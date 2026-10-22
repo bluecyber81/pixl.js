@@ -7,7 +7,7 @@
 
 #include "ntag_emu.h"
 
-#include "app_scheduler.h"
+#include "app_util_platform.h"
 #include "app_timer.h"
 #include "boards.h"
 #include "nfc_platform.h"
@@ -32,8 +32,16 @@ typedef enum {
 
 typedef struct {
     ntag_t ntag;
-    uint8_t dirty;
-    uint8_t busy;
+    volatile uint8_t dirty;
+    volatile uint8_t busy;
+    volatile bool paused;
+    volatile bool field_on;
+    volatile bool pending;
+    volatile uint32_t generation;
+    volatile uint32_t pending_generation;
+    void (*volatile action)(void *);
+    void *volatile action_context;
+    volatile uint32_t action_generation;
     int sector;
     bool is_selecting_sector;
     ntag_update_cb_t update_cb;
@@ -86,10 +94,28 @@ static const uint8_t N2E_SELECT_BANK[1] = {0x0a};
 #define N2_CMD_FAST_WRITE 0xAE
 // see https://wiki.yobi.be/index.php/N2_Elite
 
-static void update_ntag_handler(void *p_event_data, uint16_t event_size);
+/* One shared snapshot, never allocated on the limited embedded stack. */
+static ntag_t m_snapshot;
+
+static void ntag_emu_deliver(bool changing);
 
 static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint8_t *plain) {
     nrf_pwr_mgmt_feed();
+
+    if (p_data == NULL || plain == NULL || data_length == 0) {
+        ntag_emu.is_selecting_sector = false;
+        hal_send_ack_nack(0x0);
+        return;
+    }
+
+    /* Do not ACK a write which a reentrant save/selection could replace. The
+     * reader can retry after the foreground callback; IRQs remain enabled. */
+    if (ntag_emu.paused || (ntag_emu.busy &&
+        (p_data[0] == NFC_CMD_WRITE || p_data[0] == N2_CMD_WRITE ||
+         p_data[0] == N2_CMD_FAST_WRITE || p_data[0] == NFC_CMD_FAST_WRITE))) {
+        hal_send_ack_nack(0x0);
+        return;
+    }
 
     if (ntag_emu.is_selecting_sector) {
         ntag_emu.is_selecting_sector = false;
@@ -103,13 +129,28 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
     }
 
     uint8_t command = p_data[0];
-    uint8_t block_num = p_data[1];
+    uint8_t block_num = data_length > 1 ? p_data[1] : 0;
+    size_t tag_size = _ntag_data_size(&ntag_emu.ntag);
 
     switch (command) {
     case NFC_CMD_READ:
+        if (data_length < 2) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("NFC Read Block %d", block_num);
         int full_block = ((int) ntag_emu.sector * 256 + block_num);
-        if ((full_block + 3) * 4 < _ntag_data_size(&ntag_emu.ntag)) {
+        size_t read_offset = (size_t)full_block * 4;
+        if (ntag_emu.ntag.type == NTAG_215 && ntag_emu.sector == 0 && block_num < NTAG_DATA_SIZE / 4) {
+            uint8_t chunk_data[16];
+            for (size_t i = 0; i < sizeof(chunk_data); i++) {
+                size_t offset = (read_offset + i) % NTAG_DATA_SIZE;
+                /* NTAG215 PWD/PACK pages are never readable over RF. */
+                chunk_data[i] = offset >= 133 * 4 ? 0 : plain[offset];
+            }
+            APP_ERROR_CHECK(hal_nfc_send(chunk_data, sizeof(chunk_data)));
+        } else if (ntag_emu.ntag.type != NTAG_215 && full_block >= 0 &&
+                   read_offset <= tag_size && tag_size - read_offset >= 16) {
             static uint8_t chunk_data[16] = {0};
             memcpy(chunk_data, &plain[full_block*4], 16);
 
@@ -128,9 +169,14 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
         break;
     case N2_CMD_WRITE:
         // similar to write but with one extra paramter to specify the bank number
+        if (data_length < 7) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("N2E Write slot:%d:", p_data[2]);
         data_length = 6;
         p_data = p_data + 1;
+        /* fall through */
     case NFC_CMD_WRITE:
         NRF_LOG_INFO("NFC Write Block %d", block_num);
         if (ntag_emu.ntag.read_only) {
@@ -139,8 +185,13 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
             return;
         }
         if (data_length == 6) {
-            ntag_emu.dirty = true;
             int full_block_num = (((int) ntag_emu.sector) * 256) + block_num;
+            size_t write_offset = (size_t)full_block_num * 4;
+            if (full_block_num < 0 || write_offset > tag_size || tag_size - write_offset < 4) {
+                hal_send_ack_nack(0x0);
+                break;
+            }
+            ntag_emu.dirty = true;
             if (ntag_emu.ntag.type == NTAG_215 && (full_block_num == 133 || full_block_num == 134)) {
                 // ignore
             } else if (full_block_num == 2) {
@@ -169,13 +220,41 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
         hal_nfc_send(NTAG215_Signature, 32);
         break;
     case N2_CMD_FAST_READ: // TODO
+        if (data_length < 4) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("N2E Fast Read slot %d:", p_data[3]);
+        /* fall through */
     case NFC_CMD_FAST_READ:
+        if (data_length < 3) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         int start_page = block_num + (ntag_emu.sector * 256);
         int end_page = p_data[2] + (ntag_emu.sector * 256);
         int page_count = end_page - start_page + 1;
+        size_t fast_offset = (size_t)start_page * 4;
+        size_t fast_length = (size_t)page_count * 4;
+        // HAL TX is limited to 255 bytes; reject invalid requests before forming a pointer.
+        if (start_page < 0 || end_page < start_page || fast_length > UINT8_MAX ||
+            fast_offset > tag_size || fast_length > tag_size - fast_offset) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
 
-        if (ntag_emu.ntag.type == NTAG_I2C_PLUS_2K && start_page == 0xed && end_page == 0xed) {
+        if (p_data[0] == NFC_CMD_FAST_READ && ntag_emu.ntag.type == NTAG_215 && end_page >= 133) {
+            /* Standard NTAG215 FAST_READ must hide PWD/PACK just like READ.
+             * Keep the backing tag and proprietary N2/V3 reads unchanged.
+             * Bounds above limit this to 63 pages; hal_nfc_send copies the
+             * response into its persistent DMA buffer before returning. */
+            uint8_t response[63 * 4];
+            for (size_t i = 0; i < fast_length; ++i) {
+                size_t offset = fast_offset + i;
+                response[i] = offset >= 133 * 4 ? 0 : plain[offset];
+            }
+            hal_nfc_send(response, fast_length);
+        } else if (ntag_emu.ntag.type == NTAG_I2C_PLUS_2K && start_page == 0xed && end_page == 0xed) {
             static uint8_t ed_page[4] = {0};
             memcpy(ed_page, &plain[start_page*4], 4);
 
@@ -188,6 +267,10 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
         }
         break;
     case NFC_CMD_PWD_AUTH:
+        if (data_length < 5) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("NFC Password: %x %x %x %x", p_data[1], p_data[2], p_data[3], p_data[4]);
         hal_nfc_send(NTAG215_PwdOK, 2);
         break;
@@ -203,9 +286,20 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
         hal_nfc_send(N2E_SELECT_BANK, 1);
         break;
     case N2_CMD_FAST_WRITE:
+        if (data_length < 4 || ntag_emu.ntag.read_only) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("N2E Fast Read slot %d:", p_data[2]);
-        ntag_emu.dirty = true;
         uint8_t datasize = p_data[3];
+        // N2 Elite bank writes use the existing bank-local page offset, not the V3 sector.
+        size_t fast_write_offset = (size_t)block_num * 4;
+        if ((size_t)datasize > data_length - 4 || fast_write_offset > tag_size ||
+            (size_t)datasize > tag_size - fast_write_offset) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
+        ntag_emu.dirty = true;
         for (int i = 0; i < datasize; i++) {
             plain[block_num * 4 + i] = p_data[i + 4];
         }
@@ -219,6 +313,10 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
     case NFC_CMD_FAST_WRITE:
         // only supported for page 0xf0-0xff in sector 0 to write to sram buffer on i2c
         // for now we ignore the writes and just ack
+        if (data_length < 3) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("NFC Fast Write %x to %x", block_num, p_data[2]);
         hal_send_ack_nack(0xA);
         break;
@@ -237,17 +335,16 @@ static void nfc_callback(void *p_context, hal_nfc_event_t event, const uint8_t *
 
     switch (event) {
     case HAL_NFC_EVENT_FIELD_ON:
+        ntag_emu.field_on = true;
         bsp_board_led_on(BSP_BOARD_LED_0);
         break;
     case HAL_NFC_EVENT_FIELD_OFF:
         bsp_board_led_off(BSP_BOARD_LED_0);
-        if (ntag_emu.dirty) {
-            ntag_event_type_t type = NTAG_EVENT_TYPE_WRITTEN;
-            app_sched_event_put(&type, sizeof(ntag_event_type_t), update_ntag_handler);
-        } else {
-            ntag_event_type_t type = NTAG_EVENT_TYPE_READ;
-            app_sched_event_put(&type, sizeof(ntag_event_type_t), update_ntag_handler);
-        }
+        ntag_emu.field_on = false;
+        ntag_emu.sector = 0;
+        ntag_emu.is_selecting_sector = false;
+        ntag_emu.pending_generation = ntag_emu.generation;
+        ntag_emu.pending = true;
         break;
     case HAL_NFC_EVENT_COMMAND:
         // NRF_LOG_INFO("NFC Command Received: %x", p_data[0]);
@@ -263,51 +360,127 @@ static void nfc_callback(void *p_context, hal_nfc_event_t event, const uint8_t *
 }
 
 void ntag_emu_set_update_cb(ntag_update_cb_t cb, void *context) {
+    ntag_emu_prepare_change();
+    CRITICAL_REGION_ENTER();
     ntag_emu.update_cb = cb;
     ntag_emu.cb_context = context;
+    ++ntag_emu.generation;
+    ntag_emu.pending = false;
+    ntag_emu.action = NULL;
+    ntag_emu.paused = cb == NULL;
+    CRITICAL_REGION_EXIT();
 }
 
 ntag_t *ntag_emu_get_current_tag() { return &(ntag_emu.ntag); }
 
-static void update_ntag_handler(void *p_event_data, uint16_t event_size) {
-    ntag_emu.busy = true;
-
-    ntag_event_type_t type = *((ntag_event_type_t *)p_event_data);
-
-    ntag_emu_set_tag(&(ntag_emu.ntag));
-
-    if (ntag_emu.update_cb) {
-        ntag_emu.update_cb(type, ntag_emu.cb_context, &(ntag_emu.ntag));
+static void ntag_emu_deliver(bool changing) {
+    ntag_update_cb_t callback = NULL;
+    void *context = NULL;
+    ntag_event_type_t type = NTAG_EVENT_TYPE_READ;
+    CRITICAL_REGION_ENTER();
+    if (!ntag_emu.busy &&
+        (changing ? ntag_emu.dirty : (!ntag_emu.paused && !ntag_emu.field_on && ntag_emu.pending &&
+                                    ntag_emu.pending_generation == ntag_emu.generation))) {
+        ntag_emu.pending = false;
+        type = ntag_emu.dirty ? NTAG_EVENT_TYPE_WRITTEN : NTAG_EVENT_TYPE_READ;
+        ntag_emu.dirty = false;
+        if (type == NTAG_EVENT_TYPE_WRITTEN) ntag_emu.action = NULL;
+        callback = ntag_emu.update_cb;
+        context = ntag_emu.cb_context;
+        if (callback) {
+            ntag_emu.busy = true;
+            memcpy(&m_snapshot, &ntag_emu.ntag, sizeof(m_snapshot));
+            /* No stale scheduler entry may reprogram a later hardware owner. */
+            if (!changing) ntag_emu_set_uuid_only(&m_snapshot);
+        }
     }
+    CRITICAL_REGION_EXIT();
+    if (callback) {
+        callback(type, context, &m_snapshot);
+        /* A callback may select another tag. Never reset its flags/data here. */
+        CRITICAL_REGION_ENTER();
+        ntag_emu.busy = false;
+        CRITICAL_REGION_EXIT();
+    }
+}
 
-    ntag_emu.dirty = false;
-    ntag_emu.busy = false;
+void ntag_emu_prepare_change(void) {
+    CRITICAL_REGION_ENTER();
+    ntag_emu.paused = true;
+    ntag_emu.action = NULL;
+    CRITICAL_REGION_EXIT();
+    ntag_emu_deliver(true);
+    /* A reentrant callback may have selected a tag. This caller still owns a
+     * transition and must finish changing its app buffer before reception. */
+    CRITICAL_REGION_ENTER();
+    ntag_emu.paused = true;
+    ntag_emu.action = NULL;
+    CRITICAL_REGION_EXIT();
+}
+
+uint32_t ntag_emu_get_generation(void) { return ntag_emu.generation; }
+
+void ntag_emu_request_action(void (*action)(void *), void *context, uint32_t generation) {
+    CRITICAL_REGION_ENTER();
+    if (action && !ntag_emu.paused && ntag_emu.update_cb && context == ntag_emu.cb_context &&
+        generation == ntag_emu.generation) {
+        ntag_emu.action = action;
+        ntag_emu.action_context = context;
+        ntag_emu.action_generation = generation;
+    }
+    CRITICAL_REGION_EXIT();
+}
+
+void ntag_emu_process_pending(void) {
+    ntag_emu_deliver(false);
+    void (*action)(void *) = NULL;
+    void *context = NULL;
+    CRITICAL_REGION_ENTER();
+    if (!ntag_emu.busy && !ntag_emu.paused && !ntag_emu.field_on && !ntag_emu.dirty &&
+        ntag_emu.action && ntag_emu.action_generation == ntag_emu.generation) {
+        action = ntag_emu.action;
+        context = ntag_emu.action_context;
+        ntag_emu.action = NULL;
+    }
+    CRITICAL_REGION_EXIT();
+    if (action) action(context);
 }
 
 ret_code_t ntag_emu_init(const ntag_t *ntag) {
     uint32_t err_code;
 
+    ntag_emu_set_update_cb(NULL, NULL);
+    hal_nfc_stop();
+    ntag_emu.field_on = false;
+
     err_code = hal_nfc_setup(nfc_callback, NULL);
     APP_ERROR_CHECK(err_code);
 
+    ntag_emu_set_tag(ntag);
     err_code = hal_nfc_start();
     APP_ERROR_CHECK(err_code);
-
-    ntag_emu_set_tag(ntag);
     return NRF_SUCCESS;
 }
 
-void ntag_emu_uninit(ntag_t *ntag) {
-    // TODO
+void ntag_emu_uninit(void) {
+    ntag_emu_set_update_cb(NULL, NULL);
+    hal_nfc_stop();
+    ntag_emu.field_on = false;
 }
 
 void ntag_emu_set_tag(const ntag_t *ntag) {
-    memcpy(&(ntag_emu.ntag), ntag, sizeof(ntag_t));
+    if (!ntag) return;
+    ntag_emu_prepare_change();
+    CRITICAL_REGION_ENTER();
+    if (ntag != &ntag_emu.ntag) memcpy(&(ntag_emu.ntag), ntag, sizeof(ntag_t));
     ntag_emu.dirty = false;
+    ++ntag_emu.generation;
+    ntag_emu.pending = false;
     ntag_emu.sector = 0;
     ntag_emu.is_selecting_sector = 0;
-
-    ntag_emu_set_uuid_only(ntag);
+    ntag_emu_set_uuid_only(&ntag_emu.ntag);
+    ntag_emu.paused = false;
+    CRITICAL_REGION_EXIT();
 }
 
 void ntag_emu_set_uuid_only(const ntag_t *ntag) {

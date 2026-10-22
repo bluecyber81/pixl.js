@@ -15,6 +15,8 @@ typedef enum {
 typedef void (* bsp_btn_event_cb_t)(uint8_t btn, bsp_btn_event_t evt);
 
 void bsp_btn_init(bsp_btn_event_cb_t p_event_cb);
+/* Stop key timers and detach the callback before UI storage is released. */
+void bsp_btn_deinit(void);
 
 
 #endif

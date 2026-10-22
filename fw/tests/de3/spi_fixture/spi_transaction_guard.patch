@@ -1,0 +1,134 @@
+--- a/fw/application/src/hal/hal_spi_bus.c
++++ b/fw/application/src/hal/hal_spi_bus.c
+@@ -37,9 +37,22 @@
+     nrf_gpio_pin_set(p_dev->cs_pin);
+ }
+ 
+-void hal_spi_bus_aquire(const spi_device_t *p_dev) { nrf_gpio_pin_clear(p_dev->cs_pin); }
++/* Protect the whole CS transaction, including command/data and 128-byte
++ * chunks. SOFTDEVICE_PRESENT makes this mask application IRQs only: radio
++ * interrupts remain enabled. Blocking nrfx_spim does not set its busy flag.
++ * Callers must pair acquire/release for the same device without nesting SPI
++ * devices. Flash busy polling is deliberately outside these transactions. */
++void hal_spi_bus_aquire(spi_device_t *p_dev) {
++    app_util_critical_region_enter(&p_dev->critical_region_nested);
++    nrf_gpio_pin_clear(p_dev->cs_pin);
++}
+ 
+-void hal_spi_bus_release(const spi_device_t *p_dev) { nrf_gpio_pin_set(p_dev->cs_pin); }
++void hal_spi_bus_release(spi_device_t *p_dev) {
++    /* Copy before restoring IRQs: a pending handler may reuse this device. */
++    uint8_t nested = p_dev->critical_region_nested;
++    nrf_gpio_pin_set(p_dev->cs_pin);
++    app_util_critical_region_exit(nested);
++}
+ 
+ uint32_t hal_spi_bus_xfer(spi_transaction_t *p_trans) {
+     uint32_t err_code = NRF_SUCCESS;
+--- a/fw/application/src/hal/hal_spi_bus.h
++++ b/fw/application/src/hal/hal_spi_bus.h
+@@ -13,12 +13,13 @@
+ 
+ typedef struct {
+     uint32_t cs_pin;
++    uint8_t critical_region_nested; /* Owned by this device transaction. */
+ } spi_device_t;
+ 
+ void hal_spi_bus_init();
+ void hal_spi_bus_attach(spi_device_t *p_dev);
+-void hal_spi_bus_aquire(const spi_device_t *p_dev);
+-void hal_spi_bus_release(const spi_device_t *p_dev);
++void hal_spi_bus_aquire(spi_device_t *p_dev);
++void hal_spi_bus_release(spi_device_t *p_dev);
+ uint32_t hal_spi_bus_xfer(spi_transaction_t *p_trans);
+ 
+ #endif
+--- a/fw/application/src/hal/hal_spi_flash.c
++++ b/fw/application/src/hal/hal_spi_flash.c
+@@ -56,9 +56,8 @@
+     };
+ 
+     ret_code_t result = hal_spi_bus_xfer(&trans_tx);
+-    APP_ERROR_CHECK(result);
+-
+-    if (rx_len > 0) {
++
++    if (result == NRF_SUCCESS && rx_len > 0) {
+         spi_transaction_t trans_rx = {
+             .p_tx_buffer = NULL,
+             .tx_length = 0,
+@@ -66,11 +65,11 @@
+             .rx_length = rx_len,
+         };
+ 
+-        ret_code_t result = hal_spi_bus_xfer(&trans_rx);
+-        APP_ERROR_CHECK(result);
++        result = hal_spi_bus_xfer(&trans_rx);
+     }
+ 
+     hal_spi_bus_release(&m_dev);
++    APP_ERROR_CHECK(result);
+ }
+ 
+ static inline void hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_len, const uint8_t *tx_data2, uint32_t tx_len2) {
+@@ -84,9 +83,8 @@
+     };
+ 
+     ret_code_t result = hal_spi_bus_xfer(&trans_tx);
+-    APP_ERROR_CHECK(result);
+-
+-    if (tx_len2 > 0) {
++
++    if (result == NRF_SUCCESS && tx_len2 > 0) {
+         spi_transaction_t trans_rx = {
+             .p_tx_buffer = (void *)tx_data2,
+             .tx_length = tx_len2,
+@@ -94,11 +92,11 @@
+             .rx_length = 0,
+         };
+ 
+-        ret_code_t result = hal_spi_bus_xfer(&trans_rx);
+-        APP_ERROR_CHECK(result);
++        result = hal_spi_bus_xfer(&trans_rx);
+     }
+ 
+     hal_spi_bus_release(&m_dev);
++    APP_ERROR_CHECK(result);
+ }
+ 
+ static inline uint8_t hal_spi_flash_read_status(uint8_t cmd) {
+--- a/fw/application/src/mui/mui_u8g2.c
++++ b/fw/application/src/mui/mui_u8g2.c
+@@ -260,4 +260,4 @@
+     u8g2_SetDisplayRotation(&p_mui->u8g2, flip ? U8G2_R2 : U8G2_R0);
+ }
+ 
+-const spi_device_t *mui_u8g2_get_spi_device() { return &m_dev; }
+\ No newline at end of file
++spi_device_t *mui_u8g2_get_spi_device() { return &m_dev; }
+\ No newline at end of file
+--- a/fw/application/src/mui/mui_u8g2.h
++++ b/fw/application/src/mui/mui_u8g2.h
+@@ -20,6 +20,6 @@
+ void mui_u8g2_set_contrast_level(uint8_t value);
+ void mui_u8g2_set_flip_display(bool flip);
+ 
+-const spi_device_t* mui_u8g2_get_spi_device();
++spi_device_t* mui_u8g2_get_spi_device();
+ 
+ #endif
+\ No newline at end of file
+--- a/fw/application/src/app/game/port/common/driver.c
++++ b/fw/application/src/app/game/port/common/driver.c
+@@ -31,7 +31,10 @@
+     };
+     nrf_gpio_pin_write(LCD_DC_PIN, is_data);
+     uint32_t err_code = hal_spi_bus_xfer(&trans);
+-    APP_ERROR_CHECK(err_code);
++    if (err_code != NRF_SUCCESS) {
++        hal_spi_bus_release(mui_u8g2_get_spi_device());
++        APP_ERROR_CHECK(err_code);
++    }
+ }
+ 
+ void JOY_OLED_write_cmd(uint8_t cmd) { JOY_OLED_write_data(0, cmd); }

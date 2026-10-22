@@ -33,23 +33,35 @@ static void app_amiibo_try_mount_drive(app_amiibo_t *p_app_inst) {
 void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
 
     app_amiibo_t *p_app_handle = mui_mem_malloc(sizeof(app_amiibo_t));
+    if (!p_app_handle) { p_app_inst->p_handle = NULL; return; }
     memset(p_app_handle, 0, sizeof(app_amiibo_t));
-
-    p_app_inst->p_handle = p_app_handle;
+    /* Construct every owned UI object before any app activation. */
     p_app_handle->p_view_dispatcher = mui_view_dispatcher_create();
+    if (!p_app_handle->p_view_dispatcher) goto startup_failed;
     p_app_handle->p_amiibo_detail_view = amiibo_detail_view_create();
-    p_app_handle->p_amiibo_detail_view->user_data = p_app_handle;
+    if (!p_app_handle->p_amiibo_detail_view) goto startup_failed;
     p_app_handle->p_list_view = mui_list_view_create();
-    mui_list_view_set_user_data(p_app_handle->p_list_view, p_app_handle);
+    if (!p_app_handle->p_list_view) goto startup_failed;
     p_app_handle->p_text_input = mui_text_input_create();
-    mui_text_input_set_user_data(p_app_handle->p_text_input, p_app_handle);
+    if (!p_app_handle->p_text_input) goto startup_failed;
     p_app_handle->p_msg_box = mui_msg_box_create();
+    if (!p_app_handle->p_msg_box) goto startup_failed;
+    p_app_handle->p_toast_view = mui_toast_view_create();
+    if (!p_app_handle->p_toast_view) goto startup_failed;
+    p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
+    if (!p_app_handle->p_scene_dispatcher) goto startup_failed;
+    p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
+    if (!p_app_handle->p_view_dispatcher_toast) goto startup_failed;
+    p_app_inst->p_handle = p_app_handle;
+
+
+    p_app_handle->p_amiibo_detail_view->user_data = p_app_handle;
+    mui_list_view_set_user_data(p_app_handle->p_list_view, p_app_handle);
+    mui_text_input_set_user_data(p_app_handle->p_text_input, p_app_handle);
     mui_msg_box_set_user_data(p_app_handle->p_msg_box, p_app_handle);
 
-    p_app_handle->p_toast_view = mui_toast_view_create();
     mui_toast_view_set_user_data(p_app_handle->p_toast_view, p_app_handle);
 
-    p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
 
     string_init(p_app_handle->current_file);
     string_init(p_app_handle->current_folder);
@@ -70,7 +82,6 @@ void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
 
     mui_view_dispatcher_attach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);
 
-    p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
     mui_view_dispatcher_add_view(p_app_handle->p_view_dispatcher_toast, AMIIBO_VIEW_ID_TOAST,
                                  mui_toast_view_get_view(p_app_handle->p_toast_view));
     mui_view_dispatcher_attach(p_app_handle->p_view_dispatcher_toast, MUI_LAYER_TOAST);
@@ -112,13 +123,32 @@ void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
     string_set_str(p_app_handle->current_folder, "/");
     app_amiibo_try_mount_drive(p_app_handle);
     mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
+
+    return;
+
+startup_failed:
+    mui_view_dispatcher_free(p_app_handle->p_view_dispatcher_toast);
+    mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
+    mui_toast_view_free(p_app_handle->p_toast_view);
+    mui_msg_box_free(p_app_handle->p_msg_box);
+    mui_text_input_free(p_app_handle->p_text_input);
+    mui_list_view_free(p_app_handle->p_list_view);
+    amiibo_detail_view_free(p_app_handle->p_amiibo_detail_view);
+    mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);
+    mui_mem_free(p_app_handle);
+    p_app_inst->p_handle = NULL;
 }
 
 void app_amiibo_on_kill(mini_app_inst_t *p_app_inst) {
     app_amiibo_t *p_app_handle = p_app_inst->p_handle;
+    if (!p_app_handle) return;
+
+    /* A final NFC write can rename new*.bin. Retain the resulting path, even
+     * when the user leaves the app while the reader field is still present. */
+    ntag_emu_prepare_change();
 
     uint32_t current_scene_id = mui_scene_dispatcher_current_scene(p_app_handle->p_scene_dispatcher);
-    if (app_amiibo_info.hibernate_enabled &&
+    if (p_app_inst->p_retain_data && app_amiibo_info.hibernate_enabled &&
         (current_scene_id == AMIIBO_SCENE_AMIIBO_DETAIL || current_scene_id == AMIIBO_SCENE_FILE_BROWSER)) {
         app_amiibo_cache_data_t p_cache_data = {0};
         p_cache_data.cached_enabled = true;
@@ -130,9 +160,12 @@ void app_amiibo_on_kill(mini_app_inst_t *p_app_inst) {
 
         memcpy(p_app_inst->p_retain_data, &p_cache_data, sizeof(app_amiibo_cache_data_t));
     } else {
-        memset(p_app_inst->p_retain_data, 0, CACHEDATASIZE);
+        if (p_app_inst->p_retain_data) memset(p_app_inst->p_retain_data, 0, CACHEDATASIZE);
         memset(&(cache_get_data()->ntag), 0, sizeof(ntag_t));
     }
+
+    /* Stop scene-owned timers/callbacks while all views and app data are alive. */
+    mui_scene_dispatcher_exit(p_app_handle->p_scene_dispatcher);
 
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);
     mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);

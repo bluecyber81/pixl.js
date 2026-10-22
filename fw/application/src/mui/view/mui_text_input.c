@@ -83,7 +83,7 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     const char *text = string_get_cstr(p_mui_text_input->input_text);
     uint8_t needed_string_width = mui_canvas_get_width(p_canvas) - 8;
     uint8_t start_pos = 4;
-    uint8_t text_length = string_size(p_mui_text_input->input_text);
+    size_t text_length = string_size(p_mui_text_input->input_text);
 
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     mui_canvas_set_draw_color(p_canvas, 1);
@@ -173,6 +173,9 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
 static void mui_text_input_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     mui_text_input_t *p_mui_text_input = p_view->user_data;
+    if (p_mui_text_input->focus_row >= keyboard_row_count) p_mui_text_input->focus_row = 0;
+    if (p_mui_text_input->focus_column >= get_row_size(p_mui_text_input->focus_row))
+        p_mui_text_input->focus_column = get_row_size(p_mui_text_input->focus_row) - 1;
     if (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_REPEAT || event->type == INPUT_TYPE_LONG) {
         switch (event->key) {
         case INPUT_KEY_LEFT:
@@ -220,9 +223,12 @@ static void mui_text_input_on_input(mui_view_t *p_view, mui_input_event_t *event
         case INPUT_KEY_CENTER: {
             char c = get_row(p_mui_text_input->focus_row)[p_mui_text_input->focus_column].text;
             if (c == BACKSPACE_KEY) {
+                if (string_size(p_mui_text_input->input_text) == 0) break;
                 string_t current;
                 string_init_set(current, p_mui_text_input->input_text);
-                string_set_strn(p_mui_text_input->input_text, string_get_cstr(current), string_size(current) - 1);
+                size_t length = string_size(current) - 1;
+                while (length && (((unsigned char)string_get_cstr(current)[length] & 0xc0) == 0x80)) length--;
+                string_set_strn(p_mui_text_input->input_text, string_get_cstr(current), length);
                 string_clear(current);
             } else if (c == ENTER_KEY) {
                 if (p_mui_text_input->event_cb) {
@@ -232,21 +238,33 @@ static void mui_text_input_on_input(mui_view_t *p_view, mui_input_event_t *event
                 if (event->type == INPUT_TYPE_LONG) {
                     c = char_to_uppercase(c);
                 }
-                string_push_back(p_mui_text_input->input_text, c);
+                if (!p_mui_text_input->max_length || string_size(p_mui_text_input->input_text) < p_mui_text_input->max_length)
+                    string_push_back(p_mui_text_input->input_text, c);
             }
         } break;
         }
+        if (p_mui_text_input->focus_column >= get_row_size(p_mui_text_input->focus_row))
+            p_mui_text_input->focus_column = get_row_size(p_mui_text_input->focus_row) - 1;
     }
 }
 
 static void mui_text_input_on_enter(mui_view_t *p_view) {}
 
-static void mui_text_input_on_exit(mui_view_t *p_view) {}
+static void mui_text_input_on_exit(mui_view_t *p_view) {
+    /* A limit belongs to the editor session; other callers keep their old default. */
+    ((mui_text_input_t *)p_view->user_data)->max_length = 0;
+}
 
 mui_text_input_t *mui_text_input_create() {
     mui_text_input_t *p_mui_text_input = mui_mem_malloc(sizeof(mui_text_input_t));
+    if (!p_mui_text_input) return NULL;
+    memset(p_mui_text_input, 0, sizeof(*p_mui_text_input));
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) {
+        mui_mem_free(p_mui_text_input);
+        return NULL;
+    }
     p_view->user_data = p_mui_text_input;
     p_view->draw_cb = mui_text_input_on_draw;
     p_view->input_cb = mui_text_input_on_input;
@@ -257,6 +275,7 @@ mui_text_input_t *mui_text_input_create() {
     p_mui_text_input->focus_row = 0;
     p_mui_text_input->focus_column = 0;
     p_mui_text_input->clear_default_text = false;
+    p_mui_text_input->max_length = 0;
     string_init(p_mui_text_input->header);
     string_init(p_mui_text_input->input_text);
     p_mui_text_input->event_cb = NULL;
@@ -265,6 +284,7 @@ mui_text_input_t *mui_text_input_create() {
 }
 
 void mui_text_input_free(mui_text_input_t *p_view) {
+    if (!p_view) return;
     string_clear(p_view->header);
     string_clear(p_view->input_text);
     mui_mem_free(p_view->p_view);
@@ -282,7 +302,21 @@ void mui_text_input_set_event_cb(mui_text_input_t *p_view, mui_text_input_event_
 }
 void mui_text_input_clear_input_text(mui_text_input_t *p_view) { string_reset(p_view->input_text); }
 void mui_text_input_set_input_text(mui_text_input_t *p_view, const char *input) {
-    string_set_str(p_view->input_text, input);
+    size_t length = strlen(input);
+    if (p_view->max_length && length > p_view->max_length) {
+        length = p_view->max_length;
+        while (length && (((unsigned char)input[length] & 0xc0) == 0x80)) length--;
+    }
+    string_set_strn(p_view->input_text, input, length);
+}
+void mui_text_input_set_max_length(mui_text_input_t *p_view, size_t max_bytes) {
+    p_view->max_length = max_bytes;
+    if (max_bytes && string_size(p_view->input_text) > max_bytes) {
+        string_t original;
+        string_init_set(original, p_view->input_text);
+        mui_text_input_set_input_text(p_view, string_get_cstr(original));
+        string_clear(original);
+    }
 }
 void mui_text_input_set_header(mui_text_input_t *p_view, const char *title) { string_set_str(p_view->header, title); }
 const char *mui_text_input_get_input_text(mui_text_input_t *p_view) { return string_get_cstr(p_view->input_text); }
@@ -291,6 +325,7 @@ void mui_text_input_reset(mui_text_input_t *p_view) {
     p_view->focus_row = 0;
     p_view->focus_column = 0;
     p_view->clear_default_text = false;
+    p_view->max_length = 0;
     string_reset(p_view->header);
     string_reset(p_view->input_text);
 }

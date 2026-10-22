@@ -1,0 +1,9 @@
+{
+  "fw/application/src/hal/hal_spi_bus.c": "6a44390af22504d3d61960051c4e08108454ce6e894e1057d59cef46017d9e89",
+  "fw/application/src/hal/hal_spi_bus.h": "ff66cdeaeee41840c3ddba669e2c3a5064fee60a882102bf67591c24300bdef9",
+  "fw/application/src/hal/hal_spi_flash.c": "0af21e59258ac39f721d42fe87ffd59efdd5ff67c3966e22633c6232ce956d1b",
+  "fw/application/src/hal/hal_spi_flash.h": "88ea921ff0b5b7cd51124e79a2478e89a0728e48a88964ace300d646385cde7e",
+  "fw/application/src/mui/mui_u8g2.c": "36a8b376f19b230159a1812e6bc5e3a7daff252b3424d258409e2ca52ee3787a",
+  "fw/application/src/mui/mui_u8g2.h": "1d685f187e7368d1763f1df366c363e118e4453eda2d3ecdcf9134e92e28071d",
+  "fw/application/src/app/game/port/common/driver.c": "1365fa3ac30273a91d8dc4a9513138be80c43aed5cb680e19916816097c4ba01"
+}

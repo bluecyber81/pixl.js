@@ -23,6 +23,8 @@ export default {
     up: 'Parent Folder',
     refresh: 'Refresh',
     dfu: 'DFU',
+    dfupage: 'Open DFU page',
+    enterdfu: 'Put device in DFU mode',
   },
   status: {
     connected: 'Connected, Version: ',
@@ -51,6 +53,8 @@ export default {
     format: 'Format…'
   },
   properties: {
+    invalidmeta: 'Damaged or unknown metadata – editing disabled',
+    notelimit: 'Notes may contain at most {max} UTF-8 bytes (currently: {actual}).',
     title: 'Properties',
     remark: 'Remark',
     entermsg: 'Please enter remarks',
@@ -90,6 +94,7 @@ export default {
   dfumode: {
     title: 'DFU Mode',
     startconfirm: 'Enter DFU mode?',
+    commandaccepted: 'The device accepted the DFU command. Check whether DFU mode is ready on the separately opened DFU page. No firmware has been transferred yet.',
     updateconfirm: 'Entering DFU mode successfully. Do you want to open the DFU upgrade page?',
     updatetitle: 'DFU Mode accepted'
   },
@@ -110,7 +115,14 @@ export default {
     pathtoolong: 'The maximum file name cannot exceed 47 bytes'
   },
   drive: {
+    free: '{free} free of {total}',
     message: '(Disk not available [error code: ',
     messageend: '])'
+  },
+  transfer: {
+    busy: 'File transfer is running. Close the upload dialog to cancel.',
+    unsupported: 'This browser does not support Web Bluetooth. Please use Chrome or Edge.',
+    deviceerror: 'Device error',
+    cancelled: 'Transfer cancelled'
   }
 }

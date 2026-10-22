@@ -28,6 +28,7 @@ typedef struct {
     mui_text_input_t *p_text_input;
 
     app_chameleon_id_edit_type_t id_edit_type;
+    bool initialized;
 
 } app_chameleon_t;
 
@@ -40,5 +41,6 @@ typedef enum {
 } app_chameleon_view_id_t;
 
 extern mini_app_t app_chameleon_info;
+void app_chameleon_show_load_error(app_chameleon_t *app);
 
 #endif

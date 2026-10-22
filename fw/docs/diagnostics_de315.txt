@@ -1,0 +1,145 @@
+DE3.15: bounded, volatile LCD storage diagnostics (command 0x1b)
+
+Purpose and limits
+------------------
+This is diagnostic instrumentation, not a filesystem repair or header filter.
+It captures the original header obtained by SPIFFS before directory filtering.
+Selection changes diagnostic RAM only. No operation writes, erases, mounts,
+formats, flushes, invalidates cache, or calls a filesystem repair routine.
+Ordinary directory scans still use their existing SPIFFS/cache read path.
+Queries inspect a saved observation, peek cache memory without updating LRU or
+statistics, or issue bounded direct HAL reads. HAL can return different data or
+errors; those results are evidence, not an automatic explanation of the cause.
+
+Permanent diagnostic storage is a union of legacy and Tybalt state, plus a
+generation and selector. A compile-time bound keeps the complete state <=240 B.
+There is no second permanent page buffer. Direct reads reuse a bounded local
+spiffs_page_object_ix_header (205 B with the current flash layout). The wire
+contains only its first 77 bytes; the 128 metadata bytes are never transmitted
+by schema2. No file content or freely chosen address/path is accepted.
+
+Compatibility and selection
+---------------------------
+After reset the selector is 0 and existing schema1 operations 0,1,2 with
+candidate indices 0,1 have their original sizes and meanings (170,91,235 B).
+These legacy requests remain exactly two payload bytes, status=0, chunk=0.
+
+New operation3 explicitly selects the diagnostic family:
+  request [3,0]: clear diagnostic state, restore legacy Sprocket collection
+  request [3,1]: clear state, select /amiibo/Animal/Welcome/W08 - Tybalt.bin
+  request [3,2]: clear state, select /amiibo/Animal/Welcome/W08 - TybalT,`i&
+Only those literal selectors are accepted. No client string is interpreted.
+Operation3 changes RAM, including the observation generation, but not storage.
+While selector1/2 is active, legacy operations0..2 return ERR rather than
+misinterpret the union. Request [3,0] or reset restores the original behavior.
+
+Selecting a name does not arm arbitrary filesystem scanning. Capture starts
+only when the ordinary VFS opens /amiibo/Animal/Welcome with an optional trailing
+slash. Its generation advances and previous observations are cleared. The real
+LCD SPIFFS directory visitor invokes the hook immediately after a successful
+header read and before its header filters. The first exactly matching raw name
+is stored; a saturating count records additional matching observations.
+End-of-list disarms capture and stores the SPIFFS error. Closing early disarms
+without claiming completion. Opening another directory also disarms capture.
+
+Use after selecting a target
+---------------------------
+1. Perform and finish one ordinary READ_DIR of E:/amiibo/Animal/Welcome/.
+2. Request [4,selector] to read the captured snapshot and its generation.
+3. If present and completed, request [5,selector,generation_lo,generation_hi]
+   to peek cache, or [6,selector,generation_lo,generation_hi] for direct reads.
+4. Compare all returned generation/page/address/selector fields. Retain every
+   error and raw field, including values that would fail a normal header check.
+
+Operations3/4 require exactly two payload bytes; operations5/6 exactly four.
+Every request requires status=0 and chunk=0. All new operations require the
+DF file/directory transfer to be idle (including no abandoned/pending file).
+Operations5/6 reject missing/incomplete observations, different selectors and
+stale generations before cache/HAL access. An absent snapshot is allowed for
+operation4 and has its candidate fields zeroed.
+
+The 16-bit generation is an observation marker and wraps. It does not prove
+current page ownership after intervening filesystem writes. Use one exclusive,
+read-only diagnostic sequence; do not interleave modifications or retain a
+generation for later unrelated sessions. The diagnostic is cleared on reset.
+
+Responses are one logical reply, with status=OK and chunk=0, or an empty ERR.
+The existing BLE driver fragments a logical chunk0 reply when its payload
+exceeds the current notification capacity. Clients reassemble the numbered
+MORE/final transport fragments. This also preserves legacy operations0..2
+on small MTUs; no new minimum-MTU gate is imposed by this diagnostic.
+Use the normal250-MTU connection for the current evidence sequence. Sending small
+20-byte request values over MTU250 is different from a real ATT-MTU23 link.
+The separate INFO0x05 MTU diagnostic is independent of this storage schema.
+
+Schema2 common response prefix, all integers little-endian (20 B)
+----------------------------------------------------------------
+  0 u8  schema=2
+  1 u8  operation
+  2 u8  selector (0=legacy restore acknowledgement,1=correct Tybalt,2=extra name)
+  3 u8  flags: bit0 captured candidate present; bit1 listing completed;
+              bit2 more than one matching observation;
+              bit3 header cache page present (op5 only);
+              bit4 lookup cache page present (op5 only)
+  4 u16 listing/selection generation
+  6 u8  matching observation count (saturating255)
+  7 u8  reserved zero
+  8 u16 original lookup object-ID, including the index bit
+ 10 u16 observed header page
+ 12 u32 physical header address
+ 16 u32 corresponding physical lookup-entry address
+
+Operation3:20 B, common prefix only, no present candidate after selection.
+
+Operation4:101 B
+ 20 s32 recorded listing error
+ 24 raw77-byte header prefix as observed before filtering
+
+Operation5:111 B (current cache snapshot, not the earlier cache state)
+ 20 u32 cache last_access
+ 24 u32 cache cpage_use_map
+ 28 u8  header-cache flags;29 u8 header-cache slot index
+ 30 u8  lookup-cache flags;31 u8 lookup-cache slot index
+ 32 u16 current cached lookup entry
+ 34 raw77-byte cached header prefix
+Absent cache fields remain zero; the common flags distinguish absence from0.
+Only in-use read-cache pages are considered; no cache getter, allocation,
+counter update, invalidation or write-back is performed.
+
+Operation6:194 B
+Two87-byte records begin at offsets20 and107. Each record contains:
+  +0 u32 direct lookup HAL result
+  +4 u16 direct lookup value (zero if its HAL read failed)
+  +6 u32 direct header HAL result
+ +10 raw77-byte direct header prefix (all zero if its HAL read failed)
+The order is lookup1,header1,lookup2,header2. Each header read requests the same
+205-byte object-header size as normal SPIFFS lookup, but only its77-byte prefix
+is returned. Successful repeated values are not normalized or forced equal.
+Failed partial reads never expose partial/uninitialized bytes.
+
+Raw77-byte header prefix layout
+------------------------------
+  +0 u16 header object-ID (compare to original/cached/direct lookup)
+  +2 u16 span index
+  +4 u8  header flags
+  +5 raw3 alignment bytes
+  +8 u32 raw stored size
+ +12 u8  object type
+ +13 raw64 name bytes, including terminating/trailing bytes as observed
+
+The fixed geometry is256-byte pages,4096-byte blocks,physical base0 and at
+most16MiB. The captured page must be a data/header page within that geometry;
+lookup address is derived from that page, never supplied by the client.
+
+Testing boundary
+----------------
+test_storage_diag.py retains original schema1 checks. The new
+test_storage_diag_tybalt.py compiles the actual diagnostic module, real SPIFFS
+directory visitor with the actual BOARD_LCD define, actual0x1b handler,
+DF core and BLE transport driver. All seven reply sizes are reassembled
+byte-identically at simulated ATT23/185/250 in legacy and framed RX modes.
+It uses a synthetic NOR image and mocked HAL, including partial failures and
+different repeated reads. A temporary hook-removal negative control must fail
+the captured-prefix assertion. A temporary physical-capacity gate must fail
+the actual logical-response transport test. These tests do not establish a physical flash
+failure, SPI timing, radio MTU behavior, or the cause of the reported extra row.

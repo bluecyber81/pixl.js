@@ -79,3 +79,11 @@ c->s: a0b0
 s->c: b0a0
 ...
 ```
+
+## Local DE3.4 receive validation
+
+The local LCD build validates command fields and cumulative staging capacity before copying. V1 write payloads may retain the original two trailing sequence bytes; clients omitting them remain supported. V2 accepts complete AES-ECB blocks within the received envelope (including padded envelopes) and processes plaintext only after successful decryption and length validation. The existing short plaintext-command fallback is retained.
+
+A transfer begins with ACAC (AmiiboLink) or the first AmiLoop write chunk. Staging is cleared at a new transfer; disconnect, initialization and version selection cancel any unfinished transfer. Completion accepts the existing NTAG215 file lengths 532, 540 and 572 bytes. I2C 2K transfers remain in the file-transfer app, because AmiiboLink slots persist only NTAG215 data. Other incomplete lengths do not activate a tag. The normal documented NTAG215 upload is 540 bytes.
+
+AmiLoop frames require matching declared length, XOR and final 03 marker. Invalid modes cannot trigger a mode callback. Its existing zero-/one-based increasing chunk indexes and restart-on-nonincreasing-index rule are preserved. No new retransmission guarantee is introduced. These are local parser checks, not proof of interoperability with every mobile app or physical NFC reader.

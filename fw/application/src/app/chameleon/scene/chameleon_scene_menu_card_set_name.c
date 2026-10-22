@@ -15,6 +15,7 @@
 #include "tag_helper.h"
 
 #include "fds_utils.h"
+#include "vfs_meta.h"
 
 typedef enum {
     CHAMELEON_MENU_BACK,
@@ -43,10 +44,11 @@ static void chameleon_scene_menu_card_set_name_text_input_event_cb(mui_text_inpu
 
 void chameleon_scene_menu_card_set_name_on_enter(void *user_data) {
     app_chameleon_t *app = user_data;
-    char card_name[32];
+    char card_name[VFS_META_MAX_NOTES_SIZE];
 
     tag_helper_get_nickname(card_name, sizeof(card_name));
 
+    mui_text_input_set_max_length(app->p_text_input, sizeof(card_name) - 1);
     mui_text_input_set_header(app->p_text_input, _T(APP_CHAMELEON_CARD_INPUT_NICK));
     mui_text_input_set_input_text(app->p_text_input, card_name);
     mui_text_input_set_event_cb(app->p_text_input, chameleon_scene_menu_card_set_name_text_input_event_cb);
@@ -55,5 +57,6 @@ void chameleon_scene_menu_card_set_name_on_enter(void *user_data) {
 
 void chameleon_scene_menu_card_set_name_on_exit(void *user_data) {
     app_chameleon_t *app = user_data;
+    mui_text_input_set_max_length(app->p_text_input, 0);
     mui_list_view_clear_items(app->p_list_view);
 }

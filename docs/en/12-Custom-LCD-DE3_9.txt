@@ -1,0 +1,17 @@
+Custom LCD 2.21.0-DE3.9 (application counter 560)
+2026-10-21
+
+Compared with the frozen DE3.8 LCD candidate:
+- Initialize every Bluetooth status-view field before use and use a unique header guard.
+- Clear game input/repeat state on view transitions, preserve a held center key when a direction is released, saturate the repeat counter, and reject invalid key indices.
+- Add Settings > Version diagnostics for build target, actual chip and validated installed SoftDevice variant/version/FWID. Bound every version-page text write. Do not infer a bootloader version.
+- Add Mario (Melody Car) and Toad from My Mario Wooden Blocks. The generated catalog now has 952 unique IDs and 1,344 game links. These are metadata additions, not supplied NFC dumps or verified gameplay support.
+
+Preserved: wake behavior, accepted LCD scrolling speed, NFC core and storage format.
+Package: application-only Nordic Secure DFU, hardware 52, required SoftDevice FWID 0x0103. Neither installed bootloader nor SoftDevice is replaced.
+
+Verification: actual ARM LCD build, 42 passing host test suites, signed-init payload digest and ECDSA signature verification, source/build provenance and unchanged DE3.8 baseline checks. Application image is 354,904 bytes (+796); static RAM usage is unchanged. Physical validation of this new candidate is pending.
+
+Known limits: Sprocket on the brother device remains unconfirmed; full MTU23 compatibility and general allocation-failure recovery remain incomplete. The earlier blocked supplementary AmiiboLink test was not repeated. No device write was performed during this build.
+
+The separately built browser companion is not in the OTA and does not update the public Pixl website or the external DFU flasher. See its own readme and validation report.

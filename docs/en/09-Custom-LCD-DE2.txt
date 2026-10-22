@@ -1,0 +1,70 @@
+Custom LCD firmware 2.21.0-DE2 (application counter 550)
+======================================================
+
+Local derivative of cylin577/pixl.js v2.21.0, commit
+57a364329436745f780e70ac07a1642989a00d6f, continuing the local DE1 changes.
+This is not an official upstream release. Target: the verified nRF52832 LCD
+Allmiibo, existing S112 0x0103 bootloader/SoftDevice environment.
+
+Retained from DE1: German/English interface, 950 catalog IDs, the four native
+games and the PIXV animation player. Metadata does not replace tag dumps.
+V3 cannot be generated correctly from an ID alone: the generator now rejects
+that operation; supported complete 2048-byte files still use the V3 path.
+
+Corrections
+-----------
+- Retain all RAM sections occupied by the linker-defined cache region during
+  sleep; clear the correct byte count. No changes to NFC timing workarounds.
+- Copy actual NFC transmit lengths, reject incomplete commands and out-of-range
+  page access, preserve the existing V3 SRAM/passive-ACK behavior, and honor
+  read-only mode for FAST_WRITE.
+- Mount errors no longer trigger an automatic external SPIFFS format. An empty
+  or damaged unmountable device requires the explicit format operation. Listing
+  drives no longer mounts storage as a side effect.
+- Propagate read/write/close/flush failures and reject short writes. Close
+  protocol resources on Bluetooth disconnect; reject malformed wire lengths.
+  Both official browser 1-byte OPEN flags and local 4-byte flags are supported.
+- Bounded path composition with explicit failure, no silent truncation, segment
+  boundary prefix matching, and caller checks in filesystem/UI operations.
+- Decode metadata only when the complete record fits; bound and terminate notes.
+  Use memcpy for unaligned integer fields in the existing little-endian protocol.
+- Settings: migrate the old 24-byte layout without reusing padding as a new
+  preference, canonicalize stored bool bytes, preserve valid 26-byte preferences,
+  validate slot/sort bounds, and preserve unknown files after read errors.
+- Check PIXV magic, 16-byte header, dimensions, row stride, frame rate, exact file
+  size and complete frame reads. Release resources on failed playback setup.
+- Fix large category navigation indices and favorites folder sorting, unregister
+  the NFC detail callback on exit, remove the unsafe legacy metadata copy, and
+  retain supported original tag sizes/signature tails when saving.
+- Replace the UID input scanf pattern which wrote ints into one-byte slots with
+  a checked seven-byte parser; check complete writes and composed UI paths.
+- Chameleon file loading uses a temporary buffer and commits only an exact full
+  read. Bounded paths/names and exact read/write checks prevent false success.
+
+Build and offline tests
+-----------------------
+Use the existing pinned SDK container, mounted at /work with --network none:
+  solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
+  bash /work/fw/scripts/build_de2.sh
+
+This builds only files. Distribute only the signed application OTA ZIP. Do not
+flash the generated full image, bootloader or SoftDevice to the user's device.
+
+Host suite (existing Python and GCC):
+  python -B fw/tests/de2/run_all.py --report host-tests.json
+Additional Linux ASan/UBSan runs use --sanitize on test_cache_nfc.py,
+test_metadata.py, test_vfs_protocol.py and test_cwalk2.py.
+Hardware/filesystem stubs in these tests do not substitute for device tests.
+
+Limits and hardware acceptance
+-----------------------------
+No assertion that the entire firmware is bug-free. Generic MUI allocation-failure
+handling remains inherited. Writes are not transactional against physical power
+loss. Some third-party controllers and LCD contrast reports have no confirmed
+generic fix; existing hardware/timing behavior is deliberately retained.
+
+After application update: verify version, existing files and expected settings
+migration; test sleep/wake, browser transfer, LCD/buttons, games/player, a known
+classic tag and a complete V3 tag on actual supported console/game hardware.
+Keep the original backup and known application OTA available; rollback admission
+depends on the installed bootloader and is not proven by building this source.

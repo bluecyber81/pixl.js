@@ -1,10 +1,15 @@
-# download latest amiibo data and merge to amiibo_data.csv
+# Generate the database from the checked-in metadata; network refresh is opt-in.
 
 
 from urllib.request import urlopen
+import argparse
 import json
 import os
 import csv
+import re
+
+AMIIBO_API_URL = "https://amiiboapi.org/api/amiibo/"
+AMIIBO_API_TIMEOUT_SECONDS = 30
 
 class Amiibo:
     def __init__(self):
@@ -36,20 +41,42 @@ def get_prorject_directory():
 
 
 def fetch_amiibo_from_api():
-    try:
-        conn = urlopen("https://www.amiiboapi.com/api/amiibo/", timeout=5000)
-        body = json.loads(conn.read())
-        amiibos = list()
-        for ami in body["amiibo"]: 
-            amiibo = Amiibo()
-            amiibo.id = ami["head"] + ami["tail"]
-            amiibo.name_en = ami["name"]
-            amiibo.game_series = ami["gameSeries"]
-            amiibos.append(amiibo)
-        return amiibos
-    except Exception as e:
-        print("Error: %s" % e)
-        return list()   
+    # Validate the entire response before callers may update any local files.
+    # A failed refresh must never be reported as a successful offline build.
+    with urlopen(AMIIBO_API_URL, timeout=AMIIBO_API_TIMEOUT_SECONDS) as conn:
+        body = json.load(conn)
+    if not isinstance(body, dict) or not isinstance(body.get("amiibo"), list) or not body["amiibo"]:
+        raise ValueError("AmiiboAPI must return a non-empty amiibo list")
+    amiibos = []
+    seen = set()
+    for index, ami in enumerate(body["amiibo"]):
+        if not isinstance(ami, dict):
+            raise ValueError("AmiiboAPI record %d is not an object" % index)
+        for field in ("head", "tail"):
+            if not isinstance(ami.get(field), str) or re.fullmatch(r"[0-9a-fA-F]{8}", ami[field]) is None:
+                raise ValueError("AmiiboAPI record %d has an invalid %s" % (index, field))
+        for field in ("name", "gameSeries"):
+            if not isinstance(ami.get(field), str) or not ami[field].strip() or "\0" in ami[field]:
+                raise ValueError("AmiiboAPI record %d has an invalid %s" % (index, field))
+            # Reject lone JSON surrogate escapes before opening UTF-8 outputs.
+            ami[field].encode("utf8")
+        amiibo = Amiibo()
+        amiibo.id = (ami["head"] + ami["tail"]).lower()
+        if amiibo.id == "0000000000000000" or amiibo.id in seen:
+            raise ValueError("AmiiboAPI record %d has a duplicate or zero ID" % index)
+        seen.add(amiibo.id)
+        amiibo.name_en = ami["name"]
+        amiibo.name_cn = ""  # The API has no translation; use the UI's English fallback.
+        amiibo.game_series = ami["gameSeries"]
+        amiibos.append(amiibo)
+    return amiibos
+
+
+def c_string(value):
+    """Escape metadata as a C string body while preserving UTF-8 glyphs."""
+    escaped = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
+    return "".join(escaped.get(char, "\\%03o" % ord(char) if ord(char) < 32 or ord(char) == 127 else char)
+                   for char in value)
 
 
 def read_amiibo_from_csv():
@@ -102,8 +129,8 @@ def gen_amiibo_data_c_file(amiibos):
         f.write('const db_amiibo_t amiibo_list[] = {\n')
         for amiibo in amiibos:
             f.write('{0x%s, 0x%s, "%s", "%s"}, \n' % 
-                    (amiibo.id[0:8], amiibo.id[8:16], amiibo.name_en, 
-             amiibo.name_cn)) 
+                    (amiibo.id[0:8], amiibo.id[8:16], c_string(amiibo.name_en),
+             c_string(amiibo.name_cn)))
         f.write("{0, 0, 0, 0}\n")
         f.write("};\n")
         f.write("// Subsctracting one because of the end-marker entry {0,0,0,0} at the end.\n")
@@ -165,8 +192,8 @@ def gen_amiibo_link_c_file(links):
         f.write('const db_link_t link_list[] = {\n')
         for link in links:
             f.write('{%s, 0x%s, 0x%s, "%s", "%s", "%s"}, \n' % 
-                    (link.game_id, link.amiibo_id[0:8], link.amiibo_id[8:16], link.note_en, 
-             link.note_cn, link.note_it))  
+                    (link.game_id, link.amiibo_id[0:8], link.amiibo_id[8:16], c_string(link.note_en),
+             c_string(link.note_cn), c_string(link.note_it)))
         f.write("{0, 0, 0, 0, 0, 0}\n")
         f.write("};\n")
 
@@ -178,8 +205,8 @@ def gen_amiibo_game_c_file(games, links):
         f.write('const db_game_t game_list[] = {\n')
         for game in games:
             f.write('{%s, %s, "%s", "%s", %s, %s}, \n' % 
-                    (game.id, game.parent_id, game.name_en, 
-             game.name_cn, game.order, count_game_links( games, links, game.id)))
+                    (game.id, game.parent_id, c_string(game.name_en),
+             c_string(game.name_cn), game.order, count_game_links( games, links, game.id)))
         f.write("{0, 0, 0, 0, 0}\n")
         f.write("};\n")
 
@@ -205,17 +232,30 @@ def gen_other_link(amiibos, links):
     return links
 
 
-amiibos_api = fetch_amiibo_from_api()
-amiibos_csv = read_amiibo_from_csv()
-amiibos_merged = merge_amiibo(amiibos_csv, amiibos_api)
-write_amiibo_to_csv(amiibos_merged)
-amiibos_merged.sort(key=lambda x: x.id)
-print("Found %d amiibo records." % len(amiibos_merged))
-gen_amiibo_data_c_file(amiibos_merged)
+def main():
+    parser = argparse.ArgumentParser(description="Generate C database from local metadata CSVs.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--offline", action="store_true", help="Use local CSVs without network access (default).")
+    mode.add_argument("--refresh", action="store_true", help="Fetch AmiiboAPI and update the source CSV before generation.")
+    args = parser.parse_args()
+    try:
+        amiibos_api = fetch_amiibo_from_api() if args.refresh else []
+    except (OSError, ValueError) as error:
+        parser.exit(1, "AmiiboAPI refresh failed; local files were not changed: %s\n" % error)
+    amiibos_csv = read_amiibo_from_csv()
+    amiibos_merged = merge_amiibo(amiibos_csv, amiibos_api)
+    games = read_games_from_csv()
+    links = read_link_from_csv()
+    if args.refresh:
+        write_amiibo_to_csv(amiibos_merged)
+    amiibos_merged.sort(key=lambda x: x.id)
+    print("Found %d amiibo records." % len(amiibos_merged))
+    gen_amiibo_data_c_file(amiibos_merged)
+    links = gen_other_link(amiibos_merged, links)
+    gen_amiibo_game_c_file(games, links)
+    gen_amiibo_link_c_file(links)
 
-games = read_games_from_csv()
-links = read_link_from_csv()
-links = gen_other_link(amiibos_merged, links)
-gen_amiibo_game_c_file(games, links)
-gen_amiibo_link_c_file(links)
+
+if __name__ == "__main__":
+    main()
 

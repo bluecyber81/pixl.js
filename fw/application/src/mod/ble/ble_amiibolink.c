@@ -12,12 +12,64 @@
 static ntag_t m_ntag = {0};
 uint32_t m_data_pos = 0;
 uint32_t index = 0;
+static bool m_transfer_active;
 ble_amiibolink_event_handler_t m_event_handler = {0};
 void *m_event_ctx = {0};
 uint8_t m_key1 = 0;
 uint8_t m_key2 = 0;
 ble_amiibolink_ver_t m_ver = BLE_AMIIBOLINK_VER_V2;
 ble_amiibolink_mode_t  m_mode = BLE_AMIIBOLINK_MODE_RANDOM;
+
+/* The buffer helpers deliberately do not check bounds. Validate the complete
+ * field before reading it, including callers that pass a sliced buffer. */
+static bool link_has(const buffer_t *buffer, size_t length) {
+    return buffer && buffer->buff && buffer->limit <= buffer->cap &&
+           buffer->pos <= buffer->limit && length <= buffer->limit - buffer->pos;
+}
+
+void ble_amiibolink_reset_transfer(void) {
+    m_data_pos = 0;
+    index = 0;
+    m_transfer_active = false;
+    m_key1 = 0;
+    m_key2 = 0;
+}
+
+static void link_begin_transfer(void) {
+    memset(&m_ntag, 0, sizeof(m_ntag));
+    m_data_pos = 0;
+    index = 0;
+    m_transfer_active = true;
+}
+
+static bool link_append(const uint8_t *data, size_t length) {
+    if (!m_transfer_active || !data || m_data_pos > sizeof(m_ntag.data) ||
+        length > sizeof(m_ntag.data) - m_data_pos) {
+        return false;
+    }
+    memcpy(m_ntag.data + m_data_pos, data, length);
+    m_data_pos += length;
+    return true;
+}
+
+static bool link_commit_transfer(void) {
+    /* AmiiboLink slots persist NTAG215 only; I2C 2K remains a file-transfer
+     * feature and must not be acknowledged then truncated by this app. */
+    if (!m_transfer_active || !is_valid_amiibo_ntag_by_size(m_data_pos) ||
+        _ntag_type(m_data_pos) != NTAG_215) {
+        return false;
+    }
+    m_ntag.type = _ntag_type(m_data_pos);
+    /* Retire the transaction before callbacks can enter another transfer. */
+    m_transfer_active = false;
+    m_data_pos = 0;
+    index = 0;
+    ntag_emu_set_tag(&m_ntag);
+    if (m_event_handler) {
+        m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, (uint8_t *)&m_ntag, sizeof(m_ntag));
+    }
+    return true;
+}
 
 
 void ble_amiibolink_set_event_handler(ble_amiibolink_event_handler_t handler, void *ctx) {
@@ -27,6 +79,7 @@ void ble_amiibolink_set_event_handler(ble_amiibolink_event_handler_t handler, vo
 
 
 void ble_amiibolink_set_version(ble_amiibolink_ver_t ver){
+    ble_amiibolink_reset_transfer();
     m_ver = ver;
 }
 
@@ -77,11 +130,18 @@ void ble_amiibolink_send_cmd_v2(uint16_t cmd) {
     );
     NRF_LOG_INFO("nrf_crypto_aes_encrypt:out_len=%d err=%d msg=%s", out_len, err, nrf_crypto_error_string_get(err));
 
+    if (err != NRF_SUCCESS || out_len != 16) {
+        return;
+    }
+
     ble_nus_tx_data(&link_data, sizeof(link_data_t));
 }
 
 
 void ble_amiibolink_send_data_v2(uint8_t* data, size_t data_len) {
+    if (!data || data_len > sizeof(((link_data_t *)0)->data)) {
+        return;
+    }
     link_data_t link_data = {0};
     link_data.key1 = m_key1;
     link_data.key2 = m_key2;
@@ -115,6 +175,9 @@ void ble_amiibolink_send_data_v2(uint8_t* data, size_t data_len) {
         &out_len
     );
     NRF_LOG_INFO("nrf_crypto_aes_encrypt:out_len=%d err=%d msg=%s", out_len, err, nrf_crypto_error_string_get(err));
+    if (err != NRF_SUCCESS || out_len != sizeof(in_buffer)) {
+        return;
+    }
     link_data.data_len = out_len;
     link_data.de_data_len = data_len;
 
@@ -139,17 +202,26 @@ void ble_amiibolink_send_data(uint8_t *data, uint16_t data_len) {
     }
 }
 
-void ble_amiibolink_write_ntag(buffer_t *buffer) {
+static bool ble_amiibolink_write_ntag(buffer_t *buffer) {
+    if (!link_has(buffer, 2)) {
+        return false;
+    }
     buff_get_u8(buffer); // 00
     uint8_t size = buff_get_u8(buffer);
-    void *data_ptr = buff_get_data_ptr_pos(buffer);
-    memcpy(m_ntag.data + m_data_pos, data_ptr, size);
-    m_data_pos += size;
+    if (!link_has(buffer, size)) {
+        return false;
+    }
+    /* Optional sequence bytes follow the payload in the original client. */
+    return link_append(buff_get_data_ptr_pos(buffer), size);
 }
 
-void ble_amiibolink_init(void) {}
+void ble_amiibolink_init(void) { ble_amiibolink_reset_transfer(); }
 
 void ble_amiibolink_process_cmd(buffer_t* buffer){
+
+    if (!link_has(buffer, 2)) {
+        return;
+    }
 
     ble_amiibolink_mode_t mode;
     uint16_t cmd = buff_get_u16(buffer);
@@ -176,7 +248,13 @@ void ble_amiibolink_process_cmd(buffer_t* buffer){
     case 0xB1A1: // send model code ??
         // a1 b1 01
         // 01: 随机模式 02: 按序模式 03:读写模式
+        if (!link_has(buffer, 1)) {
+            return;
+        }
         mode = (ble_amiibolink_mode_t)buff_get_u8(buffer);
+        if (mode < BLE_AMIIBOLINK_MODE_RANDOM || mode > BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN) {
+            return;
+        }
         if (m_event_handler) {
             m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_SET_MODE, &mode, sizeof(ble_amiibolink_mode_t));
         }
@@ -189,7 +267,7 @@ void ble_amiibolink_process_cmd(buffer_t* buffer){
 
     case 0xACAC: // seq 2
         // ac ac 00 04 00 00 02 1c //540
-        m_data_pos = 0;
+        link_begin_transfer();
         ble_amiibolink_send_cmd(0xCACA);
         break;
 
@@ -199,7 +277,9 @@ void ble_amiibolink_process_cmd(buffer_t* buffer){
         break;
 
     case 0xAADD: // seq 4
-        ble_amiibolink_write_ntag(buffer);
+        if (!ble_amiibolink_write_ntag(buffer)) {
+            return;
+        }
         ble_amiibolink_send_cmd(0xDDAA);
         break;
 
@@ -209,9 +289,8 @@ void ble_amiibolink_process_cmd(buffer_t* buffer){
 
     case 0xDDCC: // seq 6
         NRF_LOG_INFO("ntag_emu_set_tag");
-        ntag_emu_set_tag(&m_ntag);
-        if (m_event_handler) {
-            m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, &m_ntag, sizeof(m_ntag));
+        if (!link_commit_transfer()) {
+            return;
         }
         ble_amiibolink_send_cmd(0xCCDD);
         break;
@@ -220,12 +299,18 @@ void ble_amiibolink_process_cmd(buffer_t* buffer){
 
 
 void ble_amiibolink_received_data_v1(const uint8_t *data, size_t length){
+    if (!data || length < 2 || length > MAX_MTU_DAT_SIZE) {
+        return;
+    }
     NEW_BUFFER_READ(buffer, (void *)data, length);
     ble_amiibolink_process_cmd(&buffer);
 }
 
 
 void ble_amiibolink_received_data_v2(const uint8_t *data, size_t length) {
+    if (!data || length < 2 || length > MAX_MTU_DAT_SIZE) {
+        return;
+    }
     NRF_LOG_INFO("ble data received %d bytes", length);
     //NRF_LOG_HEXDUMP_INFO(data, length);
 
@@ -238,22 +323,23 @@ void ble_amiibolink_received_data_v2(const uint8_t *data, size_t length) {
 
     //  13   45     10       02     76 98 8D 3D.....
     // key1 key2 datalen dedatalen data
-    link_data_t *link_data = (link_data_t *) data;
+    const size_t cipher_len = data[2];
+    const size_t data_len = data[3];
+    if (cipher_len == 0 || cipher_len % 16 != 0 || cipher_len > length - 4 ||
+        data_len < 2 || data_len > cipher_len) {
+        return;
+    }
 
     nrf_crypto_aes_context_t aes_ecb_ctx;
 
     uint8_t buf[MAX_MTU_DAT_SIZE];
     size_t out_len = sizeof(buf);
-    size_t data_len = link_data->de_data_len;
 
     uint8_t key[] = {
         0x4B, 0x47, 0x46, 0x5F, 0x41, 0x4D, 0x49,
         0x4C, 0x07, 0xE7, 0x04, 0x06, 0x0A, 0x2A,
-        link_data->key1, link_data->key2 // 随机密钥
+        data[0], data[1] // 随机密钥
     };
-
-    m_key1 = link_data->key1;
-    m_key2 = link_data->key2;
 
     ret_code_t err = nrf_crypto_aes_crypt(
         &aes_ecb_ctx,
@@ -261,14 +347,21 @@ void ble_amiibolink_received_data_v2(const uint8_t *data, size_t length) {
         NRF_CRYPTO_DECRYPT,
         &key,
         NULL,
-        link_data->data,
-        link_data->data_len,
+        /* SDK 17.1 declares this [in] parameter mutable; ECB does not write it. */
+        (uint8_t *)(uintptr_t)(data + 4),
+        cipher_len,
         buf,
         &out_len
     );
 
-    NRF_LOG_INFO("decrypted data len: de_data_len=%d, decrypted_len=%d", link_data->de_data_len, out_len);
+    NRF_LOG_INFO("decrypted data len: de_data_len=%d, decrypted_len=%d", data_len, out_len);
     NRF_LOG_INFO("nrf_crypto_aes_decrypt: %d %s", err, nrf_crypto_error_string_get(err));
+
+    if (err != NRF_SUCCESS || out_len > sizeof(buf) || data_len > out_len) {
+        return;
+    }
+    m_key1 = data[0];
+    m_key2 = data[1];
 
     NRF_LOG_HEXDUMP_DEBUG(&buf, data_len);
     NEW_BUFFER_READ(buffer, (void *)&buf, data_len);
@@ -284,6 +377,9 @@ uint8_t get_xor(const uint8_t *data, size_t length) {
 }
 
 void amiloop_send_data(buffer_t *buf) {
+    if (!buf || !buf->buff || buf->limit > buf->cap || buf->limit > MAX_MTU_DAT_SIZE - 4) {
+        return;
+    }
     NEW_BUFFER_LOCAL(buffer, MAX_MTU_DAT_SIZE);
     buff_put_u8(&buffer, 0x02); // magic
     buff_put_u8(&buffer, buff_get_size(buf)); // len
@@ -295,6 +391,18 @@ void amiloop_send_data(buffer_t *buf) {
 }
 
 void ble_amiloop_received_data(const uint8_t *m_data, size_t length) {
+    /* Validate framing before any length subtraction, stack allocation or
+     * buffer helper. Payload length includes the command byte. */
+    if (!m_data || length < 5 || length > MAX_MTU_DAT_SIZE || m_data[0] != 0x02 ||
+        m_data[1] != length - 4 || m_data[length - 1] != 0x03) {
+        return;
+    }
+    if (m_data[length - 2] != get_xor(m_data + 1, length - 3)) {
+        NEW_BUFFER_LOCAL(error, 1);
+        buff_put_u8(&error, 0x01);
+        amiloop_send_data(&error);
+        return;
+    }
     NRF_LOG_INFO("ble data received %d bytes", length);
     NEW_BUFFER_READ(buffer, (void *)m_data, length);
     NEW_BUFFER_LOCAL(output, MAX_MTU_DAT_SIZE);
@@ -310,35 +418,44 @@ void ble_amiloop_received_data(const uint8_t *m_data, size_t length) {
     switch (flag)
     {
     case 0x87: { // WRITE_ALL
+        if (len < 3) {
+            buff_put_u8(&output, 0x01);
+            amiloop_send_data(&output);
+            return;
+        }
         uint8_t is_end = buff_get_u8(&buffer);
         NRF_LOG_INFO("amiloop is_end: %02x", is_end);
         uint8_t idx = buff_get_u8(&buffer);
         NRF_LOG_INFO("amiloop idx: %02x", idx);
-        uint8_t data[len - 3];
-        buff_get_byte_array(&buffer, data, len - 3);
-        uint8_t xor = buff_get_u8(&buffer);
-
-        if (xor != get_xor(m_data + 1, length - 3)) {
-            NRF_LOG_WARNING("amiloop xor error: %02x", xor);
+        const size_t data_size = len - 3;
+        const uint8_t *data = buff_get_data_ptr_pos(&buffer);
+        if (is_end > 1) {
             buff_put_u8(&output, 0x01);
             amiloop_send_data(&output);
             return;
         }
 
-        if (index < idx) {
-            index = idx;
-        } else {
-            index = 0;
-            m_data_pos = 0;
+        /* Preserve both zero- and one-based clients and their restart rule. */
+        bool starts_transfer = !m_transfer_active || index >= idx;
+        size_t new_size = (starts_transfer ? 0 : m_data_pos) + data_size;
+        if (new_size > sizeof(m_ntag.data) ||
+            (is_end && (!is_valid_amiibo_ntag_by_size(new_size) || _ntag_type(new_size) != NTAG_215))) {
+            buff_put_u8(&output, 0x01);
+            amiloop_send_data(&output);
+            return;
         }
-        memcpy(m_ntag.data + m_data_pos, data, len - 3);
-        m_data_pos += len - 3;
+        if (starts_transfer) {
+            link_begin_transfer();
+        }
+        if (!link_append(data, data_size)) {
+            buff_put_u8(&output, 0x01);
+            amiloop_send_data(&output);
+            return;
+        }
+        index = idx;
 
         if (is_end == 1) {
-            ntag_emu_set_tag(&m_ntag);
-            if (m_event_handler) {
-                m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, &m_ntag, sizeof(m_ntag));
-            }
+            link_commit_transfer();
         }
         buff_put_u8(&output, 0x00);
         amiloop_send_data(&output);
@@ -356,6 +473,9 @@ void ble_amiloop_received_data(const uint8_t *m_data, size_t length) {
         // 0x00 随机模式
         // 0x01 顺序模式
         // 0x02 读写模式
+        if (len < 2) {
+            return;
+        }
         uint8_t mode = buff_get_u8(&buffer);
         NRF_LOG_INFO("amiloop mode: %d", mode);
         ble_amiibolink_mode_t link_mode;
@@ -380,7 +500,7 @@ void ble_amiloop_received_data(const uint8_t *m_data, size_t length) {
             NRF_LOG_INFO("amiloop mode error: %02x", mode);
             buff_put_u8(&output, 0x01);
             amiloop_send_data(&output);
-            break;
+            return;
         }
         if (m_event_handler) {
             m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_SET_MODE, &link_mode, sizeof(ble_amiibolink_mode_t));

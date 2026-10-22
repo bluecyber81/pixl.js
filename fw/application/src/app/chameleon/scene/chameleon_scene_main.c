@@ -9,6 +9,7 @@
 #include "hal_nfc_t2t.h"
 #include "nfc_mf1.h"
 #include "tag_emulation.h"
+#include "tag_helper.h"
 
 static void chameleon_scene_main_event_cb(chameleon_view_event_t event, chameleon_view_t *p_view) {
     app_chameleon_t *app = p_view->user_data;
@@ -18,15 +19,26 @@ static void chameleon_scene_main_event_cb(chameleon_view_event_t event, chameleo
         uint8_t slot = tag_emulation_get_slot();
         slot = tag_emulation_slot_find_prev(slot);
         tag_emulation_change_slot(slot, true);
+        if (!tag_emulation_active_data_ready()) app_chameleon_show_load_error(app);
     } else if (event == CHAMELEON_VIEW_EVENT_NEXT) {
         uint8_t slot = tag_emulation_get_slot();
         slot = tag_emulation_slot_find_next(slot);
         tag_emulation_change_slot(slot, true);
+        if (!tag_emulation_active_data_ready()) app_chameleon_show_load_error(app);
     }
 }
 
 void chameleon_scene_main_on_enter(void *user_data) {
     app_chameleon_t *app = user_data;
+
+    if (tag_helper_get_active_tag_type() == TAG_TYPE_UNDEFINED) {
+        mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, CHAMELEON_SCENE_MENU_CARD_TYPE);
+        return;
+    }
+    if (!tag_emulation_active_data_ready()) {
+        app_chameleon_show_load_error(app);
+        return;
+    }
 
     hal_nfc_set_nrfx_irq_enable(true);
 

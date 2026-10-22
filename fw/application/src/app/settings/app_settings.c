@@ -1,7 +1,9 @@
 #include "app_settings.h"
 #include "settings_scene.h"
 #include "settings.h"
+#include "nrf_log.h"
 #include "i18n/language.h"
+#include "mui_nav_diag.h"
 
 static void app_settings_on_run(mini_app_inst_t *p_app_inst);
 static void app_settings_on_kill(mini_app_inst_t *p_app_inst);
@@ -10,18 +12,31 @@ static void app_settings_on_event(mini_app_inst_t *p_app_inst, mini_app_event_t 
 void app_settings_on_run(mini_app_inst_t *p_app_inst) {
 
     app_settings_t *p_app_handle = mui_mem_malloc(sizeof(app_settings_t));
-
-    p_app_inst->p_handle = p_app_handle;
+    if (!p_app_handle) { p_app_inst->p_handle = NULL; return; }
+    memset(p_app_handle, 0, sizeof(app_settings_t));
+    /* Construct every owned UI object before any app activation. */
     p_app_handle->p_view_dispatcher = mui_view_dispatcher_create();
+    if (!p_app_handle->p_view_dispatcher) goto startup_failed;
     p_app_handle->p_list_view = mui_list_view_create();
-    mui_list_view_set_user_data(p_app_handle->p_list_view, p_app_handle);
+    if (!p_app_handle->p_list_view) goto startup_failed;
     p_app_handle->p_progress_bar = mui_progress_bar_create();
+    if (!p_app_handle->p_progress_bar) goto startup_failed;
+    p_app_handle->p_msg_box = mui_msg_box_create();
+    if (!p_app_handle->p_msg_box) goto startup_failed;
+    p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
+    if (!p_app_handle->p_scene_dispatcher) goto startup_failed;
+    p_app_handle->p_toast_view = mui_toast_view_create();
+    if (!p_app_handle->p_toast_view) goto startup_failed;
+    p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
+    if (!p_app_handle->p_view_dispatcher_toast) goto startup_failed;
+    p_app_inst->p_handle = p_app_handle;
+
+
+    mui_list_view_set_user_data(p_app_handle->p_list_view, p_app_handle);
     mui_progress_bar_set_user_data(p_app_handle->p_progress_bar, p_app_handle);
 
-    p_app_handle->p_msg_box = mui_msg_box_create();
     mui_msg_box_set_user_data(p_app_handle->p_msg_box, p_app_handle);
 
-    p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
 
     mui_scene_dispatcher_set_user_data(p_app_handle->p_scene_dispatcher, p_app_handle);
     mui_scene_dispatcher_set_scene_defines(p_app_handle->p_scene_dispatcher, settings_scene_defines,
@@ -36,23 +51,38 @@ void app_settings_on_run(mini_app_inst_t *p_app_inst) {
 
     mui_view_dispatcher_attach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);
 
-    p_app_handle->p_toast_view = mui_toast_view_create();
     mui_toast_view_set_user_data(p_app_handle->p_toast_view, p_app_handle);
 
-    p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
     mui_view_dispatcher_add_view(p_app_handle->p_view_dispatcher_toast, SETTINGS_VIEW_ID_TOAST,
                                  mui_toast_view_get_view(p_app_handle->p_toast_view));
     mui_view_dispatcher_attach(p_app_handle->p_view_dispatcher_toast, MUI_LAYER_TOAST);
     mui_view_dispatcher_switch_to_view(p_app_handle->p_view_dispatcher_toast, SETTINGS_VIEW_ID_TOAST);
 
     mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, SETTINGS_SCENE_MAIN);
+
+    return;
+
+startup_failed:
+    mui_view_dispatcher_free(p_app_handle->p_view_dispatcher_toast);
+    mui_toast_view_free(p_app_handle->p_toast_view);
+    mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
+    mui_msg_box_free(p_app_handle->p_msg_box);
+    mui_progress_bar_free(p_app_handle->p_progress_bar);
+    mui_list_view_free(p_app_handle->p_list_view);
+    mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);
+    mui_mem_free(p_app_handle);
+    p_app_inst->p_handle = NULL;
 }
 
 void app_settings_on_kill(mini_app_inst_t *p_app_inst) {
-
-    settings_save();
+    mui_nav_diag_end();
 
     app_settings_t *p_app_handle = p_app_inst->p_handle;
+    if (!p_app_handle || !p_app_handle->exit_saved) {
+        int32_t result = settings_save();
+        if (result != NRF_SUCCESS) NRF_LOG_WARNING("Settings could not be saved on app exit: %d", result);
+    }
+    if (!p_app_handle) return;
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_WINDOW);
 

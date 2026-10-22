@@ -1,0 +1,245 @@
+/* Actual allocators, Mlib containers and extracted UI loaders. Only VFS/UI
+ * peripherals are stubbed. Allocation fault injection does not alter Mlib. */
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define mui_mem_malloc real_malloc
+#define mui_mem_realloc real_realloc
+#define mui_mem_free real_free
+#include "mui_mem.c"
+#undef mui_mem_malloc
+#undef mui_mem_realloc
+#undef mui_mem_free
+static unsigned allocations, fail_at;
+void *mui_mem_malloc(size_t n) { if (++allocations == fail_at) return NULL; return real_malloc(n); }
+void *mui_mem_realloc(void *p,size_t n) { if (++allocations == fail_at) return NULL; return real_realloc(p,n); }
+void mui_mem_free(void *p) { real_free(p); }
+#include "mui_alloc.h"
+
+typedef struct mui_list_item_s mui_list_item_t;
+@ITEM_DEFINITION@
+typedef struct {
+    mui_list_item_array_t items;
+    uint16_t focus_index,scroll_offset;
+    void *user_data;
+} mui_list_view_t;
+typedef int (*mui_list_view_item_cmp_cb)(const mui_list_item_t*,const mui_list_item_t*);
+static void mui_list_view_set_focus(mui_list_view_t *v,uint16_t focus) {
+    v->focus_index=focus<v->items->size?focus:0;
+    v->scroll_offset=0;
+}
+@CLEAR_ITEMS@
+@TRY_APPEND@
+@SORT_ITEMS@
+
+typedef struct { unsigned index; } vfs_dir_t;
+typedef struct { uint8_t meta[8]; unsigned type,size; char name[48]; } vfs_obj_t;
+typedef struct { bool has_flags; unsigned flags; } vfs_meta_t;
+typedef struct {
+    int (*open_dir)(const char*,vfs_dir_t*);
+    int (*read_dir)(vfs_dir_t*,vfs_obj_t*);
+    int (*close_dir)(vfs_dir_t*);
+} vfs_driver_t;
+typedef struct { uint8_t focus,max_ntags;void *user_data; } detail_view_t;
+typedef struct {
+    mui_list_view_t *p_list_view;
+    string_array_t amiibo_files;
+    string_t current_folder,current_file;
+    unsigned current_drive;
+    detail_view_t *p_amiibo_detail_view;
+    void *p_view_dispatcher;
+    void *p_scene_dispatcher;
+    bool reload_amiibo_files;
+} app_amiibo_t;
+#define VFS_OK 0
+#define VFS_TYPE_DIR 2
+#define VFS_TYPE_REG 1
+#define VFS_OBJ_FLAG_HIDDEN 1
+#define AMIIBO_VIEW_ID_LIST 0
+#define AMIIBO_SCENE_AMIIBO_DETAIL_MENU 1
+#define AMIIBO_SCENE_AMIIBO_DETAIL 2
+#define AMIIBO_SCENE_FILE_BROWSER_MENU 3
+#define MINI_APP_ID_AMIIBO 1
+#define VFS_MAX_PATH_LEN 64
+typedef enum { MUI_LIST_VIEW_EVENT_SELECTED,MUI_LIST_VIEW_EVENT_LONG_SELECTED } mui_list_view_event_t;
+typedef enum { AMIIBO_DETAIL_VIEW_EVENT_MENU,AMIIBO_DETAIL_VIEW_EVENT_UPDATE } amiibo_detail_view_event_t;
+typedef detail_view_t amiibo_detail_view_t;
+#define FOLDER_LIST_PARENT 0xffff
+#define ICON_HOME 1
+#define ICON_BACK 2
+#define ICON_FOLDER 3
+#define ICON_FILE 4
+#define ICON_ERROR 5
+#define MAIN_MENU 0
+#define _L_OPEN_FOLDER_FAILED 1
+#define _T(x) getLangString(x)
+static unsigned entries,name_length,opens,closes,reads,view_switches,errors;
+static unsigned scene_changes,tag_reads,kills;
+static bool hidden,open_failure,memory_error;
+static const char *getLangString(unsigned id) { return id ? "Ordnerfehler" : "Hauptmenue"; }
+static void *mui(void) { return NULL; }
+static void mui_show_memory_error(void *m) { (void)m; ++errors;memory_error=true; }
+static int opened(const char *name,vfs_dir_t *d) {
+    (void)name;++opens;d->index=0;return open_failure?-1:VFS_OK;
+}
+static int read_entry(vfs_dir_t *d,vfs_obj_t *o) {
+    ++reads;if(d->index>=entries)return 1;
+    memset(o,0,sizeof(*o));o->type=VFS_TYPE_REG;o->size=540;
+    memset(o->name,'A',name_length);o->name[name_length]=0;
+    if(name_length>=4){char prefix[5];snprintf(prefix,sizeof(prefix),"%04u",d->index%10000);memcpy(o->name,prefix,4);}
+    if(hidden && d->index%2)o->meta[0]=VFS_OBJ_FLAG_HIDDEN;
+    ++d->index;return VFS_OK;
+}
+static int closed(vfs_dir_t *d){(void)d;++closes;return VFS_OK;}
+static vfs_driver_t driver={opened,read_entry,closed};
+static vfs_driver_t *vfs_get_driver(unsigned n){(void)n;return &driver;}
+static void vfs_meta_decode(const uint8_t *p,size_t n,vfs_meta_t *m){(void)n;m->has_flags=true;m->flags=p[0];}
+static bool is_valid_amiibo_ntag_by_size(unsigned n){return n==540;}
+static void mui_view_dispatcher_switch_to_view(void *d,unsigned id){(void)d;(void)id;++view_switches;}
+static void amiibo_detail_view_set_focus(detail_view_t *v,uint8_t f){v->focus=f;}
+static void amiibo_detail_view_set_max_ntags(detail_view_t *v,uint8_t n){v->max_ntags=n;}
+static uint8_t amiibo_detail_view_get_focus(detail_view_t *v){return v->focus;}
+static void mui_scene_dispatcher_next_scene(void *d,unsigned id){(void)d;(void)id;++scene_changes;}
+static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *a,const char *f){(void)a;(void)f;++tag_reads;return true;}
+static void *mini_app_launcher(void){return NULL;}
+static void mini_app_launcher_kill(void *l,unsigned id){(void)l;(void)id;++kills;}
+struct cwk_segment { const char *begin; };
+static void cwk_path_get_last_segment(const char *p,struct cwk_segment *s){s->begin=strrchr(p,'/');assert(s->begin);}
+@BROWSER_COMPARE@
+@BROWSER_RELOAD@
+@DETAIL_COMPARE@
+@DETAIL_RELOAD@
+@BROWSER_SELECTED@
+@DETAIL_EVENT@
+
+static unsigned initial_free,initial_blocks,cases;
+static mui_list_view_t list;
+static detail_view_t detail;
+static app_amiibo_t app;
+static void fixture(void) {
+    mui_mem_monitor_t m;mui_mem_monitor(&m);initial_free=m.free_size;initial_blocks=m.used_cnt;
+    memset(&list,0,sizeof(list));mui_list_item_array_init(list.items);
+    memset(&detail,0,sizeof(detail));memset(&app,0,sizeof(app));
+    app.p_list_view=&list;app.p_amiibo_detail_view=&detail;
+    list.user_data=&app;detail.user_data=&app;
+    string_array_init(app.amiibo_files);string_init(app.current_folder);string_init(app.current_file);
+    string_set_str(app.current_folder,"/");
+    allocations=fail_at=opens=closes=reads=view_switches=errors=0;
+    scene_changes=tag_reads=kills=0;
+    hidden=open_failure=memory_error=false;entries=20;name_length=47;
+}
+static void cleanup(void) {
+    mui_list_view_clear_items(&list);mui_list_item_array_clear(list.items);
+    string_array_clear(app.amiibo_files);string_clear(app.current_file);string_clear(app.current_folder);
+    mui_mem_monitor_t m;mui_mem_monitor(&m);
+    assert(m.free_size==initial_free && m.used_cnt==initial_blocks);
+    assert(tlsf_check(m_tlsf)==0 && tlsf_check_pool(tlsf_get_pool(m_tlsf))==0);
+    ++cases;
+}
+static void append_failures(void) {
+    const char *title="47-byte names use heap memory rather than inline";
+    const char *subtitle="A long subtitle is another separate checked allocation.";
+    for(unsigned failure=1;failure<=3;failure++) {
+        fixture();assert(mui_list_view_try_add_item_ext(&list,1,"a",NULL,(void*)0x1234));
+        size_t old_size=list.items->size,old_alloc=list.items->alloc;
+        /* Fill inline rows until the next append needs array growth. */
+        while(list.items->size<list.items->alloc)assert(mui_list_view_try_add_item_ext(&list,1,"b",NULL,NULL));
+        old_size=list.items->size;mui_list_item_t *old_ptr=list.items->ptr;
+        mui_mem_monitor_t before,after;mui_mem_monitor(&before);
+        fail_at=allocations+failure;
+        assert(!mui_list_view_try_add_item_ext(&list,2,title,subtitle,(void*)0x5678));
+        mui_mem_monitor(&after);
+        assert(list.items->size==old_size && list.items->alloc==old_alloc && list.items->ptr==old_ptr);
+        assert(list.items->ptr[0].user_data==(void*)0x1234 && !strcmp(string_get_cstr(list.items->ptr[0].text),"a"));
+        assert(before.free_size==after.free_size && before.used_cnt==after.used_cnt);
+        fail_at=0;assert(mui_list_view_try_add_item_ext(&list,2,title,subtitle,(void*)0x5678));
+        assert(list.items->ptr[old_size].user_data==(void*)0x5678);
+        assert(!strcmp(string_get_cstr(list.items->ptr[old_size].sub_text),subtitle));
+        cleanup();
+    }
+}
+static void loaders(void) {
+    unsigned browser_allocs,detail_allocs;
+    fixture();amiibo_scene_file_browser_reload_folders(&app);browser_allocs=allocations;
+    assert(!errors && list.items->size==entries+1 && opens==1 && closes==1 && view_switches==1);cleanup();
+    for(unsigned failure=1;failure<=browser_allocs;failure++){
+        fixture();fail_at=failure;amiibo_scene_file_browser_reload_folders(&app);
+        assert(errors==1 && memory_error && list.items->size==0 && view_switches==0);
+        assert(closes==opens);cleanup();
+    }
+    fixture();assert(amiibo_scene_amiibo_detail_reload_files(&app));detail_allocs=allocations;
+    assert(!errors && app.amiibo_files->size==entries && detail.max_ntags==entries && opens==closes);cleanup();
+    for(unsigned failure=1;failure<=detail_allocs;failure++){
+        fixture();fail_at=failure;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
+        assert(errors==1 && memory_error && app.amiibo_files->size==0 && detail.max_ntags==0 && opens==closes);cleanup();
+    }
+    fixture();entries=1000;amiibo_scene_file_browser_reload_folders(&app);
+    assert(memory_error && list.items->size==0 && closes==1 && reads<entries);
+    /* Recover without a reset: the same containers can load a small folder. */
+    fail_at=0;entries=2;memory_error=false;amiibo_scene_file_browser_reload_folders(&app);
+    assert(!memory_error && list.items->size==3 && closes==2);cleanup();
+    fixture();entries=1000;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(memory_error && app.amiibo_files->size==0 && closes==1 && reads<entries);
+    entries=2;memory_error=false;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(!memory_error && app.amiibo_files->size==2 && closes==2);cleanup();
+    fixture();entries=256;name_length=1;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(memory_error && detail.max_ntags==0 && app.amiibo_files->size==0 && closes==1);cleanup();
+    fixture();entries=255;name_length=1;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(detail.max_ntags==255);cleanup();
+    fixture();hidden=true;entries=10;amiibo_scene_file_browser_reload_folders(&app);
+    assert(list.items->size==6);assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(app.amiibo_files->size==5);cleanup();
+    fixture();open_failure=true;amiibo_scene_file_browser_reload_folders(&app);
+    assert(list.items->size==2 && closes==0);cleanup();
+    fixture();entries=0;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(detail.max_ntags==0);detail.focus=255;
+    app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0);
+    detail.focus=0;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0);cleanup();
+    fixture();open_failure=true;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0 && closes==0);cleanup();
+    fixture();entries=2;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    detail.focus=1;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==1);
+    detail.focus=2;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==1);cleanup();
+}
+static void selection_failures(void){
+    for(unsigned failure=1;failure<=2;failure++){
+        fixture();assert(mui_list_view_try_add_item_ext(&list,ICON_FOLDER,"A fairly long folder name",NULL,(void*)-1));
+        fail_at=allocations+failure;
+        amiibo_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items->ptr[0]);
+        assert(memory_error && !strcmp(string_get_cstr(app.current_folder),"/") && !opens && !scene_changes);
+        cleanup();
+    }
+    fixture();assert(mui_list_view_try_add_item_ext(&list,ICON_FILE,"A fairly long amiibo filename.bin",NULL,(void*)-1));
+    fail_at=allocations+1;amiibo_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items->ptr[0]);
+    assert(memory_error && !scene_changes && !app.reload_amiibo_files);
+    fail_at=0;memory_error=false;amiibo_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items->ptr[0]);
+    assert(!memory_error && scene_changes==1 && app.reload_amiibo_files);cleanup();
+}
+static void strings_and_reloads(void){
+    const unsigned lengths[]={0,1,6,7,14,15,16,47};
+    for(unsigned n=0;n<sizeof(lengths)/sizeof(lengths[0]);n++){
+        fixture();name_length=lengths[n];entries=3;
+        assert(amiibo_scene_amiibo_detail_reload_files(&app));
+        mui_mem_monitor_t before,after;mui_mem_monitor(&before);
+        for(unsigned r=0;r<100;r++)assert(amiibo_scene_amiibo_detail_reload_files(&app));
+        mui_mem_monitor(&after);
+        assert(before.free_size==after.free_size && before.used_cnt==after.used_cnt);
+        assert(strlen(string_get_cstr(app.amiibo_files->ptr[0]))==name_length);cleanup();
+    }
+    fixture();string_t s;string_init(s);
+    assert(mui_string_try_set_str(s,"existing long allocated string"));
+    char *old=s->ptr;fail_at=allocations+1;
+    assert(!mui_string_try_set_str(s,"another value which needs an even larger allocation than before"));
+    assert(s->ptr==old && !strcmp(string_get_cstr(s),"existing long allocated string"));
+    assert(mui_string_try_set_str(s,string_get_cstr(s)+9));
+    assert(!strcmp(string_get_cstr(s),"long allocated string"));
+    string_clear(s);cleanup();
+}
+int main(void){
+    mui_mem_init();append_failures();loaders();selection_failures();strings_and_reloads();
+    printf("PASS %u RAM cases; ABI pointer=%zu string=%zu item=%zu; actual Mlib/TLSF, every allocation failure, 800 reloads\n",cases,sizeof(void*),sizeof(string_t),sizeof(mui_list_item_t));
+    return 0;
+}

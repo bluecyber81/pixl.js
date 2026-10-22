@@ -1,5 +1,11 @@
 #include "mui_qrcode_helper.h"
 
+/* The current callers show 23-byte and 43-byte URLs in 50- and 33-pixel
+ * areas. They need versions 2 and 3; version 4 (33 modules) also fits the
+ * smaller area. Full version-40 buffers consumed 7836 bytes of our 8 KiB
+ * stack before encoder/caller frames. Keep both bounded buffers local. */
+#define MUI_QRCODE_MAX_VERSION 4
+
 // Prints the given QR Code to the console.
 void printQr(const uint8_t qrcode[], mui_canvas_t *p_canvas, uint8_t x0, uint8_t y0, uint8_t maxsize) {
     uint8_t color = mui_canvas_get_draw_color(p_canvas);
@@ -33,12 +39,15 @@ void printQr(const uint8_t qrcode[], mui_canvas_t *p_canvas, uint8_t x0, uint8_t
 
 // Creates a single QR Code, then prints it to the console.
 void draw_qrcode(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, uint8_t maxsize, const char *text) {
+    if (!p_canvas || !text || maxsize < qrcodegen_VERSION_MIN * 4 + 17) return;
+    int max_version = (maxsize - 17) / 4;
+    if (max_version > MUI_QRCODE_MAX_VERSION) max_version = MUI_QRCODE_MAX_VERSION;
     enum qrcodegen_Ecc errCorLvl = qrcodegen_Ecc_LOW; // Error correction level
 
     // Make and print the QR Code symbol
-    uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
-    uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
-    bool ok = qrcodegen_encodeText(text, tempBuffer, qrcode, errCorLvl, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX,
+    uint8_t qrcode[qrcodegen_BUFFER_LEN_FOR_VERSION(MUI_QRCODE_MAX_VERSION)];
+    uint8_t tempBuffer[qrcodegen_BUFFER_LEN_FOR_VERSION(MUI_QRCODE_MAX_VERSION)];
+    bool ok = qrcodegen_encodeText(text, tempBuffer, qrcode, errCorLvl, qrcodegen_VERSION_MIN, max_version,
                                    qrcodegen_Mask_AUTO, true);
     if (ok) printQr(qrcode, p_canvas, x, y, maxsize);
 }

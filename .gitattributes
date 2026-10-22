@@ -1,1 +1,2 @@
-*.bat    eol=crlf
+# Preserve the reviewed source snapshot exactly on all checkout platforms.
+* -text

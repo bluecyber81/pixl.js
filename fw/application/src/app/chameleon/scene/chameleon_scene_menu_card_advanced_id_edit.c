@@ -46,6 +46,10 @@ static const char *get_id_edit_title(app_chameleon_id_edit_type_t id_edit_type) 
 
 static void format_id_edit_text(app_chameleon_id_edit_type_t id_edit_type, char *text) {
     const nfc_tag_14a_coll_res_reference_t *coll_res = tag_helper_get_active_coll_res_ref();
+    text[0] = '\0';
+    if (!coll_res || !coll_res->size || !coll_res->uid || !coll_res->sak || !coll_res->atqa || !coll_res->ats) {
+        return;
+    }
     switch (id_edit_type) {
     case APP_CHAMELEON_ID_EDIT_TYPE_UID:
         nfc_tag_14a_uid_size uid_size = *(coll_res->size);
@@ -87,97 +91,76 @@ static void format_id_edit_text(app_chameleon_id_edit_type_t id_edit_type, char 
     }
 }
 
+static int chameleon_id_hex_digit(unsigned char value) {
+    if (value >= '0' && value <= '9') return value - '0';
+    if (value >= 'a' && value <= 'f') return value - 'a' + 10;
+    if (value >= 'A' && value <= 'F') return value - 'A' + 10;
+    return -1;
+}
+
+/* Strict dotted bytes; the caller's output is unchanged on any invalid input. */
+static bool chameleon_id_parse_bytes(const char *text, uint8_t *output, size_t count) {
+    if (!text || !output || count == 0 || count > ATS_MAX_LENGTH) return false;
+    uint8_t parsed[ATS_MAX_LENGTH];
+    for (size_t i = 0; i < count; i++) {
+        int hi = chameleon_id_hex_digit((unsigned char)text[0]);
+        if (hi < 0) return false;
+        int lo = chameleon_id_hex_digit((unsigned char)text[1]);
+        if (lo < 0) return false;
+        parsed[i] = (uint8_t)((hi << 4) | lo);
+        text += 2;
+        if (i + 1 < count) {
+            if (*text != '.') return false;
+            text++;
+        }
+    }
+    if (*text != '\0') return false;
+    memcpy(output, parsed, count);
+    return true;
+}
+
 static bool handle_id_edit_cb(app_chameleon_t *app, const char *text) {
-    app_chameleon_id_edit_type_t id_edit_type = app->id_edit_type;
+    if (!app || !text) return false;
     const nfc_tag_14a_coll_res_reference_t *coll_res = tag_helper_get_active_coll_res_ref();
-    int8_t buff[4];
-    switch (id_edit_type) {
-    case APP_CHAMELEON_ID_EDIT_TYPE_UID:
-        nfc_tag_14a_uid_size uid_size = *(coll_res->size);
-        if (uid_size == NFC_TAG_14A_UID_SINGLE_SIZE) {
-            if (sscanf(text, "%02x.%02x.%02x.%02x", buff, buff + 1, buff + 2, buff + 3) == 4) {
-                coll_res->uid[0] = buff[0];
-                coll_res->uid[1] = buff[1];
-                coll_res->uid[2] = buff[2];
-                coll_res->uid[3] = buff[3];
-                return true;
-            }
-        } else if (uid_size == NFC_TAG_14A_UID_DOUBLE_SIZE) {
-            if (sscanf(text, "%02x.%02x.%02x.%02x.%02x.%02x.%02x", buff, buff + 1, buff + 2, buff + 3, buff + 4,
-                       buff + 5, buff + 6) == 7) {
-                coll_res->uid[0] = buff[0];
-                coll_res->uid[1] = buff[1];
-                coll_res->uid[2] = buff[2];
-                coll_res->uid[3] = buff[3];
-                coll_res->uid[4] = buff[4];
-                coll_res->uid[5] = buff[5];
-                coll_res->uid[6] = buff[6];
-                return true;
-            }
-        } else if (uid_size == NFC_TAG_14A_UID_TRIPLE_SIZE) {
-            if (sscanf(text, "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x", buff, buff + 1, buff + 2, buff + 3,
-                       buff + 4, buff + 5, buff + 6, buff + 7, buff + 8, buff + 9) == 10) {
-                coll_res->uid[0] = buff[0];
-                coll_res->uid[1] = buff[1];
-                coll_res->uid[2] = buff[2];
-                coll_res->uid[3] = buff[3];
-                coll_res->uid[4] = buff[4];
-                coll_res->uid[5] = buff[5];
-                coll_res->uid[6] = buff[6];
-                coll_res->uid[7] = buff[7];
-                coll_res->uid[8] = buff[8];
-                coll_res->uid[9] = buff[9];
-                return true;
-            }
-        }
-        break;
-
+    if (!coll_res) return false;
+    uint8_t parsed[ATS_MAX_LENGTH];
+    switch (app->id_edit_type) {
+    case APP_CHAMELEON_ID_EDIT_TYPE_UID: {
+        if (!coll_res->size || !coll_res->uid) return false;
+        size_t count = *(coll_res->size);
+        if (count != NFC_TAG_14A_UID_SINGLE_SIZE && count != NFC_TAG_14A_UID_DOUBLE_SIZE &&
+            count != NFC_TAG_14A_UID_TRIPLE_SIZE) return false;
+        if (!chameleon_id_parse_bytes(text, parsed, count)) return false;
+        memcpy(coll_res->uid, parsed, count);
+        return true;
+    }
     case APP_CHAMELEON_ID_EDIT_TYPE_SAK:
-        if (sscanf(text, "%02x", buff) == 1) {
-            coll_res->sak[0] = buff[0];
-            return true;
-        }
-        break;
-
+        if (!coll_res->sak || !chameleon_id_parse_bytes(text, parsed, 1)) return false;
+        coll_res->sak[0] = parsed[0];
+        return true;
     case APP_CHAMELEON_ID_EDIT_TYPE_ATQA:
-        if (sscanf(text, "%02x.%02x", buff, buff + 1) == 2) {
-            coll_res->atqa[1] = buff[0];
-            coll_res->atqa[0] = buff[1];
-            return true;
-        }
-        break;
-
+        if (!coll_res->atqa || !chameleon_id_parse_bytes(text, parsed, 2)) return false;
+        coll_res->atqa[1] = parsed[0];
+        coll_res->atqa[0] = parsed[1];
+        return true;
     case APP_CHAMELEON_ID_EDIT_TYPE_ATS: {
-        if (strlen(text) == 0) {
-            // Empty input clears ATS (reverts to auto mode)
+        if (!coll_res->ats) return false;
+        size_t length = 0;
+        while (length < ATS_MAX_LENGTH * 3 && text[length]) length++;
+        if (length == 0) {
             coll_res->ats->length = 0;
             return true;
         }
-        uint8_t ats_data[ATS_MAX_LENGTH];
-        uint8_t ats_len = 0;
-        const char *p = text;
-        while (*p) {
-            if (ats_len >= ATS_MAX_LENGTH) return false;
-            if (!isxdigit((unsigned char)p[0]) || !isxdigit((unsigned char)p[1])) return false;
-            unsigned int val;
-            if (sscanf(p, "%2x", &val) != 1) return false;
-            ats_data[ats_len++] = (uint8_t)val;
-            p += 2;
-            if (*p == '.') {
-                p++;
-                if (*p == '\0') return false;
-            } else if (*p != '\0') {
-                return false;
-            }
-        }
-        if (ats_len == 0) return false;
-        memcpy(coll_res->ats->data, ats_data, ats_len);
-        coll_res->ats->length = ats_len;
+        if (length >= ATS_MAX_LENGTH * 3 || length % 3 != 2) return false;
+        size_t count = (length + 1) / 3;
+        if (!chameleon_id_parse_bytes(text, parsed, count)) return false;
+        memcpy(coll_res->ats->data, parsed, count);
+        coll_res->ats->length = (uint8_t)count;
         return true;
     }
+    default:
+        return false;
     }
-
-    return false;
 }
 
 static void text_input_event_cb(mui_text_input_event_t event, mui_text_input_t *p_text_input) {
@@ -202,10 +185,14 @@ void chameleon_scene_menu_card_advanced_id_edit_on_enter(void *user_data) {
 
     format_id_edit_text(app->id_edit_type, text);
 
+    mui_text_input_set_max_length(app->p_text_input, sizeof(text) - 1);
     mui_text_input_set_header(app->p_text_input, get_id_edit_title(app->id_edit_type));
     mui_text_input_set_input_text(app->p_text_input, text);
     mui_text_input_set_event_cb(app->p_text_input, text_input_event_cb);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_TEXT_INPUT);
 }
 
-void chameleon_scene_menu_card_advanced_id_edit_on_exit(void *user_data) { app_chameleon_t *app = user_data; }
+void chameleon_scene_menu_card_advanced_id_edit_on_exit(void *user_data) {
+    app_chameleon_t *app = user_data;
+    mui_text_input_set_max_length(app->p_text_input, 0);
+}

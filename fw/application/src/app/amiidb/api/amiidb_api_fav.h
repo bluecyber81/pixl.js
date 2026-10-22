@@ -19,6 +19,8 @@ typedef struct {
 
 #define FAV_TYPE_FOLDER 0
 #define FAV_TYPE_FAV 1
+/* Leaves room for /amiibo/fav/<folder>/255_XXXXXXXX_XXXXXXXX.fav plus NUL. */
+#define AMIIDB_FAV_NEW_FOLDER_MAX_BYTES 25
 
 typedef struct {
     uint8_t fav_type; // 0: dir, 1: fav
@@ -31,11 +33,10 @@ typedef struct {
 typedef void (*amiidb_fav_cb_t)(amiidb_fav_info_t* fav_info, void* ctx);
 
 int32_t amiidb_api_fav_list_dir(const char *folder, amiidb_fav_cb_t cb, void* ctx);
+bool amiidb_api_fav_parse_filename(const char *name, amiidb_fav_t *fav);
 int32_t amiidb_api_fav_remove_dir(const char *folder);
 int32_t amiidb_api_fav_empty_dir(const char *folder);
 int32_t amiidb_api_fav_create_dir(const char *folder);
 int32_t amiidb_api_fav_add(const char *folder, const amiidb_fav_t *fav);
 int32_t amiidb_api_fav_remove(const char *folder, const amiidb_fav_t *fav);
-int32_t amiidb_api_fav_remove_dir(const char *folder);
-
 #endif // FW_AMIIDB_API_SLOT_H

@@ -119,9 +119,11 @@ static void chameleon_view_on_exit(mui_view_t *p_view) {}
 
 chameleon_view_t *chameleon_view_create() {
     chameleon_view_t *p_chameleon_view = mui_mem_malloc(sizeof(chameleon_view_t));
+    if (!p_chameleon_view) return NULL;
     memset(p_chameleon_view, 0, sizeof(chameleon_view_t));
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) { mui_mem_free(p_chameleon_view); return NULL; }
     p_view->user_data = p_chameleon_view;
     p_view->draw_cb = chameleon_view_on_draw;
     p_view->input_cb = chameleon_view_on_input;
@@ -134,6 +136,7 @@ chameleon_view_t *chameleon_view_create() {
     return p_chameleon_view;
 }
 void chameleon_view_free(chameleon_view_t *p_view) {
+    if (!p_view) return;
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);
 }

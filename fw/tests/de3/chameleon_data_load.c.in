@@ -1,0 +1,62 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "tag_emulation.h"
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+typedef struct{char data[64];}nfc_tag_mf1_information_t;
+typedef nfc_tag_mf1_information_t nfc_tag_mf0_ntag_information_t;
+typedef struct{void(*get_coll_res)(void),(*cb_state)(void),(*cb_reset)(void);}nfc_tag_14a_handler_t;
+static nfc_tag_mf1_information_t *m_tag_information;
+static tag_specific_type_t m_tag_type;
+static bool m_tag_data_loaded;
+static unsigned registered,crc_calls,reads,sense;static bool read_ok;
+static uint16_t bytes_read,crc;static uint8_t data[64];
+static tag_data_buffer_t buffer={sizeof(data),data,&crc};
+static tag_slot_config_t slotConfig;
+static int32_t config_length;
+static int32_t tag_emulation_load_config(void){return config_length;}
+uint8_t tag_emulation_get_slot(void){return slotConfig.active_slot;}
+static void get_mifare_coll_res(void){}
+static void nfc_tag_mf1_state_handler(void){}
+static void nfc_tag_mf1_reset_handler(void){}
+static void nfc_tag_mf0_ntag_get_coll_res(void){}
+static void nfc_tag_mf0_ntag_state_handler(void){}
+static void nfc_tag_mf0_ntag_reset_handler(void){}
+static int get_information_size_by_tag_type(tag_specific_type_t t){return 32;}
+static void nfc_tag_14a_set_handler(const nfc_tag_14a_handler_t*h){registered++;assert(h->get_coll_res&&h->cb_state&&h->cb_reset);}
+@LOADER@
+static tag_datas_loadcb_t get_data_loadcb_from_tag_type(tag_specific_type_t t){return @CALL@;}
+tag_data_buffer_t*get_buffer_by_tag_type(tag_specific_type_t t){return &buffer;}
+static void calc_14a_crc_lut(uint8_t*b,unsigned n,uint8_t*out){assert(b==data && n==32);crc_calls++;}
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t){return TAG_SENSE_HF;}
+typedef struct{unsigned id,key;}fds_slot_record_map_t;
+static void get_fds_map_by_slot_sense_type_for_dump(unsigned s,unsigned t,fds_slot_record_map_t*m){m->id=1;m->key=2;}
+static bool fds_read_sync(unsigned id,unsigned key,uint16_t*n,uint8_t*b){assert(*n==64 && b==data);*n=bytes_read;reads++;return read_ok;}
+static void tag_emulation_sense_switch_all(bool v){assert(v);sense++;}
+@tag_emulation_load_by_buffer@
+@load_data_by_tag_type@
+@tag_emulation_sense_run@
+@tag_emulation_load_data@
+@tag_emulation_init@
+int main(void){
+ for(unsigned good=0;good<2;good++)for(unsigned n=0;n<=64;n++){
+  read_ok=good;bytes_read=n;registered=crc_calls=reads=sense=0;m_tag_information=NULL;m_tag_type=TAG_TYPE_UNDEFINED;m_tag_data_loaded=true;
+  load_data_by_tag_type(0,TAG_TYPE_MIFARE_1024);bool ok=good&&n>=32;
+  assert(m_tag_data_loaded==ok && registered==ok && crc_calls==ok && reads==1 && buffer.length==64);
+  assert((m_tag_information!=NULL)==ok);tag_emulation_sense_run();assert(sense==ok);
+ }
+ m_tag_data_loaded=true;load_data_by_tag_type(0,TAG_TYPE_UNDEFINED);assert(!m_tag_data_loaded);
+ buffer.length=64;crc_calls=0;assert(tag_emulation_load_by_buffer(TAG_TYPE_MIFARE_1024,false));assert(!crc_calls&&m_tag_data_loaded);
+ for(int config=-1;config<=1;config++)for(unsigned good=0;good<2;good++)for(unsigned n=0;n<=64;n++){
+  config_length=config;read_ok=good;bytes_read=n;registered=crc_calls=reads=sense=0;m_tag_data_loaded=true;
+  slotConfig.active_slot=0;slotConfig.slots[0].tag_hf=TAG_TYPE_MIFARE_1024;
+  bool ok=tag_emulation_init();assert(ok==(config==0||(config==1&&good&&n>=32)));
+  assert(reads==(config==1));assert(m_tag_data_loaded==(config==1&&good&&n>=32));
+ }
+ config_length=68;slotConfig.slots[0].tag_hf=TAG_TYPE_UNDEFINED;reads=0;
+ assert(tag_emulation_init() && !m_tag_data_loaded && !reads);
+ puts("PASS 523 actual HF-loader/init/readiness cases: short/missing data registers no handler, preserves capacity, starts no RF");
+}

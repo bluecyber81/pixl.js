@@ -47,8 +47,12 @@ static void ble_status_view_on_exit(mui_view_t *p_view) {}
 
 ble_status_view_t *ble_status_view_create() {
     ble_status_view_t *p_ble_status_view = mui_mem_malloc(sizeof(ble_status_view_t));
+    if (!p_ble_status_view) return NULL;
+    /* TLSF returns reused storage: start on the status page with no callback. */
+    memset(p_ble_status_view, 0, sizeof(ble_status_view_t));
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) { mui_mem_free(p_ble_status_view); return NULL; }
     p_view->user_data = p_ble_status_view;
     p_view->draw_cb = ble_status_view_on_draw;
     p_view->input_cb = ble_status_view_on_input;
@@ -60,6 +64,7 @@ ble_status_view_t *ble_status_view_create() {
     return p_ble_status_view;
 }
 void ble_status_view_free(ble_status_view_t *p_view) {
+    if (!p_view) return;
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);
 }

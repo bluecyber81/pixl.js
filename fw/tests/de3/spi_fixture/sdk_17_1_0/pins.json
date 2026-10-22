@@ -1,0 +1,9 @@
+{
+  "source_sha256": "ff939b6ef8b4c06fc7f7b664e14dc92b721b61f3f89f062c3de5e756c194ffb7",
+  "image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "sdk": "17.1.0_ddde560",
+  "functions": {
+    "spim_xfer": "5329316b3bb7cf45d3efa6af386ad8b1ba7e8f5883cf6d82eab1303796676085",
+    "nrfx_spim_xfer": "f264441313b8c4548bec7c5bed84b8a29e75cfb2c277b7d84a6fec801ba69e47"
+  }
+}

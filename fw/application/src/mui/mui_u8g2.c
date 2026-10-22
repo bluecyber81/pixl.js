@@ -229,6 +229,7 @@ void mui_u8g2_set_backlight(uint8_t bl) { nrf_gpio_pin_write(LCD_BL_PIN, bl); }
 uint8_t mui_u8g2_get_backlight() { return nrf_gpio_pin_out_read(LCD_BL_PIN); }
 
 void mui_u8g2_set_backlight_level(uint8_t value) {
+    if (value > 100) value = 100;
     if (value == 0) {
         app_pwm_disable(&pwm1);
     } else {
@@ -245,6 +246,8 @@ int8_t mui_u8g2_get_backlight_level(void) { return (int8_t)app_pwm_channel_duty_
 
 void mui_u8g2_set_contrast_level(uint8_t value) {
     mui_t *p_mui = mui();
+    if (value > 100) value = 100;
+    if (value == 0) value = 1;
 
 // This is a guard to prevent the contrast too low to make the display invisible.
 #ifdef LCD_SCREEN
@@ -260,4 +263,4 @@ void mui_u8g2_set_flip_display(bool flip) {
     u8g2_SetDisplayRotation(&p_mui->u8g2, flip ? U8G2_R2 : U8G2_R0);
 }
 
-const spi_device_t *mui_u8g2_get_spi_device() { return &m_dev; }
+spi_device_t *mui_u8g2_get_spi_device() { return &m_dev; }

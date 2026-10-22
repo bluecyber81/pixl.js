@@ -1,0 +1,13 @@
+lodash-unified 1.0.3
+Author as declared by package.json: Jack Works
+License as declared by package.json: MIT
+
+The published package does not include a separate LICENSE or copyright notice.
+The integrity-checked 1.0.3 tarball contains require.cjs, import.js, package.json
+and type.d.ts only. No repository or homepage is declared by npm metadata.
+This record preserves the published license declaration; it is not a fabricated
+replacement for a missing original license or a claim of complete legal clearance.
+
+Metadata: https://registry.npmjs.org/lodash-unified/1.0.3
+Tarball: https://registry.npmjs.org/lodash-unified/-/lodash-unified-1.0.3.tgz
+Tarball SHA256: 22282888b7d6042186f7b241a6d3376a059feffa3ebe1647bbfdd9893b16e3a2

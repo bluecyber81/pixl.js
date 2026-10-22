@@ -14,11 +14,13 @@
 static void settings_scene_oled_contrast_event_cb(mui_progress_bar_event_t event, mui_progress_bar_t *p_progress_bar) {
     app_settings_t *app = p_progress_bar->user_data;
     settings_data_t *p_settings = settings_get_data();
+    int32_t value = mui_progress_bar_get_current_value(p_progress_bar);
+    if (value < 0) value = 0;
+    if (value > 100) value = 100;
+    mui_progress_bar_set_current_value(p_progress_bar, value);
     if (event == MUI_PROGRESS_BAR_EVENT_DECREMENT || event == MUI_PROGRESS_BAR_EVENT_INCREMENT) {
-        uint8_t value = mui_progress_bar_get_current_value(p_progress_bar);
         mui_u8g2_set_contrast_level(value);
-    } else {
-        uint8_t value = mui_progress_bar_get_current_value(p_progress_bar);
+    } else if (event == MUI_PROGRESS_BAR_EVENT_CONFIRMED) {
         mui_u8g2_set_contrast_level(value);
         p_settings->oled_contrast = value;
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);

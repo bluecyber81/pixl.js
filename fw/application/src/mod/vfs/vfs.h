@@ -100,7 +100,15 @@ typedef struct {
     int32_t (*rename_file)(const char *file, const char *new_file);
     int32_t (*remove_file)(const char *file);
 
+    /* Optional final abandonment after failed close. Never commits buffered
+     * bytes; success invalidates fd. Ordinary close errors remain retryable. */
+    int32_t (*abort_file)(vfs_file_t *fd);
+
 } vfs_driver_t;
+
+static inline int32_t vfs_abort_file(const vfs_driver_t *driver, vfs_file_t *fd) {
+    return driver && driver->abort_file && fd ? driver->abort_file(fd) : VFS_ERR_UNSUPT;
+}
 
 bool vfs_drive_enabled(vfs_drive_t drive);
 vfs_driver_t *vfs_get_driver(vfs_drive_t drive);

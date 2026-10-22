@@ -90,6 +90,9 @@ def write_language_list_file(enabled):
     with open(c_file, "w+", newline="\n", encoding="utf8") as f:
         f.write('#ifndef LANGUAGE_LIST_H\n')
         f.write('#define LANGUAGE_LIST_H\n\n')
+        for name, _ in enabled:
+            f.write('#define LANGUAGE_HAS_%s 1\n' % language_to_enum_suffix(name))
+        f.write('\n')
         f.write('// Generated from fw/data/i18n_languages.txt - do not edit.\n')
         f.write('// X(enum_suffix, locale_c_name, native_description)\n')
         f.write('#define LANGUAGE_LIST(X) \\\n')

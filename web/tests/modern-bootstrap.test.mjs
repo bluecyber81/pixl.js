@@ -1,0 +1,73 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { createApp } from 'vue'
+import { readFileSync } from 'node:fs'
+import i18n, { getElementLocale, getLanguage } from '../src/i18n/index.js'
+import { amiiboDeepLink } from '../src/deep-link.js'
+import { installUiComponents } from '../src/ui-components.js'
+
+test('focused Element Plus bootstrap registers every production template tag and required service', () => {
+  const app = createApp({})
+  installUiComponents(app)
+  const source = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+  const tags = new Set([...source.matchAll(/<el-([a-z-]+)/g)].map(match =>
+    'El' + match[1].split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')))
+  for (const name of tags) assert.ok(app.component(name), name)
+  assert.equal(Object.keys(app._context.components).length, tags.size)
+  for (const method of ['$message', '$notify', '$confirm', '$prompt', '$alert', '$loading']) {
+    assert.equal(typeof app.config.globalProperties[method], 'function', method)
+  }
+  assert.ok(app.directive('loading'))
+  assert.equal(app.config.globalProperties.$message._context, app._context)
+  assert.equal(app.config.globalProperties.$notify._context, app._context)
+})
+
+test('Vue 3 composition i18n preserves injected Options API locale access and translation', () => {
+  const app = createApp({})
+  app.use(i18n)
+  assert.equal(i18n.mode, 'composition')
+  assert.equal(getLanguage(), 'de_DE')
+  const global = app.config.globalProperties
+  assert.equal(global.$i18n.locale, 'de_DE')
+  assert.equal(global.$t('transfer.cancelled'), 'Übertragung abgebrochen')
+  global.$i18n.locale = 'en'
+  assert.equal(i18n.global.locale.value, 'en')
+  assert.equal(global.$t('transfer.cancelled'), 'Transfer cancelled')
+  assert.ok(global.$i18n.availableLocales.includes('de_DE'))
+  global.$i18n.locale = 'de_DE'
+})
+
+test('Element Plus locale follows each supported app language and rejects unknown selection', () => {
+  const expected = { de_DE: 'de', en: 'en', zh_CN: 'zh-cn', zh_TW: 'zh-tw',
+    es: 'es', ru_RU: 'ru', sv_SE: 'sv', ja_JP: 'ja' }
+  for (const [appLocale, componentLocale] of Object.entries(expected)) {
+    assert.equal(getElementLocale(appLocale).name, componentLocale)
+  }
+  assert.equal(getElementLocale('invalid').name, 'de')
+  assert.equal(getElementLocale('__proto__').name, 'de')
+  assert.equal(getElementLocale('constructor').name, 'de')
+})
+
+test('initial locale respects saved language and survives blocked browser storage', () => {
+  const original = globalThis.window
+  try {
+    globalThis.window = { localStorage: { getItem: () => 'es' } }
+    assert.equal(getLanguage(), 'es')
+    globalThis.window = { localStorage: { getItem: () => 'unknown' } }
+    assert.equal(getLanguage(), 'de_DE')
+    globalThis.window = Object.defineProperty({}, 'localStorage', { get() { throw new Error('blocked') } })
+    assert.equal(getLanguage(), 'de_DE')
+  } finally {
+    if (original === undefined) delete globalThis.window
+    else globalThis.window = original
+  }
+})
+
+test('amiibo QR deep links retain uppercase external route only for complete hexadecimal IDs', () => {
+  assert.equal(amiiboDeepLink('/a/01010000-000e0002'), 'https://amiibo.life/nfc/01010000-000E0002')
+  assert.equal(amiiboDeepLink('/a/00000004-04431c02/'), 'https://amiibo.life/nfc/00000004-04431C02')
+  for (const path of ['/', '', null, '/a/x-y', '/a/01010000-000E0002/extra',
+    '/a/01010000-000E0002?url=evil', '/a/01010000-000E000G', '//evil.test/a/01010000-000E0002']) {
+    assert.equal(amiiboDeepLink(path), null)
+  }
+})

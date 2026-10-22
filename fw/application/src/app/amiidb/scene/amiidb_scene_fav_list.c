@@ -1,3 +1,4 @@
+#include "amiidb_scene_errors.h"
 #include "amiibo_helper.h"
 #include "amiidb_api_fav.h"
 #include "amiidb_scene.h"
@@ -12,9 +13,15 @@
 #include <math.h>
 
 static void amiidb_scene_fav_list_reload(app_amiidb_t *app);
+void amiidb_scene_fav_list_item_clear_cb(mui_list_item_t *p_item);
 
 static void amiidb_scene_fav_list_text_input_event_cb(mui_text_input_event_t event, mui_text_input_t *p_text_input) {
     app_amiidb_t *app = p_text_input->user_data;
+    if (event == MUI_TEXT_INPUT_EVENT_CANCELLED ||
+        (event == MUI_TEXT_INPUT_EVENT_CONFIRMED && !*mui_text_input_get_input_text(p_text_input))) {
+        amiidb_scene_fav_list_reload(app);
+        return;
+    }
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *text = mui_text_input_get_input_text(p_text_input);
         if (strlen(text) > 0) {
@@ -22,6 +29,8 @@ static void amiidb_scene_fav_list_text_input_event_cb(mui_text_input_event_t eve
             if (res == VFS_OK) {
                 string_reset(app->cur_fav_dir);
                 amiidb_scene_fav_list_reload(app);
+            } else {
+                amiidb_fav_show_error(app, res);
             }
         }
     }
@@ -58,6 +67,8 @@ static void amiidb_scene_fav_list_list_view_on_selected(mui_list_view_event_t ev
         } break;
 
         case ICON_NEW: {
+            mui_text_input_set_max_length(app->p_text_input, AMIIDB_FAV_NEW_FOLDER_MAX_BYTES);
+            mui_text_input_clear_input_text(app->p_text_input);
             mui_text_input_set_header(app->p_text_input, getLangString(_L_APP_AMIIDB_FAV_NEW_HEAD));
             mui_text_input_set_event_cb(app->p_text_input, amiidb_scene_fav_list_text_input_event_cb);
             mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_INPUT);
@@ -80,15 +91,20 @@ static void amiidb_scene_fav_list_list_view_on_selected(mui_list_view_event_t ev
 
 static int amiidb_scene_fav_list_list_view_sort_cb(const mui_list_item_t *p_item_a, const mui_list_item_t *p_item_b) {
     if (p_item_a->icon == ICON_FOLDER && p_item_b->icon == ICON_FOLDER) {
-        db_game_t *p_game_a = (db_game_t *)p_item_a->user_data;
-        db_game_t *p_game_b = (db_game_t *)p_item_b->user_data;
-        return p_game_b->order - p_game_a->order;
+        /* Favorite folders carry a name and NULL user_data, not db_game_t. */
+        return string_cmp(p_item_a->text, p_item_b->text);
     } else if (p_item_a->icon == ICON_FOLDER && p_item_b->icon == ICON_FILE) {
         return -1;
+    } else if (p_item_a->icon == ICON_FILE && p_item_b->icon == ICON_FOLDER) {
+        return 1;
     } else {
         amiidb_fav_t *p_amiibo_a = (amiidb_fav_t *)p_item_a->user_data;
         amiidb_fav_t *p_amiibo_b = (amiidb_fav_t *)p_item_b->user_data;
-        return p_amiibo_a->amiibo_head < p_amiibo_b->amiibo_head;
+        if (p_amiibo_a->amiibo_head != p_amiibo_b->amiibo_head) {
+            return p_amiibo_a->amiibo_head < p_amiibo_b->amiibo_head ? -1 : 1;
+        }
+        return (p_amiibo_a->amiibo_tail > p_amiibo_b->amiibo_tail) -
+               (p_amiibo_a->amiibo_tail < p_amiibo_b->amiibo_tail);
     }
 }
 
@@ -103,24 +119,31 @@ static void amiidb_scene_fav_list_read_cb(amiidb_fav_info_t *p_info, void *ctx) 
     } else {
 
         amiidb_fav_t *p_fav = mui_mem_malloc(sizeof(amiidb_fav_t));
+        if (!p_fav) { amiidb_fav_show_error(app, VFS_ERR_NOMEM); return; }
         memcpy(p_fav, &p_info->fav_data.fav, sizeof(amiidb_fav_t));
 
+        uint32_t previous_count = mui_list_view_item_size(app->p_list_view);
         const db_amiibo_t *p_amiibo = get_amiibo_by_id(p_fav->amiibo_head, p_fav->amiibo_tail);
         if (p_amiibo) {
             const char *name = get_amiibo_display_name(p_amiibo);
             mui_list_view_add_item(app->p_list_view, ICON_FILE, name, p_fav);
         } else {
-            sprintf(txt, "Amiibo[%08x:%08x]", p_fav->amiibo_head, p_fav->amiibo_tail);
+            snprintf(txt, sizeof(txt), "Amiibo[%08x:%08x]", p_fav->amiibo_head, p_fav->amiibo_tail);
             mui_list_view_add_item(app->p_list_view, ICON_FILE, txt, p_fav);
+        }
+        if (mui_list_view_item_size(app->p_list_view) == previous_count) {
+            mui_mem_free(p_fav);
+            amiidb_fav_show_error(app, VFS_ERR_NOMEM);
         }
     }
 }
 
 static void amiidb_scene_fav_list_reload(app_amiidb_t *app) {
     // clear list view
-    mui_list_view_clear_items(app->p_list_view);
+    mui_list_view_clear_items_with_cb(app->p_list_view, amiidb_scene_fav_list_item_clear_cb);
 
-    amiidb_api_fav_list_dir(string_get_cstr(app->cur_fav_dir), amiidb_scene_fav_list_read_cb, app);
+    int32_t result = amiidb_api_fav_list_dir(string_get_cstr(app->cur_fav_dir), amiidb_scene_fav_list_read_cb, app);
+    if (result != VFS_OK) amiidb_fav_show_error(app, result);
     mui_list_view_sort(app->p_list_view, amiidb_scene_fav_list_list_view_sort_cb);
 
     if (mui_list_view_item_size(app->p_list_view) == 0 && app->in_fav_folders) {

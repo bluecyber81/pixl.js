@@ -1,0 +1,36 @@
+Custom LCD DE3.8 candidate (application version 559)
+
+Base: the preserved, separately validated DE3.7 source, derived from
+cylin577/pixl.js v2.21.0. This is not a new official upstream release.
+
+Card-menu corrections:
+- Selecting a MIFARE write mode keeps the current slot. Previously the mode
+  index was mistakenly passed to the slot-switch function, causing another
+  card buffer to be loaded and modified.
+- Pending Shadow mode is displayed and focused as Shadow. The actual pending
+  state and the existing save callback are unchanged.
+
+Bluetooth file-transfer corrections:
+- File and directory response chunks use the negotiated link capacity.
+- An oversized directory entry can span multiple response chunks. Clients must
+  assemble all numbered chunks before interpreting directory records.
+- Single-frame replies that cannot fit return a protocol error. This does not
+  provide complete MTU23 onboarding: version/drive queries and long input paths
+  may still require a larger negotiated MTU.
+- A rejected response send stops the transfer session and schedules existing
+  deferred cleanup, avoiding silent continuation after a lost chunk.
+
+Wake-up, LCD scrolling, settings layout, SPIFFS storage fixes and NFC core are
+preserved. No extra full-frame display buffer, remote-control service, Disney
+Infinity preset or unverified figure IDs are introduced.
+
+Build and verification:
+The existing pinned offline SDK builds BOARD=LCD with a fresh application.
+Inherited host suites plus new actual-source regressions must pass. Validation
+binds source hashes, build products, Nordic application-only metadata, signing
+public key, version, memory regions and package hash. Host peripherals remain
+mocked. Read the accompanying validation report before using the test package.
+
+The OTA does not install a bootloader or SoftDevice. Physical BLE/NFC/menu,
+sleep/wake and long-term checks remain necessary after flashing. No change
+is made to the separate historical supplementary AmiiboLink test.

@@ -34,7 +34,7 @@ void mui_element_multiline_text(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, co
             string_set_str(str, start);
         }
         mui_canvas_draw_utf8(p_canvas, x, y, string_get_cstr(str));
-        start = end + 1;
+        if (end) start = end + 1;
         y += font_height;
     } while (end && y < 64);
     string_clear(str);

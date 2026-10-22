@@ -212,12 +212,15 @@ SRC_FILES += \
   $(PROJ_DIR)/mod/settings.c \
   $(PROJ_DIR)/mod/cache.c \
   $(PROJ_DIR)/mod/ble/ble_main.c \
+  $(PROJ_DIR)/mod/ble/ble_work.c \
   $(PROJ_DIR)/mod/ble/ble_df_driver.c \
   $(PROJ_DIR)/mod/ble/ble_amiibolink.c \
   $(PROJ_DIR)/mod/cwalk2.c \
   $(PROJ_DIR)/mod/vfs/vfs.c \
+  $(PROJ_DIR)/mod/vfs/vfs_persist.c \
   $(PROJ_DIR)/mod/vfs/vfs_meta.c \
   $(PROJ_DIR)/mod/vfs/vfs_driver_spiffs.c \
+  $(PROJ_DIR)/mod/vfs/vfs_spiffs_diag.c \
   $(PROJ_DIR)/mod/vfs/vfs_driver_lfs.c \
   $(PROJ_DIR)/mod/df/df_core.c \
   $(PROJ_DIR)/mod/df/df_proto_info.c \
@@ -236,6 +239,7 @@ SRC_FILES += \
   $(PROJ_DIR)/mui/mui_canvas.c \
   $(PROJ_DIR)/mui/mui_event.c \
   $(PROJ_DIR)/mui/mui_input.c \
+  $(PROJ_DIR)/mui/mui_nav_diag.c \
   $(PROJ_DIR)/mui/mui_element.c \
   $(PROJ_DIR)/mui/mui_mem.c \
   $(PROJ_DIR)/mui/mui_anim.c \
@@ -665,6 +669,8 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
+# Emit per-function stack estimates for the local correctness review.
+CFLAGS += -fstack-usage
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
@@ -696,7 +702,7 @@ LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
-LDFLAGS += -u _printf_float
+# Integer-only UI/log formats: do not force the floating printf implementation.
 
 pixljs: CFLAGS += -D__HEAP_SIZE=512
 pixljs: CFLAGS += -D__STACK_SIZE=8192
@@ -766,7 +772,7 @@ full: settingsgen
 	mergehex --merge $(OUTPUT_DIRECTORY)/settings.hex $(OUTPUT_DIRECTORY)/bootloader.hex $(SDK_ROOT)/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/pixljs.hex --output $(OUTPUT_DIRECTORY)/pixljs_all.hex
 
 gen:
-	python3 ../scripts/amiibo_db_gen.py
+	python3 ../scripts/amiibo_db_gen.py --offline
 	python3 ../scripts/i18n_gen.py
 	python3 ../scripts/font_data_gen.py
 	python3 ../scripts/resource_gen.py

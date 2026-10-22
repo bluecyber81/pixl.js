@@ -12,6 +12,7 @@
 #include "mui_toast_view.h"
 
 #include "amiidb_api_fav.h"
+#include "amiidb_api_db.h"
 
 #include "mlib_common.h"
 #include "db_header.h"
@@ -39,6 +40,13 @@ typedef struct {
 
     /** search */
     string_t search_str;
+    uint16_t search_page;
+    uint16_t game_page;
+    uint8_t search_game_id;
+    bool search_filter_select;
+    const db_amiibo_t *result_items[AMIIDB_RESULT_PAGE_SIZE];
+    uint16_t result_count;
+    uint16_t result_total;
 
     amiidb_fav_array_t fav_array;
     

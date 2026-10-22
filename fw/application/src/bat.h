@@ -20,9 +20,13 @@ typedef struct chrg {
 } chrg_data_t;
 
 uint8_t bat_get_level(void);
+/* Filtered voltage, not a capacity percentage. Valid only with bat_has_reading(). */
+uint16_t bat_get_voltage_mv(void);
+bool bat_has_reading(void);
+bool bat_is_low(void);
 void chrg_init(void);
 bool get_stats(void);
-void chrg_set_callback(void *cb);
+void chrg_set_callback(chrg_data_cb_t cb);
 
 
 #endif /* BAT_H_ */

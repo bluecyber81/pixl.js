@@ -11,7 +11,7 @@
 #define LAYER_STATUS_BAR_HEIGHT 13
 
 
-ARRAY_DEF(mui_view_port_array, mui_view_port_t*, M_PTR_OPLIST);
+#define MUI_LAYER_CAPACITY 2
 
 typedef enum {
     MUI_LAYER_DESKTOP, 
@@ -29,8 +29,10 @@ typedef struct {
     u8g2_t u8g2;
     mui_canvas_t canvas;
     mui_event_queue_t event_queue;
-    mui_view_port_array_t layers[MUI_LAYER_MAX];
+    mui_view_port_t *layers[MUI_LAYER_MAX][MUI_LAYER_CAPACITY];
+    uint8_t layer_counts[MUI_LAYER_MAX];
     uint8_t auto_update;
+    uint8_t memory_error;
 } mui_t;
 
 mui_t* mui();
@@ -41,6 +43,7 @@ void mui_tick(mui_t* p_mui);
 void mui_deinit(mui_t *p_mui);
 void mui_panic(mui_t *p_mui, char* err);
 void mui_set_auto_update(mui_t* p_mui, bool enabled);
+void mui_show_memory_error(mui_t *p_mui);
 
 
 void mui_add_view_port(mui_t* p_mui, mui_view_port_t* p_vp, mui_layer_t layer);

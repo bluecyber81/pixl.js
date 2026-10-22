@@ -77,3 +77,5 @@ void mui_input_init() {
     bsp_btn_init(mui_input_on_bsp_btn_event);
     
 }
+
+void mui_input_deinit(void) { bsp_btn_deinit(); }

@@ -45,15 +45,15 @@ void amiidb_scene_data_list_amiibo_slot_info_cb(amiidb_slot_info_t *p_info, void
     app_amiidb_t *app = ctx;
     settings_data_t *p_settings_data = settings_get_data();
     if (p_info->is_empty) {
-        sprintf(txt, "%02d %s", p_info->slot + 1, getLangString(_L_APP_AMIIDB_EMPTY_TAG));
+        snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, getLangString(_L_APP_AMIIDB_EMPTY_TAG));
         mui_list_view_add_item(app->p_list_view, ICON_FILE, txt, (void *)0);
     } else {
         const db_amiibo_t *p_amiibo = get_amiibo_by_id(p_info->amiibo_head, p_info->amiibo_tail);
         if (p_amiibo != NULL) {
             const char *name = get_amiibo_display_name(p_amiibo);
-            sprintf(txt, "%02d %s", p_info->slot + 1, name);
+            snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, name);
         } else {
-            sprintf(txt, "Amiibo[%08x:%08x]", p_info->amiibo_head, p_info->amiibo_tail);
+            snprintf(txt, sizeof(txt), "Amiibo[%08x:%08x]", p_info->amiibo_head, p_info->amiibo_tail);
         }
 
         mui_list_view_add_item(app->p_list_view, ICON_AMIIBO, txt, (void *)0);
@@ -63,7 +63,8 @@ void amiidb_scene_data_list_amiibo_slot_info_cb(amiidb_slot_info_t *p_info, void
 void amiidb_scene_data_list_reload(app_amiidb_t *app) {
     // clear list view
     mui_list_view_clear_items(app->p_list_view);
-    amiidb_api_slot_list(amiidb_scene_data_list_amiibo_slot_info_cb, app);
+    if (amiidb_api_slot_list(amiidb_scene_data_list_amiibo_slot_info_cb, app) != VFS_OK)
+        mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
     mui_list_view_add_item(app->p_list_view, ICON_EXIT, getLangString(_L_APP_AMIIDB_BACK), (void *)0);
 }
 

@@ -6,11 +6,12 @@
 #include "mui_view.h"
 #include "mui_view_port.h"
 
-DICT_DEF2(mui_view_dict, uint32_t, M_DEFAULT_OPLIST, mui_view_t*, M_PTR_OPLIST)
+#define MUI_DISPATCHER_MAX_VIEWS 8
 
 typedef struct {
     mui_view_port_t* p_view_port;
-    mui_view_dict_t views;
+    struct { uint32_t id; mui_view_t *view; } views[MUI_DISPATCHER_MAX_VIEWS];
+    uint8_t view_count;
     mui_view_t* p_active_view;
 }mui_view_dispatcher_t;
 

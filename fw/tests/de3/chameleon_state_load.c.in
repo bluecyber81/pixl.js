@@ -1,0 +1,104 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "tag_emulation.h"
+#define ARRAYLEN(x) (sizeof(x)/sizeof((x)[0]))
+#define NRF_LOG_INFO(...) ((void)0)
+#define VFS_OK 0
+#define VFS_ERR_NOOBJ -2
+#define VFS_TYPE_REG 1
+static tag_specific_type_t tag_specific_type_old2new_hf_values[][2]={TAG_SPECIFIC_TYPE_OLD2NEW_HF_VALUES};
+static tag_specific_type_t tag_specific_type_old2new_lf_values[][2]={TAG_SPECIFIC_TYPE_OLD2NEW_LF_VALUES};
+static tag_slot_config_t slotConfig;
+static uint16_t m_slot_config_crc;
+static unsigned loads,cases;
+static bool m_tag_data_loaded;
+/* Existing format tests allow all 50 slots; count reductions have their own regression. */
+typedef struct { uint8_t chameleon_slot_num; } settings_data_t;
+static settings_data_t settings = {TAG_MAX_SLOT_NUM};
+static settings_data_t *settings_get_data(void) { return &settings; }
+#define FDS_EMULATION_CONFIG_FILE_ID 1
+#define FDS_EMULATION_CONFIG_RECORD_KEY 2
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t type){
+ const tag_specific_type_t types[]={TAG_SPECIFIC_TYPE_HF_VALUES};
+ for(unsigned i=0;i<ARRAYLEN(types);i++)if(types[i]==type)return TAG_SENSE_HF;
+ return TAG_SENSE_NO;
+}
+static void calc_14a_crc_lut(uint8_t*p,unsigned n,uint8_t*out){
+ uint16_t crc=0;for(unsigned i=0;i<n;i++)crc=(uint16_t)((crc*31)^p[i]);memcpy(out,&crc,2);
+}
+static uint8_t file[405];static unsigned file_size;
+static bool available,mounted_ok;static int stat_result,read_delta,object_type;
+typedef struct{unsigned type,size;}vfs_obj_t;
+typedef struct{bool(*mounted)(void);int32_t(*stat_file)(const char*,vfs_obj_t*);int32_t(*read_file_data)(const char*,void*,unsigned);}vfs_driver_t;
+static bool mounted(void){return mounted_ok;}
+static int32_t stat_file(const char*p,vfs_obj_t*o){assert(!strcmp(p,"/chameleon/slots/config.bin"));o->size=file_size;o->type=object_type;return stat_result;}
+static int32_t read_file(const char*p,void*b,unsigned n){
+ unsigned copied=file_size<n?file_size:n;memcpy(b,file,copied);return (int32_t)copied+read_delta;
+}
+static vfs_driver_t driver={mounted,stat_file,read_file};
+static vfs_driver_t*vfs_get_default_driver(void){return available?&driver:NULL;}
+@fds_read_config@
+@tag_emulation_decode_config@
+@tag_emulation_load_config@
+static bool fds_is_exists(unsigned a,unsigned b){return stat_result!=VFS_ERR_NOOBJ;}
+void tag_emulation_load_data(void){assert(slotConfig.active_slot<TAG_MAX_SLOT_NUM);loads++;m_tag_data_loaded=true;}
+@tag_emulation_init@
+static void fixture(void){
+ memset(&slotConfig,0,sizeof(slotConfig));slotConfig.version=8;slotConfig.slots[0].tag_hf=TAG_TYPE_MIFARE_1024;
+ m_slot_config_crc=0xa55a;loads=0;memset(file,0,sizeof(file));file_size=0;
+ available=mounted_ok=true;stat_result=0;read_delta=0;object_type=VFS_TYPE_REG;
+}
+static void v8(unsigned count,unsigned active){
+ tag_slot_config_t candidate={0};candidate.version=8;candidate.active_slot=active;
+ for(unsigned i=0;i<count;i++){candidate.slots[i].enabled_hf=true;candidate.slots[i].tag_hf=TAG_TYPE_MIFARE_1024;}
+ file_size=4+8*count;memcpy(file,&candidate,file_size);
+}
+static void check(bool expected){
+ tag_slot_config_t before=slotConfig;uint16_t crc=m_slot_config_crc;uint8_t saved[sizeof(file)];memcpy(saved,file,sizeof(file));
+ assert(tag_emulation_init()==expected);assert(!memcmp(file,saved,sizeof(file)));
+ if(!expected){assert(!memcmp(&slotConfig,&before,sizeof(before)));assert(m_slot_config_crc==crc && loads==0);}
+ else assert(loads==(stat_result!=VFS_ERR_NOOBJ && slotConfig.slots[slotConfig.active_slot].tag_hf!=TAG_TYPE_UNDEFINED));
+ cases++;
+}
+int main(void){
+ _Static_assert(sizeof(tag_specific_type_t)==2,"firmware enum ABI");
+ _Static_assert(sizeof(tag_slot_config_t)==404,"firmware configuration ABI");
+ unsigned counts[]={8,20,50};
+ for(unsigned k=0;k<ARRAYLEN(counts);k++){
+  unsigned count=counts[k];
+  for(unsigned active=0;active<count;active++){
+   fixture();v8(count,active);check(true);assert(slotConfig.active_slot==active);
+   for(unsigned i=count;i<TAG_MAX_SLOT_NUM;i++)assert(!slotConfig.slots[i].enabled_hf && slotConfig.slots[i].tag_hf==0);
+  }
+  fixture();v8(count,count);check(false);
+  fixture();v8(count,255);check(false);
+ }
+ for(unsigned active=0;active<8;active++){
+  fixture();file_size=36;file[0]=active;
+  for(unsigned i=0;i<8;i++){file[4+i*4]=1;file[4+i*4+2]=OLD_TAG_TYPE_MIFARE_1024;file[4+i*4+3]=OLD_TAG_TYPE_EM410X;}
+  check(true);assert(slotConfig.version==8 && slotConfig.active_slot==active);
+  for(unsigned i=0;i<8;i++)assert(slotConfig.slots[i].tag_hf==TAG_TYPE_MIFARE_1024 && slotConfig.slots[i].tag_lf==TAG_TYPE_EM410X);
+ }
+ for(unsigned length=0;length<=405;length++){
+  /* Include every incomplete slot plus empty, header-only and oversize files. */
+  if(length>=12 && length<=404 && (length-4)%8==0)continue;
+  fixture();v8(8,0);file_size=length;check(false);
+ }
+ fixture();v8(8,0);file[0]=9;check(false);
+ fixture();v8(8,0);file[8]=0xff;file[9]=0xff;check(false); /* invalid active HF */
+ fixture();v8(8,0);file[8]=0;file[9]=0;check(true);       /* legal enabled empty slot */
+ fixture();v8(8,0);file[12]=0;file[16]=0xff;file[17]=0xff;check(false); /* inactive unknown type */
+ fixture();v8(8,0);file[10]=0xff;file[11]=0xff;check(false); /* invalid LF */
+ fixture();v8(8,0);file[4]=0;file[8]=0;file[9]=0;check(true); /* legal disabled empty slot */
+ fixture();v8(8,0);read_delta=-1;check(false);
+ fixture();v8(8,0);read_delta=1;check(false);
+ fixture();v8(8,0);stat_result=-9;check(false);
+ fixture();v8(8,0);object_type=2;check(false);
+ fixture();v8(8,0);available=false;check(false);
+ fixture();v8(8,0);mounted_ok=false;check(false);
+ fixture();stat_result=VFS_ERR_NOOBJ;check(true); /* factory path only for a missing file */
+ printf("PASS %u config cases: real 404B/short-enum ABI, v8 8/20/50, legacy0-7, length/type/index errors, file/RAM preservation\n",cases);
+}

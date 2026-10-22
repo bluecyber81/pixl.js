@@ -82,6 +82,11 @@
 #include "ble_amiibolink.h"
 #include "ble_df_driver.h"
 #include "ble_main.h"
+#include "ble_work.h"
+
+#if MAX_MTU_DAT_SIZE != BLE_WORK_DATA_SIZE
+#error "BLE work buffer must match the negotiated maximum NUS payload"
+#endif
 #include "df_core.h"
 #include "nrf_pwr_mgmt.h"
 
@@ -136,11 +141,6 @@ static uint16_t m_ble_nus_max_data_len =
     3; /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
 static ble_uuid_t m_adv_uuids[] = /**< Universally unique service identifier. */
     {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
-
-static nus_rx_data_handler_t m_nus_rx_data_handler =
-    NULL; /**< Event handler to be called for handling received packets. */
-static nus_tx_ready_handler_t m_nus_tx_ready_handler =
-    NULL; /**< Event handler to be called for handling transmitted packets. */
 
 #define DEVICE_NAME_PIXLJS "Pixl.js"
 #define DEVICE_NAME_AMIIBOLINK "amiibolink"
@@ -214,42 +214,27 @@ static void gap_params_init(void) {
  */
 static void nrf_qwr_error_handler(uint32_t nrf_error) { APP_ERROR_HANDLER(nrf_error); }
 
-static void nus_event_async_call_rx_data(const void *p_event_data, uint16_t event_size) {
-    // NRF_LOG_INFO("nus_event_async_call_rx_data: bytes=%d", event_size);
-    if (m_nus_rx_data_handler) {
-        m_nus_rx_data_handler(p_event_data, event_size);
-    }
-}
-
-static void nus_event_async_call_tx_ready(void *p_event_data, uint16_t event_size) {
-    if (m_nus_tx_ready_handler) {
-        m_nus_tx_ready_handler();
-    }
-}
-
-/**@brief Function for handling the data from the Nordic UART Service.
- *
- * @details This function will process the data received from the Nordic UART BLE Service and send
- *          it to the UART module.
- *
- * @param[in] p_evt       Nordic UART Service event.
- */
-/**@snippet [Handling the data received over BLE] */
+/* NUS runs in the SoftDevice observer IRQ. Copy only; handlers and all VFS
+ * operations run from ble_process_pending() in the foreground. */
 static void nus_data_handler(ble_nus_evt_t *p_evt) {
+    bool accepted = true;
     nrf_pwr_mgmt_feed();
     if (p_evt->type == BLE_NUS_EVT_RX_DATA) {
-        if (m_nus_rx_data_handler) {
-            // app_sched_event_put(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length,
-            //                    nus_event_async_call_rx_data);
-            nus_event_async_call_rx_data(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
-        }
-
+        accepted = ble_work_receive(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
     } else if (p_evt->type == BLE_NUS_EVT_TX_RDY) {
-        if (m_nus_tx_ready_handler) {
-            // app_sched_event_put(NULL, 0, nus_event_async_call_tx_ready);
-            nus_event_async_call_tx_ready(NULL, 0);
-        }
+        accepted = ble_work_tx_ready();
     }
+    if (!accepted && m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+        /* A request burst exceeding the bounded queue must retry in a new
+         * session; do not continue a stream with missing commands. */
+        uint32_t result = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        NRF_LOG_WARNING("BLE work queue overflow; disconnect result %lu", (unsigned long)result);
+    }
+}
+
+void ble_process_pending(void) {
+    ble_work_process(ble_on_disconnected);
+    ble_df_driver_poll();
 }
 
 /**@snippet [Handling the data received over BLE] */
@@ -350,10 +335,19 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
  * @param[in]   p_ble_evt   Bluetooth stack event.
  * @param[in]   p_context   Unused.
  */
+/* The SoftDevice returns counted UTF-8 bytes, without a terminating NUL. */
+static bool ble_device_name_is(const char *expected) {
+    uint8_t device_name[35];
+    uint16_t length = sizeof(device_name);
+    if (expected == NULL) return false;
+    uint32_t result = sd_ble_gap_device_name_get(device_name, &length);
+    size_t expected_length = strlen(expected);
+    return result == NRF_SUCCESS && length <= sizeof(device_name) &&
+           length == expected_length && memcmp(device_name, expected, length) == 0;
+}
+
 static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
     uint32_t err_code;
-    char device_name[35];
-    uint32_t device_name_len = 35;
 
     switch (p_ble_evt->header.evt_id) {
     case BLE_GAP_EVT_CONNECTED:
@@ -361,13 +355,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
         APP_ERROR_CHECK(err_code);
         m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+        m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
+        ble_work_connected();
         err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
         APP_ERROR_CHECK(err_code);
 
-        err_code = sd_ble_gap_device_name_get(device_name, &device_name_len);
-        APP_ERROR_CHECK(err_code);
-
-        if (strcmp(device_name, DEVICE_NAME_AMILOOP) == 0) {
+        if (ble_device_name_is(DEVICE_NAME_AMILOOP)) {
             NRF_LOG_INFO("Set mtu to %d", NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
             sd_ble_gattc_exchange_mtu_request(p_ble_evt->evt.gap_evt.conn_handle, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
         }
@@ -381,6 +374,8 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         NRF_LOG_INFO("Disconnected");
         // LED indication will be changed when advertising starts.
         m_conn_handle = BLE_CONN_HANDLE_INVALID;
+        m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
+        ble_work_disconnected();
         nrf_pwr_mgmt_set_timeout(m_previous_pwr_mgmt_sleep_timeout);
 
         break;
@@ -544,12 +539,19 @@ void ble_addr_set(uint8_t offset) {
 }
 
 void ble_service_id_set(uint32_t suffix) {
-    uint32_t *ptr = m_advertising.p_adv_data->scan_rsp_data.p_data
-                    + m_advertising.p_adv_data->scan_rsp_data.len - 4;
-    *ptr = suffix;
+    if (m_advertising.p_adv_data == NULL ||
+        m_advertising.p_adv_data->scan_rsp_data.p_data == NULL ||
+        m_advertising.p_adv_data->scan_rsp_data.len < sizeof(suffix)) return;
+    uint8_t *ptr = m_advertising.p_adv_data->scan_rsp_data.p_data
+                    + m_advertising.p_adv_data->scan_rsp_data.len - sizeof(suffix);
+    memcpy(ptr, &suffix, sizeof(suffix));
 }
 
 void ble_device_mode_prepare(ble_device_mode_t mode) {
+    /* A diagnostic MTU preference belongs to this file-transfer screen only.
+     * Plain disconnect/reconnect keeps it; entering any mode resets it. */
+    ret_code_t mtu_result = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
+    APP_ERROR_CHECK(mtu_result);
     if (mode == BLE_DEVICE_MODE_AMIIBOLINK || mode == BLE_DEVICE_MODE_AMIIBOLINK_V2) {
         ble_set_device_name(DEVICE_NAME_AMIIBOLINK);
         ble_addr_set(0x10);
@@ -572,6 +574,8 @@ void ble_adv_start(void) {
 }
 
 void ble_disable() {
+    ble_work_disconnected();
+    if (!m_ble_initialized) return;
 
     ble_advertising_start(&m_advertising, BLE_ADV_MODE_IDLE);
     sd_ble_gap_adv_stop(m_advertising.adv_handle);
@@ -586,17 +590,69 @@ bool ble_is_connected(void) {
 }
 
 void ble_nus_set_handler(nus_rx_data_handler_t rx_data_handler, nus_tx_ready_handler_t tx_ready_handler) {
-    m_nus_rx_data_handler = rx_data_handler;
-    m_nus_tx_ready_handler = tx_ready_handler;
+    ble_work_set_handlers(rx_data_handler, tx_ready_handler);
+}
+
+size_t ble_nus_max_data_length(void) { return m_ble_nus_max_data_len; }
+
+bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capacity) {
+    if (snapshot == NULL || capacity < BLE_MTU_DIAGNOSTIC_SIZE ||
+        (requested_mtu != 0 && requested_mtu != BLE_GATT_ATT_MTU_DEFAULT &&
+         requested_mtu != NRF_SDH_BLE_GATT_MAX_MTU_SIZE)) return false;
+
+    bool success = false;
+    CRITICAL_REGION_ENTER();
+    if (m_ble_initialized) {
+        bool connected = m_conn_handle != BLE_CONN_HANDLE_INVALID && ble_work_can_send();
+        bool file_mode = ble_device_name_is(DEVICE_NAME_PIXLJS);
+        uint16_t effective = connected ? nrf_ble_gatt_eff_mtu_get(&m_gatt, m_conn_handle) : 0;
+        if ((!connected || (effective >= BLE_GATT_ATT_MTU_DEFAULT && effective <= NRF_SDH_BLE_GATT_MAX_MTU_SIZE)) &&
+            (requested_mtu == 0 || (connected && file_mode &&
+             nrf_ble_gatt_att_mtu_periph_set(&m_gatt, requested_mtu) == NRF_SUCCESS))) {
+            const uint16_t values[] = {effective, m_gatt.att_mtu_desired_periph,
+                                      NRF_SDH_BLE_GATT_MAX_MTU_SIZE, connected ? m_ble_nus_max_data_len : 0};
+            memset(snapshot, 0, BLE_MTU_DIAGNOSTIC_SIZE);
+            memcpy(snapshot, "MTUD", 4);
+            snapshot[4] = 1;
+            snapshot[5] = (connected ? 1u : 0u) | (file_mode ? 2u : 0u);
+            for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
+                snapshot[6 + i * 2] = (uint8_t)values[i];
+                snapshot[7 + i * 2] = (uint8_t)(values[i] >> 8);
+            }
+            success = true;
+        }
+    }
+    CRITICAL_REGION_EXIT();
+    return success;
+}
+
+void ble_nus_abort_transfer(void) {
+    /* Discard queued work now; file-close/flush remains deferred to main after
+     * the current handler returns, as with a radio disconnect. */
+    CRITICAL_REGION_ENTER();
+    /* An old callback must never disconnect a newer peer after a link change. */
+    if (ble_work_can_send()) {
+        ble_work_disconnected();
+        if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+            ret_code_t result = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            if (result != NRF_SUCCESS) NRF_LOG_INFO("DF disconnect failed: %d", result);
+        }
+    }
+    CRITICAL_REGION_EXIT();
 }
 
 ret_code_t ble_nus_tx_data(void *data, size_t length) {
-    size_t tx_length = length;
-    NRF_LOG_INFO("ble_nus_tx_data: %d bytes", tx_length);
-    ret_code_t err_code = ble_nus_data_send(&m_nus, data, &tx_length, m_conn_handle);
-    if (err_code) {
-        NRF_LOG_INFO("send back error:%d", err_code);
+    if (data == NULL || length > m_ble_nus_max_data_len) return NRF_ERROR_DATA_SIZE;
+    uint16_t tx_length = (uint16_t)length;
+    ret_code_t err_code = NRF_ERROR_INVALID_STATE;
+    /* Keep the session check and submission together with respect to BLE
+     * observer callbacks. SoftDevice radio IRQs remain enabled. */
+    CRITICAL_REGION_ENTER();
+    if (ble_work_can_send() && m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+        err_code = ble_nus_data_send(&m_nus, data, &tx_length, m_conn_handle);
     }
+    CRITICAL_REGION_EXIT();
+    if (err_code) NRF_LOG_INFO("send back error:%d", err_code);
     return err_code;
 }
 

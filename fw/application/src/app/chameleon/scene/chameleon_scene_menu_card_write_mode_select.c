@@ -20,8 +20,6 @@ void chameleon_scene_menu_card_write_mode_select_on_event(mui_list_view_event_t 
     app_chameleon_t *app = p_list_view->user_data;
     switch (p_item->icon) {
     case ICON_DATA: {
-        uint8_t slot = (uint8_t)(uintptr_t)p_item->user_data;
-        tag_emulation_change_slot(slot, false);
         nfc_tag_mf1_write_mode_t mode = mui_list_view_get_focus(p_list_view);
         nfc_tag_mf1_set_write_mode(mode);
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
@@ -40,7 +38,11 @@ void chameleon_scene_menu_card_write_mode_select_on_enter(void *user_data) {
     }
     mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), NULL_USER_DATA);
 
-    mui_list_view_set_focus(app->p_list_view, nfc_tag_mf1_get_write_mode());
+    nfc_tag_mf1_write_mode_t mode = nfc_tag_mf1_get_write_mode();
+    if (mode == NFC_TAG_MF1_WRITE_SHADOW_REQ) {
+        mode = NFC_TAG_MF1_WRITE_SHADOW;
+    }
+    mui_list_view_set_focus(app->p_list_view, mode);
 
     mui_list_view_set_selected_cb(app->p_list_view, chameleon_scene_menu_card_write_mode_select_on_event);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_LIST);

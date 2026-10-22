@@ -1,0 +1,1106 @@
+{
+  "schema": 1,
+  "purpose": "License and attribution inventory, not a blanket relicensing or legal compatibility opinion.",
+  "root_license_sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+  "web_package_lock_sha256": "f91aaca562eccdae46de74efc6442c0ce1130493f95afe560ece6465045d830c",
+  "web_inventory_scope": "All 52 non-dev lock entries, including transitive and type/build support packages; not a claim every package survives bundling.",
+  "web_packages": [
+    {
+      "package": "@babel/helper-string-parser",
+      "version": "7.29.7",
+      "lock_path": "node_modules/@babel/helper-string-parser",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@babel__helper-string-parser@7.29.7/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@babel/helper-validator-identifier",
+      "version": "7.29.7",
+      "lock_path": "node_modules/@babel/helper-validator-identifier",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@babel__helper-validator-identifier@7.29.7/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@babel/parser",
+      "version": "7.29.9",
+      "lock_path": "node_modules/@babel/parser",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@babel__parser@7.29.9/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@babel/types",
+      "version": "7.29.8",
+      "lock_path": "node_modules/@babel/types",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@babel__types@7.29.8/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@ctrl/tinycolor",
+      "version": "4.2.1",
+      "lock_path": "node_modules/@ctrl/tinycolor",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@ctrl__tinycolor@4.2.1/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@element-plus/icons-vue",
+      "version": "2.3.2",
+      "lock_path": "node_modules/@element-plus/icons-vue",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@element-plus__icons-vue@2.3.2/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@floating-ui/core",
+      "version": "1.8.0",
+      "lock_path": "node_modules/@floating-ui/core",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@floating-ui__core@1.8.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@floating-ui/dom",
+      "version": "1.8.0",
+      "lock_path": "node_modules/@floating-ui/dom",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@floating-ui__dom@1.8.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@floating-ui/utils",
+      "version": "0.2.12",
+      "lock_path": "node_modules/@floating-ui/utils",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@floating-ui__utils@0.2.12/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@intlify/core-base",
+      "version": "11.4.16",
+      "lock_path": "node_modules/@intlify/core-base",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@intlify__core-base@11.4.16/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@intlify/devtools-types",
+      "version": "11.4.16",
+      "lock_path": "node_modules/@intlify/devtools-types",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@intlify__devtools-types@11.4.16/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@intlify/message-compiler",
+      "version": "11.4.16",
+      "lock_path": "node_modules/@intlify/message-compiler",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@intlify__message-compiler@11.4.16/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@intlify/shared",
+      "version": "11.4.16",
+      "lock_path": "node_modules/@intlify/shared",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@intlify__shared@11.4.16/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "lock_path": "node_modules/@jridgewell/sourcemap-codec",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@jridgewell__sourcemap-codec@1.6.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@sxzz/popperjs-es",
+      "version": "2.11.8",
+      "lock_path": "node_modules/@popperjs/core",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@popperjs__core@2.11.8/LICENSE.md"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@types/lodash",
+      "version": "4.17.27",
+      "lock_path": "node_modules/@types/lodash",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@types__lodash@4.17.27/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@types/lodash-es",
+      "version": "4.17.12",
+      "lock_path": "node_modules/@types/lodash-es",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@types__lodash-es@4.17.12/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@types/web-bluetooth",
+      "version": "0.0.21",
+      "lock_path": "node_modules/@types/web-bluetooth",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@types__web-bluetooth@0.0.21/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/compiler-core",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/compiler-core",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__compiler-core@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "entities",
+      "version": "7.0.1",
+      "lock_path": "node_modules/@vue/compiler-core/node_modules/entities",
+      "license": "BSD-2-Clause",
+      "license_files": [
+        "LICENSES/web/@vue__compiler-core__dependency__entities@7.0.1/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/compiler-dom",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/compiler-dom",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__compiler-dom@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/compiler-sfc",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/compiler-sfc",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__compiler-sfc@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/compiler-ssr",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/compiler-ssr",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__compiler-ssr@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/devtools-api",
+      "version": "6.6.4",
+      "lock_path": "node_modules/@vue/devtools-api",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__devtools-api@6.6.4/LICENSE"
+      ],
+      "status": "full_original_notice_included",
+      "source_commit": "df6ab6bb7791a7a525a97990de73b3ea5e9a1941"
+    },
+    {
+      "package": "@vue/reactivity",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/reactivity",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__reactivity@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/runtime-core",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/runtime-core",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__runtime-core@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/runtime-dom",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/runtime-dom",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__runtime-dom@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/server-renderer",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/server-renderer",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__server-renderer@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vue/shared",
+      "version": "3.5.44",
+      "lock_path": "node_modules/@vue/shared",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vue__shared@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vueuse/core",
+      "version": "15.0.0",
+      "lock_path": "node_modules/@vueuse/core",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vueuse__core@15.0.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vueuse/metadata",
+      "version": "15.0.0",
+      "lock_path": "node_modules/@vueuse/metadata",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vueuse__metadata@15.0.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "@vueuse/shared",
+      "version": "15.0.0",
+      "lock_path": "node_modules/@vueuse/shared",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/@vueuse__shared@15.0.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "bytebuffer",
+      "version": "5.0.1",
+      "lock_path": "node_modules/bytebuffer",
+      "license": "Apache-2.0",
+      "license_files": [
+        "LICENSES/web/bytebuffer@5.0.1/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "csstype",
+      "version": "3.2.3",
+      "lock_path": "node_modules/csstype",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/csstype@3.2.3/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "dayjs",
+      "version": "1.11.23",
+      "lock_path": "node_modules/dayjs",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/dayjs@1.11.23/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "element-plus",
+      "version": "2.14.7",
+      "lock_path": "node_modules/element-plus",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/element-plus@2.14.7/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "async-validator",
+      "version": "4.2.5",
+      "lock_path": "node_modules/element-plus/node_modules/async-validator",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/element-plus__dependency__async-validator@4.2.5/LICENSE.md"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "estree-walker",
+      "version": "2.0.2",
+      "lock_path": "node_modules/estree-walker",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/estree-walker@2.0.2/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "lodash",
+      "version": "4.18.1",
+      "lock_path": "node_modules/lodash",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/lodash@4.18.1/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "lodash-es",
+      "version": "4.18.1",
+      "lock_path": "node_modules/lodash-es",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/lodash-es@4.18.1/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "lodash-unified",
+      "version": "1.0.3",
+      "lock_path": "node_modules/lodash-unified",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/lodash-unified@1.0.3/PACKAGE_LICENSE_DECLARATION.txt"
+      ],
+      "status": "metadata_only_original_license_not_provided"
+    },
+    {
+      "package": "long",
+      "version": "3.2.0",
+      "lock_path": "node_modules/long",
+      "license": "Apache-2.0",
+      "license_files": [
+        "LICENSES/web/long@3.2.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "magic-string",
+      "version": "0.30.21",
+      "lock_path": "node_modules/magic-string",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/magic-string@0.30.21/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "memoize-one",
+      "version": "6.0.0",
+      "lock_path": "node_modules/memoize-one",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/memoize-one@6.0.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "nanoid",
+      "version": "3.3.20",
+      "lock_path": "node_modules/nanoid",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/nanoid@3.3.20/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "normalize-wheel-es",
+      "version": "1.2.0",
+      "lock_path": "node_modules/normalize-wheel-es",
+      "license": "BSD-3-Clause",
+      "license_files": [
+        "LICENSES/web/normalize-wheel-es@1.2.0/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "picocolors",
+      "version": "1.1.1",
+      "lock_path": "node_modules/picocolors",
+      "license": "ISC",
+      "license_files": [
+        "LICENSES/web/picocolors@1.1.1/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "postcss",
+      "version": "8.5.31",
+      "lock_path": "node_modules/postcss",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/postcss@8.5.31/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "source-map-js",
+      "version": "1.2.2",
+      "lock_path": "node_modules/source-map-js",
+      "license": "BSD-3-Clause",
+      "license_files": [
+        "LICENSES/web/source-map-js@1.2.2/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "vue",
+      "version": "3.5.44",
+      "lock_path": "node_modules/vue",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/vue@3.5.44/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "vue-component-type-helpers",
+      "version": "3.3.13",
+      "lock_path": "node_modules/vue-component-type-helpers",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/vue-component-type-helpers@3.3.13/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    },
+    {
+      "package": "vue-i18n",
+      "version": "11.4.16",
+      "lock_path": "node_modules/vue-i18n",
+      "license": "MIT",
+      "license_files": [
+        "LICENSES/web/vue-i18n@11.4.16/LICENSE"
+      ],
+      "status": "full_original_notice_included"
+    }
+  ],
+  "notice_sources": [
+    {
+      "path": "LICENSES/firmware/fw/components/amiitool/LICENSE",
+      "bytes": 1193,
+      "sha256": "19033fe9af00edc3b3063777e439eaa257a21d6a5fc16ab2b08ae10b0b36dc03",
+      "source": "fw/components/amiitool/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/LICENSE",
+      "bytes": 35823,
+      "sha256": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809",
+      "source": "fw/components/chameleon-ultra/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/nfc/t2t_lib/license.txt",
+      "bytes": 1961,
+      "sha256": "c7d15bf552464b4d3291e14b432497cc40274e464aa8d6c02ffc86b3d34f0b20",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/nfc/t2t_lib/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/nfc/t4t_lib/license.txt",
+      "bytes": 1961,
+      "sha256": "7df7b4b24f2c17263a7fb94416b126a7654e4be3eb5ca89e7b6d7b74f773b917",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/nfc/t4t_lib/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/mbr/hex/mbr_nrf52_2.4.1_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/mbr/hex/mbr_nrf52_2.4.1_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s112/doc/s112_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s112/doc/s112_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s112/hex/s112_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s112/hex/s112_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s113/doc/s113_nrf52_7.2.0_licence_agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s113/doc/s113_nrf52_7.2.0_licence_agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s113/hex/s113_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s113/hex/s113_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s122/doc/s122_nrf52_8.0.0_licence-agreement.txt",
+      "bytes": 1939,
+      "sha256": "8f0493153b91db1e6c74f9e2642e8a345690e6174d19c097530386ffcfcd6c49",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s122/doc/s122_nrf52_8.0.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s122/hex/s122_nrf52_8.0.0_licence-agreement.txt",
+      "bytes": 1939,
+      "sha256": "8f0493153b91db1e6c74f9e2642e8a345690e6174d19c097530386ffcfcd6c49",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s122/hex/s122_nrf52_8.0.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s132/doc/s132_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s132/doc/s132_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s132/hex/s132_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s132/hex/s132_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s140/doc/s140_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s140/doc/s140_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s140/hex/s140_nrf52_7.2.0_licence-agreement.txt",
+      "bytes": 1952,
+      "sha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s140/hex/s140_nrf52_7.2.0_licence-agreement.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/components/toolchain/cmsis/dsp/license.txt",
+      "bytes": 1620,
+      "sha256": "20b2e96d88bd6de4d5e3ec99ea3895b534e77752dfd09f09556f7a98f99d9978",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/components/toolchain/cmsis/dsp/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/licenses.html",
+      "bytes": 2386,
+      "sha256": "86524a2557c4fb81bcdc614c2b45627c061fe5f124c1b582b205b5cdfc33a9c2",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/licenses.html"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/licenses.txt",
+      "bytes": 883,
+      "sha256": "ae292aeeb355cbe5880278e96a8e2f588edd2c28432313ff0549a3e24f848a65",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/licenses.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/nRF5_Garmin_Canada_license.txt",
+      "bytes": 2217,
+      "sha256": "853704d7a28d86a84dd3f9c8c58388b2f5862ebaafce86e5de341bfbe475f535",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/nRF5_Garmin_Canada_license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/nRF5_Nordic_license.txt",
+      "bytes": 1956,
+      "sha256": "83c33cf1ff4ebfecea51eceb887c31151b8affdd322e22d369628d6cc7ffcb0d",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/documentation/nRF5_Nordic_license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nano-pb/LICENSE.txt",
+      "bytes": 918,
+      "sha256": "a9c42b959825bce9b7c72a7b0797a41580cb21f407b73e08168fb1ed1db438c4",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nano-pb/LICENSE.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310/license.txt",
+      "bytes": 1528,
+      "sha256": "97d5e2e4db2cd346faf89f68a58ddfec32eb56fbd1353eb4a63962d02786b723",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310/lib/license.txt",
+      "bytes": 1528,
+      "sha256": "97d5e2e4db2cd346faf89f68a58ddfec32eb56fbd1353eb4a63962d02786b723",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310/lib/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310_bl/license.txt",
+      "bytes": 1528,
+      "sha256": "97d5e2e4db2cd346faf89f68a58ddfec32eb56fbd1353eb4a63962d02786b723",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310_bl/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310_bl/lib/license.txt",
+      "bytes": 1528,
+      "sha256": "97d5e2e4db2cd346faf89f68a58ddfec32eb56fbd1353eb4a63962d02786b723",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_cc310_bl/lib/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_oberon/license.txt",
+      "bytes": 1956,
+      "sha256": "4061166c1f9e5741957cdae09d4e01e32019c154b0ca8214a6e1a0165973f5d1",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_oberon/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_oberon/lib/license.txt",
+      "bytes": 1956,
+      "sha256": "4061166c1f9e5741957cdae09d4e01e32019c154b0ca8214a6e1a0165973f5d1",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/nrf_oberon/lib/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/segger_rtt/license/license.txt",
+      "bytes": 2736,
+      "sha256": "aa7343300f280e1aa5bfeddc5a2e8cff2f1f07d66af1799a7464565debac5b48",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/segger_rtt/license/license.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external/utf_converter/LICENSE",
+      "bytes": 1164,
+      "sha256": "a74cacbb1be882a4e953c0682a7ca4c595736641d73b86db383be232cee49f97",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external/utf_converter/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/external_tools/cmsisconfig/LICENSE.txt",
+      "bytes": 11338,
+      "sha256": "8eecb40503f0991e8e8cbb0e675fd6b43faf99cbb21003de233633d0bc3a2136",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/external_tools/cmsisconfig/LICENSE.txt"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/firmware/nrf52_sdk/modules/nrfx/LICENSE",
+      "bytes": 2068,
+      "sha256": "a19dd70692325ecfbe65fc622063d2f552bbfb20da9ea5792db3af03f8755a61",
+      "source": "fw/components/chameleon-ultra/firmware/nrf52_sdk/modules/nrfx/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/software/src/lib/pthread/COPYING",
+      "bytes": 5939,
+      "sha256": "856d21624660e84e901c771dad5781c862b678e4f8285ce2894fefc2b52bdc49",
+      "source": "fw/components/chameleon-ultra/software/src/lib/pthread/COPYING"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/chameleon-ultra/software/src/lib/pthread/COPYING.LIB",
+      "bytes": 26934,
+      "sha256": "885a03f54b157961236f46843e79972abfcd6890b6cbb368bc7eca328ff95a12",
+      "source": "fw/components/chameleon-ultra/software/src/lib/pthread/COPYING.LIB"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/cwalk/LICENSE.md",
+      "bytes": 1089,
+      "sha256": "95131f2149f9cec55248482a31abc0e361d4a6a003272f2a35e196786dfc6a1a",
+      "source": "fw/components/cwalk/LICENSE.md"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/littlefs/LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "source": "fw/components/littlefs/LICENSE.md"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/mlib/LICENSE",
+      "bytes": 1352,
+      "sha256": "e4acc2a25b9ea2a1f927bead79027c077f4bb68d59c2f382d0035e911166ae7c",
+      "source": "fw/components/mlib/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/fw/components/spiffs/LICENSE",
+      "bytes": 1137,
+      "sha256": "e8be7464b572f1ea73027c54acf44eae31b55b5996a086b61d00535d1ce7be95",
+      "source": "fw/components/spiffs/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/fw/scripts/LICENSE",
+      "bytes": 1580,
+      "sha256": "fc3c6f9acfcf1c8d40ea8caa2ab4e26301a88f85c90dad94881a2b0bcdda50a9",
+      "source": "fw/scripts/LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "source": "LICENSE"
+    },
+    {
+      "path": "LICENSES/firmware/header-notices/tlsf-header-notice.txt",
+      "bytes": 1950,
+      "sha256": "ef8755d2e20b290a035c93a1ea88fec76b1d4333876d5453732150727a8a2dc3",
+      "source": "fw/components/tlsf/tlsf.h original first block comment"
+    },
+    {
+      "path": "LICENSES/firmware/header-notices/qrcodegen-header-notice.txt",
+      "bytes": 1257,
+      "sha256": "3fadab1568001ff5e28ec355d5e34e26a81b8aaeec726258bd72350585a1cf40",
+      "source": "fw/components/qrcode/c/qrcodegen.h original first block comment"
+    },
+    {
+      "path": "LICENSES/firmware/header-notices/u8g2-header-notice.txt",
+      "bytes": 2064,
+      "sha256": "4363c85254afd5b85007f48193b4c22de893fef5f8261a27e7342da5e058addb",
+      "source": "fw/components/u8g2/csrc/u8g2.h original first block comment"
+    },
+    {
+      "path": "LICENSES/firmware/header-notices/wenquanyi-font-notice.txt",
+      "bytes": 2523,
+      "sha256": "c07c5539144921661e3ef7270a549eee6e2a498e0ad9e346bd9389b9cd4d8b41",
+      "source": "fw/data/wenquanyi_9pt_u8g2.bdf original initial comments"
+    },
+    {
+      "path": "LICENSES/web/@babel__helper-string-parser@7.29.7/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "source": "npm @babel/helper-string-parser@7.29.7/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@babel__helper-validator-identifier@7.29.7/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "source": "npm @babel/helper-validator-identifier@7.29.7/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@babel__parser@7.29.9/LICENSE",
+      "bytes": 1086,
+      "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+      "source": "npm @babel/parser@7.29.9/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@babel__types@7.29.8/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "source": "npm @babel/types@7.29.8/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@ctrl__tinycolor@4.2.1/LICENSE",
+      "bytes": 1072,
+      "sha256": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+      "source": "npm @ctrl/tinycolor@4.2.1/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@element-plus__icons-vue@2.3.2/LICENSE",
+      "bytes": 1121,
+      "sha256": "5db4ebb3abd8353774ae148723ccc14087d6dab99473f77a7b799b55defd8dfe",
+      "source": "npm @element-plus/icons-vue@2.3.2/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@floating-ui__core@1.8.0/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "source": "npm @floating-ui/core@1.8.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@floating-ui__dom@1.8.0/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "source": "npm @floating-ui/dom@1.8.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@floating-ui__utils@0.2.12/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "source": "npm @floating-ui/utils@0.2.12/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@intlify__core-base@11.4.16/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "source": "npm @intlify/core-base@11.4.16/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@intlify__devtools-types@11.4.16/LICENSE",
+      "bytes": 1083,
+      "sha256": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d",
+      "source": "npm @intlify/devtools-types@11.4.16/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@intlify__message-compiler@11.4.16/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "source": "npm @intlify/message-compiler@11.4.16/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@intlify__shared@11.4.16/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "source": "npm @intlify/shared@11.4.16/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@jridgewell__sourcemap-codec@1.6.0/LICENSE",
+      "bytes": 1080,
+      "sha256": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c",
+      "source": "npm @jridgewell/sourcemap-codec@1.6.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@popperjs__core@2.11.8/LICENSE.md",
+      "bytes": 1082,
+      "sha256": "bf67e2c9b7974543bb18ced3a0b37f53729aaff953b442dd89a3adaf90fd93e8",
+      "source": "npm @sxzz/popperjs-es@2.11.8/LICENSE.md"
+    },
+    {
+      "path": "LICENSES/web/@types__lodash@4.17.27/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "source": "npm @types/lodash@4.17.27/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@types__lodash-es@4.17.12/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "source": "npm @types/lodash-es@4.17.12/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@types__web-bluetooth@0.0.21/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "source": "npm @types/web-bluetooth@0.0.21/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__compiler-core@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/compiler-core@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__compiler-core__dependency__entities@7.0.1/LICENSE",
+      "bytes": 1260,
+      "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+      "source": "npm entities@7.0.1/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__compiler-dom@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/compiler-dom@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__compiler-sfc@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/compiler-sfc@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__compiler-ssr@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/compiler-ssr@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__devtools-api@6.6.4/LICENSE",
+      "bytes": 1083,
+      "sha256": "050bbca6960784db52ff387271bf2ecc5cbed7cf8581b415d528a6ecb6585015",
+      "source": "https://raw.githubusercontent.com/vuejs/vue-devtools/df6ab6bb7791a7a525a97990de73b3ea5e9a1941/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__reactivity@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/reactivity@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__runtime-core@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/runtime-core@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__runtime-dom@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/runtime-dom@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__server-renderer@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/server-renderer@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vue__shared@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm @vue/shared@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vueuse__core@15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+      "source": "npm @vueuse/core@15.0.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vueuse__metadata@15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+      "source": "npm @vueuse/metadata@15.0.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/@vueuse__shared@15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+      "source": "npm @vueuse/shared@15.0.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/bytebuffer@5.0.1/LICENSE",
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "source": "npm bytebuffer@5.0.1/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/csstype@3.2.3/LICENSE",
+      "bytes": 1062,
+      "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e",
+      "source": "npm csstype@3.2.3/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/dayjs@1.11.23/LICENSE",
+      "bytes": 1072,
+      "sha256": "5faab7526d055651be3aab769d58897be6bd91f3d39d137f25f12dba1b31d5dc",
+      "source": "npm dayjs@1.11.23/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/element-plus@2.14.7/LICENSE",
+      "bytes": 1077,
+      "sha256": "0790118bb4d66681db1d63181f72ef68e632d632f6db0373ef87cf328561af27",
+      "source": "npm element-plus@2.14.7/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/element-plus__dependency__async-validator@4.2.5/LICENSE.md",
+      "bytes": 1083,
+      "sha256": "5d0427088e37071c4b942de990f6365d5c2d195f3e957ce925322d184784e2eb",
+      "source": "npm async-validator@4.2.5/LICENSE.md"
+    },
+    {
+      "path": "LICENSES/web/estree-walker@2.0.2/LICENSE",
+      "bytes": 1126,
+      "sha256": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e",
+      "source": "npm estree-walker@2.0.2/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/lodash@4.18.1/LICENSE",
+      "bytes": 1952,
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+      "source": "npm lodash@4.18.1/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/lodash-es@4.18.1/LICENSE",
+      "bytes": 1952,
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+      "source": "npm lodash-es@4.18.1/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/lodash-unified@1.0.3/PACKAGE_LICENSE_DECLARATION.txt",
+      "bytes": 727,
+      "sha256": "49d64727192cee0c44e9d80a405bc980240cef3bcbd50a5cd4ab685d6dc4b3e7",
+      "source": "exact npm metadata and integrity-checked tarball"
+    },
+    {
+      "path": "LICENSES/web/long@3.2.0/LICENSE",
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "source": "npm long@3.2.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/magic-string@0.30.21/LICENSE",
+      "bytes": 1051,
+      "sha256": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484",
+      "source": "npm magic-string@0.30.21/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/memoize-one@6.0.0/LICENSE",
+      "bytes": 1073,
+      "sha256": "b1c501095de70182748cb8e8d97ac5577701a4ef3b755ba30d59fd87b24bdb0f",
+      "source": "npm memoize-one@6.0.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/nanoid@3.3.20/LICENSE",
+      "bytes": 1095,
+      "sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987",
+      "source": "npm nanoid@3.3.20/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/normalize-wheel-es@1.2.0/LICENSE",
+      "bytes": 1527,
+      "sha256": "658d037c5c078a24c27ab1e0f37050d407ad6628be94886a4e48f3e761f47f7d",
+      "source": "npm normalize-wheel-es@1.2.0/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/picocolors@1.1.1/LICENSE",
+      "bytes": 787,
+      "sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750",
+      "source": "npm picocolors@1.1.1/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/postcss@8.5.31/LICENSE",
+      "bytes": 1095,
+      "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+      "source": "npm postcss@8.5.31/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/source-map-js@1.2.2/LICENSE",
+      "bytes": 1526,
+      "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd",
+      "source": "npm source-map-js@1.2.2/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/vue@3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "source": "npm vue@3.5.44/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/vue-component-type-helpers@3.3.13/LICENSE",
+      "bytes": 1076,
+      "sha256": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+      "source": "npm vue-component-type-helpers@3.3.13/LICENSE"
+    },
+    {
+      "path": "LICENSES/web/vue-i18n@11.4.16/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "source": "npm vue-i18n@11.4.16/LICENSE"
+    }
+  ],
+  "open_notice_gaps": [
+    "lodash-unified@1.0.3 declares MIT but supplies no separate original LICENSE."
+  ],
+  "firmware_boundary": "Top-level GPL-2.0 retained; component GPL-3.0, MIT, BSD, Nordic/ARM and font terms remain applicable. No umbrella license conversion."
+}

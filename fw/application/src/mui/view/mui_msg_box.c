@@ -94,8 +94,14 @@ static void mui_msg_box_on_exit(mui_view_t *p_view) {}
 
 mui_msg_box_t *mui_msg_box_create() {
     mui_msg_box_t *p_mui_msg_box = mui_mem_malloc(sizeof(mui_msg_box_t));
+    if (!p_mui_msg_box) return NULL;
+    memset(p_mui_msg_box, 0, sizeof(*p_mui_msg_box));
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) {
+        mui_mem_free(p_mui_msg_box);
+        return NULL;
+    }
     p_view->user_data = p_mui_msg_box;
     p_view->draw_cb = mui_msg_box_on_draw;
     p_view->input_cb = mui_msg_box_on_input;
@@ -115,6 +121,7 @@ mui_msg_box_t *mui_msg_box_create() {
 }
 
 void mui_msg_box_free(mui_msg_box_t *p_view) {
+    if (!p_view) return;
     string_clear(p_view->header);
     string_clear(p_view->message);
     string_clear(p_view->btn_center_text);

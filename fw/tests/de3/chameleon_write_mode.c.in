@@ -1,0 +1,96 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+@ACTUAL_ENUM@
+#define ICON_DATA 1
+#define ICON_BACK 2
+#define MAIN_RETURN 3
+#define CHAMELEON_VIEW_ID_LIST 1
+#define NULL_USER_DATA NULL
+#define _T(x) "Back"
+typedef int mui_list_view_event_t;
+typedef struct {int icon; void *user_data; const char *text;} mui_list_item_t;
+typedef struct list_t mui_list_view_t;
+typedef void (*selected_t)(mui_list_view_event_t,mui_list_view_t *,mui_list_item_t *);
+struct list_t {void *user_data; unsigned count, focus; mui_list_item_t items[5]; selected_t selected;};
+typedef struct {mui_list_view_t *p_list_view; void *p_scene_dispatcher, *p_view_dispatcher;} app_chameleon_t;
+typedef struct {struct {nfc_tag_mf1_write_mode_t mode_block_write;} config; uint8_t marker[16];} card_t;
+static card_t cards[50], scratch;
+static card_t *m_tag_information = &scratch;
+static struct {uint8_t active_slot;struct{int tag_hf;}slots[50];} slotConfig;
+static bool g_is_tag_emulating;
+static unsigned saves,loads,sense_stops,sense_starts,previous,view_switches,clears;
+static int require(bool ok,const char *what){if(!ok){fprintf(stderr,"FAIL: %s\n",what);return 0;}return 1;}
+#define CHECK(x) do {if(!require((x),#x))return 1;}while(0)
+static void tag_emulation_save_data(void){cards[slotConfig.active_slot]=scratch;saves++;}
+static bool save_data_by_tag_type(uint8_t slot,int type){tag_emulation_save_data();return true;}
+static void tag_emulation_load_data(void){scratch=cards[slotConfig.active_slot];loads++;}
+static void tag_emulation_sense_end(void){sense_stops++;}
+static void tag_emulation_sense_run(void){sense_starts++;}
+static void mui_scene_dispatcher_previous_scene(void *scene){previous++;}
+static unsigned mui_list_view_get_focus(mui_list_view_t *view){return view->focus;}
+static void mui_list_view_set_focus(mui_list_view_t *view,unsigned focus){view->focus=focus;}
+static const char *tag_helper_get_mf_write_mode_name(unsigned mode){static const char *names[]={"normal","denied","deceive","shadow"};return mode<4?names[mode]:"unknown";}
+static void mui_list_view_add_item(mui_list_view_t *view,int icon,const char *text,void *data){if(view->count>=5)abort();view->items[view->count++]=(mui_list_item_t){icon,data,text};}
+static void mui_list_view_set_selected_cb(mui_list_view_t *view,selected_t callback){view->selected=callback;}
+static void mui_view_dispatcher_switch_to_view(void *dispatcher,int view){view_switches++;}
+static void mui_list_view_clear_items(mui_list_view_t *view){view->count=0;clears++;}
+
+@ACTUAL_FUNCTIONS@
+
+static void setup(unsigned slot,mui_list_view_t *view,app_chameleon_t *app){
+ memset(cards,0,sizeof(cards));
+ for(unsigned n=0;n<50;n++){cards[n].config.mode_block_write=NFC_TAG_MF1_WRITE_NORMAL;memset(cards[n].marker,(int)n+1,sizeof(cards[n].marker));}
+ slotConfig.active_slot=(uint8_t)slot;scratch=cards[slot];g_is_tag_emulating=true;
+ saves=loads=sense_stops=sense_starts=previous=view_switches=clears=0;
+ memset(view,0,sizeof(*view));memset(app,0,sizeof(*app));app->p_list_view=view;view->user_data=app;
+}
+
+int main(int argc,char **argv){
+ if(argc<2)return 2;
+ unsigned slot=argc>2?(unsigned)strtoul(argv[2],NULL,10):7;
+ if(slot>=50)return 2;
+ mui_list_view_t view;app_chameleon_t app;setup(slot,&view,&app);
+ card_t before[50];memcpy(before,cards,sizeof(cards));
+ if(strcmp(argv[1],"mode")==0){
+  if(argc!=4)return 2;
+  unsigned mode=(unsigned)strtoul(argv[3],NULL,10);
+  if(mode>=4)return 2;
+  chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+  CHECK(view.count==5 && view.selected!=NULL && view_switches==1);
+  for(unsigned n=0;n<4;n++){CHECK(view.items[n].icon==ICON_DATA);CHECK((uintptr_t)view.items[n].user_data==n);}
+  CHECK(view.items[4].icon==ICON_BACK);
+  view.focus=mode;view.selected(0,&view,&view.items[mode]);
+  CHECK(tag_emulation_get_slot()==slot);
+  CHECK(saves==0 && loads==0 && sense_stops==0 && sense_starts==0);
+  CHECK(g_is_tag_emulating && previous==1);
+  CHECK(nfc_tag_mf1_get_write_mode()==(mode==3?NFC_TAG_MF1_WRITE_SHADOW_REQ:mode));
+  CHECK(memcmp(scratch.marker,before[slot].marker,sizeof(scratch.marker))==0);
+  CHECK(memcmp(cards,before,sizeof(cards))==0);
+  /* Model the later normal save: only this slot's mode may persist. */
+  tag_emulation_save_data();
+  for(unsigned n=0;n<50;n++){
+   CHECK(memcmp(cards[n].marker,before[n].marker,sizeof(cards[n].marker))==0);
+   CHECK(cards[n].config.mode_block_write==(n==slot?(mode==3?NFC_TAG_MF1_WRITE_SHADOW_REQ:mode):NFC_TAG_MF1_WRITE_NORMAL));
+  }
+ }else if(strcmp(argv[1],"back")==0){
+  chameleon_scene_menu_card_write_mode_select_on_enter(&app);view.focus=4;view.selected(0,&view,&view.items[4]);
+  CHECK(tag_emulation_get_slot()==slot && previous==1 && saves==0 && loads==0);
+  CHECK(memcmp(cards,before,sizeof(cards))==0 && memcmp(&scratch,&before[slot],sizeof(scratch))==0);
+ }else if(strcmp(argv[1],"slot")==0){
+  unsigned original=slot==7?6:7;setup(original,&view,&app);
+  scratch.marker[0]=123;mui_list_item_t selected={ICON_DATA,(void *)(uintptr_t)slot,"slot"};
+  chameleon_scene_menu_card_slot_select_on_event(0,&view,&selected);
+  CHECK(tag_emulation_get_slot()==slot && saves==1 && loads==1 && previous==1);
+  CHECK(cards[original].marker[0]==123 && scratch.marker[0]==slot+1);
+  CHECK(!g_is_tag_emulating && sense_stops==0 && sense_starts==0);
+ }else if(strcmp(argv[1],"exit")==0){
+  chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+  chameleon_scene_menu_card_write_mode_select_on_exit(&app);
+  CHECK(view.count==0 && clears==1 && tag_emulation_get_slot()==slot && saves==0 && loads==0);
+ }else return 2;
+ puts("PASS");return 0;
+}

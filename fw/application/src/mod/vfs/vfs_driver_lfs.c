@@ -20,16 +20,16 @@
 #define LFS_ATTR_META 0xAA
 
 int block_device_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
-    return hal_spi_flash_read((block * c->block_size + off), buffer, size);
+    return hal_spi_flash_read((block * c->block_size + off), buffer, size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
 }
 
 int block_device_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
                       lfs_size_t size) {
-    return hal_spi_flash_prog((block * c->block_size + off), buffer, size);
+    return hal_spi_flash_prog((block * c->block_size + off), buffer, size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
 }
 
 int block_device_erase(const struct lfs_config *c, lfs_block_t block) {
-    return hal_spi_flash_erase(block * c->block_size);
+    return hal_spi_flash_erase(block * c->block_size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
 }
 
 int block_device_sync(const struct lfs_config *c) { return 0; }
@@ -85,7 +85,7 @@ int32_t vfs_lfs_mount(void) {
 
     err_code = hal_spi_flash_init();
     if (err_code) {
-        return err_code;
+        return VFS_ERR_NODEV;
     }
 
     // read flash info
@@ -229,9 +229,14 @@ int32_t vfs_lfs_read_dir_internal(vfs_dir_t *fd, vfs_obj_t *obj) {
     if (err > 0) {
         obj->type = info.type == LFS_TYPE_DIR ? VFS_TYPE_DIR : VFS_TYPE_REG;
         obj->size = info.size;
-        strncpy(obj->name, info.name, sizeof(obj->name));
+        if (strlen(info.name) >= sizeof(obj->name)) {
+            return VFS_ERR_MAXNM;
+        }
+        strcpy(obj->name, info.name);
 
-        cwalk_append_segment(path, fd->path, obj->name);
+        if (!cwalk_append_segment(path, fd->path, obj->name)) {
+            return VFS_ERR_MAXNM;
+        }
         lfs_getattr(&lfs, path, LFS_ATTR_META, obj->meta, sizeof(obj->meta));
 
         return VFS_OK;

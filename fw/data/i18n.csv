@@ -6,8 +6,8 @@ _L_OFF_F,[OFF],[关],[關],[NO],[KI],[AUS],[DÉSACTIVÉ],[UIT],[DESLIGADO],[オ�
 _L_BACK,Back,返回,返回,[Atrás],Vissza,Zurück,Retour,Terug,Voltar,戻る,Voltar,Indietro,[Назад],Wróć,Tillbaka
 _L_ERR,Error,错误,錯誤,Error,Hiba,Fehler,Erreur,Fout,Erro,エラー,Erro,Errore,Ошибка,Błąd,Fel
 _L_ERR_CODE,Error Code,错误码,錯誤碼,Código error,Hibakód,Fehlercode,Code d'Erreur,Foutcode,Código de Erro,エラーコード,Código de Erro,Codice errore,Код ошибки,Kod Błędu,Felkod
-_L_FAILED,Failed,失败,失敗,Fallido,,,,,,,,,Ошибка,Niepowodzenie,Misslyckades
-_L_BYTES,Bytes,字节,字節,,,,,,,,,,байт,,
+_L_FAILED,Failed,失败,失敗,Fallido,,Fehlgeschlagen,,,,,,,Ошибка,Niepowodzenie,Misslyckades
+_L_BYTES,Bytes,字节,字節,,,Bytes,,,,,,,байт,,
 _L_APP_AMIIBO,Amiibo Emulator,Amiibo模拟器,Amiibo模擬器,Emulador de amiibo,Amiibo Emulátor,Amiibo Emulator,Emulateur Amiibo,Amiibo-Emulator,Emulador de Amiibo,Amiiboエミュレータ,Emulador de Amiibo,Emulatore Amiibo,Эмулятор Amiibo,Emulator Amiibo,Amiibo-emulator
 _L_APP_AMIIBOLINK,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink,AmiiboLink
 _L_APP_BLE,BLE File Transfer,蓝牙传输,藍牙傳送,Transferencia BLE,BLE Fájltovábbítás,BLE Dateitransfer,Transfert de Fichiers BLE,BLE Bestandsoverdracht,Transferência de Arquivos BLE,BLEファイル転送,Transferência BLE,Trasferimento file BLE,Передача файлов,Transfer Plików BLE,BLE Filöverföring
@@ -27,20 +27,20 @@ _L_APP_SET_LIPO_BAT,LiPO Battery,LiPO电池,LiPO電池,Batería LiPO,LiPO Akkumu
 _L_APP_SET_SHOW_MEM_USAGE,Memory Used,内存使用率,記憶體使用率,Estad. Mem.,Használt Memória,Speicheranzeige,Mémoire Utilisée,Gebruikt Geheugen,Memória Usada,使用メモリ,Memoria Usada,Memoria usata,Статус памяти,Wskaźnik Pamięci,Använt minne
 _L_APP_SET_HIBERNATE,Fast Wakeup,快速唤醒,快速喚醒,Hibernar,Gyors Ébresztés,Schnelles Aufwachen,Réveil Rapide,Snel Ontwaken,Despertar Rápido,高速起動,Suspender,Risveglio rapido,Гибернация,Szybkie Wybudzanie,Snabb väckning
 _L_APP_SET_SLEEP_TIMEOUT,Sleep Timeout,休眠时间,休眠時間,Dormir en:,Alvási Időkorlát,Standby nach,Délai de mise en veille,Time-out Slaapstand,Tempo Limite de Suspensão,スリープタイムアウト,Suspender em:,Timeout di sospensione,Таймаут сна,Opóźnienie Uśpienia,Timeout för viloläge
-_L_APP_SET_NO_SLEEP,No Sleep While Emulating,模拟时不休眠,模擬時不休眠,No dormir al emular,Nem alszik emuláció közben,Kein Standby bei Emulation,Pas de veille pendant l'émulation,Niet slapen tijdens emulatie,Não dormir ao emular,エミュレート中はスリープしない,Não dormir ao emular,Nessuna sospensione in emulazione,Не спать при эмуляции,Nie usypiaj podczas emulacji,Ingen vila vid emulering
-_L_APP_SET_FLIP_DISPLAY,Flip Display,屏幕翻转,螢幕翻轉,Girar pantalla,Képernyő fordítása,Display drehen,Pivoter l'écran,Display draaien,Girar tela,画面回転,Rodar ecrã,Ruota schermo,Перевернуть экран,Obróć ekran,Vänd skärmen
-_L_APP_SET_SWAP_BUTTONS,Swap Buttons,按键互换,按鍵互換,Intercambiar botones,Bal/Jobb gombok cseréje,Buttons tauschen,Inverser les boutons,Links/rechts wisselen,Inverter botões,左右ボタン入替,Inverter botões,Scambia pulsanti,Поменять кнопки,Zamień przyciski,Byt plats på knappar
+_L_APP_SET_NO_SLEEP,No Sleep While Emulating,模拟时不休眠,模擬時不休眠,No dormir al emular,Nem alszik emuláció közben,Wach bleiben,Pas de veille pendant l'émulation,Niet slapen tijdens emulatie,Não dormir ao emular,エミュレート中はスリープしない,Não dormir ao emular,Nessuna sospensione in emulazione,Не спать при эмуляции,Nie usypiaj podczas emulacji,Ingen vila vid emulering
+_L_APP_SET_FLIP_DISPLAY,Flip Display,屏幕翻转,螢幕翻轉,Girar pantalla,Képernyő fordítása,Anzeige drehen,Pivoter l'écran,Display draaien,Girar tela,画面回転,Rodar ecrã,Ruota schermo,Перевернуть экран,Obróć ekran,Vänd skärmen
+_L_APP_SET_SWAP_BUTTONS,Swap Buttons,按键互换,按鍵互換,Intercambiar botones,Bal/Jobb gombok cseréje,Tasten tauschen,Inverser les boutons,Links/rechts wisselen,Inverter botões,左右ボタン入替,Inverter botões,Scambia pulsanti,Поменять кнопки,Zamień przyciski,Byt plats på knappar
 _L_APP_SET_LANGUAGE,Language,系统语言,系統語言,Idioma,Nyelv,Sprache,Langue,Taal,Idioma,言語,Idioma,Lingua,Язык,Język,Språk
-_L_APP_SET_GO_SLEEP,Go Sleep,进入休眠,進入休眠,Dormir,,,,,,,,,Перейти в режим сна,Uśpij Teraz,Viloläge
+_L_APP_SET_GO_SLEEP,Go Sleep,进入休眠,進入休眠,Dormir,,Ruhezustand,,,,,,,Перейти в режим сна,Uśpij Teraz,Viloläge
 _L_APP_SET_DFU,Firmware Update,固件更新,軟體升級,Actualizar firmware,Firmware Frissítés,Firmw. Aktualisierung,Mise à Jour du Micrologiciel,Firmware Bijwerken,Atualização de Firmware,ファームウェア更新,Atualizações,Aggiornamento firmware,Обновление ПО,Aktualizacja Oprogramowania,Firmware-uppdatering
 _L_APP_SET_REBOOT,System Reboot,重启设备,重啟設備,Reiniciar,Rendszer Újraindítása,System Neustart,Redémarrage du Système,Systeem Herstarten,Reinicialização do Sistema,システム再起動,Reiniciar,Riavvio del sistema,Перезагрузка,Restart Systemu,Starta om
 _L_APP_SET_RESET_DEFAULT,Reset Default Setting,重置默认配置,重置默認配置,Restablecer config.,Alapért. Beállítás Visszaállítása,Standardeinstellungen,Rétablir les Paramètres par Défaut,Terugzetten Naar Standaardwaarden,Restaurar Configurações Padrão,デフォルト設定に戻す,Repor Definições,Ripristina impostazioni predefinite,Сброс настроек,Przywróć Domyślne Ustawienia,Fabriksinställningar
 _L_APP_SET_RESET_DEFAULT_SUCCESS,Reset Success!,重置成功,重置成功,¡Configuración Restablecida!,Alapért. Beállítások Visszaállítása,Einstellungen zurückgesetzt!,Réinitialiser les Paramètres Par Défaut,Standaardinstellingen Herstellen,Redefinir a Configuração Padrão,設定を初期化,Reposição Completa!,Ripristino riuscito!,Сброс выполнен,Resetowanie Zakończone!,Återställning lyckad!
 _L_APP_SET_RESET_DEFAULT_CONFIRM,Confirm Reset Settings?,确认重置默认设置？,确认重置默认设置？,¿Confirma Restablecer\nConfig.?,,Auf Standardeinstellungen zurücksetzen?,,,,,,Conferma il ripristino delle impostazioni?,Выполнить?,Zresetować Ustawienia?,Bekräfta återställning av inställningar?
-_L_APP_SET_ABOUT,About Device,关于设备,關於設備,Acerca del dispositivo,,,,,,,,,Об устройстве,O Urządzeniu,Om enheten
-_L_APP_SET_ABOUT_OPEN_SOURCE_PROJECT,Open Source Project,开源项目,開源項目,Poyecto de código abierto,,,,,,,,,Проект с открытым кодом,Projekt Open Source,Projekt med öppen källkod
-_L_APP_SET_ABOUT_LGPL_LICENSE,GPL 2.0 License,GPL 2.0 授权,GPL 2.0 授權,Licencia GPL 2.0,,,,,,,,,Лицензия GPL 2.0,Licencja GPL 2.0,GPL 2.0-licens
-_L_APP_SET_APP_MGMT,App Management,应用管理,應用管理,,,,,,,,,,Ярлыки главного меню,,
+_L_APP_SET_ABOUT,About Device,关于设备,關於設備,Acerca del dispositivo,,Info,,,,,,,Об устройстве,O Urządzeniu,Om enheten
+_L_APP_SET_ABOUT_OPEN_SOURCE_PROJECT,Open Source Project,开源项目,開源項目,Poyecto de código abierto,,Open-Source-Projekt,,,,,,,Проект с открытым кодом,Projekt Open Source,Projekt med öppen källkod
+_L_APP_SET_ABOUT_LGPL_LICENSE,GPL 2.0 License,GPL 2.0 授权,GPL 2.0 授權,Licencia GPL 2.0,,GPL-2.0-Lizenz,,,,,,,Лицензия GPL 2.0,Licencja GPL 2.0,GPL 2.0-licens
+_L_APP_SET_APP_MGMT,App Management,应用管理,應用管理,,,Apps verwalten,,,,,,,Ярлыки главного меню,,
 _L_15S,15 Seconds,15秒,15秒,15 segundos,15 sec.,15 Sekunden,15 sec.,15 sec.,15 seg.,15秒,15 segundos,15 secondi,15 секунд,15 Sekund,15 sekunder
 _L_30S,30 Seconds,30秒,30秒,30 segundos,30 sec.,30 Sekunden,30 sec.,30 sec.,30 seg.,30秒,30 segundos,30 secondi,30 секунд,30 Sekund,30 sekunder
 _L_45S,45 Seconds,45秒,45秒,45 segundos,45 sec.,45 Sekunden,45 sec.,45 sec.,45 seg.,45秒,45 segundos,45 secondi,45 секунд,45 Sekund,45 sekunder
@@ -52,11 +52,11 @@ _L_UPLOAD_KEY_RETAIL_BIN,Upload the file key_retail.bin to the root directory of
 _L_KNOW,Got it,知道了,知道了,Entendido,Megvan,Verstanden,Compris,Begrepen,Entendi,了解,Confirmado,Ho Capito,[Понятно],Rozumiem,Uppfattat
 _L_RANDOM_GENERATION,Rand. Tag,随机生成,隨機產生,Nuevo serial aleat.,Véletlengenerátor,Zufällige UUID,Randomiser la Balise,Willekeurige Tag,Randomizar Etiqueta,タグのランダム化,Tag Aleatória,Tag casuale,Сгенерировать UUID,Losuj Tag,Slumpa tagg
 _L_AUTO_RANDOM_GENERATION,Auto Rand.,自动随机生成,自動隨機產生,Serial alea. aut,Automat. Véletlengenerátor,Zufällige UUID (Automatisch),Randomisation Automatique,Automatische Randomisatie,Randomização Automática,自動ランダム化,Tag Aleatória Auto.,Casuale automatico,Автогенерация,Autom. Losowanie,Auto-slump
-_L_SET_CUSTOM_ID,Set Custom ID,自定义 ID,自定義 ID,Asignar ID personalizado,,,,,,,,,Заказной ID,Niestandardowy ID,Ange anpassat ID
-_L_INPUT_ID,Input ID,输入 ID,输入 ID,Ingrese ID,,,,,,,,,Задайте ID,Wprowadź ID,Input ID
-_L_INAVLID_ID,Invalid ID,无效的 ID,無效的 ID,ID inválido,,,,,,,,,Недопустимый ID,Niewłaściwy ID,Ogiltigt ID
+_L_SET_CUSTOM_ID,Set Custom ID,自定义 ID,自定義 ID,Asignar ID personalizado,,Eigene ID setzen,,,,,,,Заказной ID,Niestandardowy ID,Ange anpassat ID
+_L_INPUT_ID,Input ID,输入 ID,输入 ID,Ingrese ID,,ID eingeben:,,,,,,,Задайте ID,Wprowadź ID,Input ID
+_L_INAVLID_ID,Invalid ID,无效的 ID,無效的 ID,ID inválido,,Ungültige ID,,,,,,,Недопустимый ID,Niewłaściwy ID,Ogiltigt ID
 _L_SHOW_QRCODE,Display QR Code,显示二维码,顯示二維碼,Mostrar QR,QR-kód Megjelenítése,QR Code,Afficher le Code QR,QR-Code Weergeven,Exibir QR Code,QRコード表示,Mostrar código QR,Mostra codice QR,QR-код,Wyświetl Kod QR,Visa QR-kod
-_L_READ_ONLY,Read-only,禁止写入,禁止寫入,Solo Lectura,,,,,,,,,Только чтение,Tylko do odczytu,Skrivskyddad
+_L_READ_ONLY,Read-only,禁止写入,禁止寫入,Solo Lectura,,Schreibgeschützt,,,,,,,Только чтение,Tylko do odczytu,Skrivskyddad
 _L_DELETE_TAG,Delete Tag,删除标签,刪除標籤,Borrar amiibo...,Címke Törlése,Tag löschen,Supprimer la Balise,Tag Verwijderen,Excluir Etiqueta,タグの削除,Apagar Tag,Elimina tag,Удалить тег,Usuń Tag,Radera tagg
 _L_DELETE_TAG_CONFIRM,Confirm Delete %s ?,确认删除 %s ?,確認刪除 %s ?,¿Borrar %s?,Törlés Megerősítése?,Löschen von %s bestätigen?,Confirmer la Suppression de %s ?,Bevestig Verwijderen %s ?,Confirmar Exclusão de %s ?,%s を削除しますか？,Apagar %s definitivamente?,Conferma eliminazione %s\n?,Удалить %s?,Usunąć %s ?,Bekräfta ta bort %s?
 _L_BACK_TO_DETAILS,Back to Tag Details,返回详情,返回詳情,[Detalles amiibo],Vissza a Címke Részletkhez,Zurück zu Tag Details,Retour Aux Détails de L'étiquette,Terug naar Tag Details,Voltar Aos Detalhes da Tag,タグの詳細に戻る,Voltar para detalhes,[Torna ai dettagli del tag],[Назад к деталям],[Wróć do Szczegółów],Tillbaka till taggdetaljer
@@ -150,7 +150,7 @@ _L_APP_AMIIDB_SLOT_SAVE_FAILED,Save Failed!,保存失败,保存失敗,¡Asignaci
 _L_APP_AMIIDB_SORT_FIELD,Sort Field,排序字段,排序欄位,Campo de ordenación,Rendezési mező,Sortierfeld,Champ de tri,Sorteerveld,Campo de Ordenação,並べ替えフィールド,Campo de Ordenação,Campo di ordinamento,Сортировка,Pole sortowania,Sorteringsfält
 _L_APP_AMIIDB_SORT_DEFAULT,Default,默认,預設,Por defecto,Alapértelmezett,Standard,Par défaut,Standaard,Padrão,デフォルト,Padrão,Predefinito,По умолчанию,Domyślne,Standard
 _L_APP_AMIIDB_SORT_NAME,Name,名字,名稱,Nombre,Név,Name,Nom,Naam,Nome,名前,Nome,Nome,По алфавиту,Nazwa,Namn
-_L_APP_AMIIDB_NOT_SUPPORT_V3,Not support for v3\namiibo!,暂不支持V3 amiibo!,暫不支持V3 amiibo!,,,,,,,,,,Поддержка Amiibo V3\n не реализована!,,
+_L_APP_AMIIDB_NOT_SUPPORT_V3,Not support for v3\namiibo!,暂不支持V3 amiibo!,暫不支持V3 amiibo!,,,V3 nicht unterstützt,,,,,,,Поддержка Amiibo V3\n не реализована!,,
 _L_APP_CHAMELEON,Card Emulator,卡模拟器,卡模擬器,Emular Etiqueta RFID,Kártya Emulátor,Karten Emulator,Emulateur de Carte,Kaart Emulator,Emulador de Cartão,カードエミュレータ,Emular Tag RFID,Emula tag RFID,Эмулятор карт,Emulator Kart,Kort-emulator
 _L_APP_CHAMELEON_TAG_MF1_WRITE_NORMAL,Normal,正常,正常,Normal,Normál,Normal,Normal,Normaal,Normal,通常,Normal,Normale,Разрешена,Normalny,Normal
 _L_APP_CHAMELEON_TAG_MF1_WRITE_DENIED,Deny,拒绝,拒絕,Negar,Tagadni,Verweigern,Refuser,Weigeren,Negar,拒否,Cancelar,Nega,Запрещена,Odmów,Neka
@@ -180,9 +180,9 @@ _L_APP_CHAMELEON_CARD_DATA_SAVE_INPUT_FILE_NAME,Input File Name:,输入文件名
 _L_APP_CHAMELEON_CARD_DATA_SAVE_FAILED,Save File Failed!,写入文件失败,寫入文件失敗,¡Error al guardar!,Fájl Mentése Sikertelen!,Datei speichern fehlgeschlagen!,Échec de l'Enregistrement du Fichier!,Bestand Opslaan Mislukt!,Falha ao Salvar o Arquivo!,ファイルの保存に失敗しました！,Erro ao guardar!,Errore nel salvataggio!,Ошибка сохранения файла,Błąd zapisywania pliku!,Spara misslyckades!
 _L_APP_CHAMELEON_CARD_DATA_SAVE_SUCCESS,Save File Success,导出卡片数据成功,導出卡片數據成功,Guardado correcto,Fájl Mentése Sikeres,Datei erfolgreich gespeichert,Sauvegarde du Fichier Réussie,Bestand Opslaan Gelukt,Arquivo Salvo com êxito,ファイルが保存されました,Guardado com sucesso,Salvataggio riuscito,Данные сохранены,Plik został zapisany,Sparades
 _L_APP_CHAMELEON_CARD_ADV_CUSTOM_MODE,Custom Mode,自定义模式,自定義模式,Modo personali.,Egyéni Mód,Benutzerdefinierter Modus,Mode Personnalisé,Aangepaste Modus,Modo Personalizado,カスタムモード,Modo personalizado,Modalità personalizzata,Заказной режим,Tryb Niestandardowy,Anpassat läge
-_L_APP_CHAMELEON_CARD_ADV_LOAD_BLOCK0,Load From Block0...,加载0扇区数据...,加載0扇區數據..,,,,,,,,,,Загрузить из блока 0...,,Ladda från Block0...
-_L_APP_CHAMELEON_CARD_ADV_LOAD_BLOCK0_SUCCESS,Load Block0 Success,加载0扇区数据成功,加載0扇區數據成功,,,,,,,,,,Данные из блока 0\n загружены,,Ladda block0 lyckades
-_L_APP_CHAMELEON_CARD_ID_SIZE,ID Size,ID类型,ID類型,,,,,,,,,,Размер ID,,ID-storlek
+_L_APP_CHAMELEON_CARD_ADV_LOAD_BLOCK0,Load From Block0...,加载0扇区数据...,加載0扇區數據..,,,Aus Block 0 laden...,,,,,,,Загрузить из блока 0...,,Ladda från Block0...
+_L_APP_CHAMELEON_CARD_ADV_LOAD_BLOCK0_SUCCESS,Load Block0 Success,加载0扇区数据成功,加載0扇區數據成功,,,Block 0 geladen,,,,,,,Данные из блока 0\n загружены,,Ladda block0 lyckades
+_L_APP_CHAMELEON_CARD_ID_SIZE,ID Size,ID类型,ID類型,,,ID-Länge,,,,,,,Размер ID,,ID-storlek
 _L_APP_CHAMELEON_CARD_GEN1A_MODE,Gen1A Enabled,Gen1A模式,Gen1A模式,Gen1A habilitada,Gen1A Engedélyezve,Gen1A aktiv,Gen1A Activé,Gen1A Ingeschakeld,Gen1A Ativada,Gen1A 有効,Gen1A ativado,Gen1A abilitata,Gen1A,Gen1A Aktywny,Gen1A aktiverad
 _L_APP_CHAMELEON_CARD_GENERATE_UID,Rand. UID,生成UID,生成UID,Generar UID aleat.,Véletlen UID,Zufällige UID,Randomiser l'UID,Willekeurige UID,UID Aleatório,UIDのランダム化,Gerar novo UID,Genera nuovo UID,Сгенерировать UID,Generuj UID,Slump UID
 _L_APP_CHAMELEON_CARD_GENERATE_UID_SUCCESS,UID Generated,UID已生成,UID已生成,UID generado,Generált UID,UID generiert,UID Généré,UID Gegenereerd,UID Gerado,UID 生成,UID gerado,UID generato,UID сгенерирован,UID Został Wygenerowany,UID skapat
@@ -190,11 +190,33 @@ _L_APP_CHAMELEON_CARD_GEN2_MODE,Gen2 Enabled,Gen2模式,Gen2模式,Gen2 habilita
 _L_APP_CHAMELEON_CARD_WRITE_MODE,Write Mode,写入模式,寫入模式,Modo escrit.,Írási Mód,Schreibmodus,Mode d'Écriture,Schrijfmodus,Modo de Gravação,書き込みモード,Modo escrita,Modalità scrittura,Запись,Tryb Zapisu,Skrivläge
 _L_APP_CHAMELEON_CARD_ADV_ID_EDIT_INVALID_INPUT,Invalid Input!,无效的输入!,無效的輸入!,¡Entrada inválida!,Érvénytelen bemenet!,Ungültige Eingabe!,Entrée Invalide!,Ongeldige Invoer!,Entrada Inválida!,無効な入力,Texto invalida,Input non valido!,Недопустимый ввод,Nieprawidłowe dane wejściowe!,Ogiltig inmatning!
 _L_APP_CHAMELEON_CARD_TYPE_FACTORY_DATA_CONFRIM,Card type changed. \nFactory card data?,卡类型已修改\n重置卡数据?,卡類型已修改\n重置卡數據?,Tipo tarjeta modificado\n¿Inicializar tarjeta?,A kártya típusa megváltozott.\nGyári kártyaadatok?,Kartentyp geändert. \nKartendaten zurücksetzen?,Le Type de Carte a Été Modifié. \nRéinitialiser les Données de la Carte?,Kaarttype gewijzigd. \nGegevens terugzetten naar standaard?,O tipo de cartão foi alterado. \nRedefinir dados do cartão?,カードの種類が変更されました。\nカードデータを初期化しますか？,Tipo de cartão alterado. \nFormatar cartão?,Tipo di carta modificato\nInizializzare carta?,Тип карты изменён.\nСбросить данные карты?,Zmieniono typ karty.\nUstawić domyślne dane?,Korttypen har ändrats. \nfabriksåterställ kortdata?
-_L_APP_CHAMELEON_CARD_DEFAULT_CARD,Default Card,默认卡片,默认卡片,Tarjeta Predeterminada,,,,,,,,,По умолчанию,Domyślna Karta,Standardkort
-_L_APP_GAME,Game,游戏,游戏,Juegos,,,,,,,,,Игры,Gry,Spel
-_L_APP_GAME_TINY_ARKANOID,Arkanoid,打砖块,打磚塊,Arkanoid,,,,,,,,,Арканоид,,
-_L_APP_GAME_TINY_INVADERS,Invaders,入侵者,入侵者,Invasores,,,,,,,,,Космические захватчики,,
-_L_APP_GAME_TINY_LANDER,Lander,星球着陆,星球著陸,Lander,,,,,,,,,Посадка на Луну,,
-_L_APP_GAME_TINY_TRIS,Tris,俄罗斯方块,俄羅斯方塊,Tris,,,,,,,,,Тетрис,,
-_L_NO_ANIMATION_FILES,No Animation Files,无动画文件,無動畫文件,,,,,,,,,,,,,
-_L_NOT_PLAYING,Not Playing,未播放动画,未播放動畫,,,,,,,,,,,,,
+_L_APP_CHAMELEON_CARD_DEFAULT_CARD,Default Card,默认卡片,默认卡片,Tarjeta Predeterminada,,Standardkarte,,,,,,,По умолчанию,Domyślna Karta,Standardkort
+_L_APP_GAME,Game,游戏,游戏,Juegos,,Spiele,,,,,,,Игры,Gry,Spel
+_L_APP_GAME_TINY_ARKANOID,Arkanoid,打砖块,打磚塊,Arkanoid,,Arkanoid,,,,,,,Арканоид,,
+_L_APP_GAME_TINY_INVADERS,Invaders,入侵者,入侵者,Invasores,,Invaders,,,,,,,Космические захватчики,,
+_L_APP_GAME_TINY_LANDER,Lander,星球着陆,星球著陸,Lander,,Lander,,,,,,,Посадка на Луну,,
+_L_APP_GAME_TINY_TRIS,Tris,俄罗斯方块,俄羅斯方塊,Tris,,Tris,,,,,,,Тетрис,,
+_L_NO_ANIMATION_FILES,No Animation Files,无动画文件,無動畫文件,,,Keine Animationen,,,,,,,,,,
+_L_NOT_PLAYING,Not Playing,未播放动画,未播放動畫,,,Keine Wiedergabe,,,,,,,,,,
+_L_DE3_SEARCH_QUERY,Name or 16-digit ID,,,,,Name oder 16-stellige ID,,,,,,,,,
+_L_DE3_SEARCH_GAME,Game,,,,,Spiel,,,,,,,,,
+_L_DE3_SEARCH_ALL,All games,,,,,Alle Spiele,,,,,,,,,
+_L_DE3_SEARCH_PAGE,Page %u/%u (%u),,,,,Seite %u/%u (%u),,,,,,,,,
+_L_DE3_PREVIOUS_PAGE,Previous page,,,,,Vorherige Seite,,,,,,,,,
+_L_DE3_NEXT_PAGE,Next page,,,,,Nächste Seite,,,,,,,,,
+_L_DE3_SEARCH_EMPTY,No matches,,,,,Keine Treffer,,,,,,,,,
+_L_DE3_SEARCH_ERROR,Search failed,,,,,Suche fehlgeschlagen,,,,,,,,,
+_L_DE3_FAV_INVALID,Invalid favorite name or path,,,,,Ungültiger Favoritenname oder Pfad,,,,,,,,,
+_L_DE3_FAV_IO_ERROR,Favorite operation failed,,,,,Favoritenaktion fehlgeschlagen,,,,,,,,,
+_L_DE3_STORAGE_FULL,Storage full,,,,,Speicher voll,,,,,,,,,
+_L_DE3_STORAGE_UNAVAILABLE,Storage unavailable,,,,,Speicher nicht verfügbar,,,,,,,,,
+_L_DE3_PATH_TOO_LONG,Path too long,,,,,Pfad zu lang,,,,,,,,,
+_L_DE3_STORAGE_IO_ERROR,Storage operation failed,,,,,Speicherzugriff fehlgeschlagen,,,,,,,,,
+_L_DE3_STORAGE_CORRUPT,Storage check failed,,,,,Speicherprüfung fehlgeschlagen,,,,,,,,,
+_L_DE3_STORAGE_RETRY_MOUNT,Retry mount,,,,,Erneut einhängen,,,,,,,,,
+_L_DE3_STORAGE_WORKING,Please wait...,,,,,Bitte warten...,,,,,,,,,
+_L_DE3_STORAGE_FORMAT_DONE,Formatted and mounted,,,,,Formatiert und verfügbar,,,,,,,,,
+_L_DE3_STORAGE_MOUNT_DONE,Storage available,,,,,Speicher verfügbar,,,,,,,,,
+_L_DE3_BAT_LOW,Low,,,,,Niedrig,,,,,,,,,
+_L_DE39_INFO_BUILD_TARGET,Build target,,,,,Firmware-Ziel,,,,,,,,,
+_L_DE39_INFO_UNKNOWN,Unknown,,,,,Unbekannt,,,,,,,,,

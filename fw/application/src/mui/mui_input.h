@@ -28,6 +28,7 @@ typedef struct {
 
 
 void mui_input_init();
+void mui_input_deinit(void);
 
 void mui_input_on_bsp_event(bsp_event_t evt);
 

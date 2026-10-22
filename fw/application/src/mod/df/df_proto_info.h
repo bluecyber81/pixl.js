@@ -7,7 +7,10 @@
 /** info proto command defines */
 typedef enum {
     DF_PROTO_CMD_INFO_VERSION_INFO = 0x01,
-    DF_PROTO_CMD_INFO_ENTER_DFU = 0x02
+    DF_PROTO_CMD_INFO_ENTER_DFU = 0x02,
+    DF_PROTO_CMD_INFO_CAPABILITIES = 0x03,
+    DF_PROTO_CMD_INFO_UI_DIAGNOSTIC = 0x04,
+    DF_PROTO_CMD_INFO_MTU_DIAGNOSTIC = 0x05
 } df_proto_cmd_info_t;
 
 

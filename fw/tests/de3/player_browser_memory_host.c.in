@@ -1,0 +1,107 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "mui_mem.c"
+#include "mui_alloc.h"
+#include "vfs.h"
+#include "vfs_meta.h"
+/* A failed negative control must exit without a Windows CRT modal dialog. */
+#undef assert
+#define assert(expr) do { if (!(expr)) { fprintf(stderr,"Assertion failed at %d: %s\n",__LINE__,#expr);exit(71); } } while (0)
+typedef enum {MUI_LIST_VIEW_EVENT_SELECTED,MUI_LIST_VIEW_EVENT_LONG_SELECTED} mui_list_view_event_t;
+typedef struct {void *user_data;unsigned icon;string_t text;} mui_list_item_t;
+typedef struct {void *user_data;mui_list_item_t items[16];unsigned count;} mui_list_view_t;
+typedef struct {string_t selected_file;void *p_scene_dispatcher;mui_list_view_t *p_list_view;} app_player_t;
+#define ICON_FILE 1
+#define ICON_HOME 2
+#define ICON_ERROR 3
+#define ICON_FOLDER 4
+#define PLAYER_SCENE_PLAY 1
+#define MINI_APP_ID_PLAYER 1
+#define _T(x) #x
+static unsigned changes,errors,kills,cases,append_calls,append_fail;
+static unsigned entries,reads,closes;
+static int read_error_at=-1,open_error,close_error;
+static void mui_scene_dispatcher_next_scene(void *d,unsigned id){(void)d;assert(id==1);changes++;}
+static void *mini_app_launcher(void){return NULL;}
+static void mini_app_launcher_kill(void *l,unsigned id){(void)l;(void)id;kills++;}
+static void *mui(void){return NULL;}
+static void mui_show_memory_error(void *m){(void)m;errors++;}
+static void mui_list_view_clear_items(mui_list_view_t *list){
+ for(unsigned i=0;i<list->count;i++) string_clear(list->items[i].text);
+ list->count=0;
+}
+static bool mui_list_view_try_add_item_ext(mui_list_view_t *list,unsigned icon,const char *text,const char *sub,void *user){
+ (void)sub;if(++append_calls==append_fail)return false;
+ assert(list->count<16);mui_list_item_t *item=&list->items[list->count++];
+ item->icon=icon;item->user_data=user;string_init_set_str(item->text,text);return true;
+}
+static void mui_list_view_add_item(mui_list_view_t *list,unsigned icon,const char *text,void *user){
+ if(!mui_list_view_try_add_item_ext(list,icon,text,NULL,user))mui_show_memory_error(mui());
+}
+static int opened(const char *path,vfs_dir_t *dir){(void)dir;assert(!strcmp(path,"/player"));return open_error;}
+static int read_entry(vfs_dir_t *dir,vfs_obj_t *obj){
+ (void)dir;unsigned at=reads++;
+ if((int)at==read_error_at)return VFS_ERR_FAIL;
+ if(at>=entries)return VFS_ERR_EOF;
+ memset(obj,0,sizeof(*obj));obj->type=VFS_TYPE_REG;snprintf(obj->name,sizeof(obj->name),"frame%u.bin",at);return VFS_OK;
+}
+static int closed(vfs_dir_t *dir){(void)dir;closes++;return close_error;}
+static vfs_driver_t driver={.open_dir=opened,.read_dir=read_entry,.close_dir=closed};
+vfs_driver_t *vfs_get_driver(vfs_drive_t drive){assert(drive==VFS_DRIVE_EXT);return &driver;}
+void vfs_meta_decode(uint8_t *data,uint8_t size,vfs_meta_t *meta){(void)data;(void)size;memset(meta,0,sizeof(*meta));}
+@CALLBACK@
+@LOADER@
+static void path_case(unsigned length,bool low,bool reuse){
+ app_player_t app={0};mui_list_item_t item={.icon=ICON_FILE};mui_list_view_t view={.user_data=&app};
+ string_init(app.selected_file);string_set_str(app.selected_file,"/old.bin");
+ if(reuse){char reserve[96];memset(reserve,'z',90);reserve[90]=0;string_set_str(app.selected_file,reserve);string_set_str(app.selected_file,"/old.bin");}
+ char name[513];memset(name,'a',length);name[length]=0;string_init_set_str(item.text,name);
+ size_t initial_capacity=string_capacity(app.selected_file);unsigned e=errors,c=changes;
+ void *fill[2048];unsigned n=0;
+ if(low){while(n<2048 && (fill[n]=mui_mem_malloc(16))!=NULL)n++;assert(n<2048);}
+ bool failure=length+8>=VFS_MAX_PATH_LEN || (low && length+8>=initial_capacity);
+ player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&view,&item);
+ if(failure){assert(errors==e+1&&changes==c&&!strcmp(string_get_cstr(app.selected_file),"/old.bin"));}
+ else {assert(errors==e&&changes==c+1&&string_size(app.selected_file)==length+8);
+       assert(!memcmp(string_get_cstr(app.selected_file),"/player/",8)&&!strcmp(string_get_cstr(app.selected_file)+8,name));}
+ while(n)mui_mem_free(fill[--n]);
+ if(failure && length+8<VFS_MAX_PATH_LEN){
+  player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&view,&item);
+  assert(changes==c+1&&errors==e+1&&string_size(app.selected_file)==length+8);
+ }
+ string_clear(item.text);string_clear(app.selected_file);cases++;
+}
+static void list_case(unsigned count,int read_fail,int open_fail,int close_fail,unsigned fail_append){
+ mui_list_view_t list={0};app_player_t app={.p_list_view=&list};list.user_data=&app;
+ entries=count;reads=closes=append_calls=0;read_error_at=read_fail;open_error=open_fail;close_error=close_fail;append_fail=fail_append;
+ unsigned e=errors;player_scene_file_browser_reload_folders(&app);
+ assert(closes==((open_fail||fail_append==1)?0:1));
+ if(fail_append){assert(errors==e+1&&list.count==0);}
+ else if(open_fail||read_fail>=0||close_fail){
+  assert(errors==e&&list.count==2&&list.items[0].icon==ICON_HOME&&list.items[1].icon==ICON_ERROR);
+  assert(!strcmp(string_get_cstr(list.items[1].text),open_fail?"OPEN_FOLDER_FAILED":"READ_FILE_FAILED"));
+  unsigned before=kills;player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items[0]);assert(kills==before+1);
+ }else if(count==0){assert(list.count==2&&!strcmp(string_get_cstr(list.items[1].text),"NO_ANIMATION_FILES"));}
+ else {assert(list.count==count+1&&list.items[1].icon==ICON_FILE);}
+ mui_list_view_clear_items(&list);cases++;
+}
+int main(int argc,char **argv){
+ mui_mem_init();mui_mem_monitor_t before,after;mui_mem_monitor(&before);
+ if(argc>1 && !strcmp(argv[1],"io")){list_case(3,0,0,0,0);}
+ else if(argc>1 && !strcmp(argv[1],"oom")){path_case(47,true,false);}
+ else {
+  for(unsigned n=1;n<48;n++){path_case(n,false,false);path_case(n,true,false);path_case(n,true,true);}
+  path_case(55,false,false);path_case(56,false,false);path_case(512,false,false);
+  list_case(0,-1,0,0,0);list_case(3,-1,0,0,0);
+  list_case(3,0,0,0,0);list_case(3,2,0,0,0);list_case(0,-1,VFS_ERR_FAIL,0,0);
+  list_case(0,-1,0,VFS_ERR_FAIL,0);list_case(3,-1,0,VFS_ERR_FAIL,0);
+  for(unsigned f=1;f<=4;f++)list_case(3,-1,0,0,f);
+  list_case(0,-1,0,0,2);list_case(3,1,0,0,3);list_case(3,1,0,0,4);
+ }
+ mui_mem_monitor(&after);assert(before.free_size==after.free_size&&before.used_cnt==after.used_cnt);
+ mui_mem_deinit();printf("PASS %u player path/list cases with real Mlib/TLSF; no lost heap bytes\n",cases);return 0;
+}

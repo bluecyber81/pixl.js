@@ -173,7 +173,8 @@ static nrf_drv_clock_handler_item_t m_clock_handler_item; /**< Clock event handl
 static uint8_t m_nfcid1_length = 0; /**< Length of NFCID1 provided by user or 0 if not initialized yet */
 static uint8_t m_nfcid1_data[NFCID1_MAX_LENGHT] = {0}; /**< Content of NFCID1 */
 
-static uint8_t m_nrfx_irq_enabled = false; /**< Flag indicating if nrfx IRQs are enabled */
+static volatile uint8_t m_nrfx_irq_enabled = false; /**< Flag indicating if nrfx IRQs are enabled */
+static volatile bool m_custom_enabled = false;
 
 #ifdef HAL_NFC_NRF52840_ENGINEERING_ABC_WORKAROUND
 static volatile bool m_nfc_fieldevents_filter_active = false; /**< Flag indicating that field events are ignored. */
@@ -251,6 +252,12 @@ static void field_timer_with_callback_config(void) {
 
 void TIMER4_IRQHandler(void) {
     HAL_NFC_DEBUG_PIN_SET(HAL_NFC_TIMER4_EVENT_DEBUG_PIN);
+    if (m_nrfx_irq_enabled || !m_custom_enabled) {
+        NRF_TIMER4->TASKS_SHUTDOWN = 1;
+        NRF_TIMER4->EVENTS_COMPARE[0] = 0;
+        HAL_NFC_DEBUG_PIN_CLEAR(HAL_NFC_TIMER4_EVENT_DEBUG_PIN);
+        return;
+    }
 #ifdef HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND
     hal_nfc_field_check();
 #else
@@ -447,6 +454,8 @@ static inline void nrf_nfct_event_clear(volatile uint32_t *p_event) {
  *
  */
 static inline void nrf_nfct_clock_event_handler(nrf_drv_clock_evt_type_t event) {
+    /* A requested clock can finish starting after an ownership handoff. */
+    if (m_nrfx_irq_enabled || !m_custom_enabled || !m_field_on) return;
     switch (event) {
     case NRF_DRV_CLOCK_EVT_HFCLK_STARTED:
         /* Activate NFCT only when HFXO is running */
@@ -512,6 +521,7 @@ static inline void nrf_nfct_field_event_handler(volatile nfct_field_sense_state_
     switch (field_state) {
     case NFC_FIELD_STATE_ON:
         if (!m_field_on) {
+            m_field_on = true; /* hfclk_request may call back synchronously. */
 #ifdef HAL_NFC_NRF52840_ENGINEERING_ABC_WORKAROUND
             /* Begin: Bugfix for FTPAN-190 */
             if (!is_first_sample) {
@@ -653,7 +663,24 @@ ret_code_t hal_nfc_parameter_get(hal_nfc_param_id_t id, void *p_data, size_t *p_
     return NRF_SUCCESS;
 }
 
+static void hal_nfc_events_clear(void) {
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_FIELDDETECTED);
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_FIELDLOST);
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_SELECTED);
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_TXFRAMEEND);
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_RXFRAMEEND);
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_RXERROR);
+    nrf_nfct_event_clear(&NRF_NFCT->EVENTS_ERROR);
+}
+
 ret_code_t hal_nfc_start(void) {
+    if (m_nrfx_irq_enabled) return NRF_ERROR_INVALID_STATE;
+    hal_nfc_events_clear();
+    hal_nfc_common_hw_setup();
+#if defined(HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND) || defined(HAL_NFC_NRF52840_ENGINEERING_ABC_WORKAROUND)
+    field_timer_with_callback_config();
+#endif
+    m_custom_enabled = true;
     NRF_NFCT->ERRORSTATUS = NRF_NFCT_ERRORSTATUS_ALL;
     NRF_NFCT->TASKS_SENSE = 1;
 
@@ -668,11 +695,14 @@ ret_code_t hal_nfc_start(void) {
 static volatile uint8_t m_nfc_buffer[NFC_BUFFER_SIZE] __attribute__((aligned(32))) = {0}; /**< Buffer for NFC Rx data */
 
 ret_code_t hal_nfc_send(const uint8_t *p_data, size_t data_length) {
+    if (p_data == NULL) {
+        return NRF_ERROR_NULL;
+    }
     if ((data_length == 0) || (data_length > NFC_BUFFER_SIZE)) {
         return NRF_ERROR_DATA_SIZE;
     }
 
-    memcpy(m_nfc_buffer, p_data, NFC_BUFFER_SIZE);
+    memcpy((void *)m_nfc_buffer, p_data, data_length);
     /* Ignore previous TX END events, SW takes care only for data frames which tranmission is triggered in this function
      */
     nrf_nfct_event_clear(&NRF_NFCT->EVENTS_TXFRAMEEND);
@@ -695,7 +725,34 @@ ret_code_t hal_nfc_send(const uint8_t *p_data, size_t data_length) {
 }
 
 ret_code_t hal_nfc_stop(void) {
+    /* Stop the old owner's entire IRQ/clock lifecycle before another NFCT
+     * driver changes the peripheral. Never stop the nrfx owner's Timer3. */
+    if (m_nrfx_irq_enabled) return NRF_SUCCESS;
+    CRITICAL_REGION_ENTER();
+    m_custom_enabled = false;
+    NVIC_DisableIRQ(NFCT_IRQn);
+    NVIC_ClearPendingIRQ(NFCT_IRQn);
+    NRF_NFCT->INTENCLR = UINT32_MAX;
     NRF_NFCT->TASKS_DISABLE = 1;
+#if defined(HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND) || defined(HAL_NFC_NRF52840_ENGINEERING_ABC_WORKAROUND)
+    NRF_TIMER4->TASKS_SHUTDOWN = 1;
+    NRF_TIMER4->EVENTS_COMPARE[0] = 0;
+    NVIC_DisableIRQ(TIMER4_IRQn);
+    NVIC_ClearPendingIRQ(TIMER4_IRQn);
+#endif
+    if (m_field_on) {
+        m_field_on = false;
+        nrf_drv_clock_hfclk_release();
+#ifdef HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND
+        nrf_nfct_field_lost_hfclk_handle();
+#endif
+    }
+    m_slp_req_received = false;
+    hal_nfc_events_clear();
+#ifndef HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND
+    m_nfc_fieldpresent_mask = NFC_FIELD_OFF_MASK;
+#endif
+    CRITICAL_REGION_EXIT();
 
     NRF_LOG_INFO("Stop");
     return NRF_SUCCESS;
@@ -736,6 +793,7 @@ void NFCT_IRQHandler(void) {
         nrfx_nfct_irq_handler();
         return;
     }
+    if (!m_custom_enabled) return;
 
     nfct_field_sense_state_t current_field = NFC_FIELD_STATE_NONE;
 
@@ -765,11 +823,13 @@ void NFCT_IRQHandler(void) {
     }
 
     if (NRF_NFCT->EVENTS_RXFRAMEEND && (NRF_NFCT->INTEN & NFCT_INTEN_RXFRAMEEND_Msk)) {
-        /* Take into account only number of whole bytes */
+        /* Validate the DMA byte count before removing CRC or reading byte 0.
+         * Malformed register counts must never bypass parser length checks. */
         uint32_t rx_status = 0;
-        uint32_t rx_data_size =
-            ((NRF_NFCT->RXD.AMOUNT & NFCT_RXD_AMOUNT_RXDATABYTES_Msk) >> NFCT_RXD_AMOUNT_RXDATABYTES_Pos) -
-            NFC_CRC_SIZE;
+        uint32_t rx_amount = NRF_NFCT->RXD.AMOUNT;
+        uint32_t rx_bytes = (rx_amount & NFCT_RXD_AMOUNT_RXDATABYTES_Msk) >> NFCT_RXD_AMOUNT_RXDATABYTES_Pos;
+        bool rx_size_valid = rx_bytes > NFC_CRC_SIZE && rx_bytes <= sizeof(m_nfc_rx_buffer) &&
+                             (rx_amount & NFCT_RXD_AMOUNT_RXDATABITS_Msk) == 0;
         nrf_nfct_event_clear(&NRF_NFCT->EVENTS_RXFRAMEEND);
 
         if (NRF_NFCT->EVENTS_RXERROR && (NRF_NFCT->INTEN & NFCT_INTEN_RXERROR_Msk)) {
@@ -783,7 +843,7 @@ void NFCT_IRQHandler(void) {
         }
 
         /* Go back to idle state if NFC-A frame with Transmission Errors occurs. */
-        if (rx_status) {
+        if (rx_status || !rx_size_valid) {
             nrf_nfct_default_state_reset();
         } else {
             if (m_nfc_rx_buffer[0] == NFC_SLP_REQ_CMD) {
@@ -793,7 +853,8 @@ void NFCT_IRQHandler(void) {
             } else {
                 if (m_nfc_lib_callback != NULL) {
                     /* This callback should trigger transmission of WRITE Response */
-                    m_nfc_lib_callback(m_nfc_lib_context, HAL_NFC_EVENT_COMMAND, (void *)m_nfc_rx_buffer, rx_data_size);
+                    m_nfc_lib_callback(m_nfc_lib_context, HAL_NFC_EVENT_COMMAND, (void *)m_nfc_rx_buffer,
+                                       rx_bytes - NFC_CRC_SIZE);
                 }
             }
         }
@@ -924,6 +985,7 @@ static void hal_nfc_field_check(void) {
  */
 static inline void nrf_nfct_field_event_handler(volatile nfct_field_sense_state_t field_state) {
     if (!m_field_on) {
+        m_field_on = true; /* hfclk_request may call back synchronously. */
         HAL_NFC_DEBUG_PIN_SET(HAL_NFC_HCLOCK_ON_DEBUG_PIN); // DEBUG!
         nrf_drv_clock_hfclk_request(&m_clock_handler_item);
 
@@ -946,7 +1008,10 @@ static inline void hal_nfc_re_setup(void) {
 }
 
 void hal_nfc_set_nrfx_irq_enable(uint8_t nrfx_irq_enabled){
+    if (nrfx_irq_enabled && !m_nrfx_irq_enabled) hal_nfc_stop();
+    CRITICAL_REGION_ENTER();
     m_nrfx_irq_enabled = nrfx_irq_enabled;
+    CRITICAL_REGION_EXIT();
 }
 
 ret_code_t hal_nfc_passive_ack(void) {

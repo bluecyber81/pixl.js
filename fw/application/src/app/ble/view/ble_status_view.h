@@ -1,5 +1,5 @@
-#ifndef STATUS_BAR_VIEW_H
-#define STATUS_BAR_VIEW_H
+#ifndef BLE_STATUS_VIEW_H
+#define BLE_STATUS_VIEW_H
 
 #include "mui_include.h"
 
@@ -38,8 +38,8 @@ static inline void ble_status_view_set_user_data(ble_status_view_t* p_view, void
     p_view->user_data = user_data;
 }
 
-inline void ble_status_view_set_page(ble_status_view_t *p_view, uint8_t page) { p_view->page = page; }
+static inline void ble_status_view_set_page(ble_status_view_t *p_view, uint8_t page) { p_view->page = page; }
 
-inline uint8_t ble_status_view_get_page(ble_status_view_t *p_view) { return p_view->page; }
+static inline uint8_t ble_status_view_get_page(ble_status_view_t *p_view) { return p_view->page; }
 
 #endif

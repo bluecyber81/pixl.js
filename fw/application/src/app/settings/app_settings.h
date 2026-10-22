@@ -1,5 +1,5 @@
 #ifndef APP_SETTINGS_H
-#define APP_ETTINGS_H
+#define APP_SETTINGS_H
 
 #include "mini_app_defines.h"
 
@@ -25,6 +25,9 @@ typedef struct {
 
     mui_toast_view_t *p_toast_view;
     mui_view_dispatcher_t *p_view_dispatcher_toast;
+
+    /* Only the successful, immediately following Home exit may skip its second save. */
+    bool exit_saved;
 
 } app_settings_t;
 

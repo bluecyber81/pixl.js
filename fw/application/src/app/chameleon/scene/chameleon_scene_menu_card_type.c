@@ -57,7 +57,11 @@ void chameleon_scene_menu_card_type_on_event(mui_list_view_event_t event, mui_li
     } break;
 
     case CHAMELEON_MENU_BACK:
-        mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+        if (tag_helper_get_active_tag_type() == TAG_TYPE_UNDEFINED) {
+            mini_app_launcher_exit(mini_app_launcher());
+        } else {
+            mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+        }
         break;
     }
 }

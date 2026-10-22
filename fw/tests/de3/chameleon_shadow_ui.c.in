@@ -1,0 +1,113 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+@ACTUAL_ENUM@
+#define ICON_DATA 1
+#define ICON_BACK 2
+#define MAIN_RETURN 3
+#define CHAMELEON_VIEW_ID_LIST 1
+#define NULL_USER_DATA NULL
+#define _T(x) "Back"
+#define NRF_LOG_INFO(...) ((void)0)
+#define _L_APP_CHAMELEON_TAG_MF1_WRITE_NORMAL 0
+#define _L_APP_CHAMELEON_TAG_MF1_WRITE_DENIED 1
+#define _L_APP_CHAMELEON_TAG_MF1_WRITE_DECEIVE 2
+#define _L_APP_CHAMELEON_TAG_MF1_WRITE_SHADOW 3
+#define TAG_TYPE_UNDEFINED 0
+typedef int tag_specific_type_t;
+typedef struct {void *buffer;} tag_data_buffer_t;
+static tag_specific_type_t m_tag_type=1;
+static int get_information_size_by_tag_type(tag_specific_type_t type){return 432;}
+static const char *getLangString(uint32_t id){static const char *names[]={"normal","denied","deceive","shadow"};return id<4?names[id]:"invalid";}
+typedef int mui_list_view_event_t;
+typedef struct {int icon;void *user_data;const char *text;} mui_list_item_t;
+typedef struct list_t mui_list_view_t;
+typedef void (*selected_t)(mui_list_view_event_t,mui_list_view_t *,mui_list_item_t *);
+struct list_t {void *user_data;unsigned count,focus;mui_list_item_t items[5];selected_t selected;};
+typedef struct {mui_list_view_t *p_list_view;void *p_scene_dispatcher,*p_view_dispatcher;} app_chameleon_t;
+typedef struct {struct {nfc_tag_mf1_write_mode_t mode_block_write;} config;uint8_t data[16];} card_t;
+static card_t cards[50],scratch;
+static card_t *m_tag_information=&scratch;
+static struct {uint8_t active_slot;struct{int tag_hf;}slots[50];} slotConfig;
+static bool g_is_tag_emulating;
+static unsigned saves,loads,sense_stops,sense_starts,previous,view_switches;
+static int require(bool ok,const char *message){if(!ok){fprintf(stderr,"FAIL: %s\n",message);return 0;}return 1;}
+#define CHECK(x) do {if(!require((x),#x))return 1;}while(0)
+static void tag_emulation_save_data(void){cards[slotConfig.active_slot]=scratch;saves++;}
+static bool save_data_by_tag_type(uint8_t slot,int type){tag_emulation_save_data();return true;}
+static void tag_emulation_load_data(void){scratch=cards[slotConfig.active_slot];loads++;}
+static void tag_emulation_sense_end(void){sense_stops++;}
+static void tag_emulation_sense_run(void){sense_starts++;}
+static void mui_scene_dispatcher_previous_scene(void *scene){previous++;}
+static unsigned mui_list_view_get_focus(mui_list_view_t *view){return view->focus;}
+static void mui_list_view_set_focus(mui_list_view_t *view,unsigned focus){view->focus=focus<view->count?focus:0;}
+static void mui_list_view_add_item(mui_list_view_t *view,int icon,const char *text,void *data){if(view->count>=5)abort();view->items[view->count++]=(mui_list_item_t){icon,data,text};}
+static void mui_list_view_set_selected_cb(mui_list_view_t *view,selected_t callback){view->selected=callback;}
+static void mui_view_dispatcher_switch_to_view(void *dispatcher,int view){view_switches++;}
+static void mui_list_view_clear_items(mui_list_view_t *view){view->count=0;view->focus=0;}
+
+@ACTUAL_FUNCTIONS@
+
+static void setup(unsigned slot,unsigned state,mui_list_view_t *view,app_chameleon_t *app){
+ memset(cards,0,sizeof(cards));for(unsigned n=0;n<50;n++)memset(cards[n].data,(int)n+1,sizeof(cards[n].data));
+ slotConfig.active_slot=(uint8_t)slot;scratch=cards[slot];scratch.config.mode_block_write=(nfc_tag_mf1_write_mode_t)state;
+ g_is_tag_emulating=true;saves=loads=sense_stops=sense_starts=previous=view_switches=0;
+ memset(view,0,sizeof(*view));memset(app,0,sizeof(*app));app->p_list_view=view;view->user_data=app;
+}
+
+int main(int argc,char **argv){
+ if(argc<3)return 2;
+ unsigned state=(unsigned)strtoul(argv[2],NULL,10),slot=argc>3?(unsigned)strtoul(argv[3],NULL,10):7;
+ if(state>5||slot>=50)return 2;
+ mui_list_view_t view;app_chameleon_t app;setup(slot,state,&view,&app);
+ card_t before=scratch;
+ if(strcmp(argv[1],"name")==0){
+  const char *expected=state<=4?getLangString(state==4?3:state):"";
+  CHECK(strcmp(tag_helper_get_mf_write_mode_name(nfc_tag_mf1_get_write_mode()),expected)==0);
+  CHECK(memcmp(&before,&scratch,sizeof(scratch))==0);
+ }else if(strcmp(argv[1],"focus")==0){
+  if(state>4)return 2;
+  chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+  CHECK(view.count==5 && view.focus==(state==4?3:state));
+  CHECK(view.items[view.focus].icon==ICON_DATA);
+  CHECK(strcmp(view.items[view.focus].text,getLangString(state==4?3:state))==0);
+  CHECK(memcmp(&before,&scratch,sizeof(scratch))==0);
+ }else if(strcmp(argv[1],"select")==0){
+  if(state>3)return 2;
+  setup(slot,0,&view,&app);chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+  view.focus=state;view.selected(0,&view,&view.items[state]);
+  CHECK(tag_emulation_get_slot()==slot && saves==0 && loads==0 && previous==1);
+  CHECK(nfc_tag_mf1_get_write_mode()==(state==3?NFC_TAG_MF1_WRITE_SHADOW_REQ:state));
+  CHECK(strcmp(tag_helper_get_mf_write_mode_name(nfc_tag_mf1_get_write_mode()),getLangString(state))==0);
+  chameleon_scene_menu_card_write_mode_select_on_exit(&app);
+  chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+  CHECK(view.focus==state && view.items[view.focus].icon==ICON_DATA);
+  CHECK(nfc_tag_mf1_get_write_mode()==(state==3?NFC_TAG_MF1_WRITE_SHADOW_REQ:state));
+ }else if(strcmp(argv[1],"save")==0){
+  if(state>4)return 2;
+  tag_data_buffer_t buffer={&scratch};
+  int result=nfc_tag_mf1_data_savecb(1,&buffer);
+  CHECK(result==(state==3?0:432));
+  CHECK(nfc_tag_mf1_get_write_mode()==(state==4?NFC_TAG_MF1_WRITE_SHADOW:state));
+  CHECK(memcmp(before.data,scratch.data,sizeof(scratch.data))==0);
+ }else if(strcmp(argv[1],"reopen")==0){
+  CHECK(state==4);
+  for(unsigned round=0;round<3;round++){
+   chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+   CHECK(view.focus==3 && strcmp(view.items[3].text,"shadow")==0);
+   CHECK(nfc_tag_mf1_get_write_mode()==NFC_TAG_MF1_WRITE_SHADOW_REQ);
+   CHECK(strcmp(tag_helper_get_mf_write_mode_name(nfc_tag_mf1_get_write_mode()),"shadow")==0);
+   chameleon_scene_menu_card_write_mode_select_on_exit(&app);
+  }
+  tag_data_buffer_t buffer={&scratch};CHECK(nfc_tag_mf1_data_savecb(1,&buffer)==432);
+  CHECK(nfc_tag_mf1_get_write_mode()==NFC_TAG_MF1_WRITE_SHADOW);
+  CHECK(nfc_tag_mf1_data_savecb(1,&buffer)==0);
+  chameleon_scene_menu_card_write_mode_select_on_enter(&app);
+  CHECK(view.focus==3 && strcmp(view.items[3].text,"shadow")==0);
+ }else return 2;
+ CHECK(tag_emulation_get_slot()==slot && saves==0 && loads==0 && sense_stops==0 && sense_starts==0);
+ CHECK(g_is_tag_emulating);
+ puts("PASS");return 0;
+}

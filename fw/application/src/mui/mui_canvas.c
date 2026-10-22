@@ -7,16 +7,27 @@ void mui_canvas_clear(mui_canvas_t *p_canvas) { u8g2_ClearBuffer(p_canvas->fb); 
 void mui_canvas_set_font(mui_canvas_t *p_canvas, const uint8_t *font) { u8g2_SetFont(p_canvas->fb, font); }
 
 uint8_t mui_canvas_get_utf8_bytes(const char *p) {
-    char c = *p;
-    if (c >> 7 == 0) { // 0xxxxxxx (一位的情况,为ASCII)
-        return 1;
-    } else if (c >> 5 == 0x6) { // 110xxxxx 10xxxxxx (110开头,代表两位)
-        return 2;
-    } else if (c >> 4 == 0xE) { // 1110xxxx 10xxxxxx 10xxxxxx (1110开头代表三位)
-        return 3;
-    } else {
-        return 4;
+    if (!p || !*p) return 0;
+    const uint8_t *bytes = (const uint8_t *)p;
+    uint8_t lead = bytes[0];
+    uint8_t length;
+    if (lead < 0x80) return 1;
+    if (lead >= 0xC2 && lead <= 0xDF) length = 2;
+    else if (lead >= 0xE0 && lead <= 0xEF) length = 3;
+    else if (lead >= 0xF0 && lead <= 0xF4) length = 4;
+    else return 1;
+
+    /* Check each byte before advancing: a filename can end in an incomplete
+     * sequence. Invalid bytes consume one byte so every text walker progresses
+     * without copying beyond the terminating NUL. */
+    for (uint8_t i = 1; i < length; ++i) {
+        if ((bytes[i] & 0xC0) != 0x80) return 1;
     }
+    if ((lead == 0xE0 && bytes[1] < 0xA0) ||
+        (lead == 0xED && bytes[1] >= 0xA0) ||
+        (lead == 0xF0 && bytes[1] < 0x90) ||
+        (lead == 0xF4 && bytes[1] >= 0x90)) return 1;
+    return length;
 }
 
 uint8_t mui_canvas_draw_utf8(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, const char *str) {
@@ -56,7 +67,7 @@ int32_t mui_canvas_draw_utf8_clip(mui_canvas_t *p_canvas, int32_t x, int32_t y, 
 uint8_t mui_canvas_draw_glyph(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, uint16_t encoding) {
     x += p_canvas->offset_x;
     y += p_canvas->offset_y;
-    u8g2_DrawGlyph(p_canvas->fb, x, y, encoding);
+    return u8g2_DrawGlyph(p_canvas->fb, x, y, encoding);
 }
 
 uint16_t mui_canvas_draw_utf8_truncate(mui_canvas_t* p_canvas, uint8_t x, uint8_t y, uint8_t max_width, const char *str) {
@@ -102,12 +113,13 @@ void mui_canvas_set_frame(mui_canvas_t *p_canvas, uint8_t offset_x, uint8_t offs
 void mui_canvas_get_clip_window(mui_canvas_t *p_canvas, mui_rect_t *p_rect) {
     p_rect->x = p_canvas->fb->clip_x0 - p_canvas->offset_x;
     p_rect->y = p_canvas->fb->clip_y0 - p_canvas->offset_y;
-    p_rect->w = p_canvas->width;
-    p_rect->h = p_canvas->height;
+    p_rect->w = p_canvas->fb->clip_x1 - p_canvas->fb->clip_x0;
+    p_rect->h = p_canvas->fb->clip_y1 - p_canvas->fb->clip_y0;
 }
 void mui_canvas_set_clip_window(mui_canvas_t *p_canvas, mui_rect_t *p_rect) {
     u8g2_SetClipWindow(p_canvas->fb, p_rect->x + p_canvas->offset_x, p_rect->y + p_canvas->offset_y,
-                       p_rect->x + p_rect->w, p_rect->y + p_rect->w);
+                       p_rect->x + p_canvas->offset_x + p_rect->w,
+                       p_rect->y + p_canvas->offset_y + p_rect->h);
 }
 
 uint8_t mui_canvas_get_draw_color(mui_canvas_t *p_canvas) { return u8g2_GetDrawColor(p_canvas->fb); }

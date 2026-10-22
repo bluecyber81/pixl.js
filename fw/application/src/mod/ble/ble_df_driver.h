@@ -10,4 +10,9 @@ df_driver_t* ble_get_df_driver();
 
 void ble_on_received_data(const uint8_t* data, size_t length);
 void ble_on_transmit_ready();
-#endif 
+void ble_on_disconnected(void);
+/* Foreground idle timeout; no VFS work or timer allocation in an IRQ. */
+void ble_df_driver_poll(void);
+/* Explicit per-connection protocol opt-in; resets on disconnect. */
+void ble_df_driver_enable_framed_rx(void);
+#endif

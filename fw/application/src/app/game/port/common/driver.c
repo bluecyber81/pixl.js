@@ -31,7 +31,10 @@ void JOY_OLED_write_data(uint8_t is_data, uint8_t data) {
     };
     nrf_gpio_pin_write(LCD_DC_PIN, is_data);
     uint32_t err_code = hal_spi_bus_xfer(&trans);
-    APP_ERROR_CHECK(err_code);
+    if (err_code != NRF_SUCCESS) {
+        hal_spi_bus_release(mui_u8g2_get_spi_device());
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 void JOY_OLED_write_cmd(uint8_t cmd) { JOY_OLED_write_data(0, cmd); }

@@ -38,3 +38,11 @@ const char *getLangDesc(Language lang) {
 }
 
 Language getLanguage() { return currentLanguage; }
+
+bool isChineseLanguage(void) {
+#ifdef LANGUAGE_HAS_ZH_HANS
+    return currentLanguage == LANGUAGE_ZH_HANS;
+#else
+    return false;
+#endif
+}

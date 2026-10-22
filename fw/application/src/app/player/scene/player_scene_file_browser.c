@@ -3,6 +3,8 @@
 #include "player_view.h"
 #include "vfs.h"
 #include "vfs_meta.h"
+#include "mui_alloc.h"
+#include <stdio.h>
 
 #include "i18n/language.h"
 #include "mini_app_launcher.h"
@@ -24,8 +26,13 @@ static void player_scene_file_browser_on_selected(mui_list_view_event_t event, m
 
     if (event == MUI_LIST_VIEW_EVENT_SELECTED) {
         if (p_item->icon == ICON_FILE) {
-            string_set_str(app->selected_file, "/player/");
-            string_cat(app->selected_file, p_item->text);
+            char path[VFS_MAX_PATH_LEN];
+            int length = snprintf(path, sizeof(path), "/player/%s", string_get_cstr(p_item->text));
+            if (length < 0 || (size_t)length >= sizeof(path) ||
+                !mui_string_try_set_str(app->selected_file, path)) {
+                mui_show_memory_error(mui());
+                return;
+            }
             mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, PLAYER_SCENE_PLAY);
         } else if (p_item->icon == ICON_HOME) {
             mini_app_launcher_kill(mini_app_launcher(), MINI_APP_ID_PLAYER);
@@ -53,10 +60,12 @@ static void player_scene_file_browser_reload_folders(app_player_t *app) {
 
     p_vfs_driver = vfs_get_driver(VFS_DRIVE_EXT);
 
-    mui_list_view_add_item(app->p_list_view, ICON_HOME, _T(MAIN_MENU), (void *)-1);
+    bool complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_HOME, _T(MAIN_MENU), NULL, (void *)-1);
+    if (!complete) goto memory_error;
 
     int32_t res = p_vfs_driver->open_dir("/player", &dir);
     uint32_t file_cnt = 0;
+    const char *error = NULL;
     if (res == VFS_OK) {
         while ((res = p_vfs_driver->read_dir(&dir, &obj)) == VFS_OK) {
             // hide file or dir if flagged with hidden
@@ -66,19 +75,32 @@ static void player_scene_file_browser_reload_folders(app_player_t *app) {
                 continue;
             }
             uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
-            mui_list_view_add_item(app->p_list_view, icon, obj.name, (void *)-1);
+            if (!mui_list_view_try_add_item_ext(app->p_list_view, icon, obj.name, NULL, (void *)-1)) {
+                complete = false;
+                break;
+            }
             file_cnt++;
         }
-        p_vfs_driver->close_dir(&dir);
+        int32_t close_result = p_vfs_driver->close_dir(&dir);
+        if (!complete) goto memory_error;
+        if (res != VFS_ERR_EOF || close_result != VFS_OK) error = _T(READ_FILE_FAILED);
     } else {
-        mui_list_view_add_item(app->p_list_view, ICON_ERROR, _T(OPEN_FOLDER_FAILED), (void *)-1);
+        error = _T(OPEN_FOLDER_FAILED);
     }
 
-    if (file_cnt == 0) {
-        mui_list_view_add_item(app->p_list_view, ICON_ERROR, _T(NO_ANIMATION_FILES), (void *)-1);
+    if (error) {
+        /* A partial directory is not a complete animation list. Keep Home
+         * available and distinguish an I/O error from a genuinely empty folder. */
+        mui_list_view_clear_items(app->p_list_view);
+        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_HOME, _T(MAIN_MENU), NULL, (void *)-1) &&
+                   mui_list_view_try_add_item_ext(app->p_list_view, ICON_ERROR, error, NULL, (void *)-1);
+    } else if (file_cnt == 0) {
+        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_ERROR, _T(NO_ANIMATION_FILES), NULL, (void *)-1);
     }
-
-    //mui_list_view_sort(app->p_list_view, player_scene_file_browser_list_item_cmp);
+    if (complete) return;
+memory_error:
+    mui_list_view_clear_items(app->p_list_view);
+    mui_show_memory_error(mui());
 }
 
 void player_scene_file_browser_on_enter(void *user_data) {

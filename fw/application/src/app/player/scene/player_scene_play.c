@@ -25,4 +25,7 @@ void player_scene_play_on_enter(void *user_data) {
     player_view_play(app->p_player_view, VFS_DRIVE_EXT, string_get_cstr(app->selected_file));
 }
 
-void player_scene_play_on_exit(void *user_data) { app_player_t *app = user_data; }
+void player_scene_play_on_exit(void *user_data) {
+    app_player_t *app = user_data;
+    player_view_stop(app->p_player_view);
+}

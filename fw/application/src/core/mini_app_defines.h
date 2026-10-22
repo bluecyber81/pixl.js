@@ -35,6 +35,7 @@ struct mini_app_inst_s {
     mini_app_state_t state;
     void* p_handle;
     uint8_t* p_retain_data;
+    mini_app_inst_t *next;
 };
 
 

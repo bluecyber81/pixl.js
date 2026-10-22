@@ -31,9 +31,15 @@ static void chameleon_scene_menu_card_data_file_save_text_input_event_cb(mui_tex
             vfs_driver_t *p_driver = vfs_get_default_driver();
             uint8_t *tag_buffer = tag_helper_get_active_tag_memory_data();
             size_t tag_data_size = tag_helper_get_active_tag_data_size();
-            sprintf(path, "%s/%s", CHELEMEON_DUMP_FOLDER, text);
+            int length = snprintf(path, sizeof(path), "%s/%s", CHELEMEON_DUMP_FOLDER, text);
+            if (length < 0 || (size_t)length >= sizeof(path) || !p_driver || !p_driver->mounted() ||
+                !tag_buffer || tag_data_size == 0 || strchr(text, '/') || strchr(text, '\\') ||
+                strcmp(text, ".") == 0 || strcmp(text, "..") == 0) {
+                mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED));
+                return;
+            }
             int32_t err = p_driver->write_file_data(path, tag_buffer, tag_data_size);
-            if (err < 0) {
+            if (err < 0 || (size_t)err != tag_data_size) {
                 mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED));
                 return;
             }

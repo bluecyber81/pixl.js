@@ -1,0 +1,73 @@
+Custom LCD 2.21.0-DE3 (application OTA counter 551)
+Based on the preserved local LCD DE2 tree. Intended for the identified Allmiibo
+LCD devices; no bootloader, SoftDevice, display pin or battery calibration change.
+
+Changes relative to DE2
+----------------------
+Search and favorites:
+- Name or exact 16-hex-digit amiibo ID, game/category filter and explicit result
+  pages of 100 entries. Detail navigation uses the same visible page.
+- Bounded streaming selection avoids allocating a pointer for every database
+  entry. The result-membership bitmap supports up to 2048 database records.
+- Favorite names, paths and stored IDs are validated before filesystem access.
+  Failed writes, renames and malformed input are reported. Empty/aborted name
+  dialogs remain navigable; allocation failure does not leak a new favorite.
+- Input length is bounded per dialog in bytes, preserving UTF-8 boundaries.
+
+Persistence:
+- Settings, active amiibo data and amiibo database slots use a shared bounded
+  journal with CRC32, old/new records and a pending marker. Slot data and its
+  128-byte metadata are committed together. Existing canonical formats remain.
+- Both records and the pending marker are read back before changing the target.
+  Recovery validates the marker, path, sizes, record and data CRCs. A corrupt
+  new record can fall back to a valid old record; a transient read error cannot.
+- Successfully committed old journals without a pending marker are never used
+  to overwrite later BLE edits. Public SPIFFS mutations coordinate recovery;
+  streamed external writers exclude journal saves until close/unmount.
+- Maximum protected payload: 2048 bytes. At the maximum size the two records
+  plus marker need up to 4600 bytes, plus filesystem allocation/GC overhead.
+  Streaming uses 128-byte buffers. A free-space number alone cannot guarantee
+  a write will succeed. Larger Chameleon files and arbitrary streamed BLE
+  transfers do not gain transactional protection from this feature.
+- A malformed pending marker deliberately blocks automatic recovery/mutation.
+  Do not format as a normal recovery action. Back up available files and inspect
+  the journal before choosing a repair. CRC detection is not a guarantee against
+  all physical flash or SPIFFS power-loss failures.
+- Sleep still remains possible after a save error, so a low battery is not kept
+  awake indefinitely. The failure is logged and journal evidence is retained.
+
+Storage and battery UI:
+- Distinct storage-full/unavailable/path/check/I/O messages, usable controls
+  after a failed explicit format or mount, and an explicit mount retry.
+  No automatic format or automatic destructive retry.
+- Voltage display, EMA smoothing (1/4), 30 mV bar hysteresis and low indication
+  using the previous lower bar thresholds: CR2032 <2.30 V, LiPo <3.60 V;
+  the low indication clears 50 mV higher. Charging uses two consistent samples.
+- Mode changes reset the filter. ADC errors show an unavailable reading and
+  release ADC ownership. This is not a calibrated capacity or runtime estimate.
+
+Chameleon and menu fixes:
+- Strict bounded dotted-hex parser for 4/7/10-byte UIDs, SAK, ATQA and ATS;
+  malformed input leaves the current identity unchanged. Replaces unsafe scanf
+  writes to small objects. Existing ATQA byte order is retained.
+- Nickname reads are terminated and bounded; names over the 89-byte limit fail
+  before I/O. The editor preserves the complete existing name.
+- Empty list navigation, invalid selection and narrow text canvases are guarded.
+  Leaving/freeing a list stops its animations and frees subtitle allocations.
+
+Build and validation
+--------------------
+Use fw/scripts/build_de3.sh in the locally pinned nRF52 SDK container. Generation
+of database, translations and font remains script-driven. Target LCD only.
+The external workspace wrapper/exporter records build, source and artifact
+hashes, verifies the signed application-only Nordic OTA and checks memory bounds.
+Run fw/tests/de3/run_all.py with a new --report path for the complete DE2+DE3
+host regression set. Tests compile actual firmware C with mocked hardware and
+filesystem calls; selected tests additionally run with ASan and UBSan.
+
+Neither compilation nor host tests prove real NFC/game compatibility, LCD
+behavior, battery calibration, sleep/wake or physical flash failure recovery.
+Check version, preserved files, menu/search/favorites, battery display, a player
+file and a known owned figure on the actual device/console after installation.
+The database contains the verified 950 unique IDs carried over from DE2; this
+is not a promise to include every present or future figure in the world.

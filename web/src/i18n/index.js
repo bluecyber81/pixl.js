@@ -1,77 +1,45 @@
-import Vue from 'vue'
-import VueI18n from 'vue-i18n'
-import elementEnLocale from 'element-ui/lib/locale/lang/en' // element-ui lang
-import elementZhCnLocale from 'element-ui/lib/locale/lang/zh-CN' // element-ui lang
-import elementEsLocale from 'element-ui/lib/locale/lang/es' // element-ui lang
-import elementZhTwLocale from 'element-ui/lib/locale/lang/zh-TW' // element-ui lang
-import elementRuLocale from 'element-ui/lib/locale/lang/ru-RU' // element-ui lang
-import elementDeLocale from 'element-ui/lib/locale/lang/de' // element-ui lang
-import elementSvLocale from 'element-ui/lib/locale/lang/sv-SE' // element-ui lang
-import elementJaLocale from 'element-ui/lib/locale/lang/ja' // element-ui lang'
-import enLocale from './en_US'
-import zhTWLocale from './zh_TW'
-import zhCNLocale from './zh_Hans'
-import esLocale from './es_ES'
-import ruLocale from './ru_RU'
-import deLocale from './de_DE'
-import svLocale from './sv_SE'
-import jaLocale from './ja_JP'
-
-
-Vue.use(VueI18n)
+import { createI18n } from 'vue-i18n'
+import elementEn from 'element-plus/es/locale/lang/en.mjs'
+import elementZhCn from 'element-plus/es/locale/lang/zh-cn.mjs'
+import elementZhTw from 'element-plus/es/locale/lang/zh-tw.mjs'
+import elementEs from 'element-plus/es/locale/lang/es.mjs'
+import elementRu from 'element-plus/es/locale/lang/ru.mjs'
+import elementDe from 'element-plus/es/locale/lang/de.mjs'
+import elementSv from 'element-plus/es/locale/lang/sv.mjs'
+import elementJa from 'element-plus/es/locale/lang/ja.mjs'
+import enLocale from './en_US.js'
+import zhTWLocale from './zh_TW.js'
+import zhCNLocale from './zh_Hans.js'
+import esLocale from './es_ES.js'
+import ruLocale from './ru_RU.js'
+import deLocale from './de_DE.js'
+import svLocale from './sv_SE.js'
+import jaLocale from './ja_JP.js'
+import { read_saved_language } from '../lib/locale.js'
 
 const messages = {
-  en: {
-    ...enLocale,
-    ...elementEnLocale
-  },
-  zh_TW: {
-    ...zhTWLocale,
-    ...elementZhTwLocale
-  },
-  es: {
-    ...esLocale,
-    ...elementEsLocale
-  },
-  zh_CN: {
-    ...zhCNLocale,
-    ...elementZhCnLocale
-  },
-  ru_RU: {
-    ... ruLocale,
-    ... elementRuLocale
-  },
-  de_DE: {
-    ... deLocale,
-    ... elementDeLocale
-  },
-  sv_SE: {
-    ... svLocale,
-    ... elementSvLocale
-  },
-  ja_JP: {
-    ... jaLocale,
-    ... elementJaLocale
-  }
+  en: enLocale, zh_TW: zhTWLocale, zh_CN: zhCNLocale, es: esLocale,
+  ru_RU: ruLocale, de_DE: deLocale, sv_SE: svLocale, ja_JP: jaLocale
+}
+const elementLocales = {
+  en: elementEn, zh_TW: elementZhTw, zh_CN: elementZhCn, es: elementEs,
+  ru_RU: elementRu, de_DE: elementDe, sv_SE: elementSv, ja_JP: elementJa
+}
+export function getElementLocale(language) {
+  return Object.hasOwn(elementLocales, language) ? elementLocales[language] : elementDe
 }
 export function getLanguage() {
-  // if has not choose language
-  const language = (navigator.language || navigator.browserLanguage).toLowerCase()
-  const locales = Object.keys(messages)
-  for (const locale of locales) {
-    if (language.indexOf(locale) > -1) {
-      //return 'en'
-      return locale
-    }
-  }
-  return 'zh_TW'
+  let storage
+  try {
+    if (typeof window !== 'undefined') storage = window.localStorage
+  } catch (_) { /* Privacy settings can also block the localStorage getter. */ }
+  return read_saved_language(storage, Object.keys(messages), 'de_DE')
 }
-const i18n = new VueI18n({
-  // set locale
-  // options: en | zh | es
+export default createI18n({
+  legacy: false,
+  globalInjection: true,
   locale: getLanguage(),
-  // set locale messages
+  fallbackLocale: 'en',
   messages
 })
 
-export default i18n

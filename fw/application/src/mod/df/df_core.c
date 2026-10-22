@@ -1,6 +1,7 @@
 #include "df_core.h"
 
 #include "ble_df_driver.h"
+#include "ble_main.h"
 #include "df_driver.h"
 
 #include "df_proto_info.h"
@@ -46,7 +47,12 @@ static void df_core_default_handler(df_event_t *evt) {
 }
 
 static void df_core_on_event(df_event_t *evt) {
-    if (evt->type == DF_EVENT_DATA_RECEVIED) {
+    if (evt->type == DF_EVENT_LINK_DISCONNECTED) {
+        // Close all VFS state, not only the handler of the last command (which
+        // may have been GET_VERSION while a file was still open).
+        df_proto_vfs_cleanup();
+        m_df_ctx.cmd = NULL;
+    } else if (evt->type == DF_EVENT_DATA_RECEVIED) {
         m_df_ctx.cmd = df_core_find_proto_handler_entry(evt->df->cmd);
         NRF_LOG_INFO("cmd entry:%X", m_df_ctx.cmd);
         if (m_df_ctx.cmd) {
@@ -70,4 +76,19 @@ void df_core_init() {
     m_df_ctx.cmd_entries[1] = df_proto_handler_vfs_entries;
     // m_df_ctx.handler_entries[2] = df_proto_handler_amii_entries;
 }
-void df_core_send_frame(df_frame_t *out) { m_df_ctx.driver->send(out); }
+size_t df_core_max_payload(void) {
+    size_t length = ble_nus_max_data_length();
+    if (length <= DF_HEADER_LEN) return 0;
+    length -= DF_HEADER_LEN;
+    return length < DF_PAYLOAD_LEN ? length : DF_PAYLOAD_LEN;
+}
+
+void df_core_send_frame(df_frame_t *out) {
+    /* The driver copies a complete logical frame into its existing RX/TX
+     * buffer and segments large one-shot replies at the negotiated capacity. */
+    if (m_df_ctx.driver->send(out) != 0) {
+        /* The stack frame cannot be retried asynchronously. End this session
+         * before TX_READY could consume the next file/directory chunk. */
+        ble_nus_abort_transfer();
+    }
+}

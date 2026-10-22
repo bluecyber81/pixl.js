@@ -21,7 +21,21 @@ typedef struct {
 void app_amiibolink_on_run(mini_app_inst_t *p_app_inst) {
 
     app_amiibolink_t *p_app_handle = mui_mem_malloc(sizeof(app_amiibolink_t));
+    if (!p_app_handle) { p_app_inst->p_handle = NULL; return; }
+    memset(p_app_handle, 0, sizeof(app_amiibolink_t));
+    /* Construct every owned UI object before any app activation. */
+    p_app_handle->p_view_dispatcher = mui_view_dispatcher_create();
+    if (!p_app_handle->p_view_dispatcher) goto startup_failed;
+    p_app_handle->p_amiibolink_view = amiibolink_view_create();
+    if (!p_app_handle->p_amiibolink_view) goto startup_failed;
+    p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
+    if (!p_app_handle->p_scene_dispatcher) goto startup_failed;
+    p_app_handle->p_list_view = mui_list_view_create();
+    if (!p_app_handle->p_list_view) goto startup_failed;
+    p_app_handle->p_msg_box = mui_msg_box_create();
+    if (!p_app_handle->p_msg_box) goto startup_failed;
     p_app_inst->p_handle = p_app_handle;
+
 
     // Load saved mode from settings (user's explicit preference), or use default (manual/random)
     settings_data_t *p_settings = settings_get_data();
@@ -32,11 +46,6 @@ void app_amiibolink_on_run(mini_app_inst_t *p_app_inst) {
         p_app_handle->amiibolink_mode = BLE_AMIIBOLINK_MODE_RANDOM;
     }
 
-    p_app_handle->p_view_dispatcher = mui_view_dispatcher_create();
-    p_app_handle->p_amiibolink_view = amiibolink_view_create();
-    p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
-    p_app_handle->p_list_view = mui_list_view_create();
-    p_app_handle->p_msg_box = mui_msg_box_create();
 
     mui_list_view_set_user_data(p_app_handle->p_list_view, p_app_handle);
     amiibolink_view_set_user_data(p_app_handle->p_amiibolink_view, p_app_handle);
@@ -71,15 +80,32 @@ void app_amiibolink_on_run(mini_app_inst_t *p_app_inst) {
     }
 
     mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIBOLINK_SCENE_MAIN);
+
+    return;
+
+startup_failed:
+    mui_msg_box_free(p_app_handle->p_msg_box);
+    mui_list_view_free(p_app_handle->p_list_view);
+    mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
+    amiibolink_view_free(p_app_handle->p_amiibolink_view);
+    mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);
+    mui_mem_free(p_app_handle);
+    p_app_inst->p_handle = NULL;
 }
 
 void app_amiibolink_on_kill(mini_app_inst_t *p_app_inst) {
     app_amiibolink_t *p_app_handle = p_app_inst->p_handle;
+    if (!p_app_handle) return;
 
     app_amiibolink_retain_data_t *p_retain = (app_amiibolink_retain_data_t *)p_app_inst->p_retain_data;
 
-    p_retain->amiibolink_mode = p_app_handle->amiibolink_mode;
-    p_retain->cycle_mode_index = amiibolink_view_get_index(p_app_handle->p_amiibolink_view);
+    if (p_retain) {
+        p_retain->amiibolink_mode = p_app_handle->amiibolink_mode;
+        p_retain->cycle_mode_index = amiibolink_view_get_index(p_app_handle->p_amiibolink_view);
+    }
+
+    /* Stop scene-owned timers/callbacks while all views and app data are alive. */
+    mui_scene_dispatcher_exit(p_app_handle->p_scene_dispatcher);
 
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);
     mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);
@@ -87,6 +113,7 @@ void app_amiibolink_on_kill(mini_app_inst_t *p_app_inst) {
     amiibolink_view_free(p_app_handle->p_amiibolink_view);
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
 
+    mui_msg_box_free(p_app_handle->p_msg_box);
     mui_mem_free(p_app_handle);
 
     p_app_inst->p_handle = NULL;

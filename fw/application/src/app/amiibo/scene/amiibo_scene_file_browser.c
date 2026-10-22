@@ -4,12 +4,14 @@
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
 #include "mui_list_view.h"
+#include "mui_alloc.h"
 #include "nrf_log.h"
 #include "vfs.h"
 #include "vfs_meta.h"
 
 #include "i18n/language.h"
 #include "settings.h"
+#include <stdio.h>
 
 #define ICON_FOLDER 0xe1d6
 #define ICON_FILE 0xe1ed
@@ -39,11 +41,15 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
     vfs_obj_t obj;
 
     mui_list_view_clear_items(app->p_list_view);
+    bool complete;
     if (string_cmp_str(app->current_folder, "/") == 0) {
-        mui_list_view_add_item(app->p_list_view, ICON_HOME, _T(MAIN_MENU), (void *)FOLDER_LIST_PARENT);
+        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_HOME, _T(MAIN_MENU), NULL,
+                                                   (void *)FOLDER_LIST_PARENT);
     } else {
-        mui_list_view_add_item(app->p_list_view, ICON_BACK, "..", (void *)FOLDER_LIST_PARENT);
+        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_BACK, "..", NULL,
+                                                   (void *)FOLDER_LIST_PARENT);
     }
+    if (!complete) { mui_show_memory_error(mui()); return; }
 
     p_vfs_driver = vfs_get_driver(app->current_drive);
 
@@ -58,11 +64,23 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
                 continue;
             }
             uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
-            mui_list_view_add_item(app->p_list_view, icon, obj.name, (void *)-1);
+            if (!mui_list_view_try_add_item_ext(app->p_list_view, icon, obj.name, NULL, (void *)-1)) {
+                complete = false;
+                break;
+            }
         }
         p_vfs_driver->close_dir(&dir);
     } else {
-        mui_list_view_add_item(app->p_list_view, ICON_ERROR, getLangString(_L_OPEN_FOLDER_FAILED), (void *)-1);
+        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_ERROR,
+                                                  getLangString(_L_OPEN_FOLDER_FAILED), NULL, (void *)-1);
+    }
+
+    if (!complete) {
+        /* Never expose a truncated directory as the complete file list. The
+         * core's allocation-free error overlay owns the next input. */
+        mui_list_view_clear_items(app->p_list_view);
+        mui_show_memory_error(mui());
+        return;
     }
 
     mui_list_view_sort(app->p_list_view, amiibo_scene_file_browser_list_item_cmp);
@@ -74,7 +92,10 @@ static void amiibo_scene_file_browser_on_selected(mui_list_view_event_t event, m
     app_amiibo_t *app = p_list_view->user_data;
     uint32_t idx = (uint32_t)p_item->user_data;
 
-    string_set(app->current_file, p_item->text);
+    if (!mui_string_try_set_str(app->current_file, string_get_cstr(p_item->text))) {
+        mui_show_memory_error(mui());
+        return;
+    }
 
     if (event == MUI_LIST_VIEW_EVENT_SELECTED) {
         if (idx == FOLDER_LIST_PARENT) {
@@ -92,10 +113,16 @@ static void amiibo_scene_file_browser_on_selected(mui_list_view_event_t event, m
             }
         } else {
             if (p_item->icon == ICON_FOLDER) {
-                if (!string_end_with_str_p(app->current_folder, "/")) {
-                    string_cat_str(app->current_folder, "/");
+                char next_folder[VFS_MAX_PATH_LEN];
+                const char *folder = string_get_cstr(app->current_folder);
+                const char *separator = string_end_with_str_p(app->current_folder, "/") ? "" : "/";
+                int length = snprintf(next_folder, sizeof(next_folder), "%s%s%s", folder, separator,
+                                      string_get_cstr(p_item->text));
+                if (length < 0 || (size_t)length >= sizeof(next_folder) ||
+                    !mui_string_try_set_str(app->current_folder, next_folder)) {
+                    mui_show_memory_error(mui());
+                    return;
                 }
-                string_cat(app->current_folder, p_item->text);
                 amiibo_scene_file_browser_reload_folders(app);
             } else if (p_item->icon == ICON_HOME) {
                 mini_app_launcher_kill(mini_app_launcher(), MINI_APP_ID_AMIIBO);

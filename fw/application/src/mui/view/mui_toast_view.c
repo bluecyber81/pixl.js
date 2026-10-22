@@ -60,8 +60,13 @@ static void mui_toast_view_on_exit(mui_view_t *p_view) {}
 
 mui_toast_view_t *mui_toast_view_create() {
     mui_toast_view_t *p_toast_view = (mui_toast_view_t *)mui_mem_malloc(sizeof(mui_toast_view_t));
+    if (!p_toast_view) return NULL;
     memset(p_toast_view, 0, sizeof(mui_toast_view_t));
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) {
+        mui_mem_free(p_toast_view);
+        return NULL;
+    }
     p_view->user_data = p_toast_view;
     p_view->draw_cb = mui_toast_view_on_draw;
     p_view->input_cb = mui_toast_view_on_input;
@@ -74,13 +79,19 @@ mui_toast_view_t *mui_toast_view_create() {
 
     if (!m_toast_timer_initialized) {
         ret_code_t err_code = app_timer_create(&m_toast_timer_id, APP_TIMER_MODE_SINGLE_SHOT, mui_toast_timer_handler);
-        APP_ERROR_CHECK(err_code);
+        if (err_code != NRF_SUCCESS) {
+            string_clear(p_toast_view->message);
+            mui_view_free(p_view);
+            mui_mem_free(p_toast_view);
+            return NULL;
+        }
         m_toast_timer_initialized = true;
     }
 
     return p_toast_view;
 }
 void mui_toast_view_free(mui_toast_view_t *p_view) {
+    if (!p_view) return;
     app_timer_stop(m_toast_timer_id);
     string_clear(p_view->message);
     mui_mem_free(p_view->p_view);

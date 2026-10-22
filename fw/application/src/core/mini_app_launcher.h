@@ -6,12 +6,11 @@
 #include "mini_app_defines.h"
 
 
-DICT_DEF2(mui_app_inst_dict, uint32_t, M_DEFAULT_OPLIST, mini_app_inst_t*, M_PTR_OPLIST)
 
 
 typedef struct {
     mini_app_inst_t* p_main_app_inst; 
-    mui_app_inst_dict_t app_inst_dict;
+    mini_app_inst_t *instances;
 } mini_app_launcher_t;
 
 

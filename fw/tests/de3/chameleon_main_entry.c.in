@@ -1,0 +1,33 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef struct{void*p_scene_dispatcher,*p_view_dispatcher,*p_chameleon_view;}app_chameleon_t;
+typedef struct{void*user_data;}chameleon_view_t;
+typedef unsigned chameleon_view_event_t;
+enum{TAG_TYPE_UNDEFINED,CHAMELEON_SCENE_MENU_CARD_TYPE,CHAMELEON_SCENE_MENU,CHAMELEON_VIEW_ID_MAIN,CHAMELEON_VIEW_EVENT_MENU,CHAMELEON_VIEW_EVENT_PREV,CHAMELEON_VIEW_EVENT_NEXT};
+static unsigned type,scenes,error,irq,sense,view,changed;static bool ready;
+static unsigned tag_helper_get_active_tag_type(void){return type;}
+static bool tag_emulation_active_data_ready(void){return ready;}
+static unsigned tag_emulation_get_slot(void){return 0;}
+static unsigned tag_emulation_slot_find_prev(unsigned s){return 1;}
+static unsigned tag_emulation_slot_find_next(unsigned s){return 2;}
+static void tag_emulation_change_slot(unsigned s,bool r){assert(r);changed++;}
+static void mui_scene_dispatcher_next_scene(void*p,unsigned s){assert(s==CHAMELEON_SCENE_MENU_CARD_TYPE||s==CHAMELEON_SCENE_MENU);scenes++;}
+static void app_chameleon_show_load_error(app_chameleon_t*a){error++;}
+static void hal_nfc_set_nrfx_irq_enable(bool on){assert(on);irq++;}
+static void tag_emulation_sense_run(void){sense++;}
+static void mui_view_dispatcher_switch_to_view(void*p,unsigned s){assert(s==CHAMELEON_VIEW_ID_MAIN);view++;}
+static void chameleon_view_set_event_cb(void*p,void(*cb)(chameleon_view_event_t,chameleon_view_t*)){}
+@chameleon_scene_main_event_cb@
+@chameleon_scene_main_on_enter@
+int main(void){app_chameleon_t app={0};chameleon_view_t v={&app};
+ for(unsigned t=0;t<2;t++)for(unsigned r=0;r<2;r++){
+  type=t;ready=r;scenes=error=irq=sense=view=changed=0;chameleon_scene_main_on_enter(&app);
+  assert(scenes==!t && error==(t&&!r) && irq==(t&&r) && sense==(t&&r) && view==(t&&r));
+ }
+ for(unsigned r=0;r<2;r++)for(unsigned direction=CHAMELEON_VIEW_EVENT_PREV;direction<=CHAMELEON_VIEW_EVENT_NEXT;direction++){
+  ready=r;changed=error=0;chameleon_scene_main_event_cb(direction,&v);assert(changed==1&&error==!r);
+ }
+ puts("PASS 8 actual main entry/slot-change cases: empty type routes to selection, invalid data never renders");
+}

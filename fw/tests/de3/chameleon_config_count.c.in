@@ -1,0 +1,158 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "tag_emulation.h"
+#define ARRAYLEN(x) (sizeof(x)/sizeof((x)[0]))
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define NRF_SUCCESS 0
+#define NRF_ERROR_INVALID_STATE 8
+#define VFS_OK 0
+#define VFS_ERR_NOOBJ -2
+#define VFS_TYPE_REG 1
+#define VFS_MAX_PATH_LEN 128
+#define FDS_EMULATION_CONFIG_FILE_ID 1
+#define FDS_EMULATION_CONFIG_RECORD_KEY 2
+#define FDS_SLOT_TAG_DUMP_FILE_ID_BASE 3
+#define SLOT_MAX 50
+#define SETTINGS_FILE_NAME "/settings.bin"
+typedef struct { uint8_t chameleon_slot_num; } settings_data_t;
+static settings_data_t m_settings_data;
+static const settings_data_t def_settings_data = {8};
+static bool m_settings_save_allowed;
+static settings_data_t *settings_get_data(void) { return &m_settings_data; }
+static tag_specific_type_t tag_specific_type_old2new_hf_values[][2]={TAG_SPECIFIC_TYPE_OLD2NEW_HF_VALUES};
+static tag_specific_type_t tag_specific_type_old2new_lf_values[][2]={TAG_SPECIFIC_TYPE_OLD2NEW_LF_VALUES};
+static tag_slot_config_t slotConfig;
+static uint16_t m_slot_config_crc;
+static unsigned cases, writes, settings_removes;
+static uint8_t file[404];
+static unsigned file_size;
+static bool fail_write;
+typedef struct { unsigned type, size; } vfs_obj_t;
+typedef struct {
+ bool (*mounted)(void);
+ int32_t (*stat_file)(const char *, vfs_obj_t *);
+ int32_t (*read_file_data)(const char *, void *, unsigned);
+ int32_t (*write_file_data)(const char *, void *, unsigned);
+ int32_t (*remove_file)(const char *);
+} vfs_driver_t;
+static bool mounted(void) { return true; }
+static int32_t stat_file(const char *p, vfs_obj_t *o) {
+ assert(!strcmp(p,"/chameleon/slots/config.bin"));o->size=file_size;o->type=VFS_TYPE_REG;return 0;
+}
+static int32_t read_file(const char *p, void *b, unsigned n) {
+ assert(!strcmp(p,"/chameleon/slots/config.bin"));assert(file_size<=n);memcpy(b,file,file_size);return file_size;
+}
+static int32_t write_file(const char *p, void *b, unsigned n) {
+ assert(!strcmp(p,"/chameleon/slots/config.bin"));assert(n<=sizeof(file));writes++;
+ if(fail_write)return -17;
+ memcpy(file,b,n);file_size=n;return n;
+}
+static int32_t remove_file(const char *p) {
+ assert(!strcmp(p,SETTINGS_FILE_NAME));settings_removes++;return 0;
+}
+static vfs_driver_t driver={mounted,stat_file,read_file,write_file,remove_file};
+static vfs_driver_t *vfs_get_default_driver(void) { return &driver; }
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t type) {
+ const tag_specific_type_t types[]={TAG_SPECIFIC_TYPE_HF_VALUES};
+ for(unsigned i=0;i<ARRAYLEN(types);i++)if(types[i]==type)return TAG_SENSE_HF;
+ return TAG_SENSE_NO;
+}
+/* CRC is deterministic here; the actual persistence decision and retry path are extracted. */
+static void calc_14a_crc_lut(uint8_t *p, unsigned n, uint8_t *out) {
+ uint16_t crc=0;for(unsigned i=0;i<n;i++)crc=(uint16_t)((crc*31)^p[i]);memcpy(out,&crc,2);
+}
+@settings_reset@
+@fds_map_file_name@
+@fds_read_config@
+@fds_write_sync@
+@tag_emulation_decode_config@
+@tag_emulation_load_config@
+@tag_emulation_save_config@
+@tag_emulation_slot_set_enable@
+@tag_emulation_slot_find_next@
+@tag_emulation_slot_find_prev@
+static void fixture(unsigned stored_count, unsigned active, unsigned runtime_count) {
+ tag_slot_config_t stored={0};stored.version=8;stored.active_slot=active;
+ for(unsigned i=0;i<stored_count;i++){stored.slots[i].enabled_hf=true;stored.slots[i].tag_hf=TAG_TYPE_MIFARE_1024;}
+ memset(file,0,sizeof(file));file_size=4+8*stored_count;memcpy(file,&stored,file_size);
+ memset(&slotConfig,0,sizeof(slotConfig));m_slot_config_crc=0xa55a;
+ m_settings_data.chameleon_slot_num=runtime_count;writes=settings_removes=0;fail_write=false;
+}
+static void assert_load_readonly(void) {
+ uint8_t before[sizeof(file)];memcpy(before,file,sizeof(file));unsigned size=file_size;
+ assert(tag_emulation_load_config()==(int32_t)size);
+ assert(file_size==size&&!memcmp(before,file,sizeof(file))&&writes==0);
+}
+static void assert_navigation_bounded(void) {
+ unsigned n=m_settings_data.chameleon_slot_num,s=slotConfig.active_slot;assert(s<n);
+ for(unsigned i=0;i<2*TAG_MAX_SLOT_NUM;i++){
+  s=tag_emulation_slot_find_next(s);assert(s<n);
+  assert(tag_emulation_slot_find_prev(s)<n);
+ }
+}
+static void assert_roundtrip(void) {
+ unsigned count=m_settings_data.chameleon_slot_num;
+ tag_emulation_slot_set_enable(0,TAG_SENSE_HF,!slotConfig.slots[0].enabled_hf);
+ tag_emulation_save_config();assert(writes==1&&file_size==4+8*count);
+ assert(file[1]<count);
+ assert(tag_emulation_load_config()==(int32_t)file_size);
+ assert_navigation_bounded();cases++;
+}
+int main(void) {
+ _Static_assert(sizeof(tag_slot_config_t)==404,"real firmware config ABI");
+ fixture(50,49,50);
+ assert(settings_reset()==0&&settings_removes==1&&m_settings_data.chameleon_slot_num==8);
+ assert_load_readonly();
+#ifdef EXPECT_OLD_CORRUPTION
+ tag_emulation_slot_set_enable(0,TAG_SENSE_HF,false);tag_emulation_save_config();
+ assert(writes==1&&file_size==68&&file[1]==49);
+ assert(tag_emulation_load_config()==-1);
+ puts("PASS baseline reproduction: actual settings_reset/load/toggle/save writes 68B active49; subsequent actual loader rejects it");
+ return 0;
+#endif
+ assert_roundtrip();
+ unsigned counts[]={8,20,50};
+ for(unsigned a=0;a<ARRAYLEN(counts);a++)for(unsigned b=0;b<ARRAYLEN(counts);b++){
+  unsigned stored=counts[a],runtime=counts[b];
+  for(unsigned active=0;active<stored;active++){
+   fixture(stored,active,runtime);assert_load_readonly();
+   assert(slotConfig.active_slot==(active<runtime?active:0));
+   for(unsigned i=runtime;i<TAG_MAX_SLOT_NUM;i++)assert(!slotConfig.slots[i].enabled_hf);
+   assert_navigation_bounded();assert_roundtrip();
+  }
+ }
+ /* Invalid current count rejects without changing RAM/CRC/file. */
+ unsigned invalid_counts[]={0,7,51,255};
+ for(unsigned i=0;i<ARRAYLEN(invalid_counts);i++){
+  fixture(50,49,invalid_counts[i]);tag_slot_config_t before=slotConfig;
+  assert(tag_emulation_load_config()==-1&&!memcmp(&slotConfig,&before,sizeof(before)));
+  assert(m_slot_config_crc==0xa55a&&writes==0&&file_size==404&&file[1]==49);cases++;
+ }
+ /* Existing malformed active indices are not silently repaired. */
+ fixture(8,8,8);assert(tag_emulation_load_config()==-1&&writes==0);cases++;
+ /* Fallback chooses first enabled HF below the limit; otherwise zero. */
+ for(unsigned ready=0;ready<2;ready++){
+  fixture(50,49,8);tag_slot_config_t changed;memcpy(&changed,file,sizeof(changed));
+  for(unsigned i=0;i<8;i++){changed.slots[i].enabled_hf=false;changed.slots[i].tag_hf=TAG_TYPE_UNDEFINED;}
+  if(ready){changed.slots[3].enabled_hf=true;changed.slots[3].tag_hf=TAG_TYPE_NTAG_215;}
+  memcpy(file,&changed,sizeof(changed));assert_load_readonly();assert(slotConfig.active_slot==(ready?3:0));
+  assert_navigation_bounded();assert_roundtrip();
+ }
+ /* Normalized configuration remains dirty across write failure, then commits once. */
+ fixture(50,49,8);assert_load_readonly();uint16_t old_crc=m_slot_config_crc;
+ fail_write=true;tag_emulation_save_config();assert(writes==1&&m_slot_config_crc==old_crc&&file_size==404&&file[1]==49);
+ fail_write=false;tag_emulation_save_config();assert(writes==2&&file_size==68&&file[1]==0);
+ tag_emulation_save_config();assert(writes==2);assert(tag_emulation_load_config()==68);cases++;
+ /* Legacy expansion honors the reduced current count too. */
+ fixture(20,19,8);memset(file,0,sizeof(file));file_size=84;file[0]=19;
+ /* Legacy active values >=8 are the v8 version discriminator and invalid by design. */
+ assert(tag_emulation_load_config()==-1&&writes==0);cases++;
+ fixture(8,7,8);memset(file,0,sizeof(file));file_size=36;file[0]=7;
+ for(unsigned i=0;i<8;i++){file[4+i*4]=1;file[4+i*4+2]=OLD_TAG_TYPE_MIFARE_1024;}
+ assert_load_readonly();assert(slotConfig.version==8&&slotConfig.active_slot==7);assert_roundtrip();
+ printf("PASS %u real-source count/reset roundtrips, bounded navigation, read-only load, invalid-state preservation and failed-save retry\n",cases);
+}

@@ -15,6 +15,7 @@
 #include "tag_helper.h"
 
 #include "fds_utils.h"
+#include "mui_mem.h"
 
 typedef enum {
     CHAMELEON_MENU_BACK,
@@ -27,8 +28,11 @@ typedef enum {
 static char current_dir[VFS_MAX_PATH_LEN] = {0};
 
 static int chameleon_scene_menu_card_data_list_item_cmp(const mui_list_item_t *p_item_a, const mui_list_item_t *p_item_b) {
+    if (p_item_a->icon == ICON_BACK || p_item_b->icon == ICON_BACK) {
+        return p_item_a->icon == p_item_b->icon ? 0 : (p_item_a->icon == ICON_BACK ? 1 : -1);
+    }
     if (p_item_a->icon == ICON_HOME) {
-        return -1;
+        return p_item_b->icon == ICON_HOME ? 0 : -1;
     }
     if (p_item_b->icon == ICON_HOME) {
         return 1;
@@ -43,22 +47,22 @@ static int chameleon_scene_menu_card_data_list_item_cmp(const mui_list_item_t *p
 
 static void chameleon_scene_menu_card_data_file_load_from_file(app_chameleon_t *app, const char *file_name) {
     char path[VFS_MAX_PATH_LEN];
-    vfs_file_t fd;
     vfs_obj_t obj;
     int32_t err;
-    int32_t ret;
 
     // If current_dir is empty, use CHELEMEON_DUMP_FOLDER
-    if (strlen(current_dir) == 0) {
-        sprintf(path, "%s/%s", CHELEMEON_DUMP_FOLDER, file_name);
-    } else {
-        sprintf(path, "%s/%s", current_dir, file_name);
-    }
+    int path_length = snprintf(path, sizeof(path), "%s/%s",
+                               current_dir[0] ? current_dir : CHELEMEON_DUMP_FOLDER, file_name);
     vfs_driver_t *p_driver = vfs_get_default_driver();
 
-    tag_specific_type_t tag_type = tag_helper_get_active_tag_type();
     uint8_t *tag_buffer = tag_helper_get_active_tag_memory_data();
     size_t tag_data_size = tag_helper_get_active_tag_data_size();
+
+    if (path_length < 0 || (size_t)path_length >= sizeof(path) || !p_driver || !p_driver->mounted() ||
+        !tag_buffer || tag_data_size == 0) {
+        mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_FAILED));
+        return;
+    }
 
     err = p_driver->stat_file(path, &obj);
     if (err < 0) {
@@ -66,18 +70,25 @@ static void chameleon_scene_menu_card_data_file_load_from_file(app_chameleon_t *
         return;
     }
 
-    // TODO file size check
-    if (tag_data_size != obj.size) {
+    if (obj.type != VFS_TYPE_REG || tag_data_size != obj.size) {
         mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_SIZE_NOT_MATCH));
         return;
     }
 
-    // load file to buffer directly
-    err = p_driver->read_file_data(path, tag_buffer, tag_data_size);
-    if (err < 0) {
+    /* A short/failed read must not partially replace the currently active card. */
+    uint8_t *loaded = mui_mem_malloc(tag_data_size);
+    if (!loaded) {
         mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_FAILED));
         return;
     }
+    err = p_driver->read_file_data(path, loaded, tag_data_size);
+    if (err < 0 || (size_t)err != tag_data_size) {
+        mui_mem_free(loaded);
+        mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_FAILED));
+        return;
+    }
+    memcpy(tag_buffer, loaded, tag_data_size);
+    mui_mem_free(loaded);
 
     // update tag coll res
     tag_helper_load_coll_res_from_block0();
@@ -103,6 +114,11 @@ static void chameleon_scene_menu_card_data_file_load_reload(app_chameleon_t *app
     mui_list_view_clear_items(app->p_list_view);
 
     vfs_driver_t *p_driver = vfs_get_default_driver();
+    mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), (void *)CHAMELEON_MENU_BACK);
+    if (!p_driver || !p_driver->mounted()) {
+        mui_toast_view_show(app->p_toast_view, _T(OPEN_FOLDER_FAILED));
+        return;
+    }
     
     // Determine the directory to browse
     if (strlen(current_dir) == 0) {
@@ -138,8 +154,7 @@ static void chameleon_scene_menu_card_data_file_load_reload(app_chameleon_t *app
 
     mui_list_view_sort(app->p_list_view, chameleon_scene_menu_card_data_list_item_cmp);
     
-    // Add return button (ensure it's always at the end of the list)
-    mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), (void *)CHAMELEON_MENU_BACK);
+    // Return remains available even when opening a directory fails.
     return;
 }
 
@@ -157,14 +172,15 @@ void update_current_directory_to_parent(void) {
 }
 
 /** Set current directory to the given subdirectory (name only, not full path). */
-void update_current_directory(const char *subdir_name) {
+bool update_current_directory(const char *subdir_name) {
     char temp[VFS_MAX_PATH_LEN];
-    if (strlen(current_dir) == 0) {
-        sprintf(temp, "%s/%s", CHELEMEON_DUMP_FOLDER, subdir_name);
-    } else {
-        sprintf(temp, "%s/%s", current_dir, subdir_name);
+    int length = snprintf(temp, sizeof(temp), "%s/%s",
+                          current_dir[0] ? current_dir : CHELEMEON_DUMP_FOLDER, subdir_name);
+    if (length < 0 || (size_t)length >= sizeof(temp)) {
+        return false;
     }
     strcpy(current_dir, temp);
+    return true;
 }
 
 
@@ -180,8 +196,11 @@ static void chameleon_scene_menu_card_data_file_load_on_event(mui_list_view_even
     
     case CHAMELEON_MENU_FOLDER: {
         // Enter subdirectory
-        update_current_directory(string_get_cstr(p_item->text));
-        chameleon_scene_menu_card_data_file_load_reload(app);
+        if (update_current_directory(string_get_cstr(p_item->text))) {
+            chameleon_scene_menu_card_data_file_load_reload(app);
+        } else {
+            mui_toast_view_show(app->p_toast_view, _T(OPEN_FOLDER_FAILED));
+        }
     } break;
     
     case CHAMELEON_MENU_PARENT_DIR: {

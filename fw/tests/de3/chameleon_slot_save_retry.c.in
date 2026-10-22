@@ -1,0 +1,70 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "tag_emulation.h"
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define TAG_FIELD_LED_OFF() ((void)0)
+static tag_slot_config_t slotConfig;
+static uint8_t data[16],files[50][16];static uint16_t saved_crc;
+static tag_data_buffer_t buffer={sizeof(data),data,&saved_crc};
+static bool m_tag_data_loaded,fail_write,sensing,shadow;
+bool g_is_tag_emulating;
+static unsigned writes,loads,stops,starts,cases;
+typedef struct{unsigned id,key;}fds_slot_record_map_t;
+static uint16_t checksum(const uint8_t*b){uint16_t h=0;for(unsigned i=0;i<16;i++)h=(uint16_t)(31*h+b[i]);return h;}
+static void calc_14a_crc_lut(uint8_t*b,unsigned n,uint8_t*out){assert(n==16);uint16_t h=checksum(b);memcpy(out,&h,2);}
+tag_data_buffer_t*get_buffer_by_tag_type(tag_specific_type_t t){return &buffer;}
+static int save_cb(tag_specific_type_t t,tag_data_buffer_t*b){return shadow?0:b->length;}
+static tag_datas_savecb_t get_data_savecb_from_tag_type(tag_specific_type_t t){return save_cb;}
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t){return t==TAG_TYPE_MIFARE_1024?TAG_SENSE_HF:TAG_SENSE_NO;}
+static void get_fds_map_by_slot_sense_type_for_dump(unsigned s,unsigned t,fds_slot_record_map_t*m){m->id=s;m->key=t;}
+static bool fds_write_sync(unsigned id,unsigned key,unsigned n,void*b){writes++;if(fail_write)return false;assert(n==16);memcpy(files[id],b,n);return true;}
+static void tag_emulation_sense_switch_all(bool on){sensing=on;if(on)starts++;else stops++;}
+void tag_emulation_load_data(void){loads++;memcpy(data,files[slotConfig.active_slot],16);saved_crc=checksum(data);m_tag_data_loaded=true;}
+@save_data_by_tag_type@
+@tag_emulation_save_data@
+@tag_emulation_sense_run@
+@tag_emulation_sense_end@
+@tag_emulation_get_slot@
+@tag_emulation_set_slot@
+@tag_emulation_change_slot@
+@tag_emulation_prepare_slot_count@
+static void setup(unsigned current,bool sense){
+ memset(&slotConfig,0,sizeof(slotConfig));slotConfig.active_slot=current;
+ for(unsigned i=0;i<50;i++){slotConfig.slots[i].tag_hf=TAG_TYPE_MIFARE_1024;slotConfig.slots[i].enabled_hf=1;memset(files[i],(int)i+1,16);}
+ memset(data,0xa5,16);saved_crc=0;assert(saved_crc!=checksum(data));
+ m_tag_data_loaded=g_is_tag_emulating=true;fail_write=shadow=false;sensing=sense;writes=loads=stops=starts=0;
+}
+int main(void){
+ const unsigned targets[]={0,1,49};
+ for(unsigned sense=0;sense<2;sense++)for(unsigned i=0;i<3;i++){
+  unsigned target=targets[i];setup(7,sense);uint8_t before[16];memcpy(before,data,16);
+  fail_write=true;tag_emulation_change_slot(target,sense);
+  assert(slotConfig.active_slot==7 && !memcmp(data,before,16) && saved_crc==0 && loads==0 && writes==1);
+  assert(m_tag_data_loaded && g_is_tag_emulating && sensing==sense && starts==sense && stops==sense);
+  fail_write=false;tag_emulation_change_slot(target,sense);
+  assert(slotConfig.active_slot==target && loads==1 && writes==2 && !memcmp(files[7],before,16));
+  assert(!memcmp(data,files[target],16) && saved_crc==checksum(data) && sensing==sense);
+  assert(starts==2*sense && stops==2*sense);cases++;
+ }
+ for(unsigned sense=0;sense<2;sense++){
+  setup(7,sense);slotConfig.slots[7].tag_hf=TAG_TYPE_UNDEFINED;m_tag_data_loaded=false;fail_write=true;
+  tag_emulation_change_slot(3,sense);assert(slotConfig.active_slot==3 && loads==1 && !writes && sensing==sense);cases++;
+  setup(7,sense);shadow=true;tag_emulation_change_slot(3,sense);
+  assert(slotConfig.active_slot==3 && loads==1 && !writes && files[7][0]==8 && sensing==sense);cases++;
+  setup(7,sense);saved_crc=checksum(data);tag_emulation_change_slot(3,sense);
+  assert(slotConfig.active_slot==3 && loads==1 && !writes && sensing==sense);cases++;
+ }
+ for(unsigned ok=0;ok<2;ok++){
+  setup(49,false);fail_write=!ok;uint8_t before[16];memcpy(before,data,16);
+  assert(tag_emulation_prepare_slot_count(8)==(bool)ok);
+  assert(writes==1 && loads==ok && slotConfig.active_slot==(ok?0:49));
+  if(ok)assert(!memcmp(files[49],before,16));else assert(saved_crc==0&&!memcmp(data,before,16));
+  /* Successful pre-save plus change_slot's second check must produce one write. */
+  cases++;
+ }
+ printf("PASS %u actual checked-save slot cases: failure preserves slot/RAM/dirty CRC/RF, retry commits once; undefined/shadow/unchanged paths retained\n",cases);
+}

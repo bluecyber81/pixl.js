@@ -27,8 +27,17 @@ static void fds_map_file_name(uint16_t id, uint16_t key, char *path) {
 bool fds_read_sync(uint16_t id, uint16_t key, uint16_t* max_length, uint8_t *buffer) {
     char path[VFS_MAX_PATH_LEN];
     fds_map_file_name(id, key, path);
-    int32_t bytes_read = vfs_get_default_driver()->read_file_data(path, buffer, *max_length);
-    *max_length = bytes_read;
+    vfs_driver_t *driver = vfs_get_default_driver();
+    if (!max_length || !buffer || !driver || !driver->mounted()) {
+        if (max_length) *max_length = 0;
+        return false;
+    }
+    int32_t bytes_read = driver->read_file_data(path, buffer, *max_length);
+    if (bytes_read <= 0 || bytes_read > *max_length) {
+        *max_length = 0;
+        return false;
+    }
+    *max_length = (uint16_t)bytes_read;
     NRF_LOG_INFO("fds_read_sync: id=%X, key=%d, bytes_read=%d", id, key, bytes_read);
     return bytes_read > 0;
 }
@@ -43,9 +52,13 @@ bool fds_write_sync(uint16_t id, uint16_t key, uint16_t data_length_words, void 
         NRF_LOG_INFO("optimize config file size: data_length_words=%d", data_length_words);
     }
 
-    int32_t bytes_written = vfs_get_default_driver()->write_file_data(path, buffer, data_length_words);
+    vfs_driver_t *driver = vfs_get_default_driver();
+    if (!driver || !driver->mounted() || !buffer || data_length_words == 0) {
+        return false;
+    }
+    int32_t bytes_written = driver->write_file_data(path, buffer, data_length_words);
     NRF_LOG_INFO("fds_write_sync: id=%X, key=%d, bytes_written=%d", id, key, bytes_written);
-    return bytes_written > 0;
+    return bytes_written == data_length_words;
 }
 
 bool fds_is_exists(uint16_t id, uint16_t key) {
@@ -58,6 +71,20 @@ bool fds_is_exists(uint16_t id, uint16_t key) {
 }
 
 bool fds_config_file_exists() { return fds_is_exists(FDS_EMULATION_CONFIG_FILE_ID, FDS_EMULATION_CONFIG_RECORD_KEY); }
+
+/* Unlike the generic slot reader, a configuration read must distinguish a new
+ * device from a damaged/unreadable file and must reject oversize/short reads. */
+int32_t fds_read_config(uint8_t *buffer, uint16_t capacity) {
+    vfs_driver_t *driver = vfs_get_default_driver();
+    vfs_obj_t obj;
+    const char *path = "/chameleon/slots/config.bin";
+    if (!buffer || !capacity || !driver || !driver->mounted()) return -1;
+    int32_t result = driver->stat_file(path, &obj);
+    if (result == VFS_ERR_NOOBJ) return 0;
+    if (result != VFS_OK || obj.type != VFS_TYPE_REG || obj.size == 0 || obj.size > capacity) return -1;
+    result = driver->read_file_data(path, buffer, capacity);
+    return result == (int32_t)obj.size ? result : -1;
+}
 
 int32_t fds_read_meta(uint16_t id, uint16_t key, vfs_meta_t *meta) {
     char path[VFS_MAX_PATH_LEN];

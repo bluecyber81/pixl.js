@@ -18,7 +18,8 @@ typedef void (*app_list_view_event_cb)(app_list_view_event_t event, app_list_vie
     mui_view_t* p_view;
     app_list_view_event_cb event_cb;
     uint8_t focus;
-    ptr_array_t items;
+    const mini_app_t *items[10];
+    uint8_t item_count;
     void* user_data;
     mui_anim_t icon_anim;
     int32_t icon_anim_value;
@@ -38,11 +39,11 @@ static inline void app_list_view_set_event_cb(app_list_view_t* p_view, app_list_
 }
 
 static inline void app_list_view_add_app(app_list_view_t* p_view, const mini_app_t* p_app){
-    ptr_array_push_back(p_view->items, (void *)p_app);
+    if (p_view->item_count < 10) p_view->items[p_view->item_count++] = p_app;
 }
 
 static inline const mini_app_t* app_list_view_get(app_list_view_t* p_view, uint8_t index){
-    return (const mini_app_t*) *ptr_array_get(p_view->items, index);
+    return index < p_view->item_count ? p_view->items[index] : NULL;
 }
 static inline uint8_t app_list_view_get_focus(app_list_view_t* p_view){
     return p_view->focus;

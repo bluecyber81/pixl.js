@@ -208,6 +208,9 @@ void tag_helper_factory_data(uint8_t slot) {
     }
 
     const char *tag_helper_get_mf_write_mode_name(nfc_tag_mf1_write_mode_t write_mode) {
+        if (write_mode == NFC_TAG_MF1_WRITE_SHADOW_REQ) {
+            write_mode = NFC_TAG_MF1_WRITE_SHADOW;
+        }
         if (write_mode >= 0 && write_mode < 4) {
             return getLangString(mf1_write_mode_names[write_mode]);
         }
@@ -215,17 +218,24 @@ void tag_helper_factory_data(uint8_t slot) {
     }
 
     void tag_helper_get_nickname(char *buff, size_t buff_len) {
+        if (!buff || buff_len == 0) {
+            return;
+        }
         uint8_t slot = tag_emulation_get_slot();
         vfs_meta_t meta = {0};
         memset(buff, 0, buff_len);
         int32_t err = fds_read_meta(FDS_SLOT_TAG_DUMP_FILE_ID_BASE + slot, TAG_SENSE_HF, &meta);
 
         if (err == 0 && meta.has_notes) {
-            strncpy(buff, meta.notes, buff_len);
+            size_t length = 0;
+            while (length < sizeof(meta.notes) && meta.notes[length]) length++;
+            if (length >= buff_len) length = buff_len - 1;
+            memcpy(buff, meta.notes, length);
+            buff[length] = '\0';
         }
 
         if (strlen(buff) == 0) {
-            sprintf(buff, "%s %02d", _T(APP_CHAMELEON_CARD_SLOT), slot + 1);
+            snprintf(buff, buff_len, "%s %02d", _T(APP_CHAMELEON_CARD_SLOT), slot + 1);
         }
     }
 
@@ -233,15 +243,18 @@ void tag_helper_factory_data(uint8_t slot) {
         uint8_t slot = tag_emulation_get_slot();
         vfs_meta_t meta = {0};
 
+        if (!nickname) return -1;
+        size_t length = 0;
+        while (length < sizeof(meta.notes) && nickname[length]) length++;
+        if (length >= sizeof(meta.notes)) return -1;
+
         int32_t err = fds_read_meta(FDS_SLOT_TAG_DUMP_FILE_ID_BASE + slot, TAG_SENSE_HF, &meta);
         if (err != 0) {
             return err;
         }
         meta.has_notes = 1;
-        strcpy(meta.notes, nickname);
+        memcpy(meta.notes, nickname, length + 1);
         return fds_write_meta(FDS_SLOT_TAG_DUMP_FILE_ID_BASE + slot, TAG_SENSE_HF, &meta);
-
-        return -1;
     }
 
     size_t tag_helper_get_active_tag_data_size() {
@@ -317,6 +330,7 @@ void tag_helper_factory_data(uint8_t slot) {
     }
 
     void tag_helper_set_slot_num(uint8_t slot_num){
+        if (!tag_emulation_prepare_slot_count(slot_num)) return;
         //set slot number in settings
         settings_data_t *settings = settings_get_data();
         settings->chameleon_slot_num = slot_num;

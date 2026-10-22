@@ -2,6 +2,7 @@
 #define DF_PROTO_VFS_H
 
 #include "df_defines.h"
+#include <stdbool.h>
 
 /** info proto command defines */
 typedef enum {
@@ -15,9 +16,15 @@ typedef enum {
     DF_PROTO_CMD_VFS_DIR_CREATE = 0x17,
     DF_PROTO_CMD_VFS_REMOVE = 0x18,
     DF_PROTO_CMD_VFS_RENAME = 0x19,
-    DF_PROTO_CMD_VFS_UPDATE_META = 0x1a
+    DF_PROTO_CMD_VFS_UPDATE_META = 0x1a,
+    DF_PROTO_CMD_VFS_STORAGE_DIAG = 0x1b
 } df_proto_cmd_vfs_t;
 
 extern const df_cmd_entry_t df_proto_handler_vfs_entries[];
+void df_proto_vfs_cleanup(void);
+/* False also for an abandoned descriptor whose cleanup has not succeeded. */
+bool df_proto_vfs_file_transfer_closed(void);
+/* Includes unfinished directory reads and failed/abandoned file ownership. */
+bool df_proto_vfs_is_idle(void);
 
 #endif

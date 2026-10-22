@@ -1,84 +1,68 @@
 #include "mui_view_dispatcher.h"
 #include "mui_core.h"
 
-static void mui_view_dispatcher_set_curent_view(mui_view_dispatcher_t *p_dispatcher,
-                                                mui_view_t *p_view) {
-    if (p_dispatcher->p_active_view) {
-        mui_view_exit(p_dispatcher->p_active_view);
+static void mui_view_dispatcher_set_curent_view(mui_view_dispatcher_t *d, mui_view_t *v) {
+    if (!d) return;
+    if (d->p_active_view) mui_view_exit(d->p_active_view);
+    d->p_active_view = v;
+    if (v) mui_view_enter(v);
+    mui_view_port_enable_set(d->p_view_port, v != NULL);
+    if (v) mui_view_port_update(d->p_view_port);
+}
+static void mui_view_dispatcher_on_draw(mui_view_port_t *vp, mui_canvas_t *canvas) {
+    mui_view_dispatcher_t *d = vp->user_data;
+    if (d->p_active_view) mui_view_draw(d->p_active_view, canvas);
+}
+static void mui_view_dispatcher_on_input(mui_view_port_t *vp, mui_input_event_t *event) {
+    mui_view_dispatcher_t *d = vp->user_data;
+    if (d->p_active_view) mui_view_input(d->p_active_view, event);
+}
+mui_view_dispatcher_t *mui_view_dispatcher_create(void) {
+    mui_view_dispatcher_t *d = mui_mem_malloc(sizeof(*d));
+    if (!d) return NULL;
+    memset(d, 0, sizeof(*d));
+    d->p_view_port = mui_view_port_create();
+    if (!d->p_view_port) { mui_mem_free(d); return NULL; }
+    d->p_view_port->draw_cb = mui_view_dispatcher_on_draw;
+    d->p_view_port->input_cb = mui_view_dispatcher_on_input;
+    d->p_view_port->user_data = d;
+    return d;
+}
+void mui_view_dispatcher_free(mui_view_dispatcher_t *d) {
+    if (!d) return;
+    mui_view_port_free(d->p_view_port);
+    mui_mem_free(d);
+}
+void mui_view_dispatcher_add_view(mui_view_dispatcher_t *d, uint32_t id, mui_view_t *v) {
+    if (!d || !v) return;
+    for (unsigned i = 0; i < d->view_count; i++) {
+        if (d->views[i].id == id) { d->views[i].view = v; return; }
     }
-    p_dispatcher->p_active_view = p_view;
-    if (p_dispatcher->p_active_view) {
-        mui_view_enter(p_dispatcher->p_active_view);
-        mui_view_port_enable_set(p_dispatcher->p_view_port, true);
-        mui_view_port_update(p_dispatcher->p_view_port);
-    } else {
-        mui_view_port_enable_set(p_dispatcher->p_view_port, false);
-    }
+    if (d->view_count == MUI_DISPATCHER_MAX_VIEWS) { mui_show_memory_error(mui()); return; }
+    d->views[d->view_count].id = id;
+    d->views[d->view_count++].view = v;
 }
-
-static void mui_view_dispatcher_on_draw(mui_view_port_t *p_vp, mui_canvas_t *p_canvas) {
-    mui_view_dispatcher_t *p_dispatcher = p_vp->user_data;
-    if (p_dispatcher->p_active_view) {
-        p_dispatcher->p_active_view->draw_cb(p_dispatcher->p_active_view, p_canvas);
-    }
-}
-
-static void mui_view_dispatcher_on_input(mui_view_port_t *p_vp,
-                                         mui_input_event_t *p_event) {
-    mui_view_dispatcher_t *p_dispatcher = p_vp->user_data;
-    if (p_dispatcher->p_active_view) {
-        p_dispatcher->p_active_view->input_cb(p_dispatcher->p_active_view, p_event);
-    }
-}
-
-mui_view_dispatcher_t *mui_view_dispatcher_create() {
-    mui_view_dispatcher_t *p_dsp = mui_mem_malloc(sizeof(mui_view_dispatcher_t));
-    mui_view_dict_init(p_dsp->views);
-    p_dsp->p_view_port = mui_view_port_create();
-    p_dsp->p_view_port->draw_cb = mui_view_dispatcher_on_draw;
-    p_dsp->p_view_port->input_cb = mui_view_dispatcher_on_input;
-    p_dsp->p_view_port->user_data = p_dsp;
-    p_dsp->p_active_view = NULL;
-
-    return p_dsp;
-}
-void mui_view_dispatcher_free(mui_view_dispatcher_t *p_dispatcher) {
-    mui_view_dict_clear(p_dispatcher->views);
-    mui_view_port_free(p_dispatcher->p_view_port);
-
-    mui_mem_free(p_dispatcher);
-}
-void mui_view_dispatcher_add_view(mui_view_dispatcher_t *p_dispatcher, uint32_t view_id,
-                                  mui_view_t *p_view) {
-    mui_view_dict_set_at(p_dispatcher->views, view_id, p_view);
-}
-void mui_view_dispatcher_remove_view(mui_view_dispatcher_t *p_dispatcher,
-                                     uint32_t view_id) {
-    mui_view_t *p_view = *mui_view_dict_get(p_dispatcher->views, view_id);
-    if (p_view == NULL) {
+void mui_view_dispatcher_remove_view(mui_view_dispatcher_t *d, uint32_t id) {
+    if (!d) return;
+    for (unsigned i = 0; i < d->view_count; i++) {
+        if (d->views[i].id != id) continue;
+        if (d->p_active_view == d->views[i].view) mui_view_dispatcher_set_curent_view(d, NULL);
+        d->views[i] = d->views[--d->view_count];
         return;
     }
-
-    if (p_dispatcher->p_active_view == p_view) {
-        mui_view_dispatcher_set_curent_view(p_dispatcher, NULL);
-    }
 }
-void mui_view_dispatcher_attach(mui_view_dispatcher_t *p_dispatcher, mui_layer_t layer) {
-    mui_add_view_port(mui(), p_dispatcher->p_view_port, layer);
-    
+void mui_view_dispatcher_attach(mui_view_dispatcher_t *d, mui_layer_t layer) {
+    if (d) mui_add_view_port(mui(), d->p_view_port, layer);
 }
-void mui_view_dispatcher_detach(mui_view_dispatcher_t *p_dispatcher, mui_layer_t layer) {
-    mui_view_port_enable_set(p_dispatcher->p_view_port, false);
-    mui_remove_view_port(mui(), p_dispatcher->p_view_port, layer);
+void mui_view_dispatcher_detach(mui_view_dispatcher_t *d, mui_layer_t layer) {
+    if (!d) return;
+    mui_view_port_enable_set(d->p_view_port, false);
+    mui_remove_view_port(mui(), d->p_view_port, layer);
 }
-void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t *p_dispatcher,
-                                        uint32_t view_id) {
-    if (view_id == VIEW_NONE) {
-        mui_view_dispatcher_set_curent_view(p_dispatcher, NULL);
-    } else {
-        mui_view_t *p_view = *mui_view_dict_get(p_dispatcher->views, view_id);
-        if (p_view) {
-            mui_view_dispatcher_set_curent_view(p_dispatcher, p_view);
-        }
+void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t *d, uint32_t id) {
+    if (!d) return;
+    if (id == VIEW_NONE) { mui_view_dispatcher_set_curent_view(d, NULL); return; }
+    for (unsigned i = 0; i < d->view_count; i++) {
+        if (d->views[i].id == id) { mui_view_dispatcher_set_curent_view(d, d->views[i].view); return; }
     }
 }

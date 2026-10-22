@@ -76,7 +76,7 @@ static void amiibolink_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) 
 
     const db_amiibo_t *amd = get_amiibo_by_id(head, tail);
     if (amd != NULL) {
-        const char *name =(getLanguage() == LANGUAGE_ZH_HANS) && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
+        const char *name = isChineseLanguage() && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
         mui_element_autowrap_text(p_canvas, 5, y += 15, mui_canvas_get_width(p_canvas), 24, name);
         if (strlen(ntag->notes) > 0) {
             mui_element_autowrap_text(p_canvas, 5, y += 15, mui_canvas_get_width(p_canvas), 24, ntag->notes);
@@ -130,9 +130,11 @@ static void amiibolink_view_on_exit(mui_view_t *p_view) {}
 
 amiibolink_view_t *amiibolink_view_create() {
     amiibolink_view_t *p_amiibolink_view = mui_mem_malloc(sizeof(amiibolink_view_t));
+    if (!p_amiibolink_view) return NULL;
     memset(p_amiibolink_view, 0, sizeof(amiibolink_view_t));
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) { mui_mem_free(p_amiibolink_view); return NULL; }
     p_view->user_data = p_amiibolink_view;
     p_view->draw_cb = amiibolink_view_on_draw;
     p_view->input_cb = amiibolink_view_on_input;
@@ -146,6 +148,7 @@ amiibolink_view_t *amiibolink_view_create() {
     return p_amiibolink_view;
 }
 void amiibolink_view_free(amiibolink_view_t *p_view) {
+    if (!p_view) return;
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);
 }

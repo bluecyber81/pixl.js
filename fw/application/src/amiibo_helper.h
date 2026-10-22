@@ -13,6 +13,8 @@ bool amiibo_helper_is_key_loaded();
 void amiibo_helper_try_load_amiibo_keys_from_vfs();
 //随机uuid并重新签名amiibo
 ret_code_t amiibo_helper_rand_amiibo_uuid(ntag_t* ntag);
+ret_code_t amiibo_helper_set_amiibo_uuid(ntag_t *ntag, uint8_t *uuid);
+/* V3 metadata-only generation returns NRF_ERROR_NOT_SUPPORTED without changing ntag. */
 ret_code_t amiibo_helper_generate_amiibo(uint32_t head, uint32_t tail, ntag_t *ntag);
 
 bool is_valid_amiibo_ntag(const ntag_t* ntag);

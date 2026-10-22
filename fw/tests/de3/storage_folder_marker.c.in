@@ -1,0 +1,108 @@
+/* Host-only fixture: actual VFS/cwalk code; SPIFFS directory entries mocked. */
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "vfs.h"
+#include "cwalk.h"
+#include "cwalk2.h"
+#include "spiffs.h"
+#define CHECK(c) do { if (!(c)) { fprintf(stderr, "FAIL %d: %s\n", __LINE__, #c); exit(1); } } while (0)
+#define NRF_LOG_INFO(...) ((void)0)
+#define VFS_SPIFFS_FOLDER_NAME ".folder"
+#define mui_mem_malloc malloc
+#define mui_mem_free free
+
+static spiffs fs;
+static struct spiffs_dirent entries[16];
+static unsigned entry_count, opened, closed;
+static int error_code;
+bool vfs_persist_reserved(const char *p) { (void)p; return false; }
+spiffs_DIR *SPIFFS_opendir(spiffs *f, const char *n, spiffs_DIR *d) {
+    CHECK(f == &fs && !strcmp(n, "/"));
+    memset(d, 0, sizeof(*d)); d->fs = f; opened++; return d;
+}
+struct spiffs_dirent *SPIFFS_readdir(spiffs_DIR *d, struct spiffs_dirent *e) {
+    CHECK(d->fs == &fs);
+    if (d->entry >= entry_count) return NULL;
+    *e = entries[d->entry++]; return e;
+}
+s32_t SPIFFS_closedir(spiffs_DIR *d) { CHECK(d->fs == &fs); closed++; return SPIFFS_OK; }
+void SPIFFS_clearerr(spiffs *f) { CHECK(f == &fs); error_code = SPIFFS_OK; }
+s32_t SPIFFS_errno(spiffs *f) { CHECK(f == &fs); return error_code; }
+
+@@STRUCTURE@@
+@@FUNCTIONS@@
+
+typedef struct { const char *name; uint8_t type; size_t size; unsigned char meta; } expected_t;
+static expected_t expected[16];
+static unsigned expected_count;
+
+static void add_entry(const char *path, unsigned size, unsigned char meta) {
+    CHECK(entry_count < 16 && strlen(path) < sizeof(entries[0].name));
+    struct spiffs_dirent *entry = &entries[entry_count++];
+    memset(entry, 0, sizeof(*entry));
+    strcpy((char *)entry->name, path);
+    entry->size = size; entry->type = SPIFFS_TYPE_FILE; entry->meta[0] = meta;
+}
+
+static void expect(const char *name, uint8_t type, size_t size, unsigned char meta) {
+    CHECK(expected_count < 16);
+    expected[expected_count++] = (expected_t){name, type, size, meta};
+}
+
+int main(int argc, char **argv) {
+    CHECK(argc == 4);
+    const char *scenario = argv[1], *name = argv[2], *directory = argv[3];
+    char path[64];
+    if (!strcmp(scenario, "direct_prefix")) {
+        CHECK(snprintf(path, sizeof(path), "/amiibo/%s", name) < (int)sizeof(path));
+        add_entry(path, 540, 41);
+        expect(name, VFS_TYPE_REG, 540, 41);
+    } else if (!strcmp(scenario, "nested_prefix")) {
+        add_entry("/amiibo/sub/.folder", 0, 7);
+        CHECK(snprintf(path, sizeof(path), "/amiibo/sub/%s", name) < (int)sizeof(path));
+        add_entry(path, 540, 41);
+        expect("sub", VFS_TYPE_DIR, 0, 7);
+    } else if (!strcmp(scenario, "controls")) {
+        static const char *names[] = {".folderx", ".folder.txt", "W43 - Sprocket.bin",
+                                      "W41 - Sprocket.bin", "W41 - Norma.bin"};
+        for (unsigned i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+            CHECK(snprintf(path, sizeof(path), "/amiibo/%s", names[i]) < (int)sizeof(path));
+            add_entry(path, 540 + i, 20 + i);
+            expect(names[i], VFS_TYPE_REG, 540 + i, 20 + i);
+        }
+        /* The sibling prefix and deeper normal file must not leak into this listing. */
+        add_entry("/amiiboOther/.f", 540, 9);
+        add_entry("/amiibo/sub/normal.bin", 540, 9);
+    } else if (!strcmp(scenario, "real_marker")) {
+        add_entry("/amiibo/.folder", 0, 3);
+        add_entry("/amiibo/sub/.folder", 0, 7);
+        expect("sub", VFS_TYPE_DIR, 0, 7);
+    } else CHECK(0);
+
+    vfs_dir_t dir = {0};
+    CHECK(vfs_spiffs_open_dir(directory, &dir) == VFS_OK);
+    vfs_obj_t actual[16]; unsigned count = 0; int result;
+    while (count < 16 && (result = vfs_spiffs_read_dir(&dir, &actual[count])) == VFS_OK) {
+        printf("ENTRY name=%s type=%u size=%zu meta0=%u\n", actual[count].name,
+               actual[count].type, actual[count].size, (unsigned char)actual[count].meta[0]);
+        count++;
+    }
+    CHECK(count < 16 && result == VFS_ERR_EOF);
+    CHECK(vfs_spiffs_close_dir(&dir) == VFS_OK && dir.handle == NULL);
+    CHECK(opened == 1 && closed == 1);
+    printf("OBSERVED %s name=%s directory=%s count=%u expected=%u\n",
+           scenario, name, directory, count, expected_count);
+    CHECK(count == expected_count);
+    for (unsigned i = 0; i < count; i++) {
+        CHECK(!strcmp(actual[i].name, expected[i].name));
+        CHECK(actual[i].type == expected[i].type);
+        CHECK(actual[i].size == expected[i].size);
+        CHECK((unsigned char)actual[i].meta[0] == expected[i].meta);
+    }
+    puts("PASS exact folder-marker classification and preserved name/type/size/metadata");
+    return 0;
+}

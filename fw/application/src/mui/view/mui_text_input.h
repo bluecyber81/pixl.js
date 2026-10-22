@@ -23,6 +23,7 @@ struct mui_text_input_s {
     string_t header;
     bool clear_default_text;
     string_t input_text;
+    size_t max_length; /* UTF-8 bytes; 0 preserves the existing unlimited behavior. */
     mui_text_input_event_cb_t event_cb;
     void *user_data;
 };
@@ -36,6 +37,7 @@ void mui_text_input_set_user_data(mui_text_input_t *p_view, void *user_data);
 void mui_text_input_set_event_cb(mui_text_input_t *p_view, mui_text_input_event_cb_t event_cb);
 void mui_text_input_clear_input_text(mui_text_input_t *p_view);
 void mui_text_input_set_input_text(mui_text_input_t *p_view, const char* input);
+void mui_text_input_set_max_length(mui_text_input_t *p_view, size_t max_bytes);
 void mui_text_input_set_header(mui_text_input_t *p_view, const char* title);
 const char* mui_text_input_get_input_text(mui_text_input_t *p_view);
 void mui_text_input_reset(mui_text_input_t *p_view);

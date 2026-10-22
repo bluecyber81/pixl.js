@@ -1,0 +1,66 @@
+/* Host fixture for real VFS/cwalk functions, with exact-name SPIFFS stubs. */
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "vfs.h"
+#include "spiffs.h"
+#include "cwalk.h"
+#define NRF_LOG_INFO(...) ((void)0)
+#define VFS_SPIFFS_FOLDER_NAME ".folder"
+#define CHECK(c) do { if (!(c)) { fprintf(stderr, "FAIL %d: %s\n", __LINE__, #c); exit(1); } } while (0)
+static spiffs fs;
+static char marker[80];
+static unsigned calls;
+static const uint8_t metadata[3] = {2, 2, 1};
+s32_t SPIFFS_stat(spiffs *f, const char *name, spiffs_stat *s) {
+    CHECK(f == &fs);
+    if (strcmp(name, marker)) return SPIFFS_ERR_NOT_FOUND;
+    CHECK(strlen(marker) < sizeof(s->name));
+    memset(s, 0, sizeof(*s)); strcpy((char *)s->name, marker); return SPIFFS_OK;
+}
+s32_t SPIFFS_update_meta(spiffs *f, const char *name, const void *meta) {
+    CHECK(f == &fs && meta); calls++;
+    CHECK(!memcmp(meta, metadata, sizeof(metadata)));
+    for (unsigned i = sizeof(metadata); i < SPIFFS_OBJ_META_LEN; i++)
+        CHECK(((const uint8_t *)meta)[i] == 0);
+    return strcmp(name, marker) ? SPIFFS_ERR_NOT_FOUND : SPIFFS_OK;
+}
+@@FUNCTIONS@@
+static void sized_path(char *path, unsigned length, bool trailing) {
+    CHECK(length >= 16 && length < 80);
+    strcpy(path, "/abcdefghij/");
+    memset(path + 12, 'x', length - 12);
+    if (trailing) path[length - 1] = '/';
+    path[length] = 0;
+}
+int main(int argc, char **argv) {
+    CHECK(argc == 2);
+    const char *scenario = argv[1]; char path[80];
+    bool regular = false; int expected = VFS_OK;
+    if (!strcmp(scenario, "short_trailing")) strcpy(path, "/demo/");
+    else if (!strcmp(scenario, "short")) strcpy(path, "/demo");
+    else if (!strcmp(scenario, "max_trailing")) sized_path(path, 56, true);
+    else if (!strcmp(scenario, "max_plain")) sized_path(path, 55, false);
+    else if (!strcmp(scenario, "too_long_trailing")) { sized_path(path, 57, true); expected = VFS_ERR_MAXNM; }
+    else if (!strcmp(scenario, "too_long_plain")) { sized_path(path, 56, false); expected = VFS_ERR_MAXNM; }
+    else if (!strcmp(scenario, "file_max_path")) {
+        strcpy(path, "/abcdefghij/abcd/"); memset(path + 17, 'x', 46); path[63] = 0; regular = true;
+    } else if (!strcmp(scenario, "path_limit")) { sized_path(path, 64, false); expected = VFS_ERR_MAXNM; }
+    else if (!strcmp(scenario, "name_limit")) {
+        path[0] = '/'; memset(path + 1, 'x', 48); path[49] = 0; expected = VFS_ERR_MAXNM;
+    } else if (!strcmp(scenario, "name_max")) {
+        path[0] = '/'; memset(path + 1, 'x', 47); path[48] = 0;
+    } else CHECK(0);
+    CHECK(snprintf(marker, sizeof(marker), "%s%s%s", path,
+                   regular || path[strlen(path) - 1] == '/' ? "" : "/",
+                   regular ? "" : ".folder") < (int)sizeof(marker));
+    int result = vfs_spiffs_update_file_meta(path, (void *)metadata, sizeof(metadata));
+    printf("scenario=%s path_len=%zu marker_len=%zu result=%d expected=%d calls=%u\n",
+           scenario, strlen(path), strlen(marker), result, expected, calls);
+    CHECK(result == expected);
+    CHECK(calls == (expected == VFS_OK ? 1u : 0u));
+    puts("PASS metadata path, bounded marker and zero-padded metadata"); return 0;
+}

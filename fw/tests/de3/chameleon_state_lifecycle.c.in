@@ -1,0 +1,86 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+typedef struct{void*p_handle,*p_retain_data;}mini_app_inst_t;
+typedef struct{void*p_view_dispatcher,*p_chameleon_view,*p_scene_dispatcher,*p_list_view,*p_msg_box,*p_toast_view,*p_text_input,*p_view_dispatcher_toast;bool initialized;}app_chameleon_t;
+typedef struct{uint8_t cycle_mode_index;}app_chameleon_retain_data_t;
+typedef void mui_msg_box_t;typedef unsigned mui_msg_box_event_t;
+typedef struct{unsigned chameleon_default_slot_index;}settings_data_t;
+static settings_data_t settings;
+static unsigned live,scenes,switched,exited,tag_saves,settings_saves,slot_changes,exists_calls;
+static unsigned header,message,focus;static bool init_ok,exists;
+static void(*dialog_cb)(mui_msg_box_event_t,mui_msg_box_t*);
+static mini_app_inst_t *current;
+static void app_chameleon_on_kill(mini_app_inst_t*);
+static void*mui_mem_malloc(size_t n){void*p=malloc(n);assert(p);live++;return p;}
+static void mui_mem_free(void*p){if(p){assert(live);live--;free(p);}}
+#define OBJ(name) static void*name##_create(void){return mui_mem_malloc(1);} static void name##_free(void*p){mui_mem_free(p);}
+OBJ(mui_view_dispatcher) OBJ(chameleon_view) OBJ(mui_scene_dispatcher) OBJ(mui_list_view)
+OBJ(mui_msg_box) OBJ(mui_toast_view) OBJ(mui_text_input)
+#define mui_list_view_set_user_data(...) ((void)0)
+#define chameleon_view_set_user_data(...) ((void)0)
+#define mui_msg_box_set_user_data(...) ((void)0)
+#define mui_toast_view_set_user_data(...) ((void)0)
+#define mui_text_input_set_user_data(...) ((void)0)
+#define mui_view_dispatcher_add_view(...) ((void)0)
+#define mui_view_dispatcher_attach(...) ((void)0)
+#define mui_view_dispatcher_detach(...) ((void)0)
+#define mui_scene_dispatcher_set_user_data(...) ((void)0)
+#define mui_scene_dispatcher_set_scene_defines(...) ((void)0)
+#define MUI_LAYER_FULLSCREEN 0
+#define MUI_LAYER_TOAST 1
+#define CHAMELEON_VIEW_ID_TOAST 0
+#define CHAMELEON_VIEW_ID_MSG_BOX 1
+#define CHAMELEON_SCENE_FACTORY 2
+#define CHAMELEON_SCENE_MAIN 3
+#define MUI_MSG_BOX_EVENT_SELECT_CENTER 1
+#define TAG_SENSE_HF 1
+#define INVALID_SLOT_INDEX 255
+#define _T(x) x
+#define ERR 11
+#define DE3_STORAGE_IO_ERROR 12
+#define MAIN_MENU 13
+static void mui_view_dispatcher_switch_to_view(void*p,unsigned id){if(id==CHAMELEON_VIEW_ID_MSG_BOX)switched++;}
+static void mui_scene_dispatcher_next_scene(void*p,unsigned id){assert(init_ok);assert(id==(exists?CHAMELEON_SCENE_MAIN:CHAMELEON_SCENE_FACTORY));scenes++;}
+static void mui_scene_dispatcher_exit(void*p){exited++;}
+static void mui_msg_box_set_header(void*p,unsigned h){header=h;}
+static void mui_msg_box_set_message(void*p,unsigned m){message=m;}
+static void mui_msg_box_set_btn_text(void*p,void*l,unsigned m,void*r){assert(!l&&!r&&m==MAIN_MENU);}
+static void mui_msg_box_set_btn_focus(void*p,unsigned f){focus=f;}
+static void mui_msg_box_set_event_cb(void*p,void(*cb)(mui_msg_box_event_t,mui_msg_box_t*)){dialog_cb=cb;}
+static void*mini_app_launcher(void){return current;}
+static void mini_app_launcher_exit(void*p){assert(p==current);app_chameleon_on_kill(current);}
+static bool tag_emulation_init(void){return init_ok;}
+static bool fds_config_file_exists(void){exists_calls++;return exists;}
+static settings_data_t*settings_get_data(void){return &settings;}
+static bool tag_helper_valid_default_slot(void){return false;}
+static bool tag_emulation_slot_is_enabled(unsigned s,unsigned t){return true;}
+static void tag_emulation_change_slot(unsigned s,bool r){slot_changes++;}
+static void tag_emulation_save(void){tag_saves++;}
+static void settings_save(void){settings_saves++;}
+static unsigned chameleon_view_get_index(void*p){return 7;}
+@app_chameleon_init_error_cb@
+@app_chameleon_show_load_error@
+@app_chameleon_on_run@
+@app_chameleon_on_kill@
+int main(void){
+ for(unsigned ok=0;ok<2;ok++)for(unsigned present=0;present<2;present++)for(unsigned retained=0;retained<2;retained++){
+  init_ok=ok;exists=present;scenes=switched=exited=tag_saves=settings_saves=slot_changes=exists_calls=0;
+  header=message=focus=0;dialog_cb=NULL;settings.chameleon_default_slot_index=9;
+  app_chameleon_retain_data_t data={0};mini_app_inst_t inst={NULL,retained?&data:NULL};current=&inst;
+  app_chameleon_on_run(&inst);assert(inst.p_handle && live==9);
+  assert(((app_chameleon_t*)inst.p_handle)->initialized==init_ok);
+  assert(scenes==ok && exists_calls==ok);
+  if(!ok){
+   assert(switched==1 && header==ERR && message==DE3_STORAGE_IO_ERROR && focus==1 && dialog_cb);
+   dialog_cb(0,NULL);assert(inst.p_handle && live==9);dialog_cb(MUI_MSG_BOX_EVENT_SELECT_CENTER,NULL);
+  }else app_chameleon_on_kill(&inst);
+  assert(!inst.p_handle && !live && exited==1 && tag_saves==ok && settings_saves==ok && !slot_changes);
+  assert(settings.chameleon_default_slot_index==(ok?INVALID_SLOT_INDEX:9));
+  if(retained)assert(data.cycle_mode_index==7);
+ }
+ puts("PASS 8 actual app start/exit cases: invalid config shows Home dialog, starts no scene and preserves stored state");
+}

@@ -1,0 +1,30 @@
+{
+  "fw/application/src/hal/hal_spi_bus.c": {
+    "sha256": "027b56cb7d26f7d3a70fd7f7f703a8718e260ee7868a51d6d71fa4dce949c067",
+    "bytes": 2360
+  },
+  "fw/application/src/hal/hal_spi_bus.h": {
+    "sha256": "b89c059bd2fdcca76c48165ce59bf6edc07aead5bd8a1f046688377b0b3035d1",
+    "bytes": 537
+  },
+  "fw/application/src/hal/hal_spi_flash.c": {
+    "sha256": "428563d73ca91c29b0d181ff9842b58db65040681c7e48f5086265013843e37f",
+    "bytes": 6976
+  },
+  "fw/application/src/hal/hal_spi_flash.h": {
+    "sha256": "bd7375ae4dc1e0dba291963ca0557e7516448885b1660cf352fd6c28cff1236c",
+    "bytes": 606
+  },
+  "fw/application/src/mui/mui_u8g2.c": {
+    "sha256": "18954e91de7474b232f03c34ee6fd47aa10eb08e9bb48581d2566fe82aa5e0d3",
+    "bytes": 8104
+  },
+  "fw/application/src/mui/mui_u8g2.h": {
+    "sha256": "e081ea2e2c955494c7df8604a3956f999000791d5e4b417168314c6dd2c1de3f",
+    "bytes": 595
+  },
+  "fw/application/src/app/game/port/common/driver.c": {
+    "sha256": "59f460f200cf51deda6ebe3f1854aea5ec18dbdc0be0f235f51534677e6691f5",
+    "bytes": 2153
+  }
+}

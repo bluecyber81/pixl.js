@@ -4,16 +4,15 @@
 #include "mui_u8g2.h"
 #include "nrf_log.h"
 #include "settings.h"
+#include "app_error.h"
+#include "mini_app_launcher.h"
+#include "mini_app_registry.h"
 
-static mui_view_port_t *mui_find_view_port_enabled(mui_t *p_mui, mui_layer_t layer) {
-    mui_view_port_array_it_t it;
-    mui_view_port_array_it_last(it, p_mui->layers[layer]);
-    while (!mui_view_port_array_end_p(it)) {
-        mui_view_port_t *p_view_port = *mui_view_port_array_ref(it);
-        if (p_view_port->enabled) {
-            return p_view_port;
-        }
-        mui_view_port_array_previous(it);
+static mui_view_port_t *mui_find_view_port_enabled(mui_t *m, mui_layer_t layer) {
+    if ((unsigned)layer >= MUI_LAYER_MAX) return NULL;
+    for (unsigned i = m->layer_counts[layer]; i; i--) {
+        mui_view_port_t *vp = m->layers[layer][i - 1];
+        if (vp && vp->enabled) return vp;
     }
     return NULL;
 }
@@ -63,6 +62,16 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
     }
 
     mui_canvas_clear(&p_mui->canvas);
+    if (p_mui->memory_error) {
+        /* This fallback uses the existing framebuffer and ROM strings only. */
+        mui_canvas_set_frame(&p_mui->canvas, 0, 0, sw, sh);
+        mui_canvas_set_draw_color(&p_mui->canvas, 1);
+        mui_canvas_set_font(&p_mui->canvas, u8g2_font_wqy12_t_gb2312a);
+        mui_canvas_draw_utf8(&p_mui->canvas, 0, 18, "Speicher voll");
+        mui_canvas_draw_utf8(&p_mui->canvas, 0, 36, "Mitte: Hauptmenue");
+        mui_canvas_flush(&p_mui->canvas);
+        return;
+    }
 
     if (mui_draw_layer(p_mui, MUI_LAYER_FULLSCREEN, 0, 0, sw, sh)) {
         mui_draw_layer(p_mui, MUI_LAYER_TOAST, 0, 0, sw, sh);
@@ -86,6 +95,18 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
 }
 
 static void mui_process_input(mui_t *p_mui, mui_event_t *p_event) {
+    if (p_mui->memory_error) {
+        uint32_t arg = p_event->arg_int;
+        if ((arg & 0xFF) == INPUT_KEY_CENTER && ((arg >> 8) & 0xFF) == INPUT_TYPE_SHORT) {
+            p_mui->memory_error = false;
+            if (!mini_app_launcher_get_app_handle(mini_app_launcher(), MINI_APP_ID_STATUS_BAR))
+                mini_app_launcher_run(mini_app_launcher(), MINI_APP_ID_STATUS_BAR);
+            mini_app_launcher_run(mini_app_launcher(), MINI_APP_ID_DESKTOP);
+        }
+        mui_update(p_mui);
+        return;
+    }
+
     mui_view_port_t *p_view_port = mui_find_view_port_enabled(p_mui, MUI_LAYER_FULLSCREEN);
     if (!p_view_port) {
         p_view_port = mui_find_view_port_enabled(p_mui, MUI_LAYER_WINDOW);
@@ -148,12 +169,12 @@ void mui_init(mui_t *p_mui) {
 
     p_mui->auto_update = 1;
 
-    for (size_t i = 0; i < MUI_LAYER_MAX; i++) {
-        mui_view_port_array_init(p_mui->layers[i]);
-    }
+    memset(p_mui->layers, 0, sizeof(p_mui->layers));
+    memset(p_mui->layer_counts, 0, sizeof(p_mui->layer_counts));
+    p_mui->memory_error = false;
 
     mui_event_set_callback(&p_mui->event_queue, mui_process_event, p_mui);
-    mui_event_queue_init(&p_mui->event_queue);
+    APP_ERROR_CHECK(mui_event_queue_init(&p_mui->event_queue) ? NRF_SUCCESS : NRF_ERROR_NO_MEM);
 
     mui_input_init();
 
@@ -163,6 +184,8 @@ void mui_init(mui_t *p_mui) {
 }
 
 void mui_deinit(mui_t *p_mui) {
+    mui_input_deinit();
+    mui_event_queue_deinit(&p_mui->event_queue);
     mui_u8g2_deinit(&p_mui->u8g2);
     mui_mem_deinit();
     p_mui->initialized = false;
@@ -205,30 +228,24 @@ void mui_set_auto_update(mui_t* p_mui, bool enabled){
     p_mui->auto_update = enabled;
 }
 
-void mui_add_view_port(mui_t *p_mui, mui_view_port_t *p_vp, mui_layer_t layer) {
-    // verify that view port is not added
-    mui_view_port_array_it_t it;
-    for (size_t i = 0; i < MUI_LAYER_MAX; i++) {
-        mui_view_port_array_it(it, p_mui->layers[layer]);
-        while (!mui_view_port_array_end_p(it)) {
-            mui_assert(*mui_view_port_array_ref(it) != p_vp);
-            mui_view_port_array_next(it);
-        }
-    }
-
-    mui_view_port_array_push_back(p_mui->layers[layer], p_vp);
-    mui_update(p_mui);
+void mui_add_view_port(mui_t *m, mui_view_port_t *vp, mui_layer_t layer) {
+    if (!m || !vp || (unsigned)layer >= MUI_LAYER_MAX) return;
+    for (unsigned l = 0; l < MUI_LAYER_MAX; l++)
+        for (unsigned i = 0; i < m->layer_counts[l]; i++)
+            if (m->layers[l][i] == vp) return;
+    if (m->layer_counts[layer] == MUI_LAYER_CAPACITY) { mui_show_memory_error(m); return; }
+    m->layers[layer][m->layer_counts[layer]++] = vp;
+    mui_update(m);
 }
-void mui_remove_view_port(mui_t *p_mui, mui_view_port_t *p_vp, mui_layer_t layer) {
-    mui_view_port_array_it_t it;
-    for (size_t i = 0; i < MUI_LAYER_MAX; i++) {
-        mui_view_port_array_it(it, p_mui->layers[i]);
-        while (!mui_view_port_array_end_p(it)) {
-            if (*mui_view_port_array_ref(it) == p_vp) {
-                mui_view_port_array_remove(p_mui->layers[i], it);
-            } else {
-                mui_view_port_array_next(it);
-            }
+void mui_remove_view_port(mui_t *m, mui_view_port_t *vp, mui_layer_t layer) {
+    (void)layer;
+    if (!m || !vp) return;
+    for (unsigned l = 0; l < MUI_LAYER_MAX; l++) {
+        for (unsigned i = 0; i < m->layer_counts[l]; i++) {
+            if (m->layers[l][i] != vp) continue;
+            for (unsigned j = i + 1; j < m->layer_counts[l]; j++) m->layers[l][j - 1] = m->layers[l][j];
+            m->layers[l][--m->layer_counts[l]] = NULL;
+            return;
         }
     }
 }
@@ -242,4 +259,11 @@ void mui_update(mui_t *p_mui) {
 void mui_update_now(mui_t* p_mui){
      mui_event_t event = {.id = MUI_EVENT_ID_REDRAW};
     mui_event_dispatch_now(&p_mui->event_queue, &event);
+}
+
+void mui_show_memory_error(mui_t *m) {
+    if (!m) return;
+    m->memory_error = true;
+    m->auto_update = true;
+    mui_update(m);
 }

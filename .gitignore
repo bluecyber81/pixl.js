@@ -58,3 +58,23 @@ fw/bootloader/*.local.pem
 fw/bootloader/*private*.pem
 fw/bootloader/*release*.pem
 **/.vscode/.cortex-debug*.json
+
+# Public distribution: generated files and private inputs
+build/
+node_modules/
+__pycache__/
+*.pyc
+*.pem
+*.key
+key_retail.bin
+**/dfu_key/
+server-state.json
+server.log
+server-errors.log
+LOCAL_ONLY_REVIEW/
+# Unused third-party SDK and PC tools are not part of the LCD application.
+/fw/components/chameleon-ultra/firmware/nrf52_sdk/
+/fw/components/chameleon-ultra/software/
+# Archived upstream web output and editor launch settings are not this release.
+/gh-pages/
+/.vscode/

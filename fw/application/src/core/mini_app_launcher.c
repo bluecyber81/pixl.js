@@ -12,70 +12,78 @@ mini_app_launcher_t *mini_app_launcher() {
     return &launcher;
 }
 
-static void mini_app_launcher_inst_kill(mini_app_launcher_t *p_launcher, mini_app_inst_t *p_app_inst) {
-    p_app_inst->p_app->kill_cb(p_app_inst);
-    p_app_inst->state = APP_STATE_KILLED;
+static mini_app_inst_t *mini_app_launcher_find(mini_app_launcher_t *launcher, uint32_t id) {
+    for (mini_app_inst_t *p = launcher->instances; p; p = p->next)
+        if (p->p_app->id == id) return p;
+    return NULL;
 }
-
-static void mini_app_launcher_inst_run(mini_app_launcher_t *p_launcher, uint32_t id, uint8_t *retain_data) {
-    mini_app_inst_t **pp_app_inst = mui_app_inst_dict_get(p_launcher->app_inst_dict, id);
-    mini_app_inst_t *p_app_inst = NULL;
-    if (pp_app_inst) {
-        p_app_inst = *pp_app_inst;
+static void mini_app_launcher_inst_kill(mini_app_launcher_t *launcher, mini_app_inst_t *inst) {
+    (void)launcher;
+    if (!inst || !inst->p_handle || inst->state != APP_STATE_RUNNING) return;
+    inst->p_app->kill_cb(inst);
+    inst->state = APP_STATE_KILLED;
+}
+static mini_app_inst_t *mini_app_launcher_inst_run(mini_app_launcher_t *launcher, uint32_t id, uint8_t *retain) {
+    const mini_app_t *app = mini_app_registry_find_by_id(id);
+    if (!app) return NULL;
+    mini_app_inst_t *inst = mini_app_launcher_find(launcher, id);
+    if (!inst) {
+        inst = mui_mem_malloc(sizeof(*inst));
+        if (!inst) return NULL;
+        memset(inst, 0, sizeof(*inst));
+        inst->p_app = app;
+        inst->next = launcher->instances;
+        launcher->instances = inst;
     }
-    if (p_app_inst) {
-        p_app_inst->p_retain_data = NULL;
-        p_app_inst->p_app->run_cb(p_app_inst);
-    } else {
-        p_app_inst = mui_mem_malloc(sizeof(mini_app_inst_t));
-        p_app_inst->p_app = mini_app_registry_find_by_id(id);
-        p_app_inst->state = APP_STATE_RUNNING;
-        p_app_inst->p_retain_data = retain_data;
-        mui_app_inst_dict_set_at(p_launcher->app_inst_dict, id, p_app_inst);
-        p_app_inst->p_app->run_cb(p_app_inst);
+    if (inst->state == APP_STATE_RUNNING && inst->p_handle) return inst;
+    inst->p_retain_data = retain;
+    inst->p_handle = NULL;
+    inst->state = APP_STATE_KILLED;
+    app->run_cb(inst);
+    if (!inst->p_handle) return NULL;
+    inst->state = APP_STATE_RUNNING;
+    return inst;
+}
+void mini_app_launcher_run_with_retain_data(mini_app_launcher_t *launcher, uint32_t id, uint8_t *retain) {
+    const mini_app_t *app = mini_app_registry_find_by_id(id);
+    if (!app) return;
+    if (!app->deamon && launcher->p_main_app_inst) {
+        mini_app_launcher_inst_kill(launcher, launcher->p_main_app_inst);
+        launcher->p_main_app_inst = NULL;
+    }
+    mini_app_inst_t *inst = mini_app_launcher_inst_run(launcher, id, retain);
+    if (!inst) { mui_show_memory_error(mui()); return; }
+    if (!app->deamon) launcher->p_main_app_inst = inst;
+}
+void mini_app_launcher_run(mini_app_launcher_t *launcher, uint32_t id) {
+    mini_app_launcher_run_with_retain_data(launcher, id, NULL);
+}
+void mini_app_launcher_kill(mini_app_launcher_t *launcher, uint32_t id) {
+    mini_app_inst_t *inst = mini_app_launcher_find(launcher, id);
+    if (!inst) return;
+    bool was_main = inst == launcher->p_main_app_inst;
+    mini_app_launcher_inst_kill(launcher, inst);
+    if (was_main) {
+        launcher->p_main_app_inst = NULL;
+        mini_app_launcher_run(launcher, MINI_APP_ID_DESKTOP);
     }
 }
-
-void mini_app_launcher_run_with_retain_data(mini_app_launcher_t *p_launcher, uint32_t id, uint8_t *retain_data) {
-    const mini_app_t *p_app = mini_app_registry_find_by_id(id);
-    if (p_app == NULL) {
-        return;
-    }
-
-    if (!p_app->deamon && p_launcher->p_main_app_inst) {
-        mini_app_launcher_inst_kill(p_launcher, p_launcher->p_main_app_inst);
-    }
-    mini_app_launcher_inst_run(p_launcher, id, retain_data == NULL ? NULL : retain_data);
-
-    if (!p_app->deamon) {
-        p_launcher->p_main_app_inst = *mui_app_inst_dict_get(p_launcher->app_inst_dict, id);
-    }
+void mini_app_launcher_exit(mini_app_launcher_t *launcher) {
+    if (launcher->p_main_app_inst) mini_app_launcher_kill(launcher, launcher->p_main_app_inst->p_app->id);
 }
-
-void mini_app_launcher_run(mini_app_launcher_t *p_launcher, uint32_t id) {
-    mini_app_launcher_run_with_retain_data(p_launcher, id, NULL);
+void *mini_app_launcher_get_app_handle(mini_app_launcher_t *launcher, uint32_t id) {
+    mini_app_inst_t *inst = mini_app_launcher_find(launcher, id);
+    return inst && inst->state == APP_STATE_RUNNING ? inst->p_handle : NULL;
 }
-
-void mini_app_launcher_kill(mini_app_launcher_t *p_launcher, uint32_t id) {
-    mini_app_inst_t *p_app_inst = *mui_app_inst_dict_get(p_launcher->app_inst_dict, id);
-    if (p_app_inst) {
-        mini_app_launcher_inst_kill(p_launcher, p_app_inst);
-    }
-
-    // run desktop if kill current app
-    if (p_app_inst == p_launcher->p_main_app_inst) {
-        mini_app_launcher_inst_run(p_launcher, MINI_APP_ID_DESKTOP, NULL);
-        p_launcher->p_main_app_inst = *mui_app_inst_dict_get(p_launcher->app_inst_dict, MINI_APP_ID_DESKTOP);
-    }
-}
-
-void mini_app_launcher_exit(mini_app_launcher_t* p_launcher){
-    mini_app_launcher_kill(p_launcher, p_launcher->p_main_app_inst->p_app->id);
+void mini_app_launcher_post_event(mini_app_launcher_t *launcher, uint32_t id, mini_app_event_t *event) {
+    mini_app_inst_t *inst = mini_app_launcher_find(launcher, id);
+    if (inst && inst->state == APP_STATE_RUNNING && inst->p_handle && inst->p_app->on_event_cb)
+        inst->p_app->on_event_cb(inst, event);
 }
 
 void mini_app_launcher_init(mini_app_launcher_t *p_launcher, uint32_t wakeup_reason) {
 
-    mui_app_inst_dict_init(p_launcher->app_inst_dict);
+    p_launcher->instances = NULL;
     p_launcher->p_main_app_inst = NULL;
 
     mini_app_launcher_run(p_launcher, MINI_APP_ID_STATUS_BAR);
@@ -97,6 +105,11 @@ void mini_app_launcher_init(mini_app_launcher_t *p_launcher, uint32_t wakeup_rea
 void mini_app_launcher_sleep(mini_app_launcher_t *p_launcher) {
     mini_app_inst_t *app = p_launcher->p_main_app_inst;
     cache_data_t *p_cache = cache_get_data();
+    if (!app) {
+        p_cache->enabled = false;
+        memset(p_cache->retain_data, 0, sizeof(p_cache->retain_data));
+        return;
+    }
     if (app) {
         settings_data_t *p_settings = settings_get_data();
         NRF_LOG_INFO("running APP: %d %s %d", app->p_app->id, nrf_log_push((char *)app->p_app->name),
@@ -109,6 +122,10 @@ void mini_app_launcher_sleep(mini_app_launcher_t *p_launcher) {
         } else {
             p_cache->enabled = false;
             memset(p_cache->retain_data, 0, sizeof(p_cache->retain_data));
+            /* Even without resume data, stop timers/close files before the
+             * UI allocator and external flash are shut down. */
+            app->p_retain_data = NULL;
+            app->p_app->kill_cb(app);
         }
     }
 }

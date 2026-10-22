@@ -30,7 +30,7 @@ static void app_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     p_list_view->canvas_height = p_canvas->height;
     p_list_view->canvas_width = p_canvas->width;
 
-    mini_app_t *focus_app = *ptr_array_get(p_list_view->items, p_list_view->focus);
+    const mini_app_t *focus_app = p_list_view->items[p_list_view->focus];
 
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     uint8_t font_height = mui_canvas_current_font_height(p_canvas);
@@ -46,8 +46,8 @@ static void app_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
     mui_canvas_set_draw_color(p_canvas, 1);
 
-    for (uint8_t i = 0; i < ptr_array_size(p_list_view->items); i++) {
-        mini_app_t *app = *ptr_array_get(p_list_view->items, i);
+    for (uint8_t i = 0; i < p_list_view->item_count; i++) {
+        const mini_app_t *app = p_list_view->items[i];
         int16_t icon_x = i * ICON_GROUP_WIDTH - scroll_offset + first_offset;
         if (icon_x + ICON_GROUP_WIDTH > 0 && icon_x < canvas_width) {
             if (app->icon_32x32) {
@@ -94,7 +94,7 @@ static void app_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
 static void app_list_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     app_list_view_t *p_app_list_view = p_view->user_data;
-    uint8_t size = ptr_array_size(p_app_list_view->items);
+    uint8_t size = p_app_list_view->item_count;
     if (event->type == INPUT_TYPE_SHORT) {
         switch (event->key) {
         case INPUT_KEY_RIGHT: {
@@ -164,8 +164,10 @@ static void app_list_view_on_exit(mui_view_t *p_view) {
 
 app_list_view_t *app_list_view_create() {
     app_list_view_t *p_app_list_view = mui_mem_malloc(sizeof(app_list_view_t));
+    if (!p_app_list_view) return NULL;
+    memset(p_app_list_view, 0, sizeof(app_list_view_t));
 
-    ptr_array_init(p_app_list_view->items);
+    p_app_list_view->item_count = 0;
     p_app_list_view->focus = 0;
     p_app_list_view->icon_anim_value = 0;
     p_app_list_view->name_anim_value = 0;
@@ -185,6 +187,7 @@ app_list_view_t *app_list_view_create() {
     mui_anim_set_time(&p_app_list_view->name_anim, ICON_ANIM_SHORT_TIME);
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) { mui_mem_free(p_app_list_view); return NULL; }
     p_view->user_data = p_app_list_view;
     p_view->draw_cb = app_list_view_on_draw;
     p_view->input_cb = app_list_view_on_input;
@@ -196,7 +199,8 @@ app_list_view_t *app_list_view_create() {
     return p_app_list_view;
 }
 void app_list_view_free(app_list_view_t *p_view) {
-    ptr_array_clear(p_view->items);
+    if (!p_view) return;
+
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);
 }

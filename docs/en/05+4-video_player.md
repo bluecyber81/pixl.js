@@ -21,8 +21,13 @@ The header format is as follows
 | height | uint16 | 2 | animation height |
 | reserved | uint32 | 4 | reserved bytes |
 
-The data format of frame N is the animation data of each frame in xbm format, and the size is width * height / 8.
-If the length of width is not a multiple of 8, round it up.
+Each frame is XBM data with each row padded to a whole byte. Its size is
+`((width + 7) / 8) * height` bytes, using integer division.
+
+The DE2 build reads the 16-byte header as little-endian and accepts 1–65535
+frames, 1–60 fps, and dimensions from 1×1 to 128×64. Reserved bytes must be zero.
+The file must contain exactly the declared number of complete frames, without
+trailing data. Invalid or incomplete files stop safely instead of being played.
 
 ## How to generate animation files
 

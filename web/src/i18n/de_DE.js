@@ -1,8 +1,6 @@
-import { readonly } from "vue";
-
 export default {
   lang: {
-    choose: '语言/Language',
+    choose: 'Sprache/Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
     en: 'English',
@@ -25,6 +23,8 @@ export default {
     up: 'Übergeordneter Ordner',
     refresh: 'Aktualisieren',
     dfu: 'DFU',
+    dfupage: 'DFU-Seite öffnen',
+    enterdfu: 'Gerät in DFU versetzen',
   },
   status: {
     connected: 'Verbunden, Version: ',
@@ -33,9 +33,9 @@ export default {
     loading: 'Lade…',
   },
   conn: {
-    connect: 'Vebinden',
+    connect: 'Verbinden',
     connecting: 'Verbinde…',
-    disconnect: 'Trenne…',
+    disconnect: 'Trennen',
     consuccess: 'Erfolgreich mit Pixl.js verbunden!',
     disconnected: 'Pixl.js wurde getrennt!',
     connfailed: 'Verbindung mit Pixl.js fehlgeschlagen!'
@@ -49,11 +49,13 @@ export default {
   contxmenu: {
     del: 'Löschen…',
     rename: 'Umbenennen…',
-    prop: 'Eigenenschaften…',
+    prop: 'Eigenschaften…',
     format: 'Formatieren…'
   },
   properties: {
-    title: 'Eigenenschaften',
+    title: 'Eigenschaften',
+    invalidmeta: 'Metadaten beschädigt oder unbekannt – Bearbeitung gesperrt',
+    notelimit: 'Notizen dürfen höchstens {max} UTF-8-Bytes lang sein (aktuell: {actual}).',
     remark: 'Notiz',
     entermsg: 'Bitte Notiz eingeben',
     attrib: 'Attribute',
@@ -92,6 +94,7 @@ export default {
   dfumode: {
     title: 'DFU Modus',
     startconfirm: 'DFU Modus aktivieren?',
+    commandaccepted: 'Das Gerät hat den DFU-Befehl angenommen. Ob der DFU-Modus bereit ist, prüfst du auf der separat geöffneten DFU-Seite. Es wurde noch keine Firmware übertragen.',
     updateconfirm: 'DFU Modus erfolgreich aktiviert. Möchten Sie die DFU Aktualisierungs Seite aufrufen?',
     updatetitle: 'DFU Modus akzeptiert'
   },
@@ -105,14 +108,21 @@ export default {
     newfoldererr: 'Ordner erstellen fehlgeschlagen!:'
   },
   rename: {
-    title: 'Umbennenen',
+    title: 'Umbenennen',
     message: 'Bitte geben Sie den neuen Dateinamen ein: ',
     errrename: 'Umbenennen fehlgeschlagen!: ',
     nametoolong: 'Die maximale Dateipfadlänge darf 63 Bytes nicht überschreiten',
     pathtoolong: 'Die maximale Dateinamenlänge darf 47 Bytes nicht überschreiten'
   },
   drive: {
-    message: '(Speicher nicht verügbar [Fehler: ',
+    free: '{free} frei von {total}',
+    message: '(Speicher nicht verfügbar [Fehler: ',
     messageend: '])'
+  },
+  transfer: {
+    busy: 'Dateiübertragung läuft. Zum Abbrechen den Upload-Dialog schließen.',
+    unsupported: 'Dieser Browser unterstützt kein Web Bluetooth. Bitte Chrome oder Edge verwenden.',
+    deviceerror: 'Gerätefehler',
+    cancelled: 'Übertragung abgebrochen'
   }
 }

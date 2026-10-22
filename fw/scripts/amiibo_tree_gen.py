@@ -1,8 +1,15 @@
-import os 
+"""Explicit legacy metadata maintenance; never runs while importing the module.
+
+Use --bins with a complete intended local tree. Input validation precedes all
+changes; the two output CSV writes are not an atomic power-loss transaction.
+This helper is not part of the normal firmware build.
+"""
+import argparse
+import os
 import struct
 import csv
-
-root = "../data/Amiibo Bins"
+import re
+from pathlib import Path
 
 class Amiibo:
     def __init__(self):
@@ -32,11 +39,10 @@ def get_prorject_directory():
 
 def read_amiibo_from_csv():
     csv_file = get_prorject_directory() + "/data/amiidb_amiibo.csv"
-    if not os.path.exists(csv_file):
-        return list()
     amiibos = list()
-    with open(csv_file, "r", encoding="utf8") as f:
-        for r in csv.reader(f):
+    with open(csv_file, "r", encoding="utf8", newline="") as f:
+        for r in csv.reader(f, strict=True):
+            validate_csv_row(r, 3, csv_file)
             amiibo = Amiibo()
             amiibo.id = r[0]
             amiibo.name_en = r[1]
@@ -58,11 +64,10 @@ def write_amiibo_to_csv(amiibos):
 
 def read_games_from_csv():
     csv_file = get_prorject_directory() + "/data/amiidb_game.csv"
-    if not os.path.exists(csv_file):
-        return list()
     games = list()
-    with open(csv_file, "r", encoding="utf8") as f:
-        for r in csv.reader(f):
+    with open(csv_file, "r", encoding="utf8", newline="") as f:
+        for r in csv.reader(f, strict=True):
+            validate_csv_row(r, 5, csv_file)
             game = Game()
             game.id = r[0]
             game.parent_id = r[1]
@@ -74,11 +79,10 @@ def read_games_from_csv():
 
 def read_link_from_csv():
     csv_file = get_prorject_directory() + "/data/amiidb_link.csv"
-    if not os.path.exists(csv_file):
-        return list()
     links = list()
-    with open(csv_file, "r", encoding="utf8") as f:
-        for r in csv.reader(f):
+    with open(csv_file, "r", encoding="utf8", newline="") as f:
+        for r in csv.reader(f, strict=True):
+            validate_csv_row(r, 5, csv_file)
             link = Link()
             link.game_id = r[0]
             link.amiibo_id = r[1]
@@ -140,17 +144,69 @@ def add_ac_link(amiibo_id, game_name):
 
 
 
-def traverse_dir(path):
-    for dir, dirs, files in os.walk(path):
-        for file in files:
-            short_dir = dir[len(root) + 1:]
-            amiibo_name = file[0:-4]
-            amiibo_id = read_amiibo_id(dir + "/" + file)
-            if short_dir.find("Animal Crossing Amiibo") >= 0:
-                update_amiibo_name(amiibo_id, amiibo_name)
-                dir_name = os.path.basename(short_dir)
-                add_ac_link(amiibo_id, dir_name)
-                print(dir_name, ",",amiibo_name,",", amiibo_id)
+def validate_csv_row(row, fields, path):
+    if len(row) != fields or any("\0" in field for field in row):
+        raise ValueError("Invalid CSV row in " + path)
+
+
+def validate_csv_inputs(amiibos, game_rows, link_rows):
+    if not amiibos or not game_rows or not link_rows:
+        raise ValueError("All three metadata CSVs must contain records")
+    ids = [row.id.lower() for row in amiibos]
+    if (any(re.fullmatch(r"[0-9a-f]{16}", value) is None or value == "0" * 16 for value in ids)
+            or len(set(ids)) != len(ids) or any(not row.name_en.strip() for row in amiibos)):
+        raise ValueError("Invalid, duplicate, or unnamed amiibo CSV record")
+    game_ids = [row.id for row in game_rows]
+    if (any(not row.id.isdecimal() or not row.parent_id.isdecimal() or not row.order.isdecimal()
+            or not row.name_en.strip() for row in game_rows) or len(set(game_ids)) != len(game_ids)):
+        raise ValueError("Invalid or duplicate game CSV record")
+    if any(row.parent_id != "0" and row.parent_id not in game_ids for row in game_rows):
+        raise ValueError("Game CSV references a missing parent")
+    parents = {row.id: row.parent_id for row in game_rows}
+    for identifier in game_ids:
+        seen = set()
+        while identifier != "0":
+            if identifier in seen:
+                raise ValueError("Game CSV contains a parent cycle")
+            seen.add(identifier)
+            identifier = parents[identifier]
+    if any(row.game_id not in game_ids or row.amiibo_id.lower() not in ids for row in link_rows):
+        raise ValueError("Link CSV references an unknown game or amiibo")
+
+
+def collect_updates(path, amiibos, game_rows):
+    # Preflight the complete tree before removing links or modifying any CSV.
+    root = Path(path).resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError("--bins must name an existing directory")
+    known_ids = {row.id.lower(): row.id for row in amiibos}
+    updates = []
+    def walk_error(error):
+        raise error
+    for directory, dirs, files in os.walk(root, onerror=walk_error):
+        dirs.sort()
+        relative = Path(directory).relative_to(root)
+        if "Animal Crossing Amiibo" not in relative.as_posix():
+            continue
+        for filename in sorted(files):
+            file = Path(directory) / filename
+            if file.suffix.lower() != ".bin":
+                continue
+            if not file.is_file() or not file.resolve().is_relative_to(root):
+                raise ValueError("Invalid or out-of-tree input: " + str(file))
+            identifier = read_amiibo_id(str(file))
+            if identifier not in known_ids:
+                raise ValueError("Invalid length or unknown amiibo ID: " + str(file))
+            game_name = relative.name
+            matches = [game for game in game_rows if game.name_en == game_name]
+            if len(matches) != 1:
+                raise ValueError("Missing or ambiguous game folder: " + game_name)
+            if not file.stem.strip():
+                raise ValueError("Empty amiibo file name")
+            updates.append((known_ids[identifier], file.stem, game_name))
+    if not updates:
+        raise ValueError("No usable Animal Crossing .bin records found; metadata was not changed")
+    return updates
 
 
 def remove_ac_link():
@@ -164,23 +220,38 @@ def remove_ac_link():
 
 def link_sort_key(link):
     for amiibo in amiibo_list:
-        if link.amiibo_id == amiibo.id:
+        if link.amiibo_id.lower() == amiibo.id.lower():
             return ("%02d:%s")% (int(link.game_id) , amiibo.name_en)
-    return ("%02d:%s")% (link.game_id , "")
+    return ("%02d:%s")% (int(link.game_id) , "")
 
 def sort_link():
     links.sort(key=lambda x: link_sort_key(x) )
 
 
-amiibo_list = read_amiibo_from_csv()
-games = read_games_from_csv()
-links = read_link_from_csv()
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=(
+        "Rebuild Animal Crossing metadata from an explicitly selected local tree. "
+        "Replaces existing group 11 links and updates names in the project's CSVs."))
+    parser.add_argument("--bins", type=Path, required=True, help="Root containing Animal Crossing Amiibo subfolders")
+    args = parser.parse_args(argv)
+    global amiibo_list, games, links
+    try:
+        new_amiibos = read_amiibo_from_csv()
+        new_games = read_games_from_csv()
+        new_links = read_link_from_csv()
+        validate_csv_inputs(new_amiibos, new_games, new_links)
+        updates = collect_updates(args.bins, new_amiibos, new_games)
+    except (OSError, ValueError, csv.Error) as error:
+        parser.exit(1, "Input validation failed; metadata was not changed: %s\n" % error)
+    amiibo_list, games, links = new_amiibos, new_games, new_links
+    remove_ac_link()
+    for identifier, name, game_name in updates:
+        update_amiibo_name(identifier, name)
+        add_ac_link(identifier, game_name)
+    sort_link()
+    write_amiibo_to_csv(amiibo_list)
+    write_link_to_csv(links)
 
-remove_ac_link()
 
-traverse_dir("../data/Amiibo Bins")
-
-sort_link()
-
-write_amiibo_to_csv(amiibo_list)
-write_link_to_csv(links)
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,30 @@
+{
+  "sdk_image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "sdk_version": "17.1.0_ddde560",
+  "files": {
+    "nrf_gpio.h": {
+      "sdk_path": "/opt/nRF5_SDK_17.1.0_ddde560/modules/nrfx/hal/nrf_gpio.h",
+      "source_sha256": "cf0f98ccf1205279834db94446c70afe82ed72e83c713292155b7214a3e2e8aa",
+      "fixture_sha256": "cf0f98ccf1205279834db94446c70afe82ed72e83c713292155b7214a3e2e8aa",
+      "extraction": "byte-for-byte original source"
+    },
+    "nrfx_gpiote.c": {
+      "sdk_path": "/opt/nRF5_SDK_17.1.0_ddde560/modules/nrfx/drivers/src/nrfx_gpiote.c",
+      "source_sha256": "bc1dd3aa36d53d269ee311003e3c540257bff27fc50faac7b1e59ca3af8d6a9d",
+      "fixture_sha256": "bc1dd3aa36d53d269ee311003e3c540257bff27fc50faac7b1e59ca3af8d6a9d",
+      "extraction": "byte-for-byte original source"
+    },
+    "bsp.c": {
+      "sdk_path": "/opt/nRF5_SDK_17.1.0_ddde560/components/libraries/bsp/bsp.c",
+      "source_sha256": "8ceb1c89a40ef6929bc6f3e9804acf4daa5fe8bf336dcd0380d0792ad7f1cdcf",
+      "fixture_sha256": "8ceb1c89a40ef6929bc6f3e9804acf4daa5fe8bf336dcd0380d0792ad7f1cdcf",
+      "extraction": "byte-for-byte original source"
+    },
+    "gpio_bitfields.h": {
+      "sdk_path": "/opt/nRF5_SDK_17.1.0_ddde560/modules/nrfx/mdk/nrf52_bitfields.h",
+      "source_sha256": "abc93b354a9d82a2c394e883484e8af150f3bd81b57fa978955d7b61c9c04759",
+      "fixture_sha256": "5303bb9bccc6aca1dbbdad527dfc43b26303a61828c073ab606d924194897014",
+      "extraction": "all GPIO_PIN_CNF defines plus original copyright comment"
+    }
+  }
+}

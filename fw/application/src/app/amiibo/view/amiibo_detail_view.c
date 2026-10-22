@@ -56,7 +56,7 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
     const db_amiibo_t *amd = get_amiibo_by_id(head, tail);
     if (amd != NULL) {
         const char *name =
-            (getLanguage() == LANGUAGE_ZH_HANS) && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
+            isChineseLanguage() && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
         mui_element_autowrap_text(p_canvas, 0, y += 15, mui_canvas_get_width(p_canvas), 24, name);
         if (strlen(ntag->notes) > 0) {
             mui_element_autowrap_text(p_canvas, 0, y += 13, mui_canvas_get_width(p_canvas), 24, ntag->notes);
@@ -112,9 +112,11 @@ static void amiibo_detail_view_on_exit(mui_view_t *p_view) {}
 
 amiibo_detail_view_t *amiibo_detail_view_create() {
     amiibo_detail_view_t *p_amiibo_detail_view = mui_mem_malloc(sizeof(amiibo_detail_view_t));
+    if (!p_amiibo_detail_view) return NULL;
     memset(p_amiibo_detail_view, 0, sizeof(amiibo_detail_view_t));
 
     mui_view_t *p_view = mui_view_create();
+    if (!p_view) { mui_mem_free(p_amiibo_detail_view); return NULL; }
     p_view->user_data = p_amiibo_detail_view;
     p_view->draw_cb = amiibo_detail_view_on_draw;
     p_view->input_cb = amiibo_detail_view_on_input;
@@ -129,6 +131,7 @@ amiibo_detail_view_t *amiibo_detail_view_create() {
 }
 
 void amiibo_detail_view_free(amiibo_detail_view_t *p_view) {
+    if (!p_view) return;
     string_clear(p_view->file_name);
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);

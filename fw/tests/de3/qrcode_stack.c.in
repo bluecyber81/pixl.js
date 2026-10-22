@@ -1,0 +1,92 @@
+/* Production helper and real pinned encoder; canvas records every draw call. */
+#include "mui_qrcode_helper.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
+uint8_t mui_canvas_get_draw_color(mui_canvas_t *c) { return c->color; }
+void mui_canvas_set_draw_color(mui_canvas_t *c, uint8_t color) { c->color = color; }
+void mui_canvas_draw_dot(mui_canvas_t *c, uint8_t x, uint8_t y) {
+    c->dots++;
+    c->hash = (c->hash ^ x) * UINT64_C(1099511628211);
+    c->hash = (c->hash ^ y) * UINT64_C(1099511628211);
+    c->hash = (c->hash ^ c->color) * UINT64_C(1099511628211);
+}
+
+typedef struct {
+    uint8_t before[16];
+    uint8_t data[qrcodegen_BUFFER_LEN_FOR_VERSION(4)];
+    uint8_t after[16];
+} guarded_t;
+static unsigned cases, successful, rejected;
+
+static void check_text(const char *text, uint8_t maxsize, int expected_size) {
+    uint8_t old_qr[qrcodegen_BUFFER_LEN_MAX], old_temp[qrcodegen_BUFFER_LEN_MAX];
+    bool old_ok = qrcodegen_encodeText(text, old_temp, old_qr, qrcodegen_Ecc_LOW,
+                                     1, 40, qrcodegen_Mask_AUTO, true);
+    int old_size = old_ok ? qrcodegen_getSize(old_qr) : 0;
+    if (expected_size) assert(old_size == expected_size);
+    mui_canvas_t actual = {2, 0, UINT64_C(1469598103934665603)};
+    mui_canvas_t expected = actual;
+    bool fits = old_ok && old_size <= 33 && old_size <= maxsize;
+    if (fits) printQr(old_qr, &expected, 39, 2, maxsize);
+    draw_qrcode(&actual, 39, 2, maxsize, text);
+    assert(actual.color == 2 && actual.dots == expected.dots && actual.hash == expected.hash);
+    if (fits) successful++; else rejected++;
+
+    if (maxsize >= 21) {
+        int version = (maxsize - 17) / 4;
+        if (version > 4) version = 4;
+        guarded_t qr, temp;
+        memset(&qr, 0xA7, sizeof(qr)); memset(&temp, 0xA7, sizeof(temp));
+        bool ok = qrcodegen_encodeText(text, temp.data, qr.data, qrcodegen_Ecc_LOW,
+                                      1, version, qrcodegen_Mask_AUTO, true);
+        assert(ok == fits);
+        for (unsigned i = 0; i < 16; i++) {
+            assert(qr.before[i] == 0xA7 && qr.after[i] == 0xA7);
+            assert(temp.before[i] == 0xA7 && temp.after[i] == 0xA7);
+        }
+        if (ok) {
+            assert(qrcodegen_getSize(qr.data) == old_size);
+            size_t bytes = ((size_t)old_size * old_size + 7) / 8 + 1;
+            assert(memcmp(qr.data, old_qr, bytes) == 0);
+        } else assert(qr.data[0] == 0);
+    }
+    cases++;
+}
+
+int main(void) {
+    const char *url = "https://pixl.amiibo.xyz";
+    assert(strlen(url) == 23);
+    check_text(url, 50, 25);
+    char text[5001];
+    for (unsigned i = 0; i < 64; i++) {
+        snprintf(text, sizeof(text), "https://pixl.amiibo.xyz/a/%08X-%08X", i * 0x01020408U, ~i);
+        assert(strlen(text) == 43);
+        check_text(text, 33, 29);
+    }
+    const uint8_t sizes[] = {0, 1, 20, 21, 24, 25, 28, 29, 32, 33, 50, 255};
+    for (unsigned i = 0; i < sizeof(sizes); i++) {
+        check_text(url, sizes[i], 25);
+        check_text(text, sizes[i], 29);
+    }
+    for (unsigned mode = 0; mode < 3; mode++) {
+        for (unsigned length = 0; length <= 200; length++) {
+            memset(text, mode == 0 ? 'a' : mode == 1 ? '7' : 'A', length);
+            text[length] = 0;
+            check_text(text, 33, 0);
+        }
+    }
+    for (unsigned n = 1; n <= 50; n++) {
+        for (unsigned i = 0; i < n; i++) { text[i*2] = (char)0xC3; text[i*2+1] = (char)0xA4; }
+        text[n*2] = 0; check_text(text, 33, 0);
+    }
+    memset(text, 'a', 78); text[78] = 0; check_text(text, 33, 33);
+    text[78] = 'a'; text[79] = 0; check_text(text, 33, 37);
+    memset(text, 'a', 5000); text[5000] = 0; check_text(text, 50, 0);
+    mui_canvas_t c = {2, 0, 0};
+    draw_qrcode(&c, 0, 0, 33, NULL); assert(!c.dots && c.color == 2);
+    draw_qrcode(NULL, 0, 0, 33, url);
+    printf("PASS QR %u cases: %u identical render/matrix, %u bounded rejects; real encoder, canaries, current URLs\n", cases, successful, rejected);
+    return 0;
+}

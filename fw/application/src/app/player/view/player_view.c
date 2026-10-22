@@ -2,140 +2,151 @@
 #include "i18n/language.h"
 #include "nrf_log.h"
 #include "nrf_pwr_mgmt.h"
+#include <stdio.h>
+
+static void player_view_finished(player_view_t *p_view) {
+    player_view_stop(p_view);
+    if (p_view->event_cb) p_view->event_cb(PLAYER_VIEW_EVENT_PLAY_STOPPED, p_view);
+}
 
 static void player_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
-    player_view_t *p_player_view = p_view->user_data;
-    if (p_player_view->is_playing) {
-        size_t read = p_player_view->p_dirver->read_file(&p_player_view->fd, p_player_view->frame_buffer,
-                                                         p_player_view->frame_buffer_size);
-        if (read == p_player_view->frame_buffer_size) {
-
-            uint8_t x = (mui_canvas_get_width(p_canvas) - p_player_view->header.width) / 2;
-            uint8_t y = (mui_canvas_get_height(p_canvas) - p_player_view->header.height) / 2;
-            mui_canvas_draw_xbm(p_canvas, x, y, p_player_view->header.width, p_player_view->header.height,
-                                p_player_view->frame_buffer);
-            p_player_view->played_frames++;
-
-            char txt[10];
-            sprintf(txt, "%d", p_player_view->played_frames);
-
-            mui_canvas_set_draw_color(p_canvas, 0);
-            mui_canvas_draw_box(p_canvas, 0, 0, mui_canvas_get_utf8_width(p_canvas, txt), 12);
-            mui_canvas_set_draw_color(p_canvas, 1);
-            mui_canvas_draw_utf8(p_canvas, 0, 10, txt);
-        } else {
-            player_view_stop(p_player_view);
-            if (p_player_view->event_cb) {
-                p_player_view->event_cb(PLAYER_VIEW_EVENT_PLAY_STOPPED, p_player_view);
-            }
+    player_view_t *player = p_view->user_data;
+    if (!player->is_playing) {
+        mui_canvas_draw_utf8(p_canvas, 0, 10, player->play_error ? _T(READ_FILE_FAILED) : _T(NOT_PLAYING));
+        return;
+    }
+    if (player->header.width > mui_canvas_get_width(p_canvas) ||
+        player->header.height > mui_canvas_get_height(p_canvas)) {
+        player->play_error = true;
+        player_view_finished(player);
+        return;
+    }
+    if (player->frame_due) {
+        player->frame_due = false;
+        if (player->played_frames >= player->header.frame_count) {
+            player_view_finished(player);
+            return;
         }
-    } else {
-        mui_canvas_draw_utf8(p_canvas, 0, 10, _T(NOT_PLAYING));
+        int32_t read = player->p_dirver->read_file(&player->fd, player->frame_buffer, player->frame_buffer_size);
+        if (read != (int32_t)player->frame_buffer_size) {
+            player->play_error = true;
+            player_view_finished(player);
+            return;
+        }
+        player->played_frames++;
+        player->frame_valid = true;
+    }
+    /* UI redraws must redraw the current frame, not advance playback. */
+    if (player->frame_valid) {
+        uint8_t x = (mui_canvas_get_width(p_canvas) - player->header.width) / 2;
+        uint8_t y = (mui_canvas_get_height(p_canvas) - player->header.height) / 2;
+        mui_canvas_draw_xbm(p_canvas, x, y, player->header.width, player->header.height, player->frame_buffer);
+        char txt[10];
+        snprintf(txt, sizeof(txt), "%u", (unsigned)player->played_frames);
+        mui_canvas_set_draw_color(p_canvas, 0);
+        mui_canvas_draw_box(p_canvas, 0, 0, mui_canvas_get_utf8_width(p_canvas, txt), 12);
+        mui_canvas_set_draw_color(p_canvas, 1);
+        mui_canvas_draw_utf8(p_canvas, 0, 10, txt);
     }
 }
 
 static void player_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
-    player_view_t *p_player_view = p_view->user_data;
-    if (p_player_view->event_cb) {
-        p_player_view->event_cb(PLAYER_VIEW_EVENT_KEY_PRESSED, p_player_view);
-    }
+    /* Keep PRESS/RELEASE in this view. Returning on PRESS would deliver the
+     * same gesture's SHORT to the browser's newly focused Hauptmenue row. */
+    if (event->type != INPUT_TYPE_SHORT && event->type != INPUT_TYPE_LONG) return;
+    player_view_t *player = p_view->user_data;
+    if (player->event_cb) player->event_cb(PLAYER_VIEW_EVENT_KEY_PRESSED, player);
 }
-
 static void player_view_on_enter(mui_view_t *p_view) {}
-
-static void player_view_on_exit(mui_view_t *p_view) {}
+static void player_view_on_exit(mui_view_t *p_view) { player_view_stop(p_view->user_data); }
 
 static void player_view_on_frame_tick(void *p_context) {
     player_view_t *p_view = p_context;
-    nrf_pwr_mgmt_feed();
-    mui_update(mui());
+    if (p_view->is_playing) {
+        p_view->frame_due = true;
+        nrf_pwr_mgmt_feed();
+        mui_update(mui());
+    }
 }
 
 player_view_t *player_view_create() {
-    player_view_t *p_player_view = mui_mem_malloc(sizeof(player_view_t));
-    memset(p_player_view, 0, sizeof(player_view_t));
-
-    mui_view_t *p_view = mui_view_create();
-    p_view->user_data = p_player_view;
-    p_view->draw_cb = player_view_on_draw;
-    p_view->input_cb = player_view_on_input;
-    p_view->enter_cb = player_view_on_enter;
-    p_view->exit_cb = player_view_on_exit;
-
-    p_player_view->p_view = p_view;
-    p_player_view->frame_buffer = NULL;
-    p_player_view->is_playing = false;
-
-    p_player_view->frame_tick_timer_id = &p_player_view->frame_tick_timer_data;
-    int32_t err_code =
-        app_timer_create(&p_player_view->frame_tick_timer_id, APP_TIMER_MODE_REPEATED, player_view_on_frame_tick);
-    APP_ERROR_CHECK(err_code);
-
-    return p_player_view;
+    player_view_t *player = mui_mem_malloc(sizeof(player_view_t));
+    if (!player) return NULL;
+    memset(player, 0, sizeof(player_view_t));
+    player->p_view = mui_view_create();
+    if (!player->p_view) { mui_mem_free(player); return NULL; }
+    player->p_view->user_data = player;
+    player->p_view->draw_cb = player_view_on_draw;
+    player->p_view->input_cb = player_view_on_input;
+    player->p_view->enter_cb = player_view_on_enter;
+    player->p_view->exit_cb = player_view_on_exit;
+    player->frame_tick_timer_id = &player->frame_tick_timer_data;
+    int32_t err = app_timer_create(&player->frame_tick_timer_id, APP_TIMER_MODE_REPEATED, player_view_on_frame_tick);
+    if (err != NRF_SUCCESS) {
+        mui_view_free(player->p_view);
+        mui_mem_free(player);
+        return NULL;
+    }
+    return player;
 }
 void player_view_free(player_view_t *p_view) {
+    if (!p_view) return;
     player_view_stop(p_view);
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);
 }
 mui_view_t *player_view_get_view(player_view_t *p_view) { return p_view->p_view; }
 
-void player_view_play(player_view_t *p_view, vfs_drive_t drive, const char *path) {
-
-    vfs_driver_t *p_driver = vfs_get_driver(drive);
-    int32_t err = p_driver->open_file(path, &p_view->fd, VFS_MODE_READONLY);
-    if (err != VFS_OK) {
-        NRF_LOG_INFO("open file failed");
-        return;
-    }
-
-    err = p_driver->read_file(&p_view->fd, &p_view->header, sizeof(v_header_t));
-    if (err < 0) {
-        NRF_LOG_INFO("read file failed");
-        p_driver->close_file(&p_view->fd);
-        return;
-    }
-    NRF_LOG_INFO("magic:%X, frame_count:%d, fps:%d, width:%d, height:%d, reserved:%d", p_view->header.magic,
-                 p_view->header.frame_count, p_view->header.fps, p_view->header.width, p_view->header.height,
-                 p_view->header.reserved);
-
-    if (p_view->header.magic != V_HEADER_MAGIC) {
-        p_driver->close_file(&p_view->fd);
-        return;
-    }
-
-    p_view->p_dirver = p_driver;
+bool player_view_play(player_view_t *p_view, vfs_drive_t drive, const char *path) {
+    player_view_stop(p_view);
+    p_view->play_error = true;
     p_view->played_frames = 0;
-
-    if (p_view->header.width % 8) {
-        p_view->frame_buffer_size = (p_view->header.width + 8) * p_view->header.height / 8;
-    } else {
-        p_view->frame_buffer_size = p_view->header.width * p_view->header.height / 8;
+    vfs_driver_t *driver = vfs_get_driver(drive);
+    vfs_obj_t obj;
+    uint8_t raw[PLAYER_HEADER_BYTES];
+    if (!driver || !path || driver->stat_file(path, &obj) != VFS_OK || obj.type != VFS_TYPE_REG) return false;
+    if (driver->open_file(path, &p_view->fd, VFS_MODE_READONLY) != VFS_OK) return false;
+    p_view->p_dirver = driver;
+    p_view->file_open = true;
+    int32_t read = driver->read_file(&p_view->fd, raw, sizeof(raw));
+    if (read != (int32_t)sizeof(raw) || !player_parse_header(raw, sizeof(raw), obj.size, SCREEN_WIDTH, SCREEN_HEIGHT,
+                                                          &p_view->header, &p_view->frame_buffer_size)) {
+        player_view_stop(p_view);
+        return false;
     }
-
     p_view->frame_buffer = mui_mem_malloc(p_view->frame_buffer_size);
-    if (p_view->frame_buffer == NULL) {
-        NRF_LOG_INFO("malloc frame buffer failed");
-        p_driver->close_file(&p_view->fd);
-        return;
+    if (!p_view->frame_buffer) {
+        player_view_stop(p_view);
+        return false;
     }
-
     p_view->is_playing = true;
-    NRF_LOG_INFO("frame interval: %d ms", 1000 / p_view->header.fps);
-
-    int32_t err_code =
-        app_timer_start(p_view->frame_tick_timer_id, APP_TIMER_TICKS(1000 / p_view->header.fps), (void *)p_view);
-    APP_ERROR_CHECK(err_code);
+    p_view->frame_due = true;
+    uint32_t interval = (1000u + p_view->header.fps / 2u) / p_view->header.fps;
+    int32_t err = app_timer_start(p_view->frame_tick_timer_id, APP_TIMER_TICKS(interval), p_view);
+    if (err != NRF_SUCCESS) {
+        player_view_stop(p_view);
+        return false;
+    }
+    p_view->play_error = false;
+    mui_update(mui());
+    return true;
 }
 
 void player_view_stop(player_view_t *p_view) {
     if (p_view->is_playing) {
         p_view->is_playing = false;
         app_timer_stop(p_view->frame_tick_timer_id);
-        if (p_view->frame_buffer) {
-            mui_mem_free(p_view->frame_buffer);
-            p_view->frame_buffer = NULL;
-        }
+    }
+    p_view->frame_due = false;
+    p_view->frame_valid = false;
+    if (p_view->frame_buffer) {
+        mui_mem_free(p_view->frame_buffer);
+        p_view->frame_buffer = NULL;
+    }
+    p_view->frame_buffer_size = 0;
+    if (p_view->file_open) {
+        p_view->file_open = false;
         p_view->p_dirver->close_file(&p_view->fd);
     }
+    p_view->p_dirver = NULL;
 }

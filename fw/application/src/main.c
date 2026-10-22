@@ -166,6 +166,12 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
 
         NRF_LOG_DEBUG("go sleep");
 
+        /* Flush accepted NFC writes before app retention/teardown, even if the
+         * RF field is still present. Then close BLE before flash sleep. */
+        ntag_emu_prepare_change();
+        ble_disable();
+        ble_process_pending();
+
         mini_app_launcher_sleep(mini_app_launcher());
 
         // save ntag to cache
@@ -174,17 +180,24 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
 
         cache_save();
 
-        mui_deinit(mui());
+        // Complete the journal while the filesystem is awake. A failed save must
+        // not trap a low-battery device awake; existing recovery data is retained.
+        int32_t save_result = settings_save();
+        if (save_result != NRF_SUCCESS) {
+            NRF_LOG_WARNING("Settings save before sleep failed: %ld", (long)save_result);
+        }
 
-        // save settings
-        settings_save();
+        mui_deinit(mui());
 
         hal_spi_flash_sleep();
 
+        // Button teardown resets GPIO to a disconnected input without a pull.
+        // The SDK wake helper only sets SENSE, so restore the input first.
+        nrf_gpio_cfg_input(bsp_board_button_idx_to_pin(BTN_ID_SLEEP), BUTTON_PULL);
         err_code = bsp_wakeup_button_enable(BTN_ID_SLEEP);
         APP_ERROR_CHECK(err_code);
 
-        // Set up NFCT peripheral as the only wakeup source.
+        // Enable NFC field detection as an additional wakeup source.
         err_code = bsp_nfc_sleep_mode_prepare();
         APP_ERROR_CHECK(err_code);
 
@@ -210,8 +223,8 @@ static uint32_t check_wakeup_src(void) {
     NRF_LOG_INFO("nrf_power_resetreas_get: 0x%04x", rr);
 
     // 如果卡模拟器设置了默认卡，这里就不开启模拟NTAG
-    if (tag_helper_valid_default_slot() && (rr & NRF_POWER_RESETREAS_NFC_MASK)) {
-        tag_emulation_init();
+    if (tag_helper_valid_default_slot() && (rr & NRF_POWER_RESETREAS_NFC_MASK) && tag_emulation_init() &&
+        tag_emulation_active_data_ready()) {
         hal_nfc_set_nrfx_irq_enable(true);
         tag_emulation_sense_run();
     } else {
@@ -311,6 +324,8 @@ int main(void) {
 
     while (1) {
 
+        ntag_emu_process_pending();
+        ble_process_pending();
         app_sched_execute();
         mui_tick(p_mui);
         NRF_LOG_FLUSH();

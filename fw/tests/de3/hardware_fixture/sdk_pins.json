@@ -1,0 +1,7 @@
+{
+  "sdk_image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "version": "17.1.0_ddde560",
+  "pinned_app_button.c": "05113a686885fbbcade6594a382fa6a7567537d66fdbf4933778491dedeba684",
+  "nrfx_saadc.c": "5714ad6a0ff262be0d529c2e5a7dd266b4641e202f437d57484c73ff8764fd4f",
+  "nrfx_saadc_sample_convert_normalized_function_sha256": "d50528f2f2d31fcf2570d429b9ab4ff76187ec832c1c7cdf3daa9e08e72cb9d0"
+}

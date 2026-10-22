@@ -8,6 +8,7 @@
 #include "settings.h"
 #include "vfs.h"
 #include "vfs_meta.h"
+#include "vfs_persist.h"
 
 #include "ntag_emu.h"
 #include "ntag_store.h"
@@ -34,7 +35,9 @@ static ret_code_t amiibo_scene_amiibo_detail_set_readonly(app_amiibo_t *app, boo
     vfs_obj_t obj;
     uint8_t meta_buf[VFS_MAX_META_LEN];
 
-    cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file));
+    if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file))) {
+        return NRF_ERROR_INVALID_PARAM;
+    }
 
     vfs_driver_t *p_vfs_driver = vfs_get_driver(VFS_DRIVE_EXT);
     int32_t res = p_vfs_driver->stat_file(path, &obj);
@@ -84,7 +87,10 @@ static void amiibo_scene_amiibo_detail_delete_tag_confirmed(mui_msg_box_event_t 
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
 
         vfs_driver_t *p_vfs_driver = vfs_get_driver(app->current_drive);
-        cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file));
+        if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file))) {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+            return;
+        }
         int res = p_vfs_driver->remove_file(path);
 
         if (res == VFS_OK) {
@@ -112,21 +118,44 @@ static void amiibo_scene_amiibo_detail_delete_tag_confirmed(mui_msg_box_event_t 
     }
 }
 
+static bool amiibo_scene_parse_uid(const char *text, uint8_t uid[7]) {
+    if (!text || !uid || strlen(text) != 20) return false;
+    uint8_t parsed[7] = {0};
+    for (size_t i = 0; i < 7; i++) {
+        if (i < 6 && text[i * 3 + 2] != '.') return false;
+        for (size_t j = 0; j < 2; j++) {
+            char c = text[i * 3 + j];
+            uint8_t value;
+            if (c >= '0' && c <= '9') value = c - '0';
+            else if (c >= 'a' && c <= 'f') value = c - 'a' + 10;
+            else if (c >= 'A' && c <= 'F') value = c - 'A' + 10;
+            else return false;
+            parsed[i] = (parsed[i] << 4) | value;
+        }
+    }
+    memcpy(uid, parsed, sizeof(parsed));
+    return true;
+}
+
 static void amiibo_scene_amiibo_detail_menu_text_input_set_id_event_cb(mui_text_input_event_t event,
                                                                        mui_text_input_t *p_text_input) {
     app_amiibo_t *app = p_text_input->user_data;
     const char *input_text = mui_text_input_get_input_text(p_text_input);
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED && strlen(input_text) > 0) {
 
-        int8_t uid[7];
+        uint8_t uid[7];
         ret_code_t err_code;
         char path[VFS_MAX_PATH_LEN];
 
         ntag_t *ntag = &app->ntag;
 
+        if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file))) {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+            return;
+        }
+
         // read uid from input
-        if (sscanf(input_text, "%02x.%02x.%02x.%02x.%02x.%02x.%02x", uid, uid + 1, uid + 2, uid + 3, uid + 4, uid + 5,
-                   uid + 6) != 7) {
+        if (!amiibo_scene_parse_uid(input_text, uid)) {
             mui_toast_view_show(app->p_toast_view, _T(INAVLID_ID));
             return;
         }
@@ -139,26 +168,39 @@ static void amiibo_scene_amiibo_detail_menu_text_input_set_id_event_cb(mui_text_
             return;
         }
 
-        // set current ntag uid
-        err_code = amiibo_helper_set_amiibo_uuid(ntag, uid);
-        if (err_code != NRF_SUCCESS) {
-            mui_toast_view_show(app->p_toast_view, _T(FAILED));
-            return;
-        }
-
-        // set ntag emu to emulate new tag
-        ntag_emu_set_tag(&app->ntag);
-
-        // save to file
+        // Validate the original file before preparing a changed copy.
         vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
-
-        cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file));
-        int32_t res = p_driver->write_file_data(path, ntag->data, _ntag_data_size(ntag));
-
-        if (res < 0) {
+        vfs_obj_t obj;
+        if (!p_driver || p_driver->stat_file(path, &obj) != VFS_OK || obj.type != VFS_TYPE_REG ||
+            !is_valid_amiibo_ntag_by_size(obj.size) || _ntag_type(obj.size) != ntag->type) {
             mui_toast_view_show(app->p_toast_view, _T(FAILED));
             return;
         }
+
+        ntag_t *updated = mui_mem_malloc(sizeof(ntag_t));
+        if (!updated) {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+            return;
+        }
+        memcpy(updated, ntag, sizeof(ntag_t));
+        err_code = amiibo_helper_set_amiibo_uuid(updated, uid);
+        if (err_code != NRF_SUCCESS) {
+            mui_mem_free(updated);
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+            return;
+        }
+
+        int32_t res = vfs_persist_write(p_driver, path, updated->data, obj.size);
+        if (res != (int32_t)obj.size) {
+            mui_mem_free(updated);
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+            return;
+        }
+
+        // Commit RAM and NFC state only after the complete write succeeds.
+        memcpy(ntag, updated, sizeof(ntag_t));
+        mui_mem_free(updated);
+        ntag_emu_set_tag(&app->ntag);
 
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     } else {
@@ -171,7 +213,7 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
     app_amiibo_t *app = p_list_view->user_data;
 
     uint32_t selection = (uint32_t)p_item->user_data;
-    char msg[32];
+    char msg[VFS_MAX_PATH_LEN + 64];
 
     switch (selection) {
     case AMIIBO_DETAIL_MENU_BACK_FILE_BROWSER:
@@ -255,7 +297,7 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 
     case AMIIBO_DETAIL_MENU_REMOVE_AMIIBO: {
         mui_msg_box_set_header(app->p_msg_box, _T(DELETE_TAG));
-        sprintf(msg, _T(DELETE_TAG_CONFIRM), string_get_cstr(app->current_file));
+        snprintf(msg, sizeof(msg), _T(DELETE_TAG_CONFIRM), string_get_cstr(app->current_file));
         mui_msg_box_set_message(app->p_msg_box, msg);
         mui_msg_box_set_btn_text(app->p_msg_box, _T(CONFIRM), NULL, _T(CANCEL));
         mui_msg_box_set_btn_focus(app->p_msg_box, 2);

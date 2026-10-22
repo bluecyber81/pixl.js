@@ -32,6 +32,8 @@ typedef struct {
 /**********************************************************************************/
 /* MTP support functions */
 /**********************************************************************************/
+/* Integer payloads use the little-endian nRF52 representation. memcpy permits
+ * unaligned wire offsets without changing those bytes. Callers validate bounds. */
 /*!
  *  @brief    Put uint64_t into global array - transmit_buff
  *
@@ -41,10 +43,8 @@ typedef struct {
  *  @return      : None
  */
 static inline void buff_put_u64(buffer_t *buffer, uint64_t value) {
-    *(uint32_t *)(&buffer->buff[buffer->limit]) = value & 0xFFFFFFFF;
-    buffer->limit += 4;
-    *(uint32_t *)(&buffer->buff[buffer->limit]) = (value >> 32);
-    buffer->limit += 4;
+    memcpy(&buffer->buff[buffer->limit], &value, sizeof(value));
+    buffer->limit += sizeof(value);
 }
 
 /*!
@@ -56,7 +56,7 @@ static inline void buff_put_u64(buffer_t *buffer, uint64_t value) {
  *  @return      : None
  */
 static inline void buff_put_u32(buffer_t *buffer, uint32_t value) {
-    *(uint32_t *)(&buffer->buff[buffer->limit]) = value;
+    memcpy(&buffer->buff[buffer->limit], &value, sizeof(value));
     buffer->limit += 4;
 }
 
@@ -69,7 +69,7 @@ static inline void buff_put_u32(buffer_t *buffer, uint32_t value) {
  *  @return      : None
  */
 static inline void buff_put_u16(buffer_t *buffer, uint16_t value) {
-    *(uint16_t *)(&buffer->buff[buffer->limit]) = value;
+    memcpy(&buffer->buff[buffer->limit], &value, sizeof(value));
     buffer->limit += 2;
 }
 
@@ -134,24 +134,22 @@ static inline void buff_put_string_u8(buffer_t *buffer, const char *string) {
 }
 
 static inline uint64_t buff_get_u64(buffer_t *buffer) {
-    uint64_t value = 0;
-    value = *(uint32_t *)(&buffer->buff[buffer->pos]);
-    buffer->pos += 4;
-    value |= (uint64_t)(*(uint32_t *)(&buffer->buff[buffer->pos])) << 32;
-    buffer->pos += 4;
+    uint64_t value;
+    memcpy(&value, &buffer->buff[buffer->pos], sizeof(value));
+    buffer->pos += sizeof(value);
     return value;
 }
 
 static inline uint32_t buff_get_u32(buffer_t *buffer) {
     uint32_t value = 0;
-    value = *(uint32_t *)(&buffer->buff[buffer->pos]);
+    memcpy(&value, &buffer->buff[buffer->pos], sizeof(value));
     buffer->pos += 4;
     return value;
 }
 
 static inline uint16_t buff_get_u16(buffer_t *buffer) {
     uint16_t value = 0;
-    value = *(uint16_t *)(&buffer->buff[buffer->pos]);
+    memcpy(&value, &buffer->buff[buffer->pos], sizeof(value));
     buffer->pos += 2;
     return value;
 }
@@ -193,7 +191,7 @@ static inline void buff_get_string(buffer_t *buffer, char *string, size_t max_le
     } else {
         max_length = max_length - 1; //exclude '\0'
         uint16_t min_length = max_length > length ? length : max_length;
-        buff_get_byte_array(buffer, string, min_length);
+        buff_get_byte_array(buffer, (uint8_t *)string, min_length);
         string[min_length] = '\0';
         buffer->pos += length - min_length;
     }
@@ -214,7 +212,7 @@ static inline size_t buff_get_remain_size(buffer_t *buffer) { return buffer->lim
 
 static inline void buff_reset_limit(buffer_t *buffer) { buffer->limit = 0; }
 
-static inline uint32_t buff_set_limit(buffer_t *buffer, uint32_t limit) { buffer->limit = limit; }
+static inline uint32_t buff_set_limit(buffer_t *buffer, uint32_t limit) { return buffer->limit = limit; }
 
 static inline uint8_t *buff_get_data(buffer_t *buffer) { return buffer->buff; }
 

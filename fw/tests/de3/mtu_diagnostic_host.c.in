@@ -1,0 +1,181 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "df_proto_info.h"
+#include "ble_main.h"
+#define CHECK(x) do { if (!(x)) { fprintf(stderr,"CHECK %d: %s\n",__LINE__,#x); exit(71); } } while (0)
+#define S112 1
+#define NRF_SUCCESS 0
+#define NRF_ERROR_INVALID_PARAM 7
+#define NRF_ERROR_NULL 14
+#define NRF_ERROR_BUSY 17
+#define NRF_BLE_GATT_LINK_COUNT 1
+#define NRF_SDH_BLE_GATT_MAX_MTU_SIZE 250
+#define NRF_SDH_BLE_GAP_DATA_LENGTH 27
+#define NRF_BLE_GATT_MTU_EXCHANGE_INITIATION_ENABLED 1
+#define BLE_GATT_ATT_MTU_DEFAULT 23
+#define BLE_CONN_HANDLE_INVALID 65535
+#define BLE_GAP_ROLE_PERIPH 1
+#define NRF_BLE_GATT_EVT_ATT_MTU_UPDATED 0xA77
+#define OPCODE_LENGTH 1
+#define HANDLE_LENGTH 2
+#define DEVICE_NAME_PIXLJS "Pixl.js"
+#define DEVICE_NAME_AMIIBOLINK "amiibolink"
+#define DEVICE_NAME_AMILOOP "AMILOOP"
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_DEBUG(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define APP_ERROR_CHECK(x) CHECK((x)==0)
+#define VERIFY_PARAM_NOT_NULL(x) do { if (!(x)) return NRF_ERROR_NULL; } while (0)
+static unsigned critical_depth;
+#define CRITICAL_REGION_ENTER() do { ++critical_depth;
+#define CRITICAL_REGION_EXIT() --critical_depth; } while (0)
+typedef uint32_t ret_code_t;
+typedef struct { uint16_t evt_id,conn_handle; struct { uint16_t att_mtu_effective; } params; } nrf_ble_gatt_evt_t;
+typedef struct nrf_ble_gatt_s nrf_ble_gatt_t;
+typedef void (*nrf_ble_gatt_evt_handler_t)(nrf_ble_gatt_t *,const nrf_ble_gatt_evt_t *);
+typedef struct { uint16_t att_mtu_desired,att_mtu_effective; bool att_mtu_exchange_pending,att_mtu_exchange_requested; } nrf_ble_gatt_link_t;
+struct nrf_ble_gatt_s { nrf_ble_gatt_evt_handler_t evt_handler; uint16_t att_mtu_desired_periph,att_mtu_desired_central; uint8_t data_length; nrf_ble_gatt_link_t links[1]; };
+typedef struct { struct { uint16_t evt_id; } header; struct {
+    struct { uint16_t conn_handle; } common_evt;
+    struct { uint16_t conn_handle; struct { struct { uint8_t role; } connected; } params; } gap_evt;
+    struct { uint16_t conn_handle; struct { struct { uint16_t server_rx_mtu; } exchange_mtu_rsp; } params; } gattc_evt;
+    struct { uint16_t conn_handle; struct { struct { uint16_t client_rx_mtu; } exchange_mtu_request; } params; } gatts_evt;
+} evt; } ble_evt_t;
+static nrf_ble_gatt_t m_gatt;
+static uint16_t m_conn_handle=BLE_CONN_HANDLE_INVALID,m_ble_nus_max_data_len=20;
+static uint8_t m_ble_initialized;
+static bool work_can_send;
+static char device_name[35]="Pixl.js";
+static bool name_error;
+static unsigned init_calls,requests,replies,sends,advertising_calls;
+static uint16_t requested_rx,replied_rx;
+static uint8_t address_offset;
+static uint32_t service_suffix;
+static struct { bool opened,abandoned,read_pending; } file_chunk_state;
+static struct { bool dir_closed; } dir_chunk_state={true};
+static df_frame_t response;
+static bool ble_work_can_send(void) { return work_can_send; }
+static uint32_t sd_ble_gap_device_name_get(uint8_t *data,uint16_t *length) {
+    if (name_error) return 1;
+    size_t n=strlen(device_name); CHECK(*length>=n); memcpy(data,device_name,n);*length=n;return 0;
+}
+static uint32_t sd_ble_gattc_exchange_mtu_request(uint16_t handle,uint16_t mtu) {
+    CHECK(handle==0); ++requests;requested_rx=mtu;return 0;
+}
+static uint32_t sd_ble_gatts_exchange_mtu_reply(uint16_t handle,uint16_t mtu) {
+    CHECK(handle==0); ++replies;replied_rx=mtu;return 0;
+}
+static void ble_stack_init(void){++init_calls;}
+static void gap_params_init(void){}
+static void services_init(void){}
+static void conn_params_init(void){}
+void df_core_init(void){}
+static void ble_set_device_name(const char *name){strcpy(device_name,name);}
+static void ble_addr_set(uint8_t value){address_offset=value;}
+static void advertising_init(void){++advertising_calls;}
+static void ble_service_id_set(uint32_t value){service_suffix=value;}
+void df_core_send_frame(df_frame_t *frame){++sends;response=*frame;}
+/* ACTUAL_FUNCTIONS */
+static unsigned checks;
+static uint16_t u16(const uint8_t *p){return p[0]|((uint16_t)p[1]<<8);}
+static void snapshot(uint16_t effective,uint16_t next,uint8_t flags){
+    CHECK(response.cmd==5 && response.status==0 && response.length==16 && response.chunk==0);
+    CHECK(memcmp(response.data,"MTUD",4)==0 && response.data[4]==1 && response.data[5]==flags);
+    CHECK(u16(response.data+6)==effective && u16(response.data+8)==next && u16(response.data+10)==250);
+    CHECK(u16(response.data+12)==(effective?effective-3:0));
+    CHECK(response.data[14]==0 && response.data[15]==0 && !critical_depth);++checks;
+}
+static void issue(const uint8_t *payload,size_t length,uint8_t status,uint16_t chunk){
+    df_frame_t frame={.status=status,.chunk=chunk,.length=(uint8_t)length};
+    CHECK(length<=sizeof(frame.data));if(length)memcpy(frame.data,payload,length);
+    df_event_t evt={DF_EVENT_DATA_RECEVIED,&frame};
+    unsigned old=sends;df_proto_handler_info_mtu_diagnostic(&evt);CHECK(sends==old+1 && !critical_depth);
+}
+static void set_mtu(uint16_t mtu){uint8_t payload[]={'M','T','U','!',(uint8_t)mtu,(uint8_t)(mtu>>8)};issue(payload,6,0,0);}
+static void rejected(void){CHECK(response.status==DF_STATUS_ERR && response.length==0 && response.chunk==0);++checks;}
+static void connect_peer(uint16_t peer_mtu){
+    ble_evt_t event={0};event.evt.gap_evt.params.connected.role=BLE_GAP_ROLE_PERIPH;
+    m_conn_handle=0;work_can_send=true;m_ble_nus_max_data_len=20;
+    on_connected_evt(&m_gatt,&event);
+    event.evt.gatts_evt.params.exchange_mtu_request.client_rx_mtu=peer_mtu;
+    on_exchange_mtu_request_evt(&m_gatt,&event);
+    if(m_gatt.links[0].att_mtu_exchange_requested){
+        event.evt.gattc_evt.params.exchange_mtu_rsp.server_rx_mtu=peer_mtu;
+        on_exchange_mtu_rsp_evt(&m_gatt,&event);
+    }
+}
+static void disconnect_peer(void){
+    ble_evt_t event={0};on_disconnected_evt(&m_gatt,&event);
+    m_conn_handle=BLE_CONN_HANDLE_INVALID;work_can_send=false;m_ble_nus_max_data_len=20;
+}
+int main(void){
+    CHECK(DF_PROTO_CMD_INFO_MTU_DIAGNOSTIC==5 && BLE_MTU_DIAGNOSTIC_SIZE+DF_HEADER_LEN==20);
+    uint8_t bytes[243]={0},guard[18];memset(guard,0xa5,sizeof(guard));
+    CHECK(!ble_mtu_diagnostic(0,guard+1,16));CHECK(!critical_depth);
+    ble_init();CHECK(init_calls==1 && m_gatt.att_mtu_desired_periph==250);
+    connect_peer(250);CHECK(requested_rx==250 && replied_rx==250 && m_ble_nus_max_data_len==247);
+    issue(NULL,0,0,0);snapshot(250,250,7);
+    set_mtu(23);snapshot(250,23,7);
+    CHECK(m_gatt.links[0].att_mtu_desired==250 && m_gatt.links[0].att_mtu_effective==250);
+    disconnect_peer();ble_init();CHECK(init_calls==1 && m_gatt.att_mtu_desired_periph==23);
+    unsigned before=requests;connect_peer(517);CHECK(requests==before && replied_rx==23);
+    issue(NULL,0,0,0);snapshot(23,23,7);
+    set_mtu(250);snapshot(23,250,7);CHECK(m_gatt.links[0].att_mtu_desired==23);
+    disconnect_peer();connect_peer(250);issue(NULL,0,0,0);snapshot(250,250,7);
+    /* Every other u16 setting is rejected without changing current/next MTU. */
+    for(unsigned value=0;value<=65535;value++)if(value!=23 && value!=250){
+        set_mtu(value);rejected();CHECK(m_gatt.att_mtu_desired_periph==250 && m_gatt.links[0].att_mtu_effective==250);
+    }
+    for(unsigned length=1;length<=243;length++)if(length!=6){issue(bytes,length,0,0);rejected();}
+    for(unsigned bit=0;bit<32;bit++){
+        uint8_t p[]={'M','T','U','!',23,0};p[bit/8]^=1u<<(bit%8);issue(p,6,0,0);rejected();
+    }
+    const uint8_t valid[]={'M','T','U','!',23,0};
+    for(unsigned status=1;status<=255;status++){issue(valid,6,status,0);rejected();}
+    for(unsigned chunk=1;chunk<=65535;chunk++){issue(valid,6,0,chunk);rejected();}
+    CHECK(m_gatt.att_mtu_desired_periph==250);
+    /* Every ownership combination: rejected SET, truthful read-only QUERY. */
+    for(unsigned bits=0;bits<16;bits++){
+        file_chunk_state.opened=bits&1;file_chunk_state.abandoned=bits&2;
+        file_chunk_state.read_pending=bits&4;dir_chunk_state.dir_closed=!(bits&8);
+        CHECK(df_proto_vfs_is_idle()==(bits==0));
+        set_mtu(23);if(bits)rejected();else snapshot(250,23,7);
+        issue(NULL,0,0,0);snapshot(250,bits?250:23,bits?3:7);
+        m_gatt.att_mtu_desired_periph=250;
+    }
+    memset(&file_chunk_state,0,sizeof(file_chunk_state));dir_chunk_state.dir_closed=true;
+    /* Mode preparation resets only the next-link preference, all four modes. */
+    for(unsigned mode=0;mode<4;mode++){
+        m_gatt.att_mtu_desired_periph=23;ble_device_mode_prepare((ble_device_mode_t)mode);
+        CHECK(m_gatt.att_mtu_desired_periph==250 && m_gatt.links[0].att_mtu_effective==250);
+        issue(NULL,0,0,0);snapshot(250,250,mode==0?7:5);
+        set_mtu(23);if(mode)rejected();else snapshot(250,23,7);
+    }
+    ble_device_mode_prepare(BLE_DEVICE_MODE_PIXLJS);
+    CHECK(address_offset==0 && service_suffix==0x6e400001 && advertising_calls==5);
+    name_error=true;set_mtu(23);rejected();issue(NULL,0,0,0);snapshot(250,250,5);name_error=false;
+    disconnect_peer();set_mtu(23);rejected();issue(NULL,0,0,0);snapshot(0,250,6);
+    connect_peer(23);issue(NULL,0,0,0);snapshot(23,250,7);
+    /* Direct API bounds, no partial snapshot write on rejection. */
+    CHECK(!ble_mtu_diagnostic(23,NULL,16));CHECK(!ble_mtu_diagnostic(23,guard+1,15));
+    CHECK(!ble_mtu_diagnostic(24,guard+1,16));
+    for(unsigned i=0;i<sizeof(guard);i++)CHECK(guard[i]==0xa5);
+    CHECK(ble_mtu_diagnostic(23,guard+1,16));CHECK(guard[0]==0xa5 && guard[17]==0xa5);
+    m_gatt.links[0].att_mtu_effective=0;set_mtu(250);rejected();CHECK(m_gatt.att_mtu_desired_periph==23);
+    m_gatt.links[0].att_mtu_effective=251;set_mtu(250);rejected();CHECK(m_gatt.att_mtu_desired_periph==23);
+    m_gatt.links[0].att_mtu_effective=23;work_can_send=false;set_mtu(250);rejected();work_can_send=true;
+    unsigned old=sends;df_event_t evt={DF_EVENT_DATA_TRANSMIT_READY,NULL};
+    df_proto_handler_info_mtu_diagnostic(&evt);evt.type=DF_EVENT_LINK_DISCONNECTED;
+    df_proto_handler_info_mtu_diagnostic(&evt);CHECK(sends==old);
+    /* A real boot reinitializes250; reconnect alone above did not. */
+    disconnect_peer();m_ble_initialized=false;ble_init();CHECK(init_calls==2 && m_gatt.att_mtu_desired_periph==250);
+    CHECK(!critical_depth);
+    printf("PASS %u wire/lifecycle checks; actual pinned SDK request/reply min23 and next-link isolation; no radio\n",checks);
+    return 0;
+}

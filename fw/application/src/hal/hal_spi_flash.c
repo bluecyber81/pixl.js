@@ -1,5 +1,7 @@
 #include "hal_spi_flash.h"
 #include "hal_spi_bus.h"
+#include "app_timer.h"
+#include <string.h>
 #include "nordic_common.h"
 #include "nrf_drv_spi.h"
 #include "nrf_error.h"
@@ -12,6 +14,18 @@
 
 #define PAGE_SIZE 256
 #define CMD_ADDR_SIZE 4
+#define FLASH_ADDRESS_LIMIT (1u << 24)
+
+/* Only page program and 4-KiB sector erase are issued below. The supported
+ * W25Q/MX25L parts need at most a few ms / hundreds of ms respectively;
+ * allow generous margins, including the MX25L25645G 5-ms/600-ms limits.
+ * app_timer's 24-bit RTC counter continues running while application IRQs
+ * are masked. The poll cap also bounds failure if that clock stops. */
+#define FLASH_PROGRAM_TIMEOUT_MS 100u
+#define FLASH_READY_TIMEOUT_MS 5000u
+#define FLASH_BUSY_POLL_LIMIT 1000000u
+#define FLASH_STATUS_BUSY 0x01u
+#define FLASH_STATUS_WEL 0x02u
 
 /* command list */
 #define CMD_WRSR (0x01)       /* Write Status Register */
@@ -45,7 +59,7 @@
 
 static spi_device_t m_dev;
 
-static inline void hal_spi_flash_write_read(uint8_t *tx_data, uint8_t tx_len, uint8_t *rx_data, uint32_t rx_len) {
+static inline ret_code_t hal_spi_flash_write_read(uint8_t *tx_data, uint8_t tx_len, uint8_t *rx_data, uint32_t rx_len) {
     hal_spi_bus_aquire(&m_dev);
 
     spi_transaction_t trans_tx = {
@@ -56,9 +70,8 @@ static inline void hal_spi_flash_write_read(uint8_t *tx_data, uint8_t tx_len, ui
     };
 
     ret_code_t result = hal_spi_bus_xfer(&trans_tx);
-    APP_ERROR_CHECK(result);
 
-    if (rx_len > 0) {
+    if (result == NRF_SUCCESS && rx_len > 0) {
         spi_transaction_t trans_rx = {
             .p_tx_buffer = NULL,
             .tx_length = 0,
@@ -66,14 +79,14 @@ static inline void hal_spi_flash_write_read(uint8_t *tx_data, uint8_t tx_len, ui
             .rx_length = rx_len,
         };
 
-        ret_code_t result = hal_spi_bus_xfer(&trans_rx);
-        APP_ERROR_CHECK(result);
+        result = hal_spi_bus_xfer(&trans_rx);
     }
 
     hal_spi_bus_release(&m_dev);
+    return result;
 }
 
-static inline void hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_len, const uint8_t *tx_data2, uint32_t tx_len2) {
+static inline ret_code_t hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_len, const uint8_t *tx_data2, uint32_t tx_len2) {
     hal_spi_bus_aquire(&m_dev);
 
     spi_transaction_t trans_tx = {
@@ -84,9 +97,8 @@ static inline void hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_len, c
     };
 
     ret_code_t result = hal_spi_bus_xfer(&trans_tx);
-    APP_ERROR_CHECK(result);
 
-    if (tx_len2 > 0) {
+    if (result == NRF_SUCCESS && tx_len2 > 0) {
         spi_transaction_t trans_rx = {
             .p_tx_buffer = (void *)tx_data2,
             .tx_length = tx_len2,
@@ -94,41 +106,56 @@ static inline void hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_len, c
             .rx_length = 0,
         };
 
-        ret_code_t result = hal_spi_bus_xfer(&trans_rx);
-        APP_ERROR_CHECK(result);
+        result = hal_spi_bus_xfer(&trans_rx);
     }
 
     hal_spi_bus_release(&m_dev);
+    return result;
 }
 
-static inline uint8_t hal_spi_flash_read_status(uint8_t cmd) {
-    uint8_t tx[1];
-    uint8_t rx[1];
-    tx[0] = cmd;
-    hal_spi_flash_write_read(tx, 1, rx, 1);
-    return rx[0];
-}
-
-static inline void hal_spi_flash_write_cmd(uint8_t cmd) {
+static inline ret_code_t hal_spi_flash_read_status(uint8_t cmd, uint8_t *status) {
     uint8_t tx[1];
     tx[0] = cmd;
-    hal_spi_flash_write_read(tx, 1, NULL, 0);
+    return hal_spi_flash_write_read(tx, 1, status, 1);
 }
 
-static inline void hal_spi_flash_wait_busy() {
-    while (hal_spi_flash_read_status(CMD_RDSR1) & 0x01)
-        ;
+static inline ret_code_t hal_spi_flash_write_cmd(uint8_t cmd) {
+    uint8_t tx[1];
+    tx[0] = cmd;
+    return hal_spi_flash_write_read(tx, 1, NULL, 0);
+}
+
+static ret_code_t hal_spi_flash_wait_busy(uint32_t timeout_ticks) {
+    uint32_t started = app_timer_cnt_get();
+    for (uint32_t polls = 0; polls < FLASH_BUSY_POLL_LIMIT; polls++) {
+        uint8_t status;
+        ret_code_t result = hal_spi_flash_read_status(CMD_RDSR1, &status);
+        if (result != NRF_SUCCESS) return result;
+        if (!(status & FLASH_STATUS_BUSY)) return NRF_SUCCESS;
+        if (app_timer_cnt_diff_compute(app_timer_cnt_get(), started) >= timeout_ticks) {
+            return NRF_ERROR_TIMEOUT;
+        }
+    }
+    return NRF_ERROR_TIMEOUT;
+}
+
+static ret_code_t hal_spi_flash_write_enable(void) {
+    ret_code_t result = hal_spi_flash_write_cmd(CMD_WREN);
+    if (result != NRF_SUCCESS) return result;
+    uint8_t status;
+    result = hal_spi_flash_read_status(CMD_RDSR1, &status);
+    if (result != NRF_SUCCESS) return result;
+    if ((status & (FLASH_STATUS_BUSY | FLASH_STATUS_WEL)) != FLASH_STATUS_WEL) {
+        return NRF_ERROR_INVALID_STATE;
+    }
+    return NRF_SUCCESS;
 }
 
 ret_code_t hal_spi_flash_init() {
-    ret_code_t err_code;
-
     m_dev.cs_pin = FLASH_CS_PIN;
     hal_spi_bus_attach(&m_dev);
 
-    hal_spi_flash_write_cmd(CMD_RDP);
-
-    return NRF_SUCCESS;
+    return hal_spi_flash_write_cmd(CMD_RDP);
 }
 
 ret_code_t hal_spi_flash_info(flash_info_t *info) {
@@ -136,7 +163,10 @@ ret_code_t hal_spi_flash_info(flash_info_t *info) {
     uint8_t tx[1] = {0x9f};
     uint16_t memory_type_capacity;
 
-    hal_spi_flash_write_read(tx, 1, rx, 3);
+    if (info == NULL) return NRF_ERROR_INVALID_PARAM;
+    memset(info, 0, sizeof(*info));
+    ret_code_t result = hal_spi_flash_write_read(tx, 1, rx, 3);
+    if (result != NRF_SUCCESS) return result;
     NRF_LOG_DEBUG("FLASH ID:");
     NRF_LOG_HEXDUMP_DEBUG(rx, 3);
 
@@ -191,51 +221,67 @@ ret_code_t hal_spi_flash_info(flash_info_t *info) {
 ret_code_t hal_spi_flash_read(uint32_t address, void *buffer, size_t size) {
 
     uint8_t tx[4];
-
-    hal_spi_flash_wait_busy();
-    hal_spi_flash_write_cmd(CMD_WRDI);
-    hal_spi_flash_wait_busy();
+    if (size == 0) return NRF_SUCCESS;
+    /* The wire format below carries exactly 24 address bits. Subtraction
+     * avoids overflow for both oversized size_t values and end addresses. */
+    if (buffer == NULL || address >= FLASH_ADDRESS_LIMIT || size > FLASH_ADDRESS_LIMIT - address) {
+        return NRF_ERROR_INVALID_PARAM;
+    }
+    ret_code_t result = hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
+    if (result != NRF_SUCCESS) return result;
+    /* READ does not require WRDI. Do not clear another operation's WEL. */
 
     tx[0] = CMD_READ;
     tx[1] = (address >> 16);
     tx[2] = (address >> 8);
     tx[3] = (address);
-    hal_spi_flash_write_read(tx, 4, buffer, size);
-
-    return NRF_SUCCESS;
+    return hal_spi_flash_write_read(tx, 4, buffer, size);
 }
 
 ret_code_t hal_spi_flash_prog(uint32_t address, const void *buffer, size_t size) {
 
-    hal_spi_flash_wait_busy();
-    hal_spi_flash_write_cmd(CMD_WREN);
-    hal_spi_flash_wait_busy();
+    if (size == 0) return NRF_SUCCESS;
+    /* A single Page Program must not wrap within its 256-byte page. The
+     * filesystem uses 256-byte logical pages and performs page-local writes. */
+    if (buffer == NULL || address >= FLASH_ADDRESS_LIMIT || size > FLASH_ADDRESS_LIMIT - address ||
+        size > PAGE_SIZE - (address % PAGE_SIZE)) {
+        return NRF_ERROR_INVALID_PARAM;
+    }
+    ret_code_t result = hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
+    if (result != NRF_SUCCESS) return result;
+    result = hal_spi_flash_write_enable();
+    if (result != NRF_SUCCESS) return result;
 
     uint8_t tx[4];
     tx[0] = CMD_PP;
     tx[1] = (address >> 16);
     tx[2] = (address >> 8);
     tx[3] = (address);
-    hal_spi_flash_write_write(tx, 4, buffer, size);
-    hal_spi_flash_wait_busy();
-
-    return NRF_SUCCESS;
+    result = hal_spi_flash_write_write(tx, 4, buffer, size);
+    if (result != NRF_SUCCESS) return result;
+    return hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_PROGRAM_TIMEOUT_MS));
 }
 
 ret_code_t hal_spi_flash_erase(uint32_t address) {
-    hal_spi_flash_wait_busy();
-    hal_spi_flash_write_cmd(CMD_WREN);
-    hal_spi_flash_wait_busy();
+    /* Sector erase ignores the low 12 bits; every sector selected by a valid
+     * 24-bit address lies entirely below this limit. Do not wrap high bits. */
+    if (address >= FLASH_ADDRESS_LIMIT) return NRF_ERROR_INVALID_PARAM;
+    ret_code_t result = hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
+    if (result != NRF_SUCCESS) return result;
+    result = hal_spi_flash_write_enable();
+    if (result != NRF_SUCCESS) return result;
 
     uint8_t tx[4];
     tx[0] = CMD_ERASE_4K;
     tx[1] = (address >> 16);
     tx[2] = (address >> 8);
     tx[3] = (address);
-    hal_spi_flash_write_read(tx, 4, NULL, 0);
-    hal_spi_flash_wait_busy();
-
-    return NRF_SUCCESS;
+    result = hal_spi_flash_write_read(tx, 4, NULL, 0);
+    if (result != NRF_SUCCESS) return result;
+    return hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
 }
 
-void hal_spi_flash_sleep() { hal_spi_flash_write_cmd(CMD_DP); }
+void hal_spi_flash_sleep() {
+    ret_code_t result = hal_spi_flash_write_cmd(CMD_DP);
+    if (result != NRF_SUCCESS) NRF_LOG_WARNING("Flash sleep failed: %lu", (unsigned long)result);
+}

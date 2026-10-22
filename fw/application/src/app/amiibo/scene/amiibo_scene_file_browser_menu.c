@@ -6,6 +6,7 @@
 #include "ntag_def.h"
 #include "ntag_store.h"
 #include "vfs.h"
+#include "vfs_persist.h"
 #include "mui_icons.h"
 
 
@@ -50,7 +51,10 @@ static void amiibo_scene_file_browser_text_input_create_folder_event_cb(mui_text
         if (strlen(input_text) > 0) {
             vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
             char path[VFS_MAX_PATH_LEN];
-            cwalk_append_segment(path, string_get_cstr(app->current_folder), input_text);
+            if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), input_text)) {
+                amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
+                return;
+            }
             int32_t res = p_driver->create_dir(path);
             if (res == VFS_OK) {
                 mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
@@ -69,13 +73,18 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_event_cb(mui_text
         if (strlen(input_text) > 0) {
             vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
             char path[VFS_MAX_PATH_LEN];
-            cwalk_append_segment(path, string_get_cstr(app->current_folder), input_text);
+            if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), input_text)) {
+                amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
+                return;
+            }
 
             ntag_t ntag;
             ntag_store_new_rand(&ntag);
-            int32_t res = p_driver->write_file_data(path, ntag.data, _ntag_data_size(&ntag));
-            if (res > 0) {
+            int32_t res = vfs_persist_write(p_driver, path, ntag.data, _ntag_data_size(&ntag));
+            if (res == (int32_t)_ntag_data_size(&ntag)) {
                 mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
+            } else {
+                amiibo_scene_file_browser_show_messege(app, _T(FAILED));
             }
         } else {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
@@ -86,7 +95,7 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_event_cb(mui_text
 static void amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(mui_text_input_event_t event,
                                                                               mui_text_input_t *p_text_input) {
     app_amiibo_t *app = p_text_input->user_data;
-    char msg[32];
+    char msg[96];
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *input_text = mui_text_input_get_input_text(p_text_input);
         uint32_t num_amiibo = 0;
@@ -102,7 +111,7 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(mu
         }
 
         if (num_amiibo > AMIIBO_MAX_AMIIBO_IN_BATCH) {
-            sprintf(msg, _T(CREATE_TOO_MANY_NUM), AMIIBO_MAX_AMIIBO_IN_BATCH);
+            snprintf(msg, sizeof(msg), _T(CREATE_TOO_MANY_NUM), AMIIBO_MAX_AMIIBO_IN_BATCH);
             amiibo_scene_file_browser_show_messege(app, msg);
             return;
         }
@@ -120,15 +129,18 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(mu
         for (uint8_t i = 0; i < num_amiibo; i++) {
             sprintf(file_name, "new_%02d.bin", i + 1);
 
-            sprintf(msg, "%s %s ..", _T(CREATING_TAG_BATCH), file_name);
+            snprintf(msg, sizeof(msg), "%s %s ..", _T(CREATING_TAG_BATCH), file_name);
             mui_msg_box_set_message(app->p_msg_box, msg);
             mui_update_now(mui());
 
-            cwalk_append_segment(path, string_get_cstr(app->current_folder), file_name);
+            if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), file_name)) {
+                amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
+                return;
+            }
             ntag_store_new_rand(&ntag);
-            int32_t res = p_driver->write_file_data(path, ntag.data, _ntag_data_size(ntag.data));
-            if (res < 0) {
-                sprintf(msg, _T(CREATING_TAG_FAILED), file_name);
+            int32_t res = vfs_persist_write(p_driver, path, ntag.data, _ntag_data_size(&ntag));
+            if (res != (int32_t)_ntag_data_size(&ntag)) {
+                snprintf(msg, sizeof(msg), _T(CREATING_TAG_FAILED), file_name);
                 amiibo_scene_file_browser_show_messege(app, msg);
                 return;
             }
@@ -150,8 +162,11 @@ static void amiibo_scene_file_browser_menu_text_input_rename_folder_event_cb(mui
             char path[VFS_MAX_PATH_LEN];
             char path2[VFS_MAX_PATH_LEN];
             vfs_obj_t obj;
-            cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file));
-            cwalk_append_segment(path2, string_get_cstr(app->current_folder), input_text);
+            if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file)) ||
+                !cwalk_append_segment(path2, string_get_cstr(app->current_folder), input_text)) {
+                amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
+                return;
+            }
 
             res = p_driver->stat_file(path, &obj);
             if (res == VFS_OK) {
@@ -173,8 +188,8 @@ static void amiibo_scene_file_browser_menu_text_input_rename_folder_event_cb(mui
         if (renamed) {
             mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
         } else {
-            char msg[32];
-            sprintf(msg, "%s\n%s:%d", getLangString(_L_RENAME_FAILED), getLangString(_L_ERR_CODE), res);
+            char msg[96];
+            snprintf(msg, sizeof(msg), "%s\n%s:%d", getLangString(_L_RENAME_FAILED), getLangString(_L_ERR_CODE), res);
             mui_msg_box_set_header(app->p_msg_box, getLangString(_L_ERR));
             mui_msg_box_set_message(app->p_msg_box, msg);
             mui_msg_box_set_btn_text(app->p_msg_box, NULL, getLangString(_L_BACK), NULL);
@@ -193,9 +208,11 @@ static void amiibo_scene_file_browser_menu_msg_box_remove_folder_event_cb(mui_ms
 
     char path[VFS_MAX_PATH_LEN];
     vfs_obj_t obj;
-    cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file));
-
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file))) {
+            amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
+            return;
+        }
 
         int32_t res = p_driver->stat_file(path, &obj);
         if (res == VFS_OK) {

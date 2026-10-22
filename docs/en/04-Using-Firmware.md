@@ -511,15 +511,22 @@ This application allows to configure the device working settings, the applicatio
 |   |
 
 ## Version
-This submenu shows the version details of the firmware.
+This submenu shows the version details of the firmware. The local DE3.9 LCD build also provides read-only device information.
 - Version
 - Build date
 - Githash
 - Branch
-- Target
+- Build target (LCD/ST7567 in this build; this is not a detected PCB revision)
+- Chip, read from the Nordic factory information register
+- Installed SoftDevice variant and version, read from validated on-device metadata
+- Installed SoftDevice firmware ID (SD-FWID), or Unknown if metadata is invalid
 - Dirty
+
+The SoftDevice fields report the stored component metadata, not the version of the SDK headers used to compile the application. Opening this page does not change firmware or device storage. The installed bootloader version is not inferred. DE3.9 OTA packages update only the application and retain the existing bootloader and SoftDevice.
+
+DE3.9 adds the Mario (Melody Car) and Toad My Mario wooden-block catalog entries, bringing the built-in catalog to 952 unique IDs. These are metadata additions, not bundled NFC dump files or a claim of gameplay verification. Existing My Mario category placement is retained. Bluetooth status starts on a defined page; game controls clear held-key state between sessions, and releasing a direction no longer cancels the center-button exit hold.
 ## Language
-You can change the language displayed on the device. This firmware ships with English and Simplified Chinese; the set of compiled languages is configured in `fw/data/i18n_languages.txt`, so additional languages from `fw/data/i18n.csv` can be enabled by adding them there and rebuilding.
+You can change the language displayed on the device. The local DE3.9 build ships with German and English; the set of compiled languages is configured in `fw/data/i18n_languages.txt`, so additional languages from `fw/data/i18n.csv` can be enabled by adding them there and rebuilding.
 ## External Storage
 You could view the external storage status and usage here, enter this menu could view the external storage usage details and perform format operation.
 ## Backlight / Brightness
