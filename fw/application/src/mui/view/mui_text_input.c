@@ -224,12 +224,11 @@ static void mui_text_input_on_input(mui_view_t *p_view, mui_input_event_t *event
             char c = get_row(p_mui_text_input->focus_row)[p_mui_text_input->focus_column].text;
             if (c == BACKSPACE_KEY) {
                 if (string_size(p_mui_text_input->input_text) == 0) break;
-                string_t current;
-                string_init_set(current, p_mui_text_input->input_text);
-                size_t length = string_size(current) - 1;
-                while (length && (((unsigned char)string_get_cstr(current)[length] & 0xc0) == 0x80)) length--;
-                string_set_strn(p_mui_text_input->input_text, string_get_cstr(current), length);
-                string_clear(current);
+                size_t length = string_size(p_mui_text_input->input_text) - 1;
+                const char *text = string_get_cstr(p_mui_text_input->input_text);
+                while (length && (((unsigned char)text[length] & 0xc0) == 0x80)) length--;
+                /* Removing a character must also work when the heap is full. */
+                string_left(p_mui_text_input->input_text, length);
             } else if (c == ENTER_KEY) {
                 if (p_mui_text_input->event_cb) {
                     p_mui_text_input->event_cb(MUI_TEXT_INPUT_EVENT_CONFIRMED, p_mui_text_input);
@@ -312,10 +311,10 @@ void mui_text_input_set_input_text(mui_text_input_t *p_view, const char *input) 
 void mui_text_input_set_max_length(mui_text_input_t *p_view, size_t max_bytes) {
     p_view->max_length = max_bytes;
     if (max_bytes && string_size(p_view->input_text) > max_bytes) {
-        string_t original;
-        string_init_set(original, p_view->input_text);
-        mui_text_input_set_input_text(p_view, string_get_cstr(original));
-        string_clear(original);
+        size_t length = max_bytes;
+        const char *text = string_get_cstr(p_view->input_text);
+        while (length && (((unsigned char)text[length] & 0xc0) == 0x80)) length--;
+        string_left(p_view->input_text, length);
     }
 }
 void mui_text_input_set_header(mui_text_input_t *p_view, const char *title) { string_set_str(p_view->header, title); }

@@ -26,6 +26,13 @@ static void search_selected(mui_list_view_event_t event, mui_list_view_t *view, 
     if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
     app_amiidb_t *app = mui_list_view_get_user_data(view);
     if (app->search_filter_select) {
+        if (item->icon == ICON_PREV || item->icon == ICON_NEXT) {
+            if (item->icon == ICON_PREV && app->search_filter_page) app->search_filter_page--;
+            if (item->icon == ICON_NEXT && (uint32_t)(app->search_filter_page + 1) * AMIIDB_RESULT_PAGE_SIZE < app->result_total)
+                app->search_filter_page++;
+            search_filter_reload(app);
+            return;
+        }
         if (item->icon == ICON_FOLDER) {
             const db_game_t *game = item->user_data;
             app->search_game_id = game ? game->game_id : 0;
@@ -48,6 +55,7 @@ static void search_selected(mui_list_view_event_t event, mui_list_view_t *view, 
         break;
     case ICON_SETTINGS:
         app->search_filter_select = true;
+        app->search_filter_page = 0;
         search_filter_reload(app);
         break;
     case ICON_PREV:
@@ -60,15 +68,13 @@ static void search_selected(mui_list_view_event_t event, mui_list_view_t *view, 
         break;
     case ICON_FILE:
         app->cur_amiibo = item->user_data;
+        app->cur_focus_index = mui_list_view_get_focus(view);
+        app->cur_scroll_offset = mui_list_view_get_scroll_offset(view);
+        app->search_restore_focus = true;
         app->prev_scene_id = AMIIDB_SCENE_AMIIBO_SEARCH;
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIDB_SCENE_AMIIBO_DETAIL);
         break;
     }
-}
-
-static int filter_compare(const mui_list_item_t *a, const mui_list_item_t *b) {
-    const db_game_t *left = a->user_data, *right = b->user_data;
-    return strcmp(left->name_en, right->name_en);
 }
 
 static void search_list_ready(app_amiidb_t *app) {
@@ -81,13 +87,24 @@ static void search_list_ready(app_amiidb_t *app) {
 }
 
 static void search_filter_reload(app_amiidb_t *app) {
+    const db_game_t *games[AMIIDB_RESULT_PAGE_SIZE];
+    char text[96];
+    amiidb_api_db_game_window(0, true, true, 0, 0, games, &app->result_total);
+    uint16_t last = app->result_total ? (app->result_total - 1) / AMIIDB_RESULT_PAGE_SIZE : 0;
+    if (app->search_filter_page > last) app->search_filter_page = last;
+    int32_t count = amiidb_api_db_game_window(0, true, true,
+        (uint32_t)app->search_filter_page * AMIIDB_RESULT_PAGE_SIZE,
+        AMIIDB_RESULT_PAGE_SIZE, games, &app->result_total);
     mui_list_view_clear_items(app->p_list_view);
-    for (const db_game_t *game = game_list; game->game_id; game++)
+    for (int32_t i = 0; i < count; i++)
         mui_list_view_add_item(app->p_list_view, ICON_FOLDER,
-                              isChineseLanguage() ? game->name_cn : game->name_en, (void *)game);
-    mui_list_view_sort(app->p_list_view, filter_compare);
-    /* All games remains available without changing alphabetical game ordering. */
+                              isChineseLanguage() ? games[i]->name_cn : games[i]->name_en, (void *)games[i]);
     mui_list_view_add_item(app->p_list_view, ICON_FOLDER, _T(DE3_SEARCH_ALL), NULL);
+    snprintf(text, sizeof(text), _T(DE3_SEARCH_PAGE), (unsigned)(app->search_filter_page + 1),
+             (unsigned)(last + 1), (unsigned)app->result_total);
+    mui_list_view_add_item(app->p_list_view, ICON_PAGE, text, NULL);
+    if (app->search_filter_page) mui_list_view_add_item(app->p_list_view, ICON_PREV, _T(DE3_PREVIOUS_PAGE), NULL);
+    if (app->search_filter_page < last) mui_list_view_add_item(app->p_list_view, ICON_NEXT, _T(DE3_NEXT_PAGE), NULL);
     search_list_ready(app);
 }
 
@@ -127,6 +144,11 @@ void amiidb_scene_amiibo_search_on_enter(void *user_data) {
     app_amiidb_t *app = user_data;
     app->search_filter_select = false;
     amiidb_scene_amiibo_search_reload(app);
+    if (app->search_restore_focus) {
+        mui_list_view_set_focus(app->p_list_view, app->cur_focus_index);
+        mui_list_view_set_scroll_offset(app->p_list_view, app->cur_scroll_offset);
+        app->search_restore_focus = false;
+    }
 }
 
 void amiidb_scene_amiibo_search_on_exit(void *user_data) {

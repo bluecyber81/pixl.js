@@ -413,6 +413,16 @@ void nrf_pwr_mgmt_feed(void)
 
 /**@brief Function runs the shutdown procedure.
  */
+void nrf_pwr_mgmt_cancel_shutdown(void)
+{
+    if (m_pwr_mgmt_evt != NRF_PWR_MGMT_EVT_PREPARE_WAKEUP) return;
+    CRITICAL_REGION_ENTER();
+    PWR_MGMT_STANDBY_TIMEOUT_CLEAR();
+    nrf_section_iter_init(&m_handlers_iter, &pwr_mgmt_data);
+    m_shutdown_started = false;
+    CRITICAL_REGION_EXIT();
+}
+
 static void shutdown_process(void)
 {
     NRF_LOG_INFO("Shutdown started. Type %d", m_pwr_mgmt_evt);

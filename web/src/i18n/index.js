@@ -17,9 +17,13 @@ import svLocale from './sv_SE.js'
 import jaLocale from './ja_JP.js'
 import { read_saved_language } from '../lib/locale.js'
 
+import { toolsEnglish, toolsGerman } from './tools.js'
+import { workflowEnglish, workflowGerman } from './workflow.js'
+import { infoEnglish, infoGerman } from './info.js'
+
 const messages = {
-  en: enLocale, zh_TW: zhTWLocale, zh_CN: zhCNLocale, es: esLocale,
-  ru_RU: ruLocale, de_DE: deLocale, sv_SE: svLocale, ja_JP: jaLocale
+  en: { ...enLocale, tools: toolsEnglish, info: infoEnglish, workflow: workflowEnglish }, zh_TW: zhTWLocale, zh_CN: zhCNLocale, es: esLocale,
+  ru_RU: ruLocale, de_DE: { ...deLocale, tools: toolsGerman, info: infoGerman, workflow: workflowGerman }, sv_SE: svLocale, ja_JP: jaLocale
 }
 const elementLocales = {
   en: elementEn, zh_TW: elementZhTw, zh_CN: elementZhCn, es: elementEs,

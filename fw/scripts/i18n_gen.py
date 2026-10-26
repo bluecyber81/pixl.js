@@ -1,8 +1,9 @@
 # generate i18n sources from fw/data/i18n.csv
 #
 # Only the languages listed in fw/data/i18n_languages.txt are generated and
-# compiled into the firmware. Every other column of i18n.csv is ignored and its
-# generated .c file (if any) is removed.
+# compiled into the firmware, unless I18N_LANGS selects a different subset.
+# Every other column of i18n.csv is ignored and its generated .c file (if any)
+# is removed. Configured order is retained because language IDs are persisted.
 
 import csv
 import os
@@ -40,24 +41,45 @@ def read_i18n_from_csv():
 
 
 def read_enabled_languages(avaliable_languages):
-    """Read fw/data/i18n_languages.txt -> list of (csv_name, description)."""
+    """Read configured languages, optionally filtered/extended by I18N_LANGS."""
     config_file = get_prorject_directory() + "/data/i18n_languages.txt"
     if not os.path.exists(config_file):
         # No config: compile every language available in the CSV.
-        return [(lang, lang) for lang in avaliable_languages]
+        enabled = [(lang, lang) for lang in avaliable_languages]
+    else:
+        enabled = list()
+        with open(config_file, "r", encoding="utf8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                name, _, desc = line.partition(",")
+                name = name.strip()
+                desc = desc.strip()
+                if name not in avaliable_languages:
+                    raise ValueError("%s: unknown language '%s' (not a column of i18n.csv)" % (config_file, name))
+                if name in [lang for lang, _ in enabled]:
+                    raise ValueError("%s: duplicate language '%s'" % (config_file, name))
+                enabled.append((name, desc))
 
-    enabled = list()
-    with open(config_file, "r", encoding="utf8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            name, _, desc = line.partition(",")
-            name = name.strip()
-            desc = desc.strip()
+    override = os.environ.get("I18N_LANGS")
+    if override is not None:
+        selected = [name.strip() for name in override.split(",") if name.strip()]
+        if not selected:
+            raise ValueError("I18N_LANGS: no languages selected")
+        if len(set(selected)) != len(selected):
+            raise ValueError("I18N_LANGS: duplicate language")
+        for name in selected:
             if name not in avaliable_languages:
-                raise ValueError("%s: unknown language '%s' (not a column of i18n.csv)" % (config_file, name))
-            enabled.append((name, desc))
+                raise ValueError("I18N_LANGS: unknown language '%s' (not a column of i18n.csv)" % name)
+        if "en_US" not in avaliable_languages:
+            raise ValueError("i18n.csv: en_US fallback language is missing")
+        if "en_US" not in selected:
+            selected.append("en_US")
+        # Reordering an equivalent override must not swap saved DE/EN IDs.
+        enabled = [(name, desc) for name, desc in enabled if name in selected]
+        configured = {name for name, _ in enabled}
+        enabled.extend((name, name) for name in selected if name not in configured)
 
     if not enabled:
         raise ValueError("%s: no languages selected" % config_file)

@@ -37,6 +37,7 @@ typedef struct {
     volatile bool paused;
     volatile bool field_on;
     volatile bool pending;
+    bool save_failed, delivering_write;
     volatile uint32_t generation;
     volatile uint32_t pending_generation;
     void (*volatile action)(void *);
@@ -359,8 +360,8 @@ static void nfc_callback(void *p_context, hal_nfc_event_t event, const uint8_t *
     }
 }
 
-void ntag_emu_set_update_cb(ntag_update_cb_t cb, void *context) {
-    ntag_emu_prepare_change();
+bool ntag_emu_set_update_cb(ntag_update_cb_t cb, void *context) {
+    if (!ntag_emu_prepare_change()) return false;
     CRITICAL_REGION_ENTER();
     ntag_emu.update_cb = cb;
     ntag_emu.cb_context = context;
@@ -369,6 +370,7 @@ void ntag_emu_set_update_cb(ntag_update_cb_t cb, void *context) {
     ntag_emu.action = NULL;
     ntag_emu.paused = cb == NULL;
     CRITICAL_REGION_EXIT();
+    return true;
 }
 
 ntag_t *ntag_emu_get_current_tag() { return &(ntag_emu.ntag); }
@@ -378,33 +380,82 @@ static void ntag_emu_deliver(bool changing) {
     void *context = NULL;
     ntag_event_type_t type = NTAG_EVENT_TYPE_READ;
     CRITICAL_REGION_ENTER();
-    if (!ntag_emu.busy &&
+    if (!ntag_emu.busy && (changing || !ntag_emu.save_failed) &&
         (changing ? ntag_emu.dirty : (!ntag_emu.paused && !ntag_emu.field_on && ntag_emu.pending &&
                                     ntag_emu.pending_generation == ntag_emu.generation))) {
         ntag_emu.pending = false;
         type = ntag_emu.dirty ? NTAG_EVENT_TYPE_WRITTEN : NTAG_EVENT_TYPE_READ;
-        ntag_emu.dirty = false;
+        ntag_emu.save_failed = false;
         if (type == NTAG_EVENT_TYPE_WRITTEN) ntag_emu.action = NULL;
         callback = ntag_emu.update_cb;
         context = ntag_emu.cb_context;
         if (callback) {
             ntag_emu.busy = true;
+            ntag_emu.delivering_write = type == NTAG_EVENT_TYPE_WRITTEN;
             memcpy(&m_snapshot, &ntag_emu.ntag, sizeof(m_snapshot));
             /* No stale scheduler entry may reprogram a later hardware owner. */
             if (!changing) ntag_emu_set_uuid_only(&m_snapshot);
-        }
+        } else ntag_emu.dirty = false; /* No persistence owner: volatile tag. */
     }
     CRITICAL_REGION_EXIT();
     if (callback) {
         callback(type, context, &m_snapshot);
         /* A callback may select another tag. Never reset its flags/data here. */
         CRITICAL_REGION_ENTER();
+        if (ntag_emu.delivering_write) {
+            ntag_emu.dirty = ntag_emu.save_failed;
+            if (ntag_emu.save_failed) {
+                ntag_emu.paused = true;
+                ntag_emu.pending = false;
+                ntag_emu.action = NULL;
+            }
+        }
+        ntag_emu.delivering_write = false;
         ntag_emu.busy = false;
         CRITICAL_REGION_EXIT();
     }
 }
 
-void ntag_emu_prepare_change(void) {
+void ntag_emu_save_failed(void) {
+    CRITICAL_REGION_ENTER();
+    if (ntag_emu.update_cb && (!ntag_emu.busy || ntag_emu.delivering_write)) {
+        ntag_emu.save_failed = true;
+        ntag_emu.dirty = true;
+        ntag_emu.paused = true;
+        ntag_emu.pending = false;
+        ntag_emu.action = NULL;
+    }
+    CRITICAL_REGION_EXIT();
+}
+bool ntag_emu_save_pending(void) { return ntag_emu.save_failed; }
+
+bool ntag_emu_retry_save(void) {
+    if (!ntag_emu_prepare_change()) return false;
+    CRITICAL_REGION_ENTER();
+    ntag_emu.paused = ntag_emu.update_cb == NULL;
+    CRITICAL_REGION_EXIT();
+    return true;
+}
+
+bool ntag_emu_discard_changes(void) {
+    /* Only the separately confirmed UI action may discard pending RAM. No
+     * storage write, reset or delete is performed here. */
+    if (ntag_emu.busy || !ntag_emu.save_failed) return false;
+    CRITICAL_REGION_ENTER();
+    ntag_emu.dirty = false;
+    ntag_emu.save_failed = false;
+    ntag_emu.pending = false;
+    ntag_emu.action = NULL;
+    ntag_emu.paused = true;
+    ++ntag_emu.generation;
+    CRITICAL_REGION_EXIT();
+    return true;
+}
+
+bool ntag_emu_prepare_change(void) {
+    /* A write callback has not reported success yet. It cannot recursively
+     * replace its source, detach its owner or tear down the application. */
+    if (ntag_emu.busy && ntag_emu.delivering_write) return false;
     CRITICAL_REGION_ENTER();
     ntag_emu.paused = true;
     ntag_emu.action = NULL;
@@ -416,6 +467,7 @@ void ntag_emu_prepare_change(void) {
     ntag_emu.paused = true;
     ntag_emu.action = NULL;
     CRITICAL_REGION_EXIT();
+    return !ntag_emu.save_failed && !ntag_emu.dirty;
 }
 
 uint32_t ntag_emu_get_generation(void) { return ntag_emu.generation; }
@@ -449,7 +501,7 @@ void ntag_emu_process_pending(void) {
 ret_code_t ntag_emu_init(const ntag_t *ntag) {
     uint32_t err_code;
 
-    ntag_emu_set_update_cb(NULL, NULL);
+    if (!ntag_emu_set_update_cb(NULL, NULL)) return NRF_ERROR_BUSY;
     hal_nfc_stop();
     ntag_emu.field_on = false;
 
@@ -463,14 +515,13 @@ ret_code_t ntag_emu_init(const ntag_t *ntag) {
 }
 
 void ntag_emu_uninit(void) {
-    ntag_emu_set_update_cb(NULL, NULL);
+    if (!ntag_emu_set_update_cb(NULL, NULL)) return;
     hal_nfc_stop();
     ntag_emu.field_on = false;
 }
 
-void ntag_emu_set_tag(const ntag_t *ntag) {
-    if (!ntag) return;
-    ntag_emu_prepare_change();
+bool ntag_emu_set_tag(const ntag_t *ntag) {
+    if (!ntag || !ntag_emu_prepare_change()) return false;
     CRITICAL_REGION_ENTER();
     if (ntag != &ntag_emu.ntag) memcpy(&(ntag_emu.ntag), ntag, sizeof(ntag_t));
     ntag_emu.dirty = false;
@@ -481,6 +532,7 @@ void ntag_emu_set_tag(const ntag_t *ntag) {
     ntag_emu_set_uuid_only(&ntag_emu.ntag);
     ntag_emu.paused = false;
     CRITICAL_REGION_EXIT();
+    return true;
 }
 
 void ntag_emu_set_uuid_only(const ntag_t *ntag) {

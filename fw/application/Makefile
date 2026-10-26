@@ -201,16 +201,18 @@ SRC_FILES += \
   $(PROJ_DIR)/utils.c \
   $(PROJ_DIR)/version2.c \
   $(PROJ_DIR)/amiibo_helper.c \
+  $(PROJ_DIR)/amiibo_info_draw.c \
   $(PROJ_DIR)/mui_qrcode_helper.c \
   $(PROJ_DIR)/app_error_handler.c \
   $(PROJ_DIR)/interrupt_handler.c \
   $(PROJ_DIR)/libc_nano_stubs.c \
   $(PROJ_DIR)/hal/hal_spi_bus.c \
   $(PROJ_DIR)/hal/hal_spi_flash.c \
-  $(PROJ_DIR)/hal/hal_internal_flash.c \
   $(PROJ_DIR)/mod/bsp_btn.c \
   $(PROJ_DIR)/mod/settings.c \
   $(PROJ_DIR)/mod/cache.c \
+  $(PROJ_DIR)/mod/runtime_diag.c \
+  $(PROJ_DIR)/mod/boot_diag.c \
   $(PROJ_DIR)/mod/ble/ble_main.c \
   $(PROJ_DIR)/mod/ble/ble_work.c \
   $(PROJ_DIR)/mod/ble/ble_df_driver.c \
@@ -222,6 +224,9 @@ SRC_FILES += \
   $(PROJ_DIR)/mod/vfs/vfs_driver_spiffs.c \
   $(PROJ_DIR)/mod/vfs/vfs_spiffs_diag.c \
   $(PROJ_DIR)/mod/vfs/vfs_driver_lfs.c \
+  $(PROJ_DIR)/mod/vfs/packed_fs.c \
+  $(PROJ_DIR)/mod/vfs/vfs_driver_packed.c \
+  $(PROJ_DIR)/mod/vfs/vfs_packed_runtime.c \
   $(PROJ_DIR)/mod/df/df_core.c \
   $(PROJ_DIR)/mod/df/df_proto_info.c \
   $(PROJ_DIR)/mod/df/df_proto_vfs.c \
@@ -475,6 +480,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/usbd/class/hid/mouse \
   $(SDK_ROOT)/components/libraries/low_power_pwm \
   $(SDK_ROOT)/components/libraries/bootloader \
+  $(SDK_ROOT)/components/libraries/bootloader/dfu \
   $(SDK_ROOT)/components/nfc/ndef/conn_hand_parser/ble_oob_advdata_parser \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu \
   $(SDK_ROOT)/external/fprintf \
@@ -651,6 +657,14 @@ CFLAGS += -DS112
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DLV_LVGL_H_INCLUDE_SIMPLE 
 CFLAGS += -DBOARD_$(BOARD)
+ifeq ($(BOARD),LCD)
+# Mount and file buffers are explicitly owned by the bounded application pool.
+CFLAGS += -DLFS_NO_MALLOC
+CFLAGS += -DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN -DLFS_NO_ERROR
+ifeq ($(FILESYSTEM),SPIFFS_PREP)
+CFLAGS += -DPIXL_FS_SPIFFS_PREP
+endif
+endif
 ifneq ($(RELEASE), 1)
 CFLAGS += -DDEBUG
 CFLAGS += -DEBUG_NRF
@@ -660,6 +674,7 @@ CFLAGS += -DNDEBUG
 CFLAGS += -DU8G2_USE_LARGE_FONTS
 endif
 CFLAGS += -DMBEDTLS_CONFIG_FILE=\"nrf_crypto_mbedtls_config.h\"
+CFLAGS += -DPIXL_BOOT_DIAGNOSTICS=1
 CFLAGS += -DM_USE_THREAD_BACKEND=0
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
@@ -706,6 +721,9 @@ LDFLAGS += --specs=nano.specs
 
 pixljs: CFLAGS += -D__HEAP_SIZE=512
 pixljs: CFLAGS += -D__STACK_SIZE=8192
+ifeq ($(BOARD),LCD)
+pixljs: CFLAGS += -DPIXL_RUNTIME_DIAGNOSTICS=1
+endif
 pixljs: ASMFLAGS += -D__HEAP_SIZE=512
 pixljs: ASMFLAGS += -D__STACK_SIZE=8192
 
@@ -766,7 +784,7 @@ settingsgen:
 	nrfutil settings generate --family NRF52 --application $(OUTPUT_DIRECTORY)/pixljs.hex --application-version $(APP_VERSION_NUM) --bootloader-version 1 --bl-settings-version 1 $(OUTPUT_DIRECTORY)/settings.hex
 
 ota:
-	nrfutil pkg generate --application $(OUTPUT_DIRECTORY)/pixljs.hex --application-version $(APP_VERSION_NUM) --hw-version 52 --sd-req 0x0103 --key-file $(DFU_PRIVATE_KEY) $(OUTPUT_DIRECTORY)/pixljs_ota_v$(APP_VERSION).zip
+	nrfutil pkg generate --application $(OUTPUT_DIRECTORY)/pixljs.hex --application-version $(APP_VERSION_NUM) --hw-version 52 --sd-req 0x0103,0x0126 --key-file $(DFU_PRIVATE_KEY) $(OUTPUT_DIRECTORY)/pixljs_ota_v$(APP_VERSION).zip
 
 full: settingsgen
 	mergehex --merge $(OUTPUT_DIRECTORY)/settings.hex $(OUTPUT_DIRECTORY)/bootloader.hex $(SDK_ROOT)/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex $(OUTPUT_DIRECTORY)/pixljs.hex --output $(OUTPUT_DIRECTORY)/pixljs_all.hex

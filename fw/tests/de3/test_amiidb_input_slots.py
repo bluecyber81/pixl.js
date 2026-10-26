@@ -175,15 +175,17 @@ enum {AMIIDB_SCENE_MAIN,AMIIDB_SCENE_AMIIBO_SEARCH,AMIIDB_SCENE_AMIIBO_DETAIL};
 enum {AMIIDB_VIEW_ID_INPUT,AMIIDB_VIEW_ID_LIST};
 typedef int mui_list_view_event_t;typedef int mui_text_input_event_t;
 typedef struct {unsigned icon;void *user_data;char text[128];} mui_list_item_t;
-typedef struct {void *user_data;unsigned count,focus;mui_list_item_t items[120];} mui_list_view_t;
+typedef struct {void *user_data;unsigned count,focus,scroll;mui_list_item_t items[120];} mui_list_view_t;
 typedef struct input_s {void *user_data;size_t max;char text[100];void(*cb)(int,struct input_s*);} mui_text_input_t;
-typedef struct {mui_list_view_t *p_list_view;mui_text_input_t *p_text_input;void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher;string_t search_str;uint8_t search_game_id,prev_scene_id;uint16_t search_page,result_count,result_total;bool search_filter_select;const db_amiibo_t *cur_amiibo,*result_items[100];} app_amiidb_t;
+typedef struct {mui_list_view_t *p_list_view;mui_text_input_t *p_text_input;void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher;string_t search_str;uint8_t search_game_id,prev_scene_id;uint16_t search_page,search_filter_page,result_count,result_total,cur_scroll_offset;uint8_t cur_focus_index;bool search_filter_select,search_restore_focus;const db_amiibo_t *cur_amiibo,*result_items[100];} app_amiidb_t;
 static unsigned scene,view,errors;
 static void *mui_list_view_get_user_data(mui_list_view_t*v){return v->user_data;}
 static void mui_list_view_set_user_data(mui_list_view_t*v,void*p){v->user_data=p;}
 static void mui_list_view_set_selected_cb(mui_list_view_t*v,void(*cb)(int,mui_list_view_t*,mui_list_item_t*)){(void)v;(void)cb;}
 static void mui_list_view_set_focus(mui_list_view_t*v,unsigned n){v->focus=n;}
-static void mui_list_view_set_scroll_offset(mui_list_view_t*v,unsigned n){(void)v;assert(n==0);}
+static void mui_list_view_set_scroll_offset(mui_list_view_t*v,unsigned n){v->scroll=n;}
+static unsigned mui_list_view_get_focus(mui_list_view_t*v){return v->focus;}
+static unsigned mui_list_view_get_scroll_offset(mui_list_view_t*v){return v->scroll;}
 static void mui_list_view_clear_items(mui_list_view_t*v){v->count=0;}
 static void mui_list_view_add_item(mui_list_view_t*v,unsigned icon,const char*s,void*p){assert(v->count<120 && strlen(s)<128);mui_list_item_t *i=&v->items[v->count++];i->icon=icon;i->user_data=p;strcpy(i->text,s);}
 static int (*comparator)(const mui_list_item_t*,const mui_list_item_t*);
@@ -203,8 +205,12 @@ const db_game_t game_list[]={{1,0,"Zulu game","",0,0},{2,0,"Alpha game","",0,0},
 static db_amiibo_t records[305];
 int32_t amiidb_api_db_search_page(const char*s,uint8_t game,uint16_t page,const db_amiibo_t**items,uint16_t*total){
  *total=game?1:305;if(strcmp(s,"missing")==0){*total=0;return 0;}
- unsigned offset=game?0:(page>3?300:page*100),count=game?1:305-offset;if(count>100)count=100;
+ unsigned offset=game?0:(page>305/AMIIDB_RESULT_PAGE_SIZE?305/AMIIDB_RESULT_PAGE_SIZE*AMIIDB_RESULT_PAGE_SIZE:page*AMIIDB_RESULT_PAGE_SIZE),count=game?1:305-offset;if(count>AMIIDB_RESULT_PAGE_SIZE)count=AMIIDB_RESULT_PAGE_SIZE;
  for(unsigned i=0;i<count;i++){items[i]=&records[offset+i];}return count;
+}
+int32_t amiidb_api_db_game_window(uint8_t parent,bool all,bool by_name,uint32_t offset,uint16_t limit,const db_game_t**items,uint16_t*total){
+ (void)parent;assert(all&&by_name);*total=2;if(!limit||offset>=2)return 0;
+ unsigned n=0;for(unsigned i=offset;i<2&&n<limit;i++)items[n++]=&game_list[1-i];return n;
 }
 ''' + source + r'''
 static mui_list_item_t *find(mui_list_view_t *v,unsigned icon){for(unsigned i=0;i<v->count;i++)if(v->items[i].icon==icon)return &v->items[i];return NULL;}
@@ -212,13 +218,13 @@ static void choose(mui_list_view_t*v,unsigned icon){mui_list_item_t item=*find(v
 int main(void){
  for(unsigned i=0;i<305;i++){records[i]=(db_amiibo_t){i,2,"Record",""};}
  mui_list_view_t list={0};mui_text_input_t input={0};app_amiidb_t app={.p_list_view=&list,.p_text_input=&input};input.user_data=&app;list.user_data=&app;string_init(app.search_str);
- amiidb_scene_amiibo_search_on_enter(&app);assert(app.result_count==100 && app.result_total==305 && app.search_page==0 && !find(&list,ICON_PREV));
- choose(&list,ICON_NEXT);assert(app.search_page==1 && app.result_items[0]==&records[100] && app.result_items[99]==&records[199]);
- choose(&list,ICON_FILE);assert(scene==AMIIDB_SCENE_AMIIBO_DETAIL && app.cur_amiibo==&records[100] && app.prev_scene_id==AMIIDB_SCENE_AMIIBO_SEARCH);
- amiidb_scene_amiibo_search_on_exit(&app);amiidb_scene_amiibo_search_on_enter(&app);assert(app.search_page==1 && app.result_items[0]==&records[100]);
- choose(&list,ICON_NEXT);choose(&list,ICON_NEXT);assert(app.search_page==3 && app.result_count==5 && !find(&list,ICON_NEXT));
- choose(&list,ICON_PREV);assert(app.search_page==2);
- choose(&list,ICON_SETTINGS);assert(app.search_filter_select && list.count==4 && strcmp(list.items[0].text,"Alpha game")==0 && list.items[2].user_data==NULL);
+ amiidb_scene_amiibo_search_on_enter(&app);assert(app.result_count==AMIIDB_RESULT_PAGE_SIZE && app.result_total==305 && app.search_page==0 && !find(&list,ICON_PREV));
+ choose(&list,ICON_NEXT);assert(app.search_page==1 && app.result_items[0]==&records[AMIIDB_RESULT_PAGE_SIZE] && app.result_items[AMIIDB_RESULT_PAGE_SIZE-1]==&records[2*AMIIDB_RESULT_PAGE_SIZE-1]);
+ choose(&list,ICON_FILE);assert(scene==AMIIDB_SCENE_AMIIBO_DETAIL && app.cur_amiibo==&records[AMIIDB_RESULT_PAGE_SIZE] && app.prev_scene_id==AMIIDB_SCENE_AMIIBO_SEARCH);
+ amiidb_scene_amiibo_search_on_exit(&app);amiidb_scene_amiibo_search_on_enter(&app);assert(app.search_page==1 && app.result_items[0]==&records[AMIIDB_RESULT_PAGE_SIZE]);
+ while(find(&list,ICON_NEXT)){choose(&list,ICON_NEXT);}assert(app.search_page==305/AMIIDB_RESULT_PAGE_SIZE && app.result_count==305%AMIIDB_RESULT_PAGE_SIZE && !find(&list,ICON_NEXT));
+ choose(&list,ICON_PREV);assert(app.search_page==305/AMIIDB_RESULT_PAGE_SIZE-1);
+ choose(&list,ICON_SETTINGS);assert(app.search_filter_select && list.count==5 && strcmp(list.items[0].text,"Alpha game")==0 && list.items[2].user_data==NULL);
  choose(&list,ICON_FOLDER);assert(!app.search_filter_select && app.search_game_id==2 && app.search_page==0 && app.result_count==1);
  choose(&list,ICON_SEARCH);assert(view==AMIIDB_VIEW_ID_INPUT && input.max==32 && input.cb==search_input_cb);
  strcpy(input.text,"missing");input.cb(MUI_TEXT_INPUT_EVENT_CONFIRMED,&input);assert(app.result_count==0 && app.result_total==0 && find(&list,ICON_ERROR) && view==AMIIDB_VIEW_ID_LIST);

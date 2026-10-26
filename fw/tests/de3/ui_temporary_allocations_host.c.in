@@ -1,0 +1,160 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "app_amiidb.h"
+#include "mui_mem.c"
+#include "tlsf.h"
+#include "language.h"
+
+@KEYBOARD@
+@TEXT_FUNCTIONS@
+
+static bool ntag_emu_prepare_change(void){return true;}
+static unsigned listed = 950, generated, errors, stopped, detached;
+static bool m_tag_ready;
+static unsigned m_amiibo_gen_delay_timer;
+static db_amiibo_t fake_figure;
+static int app_timer_stop(unsigned timer) { (void)timer; stopped++; return 0; }
+static bool ntag_emu_set_update_cb(void *cb, void *data) {
+    assert(!cb && !data); detached++;
+return true;}
+int32_t amiidb_api_fav_list_dir(const char *path, amiidb_fav_cb_t cb, void *ctx) {
+    (void)path;
+    for (unsigned i = 1; i <= listed; i++) {
+        amiidb_fav_info_t info = {.fav_type=FAV_TYPE_FAV,
+            .fav_data.fav={.game_id=1, .amiibo_head=1, .amiibo_tail=i}};
+        cb(&info, ctx);
+    }
+    return VFS_OK;
+}
+const db_amiibo_t *get_amiibo_by_id(uint32_t head, uint32_t tail) {
+    if (head != 1 || tail == 0 || tail > listed) return NULL;
+    fake_figure.head=head; fake_figure.tail=tail; return &fake_figure;
+}
+static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app, const char *message) {
+    (void)app; (void)message; errors++;
+}
+const char *getLangString(L_StringID id) { (void)id; return "test error"; }
+static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t *app) {
+    assert(app->cur_amiibo); m_tag_ready=true; generated++;
+}
+@FAVORITE_FUNCTIONS@
+
+static void *exhausted[4096];
+static unsigned exhausted_count;
+static void exhaust_heap(void) {
+    exhausted_count=0;
+    while (exhausted_count < sizeof(exhausted)/sizeof(exhausted[0])) {
+        void *p=mui_mem_malloc(1);
+        if (!p) break;
+        exhausted[exhausted_count++]=p;
+    }
+    assert(exhausted_count < sizeof(exhausted)/sizeof(exhausted[0]));
+    assert(!mui_mem_malloc(1));
+}
+static void restore_heap(void) {
+    while (exhausted_count) mui_mem_free(exhausted[--exhausted_count]);
+}
+static void no_leak(void) {
+    mui_mem_monitor_t mon; mui_mem_monitor(&mon); assert(mon.used_cnt==0);
+}
+static size_t utf8_prefix(const char *text, size_t maximum) {
+    size_t cursor=0, last=0;
+    while (text[cursor]) {
+        unsigned char c=(unsigned char)text[cursor];
+        size_t n=c < 0x80 ? 1 : c < 0xe0 ? 2 : c < 0xf0 ? 3 : 4;
+        cursor+=n;
+        if (cursor > maximum) break;
+        last=cursor;
+    }
+    return last;
+}
+static unsigned text_cases(void) {
+    mui_text_input_t input={0}; mui_view_t view={.user_data=&input};
+    input.p_view=&view; string_init(input.header); string_init(input.input_text);
+    const char *samples[]={"", "a", "\xc3\xa4", "\xe2\x82\xac", "\xf0\x9f\x98\x80",
+        "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789\xc3\xa4",
+        "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789\xe2\x82\xac",
+        "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789\xf0\x9f\x98\x80"};
+    const size_t final_bytes[]={0,1,2,3,4,2,3,4};
+    unsigned count=0;
+    for (unsigned i=0;i<sizeof(samples)/sizeof(samples[0]);i++) {
+        mui_text_input_set_max_length(&input,0);
+        mui_text_input_set_input_text(&input,samples[i]);
+        mui_text_input_set_focus_key(&input,BACKSPACE_KEY);
+        const char *before=string_get_cstr(input.input_text);
+        size_t capacity=string_capacity(input.input_text);
+        exhaust_heap();
+        mui_input_event_t event={.key=INPUT_KEY_CENTER,.type=INPUT_TYPE_SHORT};
+        mui_text_input_on_input(&view,&event);
+        assert(string_size(input.input_text)==strlen(samples[i])-final_bytes[i]);
+        assert(strncmp(string_get_cstr(input.input_text),samples[i],string_size(input.input_text))==0);
+        assert(string_get_cstr(input.input_text)==before && string_capacity(input.input_text)==capacity);
+        assert(!mui_mem_malloc(1)); restore_heap(); count++;
+        for (size_t max=0;max<=strlen(samples[i])+2;max++) {
+            mui_text_input_set_max_length(&input,0);
+            mui_text_input_set_input_text(&input,samples[i]);
+            before=string_get_cstr(input.input_text); capacity=string_capacity(input.input_text);
+            exhaust_heap();
+            mui_text_input_set_max_length(&input,max);
+            size_t expected=max ? utf8_prefix(samples[i],max) : strlen(samples[i]);
+            assert(string_size(input.input_text)==expected && input.max_length==max);
+            assert(strncmp(string_get_cstr(input.input_text),samples[i],expected)==0);
+            assert(string_get_cstr(input.input_text)==before && string_capacity(input.input_text)==capacity);
+            assert(!mui_mem_malloc(1)); restore_heap(); count++;
+        }
+    }
+    string_clear(input.header); string_clear(input.input_text); no_leak();
+    printf("PASS exhausted-heap UTF8 in-place deletion/truncation: %u cases, no moved/grown strings\n",count);
+    return count;
+}
+static unsigned favorite_cases(void) {
+    app_amiidb_t *app=mui_mem_malloc(sizeof(*app)); assert(app); memset(app,0,sizeof(*app));
+    amiibo_view_t *view=mui_mem_malloc(sizeof(*view)); assert(view); memset(view,0,sizeof(*view));
+    app->p_amiibo_view=view; string_init(app->cur_fav_dir); amiidb_fav_array_init(app->fav_array);
+    app->cur_fav=(amiidb_fav_t){.game_id=1,.amiibo_head=1,.amiibo_tail=950};
+    unsigned count=0; size_t reported=0;
+    const unsigned selections[]={1,100,101,512,950};
+    for (unsigned cycle=0;cycle<6;cycle++) for (unsigned i=0;i<5;i++) {
+        mui_mem_monitor_t before,filled,after;
+        mui_mem_monitor(&before);
+        app->cur_fav.amiibo_tail=selections[i]; errors=0; generated=0;
+        amiidb_scene_amiibo_fav_list_init(app);
+        assert(!errors && generated==1 && m_tag_ready && amiidb_fav_array_size(app->fav_array)==100);
+        assert(amiidb_fav_array_get(app->fav_array,view->focus)->amiibo_tail==selections[i]);
+        size_t allocated=tlsf_block_size(app->fav_array->ptr);
+        mui_mem_monitor(&filled); assert(before.free_size > filled.free_size);
+        view->focus=0; amiidb_scene_amiibo_fav_list_update(app);
+        assert(app->cur_fav.amiibo_tail==1 && m_tag_ready);
+        unsigned old_stopped=stopped, old_detached=detached;
+        amiidb_scene_amiibo_detail_on_exit(app);
+        assert(stopped==old_stopped+1 && detached==old_detached+1);
+        assert(app->fav_array->size==0 && app->fav_array->alloc==0 && app->fav_array->ptr==NULL);
+        assert(app->cur_fav.amiibo_tail==1);
+        mui_mem_monitor(&after); assert(after.free_size==before.free_size && after.used_cnt==before.used_cnt);
+        /* Simulate returning from the menu: same selected value, freshly owned window. */
+        amiidb_scene_amiibo_fav_list_init(app); assert(view->focus==0 && app->cur_fav.amiibo_tail==1);
+        amiidb_scene_amiibo_detail_on_exit(app); mui_mem_monitor(&after);
+        assert(after.free_size==before.free_size && after.used_cnt==before.used_cnt);
+        reported=allocated; count+=2;
+    }
+    /* Repeated exit and an empty reload must not double-free or reuse a stale favorite. */
+    amiidb_scene_amiibo_detail_on_exit(app);
+    listed=0; generated=errors=0; amiidb_scene_amiibo_fav_list_init(app);
+    assert(!m_tag_ready && errors==1 && generated==0);
+    amiidb_scene_amiibo_detail_on_exit(app);
+    amiidb_fav_array_clear(app->fav_array); string_clear(app->cur_fav_dir);
+    mui_mem_free(view); mui_mem_free(app); no_leak();
+    printf("PASS favorite selection/menu-return/exit: %u cycles, ptr=%u, released-cache-block=%u bytes\n",
+           count,(unsigned)sizeof(void*),(unsigned)reported);
+    return count;
+}
+int main(int argc,char **argv) {
+    mui_mem_init(); unsigned count=0;
+    if (argc<2 || strcmp(argv[1],"favorites")) count+=text_cases();
+    if (argc<2 || strcmp(argv[1],"text")) count+=favorite_cases();
+    no_leak(); mui_mem_deinit();
+    printf("PASS %u total finite real-TLSF cases\n",count); return 0;
+}

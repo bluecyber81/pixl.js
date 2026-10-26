@@ -15,6 +15,7 @@
 #include "mui_progress_bar.h"
 #include "mui_msg_box.h"
 #include "mui_toast_view.h"
+#include "settings_storage_snapshot.h"
 
 typedef struct {
     mui_list_view_t *p_list_view;
@@ -28,6 +29,8 @@ typedef struct {
 
     /* Only the successful, immediately following Home exit may skip its second save. */
     bool exit_saved;
+
+    settings_storage_snapshot_t storage_snapshot;
 
 } app_settings_t;
 

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "package": {
+    "name": "BL6_CODE_ZAEHLER7_BOOTLOADER_ONLY.zip",
+    "sha256": "97a742cc5a715f20b7a7dcfe245fcd039bceffd2e38274b717cdb74d811fd2d1",
+    "bytes": 28697,
+    "images": [
+      {
+        "type": "bootloader",
+        "firmware_type": 2,
+        "counter": 7,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 28120,
+        "sha256": "6ba51c3161ccf775efe228baf22f5dc1240ca6c39f0bd7f401a289fa82d729dc",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 28120,
+        "app_size": 0,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "softdeviceReplaced": false,
+  "applicationIncluded": false,
+  "layoutChanged": false,
+  "signatureVerificationPreserved": true,
+  "limits": [
+    "Signature and metadata validation does not establish compatibility with an arbitrary Allmiibo board.",
+    "Standalone bootloader update may require a subsequent compatible application update.",
+    "No claim of a new device installation is made by this package receipt."
+  ]
+}

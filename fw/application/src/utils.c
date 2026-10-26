@@ -6,6 +6,7 @@
  */
 
 #include "nrf52.h"
+#include "nrf_log.h"
 #include "nrf_bootloader_info.h"
 #include "nrf_nvic.h"
 #include "nrf_pwr_mgmt.h"
@@ -36,9 +37,21 @@ void int32_to_bytes_le(uint32_t val, uint8_t *data) {
 }
 
 void enter_dfu() {
-    sd_power_gpregret_clr(0, 0);
-    sd_power_gpregret_set(0, BOOTLOADER_DFU_START);
-    sd_nvic_SystemReset();
+    /* CLR takes a bit mask: zero clears nothing. Replace only the SDK-owned
+     * DFU magic bits, preserving unrelated GPREGRET bits 1 and 2. */
+    ret_code_t err = sd_power_gpregret_clr(0, BOOTLOADER_DFU_START_MASK);
+    if (err != NRF_SUCCESS) {
+        NRF_LOG_ERROR("DFU flag clear failed: %u", (unsigned)err);
+        return;
+    }
+    err = sd_power_gpregret_set(0, BOOTLOADER_DFU_START);
+    if (err != NRF_SUCCESS) {
+        NRF_LOG_ERROR("DFU flag set failed: %u", (unsigned)err);
+        return;
+    }
+    /* Reset only after the complete DFU flag has been installed. */
+    err = sd_nvic_SystemReset();
+    NRF_LOG_ERROR("DFU reset unexpectedly returned: %u", (unsigned)err);
 }
 
 void system_reboot() { sd_nvic_SystemReset(); }

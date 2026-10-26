@@ -355,7 +355,8 @@ uint8_t CheckCollisionWithTRACKBAR(GROUPE *VAR) {
 }
 
 void WriteBallMove(GROUPE *VAR) {
-    float CORECTIONY = (VAR->SIMBallSpeedy) + (VAR->TrackAngleOut / 100.00);
+    /* The game state is float; keep this correction in hardware single precision. */
+    float CORECTIONY = (VAR->SIMBallSpeedy) + (VAR->TrackAngleOut / 100.00f);
     if (CORECTIONY < -1) {
         CORECTIONY = -1;
     }

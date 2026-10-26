@@ -8,6 +8,7 @@
 #include "settings.h"
 
 #include "nrf_log.h"
+#include "ntag_emu.h"
 
 static void app_amiibolink_on_run(mini_app_inst_t *p_app_inst);
 static void app_amiibolink_on_kill(mini_app_inst_t *p_app_inst);
@@ -30,6 +31,7 @@ void app_amiibolink_on_run(mini_app_inst_t *p_app_inst) {
     if (!p_app_handle->p_amiibolink_view) goto startup_failed;
     p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
     if (!p_app_handle->p_scene_dispatcher) goto startup_failed;
+    p_app_handle->p_scene_dispatcher->transition_guard = ntag_emu_prepare_change;
     p_app_handle->p_list_view = mui_list_view_create();
     if (!p_app_handle->p_list_view) goto startup_failed;
     p_app_handle->p_msg_box = mui_msg_box_create();

@@ -1,4 +1,4 @@
-"""Read DE3.16 navigation observations only. Device access requires --execute."""
+"""Read DE3.17 navigation observations only. Device access requires --execute."""
 import argparse
 import asyncio
 from datetime import datetime, timezone
@@ -9,7 +9,7 @@ import struct
 NUS = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 WRITE = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
 NOTIFY = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
-EXPECTED_VERSION = '2.21.0-DE3.16'
+EXPECTED_VERSION = '2.21.0-DE3.17'
 TYPES = ('press', 'release', 'short', 'long', 'repeat')
 STAGES = ('none', 'list_callback', 'settings_callback', 'save_started',
           'save_succeeded', 'save_failed', 'launcher_returned')

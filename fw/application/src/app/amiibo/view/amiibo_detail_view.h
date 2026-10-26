@@ -18,8 +18,10 @@ struct amiibo_detail_view_s {
     mui_view_t *p_view;
     ntag_t *ntag;
     void *user_data;
-    uint8_t focus;
-    uint8_t max_ntags;
+    uint16_t focus;
+    uint16_t max_ntags;
+    int8_t navigate_direction;
+    uint8_t info_page;
     string_t file_name;
     amiibo_detail_view_event_cb event_cb;
 };
@@ -34,11 +36,11 @@ inline void amiibo_detail_view_set_event_cb(amiibo_detail_view_t *p_view, amiibo
     p_view->event_cb = event_cb;
 }
 
-inline void amiibo_detail_view_set_focus(amiibo_detail_view_t *p_view, uint8_t focus) { p_view->focus = focus; }
+inline void amiibo_detail_view_set_focus(amiibo_detail_view_t *p_view, uint16_t focus) { p_view->focus = focus; }
 
-inline uint8_t amiibo_detail_view_get_focus(amiibo_detail_view_t *p_view) { return p_view->focus; }
+inline uint16_t amiibo_detail_view_get_focus(amiibo_detail_view_t *p_view) { return p_view->focus; }
 
-inline void amiibo_detail_view_set_max_ntags(amiibo_detail_view_t *p_view, uint8_t max_ntags) {
+inline void amiibo_detail_view_set_max_ntags(amiibo_detail_view_t *p_view, uint16_t max_ntags) {
     p_view->max_ntags = max_ntags;
 }
 

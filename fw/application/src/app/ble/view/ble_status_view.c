@@ -1,19 +1,49 @@
 #include "ble_status_view.h"
 #include "i18n/language.h"
 #include "mui_qrcode_helper.h"
+#include "ble_main.h"
+#ifdef VFS_PACKED_LFS_ENABLE
+#include "vfs_packed_runtime.h"
+#endif
 
 static void ble_status_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     ble_status_view_t* p_status_view = p_view->user_data;
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required()) p_status_view->page = 0;
+#endif
     if (p_status_view->page == 1) {
         draw_qrcode(p_canvas, 39, 0, 50, "https://pixl.amiibo.xyz");
         return;
     }
+    p_status_view->drawn_link_state = ble_link_state_get();
     mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
-    mui_canvas_draw_glyph(p_canvas, 20, 12, 0xe1b5);
+    mui_canvas_draw_glyph(p_canvas, 2, 12, 0xe1b5);
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
-    mui_canvas_draw_utf8(p_canvas, 30, 12, getLangString(_L_APP_BLE_TITLE));
-    mui_canvas_draw_utf8(p_canvas, 18, 24, p_status_view->ble_addr);
-    mui_canvas_draw_utf8(p_canvas, 6, 36, "https://pixl.amiibo.xyz");
+    mui_canvas_draw_utf8(p_canvas, 14, 12, getLangString(_L_APP_BLE_TITLE));
+    if (p_status_view->drawn_link_state == BLE_LINK_INACTIVE) {
+        mui_canvas_draw_utf8(p_canvas, 4, 24, getLangString(_L_DE3_BLE_INACTIVE));
+        mui_canvas_draw_utf8(p_canvas, 4, 36, getLangString(_L_DE3_BLE_RESTART));
+        mui_canvas_draw_utf8(p_canvas, 4, 48, getLangString(_L_DE3_BLE_BACK));
+    } else {
+#ifdef VFS_PACKED_LFS_ENABLE
+        if (vfs_packed_recovery_required())
+            mui_canvas_draw_utf8(p_canvas, 4, 24, getLangString(_L_DE331_STORAGE_RECOVERY));
+        else
+#endif
+            mui_canvas_draw_utf8(p_canvas, 12, 24, p_status_view->ble_addr);
+        mui_canvas_draw_utf8(p_canvas, 4, 36, getLangString(
+            p_status_view->drawn_link_state == BLE_LINK_CONNECTED ?
+                _L_DE3_BLE_CONNECTED :
+            p_status_view->drawn_link_state == BLE_LINK_HOST_CONNECTED ? _L_DE3_BLE_HOST :
+            p_status_view->drawn_link_state == BLE_LINK_DISCONNECTING ? _L_DE3_BLE_CLOSING : _L_DE3_BLE_VISIBLE));
+#ifdef VFS_PACKED_LFS_ENABLE
+        if (vfs_packed_recovery_required())
+            mui_canvas_draw_utf8(p_canvas, 4, 48, getLangString(_L_DE331_STORAGE_CONTINUE));
+        else
+#endif
+        mui_canvas_draw_utf8(p_canvas, 4, 48, getLangString(
+            p_status_view->drawn_link_state == BLE_LINK_HOST_CONNECTED ? _L_DE3_BLE_WAIT_CLIENT : _L_DE3_BLE_QR));
+    }
 }
 
 static void ble_status_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
@@ -22,6 +52,9 @@ static void ble_status_view_on_input(mui_view_t *p_view, mui_input_event_t *even
         switch (event->key) {
         case INPUT_KEY_LEFT:
         case INPUT_KEY_RIGHT:
+#ifdef VFS_PACKED_LFS_ENABLE
+            if (vfs_packed_recovery_required()) break;
+#endif
             if (p_ble_status_view->page == 1) {
                 p_ble_status_view->page = 0;
             } else {
@@ -33,8 +66,15 @@ static void ble_status_view_on_input(mui_view_t *p_view, mui_input_event_t *even
             }
             break;
         case INPUT_KEY_CENTER:
+            if (event->type == INPUT_TYPE_REPEAT) break;
             if (p_ble_status_view->event_cb) {
-                p_ble_status_view->event_cb(BLE_STATUS_VIEW_BLE_DISABLE, p_ble_status_view);
+                /* Follow the action the user actually saw. If a connection
+                 * arrives between drawing and pressing, the guarded restart
+                 * becomes a no-op rather than disconnecting the new peer. */
+                bool restart = event->type == INPUT_TYPE_SHORT && p_ble_status_view->page == 0 &&
+                               p_ble_status_view->drawn_link_state == BLE_LINK_INACTIVE;
+                p_ble_status_view->event_cb(restart ? BLE_STATUS_VIEW_BLE_RESTART :
+                    BLE_STATUS_VIEW_BLE_DISABLE, p_ble_status_view);
             }
             break;
         }

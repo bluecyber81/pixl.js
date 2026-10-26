@@ -30,7 +30,8 @@ def main():
     src = FW / 'application/src'
     driver = (src / 'mod/vfs/vfs_driver_spiffs.c').read_text()
     functions = '\n'.join(function(driver, name) for name in (
-        'static s32_t vfs_spiffs_map_error_code(', 'static s32_t spiffs_block_read(',
+        'static s32_t vfs_spiffs_map_error_code(', 'static int32_t vfs_check_namespace(',
+        'static s32_t spiffs_block_read(',
         'int32_t vfs_spiffs_open_file(', 'int32_t vfs_spiffs_storage_diagnose('))
     harness = (HERE / 'storage_diag_host.c').read_text().split('int main(', 1)[0]
     harness = harness.replace('/* ACTUAL_VFS_FUNCTIONS */', functions)

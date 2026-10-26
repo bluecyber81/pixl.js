@@ -149,6 +149,9 @@ void nrf_pwr_mgmt_feed(void);
  * @details All callbacks will be executed prior to shutdown.
  */
 void nrf_pwr_mgmt_shutdown(nrf_pwr_mgmt_shutdown_t shutdown_type);
+/* Foreground PREPARE_WAKEUP handler only, before any peripheral teardown.
+ * Cancel a blocked sleep after an unsuccessful user-data save. */
+void nrf_pwr_mgmt_cancel_shutdown(void);
 
 /**@brief Function for change the timeout on the fly.
  *

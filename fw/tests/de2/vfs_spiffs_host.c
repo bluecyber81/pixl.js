@@ -48,7 +48,7 @@ static flash_info_t geometry;
 static int write_result,read_result,rename_result,readdir_error,fs_error;
 static unsigned mount_calls,format_calls,init_calls,info_calls,close_calls,write_calls,dir_calls;
 static uint32_t total_bytes,used_bytes;
-static int target_check;
+static int target_check, dir_close_error;
 static int stat_file_error, stat_file_calls;
 static int SPIFFS_stat(spiffs*f,const char*p,spiffs_stat*s) {
     stat_file_calls++; memset(s,0,sizeof(*s));
@@ -80,7 +80,7 @@ static bool cwalk_dir_prefix_match(char*d,const char*s) {strcpy(d,s);strcat(d,"/
 static bool cwalk_same_prefix_segment(const char*a,const char*b) {return true;}
 static spiffs_DIR*SPIFFS_opendir(spiffs*f,const char*p,spiffs_DIR*d) {dir_calls++;return d;}
 static struct spiffs_dirent*SPIFFS_readdir(spiffs_DIR*d,struct spiffs_dirent*e) {assert(e);fs_error=readdir_error;return NULL;}
-static int SPIFFS_closedir(spiffs_DIR*d) {return close_error;}
+static int SPIFFS_closedir(spiffs_DIR*d) {return dir_close_error;}
 static int SPIFFS_rename(spiffs*f,const char*a,const char*b) {return rename_result;}
 static void SPIFFS_clearerr(spiffs*f) {fs_error=0;}
 static int SPIFFS_errno(spiffs*f) {return fs_error;}
@@ -89,7 +89,7 @@ static int SPIFFS_errno(spiffs*f) {return fs_error;}
 
 static void reset(void) {
     fs=(spiffs){0}; init_error=info_error=mount_error=format_error=stat_error=open_error=close_error=0;
-    read_result=0;write_result=999;rename_result=readdir_error=fs_error=target_check=0;
+    read_result=0;write_result=999;rename_result=readdir_error=fs_error=target_check=dir_close_error=0;
     mount_calls=format_calls=init_calls=info_calls=close_calls=write_calls=dir_calls=0;
     total_bytes=1000;used_bytes=300;
     stat_file_error=stat_file_calls=0;
@@ -152,9 +152,9 @@ int main(void) {
     assert(vfs_spiffs_rename_dir_internal("/source","/target",true)==VFS_ERR_MAXNM && !dir_calls);
     target_check=0;readdir_error=-10099;
     assert(vfs_spiffs_rename_dir_internal("/source","/target",true)<0);
-    readdir_error=0;close_error=-10099;
+    readdir_error=0;dir_close_error=-10099;
     assert(vfs_spiffs_rename_dir_internal("/source","/target",true)<0);
-    close_error=0;assert(vfs_spiffs_rename_dir_internal("/source","/target",true)==0);
+    dir_close_error=0;assert(vfs_spiffs_rename_dir_internal("/source","/target",true)==0);
     puts("PASS directory rename target validation and enumeration/close failures");
     return 0;
 }

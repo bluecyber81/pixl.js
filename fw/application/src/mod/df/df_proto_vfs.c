@@ -5,6 +5,13 @@
 #include "nrf_log.h"
 #include "vfs.h"
 #include "boards.h"
+#include "../runtime_diag.h"
+#ifdef VFS_PACKED_LFS_ENABLE
+#include "vfs_packed_runtime.h"
+#include "ble_main.h"
+#include "utils2.h"
+static bool packed_restart_pending;
+#endif
 #if defined(BOARD_LCD) && defined(VFS_SPIFFS_ENABLE)
 #include "vfs_driver_fs.h"
 #include "vfs_spiffs_diag.h"
@@ -44,11 +51,13 @@ static bool read_path(buffer_t *buff, char *path, size_t capacity) {
     return path[1] == ':' && path[2] == '/' && (path[0] == 'I' || path[0] == 'E');
 }
 
-static void send_error(uint8_t command) {
+static void send_vfs_error(uint8_t command, int32_t error) {
+    runtime_diag_vfs_error(command, error);
     df_frame_t out = {0};
     OUT_FRAME_NO_DATA(out, command, DF_STATUS_ERR);
     df_core_send_frame(&out);
 }
+static void send_error(uint8_t command) { send_vfs_error(command, RUNTIME_DIAG_BAD_REQUEST); }
 
 static char *get_file_path(char *path) { return path + VFS_DRIVE_LABEL_LEN; }
 
@@ -100,13 +109,14 @@ void df_proto_handler_vfs_drive_format(df_event_t *evt) {
         df_frame_t out;
 
         NEW_BUFFER_READ(buff, evt->df->data, evt->df->length);
-        if (evt->df->length != 1) {
+        if (evt->df->length != 1 || evt->df->status != 0 || evt->df->chunk != 0) {
             send_error(evt->df->cmd);
             return;
         }
         char drv_label = (char)buff_get_u8(&buff);
         vfs_driver_t *p_driver = get_driver_by_label(drv_label);
         if (p_driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -114,10 +124,16 @@ void df_proto_handler_vfs_drive_format(df_event_t *evt) {
 
         df_proto_vfs_cleanup();
         if (!file_transfer_closed()) {
-            send_error(evt->df->cmd);
+            send_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
             return;
         }
-        if (p_driver->format() == VFS_OK && p_driver->mount() == VFS_OK) {
+        int32_t result = p_driver->format();
+        if (result == VFS_OK) result = p_driver->mount();
+#ifdef VFS_PACKED_LFS_ENABLE
+        vfs_packed_latch_recovery();
+#endif
+        runtime_diag_vfs_error(evt->df->cmd, result);
+        if (result == VFS_OK) {
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_OK);
         } else {
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
@@ -146,7 +162,9 @@ static int32_t close_directory(dir_chunk_state_t *state) {
         return VFS_OK;
     }
     state->dir_closed = true;
-    return state->driver->close_dir(&state->dir);
+    int32_t result = state->driver->close_dir(&state->dir);
+    runtime_diag_vfs_error(DF_PROTO_CMD_VFS_DIR_READ, result);
+    return result;
 }
 
 /* Append only the requested window of an encoded field. No second record or
@@ -182,6 +200,7 @@ static void dir_read_send_chunk(dir_chunk_state_t *state, df_frame_t *out) {
             if (result != VFS_OK) {
                 int32_t close_result = close_directory(state);
                 if (result != VFS_ERR_EOF || close_result != VFS_OK) {
+                    if (result != VFS_ERR_EOF) runtime_diag_vfs_error(DF_PROTO_CMD_VFS_DIR_READ, result);
                     out->status = DF_STATUS_ERR;
                 }
                 break;
@@ -193,6 +212,7 @@ static void dir_read_send_chunk(dir_chunk_state_t *state, df_frame_t *out) {
             name_size++;
         }
         if (name_size == sizeof(state->obj.name)) {
+            runtime_diag_vfs_error(DF_PROTO_CMD_VFS_DIR_READ, VFS_ERR_CRPT);
             close_directory(state);
             out->status = DF_STATUS_ERR;
             break;
@@ -251,11 +271,13 @@ void df_proto_handler_vfs_dir_read(df_event_t *evt) {
         }
 
         if (close_directory(&dir_chunk_state) != VFS_OK) {
-            send_error(evt->df->cmd);
+            OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
+            df_core_send_frame(&out);
             return;
         }
         dir_chunk_state.driver = get_driver_by_path(path);
         if (dir_chunk_state.driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -263,6 +285,7 @@ void df_proto_handler_vfs_dir_read(df_event_t *evt) {
 
         int32_t err = dir_chunk_state.driver->open_dir(get_file_path(path), &dir_chunk_state.dir);
         if (err) {
+            runtime_diag_vfs_error(evt->df->cmd, err);
             // TODO mapping error
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
@@ -295,12 +318,15 @@ void df_proto_handler_vfs_dir_create(df_event_t *evt) {
 
         vfs_driver_t *p_driver = get_driver_by_path(path);
         if (p_driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
         }
 
-        if (p_driver->create_dir(get_file_path(path)) == VFS_OK) {
+        int32_t result = p_driver->create_dir(get_file_path(path));
+        runtime_diag_vfs_error(evt->df->cmd, result);
+        if (result == VFS_OK) {
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_OK);
         } else {
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
@@ -326,19 +352,22 @@ void df_proto_handler_vfs_remove(df_event_t *evt) {
          * invalidates its SPIFFS descriptor behind the transfer owner. Keep
          * ownership intact until CLOSE or disconnect cleanup has completed. */
         if (!file_transfer_closed()) {
-            send_error(evt->df->cmd);
+            send_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
             return;
         }
 
         vfs_driver_t *p_driver = get_driver_by_path(path);
         if (p_driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
         }
 
         vfs_obj_t obj;
-        if (p_driver->stat_file(get_file_path(path), &obj) != VFS_OK) {
+        int32_t stat_result = p_driver->stat_file(get_file_path(path), &obj);
+        if (stat_result != VFS_OK) {
+            runtime_diag_vfs_error(evt->df->cmd, stat_result);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -352,6 +381,7 @@ void df_proto_handler_vfs_remove(df_event_t *evt) {
         }
 
         if (err != VFS_OK) {
+            runtime_diag_vfs_error(evt->df->cmd, err);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -385,6 +415,9 @@ bool df_proto_vfs_is_idle(void) {
 }
 
 void df_proto_vfs_cleanup(void) {
+#ifdef VFS_PACKED_LFS_ENABLE
+    packed_restart_pending = false;
+#endif
     file_chunk_state.read_pending = false;
     close_directory(&dir_chunk_state);
     dir_chunk_state.driver = NULL;
@@ -392,6 +425,7 @@ void df_proto_vfs_cleanup(void) {
         int32_t result = file_chunk_state.abandoned ? file_chunk_state.err_code :
             file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
         if (result != VFS_OK) {
+            runtime_diag_vfs_error(DF_PROTO_CMD_VFS_FILE_CLOSE, result);
             NRF_LOG_INFO("VFS disconnect close failed: %d", result);
             file_chunk_state.abandoned = true;
             file_chunk_state.err_code = result;
@@ -433,6 +467,7 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
 
         vfs_driver_t *p_driver = get_driver_by_path(path);
         if (p_driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -442,15 +477,17 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
         if (file_chunk_state.abandoned) {
             df_proto_vfs_cleanup();
             if (file_chunk_state.opened) {
-                send_error(evt->df->cmd);
+                send_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
                 return;
             }
         }
         if (file_chunk_state.opened) {
             err_code = file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
             if (err_code != VFS_OK) {
+                runtime_diag_vfs_error(evt->df->cmd, err_code);
                 file_chunk_state.err_code = err_code;
-                send_error(evt->df->cmd);
+                OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
+                df_core_send_frame(&out);
                 return;
             }
             file_chunk_state.opened = false;
@@ -458,6 +495,7 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
 
         err_code = p_driver->open_file(get_file_path(path), &file_chunk_state.vfs_fd, flags);
         if (err_code != VFS_OK) {
+            runtime_diag_vfs_error(evt->df->cmd, err_code);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -490,6 +528,7 @@ void df_proto_handler_vfs_file_close(df_event_t *evt) {
             return;
         }
         if (!file_chunk_state.opened || file_chunk_state.abandoned) {
+            runtime_diag_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -497,6 +536,7 @@ void df_proto_handler_vfs_file_close(df_event_t *evt) {
 
         err_code = file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
         if (err_code != VFS_OK) {
+            runtime_diag_vfs_error(evt->df->cmd, err_code);
             file_chunk_state.err_code = err_code;
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
@@ -533,6 +573,7 @@ void df_proto_handler_vfs_file_write(df_event_t *evt) {
                 file_chunk_state.vfs_driver->write_file(&file_chunk_state.vfs_fd, data_buff, data_size);
             if (bytes_written < 0 || (size_t)bytes_written != data_size) {
                 file_chunk_state.err_code = bytes_written < 0 ? bytes_written : VFS_ERR_FAIL;
+                runtime_diag_vfs_error(evt->df->cmd, file_chunk_state.err_code);
             }
         }
 
@@ -540,6 +581,8 @@ void df_proto_handler_vfs_file_write(df_event_t *evt) {
             if (file_chunk_state.opened && !file_chunk_state.abandoned && file_chunk_state.err_code == VFS_OK) {
                 OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_OK);
             } else {
+                if (!file_chunk_state.opened || file_chunk_state.abandoned)
+                    runtime_diag_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
                 OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             }
 
@@ -566,6 +609,7 @@ void file_read_send_chunk(file_chunk_state_t *chunk_state, df_frame_t *out) {
         bytes_read = VFS_ERR_FAIL;
     }
     if (bytes_read < 0) {
+        runtime_diag_vfs_error(DF_PROTO_CMD_VFS_FILE_READ, bytes_read);
         chunk_state->read_pending = false;
         chunk_state->err_code = bytes_read;
         out->status = DF_STATUS_ERR;
@@ -616,6 +660,7 @@ void df_proto_handler_vfs_rename(df_event_t *evt) {
 
         if (get_driver_by_path(old_path) != get_driver_by_path(new_path)) {
             NRF_LOG_INFO("different drive");
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_UNSUPT);
             OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_VFS_RENAME, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -623,6 +668,7 @@ void df_proto_handler_vfs_rename(df_event_t *evt) {
 
         vfs_driver_t *p_driver = get_driver_by_path(old_path);
         if (p_driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             NRF_LOG_INFO("vfs driver is not found");
             OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_VFS_RENAME, DF_STATUS_ERR);
             df_core_send_frame(&out);
@@ -636,6 +682,7 @@ void df_proto_handler_vfs_rename(df_event_t *evt) {
 
         if (err != VFS_OK) {
             NRF_LOG_INFO("stat file error");
+            runtime_diag_vfs_error(evt->df->cmd, err);
             OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_VFS_RENAME, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -650,6 +697,7 @@ void df_proto_handler_vfs_rename(df_event_t *evt) {
 
         if (err != VFS_OK) {
             NRF_LOG_INFO("rename file error: %d", err);
+            runtime_diag_vfs_error(evt->df->cmd, err);
             OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_VFS_RENAME, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -675,6 +723,7 @@ void df_proto_handler_vfs_file_read(df_event_t *evt) {
         }
 
         if (!file_chunk_state.opened || file_chunk_state.abandoned) {
+            runtime_diag_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
             OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_VFS_FILE_READ, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -721,12 +770,15 @@ void df_proto_handler_vfs_update_meta(df_event_t *evt) {
         meta[0] = meta_size;
         vfs_driver_t *p_driver = get_driver_by_path(path);
         if (p_driver == NULL) {
+            runtime_diag_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
         }
 
-        if (p_driver->update_file_meta(get_file_path(path), meta, meta_size + 1) != VFS_OK) {
+        int32_t meta_result = p_driver->update_file_meta(get_file_path(path), meta, meta_size + 1);
+        if (meta_result != VFS_OK) {
+            runtime_diag_vfs_error(evt->df->cmd, meta_result);
             OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_ERR);
             df_core_send_frame(&out);
             return;
@@ -769,6 +821,138 @@ void df_proto_handler_vfs_storage_diag(df_event_t *evt) {
 }
 #endif
 
+/* Filesystem migration uses bounded VFS objects, never physical flash reads.
+ * All attributes (including unknown TLVs and padding) are copied verbatim. */
+static void df_proto_handler_vfs_storage_info(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    if (evt->df->status != 0 || evt->df->chunk != 0 || evt->df->length != 1) {
+        send_error(evt->df->cmd);
+        return;
+    }
+    vfs_driver_t *driver = get_driver_by_label(evt->df->data[0]);
+    if (!driver) { send_vfs_error(evt->df->cmd, VFS_ERR_NODEV); return; }
+    df_frame_t out = {0};
+    out.data[0] = 1;
+    out.data[1] = evt->df->data[0];
+#if defined(VFS_PACKED_LFS_ENABLE)
+    out.data[2] = 3;
+    out.data[4] = 7;
+#elif defined(VFS_LFS_ENABLE)
+    out.data[2] = 2;
+    out.data[4] = 7; /* raw read/write; mount never autoformats */
+#elif defined(VFS_SPIFFS_ENABLE)
+    out.data[2] = 1;
+    out.data[4] = 7; /* hardened SPIFFS also never autoformats on mount */
+#else
+    send_vfs_error(evt->df->cmd, VFS_ERR_UNSUPT);
+    return;
+#endif
+    out.data[3] = driver->mounted() ? 1 : 0;
+    out.data[5] = VFS_MAX_META_LEN;
+    out.data[6] = VFS_MAX_PATH_LEN;
+    out.data[7] = VFS_MAX_NAME_LEN;
+    OUT_FRAME_WITH_DATA_0(out, evt->df->cmd, DF_STATUS_OK, 8);
+    df_core_send_frame(&out);
+}
+
+static bool raw_meta_path_valid(const char *path, bool write) {
+    const char *part = path + 3;
+    if (write && strncmp(path + 2, "/.pixl_txn", 10) == 0) return false;
+    for (const char *cursor = part;; ++cursor) {
+        if (*cursor == '/' || *cursor == 0) {
+            size_t count = (size_t)(cursor - part);
+            if (count == 0 || count >= VFS_MAX_NAME_LEN ||
+                (count == 1 && part[0] == '.') ||
+                (count == 2 && part[0] == '.' && part[1] == '.')) return false;
+            if (*cursor == 0) return true;
+            part = cursor + 1;
+        }
+    }
+}
+
+static void df_proto_handler_vfs_raw_meta(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    const bool write = evt->df->cmd == DF_PROTO_CMD_VFS_RAW_META_WRITE;
+    if (evt->df->status != 0 || evt->df->chunk != 0 || !df_proto_vfs_is_idle()) {
+        send_error(evt->df->cmd);
+        return;
+    }
+    NEW_BUFFER_READ(buff, evt->df->data, evt->df->length);
+    char path[VFS_MAX_FULL_PATH_LEN] = {0};
+    if (!read_path(&buff, path, sizeof(path)) || !raw_meta_path_valid(path, write) ||
+        buff_get_remain_size(&buff) != (write ? VFS_MAX_META_LEN : 0)) {
+        send_error(evt->df->cmd);
+        return;
+    }
+    vfs_driver_t *driver = get_driver_by_path(path);
+    if (!driver || !driver->mounted()) {
+        send_vfs_error(evt->df->cmd, VFS_ERR_NODEV);
+        return;
+    }
+    vfs_obj_t object = {0};
+    int32_t result = driver->stat_file(get_file_path(path), &object);
+    if (result != VFS_OK) { send_vfs_error(evt->df->cmd, result); return; }
+    if (write) {
+        result = driver->update_file_meta(get_file_path(path), buff_get_data_ptr_pos(&buff), VFS_MAX_META_LEN);
+        if (result != VFS_OK) { send_vfs_error(evt->df->cmd, result); return; }
+    }
+    df_frame_t out = {0};
+    if (!write) memcpy(out.data, object.meta, VFS_MAX_META_LEN);
+    OUT_FRAME_WITH_DATA_0(out, evt->df->cmd, DF_STATUS_OK, write ? 0 : VFS_MAX_META_LEN);
+    df_core_send_frame(&out);
+}
+
+#ifdef VFS_PACKED_LFS_ENABLE
+static void df_proto_handler_vfs_packed_layout(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    if (evt->df->status || evt->df->chunk || evt->df->length != 1 ||
+        !get_driver_by_label(evt->df->data[0])) { send_error(evt->df->cmd); return; }
+    df_frame_t out = {0};
+    int32_t result = vfs_packed_layout(evt->df->data[0], out.data);
+    if (result != VFS_OK) { send_vfs_error(evt->df->cmd, result); return; }
+    OUT_FRAME_WITH_DATA_0(out, evt->df->cmd, DF_STATUS_OK, 72);
+    df_core_send_frame(&out);
+}
+
+static void df_proto_handler_vfs_import_state(df_event_t *evt) {
+    if (evt->type == DF_EVENT_DATA_TRANSMIT_READY) {
+        if (packed_restart_pending) {
+            packed_restart_pending = false;
+            ble_disable();
+            system_reboot();
+        }
+        return;
+    }
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    /* Every new request, including malformed ones, disarms a queued restart. */
+    packed_restart_pending = false;
+    if (evt->df->status || evt->df->chunk || evt->df->length < 2) {
+        send_error(evt->df->cmd); return;
+    }
+    uint8_t drive = evt->df->data[0], operation = evt->df->data[1];
+    if (drive != 'E' || !get_driver_by_label(drive) || operation > 3 ||
+        evt->df->length != (operation == 3 ? 34 : 2)) { send_error(evt->df->cmd); return; }
+    if (operation != 0) {
+        vfs_driver_t *driver = get_driver_by_label(drive);
+        if (!driver->mounted() || !df_proto_vfs_is_idle() || !vfs_packed_handles_idle()) {
+            send_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE); return;
+        }
+        int32_t result = VFS_OK;
+        if (operation == 1) result = vfs_packed_finish_import();
+        if (operation == 3) result = vfs_packed_bind_import(evt->df->data + 2);
+        if (result != VFS_OK) { send_vfs_error(evt->df->cmd, result); return; }
+        if (operation == 2) {
+            if (vfs_packed_import_pending()) { send_error(evt->df->cmd); return; }
+            packed_restart_pending = true;
+        }
+    }
+    df_frame_t out = {0};
+    vfs_packed_import_status(drive, out.data);
+    OUT_FRAME_WITH_DATA_0(out, evt->df->cmd, DF_STATUS_OK, 40);
+    df_core_send_frame(&out);
+}
+#endif
+
 const df_cmd_entry_t df_proto_handler_vfs_entries[] = {
     {DF_PROTO_CMD_VFS_DRIVE_LIST, df_proto_handler_vfs_drive_list},
     {DF_PROTO_CMD_VFS_DRIVE_FORMAT, df_proto_handler_vfs_drive_format},
@@ -781,6 +965,13 @@ const df_cmd_entry_t df_proto_handler_vfs_entries[] = {
     {DF_PROTO_CMD_VFS_FILE_WRITE, df_proto_handler_vfs_file_write},
     {DF_PROTO_CMD_VFS_FILE_READ, df_proto_handler_vfs_file_read},
     {DF_PROTO_CMD_VFS_UPDATE_META, df_proto_handler_vfs_update_meta},
+    {DF_PROTO_CMD_VFS_STORAGE_INFO, df_proto_handler_vfs_storage_info},
+    {DF_PROTO_CMD_VFS_RAW_META_READ, df_proto_handler_vfs_raw_meta},
+    {DF_PROTO_CMD_VFS_RAW_META_WRITE, df_proto_handler_vfs_raw_meta},
+#ifdef VFS_PACKED_LFS_ENABLE
+    {DF_PROTO_CMD_VFS_PACKED_LAYOUT, df_proto_handler_vfs_packed_layout},
+    {DF_PROTO_CMD_VFS_IMPORT_STATE, df_proto_handler_vfs_import_state},
+#endif
 #if defined(BOARD_LCD) && defined(VFS_SPIFFS_ENABLE)
     {DF_PROTO_CMD_VFS_STORAGE_DIAG, df_proto_handler_vfs_storage_diag},
 #endif

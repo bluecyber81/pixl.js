@@ -53,6 +53,7 @@ static void settings_scene_storage_msg_box_format_cb(mui_msg_box_event_t event, 
     vfs_driver_t *p_driver = vfs_get_default_driver();
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
         storage_show_busy(app);
+        settings_storage_snapshot_invalidate(&app->storage_snapshot);
         int32_t res = p_driver && p_driver->format ? p_driver->format() : VFS_ERR_NODEV;
         if (res == VFS_OK) {
             res = p_driver->mount ? p_driver->mount() : VFS_ERR_NODEV;
@@ -74,6 +75,7 @@ static void settings_scene_storage_on_selected(mui_list_view_event_t event, mui_
     case STORAGE_LIST_MENU_MOUNT: {
         mui_msg_box_set_header(app->p_msg_box, getLangString(_L_DE3_STORAGE_RETRY_MOUNT));
         storage_show_busy(app);
+        settings_storage_snapshot_invalidate(&app->storage_snapshot);
         int32_t res = p_driver && p_driver->mount ? p_driver->mount() : VFS_ERR_NODEV;
         storage_show_result(app, res == VFS_OK ? getLangString(_L_DE3_STORAGE_MOUNT_DONE)
                                               : storage_error_message(res));
@@ -104,7 +106,9 @@ void settings_scene_storage_on_enter(void *user_data) {
 
     vfs_driver_t *p_driver = vfs_get_default_driver();
     vfs_stat_t stat = {0};
-    int32_t res = p_driver && p_driver->stat ? p_driver->stat(&stat) : VFS_ERR_NODEV;
+    /* The explicit storage page is the refresh point for the session snapshot. */
+    settings_storage_snapshot_invalidate(&app->storage_snapshot);
+    int32_t res = settings_storage_snapshot_read(&app->storage_snapshot, p_driver, &stat);
     char txt[64];
     if (res == VFS_OK) {
 #ifdef VFS_LFS_ENABLE

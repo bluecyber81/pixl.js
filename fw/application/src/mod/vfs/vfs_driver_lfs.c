@@ -1,428 +1,440 @@
-
 #include "boards.h"
 
-#ifdef VFS_LFS_ENABLE
+#if defined(VFS_LFS_ENABLE) && !defined(VFS_PACKED_LFS_ENABLE)
 #include "vfs_driver_fs.h"
-
+#include "vfs_persist.h"
 #include "nrf_log.h"
-
 #include "lfs.h"
-
 #include "hal_spi_flash.h"
 #include "mui_mem.h"
-
-#include "m-string.h"
-
 #include "cwalk2.h"
+#include <limits.h>
+#include <string.h>
 
-#define LFS_SECTOR_SIZE 256
+#define LFS_CACHE_SIZE 256
 #define LFS_BLOCK_SIZE 4096
 #define LFS_ATTR_META 0xAA
 
-int block_device_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
-    return hal_spi_flash_read((block * c->block_size + off), buffer, size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
-}
+static lfs_t lfs;
+static struct lfs_config lfs_config;
+static bool mounted;
+static uint8_t lfs_read_buf[LFS_CACHE_SIZE];
+static uint8_t lfs_prog_buf[LFS_CACHE_SIZE];
+static uint8_t lfs_lookahead_buf[16];
+static const vfs_driver_t persist_raw_driver;
 
-int block_device_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
-                      lfs_size_t size) {
-    return hal_spi_flash_prog((block * c->block_size + off), buffer, size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
-}
-
-int block_device_erase(const struct lfs_config *c, lfs_block_t block) {
-    return hal_spi_flash_erase(block * c->block_size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
-}
-
-int block_device_sync(const struct lfs_config *c) { return 0; }
+/* All file storage belongs to the checked application heap. opencfg avoids
+ * littlefs' default libc allocator and retains the config until close. */
+typedef struct {
+    lfs_file_t file;
+    struct lfs_file_config config;
+    uint8_t cache[LFS_CACHE_SIZE];
+    bool external_writer;
+} lfs_handle_t;
 
 static int32_t vfs_lfs_map_error_code(int32_t err) {
-    static const int32_t err_code[][2] = {{LFS_ERR_OK, VFS_OK},
-                                          {LFS_ERR_NOMEM, VFS_ERR_NOSPC},
-                                          {LFS_ERR_NAMETOOLONG, VFS_ERR_MAXNM},
-                                          {LFS_ERR_NOENT, VFS_ERR_NOOBJ}};
-    for (uint32_t i = 0; i < sizeof(err_code) / sizeof(err_code[0]); i++) {
-        if (err_code[i][0] == err) {
-            return err_code[i][1];
-        }
+    switch (err) {
+    case LFS_ERR_OK: return VFS_OK;
+    case LFS_ERR_NOMEM: return VFS_ERR_NOMEM;
+    case LFS_ERR_NOSPC: return VFS_ERR_NOSPC;
+    case LFS_ERR_NAMETOOLONG: return VFS_ERR_MAXNM;
+    case LFS_ERR_NOENT: return VFS_ERR_NOOBJ;
+    case LFS_ERR_EXIST: return VFS_ERR_OBJEX;
+    case LFS_ERR_CORRUPT: return VFS_ERR_CRPT;
+    default: return VFS_ERR_FAIL;
     }
-    return VFS_ERR_FAIL;
 }
 
-static int32_t vfs_lfs_map_flags(int32_t vfs_flags) {
-    int32_t lfs_flags = 0;
-    if (vfs_flags & VFS_MODE_CREATE) {
-        lfs_flags |= LFS_O_CREAT;
-    }
-    if (vfs_flags & VFS_MODE_TRUNC) {
-        lfs_flags |= LFS_O_TRUNC;
-    }
-    if (vfs_flags & VFS_MODE_APPEND) {
-        lfs_flags |= LFS_O_APPEND;
-    }
-
-    if (vfs_flags & VFS_MODE_READONLY) {
-        lfs_flags |= LFS_O_RDONLY;
-    }
-
-    if (vfs_flags & VFS_MODE_WRITEONLY) {
-        lfs_flags |= LFS_O_WRONLY;
-    }
-    return lfs_flags;
+static bool block_range(const struct lfs_config *c, lfs_block_t block,
+                        lfs_off_t off, lfs_size_t size) {
+    return c && c->block_size == LFS_BLOCK_SIZE && c->block_count &&
+        c->block_count <= 0x1000000u / LFS_BLOCK_SIZE && block < c->block_count &&
+        off <= c->block_size && size <= c->block_size - off;
 }
+static int block_device_read(const struct lfs_config *c, lfs_block_t block,
+                             lfs_off_t off, void *buffer, lfs_size_t size) {
+    if (!block_range(c, block, off, size) || (size && !buffer)) return LFS_ERR_IO;
+    return hal_spi_flash_read(block * c->block_size + off, buffer, size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
+}
+static int block_device_prog(const struct lfs_config *c, lfs_block_t block,
+                             lfs_off_t off, const void *buffer, lfs_size_t size) {
+    if (!block_range(c, block, off, size) || (size && !buffer) ||
+        off % LFS_CACHE_SIZE || size % LFS_CACHE_SIZE) return LFS_ERR_IO;
+    return hal_spi_flash_prog(block * c->block_size + off, buffer, size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
+}
+static int block_device_erase(const struct lfs_config *c, lfs_block_t block) {
+    if (!block_range(c, block, 0, c ? c->block_size : 0)) return LFS_ERR_IO;
+    return hal_spi_flash_erase(block * c->block_size) == NRF_SUCCESS ? 0 : LFS_ERR_IO;
+}
+/* The HAL waits for completion of every program/erase before returning. */
+static int block_device_sync(const struct lfs_config *c) { (void)c; return 0; }
 
-#define LFS_CACHE_SIZE 256
-
-lfs_t lfs;
-struct lfs_config lfs_config;
-bool mounted;
-
-uint8_t lfs_read_buf[LFS_CACHE_SIZE];
-uint8_t lfs_prog_buf[LFS_CACHE_SIZE];
-uint8_t lfs_lookahead_buf[16]; // 128/8=16
-
-int32_t vfs_lfs_mount(void) {
-    flash_info_t flash_info;
-    ret_code_t err_code;
-
-    err_code = hal_spi_flash_init();
-    if (err_code) {
+static int32_t configure(void) {
+    flash_info_t info;
+    if (hal_spi_flash_init() != NRF_SUCCESS || hal_spi_flash_info(&info) != NRF_SUCCESS)
         return VFS_ERR_NODEV;
-    }
-
-    // read flash info
-    err_code = hal_spi_flash_info(&flash_info);
-    if (err_code) {
-        return VFS_ERR_NODEV;
-    }
-
-    // block device operations
+    if (info.page_size != LFS_CACHE_SIZE || info.block_size != LFS_BLOCK_SIZE ||
+        info.block_count < 2 || info.block_count > 0x1000000u / LFS_BLOCK_SIZE)
+        return VFS_ERR_UNSUPT;
+    memset(&lfs_config, 0, sizeof(lfs_config));
     lfs_config.read = block_device_read;
     lfs_config.prog = block_device_prog;
     lfs_config.erase = block_device_erase;
     lfs_config.sync = block_device_sync;
-
-    // block device configuration
-    lfs_config.read_size = flash_info.page_size;
-    lfs_config.prog_size = flash_info.page_size;
-    lfs_config.block_size = flash_info.block_size;
-    lfs_config.block_count = flash_info.block_count;
+    lfs_config.read_size = info.page_size;
+    lfs_config.prog_size = info.page_size;
+    lfs_config.block_size = info.block_size;
+    lfs_config.block_count = info.block_count;
     lfs_config.cache_size = LFS_CACHE_SIZE;
-    lfs_config.lookahead_size = 16;
+    lfs_config.lookahead_size = sizeof(lfs_lookahead_buf);
     lfs_config.block_cycles = 500;
-
     lfs_config.read_buffer = lfs_read_buf;
     lfs_config.prog_buffer = lfs_prog_buf;
     lfs_config.lookahead_buffer = lfs_lookahead_buf;
-
-    mounted = false;
-
-    int err = lfs_mount(&lfs, &lfs_config);
-    // reformat if we can't mount the filesystem
-    // this should only happen on the first boot
-    if (err) {
-        NRF_LOG_INFO("mount error, format as new device: %d", err);
-        err = lfs_format(&lfs, &lfs_config);
-        if (err) {
-            NRF_LOG_INFO("lfs format error: %d", err);
-            return err;
-        }
-        err = lfs_mount(&lfs, &lfs_config);
-        if (err) {
-            NRF_LOG_INFO("re mount error: %d", err);
-            return err;
-        }
-        mounted = true;
-    } else {
-        mounted = true;
-    }
-
-    return err;
-}
-
-static int _traverse_df_cb(void *p, lfs_block_t block) {
-    uint32_t *nb = p;
-    *nb += 1;
-    return 0;
-}
-
-ret_code_t lfs_storage_stat(uint32_t *p_total_space, uint32_t *p_free_space) {
-    ret_code_t err;
-
-    uint32_t _df_nballocatedblock = 0;
-    err = lfs_fs_traverse(&lfs, _traverse_df_cb, &_df_nballocatedblock);
-    if (err < 0) {
-        return err;
-    }
-
-    uint32_t available = lfs_config.block_count * lfs_config.block_size - _df_nballocatedblock * lfs_config.block_size;
-    *p_free_space = available;
-    *p_total_space = lfs_config.block_count * lfs_config.block_size;
-
-    return err;
-}
-
-int32_t vfs_lfs_umount() {
-    if (lfs_unmount(&lfs) == LFS_ERR_OK) {
-        return VFS_OK;
-    }
-    return VFS_ERR_FAIL;
-}
-
-int32_t vfs_lfs_format() {
-    int res = lfs_format(&lfs, &lfs_config);
-    if (res == LFS_ERR_OK) {
-        return VFS_OK;
-    } else {
-        return VFS_ERR_FAIL;
-    }
-}
-
-bool vfs_lfs_mounted() { return mounted; }
-
-int32_t vfs_lfs_stat(vfs_stat_t *p_stat) {
-    p_stat->avaliable = mounted;
-    return lfs_storage_stat(&p_stat->total_bytes, &p_stat->free_bytes);
-}
-
-int32_t vfs_lfs_stat_file(const char *file, vfs_obj_t *obj) {
-
-    struct lfs_info info;
-    memset(obj, 0, sizeof(vfs_obj_t));
-    int res = lfs_stat(&lfs, file, &info);
-    if (res == LFS_ERR_OK) {
-        obj->type = info.type == LFS_TYPE_DIR ? VFS_TYPE_DIR : VFS_TYPE_REG;
-        obj->size = info.size;
-        strncpy(obj->name, info.name, sizeof(obj->name));
-        lfs_getattr(&lfs, file, LFS_ATTR_META, obj->meta, sizeof(obj->meta));
-        return VFS_OK;
-    }
-
-    return VFS_ERR_NOOBJ;
-}
-
-int32_t vfs_lfs_open_dir(const char *dir, vfs_dir_t *fd) {
-    lfs_dir_t *p_dir = mui_mem_malloc(sizeof(lfs_dir_t));
-    if (!p_dir) {
-        return VFS_ERR_NOMEM;
-    }
-    fd->handle = p_dir;
-    strcpy(fd->path, dir);
-
-    int32_t err = lfs_dir_open(&lfs, p_dir, dir);
-
-    if (err != LFS_ERR_OK) {
-        mui_mem_free(p_dir);
-        return VFS_ERR_NOOBJ;
-    }
-
-    NRF_LOG_INFO("open dir %s\n", nrf_log_push(dir));
-
+    lfs_config.name_max = VFS_MAX_NAME_LEN - 1;
+    lfs_config.attr_max = VFS_MAX_META_LEN;
     return VFS_OK;
 }
 
-int32_t vfs_lfs_read_dir_internal(vfs_dir_t *fd, vfs_obj_t *obj) {
-    char path[VFS_MAX_FULL_PATH_LEN];
-    lfs_dir_t *p_dir = fd->handle;
-    memset(obj, 0, sizeof(vfs_obj_t));
-    struct lfs_info info;
-
-    int32_t err = lfs_dir_read(&lfs, p_dir, &info);
-    if (err > 0) {
-        obj->type = info.type == LFS_TYPE_DIR ? VFS_TYPE_DIR : VFS_TYPE_REG;
-        obj->size = info.size;
-        if (strlen(info.name) >= sizeof(obj->name)) {
-            return VFS_ERR_MAXNM;
-        }
-        strcpy(obj->name, info.name);
-
-        if (!cwalk_append_segment(path, fd->path, obj->name)) {
-            return VFS_ERR_MAXNM;
-        }
-        lfs_getattr(&lfs, path, LFS_ATTR_META, obj->meta, sizeof(obj->meta));
-
-        return VFS_OK;
-    } else if (err == 0) {
-        return VFS_ERR_EOF;
-    } else {
-        return vfs_lfs_map_error_code(err);
+int32_t vfs_lfs_mount(void) {
+    if (mounted) return VFS_OK;
+    int32_t result = configure();
+    if (result != VFS_OK) return result;
+    result = lfs_mount(&lfs, &lfs_config);
+    /* Never format/migrate on mount failure: existing SPIFFS or damaged data
+     * must remain recoverable with the previous application and PC backup. */
+    if (result != LFS_ERR_OK) return vfs_lfs_map_error_code(result);
+    mounted = true;
+    vfs_persist_unmounted(&vfs_driver_fs);
+    vfs_persist_bind(&vfs_driver_fs, &persist_raw_driver);
+    return VFS_OK;
+}
+int32_t vfs_lfs_umount(void) {
+    if (vfs_persist_active(&vfs_driver_fs) || (mounted && lfs.mlist)) return VFS_ERR_FAIL;
+    if (!mounted) return VFS_OK;
+    int32_t result = lfs_unmount(&lfs);
+    if (result == LFS_ERR_OK) {
+        mounted = false;
+        vfs_persist_unmounted(&vfs_driver_fs);
     }
+    return vfs_lfs_map_error_code(result);
+}
+int32_t vfs_lfs_format(void) {
+    /* Only the explicit format command reaches this destructive operation. */
+    int32_t result = vfs_lfs_umount();
+    if (result != VFS_OK) return result;
+    result = configure();
+    if (result != VFS_OK) return result;
+    return vfs_lfs_map_error_code(lfs_format(&lfs, &lfs_config));
+}
+bool vfs_lfs_mounted(void) { return mounted; }
+int32_t vfs_lfs_stat(vfs_stat_t *stat) {
+    if (!stat) return VFS_ERR_FAIL;
+    memset(stat, 0, sizeof(*stat));
+    if (!mounted) return VFS_OK;
+    lfs_ssize_t blocks = lfs_fs_size(&lfs);
+    if (blocks < 0) return vfs_lfs_map_error_code(blocks);
+    if ((uint32_t)blocks > lfs_config.block_count) return VFS_ERR_CRPT;
+    stat->avaliable = true;
+    stat->total_bytes = lfs_config.block_count * lfs_config.block_size;
+    stat->free_bytes = (lfs_config.block_count - (uint32_t)blocks) * lfs_config.block_size;
+    return VFS_OK;
 }
 
+static int32_t check_path(const char *path, bool allow_root) {
+    if (!path || path[0] != '/') return VFS_ERR_FAIL;
+    size_t n = 0;
+    while (n < VFS_MAX_PATH_LEN && path[n]) ++n;
+    if (n >= VFS_MAX_PATH_LEN) return VFS_ERR_MAXNM;
+    if (n == 1) return allow_root ? VFS_OK : VFS_ERR_FAIL;
+    const char *start = path + 1;
+    for (const char *p = start;; ++p) {
+        if (*p == '/' || !*p) {
+            size_t length = (size_t)(p - start);
+            if (!length || (length == 1 && start[0] == '.') ||
+                (length == 2 && start[0] == '.' && start[1] == '.')) return VFS_ERR_FAIL;
+            if (length >= VFS_MAX_NAME_LEN) return VFS_ERR_MAXNM;
+            if (!*p) return VFS_OK;
+            start = p + 1;
+        }
+    }
+}
+static int32_t ready_path(const char *path, bool allow_root) {
+    if (!mounted) return VFS_ERR_NODEV;
+    return check_path(path, allow_root);
+}
+static int32_t read_meta(const char *path, uint8_t *meta) {
+    memset(meta, 0, VFS_MAX_META_LEN);
+    int32_t result = lfs_getattr(&lfs, path, LFS_ATTR_META, meta, VFS_MAX_META_LEN);
+    if (result < 0 && result != LFS_ERR_NOATTR) return vfs_lfs_map_error_code(result);
+    if (result > VFS_MAX_META_LEN) return VFS_ERR_CRPT;
+    return VFS_OK;
+}
+int32_t vfs_lfs_stat_file(const char *path, vfs_obj_t *obj) {
+    if (!obj) return VFS_ERR_FAIL;
+    memset(obj, 0, sizeof(*obj));
+    int32_t result = ready_path(path, true);
+    if (result != VFS_OK) return result;
+    struct lfs_info info;
+    result = lfs_stat(&lfs, path, &info);
+    if (result < 0) return vfs_lfs_map_error_code(result);
+    size_t length = strlen(info.name);
+    if (length >= sizeof(obj->name)) return VFS_ERR_MAXNM;
+    result = read_meta(path, (uint8_t *)obj->meta);
+    if (result != VFS_OK) return result;
+    obj->type = info.type == LFS_TYPE_DIR ? VFS_TYPE_DIR : VFS_TYPE_REG;
+    obj->size = info.size;
+    memcpy(obj->name, info.name, length + 1);
+    return VFS_OK;
+}
+int32_t vfs_lfs_open_dir(const char *path, vfs_dir_t *fd) {
+    if (!fd) return VFS_ERR_FAIL;
+    fd->handle = NULL;
+    int32_t result = ready_path(path, true);
+    if (result != VFS_OK) return result;
+    lfs_dir_t *dir = mui_mem_malloc(sizeof(*dir));
+    if (!dir) return VFS_ERR_NOMEM;
+    result = lfs_dir_open(&lfs, dir, path);
+    if (result < 0) { mui_mem_free(dir); return vfs_lfs_map_error_code(result); }
+    memcpy(fd->path, path, strlen(path) + 1);
+    fd->handle = dir;
+    return VFS_OK;
+}
 int32_t vfs_lfs_read_dir(vfs_dir_t *fd, vfs_obj_t *obj) {
-    int32_t err;
-    // skip . and .. directory
-    while ((err = vfs_lfs_read_dir_internal(fd, obj)) == VFS_OK) {
-        if (strcmp(obj->name, ".") != 0 && strcmp(obj->name, "..") != 0) {
-            return err;
-        }
+    if (!mounted || !fd || !fd->handle || !obj) return VFS_ERR_FAIL;
+    memset(obj, 0, sizeof(*obj));
+    struct lfs_info info;
+    int32_t result;
+    do {
+        result = lfs_dir_read(&lfs, fd->handle, &info);
+        if (result <= 0) return result == 0 ? VFS_ERR_EOF : vfs_lfs_map_error_code(result);
+    } while (!strcmp(info.name, ".") || !strcmp(info.name, ".."));
+    if (strlen(info.name) >= sizeof(obj->name)) return VFS_ERR_MAXNM;
+    char path[VFS_MAX_PATH_LEN];
+    if (!cwalk_append_segment(path, fd->path, info.name)) return VFS_ERR_MAXNM;
+    result = read_meta(path, (uint8_t *)obj->meta);
+    if (result != VFS_OK) return result;
+    /* Same catalog-only hiding as SPIFFS; stat_file remains a raw metadata read. */
+    if (vfs_persist_reserved(path)) {
+        memset(obj->meta, 0, sizeof(obj->meta));
+        obj->meta[0] = 2; obj->meta[1] = 2; obj->meta[2] = 3;
     }
-    return err;
+    obj->type = info.type == LFS_TYPE_DIR ? VFS_TYPE_DIR : VFS_TYPE_REG;
+    obj->size = info.size;
+    memcpy(obj->name, info.name, strlen(info.name) + 1);
+    return VFS_OK;
 }
-
 int32_t vfs_lfs_close_dir(vfs_dir_t *fd) {
-    lfs_dir_t *p_dir = fd->handle;
-    lfs_dir_close(&lfs, p_dir);
+    if (!mounted || !fd || !fd->handle) return VFS_ERR_FAIL;
+    int32_t result = lfs_dir_close(&lfs, fd->handle);
     mui_mem_free(fd->handle);
-    return VFS_OK;
+    fd->handle = NULL;
+    return vfs_lfs_map_error_code(result);
 }
-
-int32_t vfs_lfs_create_dir(const char *dir) {
-    NRF_LOG_INFO("create dir %s\n", nrf_log_push(dir));
-    int err = lfs_mkdir(&lfs, dir);
-    return vfs_lfs_map_error_code(err);
+int32_t vfs_lfs_create_dir(const char *path) {
+    int32_t result = ready_path(path, false);
+    return result == VFS_OK ? vfs_lfs_map_error_code(lfs_mkdir(&lfs, path)) : result;
 }
-
-int32_t vfs_lfs_remove_dir(const char *dir) {
-    NRF_LOG_INFO("remove dir %s\n", nrf_log_push(dir));
-    int err = lfs_remove(&lfs, dir);
-    return vfs_lfs_map_error_code(err);
+int32_t vfs_lfs_remove_file(const char *path) {
+    int32_t result = ready_path(path, false);
+    if (result != VFS_OK) return result;
+    struct lfs_info info;
+    result = lfs_stat(&lfs, path, &info);
+    if (result < 0) return vfs_lfs_map_error_code(result);
+    if (info.type != LFS_TYPE_REG) return VFS_ERR_FAIL;
+    return vfs_lfs_map_error_code(lfs_remove(&lfs, path));
 }
-
-int32_t vfs_lfs_rename_dir(const char *old_dir, const char *new_dir) {
-    int32_t err = lfs_rename(&lfs, old_dir, new_dir);
-    return vfs_lfs_map_error_code(err);
-}
-
-/**file operations*/
-int32_t vfs_lfs_open_file(const char *file, vfs_file_t *fd, uint32_t flags) {
-    lfs_file_t *p_file = mui_mem_malloc(sizeof(lfs_file_t));
-    int32_t err = lfs_file_open(&lfs, p_file, file, vfs_lfs_map_flags(flags));
-    if (err != LFS_ERR_OK) {
-        mui_mem_free(p_file);
-        return vfs_lfs_map_error_code(err);
+int32_t vfs_lfs_remove_dir(const char *path) {
+    int32_t result = ready_path(path, false);
+    if (result != VFS_OK) return result;
+    /* Iterative postorder traversal: no recursive stack growth. Like SPIFFS,
+     * deletion is not atomic; a later error is reported without further work. */
+    char current[VFS_MAX_PATH_LEN];
+    memcpy(current, path, strlen(path) + 1);
+    size_t root_length = strlen(path);
+    for (;;) {
+        vfs_dir_t dir;
+        result = vfs_lfs_open_dir(current, &dir);
+        if (result != VFS_OK) return result;
+        vfs_obj_t obj;
+        result = vfs_lfs_read_dir(&dir, &obj);
+        int32_t closed = vfs_lfs_close_dir(&dir);
+        if (closed != VFS_OK) return closed;
+        if (result == VFS_ERR_EOF) {
+            result = vfs_lfs_map_error_code(lfs_remove(&lfs, current));
+            if (result != VFS_OK || strlen(current) == root_length) return result;
+            *strrchr(current, '/') = 0;
+        } else if (result == VFS_OK) {
+            char child[VFS_MAX_PATH_LEN];
+            if (!cwalk_append_segment(child, current, obj.name)) return VFS_ERR_MAXNM;
+            if (obj.type == VFS_TYPE_DIR) memcpy(current, child, strlen(child) + 1);
+            else {
+                result = vfs_lfs_remove_file(child);
+                if (result != VFS_OK) return result;
+            }
+        } else return result;
     }
-    fd->handle = p_file;
-    return VFS_OK;
 }
-
-int32_t vfs_lfs_close_file(vfs_file_t *fd) {
-    if (fd->handle) {
-        lfs_file_close(&lfs, fd->handle);
-        mui_mem_free(fd->handle);
-        fd->handle = NULL;
-    }
-    return VFS_OK;
-}
-
-int32_t vfs_lfs_read_file(vfs_file_t *fd, void *buff, size_t buff_size) {
-    if (fd->handle < 0) {
+static int32_t rename_path(const char *path, const char *target, bool directory) {
+    int32_t result = ready_path(path, false);
+    if (result == VFS_OK) result = check_path(target, false);
+    if (result != VFS_OK) return result;
+    struct lfs_info info;
+    result = lfs_stat(&lfs, path, &info);
+    if (result < 0) return vfs_lfs_map_error_code(result);
+    if ((info.type == LFS_TYPE_DIR) != directory) return VFS_ERR_FAIL;
+    size_t length = strlen(path);
+    if (directory && !strncmp(path, target, length) && (target[length] == '/' || !target[length]))
         return VFS_ERR_FAIL;
-    }
-    NRF_LOG_INFO("read file %d with %d bytes", fd->handle, buff_size);
-    int32_t read_size = lfs_file_read(&lfs, fd->handle, buff, buff_size);
-    if (read_size < 0) {
-        return vfs_lfs_map_error_code(read_size);
-    }
-    return read_size;
+    result = lfs_stat(&lfs, target, &info);
+    if (result != LFS_ERR_NOENT) return result == LFS_ERR_OK ? VFS_ERR_OBJEX : vfs_lfs_map_error_code(result);
+    return vfs_lfs_map_error_code(lfs_rename(&lfs, path, target));
 }
+int32_t vfs_lfs_rename_file(const char *path, const char *target) { return rename_path(path, target, false); }
+int32_t vfs_lfs_rename_dir(const char *path, const char *target) { return rename_path(path, target, true); }
 
-int32_t vfs_lfs_write_file(vfs_file_t *fd, void *buff, size_t buff_size) {
-    if (fd->handle < 0) {
+int32_t vfs_lfs_open_file(const char *path, vfs_file_t *fd, uint32_t flags) {
+    if (!fd) return VFS_ERR_FAIL;
+    fd->handle = NULL;
+    int32_t result = ready_path(path, false);
+    if (result != VFS_OK) return result;
+    if (flags & ~(VFS_MODE_APPEND | VFS_MODE_TRUNC | VFS_MODE_CREATE | VFS_MODE_READONLY | VFS_MODE_WRITEONLY))
         return VFS_ERR_FAIL;
-    }
-    NRF_LOG_INFO("write file %d with %d bytes", fd->handle, buff_size);
-    int32_t written_size = lfs_file_write(&lfs, fd->handle, buff, buff_size);
-    if (written_size < 0) {
-        return vfs_lfs_map_error_code(written_size);
-    }
-    return written_size;
+    if ((flags & (VFS_MODE_APPEND | VFS_MODE_TRUNC | VFS_MODE_CREATE)) && !(flags & VFS_MODE_WRITEONLY))
+        return VFS_ERR_FAIL;
+    int access = flags & VFS_MODE_WRITEONLY ? (flags & VFS_MODE_READONLY ? LFS_O_RDWR : LFS_O_WRONLY) : LFS_O_RDONLY;
+    if (flags & VFS_MODE_APPEND) access |= LFS_O_APPEND;
+    if (flags & VFS_MODE_TRUNC) access |= LFS_O_TRUNC;
+    if (flags & VFS_MODE_CREATE) access |= LFS_O_CREAT;
+    lfs_handle_t *handle = mui_mem_malloc(sizeof(*handle));
+    if (!handle) return VFS_ERR_NOMEM;
+    memset(handle, 0, sizeof(*handle));
+    handle->config.buffer = handle->cache;
+    result = lfs_file_opencfg(&lfs, &handle->file, path, access, &handle->config);
+    if (result < 0) { mui_mem_free(handle); return vfs_lfs_map_error_code(result); }
+    fd->handle = handle;
+    return VFS_OK;
 }
-
-int32_t vfs_lfs_update_file_meta(const char *file, void *meta, size_t meta_size) {
-    int32_t err = lfs_setattr(&lfs, file, LFS_ATTR_META, meta, meta_size);
-    NRF_LOG_INFO("update file meta: %s, size:%d res: %d", nrf_log_push(file), meta_size, err);
-    return vfs_lfs_map_error_code(err);
+static int32_t close_file(vfs_file_t *fd, bool aborting) {
+    if (!fd) return VFS_ERR_FAIL;
+    if (!fd->handle) return aborting ? VFS_OK : VFS_ERR_FAIL;
+    if (!mounted) return VFS_ERR_NODEV;
+    lfs_handle_t *handle = fd->handle;
+    /* Preserve the VFS retry/abandon contract: a failed sync keeps the
+     * handle and external-writer exclusion alive until explicit abort. */
+    if (!aborting) {
+        if (handle->file.flags & LFS_F_ERRED) return VFS_ERR_FAIL;
+        int32_t synced = lfs_file_sync(&lfs, &handle->file);
+        if (synced < 0) return vfs_lfs_map_error_code(synced);
+    }
+    /* Pinned littlefs 2.8: rawsync skips an ERRED file; rawclose still removes
+     * it from mlist. Abandon releases RAM without committing a failed cache. */
+    if (aborting) handle->file.flags |= LFS_F_ERRED;
+    int32_t result = lfs_file_close(&lfs, &handle->file);
+    if (handle->external_writer) vfs_persist_writer_end(&vfs_driver_fs);
+    mui_mem_free(handle);
+    fd->handle = NULL;
+    return vfs_lfs_map_error_code(result);
 }
-
-/**short opearation*/
-int32_t vfs_lfs_write_file_data(const char *file, void *buff, size_t buff_size) {
-    struct lfs_file fd;
-    int32_t file_written_size = 0;
-
-    NRF_LOG_INFO("write file data %s\n", nrf_log_push(file));
-    int32_t err = lfs_file_open(&lfs, &fd, file, LFS_O_CREAT | LFS_O_TRUNC | LFS_O_WRONLY);
-    if (err != LFS_ERR_OK) {
-        return vfs_lfs_map_error_code(err);
-    }
-
-    err = lfs_file_write(&lfs, &fd, buff, buff_size);
-    if (err < 0) {
-        lfs_file_close(&lfs, &fd);
-        return vfs_lfs_map_error_code(err);
-    }
-
-    file_written_size = err;
-
-    err = lfs_file_close(&lfs, &fd);
-    if (err < 0) {
-        return vfs_lfs_map_error_code(err);
-    }
-
-    return file_written_size;
+int32_t vfs_lfs_close_file(vfs_file_t *fd) { return close_file(fd, false); }
+int32_t vfs_lfs_abort_file(vfs_file_t *fd) { return close_file(fd, true); }
+int32_t vfs_lfs_read_file(vfs_file_t *fd, void *buffer, size_t size) {
+    if (!mounted || !fd || !fd->handle || (size && !buffer) || size > INT32_MAX) return VFS_ERR_FAIL;
+    lfs_handle_t *handle = fd->handle;
+    if (!(handle->file.flags & LFS_O_RDONLY)) return VFS_ERR_FAIL;
+    int32_t result = lfs_file_read(&lfs, &handle->file, buffer, size);
+    return result < 0 ? vfs_lfs_map_error_code(result) : result;
 }
-
-int32_t vfs_lfs_read_file_data(const char *file, void *buff, size_t buff_size) {
-    struct lfs_file fd;
-    int32_t file_read_size = 0;
-
-    NRF_LOG_INFO("read file data %s\n", nrf_log_push(file));
-    int32_t err = lfs_file_open(&lfs, &fd, file, LFS_O_RDONLY);
-    if (err != LFS_ERR_OK) {
-        return vfs_lfs_map_error_code(err);
-    }
-
-    err = lfs_file_read(&lfs, &fd, buff, buff_size);
-    if (err < 0) {
-        lfs_file_close(&lfs, &fd);
-        return vfs_lfs_map_error_code(err);
-    }
-
-    file_read_size = err;
-
-    err = lfs_file_close(&lfs, &fd);
-    if (err < 0) {
-        return vfs_lfs_map_error_code(err);
-    }
-
-    return file_read_size;
+int32_t vfs_lfs_write_file(vfs_file_t *fd, void *buffer, size_t size) {
+    if (!mounted || !fd || !fd->handle || (size && !buffer) || size > INT32_MAX) return VFS_ERR_FAIL;
+    lfs_handle_t *handle = fd->handle;
+    if (!(handle->file.flags & LFS_O_WRONLY) || (handle->file.flags & LFS_F_ERRED)) return VFS_ERR_FAIL;
+    int32_t result = lfs_file_write(&lfs, &handle->file, buffer, size);
+    return result < 0 ? vfs_lfs_map_error_code(result) : result;
 }
-
-int32_t vfs_lfs_rename_file(const char *file, const char *new_file) {
-    NRF_LOG_INFO("rename file %s => %s", nrf_log_push(file), nrf_log_push(new_file));
-    int32_t err = lfs_rename(&lfs, file, new_file);
-    return vfs_lfs_map_error_code(err);
+int32_t vfs_lfs_update_file_meta(const char *path, void *meta, size_t size) {
+    int32_t result = ready_path(path, false);
+    if (result != VFS_OK) return result;
+    if (size > VFS_MAX_META_LEN || (size && !meta)) return VFS_ERR_FAIL;
+    uint8_t padded[VFS_MAX_META_LEN] = {0};
+    if (size) memcpy(padded, meta, size);
+    return vfs_lfs_map_error_code(lfs_setattr(&lfs, path, LFS_ATTR_META, padded, sizeof(padded)));
 }
-
-int32_t vfs_lfs_remove_file(const char *file) {
-    NRF_LOG_INFO("remove file %s => %s", file);
-    int32_t err = lfs_remove(&lfs, file);
-    return vfs_lfs_map_error_code(err);
+static int32_t transfer_data(const char *path, void *buffer, size_t size, bool writing) {
+    if ((size && !buffer) || size > INT32_MAX) return VFS_ERR_FAIL;
+    vfs_file_t fd;
+    int32_t result = vfs_lfs_open_file(path, &fd, writing ?
+        VFS_MODE_CREATE | VFS_MODE_TRUNC | VFS_MODE_WRITEONLY : VFS_MODE_READONLY);
+    if (result != VFS_OK) return result;
+    result = writing ? vfs_lfs_write_file(&fd, buffer, size) : vfs_lfs_read_file(&fd, buffer, size);
+    int32_t closed = result < 0 ? vfs_lfs_abort_file(&fd) : vfs_lfs_close_file(&fd);
+    if (closed != VFS_OK) vfs_lfs_abort_file(&fd);
+    return result < 0 ? result : closed != VFS_OK ? closed : result;
 }
+int32_t vfs_lfs_read_file_data(const char *p, void *b, size_t n) { return transfer_data(p, b, n, false); }
+int32_t vfs_lfs_write_file_data(const char *p, void *b, size_t n) { return transfer_data(p, b, n, true); }
 
-// TODO
-const vfs_driver_t vfs_driver_fs = {.mount = vfs_lfs_mount,
-                                    .umount = vfs_lfs_umount,
-                                    .format = vfs_lfs_format,
-                                    .mounted = vfs_lfs_mounted,
-                                    .stat = vfs_lfs_stat,
-
-                                    .stat_file = vfs_lfs_stat_file,
-
-                                    .open_dir = vfs_lfs_open_dir,
-                                    .read_dir = vfs_lfs_read_dir,
-                                    .close_dir = vfs_lfs_close_dir,
-                                    .create_dir = vfs_lfs_create_dir,
-                                    .remove_dir = vfs_lfs_remove_dir,
-                                    .rename_dir = vfs_lfs_rename_dir,
-
-                                    .open_file = vfs_lfs_open_file,
-                                    .close_file = vfs_lfs_close_file,
-                                    .read_file = vfs_lfs_read_file,
-                                    .write_file = vfs_lfs_write_file,
-                                    .update_file_meta = vfs_lfs_update_file_meta,
-
-                                    .write_file_data = vfs_lfs_write_file_data,
-                                    .read_file_data = vfs_lfs_read_file_data,
-
-                                    .rename_file = vfs_lfs_rename_file,
-                                    .remove_file = vfs_lfs_remove_file};
+static const vfs_driver_t persist_raw_driver = {
+    .stat_file = vfs_lfs_stat_file, .open_file = vfs_lfs_open_file,
+    .close_file = vfs_lfs_close_file, .abort_file = vfs_lfs_abort_file,
+    .read_file = vfs_lfs_read_file, .write_file = vfs_lfs_write_file,
+    .update_file_meta = vfs_lfs_update_file_meta,
+    .read_file_data = vfs_lfs_read_file_data, .write_file_data = vfs_lfs_write_file_data,
+    .remove_file = vfs_lfs_remove_file,
+};
+static int32_t guarded_open(const char *path, vfs_file_t *fd, uint32_t flags) {
+    if (!fd) return VFS_ERR_FAIL;
+    fd->handle = NULL;
+    bool writing = flags & (VFS_MODE_WRITEONLY | VFS_MODE_APPEND | VFS_MODE_TRUNC | VFS_MODE_CREATE);
+    if (!writing) return vfs_lfs_open_file(path, fd, flags);
+    int32_t result = vfs_persist_writer_begin(&vfs_driver_fs, path);
+    if (result != VFS_OK) return result;
+    result = vfs_lfs_open_file(path, fd, flags);
+    if (result == VFS_OK) ((lfs_handle_t *)fd->handle)->external_writer = true;
+    else vfs_persist_writer_end(&vfs_driver_fs);
+    return result;
+}
+static int32_t guarded_write_data(const char *path, void *data, size_t size) {
+    int32_t result = vfs_persist_writer_begin(&vfs_driver_fs, path);
+    if (result != VFS_OK) return result;
+    result = vfs_lfs_write_file_data(path, data, size);
+    vfs_persist_writer_end(&vfs_driver_fs);
+    return result;
+}
+static int32_t guarded_meta(const char *path, void *meta, size_t size) {
+    int32_t result = vfs_persist_before_mutation(&vfs_driver_fs, path);
+    return result == VFS_OK ? vfs_lfs_update_file_meta(path, meta, size) : result;
+}
+static int32_t guarded_remove(const char *path) {
+    int32_t result = vfs_persist_before_mutation(&vfs_driver_fs, path);
+    return result == VFS_OK ? vfs_lfs_remove_file(path) : result;
+}
+static int32_t guarded_remove_dir(const char *path) {
+    int32_t result = vfs_persist_before_mutation(&vfs_driver_fs, path);
+    return result == VFS_OK ? vfs_lfs_remove_dir(path) : result;
+}
+static int32_t guarded_create_dir(const char *path) {
+    int32_t result = vfs_persist_before_mutation(&vfs_driver_fs, path);
+    return result == VFS_OK ? vfs_lfs_create_dir(path) : result;
+}
+static int32_t guarded_rename(const char *path, const char *target) {
+    int32_t result = vfs_persist_before_mutation(&vfs_driver_fs, path);
+    if (result == VFS_OK) result = vfs_persist_before_mutation(&vfs_driver_fs, target);
+    return result == VFS_OK ? vfs_lfs_rename_file(path, target) : result;
+}
+static int32_t guarded_rename_dir(const char *path, const char *target) {
+    int32_t result = vfs_persist_before_mutation(&vfs_driver_fs, path);
+    if (result == VFS_OK) result = vfs_persist_before_mutation(&vfs_driver_fs, target);
+    return result == VFS_OK ? vfs_lfs_rename_dir(path, target) : result;
+}
+const vfs_driver_t vfs_driver_fs = {
+    .mount = vfs_lfs_mount, .umount = vfs_lfs_umount, .format = vfs_lfs_format,
+    .mounted = vfs_lfs_mounted, .stat = vfs_lfs_stat, .stat_file = vfs_lfs_stat_file,
+    .open_dir = vfs_lfs_open_dir, .read_dir = vfs_lfs_read_dir, .close_dir = vfs_lfs_close_dir,
+    .create_dir = guarded_create_dir, .remove_dir = guarded_remove_dir, .rename_dir = guarded_rename_dir,
+    .open_file = guarded_open, .close_file = vfs_lfs_close_file, .abort_file = vfs_lfs_abort_file,
+    .read_file = vfs_lfs_read_file, .write_file = vfs_lfs_write_file,
+    .update_file_meta = guarded_meta, .write_file_data = guarded_write_data,
+    .read_file_data = vfs_lfs_read_file_data, .rename_file = guarded_rename, .remove_file = guarded_remove,
+};
 #endif

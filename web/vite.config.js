@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
-  publicDir: 'src/public',
+  publicDir: 'public',
   resolve: { alias: { '~': fileURLToPath(new URL('./src', import.meta.url)) } },
   define: {
     __VUE_OPTIONS_API__: true,

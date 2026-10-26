@@ -109,7 +109,7 @@ class DatabaseRefreshTests(unittest.TestCase):
         generated = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
         self.assertIn('{0xabcdef01, 0x23456789, "New \\"figure\\" \\\\ test\\nnext line", ""}', generated)
         self.assertNotIn('"None"', generated)
-        self.assertIn('{255, 0xabcdef01, 0x23456789, "", "", ""}',
+        self.assertIn('{255, 1, "", "", ""}',
                       (self.generated / "db_link.c").read_text(encoding="utf8"))
         first = {p.name: p.read_bytes() for p in self.generated.glob("*.c")}
         self.assertEqual(self.execute(["--refresh"], body)[0], 0)
@@ -182,6 +182,111 @@ class DatabaseRefreshTests(unittest.TestCase):
                                         capture_output=True, text=True, timeout=30)
         self.assertEqual(compile_result.returncode, 0, compile_result.stdout + compile_result.stderr)
         self.assertEqual(subprocess.run([str(executable)], timeout=10).returncode, 0)
+
+    def test_invalid_game_graph_and_fields_preserve_all_outputs_and_csv(self):
+        valid = [["1", "0", "Game", "", "1"], ["255", "0", "Other", "", "2"]]
+        invalid = [
+            [["1", "1", "Self cycle", "", "1"], valid[1]],
+            [["1", "2", "Cycle A", "", "1"], ["2", "1", "Cycle B", "", "2"], valid[1]],
+            [["1", "2", "Missing parent", "", "1"], valid[1]],
+            [valid[0], ["01", "0", "Duplicate numeric ID", "", "1"], valid[1]],
+            [["0", "0", "Reserved sentinel", "", "1"], valid[1]],
+            [["256", "0", "Overflow ID", "", "1"], valid[1]],
+            [["1", "-1", "Invalid parent", "", "1"], valid[1]],
+            [["1", "0", "Overflow order", "", "256"], valid[1]],
+            [["1", "0", "Invalid order", "", "-1"], valid[1]],
+            [["1", "0", "Non ASCII order", "", "\u0661"], valid[1]],
+            [valid[1]],  # Link references missing game 1.
+            [valid[0]],  # Refresh adds an uncategorized figure; game 255 is missing.
+        ]
+        for rows in invalid:
+            for mode in (["--offline"], ["--refresh"]):
+                if rows == [valid[0]] and mode == ["--offline"]:
+                    continue
+                with self.subTest(rows=rows, mode=mode):
+                    self.write_csv("amiidb_game.csv", rows)
+                    before = self.snapshot()
+                    with self.assertRaises(ValueError):
+                        self.execute(mode)
+                    self.assertEqual(before, self.snapshot())
+
+    def test_case_equivalent_ids_keep_local_names_and_do_not_add_other_link(self):
+        self.write_csv("amiidb_amiibo.csv", [[ADDED.upper(), "Local alias", "Local translation"]])
+        self.write_csv("amiidb_link.csv", [["1", ADDED, "Note", "", ""]])
+        for mode in (["--offline"], ["--refresh"]):
+            with self.subTest(mode=mode):
+                self.assertEqual(self.execute(mode, {"amiibo": [record(ADDED)]})[0], 0)
+                data = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
+                links = (self.generated / "db_link.c").read_text(encoding="utf8")
+                self.assertIn('"Local alias", "Local translation"', data)
+                self.assertIn('{1, 0, "Note", "", ""}', links)
+                self.assertNotIn("{255,", links)
+                with (self.project / "data/amiidb_amiibo.csv").open(encoding="utf8", newline="") as stream:
+                    self.assertEqual(len(list(csv.reader(stream))), 1)
+
+    def test_each_publication_failure_restores_original_files_and_refresh_csv(self):
+        real_replace = os.replace
+        for failure_index in range(1, 5):
+            before = self.snapshot()
+            calls = []
+            def replace(source, destination):
+                calls.append(str(destination))
+                if len(calls) == failure_index:
+                    raise OSError("injected publication failure")
+                return real_replace(source, destination)
+            with self.subTest(failure_index=failure_index), patch("os.replace", side_effect=replace):
+                with self.assertRaisesRegex(OSError, "injected publication failure"):
+                    self.execute(["--refresh"])
+            self.assertEqual(before, self.snapshot())
+
+    def test_staging_failure_never_publishes_any_output(self):
+        real_copy = shutil.copy2
+        for failure_index in range(1, 5):
+            before = self.snapshot()
+            calls = []
+            def copy(source, destination):
+                calls.append(str(destination))
+                if len(calls) == failure_index:
+                    raise OSError("injected backup staging failure")
+                return real_copy(source, destination)
+            with self.subTest(failure_index=failure_index), patch("shutil.copy2", side_effect=copy):
+                with self.assertRaisesRegex(OSError, "backup staging failure"):
+                    self.execute(["--refresh"])
+            self.assertEqual(before, self.snapshot())
+
+    def test_publication_rollback_removes_new_targets(self):
+        # The first output did not previously exist: rollback must remove it.
+        (self.generated / "db_amiibo.c").unlink()
+        before = self.snapshot()
+        real_replace = os.replace
+        calls = []
+        def replace(source, destination):
+            calls.append(str(destination))
+            if len(calls) == 2:
+                raise OSError("injected second publication failure")
+            return real_replace(source, destination)
+        with patch("os.replace", side_effect=replace):
+            with self.assertRaisesRegex(OSError, "second publication failure"):
+                self.execute(["--refresh"])
+        self.assertEqual(before, self.snapshot())
+
+    def test_failed_rollback_reports_and_retains_recovery_backup(self):
+        original = (self.generated / "db_amiibo.c").read_bytes()
+        real_replace = os.replace
+        calls = []
+        def replace(source, destination):
+            calls.append(str(destination))
+            if len(calls) in (2, 3):
+                raise OSError("injected publish and rollback failure")
+            return real_replace(source, destination)
+        with patch("os.replace", side_effect=replace):
+            with self.assertRaisesRegex(OSError, "restore retained backups") as raised:
+                self.execute(["--refresh"])
+        retained = list(self.generated.glob(".amiidb-old-*.tmp"))
+        self.assertEqual(len(retained), 1)
+        self.assertEqual(retained[0].read_bytes(), original)
+        self.assertIn(str(retained[0]), str(raised.exception))
+        self.assertFalse(list(self.generated.glob(".amiidb-new-*.tmp")))
 
 
 if __name__ == "__main__":

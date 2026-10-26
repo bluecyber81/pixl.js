@@ -20,7 +20,9 @@ def function(path, name):
 base = '#include <assert.h>\n#include <stdbool.h>\n#include <stdint.h>\n#include <stdio.h>\n#include <string.h>\n'
 reset = base + r'''
 typedef struct { bool flip_display; unsigned oled_contrast,lcd_backlight,sleep_timeout_sec,language; } settings_data_t;
-typedef struct { void *p_toast_view,*p_view_dispatcher; } app_settings_t;
+typedef struct {bool valid;} settings_storage_snapshot_t;
+static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){p->valid=false;}
+typedef struct { void *p_toast_view,*p_view_dispatcher; settings_storage_snapshot_t storage_snapshot; } app_settings_t;
 typedef struct { void *user_data; } mui_msg_box_t;
 typedef unsigned mui_msg_box_event_t;
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 0

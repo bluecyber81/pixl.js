@@ -4,6 +4,8 @@
 #include "utils2.h"
 #include "ble_df_driver.h"
 #include "mui_nav_diag.h"
+#include "../runtime_diag.h"
+#include "../boot_diag.h"
 
 #include "nrf_log.h"
 #include "ble_main.h"
@@ -33,7 +35,11 @@ void df_proto_handler_info_enter_dfu(df_event_t *evt) {
      * request replaces this flag before any subsequent TX_READY can use it. */
     static bool pending;
     if (evt->type == DF_EVENT_DATA_RECEVIED) {
-        pending = df_proto_vfs_file_transfer_closed();
+        /* DFU is an empty command, never a stream or a reply. Legacy RX
+         * preserves header fields, so validate here as well as in framed RX.
+         * A rejected request must also disarm a previously accepted one. */
+        pending = evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
+                  df_proto_vfs_file_transfer_closed();
         df_frame_t out;
         OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_ENTER_DFU, pending ? DF_STATUS_OK : DF_STATUS_ERR);
         df_core_send_frame(&out);
@@ -103,10 +109,52 @@ static void df_proto_handler_info_mtu_diagnostic(df_event_t *evt) {
     df_core_send_frame(&out);
 }
 
+static void df_proto_handler_info_runtime_diagnostic(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_RUNTIME_DIAGNOSTIC, DF_STATUS_ERR);
+    if (evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
+        runtime_diag_snapshot(out.data, sizeof(out.data))) {
+        out.status = DF_STATUS_OK;
+        out.length = RUNTIME_DIAG_SIZE;
+    }
+    df_core_send_frame(&out);
+}
+
+/* Fixed read-only report; malformed requests cannot select memory addresses.
+ * Avoid interleaving the bounded hash with an unfinished storage transfer. */
+static void df_proto_handler_info_boot_diagnostic(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_BOOT_DIAGNOSTIC, DF_STATUS_ERR);
+    if (evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
+        df_proto_vfs_is_idle() && boot_diag_snapshot(out.data, sizeof(out.data))) {
+        out.status = DF_STATUS_OK;
+        out.length = BOOT_DIAG_SIZE;
+    }
+    df_core_send_frame(&out);
+}
+
+/* Optional cached observations only: no ADC conversion, GPIO write or reset. */
+static void df_proto_handler_info_power_diagnostic(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_POWER_DIAGNOSTIC, DF_STATUS_ERR);
+    if (evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
+        runtime_diag_power_snapshot(out.data, sizeof(out.data))) {
+        out.status = DF_STATUS_OK;
+        out.length = POWER_DIAG_SIZE;
+    }
+    df_core_send_frame(&out);
+}
+
 const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_VERSION_INFO, df_proto_handler_info_get_version},
     {DF_PROTO_CMD_INFO_ENTER_DFU, df_proto_handler_info_enter_dfu},
     {DF_PROTO_CMD_INFO_CAPABILITIES, df_proto_handler_info_capabilities},
     {DF_PROTO_CMD_INFO_UI_DIAGNOSTIC, df_proto_handler_info_ui_diagnostic},
     {DF_PROTO_CMD_INFO_MTU_DIAGNOSTIC, df_proto_handler_info_mtu_diagnostic},
+    {DF_PROTO_CMD_INFO_RUNTIME_DIAGNOSTIC, df_proto_handler_info_runtime_diagnostic},
+    {DF_PROTO_CMD_INFO_BOOT_DIAGNOSTIC, df_proto_handler_info_boot_diagnostic},
+    {DF_PROTO_CMD_INFO_POWER_DIAGNOSTIC, df_proto_handler_info_power_diagnostic},
     {0, NULL}};

@@ -89,6 +89,65 @@ static int32_t vfs_check_folder_path(const char *file_path) {
     return VFS_OK;
 }
 
+/* SPIFFS stores flat names. A file at /a and children at /a/... would make
+ * the same VFS name both a file and a directory. Inspect before mutating;
+ * an implicit directory (children without .folder) also owns its name. */
+static int32_t vfs_check_namespace(const char *path, bool directory) {
+    char target[VFS_MAX_PATH_LEN];
+    size_t length = strlen(path);
+    if (length == 0 || length >= sizeof(target)) return VFS_ERR_MAXNM;
+    /* A regular file never ends in a separator. SPIFFS would store /a/
+     * separately from /a, while the VFS catalog displays both as a. */
+    if (!directory && path[length - 1] == '/') return VFS_ERR_FAIL;
+    memcpy(target, path, length + 1);
+    while (length > 1 && target[length - 1] == '/') target[--length] = 0;
+
+    /* Reopening an existing file creates no new name. Keep ordinary
+     * overwrite/journal updates on the existing lookup path. This guard
+     * prevents new ambiguity; it does not repair old conflicting objects. */
+    if (!directory) {
+        spiffs_stat existing;
+        int lookup = SPIFFS_stat(&fs, path, &existing);
+        if (lookup == SPIFFS_OK) return VFS_OK;
+        if (lookup != SPIFFS_ERR_NOT_FOUND) return vfs_spiffs_map_error_code(lookup);
+    }
+
+    /* CWalk skips empty components but SPIFFS stores the raw key. Reject
+     * new aliases such as /a//b; keep historical file access above and
+     * the established trailing-separator handling for directories. */
+    for (size_t i = 1; i < length; ++i) {
+        if (target[i - 1] == '/' && target[i] == '/') return VFS_ERR_FAIL;
+    }
+
+    spiffs_DIR dir;
+    struct spiffs_dirent entry;
+    if (!SPIFFS_opendir(&fs, "/", &dir)) {
+        int error = SPIFFS_errno(&fs);
+        return error == SPIFFS_OK ? VFS_ERR_FAIL : vfs_spiffs_map_error_code(error);
+    }
+    int32_t result = VFS_OK;
+    SPIFFS_clearerr(&fs);
+    while (SPIFFS_readdir(&dir, &entry)) {
+        const char *name = (const char *)entry.name;
+        size_t entry_length = strlen(name);
+        bool exact = entry_length == length && memcmp(name, target, length) == 0;
+        bool ancestor = entry_length < length && target[entry_length] == '/' &&
+                        memcmp(name, target, entry_length) == 0;
+        bool descendant = length < entry_length && name[length] == '/' &&
+                          memcmp(name, target, length) == 0;
+        if ((exact && directory) ||
+            ancestor || (!directory && descendant)) {
+            result = VFS_ERR_OBJEX;
+            break;
+        }
+    }
+    int read_error = SPIFFS_errno(&fs);
+    int close_error = SPIFFS_closedir(&dir);
+    if (result == VFS_OK)
+        result = vfs_spiffs_map_error_code(read_error != SPIFFS_OK ? read_error : close_error);
+    return result;
+}
+
 static s32_t spiffs_block_read(u32_t addr, u32_t size, u8_t *dst) {
     uint32_t result = hal_spi_flash_read(addr, dst, size);
 #if defined(BOARD_LCD)
@@ -411,7 +470,11 @@ int32_t vfs_spiffs_create_dir(const char *dir) {
         return res;
     }
 
-    snprintf(path, sizeof(path), "%s/%s", dir, VFS_SPIFFS_FOLDER_NAME);
+    res = vfs_check_namespace(dir, true);
+    if (res != VFS_OK) return res;
+    size_t length = strlen(dir);
+    while (length > 1 && dir[length - 1] == '/') --length;
+    snprintf(path, sizeof(path), "%.*s/%s", (int)length, dir, VFS_SPIFFS_FOLDER_NAME);
 
     res = SPIFFS_creat(&fs, path, 0);
     return vfs_spiffs_map_error_code(res);
@@ -549,6 +612,8 @@ int32_t vfs_spiffs_rename_dir(const char *dir_name, const char *new_dir_name) {
     while (target_length > 1 && target[target_length - 1] == '/') target[--target_length] = 0;
     /* A directory cannot be renamed to itself or inside its own subtree. */
     if (cwalk_same_prefix_segment(source, target)) return VFS_ERR_FAIL;
+    err_code = vfs_check_namespace(target, true);
+    if (err_code != VFS_OK) return err_code;
     spiffs_stat existing;
     int result = SPIFFS_stat(&fs, target, &existing);
     if (result != SPIFFS_ERR_NOT_FOUND)
@@ -568,6 +633,10 @@ int32_t vfs_spiffs_open_file(const char *file, vfs_file_t *fd, uint32_t flags) {
     int ret = vfs_check_file_path(file);
     if (ret != VFS_OK) {
         return ret;
+    }
+    if (flags & VFS_MODE_CREATE) {
+        ret = vfs_check_namespace(file, false);
+        if (ret != VFS_OK) return ret;
     }
 #if defined(BOARD_LCD)
     vfs_spiffs_diag_open_begin(file);
@@ -667,6 +736,8 @@ int32_t vfs_spiffs_write_file_data(const char *file, void *buff, size_t buff_siz
     if (ret != VFS_OK) {
         return ret;
     }
+    ret = vfs_check_namespace(file, false);
+    if (ret != VFS_OK) return ret;
 
     spiffs_file fd = SPIFFS_open(&fs, file, SPIFFS_WRONLY | SPIFFS_CREAT | SPIFFS_TRUNC, 0);
     if (fd < 0) {
@@ -720,6 +791,8 @@ int32_t vfs_spiffs_rename_file(const char *file, const char *new_file) {
     if (ret != VFS_OK) {
         return ret;
     }
+    ret = vfs_check_namespace(new_file, false);
+    if (ret != VFS_OK) return ret;
 
     NRF_LOG_INFO("rename file %s => %s\n", nrf_log_push((char *)file), nrf_log_push((char *)new_file));
     int res = SPIFFS_rename(&fs, file, new_file);

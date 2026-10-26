@@ -4,6 +4,7 @@
 #include "app_amiidb.h"
 #include "i18n/language.h"
 #include "mui_icons.h"
+#include "amiidb_fav_page.h"
 
 static void amiidb_scene_fav_select_reload(app_amiidb_t *app);
 
@@ -32,6 +33,11 @@ static void amiidb_scene_fav_select_list_view_on_selected(mui_list_view_event_t 
     uint16_t icon = p_item->icon;
     app_amiidb_t *app = mui_list_view_get_user_data(p_list_view);
 
+    if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
+    if (icon == ICON_PREV || icon == ICON_NEXT) {
+        if (amiidb_fav_page_step(app, icon)) amiidb_scene_fav_select_reload(app);
+        return;
+    }
     switch (icon) {
     case ICON_EXIT:
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
@@ -61,23 +67,8 @@ static void amiidb_scene_fav_select_list_view_on_selected(mui_list_view_event_t 
     }
 }
 
-static void amiidb_scene_fav_select_read_cb(amiidb_fav_info_t *p_info, void *ctx) {
-    app_amiidb_t *app = ctx;
-    if (p_info->fav_type == FAV_TYPE_FOLDER) {
-        mui_list_view_add_item(app->p_list_view, ICON_FOLDER, p_info->fav_data.folder_name, 0);
-    }
-}
-
 static void amiidb_scene_fav_select_reload(app_amiidb_t *app) {
-    // clear list view
-    mui_list_view_clear_items(app->p_list_view);
-
-    mui_list_view_add_item(app->p_list_view, ICON_NEW, getLangString(_L_APP_AMIIDB_NEW), (void *)0);
-
-    int32_t result = amiidb_api_fav_list_dir("", amiidb_scene_fav_select_read_cb, app);
-    if (result != VFS_OK) amiidb_fav_show_error(app, result);
-
-    mui_list_view_add_item(app->p_list_view, ICON_EXIT, getLangString(_L_APP_AMIIDB_BACK), (void *)0);
+    amiidb_fav_page_load(app, true);
     mui_list_view_set_selected_cb(app->p_list_view, amiidb_scene_fav_select_list_view_on_selected);
     mui_list_view_set_user_data(app->p_list_view, app);
 
@@ -87,10 +78,12 @@ static void amiidb_scene_fav_select_reload(app_amiidb_t *app) {
 
 void amiidb_scene_fav_select_on_enter(void *user_data) {
     app_amiidb_t *app = (app_amiidb_t *)user_data;
+    amiidb_fav_page_reset(app);
     amiidb_scene_fav_select_reload(app);
 }
 
 void amiidb_scene_fav_select_on_exit(void *user_data) {
     app_amiidb_t *app = (app_amiidb_t *)user_data;
+    mui_list_view_set_selected_cb(app->p_list_view, NULL);
     mui_list_view_clear_items(app->p_list_view);
 }

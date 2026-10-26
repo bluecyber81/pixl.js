@@ -60,11 +60,11 @@ static bool link_commit_transfer(void) {
         return false;
     }
     m_ntag.type = _ntag_type(m_data_pos);
+    if (!ntag_emu_set_tag(&m_ntag)) return false;
     /* Retire the transaction before callbacks can enter another transfer. */
     m_transfer_active = false;
     m_data_pos = 0;
     index = 0;
-    ntag_emu_set_tag(&m_ntag);
     if (m_event_handler) {
         m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, (uint8_t *)&m_ntag, sizeof(m_ntag));
     }
@@ -454,8 +454,10 @@ void ble_amiloop_received_data(const uint8_t *m_data, size_t length) {
         }
         index = idx;
 
-        if (is_end == 1) {
-            link_commit_transfer();
+        if (is_end == 1 && !link_commit_transfer()) {
+            buff_put_u8(&output, 0x01);
+            amiloop_send_data(&output);
+            return;
         }
         buff_put_u8(&output, 0x00);
         amiloop_send_data(&output);

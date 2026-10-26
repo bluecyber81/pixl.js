@@ -31,7 +31,8 @@ def main():
     tests = Path(__file__).resolve().parent
     src = tests.parents[1] / "application/src"
     driver = (src / "mod/vfs/vfs_driver_spiffs.c").read_text(encoding="utf-8")
-    names = ("static s32_t vfs_spiffs_map_error_code(", "int32_t vfs_spiffs_mount(",
+    names = ("static s32_t vfs_spiffs_map_error_code(", "static int32_t vfs_check_namespace(",
+             "int32_t vfs_spiffs_mount(",
              "int32_t vfs_spiffs_format(", "int32_t vfs_spiffs_stat(",
              "int32_t vfs_spiffs_stat_file(",
              "int32_t vfs_spiffs_close_file(", "int32_t vfs_spiffs_read_file(",

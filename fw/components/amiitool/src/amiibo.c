@@ -190,21 +190,28 @@ void nfc3d_amiibo_pack(const nfc3d_amiibo_keys* amiiboKeys, const uint8_t* plain
 
 bool nfc3d_amiibo_load_keys(nfc3d_amiibo_keys* amiiboKeys, const uint8_t* data)
 {
-	if (!data)
+	if (!amiiboKeys || !data)
 	{
+		errno = EINVAL;
 		return false;
 	}
 
-	memcpy(amiiboKeys, data, sizeof(*amiiboKeys));
-
+	/* Packed input fields are byte-sized. Validate before committing so a
+	 * rejected import cannot replace an already usable key pair. The KDF's
+	 * bounded type-string copy requires a terminator in each 14-byte field. */
+	const nfc3d_amiibo_keys* candidate = (const nfc3d_amiibo_keys*)data;
 	if (
-		(amiiboKeys->data.magicBytesSize > 16) ||
-		(amiiboKeys->tag.magicBytesSize > 16))
+		(candidate->data.magicBytesSize > sizeof(candidate->data.magicBytes)) ||
+		(candidate->tag.magicBytesSize > sizeof(candidate->tag.magicBytes)) ||
+		!memchr(candidate->data.typeString, '\0', sizeof(candidate->data.typeString)) ||
+		!memchr(candidate->tag.typeString, '\0', sizeof(candidate->tag.typeString)))
 	{
 		errno = EILSEQ;
 		return false;
 	}
 
+	/* Also support revalidating the currently loaded pair in place. */
+	memmove(amiiboKeys, data, sizeof(*amiiboKeys));
 	return true;
 }
 

@@ -50,6 +50,7 @@ static void settings_reset_default(void *user_data) {
 static void settings_scene_main_msg_box_reset_settings_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
     app_settings_t *app = p_msg_box->user_data;
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        settings_storage_snapshot_invalidate(&app->storage_snapshot);
         if (settings_reset() != NRF_SUCCESS) {
             mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
         } else {
@@ -98,6 +99,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
         break;
 
     case SETTINGS_MAIN_MENU_DFU:
+        settings_storage_snapshot_invalidate(&app->storage_snapshot);
         if (settings_save() != NRF_SUCCESS) {
             mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
             break;
@@ -158,6 +160,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MSG_BOX);
         mui_update_now(mui());
         mui_nav_diag_save_begin(diag_type);
+        settings_storage_snapshot_invalidate(&app->storage_snapshot);
         int32_t save_result = settings_save();
         mui_nav_diag_save_result(diag_type, save_result);
         if (save_result != NRF_SUCCESS) {
@@ -172,6 +175,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     }
 
     case SETTINGS_MAIN_MENU_REBOOT:
+        settings_storage_snapshot_invalidate(&app->storage_snapshot);
         if (settings_save() != NRF_SUCCESS) {
             mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
             break;
@@ -215,7 +219,7 @@ static void settings_scene_main_reload(void *user_data) {
 
     vfs_driver_t *p_driver = vfs_get_default_driver();
     vfs_stat_t stat = {0};
-    int32_t res = p_driver && p_driver->stat ? p_driver->stat(&stat) : VFS_ERR_NODEV;
+    int32_t res = settings_storage_snapshot_read(&app->storage_snapshot, p_driver, &stat);
     if (res == VFS_OK && stat.avaliable && stat.total_bytes && stat.free_bytes <= stat.total_bytes) {
         snprintf(txt, sizeof(txt), "[%s %02d%%]", _T(APP_SET_STORAGE_USED),
                  (uint8_t)((stat.total_bytes - stat.free_bytes) / (float)stat.total_bytes * 100));

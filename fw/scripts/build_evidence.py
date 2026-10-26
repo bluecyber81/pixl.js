@@ -1,4 +1,4 @@
-"""Bind one DE3.16 build to immutable inputs and products; no device operations.
+"""Bind one DE3.30 build to immutable inputs and products; no device operations.
 
 Generated sources/version must be ready before begin. Previous application
 objects/products are archived before normal make. Private keys are never read here.
@@ -11,10 +11,10 @@ import os
 from pathlib import Path
 import re
 
-VERSION = '2.21.0-DE3.16'
-COUNTER = 572
+VERSION = '2.22.0-DE3.37'
+COUNTER = 609
 IMAGE = 'solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16'
-ARTIFACTS = ('pixljs_ota_v2.21.0-DE3.16.zip', 'pixljs.bin', 'pixljs.out', 'pixljs.map',
+ARTIFACTS = ('pixljs_ota_v2.22.0-DE3.37.zip', 'pixljs.bin', 'pixljs.out', 'pixljs.map',
              'pixljs.hex', 'size_report_LCD.json', 'size_report_LCD.txt')
 ROOTS = ('application', 'bootloader', 'components', 'ld', 'data', 'scripts', 'tests', 'resources', 'docs')
 SUFFIXES = {'.c','.h','.s','.S','.cc','.cpp','.hpp','.inc','.ld','.mk','.a','.lib',
@@ -52,7 +52,7 @@ def source_snapshot(fw):
             names[:] = sorted(n for n in names if n not in SKIP_DIRS)
             for name in files:
                 path = Path(directory) / name
-                if path.suffix in SUFFIXES or name in {'Makefile','CMakeLists.txt'}:
+                if path.suffix in SUFFIXES or name in {'Makefile','CMakeLists.txt','bdfconv_linux'}:
                     paths.add(path)
     if (fw / 'Makefile').exists():
         paths.add(fw / 'Makefile')
@@ -71,6 +71,8 @@ def host_source_snapshot(fw):
     paths += list((fw / 'application/config').glob('*.h'))
     paths += list((fw / 'components/spiffs/src').glob('*.c'))
     paths += list((fw / 'components/spiffs/src').glob('*.h'))
+    paths += list((fw / 'components/littlefs').glob('*.c'))
+    paths += list((fw / 'components/littlefs').glob('*.h'))
     for suffix in ('*.c', '*.h'):
         paths += list((fw / 'components/chameleon-ultra/firmware/application/src').rglob(suffix))
     return {p.relative_to(fw).as_posix(): sha_file(p) for p in sorted(set(paths))}
@@ -173,13 +175,9 @@ def verify_manifest(fw, manifest, run_id):
 def verify_version_marker(payload, version_header):
     require(isinstance(payload, bytes), 'Payload must be bytes')
     require(VERSION.encode('ascii') + b'\0' in payload, 'Missing exact terminated firmware version')
-    require(b'2.21.0-DE3\0' not in payload, 'Previous DE3 firmware marker remains')
-    require(b'2.21.0-DE3.1\0' not in payload, 'Previous DE3.1 firmware marker remains')
-    require(b'2.21.0-DE3.2\0' not in payload, 'Previous DE3.2 firmware marker remains')
-    require(b'2.21.0-DE3.3\0' not in payload, 'Previous DE3.3 firmware marker remains')
-    require(b'2.21.0-DE3.4\0' not in payload, 'Previous DE3.4 firmware marker remains')
-    require(b'2.21.0-DE3.5\0' not in payload, 'Previous DE3.5 firmware marker remains')
-    require(b'2.21.0-DE3.6\0' not in payload, 'Previous DE3.6 firmware marker remains')
+    markers = set(re.findall(rb'2\.[0-9]+\.[0-9]+-DE3(?:\.[0-9]+)?(?:-PREP)?\x00', payload))
+    require(markers == {VERSION.encode('ascii') + b'\0'},
+            'Unexpected DE3 firmware marker remains')
     definitions = re.findall(r'^#define VERSION "([^"\r\n]+)"$', version_header, re.M)
     require(definitions == [VERSION], 'Generated version header does not match exact target')
 
@@ -207,7 +205,7 @@ def main():
     args = parser.parse_args()
     fw = Path(__file__).resolve().parents[1]
     {'start':start, 'begin':begin, 'finish':finish}[args.action](fw, args.run_id)
-    print('DE3.16 build evidence: ' + args.action + ' ' + args.run_id)
+    print('DE3.30 build evidence: ' + args.action + ' ' + args.run_id)
 
 
 if __name__ == '__main__':

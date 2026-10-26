@@ -102,8 +102,13 @@ typedef struct { uint8_t bytes[4]; } ntag_t;
 typedef struct { ntag_t ntag; } cache_data_t;
 static cache_data_t cache;
 static ntag_t tag;
+/* This fixture checks the established normal shutdown GPIO path. Recovery
+ * cache/NFC behavior is covered by the separate recovery integration tests. */
+static const ntag_t default_ntag215 = {{0}};
+static bool vfs_packed_recovery_required(void) { return false; }
 static int save_result;
-static void ntag_emu_prepare_change(void) {}
+static void nrf_pwr_mgmt_cancel_shutdown(void) {}
+static bool ntag_emu_prepare_change(void) {return true;}
 static void ble_disable(void) {}
 static void ble_process_pending(void) {}
 static void *mini_app_launcher(void) { return NULL; }

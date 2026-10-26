@@ -1,0 +1,218 @@
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define CHECK(x) do { if (!(x)) {fprintf(stderr,"CHECK %d: %s\n",__LINE__,#x);exit(71);} } while(0)
+static int critical_depth, irq;
+#define CRITICAL_REGION_ENTER() do { ++critical_depth;
+#define CRITICAL_REGION_EXIT() --critical_depth; } while(0)
+#define BLE_CONN_HANDLE_INVALID 65535
+#define NRF_SUCCESS 0
+#define NRF_ERROR_INVALID_STATE 8
+#define NRF_SDH_BLE_GATT_MAX_MTU_SIZE 250
+#define BLE_GATT_ATT_MTU_DEFAULT 23
+#define OPCODE_LENGTH 1
+#define HANDLE_LENGTH 2
+#define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180
+#define DEVICE_NAME_AMILOOP "AmiLoop"
+#define BSP_INDICATE_CONNECTED 1
+#define BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION 0x13
+#define BLE_CONN_STATUS_CONNECTED 1
+#define APP_TIMER_TICKS(ms) ((uint32_t)(((uint64_t)(ms)*16384u+500u)/1000u))
+/* ACTUAL_JOIN_TIMEOUT */
+#define RTC_MASK 0xffffffu
+#define RUNTIME_DIAG_QUEUE_OVERFLOW 3
+#define RUNTIME_DIAG_PROTOCOL 4
+#define APP_ERROR_CHECK(x) CHECK((x)==0)
+static void test_log(const char *format,...) {(void)format;}
+#define NRF_LOG_INFO(...) test_log(__VA_ARGS__)
+#define NRF_LOG_WARNING(...) test_log(__VA_ARGS__)
+#include "ble_work.h"
+#include "ble_main.h"
+typedef uint32_t ret_code_t;
+enum {BLE_NUS_EVT_COMM_STARTED, BLE_NUS_EVT_COMM_STOPPED, BLE_NUS_EVT_RX_DATA, BLE_NUS_EVT_TX_RDY};
+typedef struct { int type; uint16_t conn_handle;
+ struct {struct {const uint8_t *p_data;size_t length;}rx_data;} params; } ble_nus_evt_t;
+typedef struct {struct {struct {uint16_t conn_handle;struct {struct {uint8_t reason;}disconnected;}params;}gap_evt;}evt;} ble_evt_t;
+static unsigned cleanups, rx_calls, tx_calls, disconnects, poll_calls;
+static unsigned power_feeds, standby_elapsed;
+static uint32_t clock_ticks;
+static bool file_open, stop_in_rx, reenter_in_rx, manual_exit;
+static uint16_t physical_handle=BLE_CONN_HANDLE_INVALID, last_disconnect;
+static int disconnect_result;
+static uint16_t m_ble_nus_max_data_len, m_previous_pwr_mgmt_sleep_timeout, timeout=30;
+static int m_qwr;
+enum { BLE_ADV_MODE_IDLE };
+static struct { int adv_handle; struct {bool ble_adv_on_disconnect_disabled;}adv_modes_config;} m_advertising;
+/* GLOBALS */
+static void runtime_diag_ble_abort(unsigned reason) {(void)reason;}
+static void runtime_diag_ble_disconnected(unsigned reason) {(void)reason;}
+/* ACTUAL_WORK */
+static void ble_on_disconnected(void) {CHECK(!irq&&!critical_depth);cleanups++;file_open=false;}
+static void ble_df_driver_poll(void) {poll_calls++;}
+static int ble_conn_state_status(uint16_t handle) {return handle==physical_handle ? BLE_CONN_STATUS_CONNECTED : 0;}
+static uint32_t app_timer_cnt_get(void) {return clock_ticks;}
+static uint32_t app_timer_cnt_diff_compute(uint32_t now,uint32_t old) {return (now-old)&RTC_MASK;}
+static void nrf_pwr_mgmt_feed(void) {power_feeds++;standby_elapsed=0;}
+static unsigned nrf_pwr_mgmt_get_timeout(void) {return timeout;}
+static void nrf_pwr_mgmt_set_timeout(unsigned value) {timeout=value;}
+static unsigned bsp_indication_set(int value) {(void)value;return 0;}
+static unsigned nrf_ble_qwr_conn_handle_assign(void *q,unsigned h) {(void)q;(void)h;return 0;}
+static bool ble_device_name_is(const char *name) {(void)name;return false;}
+static unsigned sd_ble_gattc_exchange_mtu_request(unsigned h,unsigned v) {(void)h;(void)v;return 0;}
+static unsigned ble_advertising_start(void *adv,int mode) {(void)adv;CHECK(mode==BLE_ADV_MODE_IDLE);return 0;}
+static unsigned sd_ble_gap_adv_stop(int handle) {(void)handle;return 0;}
+static unsigned sd_ble_gap_disconnect(uint16_t handle,int reason) {
+ CHECK(!irq&&reason==0x13&&(manual_exit||ble_work_cleanup_complete())&&!file_open);
+ last_disconnect=handle;disconnects++;return disconnect_result;
+}
+/* ACTUAL_BLE */
+static void gap(bool connected,uint16_t handle) {
+ ble_evt_t event={.evt.gap_evt.conn_handle=handle,.evt.gap_evt.params.disconnected.reason=0x13};
+ const ble_evt_t *p_ble_evt=&event;uint32_t err_code;(void)err_code;irq++;
+ switch(connected) {case 1: { /* CONNECT */ } case 0: { /* DISCONNECT */ }}
+ irq--;CHECK(!critical_depth);
+}
+static void nus(int type,uint16_t handle) {
+ const uint8_t byte=0x42;ble_nus_evt_t event={.type=type,.conn_handle=handle,.params.rx_data={&byte,1}};
+ irq++;nus_data_handler(&event);irq--;CHECK(!critical_depth);
+}
+static void on_rx(const uint8_t *data,size_t length) {
+ CHECK(!irq&&!critical_depth&&data[0]==0x42&&length==1);rx_calls++;
+ if(stop_in_rx) {
+  unsigned before=cleanups;nus(BLE_NUS_EVT_COMM_STOPPED,m_conn_handle);CHECK(!ble_work_can_send());
+  if(reenter_in_rx) {ble_process_pending();CHECK(cleanups==before&&!disconnects&&file_open);}
+ }
+}
+static void on_tx(void) {CHECK(!irq&&!critical_depth);tx_calls++;}
+static void connect_peer(uint16_t handle,bool subscribe) {
+ physical_handle=handle;gap(true,handle);
+ if(subscribe)nus(BLE_NUS_EVT_COMM_STARTED,handle);
+ ble_process_pending();
+}
+static void setup(void) {
+ m_ble_initialized=true;m_sessions_enabled=true;m_file_mode=true;ble_work_set_handlers(on_rx,on_tx);
+ ble_process_pending();cleanups=0;poll_calls=0;
+}
+int main(int argc,char **argv) {
+ CHECK(argc==2);setup();const char *test=argv[1];
+ if(!strcmp(test,"discovery")) {
+  connect_peer(4,false);CHECK(ble_link_state_get()==BLE_LINK_HOST_CONNECTED&&!ble_work_can_send());
+  nus(BLE_NUS_EVT_COMM_STOPPED,4);nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();
+  CHECK(!rx_calls&&!disconnects&&ble_link_state_get()==BLE_LINK_HOST_CONNECTED);
+ } else if(!strcmp(test,"duplicate_start")) {
+  connect_peer(4,true);unsigned before=cleanups;
+  nus(BLE_NUS_EVT_RX_DATA,4);nus(BLE_NUS_EVT_COMM_STARTED,4);ble_process_pending();
+  CHECK(rx_calls==1&&cleanups==before&&!disconnects&&ble_work_can_send());
+ } else if(!strcmp(test,"stopped_cleanup")||!strcmp(test,"stop_during_rx")||!strcmp(test,"reentrant_stop")||!strcmp(test,"pending_cleanup")) {
+  connect_peer(4,true);unsigned before=cleanups;file_open=true;
+  nus(BLE_NUS_EVT_RX_DATA,4);nus(BLE_NUS_EVT_TX_RDY,4);
+  if(!strcmp(test,"stop_during_rx")||!strcmp(test,"reentrant_stop")) {
+   stop_in_rx=true;reenter_in_rx=!strcmp(test,"reentrant_stop");
+  }
+  else nus(BLE_NUS_EVT_COMM_STOPPED,4);
+  if(!strcmp(test,"pending_cleanup")) {ble_release_stopped_session();CHECK(!disconnects);}
+  ble_process_pending();CHECK(cleanups==before+1&&!file_open&&disconnects==1&&last_disconnect==4);
+  CHECK(rx_calls==(unsigned)stop_in_rx&&!tx_calls&&!ble_work_can_send());
+  CHECK(ble_link_state_get()==BLE_LINK_DISCONNECTING&&m_conn_handle==4);
+  ble_process_pending();CHECK(disconnects==1);m_advertising_active=true;physical_handle=BLE_CONN_HANDLE_INVALID;
+  gap(false,4);ble_process_pending();CHECK(ble_link_state_get()==BLE_LINK_ADVERTISING);
+ } else if(!strcmp(test,"fast_resubscribe")) {
+  connect_peer(4,true);nus(BLE_NUS_EVT_COMM_STOPPED,4);nus(BLE_NUS_EVT_COMM_STARTED,4);
+  nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();CHECK(disconnects==1&&!rx_calls&&!ble_work_can_send());
+ } else if(!strcmp(test,"observer_order")) {
+  physical_handle=4;nus(BLE_NUS_EVT_COMM_STARTED,4);CHECK(!ble_work_can_send());
+  gap(true,4);ble_process_pending();nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();
+  CHECK(rx_calls==1&&ble_link_state_get()==BLE_LINK_CONNECTED&&!disconnects);
+ } else if(!strcmp(test,"stale_handle")) {
+  connect_peer(4,true);nus(BLE_NUS_EVT_COMM_STOPPED,9);nus(BLE_NUS_EVT_RX_DATA,9);gap(false,9);
+  ble_process_pending();CHECK(!rx_calls&&!disconnects&&m_conn_handle==4&&ble_work_can_send());
+  physical_handle=BLE_CONN_HANDLE_INVALID;gap(false,4);ble_process_pending();
+  nus(BLE_NUS_EVT_COMM_STARTED,4);CHECK(m_nus_session_handle==BLE_CONN_HANDLE_INVALID);
+ } else if(!strcmp(test,"reused_handle")) {
+  connect_peer(4,true);nus(BLE_NUS_EVT_COMM_STOPPED,4);gap(false,4);
+  connect_peer(4,true);nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();
+  CHECK(!disconnects&&rx_calls==1&&ble_work_can_send());
+ } else if(!strcmp(test,"disconnect_error")) {
+  connect_peer(4,true);disconnect_result=42;nus(BLE_NUS_EVT_COMM_STOPPED,4);ble_process_pending();
+  CHECK(disconnects==1&&m_conn_handle==4&&!m_advertising_active&&!ble_work_can_send());
+  CHECK(ble_link_state_get()==BLE_LINK_HOST_CONNECTED);ble_process_pending();CHECK(disconnects==1);
+ } else if(!strcmp(test,"active_idle")) {
+  connect_peer(4,true);ble_process_pending();ble_process_pending();
+  CHECK(!disconnects&&ble_work_can_send()&&ble_link_state_get()==BLE_LINK_CONNECTED);
+ } else if(!strcmp(test,"legacy_modes")) {
+  m_file_mode=false;connect_peer(4,false);nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();CHECK(rx_calls==1);
+  nus(BLE_NUS_EVT_COMM_STARTED,4);nus(BLE_NUS_EVT_RX_DATA,4);nus(BLE_NUS_EVT_COMM_STOPPED,4);
+  ble_process_pending();CHECK(rx_calls==2&&!disconnects&&ble_work_can_send());
+ } else if(!strcmp(test,"disabled")) {
+  connect_peer(4,false);m_sessions_enabled=false;
+  nus(BLE_NUS_EVT_COMM_STARTED,4);nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();CHECK(!rx_calls&&!ble_work_can_send());
+ } else if(!strcmp(test,"join_release_contract")) {
+  CHECK(BLE_FILE_JOIN_TIMEOUT_TICKS==APP_TIMER_TICKS(30000));
+  connect_peer(4,false);clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(disconnects==1&&last_disconnect==4);
+ } else if(!strcmp(test,"join_30s_contract")) {
+  connect_peer(4,false);clock_ticks=APP_TIMER_TICKS(30000)-1;ble_process_pending();CHECK(!disconnects);
+  clock_ticks++;ble_process_pending();CHECK(disconnects==1&&last_disconnect==4);
+ } else if(!strcmp(test,"join_gap_cancel")) {
+  connect_peer(4,false);clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS-1;
+  physical_handle=BLE_CONN_HANDLE_INVALID;m_advertising_active=true;gap(false,4);
+  unsigned feeds=power_feeds;clock_ticks+=BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(!disconnects&&power_feeds==feeds&&!m_file_join_pending&&ble_link_state_get()==BLE_LINK_ADVERTISING);
+ } else if(!strcmp(test,"join_local_cancel")) {
+  connect_peer(4,false);clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS-1;manual_exit=true;ble_disable();
+  CHECK(disconnects==1&&!m_file_join_pending);physical_handle=BLE_CONN_HANDLE_INVALID;gap(false,4);
+  unsigned feeds=power_feeds;clock_ticks+=BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(disconnects==1&&power_feeds==feeds&&!m_sessions_enabled&&ble_link_state_get()==BLE_LINK_INACTIVE);
+ } else if(!strcmp(test,"join_restores_three_minutes")) {
+  timeout=180;standby_elapsed=177;connect_peer(4,false);CHECK(!standby_elapsed&&timeout==180);
+  standby_elapsed=30;clock_ticks=APP_TIMER_TICKS(30000);ble_process_pending();
+  CHECK(disconnects==1&&!standby_elapsed);physical_handle=BLE_CONN_HANDLE_INVALID;gap(false,4);
+  ble_process_pending();CHECK(timeout==180&&m_previous_pwr_mgmt_sleep_timeout==180);
+ } else if(!strcmp(test,"join_timeout")||!strcmp(test,"join_wrap")) {
+  if(!strcmp(test,"join_wrap"))clock_ticks=RTC_MASK-100;
+  uint32_t start=clock_ticks;standby_elapsed=175;connect_peer(4,false);
+  CHECK(power_feeds==1&&!standby_elapsed&&timeout==180);
+  clock_ticks=(start+BLE_FILE_JOIN_TIMEOUT_TICKS-1)&RTC_MASK;standby_elapsed=29;ble_process_pending();
+  CHECK(!disconnects&&power_feeds==1&&standby_elapsed==29);
+  clock_ticks=(start+BLE_FILE_JOIN_TIMEOUT_TICKS)&RTC_MASK;ble_process_pending();
+  CHECK(disconnects==1&&last_disconnect==4&&power_feeds==2&&!standby_elapsed);
+  CHECK(ble_link_state_get()==BLE_LINK_DISCONNECTING&&!m_file_join_pending);
+  ble_process_pending();CHECK(power_feeds==2&&disconnects==1);
+  m_advertising_active=true;physical_handle=BLE_CONN_HANDLE_INVALID;gap(false,4);ble_process_pending();
+  CHECK(timeout==30&&ble_link_state_get()==BLE_LINK_ADVERTISING&&power_feeds==2);
+ } else if(!strcmp(test,"join_started_first")) {
+  connect_peer(4,false);clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS;
+  nus(BLE_NUS_EVT_COMM_STARTED,4);unsigned feeds=power_feeds;ble_process_pending();
+  file_open=true;clock_ticks=3*BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(!disconnects&&file_open&&power_feeds==feeds&&!m_file_join_pending&&ble_work_can_send());
+ } else if(!strcmp(test,"join_deadline_first")) {
+  connect_peer(4,false);clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  nus(BLE_NUS_EVT_COMM_STARTED,4);nus(BLE_NUS_EVT_RX_DATA,4);ble_process_pending();
+  CHECK(disconnects==1&&!rx_calls&&!ble_work_can_send());
+ } else if(!strcmp(test,"join_reused_handle")) {
+  connect_peer(4,false);clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS-1;gap(false,4);
+  connect_peer(4,false);unsigned feeds=power_feeds;clock_ticks++;
+  ble_process_pending();CHECK(!disconnects&&power_feeds==feeds&&m_file_join_pending);
+  clock_ticks=(clock_ticks+BLE_FILE_JOIN_TIMEOUT_TICKS)&RTC_MASK;ble_process_pending();CHECK(disconnects==1);
+ } else if(!strcmp(test,"join_stale_generation")) {
+  connect_peer(4,false);m_file_join_generation--;clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS;
+  ble_process_pending();CHECK(!disconnects&&m_conn_handle==4);
+ } else if(!strcmp(test,"join_disabled")) {
+  connect_peer(4,false);manual_exit=true;ble_disable();CHECK(disconnects==1&&!m_file_join_pending);
+  unsigned feeds=power_feeds;clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(disconnects==1&&power_feeds==feeds&&!m_sessions_enabled);
+ } else if(!strcmp(test,"join_other_mode")) {
+  m_file_mode=false;connect_peer(4,false);clock_ticks=3*BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(!disconnects&&!power_feeds&&!m_file_join_pending&&ble_work_can_send());
+ } else if(!strcmp(test,"join_release_error")) {
+  connect_peer(4,false);disconnect_result=42;clock_ticks=BLE_FILE_JOIN_TIMEOUT_TICKS;ble_process_pending();
+  CHECK(disconnects==1&&m_conn_handle==4&&!m_file_join_pending&&!m_advertising_active);
+  unsigned feeds=power_feeds;clock_ticks*=2;ble_process_pending();
+  CHECK(disconnects==1&&power_feeds==feeds&&ble_link_state_get()==BLE_LINK_HOST_CONNECTED);
+  manual_exit=true;disconnect_result=0;ble_disable();CHECK(disconnects==2&&!m_sessions_enabled);
+ } else CHECK(false);
+ CHECK(!critical_depth&&!irq);printf("PASS %s\n",test);return 0;
+}

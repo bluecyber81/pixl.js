@@ -107,7 +107,9 @@ int main(void) {
     }
     unsigned links = 0;
     for (const db_link_t *link = link_list; link->game_id; ++link) {
-        assert(get_amiibo_by_id(link->head, link->tail));
+        assert(link->amiibo_index < amiibo_list_size);
+        const db_amiibo_t *linked = &amiibo_list[link->amiibo_index];
+        assert(get_amiibo_by_id(linked->head, linked->tail) == linked);
         unsigned matching_games = 0;
         for (const db_game_t *game = game_list; game->game_id; ++game)
             matching_games += game->game_id == link->game_id;

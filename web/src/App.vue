@@ -1,8 +1,12 @@
 <template>
 
-  <el-config-provider :locale="elementLocale"><div class="filemanager">
-    <h2>Allmiibo Dateimanager · DE3.12</h2>
-    <div class="action-right">
+  <el-config-provider :locale="elementLocale"><main class="filemanager">
+    <a class="skip-link" href="#file-workspace">{{ $t('workflow.skipToFiles') }}</a>
+    <header class="app-header">
+      <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="4" y="6" width="24" height="20" rx="5"/><path d="M10 12h12M10 17h7M22 21h.01"/></svg></span>
+        <div><p class="app-eyebrow">ALLMIIBO · LCD</p><h1>{{ $t('workflow.appTitle') }}</h1><p class="app-subtitle">{{ $t('tools.subtitle') }}</p></div>
+      </div>
+      <div class="header-tools">    <div class="header-language">
       <el-dropdown trigger="click" class="international" @command="handle_set_language">
         <div>
           <el-button size="small" type="primary" >{{ $t('lang.choose') }}</el-button>
@@ -35,69 +39,129 @@
         </el-dropdown-menu></template>
       </el-dropdown>
     </div>
-    <p class="header">Pixl.js / Allmiibo</p>
-    <el-row>
-      <el-col :span="14">
-        <div class="action-left">
-          <el-button-group>
-            <el-button size="small" type="primary" @click="on_btn_upload"
-              :disabled="btn_disabled()">{{ $t('menu.upload')  }}</el-button>
-          </el-button-group>
-          <el-button-group>
-            <el-button size="small" @click="on_btn_new_folder"
-              :disabled="btn_disabled()">{{ $t('menu.newfolder')  }}</el-button>
-            <el-button size="small" type="danger" @click="on_btn_remove"
-              :disabled="btn_disabled() || !table_selection.length">{{ $t('menu.del')  }}</el-button>
-          </el-button-group>
-          <el-button-group>
-            <el-button size="small" @click="on_btn_up" :disabled="btn_disabled()">{{ $t('menu.up')  }}</el-button>
-            <el-button size="small" @click="on_btn_refresh" :disabled="!connected || busy">{{ $t('menu.refresh') }}</el-button>
-          </el-button-group>
-        </div>
-      </el-col>
-      <el-col :span="10">
-        <div class="action-right">
-          <el-button type="success" size="small" v-if="version">{{ version }}</el-button>
-          <a class="dfu-page-link" href="https://thegecko.github.io/web-bluetooth-dfu/examples/web.html"
-            target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }}</a>
-          <el-button-group>
-            <el-button type="info" size="small" @click="on_btn_enter_dfu"
-              :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button>
-            <el-button :type="connBtnType" size="small" @click="on_btn_ble_connect">{{
+<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
               connBtnText
-            }}</el-button>
-          </el-button-group>
-        </div>
-      </el-col>
-    </el-row>
+            }}</el-button></div>
+    </header>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.27.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
+      <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
+      <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
+      <span v-else class="quick-location">{{ $t(demoMode ? 'workflow.previewShort' : 'workflow.connectHint') }}</span></div>
+      <span v-if="statusDriveInfo" class="quick-storage">{{ statusDriveInfo.label }}: {{ $t('workflow.freeSpace',{bytes:format_size(statusDriveInfo.freeBytes)}) }}</span>
+      <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
+    </section>
+    <p v-if="browserIssue" class="notice error" role="alert">{{ $t(browserIssue) }}</p>
+    <nav class="workspace-nav" :aria-label="$t('workflow.workspaces')">
+      <button type="button" @click="show_workspace('files')" aria-controls="file-workspace"><span class="workspace-icon" aria-hidden="true">▤</span><span><strong>{{ $t('workflow.filesTitle') }}</strong><small>{{ $t('workflow.filesBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('backup')" aria-controls="backup-workspace"><span class="workspace-icon" aria-hidden="true">↓</span><span><strong>{{ $t('workflow.backupTitle') }}</strong><small>{{ $t('workflow.backupBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('update')" aria-controls="update-workspace"><span class="workspace-icon" aria-hidden="true">↻</span><span><strong>{{ $t('workflow.updateTitle') }}</strong><small>{{ $t('workflow.updateBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+    </nav>
+    <details class="workspace-panel" ref="backupWorkspace" id="backup-workspace" @toggle="keep_migration_visible">
+      <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
+      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
+      <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
+      <div class="workspace-actions"><el-button size="small" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
+    <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
+      </div>
+    </details>
+    <details class="workspace-panel" ref="updateWorkspace" id="update-workspace">
+      <summary>{{ $t('workflow.updateTitle') }}<span>{{ $t('workflow.updateBrief') }}</span></summary>
+      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
+      <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
+              :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
+      <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" href="/dfu/web.html" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
+      <UpdateCheck :session="{ connected, firmwareVersion, bootState }" :boot="bootInfo" :locale="language" />
+      <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
+      </div>
+    </details>
+    <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
+      <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
+      <strong>{{ $t('tools.' + transfer.phase) }}</strong>
+      <span class="transfer-path">{{ transfer.path }}</span>
+      <progress :value="Number.isSafeInteger(transfer.total) ? transferPercent : undefined" max="100" :aria-label="$t('tools.transfer')"></progress>
+      <span v-if="Number.isSafeInteger(transfer.total)">{{ transferPercent }}%</span>
+      <span>{{ format_size(transfer.done) }} / {{ format_size(transfer.total) }}</span>
+      <span v-if="Number.isSafeInteger(transfer.filesTotal)">{{ $t('workflow.backupFiles',{done:transfer.filesDone,total:transfer.filesTotal}) }}</span>
+      <span v-if="transferStats?.bytesPerSecond != null">{{ format_size(Math.round(transferStats.bytesPerSecond)) }}/s</span>
+      <span v-if="transferStats?.etaSeconds != null">{{ $t('info.remaining', { seconds: Math.ceil(transferStats.etaSeconds) }) }}</span>
+      <span v-if="transferStats?.stalled">{{ $t('info.waiting') }}</span>
+      <small class="transfer-estimate-hint">{{ $t('info.estimateHint') }}</small>
+      <button v-if="zipBusy || syncing || backingUp || pendingUploads || pendingDownloads" type="button" @click="cancel_transfer" :disabled="transferCancelling">{{ $t('tools.cancel') }}</button>
+      <span v-if="cancellingBackup">{{ $t('tools.cancelling') }}</span>
+      <span v-if="cancellingUploads">{{ $t('info.finishingCommit') }}</span>
+    </section>
+    <section v-if="backupCanResume" class="backup-resume">
+      <strong>{{ $t('workflow.resumeTitle') }}</strong>
+      <p>{{ backupResumeInfo.rootPath }} · {{ $t('workflow.cached', {count:backupResumeInfo.files,bytes:format_size(backupResumeInfo.bytes)}) }}</p>
+      <p>{{ $t('workflow.resumeHint') }}</p>
+      <details><summary>{{ $t('workflow.resumeLimitsTitle') }}</summary><p>{{ $t('workflow.resumeLimits') }}</p></details>
+      <button type="button" @click="on_backup(true)" :disabled="btn_disabled() || upload_diag_visible || backupResumeInfo.busy || current_dir !== backupResumeInfo.rootPath">{{ $t('workflow.resume') }}</button>
+      <button type="button" @click="discard_backup_checkpoint" :disabled="busy || backupResumeInfo.busy">{{ $t('workflow.discard') }}</button>
+    </section>
+    <section v-if="lastBackup" class="backup-ready" role="status">
+      <span>{{ lastBackup.filename }}</span><button type="button" @click="lastBackup = null">{{ $t('info.discard') }}</button>
+      <button type="button" @click="save_last_backup">{{ $t('tools.saveBackup') }}</button>
+    </section>
+    <section v-if="lastDownload" class="backup-ready" role="status">
+      <span>{{ $t('info.downloadReady') }} {{ lastDownload.filename }}</span>
+      <button type="button" @click="save_last_download">{{ $t('info.saveFile') }}</button>
+      <button type="button" @click="lastDownload = null">{{ $t('info.discard') }}</button>
+    </section>
+    <p v-if="lastTransfer" class="backup-hint" role="status">{{ $t('info.lastTransfer') }}: {{ $t('info.kind_' + lastTransfer.kind) }} · {{ $t('info.result_' + lastTransfer.status) }} · {{ format_size(lastTransfer.bytes) }}<span v-if="lastTransfer.verified"> · SHA-256 ✓</span></p>
+    <section v-if="recoveryNotes.length" class="notice error" role="alert">
+      <strong>{{ $t('info.recoveryTitle') }}</strong><p>{{ $t('info.recoveryHint') }}</p>
+      <pre v-for="(note, index) in recoveryNotes" :key="index" class="recovery-note">{{ note }}</pre>
+      <button type="button" @click="recoveryNotes = []">{{ $t('info.discard') }}</button>
+    </section>
+    <p v-if="enteringDfu" class="notice" role="status">{{ $t('info.enteringDfu') }}</p>
+    <section class="files-workspace" id="file-workspace" ref="fileWorkspace" tabindex="-1" :aria-label="$t('workflow.filesTitle')">
+      <div class="section-heading"><div><p class="section-eyebrow">{{ $t('workflow.collection') }}</p><h2>{{ $t('workflow.filesTitle') }}</h2></div><div class="file-navigation"><el-button size="small" @click="on_btn_up" :disabled="btn_disabled()">{{ $t('menu.up')  }}</el-button><el-button size="small" @click="on_btn_refresh" :disabled="!connected || busy">{{ $t('menu.refresh') }}</el-button></div></div>
+      <div class="file-toolbar"><el-button-group><el-button size="small" type="primary" @click="on_btn_upload"
+              :disabled="btn_disabled()">{{ $t('menu.upload')  }}</el-button><el-button size="small" @click="on_btn_new_folder"
+              :disabled="btn_disabled()">{{ $t('menu.newfolder')  }}</el-button></el-button-group><el-button-group><el-button size="small" type="danger" @click="on_btn_remove"
+              :disabled="btn_disabled() || !table_selection.length">{{ $t('menu.del')  }}</el-button></el-button-group><span v-if="table_selection.length" class="selection-counter">{{ $t('workflow.selectedCount',{count:table_selection.length}) }}</span></div>
+      <div v-if="!connected && !connecting && !demoMode" class="connection-guide"><span class="connection-guide-symbol" aria-hidden="true">↔</span><div><h3>{{ $t('workflow.readyToConnect') }}</h3><p>{{ $t('workflow.connectGuide') }}</p></div></div>
+      <div v-if="!connected && !connecting" class="preview-controls"><button type="button" @click="toggle_preview">{{ $t(demoMode ? 'tools.previewClose' : 'tools.previewOpen') }}</button><p v-if="demoMode" role="status">{{ $t('tools.previewNotice') }}</p></div>
     <el-row>
       <el-col :span="24">
         <div class="folder-path">
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ current_dir }}</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ current_dir || $t('workflow.chooseDrive') }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
       </el-col>
     </el-row>
+    <div class="file-filters">
+      <label class="search-label">{{ $t('tools.search') }}<input type="search" v-model="searchQuery" @input="on_filter_change" :placeholder="$t('tools.search')"></label>
+      <label>{{ $t('tools.filter') }} <select v-model="typeFilter" @change="on_filter_change">
+        <option value="all">{{ $t('tools.all') }}</option><option value="REG">{{ $t('tools.files') }}</option><option value="DIR">{{ $t('tools.folders') }}</option>
+      </select></label>
+      <span class="entry-count">{{ $t('tools.counts', { visible: filteredRows.length, total: tableData.length }) }}</span>
+      <button v-if="searchQuery || typeFilter !== 'all'" type="button" @click="reset_filters">{{ $t('workflow.resetFilters') }}</button>
+    </div>
+    <p v-if="(connected || demoMode) && !table_loading && !filteredRows.length" class="backup-hint" role="status">{{ $t(tableData.length ? 'workflow.noMatches' : current_dir ? 'workflow.emptyFolder' : 'workflow.noDrives') }}</p>
+    <p v-if="connected && current_dir" class="backup-hint">{{ $t('tools.backupHint') }}</p>
     <div>
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" v-loading="table_loading"
+      <el-table ref="multipleTable" :data="pagedRows" tooltip-effect="dark" style="width: 100%" v-loading="table_loading"
         :element-loading-text="$t('status.loading')"  cell-class-name="file-cell"
         @selection-change="on_table_selection_change"
+        @sort-change="on_sort_change"
         :default-sort="{ prop: 'name', order: 'ascending' }">
-        <el-table-column type="selection" width="42" :selectable="row => row.type !== 'DRIVE' && !busy">
+        <el-table-column type="selection" width="42" :selectable="row => connected && row.type !== 'DRIVE' && !busy">
         </el-table-column>
-        <el-table-column prop="name" :label="$t('labels.name')" sortable :sort-method="sort_table_row_name" width="320">
+        <el-table-column prop="name" :label="$t('labels.name')" sortable="custom" min-width="240">
           <template #default="scope">
             <span class="file-symbol" aria-hidden="true">{{ scope.row.type === "REG" ? "▤" : scope.row.type === "DIR" ? "▣" : "◫" }}</span>
-            <button type="button" class="file-name-action" :disabled="!connected || table_loading || mutating || pendingUploads > 0" @click="handle_name_click(scope.$index, scope.row)">
+            <button type="button" class="file-name-action" :disabled="!connected || busy" @click="handle_name_click(scope.$index, scope.row)">
               {{ scope.row.name }}</button>
           </template>
         </el-table-column>
-        <el-table-column prop="size" :label="$t('labels.size')" sortable :sort-method="sort_table_row_size" width="150">
+        <el-table-column prop="size" :label="$t('labels.size')" sortable="custom" width="150">
         </el-table-column>
-        <el-table-column prop="type" :label="$t('labels.type')" sortable width="80">
+        <el-table-column prop="type" :label="$t('labels.type')" sortable="custom" width="80">
         </el-table-column>
-        <el-table-column prop="notes" :label="$t('labels.remark')" sortable>
+        <el-table-column prop="notes" :label="$t('labels.remark')" sortable="custom">
         </el-table-column>
         <el-table-column label="" fixed="right" width="40">
           <template #default="scope">
@@ -119,9 +183,123 @@
           </template>
         </el-table-column>
       </el-table>
+      <nav class="pagination" :aria-label="$t('tools.pages')" v-if="pageCount > 1">
+        <button type="button" @click="change_page(page - 1)" :disabled="page <= 1 || busy">{{ $t('tools.previous') }}</button>
+        <span>{{ $t('tools.page', { page, total: pageCount }) }}</span>
+        <button type="button" @click="change_page(page + 1)" :disabled="page >= pageCount || busy">{{ $t('tools.next') }}</button>
+      </nav>
     </div>
 
-    <el-dialog :title="$t('properties.title')" v-model="meta_diag_visible" width="min(560px, 92vw)" :close-on-click-modal="!mutating" :close-on-press-escape="!mutating" :show-close="!mutating">
+    </section>
+    <details class="device-panel" ref="devicePanel" id="device-overview">
+      <summary>{{ $t('info.title') }}</summary>
+      <p>{{ $t('info.localBluetooth') }}</p>
+      <dl class="device-info-grid">
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.27.0</dd></div>
+        <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
+        <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
+        <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
+        <div><dt>{{ $t('info.reportedCapacity') }}</dt><dd>{{ transportInfo?.reportedGattValueCapacity ?? $t('info.unknown') }}</dd></div>
+        <div><dt>{{ $t('info.effectiveCapacity') }}</dt><dd>{{ transportInfo?.effectiveGattValueCapacity ?? $t('info.unknown') }}</dd></div>
+        <div><dt>{{ $t('info.sent') }}</dt><dd>{{ format_size(transportInfo?.txBytes || 0) }}</dd></div>
+        <div><dt>{{ $t('info.received') }}</dt><dd>{{ format_size(transportInfo?.rxBytes || 0) }}</dd></div>
+      </dl>
+      <p class="backup-hint">{{ $t('info.capacityHint') }}</p>
+      <div class="drive-info" v-for="drive in driveInfo" :key="drive.label">
+        <strong>{{ drive.label }}:</strong>
+        <span v-if="drive.status === 0">{{ $t('drive.free', { free: format_size(drive.freeBytes), total: format_size(drive.totalBytes) }) }}</span>
+        <span v-else>{{ $t('info.unavailable') }}</span>
+        <progress v-if="drive.status === 0 && drive.totalBytes" :value="drive.totalBytes - drive.freeBytes" :max="drive.totalBytes" :aria-label="$t('info.used')"></progress>
+      </div>
+      <p v-if="driveInfo.length" class="backup-hint">{{ $t('info.snapshot') }}</p>
+      <div class="info-actions">
+        <button type="button" @click="refresh_device_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('info.refresh') }}</button>
+        <button type="button" @click="refresh_runtime_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('info.runtimeRead') }}</button>
+        <button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('info.bootRead') }}</button>
+        <button type="button" @click="refresh_power_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.powerRead') }}</button>
+        <button type="button" @click="save_diagnostics" :disabled="diagnosticsBusy">{{ $t('info.export') }}</button>
+      </div>
+      <p v-if="runtimeState === 'unavailable'">{{ $t('info.runtimeUnavailable') }}</p>
+      <section v-if="runtimeInfo" class="runtime-info">
+        <p>{{ $t('info.runtimeScope') }}</p>
+        <dl class="device-info-grid">
+          <div><dt>{{ $t('info.heapFree') }}</dt><dd>{{ format_optional_size(runtimeInfo.heapFreeBytes) }} / {{ format_optional_size(runtimeInfo.heapPoolBytes) }}</dd></div>
+          <div><dt>{{ $t('info.heapLargest') }}</dt><dd>{{ format_optional_size(runtimeInfo.largestFreeBlockBytes) }}</dd></div>
+          <div><dt>{{ $t('info.heapMinimum') }}</dt><dd>{{ format_optional_size(runtimeInfo.sampledMinFreeBytes) }}</dd></div>
+          <div><dt>{{ $t('info.heapSamples') }}</dt><dd>{{ runtimeInfo.memorySamples ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.runtimeDisconnects') }}</dt><dd>{{ runtimeInfo.disconnects ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.runtimeTimeouts') }}</dt><dd>{{ runtimeInfo.timeouts ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.runtimeQueue') }}</dt><dd>{{ runtimeInfo.queueOverflows ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.runtimeAllocations') }}</dt><dd>{{ runtimeInfo.allocationFailures ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.runtimeVfs') }}</dt><dd>{{ runtimeInfo.vfsErrors ?? $t('info.unknown') }} · {{ runtimeInfo.lastVfsError ?? '—' }}</dd></div>
+          <div><dt>{{ $t('info.runtimeBleCause') }}</dt><dd>{{ runtimeInfo.lastLocalBleCause ?? '—' }} / {{ runtimeInfo.lastHciReason ?? '—' }}</dd></div>
+        </dl><p class="backup-hint">{{ $t('info.runtimeVfsHint') }} {{ runtime_vfs_detail(runtimeInfo.lastVfsError) }}</p>
+        <p class="backup-hint">{{ $t('info.runtimeLimits') }}</p>
+      </section>
+      <p v-if="bootState === 'unavailable'">{{ $t('info.bootUnavailable') }}</p>
+      <p v-if="bootState === 'failed'" role="status">{{ $t('info.bootFailed') }}</p>
+      <section v-if="bootInfo" class="runtime-info">
+        <h3>{{ $t('info.bootTitle') }}</h3><p>{{ $t('info.bootScope') }}</p>
+        <p v-if="!bootInfo.geometryValid || !bootInfo.bootAddressValid || !bootInfo.bootVectorsValid || !bootInfo.paramsLayoutKnown" class="notice error">{{ $t('info.bootIncomplete') }}</p>
+        <p v-if="bootInfo.addressConflict" class="notice error">{{ $t('info.bootConflict') }}</p>
+        <dl class="device-info-grid">
+          <div><dt>{{ $t('info.bootChip') }}</dt><dd>{{ format_hex(bootInfo.chipPart) }} / {{ format_hex(bootInfo.chipVariantRaw) }}</dd></div>
+          <div><dt>{{ $t('info.bootMemory') }}</dt><dd>{{ format_optional_size(bootInfo.flashBytes) }} / {{ format_optional_size(bootInfo.ramBytes) }}</dd></div>
+          <div><dt>{{ $t('info.bootSoftDevice') }}</dt><dd>{{ bootInfo.softDeviceVariant ?? $t('info.unknown') }} / {{ bootInfo.softDeviceVersion ?? $t('info.unknown') }} / {{ format_hex(bootInfo.softDeviceFwid) }}</dd></div>
+          <div><dt>{{ $t('info.bootAddress') }}</dt><dd>{{ format_hex(bootInfo.bootAddress) }} · {{ $t('info.bootSource_' + bootInfo.bootAddressSource) }}</dd></div>
+          <div><dt>{{ $t('info.bootSettings') }}</dt><dd>{{ bootInfo.settingsVersion ?? $t('info.unknown') }} · {{ $t(bootInfo.settingsCrcValid ? 'info.bootCrcValid' : 'info.bootCrcUnvalidated') }}</dd></div>
+          <div><dt>{{ $t('info.bootCounter') }}</dt><dd>{{ bootInfo.bootloaderCounter ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.bootAppCounter') }}</dt><dd>{{ bootInfo.applicationCounter ?? $t('info.unknown') }}</dd></div>
+          <div><dt>{{ $t('info.bootHash') }}</dt><dd>{{ bootInfo.bootRegionSha256 ?? $t('info.unknown') }}<br>{{ format_optional_size(bootInfo.bootRegionBytes) }}</dd></div>
+        </dl><p class="backup-hint">{{ $t('info.bootLimits') }}</p>
+      </section>
+      <section v-if="powerState !== 'unknown'" class="power-diagnostics">
+        <h3>{{ $t('workflow.powerTitle') }}</h3>
+        <p v-if="powerState === 'unavailable'">{{ $t('workflow.powerUnavailable') }}</p>
+        <p v-else-if="powerState === 'failed'" class="notice error">{{ $t('workflow.powerFailed') }}</p>
+        <dl v-if="powerInfo" class="device-grid">
+          <div><dt>{{ $t('workflow.powerReset') }}</dt><dd>{{ format_hex(powerInfo.resetReasonRaw) }}</dd></div>
+          <div><dt>{{ $t('workflow.powerVoltage') }}</dt><dd>{{ powerInfo.batteryMillivolts === null ? $t('info.unknown') : powerInfo.batteryMillivolts + ' mV' }}</dd></div>
+          <div><dt>{{ $t('workflow.powerMode') }}</dt><dd>{{ $t(!powerInfo.sampleCollected ? 'info.unknown' : powerInfo.lipoMode ? 'workflow.powerLipo' : 'workflow.powerOther') }}</dd></div>
+          <div><dt>{{ $t('workflow.powerCharging') }}</dt><dd>{{ $t(!powerInfo.voltageValid ? 'info.unknown' : powerInfo.chargingActive ? 'workflow.powerActive' : 'workflow.powerInactive') }}</dd></div>
+          <div><dt>{{ $t('workflow.powerSleep') }}</dt><dd>{{ powerInfo.sampleCollected ? powerInfo.configuredSleepSeconds + ' s' : $t('info.unknown') }}</dd></div>
+        </dl>
+        <p class="backup-hint">{{ $t('workflow.powerLimits') }}</p>
+      </section>
+      <p class="backup-hint">{{ $t('info.privacy') }}</p>
+    </details>
+    <section class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
+    <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
+    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" /></div>
+    </section>
+    <el-dialog :title="$t('info.diagnosticPreviewTitle')" v-model="diagnosticsDialog" width="min(800px, 94vw)" :close-on-click-modal="!diagnosticsBusy" :close-on-press-escape="!diagnosticsBusy" :show-close="!diagnosticsBusy">
+      <p class="diagnostic-export-hint">{{ $t('info.diagnosticPreviewHint') }}</p>
+      <p class="backup-hint">{{ $t('info.privacy') }}</p>
+      <p class="property-filename">{{ diagnosticsFilename }}</p>
+      <label class="diagnostic-json-label" for="diagnostic-json">{{ $t('info.diagnosticJsonContent') }}</label>
+      <textarea id="diagnostic-json" ref="diagnosticsText" class="diagnostic-json" readonly spellcheck="false" rows="12" :value="diagnosticsJson"></textarea>
+      <p v-if="!nativeDiagnosticSaveAvailable" class="backup-hint">{{ $t('info.diagnosticPickerUnavailable') }}</p>
+      <p class="diagnostic-export-status" role="status" aria-live="polite">{{ $t(diagnosticsStatus) }}</p>
+      <template #footer><div class="diagnostic-export-actions">
+        <button v-if="nativeDiagnosticSaveAvailable" type="button" @click="save_diagnostic_file" :disabled="diagnosticsBusy">{{ $t('info.diagnosticSaveFile') }}</button>
+        <button type="button" @click="copy_diagnostics" :disabled="diagnosticsBusy">{{ $t('info.diagnosticCopy') }}</button>
+        <button type="button" @click="select_diagnostics" :disabled="diagnosticsBusy">{{ $t('info.diagnosticSelect') }}</button>
+        <button type="button" @click="download_diagnostics" :disabled="diagnosticsBusy">{{ $t('info.diagnosticTryDownload') }}</button>
+        <button type="button" @click="diagnosticsDialog = false" :disabled="diagnosticsBusy">{{ $t('info.closeProperties') }}</button>
+      </div></template>
+    </el-dialog>
+
+    <el-dialog :title="$t('properties.title')" v-model="meta_diag_visible" @close="reset_figure_info" width="min(640px, 94vw)" :close-on-click-modal="!mutating" :close-on-press-escape="!mutating" :show-close="!mutating">
+      <p class="property-filename">{{ meta_form.name }}</p>
+      <section v-if="figureInfoSupported" class="figure-file-read">
+        <button type="button" :disabled="!connected || busy" @click="read_figure_info">{{ $t('info.figureRead') }}</button>
+        <p class="read-only-label">{{ $t('info.figureReadBrief') }}</p>
+        <details><summary>{{ $t('info.figureReadScope') }}</summary><p>{{ $t('info.figureReadHint') }}</p></details>
+        <p v-if="figureInfoState === 'reading'" role="status">{{ $t('info.figureReading') }}</p>
+        <p v-if="figureInfoState === 'failed'" role="alert">{{ $t('info.figureReadFailed') }}</p>
+      </section>
+      <FigureDetails v-if="meta_diag_visible && meta_form.row && meta_form.row.type === 'REG'" :key="meta_form.path + ':' + (figureInspection ? 'file' : 'metadata')" :metadata="figureInspection ? null : meta_form.amiibo" :id="figureInspection?.id || null" :inspection="figureInspection" :source="figureInspection ? 'local' : 'metadata'" />
+      <details class="property-edit"><summary>{{ $t('info.editProperties') }}</summary>
       <el-form ref="form" :model="meta_form" label-width="80px" :disabled="mutating">
         <el-form-item :label="$t('properties.remark')">
           <el-input v-model="meta_form.notes"></el-input>
@@ -131,16 +309,70 @@
           <el-checkbox v-model="meta_form.flags.readonly">{{ $t('properties.readonly') }}</el-checkbox>
         </el-form-item>
       </el-form>
+      </details>
       <template #footer>
-        <el-button :disabled="mutating" @click="meta_diag_visible = false">{{ $t('btn.cancel') }}</el-button>
-        <el-button type="primary" :loading="mutating" :disabled="!connected || busy" @click="on_diag_meta_close">{{ $t('btn.ok') }}</el-button>
+        <el-button :disabled="mutating" @click="meta_diag_visible = false">{{ $t('info.closeProperties') }}</el-button>
+        <el-button type="primary" :loading="mutating" :disabled="!connected || busy" @click="on_diag_meta_close">{{ $t('info.saveProperties') }}</el-button>
       </template>
     </el-dialog>
 
+    <el-dialog :title="$t('workflow.zipTitle')" v-model="zipDialog" width="min(800px, 94vw)" :before-close="close_zip">
+      <p>{{ $t('workflow.zipHint') }}</p><p class="property-filename">{{ $t('workflow.destination') }} {{ zipRoot }}</p>
+      <label class="sync-picker">{{ $t('workflow.chooseZip') }}<input type="file" accept=".zip,application/zip" :disabled="busy" @change="on_zip_file"></label>
+      <p>{{ zipFilename }}</p>
+      <el-button @click="preview_zip" :disabled="!connected || busy || !zipFilename">{{ $t('info.syncCompare') }}</el-button>
+      <section v-if="zipPlan" class="sync-plan">
+        <p class="property-filename">{{ $t('workflow.source') }} {{ zipPlan.sourceRoot }} → {{ $t('workflow.destination') }} {{ zipPlan.rootPath }}</p>
+        <p>{{ $t('info.syncSummary', zipPlan.summary) }}</p><p>{{ $t('workflow.selectionHint') }}</p>
+        <div class="selection-actions"><button type="button" :disabled="busy" @click="select_plan('zip',true)">{{ $t('workflow.onlyNew') }}</button><button type="button" :disabled="busy" @click="select_plan('zip',false)">{{ $t('workflow.clearSelection') }}</button><span>{{ $t('workflow.selectedCount',{count:zipSelected.length}) }}</span></div>
+        <div class="sync-entries"><label v-for="entry in zipPagedEntries" :key="entry.targetPath" class="sync-entry">
+          <input v-if="entry.status==='add'||entry.status==='change'" type="checkbox" :value="entry.targetPath" v-model="zipSelected" :disabled="busy">
+          <span>{{ $t('info.sync_' + entry.status) }} · {{ entry.targetPath }}</span><small v-if="entry.reason">{{ plan_reason(entry.reason) }}</small>
+        </label></div>
+        <div class="sync-pages"><button type="button" @click="zipPage--" :disabled="busy || zipPage<=1">{{ $t('tools.previous') }}</button>
+          <span>{{ $t('tools.page',{page:zipPage,total:zipPageCount}) }}</span><button type="button" @click="zipPage++" :disabled="busy || zipPage>=zipPageCount">{{ $t('tools.next') }}</button></div>
+        <el-button type="primary" @click="run_zip" :disabled="!connected || busy || !zipSelected.length">{{ $t('info.syncRun',{count:zipSelected.length}) }}</el-button>
+      </section>
+      <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
+      <p v-if="zipStatus" role="status">{{ zipStatus }}</p><el-button v-if="zipBusy" :disabled="workflowCancelling" @click="cancel_transfer">{{ $t('tools.cancel') }}</el-button>
+    </el-dialog>
+    <el-dialog :title="$t('info.syncOpen')" v-model="syncDialog" width="min(780px, 94vw)" :before-close="close_sync">
+      <p>{{ $t('info.syncNotice') }}</p>
+      <p>{{ syncRoot }}</p>
+      <label class="sync-picker">{{ $t('info.syncFiles') }} <input type="file" multiple :disabled="busy" @change="on_sync_files"></label>
+      <label class="sync-picker">{{ $t('info.syncFolder') }} <input type="file" webkitdirectory multiple :disabled="busy" @change="on_sync_files"></label>
+      <p>{{ $t('info.syncSelectedFiles', { count: syncFileCount }) }}</p>
+      <el-button @click="build_sync_plan" :disabled="!connected || busy || !syncFileCount">{{ $t('info.syncCompare') }}</el-button>
+      <section v-if="syncPlan" class="sync-plan">
+        <p>{{ $t('info.syncSummary', syncPlan.summary) }}</p>
+        <p>{{ $t('info.syncKeepDevice', { count: syncPlan.deviceOnly.length }) }}</p>
+        <div class="selection-actions"><button type="button" :disabled="busy" @click="select_plan('sync',true)">{{ $t('workflow.onlyNew') }}</button><button type="button" :disabled="busy" @click="select_plan('sync',false)">{{ $t('workflow.clearSelection') }}</button><span>{{ $t('workflow.selectedCount',{count:syncSelected.length}) }}</span></div>
+        <div class="sync-entries">
+          <label v-for="entry in syncPagedEntries" :key="entry.relativePath" class="sync-entry">
+            <input v-if="entry.status === 'add' || entry.status === 'change'" type="checkbox" :value="entry.targetPath" v-model="syncSelected" :disabled="busy">
+            <span>{{ $t('info.sync_' + entry.status) }} · {{ entry.relativePath }}</span>
+            <small v-if="entry.reason">{{ plan_reason(entry.reason) }}</small>
+          </label>
+        </div>
+        <div class="sync-pages"><button type="button" @click="syncPage--" :disabled="busy || syncPage <= 1">{{ $t('tools.previous') }}</button>
+          <span>{{ $t('tools.page', {page:syncPage,total:syncPageCount}) }}</span>
+          <button type="button" @click="syncPage++" :disabled="busy || syncPage >= syncPageCount">{{ $t('tools.next') }}</button></div>
+        <el-button type="primary" @click="run_sync" :disabled="!connected || busy || !syncSelected.length">{{ $t('info.syncRun', { count: syncSelected.length }) }}</el-button>
+      </section>
+      <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
+      <p v-if="syncStatus" role="status">{{ syncStatus }}</p>
+      <el-button v-if="syncing" :disabled="workflowCancelling" @click="cancel_sync">{{ $t('tools.cancel') }}</el-button>
+    </el-dialog>
     <el-dialog :title="$t('upload.title')" v-model="upload_diag_visible" width="min(560px, 92vw)" :before-close="on_upload_diag_close">
       <div>
+<TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
+              <p>{{ $t('tools.uploadNotice') }}</p>
+        <el-checkbox v-model="safeUploads" :disabled="pendingUploads > 0" @change="value => { if (value) verifyUploads = true }">{{ $t('info.safeUploads') }}</el-checkbox>
+        <p v-if="safeUploads">{{ $t('info.safeUploadHint') }}</p><p v-else class="notice error">{{ $t('info.directUploadWarning') }}</p>
+        <el-checkbox v-model="verifyUploads" :disabled="safeUploads || pendingUploads > 0">{{ $t('tools.verify') }}</el-checkbox>
+        <el-checkbox v-model="replaceUploads" :disabled="pendingUploads > 0">{{ $t('tools.replace') }}</el-checkbox>
         <el-upload ref="upload" class="upload-demo" drag action="#" multiple
-          :http-request="on_upload_request" :on-error="on_upload_error" :disabled="!connected" :before-remove="before_upload_remove">
+          :http-request="on_upload_request" :on-error="on_upload_error" :disabled="!connected || enteringDfu || cancellingUploads || backingUp || dialogPending" :before-remove="before_upload_remove">
           <span class="upload-symbol" aria-hidden="true">↑</span>
           <div class="el-upload__text">{{ $t('upload.drag') }} <em>{{ $t('upload.click') }}</em></div>
           <template #tip><div class="el-upload__tip">
@@ -155,36 +387,62 @@
       </template>
     </el-dialog>
 
-  </div></el-config-provider>
+  </main></el-config-provider>
 </template>
 
 
 
 <script>
+import { defineAsyncComponent } from "vue"
 import * as pixl from "./lib/pixl.ble"
 import { sharedEventDispatcher } from "./lib/event"
 import * as proto from "./lib/pixl.proto"
 import { getElementLocale } from "./i18n"
 import { read_saved_language, save_language } from "./lib/locale"
+import { filterRows, joinDevicePath, sha256, saveBlob, saveBlobWithPicker } from "./lib/browser-tools.js"
+import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
+import { normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
+import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
+import { normalizeDrives, normalizeRuntimeDiagnostics, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
+import { assertPortableEntryName, portableNameKey } from "./lib/portable-names.js"
+import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
+import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
+import { createTransferMeter } from "./lib/transfer-meter.js"
+import { loadBackupZip, previewZipImport, executeZipImport } from "./lib/zip-import.js"
+import { TAG_LENGTHS, inspectTagStructure } from "./lib/figure-info.js"
 
 
 
 export default {
+  components: { MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      tableData: [],
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.27.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
+      powerInfo: null, powerState: 'unknown',
+      tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
+      driveInfo: [], transportInfo: null, infoLoading: false,
+      transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown',
+      safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
+      syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
+      syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1,
+      searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
+      page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
+      cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
+      verifyUploads: true, replaceUploads: false,
       connBtnType: "",
       connBtnText: `${this.$t("conn.connect")}`,
       version: "",
       connected: false,
       table_loading: false,
-      mutating: false, connecting: false, pendingUploads: 0, pendingDownloads: 0,
+      mutating: false, connecting: false, disconnecting: false, enteringDfu: false, pendingUploads: 0, pendingDownloads: 0,
       sessionGeneration: 0, listingGeneration: 0, firmwareVersion: "",
       current_dir: "",
       upload_diag_visible: false,
       table_selection: [],
       language: "de_DE",
       meta_diag_visible: false,
+      figureInspection: null, figureInfoState: 'idle', figureInfoGeneration: 0,
       meta_form: {
         notes: "",
         flags: {
@@ -201,10 +459,555 @@ export default {
   },
 
   computed: {
+    diagnosticsBusy() { return this.diagnosticsSaving || this.diagnosticsCopying; },
+    nativeDiagnosticSaveAvailable() { return typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function'; },
     elementLocale() { return getElementLocale(this.language) },
-    busy() { return this.table_loading || this.mutating || this.pendingUploads > 0 || this.pendingDownloads > 0 }
+    figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
+    busy() { return this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
+    lastTransfer() { return this.transferHistory.at(-1) || null; },
+    connectionDisconnectLocked() { return this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
+    zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
+    zipPagedEntries() { return (this.zipPlan?.entries || []).slice((this.zipPage - 1) * 100, this.zipPage * 100); },
+    syncPageCount() { return Math.max(1,Math.ceil((this.syncPlan?.entries.length || 0)/100)); },
+    syncPagedEntries() { return (this.syncPlan?.entries || []).slice((this.syncPage-1)*100,this.syncPage*100); },
+    filteredRows() { return filterRows(this.tableData, this.searchQuery, this.typeFilter); },
+    nameCollator() { return new Intl.Collator(this.language.replace('_', '-'), { numeric: true, sensitivity: 'base' }); },
+    sortedRows() {
+      const direction = this.sortOrder === 'descending' ? -1 : 1;
+      return [...this.filteredRows].sort((a, b) => direction * (this.sortKey === 'size'
+        ? this.sort_table_row_size(a, b) : this.nameCollator.compare(a[this.sortKey] || '', b[this.sortKey] || '')));
+    },
+    pageCount() { return Math.max(1, Math.ceil(this.filteredRows.length / this.pageSize)); },
+    pagedRows() { const start = (Math.min(this.page, this.pageCount) - 1) * this.pageSize; return this.sortedRows.slice(start, start + this.pageSize); },
+    transferCancelling() { return this.cancellingBackup || this.cancellingUploads || this.workflowCancelling; },
+    connectionSummaryKey() { return this.disconnecting ? 'info.disconnecting' : this.connecting ? 'conn.connecting' : this.connected ? 'info.connected' : this.demoMode ? 'tools.previewOpen' : 'info.disconnected'; },
+    selectedDriveInfo() { return this.connected ? this.driveInfo.find(d => d.label === this.current_dir[0] && d.status === 0) || null : null; },
+    statusDriveInfo() { return this.connected ? this.selectedDriveInfo || this.driveInfo.find(d => d.label === 'E' && d.status === 0) || null : null; },
+    transferPercent() { return Math.floor(this.transferStats?.percent ?? 0); },
+    backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; }
   },
   methods: {
+    plan_reason(code) { const known = ['PARENT_BLOCKED','NAME_COLLISION','TYPE_CONFLICT','EXISTING_SIZE_LIMIT','READONLY','INVALID_METADATA','UPLOAD_SIZE_LIMIT']; return this.$t('workflow.' + (known.includes(code) ? code : 'blockedOther')); },
+    select_plan(kind, additionsOnly) {
+      if (this.busy) return;
+      const plan = kind === 'zip' ? this.zipPlan : kind === 'sync' ? this.syncPlan : null;
+      if (!plan) return;
+      this[kind + 'Selected'] = additionsOnly ? plan.entries.filter(e => e.status === 'add').map(e => e.targetPath) : [];
+    },
+    show_workspace(name) {
+      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace' };
+      const panel = Object.hasOwn(refs, name) ? this.$refs[refs[name]] : null;
+      if (!panel) return;
+      if (name !== 'files') panel.open = true;
+      panel.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+      (name === 'files' ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll: true });
+    },
+    on_migration_busy(value) {
+      this.migrationBusy = !!value;
+      if (this.migrationBusy && this.$refs.backupWorkspace) this.$refs.backupWorkspace.open = true;
+    },
+    keep_migration_visible() {
+      if (this.migrationBusy && this.$refs.backupWorkspace) this.$refs.backupWorkspace.open = true;
+    },
+    show_device_panel() { if (this.$refs.devicePanel) { this.$refs.devicePanel.open = true; this.$refs.devicePanel.scrollIntoView?.({block:'start',behavior:'auto'}); } },
+    runtime_vfs_detail(code) { return this.$t('info.' + runtimeVfsDetailKey(code)); },
+    refresh_local_metrics() {
+      this.transportInfo = proto.get_transport_diagnostics?.() || null;
+      if (this.transfer && this._transferMeter) this.transferStats = this._transferMeter.snapshot();
+    },
+    set_transfer(value) {
+      this.transfer = value;
+      this._transferMeter ||= createTransferMeter();
+      this.transferStats = value ? this._transferMeter.update(value) : null;
+      if (!value) this._transferMeter.reset();
+      this.refresh_local_metrics();
+    },
+    remember_transfer(kind, status, bytes = 0, verified = false) {
+      this.transferHistory.push({ kind, status, bytes, verified });
+      this.transferHistory = this.transferHistory.slice(-20);
+    },
+    remember_interruption() {
+      const kind = (this.zipBusy || this.syncing) ? 'sync' : this.backingUp ? 'backup' : this.pendingDownloads ? 'download' : this.pendingUploads ? 'upload' : null;
+      const intent = this._disconnectIntent?.generation === this.sessionGeneration ? this._disconnectIntent.reason : null;
+      if (!kind || intent === 'dfu') return;
+      this.remember_transfer(kind, intent === 'cancelled' || this.cancellingBackup ? 'cancelled' : 'interrupted', this.transfer?.done || 0);
+    },
+    clear_dfu_attempt(attempt = this._dfuAttempt) {
+      if (!attempt || this._dfuAttempt !== attempt) return;
+      clearTimeout(attempt.timer);
+      this._dfuAttempt = null; this.enteringDfu = false;
+    },
+    clear_migration_restart(attempt = this._migrationRestartAttempt) {
+      if (!attempt || this._migrationRestartAttempt !== attempt) return;
+      clearTimeout(attempt.timer); this._migrationRestartAttempt = null;
+      if (this._disconnectIntent === attempt) this._disconnectIntent = null;
+    },
+    async request_migration_restart(generation) {
+      this.assert_session(generation); this.clear_migration_restart();
+      const attempt = { generation, reason: 'migration-restart', timer: null };
+      this._migrationRestartAttempt = attempt; this._disconnectIntent = attempt;
+      attempt.timer = setTimeout(() => this.clear_migration_restart(attempt), 15000);
+      try { return this.checked(await proto.vfs_import_state('E', 2)); }
+      catch (error) { this.clear_migration_restart(attempt); throw error; }
+    },
+    remember_recovery(value) {
+      const receipt = value?.recovery;
+      const files = receipt?.recoveryFiles || value?.recoveryFiles || [];
+      if (!files.length && receipt?.committed !== null && receipt?.restored !== true) return;
+      // Recovery locations are shown only here in this browser's memory. They
+      // are deliberately excluded from the allowlisted diagnostic export.
+      const note = { phase: receipt?.phase || 'complete', failurePhase:receipt?.failurePhase || null,
+        targetPath:receipt?.targetPath || value?.path || null, committed: receipt ? receipt.committed : true,
+        restored: receipt?.restored === true, files: files.map(file => ({path:file.path, role:file.role, state:file.state})) };
+      this.recoveryNotes.push(JSON.stringify(note, null, 2));
+      this.recoveryNotes = this.recoveryNotes.slice(-20);
+    },
+    migration_session() {
+      const generation=this.sessionGeneration,deviceKey=pixl.get_device_key?.();this.assert_session(generation);
+      if(!deviceKey)throw new Error(this.$t('info.syncIdentity'));
+      return {...this.transfer_adapters(generation),deviceKey,firmwareVersion:this.firmwareVersion,
+        readStorageInfo:async()=>{this.assert_session(generation);const response=await proto.vfs_storage_info('E');this.assert_session(generation);if(response?.status===255)throw Object.assign(new Error('Raw128 storage capabilities were not confirmed.'),{code:'MIGRATION_PREPARATION_REQUIRED'});return this.checked(response);},
+        readStorageLayout:async()=>{this.assert_session(generation);const value=this.checked(await proto.vfs_storage_layout('E'));this.assert_session(generation);return value;},
+        readApplicationIdentity:async()=>{this.assert_session(generation);const version=this.checked(await proto.get_version());this.assert_session(generation);const boot=normalizeBootDiagnostics(await proto.get_boot_diagnostics());this.assert_session(generation);if(!boot)throw Object.assign(new Error('Current application counter is unavailable.'),{code:'MIGRATION_IDENTITY'});return {...boot,firmwareVersion:version.ver};},
+        readImportState:async()=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',0));this.assert_session(generation);return state;},
+        bindImport:async hash=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',3,hash));this.assert_session(generation);return state;},
+        finishImport:async()=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',1));this.assert_session(generation);return state;},
+        restartDevice:()=>this.request_migration_restart(generation),
+        formatStorage:async()=>{this.assert_session(generation);this.checked(await proto.vfs_drive_format('E'));this.assert_session(generation);},
+        readRawMetadata:async path=>{this.assert_session(generation);const bytes=this.checked(await proto.vfs_read_raw_meta(path));this.assert_session(generation);return bytes;},
+        updateRawMetadata:async(path,bytes)=>{this.assert_session(generation);this.checked(await proto.vfs_write_raw_meta(path,bytes));this.assert_session(generation);}}
+    },
+    confirm_migration_restore({files,root}) {
+      const text=this.language==='de_DE'?`Alle Nutzdaten aus der geprüften Sicherung nach ${root} wiederherstellen (${files} Dateien einschließlich separat ausgeschlossener Journaldateien)? Vorhandene gleichnamige Dateien können ersetzt werden. Es wird nicht formatiert.`:`Restore all user entries from the verified backup to ${root} (${files} files including separately excluded journals)? Existing matching paths may be replaced. No formatting is performed.`;
+      return this.ask_dialog(()=>this.$confirm(text,this.language==='de_DE'?'Vollständige Wiederherstellung':'Full restoration',this.confirm_options()));
+    },
+    confirm_migration_format({archiveSha256,recoveryAttempt=false}) {
+      const text=this.language==='de_DE'?`Laufwerk E: auf diesem geprüften Gerät jetzt ausdrücklich löschen und als Packed LittleFS initialisieren? Die Quelldaten wurden mit der gespeicherten ZIP verglichen. Archiv-SHA256: ${archiveSha256}. Anschließend dieselbe ZIP wiederherstellen. Dies ist kein Firmware-Flash.`:`Explicitly erase E: on this checked device and initialize Packed LittleFS? Source data was compared to the saved ZIP. Archive SHA256: ${archiveSha256}. Restore that same ZIP afterwards. This does not flash firmware.`;
+      const recovery=this.language==='de_DE'?`Der Ausgang eines früheren Formatversuchs ist in diesem Browser nicht abschließend bestätigt; der Speicher ist jetzt nicht eingebunden. Ein Abschluss auf einem anderen PC oder Handy und später geänderte Daten sind damit nicht ausgeschlossen. E: ausdrücklich erneut löschen und mit genau dieser ZIP initialisieren? Dies ist kein neuer Quellvergleich. SHA256: ${archiveSha256}.`:`This browser has no final confirmation of an earlier format attempt, and storage is now unmounted. Completion on another computer or phone and later data changes cannot be ruled out. Explicitly erase E: again and initialize it for this exact ZIP? This is not a new source comparison. SHA256: ${archiveSha256}.`;
+      return this.ask_dialog(()=>this.$confirm(recoveryAttempt?recovery:text,this.language==='de_DE'?'E: ausdrücklich formatieren':'Explicitly format E:',this.confirm_options()));
+    },
+    confirm_migration_initialize({archiveSha256}) {
+      const text=this.language==='de_DE'?`Den bereits leeren, ausstehenden Import fest an diese geprüfte ZIP binden? SHA256: ${archiveSha256}. Es wird nicht erneut formatiert. Diese Wiederaufnahme ersetzt keinen früheren Quellvergleich.`:`Bind this already empty pending import to the checked ZIP? SHA256: ${archiveSha256}. No additional format is performed. Recovery initialization does not replace an earlier source comparison.`;
+      return this.ask_dialog(()=>this.$confirm(text,this.language==='de_DE'?'Wiederherstellung initialisieren':'Initialize recovery',this.confirm_options()));
+    },
+    confirm_migration_restart() {
+      return this.ask_dialog(()=>this.$confirm(this.language==='de_DE'?'Die vollständig geprüfte Wiederherstellung ist abgeschlossen. Allmiibo jetzt neu starten?':'The fully verified restoration is complete. Restart Allmiibo now?',this.language==='de_DE'?'Gerät neu starten':'Restart device',this.confirm_options()));
+    },
+    transfer_adapters(generation) {
+      return {
+        assertSession: () => this.assert_session(generation),
+        readDirectory: async path => { this.assert_session(generation); const data = this.checked(await proto.vfs_read_folder(path)); this.assert_session(generation); return data; },
+        readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
+        writeFile: (path, bytes, options = {}) => new Promise((resolve, reject) => {
+          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject); }
+          catch(error) { reject(error); }
+        }),
+        rename: async (from, to) => { this.assert_session(generation); this.checked(await proto.vfs_rename(from,to)); this.assert_session(generation); },
+        remove: async path => { this.assert_session(generation); this.checked(await proto.vfs_remove(path)); this.assert_session(generation); },
+        updateMetadata: async (path, meta) => { this.assert_session(generation); this.checked(await proto.vfs_update_meta(path,meta)); this.assert_session(generation); },
+        createDirectory: async path => { this.assert_session(generation); this.checked(await proto.vfs_create_folder(path)); this.assert_session(generation); },
+        getFreeBytes: async path => { const drives=await this.read_drive_info(generation); const drive=drives.find(item=>item.label===path[0]); if(!drive || drive.status!==0) throw new Error(this.$t('info.driveUnavailable')); return drive.freeBytes; }
+      };
+    },
+    show_safe_progress(progress, path, total, onProgress) {
+      const done = Number.isSafeInteger(progress?.done) && progress.done >= 0 ? progress.done : 0;
+      const boundedTotal = Number.isSafeInteger(progress?.total) && progress.total >= 0 ? progress.total : total;
+      this.set_transfer({phase:progress?.phase || 'uploading', path:progress?.path || path, done, total:boundedTotal, complete:progress?.phase === 'complete'});
+      if (progress?.phase === 'uploading') onProgress?.({percent:boundedTotal ? Math.min(99,done / boundedTotal * 100) : 0});
+    },
+    show_sync_progress(progress) {
+      if (['listing','compared','syncing'].includes(progress?.phase)) {
+        this.set_transfer(null);
+        this.syncStatus = this.$t('info.syncProgress', {done:progress.filesDone || 0,total:progress.filesTotal || 0});
+      } else this.show_safe_progress(progress,this.syncRoot,0);
+    },
+    open_zip() {
+      if (this.btn_disabled() || this.upload_diag_visible) return;
+      this.invalidate_zip(); this.zipRoot = this.current_dir; this.zipDialog = true;
+    },
+    invalidate_zip() {
+      this.workflowCancelling = false; this._zipController?.abort(); this._zipController = null; this._zipArchive = null;
+      this._zipGeneration = null; this._zipDeviceKey = null;
+      this.zipDialog = false; this.zipBusy = false; this.zipPlan = null; this.zipSelected = [];
+      this.zipFilename = ''; this.zipStatus = ''; this.zipPage = 1;
+    },
+    close_zip(done) { if (!this.zipBusy) { this.invalidate_zip(); done?.(); } },
+    show_zip_progress(progress) {
+      if (progress.phase === 'parsing' || progress.phase === 'checking') {
+        this.zipStatus = this.$t('workflow.' + progress.phase, {done:progress.done || 0,total:progress.total || 0});
+      } else this.show_safe_progress(progress,this.zipRoot,0);
+    },
+    async on_zip_file(event) {
+      if (!this.connected || this.busy || !this.zipDialog) return;
+      const file = event.target.files?.[0]; event.target.value = '';
+      if (!file) return;
+      const generation=this.sessionGeneration, controller=new AbortController();
+      this.workflowCancelling=false; this._zipController=controller; this.zipBusy=true; this.zipPlan=null; this.zipSelected=[]; this._zipArchive=null; this.zipFilename='';
+      this.zipStatus=this.$t('workflow.validating');
+      try {
+        const archive=await loadBackupZip(file,{JSZip:window.JSZip,signal:controller.signal,
+          onProgress:progress=>{if(this.session_current(generation))this.show_zip_progress(progress);}});
+        this.assert_session(generation);
+        if (controller.signal.aborted) return;
+        this._zipArchive=archive; this.zipFilename=file.name; this.zipStatus=this.$t('workflow.validated',{files:archive.fileCount,bytes:this.format_size(archive.byteCount)});
+      } catch(error) { if(this.session_current(generation)) {this.zipStatus=this.$t(controller.signal.aborted?'info.syncCancelled':'workflow.invalidZip');if(!controller.signal.aborted)this.show_transfer_error(error);} }
+      finally { if(this._zipController===controller)this._zipController=null;if(generation===this.sessionGeneration){this.workflowCancelling=false;this.zipBusy=false;this.workflowCancelling=false;} }
+    },
+    async preview_zip() {
+      if (!this.connected || this.busy || !this._zipArchive || !this.zipDialog) return;
+      const generation=this.sessionGeneration, deviceKey=pixl.get_device_key?.();
+      if (!deviceKey) {this.show_transfer_error(new Error(this.$t('info.syncIdentity')));return;}
+      const controller=new AbortController();this.workflowCancelling=false; this._zipController=controller;this.zipBusy=true;this.zipPlan=null;this.zipSelected=[];
+      try {
+        const plan=await previewZipImport({archive:this._zipArchive,rootPath:this.zipRoot,deviceKey,...this.transfer_adapters(generation),signal:controller.signal,
+          onProgress:progress=>{if(this.session_current(generation))this.show_zip_progress(progress);}});
+        this.assert_session(generation);if(controller.signal.aborted)return;
+        this.zipPlan=plan;this._zipGeneration=generation;this._zipDeviceKey=deviceKey;this.zipPage=1;
+        this.zipSelected=plan.entries.filter(entry=>entry.status==='add').map(entry=>entry.targetPath);
+        this.zipStatus=this.$t('info.syncPlanReady');
+      } catch(error) {if(this.session_current(generation)){this.zipStatus=this.$t(controller.signal.aborted?'info.syncCancelled':'info.syncFailed');if(!controller.signal.aborted)this.show_transfer_error(error);}}
+      finally {if(this._zipController===controller)this._zipController=null;if(generation===this.sessionGeneration){this.workflowCancelling=false;this.zipBusy=false;this.set_transfer(null);}}
+    },
+    async run_zip() {
+      if (!this.connected || this.busy || !this.zipPlan || !this.zipSelected.length) return;
+      const generation=this.sessionGeneration, deviceKey=pixl.get_device_key?.(), plan=this.zipPlan, selectedPaths=this.zipSelected.slice();
+      if(generation!==this._zipGeneration || !deviceKey || deviceKey!==this._zipDeviceKey){this.invalidate_zip();this.show_transfer_error(new Error(this.$t('info.syncIdentity')));return;}
+      const changes=plan.entries.filter(entry=>selectedPaths.includes(entry.targetPath)&&entry.status==='change').length;
+      try {await this.ask_dialog(()=>this.$confirm(this.$t('workflow.confirm',{count:selectedPaths.length,changes,root:plan.rootPath}),this.$t('workflow.zipTitle'),this.confirm_options()));}
+      catch(error){this.show_transfer_error(error);return;}
+      if(!this.session_current(generation)||plan!==this.zipPlan)return;
+      const controller=new AbortController();this.workflowCancelling=false; this._zipController=controller;this.zipBusy=true;this.zipStatus=this.$t('workflow.importing');
+      try {
+        const result=await executeZipImport({plan,deviceKey,selectedPaths,...this.transfer_adapters(generation),signal:controller.signal,
+          onProgress:progress=>{if(this.session_current(generation))this.show_zip_progress(progress);}});
+        this.assert_session(generation);this.remember_recovery(result);
+        this.zipStatus=this.$t('workflow.done',{count:result.completed});
+        this.remember_transfer('sync','success',plan.entries.filter(e=>selectedPaths.includes(e.targetPath)).reduce((sum,e)=>sum+(e.size||0),0),true);
+        return result;
+      } catch(error) {
+        this.remember_recovery(error);if(error.importProgress)this.remember_recovery(error.importProgress);
+        if(error.importProgress?.attemptedFolders?.length) {
+          this.recoveryNotes.push(JSON.stringify({folderAttempts:error.importProgress.attemptedFolders},null,2));
+          this.recoveryNotes=this.recoveryNotes.slice(-20);
+        }
+        if(this.session_current(generation)){
+          this.zipStatus=this.$t('workflow.partial',{count:error.importProgress?.completedPaths?.length||0});
+          this.remember_transfer('sync',controller.signal.aborted?'cancelled':'failed',0);
+          if(!controller.signal.aborted)this.show_transfer_error(error);
+        }
+      } finally {
+        if(this._zipController===controller)this._zipController=null;
+        if(generation===this.sessionGeneration){this.workflowCancelling=false;this.zipBusy=false;this.zipPlan=null;this.zipSelected=[];this.set_transfer(null);await this.refresh_current();}
+      }
+    },
+    open_sync() {
+      if (this.btn_disabled() || this.upload_diag_visible) return;
+      this.invalidate_sync(); this.syncRoot = this.current_dir; this.syncDialog = true;
+    },
+    invalidate_sync() {
+      this.workflowCancelling = false; this._syncController?.abort(); this._syncController = null; this._syncFiles = [];
+      this._syncGeneration = null; this._syncDeviceKey = null;
+      this.syncDialog = false; this.syncing = false; this.syncFileCount = 0;
+      this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
+    },
+    on_sync_files(event) {
+      if (!this.connected || !this.syncDialog || this.busy) return;
+      const files = Array.from(event.target.files || []); event.target.value = '';
+      if (files.length > 4096) { this.show_transfer_error(new Error(this.$t('info.syncTooMany'))); event.target.value = ''; return; }
+      this._syncFiles = files; this.syncFileCount = files.length;
+      this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
+    },
+    async build_sync_plan() {
+      if (!this.connected || this.busy || !this.syncFileCount) return;
+      const generation = this.sessionGeneration, deviceKey = pixl.get_device_key?.();
+      if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
+      const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
+      this.syncStatus = ''; this.syncPlan = null; this.syncSelected = [];
+      try {
+        const adapters = this.transfer_adapters(generation);
+        const plan = await createSyncPlan({rootPath:this.syncRoot, files:this._syncFiles, deviceKey,
+          ...adapters, signal:controller.signal, onProgress:progress => {
+            if (this.session_current(generation)) this.show_sync_progress(progress);
+          }});
+        this.assert_session(generation);
+        this._syncGeneration = generation; this._syncDeviceKey = deviceKey; this.syncPlan = plan;
+        this.syncPage=1; this.syncSelected = plan.entries.filter(entry=>entry.status==='add').map(entry=>entry.targetPath);
+        this.syncStatus = this.$t('info.syncPlanReady');
+      } catch(error) {
+        if (this.session_current(generation)) {
+          this.syncStatus = this.$t(controller.signal.aborted ? 'info.syncCancelled' : 'info.syncFailed');
+          if (!controller.signal.aborted) this.show_transfer_error(error);
+        }
+      } finally {
+        if (this._syncController === controller) this._syncController = null;
+        if (generation === this.sessionGeneration) { this.workflowCancelling=false; this.syncing = false; this.set_transfer(null); }
+      }
+    },
+    async run_sync() {
+      if (!this.connected || this.busy || !this.syncPlan || !this.syncSelected.length) return;
+      const generation = this.sessionGeneration, deviceKey = pixl.get_device_key?.();
+      if (generation !== this._syncGeneration || !deviceKey || deviceKey !== this._syncDeviceKey) {
+        this.invalidate_sync(); this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return;
+      }
+      const plan = this.syncPlan, selectedPaths = this.syncSelected.slice();
+      try { await this.ask_dialog(()=>this.$confirm(this.$t('info.syncConfirm',{count:selectedPaths.length}),this.$t('info.syncOpen'),this.confirm_options())); }
+      catch(error) { this.show_transfer_error(error); return; }
+      if (!this.session_current(generation) || plan !== this.syncPlan) return;
+      const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
+      this.syncStatus = ''; const adapters = this.transfer_adapters(generation);
+      try {
+        const job = createSyncJob(plan);
+        const result = await executeSyncJob({job,plan,files:this._syncFiles,deviceKey,selectedPaths,
+          ...adapters, signal:controller.signal,
+          uploadFile: async options => {
+            try {
+              const receipt = await safeUpload({...options,...adapters,signal:controller.signal,
+                getFreeBytes:()=>adapters.getFreeBytes(options.path)});
+              this.remember_recovery(receipt); return receipt;
+            } catch(error) { this.remember_recovery(error); throw error; }
+          },
+          onProgress:progress=>{if(this.session_current(generation))this.show_sync_progress(progress);}
+        });
+        this.assert_session(generation);
+        this.syncStatus = this.$t('info.syncDone');
+        const bytes=plan.entries.filter(entry=>selectedPaths.includes(entry.targetPath)).reduce((sum,entry)=>sum+entry.size,0);
+        this.remember_transfer('sync','success',bytes,true); return result;
+      } catch(error) {
+        if (this.session_current(generation)) {
+          this.syncStatus=this.$t(controller.signal.aborted?'info.syncCancelled':'info.syncFailed');
+          this.remember_transfer('sync',controller.signal.aborted?'cancelled':'failed',this.transfer?.done||0);
+          if (!controller.signal.aborted) this.show_transfer_error(error);
+        }
+      } finally {
+        if(this._syncController===controller)this._syncController=null;
+        if(generation===this.sessionGeneration){this.workflowCancelling=false;this.syncing=false;this.syncPlan=null;this.syncSelected=[];this.set_transfer(null);}
+      }
+    },
+    cancel_sync() { this.workflowCancelling=true; this._syncController?.abort(); this.syncStatus=this.$t('info.finishingCommit'); },
+    close_sync(done) { if(this.syncing){this.cancel_sync();return;} this.invalidate_sync(); done?.(); },
+    async read_drive_info(generation) {
+      this.assert_session(generation);
+      const drives = normalizeDrives(this.checked(await proto.vfs_get_drive_list()));
+      this.assert_session(generation); this.driveInfo = drives;
+      return drives;
+    },
+    async refresh_device_info() {
+      if (!this.connected || this.busy || this.upload_diag_visible) return;
+      const generation = this.sessionGeneration; this.infoLoading = true;
+      try { await this.read_drive_info(generation); this.refresh_local_metrics(); }
+      catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
+      finally { if (generation === this.sessionGeneration) this.infoLoading = false; }
+    },
+    async refresh_runtime_info() {
+      if (!this.connected || this.busy || this.upload_diag_visible) return;
+      const generation=this.sessionGeneration; this.infoLoading=true;
+      this.runtimeInfo=null; this.runtimeState='unknown';
+      try {
+        const data=await proto.get_runtime_diagnostics?.(); this.assert_session(generation);
+        this.runtimeInfo=normalizeRuntimeDiagnostics(data); this.runtimeState=this.runtimeInfo?'available':'unavailable';
+      } catch(error) {if(this.session_current(generation))this.show_transfer_error(error);}
+      finally {if(generation===this.sessionGeneration)this.infoLoading=false;}
+    },
+    async refresh_boot_info() {
+      if (!this.connected || this.busy || this.upload_diag_visible) return;
+      const generation=this.sessionGeneration; this.infoLoading=true;
+      this.bootInfo=null; this.bootState='unknown';
+      try {
+        const data=await proto.get_boot_diagnostics?.(); this.assert_session(generation);
+        if (data == null) { this.bootState='unavailable'; return; }
+        const normalized=normalizeBootDiagnostics(data);
+        if (!normalized) throw new Error(this.$t('info.bootFailed'));
+        this.bootInfo=normalized; this.bootState='available';
+      } catch(error) {
+        if(this.session_current(generation)) { this.bootState='failed'; this.show_transfer_error(error); }
+      } finally {if(generation===this.sessionGeneration)this.infoLoading=false;}
+    },
+    async refresh_power_info() {
+      if (!this.connected || this.busy || this.upload_diag_visible) return;
+      const generation=this.sessionGeneration; this.infoLoading=true;
+      this.powerInfo=null; this.powerState='unknown';
+      try {
+        const data=await proto.get_power_diagnostics?.(); this.assert_session(generation);
+        if(data == null) { this.powerState='unavailable'; return; }
+        const normalized=normalizePowerDiagnostics(data);
+        if(!normalized) throw new Error(this.$t('workflow.powerFailed'));
+        this.powerInfo=normalized; this.powerState='available';
+      } catch(error) {
+        if(this.session_current(generation)) { this.powerState='failed'; this.show_transfer_error(error); }
+      } finally { if(generation===this.sessionGeneration) this.infoLoading=false; }
+    },
+    format_hex(value) { return formatHexWord(value) ?? this.$t('info.unknown'); },
+    format_optional_size(value) { return value === null || value === undefined ? this.$t('info.unknown') : this.format_size(value); },
+    save_diagnostics() {
+      if (this.diagnosticsBusy) return;
+      this.refresh_local_metrics();
+      const report = createDiagnostics({ firmwareVersion: this.firmwareVersion, connected: this.connected,
+        browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator !== 'undefined' && !!navigator.bluetooth },
+        transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
+      this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
+      this.diagnosticsStatus = 'info.diagnosticReady';
+      this.diagnosticsDialog = true;
+    },
+    async save_diagnostic_file() {
+      if (this.diagnosticsBusy || !this.diagnosticsJson) return;
+      this.diagnosticsSaving = true; this.diagnosticsStatus = 'info.diagnosticSaving';
+      try {
+        // Calling the helper before any await retains this explicit click's
+        // activation. Unsupported/cancelled never trigger a hidden download.
+        const result = await saveBlobWithPicker(new Blob([this.diagnosticsJson], {type:'application/json'}), this.diagnosticsFilename,
+          {types:[{description:this.$t('info.diagnosticJsonFile'),accept:{'application/json':['.json']}}]});
+        this.diagnosticsStatus = result?.status === 'saved' ? 'info.diagnosticSaved'
+          : result?.status === 'cancelled' ? 'info.diagnosticCancelled'
+          : result?.status === 'unsupported' ? 'info.diagnosticPickerUnavailable' : 'info.diagnosticSaveFailed';
+      } catch (_) { this.diagnosticsStatus = 'info.diagnosticSaveFailed'; }
+      finally { this.diagnosticsSaving = false; }
+    },
+    select_diagnostic_text() {
+      const field = this.$refs.diagnosticsText;
+      if (typeof field?.select !== 'function') return false;
+      try { field.focus?.(); field.select(); return true; }
+      catch (_) { return false; }
+    },
+    select_diagnostics() {
+      if (this.diagnosticsBusy || !this.diagnosticsJson) return;
+      this.diagnosticsStatus = this.select_diagnostic_text() ? 'info.diagnosticSelected' : 'info.diagnosticCopyFailed';
+    },
+    async copy_diagnostics() {
+      if (this.diagnosticsBusy || !this.diagnosticsJson) return;
+      this.diagnosticsCopying = true;
+      try {
+        if (typeof navigator === 'undefined' || typeof navigator.clipboard?.writeText !== 'function') throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(this.diagnosticsJson);
+        this.diagnosticsStatus = 'info.diagnosticCopied';
+      } catch (_) {
+        this.diagnosticsStatus = this.select_diagnostic_text() ? 'info.diagnosticSelected' : 'info.diagnosticCopyFailed';
+      } finally { this.diagnosticsCopying = false; }
+    },
+    download_diagnostics() {
+      if (this.diagnosticsBusy || !this.diagnosticsJson) return;
+      try {
+        saveBlob(new Blob([this.diagnosticsJson], {type:'application/json'}), this.diagnosticsFilename);
+        this.diagnosticsStatus = 'info.diagnosticDownloadRequested';
+      } catch (_) { this.diagnosticsStatus = 'info.diagnosticDownloadFailed'; }
+    },
+    save_last_download() {
+      if (!this.lastDownload) return;
+      try { saveBlob(this.lastDownload.blob, this.lastDownload.filename); }
+      catch (error) { this.show_transfer_error(error); }
+    },
+    toggle_preview() {
+      if (this.connected || this.connecting || this.busy) return;
+      this.demoMode = !this.demoMode;
+      this.current_dir = '';
+      this.tableData = this.demoMode ? Array.from({ length: 245 }, (_, index) => ({
+        name: (index % 25 === 0 ? 'Demo-Ordner-' : 'Demo-Datei-') + String(index + 1).padStart(3, '0') + (index % 25 === 0 ? '' : '.bin'),
+        type: index % 25 === 0 ? 'DIR' : 'REG', sizeBytes: index % 25 === 0 ? 0 : 540,
+        size: index % 25 === 0 ? '' : '540 B', notes: this.$t('tools.previewData')
+      })) : [];
+      this.on_filter_change();
+    },
+    on_filter_change() { this.page = 1; this.table_selection = []; this.$refs.multipleTable?.clearSelection(); },
+    reset_filters() { this.searchQuery=''; this.typeFilter='all'; this.on_filter_change(); },
+    on_sort_change({ prop, order }) {
+      this.sortKey = ['name', 'size', 'type', 'notes'].includes(prop) ? prop : 'name';
+      this.sortOrder = order === 'descending' ? order : 'ascending'; this.on_filter_change();
+    },
+    change_page(page) {
+      if (this.busy) return;
+      this.on_filter_change(); this.page = Math.max(1, Math.min(page, this.pageCount));
+    },
+    async ask_dialog(action) {
+      const generation = this.sessionGeneration;
+      if (this.dialogPending) throw new Error(this.$t('transfer.busy'));
+      this.dialogPending = true;
+      try { return await action(); }
+      finally { if (generation === this.sessionGeneration) this.dialogPending = false; }
+    },
+    assert_session(generation) { if (!this.session_current(generation)) throw new Error(this.$t('tools.sessionChanged')); },
+    read_device_file(path, options = {}) {
+      return new Promise((resolve, reject) => {
+        try { proto.vfs_helper_read_file(path, resolve, reject, undefined, options); }
+        catch (error) { reject(error); }
+      });
+    },
+    refresh_backup_checkpoint() {
+      this.backupResumeInfo = this._backupCheckpoint?.summary() || null;
+    },
+    discard_backup_checkpoint() {
+      if (this.busy || this.backupResumeInfo?.busy) return;
+      this._backupCheckpoint?.clear(); this._backupCheckpoint = null; this.backupResumeInfo = null;
+    },
+    async on_backup(resume = false) {
+      if (this.btn_disabled() || this.upload_diag_visible) return;
+      const rootPath = this.current_dir, generation = this.sessionGeneration;
+      if (this.backupResumeInfo?.busy) return;
+      const deviceKey = pixl.get_device_key?.();
+      if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
+      if (resume !== true) {
+        if (this.backupResumeInfo?.files) {
+          try { await this.ask_dialog(() => this.$confirm(this.$t('workflow.discardConfirm'), this.$t('tools.backup'), this.confirm_options())); }
+          catch(error) { this.show_transfer_error(error); return; }
+          if (!this.session_current(generation)) return;
+        }
+        this.discard_backup_checkpoint();
+        this._backupCheckpoint = createBackupCheckpoint({rootPath,deviceKey,firmwareVersion:this.firmwareVersion,preserveLegacyNames:true});
+      } else if (!this._backupCheckpoint) return;
+      const checkpointState = this._backupCheckpoint;
+      this.backingUp = true; this.cancellingBackup = false;
+      const controller = new AbortController(); this._backupController = controller;
+      this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: 0 });
+      try {
+        const result = await createBackup({ rootPath, deviceKey, checkpointState, firmwareVersion: this.firmwareVersion, signal: controller.signal, preserveLegacyNames: true,
+          readDirectory: async path => {
+            this.assert_session(generation);
+            const entries = this.checked(await proto.vfs_read_folder(path));
+            this.assert_session(generation); return entries;
+          },
+          readFile: async (path, options) => {
+            this.assert_session(generation);
+            const bytes = await this.read_device_file(path, { max_bytes: options.maxBytes, progress_cb: options.onProgress });
+            this.assert_session(generation); return bytes;
+          },
+          onProgress: progress => {
+            if (this.session_current(generation)) { this.set_transfer({ phase: progress.phase, path: progress.path, done: progress.bytesDone, total: progress.bytesTotal,
+              filesDone:Number.isSafeInteger(progress.filesDone)?progress.filesDone:null,filesTotal:Number.isSafeInteger(progress.filesTotal)?progress.filesTotal:null }); this.refresh_backup_checkpoint(); }
+          }
+        });
+        this.assert_session(generation); this.lastBackup = result;
+        this.remember_transfer('backup', 'success', result.manifest.bytes || 0);
+        // Keep the archive in memory until the user's explicit Save click.
+        // This preserves browser activation and allows a cancelled save to retry.
+        this.$message({ type: 'success', message: this.$t('tools.backupReady', { files: result.manifest.files }) });
+      } catch (error) {
+        if (this.session_current(generation)) {
+          this.remember_transfer('backup', controller.signal.aborted ? 'cancelled' : 'failed', this.transfer?.done || 0);
+          if (!controller.signal.aborted) this.show_transfer_error(error);
+        }
+      } finally {
+        if (this._backupController === controller) this._backupController = null;
+        if (this._backupCheckpoint === checkpointState) this.refresh_backup_checkpoint();
+        if (generation === this.sessionGeneration) { this.backingUp = false; this.cancellingBackup = false; this.set_transfer(null); }
+      }
+    },
+    save_last_backup() {
+      if (!this.lastBackup) return;
+      try { saveBlob(this.lastBackup.blob, this.lastBackup.filename); }
+      catch (error) { this.show_transfer_error(error); }
+    },
+    cancel_transfer() {
+      if (this.zipBusy) { this.workflowCancelling=true; this.zipStatus=this.$t('info.finishingCommit'); this._zipController?.abort(); }
+      else if (this.syncing) this.cancel_sync();
+      else if (this.backingUp) { this.cancellingBackup = true; this._backupController?.abort(); }
+      else if (this.pendingUploads && this.safeUploads) {
+        this.cancellingUploads = true; this._cancelUploadGeneration = this.sessionGeneration;
+        this._uploadController?.abort();
+      }
+      else if (this.pendingUploads || this.pendingDownloads) {
+        this._disconnectIntent = { generation: this.sessionGeneration, reason: 'cancelled' };
+        pixl.disconnect({ immediate: true });
+      }
+    },
+    on_before_unload(event) { if (this.busy || this.backupResumeInfo?.files) { event.preventDefault(); event.returnValue = ''; } },
     storage() { try { return window.localStorage; } catch (_) { return null; } },
     checked(response) {
       if (!response || response.status !== 0) throw new Error(this.$t('transfer.deviceerror') + ': ' + (response?.status ?? '?'));
@@ -230,14 +1033,31 @@ export default {
     sort_table_row_size(a, b) { return (a.sizeBytes || 0) - (b.sizeBytes || 0); },
     show_transfer_error(error) {
       if (error === 'cancel' || error === 'close') return;
-      this.$message({ type: 'error', message: error?.message || String(error) });
+      const known = { UPLOAD_PARENT:'uploadParent', UPLOAD_READONLY:'READONLY', BACKUP_CHECKPOINT_IDENTITY:'checkpointIdentity', BACKUP_CHECKPOINT_BUSY:'checkpointBusy', ZIP_STALE:'zipStale', ZIP_CHANGED:'zipStale', ZIP_LIMIT:'zipLimit', ZIP_CRC:'zipIntegrity', ZIP_HASH:'zipIntegrity', ZIP_STRUCTURE:'zipIntegrity', ZIP_FORMAT:'zipIntegrity', ZIP_MANIFEST:'zipIntegrity', ZIP_PATH:'zipPath', ZIP_COLLISION:'zipPath' };
+      this.$message({ type: 'error', message: known[error?.code] ? this.$t('workflow.' + known[error.code]) : error?.message || String(error) });
     },
     on_btn_ble_connect() {
-      if (this.connected || this.connecting) pixl.disconnect();
-      else { this.connecting = true; this.connBtnText = this.$t('conn.connecting'); pixl.connect(); }
+      if (this.disconnecting) return;
+      if (this.connectionDisconnectLocked) { this.cancel_transfer(); return; }
+      if (this.connected || this.connecting) {
+        // Keep idle user disconnection distinct from interrupting device work.
+        this._disconnectIntent = { generation: this.sessionGeneration, reason: this.busy ? 'cancelled' : 'user-disconnect' };
+        pixl.disconnect();
+      }
+      else {
+        if (this.demoMode) this.toggle_preview();
+        this.connecting = true; this.connBtnText = this.$t('conn.connecting'); pixl.connect();
+      }
     },
     async on_ble_connected() {
+      this.powerInfo=null; this.powerState='unknown';
+      this.disconnecting = false;
+      this.reset_figure_info(); this.meta_diag_visible = false;
+      this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
+      this.runtimeInfo=null; this.runtimeState='unknown';
+      this.bootInfo=null; this.bootState='unknown';
       const generation = ++this.sessionGeneration;
+      this.driveInfo = []; this.transferHistory = []; this.infoLoading = false;
       this.connected = true; this.connecting = false; this.connBtnType = 'success';
       this.connBtnText = this.$t('conn.disconnect');
       this.$notify({ title: 'Allmiibo', type: 'success', message: this.$t('conn.consuccess'), duration: 5000 });
@@ -251,31 +1071,66 @@ export default {
       } catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
     },
     on_ble_disconnected() {
+      this.powerInfo=null; this.powerState='unknown';
+      this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
+      this.reset_figure_info();
+      const expectedDfu = this._disconnectIntent?.generation === this.sessionGeneration && this._disconnectIntent.reason === 'dfu';
+      const expectedMigrationRestart = this._disconnectIntent?.generation === this.sessionGeneration && this._disconnectIntent.reason === 'migration-restart';
+      const expectedIdleDisconnect = this._disconnectIntent?.generation === this.sessionGeneration && this._disconnectIntent.reason === 'user-disconnect';
+      this.remember_interruption(); this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
+      this.runtimeInfo=null; this.runtimeState='unknown';
+      this.bootInfo=null; this.bootState='unknown';
       ++this.sessionGeneration; ++this.listingGeneration;
+      this.driveInfo = []; this.infoLoading = false;
+      Promise.resolve().then(() => this.refresh_local_metrics());
+      this._uploadTail = Promise.resolve();
+      this._backupController?.abort();
+      this._uploadController?.abort(); this._uploadController = null; this.cancellingUploads = false;
+      this.invalidate_sync(); this.invalidate_zip(); this.refresh_backup_checkpoint();
+      this.backingUp = false; this.cancellingBackup = false; this.dialogPending = false; this.set_transfer(null);
+      this.pendingUploads = 0; this.pendingDownloads = 0; this.upload_diag_visible = false;
       this.connecting = false; this.connected = false; this.mutating = false;
       this.meta_diag_visible = false; this.table_selection = []; this.firmwareVersion = "";
       this.connBtnType = "";
       this.connected = false;
-      this.connBtnText = `${this.$t("conn.connect")}`;
+      this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : 'conn.connect');
       this.version = "";
       this.table_loading = false;
       this.tableData = [];
       this.current_dir = "";
       this.$notify({
         title: 'Pixl.js',
-        type: 'error',
-        message: `${this.$t("conn.disconnected")}`,
+        type: expectedDfu || expectedMigrationRestart || expectedIdleDisconnect ? 'info' : 'error',
+        message: this.$t(expectedDfu ? 'info.dfuDisconnected' : expectedMigrationRestart ? 'info.migrationRestartDisconnected' : 'conn.disconnected'),
         duration: 5000
       });
 
 
     },
-    on_ble_connect_error() {
+    on_ble_disconnect_complete() {
+      this.disconnecting = false;
+      this.connBtnText = this.$t(this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
+    },
+    on_ble_connect_error(error) {
+      this.powerInfo=null; this.powerState='unknown';
+      this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
+      this.reset_figure_info();
+      this.remember_interruption(); this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
+      this.runtimeInfo=null; this.runtimeState='unknown';
+      this.bootInfo=null; this.bootState='unknown';
       ++this.sessionGeneration; ++this.listingGeneration;
+      this.driveInfo = []; this.infoLoading = false;
+      Promise.resolve().then(() => this.refresh_local_metrics());
+      this._uploadTail = Promise.resolve();
+      this._backupController?.abort();
+      this._uploadController?.abort(); this._uploadController = null; this.cancellingUploads = false;
+      this.invalidate_sync(); this.invalidate_zip(); this.refresh_backup_checkpoint();
+      this.backingUp = false; this.cancellingBackup = false; this.dialogPending = false; this.set_transfer(null);
+      this.pendingUploads = 0; this.pendingDownloads = 0; this.upload_diag_visible = false;
       this.connecting = false; this.connected = false; this.mutating = false;
       this.meta_diag_visible = false; this.table_selection = []; this.firmwareVersion = "";
       this.connBtnType = "";
-      this.connBtnText = `${this.$t("conn.connect")}`;
+      this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : 'conn.connect');
       this.version = "";
       this.table_loading = false;
       this.tableData = [];
@@ -283,7 +1138,7 @@ export default {
       this.$notify({
         title: 'Pixl.js',
         type: 'error',
-        message: `${this.$t("conn.connfailed")}`,
+        message: this.$t(error?.code === 'CONNECT_TIMEOUT' ? 'info.connectTimeout' : 'conn.connfailed'),
         duration: 5000
       });
     },
@@ -291,14 +1146,31 @@ export default {
     async on_btn_enter_dfu() {
       if (!this.connected || this.busy) return;
       const generation = this.sessionGeneration;
+      let attempt;
       try {
-        await this.$confirm(this.$t('dfumode.startconfirm'), this.$t('dfumode.title'), this.confirm_options());
+        await this.ask_dialog(() => this.$confirm(this.$t('dfumode.startconfirm'), this.$t('dfumode.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
+        attempt = { generation, timer: null };
+        this._dfuAttempt = attempt; this.enteringDfu = true;
+        this._disconnectIntent = { generation, reason: 'dfu' };
+        attempt.timer = setTimeout(() => {
+          if (this._dfuAttempt !== attempt || !this.session_current(generation)) return;
+          this.show_transfer_error(new Error(this.$t('info.dfuTimeout')));
+          // End this transport before unlocking controls. A late acknowledgement
+          // must not race with a new file operation or a replacement session.
+          pixl.disconnect({ immediate: true }); this.clear_dfu_attempt(attempt);
+        }, 15000);
         this.checked(await proto.enter_dfu());
+        if (this._dfuAttempt !== attempt || !this.session_current(generation)) return;
         // The acknowledgement confirms the command, not a bootloader connection
-        // or a completed firmware update. The external page is a separate link.
+        // or a completed firmware update. The bundled DFU page is a separate link.
         this.$message({ type: 'info', message: this.$t('dfumode.commandaccepted') });
-      } catch (error) { this.show_transfer_error(error); }
+      } catch (error) {
+        if (generation !== this.sessionGeneration) return;
+        this.clear_dfu_attempt(attempt);
+        if (this._disconnectIntent?.generation === generation) this._disconnectIntent = null;
+        this.show_transfer_error(error);
+      }
     },
 
     on_btn_up() {
@@ -322,6 +1194,11 @@ export default {
     },
 
     on_btn_refresh() {
+      if (!this.connected || this.busy) return;
+      return this.refresh_current();
+    },
+
+    refresh_current() {
       if (this.current_dir == '') {
         return this.reload_drive();
       } else {
@@ -333,11 +1210,12 @@ export default {
       if (this.btn_disabled()) return;
       const dir = this.current_dir, generation = this.sessionGeneration;
       try {
-        const { value } = await this.$prompt(this.$t('newfolder.message'), this.$t('newfolder.title'), { ...this.confirm_options(), inputValue: '' });
+        const { value } = await this.ask_dialog(() => this.$prompt(this.$t('newfolder.message'), this.$t('newfolder.title'), { ...this.confirm_options(), inputValue: '' }));
         if (!value || !this.session_current(generation)) return;
         await this.mutate(async () => {
-          this.checked(await proto.vfs_create_folder(this.append_segment(dir, value)));
-          if (this.session_current(generation)) await this.on_btn_refresh();
+          await this.assert_new_entry_available(dir,value,generation);
+          this.checked(await proto.vfs_create_folder(this.new_entry_path(dir, value)));
+          if (this.session_current(generation)) await this.refresh_current();
         });
       } catch (error) { this.show_transfer_error(error); }
     },
@@ -353,7 +1231,7 @@ export default {
       const rows = this.table_selection.filter(row => row.type !== 'DRIVE').slice();
       if (!rows.length) return;
       try {
-        await this.$confirm(this.$t('del.message') + rows.map(row => row.name).join(', ') + this.$t('del.messageend'), this.$t('del.title'), this.confirm_options());
+        await this.ask_dialog(() => this.$confirm(this.$t('del.message') + rows.map(row => row.name).join(', ') + this.$t('del.messageend'), this.$t('del.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
         await this.mutate(async () => {
           for (const row of rows) {
@@ -369,35 +1247,115 @@ export default {
 
 
     async on_upload_diag_close(done) {
+      const generation = this.sessionGeneration;
       try {
         if (this.pendingUploads > 0) {
           await this.$confirm(this.$t('upload.closemessage'), this.$t('upload.closetitle'), this.confirm_options());
-          pixl.disconnect();
-          await this.$nextTick();
+          if (generation !== this.sessionGeneration) return;
+          // The disconnect handler closes this session's upload dialog. Do not
+          // touch its refs after disconnect: a new session may already exist.
+          if (this.safeUploads) {
+            this.cancel_transfer(); await this._uploadTail;
+            if (generation !== this.sessionGeneration) return;
+          } else { pixl.disconnect({ immediate: true }); return; }
         }
+        if (generation !== this.sessionGeneration) return;
         this.$refs.upload?.clearFiles();
         done();
-        if (this.connected) await this.on_btn_refresh();
-      } catch (error) { this.show_transfer_error(error); }
+        if (this.connected) await this.refresh_current();
+      } catch (error) { if (generation === this.sessionGeneration) this.show_transfer_error(error); }
     },
 
     on_upload_request(options) {
-      if (!this.connected || !this.current_dir) return Promise.reject(new Error(this.$t('conn.disconnected')));
-      const path = this.append_segment(this.current_dir, options.file.name);
+      if (!this.connected || !this.current_dir || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingDownloads || this.mutating) return Promise.reject(new Error(this.$t('conn.disconnected')));
+      const dir = this.current_dir, generation = this.sessionGeneration, safe = this.safeUploads, verify = safe || this.verifyUploads, replace = this.replaceUploads;
+      let controller;
+      let path;
+      try { path = this.new_entry_path(dir, options.file.name); }
+      catch (error) { return Promise.reject(error); }
+      if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.maxsize')));
       ++this.pendingUploads;
-      // Element Plus observes this promise and invokes completion hooks itself.
-      return new Promise((resolve, reject) => {
-        let finished = false;
-        const finish = error => {
-          if (finished) return;
-          finished = true; --this.pendingUploads;
-          if (error) reject(error); else resolve({});
-        };
-        try {
-          proto.vfs_helper_write_file(path, options.file,
-            progress => options.onProgress({ percent: progress.total_bytes ? progress.written_bytes / progress.total_bytes * 100 : 100 }),
-            () => finish(), error => finish(error));
-        } catch (error) { finish(error); }
+      const run = async () => {
+        this.assert_session(generation);
+        if (this._cancelUploadGeneration === generation) throw Object.assign(new Error(this.$t('info.uploadCancelled')), {name:'AbortError'});
+        if (safe) { controller = new AbortController(); this._uploadController = controller; }
+        // Refresh the destination before OPEN('w'): uploads in this same batch
+        // can have introduced a new conflict since the displayed listing.
+        const entries = this.checked(await proto.vfs_read_folder(dir));
+        this.assert_session(generation);
+        const aliases = entries.filter(entry => portableNameKey(entry.name) === portableNameKey(options.file.name));
+        if (aliases.length > 1 || aliases.some(entry => entry.name !== options.file.name)) throw new Error(this.$t('info.portableCollision'));
+        const existing = aliases[0];
+        if (existing) {
+          if (existing.type !== 0) throw new Error(this.$t('tools.conflictDirectory', { name: options.file.name }));
+          if (existing.meta?.valid === false) throw new Error(this.$t('properties.invalidmeta'));
+          if (existing.meta?.flags?.readonly || (existing.meta?.flags?.raw & 4)) throw new Error(this.$t('info.readonlyTarget'));
+          if (!replace) throw new Error(this.$t('tools.exists', { name: options.file.name }));
+          await this.ask_dialog(() => this.$confirm(this.$t(safe ? 'info.safeReplaceWarning' : 'tools.replaceWarning', { name: options.file.name }), this.$t('upload.title'), this.confirm_options()));
+          this.assert_session(generation);
+        }
+        const drives = await this.read_drive_info(generation);
+        const destination = drives.find(drive => drive.label === dir[0]);
+        if (!destination || destination.status !== 0) throw new Error(this.$t('info.driveUnavailable'));
+        if (!uploadSpaceAvailable(destination, options.file.size, safe ? 0 : existing?.size || 0)) throw new Error(this.$t('info.notEnoughSpace'));
+        if (safe) {
+          const adapters = this.transfer_adapters(generation);
+          const result = await safeUpload({path, file:options.file, replace:!!existing, ...adapters,
+            getFreeBytes: () => adapters.getFreeBytes(path), signal:controller.signal,
+            onProgress: progress => { if (this.session_current(generation)) this.show_safe_progress(progress, path, options.file.size, options.onProgress); }
+          });
+          this.remember_recovery(result); this.assert_session(generation);
+          if (result.cancelledAfterCommit) this.$message({type:'info',message:this.$t('info.cancelledAfterCommit')});
+          options.onProgress?.({percent:100});
+          this.remember_transfer('upload','success',options.file.size,true);
+          return {};
+        }
+        // Hash source bytes before touching the destination so local read or
+        // unsupported crypto errors cannot truncate an existing device file.
+        const sourceHash = verify ? await sha256(await options.file.arrayBuffer()) : null;
+        this.assert_session(generation);
+        const adapters = this.transfer_adapters(generation);
+        if (!await writableDirectoryPath(dir, adapters.readDirectory, adapters.assertSession)) {
+          throw Object.assign(new Error(this.$t('workflow.uploadParent')), { code: 'UPLOAD_PARENT' });
+        }
+        this.assert_session(generation);
+        this.set_transfer({ phase: 'uploading', path, done: 0, total: options.file.size });
+        await new Promise((resolve, reject) => {
+          try { proto.vfs_helper_write_file(path, options.file, progress => {
+            if (this.session_current(generation)) {
+              this.set_transfer({ phase: 'uploading', path, done: progress.written_bytes, total: progress.total_bytes });
+              options.onProgress?.({ percent: progress.total_bytes ? Math.min(99, progress.written_bytes / progress.total_bytes * 100) : 0 });
+            }
+          }, resolve, reject); } catch (error) { reject(error); }
+        });
+        this.assert_session(generation);
+        if (verify) {
+          this.set_transfer({ phase: 'verifying', path, done: 0, total: options.file.size });
+          const bytes = await this.read_device_file(path, { max_bytes: options.file.size, progress_cb: progress => {
+            if (this.session_current(generation)) this.set_transfer({ phase: 'verifying', path, done: progress.received_bytes, total: options.file.size });
+          } });
+          this.assert_session(generation);
+          if (bytes.byteLength !== options.file.size || await sha256(bytes) !== sourceHash) throw new Error(this.$t('tools.verificationFailed'));
+          this.assert_session(generation);
+        }
+        options.onProgress?.({ percent: 100 });
+        this.remember_transfer('upload', 'success', options.file.size, verify);
+        return {};
+      };
+      // FileReader and overwrite prompts belong to the same ordered queue as
+      // the transfer. A rejected entry must not strand the next queued upload.
+      const pending = (this._uploadTail || Promise.resolve()).then(run);
+      this._uploadTail = pending.catch(() => {});
+      return pending.catch(error => {
+        this.remember_recovery(error);
+        if (generation === this.sessionGeneration) this.remember_transfer('upload', error === 'cancel' || error === 'close' || error?.name === 'AbortError' ? 'cancelled' : 'failed', this.transfer?.done || 0);
+        throw error;
+      }).finally(() => {
+        if (this._uploadController === controller) this._uploadController = null;
+        if (generation === this.sessionGeneration) {
+          --this.pendingUploads;
+          if (!this.pendingUploads) { this.set_transfer(null); this.cancellingUploads = false; this._cancelUploadGeneration = null; }
+        }
       });
     },
 
@@ -411,7 +1369,7 @@ export default {
     async on_row_btn_format(index, row) {
       const generation = this.sessionGeneration;
       try {
-        await this.$confirm(this.$t('format.messrow1a') + row.name + this.$t('format.messrow1b') + '\n' + this.$t('format.messrow2') + '\n' + this.$t('format.messrow3'), this.$t('format.title'), this.confirm_options());
+        await this.ask_dialog(() => this.$confirm(this.$t('format.messrow1a') + row.name + this.$t('format.messrow1b') + '\n' + this.$t('format.messrow2') + '\n' + this.$t('format.messrow3'), this.$t('format.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
         await this.mutate(async () => {
           this.checked(await proto.vfs_drive_format(row.name.slice(0, 1)));
@@ -425,11 +1383,11 @@ export default {
     async on_row_btn_remove(index, row) {
       const path = this.append_segment(this.current_dir, row.name), generation = this.sessionGeneration;
       try {
-        await this.$confirm(this.$t('del.message') + row.name + this.$t('del.messageend'), this.$t('del.title'), this.confirm_options());
+        await this.ask_dialog(() => this.$confirm(this.$t('del.message') + row.name + this.$t('del.messageend'), this.$t('del.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
         await this.mutate(async () => {
           this.checked(await proto.vfs_remove(path));
-          if (this.session_current(generation)) await this.on_btn_refresh();
+          if (this.session_current(generation)) await this.refresh_current();
         });
       } catch (error) { this.show_transfer_error(error); }
     },
@@ -437,11 +1395,12 @@ export default {
     async on_row_btn_rename(index, row) {
       const dir = this.current_dir, path = this.append_segment(dir, row.name), generation = this.sessionGeneration;
       try {
-        const { value } = await this.$prompt(this.$t('rename.message'), this.$t('rename.title'), { ...this.confirm_options(), inputValue: row.name });
+        const { value } = await this.ask_dialog(() => this.$prompt(this.$t('rename.message'), this.$t('rename.title'), { ...this.confirm_options(), inputValue: row.name }));
         if (!value || value === row.name || !this.session_current(generation)) return;
         await this.mutate(async () => {
-          this.checked(await proto.vfs_rename(path, this.append_segment(dir, value)));
-          if (this.session_current(generation)) await this.on_btn_refresh();
+          await this.assert_new_entry_available(dir,value,generation,row.name);
+          this.checked(await proto.vfs_rename(path, this.new_entry_path(dir, value)));
+          if (this.session_current(generation)) await this.refresh_current();
         });
       } catch (error) { this.show_transfer_error(error); }
     },
@@ -452,9 +1411,46 @@ export default {
         this.$message({ type: 'warning', message: this.$t('properties.invalidmeta') });
         return;
       }
+      this.reset_figure_info();
       this.meta_form = { name: row.name, notes: row.notes || '', flags: { ...row.flags }, amiibo: { ...row.amiibo }, row,
         path: this.append_segment(this.current_dir, row.name) };
       this.meta_diag_visible = true;
+    },
+
+    reset_figure_info() {
+      ++this.figureInfoGeneration;
+      this.figureInspection = null; this.figureInfoState = 'idle';
+    },
+
+    async read_figure_info() {
+      if (!this.connected || this.busy || !this.meta_diag_visible || !this.figureInfoSupported) return;
+      const generation = this.sessionGeneration, dialog = ++this.figureInfoGeneration;
+      const form = this.meta_form, path = form.path, size = form.row.sizeBytes;
+      const current = () => this.session_current(generation) && this.meta_diag_visible &&
+        this.figureInfoGeneration === dialog && this.meta_form === form && this.meta_form.path === path;
+      this.figureInspection = null; this.figureInfoState = 'reading';
+      ++this.pendingDownloads;
+      this.set_transfer({ phase: 'download', path: form.name, done: 0, total: size });
+      try {
+        // Uses the existing serialized read/open/close transaction, bounded to
+        // at most 2048 bytes. It creates no Blob, download or metadata write.
+        const data = await this.read_device_file(path, { max_bytes: size, progress_cb: progress => {
+          if (current()) this.set_transfer({ phase: 'download', path: form.name, done: progress.received_bytes, total: size });
+        } });
+        if (!current()) return;
+        if (data.byteLength !== size) throw new Error(this.$t('tools.sizeChanged'));
+        this.figureInspection = inspectTagStructure(new Uint8Array(data));
+        this.figureInfoState = 'ready';
+      } catch (error) {
+        if (current()) { this.figureInfoState = 'failed'; this.show_transfer_error(error); }
+      } finally {
+        // Closing the dialog invalidates its result, but the protocol still
+        // owns its read until completion. Never unlock a replacement session.
+        if (generation === this.sessionGeneration) {
+          --this.pendingDownloads;
+          if (!this.pendingDownloads) this.set_transfer(null);
+        }
+      }
     },
 
     on_diag_meta_close() {
@@ -471,11 +1467,11 @@ export default {
     },
 
     sort_table_row_name(a, b) {
-      return a.name.localeCompare(b.name, this.language.replace('_', '-'), { numeric: true, sensitivity: 'base' });
+      return this.nameCollator.compare(a.name, b.name);
     },
 
     handle_name_click(index, row) {
-      if (!this.connected || this.table_loading || this.mutating || this.pendingUploads) return;
+      if (!this.connected || this.busy) return;
       if (row.type === 'DRIVE' || row.type === 'DIR') {
         if (this.pendingDownloads) return;
         this.current_dir = row.type === 'DRIVE' ? row.name.slice(0, 3) : this.append_segment(this.current_dir, row.name);
@@ -483,22 +1479,36 @@ export default {
       }
       const generation = this.sessionGeneration;
       ++this.pendingDownloads;
-      return proto.vfs_helper_read_file(this.append_segment(this.current_dir, row.name), data => {
+      this.set_transfer({ phase: 'download', path: row.name, done: 0, total: row.sizeBytes || 0 });
+      let path;
+      try { path = this.append_segment(this.current_dir, row.name); }
+      catch (error) { --this.pendingDownloads; this.set_transfer(null); this.show_transfer_error(error); return; }
+      return proto.vfs_helper_read_file(path, data => {
         if (!this.session_current(generation)) return;
-        const url = window.URL.createObjectURL(new Blob([data], { type: 'application/octet-stream' }));
-        const link = document.createElement('a'); link.href = url; link.download = row.name; link.style.display = 'none';
-        document.body.appendChild(link); link.click(); link.remove();
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-      }, error => { if (this.session_current(generation)) this.show_transfer_error(error); }, () => { --this.pendingDownloads; });
+        if (Number.isSafeInteger(row.sizeBytes) && data.byteLength !== row.sizeBytes) {
+          this.remember_transfer('download', 'failed', data.byteLength);
+          this.show_transfer_error(new Error(this.$t('tools.sizeChanged'))); return;
+        }
+        // Keep bytes until an explicit click; a blocked/cancelled browser save
+        // can then be retried without another Bluetooth read.
+        this.lastDownload = { blob: new Blob([data], { type: 'application/octet-stream' }), filename: row.name };
+        this.remember_transfer('download', 'success', data.byteLength);
+      }, error => { if (this.session_current(generation)) { this.remember_transfer('download', 'failed'); this.show_transfer_error(error); } }, () => {
+        if (generation === this.sessionGeneration) { --this.pendingDownloads; if (!this.pendingDownloads) this.set_transfer(null); }
+      }, { ...(Number.isSafeInteger(row.sizeBytes) ? { max_bytes: row.sizeBytes } : {}), progress_cb: progress => {
+        if (this.session_current(generation)) this.set_transfer({ phase: 'download', path: row.name, done: progress.received_bytes, total: row.sizeBytes || 0 });
+      } });
     },
 
     async reload_drive() {
       if (!this.connected) return;
       const listing = ++this.listingGeneration, generation = this.sessionGeneration;
       this.current_dir = ''; this.table_loading = true; this.tableData = []; this.table_selection = [];
+      this.page = 1;
       try {
         const data = this.checked(await proto.vfs_get_drive_list());
         if (!this.session_current(generation) || listing !== this.listingGeneration) return;
+        this.driveInfo = normalizeDrives(data); this.refresh_local_metrics();
         this.tableData = data.map(drive => ({ name: drive.label + ':/ [' + drive.name + ']', type: 'DRIVE', notes: '', sizeBytes: drive.total_size,
           size: drive.status === 0 ? this.$t('drive.free', { free: this.format_size(drive.free_size), total: this.format_size(drive.total_size) }) : this.$t('drive.message') + drive.status + this.$t('drive.messageend') }));
       } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) this.show_transfer_error(error); }
@@ -509,6 +1519,7 @@ export default {
       if (!this.connected) return;
       const dir = this.current_dir, listing = ++this.listingGeneration, generation = this.sessionGeneration;
       this.table_loading = true; this.tableData = []; this.table_selection = [];
+      this.page = 1;
       try {
         const data = this.checked(await proto.vfs_read_folder(dir));
         if (!this.session_current(generation) || listing !== this.listingGeneration || dir !== this.current_dir) return;
@@ -535,13 +1546,18 @@ export default {
 
     btn_disabled() { return !this.connected || !this.current_dir || this.busy; },
 
-    append_segment(dir, seg) {
-      var drive = dir.substring(0, 2); //E:
-      var path = dir.substring(2);
-      if (path == '/') {
-        return dir + seg;
-      } else {
-        return dir + '/' + seg;
+    append_segment(dir, seg) { return joinDevicePath(dir, seg); },
+    new_entry_path(dir, name) {
+      try { assertPortableEntryName(name); }
+      catch (error) { throw new Error(this.$t(error.code === 'NAME_LIMIT' ? 'workflow.nameLimit' : 'info.portableName')); }
+      return this.append_segment(dir, name);
+    },
+    async assert_new_entry_available(dir,name,generation,sourceName) {
+      this.new_entry_path(dir,name);
+      const entries=this.checked(await proto.vfs_read_folder(dir)); this.assert_session(generation);
+      const key=portableNameKey(name);
+      if(entries.some(entry=>entry.name!==sourceName && portableNameKey(entry.name)===key)) {
+        throw new Error(this.$t('info.portableCollision'));
       }
     },
 
@@ -549,6 +1565,7 @@ export default {
       for (var i = 0; i < this.tableData.length; i++) {
         if (this.tableData[i].name == name) {
           this.tableData.splice(i, 1);
+          this.page = Math.min(this.page, this.pageCount);
           return;
         }
       }
@@ -559,16 +1576,21 @@ export default {
       this.language = lang; this.$i18n.locale = lang;
       document.documentElement.lang = lang.replace('_', '-');
       save_language(this.storage(), lang);
-      this.connBtnText = this.$t(this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
+      this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
       this.version = this.firmwareVersion ? this.$t('status.connected') + this.firmwareVersion : '';
       this.$message({ message: this.$t('lang.changeok'), type: 'success' });
     }
 
 
   }, mounted() {
+    this._metricsTimer = window.setInterval?.(() => this.refresh_local_metrics(), 500);
+    this.browserIssue = typeof navigator !== 'undefined' && !navigator.bluetooth ? 'tools.browserUnavailable' : '';
+    if (typeof window !== 'undefined' && window.isSecureContext === false) this.browserIssue = 'tools.insecure';
+    window.addEventListener?.('beforeunload', this.on_before_unload);
     var dispatcher = sharedEventDispatcher();
     dispatcher.addListener("ble_connected", this.on_ble_connected);
     dispatcher.addListener("ble_disconnected", this.on_ble_disconnected);
+    dispatcher.addListener("ble_disconnect_complete", this.on_ble_disconnect_complete);
     dispatcher.addListener("ble_connect_error", this.on_ble_connect_error);
 
     proto.init();
@@ -584,18 +1606,94 @@ export default {
     this.connBtnText = `${this.$t("conn.connect")}`;
   },
   beforeUnmount() {
+    this.reset_figure_info();
+    this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
+    this.invalidate_sync(); this.invalidate_zip(); this._uploadController?.abort(); this._uploadController=null;
+    if (this._metricsTimer != null) window.clearInterval?.(this._metricsTimer);
+    this._backupController?.abort(); this.lastBackup = null; this.lastDownload = null;
+    window.removeEventListener?.('beforeunload', this.on_before_unload);
     ++this.sessionGeneration; ++this.listingGeneration;
     this.connected = false; this.connecting = false;
     const dispatcher = sharedEventDispatcher();
     dispatcher.removeListener('ble_connected', this.on_ble_connected);
     dispatcher.removeListener('ble_disconnected', this.on_ble_disconnected);
+    dispatcher.removeListener('ble_disconnect_complete', this.on_ble_disconnect_complete);
     dispatcher.removeListener('ble_connect_error', this.on_ble_connect_error);
-    pixl.disconnect();
+    pixl.disconnect({ immediate: true });
   }
 }
 </script>
 
 <style>
+.diagnostic-export-hint { line-height:1.6; font-size:14px; color:#395c67; }
+.diagnostic-json-label { display:block; margin:14px 0 8px; font-size:12px; color:#54737d; }
+.diagnostic-json { display:block; box-sizing:border-box; width:100%; max-width:100%; min-height:220px; resize:vertical; padding:12px; border:1px solid #bed3d7; border-radius:8px; background:#f5f9fa; color:#263e47; font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:2; }
+.diagnostic-json:focus-visible { outline:3px solid #268892; outline-offset:3px; }
+.diagnostic-export-status { min-height:2.8em; padding:10px 12px; border-radius:7px; color:#3a6270; background:#edf5f7; font-size:13px; line-height:1.5; }
+.diagnostic-export-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.diagnostic-export-actions button { min-height:42px; padding:10px 13px; border:1px solid #b3cdd3; border-radius:7px; background:white; color:#2b6874; font:inherit; font-size:12px; cursor:pointer; }
+.diagnostic-export-actions button:disabled { opacity:.5; cursor:default; }
+.diagnostic-export-actions button:focus-visible { outline:3px solid #268892; outline-offset:3px; }
+@media(max-width:500px) { .diagnostic-export-actions button { flex:1 1 45%; } }
+.quick-status { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 14px; margin:12px 0; background:#f4f8fc; border:1px solid #d3e0ec; border-radius:10px; clear:both; }
+.quick-status-main { display:flex; align-items:center; flex-wrap:wrap; gap:10px; flex:1; min-width:180px; }
+.connection-pill { padding:6px 10px; border-radius:18px; color:#536578; background:#e5edf4; font-size:.82rem; white-space:nowrap; }
+.connection-pill.online { color:#205e42; background:#dcefe5; }
+.quick-location { font-size:.84rem; overflow-wrap:anywhere; min-width:0; }
+.quick-storage { color:#486a80; font-size:.8rem; }
+.quick-status button,.selection-actions button { padding:9px 12px; min-height:40px; border:1px solid #a7bfd3; border-radius:7px; background:white; color:#24577e; cursor:pointer; }
+.selection-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:10px 0; font-size:.82rem; }
+.selection-actions button:disabled { opacity:.5; cursor:default; }
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@media(max-width:650px) { .quick-status { align-items:stretch; } .quick-status-main { flex-basis:100%; } .filemanager .el-button--small { min-height:38px; } .row-menu { min-width:36px; min-height:36px; } .sync-pages { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } }
+
+.backup-resume { margin:12px 0; padding:16px; border:1px solid #bfd5e8; border-radius:10px; background:#f3f8fc; line-height:1.5; overflow-wrap:anywhere; }
+.backup-resume button { margin:10px 8px 0 0; padding:10px 14px; border:1px solid #9aadc4; border-radius:6px; background:white; color:#2459a6; cursor:pointer; }
+.backup-resume button:disabled { opacity:.5; cursor:default; }
+.backup-resume summary { cursor:pointer; }
+
+.version-context { display:flex; gap:8px; flex-wrap:wrap; margin:-6px 0 16px; color:#607588; font-size:.76rem; } .version-context span { border:1px solid #dce5ed; background:#f7fafc; border-radius:20px; padding:5px 10px; } .version-context strong { font-weight:600; color:#315c7b; }
+.property-filename { overflow-wrap:anywhere; font-size:.85rem; font-weight:600; color:#526575; margin:0 0 12px; }
+.figure-file-read { margin:12px 0; padding:12px; border:1px solid #d8e5ee; border-radius:10px; background:#f6f9fc; } .figure-file-read button { min-height:42px; padding:9px 14px; border:1px solid #9fbdd4; border-radius:8px; color:#22577f; background:white; cursor:pointer; } .figure-file-read button:disabled { opacity:.5; cursor:default; } .figure-file-read p { font-size:.8rem; line-height:1.5; margin:8px 0 0; } .figure-file-read .read-only-label { color:#496d62; font-size:.75rem; } .figure-file-read summary,.property-edit summary { cursor:pointer; padding:10px 0; font-size:.8rem; color:#526b80; } .property-edit { margin-top:12px; border-top:1px solid #dce5ed; } .property-edit .el-form { padding-top:8px; }
+.catalogue-toggle { margin: 4px 0 12px; padding: 8px 12px; cursor: pointer; }
+.sync-picker { display: block; margin: 12px 0; overflow-wrap: anywhere; }
+.sync-picker input { display: block; max-width: 100%; margin-top: 6px; }
+.sync-entries { max-height: 360px; overflow: auto; margin: 12px 0; border: 1px solid #cad9eb; }
+.sync-entry { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-bottom: 1px solid #e1e8ef; overflow-wrap: anywhere; }
+.sync-entry span { min-width: 0; flex: 1; }
+.sync-entry small { width: 100%; }
+.recovery-note { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.device-panel { margin: 16px 0; padding: 14px; border: 1px solid #cad9eb; border-radius: 8px; background: #f8fafd; }
+.device-panel summary { font-weight: 600; cursor: pointer; }
+.device-panel p { line-height: 1.5; }
+.device-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+.device-info-grid dt { color: #5a687b; font-size: 13px; line-height: 1.4; }
+.device-info-grid dd { margin: 4px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.drive-info { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 8px 0; }
+.drive-info progress { accent-color: #2459a6; max-width: 100%; }
+.info-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.info-actions button { font: inherit; padding: 7px 12px; color: #2459a6; background: white; border: 1px solid #9aadc4; border-radius: 5px; cursor: pointer; }
+.info-actions button:disabled { opacity: .5; cursor: default; }
+.transfer-estimate-hint { flex-basis: 100%; color: #5a687b; line-height: 1.4; }
+input[type="search"], select { font: inherit; border: 1px solid #c7d1df; border-radius: 6px; padding: 8px; background: white; color: #253047; }
+.file-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; margin: 16px 0; }
+.search-label { display: grid; gap: 5px; flex: 1; min-width: 210px; }
+.entry-count { color: #5a687b; padding-bottom: 8px; }
+.backup-hint { font-size: 13px; color: #5a687b; line-height: 1.5; margin: 8px 0; }
+.pagination { display: flex; gap: 16px; align-items: center; justify-content: flex-end; padding: 16px 0; }
+.pagination button { font: inherit; padding: 6px 12px; border: 1px solid #9aadc4; border-radius: 5px; background: white; cursor: pointer; }
+.pagination button:disabled { cursor: default; opacity: .45; }
+.notice, .transfer-panel, .backup-ready { padding: 14px; background: #eff5fc; border: 1px solid #cad9eb; border-radius: 8px; margin: 12px 0; }
+.notice.error { background: #fff6e8; border-color: #e4c692; }
+.transfer-panel, .backup-ready { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.transfer-path { overflow-wrap: anywhere; flex: 1; min-width: 160px; }
+.transfer-panel progress { width: 180px; accent-color: #2459a6; }
+.transfer-panel button, .backup-ready button { padding: 7px 12px; cursor: pointer; border: 1px solid #9aadc4; border-radius: 5px; background: white; color: #253047; }
+.backup-ready { background: #edf8f1; border-color: #b6dbc3; }
+.backup-ready span { overflow-wrap: anywhere; flex: 1; }
+.preview-controls { padding: 12px; background: #eff5fc; border-radius: 8px; margin: 12px 0; }
+.preview-controls button { font: inherit; padding: 7px 12px; color: #2459a6; background: white; border: 1px solid #9aadc4; border-radius: 5px; cursor: pointer; }
+.preview-controls p { font-size: 14px; line-height: 1.5; margin: 10px 0 0; }
 body { margin: 20px; background: #f5f7fa; color: #253047; }
 .file-symbol { margin-right: 8px; color: #64758a; }
 .file-name-action { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -638,8 +1736,107 @@ body { margin: 20px; background: #f5f7fa; color: #253047; }
 }
 
 .header {
+  clear: both;
+  padding-top: 18px;
   text-align: center;
   margin: 30px auto;
 }
-@media (max-width: 650px) { body { margin: 8px; } .filemanager { padding: 12px; } }
+@media (max-width: 650px) {
+  body { margin: 8px; } .filemanager { padding: 12px; }
+  .filemanager > .el-row > .el-col { max-width: 100%; flex-basis: 100%; }
+  .filemanager > .el-row .action-right, .filemanager > .el-row .action-left { float: none; }
+  .filemanager h2 { font-size: 23px; }
+}
+/* 3.26: task-focused shell. Existing transfer dialogs and confirmation gates
+ * stay mounted; navigation only opens and focuses their surrounding areas. */
+:root { --el-color-primary:#176b73; --el-color-primary-light-3:#53969b; --el-color-primary-light-5:#83b3b7; --el-color-primary-light-7:#b4d0d3; --el-color-primary-light-8:#cce0e2; --el-color-primary-light-9:#e8f2f3; --el-color-primary-dark-2:#11545b; }
+body { box-sizing:border-box; margin:0; padding:28px 20px; background:#eef3f3; color:#22363d; }
+.filemanager { box-sizing:border-box; max-width:1180px; padding:30px; border:1px solid #dae4e5; border-radius:20px; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; box-shadow:0 8px 40px #17383f08; }
+.filemanager *, .filemanager *::before, .filemanager *::after { box-sizing:border-box; }
+.filemanager button, .filemanager input, .filemanager select { font-family:inherit; }
+.filemanager :where(button,a,input,select,summary,[tabindex]):focus-visible { outline:3px solid #268892; outline-offset:4px; }
+.skip-link { position:absolute; top:8px; left:12px; transform:translateY(-200%); padding:12px 18px; z-index:100; color:white; background:#144e55; border-radius:8px; }
+.skip-link:focus { transform:translateY(0); }
+.app-header { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.brand-lockup { display:flex; align-items:center; gap:15px; min-width:0; }
+.brand-mark { width:54px; height:54px; display:grid; place-items:center; flex:none; border-radius:16px; color:#d6f5f1; background:#183f48; }
+.brand-mark svg { width:36px; height:36px; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; }
+.app-eyebrow,.section-eyebrow { margin:0 0 5px; color:#51757c; font-size:10px; font-weight:700; letter-spacing:.15em; }
+.app-header h1 { margin:0; font-size:clamp(26px,3vw,34px); font-weight:700; line-height:1.15; letter-spacing:-.04em; color:#203e47; }
+.app-subtitle { margin:7px 0 0; color:#627b82; font-size:12px; line-height:1.5; }
+.header-tools { display:flex; align-items:center; flex-wrap:wrap; gap:10px; justify-content:flex-end; flex:none; }
+.header-tools>.el-button { min-width:112px; min-height:42px; font-weight:600; border-radius:9px; }
+.header-language .el-button { min-height:38px; color:#43656f; background:#fff; border-color:#d1dfe1; border-radius:9px; }
+.version-context { margin:18px 0 12px; font-size:11px; }
+.version-context span { border-color:#dfe8e9; background:#f7fafa; }
+.version-context strong { color:#31545d; }
+.quick-status { margin:0 0 22px; padding:12px 14px; background:#f7fafa; border-color:#dfe8e9; border-radius:11px; }
+.connection-pill { display:inline-flex; align-items:center; gap:7px; background:#e8edef; color:#576a72; font-weight:600; font-size:12px; }
+.connection-pill::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.connection-pill.online { background:#e1f0e8; color:#276a4e; }
+.quick-status button { min-height:36px; padding:7px 11px; border-color:#cadadd; color:#35646c; font-size:12px; }
+.quick-location,.quick-storage { color:#486771; font-size:12px; }
+.workspace-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 20px; }
+.workspace-nav button { display:flex; align-items:center; gap:12px; width:100%; min-height:88px; padding:16px 14px; text-align:left; background:#fff; border:1px solid #d6e2e3; border-radius:12px; color:#234851; cursor:pointer; }
+.workspace-nav button:hover { border-color:#74a9ae; background:#f2f8f8; }
+.workspace-nav strong { display:block; font-size:13px; line-height:1.4; }
+.workspace-nav small { display:block; margin-top:5px; color:#617b82; font-size:11px; line-height:1.5; }
+.workspace-icon { display:grid; place-items:center; width:35px; height:38px; flex:none; border-radius:9px; background:#eaf3f3; color:#26747c; font-size:22px; }
+.workspace-arrow { margin-left:auto; font-size:18px; color:#6a8e94; }
+.workspace-panel { margin:10px 0; border:1px solid #dce6e7; border-radius:12px; background:#fafcfc; scroll-margin-top:20px; }
+.workspace-panel>summary { padding:14px 16px; font-size:13px; font-weight:650; color:#355c65; cursor:pointer; }
+.workspace-panel>summary>span { margin-left:12px; color:#71878d; font-size:11px; font-weight:400; }
+.workspace-panel[open]>summary { border-bottom:1px solid #e1e9ea; }
+.workspace-content { padding:16px; }
+.workspace-description { margin:0 0 12px; color:#5a737c; font-size:13px; line-height:1.6; max-width:85ch; }
+.workspace-location { font-size:12px; color:#627b82; overflow-wrap:anywhere; }
+.workspace-location strong { color:#2b555e; }
+.workspace-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.workspace-actions .el-button { margin:0; min-height:40px; }
+.update-steps { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0; }
+.update-steps>div { padding:16px; background:white; border:1px solid #dce6e7; border-radius:10px; }
+.update-steps>div>span { display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:#e8f3f3; color:#1c6972; font-size:12px; font-weight:700; }
+.update-steps p { font-size:12px; color:#536f78; line-height:1.6; }
+.update-steps .el-button,.dfu-page-link { min-height:40px; }
+.dfu-page-link { display:inline-flex; align-items:center; gap:10px; margin:0; padding:10px 14px; border:1px solid #c3d7da; border-radius:8px; color:#176b73; font-size:12px; text-decoration:none; background:#fff; }
+.files-workspace { margin:24px 0; padding-top:4px; scroll-margin-top:18px; outline-offset:7px; }
+.section-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 0 16px; }
+.filemanager .section-heading h2 { font-size:23px; letter-spacing:-.025em; margin:0; color:#23434c; }
+.file-navigation,.file-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.file-toolbar { justify-content:flex-start; margin:0 0 12px; }
+.filemanager .el-button--small { min-height:38px; font-size:12px; }
+.file-navigation .el-button+.el-button { margin-left:0; }
+.el-button-group { margin:0; }
+.selection-counter { padding:5px 8px; color:#54717a; font-size:12px; }
+.folder-path { margin:12px 0; padding:12px 14px; border:1px solid #e0e8e9; border-radius:9px; background:#f8fafa; overflow-wrap:anywhere; }
+.folder-path .el-breadcrumb { line-height:1.6; }
+.file-filters { gap:12px; margin:16px 0; font-size:12px; }
+.file-filters input,.file-filters select { min-height:40px; border-color:#ccdce0; }
+.search-label { min-width:180px; }
+.file-filters>button { min-height:40px; padding:8px 12px; border:1px solid #cbdcdf; background:white; color:#276873; border-radius:7px; cursor:pointer; }
+.connection-guide { display:flex; align-items:flex-start; gap:14px; padding:20px; margin:15px 0 0; background:#f1f7f7; border:1px dashed #b8d2d6; border-radius:11px; }
+.connection-guide-symbol { font-size:26px; color:#387b84; }
+.connection-guide h3 { margin:0 0 7px; font-size:14px; color:#284e58; }
+.connection-guide p { margin:0; color:#617a83; font-size:12px; line-height:1.7; max-width:75ch; }
+.preview-controls { padding:10px 0; background:transparent; }
+.preview-controls button { font-size:12px; min-height:40px; color:#34727c; border-color:#c2d9dc; }
+.device-panel { margin:24px 0 0; padding:16px; background:#f8fafa; border-color:#dbe5e6; border-radius:12px; scroll-margin-top:20px; }
+.device-panel>summary { font-size:13px; color:#466670; }
+.device-panel>p,.device-panel .backup-hint { font-size:12px; }
+.device-info-grid { gap:18px; margin:20px 0; }
+.device-info-grid dt { font-size:11px; color:#6a8189; }
+.device-info-grid dd { font-size:13px; color:#31535d; }
+.extra-tools { margin:22px 0 0; padding:20px 0 0; border-top:1px solid #e0e9ea; }
+.filemanager .extra-tools h2 { margin:0 0 7px; font-size:15px; color:#355760; }
+.extra-tools>p { margin:0 0 12px; font-size:12px; color:#6b8189; }
+.catalogue-toggle { padding:10px 14px; min-height:40px; border:1px solid #cadde0; border-radius:8px; background:white; color:#2e6974; font:inherit; font-size:12px; }
+.transfer-panel,.backup-resume,.backup-ready { scroll-margin-top:18px; }
+.transfer-panel { border-left:4px solid #348992; background:#eff7f7; }
+.filemanager .el-table { --el-table-header-bg-color:#f4f8f8; --el-table-border-color:#e0e9ea; --el-table-row-hover-bg-color:#f1f7f7; border:1px solid #e0e9ea; border-radius:10px; font-size:12px; }
+.filemanager .el-table th.el-table__cell { color:#58747d; font-weight:600; }
+.filemanager .el-table td.el-table__cell { padding:9px 0; }
+.file-name-action { min-height:30px; }
+@media(max-width:850px) { .workspace-nav { gap:8px; } .workspace-nav button { padding:13px 10px; gap:8px; } .workspace-icon { display:none; } .app-subtitle { max-width:35ch; } }
+@media(max-width:650px) { body { padding:10px; } .filemanager { padding:18px 14px; border-radius:14px; } .app-header { flex-wrap:wrap; gap:16px; } .header-tools { justify-content:space-between; width:100%; } .brand-mark { width:46px; height:46px; border-radius:13px; } .app-subtitle { max-width:none; font-size:11px; } .version-context { margin-top:14px; } .workspace-nav { grid-template-columns:1fr; gap:8px; } .workspace-nav button { min-height:64px; padding:11px 13px; } .workspace-icon { display:grid; } .workspace-nav small { margin-top:2px; } .workspace-panel>summary>span { display:block; margin:5px 0 0 15px; } .workspace-content { padding:12px; } .update-steps { grid-template-columns:1fr; } .section-heading { align-items:flex-start; flex-wrap:wrap; } .file-navigation { width:100%; } .file-navigation .el-button { flex:1; } .filemanager .el-button--small { min-height:42px; } .search-label { flex-basis:100%; min-width:0; } .entry-count { padding-bottom:0; } .quick-status-main { min-width:0; } .quick-status button { min-height:42px; } .info-actions button { min-height:42px; } .connection-guide { padding:14px; } }
+@media(prefers-reduced-motion:reduce) { .filemanager *, .filemanager *::before, .filemanager *::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
 </style>

@@ -43,10 +43,10 @@ typedef struct {
     int (*read_dir)(vfs_dir_t*,vfs_obj_t*);
     int (*close_dir)(vfs_dir_t*);
 } vfs_driver_t;
-typedef struct { uint8_t focus,max_ntags;void *user_data; } detail_view_t;
+typedef struct { uint16_t focus,max_ntags;int8_t navigate_direction;void *user_data; } detail_view_t;
 typedef struct {
     mui_list_view_t *p_list_view;
-    string_array_t amiibo_files;
+    char browser_anchor[48];uint16_t browser_anchor_icon;int8_t browser_direction;unsigned current_focus_index;
     string_t current_folder,current_file;
     unsigned current_drive;
     detail_view_t *p_amiibo_detail_view;
@@ -55,6 +55,8 @@ typedef struct {
     bool reload_amiibo_files;
 } app_amiibo_t;
 #define VFS_OK 0
+#define VFS_ERR_EOF -3
+#define VFS_ERR_NODEV -6
 #define VFS_TYPE_DIR 2
 #define VFS_TYPE_REG 1
 #define VFS_OBJ_FLAG_HIDDEN 1
@@ -64,10 +66,19 @@ typedef struct {
 #define AMIIBO_SCENE_FILE_BROWSER_MENU 3
 #define MINI_APP_ID_AMIIBO 1
 #define VFS_MAX_PATH_LEN 64
+#define VFS_MAX_NAME_LEN 48
+#define VFS_ERR_CRPT -7
 typedef enum { MUI_LIST_VIEW_EVENT_SELECTED,MUI_LIST_VIEW_EVENT_LONG_SELECTED } mui_list_view_event_t;
 typedef enum { AMIIBO_DETAIL_VIEW_EVENT_MENU,AMIIBO_DETAIL_VIEW_EVENT_UPDATE } amiibo_detail_view_event_t;
 typedef detail_view_t amiibo_detail_view_t;
 #define FOLDER_LIST_PARENT 0xffff
+#define FOLDER_LIST_PREVIOUS 0xfffe
+#define FOLDER_LIST_NEXT 0xfffd
+#define AMIIBO_BROWSER_PAGE_SIZE 24
+#define ICON_PREVIOUS 6
+#define ICON_NEXT_PAGE 7
+#define DE3_PREVIOUS_PAGE 2
+#define DE3_NEXT_PAGE 3
 #define ICON_HOME 1
 #define ICON_BACK 2
 #define ICON_FOLDER 3
@@ -82,11 +93,12 @@ static bool hidden,open_failure,memory_error;
 static const char *getLangString(unsigned id) { return id ? "Ordnerfehler" : "Hauptmenue"; }
 static void *mui(void) { return NULL; }
 static void mui_show_memory_error(void *m) { (void)m; ++errors;memory_error=true; }
+static void amiibo_scene_amiibo_detail_reload_error(app_amiibo_t*a,const char*p,int32_t e){(void)a;(void)p;(void)e;++errors;}
 static int opened(const char *name,vfs_dir_t *d) {
     (void)name;++opens;d->index=0;return open_failure?-1:VFS_OK;
 }
 static int read_entry(vfs_dir_t *d,vfs_obj_t *o) {
-    ++reads;if(d->index>=entries)return 1;
+    ++reads;if(d->index>=entries)return VFS_ERR_EOF;
     memset(o,0,sizeof(*o));o->type=VFS_TYPE_REG;o->size=540;
     memset(o->name,'A',name_length);o->name[name_length]=0;
     if(name_length>=4){char prefix[5];snprintf(prefix,sizeof(prefix),"%04u",d->index%10000);memcpy(o->name,prefix,4);}
@@ -99,11 +111,13 @@ static vfs_driver_t *vfs_get_driver(unsigned n){(void)n;return &driver;}
 static void vfs_meta_decode(const uint8_t *p,size_t n,vfs_meta_t *m){(void)n;m->has_flags=true;m->flags=p[0];}
 static bool is_valid_amiibo_ntag_by_size(unsigned n){return n==540;}
 static void mui_view_dispatcher_switch_to_view(void *d,unsigned id){(void)d;(void)id;++view_switches;}
-static void amiibo_detail_view_set_focus(detail_view_t *v,uint8_t f){v->focus=f;}
-static void amiibo_detail_view_set_max_ntags(detail_view_t *v,uint8_t n){v->max_ntags=n;}
-static uint8_t amiibo_detail_view_get_focus(detail_view_t *v){return v->focus;}
+static void amiibo_detail_view_set_focus(detail_view_t *v,uint16_t f){v->focus=f;}
+static void amiibo_detail_view_set_max_ntags(detail_view_t *v,uint16_t n){v->max_ntags=n;}
+static uint16_t amiibo_detail_view_get_focus(detail_view_t *v){return v->focus;}
 static void mui_scene_dispatcher_next_scene(void *d,unsigned id){(void)d;(void)id;++scene_changes;}
 static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *a,const char *f){(void)a;(void)f;++tag_reads;return true;}
+static bool ntag_emu_prepare_change(void) {return true;}
+static void mui_list_view_set_scroll_offset(mui_list_view_t*v,unsigned n){v->scroll_offset=n;}
 static void *mini_app_launcher(void){return NULL;}
 static void mini_app_launcher_kill(void *l,unsigned id){(void)l;(void)id;++kills;}
 struct cwk_segment { const char *begin; };
@@ -125,7 +139,7 @@ static void fixture(void) {
     memset(&detail,0,sizeof(detail));memset(&app,0,sizeof(app));
     app.p_list_view=&list;app.p_amiibo_detail_view=&detail;
     list.user_data=&app;detail.user_data=&app;
-    string_array_init(app.amiibo_files);string_init(app.current_folder);string_init(app.current_file);
+    string_init(app.current_folder);string_init(app.current_file);
     string_set_str(app.current_folder,"/");
     allocations=fail_at=opens=closes=reads=view_switches=errors=0;
     scene_changes=tag_reads=kills=0;
@@ -133,7 +147,7 @@ static void fixture(void) {
 }
 static void cleanup(void) {
     mui_list_view_clear_items(&list);mui_list_item_array_clear(list.items);
-    string_array_clear(app.amiibo_files);string_clear(app.current_file);string_clear(app.current_folder);
+    string_clear(app.current_file);string_clear(app.current_folder);
     mui_mem_monitor_t m;mui_mem_monitor(&m);
     assert(m.free_size==initial_free && m.used_cnt==initial_blocks);
     assert(tlsf_check(m_tlsf)==0 && tlsf_check_pool(tlsf_get_pool(m_tlsf))==0);
@@ -171,38 +185,27 @@ static void loaders(void) {
         assert(closes==opens);cleanup();
     }
     fixture();assert(amiibo_scene_amiibo_detail_reload_files(&app));detail_allocs=allocations;
-    assert(!errors && app.amiibo_files->size==entries && detail.max_ntags==entries && opens==closes);cleanup();
-    for(unsigned failure=1;failure<=detail_allocs;failure++){
-        fixture();fail_at=failure;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
-        assert(errors==1 && memory_error && app.amiibo_files->size==0 && detail.max_ntags==0 && opens==closes);cleanup();
-    }
+    assert(!errors && detail.max_ntags==entries && opens==closes && !detail_allocs);cleanup();
     fixture();entries=1000;amiibo_scene_file_browser_reload_folders(&app);
-    assert(memory_error && list.items->size==0 && closes==1 && reads<entries);
-    /* Recover without a reset: the same containers can load a small folder. */
-    fail_at=0;entries=2;memory_error=false;amiibo_scene_file_browser_reload_folders(&app);
+    assert(!memory_error && list.items->size==26 && list.items->alloc<=32 && closes==1 && reads==entries+1);
+    entries=2;amiibo_scene_file_browser_reload_folders(&app);
     assert(!memory_error && list.items->size==3 && closes==2);cleanup();
-    fixture();entries=1000;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
-    assert(memory_error && app.amiibo_files->size==0 && closes==1 && reads<entries);
-    entries=2;memory_error=false;assert(amiibo_scene_amiibo_detail_reload_files(&app));
-    assert(!memory_error && app.amiibo_files->size==2 && closes==2);cleanup();
-    fixture();entries=256;name_length=1;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
-    assert(memory_error && detail.max_ntags==0 && app.amiibo_files->size==0 && closes==1);cleanup();
-    fixture();entries=255;name_length=1;assert(amiibo_scene_amiibo_detail_reload_files(&app));
-    assert(detail.max_ntags==255);cleanup();
+    fixture();entries=1000;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(!memory_error && detail.max_ntags==1000 && closes==1 && !allocations);
+    entries=2;assert(amiibo_scene_amiibo_detail_reload_files(&app));assert(detail.max_ntags==2);cleanup();
+    fixture();entries=256;assert(amiibo_scene_amiibo_detail_reload_files(&app));assert(detail.max_ntags==256);cleanup();
     fixture();hidden=true;entries=10;amiibo_scene_file_browser_reload_folders(&app);
-    assert(list.items->size==6);assert(amiibo_scene_amiibo_detail_reload_files(&app));
-    assert(app.amiibo_files->size==5);cleanup();
-    fixture();open_failure=true;amiibo_scene_file_browser_reload_folders(&app);
-    assert(list.items->size==2 && closes==0);cleanup();
-    fixture();entries=0;assert(amiibo_scene_amiibo_detail_reload_files(&app));
-    assert(detail.max_ntags==0);detail.focus=255;
-    app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0);
-    detail.focus=0;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0);cleanup();
-    fixture();open_failure=true;assert(amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(list.items->size==6);assert(amiibo_scene_amiibo_detail_reload_files(&app));assert(detail.max_ntags==5);cleanup();
+    fixture();open_failure=true;amiibo_scene_file_browser_reload_folders(&app);assert(list.items->size==2 && closes==0);cleanup();
+    fixture();entries=0;assert(amiibo_scene_amiibo_detail_reload_files(&app));assert(detail.max_ntags==0);
+    detail.navigate_direction=1;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0);cleanup();
+    fixture();open_failure=true;assert(!amiibo_scene_amiibo_detail_reload_files(&app));
+    assert(errors==1 && !memory_error && detail.max_ntags==0);
     app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==0 && closes==0);cleanup();
     fixture();entries=2;assert(amiibo_scene_amiibo_detail_reload_files(&app));
-    detail.focus=1;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==1);
-    detail.focus=2;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==1);cleanup();
+    detail.navigate_direction=1;app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==1);
+    app_amiibo_detail_view_on_event(AMIIBO_DETAIL_VIEW_EVENT_UPDATE,&detail);assert(tag_reads==1);cleanup();
+
 }
 static void selection_failures(void){
     for(unsigned failure=1;failure<=2;failure++){
@@ -227,7 +230,7 @@ static void strings_and_reloads(void){
         for(unsigned r=0;r<100;r++)assert(amiibo_scene_amiibo_detail_reload_files(&app));
         mui_mem_monitor(&after);
         assert(before.free_size==after.free_size && before.used_cnt==after.used_cnt);
-        assert(strlen(string_get_cstr(app.amiibo_files->ptr[0]))==name_length);cleanup();
+        assert(detail.max_ntags==entries && !allocations);cleanup();
     }
     fixture();string_t s;string_init(s);
     assert(mui_string_try_set_str(s,"existing long allocated string"));

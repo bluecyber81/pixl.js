@@ -30,9 +30,6 @@ typedef void (*player_view_event_cb)(player_view_event_t event, player_view_t *p
     bool play_error;
     uint8_t* frame_buffer;
     size_t frame_buffer_size;
-    app_timer_t frame_tick_timer_data;
-    app_timer_id_t frame_tick_timer_id;
-
     void* user_data;
 
 

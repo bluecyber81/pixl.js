@@ -1,0 +1,161 @@
+{
+  "version": "2.22.0-DE3.37",
+  "counter": 609,
+  "board": "LCD",
+  "web_version": "3.27.0",
+  "upstream_repositories": [
+    "https://github.com/cylin577/pixl.js",
+    "https://github.com/solosky/pixl.js"
+  ],
+  "application_only": true,
+  "storage_engine": "Packed LittleFS PFS1",
+  "ota_sha256": "ecb484e3a35968c9d5b04088ec19c460088b9c7a5b6863a3122e61d263a0cf73",
+  "application_sha256": "3a3d060d9359c57fc1633e2daecff5a5764841890152599eeded010ee39d8b27",
+  "hardware_version": 52,
+  "softdevice_requirements": [
+    "0x0103",
+    "0x0126"
+  ],
+  "bootloader_and_softdevice_replaced_by_application_ota": false,
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
+  "migration_required_for_existing_pfs1": false,
+  "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
+  "host_firmware_suites": 102,
+  "sanitizer_suites": 5,
+  "web_host_tests": 659,
+  "web_worker_tests": 7,
+  "device_evidence": {
+    "date": "2026-10-26",
+    "source": "owner report",
+    "result": "DE3.37 flashed and tested functions working",
+    "limits": "No independent full image readback or new exhaustive physical error/MTU/NFC suite is claimed."
+  },
+  "privacy": {
+    "private_keys_in_distribution": false,
+    "user_backups_or_figure_dumps_in_distribution": false,
+    "test_address_replaced_with_synthetic": true
+  },
+  "limits": [
+    "Only the matching LCD hardware/layout is in scope.",
+    "RAM-retained unsaved NFC changes do not survive power removal or forced reset.",
+    "The inherited public upstream signing key does not prove exclusive publisher identity."
+  ],
+  "public_build": {
+    "status": "passed",
+    "mode": "release",
+    "version": "2.22.0-DE3.37",
+    "counter": 609,
+    "board": "LCD",
+    "sdk_image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+    "network": "none",
+    "signed": false,
+    "device_access": false,
+    "version_header_sha256": "0c90e96efcc732af20801dea0649bdfeb680f3d39776c492f5df24623c8f9343",
+    "sdk_header_override": {
+      "path": "components/softdevice/s112/headers/nrf_nvic.h",
+      "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+      "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+    },
+    "expected_bin_sha256": "3a3d060d9359c57fc1633e2daecff5a5764841890152599eeded010ee39d8b27",
+    "source_tar_sha256": "7319f9ebec6cce72aaeacf13dd2989a4ec90aa7079f1a8b6084b6fe2a9fe72c5",
+    "exit_code": 0,
+    "artifacts_sha256": {
+      "pixljs.bin": "3a3d060d9359c57fc1633e2daecff5a5764841890152599eeded010ee39d8b27",
+      "pixljs.hex": "418d64671ef9fd65930d3995801f7dcf5dbb38f7dfc28dbb493258f90d864bd3",
+      "pixljs.out": "56b74154e5b3c3088b929d1b913e0ea27d242ef2dab9e6f05c1e14effbccbee7",
+      "pixljs.map": "ca47de1e2e881e8b4599d053e28e14fb4e669feb7b6550d7b229c92da819984b"
+    },
+    "matches_archived_release_binary": true
+  },
+  "bootloader_public_verification": {
+    "checkedAt": "2026-10-26",
+    "component": "BL6",
+    "sourceManifestSha256": "01b2afd16a84f4c74219eb5e2d1df98857d9fc577d472f2be7332fe9ec743012",
+    "sourceFilesUnmodified": true,
+    "armRebuild": {
+      "matchedSignedRelease": true,
+      "paddedRegionSha256": "71a8697ed4983a224d984b92dbd76c4ddbe629ccf9650cb5c77acb764eb1b060",
+      "sdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+      "hexSha256": "95b6c7bea7f099f2996e35822d902cf544d20db360e7b95b5ca54cb17a987cce"
+    },
+    "portableHostTests": {
+      "nativePassed": true,
+      "asanUbsanPassed": true,
+      "transportAssertionsPerRuntime": 221,
+      "completionScenariosPerRuntime": 18
+    },
+    "deviceAccess": false,
+    "limits": [
+      "Host SDK/hardware callbacks are mocked.",
+      "No new device flash or physical radio/power-loss/timing test was performed for this publication.",
+      "Historical negative controls are not part of this portable test subset."
+    ]
+  },
+  "public_web_rebuild": {
+    "status": "passed",
+    "version": "3.27.0",
+    "nodeVersion": "24.22.1",
+    "install": "npm ci --ignore-scripts --offline --no-audit --no-fund",
+    "installedPackages": 65,
+    "dependencyLockUnchanged": true,
+    "hostTests": {
+      "counts": {
+        "tests": 659,
+        "pass": 659,
+        "fail": 0,
+        "skipped": 0
+      },
+      "sha256": "d6487f76645824fd07c30f385e4efc9ddb293c44e44fc3a5d8975d4637506961"
+    },
+    "productionWorkerTests": {
+      "counts": {
+        "tests": 7,
+        "pass": 7,
+        "fail": 0,
+        "skipped": 0
+      },
+      "sha256": "be3bb19103243121cfa601d0d472c063cee37ab2747f25118da11632b51eeff5"
+    },
+    "productionWorkerTestIncludedByGit": true,
+    "distFiles": 32,
+    "distByteIdenticalToReviewed327": true,
+    "distSha256": {
+      "index.html": "3dc28c7ebe3419104753224cba4a1c01b8fac8815e42e3882fdbd7057409154f",
+      "lfs-capacity-current.wasm": "410f213e0818a3a5e1d0ce381e202514f7dd3b834b1cec854d5fe6f180574b1f",
+      "lfs-capacity.wasm": "8830aece6d900679ccfec27e4b1321ffc160aba9381023cd26c397d3e0dcb1d4",
+      "_redirects": "faddc50d8b4f77f60a98186ba256e7ac0fd96f4bd68a26bd90b53fd4f24f4187",
+      "assets/CataloguePanel-8_a3NpC_.js": "b0cd85ea64134138715a83e6fe1acb2a5f8f8a70957c6ec97da81070a832f260",
+      "assets/CataloguePanel-DLt4ElY9.css": "7291a5a74f9fb3675e09e7dbf1597ac187d8a5075f7237233abc2b01c7d53741",
+      "assets/FigureDetails-Cx1JPL0S.js": "1925221f54c0186b3286bc88eae142bf4a27537805f3ce0263d8e7069b567729",
+      "assets/FigureDetails-DIyjT5EE.css": "9a3774796e301d20a9289e82a559d6b5cd9806a0489c2fc773589767d98e3996",
+      "assets/index-BP6CQriD.js": "34dd5c0b4ae6260a27eec599ef82e3511943db0354ba06db5dddf6e2974634a0",
+      "assets/index-lOIiIiiw.css": "ed79bcfb38e485848e4e4f9200b7f11da9188a9931be5878c2936efe88d862aa",
+      "assets/migration-capacity-worker-MMhujtn_.js": "a93ad230de9be4cde84e748f75700aef4229d920d831072d20617721f4d9c984",
+      "assets/MigrationAssistant-BMfuPdja.js": "1f0e73cc548e60d1cf56686b5df50cb2b692b44d70766fc69411ad55125c8cc3",
+      "assets/MigrationAssistant-CoVVET-1.css": "d47c1e9851b7d837e9fa381ff3b296e2493603026623fad8e874249feecd4a14",
+      "assets/TransferStatus-CRQpWChJ.js": "895376e5135161c8ba133d64f01983e2b69c3466e89331c26d4437dcb888a9f5",
+      "assets/TransferStatus-nWAZERUQ.css": "fab2a74739d5553a89ebf48e008db5b398db75d1ff66e6b27a1f49d599fc6db7",
+      "assets/UpdateCheck-Bq7cfTyA.css": "5d070fd5794d43f08ff1cfb63ddacf8fece7536e87e63eb362fc40b6b161c63d",
+      "assets/UpdateCheck-B_r5Lg9m.js": "59514acd68eb0a5d2254fce39710bc62930f61f35970e4c07c43eb54aae4cfe6",
+      "dfu/LICENSE.txt": "2afc378dc870b9cbade5270eeff6f86083fe3f99c2eb2583c74cad06db56538d",
+      "dfu/package.js": "5f62cffdd98711b19a0af6a06eb8a9d828e006ad1778e00946669ac9250b3854",
+      "dfu/package.json": "f2254b3bbbfefb0ee3fb21af0fb766135d8e49dbc52124f9208d22066f3fbb2f",
+      "dfu/page.js": "1916db8e88f3673c1fdb7fe6eba361ae80f4df2a12d537b21226d6949d7d06ea",
+      "dfu/secure-dfu.js": "ff1f74f23b2d9243fbac04dd842a5f2e34528f6b5998ae05887916ed9060a9ea",
+      "dfu/updater.css": "dd3a789922afc445c3d73e4f02b4e5e543173a096eb7b32b5618719a234985c3",
+      "dfu/updater.js": "4e704214b44450c5d4d58d15e72db0f28203b143d27ed6a140185344a292c2ea",
+      "dfu/web.html": "cd6332766306bb99f519f8cd253b8eb948c24891ef4928854dd6f050f17f53af",
+      "licenses/qrcode-generator-MIT.txt": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+      "licenses/qrcode-generator-provenance.json": "94be890bfbe9af7c95b7bd73820ca2dfa32e2302e13a417f8ee427044abbfe29",
+      "dfu/vendor/CRC32-LICENSE.txt": "c542ba7851b5d39a5face477e47a27cb7c00a9759e321b66824e79718bffe1ac",
+      "dfu/vendor/crc32.js": "8450a98f18b8a24ed088d07d64c5134896e54079757f783945054167a9d2e75e",
+      "dfu/vendor/jszip-3.10.1.min.js": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+      "dfu/vendor/JSZip-LICENSE.txt": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4",
+      "dfu/vendor/SOURCES.json": "ccbc64f9fadfb41b9b8b8503267c110fb1528ec9ea949c0628c984880240ec8a"
+    },
+    "deviceAccess": false
+  },
+  "source_distribution": "Exact application runtime sources; device-address test fixture is synthetic. Unused SDK/PC trees and private files are omitted.",
+  "test_evidence_scope": "Firmware host tests passed before publication; public application and BL6 rebuilds and public web installation, 659 host tests and seven built-worker tests were repeated for publication.",
+  "no_automatic_device_actions": true
+}

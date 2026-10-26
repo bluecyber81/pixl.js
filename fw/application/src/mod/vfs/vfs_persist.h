@@ -3,8 +3,10 @@
 
 #include "vfs.h"
 
-/* One shared, bounded journal. Canonical files retain their original format.
- * This detects interrupted writes; it does not make SPIFFS/flash atomic. */
+/* Canonical files retain their original format. PackedFS replaces content and
+ * raw metadata in one atomic manifest publication, retaining legacy journal
+ * recovery. Other drivers use the shared bounded journal; that detects
+ * interrupted writes but does not make SPIFFS/flash atomic. */
 #define VFS_PERSIST_MAX_DATA 2048
 void vfs_persist_bind(const vfs_driver_t *public_driver, const vfs_driver_t *raw_driver);
 int32_t vfs_persist_recover(vfs_driver_t *driver);

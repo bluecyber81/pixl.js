@@ -455,7 +455,14 @@ void mui_list_view_clear_items(mui_list_view_t *p_view) {
         string_clear(item->sub_text);
         mui_list_item_array_next(it);
     }
-    mui_list_item_array_reset(p_view->items);
+    /* Keep a small reusable page, but do not pin a former large directory's
+     * backing array while the next scene reads a tag or commits a file. */
+    if (p_view->items->alloc > 32u) {
+        mui_list_item_array_clear(p_view->items);
+        mui_list_item_array_init(p_view->items);
+    } else {
+        mui_list_item_array_reset(p_view->items);
+    }
     mui_list_view_set_focus(p_view, 0);
 }
 
@@ -470,7 +477,12 @@ void mui_list_view_clear_items_with_cb(mui_list_view_t *p_view, mui_list_view_it
         clear_cb(item);
         mui_list_item_array_next(it);
     }
-    mui_list_item_array_reset(p_view->items);
+    if (p_view->items->alloc > 32u) {
+        mui_list_item_array_clear(p_view->items);
+        mui_list_item_array_init(p_view->items);
+    } else {
+        mui_list_item_array_reset(p_view->items);
+    }
     mui_list_view_set_focus(p_view, 0);
 }
 

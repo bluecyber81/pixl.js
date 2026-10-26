@@ -65,6 +65,7 @@ void settings_scene_app_management_on_enter(void *user_data) {
 
 void settings_scene_app_management_on_exit(void *user_data) {
     app_settings_t *app = user_data;
+    settings_storage_snapshot_invalidate(&app->storage_snapshot);
     if (settings_save() != NRF_SUCCESS)
         mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
     mui_list_view_clear_items(app->p_list_view);

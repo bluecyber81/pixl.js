@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stddef.h>
 #include "vfs.h"
+#include "app/settings/settings_storage_snapshot.h"
 #include "i18n/language.h"
 typedef enum { MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_CENTER, MUI_MSG_BOX_EVENT_SELECT_RIGHT } mui_msg_box_event_t;
 typedef struct mui_msg_box_s mui_msg_box_t;
@@ -14,7 +15,7 @@ struct mui_msg_box_s { void *user_data; box_cb_t cb; int focus; const char *head
 typedef struct { void *user_data; } mui_list_item_t;
 typedef struct { void *user_data; int count; const char *labels[20]; void *values[20]; } mui_list_view_t;
 typedef int mui_list_view_event_t;
-typedef struct { mui_list_view_t *p_list_view; mui_msg_box_t *p_msg_box; void *p_view_dispatcher,*p_scene_dispatcher; } app_settings_t;
+typedef struct { mui_list_view_t *p_list_view; mui_msg_box_t *p_msg_box; void *p_view_dispatcher,*p_scene_dispatcher; settings_storage_snapshot_t storage_snapshot; } app_settings_t;
 enum {SETTINGS_VIEW_ID_MAIN,SETTINGS_VIEW_ID_PROGRESS_BAR,SETTINGS_VIEW_ID_MSG_BOX};
 static int current_view, previous_scenes, stat_result, mount_result, format_result;
 static int mount_calls,format_calls,stat_calls,updates;
@@ -23,7 +24,7 @@ static vfs_driver_t driver;
 static vfs_driver_t *active_driver;
 static mui_list_view_t list;
 static mui_msg_box_t box;
-static app_settings_t app={&list,&box,NULL,NULL};
+static app_settings_t app={.p_list_view=&list,.p_msg_box=&box};
 static const char *getLangString(const char *s) { return s; }
 vfs_driver_t *vfs_get_default_driver(void) {return active_driver;}
 static void mui_msg_box_set_message(mui_msg_box_t *b,const char *s) {b->message=s;}
@@ -44,8 +45,9 @@ static void mui_list_view_add_item_ext(mui_list_view_t *v,int icon,const char *s
 }
 static void mui_list_view_set_selected_cb(mui_list_view_t *v,void (*cb)(mui_list_view_event_t,mui_list_view_t *,mui_list_item_t *)) {(void)v;(void)cb;}
 static int32_t mock_stat(vfs_stat_t *s) {stat_calls++;*s=status;return stat_result;}
-static int32_t mock_mount(void) {mount_calls++;assert(box.cb==NULL);if(mount_result==0)status.avaliable=1;return mount_result;}
-static int32_t mock_format(void) {format_calls++;assert(box.cb==NULL);if(format_result==0)status.avaliable=0;return format_result;}
+static int32_t mock_mount(void) {mount_calls++;assert(box.cb==NULL);assert(!app.storage_snapshot.valid);if(mount_result==0)status.avaliable=1;return mount_result;}
+static int32_t mock_format(void) {format_calls++;assert(box.cb==NULL);assert(!app.storage_snapshot.valid);if(format_result==0)status.avaliable=0;return format_result;}
+/* ACTUAL_STORAGE_SNAPSHOT_READ */
 /* ACTUAL_STORAGE_INCLUDE */
 static void reset(void) {
     driver=(vfs_driver_t){.stat=mock_stat,.mount=mock_mount,.format=mock_format};active_driver=&driver;
@@ -59,8 +61,13 @@ static void click(mui_msg_box_event_t event) {assert(box.cb);box.cb(event,&box);
 static void assert_back(void) {assert(box.cb==settings_scene_storage_result_cb && box.focus==1 && !box.left && box.center && !box.right);}
 static void test_readonly_status(void) {
     reset();assert(current_view==SETTINGS_VIEW_ID_MAIN && stat_calls==1 && mount_calls==0 && format_calls==0);
+    assert(app.storage_snapshot.valid && app.storage_snapshot.stat.free_bytes==2048);
+    vfs_stat_t cached={0};
+    assert(settings_storage_snapshot_read(&app.storage_snapshot,active_driver,&cached)==VFS_OK);
+    assert(stat_calls==1 && cached.free_bytes==2048);
     assert(has(_L_TOTAL_SPACE) && has(_L_AVAILABLE_SPACE) && !has(_L_DE3_STORAGE_RETRY_MOUNT));
     status.free_bytes=0;settings_scene_storage_on_enter(&app);assert(has(_L_DE3_STORAGE_FULL));
+    assert(stat_calls==2 && app.storage_snapshot.stat.free_bytes==0);
     status.avaliable=0;settings_scene_storage_on_enter(&app);assert(has(_L_NOT_MOUNTED) && has(_L_DE3_STORAGE_RETRY_MOUNT));
     stat_result=VFS_ERR_NODEV;settings_scene_storage_on_enter(&app);assert(has(_L_DE3_STORAGE_UNAVAILABLE));
     active_driver=NULL;settings_scene_storage_on_enter(&app);assert(list.count==2 && has(_L_BACK) && !has(_L_FORMAT));

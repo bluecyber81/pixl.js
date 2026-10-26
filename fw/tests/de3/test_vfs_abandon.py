@@ -25,6 +25,8 @@ def main():
         'int32_t vfs_spiffs_read_file(', 'int32_t vfs_spiffs_write_file(',
         'int32_t vfs_spiffs_write_file_data(', 'int32_t vfs_spiffs_read_file_data(',
         'static int32_t guarded_open(', 'static int32_t guarded_close(', 'static int32_t guarded_abort(']
+    if 'static int32_t vfs_check_namespace(' in source:
+        signatures.insert(1, 'static int32_t vfs_check_namespace(')
     code=(HERE/'vfs_abandon_host.c').read_text().replace('@@NOR@@',nor)
     code=code.replace('@@WRAPPERS@@','\n'.join(extract(source,s) for s in signatures))
     for marker,path in [('@@PERSIST@@',src/'mod/vfs/vfs_persist.c'),('@@PROTOCOL@@',src/'mod/df/df_proto_vfs.c')]:

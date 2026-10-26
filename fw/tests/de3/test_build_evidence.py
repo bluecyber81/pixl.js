@@ -25,6 +25,7 @@ class BuildEvidenceTests(unittest.TestCase):
             'application/Makefile': b'all:\n', 'Makefile': b'all:\n',
             'scripts/build_evidence.py': HELPER.read_bytes(),
             'scripts/amiibo_db_gen.py': b'# generator input bound to test evidence\n',
+            'scripts/bdfconv_linux': b'font compiler fixture\0',
             'scripts/fw_update.bat': b'@echo off\nexit /b 1\n',
             'scripts/build.cmd': b'@echo off\n',
             'scripts/build.sh': b'#!/bin/sh\n',
@@ -229,31 +230,37 @@ class BuildEvidenceTests(unittest.TestCase):
             evidence.verify_host_tests(self.fw, self.host(), self.manifest)
 
     def test_wrong_version_or_counter_rejected(self):
-        self.assertEqual(evidence.VERSION, '2.21.0-DE3.16')
-        self.assertEqual(evidence.COUNTER, 572)
+        self.assertEqual(evidence.VERSION, '2.22.0-DE3.37')
+        self.assertEqual(evidence.COUNTER, 609)
         for field, value in [('version', '2.21.0-DE3'), ('version', '2.21.0-DE3.2'),
-                             ('version', '2.21.0-DE3.3'), ('version', '2.21.0-DE3.4'), ('version', '2.21.0-DE3.5'), ('version', '2.21.0-DE3.6'), ('version', '2.21.0-DE3.160'), ('counter', 571), ('counter', 573)]:
+                             ('version', '2.21.0-DE3.3'), ('version', '2.21.0-DE3.4'), ('version', '2.21.0-DE3.5'), ('version', '2.21.0-DE3.6'), ('version', '2.21.0-DE3.17'), ('version', '2.21.0-DE3.190'), ('version', '2.21.0-DE3.20'), ('version', '2.21.0-DE3.21'), ('version', '2.21.0-DE3.23'), ('counter', 577), ('counter', 579), ('counter', 580), ('counter', 581), ('counter', 582), ('counter', 583), ('counter', 585), ('counter', 586), ('counter', 587), ('counter', 589), ('version', '2.21.0-DE3.25'), ('counter', 590), ('counter', 591), ('version', '2.21.0-DE3.26'), ('version', '2.21.0-DE3.27'), ('version', '2.21.0-DE3.28'), ('version', '2.21.0-DE3.30'), ('counter', 596), ('counter', 599), ('counter', 592), ('counter', 593), ('counter', 594), ('counter', 595), ('counter', 597), ('counter', 604), ('version', '2.22.0-DE3.32')]:
             manifest = dict(self.manifest, **{field: value})
             with self.subTest(field=field, value=value), self.assertRaisesRegex(ValueError, 'configuration'):
                 evidence.verify_manifest(self.fw, manifest, self.run_id)
 
+    def test_executed_font_compiler_is_bound(self):
+        self.assertIn('scripts/bdfconv_linux', self.manifest['source_snapshot'])
+        (self.fw/'scripts/bdfconv_linux').write_bytes(b'changed font compiler\0')
+        with self.assertRaisesRegex(ValueError, 'Current sources'):
+            self.verify()
+
     def test_exact_terminated_version_not_prefix(self):
-        header = '#define VERSION "2.21.0-DE3.16"\n'
-        evidence.verify_version_marker(b'prefix 2.21.0-DE3.16\0 trailer', header)
-        for payload in (b'2.21.0-DE3\0', b'2.21.0-DE3.16', b'2.21.0-DE3.160\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3.1\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3.2\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3.3\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3.4\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3.5\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3.6\0',
-                        b'2.21.0-DE3.16\0 2.21.0-DE3\0'):
+        expected = '2.22.0-DE3.37'
+        current = expected.encode('ascii')
+        header = f'#define VERSION "{expected}"\n'
+        evidence.verify_version_marker(b'prefix ' + current + b'\0 trailer', header)
+        malformed = [b'2.21.0-DE3\0', current, current + b'0\0']
+        other_versions = [b'2.21.0-DE3'] + [f'2.21.0-DE3.{number}'.encode('ascii')
+                                          for number in range(1, 30)]
+        other_versions += [b'2.22.0-DE3.29', b'2.22.0-DE3.33', b'2.22.0-DE3.34', b'2.22.0-DE3.35', b'2.22.0-DE3.36', b'2.22.0-DE3.37-PREP', b'2.21.0-DE3.30', b'2.21.0-DE3.290', b'2.21.0-DE3.291']
+        malformed += [current + b'\0 ' + other + b'\0' for other in other_versions]
+        for payload in malformed:
             with self.subTest(payload=payload), self.assertRaises(ValueError):
                 evidence.verify_version_marker(payload, header)
         for bad_header in ('#define VERSION "2.21.0-DE3"\n',
-                           '#define VERSION "2.21.0-DE3.160"\n', header + header):
+                           f'#define VERSION "{expected}0"\n', header + header):
             with self.subTest(header=bad_header), self.assertRaises(ValueError):
-                evidence.verify_version_marker(b'2.21.0-DE3.16\0', bad_header)
+                evidence.verify_version_marker(current + b'\0', bad_header)
 
     def test_wrong_board_or_rebuild_flag_rejected(self):
         for field, value in [('board', 'OLED'), ('force_application_rebuild', False)]:

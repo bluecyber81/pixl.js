@@ -78,3 +78,10 @@ LOCAL_ONLY_REVIEW/
 # Archived upstream web output and editor launch settings are not this release.
 /gh-pages/
 /.vscode/
+
+# Current public distribution outputs and local state
+server-state-*.json
+server-state-*.tmp
+server-*.log
+*.local.json
+/bootloader-bl6/build/

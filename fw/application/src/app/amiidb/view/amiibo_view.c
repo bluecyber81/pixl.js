@@ -1,8 +1,11 @@
 #include "amiibo_view.h"
+#include "amiibo_helper.h"
+#include "amiibo_info_draw.h"
 #include "db_header.h"
 #include "i18n/language.h"
 #include "mui_element.h"
 #include "mui_qrcode_helper.h"
+#include "ntag_store.h"
 #include "settings.h"
 
 #define ICON_LEFT 0xe1ac
@@ -73,10 +76,16 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     char buff[64];
     amiibo_view_t *p_amiibo_view = p_view->user_data;
     ntag_t *ntag = p_amiibo_view->ntag;
+    if (p_amiibo_view->info_page) {
+        amiibo_info_draw(p_canvas, ntag, p_amiibo_view->info_page);
+        return;
+    }
 
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
-    sprintf(buff, "%02d %02x:%02x:%02x:%02x:%02x:%02x:%02x", p_amiibo_view->focus + 1, ntag->data[0], ntag->data[1],
-            ntag->data[2], ntag->data[4], ntag->data[5], ntag->data[6], ntag->data[7]);
+    uint8_t uid[7];
+    ntag_store_get_uuid(ntag, uid);
+    sprintf(buff, "%02d %02x:%02x:%02x:%02x:%02x:%02x:%02x", p_amiibo_view->focus + 1, uid[0], uid[1],
+            uid[2], uid[3], uid[4], uid[5], uid[6]);
 
     uint8_t y = 0;
     mui_canvas_draw_box(p_canvas, 0, y, mui_canvas_get_width(p_canvas), 12);
@@ -123,13 +132,14 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         clip_win_cur.h = mui_canvas_get_height(p_canvas) - y;
         mui_canvas_set_clip_window(p_canvas, &clip_win_cur);
 
-        // text+qrcode
-        uint8_t square_r = 0;
+        /* Keep the complete QR stationary while the description scrolls.
+         * Its own quiet zone and a separate text clip prevent moving text or
+         * the scrollbar from painting over the scan target. */
+        uint16_t text_width = clip_win_cur.w;
         if (settings_get_data()->qrcode_enabled) {
-            square_r = 37;
-            sprintf(buff, "https://pixl.amiibo.xyz/a/%08X-%08X", head, tail);
-            if (p_amiibo_view->desc_offset <= 33) {
-                draw_qrcode(p_canvas, 91, y + 2 - p_amiibo_view->desc_offset, 33, buff);
+            if (amiibo_info_url(buff, sizeof(buff), ntag) &&
+                draw_qrcode(p_canvas, 91, y + 2, 37, buff)) {
+                text_width = 89; /* QR starts at x=91; keep a two-pixel gap. */
             }
         }
         p_amiibo_view->desc_step = 8;
@@ -138,8 +148,8 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         const db_link_t *link = get_link_by_id(p_amiibo_view->game_id, head, tail);
         if (strlen(ntag->notes) > 0) {
             p_amiibo_view->desc_total =
-                mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, clip_win_cur.w, clip_win_cur.h,
-                                              p_amiibo_view->desc_offset, square_r, ntag->notes);
+                mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
+                                              p_amiibo_view->desc_offset, 0, ntag->notes);
         } else if (link != NULL) {
             const char *notes;
             if (isChineseLanguage()) {
@@ -148,8 +158,8 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
                 notes = link->note_en;
             }
             p_amiibo_view->desc_total =
-                mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, clip_win_cur.w, clip_win_cur.h,
-                                              p_amiibo_view->desc_offset, square_r, notes);
+                mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
+                                              p_amiibo_view->desc_offset, 0, notes);
         }
         mui_canvas_set_clip_window(p_canvas, &clip_win_prev);
         amiibo_view_update_desc_anim(p_amiibo_view);
@@ -161,8 +171,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         sprintf(buff, "[%08x:%08x]", head, tail);
         mui_canvas_draw_utf8(p_canvas, 0, y += 15, buff);
         if (settings_get_data()->qrcode_enabled) {
-            sprintf(buff, "https://pixl.amiibo.xyz/a/%08X-%08X", head, tail);
-            draw_qrcode(p_canvas, 91, 26, 33, buff);
+            if (amiibo_info_url(buff, sizeof(buff), ntag)) draw_qrcode(p_canvas, 91, 26, 37, buff);
         }
     } else {
         amiibo_view_stop_desc_anim(p_amiibo_view);
@@ -174,6 +183,11 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
 static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     amiibo_view_t *p_amiibo_view = p_view->user_data;
+    if (p_amiibo_view->info_page) {
+        if (amiibo_info_input(&p_amiibo_view->info_page, event) && p_amiibo_view->event_cb)
+            p_amiibo_view->event_cb(AMIIBO_VIEW_EVENT_MENU, p_amiibo_view);
+        return;
+    }
     if (event->type == INPUT_TYPE_REPEAT || event->type == INPUT_TYPE_LONG) {
         switch (event->key) {
         case INPUT_KEY_LEFT:
@@ -181,6 +195,8 @@ static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
             p_amiibo_view->desc_auto_scroll_disabled = true;
             if (p_amiibo_view->desc_offset >= p_amiibo_view->desc_step) {
                 p_amiibo_view->desc_offset -= p_amiibo_view->desc_step;
+            } else {
+                p_amiibo_view->desc_offset = 0;
             }
 
             if (p_amiibo_view->event_cb) {

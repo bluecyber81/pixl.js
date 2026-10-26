@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <stdbool.h>
+static bool ntag_emu_prepare_change(void){return true;}
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>

@@ -13,9 +13,48 @@ var bluetoothDevice;
 var connectionPromise;
 var connectionGeneration = 0;
 var connected = false;
+var cancelConnectionStep;
+var disconnectionPromise = null;
+const NOTIFICATION_STOP_TIMEOUT = 1500;
 
-function clearConnection() {
+// Browser GATT promises can remain pending after the peripheral disappears.
+// Bound each radio step, but never time out the user's device picker.
+function waitForConnectionStep(operation, checkCurrent) {
+    return new Promise((resolve, reject) => {
+        let finished = false;
+        const finish = (error, value) => {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+            if (cancelConnectionStep === cancel) cancelConnectionStep = null;
+            if (error) reject(error); else resolve(value);
+        };
+        const cancel = () => finish(new Error('Connection cancelled'));
+        const timer = setTimeout(() => finish(Object.assign(
+            new Error('Bluetooth connection step timed out'), { code: 'CONNECT_TIMEOUT' })), 20000);
+        cancelConnectionStep = cancel;
+        Promise.resolve(operation).then(value => {
+            // A timed-out or cancelled gatt.connect() may still succeed later.
+            // The generation check cleans that stale link without touching a
+            // newer attempt that owns the same BluetoothDevice object.
+            try { checkCurrent(); finish(null, value); } catch (error) { finish(error); }
+        }, error => finish(error));
+    });
+}
+
+// Opaque browser permission identity. RAM only, never a diagnostic/export field.
+export function get_device_key() {
+    return connected && typeof bluetoothDevice?.id === 'string' ? bluetoothDevice.id : null;
+}
+
+// Deliberately exclude the selected BluetoothDevice, its name and its address.
+export function get_connection_state() {
+    return disconnectionPromise ? 'disconnecting' : connected ? 'connected' : connectionPromise ? 'connecting' : 'disconnected';
+}
+
+function detachConnection() {
     const device = bluetoothDevice;
+    const rx = nus_char_rx;
     if (nus_char_rx) {
         nus_char_rx.removeEventListener('characteristicvaluechanged', onRxDataReceived);
     }
@@ -25,12 +64,51 @@ function clearConnection() {
     nus_char_rx = null;
     nus_char_tx = null;
     connected = false;
-    if (device && device.gatt.connected) device.gatt.disconnect();
+    return { device, rx };
+}
+
+function disconnectGatt(device) {
+    // Local teardown must finish even if a platform has already invalidated GATT.
+    try { device?.gatt.disconnect(); } catch (_) { /* Already unavailable. */ }
+}
+
+function clearConnection() {
+    const { device } = detachConnection();
+    // disconnect() also cancels a pending GATT connection while connected is
+    // still false. Waiting for a late successful connect leaves that request live.
+    disconnectGatt(device);
+}
+
+function stopNotificationsAndDisconnect({ device, rx }) {
+    let complete;
+    const pending = new Promise(resolve => { complete = resolve; });
+    disconnectionPromise = pending;
+    let finished = false;
+    const finish = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        device.removeEventListener('gattserverdisconnected', disconnected);
+        disconnectGatt(device);
+        if (disconnectionPromise === pending) disconnectionPromise = null;
+        complete();
+        sharedEventDispatcher().emit('ble_disconnect_complete');
+    };
+    const disconnected = event => { if (event.target === device) finish(); };
+    const timer = setTimeout(finish, NOTIFICATION_STOP_TIMEOUT);
+    device.addEventListener('gattserverdisconnected', disconnected);
+    // Defer the radio operation until local consumers have cancelled their queues.
+    // A resolved promise confirms local unsubscription, not a physical radio close.
+    Promise.resolve().then(() => {
+        if (!finished) return rx.stopNotifications();
+    }).then(finish, finish);
+    return pending;
 }
 
 export function connect() {
     if (connectionPromise) return connectionPromise;
     if (connected) return Promise.resolve();
+    const previousDisconnect = disconnectionPromise;
     const generation = ++connectionGeneration;
     let attemptedDevice;
     function checkCurrent() {
@@ -42,24 +120,32 @@ export function connect() {
             throw new Error('Connection cancelled');
         }
     }
-    connectionPromise = Promise.resolve().then(() => navigator.bluetooth.requestDevice({
+    connectionPromise = Promise.resolve().then(() => {
+        checkCurrent();
+        return navigator.bluetooth.requestDevice({
         filters: [
             { services: [NUS_SERVICE_UUID] }
         ],
         optionalServices: [NUS_SERVICE_UUID]
-    }))
+        });
+    })
         .then(device => {
             checkCurrent();
-            attemptedDevice = device;
-            bluetoothDevice = device;
-            console.log('Connecting to GATT Server...');
-            device.addEventListener('gattserverdisconnected', onDeviceDisconnected);
-            return device.gatt.connect();
+            // The picker still opens from the initiating user gesture. Only the
+            // radio work waits: old unsubscription must never affect a new link.
+            return Promise.resolve(previousDisconnect).then(() => {
+                checkCurrent();
+                attemptedDevice = device;
+                bluetoothDevice = device;
+                console.log('Connecting to GATT Server...');
+                device.addEventListener('gattserverdisconnected', onDeviceDisconnected);
+                return waitForConnectionStep(device.gatt.connect(), checkCurrent);
+            });
         })
         .then(server => {
             checkCurrent();
             console.log('Getting Services...');
-            return server.getPrimaryServices();
+            return waitForConnectionStep(server.getPrimaryServices(), checkCurrent);
         })
         .then(services => {
             checkCurrent();
@@ -71,7 +157,7 @@ export function connect() {
                 }
             });
             if (!nus_service) throw new Error('Pixl UART service is missing');
-            return nus_service.getCharacteristics();
+            return waitForConnectionStep(nus_service.getCharacteristics(), checkCurrent);
         })
         .then(characteristics => {
             checkCurrent();
@@ -88,7 +174,7 @@ export function connect() {
                 }
             });
             if (!nus_char_rx || !nus_char_tx) throw new Error('Pixl UART characteristics are missing');
-            return nus_char_rx.startNotifications();
+            return waitForConnectionStep(nus_char_rx.startNotifications(), checkCurrent);
         })
         .then(() => {
             checkCurrent();
@@ -98,7 +184,9 @@ export function connect() {
         })
         .catch(error => {
             if (generation === connectionGeneration) {
+                ++connectionGeneration;
                 clearConnection();
+                connectionPromise = null;
                 sharedEventDispatcher().emit("ble_connect_error", error);
             }
         }).then(() => {
@@ -108,12 +196,20 @@ export function connect() {
 }
 
 
-export function disconnect() {
+export function disconnect(options = {}) {
     const hadConnection = !!(bluetoothDevice || connectionPromise || connected);
+    const wasConnected = connected;
     ++connectionGeneration;
+    cancelConnectionStep?.();
     connectionPromise = null;
-    clearConnection();
+    const snapshot = detachConnection();
+    let pending = disconnectionPromise;
+    if (wasConnected && !options.immediate && snapshot.device?.gatt.connected &&
+        typeof snapshot.rx?.stopNotifications === 'function') {
+        pending = stopNotificationsAndDisconnect(snapshot);
+    } else disconnectGatt(snapshot.device);
     if (hadConnection) sharedEventDispatcher().emit("ble_disconnected");
+    return pending || Promise.resolve();
 }
 
 
@@ -121,7 +217,9 @@ export function tx_data(buff) {
     if (!connected || !nus_char_tx || !bluetoothDevice || !bluetoothDevice.gatt.connected) {
         return Promise.reject(new Error('Bluetooth is not connected'));
     }
-    console.log("tx bytes:", buff.byteLength);
+    if (nus_char_tx.properties.write && typeof nus_char_tx.writeValueWithResponse === 'function') {
+        return nus_char_tx.writeValueWithResponse(buff);
+    }
     return nus_char_tx.writeValue(buff);
 }
 
@@ -131,13 +229,13 @@ function onRxDataReceived(event) {
     if (event.target !== nus_char_rx) return;
     const value = event.target.value;
     const data = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
-    console.log("rx bytes:", data.byteLength);
     sharedEventDispatcher().emit("ble_rx_data", data);
 }
 
 function onDeviceDisconnected(event) {
     if (event.target !== bluetoothDevice) return;
     ++connectionGeneration;
+    cancelConnectionStep?.();
     connectionPromise = null;
     clearConnection();
     sharedEventDispatcher().emit("ble_disconnected");

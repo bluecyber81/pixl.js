@@ -16,6 +16,7 @@ static int ack;
 #define CRITICAL_REGION_ENTER() do { ++critical_depth;
 #define CRITICAL_REGION_EXIT() --critical_depth; } while (0)
 #define NRF_SUCCESS 0
+#define NRF_ERROR_BUSY 17
 #define NRF_LOG_INFO(...) ((void)0)
 #define APP_ERROR_CHECK(x) assert((x) == 0)
 #define BSP_BOARD_LED_0 0
@@ -33,9 +34,9 @@ static ret_code_t hal_nfc_parameter_set(int id, const uint8_t *data, size_t size
 static ret_code_t hal_nfc_setup(hal_nfc_callback_t cb, void *ctx) { (void)cb; (void)ctx; return 0; }
 static ret_code_t hal_nfc_start(void) { assert(parameter_writes > 0); ++start_count; return 0; }
 static ret_code_t hal_nfc_stop(void) { ++stop_count; return 0; }
-void ntag_emu_set_tag(const ntag_t *);
+bool ntag_emu_set_tag(const ntag_t *);
 void ntag_emu_set_uuid_only(const ntag_t *);
-void ntag_emu_prepare_change(void);
+bool ntag_emu_prepare_change(void);
 void ntag_emu_process_pending(void);
 
 /* ACTUAL_SOURCE */
@@ -62,11 +63,11 @@ static void callback(ntag_event_type_t type, void *context, ntag_t *tag) {
             write_page(0x77, 0);  /* Explicit NAK, never an ACK followed by silent loss. */
             assert(tag->data[16] == 0x55 && ntag_emu.ntag.data[16] == 0x55);
         } else if (behavior == CHANGE_DURING_SAVE) {
-            ntag_emu_set_tag(&tag_b);
-            assert(tag->data[0] == 0x41 && ntag_emu.ntag.data[0] == 0x42);
+            assert(!ntag_emu_set_tag(&tag_b));
+            assert(tag->data[0] == 0x41 && ntag_emu.ntag.data[0] == 0x41);
             write_page(0x77, 0);
         } else if (behavior == DETACH_DURING_SAVE) {
-            ntag_emu_set_update_cb(NULL, NULL);
+            assert(!ntag_emu_set_update_cb(NULL, NULL));
             assert(tag->data[0] == 0x41);
         } else if (behavior == FIELD_OFF_DURING_SAVE) {
             field_off();
@@ -119,15 +120,15 @@ int main(void) {
     puts("PASS busy WRITE explicitly NAKs; retried WRITE ACKs and is persisted");
 
     reset(); write_page(0x55, 0xa); field_off(); behavior = CHANGE_DURING_SAVE;
-    ntag_emu_process_pending(); assert(writes == 1 && saved_uid == 0x41 && ntag_emu.ntag.data[0] == 0x42);
+    ntag_emu_process_pending(); assert(writes == 1 && saved_uid == 0x41 && ntag_emu.ntag.data[0] == 0x41);
     behavior = NORMAL; write_page(0x77, 0xa); field_off(); ntag_emu_process_pending();
-    assert(writes == 2 && saved_uid == 0x42 && saved_page == 0x77);
+    assert(writes == 2 && saved_uid == 0x41 && saved_page == 0x77);
     reset(); write_page(0x55, 0xa); field_off(); behavior = DETACH_DURING_SAVE;
-    ntag_emu_process_pending(); assert(writes == 1 && ntag_emu.paused && !ntag_emu.update_cb);
+    ntag_emu_process_pending(); assert(writes == 1 && !ntag_emu.paused && ntag_emu.update_cb==callback);
     reset(); write_page(0x55, 0xa); behavior = CHANGE_DURING_SAVE;
-    ntag_emu_prepare_change(); assert(writes == 1 && ntag_emu.paused && ntag_emu.ntag.data[0] == 0x42);
+    ntag_emu_prepare_change(); assert(writes == 1 && ntag_emu.paused && ntag_emu.ntag.data[0] == 0x41);
     write_page(0x77, 0);
-    puts("PASS callback-reentrant tag change and owner detach preserve snapshot/lifecycle");
+    puts("PASS write callback cannot replace its undecided tag or detach its owner");
 
     reset(); behavior = CHANGE_DURING_READ; field_off(); ntag_emu_process_pending();
     assert(reads == 1 && ntag_emu.ntag.data[0] == 0x42);

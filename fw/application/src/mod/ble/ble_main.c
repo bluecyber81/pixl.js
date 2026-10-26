@@ -54,6 +54,7 @@
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
+#include "ble_conn_state.h"
 #include "ble_hci.h"
 #include "ble_nus.h"
 #include "bsp_btn_ble.h"
@@ -83,6 +84,7 @@
 #include "ble_df_driver.h"
 #include "ble_main.h"
 #include "ble_work.h"
+#include "../runtime_diag.h"
 
 #if MAX_MTU_DAT_SIZE != BLE_WORK_DATA_SIZE
 #error "BLE work buffer must match the negotiated maximum NUS payload"
@@ -135,7 +137,21 @@ NRF_BLE_GATT_DEF(m_gatt);                         /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                           /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);               /**< Advertising module instance. */
 
-static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
+static volatile uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Shared with the BLE observer IRQ. */
+/* A host may retain its GAP link after the browser has closed its GATT
+ * session. Notification subscription, not the physical handle, owns a file
+ * protocol session. Never invent a GAP disconnect or restart services here. */
+static volatile uint16_t m_nus_session_handle = BLE_CONN_HANDLE_INVALID;
+static volatile uint16_t m_release_handle = BLE_CONN_HANDLE_INVALID;
+static volatile uint32_t m_link_generation, m_release_generation;
+static volatile bool m_release_attempted, m_release_requested;
+static volatile bool m_file_mode = true;
+static volatile bool m_sessions_enabled;
+/* Bound only initial file-client discovery. An established NUS session has
+ * no idle deadline. RTC subtraction handles its 24-bit counter wrapping. */
+static volatile bool m_file_join_pending;
+static volatile uint32_t m_file_join_tick, m_file_join_generation;
+#define BLE_FILE_JOIN_TIMEOUT_TICKS APP_TIMER_TICKS(30000)
 static uint16_t m_ble_nus_max_data_len =
     BLE_GATT_ATT_MTU_DEFAULT -
     3; /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
@@ -151,6 +167,11 @@ static ble_uuid_t m_adv_uuids[] = /**< Universally unique service identifier. */
 static ble_gap_addr_t m_default_gap_addr = {0};
 
 static uint8_t m_ble_initialized = false;
+/* Advertising mode can remain FAST after a link opens. Track actual SDK
+ * start/idle events instead; never infer visibility from the UI screen. */
+static volatile bool m_advertising_active;
+static uint8_t m_reported_link_state;
+static ble_link_state_handler_t m_link_state_handler;
 
 #define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180 /**< Sleep timeout when ble connection established. */
 uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
@@ -219,6 +240,32 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) { APP_ERROR_HANDLER(nrf_er
 static void nus_data_handler(ble_nus_evt_t *p_evt) {
     bool accepted = true;
     nrf_pwr_mgmt_feed();
+    if (!m_sessions_enabled || p_evt->conn_handle == BLE_CONN_HANDLE_INVALID ||
+        (m_conn_handle != BLE_CONN_HANDLE_INVALID && p_evt->conn_handle != m_conn_handle)) return;
+    if (p_evt->type == BLE_NUS_EVT_COMM_STARTED) {
+        /* NUS's CONNECT observer runs before ours. Remember an already
+         * restored CCCD, but do not dispatch work before GAP is recorded. */
+        if (ble_conn_state_status(p_evt->conn_handle) != BLE_CONN_STATUS_CONNECTED ||
+            m_release_handle != BLE_CONN_HANDLE_INVALID || m_nus_session_handle == p_evt->conn_handle) return;
+        m_nus_session_handle = p_evt->conn_handle;
+        m_file_join_pending = false;
+        if (m_file_mode && m_conn_handle == p_evt->conn_handle) ble_work_connected();
+        return;
+    }
+    if (p_evt->type == BLE_NUS_EVT_COMM_STOPPED) {
+        if (m_nus_session_handle != p_evt->conn_handle) return; /* Initial CCCD=0 is not a session close. */
+        m_nus_session_handle = BLE_CONN_HANDLE_INVALID;
+        if (m_file_mode && m_conn_handle == p_evt->conn_handle) {
+            ble_work_disconnected(); /* Invalidate now; flush/close only in main. */
+            m_release_handle = m_conn_handle;
+            m_release_generation = m_link_generation;
+            m_release_attempted = m_release_requested = false;
+        }
+        return;
+    }
+    if (m_conn_handle != p_evt->conn_handle ||
+        (m_file_mode && (m_nus_session_handle != m_conn_handle ||
+                         m_release_handle != BLE_CONN_HANDLE_INVALID))) return;
     if (p_evt->type == BLE_NUS_EVT_RX_DATA) {
         accepted = ble_work_receive(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
     } else if (p_evt->type == BLE_NUS_EVT_TX_RDY) {
@@ -232,9 +279,55 @@ static void nus_data_handler(ble_nus_evt_t *p_evt) {
     }
 }
 
+static void ble_file_join_poll(void) {
+    /* No extra timer callback: serialize the deadline decision with NUS/GAP
+     * events, then use the existing deferred cleanup and release path. */
+    CRITICAL_REGION_ENTER();
+    if (m_file_join_pending && m_sessions_enabled && m_file_mode &&
+        m_conn_handle != BLE_CONN_HANDLE_INVALID && m_file_join_generation == m_link_generation &&
+        m_nus_session_handle != m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
+        app_timer_cnt_diff_compute(app_timer_cnt_get(), m_file_join_tick) >= BLE_FILE_JOIN_TIMEOUT_TICKS) {
+        m_file_join_pending = false;
+        ble_work_disconnected();
+        m_release_handle = m_conn_handle;
+        m_release_generation = m_link_generation;
+        m_release_attempted = m_release_requested = false;
+        /* Give the restored user standby interval a fresh starting point,
+         * rather than sleeping immediately when a short timeout returns. */
+        nrf_pwr_mgmt_feed();
+    }
+    CRITICAL_REGION_EXIT();
+}
+
+static void ble_release_stopped_session(void) {
+    /* Run after old VFS work has unwound and cleanup has completed. The
+     * generation check also covers a newer peer reusing the same handle. */
+    ret_code_t result = NRF_SUCCESS;
+    CRITICAL_REGION_ENTER();
+    if (ble_work_cleanup_complete() && !m_release_attempted && m_release_handle != BLE_CONN_HANDLE_INVALID &&
+        m_release_handle == m_conn_handle && m_release_generation == m_link_generation) {
+        m_release_attempted = true;
+        result = sd_ble_gap_disconnect(m_release_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        m_release_requested = result == NRF_SUCCESS;
+    }
+    CRITICAL_REGION_EXIT();
+    /* On failure keep the actual link visible and allow the normal local
+     * exit action to retry. Do not spin or claim that advertising resumed. */
+    if (result != NRF_SUCCESS) NRF_LOG_WARNING("BLE session release failed: %lu", (unsigned long)result);
+}
+
 void ble_process_pending(void) {
+    ble_file_join_poll();
     ble_work_process(ble_on_disconnected);
+    ble_release_stopped_session();
     ble_df_driver_poll();
+    if (m_link_state_handler) {
+        ble_link_state_t state = ble_link_state_get();
+        if (state != m_reported_link_state) {
+            m_reported_link_state = state;
+            m_link_state_handler(state);
+        }
+    }
 }
 
 /**@snippet [Handling the data received over BLE] */
@@ -319,10 +412,12 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 
     switch (ble_adv_evt) {
     case BLE_ADV_EVT_FAST:
+        m_advertising_active = true;
         err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
         APP_ERROR_CHECK(err_code);
         break;
     case BLE_ADV_EVT_IDLE:
+        m_advertising_active = false;
         bsp_indication_set(BSP_INDICATE_IDLE);
         break;
     default:
@@ -355,8 +450,23 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
         APP_ERROR_CHECK(err_code);
         m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+        m_link_generation++;
+        m_release_handle = BLE_CONN_HANDLE_INVALID;
+        m_release_attempted = m_release_requested = false;
+        m_file_join_pending = m_sessions_enabled && m_file_mode && m_nus_session_handle != m_conn_handle;
+        if (m_file_join_pending) {
+            m_file_join_tick = app_timer_cnt_get();
+            m_file_join_generation = m_link_generation;
+            /* GAP discovery is activity once, not a reason to feed forever. */
+            nrf_pwr_mgmt_feed();
+        }
+        m_advertising_active = false;
         m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
-        ble_work_connected();
+        if (m_sessions_enabled && (!m_file_mode || m_nus_session_handle == m_conn_handle)) {
+            ble_work_connected();
+        } else {
+            ble_work_disconnected();
+        }
         err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
         APP_ERROR_CHECK(err_code);
 
@@ -371,9 +481,17 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         break;
 
     case BLE_GAP_EVT_DISCONNECTED:
+        if (p_ble_evt->evt.gap_evt.conn_handle != m_conn_handle) break;
+        runtime_diag_ble_disconnected(p_ble_evt->evt.gap_evt.params.disconnected.reason);
         NRF_LOG_INFO("Disconnected");
         // LED indication will be changed when advertising starts.
         m_conn_handle = BLE_CONN_HANDLE_INVALID;
+        /* Do not clear advertising here: the SDK may already have restarted
+         * it earlier in this same disconnect observer dispatch. */
+        m_nus_session_handle = m_release_handle = BLE_CONN_HANDLE_INVALID;
+        m_file_join_pending = false;
+        m_release_attempted = m_release_requested = false;
+        m_link_generation++;
         m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
         ble_work_disconnected();
         nrf_pwr_mgmt_set_timeout(m_previous_pwr_mgmt_sleep_timeout);
@@ -403,6 +521,7 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         break;
 
     case BLE_GATTC_EVT_TIMEOUT:
+        runtime_diag_ble_abort(RUNTIME_DIAG_GATT_CLIENT_TIMEOUT);
         // Disconnect on GATT Client timeout event.
         err_code =
             sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
@@ -410,6 +529,7 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         break;
 
     case BLE_GATTS_EVT_TIMEOUT:
+        runtime_diag_ble_abort(RUNTIME_DIAG_GATT_SERVER_TIMEOUT);
         // Disconnect on GATT Server timeout event.
         err_code =
             sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
@@ -548,6 +668,9 @@ void ble_service_id_set(uint32_t suffix) {
 }
 
 void ble_device_mode_prepare(ble_device_mode_t mode) {
+    m_file_join_pending = false;
+    m_file_mode = mode == BLE_DEVICE_MODE_PIXLJS;
+    m_sessions_enabled = true;
     /* A diagnostic MTU preference belongs to this file-transfer screen only.
      * Plain disconnect/reconnect keeps it; entering any mode resets it. */
     ret_code_t mtu_result = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
@@ -573,13 +696,56 @@ void ble_adv_start(void) {
     }
 }
 
+ble_link_state_t ble_link_state_get(void) {
+    ble_link_state_t state;
+    CRITICAL_REGION_ENTER();
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+        state = m_release_handle != BLE_CONN_HANDLE_INVALID && (!m_release_attempted || m_release_requested) ?
+                    BLE_LINK_DISCONNECTING :
+                m_file_mode && m_nus_session_handle != m_conn_handle ? BLE_LINK_HOST_CONNECTED : BLE_LINK_CONNECTED;
+    } else {
+        state = m_advertising_active ? BLE_LINK_ADVERTISING : BLE_LINK_INACTIVE;
+    }
+    CRITICAL_REGION_EXIT();
+    return state;
+}
+
+void ble_link_state_observe(ble_link_state_handler_t handler) {
+    /* Registration and delivery are foreground-only. Force one initial
+     * snapshot even when another BLE app previously saw the same state. */
+    m_link_state_handler = handler;
+    m_reported_link_state = UINT8_MAX;
+}
+
+bool ble_restart_advertising(void) {
+    ret_code_t result = NRF_ERROR_INVALID_STATE;
+    CRITICAL_REGION_ENTER();
+    if (m_ble_initialized && m_conn_handle == BLE_CONN_HANDLE_INVALID && !m_advertising_active) {
+        m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = false;
+        result = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+    }
+    CRITICAL_REGION_EXIT();
+    /* SoftDevice may establish a link before its application IRQ is handled.
+     * INVALID_STATE must not reset/disconnect that new peer. Allow a retry if
+     * advertising failed for another reason; never report success early. */
+    if (result != NRF_SUCCESS) NRF_LOG_INFO("BLE visibility retry: %lu", (unsigned long)result);
+    return result == NRF_SUCCESS;
+}
+
 void ble_disable() {
+    m_file_join_pending = false;
+    m_sessions_enabled = false;
+    m_nus_session_handle = m_release_handle = BLE_CONN_HANDLE_INVALID;
+    m_release_attempted = m_release_requested = false;
+    m_advertising_active = false;
     ble_work_disconnected();
     if (!m_ble_initialized) return;
 
+    /* Disable automatic restart before stopping advertising: a disconnect
+     * observer may run between these SoftDevice calls. */
+    m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;
     ble_advertising_start(&m_advertising, BLE_ADV_MODE_IDLE);
     sd_ble_gap_adv_stop(m_advertising.adv_handle);
-    m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;
     if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
         sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
     }

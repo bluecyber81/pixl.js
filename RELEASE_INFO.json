@@ -1,42 +1,43 @@
 {
-  "version": "2.21.0-DE3.16",
-  "counter": 572,
+  "version": "2.22.0-DE3.37",
+  "counter": 609,
   "board": "LCD",
-  "base_repository": "https://github.com/cylin577/pixl.js",
-  "base_commit": "57a364329436745f780e70ac07a1642989a00d6f",
-  "original_project": "https://github.com/solosky/pixl.js",
-  "application_only": true,
-  "public_source_fixture_redacted": true,
-  "source_export_sha256": "b2b33e1a37a64997674bdc940ba524762126accc9de9e7981f2a58ddcb6f99e6",
-  "ota": {
-    "application_bytes": 361288,
-    "application_only": true,
-    "application_sha256": "7a92e95a62556b45cc0f9ce06dbed4ba90a9415f41932cdda0267b3f7265e697",
-    "application_version": 572,
-    "debug": false,
-    "ecdsa_p256_sha256_verified_against_official_2_16_public_key": true,
-    "hardware_version": 52,
-    "manifest": {
-      "manifest": {
-        "application": {
-          "bin_file": "pixljs.bin",
-          "dat_file": "pixljs.dat"
-        }
-      }
-    },
-    "payload_sha256_matches_signed_init": true,
-    "softdevice_requirement": "0x0103",
-    "zip": "pixljs_ota_v2.21.0-DE3.16.zip",
-    "zip_bytes": 361883,
-    "zip_sha256": "e586c067b4a62da6a85d3ea97c3fcf044bb9672ff9be5cde23c6329c5837e2ac"
-  },
-  "vendored_components": [
-    "mlib",
-    "tlsf",
-    "cwalk",
-    "spiffs",
-    "littlefs",
-    "chameleon-ultra"
+  "web_version": "3.27.0",
+  "upstream_repositories": [
+    "https://github.com/cylin577/pixl.js",
+    "https://github.com/solosky/pixl.js"
   ],
-  "private_keys_in_distribution": false
+  "application_only": true,
+  "storage_engine": "Packed LittleFS PFS1",
+  "ota_sha256": "ecb484e3a35968c9d5b04088ec19c460088b9c7a5b6863a3122e61d263a0cf73",
+  "application_sha256": "3a3d060d9359c57fc1633e2daecff5a5764841890152599eeded010ee39d8b27",
+  "hardware_version": 52,
+  "softdevice_requirements": [
+    "0x0103",
+    "0x0126"
+  ],
+  "bootloader_and_softdevice_replaced_by_application_ota": false,
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
+  "migration_required_for_existing_pfs1": false,
+  "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
+  "host_firmware_suites": 102,
+  "sanitizer_suites": 5,
+  "web_host_tests": 659,
+  "web_worker_tests": 7,
+  "device_evidence": {
+    "date": "2026-10-26",
+    "source": "owner report",
+    "result": "DE3.37 flashed and tested functions working",
+    "limits": "No independent full image readback or new exhaustive physical error/MTU/NFC suite is claimed."
+  },
+  "privacy": {
+    "private_keys_in_distribution": false,
+    "user_backups_or_figure_dumps_in_distribution": false,
+    "test_address_replaced_with_synthetic": true
+  },
+  "limits": [
+    "Only the matching LCD hardware/layout is in scope.",
+    "RAM-retained unsaved NFC changes do not survive power removal or forced reset.",
+    "The inherited public upstream signing key does not prove exclusive publisher identity."
+  ]
 }

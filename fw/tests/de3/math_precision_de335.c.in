@@ -1,0 +1,64 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+typedef struct { int u8g2; } mui_t;
+static mui_t stub_mui;
+static uint8_t contrast_result;
+static mui_t *mui(void) { return &stub_mui; }
+static void u8g2_SetContrast(int *unused,uint8_t value) { (void)unused;contrast_result=value; }
+static void JOY_sound(int a,int b) { (void)a;(void)b; }
+@STRUCT@
+@OLD_CONTRAST@
+@NEW_CONTRAST@
+@OLD_GAME@
+@NEW_GAME@
+static uint32_t bits(float value) { uint32_t result;memcpy(&result,&value,4);return result; }
+int main(void) {
+    unsigned contrast_cases=0;
+    for(unsigned value=0;value<256;value++) {
+        old_contrast((uint8_t)value);uint8_t before=contrast_result;
+        new_contrast((uint8_t)value);assert(before==contrast_result);contrast_cases++;
+    }
+    unsigned rounding_differences=0,boundary_cases=0;double max_error=0;
+    for(int angle=-128;angle<=127;angle++)for(int sample=-10000;sample<=10000;sample++) {
+        GROUPE old={0},new={0};old.SIMBallypos=new.SIMBallypos=32;
+        old.SIMBallSpeedy=new.SIMBallSpeedy=(float)sample/10000.0f;
+        old.TrackAngleOut=new.TrackAngleOut=(int8_t)angle;
+        old_WriteBallMove(&old);new_WriteBallMove(&new);
+        assert(isfinite(new.BallSpeedy)&&new.BallSpeedy>=-1&&new.BallSpeedy<=1);
+        double error=fabs((double)old.BallSpeedy-new.BallSpeedy);if(error>max_error)max_error=error;
+        rounding_differences += bits(old.BallSpeedy)!=bits(new.BallSpeedy);boundary_cases++;
+    }
+    unsigned trajectories=128,frames=5000,divergent=0,first_divergent_frame=0,pixel_divergent=0;
+    double max_position_error=0;
+    for(unsigned seed=0;seed<trajectories;seed++) {
+        GROUPE old={0},new={0};
+        old.launch=1;old.Ballxpos=20+(seed%40);old.Ballypos=8+(seed%40);
+        old.BallSpeedx=(seed&1)?1:-1;
+        old.BallSpeedy=(seed&2)?0.41f:0.47f;if(seed&4)old.BallSpeedy=-old.BallSpeedy;
+        memset(old.BlocsGrid,255,sizeof(old.BlocsGrid));
+        if(seed&8)for(unsigned y=0;y<6;y++)for(unsigned x=0;x<5;x++)old.BlocsGrid[y][x]=(seed+x+y)%6;
+        new=old;bool saw_difference=false,saw_pixel_difference=false;
+        for(unsigned frame=1;frame<=frames;frame++) {
+            int paddle=(int)old.Ballypos-8;if(paddle<0)paddle=0;if(paddle>48)paddle=48;
+            old.TrackBary=new.TrackBary=(uint8_t)(paddle/8);
+            old.TrackBaryDecal=new.TrackBaryDecal=(uint8_t)(paddle%8);
+            old_UpdateBall(&old);new_UpdateBall(&new);
+            double dx=fabs((double)old.Ballxpos-new.Ballxpos),dy=fabs((double)old.Ballypos-new.Ballypos);
+            if(dx>max_position_error)max_position_error=dx;
+            if(dy>max_position_error)max_position_error=dy;
+            if(memcmp(&old,&new,sizeof(old))) {
+                saw_difference=true;if(!first_divergent_frame||frame<first_divergent_frame)first_divergent_frame=frame;
+            }
+            if((int)old.Ballxpos!=(int)new.Ballxpos||(int)old.Ballypos!=(int)new.Ballypos||memcmp(old.BlocsGrid,new.BlocsGrid,sizeof(old.BlocsGrid)))saw_pixel_difference=true;
+            if(old.Ballxpos<1||new.Ballxpos<1)break;
+        }
+        divergent+=saw_difference;pixel_divergent+=saw_pixel_difference;
+    }
+    assert(max_error<=0.0000001 && pixel_divergent==0 && max_position_error<0.0009765625);
+    printf("{\"passed\":true,\"lcd\":%d,\"contrast_cases\":%u,\"boundary_cases\":%u,\"rounding_differences\":%u,\"max_speed_abs_error\":%.17g,\"trajectories\":%u,\"max_frames_each\":%u,\"divergent_trajectories\":%u,\"pixel_divergent_trajectories\":%u,\"first_divergent_frame\":%u,\"max_position_abs_error\":%.17g}\n",TEST_LCD,contrast_cases,boundary_cases,rounding_differences,max_error,trajectories,frames,divergent,pixel_divergent,first_divergent_frame,max_position_error);
+    return 0;
+}

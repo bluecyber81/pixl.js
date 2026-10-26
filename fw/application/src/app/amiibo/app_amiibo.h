@@ -31,7 +31,9 @@ typedef struct {
     uint32_t current_focus_index;
 
     /**amiibo detail view*/
-    string_array_t amiibo_files;
+    char browser_anchor[VFS_MAX_NAME_LEN];
+    uint16_t browser_anchor_icon;
+    int8_t browser_direction; /* 0: first page, +1: after, -1: before anchor */
     bool reload_amiibo_files;
 
 } app_amiibo_t;
@@ -51,7 +53,17 @@ typedef struct {
     char current_file[64];
     uint32_t current_focus_index;
     uint32_t current_scene_id;
+    /* Versioned tail: the pre-DE3.32 208-byte prefix remains unchanged. */
+    uint32_t browser_magic;
+    char browser_anchor[VFS_MAX_NAME_LEN];
+    uint16_t browser_anchor_icon;
+    int8_t browser_direction;
 } app_amiibo_cache_data_t;
+
+#define APP_AMIIBO_CACHE_PAGE_MAGIC 0x41333250u
+
+int32_t app_amiibo_file_neighbor(app_amiibo_t *app, int8_t direction, char *name,
+                                 uint16_t *focus, uint16_t *total);
 
 extern mini_app_t app_amiibo_info;
 

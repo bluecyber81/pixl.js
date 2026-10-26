@@ -1,0 +1,136 @@
+#include "amiibo_info_draw.h"
+#include "mui_qrcode_helper.h"
+#include "db_header.h"
+#include "i18n/language.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
+extern const char *const lang_de_DE[];
+extern const char *const lang_en_US[];
+static bool english;
+const char *getLangString(int id) { return (english ? lang_en_US : lang_de_DE)[id]; }
+const db_amiibo_t *get_amiibo_by_id(uint32_t h,uint32_t t) {
+    static const db_amiibo_t known = {0};
+    return (h==0 && t==2) || (h==0x1f030100 && t==0x04c91e03) ? &known : NULL;
+}
+/*ACTUAL_ENDIAN_FUNCTION*/
+
+static const u8x8_display_info_t display_info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
+static unsigned frames;
+static void setup(mui_canvas_t *c,u8g2_t *u,uint8_t *buf) {
+    memset(u,0,sizeof(*u));memset(buf,0,1024);
+    u->u8x8.display_info=&display_info;
+    u8g2_SetupBuffer(u,buf,8,u8g2_ll_hvline_vertical_top_lsb,&u8g2_cb_r0);
+    c->fb=u;c->width=128;c->height=64;c->offset_x=0;c->offset_y=0;
+    mui_canvas_set_font(c,u8g2_font_wqy12_t_gb2312a);
+}
+static void pbm(const char *folder,const char *name,const uint8_t *buf) {
+    char path[1024];snprintf(path,sizeof(path),"%s/%s.pbm",folder,name);
+    FILE *f=fopen(path,"wb");assert(f);fprintf(f,"P1\n128 64\n");
+    for(unsigned y=0;y<64;y++)for(unsigned x=0;x<128;x++)
+        fprintf(f,"%u%c",!!(buf[(y/8)*128+x]&(1U<<(y%8))),x==127?'\n':' ');
+    fclose(f);frames++;
+}
+static void image(mui_canvas_t *c,const ntag_t *tag,uint8_t page,const char *folder,const char *name) {
+    uint8_t before[sizeof(*tag)];memcpy(before,tag,sizeof(*tag));
+    memset(c->fb->tile_buf_ptr,0,1024);mui_canvas_set_draw_color(c,2);
+    amiibo_info_draw(c,tag,page);
+    assert(mui_canvas_get_draw_color(c)==2);
+    assert(!memcmp(before,tag,sizeof(*tag)));
+    pbm(folder,name,c->fb->tile_buf_ptr);
+}
+
+static unsigned menu_events,switched_view,scroll_calls;
+typedef struct {void *user_data;} mui_view_t;
+typedef int amiibo_detail_view_event_t;
+enum {AMIIBO_DETAIL_VIEW_EVENT_UPDATE,AMIIBO_DETAIL_VIEW_EVENT_MENU};
+typedef struct amiibo_detail_view_s {
+    uint8_t info_page;uint16_t focus,max_ntags;int8_t navigate_direction;
+    void *user_data;
+    void (*event_cb)(amiibo_detail_view_event_t,struct amiibo_detail_view_s *);
+} amiibo_detail_view_t;
+typedef struct {void *p_view_dispatcher;} app_amiibo_t;
+enum {AMIIBO_VIEW_ID_LIST=11,AMIIDB_VIEW_ID_LIST=12};
+void mui_view_dispatcher_switch_to_view(void *d,unsigned id){(void)d;switched_view=id;menu_events++;}
+/*ACTUAL_FILE_BACK_CALLBACK*/
+/*ACTUAL_FILE_INPUT*/
+
+typedef int amiibo_view_event_t;
+enum {AMIIBO_VIEW_EVENT_UPDATE,AMIIBO_VIEW_EVENT_DESC_UPDATE,AMIIBO_VIEW_EVENT_MENU};
+typedef struct amiibo_view_s {
+    uint8_t info_page,focus,max_ntags,desc_step;
+    uint16_t desc_offset;
+    bool desc_auto_scroll_disabled;
+    void *user_data;
+    void (*event_cb)(amiibo_view_event_t,struct amiibo_view_s *);
+} amiibo_view_t;
+typedef struct {void *p_view_dispatcher;} app_amiidb_t;
+static void amiibo_view_stop_desc_anim(amiibo_view_t *v){(void)v;scroll_calls++;}
+static void amiibo_view_reset_desc_scroll(amiibo_view_t *v){(void)v;scroll_calls++;}
+static uint16_t amiibo_view_desc_max_offset(amiibo_view_t *v){(void)v;scroll_calls++;return 0;}
+/*ACTUAL_DB_BACK_CALLBACK*/
+/*ACTUAL_DB_INPUT*/
+
+static void navigation_tests(void) {
+    app_amiibo_t app={0};app_amiidb_t db={0};
+    amiibo_detail_view_t file={.info_page=1,.focus=5,.max_ntags=10,.user_data=&app,.event_cb=amiibo_scene_figure_info_back};
+    amiibo_view_t view={.info_page=1,.focus=5,.max_ntags=10,.user_data=&db,.event_cb=amiidb_scene_figure_info_back};
+    mui_view_t f={&file},v={&view};
+    mui_input_event_t e={INPUT_KEY_RIGHT,INPUT_TYPE_SHORT};
+    amiibo_detail_view_on_input(&f,&e);amiibo_view_on_input(&v,&e);
+    assert(file.info_page==2 && view.info_page==2 && file.focus==5 && view.focus==5 && !menu_events && !scroll_calls);
+    e.type=INPUT_TYPE_REPEAT;amiibo_detail_view_on_input(&f,&e);amiibo_view_on_input(&v,&e);
+    assert(file.info_page==2 && view.info_page==2 && !scroll_calls);
+    e.type=INPUT_TYPE_SHORT;e.key=INPUT_KEY_LEFT;
+    amiibo_detail_view_on_input(&f,&e);amiibo_view_on_input(&v,&e);
+    assert(file.info_page==1 && view.info_page==1);
+    e.key=INPUT_KEY_CENTER;amiibo_detail_view_on_input(&f,&e);
+    assert(file.info_page==0 && switched_view==AMIIBO_VIEW_ID_LIST && menu_events==1);
+    amiibo_view_on_input(&v,&e);
+    assert(view.info_page==0 && switched_view==AMIIDB_VIEW_ID_LIST && menu_events==2 && !scroll_calls);
+    file.info_page=2;e.type=INPUT_TYPE_LONG;amiibo_detail_view_on_input(&f,&e);
+    assert(file.info_page==0 && menu_events==3);
+}
+
+int main(int argc,char **argv) {
+    assert(argc==2);
+    uint8_t buffer[1024];u8g2_t u;mui_canvas_t canvas;
+    setup(&canvas,&u,buffer);
+    ntag_t classic={0},v3={0},unknown={0},blank={0};
+    classic.data[91]=2;classic.type=NTAG_215;
+    const uint8_t id[8]={0x1f,3,1,0,4,0xc9,0x1e,3};
+    memcpy(v3.data+84,id,8);v3.type=NTAG_I2C_PLUS_2K;
+    memset(unknown.data+84,0xab,8);unknown.type=NTAG_215;
+    char a[48],b[48];assert(amiibo_info_url(a,sizeof(a),&v3));
+    assert(!strcmp(a,"https://amiibo.life/nfc/1f030100-04c91e03"));
+    memset(v3.data,0x6a,84);memset(v3.data+92,0x6a,sizeof(v3.data)-92);memset(v3.notes,'X',sizeof(v3.notes));
+    assert(amiibo_info_url(b,sizeof(b),&v3) && !strcmp(a,b));
+    assert(!amiibo_info_url(b,5,&v3) && !b[0]);
+    assert(!amiibo_info_url(b,sizeof(b),&blank));
+    for(unsigned language=0;language<2;language++) {
+        english=language;const char *texts[]={_T(DE3_FIGURE_INFO),_T(DE3_CATALOG_KNOWN),_T(DE3_CATALOG_UNKNOWN)};
+        assert(mui_canvas_get_utf8_width(&canvas,texts[0])<=100);
+        assert(mui_canvas_get_utf8_width(&canvas,texts[1])<=124);
+        assert(mui_canvas_get_utf8_width(&canvas,texts[2])<=124);
+        assert(mui_canvas_get_utf8_width(&canvas,_T(DE3_PUBLIC_ID_ONLY))<=74);
+        assert(mui_canvas_get_utf8_width(&canvas,_T(DE3_INFO_PRESS))<=74);
+        assert(mui_canvas_get_utf8_width(&canvas,_T(BACK))<=74);
+        char name[64];snprintf(name,sizeof(name),"%s_classic_info",english?"en":"de");image(&canvas,&classic,1,argv[1],name);
+        snprintf(name,sizeof(name),"%s_v3_info",english?"en":"de");image(&canvas,&v3,1,argv[1],name);
+        snprintf(name,sizeof(name),"%s_public_qr",english?"en":"de");image(&canvas,&v3,2,argv[1],name);
+    }
+    english=false;image(&canvas,&unknown,1,argv[1],"de_unknown_info");image(&canvas,&blank,2,argv[1],"de_blank_qr");
+    memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,91,25,37,a));pbm(argv[1],"database_qr_edge",buffer);
+    /* Four-module quiet zone must be white on every side, even over dirty RAM. */
+    for(unsigned y=25;y<62;y++)for(unsigned x=91;x<128;x++)if(x<95||x>=124||y<29||y>=58)
+        assert(!(buffer[(y/8)*128+x]&(1U<<(y%8))));
+    uint8_t saved[1024];memcpy(saved,buffer,1024);
+    assert(!draw_qrcode(&canvas,92,25,37,a));assert(!memcmp(saved,buffer,1024));
+    assert(!draw_qrcode(&canvas,0,28,37,a));assert(!memcmp(saved,buffer,1024));
+    assert(!draw_qrcode(&canvas,0,0,28,a));assert(!memcmp(saved,buffer,1024));
+    memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,39,0,50,"https://pixl.amiibo.xyz"));pbm(argv[1],"ble_qr_top_edge",buffer);
+    navigation_tests();
+    printf("PASS figure-info: %u actual128x64 u8g2/font frames, public-only URL, unchanged tag, QR quiet-zone/bounds, both view return paths\n",frames);
+    return 0;
+}

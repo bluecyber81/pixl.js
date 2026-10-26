@@ -42,16 +42,23 @@ class Tests(unittest.TestCase):
 
     def test_complete_four_kill_callbacks_null_and_retained(self):
         source=[]
+        amiibo=(SRC/'app/amiibo/app_amiibo.c').read_text(encoding='utf-8')
+        header=(SRC/'app/amiibo/app_amiibo.h').read_text(encoding='utf-8')
+        cache=re.search(r'typedef struct \{[^}]*\} app_amiibo_cache_data_t;',header).group(0)
+        magic=re.search(r'^#define APP_AMIIBO_CACHE_PAGE_MAGIC[^\n]+',header,re.M).group(0)
+        source.extend(function(amiibo,n) for n in ('app_amiibo_restore_browser_cache','app_amiibo_save_browser_cache'))
         for name in ('amiibo','amiidb','amiibolink','chameleon'):
             source.append(function((SRC/f'app/{name}/app_{name}.c').read_text(encoding='utf-8'),f'app_{name}_on_kill'))
         code=(HERE/'ui_retained_exit_host.c').read_text(encoding='utf-8').replace('/* ACTUAL_KILL_CALLBACKS */','\n'.join(source))
-        self.compile_run(code,args=[(app,retain,scene) for app in range(4) for retain in (0,1) for scene in (3,4,9)])
+        code=code.replace('/* ACTUAL_AMIIBO_CACHE_DEFINITION */',cache+'\n'+magic)
+        self.compile_run(code,args=[(app,retain,scene,direction) for app in range(4) for retain in (0,1) for scene in (3,4,9) for direction in (-1,0,1)])
 
     def test_real_bounded_event_queue_irq_lifecycle_fifo_and_coalescing(self):
         stubs={'mui_common.h':'''#pragma once
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #define MUI_EVENT_ID_REDRAW 0
 #define MUI_EVENT_ID_INPUT 1
@@ -79,21 +86,23 @@ void mui_mem_free(void*);
         self.compile_run(r'''
 #include <assert.h>
 #include <stddef.h>
+#include <stdbool.h>
 typedef struct {int fav_array;} app_amiibo_t;
 typedef app_amiibo_t app_amiidb_t;
 typedef app_amiibo_t app_amiibolink_t;
-static int stopped,cleared,disabled,handlers,reset;
+static int stopped,cleared,disabled,handlers,released,initialized;
 static int m_amiibo_gen_delay_timer=1;
 static void app_timer_stop(int timer){assert(timer==1);stopped++;}
-static void ntag_emu_set_update_cb(void*cb,void*ctx){assert(!cb&&!ctx);cleared++;}
+static bool ntag_emu_set_update_cb(void*cb,void*ctx) {assert(!cb&&!ctx);cleared++;return true;}
 static void ble_disable(void){disabled++;}
 static void ble_nus_set_handler(void*rx,void*tx){assert(!rx&&!tx);handlers++;}
-#define amiidb_fav_array_reset(x) ((void)(x),reset++)
+#define amiidb_fav_array_clear(x) ((void)(x),released++)
+#define amiidb_fav_array_init(x) ((void)(x),initialized++)
 '''+'\n'.join(callbacks)+r'''
 int main(void){
  app_amiibo_t app={0};
  amiibo_scene_amiibo_detail_on_exit(&app); assert(stopped==1&&cleared==1);
- amiidb_scene_amiibo_detail_on_exit(&app); assert(stopped==2&&cleared==2&&reset==1);
+ amiidb_scene_amiibo_detail_on_exit(&app); assert(stopped==2&&cleared==2&&released==1&&initialized==1);
  amiibolink_scene_main_on_exit(&app); assert(stopped==3&&cleared==3&&disabled==1&&handlers==1);
  return 0;
 }

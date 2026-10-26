@@ -75,6 +75,7 @@
 #include "ntag_store.h"
 
 #include "bat.h"
+#include "mod/runtime_diag.h"
 #include "ble_main.h"
 
 #include "nrf_sdh.h"
@@ -89,6 +90,7 @@
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
 #include "mui_include.h"
+#include "mui_mem.h"
 
 #include "hal_spi_bus.h"
 #include "hal_spi_flash.h"
@@ -98,6 +100,9 @@
 #include "cache.h"
 #include "i18n/language.h"
 #include "settings.h"
+#ifdef VFS_PACKED_LFS_ENABLE
+#include "vfs_packed_runtime.h"
+#endif
 
 #define APP_SCHED_MAX_EVENT_SIZE 4 /**< Maximum size of scheduler events. */
 #define APP_SCHED_QUEUE_SIZE 16    /**< Maximum number of events in the scheduler queue. */
@@ -168,7 +173,10 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
 
         /* Flush accepted NFC writes before app retention/teardown, even if the
          * RF field is still present. Then close BLE before flash sleep. */
-        ntag_emu_prepare_change();
+        if (!ntag_emu_prepare_change()) {
+            nrf_pwr_mgmt_cancel_shutdown();
+            return false;
+        }
         ble_disable();
         ble_process_pending();
 
@@ -176,7 +184,18 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
 
         // save ntag to cache
         cache_data_t *p_cache_data = cache_get_data();
-        memcpy(&p_cache_data->ntag, ntag_emu_get_current_tag(), sizeof(ntag_t));
+#ifdef VFS_PACKED_LFS_ENABLE
+        if (vfs_packed_recovery_required()) {
+            /* NFC was intentionally not initialized. Do not mark its zeroed
+             * RAM as a valid retained tag for the first normal restart. */
+            extern const ntag_t default_ntag215;
+            memset(p_cache_data, 0, sizeof(*p_cache_data));
+            memcpy(&p_cache_data->ntag, &default_ntag215, sizeof(ntag_t));
+        } else
+#endif
+        {
+            memcpy(&p_cache_data->ntag, ntag_emu_get_current_tag(), sizeof(ntag_t));
+        }
 
         cache_save();
 
@@ -197,9 +216,14 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
         err_code = bsp_wakeup_button_enable(BTN_ID_SLEEP);
         APP_ERROR_CHECK(err_code);
 
-        // Enable NFC field detection as an additional wakeup source.
-        err_code = bsp_nfc_sleep_mode_prepare();
-        APP_ERROR_CHECK(err_code);
+        // NFC is not initialized while storage recovery owns the application.
+#ifdef VFS_PACKED_LFS_ENABLE
+        if (!vfs_packed_recovery_required())
+#endif
+        {
+            err_code = bsp_nfc_sleep_mode_prepare();
+            APP_ERROR_CHECK(err_code);
+        }
 
         // Turn off LED to indicate that the device entered System OFF mode.
         bsp_board_leds_off();
@@ -221,6 +245,14 @@ NRF_PWR_MGMT_HANDLER_REGISTER(shutdown_handler, APP_SHUTDOWN_HANDLER_PRIORITY);
 static uint32_t check_wakeup_src(void) {
     uint32_t rr = nrf_power_resetreas_get();
     NRF_LOG_INFO("nrf_power_resetreas_get: 0x%04x", rr);
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required()) {
+        /* No retained or default tag may become active against an incomplete
+         * collection. The recovery UI is reached even after an NFC wake. */
+        nrf_power_resetreas_clear(rr);
+        return rr;
+    }
+#endif
 
     // 如果卡模拟器设置了默认卡，这里就不开启模拟NTAG
     if (tag_helper_valid_default_slot() && (rr & NRF_POWER_RESETREAS_NFC_MASK) && tag_emulation_init() &&
@@ -257,7 +289,20 @@ static uint32_t check_wakeup_src(void) {
 /**
  * @brief   Function for application main entry.
  */
+static void prepare_storage_recovery_ui(void) {
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required()) {
+        /* Temporary RAM defaults only. settings_save is blocked until reboot,
+         * so a restored settings.bin cannot be overwritten by these values. */
+        settings_data_t *settings = settings_get_data();
+        settings->lcd_backlight = 30;
+        settings->sleep_timeout_sec = 180;
+    }
+#endif
+}
+
 int main(void) {
+    runtime_diag_boot_capture(nrf_power_resetreas_get());
     ret_code_t err_code;
 
     log_init();
@@ -285,6 +330,9 @@ int main(void) {
     err_code = nrf_mem_init();
     APP_ERROR_CHECK(err_code);
 
+    /* Settings/VFS startup may need the application allocator before mui_init. */
+    mui_mem_init();
+
     err_code = nrf_pwr_mgmt_init();
     APP_ERROR_CHECK(err_code);
 
@@ -297,6 +345,10 @@ int main(void) {
     // cache_clean(); //FOR TESTING
 
     err_code = settings_init();
+#ifdef VFS_PACKED_LFS_ENABLE
+    vfs_packed_latch_recovery();
+#endif
+    prepare_storage_recovery_ui();
     // we ignore error here, cause flash may not be presented or settings.bin did not exist
     NRF_LOG_INFO("settings init: %d", err_code);
     // APP_ERROR_CHECK(err_code);
@@ -308,7 +360,10 @@ int main(void) {
     settings_data_t *p_settings = settings_get_data();
     nrf_pwr_mgmt_set_timeout(p_settings->sleep_timeout_sec);
 
-    amiibo_helper_try_load_amiibo_keys_from_vfs();
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (!vfs_packed_recovery_required())
+#endif
+        amiibo_helper_try_load_amiibo_keys_from_vfs();
 
     NRF_LOG_DEBUG("init done");
 
@@ -335,8 +390,8 @@ int main(void) {
         // keep the standby timeout armed but reset the activity counter while
         // emulating or transferring over BLE, so the timeout still applies
         // afterwards. Manual sleep is not affected.
-        if (p_settings->no_sleep_mode &&
-            (is_emulating_app(p_launcher) || ble_is_connected())) {
+        if (ntag_emu_save_pending() || (p_settings->no_sleep_mode &&
+            (is_emulating_app(p_launcher) || ble_is_connected()))) {
             nrf_pwr_mgmt_feed();
         }
 

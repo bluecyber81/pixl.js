@@ -36,6 +36,9 @@ static void app_timer_start(int timer,int ticks,void*ctx){assert(timer==1&&ticks
 static void *mui(void){return NULL;}
 static void mui_update(void*p){(void)p;}
 static void mui_toast_view_show(void*p,int text){(void)p;(void)text;errors++;}
+static void ntag_emu_save_failed(void){errors++;}
+static void amiibo_view_set_focus(void*p,uint8_t v){(void)p;focus=v;}
+static void ntag_save_error(app_amiibolink_t*app){(void)app;errors++;}
 static uint8_t amiibo_view_get_focus(void*p){(void)p;return (uint8_t)focus;}
 '''
 
@@ -59,10 +62,10 @@ static int amiidb_api_slot_write(uint8_t slot,ntag_t*tag){saves++;saved_index=sl
 static int amiidb_api_slot_read(uint8_t slot,ntag_t*tag){assert(saves==1&&saved_index==2);memset(tag,0,sizeof(*tag));tag->data[16]=slot;return read_result;}
 static void ntag_store_new_rand(ntag_t*tag){memset(tag,0,sizeof(*tag));}
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t*app,int text){(void)app;(void)text;errors++;}
-static void ntag_emu_set_tag(const ntag_t*tag){assert(m_active_slot==8&&m_active_slot_persist&&tag->data[16]==8);emulated++;}
-static void ntag_emu_prepare_change(void);
+static bool ntag_emu_set_tag(const ntag_t*tag) {assert(m_active_slot==8&&m_active_slot_persist&&tag->data[16]==8);emulated++;return true;}
+static bool ntag_emu_prepare_change(void);
 ''' + function(amiidb, "ntag_update_cb") + r'''
-static void ntag_emu_prepare_change(void){if(dirty){dirty=false;ntag_update_cb(NTAG_EVENT_TYPE_WRITTEN,active_app,&old_tag);}}
+static bool ntag_emu_prepare_change(void) {if(dirty){dirty=false;ntag_update_cb(NTAG_EVENT_TYPE_WRITTEN,active_app,&old_tag);}return true;}
 ''' + function(amiidb, "amiidb_scene_amiibo_data_list_update") + r'''
 int main(void){
  app_amiidb_t app={0};active_app=&app;old_tag.data[16]=0x55;
@@ -80,7 +83,7 @@ int main(void){
 #define BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN 2
 static uint8_t m_active_index=99;
 static int m_active_mode=3;
-static void ntag_update(app_amiibolink_t*app,uint8_t index,ntag_t*tag){(void)app;saves++;saved_index=index;saved_value=tag->data[16];}
+static bool ntag_update(app_amiibolink_t*app,uint8_t index,ntag_t*tag){(void)app;saves++;saved_index=index;saved_value=tag->data[16];return true;}
 ''' + function(link, "ntag_update_cb") + r'''
 int main(void){
  app_amiibolink_t app={0};ntag_t tag={0};tag.data[16]=0x55;

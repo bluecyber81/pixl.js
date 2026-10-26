@@ -1,3 +1,4 @@
+#include "ntag_emu.h"
 #include "app_amiibo.h"
 #include "mini_app_registry.h"
 
@@ -15,6 +16,34 @@
 
 #include "amiibo_helper.h"
 #include "i18n/language.h"
+
+_Static_assert(sizeof(app_amiibo_cache_data_t) <= CACHEDATASIZE, "amiibo retain cache overflow");
+
+static void app_amiibo_restore_browser_cache(app_amiibo_t *app, const app_amiibo_cache_data_t *cache) {
+    bool valid = cache->browser_magic == APP_AMIIBO_CACHE_PAGE_MAGIC &&
+                 (cache->browser_direction == 0 || cache->browser_direction == 1 || cache->browser_direction == -1) &&
+                 memchr(cache->browser_anchor, 0, sizeof(cache->browser_anchor)) &&
+                 (!cache->browser_direction || (cache->browser_anchor[0] &&
+                  (cache->browser_anchor_icon == 0xe1d6 || cache->browser_anchor_icon == 0xe1ed)));
+    if (valid) {
+        memcpy(app->browser_anchor, cache->browser_anchor, sizeof(app->browser_anchor));
+        app->browser_anchor_icon = cache->browser_anchor_icon;
+        app->browser_direction = cache->browser_direction;
+    } else {
+        /* Old firmware left this tail unversioned. Never use it as a key. */
+        memset(app->browser_anchor, 0, sizeof(app->browser_anchor));
+        app->browser_anchor_icon = 0;
+        app->browser_direction = 0;
+        app->current_focus_index = 0;
+    }
+}
+
+static void app_amiibo_save_browser_cache(const app_amiibo_t *app, app_amiibo_cache_data_t *cache) {
+    cache->browser_magic = APP_AMIIBO_CACHE_PAGE_MAGIC;
+    memcpy(cache->browser_anchor, app->browser_anchor, sizeof(cache->browser_anchor));
+    cache->browser_anchor_icon = app->browser_anchor_icon;
+    cache->browser_direction = app->browser_direction;
+}
 
 static void app_amiibo_on_run(mini_app_inst_t *p_app_inst);
 static void app_amiibo_on_kill(mini_app_inst_t *p_app_inst);
@@ -50,6 +79,7 @@ void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
     if (!p_app_handle->p_toast_view) goto startup_failed;
     p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
     if (!p_app_handle->p_scene_dispatcher) goto startup_failed;
+    p_app_handle->p_scene_dispatcher->transition_guard = ntag_emu_prepare_change;
     p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
     if (!p_app_handle->p_view_dispatcher_toast) goto startup_failed;
     p_app_inst->p_handle = p_app_handle;
@@ -65,7 +95,6 @@ void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
 
     string_init(p_app_handle->current_file);
     string_init(p_app_handle->current_folder);
-    string_array_init(p_app_handle->amiibo_files);
 
     mui_scene_dispatcher_set_user_data(p_app_handle->p_scene_dispatcher, p_app_handle);
     mui_scene_dispatcher_set_scene_defines(p_app_handle->p_scene_dispatcher, amiibo_scene_defines, AMIIBO_SCENE_MAX);
@@ -99,6 +128,7 @@ void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
             string_set_str(p_app_handle->current_file, p_cache_data->current_file);
             string_set_str(p_app_handle->current_folder, p_cache_data->current_folder);
             p_app_handle->current_focus_index = p_cache_data->current_focus_index;
+            app_amiibo_restore_browser_cache(p_app_handle, p_cache_data);
             memcpy(&(p_app_handle->ntag), &(cache_get_data()->ntag), sizeof(ntag_t));
 
             if (p_app_handle->current_drive == VFS_DRIVE_EXT || p_app_handle->current_drive == VFS_DRIVE_INT) {
@@ -145,7 +175,7 @@ void app_amiibo_on_kill(mini_app_inst_t *p_app_inst) {
 
     /* A final NFC write can rename new*.bin. Retain the resulting path, even
      * when the user leaves the app while the reader field is still present. */
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return;
 
     uint32_t current_scene_id = mui_scene_dispatcher_current_scene(p_app_handle->p_scene_dispatcher);
     if (p_app_inst->p_retain_data && app_amiibo_info.hibernate_enabled &&
@@ -156,7 +186,10 @@ void app_amiibo_on_kill(mini_app_inst_t *p_app_inst) {
         strcpy(p_cache_data.current_folder, string_get_cstr(p_app_handle->current_folder));
         p_cache_data.current_drive = p_app_handle->current_drive;
         p_cache_data.current_scene_id = current_scene_id;
-        p_cache_data.current_focus_index = mui_list_view_get_focus(p_app_handle->p_list_view);
+        p_cache_data.current_focus_index = current_scene_id == AMIIBO_SCENE_FILE_BROWSER
+                                            ? mui_list_view_get_focus(p_app_handle->p_list_view)
+                                            : p_app_handle->current_focus_index;
+        app_amiibo_save_browser_cache(p_app_handle, &p_cache_data);
 
         memcpy(p_app_inst->p_retain_data, &p_cache_data, sizeof(app_amiibo_cache_data_t));
     } else {
@@ -181,7 +214,6 @@ void app_amiibo_on_kill(mini_app_inst_t *p_app_inst) {
 
     string_clear(p_app_handle->current_file);
     string_clear(p_app_handle->current_folder);
-    string_array_clear(p_app_handle->amiibo_files);
 
     mui_mem_free(p_app_handle);
 

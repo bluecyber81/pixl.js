@@ -68,12 +68,13 @@ STUB_TIMER = r'''
 #include <stdint.h>
 typedef int app_timer_t;
 typedef app_timer_t *app_timer_id_t;
+#define APP_TIMER_DEF(name) static app_timer_t name##_data; static const app_timer_id_t name = &name##_data
 #define APP_TIMER_MODE_REPEATED 1
 #define APP_TIMER_TICKS(x) (x)
 #define NRF_SUCCESS 0
 #define APP_ERROR_CHECK(x) assert((x)==0)
 static int timer_error, starts, stops, ticks;
-static int app_timer_create(app_timer_id_t *p,int mode,void(*cb)(void*)) {(void)p;(void)mode;(void)cb;return 0;}
+static int app_timer_create(app_timer_id_t const *p,int mode,void(*cb)(void*)) {(void)p;(void)mode;(void)cb;return 0;}
 static int app_timer_start(app_timer_id_t p,int interval,void *context) {(void)p;(void)context;starts++;ticks=interval;return timer_error;}
 static int app_timer_stop(app_timer_id_t p) {(void)p;stops++;return 0;}
 '''
@@ -196,16 +197,16 @@ int main(void) {
 
     def test_real_favorite_sort_null_folder_data_and_antisymmetry(self):
         source = (SRC / "app/amiidb/scene/amiidb_scene_fav_list.c").read_text(encoding="utf-8")
-        compare = function(source, "amiidb_scene_fav_list_list_view_sort_cb")
+        compare = function(source, "fav_record_compare") + "\n" + function(source, "amiidb_scene_fav_list_list_view_sort_cb")
         self.compile_run('''#include <stdint.h>\n#include <assert.h>\n#include <stdio.h>\n#include <string.h>
 #define ICON_FOLDER 1
 #define ICON_FILE 2
 #define string_cmp strcmp
-typedef struct {uint32_t amiibo_head,amiibo_tail;} amiidb_fav_t;
+typedef struct {uint32_t amiibo_head,amiibo_tail;uint8_t game_id;} amiidb_fav_t;
 typedef struct {int icon;const char *text;void *user_data;} mui_list_item_t;
 ''' + compare + '''
 int main(void) {
- amiidb_fav_t first={1,2},second={2,1};
+ amiidb_fav_t first={1,2,1},second={2,1,2};
  mui_list_item_t a={ICON_FOLDER,"A",NULL},b={ICON_FOLDER,"B",NULL};
  mui_list_item_t c={ICON_FILE,"C",&first},d={ICON_FILE,"D",&second};
  assert(amiidb_scene_fav_list_list_view_sort_cb(&a,&b)<0);
@@ -234,8 +235,8 @@ static bool m_tag_ready;
 static int result,emulated;
 static const char *message;
 static int amiibo_helper_generate_amiibo(uint32_t h,uint32_t t,ntag_t *n) {(void)h;(void)t;(void)n;return result;}
-static void ntag_emu_set_tag(ntag_t *n) {(void)n;emulated++;}
-static void ntag_emu_prepare_change(void) {}
+static bool ntag_emu_set_tag(ntag_t *n) {(void)n;emulated++;return true;}
+static bool ntag_emu_prepare_change(void) {return true;}
 static bool m_active_slot_persist;
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app,const char *text) {(void)app;message=text;}
 ''' + generate + '''
@@ -261,6 +262,7 @@ typedef struct {uint8_t game_id;uint32_t head,tail;} db_link_t;
 typedef struct {unsigned max,focus,game;} view_t;
 typedef struct {uint16_t game_id_path[8];uint8_t game_id_index,search_game_id,prev_scene_id;const db_amiibo_t *cur_amiibo;view_t *p_amiibo_view;uint16_t result_count;const db_amiibo_t *result_items[100];} app_amiidb_t;\n#define AMIIDB_SCENE_AMIIBO_SEARCH 9\n#define _T(x) #x\nstatic int m_tag_ready;\nstatic void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *a,const char*m) {(void)a;(void)m;}
 static db_link_t link_list[401];static db_amiibo_t tags[400];
+static bool ntag_emu_prepare_change(void){return true;}
 static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t *a) {(void)a;}
 static void amiibo_view_set_max_ntags(view_t*v,unsigned n) {v->max=n;}
 static void amiibo_view_set_focus(view_t*v,unsigned n) {v->focus=n;}

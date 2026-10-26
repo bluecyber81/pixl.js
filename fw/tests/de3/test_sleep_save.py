@@ -69,7 +69,8 @@ static ntag_t current = {{1,2,3,4}};
 #define NRF_LOG_WARNING(...) (++warnings)
 #define APP_ERROR_CHECK(value) assert((value) == 0)
 static void step(int value) { assert(count < 12); order[count++] = value; }
-static void ntag_emu_prepare_change(void) {step(-2);current.bytes[0]=42;}
+static void nrf_pwr_mgmt_cancel_shutdown(void) {}
+static bool ntag_emu_prepare_change(void) {step(-2);current.bytes[0]=42;return true;}
 static void ble_disable(void) {step(-1);}
 static void ble_process_pending(void) {step(0);}
 static void *mini_app_launcher(void) { return 0; }

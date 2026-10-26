@@ -48,12 +48,15 @@ class SettingsSaveUiTests(native.NativeTests):
 #define MINI_APP_ID_SETTINGS 3
 #define MUI_LAYER_WINDOW 1
 #define MUI_LAYER_TOAST 2
+#define MUI_LAYER_FULLSCREEN 3
 enum {SETTINGS_SCENE_OLED_CONTRAST,SETTINGS_SCENE_VERSION,SETTINGS_SCENE_SLEEP_TIMEOUT,SETTINGS_SCENE_LANGUAGE,SETTINGS_SCENE_STORAGE,SETTINGS_SCENE_APP_MANAGEMENT,SETTINGS_SCENE_ABOUT};
 typedef int mui_msg_box_event_t;typedef int mui_list_view_event_t;
 typedef struct {void *user_data;} mui_msg_box_t;
 typedef struct {void *user_data;} mui_list_view_t;
 typedef struct {void *user_data;} mui_list_item_t;
-typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved;} app_settings_t;
+typedef struct {bool valid;} settings_storage_snapshot_t;
+static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){p->valid=false;}
+typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved;settings_storage_snapshot_t storage_snapshot;} app_settings_t;
 typedef struct {void *p_handle;} mini_app_inst_t;
 typedef struct {bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,flip_display,swap_buttons;} settings_data_t;
 static settings_data_t data;
@@ -88,7 +91,7 @@ static void cleanup(void*p){(void)p;cleanup_calls++;}
 #define mui_msg_box_free cleanup
 #define mui_toast_view_free cleanup
 #define mui_mem_free cleanup
-static void mui_view_dispatcher_detach(void*p,unsigned n){(void)p;(void)n;}
+static void mui_view_dispatcher_detach(void*p,unsigned n){(void)p;assert(n==MUI_LAYER_FULLSCREEN || n==MUI_LAYER_TOAST);}
 #define NRF_LOG_WARNING(...) ((void)logs++)
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"

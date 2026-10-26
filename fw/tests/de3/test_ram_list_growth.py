@@ -14,6 +14,7 @@ class RamListGrowthTests(HostTests):
         core=(SRC/'mui/mui_core.c').read_text()
         self.compile_run(r'''
 #include <assert.h>
+#define mui_nfc_save_input(m,e) false
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -84,7 +85,7 @@ int main(void){
             'SORT_ITEMS':definition(source,'mui_list_view_sort','void'),
             'BROWSER_COMPARE':function(browser,'amiibo_scene_file_browser_list_item_cmp'),
             'BROWSER_RELOAD':function(browser,'amiibo_scene_file_browser_reload_folders'),
-            'DETAIL_COMPARE':function(detail,'amiibo_scene_amiibo_detail_list_item_cmp'),
+            'DETAIL_COMPARE':function(detail,'app_amiibo_file_neighbor'),
             'DETAIL_RELOAD':function(detail[detail.index('static bool amiibo_scene_amiibo_detail_reload_files(app_amiibo_t *app) {'):],'amiibo_scene_amiibo_detail_reload_files'),
             'BROWSER_SELECTED':function(browser,'amiibo_scene_file_browser_on_selected'),
             'DETAIL_EVENT':function(detail,'app_amiibo_detail_view_on_event'),

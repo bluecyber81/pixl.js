@@ -1,0 +1,23 @@
+Optional power/start diagnostic, application DE3.33
+
+INFO command 0x08 accepts only an empty request with status=0, chunk=0.
+Response: PXPD, format byte1, length byte16, flags byte, reserved zero byte,
+uint32 LE remaining RESETREAS at application main entry, uint16 LE cached
+filtered battery millivolts, uint16 LE configured sleep timeout in seconds.
+
+Flags: bit0 reset observation captured; bit1 battery sampling attempted;
+bit2 battery sample valid; bit3 LiPo mode; bit4 charging active.
+Charging is only reported when the sample is valid and LiPo mode is enabled.
+Invalid voltage is zero. Flags distinguish unavailable from a valid zero reset
+register. Other flags and the reserved byte are zero in format1.
+
+This query does not initiate ADC conversion, reset, GPIO write or storage access.
+Battery values are copied after initialization and the existing one-second
+measurement callback. They are a cached snapshot, not live VBUS detection.
+The CHRG pin indicates active charging only, not USB presence or cable type.
+
+Reset bits are captured after the bootloader. BL6 can already clear OFF before
+application entry; zero is not evidence of cold power-on, USB wake or a failed
+button wake. Multiple bits may be set. This is not persistent reset history.
+The existing 64-byte PXDG v1 command0x06 and bootloader report0x07 are unchanged.
+Older applications may reject0x08 without requiring a connection reset.

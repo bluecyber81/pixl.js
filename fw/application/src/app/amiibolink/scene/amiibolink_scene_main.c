@@ -27,6 +27,13 @@ APP_TIMER_DEF(m_amiibo_gen_delay_timer);
 static uint32_t m_generate_generation;
 static uint8_t m_active_index;
 static ble_amiibolink_mode_t m_active_mode;
+static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag);
+
+static void ntag_save_error(app_amiibolink_t *app) {
+    (void)app;
+    ntag_emu_save_failed();
+    mui_update(mui());
+}
 
 static void amiibolink_scene_amiibo_detail_menu_msg_box_no_key_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
     app_amiibolink_t *app = p_msg_box->user_data;
@@ -52,7 +59,7 @@ static void ntag_generate_cb(void* ctx) {
         return;
     }
 
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return;
     ret_code_t err_code = amiibo_helper_rand_amiibo_uuid(ntag_emu_get_current_tag());
     NRF_LOG_INFO("ntag generate: %d", err_code);
     if (err_code == NRF_SUCCESS) {
@@ -66,13 +73,17 @@ static void ntag_generate_timer_request(void *context) {
 }
 
 #ifdef INTERNAL_ENABLE
-static void ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
+static bool ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
     ret_code_t err_code = ntag_store_write(index, p_ntag);
     NRF_LOG_INFO("ntag_update: index=%d, err_code=%d", index, err_code);
+    return err_code == NRF_SUCCESS;
 }
 
 static void ntag_reload(app_amiibolink_t *app, uint8_t index) {
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) {
+        amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
+        return;
+    }
     ntag_t ntag;
     ret_code_t err_code = ntag_store_read(index, &ntag);
     if (err_code == NRF_SUCCESS) {
@@ -85,16 +96,20 @@ static void ntag_reload(app_amiibolink_t *app, uint8_t index) {
 static void ntag_init() {}
 #else
 
-static void ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
+static bool ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
     char path[VFS_MAX_PATH_LEN] = {0};
     sprintf(path, "/amiibolink/%02d.bin", index);
     vfs_driver_t *p_driver = vfs_get_driver(VFS_DRIVE_EXT);
     int32_t err_code = p_driver->write_file_data(path, p_ntag->data, NTAG_DATA_SIZE);
     NRF_LOG_INFO("ntag_update: index=%d, err_code=%d", index, err_code);
+    return err_code == NTAG_DATA_SIZE;
 }
 
 static void ntag_reload(app_amiibolink_t *app, uint8_t index) {
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) {
+        amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
+        return;
+    }
     ntag_t ntag = {0};
     char path[VFS_MAX_PATH_LEN] = {0};
 
@@ -127,7 +142,7 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
 
     if (type == NTAG_EVENT_TYPE_WRITTEN && m_active_mode != BLE_AMIIBOLINK_MODE_RANDOM) {
         app_timer_stop(m_amiibo_gen_delay_timer);
-        ntag_update(app, m_active_index, p_ntag);
+        if (!ntag_update(app, m_active_index, p_ntag)) ntag_save_error(app);
         mui_update(mui());
     } else if (type == NTAG_EVENT_TYPE_READ && m_active_mode == BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN) {
         app_timer_stop(m_amiibo_gen_delay_timer);
@@ -146,7 +161,7 @@ static void amiibolink_scene_main_event_cb(amiibolink_view_event_t event, amiibo
 }
 
 static void amiibolink_scene_switch_mode(app_amiibolink_t *app, ble_amiibolink_mode_t mode, uint8_t initial_index) {
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return;
     NRF_LOG_INFO("new mode: %d", mode);
     app->amiibolink_mode = mode;
     amiibolink_view_set_amiibolink_mode(app->p_amiibolink_view, mode);
@@ -178,7 +193,10 @@ static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_t
 
         if (app->amiibolink_mode == BLE_AMIIBOLINK_MODE_CYCLE) {
             // save ntag
-            ntag_update(app, p_view->index, (ntag_t *)data);
+            if (!ntag_update(app, p_view->index, (ntag_t *)data)) {
+                ntag_save_error(app);
+                return;
+            }
             if (p_view->index < p_view->max_size - 1) {
                 p_view->index++;
             } else {
@@ -186,7 +204,7 @@ static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_t
             }
             ntag_reload(app, p_view->index);
         } else if (app->amiibolink_mode == BLE_AMIIBOLINK_MODE_NTAG) {
-            ntag_update(app, DEFAULT_NTAG_INDEX, (ntag_t *)data);
+            if (!ntag_update(app, DEFAULT_NTAG_INDEX, (ntag_t *)data)) ntag_save_error(app);
         }
 
         mui_update(mui());

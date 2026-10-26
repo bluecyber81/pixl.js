@@ -44,6 +44,8 @@ ALLOC = r'''
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+typedef struct {bool (*transition_guard)(void);} scene_guard_t;
+static bool ntag_emu_prepare_change(void){return true;}
 static unsigned calls, fail_at, live;
 static void *alloc_stack[64];
 static void *mui_mem_malloc(size_t n) {
@@ -72,7 +74,7 @@ class StartupTests(unittest.TestCase):
                 # Execute the exact allocation prelude and exact rollback label.
                 # The omitted successful body is the scene/hardware activation.
                 body = before + '    p_app_inst->p_handle = p_app_handle;\n    return;\n' + cleanup
-                fields = '\n'.join(f'void *{field};' for field, _ in allocations)
+                fields = '\n'.join((f'scene_guard_t *{field};' if field == 'p_scene_dispatcher' else f'void *{field};') for field, _ in allocations)
                 initialized_assert = ''
                 if app == 'settings':
                     fields += '\nbool exit_saved;'
@@ -112,7 +114,7 @@ int main(void) {{
             callbacks += [f'static void {name}_on_{cb}(void) {{}}' for cb in ('draw','input','enter','exit')]
         compile_run(ALLOC + r'''
 typedef struct {void *user_data; void (*draw_cb)(void),(*input_cb)(void),(*enter_cb)(void),(*exit_cb)(void);} mui_view_t;
-typedef struct {mui_view_t *p_view; void *event_cb; char ble_addr[20]; uint8_t page; void *user_data;} ble_status_view_t;
+typedef struct {mui_view_t *p_view; void *event_cb; char ble_addr[20]; uint8_t page; uint8_t drawn_link_state; void *user_data;} ble_status_view_t;
 typedef struct {mui_view_t *p_view; void *event_cb; int(*game_run)(void); uint8_t running; void *user_data;} game_view_t;
 static mui_view_t *mui_view_create(void) {return mui_mem_malloc(sizeof(mui_view_t));}
 static void mui_view_free(mui_view_t *p) {mui_mem_free(p);}

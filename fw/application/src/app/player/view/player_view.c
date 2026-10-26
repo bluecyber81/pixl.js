@@ -4,6 +4,13 @@
 #include "nrf_pwr_mgmt.h"
 #include <stdio.h>
 
+/* Nordic retains timer-control pointers while START/STOP requests are queued.
+ * Keep the singleton timer alive independently of any heap-allocated view. */
+APP_TIMER_DEF(m_player_frame_timer);
+static bool m_player_frame_timer_initialized;
+static bool m_player_frame_timer_faulted;
+static player_view_t *volatile m_player_timer_owner;
+
 static void player_view_finished(player_view_t *p_view) {
     player_view_stop(p_view);
     if (p_view->event_cb) p_view->event_cb(PLAYER_VIEW_EVENT_PLAY_STOPPED, p_view);
@@ -61,8 +68,11 @@ static void player_view_on_enter(mui_view_t *p_view) {}
 static void player_view_on_exit(mui_view_t *p_view) { player_view_stop(p_view->user_data); }
 
 static void player_view_on_frame_tick(void *p_context) {
-    player_view_t *p_view = p_context;
-    if (p_view->is_playing) {
+    (void)p_context;
+    /* The callback runs in RTC IRQ context. Main-thread teardown clears this
+     * atomic pointer before freeing a view; no queued callback owns heap data. */
+    player_view_t *p_view = m_player_timer_owner;
+    if (p_view && p_view->is_playing) {
         p_view->frame_due = true;
         nrf_pwr_mgmt_feed();
         mui_update(mui());
@@ -80,12 +90,14 @@ player_view_t *player_view_create() {
     player->p_view->input_cb = player_view_on_input;
     player->p_view->enter_cb = player_view_on_enter;
     player->p_view->exit_cb = player_view_on_exit;
-    player->frame_tick_timer_id = &player->frame_tick_timer_data;
-    int32_t err = app_timer_create(&player->frame_tick_timer_id, APP_TIMER_MODE_REPEATED, player_view_on_frame_tick);
-    if (err != NRF_SUCCESS) {
-        mui_view_free(player->p_view);
-        mui_mem_free(player);
-        return NULL;
+    if (!m_player_frame_timer_initialized) {
+        int32_t err = app_timer_create(&m_player_frame_timer, APP_TIMER_MODE_REPEATED, player_view_on_frame_tick);
+        if (err != NRF_SUCCESS) {
+            mui_view_free(player->p_view);
+            mui_mem_free(player);
+            return NULL;
+        }
+        m_player_frame_timer_initialized = true;
     }
     return player;
 }
@@ -101,6 +113,9 @@ bool player_view_play(player_view_t *p_view, vfs_drive_t drive, const char *path
     player_view_stop(p_view);
     p_view->play_error = true;
     p_view->played_frames = 0;
+    /* The application owns one player. Reject a competing view rather than
+     * silently redirecting the shared timer while its old file stays open. */
+    if (m_player_frame_timer_faulted || (m_player_timer_owner && m_player_timer_owner != p_view)) return false;
     vfs_driver_t *driver = vfs_get_driver(drive);
     vfs_obj_t obj;
     uint8_t raw[PLAYER_HEADER_BYTES];
@@ -121,8 +136,9 @@ bool player_view_play(player_view_t *p_view, vfs_drive_t drive, const char *path
     }
     p_view->is_playing = true;
     p_view->frame_due = true;
+    m_player_timer_owner = p_view;
     uint32_t interval = (1000u + p_view->header.fps / 2u) / p_view->header.fps;
-    int32_t err = app_timer_start(p_view->frame_tick_timer_id, APP_TIMER_TICKS(interval), p_view);
+    int32_t err = app_timer_start(m_player_frame_timer, APP_TIMER_TICKS(interval), NULL);
     if (err != NRF_SUCCESS) {
         player_view_stop(p_view);
         return false;
@@ -133,9 +149,16 @@ bool player_view_play(player_view_t *p_view, vfs_drive_t drive, const char *path
 }
 
 void player_view_stop(player_view_t *p_view) {
-    if (p_view->is_playing) {
-        p_view->is_playing = false;
-        app_timer_stop(p_view->frame_tick_timer_id);
+    p_view->is_playing = false;
+    if (m_player_timer_owner == p_view) {
+        m_player_timer_owner = NULL;
+        if (app_timer_stop(m_player_frame_timer) != NRF_SUCCESS) {
+            /* A full SDK queue can leave this IDLE node linked to the timer
+             * engine. Retrying STOP reports success without enqueueing it.
+             * Keep it allocated and prevent reinsertion until device reset. */
+            m_player_frame_timer_faulted = true;
+            p_view->play_error = true;
+        }
     }
     p_view->frame_due = false;
     p_view->frame_valid = false;
@@ -146,7 +169,12 @@ void player_view_stop(player_view_t *p_view) {
     p_view->frame_buffer_size = 0;
     if (p_view->file_open) {
         p_view->file_open = false;
-        p_view->p_dirver->close_file(&p_view->fd);
+        if (p_view->p_dirver->close_file(&p_view->fd) != VFS_OK) {
+            /* The stopped player has no retrying owner after exit. Release a
+             * failed-close descriptor like the other operation-local readers. */
+            p_view->play_error = true;
+            vfs_abort_file(p_view->p_dirver, &p_view->fd);
+        }
     }
     p_view->p_dirver = NULL;
 }

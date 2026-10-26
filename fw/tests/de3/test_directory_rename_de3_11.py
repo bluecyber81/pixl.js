@@ -153,6 +153,8 @@ def build(fw, folder, name):
     signatures=['static s32_t vfs_spiffs_map_error_code(', 'static int32_t vfs_check_file_path(',
                 'static int32_t vfs_check_folder_path(', 'int32_t vfs_spiffs_rename_dir_internal(',
                 'int32_t vfs_spiffs_rename_dir(']
+    if 'static int32_t vfs_check_namespace(' in source:
+        signatures.insert(1, 'static int32_t vfs_check_namespace(')
     code=prefix+BODY.replace('@@STRUCTURE@@',structure).replace('@@FUNCTIONS@@','\n'.join(extract(source,s) for s in signatures))
     c=folder/(name+'.c');c.write_text(code)
     exe=folder/(name+'.exe')

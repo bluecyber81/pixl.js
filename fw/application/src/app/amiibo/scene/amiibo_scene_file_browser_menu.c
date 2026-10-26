@@ -2,6 +2,7 @@
 #include "app_amiibo.h"
 #include "cwalk2.h"
 #include "mui_list_view.h"
+#include "mui_mem.h"
 #include "nrf_log.h"
 #include "ntag_def.h"
 #include "ntag_store.h"
@@ -43,6 +44,35 @@ static void amiibo_scene_file_browser_show_messege(app_amiibo_t *app, const char
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_MSG_BOX);
 }
 
+static void amiibo_scene_file_browser_show_error(app_amiibo_t *app, int32_t result) {
+    char msg[96];
+    snprintf(msg, sizeof(msg), "%s\n%s: %ld", _T(FAILED), _T(ERR_CODE), (long)result);
+    amiibo_scene_file_browser_show_messege(app, msg);
+}
+
+static int32_t amiibo_scene_file_browser_new_path(vfs_driver_t *driver, const char *path) {
+    if (!driver) return VFS_ERR_NODEV;
+    vfs_obj_t obj;
+    int32_t result = driver->stat_file(path, &obj);
+    /* Creation never means replacing an existing figure or save. I/O errors
+     * must not be mistaken for an unused name. */
+    return result == VFS_ERR_NOOBJ ? VFS_OK : result == VFS_OK ? VFS_ERR_OBJEX : result;
+}
+
+static bool amiibo_scene_file_browser_batch_count(const char *text, uint32_t *count) {
+    if (!text || !*text || !count) return false;
+    uint32_t value = 0;
+    for (; *text; ++text) {
+        if (*text < '0' || *text > '9') return false;
+        value = value * 10 + (uint32_t)(*text - '0');
+        /* The previous iteration was at most 50, so this cannot overflow. */
+        if (value > AMIIBO_MAX_AMIIBO_IN_BATCH) return false;
+    }
+    if (!value) return false;
+    *count = value;
+    return true;
+}
+
 static void amiibo_scene_file_browser_text_input_create_folder_event_cb(mui_text_input_event_t event,
                                                                         mui_text_input_t *p_text_input) {
     app_amiibo_t *app = p_text_input->user_data;
@@ -55,9 +85,11 @@ static void amiibo_scene_file_browser_text_input_create_folder_event_cb(mui_text
                 amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
                 return;
             }
-            int32_t res = p_driver->create_dir(path);
+            int32_t res = p_driver ? p_driver->create_dir(path) : VFS_ERR_NODEV;
             if (res == VFS_OK) {
                 mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
+            } else {
+                amiibo_scene_file_browser_show_error(app, res);
             }
         } else {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
@@ -78,10 +110,26 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_event_cb(mui_text
                 return;
             }
 
-            ntag_t ntag;
-            ntag_store_new_rand(&ntag);
-            int32_t res = vfs_persist_write(p_driver, path, ntag.data, _ntag_data_size(&ntag));
-            if (res == (int32_t)_ntag_data_size(&ntag)) {
+            /* Recover before checking the name: an interrupted journal may
+             * restore a target which initially appears to be absent. */
+            int32_t res = vfs_persist_recover(p_driver);
+            if (res == VFS_OK) res = amiibo_scene_file_browser_new_path(p_driver, path);
+            if (res != VFS_OK) {
+                amiibo_scene_file_browser_show_error(app, res);
+                return;
+            }
+            /* Packed filesystem commits have a deeper call chain. Keep the
+             * largest supported tag off the shared application/IRQ stack. */
+            ntag_t *ntag = mui_mem_malloc(sizeof(*ntag));
+            if (!ntag) {
+                amiibo_scene_file_browser_show_error(app, VFS_ERR_NOMEM);
+                return;
+            }
+            ntag_store_new_rand(ntag);
+            size_t tag_size = _ntag_data_size(ntag);
+            res = vfs_persist_write(p_driver, path, ntag->data, tag_size);
+            mui_mem_free(ntag);
+            if (res == (int32_t)tag_size) {
                 mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
             } else {
                 amiibo_scene_file_browser_show_messege(app, _T(FAILED));
@@ -105,21 +153,42 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(mu
             return;
         }
 
-        if (sscanf(input_text, "%u", &num_amiibo) != 1) {
+        if (!amiibo_scene_file_browser_batch_count(input_text, &num_amiibo)) {
             amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
-            return;
-        }
-
-        if (num_amiibo > AMIIBO_MAX_AMIIBO_IN_BATCH) {
-            snprintf(msg, sizeof(msg), _T(CREATE_TOO_MANY_NUM), AMIIBO_MAX_AMIIBO_IN_BATCH);
-            amiibo_scene_file_browser_show_messege(app, msg);
             return;
         }
 
         vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
         char path[VFS_MAX_PATH_LEN];
         char file_name[VFS_MAX_NAME_LEN];
-        ntag_t ntag;
+
+        int32_t preparation = vfs_persist_recover(p_driver);
+        if (preparation != VFS_OK) {
+            amiibo_scene_file_browser_show_error(app, preparation);
+            return;
+        }
+        /* Check every target before writing the first one. A collision at
+         * new_50.bin must not overwrite or partially create this batch. */
+        for (uint8_t i = 0; i < num_amiibo; i++) {
+            snprintf(file_name, sizeof(file_name), "new_%02u.bin", (unsigned)i + 1);
+            if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), file_name)) {
+                amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
+                return;
+            }
+            preparation = amiibo_scene_file_browser_new_path(p_driver, path);
+            if (preparation != VFS_OK) {
+                amiibo_scene_file_browser_show_error(app, preparation);
+                return;
+            }
+        }
+
+        /* One reusable buffer for the whole batch; no files are created if
+         * allocation fails after the read-only collision preflight. */
+        ntag_t *ntag = mui_mem_malloc(sizeof(*ntag));
+        if (!ntag) {
+            amiibo_scene_file_browser_show_error(app, VFS_ERR_NOMEM);
+            return;
+        }
 
         mui_msg_box_set_header(app->p_msg_box, _T(CREATING_TAG_BATCH));
         mui_msg_box_set_btn_text(app->p_msg_box, NULL, NULL, NULL);
@@ -134,18 +203,21 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(mu
             mui_update_now(mui());
 
             if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), file_name)) {
+                mui_mem_free(ntag);
                 amiibo_scene_file_browser_show_messege(app, _T(INVALID_INPUT));
                 return;
             }
-            ntag_store_new_rand(&ntag);
-            int32_t res = vfs_persist_write(p_driver, path, ntag.data, _ntag_data_size(&ntag));
-            if (res != (int32_t)_ntag_data_size(&ntag)) {
+            ntag_store_new_rand(ntag);
+            int32_t res = vfs_persist_write(p_driver, path, ntag->data, _ntag_data_size(ntag));
+            if (res != (int32_t)_ntag_data_size(ntag)) {
+                mui_mem_free(ntag);
                 snprintf(msg, sizeof(msg), _T(CREATING_TAG_FAILED), file_name);
                 amiibo_scene_file_browser_show_messege(app, msg);
                 return;
             }
         }
 
+        mui_mem_free(ntag);
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
     }
 }
@@ -214,7 +286,7 @@ static void amiibo_scene_file_browser_menu_msg_box_remove_folder_event_cb(mui_ms
             return;
         }
 
-        int32_t res = p_driver->stat_file(path, &obj);
+        int32_t res = p_driver ? p_driver->stat_file(path, &obj) : VFS_ERR_NODEV;
         if (res == VFS_OK) {
             if (obj.type == VFS_TYPE_DIR) {
                 res = p_driver->remove_dir(path);
@@ -225,6 +297,8 @@ static void amiibo_scene_file_browser_menu_msg_box_remove_folder_event_cb(mui_ms
 
         if (res == VFS_OK) {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+        } else {
+            amiibo_scene_file_browser_show_error(app, res);
         }
 
     } else {

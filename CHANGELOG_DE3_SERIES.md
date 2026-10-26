@@ -1,5 +1,71 @@
 # Cumulative DE-series changes / Kumulative Änderungen der DE-Reihe
 
+Current release: **2.22.0-DE3.37 / application counter 609**, with **file manager 3.27.0**, dated 26 October 2026. The earlier DE1–DE3.16 record is retained below as a historical record; its version-specific tests, open questions and software versions are not current-release claims.
+
+This is a component summary of the retained development work, not an assertion that every intermediate version introduced a distinct feature or that all defects have been eliminated. The application derives from cylin577/pixl.js and the original solosky/pixl.js project. The custom Packed LittleFS layer is not interchangeable with ordinary upstream LittleFS.
+
+## Since the previously public DE3.16
+
+### Storage and RAM
+
+- **DE3.30 preparation / DE3.31:** separate SPIFFS preparation and external backup of complete 128-byte metadata, followed by an explicitly confirmed conversion to the custom **PFS1 Packed LittleFS** target. The browser recovery workflow preserves logical paths, content and metadata and records import state. It does not silently format a failed mount. The application alone is not a data migration.
+- **DE3.32–DE3.33:** bounded/paged database and large-folder lists address the reported RAM-allocation failures after the storage transition. Favorites and favorite-target folders load at most 24 data entries at a time. Stable ordering distinguishes repeated figures in different games; read failures do not present incomplete lists as complete.
+- **DE3.34:** reuse the index verified during mount, remove redundant metadata reads, and use a small CRC32 table. Folder traversal can skip verified immutable blocks with no matching children, while cold/replaced blocks are searched and already-open lists retain their view. Settings cache storage statistics for the session and invalidate them after storage actions, including failure.
+- Small persistent records on PFS1 commit content and all 128 metadata bytes atomically, while existing interrupted-journal recovery remains supported. This is not a promise that every arbitrary Bluetooth file stream is one atomic transaction.
+- **DE3.35:** UTF-8 deletion/truncation reuses the existing buffer; unused favorite-detail capacity is freed on exit. Internal catalog IDs use indexes instead of repeated data. The retained catalog has 952 unique figure IDs and 1344 game links; this is metadata, not a complete collection of valid figure files or a guarantee of worldwide currentness. Integer contrast arithmetic preserves its values; Arkanoid uses float hardware rather than double helper routines. Shared CRC and parent-hash reuse reduce duplicated work.
+- **DE3.36:** normalize trailing separators when navigating to a parent directory. Backport two specific fixes into LittleFS 2.8: [FCRC read-error propagation](https://github.com/littlefs-project/littlefs/commit/8b75de74c916ed516c634388f81c1bbcac446d41) and [invalid read-cache handling after a block-end seek](https://github.com/littlefs-project/littlefs/commit/366100b1403d2b680ed7a0f3bd0ba982c34d5c07). The latter failure was reproduced through the actual PFS file interface. PFS1 and LittleFS disk format 2.1 remain unchanged; this is not an unqualified wholesale LittleFS upgrade.
+- The DE3.37 application is 358880 bytes with 13856 bytes remaining in its application-flash region. The application heap remains 18432 bytes and hardware RAM 64 KiB. Earlier PC-model read/write reductions are not wall-clock speed guarantees or physical stack measurements.
+
+### NFC persistence and application transitions
+
+- **DE3.37:** a failed storage callback retains the tag's dirty state and unsaved RAM. Tag/slot/application replacement and sleep cannot silently discard that state. Reentrant changes during the save callback are rejected, and the main loop does not continuously retry flash writes.
+- An allocation-free save-error dialog supports explicit retry and separately confirmed discard, initially selecting No. Discard removes only the unsaved RAM change; the previous stored file remains. Real short-press/release sequences, long/repeat inputs and scene generation changes have focused regression coverage.
+- Pending/aborted shutdown state is coordinated so a previous sleep request cannot immediately requeue sleep after the user cancels it. AmiiboLink propagates save failure. AmiLoop's 0x87 completion response reports failure when a retained old tag prevents committing a new one, rather than acknowledging success.
+- RAM retention is not persistence across power loss, forced reset or battery disconnection. These cases were exercised in host models where applicable, not deliberately triggered on the user's physical unit for this release.
+
+### Bluetooth, display and diagnostics
+
+- Later BLE work distinguishes the physical connection from an initialized file-transfer client and advertising availability. Incomplete clients have a bounded release timeout (reduced from 90 to 30 seconds during DE3.27/DE3.28), so an abandoned host connection does not indefinitely reserve the session. MTU23 negotiated request/reply handling and legacy client behavior remain part of the protocol tests.
+- The QR information view remains stable while descriptions scroll. Figure information/QR pages, more explicit BLE status and device diagnostics supplement the earlier slower text and center-button wake work.
+- Read-only diagnostics expose application heap, selected error/session counters, cached startup/battery values and bounded bootloader/SoftDevice metadata. A version counter or a hash alone is not a backup, board-identification proof or signing-key identity. No PC Bluetooth driver is installed by an application OTA.
+- Bootloader BL6 and S112 7.3.0 are separate from DE3.37. BL6 has its own DFU entry, transfer and final-completion handling and review. Its exact source/configuration must not be confused with the inherited bootloader directory inside an application snapshot. A bootloader change is not needed merely to apply this PFS1 application update to an already compatible unit.
+
+### Browser file manager through 3.27.0
+
+- ZIP backup/import, folder/metadata preservation, local comparison and resume records accompany the Vue 3/Vite modernization. Private backups stay local. The migration assistant separates backup, target/capacity preparation, transfer and a single final content/Raw128 comparison; an additional complete target check beforehand remains optional.
+- Read-only destination folders/ancestors are checked before upload, ZIP import and synchronization. Capacity checks bind to exact firmware/engine combinations instead of accepting unknown versions. Current profiles recognize the unchanged DE3.36/608 and DE3.37/609 engine; earlier qualified profiles remain separate.
+- Three work areas organize files, backup/restoration and updating. Device/storage/connection detail is expandable. Diagnostic JSON has preview, save, copy and download actions; requesting a download is not a verified disk save.
+- **3.27.0:** re-read small directory metadata before committing final ZIP-folder attributes. Concurrent changes to notes/read-only flags are preserved and reported; this applies to pre-existing and newly created folders, without another full file reread.
+- Reopen the recovery IndexedDB connection after browser closure/version change or a stale connection error. A failed write is not automatically replayed, and an obsolete callback cannot clear a newer connection.
+- Recovery guidance distinguishes unavailable or mismatched receipts. Missing Raw128/storage capabilities prompt diagnosis rather than an unsafe SPIFFS preparation suggestion for an already migrated or unknown device. Intentional idle disconnects use an informational message; unexpected disconnects remain errors. Unsupported optional battery/startup queries do not create false device-error diagnoses or erase older real errors.
+- The expected-component display is updated to DE3.37/609, BL6 and S112 7.3.0. It is not an Internet update service. No additional full migration pass is introduced by 3.27.0.
+
+The optional `BL6_CODE_ZAEHLER7_BOOTLOADER_ONLY.zip` has stored counter 7. Its [separate source/build guide](bootloader-bl6/README.md) covers compatibility and a Nordic Secure DFU client; the integrated web flasher remains application-only. Existing BL6 does not require another update. This release includes no SoftDevice binary.
+
+### Current verification, separate from historical evidence
+
+Fresh unsigned builds from the public application source and separate BL6 source reproduce the corresponding release application BIN and padded 28 KiB bootloader region. This is source/binary correspondence, not additional device testing.
+
+DE3.37 passed 102 firmware host test groups, five targeted ASan/UBSan suites, an ARM build, source binding, memory-map bounds and signed-OTA validation. Dateimanager 3.27.0 passed 659 host tests and 7 tests of the built worker/WASM. BL6 completion/entry/transport tests were rerun. Targeted old-code counterexamples reproduce the new NFC/scene/AmiLoop failures before the fix.
+
+The device owner reported on 26 October 2026 that DE3.37 was flashed and the tried functions worked. This does not imply that a complete physical NFC/BLE/MTU23 test, long-term endurance test or deliberate device-failure test was repeated. No claim is made that every memory allocation, RF event order, board revision or power-loss scenario is covered.
+
+## Deutsch: Änderungen seit der öffentlichen DE3.16
+
+- **Speicher:** getrennte SPIFFS-Vorbereitung und Sicherung aller 128 Metadatenbytes, danach ausdrücklich bestätigte Umstellung auf Packed LittleFS/PFS1. Kein automatisches Formatieren nach einem Lesefehler; normale Upstream-LittleFS-Daten sind ein anderes Layout.
+- **RAM und große Sammlungen:** begrenzte/seitenweise Datenbank-, Ordner- und Favoritenlisten; stabile Sortierung, erkennbare Lesefehler, Freigabe unbenutzter Caches und Textbearbeitung ohne unnötigen Zwischenpuffer.
+- **Lese-/Schreibaufwand:** Wiederverwendung geprüfter Indizes, gezielte Speicherstatistik, Ordnerfilter und atomare kleine PFS1-Speicherungen samt Raw128. Diese Änderungen reduzieren konkrete Arbeitsschritte, versprechen aber keine feste Dauer auf jedem Gerät.
+- **LittleFS:** gezielte Korrekturen für FCRC-Lesefehler und ungültigen Cache nach Seek am Blockende. Das PFS1-Layout blieb gleich. Kein pauschaler Austausch auf die jeweils neueste Bibliothek.
+- **DE3.37:** fehlgeschlagene NFC-Speicherung behält die Änderung im RAM; App-/Figurenwechsel und Schlafen dürfen sie nicht still verlieren. Neuer Dialog für erneutes Speichern oder getrennt bestätigtes Verwerfen, zunächst Nein. AmiLoop meldet einen abgewiesenen Commit nicht mehr als Erfolg. Die alte gespeicherte Datei bleibt bei bewusstem Verwerfen erhalten; ungesicherter RAM ist nicht stromausfallsicher.
+- **Bluetooth/Bedienung:** getrennte Anzeigen für Funkverbindung, Client und Sichtbarkeit; Freigabe unvollständiger Clients nach 30 Sekunden; stehende QR-Informationen, langsamer Lauftext und erweiterte lesende Diagnose.
+- **Dateimanager 3.27.0:** strukturierte Arbeitsbereiche, ZIP-/Metadatenübertragung, fortsetzbare Sicherung/Wiederherstellung und einmaliger vollständiger Abschlussvergleich. Schutz vor zwischenzeitlich geänderten Ordnerattributen, erneutes Öffnen einer geschlossenen lokalen Datenbank, passendere Fehlertexte, korrekte Trennungsmeldung und keine irreführende SPIFFS-Downgradeempfehlung.
+- **Komponenten:** DE3.37 bleibt Anwendungs-OTA; BL6, SoftDevice S112 und PC-Treiber sind eigenständig. Kein erneutes Formatieren bei einem bereits passend umgestellten PFS1-Gerät. [Bauanleitung](docs/BUILD_DE3_37.md), [Speicher-/Migrationshinweise](docs/MIGRATION_PFS1.md).
+
+Aktuelle Prüfung: 102 Firmware-Hostprüfreihen, fünf Sanitizer-Prüfreihen, 659 Webtests plus 7 Tests des gebauten Workers/WASM sowie Build-/Signaturprüfungen. Der Besitzer bestätigte das Flashen und die ausprobierten Funktionen unter DE3.37. Ältere gerätespezifische Fehlerberichte und Testzahlen unten bleiben ausdrücklich historische Aussagen.
+
+---
+## Historical record: DE1–DE3.16 / Historischer Stand DE1–DE3.16
+
 Scope: **DE1 through 2.21.0-DE3.16**, compared with the imported **cylin577/pixl.js v2.21.0**, commit `57a364329436745f780e70ac07a1642989a00d6f`. The original project is [solosky/pixl.js](https://github.com/solosky/pixl.js); the immediate base is [cylin577/pixl.js](https://github.com/cylin577/pixl.js).
 
 This is a component-based summary of documented changes retained in DE3.16, not an exhaustive upstream **2.16.0 → 2.21.0** comparison, a claim about the latest upstream release, or proof that every possible defect has been eliminated. Milestones identify documented changes rather than inventing a separate feature for every intermediate version.

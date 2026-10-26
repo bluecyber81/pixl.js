@@ -44,16 +44,16 @@ int main(void) {
  assert(amiibo_list_size==952);
  for(size_t i=0;i<amiibo_list_size;i++)expected[i]=&amiibo_list[i];
  qsort(expected,amiibo_list_size,sizeof(expected[0]),ref_compare);
- struct {uint64_t before;const db_amiibo_t *items[100];uint64_t after;} page={.before=0x12345678,.after=0x87654321};
+ struct {uint64_t before;const db_amiibo_t *items[AMIIDB_RESULT_PAGE_SIZE];uint64_t after;} page={.before=0x12345678,.after=0x87654321};
  uint16_t total;unsigned visited=0;
- for(unsigned number=0;number<10;number++) {
+ for(unsigned number=0;number<(952+AMIIDB_RESULT_PAGE_SIZE-1)/AMIIDB_RESULT_PAGE_SIZE;number++) {
   int count=amiidb_api_db_search_page("",0,number,page.items,&total);
-  assert(total==952 && count==(number==9?52:100));
+  assert(total==952 && count==(number==952/AMIIDB_RESULT_PAGE_SIZE?952%AMIIDB_RESULT_PAGE_SIZE:AMIIDB_RESULT_PAGE_SIZE));
   for(int j=0;j<count;j++)assert(page.items[j]==expected[visited++]);
   assert(page.before==0x12345678 && page.after==0x87654321);
  }
  assert(visited==952);
- assert(amiidb_api_db_search_page("",0,65535,page.items,&total)==52 && page.items[0]==expected[900]);
+ assert(amiidb_api_db_search_page("",0,65535,page.items,&total)==952%AMIIDB_RESULT_PAGE_SIZE && page.items[0]==expected[952/AMIIDB_RESULT_PAGE_SIZE*AMIIDB_RESULT_PAGE_SIZE]);
  assert(amiidb_api_db_search("",count_cb,NULL)==0 && callback_count==952);
  char id[17];
  for(size_t i=0;i<952;i++) {
@@ -71,16 +71,16 @@ int main(void) {
   if(has_children)continue;
   size_t n=0;
   for(size_t i=0;i<952;i++)for(const db_link_t *link=link_list;link->game_id;link++)
-   if(link->game_id==game->game_id && link->head==amiibo_list[i].head && link->tail==amiibo_list[i].tail){expected[n++]=&amiibo_list[i];break;}
+   if(link->game_id==game->game_id && link->amiibo_index==i){expected[n++]=&amiibo_list[i];break;}
   qsort(expected,n,sizeof(expected[0]),ref_compare);
   size_t seen=0;
-  for(unsigned number=0;number<(n+99)/100 || number==0;number++) {
+  for(unsigned number=0;number<(n+AMIIDB_RESULT_PAGE_SIZE-1)/AMIIDB_RESULT_PAGE_SIZE || number==0;number++) {
    int count=amiidb_api_db_search_page("",game->game_id,number,page.items,&total);assert(total==n && count>=0);
    for(int j=0;j<count;j++)assert(page.items[j]==expected[seen++]);
   }
   assert(seen==n);
  }
- puts("PASS: all 952 exact IDs, 10 sorted pages, bounds, case search and every leaf game");return 0;
+ puts("PASS: all 952 exact IDs, bounded sorted pages, bounds, case search and every leaf game");return 0;
 }
 ''', includes=[SRC / 'amiidb', SRC / 'app/amiidb/api'])
 
@@ -92,10 +92,10 @@ int main(void) {
 const db_amiibo_t amiibo_list[]={{1,2,"Zulu",""},{2,2,"Alpha",""},{3,2,"Beta",""}};
 const size_t amiibo_list_size=3;
 const db_game_t game_list[]={{1,0,"Parent","",0,0},{2,1,"Child","",0,0},{3,2,"Grandchild","",0,0},{4,5,"CycleA","",0,0},{5,4,"CycleB","",0,0},{0}};
-const db_link_t link_list[]={{2,1,2,0,0,0},{3,2,2,0,0,0},{4,3,2,0,0,0},{2,1,2,0,0,0},{0}};
+const db_link_t link_list[]={{2,0,0,0,0},{3,1,0,0,0},{4,2,0,0,0},{2,0,0,0,0},{0}};
 #include "amiidb_api_db.c"
 int main(void) {
- const db_amiibo_t *items[100];uint16_t total;
+ const db_amiibo_t *items[AMIIDB_RESULT_PAGE_SIZE];uint16_t total;
  assert(amiidb_api_db_search_page("",1,0,items,&total)==2 && total==2 && items[0]->head==2 && items[1]->head==1);
  assert(amiidb_api_db_search_page("0000000100000002",3,0,items,&total)==0);
  assert(amiidb_api_db_search_page("0000000200000002",1,0,items,&total)==1);

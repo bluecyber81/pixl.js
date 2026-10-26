@@ -6,6 +6,9 @@
 #include "vfs.h"
 #include "vfs_meta.h"
 #include "vfs_persist.h"
+#ifdef VFS_PACKED_LFS_ENABLE
+#include "vfs_packed_runtime.h"
+#endif
 
 #include "tag_helper.h"
 #include "ble_amiibolink.h"
@@ -133,6 +136,9 @@ int32_t settings_init() {
     if (!p_driver->mounted()) {
         return NRF_ERROR_INVALID_STATE;
     }
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required()) return NRF_ERROR_INVALID_STATE;
+#endif
     if (vfs_persist_recover(p_driver) != VFS_OK) {
         return NRF_ERROR_INVALID_STATE;
     }
@@ -172,7 +178,11 @@ int32_t settings_save() {
         return NRF_ERROR_NOT_SUPPORTED;
     }
 
-    if (!p_driver->mounted() || !m_settings_save_allowed) {
+    if (!p_driver->mounted() || !m_settings_save_allowed
+#ifdef VFS_PACKED_LFS_ENABLE
+        || vfs_packed_recovery_required()
+#endif
+    ) {
         return NRF_ERROR_INVALID_STATE;
     }
     err = vfs_persist_recover(p_driver);

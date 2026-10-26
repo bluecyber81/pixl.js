@@ -42,8 +42,13 @@ typedef struct {
     string_t search_str;
     uint16_t search_page;
     uint16_t game_page;
+    uint16_t search_filter_page;
+    uint16_t game_page_path[8];
+    uint16_t game_scroll_path[8];
+    uint8_t game_focus_path[8];
     uint8_t search_game_id;
     bool search_filter_select;
+    bool search_restore_focus;
     const db_amiibo_t *result_items[AMIIDB_RESULT_PAGE_SIZE];
     uint16_t result_count;
     uint16_t result_total;
@@ -58,6 +63,10 @@ typedef struct {
     /** fav list*/
     string_t cur_fav_dir;
     amiidb_fav_t cur_fav;
+    amiidb_fav_info_t fav_page_anchor;
+    int8_t fav_page_direction;
+    uint8_t fav_page_focus;
+    uint8_t fav_page_mode;
     uint8_t in_fav_folders;
 
     /** data slot */

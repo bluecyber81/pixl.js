@@ -1,0 +1,169 @@
+/* Real menu/loader functions; deterministic VFS/UI/containers replace hardware.
+ * No tag data or keys. The separate RAM suite exercises real Mlib/TLSF growth. */
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "vfs.h"
+#define CHECK(x) do {if(!(x)){fprintf(stderr,"CHECK %d: %s\n",__LINE__,#x);exit(71);}}while(0)
+typedef char string_t[48];
+typedef struct {unsigned size;string_t data[260];} strings_t;
+typedef strings_t string_array_t[1];
+typedef struct {strings_t *a;unsigned i;} string_array_it_t[1];
+typedef struct {unsigned icon;string_t text;void *user_data;} mui_list_item_t;
+typedef struct {mui_list_item_t data[260];unsigned size;} list_array_t;
+typedef struct {list_array_t items[1];void *user_data;} mui_list_view_t;
+#define mui_list_item_array_size(a) ((a)->size)
+#define mui_list_item_array_get(a,i) (&(a)->data[i])
+typedef struct {unsigned focus,max_ntags;} detail_t;
+typedef struct {string_t current_folder,current_file;char browser_anchor[48];uint16_t browser_anchor_icon;int8_t browser_direction;unsigned current_focus_index;
+ vfs_drive_t current_drive;mui_list_view_t *p_list_view;detail_t *p_amiibo_detail_view;
+ void *p_view_dispatcher,*p_scene_dispatcher,*p_toast_view;bool reload_amiibo_files;} app_amiibo_t;
+typedef struct {void *user_data;} mui_msg_box_t;
+typedef int mui_msg_box_event_t;
+typedef int mui_list_view_event_t;
+typedef struct {bool has_flags;unsigned flags;} vfs_meta_t;
+#define ICON_HOME 1
+#define ICON_BACK 2
+#define ICON_FOLDER 3
+#define ICON_FILE 4
+#define ICON_ERROR 5
+#define FOLDER_LIST_PARENT 0xffff
+#define FOLDER_LIST_PREVIOUS 0xfffe
+#define FOLDER_LIST_NEXT 0xfffd
+#define AMIIBO_BROWSER_PAGE_SIZE 24
+#define ICON_PREVIOUS 6
+#define ICON_NEXT_PAGE 7
+#define DE3_PREVIOUS_PAGE 4
+#define DE3_NEXT_PAGE 5
+#define MAIN_MENU 1
+#define FAILED 2
+#define _L_OPEN_FOLDER_FAILED 3
+#define MUI_LIST_VIEW_EVENT_SELECTED 1
+#define MUI_MSG_BOX_EVENT_SELECT_LEFT 1
+#define AMIIBO_VIEW_ID_LIST 1
+#define AMIIBO_SCENE_FILE_BROWSER 1
+#define AMIIBO_SCENE_AMIIBO_DETAIL 2
+#define AMIIBO_SCENE_FILE_BROWSER_MENU 3
+#define MINI_APP_ID_AMIIBO 1
+#define VFS_OBJ_FLAG_HIDDEN 1
+#define string_get_cstr(s) (s)
+#define string_cmp(a,b) strcmp(a,b)
+#define string_cmp_str(a,b) strcmp(a,b)
+#define string_size(s) strlen(s)
+#define string_set_str(s,v) strcpy(s,v)
+#define string_set(s,v) strcpy(s,v)
+#define string_left(s,n) ((s)[n]=0)
+#define string_cat_str(s,v) strcat(s,v)
+#define string_end_with_str_p(s,v) ((s)[strlen(s)-1]==(v)[0])
+#define _T(x) getLangString(x)
+static unsigned opens,closes,reads,removes,errors,memory_errors,navigations,view_switches,sorts;
+static unsigned total, fail_read_at, fail_alloc_at, allocations;
+static int open_result,read_result,close_result,remove_result,last_error;
+static bool missing_driver;
+static const char *getLangString(int id){return id==MAIN_MENU?"Hauptmenue":id==FAILED?"Fehlgeschlagen":"Ordnerfehler";}
+static void *mui(void){return NULL;}
+static void mui_show_memory_error(void *m){(void)m;memory_errors++;}
+static void mui_toast_view_show(void *m,const char *text){(void)m;CHECK(!strcmp(text,"Fehlgeschlagen"));errors++;}
+static void amiibo_scene_amiibo_detail_reload_error(app_amiibo_t*a,const char*p,int32_t e){(void)a;(void)p;errors++;last_error=e;}
+static void mui_scene_dispatcher_previous_scene(void *m){(void)m;navigations++;}
+static void mui_scene_dispatcher_next_scene(void*m,unsigned id){(void)m;(void)id;navigations++;}
+static void mui_view_dispatcher_switch_to_view(void*m,unsigned id){(void)m;(void)id;view_switches++;}
+static void *mini_app_launcher(void){return NULL;}
+static void mini_app_launcher_kill(void*m,unsigned id){(void)m;(void)id;navigations++;}
+static void string_array_reset(string_array_t a){a->size=0;}
+static unsigned string_array_size(const string_array_t a){return a->size;}
+static string_t *string_array_get(string_array_t a,unsigned i){CHECK(i<a->size);return &a->data[i];}
+static void string_array_it(string_array_it_t it,string_array_t a){it->a=a;it->i=0;}
+static bool string_array_end_p(string_array_it_t it){return it->i==it->a->size;}
+static string_t *string_array_ref(string_array_it_t it){return &it->a->data[it->i];}
+static void string_array_next(string_array_it_t it){it->i++;}
+static void string_array_special_sort(string_array_t a,int(*cmp)(const string_t*,const string_t*)){
+ (void)a;(void)cmp;sorts++;
+}
+static bool mui_string_try_set_str(char *dst,const char *src){if(++allocations==fail_alloc_at)return false;strcpy(dst,src);return true;}
+static bool mui_string_array_try_push_str(string_array_t a,const char*s){
+ if(++allocations==fail_alloc_at)return false;CHECK(a->size<260);strcpy(a->data[a->size++],s);return true;
+}
+static void mui_list_view_clear_items(mui_list_view_t*l){l->items->size=0;}
+static bool mui_list_view_try_add_item_ext(mui_list_view_t*l,unsigned icon,const char*t,const char*s,void*d){
+ (void)s;if(++allocations==fail_alloc_at)return false;CHECK(l->items->size<260);
+ mui_list_item_t*i=&l->items->data[l->items->size++];i->icon=icon;strcpy(i->text,t);i->user_data=d;return true;
+}
+static void mui_list_view_sort(mui_list_view_t*l,int(*cmp)(const mui_list_item_t*,const mui_list_item_t*)){
+ qsort(l->items->data,l->items->size,sizeof(mui_list_item_t),(int(*)(const void*,const void*))cmp);sorts++;
+}
+static void mui_list_view_set_focus(mui_list_view_t*l,unsigned n){(void)l;(void)n;}
+static void mui_list_view_set_scroll_offset(mui_list_view_t*l,unsigned n){(void)l;(void)n;}
+static void amiibo_detail_view_set_focus(detail_t*d,unsigned n){d->focus=n;}
+static void amiibo_detail_view_set_max_ntags(detail_t*d,unsigned n){d->max_ntags=n;}
+static unsigned amiibo_detail_view_get_focus(detail_t*d){return d->focus;}
+static bool is_valid_amiibo_ntag_by_size(size_t n){return n==540;}
+static void vfs_meta_decode(const void*p,size_t n,vfs_meta_t*m){(void)p;(void)n;m->has_flags=false;}
+struct cwk_segment {const char *begin;};
+static void cwk_path_get_last_segment(const char*p,struct cwk_segment*s){s->begin=strrchr(p,'/');}
+static int opened(const char*p,vfs_dir_t*d){(void)p;opens++;d->handle=NULL;return open_result;}
+static int read_entry(vfs_dir_t*d,vfs_obj_t*o){
+ (void)d;reads++;if(reads==fail_read_at)return read_result;
+ if(reads>total)return VFS_ERR_EOF;
+ memset(o,0,sizeof(*o));o->type=VFS_TYPE_REG;o->size=540;snprintf(o->name,sizeof(o->name),"tag%u.bin",reads);return VFS_OK;
+}
+static int closed(vfs_dir_t*d){(void)d;closes++;return close_result;}
+static int removed(const char*p){CHECK(!strcmp(p,"/tag2.bin"));removes++;return remove_result;}
+static vfs_driver_t driver={.open_dir=opened,.read_dir=read_entry,.close_dir=closed,.remove_file=removed};
+vfs_driver_t *vfs_get_driver(vfs_drive_t d){(void)d;return missing_driver?NULL:&driver;}
+@FUNCTIONS@
+int main(int argc,char **argv){
+ CHECK(argc==2);int scenario=atoi(argv[1]);total=3;read_result=VFS_ERR_CRPT;
+ app_amiibo_t app={0};detail_t detail={.focus=1,.max_ntags=3};mui_list_view_t list={0};
+ app.p_amiibo_detail_view=&detail;app.p_list_view=&list;list.user_data=&app;
+ strcpy(app.current_folder,"/");strcpy(app.current_file,"tag2.bin");
+ if(scenario<10){
+  if(scenario==0)open_result=VFS_ERR_FAIL;
+  if(scenario==1){fail_read_at=2;}
+  if(scenario==2)close_result=VFS_ERR_FAIL;
+  if(scenario==3){fail_read_at=2;close_result=VFS_ERR_FAIL;}
+  if(scenario==4)missing_driver=true;
+  if(scenario==5)total=0;
+  if(scenario==7)fail_alloc_at=2;
+  if(scenario==8){total=256;}
+  if(scenario==9){fail_read_at=1;}
+  bool ok=amiibo_scene_amiibo_detail_reload_files(&app);
+  if(scenario==5 || scenario==6 || scenario==7 || scenario==8){CHECK(ok && !errors && !memory_errors && detail.max_ntags==total);}
+  else{
+   CHECK(!ok && detail.max_ntags==0 && detail.focus==0 && !sorts);
+   if(scenario==7 || scenario==8)CHECK(memory_errors==1 && !errors);
+   else{CHECK(errors==1 && !memory_errors);if(scenario==1 || scenario==3 || scenario==9)CHECK(last_error==VFS_ERR_CRPT);}
+  }
+  CHECK(closes==(scenario==0 || scenario==4?0:1));CHECK(!navigations);
+ }else if(scenario<20){
+  if(scenario==10)open_result=VFS_ERR_FAIL;
+  if(scenario==11 || scenario==13){fail_read_at=2;}
+  if(scenario==12 || scenario==13)close_result=VFS_ERR_FAIL;
+  if(scenario==14)missing_driver=true;
+  if(scenario==15)total=0;
+  if(scenario==17){fail_read_at=2;fail_alloc_at=3;}
+  if(scenario==18){fail_read_at=1;}
+  amiibo_scene_file_browser_reload_folders(&app);
+  if(scenario==17){CHECK(memory_errors==1 && list.items->size==0 && !view_switches);}
+  else if(scenario==15 || scenario==16){CHECK(list.items->size==total+1 && !memory_errors && view_switches==1);}
+  else{
+   CHECK(list.items->size==2 && list.items->data[0].icon==ICON_HOME && list.items->data[1].icon==ICON_ERROR && !memory_errors && view_switches==1);
+   amiibo_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items->data[1]);
+   CHECK(!navigations && !strcmp(app.current_file,"tag2.bin"));
+   amiibo_scene_file_browser_on_selected(2,&list,&list.items->data[1]);CHECK(!navigations);
+  }
+  CHECK(closes==(scenario==10 || scenario==14?0:1));
+ }else{
+  mui_msg_box_t box={.user_data=&app};
+  remove_result=scenario==20?VFS_ERR_FAIL:scenario==21?VFS_ERR_CRPT:VFS_OK;
+  if(scenario==24)missing_driver=true;
+  amiibo_scene_amiibo_detail_delete_tag_confirmed(scenario==23?2:MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+  if(scenario==20 || scenario==21 || scenario==24){CHECK(errors==1 && !navigations && !app.reload_amiibo_files && !strcmp(app.current_file,"tag2.bin"));}
+  else if(scenario==22){CHECK(!errors && navigations==1 && app.reload_amiibo_files && !strcmp(app.current_file,"tag1.bin"));}
+  else CHECK(!errors && navigations==1 && !removes);
+  CHECK(removes==(scenario==23 || scenario==24?0:1));
+ }
+ printf("PASS file-error case %d\n",scenario);return 0;
+}

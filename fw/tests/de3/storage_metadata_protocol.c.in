@@ -1,0 +1,188 @@
+/* Complete production protocol TU; only VFS and outgoing-frame boundary mocked. */
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define CHECK(x) do { if (!(x)) { fprintf(stderr,"CHECK line %d: %s\n",__LINE__,#x); exit(71); } } while (0)
+@PROTOCOL@
+
+static vfs_driver_t mock_driver;
+static df_frame_t response;
+static unsigned sends, stat_calls, update_calls, format_calls, mount_calls, dfu_calls;
+static bool enabled = true, mounted = true;
+static int32_t stat_result, update_result, last_error;
+static uint8_t stored[VFS_MAX_META_LEN];
+static char last_path[VFS_MAX_FULL_PATH_LEN];
+
+void runtime_diag_vfs_error(uint8_t command, int32_t error) {(void)command;last_error=error;}
+void df_core_send_frame(df_frame_t *frame) {CHECK(frame->length<=DF_PAYLOAD_LEN);response=*frame;++sends;}
+size_t df_core_max_payload(void) {return DF_PAYLOAD_LEN;}
+bool vfs_drive_enabled(vfs_drive_t drive) {return enabled && drive==VFS_DRIVE_EXT;}
+vfs_driver_t *vfs_get_driver(vfs_drive_t drive) {CHECK(drive==VFS_DRIVE_EXT);return &mock_driver;}
+static bool mock_mounted(void) {return mounted;}
+static int32_t mock_mount(void) {++mount_calls;return VFS_ERR_FAIL;}
+static int32_t mock_format(void) {++format_calls;return VFS_ERR_FAIL;}
+void enter_dfu(void) {++dfu_calls;}
+static int32_t mock_stat_file(const char *path,vfs_obj_t *object) {
+    ++stat_calls;CHECK(strlen(path)<sizeof(last_path));strcpy(last_path,path);
+    if(stat_result)return stat_result;
+    memset(object,0,sizeof(*object));object->type=VFS_TYPE_REG;
+    memcpy(object->meta,stored,sizeof(stored));return VFS_OK;
+}
+static int32_t mock_update(const char *path,void *meta,size_t length) {
+    ++update_calls;CHECK(!strcmp(path,last_path));CHECK(length==sizeof(stored));
+    if(update_result)return update_result;
+    memcpy(stored,meta,length);return VFS_OK;
+}
+static void reset(void) {
+    memset(&file_chunk_state,0,sizeof(file_chunk_state));
+    memset(&dir_chunk_state,0,sizeof(dir_chunk_state));dir_chunk_state.dir_closed=true;
+    memset(&response,0,sizeof(response));
+    sends=stat_calls=update_calls=format_calls=mount_calls=dfu_calls=0;
+    enabled=mounted=true;stat_result=update_result=last_error=0;
+    for(size_t i=0;i<sizeof(stored);++i)stored[i]=(uint8_t)(i*13u+17u);
+    mock_driver=(vfs_driver_t){.mounted=mock_mounted,.mount=mock_mount,.format=mock_format,
+        .stat_file=mock_stat_file,.update_file_meta=mock_update};
+}
+static df_frame_t frame(uint8_t command,const char *path) {
+    df_frame_t value={.cmd=command};
+    size_t length=strlen(path);CHECK(length+2+128<=sizeof(value.data));
+    value.data[0]=(uint8_t)length;value.data[1]=(uint8_t)(length>>8);
+    memcpy(value.data+2,path,length);value.length=(uint8_t)(length+2);
+    if(command==0x1e){memcpy(value.data+value.length,stored,128);value.length+=128;}
+    return value;
+}
+static void dispatch(df_frame_t *value,df_event_type_t type) {
+    df_event_t event={.type=type,.df=value};bool found=false;
+    for(const df_cmd_entry_t *entry=df_proto_handler_vfs_entries;entry->handler;++entry){
+        if(entry->cmd==value->cmd){entry->handler(&event);found=true;break;}
+    }
+    CHECK(found);CHECK(format_calls==0 && mount_calls==0 && dfu_calls==0);
+}
+static void expect_bad(df_frame_t value) {
+    unsigned old_stat=stat_calls,old_update=update_calls,old_sends=sends;
+    dispatch(&value,DF_EVENT_DATA_RECEVIED);
+    CHECK(sends==old_sends+1 && response.cmd==value.cmd && response.status==DF_STATUS_ERR && response.length==0);
+    CHECK(stat_calls==old_stat && update_calls==old_update);
+}
+static void expect_error(df_frame_t value,int32_t code,unsigned calls) {
+    unsigned old_stat=stat_calls,old_update=update_calls,old_sends=sends;
+    dispatch(&value,DF_EVENT_DATA_RECEVIED);
+    CHECK(sends==old_sends+1 && response.status==DF_STATUS_ERR && response.length==0 && last_error==code);
+    CHECK(stat_calls==old_stat+1 && update_calls==old_update+calls);
+}
+static void raw_roundtrip(bool erased) {
+    uint8_t expected[128];
+    for(size_t i=0;i<128;++i)expected[i]=erased?0xff:(uint8_t)(i*7u+0x91u);
+    df_frame_t value=frame(0x1e,"E:/folder/file.bin");
+    memcpy(value.data+value.length-128,expected,128);
+    dispatch(&value,DF_EVENT_DATA_RECEVIED);
+    CHECK(sends==1 && response.status==DF_STATUS_OK && response.length==0);
+    CHECK(stat_calls==1 && update_calls==1 && !memcmp(stored,expected,128));
+    value=frame(0x1d,"E:/folder/file.bin");dispatch(&value,DF_EVENT_DATA_RECEVIED);
+    CHECK(sends==2 && response.status==DF_STATUS_OK && response.length==128 && !memcmp(response.data,expected,128));
+    CHECK(stat_calls==2 && update_calls==1 && !strcmp(last_path,"/folder/file.bin"));
+}
+int main(int argc,char **argv) {
+    CHECK(argc==2);unsigned scenario=(unsigned)strtoul(argv[1],NULL,10);reset();
+    df_frame_t info={.cmd=0x1c,.data={'E'},.length=1};
+    if(scenario==0 || scenario==1) {
+        if(scenario==1)mounted=false;
+        dispatch(&info,DF_EVENT_DATA_RECEVIED);
+        CHECK(sends==1 && response.cmd==0x1c);
+#if defined(VFS_LFS_ENABLE) || defined(VFS_SPIFFS_ENABLE)
+        CHECK(response.status==0 && response.length==8);
+        CHECK(response.data[0]==1 && response.data[1]=='E' && response.data[3]==mounted);
+#ifdef VFS_LFS_ENABLE
+        CHECK(response.data[2]==2);
+#else
+        CHECK(response.data[2]==1);
+#endif
+        CHECK(response.data[4]==7 && response.data[5]==128 && response.data[6]==64 && response.data[7]==48);
+#else
+        CHECK(response.status==DF_STATUS_ERR && response.length==0 && last_error==VFS_ERR_UNSUPT);
+#endif
+        CHECK(!stat_calls && !update_calls);
+    } else if(scenario==2) {
+        df_frame_t bad=info;bad.length=0;expect_bad(bad);bad=info;bad.length=2;expect_bad(bad);
+        bad=info;bad.status=1;expect_bad(bad);bad=info;bad.chunk=1;expect_bad(bad);
+        bad=info;bad.data[0]='X';expect_bad(bad);bad.data[0]='I';expect_bad(bad);
+        enabled=false;expect_bad(info);
+    } else if(scenario==3) {
+        df_frame_t value=frame(0x1d,"E:/x");dispatch(&value,DF_EVENT_DATA_RECEVIED);
+        CHECK(sends==1 && response.status==0 && response.chunk==0 && response.length==128);
+        CHECK(!memcmp(response.data,stored,128) && stat_calls==1 && !update_calls);
+    } else if(scenario==4 || scenario==5) {
+        raw_roundtrip(scenario==5);
+    } else if(scenario==6) {
+        for(uint8_t command=0x1d;command<=0x1e;++command) {
+            df_frame_t value=frame(command,"E:/x");value.length=0;expect_bad(value);
+            value=frame(command,"E:/x");value.length=1;expect_bad(value);
+            value=frame(command,"E:/x");value.data[0]=0xff;value.data[1]=0xff;expect_bad(value);
+            value=frame(command,"E:/x");value.data[1]=1;expect_bad(value);
+            value=frame(command,"E:/x");value.data[0]=2;expect_bad(value);
+            value=frame(command,"E:/x");value.data[4]=0;expect_bad(value);
+            value=frame(command,"E:/x");value.data[2]='X';expect_bad(value);
+            value=frame(command,"E:/x");value.data[3]='!';expect_bad(value);
+        }
+    } else if(scenario==7) {
+        df_frame_t value=frame(0x1d,"E:/x");value.data[value.length++]=9;expect_bad(value);
+        value=frame(0x1e,"E:/x");--value.length;expect_bad(value);
+        value=frame(0x1e,"E:/x");value.data[value.length++]=9;expect_bad(value);
+    } else if(scenario==8) {
+        const char *bad[]={"E:/","E:/.","E:/..","E:/../x","E:/a/../x","E:/a/./x","E://x","E:/a//x","E:/a/"};
+        for(size_t i=0;i<sizeof(bad)/sizeof(bad[0]);++i){expect_bad(frame(0x1d,bad[i]));expect_bad(frame(0x1e,bad[i]));}
+    } else if(scenario==9) {
+        enabled=false;expect_bad(frame(0x1d,"E:/x"));expect_bad(frame(0x1e,"E:/x"));
+        CHECK(last_error==VFS_ERR_NODEV);enabled=true;mounted=false;
+        expect_bad(frame(0x1d,"E:/x"));expect_bad(frame(0x1e,"E:/x"));CHECK(last_error==VFS_ERR_NODEV);
+    } else if(scenario==10) {
+        for(unsigned state=0;state<4;++state) {
+            reset();if(state==0)file_chunk_state.opened=true;
+            if(state==1)file_chunk_state.abandoned=true;
+            if(state==2)file_chunk_state.read_pending=true;
+            if(state==3)dir_chunk_state.dir_closed=false;
+            expect_bad(frame(0x1d,"E:/x"));expect_bad(frame(0x1e,"E:/x"));
+        }
+    } else if(scenario==11) {
+        const char *bad[]={"E:/.pixl_txn","E:/.pixl_txn/file","E:/.pixl_txn_new"};
+        for(size_t i=0;i<sizeof(bad)/sizeof(bad[0]);++i)expect_bad(frame(0x1e,bad[i]));
+        df_frame_t value=frame(0x1d,bad[0]);dispatch(&value,DF_EVENT_DATA_RECEVIED);
+        CHECK(response.status==0 && response.length==128 && stat_calls==1 && !update_calls);
+    } else if(scenario==12) {
+        for(unsigned event=0;event<=DF_EVENT_DATA_TRANSMIT_READY;++event) {
+            if(event==DF_EVENT_DATA_RECEVIED)continue;
+            dispatch(&info,(df_event_type_t)event);
+            df_frame_t value=frame(0x1d,"E:/x");dispatch(&value,(df_event_type_t)event);
+            value=frame(0x1e,"E:/x");dispatch(&value,(df_event_type_t)event);
+        }CHECK(!sends && !stat_calls && !update_calls);
+    } else if(scenario==13) {
+        char path[68]="E:/";memset(path+3,'a',16);path[19]='/';memset(path+20,'b',45);path[65]=0;
+        df_frame_t value=frame(0x1d,path);dispatch(&value,DF_EVENT_DATA_RECEVIED);
+        CHECK(response.status==0 && response.length==128 && stat_calls==1);
+        path[65]='c';path[66]=0;expect_bad(frame(0x1d,path));expect_bad(frame(0x1e,path));
+        strcpy(path,"E:/");memset(path+3,'a',48);path[51]=0;expect_bad(frame(0x1d,path));expect_bad(frame(0x1e,path));
+    } else if(scenario==14) {
+        df_frame_t value=frame(0x1d,"E:/M\xC3\xBCnze.bin");dispatch(&value,DF_EVENT_DATA_RECEVIED);
+        CHECK(response.status==0 && response.length==128 && !strcmp(last_path,"/M\xC3\xBCnze.bin"));
+    } else if(scenario==15) {
+        stat_result=VFS_ERR_NOOBJ;expect_error(frame(0x1d,"E:/x"),VFS_ERR_NOOBJ,0);
+        expect_error(frame(0x1e,"E:/x"),VFS_ERR_NOOBJ,0);
+        stat_result=VFS_ERR_FAIL;expect_error(frame(0x1d,"E:/x"),VFS_ERR_FAIL,0);
+        expect_error(frame(0x1e,"E:/x"),VFS_ERR_FAIL,0);
+    } else if(scenario==16) {
+        uint8_t previous[128];memcpy(previous,stored,128);update_result=VFS_ERR_NOSPC;
+        df_frame_t value=frame(0x1e,"E:/x");memset(value.data+value.length-128,0x2a,128);
+        expect_error(value,VFS_ERR_NOSPC,1);CHECK(!memcmp(previous,stored,128));
+    } else if(scenario==17) {
+        for(uint8_t command=0x1d;command<=0x1e;++command) {
+            df_frame_t value=frame(command,"E:/x");value.status=1;expect_bad(value);
+            value=frame(command,"E:/x");value.chunk=1;expect_bad(value);
+            value=frame(command,"E:/x");value.chunk=0x8000;expect_bad(value);
+        }
+    } else CHECK(!"unknown scenario");
+    CHECK(!format_calls && !mount_calls && !dfu_calls);
+    printf("PASS bounded storage metadata protocol scenario %u\n",scenario);return 0;
+}

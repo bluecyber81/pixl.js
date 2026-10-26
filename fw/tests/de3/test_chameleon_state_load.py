@@ -71,7 +71,7 @@ static void tag_emulation_sense_run(void){sense++;}
 static ret_code_t ntag_emu_init(const ntag_t*n){assert(n==&default_ntag215);ntag++;return 0;}
 static bool cache_valid(void){return cached;}
 static cache_data_t*cache_get_data(void){return &cache;}
-static void ntag_emu_set_tag(ntag_t*n){assert(n==&cache.ntag);cache_set++;}
+static bool ntag_emu_set_tag(ntag_t*n) {assert(n==&cache.ntag);cache_set++;return true;}
 static void cache_clean(void){clean++;}
 '''+definition(text,'check_wakeup_src','uint32_t')+r'''
 int main(void){

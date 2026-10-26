@@ -4,6 +4,7 @@
 #include "app_error.h"
 #include "cwalk2.h"
 #include "mui_list_view.h"
+#include "mui_alloc.h"
 #include "nrf_log.h"
 #include "settings.h"
 #include "vfs.h"
@@ -19,6 +20,7 @@
 #include "mini_app_registry.h"
 
 enum amiibo_detail_menu_t {
+    AMIIBO_DETAIL_MENU_FIGURE_INFO,
     AMIIBO_DETAIL_MENU_RAND_UID,
     AMIIBO_DETAIL_MENU_AUTO_RAND_UID,
     AMIIBO_DETAIL_MENU_READ_ONLY,
@@ -91,20 +93,25 @@ static void amiibo_scene_amiibo_detail_delete_tag_confirmed(mui_msg_box_event_t 
             mui_toast_view_show(app->p_toast_view, _T(FAILED));
             return;
         }
-        int res = p_vfs_driver->remove_file(path);
+        int res = p_vfs_driver ? p_vfs_driver->remove_file(path) : VFS_ERR_NODEV;
+        if (res != VFS_OK) {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+            return;
+        }
 
         if (res == VFS_OK) {
-            uint8_t focus = amiibo_detail_view_get_focus(app->p_amiibo_detail_view);
-            bool reload = false;
-            if (focus > 0) {
-                string_set(app->current_file, *string_array_get(app->amiibo_files, focus - 1));
-                reload = true;
-            } else if (string_array_size(app->amiibo_files) > 1) {
-                string_set(app->current_file, *string_array_get(app->amiibo_files, focus + 1));
-                reload = true;
-            } else {
-                string_set_str(app->current_file, "");
+            char next[VFS_MAX_NAME_LEN];
+            uint16_t focus, total;
+            /* The removed name is still our anchor; prefer the previous tag,
+             * or the first successor when the first tag was deleted. */
+            int8_t direction = amiibo_detail_view_get_focus(app->p_amiibo_detail_view) ? -1 : 1;
+            int32_t scan = app_amiibo_file_neighbor(app, direction, next, &focus, &total);
+            bool reload = scan == VFS_OK && total;
+            if (reload && !mui_string_try_set_str(app->current_file, next)) {
+                mui_show_memory_error(mui());
+                return;
             }
+            if (!reload) string_set_str(app->current_file, "");
 
             if (reload) {
                 app->reload_amiibo_files = true;
@@ -208,6 +215,13 @@ static void amiibo_scene_amiibo_detail_menu_text_input_set_id_event_cb(mui_text_
     }
 }
 
+static void amiibo_scene_figure_info_back(amiibo_detail_view_event_t event, amiibo_detail_view_t *view) {
+    if (event != AMIIBO_DETAIL_VIEW_EVENT_MENU) return;
+    app_amiibo_t *app = view->user_data;
+    view->info_page = 0;
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_LIST);
+}
+
 static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                         mui_list_item_t *p_item) {
     app_amiibo_t *app = p_list_view->user_data;
@@ -216,6 +230,11 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
     char msg[VFS_MAX_PATH_LEN + 64];
 
     switch (selection) {
+    case AMIIBO_DETAIL_MENU_FIGURE_INFO:
+        app->p_amiibo_detail_view->info_page = 1;
+        amiibo_detail_view_set_event_cb(app->p_amiibo_detail_view, amiibo_scene_figure_info_back);
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_DETAIL);
+        break;
     case AMIIBO_DETAIL_MENU_BACK_FILE_BROWSER:
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
         break;
@@ -316,6 +335,9 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 void amiibo_scene_amiibo_detail_menu_on_enter(void *user_data) {
     app_amiibo_t *app = user_data;
 
+    mui_list_view_add_item(app->p_list_view, 0xe0ae, _T(DE3_FIGURE_INFO),
+                           (void *)AMIIBO_DETAIL_MENU_FIGURE_INFO);
+
     mui_list_view_add_item(app->p_list_view, 0xe1c5, getLangString(_L_RANDOM_GENERATION),
                            (void *)AMIIBO_DETAIL_MENU_RAND_UID);
     settings_data_t *p_settings = settings_get_data();
@@ -348,6 +370,8 @@ void amiibo_scene_amiibo_detail_menu_on_enter(void *user_data) {
 
 void amiibo_scene_amiibo_detail_menu_on_exit(void *user_data) {
     app_amiibo_t *app = user_data;
+    app->p_amiibo_detail_view->info_page = 0;
+    amiibo_detail_view_set_event_cb(app->p_amiibo_detail_view, NULL);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);
     mui_list_view_set_user_data(app->p_list_view, NULL);
     mui_list_view_clear_items(app->p_list_view);

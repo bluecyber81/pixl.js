@@ -31,7 +31,7 @@ def harness():
     app_type = re.search(r'typedef struct \{.*?\} app_settings_t;', header, re.S).group()
     replace('#include <stdio.h>', '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>')
     replace('toast_calls,kills,reboots', 'toast_calls,reboots')
-    replace('typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved;} app_settings_t;',
+    replace('typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved;settings_storage_snapshot_t storage_snapshot;} app_settings_t;',
             'typedef void mui_progress_bar_t, mui_view_dispatcher_t, mui_scene_dispatcher_t, mui_toast_view_t;\n' + app_type)
     inst_header = (SRC / 'core/mini_app_defines.h').read_text(encoding='utf-8')
     inst_types = inst_header[inst_header.index('struct mini_app_inst_s;'):inst_header.rindex('#endif')]
@@ -42,6 +42,7 @@ static mini_app_launcher_t launcher;
 static mini_app_inst_t instance;
 static unsigned desktop_runs, frees, active_view, frames, frames_at_save;
 static unsigned header_sets, message_sets, button_clears, callback_clears;
+static bool ntag_emu_prepare_change(void){return true;}
 static bool home_save;
 static char header_text[64]="STALE FORMAT CONFIRM", message_text[64];
 static void mini_app_launcher_run(mini_app_launcher_t*l,uint32_t id){

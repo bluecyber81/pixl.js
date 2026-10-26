@@ -12,7 +12,16 @@ void ble_scene_connect_status_view_event_cb(ble_status_view_event_t event, ble_s
     if (event == BLE_STATUS_VIEW_BLE_DISABLE) {
         ble_disable();
         mini_app_launcher_kill(mini_app_launcher(), MINI_APP_ID_BLE);
+    } else if (event == BLE_STATUS_VIEW_BLE_RESTART) {
+        (void)ble_restart_advertising();
+        mui_update(mui());
     }
+}
+
+static void ble_scene_link_state_changed(ble_link_state_t state) {
+    (void)state;
+    app_ble_t *app = mini_app_launcher_get_app_handle(mini_app_launcher(), MINI_APP_ID_BLE);
+    if (app && ble_status_view_get_page(app->p_ble_view) == 0) mui_update(mui());
 }
 
 
@@ -27,6 +36,7 @@ void ble_scene_connect_start_on_enter(void *user_data) {
 
     ble_get_addr_str(ble_status_view_get_ble_addr(app->p_ble_view));
     ble_status_view_set_event_cb(app->p_ble_view, ble_scene_connect_status_view_event_cb);
+    ble_link_state_observe(ble_scene_link_state_changed);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, BLE_VIEW_ID_MAIN);
 }
 

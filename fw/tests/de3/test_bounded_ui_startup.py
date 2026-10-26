@@ -15,6 +15,8 @@ COMMON = r'''
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+static bool nfc_change_allowed=true;static unsigned guard_calls;
+static bool ntag_emu_prepare_change(void){guard_calls++;return nfc_change_allowed;}
 static unsigned calls, fail_at, live, errors;
 static void *mui_mem_malloc(size_t n) {
  if (++calls == fail_at) return NULL;
@@ -86,6 +88,9 @@ int main(void){
  mui_scene_t defs[MUI_SCENE_STACK_CAPACITY+1];
  for(unsigned i=0;i<MUI_SCENE_STACK_CAPACITY+1;i++)defs[i]=(mui_scene_t){.enter_cb=enter,.exit_cb=leave};
  mui_scene_dispatcher_set_user_data(s,&enters);mui_scene_dispatcher_set_scene_defines(s,defs,MUI_SCENE_STACK_CAPACITY+1);
+ s->transition_guard=ntag_emu_prepare_change;
+ nfc_change_allowed=false;mui_scene_dispatcher_next_scene(s,0);assert(!s->scene_depth&&!enters&&!exits);
+ nfc_change_allowed=true;
  /* Existing MAIN -> DATA_LIST -> named MAIN return must stay shallow. */
  for(unsigned i=0;i<1000;i++){
   mui_scene_dispatcher_next_scene(s,0);assert(s->scene_depth==1);
@@ -93,11 +98,14 @@ int main(void){
   mui_scene_dispatcher_next_scene(s,0);assert(s->scene_depth==1);
  }
  mui_scene_dispatcher_next_scene(s,0);assert(s->scene_depth==1&&errors==2);
- mui_scene_dispatcher_exit(s);enters=exits=0;
+ nfc_change_allowed=false;unsigned held_enters=enters,held_exits=exits;
+ mui_scene_dispatcher_next_scene(s,1);mui_scene_dispatcher_back_scene(s,1);
+ assert(s->scene_depth==1&&enters==held_enters&&exits==held_exits);
+ nfc_change_allowed=true;mui_scene_dispatcher_exit(s);enters=exits=0;
  count=calls;
  for(unsigned i=0;i<MUI_SCENE_STACK_CAPACITY;i++)mui_scene_dispatcher_next_scene(s,i);
  assert(s->scene_depth==MUI_SCENE_STACK_CAPACITY&&enters==MUI_SCENE_STACK_CAPACITY&&calls==count);
- unsigned prior=exits;mui_scene_dispatcher_next_scene(s,MUI_SCENE_STACK_CAPACITY);assert(errors==3&&exits==prior);
+ unsigned prior=exits,prior_guards=guard_calls;mui_scene_dispatcher_next_scene(s,MUI_SCENE_STACK_CAPACITY);assert(errors==3&&exits==prior&&guard_calls==prior_guards);
  mui_scene_dispatcher_next_scene(s,99);assert(exits==prior);
  mui_scene_dispatcher_back_scene(s,99);assert(s->scene_depth==1&&mui_scene_dispatcher_current_scene(s)==0);
  prior=exits;mui_scene_dispatcher_exit(s);mui_scene_dispatcher_exit(s);assert(exits==prior+1&&s->scene_depth==0);
@@ -136,6 +144,10 @@ int main(void){
  assert(l.p_main_app_inst&&l.p_main_app_inst->p_retain_data==&retain&&l.p_main_app_inst->state==APP_STATE_RUNNING&&live==2);
  mini_app_launcher_post_event(&l,2,&e);assert(event_count==1);
  mini_app_launcher_kill(&l,99);mini_app_launcher_run(&l,99);assert(!kill_count);
+ nfc_change_allowed=false;
+ mini_app_launcher_kill(&l,2);mini_app_launcher_run(&l,1);mini_app_launcher_exit(&l);
+ assert(!kill_count&&l.p_main_app_inst->p_app->id==2&&l.p_main_app_inst->p_handle&&live==2);
+ nfc_change_allowed=true;
  mini_app_launcher_kill(&l,2);assert(kill_count==1&&l.p_main_app_inst->p_app->id==1);
  mini_app_launcher_run_with_retain_data(&l,2,&retain);assert(kill_count==2&&l.p_main_app_inst->state==APP_STATE_RUNNING&&l.p_main_app_inst->p_retain_data==&retain);
  mini_app_launcher_inst_kill(&l,l.p_main_app_inst);mini_app_launcher_inst_kill(&l,l.p_main_app_inst);assert(kill_count==3);

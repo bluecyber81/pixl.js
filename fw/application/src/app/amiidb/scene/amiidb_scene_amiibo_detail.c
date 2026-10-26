@@ -31,8 +31,10 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
         app_timer_stop(m_amiibo_gen_delay_timer);
         memcpy(&app->ntag, p_ntag, sizeof(ntag_t));
         if (m_active_slot_persist) {
-            if (amiidb_api_slot_write(m_active_slot, &app->ntag) != VFS_OK)
-                mui_toast_view_show(app->p_toast_view, _T(APP_AMIIDB_SLOT_SAVE_FAILED));
+            if (amiidb_api_slot_write(m_active_slot, &app->ntag) != VFS_OK) {
+                ntag_emu_save_failed();
+                /* Global save overlay remains usable even if the heap is full. */
+            }
         }
         mui_update(mui());
     } else if (type == NTAG_EVENT_TYPE_READ) {
@@ -46,7 +48,7 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
 }
 
 static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t *app) {
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return;
     m_active_slot_persist = false;
     const db_amiibo_t *p_amiibo = app->cur_amiibo;
     ret_code_t result = p_amiibo ? amiibo_helper_generate_amiibo(p_amiibo->head, p_amiibo->tail, &app->ntag)
@@ -80,6 +82,7 @@ static void amiidb_scene_amiibo_game_list_init(app_amiidb_t *app) {
 }
 
 static void amiidb_scene_amiibo_game_list_update(app_amiidb_t *app) {
+    if (!ntag_emu_prepare_change()) return;
     uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
     if (focus >= app->result_count || focus >= LIST_VIEW_ITEM_MAX_COUNT || !app->result_items[focus]) {
         m_tag_ready = false;
@@ -91,7 +94,7 @@ static void amiidb_scene_amiibo_game_list_update(app_amiidb_t *app) {
 }
 
 static void amiidb_scene_amiibo_data_list_init(app_amiidb_t *app) {
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return;
     int32_t result = amiidb_api_slot_read(app->cur_slot_index, &app->ntag);
     if (result == VFS_ERR_NOOBJ) ntag_store_new_rand(&app->ntag);
     else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
@@ -106,7 +109,10 @@ static void amiidb_scene_amiibo_data_list_init(app_amiidb_t *app) {
 }
 
 static void amiidb_scene_amiibo_data_list_update(app_amiidb_t *app) {
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) {
+        amiibo_view_set_focus(app->p_amiibo_view, m_active_slot);
+        return;
+    }
     uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
     int32_t result = amiidb_api_slot_read(focus, &app->ntag);
     if (result == VFS_ERR_NOOBJ) ntag_store_new_rand(&app->ntag);
@@ -167,6 +173,7 @@ static void amiidb_scene_amiibo_fav_list_init(app_amiidb_t *app) {
 }
 
 static void amiidb_scene_amiibo_fav_list_update(app_amiidb_t *app) {
+    if (!ntag_emu_prepare_change()) return;
     uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
     if (focus >= amiidb_fav_array_size(app->fav_array)) {
         m_tag_ready = false;
@@ -285,5 +292,8 @@ void amiidb_scene_amiibo_detail_on_exit(void *user_data) {
     app_amiidb_t *app = (app_amiidb_t *)user_data;
     app_timer_stop(m_amiibo_gen_delay_timer);
     ntag_emu_set_update_cb(NULL, NULL);
-    amiidb_fav_array_reset(app->fav_array);
+    /* The next detail entry reloads this temporary window. Release its backing
+     * allocation before rebuilding a list or entering a different scene. */
+    amiidb_fav_array_clear(app->fav_array);
+    amiidb_fav_array_init(app->fav_array);
 }

@@ -20,14 +20,19 @@
 #define ICON_HOME 0xe1f0
 
 #define FOLDER_LIST_PARENT 0xFFFF
+#define FOLDER_LIST_PREVIOUS 0xFFFE
+#define FOLDER_LIST_NEXT 0xFFFD
+#define AMIIBO_BROWSER_PAGE_SIZE 24
+#define ICON_PREVIOUS 0xe1ac
+#define ICON_NEXT_PAGE 0xe1aa
 
 static int amiibo_scene_file_browser_list_item_cmp(const mui_list_item_t *p_item_a, const mui_list_item_t *p_item_b) {
-    if (p_item_a->icon == ICON_HOME) {
-        return -1;
-    }
-    if (p_item_b->icon == ICON_HOME) {
-        return 1;
-    }
+    uintptr_t a = (uintptr_t)p_item_a->user_data, b = (uintptr_t)p_item_b->user_data;
+    if (a == b && (a == FOLDER_LIST_PARENT || a == FOLDER_LIST_PREVIOUS || a == FOLDER_LIST_NEXT)) return 0;
+    if (a == FOLDER_LIST_PARENT || b == FOLDER_LIST_NEXT) return -1;
+    if (b == FOLDER_LIST_PARENT || a == FOLDER_LIST_NEXT) return 1;
+    if (a == FOLDER_LIST_PREVIOUS) return -1;
+    if (b == FOLDER_LIST_PREVIOUS) return 1;
     if (p_item_a->icon != p_item_b->icon) {
         return p_item_a->icon - p_item_b->icon;
     } else {
@@ -36,61 +41,107 @@ static int amiibo_scene_file_browser_list_item_cmp(const mui_list_item_t *p_item
 }
 
 static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
-    vfs_driver_t *p_vfs_driver;
+    /* Cwalk's segment.begin follows the parent separator. Remove that
+     * separator before opening PackedFS, including retained older paths. */
+    size_t folder_length = string_size(app->current_folder);
+    const char *folder_path = string_get_cstr(app->current_folder);
+    while (folder_length > 1 && folder_path[folder_length - 1] == '/') folder_length--;
+    string_left(app->current_folder, folder_length);
+    vfs_driver_t *driver = vfs_get_driver(app->current_drive);
     vfs_dir_t dir;
     vfs_obj_t obj;
-
-    mui_list_view_clear_items(app->p_list_view);
-    bool complete;
-    if (string_cmp_str(app->current_folder, "/") == 0) {
-        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_HOME, _T(MAIN_MENU), NULL,
-                                                   (void *)FOLDER_LIST_PARENT);
-    } else {
-        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_BACK, "..", NULL,
-                                                   (void *)FOLDER_LIST_PARENT);
-    }
-    if (!complete) { mui_show_memory_error(mui()); return; }
-
-    p_vfs_driver = vfs_get_driver(app->current_drive);
-
-    int32_t res = p_vfs_driver->open_dir(string_get_cstr(app->current_folder), &dir);
+    mui_list_view_t *list = app->p_list_view;
+    mui_list_view_clear_items(list);
+    bool complete = true;
+    uint32_t eligible = 0, excluded = 0;
+    int32_t res = driver ? driver->open_dir(string_get_cstr(app->current_folder), &dir) : VFS_ERR_NODEV;
     if (res == VFS_OK) {
-        while ((res = p_vfs_driver->read_dir(&dir, &obj)) == VFS_OK) {
-            // hide file or dir if flagged with hidden
-            vfs_meta_t meta;
-            memset(&meta, 0, sizeof(vfs_meta_t));
+        while ((res = driver->read_dir(&dir, &obj)) == VFS_OK) {
+            vfs_meta_t meta = {0};
             vfs_meta_decode(obj.meta, sizeof(obj.meta), &meta);
-            if (meta.has_flags && (meta.flags & VFS_OBJ_FLAG_HIDDEN)) {
-                continue;
-            }
+            if (meta.has_flags && (meta.flags & VFS_OBJ_FLAG_HIDDEN)) continue;
+            if (!memchr(obj.name, 0, sizeof(obj.name))) { res = VFS_ERR_CRPT; break; }
             uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
-            if (!mui_list_view_try_add_item_ext(app->p_list_view, icon, obj.name, NULL, (void *)-1)) {
-                complete = false;
-                break;
+            int cmp = icon != app->browser_anchor_icon ? (int)icon - app->browser_anchor_icon
+                                                       : strcmp(obj.name, app->browser_anchor);
+            if (app->browser_direction && (app->browser_direction > 0 ? cmp <= 0 : cmp >= 0)) {
+                excluded++; continue;
             }
+            eligible++;
+            size_t count = mui_list_item_array_size(list->items);
+            if (count < AMIIBO_BROWSER_PAGE_SIZE) {
+                if (!mui_list_view_try_add_item_ext(list, icon, obj.name, NULL, (void *)-1)) {
+                    complete = false; break;
+                }
+            } else {
+                /* Keep only the nearest 24 names. Backwards traversal retains
+                 * the greatest keys below its anchor; both pages display ASC. */
+                mui_list_item_t *worst = mui_list_item_array_get(list->items,
+                                        app->browser_direction < 0 ? 0 : count - 1);
+                cmp = icon != worst->icon ? (int)icon - (int)worst->icon : strcmp(obj.name, string_get_cstr(worst->text));
+                if (app->browser_direction < 0 ? cmp <= 0 : cmp >= 0) continue;
+                if (!mui_string_try_set_str(worst->text, obj.name)) { complete = false; break; }
+                worst->icon = icon;
+            }
+            mui_list_view_sort(list, amiibo_scene_file_browser_list_item_cmp);
         }
-        p_vfs_driver->close_dir(&dir);
-    } else {
-        complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_ERROR,
-                                                  getLangString(_L_OPEN_FOLDER_FAILED), NULL, (void *)-1);
+        int32_t close_res = driver->close_dir(&dir);
+        if (res == VFS_ERR_EOF) res = close_res;
     }
-
+    if (complete && res == VFS_OK && !eligible && excluded) {
+        /* The last page may disappear after deletion. Reopen the first page,
+         * never leave an inaccessible directory or present a partial scan. */
+        app->browser_direction = 0;
+        amiibo_scene_file_browser_reload_folders(app);
+        return;
+    }
+    if (res != VFS_OK) mui_list_view_clear_items(list);
+    bool root = string_cmp_str(app->current_folder, "/") == 0;
+    complete = complete && mui_list_view_try_add_item_ext(list, root ? ICON_HOME : ICON_BACK,
+                  root ? _T(MAIN_MENU) : "..", NULL, (void *)FOLDER_LIST_PARENT);
+    if (complete && res != VFS_OK)
+        complete = mui_list_view_try_add_item_ext(list, ICON_ERROR, getLangString(_L_OPEN_FOLDER_FAILED), NULL, (void *)-1);
+    if (complete && res == VFS_OK) {
+        bool previous = app->browser_direction < 0 ? eligible > AMIIBO_BROWSER_PAGE_SIZE : excluded > 0;
+        bool next = app->browser_direction < 0 ? excluded > 0 : eligible > AMIIBO_BROWSER_PAGE_SIZE;
+        if (previous) complete = mui_list_view_try_add_item_ext(list, ICON_PREVIOUS, _T(DE3_PREVIOUS_PAGE), NULL, (void *)FOLDER_LIST_PREVIOUS);
+        if (complete && next) complete = mui_list_view_try_add_item_ext(list, ICON_NEXT_PAGE, _T(DE3_NEXT_PAGE), NULL, (void *)FOLDER_LIST_NEXT);
+    }
     if (!complete) {
-        /* Never expose a truncated directory as the complete file list. The
-         * core's allocation-free error overlay owns the next input. */
-        mui_list_view_clear_items(app->p_list_view);
+        mui_list_view_clear_items(list);
         mui_show_memory_error(mui());
         return;
     }
-
-    mui_list_view_sort(app->p_list_view, amiibo_scene_file_browser_list_item_cmp);
+    mui_list_view_sort(list, amiibo_scene_file_browser_list_item_cmp);
+    mui_list_view_set_focus(list, 0);
+    mui_list_view_set_scroll_offset(list, 0);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_LIST);
 }
 
 static void amiibo_scene_file_browser_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                   mui_list_item_t *p_item) {
     app_amiibo_t *app = p_list_view->user_data;
-    uint32_t idx = (uint32_t)p_item->user_data;
+    /* The error row describes the folder; it is not a selectable file. */
+    if (p_item->icon == ICON_ERROR) return;
+    uint32_t idx = (uintptr_t)p_item->user_data;
+    if (idx == FOLDER_LIST_PREVIOUS || idx == FOLDER_LIST_NEXT) {
+        if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
+        bool previous = idx == FOLDER_LIST_PREVIOUS;
+        mui_list_item_t *anchor = NULL;
+        for (size_t i = 0; i < mui_list_item_array_size(p_list_view->items); i++) {
+            mui_list_item_t *item = mui_list_item_array_get(p_list_view->items, i);
+            if (item->icon != ICON_FILE && item->icon != ICON_FOLDER) continue;
+            anchor = item;
+            if (previous) break;
+        }
+        if (!anchor) return;
+        snprintf(app->browser_anchor, sizeof(app->browser_anchor), "%s", string_get_cstr(anchor->text));
+        app->browser_anchor_icon = anchor->icon;
+        app->browser_direction = previous ? -1 : 1;
+        app->current_focus_index = 0;
+        amiibo_scene_file_browser_reload_folders(app);
+        return;
+    }
 
     if (!mui_string_try_set_str(app->current_file, string_get_cstr(p_item->text))) {
         mui_show_memory_error(mui());
@@ -109,6 +160,8 @@ static void amiibo_scene_file_browser_on_selected(mui_list_view_event_t event, m
                 if (string_size(app->current_folder) == 0) {
                     string_cat_str(app->current_folder, "/");
                 }
+                app->browser_direction = 0;
+                app->current_focus_index = 0;
                 amiibo_scene_file_browser_reload_folders(app);
             }
         } else {
@@ -123,6 +176,8 @@ static void amiibo_scene_file_browser_on_selected(mui_list_view_event_t event, m
                     mui_show_memory_error(mui());
                     return;
                 }
+                app->browser_direction = 0;
+                app->current_focus_index = 0;
                 amiibo_scene_file_browser_reload_folders(app);
             } else if (p_item->icon == ICON_HOME) {
                 mini_app_launcher_kill(mini_app_launcher(), MINI_APP_ID_AMIIBO);
@@ -151,6 +206,7 @@ void amiibo_scene_file_browser_on_enter(void *user_data) {
 
 void amiibo_scene_file_browser_on_exit(void *user_data) {
     app_amiibo_t *app = user_data;
+    app->current_focus_index = mui_list_view_get_focus(app->p_list_view);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);
     mui_list_view_set_user_data(app->p_list_view, NULL);
     mui_list_view_clear_items(app->p_list_view);

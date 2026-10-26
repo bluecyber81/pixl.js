@@ -1,6 +1,6 @@
 # Third-party notices
 
-The DE3.16 source snapshot and unchanged application-only firmware contain components with different licenses. The original top-level GPL version 2 text remains in [LICENSE](LICENSE). This index does not relicense individual components or assert one shared license.
+The DE3.37 source snapshot, application-only firmware, optional BL6 source and Dateimanager 3.27.0 contain components with different licenses. The original top-level GPL version 2 text remains in [LICENSE](LICENSE). This index does not relicense individual components or assert one shared license.
 
 Original source notices remain in place. Additional copies, file hashes, provenance and exact web-package versions are collected in [LICENSES/INVENTORY.json](LICENSES/INVENTORY.json). Keep applicable notices with redistributed source and binary packages.
 
@@ -30,9 +30,24 @@ The unused vendored Chameleon SDK and PC-tool trees are excluded from this publi
 
 The three bdfconv executables are font-generation build tools covered by fw/scripts/LICENSE. Fonts have separate notices: the supplied WenQuanYi BDF declares GPL v2 with a font embedding exception. The u8g2 code license must not be assumed to cover every font.
 
-## Web dateimanager
+## Current web and SDK additions
 
-The distributed browser code is unchanged. Dependency notices are supplied separately because its minified bundle does not preserve a complete set of notices. This conservative inventory covers every non-dev entry of the pinned lockfile, including transitive, type and build-support entries; it does not assert that all entries survive into the browser bundle.
+Dateimanager 3.27.0 contains its current pinned dependency notices and provenance in
+[web/third-party/npm/SOURCES.json](web/third-party/npm/SOURCES.json), original notices under
+`web/third-party/npm/licenses/`, and separate AmiiboAPI, QR generator, DFU, JSZip,
+CRC32 and packed-simulator notices in `web/third-party` and `web/public/dfu`.
+The older dependency table below is historical DE3.16 evidence, not the current inventory.
+Three current packages provide no standalone notice in their distributed package;
+the current SOURCES.json records their exact declarations instead of inventing a copyright statement.
+
+`tools/sdk-overrides/nrf_nvic.h` retains the Nordic copyright/license header. It is the
+checked S112 compatibility correction used by the pinned SDK build; see the public build guide.
+The external complete Nordic SDK is not redistributed here. Optional BL6 has its own
+source/provenance and Nordic notices under `bootloader-bl6`; the normal application ZIP does not contain it.
+
+## Historical DE3.16 web inventory
+
+The following table describes the historical DE3.16 browser distribution. Dependency notices are supplied separately because its minified bundle does not preserve a complete set of notices. This conservative inventory covers every non-dev entry of the pinned lockfile, including transitive, type and build-support entries; it does not assert that all entries survive into the browser bundle.
 
 | Package | Version | Declared license | Included notice |
 | --- | --- | --- | --- |

@@ -20,6 +20,7 @@
 #include "amiidb_api_slot.h"
 
 enum amiidb_detail_menu_t {
+    AMIIDB_DETAIL_MENU_FIGURE_INFO,
     AMIIDB_DETAIL_MENU_RAND_UID,
     AMIIDB_DETAIL_MENU_AUTO_RAND_UID,
     AMIIDB_DETAIL_MENU_READ_ONLY,
@@ -48,6 +49,13 @@ static void amiidb_scene_amiibo_detail_no_key_msg(app_amiidb_t *app) {
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_MSG_BOX);
 }
 
+static void amiidb_scene_figure_info_back(amiibo_view_event_t event, amiibo_view_t *view) {
+    if (event != AMIIBO_VIEW_EVENT_MENU) return;
+    app_amiidb_t *app = view->user_data;
+    view->info_page = 0;
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
+}
+
 static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                         mui_list_item_t *p_item) {
     app_amiidb_t *app = p_list_view->user_data;
@@ -55,6 +63,11 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
     uint32_t selection = (uint32_t)p_item->user_data;
 
     switch (selection) {
+    case AMIIDB_DETAIL_MENU_FIGURE_INFO:
+        app->p_amiibo_view->info_page = 1;
+        amiibo_view_set_event_cb(app->p_amiibo_view, amiidb_scene_figure_info_back);
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_DETAIL);
+        break;
     case AMIIDB_DETAIL_MENU_BACK_FILE_BROWSER:
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, app->prev_scene_id);
         break;
@@ -145,6 +158,9 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
     app_amiidb_t *app = user_data;
 
+    mui_list_view_add_item(app->p_list_view, 0xe0ae, _T(DE3_FIGURE_INFO),
+                           (void *)AMIIDB_DETAIL_MENU_FIGURE_INFO);
+
     mui_list_view_add_item(app->p_list_view, 0xe1c5, getLangString(_L_RANDOM_GENERATION),
                            (void *)AMIIDB_DETAIL_MENU_RAND_UID);
 
@@ -184,6 +200,8 @@ void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
 
 void amiidb_scene_amiibo_detail_menu_on_exit(void *user_data) {
     app_amiidb_t *app = user_data;
+    app->p_amiibo_view->info_page = 0;
+    amiibo_view_set_event_cb(app->p_amiibo_view, NULL);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);
     mui_list_view_clear_items(app->p_list_view);
 }

@@ -22,6 +22,7 @@ typedef struct {
     uint32_t default_scene_id;
     uint32_t scene_id_stack[MUI_SCENE_STACK_CAPACITY];
     uint8_t scene_depth;
+    bool (*transition_guard)(void);
 } mui_scene_dispatcher_t;
 
 mui_scene_dispatcher_t* mui_scene_dispatcher_create();

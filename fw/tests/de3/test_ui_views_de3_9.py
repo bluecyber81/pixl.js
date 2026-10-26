@@ -115,7 +115,7 @@ static void test_ble(void) {
         view->p_view->enter_cb(view->p_view);
         text_draws = qr_draws = 0;
         view->p_view->draw_cb(view->p_view, NULL);
-        CHECK(text_draws == 3 && qr_draws == 0);
+        CHECK(text_draws == 4 && qr_draws == 0);
         send(view->p_view, INPUT_KEY_RIGHT, INPUT_TYPE_SHORT); /* callback is still NULL */
         CHECK(view->page == 1);
         view->p_view->draw_cb(view->p_view, NULL); CHECK(qr_draws == 1);
@@ -189,7 +189,8 @@ class ViewTests(unittest.TestCase):
                 "mui_include.h": COMMON,
                 "mui_core.h": '#include "mui_include.h"\n',
                 "mui_qrcode_helper.h": '#include "mui_include.h"\nvoid draw_qrcode(mui_canvas_t *, int, int, int, const char *);\n',
-                "i18n/language.h": 'enum { _L_APP_BLE_TITLE };\nconst char *getLangString(int);\n',
+                "i18n/language.h": 'enum { _L_APP_BLE_TITLE, _L_DE3_BLE_VISIBLE, _L_DE3_BLE_CONNECTED, _L_DE3_BLE_INACTIVE, _L_DE3_BLE_RESTART, _L_DE3_BLE_BACK, _L_DE3_BLE_QR, _L_DE3_BLE_HOST, _L_DE3_BLE_CLOSING, _L_DE3_BLE_WAIT_CLIENT };\nconst char *getLangString(int);\n',
+                "ble_main.h": 'enum { BLE_LINK_INACTIVE, BLE_LINK_ADVERTISING, BLE_LINK_CONNECTED, BLE_LINK_HOST_CONNECTED, BLE_LINK_DISCONNECTING };\nstatic inline int ble_link_state_get(void) { return BLE_LINK_CONNECTED; }\n',
                 "ble_status_view.h": (BLE / "ble_status_view.h").read_text(encoding="utf-8"),
                 "ble_status_view.c": ble_source if ble_source is not None else (BLE / "ble_status_view.c").read_text(encoding="utf-8"),
                 "status_bar_view.h": (SRC / "app/status_bar/view/status_bar_view.h").read_text(encoding="utf-8"),

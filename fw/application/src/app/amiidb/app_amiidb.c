@@ -1,3 +1,4 @@
+#include "ntag_emu.h"
 #include "app_amiidb.h"
 #include "mini_app_registry.h"
 
@@ -12,7 +13,6 @@
 #include "settings.h"
 
 #include "amiibo_helper.h"
-#include "ntag_emu.h"
 
 static void app_amiidb_on_run(mini_app_inst_t *p_app_inst);
 static void app_amiidb_on_kill(mini_app_inst_t *p_app_inst);
@@ -52,6 +52,7 @@ void app_amiidb_on_run(mini_app_inst_t *p_app_inst) {
     if (!p_app_handle->p_toast_view) goto startup_failed;
     p_app_handle->p_scene_dispatcher = mui_scene_dispatcher_create();
     if (!p_app_handle->p_scene_dispatcher) goto startup_failed;
+    p_app_handle->p_scene_dispatcher->transition_guard = ntag_emu_prepare_change;
     p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
     if (!p_app_handle->p_view_dispatcher_toast) goto startup_failed;
     p_app_inst->p_handle = p_app_handle;

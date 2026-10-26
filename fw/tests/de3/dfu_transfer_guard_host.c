@@ -47,6 +47,17 @@ static void reconnect(void) {
     CHECK(m_df_ctx.cmd==NULL && ble_work_can_send());
 }
 
+static void expect_invalid_dfu(uint8_t status,uint16_t chunk,const uint8_t *data,size_t length) {
+    unsigned before=dfu_calls, disabled=disable_calls;
+    sends=attempts=0;
+    packet(2,status,chunk,data,length);
+    CHECK(sends==1 && replies[0].cmd==2 && replies[0].status==DF_STATUS_ERR);
+    CHECK(!replies[0].length && !replies[0].chunk);
+    ready();ready();
+    CHECK(dfu_calls==before && disable_calls==disabled && ble_work_can_send());
+    CHECK(!file_chunk_state.opened && !disconnected);
+}
+
 int main(int argc,char **argv) {
     CHECK(argc==3);
     unsigned scenario=(unsigned)strtoul(argv[1],NULL,10);
@@ -101,6 +112,42 @@ int main(int argc,char **argv) {
         ready();CHECK(!dfu_calls);
         send_error_code=0;reconnect();ready();CHECK(!dfu_calls);
         request(1,NULL,0);finish_stream();CHECK(!dfu_calls);
+        expect_success();
+    } else if(scenario==7) {
+        /* Every nonzero legacy status is a response, not a DFU command. */
+        for(unsigned value=1;value<=255;value++)expect_invalid_dfu((uint8_t)value,0,NULL,0);
+        expect_success();
+    } else if(scenario==8) {
+        /* Exercise every bit plus sequence/MORE boundary values in legacy RX. */
+        for(unsigned bit=0;bit<16;bit++)expect_invalid_dfu(0,(uint16_t)(1u<<bit),NULL,0);
+        expect_invalid_dfu(0,0x7fff,NULL,0);expect_invalid_dfu(0,0xffff,NULL,0);
+        expect_success();
+    } else if(scenario==9) {
+        /* Nonempty legacy commands fit this link but must never reset. */
+        uint8_t payload[DF_PAYLOAD_LEN]={0xa5};
+        for(size_t length=1;length<=mtu-7;length++)expect_invalid_dfu(0,0,payload,length);
+        expect_success();
+    } else if(scenario==10) {
+        /* A reassembled modern request also needs an empty DFU payload. */
+        modern();
+        uint8_t payload[DF_PAYLOAD_LEN];memset(payload,0x5a,sizeof(payload));
+        for(size_t length=1;length<=sizeof(payload);length++) {
+            sends=attempts=0;
+            for(size_t pos=0,seq=0;pos<length;seq++) {
+                size_t count=length-pos;if(count>mtu-7)count=mtu-7;
+                packet(2,0,(uint16_t)(seq|(pos+count<length?0x8000:0)),payload+pos,count);
+                pos+=count;
+                if(pos<length)CHECK(!sends && !dfu_calls);
+            }
+            CHECK(sends==1 && replies[0].status==DF_STATUS_ERR);
+            ready();ready();CHECK(!dfu_calls && !disable_calls && !disconnected);
+        }
+        expect_success();
+    } else if(scenario==11) {
+        /* Lost/late completion followed by an invalid command cannot reuse
+         * the function's pending bit across a new connection. */
+        request(2,NULL,0);CHECK(!dfu_calls && !replies[0].status);
+        reconnect();expect_invalid_dfu(1,0,NULL,0);
         expect_success();
     } else return 2;
     CHECK(!critical_depth);

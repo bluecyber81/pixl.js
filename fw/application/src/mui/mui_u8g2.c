@@ -255,7 +255,8 @@ void mui_u8g2_set_contrast_level(uint8_t value) {
         value = 60;
     }
 #endif
-    u8g2_SetContrast(&p_mui->u8g2, (value - 1) * (255.0 / 99.0));
+    /* Preserve truncation for all clamped inputs without software double math. */
+    u8g2_SetContrast(&p_mui->u8g2, ((uint32_t)value - 1u) * 255u / 99u);
 }
 
 void mui_u8g2_set_flip_display(bool flip) {

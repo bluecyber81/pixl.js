@@ -16,6 +16,7 @@ FW = Path(__file__).resolve().parents[2]
 
 PREFIX = r'''
 #include <assert.h>
+#define mui_nfc_save_input(m,e) false
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

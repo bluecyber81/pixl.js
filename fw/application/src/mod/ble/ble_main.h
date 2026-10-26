@@ -24,6 +24,16 @@ typedef enum {
     BLE_DEVICE_MODE_AMILOOP
 } ble_device_mode_t;
 
+typedef enum {
+    BLE_LINK_INACTIVE,
+    BLE_LINK_ADVERTISING,
+    BLE_LINK_CONNECTED,
+    BLE_LINK_HOST_CONNECTED,
+    BLE_LINK_DISCONNECTING
+} ble_link_state_t;
+
+typedef void (*ble_link_state_handler_t)(ble_link_state_t state);
+
 typedef void (*nus_rx_data_handler_t)(const uint8_t *data, size_t data_len);
 typedef void (*nus_tx_ready_handler_t)(void);
 
@@ -35,6 +45,14 @@ void ble_device_mode_prepare(ble_device_mode_t mode);
 void ble_adv_start(void);
 void ble_disable();
 bool ble_is_connected(void);
+/* Foreground UI: callbacks run only from ble_process_pending(), never an IRQ.
+ * Unregister before freeing the owning view. No packets trigger a callback
+ * unless the connection/advertising state actually changed. */
+ble_link_state_t ble_link_state_get(void);
+void ble_link_state_observe(ble_link_state_handler_t handler);
+/* Foreground only; resumes visibility without restarting services or an
+ * established link. A concurrent connection is a harmless false result. */
+bool ble_restart_advertising(void);
 
 
 void ble_nus_set_handler(nus_rx_data_handler_t rx_data_handler, nus_tx_ready_handler_t tx_ready_handler);

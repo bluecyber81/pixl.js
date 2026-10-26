@@ -17,7 +17,12 @@ typedef enum {
     DF_PROTO_CMD_VFS_REMOVE = 0x18,
     DF_PROTO_CMD_VFS_RENAME = 0x19,
     DF_PROTO_CMD_VFS_UPDATE_META = 0x1a,
-    DF_PROTO_CMD_VFS_STORAGE_DIAG = 0x1b
+    DF_PROTO_CMD_VFS_STORAGE_DIAG = 0x1b,
+    DF_PROTO_CMD_VFS_STORAGE_INFO = 0x1c,
+    DF_PROTO_CMD_VFS_RAW_META_READ = 0x1d,
+    DF_PROTO_CMD_VFS_RAW_META_WRITE = 0x1e,
+    DF_PROTO_CMD_VFS_PACKED_LAYOUT = 0x1f,
+    DF_PROTO_CMD_VFS_IMPORT_STATE = 0x20
 } df_proto_cmd_vfs_t;
 
 extern const df_cmd_entry_t df_proto_handler_vfs_entries[];

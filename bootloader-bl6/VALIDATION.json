@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-26",
+  "component": "BL6",
+  "sourceManifestSha256": "01b2afd16a84f4c74219eb5e2d1df98857d9fc577d472f2be7332fe9ec743012",
+  "sourceFilesUnmodified": true,
+  "armRebuild": {
+    "matchedSignedRelease": true,
+    "paddedRegionSha256": "71a8697ed4983a224d984b92dbd76c4ddbe629ccf9650cb5c77acb764eb1b060",
+    "sdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+    "hexSha256": "95b6c7bea7f099f2996e35822d902cf544d20db360e7b95b5ca54cb17a987cce"
+  },
+  "portableHostTests": {
+    "nativePassed": true,
+    "asanUbsanPassed": true,
+    "transportAssertionsPerRuntime": 221,
+    "completionScenariosPerRuntime": 18
+  },
+  "deviceAccess": false,
+  "limits": [
+    "Host SDK/hardware callbacks are mocked.",
+    "No new device flash or physical radio/power-loss/timing test was performed for this publication.",
+    "Historical negative controls are not part of this portable test subset."
+  ]
+}

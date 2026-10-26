@@ -30,6 +30,7 @@ void mui_scene_dispatcher_next_scene(mui_scene_dispatcher_t *d, uint32_t id) {
         if (d->scene_id_stack[i] == id) { next_depth = i + 1; break; }
     }
     if (next_depth > MUI_SCENE_STACK_CAPACITY) { mui_show_memory_error(mui()); return; }
+    if (d->transition_guard && !d->transition_guard()) return;
     if (d->scene_depth) {
         uint32_t old = d->scene_id_stack[d->scene_depth - 1];
         if (d->p_scene_defines[old].exit_cb) d->p_scene_defines[old].exit_cb(d->user_data);
@@ -44,6 +45,7 @@ void mui_scene_dispatcher_back_scene(mui_scene_dispatcher_t *d, uint32_t step) {
     unsigned depth = step < d->scene_depth ? d->scene_depth - step : 0;
     uint32_t next = depth ? d->scene_id_stack[depth - 1] : d->default_scene_id;
     if (next >= d->scene_num) return;
+    if (d->transition_guard && !d->transition_guard()) return;
     if (d->p_scene_defines[old].exit_cb) d->p_scene_defines[old].exit_cb(d->user_data);
     d->scene_depth = depth;
     if (!depth) d->scene_id_stack[d->scene_depth++] = next;

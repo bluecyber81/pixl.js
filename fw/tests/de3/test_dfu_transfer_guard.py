@@ -52,6 +52,8 @@ def build(root, folder, name, sanitize):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', type=Path)
+    parser.add_argument('--malformed-baseline', type=Path,
+                        help='Unmodified DE3.19 must fail the newly covered malformed DFU requests')
     parser.add_argument('--report', type=Path)
     parser.add_argument('--sanitize', action='store_true')
     args = parser.parse_args()
@@ -78,7 +80,7 @@ def main():
         for name, contents in stubs.items(): (folder / name).write_text(contents)
         executable = build(FW, folder, 'candidate', args.sanitize)
         for mtu in (23, 185, 250):
-            for scenario in range(7):
+            for scenario in range(12):
                 result = subprocess.run([str(executable), str(scenario), str(mtu)],
                                         capture_output=True, text=True, timeout=15)
                 row = {'mtu': mtu, 'scenario': scenario, 'exit_code': result.returncode,
@@ -100,9 +102,20 @@ def main():
                 report['negative_controls'].append(row)
                 assert result.returncode == 71 and 'status==DF_STATUS_ERR' in row['output'], row
                 print('PASS unchanged DE3.12 negative control:', scenario, flush=True)
+        if args.malformed_baseline:
+            baseline=args.malformed_baseline.resolve()
+            executable=build(baseline,folder,'malformed_baseline',False)
+            report['malformed_negative_controls']=[]
+            for scenario in range(7,12):
+                result=subprocess.run([str(executable),str(scenario),'250'],capture_output=True,text=True,timeout=15)
+                row={'scenario':scenario,'exit_code':result.returncode,'output':result.stdout+result.stderr}
+                report['malformed_negative_controls'].append(row)
+                assert result.returncode==71 and 'status==DF_STATUS_ERR' in row['output'],row
+            report['malformed_baseline_info_sha256']=hashlib.sha256(
+                (baseline/'application/src/mod/df/df_proto_info.c').read_bytes()).hexdigest()
     report['passed'] = True
     if args.report: args.report.write_text(json.dumps(report, indent=2) + '\n')
-    print('PASS 21 DFU ownership/reply/session checks; no device access')
+    print('PASS 36 DFU ownership/reply/session/malformed-request scenarios; no device access')
 
 
 if __name__ == '__main__': main()

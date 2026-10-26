@@ -10,6 +10,7 @@ typedef struct ble_status_view_s ble_status_view_t;
 typedef enum {
     BLE_STATUS_VIEW_BLE_DISABLE,
     BLE_STATUS_VIEW_EVENT_UPDATE,
+    BLE_STATUS_VIEW_BLE_RESTART,
 } ble_status_view_event_t;
 
 typedef void (*ble_status_view_event_cb)(ble_status_view_event_t event, ble_status_view_t *p_view);
@@ -19,6 +20,7 @@ typedef void (*ble_status_view_event_cb)(ble_status_view_event_t event, ble_stat
     ble_status_view_event_cb event_cb;
     char ble_addr[20];
     uint8_t page;
+    uint8_t drawn_link_state; /* Fits the existing ARM alignment padding. */
     void* user_data;
 } ;
 

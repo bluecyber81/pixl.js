@@ -7,6 +7,53 @@
 #include "app_error.h"
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
+#include "ntag_emu.h"
+#include "i18n/language.h"
+
+/* No allocations and no app pointers: available even during RAM exhaustion.
+ * Confirmation defaults to No; navigation/back never discards the current tag. */
+static uint8_t m_save_confirm;
+static uint32_t m_save_generation;
+static bool mui_nfc_save_active(void) {
+    if (!ntag_emu_save_pending()) { m_save_confirm = 0; return false; }
+    uint32_t generation = ntag_emu_get_generation();
+    if (generation != m_save_generation) {
+        m_save_generation = generation;
+        m_save_confirm = 0;
+    }
+    return true;
+}
+static bool mui_nfc_save_draw(mui_t *m) {
+    if (!mui_nfc_save_active()) return false;
+    mui_canvas_t *c = &m->canvas;
+    mui_canvas_set_frame(c, 0, 0, m->screen_width, m->screen_height);
+    mui_canvas_set_draw_color(c, 1);
+    mui_canvas_set_font(c, u8g2_font_wqy12_t_gb2312a);
+    mui_canvas_draw_utf8(c, 0, 12, _T(DE3_SAVE_FAILED));
+    mui_canvas_draw_utf8(c, 0, 28, m_save_confirm ? _T(DE3_SAVE_DISCARD_ASK) : _T(DE3_SAVE_RAM_ONLY));
+    mui_canvas_draw_utf8(c, 0, 44, m_save_confirm ?
+        (m_save_confirm == 2 ? _T(DE3_SAVE_YES_SELECTED) : _T(DE3_SAVE_NO_SELECTED)) : _T(DE3_SAVE_RETRY));
+    mui_canvas_draw_utf8(c, 0, 60, m_save_confirm ? _T(DE3_SAVE_CONFIRM) : _T(DE3_SAVE_DISCARD));
+    mui_canvas_flush(c);
+    return true;
+}
+static bool mui_nfc_save_input(mui_t *m, mui_event_t *event) {
+    if (!mui_nfc_save_active()) return false;
+    uint32_t key = event->arg_int & 0xff, type = (event->arg_int >> 8) & 0xff;
+    if (type == INPUT_TYPE_SHORT) {
+        if (key == INPUT_KEY_LEFT) m_save_confirm = 0;
+        else if (key == INPUT_KEY_RIGHT) m_save_confirm = m_save_confirm ? 2 : 1;
+        else if (key == INPUT_KEY_CENTER) {
+            if (m_save_confirm == 2) {
+                m_save_confirm = 0;
+                if (ntag_emu_discard_changes()) mini_app_launcher_exit(mini_app_launcher());
+            } else if (m_save_confirm) m_save_confirm = 0;
+            else ntag_emu_retry_save();
+        }
+    } else if (key == INPUT_KEY_CENTER && type == INPUT_TYPE_LONG) m_save_confirm = 0;
+    mui_update(m);
+    return true;
+}
 
 static mui_view_port_t *mui_find_view_port_enabled(mui_t *m, mui_layer_t layer) {
     if ((unsigned)layer >= MUI_LAYER_MAX) return NULL;
@@ -62,12 +109,13 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
     }
 
     mui_canvas_clear(&p_mui->canvas);
+    if (mui_nfc_save_draw(p_mui)) return;
     if (p_mui->memory_error) {
         /* This fallback uses the existing framebuffer and ROM strings only. */
         mui_canvas_set_frame(&p_mui->canvas, 0, 0, sw, sh);
         mui_canvas_set_draw_color(&p_mui->canvas, 1);
         mui_canvas_set_font(&p_mui->canvas, u8g2_font_wqy12_t_gb2312a);
-        mui_canvas_draw_utf8(&p_mui->canvas, 0, 18, "Speicher voll");
+        mui_canvas_draw_utf8(&p_mui->canvas, 0, 18, "RAM voll");
         mui_canvas_draw_utf8(&p_mui->canvas, 0, 36, "Mitte: Hauptmenue");
         mui_canvas_flush(&p_mui->canvas);
         return;
@@ -95,6 +143,7 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
 }
 
 static void mui_process_input(mui_t *p_mui, mui_event_t *p_event) {
+    if (mui_nfc_save_input(p_mui, p_event)) return;
     if (p_mui->memory_error) {
         uint32_t arg = p_event->arg_int;
         if ((arg & 0xFF) == INPUT_KEY_CENTER && ((arg >> 8) & 0xFF) == INPUT_TYPE_SHORT) {

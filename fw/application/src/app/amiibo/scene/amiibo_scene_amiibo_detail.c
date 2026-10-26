@@ -113,7 +113,7 @@ static void ntag_gen(void *p_context) {
     app_amiibo_t *app = p_context;
     ntag_t *ntag_current = &app->ntag;
 
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return;
     err_code = amiibo_helper_rand_amiibo_uuid(ntag_current);
     if (err_code == NRF_SUCCESS) {
         ntag_emu_set_tag(&app->ntag);
@@ -133,7 +133,8 @@ static void ntag_update(app_amiibo_t *app, ntag_t *p_ntag) {
 
     char path[VFS_MAX_PATH_LEN];
     if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file))) {
-        amiibo_scene_amiibo_detail_reload_error(app, string_get_cstr(app->current_file), NRF_ERR_WRITE_ERROR);
+        ntag_emu_save_failed();
+        mui_update(mui());
         return;
     }
 
@@ -167,7 +168,8 @@ static void ntag_update(app_amiibo_t *app, ntag_t *p_ntag) {
             }
         }
     } else {
-        amiibo_scene_amiibo_detail_reload_error(app, string_get_cstr(app->current_file), res);
+        ntag_emu_save_failed();
+        /* The allocation-free save overlay owns retry/discard input. */
     }
 
     mui_update(mui());
@@ -202,7 +204,7 @@ static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *app, const char
     file_name = selected_name;
 
     /* Flush A before reading B into the shared app tag or changing its path. */
-    ntag_emu_prepare_change();
+    if (!ntag_emu_prepare_change()) return false;
 
     if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), file_name)) {
         amiibo_scene_amiibo_detail_reload_error(app, file_name, NRF_ERR_READ_ERROR);
@@ -228,64 +230,61 @@ static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *app, const char
     return true;
 }
 
-static int amiibo_scene_amiibo_detail_list_item_cmp(const string_t *a, const string_t *b) { return string_cmp(*a, *b); }
-
-static bool amiibo_scene_amiibo_detail_reload_files(app_amiibo_t *app) {
+/* A single bounded scan replaces the old whole-folder string cache. Every
+ * traversal error invalidates the result; hidden/non-tag entries never cycle. */
+int32_t app_amiibo_file_neighbor(app_amiibo_t *app, int8_t direction, char *name,
+                                 uint16_t *focus, uint16_t *total) {
+    vfs_driver_t *driver = vfs_get_driver(app->current_drive);
     vfs_dir_t dir;
     vfs_obj_t obj;
-    uint32_t focus = 0;
-    bool complete = true;
-
-    // query amiibo list
-    string_array_reset(app->amiibo_files);
-    vfs_driver_t *p_vfs_driver = vfs_get_driver(app->current_drive);
-
-    int32_t res = p_vfs_driver->open_dir(string_get_cstr(app->current_folder), &dir);
-    if (res == VFS_OK) {
-        while ((res = p_vfs_driver->read_dir(&dir, &obj)) == VFS_OK) {
-            vfs_meta_t meta;
-            memset(&meta, 0, sizeof(vfs_meta_t));
-            vfs_meta_decode(obj.meta, sizeof(obj.meta), &meta);
-            if (obj.type == VFS_TYPE_REG && is_valid_amiibo_ntag_by_size(obj.size)
-                 && (!meta.has_flags || !(meta.flags & VFS_OBJ_FLAG_HIDDEN))) {
-                if (string_array_size(app->amiibo_files) >= UINT8_MAX ||
-                    !mui_string_array_try_push_str(app->amiibo_files, obj.name)) {
-                    complete = false;
-                    break;
-                }
-            }
-        }
-        p_vfs_driver->close_dir(&dir);
+    char edge[VFS_MAX_NAME_LEN] = {0};
+    uint32_t count = 0, before = 0;
+    bool found = false;
+    name[0] = '\0'; *focus = 0; *total = 0;
+    int32_t res = driver ? driver->open_dir(string_get_cstr(app->current_folder), &dir) : VFS_ERR_NODEV;
+    if (res != VFS_OK) return res;
+    while ((res = driver->read_dir(&dir, &obj)) == VFS_OK) {
+        vfs_meta_t meta = {0};
+        vfs_meta_decode(obj.meta, sizeof(obj.meta), &meta);
+        if (obj.type != VFS_TYPE_REG || !is_valid_amiibo_ntag_by_size(obj.size) ||
+            (meta.has_flags && (meta.flags & VFS_OBJ_FLAG_HIDDEN))) continue;
+        if (!memchr(obj.name, 0, sizeof(obj.name)) || ++count > UINT16_MAX) { res = VFS_ERR_CRPT; break; }
+        int cmp = strcmp(obj.name, string_get_cstr(app->current_file));
+        before += cmp < 0;
+        found |= cmp == 0;
+        if (!direction) continue;
+        bool previous = direction < 0;
+        if (!edge[0] || (previous ? strcmp(obj.name, edge) > 0 : strcmp(obj.name, edge) < 0))
+            memcpy(edge, obj.name, sizeof(edge));
+        if ((previous ? cmp < 0 : cmp > 0) &&
+            (!name[0] || (previous ? strcmp(obj.name, name) > 0 : strcmp(obj.name, name) < 0)))
+            memcpy(name, obj.name, VFS_MAX_NAME_LEN);
     }
+    int32_t close_res = driver->close_dir(&dir);
+    if (res == VFS_ERR_EOF) res = close_res;
+    if (res != VFS_OK) { name[0] = '\0'; return res; }
+    *total = count;
+    if (!direction) { *focus = found ? before : 0; return VFS_OK; }
+    if (!count) return VFS_OK;
+    if (!name[0]) {
+        memcpy(name, edge, VFS_MAX_NAME_LEN);
+        *focus = direction < 0 ? count - 1 : 0;
+    } else {
+        *focus = direction < 0 ? before - 1 : before + (found ? 1 : 0);
+    }
+    return VFS_OK;
+}
 
-    if (!complete) {
-        string_array_reset(app->amiibo_files);
-        amiibo_detail_view_set_focus(app->p_amiibo_detail_view, 0);
-        amiibo_detail_view_set_max_ntags(app->p_amiibo_detail_view, 0);
-        mui_show_memory_error(mui());
+static bool amiibo_scene_amiibo_detail_reload_files(app_amiibo_t *app) {
+    char name[VFS_MAX_NAME_LEN];
+    uint16_t focus, total;
+    int32_t res = app_amiibo_file_neighbor(app, 0, name, &focus, &total);
+    amiibo_detail_view_set_focus(app->p_amiibo_detail_view, focus);
+    amiibo_detail_view_set_max_ntags(app->p_amiibo_detail_view, total);
+    if (res != VFS_OK) {
+        amiibo_scene_amiibo_detail_reload_error(app, string_get_cstr(app->current_folder), res);
         return false;
     }
-
-    string_array_special_sort(app->amiibo_files, amiibo_scene_amiibo_detail_list_item_cmp);
-
-    // load amiibo detail
-    string_array_it_t it;
-    string_array_it(it, app->amiibo_files);
-    while (!string_array_end_p(it)) {
-        string_t *item = string_array_ref(it);
-        if (string_cmp(*item, app->current_file) == 0) {
-            amiibo_detail_view_set_focus(app->p_amiibo_detail_view, focus);
-            break;
-        }
-        focus++;
-        string_array_next(it);
-    }
-
-    if (focus >= string_array_size(app->amiibo_files)) {
-        amiibo_detail_view_set_focus(app->p_amiibo_detail_view, 0);
-    }
-
-    amiibo_detail_view_set_max_ntags(app->p_amiibo_detail_view, string_array_size(app->amiibo_files));
     return true;
 }
 
@@ -294,9 +293,28 @@ static void app_amiibo_detail_view_on_event(amiibo_detail_view_event_t event, am
     if (event == AMIIBO_DETAIL_VIEW_EVENT_MENU) {
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_AMIIBO_DETAIL_MENU);
     } else if (event == AMIIBO_DETAIL_VIEW_EVENT_UPDATE) {
-        uint8_t focus = amiibo_detail_view_get_focus(app->p_amiibo_detail_view);
-        if (focus >= string_array_size(app->amiibo_files)) return;
-        amiibo_scene_amiibo_detail_reload_ntag(app, string_get_cstr(*string_array_get(app->amiibo_files, focus)));
+        if (!p_view->max_ntags || !p_view->navigate_direction) return;
+        char name[VFS_MAX_NAME_LEN];
+        uint16_t focus, total;
+        /* Flush pending writes/renames before using the current filename as
+         * the ordering anchor, just as reload_ntag flushes before reading. */
+        if (!ntag_emu_prepare_change()) { p_view->navigate_direction = 0; return; }
+        int32_t res = app_amiibo_file_neighbor(app, p_view->navigate_direction, name, &focus, &total);
+        p_view->navigate_direction = 0;
+        if (res != VFS_OK) {
+            amiibo_detail_view_set_max_ntags(p_view, 0);
+            amiibo_scene_amiibo_detail_reload_error(app, string_get_cstr(app->current_folder), res);
+            return;
+        }
+        if (!total) {
+            amiibo_detail_view_set_focus(p_view, 0);
+            amiibo_detail_view_set_max_ntags(p_view, 0);
+            return;
+        }
+        if (total && amiibo_scene_amiibo_detail_reload_ntag(app, name)) {
+            amiibo_detail_view_set_focus(p_view, focus);
+            amiibo_detail_view_set_max_ntags(p_view, total);
+        }
     }
 }
 

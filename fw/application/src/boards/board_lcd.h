@@ -51,8 +51,14 @@
 
 
 // VFS driver
-//#define VFS_LFS_ENABLE
+/* Preparation keeps the existing filesystem readable until the PC backup is
+ * verified. The final build uses LittleFS; neither variant autoformats. */
+#ifdef PIXL_FS_SPIFFS_PREP
 #define VFS_SPIFFS_ENABLE
+#else
+#define VFS_LFS_ENABLE
+#define VFS_PACKED_LFS_ENABLE
+#endif
 
 
 #define NRFX_SPIM_SCK_PIN 26  // yellow wire (CLK)

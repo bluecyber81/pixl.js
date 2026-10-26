@@ -117,7 +117,9 @@ uint16_t mui_element_autowrap_text_box(mui_canvas_t *p_canvas, uint16_t x, uint1
             yi += font_height;
         }
         uint8_t utf8_w = 0;
-        if (yi > offset_y) {
+        /* Canvas coordinates are uint8_t. Off-screen rows of long descriptions
+         * must not wrap from e.g. y=256 back to the top of the display. */
+        if (yi > offset_y && yi - offset_y <= UINT8_MAX) {
             utf8_w = mui_canvas_draw_utf8(p_canvas, xi, yi - offset_y, utf8);
         } else {
             // not draw

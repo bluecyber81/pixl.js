@@ -6,6 +6,10 @@
 
 #include "df_proto_info.h"
 #include "df_proto_vfs.h"
+#include "../runtime_diag.h"
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+#include "ble_work.h"
+#endif
 
 #include "nrf_log.h"
 #include "nrf_pwr_mgmt.h"
@@ -87,6 +91,11 @@ void df_core_send_frame(df_frame_t *out) {
     /* The driver copies a complete logical frame into its existing RX/TX
      * buffer and segments large one-shot replies at the negotiated capacity. */
     if (m_df_ctx.driver->send(out) != 0) {
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+        /* A cancelled generation cannot submit a reply. Preserve the earlier
+         * queue/timeout cause instead of relabelling that cleanup as TX error. */
+        if (ble_work_can_send()) runtime_diag_ble_abort(RUNTIME_DIAG_TX_FAILURE);
+#endif
         /* The stack frame cannot be retried asynchronously. End this session
          * before TX_READY could consume the next file/directory chunk. */
         ble_nus_abort_transfer();

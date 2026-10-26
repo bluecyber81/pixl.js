@@ -9,7 +9,7 @@ typedef int ret_code_t;
 typedef int16_t nrf_saadc_value_t;
 typedef struct { int type; } nrf_drv_saadc_evt_t;
 typedef struct { int input; } nrf_saadc_channel_config_t;
-typedef struct { bool bat_mode; } settings_data_t;
+typedef struct { bool bat_mode; uint8_t sleep_timeout_sec; } settings_data_t;
 static settings_data_t settings;
 static int init_result, channel_result, sample_result;
 static int adc_sample = 768, charge_pin = 1;
@@ -42,6 +42,15 @@ static void nrf_gpio_cfg_input(int pin, int pull) { assert(pin == 3 && pull == 3
 static int nrf_gpio_pin_read(int pin) { assert(pin == 3); gpio_reads++; return charge_pin; }
 static int app_timer_create(int *timer, int mode, void (*cb)(void *)) { (void)timer; assert(mode == 2); timer_cb = cb; return 0; }
 static int app_timer_start(int timer, int ticks, void *context) { (void)timer; (void)context; timer_period=ticks; return 0; }
+#define PIXL_RUNTIME_DIAGNOSTICS 1
+static unsigned diagnostic_calls;
+static uint16_t diagnostic_mv, diagnostic_sleep;
+static bool diagnostic_valid, diagnostic_lipo, diagnostic_charging;
+void runtime_diag_power_sample(uint16_t mv, bool valid, bool lipo, bool charging, uint16_t seconds) {
+    diagnostic_calls++;
+    diagnostic_mv=mv; diagnostic_valid=valid; diagnostic_lipo=lipo;
+    diagnostic_charging=charging; diagnostic_sleep=seconds;
+}
 /* ACTUAL_BATTERY_INCLUDE */
 static void changed(void) { callbacks++; }
 static void reset(bool lipo) {
@@ -52,6 +61,7 @@ static void reset(bool lipo) {
     init_calls = channel_calls = sample_calls = uninit_calls = channel_uninit_calls = 0;
     gpio_reads = gpio_configs = callbacks = 0;
     settings.bat_mode = lipo; charge_pin = 1; adc_sample = 768;
+    settings.sleep_timeout_sec=180; diagnostic_calls=0;
     chrg_set_callback(changed);
 }
 static void settle(uint16_t mv, int count) { for (int i=0;i<count;i++) bat_update_voltage(mv,false); }
@@ -134,7 +144,22 @@ static void test_charging_and_callbacks(void) {
     chrg_set_callback(NULL); charge_pin=0; chrg_read(NULL); chrg_read(NULL); assert(callbacks==2);
     puts("PASS debounced charging pin, low suppression and callback cleanup");
 }
+static void test_diagnostic_sampling(void) {
+    reset(true); chrg_init();
+    assert(diagnostic_calls==1 && diagnostic_valid && diagnostic_lipo && !diagnostic_charging);
+    assert(diagnostic_mv==bat_get_voltage_mv() && diagnostic_sleep==180 && sample_calls==1);
+    charge_pin=0; chrg_read(NULL); chrg_read(NULL);
+    assert(diagnostic_calls==3 && diagnostic_charging && sample_calls==3);
+    sample_result=1; settings.sleep_timeout_sec=15; chrg_read(NULL);
+    assert(diagnostic_calls==4 && !diagnostic_valid && !diagnostic_charging && diagnostic_mv==0);
+    assert(diagnostic_sleep==15 && sample_calls==4);
+    sample_result=0; settings.bat_mode=false; chrg_read(NULL);
+    assert(diagnostic_calls==5 && diagnostic_valid && !diagnostic_lipo && !diagnostic_charging);
+    assert(diagnostic_mv==2700 && sample_calls==5);
+    puts("PASS cached diagnostics follow init/timer/ADC failure/mode changes without extra conversions");
+}
 int main(void) {
     test_measurement_modes(); test_filter_thresholds(); test_adc_failures(); test_charging_and_callbacks();
+    test_diagnostic_sampling();
     return 0;
 }

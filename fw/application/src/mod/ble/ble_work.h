@@ -18,5 +18,7 @@ bool ble_work_receive(const uint8_t *data, size_t length);
 bool ble_work_tx_ready(void);
 void ble_work_process(ble_work_notify_t cleanup);
 bool ble_work_can_send(void);
+/* True only after deferred cleanup has returned; never close VFS from IRQs. */
+bool ble_work_cleanup_complete(void);
 
 #endif

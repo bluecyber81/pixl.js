@@ -307,6 +307,12 @@ static inline void hal_nfc_common_hw_setup()
         (NFCT_FRAMEDELAYMODE_FRAMEDELAYMODE_WindowGrid << NFCT_FRAMEDELAYMODE_FRAMEDELAYMODE_Pos) &
         NFCT_FRAMEDELAYMODE_FRAMEDELAYMODE_Msk;
 
+    /* Chameleon's bit responses can leave this at 65535; disabling NFCT does
+     * not reset its configuration. Restore the NFC-A default before sensing
+     * with the custom owner (nRF52832 erratum 218: IDLE/SLEEP_A timing).
+     * This setup runs before STARTTX, as required for frame-delay changes. */
+    NRF_NFCT->FRAMEDELAYMAX = 0x00001000UL;
+
     hal_nfc_nfcid1_registers_setup();
 }
 

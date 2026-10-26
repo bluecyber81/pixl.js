@@ -5,6 +5,7 @@ Positive hardware/register responses are modeled; no timing or RF claim is made.
 """
 from pathlib import Path
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -179,27 +180,52 @@ int main(void){unsigned cases=0;
 
 ADAPTER_MODEL = r'''
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <assert.h>
 #include <stdio.h>
 typedef int32_t s32_t;typedef uint32_t u32_t;typedef uint8_t u8_t;
 typedef uint32_t lfs_block_t;typedef uint32_t lfs_off_t;typedef uint32_t lfs_size_t;
-struct lfs_config{uint32_t block_size;};
+struct lfs_config{uint32_t block_size,block_count;};
+/* ACTUAL_LFS_CONSTANTS */
 #define NRF_SUCCESS 0
 #define SPIFFS_OK 0
 #define SPIFFS_ERR_INTERNAL -10050
 #define LFS_ERR_IO -5
-static uint32_t result;
-static uint32_t hal_spi_flash_read(uint32_t a,void*b,size_t n){(void)a;(void)b;(void)n;return result;}
-static uint32_t hal_spi_flash_prog(uint32_t a,const void*b,size_t n){(void)a;(void)b;(void)n;return result;}
-static uint32_t hal_spi_flash_erase(uint32_t a){(void)a;return result;}
+static uint32_t result,calls;
+static uint32_t hal_spi_flash_read(uint32_t a,void*b,size_t n){(void)a;(void)b;(void)n;calls++;return result;}
+static uint32_t hal_spi_flash_prog(uint32_t a,const void*b,size_t n){(void)a;(void)b;(void)n;calls++;return result;}
+static uint32_t hal_spi_flash_erase(uint32_t a){(void)a;calls++;return result;}
 /* ACTUAL_ADAPTERS */
-int main(void){struct lfs_config c={4096};uint8_t byte=0;
+int main(void){struct lfs_config c={4096,512};uint8_t byte=0, page[LFS_CACHE_SIZE]={0};
     for(unsigned i=0;i<256;i++){result=i;int expected=i?SPIFFS_ERR_INTERNAL:0;
         assert(spiffs_block_read(0,1,&byte)==expected&&spiffs_block_write(0,1,&byte)==expected&&spiffs_block_erase(0,4096)==expected);
-        expected=i?LFS_ERR_IO:0;assert(block_device_read(&c,0,0,&byte,1)==expected&&block_device_prog(&c,0,0,&byte,1)==expected&&block_device_erase(&c,0)==expected);
+        expected=i?LFS_ERR_IO:0;assert(block_device_read(&c,0,0,&byte,1)==expected&&block_device_prog(&c,0,0,page,sizeof(page))==expected&&block_device_erase(&c,0)==expected);
     }
     puts("PASS 256 HAL status values map to zero success or negative SPIFFS/LFS failure");
+    result=0;calls=0;
+    assert(block_device_read(NULL,0,0,&byte,1)==LFS_ERR_IO);
+    assert(block_device_prog(NULL,0,0,page,sizeof(page))==LFS_ERR_IO);
+    assert(block_device_erase(NULL,0)==LFS_ERR_IO);
+    assert(block_device_read(&c,512,0,&byte,1)==LFS_ERR_IO);
+    assert(block_device_prog(&c,512,0,page,sizeof(page))==LFS_ERR_IO);
+    assert(block_device_erase(&c,512)==LFS_ERR_IO);
+    assert(block_device_read(&c,0,4096,&byte,1)==LFS_ERR_IO);
+    assert(block_device_read(&c,0,1,&byte,UINT32_MAX)==LFS_ERR_IO);
+    assert(block_device_read(&c,0,0,NULL,1)==LFS_ERR_IO);
+    assert(block_device_prog(&c,0,0,NULL,256)==LFS_ERR_IO);
+    assert(block_device_prog(&c,0,1,page,256)==LFS_ERR_IO);
+    assert(block_device_prog(&c,0,0,page,1)==LFS_ERR_IO);
+    assert(block_device_prog(&c,0,4096,page,256)==LFS_ERR_IO);
+    c.block_count=0;assert(block_device_read(&c,0,0,&byte,1)==LFS_ERR_IO);
+    c.block_count=4097;assert(block_device_erase(&c,0)==LFS_ERR_IO);
+    c.block_count=512;c.block_size=8192;assert(block_device_erase(&c,0)==LFS_ERR_IO);
+    assert(calls==0);
+    c.block_size=4096;c.block_count=4096;
+    assert(block_device_read(&c,4095,4095,&byte,1)==0);
+    assert(block_device_prog(&c,4095,3840,page,256)==0);
+    assert(block_device_erase(&c,4095)==0 && calls==3);
+    puts("PASS 16 LFS geometry/range/null/alignment guards reject before HAL; final physical page succeeds");
 }
 '''
 
@@ -219,7 +245,8 @@ def main():
         nfc_source=(SRC/'hal/hal_nfc_t2t.c').read_text(encoding='utf-8')
         nfc=NFC_MODEL.replace('/* ACTUAL_RX */',brace_block(nfc_source,'if (NRF_NFCT->EVENTS_RXFRAMEEND &&'))
         spiffs=(SRC/'mod/vfs/vfs_driver_spiffs.c').read_text(encoding='utf-8');lfs=(SRC/'mod/vfs/vfs_driver_lfs.c').read_text(encoding='utf-8')
-        adapters=ADAPTER_MODEL.replace('/* ACTUAL_ADAPTERS */','\n'.join(function(spiffs,n) for n in ['spiffs_block_read','spiffs_block_write','spiffs_block_erase'])+'\n'+'\n'.join(function(lfs,n) for n in ['block_device_read','block_device_prog','block_device_erase']))
+        constants='\n'.join(re.search(r'^#define '+name+r'[^\n]+',lfs,re.M).group() for name in ['LFS_CACHE_SIZE','LFS_BLOCK_SIZE'])
+        adapters=ADAPTER_MODEL.replace('/* ACTUAL_LFS_CONSTANTS */',constants).replace('/* ACTUAL_ADAPTERS */','\n'.join(function(spiffs,n) for n in ['spiffs_block_read','spiffs_block_write','spiffs_block_erase'])+'\n'+'\n'.join(function(lfs,n) for n in ['block_range','block_device_read','block_device_prog','block_device_erase']))
         for name,code in [('flash',flash),('nfc',nfc),('adapters',adapters)]:
             source=folder/(name+'.c');binary=folder/(name+('.exe' if os.name=='nt' else ''));source.write_text(code,encoding='utf-8')
             cmd=[cc,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-I',str(folder)]

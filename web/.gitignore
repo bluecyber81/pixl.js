@@ -1,8 +1,15 @@
 .DS_Store
 node_modules/
 dist/
+!tests/dist/
+!tests/dist/*.mjs
 npm-debug.log
 .idea
 server.log
 server-errors.log
 server-state.json
+server-state-*.json
+server-state-*.tmp
+server-*.log
+__pycache__/
+*.pyc

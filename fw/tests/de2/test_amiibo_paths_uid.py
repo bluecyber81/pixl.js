@@ -1,4 +1,4 @@
-"""Actual manual-UID callback with mocked storage; static coverage of all 12 path joins."""
+"""Actual manual-UID callback with mocked storage; static coverage of all 13 path joins."""
 import re
 import unittest
 import test_player_v3 as host
@@ -17,7 +17,7 @@ class PathUidTests(unittest.TestCase):
             for call in calls:
                 self.assertEqual(source[call.start()-1], "!", filename)
             count += len(calls)
-        self.assertEqual(count, 12)
+        self.assertEqual(count, 13)
 
     def test_real_uid_parser_and_save_callback_bounds_paths_and_formats(self):
         source = (SCENES / "amiibo_scene_amiibo_detail_menu.c").read_text(encoding="utf-8")
@@ -52,7 +52,7 @@ static void ntag_store_get_uuid(ntag_t *n,uint8_t *u) {memcpy(u,n->data,7);}
 static int amiibo_helper_set_amiibo_uuid(ntag_t*n,uint8_t*u) {uid_changes++;memcpy(n->data,u,7);return helper_error;}
 static void *mui_mem_malloc(size_t n) {if(allocation_fail)return NULL;allocations++;return malloc(n);}
 static void mui_mem_free(void *p) {if(p)frees++;free(p);}
-static void ntag_emu_set_tag(ntag_t*n) {(void)n;emulations++;}
+static bool ntag_emu_set_tag(ntag_t*n) {(void)n;emulations++;return true;}
 static int stat_fake(const char*p,vfs_obj_t*o) {(void)p;o->size=stored_size;o->type=VFS_TYPE_REG;return stat_error;}
 static int write_fake(const char*p,void*d,size_t n) {(void)p;(void)d;last_write=n;writes++;return (int)n+write_delta;}
 static vfs_driver_t driver={.stat_file=stat_fake,.write_file_data=write_fake};

@@ -155,11 +155,11 @@ static void app_list_view_on_enter(mui_view_t *p_view) {
 }
 
 static void app_list_view_on_exit(mui_view_t *p_view) {
+    if (!p_view || !p_view->user_data) return;
     app_list_view_t *p_app_list_view = p_view->user_data;
-    if (mui_list_view_anim_enabled()) {
-        mui_anim_stop(&p_app_list_view->icon_anim);
-        mui_anim_stop(&p_app_list_view->name_anim);
-    }
+    /* The preference may have changed after these animations were started. */
+    mui_anim_stop(&p_app_list_view->icon_anim);
+    mui_anim_stop(&p_app_list_view->name_anim);
 }
 
 app_list_view_t *app_list_view_create() {
@@ -201,6 +201,9 @@ app_list_view_t *app_list_view_create() {
 void app_list_view_free(app_list_view_t *p_view) {
     if (!p_view) return;
 
+    /* Destruction must also be safe when no view-exit callback ran. */
+    mui_anim_stop(&p_view->icon_anim);
+    mui_anim_stop(&p_view->name_anim);
     mui_view_free(p_view->p_view);
     mui_mem_free(p_view);
 }

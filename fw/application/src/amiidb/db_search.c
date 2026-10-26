@@ -22,9 +22,12 @@ const db_amiibo_t * get_amiibo_by_id(uint32_t head, uint32_t tail){
 }
 
 const db_link_t* get_link_by_id(uint8_t game_id, uint32_t head, uint32_t tail){
+    const db_amiibo_t *amiibo = get_amiibo_by_id(head, tail);
+    if (!amiibo) return NULL;
+    size_t index = (size_t)(amiibo - amiibo_list);
     const db_link_t *link = link_list;
     while(link->game_id > 0){
-        if(link->game_id == game_id && link->head == head && link->tail == tail){
+        if(link->game_id == game_id && link->amiibo_index == index){
             return link;
         }
         link += 1;

@@ -1,0 +1,5 @@
+{
+  "schema": 1,
+  "provenance": "Actual C implementation reassembled through mocked GATT MTU23/185/250; no real radio.",
+  "hex": "505844470140400000120000000000000000000018fcffff00000000ffffffff00000000ffffffff0000000000000000ffffffffffffffff0000000003000000"
+}

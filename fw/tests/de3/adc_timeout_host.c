@@ -50,7 +50,7 @@ typedef int ret_code_t;
 typedef int16_t nrf_saadc_value_t;
 typedef struct { int type; } nrf_drv_saadc_evt_t;
 typedef struct { int input; } nrf_saadc_channel_config_t;
-typedef struct { bool bat_mode; } settings_data_t;
+typedef struct { bool bat_mode; uint8_t sleep_timeout_sec; } settings_data_t;
 static settings_data_t settings;
 static int init_result, channel_result, sample_result;
 static int adc_sample = 768, charge_pin = 1;

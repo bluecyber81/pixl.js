@@ -9,6 +9,7 @@ import re
 import shlex
 import subprocess
 import tempfile
+from root_host import function
 
 
 def main():
@@ -37,6 +38,10 @@ def main():
         for name, (harness, actual, placeholder) in suites.items():
             code = (tests / harness).read_text(encoding='utf-8-sig').replace(
                 f'/* {placeholder} */', f'#include "{(src / actual).as_posix()}"')
+            if name == 'storage':
+                code = code.replace('/* ACTUAL_STORAGE_SNAPSHOT_READ */', function(
+                    (src / 'app/settings/app_settings.c').read_text(encoding='utf-8'),
+                    'settings_storage_snapshot_read'))
             cfile = temp / (name + '.c')
             exe = temp / (name + ('.exe' if os.name == 'nt' else ''))
             cfile.write_text(code, encoding='utf-8')

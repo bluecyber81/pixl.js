@@ -21,6 +21,7 @@ struct amiibo_view_s {
     void *user_data;
     uint8_t focus;
     uint8_t max_ntags;
+    uint8_t info_page;
     uint8_t game_id;
     amiibo_view_event_cb event_cb;
     uint16_t desc_offset;

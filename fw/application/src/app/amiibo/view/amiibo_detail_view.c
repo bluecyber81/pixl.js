@@ -1,5 +1,6 @@
 #include "amiibo_detail_view.h"
 #include "amiibo_helper.h"
+#include "amiibo_info_draw.h"
 #include "db_header.h"
 #include "i18n/language.h"
 #include "mui_element.h"
@@ -12,6 +13,10 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
     char buff[64];
     amiibo_detail_view_t *p_amiibo_detail_view = p_view->user_data;
     ntag_t *ntag = p_amiibo_detail_view->ntag;
+    if (p_amiibo_detail_view->info_page) {
+        amiibo_info_draw(p_canvas, ntag, p_amiibo_detail_view->info_page);
+        return;
+    }
 
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     if (ntag->type == NTAG_215) {
@@ -72,9 +77,16 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
 
 static void amiibo_detail_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     amiibo_detail_view_t *p_amiibo_detail_view = p_view->user_data;
+    if (p_amiibo_detail_view->info_page) {
+        if (amiibo_info_input(&p_amiibo_detail_view->info_page, event) && p_amiibo_detail_view->event_cb)
+            p_amiibo_detail_view->event_cb(AMIIBO_DETAIL_VIEW_EVENT_MENU, p_amiibo_detail_view);
+        return;
+    }
     if (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_REPEAT || event->type == INPUT_TYPE_LONG) {
         switch (event->key) {
         case INPUT_KEY_LEFT:
+            if (!p_amiibo_detail_view->max_ntags) break;
+            p_amiibo_detail_view->navigate_direction = -1;
             if (p_amiibo_detail_view->focus > 0) {
                 p_amiibo_detail_view->focus--;
             } else {
@@ -86,6 +98,8 @@ static void amiibo_detail_view_on_input(mui_view_t *p_view, mui_input_event_t *e
             }
             break;
         case INPUT_KEY_RIGHT:
+            if (!p_amiibo_detail_view->max_ntags) break;
+            p_amiibo_detail_view->navigate_direction = 1;
             if (p_amiibo_detail_view->focus < p_amiibo_detail_view->max_ntags - 1) {
                 p_amiibo_detail_view->focus++;
             } else {

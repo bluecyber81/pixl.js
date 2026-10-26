@@ -1,0 +1,34 @@
+{
+  "manifest": {
+    "schema": 1,
+    "format": "PFS1",
+    "constants": {
+      "FORMAT_VERSION": 1,
+      "BLOCK_SIZE": 4096,
+      "BLOCK_COUNT": 512,
+      "CACHE_SIZE": 256,
+      "SHARD_TARGET": 32768,
+      "MAX_SHARDS": 64,
+      "MAX_HANDLES": 8,
+      "PATH_MAX": 64,
+      "NAME_MAX": 48,
+      "META_SIZE": 128
+    },
+    "defines": [
+      "LFS_NO_ASSERT",
+      "LFS_NO_DEBUG",
+      "LFS_NO_ERROR",
+      "LFS_NO_MALLOC",
+      "LFS_NO_WARN"
+    ],
+    "files": {
+      "packed_fs.c": "5b23e102d70b389d43c394eb5cabe341577d0d6f0af3aff61190b81d68df68f9",
+      "packed_fs.h": "ae7606a18bc7d4aa074fedbde91c7890750a8a5e50c057f8bb5c495226bcc43f",
+      "lfs.c": "fc64e371ca43c21e216d604dcccb893eeb9b2958c8fd882c15f2439dc04b637f",
+      "lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+      "lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+      "lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+    }
+  },
+  "engineSha256": "637a0dd2e7fbfbc0305191dc755a647c2d76c4d72cf1289090f3ef7136bf4bbd"
+}

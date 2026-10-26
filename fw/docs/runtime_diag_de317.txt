@@ -1,0 +1,107 @@
+DE3.17 LCD runtime diagnostics (application-only; optional protocol extension)
+============================================================================
+
+INFO 0x06 accepts only an empty request with status=0 and chunk=0. A supported
+build returns status=0 and exactly64 logical payload bytes. Ordinary transport
+fragmentation applies, including ATT MTU23. No existing command's status or
+payload format changes. An unsupported firmware/build returns a normal error;
+the companion must treat this command as optional and continue without it.
+
+The command observes RAM only. It does not start DFU, disconnect, change MTU,
+write/repair files, reset counters or store names, paths, addresses or contents.
+Counters survive Bluetooth reconnects but reset on a processor restart (also
+normal System OFF wake). No persistent crash recorder is introduced.
+
+Offset Width Type    Meaning
+0      4     bytes   ASCII PXDG
+4      1     u8      schema version1
+5      1     u8      payload length64
+6      1     bits    bit0 current TLSF pool available
+                    bit1 free-space samples available
+                    bit2 static linker stack reservation available
+                    bit3 measured stack low-water supported (always0 here)
+                    bit5 HCI disconnect observation available
+                    bit6 VFS error observation available
+                    bits4/7 reserved0
+7      1     u8      last local transfer-abort/timeout cause (table below)
+8      1     u8      last SDK HCI disconnect reason, valid only with bit5
+9      1     u8      command belonging to last VFS error, valid only with bit6
+10     2     bytes   reserved0
+12     2     u16LE   disconnect observations (saturates65535)
+14     2     u16LE   queue-overflow observations (saturates65535)
+16     2     u16LE   fragment/GATT timeout observations (saturates65535)
+18     2     u16LE   failed nonzero TLSF allocations/reallocations (saturates65535)
+20     4     i32LE   last VFS error; signed two's complement
+24     4     u32LE   currently free TLSF payload bytes (bit0)
+28     4     u32LE   minimum sampled free payload bytes (bit1)
+32     4     u32LE   current largest free TLSF payload block, bytes (bit0)
+36     4     u32LE   minimum sampled largest-free-block size, bytes (bit1)
+40     4     u32LE   configured TLSF pool size, bytes (bit0)
+44     4     u32LE   maximum observed TLSF payload balance after MUI calls, bytes
+48     4     u32LE   static linker stack reservation, bytes (bit2)
+52     4     u32LE   minimum free stack bytes: unsupported=0xFFFFFFFF
+56     4     u32LE   valid free-space samples (saturates0xFFFFFFFF)
+60     4     u32LE   VFS error observations (saturates0xFFFFFFFF)
+
+All numeric fields are little-endian. Unavailable sampled minima and static
+stack reservation use0xFFFFFFFF; unavailable current-pool fields are0 and bit0
+is clear. Reserved fields must be ignored by clients. Unsupported is not zero.
+
+Local cause:0 none observed;1 bounded work queue overflow;2 fragment/reply
+timeout;3 malformed protocol packet;4 live-session transmission failure;
+5 GATT client timeout;6 GATT server timeout. The local cause and HCI reason
+are separate historical observations and need not refer to the same event.
+An old/cancelled response must not overwrite an earlier queue cause with a
+secondary transmission error. No timestamp or link identity is collected.
+
+VFS errors preserve the original VFS enum: -1 failure, -2 memory, -3 EOF,
+-4 exists, -5 path/name length, -6 unavailable drive, -7 corruption,
+-90 missing object, -91 no space, -99 unsupported. Additional diagnostic-only
+codes: -1000 invalid request, -1001 invalid transfer state. Successful commands
+do not erase the last failure. EOF at normal directory end is not a failure.
+Counts are observations, not an exact count of failed user operations.
+
+Memory interpretation
+---------------------
+The existing TLSF pool walker samples current free space on explicit monitoring
+or Info0x06 queries. Its minima are only minima of those samples, not continuous
+free-RAM watermarks. Each allocation/free/reallocation additionally accounts
+actual tlsf_block_size() in O(1) to track the maximum observed allocated payload
+balance after completed MUI allocator calls. Failed realloc preserves the old
+block/accounting; realloc(p,0) releases it. A moving realloc can temporarily
+hold both old and new TLSF blocks internally; that transient overlap is not
+measured. This is not an uninterrupted physical allocator peak and also excludes
+allocator metadata, static RAM, the SDK heap and stack. It cannot be subtracted
+from all nRF52832 RAM to claim a safety reserve.
+
+The current implementation never paints, scans or writes the live stack. The
+linker reservation is a configured capacity, not a measured unused reserve.
+Runtime stack low-water is deliberately reported unsupported. A future safe
+measurement requires startup/interrupt/call-chain validation on the real board.
+
+Implementation footprint: runtime diagnostic state is compile-time bounded to
+56 RAM bytes; no dynamic diagnostic allocation, persistent writes or paths.
+Critical regions copy/update only the small counters/state, never walk TLSF.
+The module is enabled only for the LCD application build; radio, NFC pins,
+SoftDevice, bootloader, settings layout and figure data are unchanged.
+
+Limited upstream optimization
+-----------------------------
+Reviewed primary source: https://github.com/solosky/pixl.js/pull/468 (still WIP).
+The progress-bar expression already produces float; ceilf avoids converting it
+to double before rounding. Within screen bounds its rendered integer is the
+same. DE3.16 had already removed forced floating-point printf linking. LTO,
+global logger disabling, crypto trimming, packed DB ABI and stack painting are
+not imported. Flash savings must be measured on the final ARM build, not copied
+from the upstream PR's combined figures.
+
+Validation boundary
+-------------------
+test_runtime_diag.py exercises actual diagnostic/TLSF/MUI/DF/queue C code with
+mocked VFS and Nordic notification endpoints at simulated ATT23/185/250. The
+DE3.16 control must return unsupported; deliberate counter-wrap, missing
+allocation-failure and false-stack-measurement mutations must compile and fail
+assertions. Existing BLE SDK lifecycle tests cover the actual HCI/GATT hooks.
+These tests do not prove real radio timing, physical heap/stack margin, NFC
+compatibility or hardware endurance. Tybalt/Sprocket remains unresolved. No
+historically blocked supplementary AmiiboLink check is included.

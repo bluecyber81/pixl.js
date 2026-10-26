@@ -5,6 +5,7 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "stddef.h"
+#include "../runtime_diag.h"
 #include <string.h>
 
 static df_event_handler_t m_df_event_handler;
@@ -23,7 +24,8 @@ static void df_reset_transfer(void) {
     memset(&m_rx_df_frame, 0, sizeof(m_rx_df_frame));
 }
 
-static void df_abort_transfer(void) {
+static void df_abort_transfer(uint8_t cause) {
+    runtime_diag_ble_abort(cause);
     df_reset_transfer();
     ble_nus_abort_transfer();
 }
@@ -31,7 +33,7 @@ static void df_abort_transfer(void) {
 static bool df_check_timeout(void) {
     if ((m_rx_active || m_tx_active) &&
         app_timer_cnt_diff_compute(app_timer_cnt_get(), m_last_tick) >= DF_FRAGMENT_TIMEOUT_TICKS) {
-        df_abort_transfer();
+        df_abort_transfer(RUNTIME_DIAG_FRAGMENT_TIMEOUT);
         return true;
     }
     return false;
@@ -87,7 +89,7 @@ void ble_on_received_data(const uint8_t *data, size_t length) {
 
     if (df_check_timeout()) return;
     if (data == NULL || length < DF_HEADER_LEN || length > DF_MAX_LEN || m_tx_active) {
-        df_abort_transfer();
+        df_abort_transfer(RUNTIME_DIAG_PROTOCOL);
         return;
     }
     uint16_t chunk = (uint16_t)data[2] | ((uint16_t)data[3] << 8);
@@ -111,7 +113,7 @@ void ble_on_received_data(const uint8_t *data, size_t length) {
         (m_rx_active && data[0] != m_rx_df_frame.cmd) ||
         ((more || m_rx_active) && payload == 0) ||
         payload > DF_PAYLOAD_LEN - (m_rx_active ? m_rx_df_frame.length : 0)) {
-        df_abort_transfer();
+        df_abort_transfer(RUNTIME_DIAG_PROTOCOL);
         return;
     }
     if (!m_rx_active) {
@@ -125,7 +127,7 @@ void ble_on_received_data(const uint8_t *data, size_t length) {
     m_last_tick = app_timer_cnt_get();
     if (more) {
         /* A continuation must leave room for at least one more byte. */
-        if (m_rx_df_frame.length == DF_PAYLOAD_LEN) { df_abort_transfer(); return; }
+        if (m_rx_df_frame.length == DF_PAYLOAD_LEN) { df_abort_transfer(RUNTIME_DIAG_PROTOCOL); return; }
         m_rx_active = true;
         ++m_rx_next_chunk;
         return;
@@ -153,7 +155,7 @@ void ble_on_transmit_ready() {
     m_rx_df_frame.length -= m_tx_sent;
     if (m_rx_df_frame.length) {
         memmove(m_rx_df_frame.data, m_rx_df_frame.data + m_tx_sent, m_rx_df_frame.length);
-        if (df_send_next() != 0) df_abort_transfer();
+        if (df_send_next() != 0) df_abort_transfer(RUNTIME_DIAG_TX_FAILURE);
         return;
     }
     m_tx_active = false;

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Allmiibo DFU 3.27.0</title>
+  <link rel="stylesheet" href="updater.css">
+</head>
+<body>
+<main>
+  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.27.0</p>
+  <h1>Firmware übertragen</h1>
+  <p class="notice"><strong>Integrierter Anwendungs-Flasher.</strong> Die unveränderte Sendesteuerung wurde mit DE3.27 über den Codex-Browser am eigenen Gerät verwendet; Übertragungsabschluss und anschließendes Menü wurden bestätigt. Die Oberfläche trägt jetzt die Dateimanager-Version 3.27.0. Das ist keine Zusage für jedes Gerät oder jeden Browser.</p>
+  <section>
+    <h2>1. Anwendungs-OTA auswählen</h2>
+    <p>Die passende LCD-Anwendungs-OTA-ZIP wählen. Gesamtarchive sowie Bootloader-/SoftDevice-Pakete werden abgewiesen. Der Bootloader prüft Signatur, Versionszähler und seine technischen Anforderungen. Die genaue LCD-/OLED-Platinenvariante wird dabei nicht automatisch erkannt; dafür musst du das ausdrücklich passende Paket auswählen.</p>
+    <label for="file">Firmware-Paket</label>
+    <input id="file" type="file" accept=".zip,application/zip">
+  </section>
+  <section>
+    <h2>2. Gerät auswählen und übertragen</h2>
+    <p>Das richtige Allmiibo in den DFU-Modus bringen. Ein dunkler Bildschirm allein sagt nicht aus, ob DFU bereit ist. Nach der Geräteauswahl startet die Übertragung des oben geprüften Pakets.</p>
+    <button id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
+    <p id="capability"></p>
+    <progress id="progress" max="100" value="0" hidden></progress>
+    <p id="transfer"></p>
+    <p id="status" role="status" aria-live="polite">Noch kein Paket ausgewählt.</p>
+  </section>
+  <section>
+    <h2>3. Neustart prüfen</h2>
+    <p>Nach bestätigter Übertragung das Gerätemenü und die Versionsnummer prüfen. Eine beendete Bluetooth-Verbindung beweist für sich keinen erfolgreichen Start der Firmware.</p>
+  </section>
+  <footer>Lokale Dateien, keine Cloud-Übertragung. Quellcode und MIT-Lizenz sind im Dateimanager-Paket enthalten.</footer>
+</main>
+<script src="vendor/crc32.js"></script>
+<script src="vendor/jszip-3.10.1.min.js"></script>
+<script src="secure-dfu.js"></script>
+<script src="package.js"></script>
+<script src="updater.js"></script>
+<script src="page.js"></script>
+</body>
+</html>

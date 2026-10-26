@@ -28,6 +28,8 @@ def build(fw,folder,name,sanitize=False):
         'int32_t vfs_spiffs_remove_file(', 'int32_t vfs_spiffs_remove_dir(',
         'static int32_t guarded_remove(', 'static int32_t guarded_remove_dir(',
         'static int32_t guarded_open(', 'static int32_t guarded_close(', 'static int32_t guarded_abort(']
+    if 'static int32_t vfs_check_namespace(' in source:
+        signatures.insert(1, 'static int32_t vfs_check_namespace(')
     structure=source[source.index('typedef struct {'):source.index('} vfs_spiffs_dir_t;')+len('} vfs_spiffs_dir_t;')]
     wrappers='#define VFS_SPIFFS_FOLDER_NAME ".folder"\n'+structure+'\n'+'\n'.join(extract(source,s) for s in signatures)
     code=(HERE/'vfs_abandon_host.c').read_text().split('int main(void){',1)[0]

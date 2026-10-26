@@ -1,0 +1,14 @@
+{
+  "hex": "505842440102bf0132280500304241410000080000000100001000007000000090d76a000301000000700700ffffffff0070070000f0070002000000420200002a000000772fa7b4772fa7b400700000894148f4a92e4c32567b5acdf356f5525fa02a07f2db4f8ca66f5bd4a5e49bea00e00700ffffffff00e0070000000000",
+  "source": "actual C observer with mock registers, real SDK CRC32/SHA256",
+  "physical_device": false,
+  "source_sha256": {
+    "mod/df/df_proto_vfs.c": "1b3b696371e182a414e35771aa28f8104058f24974aa1a57eece42237d5f2d56",
+    "mod/df/df_proto_info.c": "66544a1476ac77d2c9acb5f6ac9bbfe94277f91d13c2a581fdfffc3c9255e08a",
+    "mod/df/df_core.c": "87e40db8a4ee7c45ed71a12da53cad35bf189e2988a96bd6406ac3b273a61d4e",
+    "mod/ble/ble_df_driver.c": "4a52ae7fc49328731f8abda349d07f05013b70bed7b245a2d83ccb31adc9da60",
+    "mod/ble/ble_work.c": "a957377060f77f4243b45997e6a4b450a9369829ed930af0c2095fe671443e5b",
+    "mod/boot_diag.c": "97ce1708930cc9041e1de1bbd42f2202856f48d15278332b104d5d30f33ff4ab",
+    "mod/boot_diag.h": "ee81158c0ed744cca82e9de3d6d9459a2a4a1c46e1668ccc7c8c5f5101ec4dfc"
+  }
+}

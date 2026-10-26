@@ -1,0 +1,7 @@
+_host-tests/
+_build/
+fw/_build/
+__pycache__/
+*.pyc
+*.pem
+*.key

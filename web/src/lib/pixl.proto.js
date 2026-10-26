@@ -2,6 +2,9 @@ import { sharedEventDispatcher } from "./event"
 import * as pixl from "./pixl.ble"
 import ByteBuffer from "bytebuffer"
 
+import { parseBootDiagnostics } from "./boot-diagnostics.js"
+import { parsePowerDiagnostics } from "./power-diagnostics.js"
+
 import i18n from '../i18n'
 
 
@@ -21,15 +24,63 @@ const SAFE_GATT_PAYLOAD = 20
 var transport_generation = 0
 var transport_capabilities = null
 var transport_probe = null
+var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0 }
+var transport_last_error = null
 
-export function op_queue_push(cmd, tx_data_cb, rx_data_cb) {
+// This is local observation plus the application's capability reply. It neither
+// measures ATT MTU nor exposes device identities, payloads or filenames. Counts
+// include the four-byte protocol header. TX counts completed browser writes,
+// not acknowledged files; RX counts all notifications observed by this module.
+export function get_transport_diagnostics() {
+    const profile = transport_capabilities;
+    const capabilities = profile ? Object.freeze({
+        chunkedRequests: profile.chunkedRequests,
+        maxRequestPayload: profile.maxRequestPayload,
+        gattValueCapacity: profile.gattValueCapacity ?? null
+    }) : null;
+    return Object.freeze({
+        schemaVersion: 1,
+        connectionState: pixl.get_connection_state(),
+        chunkMode: !profile ? 'not-negotiated' : profile.chunkedRequests ? 'chunked' : 'legacy',
+        capabilities,
+        reportedGattValueCapacity: profile?.reportedGattValueCapacity ?? null,
+        effectiveGattValueCapacity: profile?.chunkedRequests ? profile.gattValueCapacity : null,
+        maxRequestPayload: profile?.maxRequestPayload ?? null,
+        ...transport_stats,
+        activeCommand: Number.isInteger(active_op?.cmd) && active_op.cmd >= 0 && active_op.cmd <= 255 ? active_op.cmd : null,
+        queuedCommands: op_queue.length,
+        fileTransferActive: file_write_ongoing,
+        queuedFileTransfers: file_write_queue.length,
+        lastErrorCode: transport_last_error
+    });
+}
+
+function reset_transport_stats() {
+    transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0 };
+}
+
+function on_ble_connected() {
+    reset_transport_stats();
+    transport_last_error = null;
+}
+
+export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
     return new Promise((resolve, reject) => {
+        const max_response_bytes = options.max_bytes ?? MAX_RESPONSE_BYTES;
+        if (!Number.isSafeInteger(max_response_bytes) || max_response_bytes < 0 || max_response_bytes > MAX_RESPONSE_BYTES) {
+            throw new Error('Invalid response byte limit');
+        }
+        if (options.progress_cb !== undefined && typeof options.progress_cb !== 'function') {
+            throw new Error('Invalid download progress callback');
+        }
         var op = {
             cmd: cmd,
             tx_data_cb: tx_data_cb,
             rx_data_cb: rx_data_cb,
             p_resolve: resolve,
-            p_reject: reject
+            p_reject: reject,
+            max_response_bytes,
+            progress_cb: options.progress_cb
         }
         op_queue.push(op);
         process_op_queue();
@@ -55,6 +106,7 @@ function proocess_op(op) {
     try {
         op.tx_data_cb(bb);
     } catch (error) {
+        transport_last_error = 'REQUEST_INVALID';
         finish_op(op, error);
         return;
     }
@@ -65,10 +117,10 @@ function proocess_op(op) {
             op.tx_done = true;
             finish_when_ready(op);
         }).catch(error => {
-            if (active_op === op) abort_transport(error);
+            if (active_op === op) abort_transport(error, 'TX_FAILED');
         });
     } catch (error) {
-        abort_transport(error);
+        abort_transport(error, 'TX_FAILED');
     }
 }
 
@@ -93,23 +145,28 @@ function finish_op(op, error, response) {
 function arm_response_timeout(op) {
     clearTimeout(response_timer);
     response_timer = setTimeout(() => {
-        if (active_op === op) abort_transport(new Error('Bluetooth response timed out'));
+        if (active_op === op) abort_transport(new Error('Bluetooth response timed out'), 'TIMEOUT');
     }, RESPONSE_IDLE_TIMEOUT);
 }
 
-function abort_transport(error) {
+function abort_transport(error, code) {
     // After a malformed/incomplete exchange, a late packet must not be consumed
     // as the response to a new command. Cancel work and require reconnection.
+    transport_last_error = code;
     on_ble_disconnected(error);
-    pixl.disconnect();
+    pixl.disconnect({ immediate: true });
 }
 
 export function init() {
     if (initialized) return;
     initialized = true;
     sharedEventDispatcher().addListener("ble_rx_data", on_rx_data);
+    sharedEventDispatcher().addListener("ble_connected", on_ble_connected);
     sharedEventDispatcher().addListener("ble_disconnected", on_ble_disconnected);
-    sharedEventDispatcher().addListener("ble_connect_error", on_ble_disconnected);
+    sharedEventDispatcher().addListener("ble_connect_error", reason => {
+        transport_last_error = 'CONNECT_FAILED';
+        on_ble_disconnected(reason);
+    });
     ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 }
 
@@ -151,16 +208,17 @@ export function negotiate_transport() {
         }
         // Firmware reports its current negotiated GATT value capacity. A missing
         // or unclear value retains the universally safe ATT MTU23 limit.
-        const advertised = b.remaining() === 2 ? b.readUint16() : SAFE_GATT_PAYLOAD;
-        const gattValueCapacity = advertised >= SAFE_GATT_PAYLOAD && advertised <= MTU_MAX_DATA_SIZE
-            ? advertised : SAFE_GATT_PAYLOAD;
-        return { chunkedRequests: true, maxRequestPayload: maximum, gattValueCapacity };
+        const advertised = b.remaining() === 2 ? b.readUint16() : null;
+        const reportedGattValueCapacity = advertised >= SAFE_GATT_PAYLOAD && advertised <= MTU_MAX_DATA_SIZE
+            ? advertised : null;
+        const gattValueCapacity = reportedGattValueCapacity ?? SAFE_GATT_PAYLOAD;
+        return { chunkedRequests: true, maxRequestPayload: maximum, gattValueCapacity, reportedGattValueCapacity };
     }).then(response => {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
         if (response.status === 255) {
-            transport_capabilities = { chunkedRequests: false, maxRequestPayload: DF_MAX_DATA_SIZE };
+            transport_capabilities = Object.freeze({ chunkedRequests: false, maxRequestPayload: DF_MAX_DATA_SIZE });
         } else {
-            transport_capabilities = checked_response(response);
+            transport_capabilities = Object.freeze(checked_response(response));
         }
         return transport_capabilities;
     });
@@ -175,6 +233,69 @@ export function enter_dfu() {
     return op_queue_push(0x02,
         b => { },
         b => { });
+}
+
+// Optional application diagnostics. Older firmware's UNKNOWN_COMMAND reply is
+// expected; a malformed successful reply must still be reported as an error.
+export function get_runtime_diagnostics() {
+    const generation = transport_generation;
+    return op_queue_push(0x06, () => {}, b =>
+        parse_runtime_diagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 64 })
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 255 ? null : checked_response(response);
+        });
+}
+
+// Optional read-only fixed-layout snapshot. It is requested only by the user;
+// old firmware may reply UNKNOWN_COMMAND without invalidating the connection.
+export function get_boot_diagnostics() {
+    const generation = transport_generation;
+    return op_queue_push(0x07, () => {}, b =>
+        parseBootDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 128 })
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 255 ? null : checked_response(response);
+        });
+}
+
+export function get_power_diagnostics() {
+    const generation = transport_generation;
+    return op_queue_push(0x08, () => {}, b =>
+        parsePowerDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16 })
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 255 ? null : checked_response(response);
+        });
+}
+
+export function parse_runtime_diagnostics(buffer) {
+    const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
+    if (!(bytes instanceof Uint8Array) || bytes.byteLength !== 64 ||
+        bytes[0] !== 80 || bytes[1] !== 88 || bytes[2] !== 68 || bytes[3] !== 71 ||
+        bytes[4] !== 1 || bytes[5] !== 64 || bytes[10] !== 0 || bytes[11] !== 0) {
+        throw new Error('Invalid runtime diagnostic response');
+    }
+    const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), flags = bytes[6];
+    const u32 = offset => v.getUint32(offset, true);
+    const available = (offset, bit) => (flags & bit) && u32(offset) !== 0xffffffff ? u32(offset) : null;
+    const pool = available(40, 1), free = available(24, 1), largest = available(32, 1);
+    const minFree = available(28, 2), minLargest = available(36, 2);
+    if (pool !== null && (free > pool || largest > free || minFree > pool || minLargest > pool)) {
+        throw new Error('Invalid runtime memory counters');
+    }
+    return Object.freeze({
+        schemaVersion: 1, scope: 'since-device-restart',
+        lastLocalBleCause: bytes[7], lastHciReason: flags & 32 ? bytes[8] : null,
+        disconnects: v.getUint16(12, true), queueOverflows: v.getUint16(14, true),
+        timeouts: v.getUint16(16, true), allocationFailures: v.getUint16(18, true),
+        lastVfsCommand: flags & 64 ? bytes[9] : null,
+        lastVfsError: flags & 64 ? v.getInt32(20, true) : null,
+        heapPoolBytes: pool, heapFreeBytes: free, largestFreeBlockBytes: largest,
+        sampledMinFreeBytes: minFree, sampledMinLargestBlockBytes: minLargest,
+        maxAllocatedPayloadBytes: available(44, 1), stackReservedBytes: available(48, 4),
+        stackMinFreeBytes: available(52, 8), memorySamples: u32(56), vfsErrors: u32(60)
+    });
 }
 
 export function vfs_get_drive_list() {
@@ -204,6 +325,69 @@ export function vfs_drive_format(path) {
     return op_queue_push(0x11,
         b => { b.writeByte(path.charCodeAt(0)) },
         b => { });
+}
+
+export function vfs_storage_info(drive) {
+    if (!['I','E'].includes(drive)) return Promise.reject(new Error('Invalid storage drive.'));
+    return op_queue_push(0x1c, b => b.writeUint8(drive.charCodeAt(0)), b => {
+        if (b.remaining() !== 8) throw new Error('Invalid storage information length.');
+        const data = Array.from(new Uint8Array(b.readBytes(8).toArrayBuffer()));
+        if (data[0] !== 1 || data[1] !== drive.charCodeAt(0) || ![1,2,3].includes(data[2]) || data[3] > 1 ||
+            (data[4] & ~7) || data[5] !== 128 || data[6] !== 64 || data[7] !== 48) throw new Error('Unsupported storage information.');
+        return {schema:1,drive,backend:data[2],mounted:!!data[3],flags:data[4],metaLen:data[5],pathMax:data[6],nameMax:data[7]};
+    });
+}
+export function vfs_storage_layout(drive) {
+    if (drive !== 'E') return Promise.reject(new Error('Packed storage layout is supported only for E:.'));
+    return op_queue_push(0x1f, b => b.writeUint8(drive.charCodeAt(0)), b => {
+        if (b.remaining() !== 72) throw new Error('Invalid storage layout length.');
+        const bytes = new Uint8Array(b.readBytes(72).toArrayBuffer()), v = new DataView(bytes.buffer);
+        if (bytes[0] !== 1 || bytes[1] !== 69 || bytes[2] !== 3 || bytes[3] > 1 ||
+            v.getUint32(4,true) !== 0x31534650 || v.getUint32(36,true) !== 7) throw new Error('Unsupported packed storage layout.');
+        const layout = {schema:1,drive,backend:3,mounted:!!bytes[3],magic:v.getUint32(4,true),
+            flashBytes:v.getUint32(8,true),blockSize:v.getUint32(12,true),blockCount:v.getUint32(16,true),
+            readSize:v.getUint16(20,true),progSize:v.getUint16(22,true),cacheSize:v.getUint16(24,true),
+            metadataBytes:v.getUint16(26,true),shardTarget:v.getUint32(28,true),maxShards:bytes[32],
+            pathCap:bytes[33],nameCap:bytes[34],maxHandles:bytes[35],flags:v.getUint32(36,true),
+            engineSha256:Array.from(bytes.slice(40),x=>x.toString(16).padStart(2,'0')).join('')};
+        if (!layout.blockSize || !layout.blockCount || layout.blockSize*layout.blockCount !== layout.flashBytes ||
+            !layout.readSize || !layout.progSize || !layout.cacheSize || !layout.metadataBytes ||
+            !layout.shardTarget || !layout.maxShards || !layout.maxHandles || layout.pathCap < 2 || layout.nameCap < 2 ||
+            /^0{64}$|^f{64}$/u.test(layout.engineSha256)) throw new Error('Invalid packed storage geometry.');
+        return Object.freeze(layout);
+    });
+}
+// op0 reads state, op1 seals an independently verified restore, op2 reboots.
+// Callers must keep these distinct; no implicit format or reconnect action.
+export function vfs_import_state(drive, operation = 0, archiveSha256 = null) {
+    if (drive !== 'E' || ![0,1,2,3].includes(operation) ||
+        (operation === 3 ? !/^[a-f0-9]{64}$/u.test(archiveSha256 || '') || /^0{64}$/u.test(archiveSha256) : archiveSha256 !== null)) return Promise.reject(new Error('Invalid import operation.'));
+    return op_queue_push(0x20, b => {b.writeUint8(69);b.writeUint8(operation);if(operation===3)for(const pair of archiveSha256.match(/../g))b.writeUint8(parseInt(pair,16));}, b => {
+        if (b.remaining() !== 40) throw new Error('Invalid import state length.');
+        const data = Array.from(new Uint8Array(b.readBytes(40).toArrayBuffer()));
+        const hash=data.slice(8).map(x=>x.toString(16).padStart(2,'0')).join('');
+        if (data[0] !== 1 || data[1] !== 69 || data[2] !== 3 || data.slice(3,8).some(x=>x>1) ||
+            (!!data[5] !== (!!data[3]&&!data[4])) || (!data[6] && !/^0{64}$/u.test(hash)) ||
+            (data[6] && /^0{64}$/u.test(hash))) throw new Error('Invalid import state.');
+        return Object.freeze({schema:1,drive,backend:3,mounted:!!data[3],pending:!!data[4],ready:!!data[5],
+            bound:!!data[6],rebootRequired:!!data[7],archiveSha256:data[6]?hash:null});
+    });
+}
+export function vfs_read_raw_meta(path) {
+    path_validation(path);
+    if (path.length <= 3) return Promise.reject(new Error('Root metadata is unsupported.'));
+    return op_queue_push(0x1d, b => write_string(b,path), b => {
+        if (b.remaining() !== 128) throw new Error('Invalid raw metadata length.');
+        return new Uint8Array(b.readBytes(128).toArrayBuffer());
+    });
+}
+export function vfs_write_raw_meta(path, value) {
+    path_validation(path);
+    const bytes = value instanceof Uint8Array ? new Uint8Array(value) : value instanceof ArrayBuffer ? new Uint8Array(value.slice(0)) : null;
+    if (path.length <= 3 || !bytes || bytes.length !== 128) return Promise.reject(new Error('Exactly 128 metadata bytes and a non-root path are required.'));
+    return op_queue_push(0x1e, b => { write_string(b,path); for (const byte of bytes) b.writeUint8(byte); }, b => {
+        if (b.remaining() !== 0) throw new Error('Unexpected raw metadata acknowledgement.');
+    });
 }
 
 export function vfs_read_folder(dir) {
@@ -274,15 +458,13 @@ export function vfs_close_file(file_id) {
         b => { });
 }
 
-export function vfs_read_file(file_id) {
-    console.log("vfs_read_file", file_id);
+export function vfs_read_file(file_id, options) {
     return op_queue_push(0x14,
         b => { b.writeUint8(file_id) },
-        b => { return b.readBytes(b.remaining()).toArrayBuffer() });
+        b => { return b.readBytes(b.remaining()).toArrayBuffer() }, options);
 }
 
 export function vfs_write_file(file_id, data) {
-    console.log("vfs_write_file", file_id);
     return op_queue_push(0x15,
         b => {
             b.writeUint8(file_id);
@@ -328,21 +510,30 @@ function checked_response(response) {
     return response.data;
 }
 
-export function vfs_helper_read_file(path, success_cb, error_cb, done_cb) {
+export function vfs_helper_read_file(path, success_cb, error_cb, done_cb, options = {}) {
     return new Promise(resolve => {
-        file_write_queue.push({type: 'read', path, success_cb, error_cb, done_cb, completion: resolve});
+        file_write_queue.push({type: 'read', path, success_cb, error_cb, done_cb, options, completion: resolve});
         vfs_process_file_write_queue();
     });
 }
 
 function vfs_process_file_read(entry) {
     const generation = file_write_generation;
+    const options = entry.options;
+    // Reject a bad caller limit before OPEN acquires the device's single handle.
+    if (!options || typeof options !== 'object' ||
+        (options.max_bytes !== undefined && (!Number.isSafeInteger(options.max_bytes) ||
+            options.max_bytes < 0 || options.max_bytes > MAX_RESPONSE_BYTES)) ||
+        (options.progress_cb !== undefined && typeof options.progress_cb !== 'function')) {
+        entry.finish(new Error('Invalid download options'));
+        return;
+    }
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }
     return vfs_open_file(entry.path, "r").then(checked_response).then(opened => {
         checkCurrent();
-        return vfs_read_file(opened.file_id).then(checked_response).then(data => {
+        return vfs_read_file(opened.file_id, options).then(checked_response).then(data => {
             checkCurrent();
             return vfs_close_file(opened.file_id).then(checked_response).then(() => data);
         }, error => {
@@ -358,6 +549,23 @@ var file_write_queue = []
 var file_write_ongoing = false
 var file_write_generation = 0
 var file_write_current = null
+
+function file_callback(callback, ...args) {
+    if (typeof callback !== 'function') return;
+    try { callback(...args); }
+    catch (error) {
+        // A consumer's UI callback must not strand other files or their completion
+        // promises, including when every queued entry is cancelled at disconnect.
+        console.error?.('File-transfer callback failed', error);
+    }
+}
+
+function complete_file_entry(entry, error, data) {
+    if (error) file_callback(entry.error_cb, error, entry.file);
+    else file_callback(entry.success_cb, entry.type === 'read' ? data : entry.file);
+    file_callback(entry.done_cb);
+    if (entry.completion) entry.completion();
+}
 
 export function vfs_helper_write_file(path, file, progress_cb, success_cb, error_cb) {
     file_write_queue.push({
@@ -381,14 +589,8 @@ function vfs_process_file_write_queue() {
             e.finished = true;
             file_write_current = null;
             file_write_ongoing = false;
-            try {
-                if (error) e.error_cb(error, e.file);
-                else e.success_cb(e.type === 'read' ? data : e.file);
-            } finally {
-                if (e.done_cb) e.done_cb();
-                if (e.completion) e.completion();
-                vfs_process_file_write_queue();
-            }
+            complete_file_entry(e, error, data);
+            vfs_process_file_write_queue();
         };
         if (e.type === 'read') vfs_process_file_read(e);
         else vfs_process_file_write(e);
@@ -411,11 +613,12 @@ function vfs_process_file_write(entry) {
             function writeNext() {
                 checkCurrent();
                 if (offset === size) return;
-                const length = Math.min(DF_MAX_DATA_SIZE - 1, size - offset);
+                // One byte of each logical WRITE payload is the file handle.
+                const length = Math.min((transport_capabilities?.maxRequestPayload ?? DF_MAX_DATA_SIZE) - 1, size - offset);
                 return vfs_write_file(file_id, buffer.slice(offset, offset + length)).then(checked_response).then(() => {
                     checkCurrent();
                     offset += length;
-                    entry.progress_cb({ written_bytes: offset, total_bytes: size }, entry.file);
+                    file_callback(entry.progress_cb, { written_bytes: offset, total_bytes: size }, entry.file);
                     return writeNext();
                 });
             }
@@ -503,7 +706,7 @@ function read_meta(bb) {
             if (type == 1) {
                 var type_size = mb.readUint8();
                 var bytes = read_bytes_array(mb, type_size);
-                meta.notes = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes));
+                meta.notes = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(new Uint8Array(bytes));
             } else if (type == 2) {
                 var flags = mb.readUint8();
                 // Retain SYSTEM and future bits when editing the visible flags.
@@ -602,10 +805,9 @@ function write_string(bb, str) {
 }
 
 function write_bytes(bb, buffer) {
-    var size = buffer.remaining();
-    for (var i = 0; i < size; i++) {
-        bb.writeUint8(buffer.readUint8());
-    }
+    // append copies the bounded remaining range and advances both offsets.
+    // Avoid per-byte accessor/resize checks for every received notification.
+    bb.append(buffer);
 }
 
 function read_bytes_array(bb, size) {
@@ -637,9 +839,12 @@ async function tx_data_frame(cmd, status, chunk, data) {
         frame.flip();
         // Await every GATT write; no concurrent writes and no fragments from
         // an earlier connection can leak into a replacement session.
-        await pixl.tx_data(frame.toArrayBuffer());
+        const wire = frame.toArrayBuffer();
+        await pixl.tx_data(wire);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        ++transport_stats.txFrames;
+        transport_stats.txBytes += wire.byteLength;
         if (active_op) {
             if (offset < payload.length && active_op.rx_done) {
                 throw new Error('Bluetooth response arrived before the complete request');
@@ -661,10 +866,13 @@ function reset_rx() {
 
 
 function on_rx_data(data) {
+    ++transport_stats.rxFrames;
+    // Diagnostics must not throw ahead of the existing malformed-frame guard.
+    transport_stats.rxBytes += Number.isSafeInteger(data?.byteLength) ? data.byteLength : 0;
     const op = active_op;
     if (!op) return; // Ignore unsolicited/stale notifications outside an exchange.
     if (op.rx_done) {
-        abort_transport(new Error('Unexpected extra Bluetooth response'));
+        abort_transport(new Error('Unexpected extra Bluetooth response'), 'RX_INVALID');
         return;
     }
     var h;
@@ -679,15 +887,19 @@ function on_rx_data(data) {
         if ((h.status !== 0 && more) || (more && rx_next_chunk === 0x7fff)) {
             throw new Error('Invalid Bluetooth response continuation');
         }
-        if (rx_bytebuffer.offset + buff.remaining() > MAX_RESPONSE_BYTES) {
-            throw new Error('Bluetooth response is too large');
+        if (h.status === 0) {
+            if (rx_bytebuffer.offset + buff.remaining() > op.max_response_bytes) {
+                throw new Error('Bluetooth response exceeds the byte limit');
+            }
+            write_bytes(rx_bytebuffer, buff);
+            file_callback(op.progress_cb, { received_bytes: rx_bytebuffer.offset });
+            if (active_op !== op) return;
         }
-        if (h.status === 0) write_bytes(rx_bytebuffer, buff);
         ++rx_next_chunk;
         arm_response_timeout(op);
         if (more) return;
     } catch (error) {
-        abort_transport(error);
+        abort_transport(error, 'RX_INVALID');
         return;
     }
     try {
@@ -698,7 +910,10 @@ function on_rx_data(data) {
             h.data = op.rx_data_cb(ByteBuffer.wrap(rx_bytebuffer.toArrayBuffer()));
         }
         op.response = h;
+        // Unsupported optional diagnostics are capabilities, not device faults.
+        if (h.status !== 0 && !((h.cmd === 0x03 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
+        transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;
     }
     op.rx_done = true;
@@ -707,6 +922,8 @@ function on_rx_data(data) {
 
 
 function on_ble_disconnected(reason) {
+    reset_transport_stats();
+    if (!transport_last_error) transport_last_error = 'DISCONNECTED';
     ++transport_generation;
     transport_capabilities = null;
     transport_probe = null;
@@ -724,13 +941,7 @@ function on_ble_disconnected(reason) {
     const waiting = file_write_queue;
     file_write_queue = [];
     if (file_write_current) file_write_current.finish(error);
-    waiting.forEach(entry => {
-        try { entry.error_cb(error, entry.file); }
-        finally {
-            if (entry.done_cb) entry.done_cb();
-            if (entry.completion) entry.completion();
-        }
-    });
+    waiting.forEach(entry => complete_file_entry(entry, error));
 }
 
 

@@ -9,6 +9,21 @@ static void app_settings_on_run(mini_app_inst_t *p_app_inst);
 static void app_settings_on_kill(mini_app_inst_t *p_app_inst);
 static void app_settings_on_event(mini_app_inst_t *p_app_inst, mini_app_event_t *p_event);
 
+/* Shared by both settings scenes instead of duplicating this code in flash. */
+int32_t settings_storage_snapshot_read(settings_storage_snapshot_t *snapshot,
+                                       vfs_driver_t *driver, vfs_stat_t *stat) {
+    if (!snapshot->valid || snapshot->driver != driver) {
+        vfs_stat_t fresh = {0};
+        snapshot->result = driver && driver->stat ? driver->stat(&fresh) : VFS_ERR_NODEV;
+        /* Do not retain partially filled values after a failed measurement. */
+        snapshot->stat = snapshot->result == VFS_OK ? fresh : (vfs_stat_t){0};
+        snapshot->driver = driver;
+        snapshot->valid = true;
+    }
+    *stat = snapshot->stat;
+    return snapshot->result;
+}
+
 void app_settings_on_run(mini_app_inst_t *p_app_inst) {
 
     app_settings_t *p_app_handle = mui_mem_malloc(sizeof(app_settings_t));
@@ -84,7 +99,7 @@ void app_settings_on_kill(mini_app_inst_t *p_app_inst) {
     }
     if (!p_app_handle) return;
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
-    mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_WINDOW);
+    mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);
 
     mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);
     mui_list_view_free(p_app_handle->p_list_view);

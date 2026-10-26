@@ -6,6 +6,10 @@
 #include "settings.h"
 #include "nrf_power.h"
 #include "tag_helper.h"
+#include "ntag_emu.h"
+#ifdef VFS_PACKED_LFS_ENABLE
+#include "vfs_packed_runtime.h"
+#endif
 
 mini_app_launcher_t *mini_app_launcher() {
     static mini_app_launcher_t launcher;
@@ -45,8 +49,15 @@ static mini_app_inst_t *mini_app_launcher_inst_run(mini_app_launcher_t *launcher
     return inst;
 }
 void mini_app_launcher_run_with_retain_data(mini_app_launcher_t *launcher, uint32_t id, uint8_t *retain) {
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required() && id != MINI_APP_ID_BLE && id != MINI_APP_ID_STATUS_BAR) {
+        id = MINI_APP_ID_BLE;
+        retain = NULL;
+    }
+#endif
     const mini_app_t *app = mini_app_registry_find_by_id(id);
     if (!app) return;
+    if (!app->deamon && !ntag_emu_prepare_change()) return;
     if (!app->deamon && launcher->p_main_app_inst) {
         mini_app_launcher_inst_kill(launcher, launcher->p_main_app_inst);
         launcher->p_main_app_inst = NULL;
@@ -62,6 +73,7 @@ void mini_app_launcher_kill(mini_app_launcher_t *launcher, uint32_t id) {
     mini_app_inst_t *inst = mini_app_launcher_find(launcher, id);
     if (!inst) return;
     bool was_main = inst == launcher->p_main_app_inst;
+    if (was_main && !ntag_emu_prepare_change()) return;
     mini_app_launcher_inst_kill(launcher, inst);
     if (was_main) {
         launcher->p_main_app_inst = NULL;
@@ -87,6 +99,12 @@ void mini_app_launcher_init(mini_app_launcher_t *p_launcher, uint32_t wakeup_rea
     p_launcher->p_main_app_inst = NULL;
 
     mini_app_launcher_run(p_launcher, MINI_APP_ID_STATUS_BAR);
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required()) {
+        mini_app_launcher_run(p_launcher, MINI_APP_ID_BLE);
+        return;
+    }
+#endif
 
     cache_data_t *p_cache = cache_get_data();
     settings_data_t *p_settings = settings_get_data();

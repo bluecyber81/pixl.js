@@ -1,44 +1,57 @@
-# Allmiibo Dateimanager DE3.12
+# Allmiibo Dateimanager 3.27.0
 
-Local browser companion for the custom Allmiibo LCD DE3.12 release, based on Pixl.js. This application runs on the PC. It is separate from the LCD firmware OTA and does not replace an installed bootloader or Nordic SoftDevice. Original Pixl.js authorship and GPL licensing remain applicable.
+Browser software for file transfer, ZIP backup/import, storage migration and device diagnostics.
+This folder is the companion application, not firmware to flash on the Allmiibo.
 
-## Start the delivered application
+## Ready-built download / Fertiges Paket
 
-Use `Start-Dateimanager.cmd` in the delivered directory containing `dist/`. It starts the existing local Python runtime, binds only to `127.0.0.1:8765` and opens the browser. Use Chrome or Edge for Web Bluetooth. Select the device yourself when connecting; simply opening the application performs no device write. Direct `file://` opening is not supported.
+Download `Allmiibo_Dateimanager_3_27_0_PUBLIC.zip` from the
+[DE3.37 release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.37).
+Extract the complete ZIP. On Windows with Python 3 installed, run
+`Start_8768.cmd` and open http://127.0.0.1:8768/ in a browser supporting Web Bluetooth.
+On other systems: `python serve_local.py --port 8768 --directory dist`.
+Use a single browser/client connection to the device. A VPN does not extend Bluetooth range.
+No installation, formatting, migration, flashing or device connection happens merely by serving the page.
 
-Use `Stop-Dateimanager.cmd` to stop the matching local server. There is no autostart, background schedule, firewall change or global package installation. PowerShell users may set `-Port 8766` or `-NoBrowser` on the start script. The launcher prefers the existing Agent-Tools Python environment, then Scoop Python, and rejects the Windows Store alias.
+## Build from this source
 
-## Modernized build
-
-The application uses Vue 3, Element Plus, Vue I18n and Vite. Obsolete Vue 2, Element UI and Webpack 2 tooling is replaced. Exact dependency versions and integrities are recorded in `package-lock.json`; use npm rather than the old Yarn workflow. See `package.json` for the supported Node version.
+Node.js >=22.12.0 is required. The lockfile pins dependencies.
 
 ```sh
-npm ci --ignore-scripts --no-audit --no-fund
+npm ci
 npm test
 npm run build
 ```
 
-The delivered `dist/` is already built; installing npm dependencies is not required for normal use. Development and preview servers must stay on loopback.
+The build also runs seven production-worker/WASM checks. Serve `dist` as above.
+The Git source tree does not include a prebuilt `dist`; the downloadable ready-built ZIP does.
 
-## Reliability changes
+## Current changes
 
-- Wait for notification readiness before announcing a BLE connection; clean up failed/cancelled connection attempts and copy exactly the received DataView.
-- Assemble ordered response chunks, preserve terminal error status and reject malformed, incomplete or timed-out exchanges. Wait for both the GATT write and final response before completing a command.
-- Reject active and queued work on disconnect. Prevent stale callbacks from a prior connection from altering a new transfer.
-- Serialize complete downloads and uploads around the device's single file handle; check OPEN, READ, WRITE and CLOSE status before reporting success.
-- Release failed FileReader work so that later queued uploads can proceed.
-- Use a browser-native event dispatcher instead of a Node events polyfill.
-- Detect German correctly, persist supported language selections locally and tolerate blocked browser storage. No remote analytics or MAC-address telemetry is included.
-- Preserve unknown/system metadata flags, enforce the firmware's 89-byte UTF-8 notes limit, and isolate malformed metadata records without corrupting the directory view.
-- Keep file actions keyboard-accessible, label available storage correctly, and expose the external DFU page independently of the device-mode command.
-- Negotiate request fragmentation with DE3.10 before reading the version. Long requests and replies can be split for the minimum ATT MTU23. Use the device-advertised GATT value limit when valid and fall back to 20-byte values when it is unavailable. Older firmware retains legacy request framing.
-- Match the firmware's stored-path budget: up to 63 UTF-8 bytes after the two-byte drive label, and up to 47 bytes for a file name.
-- Decode device strings strictly and preserve a leading UTF-8 BOM in file names. Invalid UTF-8 rejects the directory response with an error and leaves no actionable rows; it must never silently select a different file. Healthy directories remain usable. This does not repair malformed stored names.
+- ZIP imports recheck small folder records before committing metadata, preserving concurrent note/read-only changes.
+- Closed IndexedDB recovery storage can be reopened on the next action; failed writes are not replayed automatically.
+- Deliberate idle disconnections are informational; unexpected or pending-transfer disconnects remain errors.
+- Unsupported optional energy queries do not produce a false device-status failure.
+- Migration advice distinguishes inaccessible recovery records, a mismatched receipt and missing firmware capabilities.
+- The local component target is DE3.37/609, BL6 and S112 7.3.0; this is not an online update check.
+- The current capacity profile accepts the explicit DE3.36/608 and DE3.37/609 identities for the unchanged storage engine.
 
-The legacy `fw/scripts/fw_update.bat` factory-flash helper is deliberately disabled. It previously erased hardware before verifying that a complete firmware image was available. This application-only package supplies no verified complete factory image or board-specific recovery procedure. Use its application OTA ZIP; the disabled helper performs no download or hardware command.
+## Storage / Speicherumstellung
 
-## Validation boundaries
+Existing Packed LittleFS PFS1 devices do not need to be formatted again for DE3.37.
+SPIFFS and upstream standard LittleFS are different formats: see
+[migration scope](../docs/MIGRATION_PFS1.md).
+Restoration transfers files and performs one final full content/Raw128 comparison;
+the additional full comparison before restoration remains optional.
+Never install the historical SPIFFS preparation firmware merely because a query failed on an already migrated device.
 
-Production-module tests use mocked GATT and FileReader. UI checks and a successful production build do not prove a physical Bluetooth/NFC transfer. Refer to the DE3.12 release receipts for the checks actually completed, exact counts and outstanding findings; prior physical DE3.10 results are not proof of a DE3.12 device test.
+## Export and verification
 
-The DFU page link opens the existing external thegecko flasher even without a connected device. The separate device-mode button requests entry into DFU mode. This is not a new DFU implementation and does not fix that external page's historical CRC/false-success issue. A disconnect during the entry command can leave its result ambiguous even if the device entered DFU. MTU23 operation is host-tested with the matching DE3.10 firmware; physical radio tests remain pending. Web Bluetooth does not expose the negotiated ATT MTU, so the device's reported limit is not a browser measurement. Do not expose the local server publicly. The firmware package and browser application have separate roles.
+Diagnostics can be previewed/copied and saved using browser-supported file/download mechanisms.
+An initiated download is not proof of a saved file. If an embedded browser blocks the download,
+the user-confirmed workaround is opening the manager in desktop Chrome.
+
+659 host tests and seven production-worker checks passed for this version.
+Simulated races and failures are not a complete physical device/migration test.
+See [German usage notes](LIESMICH_3_27_0.txt), [component notices](third-party/npm/SOURCES.json)
+and the top-level third-party notices. Original component licenses remain applicable.

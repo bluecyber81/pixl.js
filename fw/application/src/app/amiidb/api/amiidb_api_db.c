@@ -48,9 +48,9 @@ static int compare_amiibo(const db_amiibo_t *a, const db_amiibo_t *b) {
     return (a->tail > b->tail) - (a->tail < b->tail);
 }
 
-int32_t amiidb_api_db_search_page(const char *search, uint8_t game_id, uint16_t page,
-                                const db_amiibo_t **items, uint16_t *total) {
-    if (!search || !items || !total || amiibo_list_size > QUERY_MAX_IDS) return -1;
+int32_t amiidb_api_db_search_window(const char *search, uint8_t game_id, uint32_t offset,
+                                  uint16_t limit, const db_amiibo_t **items, uint16_t *total) {
+    if (!search || !items || !total || limit > AMIIDB_RESULT_PAGE_SIZE || amiibo_list_size > QUERY_MAX_IDS) return -1;
     *total = 0;
     size_t query_length = 0;
     while (query_length <= AMIIDB_SEARCH_MAX_BYTES && search[query_length]) query_length++;
@@ -64,32 +64,76 @@ int32_t amiidb_api_db_search_page(const char *search, uint8_t game_id, uint16_t 
             !contains_text(item->name_en, search) && !contains_text(item->name_cn, search)) continue;
         bool linked = game_id == 0;
         for (const db_link_t *link = link_list; !linked && link->game_id; link++) {
-            if (link->head == item->head && link->tail == item->tail && game_contains(game_id, link->game_id)) linked = true;
+            if (link->amiibo_index == i && game_contains(game_id, link->game_id)) linked = true;
         }
         if (linked) { matches[i / 8] |= 1u << (i % 8); (*total)++; }
     }
-    if (!*total) return 0;
-    uint16_t final_page = (*total - 1) / AMIIDB_RESULT_PAGE_SIZE;
-    if (page > final_page) page = final_page;
+    if (!limit || offset >= *total) return 0;
     const db_amiibo_t *after = NULL;
     uint16_t count = 0;
-    /* Repeated bounded top-100 selection avoids a 950-pointer allocation. */
-    for (uint16_t current = 0; current <= page; current++) {
+    /* Skip bounded sorted chunks; never materialize the whole catalog. */
+    for (;;) {
+        uint16_t take = offset ? (offset < AMIIDB_RESULT_PAGE_SIZE ? offset : AMIIDB_RESULT_PAGE_SIZE) : limit;
         count = 0;
         for (size_t i = 0; i < amiibo_list_size; i++) {
             const db_amiibo_t *item = &amiibo_list[i];
             if (!(matches[i / 8] & (1u << (i % 8))) || (after && compare_amiibo(item, after) <= 0)) continue;
             uint16_t pos = 0;
             while (pos < count && compare_amiibo(items[pos], item) < 0) pos++;
-            if (pos >= AMIIDB_RESULT_PAGE_SIZE) continue;
-            if (count < AMIIDB_RESULT_PAGE_SIZE) count++;
+            if (pos >= take) continue;
+            if (count < take) count++;
             memmove(items + pos + 1, items + pos, (count - pos - 1) * sizeof(*items));
             items[pos] = item;
         }
         if (!count) return 0;
+        if (!offset) return count;
         after = items[count - 1];
+        offset -= count;
     }
+}
+
+
+int32_t amiidb_api_db_search_page(const char *search, uint8_t game_id, uint16_t page,
+                                const db_amiibo_t **items, uint16_t *total) {
+    int32_t count = amiidb_api_db_search_window(search, game_id, (uint32_t)page * AMIIDB_RESULT_PAGE_SIZE,
+                                               AMIIDB_RESULT_PAGE_SIZE, items, total);
+    if (count == 0 && *total && page)
+        count = amiidb_api_db_search_window(search, game_id,
+                ((uint32_t)(*total - 1) / AMIIDB_RESULT_PAGE_SIZE) * AMIIDB_RESULT_PAGE_SIZE,
+                AMIIDB_RESULT_PAGE_SIZE, items, total);
     return count;
+}
+
+static int compare_game(const db_game_t *a, const db_game_t *b, bool by_name) {
+    if (!by_name && a->order != b->order) return a->order > b->order ? -1 : 1;
+    int names = strcmp(a->name_en, b->name_en);
+    return names ? names : (int)a->game_id - (int)b->game_id;
+}
+
+int32_t amiidb_api_db_game_window(uint8_t parent, bool all, bool by_name, uint32_t offset,
+                                uint16_t limit, const db_game_t **items, uint16_t *total) {
+    if (!items || !total || limit > AMIIDB_RESULT_PAGE_SIZE) return -1;
+    *total = 0;
+    for (const db_game_t *g = game_list; g->game_id; g++)
+        if (all || g->parent_game_id == parent) (*total)++;
+    if (!limit || offset >= *total) return 0;
+    const db_game_t *after = NULL;
+    for (;;) {
+        uint16_t take = offset ? (offset < AMIIDB_RESULT_PAGE_SIZE ? offset : AMIIDB_RESULT_PAGE_SIZE) : limit;
+        uint16_t count = 0;
+        for (const db_game_t *g = game_list; g->game_id; g++) {
+            if ((!all && g->parent_game_id != parent) || (after && compare_game(g, after, by_name) <= 0)) continue;
+            uint16_t pos = 0;
+            while (pos < count && compare_game(items[pos], g, by_name) < 0) pos++;
+            if (pos >= take) continue;
+            if (count < take) count++;
+            memmove(items + pos + 1, items + pos, (count - pos - 1) * sizeof(*items));
+            items[pos] = g;
+        }
+        if (!count || !offset) return count;
+        after = items[count - 1];
+        offset -= count;
+    }
 }
 
 int32_t amiidb_api_db_search(const char *search, amiidb_db_search_cb_t cb, void *ctx) {

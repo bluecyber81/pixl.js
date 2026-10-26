@@ -6,6 +6,7 @@
 #include "nrf_drv_saadc.h"
 #include "nrf_gpio.h"
 #include "settings.h"
+#include "mod/runtime_diag.h"
 #include <stddef.h>
 
 #define ADC_CHANNEL 0
@@ -133,6 +134,11 @@ bool get_stats(void) { return bat_has_reading() && sample_lipo && chrg.stats == 
 bool bat_is_low(void) { return bat_has_reading() && low_voltage && !get_stats(); }
 void chrg_set_callback(chrg_data_cb_t cb) { chrg.callback = cb; }
 
+static void bat_diagnostic_sample(void) {
+    runtime_diag_power_sample(bat_get_voltage_mv(), bat_has_reading(), settings_get_data()->bat_mode,
+                              get_stats(), settings_get_data()->sleep_timeout_sec);
+}
+
 static void chrg_read(void *p_context) {
     (void)p_context;
     uint8_t old_level = bat_get_level();
@@ -141,6 +147,7 @@ static void chrg_read(void *p_context) {
     bool old_low = bat_is_low();
     bool old_valid = bat_has_reading();
     bat_measure();
+    bat_diagnostic_sample();
     if (chrg.callback && (old_level != bat_get_level() || old_charging != get_stats() ||
                           old_low != bat_is_low() || old_valid != bat_has_reading() ||
                           old_voltage != bat_get_voltage_mv() / 10)) {
@@ -150,6 +157,7 @@ static void chrg_read(void *p_context) {
 
 void chrg_init(void) {
     bat_measure();
+    bat_diagnostic_sample();
     ret_code_t error = app_timer_create(&m_chrg_timer, APP_TIMER_MODE_REPEATED, chrg_read);
     APP_ERROR_CHECK(error);
     error = app_timer_start(m_chrg_timer, APP_TIMER_TICKS(1000), NULL);

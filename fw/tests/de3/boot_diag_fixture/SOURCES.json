@@ -1,0 +1,29 @@
+{
+  "sdk_image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "files": {
+    "sha256.c": {
+      "source": "external/mbedtls/library/sha256.c",
+      "sha256": "04561d779c0e1e061230b8adad91ad182b7434012fd880e06999f9d509d3266f"
+    },
+    "mbedtls/sha256.h": {
+      "source": "external/mbedtls/include/mbedtls/sha256.h",
+      "sha256": "75e55fb61fc18e61b86379db673ddc3d15e59197f5ea54f2088ed3b4ddd40ae8"
+    },
+    "mbedtls/platform_util.h": {
+      "source": "external/mbedtls/include/mbedtls/platform_util.h",
+      "sha256": "0a39ec8a5a695725110e2a6fe1bf3a51f5195ac21cdcc07688770730f3b2d180"
+    },
+    "nrf_dfu_types.h": {
+      "source": "components/libraries/bootloader/dfu/nrf_dfu_types.h",
+      "sha256": "3e05148b5b2f0205c7181bd1ffebd9fce518048fa28a99bbd12a3b2d7355a952"
+    },
+    "crc32.c": {
+      "source": "components/libraries/crc32/crc32.c",
+      "sha256": "fbadf2662cd3488c74ddb9212e789a81b20020ca304757498e39121182c6ad25"
+    },
+    "crc32.h": {
+      "source": "components/libraries/crc32/crc32.h",
+      "sha256": "e8512e9fa278780fb6329ae585ab32ffd7c76a435fe10fb57f5ced27008a4dda"
+    }
+  }
+}

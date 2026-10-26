@@ -1,5 +1,6 @@
 #include "ble_work.h"
 #include "app_util_platform.h"
+#include "../runtime_diag.h"
 #include <string.h>
 
 typedef struct {
@@ -54,6 +55,7 @@ static bool enqueue(const uint8_t *data, size_t length, bool tx_ready) {
                count == BLE_WORK_CAPACITY) {
         /* Never silently lose a request or allocate in an IRQ. The caller
          * disconnects; main closes the old stream before another session. */
+        runtime_diag_ble_abort(count == BLE_WORK_CAPACITY ? RUNTIME_DIAG_QUEUE_OVERFLOW : RUNTIME_DIAG_PROTOCOL);
         invalidate();
         accepting = false;
         ok = false;
@@ -77,6 +79,14 @@ bool ble_work_can_send(void) {
     bool result;
     CRITICAL_REGION_ENTER();
     result = accepting && (!dispatching || dispatch_generation == generation);
+    CRITICAL_REGION_EXIT();
+    return result;
+}
+
+bool ble_work_cleanup_complete(void) {
+    bool result;
+    CRITICAL_REGION_ENTER();
+    result = !cleanup_pending && !dispatching;
     CRITICAL_REGION_EXIT();
     return result;
 }

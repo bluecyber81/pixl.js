@@ -1,6 +1,9 @@
 #include "vfs_persist.h"
 #include <stddef.h>
 #include <string.h>
+#ifdef VFS_PACKED_LFS_ENABLE
+#include "lfs_util.h"
+#endif
 
 #define RECORD_MAGIC 0x31524750u /* PGR1 */
 #define PENDING_MAGIC 0x31545050u /* PPT1 */
@@ -27,7 +30,9 @@ _Static_assert(sizeof(pending_t) == 80, "pending layout changed");
 static const vfs_driver_t *public_fs, *raw_fs;
 static bool busy;
 static uint8_t external_writers;
+#ifndef VFS_PACKED_LFS_ENABLE
 static const uint8_t hidden_meta[VFS_MAX_META_LEN] = {2, 2, 3}; /* flags: hidden + system */
+#endif
 
 void vfs_persist_bind(const vfs_driver_t *driver, const vfs_driver_t *raw) {
     public_fs = driver;
@@ -42,12 +47,16 @@ void vfs_persist_unmounted(const vfs_driver_t *driver) {
 }
 
 static uint32_t crc_step(uint32_t crc, const void *data, size_t size) {
+#ifdef VFS_PACKED_LFS_ENABLE
+    return lfs_crc(crc, data, size);
+#else
     const uint8_t *p = data;
     while (size--) {
         crc ^= *p++;
         for (unsigned i = 0; i < 8; ++i) crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1)));
     }
     return crc;
+#endif
 }
 static uint32_t crc_bytes(const void *data, size_t size) { return ~crc_step(~0u, data, size); }
 
@@ -151,6 +160,7 @@ static int32_t reusable_record(const char *name) {
     const uint32_t expected = RECORD_MAGIC;
     return n <= sizeof(magic) && memcmp(&magic, &expected, (size_t)n) == 0 ? VFS_OK : VFS_ERR_CRPT;
 }
+#ifndef VFS_PACKED_LFS_ENABLE
 static int32_t write_record(const char *name, const record_t *record, const void *data, bool from_file) {
     vfs_file_t out, in;
     bool opened_in = false;
@@ -177,6 +187,20 @@ static int32_t write_record(const char *name, const record_t *record, const void
     if (opened_in) result = close_result(&in, result);
     result = close_result(&out, result);
     if (result == VFS_OK) result = raw_fs->update_file_meta(name, (void *)hidden_meta, sizeof(hidden_meta));
+    return result;
+}
+#endif
+static int32_t verify_file(const char *path, size_t size, uint32_t expected_crc,
+                           const uint8_t *meta) {
+    uint32_t crc;
+    int32_t result = file_crc(path, 0, size, &crc);
+    if (result == VFS_OK && crc != expected_crc) result = VFS_ERR_CRPT;
+    if (result == VFS_OK) {
+        vfs_obj_t obj;
+        result = raw_fs->stat_file(path, &obj);
+        if (result == VFS_OK && (obj.type != VFS_TYPE_REG || obj.size != size ||
+            memcmp(obj.meta, meta, VFS_MAX_META_LEN))) result = VFS_ERR_CRPT;
+    }
     return result;
 }
 static int32_t apply_record(const char *name, const record_t *record) {
@@ -209,16 +233,7 @@ static int32_t apply_record(const char *name, const record_t *record) {
     if (result != VFS_OK) return result;
     result = raw_fs->update_file_meta(record->path, (void *)record->meta, sizeof(record->meta));
     if (result != VFS_OK) return result;
-    uint32_t crc;
-    result = file_crc(record->path, 0, record->size, &crc);
-    if (result == VFS_OK && crc != record->data_crc) result = VFS_ERR_CRPT;
-    if (result == VFS_OK) {
-        vfs_obj_t obj;
-        result = raw_fs->stat_file(record->path, &obj);
-        if (result == VFS_OK && (obj.type != VFS_TYPE_REG || obj.size != record->size ||
-            memcmp(obj.meta, record->meta, sizeof(record->meta)))) result = VFS_ERR_CRPT;
-    }
-    return result;
+    return verify_file(record->path, record->size, record->data_crc, record->meta);
 }
 static int32_t recover_locked(void) {
     pending_t pending;
@@ -277,6 +292,38 @@ int32_t vfs_persist_writer_begin(const vfs_driver_t *driver, const char *path) {
 void vfs_persist_writer_end(const vfs_driver_t *driver) {
     if (driver == public_fs && external_writers) --external_writers;
 }
+#ifdef VFS_PACKED_LFS_ENABLE
+/* Only the PackedFS adapter implements this private, ownership-checked entry.
+ * It stages data and all metadata before one manifest publication. */
+extern int32_t vfs_packed_persist_replace(const char *path, const void *data,
+                                         size_t size, const uint8_t *meta);
+static int32_t write_locked(const char *path, const void *data, size_t size, const uint8_t *meta) {
+    /* Upgrades may retain an interrupted journal from older applications.
+     * Finish that exact recovery contract before any new atomic replacement. */
+    int32_t result = recover_locked();
+    if (result != VFS_OK) return result;
+    result = reusable_record(OLD_RECORD);
+    if (result == VFS_OK) result = reusable_record(NEW_RECORD);
+    if (result != VFS_OK) return result;
+    vfs_obj_t obj;
+    uint8_t committed_meta[VFS_MAX_META_LEN] = {0};
+    result = raw_fs->stat_file(path, &obj);
+    if (result == VFS_OK) {
+        if (obj.type != VFS_TYPE_REG || obj.size > VFS_PERSIST_MAX_DATA) return VFS_ERR_UNSUPT;
+        memcpy(committed_meta, obj.meta, sizeof(committed_meta));
+    } else if (result != VFS_ERR_NOOBJ) return result;
+    if (meta) memcpy(committed_meta, meta, sizeof(committed_meta));
+    /* PackedFS validates every old record during rebuild, including the one
+     * being replaced. No old payload CRC is skipped by avoiding the journal. */
+    result = vfs_packed_persist_replace(path, data, size, committed_meta);
+    if (result < 0) return result;
+    if ((size_t)result != size) return VFS_ERR_FAIL;
+    /* Publication is already durable. A failed readback is an error, never a
+     * signal to roll back, re-publish, or pretend the old value is installed. */
+    result = verify_file(path, size, crc_bytes(data, size), committed_meta);
+    return result == VFS_OK ? (int32_t)size : result;
+}
+#else
 static int32_t write_locked(const char *path, const void *data, size_t size, const uint8_t *meta) {
     int32_t result = recover_locked();
     if (result != VFS_OK) return result;
@@ -330,6 +377,7 @@ static int32_t write_locked(const char *path, const void *data, size_t size, con
     if (result == VFS_OK) result = clear_pending();
     return result == VFS_OK ? (int32_t)size : result;
 }
+#endif
 int32_t vfs_persist_write_meta(vfs_driver_t *driver, const char *path, const void *data, size_t size,
                                const uint8_t *meta) {
     if (!driver || driver != public_fs || !raw_fs) return VFS_ERR_UNSUPT;
