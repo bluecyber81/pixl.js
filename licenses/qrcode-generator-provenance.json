@@ -1,0 +1,16 @@
+{
+  "name": "qrcode-generator",
+  "version": "2.0.4",
+  "license": "MIT",
+  "source": "https://github.com/kazuhikoarase/qrcode-generator/tree/83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8",
+  "npmArchive": "https://registry.npmjs.org/qrcode-generator/-/qrcode-generator-2.0.4.tgz",
+  "npmIntegrity": "sha512-mZSiP6RnbHl4xL2Ap5HfkjLnmxfKcPWpWe/c+5XxCuetEenqmNFf1FH/ftXPCtFG5/TDobjsjz6sSNL0Sr8Z9g==",
+  "files": {
+    "LICENSE": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+    "package.json": "0c8db18ad7f1b9dece93dd87dc0624be938f9b9b21e93c0f78e6e2d194ac10e9",
+    "qrcode.mjs": "ea91d7118a5395289170da848b7c6758b996163bfbccf312591ab65a4911b7c0",
+    "README.md": "e2e665eb157725a8543c37951b064f58c564eb38f8507bf34309c39f58db6003"
+  },
+  "scope": "Unmodified ESM encoder only; no runtime dependencies; offline public figure info QR, never tag data.",
+  "checkedDate": "2026-10-24"
+}

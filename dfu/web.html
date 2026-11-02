@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Allmiibo DFU 3.32.5</title>
+  <link rel="stylesheet" href="updater.css">
+</head>
+<body>
+<main>
+  <a href="../" class="back-link">← Zurück zum Dateimanager</a>
+  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.32.5</p>
+  <h1>Firmware übertragen</h1>
+  <p class="notice"><strong>Deine Sammlung bleibt erhalten.</strong> Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</p>
+  <section>
+    <h2>1. Update auswählen</h2>
+    <label for="bundled">Mitgeliefertes Paket</label>
+    <select id="bundled" disabled><option value="">Kein mitgeliefertes Paket</option></select>
+    <button id="load-bundled" type="button" disabled>Paket laden und prüfen</button>
+    <button id="cancel-bundled" type="button" hidden>Auswahl abbrechen</button>
+    <p id="bundled-info" role="status">Lokale Paketliste, keine Online-Updatesuche. Für unser LCD-Gerät mit PFS1, BL8 und S112 7.3.0. Gerätekompatibilität wird hier nicht automatisch ausgelesen.</p>
+    <p>Das mitgelieferte Paket laden oder eine passende Anwendungs-ZIP von deinem Computer oder Handy wählen.</p>
+    <label for="file">Eigene Firmware-ZIP</label>
+    <input id="file" type="file" accept=".zip,application/zip">
+    <details><summary>Welche Pakete passen?</summary><p>Das mitgelieferte Paket gehört zu unserem Allmiibo LCD mit PFS1, BL8 und S112 7.3.0. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p>Beim Laden kontrolliert die Seite die ZIP-Prüfsumme. Der Bootloader prüft beim Übertragen Signatur und Versionszähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
+  </section>
+  <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/web3.32.5/Allmiibo_DE3_55_Quellcode.zip" target="_blank" rel="noopener noreferrer">Quellcode der mitgelieferten Firmware DE3.55 herunterladen</a></p>
+  <section>
+    <h2>2. Gerät auswählen und übertragen</h2>
+    <p>Am Allmiibo „Firmware flashen“ öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>
+    <button id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
+    <p id="capability"></p>
+    <progress id="progress" max="100" value="0" hidden></progress>
+    <p id="transfer"></p>
+    <p id="status" role="status" aria-live="polite">Noch kein Paket ausgewählt.</p>
+  </section>
+  <section>
+    <h2>3. Neustart prüfen</h2>
+    <p>Nach dem Update erscheint wieder das normale Menü. Dort die neue Version prüfen. Für den Dateimanager anschließend „Bluetooth-Dateiübertragung“ öffnen.</p>
+  </section>
+  <footer>Lokale Dateien, keine Cloud-Übertragung. <a href="../licenses/index.html">Quellen &amp; Lizenzen</a></footer>
+</main>
+<script src="vendor/crc32.js"></script>
+<script src="vendor/jszip-3.10.2.min.js"></script>
+<script src="secure-dfu.js"></script>
+<script src="package.js"></script>
+<script src="updater.js"></script>
+<script src="../firmware/releases.js"></script>
+<script src="bundled-packages.js"></script>
+<script src="page.js"></script>
+</body>
+</html>
