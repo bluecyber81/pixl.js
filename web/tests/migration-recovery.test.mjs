@@ -7,7 +7,7 @@ import {decodeRawMetadata} from '../src/lib/raw-metadata.js'
 import {migrationStagingPlan} from '../src/lib/migration-staging.js'
 import {matchMigrationLayout,checkImportState} from '../src/lib/migration-layout.js'
 import {simulateCapacityInWorker} from '../src/lib/migration-capacity-worker-client.js'
-const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.1.min.js')
+const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js')
 const layout={schema:1,drive:'E',backend:3,magic:0x31534650,flashBytes:2097152,blockSize:4096,blockCount:512,
   readSize:256,progSize:256,cacheSize:256,metadataBytes:128,shardTarget:32768,maxShards:64,pathCap:64,nameCap:48,maxHandles:8,flags:7,engineSha256:'c'.repeat(64)}
 const profile={approved:true,layout,firmwareVersion:'2.22.0-DE3.31',applicationCounter:603,wasmSha256:'d'.repeat(64)}
@@ -156,8 +156,8 @@ test('3.25.5 approved migration pairs are exact and preserve all geometry/CRC ga
  assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true,engineSha256:'f'.repeat(64)},{firmwareVersion:'2.22.0-DE3.32',applicationCounter:604,settingsCrcValid:true},target))
  assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},{firmwareVersion:'2.22.0-DE3.32',applicationCounter:604,settingsCrcValid:false},target))
 })
-test('3.27 current engine accepts only reviewed DE3.36/608 and DE3.37/609 pairs',async()=>{
- const {MIGRATION_CAPACITY_TARGET:target}=await import('../src/lib/migration-capacity.js')
+test('3.29 previous engine retains only reviewed DE3.36/608 and DE3.37/609 pairs',async()=>{
+ const {PREVIOUS_MIGRATION_CAPACITY_TARGET:target}=await import('../src/lib/migration-capacity.js')
  for(const [firmwareVersion,applicationCounter]of [['2.22.0-DE3.36',608],['2.22.0-DE3.37',609]]){
   const identity={firmwareVersion,applicationCounter,settingsCrcValid:true}
   assert(matchMigrationLayout({...target.layout,mounted:true},identity,target))
@@ -166,6 +166,65 @@ test('3.27 current engine accepts only reviewed DE3.36/608 and DE3.37/609 pairs'
  }
  for(const [firmwareVersion,applicationCounter]of [['2.22.0-DE3.36',609],['2.22.0-DE3.37',608],['2.22.0-DE3.38',610]])
   assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},{firmwareVersion,applicationCounter,settingsCrcValid:true},target),{code:'MIGRATION_LAYOUT'})
+})
+
+test('3.30.1 retained DE344 engine accepts only exact DE3.42/614, DE3.43/615 and DE3.44/616 pairs',async()=>{
+ const {DE344_MIGRATION_CAPACITY_TARGET:target}=await import('../src/lib/migration-capacity.js')
+ const layout={...target.layout,mounted:true}
+ for(const [firmwareVersion,applicationCounter]of [['2.22.0-DE3.42',614],['2.22.0-DE3.43',615],['2.22.0-DE3.44',616]]){
+  const identity={firmwareVersion,applicationCounter,settingsCrcValid:true}
+  assert(matchMigrationLayout(layout,identity,target))
+  for(const changed of [{firmwareVersion:'2.22.0-DE3.41'},{applicationCounter:613},{settingsCrcValid:false}])
+   assert.throws(()=>matchMigrationLayout(layout,{...identity,...changed},target),{code:'MIGRATION_LAYOUT'})
+  for(const changed of [{engineSha256:'f'.repeat(64)},{blockCount:511},{metadataBytes:64}])
+   assert.throws(()=>matchMigrationLayout({...layout,...changed},identity,target),{code:'MIGRATION_LAYOUT'})
+ }
+ for(const [firmwareVersion,applicationCounter]of [['2.22.0-DE3.42',615],['2.22.0-DE3.43',614],['2.22.0-DE3.44',615],['2.22.0-DE3.45',617]])
+  assert.throws(()=>matchMigrationLayout(layout,{firmwareVersion,applicationCounter,settingsCrcValid:true},target),{code:'MIGRATION_LAYOUT'})
+})
+
+test('3.30.1 DE345 and retained DE344 need their exact distinct engine and app identity despite matching geometry',async()=>{
+ const {DE345_MIGRATION_CAPACITY_TARGET:current,DE344_MIGRATION_CAPACITY_TARGET:retained}=await import('../src/lib/migration-capacity.js')
+ const identity={firmwareVersion:'2.22.0-DE3.45',applicationCounter:617,settingsCrcValid:true}
+ const oldIdentity={firmwareVersion:'2.22.0-DE3.44',applicationCounter:616,settingsCrcValid:true}
+ assert.deepEqual(current.geometry,retained.geometry)
+ assert.notEqual(current.layout.engineSha256,retained.layout.engineSha256)
+ assert(matchMigrationLayout({...current.layout,mounted:true},identity,current))
+ assert(matchMigrationLayout({...retained.layout,mounted:true},oldIdentity,retained))
+ for(const changed of [{firmwareVersion:'2.22.0-DE3.44'},{applicationCounter:616},{settingsCrcValid:false}])
+  assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true},{...identity,...changed},current),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...retained.layout,mounted:true},identity,current),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true},oldIdentity,retained),{code:'MIGRATION_LAYOUT'})
+ for(const changed of [{blockCount:511},{metadataBytes:64}])
+  assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true,...changed},identity,current),{code:'MIGRATION_LAYOUT'})
+})
+
+test('3.30.1 DE346 and retained DE345 need their exact distinct engine and app identity despite matching geometry',async()=>{
+ const {DE350_MIGRATION_CAPACITY_TARGET:current,DE345_MIGRATION_CAPACITY_TARGET:retained}=await import('../src/lib/migration-capacity.js')
+ const identity={firmwareVersion:'2.22.0-DE3.46',applicationCounter:618,settingsCrcValid:true}
+ const oldIdentity={firmwareVersion:'2.22.0-DE3.45',applicationCounter:617,settingsCrcValid:true}
+ assert.deepEqual(current.geometry,retained.geometry)
+ assert.notEqual(current.layout.engineSha256,retained.layout.engineSha256)
+ assert(matchMigrationLayout({...current.layout,mounted:true},identity,current))
+ assert(matchMigrationLayout({...retained.layout,mounted:true},oldIdentity,retained))
+ for(const changed of [{firmwareVersion:'2.22.0-DE3.45'},{applicationCounter:617},{settingsCrcValid:false}])
+  assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true},{...identity,...changed},current),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...retained.layout,mounted:true},identity,current),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true},oldIdentity,retained),{code:'MIGRATION_LAYOUT'})
+ for(const changed of [{blockCount:511},{metadataBytes:64}])
+  assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true,...changed},identity,current),{code:'MIGRATION_LAYOUT'})
+})
+
+test('3.30.2 unchanged current engine accepts exact DE346 through DE350 pairs and rejects crossed counters',async()=>{
+ const {DE350_MIGRATION_CAPACITY_TARGET:target}=await import('../src/lib/migration-capacity.js')
+ for(const [version,counter] of [[46,618],[47,619],[48,620],[49,621],[50,622]]) {
+  const identity={firmwareVersion:`2.22.0-DE3.${version}`,applicationCounter:counter,settingsCrcValid:true}
+  assert(matchMigrationLayout({...target.layout,mounted:true},identity,target))
+  for(const other of [618,619,620,621,622].filter(value=>value!==counter))
+   assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},{...identity,applicationCounter:other},target),{code:'MIGRATION_LAYOUT'})
+  assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true,engineSha256:'00'.repeat(32)},identity,target),{code:'MIGRATION_LAYOUT'})
+ }
+ assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},{firmwareVersion:'2.22.0-DE3.51',applicationCounter:623,settingsCrcValid:true},target),{code:'MIGRATION_LAYOUT'})
 })
 
 test('3.25.5 new604 formats bind604; compatible finish preserves an existing603 receipt instead of rewriting its identity',async()=>{
@@ -182,4 +241,43 @@ test('3.25.5 a603 unfinished format receipt cannot authorize a604 format retry o
  f.setIdentity({firmwareVersion:'2.22.0-DE3.32',applicationCounter:604,settingsCrcValid:true});await assert.rejects(f.api.formatMigrationTarget(f.o()),{code:'MIGRATION_TICKET'});assert(!f.events.includes('format'))
  const g=await fixture(true);await g.api.retainMigrationSource({archive:g.archive,report:g.source})
  await assert.rejects(g.api.formatMigrationTarget({...g.o(),confirmFormat:async()=>g.setIdentity({firmwareVersion:'2.22.0-DE3.32',applicationCounter:604,settingsCrcValid:true})}),{code:'MIGRATION_IDENTITY'});assert(!g.events.includes('format'))
+})
+
+
+test('DE351 current profile and retained DE350 cannot cross their application or engine identities',async()=>{
+ const {DE354_MIGRATION_CAPACITY_TARGET:current,DE350_MIGRATION_CAPACITY_TARGET:retained}=await import('../src/lib/migration-capacity.js')
+ const identity={firmwareVersion:'2.22.0-DE3.51',applicationCounter:623,settingsCrcValid:true},old={firmwareVersion:'2.22.0-DE3.50',applicationCounter:622,settingsCrcValid:true}
+ assert.deepEqual(current.geometry,retained.geometry);assert.notEqual(current.layout.engineSha256,retained.layout.engineSha256)
+ assert(matchMigrationLayout({...current.layout,mounted:true},identity,current));assert(matchMigrationLayout({...retained.layout,mounted:true},old,retained))
+ assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true},old,current),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...retained.layout,mounted:true},identity,current),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...current.layout,mounted:true},{...identity,applicationCounter:622},current),{code:'MIGRATION_LAYOUT'})
+})
+
+test('unchanged DE351 through DE354 engine accepts only its four exact application/counter pairs',async()=>{
+ const {DE354_MIGRATION_CAPACITY_TARGET:target}=await import('../src/lib/migration-capacity.js')
+ for(const [firmwareVersion,applicationCounter] of [['2.22.0-DE3.51',623],['2.22.0-DE3.52',624],['2.22.0-DE3.53',625],['2.22.0-DE3.54',626]]){
+  const identity={firmwareVersion,applicationCounter,settingsCrcValid:true}
+  assert(matchMigrationLayout({...target.layout,mounted:true},identity,target))
+  for(const mismatchedCounter of [623,624,625,626,627].filter(value=>value!==applicationCounter))
+   assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},{...identity,applicationCounter:mismatchedCounter},target),{code:'MIGRATION_LAYOUT'})
+  assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},{...identity,settingsCrcValid:false},target),{code:'MIGRATION_LAYOUT'})
+ }
+})
+
+test('DE355 keeps PFS1 geometry but cannot reuse a DE354 capacity or identity proof',async()=>{
+ const {MIGRATION_CAPACITY_TARGET:target,DE354_MIGRATION_CAPACITY_TARGET:previous,getMigrationCapacityTarget}=await import('../src/lib/migration-capacity.js')
+ const current={firmwareVersion:'2.22.0-DE3.55',applicationCounter:627,settingsCrcValid:true}
+ const old={firmwareVersion:'2.22.0-DE3.54',applicationCounter:626,settingsCrcValid:true}
+ assert.equal(getMigrationCapacityTarget(),target);assert.equal(getMigrationCapacityTarget('de354'),previous)
+ assert.deepEqual(target.geometry,previous.geometry)
+ assert.deepEqual({...target.layout,engineSha256:null},{...previous.layout,engineSha256:null})
+ assert.notEqual(target.layout.engineSha256,previous.layout.engineSha256)
+ assert.notEqual(target.wasmSha256,previous.wasmSha256);assert.notEqual(target.url,previous.url)
+ assert(matchMigrationLayout({...target.layout,mounted:true},current,target))
+ assert(matchMigrationLayout({...previous.layout,mounted:true},old,previous))
+ for(const observation of [old,{...current,applicationCounter:626},{...current,settingsCrcValid:false}])
+  assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},observation,target),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...previous.layout,mounted:true},current,target),{code:'MIGRATION_LAYOUT'})
+ assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},old,previous),{code:'MIGRATION_LAYOUT'})
 })

@@ -5,7 +5,7 @@ import { createBackup } from '../src/lib/backup.js'
 import { loadBackupZip, previewZipImport, executeZipImport, ZIP_IMPORT_LIMITS } from '../src/lib/zip-import.js'
 import { sha256Bytes } from '../src/lib/safe-upload.js'
 import { memoryVfs, metadata } from './helpers/memory-vfs.mjs'
-const require = createRequire(import.meta.url), JSZip = require('../public/dfu/vendor/jszip-3.10.1.min.js')
+const require = createRequire(import.meta.url), JSZip = require('../public/dfu/vendor/jszip-3.10.2.min.js')
 const key = 'test-device', encoder = new TextEncoder()
 const preview = (archive, vfs, options = {}) => previewZipImport({ archive, rootPath: 'E:/', deviceKey: key, ...vfs.api, ...options })
 const execute = (plan, vfs, selectedPaths, options = {}) => executeZipImport({ plan, deviceKey: key, selectedPaths, ...vfs.api, ...options })
@@ -193,6 +193,43 @@ test('parse/preview cancellation prevents writes and concurrent imports cannot c
   await assert.rejects(preview(archive, target, { signal: controller.signal }), { name: 'AbortError' }); assert.equal(target.log.length, 0)
   const plan = await preview(archive, target), first = execute(plan, target, ['E:/tags/a.bin'])
   await assert.rejects(execute(plan, target, ['E:/tags/a.bin']), { code: 'ZIP_STALE' }); await first
+})
+
+for (const stage of ['file', 'archive']) {
+  test(`cancellation during the ${stage} SHA-256 does not publish later progress or a verified archive`, async t => {
+    const { result } = await simple(), controller = new AbortController(), progress = []
+    const digest = globalThis.crypto.subtle.digest.bind(globalThis.crypto.subtle)
+    const abortLength = stage === 'file' ? 3 : result.blob.size
+    let interrupted = false
+    t.mock.method(globalThis.crypto.subtle, 'digest', async (algorithm, data) => {
+      const hash = await digest(algorithm, data)
+      if (data.byteLength === abortLength) { interrupted = true; controller.abort() }
+      return hash
+    })
+    await assert.rejects(loadBackupZip(result.blob, { JSZip, signal: controller.signal,
+      onProgress: value => progress.push(value) }), { name: 'AbortError', code: 'ZIP_CANCELLED' })
+    assert.equal(interrupted, true)
+    if (stage === 'file') assert.equal(progress.some(value => value.done === 1), false)
+  })
+}
+
+test('ZIP progress distinguishes parsed files, compared entries and transferred bytes', async () => {
+  const { result } = await simple(), parsing = [], comparing = [], importing = []
+  const archive = await loadBackupZip(result.blob, { JSZip, onProgress: value => parsing.push(value) })
+  assert(parsing.length > 0)
+  assert(parsing.every(value => value.phase === 'parsing' && value.unit === 'files' && value.total === 1))
+  assert.equal(parsing.at(-1).done, 1)
+  const target = memoryVfs(); target.put('E:/tags/a.bin', [9, 8])
+  const plan = await preview(archive, target, { onProgress: value => comparing.push(value) })
+  assert(comparing.length > 0)
+  assert(comparing.every(value => value.phase === 'checking' && value.unit === 'entries' && value.total === archive.entries.length))
+  assert.equal(comparing.at(-1).done, archive.entries.length)
+  await execute(plan, target, ['E:/tags/a.bin'], { onProgress: value => importing.push(value) })
+  assert(importing.some(value => value.phase === 'checking' && value.unit === 'entries'))
+  assert(importing.some(value => value.phase === 'checking' && value.unit === 'bytes' && value.total === 2))
+  const complete = importing.find(value => value.phase === 'complete')
+  assert.equal(complete.unit, 'bytes'); assert.equal(complete.done, 3); assert.equal(complete.total, 3)
+  assert.equal(complete.filesDone, 1); assert.equal(complete.filesTotal, 1)
 })
 
 test('folder-only and empty backups are supported without fabricating files', async () => {

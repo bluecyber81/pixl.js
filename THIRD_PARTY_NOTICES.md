@@ -1,6 +1,6 @@
 # Third-party notices
 
-The DE3.37 source snapshot, application-only firmware, optional BL6 source and Dateimanager 3.27.0 contain components with different licenses. The original top-level GPL version 2 text remains in [LICENSE](LICENSE). This index does not relicense individual components or assert one shared license.
+The DE3.37 source snapshot, application-only firmware, optional BL6 source and the historical Dateimanager 3.27.0 contain components with different licenses. The original top-level GPL version 2 text remains in [LICENSE](LICENSE). This index does not relicense individual components or assert one shared license.
 
 Original source notices remain in place. Additional copies, file hashes, provenance and exact web-package versions are collected in [LICENSES/INVENTORY.json](LICENSES/INVENTORY.json). Keep applicable notices with redistributed source and binary packages.
 
@@ -32,7 +32,9 @@ The three bdfconv executables are font-generation build tools covered by fw/scri
 
 ## Current web and SDK additions
 
-Dateimanager 3.27.0 contains its current pinned dependency notices and provenance in
+The current GitHub Pages website serves Dateimanager 3.32.5. Its exact web/WASM sources and notices are supplied in the [web3.32.5 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.32.5). The optional DE3.55/627 application has a separate corresponding-source archive there; the historical DE3.37 `fw/` tree is not its matching source. The Pages build also includes accessible component license notices. This web publication does not republish BL8 or a SoftDevice binary.
+
+Dateimanager 3.32.5 contains its current pinned dependency notices and provenance in
 [web/third-party/npm/SOURCES.json](web/third-party/npm/SOURCES.json), original notices under
 `web/third-party/npm/licenses/`, and separate AmiiboAPI, QR generator, DFU, JSZip,
 CRC32 and packed-simulator notices in `web/third-party` and `web/public/dfu`.

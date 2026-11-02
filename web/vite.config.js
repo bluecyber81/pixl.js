@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
+import { deploymentBase } from './src/lib/deployment-path.js'
 
 export default defineConfig({
+  base: deploymentBase(process.env.ALLMIIBO_BASE_PATH || '/'),
   plugins: [vue()],
   publicDir: 'public',
   resolve: { alias: { '~': fileURLToPath(new URL('./src', import.meta.url)) } },

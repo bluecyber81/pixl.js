@@ -147,7 +147,11 @@
     async _select(type,total){
       const v=await this.sendControl([6,type]);if(v.byteLength!==12)throw new Error('Invalid DFU SELECT response length');
       const state={maxSize:v.getUint32(0,true),offset:v.getUint32(4,true),crc:v.getUint32(8,true)};
-      if(state.maxSize===0||state.maxSize>16*1024*1024||state.offset>total)throw new Error('Invalid DFU object size or resume offset');return state;
+      // A previous command object may be longer than the newly selected init
+      // packet. It can be replaced after SELECT, as in Nordic pc-nrfutil. Its
+      // offset must still fit the command-object limit. Firmware data offsets
+      // remain bounded to the exact selected image and are never reset here.
+      if(state.maxSize===0||state.maxSize>16*1024*1024||state.offset>(type===1?state.maxSize:total))throw new Error('Invalid DFU object size or resume offset');return state;
     }
     async _create(type,size){if(size<=0)throw new Error('Empty DFU object rejected');const b=new ArrayBuffer(4);new DataView(b).setUint32(0,size,true);await this.sendControl([1,type],b);}
     _checkOffset(v,expectedOffset,type){
@@ -183,7 +187,8 @@
       const bytes=asBytes(input),state=await this._select(1,bytes.length);
       if(bytes.length>state.maxSize)throw new Error('Init packet exceeds bootloader object size');
       let offset=state.offset;
-      if(!offset||state.crc!==this._crc(bytes.subarray(0,offset))){await this._create(1,bytes.length);offset=0;}
+      if(offset>bytes.length)this.log('Ein längeres Init-Paket eines früheren DFU-Versuchs wird neu angelegt. Die Firmwaredaten werden anschließend weiter mit CRC geprüft.');
+      if(!offset||offset>bytes.length||state.crc!==this._crc(bytes.subarray(0,offset))){await this._create(1,bytes.length);offset=0;}
       this.progress('init',bytes.length,offset);
       if(offset<bytes.length)await this._stream(bytes,offset,bytes.length,'init');
       // A complete matching init packet still requires Execute; SELECT alone

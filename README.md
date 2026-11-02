@@ -2,9 +2,24 @@
 
 [Deutsch](README.de.md) · [DE3.37 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.37) · [Changes](CHANGELOG_DE3_SERIES.md) · [Build guide](docs/BUILD_DE3_37.md)
 
-Current application: **2.22.0-DE3.37**, DFU counter **609**. Browser file manager: **3.27.0**. This community fork combines the [cylin577/pixl.js](https://github.com/cylin577/pixl.js) codebase with the DE-series changes and a custom Packed LittleFS storage layer. The original project is [solosky/pixl.js](https://github.com/solosky/pixl.js). This is not an official release from either upstream project.
+Firmware source snapshot under `fw/`: **2.22.0-DE3.37**, DFU counter **609**. The current browser file manager under `web/` is **3.32.5**; the firmware documentation below still describes the DE3.37 release. This community fork combines the [cylin577/pixl.js](https://github.com/cylin577/pixl.js) codebase with the DE-series changes and a custom Packed LittleFS storage layer. The original project is [solosky/pixl.js](https://github.com/solosky/pixl.js). This is not an official release from either upstream project.
 
 **DE3.37 is an application update for matching LCD devices already using this fork's Packed LittleFS (PFS1).** A device still running SPIFFS, including the earlier public DE3.16, requires a separate backup and migration. Upstream's ordinary LittleFS layout is also different. Flashing this application alone does not convert or restore either layout. Read [the storage guide](docs/MIGRATION_PFS1.md) before changing an older device.
+
+## Online file manager 3.32.5
+
+**[Open file manager](https://bluecyber81.github.io/pixl.js/) · [DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable packages and corresponding sources](https://github.com/bluecyber81/pixl.js/releases/tag/web3.32.5)**
+
+The website works without an always-on local server. Chrome on Android or a
+supported computer connects directly to the Allmiibo within Bluetooth range.
+Private figure files and backups are not uploaded to GitHub. See the
+[website guide](docs/DATEIMANAGER_WEB.md) for use, deployment and limitations.
+
+The file manager optionally offers **DE3.55 / 627** for the matching LCD device
+with **Packed LittleFS (PFS1), BL8 and S112 7.3.0**. This is application-only;
+using the file manager does not itself require a firmware update. The exact
+DE3.55 sources are supplied as a separate archive in the linked web release.
+The older `fw/` tree below is **not** the source snapshot for that firmware.
 
 ## Downloads and installation
 

@@ -1,8 +1,7 @@
 .DS_Store
 node_modules/
 dist/
-!tests/dist/
-!tests/dist/*.mjs
+dist-pages/
 npm-debug.log
 .idea
 server.log

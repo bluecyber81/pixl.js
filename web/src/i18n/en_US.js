@@ -55,6 +55,8 @@ export default {
   properties: {
     invalidmeta: 'Damaged or unknown metadata – editing disabled',
     notelimit: 'Notes may contain at most {max} UTF-8 bytes (currently: {actual}).',
+    noteinvalid: 'The note contains a NUL or incomplete Unicode character. Please remove or retype it.',
+    notebytes: '{actual} of {max} bytes. Accented letters and emojis use multiple bytes.',
     title: 'Properties',
     remark: 'Remark',
     entermsg: 'Please enter remarks',

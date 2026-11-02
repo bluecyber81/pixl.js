@@ -1,0 +1,27 @@
+{
+  "provenance": "Read-only owner DE3.48 snapshot, POSTFLASH_DE348_141816.json, 2026-10-29T14:18:16Z, runtime_after. Contains no Bluetooth address or file data.",
+  "firmware": "2.22.0-DE3.48",
+  "hex": "505844470140270016000000010000000000000000000000ac290000ac2900004029000040290000004800008c14000000200000ffffffff0200000000000000",
+  "expected": {
+    "schemaVersion": 1,
+    "scope": "since-device-restart",
+    "lastLocalBleCause": 0,
+    "lastHciReason": 22,
+    "disconnects": 1,
+    "queueOverflows": 0,
+    "timeouts": 0,
+    "allocationFailures": 0,
+    "lastVfsCommand": null,
+    "lastVfsError": null,
+    "heapPoolBytes": 18432,
+    "heapFreeBytes": 10668,
+    "largestFreeBlockBytes": 10560,
+    "sampledMinFreeBytes": 10668,
+    "sampledMinLargestBlockBytes": 10560,
+    "maxAllocatedPayloadBytes": 5260,
+    "stackReservedBytes": 8192,
+    "stackMinFreeBytes": null,
+    "memorySamples": 2,
+    "vfsErrors": 0
+  }
+}

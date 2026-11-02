@@ -1,57 +1,119 @@
-# Allmiibo Dateimanager 3.27.0
+# Dateimanager 3.32.5
 
-Browser software for file transfer, ZIP backup/import, storage migration and device diagnostics.
-This folder is the companion application, not firmware to flash on the Allmiibo.
+Startanleitung und Änderungen: **LIESMICH_3_32_5.txt**.
 
-## Ready-built download / Fertiges Paket
+3.32.5 ergänzt einen getrennten GitHub-Pages-Build für
+https://bluecyber81.github.io/pixl.js/ und erhält den lokalen Portable-Build.
+Firmware-ZIP, sieben Speicherprüfprofile und WASM-Dateien bleiben unverändert.
+Bluetooth funktioniert weiterhin direkt zwischen Browser und Gerät; diese
+Webseite ist keine Funkbrücke zum heimischen Laptop. Sammlungen, Sicherungen
+und Diagnosen werden in diesem Ablauf nicht auf GitHub hochgeladen.
 
-Download `Allmiibo_Dateimanager_3_27_0_PUBLIC.zip` from the
-[DE3.37 release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.37).
-Extract the complete ZIP. On Windows with Python 3 installed, run
-`Start_8768.cmd` and open http://127.0.0.1:8768/ in a browser supporting Web Bluetooth.
-On other systems: `python serve_local.py --port 8768 --directory dist`.
-Use a single browser/client connection to the device. A VPN does not extend Bluetooth range.
-No installation, formatting, migration, flashing or device connection happens merely by serving the page.
+Der Quellbuild ist `npm ci`, `npm test`, `npm run build` (lokal, dist) sowie
+`npm run build:pages` (Projektadresse /pixl.js/, dist-pages). Beide Builds führen
+anschließend ihre eigenen Produktionsprüfungen aus. Nur den Inhalt von
+dist-pages veröffentlichen, weder Quellverzeichnis noch lokale Serverzustände.
+GitHub Pages benötigt den Inhalt direkt im Veröffentlichungswurzelverzeichnis.
+Eine andere Projektadresse benötigt einen eigenen Basis-Build und passende Tests.
+Beide Builds enthalten dieselben Lizenztexte unter „Quellen & Lizenzen“; der
+Build kopiert dafür ausschließlich vorhandene Lizenz- und Quellenhinweise.
 
-## Build from this source
+Figurenlinks ohne Serverweiterleitung funktionieren als
+`/?amiibo=01010000000e0002` oder `/#/a/01010000-000e0002` lokal und entsprechend
+`/pixl.js/?amiibo=01010000000e0002` bzw. `/pixl.js/#/a/01010000-000e0002` online.
+Es sind reine Informationslinks zu amiibo.life, keine Gerätebefehle. Die alte
+lokale Route /a/<8Hex>-<8Hex> bleibt erhalten; auf Pages sind die neuen Links zu
+verwenden. Für den Gerätezugriff braucht der Browser Web Bluetooth und HTTPS
+oder localhost. Die normale Bluetooth-Paarung ist dafür nicht erforderlich.
 
-Node.js >=22.12.0 is required. The lockfile pins dependencies.
+Das mitgelieferte Anwendungsupdate DE3.55/627 ist für unser LCD/PFS1-Gerät mit
+BL8/S112 7.3.0 bestimmt. Kein universelles Paket für alle Allmiibo-Varianten.
+Der genaue Firmwarequellstand ist bei der Paketauswahl und auf der DFU-Seite
+als separater Download verlinkt. Eine neue Seite erteilt noch keine Bluetooth-
+Freigabe: Geräteauswahl und Übertragungsstart erfolgen ausdrücklich im Browser.
 
-```sh
-npm ci
-npm test
-npm run build
-```
+Beibehalten aus 3.32.4:
 
-The build also runs seven production-worker/WASM checks. Serve `dist` as above.
-The Git source tree does not include a prebuilt `dist`; the downloadable ready-built ZIP does.
+3.32.4 ergänzt das getrennt gebundene Speicherprüfprofil für DE3.55/627.
+Der zugehörige WASM-Simulator verwendet exakt den neuen Firmwarekern mit
+optimierter CRC-Berechnung und LittleFS-Verschleißkorrektur. Das PFS1-Datenformat und die
+Speicheraufteilung bleiben gleich. Ein bereits auf Packed LittleFS laufendes
+Gerät benötigt für dieses Anwendungsupdate keine Formatierung oder erneute
+Wiederherstellung. Vorhandene Amiibo-Dateien bleiben auf dem Gerät.
 
-## Current changes
+Unter „Speicherumstellung“ ist DE3.55/627 das neue Standardprüfprofil.
+DE3.51–DE3.54 bleibt separat auswählbar. Alle sechs früheren WASM-Dateien
+und ihre Quellbäume bleiben bytegleich erhalten; das neue Profil ist ein
+siebtes Artefakt. Die Auswahl ist keine Aussage über die installierte Version.
+Version, Anwendungszähler und Engine-Identität müssen weiterhin zusammenpassen.
 
-- ZIP imports recheck small folder records before committing metadata, preserving concurrent note/read-only changes.
-- Closed IndexedDB recovery storage can be reopened on the next action; failed writes are not replayed automatically.
-- Deliberate idle disconnections are informational; unexpected or pending-transfer disconnects remain errors.
-- Unsupported optional energy queries do not produce a false device-status failure.
-- Migration advice distinguishes inaccessible recovery records, a mismatched receipt and missing firmware capabilities.
-- The local component target is DE3.37/609, BL6 and S112 7.3.0; this is not an online update check.
-- The current capacity profile accepts the explicit DE3.36/608 and DE3.37/609 identities for the unchanged storage engine.
+Die folgenden Bibliotheks- und Bedienungsverbesserungen bleiben erhalten:
 
-## Storage / Speicherumstellung
+3.32.3 aktualisiert kompatible Bibliotheks-Patches: Babel-Helfer/-Parser/-Typen,
+tinycolor, PostCSS, Rolldown einschließlich seiner Plattformbindungen und
+vue-component-type-helpers. Rolldown benötigt dazu seine exakt passende
+Build-Typenbibliothek @oxc-project/types 0.156.0. Vue, Element Plus, Vite und
+die Bluetooth-/DFU-Protokolle wechseln nicht auf eine andere Versionsreihe.
+Diese Build-/Bibliothekskorrekturen sind keine gemessene Funkbeschleunigung.
 
-Existing Packed LittleFS PFS1 devices do not need to be formatted again for DE3.37.
-SPIFFS and upstream standard LittleFS are different formats: see
-[migration scope](../docs/MIGRATION_PFS1.md).
-Restoration transfers files and performs one final full content/Raw128 comparison;
-the additional full comparison before restoration remains optional.
-Never install the historical SPIFFS preparation firmware merely because a query failed on an already migrated device.
+Die bisherige nanoid-Lockangabe 3.3.22/URL wurde auf die aktuell offiziell
+verfügbare 3.3.20 berichtigt. Alle 26 installierten Dateien und das Tarball-SRI
+sind bytegleich zum vorher verwendeten Artefakt; dieses deklarierte bereits
+3.3.20. Kein nanoid-Code-Downgrade. Die frühere 3.3.22-Metadatenadresse liefert
+aktuell HTTP404; eine Aussage zur gesamten Veröffentlichungshistorie folgt
+daraus nicht. Eine neue Regression prüft installierte Versionen und Lizenzen
+gegen den Lock ohne Ausnahme für widersprüchliche Versionsangaben.
 
-## Export and verification
+Beibehalten aus 3.32.2 ist unter „Auf dem Gerät suchen“ die freiwillige Inhaltssuche:
+„Figuren auch ohne gespeicherte ID finden“. Ohne Haken bleibt die Suche
+bei Ordnern und Metadaten. Mit Haken liest sie nacheinander höchstens 128
+unterstützte BIN-Dateien (maximal 256 KiB), falls deren Metadaten-ID fehlt und
+Dateiname/Notiz den Suchtext noch nicht erfüllen. Sie ordnet die ID aus
+Bytes 84–91 dem lokalen Katalog zu. Keine Geräteänderung, keine Inhaltsablage,
+keine Internetabfrage; keine NFC-Funktions- oder Signaturprüfung. Grenzen und
+Teilergebnisse werden angezeigt, und die Suche kann abgebrochen werden.
 
-Diagnostics can be previewed/copied and saved using browser-supported file/download mechanisms.
-An initiated download is not proof of a saved file. If an embedded browser blocks the download,
-the user-confirmed workaround is opening the manager in desktop Chrome.
+Ein Upload-Abbruch wird jetzt auch zwischen den Vorprüfungen beachtet:
+Nach einem abgebrochenen Ordnerlesen erscheint kein späterer Überschreiben-
+Dialog. Ein bereits begonnener Commit wird weiterhin sicher abgeschlossen.
 
-659 host tests and seven production-worker checks passed for this version.
-Simulated races and failures are not a complete physical device/migration test.
-See [German usage notes](LIESMICH_3_27_0.txt), [component notices](third-party/npm/SOURCES.json)
-and the top-level third-party notices. Original component licenses remain applicable.
+Beibehalten: 3.32.1 schließt die Auswahlvorschau beim Wechsel zur Laufwerksübersicht und
+beim Löschen ihrer Datei. Vorschau-Aktionen prüfen den aktuellen Ordner und
+die konkrete Zeile; verspätete Klicks auf inzwischen geschlossene Auswahlen
+werden verworfen. Andere ausgewählte Dateien bleiben verfügbar.
+
+3.32.0 ergänzt eine Suche auf dem Gerät, eine direkte Auswahlvorschau und
+eine übersichtlichere Oberfläche. Das Bild einer ausgewählten Figur erscheint
+direkt. Fehlt ihre ID in den Metadaten, wird nur die ausgewählte unterstützte
+Datei gelesen. Ohne die neue ausdrückliche Inhaltssuche werden weiterhin
+ausschließlich Ordner und Metadaten gelesen.
+
+Die lokale Firmwareliste enthält das Anwendungs-ZIP DE3.55/627.
+Paketidentität und Übertragungsbeginn bleiben getrennt: Erst die ausdrückliche
+Geräteauswahl auf der DFU-Seite startet den Transfer. Das ZIP enthält weder
+Bootloader/SoftDevice noch eine Amiibo-Sammlung oder Speicherumstellung.
+
+Das bisherige LittleFS-Profil unterstützt weiterhin die exakten Paare
+DE3.51/623, DE3.52/624, DE3.53/625 und DE3.54/626. Das neue Profil gehört
+ausschließlich zum Paar DE3.55/627 und dessen eigener Engine-Identität.
+
+Mit DE3.51 übernimmt der Dateimanager eine bestehende Fernbedienungsverbindung
+für die Dateiübertragung. Vollständige Raw128-Wiederherstellungen veröffentlichen
+Dateiinhalt und Metadaten gemeinsam; der abschließende Vergleich bleibt erhalten.
+Die alte Firmware und alle früheren Speicherprüfprofile bleiben unterstützt.
+
+Die Tests verwenden gemocktes Bluetooth und echte lokale WASM-Simulatoren.
+Sie ersetzen keine Funk-, NFC- oder Leistungsmessung am Allmiibo.
+
+Entwicklung: `npm test`, `npm run build` (mit Produktions-Worker-Tests).
+Der isolierte native Test `scripts/check-pfs-compatibility.py --output <neuer Ordner>`
+benötigt GCC und prüft einen synthetischen Datenträger mit beiden Kernversionen:
+alt erstellen, neu lesen/ändern, alt lesen/ändern, neu wieder lesen. Er gleicht
+Dateiinhalt, Pfade, Raw128-Metadaten und Importidentität vollständig ab.
+`scripts/build-capacity-simulator.py --profile current` reproduziert den
+neuen WASM mit clang 23.1.4; `--profile de354` reproduziert den vorherigen.
+Lizenzangaben in third-party/npm/SOURCES.json sind an die aktuell installierten
+Versionen gebunden. Ältere, nicht mehr dort referenzierte Lizenzkopien bleiben
+als historische Hinweise erhalten; sie werden nicht als installierte Version
+ausgewiesen. Die offizielle Registry, der aktualisierte Lock und npm-ci werden
+im separaten Prüfbericht gebunden. Keine persönlichen Amiibo-Dateien enthalten.

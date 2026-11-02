@@ -7,7 +7,7 @@ import {decodeRawMetadata} from '../src/lib/raw-metadata.js'
 import {migrationStagingPlan} from '../src/lib/migration-staging.js'
 import {matchMigrationLayout,checkImportState} from '../src/lib/migration-layout.js'
 import {simulateCapacityInWorker} from '../src/lib/migration-capacity-worker-client.js'
-const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.1.min.js')
+const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js')
 const layout={schema:1,drive:'E',backend:3,magic:0x31534650,flashBytes:2097152,blockSize:4096,blockCount:512,
   readSize:256,progSize:256,cacheSize:256,metadataBytes:128,shardTarget:32768,maxShards:64,pathCap:64,nameCap:48,maxHandles:8,flags:7,engineSha256:'c'.repeat(64)}
 const profile={approved:true,layout,firmwareVersion:'2.22.0-DE3.31',applicationCounter:603,wasmSha256:'d'.repeat(64)}
@@ -27,7 +27,7 @@ async function moduleFixture(countNames=false){
     '\nlet normalizationCount=0; function portableNameKey(value){normalizationCount++;return normalizeMigrationName(value)}; export const resetNormalizationCount=()=>{normalizationCount=0}; export const getNormalizationCount=()=>normalizationCount;'
   return import('data:text/javascript;base64,'+Buffer.from(source+`\n// isolated lifecycle fixture ${serial++}`).toString('base64'))
 }
-async function fixture(extraFiles=0,countNames=false){
+async function fixture(extraFiles=0,countNames=false,rawSeed=null){
   const api=await moduleFixture(countNames),vfs=memoryVfs(),raw=new Map(),events=[]
   vfs.put('E:/tags/first',[0,1,2,3]);vfs.put('E:/tags/zero',[]);vfs.nodes.set('E:/empty',{type:1,meta:decodeRawMetadata(new Uint8Array(128).fill(255))})
   for(let i=0;i<extraFiles;i++)vfs.put(`E:/tags/file-${String(i).padStart(4,'0')}`,[i&255])
@@ -40,6 +40,7 @@ async function fixture(extraFiles=0,countNames=false){
     finishImport:async()=>{events.push('finish');assert(importState.bound);importState={...importState,pending:false,ready:true};return {...importState}},
     restartDevice:async()=>{events.push('restart');return {...importState}},
     confirmFormat:async()=>events.push('confirm-format'),confirmInitialize:async()=>events.push('confirm-bind'),confirmRestart:async()=>events.push('confirm-restart')}
+  if(rawSeed){raw.set('E:/tags/first',rawSeed.slice());vfs.nodes.get('E:/tags/first').meta=decodeRawMetadata(rawSeed)}
   const archive=await api.loadMigrationArchive((await api.createMigrationBackup(options)).blob,{JSZip})
   const proof=await api.checkMigrationCapacity(archive)
   const source=await api.verifyMigrationArchive({...options,archive})
@@ -48,6 +49,48 @@ async function fixture(extraFiles=0,countNames=false){
 }
 const mutations=f=>f.events.filter(x=>['format','bind','finish','restart','raw'].includes(x)).length+f.vfs.log.filter(x=>['write','rename','remove','mkdir','meta'].includes(x.op)).length
 async function prepared(f){await f.api.retainMigrationSource({archive:f.archive,report:f.source},{put:async()=>{}});await f.api.formatMigrationTarget(f.o());await f.api.initializeMigrationImport(f.o())}
+
+function atomicOptions(f,afterCommit=()=>{}){
+ return {...f.o(),storageInfo:{...storage(3),flags:15},writeFile:async(path,bytes,options={})=>{
+  assert(options.rawMeta128 instanceof Uint8Array);assert.equal(options.rawMeta128.length,128)
+  // Model the newly advertised atomic primitive. Actual flash failure atomicity
+  // is covered independently by the firmware tests, not this JS fixture.
+  await f.options.writeFile(path,bytes,options);f.raw.set(path,options.rawMeta128.slice());f.vfs.nodes.get(path).meta=decodeRawMetadata(options.rawMeta128)
+  await afterCommit(path,bytes,options)
+ }}
+}
+test('atomic capability restores exact raw128 including readonly and opaque tail in one file commit',async()=>{
+ const raw=new Uint8Array(128).fill(255);raw.set([2,2,4]);raw[127]=41
+ const f=await fixture(0,false,raw);await prepared(f);f.vfs.log.length=0;f.events.length=0
+ const result=await f.api.restoreMigrationArchive({...atomicOptions(f),deferFinalVerification:true})
+ assert.equal(result.verified,false);assert.equal(result.deferred,true)
+ assert.deepEqual(f.vfs.log.filter(x=>['write','meta','rename','remove'].includes(x.op)).map(x=>x.op),['write','write'])
+ assert.deepEqual(f.raw.get('E:/tags/first'),raw);assert.equal(f.vfs.nodes.get('E:/tags/first').meta.flags.readonly,true)
+ assert.equal(f.events.filter(x=>x==='raw').length,2,'only two directory attributes need separate raw writes')
+ const done=await f.api.finishMigrationImport(f.o());assert.equal(done.verification.filesVerified,2);assert.equal(done.finished,true)
+});
+test('atomic replacement uses the real target without a public stage or rename and checks final bytes',async()=>{
+ const f=await fixture();await prepared(f);await f.options.createDirectory('E:/tags');f.vfs.put('E:/tags/first',[0,1]);f.vfs.log.length=0
+ let replacements=0;await f.api.restoreMigrationArchive({...atomicOptions(f,(path,bytes,o)=>{if(path==='E:/tags/first'){assert.equal(o.atomicReplace,true);replacements++}}),deferFinalVerification:true})
+ assert.equal(replacements,1);assert(!f.vfs.log.some(x=>['rename','remove','meta'].includes(x.op)))
+ assert.deepEqual(f.vfs.bytes('E:/tags/first'),[0,1,2,3]);assert.equal((await f.api.finishMigrationImport(f.o())).finished,true)
+});
+test('lost atomic close acknowledgement invalidates namespace without retry or deleting the target',async()=>{
+ const f=await fixture();await prepared(f);f.vfs.log.length=0;let writes=0
+ await assert.rejects(f.api.restoreMigrationArchive({...atomicOptions(f,()=>{writes++;throw Error('lost atomic CLOSE ACK')}),deferFinalVerification:true}),e=>{
+  assert.equal(e.migrationProgress.namespace.invalidated,true);assert.equal(e.uploadReceipt?.committed,undefined)
+  assert.equal(e.migrationUploadReceipt.committed,null);assert(e.recoveryFiles.some(x=>x.role==='target'));return /lost atomic/.test(e.message)
+ })
+ assert.equal(writes,1);assert(!f.vfs.log.some(x=>['rename','remove','meta'].includes(x.op)));assert(f.vfs.nodes.has('E:/tags/first'));assert(!f.events.includes('finish'))
+ await f.api.restoreMigrationArchive({...atomicOptions(f),deferFinalVerification:true});assert.equal((await f.api.finishMigrationImport(f.o())).finished,true)
+});
+test('atomic acknowledged corruption still blocks final import completion',async()=>{
+ for(const field of ['bytes','raw']){
+  const f=await fixture();await prepared(f)
+  await f.api.restoreMigrationArchive({...atomicOptions(f,path=>{if(path==='E:/tags/first'){if(field==='bytes')f.vfs.nodes.get(path).bytes[0]^=1;else f.raw.get(path)[127]^=1}}),deferFinalVerification:true})
+  await assert.rejects(f.api.finishMigrationImport(f.o()),{code:'MIGRATION_VERIFY'});assert(!f.events.includes('finish'));assert(f.getState().pending)
+ }
+});
 
 
 const mutops=new Set(['mkdir','write','meta','rename','remove'])

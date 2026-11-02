@@ -9,8 +9,8 @@ const { pathToFileURL } = require('node:url');
 const { EventEmitter } = require('node:events');
 const ByteBuffer = require('bytebuffer');
 
-function load(name, bindings) {
-    const source = fs.readFileSync(path.join(process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib'), name), 'utf8');
+function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib')) {
+    const source = fs.readFileSync(path.join(sourceRoot, name), 'utf8');
     const exports = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
     const code = source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
     const context = { ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
@@ -53,7 +53,7 @@ function protocolFixture(i18n={global:{t:key=>key}}) {
         readAsArrayBuffer(file){this.file=file;if(file.error){this.error=new Error('FileReader failed');this.onerror();}
             else if(!file.pending){this.result=Uint8Array.from(file.bytes || []).buffer;this.onload();}}
     }
-    const api=load('pixl.proto.js',{pixl,FileReader,i18n,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
+    const api=load('pixl.proto.js',{pixl,FileReader,i18n,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
         setTimeout:cb=>{const id=++timerId;timers.set(id,cb);return id;},clearTimeout:id=>timers.delete(id)});
     api.init();
     return {api,bus,writes,timers,readers,get disconnects(){return disconnects;},setWrite:fn=>{writeImpl=fn;},
@@ -62,6 +62,75 @@ function protocolFixture(i18n={global:{t:key=>key}}) {
 const bytes = value => Array.from(new Uint8Array(value));
 const command = (f,cmd=0x14) => f.api.op_queue_push(cmd,()=>{},b=>b.readBytes(b.remaining()).toArrayBuffer());
 const bootPacket = require('./boot-fixture.cjs');
+
+test('same-link ownership executes real remote handshake then real file version query without reconnect',async()=>{
+ const {createRemoteClient}=await import(pathToFileURL(path.join(process.env.PIXL_SOURCE_DIR||path.join(__dirname,'../src/lib'),'remote-control.js')));
+ const f=bleFixture();let picks=0,connects=0,starts=0,stops=0,disconnects=0,ready=0;const writes=[];
+ f.navigator.bluetooth.requestDevice=async()=>{picks++;return f.device;};
+ f.device.gatt.connect=async()=>{connects++;f.device.gatt.connected=true;return f.device.gatt;};
+ f.device.gatt.disconnect=()=>{disconnects++;f.device.gatt.connected=false;f.device.events.emit('gattserverdisconnected',{target:f.device});};
+ f.device.gatt.getPrimaryService=async()=>f.service;
+ f.service.getCharacteristic=async uuid=>uuid===f.tx.uuid?f.tx:f.rx;
+ f.rx.startNotifications=async()=>{starts++;return f.rx;};f.rx.stopNotifications=async()=>{stops++;};
+ f.tx.writeValueWithResponse=data=>{
+  const bytes=Array.from(new Uint8Array(data));writes.push(bytes);
+  let reply;if(bytes[0]===80){reply=[80,88,1,bytes[3]|128,bytes[4],bytes[5],0,bytes[3]===4?3:1,31,0,0,0];}
+  else if(bytes[0]===3)reply=[3,255,0,0];
+  else {const version=Array.from(Buffer.from('2.22.0-DE3.51'));reply=[1,0,0,0,version.length,0,...version];}
+  f.rx.value=new DataView(Uint8Array.from(reply).buffer);f.rx.events.emit('characteristicvaluechanged',{target:f.rx});return Promise.resolve();
+ };
+ const proto=load('pixl.proto.js',{pixl:f.api,i18n:{global:{t:x=>x}},metadataNoteInfo:()=>{},parseStartupDiagnostics:()=>{},parseBootDiagnostics:()=>{},parsePowerDiagnostics:()=>{},sharedEventDispatcher:()=>f.bus,setTimeout,clearTimeout});proto.init();
+ f.bus.on('ble_connected',()=>ready++);
+ const client=createRemoteClient({environment:{navigator:f.navigator,isSecureContext:true}});
+ await client.connect();await client.command('files');client.releaseFileConnection(f.api.adopt_remote_connection);
+ const version=await proto.get_version();assert.equal(version.data.ver,'2.22.0-DE3.51');
+ assert.deepEqual([picks,connects,starts,stops,disconnects,ready],[1,1,1,0,0,1]);assert.deepEqual(writes.map(p=>p[0]===80?p[3]:p[0]),[0,4,3,1]);
+ await client.disconnect();assert.equal(f.device.gatt.connected,true);
+ await f.api.disconnect();assert.equal(stops,1);assert.equal(disconnects,1);assert.equal(f.api.get_connection_state(),'disconnected');
+});
+test('adoption rejects busy or stale sessions without disturbing the existing file owner',async()=>{
+ const f=bleFixture();f.tx.writeValueWithResponse=async()=>{};
+ assert.throws(()=>f.api.adopt_remote_connection({device:f.device,rx:f.rx,tx:f.tx}),/Invalid/);
+ await f.api.connect();assert.throws(()=>f.api.adopt_remote_connection({device:f.device,rx:f.rx,tx:f.tx}),/busy/);
+ assert.equal(f.api.get_connection_state(),'connected');await f.api.disconnect();
+});
+
+function startupPacket() {
+ const bytes=new Uint8Array(32),view=new DataView(bytes.buffer);bytes.set([80,88,83,84,1,32,63,0]);
+ [0,37,45,92,97,101].forEach((ms,i)=>view.setUint32(8+4*i,ms,true));return bytes;
+}
+test('optional startup request is explicit, serialized after earlier work and exact32B',async()=>{
+ const f=protocolFixture();assert.equal(f.writes.length,0);
+ const prior=command(f),p=f.api.get_startup_diagnostics();assert.deepEqual(f.writes,[[0x14,0,0,0]]);
+ f.rx(0x14,[7]);await prior;await flush();assert.deepEqual(f.writes.at(-1),[9,0,0,0]);
+ f.rx(9,startupPacket());const result=await p;assert.deepEqual(Array.from(result.elapsedMilliseconds),[0,37,45,92,97,101]);
+ assert.equal(f.disconnects,0);
+});
+test('unsupported startup is not a device fault, does not clear an earlier error and leaves queue usable',async()=>{
+ const f=protocolFixture(),p=f.api.get_startup_diagnostics();f.rx(9,[],0,255);
+ assert.equal(await p,null);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);assert.equal(f.disconnects,0);
+ const fail=f.api.get_startup_diagnostics(),rejected=assert.rejects(fail);f.rx(9,[],0,1);await rejected;
+ assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'DEVICE_STATUS');
+ const old=f.api.get_startup_diagnostics();f.rx(9,[],0,255);assert.equal(await old,null);
+ assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'DEVICE_STATUS');
+ const next=command(f);f.rx(0x14,[9]);assert.deepEqual(bytes((await next).data),[9]);assert.equal(f.disconnects,0);
+});
+test('startup markers reassemble through actual protocol decoder at MTU23,185,250 without new reads',async()=>{
+ for(const mtu of [23,185,250]){
+  const f=protocolFixture(),p=f.api.get_startup_diagnostics(),packet=startupPacket();
+  const capacity=mtu-7,total=Math.ceil(packet.length/capacity);
+  for(let i=0;i<total;i++)f.rx(9,packet.subarray(i*capacity,(i+1)*capacity),i|(i+1<total?0x8000:0));
+  assert.deepEqual(Array.from((await p).elapsedMilliseconds),[0,37,45,92,97,101]);assert.equal(f.writes.length,1);assert.equal(f.timers.size,0);
+ }
+});
+test('startup rejects invalid packets, bounded oversize, status failures and disconnected stale work',async()=>{
+ const invalid=startupPacket();invalid[6]=5;
+ for(const [payload,status]of [[new Array(31).fill(0),0],[new Array(33).fill(0),0],[invalid,0],[[],1]]){
+  const f=protocolFixture(),p=f.api.get_startup_diagnostics(),rejected=assert.rejects(p);f.rx(9,payload,0,status);await rejected;
+ }
+ const f=protocolFixture(),p=f.api.get_startup_diagnostics(),rejected=assert.rejects(p);f.bus.emit('ble_disconnected');await rejected;
+ f.rx(9,startupPacket());assert.equal(f.writes.length,1);
+});
 
 test('optional power request is user-initiated, readonly, exact16B and old firmware stays connected',async()=>{
  const f=protocolFixture();assert.equal(f.writes.length,0);const p=f.api.get_power_diagnostics();assert.deepEqual(f.writes,[[8,0,0,0]]);
@@ -95,6 +164,72 @@ test('migration storage info validates exact eight-byte drive/backend/capability
         const g=protocolFixture(),request=g.api.vfs_storage_info('E'),reject=assert.rejects(request);g.rx(0x1c,payload);await reject;
     }
     const count=f.writes.length;await assert.rejects(f.api.vfs_storage_info('E:/'));assert.equal(f.writes.length,count);
+});
+test('atomic file metadata is capability-gated, copied at call time, and invalidated by disconnect',async()=>{
+ const f=protocolFixture(),raw=Uint8Array.from({length:128},(_,i)=>i);
+ await assert.rejects(f.api.vfs_open_file('E:/a','w',raw),/not supported/);assert.equal(f.writes.length,0);
+ const old=f.api.vfs_storage_info_extended('E');f.rx(0x1c,[1,69,3,1,7,128,64,48]);await old;
+ await assert.rejects(f.api.vfs_open_file('E:/a','w',raw),/not supported/);
+ const modern=f.api.vfs_storage_info_extended('E');f.rx(0x1c,[1,69,3,1,15,128,64,48]);await modern;
+ const open=f.api.vfs_open_file('E:/a','w',raw);raw.fill(9);await flush();
+ const payload=f.writes.at(-1).slice(4);assert.deepEqual(payload.slice(0,7),[4,0,69,58,47,97,22]);assert.deepEqual(payload.slice(7),Array.from({length:128},(_,i)=>i));
+ f.rx(0x12,[0]);await open;
+ for(const args of [['I:/a','w',raw],['E:/a','r',raw],['E:/a','w',new Uint8Array(127)]])await assert.rejects(f.api.vfs_open_file(...args));
+ f.bus.emit('ble_disconnected');await assert.rejects(f.api.vfs_open_file('E:/a','w',raw),/not supported/);
+});
+test('extended storage info opts in explicitly and old firmware falls back only after a known rejection',async()=>{
+ for(const status of [1,255]){
+  const f=protocolFixture(),p=f.api.vfs_storage_info_extended('E');assert.deepEqual(f.writes,[[28,0,0,0,69,1]]);
+  f.rx(28,[],0,status);await flush();assert.deepEqual(f.writes.at(-1),[28,0,0,0,69]);
+  f.rx(28,[1,69,3,1,7,128,64,48]);assert.equal((await p).data.flags,7);
+  assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);await assert.rejects(f.api.vfs_open_file('E:/a','w',new Uint8Array(128)));
+ }
+});
+test('extended storage info cannot hide malformed success or retry across a disconnected session',async()=>{
+ const f=protocolFixture(),p=f.api.vfs_storage_info_extended('E'),failed=assert.rejects(p);
+ f.rx(28,[1,69,3,1,15,128,64]);await failed;assert.equal(f.writes.length,1);
+ const g=protocolFixture(),q=g.api.vfs_storage_info_extended('E'),rejected=assert.rejects(q);
+ g.rx(28,[],0,1);g.bus.emit('ble_disconnected');await rejected;await flush();assert.equal(g.writes.length,1);
+});
+test('failed capability refresh removes atomic eligibility and legacy query retains the original flags contract',async()=>{
+ const f=protocolFixture(),first=f.api.vfs_storage_info_extended('E');f.rx(28,[1,69,3,1,15,128,64,48]);await first;
+ const legacy=f.api.vfs_storage_info('E'),rejected=assert.rejects(legacy);f.rx(28,[1,69,3,1,15,128,64,48]);await rejected;
+ const before=f.writes.length;await assert.rejects(f.api.vfs_open_file('E:/a','w',new Uint8Array(128)));assert.equal(f.writes.length,before);
+});
+test('overlapping storage probes cannot leave an older atomic capability cached after the newest fails',async()=>{
+ const f=protocolFixture(),a=f.api.vfs_storage_info_extended('E'),b=f.api.vfs_storage_info_extended('E'),failed=assert.rejects(b);
+ f.rx(28,[1,69,3,1,15,128,64,48]);await a;await flush();
+ f.rx(28,[1,69,3,1,15,128,64]);await failed;
+ const count=f.writes.length;await assert.rejects(f.api.vfs_open_file('E:/a','w',new Uint8Array(128)));assert.equal(f.writes.length,count);
+});
+test('late fallback from an older storage probe cannot erase a newer successful capability',async()=>{
+ const f=protocolFixture(),a=f.api.vfs_storage_info_extended('E'),b=f.api.vfs_storage_info_extended('E');
+ f.rx(28,[],0,1);await flush();f.rx(28,[1,69,3,1,15,128,64,48]);await b;await flush();
+ f.rx(28,[1,69,3,1,7,128,64,48]);await a;
+ const open=f.api.vfs_open_file('E:/a','w',new Uint8Array(128));await flush();assert.equal(f.writes.at(-1)[0],18);f.rx(18,[0]);await open;
+});
+test('atomic helper fragments the full metadata OPEN at MTU23 and reports success only after CLOSE',async()=>{
+ const f=protocolFixture();await modernProtocol(f);const info=f.api.vfs_storage_info_extended('E');await flush();f.rx(0x1c,[1,69,3,1,15,128,64,48]);await info;f.writes.length=0;
+ const raw=new Uint8Array(128).fill(255),events=[];
+ f.api.vfs_helper_write_file('E:/a',{bytes:[7,8]},()=>{},()=>events.push('ok'),e=>events.push(e.message),{rawMeta128:raw});raw[127]=0;
+ await flush();assert(f.writes.every(p=>p.length<=20));assert(f.writes.length>1);
+ const payload=f.writes.flatMap(p=>p.slice(4));assert.deepEqual(payload.slice(7),Array(128).fill(255));
+ f.rx(0x12,[0]);await flush();assert.equal(f.writes.at(-1)[0],0x15);assert.deepEqual(events,[]);
+ f.rx(0x15);await flush();assert.equal(f.writes.at(-1)[0],0x13);assert.deepEqual(events,[]);
+ f.rx(0x13);await flush();assert.deepEqual(events,['ok']);assert.equal(f.disconnects,0);
+});
+test('atomic helper error aborts the link instead of closing and committing partial data',async()=>{
+ const f=protocolFixture(),info=f.api.vfs_storage_info_extended('E');f.rx(0x1c,[1,69,3,1,15,128,64,48]);await info;f.writes.length=0;
+ const events=[];f.api.vfs_helper_write_file('E:/a',{bytes:[7,8]},()=>{},()=>events.push('ok'),e=>events.push(e.message),{rawMeta128:new Uint8Array(128)});
+ await flush();f.rx(0x12,[0]);await flush();f.rx(0x15,[],0,1);await flush();
+ assert.equal(f.disconnects,1);assert.equal(events.length,1);assert.notEqual(events[0],'ok');assert(!f.writes.some(p=>p[0]===0x13));
+ assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'ATOMIC_WRITE_FAILED');
+});
+test('atomic helper rejects invalid metadata or options before OPEN and legacy writes keep their old frame',async()=>{
+ const f=protocolFixture(),events=[];
+ for(const options of [null,{rawMeta128:new Uint8Array(127)},{rawMeta128:'x'}])f.api.vfs_helper_write_file('E:/a',{bytes:[]},()=>{},()=>events.push('ok'),e=>events.push(e.message),options);
+ await flush();assert.equal(events.length,3);assert(!events.includes('ok'));assert.equal(f.writes.length,0);
+ const p=f.api.vfs_open_file('E:/a','w');assert.deepEqual(f.writes.at(-1),[18,0,0,0,4,0,69,58,47,97,22]);f.rx(0x12,[0]);await p;
 });
 function packedLayoutPacket() {
     const p=new Uint8Array(72),v=new DataView(p.buffer);p.set([1,69,3,0]);
@@ -326,6 +461,17 @@ function runtimePacket() {
     for(const [off,value] of [[24,10000],[28,9000],[32,8000],[36,7000],[40,30000],[44,18000],[48,8192],[52,0xffffffff],[56,5],[60,6]])v.setUint32(off,value,true);
     return bytes;
 }
+test('3.30.2 real DE3.48 runtime reply decodes at MTU23,185,250 without extra reads or retries',async()=>{
+    const fixture=require('./runtime-de348-wire-fixture.json'),packet=Buffer.from(fixture.hex,'hex');
+    for(const mtu of [23,185,250]) {
+        const f=protocolFixture(),pending=f.api.get_runtime_diagnostics();await flush();
+        const capacity=mtu-7,total=Math.ceil(packet.length/capacity);
+        for(let i=0;i<total;i++)f.rx(6,packet.subarray(i*capacity,(i+1)*capacity),i|(i+1<total?0x8000:0));
+        assert.deepEqual(JSON.parse(JSON.stringify(await pending)),fixture.expected);
+        assert.equal(f.writes.length,1);assert.equal(f.writes[0][0],6);
+        assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+    }
+});
 test('DE3.17 browser decodes the actual C diagnostic reply reassembled at all three simulated MTUs',async()=>{
     const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'runtime-wire-fixture.json'),'utf8'));
     const f=protocolFixture(),p=f.api.get_runtime_diagnostics();await flush();f.rx(6,[...Buffer.from(fixture.hex,'hex')]);
@@ -753,6 +899,20 @@ test('postflash: note boundary is 89 UTF-8 bytes, preserving the firmware NUL te
     }
     assert.equal(f.writes.length, before);
 });
+
+for (const [label,note] of [['NUL','keep\0lost'],['unpaired-high','keep\ud800'],['unpaired-low','keep\udfff']]) {
+    test(`3.30.3 metadata rejects ${label} before transmission without stranding the queue`, async () => {
+        const f=protocolFixture(),meta={notes:note,flags:{raw:0,hide:false,readonly:false},amiibo:{head:0,tail:0}};
+        const before=f.writes.length,p=f.api.vfs_update_meta('E:/a.bin',meta);
+        // Settle the old serializer too, so the negative control fails rather
+        // than hanging on the mock device's acknowledgement.
+        f.rx(0x1a);
+        await assert.rejects(p,/noteinvalid/);
+        assert.equal(f.writes.length,before);
+        const next=command(f);f.rx(0x14,[7]);assert.deepEqual(bytes((await next).data),[7]);
+        assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+    });
+}
 
 test('postflash: drive parser exposes available bytes as free_size', async () => {
     const f = protocolFixture(), payload = new ByteBuffer();

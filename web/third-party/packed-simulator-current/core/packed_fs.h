@@ -69,6 +69,10 @@ lfs_ssize_t pfs_read(pfs_file_t *file, void *buffer, lfs_size_t size);
 lfs_ssize_t pfs_write(pfs_file_t *file, const void *buffer, lfs_size_t size);
 lfs_soff_t pfs_seek(pfs_file_t *file, lfs_soff_t offset, int whence);
 int pfs_close(pfs_file_t *file);
+/* Stage raw metadata on a writable private file; publication is at close. */
+int pfs_file_set_meta(pfs_file_t *file, const uint8_t meta[PFS_META_SIZE]);
+/* Zero means no healthy mounted snapshot. Not a persistent device identity. */
+uint32_t pfs_generation(const pfs_t *fs);
 int pfs_abort(pfs_file_t *file);
 /* Atomically replace content plus raw128 metadata. NULL metadata preserves
  * an existing file's metadata; a new file receives zeros. Returns byte count

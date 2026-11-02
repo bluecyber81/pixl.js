@@ -1,0 +1,138 @@
+// DE remote protocol PX v1. NUS is used exclusively by the awake remote mode;
+// no file command or button is sent before the capability handshake succeeds.
+export const REMOTE_UUIDS=Object.freeze({service:'6e400001-b5a3-f393-e0a9-e50e24dcca9e',write:'6e400002-b5a3-f393-e0a9-e50e24dcca9e',notify:'6e400003-b5a3-f393-e0a9-e50e24dcca9e'});
+export const REMOTE_NAME='Pixl.Remote';
+const commands=Object.freeze({status:[0,0],files:[1,0],left:[2,0],center:[2,1],right:[2,2],back:[3,0]});
+const error=code=>Object.assign(new Error(code),{code});
+const remoteCode=(failure,fallback)=>typeof failure?.code==='string'&&/^REMOTE_[A-Z_]+$/.test(failure.code)?failure.code:fallback;
+const statusErrors={1:'REMOTE_BUSY',2:'REMOTE_PROTOCOL',3:'REMOTE_DISABLED',4:'REMOTE_UNSUPPORTED',5:'REMOTE_UNSAFE',6:'REMOTE_QUEUE',7:'REMOTE_PROTOCOL'};
+export function remoteAvailability(environment=globalThis){return environment.isSecureContext===false||!environment.navigator?.bluetooth?.requestDevice?'REMOTE_UNAVAILABLE':'';}
+export function encodeRemoteRequest(opcode,sequence,arg=0){
+  if(!Number.isInteger(sequence)||sequence<1||sequence>65535||![0,1,2,3,4].includes(opcode)||!Number.isInteger(arg)||(opcode===2?![0,1,2].includes(arg):arg!==0))throw error('REMOTE_PROTOCOL');
+  return Uint8Array.of(0x50,0x58,1,opcode,sequence&255,sequence>>>8,arg,0);
+}
+export function parseRemoteReply(value){
+  const bytes=value instanceof DataView?new Uint8Array(value.buffer,value.byteOffset,value.byteLength):value;
+  if(!(bytes instanceof Uint8Array)||bytes.length!==12||bytes[0]!==0x50||bytes[1]!==0x58||bytes[2]!==1||![0x80,0x81,0x82,0x83,0x84].includes(bytes[3])||bytes[6]>8||bytes[7]>4||bytes[10]!==0||bytes[11]!==0)throw error('REMOTE_PROTOCOL');
+  return {opcode:bytes[3]&0x7f,sequence:bytes[4]|bytes[5]<<8,status:bytes[6],state:bytes[7],capabilities:bytes[8]|bytes[9]<<8};
+}
+export function createRemoteClient(options={}){
+  const environment=options.environment||globalThis,report=options.onState||(()=>{});
+  const stepMs=options.stepMs??20000,commandMs=options.commandMs??4000,stopMs=options.stopMs??1000;
+  let generation=0,phase='disconnected',device=null,tx=null,rx=null,pending=null,seq=1,caps=0,connectPromise=null,closing=null,handoffMode=null;
+  const cancels=new Set();
+  const state=(next,code='')=>{phase=next;try{report({phase,error:code,capabilities:caps});}catch{/*Observers cannot control transport cleanup.*/}};
+  function disconnectGatt(target){try{target?.gatt?.disconnect();}catch{/*Already gone.*/}}
+  function bounded(operation,ms,check){
+    return new Promise((resolve,reject)=>{
+      let done=false;const finish=(failure,value)=>{if(done)return;done=true;clearTimeout(timer);cancels.delete(cancel);failure?reject(failure):resolve(value);};
+      const cancel=()=>finish(error('REMOTE_CANCELLED'));cancels.add(cancel);
+      const timer=setTimeout(()=>finish(error('REMOTE_TIMEOUT')),ms);
+      Promise.resolve(operation).then(value=>{try{check?.();finish(null,value);}catch(failure){finish(failure);}},failure=>finish(failure));
+    });
+  }
+  function failPending(failure){if(!pending)return;const item=pending;pending=null;clearTimeout(item.timer);item.reject(failure);}
+  function detach(){
+    const snapshot={device,rx,tx};
+    rx?.removeEventListener('characteristicvaluechanged',notification);
+    device?.removeEventListener('gattserverdisconnected',disconnected);
+    device=null;tx=null;rx=null;caps=0;handoffMode=null;return snapshot;
+  }
+  function terminate(code='REMOTE_DISCONNECTED'){
+    ++generation;for(const cancel of [...cancels])cancel();failPending(error(code));
+    const old=detach();connectPromise=null;disconnectGatt(old.device);state('disconnected',code);
+  }
+  function disconnected(event){if(event.target===device)terminate('REMOTE_DISCONNECTED');}
+  function finishPending(){if(pending?.reply&&pending.writeDone){const item=pending;pending=null;clearTimeout(item.timer);item.resolve(item.reply);}}
+  function notification(event){
+    if(event.target!==rx)return;
+    let reply;try{reply=parseRemoteReply(event.target.value);}catch{terminate(phase==='connecting'?'REMOTE_UNSUPPORTED':'REMOTE_PROTOCOL');return;}
+    // Old duplicate receipts cannot acknowledge a newer operation.
+    if(!pending||reply.sequence!==pending.sequence||reply.opcode!==pending.opcode)return;
+    if(pending.reply&&Object.keys(reply).some(key=>pending.reply[key]!==reply[key])){terminate('REMOTE_PROTOCOL');return;}
+    pending.reply=reply;finishPending();
+  }
+  function request(opcode,arg){
+    if(pending) return Promise.reject(error('REMOTE_BUSY'));
+    if(!device?.gatt?.connected||!tx)return Promise.reject(error('REMOTE_DISCONNECTED'));
+    const sequence=seq;seq=seq===65535?1:seq+1;
+    const payload=encodeRemoteRequest(opcode,sequence,arg);
+    return new Promise((resolve,reject)=>{
+      const item={sequence,opcode,resolve,reject,writeDone:false,reply:null,timer:null};pending=item;
+      item.timer=setTimeout(()=>terminate('REMOTE_TIMEOUT'),commandMs);
+      let write;
+      try{
+        if(tx.properties?.write&&typeof tx.writeValueWithResponse==='function')write=tx.writeValueWithResponse(payload);
+        else throw error('REMOTE_UNSUPPORTED');
+      }catch(failure){terminate(remoteCode(failure,'REMOTE_DISCONNECTED'));return;}
+      Promise.resolve(write).then(()=>{if(pending===item){item.writeDone=true;finishPending();}},()=>{if(pending===item)terminate('REMOTE_DISCONNECTED');});
+    });
+  }
+  function accept(reply,opcode){
+    if(reply.status!==0&&!(opcode===1&&reply.status===8))throw error(statusErrors[reply.status]||'REMOTE_PROTOCOL');
+    if((reply.capabilities&0x0d)!==0x0d)throw error('REMOTE_UNSUPPORTED');
+    if(reply.state!==(opcode===1?2:opcode===4?3:1)||reply.status!==(opcode===1?8:0))throw error('REMOTE_PROTOCOL');
+    if(opcode===4&&!(reply.capabilities&0x10))throw error('REMOTE_PROTOCOL');
+    return reply;
+  }
+  async function connect(){
+    if(connectPromise)return connectPromise;
+    if(phase!=='disconnected'||closing)throw error('REMOTE_BUSY');
+    const unavailable=remoteAvailability(environment);if(unavailable)throw error(unavailable);
+    const current=++generation;let selected;
+    const check=()=>{if(current!==generation){if(selected&&selected!==device)disconnectGatt(selected);throw error('REMOTE_CANCELLED');}};
+    state('connecting');
+    // Invoke the picker in the user's click stack; never bound its interaction time.
+    let picker;try{picker=environment.navigator.bluetooth.requestDevice({filters:[{name:REMOTE_NAME,services:[REMOTE_UUIDS.service]}],optionalServices:[REMOTE_UUIDS.service]});}catch(failure){state('disconnected');throw error(remoteCode(failure,failure.name==='NotFoundError'?'REMOTE_CANCELLED':'REMOTE_UNSUPPORTED'));}
+    const task=(async()=>{
+      try{
+        const chosen=await picker;check();selected=chosen;device=chosen;seq=1;
+        device.addEventListener('gattserverdisconnected',disconnected);
+        const server=await bounded(device.gatt.connect(),stepMs,check);check();
+        const service=await bounded(server.getPrimaryService(REMOTE_UUIDS.service),stepMs,check);check();
+        tx=await bounded(service.getCharacteristic(REMOTE_UUIDS.write),stepMs,check);check();
+        rx=await bounded(service.getCharacteristic(REMOTE_UUIDS.notify),stepMs,check);check();
+        rx.addEventListener('characteristicvaluechanged',notification);
+        await bounded(rx.startNotifications(),stepMs,check);check();
+        const hello=accept(await request(0,0),0);check();caps=hello.capabilities;state('ready');
+      }catch(failure){
+        const code=remoteCode(failure,failure.name==='NotFoundError'&&!selected?'REMOTE_CANCELLED':'REMOTE_UNSUPPORTED');
+        if(current===generation)terminate(code);
+        throw error(code);
+      }finally{if(connectPromise===task)connectPromise=null;}
+    })();
+    connectPromise=task;return task;
+  }
+  async function command(name,options={}){
+    if(phase!=='ready')throw error('REMOTE_BUSY');
+    if(!Object.hasOwn(commands,name)||name==='status'||(name==='back'&&!(caps&2)))throw error('REMOTE_UNSUPPORTED');
+    const current=generation,[legacyOpcode,arg]=commands[name];
+    const opcode=name==='files'&&options.sameLink!==false&&(caps&0x10)?4:legacyOpcode;let handoff=false;state('command');
+    try{const reply=accept(await request(opcode,arg),opcode);if(current!==generation)throw error('REMOTE_DISCONNECTED');handoff=opcode===1||opcode===4;if(handoff)handoffMode=opcode===4?'same-link':'reconnect';return reply;}
+    catch(failure){if(current===generation&&['REMOTE_PROTOCOL','REMOTE_DISABLED','REMOTE_UNSUPPORTED'].includes(failure.code))terminate(failure.code);throw failure;}
+    finally{if(current===generation)state(handoff?'handoff':'ready');}
+  }
+  // Synchronous ownership transfer: the new owner attaches its listeners before
+  // any queued browser event can run. Keep notifications and GATT alive. The
+  // receiver returns true only after taking ownership; failures close this link.
+  function releaseFileConnection(acceptConnection){
+    if(phase!=='handoff'||handoffMode!=='same-link'||pending||!device?.gatt?.connected||typeof acceptConnection!=='function')throw error('REMOTE_PROTOCOL');
+    ++generation;const session=detach();connectPromise=null;
+    try{if(acceptConnection(Object.freeze(session))!==true)throw error('REMOTE_REJECTED');state('disconnected');return true;}
+    catch(failure){disconnectGatt(session.device);state('disconnected',remoteCode(failure,'REMOTE_DISCONNECTED'));throw failure;}
+  }
+  function disconnect(){
+    if(closing)return closing;
+    ++generation;for(const cancel of [...cancels])cancel();failPending(error('REMOTE_CANCELLED'));
+    const old=detach();connectPromise=null;
+    if(!old.device){state('disconnected');return Promise.resolve();}
+    state('disconnecting');
+    const task=new Promise(resolve=>{
+      let finished=false;
+      const finish=()=>{if(finished)return;finished=true;clearTimeout(timer);disconnectGatt(old.device);closing=null;state('disconnected');resolve();};
+      const timer=setTimeout(finish,stopMs);
+      Promise.resolve().then(()=>old.rx?.stopNotifications?.()).then(finish,finish);
+    });closing=task;return task;
+  }
+  return Object.freeze({connect,command,disconnect,releaseFileConnection,snapshot:()=>({phase,capabilities:caps})});
+}

@@ -1,7 +1,7 @@
 <template>
 
   <el-config-provider :locale="elementLocale"><main class="filemanager">
-    <a class="skip-link" href="#file-workspace">{{ $t('workflow.skipToFiles') }}</a>
+    <a class="skip-link" href="#file-workspace" @click="show_workspace('files')">{{ $t('workflow.skipToFiles') }}</a>
     <header class="app-header">
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="4" y="6" width="24" height="20" rx="5"/><path d="M10 12h12M10 17h7M22 21h.01"/></svg></span>
         <div><p class="app-eyebrow">ALLMIIBO · LCD</p><h1>{{ $t('workflow.appTitle') }}</h1><p class="app-subtitle">{{ $t('tools.subtitle') }}</p></div>
@@ -39,11 +39,11 @@
         </el-dropdown-menu></template>
       </el-dropdown>
     </div>
-<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
+<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="remoteActive || disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.27.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.32.5</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -52,29 +52,26 @@
       <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
     </section>
     <p v-if="browserIssue" class="notice error" role="alert">{{ $t(browserIssue) }}</p>
+    <div class="app-layout">
     <nav class="workspace-nav" :aria-label="$t('workflow.workspaces')">
-      <button type="button" @click="show_workspace('files')" aria-controls="file-workspace"><span class="workspace-icon" aria-hidden="true">▤</span><span><strong>{{ $t('workflow.filesTitle') }}</strong><small>{{ $t('workflow.filesBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
-      <button type="button" @click="show_workspace('backup')" aria-controls="backup-workspace"><span class="workspace-icon" aria-hidden="true">↓</span><span><strong>{{ $t('workflow.backupTitle') }}</strong><small>{{ $t('workflow.backupBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
-      <button type="button" @click="show_workspace('update')" aria-controls="update-workspace"><span class="workspace-icon" aria-hidden="true">↻</span><span><strong>{{ $t('workflow.updateTitle') }}</strong><small>{{ $t('workflow.updateBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('files')" :aria-current="activeWorkspace === 'files' ? 'page' : undefined" aria-controls="file-workspace"><span class="workspace-icon" aria-hidden="true">▤</span><span><strong>{{ $t('workflow.filesTitle') }}</strong><small>{{ $t('workflow.filesBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('backup')" :aria-current="activeWorkspace === 'backup' ? 'page' : undefined" aria-controls="backup-workspace"><span class="workspace-icon" aria-hidden="true">↓</span><span><strong>{{ $t('workflow.backupShort') }}</strong><small>{{ $t('workflow.backupBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('update')" :aria-current="activeWorkspace === 'update' ? 'page' : undefined" aria-controls="update-workspace"><span class="workspace-icon" aria-hidden="true">↻</span><span><strong>{{ $t('workflow.updateShort') }}</strong><small>{{ $t('workflow.updateBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
+      <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Bilder, Infos und QR-Codes' : 'Images, information and QR codes' }}</small></span></button>
+      <div class="sidebar-device">
+        <p class="sidebar-caption">{{ language === 'de_DE' ? 'DEIN GERÄT' : 'YOUR DEVICE' }}</p>
+        <strong>{{ connected ? 'Allmiibo LCD' : $t('info.disconnected') }}</strong>
+        <p v-if="statusDriveInfo">{{ statusDriveInfo.label }}: {{ format_size(statusDriveInfo.freeBytes) }} {{ language === 'de_DE' ? 'frei' : 'free' }}</p>
+        <progress v-if="statusDriveInfo?.totalBytes" :value="statusDriveInfo.totalBytes-statusDriveInfo.freeBytes" :max="statusDriveInfo.totalBytes" :aria-label="$t('info.used')"></progress>
+        <p v-if="current_dir" class="sidebar-path">{{ current_dir }}<br>{{ tableData.length }} {{ language === 'de_DE' ? 'Einträge' : 'entries' }}</p>
+        <button type="button" class="sidebar-upload" :disabled="btn_disabled()" @click="on_btn_upload">↑ {{ $t('menu.upload') }}</button>
+      </div>
     </nav>
-    <details class="workspace-panel" ref="backupWorkspace" id="backup-workspace" @toggle="keep_migration_visible">
-      <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
-      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
-      <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
-      <div class="workspace-actions"><el-button size="small" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
-    <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
-      </div>
-    </details>
-    <details class="workspace-panel" ref="updateWorkspace" id="update-workspace">
-      <summary>{{ $t('workflow.updateTitle') }}<span>{{ $t('workflow.updateBrief') }}</span></summary>
-      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
-      <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
-              :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
-      <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" href="/dfu/web.html" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
-      <UpdateCheck :session="{ connected, firmwareVersion, bootState }" :boot="bootInfo" :locale="language" />
-      <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
-      </div>
-    </details>
+    <div class="workspace-body">
+    <p v-if="searchBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Gerätesuche läuft…' : 'Device search running…' }} <button type="button" @click="show_workspace('files')">{{ language === 'de_DE' ? 'Suche anzeigen' : 'Show search' }}</button></p>
+    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl :locale="language" :blocked="connected || connecting || disconnecting || busy" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
     <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
       <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
       <strong>{{ $t('tools.' + transfer.phase) }}</strong>
@@ -115,7 +112,8 @@
       <button type="button" @click="recoveryNotes = []">{{ $t('info.discard') }}</button>
     </section>
     <p v-if="enteringDfu" class="notice" role="status">{{ $t('info.enteringDfu') }}</p>
-    <section class="files-workspace" id="file-workspace" ref="fileWorkspace" tabindex="-1" :aria-label="$t('workflow.filesTitle')">
+    <section v-show="activeWorkspace === 'files'" class="files-workspace" id="file-workspace" ref="fileWorkspace" tabindex="-1" :aria-label="$t('workflow.filesTitle')">
+      <div class="collection-layout"><div class="collection-main">
       <div class="section-heading"><div><p class="section-eyebrow">{{ $t('workflow.collection') }}</p><h2>{{ $t('workflow.filesTitle') }}</h2></div><div class="file-navigation"><el-button size="small" @click="on_btn_up" :disabled="btn_disabled()">{{ $t('menu.up')  }}</el-button><el-button size="small" @click="on_btn_refresh" :disabled="!connected || busy">{{ $t('menu.refresh') }}</el-button></div></div>
       <div class="file-toolbar"><el-button-group><el-button size="small" type="primary" @click="on_btn_upload"
               :disabled="btn_disabled()">{{ $t('menu.upload')  }}</el-button><el-button size="small" @click="on_btn_new_folder"
@@ -126,12 +124,17 @@
     <el-row>
       <el-col :span="24">
         <div class="folder-path">
-          <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ current_dir || $t('workflow.chooseDrive') }}</el-breadcrumb-item>
-          </el-breadcrumb>
+          <nav class="folder-breadcrumbs" :aria-label="$t('workflow.folderPath')"><ol>
+            <li v-for="(crumb, index) in breadcrumbs" :key="crumb.path">
+              <span v-if="index" class="path-separator" aria-hidden="true">/</span>
+              <span v-if="crumb.path === current_dir" aria-current="page">{{ crumb.name || $t('workflow.drives') }}</span>
+              <button v-else type="button" :disabled="!connected || busy" @click="navigate_breadcrumb(crumb.path)">{{ crumb.name || $t('workflow.drives') }}</button>
+            </li>
+          </ol></nav>
         </div>
       </el-col>
     </el-row>
+    <DeviceSearch :connected="connected" :blocked="(busy && !searchBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" @busy="searchBusy = $event" @navigate="navigate_search_result" />
     <div class="file-filters">
       <label class="search-label">{{ $t('tools.search') }}<input type="search" v-model="searchQuery" @input="on_filter_change" :placeholder="$t('tools.search')"></label>
       <label>{{ $t('tools.filter') }} <select v-model="typeFilter" @change="on_filter_change">
@@ -140,7 +143,8 @@
       <span class="entry-count">{{ $t('tools.counts', { visible: filteredRows.length, total: tableData.length }) }}</span>
       <button v-if="searchQuery || typeFilter !== 'all'" type="button" @click="reset_filters">{{ $t('workflow.resetFilters') }}</button>
     </div>
-    <p v-if="(connected || demoMode) && !table_loading && !filteredRows.length" class="backup-hint" role="status">{{ $t(tableData.length ? 'workflow.noMatches' : current_dir ? 'workflow.emptyFolder' : 'workflow.noDrives') }}</p>
+    <p v-if="listingError && connected && !table_loading" class="notice error" role="alert">{{ $t('workflow.listingFailed') }}</p>
+    <p v-if="(connected || demoMode) && !table_loading && !listingError && !filteredRows.length" class="backup-hint" role="status">{{ $t(tableData.length ? 'workflow.noMatches' : current_dir ? 'workflow.emptyFolder' : 'workflow.noDrives') }}</p>
     <p v-if="connected && current_dir" class="backup-hint">{{ $t('tools.backupHint') }}</p>
     <div>
       <el-table ref="multipleTable" :data="pagedRows" tooltip-effect="dark" style="width: 100%" v-loading="table_loading"
@@ -153,7 +157,7 @@
         <el-table-column prop="name" :label="$t('labels.name')" sortable="custom" min-width="240">
           <template #default="scope">
             <span class="file-symbol" aria-hidden="true">{{ scope.row.type === "REG" ? "▤" : scope.row.type === "DIR" ? "▣" : "◫" }}</span>
-            <button type="button" class="file-name-action" :disabled="!connected || busy" @click="handle_name_click(scope.$index, scope.row)">
+            <button type="button" class="file-name-action" :data-file-name="scope.row.name" :disabled="(!connected && !(demoMode && scope.row.demoFigure)) || (busy && !previewBusy)" @click="select_file_row(scope.$index, scope.row)" @dblclick="download_preview_selection">
               {{ scope.row.name }}</button>
           </template>
         </el-table-column>
@@ -183,19 +187,42 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="table-footer" v-if="tableData.length">
+        <label class="page-size">{{ $t('workflow.pageSize') }} <select :value="pageSize" @change="set_page_size($event.target.value)" :disabled="busy"><option v-for="size in [25,50,100]" :key="size" :value="size">{{ size }}</option></select></label>
       <nav class="pagination" :aria-label="$t('tools.pages')" v-if="pageCount > 1">
         <button type="button" @click="change_page(page - 1)" :disabled="page <= 1 || busy">{{ $t('tools.previous') }}</button>
         <span>{{ $t('tools.page', { page, total: pageCount }) }}</span>
         <button type="button" @click="change_page(page + 1)" :disabled="page >= pageCount || busy">{{ $t('tools.next') }}</button>
       </nav>
+      </div>
     </div>
 
+      </div><aside class="selection-context" :class="{'has-selection': !!previewSelection}"><button v-if="previewSelection" type="button" class="mobile-preview-close" @click="close_preview_selection">{{ language === 'de_DE' ? 'Vorschau schließen' : 'Close preview' }} ×</button><SelectionPreview :selection="previewSelection" :locale="language" :blocked="busy || !preview_selection_current()" @download="download_preview_selection" @properties="open_preview_properties" /></aside></div>
     </section>
-    <details class="device-panel" ref="devicePanel" id="device-overview">
+    <details v-show="activeWorkspace === 'backup'" class="workspace-panel" ref="backupWorkspace" id="backup-workspace" @toggle="keep_migration_visible">
+      <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
+      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
+      <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
+      <div class="workspace-actions"><el-button size="small" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
+    <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
+      </div>
+    </details>
+    <details v-show="activeWorkspace === 'update'" class="workspace-panel" ref="updateWorkspace" id="update-workspace">
+      <summary>{{ $t('workflow.updateTitle') }}<span>{{ $t('workflow.updateBrief') }}</span></summary>
+      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
+      <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
+              :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
+      <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" :href="dfuPageUrl" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
+      <UpdateCheck :session="{ connected, firmwareVersion, bootState }" :boot="bootInfo" :locale="language" />
+      <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
+      </div>
+    </details>
+    <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview">
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
+      <StartupDiagnostics :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.27.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.32.5</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -219,7 +246,11 @@
         <button type="button" @click="refresh_power_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.powerRead') }}</button>
         <button type="button" @click="save_diagnostics" :disabled="diagnosticsBusy">{{ $t('info.export') }}</button>
       </div>
-      <p v-if="runtimeState === 'unavailable'">{{ $t('info.runtimeUnavailable') }}</p>
+      <div class="runtime-status" role="status" aria-live="polite" aria-atomic="true">
+        <p v-if="runtimeState === 'loading'">{{ $t('info.runtimeLoading') }}</p>
+        <p v-else-if="runtimeState === 'failed'" class="notice error">{{ $t('info.runtimeFailed') }}</p>
+        <p v-else-if="runtimeState === 'unavailable'">{{ $t('info.runtimeUnavailable') }}</p>
+      </div>
       <section v-if="runtimeInfo" class="runtime-info">
         <p>{{ $t('info.runtimeScope') }}</p>
         <dl class="device-info-grid">
@@ -236,7 +267,8 @@
         </dl><p class="backup-hint">{{ $t('info.runtimeVfsHint') }} {{ runtime_vfs_detail(runtimeInfo.lastVfsError) }}</p>
         <p class="backup-hint">{{ $t('info.runtimeLimits') }}</p>
       </section>
-      <p v-if="bootState === 'unavailable'">{{ $t('info.bootUnavailable') }}</p>
+      <p v-if="bootState === 'loading'" role="status">{{ $t('info.bootLoading') }}</p>
+      <p v-if="bootState === 'unavailable'" role="status">{{ $t('info.bootUnavailable') }}</p>
       <p v-if="bootState === 'failed'" role="status">{{ $t('info.bootFailed') }}</p>
       <section v-if="bootInfo" class="runtime-info">
         <h3>{{ $t('info.bootTitle') }}</h3><p>{{ $t('info.bootScope') }}</p>
@@ -255,8 +287,9 @@
       </section>
       <section v-if="powerState !== 'unknown'" class="power-diagnostics">
         <h3>{{ $t('workflow.powerTitle') }}</h3>
-        <p v-if="powerState === 'unavailable'">{{ $t('workflow.powerUnavailable') }}</p>
-        <p v-else-if="powerState === 'failed'" class="notice error">{{ $t('workflow.powerFailed') }}</p>
+        <p v-if="powerState === 'loading'" role="status">{{ $t('workflow.powerLoading') }}</p>
+        <p v-else-if="powerState === 'unavailable'" role="status">{{ $t('workflow.powerUnavailable') }}</p>
+        <p v-else-if="powerState === 'failed'" class="notice error" role="status">{{ $t('workflow.powerFailed') }}</p>
         <dl v-if="powerInfo" class="device-grid">
           <div><dt>{{ $t('workflow.powerReset') }}</dt><dd>{{ format_hex(powerInfo.resetReasonRaw) }}</dd></div>
           <div><dt>{{ $t('workflow.powerVoltage') }}</dt><dd>{{ powerInfo.batteryMillivolts === null ? $t('info.unknown') : powerInfo.batteryMillivolts + ' mV' }}</dd></div>
@@ -268,10 +301,11 @@
       </section>
       <p class="backup-hint">{{ $t('info.privacy') }}</p>
     </details>
-    <section class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
+    <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
     <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" /></div>
     </section>
+    </div></div>
     <el-dialog :title="$t('info.diagnosticPreviewTitle')" v-model="diagnosticsDialog" width="min(800px, 94vw)" :close-on-click-modal="!diagnosticsBusy" :close-on-press-escape="!diagnosticsBusy" :show-close="!diagnosticsBusy">
       <p class="diagnostic-export-hint">{{ $t('info.diagnosticPreviewHint') }}</p>
       <p class="backup-hint">{{ $t('info.privacy') }}</p>
@@ -302,7 +336,8 @@
       <details class="property-edit"><summary>{{ $t('info.editProperties') }}</summary>
       <el-form ref="form" :model="meta_form" label-width="80px" :disabled="mutating">
         <el-form-item :label="$t('properties.remark')">
-          <el-input v-model="meta_form.notes"></el-input>
+          <el-input v-model="meta_form.notes" aria-describedby="metadata-note-hint" :aria-invalid="!metadataNote.valid"></el-input>
+          <p id="metadata-note-hint" class="metadata-note-hint" :class="{ invalid: !metadataNote.valid }" role="status">{{ metadata_note_hint() }}</p>
         </el-form-item>
         <el-form-item :label="$t('properties.attrib')">
           <el-checkbox v-model="meta_form.flags.hide">{{ $t('properties.hide') }}</el-checkbox>
@@ -312,7 +347,7 @@
       </details>
       <template #footer>
         <el-button :disabled="mutating" @click="meta_diag_visible = false">{{ $t('info.closeProperties') }}</el-button>
-        <el-button type="primary" :loading="mutating" :disabled="!connected || busy" @click="on_diag_meta_close">{{ $t('info.saveProperties') }}</el-button>
+        <el-button type="primary" :loading="mutating" :disabled="!connected || busy || !metadataNote.valid" @click="on_diag_meta_close">{{ $t('info.saveProperties') }}</el-button>
       </template>
     </el-dialog>
 
@@ -365,6 +400,13 @@
     </el-dialog>
     <el-dialog :title="$t('upload.title')" v-model="upload_diag_visible" width="min(560px, 92vw)" :before-close="on_upload_diag_close">
       <div>
+        <p class="upload-destination">{{ uploadHub.destination }} <strong>{{ current_dir }}</strong></p>
+        <div class="upload-choices">
+          <label class="upload-choice">{{ uploadHub.folder }}<input type="file" webkitdirectory multiple :disabled="busy || !connected" @change="on_upload_folder_choice"></label>
+          <label class="upload-choice">{{ uploadHub.zip }}<input type="file" accept=".zip,application/zip" :disabled="busy || !connected" @change="on_upload_zip_choice"></label>
+        </div>
+        <p class="backup-hint">{{ uploadHub.planHint }}</p>
+        <h3>{{ uploadHub.files }}</h3>
 <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
               <p>{{ $t('tools.uploadNotice') }}</p>
         <el-checkbox v-model="safeUploads" :disabled="pendingUploads > 0" @change="value => { if (value) verifyUploads = true }">{{ $t('info.safeUploads') }}</el-checkbox>
@@ -384,9 +426,12 @@
         </el-upload>
       </div>
       <template #footer>
+        <span role="status" aria-live="polite">{{ pendingUploads ? uploadHub.queued + ': ' + pendingUploads : uploadHub.idle }}</span>
+        <el-button @click="on_upload_diag_close(() => { upload_diag_visible = false })">{{ uploadHub.close }}</el-button>
       </template>
     </el-dialog>
 
+  <footer class="source-footer"><a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a></footer>
   </main></el-config-provider>
 </template>
 
@@ -409,24 +454,28 @@ import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
 import { loadBackupZip, previewZipImport, executeZipImport } from "./lib/zip-import.js"
-import { TAG_LENGTHS, inspectTagStructure } from "./lib/figure-info.js"
+import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure-info.js"
+import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
+import { metadataNoteInfo } from "./lib/metadata-note.js"
+import { deploymentPath } from "./lib/deployment-path.js"
 
 
 
 export default {
-  components: { MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.27.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.32.5.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
-      powerInfo: null, powerState: 'unknown',
+      activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
+      powerInfo: null, powerState: 'unknown', startupBusy: false,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown',
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1,
-      searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
+      searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
       verifyUploads: true, replaceUploads: false,
@@ -434,7 +483,7 @@ export default {
       connBtnText: `${this.$t("conn.connect")}`,
       version: "",
       connected: false,
-      table_loading: false,
+      table_loading: false, listingError: false,
       mutating: false, connecting: false, disconnecting: false, enteringDfu: false, pendingUploads: 0, pendingDownloads: 0,
       sessionGeneration: 0, listingGeneration: 0, firmwareVersion: "",
       current_dir: "",
@@ -459,11 +508,16 @@ export default {
   },
 
   computed: {
+    dfuPageUrl() { return deploymentPath('dfu/web.html'); },
+    licensesUrl() { return deploymentPath('licenses/index.html'); },
+    uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
+    metadataNote() { return metadataNoteInfo(this.meta_form.notes); },
     diagnosticsBusy() { return this.diagnosticsSaving || this.diagnosticsCopying; },
     nativeDiagnosticSaveAvailable() { return typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function'; },
     elementLocale() { return getElementLocale(this.language) },
+    breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
     figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
-    busy() { return this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
+    busy() { return this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
     lastTransfer() { return this.transferHistory.at(-1) || null; },
     connectionDisconnectLocked() { return this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
     zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
@@ -487,7 +541,126 @@ export default {
     backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; }
   },
   methods: {
-    plan_reason(code) { const known = ['PARENT_BLOCKED','NAME_COLLISION','TYPE_CONFLICT','EXISTING_SIZE_LIMIT','READONLY','INVALID_METADATA','UPLOAD_SIZE_LIMIT']; return this.$t('workflow.' + (known.includes(code) ? code : 'blockedOther')); },
+    select_file_row(index, row) {
+      const demo=!this.connected&&this.demoMode&&row.demoFigure===true;
+      if ((!this.connected&&!demo) || (this.busy && !this.previewBusy)) return;
+      if (row.type !== 'REG') return this.handle_name_click(index,row);
+      let path; try { path=demo?'demo:'+row.name:this.append_segment(this.current_dir,row.name); } catch { return; }
+      if(this.previewSelection?.row===row&&this.previewSelection.path===path&&this.previewSelection.state!=='failed')return this._previewTail;
+      const generation=this.sessionGeneration, serial=++this.previewSerial;
+      const selection={row,path,id:null,inspection:null,state:'unknown',source:demo?'demo':'metadata'};
+      this.previewSelection=selection;
+      const current=()=>this.session_current(generation)&&serial===this.previewSerial&&this.previewSelection?.path===path;
+      if(!TAG_LENGTHS.includes(row.sizeBytes)){selection.state='unsupported';return;}
+      const id=row.metadataValid===false?null:metadataFigureId(row.amiibo);
+      if(id){selection.id=id;selection.state='ready';return;}
+      if(demo)return;
+      selection.state='reading';selection.source='file';
+      this.previewBusy=true;
+      const pending=(this._previewTail||Promise.resolve()).then(async()=>{
+        if(!current())return;
+        try{
+          const bytes=await this.read_device_file(path,{max_bytes:row.sizeBytes});
+          if(!current())return;
+          if(bytes.byteLength!==row.sizeBytes)throw new Error('File size changed');
+          const inspection=inspectTagStructure(new Uint8Array(bytes));
+          // Never assign an ordinary figure image to a malformed selected file.
+          this.previewSelection={...selection,inspection,id:inspection.status==='structure-consistent'?inspection.id:null,
+            state:inspection.status==='structure-consistent'?'ready':'invalid'};
+        }catch(error){if(current())this.previewSelection={...selection,state:'failed'};}
+      });
+      this._previewTail=pending.catch(()=>{});
+      const tail=this._previewTail;
+      void tail.finally(()=>{if(generation===this.sessionGeneration&&tail===this._previewTail)this.previewBusy=false;});
+      return pending;
+    },
+    close_preview_selection() { this.previewSelection=null;++this.previewSerial; },
+    preview_selection_current(selection = this.previewSelection) {
+      if (!this.connected || !selection || !this.current_dir || selection.row?.type !== 'REG' ||
+          this.previewSelection?.row !== selection.row || this.previewSelection.path !== selection.path ||
+          !this.tableData.includes(selection.row)) return false;
+      // A retained picture must never redirect an action into a new folder or
+      // target a newly listed file that merely reuses the previous filename.
+      try { return this.append_segment(this.current_dir, selection.row.name) === selection.path; }
+      catch { return false; }
+    },
+    async download_preview_selection() {
+      const selection=this.previewSelection,generation=this.sessionGeneration,serial=this.previewSerial;
+      if(!this.preview_selection_current(selection))return;
+      await this._previewTail;
+      if(!this.session_current(generation)||this.busy||serial!==this.previewSerial||!this.preview_selection_current(selection))return;
+      return this.handle_name_click(0,selection.row);
+    },
+    open_preview_properties() {
+      const selection=this.previewSelection;
+      if(!this.busy&&this.preview_selection_current(selection))return this.on_row_btn_meta(0,selection.row);
+    },
+    device_search_session() {
+      const generation = this.sessionGeneration;
+      this.assert_session(generation);
+      return { assertSession: () => this.assert_session(generation), readDirectory: async path => {
+        this.assert_session(generation);
+        const entries = this.checked(await proto.vfs_read_folder(path));
+        this.assert_session(generation);
+        return entries;
+      }, readFile: async (path, { maxBytes }) => {
+        this.assert_session(generation);
+        const bytes = await this.read_device_file(path, { max_bytes: maxBytes });
+        this.assert_session(generation); return bytes;
+      } };
+    },
+    async navigate_search_result(result) {
+      if (!result || !this.connected || this.busy || result.generation !== this.sessionGeneration || ![0,1].includes(result.type)) return;
+      try {
+        if (joinDevicePath(result.parent, result.name) !== result.path) return;
+      } catch { return; }
+      const generation = this.sessionGeneration, dir = result.type === 1 ? result.path : result.parent;
+      this.reset_filters(); this.current_dir = dir;
+      await this.reload_folder();
+      if (!this.session_current(generation) || this.current_dir !== dir || this.listingError) return;
+      if (result.type === 0) {
+        const index = this.sortedRows.findIndex(row => row.name === result.name && row.type === 'REG');
+        if (index < 0) return;
+        this.page = Math.floor(index / this.pageSize) + 1;
+        await this.$nextTick();
+        if (!this.session_current(generation) || this.current_dir !== dir) return;
+        const button = Array.from(this.$refs.fileWorkspace?.querySelectorAll?.('[data-file-name]') || []).find(item => item.getAttribute('data-file-name') === result.name);
+        button?.focus?.(); button?.scrollIntoView?.({ block:'nearest' });
+      } else this.show_workspace('files');
+    },
+    on_upload_folder_choice(event) {
+      if (this.busy || !this.connected || !this.current_dir || !event.target.files?.length) { event.target.value = ''; return; }
+      this.$refs.upload?.clearFiles();
+      this.upload_diag_visible = false;
+      this.open_sync();
+      if (this.syncDialog) this.on_sync_files(event);
+    },
+    async on_upload_zip_choice(event) {
+      if (this.busy || !this.connected || !this.current_dir || !event.target.files?.length) { event.target.value = ''; return; }
+      this.$refs.upload?.clearFiles();
+      this.upload_diag_visible = false;
+      this.open_zip();
+      if (this.zipDialog) await this.on_zip_file(event);
+    },
+    read_startup_diagnostics() { return proto.get_startup_diagnostics(); },
+    open_startup_report(report) {
+      if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
+      this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.32.5.json';
+      this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
+    },
+    navigate_breadcrumb(path) {
+      if (!this.connected || this.busy || path === this.current_dir || !this.breadcrumbs.some(crumb => crumb.path === path)) return;
+      this.reset_filters(); this.current_dir = path;
+      return this.refresh_current();
+    },
+    set_page_size(value) {
+      if (this.busy) return;
+      const size = checkedPageSize(value);
+      if (size === this.pageSize) return;
+      this.pageSize = size; this.on_filter_change();
+    },
+    plan_reason(code) { const known = ['PARENT_BLOCKED','NAME_COLLISION','TYPE_CONFLICT','EXISTING_SIZE_LIMIT','READONLY','INVALID_METADATA','UPLOAD_SIZE_LIMIT']; const reason = code === 'DIRECTORY_CONFLICT' ? 'TYPE_CONFLICT' : code; return this.$t('workflow.' + (known.includes(reason) ? reason : 'blockedOther')); },
     select_plan(kind, additionsOnly) {
       if (this.busy) return;
       const plan = kind === 'zip' ? this.zipPlan : kind === 'sync' ? this.syncPlan : null;
@@ -495,21 +668,25 @@ export default {
       this[kind + 'Selected'] = additionsOnly ? plan.entries.filter(e => e.status === 'add').map(e => e.targetPath) : [];
     },
     show_workspace(name) {
-      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace' };
+      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
       const panel = Object.hasOwn(refs, name) ? this.$refs[refs[name]] : null;
-      if (!panel) return;
-      if (name !== 'files') panel.open = true;
+      if (!panel || (this.migrationBusy && name !== 'backup')) return;
+      this.activeWorkspace = name;
+      if (name === 'catalogue') this.catalogueOpen = true;
+      if (!['files','catalogue'].includes(name)) panel.open = true;
       panel.scrollIntoView?.({ block: 'start', behavior: 'auto' });
-      (name === 'files' ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll: true });
+      (['files','catalogue'].includes(name) ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll: true });
+      this.$nextTick(() => { panel.scrollIntoView?.({ block:'start', behavior:'auto' }); (['files','catalogue'].includes(name) ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll:true }); });
     },
     on_migration_busy(value) {
       this.migrationBusy = !!value;
+      if (this.migrationBusy) this.activeWorkspace = 'backup';
       if (this.migrationBusy && this.$refs.backupWorkspace) this.$refs.backupWorkspace.open = true;
     },
     keep_migration_visible() {
       if (this.migrationBusy && this.$refs.backupWorkspace) this.$refs.backupWorkspace.open = true;
     },
-    show_device_panel() { if (this.$refs.devicePanel) { this.$refs.devicePanel.open = true; this.$refs.devicePanel.scrollIntoView?.({block:'start',behavior:'auto'}); } },
+    show_device_panel() { return this.show_workspace('device'); },
     runtime_vfs_detail(code) { return this.$t('info.' + runtimeVfsDetailKey(code)); },
     refresh_local_metrics() {
       this.transportInfo = proto.get_transport_diagnostics?.() || null;
@@ -566,7 +743,7 @@ export default {
       const generation=this.sessionGeneration,deviceKey=pixl.get_device_key?.();this.assert_session(generation);
       if(!deviceKey)throw new Error(this.$t('info.syncIdentity'));
       return {...this.transfer_adapters(generation),deviceKey,firmwareVersion:this.firmwareVersion,
-        readStorageInfo:async()=>{this.assert_session(generation);const response=await proto.vfs_storage_info('E');this.assert_session(generation);if(response?.status===255)throw Object.assign(new Error('Raw128 storage capabilities were not confirmed.'),{code:'MIGRATION_PREPARATION_REQUIRED'});return this.checked(response);},
+        readStorageInfo:async()=>{this.assert_session(generation);const response=await proto.vfs_storage_info_extended('E');this.assert_session(generation);if(response?.status===255)throw Object.assign(new Error('Raw128 storage capabilities were not confirmed.'),{code:'MIGRATION_PREPARATION_REQUIRED'});return this.checked(response);},
         readStorageLayout:async()=>{this.assert_session(generation);const value=this.checked(await proto.vfs_storage_layout('E'));this.assert_session(generation);return value;},
         readApplicationIdentity:async()=>{this.assert_session(generation);const version=this.checked(await proto.get_version());this.assert_session(generation);const boot=normalizeBootDiagnostics(await proto.get_boot_diagnostics());this.assert_session(generation);if(!boot)throw Object.assign(new Error('Current application counter is unavailable.'),{code:'MIGRATION_IDENTITY'});return {...boot,firmwareVersion:version.ver};},
         readImportState:async()=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',0));this.assert_session(generation);return state;},
@@ -599,7 +776,7 @@ export default {
         readDirectory: async path => { this.assert_session(generation); const data = this.checked(await proto.vfs_read_folder(path)); this.assert_session(generation); return data; },
         readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
         writeFile: (path, bytes, options = {}) => new Promise((resolve, reject) => {
-          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject); }
+          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject, {rawMeta128:options.rawMeta128}); }
           catch(error) { reject(error); }
         }),
         rename: async (from, to) => { this.assert_session(generation); this.checked(await proto.vfs_rename(from,to)); this.assert_session(generation); },
@@ -633,7 +810,8 @@ export default {
     },
     close_zip(done) { if (!this.zipBusy) { this.invalidate_zip(); done?.(); } },
     show_zip_progress(progress) {
-      if (progress.phase === 'parsing' || progress.phase === 'checking') {
+      if (progress.unit === 'files' || progress.unit === 'entries') {
+        this.set_transfer(null);
         this.zipStatus = this.$t('workflow.' + progress.phase, {done:progress.done || 0,total:progress.total || 0});
       } else this.show_safe_progress(progress,this.zipRoot,0);
     },
@@ -780,7 +958,7 @@ export default {
         }
       } finally {
         if(this._syncController===controller)this._syncController=null;
-        if(generation===this.sessionGeneration){this.workflowCancelling=false;this.syncing=false;this.syncPlan=null;this.syncSelected=[];this.set_transfer(null);}
+        if(generation===this.sessionGeneration){this.workflowCancelling=false;this.syncing=false;this.syncPlan=null;this.syncSelected=[];this.set_transfer(null);await this.refresh_current();}
       }
     },
     cancel_sync() { this.workflowCancelling=true; this._syncController?.abort(); this.syncStatus=this.$t('info.finishingCommit'); },
@@ -801,17 +979,22 @@ export default {
     async refresh_runtime_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
       const generation=this.sessionGeneration; this.infoLoading=true;
-      this.runtimeInfo=null; this.runtimeState='unknown';
+      this.runtimeInfo=null; this.runtimeState='loading';
       try {
         const data=await proto.get_runtime_diagnostics?.(); this.assert_session(generation);
-        this.runtimeInfo=normalizeRuntimeDiagnostics(data); this.runtimeState=this.runtimeInfo?'available':'unavailable';
-      } catch(error) {if(this.session_current(generation))this.show_transfer_error(error);}
+        if (data == null) { this.runtimeState='unavailable'; return; }
+        const normalized=normalizeRuntimeDiagnostics(data);
+        if (!normalized) throw new Error(this.$t('info.runtimeFailed'));
+        this.runtimeInfo=normalized; this.runtimeState='available';
+      } catch(error) {
+        if(this.session_current(generation)) { this.runtimeState='failed'; this.show_transfer_error(error); }
+      }
       finally {if(generation===this.sessionGeneration)this.infoLoading=false;}
     },
     async refresh_boot_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
       const generation=this.sessionGeneration; this.infoLoading=true;
-      this.bootInfo=null; this.bootState='unknown';
+      this.bootInfo=null; this.bootState='loading';
       try {
         const data=await proto.get_boot_diagnostics?.(); this.assert_session(generation);
         if (data == null) { this.bootState='unavailable'; return; }
@@ -825,7 +1008,7 @@ export default {
     async refresh_power_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
       const generation=this.sessionGeneration; this.infoLoading=true;
-      this.powerInfo=null; this.powerState='unknown';
+      this.powerInfo=null; this.powerState='loading';
       try {
         const data=await proto.get_power_diagnostics?.(); this.assert_session(generation);
         if(data == null) { this.powerState='unavailable'; return; }
@@ -845,6 +1028,7 @@ export default {
         browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator !== 'undefined' && !!navigator.bluetooth },
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.32.5.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -897,6 +1081,7 @@ export default {
     },
     toggle_preview() {
       if (this.connected || this.connecting || this.busy) return;
+      this.close_preview_selection();
       this.demoMode = !this.demoMode;
       this.current_dir = '';
       this.tableData = this.demoMode ? Array.from({ length: 245 }, (_, index) => ({
@@ -904,6 +1089,11 @@ export default {
         type: index % 25 === 0 ? 'DIR' : 'REG', sizeBytes: index % 25 === 0 ? 0 : 540,
         size: index % 25 === 0 ? '' : '540 B', notes: this.$t('tools.previewData')
       })) : [];
+      if(this.demoMode){
+        // Public catalogue identities only, never fabricated tag bytes.
+        const examples=[{name:'Mario',head:0,tail:2},{name:'Link',head:0x01000000,tail:0x00040002}];
+        for(let i=0;i<examples.length;i++)this.tableData[i+1]={name:`0${i+1}-Demo-${examples[i].name}.bin`,type:'REG',sizeBytes:540,size:'540 B',notes:this.$t('tools.previewData'),demoFigure:true,metadataValid:true,flags:{},amiibo:{head:examples[i].head,tail:examples[i].tail}};
+      }
       this.on_filter_change();
     },
     on_filter_change() { this.page = 1; this.table_selection = []; this.$refs.multipleTable?.clearSelection(); },
@@ -969,7 +1159,7 @@ export default {
             this.assert_session(generation); return bytes;
           },
           onProgress: progress => {
-            if (this.session_current(generation)) { this.set_transfer({ phase: progress.phase, path: progress.path, done: progress.bytesDone, total: progress.bytesTotal,
+            if (this.session_current(generation)) { this.set_transfer({ phase: progress.phase, path: progress.path, done: progress.bytesDone, total: progress.bytesTotal, complete: progress.phase === 'complete',
               filesDone:Number.isSafeInteger(progress.filesDone)?progress.filesDone:null,filesTotal:Number.isSafeInteger(progress.filesTotal)?progress.filesTotal:null }); this.refresh_backup_checkpoint(); }
           }
         });
@@ -1036,7 +1226,15 @@ export default {
       const known = { UPLOAD_PARENT:'uploadParent', UPLOAD_READONLY:'READONLY', BACKUP_CHECKPOINT_IDENTITY:'checkpointIdentity', BACKUP_CHECKPOINT_BUSY:'checkpointBusy', ZIP_STALE:'zipStale', ZIP_CHANGED:'zipStale', ZIP_LIMIT:'zipLimit', ZIP_CRC:'zipIntegrity', ZIP_HASH:'zipIntegrity', ZIP_STRUCTURE:'zipIntegrity', ZIP_FORMAT:'zipIntegrity', ZIP_MANIFEST:'zipIntegrity', ZIP_PATH:'zipPath', ZIP_COLLISION:'zipPath' };
       this.$message({ type: 'error', message: known[error?.code] ? this.$t('workflow.' + known[error.code]) : error?.message || String(error) });
     },
+    on_remote_file_handoff(session) {
+      if (this.connected || this.connecting || this.disconnecting || this.busy) throw new Error('File connection is busy');
+      if (this.demoMode) this.toggle_preview();
+      const accepted = pixl.adopt_remote_connection(session);
+      if (accepted) this.show_workspace('files');
+      return accepted;
+    },
     on_btn_ble_connect() {
+      if (this.remoteActive) return;
       if (this.disconnecting) return;
       if (this.connectionDisconnectLocked) { this.cancel_transfer(); return; }
       if (this.connected || this.connecting) {
@@ -1071,6 +1269,8 @@ export default {
       } catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
     },
     on_ble_disconnected() {
+      this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
+      this.searchBusy=false;
       this.powerInfo=null; this.powerState='unknown';
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
@@ -1095,7 +1295,7 @@ export default {
       this.connected = false;
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : 'conn.connect');
       this.version = "";
-      this.table_loading = false;
+      this.table_loading = false; this.listingError = false;
       this.tableData = [];
       this.current_dir = "";
       this.$notify({
@@ -1112,6 +1312,8 @@ export default {
       this.connBtnText = this.$t(this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
     },
     on_ble_connect_error(error) {
+      this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
+      this.searchBusy=false;
       this.powerInfo=null; this.powerState='unknown';
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
@@ -1132,7 +1334,7 @@ export default {
       this.connBtnType = "";
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : 'conn.connect');
       this.version = "";
-      this.table_loading = false;
+      this.table_loading = false; this.listingError = false;
       this.tableData = [];
       this.current_dir = "";
       this.$notify({
@@ -1175,6 +1377,7 @@ export default {
 
     on_btn_up() {
       if (this.btn_disabled()) return;
+      this.reset_filters();
       var drive = this.current_dir.substring(0, 2); //E:
       var path = this.current_dir.substring(2);
 
@@ -1267,7 +1470,7 @@ export default {
     },
 
     on_upload_request(options) {
-      if (!this.connected || !this.current_dir || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingDownloads || this.mutating) return Promise.reject(new Error(this.$t('conn.disconnected')));
+      if (!this.connected || !this.current_dir || this.searchBusy || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingDownloads || this.mutating) return Promise.reject(new Error(this.$t('conn.disconnected')));
       const dir = this.current_dir, generation = this.sessionGeneration, safe = this.safeUploads, verify = safe || this.verifyUploads, replace = this.replaceUploads;
       let controller;
       let path;
@@ -1275,14 +1478,17 @@ export default {
       catch (error) { return Promise.reject(error); }
       if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.maxsize')));
       ++this.pendingUploads;
-      const run = async () => {
+      const checkPreflight = () => {
         this.assert_session(generation);
-        if (this._cancelUploadGeneration === generation) throw Object.assign(new Error(this.$t('info.uploadCancelled')), {name:'AbortError'});
+        if (this._cancelUploadGeneration === generation || controller?.signal.aborted) throw Object.assign(new Error(this.$t('info.uploadCancelled')), {name:'AbortError'});
+      };
+      const run = async () => {
+        checkPreflight();
         if (safe) { controller = new AbortController(); this._uploadController = controller; }
         // Refresh the destination before OPEN('w'): uploads in this same batch
         // can have introduced a new conflict since the displayed listing.
         const entries = this.checked(await proto.vfs_read_folder(dir));
-        this.assert_session(generation);
+        checkPreflight();
         const aliases = entries.filter(entry => portableNameKey(entry.name) === portableNameKey(options.file.name));
         if (aliases.length > 1 || aliases.some(entry => entry.name !== options.file.name)) throw new Error(this.$t('info.portableCollision'));
         const existing = aliases[0];
@@ -1292,9 +1498,10 @@ export default {
           if (existing.meta?.flags?.readonly || (existing.meta?.flags?.raw & 4)) throw new Error(this.$t('info.readonlyTarget'));
           if (!replace) throw new Error(this.$t('tools.exists', { name: options.file.name }));
           await this.ask_dialog(() => this.$confirm(this.$t(safe ? 'info.safeReplaceWarning' : 'tools.replaceWarning', { name: options.file.name }), this.$t('upload.title'), this.confirm_options()));
-          this.assert_session(generation);
+          checkPreflight();
         }
         const drives = await this.read_drive_info(generation);
+        checkPreflight();
         const destination = drives.find(drive => drive.label === dir[0]);
         if (!destination || destination.status !== 0) throw new Error(this.$t('info.driveUnavailable'));
         if (!uploadSpaceAvailable(destination, options.file.size, safe ? 0 : existing?.size || 0)) throw new Error(this.$t('info.notEnoughSpace'));
@@ -1454,12 +1661,19 @@ export default {
     },
 
     on_diag_meta_close() {
+      if (!this.metadataNote.valid) { this.show_transfer_error(new Error(this.metadata_note_hint())); return; }
       const form = this.meta_form, meta = { notes: form.notes, flags: { ...form.flags }, amiibo: { ...form.amiibo } };
       return this.mutate(async generation => {
         this.checked(await proto.vfs_update_meta(form.path, meta));
         if (!this.session_current(generation)) return;
         Object.assign(form.row, meta); this.meta_diag_visible = false;
       });
+    },
+
+    metadata_note_hint() {
+      const note = this.metadataNote;
+      return this.$t(note.reason === 'invalid' ? 'properties.noteinvalid' : note.reason === 'length' ? 'properties.notelimit' : 'properties.notebytes',
+        { max: note.maxBytes, actual: note.bytes });
     },
 
     on_table_selection_change(selected) {
@@ -1475,6 +1689,7 @@ export default {
       if (row.type === 'DRIVE' || row.type === 'DIR') {
         if (this.pendingDownloads) return;
         this.current_dir = row.type === 'DRIVE' ? row.name.slice(0, 3) : this.append_segment(this.current_dir, row.name);
+        this.reset_filters();
         return this.reload_folder();
       }
       const generation = this.sessionGeneration;
@@ -1502,8 +1717,9 @@ export default {
 
     async reload_drive() {
       if (!this.connected) return;
+      this.close_preview_selection();
       const listing = ++this.listingGeneration, generation = this.sessionGeneration;
-      this.current_dir = ''; this.table_loading = true; this.tableData = []; this.table_selection = [];
+      this.current_dir = ''; this.table_loading = true; this.listingError = false; this.tableData = []; this.table_selection = [];
       this.page = 1;
       try {
         const data = this.checked(await proto.vfs_get_drive_list());
@@ -1511,22 +1727,25 @@ export default {
         this.driveInfo = normalizeDrives(data); this.refresh_local_metrics();
         this.tableData = data.map(drive => ({ name: drive.label + ':/ [' + drive.name + ']', type: 'DRIVE', notes: '', sizeBytes: drive.total_size,
           size: drive.status === 0 ? this.$t('drive.free', { free: this.format_size(drive.free_size), total: this.format_size(drive.total_size) }) : this.$t('drive.message') + drive.status + this.$t('drive.messageend') }));
-      } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) this.show_transfer_error(error); }
+      } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) { this.listingError = true; this.show_transfer_error(error); } }
       finally { if (listing === this.listingGeneration) this.table_loading = false; }
     },
 
     async reload_folder() {
       if (!this.connected) return;
+      this.previewSelection=null;++this.previewSerial;
       const dir = this.current_dir, listing = ++this.listingGeneration, generation = this.sessionGeneration;
-      this.table_loading = true; this.tableData = []; this.table_selection = [];
-      this.page = 1;
+      this.table_loading = true; this.listingError = false; this.tableData = []; this.table_selection = [];
       try {
         const data = this.checked(await proto.vfs_read_folder(dir));
         if (!this.session_current(generation) || listing !== this.listingGeneration || dir !== this.current_dir) return;
         this.tableData = data.map(file => ({ name: file.name, size: this.format_size(file.size), sizeBytes: file.size,
           type: file.type === 0 ? 'REG' : 'DIR', metadataValid: file.meta.valid !== false,
           notes: file.meta.valid === false ? this.$t('properties.invalidmeta') : file.meta.notes, flags: file.meta.flags, amiibo: file.meta.amiibo }));
-      } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) this.show_transfer_error(error); }
+        // Filters remain usable while the listing is pending. Preserve the
+        // user's current page decision, not the page captured before that edit.
+        this.page = Math.min(Math.max(1, this.page), this.pageCount);
+      } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) { this.listingError = true; this.show_transfer_error(error); } }
       finally { if (listing === this.listingGeneration) this.table_loading = false; }
     },
 
@@ -1564,6 +1783,7 @@ export default {
     delete_table_row_by_name(name) {
       for (var i = 0; i < this.tableData.length; i++) {
         if (this.tableData[i].name == name) {
+          if (this.previewSelection?.row === this.tableData[i]) this.close_preview_selection();
           this.tableData.splice(i, 1);
           this.page = Math.min(this.page, this.pageCount);
           return;
@@ -1625,6 +1845,8 @@ export default {
 </script>
 
 <style>
+.upload-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem}.upload-choice{display:flex;flex-direction:column;gap:.6rem;border:1px solid #c9d7e8;border-radius:10px;padding:.8rem;font-weight:600;min-width:0}.upload-choice input{max-width:100%;font:inherit;font-size:.85rem}.upload-destination{overflow-wrap:anywhere}
+
 .diagnostic-export-hint { line-height:1.6; font-size:14px; color:#395c67; }
 .diagnostic-json-label { display:block; margin:14px 0 8px; font-size:12px; color:#54737d; }
 .diagnostic-json { display:block; box-sizing:border-box; width:100%; max-width:100%; min-height:220px; resize:vertical; padding:12px; border:1px solid #bed3d7; border-radius:8px; background:#f5f9fa; color:#263e47; font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:2; }
@@ -1776,10 +1998,13 @@ body { box-sizing:border-box; margin:0; padding:28px 20px; background:#eef3f3; c
 .connection-pill.online { background:#e1f0e8; color:#276a4e; }
 .quick-status button { min-height:36px; padding:7px 11px; border-color:#cadadd; color:#35646c; font-size:12px; }
 .quick-location,.quick-storage { color:#486771; font-size:12px; }
-.workspace-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 20px; }
+.workspace-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 20px; }
 .workspace-nav button { display:flex; align-items:center; gap:12px; width:100%; min-height:88px; padding:16px 14px; text-align:left; background:#fff; border:1px solid #d6e2e3; border-radius:12px; color:#234851; cursor:pointer; }
 .workspace-nav button:hover { border-color:#74a9ae; background:#f2f8f8; }
 .workspace-nav strong { display:block; font-size:13px; line-height:1.4; }
+.remote-workspace { margin:16px 0; border:1px solid #d4e1e4; border-radius:12px; padding:14px; scroll-margin-top:12px; }
+.remote-workspace>summary { cursor:pointer; font-weight:600; min-height:32px; }
+.remote-workspace[open]>summary { margin-bottom:12px; }
 .workspace-nav small { display:block; margin-top:5px; color:#617b82; font-size:11px; line-height:1.5; }
 .workspace-icon { display:grid; place-items:center; width:35px; height:38px; flex:none; border-radius:9px; background:#eaf3f3; color:#26747c; font-size:22px; }
 .workspace-arrow { margin-left:auto; font-size:18px; color:#6a8e94; }
@@ -1839,4 +2064,42 @@ body { box-sizing:border-box; margin:0; padding:28px 20px; background:#eef3f3; c
 @media(max-width:850px) { .workspace-nav { gap:8px; } .workspace-nav button { padding:13px 10px; gap:8px; } .workspace-icon { display:none; } .app-subtitle { max-width:35ch; } }
 @media(max-width:650px) { body { padding:10px; } .filemanager { padding:18px 14px; border-radius:14px; } .app-header { flex-wrap:wrap; gap:16px; } .header-tools { justify-content:space-between; width:100%; } .brand-mark { width:46px; height:46px; border-radius:13px; } .app-subtitle { max-width:none; font-size:11px; } .version-context { margin-top:14px; } .workspace-nav { grid-template-columns:1fr; gap:8px; } .workspace-nav button { min-height:64px; padding:11px 13px; } .workspace-icon { display:grid; } .workspace-nav small { margin-top:2px; } .workspace-panel>summary>span { display:block; margin:5px 0 0 15px; } .workspace-content { padding:12px; } .update-steps { grid-template-columns:1fr; } .section-heading { align-items:flex-start; flex-wrap:wrap; } .file-navigation { width:100%; } .file-navigation .el-button { flex:1; } .filemanager .el-button--small { min-height:42px; } .search-label { flex-basis:100%; min-width:0; } .entry-count { padding-bottom:0; } .quick-status-main { min-width:0; } .quick-status button { min-height:42px; } .info-actions button { min-height:42px; } .connection-guide { padding:14px; } }
 @media(prefers-reduced-motion:reduce) { .filemanager *, .filemanager *::before, .filemanager *::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
+/* Compact navigation and explicit path controls, without hiding file actions. */
+.folder-breadcrumbs ol { display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; list-style:none; margin:0; padding:0; font-size:12px; }
+.folder-breadcrumbs li { display:flex; align-items:center; gap:8px; min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.folder-breadcrumbs button { border:0; border-radius:6px; padding:8px 6px; background:transparent; color:#176b73; text-align:left; font:inherit; cursor:pointer; overflow-wrap:anywhere; min-height:36px; }
+.folder-breadcrumbs button:hover { background:#e3f0f0; text-decoration:underline; text-underline-offset:3px; }
+.folder-breadcrumbs button:disabled { opacity:.5; cursor:default; }
+.folder-breadcrumbs [aria-current] { padding:8px 0; color:#254e59; font-weight:650; }
+.metadata-note-hint { width:100%; margin:6px 0 0; font-size:12px; line-height:1.5; color:#536b80; overflow-wrap:anywhere; }
+.metadata-note-hint.invalid { color:#a12a2a; }
+.path-separator { color:#92a8ad; }
+.table-footer { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:12px; padding:12px 0; }
+.table-footer .pagination { padding:0; flex-wrap:wrap; gap:10px; }
+.page-size { display:flex; gap:10px; align-items:center; color:#5b767e; font-size:12px; }
+.page-size select { min-height:40px; }
+@media(max-width:650px) {
+  .workspace-nav { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-bottom:16px; }
+  .workspace-nav button { min-height:74px; padding:10px 4px; display:flex; flex-direction:column; justify-content:center; text-align:center; gap:5px; }
+  .workspace-nav strong { font-size:11px; overflow-wrap:anywhere; }
+  .workspace-nav small,.workspace-arrow { display:none; }
+  .workspace-icon { width:26px; height:26px; font-size:19px; border-radius:7px; }
+  .quick-status { margin-bottom:14px; }
+  .files-workspace { margin-top:16px; }
+  .folder-path { padding:7px 9px; }
+  .folder-breadcrumbs button { min-height:42px; }
+  .table-footer { align-items:flex-start; }
+  .table-footer .pagination button { min-height:42px; }
+}
+
+/* 3.32: persistent workspaces, quiet navigation and a selection context. */
+:root{--el-color-primary:#26333d;--el-color-primary-dark-2:#16232d;--el-color-primary-light-3:#596772;--el-color-primary-light-5:#89949c;--el-color-primary-light-7:#b9c1c7;--el-color-primary-light-8:#d6dce0;--el-color-primary-light-9:#eef1f3}
+body{padding:0;background:#f5f6f8;color:#2d3943}.filemanager{max-width:1680px;min-height:100vh;border:0;border-radius:0;margin:0 auto;padding:0;background:#fafbfc;box-shadow:none}.app-header{height:76px;padding:14px 28px;background:white;border-bottom:1px solid #e5e8ec;gap:16px}.brand-mark{width:38px;height:38px;border-radius:11px;background:#293942;color:#fff}.brand-mark svg{width:26px;height:26px}.brand-lockup{gap:11px}.app-header h1{font-size:21px;letter-spacing:-.03em;color:#27333d}.app-eyebrow{font-size:8px;letter-spacing:.15em;color:#8b959e;margin:0 0 3px}.app-subtitle{display:none}.header-tools>.el-button{min-height:36px}.header-language .el-button{min-height:34px}.version-context{margin:0;padding:10px 28px 0;background:white;font-size:10px}.version-context span{border:0;padding:0 16px 0 0;background:transparent;border-radius:0}.version-context strong{color:#65717b}.quick-status{margin:0;border:0;border-bottom:1px solid #e5e8ec;border-radius:0;padding:12px 28px;background:white;gap:10px}.quick-status button{min-height:30px;border:0;background:transparent;color:#5d6e7a;padding:6px}.quick-location{font-size:12px}.connection-pill{font-size:10px;padding:5px 9px}.quick-storage{font-size:11px}.app-layout{display:grid;grid-template-columns:210px minmax(0,1fr);align-items:start;min-height:calc(100vh - 135px)}.workspace-nav{display:flex;flex-direction:column;gap:7px;margin:0;padding:26px 14px;position:sticky;top:0;max-height:100vh;overflow:auto;align-self:start;border-right:1px solid #e5e8ec;min-height:calc(100vh - 135px);background:#fafbfc}.workspace-nav button{display:flex;align-items:center;text-align:left;width:100%;border:0;border-radius:8px;box-shadow:none;background:transparent;padding:12px 10px;gap:10px;min-height:52px}.workspace-nav button:hover{background:#edf0f3;transform:none}.workspace-nav button[aria-current="page"]{background:#e8ecef;color:#263c49}.workspace-nav button strong{font-size:12px;font-weight:600;color:#34444f}.workspace-nav button small{font-size:10px;line-height:1.4;margin-top:3px;color:#8b959e}.workspace-nav .workspace-icon{width:25px;height:25px;background:transparent;color:#607583;font-size:20px}.workspace-arrow{display:none}.workspace-body{min-width:0;padding:24px}.files-workspace{padding:0;border:1px solid #e3e7eb;border-radius:12px;background:white;box-shadow:0 2px 8px #20303a04;overflow:hidden}.collection-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px}.collection-main{min-width:0;padding:24px}.selection-context{min-width:0;border-left:1px solid #e5e8ec;background:#fdfefe;align-self:stretch}.selection-context .selection-preview{position:sticky;top:0}.section-heading{gap:12px;flex-wrap:wrap;margin-bottom:18px}.filemanager .section-heading h2{font-size:21px;letter-spacing:-.03em;margin:0}.section-eyebrow{font-size:9px;color:#98a1a9;margin-bottom:5px}.file-toolbar{margin-bottom:10px}.file-toolbar .el-button{min-height:34px}.folder-path{margin:15px 0}.file-filters{gap:9px;margin:16px 0}.file-filters label{font-size:11px;color:#657783}.search-label{min-width:130px}.file-filters input,.file-filters select{min-height:36px;font-size:12px;border-color:#dde3e8}.entry-count{font-size:10px}.connection-guide{background:#fafbfc;border:1px dashed #d3dbe1;border-radius:10px;margin:12px 0}.connection-guide h3{font-size:14px}.connection-guide p{font-size:12px}.connection-guide-symbol{color:#6d7d88;background:#eef1f4}.preview-controls{background:transparent;padding:6px 0}.preview-controls button{font-size:11px;background:white;border-color:#dce3e8;color:#5c707d}.device-search{font-size:12px}.filemanager .el-table{font-size:12px;--el-table-header-bg-color:#fafbfc;--el-table-border-color:#edf0f3;--el-table-row-hover-bg-color:#f5f8fa}.filemanager .el-table th.el-table__cell{font-size:10px;font-weight:600;color:#8b959e;height:38px}.filemanager .el-table td.el-table__cell{height:44px}.file-name-action{font-size:12px}.file-name-action:hover{color:#12725f}.file-symbol{color:#9ba7af}.table-footer{margin-top:14px}.page-size,.pagination{font-size:11px}.workspace-body>.workspace-panel,.workspace-body>.device-panel,.workspace-body>.remote-workspace,.workspace-body>.extra-tools{margin:0;padding:24px;border:1px solid #e3e7eb;border-radius:12px;background:white;box-shadow:0 2px 8px #20303a04}.workspace-body>.workspace-panel>summary,.workspace-body>.device-panel>summary,.workspace-body>.remote-workspace>summary{padding:0 0 18px;font-size:18px;list-style:none;pointer-events:none}.workspace-content{padding:0}.transfer-panel,.backup-ready,.backup-resume{margin:0 0 16px;background:white;border-color:#e0e6eb}.transfer-panel{position:sticky;top:8px;z-index:4;box-shadow:0 5px 18px #22333f0b}.workspace-body>.backup-hint{font-size:10px;margin-bottom:10px}.workspace-body .extra-tools h2{font-size:20px}.workspace-body .extra-tools .catalogue-toggle{font-size:12px}.device-info-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.device-info-grid dt{font-size:11px}.device-info-grid dd{font-size:13px}.filemanager>.notice{margin:12px 28px}.upload-choices input::file-selector-button{border:1px solid #d1dbe1;padding:8px;border-radius:6px;background:#fff;color:#394d5b}.el-upload-dragger{background:#fafbfc;border-color:#cbd5dd}.upload-symbol{color:#9aa9b5}
+@media(max-width:1200px){.app-layout{grid-template-columns:175px minmax(0,1fr)}.workspace-body{padding:18px}.collection-layout{grid-template-columns:minmax(0,1fr) 225px}.collection-main{padding:18px}.workspace-nav{padding:20px 9px}.workspace-nav button small{display:none}.workspace-nav button{min-height:44px}.file-navigation{gap:4px}.filemanager .el-button--small{font-size:11px}}
+@media(max-width:960px){.collection-layout{grid-template-columns:minmax(0,1fr)}.selection-context{border-left:0;border-top:1px solid #e5e8ec}.selection-context .selection-preview{position:static}.selection-preview .preview-picture{float:left;width:150px;margin:0 20px 15px 0;height:150px}.selection-preview .preview-picture img{max-height:140px}.selection-preview .preview-actions{clear:both;grid-template-columns:1fr 1fr}.selection-preview .preview-empty{padding:12px 0}.selection-preview dl{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}}
+@media(max-width:650px){body{padding:0}.filemanager{padding:0;border-radius:0}.app-header{height:auto;min-height:70px;padding:14px 16px;align-items:center}.brand-lockup{gap:8px}.brand-mark{width:33px;height:33px}.app-header h1{font-size:18px}.header-tools{gap:5px;flex:none}.header-tools>.el-button{min-width:80px;min-height:36px;font-size:11px}.header-language .el-button{font-size:10px;max-width:100px;padding:8px}.version-context{padding:7px 16px 0}.quick-status{padding:10px 16px;gap:7px}.quick-status-main{min-width:0;flex-basis:auto}.quick-location{display:none}.quick-storage{font-size:10px}.app-layout{display:block;min-height:0}.workspace-nav{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px 10px;min-height:0;max-height:none;border-right:0;border-bottom:1px solid #e1e6ea;background:#fafbfdf5;backdrop-filter:blur(10px)}.workspace-nav button{justify-content:center;min-height:42px;padding:8px 4px;gap:5px;text-align:center}.workspace-nav button strong{font-size:10px}.workspace-nav .workspace-icon{width:17px;height:20px;font-size:17px}.workspace-body{padding:12px 10px}.collection-main{padding:16px 12px}.filemanager .section-heading h2{font-size:19px}.workspace-body>.workspace-panel,.workspace-body>.device-panel,.workspace-body>.remote-workspace,.workspace-body>.extra-tools{padding:16px}.file-toolbar .el-button{font-size:11px}.file-filters{gap:8px}.file-filters .search-label{flex-basis:100%}.selection-preview .preview-picture{width:120px;height:145px;margin-right:15px}.selection-preview .preview-picture img{max-height:130px}.transfer-panel{position:static}.device-info-grid{grid-template-columns:1fr 1fr}.filemanager>.notice{margin:10px}.workspace-body>.workspace-panel>summary,.workspace-body>.device-panel>summary,.workspace-body>.remote-workspace>summary{font-size:17px}.el-dialog{max-width:96vw}.filemanager .file-navigation .el-button{min-height:32px}.filemanager .page-size select{min-height:34px}.filemanager .backup-hint{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+.sidebar-device{padding:22px 10px;margin-top:15px;border-top:1px solid #e3e8ec;font-size:11px;color:#6c7984}.sidebar-caption{font-size:9px;letter-spacing:.13em;color:#99a3ab}.sidebar-device strong{font-size:12px;color:#485b68}.sidebar-device p{line-height:1.6}.sidebar-path{overflow-wrap:anywhere}.sidebar-device progress{width:100%;height:5px;accent-color:#748e84;display:block;margin:12px 0}.workspace-nav .sidebar-upload{border:1px dashed #b7c5ce;background:white;justify-content:center;text-align:center;font-size:12px;margin-top:15px}.workspace-nav .sidebar-upload:disabled{opacity:.5;cursor:default}.background-work{padding:12px 16px;margin:0 0 12px;background:#eef5f2;border-radius:8px;font-size:12px}.background-work button{border:0;background:transparent;color:#397262;cursor:pointer;text-decoration:underline}@media(max-width:650px){.sidebar-device{display:none}}
+.mobile-preview-close{display:none}@media(max-width:960px){.selection-context.has-selection{position:fixed;bottom:0;left:0;right:0;z-index:20;max-height:50svh;overflow:auto;border:1px solid #d7e0e5;border-radius:16px 16px 0 0;background:white;box-shadow:0 -10px 40px #20313e24;padding-bottom:env(safe-area-inset-bottom)}.selection-context.has-selection .mobile-preview-close{display:block;position:sticky;top:0;z-index:1;margin:0 0 0 auto;padding:12px 18px;border:0;background:white;color:#506b7a;font:inherit;font-size:12px;cursor:pointer}.selection-context.has-selection .selection-preview{padding-top:4px}.selection-context.has-selection .preview-caption{font-size:10px}.selection-context.has-selection .preview-eyebrow{margin-bottom:10px}}
 </style>

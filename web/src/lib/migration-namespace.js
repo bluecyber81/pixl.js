@@ -74,9 +74,14 @@ export function migrationNamespace(o, listings, binding) {
       })
     },
     writeFile: (path, bytes, options) => {
-      healthy(); if (node(path) || !directories.has(parent(path))) throw stale()
-      return mutate('writeFile', [path, bytes, options], () =>
-        add(path, { type: 0, size: bytes.byteLength, meta: decodeRawMetadata(new Uint8Array(128).fill(255)) }))
+      healthy(); const existing=node(path)
+      const replace=options?.atomicReplace===true&&options?.rawMeta128 instanceof Uint8Array&&options.rawMeta128.length===128&&
+        o.storageInfo?.backend===3&&o.storageInfo?.flags===15&&existing?.type===0
+      if ((existing&&!replace) || !directories.has(parent(path))) throw stale()
+      return mutate('writeFile', [path, bytes, options], () => {
+        if(replace)directories.get(parent(path)).delete(leaf(path))
+        add(path, { type: 0, size: bytes.byteLength, meta: options?.rawMeta128 ? {valid:false} : decodeRawMetadata(new Uint8Array(128).fill(255)) })
+      })
     },
     updateMetadata: (path, value) => {
       healthy(); if (!node(path)) throw stale()

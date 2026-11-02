@@ -3,7 +3,7 @@
   "packages": [
     {
       "name": "@babel/helper-string-parser",
-      "version": "7.29.7",
+      "version": "7.29.11",
       "declared_license": "MIT",
       "author": "The Babel Team (https://babel.dev/team)",
       "repository": {
@@ -13,7 +13,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/babel__helper-string-parser-7.29.7/LICENSE",
+          "file": "licenses/babel__helper-string-parser-7.29.11/LICENSE",
           "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
         }
       ],
@@ -39,7 +39,7 @@
     },
     {
       "name": "@babel/parser",
-      "version": "7.29.9",
+      "version": "7.29.12",
       "declared_license": "MIT",
       "author": "The Babel Team (https://babel.dev/team)",
       "repository": {
@@ -49,7 +49,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/babel__parser-7.29.9/LICENSE",
+          "file": "licenses/babel__parser-7.29.12/LICENSE",
           "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652"
         }
       ],
@@ -57,7 +57,7 @@
     },
     {
       "name": "@babel/types",
-      "version": "7.29.8",
+      "version": "7.29.11",
       "declared_license": "MIT",
       "author": "The Babel Team (https://babel.dev/team)",
       "repository": {
@@ -67,7 +67,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/babel__types-7.29.8/LICENSE",
+          "file": "licenses/babel__types-7.29.11/LICENSE",
           "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
         }
       ],
@@ -75,13 +75,13 @@
     },
     {
       "name": "@ctrl/tinycolor",
-      "version": "4.2.1",
+      "version": "4.2.2",
       "declared_license": "MIT",
       "author": "Scott Cooper <scttcper@gmail.com>",
       "repository": "scttcper/tinycolor",
       "notice_files": [
         {
-          "file": "licenses/ctrl__tinycolor-4.2.1/LICENSE",
+          "file": "licenses/ctrl__tinycolor-4.2.2/LICENSE",
           "sha256": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65"
         }
       ],
@@ -161,7 +161,7 @@
     },
     {
       "name": "@intlify/core-base",
-      "version": "11.4.16",
+      "version": "11.4.17",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -174,7 +174,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__core-base-11.4.16/LICENSE",
+          "file": "licenses/intlify__core-base-11.4.17/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
@@ -182,7 +182,7 @@
     },
     {
       "name": "@intlify/devtools-types",
-      "version": "11.4.16",
+      "version": "11.4.17",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -195,7 +195,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__devtools-types-11.4.16/LICENSE",
+          "file": "licenses/intlify__devtools-types-11.4.17/LICENSE",
           "sha256": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d"
         }
       ],
@@ -203,7 +203,7 @@
     },
     {
       "name": "@intlify/message-compiler",
-      "version": "11.4.16",
+      "version": "11.4.17",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -216,7 +216,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__message-compiler-11.4.16/LICENSE",
+          "file": "licenses/intlify__message-compiler-11.4.17/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
@@ -224,7 +224,7 @@
     },
     {
       "name": "@intlify/shared",
-      "version": "11.4.16",
+      "version": "11.4.17",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -237,7 +237,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__shared-11.4.16/LICENSE",
+          "file": "licenses/intlify__shared-11.4.17/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
@@ -263,7 +263,7 @@
     },
     {
       "name": "@oxc-project/types",
-      "version": "0.155.0",
+      "version": "0.156.0",
       "declared_license": "MIT",
       "author": "Boshen and oxc contributors",
       "repository": {
@@ -273,7 +273,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/oxc-project__types-0.155.0/LICENSE",
+          "file": "licenses/oxc-project__types-0.156.0/LICENSE",
           "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"
         }
       ],
@@ -281,9 +281,8 @@
     },
     {
       "name": "@rolldown/binding-win32-x64-msvc",
-      "version": "1.2.15",
+      "version": "1.2.16",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "git+https://github.com/rolldown/rolldown.git",
@@ -960,13 +959,13 @@
     },
     {
       "name": "postcss",
-      "version": "8.5.31",
+      "version": "8.5.32",
       "declared_license": "MIT",
       "author": "Andrey Sitnik <andrey@sitnik.es>",
       "repository": "postcss/postcss",
       "notice_files": [
         {
-          "file": "licenses/postcss-8.5.31/LICENSE",
+          "file": "licenses/postcss-8.5.32/LICENSE",
           "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
         }
       ],
@@ -974,9 +973,8 @@
     },
     {
       "name": "rolldown",
-      "version": "1.2.15",
+      "version": "1.2.16",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "git+https://github.com/rolldown/rolldown.git",
@@ -984,7 +982,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/rolldown-1.2.15/LICENSE",
+          "file": "licenses/rolldown-1.2.16/LICENSE",
           "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734"
         }
       ],
@@ -1058,9 +1056,8 @@
     },
     {
       "name": "vue-component-type-helpers",
-      "version": "3.3.13",
+      "version": "3.3.14",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "https://github.com/vuejs/language-tools.git",
@@ -1068,7 +1065,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue-component-type-helpers-3.3.13/LICENSE",
+          "file": "licenses/vue-component-type-helpers-3.3.14/LICENSE",
           "sha256": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0"
         }
       ],
@@ -1076,7 +1073,7 @@
     },
     {
       "name": "vue-i18n",
-      "version": "11.4.16",
+      "version": "11.4.17",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -1089,7 +1086,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue-i18n-11.4.16/LICENSE",
+          "file": "licenses/vue-i18n-11.4.17/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],

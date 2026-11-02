@@ -17,6 +17,10 @@ export function metadataFigureId(metadata) {
 
 export function publicFigureLink(value) {
   const id = figureId(value);
+  // amiibo.life's NFC lookup still returns 404 for these two published figures
+  // (verified 2026-11-01). Their public figure pages resolve directly.
+  if (id === '0000000404431c02') return 'https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car';
+  if (id === '000a000404451c02') return 'https://amiibo.life/amiibo/my-mario-wood-blocks/toad';
   return id ? `https://amiibo.life/nfc/${id.slice(0, 8).toUpperCase()}-${id.slice(8).toUpperCase()}` : null;
 }
 

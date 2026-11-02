@@ -30,7 +30,7 @@ export async function snapshotFile(file, maxBytes = UPLOAD_LIMITS.maxFileBytes) 
   return new Uint8Array(bytes) // Also copies Buffer/subclasses whose slice() may share storage.
 }
 export function copyMetadata(meta) {
-  if (!meta || meta.valid !== true || !validUnicode(meta.notes) || new TextEncoder().encode(meta.notes).length > 89 ||
+  if (!meta || meta.valid !== true || !validUnicode(meta.notes) || meta.notes.includes('\0') || new TextEncoder().encode(meta.notes).length > 89 ||
       !uint(meta.flags?.raw, 255) || typeof meta.flags?.hide !== 'boolean' || typeof meta.flags?.readonly !== 'boolean' ||
       meta.flags.hide !== !!(meta.flags.raw & 1) || meta.flags.readonly !== !!(meta.flags.raw & 4) ||
       !uint(meta.amiibo?.head) || !uint(meta.amiibo?.tail)) fail('UPLOAD_METADATA', 'The existing metadata cannot be preserved safely.')

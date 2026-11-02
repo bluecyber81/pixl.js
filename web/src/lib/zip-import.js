@@ -169,13 +169,18 @@ export async function loadBackupZip(input, { JSZip = globalThis.JSZip, signal, o
     const contents = await boundedEntry(zip, entries.get(record.archivePath), signal); check(signal)
     if (record.type === 'file') {
       requireThat(checksums.get(record.archivePath) === record.sha256 && await sha256Bytes(contents) === record.sha256, 'ZIP_HASH', 'Backup file checksum does not match.')
+      check(signal)
       data.set(record.sourcePath, contents); ++done
     }
-    observe(onProgress, { phase: 'parsing', path: record.sourcePath, done, total: fileCount })
+    observe(onProgress, { phase: 'parsing', unit: 'files', path: record.sourcePath, done, total: fileCount })
   }
   check(signal)
+  const archiveSha256 = await sha256Bytes(bytes)
+  // Web Crypto cannot be interrupted. Honour cancellation after it settles,
+  // before exposing the archive as verified or retaining its owned file bytes.
+  check(signal)
   const archive = freeze({ format: 'allmiibo-folder-backup', version: manifest.version, rootPath, entries: records, fileCount, directoryCount, byteCount,
-    archiveSha256: await sha256Bytes(bytes), firmwareVersion: typeof manifest.firmwareVersion === 'string' ? manifest.firmwareVersion.slice(0,128) : '' })
+    archiveSha256, firmwareVersion: typeof manifest.firmwareVersion === 'string' ? manifest.firmwareVersion.slice(0,128) : '' })
   archives.set(archive, data)
   return archive
 }
@@ -232,7 +237,7 @@ export async function previewZipImport({ archive, rootPath, deviceKey, readDirec
     }
     if (record.type === 'file' && record.size > UPLOAD_LIMITS.maxFileBytes) { entry.status = 'blocked'; entry.reason = 'UPLOAD_SIZE_LIMIT' }
     if (record.type === 'directory') folders.set(record.targetPath, { available: !!entry.expected, blocked: entry.status === 'blocked' || entry.expected?.metadata.flags.readonly === true })
-    records.push(entry); observe(onProgress, { phase: 'checking', path: record.targetPath, done: records.length, total: targets.length })
+    records.push(entry); observe(onProgress, { phase: 'checking', unit: 'entries', path: record.targetPath, done: records.length, total: targets.length })
   }
   checkpoint()
   const summary = { add: 0, change: 0, same: 0, blocked: 0 }; records.forEach(record => ++summary[record.status])
@@ -300,7 +305,8 @@ export async function executeZipImport({ plan, deviceKey, selectedPaths = [], re
       const result = await safeUpload({ path: entry.targetPath, file: bytes, replace: !!entry.expected, expected: entry.expected,
         metadata: entry.metadata, allowLegacyNames: true, readDirectory, readFile, writeFile, rename, remove, updateMetadata,
         getFreeBytes: () => getFreeBytes(entry.targetPath), assertSession, signal, randomToken,
-        onProgress: progress => observe(onProgress, { ...progress, filesDone: completedPaths.length, filesTotal: selectedFiles.length }) })
+        onProgress: progress => observe(onProgress, { ...progress, unit: 'bytes',
+          filesDone: completedPaths.length + (progress.phase === 'complete' ? 1 : 0), filesTotal: selectedFiles.length }) })
       recoveryFiles.push(...result.recoveryFiles); completedPaths.push(entry.targetPath); checkpoint()
     }
     // Delay readonly/hidden directory attributes until all selected children exist.

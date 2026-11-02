@@ -19,10 +19,12 @@
       </article>
     </div>
     <p class="limits">{{ text.limits }}</p>
+    <FirmwarePackages :session="session" :boot="boot" :locale="locale" />
   </section>
 </template>
 <script setup>
 import { computed } from 'vue';
+import FirmwarePackages from './FirmwarePackages.vue';
 import { evaluateUpdateCheck, formatUpdateValue, updateCheckText } from '../lib/update-check.js';
 const props = defineProps({ session: { type: Object, default: () => ({}) }, boot: { type: Object, default: null }, locale: { type: String, default: 'de_DE' } });
 const result = computed(() => evaluateUpdateCheck({ session: props.session, boot: props.boot }));

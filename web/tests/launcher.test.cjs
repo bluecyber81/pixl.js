@@ -25,8 +25,8 @@ function fixture() {
     fs.copyFileSync(path.join(web, file), path.join(dir, file));
   }
   fs.mkdirSync(path.join(dir, 'dist/empty'), { recursive: true });
+  fs.cpSync(path.join(web, 'public'), path.join(dir, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'dist/index.html'), '<title>New arbitrary UI title</title>fixture only');
-  fs.cpSync(path.join(web, 'public/dfu'), path.join(dir, 'dist/dfu'), { recursive: true });
   return { dir, cleanup() {
     // Delete only the exact temporary test tree, never a project or user folder.
     const resolved = fs.realpathSync(dir);
@@ -91,7 +91,7 @@ test('local server identity, routes and authenticated self-stop reject wrong tok
   const exited = new Promise(resolve => child.once('exit', resolve));
   try {
     const health = await waitHealth(port);
-    assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.27.0', instance: crypto.createHash('sha256').update(token).digest('hex') });
+    assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.32.5', instance: crypto.createHash('sha256').update(token).digest('hex') });
     assert.ok(!JSON.stringify(health).includes(token));
     const head = await request(port, healthPath, 'HEAD');
     assert.equal(head.status, 200); assert.equal(head.body, ''); assert.ok(Number(head.headers['content-length']) > 0);
@@ -99,12 +99,20 @@ test('local server identity, routes and authenticated self-stop reject wrong tok
     assert.equal(index.status, 200); assert.match(index.body, /New arbitrary UI title/);
     assert.equal(index.headers['x-content-type-options'], 'nosniff');
     const dfu = await request(port, '/dfu/web.html');
-    assert.equal(dfu.status, 200); assert.match(dfu.body, /Allmiibo DFU 3\.27\.0/);
+    assert.equal(dfu.status, 200); assert.match(dfu.body, /Allmiibo DFU 3\.32\.5/);
     assert.match(dfu.headers['content-type'], /text\/html/);
-    for (const match of dfu.body.matchAll(/(?:src|href)="([^"]+)"/g)) {
-      const response = await request(port, '/dfu/' + match[1]);
+    const base = new URL(`http://127.0.0.1:${port}/dfu/web.html`);
+    assert.match(dfu.body, /<a\b[^>]*href="\.\.\/"/);
+    const back = await request(port, new URL('../', base).pathname);
+    assert.equal(back.status, 200); assert.equal(back.body, index.body);
+    for (const match of dfu.body.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)) {
+      const asset = new URL(match[1], base);
+      assert.equal(asset.origin, base.origin, match[1]);
+      const response = await request(port, asset.pathname + asset.search);
       assert.equal(response.status, 200, match[1]);
-      assert.equal(response.body, fs.readFileSync(path.join(web, 'public/dfu', match[1]), 'utf8'));
+      const file = path.join(f.dir, 'dist', decodeURIComponent(asset.pathname.slice(1)));
+      assert.ok(fs.statSync(file).isFile(), match[1]);
+      assert.equal(response.body, fs.readFileSync(file, 'utf8'));
       if (match[1].endsWith('.js')) assert.match(response.headers['content-type'], /javascript/);
     }
     assert.equal((await request(port, '/a/00000000-12345678')).status, 200);

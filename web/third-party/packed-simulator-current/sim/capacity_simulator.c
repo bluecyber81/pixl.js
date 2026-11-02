@@ -46,29 +46,13 @@ static int data_verify(const char *path,const row_t *row){
         for(uint32_t j=0;j<n;j++)if(bytes[j]!=sample(row->seed,offset+j)){r=LFS_ERR_CORRUPT;break;}offset+=n;}
     if(!r&&pfs_read(file,bytes,1)!=0)r=LFS_ERR_CORRUPT;int closed=pfs_close(file);return r?r:closed;
 }
-static int data_write(const char *path,const row_t *row){pfs_file_t *file=NULL;int r=pfs_open(fs,path,LFS_O_WRONLY|LFS_O_CREAT|LFS_O_EXCL,&file);if(r)return r;uint8_t bytes[256];
+static int data_write(const char *path,const row_t *row){pfs_file_t *file=NULL;int r=pfs_open(fs,path,LFS_O_WRONLY|LFS_O_CREAT|LFS_O_TRUNC,&file);if(r)return r;r=pfs_file_set_meta(file,row->raw);uint8_t bytes[256];
     for(uint32_t offset=0;!r&&offset<row->size;){uint32_t n=row->size-offset;if(n>sizeof(bytes))n=sizeof(bytes);for(uint32_t j=0;j<n;j++)bytes[j]=sample(row->seed,offset+j);
         lfs_ssize_t wrote=pfs_write(file,bytes,n);if(wrote!=(lfs_ssize_t)n)r=wrote<0?(int)wrote:LFS_ERR_IO;offset+=n;}
     if(!r){r=pfs_close(file);if(!r)file=NULL;}if(file)pfs_abort(file);if(!r)r=measure();return r;
 }
-static int temporary(const char *path,char *stage,char *backup){const char *slash=strrchr(path,'/');if(!slash)return LFS_ERR_INVAL;size_t prefix=(size_t)(slash-path)+1,available=63-prefix;if(!available)return LFS_ERR_NAMETOOLONG;
-    static const char alphabet[]="0123456789abcdefghijklmnopqrstuvwxyz",hex[]="0123456789abcdef";
-    for(uint32_t attempt=0;attempt<36;attempt++){
-        memcpy(stage,path,prefix);memcpy(backup,path,prefix);size_t n=prefix;
-        if(available>=3){stage[n]='~';backup[n++]='~';stage[n]='u';backup[n++]='b';size_t digits=available-2;if(digits>12)digits=12;
-            for(size_t j=0;j<digits;j++){char c=hex[(attempt>>(4*(j%4)))&15];stage[n]=c;backup[n++]=c;}}
-        else {if(available==2){stage[n]='~';backup[n++]='~';}stage[n]=alphabet[attempt];backup[n++]=alphabet[(attempt+1)%36];}
-        stage[n]=backup[n]=0;pfs_info_t info;if(strcmp(stage,path)&&strcmp(backup,path)&&pfs_stat(fs,stage,&info)==LFS_ERR_NOENT&&pfs_stat(fs,backup,&info)==LFS_ERR_NOENT)return 0;
-    }return LFS_ERR_EXIST;
-}
-static int upload(const row_t *row,bool replace){char stage[64],backup[64];int r=temporary(row->path,stage,backup);if(r)return r;
-    r=data_write(stage,row);if(!r)r=data_verify(stage,row);uint8_t defaults[128]={0};
-    if(!r)r=pfs_setattr(fs,stage,defaults);if(!r)r=measure();
-    if(!r&&replace){r=pfs_rename(fs,row->path,backup);if(!r)r=measure();}
-    if(!r)r=pfs_rename(fs,stage,row->path);if(!r)r=measure();if(!r)r=data_verify(row->path,row);
-    if(!r&&replace){r=pfs_remove(fs,backup,false);if(!r)r=measure();}
-    if(!r)r=pfs_setattr(fs,row->path,row->raw);if(!r)r=measure();return r;
-}
+/* New client sends target bytes and raw128 in one private staged commit. */
+static int upload(const row_t *row,bool replace){(void)replace;int r=data_write(row->path,row);if(!r)r=data_verify(row->path,row);return r;}
 int begin(void){if(fs){int r=pfs_destroy(fs);if(r)return r;fs=NULL;}memset(flash,255,sizeof(flash));memset(&arena,0,sizeof(arena));allocation_t *h=(allocation_t*)arena.bytes;h->size=ARENA-8;h->free=1;
     count=peak_blocks=heap_current=heap_peak=verified=phase=0;sticky_error=0;
     struct lfs_config cfg={0};cfg.read=read_flash;cfg.prog=prog_flash;cfg.erase=erase_flash;cfg.sync=sync_flash;cfg.read_size=cfg.prog_size=256;cfg.block_size=4096;cfg.block_count=512;
@@ -85,7 +69,7 @@ int add(uint32_t kind,uint32_t size){if(sticky_error)return sticky_error;if(!fs|
 }
 int finish(void){if(sticky_error)return sticky_error;if(!fs||phase)return record_error(LFS_ERR_INVAL);phase=1;int r=0;
     for(uint32_t i=count;i&&!r;i--)if(rows[i-1].kind){r=pfs_setattr(fs,rows[i-1].path,rows[i-1].raw);if(!r)r=measure();}
-    /* Exercise coexistence of old, staged and backup data for the largest file. */
+    /* Exercise atomic replacement of the largest file, with old and private staged data coexisting. */
     uint32_t largest=LIMIT;for(uint32_t i=0;i<count;i++)if(!rows[i].kind&&(largest==LIMIT||rows[i].size>rows[largest].size))largest=i;
     if(!r&&largest!=LIMIT)r=upload(&rows[largest],true);
     if(!r)r=pfs_gc(fs);if(!r)r=measure();if(!r)r=pfs_unmount(fs);if(!r)r=pfs_mount(fs);

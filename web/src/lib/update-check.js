@@ -68,7 +68,8 @@ export function updateCheckText(locale = 'de_DE') {
   const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
   return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · ${UPDATE_TARGET.bootloader.name} · S112 7.3.0`,
-    targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}` },
+    targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}`,
+      bootloader: `${UPDATE_TARGET.bootloader.name} · ${german ? 'Bereichs-Hash und Zähler' : 'region hash and counter'} ${UPDATE_TARGET.bootloader.counter}` },
     reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
 }
 
@@ -95,7 +96,7 @@ const COPY = {
     actual: 'Gelesen', expected: 'Erwartet', details: 'Prüfdetails anzeigen', yes: 'Ja', no: 'Nein',
     overall: { match: 'Alle gelesenen Angaben passen zum lokalen Ziel.', different: 'Mindestens eine gelesene Angabe weicht vom Ziel ab.', unknown: 'Für den vollständigen Abgleich fehlen noch bestätigte Angaben.' },
     names: { hardware: 'Hardware', application: 'Anwendung', bootloader: 'Bootloader', softDevice: 'Bluetooth-Stack' },
-    targets: { hardware: 'nRF52832 AAE0 · 512 KiB Flash · 64 KiB RAM', application: '', bootloader: 'BL6 · Bereichs-Hash und Zähler 7', softDevice: 'S112 7.3.0 · FWID 0x126' },
+    targets: { hardware: 'nRF52832 AAE0 · 512 KiB Flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
     fields: { chip: 'Chip', variant: 'Chipvariante (AAE0)', flash: 'Chip-Flash', ram: 'Chip-RAM', page: 'Flash-Seite', geometry: 'Speichergeometrie gültig', version: 'Laufende Version', applicationCounter: 'Anwendungszähler', bootHash: 'SHA-256 des Bootloader-Bereichs', bootCounter: 'Bootloader-Zähler', bootAddress: 'Bootloader-Start', bootBytes: 'Bereichsgröße', paramsAddress: 'MBR-Parameter', settingsAddress: 'Settings-Adresse', settingsVersion: 'Settings-Layout', bootVectors: 'Boot-Vektoren gültig', settingsCrc: 'Settings-CRC gültig', addressConflict: 'Adresskonflikt', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware-ID' },
     reasons: {
       disconnected: 'Nicht verbunden; frühere Werte werden hier nicht als aktuell bestätigt.',
@@ -118,7 +119,7 @@ const COPY = {
     actual: 'Read', expected: 'Expected', details: 'Show check details', yes: 'Yes', no: 'No',
     overall: { match: 'All read values match the local target.', different: 'At least one read value differs from the target.', unknown: 'A complete comparison still needs confirmed values.' },
     names: { hardware: 'Hardware', application: 'Application', bootloader: 'Bootloader', softDevice: 'Bluetooth stack' },
-    targets: { hardware: 'nRF52832 AAE0 · 512 KiB flash · 64 KiB RAM', application: '', bootloader: 'BL6 · region hash and counter 7', softDevice: 'S112 7.3.0 · FWID 0x126' },
+    targets: { hardware: 'nRF52832 AAE0 · 512 KiB flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
     fields: { chip: 'Chip', variant: 'Chip variant (AAE0)', flash: 'Chip flash', ram: 'Chip RAM', page: 'Flash page', geometry: 'Valid memory geometry', version: 'Running version', applicationCounter: 'Application counter', bootHash: 'Bootloader region SHA-256', bootCounter: 'Bootloader counter', bootAddress: 'Bootloader start', bootBytes: 'Region size', paramsAddress: 'MBR parameters', settingsAddress: 'Settings address', settingsVersion: 'Settings layout', bootVectors: 'Valid boot vectors', settingsCrc: 'Valid settings CRC', addressConflict: 'Address conflict', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware ID' },
     reasons: {
       disconnected: 'Disconnected; previous values are not confirmed as current here.',

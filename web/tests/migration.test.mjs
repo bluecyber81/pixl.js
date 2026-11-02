@@ -8,7 +8,7 @@ import { parseUniqueJson } from '../src/lib/unique-json.js'
 import { previewZipImport,readBackupArchiveFile } from '../src/lib/zip-import.js'
 import { sha256Bytes } from '../src/lib/safe-upload.js'
 import { memoryVfs } from './helpers/memory-vfs.mjs'
-const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.1.min.js')
+const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js')
 const storage=()=>({schema:1,drive:'E',backend:1,mounted:true,flags:7,metaLen:128,pathMax:64,nameMax:48})
 function fixture(){
   const vfs=memoryVfs(),raw=new Map(),rawLog=[]

@@ -1,4 +1,6 @@
 export const workflowGerman = {
+  listingFailed: 'Die Ordneransicht konnte nicht geladen werden. Mit „Aktualisieren“ erneut versuchen; dies bedeutet nicht, dass der Ordner leer ist.',
+  folderPath: 'Ordnerpfad', drives: 'Laufwerke', pageSize: 'Einträge pro Seite', backupShort: 'Sicherung', updateShort: 'Update',
   appTitle: 'Dateimanager', skipToFiles: 'Zur Dateiverwaltung', workspaces: 'Arbeitsbereiche',
   filesTitle: 'Dateien', filesBrief: 'Ordner öffnen und Dateien übertragen', collection: 'DEINE SAMMLUNG',
   backupTitle: 'Sicherung & Wiederherstellung', backupBrief: 'ZIP sichern, importieren oder fortsetzen',
@@ -11,7 +13,7 @@ export const workflowGerman = {
   connectGuide: 'Öffne am Allmiibo „Bluetooth-Dateiübertragung“ und wähle oben „Verbinden“. Danach öffnest du hier das Laufwerk und deinen gewünschten Ordner.',
   extraTools: 'Figuren entdecken', catalogueHint: 'Der Figurenkatalog ist auch ohne verbundenes Allmiibo verfügbar.',
   resetFilters: 'Filter zurücksetzen', noMatches: 'Keine Treffer für diese Suche oder Dateiauswahl. Filter zurücksetzen, um alle Einträge zu sehen.', emptyFolder: 'Dieser Ordner ist leer.', noDrives: 'Keine Laufwerke angezeigt. Die Geräteübersicht kann neu geladen werden.',
-  powerTitle: 'Start- und Akkudiagnose', powerRead: 'Start- und Akkudiagnose lesen', powerUnavailable: 'Diese Firmware bietet die optionale Start-/Akkudiagnose noch nicht an. Die Verbindung bleibt nutzbar.', powerFailed: 'Die Start-/Akkudiagnose konnte nicht bestätigt werden.',
+  powerTitle: 'Start- und Akkudiagnose', powerRead: 'Start- und Akkudiagnose lesen', powerLoading: 'Start- und Akkudiagnose wird gelesen…', powerUnavailable: 'Diese Firmware bietet die optionale Start-/Akkudiagnose noch nicht an. Die Verbindung bleibt nutzbar.', powerFailed: 'Die Start-/Akkudiagnose konnte nicht bestätigt werden.',
   powerReset: 'RESETREAS beim Anwendungsstart (roh)', powerVoltage: 'Letzte gefilterte Akkuspannung', powerMode: 'Konfigurierter Batteriemodus', powerLipo: 'LiPo', powerOther: 'Anderer Batteriemodus', powerCharging: 'Ladesignal CHRG', powerActive: 'Aktiv', powerInactive: 'Nicht aktiv', powerSleep: 'Eingestellte Ruhezeit',
   powerLimits: 'Nur lesende Momentaufnahme. Die Spannung stammt aus dem zuletzt erfassten Messwert (normal etwa 1 Sekunde alt), nicht aus einer neuen Messung. CHRG ist kein Nachweis einer USB-Verbindung. Der Bootloader kann Resetbits bereits gelöscht haben: 0 beweist weder einen Kaltstart noch eine fehlende Aufweckquelle. Kein automatischer Neustart.',
   backupFiles: '{done} / {total} Dateien fertig gelesen',
@@ -46,6 +48,8 @@ export const workflowGerman = {
   zipPath: 'Das Archiv enthält ungültige oder mehrdeutige Namen. Die Einträge wurden nicht automatisch umbenannt.'
 }
 export const workflowEnglish = {
+  listingFailed: 'The folder view could not be loaded. Select “Refresh” to try again; this does not mean the folder is empty.',
+  folderPath: 'Folder path', drives: 'Drives', pageSize: 'Entries per page', backupShort: 'Backup', updateShort: 'Update',
   appTitle: 'File manager', skipToFiles: 'Skip to files', workspaces: 'Workspaces',
   filesTitle: 'Files', filesBrief: 'Browse folders and transfer files', collection: 'YOUR COLLECTION',
   backupTitle: 'Backup & restore', backupBrief: 'Save, import or resume a ZIP backup',
@@ -58,7 +62,7 @@ export const workflowEnglish = {
   connectGuide: 'Open “Bluetooth file transfer” on your Allmiibo and select “Connect” above. Then open the drive and your desired folder here.',
   extraTools: 'Explore figures', catalogueHint: 'The figure catalogue is also available without a connected Allmiibo.',
   resetFilters: 'Reset filters', noMatches: 'No matches for the current search or file filter. Reset filters to show all entries.', emptyFolder: 'This folder is empty.', noDrives: 'No drives displayed. Refresh the device overview to try again.',
-  powerTitle: 'Startup and battery diagnostics', powerRead: 'Read startup and battery diagnostics', powerUnavailable: 'This firmware does not provide optional startup/battery diagnostics. The connection remains usable.', powerFailed: 'The startup/battery diagnostic response could not be confirmed.',
+  powerTitle: 'Startup and battery diagnostics', powerRead: 'Read startup and battery diagnostics', powerLoading: 'Reading startup and battery diagnostics…', powerUnavailable: 'This firmware does not provide optional startup/battery diagnostics. The connection remains usable.', powerFailed: 'The startup/battery diagnostic response could not be confirmed.',
   powerReset: 'RESETREAS at application start (raw)', powerVoltage: 'Last filtered battery voltage', powerMode: 'Configured battery mode', powerLipo: 'LiPo', powerOther: 'Other battery mode', powerCharging: 'CHRG signal', powerActive: 'Active', powerInactive: 'Inactive', powerSleep: 'Configured sleep time',
   powerLimits: 'Read-only snapshot. Voltage is the last captured sample (normally about 1 second old), not a fresh measurement. CHRG does not prove USB presence. The bootloader may already have cleared reset bits: zero proves neither a cold start nor a missing wake source. No automatic restart.',
   backupFiles: '{done} / {total} files fully read',

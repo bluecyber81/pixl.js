@@ -1,5 +1,5 @@
 import {
-  ElBreadcrumb, ElBreadcrumbItem, ElButton, ElButtonGroup, ElCheckbox, ElCol,
+  ElButton, ElButtonGroup, ElCheckbox, ElCol,
   ElConfigProvider, ElDialog, ElDropdown, ElDropdownItem, ElDropdownMenu,
   ElForm, ElFormItem, ElInput, ElRow, ElTable, ElTableColumn, ElUpload,
   ElLoading, ElMessage, ElMessageBox, ElNotification
@@ -9,7 +9,7 @@ import {
 // complete component catalogue, while keeping official service/context hooks.
 export function installUiComponents(app) {
   for (const component of [
-    ElBreadcrumb, ElBreadcrumbItem, ElButton, ElButtonGroup, ElCheckbox, ElCol,
+    ElButton, ElButtonGroup, ElCheckbox, ElCol,
     ElConfigProvider, ElDialog, ElDropdown, ElDropdownItem, ElDropdownMenu,
     ElForm, ElFormItem, ElInput, ElRow, ElTable, ElTableColumn, ElUpload
   ]) app.component(component.name, component)

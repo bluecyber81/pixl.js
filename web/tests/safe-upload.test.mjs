@@ -8,6 +8,14 @@ function setup(meta = metadata(0x80, 'Keep this note')) { const vfs = memoryVfs(
 const run = (vfs, options = {}) => safeUpload({ ...vfs.api, path: target, file: localFile('a.bin'), replace: true, ...options })
 const mutations = vfs => vfs.log.filter(entry => ['write', 'rename', 'remove', 'meta'].includes(entry.op))
 
+test('3.30.3 NUL in existing or requested notes is rejected before staging or any mutation', async () => {
+  for (const origin of ['existing','requested']) {
+    const bad = metadata(0x80, 'keep\0lost'), vfs = setup(origin === 'existing' ? bad : metadata());
+    await assert.rejects(run(vfs, origin === 'requested' ? { metadata: bad } : {}), { code: 'UPLOAD_METADATA' });
+    assert.equal(mutations(vfs).length, 0); assert.deepEqual(vfs.bytes(target), [1,2,3]);
+  }
+})
+
 test('replacement stages and hashes before target mutation, preserves complete metadata and confirms target before backup removal', async () => {
   const vfs = setup(), oldMeta = structuredClone(vfs.nodes.get(target).meta)
   const result = await run(vfs)

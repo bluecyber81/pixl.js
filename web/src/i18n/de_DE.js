@@ -56,6 +56,8 @@ export default {
     title: 'Eigenschaften',
     invalidmeta: 'Metadaten beschädigt oder unbekannt – Bearbeitung gesperrt',
     notelimit: 'Notizen dürfen höchstens {max} UTF-8-Bytes lang sein (aktuell: {actual}).',
+    noteinvalid: 'Die Notiz enthält ein Nullzeichen oder unvollständiges Unicode-Zeichen. Bitte entfernen oder neu eingeben.',
+    notebytes: '{actual} von {max} Bytes. Umlaute und Emojis benötigen mehrere Bytes.',
     remark: 'Notiz',
     entermsg: 'Bitte Notiz eingeben',
     attrib: 'Attribute',

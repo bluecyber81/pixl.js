@@ -4,6 +4,8 @@ import ByteBuffer from "bytebuffer"
 
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
+import { parseStartupDiagnostics } from "./startup-diagnostics.js"
+import { metadataNoteInfo } from "./metadata-note.js"
 
 import i18n from '../i18n'
 
@@ -24,6 +26,8 @@ const SAFE_GATT_PAYLOAD = 20
 var transport_generation = 0
 var transport_capabilities = null
 var transport_probe = null
+var storage_info_cache = new Map()
+var storage_info_queries = new Map()
 var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0 }
 var transport_last_error = null
 
@@ -62,6 +66,8 @@ function reset_transport_stats() {
 function on_ble_connected() {
     reset_transport_stats();
     transport_last_error = null;
+    storage_info_cache.clear();
+    storage_info_queries.clear();
 }
 
 export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
@@ -80,7 +86,8 @@ export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
             p_resolve: resolve,
             p_reject: reject,
             max_response_bytes,
-            progress_cb: options.progress_cb
+            progress_cb: options.progress_cb,
+            storage_probe: options.storage_probe === true
         }
         op_queue.push(op);
         process_op_queue();
@@ -269,6 +276,17 @@ export function get_power_diagnostics() {
         });
 }
 
+// Explicit optional read, serialized by the same queue as all file operations.
+export function get_startup_diagnostics() {
+    const generation = transport_generation;
+    return op_queue_push(0x09, () => {}, b =>
+        parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 32 })
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 255 ? null : checked_response(response);
+        });
+}
+
 export function parse_runtime_diagnostics(buffer) {
     const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
     if (!(bytes instanceof Uint8Array) || bytes.byteLength !== 64 ||
@@ -328,13 +346,42 @@ export function vfs_drive_format(path) {
 }
 
 export function vfs_storage_info(drive) {
+    return read_storage_info(drive, false);
+}
+// An explicit read-only opt-in keeps old browsers' exact flag contract intact.
+// Old firmware rejects the extra request byte; retry only that documented reply,
+// never a timeout, malformed response, or an operation in a replacement session.
+export function vfs_storage_info_extended(drive) {
+    const generation=transport_generation;
+    const query={};
+    return read_storage_info(drive, true, query).then(response => {
+        if (generation!==transport_generation) throw new Error('Bluetooth session changed');
+        return response.status===1 || response.status===255 ? read_storage_info(drive,false,query) : response;
+    });
+}
+function read_storage_info(drive, extended, query={}) {
     if (!['I','E'].includes(drive)) return Promise.reject(new Error('Invalid storage drive.'));
-    return op_queue_push(0x1c, b => b.writeUint8(drive.charCodeAt(0)), b => {
+    if (!query.started) {
+        query.started=true; storage_info_queries.set(drive,query); storage_info_cache.delete(drive);
+    }
+    const generation = transport_generation;
+    return op_queue_push(0x1c, b => {b.writeUint8(drive.charCodeAt(0));if(extended)b.writeUint8(1);}, b => {
         if (b.remaining() !== 8) throw new Error('Invalid storage information length.');
         const data = Array.from(new Uint8Array(b.readBytes(8).toArrayBuffer()));
         if (data[0] !== 1 || data[1] !== drive.charCodeAt(0) || ![1,2,3].includes(data[2]) || data[3] > 1 ||
-            (data[4] & ~7) || data[5] !== 128 || data[6] !== 64 || data[7] !== 48) throw new Error('Unsupported storage information.');
+            (data[4] & ~(extended?15:7)) || ((data[4]&8) && (drive!=='E'||data[2]!==3||(data[4]&7)!==7)) ||
+            data[5] !== 128 || data[6] !== 64 || data[7] !== 48) throw new Error('Unsupported storage information.');
         return {schema:1,drive,backend:data[2],mounted:!!data[3],flags:data[4],metaLen:data[5],pathMax:data[6],nameMax:data[7]};
+    },{storage_probe:extended}).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        if (storage_info_queries.get(drive)===query) {
+            if (response.status === 0) storage_info_cache.set(drive, Object.freeze({...response.data}));
+            else storage_info_cache.delete(drive);
+        }
+        return response;
+    }, error => {
+        if (generation===transport_generation && storage_info_queries.get(drive)===query) storage_info_cache.delete(drive);
+        throw error;
     });
 }
 export function vfs_storage_layout(drive) {
@@ -429,11 +476,20 @@ export function vfs_remove(path) {
         b => { });
 }
 
-export function vfs_open_file(path, mode) {
+export function vfs_open_file(path, mode, rawMeta128) {
     console.log("vfs_open_file", path, mode);
-
+    const raw = rawMeta128 instanceof Uint8Array ? rawMeta128.slice() : rawMeta128 instanceof ArrayBuffer ? new Uint8Array(rawMeta128.slice(0)) : null;
+    const storage = storage_info_cache.get('E');
+    if (rawMeta128 !== undefined && (mode !== 'w' || typeof path !== 'string' || !path.startsWith('E:/') ||
+        raw?.length !== 128 || storage?.backend !== 3 || !storage.mounted || !(storage.flags & 8))) {
+        return Promise.reject(new Error('Atomic raw metadata writes are not supported by this connection.'));
+    }
     return op_queue_push(0x12,
         b => {
+            if (raw) {
+                const current=storage_info_cache.get('E');
+                if (current?.backend!==3 || !current.mounted || !(current.flags&8)) throw new Error('Atomic metadata capability changed.');
+            }
             path_validation(path);
             write_string(b, path);
             if (mode == 'r') {
@@ -441,6 +497,7 @@ export function vfs_open_file(path, mode) {
             } else if (mode == 'w') {
                 b.writeUint8(0x16); //truc, create, write
             }
+            if (raw) for (const value of raw) b.writeUint8(value);
 
         },
         b => {
@@ -567,13 +624,21 @@ function complete_file_entry(entry, error, data) {
     if (entry.completion) entry.completion();
 }
 
-export function vfs_helper_write_file(path, file, progress_cb, success_cb, error_cb) {
+export function vfs_helper_write_file(path, file, progress_cb, success_cb, error_cb, options = {}) {
+    let rawMeta128;
+    if (!options || typeof options !== 'object') { file_callback(error_cb, new Error('Invalid upload options.'), file); return; }
+    if (options.rawMeta128 !== undefined) {
+        const value = options.rawMeta128;
+        rawMeta128 = value instanceof Uint8Array ? value.slice() : value instanceof ArrayBuffer ? new Uint8Array(value.slice(0)) : null;
+        if (rawMeta128?.length !== 128) { file_callback(error_cb, new Error('Exactly 128 raw metadata bytes are required.'), file); return; }
+    }
     file_write_queue.push({
         path: path,
         file: file,
         progress_cb: progress_cb,
         success_cb: success_cb,
-        error_cb: error_cb
+        error_cb: error_cb,
+        rawMeta128
     });
     vfs_process_file_write_queue();
 }
@@ -605,7 +670,7 @@ function vfs_process_file_write(entry) {
     }
     read_file_as_bytebuffer(entry.file).then(buffer => {
         checkCurrent();
-        return vfs_open_file(entry.path, "w").then(checked_response).then(opened => {
+        return vfs_open_file(entry.path, "w", entry.rawMeta128).then(checked_response).then(opened => {
             checkCurrent();
             file_id = opened.file_id;
             let offset = 0;
@@ -631,6 +696,9 @@ function vfs_process_file_write(entry) {
         });
     }).then(() => entry.finish(), error => {
         if (file_id !== null && generation === file_write_generation && !entry.finished) {
+            // The atomic writer retains the old file until successful CLOSE.
+            // A failed transfer must not turn cleanup into a partial commit.
+            if (entry.rawMeta128) { abort_transport(error, 'ATOMIC_WRITE_FAILED'); entry.finish(error); return; }
             return vfs_close_file(file_id).then(() => entry.finish(error), () => entry.finish(error));
         }
         entry.finish(error);
@@ -730,12 +798,10 @@ function read_meta(bb) {
 function write_meta(bb, meta) {
     if (meta.valid === false) throw new Error(i18n.global.t('properties.invalidmeta'));
     var notes = meta.notes;
+    const note = metadataNoteInfo(notes);
+    if (note.reason === 'invalid') throw new Error(i18n.global.t('properties.noteinvalid'));
+    if (note.reason === 'length') throw new Error(i18n.global.t('properties.notelimit', { max: note.maxBytes, actual: note.bytes }));
     var bytes = encode_utf8(notes);
-
-    // Firmware notes[90] reserves its final byte for the terminating NUL.
-    if (bytes.length > 89) {
-        throw new Error(i18n.global.t('properties.notelimit', { max: 89, actual: bytes.length }));
-    }
 
     var tb = new ByteBuffer();
     //notes
@@ -911,7 +977,8 @@ function on_rx_data(data) {
         }
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
-        if (h.status !== 0 && !((h.cmd === 0x03 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        const unsupportedProbe = h.cmd===0x1c && op.storage_probe && (h.status===1 || h.status===255);
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;
@@ -927,6 +994,8 @@ function on_ble_disconnected(reason) {
     ++transport_generation;
     transport_capabilities = null;
     transport_probe = null;
+    storage_info_cache.clear();
+    storage_info_queries.clear();
     const error = reason instanceof Error ? reason : new Error('Bluetooth disconnected');
     clearTimeout(response_timer);
     response_timer = null;

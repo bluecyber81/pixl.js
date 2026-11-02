@@ -65,7 +65,7 @@ test('initial locale respects saved language and survives blocked browser storag
 
 test('amiibo QR deep links retain uppercase external route only for complete hexadecimal IDs', () => {
   assert.equal(amiiboDeepLink('/a/01010000-000e0002'), 'https://amiibo.life/nfc/01010000-000E0002')
-  assert.equal(amiiboDeepLink('/a/00000004-04431c02/'), 'https://amiibo.life/nfc/00000004-04431C02')
+  assert.equal(amiiboDeepLink('/a/00000004-04431c02/'), 'https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car')
   for (const path of ['/', '', null, '/a/x-y', '/a/01010000-000E0002/extra',
     '/a/01010000-000E0002?url=evil', '/a/01010000-000E000G', '//evil.test/a/01010000-000E0002']) {
     assert.equal(amiiboDeepLink(path), null)

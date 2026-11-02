@@ -1,0 +1,158 @@
+ALLMIIBO DATEIMANAGER 3.32.5
+
+STARTEN
+Das Portable-ZIP vollstaendig entpacken und Start-Dateimanager.cmd starten.
+Python 3 muss auf dem Computer installiert sein. Fuer den fertig gebauten
+Dateimanager sind keine npm-Installation und kein node_modules-Ordner noetig.
+Chrome oder Edge auf demselben Computer verwenden; Stop-Dateimanager.cmd
+beendet nur die zugehoerige lokale Instanz. Standardadresse: http://127.0.0.1:8765/
+Ein bereits belegter Port wird nicht uebernommen. Mit
+Start-Dateimanager.cmd -Port 8778 kann ein anderer lokaler Port gewaehlt werden.
+
+NEU IN 3.32.5
+3.32.5 ergänzt einen getrennten GitHub-Pages-Build für
+https://bluecyber81.github.io/pixl.js/ und erhält den lokalen Portable-Build.
+Firmware-ZIP, sieben Speicherprüfprofile und WASM-Dateien bleiben unverändert.
+Bluetooth funktioniert weiterhin direkt zwischen Browser und Gerät; diese
+Webseite ist keine Funkbrücke zum heimischen Laptop. Sammlungen, Sicherungen
+und Diagnosen werden in diesem Ablauf nicht auf GitHub hochgeladen.
+
+Der Quellbuild ist `npm ci`, `npm test`, `npm run build` (lokal, dist) sowie
+`npm run build:pages` (Projektadresse /pixl.js/, dist-pages). Beide Builds führen
+anschließend ihre eigenen Produktionsprüfungen aus. Nur den Inhalt von
+dist-pages veröffentlichen, weder Quellverzeichnis noch lokale Serverzustände.
+GitHub Pages benötigt den Inhalt direkt im Veröffentlichungswurzelverzeichnis.
+Eine andere Projektadresse benötigt einen eigenen Basis-Build und passende Tests.
+
+Figurenlinks ohne Serverweiterleitung funktionieren als
+`/?amiibo=01010000000e0002` oder `/#/a/01010000-000e0002` lokal und entsprechend
+`/pixl.js/?amiibo=01010000000e0002` bzw. `/pixl.js/#/a/01010000-000e0002` online.
+Es sind reine Informationslinks zu amiibo.life, keine Gerätebefehle. Die alte
+lokale Route /a/<8Hex>-<8Hex> bleibt erhalten; auf Pages sind die neuen Links zu
+verwenden. Für den Gerätezugriff braucht der Browser Web Bluetooth und HTTPS
+oder localhost. Die normale Bluetooth-Paarung ist dafür nicht erforderlich.
+
+Das mitgelieferte Anwendungsupdate DE3.55/627 ist für unser LCD/PFS1-Gerät mit
+BL8/S112 7.3.0 bestimmt. Kein universelles Paket für alle Allmiibo-Varianten.
+Der genaue Firmwarequellstand ist bei der Paketauswahl und auf der DFU-Seite
+als separater Download verlinkt. Eine neue Seite erteilt noch keine Bluetooth-
+Freigabe: Geräteauswahl und Übertragungsstart erfolgen ausdrücklich im Browser.
+
+BEIBEHALTEN AUS 3.32.4
+Neues, getrennt gebundenes Speicherpruefprofil fuer DE3.55/627 mit dem
+passenden WASM-Simulator. Es verwendet exakt den neuen Firmwarekern mit
+optimierter CRC-Berechnung und LittleFS-Verschleisskorrektur. PFS1-Datenformat und Speicher-
+aufteilung bleiben erhalten. Ein bereits umgestelltes Geraet wird fuer
+dieses Anwendungsupdate NICHT neu formatiert oder wiederhergestellt.
+
+Unter Speicherumstellung ist DE3.55/627 das neue Standardpruefprofil;
+DE3.51-DE3.54 ist separat waehlbar. Alle sechs alten Simulatoren bleiben
+bytegleich vorhanden, der neue ist das siebte Profil. Die Profilauswahl
+bestaetigt keine installierte Firmware und startet keine Geraeteaktion.
+
+BEIBEHALTEN AUS 3.32.3
+Kompatible Bibliotheks-Patches fuer Babel, tinycolor, PostCSS, Rolldown und
+vue-component-type-helpers sind enthalten. Rolldowns Plattformbindungen und
+die genau erforderliche Build-Typenbibliothek wurden passend aktualisiert.
+Kein Major-Upgrade von Vue, Element Plus oder Vite; kein neues BLE-/DFU-
+Protokoll. Ein messbarer Geschwindigkeitsgewinn am Geraet wird nicht behauptet.
+
+Die inkonsistente nanoid-Lockangabe 3.3.22 ist auf die aktuell offiziell
+verfuegbare 3.3.20 berichtigt. Die 26 installierten Dateien und das Tarball-SRI
+sind identisch zum bisherigen Artefakt, das selbst schon 3.3.20 angab.
+Das ist kein Code-Downgrade. Die alte Metadatenadresse liefert aktuell404;
+dies beweist keine gesamte Veroeffentlichungshistorie. Die neue Pruefung
+vergleicht installierte Versionen und Lizenzen strikt mit dem Lock.
+
+BEIBEHALTEN AUS 3.32.2
+Dateien -> Auf dem Geraet suchen -> "Figuren auch ohne gespeicherte ID finden"
+freiwillig einschalten. Die Standardsuche bleibt unveraendert.
+Die Zusatzsuche liest nacheinander hoechstens 128 BIN-Dateien / 256 KiB,
+nur bekannte Amiibo-Dateigroessen und nur Dateien ohne gueltige Metadaten-ID,
+die noch nicht ueber Dateiname/Notiz gefunden wurden. Die ID in Bytes 84-91
+wird lokal zugeordnet; weder Datei noch Metadaten auf dem Geraet werden
+veraendert. Keine Inhaltsablage und kein Versand an einen Onlinedienst.
+Das ist keine NFC-Funktions- oder Signaturpruefung. Abbrechen wartet nur noch
+auf den laufenden kleinen Lesezugriff. Fuer mehr Treffer bei erreichter
+Grenze einen kleineren Ordner waehlen und dort erneut suchen.
+
+Ein Upload-Abbruch stoppt nun auch die verbleibenden Vorpruefungen. Ein
+spaeter beantwortetes Ordnerlesen loest keinen Ueberschreiben-Dialog mehr
+aus. Ein bereits begonnener Commit wird weiterhin fertig gefuehrt.
+
+BEIBEHALTEN AUS 3.32.1
+Die Auswahlvorschau schliesst sich beim Wechsel zur Laufwerksuebersicht und
+beim Loeschen ihrer Datei. Eigenschaften und Download gelten nur fuer die
+noch vorhandene ausgewaehlte Datei im aktuellen Ordner. Ein ausstehender
+Download-Klick wird nach Schliessen oder neuer Auswahl nicht nachgeholt.
+Die Vorschau einer anderen, nicht geloeschten Datei bleibt erhalten.
+
+BEIBEHALTEN AUS 3.32.0
+Die Oberflaeche trennt Verbindung, Dateien und Zusatzwerkzeuge deutlicher.
+Die Auswahlvorschau zeigt Angaben und Bild der markierten Figur direkt in der
+Ansicht. Fehlt die Figuren-ID in den Metadaten, wird nur die gerade ausgewaehlte
+unterstuetzte Datei gelesen, um die ID zu bestimmen. Es wird nichts veraendert.
+Figurenangaben kommen aus dem lokalen Katalog. Bilder koennen Internetzugriff
+benoetigen; ein fehlendes Bild bedeutet nicht, dass die Figur defekt ist.
+
+Unter "Auf dem Geraet suchen" kannst du den aktuellen Ordner oder die gesamte
+Sammlung E: nach Dateinamen, Notizen, Figurennamen und Serien durchsuchen.
+Die Standardsuche liest nur Ordner und Metadaten. Figurenname/Serie sind verfuegbar,
+wenn die gespeicherte Figuren-ID zum lokalen Katalog passt. Die Suche laesst
+sich abbrechen; Begrenzungen und unvollstaendige Ergebnisse werden angezeigt.
+Ein Treffer oeffnet seinen Ordner oder zeigt die Datei dort an. Es werden
+keine Figurendateien fuer die Standardsuche uebertragen oder veraendert.
+
+MITGELIEFERTE FIRMWARE
+Dieses Paket enthaelt genau Allmiibo_LCD_DE3_55_627_TESTSTAND.zip:
+2.22.0-DE3.55, Anwendungszaehler 627, fuer unser Allmiibo LCD/PFS1 mit BL8
+und S112 7.3.0. Das ZIP ersetzt nur die Anwendung. Bootloader, SoftDevice und
+Sammlung sind nicht enthalten; eine Speicherumstellung ist nicht erforderlich.
+Die lokale Paketliste ist keine Online-Updatesuche und bestaetigt ohne
+Geraetepruefung keine Modell-/Speicherkompatibilitaet.
+
+In "Mitgelieferte Firmware" das Paket herunterladen oder die DFU-Seite
+oeffnen. Die DFU-Seite prueft die gewaehlten Paketbytes mit SHA-256. Erst
+deine ausdrueckliche Bluetooth-Geraeteauswahl startet die Uebertragung.
+Die Signatur und den Versionszaehler prueft der Bootloader. Ein bewusst
+aelteres Paket wird bei entsprechend neuerem gelesenen Geraetestand nicht
+zum Downgrade angeboten. Auf Android kann das unveraenderte ZIP auch mit
+der nRF-DFU-App verwendet werden. Die App muss die Bluetooth-Verbindung
+anschliessend freigeben, bevor der Dateimanager verbinden kann.
+
+DE3.53 ERGAENZUNG AM GERAET
+Kartenemulator -> Slotmenue -> Disney Infinity ist ein optionales Profil
+fuer einen bereits geladenen MiFare-Mini-Dump (320 Bytes). Nach Bestaetigung
+werden sieben UID-Bytes, Custom Mode, SAK09 und ATQA0044 passend gesetzt.
+Dumpdaten bleiben erhalten. Andere Kartentypen und Shadow-Modus werden
+nicht automatisch umgestellt. Das Profil ersetzt keinen Test am jeweiligen
+Infinity-Portal und behauptet keine neue Konsolenkompatibilitaet.
+
+BEIBEHALTEN
+Die bisherigen ZIP-/Raw128-Sicherungen, Wiederherstellung, Metadaten,
+QR-Anzeigen, Fernbedienung und LittleFS-Pruefprofile bleiben enthalten.
+Alle sechs bisherigen WASM-Simulatoren und das PFS1-Speicherformat bleiben
+unveraendert; der neue Simulator ergaenzt DE3.55/627. Das vorherige Profil
+kennt weiter DE3.51/623, DE3.52/624, DE3.53/625 und DE3.54/626.
+Ein bereits umgestelltes Geraet braucht keine neue Formatierung.
+Die aktuellen Bibliotheksversionen und Lizenztexte sind in
+third-party/npm/SOURCES.json gebunden. Aeltere, nicht mehr darin referenzierte
+Lizenzkopien bleiben als historische Hinweise erhalten. Sie kennzeichnen
+keine zusaetzlich installierten Bibliotheken.
+
+HINWEISE
+Bluetooth nutzt den Computer oder das Handy, auf dem der Browser laeuft.
+Ein VPN verlaengert diese Funkreichweite nicht. http://127.0.0.1 bezeichnet
+immer das gerade verwendete Geraet. Ein mobiler Fernzugriff ist durch diesen
+lokalen Start nicht automatisch eingerichtet. Der Server bindet nur Loopback.
+
+Dieses Paket verbindet, flasht, formatiert und aktualisiert nichts von selbst.
+Der integrierte Browser-Flasher nimmt reine Anwendungs-ZIPs an; kombinierte
+Bootloader-/SoftDevice-Pakete gehoeren nicht zu dieser Lieferung.
+
+PRUEFGRENZEN UND QUELLCODE
+Automatische Protokoll-/UI-Tests und echte lokale WASM-Tests ersetzen keinen
+Funk-, NFC-, Speicher- oder Geschwindigkeitstest am physischen Allmiibo.
+Das separate Quellcode-ZIP enthaelt public, src, tests, scripts, third-party,
+Builddateien und Lizenzhinweise. Die Quellen enthalten keine persoenliche
+Amiibo-Sammlung und keine privaten Signierschluessel.

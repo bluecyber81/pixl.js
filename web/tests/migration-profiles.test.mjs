@@ -5,11 +5,16 @@ import {createRequire} from 'node:module'
 import {memoryVfs} from './helpers/memory-vfs.mjs'
 import {simulateCapacityInWorker} from '../src/lib/migration-capacity-worker-client.js'
 
-const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.1.min.js')
+const require=createRequire(import.meta.url),JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js')
 const layout={schema:1,drive:'E',backend:3,magic:0x31534650,flashBytes:2097152,blockSize:4096,blockCount:512,
   readSize:256,progSize:256,cacheSize:256,metadataBytes:128,shardTarget:32768,maxShards:64,pathCap:64,nameCap:48,maxHandles:8,flags:7}
 const profiles={
-  current:{approved:true,layout:{...layout,engineSha256:'c'.repeat(64)},wasmSha256:'d'.repeat(64),firmwareVersion:'2.22.0-DE3.36',applicationCounter:608},
+  de350:{approved:true,layout:{...layout,engineSha256:"9".repeat(64)},wasmSha256:"0".repeat(64),firmwareVersion:"2.22.0-DE3.50",applicationCounter:622},
+  de344:{approved:true,layout:{...layout,engineSha256:'7'.repeat(64)},wasmSha256:'8'.repeat(64),firmwareVersion:'2.22.0-DE3.44',applicationCounter:616},
+  de345:{approved:true,layout:{...layout,engineSha256:'5'.repeat(64)},wasmSha256:'6'.repeat(64),firmwareVersion:'2.22.0-DE3.45',applicationCounter:617},
+  de354:{approved:true,layout:{...layout,engineSha256:'c'.repeat(64)},wasmSha256:'d'.repeat(64),firmwareVersion:'2.22.0-DE3.54',applicationCounter:626},
+  current:{approved:true,layout:{...layout,engineSha256:'1'.repeat(64)},wasmSha256:'2'.repeat(64),firmwareVersion:'2.22.0-DE3.55',applicationCounter:627},
+  previous:{approved:true,layout:{...layout,engineSha256:'a'.repeat(64)},wasmSha256:'b'.repeat(64),firmwareVersion:'2.22.0-DE3.37',applicationCounter:609},
   legacy:{approved:true,layout:{...layout,engineSha256:'e'.repeat(64)},wasmSha256:'f'.repeat(64),firmwareVersion:'2.22.0-DE3.33',applicationCounter:605},
 }
 let serial=0
@@ -31,9 +36,9 @@ async function fixture(wrongReport=false){
   return {api,archive,vfs,target}
 }
 
-test('current and legacy capacity proofs stay bound to their exact engine and application',async()=>{
+test('all seven capacity proofs stay bound to their exact engine and application',async()=>{
   const f=await fixture()
-  for(const capacityProfile of ['current','legacy']){
+  for(const capacityProfile of ['current','de354','de350','de345','de344','previous','legacy']){
     const proof=await f.api.checkMigrationCapacity(f.archive,{capacityProfile})
     assert.equal(proof.capacityProfile,capacityProfile)
     const result=await f.api.inspectMigrationTarget({...f.target(capacityProfile),capacityProof:proof})
@@ -49,7 +54,7 @@ test('current and legacy capacity proofs stay bound to their exact engine and ap
 test('omitted capacity ID selects current, while mismatched report IDs cannot create a proof',async()=>{
   const f=await fixture();assert.equal((await f.api.checkMigrationCapacity(f.archive)).capacityProfile,'current')
   const bad=await fixture(true)
-  for(const capacityProfile of ['current','legacy'])await assert.rejects(bad.api.checkMigrationCapacity(bad.archive,{capacityProfile}),{code:'MIGRATION_CAPACITY'})
+  for(const capacityProfile of ['current','de354','de350','de345','de344','previous','legacy'])await assert.rejects(bad.api.checkMigrationCapacity(bad.archive,{capacityProfile}),{code:'MIGRATION_CAPACITY'})
 })
 
 test('unknown capacity IDs are rejected before constructing a worker',async()=>{
@@ -64,7 +69,7 @@ test('unknown capacity IDs are rejected before constructing a worker',async()=>{
 test('worker messages carry the selected local profile ID and never a caller-supplied raw target',async()=>{
   const workers=[]
   class Worker{constructor(){workers.push(this)}postMessage(message){this.message=message}terminate(){this.stopped=true}}
-  for(const capacityProfile of ['current','legacy']){
+  for(const capacityProfile of ['current','de354','de350','de345','de344','previous','legacy']){
     const pending=simulateCapacityInWorker([],{capacityProfile,WorkerImpl:Worker,archiveSha256:'a'.repeat(64),target:{approved:true,url:'https://invalid.example/a.wasm'}})
     const worker=workers.at(-1)
     assert.deepEqual(worker.message,{rows:[],archiveSha256:'a'.repeat(64),capacityProfile})

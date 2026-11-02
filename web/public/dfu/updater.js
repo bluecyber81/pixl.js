@@ -30,8 +30,9 @@
             if (this.busy || this.loading || !this.package) return false;
             const selected = this.package; this.busy = true; this.lastResult = null; this.state(); this.onProgress(null);
             let dfu; const progress = event => this.onProgress(event);
+            const log = event => { if (typeof event?.message === 'string') this.onStatus(event.message); };
             try {
-                dfu = this.createDfu(); dfu.addEventListener('progress', progress);
+                dfu = this.createDfu(); dfu.addEventListener('progress', progress); dfu.addEventListener('log', log);
                 this.onStatus('DFU-Gerät auswählen …');
                 // Keep this call before the first await: Web Bluetooth needs
                 // the user's click, not an asynchronous follow-up invocation.
@@ -51,7 +52,7 @@
             } catch (error) {
                 this.onStatus('Vorgang nicht bestätigt: ' + error.message); return false;
             } finally {
-                if (dfu?.removeEventListener) dfu.removeEventListener('progress', progress);
+                if (dfu?.removeEventListener) { dfu.removeEventListener('progress', progress); dfu.removeEventListener('log', log); }
                 // Keep the last acknowledged byte position visible on errors.
                 // A new package or attempt resets it before starting.
                 this.busy = false; this.state();

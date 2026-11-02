@@ -7,8 +7,10 @@ const file=process.env.PIXL_MIGRATION_SOURCE?new URL(process.env.PIXL_MIGRATION_
 const {descriptor}=parse(fs.readFileSync(file,'utf8'),{filename:file.pathname})
 const vueImports=source=>source.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`)
 const script=compileScript(descriptor,{id:'migration-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const component=')
-const template=vueImports(compileTemplate({source:descriptor.template.content,id:'migration-ui',filename:file.pathname}).code).replace('export function render','function render')
-const makeComponent=new Function('Vue','createMigrationBackup','loadMigrationArchive','verifyMigrationArchive','restoreMigrationArchive','checkMigrationCapacity','MIGRATION_CAPACITY_TARGET','saveBlob','retainMigrationSource','inspectMigrationTarget','formatMigrationTarget','initializeMigrationImport','finishMigrationImport','restartAfterMigration',script+'\n'+template+'\ncomponent.render=render;return component;')
+// Render every static option as a VNode: this lightweight host deliberately has no HTML parser.
+// Five options cross Vue's static-string optimization threshold; no UI assertions are removed.
+const template=vueImports(compileTemplate({source:descriptor.template.content,id:'migration-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code).replace('export function render','function render')
+const makeComponent=new Function('Vue','createMigrationBackup','loadMigrationArchive','verifyMigrationArchive','restoreMigrationArchive','checkMigrationCapacity','MIGRATION_CAPACITY_TARGET','saveBlob','retainMigrationSource','inspectMigrationTarget','formatMigrationTarget','initializeMigrationImport','finishMigrationImport','restartAfterMigration','getMigrationCapacityTarget',script+'\n'+template+'\ncomponent.render=render;return component;')
 const node=(type,text='')=>({type,text,props:{},children:[],parent:null})
 const renderer=Vue.createRenderer({createElement:t=>node(t),createText:t=>node('#text',t),createComment:t=>node('#comment',t),
   setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[]},patchProp:(n,k,o,v)=>n.props[k]=v,
@@ -20,12 +22,26 @@ function mount(overrides={}){
  const events=[],calls=[],saves=[],root=node('root'),archive=Object.freeze({version:2,fileCount:2,directoryCount:1,byteCount:540,archiveSha256:'a'.repeat(64)})
  const methods={backup:async()=>({blob:new Blob(['zip']),filename:'backup.zip'}),load:async()=>archive,verify:async()=>({verified:true,kind:'migration-source-verification',filesVerified:2,bytesVerified:540,migrationReady:false}),restore:async()=>{throw Error('Unexpected restore')},capacity:async()=>{throw Error('Not approved')},...overrides}
  const unexpected=async()=>{throw Error('Unexpected mutation')}
- const Component=makeComponent(Vue,async o=>{calls.push(['backup',o]);return methods.backup(o)},async(f,o)=>{calls.push(['load',f,o]);return methods.load(f,o)},async o=>{calls.push(['verify',o]);return methods.verify(o)},methods.restore,methods.capacity,{approved:overrides.approved===true},(...a)=>saves.push(a),methods.retain|| (async()=>({retained:true,persistent:true})),methods.inspect||unexpected,methods.format||unexpected,methods.initialize||unexpected,methods.finish||unexpected,methods.restart||unexpected)
+ const Component=makeComponent(Vue,async o=>{calls.push(['backup',o]);return methods.backup(o)},async(f,o)=>{calls.push(['load',f,o]);return methods.load(f,o)},async o=>{calls.push(['verify',o]);return methods.verify(o)},methods.restore,methods.capacity,{approved:overrides.approved===true},(...a)=>saves.push(a),methods.retain|| (async()=>({retained:true,persistent:true})),methods.inspect||unexpected,methods.format||unexpected,methods.initialize||unexpected,methods.finish||unexpected,methods.restart||unexpected,overrides.getCapacityTarget|| (profile=>({approved:overrides.approved===true})))
  const props=Vue.reactive({connected:true,blocked:false,generation:1,language:'de_DE',getSession:()=>{const generation=props.generation;return {deviceKey:'A',firmwareVersion:'2.22.0-DE3.30-PREP',assertSession:()=>{if(generation!==props.generation)throw Error('stale')},readStorageInfo:async()=>({schema:1})}},confirmRestore:async()=>{calls.push(['confirm'])},onBusy:x=>events.push(x)})
  let vm;const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:value=>vm=value})});app.mount(root)
  return {root,props,events,calls,saves,app,archive,get vm(){return vm},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label)),input:()=>flat(root).find(n=>n.type==='input')}
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
+
+test('3.29 selects each reviewed engine independently and never inherits approval from another profile',async()=>{
+ const h=mount({getCapacityTarget:profile=>({approved:profile==='previous'})});try{
+  await load(h);assert.equal(h.vm.capacityApproved,false);assert(h.button('simulieren').props.disabled);
+  h.vm.capacityProof={passed:true};h.vm.changeCapacityProfile('previous');await Vue.nextTick();
+  assert.equal(h.vm.capacityApproved,true);assert.equal(h.vm.capacityProof,null);assert.equal(h.button('simulieren').props.disabled,false);
+  assert.match(h.vm.capacityProfileLabel,/DE3.36.*DE3.37/);
+  h.vm.changeCapacityProfile('legacy');await Vue.nextTick();assert.equal(h.vm.capacityApproved,false);assert(h.button('simulieren').props.disabled);
+  h.vm.changeCapacityProfile('de344');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.42–DE3.44 \/ 614–616/);
+  h.vm.changeCapacityProfile('de345');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.45 \/ 617/);
+  h.vm.changeCapacityProfile('de354');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.51–DE3.54 \/ 623–626/);
+  h.vm.changeCapacityProfile('current');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.55 \/ 627/);assert.equal(h.calls.length,1);
+ }finally{h.app.unmount()}
+})
 
 test('3.25.5 deferred restore keeps overall progress separate and never claims intermediate verification',async()=>{
  const gate=defer();let options;const h=mount({restore:o=>{options=o;o.onProgress({phase:'restoring',path:'E:/x',done:120,total:1208,filePhase:'uploading',fileDone:242,fileTotal:540});return gate.promise}})

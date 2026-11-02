@@ -24,7 +24,7 @@ const observe=(o,phase,path,done,total)=>{try{o.onProgress?.({phase,path,done,to
 const detail=(o,value)=>{try{o.onProgress?.(value)}catch{/* observer */}}
 export function checkedStorage(info,{target=false}={}) {
   need(info?.schema===1 && info.drive==='E' && [1,2,3].includes(info.backend) && info.mounted===true &&
-    Number.isInteger(info.flags) && (info.flags&7)===7 && !(info.flags&~7) && info.metaLen===128 && info.pathMax===64 && info.nameMax===48,
+    Number.isInteger(info.flags) && (info.flags&7)===7 && !(info.flags&~15) && (!(info.flags&8)||info.backend===3) && info.metaLen===128 && info.pathMax===64 && info.nameMax===48,
     'MIGRATION_CAPABILITY','A mounted E: drive with exact raw128 access and no automatic format is required.')
   need(!target || [2,3].includes(info.backend),'MIGRATION_BACKEND','Target verification requires an explicitly reported LittleFS target.')
   return Object.freeze({...info})
@@ -319,20 +319,22 @@ export async function restoreMigrationArchive(o){
     }
     for(const entry of entries.filter(e=>e.type==='file')){
       checkpoint(o);const existing=initial.records.get(entry.sourcePath)
+      let rawCommitted=false
       // Size-matching entries remain explicitly UNVERIFIED until the single
       // final comparison. A real failed comparison selects exact byte repairs.
       const same=existing&&existing.size===entry.size&&!repairs.has(entry.sourcePath)
       if(!same){
         const attempt={path:entry.sourcePath,operation:'file',state:'possible'};attempts.push(attempt)
-        await migrationStagedUpload({...io,
+        const receipt=await migrationStagedUpload({...io,
           onProgress:p=>detail(o,{phase:'restoring',path:entry.sourcePath,done:completed.length,total:entries.length,
             filePhase:p.phase,fileDone:p.done??0,fileTotal:p.total??entry.size})},
           entry,readBackupArchiveFile(archive,entry.sourcePath),staging.get(entry.sourcePath),existing)
+        rawCommitted=receipt.rawCommitted===true
         index?.assertHealthy()
         attempt.state='acknowledged';checkpoint(o)
       }
-      const attempt={path:entry.sourcePath,operation:'raw-metadata',state:'possible'};attempts.push(attempt)
-      await io.updateRawMetadata(entry.sourcePath,rawMetadataBytes(entry.rawMeta128Hex));attempt.state='acknowledged';checkpoint(o)
+      if(!rawCommitted){const attempt={path:entry.sourcePath,operation:'raw-metadata',state:'possible'};attempts.push(attempt)
+        await io.updateRawMetadata(entry.sourcePath,rawMetadataBytes(entry.rawMeta128Hex));attempt.state='acknowledged';checkpoint(o)}
       completed.push(entry.sourcePath);observe(o,'restoring',entry.sourcePath,completed.length,entries.length)
     }
     for(const entry of entries.filter(e=>e.type==='directory').reverse()){

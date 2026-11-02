@@ -212,6 +212,31 @@ export function disconnect(options = {}) {
     return pending || Promise.resolve();
 }
 
+// Receives the already authorized NUS link only after the remote protocol has
+// acknowledged FILE_READY. No picker, connect, discovery or unsubscribe runs.
+// The remote owner detaches synchronously before calling this receiver.
+export function adopt_remote_connection(session) {
+    if (bluetoothDevice || connectionPromise || connected || disconnectionPromise) throw new Error('File connection is busy');
+    const { device, rx, tx } = session || {};
+    if (!device?.gatt?.connected || rx?.uuid !== NUS_CHAR_RX_UUID || tx?.uuid !== NUS_CHAR_TX_UUID ||
+        !rx.properties?.notify || !tx.properties?.write || typeof tx.writeValueWithResponse !== 'function') {
+        throw new Error('Invalid remote file connection');
+    }
+    ++connectionGeneration;
+    bluetoothDevice = device; nus_char_rx = rx; nus_char_tx = tx;
+    try {
+        device.addEventListener('gattserverdisconnected', onDeviceDisconnected);
+        rx.addEventListener('characteristicvaluechanged', onRxDataReceived);
+        connected = true;
+        sharedEventDispatcher().emit('ble_connected');
+        return true;
+    } catch (error) {
+        clearConnection();
+        sharedEventDispatcher().emit('ble_connect_error', error);
+        throw error;
+    }
+}
+
 
 export function tx_data(buff) {
     if (!connected || !nus_char_tx || !bluetoothDevice || !bluetoothDevice.gatt.connected) {

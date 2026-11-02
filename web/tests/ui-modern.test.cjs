@@ -53,10 +53,12 @@ function harness(overrides = {}) {
   // while the VM isolates the browser fakes from the Node test process.
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/power-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   const localeSource = fs.readFileSync(path.join(__dirname, '../src/lib/locale.js'), 'utf8');
   vm.runInContext(localeSource.replace(/export /g, ''), context);
   vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nglobalThis.assertPortableEntryName=assertPortableEntryName; globalThis.portableNameKey=portableNameKey; }', context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/browser-tools.js'), 'utf8').replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/folder-navigation.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/boot-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-info.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/transfer-meter.js'), 'utf8').replace(/export /g, ''), context);
@@ -80,6 +82,173 @@ function harness(overrides = {}) {
 }
 const connected = h => { h.instance.connected = true; h.instance.current_dir = 'E:/'; return h.instance; };
 
+test('3.32.2 cancelled safe upload stops preflight before late prompts or further reads', async () => {
+ const gate=deferred();let prompts=0,driveReads=0,uploads=0;
+ const h=harness({safeUploads:true,vfs_read_folder:()=>gate.promise,vfs_get_drive_list:async()=>{++driveReads;return {status:0,data:[]};},
+  safeUpload:async({signal})=>{++uploads;assert.equal(signal.aborted,true);throw Object.assign(Error('cancelled'),{name:'AbortError'});}}),app=connected(h);
+ app.replaceUploads=true;app.$confirm=async()=>{++prompts;};
+ const pending=app.on_upload_request({file:{name:'existing.bin',size:1},onProgress(){}});
+ const result=pending.then(()=>null,error=>error);await new Promise(setImmediate);
+ app.cancel_transfer();gate.resolve({status:0,data:[file('existing.bin')]});
+ const error=await result;
+ assert.equal(prompts,0);assert.equal(driveReads,0);assert.equal(uploads,0);assert.equal(error.name,'AbortError');
+ assert.equal(app.pendingUploads,0);assert.equal(app.busy,false);assert.equal(app.lastTransfer.status,'cancelled');
+});
+
+test('3.32.2 search file adapter binds the size limit and rejects stale sessions before and after the read', async () => {
+ const app=connected(harness());let reads=0;
+ app.read_device_file=async(path,options)=>{++reads;assert.equal(path,'E:/file.bin');assert.equal(options.max_bytes,540);return new Uint8Array(540);};
+ const session=app.device_search_session();assert.equal((await session.readFile('E:/file.bin',{maxBytes:540})).length,540);assert.equal(reads,1);
+ ++app.sessionGeneration;await assert.rejects(session.readFile('E:/file.bin',{maxBytes:540}));assert.equal(reads,1);
+ const next=app.device_search_session();app.read_device_file=async()=>{++reads;++app.sessionGeneration;return new Uint8Array(540);};
+ await assert.rejects(next.readFile('E:/file.bin',{maxBytes:540}));assert.equal(reads,2);
+});
+
+test('3.32.2 safe-upload cancellation after overwrite prompt or storage query starts no upload',async()=>{
+ for(const phase of ['prompt','space']){
+  const gate=deferred();let prompts=0,driveReads=0,uploads=0;
+  const h=harness({safeUploads:true,vfs_read_folder:async()=>({status:0,data:[file('existing.bin')]}),
+   vfs_get_drive_list:()=>{++driveReads;return gate.promise;},safeUpload:async()=>{++uploads;throw Error('must not upload');}}),app=connected(h);
+  app.replaceUploads=true;app.$confirm=()=>{++prompts;return phase==='prompt'?gate.promise:Promise.resolve();};
+  const pending=app.on_upload_request({file:{name:'existing.bin',size:1},onProgress(){}});
+  const result=pending.then(()=>null,error=>error);await new Promise(setImmediate);
+  assert.equal(prompts,1);assert.equal(driveReads,phase==='space'?1:0);
+  app.cancel_transfer();gate.resolve({status:0,data:[{label:'E',name:'External',status:0,total_size:4096,free_size:4096}]});
+  const error=await result;assert.equal(error.name,'AbortError');assert.equal(uploads,0);assert.equal(driveReads,phase==='space'?1:0);
+  assert.equal(app.pendingUploads,0);assert.equal(app.busy,false);assert.equal(app.lastTransfer.status,'cancelled');
+ }
+});
+
+test('3.32.1 note feedback counts bytes and prevents invalid saves before protocol requests', async () => {
+  let saves = 0;
+  const h = harness({vfs_update_meta: async () => { saves++; return {status:0}; }}), app = connected(h);
+  const row = {name:'A.bin',notes:'old',flags:{},amiibo:{}};
+  app.on_row_btn_meta(0,row);
+  for (const [note,reason] of [['keep\0lost','invalid'],['\ud800','invalid'],['\udfff','invalid'],['ä'.repeat(45),'length']]) {
+    app.meta_form.notes=note;
+    assert.equal(app.metadataNote.valid,false);assert.equal(app.metadataNote.reason,reason);
+    await app.on_diag_meta_close();assert.equal(saves,0);assert.equal(row.notes,'old');assert.equal(app.meta_diag_visible,true);
+  }
+  app.meta_form.notes='ä'.repeat(42)+'😀a';
+  assert.equal(app.metadataNote.bytes,89);assert.equal(app.metadataNote.valid,true);
+  assert.equal(app.metadata_note_hint(),'properties.notebytes');
+  await app.on_diag_meta_close();assert.equal(saves,1);assert.equal(row.notes,'ä'.repeat(42)+'😀a');
+  assert.match(descriptor.template.content,/aria-describedby="metadata-note-hint"/);
+  assert.match(descriptor.template.content,/!connected \|\| busy \|\| !metadataNote\.valid/);
+});
+
+test('3.29 folder and parent navigation clear filters from the previous location', async () => {
+  const folders = [], app = connected(harness({vfs_read_folder: async path => {
+    folders.push(path); return {status:0,data:[file('Mario.bin')]};
+  }}));
+  app.searchQuery = 'Zelda'; app.typeFilter = 'DIR'; app.page = 3;
+  await app.handle_name_click(0, {name:'Figuren',type:'DIR'});
+  assert.equal(app.current_dir, 'E:/Figuren'); assert.equal(app.searchQuery, '');
+  assert.equal(app.typeFilter, 'all'); assert.equal(app.page, 1); assert.equal(app.filteredRows.length, 1);
+  app.searchQuery = 'missing'; app.typeFilter = 'DIR'; app.page = 2;
+  await app.on_btn_up();
+  assert.equal(app.current_dir, 'E:/'); assert.equal(app.searchQuery, ''); assert.equal(app.typeFilter, 'all');
+  assert.deepEqual(folders, ['E:/Figuren','E:/']);
+});
+
+test('3.29 refreshing a large folder retains search and page, clamping only after the result shrinks', async () => {
+  let length = 260;
+  const app = connected(harness({vfs_read_folder: async () => ({status:0,data:Array.from({length},(_,i)=>file(`Mario${i}.bin`))})}));
+  app.searchQuery = 'Mario'; app.page = 3;
+  await app.on_btn_refresh(); assert.equal(app.page, 3); assert.equal(app.searchQuery, 'Mario');
+  length = 120; await app.on_btn_refresh(); assert.equal(app.page, 2);
+  length = 0; await app.on_btn_refresh(); assert.equal(app.page, 1);
+});
+
+test('3.29 failed listing is not announced as empty and a successful retry clears the error', async () => {
+  let fail = true;
+  const h = harness({vfs_read_folder: async () => {
+    if (fail) throw new Error('Read failed'); return {status:0,data:[]};
+  }}), app = connected(h);
+  await app.reload_folder(); assert.equal(app.listingError, true); assert.equal(app.table_loading, false);
+  assert.match(descriptor.template.content, /v-if="listingError[^\"]*"[^>]*role="alert"/);
+  assert.match(descriptor.template.content, /!listingError[^\"]*!filteredRows\.length/);
+  fail = false; await app.reload_folder(); assert.equal(app.listingError, false);
+  app.listingError = true; app.on_ble_disconnected(); assert.equal(app.listingError, false);
+});
+
+test('3.30.1 refresh honours a filter reset performed while its folder read is pending', async () => {
+  for (const change of ['search', 'type', 'reset']) {
+    const gate = deferred();
+    const app = connected(harness({vfs_read_folder: () => gate.promise}));
+    app.tableData = Array.from({length:500}, (_,i) => ({name:`Mario${i}`,type:'REG'}));
+    app.searchQuery = 'Mario'; app.page = 4;
+    const pending = app.on_btn_refresh(); assert.equal(app.table_loading,true);
+    if (change === 'search') { app.searchQuery = 'Mario'; app.on_filter_change(); }
+    else if (change === 'type') { app.typeFilter = 'REG'; app.on_filter_change(); }
+    else app.reset_filters();
+    assert.equal(app.page,1);
+    gate.resolve({status:0,data:Array.from({length:500}, (_,i) => file(`Mario${i}`))});
+    await pending;
+    assert.equal(app.page,1,change); assert.equal(app.filteredRows.length,500);
+    assert.equal(app.busy,false);
+  }
+});
+
+function readyCurrentSync(app) {
+  app.syncDialog=true; app.syncRoot='E:/';
+  app._syncGeneration=app.sessionGeneration; app._syncDeviceKey='private-test-device';
+  app.syncPlan={rootPath:'E:/',deviceKey:'private-test-device',entries:[{targetPath:'E:/New.bin',status:'add',size:3}]};
+  app.syncSelected=['E:/New.bin']; app._syncFiles=[{name:'New.bin',size:3}];
+}
+
+test('3.30.1 local sync refreshes committed entries after success, partial failure or cancellation', async () => {
+  for (const outcome of ['success','partial-failure','cancelled']) {
+    const remote=[]; let folderReads=0;
+    const app=connected(harness({createSyncJob:()=>({}),executeSyncJob:async()=>{
+      remote.push(file('New.bin'));
+      if(outcome==='cancelled') app.cancel_sync();
+      if(outcome!=='success') throw Error('Stopped after first committed file');
+      return {completed:1,skipped:0,total:1};
+    },vfs_read_folder:async()=>{folderReads++;return {status:0,data:remote.slice()};}}));
+    readyCurrentSync(app); app.tableData=[];
+    await app.run_sync();
+    assert.deepEqual(Array.from(app.tableData,row=>row.name),['New.bin'],outcome);
+    assert.equal(folderReads,1); assert.equal(app.busy,false);
+    assert.equal(app.syncPlan,null); assert.equal(app.syncSelected.length,0);
+    assert.equal(app.lastTransfer.status,outcome==='success'?'success':outcome==='cancelled'?'cancelled':'failed');
+  }
+});
+
+test('3.30.1 sync retains the operation lock until its final listing settles and exposes read failure separately', async () => {
+  const gate=deferred();
+  const app=connected(harness({createSyncJob:()=>({}),executeSyncJob:async()=>({completed:1}),vfs_read_folder:()=>gate.promise}));
+  readyCurrentSync(app); const pending=app.run_sync(); await new Promise(setImmediate);
+  assert.equal(app.table_loading,true); assert.equal(app.busy,true);
+  assert.equal(app.lastTransfer.status,'success');
+  gate.reject(Error('Final listing failed')); await pending;
+  assert.equal(app.lastTransfer.status,'success'); assert.equal(app.listingError,true);
+  assert.equal(app.busy,false);
+});
+
+test('3.30.1 late sync completion cannot refresh or unlock a replacement session', async () => {
+  const gate=deferred(); let reads=0;
+  const app=connected(harness({createSyncJob:()=>({}),executeSyncJob:()=>gate.promise,vfs_read_folder:async()=>{reads++;return {status:0,data:[]};}}));
+  readyCurrentSync(app); const pending=app.run_sync(); await new Promise(setImmediate);
+  app.on_ble_disconnected(); app.connected=true; app.tableData=[{name:'Replacement'}]; app.pendingDownloads=1;
+  gate.resolve({completed:1}); await pending;
+  assert.equal(reads,0); assert.equal(app.tableData[0].name,'Replacement'); assert.equal(app.pendingDownloads,1);
+});
+
+test('3.29 ZIP entry progress clears stale byte estimates before changing units', () => {
+  const app = connected(harness());
+  app.set_transfer({phase:'checking',path:'E:/Mario.bin',done:540,total:540});
+  app.show_zip_progress({unit:'entries',phase:'checking',done:2,total:8});
+  assert.equal(app.transfer, null); assert.equal(app.transferStats, null);
+  assert.equal(app.zipStatus, 'workflow.checking');
+});
+test('3.29 local sync directory collisions explain the file/folder conflict', () => {
+  const app = harness().instance;
+  assert.equal(app.plan_reason('DIRECTORY_CONFLICT'), 'workflow.TYPE_CONFLICT');
+  assert.equal(app.plan_reason('TYPE_CONFLICT'), 'workflow.TYPE_CONFLICT');
+  assert.equal(app.plan_reason('Unexpected arbitrary message'), 'workflow.blockedOther');
+});
+
 function diagnosticDownloadProbe(h) {
   const downloads = [];
   h.window.URL = { createObjectURL(blob) { downloads.push({blob}); return 'blob:diagnostic'; }, revokeObjectURL() {} };
@@ -88,7 +257,7 @@ function diagnosticDownloadProbe(h) {
   return downloads;
 }
 
-test('3.27.0 diagnostic export first opens a local whitelisted preview with no download, picker, clipboard or device reads', () => {
+test('3.30.1 diagnostic export first opens a local whitelisted preview with no download, picker, clipboard or device reads', () => {
   let reads = 0, pickers = 0, copies = 0;
   const h = harness({get_runtime_diagnostics: () => reads++, get_boot_diagnostics: () => reads++, vfs_read_folder: () => reads++});
   const app = connected(h), downloads = diagnosticDownloadProbe(h);
@@ -100,19 +269,19 @@ test('3.27.0 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.27.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.32.5'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
 
-test('3.27.0 explicit save opens picker synchronously and confirms success only after write and close', async () => {
+test('3.30.1 explicit save opens picker synchronously and confirms success only after write and close', async () => {
   const h = harness(), app = h.instance, downloads = diagnosticDownloadProbe(h), gate = deferred(), closing = deferred();
   let pickerCount = 0, pickerOptions, written, closes = 0;
   h.window.showSaveFilePicker = options => { pickerCount++; pickerOptions = options; return gate.promise; };
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.27.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.32.5.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -128,7 +297,7 @@ test('3.27.0 explicit save opens picker synchronously and confirms success only 
   assert.equal(downloads.length, 0); assert.equal(app.diagnosticsDialog, true);
 });
 
-test('3.27.0 cancelled, unavailable, denied and failed native saves retain the report without automatic download', async () => {
+test('3.30.1 cancelled, unavailable, denied and failed native saves retain the report without automatic download', async () => {
   for (const outcome of ['cancel','unsupported','denied','create','write','close']) {
     const h = harness(), app = h.instance, downloads = diagnosticDownloadProbe(h);
     if (outcome !== 'unsupported') h.window.showSaveFilePicker = async () => {
@@ -149,7 +318,7 @@ test('3.27.0 cancelled, unavailable, denied and failed native saves retain the r
   }
 });
 
-test('3.27.0 explicit copying retains snapshot and only reports copied after clipboard success', async () => {
+test('3.30.1 explicit copying retains snapshot and only reports copied after clipboard success', async () => {
   const h = harness(), app = h.instance, gate = deferred(); let copied;
   h.navigator.clipboard = {writeText: value => { copied = value; return gate.promise; }};
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
@@ -160,7 +329,7 @@ test('3.27.0 explicit copying retains snapshot and only reports copied after cli
   assert.equal(app.diagnosticsStatus, 'info.diagnosticCopied'); assert.equal(app.diagnosticsBusy, false);
 });
 
-test('3.27.0 unavailable or rejected clipboard selects text and a failed selection remains honest', async () => {
+test('3.30.1 unavailable or rejected clipboard selects text and a failed selection remains honest', async () => {
   for (const outcome of ['missing','denied','selection-failed','no-field']) {
     const h = harness(), app = h.instance, selection = [];
     if (outcome !== 'missing') h.navigator.clipboard = {writeText: async () => { throw Error('blocked'); }};
@@ -177,7 +346,7 @@ test('3.27.0 unavailable or rejected clipboard selects text and a failed selecti
   assert.equal(selected, 1); assert.equal(h.instance.diagnosticsStatus, 'info.diagnosticSelected');
 });
 
-test('3.27.0 browser download is explicit and a silently blocked click never claims file saved', async () => {
+test('3.30.1 browser download is explicit and a silently blocked click never claims file saved', async () => {
   const h = harness(), app = h.instance, downloads = diagnosticDownloadProbe(h);
   app.save_diagnostics(); assert.equal(downloads.length, 0);
   app.download_diagnostics(); assert.equal(downloads.length, 1); assert.equal(downloads[0].clicked, true);
@@ -188,7 +357,7 @@ test('3.27.0 browser download is explicit and a silently blocked click never cla
   assert.equal(app.diagnosticsDialog, true); assert.ok(app.diagnosticsJson);
 });
 
-test('3.27.0 production export dialog renders selectable JSON, manual fallbacks and busy controls accessibly', async () => {
+test('3.30.1 production export dialog renders selectable JSON, manual fallbacks and busy controls accessibly', async () => {
   const Vue = require('vue'), {renderToString} = require('@vue/server-renderer');
   const {parse,compile} = require('@vue/compiler-dom'), {infoGerman: labels} = await import('../src/i18n/info.js');
   function findDialog(node) {
@@ -199,7 +368,7 @@ test('3.27.0 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.27.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.32.5.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -285,7 +454,7 @@ test('3.22.2 graceful disconnect clears device controls immediately but keeps re
   assert.equal(app.connected,false);assert.equal(app.disconnecting,true);assert.equal(app.firmwareVersion,'');
   assert.equal(app.current_dir,'');assert.equal(app.tableData.length,0);assert.equal(app.connBtnText,'info.disconnecting');
   app.on_btn_ble_connect();assert.equal(picks,0);
-  assert.match(appSource,/:disabled="disconnecting \|\| connectionDisconnectLocked/);
+  assert.match(appSource,/:disabled="remoteActive \|\| disconnecting \|\| connectionDisconnectLocked/);
   state='disconnected';h.listeners.get('ble_disconnect_complete')();
   assert.equal(app.disconnecting,false);assert.equal(app.connBtnText,'conn.connect');app.on_btn_ble_connect();assert.equal(picks,1);
 });
@@ -572,6 +741,74 @@ test('3.15 runtime diagnostics are optional, manual and stale replies cannot rep
   assert.equal(app.runtimeState,'unavailable');assert.equal(app.busy,false);
 });
 
+test('3.32.1 runtime loading and failure remain visible until an explicit retry succeeds', async () => {
+  const fixture=require('./runtime-de348-wire-fixture.json'),gate=deferred();let calls=0;
+  const h=harness({get_runtime_diagnostics:()=>{calls++;return gate.promise}}),app=connected(h);
+  app.runtimeInfo=fixture.expected;app.runtimeState='available';
+  const pending=app.refresh_runtime_info();
+  assert.equal(app.runtimeState,'loading');assert.equal(app.runtimeInfo,null);assert.equal(app.busy,true);
+  await app.refresh_runtime_info();await app.refresh_boot_info();assert.equal(calls,1);
+  gate.reject(Error('Bluetooth read timed out'));await pending;
+  assert.equal(app.runtimeState,'failed');assert.equal(app.runtimeInfo,null);assert.equal(app.busy,false);
+  assert.equal(h.messages.length,1);await new Promise(setImmediate);assert.equal(calls,1);
+  h.proto.get_runtime_diagnostics=async()=>{calls++;return fixture.expected};
+  await app.refresh_runtime_info();assert.equal(app.runtimeState,'available');assert.equal(app.busy,false);
+  assert.equal(calls,2);assert.deepEqual(JSON.parse(JSON.stringify(app.runtimeInfo)),fixture.expected);
+  app.save_diagnostics();assert.deepEqual(JSON.parse(app.diagnosticsJson).runtime,fixture.expected);
+});
+
+test('3.32.1 invalid runtime data differs from an unsupported optional command',async()=>{
+  for(const invalid of [{}, {schemaVersion:2,scope:'since-device-restart'}, {schemaVersion:1,scope:'other-session'}]) {
+    const h=harness({get_runtime_diagnostics:async()=>invalid}),app=connected(h);
+    await app.refresh_runtime_info();assert.equal(app.runtimeState,'failed');assert.equal(app.runtimeInfo,null);
+    assert.equal(app.infoLoading,false);assert.equal(h.messages.length,1);
+    h.proto.get_runtime_diagnostics=async()=>null;await app.refresh_runtime_info();
+    assert.equal(app.runtimeState,'unavailable');assert.equal(h.messages.length,1);
+  }
+});
+
+test('3.32.1 stale diagnostic success and failure cannot unlock or overwrite a newer read',async()=>{
+  for(const lateFailure of [false,true]) {
+    const old=deferred(),fresh=deferred(),h=harness({get_runtime_diagnostics:()=>old.promise}),app=connected(h);
+    const pending=app.refresh_runtime_info();app.on_ble_disconnected();app.connected=true;
+    h.proto.get_runtime_diagnostics=()=>fresh.promise;const current=app.refresh_runtime_info();
+    if(lateFailure)old.reject(Error('Old connection lost'));else old.resolve(require('./runtime-de348-wire-fixture.json').expected);
+    await pending;
+    assert.equal(app.runtimeState,'loading');assert.equal(app.runtimeInfo,null);assert.equal(app.infoLoading,true);
+    assert.equal(h.messages.length,0);fresh.resolve(null);await current;
+    assert.equal(app.runtimeState,'unavailable');assert.equal(app.infoLoading,false);
+  }
+});
+
+test('3.32.1 boot and battery reads retain an explicit loading status while waiting',async()=>{
+  for(const [method,command,state] of [['refresh_boot_info','get_boot_diagnostics','bootState'],['refresh_power_info','get_power_diagnostics','powerState']]) {
+    const gate=deferred(),h=harness({[command]:()=>gate.promise}),app=connected(h);
+    const pending=app[method]();assert.equal(app[state],'loading');assert.equal(app.busy,true);
+    gate.resolve(null);await pending;assert.equal(app[state],'unavailable');assert.equal(app.busy,false);
+  }
+});
+
+test('3.32.1 runtime status renders readable loading, failure and unsupported messages in German and English',async()=>{
+  const Vue=require('vue'),{renderToString}=require('@vue/server-renderer');
+  const {parse,compile}=require('@vue/compiler-dom');
+  const {infoGerman,infoEnglish}=await import('../src/i18n/info.js');
+  function findStatus(node) {
+    if(node.type===1 && node.props.some(prop=>prop.type===6 && prop.name==='class' && prop.value?.content==='runtime-status'))return node;
+    for(const child of node.children||[]) { const found=findStatus(child);if(found)return found; }
+  }
+  const status=findStatus(parse(descriptor.template.content));assert.ok(status);
+  const render=new Function('Vue',compile(status.loc.source,{mode:'function',prefixIdentifiers:true}).code)(Vue);
+  for(const labels of [infoGerman,infoEnglish]) {
+    for(const [state,key] of [['loading','runtimeLoading'],['failed','runtimeFailed'],['unavailable','runtimeUnavailable']]) {
+      const app=Vue.createSSRApp({render,data:()=>({runtimeState:state})});
+      app.config.globalProperties.$t=value=>labels[value.replace(/^info\./,'')];
+      const html=await renderToString(app);
+      assert.match(html,/role="status"/);assert.match(html,/aria-live="polite"/);assert.ok(html.includes(labels[key]));
+      if(state==='failed')assert.doesNotMatch(html,new RegExp(labels.runtimeUnavailable.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+    }
+  }
+});
+
 test('3.15 sync selection uses target paths, never selects replacements automatically and invalidates on disconnect', async () => {
   const plan={rootPath:'E:/',entries:[{relativePath:'new.bin',targetPath:'E:/new.bin',status:'add',size:1},{relativePath:'old.bin',targetPath:'E:/old.bin',status:'change',size:1}],deviceOnly:[],summary:{add:1,change:1,same:0,blocked:0}};
   let executed;
@@ -672,7 +909,7 @@ test('production template compiles with Vue 3 and modern Element Plus bindings',
   assert.deepEqual(compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'ui' }).errors, []);
   assert.doesNotMatch(descriptor.template.content, /slot-scope|\.(?:native|sync)(?==|\s|>)/);
   assert.match(descriptor.template.content, /<h1>\{\{ \$t\('workflow\.appTitle'\) \}\}<\/h1>/);
-  assert.match(descriptor.template.content, /<strong>3\.27\.0<\/strong>/);
+  assert.match(descriptor.template.content, /<strong>3\.32\.5<\/strong>/);
 });
 
 test('3.26 workspaces open and focus without navigation, disconnect or loss of transfer state',()=>{
@@ -703,7 +940,7 @@ test('migration lock is shared with ordinary operations and deliberate disconnec
   assert.match(descriptor.template.content,/:blocked="busy && !migrationBusy"/);
 });
 test('migration read/raw adapters bind one generation and never implicitly format',async()=>{
-  const calls=[],h=harness({vfs_storage_info:async drive=>{calls.push(['storage',drive]);return{status:0,data:{schema:1}}},
+  const calls=[],h=harness({vfs_storage_info_extended:async drive=>{calls.push(['storage',drive]);return{status:0,data:{schema:1}}},
     vfs_read_raw_meta:async path=>{calls.push(['raw-read',path]);return{status:0,data:new Uint8Array(128)}},
     vfs_write_raw_meta:async path=>{calls.push(['raw-write',path]);return{status:0,data:null}}}),app=connected(h);
   const adapter=app.migration_session();assert.equal(adapter.deviceKey,'private-test-device');
@@ -715,14 +952,14 @@ test('migration read/raw adapters bind one generation and never implicitly forma
 });
 
 test('3.25 missing StorageInfo capability produces a preparation requirement, not an unqualified error255',async()=>{
-  let rawReads=0;const h=harness({vfs_storage_info:async()=>({status:255}),vfs_read_raw_meta:async()=>{rawReads++;return{status:0,data:new Uint8Array(128)}}}),app=connected(h);
+  let rawReads=0;const h=harness({vfs_storage_info_extended:async()=>({status:255}),vfs_read_raw_meta:async()=>{rawReads++;return{status:0,data:new Uint8Array(128)}}}),app=connected(h);
   app.firmwareVersion='2.22.0-DE3.30-PREP';
   await assert.rejects(app.migration_session().readStorageInfo(),{code:'MIGRATION_PREPARATION_REQUIRED'});
   assert.equal(rawReads,0,'a claimed PREP version alone cannot grant raw access');
   assert.equal(app.busy,false,'ordinary file-manager controls remain available');
 });
 test('3.25 an unrelated storage error stays distinct from unsupported capabilities',async()=>{
-  const h=harness({vfs_storage_info:async()=>({status:1})}),app=connected(h);
+  const h=harness({vfs_storage_info_extended:async()=>({status:1})}),app=connected(h);
   await assert.rejects(app.migration_session().readStorageInfo(),error=>!error.code&&error.message.includes(': 1'));
 });
 
@@ -886,7 +1123,7 @@ test('download callbacks cannot display errors or save bytes from a previous con
   assert.equal(app.pendingDownloads, 0); assert.equal(h.messages.length, 0);
 });
 
-test('DFU webpage is an unconditional bundled local link with no Bluetooth action', () => {
+test('DFU webpage is an unconditional build-base link with no Bluetooth action', async () => {
   const ast = compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'dfu' }).ast;
   let found;
   function visit(node, parents = []) {
@@ -897,12 +1134,16 @@ test('DFU webpage is an unconditional bundled local link with no Bluetooth actio
   visit(ast);
   assert.ok(found, 'independent DFU anchor exists');
   const attributes = Object.fromEntries(found.node.props.filter(prop => prop.type === 6).map(prop => [prop.name, prop.value?.content]));
-  assert.equal(attributes.href, '/dfu/web.html');
+  const hrefBinding=found.node.props.find(prop=>prop.type===7&&prop.name==='bind'&&prop.arg?.content==='href');
+  assert.equal(hrefBinding?.exp?.content,'_ctx.dfuPageUrl');
+  const {deploymentPath}=await import('../src/lib/deployment-path.js');
+  const href=new Function('deploymentPath', 'return ('+descriptor.script.content.match(/dfuPageUrl\(\) \{([^}]+)\}/)[0].replace('dfuPageUrl()', 'function()')+').call({})')(deploymentPath);
+  assert.equal(href, '/dfu/web.html');
   for (const location of ['http://127.0.0.1:8765/', 'http://127.0.0.1:8765/a/00000000-12345678']) {
-    assert.equal(new URL(attributes.href, location).pathname, '/dfu/web.html');
+    assert.equal(new URL(href, location).pathname, '/dfu/web.html');
   }
   assert.equal(attributes.target, '_blank'); assert.equal(attributes.rel, 'noopener noreferrer');
-  assert.equal(found.node.props.some(prop => prop.type === 7 || prop.name === 'disabled'), false);
+  assert.equal(found.node.props.some(prop => (prop.type === 7 && prop !== hrefBinding) || prop.name === 'disabled'), false);
   assert.equal(found.parents.some(parent => parent.type === 9 || parent.type === 10), false, 'link is not conditional');
 });
 
@@ -968,7 +1209,7 @@ test('postflash: filename actions are native keyboard buttons without deprecated
   assert.ok(button, 'filename action is a native button');
   assert.ok(button.props.some(prop => prop.name === 'type' && prop.value?.content === 'button'));
   assert.ok(button.props.some(prop => prop.name === 'bind' && prop.arg?.content === 'disabled'));
-  assert.ok(button.props.some(prop => prop.name === 'on' && prop.arg?.content === 'click' && prop.exp?.loc?.source?.includes('handle_name_click')));
+  assert.ok(button.props.some(prop => prop.name === 'on' && prop.arg?.content === 'click' && prop.exp?.loc?.source?.includes('select_file_row')));
   assert.doesNotMatch(template, /<el-link|:underline="false"/);
 });
 
@@ -1100,6 +1341,62 @@ test('backup wrapper is read-only, forwards bounds, and waits for an explicit sa
   await app.on_backup(); assert.equal(reads, 1); assert.equal(observed.rootPath, 'E:/');
   assert.equal(observed.preserveLegacyNames,true);
   assert.equal(app.lastBackup.filename, 'backup.zip'); assert.equal(app.backingUp, false); assert.equal(app.busy, false);
+});
+
+test('3.28 completed backup reaches 100 only after the completed archive event', async () => {
+  let app;
+  const h = harness({createBackup: async ({onProgress}) => {
+    onProgress({phase:'reading',path:'E:/A',bytesDone:540,bytesTotal:540,filesDone:1,filesTotal:1});
+    assert.equal(app.transferPercent,99);
+    onProgress({phase:'complete',bytesDone:540,bytesTotal:540,filesDone:1,filesTotal:1});
+    assert.equal(app.transferPercent,100);
+    return {blob:new Blob(['zip']),filename:'backup.zip',manifest:{files:1,bytes:540}};
+  }});
+  app=connected(h); await app.on_backup();
+  assert.equal(app.lastBackup.filename,'backup.zip'); assert.equal(app.busy,false);
+});
+
+test('3.28 ZIP file/entry counts are distinct from byte-level checking progress', () => {
+  const app=connected(harness()); let bytes;
+  app.show_safe_progress=p=>{bytes=p;};
+  for (const unit of ['files','entries']) {
+    app.show_zip_progress({unit,phase:unit==='files'?'parsing':'checking',done:3,total:10});
+    assert.equal(bytes,undefined);assert.equal(app.zipStatus,'workflow.'+(unit==='files'?'parsing':'checking'));
+  }
+  const progress={unit:'bytes',phase:'checking',done:540,total:540};app.show_zip_progress(progress);
+  assert.equal(bytes,progress);
+});
+
+test('3.28 breadcrumbs navigate only actual ancestors, reset stale filters, and respect operation locks', async () => {
+  const folders=[];let drives=0;
+  const app=connected(harness({vfs_read_folder:async path=>{folders.push(path);return {status:0,data:[]};},vfs_get_drive_list:async()=>{drives++;return {status:0,data:[]};}}));
+  app.current_dir='E:/A/Ä %2F';app.searchQuery='old search';app.typeFilter='REG';app.table_selection=[{name:'old'}];
+  await app.navigate_breadcrumb('E:/B');assert.equal(folders.length,0);
+  app.startupBusy=true;await app.navigate_breadcrumb('E:/A');assert.equal(folders.length,0);
+  app.startupBusy=false;await app.navigate_breadcrumb('E:/A');
+  assert.deepEqual(folders,['E:/A']);assert.equal(app.searchQuery,'');assert.equal(app.typeFilter,'all');assert.equal(app.table_selection.length,0);
+  await app.navigate_breadcrumb('');assert.equal(drives,1);assert.equal(app.current_dir,'');
+  app.connected=false;await app.navigate_breadcrumb('E:/');assert.equal(folders.length,1);
+});
+
+test('3.28 page sizing bounds rendering, clears hidden selections and cannot change during a transfer', () => {
+  const app=connected(harness());app.tableData=Array.from({length:120},(_,i)=>({name:String(i),type:'REG'}));
+  app.table_selection=[app.tableData[0]];app.page=2;app.set_page_size('25');
+  assert.equal(app.pagedRows.length,25);assert.equal(app.page,1);assert.equal(app.table_selection.length,0);
+  app.pendingUploads=1;app.set_page_size(50);assert.equal(app.pageSize,25);
+  app.pendingUploads=0;app.set_page_size(50000);assert.equal(app.pageSize,100);
+});
+
+test('3.28 startup report opens the reusable local export preview and generic export resets its filename', () => {
+  const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
+  const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
+  app.open_startup_report(report);
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.32.5.json');
+  assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
+  assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.32.5.json');
+  const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
+  assert.equal(app.diagnosticsJson,previous);
 });
 test('3.25 active backup exposes actual aggregate percent/file counts and never presents its cache as interrupted',async()=>{
   const gate=deferred(),state={rootPath:'E:/',files:119,bytes:63652,busy:true};let progress;
@@ -1360,7 +1657,7 @@ test('3.22 ZIP selection validates locally without device writes and never bypas
   await app.on_zip_file(event);app.connected=true;app.current_dir='E:/';app.open_zip();app.pendingDownloads=1;
   await app.on_zip_file(event);assert.equal(loads,0);app.pendingDownloads=0;
   const pending=app.on_zip_file(event);assert.equal(loads,1);assert.equal(app.busy,true);assert.equal(event.target.value,'');
-  options.onProgress({phase:'parsing',done:1,total:3});assert.equal(app.zipStatus,'workflow.parsing');
+  options.onProgress({phase:'parsing',unit:'files',done:1,total:3});assert.equal(app.zipStatus,'workflow.parsing');
   gate.resolve(archive);await pending;
   assert.equal(app._zipArchive,archive);assert.equal(app.zipFilename,'backup.zip');assert.equal(app.zipPlan,null);
   assert.equal(app.zipStatus,'workflow.validated');assert.equal(writes,0);assert.equal(app.busy,false);
@@ -1560,3 +1857,103 @@ test('3.25.5 migration restart old timer cannot clear a replacement session inte
  await app.migration_session().restartDevice();const current=app._disconnectIntent;old.callback();assert.equal(app._disconnectIntent,current)
  app.on_ble_disconnected();assert.equal(h.notifications.at(-1).type,'info')
 })
+
+test('3.32 device search adapter does not change current listing, selection or filters', async()=>{
+ const h=harness({vfs_read_folder:async path=>({status:0,data:[{name:'A.bin',type:0,meta:{}}]})}),app=connected(h);
+ const selected={name:'Selected.bin'};app.table_selection=[selected];app.tableData=[selected];app.searchQuery='keep';app.current_dir='E:/Keep';
+ const session=app.device_search_session();assert.equal((await session.readDirectory('E:/Other'))[0].name,'A.bin');assert.equal(app.current_dir,'E:/Keep');assert.equal(app.table_selection[0],selected);assert.equal(app.searchQuery,'keep');
+ ++app.sessionGeneration;await assert.rejects(session.readDirectory('E:/Other'));
+});
+test('3.32 search navigation opens containing folder, pages and focuses the exact file without downloading',async()=>{
+ const files=Array.from({length:31},(_,i)=>({name:`File${i}.bin`,type:0,meta:{}}));let focused=0;
+ const h=harness({vfs_read_folder:async path=>{assert.equal(path,'E:/Tags');return {status:0,data:files};}}),app=connected(h);app.pageSize=25;app.searchQuery='hidden';
+ app.$refs.fileWorkspace={querySelectorAll:()=>[{getAttribute:()=> 'File30.bin',focus:()=>focused++,scrollIntoView(){}}]};
+ await app.navigate_search_result({name:'File30.bin',path:'E:/Tags/File30.bin',parent:'E:/Tags',type:0,generation:app.sessionGeneration});assert.equal(app.page,2);assert.equal(focused,1);assert.equal(app.searchQuery,'');
+});
+test('3.32 stale search navigation cannot select another session or accept forged paths',async()=>{
+ let reads=0;const h=harness({vfs_read_folder:async()=>{++reads;return {status:0,data:[]};}}),app=connected(h);
+ for(const result of [{name:'A',parent:'E:/',path:'E:/A',type:0,generation:99},{name:'../A',parent:'E:/',path:'E:/A',type:0,generation:0}])await app.navigate_search_result(result);
+ assert.equal(reads,0);
+});
+test('3.32 unified folder picker stages original files for comparison and cannot interrupt upload queue',()=>{
+ const h=harness(),app=connected(h),files=[{name:'Case.BIN',webkitRelativePath:'MyFolder/Case.BIN',size:540}];app.upload_diag_visible=true;
+ app.on_upload_folder_choice({target:{files,value:'x'}});assert.equal(app.upload_diag_visible,false);assert.equal(app.syncDialog,true);assert.equal(app.syncFileCount,1);assert.equal(app._syncFiles[0],files[0]);assert.equal(app.syncRoot,'E:/');
+ app.syncDialog=false;app.upload_diag_visible=true;app.pendingUploads=1;app.on_upload_folder_choice({target:{files,value:'x'}});assert.equal(app.syncDialog,false);assert.equal(app.upload_diag_visible,true);
+});
+test('3.32 unified ZIP picker uses existing validator and only stages archive until explicit preview/import',async()=>{
+ let checked=0;const file={name:'backup.zip',size:100};const h=harness({loadBackupZip:async selected=>{assert.equal(selected,file);checked++;return {fileCount:1,byteCount:540};}}),app=connected(h);app.upload_diag_visible=true;
+ await app.on_upload_zip_choice({target:{files:[file],value:'x'}});assert.equal(checked,1);assert.equal(app.zipDialog,true);assert.equal(app.upload_diag_visible,false);assert.equal(app.zipFilename,'backup.zip');assert.equal(app.zipPlan,null);
+});
+
+test('3.32 file single-click resolves valid metadata immediately without any file reads',()=>{
+ let reads=0;const h=harness({vfs_helper_read_file(){reads++;}}),app=connected(h);const row={...figureRow(),amiibo:{head:0,tail:2}};
+ app.select_file_row(0,row);assert.equal(reads,0);assert.equal(app.previewSelection.id,'0000000000000002');assert.equal(app.previewSelection.source,'metadata');assert.equal(app.lastDownload,null);assert.equal(app.meta_diag_visible,false);
+});
+test('3.32 automatic preview reads only selected supported file once, never writes or downloads',async()=>{
+ let reads=0;const h=harness({vfs_helper_read_file(path,yes,no,done,options){reads++;assert.equal(path,'E:/Figure.bin');assert.equal(options.max_bytes,540);yes(figureBytes());}}),app=connected(h);
+ await app.select_file_row(0,figureRow());await app._previewTail;assert.equal(reads,1);assert.equal(app.previewSelection.id,'0000000000000002');assert.equal(app.previewSelection.source,'file');assert.equal(app.lastDownload,null);assert.equal(app.previewBusy,false);
+ for(const size of [0,14,541,999999])await app.select_file_row(0,figureRow('Other.dat',size));assert.equal(reads,1);assert.equal(app.previewSelection.state,'unsupported');
+});
+test('3.32 fast selection change retains new metadata image and ignores old read result',async()=>{
+ let success;const h=harness({vfs_helper_read_file(path,yes){success=yes;}}),app=connected(h);const old=app.select_file_row(0,figureRow('Old.bin'));await Promise.resolve();
+ app.select_file_row(0,{...figureRow('New.bin'),amiibo:{head:0x01010000,tail:0x000e0002}});assert.equal(app.previewSelection.id,'01010000000e0002');success(figureBytes());await old;await app._previewTail;assert.equal(app.previewSelection.row.name,'New.bin');assert.equal(app.previewSelection.id,'01010000000e0002');assert.equal(app.previewBusy,false);
+});
+test('3.32 rapid unknown previews coalesce obsolete queued reads and serialize the latest',async()=>{
+ const calls=[],resolve=[];const h=harness({vfs_helper_read_file(path,yes){calls.push(path);resolve.push(yes);}}),app=connected(h);
+ const a=app.select_file_row(0,figureRow('A.bin'));await Promise.resolve();const b=app.select_file_row(0,figureRow('B.bin'));const c=app.select_file_row(0,figureRow('C.bin'));assert.deepEqual(calls,['E:/A.bin']);resolve[0](figureBytes());await a;await b;await Promise.resolve();assert.deepEqual(calls,['E:/A.bin','E:/C.bin']);resolve[1](figureBytes());await c;await app._previewTail;assert.equal(app.previewSelection.row.name,'C.bin');assert.equal(app.previewBusy,false);
+});
+test('3.32 preview disconnect cannot paint old image or unlock replacement session',async()=>{
+ let success;const h=harness({vfs_helper_read_file(path,yes){success=yes;}}),app=connected(h);const pending=app.select_file_row(0,figureRow());await Promise.resolve();app.on_ble_disconnected();app.connected=true;app.previewBusy=true;app.previewSelection={row:{name:'New'}};success(figureBytes());await pending;assert.equal(app.previewSelection.row.name,'New');assert.equal(app.previewBusy,true);
+});
+test('3.32 corrupt and truncated previews never assign an otherwise plausible figure image',async()=>{
+ for(const bytes of [new Uint8Array(540).buffer,figureBytes(532)]){const h=harness({vfs_helper_read_file(path,yes){yes(bytes);}}),app=connected(h);await app.select_file_row(0,figureRow());assert.equal(app.previewSelection.id,null);assert.ok(['invalid','failed'].includes(app.previewSelection.state));}
+});
+test('3.32 all six workspaces remain mounted and navigation preserves table selection, jobs and preview',()=>{
+ const h=harness(),app=connected(h);const selection={name:'keep'};app.table_selection=[selection];app.previewSelection={row:selection};app.transfer={phase:'reading',done:9};
+ for(const [name,ref] of Object.entries({files:'fileWorkspace',backup:'backupWorkspace',update:'updateWorkspace',remote:'remoteWorkspace',device:'devicePanel',catalogue:'catalogueWorkspace'})){app.$refs[ref]={open:false,scrollIntoView(){},querySelector:()=>({focus(){}}),focus(){}};app.show_workspace(name);assert.equal(app.activeWorkspace,name);assert.equal(app.table_selection[0],selection);assert.equal(app.transfer.done,9);assert.equal(app.previewSelection.row,selection);assert.match(descriptor.template.content,new RegExp(`v-show="activeWorkspace === '${name}'"`));}
+ assert.equal(app.catalogueOpen,true);assert.equal(h.disconnects(),0);assert.doesNotMatch(descriptor.template.content,/<(?:MigrationAssistant|RemoteControl|StartupDiagnostics)[^>]*v-if=/);
+});
+
+test('3.32 repeated click on selected file reuses pending preview; mobile dismissal ignores its result',async()=>{
+ let success,reads=0;const h=harness({vfs_helper_read_file(path,yes){reads++;success=yes;}}),app=connected(h),row=figureRow();const pending=app.select_file_row(0,row);await Promise.resolve();app.select_file_row(0,row);assert.equal(reads,1);app.close_preview_selection();success(figureBytes());await pending;await app._previewTail;assert.equal(app.previewSelection,null);assert.equal(app.previewBusy,false);assert.match(appSource,/max-height:50svh/);assert.match(descriptor.template.content,/@click="close_preview_selection"/);
+});
+
+test('3.32 offline demo offers two public figure previews without BLE or device actions and keeps 245 rows',async()=>{
+ let reads=0;const h=harness({vfs_helper_read_file(){reads++;}}),app=h.instance;app.toggle_preview();assert.equal(app.demoMode,true);assert.equal(app.tableData.length,245);
+ const examples=app.tableData.filter(row=>row.demoFigure);assert.equal(examples.length,2);
+ for(const row of examples){await app.select_file_row(0,row);assert.equal(app.previewSelection.source,'demo');assert.match(app.previewSelection.id,/^[a-f0-9]{16}$/);assert.equal(app.previewSelection.row,row);await app.download_preview_selection();app.open_preview_properties();assert.equal(app.meta_diag_visible,false);}
+ assert.equal(reads,0);assert.equal(app.lastDownload,null);assert.equal(app.pendingDownloads,0);app.toggle_preview();assert.equal(app.previewSelection,null);assert.equal(app.tableData.length,0);
+});
+
+test('3.32.1 returning to drive overview clears figure preview and leaves no stale properties action',async()=>{
+ const app=connected(harness()),row={...figureRow(),amiibo:{head:0,tail:2}};app.tableData=[row];app.select_file_row(0,row);
+ await app.on_btn_up();assert.equal(app.current_dir,'');assert.equal(app.previewSelection,null);
+ assert.doesNotThrow(()=>app.open_preview_properties());assert.equal(app.meta_diag_visible,false);
+});
+
+test('3.32.1 confirmed bulk deletion retires only the deleted selected preview',async()=>{
+ const removed=[],app=connected(harness({vfs_remove:async path=>{removed.push(path);return{status:0};}}));
+ const row={...figureRow('Keep.bin'),amiibo:{head:0,tail:2}},other={...figureRow('Remove.bin'),amiibo:{head:0,tail:2}};app.tableData=[row,other];app.select_file_row(0,row);
+ app.table_selection=[other];await app.on_btn_remove();assert.equal(app.previewSelection.row,row);app.open_preview_properties();assert.equal(app.meta_form.path,'E:/Keep.bin');app.meta_diag_visible=false;
+ app.table_selection=[row];await app.on_btn_remove();assert.equal(app.tableData.length,0);assert.equal(app.previewSelection,null);app.open_preview_properties();assert.equal(app.meta_diag_visible,false);
+ assert.deepEqual(removed,['E:/Remove.bin','E:/Keep.bin']);
+});
+
+test('3.32.1 preview actions reject a changed parent or a replacement row with the same filename',async()=>{
+ for(const invalidation of ['directory','replacement','removed']){
+  let reads=0;const app=connected(harness({vfs_helper_read_file(){reads++;}})),row={...figureRow(),amiibo:{head:0,tail:2}};app.tableData=[row];app.select_file_row(0,row);
+  if(invalidation==='directory')app.current_dir='E:/Other';else app.tableData=invalidation==='replacement'?[{...row}]:[];
+  await app.download_preview_selection();assert.doesNotThrow(()=>app.open_preview_properties());assert.equal(reads,0);assert.equal(app.meta_diag_visible,false);
+ }
+});
+
+test('3.32.1 a dismissed pending preview download cannot act on a reselected same-path file',async()=>{
+ let reads=0;const app=connected(harness({vfs_helper_read_file(){reads++;}})),row={...figureRow(),amiibo:{head:0,tail:2}},gate=deferred();app.tableData=[row];app.select_file_row(0,row);app._previewTail=gate.promise;
+ const pending=app.download_preview_selection();app.close_preview_selection();app.select_file_row(0,row);gate.resolve();await pending;assert.equal(reads,0);assert.equal(app.previewSelection.row,row);
+});
+
+test('3.32.1 an explicit download waits for its selected file preview then reads the same file',async()=>{
+ let finish;const paths=[],app=connected(harness({vfs_helper_read_file(path,yes,no,done){paths.push(path);if(paths.length===1)finish=yes;else{yes(figureBytes());done?.();}}})),row=figureRow();app.tableData=[row];
+ const preview=app.select_file_row(0,row);await Promise.resolve();const download=app.download_preview_selection();finish(figureBytes());await preview;await download;
+ assert.deepEqual(paths,['E:/Figure.bin','E:/Figure.bin']);assert.equal(app.lastDownload.filename,'Figure.bin');assert.equal(app.pendingDownloads,0);assert.equal(app.previewSelection.id,'0000000000000002');
+});

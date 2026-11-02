@@ -53,6 +53,26 @@ test('control writes settle before another GATT operation begins',async()=>{cons
 for(const len of [0,7,32,64,91,93])test('valid prefix firmware resume at '+len,async()=>{const p=peripheral({data:IMAGE.slice(0,len)}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.deepEqual(p.state.data,[...IMAGE]);assert.equal(d.lastResult.transferVerified,true);assert.ok(!p.state.writes.some(w=>w.size===0));});
 for(const len of [2,5])test('init prefix/full resume executes init at '+len,async()=>{const p=peripheral({init:INIT.slice(0,len)}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.equal(p.state.writes.filter(w=>w.type===1).length,0);assert.deepEqual(p.state.init,[...INIT]);assert.equal(p.state.executes,4);});
 test('mismatching init is restarted',async()=>{const p=peripheral({init:[99,98]}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.equal(p.state.writes.filter(w=>w.type===1).length,1);assert.deepEqual(p.state.init,[...INIT]);});
+for(const length of [6,16,32])test('3.30.1 longer previous init restarts within the command limit: '+length,async()=>{
+  const p=peripheral({init:Array(length).fill(91)}),d=dfu();
+  const logs=[];d.addEventListener('log',event=>logs.push(event.message));
+  await d.update(p.device,INIT,IMAGE);
+  assert.deepEqual(p.state.init,[...INIT]);assert.deepEqual(p.state.data,[...IMAGE]);
+  assert.equal(p.state.writes.filter(w=>w.type===1).length,1);
+  assert.equal(d.lastResult.transferVerified,true);assert.equal(p.state.overlap,false);
+  assert.equal(logs.length,1);assert.match(logs[0],/Init-Paket.*früheren DFU/);
+});
+test('3.30.1 impossible command offset is rejected before replacement or firmware writes',async()=>{
+  const p=peripheral({init:Array(33).fill(91)}),d=dfu();
+  await assert.rejects(d.update(p.device,INIT,IMAGE),/Invalid DFU object/);
+  assert.equal(p.state.writes.length,0);assert.equal(p.state.executes,0);assert.equal(d.lastResult,null);
+});
+test('3.30.1 excessive firmware resume offset remains rejected without reset',async()=>{
+  const p=peripheral({data:Array(IMAGE.length+1).fill(91)}),d=dfu();
+  await assert.rejects(d.update(p.device,INIT,IMAGE),/Invalid DFU object/);
+  assert.equal(p.state.writes.filter(w=>w.type===2).length,0);
+  assert.equal(p.state.data.length,IMAGE.length+1);assert.equal(d.lastResult,null);
+});
 test('mismatching resume CRC rejects without creating or writing firmware',async()=>{const p=peripheral({data:IMAGE.slice(0,32),badResumeCrc:true}),d=dfu();await assert.rejects(d.update(p.device,INIT,IMAGE),/Resume CRC32/);assert.equal(p.state.writes.filter(w=>w.type===2).length,0);assert.deepEqual(p.state.data,[...IMAGE.slice(0,32)]);});
 for(const [key,pattern]of [['badCrc',/CRC32 mismatch/],['badOffset',/offset mismatch/]])test(key+' rejects before Execute',async()=>{const p=peripheral({[key]:true}),d=dfu();await assert.rejects(d.update(p.device,INIT,IMAGE),pattern);assert.equal(p.state.executes,0);assert.equal(d.lastResult,null);});
 for(const settings of [{invalidMax:0},{invalidOffset:99999}])test('invalidSELECT '+JSON.stringify(settings),async()=>{const p=peripheral(settings),d=dfu();await assert.rejects(d.update(p.device,INIT,IMAGE),/Invalid DFU object/);assert.equal(p.state.executes,0);});
@@ -79,7 +99,7 @@ test('two instances cannot concurrently own one device',async()=>{const p=periph
 test('cancelling a pending ACK rejects and removes listeners',async()=>{const p=peripheral({noAck:2}),d=dfu();const update=d.update(p.device,INIT,IMAGE);await wait(3);d.cancel();await assert.rejects(update,/cancelled/);assert.equal(p.device.listenerCount()+p.control.listenerCount(),0);assert.equal(d.lastResult,null);});
 test('integration: real ZIP package, UI coordinator and transport; invalid manifest never opens picker',async()=>{
   const Package=require('../public/dfu/package.js'),Updater=require('../public/dfu/updater.js');
-  const JSZip=require('../public/dfu/vendor/jszip-3.10.1.min.js'),CRC32=require('../public/dfu/vendor/crc32.js');
+  const JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js'),CRC32=require('../public/dfu/vendor/crc32.js');
   const zip=new JSZip();
   zip.file('manifest.json',JSON.stringify({manifest:{application:{dat_file:'application.dat',bin_file:'application.bin'}}}));
   zip.file('application.dat',INIT);zip.file('application.bin',IMAGE);

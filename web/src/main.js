@@ -21,7 +21,7 @@ import { installUiComponents } from './ui-components'
 
 // Preserve the original QR-link behavior without a router.
 // Only complete hexadecimal NFC identifiers become an external URL.
-const redirect = amiiboDeepLink(window.location.pathname)
+const redirect = amiiboDeepLink(window.location.pathname, { search: window.location.search, hash: window.location.hash })
 if (redirect) {
   window.location.replace(redirect)
 } else {

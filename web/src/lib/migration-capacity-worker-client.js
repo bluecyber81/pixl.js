@@ -2,7 +2,7 @@ const abort=()=>Object.assign(new Error('Cancelled'),{name:'AbortError'})
 /** Bounded worker keeps the UI responsive and can terminate synchronous WASM. */
 export function simulateCapacityInWorker(rows,{archiveSha256,capacityProfile='current',signal,onProgress,WorkerImpl,timeoutMs=300000}={}){
   if(signal?.aborted)return Promise.reject(abort())
-  if(!['current','legacy'].includes(capacityProfile))return Promise.reject(Object.assign(new Error('Unknown local capacity profile.'),{code:'MIGRATION_CAPACITY'}))
+  if(!['current','de354','de350','de345','de344','previous','legacy'].includes(capacityProfile))return Promise.reject(Object.assign(new Error('Unknown local capacity profile.'),{code:'MIGRATION_CAPACITY'}))
   if(typeof (WorkerImpl===undefined?globalThis.Worker:WorkerImpl)!=='function')return Promise.reject(Object.assign(new Error('A Web Worker is required for the bounded local capacity check.'),{code:'MIGRATION_CAPACITY'}))
   return new Promise((resolve,reject)=>{
     let worker,timer,settled=false

@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const JSZip = require('../public/dfu/vendor/jszip-3.10.1.min.js');
+const JSZip = require('../public/dfu/vendor/jszip-3.10.2.min.js');
 const Package = require('../public/dfu/package.js');
 const Updater = require('../public/dfu/updater.js');
 const wait = () => new Promise(setImmediate);
@@ -141,4 +141,22 @@ test('failed transfer retains last confirmed byte position until the next attemp
     const boundary=positions.length;assert.equal(await u.selectDevice(),false);
     assert.equal(positions[boundary],null);assert.equal(attempts,2);
     assert.equal(positions.at(-1).currentBytes,240);
+});
+
+test('3.30.1 init recovery explanation is visible and listeners are removed after success or failure', async () => {
+  for (const failed of [false,true]) {
+    const listeners=new Map(),statuses=[];
+    const d={lastResult:{transferVerified:true,executeAcknowledged:true,rebootObserved:false},
+      addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:name=>listeners.delete(name),
+      requestDevice:async()=>({}),update:async()=>{
+        listeners.get('log')({message:'Ein längeres Init-Paket wird neu angelegt.'});
+        listeners.get('log')({message:undefined});
+        if(failed)throw Error('CRC mismatch');
+      }};
+    const u=new Updater({Package,createDfu:()=>d,onStatus:value=>statuses.push(value)});
+    await u.setPackage(await archive());assert.equal(await u.selectDevice(),!failed);
+    assert.ok(statuses.includes('Ein längeres Init-Paket wird neu angelegt.'));
+    assert.equal(listeners.size,0);assert.equal(u.busy,false);
+    assert.match(statuses.at(-1),failed?/nicht bestätigt/:/Neustart noch nicht beobachtet/);
+  }
 });

@@ -2,7 +2,7 @@
  * Application-only candidate. Authenticity and installed-device compatibility
  * remain enforced by the Nordic bootloader, not by this ZIP preflight. */
 (function (root, factory) {
-    if (typeof module === 'object' && module.exports) module.exports = factory(require('./vendor/jszip-3.10.1.min.js'), require('./vendor/crc32.js'));
+    if (typeof module === 'object' && module.exports) module.exports = factory(require('./vendor/jszip-3.10.2.min.js'), require('./vendor/crc32.js'));
     else root.SecureDfuPackage = factory(root.JSZip, root.CRC32);
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (JSZip, CRC32) {
     'use strict';

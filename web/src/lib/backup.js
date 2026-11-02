@@ -120,7 +120,7 @@ function uint(value, max, label) {
 }
 
 function checkedMetadata(meta) {
-  if (!meta || meta.valid !== true || typeof meta.notes !== 'string' || !validUnicode(meta.notes) ||
+  if (!meta || meta.valid !== true || typeof meta.notes !== 'string' || !validUnicode(meta.notes) || meta.notes.includes('\0') ||
       encoder.encode(meta.notes).length > 89 || !meta.flags || !meta.amiibo ||
       typeof meta.flags.hide !== 'boolean' || typeof meta.flags.readonly !== 'boolean') {
     fail('BACKUP_METADATA', 'A directory entry has invalid or incomplete metadata; no complete backup can be made.')

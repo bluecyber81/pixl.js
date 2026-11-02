@@ -48,7 +48,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
   const capacity = value => Number.isInteger(value) && value >= 20 && value <= 247 ? value : null;
   // Explicit allowlist: never spread arbitrary device data or exception text.
   return {
-    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.27.0',
+    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.32.5',
     firmwareVersion: /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion || '') ? firmwareVersion : null,
     connected: connected === true,
     runtime: normalizeRuntimeDiagnostics(runtime),
@@ -65,7 +65,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
       activeCommand: Number.isInteger(transport.activeCommand) && transport.activeCommand >= 0 && transport.activeCommand <= 255 ? transport.activeCommand : null,
       queuedCommands: number(transport.queuedCommands), queuedFileTransfers: number(transport.queuedFileTransfers),
       fileTransferActive: transport.fileTransferActive === true,
-      lastErrorCode: fixed(transport.lastErrorCode, ['REQUEST_INVALID', 'TX_FAILED', 'TIMEOUT', 'RX_INVALID', 'RESPONSE_INVALID', 'DEVICE_STATUS', 'CONNECT_FAILED', 'DISCONNECTED'])
+      lastErrorCode: fixed(transport.lastErrorCode, ['ATOMIC_WRITE_FAILED', 'REQUEST_INVALID', 'TX_FAILED', 'TIMEOUT', 'RX_INVALID', 'RESPONSE_INVALID', 'DEVICE_STATUS', 'CONNECT_FAILED', 'DISCONNECTED'])
     } : null,
     drives: (drives || []).filter(drive => ['I', 'E'].includes(drive.label)).map(drive => ({
       label: drive.label, status: number(drive.status), totalBytes: number(drive.totalBytes), freeBytes: number(drive.freeBytes)

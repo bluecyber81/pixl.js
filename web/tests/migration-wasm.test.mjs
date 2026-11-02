@@ -2,12 +2,20 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
-import {MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
+import {MIGRATION_CAPACITY_TARGET, DE354_MIGRATION_CAPACITY_TARGET, DE350_MIGRATION_CAPACITY_TARGET, DE345_MIGRATION_CAPACITY_TARGET, DE344_MIGRATION_CAPACITY_TARGET, PREVIOUS_MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
 import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-current',target:MIGRATION_CAPACITY_TARGET,counter:609,version:'2.22.0-DE3.37',approvedCounters:[608,609],
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:627,version:'2.22.0-DE3.55',approvedCounters:[627],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
+ {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
+  wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
+ {id:'de345',folder:'packed-simulator-de345',target:DE345_MIGRATION_CAPACITY_TARGET,counter:617,version:'2.22.0-DE3.45',approvedCounters:[617],
+  wasmSha256:'a4cfd3b1d823f2d596ba67625364260bbe74979b28c7123fc863e549b7199c99',engineSha256:'532b316e72fd7b9edef868bd318d30c8a6be45880d98b68464bf12da31bac9e8'},
+ {id:'de344',folder:'packed-simulator-de344',target:DE344_MIGRATION_CAPACITY_TARGET,counter:616,version:'2.22.0-DE3.44',approvedCounters:[614,615,616],
+  wasmSha256:'06500c5b69bd61310352cecc07eadb50a17b0eecd22c9381d1118c3cf0f8ec9f',engineSha256:'e3f8e958d347a0df58888253916393db8afec3fe7c5466b215f471d346e2493e'},
+ {id:'previous',folder:'packed-simulator-previous',target:PREVIOUS_MIGRATION_CAPACITY_TARGET,counter:609,version:'2.22.0-DE3.37',approvedCounters:[608,609],
   wasmSha256:'410f213e0818a3a5e1d0ce381e202514f7dd3b834b1cec854d5fe6f180574b1f',engineSha256:'d13c90a1907cd9ee563cf7b14ad4d2b73307c49874021c369a0623fa7b382e6e'},
  {id:'legacy',folder:'packed-simulator',target:LEGACY_MIGRATION_CAPACITY_TARGET,counter:603,version:'2.22.0-DE3.31',approvedCounters:[603,604,605],
   wasmSha256:'8830aece6d900679ccfec27e4b1321ffc160aba9381023cd26c397d3e0dcb1d4',engineSha256:'637a0dd2e7fbfbc0305191dc755a647c2d76c4d72cf1289090f3ef7136bf4bbd'},

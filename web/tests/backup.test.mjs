@@ -12,6 +12,12 @@ const file = (name, size = 9, metadata = meta()) => ({ name, size, type: 0, meta
 const dir = name => ({ name, size: 0, type: 1, meta: meta() })
 const rejection = code => error => error.code === code
 
+test('3.30.3 decoded backup rejects notes that would truncate on restore before file reads', async () => {
+  const f = fixture({readDirectory: async () => [file('a.bin',9,meta('keep\0lost'))]});
+  await assert.rejects(createBackup(f.options), rejection('BACKUP_METADATA'));
+  assert.equal(f.reads.length, 0);
+})
+
 function fixture(overrides = {}) {
   const calls = [], reads = [], progress = []
   const files = new Map([['E:/a.bin', encode('123456789')], ['E:/日本/é.bin', new Uint8Array([0, 1, 255])], ['E:/zero', new Uint8Array()]])

@@ -2,9 +2,25 @@
 
 [English](README.md) · [DE3.37 herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.37) · [Änderungen](CHANGELOG_DE3_SERIES.md) · [Bauanleitung](docs/BUILD_DE3_37.md)
 
-Aktuell: **Firmware 2.22.0-DE3.37**, Anwendungszähler **609**, und **Dateimanager 3.27.0**. Dieser Community-Fork verbindet die Grundlage von [cylin577/pixl.js](https://github.com/cylin577/pixl.js) mit den DE-Verbesserungen und einer eigenen Packed-LittleFS-Speicherung. Das ursprüngliche Projekt stammt von [solosky/pixl.js](https://github.com/solosky/pixl.js). Dies ist keine offizielle Veröffentlichung der beiden Upstream-Projekte.
+Firmware-Quellstand unter `fw/`: **2.22.0-DE3.37**, Anwendungszähler **609**. Der aktuelle Browser-Dateimanager unter `web/` ist **3.32.5**; die nachfolgende Firmwarebeschreibung dokumentiert weiterhin die Veröffentlichung DE3.37. Dieser Community-Fork verbindet die Grundlage von [cylin577/pixl.js](https://github.com/cylin577/pixl.js) mit den DE-Verbesserungen und einer eigenen Packed-LittleFS-Speicherung. Das ursprüngliche Projekt stammt von [solosky/pixl.js](https://github.com/solosky/pixl.js). Dies ist keine offizielle Veröffentlichung der beiden Upstream-Projekte.
 
 **Das DE3.37-Anwendungspaket ist für passende LCD-Geräte bestimmt, die bereits unser Packed LittleFS (PFS1) verwenden.** Geräte mit SPIFFS, beispielsweise der bisher öffentlich angebotenen DE3.16, benötigen zuvor eine getrennte Sicherung und Umstellung. Auch das gewöhnliche LittleFS des Upstream-Projekts hat ein anderes Datenlayout. Das Flashen allein konvertiert oder restauriert diese Dateisysteme nicht. Dafür gilt die [Speicheranleitung](docs/MIGRATION_PFS1.md).
+
+## Online-Dateimanager 3.32.5
+
+**[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable Pakete und zugehörige Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.32.5)**
+
+Die Webseite funktioniert ohne laufenden PC-Server. Chrome auf Android oder einem
+unterstützten PC verbindet sich direkt mit dem Allmiibo in Bluetooth-Reichweite.
+Figurendateien und Sicherungen werden nicht auf GitHub hochgeladen. Hinweise zur
+Nutzung, Aktualisierung, Speicherung und zu den Grenzen stehen in der
+[Web-Anleitung](docs/DATEIMANAGER_WEB.md).
+
+Der Dateimanager bietet optional **DE3.55 / 627** für das passende LCD-Gerät mit
+**Packed LittleFS (PFS1), BL8 und S112 7.3.0** an. Es handelt sich um ein reines
+Anwendungsupdate; der Dateimanager selbst benötigt kein Firmware-Update.
+Die exakten DE3.55-Quellen liegen als separates Archiv bei der verlinkten
+Web-Veröffentlichung. Der ältere `fw/`-Baum unten ist **nicht** dessen Quellstand.
 
 ## Welche Datei brauche ich?
 
