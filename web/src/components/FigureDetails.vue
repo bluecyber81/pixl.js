@@ -36,7 +36,7 @@
     <div v-if="imageRequested || qr" class="media-grid">
       <figure v-if="imageRequested" class="media-tile">
         <figcaption>{{ de ? 'Figurenbild' : 'Figure image' }}</figcaption>
-        <img v-if="!imageFailed" :key="resolvedId" :src="publicFigureImage(resolvedId)" :alt="entry.name" referrerpolicy="no-referrer" loading="lazy" @error="imageFailed = true" />
+        <img v-if="!imageFailed" :key="resolvedId" :src="publicFigureImage(resolvedId, imageCommit)" :alt="entry.name" referrerpolicy="no-referrer" loading="lazy" @error="imageFailed = true" />
         <p v-else role="status">{{ de ? 'Bild nicht verfügbar oder durch den Browser blockiert.' : 'Image unavailable or blocked by the browser.' }}</p>
       </figure>
       <figure v-if="qr" class="media-tile qr-tile">
@@ -69,11 +69,11 @@ import { useI18n } from 'vue-i18n';
 import data from '../data/catalogue.json';
 import { figureId, metadataFigureId, publicFigureImage, publicFigureLink } from '../lib/figure-info.js';
 import { publicFigureQr } from '../lib/figure-qr.js';
-const props = defineProps({ id: { type: String, default: null }, metadata: { type: Object, default: null }, inspection: { type: Object, default: null }, source: { type: String, default: 'catalogue' } });
+const props = defineProps({ id: { type: String, default: null }, metadata: { type: Object, default: null }, inspection: { type: Object, default: null }, source: { type: String, default: 'catalogue' }, catalogueEntry: Object, imageCommit: String });
 const { locale } = useI18n();
 const de = computed(() => locale.value.startsWith('de'));
 const resolvedId = computed(() => figureId(props.id) || metadataFigureId(props.metadata));
-const entry = computed(() => data.entries.find(item => item.id === resolvedId.value));
+const entry = computed(() => props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : data.entries.find(item => item.id === resolvedId.value));
 const regions = [{ id: 'eu', label: 'Europa / Europe' }, { id: 'na', label: 'Nordamerika / North America' }, { id: 'jp', label: 'Japan' }, { id: 'au', label: 'Australien / Australia' }];
 const imageRequested = ref(false), imageFailed = ref(false), qrVisible = ref(false);
 const qr = computed(() => qrVisible.value ? publicFigureQr(resolvedId.value) : null);

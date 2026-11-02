@@ -1,0 +1,348 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import * as Vue from 'vue';
+import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
+import { auditCollection } from '../src/lib/collection-audit.js';
+import { prepareFigureTransfer, suggestedFigureFilename } from '../src/lib/figure-transfer.js';
+import { filterCatalogue, releaseLabel } from '../src/lib/catalogue.js';
+
+const file = process.env.PIXL_COLLECTION_SOURCE ? pathToFileURL(path.resolve(process.env.PIXL_COLLECTION_SOURCE)) :
+  new URL('../src/components/CollectionAssistant.vue', import.meta.url);
+const { descriptor } = parse(fs.readFileSync(file, 'utf8'), { filename: file.pathname });
+const script = compileScript(descriptor, { id: 'collection-ui' }).content.replace(/^import .*$/gm, '').replace('export default', 'const component=');
+const compiled = compileTemplate({ source: descriptor.template.content, id: 'collection-ui', filename: file.pathname, compilerOptions: { hoistStatic: false } });
+assert.deepEqual(compiled.errors, []);
+const template = compiled.code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,
+  (_, names) => `const {${names.replace(/\s+as\s+/g, ':')}}=Vue;`).replace('export function render', 'function render');
+const make = new Function('Vue', 'baseline', 'checkCatalogueUpdates', 'auditCollection', 'prepareFigureTransfer',
+  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker',
+  script + '\n' + template + '\ncomponent.render=render;return component;');
+const A = '0000000000000102', B = '0000000000000202';
+const baseline = { checkedDate: '2026-11-02', entries: [A, B].map(id => ({ id, name: `Synthetic ${id}`, series: 'Test', release: { eu: '2020-01-01' } })) };
+const tag = id => { const data = new Uint8Array(540); data[0] = 4; data[3] = 0x8c; data.set(id.match(/../g).map(x => parseInt(x, 16)), 84); return data; };
+const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
+const node = (type, text = '') => ({ type, text, props: {}, children: [], parent: null, focus() {} });
+const renderer = Vue.createRenderer({ createElement: type => node(type), createText: text => node('#text', text), createComment: text => node('#comment', text),
+  setText: (n, t) => n.text = t, setElementText: (n, t) => { n.text = t; n.children = []; }, patchProp: (n, k, old, value) => n.props[k] = value,
+  insert(n, parent, anchor = null) { if (n.parent) n.parent.children.splice(n.parent.children.indexOf(n), 1); n.parent = parent; const i = parent.children.indexOf(anchor); i < 0 ? parent.children.push(n) : parent.children.splice(i, 0, n); },
+  remove(n) { if (n.parent) n.parent.children.splice(n.parent.children.indexOf(n), 1); n.parent = null; }, parentNode: n => n.parent, nextSibling: n => n.parent?.children[n.parent.children.indexOf(n) + 1] || null });
+const flat = n => [n, ...n.children.flatMap(flat)], text = n => n.text + n.children.map(text).join('');
+const tick = async () => { await Promise.resolve(); await Vue.nextTick(); };
+function mount(overrides = {}) {
+  const events = [], saves = [], reportEvents = [], staleEvents = [], root = node('root'); let vm;
+  const props = Vue.reactive({ connected: true, blocked: false, generation: 1, revision: 0, directory: 'E:/', locale: 'de_DE',
+    getSession: () => { const gen = props.generation; return {
+      assertSession() { if (gen !== props.generation || !props.connected) throw Error('stale'); },
+      readDirectory: async () => [], readFile: async () => tag(A), ...overrides.session,
+    }; }, getTransferSession: () => ({ assertSession() {} }), ...overrides.props });
+  const Component = make({ ...Vue, vModelText: {}, vModelSelect: {} }, baseline,
+    overrides.catalogue || (async () => { throw Error('No network expected'); }), overrides.audit || auditCollection,
+    overrides.prepare || prepareFigureTransfer, overrides.transfer || (async () => ({ committed: true })),
+    suggestedFigureFilename, filterCatalogue, releaseLabel, (...args) => saves.push(args),
+    async (...args) => { saves.push(args); return { status: 'saved' }; });
+  const app = renderer.createApp({ render: () => Vue.h(Component, { ...props, ref: v => vm = v,
+    onBusy: v => events.push(['busy', v]), onWriting: v => events.push(['writing', v]), onChanged: v => events.push(['changed', v]),
+    onRecovery: v => events.push(['recovery', v]), onCatalogue: v => events.push(['catalogue', v]),
+    onReport: v => reportEvents.push(v), onReportStale: v => staleEvents.push(v) }) });
+  app.mount(root);
+  return { root, props, app, events, saves, reportEvents, staleEvents, get vm() { return vm; }, button: label => flat(root).find(n => n.type === 'button' && text(n) === label) };
+}
+const partial = (mode = 'full') => ({ schema: 1, rootPath: 'E:/', mode, scanComplete: false, contentComplete: false, complete: false,
+  present: [], missing: [{ id: A, name: 'Not confirmed', state: 'not-observed-unconfirmed' }], upcoming: [], duplicates: [], unknown: [], files: [] });
+
+test('scan holds the BLE busy lock while an aborted read drains and disallows a second operation', async () => {
+  const gate = deferred(); let lists = 0;
+  const h = mount({ session: { readDirectory: () => { lists++; return gate.promise; } } });
+  try {
+    const pending = h.vm.scan(); await tick(); assert.equal(h.vm.running, 'scan'); assert.deepEqual(h.events, [['busy', true]]);
+    await h.vm.scan(); h.vm.cancel(); await tick(); assert.equal(lists, 1); assert.equal(h.vm.running, 'scan');
+    assert.deepEqual(h.events, [['busy', true]]); gate.resolve([]); await pending; await tick();
+    assert.equal(h.vm.report.status, 'cancelled'); assert.equal(h.vm.report.scanComplete, false); assert.equal(h.vm.running, '');
+    assert.deepEqual(h.events, [['busy', true], ['busy', false]]); assert.match(text(h.root), /Prüfung unvollständig/);
+  } finally { h.app.unmount(); }
+});
+
+test('a previous-session scan cannot replace new results or release the newer busy lock', async () => {
+  const old = deferred(), current = deferred(); let calls = 0;
+  const h = mount({ session: { readDirectory: () => ++calls === 1 ? old.promise : current.promise } });
+  try {
+    const first = h.vm.scan(); await tick(); h.props.generation = 2; await tick();
+    const second = h.vm.scan(); await tick(); const eventCount = h.events.length;
+    old.resolve([]); await first; await tick(); assert.equal(h.vm.report, null); assert.equal(h.vm.running, 'scan'); assert.equal(h.events.length, eventCount);
+    current.resolve([]); await second; await tick(); assert.equal(h.vm.report.scanComplete, true); assert.equal(h.vm.running, '');
+  } finally { h.app.unmount(); }
+});
+
+test('disconnect clears a prior report and prevents a late result from appearing', async () => {
+  const gate = deferred(), h = mount({ audit: () => gate.promise });
+  try { const active = h.vm.scan(); await tick(); h.props.connected = false; await tick(); gate.resolve(partial()); await active; await tick();
+    assert.equal(h.vm.report, null); assert.equal(h.vm.running, ''); assert.doesNotMatch(text(h.root), /Not confirmed/);
+  } finally { h.app.unmount(); }
+});
+
+test('upload is single-owner and keeps busy/writing locks until cancelled work settles', async () => {
+  const gate = deferred(); let calls = 0, signal;
+  const h = mount({ transfer: options => { calls++; signal = options.signal; return gate.promise; } });
+  try {
+    h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(A) });
+    const active = h.vm.upload(); await tick(); await h.vm.upload(); h.vm.cancel(); await tick();
+    assert.equal(calls, 1); assert.equal(signal.aborted, true); assert.equal(h.vm.running, 'upload');
+    assert.deepEqual(h.events, [['busy', true], ['writing', true]]);
+    gate.reject(Object.assign(Error('cancel'), { name: 'AbortError' })); await active; await tick();
+    assert.equal(h.vm.running, ''); assert.deepEqual(h.events.slice(-2), [['busy', false], ['writing', false]]);
+    assert.equal(h.events.filter(e => e[0] === 'changed').length, 0);
+  } finally { h.app.unmount(); }
+});
+
+test('a late previous-session upload receipt must never refresh or attribute changes to the new device', async () => {
+  const gate = deferred(), h = mount({ transfer: () => gate.promise });
+  try {
+    h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(A) }); const active = h.vm.upload(); await tick();
+    h.props.generation = 2; await tick(); const before = h.events.length;
+    gate.resolve({ committed: true, path: 'E:/old-device.bin' }); await active; await tick();
+    assert.equal(h.events.length, before); assert.equal(h.events.filter(e => e[0] === 'changed').length, 0); assert.equal(h.vm.message, '');
+  } finally { h.app.unmount(); }
+});
+
+test('a failed or uncertain upload immediately makes the previous collection report stale', async () => {
+  const gate = deferred(), h = mount({ transfer: () => gate.promise });
+  try {
+    h.vm.report = { ...partial(), scanComplete: true }; h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(A) });
+    const active = h.vm.upload(); await tick(); assert.equal(h.vm.stale, true);
+    gate.reject(Error('uncertain close')); await active; await tick(); assert.equal(h.vm.stale, true); assert.match(text(h.root), /Seit dieser Prüfung.*Schreib- oder Wiederherstellungsvorgang/);
+  } finally { h.app.unmount(); }
+});
+
+test('a foreign figure ID never becomes prepared or reaches the device transfer boundary', async () => {
+  let calls = 0; const h = mount({ transfer: async () => { calls++; } });
+  try {
+    h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(B) }); await h.vm.upload(); await tick();
+    assert.equal(h.vm.prepared, null); assert.equal(calls, 0); assert.match(h.vm.error, /different figure/);
+  } finally { h.app.unmount(); }
+});
+
+test('cancelled local-file reading cannot publish a late prepared file', async () => {
+  const gate = deferred(), h = mount();
+  try {
+    h.vm.choose(baseline.entries[0], false); const active = h.vm.prepare({ file: { size: 540, arrayBuffer: () => gate.promise } }); await tick();
+    h.vm.cancel(); gate.resolve(tag(A).buffer); await active; await tick(); assert.equal(h.vm.prepared, null); assert.match(h.vm.error, /abgebrochen/);
+  } finally { h.app.unmount(); }
+});
+
+test('changing the selected figure removes prepared bytes and cannot redirect an existing prepared upload', async () => {
+  const h = mount();
+  try { h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(A) }); assert.equal(h.vm.prepared.id, A);
+    h.props.selectedFigure = baseline.entries[1]; await tick(); assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null);
+  } finally { h.app.unmount(); }
+});
+
+test('partial and quick result views explicitly withhold full-content and absence claims', async () => {
+  const h = mount({ audit: async () => partial() });
+  try {
+    await h.vm.scan(); await tick(); assert.match(text(h.root), /Prüfung unvollständig/); assert.doesNotMatch(text(h.root), /Bestand vollständig durchlaufen/);
+    h.vm.report = { ...partial('quick'), scanComplete: true, complete: true }; await tick();
+    assert.match(text(h.root), /nicht aus geprüften Dateien/); assert.doesNotMatch(text(h.root), /Bestand vollständig durchlaufen/);
+    assert.match(text(h.root), /keine HMAC-\/Signaturprüfung/);
+  } finally { h.app.unmount(); }
+});
+
+test('revision changes mark completed reports stale without silently rerunning any device reads', async () => {
+  let reads = 0; const h = mount({ session: { readDirectory: async () => { reads++; return []; } } });
+  try { await h.vm.scan(); await tick(); assert.equal(h.vm.stale, false); const before = reads;
+    h.props.revision++; await tick(); assert.equal(h.vm.stale, true); assert.equal(reads, before); assert.match(text(h.root), /Seit dieser Prüfung.*Schreib- oder Wiederherstellungsvorgang/);
+  } finally { h.app.unmount(); }
+});
+
+test('save report is disabled and method-guarded while another operation is in flight', async () => {
+  const gate = deferred(), h = mount({ catalogue: () => gate.promise });
+  try {
+    h.vm.report = partial(); const active = h.vm.checkUpdates(); await tick();
+    assert.equal(h.button('Prüfbericht speichern').props.disabled, true); await h.vm.saveReport(); assert.equal(h.saves.length, 0);
+    gate.reject(Object.assign(Error('cancelled'), { name: 'AbortError' })); await active;
+  } finally { h.app.unmount(); }
+});
+
+test('external BLE lock blocks scan and upload before obtaining any adapters', async () => {
+  let sessions = 0; const h = mount({ props: { blocked: true, getSession: () => { sessions++; }, getTransferSession: () => { sessions++; } } });
+  try { h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(A) }); await h.vm.scan(); await h.vm.upload();
+    assert.equal(sessions, 0); assert.equal(h.events.length, 0);
+  } finally { h.app.unmount(); }
+});
+
+test('unmounted component cannot publish late scan results or busy events', async () => {
+  const gate = deferred(), h = mount({ audit: () => gate.promise }); const active = h.vm.scan(); await tick();
+  h.app.unmount(); const count = h.events.length; gate.resolve(partial()); await active; assert.equal(h.events.length, count);
+});
+
+// Use the production App Options API; no copied lock/session implementation.
+const appFile = new URL('../src/App.vue', import.meta.url);
+const appDescriptor = parse(fs.readFileSync(appFile, 'utf8'), { filename: appFile.pathname }).descriptor;
+function appOptions(proto = {}, pixl = {}) {
+  return new Function('defineAsyncComponent', 'catalogueBaseline', 'proto', 'pixl',
+    appDescriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'return'))(loader => ({ loader }), baseline, proto, pixl);
+}
+test('App applies collection busy to global operation lock and writing to disconnect lock', () => {
+  const options = appOptions(), state = options.data.call({ $t: x => x });
+  state.collectionBusy = true; assert.equal(options.computed.busy.call(state), true);
+  assert.equal(!!options.computed.connectionDisconnectLocked.call(state), false);
+  state.collectionWriting = true; assert.equal(options.computed.connectionDisconnectLocked.call(state), true);
+  for (const [field, previous] of [['mutating', false], ['pendingUploads', 0], ['syncing', false], ['zipBusy', false], ['migrationBusy', false], ['collectionWriting', false]]) {
+    const before = state.collectionRevision; options.watch[field].call(state, field === 'pendingUploads' ? 1 : true, previous); assert.equal(state.collectionRevision, before + 1, field);
+  }
+});
+
+test('App search adapter rejects an old-session directory response before exposing it to collection UI', async () => {
+  const gate = deferred(); const options = appOptions({ vfs_read_folder: () => gate.promise });
+  const state = { sessionGeneration: 1, connected: true, assert_session(generation) { if (generation !== this.sessionGeneration) throw Error('stale'); }, checked: value => value.data };
+  const session = options.methods.device_search_session.call(state), pending = session.readDirectory('E:/');
+  state.sessionGeneration = 2; gate.resolve({ data: [] }); await assert.rejects(pending, /stale/);
+});
+
+test('App mounts collection with v-show workspace persistence and binds revision/locks', () => {
+  const tpl = appDescriptor.template.content;
+  assert.match(tpl, /v-show="activeWorkspace === 'catalogue'"/); assert.match(tpl, /:revision="collectionRevision"/);
+  assert.match(tpl, /@busy="collectionBusy = \$event"/); assert.match(tpl, /@writing="collectionWriting = \$event"/);
+  for (const name of ['App', 'CollectionAssistant', 'CataloguePanel', 'FigureDetails']) {
+    const url = name === 'App' ? appFile : new URL(`../src/components/${name}.vue`, import.meta.url);
+    const { descriptor } = parse(fs.readFileSync(url, 'utf8'), { filename: url.pathname });
+    compileScript(descriptor, { id: name });
+    const result = compileTemplate({ source: descriptor.template.content, id: name, filename: url.pathname });
+    assert.deepEqual(result.errors, [], name);
+  }
+});
+
+// Compile/mount the actual script-setup catalogue and details too. Only locale,
+// DOM host and the unrelated local-file inspector are replaced at the boundary.
+async function loadSfc(filename) {
+  const { descriptor } = parse(fs.readFileSync(filename, 'utf8'), { filename });
+  const compiledScript = compileScript(descriptor, { id: filename });
+  let source = compiledScript.content.replace('export default', 'const Component =');
+  const tpl = compileTemplate({ source: descriptor.template.content, id: filename, filename,
+    compilerOptions: { hoistStatic: false, bindingMetadata: compiledScript.bindings } });
+  assert.deepEqual(tpl.errors, []);
+  source += '\n' + tpl.code.replace('export function render', 'function render') + '\nComponent.render=render;return Component;';
+  const imports = [];
+  source = source.replace(/import\s+(.+?)\s+from\s+['"]([^'"]+)['"];?/g, (_, binding, spec) => { imports.push({ binding, spec }); return ''; });
+  const modules = [];
+  for (const { spec } of imports) {
+    if (spec === 'vue') modules.push({ ...Vue, vModelText: {}, vModelSelect: {}, vModelCheckbox: {} });
+    else if (spec === 'vue-i18n') modules.push({ useI18n: () => ({ locale: Vue.ref('de_DE') }) });
+    else {
+      const target = path.resolve(path.dirname(filename), spec);
+      modules.push(spec.endsWith('LocalTagInspector.vue') ? { default: { render: () => null } } : spec.endsWith('.vue') ? { default: await loadSfc(target) } :
+        spec.endsWith('.json') ? { default: JSON.parse(fs.readFileSync(target, 'utf8')) } : await import(pathToFileURL(target)));
+    }
+  }
+  const bindings = imports.map(({ binding }, i) => binding.startsWith('{') ? `const ${binding.replace(/\s+as\s+/g, ':')}=modules[${i}];` : `const ${binding}=modules[${i}].default;`).join('\n');
+  return new Function('modules', bindings + '\n' + source)(modules);
+}
+async function mountSfc(name, values) {
+  const Component = await loadSfc(fileURLToPath(new URL(`../src/components/${name}.vue`, import.meta.url)));
+  const props = Vue.reactive(values), root = node('root'), app = renderer.createApp({ render: () => Vue.h(Component, props) });
+  app.mount(root); await tick(); return { props, root, app };
+}
+test('new catalogue selection passes the real public entry and respects the BLE operation block', async () => {
+  const selected = [], source = { ...baseline, commit: 'a'.repeat(40), sourceUrl: 'https://github.com/8bitDream/AmiiboAPI' };
+  const h = await mountSfc('CataloguePanel', { catalogue: source, blocked: true, onSelectEntry: e => selected.push(e) });
+  try {
+    const button = () => flat(h.root).find(n => n.type === 'button' && text(n) === 'Details und Bild');
+    assert.equal(button().props.disabled, true); await button().props.onClick({ currentTarget: {} }); assert.equal(selected.length, 0);
+    h.props.blocked = false; await tick(); await button().props.onClick({ currentTarget: {} }); await tick();
+    assert.equal(selected.length, 1); assert.equal(selected[0].id, A); assert.match(text(h.root), /Synthetic 0000000000000102/);
+  } finally { h.app.unmount(); }
+});
+
+test('figure image requires a click, uses the pinned online catalogue commit and resets on ID change', async () => {
+  const h = await mountSfc('FigureDetails', { id: A, catalogueEntry: baseline.entries[0], imageCommit: 'b'.repeat(40) });
+  try {
+    assert.equal(flat(h.root).filter(n => n.type === 'img').length, 0);
+    flat(h.root).find(n => n.type === 'button' && text(n) === 'Bild einmal laden').props.onClick(); await tick();
+    const img = flat(h.root).find(n => n.type === 'img'); assert.ok(img.props.src.includes('/' + 'b'.repeat(40) + '/images/')); assert.equal(img.props.referrerpolicy, 'no-referrer');
+    h.props.id = B; h.props.catalogueEntry = baseline.entries[1]; await tick(); assert.equal(flat(h.root).filter(n => n.type === 'img').length, 0);
+    assert.match(text(h.root), /Synthetic 0000000000000202/); assert.doesNotMatch(text(h.root), /Synthetic 0000000000000102/);
+  } finally { h.app.unmount(); }
+});
+
+test('a catalogue-entry prop for a different ID cannot label the selected figure incorrectly', async () => {
+  const h = await mountSfc('FigureDetails', { id: A, catalogueEntry: { ...baseline.entries[1], name: 'WRONG-FIGURE-NAME' } });
+  try { assert.doesNotMatch(text(h.root), /WRONG-FIGURE-NAME/); assert.match(text(h.root), /ID im Katalog unbekannt/); }
+  finally { h.app.unmount(); }
+});
+
+test('532/572/2048 files expose their size and format limits in the actual DE/EN result view without being called corrupt', async () => {
+  const files = [
+    { path: 'E:/short.bin', size: 532, id: A, status: 'structure-consistent', issues: [], formatContext: 'classic-without-final-eight-bytes' },
+    { path: 'E:/extended.bin', size: 572, id: A, status: 'structure-consistent', issues: [], formatContext: 'classic-with-unverified-extra-bytes' },
+    { path: 'E:/two-k.bin', size: 2048, id: B, status: 'structure-consistent', issues: [], formatContext: 'two-kib-layout-not-fully-validated' },
+    { path: 'E:/classic.bin', size: 540, id: A, status: 'structure-consistent', issues: [], formatContext: 'classic-540' },
+  ];
+  const h = mount();
+  try {
+    h.vm.report = { ...partial(), scanComplete: true, files }; h.vm.filter = 'issues'; await tick();
+    assert.equal(h.vm.issues.length, 3); assert.match(text(h.root), /532 Bytes · Verkürzter klassischer Dump: letzte 8 Bytes nicht enthalten/);
+    assert.match(text(h.root), /572 Bytes · Klassischer Dump mit ungeprüftem Zusatzbereich/);
+    assert.match(text(h.root), /2048 Bytes · 2-KiB-Datei: Größe und öffentliche ID geprüft; übriges Layout nicht vollständig geprüft/);
+    assert.doesNotMatch(text(h.root), /kaputt|beschädigt|corrupt/);
+    h.props.locale = 'en'; await tick();
+    assert.match(text(h.root), /532 Bytes · Short classic dump: final 8 bytes not included/);
+    assert.match(text(h.root), /572 Bytes · Classic dump with unchecked extra data/);
+    assert.match(text(h.root), /2048 Bytes · 2 KiB file: size and public ID checked; remaining layout not fully checked/);
+    h.vm.report = { ...h.vm.report, mode: 'quick' }; await tick();
+    assert.match(text(h.root), /2 KiB file according to directory; contents and layout unchecked/);
+    assert.doesNotMatch(text(h.root), /size and public ID checked/);
+    h.props.locale = 'de_DE'; await tick();
+    assert.match(text(h.root), /2-KiB-Datei laut Verzeichnis; Inhalt und Layout ungeprüft/);
+    assert.doesNotMatch(text(h.root), /Größe und öffentliche ID geprüft/);
+  } finally { h.app.unmount(); }
+});
+
+test('collection report and stale transitions are emitted to the catalogue owner and cleared on disconnect', async () => {
+  const h = mount();
+  try {
+    await h.vm.scan(); await tick(); assert.equal(h.reportEvents.at(-1)?.scanComplete, true);
+    h.props.revision++; await tick(); assert.equal(h.staleEvents.at(-1), true);
+    h.props.connected = false; await tick(); assert.equal(h.reportEvents.at(-1), null); assert.equal(h.staleEvents.at(-1), false);
+  } finally { h.app.unmount(); }
+});
+
+test('App clears catalogue presence on disconnect/error and binds both report and stale props', async () => {
+  const options = appOptions({}, { get_connection_state: () => 'disconnected' });
+  for (const method of ['on_ble_disconnected', 'on_ble_connect_error']) {
+    const state = { ...options.data.call({ $t: x => x }), collectionReport: partial(), collectionStale: true, $t: x => x, $notify() {} };
+    for (const name of ['reset_figure_info', 'remember_interruption', 'clear_dfu_attempt', 'clear_migration_restart',
+      'refresh_local_metrics', 'invalidate_sync', 'invalidate_zip', 'refresh_backup_checkpoint', 'set_transfer']) state[name] = () => {};
+    options.methods[method].call(state, Error('synthetic'));
+    assert.equal(state.collectionReport, null, method); assert.equal(state.collectionStale, false, method);
+    await Promise.resolve();
+  }
+  assert.match(appDescriptor.template.content, /:collection-report="collectionReport"/);
+  assert.match(appDescriptor.template.content, /:collection-stale="collectionStale"/);
+  assert.match(appDescriptor.template.content, /@report="collectionReport = \$event"/);
+  assert.match(appDescriptor.template.content, /@report-stale="collectionStale = \$event"/);
+});
+
+test('whole catalogue cards render green/red/orange states with text, and stale/quick states cannot retain red', async () => {
+  const full = { ...partial(), status: 'complete', complete: true, scanComplete: true, contentComplete: true, errors: [], limitsReached: [], stats: {},
+    present: [{ id: A, contentConfirmed: true, paths: ['E:/a.bin'] }], missing: [{ id: B, state: 'no-structurally-consistent-file-observed' }],
+    files: [{ id: A, metadataId: A, path: 'E:/a.bin', status: 'structure-consistent', issues: [], formatContext: 'classic-540' }], metadataMismatches: [] };
+  const source = { ...baseline, commit: 'a'.repeat(40), sourceUrl: 'https://github.com/8bitDream/AmiiboAPI' };
+  const h = await mountSfc('CataloguePanel', { catalogue: source, collectionReport: full, collectionStale: false });
+  const cards = () => flat(h.root).filter(n => n.type === 'li' && n.props['data-presence']);
+  try {
+    assert.deepEqual(cards().map(n => n.props['data-presence']), ['present', 'missing']);
+    assert.match(cards()[0].props.class, /presence-present/); assert.match(text(cards()[0]), /Vorhanden · ID bestätigt/);
+    assert.match(cards()[1].props.class, /presence-missing/); assert.match(text(cards()[1]), /Nicht gefunden/);
+    h.props.collectionReport = { ...full, files: [{ ...full.files[0], formatContext: 'classic-without-final-eight-bytes' }] }; await tick();
+    assert.equal(cards()[0].props['data-presence'], 'attention'); assert.match(text(cards()[0]), /Vorhanden · Abweichung prüfen/);
+    h.props.collectionStale = true; await tick(); assert.ok(cards().every(n => n.props['data-presence'] === 'stale')); assert.match(text(h.root), /Prüfung veraltet/);
+    h.props.collectionStale = false; h.props.collectionReport = { ...full, mode: 'quick', contentComplete: false,
+      files: [{ ...full.files[0], status: 'metadata-only' }], present: [{ ...full.present[0], contentConfirmed: false }] }; await tick();
+    assert.deepEqual(cards().map(n => n.props['data-presence']), ['present', 'unknown']); assert.match(text(cards()[0]), /Vorhanden laut Eigenschaften/);
+    assert.equal(flat(h.root).filter(n => n.type === 'button' && text(n) === 'Details und Bild').length, 2);
+  } finally { h.app.unmount(); }
+  const sourceText = fs.readFileSync(new URL('../src/components/CataloguePanel.vue', import.meta.url), 'utf8');
+  for (const state of ['present', 'attention', 'missing']) assert.match(sourceText, new RegExp(`\\.entries li\\.presence-${state} \\{ border:2px solid #[a-f0-9]{6};`));
+});

@@ -24,9 +24,10 @@ export function publicFigureLink(value) {
   return id ? `https://amiibo.life/nfc/${id.slice(0, 8).toUpperCase()}-${id.slice(8).toUpperCase()}` : null;
 }
 
-export function publicFigureImage(value) {
+export function publicFigureImage(value, commit = IMAGE_COMMIT) {
   const id = figureId(value);
-  return id ? `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${IMAGE_COMMIT}/images/icon_${id.slice(0, 8)}-${id.slice(8)}.png` : null;
+  const revision = typeof commit === "string" && /^[a-f0-9]{40}$/.test(commit) ? commit : IMAGE_COMMIT;
+  return id ? `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${revision}/images/icon_${id.slice(0, 8)}-${id.slice(8)}.png` : null;
 }
 
 export function inspectTagStructure(input) {

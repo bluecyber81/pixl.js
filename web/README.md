@@ -1,8 +1,23 @@
-# Dateimanager 3.32.5
+# Dateimanager 3.33.0
 
-Startanleitung und Änderungen: **LIESMICH_3_32_5.txt**.
+Startanleitung und Änderungen: **LIESMICH_3_33_0.txt**.
 
-3.32.5 ergänzt einen getrennten GitHub-Pages-Build für
+3.33.0 ergänzt im Figurenkatalog eine Online-Neuheitenprüfung, den seriellen
+Sammlungsabgleich (Inhalte oder Schnellübersicht) und den geprüften Import
+eigener BIN-Dateien oder direkter HTTPS-Links. Vorhandene Dateien werden
+nicht überschrieben. Die Firmware DE3.55 bleibt unverändert.
+
+
+Katalog-Markierungen nach der Sammlungsprüfung: Grün = passende ID gefunden,
+Orange = vorhandene Datei mit Abweichung oder eingeschränkter Formatprüfung,
+Rot = nach vollständiger Inhaltsprüfung auf E: nicht nachgewiesen. Ungeprüfte
+oder inzwischen veraltete Ergebnisse bleiben neutral. Eine Schnellübersicht
+kennzeichnet gefundene IDs ausdrücklich als reine Dateieigenschaften.
+
+Die Online-Abfrage liefert Metadaten, keine spielfertigen Figurendateien.
+Strukturprüfung ist keine kryptografische Prüfung oder NFC-Funktionsgarantie.
+
+3.32.5 ergänzte einen getrennten GitHub-Pages-Build für
 https://bluecyber81.github.io/pixl.js/ und erhält den lokalen Portable-Build.
 Firmware-ZIP, sieben Speicherprüfprofile und WASM-Dateien bleiben unverändert.
 Bluetooth funktioniert weiterhin direkt zwischen Browser und Gerät; diese

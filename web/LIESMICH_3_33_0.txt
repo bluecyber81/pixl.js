@@ -1,4 +1,4 @@
-ALLMIIBO DATEIMANAGER 3.32.5
+ALLMIIBO DATEIMANAGER 3.33.0
 
 STARTEN
 Das Portable-ZIP vollstaendig entpacken und Start-Dateimanager.cmd starten.
@@ -9,7 +9,37 @@ beendet nur die zugehoerige lokale Instanz. Standardadresse: http://127.0.0.1:87
 Ein bereits belegter Port wird nicht uebernommen. Mit
 Start-Dateimanager.cmd -Port 8778 kann ein anderer lokaler Port gewaehlt werden.
 
-NEU IN 3.32.5
+NEU IN 3.33.0
+Im Bereich Figurenkatalog stehen drei neue Werkzeuge:
+1. Nach neuen Figuren suchen: liest auf Klick den aktuellen GitHub-Katalog,
+   zeigt neue/geänderte öffentliche Einträge und behält lokale Ergänzungen.
+   Der Abruf wird an einen konkreten Quellcommit gebunden. Keine Geräte-
+   dateien werden hochgeladen. Neue Metadaten gelten für diese Sitzung.
+2. Sammlung prüfen: ganzes E: oder einen Ordner mit Unterordnern abgleichen.
+   Der vollständige Modus liest passende BIN-Dateien nacheinander und prüft
+   öffentliche ID, Größe und einfache Headermerkmale. Eine Schnellübersicht
+   verwendet nur Eigenschaften. Fehlende passende Dateien, doppelte IDs,
+   unbekannte IDs und Auffälligkeiten werden getrennt angezeigt. Nach
+   Abbruch/Lesefehler/Grenze wird kein vollständiger Scan behauptet.
+3. Figurendatei übernehmen: eigene BIN auswählen oder einen direkten HTTPS-
+   Dateilink laden. Katalog-ID und Grundstruktur müssen passen. Die Datei
+   kann gespeichert oder in einen vorhandenen Geräteordner übertragen
+   werden. Vorhandene Dateinamen werden nicht überschrieben; der Upload
+   wird mit SHA-256 nachgelesen. Für Namenskonflikte anderen Namen wählen.
+
+Es gibt keinen allgemeinen Downloadserver für alle spielfertigen Figuren.
+AmiiboAPI liefert Katalogdaten/Bilder, keine komplette BIN-Sammlung. Ein
+Downloadlink muss direkten Browserzugriff erlauben (CORS). Größen-/ID-
+Prüfung ersetzt weder Kryptografieprüfung noch Erkennung an der Konsole;
+bei 2048-Byte-Dateien wird keine vollständige V3-Kombination bestätigt.
+Der exportierte Sammlungsbericht enthält Dateipfade und öffentliche IDs;
+keine UID, Dateiinhalte oder entschlüsselten Besitzer-/Spieldaten.
+
+Die Gerätefirmware DE3.55, BL8, SoftDevice, Speicherformat und sieben
+WASM-Simulatoren bleiben bytegleich. Für diese neuen Browserfunktionen
+muss das Allmiibo nicht neu geflasht werden.
+
+BEIBEHALTEN AUS 3.32.5
 3.32.5 ergänzt einen getrennten GitHub-Pages-Build für
 https://bluecyber81.github.io/pixl.js/ und erhält den lokalen Portable-Build.
 Firmware-ZIP, sieben Speicherprüfprofile und WASM-Dateien bleiben unverändert.
@@ -156,3 +186,10 @@ Funk-, NFC-, Speicher- oder Geschwindigkeitstest am physischen Allmiibo.
 Das separate Quellcode-ZIP enthaelt public, src, tests, scripts, third-party,
 Builddateien und Lizenzhinweise. Die Quellen enthalten keine persoenliche
 Amiibo-Sammlung und keine privaten Signierschluessel.
+
+
+Katalog-Markierungen nach der Sammlungsprüfung: Grün = passende ID gefunden,
+Orange = vorhandene Datei mit Abweichung oder eingeschränkter Formatprüfung,
+Rot = nach vollständiger Inhaltsprüfung auf E: nicht nachgewiesen. Ungeprüfte
+oder inzwischen veraltete Ergebnisse bleiben neutral. Eine Schnellübersicht
+kennzeichnet gefundene IDs ausdrücklich als reine Dateieigenschaften.

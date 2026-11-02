@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.32.5</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.33.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -59,7 +59,7 @@
       <button type="button" @click="show_workspace('update')" :aria-current="activeWorkspace === 'update' ? 'page' : undefined" aria-controls="update-workspace"><span class="workspace-icon" aria-hidden="true">↻</span><span><strong>{{ $t('workflow.updateShort') }}</strong><small>{{ $t('workflow.updateBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
-      <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Bilder, Infos und QR-Codes' : 'Images, information and QR codes' }}</small></span></button>
+      <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
       <div class="sidebar-device">
         <p class="sidebar-caption">{{ language === 'de_DE' ? 'DEIN GERÄT' : 'YOUR DEVICE' }}</p>
         <strong>{{ connected ? 'Allmiibo LCD' : $t('info.disconnected') }}</strong>
@@ -70,6 +70,7 @@
       </div>
     </nav>
     <div class="workspace-body">
+    <p v-if="collectionBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Sammlungsprüfung oder Figurenübertragung läuft …' : 'Collection check or figure transfer running …' }} <button type="button" @click="show_workspace('catalogue')">{{ language === 'de_DE' ? 'Vorgang anzeigen' : 'Show operation' }}</button></p>
     <p v-if="searchBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Gerätesuche läuft…' : 'Device search running…' }} <button type="button" @click="show_workspace('files')">{{ language === 'de_DE' ? 'Suche anzeigen' : 'Show search' }}</button></p>
     <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl :locale="language" :blocked="connected || connecting || disconnecting || busy" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
     <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
@@ -222,7 +223,7 @@
       <p>{{ $t('info.localBluetooth') }}</p>
       <StartupDiagnostics :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.32.5</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.33.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -303,7 +304,8 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" /></div>
+    <CollectionAssistant :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="collectionReport = $event" @report-stale="collectionStale = $event" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="collectionReport" :collection-stale="collectionStale" :blocked="collectionBusy" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
     <el-dialog :title="$t('info.diagnosticPreviewTitle')" v-model="diagnosticsDialog" width="min(800px, 94vw)" :close-on-click-modal="!diagnosticsBusy" :close-on-press-escape="!diagnosticsBusy" :show-close="!diagnosticsBusy">
@@ -458,14 +460,15 @@ import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure
 import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
 import { metadataNoteInfo } from "./lib/metadata-note.js"
 import { deploymentPath } from "./lib/deployment-path.js"
+import catalogueBaseline from "./data/catalogue.json"
 
 
 
 export default {
-  components: { SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.32.5.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.33.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
@@ -475,7 +478,7 @@ export default {
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1,
-      searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
+      collectionReport:null, collectionStale:false, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
       verifyUploads: true, replaceUploads: false,
@@ -507,6 +510,14 @@ export default {
     }
   },
 
+  watch: {
+    mutating(value){if(value)++this.collectionRevision;},
+    pendingUploads(value,previous){if(value>previous)++this.collectionRevision;},
+    syncing(value){if(value)++this.collectionRevision;},
+    zipBusy(value){if(value)++this.collectionRevision;},
+    migrationBusy(value){if(value)++this.collectionRevision;},
+    collectionWriting(value){if(value)++this.collectionRevision;}
+  },
   computed: {
     dfuPageUrl() { return deploymentPath('dfu/web.html'); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
@@ -517,9 +528,9 @@ export default {
     elementLocale() { return getElementLocale(this.language) },
     breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
     figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
-    busy() { return this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
+    busy() { return this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
     lastTransfer() { return this.transferHistory.at(-1) || null; },
-    connectionDisconnectLocked() { return this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
+    connectionDisconnectLocked() { return this.collectionWriting || this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
     zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
     zipPagedEntries() { return (this.zipPlan?.entries || []).slice((this.zipPage - 1) * 100, this.zipPage * 100); },
     syncPageCount() { return Math.max(1,Math.ceil((this.syncPlan?.entries.length || 0)/100)); },
@@ -595,6 +606,17 @@ export default {
       const selection=this.previewSelection;
       if(!this.busy&&this.preview_selection_current(selection))return this.on_row_btn_meta(0,selection.row);
     },
+    collection_transfer_session() {
+      const generation=this.sessionGeneration;this.assert_session(generation);
+      return this.transfer_adapters(generation);
+    },
+    on_collection_catalogue(result) {
+      this.collectionCatalogue={...catalogueBaseline,entries:result.entries,checkedDate:result.observedAt.slice(0,10),commit:result.source.commit,sourceUrl:result.source.url};
+    },
+    async on_collection_changed(receipt) {
+      this.remember_recovery(receipt);
+      await this.refresh_current();
+    },
     device_search_session() {
       const generation = this.sessionGeneration;
       this.assert_session(generation);
@@ -646,7 +668,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.32.5.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.33.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1028,7 +1050,7 @@ export default {
         browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator !== 'undefined' && !!navigator.bluetooth },
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.32.5.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.33.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1270,7 +1292,7 @@ export default {
     },
     on_ble_disconnected() {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
-      this.searchBusy=false;
+      this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
@@ -1313,7 +1335,7 @@ export default {
     },
     on_ble_connect_error(error) {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
-      this.searchBusy=false;
+      this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();

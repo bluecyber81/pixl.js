@@ -27,6 +27,15 @@ test('public IDs reject partial/malicious input and retain Mario zero head', () 
   assert.match(publicFigureImage('0000000000000002'), /^https:\/\/raw\.githubusercontent\.com\/8bitDream\/AmiiboAPI\/[0-9a-f]{40}\/images\/icon_00000000-00000002\.png$/);
 });
 
+test('online image revisions accept only immutable GitHub commit IDs and stay on the fixed source', () => {
+  const id = '0000000000000002', commit = '85a7d81c06299e7bc386a4d20fd579463400511d';
+  assert.equal(publicFigureImage(id, commit), `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${commit}/images/icon_00000000-00000002.png`);
+  for (const value of [null, 1, '', 'master', '../evil', 'https://example.com/', commit + '/evil']) {
+    assert.equal(publicFigureImage(id, value), publicFigureImage(id));
+  }
+  assert.equal(publicFigureImage('invalid', commit), null);
+});
+
 test('supported classic layouts have local header checks without private fields or crypto claims', () => {
   for (const size of [532, 540, 572]) {
     const input = fixture(size), before = input.slice(), result = inspectTagStructure(input);
