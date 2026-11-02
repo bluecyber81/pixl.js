@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.33.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.33.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -223,7 +223,7 @@
       <p>{{ $t('info.localBluetooth') }}</p>
       <StartupDiagnostics :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.33.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.33.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -304,8 +304,8 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <CollectionAssistant :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="collectionReport = $event" @report-stale="collectionStale = $event" @changed="on_collection_changed" @recovery="remember_recovery" />
-    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="collectionReport" :collection-stale="collectionStale" :blocked="collectionBusy" @select-entry="collectionSelected = $event" /></div>
+    <CollectionAssistant :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
     <el-dialog :title="$t('info.diagnosticPreviewTitle')" v-model="diagnosticsDialog" width="min(800px, 94vw)" :close-on-click-modal="!diagnosticsBusy" :close-on-press-escape="!diagnosticsBusy" :show-close="!diagnosticsBusy">
@@ -468,7 +468,7 @@ export default {
   components: { CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.33.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.33.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
@@ -478,7 +478,7 @@ export default {
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1,
-      collectionReport:null, collectionStale:false, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
+      collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
       verifyUploads: true, replaceUploads: false,
@@ -511,6 +511,7 @@ export default {
   },
 
   watch: {
+    collectionRevision(){this.collectionObservation=null;},
     mutating(value){if(value)++this.collectionRevision;},
     pendingUploads(value,previous){if(value>previous)++this.collectionRevision;},
     syncing(value){if(value)++this.collectionRevision;},
@@ -519,6 +520,9 @@ export default {
     collectionWriting(value){if(value)++this.collectionRevision;}
   },
   computed: {
+    catalogueObservationHistorical() { return !this.connected && !this.connecting && !this.collectionStale && !!this.collectionObservation; },
+    cataloguePresenceReport() { return this.catalogueObservationHistorical ? this.collectionObservation.report : this.collectionReport; },
+    catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },
     dfuPageUrl() { return deploymentPath('dfu/web.html'); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
     uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
@@ -611,8 +615,22 @@ export default {
       return this.transfer_adapters(generation);
     },
     on_collection_catalogue(result) {
+      this.collectionObservation=null;
       this.collectionCatalogue={...catalogueBaseline,entries:result.entries,checkedDate:result.observedAt.slice(0,10),commit:result.source.commit,sourceUrl:result.source.url};
     },
+    on_collection_report(report) {
+      this.collectionReport=this.connected ? report : null;
+      // Child invalidation emits null after disconnect. Keep only the already
+      // completed observation, never a late result from the former session.
+      if(!this.connected)return;
+      this.collectionObservation=null;
+      if(this.collectionStale || this.collectionWriting || this.mutating || this.pendingUploads>0 || this.syncing || this.zipBusy || this.migrationBusy)return;
+      if(report?.schema!==1 || !['full','quick'].includes(report.mode) || report.status!=='complete' || report.complete!==true || report.scanComplete!==true || report.cancelled || report.sessionChanged ||
+        (report.mode==='full' && report.contentComplete!==true) || !Array.isArray(report.errors) || report.errors.length || !Array.isArray(report.limitsReached) || report.limitsReached.length ||
+        report.stats?.readErrors || report.stats?.invalidEntries || !Array.isArray(report.files) || !Array.isArray(report.present) || !Array.isArray(report.missing))return;
+      this.collectionObservation=Object.freeze({report,checkedAt:new Date().toISOString()});
+    },
+    on_collection_stale(stale) { this.collectionStale=stale; if(stale)this.collectionObservation=null; },
     async on_collection_changed(receipt) {
       this.remember_recovery(receipt);
       await this.refresh_current();
@@ -668,7 +686,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.33.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.33.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1050,7 +1068,7 @@ export default {
         browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator !== 'undefined' && !!navigator.bluetooth },
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.33.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.33.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1265,11 +1283,13 @@ export default {
         pixl.disconnect();
       }
       else {
+        this.collectionObservation=null;
         if (this.demoMode) this.toggle_preview();
         this.connecting = true; this.connBtnText = this.$t('conn.connecting'); pixl.connect();
       }
     },
     async on_ble_connected() {
+      this.collectionObservation=null;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
       this.disconnecting = false;
       this.reset_figure_info(); this.meta_diag_visible = false;
@@ -1291,6 +1311,7 @@ export default {
       } catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
     },
     on_ble_disconnected() {
+      if(this.collectionStale || this.collectionWriting || this.mutating || this.pendingUploads>0 || this.syncing || this.zipBusy || this.migrationBusy)this.collectionObservation=null;
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
@@ -1334,6 +1355,7 @@ export default {
       this.connBtnText = this.$t(this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
     },
     on_ble_connect_error(error) {
+      this.collectionObservation=null;
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';

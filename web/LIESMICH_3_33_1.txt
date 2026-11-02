@@ -1,4 +1,4 @@
-ALLMIIBO DATEIMANAGER 3.33.0
+ALLMIIBO DATEIMANAGER 3.33.1
 
 STARTEN
 Das Portable-ZIP vollstaendig entpacken und Start-Dateimanager.cmd starten.
@@ -9,7 +9,7 @@ beendet nur die zugehoerige lokale Instanz. Standardadresse: http://127.0.0.1:87
 Ein bereits belegter Port wird nicht uebernommen. Mit
 Start-Dateimanager.cmd -Port 8778 kann ein anderer lokaler Port gewaehlt werden.
 
-NEU IN 3.33.0
+NEU IN 3.33.1
 Im Bereich Figurenkatalog stehen drei neue Werkzeuge:
 1. Nach neuen Figuren suchen: liest auf Klick den aktuellen GitHub-Katalog,
    zeigt neue/geänderte öffentliche Einträge und behält lokale Ergänzungen.
@@ -193,3 +193,13 @@ Orange = vorhandene Datei mit Abweichung oder eingeschränkter Formatprüfung,
 Rot = nach vollständiger Inhaltsprüfung auf E: nicht nachgewiesen. Ungeprüfte
 oder inzwischen veraltete Ergebnisse bleiben neutral. Eine Schnellübersicht
 kennzeichnet gefundene IDs ausdrücklich als reine Dateieigenschaften.
+
+KORREKTUR 3.33.1
+Fehlt die Figuren-ID in den Dateieigenschaften, bleibt die Schnelluebersicht
+unbestaetigt. Die Aktion zur Inhaltspruefung liest die Dateien aus und zeigt
+deren Fundstellen im Katalog. Nur ein vollstaendiger Inhaltslauf von E: kann
+rote Karten fuer nicht gefundene Figuren begruenden.
+
+Bei Trennung bleiben Farben mit dem Hinweis auf die letzte Pruefung sichtbar.
+Sie gelten fuer den damaligen Bestand. Eine neue Verbindung oder Aenderung
+verwirft diese Anzeige; sie wird nicht dauerhaft im Browser gespeichert.

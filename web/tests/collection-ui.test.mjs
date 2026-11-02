@@ -51,7 +51,7 @@ function mount(overrides = {}) {
   return { root, props, app, events, saves, reportEvents, staleEvents, get vm() { return vm; }, button: label => flat(root).find(n => n.type === 'button' && text(n) === label) };
 }
 const partial = (mode = 'full') => ({ schema: 1, rootPath: 'E:/', mode, scanComplete: false, contentComplete: false, complete: false,
-  present: [], missing: [{ id: A, name: 'Not confirmed', state: 'not-observed-unconfirmed' }], upcoming: [], duplicates: [], unknown: [], files: [] });
+  present: [], missing: [], unconfirmed: [{ id: A, name: 'Not confirmed', state: 'not-observed-unconfirmed' }], upcoming: [], duplicates: [], unknown: [], files: [] });
 
 test('scan holds the BLE busy lock while an aborted read drains and disallows a second operation', async () => {
   const gate = deferred(); let lists = 0;
@@ -143,9 +143,53 @@ test('partial and quick result views explicitly withhold full-content and absenc
   const h = mount({ audit: async () => partial() });
   try {
     await h.vm.scan(); await tick(); assert.match(text(h.root), /Prüfung unvollständig/); assert.doesNotMatch(text(h.root), /Bestand vollständig durchlaufen/);
+    assert.equal(h.vm.filter, 'unconfirmed'); assert.match(text(h.root), /Bestand nicht bestimmbar/);
+    assert.doesNotMatch(text(h.root), /Keine passende Datei|Nicht gefunden/);
     h.vm.report = { ...partial('quick'), scanComplete: true, complete: true }; await tick();
     assert.match(text(h.root), /nicht aus geprüften Dateien/); assert.doesNotMatch(text(h.root), /Bestand vollständig durchlaufen/);
     assert.match(text(h.root), /keine HMAC-\/Signaturprüfung/);
+  } finally { h.app.unmount(); }
+});
+
+test('actual zero-ID quick result explains neutral cards in DE/EN and its button checks contents in the selected folder', async () => {
+  const lists = [], reads = [];
+  const h = mount({ props: { directory: 'E:/figures' }, session: {
+    readDirectory: async path => { lists.push(path); return [{ name: 'figure.bin', type: 0, size: 540, meta: { valid: true, amiibo: { head: 0, tail: 0 } } }]; },
+    readFile: async path => { reads.push(path); return tag(A); },
+  } });
+  try {
+    h.vm.scope = 'folder'; h.vm.mode = 'quick'; await h.vm.scan(); await tick();
+    assert.equal(h.vm.report.stats.metadataMissing, 1); assert.equal(h.vm.report.stats.candidateMetadataCount, 0);
+    assert.deepEqual(h.vm.report.missing, []); assert.equal(h.vm.report.unconfirmed.length, 2);
+    assert.equal(h.vm.filter, 'unconfirmed'); assert.deepEqual(reads, []);
+    assert.match(text(h.root), /1 Dateien ohne Figuren-ID in Eigenschaften; Inhaltsprüfung nötig/);
+    assert.match(text(h.root), /Bestand nicht bestimmbar/); assert.doesNotMatch(text(h.root), /Keine passende Datei|Nicht gefunden/);
+    h.props.locale = 'en'; await tick(); assert.match(text(h.root), /1 files without a figure ID in their properties; a content check is needed/);
+    assert.match(text(h.root), /Presence undetermined/); assert.doesNotMatch(text(h.root), /No matching file|Not found/);
+    const button = h.button('Check file contents in the selected scope'); assert.equal(button.props.disabled, false);
+    await button.props.onClick(); await tick();
+    assert.equal(h.vm.mode, 'full'); assert.equal(h.vm.report.rootPath, 'E:/figures'); assert.equal(h.vm.report.contentComplete, true);
+    assert.deepEqual(lists, ['E:/figures', 'E:/figures']); assert.deepEqual(reads, ['E:/figures/figure.bin']);
+    assert.equal(h.vm.report.present[0].id, A); assert.deepEqual(h.vm.report.unconfirmed, []);
+    assert.equal(h.vm.filter, 'missing'); assert.match(text(h.root), /No matching file found in the checked scope/);
+  } finally { h.app.unmount(); }
+});
+
+test('quick-to-content action honors the global lock and keeps single-owner cancellation semantics', async () => {
+  const gate = deferred(); let sessions = 0;
+  const h = mount({ props: { blocked: true, getSession() { sessions++; return { assertSession() {}, readDirectory: () => gate.promise, readFile: async () => tag(A) }; } } });
+  try {
+    h.vm.mode = 'quick'; h.vm.report = { ...partial('quick'), stats: { metadataMissing: 1, candidates: 1, candidateMetadataCount: 0 } };
+    await tick(); assert.equal(h.button('Dateiinhalte im gewählten Bereich prüfen').props.disabled, true);
+    await h.vm.scanContents(); assert.equal(h.vm.mode, 'quick'); assert.equal(sessions, 0);
+    h.props.blocked = false; h.vm.scope = 'folder'; h.props.directory = ''; await tick();
+    await h.vm.scanContents(); assert.equal(sessions, 0); assert.equal(h.vm.mode, 'quick');
+    h.vm.scope = 'device'; await tick(); const active = h.vm.scanContents(); await tick();
+    await h.vm.scanContents(); h.vm.cancel(); await tick();
+    assert.equal(sessions, 1); assert.equal(h.vm.running, 'scan'); assert.deepEqual(h.events, [['busy', true]]);
+    gate.resolve([]); await active; await tick();
+    assert.equal(h.vm.report.status, 'cancelled'); assert.deepEqual(h.vm.report.missing, []); assert.equal(h.vm.filter, 'unconfirmed');
+    assert.deepEqual(h.events, [['busy', true], ['busy', false]]);
   } finally { h.app.unmount(); }
 });
 
@@ -318,10 +362,12 @@ test('App clears catalogue presence on disconnect/error and binds both report an
     assert.equal(state.collectionReport, null, method); assert.equal(state.collectionStale, false, method);
     await Promise.resolve();
   }
-  assert.match(appDescriptor.template.content, /:collection-report="collectionReport"/);
+  assert.match(appDescriptor.template.content, /:collection-report="cataloguePresenceReport"/);
   assert.match(appDescriptor.template.content, /:collection-stale="collectionStale"/);
-  assert.match(appDescriptor.template.content, /@report="collectionReport = \$event"/);
-  assert.match(appDescriptor.template.content, /@report-stale="collectionStale = \$event"/);
+  assert.match(appDescriptor.template.content, /@report="on_collection_report"/);
+  assert.match(appDescriptor.template.content, /@report-stale="on_collection_stale"/);
+  assert.match(appDescriptor.template.content, /:collection-historical="catalogueObservationHistorical"/);
+  assert.match(appDescriptor.template.content, /:collection-observed-at="catalogueObservationAt"/);
 });
 
 test('whole catalogue cards render green/red/orange states with text, and stale/quick states cannot retain red', async () => {
@@ -344,5 +390,21 @@ test('whole catalogue cards render green/red/orange states with text, and stale/
     assert.equal(flat(h.root).filter(n => n.type === 'button' && text(n) === 'Details und Bild').length, 2);
   } finally { h.app.unmount(); }
   const sourceText = fs.readFileSync(new URL('../src/components/CataloguePanel.vue', import.meta.url), 'utf8');
-  for (const state of ['present', 'attention', 'missing']) assert.match(sourceText, new RegExp(`\\.entries li\\.presence-${state} \\{ border:2px solid #[a-f0-9]{6};`));
+  for (const state of ['present', 'attention', 'missing']) assert.match(sourceText, new RegExp(`\\.entries li\\.presence-${state} \\{ border:3px solid #[a-f0-9]{6};`));
+});
+
+test('real reports without properties IDs render neutral in quick mode, green/red after full drive scan, and no red for a folder', async () => {
+  const options = { catalogue: baseline.entries, assertSession() {},
+    readDirectory: async () => [{ name: 'figure.bin', type: 0, size: 540 }], readFile: async () => tag(A) };
+  const quick = await auditCollection({ ...options, mode: 'quick' });
+  const h = await mountSfc('CataloguePanel', { catalogue: { ...baseline, commit: 'a'.repeat(40), sourceUrl: 'https://github.com/8bitDream/AmiiboAPI' }, collectionReport: quick, collectionStale: false });
+  const cards = () => flat(h.root).filter(n => n.type === 'li' && n.props['data-presence']);
+  try {
+    assert.deepEqual(cards().map(n => n.props['data-presence']), ['unknown', 'unknown']);
+    const full = await auditCollection(options); h.props.collectionReport = full; await tick();
+    assert.deepEqual(cards().map(n => n.props['data-presence']), ['present', 'missing']);
+    assert.match(text(cards()[0]), /Vorhanden · ID bestätigt/); assert.match(text(cards()[1]), /Nicht gefunden/);
+    h.props.collectionReport = await auditCollection({ ...options, rootPath: 'E:/figures' }); await tick();
+    assert.deepEqual(cards().map(n => n.props['data-presence']), ['present', 'unknown']);
+  } finally { h.app.unmount(); }
 });

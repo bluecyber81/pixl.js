@@ -1,8 +1,8 @@
-# Dateimanager 3.33.0
+# Dateimanager 3.33.1
 
-Startanleitung und Änderungen: **LIESMICH_3_33_0.txt**.
+Startanleitung und Änderungen: **LIESMICH_3_33_1.txt**.
 
-3.33.0 ergänzt im Figurenkatalog eine Online-Neuheitenprüfung, den seriellen
+3.33.1 ergänzt im Figurenkatalog eine Online-Neuheitenprüfung, den seriellen
 Sammlungsabgleich (Inhalte oder Schnellübersicht) und den geprüften Import
 eigener BIN-Dateien oder direkter HTTPS-Links. Vorhandene Dateien werden
 nicht überschrieben. Die Firmware DE3.55 bleibt unverändert.
@@ -132,3 +132,11 @@ Versionen gebunden. Ältere, nicht mehr dort referenzierte Lizenzkopien bleiben
 als historische Hinweise erhalten; sie werden nicht als installierte Version
 ausgewiesen. Die offizielle Registry, der aktualisierte Lock und npm-ci werden
 im separaten Prüfbericht gebunden. Keine persönlichen Amiibo-Dateien enthalten.
+
+3.33.1 korrigiert die Bestandsanzeige bei Dateien ohne Figuren-ID in den
+Eigenschaften. Eine Schnellpruefung stellt solche Figuren nicht als fehlend dar.
+Die Inhaltspruefung liest ihre IDs direkt und faerbt passende Katalogkarten.
+
+Nach dem Trennen bleiben abgeschlossene Ergebnisse als datierte letzte Pruefung
+auf den Karten sichtbar. Neue Verbindungen und Bestandsaenderungen setzen diese
+Anzeige zurueck. Die Daten werden nur in der geoeffneten Seite gehalten.

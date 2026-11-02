@@ -64,7 +64,7 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
   const index = new Map(snapshot.entries.map(entry => [entry.id, entry]));
   const stats = { entries: 0, folders: 0, files: 0, candidates: 0, filesRead: 0, bytesRead: 0,
     readAttempts: 0, bytesReserved: 0, ignoredFiles: 0, unsupportedFiles: 0, invalidFiles: 0,
-    readErrors: 0, invalidEntries: 0, metadataMismatches: 0 };
+    readErrors: 0, invalidEntries: 0, metadataMismatches: 0, candidateMetadataCount: 0, metadataMissing: 0 };
   const files = [], errors = [], limitsReached = new Set(), pending = [{ path: rootPath, depth: 0 }];
   const scheduled = new Set([rootPath]), seen = new Set(), observed = new Map(), confirmed = new Map();
   let status = 'complete', cursor = 0, traversalDone = false;
@@ -114,6 +114,8 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
         if (stats.candidates >= bounds.candidates) { limit('candidates'); continue; }
         ++stats.candidates;
         const metadataId = entry.meta?.valid === true ? metadataFigureId(entry.meta.amiibo) : null;
+        if (metadataId) ++stats.candidateMetadataCount;
+        else ++stats.metadataMissing;
         const row = { path, size: entry.size, id: null, metadataId, idSource: mode === 'quick' ? 'metadata' : 'content',
           status: 'not-read', formatContext: formats[entry.size] || 'unsupported-length', known: false, issues: [] };
         files.push(row);
@@ -168,9 +170,13 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
   const catalogueRow = entry => ({ ...entry, paths: (presence.get(entry.id) || []).map(row => row.path),
     contentConfirmed: mode === 'full' && confirmed.has(entry.id) });
   const present = snapshot.entries.filter(entry => presence.has(entry.id)).map(catalogueRow);
-  const missing = snapshot.entries.filter(entry => !presence.has(entry.id) && entry.releaseState !== 'upcoming').map(entry => ({
+  const notObserved = snapshot.entries.filter(entry => !presence.has(entry.id) && entry.releaseState !== 'upcoming').map(entry => ({
     ...catalogueRow(entry), state: contentComplete ? 'no-structurally-consistent-file-observed' : 'not-observed-unconfirmed',
   }));
+  // A completed directory listing cannot establish absence when properties do
+  // not identify the files. Interrupted content scans have the same limitation.
+  const missing = contentComplete ? notObserved : [];
+  const unconfirmed = contentComplete ? [] : notObserved;
   const grouped = ([id, rows]) => ({ id, paths: rows.map(row => row.path),
     consistentFiles: mode === 'full' ? rows.filter(row => row.status === 'structure-consistent').length : 0 });
   const report = { schema: 1, mode, rootPath, today, status, complete, scanComplete, contentComplete,
@@ -178,7 +184,8 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
     catalogue: { entries: snapshot.entries.length, checkedDate: snapshot.checkedDate, commit: snapshot.commit,
       scope: 'provided-catalogue-snapshot', releaseRule: 'earliest-known-regional-date' },
     stats: { ...stats, observedIds: observed.size, consistentIds: confirmed.size, presentIds: present.length },
-    files, present, missing, upcoming: snapshot.entries.filter(entry => entry.releaseState === 'upcoming').map(catalogueRow),
+    unknownIdFileCount: files.filter(row => !row.id).length,
+    files, present, missing, unconfirmed, upcoming: snapshot.entries.filter(entry => entry.releaseState === 'upcoming').map(catalogueRow),
     unknown: [...observed].filter(([id]) => !index.has(id)).map(grouped),
     duplicates: [...observed].filter(([, rows]) => rows.length > 1).map(grouped),
     metadataMismatches: files.filter(row => mode === 'full' && row.id && row.metadataId && row.id !== row.metadataId)

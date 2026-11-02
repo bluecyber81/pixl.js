@@ -9,6 +9,7 @@
       <span>· {{ de ? 'Neutral: nicht bestätigt oder veraltet' : 'Neutral: unconfirmed or outdated' }}</span>
     </div>
     <p class="presence-scope" role="status">{{ presenceScope }}</p>
+    <p v-if="historical" class="presence-observation" role="status">{{ de ? 'Gerät getrennt. Letzte Prüfung vom' : 'Device disconnected. Last check at' }} {{ observationDate }}. {{ de ? 'Die Farben zeigen diesen damaligen Prüfstand, keinen aktuellen Live-Bestand.' : 'Colours show that past observation, not the current live collection.' }}</p>
     <label class="search-field">{{ de ? 'Name, Serie oder öffentliche ID' : 'Name, series or public ID' }}<input ref="searchInput" v-model="query" type="search" maxlength="200" :placeholder="de ? 'Zum Beispiel Mario oder Link …' : 'For example Mario or Link …'" /></label>
     <details class="filter-details">
       <summary>{{ de ? 'Filter' : 'Filters' }}<span v-if="activeFilters" class="filter-count">{{ activeFilters }}</span></summary>
@@ -30,6 +31,7 @@
       <li v-for="entry in result.entries" :key="entry.id" :class="['presence-' + presenceFor(entry.id).state, { selected: selectedId === entry.id }]" :data-presence="presenceFor(entry.id).state">
         <div class="entry-title"><strong>{{ entry.name }}</strong><span class="entry-type">{{ entry.type }}</span></div>
         <span class="presence-label">{{ presenceLabel(presenceFor(entry.id)) }}</span>
+        <small v-if="historical" class="observation-date">{{ observationDate }}</small>
         <span class="entry-series">{{ entry.series }}</span><code>{{ entry.id }}</code>
         <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="releaseLabel(entry, today).state === 'upcoming'"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
         <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in Firmware verfügbar' : 'Name available in firmware') : (de ? 'Kein Name im Firmware-Katalog' : 'No name in firmware catalogue') }}</small>
@@ -48,12 +50,15 @@ import { filterCatalogue, cataloguePage, releaseLabel } from '../lib/catalogue.j
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import FigureDetails from './FigureDetails.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
-const props = defineProps({ catalogue: Object, blocked: Boolean, collectionReport: Object, collectionStale: Boolean });
+const props = defineProps({ catalogue: Object, blocked: Boolean, collectionReport: Object, collectionStale: Boolean, collectionHistorical: Boolean, collectionObservedAt: String });
 const emit = defineEmits(['select-entry']);
 const data = computed(() => props.catalogue || baseline);
 const { locale } = useI18n();
 const de = computed(() => locale.value.startsWith('de'));
-const presence = computed(() => buildCollectionPresence(props.collectionReport, { stale: props.collectionStale }));
+const validObservationDate = computed(() => typeof props.collectionObservedAt === 'string' && Number.isFinite(Date.parse(props.collectionObservedAt)));
+const historical = computed(() => props.collectionHistorical && validObservationDate.value && !props.collectionStale && !!props.collectionReport);
+const observationDate = computed(() => validObservationDate.value ? new Date(props.collectionObservedAt).toLocaleString(de.value ? 'de-DE' : 'en-GB') : '');
+const presence = computed(() => buildCollectionPresence(props.collectionReport, { stale: props.collectionStale || props.collectionHistorical && !validObservationDate.value }));
 const presenceFor = id => collectionPresenceFor(presence.value, id);
 const presenceScope = computed(() => {
   const states = {
@@ -66,6 +71,10 @@ const presenceScope = computed(() => {
   return states[presence.value.status]?.[de.value ? 0 : 1] || '';
 });
 function presenceLabel(value) {
+  if(historical.value) {
+    const labels={present:value.basis==='metadata' ? ['ID laut Eigenschaften','ID from properties'] : ['ID gefunden','ID found'],attention:['Prüfhinweis','Needs inspection'],missing:['Nicht gefunden','Not found'],unknown:['Nicht bestätigt','Unconfirmed']};
+    return (de.value ? 'Letzte Prüfung · ' : 'Last check · ') + (labels[value.state] || labels.unknown)[de.value ? 0 : 1];
+  }
   if (value.state === 'present') return value.basis === 'metadata'
     ? (de.value ? '✓ Vorhanden laut Eigenschaften' : '✓ Present according to properties')
     : (de.value ? '✓ Vorhanden · ID bestätigt' : '✓ Present · ID confirmed');
@@ -95,6 +104,8 @@ watch([query, series, kind, knownOnly], () => { page.value = 1; selectedId.value
 .presence-legend { display:flex; flex-wrap:wrap; gap:8px 14px; font-size:.75rem; line-height:1.5; color:#526575; padding:10px 12px; border:1px solid #d9e3ec; border-radius:8px; background:white; }
 .legend-present { color:#176c41; } .legend-attention { color:#92500a; } .legend-missing { color:#aa3030; }
 .presence-scope { font-size:.77rem; line-height:1.5; color:#526575; margin:9px 0 14px; }
+.presence-observation { font-size:.8rem; line-height:1.5; padding:10px 12px; border:1px solid #c5d5e1; border-radius:8px; background:#edf3f7; color:#334f64; }
+.observation-date { font-size:.7rem; color:#526575; }
 .presence-label { font-size:.74rem; line-height:1.4; font-weight:600; color:#60788b; }
 .catalogue-heading { display:flex; justify-content:space-between; gap:12px; align-items:center; } .eyebrow { margin:0 0 4px; font-size:.72rem; color:#617486; letter-spacing:.03em; } h3 { margin:0; font-size:1.3rem; } .count-badge { white-space:nowrap; font-size:.78rem; padding:6px 10px; background:white; border:1px solid #d9e3ec; border-radius:20px; color:#526b80; } .catalogue-hint { margin:9px 0 16px; font-size:.83rem; line-height:1.5; color:#526575; }
 .search-field { display:grid; gap:6px; font-size:.8rem; color:#465f74; } input[type=search],select { width:100%; box-sizing:border-box; min-height:43px; padding:10px 12px; border:1px solid #b5c9d9; border-radius:8px; background:white; color:#193247; font:inherit; font-size:.88rem; } input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible { outline:3px solid #8eb8d8; outline-offset:2px; }
@@ -102,9 +113,9 @@ watch([query, series, kind, knownOnly], () => { page.value = 1; selectedId.value
 button { min-height:42px; padding:8px 14px; border:1px solid #b8ccdc; border-radius:8px; background:white; color:#205580; font:inherit; font-size:.82rem; cursor:pointer; } button:hover:enabled { background:#eaf2f9; border-color:#7eabc9; } button:disabled { cursor:default; opacity:.45; } .reset-filters { margin-bottom:8px; min-height:36px; font-size:.77rem; }
 .selected-detail { outline:none; } .selection-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.8rem; color:#526575; padding-top:8px; } .selection-toolbar button { min-height:36px; } .result-bar p { font-size:.83rem; margin:15px 0 10px; } .result-bar span { color:#60788b; }
 .entries { list-style:none; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; margin:10px 0 16px; } .entries li { display:flex; flex-direction:column; gap:6px; border:1px solid #d9e3ec; background:white; border-radius:11px; padding:14px; overflow-wrap:anywhere; } .entries li.selected { border-color:#719fc4; box-shadow:0 0 0 2px #dcebf6; } .entry-title { display:flex; gap:8px; align-items:flex-start; justify-content:space-between; } .entry-title strong { font-size:.96rem; line-height:1.35; } .entry-type { font-size:.65rem; color:#60788b; background:#f0f5f9; padding:3px 6px; border-radius:5px; } .entry-series { font-size:.8rem; color:#526575; } code { font-size:.75rem; color:#60788b; } small { color:#60788b; font-size:.72rem; line-height:1.45; } .firmware-name { margin:2px 0 4px; } .entries button { margin-top:auto; background:#f6f9fc; }
-.entries li.presence-present { border:2px solid #23834f; } .entries li.presence-present .presence-label { color:#176c41; }
-.entries li.presence-attention { border:2px solid #c47a16; } .entries li.presence-attention .presence-label { color:#92500a; }
-.entries li.presence-missing { border:2px solid #c24343; } .entries li.presence-missing .presence-label { color:#aa3030; }
+.entries li.presence-present { border:3px solid #23834f; background:#f4fbf6; } .entries li.presence-present .presence-label { color:#176c41; }
+.entries li.presence-attention { border:3px solid #c47a16; background:#fffaf1; } .entries li.presence-attention .presence-label { color:#92500a; }
+.entries li.presence-missing { border:3px solid #c24343; background:#fff7f7; } .entries li.presence-missing .presence-label { color:#aa3030; }
 .entries li.presence-stale { border-style:dashed; }
 nav { display:flex; justify-content:center; align-items:center; gap:14px; font-size:.8rem; color:#60788b; } .source-details { border-top:1px solid #dce5ed; margin-top:16px; padding-top:5px; } .source { font-size:.78rem; overflow-wrap:anywhere; color:#526575; line-height:1.5; margin:5px 0 8px; } .empty-result { border:1px dashed #bacddd; border-radius:10px; padding:20px; background:white; font-size:.9rem; line-height:1.5; }
 @media(max-width:480px) { .catalogue { padding:14px; border-radius:12px; } h3 { font-size:1.16rem; } .count-badge { font-size:.7rem; padding:5px 8px; } .entries { grid-template-columns:1fr; } .selection-toolbar { align-items:flex-start; } }

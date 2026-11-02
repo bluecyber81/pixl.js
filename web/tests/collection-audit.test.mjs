@@ -43,7 +43,9 @@ test('quick mode does not read bytes and never confirms contents or missing IDs'
   assert.equal(report.complete, true); assert.equal(report.contentComplete, false); assert.equal(report.contentConfirmed, false);
   assert.equal(report.stats.filesRead, 0); assert.ok(report.files.every(row => row.status === 'metadata-only'));
   assert.ok(report.present.every(row => !row.contentConfirmed));
-  assert.ok(report.missing.every(row => row.state === 'not-observed-unconfirmed'));
+  assert.deepEqual(report.missing, []); assert.ok(report.unconfirmed.length);
+  assert.ok(report.unconfirmed.every(row => row.state === 'not-observed-unconfirmed'));
+  assert.equal(report.stats.candidateMetadataCount, 2); assert.equal(report.stats.metadataMissing, 0);
 });
 
 test('quick metadata must be explicitly valid and directories never become figures', async () => {
@@ -51,6 +53,24 @@ test('quick metadata must be explicitly valid and directories never become figur
     { ...file('x.bin'), meta: { ...meta(A), valid: false } }, { ...file('y.bin'), meta: { amiibo: meta(A).amiibo } }] });
   const report = await auditCollection({ ...a.options, mode: 'quick' });
   assert.equal(report.present.length, 0); assert.equal(report.stats.candidates, 2);
+  assert.equal(report.stats.metadataMissing, 2); assert.equal(report.stats.candidateMetadataCount, 0);
+});
+
+test('quick zero properties IDs leave all catalogue presence undetermined; a full scan identifies the same files', async () => {
+  const entries = [file('no-properties.bin'), { ...file('empty-properties.bin'), meta: { valid: true, amiibo: { head: 0, tail: 0 } } },
+    file('settings.bin'), file('key_retail.bin'), file('notes.txt')];
+  const a = adapter({ 'E:/': entries });
+  const quick = await auditCollection({ ...a.options, mode: 'quick' });
+  assert.equal(quick.complete, true); assert.equal(quick.stats.candidates, 2);
+  assert.equal(quick.stats.candidateMetadataCount, 0); assert.equal(quick.stats.metadataMissing, 2);
+  assert.equal(quick.unknownIdFileCount, 2); assert.equal(quick.present.length, 0); assert.deepEqual(quick.missing, []);
+  assert.deepEqual(quick.unconfirmed.map(row => row.id), [A, B, V3]); assert.deepEqual(quick.unknown, []);
+  assert.equal(quick.stats.filesRead, 0); assert.equal(a.calls.length, 1);
+  const full = await auditCollection(a.options);
+  assert.equal(full.contentComplete, true); assert.equal(full.stats.filesRead, 2);
+  assert.equal(full.stats.metadataMissing, 2); assert.equal(full.unknownIdFileCount, 0);
+  assert.deepEqual(full.present.map(row => row.id), [A]); assert.deepEqual(full.unconfirmed, []);
+  assert.deepEqual(full.missing.map(row => row.id), [B, V3]);
 });
 
 test('unknown IDs, structural errors and duplicates are distinct without claiming duplicate byte equality', async () => {
@@ -119,7 +139,8 @@ test('aborted before start performs no IO and cannot confirm missing entries', a
   const a = adapter(), controller = new AbortController(); controller.abort();
   const r = await auditCollection({ ...a.options, signal: controller.signal });
   assert.equal(r.status, 'cancelled'); assert.equal(r.complete, false); assert.equal(a.calls.length, 0);
-  assert.ok(r.missing.every(row => row.state === 'not-observed-unconfirmed'));
+  assert.deepEqual(r.missing, []); assert.equal(r.unconfirmed.length, 3);
+  assert.ok(r.unconfirmed.every(row => row.state === 'not-observed-unconfirmed'));
 });
 
 test('abort after directory response does not read any files or retain returned metadata', async () => {
@@ -160,7 +181,8 @@ test('directory read failure cannot turn unvisited branches into confirmed absen
   const read = a.options.readDirectory;
   const r = await auditCollection({ ...a.options, async readDirectory(path) { if (path === 'E:/bad') throw new Error(); return read(path); } });
   assert.equal(r.complete, false); assert.equal(r.stats.readErrors, 1);
-  assert.ok(!a.calls.some(c => c[1] === 'E:/later')); assert.ok(r.missing.every(x => x.state === 'not-observed-unconfirmed'));
+  assert.ok(!a.calls.some(c => c[1] === 'E:/later')); assert.deepEqual(r.missing, []);
+  assert.equal(r.unconfirmed.length, 3); assert.ok(r.unconfirmed.every(x => x.state === 'not-observed-unconfirmed'));
 });
 
 for (const value of [new Uint8Array(532), new Uint8Array(541), new Uint8Array(10000), [1, 2]]) {
@@ -197,7 +219,8 @@ test('candidate limit reports incomplete even if later files have matching metad
   const a = adapter({ 'E:/': [file('a.bin'), file('b.bin', 540, B)] });
   const r = await auditCollection({ ...a.options, limits: { candidates: 1 } });
   assert.equal(r.stats.filesRead, 1); assert.equal(r.stats.candidates, 1); assert.equal(r.complete, false);
-  assert.deepEqual(r.limitsReached, ['candidates']); assert.ok(r.missing.some(x => x.id === B));
+  assert.deepEqual(r.limitsReached, ['candidates']); assert.deepEqual(r.missing, []); assert.ok(r.unconfirmed.some(x => x.id === B));
+  assert.equal(r.stats.metadataMissing, 1); assert.equal(r.stats.candidateMetadataCount, 0);
 });
 
 for (const limits of [{ folders: 1 }, { depth: 0 }]) test(`folder/depth bound ${JSON.stringify(limits)} prevents nested IO`, async () => {
@@ -274,7 +297,8 @@ test('cancellation from progress preserves only completed observations and stops
   const r = await auditCollection({ ...a.options, signal: controller.signal, onProgress(p) { if (p.filesRead === 1) controller.abort(); } });
   assert.equal(r.status, 'cancelled'); assert.equal(r.stats.filesRead, 1); assert.equal(r.contentConfirmed, false);
   assert.equal(a.calls.filter(c => c[0] === 'read').length, 1); assert.equal(r.present[0].id, A);
-  assert.ok(r.missing.every(row => row.state === 'not-observed-unconfirmed'));
+  assert.deepEqual(r.missing, []); assert.equal(r.unconfirmed.length, 2);
+  assert.ok(r.unconfirmed.every(row => row.state === 'not-observed-unconfirmed'));
 });
 
 test('session change during a rejected read wins over generic transport failure and sanitizes the result', async () => {
