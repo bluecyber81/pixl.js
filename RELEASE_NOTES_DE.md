@@ -5,6 +5,7 @@
 Der Hauptzweig und die Entwicklerdokumentation entsprechen jetzt den aktuellen Downloads. Die bisherigen Anwendungs- und Browserdateien bleiben unverändert. Wer DE3.55 bereits installiert hat, muss deshalb nicht erneut flashen.
 
 - Passende Firmware- und BL8-Quellen, SDK-Korrekturen, Bauanleitungen, Beitragsleitfaden und CI.
+- Bibliothekstests unterscheiden optionale Windows-/Linux-Komponenten korrekt und prüfen weiterhin Identität, Lockdatei und Lizenznachweise. Neue Gegenproben decken fehlende oder veränderte Pakete ab.
 - Frische unabhängige Builds reproduzieren Anwendung und BL8 bytegenau.
 - Bisherige Speicher-, Tasten-, Bluetooth-/NFC- und DFU-Korrekturen sowie der aktuelle Browser mit Bildern, Katalogprüfung und farbiger Sammlungsanzeige bleiben enthalten.
 

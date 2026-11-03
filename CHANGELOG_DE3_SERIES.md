@@ -11,6 +11,7 @@ Published source and documentation synchronized on 2026-11-03. This synchronizat
 - The web manager has current pinned library patches, improved DFU object/resume handling (including a leftover longer init packet), diagnostic exports, preview/images and cross-folder search, ZIP/Raw128 import/backup/recovery, and distinct storage-engine simulation profiles.
 - 3.33.0 added catalogue freshness and collection/own-source transfer tools. 3.33.1 fixes unconfirmed-versus-missing classification, makes full-card green/orange/red borders visible and keeps a completed disconnected observation with its date in page memory only.
 - Complete application and BL8 sources, contributor instructions, build helpers and non-deploying CI now accompany the download artifacts. A fresh public-source application rebuild matches the released binary.
+- The first Linux CI run exposed a Windows-only expectation in a dependency-notice test. The corrected test checks platform rules and still requires active native packages, lock identities and license notices; browser runtime bytes are unchanged.
 
 ## DE3.55 specifics
 

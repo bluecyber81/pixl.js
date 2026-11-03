@@ -5,6 +5,7 @@
 This publication brings the main source tree and contributor documentation up to the existing DE3.55 application and 3.33.1 web releases. Existing firmware/web payloads are unchanged; no repeat flash is needed if they are already installed.
 
 - Matching current application source plus independently exported BL8 source, SDK overrides, build guides and CI.
+- Dependency checks now distinguish Windows/Linux optional native packages while retaining lockfile, identity and license validation; new regression cases cover platform selection and missing or modified packages.
 - Fresh public-source application rebuild matches the archived BIN/HEX/ELF/map byte for byte. BL8 build evidence is documented in its source guide.
 - Current file manager, collection color markers, diagnostic and DFU fixes, PFS1 storage improvements and preserved UI/BLE/NFC behavior. See [current README](https://github.com/bluecyber81/pixl.js/blob/de3.55/README.md) and [changes](https://github.com/bluecyber81/pixl.js/blob/de3.55/CHANGELOG_DE3_SERIES.md).
 
