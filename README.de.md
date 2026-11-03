@@ -1,10 +1,18 @@
 # Allmiibo LCD — DE3-Firmware und Dateimanager
 
-[English](README.md) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.56) · [Mitarbeiten](CONTRIBUTING.md)
+[English](README.md) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.57) · [Mitarbeiten](CONTRIBUTING.md)
 
-Quellstand **3. November 2026**: **Firmware 2.22.0-DE3.56 / Zähler 628**, **Dateimanager 3.35.0**, **Bootloader BL8**, **Nordic S112 7.3.0 / FWID 0x0126**, Dateisystem **Packed LittleFS/PFS1**.
+Quellstand **3. November 2026**: **Firmware 2.22.0-DE3.57 / Zähler 629**, **Dateimanager 3.35.1**, **Bootloader BL8**, **Nordic S112 7.3.0 / FWID 0x0126**, Dateisystem **Packed LittleFS/PFS1**.
 
 Diese Community-Weiterentwicklung von bluecyber81 baut auf [cylin577/pixl.js](https://github.com/cylin577/pixl.js) und ursprünglich [solosky/pixl.js](https://github.com/solosky/pixl.js) auf. Sie ist keine offizielle Version dieser Entwickler. Aus späteren Upstream-Versionen wurden ausgewählte Änderungen übernommen; die Versionsnummer bedeutet keine vollständige Gleichheit mit deren aktuellem Stand.
+
+## Neu in DE3.57 / Dateimanager 3.35.1
+
+Das kleine feste Zeichen links neben der Akkuspannung wird durch eine echte **Bluetooth-Statusanzeige** ersetzt: durchgestrichen = inaktiv, Funkwellen = sichtbar, offener Punkt = Funkverbindung ohne bereiten Datenkanal, gefüllter Punkt = Datenkanal bereit, Minus = Trennung oder Moduswechsel läuft. Die Anzeige gilt auch bei aktivierter Fernbedienung. Sie aktiviert Bluetooth nicht selbst und blinkt nicht.
+
+Der Status wird bei Änderungen aus den vorhandenen Firmwarezuständen übernommen. Es gibt keine zusätzlichen Funkabfragen, Timer oder Schreibzugriffe. Die Dateiübertragungsanzeige behält ihre eigenen Statusmeldungen. [Symbole, Bedienung und Grenzen](docs/BLUETOOTH_STATUS_DE3_57.md).
+
+Dateimanager **3.35.1** aktualisiert das passende DFU-Paket und den erwarteten Anwendungsstand auf DE3.57. Die Diagnosefunktionen aus 3.35.0 bleiben erhalten. **BL8, Nordic S112 7.3.0, PFS1 und vorhandene Amiibos bleiben unverändert.** Die Geräteprüfung der neuen Anzeige steht noch aus; Hosttests und Buildnachweise sind getrennt davon dokumentiert.
 
 ## Neu im Dateimanager 3.35.0
 
@@ -24,8 +32,8 @@ Diese Community-Weiterentwicklung von bluecyber81 baut auf [cylin577/pixl.js](ht
 ## Benutzen und installieren
 
 1. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) in einem Browser mit Web Bluetooth öffnen, am Gerät **Bluetooth-Dateiübertragung** starten und auf der Seite verbinden.
-2. Für die neue Tastaturdarstellung und Scrollleiste **Allmiibo_LCD_DE3_56_628_TESTSTAND.zip** unverändert auf der [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) auswählen. **Dieses Paket ersetzt nur die Anwendung.**
-3. Für die lokale Nutzung **Allmiibo_Dateimanager_3_35_0.zip** entpacken und unter Windows mit installiertem Python `Start-Dateimanager.cmd` starten. Das äußere **Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip** ist ein Downloadarchiv, keine flashbare ZIP.
+2. Für die neue Bluetooth-Anzeige **Allmiibo_LCD_DE3_57_629_TESTSTAND.zip** unverändert auf der [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) auswählen. **Dieses Paket ersetzt nur die Anwendung.**
+3. Für die lokale Nutzung **Allmiibo_Dateimanager_3_35_1.zip** entpacken und unter Windows mit installiertem Python `Start-Dateimanager.cmd` starten. Das äußere **Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip** ist ein Downloadarchiv, keine flashbare ZIP.
 
 Die Browserverbesserungen benötigen kein Geräteupdate. **BL8, S112 7.3.0 und das PFS1-Speicherlayout bleiben unverändert.** Eine vorhandene passende Sammlung benötigt keine Formatierung oder Wiederherstellung.
 
@@ -49,9 +57,9 @@ Der mitgelieferte Katalog umfasst **952 IDs**, keine Figurendateien. Ein ID-Tref
 
 BL8 liegt mit eigener Quelle und signiertem Einzelpaket vor. [S112 7.3.0](softdevice-s112/README.md) ist die unveränderte Nordic-Originaldatei mit Lizenz. Unsere Integration, SDK-Korrektur und Diagnosen sind getrennt von Nordics Änderungen beschrieben. Die Einzelpakete behalten ihre Zähler- und Installationsvoraussetzungen.
 
-[Mitarbeit und Tests](CONTRIBUTING.md) · [Firmware bauen](docs/BUILD_DE3_56.md) · [BL8 bauen](bootloader-bl8/README.md) · [DE3.56-Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip) · [Dateimanager-Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.35.0/Allmiibo_Dateimanager_3_35_0_Quellcode.zip)
+[Mitarbeit und Tests](CONTRIBUTING.md) · [Firmware bauen](docs/BUILD_DE3_57.md) · [BL8 bauen](bootloader-bl8/README.md) · [DE3.57-Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip) · [Dateimanager-Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1_Quellcode.zip)
 
-Gezielte Regressionen prüfen Katalogwechsel, Bildfreigaben/-fehler, Statusfilter, Seitenwechsel sowie Tastatur und Scrollanzeige. Abschließende Prüfergebnisse werden versionsgebunden dokumentiert. Die [früheren DE3.55-Gerätetests](docs/validation/DE3_55.json) einschließlich MTU23/250, NFC, Mitteldruck, Aufwachen und Startmarken sind keine Hardwareprüfung von DE3.56.
+Gezielte Regressionen prüfen Katalogwechsel, Bildfreigaben/-fehler, Statusfilter, Seitenwechsel sowie Tastatur und Scrollanzeige. Abschließende Prüfergebnisse werden versionsgebunden dokumentiert. Die [früheren DE3.55-Gerätetests](docs/validation/DE3_55.json) einschließlich MTU23/250, NFC, Mitteldruck, Aufwachen und Startmarken sind keine Hardwareprüfung von DE3.57.
 
 Zielhardware: passende 128×64-LCD-Platine, nRF52832 mit 512 KiB internem Flash und 64 KiB RAM. Der Anwendungs-Heap bleibt 18.432 Bytes groß. Der Build weist die tatsächliche Flashbelegung aus; Heap-Stichproben messen nicht den gesamten RAM/Stack und geben keine beliebige Allmiibo-/OLED-Variante frei.
 
@@ -59,6 +67,8 @@ Zielhardware: passende 128×64-LCD-Platine, nRF52832 mit 512 KiB internem Flash 
 
 Danke an solosky, cylin577 und die Komponentenentwickler; [Mochi](https://github.com/tasken/Mochi) lieferte Anregungen zur Browserbedienung. [Lizenzhinweise](THIRD_PARTY_NOTICES.md) und Originalvermerke bleiben erhalten. S112 ist Nordic-Software unter deren Bedingungen. Der bekannte Upstream-Signierschlüssel beweist Paketkompatibilität, keine exklusive Herausgeberidentität. Private Schlüssel, Sicherungen und Figurensammlungen werden nicht veröffentlicht.
 
-[Aktueller DE3.56-Prüfbericht](docs/validation/DE3_56.json) — 137 Firmware-Testsuiten, 1.082 Webtests, je 21 Produktionsprüfungen für lokal und GitHub Pages.
+[DE3.57-Prüfbericht](docs/validation/DE3_57.json) dokumentiert die neuen Release-Prüfungen; die Geräteprüfung steht noch aus.
+
+[Historischer DE3.56-Prüfbericht](docs/validation/DE3_56.json) — 137 Firmware-Testsuiten, 1.082 Webtests, je 21 Produktionsprüfungen für lokal und GitHub Pages.
 
 [Dateimanager 3.35.0: Prüfbericht](docs/validation/WEB3_35_0.json) — 1.128 Webtests und je 21 Produktionsprüfungen bestanden. [Vom Nutzer gelieferter Handybericht](docs/validation/WEB3_35_0_READBACK.json) bestätigt alle acht Bereiche; kein Firmwarewechsel.

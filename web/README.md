@@ -1,8 +1,8 @@
-# Dateimanager 3.35.0
+# Dateimanager 3.35.1
 
-Neu: **Gerät & Diagnose → Alle Diagnosewerte auslesen → Gesamtdiagnose speichern**. Zusätzliche Speicher-, RAM-, MTU- und Tastenwerte ohne neues Flashen. [Bedienung und Grenzen](https://github.com/bluecyber81/pixl.js/blob/web3.35.0/docs/DIAGNOSTICS_3_35.md).
+Neu: **Gerät & Diagnose → Alle Diagnosewerte auslesen → Gesamtdiagnose speichern**. Zusätzliche Speicher-, RAM-, MTU- und Tastenwerte ohne neues Flashen. [Bedienung und Grenzen](https://github.com/bluecyber81/pixl.js/blob/web3.35.1/docs/DIAGNOSTICS_3_35.md).
 
-[Startanleitung und Bedienung](LIESMICH_3_35_0.txt) · [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Release-Hinweise](../RELEASE_NOTES_DE.md)
+[Startanleitung und Bedienung](LIESMICH_3_35_1.txt) · [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Release-Hinweise](../RELEASE_NOTES_DE.md)
 
 ## Neu: Galerie und Bestandsfilter
 
@@ -39,7 +39,7 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 ## Firmware und Speicherprofile
 
-Das mitgelieferte Anwendungsupdate ist **DE3.56/628** für passende LCD/PFS1-Geräte
+Das mitgelieferte Anwendungsupdate ist **DE3.57/629** für passende LCD/PFS1-Geräte
 mit BL8/S112 7.3.0. Es enthält neue Tastaturhinweise und eine besser sichtbare
 Scrollanzeige. **Bootloader, SoftDevice, PFS1-Datenlayout und Speicherkern bleiben
 unverändert.** Eine vorhandene passende Sammlung benötigt keine Formatierung
@@ -47,13 +47,13 @@ oder Wiederherstellung. Die Browserverbesserungen allein erfordern kein Flashen.
 
 Der bisherige DE3.55-Simulator und seine Engine-Identität bleiben unverändert.
 Das aktuelle Profil akzeptiert ausdrücklich die Paare **DE3.55/627** und
-**DE3.56/628**. Unter „Speicherumstellung“ ist DE3.56/628 der aktuelle Zielstand.
+**DE3.57/629**. Unter „Speicherumstellung“ ist DE3.57/629 der aktuelle Zielstand.
 Alle früheren Profile bleiben separat vorhanden; die Auswahl bestätigt keine
 tatsächlich installierte Firmware oder unbekannte Display-/Speicherkompatibilität.
 Die Prüfung verknüpft Version, Zähler und Engine-Identität.
 
 Die Firmware-Paketliste und DFU-Seite verlinken die genaue
-[DE3.56-Quelle](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip).
+[DE3.57-Quelle](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip).
 Paketprüfung und Übertragung sind getrennt: SHA-256 bindet die Paketbytes;
 erst die ausdrückliche Geräteauswahl startet den Transfer. Das Anwendungs-ZIP
 ersetzt weder BL8/S112 noch migriert es eine SPIFFS-/Upstream-LittleFS-Sammlung.
@@ -83,12 +83,12 @@ Pfade, Raw128-Metadaten und Importidentität.
 `scripts/build-capacity-simulator.py --profile current` reproduziert den
 beibehaltenen aktuellen WASM mit clang 23.1.4; `--profile de354` den vorherigen.
 Historische Verzeichnis-/Artefaktnamen wie `packed-simulator-de355` identifizieren
-den unveränderten Speicherkern und werden nicht nur wegen DE3.56 umbenannt.
+den unveränderten Speicherkern und werden nicht nur wegen DE3.57 umbenannt.
 
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.35.0/Allmiibo_Dateimanager_3_35_0_Quellcode.zip)
+Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.35.1/Allmiibo_Dateimanager_3_35_1_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen
@@ -106,5 +106,7 @@ Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 
 Tests verwenden simuliertes Bluetooth und echte lokale WASM-Kerne. Sie ersetzen
 keine Funk-, NFC-, Startzeit- oder physische Speichermessung. Geräteprüfungen
-von DE3.56 stehen noch aus; frühere DE3.55-Ergebnisse gelten nicht als neue
+von DE3.57 stehen noch aus; frühere DE3.55-Ergebnisse gelten nicht als neue
 Hardwareprüfung. Ein zusätzlicher Startzeitgewinn wird hier nicht behauptet.
+
+3.35.1: Das mitgelieferte Update DE3.57/629 zeigt den Bluetooth-Zustand links neben der Akkuspannung. Diagnosefunktionen aus 3.35.0 bleiben erhalten. Nur Anwendungsupdate; kein Formatieren, BL8/S112 unveraendert.

@@ -1,3 +1,33 @@
+# DE3.57 / file manager 3.35.1 – Bluetooth status at a glance
+
+**LCD application 2.22.0-DE3.57 / counter 629 · file manager 3.35.1 · BL8 · Nordic S112 7.3.0 · Packed LittleFS PFS1**
+
+A Bluetooth status indicator replaces the unchanging pictogram beside the voltage. It distinguishes inactive, advertising, a physical link without a ready data channel, a ready data channel, and disconnecting or switching mode. This also applies to optional remote-control connections, without enabling Bluetooth itself. See the [symbol guide](docs/BLUETOOTH_STATUS_DE3_57.md).
+
+The indicator follows existing state changes, without extra radio queries, timers, animation or storage writes. “Data channel ready” does not mean a file is transferring or every remote command is permitted during NFC operation. The existing file-transfer screen retains its own status display.
+
+File manager 3.35.1 carries the matching application OTA and compares the application against DE3.57. Diagnostics from 3.35.0 remain available. BL8, S112, PFS1 and existing collections are not replaced by this application update. Existing matching PFS1 devices need neither formatting nor restoration.
+
+## Downloads
+
+- [Allmiibo_LCD_DE3_57_629_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_LCD_DE3_57_629_TESTSTAND.zip): application-only flashable OTA; use the unchanged ZIP.
+- [Allmiibo_Dateimanager_3_35_1.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1.zip): portable file manager.
+- [Allmiibo_DE3_57_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip): firmware/project source and developer documentation.
+- [Allmiibo_Dateimanager_3_35_1_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1_Quellcode.zip): browser source and tests.
+- [Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip): complete download; **the outer ZIP is not flashable**.
+
+[Online file manager](https://bluecyber81.github.io/pixl.js/) · [DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Build guide](docs/BUILD_DE3_57.md) · [Validation](docs/validation/DE3_57.json)
+
+## Validation scope
+
+Host tests check state transitions and actual LCD rendering. Build and package checks are documented separately from device testing. **Physical validation of the new indicator is pending.** Earlier successful DE3.56 diagnostics are not relabelled as DE3.57 device tests. This release does not claim faster startup or greater radio range.
+
+Enlarged preview from the firmware renderer, not a device photograph.
+
+![DE3.57 Bluetooth status](https://raw.githubusercontent.com/bluecyber81/pixl.js/de3.57/docs/images/de357-bluetooth-status.png)
+
+---
+
 # File manager 3.35.0 – combined read-only diagnostics
 
 Browser-only update. Firmware DE3.56/628, BL8 and S112 7.3.0 are unchanged.

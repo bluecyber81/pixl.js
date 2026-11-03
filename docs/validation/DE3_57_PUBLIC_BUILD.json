@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "mode": "release",
+  "version": "2.22.0-DE3.57",
+  "counter": 629,
+  "board": "LCD",
+  "sdk_image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "network": "none",
+  "signed": false,
+  "device_access": false,
+  "version_header_sha256": "34c7a43d6daf67721c79e84fac29f43dbe09ccc218f60b9ce6d6693fcd1f869d",
+  "sdk_header_override": {
+    "path": "components/softdevice/s112/headers/nrf_nvic.h",
+    "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+    "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+  },
+  "expected_bin_sha256": "9996b5a64e833b04a17e3c3b878f9c11749a00937ec3210b3a0eb5dc5bb784d2",
+  "source_tar_sha256": "5d895cff3333708dc65b2311a7d56b05ea02aa62ef7402c9d3dc00038c16ca25",
+  "exit_code": 0,
+  "artifacts_sha256": {
+    "pixljs.bin": "9996b5a64e833b04a17e3c3b878f9c11749a00937ec3210b3a0eb5dc5bb784d2",
+    "pixljs.hex": "66bcfc6da097c077bcdba02683956c70f0b05bc5da2fb355236ba0845410ef79",
+    "pixljs.out": "afc147177d9de796a812868f674206a5737a7c6b1d2d0680240fad7f1f263a06",
+    "pixljs.map": "2e8b18280d42246570d713c79033a17a54befb87ab654594f3bc382bc10728f4"
+  },
+  "matches_archived_release_binary": true
+}

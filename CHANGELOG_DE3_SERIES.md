@@ -1,6 +1,14 @@
-# Current publication: DE3.56 / Dateimanager 3.34.0 / BL8 / S112 7.3.0
+# Current publication: DE3.57 / Dateimanager 3.35.1 / BL8 / S112 7.3.0
 
 **[Detailed history (English)](docs/DEVELOPMENT_HISTORY.md) · [Änderungen und Bedienung (Deutsch)](RELEASE_NOTES_DE.md) · [Release notes](RELEASE_NOTES_EN.md)**
+
+## New in DE3.57 / file manager 3.35.1
+
+The static symbol beside the battery voltage is replaced by a **Bluetooth status indicator**: crossed out = inactive, radio waves = advertising, open dot = physical link without a ready data channel, filled dot = data channel ready, minus = disconnecting or switching mode. It also reflects active remote-control connections. The indicator neither enables Bluetooth nor blinks.
+
+Existing firmware state changes update the indicator, without extra radio queries, timers or storage writes. The file-transfer screen retains its own status messages. [Symbols, use and limits](docs/BLUETOOTH_STATUS_DE3_57.md).
+
+File manager **3.35.1** updates the packaged application OTA and expected application identity to DE3.57; diagnostics from 3.35.0 remain available. **BL8, Nordic S112 7.3.0, PFS1 and existing Amiibos are unchanged.** Physical testing of the new indicator is pending and remains separate from host/build evidence.
 
 ## DE3.56 / 3.34.0 — 3 November 2026
 

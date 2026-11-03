@@ -14,9 +14,9 @@ from pathlib import Path
 
 
 IMAGE = "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
-RELEASE_VERSION = "2.22.0-DE3.56"
-RELEASE_COUNTER = 628
-RELEASE_BIN_SHA256 = "23d7cb75c115a8565ac76944cf68bac2395f1cc533bb164a830299b05391782e"
+RELEASE_VERSION = "2.22.0-DE3.57"
+RELEASE_COUNTER = 629
+RELEASE_BIN_SHA256 = "9996b5a64e833b04a17e3c3b878f9c11749a00937ec3210b3a0eb5dc5bb784d2"
 SOURCE_DATE_EPOCH = 1793664000
 NVIC_BEFORE_SHA256 = "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210"
 NVIC_AFTER_SHA256 = "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
@@ -42,16 +42,16 @@ def build_identity(root, mode, version, counter):
         if version is not None or counter is not None:
             raise ValueError("Release identity is fixed; --version/--counter are for development mode.")
         expected = {"GIT_COMMIT": '"unknown"', "GIT_BRANCH": '"source-archive"',
-                    "GIT_BRANCH_NUM": '"n/a"', "VERSION": '"2.22.0-DE3.56"',
+                    "GIT_BRANCH_NUM": '"n/a"', "VERSION": '"2.22.0-DE3.57"',
                     "BUILD_DIRTY": "1", "BUILD_DIRTY_KNOWN": "0",
                     "BUILD_DATE": '"2026-11-03"', "TARGET": "0"}
         if values != expected:
-            raise ValueError("Release mode requires the archived DE3.56 version.inc.h metadata.")
+            raise ValueError("Release mode requires the archived DE3.57 version.inc.h metadata.")
         return RELEASE_VERSION, RELEASE_COUNTER, sha256(header)
     if not version or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}", version):
         raise ValueError("Development mode requires an explicit simple --version identifier.")
-    if version == RELEASE_VERSION or counter is None or not 629 <= counter <= 0xFFFFFFFF:
-        raise ValueError("Use a new development version and explicit counter >=629; 628 identifies DE3.56.")
+    if version == RELEASE_VERSION or counter is None or not 630 <= counter <= 0xFFFFFFFF:
+        raise ValueError("Use a new development version and explicit counter >=630; 629 identifies DE3.57.")
     if values.get("VERSION") != json.dumps(version):
         raise ValueError("First update VERSION in your development source version.inc.h to match --version.")
     return version, counter, sha256(header)
@@ -101,12 +101,12 @@ def main(argv=None):
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        destination = root / "build/lcd-de356"
+        destination = root / "build/lcd-de357"
         if destination.resolve() != destination:
-            raise RuntimeError("build/lcd-de356 must not resolve through a symlink or junction.")
+            raise RuntimeError("build/lcd-de357 must not resolve through a symlink or junction.")
         destination.mkdir(parents=True, exist_ok=True)
         if any(destination.iterdir()):
-            raise RuntimeError("build/lcd-de356 must be empty. Preserve or move its previous results before rebuilding.")
+            raise RuntimeError("build/lcd-de357 must be empty. Preserve or move its previous results before rebuilding.")
         record = {"status": "preparing", "mode": args.mode, "version": version,
                   "counter": counter, "board": "LCD", "sdk_image": IMAGE,
                   "network": "none", "signed": False, "device_access": False,
@@ -150,7 +150,7 @@ cp fw/_build/pixljs.bin fw/_build/pixljs.hex fw/_build/pixljs.out fw/_build/pixl
                 result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=900)
             record["exit_code"] = result.returncode
             if result.returncode:
-                raise RuntimeError("Compilation failed; inspect build/lcd-de356/build.log")
+                raise RuntimeError("Compilation failed; inspect build/lcd-de357/build.log")
             hashes = {name: sha256(export / name) for name in ARTIFACTS}
             record["artifacts_sha256"] = hashes
             matches = hashes["pixljs.bin"] == RELEASE_BIN_SHA256

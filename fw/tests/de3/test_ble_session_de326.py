@@ -25,7 +25,7 @@ CASES = ('discovery', 'duplicate_start', 'stopped_cleanup', 'stop_during_rx', 'r
          'join_30s_contract', 'join_gap_cancel', 'join_local_cancel', 'join_restores_three_minutes')
 GLOBALS = ('m_conn_handle', 'm_nus_session_handle', 'm_release_handle', 'm_link_generation',
            'm_release_attempted', 'm_file_mode', 'm_sessions_enabled', 'm_advertising_active',
-           'm_reported_link_state', 'm_link_state_handler', 'm_ble_initialized',
+           'm_reported_link_state', 'm_link_state_handler', 'm_reported_status_state', 'm_status_state_handler', 'm_ble_initialized',
            'm_file_join_pending', 'm_file_join_tick', 'm_remote_mode', 'm_session_generation', 'm_timeout_overridden', 'm_file_link_handoff')
 
 
@@ -56,7 +56,7 @@ def execute(sanitize=False, report_dir=None):
     code = code.replace('/* ACTUAL_JOIN_TIMEOUT */', re.search(r'^#define BLE_FILE_JOIN_TIMEOUT_TICKS[^\n]*', ble, re.M)[0])
     code = code.replace('/* ACTUAL_WORK */', work)
     names = ('nus_data_handler', 'ble_file_join_poll', 'ble_release_stopped_session',
-             'ble_process_pending', 'ble_link_state_get', 'ble_stop_transport', 'ble_disable')
+             'ble_process_pending', 'ble_link_state_get', 'ble_status_state_get', 'ble_stop_transport', 'ble_disable')
     code = code.replace('/* ACTUAL_BLE */', '\n'.join(function(ble, n) for n in names))
     connect = ble.split('case BLE_GAP_EVT_CONNECTED:', 1)[1].split('case BLE_GAP_EVT_DISCONNECTED:', 1)[0]
     disconnect = ble.split('case BLE_GAP_EVT_DISCONNECTED:', 1)[1].split('case BLE_GAP_EVT_PHY_UPDATE_REQUEST:', 1)[0]
@@ -95,6 +95,8 @@ def execute(sanitize=False, report_dir=None):
             old = old_join_path.read_text(encoding='utf8')
             old_connect = old.split('case BLE_GAP_EVT_CONNECTED:', 1)[1].split('case BLE_GAP_EVT_DISCONNECTED:', 1)[0]
             negative = code.replace(function(ble, 'ble_process_pending'), function(old, 'ble_process_pending')).replace(connect, old_connect)
+            # The old dispatcher predates the independent status subscriber.
+            negative = re.sub(r'^static[^\n]*\b(?:m_status_state_handler|m_reported_status_state)\b[^\n]*;[^\n]*\n', '', negative, flags=re.M)
             cfile.write_text(negative, encoding='utf8')
             built = subprocess.run(flags + [str(cfile), '-o', str(binary)], capture_output=True, text=True, timeout=60)
             assert built.returncode == 0, built.stdout + built.stderr

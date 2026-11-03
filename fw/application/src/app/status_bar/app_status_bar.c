@@ -19,8 +19,12 @@ static void app_status_bar_on_event(mini_app_inst_t *p_app_inst,
 typedef struct {
     status_bar_view_t *p_status_bar_view;
     mui_view_dispatcher_t *p_view_dispatcher;
-    uint16_t ble_icon;
 } app_status_bar_t;
+
+static void app_status_bar_link_state_changed(ble_link_state_t state) {
+    app_status_bar_t *app = mini_app_launcher_get_app_handle(mini_app_launcher(), MINI_APP_ID_STATUS_BAR);
+    if (app) status_bar_view_set_link_state(app->p_status_bar_view, state);
+}
 
 void app_status_bar_on_run(mini_app_inst_t *p_app_inst) {
 
@@ -42,6 +46,7 @@ void app_status_bar_on_run(mini_app_inst_t *p_app_inst) {
     mui_view_dispatcher_attach(p_app_handle->p_view_dispatcher, MUI_LAYER_STATUS_BAR);
     mui_view_dispatcher_switch_to_view(p_app_handle->p_view_dispatcher,
                                        STATUS_BAR_VIEW_ID_MAIN);
+    ble_status_state_observe(app_status_bar_link_state_changed);
 
     return;
 
@@ -55,6 +60,7 @@ startup_failed:
 void app_status_bar_on_kill(mini_app_inst_t *p_app_inst) {
     app_status_bar_t *p_app_handle = p_app_inst->p_handle;
     if (!p_app_handle) return;
+    ble_status_state_observe(NULL);
 
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_STATUS_BAR);
     mui_view_dispatcher_free(p_app_handle->p_view_dispatcher);
@@ -68,13 +74,6 @@ void app_status_bar_on_kill(mini_app_inst_t *p_app_inst) {
 void app_status_bar_on_event(mini_app_inst_t *p_app_inst, mini_app_event_t *p_event) {}
 
 
-
-void app_status_bar_set_ble_icon(uint16_t icon){
-    app_status_bar_t* app = mini_app_launcher_get_app_handle(mini_app_launcher(), MINI_APP_ID_STATUS_BAR);
-    if (!app) return;
-    app->ble_icon = icon;
-    mui_update(mui());
-}
 
 mini_app_t app_status_bar_info = {.id = MINI_APP_ID_STATUS_BAR,
                                         .name = "status bar",

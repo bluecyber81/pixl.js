@@ -1,4 +1,4 @@
-ALLMIIBO DATEIMANAGER 3.35.0
+ALLMIIBO DATEIMANAGER 3.35.1
 
 NEU: GEMEINSAME DIAGNOSE
 Geraet & Diagnose -> Alle Diagnosewerte auslesen -> Gesamtdiagnose speichern.
@@ -56,7 +56,7 @@ und uebertragen werden. Es gibt keinen allgemeinen Downloadserver fuer
 eine vollstaendige Sammlung spielfertiger Figuren. Ein externer Downloadlink
 muss Browserzugriff erlauben (CORS).
 
-DE3.56 AM GERAET
+DE3.57 AM GERAET
 Beim Suchen/Umbenennen zeigt die Tastatur das Zeichen fuer kurzen Mitteldruck.
 Oben erklaert q/Q: kurz = klein, lang = gross; _/SP: Unterstrich/Leerzeichen.
 Lange Titel ueberdecken die Hilfe nicht. Die Schreibfunktion selbst bleibt
@@ -64,7 +64,7 @@ erhalten. Die rechte Scrollanzeige ist auch bei grossen Listen gut sichtbar
 und erreicht deren Anfang/Ende korrekt.
 
 MITGELIEFERTE FIRMWARE
-Allmiibo_LCD_DE3_56_628_TESTSTAND.zip: 2.22.0-DE3.56, Zaehler 628.
+Allmiibo_LCD_DE3_57_629_TESTSTAND.zip: 2.22.0-DE3.57, Zaehler 629.
 Nur fuer passende Allmiibo-LCD/PFS1-Geraete mit BL8 und S112 7.3.0.
 Das Paket ersetzt die Anwendung. Bootloader, SoftDevice und PFS1-Datenlayout
 bleiben unveraendert; eine vorhandene passende Sammlung braucht weder
@@ -87,7 +87,7 @@ Bilder/Dateivorschau, Geraetesuche, Datei-/Ordner-/ZIP-Upload,
 ZIP-/Raw128-Sicherung, Fortsetzen/Wiederherstellung, Metadaten,
 QR-Anzeigen, Fernbedienung, Diagnose und DFU-Korrekturen bleiben enthalten.
 PFS1-Datenlayout und Speicherkern bleiben unveraendert. Das bisherige
-DE3.55-Speicherpruefprofil gilt auch fuer DE3.56; aeltere Profile bleiben
+DE3.55-Speicherpruefprofil gilt auch fuer DE3.57; aeltere Profile bleiben
 getrennt vorhanden. Das Profil bestaetigt keine installierte Firmware.
 
 Der Pages-Build nutzt /pixl.js/, der Portable-Build die lokale Wurzeladresse.
@@ -106,16 +106,18 @@ nur dist-pages veroeffentlichen. Abhaengigkeiten und Lizenznachweise sind
 in package-lock.json und third-party/npm/SOURCES.json gebunden.
 
 Firmware-/Projektquelle:
-https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip
+https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip
 Dateimanagerquelle:
-https://github.com/bluecyber81/pixl.js/releases/download/web3.35.0/Allmiibo_Dateimanager_3_35_0_Quellcode.zip
+https://github.com/bluecyber81/pixl.js/releases/download/web3.35.1/Allmiibo_Dateimanager_3_35_1_Quellcode.zip
 
 PRUEFGRENZEN
 Regressionstests decken Katalogwechsel, Bildfreigaben, Fehlerantworten,
 Filter und Seitenwechsel an den tatsaechlichen Vue-Komponenten ab.
 Geraetetastatur und Scrollanzeige haben gezielte Host-Tests. Abschliessende
 Ergebnisse stehen im versionsgebundenen Pruefbericht. Direkte Geraetetests
-von DE3.56 sind noch offen. Fruehere DE3.55-Funk-/NFC-/Startzeitbeobachtungen
+von DE3.57 sind noch offen. Fruehere DE3.55-Funk-/NFC-/Startzeitbeobachtungen
 sind keine neue Hardwarepruefung. Fuer dieses Update wird kein schnellerer
 Geraetestart behauptet. Private Schluessel, Sicherungen und Figurendateien
 sind nicht im Quellpaket enthalten.
+
+3.35.1: Das mitgelieferte Update DE3.57/629 zeigt den Bluetooth-Zustand links neben der Akkuspannung. Diagnosefunktionen aus 3.35.0 bleiben erhalten. Nur Anwendungsupdate; kein Formatieren, BL8/S112 unveraendert.

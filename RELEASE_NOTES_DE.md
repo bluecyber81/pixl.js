@@ -1,3 +1,33 @@
+# DE3.57 / Dateimanager 3.35.1 – Bluetooth auf einen Blick
+
+**LCD-Anwendung 2.22.0-DE3.57 / Zähler 629 · Dateimanager 3.35.1 · BL8 · Nordic S112 7.3.0 · Packed LittleFS PFS1**
+
+Links neben der Spannung ersetzt eine echte Bluetooth-Anzeige das bisherige, unveränderliche Piktogramm. Sie unterscheidet inaktiv, sichtbar, Funkverbindung ohne bereiten Datenkanal, bereiten Datenkanal und laufendes Trennen bzw. einen Moduswechsel. Das gilt auch für die optionale Fernbedienung, ohne Bluetooth automatisch einzuschalten. Die Bedeutung der Markierungen steht in der [Symbolübersicht](docs/BLUETOOTH_STATUS_DE3_57.md).
+
+Die Anzeige nutzt vorhandene Zustandswechsel, ohne zusätzliche Funkabfragen, Timer, Blinken oder Speicherzugriffe. „Datenkanal bereit“ bedeutet weder laufende Dateiübertragung noch eine Garantie, dass jeder Fernbedienungsbefehl während NFC-Betrieb zulässig ist. Die bestehende Dateiübertragungsansicht behält ihren eigenen Status.
+
+Dateimanager 3.35.1 enthält das passende Anwendungs-DFU-Paket und vergleicht mit DE3.57. Die Diagnosefunktionen aus 3.35.0 bleiben erhalten. BL8, S112, PFS1 und die vorhandene Sammlung werden durch das Anwendungsupdate nicht ersetzt. Für bereits passende PFS1-Geräte sind weder Formatierung noch Wiederherstellung erforderlich.
+
+## Downloads
+
+- [Allmiibo_LCD_DE3_57_629_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_LCD_DE3_57_629_TESTSTAND.zip): flashbare Anwendung; ZIP unverändert verwenden.
+- [Allmiibo_Dateimanager_3_35_1.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1.zip): portabler Dateimanager.
+- [Allmiibo_DE3_57_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip): Firmware-/Projektquellen und Entwicklerdokumentation.
+- [Allmiibo_Dateimanager_3_35_1_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1_Quellcode.zip): Browserquellen und Tests.
+- [Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip): Gesamtarchiv; **die äußere ZIP ist nicht flashbar**.
+
+[Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Bauanleitung](docs/BUILD_DE3_57.md) · [Prüfbericht](docs/validation/DE3_57.json)
+
+## Prüfumfang
+
+Hosttests prüfen Zustandswechsel und die tatsächliche LCD-Zeichenausgabe. Build-/Paketprüfungen sind getrennt vom Gerätetest dokumentiert. **Die praktische Prüfung der neuen Anzeige auf dem Allmiibo steht noch aus.** Frühere erfolgreiche DE3.56-Diagnosen werden nicht als DE3.57-Gerätetest ausgegeben. Dieses Update verspricht keinen kürzeren Gerätestart und keine zusätzliche Funkreichweite.
+
+Vorschau aus dem Firmware-Zeichencode, vergrößert; keine Geräteaufnahme.
+
+![DE3.57 Bluetooth status](https://raw.githubusercontent.com/bluecyber81/pixl.js/de3.57/docs/images/de357-bluetooth-status.png)
+
+---
+
 # Dateimanager 3.35.0 – gemeinsame Lesediagnose
 
 Nur Browserupdate; Firmware DE3.56/628, BL8 und S112 7.3.0 bleiben unverändert.

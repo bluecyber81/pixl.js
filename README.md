@@ -1,18 +1,26 @@
 # Allmiibo LCD — DE3 community firmware and file manager
 
-[Deutsch](README.de.md) · [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Current downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.56) · [Contributing](CONTRIBUTING.md)
+[Deutsch](README.de.md) · [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Current downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.57) · [Contributing](CONTRIBUTING.md)
 
 Release source, **3 November 2026**:
 
 | Component | Version / source | Installation |
 | --- | --- | --- |
-| LCD application | **2.22.0-DE3.56**, DFU counter **628**; [`fw/`](fw) | Application-only OTA, existing compatible PFS1 devices |
-| Browser file manager | **3.35.0**; [`web/`](web) | [Online](https://bluecyber81.github.io/pixl.js/) or portable ZIP; no device flash |
-| Bootloader | **BL8**; [`bootloader-bl8/`](bootloader-bl8) | Separate component; unchanged in DE3.56 |
+| LCD application | **2.22.0-DE3.57**, DFU counter **629**; [`fw/`](fw) | Application-only OTA, existing compatible PFS1 devices |
+| Browser file manager | **3.35.1**; [`web/`](web) | [Online](https://bluecyber81.github.io/pixl.js/) or portable ZIP; no device flash |
+| Bootloader | **BL8**; [`bootloader-bl8/`](bootloader-bl8) | Separate component; unchanged in DE3.57 |
 | Nordic Bluetooth stack | **[S112 7.3.0](softdevice-s112/README.md)**, FWID **0x0126** | Unchanged Nordic binary under vendor terms |
 | File storage | **Packed LittleFS, PFS1** | Unchanged; not interchangeable with SPIFFS or ordinary upstream LittleFS |
 
 This is bluecyber81's community continuation of [cylin577/pixl.js](https://github.com/cylin577/pixl.js), originally [solosky/pixl.js](https://github.com/solosky/pixl.js). It combines selected upstream work with the DE-series changes. It is not an official release from either upstream and does not claim every later upstream change has been merged. The version prefix identifies the base, not equality with a current upstream tag.
+
+## New in DE3.57 / file manager 3.35.1
+
+The static symbol beside the battery voltage is replaced by a **Bluetooth status indicator**: crossed out = inactive, radio waves = advertising, open dot = physical link without a ready data channel, filled dot = data channel ready, minus = disconnecting or switching mode. It also reflects active remote-control connections. The indicator neither enables Bluetooth nor blinks.
+
+Existing firmware state changes update the indicator, without extra radio queries, timers or storage writes. The file-transfer screen retains its own status messages. [Symbols, use and limits](docs/BLUETOOTH_STATUS_DE3_57.md).
+
+File manager **3.35.1** updates the packaged application OTA and expected application identity to DE3.57; diagnostics from 3.35.0 remain available. **BL8, Nordic S112 7.3.0, PFS1 and existing Amiibos are unchanged.** Physical testing of the new indicator is pending and remains separate from host/build evidence.
 
 ## New in file manager 3.35.0
 
@@ -31,9 +39,9 @@ See [release notes](RELEASE_NOTES_EN.md) for menu paths, downloads and validatio
 
 Use the [online file manager](https://bluecyber81.github.io/pixl.js/) in a browser supporting Web Bluetooth. On the Allmiibo, open **Bluetooth file transfer**, then connect from the page. Bluetooth uses the computer/phone running that browser; a VPN does not extend its radio range. The [online DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) handles supported **application** updates.
 
-For offline use, extract `Allmiibo_Dateimanager_3_35_0.zip` and run `Start-Dateimanager.cmd` on Windows with Python installed. Use the unchanged inner `Allmiibo_LCD_DE3_56_628_TESTSTAND.zip` to install the new device UI. The outer `Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip` is a download archive, **not flashable**. The browser improvements alone require no firmware flash.
+For offline use, extract `Allmiibo_Dateimanager_3_35_1.zip` and run `Start-Dateimanager.cmd` on Windows with Python installed. Use the unchanged inner `Allmiibo_LCD_DE3_57_629_TESTSTAND.zip` to install the new Bluetooth indicator. The outer `Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip` is a download archive, **not flashable**. The browser improvements alone require no firmware flash.
 
-**Before updating an older device:** confirm board, bootloader/SoftDevice and storage layout. DE3.8/DE3.16 SPIFFS devices need a complete backup and a separate migration. Flashing this application alone does not convert their collection. See [installation](docs/INSTALLATION.md) and [PFS1 migration](docs/MIGRATION_PFS1.md). Existing compatible PFS1 devices need no formatting or restoration for DE3.56.
+**Before updating an older device:** confirm board, bootloader/SoftDevice and storage layout. DE3.8/DE3.16 SPIFFS devices need a complete backup and a separate migration. Flashing this application alone does not convert their collection. See [installation](docs/INSTALLATION.md) and [PFS1 migration](docs/MIGRATION_PFS1.md). Existing compatible PFS1 devices need no formatting or restoration for DE3.57.
 
 ## Retained improvements
 
@@ -53,9 +61,9 @@ The bundled catalogue contains **952 IDs**. Metadata and images are not valid fi
 
 BL8 has corresponding source and a separately published signed OTA. S112 7.3.0 is the unchanged Nordic reference distribution with its license. Our integration, SDK workaround, diagnostics and validation are documented separately from Nordic's vendor fixes. The component guide explains the counter-9/counter-11 distinction and why the vendor ZIP is not a direct DFU package. Neither component is replaced by this application update.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md), the [DE3.56 application build guide](docs/BUILD_DE3_56.md) and [BL8 guide](bootloader-bl8/README.md). Sources: [DE3.56 project](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip) and [file manager 3.35.0](https://github.com/bluecyber81/pixl.js/releases/download/web3.35.0/Allmiibo_Dateimanager_3_35_0_Quellcode.zip). Pinned builds and automated checks do not flash a device.
+Read [CONTRIBUTING.md](CONTRIBUTING.md), the [DE3.57 application build guide](docs/BUILD_DE3_57.md) and [BL8 guide](bootloader-bl8/README.md). Sources: [DE3.57 project](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip) and [file manager 3.35.1](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1_Quellcode.zip). Pinned builds and automated checks do not flash a device.
 
-Targeted tests cover catalogue replacement, image opt-in/errors, status filtering, pagination, text entry and scrollbar rendering. Final release evidence is separate from [historical DE3.55 validation](docs/validation/DE3_55.json). The older MTU23/250, NFC, middle-button, wake and startup observations are not DE3.56 hardware results.
+Targeted tests cover catalogue replacement, image opt-in/errors, status filtering, pagination, text entry and scrollbar rendering. Final release evidence is separate from [historical DE3.55 validation](docs/validation/DE3_55.json). The older MTU23/250, NFC, middle-button, wake and startup observations are not DE3.57 hardware results.
 
 ## Hardware and licenses
 
@@ -65,6 +73,8 @@ The inherited upstream DFU key is publicly known: a valid signature proves key/p
 
 Thanks to solosky, cylin577 and component contributors. [Mochi](https://github.com/tasken/Mochi) inspired web usability ideas. The original [license text](LICENSE), [component notices](THIRD_PARTY_NOTICES.md) and attribution remain; Nordic components retain their vendor terms.
 
-[Current DE3.56 verification](docs/validation/DE3_56.json) — 137 firmware host suites, 1,082 web tests and 21 production checks for each deployment.
+[DE3.57 verification](docs/validation/DE3_57.json) records the new release checks; physical device validation is pending.
+
+[Historical DE3.56 verification](docs/validation/DE3_56.json) — 137 firmware host suites, 1,082 web tests and 21 production checks for each deployment.
 
 [File manager 3.35.0 verification](docs/validation/WEB3_35_0.json) — 1,128 web tests and 21 production checks per deployment passed. [User-provided phone readback](docs/validation/WEB3_35_0_READBACK.json) confirms all eight sections; no firmware change.

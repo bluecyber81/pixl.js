@@ -9,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.56 / 628**; [unsigned build guide](docs/BUILD_DE3_56.md) |
+| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.57 / 629**; [unsigned build guide](docs/BUILD_DE3_57.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.34.0**; [web README](web/README.md) |
+| Browser file manager | `web/`, currently **3.35.1**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Matching BL8 bootloader | `bootloader-bl8/`; [source binding and separate unsigned build](bootloader-bl8/README.md) |
@@ -51,7 +51,7 @@ The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-Follow [BUILD_DE3_56.md](docs/BUILD_DE3_56.md) to reproduce the unsigned LCD
+Follow [BUILD_DE3_57.md](docs/BUILD_DE3_57.md) to reproduce the unsigned LCD
 application. No signing key is required. The current release helper preserves
 generated resources and the version header. For an intentional change, use its
 development mode with a distinct version and explicit counter.
@@ -78,7 +78,7 @@ release evidence separately. Do not disable a failing assertion, drop older
 tests or claim a host result proves NFC, radio timing or physical power-loss
 behavior.
 
-The new device UI regression is `python3 fw/tests/de3/test_ui_comfort_de356.py`. For `test_device_info.py`, set `NRF5_SDK_PATH` or `NRF52_SDK_ROOT` to a matching Nordic SDK 17.1.0 tree. It requires the hash-pinned S112 7.2.0 reference from that SDK as a test input; this does not downgrade the device from S112 7.3.0. Missing or mismatched SDK inputs fail explicitly. This test is not part of the small portable CI subset.
+The Bluetooth indicator regression is `python3 fw/tests/de3/test_ble_status_de357.py`; `test_ui_comfort_de356.py` retains keyboard/scrollbar coverage. For `test_device_info.py`, set `NRF5_SDK_PATH` or `NRF52_SDK_ROOT` to a matching Nordic SDK 17.1.0 tree. It requires the hash-pinned S112 7.2.0 reference from that SDK as a test input; this does not downgrade the device from S112 7.3.0. Missing or mismatched SDK inputs fail explicitly. This test is not part of the small portable CI subset.
 
 Changes to the storage core need particular care: retain PFS1 format, Raw128
 metadata and migration compatibility unless a deliberate migration is designed.
@@ -101,8 +101,8 @@ separate browser simulation profile; do not silently replace an old profile.
   code/build contribution. Do not commit private signing keys.
 
 The [checks workflow](.github/workflows/checks.yml) runs Web tests/builds and the
-two portable firmware suites with read-only repository permissions. The separate
+portable firmware subsets with read-only repository permissions. The separate
 [unsigned firmware workflow](.github/workflows/unsigned-firmware.yml) is manual:
-separate DE3.56 and BL8 jobs download the same pinned SDK image before their
+separate DE3.57 and BL8 jobs download the same pinned SDK image before their
 offline unsigned builds. New workflow files are not evidence of a successful
 GitHub Actions run; consult the actual run.

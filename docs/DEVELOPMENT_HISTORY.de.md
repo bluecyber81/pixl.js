@@ -1,10 +1,10 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
 Stand: **3. November 2026**. Aktueller Anwendungsstand:
-**2.22.0-DE3.56 / DFU-Zähler 628**; Dateimanager **3.35.0**.
+**2.22.0-DE3.57 / DFU-Zähler 629**; Dateimanager **3.35.1**.
 
 Diese Übersicht beginnt mit den frühen Änderungen von **DE1 bis DE3.16** und
-erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.56**. Sie
+erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.57**. Sie
 verbindet den [historischen Änderungsbericht](../CHANGELOG_DE3_SERIES.md)
 mit den inzwischen veröffentlichten Quellen und Regressionstests. Die Angaben
 „vorher“ beziehen sich auf den jeweils untersuchten älteren DE-Stand. Sie bedeuten
@@ -20,6 +20,14 @@ jeden möglichen Gerätefehler lässt sich daraus nicht ableiten.
 Bootloader und Nordic-Stack werden getrennt in
 [Bootloader- und SoftDevice-Änderungen](BOOTLOADER_SOFTDEVICE_CHANGES.md)
 erklärt. Ein Anwendungsupdate ersetzt diese Komponenten nicht.
+
+## Neu in DE3.57 / Dateimanager 3.35.1
+
+Das kleine feste Zeichen links neben der Akkuspannung wird durch eine echte **Bluetooth-Statusanzeige** ersetzt: durchgestrichen = inaktiv, Funkwellen = sichtbar, offener Punkt = Funkverbindung ohne bereiten Datenkanal, gefüllter Punkt = Datenkanal bereit, Minus = Trennung oder Moduswechsel läuft. Die Anzeige gilt auch bei aktivierter Fernbedienung. Sie aktiviert Bluetooth nicht selbst und blinkt nicht.
+
+Der Status wird bei Änderungen aus den vorhandenen Firmwarezuständen übernommen. Es gibt keine zusätzlichen Funkabfragen, Timer oder Schreibzugriffe. Die Dateiübertragungsanzeige behält ihre eigenen Statusmeldungen. [Symbole, Bedienung und Grenzen](BLUETOOTH_STATUS_DE3_57.md).
+
+Dateimanager **3.35.1** aktualisiert das passende DFU-Paket und den erwarteten Anwendungsstand auf DE3.57. Die Diagnosefunktionen aus 3.35.0 bleiben erhalten. **BL8, Nordic S112 7.3.0, PFS1 und vorhandene Amiibos bleiben unverändert.** Die Geräteprüfung der neuen Anzeige steht noch aus; Hosttests und Buildnachweise sind getrennt davon dokumentiert.
 
 ## Dateimanager 3.35.0: gemeinsame Lesediagnose
 

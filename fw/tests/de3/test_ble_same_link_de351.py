@@ -30,7 +30,7 @@ def main_code():
     code=code.replace('/* GLOBALS */','\n'.join(re.search(r'^static[^\n]*\b'+n+r'\b[^\n]*;[^\n]*',ble,re.M)[0] for n in (*GLOBALS,'m_file_link_generation')))
     code=code.replace('/* ACTUAL_JOIN_TIMEOUT */',re.search(r'^#define BLE_FILE_JOIN_TIMEOUT_TICKS[^\n]*',ble,re.M)[0])
     code=code.replace('/* ACTUAL_WORK */',strip((BLE/'ble_work.c').read_text()))
-    names=('nus_data_handler','ble_file_join_poll','ble_release_stopped_session','ble_process_pending','ble_link_state_get','ble_stop_transport','ble_disable')
+    names=('nus_data_handler','ble_file_join_poll','ble_release_stopped_session','ble_process_pending','ble_link_state_get','ble_status_state_get','ble_stop_transport','ble_disable')
     code=code.replace('/* ACTUAL_BLE */','\n'.join(function(ble,n) for n in names))
     code=code.replace('/* CONNECT */',ble.split('case BLE_GAP_EVT_CONNECTED:',1)[1].split('case BLE_GAP_EVT_DISCONNECTED:',1)[0])
     code=code.replace('/* DISCONNECT */',ble.split('case BLE_GAP_EVT_DISCONNECTED:',1)[1].split('case BLE_GAP_EVT_PHY_UPDATE_REQUEST:',1)[0])

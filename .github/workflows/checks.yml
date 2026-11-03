@@ -61,3 +61,5 @@ jobs:
         run: python3 fw/tests/de3/test_ui_comfort_de356.py
       - name: Existing LCD editor rendering
         run: python3 fw/tests/de3/test_text_input_render_de344.py
+      - name: Bluetooth status lifecycle and LCD pixels
+        run: python3 fw/tests/de3/test_ble_status_de357.py

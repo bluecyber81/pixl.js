@@ -47,7 +47,7 @@ def main():
             cfile.write_text(code, encoding='utf-8')
             command = shlex.split(args.cc) + ['-std=c11', '-O1', '-g', '-Wall', '-Wextra',
                 '-Werror', '-Wno-unused-parameter', '-Wno-unused-function', '-I', str(temp),
-                '-I', str(src), '-I', str(src / 'mod/vfs')]
+                '-I', str(src), '-I', str(src / 'mod/vfs'), '-I', str(src / 'mod/ble')]
             if args.sanitize:
                 command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']
             subprocess.run(command + [str(cfile), '-o', str(exe)], check=True, timeout=60)

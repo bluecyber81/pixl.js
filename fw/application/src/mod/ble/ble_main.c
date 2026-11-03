@@ -189,6 +189,8 @@ static uint8_t m_ble_initialized = false;
 static volatile bool m_advertising_active;
 static uint8_t m_reported_link_state;
 static ble_link_state_handler_t m_link_state_handler;
+static uint8_t m_reported_status_state;
+static ble_link_state_handler_t m_status_state_handler;
 
 #define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180 /**< Sleep timeout when ble connection established. */
 uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
@@ -348,6 +350,13 @@ void ble_process_pending(void) {
         if (state != m_reported_link_state) {
             m_reported_link_state = state;
             m_link_state_handler(state);
+        }
+    }
+    if (m_status_state_handler) {
+        ble_link_state_t state = ble_status_state_get();
+        if (state != m_reported_status_state) {
+            m_reported_status_state = state;
+            m_status_state_handler(state);
         }
     }
 }
@@ -745,6 +754,34 @@ ble_link_state_t ble_link_state_get(void) {
     }
     CRITICAL_REGION_EXIT();
     return state;
+}
+
+ble_link_state_t ble_status_state_get(void) {
+    ble_link_state_t state = BLE_LINK_INACTIVE;
+    CRITICAL_REGION_ENTER();
+    if (m_ble_initialized) {
+        if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+            if (!m_sessions_enabled || m_mode_pending)
+                state = BLE_LINK_DISCONNECTING;
+            else if (m_release_handle != BLE_CONN_HANDLE_INVALID)
+                /* A rejected disconnect keeps the physical link but no ready
+                 * session. Do not imply that a release is still in flight. */
+                state = !m_release_attempted || m_release_requested ?
+                    BLE_LINK_DISCONNECTING : BLE_LINK_HOST_CONNECTED;
+            else
+                state = m_nus_session_handle == m_conn_handle && ble_work_can_send() ?
+                    BLE_LINK_CONNECTED : BLE_LINK_HOST_CONNECTED;
+        } else if (m_sessions_enabled && !m_mode_pending && m_advertising_active) {
+            state = BLE_LINK_ADVERTISING;
+        }
+    }
+    CRITICAL_REGION_EXIT();
+    return state;
+}
+
+void ble_status_state_observe(ble_link_state_handler_t handler) {
+    m_status_state_handler = handler;
+    m_reported_status_state = UINT8_MAX;
 }
 
 void ble_link_state_observe(ble_link_state_handler_t handler) {

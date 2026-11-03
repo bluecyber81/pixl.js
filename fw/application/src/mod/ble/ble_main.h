@@ -66,6 +66,12 @@ bool ble_is_connected(void);
  * unless the connection/advertising state actually changed. */
 ble_link_state_t ble_link_state_get(void);
 void ble_link_state_observe(ble_link_state_handler_t handler);
+/* Independent status-bar snapshot/listener: CONNECTED means an enabled NUS
+ * channel in every mode, including Remote/AmiLoop; HOST_CONNECTED is GAP only.
+ * No radio query or state mutation. Delivery shares the existing foreground
+ * dispatch, and does not replace the file-transfer view's listener. */
+ble_link_state_t ble_status_state_get(void);
+void ble_status_state_observe(ble_link_state_handler_t handler);
 /* Foreground only; resumes visibility without restarting services or an
  * established link. A concurrent connection is a harmless false result. */
 bool ble_restart_advertising(void);

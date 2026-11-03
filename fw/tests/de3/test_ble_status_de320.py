@@ -119,6 +119,7 @@ static uint32_t ble_advertising_start(advertising_t *a,int mode) {
 #define BLE_CONN_STATUS_CONNECTED 1
 static int ble_conn_state_status(uint16_t h) {(void)h;return BLE_CONN_STATUS_CONNECTED;}
 static bool ble_work_cleanup_complete(void) {return true;}
+static bool ble_work_can_send(void) {return true;}
 static void ble_work_connected(void) {}
 static void ble_work_disconnected(void) {}
 static void ble_on_disconnected(void) {}
@@ -298,9 +299,9 @@ class StatusTests(unittest.TestCase):
         ble = self.ble if ble is None else ble
         view = self.view if view is None else view
         names = ("ble_file_join_poll", "ble_release_stopped_session", "ble_link_state_get", "ble_link_state_observe", "ble_restart_advertising",
-                 "ble_process_pending", "on_adv_evt", "ble_evt_handler", "ble_stop_transport", "ble_disable", "nus_data_handler")
+                 "ble_process_pending", "ble_status_state_get", "on_adv_evt", "ble_evt_handler", "ble_stop_transport", "ble_disable", "nus_data_handler")
         declarations = []
-        for name in ("m_conn_handle", "m_ble_initialized", "m_advertising_active", "m_reported_link_state", "m_link_state_handler", "m_nus_session_handle", "m_release_handle", "m_link_generation", "m_release_attempted", "m_file_mode", "m_sessions_enabled", "m_file_join_pending", "m_file_join_tick", "m_remote_mode", "m_session_generation", "m_timeout_overridden", "m_file_link_handoff"):
+        for name in ("m_conn_handle", "m_ble_initialized", "m_advertising_active", "m_reported_link_state", "m_link_state_handler", "m_reported_status_state", "m_status_state_handler", "m_nus_session_handle", "m_release_handle", "m_link_generation", "m_release_attempted", "m_file_mode", "m_sessions_enabled", "m_file_join_pending", "m_file_join_tick", "m_remote_mode", "m_session_generation", "m_timeout_overridden", "m_file_link_handoff"):
             declarations.append(re.search(r"^static[^\n]*\b" + name + r"\b[^\n]*;[^\n]*", ble, re.M)[0])
         source = HARNESS.replace("/* GLOBALS */", "\n".join(declarations))
         source = source.replace("/* ACTUAL_BLE */", "\n".join(function(ble, n) for n in names))

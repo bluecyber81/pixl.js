@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "date": "2026-11-03",
+  "firmware": "2.22.0-DE3.57",
+  "counter": 629,
+  "web": "3.35.1",
+  "firmwareHostSuites": 138,
+  "webHostTests": 1128,
+  "productionRootTests": 21,
+  "productionPagesTests": 21,
+  "checks": {
+    "hostSourcesUnchanged": true,
+    "web": {
+      "tests": 1128,
+      "passed": 1128,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "2040287e8e936efd58f3254822d6c308a10255f6e2205625c526ed9582b58777"
+    },
+    "root": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "4d44673086e2208edf96466d3ed49394e8a85a0a7e7ff06152c1984629036695"
+    },
+    "pages": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "138a19f1d5aa37cba7ee9b4649e996cb2e01586285aa2e468dab1ff13032a461"
+    },
+    "applicationBuild": "DE3_57_PUBLIC_BUILD.json",
+    "reproducedApplicationBytesMatch": true,
+    "packageSignatureSha256CrcAndGeometryVerified": true
+  },
+  "applicationBytes": 370728,
+  "applicationPartitionBytes": 372736,
+  "applicationSha256": "9996b5a64e833b04a17e3c3b878f9c11749a00937ec3210b3a0eb5dc5bb784d2",
+  "otaSha256": "d23d76e03b14c8dd78f7976b7024f7664482894ee5bd0db1f9f5f16c8e42d155",
+  "statusIndicator": {
+    "modes": [
+      "inactive",
+      "advertising",
+      "physical-link-only",
+      "data-channel-ready",
+      "disconnecting-or-switching"
+    ],
+    "radioQueriesAdded": false,
+    "timerAdded": false,
+    "redrawOnlyOnVisibleStateChange": true,
+    "existingFileViewObserverPreserved": true,
+    "failedDisconnectNotReportedAsReady": true,
+    "bitmapBytes": 110,
+    "pixelScenarios": 360,
+    "nativeStateRenderLifecycleTests": 3,
+    "bounds": [
+      0,
+      0,
+      13,
+      11
+    ],
+    "voltageX": 14,
+    "render": "../images/de357-bluetooth-status.png"
+  },
+  "storageEngineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248",
+  "storageLayoutChanged": false,
+  "storageCodeChanged": false,
+  "bootloaderChanged": false,
+  "softdeviceChanged": false,
+  "deviceAccess": false,
+  "deviceValidationPending": true,
+  "historicalDeviceEvidence": "WEB3_35_0_READBACK.json",
+  "limits": [
+    "Host tests and LCD renders are not physical BLE, NFC, key, battery or display proof.",
+    "Data-channel readiness does not imply a transfer or permission to execute every remote command.",
+    "No startup speedup or radio-range change is claimed.",
+    "Application-only LCD/PFS1 update; no format, migration, BL8 or S112 replacement."
+  ]
+}

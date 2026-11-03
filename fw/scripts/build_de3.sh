@@ -6,6 +6,6 @@ export SOURCE_DATE_EPOCH=1793664000
 # Recursive make is also queried inside SDK linker variables; keep directory
 # banners out of the captured argument list when using make -C.
 export MAKEFLAGS=--no-print-directory
-make -C application version BOARD=LCD RELEASE=1 APP_VERSION=2.22.0-DE3.56 APP_VERSION_NUM=628
-make -C application -j8 pixljs BOARD=LCD RELEASE=1 APP_VERSION=2.22.0-DE3.56 APP_VERSION_NUM=628
-make size_report_files BOARD=LCD RELEASE=1 APP_VERSION=2.22.0-DE3.56 APP_VERSION_NUM=628
+make -C application version BOARD=LCD RELEASE=1 APP_VERSION=2.22.0-DE3.57 APP_VERSION_NUM=629
+make -C application -j8 pixljs BOARD=LCD RELEASE=1 APP_VERSION=2.22.0-DE3.57 APP_VERSION_NUM=629
+make size_report_files BOARD=LCD RELEASE=1 APP_VERSION=2.22.0-DE3.57 APP_VERSION_NUM=629
