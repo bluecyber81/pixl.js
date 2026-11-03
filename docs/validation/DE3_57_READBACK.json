@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "date": "2026-11-03",
+  "evidenceSource": "Direct bounded read-only Windows BLE sessions; separate user LCD observation",
+  "firmware": "2.22.0-DE3.57",
+  "applicationCounter": 629,
+  "firmwareSourceCommit": "5f52888a616367fd18ffacfc68637c46166007c7",
+  "applicationBinaryHashReadFromDevice": false,
+  "allEightDiagnosticAreasRead": true,
+  "parsedWithCurrentWebDiagnosticFunctions": [
+    "runtime",
+    "mtu",
+    "ui",
+    "startup",
+    "power"
+  ],
+  "bootRegionMatchesBL8": true,
+  "bootloaderStoredCounter": 11,
+  "bootSettingsCrcValid": true,
+  "softdevice": "S112 7.3.0 / FWID 0x0126",
+  "runtime": {
+    "schemaVersion": 1,
+    "scope": "since-device-restart",
+    "lastLocalBleCause": 0,
+    "lastHciReason": 22,
+    "disconnects": 3,
+    "queueOverflows": 0,
+    "timeouts": 0,
+    "allocationFailures": 0,
+    "lastVfsCommand": null,
+    "lastVfsError": null,
+    "heapPoolBytes": 18432,
+    "heapFreeBytes": 10668,
+    "largestFreeBlockBytes": 10560,
+    "sampledMinFreeBytes": 10668,
+    "sampledMinLargestBlockBytes": 10560,
+    "maxAllocatedPayloadBytes": 5260,
+    "stackReservedBytes": 8192,
+    "stackMinFreeBytes": null,
+    "memorySamples": 10,
+    "vfsErrors": 0
+  },
+  "mtu": {
+    "schemaVersion": 1,
+    "scope": "firmware-gatt-snapshot",
+    "sessionReady": true,
+    "fileMode": true,
+    "transferIdle": true,
+    "effectiveAttMtu": 250,
+    "nextConnectionAttMtu": 250,
+    "configuredMaxAttMtu": 250,
+    "gattValueCapacity": 247
+  },
+  "startup": {
+    "schemaVersion": 1,
+    "scope": "application-storage-start-to-first-dispatch",
+    "phaseMask": 63,
+    "elapsedMilliseconds": [
+      0,
+      2450,
+      2481,
+      2534,
+      2535,
+      2553
+    ]
+  },
+  "power": {
+    "schemaVersion": 1,
+    "scope": "application-start-and-cached-battery",
+    "resetCaptured": true,
+    "resetReasonRaw": 0,
+    "sampleCollected": true,
+    "voltageValid": true,
+    "batteryMillivolts": 4170,
+    "lipoMode": true,
+    "chargingActive": false,
+    "configuredSleepSeconds": 180
+  },
+  "storage": {
+    "backend": "Packed LittleFS PFS1",
+    "mounted": true,
+    "totalBytes": 2097152,
+    "freeBytes": 1093632,
+    "engineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248",
+    "cacheConfiguredBytes": 256
+  },
+  "uiSettingsSessions": 0,
+  "reconnectCycles": 2,
+  "advertisingAfterEachDisconnect": true,
+  "errorCounterIncrementsAllZero": true,
+  "lcdObservation": {
+    "source": "user-confirmed after final disconnect",
+    "advertisingWavesVisible": true,
+    "otherIndicatorStates": "not individually confirmed in this check"
+  },
+  "deviceStorageWrites": false,
+  "formatResetDfu": false,
+  "limits": [
+    "This is a bounded read-only diagnostic check, not a sustained transfer or complete collection validation.",
+    "No new physical NFC, sleep, key or remote-control test was performed during these sessions.",
+    "The user confirmed the advertising icon only; other LCD states remain individually unconfirmed.",
+    "Runtime samples do not measure all RAM or stack peaks; stackMinFreeBytes is unavailable.",
+    "Disconnect counts include connection lifecycle events and must not be described as zero.",
+    "Startup markers were read from the current boot; they exclude bootloader and early SDK startup and are not button-to-menu timing.",
+    "Native BLE reads do not prove an end-to-end browser diagnostic readback of web 3.35.1.",
+    "Storage cache size is configuration, not measured utilization."
+  ]
+}

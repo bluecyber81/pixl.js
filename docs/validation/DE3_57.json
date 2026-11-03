@@ -69,7 +69,7 @@
   "storageCodeChanged": false,
   "bootloaderChanged": false,
   "softdeviceChanged": false,
-  "deviceAccess": false,
+  "deviceAccess": true,
   "deviceValidationPending": true,
   "historicalDeviceEvidence": "WEB3_35_0_READBACK.json",
   "limits": [
@@ -77,5 +77,12 @@
     "Data-channel readiness does not imply a transfer or permission to execute every remote command.",
     "No startup speedup or radio-range change is claimed.",
     "Application-only LCD/PFS1 update; no format, migration, BL8 or S112 replacement."
+  ],
+  "deviceReadbackEvidence": "DE3_57_READBACK.json",
+  "deviceReadbackPassed": true,
+  "remainingPhysicalValidation": [
+    "Other LCD states individually",
+    "Remote-mode LCD observation",
+    "New NFC/key/sleep tests or sustained transfer tests"
   ]
 }

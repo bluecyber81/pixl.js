@@ -57,5 +57,8 @@
   "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.1",
   "web_device_readback_pending": true,
   "web_device_readback_evidence": null,
-  "previous_web_device_readback_evidence": "docs/validation/WEB3_35_0_READBACK.json"
+  "previous_web_device_readback_evidence": "docs/validation/WEB3_35_0_READBACK.json",
+  "device_readback_evidence": "docs/validation/DE3_57_READBACK.json",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": "Remaining individual LCD states, remote-mode display and physical NFC/key/sleep/stress checks; read-only BLE checks and advertising LCD observation passed."
 }
