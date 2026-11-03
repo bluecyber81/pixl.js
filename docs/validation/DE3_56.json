@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "date": "2026-11-03",
+  "firmware": "2.22.0-DE3.56",
+  "counter": 628,
+  "web": "3.34.0",
+  "firmwareHostSuites": 137,
+  "webHostTests": 1082,
+  "productionRootTests": 21,
+  "productionPagesTests": 21,
+  "checks": {
+    "hostSourcesUnchanged": true,
+    "web": {
+      "tests": 1082,
+      "passed": 1082,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "d2b31ad05530d3a1caec11e9fea4f5c5b1b5fa7f2ef12a085ad2d1e8e3091533"
+    },
+    "root": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "4e8cec815f5a0f1af48d2dcd671e04af524014bb5c0006737bd852a2a3828e5a"
+    },
+    "pages": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "0cd2bbdef5f338640c960bfef804c02ef53cb6a30193a9f7e88b55cf67883933"
+    },
+    "applicationBuild": "DE3_56_PUBLIC_BUILD.json",
+    "reproducedApplicationBytesMatch": true,
+    "packageSignatureSha256CrcAndGeometryVerified": true,
+    "signatureNegativeControls": 3
+  },
+  "applicationBytes": 370280,
+  "applicationPartitionBytes": 372736,
+  "applicationSha256": "23d7cb75c115a8565ac76944cf68bac2395f1cc533bb164a830299b05391782e",
+  "otaSha256": "e858792304b372969376b06e81d3e4280e13700d66c4008e6e457878824e3973",
+  "graphics": {
+    "realKeyboardInputCases": 52,
+    "unicodeClipPixelCases": 480,
+    "scrollbarBoundaryCases": 30720,
+    "existingEditorRenderCases": 12,
+    "fonts": "production U8g2 fonts, 128x64 raster",
+    "desktopBrowserWidth": 1280,
+    "mobileBrowserWidth": 390,
+    "horizontalOverflow": false,
+    "browserConsoleErrors": 0
+  },
+  "catalogueIds": 952,
+  "storageEngineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248",
+  "storageLayoutChanged": false,
+  "storageCodeChanged": false,
+  "bootloaderChanged": false,
+  "softdeviceChanged": false,
+  "deviceAccess": false,
+  "deviceValidationPending": true,
+  "historicalDeviceEvidence": "DE3_55.json",
+  "limits": [
+    "Host tests and renders are not physical NFC, BLE, battery, key or display proof.",
+    "No startup speedup is claimed for this UI release.",
+    "Matching LCD/PFS1 hardware only; no SPIFFS or upstream-LittleFS migration.",
+    "BL8 and Nordic S112 7.3.0 are unchanged; application-only update."
+  ]
+}

@@ -65,7 +65,7 @@ test('figure images need opt-in for each identity; QR is local and resets on ide
     state.id='01010000000e0002';await Vue.nextTick();
     assert.equal(nodes(root,'img').length,0);
     await click(root,'Bild einmal laden');
-    nodes(root,'img')[0].props.onError();await Vue.nextTick();
+    const currentImage=nodes(root,'img')[0];currentImage.props.onError({target:{getAttribute:()=>currentImage.props.src}});await Vue.nextTick();
     assert.equal(nodes(root,'img').length,0);assert.match(text(root),/Bild nicht verfügbar/);
   } finally { app.unmount(); }
 });
@@ -78,6 +78,25 @@ test('unknown and metadata-only IDs do not imply invalid file or request images'
     assert.equal(nodes(root,'img').length,0);
     assert.equal(nodes(root,'button').some(node=>text(node)==='Bild einmal laden'),false);
   } finally { app.unmount(); }
+});
+
+test('properties use an updated catalogue but each changed image revision still requires an explicit load',async()=>{
+ const id='f123456700000002',entry={id,name:'Future Figure Review Fixture',series:'New Series',game:'New Game',type:'Figure'};
+ const {root,state,app}=await mount('FigureDetails',{metadata:{head:0xf1234567,tail:2},source:'metadata'});
+ try{
+  assert.match(text(root),/ID im Katalog unbekannt/);
+  state.catalogue={commit:'a'.repeat(40),entries:[entry]};await Vue.nextTick();
+  assert.match(text(root),/Future Figure Review Fixture/);assert.equal(nodes(root,'img').length,0);
+  await click(root,'Bild einmal laden');const old=nodes(root,'img')[0];assert.ok(old.props.src.includes('/'+'a'.repeat(40)+'/images/'));
+  state.catalogue={commit:'b'.repeat(40),entries:[entry]};await Vue.nextTick();
+  assert.equal(nodes(root,'img').length,0);await click(root,'Bild einmal laden');
+  assert.ok(nodes(root,'img')[0].props.src.includes('/'+'b'.repeat(40)+'/images/'));
+  old.props.onError({target:{getAttribute:()=>old.props.src}});await Vue.nextTick();assert.equal(nodes(root,'img').length,1);
+  const current=nodes(root,'img')[0];current.props.onError({target:{getAttribute:()=>current.props.src}});await Vue.nextTick();
+  assert.match(text(root),/Bild nicht verfügbar/);assert.equal(nodes(root,'img').length,0);
+  state.id='invalid';state.metadata=null;state.catalogueEntry={id:null,name:'Wrong fixture'};await Vue.nextTick();
+  assert.doesNotMatch(text(root),/Wrong fixture/);assert.equal(nodes(root,'img').length,0);
+ }finally{app.unmount();}
 });
 
 test('explicit raw-file results show structural limits and raw ID without requesting an image',async()=>{
@@ -105,6 +124,22 @@ test('local file picker ignores stale reads, clears selection, and does not leak
     assert.equal(nodes(root,'img').length,0);
     await click(root,'Prüfergebnis entfernen');assert.doesNotMatch(text(root),/10000 Bytes/);
   } finally { app.unmount(); }
+});
+
+test('local BIN inspection resolves new catalogue IDs and image revisions without reading the file again',async()=>{
+ const id='f123456700000002',entry={id,name:'Future Local Fixture',series:'New Series',game:'Game',type:'Figure'};
+ const bytes=new Uint8Array(540);bytes[0]=4;bytes[3]=0x8c;bytes.set(id.match(/../g).map(value=>parseInt(value,16)),84);
+ let reads=0;
+ const {root,state,app}=await mount('LocalTagInspector',{catalogue:{entries:[]}});
+ try{
+  await nodes(root,'input')[0].props.onChange({target:{files:[{name:'Private-owner.bin',size:540,arrayBuffer:async()=>{++reads;return bytes.buffer;}}],value:'private'}});await Vue.nextTick();
+  assert.match(text(root),/ID im Katalog unbekannt/);assert.equal(nodes(root,'img').length,0);
+  state.catalogue={entries:[entry],commit:'c'.repeat(40)};await Vue.nextTick();
+  assert.match(text(root),/Future Local Fixture/);assert.match(text(root),/Grundstruktur unauffällig/);assert.equal(reads,1);
+  assert.equal(nodes(root,'img').length,0);await click(root,'Bild einmal laden');
+  const image=nodes(root,'img')[0];assert.ok(image.props.src.includes('/'+'c'.repeat(40)+'/images/'));assert.match(image.props.src,/icon_f1234567-00000002\.png$/);
+  assert.doesNotMatch(image.props.src,/Private|owner/);assert.doesNotMatch(text(root),/Private-owner/);assert.equal(reads,1);
+ }finally{app.unmount();}
 });
 
 test('compact figure details keep warnings and image consent visible while technical explanations start collapsed',async()=>{

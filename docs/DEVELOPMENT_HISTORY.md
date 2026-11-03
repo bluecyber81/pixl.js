@@ -1,8 +1,27 @@
 # Improvements and fixed bugs in the DE series
 
-**DE3.55 / application counter 627 · Dateimanager 3.33.1 · BL8 · Nordic S112 7.3.0**
+**DE3.56 / application counter 628 · Dateimanager 3.34.0 · BL8 · Nordic S112 7.3.0**
 
 This is the English entry point to the [detailed German before/after record](DEVELOPMENT_HISTORY.de.md), which links each topic to published source and regression tests. The [earlier cumulative changelog](../CHANGELOG_DE3_SERIES.md) retains DE1–DE3.16 history. “Before” refers to the reviewed older downstream code: it is not an assertion that the same problem exists in today's upstream repositories. Some fixes address regressions introduced during this fork's own storage transition.
+
+## DE3.56 / Dateimanager 3.34.0: input, gallery and catalogue consistency
+
+BL8, Nordic S112 7.3.0, PFS1 layout and the storage core are unchanged. Existing compatible collections need no migration. Physical DE3.56 testing is pending; no additional startup speed improvement is claimed.
+
+| Earlier behavior | Change and use |
+| --- | --- |
+| An empty text field could show an uppercase key while a short press inserted lowercase. | Search/rename keycaps now match short input. `q/Q` explains short/held input and `_/SP` underscore/space. Long Unicode titles cannot obscure the hint; insertion behavior is unchanged. |
+| The list marker could shrink to one pixel and miss the exact end position. | A minimum three-pixel LCD thumb, correct endpoints, integer calculation and no marker on an empty list. |
+| Images required opening individual details. | Figure catalogue → Show images enables a current-page gallery with fixed-size placeholders and revision-pinned URLs. No gallery requests before opt-in. |
+| Coloured collection cards could not be filtered by inspection state. | Filter collection selects present, not found, needs inspection or unconfirmed/outdated entries. Partial scans never prove absence; disconnected results retain their historical label. |
+| Paging left the user below the new results. | Next/Previous reveals the result start and closes old details. Typing never steals focus. |
+| Following a catalogue update, search, preview and file inspection could retain the bundled data. | Device search, selection preview, properties and local file inspection share the accepted session catalogue. In-flight searches stop on replacement; late old results/image errors cannot overwrite the new view. |
+
+Device paths include **Amiibo database → Search** and **Amiibo emulator → file-browser action menu → Rename / New folder / New tag**. The keyboard hint needs no additional heap allocation. The scrollbar applies to the existing list/folder views.
+
+Focused host regressions exercise production drawing code and Vue components, including App bindings, catalogue replacement during pending search, image opt-in/errors, status filters, pagination and local BIN inspection. Sources: [device graphics](../fw/tests/de3/test_ui_comfort_de356.py), [catalogue comfort](../web/tests/catalogue-comfort.test.mjs), [active catalogue](../web/tests/active-catalogue.test.mjs), [figure details](../web/tests/figure-components.test.mjs), [device search](../web/tests/device-search-ui.test.mjs) and [selection preview](../web/tests/selection-preview-ui.test.mjs). Final release outcomes and physical testing remain separate evidence.
+
+The catalogue still contains 952 IDs. Image retrieval shares the public ID and visitor IP with the image host, not device files; catalogue metadata/images are not new figure dumps. See [release notes](../RELEASE_NOTES_EN.md) and [build guide](BUILD_DE3_56.md).
 
 ## Device UI, input and RAM
 

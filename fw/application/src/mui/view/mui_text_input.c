@@ -28,8 +28,6 @@ static const mui_text_input_key_t keyboard_keys_row_3[] = {
     {'_', 64, 32}, {'.', 73, 32}, {ENTER_KEY, 82, 32}, {'7', 100, 32}, {'8', 110, 32}, {'9', 120, 32},
 };
 
-static bool char_is_lowercase(char letter) { return (letter >= 0x61 && letter <= 0x7A); }
-
 static char char_to_uppercase(const char letter) {
     if (letter == '_') {
         return 0x20;
@@ -81,11 +79,42 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
     const char *text = string_get_cstr(p_mui_text_input->input_text);
     uint8_t start_pos = 4;
-    size_t text_length = string_size(p_mui_text_input->input_text);
-
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     mui_canvas_set_draw_color(p_canvas, 1);
-    mui_canvas_draw_utf8(p_canvas, 2, 10, string_get_cstr(p_mui_text_input->header));
+    /* The keycap shows short/held input, without allocating or changing the
+     * entered name. SP is the held underscore key's space character. */
+    char hint[5] = {0};
+    if (p_mui_text_input->focus_row < keyboard_row_count &&
+        p_mui_text_input->focus_column < get_row_size(p_mui_text_input->focus_row)) {
+        char key = get_row(p_mui_text_input->focus_row)[p_mui_text_input->focus_column].text;
+        if (key >= 'a' && key <= 'z') {
+            hint[0] = key; hint[1] = '/'; hint[2] = char_to_uppercase(key);
+        } else if (key == '_') {
+            memcpy(hint, "_/SP", sizeof(hint));
+        }
+    }
+    uint8_t header_width = 124;
+    if (hint[0]) {
+        uint8_t hint_width = mui_canvas_get_utf8_width(p_canvas, hint);
+        uint8_t hint_x = 124 - hint_width;
+        header_width = hint_x - 6;
+        mui_canvas_draw_rframe(p_canvas, hint_x - 2, 0, hint_width + 4, 12, 2);
+        mui_canvas_draw_utf8(p_canvas, hint_x, 10, hint);
+    }
+    /* The truncation helper can draw a final wide glyph/ellipsis beyond its
+     * requested width. Keep the title out of the key hint and restore the
+     * caller's exact clip window before drawing the rest of the editor. */
+    u8g2_t *fb = p_canvas->fb;
+    u8g2_uint_t clip_x0 = fb->clip_x0, clip_y0 = fb->clip_y0;
+    u8g2_uint_t clip_x1 = fb->clip_x1, clip_y1 = fb->clip_y1;
+    uint16_t title_right = (uint16_t)p_canvas->offset_x + header_width;
+    if (title_right > clip_x1) title_right = clip_x1;
+    if (title_right > clip_x0) {
+        u8g2_SetClipWindow(fb, clip_x0, clip_y0, title_right, clip_y1);
+        mui_canvas_draw_utf8_truncate(p_canvas, 2, 10, header_width,
+                                      string_get_cstr(p_mui_text_input->header));
+        u8g2_SetClipWindow(fb, clip_x0, clip_y0, clip_x1, clip_y1);
+    }
 
     mui_canvas_draw_rframe(p_canvas, 1, 12, 126, 15, 1);
 
@@ -162,14 +191,10 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
                     mui_canvas_set_draw_color(p_canvas, 1);
                 }
 
-                if (p_mui_text_input->clear_default_text ||
-                    (text_length == 0 && char_is_lowercase(keys[column].text))) {
-                    mui_canvas_draw_glyph(p_canvas, keyboard_origin_x + keys[column].x,
-                                          keyboard_origin_y + keys[column].y, char_to_uppercase(keys[column].text));
-                } else {
-                    mui_canvas_draw_glyph(p_canvas, keyboard_origin_x + keys[column].x,
-                                          keyboard_origin_y + keys[column].y, keys[column].text);
-                }
+                /* A short press inserts this exact glyph, even in an empty
+                 * field. Holding the middle key still selects its alternate. */
+                mui_canvas_draw_glyph(p_canvas, keyboard_origin_x + keys[column].x,
+                                      keyboard_origin_y + keys[column].y, keys[column].text);
             }
         }
     }

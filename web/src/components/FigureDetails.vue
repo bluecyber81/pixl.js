@@ -36,7 +36,7 @@
     <div v-if="imageRequested || qr" class="media-grid">
       <figure v-if="imageRequested" class="media-tile">
         <figcaption>{{ de ? 'Figurenbild' : 'Figure image' }}</figcaption>
-        <img v-if="!imageFailed" :key="resolvedId" :src="publicFigureImage(resolvedId, imageCommit)" :alt="entry.name" referrerpolicy="no-referrer" loading="lazy" @error="imageFailed = true" />
+        <img v-if="imageUrl && !imageFailed" :key="imageUrl" :src="imageUrl" :alt="entry.name" referrerpolicy="no-referrer" loading="lazy" @error="imageError" />
         <p v-else role="status">{{ de ? 'Bild nicht verfügbar oder durch den Browser blockiert.' : 'Image unavailable or blocked by the browser.' }}</p>
       </figure>
       <figure v-if="qr" class="media-tile qr-tile">
@@ -69,15 +69,18 @@ import { useI18n } from 'vue-i18n';
 import data from '../data/catalogue.json';
 import { figureId, metadataFigureId, publicFigureImage, publicFigureLink } from '../lib/figure-info.js';
 import { publicFigureQr } from '../lib/figure-qr.js';
-const props = defineProps({ id: { type: String, default: null }, metadata: { type: Object, default: null }, inspection: { type: Object, default: null }, source: { type: String, default: 'catalogue' }, catalogueEntry: Object, imageCommit: String });
+const props = defineProps({ id: { type: String, default: null }, metadata: { type: Object, default: null }, inspection: { type: Object, default: null }, source: { type: String, default: 'catalogue' }, catalogueEntry: Object, imageCommit: String, catalogue: Object });
 const { locale } = useI18n();
 const de = computed(() => locale.value.startsWith('de'));
 const resolvedId = computed(() => figureId(props.id) || metadataFigureId(props.metadata));
-const entry = computed(() => props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : data.entries.find(item => item.id === resolvedId.value));
+const catalogueData = computed(() => Array.isArray(props.catalogue?.entries) ? props.catalogue : data);
+const entry = computed(() => resolvedId.value ? (props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : catalogueData.value.entries.find(item => item?.id === resolvedId.value)) : null);
+const imageUrl = computed(() => entry.value ? publicFigureImage(resolvedId.value, props.imageCommit ?? catalogueData.value.commit) : null);
 const regions = [{ id: 'eu', label: 'Europa / Europe' }, { id: 'na', label: 'Nordamerika / North America' }, { id: 'jp', label: 'Japan' }, { id: 'au', label: 'Australien / Australia' }];
 const imageRequested = ref(false), imageFailed = ref(false), qrVisible = ref(false);
 const qr = computed(() => qrVisible.value ? publicFigureQr(resolvedId.value) : null);
 function hideImage() { imageRequested.value = false; imageFailed.value = false; }
+function imageError(event) { if (imageRequested.value && event?.target?.getAttribute?.('src') === imageUrl.value) imageFailed.value = true; }
 function structureIssue(issue) {
   const labels = {
     manufacturer: ['Unerwartete Herstellerkennung.', 'Unexpected manufacturer byte.'],
@@ -90,6 +93,9 @@ function structureIssue(issue) {
 }
 // Permission is for this detail only; switching figures must not load another image.
 watch(resolvedId, () => { hideImage(); qrVisible.value = false; }, { flush: 'sync' });
+// A new catalogue revision can change the image URL even for the same ID.
+// Keep external requests explicit, and never carry a previous load error over.
+watch(imageUrl, hideImage, { flush: 'sync' });
 </script>
 <style scoped>
 .figure-details { border:1px solid #d3dee8; border-radius:14px; padding:18px; background:#fff; color:#193247; margin:12px 0; overflow-wrap:anywhere; box-shadow:0 3px 12px #19324708; }

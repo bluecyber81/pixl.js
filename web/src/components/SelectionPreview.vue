@@ -3,7 +3,7 @@
     <p class="preview-eyebrow">{{ de ? 'AUSWAHL' : 'SELECTION' }}</p>
     <template v-if="selection">
       <div class="preview-picture">
-        <img v-if="entry && !failed" :key="imageUrl" :src="imageUrl" :alt="entry.name" referrerpolicy="no-referrer" @error="imageError" />
+        <img v-if="imageUrl && !failed" :key="imageUrl" :src="imageUrl" :alt="entry.name" referrerpolicy="no-referrer" @error="imageError" />
         <span v-else class="preview-placeholder" aria-hidden="true">◇</span>
       </div>
       <h3>{{ entry?.name || selection.row.name }}</h3>
@@ -24,15 +24,16 @@
 </template>
 <script setup>
 import {computed,ref,watch} from 'vue';
-import catalogue from '../data/catalogue.json';
+import catalogueBaseline from '../data/catalogue.json';
 import {figureId,publicFigureImage} from '../lib/figure-info.js';
-const props=defineProps({selection:Object,locale:{type:String,default:'de_DE'},blocked:Boolean});
+const props=defineProps({selection:Object,locale:{type:String,default:'de_DE'},blocked:Boolean,catalogue:Object});
 defineEmits(['download','properties']);
 const de=computed(()=>props.locale.startsWith('de'));
-const entry=computed(()=>{const id=figureId(props.selection?.id);return id?catalogue.entries.find(item=>item.id===id):null;});
-const imageUrl=computed(()=>entry.value?publicFigureImage(entry.value.id):null);
+const catalogueData=computed(()=>Array.isArray(props.catalogue?.entries)?props.catalogue:catalogueBaseline);
+const entry=computed(()=>{const id=figureId(props.selection?.id);return id?catalogueData.value.entries.find(item=>item?.id===id):null;});
+const imageUrl=computed(()=>entry.value?publicFigureImage(entry.value.id,catalogueData.value.commit):null);
 const failed=ref(false);
-watch(()=>props.selection,()=>{failed.value=false;},{flush:'sync'});
+watch([()=>props.selection,imageUrl],()=>{failed.value=false;},{flush:'sync'});
 function imageError(event){if(event.target?.getAttribute?.('src')===imageUrl.value)failed.value=true;}
 </script>
 <style scoped>

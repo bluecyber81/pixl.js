@@ -72,3 +72,32 @@ test('offline selected example states catalogue-only origin and leaves device ac
  const {root,app}=await mount('SelectionPreview',{selection:{row:{name:'Demo-Mario.bin',sizeBytes:540},id:'0000000000000002',state:'ready',source:'demo'},blocked:true});
  try{assert.equal(nodes(root,'img')[0].props.alt,'Mario');assert.match(text(root),/Keine? Gerät|Kein Gerät/);assert.match(text(root),/keine Figurendatei gelesen oder erzeugt/);for(const button of nodes(root,'button'))assert.equal(button.props.disabled,true);}finally{app.unmount();}
 });
+
+test('an online catalogue addition resolves the selected figure and pins its image to the same revision',async()=>{
+ const id='f123456700000002',commit='a'.repeat(40);
+ const selection={row:{name:'Private-name.bin',sizeBytes:540,notes:'Local only'},id,state:'ready',source:'metadata'};
+ const {root,state,app}=await mount('SelectionPreview',{selection});
+ try{
+  assert.equal(nodes(root,'img').length,0);assert.match(text(root),/unbekannt/);
+  state.catalogue={commit,entries:[{id,name:'Future Figure Review Fixture',series:'New Series'}]};await Vue.nextTick();
+  const img=nodes(root,'img')[0];assert.ok(img);assert.equal(img.props.alt,'Future Figure Review Fixture');
+  assert.ok(img.props.src.includes('/'+commit+'/images/'));assert.match(img.props.src,/icon_f1234567-00000002\.png$/);
+  assert.doesNotMatch(img.props.src,/Private|Local/);assert.equal(img.props.referrerpolicy,'no-referrer');
+ }finally{app.unmount();}
+});
+
+test('same-ID catalogue image revisions clear failures and ignore errors from older URLs',async()=>{
+ const id='f123456700000002',entry={id,name:'Fixture',series:'Series'};
+ const {root,state,app}=await mount('SelectionPreview',{selection:{row:{name:'Fixture.bin',sizeBytes:540},id,state:'ready'},catalogue:{commit:'a'.repeat(40),entries:[entry]}});
+ try{
+  const first=nodes(root,'img')[0];first.props.onError({target:{getAttribute:()=>first.props.src}});await Vue.nextTick();assert.equal(nodes(root,'img').length,0);
+  state.catalogue={commit:'b'.repeat(40),entries:[entry]};await Vue.nextTick();const updated=nodes(root,'img')[0];
+  assert.ok(updated.props.src.includes('/'+'b'.repeat(40)+'/images/'));
+  first.props.onError({target:{getAttribute:()=>first.props.src}});await Vue.nextTick();assert.equal(nodes(root,'img').length,1);
+  state.catalogue={commit:'https://example.invalid/private',entries:[entry]};await Vue.nextTick();
+  assert.match(nodes(root,'img')[0].props.src,/^https:\/\/raw\.githubusercontent\.com\/8bitDream\/AmiiboAPI\/[a-f0-9]{40}\//);
+  assert.doesNotMatch(nodes(root,'img')[0].props.src,/example\.invalid/);
+  state.selection={row:{name:'Bad.bin',sizeBytes:540},id:'invalid',state:'invalid'};state.catalogue={entries:[{id:'invalid',name:'Wrong name'}]};await Vue.nextTick();
+  assert.equal(nodes(root,'img').length,0);assert.doesNotMatch(text(root),/Wrong name/);
+ }finally{app.unmount();}
+});

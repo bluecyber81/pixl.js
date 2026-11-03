@@ -17,7 +17,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
 
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
-    source:'Quellcode der mitgelieferten Firmware DE3.55',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    source:'Quellcode der mitgelieferten Firmware DE3.56',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
     scope:'Für unser Allmiibo LCD mit Packed LittleFS (PFS1), BL8 und S112 7.3.0. Nur die Anwendung; keine Speicherumstellung.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Die DFU-Seite prüft die Paketidentität mit SHA-256. Signatur und Versionszähler prüft der Bootloader. Übertragen startet erst nach deiner Geräteauswahl.',
@@ -25,7 +25,7 @@ export function firmwarePackageText(locale='de_DE') {
     newer:'Die gelesene Anwendung ist neuer als dieses Paket. Ein Downgrade wird nicht angeboten.',
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
-    source:'Source code for bundled firmware DE3.55',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    source:'Source code for bundled firmware DE3.56',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
     scope:'For our Allmiibo LCD with Packed LittleFS (PFS1), BL8 and S112 7.3.0. Application only; no storage migration.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The DFU page verifies package identity with SHA-256. The bootloader checks the signature and version counter. Transfer begins only after you select a device.',

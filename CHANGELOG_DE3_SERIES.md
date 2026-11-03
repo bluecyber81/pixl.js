@@ -1,4 +1,21 @@
-# Current publication: DE3.55 / Dateimanager 3.33.1 / BL8 / S112 7.3.0
+# Current publication: DE3.56 / Dateimanager 3.34.0 / BL8 / S112 7.3.0
+
+**[Detailed history (English)](docs/DEVELOPMENT_HISTORY.md) · [Änderungen und Bedienung (Deutsch)](RELEASE_NOTES_DE.md) · [Release notes](RELEASE_NOTES_EN.md)**
+
+## DE3.56 / 3.34.0 — 3 November 2026
+
+- Device text entry now displays the character inserted by a short press, including empty fields. A compact short/held hint (`q/Q`, `_/SP`) explains existing input behavior. Clipped long Unicode titles cannot cover it; no new heap allocation.
+- Integer scrollbars retain a visible three-pixel LCD thumb, correct endpoints and empty-list handling.
+- Optional current-page catalogue gallery with revision-pinned lazy images, fixed geometry and unavailable-image placeholders. No gallery requests before opt-in.
+- Collection-state filters preserve all previous evidence rules: partial/metadata-only scans cannot prove absence, stale results stay unconfirmed, and disconnected observations remain labelled.
+- Explicit catalogue pagination reveals/focuses the result start without stealing focus on search input.
+- Accepted catalogue updates now propagate through App to device search, selection preview, properties and local file inspection. Search cancellation and image-error guards prevent stale asynchronous work from replacing the active data.
+- Focused production-code regressions cover these changes. Full release results are recorded separately; **physical DE3.56 device testing is pending**. Earlier device observations below do not validate this new application.
+- Application counter 628, browser 3.34.0. **BL8, Nordic S112 7.3.0, PFS1 layout and storage core are unchanged.** Existing compatible collections need no formatting/restoration. No new startup speed improvement or new figure IDs are claimed.
+
+## Previous DE3.55 / 3.33.1 publication
+
+The following DE3.55 section retains its dated publication and validation evidence.
 
 **[Detailed before/after history (English)](docs/DEVELOPMENT_HISTORY.md) · [Ausführliche Fehlerbehebungen (Deutsch)](docs/DEVELOPMENT_HISTORY.de.md) · [Bootloader and SoftDevice work](docs/BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Component downloads](docs/COMPONENT_DOWNLOADS.md)**
 

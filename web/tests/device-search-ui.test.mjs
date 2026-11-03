@@ -122,3 +122,36 @@ test('content read cancellation and session replacement keep the actual componen
   }finally{app.unmount();}
  }
 });
+
+test('device search uses the active online catalogue without downloading tag contents',async()=>{
+ const id='f123456700000002', reads=[], navigations=[];
+ const catalogue={commit:'a'.repeat(40),entries:[{id,name:'Future Figure Review Fixture',series:'New Series',game:'New Game'}]};
+ const {root,app}=await mount('DeviceSearch',{catalogue,connected:true,generation:3,directory:'E:/',onNavigate:value=>navigations.push(value),getSession:()=>({
+  readDirectory:async path=>{reads.push(path);return[{name:'anonymous.bin',type:0,size:540,meta:{amiibo:{head:0xf1234567,tail:2}}}];},
+  readFile:async()=>{throw Error('Metadata search must not read a BIN');}
+ })});
+ try{
+  nodes(root,'input').find(n=>n.props.type==='search').props['onUpdate:modelValue']('future figure');await Vue.nextTick();
+  await nodes(root,'form')[0].props.onSubmit({preventDefault(){}});await Vue.nextTick();
+  assert.deepEqual(reads,['E:/']);assert.match(text(root),/Future Figure Review Fixture/);assert.match(text(root),/New Series/);
+  nodes(root,'button').find(n=>text(n).includes('anonymous.bin')).props.onClick();
+  assert.equal(navigations[0].id,id);assert.equal(navigations[0].path,'E:/anonymous.bin');
+ }finally{app.unmount();}
+});
+
+test('catalogue replacement cancels stale search results but keeps BLE busy until the pending read drains',async()=>{
+ let finish,reads=0;const busy=[];
+ const entry={id:'f123456700000002',name:'Old Fixture',series:'Series'};
+ const {root,state,app}=await mount('DeviceSearch',{catalogue:{entries:[entry]},connected:true,generation:1,directory:'E:/',onBusy:value=>busy.push(value),getSession:()=>({
+  readDirectory:()=>{++reads;return new Promise(resolve=>finish=resolve);}
+ })});
+ try{
+  nodes(root,'input').find(n=>n.props.type==='search').props['onUpdate:modelValue']('fixture');await Vue.nextTick();
+  const pending=nodes(root,'form')[0].props.onSubmit({preventDefault(){}});await Vue.nextTick();
+  state.catalogue={entries:[{...entry,name:'Updated Fixture'}]};await Vue.nextTick();
+  assert.deepEqual(busy,[true]);assert.match(text(root),/Katalog aktualisiert/);
+  await nodes(root,'form')[0].props.onSubmit({preventDefault(){}});assert.equal(reads,1);
+  finish([{name:'anonymous.bin',type:0,meta:{amiibo:{head:0xf1234567,tail:2}}}]);await pending;await Vue.nextTick();
+  assert.deepEqual(busy,[true,false]);assert.equal(reads,1);assert.doesNotMatch(text(root),/anonymous.bin/);assert.match(text(root),/Suche erneut starten/);
+ }finally{app.unmount();}
+});

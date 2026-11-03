@@ -4,19 +4,21 @@
 void mui_element_scrollbar(mui_canvas_t *p_canvas, uint32_t pos, uint16_t total) {
     uint8_t width = mui_canvas_get_width(p_canvas);
     uint8_t height = mui_canvas_get_height(p_canvas);
-    // prevent overflows
+    if (width < 4 || height == 0) return;
+    // Keep the indicator clear of text, including empty lists.
     mui_canvas_set_draw_color(p_canvas, 0);
     mui_canvas_draw_box(p_canvas, width - 4, 0, 4, height);
-    // dot line
     mui_canvas_set_draw_color(p_canvas, 1);
-    for (uint8_t i = 0; i < height; i += 2) {
+    if (!total) return;
+    // Sparse track and a visible thumb, also for very large folders.
+    for (uint16_t i = 0; i < height; i += 2) {
         mui_canvas_draw_dot(p_canvas, width - 2, i);
     }
-    // Position block
-    if (total) {
-        float block_h = ((float)height) / total;
-        mui_canvas_draw_box(p_canvas, width - 3, block_h * pos, 3, block_h > 1 ? block_h : 1);
-    }
+    uint16_t thumb = height / total;
+    if (thumb < 3) thumb = height < 3 ? height : 3;
+    if (pos >= total) pos = total - 1;
+    uint16_t top = total > 1 ? (pos * (height - thumb)) / (total - 1) : 0;
+    mui_canvas_draw_box(p_canvas, width - 3, top, 3, thumb);
 }
 
 void mui_element_multiline_text(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, const char *text) {

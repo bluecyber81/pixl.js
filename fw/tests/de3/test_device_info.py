@@ -1,14 +1,42 @@
-"""Compile actual read-only metadata/UI code against bounded Nordic register stubs."""
+"""Compile actual read-only metadata/UI code against bounded Nordic register stubs.
+
+The metadata test also needs the unmodified S112 7.2.0 HEX from Nordic's
+nRF5 SDK 17.1.0. Set NRF5_SDK_PATH (or the build's NRF52_SDK_ROOT) to the SDK
+root. No SDK or firmware binary is downloaded or redistributed by this test.
+"""
 from pathlib import Path
+import hashlib
 import importlib.util
+import os
 import struct
+import tempfile
 import unittest
+from unittest.mock import patch
 
 FW = Path(__file__).resolve().parents[2]
 SCENE = FW / "application/src/app/settings/scene"
 spec = importlib.util.spec_from_file_location("de2_native", FW / "tests/de2/test_player_v3.py")
 native = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(native)
+
+S112_IMAGE = Path("components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex")
+# Identical in Nordic SDK 17.1.0 and the digest-pinned image in tools/build_lcd.py.
+S112_SHA256 = "6024130cbe5b89e5f108951b7f65374c2bb1aabb57049cdf9b4bcab4ce3e80e4"
+
+
+def load_s112_fixture():
+    sdk = os.environ.get("NRF5_SDK_PATH") or os.environ.get("NRF52_SDK_ROOT")
+    root = Path(sdk) if sdk else FW / "components/chameleon-ultra/firmware/nrf52_sdk"
+    image = root / S112_IMAGE
+    if not image.is_file():
+        raise FileNotFoundError(
+            f"Nordic S112 7.2.0 test fixture is missing: {image}. "
+            "Set NRF5_SDK_PATH or NRF52_SDK_ROOT to an unpacked nRF5 SDK 17.1.0 root."
+        )
+    data = image.read_bytes()
+    if hashlib.sha256(data).hexdigest() != S112_SHA256:
+        raise ValueError(f"Nordic S112 7.2.0 test fixture SHA-256 mismatch: {image}")
+    return data
 
 REGISTERS = r'''
 #pragma once
@@ -152,10 +180,10 @@ int main(void) {
 ''')
 
     def test_nordic_supplied_s112_metadata_matches_readout(self):
-        image = FW / "components/chameleon-ultra/firmware/nrf52_sdk/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex"
+        image = load_s112_fixture()
         memory = {}
         base = 0
-        for line in image.read_text().splitlines():
+        for line in image.decode("ascii").splitlines():
             record = bytes.fromhex(line[1:])
             self.assertEqual(sum(record) & 255, 0)
             size, address, kind = record[0], int.from_bytes(record[1:3], "big"), record[3]
@@ -182,6 +210,18 @@ int main(void) {{
     puts("PASS: Nordic supplied S112 7.2.0 metadata readout"); return 0;
 }}
 ''')
+
+    def test_missing_or_wrong_sdk_fixture_is_not_silently_skipped(self):
+        with tempfile.TemporaryDirectory(prefix="pixl-sdk-fixture-") as tmp:
+            root = Path(tmp)
+            with patch.dict(os.environ, {"NRF5_SDK_PATH": str(root)}):
+                with self.assertRaisesRegex(FileNotFoundError, "Set NRF5_SDK_PATH"):
+                    load_s112_fixture()
+                image = root / S112_IMAGE
+                image.parent.mkdir(parents=True)
+                image.write_bytes(b":00000001FF\n")  # valid EOF, wrong/empty image
+                with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+                    load_s112_fixture()
 
     def test_actual_version_scene_uses_detected_metadata_and_unknown_fallback(self):
         src = (SCENE / "settings_scene_version.c").read_text()

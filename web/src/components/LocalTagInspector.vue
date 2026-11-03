@@ -10,7 +10,7 @@
         <p><strong>{{ de ? 'Dateiformat nicht unterstützt' : 'Unsupported file format' }}</strong> · {{ inspection.size }} Bytes</p>
         <p>{{ de ? 'Das ist kein unterstütztes Rohdateiformat. Andere Formate oder Archive werden nicht als defekte amiibo bewertet.' : 'This is not a supported raw file format. Other formats or archives are not classified as broken amiibo.' }}</p>
       </template>
-      <FigureDetails v-else :key="readGeneration" :id="inspection.id" :inspection="inspection" source="local" />
+      <FigureDetails v-else :key="readGeneration" :id="inspection.id" :inspection="inspection" source="local" :catalogue="catalogueData" />
       <button type="button" @click="clear">{{ de ? 'Prüfergebnis entfernen' : 'Clear inspection' }}</button>
     </section>
   </details>
@@ -20,6 +20,9 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import FigureDetails from './FigureDetails.vue';
 import { inspectLocalTagFile } from '../lib/figure-info.js';
+import catalogueBaseline from '../data/catalogue.json';
+const props = defineProps({ catalogue: Object });
+const catalogueData = computed(() => Array.isArray(props.catalogue?.entries) ? props.catalogue : catalogueBaseline);
 const { locale } = useI18n();
 const de = computed(() => locale.value.startsWith('de'));
 const inspection = ref(null), loading = ref(false), readError = ref(false), readGeneration = ref(0);

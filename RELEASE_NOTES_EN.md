@@ -1,28 +1,47 @@
-# DE3.55 source synchronization and current complete download
+# DE3.56 and Dateimanager 3.34.0: clearer input and an image gallery
 
-**LCD application 2.22.0-DE3.55 / counter 627 · Dateimanager 3.33.1 · BL8 source · S112 7.3.0 documentation**
+**LCD application 2.22.0-DE3.56 / counter 628 Â· Dateimanager 3.34.0 Â· BL8 Â· Nordic S112 7.3.0 Â· Packed LittleFS PFS1**
 
-The [detailed improvement/bug-fix history](https://github.com/bluecyber81/pixl.js/blob/main/docs/DEVELOPMENT_HISTORY.md) and [BL8/S112 changes](https://github.com/bluecyber81/pixl.js/blob/main/docs/BOOTLOADER_SOFTDEVICE_CHANGES.md) are now published. [Separate BL8 and original Nordic S112 component downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) supplement this standard application release; their counter and installation requirements are different.
+This release improves LCD and browser usability. It also fixes inconsistent catalogue use after an update: device search, selection previews, file properties and local file inspection now use the same updated session catalogue as the catalogue panel.
 
-This publication brings the main source tree and contributor documentation up to the existing DE3.55 application and 3.33.1 web releases. Existing firmware/web payloads are unchanged; no repeat flash is needed if they are already installed.
+## On the Allmiibo
 
-- Matching current application source plus independently exported BL8 source, SDK overrides, build guides and CI.
-- Dependency checks now distinguish Windows/Linux optional native packages while retaining lockfile, identity and license validation; new regression cases cover platform selection and missing or modified packages.
-- Fresh public-source application rebuild matches the archived BIN/HEX/ELF/map byte for byte. BL8 build evidence is documented in its source guide.
-- Current file manager, collection color markers, diagnostic and DFU fixes, PFS1 storage improvements and preserved UI/BLE/NFC behavior. See [current README](https://github.com/bluecyber81/pixl.js/blob/de3.55/README.md) and [changes](https://github.com/bluecyber81/pixl.js/blob/de3.55/CHANGELOG_DE3_SERIES.md).
+- **When searching or renaming:** Even in an empty field, each key displays the character inserted by a short middle press. Previously it could display an uppercase letter while inserting a lowercase letter.
+- **Short/held middle press:** The header shows hints such as `q/Q` for short/held input or `_/SP` for underscore/space. Existing input behavior is preserved. Long titles are clipped so they cannot cover this hint; no additional heap allocation is needed.
+- **List position:** The scrollbar thumb remains at least three pixels tall in large folders and correctly reaches both ends. Integer arithmetic replaces floating point; empty lists have no misleading position marker.
 
-## Downloads
+## In the file manager
 
-- `Allmiibo_LCD_DE3_55_627_TESTSTAND.zip`: unchanged **application-only OTA** for matching LCD/PFS1 devices. Do not extract/re-zip it.
-- `Allmiibo_Dateimanager_3_33_1.zip`: current portable browser application.
-- `Allmiibo_DE3_55_BL8_Web3_33_1_Projektquellen.zip`: current public project with standalone application/BL8 build instructions and web sources.
-- `Allmiibo_DE3_55_Web3_33_1_Gesamtpaket.zip`: all preceding download files and checksums/documentation. **The outer ZIP is not flashable.**
-- `SHA256SUMS.txt`: exact asset checksums.
+1. **Figure catalogue â†’ Show images:** An optional gallery loads images only for the current page. No gallery images are requested before opt-in. A fixed-size placeholder handles unavailable images. URLs are pinned to the active catalogue revision. GitHub receives the public figure ID and the visitor's IP address, not device files.
+2. **Figure catalogue â†’ Filter collection:** After a collection scan, select present, not found, needs inspection, or unconfirmed/outdated entries. Existing green/orange/red evidence rules remain intact: a partial scan cannot establish absence, and a result retained after disconnection remains labelled as an earlier observation.
+3. **Next/Previous:** Explicit page changes reveal and focus the start of the new results. Typing does not move focus or scroll the view. Old details close on a page change; the gallery preference remains selected.
+4. **Check for new figures:** Accepted catalogue data also applies to device-wide search, selection previews, file properties and local figure-file inspection. An in-progress device search stops when the catalogue changes and can be restarted with the new data. Late results or image errors from the old revision cannot replace the current selection.
 
-Use the [online file manager](https://bluecyber81.github.io/pixl.js/) or its [application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html).
+The bundled catalogue still contains **952 IDs**. Catalogue entries and images are not figure files, and an ID match proves neither signature validity nor game compatibility. No private BIN collection has been added.
 
-**Old SPIFFS/DE3.8/DE3.16 and ordinary upstream LittleFS devices are not a direct migration target of this application ZIP.** Read [installation](https://github.com/bluecyber81/pixl.js/blob/de3.55/docs/INSTALLATION.md) first. Existing compatible PFS1 devices need no format. Neither bootloader nor SoftDevice is replaced by the standard OTA; no universal combined system ZIP, private keys, backups or figure dumps are published.
+## Downloads and installation
 
-Archived verification: 136 firmware host groups, targeted sanitizer/ARM/storage checks; web 1,057 tests and 21 root +21 Pages production checks. Bounded device read/write/Raw128 tests at actual MTU23/250 passed on 2 November; NFC/middle/wake confirmed by the owner. These are scoped, dated observations, not a claim that all hardware or failure modes are covered.
+- [Allmiibo_LCD_DE3_56_628_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_LCD_DE3_56_628_TESTSTAND.zip): **application-only OTA** for matching LCD/PFS1 devices. Do not extract and re-zip it.
+- [Allmiibo_Dateimanager_3_34_0.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0.zip): portable file manager with a local launcher.
+- [Allmiibo_DE3_56_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip): firmware/project source and contributor documentation.
+- [Allmiibo_Dateimanager_3_34_0_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0_Quellcode.zip): browser source and tests.
+- [Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip): complete download with instructions and checksums. **The outer archive is not flashable.**
+- `SHA256SUMS.txt`: published asset checksums.
 
-Credits to solosky, cylin577 and component contributors; vendor licenses and original notices remain applicable. This is an independent community continuation.
+[Online file manager](https://bluecyber81.github.io/pixl.js/) Â· [Application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) Â· [Build guide](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/BUILD_DE3_56.md)
+
+The browser additions do not require a device update. DE3.56 is required for the new keyboard rendering and scrollbar. **BL8, Nordic S112 7.3.0 and the PFS1 storage layout are unchanged.** An existing compatible collection needs no format or restore. Old DE3.8/DE3.16/SPIFFS and ordinary upstream LittleFS still require their own migration path; this ZIP does not convert their storage. [Separate BL8/S112 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) retain their own installation requirements.
+
+## Validation and limits
+
+Targeted regressions exercise the production Vue components with catalogue replacement, image opt-in, filters and pagination, plus device text-entry and scrollbar rendering in host tests. Final outcomes belong in the version-specific validation report. Earlier DE3.55 device observations are not device tests of DE3.56. **Direct testing of this new release on the physical device is still pending.** This update claims neither a faster startup nor new radio/NFC functionality.
+
+Existing storage, button, Bluetooth/NFC, DFU, backup and migration functionality remains in the source. Private keys, device backups and figure dumps are excluded. Attribution and licenses from solosky, cylin577 and component authors remain applicable. [Detailed history](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/DEVELOPMENT_HISTORY.md).
+
+## Previews
+
+Browser screenshot without a device; LCD render from production code and fonts, not a photograph.
+
+![Galerie](https://raw.githubusercontent.com/bluecyber81/pixl.js/de3.56/docs/images/de356-gallery.png)
+
+![LCD-Tastatur](https://raw.githubusercontent.com/bluecyber81/pixl.js/de3.56/docs/images/de356-keyboard.png)

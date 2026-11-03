@@ -1,10 +1,10 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
 Stand: **3. November 2026**. Aktueller Anwendungsstand:
-**2.22.0-DE3.55 / DFU-Zähler 627**; Dateimanager **3.33.1**.
+**2.22.0-DE3.56 / DFU-Zähler 628**; Dateimanager **3.34.0**.
 
 Diese Übersicht beginnt mit den frühen Änderungen von **DE1 bis DE3.16** und
-erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.55**. Sie
+erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.56**. Sie
 verbindet den [historischen Änderungsbericht](../CHANGELOG_DE3_SERIES.md)
 mit den inzwischen veröffentlichten Quellen und Regressionstests. Die Angaben
 „vorher“ beziehen sich auf den jeweils untersuchten älteren DE-Stand. Sie bedeuten
@@ -20,6 +20,25 @@ jeden möglichen Gerätefehler lässt sich daraus nicht ableiten.
 Bootloader und Nordic-Stack werden getrennt in
 [Bootloader- und SoftDevice-Änderungen](BOOTLOADER_SOFTDEVICE_CHANGES.md)
 erklärt. Ein Anwendungsupdate ersetzt diese Komponenten nicht.
+
+## DE3.56 / Dateimanager 3.34.0: Eingabe, Galerie und konsistenter Katalog
+
+Diese Ergänzungen ändern weder BL8 noch Nordic S112 7.3.0, das PFS1-Datenlayout oder den Speicherkern. Eine vorhandene passende Sammlung benötigt keine erneute Migration. Eine direkte Geräteprüfung von DE3.56 steht noch aus; ein zusätzlicher Startzeitgewinn wird nicht behauptet.
+
+| Vorher | Änderung und Bedienung |
+| --- | --- |
+| Bei leerem Texteingabefeld konnte die Tastatur einen Großbuchstaben anzeigen, der kurze Mitteldruck schrieb aber klein. | Beim Suchen und Umbenennen stimmen Anzeige und Kurzdruck überein. `q/Q` erklärt kurz/lang; `_/SP` Unterstrich/Leerzeichen. Die Schreibfunktion wird nicht geändert. Lange, auch breite Unicode-Titel werden von der Hilfe ferngehalten. |
+| Die Listenmarkierung konnte auf einen kaum sichtbaren Pixel schrumpfen; ihre Endposition war nicht exakt. | Mindestens drei Pixel hoher Marker auf dem LCD, beide Enden korrekt, Ganzzahlberechnung und kein Marker bei leerer Liste. |
+| Bilder mussten über einzelne Details geöffnet werden. | Figurenkatalog → Bilder anzeigen lädt optional Bilder der aktuellen Seite, mit festen Flächen und Fehlerplatzhalter. Ohne Einschalten kein Galerieabruf; Adressen sind an die aktive Katalogrevision gebunden. |
+| Farbige Bestandskarten ließen sich nicht nach ihrem Prüfstatus eingrenzen. | Bestand filtern: vorhanden, nicht gefunden, Prüfhinweis, unbestätigt/veraltet. Teilprüfungen begründen keine rote Fehlanzeige; getrennte Sitzungen behalten die Kennzeichnung als frühere Beobachtung. |
+| Beim Blättern musste man zurück zum Ergebnisanfang scrollen. | Weiter/Zurück führt zum Anfang der neuen Ergebnisse und schließt die alten Details. Tippen in der Suche verschiebt den Fokus nicht. |
+| Nach einer Katalogaktualisierung konnten Suche, Vorschau und Dateiprüfung noch den gebündelten Stand verwenden. | Gerätesuche, Auswahlvorschau, Eigenschaften und lokale Dateiprüfung erhalten denselben aktiven Katalog. Laufende Suchen stoppen bei Katalogwechsel; verspätete Ergebnisse/Bildfehler des alten Stands ersetzen nicht den neuen. |
+
+Praktische Gerätewege: **Amiibo-Datenbank → Suche** oder **Amiibo-Emulator → Dateibrowser-Aktionsmenü → Umbenennen / Neuer Ordner / Neuer Tag**. Die Tastaturhilfe benötigt keinen zusätzlichen Heap-Speicher. Die Scrollanzeige gilt für die vorhandenen Listen-/Ordneransichten.
+
+Gezielte Host-Regressionen prüfen die tatsächliche Text-/Scrollzeichnung, die Vue-Komponenten und deren Verbindung über App, einschließlich Katalogwechsel während einer laufenden Suche, Bildfreigabe/-fehler, Filter, Pagination und lokaler BIN-Prüfung. Testdateien: [Gerätegrafik](../fw/tests/de3/test_ui_comfort_de356.py), [Katalogkomfort](../web/tests/catalogue-comfort.test.mjs), [aktiver Katalog](../web/tests/active-catalogue.test.mjs), [Figurendetails](../web/tests/figure-components.test.mjs), [Gerätesuche](../web/tests/device-search-ui.test.mjs) und [Auswahlvorschau](../web/tests/selection-preview-ui.test.mjs). Abschließende Release-Ergebnisse und physische Geräteprüfungen bleiben getrennte Nachweise.
+
+Der Katalog umfasst weiterhin 952 IDs. Bildabrufe geben öffentliche ID und IP-Adresse an den Bildanbieter weiter, keine Gerätedateien. Metadaten/Bilder sind keine neuen Figurendumps. [Release-Hinweise](../RELEASE_NOTES_DE.md) und [Bauanleitung](BUILD_DE3_56.md).
 
 ## Frühere DE1–DE3.16
 

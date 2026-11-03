@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "publication_date": "2026-11-03",
-  "version": "2.22.0-DE3.55",
-  "counter": 627,
+  "version": "2.22.0-DE3.56",
+  "counter": 628,
   "board": "LCD",
-  "web_version": "3.33.1",
+  "web_version": "3.34.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "1740a38054674ef5acb3ebce7f99636087cca50090ca074e13f2a03fb1266fa3",
-  "application_sha256": "e80712735b8076b2d97e0b5fac42ef1c5311d40eeb53725be6232db172c0453d",
+  "ota_sha256": "e858792304b372969376b06e81d3e4280e13700d66c4008e6e457878824e3973",
+  "application_sha256": "23d7cb75c115a8565ac76944cf68bac2395f1cc533bb164a830299b05391782e",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -36,11 +36,11 @@
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 136,
-  "web_host_tests": 1057,
+  "host_firmware_suites": 137,
+  "web_host_tests": 1082,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "evidence": "docs/validation/DE3_55.json",
+  "evidence": "docs/validation/DE3_56.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -51,5 +51,6 @@
     "Public inherited signing key does not prove exclusive publisher identity.",
     "No universal BL/SD combined update is supplied."
   ],
-  "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0"
+  "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
+  "device_validation_pending": true
 }

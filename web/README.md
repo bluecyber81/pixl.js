@@ -1,142 +1,108 @@
-# Dateimanager 3.33.1
+# Dateimanager 3.34.0
 
-Startanleitung und Änderungen: **LIESMICH_3_33_1.txt**.
+[Startanleitung und Bedienung](LIESMICH_3_34_0.txt) · [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Release-Hinweise](../RELEASE_NOTES_DE.md)
 
-3.33.1 ergänzt im Figurenkatalog eine Online-Neuheitenprüfung, den seriellen
-Sammlungsabgleich (Inhalte oder Schnellübersicht) und den geprüften Import
-eigener BIN-Dateien oder direkter HTTPS-Links. Vorhandene Dateien werden
-nicht überschrieben. Die Firmware DE3.55 bleibt unverändert.
+## Neu: Galerie und Bestandsfilter
 
+**Figurenkatalog → Bilder anzeigen** aktiviert die optionale Galerie der aktuellen
+Seite. Vor dem Einschalten gibt es keine Galerie-Bildabrufe. Bilder verwenden die
+aktive Katalogrevision; eine feste Fläche und ein Platzhalter halten die Karten
+bei Ladefehlern stabil. GitHub erhält beim Bildabruf die öffentliche Figuren-ID
+und IP-Adresse, keine Gerätedateien.
 
-Katalog-Markierungen nach der Sammlungsprüfung: Grün = passende ID gefunden,
-Orange = vorhandene Datei mit Abweichung oder eingeschränkter Formatprüfung,
-Rot = nach vollständiger Inhaltsprüfung auf E: nicht nachgewiesen. Ungeprüfte
-oder inzwischen veraltete Ergebnisse bleiben neutral. Eine Schnellübersicht
-kennzeichnet gefundene IDs ausdrücklich als reine Dateieigenschaften.
+**Bestand filtern** zeigt vorhandene, nicht gefundene, auffällige oder
+unbestätigte/veraltete Einträge. Grundlage ist weiterhin „Sammlung prüfen“:
+Grün = ID gefunden, Orange = Prüfhinweis, Rot = nach vollständiger Inhaltsprüfung
+von ganz E: nicht gefunden. Teilprüfungen oder fehlende Metadaten belegen keine
+Abwesenheit. Ein Ergebnis nach Trennung bleibt als frühere Beobachtung markiert.
+Neue Verbindung, Änderungen oder Neuladen verwerfen den alten Bestand.
 
-Die Online-Abfrage liefert Metadaten, keine spielfertigen Figurendateien.
-Strukturprüfung ist keine kryptografische Prüfung oder NFC-Funktionsgarantie.
+Ein bewusster Seitenwechsel führt zum Anfang der Ergebnisse. Eingaben in der
+Suche verschieben den Fokus nicht. Alte Details schließen beim Blättern.
 
-3.32.5 ergänzte einen getrennten GitHub-Pages-Build für
-https://bluecyber81.github.io/pixl.js/ und erhält den lokalen Portable-Build.
-Firmware-ZIP, sieben Speicherprüfprofile und WASM-Dateien bleiben unverändert.
-Bluetooth funktioniert weiterhin direkt zwischen Browser und Gerät; diese
-Webseite ist keine Funkbrücke zum heimischen Laptop. Sammlungen, Sicherungen
-und Diagnosen werden in diesem Ablauf nicht auf GitHub hochgeladen.
+## Korrektur: aktualisierte Katalogdaten überall verwenden
 
-Der Quellbuild ist `npm ci`, `npm test`, `npm run build` (lokal, dist) sowie
-`npm run build:pages` (Projektadresse /pixl.js/, dist-pages). Beide Builds führen
-anschließend ihre eigenen Produktionsprüfungen aus. Nur den Inhalt von
-dist-pages veröffentlichen, weder Quellverzeichnis noch lokale Serverzustände.
-GitHub Pages benötigt den Inhalt direkt im Veröffentlichungswurzelverzeichnis.
-Eine andere Projektadresse benötigt einen eigenen Basis-Build und passende Tests.
-Beide Builds enthalten dieselben Lizenztexte unter „Quellen & Lizenzen“; der
-Build kopiert dafür ausschließlich vorhandene Lizenz- und Quellenhinweise.
+Über „Nach neuen Figuren suchen“ übernommene Metadaten gelten jetzt auch für
+Gerätesuche, Auswahlvorschau, Dateieigenschaften und lokale Figurendateiprüfung.
+Ein Katalogwechsel beendet eine laufende Gerätesuche; sie kann mit dem neuen
+Stand neu gestartet werden. Verspätete alte Ergebnisse/Bildfehler überschreiben
+nicht die aktuelle Auswahl. Diese Verbindungen werden mit tatsächlichen
+Vue-Komponenten und synthetischen BIN-Dateien getestet.
 
-Figurenlinks ohne Serverweiterleitung funktionieren als
-`/?amiibo=01010000000e0002` oder `/#/a/01010000-000e0002` lokal und entsprechend
-`/pixl.js/?amiibo=01010000000e0002` bzw. `/pixl.js/#/a/01010000-000e0002` online.
-Es sind reine Informationslinks zu amiibo.life, keine Gerätebefehle. Die alte
-lokale Route /a/<8Hex>-<8Hex> bleibt erhalten; auf Pages sind die neuen Links zu
-verwenden. Für den Gerätezugriff braucht der Browser Web Bluetooth und HTTPS
-oder localhost. Die normale Bluetooth-Paarung ist dafür nicht erforderlich.
+Der gebündelte Katalog umfasst weiterhin 952 öffentliche IDs. Metadaten/Bilder
+sind keine spielfertigen Figurendateien. Eigene BIN-Dateien oder direkte
+HTTPS-Quellen können geprüft und übertragen werden; vorhandene Dateien werden
+dabei nicht automatisch überschrieben. Grundstruktur und ID-Prüfung ersetzen
+keine kryptografische Prüfung oder Erkennung an der Konsole.
 
-Das mitgelieferte Anwendungsupdate DE3.55/627 ist für unser LCD/PFS1-Gerät mit
-BL8/S112 7.3.0 bestimmt. Kein universelles Paket für alle Allmiibo-Varianten.
-Der genaue Firmwarequellstand ist bei der Paketauswahl und auf der DFU-Seite
-als separater Download verlinkt. Eine neue Seite erteilt noch keine Bluetooth-
-Freigabe: Geräteauswahl und Übertragungsstart erfolgen ausdrücklich im Browser.
+## Firmware und Speicherprofile
 
-Beibehalten aus 3.32.4:
+Das mitgelieferte Anwendungsupdate ist **DE3.56/628** für passende LCD/PFS1-Geräte
+mit BL8/S112 7.3.0. Es enthält neue Tastaturhinweise und eine besser sichtbare
+Scrollanzeige. **Bootloader, SoftDevice, PFS1-Datenlayout und Speicherkern bleiben
+unverändert.** Eine vorhandene passende Sammlung benötigt keine Formatierung
+oder Wiederherstellung. Die Browserverbesserungen allein erfordern kein Flashen.
 
-3.32.4 ergänzt das getrennt gebundene Speicherprüfprofil für DE3.55/627.
-Der zugehörige WASM-Simulator verwendet exakt den neuen Firmwarekern mit
-optimierter CRC-Berechnung und LittleFS-Verschleißkorrektur. Das PFS1-Datenformat und die
-Speicheraufteilung bleiben gleich. Ein bereits auf Packed LittleFS laufendes
-Gerät benötigt für dieses Anwendungsupdate keine Formatierung oder erneute
-Wiederherstellung. Vorhandene Amiibo-Dateien bleiben auf dem Gerät.
+Der bisherige DE3.55-Simulator und seine Engine-Identität bleiben unverändert.
+Das aktuelle Profil akzeptiert ausdrücklich die Paare **DE3.55/627** und
+**DE3.56/628**. Unter „Speicherumstellung“ ist DE3.56/628 der aktuelle Zielstand.
+Alle früheren Profile bleiben separat vorhanden; die Auswahl bestätigt keine
+tatsächlich installierte Firmware oder unbekannte Display-/Speicherkompatibilität.
+Die Prüfung verknüpft Version, Zähler und Engine-Identität.
 
-Unter „Speicherumstellung“ ist DE3.55/627 das neue Standardprüfprofil.
-DE3.51–DE3.54 bleibt separat auswählbar. Alle sechs früheren WASM-Dateien
-und ihre Quellbäume bleiben bytegleich erhalten; das neue Profil ist ein
-siebtes Artefakt. Die Auswahl ist keine Aussage über die installierte Version.
-Version, Anwendungszähler und Engine-Identität müssen weiterhin zusammenpassen.
+Die Firmware-Paketliste und DFU-Seite verlinken die genaue
+[DE3.56-Quelle](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip).
+Paketprüfung und Übertragung sind getrennt: SHA-256 bindet die Paketbytes;
+erst die ausdrückliche Geräteauswahl startet den Transfer. Das Anwendungs-ZIP
+ersetzt weder BL8/S112 noch migriert es eine SPIFFS-/Upstream-LittleFS-Sammlung.
 
-Die folgenden Bibliotheks- und Bedienungsverbesserungen bleiben erhalten:
+## Bauen, testen und veröffentlichen
 
-3.32.3 aktualisiert kompatible Bibliotheks-Patches: Babel-Helfer/-Parser/-Typen,
-tinycolor, PostCSS, Rolldown einschließlich seiner Plattformbindungen und
-vue-component-type-helpers. Rolldown benötigt dazu seine exakt passende
-Build-Typenbibliothek @oxc-project/types 0.156.0. Vue, Element Plus, Vite und
-die Bluetooth-/DFU-Protokolle wechseln nicht auf eine andere Versionsreihe.
-Diese Build-/Bibliothekskorrekturen sind keine gemessene Funkbeschleunigung.
+Node/npm gemäß [CONTRIBUTING.md](../CONTRIBUTING.md) verwenden:
 
-Die bisherige nanoid-Lockangabe 3.3.22/URL wurde auf die aktuell offiziell
-verfügbare 3.3.20 berichtigt. Alle 26 installierten Dateien und das Tarball-SRI
-sind bytegleich zum vorher verwendeten Artefakt; dieses deklarierte bereits
-3.3.20. Kein nanoid-Code-Downgrade. Die frühere 3.3.22-Metadatenadresse liefert
-aktuell HTTP404; eine Aussage zur gesamten Veröffentlichungshistorie folgt
-daraus nicht. Eine neue Regression prüft installierte Versionen und Lizenzen
-gegen den Lock ohne Ausnahme für widersprüchliche Versionsangaben.
+```sh
+npm ci
+npm test
+npm run build
+npm run build:pages
+```
 
-Beibehalten aus 3.32.2 ist unter „Auf dem Gerät suchen“ die freiwillige Inhaltssuche:
-„Figuren auch ohne gespeicherte ID finden“. Ohne Haken bleibt die Suche
-bei Ordnern und Metadaten. Mit Haken liest sie nacheinander höchstens 128
-unterstützte BIN-Dateien (maximal 256 KiB), falls deren Metadaten-ID fehlt und
-Dateiname/Notiz den Suchtext noch nicht erfüllen. Sie ordnet die ID aus
-Bytes 84–91 dem lokalen Katalog zu. Keine Geräteänderung, keine Inhaltsablage,
-keine Internetabfrage; keine NFC-Funktions- oder Signaturprüfung. Grenzen und
-Teilergebnisse werden angezeigt, und die Suche kann abgebrochen werden.
+Der lokale Build liegt in `dist/`, der Pages-Build für `/pixl.js/` in
+`dist-pages/`. Beide führen ihre Produktionsprüfungen aus und enthalten dieselben
+gebundenen Lizenztexte unter „Quellen & Lizenzen“. Für Pages nur den Inhalt von
+`dist-pages/` veröffentlichen, keine Quellen, Serverzustände oder private Dateien.
+Eine andere Projektadresse benötigt einen passenden Basis-Build mit Tests.
 
-Ein Upload-Abbruch wird jetzt auch zwischen den Vorprüfungen beachtet:
-Nach einem abgebrochenen Ordnerlesen erscheint kein späterer Überschreiben-
-Dialog. Ein bereits begonnener Commit wird weiterhin sicher abgeschlossen.
-
-Beibehalten: 3.32.1 schließt die Auswahlvorschau beim Wechsel zur Laufwerksübersicht und
-beim Löschen ihrer Datei. Vorschau-Aktionen prüfen den aktuellen Ordner und
-die konkrete Zeile; verspätete Klicks auf inzwischen geschlossene Auswahlen
-werden verworfen. Andere ausgewählte Dateien bleiben verfügbar.
-
-3.32.0 ergänzt eine Suche auf dem Gerät, eine direkte Auswahlvorschau und
-eine übersichtlichere Oberfläche. Das Bild einer ausgewählten Figur erscheint
-direkt. Fehlt ihre ID in den Metadaten, wird nur die ausgewählte unterstützte
-Datei gelesen. Ohne die neue ausdrückliche Inhaltssuche werden weiterhin
-ausschließlich Ordner und Metadaten gelesen.
-
-Die lokale Firmwareliste enthält das Anwendungs-ZIP DE3.55/627.
-Paketidentität und Übertragungsbeginn bleiben getrennt: Erst die ausdrückliche
-Geräteauswahl auf der DFU-Seite startet den Transfer. Das ZIP enthält weder
-Bootloader/SoftDevice noch eine Amiibo-Sammlung oder Speicherumstellung.
-
-Das bisherige LittleFS-Profil unterstützt weiterhin die exakten Paare
-DE3.51/623, DE3.52/624, DE3.53/625 und DE3.54/626. Das neue Profil gehört
-ausschließlich zum Paar DE3.55/627 und dessen eigener Engine-Identität.
-
-Mit DE3.51 übernimmt der Dateimanager eine bestehende Fernbedienungsverbindung
-für die Dateiübertragung. Vollständige Raw128-Wiederherstellungen veröffentlichen
-Dateiinhalt und Metadaten gemeinsam; der abschließende Vergleich bleibt erhalten.
-Die alte Firmware und alle früheren Speicherprüfprofile bleiben unterstützt.
-
-Die Tests verwenden gemocktes Bluetooth und echte lokale WASM-Simulatoren.
-Sie ersetzen keine Funk-, NFC- oder Leistungsmessung am Allmiibo.
-
-Entwicklung: `npm test`, `npm run build` (mit Produktions-Worker-Tests).
-Der isolierte native Test `scripts/check-pfs-compatibility.py --output <neuer Ordner>`
-benötigt GCC und prüft einen synthetischen Datenträger mit beiden Kernversionen:
-alt erstellen, neu lesen/ändern, alt lesen/ändern, neu wieder lesen. Er gleicht
-Dateiinhalt, Pfade, Raw128-Metadaten und Importidentität vollständig ab.
+Der isolierte native Test
+`scripts/check-pfs-compatibility.py --output <neuer Ordner>` benötigt GCC und
+prüft einen synthetischen Datenträger mit beiden Kernständen: alt erstellen,
+neu lesen/ändern, alt lesen/ändern, neu erneut lesen. Er vergleicht Inhalte,
+Pfade, Raw128-Metadaten und Importidentität.
 `scripts/build-capacity-simulator.py --profile current` reproduziert den
-neuen WASM mit clang 23.1.4; `--profile de354` reproduziert den vorherigen.
-Lizenzangaben in third-party/npm/SOURCES.json sind an die aktuell installierten
-Versionen gebunden. Ältere, nicht mehr dort referenzierte Lizenzkopien bleiben
-als historische Hinweise erhalten; sie werden nicht als installierte Version
-ausgewiesen. Die offizielle Registry, der aktualisierte Lock und npm-ci werden
-im separaten Prüfbericht gebunden. Keine persönlichen Amiibo-Dateien enthalten.
+beibehaltenen aktuellen WASM mit clang 23.1.4; `--profile de354` den vorherigen.
+Historische Verzeichnis-/Artefaktnamen wie `packed-simulator-de355` identifizieren
+den unveränderten Speicherkern und werden nicht nur wegen DE3.56 umbenannt.
 
-3.33.1 korrigiert die Bestandsanzeige bei Dateien ohne Figuren-ID in den
-Eigenschaften. Eine Schnellpruefung stellt solche Figuren nicht als fehlend dar.
-Die Inhaltspruefung liest ihre IDs direkt und faerbt passende Katalogkarten.
+Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
+`third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
+sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
+Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0_Quellcode.zip)
+enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
-Nach dem Trennen bleiben abgeschlossene Ergebnisse als datierte letzte Pruefung
-auf den Karten sichtbar. Neue Verbindungen und Bestandsaenderungen setzen diese
-Anzeige zurueck. Die Daten werden nur in der geoeffneten Seite gehalten.
+## Verbindung und Grenzen
+
+Web Bluetooth erfordert einen unterstützenden Browser sowie HTTPS oder localhost.
+Die normale Betriebssystem-Paarung ist nicht erforderlich. Bluetooth läuft
+direkt zwischen dem Browsergerät und Allmiibo; Pages ist keine Funkbrücke zum
+heimischen Laptop. Sicherungen, Diagnosen und Sammlungen werden nicht automatisch
+an GitHub gesendet.
+
+Informationslinks funktionieren lokal als `/?amiibo=01010000000e0002` oder
+`/#/a/01010000-000e0002`, auf Pages mit `/pixl.js/` davor. Sie sind öffentliche
+Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
+`/a/<8Hex>-<8Hex>` benötigt einen lokalen Server und ist kein Pages-Routeersatz.
+
+Tests verwenden simuliertes Bluetooth und echte lokale WASM-Kerne. Sie ersetzen
+keine Funk-, NFC-, Startzeit- oder physische Speichermessung. Geräteprüfungen
+von DE3.56 stehen noch aus; frühere DE3.55-Ergebnisse gelten nicht als neue
+Hardwareprüfung. Ein zusätzlicher Startzeitgewinn wird hier nicht behauptet.

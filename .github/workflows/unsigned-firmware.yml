@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.55 application
+    name: DE3.56 application
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -22,7 +22,7 @@ jobs:
       - name: Compile and verify unsigned release application offline
         run: python3 tools/build_lcd.py --jobs 4
       - name: Show bound build result
-        run: cat build/lcd-de355/BUILD_RESULT.json
+        run: cat build/lcd-de356/BUILD_RESULT.json
 
   bootloader:
     name: BL8 corresponding-source build

@@ -57,3 +57,7 @@ jobs:
         run: python3 fw/tests/de3/test_packed_crc_pair_de355.py
       - name: LittleFS NOR wear and interrupted writes
         run: python3 fw/tests/de3/test_lfs_wear_de355.py
+      - name: LCD keyboard pixels, input and scrollbar boundaries
+        run: python3 fw/tests/de3/test_ui_comfort_de356.py
+      - name: Existing LCD editor rendering
+        run: python3 fw/tests/de3/test_text_input_render_de344.py

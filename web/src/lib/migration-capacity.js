@@ -67,10 +67,10 @@ const de354={...de350,url:'/lfs-capacity-current.wasm',wasmSha256:'50466efc47783
   firmwareVersion:'2.22.0-DE3.54',applicationCounter:626,
   approvedApplications:[{firmwareVersion:'2.22.0-DE3.51',applicationCounter:623},{firmwareVersion:'2.22.0-DE3.52',applicationCounter:624},{firmwareVersion:'2.22.0-DE3.53',applicationCounter:625},{firmwareVersion:'2.22.0-DE3.54',applicationCounter:626}],
   geometry:{...de350.geometry},layout:{...de350.layout,engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'}}
-// DE3.55 retains PFS1 on-disk geometry with a different reviewed CRC/wear-leveling engine.
+// DE3.55 introduced this CRC/wear engine; DE3.56 keeps every engine byte and geometry unchanged.
 const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',
-  firmwareVersion:'2.22.0-DE3.55',applicationCounter:627,
-  approvedApplications:[{firmwareVersion:'2.22.0-DE3.55',applicationCounter:627}],
+  firmwareVersion:'2.22.0-DE3.56',applicationCounter:628,
+  approvedApplications:[{firmwareVersion:'2.22.0-DE3.55',applicationCounter:627},{firmwareVersion:'2.22.0-DE3.56',applicationCounter:628}],
   geometry:{...de354.geometry},layout:{...de354.layout,engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'}}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
