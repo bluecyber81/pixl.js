@@ -2,6 +2,8 @@
 
 **LCD application 2.22.0-DE3.55 / counter 627 · Dateimanager 3.33.1 · BL8 source · S112 7.3.0 documentation**
 
+The [detailed improvement/bug-fix history](https://github.com/bluecyber81/pixl.js/blob/main/docs/DEVELOPMENT_HISTORY.md) and [BL8/S112 changes](https://github.com/bluecyber81/pixl.js/blob/main/docs/BOOTLOADER_SOFTDEVICE_CHANGES.md) are now published. [Separate BL8 and original Nordic S112 component downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) supplement this standard application release; their counter and installation requirements are different.
+
 This publication brings the main source tree and contributor documentation up to the existing DE3.55 application and 3.33.1 web releases. Existing firmware/web payloads are unchanged; no repeat flash is needed if they are already installed.
 
 - Matching current application source plus independently exported BL8 source, SDK overrides, build guides and CI.

@@ -2,6 +2,8 @@
 
 **Anwendung 2.22.0-DE3.55 / Zähler 627 · Dateimanager 3.33.1 · BL8-Quellen · S112-7.3.0-Dokumentation**
 
+Neu dokumentiert: [ausführliche Verbesserungen und Fehlerbehebungen](https://github.com/bluecyber81/pixl.js/blob/main/docs/DEVELOPMENT_HISTORY.de.md), [BL8-/S112-Arbeit](https://github.com/bluecyber81/pixl.js/blob/main/docs/BOOTLOADER_SOFTDEVICE_CHANGES.md) und [separate Bootloader-/SoftDevice-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0). Die Einzelkomponenten haben eigene Zähler- und Installationsvoraussetzungen.
+
 Der Hauptzweig und die Entwicklerdokumentation entsprechen jetzt den aktuellen Downloads. Die bisherigen Anwendungs- und Browserdateien bleiben unverändert. Wer DE3.55 bereits installiert hat, muss deshalb nicht erneut flashen.
 
 - Passende Firmware- und BL8-Quellen, SDK-Korrekturen, Bauanleitungen, Beitragsleitfaden und CI.

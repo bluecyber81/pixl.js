@@ -6,6 +6,12 @@ Stand **3. November 2026**: **Firmware 2.22.0-DE3.55 / Zähler 627**, **Dateiman
 
 Diese Community-Weiterentwicklung von bluecyber81 baut auf [cylin577/pixl.js](https://github.com/cylin577/pixl.js) und ursprünglich [solosky/pixl.js](https://github.com/solosky/pixl.js) auf. Sie ist keine offizielle Version dieser Entwickler. Aus späteren Upstream-Versionen wurden ausgewählte Änderungen übernommen; die Versionsnummer bedeutet keine vollständige Gleichheit mit deren aktuellem Stand.
 
+## Unsere Weiterentwicklung und behobenen Fehler
+
+**[Ausführlicher Änderungs- und Fehlerbehebungsverlauf](docs/DEVELOPMENT_HISTORY.de.md)** · **[BL8 und SoftDevice-Anbindung](docs/BOOTLOADER_SOFTDEVICE_CHANGES.md)** · **[Bootloader-/SoftDevice-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0)**
+
+Bootloader und SoftDevice sind eigenständige, sichtbare Teile des Projekts. BL8 enthält unsere Bootloaderkorrekturen und liegt mit passender Quelle sowie dem unveränderten signierten Einzelpaket vor. [S112 7.3.0](softdevice-s112/README.md) gibt es als unveränderte Nordic-Originaldatei mit Lizenz. Unsere Integrations-, SDK-, Diagnose- und Prüfarbeit ist ebenfalls beschrieben. Der Verlauf nennt jeweils das frühere Problem, die Korrektur und den belegten Prüfumfang.
+
 ## Benutzen und installieren
 
 1. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) in einem Browser mit Web Bluetooth öffnen, am Gerät **Bluetooth-Dateiübertragung** starten und auf der Seite verbinden.

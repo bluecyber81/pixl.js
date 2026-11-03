@@ -2,6 +2,8 @@
 
 Publication baseline: **2026-11-03**. Components have independent versions.
 
+**[Detailed bootloader/SoftDevice changes](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
+
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
 | Application | 2.22.0-DE3.55 | DFU counter 627, hardware requirement 52 |

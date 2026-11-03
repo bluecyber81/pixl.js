@@ -1,5 +1,7 @@
 # Current publication: DE3.55 / Dateimanager 3.33.1 / BL8 / S112 7.3.0
 
+**[Detailed before/after history (English)](docs/DEVELOPMENT_HISTORY.md) · [Ausführliche Fehlerbehebungen (Deutsch)](docs/DEVELOPMENT_HISTORY.de.md) · [Bootloader and SoftDevice work](docs/BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Component downloads](docs/COMPONENT_DOWNLOADS.md)**
+
 Published source and documentation synchronized on 2026-11-03. This synchronization changes no installed firmware and keeps existing OTA bytes/checksums intact. [Current component matrix](docs/COMPONENTS.md).
 
 ## Since the former main-branch DE3.37 snapshot

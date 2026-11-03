@@ -9,10 +9,16 @@ Current published components, checked **3 November 2026**:
 | LCD application | **2.22.0-DE3.55**, DFU counter **627**; [`fw/`](fw) | Application-only OTA, existing compatible PFS1 devices |
 | Browser file manager | **3.33.1**; [`web/`](web) | [Online](https://bluecyber81.github.io/pixl.js/) or portable ZIP; no device flash |
 | Bootloader | **BL8**; [`bootloader-bl8/`](bootloader-bl8) | Separate advanced component; not replaced by application OTA |
-| Nordic Bluetooth stack | **S112 7.3.0**, FWID **0x0126** | Nordic binary under vendor terms; not our own SoftDevice build |
+| Nordic Bluetooth stack | **[S112 7.3.0](softdevice-s112/README.md)**, FWID **0x0126** | Nordic binary under vendor terms; not our own SoftDevice build |
 | File storage | **Packed LittleFS, PFS1** | Not interchangeable with SPIFFS or ordinary upstream LittleFS |
 
 This is bluecyber81's community continuation of [cylin577/pixl.js](https://github.com/cylin577/pixl.js), originally [solosky/pixl.js](https://github.com/solosky/pixl.js). It combines selected upstream work with the DE-series changes. It is not an official release from either upstream and does not claim every later upstream change has been merged. The version prefix identifies the base, not equality with a current upstream tag.
+
+## Development, bootloader and SoftDevice
+
+**[Detailed improvements and fixed bugs](docs/DEVELOPMENT_HISTORY.md)** · **[BL8 / S112 change record](docs/BOOTLOADER_SOFTDEVICE_CHANGES.md)** · **[Component downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0)**
+
+BL8 is an actively modified project component with corresponding source and a separately published original signed OTA. [S112 7.3.0](softdevice-s112/README.md) is also published as the unchanged Nordic reference distribution with its license. Our SoftDevice integration, SDK workaround, diagnostics and validation are documented separately from Nordic's vendor fixes. The component download guide explains the counter-9/counter-11 distinction and why the vendor archive is not a direct DFU package.
 
 ## Start here
 

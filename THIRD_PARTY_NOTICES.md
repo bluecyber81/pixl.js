@@ -47,6 +47,10 @@ checked S112 compatibility correction used by the pinned SDK build; see the publ
 The external complete Nordic SDK is not redistributed here. Optional BL6 has its own
 source/provenance and Nordic notices under `bootloader-bl6`; the normal application ZIP does not contain it.
 
+## Separate BL8 and S112 reference-component release
+
+The [component release](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) separately republishes the byte-identical original Nordic S112 7.3.0 ZIP with its full license, API and release notes. [softdevice-s112/LICENSE_NORDIC.txt](softdevice-s112/LICENSE_NORDIC.txt) also preserves the terms and disclaimer. The vendor software is restricted to Nordic integrated circuits, is not relicensed under GPL and is not endorsed by Nordic. Project integration/header corrections are distinguished from vendor binary fixes. The signed BL8-only OTA is accompanied by corresponding source and original project/Nordic notices.
+
 ## Historical DE3.16 web inventory
 
 The following table describes the historical DE3.16 browser distribution. Dependency notices are supplied separately because its minified bundle does not preserve a complete set of notices. This conservative inventory covers every non-dev entry of the pinned lockfile, including transitive, type and build-support entries; it does not assert that all entries survive into the browser bundle.
@@ -112,7 +116,7 @@ The @vue/devtools-api notice comes from the exact source commit recorded by npm 
 
 ## Distribution boundaries
 
-The OTA files are application-only images and do not replace or redistribute a bootloader or SoftDevice image. The historical public upstream default signing key is not a private or unique trust credential. No private signing key is included in this new working-tree snapshot.
+The normal DE application OTA files are application-only images and do not replace the bootloader or SoftDevice. The separate BL8/S112 reference-component release includes a clearly identified bootloader-only OTA and the unchanged original Nordic vendor distribution with their corresponding source/notices and installation boundaries. The historical public upstream default signing key is not a private or unique trust credential. No private signing key is included in this working-tree snapshot.
 
 User figure collections, private device reports and account credentials gain no distribution rights from the firmware license. This package is not a collection of amiibo dumps.
 
