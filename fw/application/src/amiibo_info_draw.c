@@ -12,9 +12,17 @@ bool amiibo_info_url(char *out, size_t capacity, const ntag_t *tag) {
     uint32_t head = to_little_endian_int32(&tag->data[84]);
     uint32_t tail = to_little_endian_int32(&tag->data[88]);
     if (!head && !tail) return false;
+    /* These products have public pages, but the site's ID resolver returned
+     * 404 on 2026-11-01. Never change tag IDs to accommodate a website. */
+    const char *product_url = NULL;
+    if (head == 0x00000004 && tail == 0x04431c02)
+        product_url = "https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car";
+    else if (head == 0x000a0004 && tail == 0x04451c02)
+        product_url = "https://amiibo.life/amiibo/my-mario-wood-blocks/toad";
     /* Public model identity only. Never include UID, filename, owner or save. */
-    int length = snprintf(out, capacity, "https://amiibo.life/nfc/%08lx-%08lx",
-                          (unsigned long)head, (unsigned long)tail);
+    int length = product_url ? snprintf(out, capacity, "%s", product_url) :
+        snprintf(out, capacity, "https://amiibo.life/nfc/%08lx-%08lx",
+                 (unsigned long)head, (unsigned long)tail);
     if (length < 0 || (size_t)length >= capacity) { out[0] = 0; return false; }
     return true;
 }
@@ -43,7 +51,7 @@ void amiibo_info_draw(mui_canvas_t *canvas, const ntag_t *tag, uint8_t page) {
     mui_canvas_draw_utf8(canvas, 2, 10, _T(DE3_FIGURE_INFO));
     mui_canvas_draw_utf8(canvas, 105, 10, page == 2 ? "2/2" : "1/2");
     mui_canvas_set_draw_color(canvas, 1);
-    char text[48];
+    char text[AMIIBO_INFO_URL_CAPACITY];
     if (page == 2) {
         if (amiibo_info_url(text, sizeof(text), tag)) {
             draw_qrcode(canvas, 0, 14, 50, text);

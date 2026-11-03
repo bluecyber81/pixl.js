@@ -120,6 +120,13 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
 
     if (ntag_emu.is_selecting_sector) {
         ntag_emu.is_selecting_sector = false;
+        /* Packet 2 is one sector byte and three RFU bytes (CRC removed by
+         * HAL). A truncated READ must not become sector 0x30. Preserve the
+         * old sector on rejection so a following command can recover. */
+        if (data_length != 4) {
+            hal_send_ack_nack(0x0);
+            return;
+        }
         ntag_emu.sector = p_data[0];
         NRF_LOG_INFO("NFC Sector Select Done (switch to %d)", p_data[0]);
 
@@ -307,6 +314,11 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
         hal_send_ack_nack(0xA);
         break;
     case NFC_CMD_SECTOR_SELECT:
+        /* NXP NT3H2111/2211 section 10.12: packet 1 is exactly C2 FF. */
+        if (data_length != 2 || p_data[1] != 0xff) {
+            hal_send_ack_nack(0x0);
+            break;
+        }
         NRF_LOG_INFO("NFC Sector Select start");
         hal_send_ack_nack(0xA);
         ntag_emu.is_selecting_sector = true;
@@ -428,6 +440,15 @@ void ntag_emu_save_failed(void) {
     CRITICAL_REGION_EXIT();
 }
 bool ntag_emu_save_pending(void) { return ntag_emu.save_failed; }
+
+bool ntag_emu_remote_input_safe(void) {
+    bool safe;
+    CRITICAL_REGION_ENTER();
+    safe = !ntag_emu.field_on && !ntag_emu.dirty && !ntag_emu.pending &&
+           !ntag_emu.busy && !ntag_emu.save_failed && !ntag_emu.delivering_write;
+    CRITICAL_REGION_EXIT();
+    return safe;
+}
 
 bool ntag_emu_retry_save(void) {
     if (!ntag_emu_prepare_change()) return false;

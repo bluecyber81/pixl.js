@@ -31,6 +31,8 @@ void settings_scene_language_on_enter(void *user_data) {
     }
     mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK), (void *)NULL_USER_DATA);
 
+    uint16_t language = settings_get_data()->language;
+    mui_list_view_set_focus(app->p_list_view, language < LANGUAGE_COUNT ? language : 0);
     mui_list_view_set_selected_cb(app->p_list_view, settings_scene_language_list_view_on_selected);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
 }

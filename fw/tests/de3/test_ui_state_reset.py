@@ -46,7 +46,7 @@ static vfs_driver_t driver={mounted,remove_file};
 static vfs_driver_t*vfs_get_default_driver(void){return &driver;}
 static settings_data_t*settings_get_data(void){return &m_settings_data;}
 static void mui_u8g2_set_contrast_level(unsigned x){(void)x;}
-static void mui_u8g2_set_backlight_level(unsigned x){(void)x;}
+static unsigned mui_u8g2_set_backlight_level(unsigned x){(void)x;return NRF_SUCCESS;}
 static void mui_u8g2_set_flip_display(bool x){display_flipped=x;}
 static void nrf_pwr_mgmt_set_timeout(unsigned x){(void)x;}
 static void setLanguage(unsigned x){(void)x;}

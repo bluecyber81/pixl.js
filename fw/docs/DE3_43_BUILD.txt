@@ -1,0 +1,23 @@
+DE3.43: button responsiveness and bounded input handling (application counter 615)
+
+Based on DE3.42. Preserve its fixed card factories, drive bounds and unchanged
+PFS1/LittleFS engine. No migration, formatting, bootloader or SoftDevice change.
+
+This release addresses reproducible software losses of menu input. A host
+reproduction is not proof that every missed physical button press has the same
+cause. The device must still be checked for reliable single presses afterward.
+
+Reviewed areas include debounced input, short/long/repeat classification, event
+queue overload, inactive polling, teardown/reinitialization and memory bounds.
+The detailed release evidence records exact changes and actual test results.
+SDK17.1 button driver: clear the active-pin bit when a short pulse returns to
+IDLE. Retain the SDK copyright and license; no radio-stack replacement.
+BSP debounce parameter 20 ms instead of 50 ms (three half-period samples).
+On queue overflow, retain input by evicting the oldest queued animation/redraw;
+never evict another input. All-input overload remains bounded and diagnosed.
+PWM backlight synchronization is limited to 200 attempts (199 x 10 us delays
+at most, excluding interrupt preemption). Settings report errors and do not
+confirm a brightness change that failed. No background retry is introduced.
+
+Build using the same pinned SDK image and nrf_nvic.h erratum override as DE3.42.
+The original DE3.42 source, signed package and evidence remain unchanged.

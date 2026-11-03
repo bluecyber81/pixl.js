@@ -19,10 +19,17 @@ static void settings_scene_lcd_backlight_event_cb(mui_progress_bar_event_t event
     if (value < 0) value = 0;
     if (value > 100) value = 100;
     mui_progress_bar_set_current_value(p_progress_bar, value);
-    if (event == MUI_PROGRESS_BAR_EVENT_DECREMENT || event == MUI_PROGRESS_BAR_EVENT_INCREMENT) {
-        mui_u8g2_set_backlight_level(value);
-    } else if (event == MUI_PROGRESS_BAR_EVENT_CONFIRMED) {
-        mui_u8g2_set_backlight_level(value);
+    if (event != MUI_PROGRESS_BAR_EVENT_DECREMENT && event != MUI_PROGRESS_BAR_EVENT_INCREMENT &&
+        event != MUI_PROGRESS_BAR_EVENT_CONFIRMED) return;
+    ret_code_t result = mui_u8g2_set_backlight_level(value);
+    if (result != NRF_SUCCESS) {
+        int8_t actual = mui_u8g2_get_backlight_level();
+        mui_progress_bar_set_current_value(p_progress_bar, actual >= 0 ? actual : p_settings->lcd_backlight);
+        NRF_LOG_WARNING("Backlight change failed: %u", result);
+        mui_toast_view_show(app->p_toast_view, _T(ERR));
+        return;
+    }
+    if (event == MUI_PROGRESS_BAR_EVENT_CONFIRMED) {
         p_settings->lcd_backlight = value;
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     }

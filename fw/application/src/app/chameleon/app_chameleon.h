@@ -29,6 +29,12 @@ typedef struct {
 
     app_chameleon_id_edit_type_t id_edit_type;
     bool initialized;
+    /* Only one sorted import page is retained in the application heap. */
+    char browser_anchor[48];
+    uint16_t browser_anchor_icon;
+    int8_t browser_direction;
+    /* Optional two-page cache; allocated only while the file picker is open. */
+    struct chameleon_browser_cache_s *browser_cache;
 
 } app_chameleon_t;
 

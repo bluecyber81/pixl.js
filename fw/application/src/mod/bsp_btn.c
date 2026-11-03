@@ -9,6 +9,9 @@
 
 typedef enum { BTN_STATE_IDLE, BTN_STATE_PRESSED, BTN_STATE_LONG_PRESSED, BTN_STATE_REPEAT } btn_state_t;
 
+/* SDK app_button samples every half-delay and accepts three active samples.
+ * 20 ms therefore detects a clean first press in about 30 ms, not 20 ms. */
+#define BSP_BUTTON_DETECTION_DELAY_MS (20)
 #define BSP_BUTTON_LONG_PUSH_TIMEOUT_MS (1000)
 #define BSP_BUTTON_REPEAT_PUSH_TIMEOUT_MS (200)
 
@@ -146,7 +149,7 @@ void bsp_btn_init(bsp_btn_event_cb_t p_event_cb) {
     /* app_button_disable does not reset its private debounce states. Release
      * our GPIO inputs at deinit so init can reset those states without trying
      * to allocate an already-owned pin. Other GPIOTE users are untouched. */
-    uint32_t result = app_button_init(app_buttons, BUTTONS_NUMBER, APP_TIMER_TICKS(50));
+    uint32_t result = app_button_init(app_buttons, BUTTONS_NUMBER, APP_TIMER_TICKS(BSP_BUTTON_DETECTION_DELAY_MS));
     APP_ERROR_CHECK(result);
     m_inputs_initialized = true;
     for (uint32_t i = 0; i < BUTTONS_NUMBER; i++) m_bsp_btns[i].state = BTN_STATE_IDLE;

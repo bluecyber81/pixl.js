@@ -77,6 +77,7 @@
 #include "bat.h"
 #include "mod/runtime_diag.h"
 #include "ble_main.h"
+#include "ble_remote.h"
 
 #include "nrf_sdh.h"
 
@@ -177,6 +178,7 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
             nrf_pwr_mgmt_cancel_shutdown();
             return false;
         }
+        ble_remote_shutdown();
         ble_disable();
         ble_process_pending();
 
@@ -301,6 +303,15 @@ static void prepare_storage_recovery_ui(void) {
 #endif
 }
 
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+static uint32_t startup_elapsed_ms(uint32_t started) {
+    uint32_t ticks = app_timer_cnt_diff_compute(app_timer_cnt_get(), started);
+    uint64_t ms = (uint64_t)ticks * 1000u * (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u) /
+                  APP_TIMER_CLOCK_FREQ;
+    return ms > UINT32_MAX ? UINT32_MAX : (uint32_t)ms;
+}
+#endif
+
 int main(void) {
     runtime_diag_boot_capture(nrf_power_resetreas_get());
     ret_code_t err_code;
@@ -344,7 +355,18 @@ int main(void) {
 
     // cache_clean(); //FOR TESTING
 
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+    /* The existing power-management timer runs RTC1 by this point. With
+     * APP_TIMER_KEEPS_RTC_ACTIVE=0, app_timer_init alone is not a time origin.
+     * The 24-bit counter span is sufficient for this synchronous startup;
+     * this trace deliberately excludes bootloader and early SDK startup. */
+    const uint32_t startup_started = app_timer_cnt_get();
+    runtime_diag_startup_mark(STARTUP_STORAGE_BEGIN, 0);
+#endif
     err_code = settings_init();
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+    runtime_diag_startup_mark(STARTUP_STORAGE_DONE, startup_elapsed_ms(startup_started));
+#endif
 #ifdef VFS_PACKED_LFS_ENABLE
     vfs_packed_latch_recovery();
 #endif
@@ -370,10 +392,20 @@ int main(void) {
     setLanguage(p_settings->language);
 
     mui_t *p_mui = mui();
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+    runtime_diag_startup_mark(STARTUP_DISPLAY_BEGIN, startup_elapsed_ms(startup_started));
+#endif
     mui_init(p_mui);
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+    runtime_diag_startup_mark(STARTUP_DISPLAY_DONE, startup_elapsed_ms(startup_started));
+#endif
 
     mini_app_launcher_t *p_launcher = mini_app_launcher();
     mini_app_launcher_init(p_launcher, wakeup_reason);
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+    runtime_diag_startup_mark(STARTUP_LAUNCHER_DONE, startup_elapsed_ms(startup_started));
+    bool startup_dispatched = false;
+#endif
 
     NRF_LOG_FLUSH();
 
@@ -383,6 +415,14 @@ int main(void) {
         ble_process_pending();
         app_sched_execute();
         mui_tick(p_mui);
+        ble_remote_poll();
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+        if (!startup_dispatched) {
+            /* First event dispatch, not a measurement of visible LCD pixels. */
+            runtime_diag_startup_mark(STARTUP_DISPATCH_DONE, startup_elapsed_ms(startup_started));
+            startup_dispatched = true;
+        }
+#endif
         NRF_LOG_FLUSH();
 
         // The device keeps emulating a NFC tag in all modes (amiibo/amiibolink/chameleon),
@@ -391,7 +431,7 @@ int main(void) {
         // emulating or transferring over BLE, so the timeout still applies
         // afterwards. Manual sleep is not affected.
         if (ntag_emu_save_pending() || (p_settings->no_sleep_mode &&
-            (is_emulating_app(p_launcher) || ble_is_connected()))) {
+            (is_emulating_app(p_launcher) || (ble_is_connected() && !ble_remote_mode_active())))) {
             nrf_pwr_mgmt_feed();
         }
 

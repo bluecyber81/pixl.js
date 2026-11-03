@@ -36,7 +36,7 @@ def build_source(sdk):
     bodies = '\n\n'.join(function(gatt, x) for x in sdk_functions)
     bodies += '\n\n' + '\n\n'.join(function(ble, x) for x in
         ('static bool ble_device_name_is(', 'void gatt_evt_handler(', 'void gatt_init(',
-         'void ble_init(', 'void ble_device_mode_prepare(', 'bool ble_mtu_diagnostic('))
+         'void ble_init(', 'static ret_code_t ble_apply_device_mode(', 'bool ble_mtu_diagnostic('))
     bodies += '\n\n' + function(vfs, 'bool df_proto_vfs_is_idle(')
     bodies += '\n\n' + function(info, 'static void df_proto_handler_info_mtu_diagnostic(')
     return parts[0].replace('/* ACTUAL_FUNCTIONS */', bodies)

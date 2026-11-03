@@ -173,7 +173,6 @@ static tag_base_handler_map_t tag_base_map[] = {
 };
 
 static int32_t tag_emulation_load_config(void);
-static void tag_emulation_save_config(void);
 
 /**
  * accordingToTheSpecifiedDetailedLabelType,ObtainTheImplementationFunctionOfTheDataThatProcessesTheLoadedLoaded
@@ -311,6 +310,16 @@ static bool save_data_by_tag_type(uint8_t slot, tag_specific_type_t tag_type) {
         NRF_LOG_ERROR("No buffer valid!");
         return false;
     }
+    /* The MF1 callback turns a pending Shadow selection into its persisted
+     * representation. Roll that transition back if persistence fails, or the
+     * next retry would deliberately skip saving an already-Shadow buffer. */
+    nfc_tag_mf1_configure_t *pending_shadow = NULL;
+    if (buffer->buffer && buffer->length >= sizeof(nfc_tag_14a_coll_res_entity_t) + sizeof(nfc_tag_mf1_configure_t) &&
+        (tag_type == TAG_TYPE_MIFARE_Mini || tag_type == TAG_TYPE_MIFARE_1024 ||
+         tag_type == TAG_TYPE_MIFARE_2048 || tag_type == TAG_TYPE_MIFARE_4096)) {
+        nfc_tag_mf1_configure_t *config = &((nfc_tag_mf1_information_t *)buffer->buffer)->config;
+        if (config->mode_block_write == NFC_TAG_MF1_WRITE_SHADOW_REQ) pending_shadow = config;
+    }
     // The length of the data to be saved by the user should not exceed the size of the global buffer
     int data_byte_length = 0;
     tag_datas_savecb_t fn_savecb = get_data_savecb_from_tag_type(tag_type);
@@ -322,25 +331,31 @@ static bool save_data_by_tag_type(uint8_t slot, tag_specific_type_t tag_type) {
     }
     // Make sure to save data, we can judge whether the data has changed through CRC
     if (data_byte_length <= 0) {
+        if (pending_shadow) pending_shadow->mode_block_write = NFC_TAG_MF1_WRITE_SHADOW_REQ;
         NRF_LOG_INFO("Tag type %d data no save.", tag_type);
         return data_byte_length == 0;
     }
     // Make sure that the data to be stored is not greater than the size of the current buffer area
     if (data_byte_length > buffer->length) {
+        if (pending_shadow) pending_shadow->mode_block_write = NFC_TAG_MF1_WRITE_SHADOW_REQ;
         NRF_LOG_ERROR("Tag data save length overflow.", tag_type);
         return false;
     }
     uint16_t crc;
     calc_14a_crc_lut(buffer->buffer, data_byte_length, (uint8_t *)&crc);
-    // Determine whether the data has changed
-    if (crc == *buffer->crc) {
-        NRF_LOG_INFO("Tag slot data no change, length = %d", data_byte_length);
-        return true;
-    }
     tag_sense_type_t sense_type = get_sense_type_from_tag_type(tag_type);
     // Get the special card slot FDS record information
     fds_slot_record_map_t map_info;
     get_fds_map_by_slot_sense_type_for_dump(slot, sense_type, &map_info);
+    /* CRC16 is a cheap changed-data hint, not proof of equal bytes. This
+     * comparison only runs on a save, never at startup or in the NFC IRQ. */
+    if (crc == *buffer->crc) {
+        int32_t equal = fds_compare_sync(map_info.id, map_info.key, data_byte_length, buffer->buffer);
+        if (equal != 0) {
+            if (equal < 0 && pending_shadow) pending_shadow->mode_block_write = NFC_TAG_MF1_WRITE_SHADOW_REQ;
+            return equal > 0;
+        }
+    }
     // Call the blocked FDS to write the function, and write the data of the specified field type of the card slot into
     // the Flash
     bool ret = fds_write_sync(map_info.id, map_info.key, data_byte_length, buffer->buffer);
@@ -348,6 +363,7 @@ static bool save_data_by_tag_type(uint8_t slot, tag_specific_type_t tag_type) {
         *buffer->crc = crc;
         NRF_LOG_INFO("Save tag slot data success.");
     } else {
+        if (pending_shadow) pending_shadow->mode_block_write = NFC_TAG_MF1_WRITE_SHADOW_REQ;
         NRF_LOG_ERROR("Save tag slot data error.");
     }
     /* A failed write remains dirty so a later save can retry it. */
@@ -385,6 +401,28 @@ void tag_emulation_save_data(void) {
     uint8_t slot = tag_emulation_get_slot();
     save_data_by_tag_type(slot, slotConfig.slots[slot].tag_hf);
     // save_data_by_tag_type(slot, slotConfig.slots[slot].tag_lf);
+}
+
+/* Explicit changed-only commit: the caller has already compared the edited
+ * fields byte-for-byte. General saves instead compare storage on CRC equality;
+ * this explicit changed path can persist directly without that extra read. */
+bool tag_emulation_save_active_data(void) {
+    uint8_t slot = tag_emulation_get_slot();
+    tag_specific_type_t type = slotConfig.slots[slot].tag_hf;
+    if (!m_tag_data_loaded || type == TAG_TYPE_UNDEFINED) return false;
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(type);
+    tag_datas_savecb_t saver = get_data_savecb_from_tag_type(type);
+    if (!buffer || !buffer->buffer || !buffer->crc || !saver) return false;
+    int length = saver(type, buffer);
+    /* Zero means intentionally not saved (e.g. shadow), never a commit. */
+    if (length <= 0 || length > buffer->length) return false;
+    uint16_t crc;
+    calc_14a_crc_lut(buffer->buffer, length, (uint8_t *)&crc);
+    fds_slot_record_map_t map;
+    get_fds_map_by_slot_sense_type_for_dump(slot, get_sense_type_from_tag_type(type), &map);
+    bool saved = fds_write_sync(map.id, map.key, length, buffer->buffer);
+    if (saved) *buffer->crc = crc;
+    return saved;
 }
 
 /**
@@ -436,6 +474,7 @@ bool tag_emulation_factory_data(uint8_t slot, tag_specific_type_t tag_type) {
             // update to the memory
             if (tag_emulation_get_slot() == slot) {
                 load_data_by_tag_type(slot, tag_type);
+                return m_tag_data_loaded;
             }
             return true;
         }
@@ -576,12 +615,19 @@ static int32_t tag_emulation_load_config(void) {
 /**
  *Save the emulated card configuration data
  */
-static void tag_emulation_save_config(void) {
+bool tag_emulation_save_config(void) {
     // We are configured the card slot configuration, and we need to calculate the current card slot configuration CRC
     // code to judge whether the data below is updated
     uint16_t new_calc_crc;
     calc_14a_crc_lut((uint8_t *)&slotConfig, sizeof(slotConfig), (uint8_t *)&new_calc_crc);
-    if (new_calc_crc != m_slot_config_crc) { // Before saving, make sure that the card slot configuration has changed
+    bool changed = new_calc_crc != m_slot_config_crc;
+    if (!changed) {
+        int32_t equal = fds_compare_sync(FDS_EMULATION_CONFIG_FILE_ID, FDS_EMULATION_CONFIG_RECORD_KEY,
+                                         sizeof(slotConfig), (uint8_t *)&slotConfig);
+        if (equal < 0) return false;
+        changed = equal == 0;
+    }
+    if (changed) {
         NRF_LOG_INFO("Save tag slot config start.");
         bool ret = fds_write_sync(FDS_EMULATION_CONFIG_FILE_ID, FDS_EMULATION_CONFIG_RECORD_KEY, sizeof(slotConfig),
                                   (uint8_t *)&slotConfig);
@@ -591,9 +637,11 @@ static void tag_emulation_save_config(void) {
         } else {
             NRF_LOG_ERROR("Save tag slot config error.");
         }
+        return ret;
     } else {
         NRF_LOG_INFO("Tag slot config no change.");
     }
+    return true;
 }
 
 /**

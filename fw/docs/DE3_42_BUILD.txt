@@ -1,0 +1,25 @@
+Building and testing DE3.42 (LCD application, DFU counter 614)
+
+Use the pinned Nordic SDK container and fw/scripts/build_de3.sh. The source
+bundle is based on DE3.41; older DE3_39_BUILD.md describes the inherited build
+restrictions. Historical full-image/flash targets remain disabled.
+
+Changes:
+- Invalid VFS drive IDs return NULL/false before indexing the drive table.
+- MIFARE Classic factory records are initialized before saving and use bounded,
+  released application-heap scratch instead of a large automatic stack object.
+  Allocation failure returns failure before any file write.
+- MF0/NTAG factory records depend on the requested slot type, not the currently
+  active emulation type. NTAG210/212 configuration defaults are handled.
+  Source for NTAG210/212 defaults: NXP NTAG210_212.pdf, section 8.5.7, table 9:
+  https://www.nxp.com/docs/en/data-sheet/NTAG210_212.pdf
+
+PackedFS/LittleFS engine and PFS1 geometry are byte-identical to DE3.41. Existing
+files and raw128 metadata require no migration or formatting. Application-only
+OTA retains the installed bootloader and S112. BL8 is a separately built and
+verified bootloader; the older bootloader tree inside this application source
+is not the authority for BL8 or the installed BL7.
+
+The host suites execute production C with hardware mocks. ASan/UBSan and ARM32
+checks cover selected paths. ARM linker/stack reports do not measure a physical
+stack watermark. Real BLE/NFC/wake/start-time tests remain pending on the device.

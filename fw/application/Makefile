@@ -1,3 +1,10 @@
+# This DE source tree is built with scripts/build_de3.sh. Historical full-flash
+# recipes below contain old SoftDevice/settings assumptions and must never be
+# used for the custom application. Fail before prerequisites or parallel jobs.
+ifneq ($(strip $(filter full settingsgen flash_softdevice flash_all_ocd,$(MAKECMDGOALS))),)
+$(error Legacy full-flash/SoftDevice/settings targets are disabled in this DE tree; use fw/scripts/build_de3.sh for application-only compilation and the separately verified signed update packages)
+endif
+
 PROJECT_NAME     := ble_app_blinky_pca10040_s132
 TARGETS          := pixljs
 OUTPUT_DIRECTORY := ../_build
@@ -51,7 +58,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_default_backends.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
-  $(SDK_ROOT)/components/libraries/button/app_button.c \
+  $(PROJ_DIR)/mod/app_button_de343.c \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
   $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
@@ -90,7 +97,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_ppi.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_ppi.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_spi.c \
-  $(SDK_ROOT)/components/libraries/button/app_button.c \
+  $(PROJ_DIR)/mod/app_button_de343.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp_nfc.c \
   $(SDK_ROOT)/components/libraries/mem_manager/mem_manager.c \
@@ -214,6 +221,10 @@ SRC_FILES += \
   $(PROJ_DIR)/mod/runtime_diag.c \
   $(PROJ_DIR)/mod/boot_diag.c \
   $(PROJ_DIR)/mod/ble/ble_main.c \
+  $(PROJ_DIR)/mod/ble/ble_remote.c \
+  $(PROJ_DIR)/mod/ble/ble_remote_protocol.c \
+  $(PROJ_DIR)/mod/ble/ble_remote.c \
+  $(PROJ_DIR)/mod/ble/ble_remote_protocol.c \
   $(PROJ_DIR)/mod/ble/ble_work.c \
   $(PROJ_DIR)/mod/ble/ble_df_driver.c \
   $(PROJ_DIR)/mod/ble/ble_amiibolink.c \

@@ -1,0 +1,41 @@
+DE3.51 application / File manager 3.31.0
+
+Storage remains Packed LittleFS format PFS1. No format or migration is needed
+for this application update. Existing data, bootloader BL8 and S112 7.3.0 are
+not replaced by the application package.
+
+Full raw128 restore optimization
+STORAGE_INFO (0x1c) with one drive byte preserves the legacy flag mask 7.
+An explicit [E,1] request may additionally report flag 8. A supporting client
+may then send FILE_OPEN with the normal length-prefixed E:/path, a one-byte
+0x16 mode and exactly 128 raw metadata bytes. Other lengths, drives and modes
+do not enable this extension. Content and metadata remain private until an
+explicit successful CLOSE. Disconnect cleanup or replacement OPEN aborts
+this private stage; failed writes cannot be published by cleanup CLOSE.
+Legacy one- and four-byte OPEN modes retain their previous semantics.
+The new browser uses this only for a bound, complete raw128 restore. Ordinary
+ZIP imports retain their existing staged-upload behavior. Each file remains
+a separate atomic commit; this is not a delayed multi-file transaction.
+
+Directory navigation
+The card-emulator import browser may reserve two pages of 24 sorted entries.
+The cache is optional, bounded and checked against a mount/session plus
+manifest-generation token. Low memory falls back to the old one-page scan.
+The cache is released before importing card contents, on leaving the scene
+and for one-page directories. A failed or changed scan is not cached.
+
+Remote handoff
+The optional remote protocol advertises capability 0x10 and command 4 for
+switching the current NUS link to file transfer. Command 1 remains the legacy
+disconnect handoff. The final acknowledgement and receiver change share an
+interrupt-protected transition. Old queued work is invalidated. Local
+permission, physical input priority, NFC/recovery guards and session epochs
+still apply. The GAP name is refreshed after the eventual disconnect.
+
+Tests and boundaries
+Host tests use actual C/JavaScript components with modeled hardware edges.
+Packed storage tests include interrupted writes, allocation failures and
+reading/writing the same synthetic image with DE350 and DE351 engines.
+Native, ASan/UBSan and ARM32/QEMU runs are not physical Cortex-M4 timing,
+radio, power-loss, display, NFC or maximum-stack measurements. The delivered
+reports bind tested source hashes and the actual ARM application image.

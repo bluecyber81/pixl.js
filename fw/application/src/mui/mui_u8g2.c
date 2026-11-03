@@ -85,31 +85,38 @@ static spi_device_t m_dev;
 
 #ifdef LCD_SCREEN
 APP_PWM_INSTANCE(pwm1, 1); // Create the instance "PWM1" using TIMER1.
+static bool m_pwm_initialized;
+#define BACKLIGHT_PWM_MAX_ATTEMPTS 200u
+
+static ret_code_t backlight_pwm_duty_set(app_pwm_duty_t duty) {
+    /* 200-us PWM period. Wait nominally less than 2 ms for synchronization;
+     * IRQ preemption can extend wall time. Never retry forever or in mainloop. */
+    for (unsigned attempt = 0; attempt < BACKLIGHT_PWM_MAX_ATTEMPTS; attempt++) {
+        ret_code_t result = app_pwm_channel_duty_set(&pwm1, 0, duty);
+        if (result != NRF_ERROR_BUSY) return result;
+        if (attempt + 1u < BACKLIGHT_PWM_MAX_ATTEMPTS) nrf_delay_us(10);
+    }
+    return NRF_ERROR_TIMEOUT;
+}
 
 static ret_code_t pwm_init(void) {
-    ret_code_t err_code;
-    /* 2-channel PWM, 200Hz, output on DK LED pins. */
+    /* One channel, 200-us period (5 kHz), LCD backlight. */
     app_pwm_config_t pwm1_cfg = APP_PWM_DEFAULT_CONFIG_1CH(200L, LCD_BL_PIN);
 
     /* Switch the polarity of the second channel. */
     pwm1_cfg.pin_polarity[0] = APP_PWM_POLARITY_ACTIVE_HIGH;
 
     /* Initialize and enable PWM. */
-    err_code = app_pwm_init(&pwm1, &pwm1_cfg, NULL);
-    if (err_code != NRF_SUCCESS) {
-        return err_code;
+    if (!m_pwm_initialized) {
+        ret_code_t err_code = app_pwm_init(&pwm1, &pwm1_cfg, NULL);
+        if (err_code != NRF_SUCCESS) return err_code;
+        m_pwm_initialized = true;
     }
 
     settings_data_t *p_settings = settings_get_data();
     app_pwm_duty_t init_duty = p_settings->lcd_backlight <= 100 ? p_settings->lcd_backlight : 0;
     NRF_LOG_INFO("init bl = %d", init_duty);
-    if (init_duty > 0) {
-        app_pwm_enable(&pwm1);
-        while (app_pwm_channel_duty_set(&pwm1, 0, init_duty) == NRF_ERROR_BUSY)
-            ;
-    }
-
-    return NRF_SUCCESS;
+    return mui_u8g2_set_backlight_level(init_duty);
 }
 
 #endif
@@ -197,7 +204,9 @@ void mui_u8g2_init(u8g2_t *p_u8g2) {
 
     u8g2_SetPowerSave(p_u8g2, 0);
 
-    pwm_init();
+    ret_code_t backlight_result = pwm_init();
+    if (backlight_result != NRF_SUCCESS)
+        NRF_LOG_WARNING("Backlight initialization failed: %u", backlight_result);
 #endif
 
 #ifdef OLED_SCREEN
@@ -228,19 +237,27 @@ void mui_u8g2_set_backlight(uint8_t bl) { nrf_gpio_pin_write(LCD_BL_PIN, bl); }
 
 uint8_t mui_u8g2_get_backlight() { return nrf_gpio_pin_out_read(LCD_BL_PIN); }
 
-void mui_u8g2_set_backlight_level(uint8_t value) {
+ret_code_t mui_u8g2_set_backlight_level(uint8_t value) {
+    if (!m_pwm_initialized) return NRF_ERROR_INVALID_STATE;
     if (value > 100) value = 100;
     if (value == 0) {
         app_pwm_disable(&pwm1);
+        return NRF_SUCCESS;
     } else {
-        if (pwm1.p_cb->state != NRFX_DRV_STATE_POWERED_ON) {
-            app_pwm_enable(&pwm1);
-        }
-        while (app_pwm_channel_duty_set(&pwm1, 0, value) == NRF_ERROR_BUSY)
-            ;
+        bool enabled_now = pwm1.p_cb->state != NRFX_DRV_STATE_POWERED_ON;
+        if (enabled_now) app_pwm_enable(&pwm1);
+        ret_code_t result = backlight_pwm_duty_set(value);
+        /* A failed change of an active output leaves the previous duty intact.
+         * A newly enabled output returns to its previous disabled state. */
+        if (result != NRF_SUCCESS && enabled_now) app_pwm_disable(&pwm1);
+        return result;
     }
 }
-int8_t mui_u8g2_get_backlight_level(void) { return (int8_t)app_pwm_channel_duty_get(&pwm1, 0); }
+int8_t mui_u8g2_get_backlight_level(void) {
+    if (!m_pwm_initialized) return -1;
+    if (pwm1.p_cb->state != NRFX_DRV_STATE_POWERED_ON) return 0;
+    return (int8_t)app_pwm_channel_duty_get(&pwm1, 0);
+}
 
 #endif
 

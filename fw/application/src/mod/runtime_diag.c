@@ -21,6 +21,25 @@ static struct {
     uint8_t flags;
 } power_state;
 _Static_assert(sizeof(power_state) <= 12, "power diagnostic RAM budget");
+static struct {
+    uint32_t elapsed_ms[STARTUP_PHASE_COUNT];
+    uint8_t phases;
+} startup_state;
+_Static_assert(sizeof(startup_state) <= 28, "startup diagnostic RAM budget");
+
+void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms) {
+    if (phase >= STARTUP_PHASE_COUNT) return;
+    CRITICAL_REGION_ENTER();
+    /* Capture each phase once, in order, and reject an elapsed-time regression.
+     * The caller must finish within its RTC counter span; this cannot detect
+     * an entire counter revolution between two observations. */
+    if (startup_state.phases == (uint8_t)((1u << phase) - 1u) &&
+        (phase ? elapsed_ms >= startup_state.elapsed_ms[phase - 1u] : elapsed_ms == 0)) {
+        startup_state.elapsed_ms[phase] = elapsed_ms;
+        startup_state.phases |= (uint8_t)(1u << phase);
+    }
+    CRITICAL_REGION_EXIT();
+}
 
 void runtime_diag_boot_capture(uint32_t reset_reason) {
     /* Once, at main entry before the application's reset-reason clear. */
@@ -98,6 +117,20 @@ static void put16(uint8_t *out, uint16_t value) {
 }
 static void put32(uint8_t *out, uint32_t value) {
     for (unsigned i = 0; i < 4; ++i) out[i] = (uint8_t)(value >> (8 * i));
+}
+bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity) {
+    if (!out || capacity < STARTUP_DIAG_SIZE) return false;
+    memset(out, 0, STARTUP_DIAG_SIZE);
+    memcpy(out, "PXST", 4);
+    out[4] = 1;
+    out[5] = STARTUP_DIAG_SIZE;
+    CRITICAL_REGION_ENTER();
+    out[6] = startup_state.phases;
+    /* Byte 7 is reserved; unset values are zero, qualified by the mask. */
+    for (unsigned phase = 0; phase < STARTUP_PHASE_COUNT; ++phase)
+        put32(out + 8 + 4 * phase, startup_state.elapsed_ms[phase]);
+    CRITICAL_REGION_EXIT();
+    return true;
 }
 bool runtime_diag_power_snapshot(uint8_t *out, size_t capacity) {
     if (!out || capacity < POWER_DIAG_SIZE) return false;

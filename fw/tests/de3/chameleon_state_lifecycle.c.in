@@ -12,6 +12,8 @@ typedef struct{unsigned chameleon_default_slot_index;}settings_data_t;
 static settings_data_t settings;
 static unsigned live,scenes,switched,exited,tag_saves,settings_saves,slot_changes,exists_calls;
 static unsigned header,message,focus;static bool init_ok,exists;
+static bool sense_active,irq_enabled,default_valid;
+static unsigned sense_stops,irq_stops;
 static void(*dialog_cb)(mui_msg_box_event_t,mui_msg_box_t*);
 static mini_app_inst_t *current;
 static void app_chameleon_on_kill(mini_app_inst_t*);
@@ -44,7 +46,7 @@ OBJ(mui_msg_box) OBJ(mui_toast_view) OBJ(mui_text_input)
 #define DE3_STORAGE_IO_ERROR 12
 #define MAIN_MENU 13
 static void mui_view_dispatcher_switch_to_view(void*p,unsigned id){if(id==CHAMELEON_VIEW_ID_MSG_BOX)switched++;}
-static void mui_scene_dispatcher_next_scene(void*p,unsigned id){assert(init_ok);assert(id==(exists?CHAMELEON_SCENE_MAIN:CHAMELEON_SCENE_FACTORY));scenes++;}
+static void mui_scene_dispatcher_next_scene(void*p,unsigned id){assert(init_ok);assert(id==(exists?CHAMELEON_SCENE_MAIN:CHAMELEON_SCENE_FACTORY));scenes++;sense_active=irq_enabled=exists;}
 static void mui_scene_dispatcher_exit(void*p){exited++;}
 static void mui_msg_box_set_header(void*p,unsigned h){header=h;}
 static void mui_msg_box_set_message(void*p,unsigned m){message=m;}
@@ -56,20 +58,23 @@ static void mini_app_launcher_exit(void*p){assert(p==current);app_chameleon_on_k
 static bool tag_emulation_init(void){return init_ok;}
 static bool fds_config_file_exists(void){exists_calls++;return exists;}
 static settings_data_t*settings_get_data(void){return &settings;}
-static bool tag_helper_valid_default_slot(void){return false;}
+static bool tag_helper_valid_default_slot(void){return default_valid;}
 static bool tag_emulation_slot_is_enabled(unsigned s,unsigned t){return true;}
-static void tag_emulation_change_slot(unsigned s,bool r){slot_changes++;}
-static void tag_emulation_save(void){tag_saves++;}
-static void settings_save(void){settings_saves++;}
+static void tag_emulation_sense_end(void){sense_stops++;sense_active=false;}
+static void hal_nfc_set_nrfx_irq_enable(bool enabled){assert(!enabled);irq_stops++;irq_enabled=false;}
+static void tag_emulation_change_slot(unsigned s,bool r){assert(!r&&!sense_active&&!irq_enabled);slot_changes++;}
+static void tag_emulation_save(void){assert(!sense_active&&!irq_enabled);tag_saves++;}
+static void settings_save(void){assert(!sense_active&&!irq_enabled);settings_saves++;}
 static unsigned chameleon_view_get_index(void*p){return 7;}
 @app_chameleon_init_error_cb@
 @app_chameleon_show_load_error@
 @app_chameleon_on_run@
 @app_chameleon_on_kill@
 int main(void){
- for(unsigned ok=0;ok<2;ok++)for(unsigned present=0;present<2;present++)for(unsigned retained=0;retained<2;retained++){
+ for(unsigned ok=0;ok<2;ok++)for(unsigned present=0;present<2;present++)for(unsigned retained=0;retained<2;retained++)for(unsigned def=0;def<2;def++){
   init_ok=ok;exists=present;scenes=switched=exited=tag_saves=settings_saves=slot_changes=exists_calls=0;
   header=message=focus=0;dialog_cb=NULL;settings.chameleon_default_slot_index=9;
+  sense_active=irq_enabled=false;sense_stops=irq_stops=0;default_valid=def;
   app_chameleon_retain_data_t data={0};mini_app_inst_t inst={NULL,retained?&data:NULL};current=&inst;
   app_chameleon_on_run(&inst);assert(inst.p_handle && live==9);
   assert(((app_chameleon_t*)inst.p_handle)->initialized==init_ok);
@@ -78,9 +83,10 @@ int main(void){
    assert(switched==1 && header==ERR && message==DE3_STORAGE_IO_ERROR && focus==1 && dialog_cb);
    dialog_cb(0,NULL);assert(inst.p_handle && live==9);dialog_cb(MUI_MSG_BOX_EVENT_SELECT_CENTER,NULL);
   }else app_chameleon_on_kill(&inst);
-  assert(!inst.p_handle && !live && exited==1 && tag_saves==ok && settings_saves==ok && !slot_changes);
-  assert(settings.chameleon_default_slot_index==(ok?INVALID_SLOT_INDEX:9));
+  assert(!inst.p_handle && !live && exited==1 && tag_saves==ok && settings_saves==ok && slot_changes==(ok&&def));
+  assert(settings.chameleon_default_slot_index==((ok&&!def)?INVALID_SLOT_INDEX:9));
+  assert(sense_stops==ok&&irq_stops==ok&&!sense_active&&!irq_enabled);
   if(retained)assert(data.cycle_mode_index==7);
  }
- puts("PASS 8 actual app start/exit cases: invalid config shows Home dialog, starts no scene and preserves stored state");
+ puts("PASS 16 actual app start/exit cases: NFC stopped before save/default-slot change; invalid init preserves stored state");
 }

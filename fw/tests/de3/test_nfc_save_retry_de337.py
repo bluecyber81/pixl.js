@@ -57,7 +57,7 @@ static void mui_update(void*p){(void)p;}
 static void mui_toast_view_show(void*p,int text){(void)p;assert(text==APP_AMIIDB_SLOT_SAVE_FAILED);errors++;}
 static uint8_t amiibo_view_get_focus(void*p){(void)p;return (uint8_t)focus;}
 static void amiibo_view_set_focus(void*p,uint8_t f){(void)p;focus=f;}
-static int amiidb_api_slot_write(uint8_t slot,ntag_t*tag){
+static int amiidb_api_slot_update(uint8_t slot,ntag_t*tag){
  assert(slot==2);save_calls++;if(!save_result)persisted=tag->data[16];return save_result;
 }
 static int amiidb_api_slot_read(uint8_t slot,ntag_t*tag){

@@ -14,6 +14,18 @@
 #define DESC_AUTO_SCROLL_MS_PER_PIXEL 150
 #define DESC_AUTO_SCROLL_MIN_TIME 1200
 
+static uint16_t amiibo_view_draw_qrcode(mui_canvas_t *canvas, uint8_t text_top, const char *url) {
+    uint16_t width = mui_canvas_get_width(canvas);
+    /* Version 3-L holds 53 byte-mode characters. Longer product URLs need
+     * version 4 and a 41px box including all four quiet-zone modules.
+     * On the 128x64 LCD this sits at (87,23), below the name baseline. */
+    uint8_t box = strlen(url) > 53 ? 41 : 37;
+    uint16_t top = text_top + (box == 37 ? 2 : 0);
+    if (width < box + 2 || top + box > mui_canvas_get_height(canvas)) return width;
+    uint16_t left = width - box;
+    return draw_qrcode(canvas, left, top, box, url) ? left - 2 : width;
+}
+
 static uint16_t amiibo_view_desc_max_offset(amiibo_view_t *p_amiibo_view) {
     if (p_amiibo_view->desc_page_size == 0 || p_amiibo_view->desc_total <= p_amiibo_view->desc_page_size) {
         return 0;
@@ -73,7 +85,7 @@ static void amiibo_view_update_desc_anim(amiibo_view_t *p_amiibo_view) {
 }
 
 static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
-    char buff[64];
+    char buff[AMIIBO_INFO_URL_CAPACITY];
     amiibo_view_t *p_amiibo_view = p_view->user_data;
     ntag_t *ntag = p_amiibo_view->ntag;
     if (p_amiibo_view->info_page) {
@@ -137,10 +149,8 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
          * the scrollbar from painting over the scan target. */
         uint16_t text_width = clip_win_cur.w;
         if (settings_get_data()->qrcode_enabled) {
-            if (amiibo_info_url(buff, sizeof(buff), ntag) &&
-                draw_qrcode(p_canvas, 91, y + 2, 37, buff)) {
-                text_width = 89; /* QR starts at x=91; keep a two-pixel gap. */
-            }
+            if (amiibo_info_url(buff, sizeof(buff), ntag))
+                text_width = amiibo_view_draw_qrcode(p_canvas, y, buff);
         }
         p_amiibo_view->desc_step = 8;
         p_amiibo_view->desc_page_size = clip_win_cur.h;
@@ -171,7 +181,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         sprintf(buff, "[%08x:%08x]", head, tail);
         mui_canvas_draw_utf8(p_canvas, 0, y += 15, buff);
         if (settings_get_data()->qrcode_enabled) {
-            if (amiibo_info_url(buff, sizeof(buff), ntag)) draw_qrcode(p_canvas, 91, 26, 37, buff);
+            if (amiibo_info_url(buff, sizeof(buff), ntag)) amiibo_view_draw_qrcode(p_canvas, 24, buff);
         }
     } else {
         amiibo_view_stop_desc_anim(p_amiibo_view);

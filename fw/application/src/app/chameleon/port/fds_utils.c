@@ -61,6 +61,46 @@ bool fds_write_sync(uint16_t id, uint16_t key, uint16_t data_length_words, void 
     return bytes_written == data_length_words;
 }
 
+/* Exact no-op check: 1 equal, 0 absent/different, -1 unreadable. One bounded
+ * stack block, no heap copy of the card. The shortened config representation
+ * must be identical to fds_write_sync's length convention. */
+int32_t fds_compare_sync(uint16_t id, uint16_t key, uint16_t length, const uint8_t *buffer) {
+    if (!buffer || !length) return -1;
+    if (id == FDS_EMULATION_CONFIG_FILE_ID) {
+        uint16_t stored_length = TAG_SLOT_CONFIG_SIZE(settings_get_data()->chameleon_slot_num);
+        if (stored_length > length) return -1;
+        length = stored_length;
+    }
+    vfs_driver_t *driver = vfs_get_default_driver();
+    if (!driver || !driver->mounted() || !driver->stat_file || !driver->open_file ||
+        !driver->read_file || !driver->close_file) return -1;
+    char path[VFS_MAX_PATH_LEN];
+    fds_map_file_name(id, key, path);
+    vfs_obj_t object;
+    int32_t result = driver->stat_file(path, &object);
+    if (result == VFS_ERR_NOOBJ) return 0;
+    if (result != VFS_OK) return -1;
+    if (object.type != VFS_TYPE_REG || object.size != length) return 0;
+    vfs_file_t file = {0};
+    if (driver->open_file(path, &file, VFS_MODE_READONLY) != VFS_OK) return -1;
+    uint8_t chunk[128];
+    uint16_t offset = 0;
+    result = 1;
+    while (offset < length) {
+        size_t wanted = length - offset;
+        if (wanted > sizeof(chunk)) wanted = sizeof(chunk);
+        int32_t count = driver->read_file(&file, chunk, wanted);
+        if (count <= 0 || count > (int32_t)wanted) { result = -1; break; }
+        if (memcmp(chunk, buffer + offset, (size_t)count)) { result = 0; break; }
+        offset += (uint16_t)count;
+    }
+    if (driver->close_file(&file) != VFS_OK) {
+        vfs_abort_file(driver, &file);
+        result = -1;
+    }
+    return result;
+}
+
 bool fds_is_exists(uint16_t id, uint16_t key) {
     char path[VFS_MAX_PATH_LEN];
     vfs_obj_t obj;

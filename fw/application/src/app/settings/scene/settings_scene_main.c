@@ -8,6 +8,7 @@
 #include "version2.h"
 #include "vfs.h"
 #include "mui_nav_diag.h"
+#include "ble_remote.h"
 
 enum settings_main_menu_t {
     SETTINGS_MAIN_MENU_VERSION,
@@ -29,7 +30,8 @@ enum settings_main_menu_t {
     SETTINGS_MAIN_MENU_RESET_DEFAULT,
     SETTINGS_MAIN_MENU_ABOUT,
     SETTINGS_MAIN_MENU_APP_MANAGEMENT,
-    SETTINGS_MAIN_MENU_EXIT
+    SETTINGS_MAIN_MENU_EXIT,
+    SETTINGS_MAIN_MENU_REMOTE
 };
 
 static void settings_scene_main_reload(void *user_data);
@@ -38,13 +40,15 @@ static void settings_reset_default(void *user_data) {
     settings_data_t *p_settings = settings_get_data();
     mui_u8g2_set_contrast_level(p_settings->oled_contrast);
     mui_u8g2_set_flip_display(p_settings->flip_display);
+    uint32_t backlight_result = NRF_SUCCESS;
 #ifdef LCD_SCREEN
-    mui_u8g2_set_backlight_level(p_settings->lcd_backlight);
+    backlight_result = mui_u8g2_set_backlight_level(p_settings->lcd_backlight);
 #endif
     nrf_pwr_mgmt_set_timeout(p_settings->sleep_timeout_sec);
     setLanguage(p_settings->language);
 
-    mui_toast_view_show(app->p_toast_view, _T(APP_SET_RESET_DEFAULT_SUCCESS));
+    mui_toast_view_show(app->p_toast_view,
+                       backlight_result == NRF_SUCCESS ? _T(APP_SET_RESET_DEFAULT_SUCCESS) : _T(ERR));
 }
 
 static void settings_scene_main_msg_box_reset_settings_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
@@ -128,6 +132,12 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
 
     case SETTINGS_MAIN_MENU_ANIM_ENABLED:
         p_settings->anim_enabled = !p_settings->anim_enabled;
+        settings_scene_main_reload(app);
+        break;
+
+    case SETTINGS_MAIN_MENU_REMOTE:
+        if (!ble_remote_set_enabled(!ble_remote_enabled()))
+            mui_toast_view_show(app->p_toast_view, _T(ERR));
         settings_scene_main_reload(app);
         break;
 
@@ -282,6 +292,9 @@ static void settings_scene_main_reload(void *user_data) {
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c9, _T(APP_SET_NO_SLEEP),
                                p_settings->no_sleep_mode ? _T(ON_F) : _T(OFF_F),
                                (void *)SETTINGS_MAIN_MENU_NO_SLEEP);
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1d0, _T(DE3_REMOTE_SESSION),
+                               ble_remote_enabled() ? _T(ON_F) : _T(OFF_F),
+                               (void *)SETTINGS_MAIN_MENU_REMOTE);
     mui_list_view_add_item(app->p_list_view, 0xe1d0, _T(APP_SET_APP_MGMT), (void *)SETTINGS_MAIN_MENU_APP_MANAGEMENT);
     mui_list_view_add_item(app->p_list_view, 0xe1c9, _T(APP_SET_GO_SLEEP), (void *)SETTINGS_MAIN_MENU_GO_SLEEP);
     mui_list_view_add_item(app->p_list_view, 0xe1ca, _T(APP_SET_DFU), (void *)SETTINGS_MAIN_MENU_DFU);
@@ -301,6 +314,14 @@ void settings_scene_main_on_enter(void *user_data) {
     app_settings_t *app = user_data;
     mui_list_view_clear_items(app->p_list_view);
     settings_scene_main_reload(user_data);
+    uint16_t focus = app->main_focus;
+    if (focus >= mui_list_view_item_size(app->p_list_view)) focus = 0;
+    mui_list_view_set_focus(app->p_list_view, focus);
+    uint16_t focus_offset = mui_list_view_get_scroll_offset(app->p_list_view);
+    /* Keep a valid saved viewport; stale positions must not hide the selection. */
+    if (app->main_scroll <= focus_offset &&
+        focus_offset - app->main_scroll < app->p_list_view->canvas_height)
+        mui_list_view_set_scroll_offset(app->p_list_view, app->main_scroll);
     mui_list_view_set_selected_cb(app->p_list_view, settings_scene_main_list_view_on_selected);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
 }
@@ -308,6 +329,8 @@ void settings_scene_main_on_enter(void *user_data) {
 void settings_scene_main_on_exit(void *user_data) {
     mui_nav_diag_end();
     app_settings_t *app = user_data;
+    app->main_focus = mui_list_view_get_focus(app->p_list_view);
+    app->main_scroll = mui_list_view_get_scroll_offset(app->p_list_view);
     mui_list_view_clear_items(app->p_list_view);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);
 }

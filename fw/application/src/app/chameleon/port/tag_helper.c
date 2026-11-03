@@ -7,34 +7,9 @@
 #include "tag_emulation.h"
 #include "utils2.h"
 #include <string.h>
+#include <stddef.h>
 
 #define NFC_TAG_NTAG_DATA_SIZE 4
-
-// NTAG21x "memory content at delivery" (NTAG213/215/216 datasheet Tables 5-7,
-// NTAG210/212 datasheet Tables 4-5): static lock bytes 0000h, valid CC, empty NDEF TLV
-typedef struct {
-    tag_specific_type_t tag_type;
-    uint8_t cc[NFC_TAG_NTAG_DATA_SIZE];
-    uint8_t page4[NFC_TAG_NTAG_DATA_SIZE];
-    uint8_t page5[NFC_TAG_NTAG_DATA_SIZE];
-} ntag_delivery_defaults_t;
-
-static const ntag_delivery_defaults_t ntag_delivery_defaults[] = {
-    {TAG_TYPE_NTAG_210, {0xE1, 0x10, 0x06, 0x00}, {0x03, 0x00, 0xFE, 0x00}, {0x00, 0x00, 0x00, 0x00}},
-    {TAG_TYPE_NTAG_212, {0xE1, 0x10, 0x10, 0x00}, {0x01, 0x03, 0x90, 0x0A}, {0x34, 0x03, 0x00, 0xFE}},
-    {TAG_TYPE_NTAG_213, {0xE1, 0x10, 0x12, 0x00}, {0x01, 0x03, 0xA0, 0x0C}, {0x34, 0x03, 0x00, 0xFE}},
-    {TAG_TYPE_NTAG_215, {0xE1, 0x10, 0x3E, 0x00}, {0x03, 0x00, 0xFE, 0x00}, {0x00, 0x00, 0x00, 0x00}},
-    {TAG_TYPE_NTAG_216, {0xE1, 0x10, 0x6D, 0x00}, {0x03, 0x00, 0xFE, 0x00}, {0x00, 0x00, 0x00, 0x00}},
-};
-
-static const ntag_delivery_defaults_t *get_ntag_delivery_defaults(tag_specific_type_t tag_type) {
-    for (uint32_t i = 0; i < ARRAY_SIZE(ntag_delivery_defaults); i++) {
-        if (ntag_delivery_defaults[i].tag_type == tag_type) {
-            return &ntag_delivery_defaults[i];
-        }
-    }
-    return NULL;
-}
 
 const static tag_specific_type_name_t tag_type_names[] = {
     {TAG_TYPE_UNDEFINED, "-", "-", 0},
@@ -167,26 +142,40 @@ void tag_helper_load_coll_res_from_block0() {
     }
 }
 
-void tag_helper_factory_data(uint8_t slot) {
+bool tag_helper_factory_data(uint8_t slot) {
     tag_specific_type_t tag_type = tag_helper_get_active_tag_type();
-    if (!tag_emulation_factory_data(slot, tag_type)) {
-        return;
-    }
+    return tag_emulation_factory_data(slot, tag_type) && tag_emulation_save_config();
+}
 
-    const ntag_delivery_defaults_t *delivery = get_ntag_delivery_defaults(tag_type);
-    if (delivery == NULL) {
-        return;
-    }
+/* Explicit profile for an already loaded Mini dump. Never change its type,
+ * block data or unrelated options. Shadow data must remain nonpersistent. */
+bool tag_helper_apply_disney_profile(void) {
+    if (tag_helper_get_active_tag_type() != TAG_TYPE_MIFARE_Mini || !tag_emulation_active_data_ready()) return false;
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_MIFARE_Mini);
+    if (!buffer || !buffer->buffer || !buffer->crc ||
+        buffer->length < offsetof(nfc_tag_mf1_information_t, memory) + 20 * NFC_TAG_MF1_DATA_SIZE) return false;
+    nfc_tag_mf1_information_t *data = (nfc_tag_mf1_information_t *)buffer->buffer;
+    if (data->config.mode_block_write >= NFC_TAG_MF1_WRITE_SHADOW) return false;
+    /* ATS is untouched: retain only the small identity prefix, not 256 ATS bytes. */
+    uint8_t old_identity[offsetof(nfc_tag_14a_coll_res_entity_t, ats)];
+    memcpy(old_identity, &data->res_coll, sizeof(old_identity));
+    bool old_custom = data->config.use_mf1_coll_res;
 
-    tag_data_buffer_t *tag_buffer = get_buffer_by_tag_type(tag_type);
-    nfc_tag_mf0_ntag_information_t *m_tag_information = (nfc_tag_mf0_ntag_information_t *)tag_buffer->buffer;
-    m_tag_information->memory[2][2] = 0;
-    m_tag_information->memory[2][3] = 0;
-    memcpy(m_tag_information->memory[3], delivery->cc, NFC_TAG_NTAG_DATA_SIZE);
-    memcpy(m_tag_information->memory[4], delivery->page4, NFC_TAG_NTAG_DATA_SIZE);
-    memcpy(m_tag_information->memory[5], delivery->page5, NFC_TAG_NTAG_DATA_SIZE);
+    data->config.use_mf1_coll_res = false;
+    data->res_coll.size = NFC_TAG_14A_UID_DOUBLE_SIZE;
+    tag_helper_load_coll_res_from_block0();
+    data->res_coll.sak[0] = 0x09;
+    data->res_coll.atqa[0] = 0x44;
+    data->res_coll.atqa[1] = 0x00;
+    /* The general dirty tracker is only CRC16. Decide the profile no-op by
+     * exact bytes, then request a real commit even if changed bytes collide. */
+    if (old_custom == data->config.use_mf1_coll_res &&
+        memcmp(old_identity, &data->res_coll, sizeof(old_identity)) == 0) return true;
+    if (tag_emulation_save_active_data()) return true;
 
-    tag_emulation_save();
+    memcpy(&data->res_coll, old_identity, sizeof(old_identity));
+    data->config.use_mf1_coll_res = old_custom;
+    return false;
 }
 
     tag_specific_type_t tag_helper_get_active_tag_type() {
@@ -288,11 +277,12 @@ void tag_helper_factory_data(uint8_t slot) {
         return false;
     }
 
-    void tag_helper_generate_uid() {
+    bool tag_helper_generate_uid(void) {
         tag_specific_type_t tag_type = tag_helper_get_active_tag_type();
         tag_group_type_t tag_group_type = tag_helper_get_tag_group_type(tag_type);
         tag_data_buffer_t *tag_buffer = get_buffer_by_tag_type(tag_type);
-        if (tag_group_type == TAG_GROUP_NTAG) {
+        if (tag_group_type == TAG_GROUP_NTAG && tag_buffer && tag_buffer->buffer &&
+            tag_buffer->length >= offsetof(nfc_tag_mf0_ntag_information_t, memory) + 3 * NFC_TAG_NTAG_DATA_SIZE) {
             nfc_tag_mf0_ntag_information_t *m_tag_information = (nfc_tag_mf0_ntag_information_t *)tag_buffer->buffer;
             uint8_t uuid[7];
             ret_code_t err_code = utils_rand_bytes(uuid, sizeof(uuid));
@@ -315,8 +305,10 @@ void tag_helper_factory_data(uint8_t slot) {
                                                   m_tag_information->memory[1][2] ^ m_tag_information->memory[1][3];
 
                 memcpy(m_tag_information->res_coll.uid, uuid, sizeof(uuid));
+                return true;
             }
         }
+        return false;
     }
 
     bool tag_helper_is_defult_slot() {

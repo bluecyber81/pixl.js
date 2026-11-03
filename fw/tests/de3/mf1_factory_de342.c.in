@@ -1,0 +1,120 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "nfc_mf1.h"
+#include "tag_persistence.h"
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+
+static unsigned alloc_calls, free_calls, map_calls, write_calls, cases;
+static size_t requested, expected_size;
+static uint8_t expected_slot;
+static void *live;
+static bool fail_alloc, fail_write;
+static nfc_tag_mf1_information_t expected;
+
+static void *mui_mem_malloc(size_t size) {
+    alloc_calls++;
+    requested = size;
+    assert(!live && size == expected_size && size <= sizeof(expected));
+    if (fail_alloc) return NULL;
+    live = malloc(size);
+    assert(live);
+    memset(live, 0xA5, size);
+    return live;
+}
+static void mui_mem_free(void *ptr) {
+    assert(ptr && ptr == live);
+    memset(ptr, 0xA5, requested);
+    free(ptr);
+    live = NULL;
+    free_calls++;
+}
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t type) {
+    assert(type >= TAG_TYPE_MIFARE_Mini && type <= TAG_TYPE_MIFARE_4096);
+    return TAG_SENSE_HF;
+}
+void get_fds_map_by_slot_sense_type_for_dump(uint8_t slot, tag_sense_type_t sense, fds_slot_record_map_t *map) {
+    assert(slot == expected_slot && sense == TAG_SENSE_HF);
+    map_calls++;
+    map->id = slot + 1;
+    map->key = 99;
+}
+static bool fds_write_sync(uint16_t id, uint16_t key, uint16_t size, void *data) {
+    assert(id == expected_slot + 1 && key == 99 && size == expected_size);
+    write_calls++;
+    const uint8_t *want = (const uint8_t *)&expected, *got = data;
+    for (size_t i=0; i<size; i++) {
+        if (got[i] != want[i]) {
+            fprintf(stderr, "MF1 serialized byte %zu: expected %02x, got %02x (unset UID/ATS/config bytes must be zero)\n", i, want[i], got[i]);
+            abort();
+        }
+    }
+    assert(data == live);
+    return !fail_write;
+}
+
+@FUNCTIONS@
+
+static void reset_counts(void) {
+    assert(!live);
+    alloc_calls = free_calls = map_calls = write_calls = 0;
+    requested = 0;
+    fail_alloc = fail_write = false;
+}
+static void make_expected(unsigned blocks) {
+    static const uint8_t block0[16] = {0xDE,0xAD,0xBE,0xEF,0x22,0x08,0x04,0x00,0x01,0x77,0xA2,0xCC,0x35,0xAF,0xA5,0x1D};
+    static const uint8_t trailer[16] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x07,0x80,0x69,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+    memset(&expected, 0, sizeof(expected));
+    expected.res_coll.size = NFC_TAG_14A_UID_SINGLE_SIZE;
+    expected.res_coll.atqa[0] = 4;
+    expected.res_coll.sak[0] = 8;
+    memcpy(expected.res_coll.uid, block0, 4);
+    expected.config.use_mf1_coll_res = true;
+    expected.config.mode_block_write = NFC_TAG_MF1_WRITE_NORMAL;
+    memcpy(expected.memory[0], block0, 16);
+    for (unsigned sector_start=0; sector_start<blocks;) {
+        unsigned sector_size = sector_start < 128 ? 4 : 16;
+        memcpy(expected.memory[sector_start+sector_size-1], trailer, 16);
+        sector_start += sector_size;
+    }
+    assert(offsetof(nfc_tag_mf1_information_t, memory) == sizeof(expected.res_coll)+sizeof(expected.config));
+    expected_size = offsetof(nfc_tag_mf1_information_t, memory)+blocks*16;
+}
+int main(void) {
+    const tag_specific_type_t types[] = {TAG_TYPE_MIFARE_Mini,TAG_TYPE_MIFARE_1024,TAG_TYPE_MIFARE_2048,TAG_TYPE_MIFARE_4096};
+    const unsigned blocks[] = {20,64,128,256};
+    for (unsigned t=0;t<4;t++) {
+        make_expected(blocks[t]);
+        for (unsigned slot=0;slot<TAG_MAX_SLOT_NUM;slot++) {
+            expected_slot=slot;
+            for (unsigned outcome=0;outcome<3;outcome++) {
+                reset_counts();
+                fail_write = outcome==1;
+                fail_alloc = outcome==2;
+                assert(nfc_tag_mf1_data_factory(slot,types[t]) == (outcome==0));
+                assert(alloc_calls==1 && free_calls==!fail_alloc && !live);
+                assert(map_calls==!fail_alloc && write_calls==!fail_alloc);
+                cases++;
+            }
+        }
+        for (unsigned slot=TAG_MAX_SLOT_NUM;slot<=UINT8_MAX;slot++) {
+            reset_counts();
+            assert(!nfc_tag_mf1_data_factory(slot,types[t]));
+            assert(!alloc_calls && !free_calls && !map_calls && !write_calls && !live);
+            cases++;
+        }
+    }
+    for (unsigned raw=0;raw<=UINT16_MAX;raw++) {
+        if (raw>=TAG_TYPE_MIFARE_Mini && raw<=TAG_TYPE_MIFARE_4096) continue;
+        reset_counts();
+        assert(!nfc_tag_mf1_data_factory(0,(tag_specific_type_t)raw));
+        assert(!alloc_calls && !free_calls && !map_calls && !write_calls && !live);
+        cases++;
+    }
+    printf("PASS %u cases; all serialized bytes deterministic, no write on OOM/invalid input, no leaks; pointer=%zu config=%zu header=%zu largest scratch=%zu\n", cases, sizeof(void*),sizeof(expected.config),offsetof(nfc_tag_mf1_information_t,memory), expected_size);
+}

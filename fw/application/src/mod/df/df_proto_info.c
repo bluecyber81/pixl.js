@@ -148,6 +148,19 @@ static void df_proto_handler_info_power_diagnostic(df_event_t *evt) {
     df_core_send_frame(&out);
 }
 
+/* A cached startup trace. Reading cannot restart, mount, mutate or clear it. */
+static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, DF_STATUS_ERR);
+    if (evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
+        runtime_diag_startup_snapshot(out.data, sizeof(out.data))) {
+        out.status = DF_STATUS_OK;
+        out.length = STARTUP_DIAG_SIZE;
+    }
+    df_core_send_frame(&out);
+}
+
 const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_VERSION_INFO, df_proto_handler_info_get_version},
     {DF_PROTO_CMD_INFO_ENTER_DFU, df_proto_handler_info_enter_dfu},
@@ -157,4 +170,5 @@ const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_RUNTIME_DIAGNOSTIC, df_proto_handler_info_runtime_diagnostic},
     {DF_PROTO_CMD_INFO_BOOT_DIAGNOSTIC, df_proto_handler_info_boot_diagnostic},
     {DF_PROTO_CMD_INFO_POWER_DIAGNOSTIC, df_proto_handler_info_power_diagnostic},
+    {DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, df_proto_handler_info_startup_diagnostic},
     {0, NULL}};

@@ -1,0 +1,59 @@
+name: Source checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web tests and both bundles
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.13.0'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Select the declared npm version
+        run: npm install --global npm@11.19.1
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run build:pages
+
+  firmware-host:
+    name: Portable firmware regression subset
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONOPTIMIZE: '0'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Show host toolchain
+        run: |
+          python3 --version
+          gcc --version
+      - name: Production CRC pair and independent oracles
+        run: python3 fw/tests/de3/test_packed_crc_pair_de355.py
+      - name: LittleFS NOR wear and interrupted writes
+        run: python3 fw/tests/de3/test_lfs_wear_de355.py

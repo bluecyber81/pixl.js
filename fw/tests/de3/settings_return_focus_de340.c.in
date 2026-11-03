@@ -1,0 +1,199 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#undef assert
+#define assert(x) do { if (!(x)) { fprintf(stderr,"Assertion failed: %s at line %d\n",#x,__LINE__); exit(77); } } while(0)
+#define LCD_SCREEN 1
+#define NRF_SUCCESS 0
+#define VFS_OK 0
+#define LIST_ITEM_HEIGHT 13
+#define LANGUAGE_COUNT 2
+#define NULL_USER_DATA ((void *)-1)
+#define MUI_LIST_VIEW_EVENT_SELECTED 0
+#define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
+#define INPUT_TYPE_SHORT 2
+#define INPUT_TYPE_LONG 3
+#define MINI_APP_ID_SETTINGS 3
+#define _T(x) #x
+#define mui_nav_diag_begin() ((void)0)
+#define mui_nav_diag_end() ((void)0)
+#define mui_nav_diag_settings(...) ((void)0)
+#define mui_nav_diag_save_begin(...) ((void)0)
+#define mui_nav_diag_save_result(...) ((void)0)
+#define mui_nav_diag_exit_returned(...) ((void)0)
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#pragma GCC diagnostic ignored "-Wtype-limits"
+enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_MSG_BOX };
+enum { SETTINGS_SCENE_MAIN, SETTINGS_SCENE_VERSION, SETTINGS_SCENE_SLEEP_TIMEOUT,
+       SETTINGS_SCENE_LCD_BACKLIGHT, SETTINGS_SCENE_OLED_CONTRAST, SETTINGS_SCENE_LANGUAGE,
+       SETTINGS_SCENE_STORAGE, SETTINGS_SCENE_ABOUT, SETTINGS_SCENE_APP_MANAGEMENT, SETTINGS_SCENE_MAX };
+enum { _L_OFF_F, _L_OFF, _L_15S, _L_30S, _L_45S, _L_1MIN, _L_2MIN, _L_3MIN, _L_BACK };
+typedef int mui_list_view_event_t, mui_msg_box_event_t;
+typedef struct { void *user_data; uint16_t icon; char text[96],subtext[96]; } mui_list_item_t;
+typedef struct mui_list_view_s mui_list_view_t;
+typedef void (*selected_cb_t)(mui_list_view_event_t, mui_list_view_t *, mui_list_item_t *);
+typedef struct { unsigned size; mui_list_item_t row[32]; } list_items_t;
+struct mui_list_view_s { void *user_data; list_items_t items[1]; uint16_t focus_index,scroll_offset;
+                        uint8_t canvas_height; selected_cb_t selected_cb; };
+typedef struct {void *user_data;} mui_msg_box_t;
+typedef void mui_progress_bar_t, mui_toast_view_t, mui_view_dispatcher_t;
+@DISPATCH_TYPES@
+typedef struct {bool valid;} settings_storage_snapshot_t;
+@APP_STRUCT@
+typedef struct { bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,
+                     flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight;
+                 uint16_t sleep_timeout_sec; } settings_data_t;
+typedef struct {bool avaliable;uint32_t total_bytes,free_bytes;} vfs_stat_t;
+typedef struct {int unused;} vfs_driver_t;
+static settings_data_t data;
+/* Remote state is a RAM-only dependency; these focus cases do not select it. */
+static bool fixture_remote_enabled;
+static bool ble_remote_enabled(void){return fixture_remote_enabled;}
+static bool ble_remote_set_enabled(bool enabled){fixture_remote_enabled=enabled;return true;}
+static unsigned saves,resets,runtime_timeout_sets,language_sets;
+static settings_data_t *settings_get_data(void){return &data;}
+static int settings_save(void){saves++;return 0;}
+static int settings_reset(void){resets++;return 0;}
+static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){p->valid=false;}
+static vfs_driver_t driver;
+static vfs_driver_t *vfs_get_default_driver(void){return &driver;}
+static int32_t settings_storage_snapshot_read(settings_storage_snapshot_t*p,vfs_driver_t*d,vfs_stat_t*s){
+ (void)p;(void)d;*s=(vfs_stat_t){true,2048,1024};return VFS_OK;
+}
+static void *version_get(void){return NULL;}
+static const char *version_get_version(void*p){(void)p;return "DE3.40";}
+static const char *getLangDesc(unsigned n){assert(n<LANGUAGE_COUNT);return n?"English":"Deutsch";}
+static const char *getLangString(int n){(void)n;return "label";}
+static void setLanguage(unsigned n){assert(n<LANGUAGE_COUNT);language_sets++;}
+static int nrf_pwr_mgmt_get_timeout(void){return data.sleep_timeout_sec;}
+static void nrf_pwr_mgmt_set_timeout(int n){(void)n;runtime_timeout_sets++;}
+static void mui_u8g2_set_flip_display(bool n){(void)n;}
+static void mui_u8g2_set_contrast_level(int n){(void)n;}
+static unsigned mui_u8g2_set_backlight_level(int n){(void)n;return NRF_SUCCESS;}
+static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;}
+static void *mui(void){return NULL;}
+static void mui_update_now(void*p){(void)p;}
+static void mui_show_memory_error(void*p){(void)p;assert(0);}
+static void *mini_app_launcher(void){return NULL;}
+static void mini_app_launcher_kill(void*p,unsigned id){(void)p;(void)id;assert(0);}
+static void system_reboot(void){assert(0);}
+static void go_sleep(void){assert(0);}
+static void enter_dfu(void){assert(0);}
+static void mui_view_dispatcher_switch_to_view(void*p,unsigned id){(void)p;(void)id;}
+#define mui_msg_box_set_header(...) ((void)0)
+#define mui_msg_box_set_message(...) ((void)0)
+#define mui_msg_box_set_btn_text(...) ((void)0)
+#define mui_msg_box_set_btn_focus(...) ((void)0)
+#define mui_msg_box_set_event_cb(...) ((void)0)
+static unsigned mui_list_item_array_size(list_items_t*p){return p->size;}
+static unsigned mui_list_view_item_size(mui_list_view_t*p){return p->items->size;}
+static uint16_t mui_list_view_get_focus(mui_list_view_t*p){return p->focus_index;}
+static uint16_t mui_list_view_get_scroll_offset(mui_list_view_t*p){return p->scroll_offset;}
+static void mui_list_view_set_scroll_offset(mui_list_view_t*p,uint16_t n){p->scroll_offset=n;}
+static void mui_list_view_set_selected_cb(mui_list_view_t*p,selected_cb_t cb){p->selected_cb=cb;}
+static void mui_list_view_clear_items(mui_list_view_t*p){p->items->size=0;p->focus_index=0;p->scroll_offset=0;}
+static void mui_list_view_add_item_ext(mui_list_view_t*p,uint16_t icon,const char*t,const char*s,void*u){
+ assert(p->items->size<32);mui_list_item_t *item=&p->items->row[p->items->size++];
+ *item=(mui_list_item_t){.user_data=u,.icon=icon};
+ snprintf(item->text,sizeof(item->text),"%s",t);snprintf(item->subtext,sizeof(item->subtext),"%s",s?s:"");
+}
+static void mui_list_view_add_item(mui_list_view_t*p,uint16_t icon,const char*t,void*u){mui_list_view_add_item_ext(p,icon,t,NULL,u);}
+static void settings_scene_main_reload(void*p);
+@PRODUCTION@
+static void blank_enter(void*p){(void)p;}
+static void blank_exit(void*p){(void)p;}
+static const mui_scene_t scenes[SETTINGS_SCENE_MAX]={
+ [SETTINGS_SCENE_MAIN]={SETTINGS_SCENE_MAIN,settings_scene_main_on_enter,settings_scene_main_on_exit},
+ [SETTINGS_SCENE_VERSION]={SETTINGS_SCENE_VERSION,blank_enter,blank_exit},
+ [SETTINGS_SCENE_SLEEP_TIMEOUT]={SETTINGS_SCENE_SLEEP_TIMEOUT,settings_scene_sleep_timeout_on_enter,settings_scene_sleep_timeout_on_exit},
+ [SETTINGS_SCENE_LCD_BACKLIGHT]={SETTINGS_SCENE_LCD_BACKLIGHT,blank_enter,blank_exit},
+ [SETTINGS_SCENE_OLED_CONTRAST]={SETTINGS_SCENE_OLED_CONTRAST,blank_enter,blank_exit},
+ [SETTINGS_SCENE_LANGUAGE]={SETTINGS_SCENE_LANGUAGE,settings_scene_language_on_enter,settings_scene_language_on_exit},
+ [SETTINGS_SCENE_STORAGE]={SETTINGS_SCENE_STORAGE,blank_enter,blank_exit},
+ [SETTINGS_SCENE_ABOUT]={SETTINGS_SCENE_ABOUT,blank_enter,blank_exit},
+ [SETTINGS_SCENE_APP_MANAGEMENT]={SETTINGS_SCENE_APP_MANAGEMENT,blank_enter,blank_exit}
+};
+static void fresh(app_settings_t*app,mui_list_view_t*list,mui_scene_dispatcher_t*d){
+ memset(app,0,sizeof(*app));memset(list,0,sizeof(*list));memset(d,0,sizeof(*d));
+ app->p_list_view=list;app->p_scene_dispatcher=d;list->user_data=app;list->canvas_height=64;
+ d->user_data=app;d->p_scene_defines=scenes;d->scene_num=SETTINGS_SCENE_MAX;
+ mui_scene_dispatcher_next_scene(d,SETTINGS_SCENE_MAIN);
+ assert(list->focus_index==0&&list->scroll_offset==0);
+}
+static unsigned find(mui_list_view_t*p,unsigned selection){
+ for(unsigned i=0;i<p->items->size;i++)if((uintptr_t)p->items->row[i].user_data==selection)return i;
+ assert(0);return 0;
+}
+static void activate(mui_list_view_t*p,unsigned row){
+ assert(row<p->items->size&&p->selected_cb);
+ p->selected_cb(MUI_LIST_VIEW_EVENT_SELECTED,p,&p->items->row[row]);
+}
+int main(void){
+ app_settings_t app;mui_list_view_t list;mui_scene_dispatcher_t d;
+ data=(settings_data_t){.language=0,.sleep_timeout_sec=180,.lcd_backlight=50};
+ settings_data_t before=data;fresh(&app,&list,&d);assert(!memcmp(&data,&before,sizeof(data)));
+ const unsigned menus[]={SETTINGS_MAIN_MENU_VERSION,SETTINGS_MAIN_MENU_BACK_LIGHT,
+  SETTINGS_MAIN_MENU_OLED_CONTRAST,SETTINGS_MAIN_MENU_LANGUAGE,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT,
+  SETTINGS_MAIN_MENU_STORAGE,SETTINGS_MAIN_MENU_ABOUT,SETTINGS_MAIN_MENU_APP_MANAGEMENT};
+ for(unsigned repeat=0;repeat<5;repeat++)for(unsigned m=0;m<sizeof(menus)/sizeof(*menus);m++){
+  unsigned row=find(&list,menus[m]);mui_list_view_set_focus(&list,row);
+  unsigned scroll=row>2?(row-2)*LIST_ITEM_HEIGHT:0;list.scroll_offset=scroll;
+  before=data;activate(&list,row);assert(d.scene_depth==2);
+  mui_scene_dispatcher_previous_scene(&d);assert(d.scene_depth==1);
+  assert(list.focus_index==row&&list.scroll_offset==scroll&&!memcmp(&data,&before,sizeof(data)));
+ }
+ const unsigned toggles[]={SETTINGS_MAIN_MENU_LI_MODE,SETTINGS_MAIN_MENU_SHOW_MEM_USAGE,
+  SETTINGS_MAIN_MENU_ENABLE_HIBERNATE,SETTINGS_MAIN_MENU_ANIM_ENABLED,SETTINGS_MAIN_MENU_NO_SLEEP,
+  SETTINGS_MAIN_MENU_FLIP_DISPLAY,SETTINGS_MAIN_MENU_SWAP_BUTTONS};
+ for(unsigned i=0;i<sizeof(toggles)/sizeof(*toggles);i++){
+  unsigned row=find(&list,toggles[i]);mui_list_view_set_focus(&list,row);list.scroll_offset=(row-1)*13;
+  before=data;activate(&list,row);assert(memcmp(&data,&before,sizeof(data))!=0);
+  assert(list.focus_index==row&&list.scroll_offset==(row-1)*13);
+  activate(&list,row);assert(!memcmp(&data,&before,sizeof(data)));
+ }
+ /* A stale index or viewport cannot leave the selected item off screen. */
+ app.main_focus=65535;app.main_scroll=65535;settings_scene_main_on_enter(&app);
+ assert(list.focus_index==0&&list.scroll_offset==0);
+ app.main_focus=7;app.main_scroll=65535;settings_scene_main_on_enter(&app);
+ assert(list.focus_index==7&&list.scroll_offset==91);
+ app.main_focus=7;app.main_scroll=0;settings_scene_main_on_enter(&app);
+ assert(list.focus_index==7&&list.scroll_offset==91);
+ /* All supported timeouts focus the active item. Opening and Back write nothing. */
+ const unsigned values[]={0,15,30,45,60,120,180};
+ for(unsigned i=0;i<7;i++){
+  data.sleep_timeout_sec=values[i];before=data;unsigned old_runtime=runtime_timeout_sets;
+  unsigned row=find(&list,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT);mui_list_view_set_focus(&list,row);
+  activate(&list,row);assert(list.focus_index==i&&list.items->size==8);
+  assert(!memcmp(&data,&before,sizeof(data))&&runtime_timeout_sets==old_runtime);
+  activate(&list,7);assert(!memcmp(&data,&before,sizeof(data))&&runtime_timeout_sets==old_runtime);
+  assert(list.focus_index==row);
+  activate(&list,row);activate(&list,i);assert(data.sleep_timeout_sec==values[i]);
+  assert(runtime_timeout_sets==old_runtime+1&&list.focus_index==row);
+ }
+ data.sleep_timeout_sec=17;before=data;
+ activate(&list,find(&list,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT));assert(list.focus_index==0);
+ activate(&list,7);assert(!memcmp(&data,&before,sizeof(data)));
+ for(unsigned value=0;value<LANGUAGE_COUNT;value++){
+  data.language=value;before=data;unsigned old_languages=language_sets;
+  unsigned row=find(&list,SETTINGS_MAIN_MENU_LANGUAGE);mui_list_view_set_focus(&list,row);
+  activate(&list,row);assert(list.focus_index==value&&list.items->size==LANGUAGE_COUNT+1);
+  assert(!memcmp(&data,&before,sizeof(data))&&language_sets==old_languages);
+  activate(&list,LANGUAGE_COUNT);assert(!memcmp(&data,&before,sizeof(data))&&language_sets==old_languages);
+  assert(list.focus_index==row);activate(&list,row);activate(&list,1-value);
+  assert(data.language==1-value&&language_sets==old_languages+1&&list.focus_index==row);
+ }
+ /* Invalid language only enters the submenu, because main rendering expects a valid setting. */
+ for(unsigned bad=LANGUAGE_COUNT;bad<=255;bad+=253){
+  mui_list_view_clear_items(&list);data.language=bad;before=data;
+  settings_scene_language_on_enter(&app);assert(list.focus_index==0);
+  assert(!memcmp(&data,&before,sizeof(data)));settings_scene_language_on_exit(&app);
+ }
+ data.language=0;fresh(&app,&list,&d);assert(!saves&&!resets);
+ puts("PASS real settings/dispatcher: 40 roundtrips, viewport bounds, 7 toggles/timeouts, languages, no open/back writes");
+}

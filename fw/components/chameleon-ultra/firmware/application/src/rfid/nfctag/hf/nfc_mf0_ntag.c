@@ -267,8 +267,8 @@ static int get_block_max_by_tag_type(tag_specific_type_t tag_type, bool read) {
     else return max_pages;
 }
 
-static bool is_ntag() {
-    switch (m_tag_type) {
+static bool is_ntag_type(tag_specific_type_t tag_type) {
+    switch (tag_type) {
         case TAG_TYPE_NTAG_210:
         case TAG_TYPE_NTAG_212:
         case TAG_TYPE_NTAG_213:
@@ -279,6 +279,8 @@ static bool is_ntag() {
             return false;
     }
 }
+
+static bool is_ntag() { return is_ntag_type(m_tag_type); }
 
 int get_version_page_by_tag_type(tag_specific_type_t tag_type) {
     int version_page_off;
@@ -318,7 +320,7 @@ int get_version_page_by_tag_type(tag_specific_type_t tag_type) {
 int get_signature_page_by_tag_type(tag_specific_type_t tag_type) {
     int version_page_off;
 
-    switch (m_tag_type) {
+    switch (tag_type) {
         case TAG_TYPE_MF0UL11:
             version_page_off = MF0UL11_PAGES + MF0ULx1_NUM_CTRS + PAGES_PER_VERSION;
             break;
@@ -1092,12 +1094,14 @@ nfc_tag_mf0_ntag_information_max_t;
 
 // Initialized NTAG factory data
 bool nfc_tag_mf0_ntag_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
+    /* Creating an inactive slot must not use the type currently serving RF. */
+    if (slot >= TAG_MAX_SLOT_NUM || nfc_tag_mf0_ntag_get_nr_pages_by_tag_type(tag_type) <= 0) return false;
     // default ntag data
     uint8_t default_p0[] = { 0x04, 0x68, 0x95, 0x71 };
     uint8_t default_p1[] = { 0xFA, 0x5C, 0x64, 0x80 };
     uint8_t default_p2[] = { 0x42, 0x48, 0x0F, 0xE0 };
 
-    if (!is_ntag()) {
+    if (!is_ntag_type(tag_type)) {
         default_p2[2] = 0;
         default_p2[3] = 0;
     }
@@ -1127,12 +1131,40 @@ bool nfc_tag_mf0_ntag_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
         }
     }
 
+    /* Preserve the UI's NTAG delivery defaults in the initial atomic write.
+     * A second unreported save used to leave an incomplete reset on failure.
+     * These are the existing NXP CC/NDEF defaults; Ultralight is unchanged. */
+    static const struct {
+        tag_specific_type_t type;
+        uint8_t cc[4], page4[4], page5[4];
+    } delivery[] = {
+        {TAG_TYPE_NTAG_210, {0xE1, 0x10, 0x06, 0x00}, {0x03, 0x00, 0xFE, 0x00}, {0x00, 0x00, 0x00, 0x00}},
+        {TAG_TYPE_NTAG_212, {0xE1, 0x10, 0x10, 0x00}, {0x01, 0x03, 0x90, 0x0A}, {0x34, 0x03, 0x00, 0xFE}},
+        {TAG_TYPE_NTAG_213, {0xE1, 0x10, 0x12, 0x00}, {0x01, 0x03, 0xA0, 0x0C}, {0x34, 0x03, 0x00, 0xFE}},
+        {TAG_TYPE_NTAG_215, {0xE1, 0x10, 0x3E, 0x00}, {0x03, 0x00, 0xFE, 0x00}, {0x00, 0x00, 0x00, 0x00}},
+        {TAG_TYPE_NTAG_216, {0xE1, 0x10, 0x6D, 0x00}, {0x03, 0x00, 0xFE, 0x00}, {0x00, 0x00, 0x00, 0x00}},
+    };
+    for (unsigned i = 0; i < sizeof(delivery) / sizeof(delivery[0]); i++) {
+        if (delivery[i].type == tag_type) {
+            p_ntag_information->memory[2][2] = 0;
+            p_ntag_information->memory[2][3] = 0;
+            memcpy(p_ntag_information->memory[3], delivery[i].cc, sizeof(delivery[i].cc));
+            memcpy(p_ntag_information->memory[4], delivery[i].page4, sizeof(delivery[i].page4));
+            memcpy(p_ntag_information->memory[5], delivery[i].page5, sizeof(delivery[i].page5));
+            break;
+        }
+    }
+
     int first_cfg_page = get_first_cfg_page_by_tag_type(tag_type);
     if (first_cfg_page != 0) {
         p_ntag_information->memory[first_cfg_page][CONF_AUTH0_BYTE] = 0xFF; // set AUTH to 0xFF
         *(uint32_t *)p_ntag_information->memory[first_cfg_page + CONF_PWD_PAGE_OFFSET] = 0xFFFFFFFF; // set PWD to FFFFFFFF
 
         switch (tag_type) {
+        case TAG_TYPE_NTAG_210:
+        case TAG_TYPE_NTAG_212:
+            /* NXP NTAG210/212 table 9: MIRROR_BYTE/PAGE default to zero. */
+            break;
         case TAG_TYPE_MF0UL11:
         case TAG_TYPE_MF0UL21:
             p_ntag_information->memory[first_cfg_page + 1][1] = 0x05; // set VCTID to 0x05
@@ -1152,7 +1184,7 @@ bool nfc_tag_mf0_ntag_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
     if (version_page > 0) {
         uint8_t *version_data = &p_ntag_information->memory[version_page][0];
 
-        switch (m_tag_type) {
+        switch (tag_type) {
         case TAG_TYPE_MF0UL11:
             version_data[6] = MF0UL11_VERSION_STORAGE_SIZE;
             version_data[2] = MF0ULx1_VERSION_PRODUCT_TYPE;
@@ -1205,13 +1237,9 @@ bool nfc_tag_mf0_ntag_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
     p_ntag_information->res_coll.atqa[0] = 0x44;
     p_ntag_information->res_coll.atqa[1] = 0x00;
     p_ntag_information->res_coll.sak[0] = 0x00;
-    p_ntag_information->res_coll.uid[0] = 0x04;
-    p_ntag_information->res_coll.uid[1] = 0x68;
-    p_ntag_information->res_coll.uid[2] = 0x95;
-    p_ntag_information->res_coll.uid[3] = 0x71;
-    p_ntag_information->res_coll.uid[4] = 0xFA;
-    p_ntag_information->res_coll.uid[5] = 0x5C;
-    p_ntag_information->res_coll.uid[6] = 0x64;
+    /* Page 0 byte 3 is BCC0, not part of the seven-byte NFC UID. */
+    memcpy(p_ntag_information->res_coll.uid, p_ntag_information->memory[0], 3);
+    memcpy(p_ntag_information->res_coll.uid + 3, p_ntag_information->memory[1], 4);
     p_ntag_information->res_coll.size = NFC_TAG_14A_UID_DOUBLE_SIZE;
     p_ntag_information->res_coll.ats.length = 0;
 

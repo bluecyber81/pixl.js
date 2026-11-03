@@ -11,6 +11,7 @@
 #include <string.h>
 
 static pfs_t *store;
+static uint32_t mount_epoch;
 static bool geometry_valid;
 static const vfs_driver_t persist_raw_driver;
 typedef struct {
@@ -116,6 +117,15 @@ int32_t vfs_packed_finish_import(void) {
                                     : map_error(pfs_finish_import(store));
 }
 static bool packed_mounted(void) { return pfs_mounted(store); }
+uint64_t vfs_packed_revision(void) {
+  uint32_t generation = pfs_generation(store);
+  return generation && mount_epoch && mount_epoch != UINT32_MAX
+      ? ((uint64_t)mount_epoch << 32) | generation : 0;
+}
+static void mounted_revision(void) {
+  /* Saturation disables caching instead of ever reusing an old token. */
+  if (mount_epoch != UINT32_MAX) mount_epoch++;
+}
 static int32_t packed_mount(void) {
   if (pfs_mounted(store))
     return pfs_poisoned(store) ? VFS_ERR_CRPT : VFS_OK;
@@ -125,6 +135,7 @@ static int32_t packed_mount(void) {
   r = pfs_mount(store);
   if (r)
     return map_error(r);
+  mounted_revision();
   vfs_persist_unmounted(&vfs_driver_fs);
   vfs_persist_bind(&vfs_driver_fs, &persist_raw_driver);
   return VFS_OK;
@@ -152,6 +163,7 @@ static int32_t packed_format(void) {
   vfs_persist_unmounted(&vfs_driver_fs);
   vfs_persist_bind(&vfs_driver_fs, &persist_raw_driver);
   vfs_packed_latch_recovery();
+  mounted_revision();
   return VFS_OK;
 }
 static int32_t packed_stat(vfs_stat_t *s) {
@@ -318,6 +330,12 @@ static int32_t packed_write_file(vfs_file_t *fd, void *data, size_t size) {
     return VFS_ERR_FAIL;
   int r = pfs_write(((packed_handle_t *)fd->handle)->file, data, size);
   return r < 0 ? map_error(r) : r;
+}
+int32_t vfs_packed_stage_meta(vfs_file_t *fd, const uint8_t meta[128]) {
+  if (!fd || !fd->handle || !meta) return VFS_ERR_FAIL;
+  packed_handle_t *h = fd->handle;
+  if (!h->external_writer) return VFS_ERR_FAIL;
+  return map_error(pfs_file_set_meta(h->file, meta));
 }
 static int32_t packed_update_file_meta(const char *path, void *data,
                                        size_t size) {

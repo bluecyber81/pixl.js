@@ -18,9 +18,13 @@ static const vfs_drive_item_t vfs_drive_items[VFS_DRIVE_MAX] = {
 };
 
 
-bool vfs_drive_enabled(vfs_drive_t drive) { return vfs_drive_items[drive].enabled; }
+bool vfs_drive_enabled(vfs_drive_t drive) {
+    return (unsigned)drive < VFS_DRIVE_MAX && vfs_drive_items[drive].enabled;
+}
 
-vfs_driver_t *vfs_get_driver(vfs_drive_t drive) { return (vfs_driver_t *)vfs_drive_items[drive].p_driver; }
+vfs_driver_t *vfs_get_driver(vfs_drive_t drive) {
+    return (unsigned)drive < VFS_DRIVE_MAX ? (vfs_driver_t *)vfs_drive_items[drive].p_driver : NULL;
+}
 
 vfs_driver_t* vfs_get_default_driver() {
     for(uint32_t i=0; i<VFS_DRIVE_MAX; i++ ){

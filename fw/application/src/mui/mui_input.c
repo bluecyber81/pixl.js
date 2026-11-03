@@ -4,6 +4,7 @@
 #include "mui_event.h"
 #include "nrf_log.h"
 #include "bsp_btn.h"
+#include "ble_remote.h"
 
 #include "cache.h"
 #include "settings.h"
@@ -19,6 +20,7 @@ static void mui_input_post_event(mui_input_event_t *p_input_event) {
 
 
 void mui_input_on_bsp_btn_event(uint8_t btn, bsp_btn_event_t evt) {
+    ble_remote_local_activity();
     // When enabled, mirror the left/right buttons (e.g. to match a device
     // held rotated 180 degrees).
     if (settings_get_data()->swap_buttons) {

@@ -4,7 +4,7 @@ import subprocess
 import os
 import json
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 
 class GitVersion:
@@ -101,7 +101,7 @@ class Main(object):
         current_info = GitVersion(".").get_version_info()
 
         if "SOURCE_DATE_EPOCH" in os.environ:
-            build_date = datetime.utcfromtimestamp(int(os.environ["SOURCE_DATE_EPOCH"]))
+            build_date = datetime.fromtimestamp(int(os.environ["SOURCE_DATE_EPOCH"]), timezone.utc)
         else:
             build_date = date.today()
 

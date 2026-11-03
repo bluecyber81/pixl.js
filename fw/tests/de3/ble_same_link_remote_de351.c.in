@@ -1,0 +1,51 @@
+int main(void) {
+    reset();request(4,1,0);CHECK(mock_reply[6]==REMOTE_UNSUPPORTED&&!mock_launches);
+    reset();handshake();request(4,2,1);CHECK(mock_reply[6]==REMOTE_INVALID&&!mock_launches);
+    reset();handshake();request(4,2,0);
+    CHECK(mock_reply[3]==132&&mock_reply[6]==0&&mock_reply[7]==3&&mock_reply[8]==31);
+    CHECK(mock_launches==1&&mock_launcher.file&&!mock_mode&&!file_link_requested&&mock_connected);
+    CHECK(!mock_hold&&!mock_aborts);ble_remote_poll();CHECK(mock_launches==1);
+    /* Shared web wire vector, after the required status handshake. */
+    reset();handshake();for(unsigned seq=2;seq<6;seq++)request(0,seq,0);request(4,6,0);
+    const uint8_t expected[]={80,88,1,132,6,0,0,3,31,0,0,0};CHECK(!memcmp(mock_reply,expected,sizeof(expected)));
+    reset();handshake();mock_launch_fail=true;request(4,2,0);
+    CHECK(mock_reply[6]==0&&mock_launches==1&&!mock_launcher.file&&!mock_mode&&!mock_ready&&!ble_work_can_send());
+    reset();handshake();inject_local_after_claim=true;request(4,2,0);
+    CHECK(!inject_local_after_claim&&!mock_launches&&mock_reply[6]==REMOTE_BUSY&&!file_link_requested);
+    /* Retrying TX cannot execute twice; local input/NFC can cancel before ACK. */
+    for(unsigned cancel=0;cancel<11;cancel++) {
+        reset();handshake();mock_send_result=1;request(4,2,0);
+        CHECK(protocol.replying&&file_link_requested&&mock_mode&&!mock_launches);
+        for(unsigned i=0;i<10;i++)ble_remote_poll();CHECK(!mock_launches);
+        if(cancel==0)ble_remote_local_activity();
+        if(cancel==1)mock_tick=10000;
+        if(cancel==2)mock_permission_safe=false;
+        if(cancel==3)nfct.FIELDPRESENT=1;
+        if(cancel==4)nfct.FIELDPRESENT=2;
+        if(cancel==5)mock_recovery=true;
+        if(cancel==6)mock_ui.memory_error=true;
+        if(cancel==7){mock_ui.event_queue.count=1;input_events[0].id=MUI_EVENT_ID_INPUT;}
+        if(cancel==8)mock_launcher.loop=true;
+        if(cancel==9)mock_pending=true;
+        mock_send_result=0;ble_remote_poll();
+        if(cancel==10) { CHECK(mock_launches==1&&mock_reply[6]==0); }
+        else {
+            CHECK(!mock_launches&&!file_link_requested&&mock_reply[6]==(cancel>=2&&cancel<=5?REMOTE_UNSAFE:REMOTE_BUSY));
+            CHECK(mock_reply[7]!=REMOTE_FILE);
+            /* Cached duplicate preserves the cancelled result. */
+            uint8_t failed=mock_reply[6];request(4,2,0);CHECK(!mock_launches&&mock_reply[6]==failed);
+        }
+    }
+    reset();handshake();mock_send_result=1;request(4,2,0);disconnect();connect();
+    mock_send_result=0;ble_remote_poll();CHECK(!file_link_requested&&!mock_launches&&!protocol.handshake);
+    handshake();CHECK(mock_reply[7]==REMOTE_ACTIVE);request(4,2,0);CHECK(mock_launches==1);
+    reset();handshake();mock_send_result=1;request(4,2,0);CHECK(ble_remote_set_enabled(false));
+    mock_send_result=0;ble_remote_poll();CHECK(!mock_launches&&!file_link_requested&&!mock_mode);
+    reset();handshake();mock_send_result=2;request(4,2,0);CHECK(!mock_launches&&!protocol.active);
+    mock_send_result=0;ble_remote_poll();CHECK(!file_link_requested);handshake();CHECK(mock_reply[7]==REMOTE_ACTIVE);
+    request(4,2,0);CHECK(mock_launches==1);
+    /* Legacy op1 still waits for real disconnect and cleanup. */
+    reset();handshake();request(1,2,0);CHECK(mock_reply[6]==8&&mock_reply[7]==2&&mock_hold&&!mock_launches);
+    disconnect();ble_remote_poll();CHECK(!mock_launches);ble_work_process(clean);ble_remote_poll();CHECK(mock_launches==1);
+    CHECK(!critical_depth);printf("PASS %u same-link bridge assertions\n",cases);return 0;
+}

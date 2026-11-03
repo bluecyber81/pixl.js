@@ -1,0 +1,110 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define RH 16u
+#define R_MAGIC 0x31524650u
+#define PFS_PATH_MAX 64u
+#define PFS_NAME_MAX 48u
+#define PFS_META_SIZE 128u
+#define PFS_CACHE_SIZE 256u
+#define PFS_FILE 1u
+#define PFS_DIR 2u
+#define DISK (2u*1024u*1024u)
+#define LFS_ERR_CORRUPT (-84)
+#define LFS_ERR_IO (-5)
+#define LFS_ERR_INVAL (-22)
+#define LFS_ERR_NAMETOOLONG (-36)
+#define CHECK(x) do { if (!(x)) { fprintf(stderr,"check failed line %d: %s\n",__LINE__,#x);exit(77); } } while(0)
+typedef struct { uint8_t copy[256]; } pfs_t;
+typedef struct { int unused; } io_t;
+typedef struct { char path[64]; uint32_t size; uint8_t type; uint8_t meta[128]; } pfs_info_t;
+typedef struct { uint32_t shard,offset,data,size; } location_t;
+static uint8_t disk[8192], original[8192];
+static unsigned calls, fail_call, expected_pos, read_bytes, maximum_end;
+static uint32_t crc(uint32_t value,const void *p,size_t n) {
+    const uint8_t *s=p;
+    while(n--) {value^=*s++; for(unsigned b=0;b<8;b++)value=(value>>1)^((value&1u)?0xedb88320u:0);}
+    return value;
+}
+static void put32(uint8_t *p,uint32_t value) {for(unsigned i=0;i<4;i++)p[i]=(uint8_t)(value>>(8*i));}
+static int read_at(pfs_t *fs,io_t *io,uint32_t pos,void *out,uint32_t length) {
+    (void)fs;(void)io;
+    CHECK(pos==expected_pos); /* no reread or rewind, including cache crossings */
+    CHECK(pos<=maximum_end && length<=maximum_end-pos);
+    calls++;
+    if(calls==fail_call)return LFS_ERR_IO;
+    memcpy(out,disk+pos,length); expected_pos+=length;read_bytes+=length;return 0;
+}
+@PRODUCTION@
+static unsigned make(unsigned offset,const char *path,unsigned type,unsigned bytes) {
+    unsigned n=(unsigned)strlen(path),length=RH+n+128+bytes+4;
+    CHECK(offset+length<=sizeof(disk));memset(disk,0xcd,sizeof(disk));
+    uint8_t *b=disk+offset;put32(b,R_MAGIC);put32(b+4,bytes);
+    b[8]=(uint8_t)n;b[9]=(uint8_t)(n>>8);b[10]=(uint8_t)type;b[11]=0;
+    put32(b+12,~crc(~0u,b,12));memcpy(b+RH,path,n);
+    for(unsigned i=0;i<128+bytes;i++)b[RH+n+i]=(uint8_t)(i*37u+53u);
+    put32(b+length-4,~crc(~0u,b,length-4));return length;
+}
+static void reset(unsigned offset,unsigned length) {
+    calls=fail_call=read_bytes=0;expected_pos=offset;maximum_end=offset+length;
+}
+static int run(unsigned offset,unsigned length,uint32_t *sum,pfs_info_t *info,location_t *loc) {
+    pfs_t fs;io_t io; memset(&fs,0,sizeof(fs));memset(&io,0,sizeof(io));
+    return read_verified_record(&fs,&io,offset,offset+length,info,loc,sum);
+}
+static void reseal(unsigned offset,unsigned length,bool header) {
+    if(header)put32(disk+offset+12,~crc(~0u,disk+offset,12));
+    put32(disk+offset+length-4,~crc(~0u,disk+offset,length-4));
+}
+static void rejected(unsigned offset,unsigned length) {
+    reset(offset,length);uint32_t sum=0x12345678;pfs_info_t info;location_t loc;
+    CHECK(run(offset,length,&sum,&info,&loc)==LFS_ERR_CORRUPT);
+}
+int main(void) {
+    const unsigned sizes[]={0,1,17,127,128,255,256,257,540,2048,4097};
+    const char *paths[]={"/a","/folder/a.bin","/01234567890123456789012345678901234567890123456"};
+    unsigned cases=0;
+    for(unsigned offset=0;offset<256;offset++) for(unsigned p=0;p<3;p++)
+        for(unsigned s=0;s<sizeof(sizes)/sizeof(*sizes);s++) {
+            unsigned length=make(offset,paths[p],PFS_FILE,sizes[s]);reset(offset,length);
+            uint32_t seed=0x31415926,sum=seed;pfs_info_t info;location_t loc;
+            CHECK(run(offset,length,&sum,&info,&loc)==0);
+            CHECK(sum==crc(seed,disk+offset,length-4));
+            CHECK(read_bytes==length && expected_pos==offset+length);
+            CHECK(info.type==PFS_FILE && info.size==sizes[s] && !strcmp(info.path,paths[p]));
+            CHECK(loc.offset==offset && loc.size==length && loc.data==offset+RH+strlen(paths[p])+128);
+            for(unsigned m=0;m<128;m++)CHECK(info.meta[m]==0);
+            cases++;
+        }
+    unsigned offset=249,length=make(offset,"/folder/x",PFS_DIR,0);reset(offset,length);
+    uint32_t sum=~0u;pfs_info_t info;location_t loc;
+    CHECK(run(offset,length,&sum,&info,&loc)==0 && info.type==PFS_DIR && info.size==0);
+    length=make(offset,"/folder/x",PFS_FILE,540);memcpy(original,disk,sizeof(disk));
+    reset(offset,length);sum=~0u;CHECK(run(offset,length,&sum,&info,&loc)==0);unsigned total_calls=calls;
+    for(unsigned fault=1;fault<=total_calls;fault++) {
+        reset(offset,length);fail_call=fault;sum=~0u;CHECK(run(offset,length,&sum,&info,&loc)==LFS_ERR_IO);
+    }
+    /* Every raw metadata byte, first/last payload byte and record checksum. */
+    for(unsigned m=0;m<130;m++) {
+        memcpy(disk,original,sizeof(disk));unsigned at=m<128?RH+9+m:m==128?RH+9+128:length-5;
+        disk[offset+at]^=1;rejected(offset,length);
+    }
+    memcpy(disk,original,sizeof(disk));disk[offset+length-1]^=0x80;rejected(offset,length);
+    /* Recompute outer CRC so malformed header/path cannot hide behind it. */
+    memcpy(disk,original,sizeof(disk));disk[offset+12]^=1;reseal(offset,length,false);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+11]=1;reseal(offset,length,true);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+10]=PFS_DIR;reseal(offset,length,true);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+10]=3;reseal(offset,length,true);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+RH]='a';reseal(offset,length,false);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+RH+2]=0;reseal(offset,length,false);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));put32(disk+offset+4,DISK+1);reseal(offset,length,true);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+8]=64;reseal(offset,length,true);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));disk[offset+8]=0;reseal(offset,length,true);rejected(offset,length);
+    memcpy(disk,original,sizeof(disk));rejected(offset,length-1);
+    reset(offset,0);sum=~0u;CHECK(run(offset,0,&sum,&info,&loc)==LFS_ERR_CORRUPT && calls==0);
+    printf("PASS %u cache-offset/size/path cases, raw128 corruption, header/path/bounds and %u I/O failures\n",cases,total_calls);
+    return 0;
+}

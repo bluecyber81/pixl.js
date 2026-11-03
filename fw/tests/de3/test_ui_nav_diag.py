@@ -107,7 +107,7 @@ int main(void) {
 }
 ''')
 
-    def test_actual_queue_observes_release_short_drop_and_success_without_reordering(self):
+    def test_actual_queue_preserves_release_short_under_animation_pressure(self):
         self.compile_run(r'''
 static unsigned received, short_received, release_received;
 static void consume(void *ctx,mui_event_t *event) {
@@ -124,14 +124,14 @@ int main(void) {
  for(unsigned i=0;i<63;i++) mui_event_post(&q,&tick);
  mui_event_post(&q,&release); mui_event_post(&q,&short_press);
  assert(q.count==64); mui_event_dispatch(&q);
- assert(received==64 && release_received==1 && short_received==0 && q.count==0);
+ assert(received==64 && release_received==1 && short_received==1 && q.count==0);
  assert(mui_nav_diag_snapshot(out,sizeof(out)));
- assert(get16(out+40)==1 && get16(out+42)==0 && get16(out+52)==1 && get16(out+60)==1 && get16(out+62)==0 && out[68]==64);
+ assert(get16(out+40)==1 && get16(out+42)==1 && get16(out+52)==0 && get16(out+60)==1 && get16(out+62)==1 && out[68]==64);
  mui_event_post(&q,&short_press); mui_event_dispatch(&q);
- assert(short_received==1 && received==65);
- assert(mui_nav_diag_snapshot(out,sizeof(out)) && get16(out+42)==1 && get16(out+62)==1);
+ assert(short_received==2 && received==65);
+ assert(mui_nav_diag_snapshot(out,sizeof(out)) && get16(out+42)==2 && get16(out+62)==2);
  mui_nav_diag_end(); mui_event_post(&q,&short_press); mui_event_dispatch(&q);
- assert(short_received==2); assert(mui_nav_diag_snapshot(out,sizeof(out)) && get16(out+42)==1 && get16(out+62)==1);
+ assert(short_received==3); assert(mui_nav_diag_snapshot(out,sizeof(out)) && get16(out+42)==2 && get16(out+62)==2);
  mui_event_queue_deinit(&q); assert(!critical_depth);
  puts("PASS actual queue preserves delivery and observes release/short capacity boundary");
 }

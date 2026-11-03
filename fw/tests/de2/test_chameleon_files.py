@@ -19,7 +19,11 @@ def function(filename, marker):
         end += 1
     return text[start:end]
 
-functions = '\n'.join([
+menu_source = (base / 'chameleon_scene_menu_card_data_file_load.c').read_text(encoding='utf-8')
+menu_enum = menu_source[menu_source.index('typedef enum {'):menu_source.index('} chameleon_menu_item_t;') + len('} chameleon_menu_item_t;')]
+
+functions = menu_enum + '\n' + '\n'.join([
+    function('chameleon_scene_menu_card_data_file_load.c', 'static void chameleon_browser_cache_free('),
     function('chameleon_scene_menu_card_data_file_load.c', 'static int chameleon_scene_menu_card_data_list_item_cmp('),
     function('chameleon_scene_menu_card_data_file_load.c', 'static void chameleon_scene_menu_card_data_file_load_from_file('),
     function('chameleon_scene_menu_card_data_file_load.c', 'bool update_current_directory('),
@@ -45,14 +49,14 @@ prefix = r'''
 #define string_cmp strcmp
 #define FDS_EMULATION_CONFIG_FILE_ID 999
 #define TAG_SLOT_CONFIG_SIZE(n) (n)
-typedef struct {int icon;const char *text;} mui_list_item_t;
+typedef struct {uint16_t icon;const char *text;void *user_data;} mui_list_item_t;
 typedef struct {uint8_t chameleon_slot_num;} settings_data_t;
 static settings_data_t settings={8};
 static settings_data_t *settings_get_data(void) {return &settings;}
 static void fds_map_file_name(uint16_t id,uint16_t key,char *p) {(void)id;(void)key;strcpy(p,"/slot.bin");}
 typedef int mui_text_input_event_t;
 typedef struct {void *user_data;} mui_text_input_t;
-typedef struct {void *p_toast_view; void *p_scene_dispatcher;} app_chameleon_t;
+typedef struct {void *p_toast_view; void *p_scene_dispatcher; void *browser_cache;} app_chameleon_t;
 typedef struct {int type; size_t size;} vfs_obj_t;
 typedef struct {
     bool (*mounted)(void);
@@ -128,11 +132,29 @@ int main(void) {
         assert(writes==0 && backs==0);
     }
     puts("PASS oversized and path-bearing save names rejected");
-    mui_list_item_t back={ICON_BACK,"Back"}, folder={3,"Folder"};
+    mui_list_item_t back={ICON_BACK,"Back",(void*)CHAMELEON_MENU_BACK};
+    mui_list_item_t folder={3,"Folder",(void*)CHAMELEON_MENU_FOLDER};
     assert(chameleon_scene_menu_card_data_list_item_cmp(&back,&folder)>0);
     assert(chameleon_scene_menu_card_data_list_item_cmp(&folder,&back)<0);
     assert(chameleon_scene_menu_card_data_list_item_cmp(&back,&back)==0);
     puts("PASS return navigation remains last with symmetric comparison");
+    /* Parent, previous page, sorted folders/files, next page, return. */
+    mui_list_item_t ordered[]={
+        {ICON_HOME,"Parent",(void*)CHAMELEON_MENU_PARENT_DIR},
+        {20,"Previous",(void*)CHAMELEON_MENU_PREVIOUS_PAGE},
+        {3,"Alpha",(void*)CHAMELEON_MENU_FOLDER},
+        {3,"Zulu",(void*)CHAMELEON_MENU_FOLDER},
+        {4,"Alpha.bin",(void*)CHAMELEON_MENU_FILE},
+        {4,"Zulu.bin",(void*)CHAMELEON_MENU_FILE},
+        {21,"Next",(void*)CHAMELEON_MENU_NEXT_PAGE},
+        {ICON_BACK,"Back",(void*)CHAMELEON_MENU_BACK}
+    };
+    const size_t count=sizeof ordered/sizeof ordered[0];
+    for(size_t a=0;a<count;a++)for(size_t b=0;b<count;b++) {
+        int cmp=chameleon_scene_menu_card_data_list_item_cmp(&ordered[a],&ordered[b]);
+        assert(a==b?cmp==0:a<b?cmp<0:cmp>0);
+    }
+    puts("PASS navigation controls keep total order and folders/files retain lexical sort");
     unsigned char data[64]; uint16_t length;
     reset(); result=-1;length=64;assert(!fds_read_sync(1,1,&length,data) && length==0);
     reset();result=65;length=64;assert(!fds_read_sync(1,1,&length,data) && length==0);
@@ -151,4 +173,4 @@ with tempfile.TemporaryDirectory(prefix='pixl-chameleon-') as directory:
     exe=root/('test.exe' if os.name=='nt' else 'test')
     subprocess.run([shutil.which('gcc') or 'gcc','-std=c11','-O2',str(c),'-o',str(exe)],check=True)
     result=subprocess.run([str(exe)],check=True,capture_output=True,text=True)
-    print(json.dumps({'test':'chameleon_files','groups':7,'result':result.stdout},indent=2))
+    print(json.dumps({'test':'chameleon_files','groups':8,'result':result.stdout},indent=2))

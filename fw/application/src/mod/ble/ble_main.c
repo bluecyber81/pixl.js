@@ -84,6 +84,7 @@
 #include "ble_df_driver.h"
 #include "ble_main.h"
 #include "ble_work.h"
+#include "ble_remote.h"
 #include "../runtime_diag.h"
 
 #if MAX_MTU_DAT_SIZE != BLE_WORK_DATA_SIZE
@@ -146,6 +147,21 @@ static volatile uint16_t m_release_handle = BLE_CONN_HANDLE_INVALID;
 static volatile uint32_t m_link_generation, m_release_generation;
 static volatile bool m_release_attempted, m_release_requested;
 static volatile bool m_file_mode = true;
+static volatile bool m_remote_mode;
+static volatile uint32_t m_session_generation;
+static volatile bool m_timeout_overridden;
+static bool m_mode_pending, m_mode_adv_requested, m_mode_handlers_ready, m_mode_stop_requested;
+static bool m_mode_wait_reply;
+static uint32_t m_mode_wait_tick;
+static ble_device_mode_t m_pending_mode;
+static nus_rx_data_handler_t m_pending_rx;
+static nus_tx_ready_handler_t m_pending_tx;
+/* 1: committed remote ACK, UI pending; 2: file UI adopted this exact link. */
+static uint8_t m_file_link_handoff;
+static uint32_t m_file_link_generation;
+static void ble_pending_mode_poll(void);
+static void ble_stop_transport(void);
+static void ble_file_link_poll(void);
 static volatile bool m_sessions_enabled;
 /* Bound only initial file-client discovery. An established NUS session has
  * no idle deadline. RTC subtraction handles its 24-bit counter wrapping. */
@@ -159,6 +175,7 @@ static ble_uuid_t m_adv_uuids[] = /**< Universally unique service identifier. */
     {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
 
 #define DEVICE_NAME_PIXLJS "Pixl.js"
+#define DEVICE_NAME_REMOTE "Pixl.Remote"
 #define DEVICE_NAME_AMIIBOLINK "amiibolink"
 #define DEVICE_NAME_AMILOOP "AmiLoop"
 
@@ -239,7 +256,7 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) { APP_ERROR_HANDLER(nrf_er
  * operations run from ble_process_pending() in the foreground. */
 static void nus_data_handler(ble_nus_evt_t *p_evt) {
     bool accepted = true;
-    nrf_pwr_mgmt_feed();
+    if (!m_remote_mode) nrf_pwr_mgmt_feed();
     if (!m_sessions_enabled || p_evt->conn_handle == BLE_CONN_HANDLE_INVALID ||
         (m_conn_handle != BLE_CONN_HANDLE_INVALID && p_evt->conn_handle != m_conn_handle)) return;
     if (p_evt->type == BLE_NUS_EVT_COMM_STARTED) {
@@ -248,14 +265,16 @@ static void nus_data_handler(ble_nus_evt_t *p_evt) {
         if (ble_conn_state_status(p_evt->conn_handle) != BLE_CONN_STATUS_CONNECTED ||
             m_release_handle != BLE_CONN_HANDLE_INVALID || m_nus_session_handle == p_evt->conn_handle) return;
         m_nus_session_handle = p_evt->conn_handle;
+        m_session_generation++;
         m_file_join_pending = false;
-        if (m_file_mode && m_conn_handle == p_evt->conn_handle) ble_work_connected();
+        if ((m_file_mode || m_remote_mode) && m_conn_handle == p_evt->conn_handle) ble_work_connected();
         return;
     }
     if (p_evt->type == BLE_NUS_EVT_COMM_STOPPED) {
         if (m_nus_session_handle != p_evt->conn_handle) return; /* Initial CCCD=0 is not a session close. */
         m_nus_session_handle = BLE_CONN_HANDLE_INVALID;
-        if (m_file_mode && m_conn_handle == p_evt->conn_handle) {
+        m_session_generation++;
+        if ((m_file_mode || m_remote_mode) && m_conn_handle == p_evt->conn_handle) {
             ble_work_disconnected(); /* Invalidate now; flush/close only in main. */
             m_release_handle = m_conn_handle;
             m_release_generation = m_link_generation;
@@ -264,10 +283,11 @@ static void nus_data_handler(ble_nus_evt_t *p_evt) {
         return;
     }
     if (m_conn_handle != p_evt->conn_handle ||
-        (m_file_mode && (m_nus_session_handle != m_conn_handle ||
+        ((m_file_mode || m_remote_mode) && (m_nus_session_handle != m_conn_handle ||
                          m_release_handle != BLE_CONN_HANDLE_INVALID))) return;
     if (p_evt->type == BLE_NUS_EVT_RX_DATA) {
-        accepted = ble_work_receive(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+        accepted = m_remote_mode ? ble_remote_receive_irq(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length)
+                                 : ble_work_receive(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
     } else if (p_evt->type == BLE_NUS_EVT_TX_RDY) {
         accepted = ble_work_tx_ready();
     }
@@ -283,7 +303,7 @@ static void ble_file_join_poll(void) {
     /* No extra timer callback: serialize the deadline decision with NUS/GAP
      * events, then use the existing deferred cleanup and release path. */
     CRITICAL_REGION_ENTER();
-    if (m_file_join_pending && m_sessions_enabled && m_file_mode &&
+    if (m_file_join_pending && m_sessions_enabled && (m_file_mode || m_remote_mode) &&
         m_conn_handle != BLE_CONN_HANDLE_INVALID && m_file_join_generation == m_link_generation &&
         m_nus_session_handle != m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
         app_timer_cnt_diff_compute(app_timer_cnt_get(), m_file_join_tick) >= BLE_FILE_JOIN_TIMEOUT_TICKS) {
@@ -320,6 +340,8 @@ void ble_process_pending(void) {
     ble_file_join_poll();
     ble_work_process(ble_on_disconnected);
     ble_release_stopped_session();
+    ble_file_link_poll();
+    ble_pending_mode_poll();
     ble_df_driver_poll();
     if (m_link_state_handler) {
         ble_link_state_t state = ble_link_state_get();
@@ -451,9 +473,11 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         APP_ERROR_CHECK(err_code);
         m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
         m_link_generation++;
+        m_session_generation++;
+        m_timeout_overridden = false;
         m_release_handle = BLE_CONN_HANDLE_INVALID;
         m_release_attempted = m_release_requested = false;
-        m_file_join_pending = m_sessions_enabled && m_file_mode && m_nus_session_handle != m_conn_handle;
+        m_file_join_pending = m_sessions_enabled && (m_file_mode || m_remote_mode) && m_nus_session_handle != m_conn_handle;
         if (m_file_join_pending) {
             m_file_join_tick = app_timer_cnt_get();
             m_file_join_generation = m_link_generation;
@@ -462,7 +486,7 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         }
         m_advertising_active = false;
         m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
-        if (m_sessions_enabled && (!m_file_mode || m_nus_session_handle == m_conn_handle)) {
+        if (m_sessions_enabled && (!(m_file_mode || m_remote_mode) || m_nus_session_handle == m_conn_handle)) {
             ble_work_connected();
         } else {
             ble_work_disconnected();
@@ -470,13 +494,21 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
         APP_ERROR_CHECK(err_code);
 
+        if (!m_sessions_enabled) {
+            /* A CONNECT already accepted by the stack may arrive after stop. */
+            sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            break;
+        }
         if (ble_device_name_is(DEVICE_NAME_AMILOOP)) {
             NRF_LOG_INFO("Set mtu to %d", NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
             sd_ble_gattc_exchange_mtu_request(p_ble_evt->evt.gap_evt.conn_handle, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
         }
 
-        m_previous_pwr_mgmt_sleep_timeout = nrf_pwr_mgmt_get_timeout();
-        nrf_pwr_mgmt_set_timeout(BLE_CONNECT_SLEEP_TIMEOUT_SECONDS);
+        if (!m_remote_mode) {
+            m_previous_pwr_mgmt_sleep_timeout = nrf_pwr_mgmt_get_timeout();
+            nrf_pwr_mgmt_set_timeout(BLE_CONNECT_SLEEP_TIMEOUT_SECONDS);
+            m_timeout_overridden = true;
+        }
 
         break;
 
@@ -492,9 +524,11 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         m_file_join_pending = false;
         m_release_attempted = m_release_requested = false;
         m_link_generation++;
+        m_session_generation++;
         m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGTH - HANDLE_LENGTH;
         ble_work_disconnected();
-        nrf_pwr_mgmt_set_timeout(m_previous_pwr_mgmt_sleep_timeout);
+        if (m_timeout_overridden) nrf_pwr_mgmt_set_timeout(m_previous_pwr_mgmt_sleep_timeout);
+        m_timeout_overridden = false;
 
         break;
 
@@ -593,7 +627,7 @@ void gatt_init(void) {
 
 /**@brief Function for initializing the Advertising functionality.
  */
-static void advertising_init(void) {
+static ret_code_t advertising_init(bool remote) {
     uint32_t err_code;
     ble_advertising_init_t init;
 
@@ -601,20 +635,23 @@ static void advertising_init(void) {
 
     init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
     init.advdata.include_appearance = false;
-    init.advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+    init.advdata.flags = remote ? BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE :
+                                BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
 
     init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     init.srdata.uuids_complete.p_uuids = m_adv_uuids;
 
     init.config.ble_adv_fast_enabled = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
-    init.config.ble_adv_fast_timeout = APP_ADV_DURATION;
+    /* Permission ends at sleep/disable; mere advertising never feeds sleep. */
+    init.config.ble_adv_fast_timeout = remote ? 0 : APP_ADV_DURATION;
     init.evt_handler = on_adv_evt;
+    init.config.ble_adv_on_disconnect_disabled = true;
 
     err_code = ble_advertising_init(&m_advertising, &init);
-    APP_ERROR_CHECK(err_code);
-
+    if (err_code != NRF_SUCCESS) return err_code;
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
+    return NRF_SUCCESS;
 }
 
 /**@brief Function for starting advertising.
@@ -642,20 +679,15 @@ void ble_init(void) {
     NRF_LOG_INFO("BLE started.");
 }
 
-void ble_set_device_name(const char *device_name) {
+static ret_code_t ble_set_device_name(const char *device_name) {
     ble_gap_conn_sec_mode_t sec_mode;
-
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
-    uint32_t err_code = sd_ble_gap_device_name_set(&sec_mode, (const uint8_t *)device_name, strlen(device_name));
-    APP_ERROR_CHECK(err_code);
+    return sd_ble_gap_device_name_set(&sec_mode, (const uint8_t *)device_name, strlen(device_name));
 }
-
-void ble_addr_set(uint8_t offset) {
-    ble_gap_addr_t addr = {0};
-    memcpy(&addr, &m_default_gap_addr, sizeof(ble_gap_addr_t));
+static ret_code_t ble_addr_set(uint8_t offset) {
+    ble_gap_addr_t addr = m_default_gap_addr;
     addr.addr[0] += offset;
-    uint32_t err_code = sd_ble_gap_addr_set(&addr);
-    APP_ERROR_CHECK(err_code);
+    return sd_ble_gap_addr_set(&addr);
 }
 
 void ble_service_id_set(uint32_t suffix) {
@@ -667,30 +699,35 @@ void ble_service_id_set(uint32_t suffix) {
     memcpy(ptr, &suffix, sizeof(suffix));
 }
 
-void ble_device_mode_prepare(ble_device_mode_t mode) {
+static ret_code_t ble_apply_device_mode(ble_device_mode_t mode) {
+    uint8_t offset = 0;
+    const char *name = mode == BLE_DEVICE_MODE_REMOTE ? DEVICE_NAME_REMOTE : DEVICE_NAME_PIXLJS;
+    if (mode == BLE_DEVICE_MODE_AMIIBOLINK || mode == BLE_DEVICE_MODE_AMIIBOLINK_V2) {
+        name = DEVICE_NAME_AMIIBOLINK; offset = 0x10;
+    } else if (mode == BLE_DEVICE_MODE_AMILOOP) {
+        name = DEVICE_NAME_AMILOOP; offset = 0x20;
+    }
+    /* BUSY means the stack still has events to deliver. Publish no new owner
+     * until every configuration step succeeded; retry from foreground. */
+    ret_code_t result = ble_addr_set(offset);
+    if (result != NRF_SUCCESS) return result;
+    result = ble_set_device_name(name);
+    if (result != NRF_SUCCESS) return result;
+    result = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
+    if (result != NRF_SUCCESS) return result;
+    result = advertising_init(mode == BLE_DEVICE_MODE_REMOTE);
+    if (result != NRF_SUCCESS) return result;
+    ble_service_id_set(mode == BLE_DEVICE_MODE_AMIIBOLINK_V2 ? 0x0000180F : 0x6e400001);
     m_file_join_pending = false;
     m_file_mode = mode == BLE_DEVICE_MODE_PIXLJS;
+    m_remote_mode = mode == BLE_DEVICE_MODE_REMOTE;
+    m_session_generation++;
     m_sessions_enabled = true;
-    /* A diagnostic MTU preference belongs to this file-transfer screen only.
-     * Plain disconnect/reconnect keeps it; entering any mode resets it. */
-    ret_code_t mtu_result = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
-    APP_ERROR_CHECK(mtu_result);
-    if (mode == BLE_DEVICE_MODE_AMIIBOLINK || mode == BLE_DEVICE_MODE_AMIIBOLINK_V2) {
-        ble_set_device_name(DEVICE_NAME_AMIIBOLINK);
-        ble_addr_set(0x10);
-    } else if (mode == BLE_DEVICE_MODE_AMILOOP) {
-        ble_set_device_name(DEVICE_NAME_AMILOOP);
-        ble_addr_set(0x20);
-    } else {
-        ble_set_device_name(DEVICE_NAME_PIXLJS);
-        ble_addr_set(0);
-    }
-    advertising_init();
-
-    ble_service_id_set(mode == BLE_DEVICE_MODE_AMIIBOLINK_V2 ? 0x0000180F : 0x6e400001);
+    return NRF_SUCCESS;
 }
 
 void ble_adv_start(void) {
+    if (m_mode_pending) { m_mode_adv_requested = true; return; }
     if (m_ble_initialized && m_advertising.adv_mode_current == BLE_ADV_MODE_IDLE) {
         advertising_start();
     }
@@ -732,7 +769,9 @@ bool ble_restart_advertising(void) {
     return result == NRF_SUCCESS;
 }
 
-void ble_disable() {
+static void ble_stop_transport(void) {
+    m_file_link_handoff = 0;
+    m_session_generation++;
     m_file_join_pending = false;
     m_sessions_enabled = false;
     m_nus_session_handle = m_release_handle = BLE_CONN_HANDLE_INVALID;
@@ -744,11 +783,121 @@ void ble_disable() {
     /* Disable automatic restart before stopping advertising: a disconnect
      * observer may run between these SoftDevice calls. */
     m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;
-    ble_advertising_start(&m_advertising, BLE_ADV_MODE_IDLE);
-    sd_ble_gap_adv_stop(m_advertising.adv_handle);
+    if (m_advertising.p_adv_data) {
+        ble_advertising_start(&m_advertising, BLE_ADV_MODE_IDLE);
+        sd_ble_gap_adv_stop(m_advertising.adv_handle);
+    }
     if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
         sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
     }
+}
+
+void ble_disable(void) {
+    m_mode_pending = m_mode_adv_requested = m_mode_handlers_ready = m_mode_wait_reply = false;
+    ble_stop_transport();
+}
+void ble_device_mode_prepare(ble_device_mode_t mode) {
+    /* New owners register their handlers before the next foreground poll.
+     * Never reconfigure the GAP address beneath an existing connection. */
+    m_pending_mode = mode;
+    m_mode_pending = true;
+    m_mode_adv_requested = m_mode_handlers_ready = m_mode_stop_requested = false;
+    m_pending_rx = NULL; m_pending_tx = NULL;
+    m_mode_wait_reply = m_remote_mode && ble_remote_dispatching();
+    m_mode_wait_tick = app_timer_cnt_get();
+    if (!m_mode_wait_reply) { ble_stop_transport(); m_mode_stop_requested = true; }
+}
+static void ble_pending_mode_poll(void) {
+    if (!m_mode_pending) return;
+    if (!m_mode_stop_requested) {
+        if (m_mode_wait_reply && ble_is_connected() && ble_remote_response_pending() &&
+            app_timer_cnt_diff_compute(app_timer_cnt_get(), m_mode_wait_tick) < APP_TIMER_TICKS(2000)) return;
+        ble_stop_transport(); m_mode_stop_requested = true;
+    }
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID || !ble_work_cleanup_complete() || !m_mode_handlers_ready) return;
+    ble_device_mode_t mode = m_pending_mode;
+    bool advertise = m_mode_adv_requested;
+    ble_work_set_handlers(m_pending_rx, m_pending_tx);
+    ble_work_process(ble_on_disconnected);
+    if (!ble_work_cleanup_complete()) return;
+    ret_code_t result = NRF_ERROR_BUSY;
+    CRITICAL_REGION_ENTER();
+    if (m_conn_handle == BLE_CONN_HANDLE_INVALID && ble_work_cleanup_complete())
+        result = ble_apply_device_mode(mode);
+    CRITICAL_REGION_EXIT();
+    if (result == NRF_ERROR_BUSY || result == NRF_ERROR_INVALID_STATE) return;
+    APP_ERROR_CHECK(result);
+    m_mode_pending = m_mode_wait_reply = false;
+    if (advertise) ble_adv_start();
+}
+uint32_t ble_session_generation(void) { return m_session_generation; }
+uint32_t ble_link_generation(void) { return m_link_generation; }
+bool ble_remote_mode_active(void) { return m_ble_initialized && m_remote_mode && m_sessions_enabled; }
+bool ble_remote_mode_owned(void) {
+    return m_mode_pending ? m_pending_mode == BLE_DEVICE_MODE_REMOTE : ble_remote_mode_active();
+}
+bool ble_mode_transition_pending(void) { return m_mode_pending; }
+bool ble_transport_idle(void) { return m_conn_handle == BLE_CONN_HANDLE_INVALID && ble_work_cleanup_complete(); }
+bool ble_remote_transport_ready(void) {
+    return ble_remote_mode_active() && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
+           m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID && ble_work_can_send();
+}
+uint32_t ble_remote_open_file_link(const uint8_t *reply, size_t length, uint32_t generation) {
+    ret_code_t result = NRF_ERROR_INVALID_STATE;
+    CRITICAL_REGION_ENTER();
+    if (!m_mode_pending && !m_file_link_handoff && m_session_generation == generation &&
+        ble_remote_transport_ready()) {
+        result = ble_nus_tx_data((void *)reply, length);
+        if (result == NRF_SUCCESS) {
+            /* The ACK and new RX owner are indivisible to application IRQs.
+             * Discard all old remote work; newly arriving file frames remain
+             * queued until foreground cleanup has reset the DF protocol. */
+            m_remote_mode = false;
+            m_file_mode = true;
+            m_file_join_pending = false;
+            m_session_generation++;
+            m_file_link_generation = m_link_generation;
+            m_file_link_handoff = 1;
+            m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;
+            ble_work_set_handlers(ble_on_received_data, ble_on_transmit_ready);
+            ble_work_connected();
+            m_previous_pwr_mgmt_sleep_timeout = nrf_pwr_mgmt_get_timeout();
+            nrf_pwr_mgmt_set_timeout(BLE_CONNECT_SLEEP_TIMEOUT_SECONDS);
+            m_timeout_overridden = true;
+        }
+    }
+    CRITICAL_REGION_EXIT();
+    return result;
+}
+bool ble_file_link_adopt(void) {
+    bool accepted = false;
+    CRITICAL_REGION_ENTER();
+    if (m_file_link_handoff == 1 && m_file_link_generation == m_link_generation &&
+        m_sessions_enabled && m_file_mode && !m_mode_pending &&
+        m_conn_handle != BLE_CONN_HANDLE_INVALID && m_nus_session_handle == m_conn_handle &&
+        m_release_handle == BLE_CONN_HANDLE_INVALID && ble_work_can_send()) {
+        m_file_link_handoff = 2;
+        accepted = true;
+    }
+    CRITICAL_REGION_EXIT();
+    return accepted;
+}
+static void ble_file_link_poll(void) {
+    if (!m_file_link_handoff || m_conn_handle != BLE_CONN_HANDLE_INVALID) return;
+    /* A retained link used the remote GAP name/advertisement. Only after its
+     * disconnect may the normal file identity and visibility be configured. */
+    m_file_link_handoff = 0;
+    ble_device_mode_prepare(BLE_DEVICE_MODE_PIXLJS);
+    ble_adv_start();
+    ble_nus_set_handler(ble_on_received_data, ble_on_transmit_ready);
+}
+void ble_hold_advertising_after_disconnect(void) {
+    m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;
+}
+void ble_release_advertising_hold(void) {
+    if (m_mode_pending || !ble_remote_mode_active()) return;
+    m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = false;
+    if (ble_transport_idle()) (void)ble_restart_advertising();
 }
 
 bool ble_is_connected(void) {
@@ -756,7 +905,10 @@ bool ble_is_connected(void) {
 }
 
 void ble_nus_set_handler(nus_rx_data_handler_t rx_data_handler, nus_tx_ready_handler_t tx_ready_handler) {
-    ble_work_set_handlers(rx_data_handler, tx_ready_handler);
+    if (m_mode_pending) {
+        m_pending_rx = rx_data_handler; m_pending_tx = tx_ready_handler;
+        m_mode_handlers_ready = true;
+    } else ble_work_set_handlers(rx_data_handler, tx_ready_handler);
 }
 
 size_t ble_nus_max_data_length(void) { return m_ble_nus_max_data_len; }
@@ -770,7 +922,8 @@ bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capaci
     CRITICAL_REGION_ENTER();
     if (m_ble_initialized) {
         bool connected = m_conn_handle != BLE_CONN_HANDLE_INVALID && ble_work_can_send();
-        bool file_mode = ble_device_name_is(DEVICE_NAME_PIXLJS);
+        /* A same-link handoff retains the remote GAP name until disconnect. */
+        bool file_mode = m_file_mode;
         uint16_t effective = connected ? nrf_ble_gatt_eff_mtu_get(&m_gatt, m_conn_handle) : 0;
         if ((!connected || (effective >= BLE_GATT_ATT_MTU_DEFAULT && effective <= NRF_SDH_BLE_GATT_MAX_MTU_SIZE)) &&
             (requested_mtu == 0 || (connected && file_mode &&

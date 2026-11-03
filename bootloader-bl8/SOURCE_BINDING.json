@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "bootloader": "BL8",
+  "board": "LCD",
+  "artifactCounters": [
+    9,
+    11
+  ],
+  "counterMeaning": "Counter belongs to signed package metadata; identical BL8 code was packaged with counter9 alone and counter11 with S1127.3.0.",
+  "expectedBootloaderPayloadBytes": 28136,
+  "expectedBootloaderPayloadSha256": "270a71603d305aaffcfe9da1998be99fea27aebe5dc824de90cf3867c3666398",
+  "expectedPaddedBootloaderSha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+  "sdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1) 12.2.1 20221205",
+  "sdkHeaderOverride": {
+    "path": "components/softdevice/s112/headers/nrf_nvic.h",
+    "original_sdk_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+    "baseline_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef",
+    "candidate_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef",
+    "scope": "baseline and candidate, ephemeral container, existing audited DRGN10613 workaround"
+  },
+  "sourceBuildReportSha256": "1f09747413c40c1e65ba9515f3d09482d3a8e47885e7700d3bd4228bfd192c24",
+  "files": {
+    "fw/application/src/boards/board_lcd.h": "cb85412108a52446051ecc4c1ba1bfe658ba053d59b0f252265c474006db98b7",
+    "fw/application/src/boards/board_oled.h": "6d7f0f913fc0a901ed1f6810790d770cbf25333bd63e63481eb69939abcb61df",
+    "fw/application/src/custom_board.h": "f046368b61a366cd5d56b02fe1b54d2075563cd6f094898959567c432428329b",
+    "fw/bootloader/config/sdk_config.h": "73f103181c547db6ab0c310e5f45fda38fed2b5f433f6985a2f03534e883d775",
+    "fw/bootloader/Makefile": "b7cd78fa3e9dc0467c7c296cb658e593827f2e94dff06d99068609951b314892",
+    "fw/bootloader/src/bitmap.h": "e1a6be70268fcfc002e6abba67077445d1d9a8bac780bd65518c5b38eb678d1b",
+    "fw/bootloader/src/dfu_completion.h": "4597049c254af92fdc1c78dab81701d0f4cb59156c720028d7c259c7d825becb",
+    "fw/bootloader/src/dfu_public_key.c": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3",
+    "fw/bootloader/src/lcd_comm.c": "f8284af63509567905c6eef8f5959fae2639ed49fe22bf0ffd752b022c4b5534",
+    "fw/bootloader/src/lcd_comm.h": "e07c9d5f28cdbbf0c73ed4ba3d92729655845c254fc560c7a4ecdbd81ea2d812",
+    "fw/bootloader/src/lcd_drv.c": "f5ee6f07b0ca491769b2f458dafd35928fb36bf7e3f93d527ab58a9cdeafaeb2",
+    "fw/bootloader/src/lcd_drv.h": "2d892286e8ec9edbe3a634488ab8e0971b674bbf76181a30ff763d032de18e3c",
+    "fw/bootloader/src/main.c": "923331438efae79d80654fa40351b0cd0cb4b76d5f720448a51c170f60739778",
+    "fw/bootloader/src/nrf_crypto_allocator.h": "1bec4d979457cc82fc72da7b482f831ecf9a21cdb58a061d40daa17393ebef22",
+    "fw/bootloader/src/sdk/nrf_bootloader.c": "704de4c0ba817db4f835d39208c46bcb3bd491bf585a04662c1d657d01430c01",
+    "fw/bootloader/src/sdk/nrf_bootloader_fw_activation.c": "9080cec3da45e212eb3d16bc61cd597ed2d6790879a4ed52362af9357ba76fdd",
+    "fw/bootloader/src/sdk/nrf_dfu_ble.c": "46f022c6e8f2f9bb8e208ad96e6c2a7c4ce9964026bfe70ccefc73b8db168aa8",
+    "fw/bootloader/src/sdk/nrf_dfu_req_handler.c": "90f569fd57ad61890481706dfa1548c23e6075400457a3526bda0ed2a89e1bdd",
+    "fw/bootloader/src/sdk/nrf_dfu_validation.c": "366b8915619474a4be049aaaebc06abab3597b001f3e6c3e659e7cc661302a16",
+    "fw/ld/bootloader.ld": "4424352deb973bbca3196201ba1b743117bf563980a14d5789fc47b413343751",
+    "sdk-overrides/nrf_nvic.h": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef",
+    "sdk-overrides/nRF5_Nordic_license.txt": "83c33cf1ff4ebfecea51eceb887c31151b8affdd322e22d369628d6cc7ffcb0d"
+  }
+}

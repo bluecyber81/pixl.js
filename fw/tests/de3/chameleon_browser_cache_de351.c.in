@@ -1,0 +1,87 @@
+static void cache_walk(unsigned n, bool pressure) {
+ make(n,true);app_chameleon_t*a=begin(pressure);mui_mem_monitor_t before;mui_mem_monitor(&before);
+ chameleon_scene_menu_card_data_file_load_on_enter(a);
+ unsigned seen=0,start=0,pages=0;bool cached=false;
+#if TEST_CACHE
+ cached=a->browser_cache!=NULL;
+ if(n<=24)assert(!cached);
+#endif
+ do{start=seen;seen+=checkpage(a,seen);pages++;if(!control(a,CHAMELEON_MENU_NEXT_PAGE))break;click(a,CHAMELEON_MENU_NEXT_PAGE);}while(1);
+ unsigned forward=reads;assert(seen==n);
+ while(control(a,CHAMELEON_MENU_PREVIOUS_PAGE)){click(a,CHAMELEON_MENU_PREVIOUS_PAGE);start-=24;checkpage(a,start);}
+ assert(start==0);
+ if(cached){assert(forward==((pages+1)/2)*(n+1));assert(reads==(pages%2?pages:pages-1)*(n+1));}
+ else{assert(forward==pages*(n+1));assert(reads==(pages*2-1)*(n+1));}
+ printf("OBS entries=%u pressure=%u ptr=%u cache=%u initial_free=%u sampled_min_free=%u pages=%u forward_reads=%u roundtrip_reads=%u\n",n,pressure,(unsigned)sizeof(void*),cached,before.free_size,min_free,pages,forward,reads);
+ end(a);
+}
+#if TEST_CACHE
+static void reset_sorted(void){for(unsigned i=0;i<count;i++)expected[i]=objects[i];qsort(expected,count,sizeof(*expected),cmp_obj);}
+static void cache_mutation(void){
+ make(100,false);app_chameleon_t*a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);assert(a->browser_cache);
+ unsigned oldreads=reads;click(a,CHAMELEON_MENU_NEXT_PAGE);checkpage(a,24);assert(reads==oldreads);
+ strcpy(objects[30].name,"z-renamed.bin");reset_sorted();revision++;
+ click(a,CHAMELEON_MENU_PREVIOUS_PAGE);checkpage(a,0);assert(reads>oldreads);
+ oldreads=reads;click(a,CHAMELEON_MENU_NEXT_PAGE);checkpage(a,24);assert(reads>oldreads); /* reverse cache ended at old anchor */
+ oldreads=reads;revision+=UINT64_C(1)<<32;click(a,CHAMELEON_MENU_PREVIOUS_PAGE);checkpage(a,0);assert(reads>oldreads);
+ click(a,CHAMELEON_MENU_NEXT_PAGE);click(a,CHAMELEON_MENU_NEXT_PAGE);make(24,false);revision++;
+ chameleon_scene_menu_card_data_file_load_reload(a);assert(a->browser_direction==0);checkpage(a,0);end(a);
+ puts("PASS mutation rename/delete/remount invalidates cached pages, deleted-page fallback");
+}
+static void cache_partial_reverse(void){
+ make(100,false);app_chameleon_t*a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);
+ strcpy(a->browser_anchor,objects[30].name);a->browser_anchor_icon=ICON_FILE;a->browser_direction=-1;
+ chameleon_scene_menu_card_data_file_load_reload(a);assert(checkpage(a,6)==24);
+ unsigned before=reads;click(a,CHAMELEON_MENU_PREVIOUS_PAGE);assert(checkpage(a,0)==6&&reads==before);
+ click(a,CHAMELEON_MENU_NEXT_PAGE);assert(checkpage(a,6)==24&&reads==before);end(a);
+ puts("PASS partial reverse cache boundary has no duplicate or skipped entries");
+}
+static void cache_io_failures(void){
+ for(unsigned f=0;f<4;f++){
+  make(100,false);app_chameleon_t*a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);assert(a->browser_cache);
+  revision++;if(f==0)fail_read=10;if(f==1)closefail=true;if(f==2)mutate_after=10;if(f==3)openfail=true;
+  click(a,CHAMELEON_MENU_NEXT_PAGE);assert(errors==1&&!oom&&control(a,CHAMELEON_MENU_BACK));
+  assert(a->p_list_view->items->size==1&&!a->browser_cache);end(a);
+ }
+ make(100,false);app_chameleon_t*a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);assert(a->browser_cache);
+ revision=0;unsigned before=reads;click(a,CHAMELEON_MENU_NEXT_PAGE);assert(reads>before&&!a->browser_cache);checkpage(a,24);end(a);
+ make(100,true);a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);click(a,CHAMELEON_MENU_FOLDER);
+ revision++;fail_read=10;click(a,CHAMELEON_MENU_NEXT_PAGE);
+ assert(errors==1&&!oom&&!a->browser_cache&&a->p_list_view->items->size==2);
+ assert(control(a,CHAMELEON_MENU_PARENT_DIR)&&control(a,CHAMELEON_MENU_BACK));end(a);
+ puts("PASS cached revision invalidation + open/read/close/concurrent-mutation failures discard partial cache");
+}
+static void cache_pressure_and_import(void){
+ make(1000,false);app_chameleon_t*a=begin(false);mui_mem_monitor_t m;mui_mem_monitor(&m);
+ if(m.free_biggest_size>8000)reserve(m.free_biggest_size-8000);
+ chameleon_scene_menu_card_data_file_load_on_enter(a);assert(!a->browser_cache);checkpage(a,0);
+ unsigned before=reads;click(a,CHAMELEON_MENU_NEXT_PAGE);checkpage(a,24);assert(reads==before+1001);end(a);
+ make(1000,false);a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);assert(a->browser_cache);
+ memset(tag_data,0xa5,sizeof(tag_data));read_size=4095;click(a,CHAMELEON_MENU_FILE);assert(!a->browser_cache&&errors==1&&scenes==0&&!oom);
+ for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0xa5);
+ errors=0;read_size=4096;click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==2&&!oom);
+ for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0x31);
+ end(a);puts("PASS low-headroom fallback and cache released before4KiB import staging");
+}
+static void cache_lifecycle(void){
+ make(100,true);app_chameleon_t*a=begin(false);chameleon_scene_menu_card_data_file_load_on_enter(a);assert(a->browser_cache);
+ unsigned before=reads;click(a,CHAMELEON_MENU_FOLDER);assert(reads>before&&current_dir[0]&&control(a,CHAMELEON_MENU_PARENT_DIR));
+ before=reads;click(a,CHAMELEON_MENU_PARENT_DIR);assert(reads>before&&!current_dir[0]);checkpage(a,0);
+ chameleon_scene_menu_card_data_file_load_on_exit(a);assert(!a->browser_cache);
+ chameleon_scene_menu_card_data_file_load_on_enter(a);assert(a->browser_cache);checkpage(a,0);
+ end(a);puts("PASS nested path and scene exit/reentry invalidate/release cache");
+}
+#endif
+int main(void){
+ printf("ABI ptr=%u app=%u pfs=%u TLSFcontrol=%u cache_enabled=%u\n",(unsigned)sizeof(void*),(unsigned)sizeof(app_chameleon_t),(unsigned)sizeof(struct pfs),(unsigned)tlsf_size(),TEST_CACHE);
+#if TEST_CACHE
+ printf("CACHE allocation_bytes=%u min_free_headroom=6144\n",(unsigned)sizeof(struct chameleon_browser_cache_s));
+#endif
+ unsigned counts[]={0,1,24,25,48,49,100,256,1000};
+ for(unsigned pressure=0;pressure<2;pressure++)for(unsigned i=0;i<9;i++)cache_walk(counts[i],pressure!=0);
+ failures();nested();allocation_failure();max_names();import_buffer();
+#if TEST_CACHE
+ cache_mutation();cache_partial_reverse();cache_io_failures();cache_pressure_and_import();cache_lifecycle();
+#endif
+ printf("PASS %u leak-free actual TLSF cases\n",cases);return 0;
+}

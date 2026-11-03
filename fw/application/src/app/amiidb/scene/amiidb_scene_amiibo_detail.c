@@ -31,7 +31,7 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
         app_timer_stop(m_amiibo_gen_delay_timer);
         memcpy(&app->ntag, p_ntag, sizeof(ntag_t));
         if (m_active_slot_persist) {
-            if (amiidb_api_slot_write(m_active_slot, &app->ntag) != VFS_OK) {
+            if (amiidb_api_slot_update(m_active_slot, &app->ntag) != VFS_OK) {
                 ntag_emu_save_failed();
                 /* Global save overlay remains usable even if the heap is full. */
             }

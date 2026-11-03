@@ -1,6 +1,6 @@
 # Third-party notices
 
-The DE3.37 source snapshot, application-only firmware, optional BL6 source and the historical Dateimanager 3.27.0 contain components with different licenses. The original top-level GPL version 2 text remains in [LICENSE](LICENSE). This index does not relicense individual components or assert one shared license.
+The DE3.55 source snapshot, application-only firmware, optional BL8 source and Dateimanager 3.33.1 contain components with different licenses. The original top-level GPL version 2 text remains in [LICENSE](LICENSE). This index does not relicense individual components or assert one shared license.
 
 Original source notices remain in place. Additional copies, file hashes, provenance and exact web-package versions are collected in [LICENSES/INVENTORY.json](LICENSES/INVENTORY.json). Keep applicable notices with redistributed source and binary packages.
 
@@ -28,13 +28,13 @@ The application uses the external pinned Nordic SDK through NRF52_SDK_ROOT. The 
 
 The unused vendored Chameleon SDK and PC-tool trees are excluded from this public application snapshot. Selected license texts from the original source archive remain in LICENSES/firmware for provenance and SDK reference; presence of a license copy does not imply that its associated static library, SoftDevice, CMSIS tool or pthread DLL is shipped.
 
-The three bdfconv executables are font-generation build tools covered by fw/scripts/LICENSE. Fonts have separate notices: the supplied WenQuanYi BDF declares GPL v2 with a font embedding exception. The u8g2 code license must not be assumed to cover every font.
+The retained bdfconv executables are historical font-generation build tools covered by fw/scripts/LICENSE. Fonts have separate notices: the supplied WenQuanYi BDF declares GPL v2 with a font embedding exception. The u8g2 code license must not be assumed to cover every font.
 
 ## Current web and SDK additions
 
-The current GitHub Pages website serves Dateimanager 3.32.5. Its exact web/WASM sources and notices are supplied in the [web3.32.5 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.32.5). The optional DE3.55/627 application has a separate corresponding-source archive there; the historical DE3.37 `fw/` tree is not its matching source. The Pages build also includes accessible component license notices. This web publication does not republish BL8 or a SoftDevice binary.
+The current GitHub Pages website serves Dateimanager 3.33.1. Its matching web/WASM sources and notices are under `web/` and in the web3.33.1 release. The current `fw/` tree matches the DE3.55 application. Corresponding BL8 source and notices are under `bootloader-bl8/`; `bootloader-bl6/` is retained as history. No SoftDevice binary is republished in the standard bundle.
 
-Dateimanager 3.32.5 contains its current pinned dependency notices and provenance in
+Dateimanager 3.33.1 contains its current pinned dependency notices and provenance in
 [web/third-party/npm/SOURCES.json](web/third-party/npm/SOURCES.json), original notices under
 `web/third-party/npm/licenses/`, and separate AmiiboAPI, QR generator, DFU, JSZip,
 CRC32 and packed-simulator notices in `web/third-party` and `web/public/dfu`.

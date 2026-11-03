@@ -90,6 +90,30 @@ int32_t amiidb_api_slot_write(uint8_t slot, ntag_t *p_ntag) {
     return 0;
 }
 
+int32_t amiidb_api_slot_update(uint8_t slot, ntag_t *p_ntag) {
+    if (!p_ntag || slot >= MAX_SLOT_COUNT) return VFS_ERR_FAIL;
+    char path[VFS_MAX_PATH_LEN];
+    vfs_obj_t obj;
+    vfs_meta_t meta;
+    snprintf(path, sizeof(path), "/amiibo/data/%02u.bin", (unsigned)slot);
+    vfs_driver_t *driver = vfs_get_driver(VFS_DRIVE_EXT);
+    if (!driver) return VFS_ERR_NODEV;
+    int32_t result = vfs_persist_recover(driver);
+    if (result != VFS_OK) return result;
+    result = driver->stat_file(path, &obj);
+    /* An empty data slot can be emulated before its first NFC save. */
+    if (result == VFS_ERR_NOOBJ) return amiidb_api_slot_write(slot, p_ntag);
+    if (result != VFS_OK) return result;
+    if (obj.type != VFS_TYPE_REG || !is_valid_amiibo_ntag_by_size(obj.size)) return VFS_ERR_CRPT;
+    vfs_meta_decode((uint8_t *)obj.meta, sizeof(obj.meta), &meta);
+    if (amiidb_api_slot_get_tag_type(obj.size, &meta, p_ntag) != p_ntag->type) return VFS_ERR_CRPT;
+
+    /* Preserve all 128 metadata bytes, 532-byte formats and 572-byte signatures.
+     * Explicitly choosing another figure still uses slot_write to replace it. */
+    result = vfs_persist_write(driver, path, p_ntag->data, obj.size);
+    return result == (int32_t)obj.size ? VFS_OK : result < 0 ? result : VFS_ERR_FAIL;
+}
+
 int32_t amiidb_api_slot_remove(uint8_t slot) {
     if (slot >= MAX_SLOT_COUNT) return VFS_ERR_FAIL;
     char path[VFS_MAX_PATH_LEN];

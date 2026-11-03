@@ -244,3 +244,8 @@ _L_DE3_SAVE_DISCARD_ASK,Discard RAM changes?,,,,,RAM-Daten verwerfen?,,,,,,,,,
 _L_DE3_SAVE_NO_SELECTED,[No]       Yes,,,,,[Nein]       Ja,,,,,,,,,
 _L_DE3_SAVE_YES_SELECTED, No       [Yes],,,,, Nein       [Ja],,,,,,,,,
 _L_DE3_SAVE_CONFIRM,Center: confirm,,,,,Mitte: bestaetigen,,,,,,,,,
+_L_DE3_REMOTE_SESSION,Remote (until off),Remote (until off),Remote (until off),Remote (until off),Remote (until off),Fernbedienung (bis Aus),Remote (until off),Remote (until off),Remote (until off),Remote (until off),Remote (until off),Remote (until off),Remote (until off),Remote (until off),Remote (until off)
+_L_APP_CHAMELEON_DISNEY_PROFILE,Disney Infinity,,,,,Disney Infinity,,,,,,,,,
+_L_APP_CHAMELEON_DISNEY_CONFIRM,Replace identity?\nKeep dump data.,,,,,Kennung ersetzen?\nDump bleibt erhalten.,,,,,,,,,
+_L_APP_CHAMELEON_DISNEY_NEEDS_MINI,Load a Mini dump first,,,,,Zuerst Mini-Dump laden,,,,,,,,,
+_L_APP_CHAMELEON_DISNEY_SHADOW,Shadow mode: unchanged,,,,,Schattenmodus: unveraendert,,,,,,,,,

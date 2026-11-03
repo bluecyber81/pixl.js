@@ -109,6 +109,7 @@ static bool vfs_packed_recovery_required(void) { return false; }
 static int save_result;
 static void nrf_pwr_mgmt_cancel_shutdown(void) {}
 static bool ntag_emu_prepare_change(void) {return true;}
+static void ble_remote_shutdown(void) {}
 static void ble_disable(void) {}
 static void ble_process_pending(void) {}
 static void *mini_app_launcher(void) { return NULL; }

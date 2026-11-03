@@ -1,0 +1,174 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "mui_input.h"
+#include "mui_event.h"
+#include "bsp_btn.h"
+static unsigned irq_depth;
+static void (*unlock_hook)(void);
+static void app_util_critical_region_enter(uint8_t*n){*n=irq_depth!=0;irq_depth++;}
+static void app_util_critical_region_exit(uint8_t n){assert(irq_depth);irq_depth--;assert((irq_depth!=0)==(n!=0));
+ if(!irq_depth && unlock_hook){void(*hook)(void)=unlock_hook;unlock_hook=NULL;hook();}}
+#include "mui_nav_diag.c"
+#include "mui_event.c"
+#define BUTTONS_NUMBER 3
+#define LIST_ITEM_HEIGHT 13
+#define LIST_ANIM_SHORT_TIME 150
+#define LIST_ANIM_LONG_TIME 300
+#define LIST_ANIM_FOCUS 0
+#define LIST_ANIM_SCROLL 1
+#define MUI_LIST_VIEW_EVENT_SELECTED 0
+#define MUI_LIST_VIEW_EVENT_LONG_SELECTED 1
+#define MINI_APP_ID_STATUS_BAR 1
+#define MINI_APP_ID_DESKTOP 2
+typedef enum {MUI_LAYER_DESKTOP,MUI_LAYER_WINDOW,MUI_LAYER_FULLSCREEN,MUI_LAYER_MAX} mui_layer_t;
+typedef struct {void *user_data;} mui_list_item_t;
+typedef struct {unsigned count;mui_list_item_t data[4];} items_t;
+typedef struct view {void *user_data;void(*input_cb)(struct view*,mui_input_event_t*);} mui_view_t;
+typedef struct list mui_list_view_t;
+struct list {items_t items[1];uint16_t focus_index,scroll_offset;uint8_t canvas_height,canvas_width,anim_type;
+ int16_t anim_value;int anim;void(*selected_cb)(int,mui_list_view_t*,mui_list_item_t*);};
+typedef struct viewport {bool enabled;void *user_data;void(*input_cb)(struct viewport*,mui_input_event_t*);} mui_view_port_t;
+typedef struct {mui_view_t *p_active_view;} mui_view_dispatcher_t;
+typedef struct {mui_event_queue_t queue;bool memory_error,auto_update;uint8_t layer_counts[MUI_LAYER_MAX];mui_view_port_t*layers[MUI_LAYER_MAX][2];} mui_t;
+static mui_t ui;
+static mui_list_view_t list;
+static mui_view_t view;
+static mui_view_dispatcher_t dispatcher;
+static mui_view_port_t port;
+static struct {bool swap_buttons;} settings;
+static void*settings_get_data(void);
+#define settings_get_data() (&settings)
+static unsigned selected,long_selected,redraws,animations,synthetic_stall_ticks,attempts;
+static bool handoff;
+static unsigned dialog_short;
+static mui_t*mui(void){return &ui;}
+static void mui_post(mui_t*m,mui_event_t*e){mui_event_post(&m->queue,e);}
+static void mui_update(mui_t*m){mui_event_t e={.id=MUI_EVENT_ID_REDRAW};mui_post(m,&e);}
+static bool mui_nfc_save_input(mui_t*m,mui_event_t*e){(void)m;(void)e;return false;}
+static void*mini_app_launcher(void){return NULL;}
+static void*mini_app_launcher_get_app_handle(void*p,unsigned n){(void)p;(void)n;return &ui;}
+static void mini_app_launcher_run(void*p,unsigned n){(void)p;(void)n;abort();}
+static bool mui_list_view_anim_enabled(void){return false;}
+static unsigned mui_list_item_array_size(items_t*a){return a->count;}
+static mui_list_item_t*mui_list_item_array_get(items_t*a,unsigned n){assert(n<a->count);return&a->data[n];}
+static void mui_list_view_start_text_anim(mui_list_view_t*l){(void)l;}
+static void mui_anim_set_time(int*a,int n){(void)a;(void)n;}
+static void mui_anim_set_values(int*a,int x,int y){(void)a;(void)x;(void)y;}
+static void mui_anim_start(int*a){(void)a;}
+
+@FUNCTIONS@
+
+static void consume(void*ctx,mui_event_t*e){assert(ctx==&ui && !irq_depth);
+ if(e->id==MUI_EVENT_ID_INPUT)mui_process_input(&ui,e);
+ else if(e->id==MUI_EVENT_ID_ANIM)animations++;
+ else if(e->id==MUI_EVENT_ID_REDRAW)redraws++;
+}
+static void tick(void){mui_anim_tick_tmr_cb(NULL);}
+static void drain(void){while(ui.queue.count)mui_event_dispatch(&ui.queue);}
+static void raw(unsigned key,bsp_btn_event_t type){mui_nav_diag_raw(key,type);mui_input_on_bsp_btn_event(key,type);}
+static void short_press(unsigned key){raw(key,BSP_BTN_EVENT_PRESSED);raw(key,BSP_BTN_EVENT_RELEASED);raw(key,BSP_BTN_EVENT_SHORT);attempts++;}
+static void dialog_input(mui_view_port_t*p,mui_input_event_t*e){(void)p;if(e->type==INPUT_TYPE_SHORT)dialog_short++;}
+static void selected_cb(int type,mui_list_view_t*l,mui_list_item_t*i){assert(l==&list && i==&list.items[0].data[list.focus_index]);
+ if(type==MUI_LIST_VIEW_EVENT_SELECTED)selected++;else long_selected++;
+ if(synthetic_stall_ticks){unsigned ticks=synthetic_stall_ticks;synthetic_stall_ticks=0;
+  for(unsigned t=0;t<ticks;t++)tick();
+  /* IRQ producers continue while the selected handler is synchronously busy. */
+  short_press(INPUT_KEY_CENTER);
+ }
+ if(handoff)port.input_cb=dialog_input;
+}
+static void setup(void){if(ui.queue.events)mui_event_queue_deinit(&ui.queue);memset(&ui,0,sizeof(ui));memset(&list,0,sizeof(list));
+ selected=long_selected=redraws=animations=synthetic_stall_ticks=attempts=dialog_short=0;settings.swap_buttons=false;handoff=false;
+ assert(mui_event_queue_init(&ui.queue));mui_event_set_callback(&ui.queue,consume,&ui);ui.auto_update=true;
+ list.items[0].count=4;list.canvas_height=64;list.canvas_width=128;list.selected_cb=selected_cb;
+ view.user_data=&list;view.input_cb=mui_list_view_on_input;dispatcher.p_active_view=&view;
+ port.enabled=true;port.user_data=&dispatcher;port.input_cb=mui_view_dispatcher_on_input;
+ ui.layers[MUI_LAYER_WINDOW][0]=&port;ui.layer_counts[MUI_LAYER_WINDOW]=1;mui_nav_diag_begin();
+}
+static unsigned get16(const uint8_t*p){return p[0]|((unsigned)p[1]<<8);}
+static mui_event_t captured[128];
+static unsigned captured_count;
+static void capture(void*ctx,mui_event_t*e){assert(ctx==&ui && !irq_depth && captured_count<128);captured[captured_count++]=*e;}
+static mui_event_t numbered(unsigned id,unsigned n){mui_event_t e={.id=id,.arg_int=n,.arg_ptr=(void*)(uintptr_t)(n+100)};return e;}
+static void post_number(unsigned id,unsigned n){mui_event_t e=numbered(id,n);mui_event_post(&ui.queue,&e);}
+static void check_number(unsigned index,unsigned id,unsigned n){assert(index<captured_count);assert(captured[index].id==id && captured[index].arg_int==n && captured[index].arg_ptr==(void*)(uintptr_t)(n+100));}
+static void inject_after_unlock(void){post_number(MUI_EVENT_ID_INPUT,9001);}
+static unsigned stress_ring(void){unsigned cases=0;
+ for(unsigned head=0;head<64;head++)for(unsigned hole=0;hole<64;hole++)for(unsigned kind=0;kind<2;kind++){
+  setup();mui_event_set_callback(&ui.queue,capture,&ui);captured_count=0;
+  for(unsigned n=0;n<head;n++)post_number(MUI_EVENT_ID_INPUT,n);
+  drain();assert(ui.queue.head==head);captured_count=0;
+  for(unsigned n=0;n<64;n++)post_number(n==hole?(kind?MUI_EVENT_ID_REDRAW:MUI_EVENT_ID_ANIM):MUI_EVENT_ID_INPUT,n);
+  assert(ui.queue.count==64 && ui.queue.redraw_pending==(kind!=0));
+  uint8_t nested;bool outer=(head+hole+kind)&1;
+  if(outer)app_util_critical_region_enter(&nested);
+  post_number(MUI_EVENT_ID_INPUT,9000);
+  if(outer){assert(irq_depth==1);app_util_critical_region_exit(nested);}
+  assert(ui.queue.count==64 && !ui.queue.redraw_pending);drain();assert(captured_count==64);
+  unsigned index=0;for(unsigned n=0;n<64;n++)if(n!=hole)check_number(index++,MUI_EVENT_ID_INPUT,n);
+  check_number(index,MUI_EVENT_ID_INPUT,9000);cases++;
+ }
+ /* No input may be evicted for a redraw/tick or another input. */
+ setup();mui_event_set_callback(&ui.queue,capture,&ui);captured_count=0;
+ for(unsigned n=0;n<64;n++)post_number(MUI_EVENT_ID_INPUT,n);
+ post_number(MUI_EVENT_ID_INPUT,9000);post_number(MUI_EVENT_ID_ANIM,9001);post_number(MUI_EVENT_ID_REDRAW,9002);
+ assert(ui.queue.count==64 && !ui.queue.redraw_pending);drain();assert(captured_count==64);
+ for(unsigned n=0;n<64;n++){check_number(n,MUI_EVENT_ID_INPUT,n);}cases++;
+ /* A producer interrupting just after unlock sees fully shifted/published
+  * ring state and appends after the outer producer, including across wrap. */
+ setup();mui_event_set_callback(&ui.queue,capture,&ui);captured_count=0;
+ for(unsigned n=0;n<63;n++){post_number(MUI_EVENT_ID_INPUT,n);}drain();captured_count=0;
+ for(unsigned n=0;n<64;n++)post_number(n==0?MUI_EVENT_ID_ANIM:n==32?MUI_EVENT_ID_REDRAW:MUI_EVENT_ID_INPUT,n);
+ unlock_hook=inject_after_unlock;post_number(MUI_EVENT_ID_INPUT,9000);
+ assert(!unlock_hook && ui.queue.count==64 && !ui.queue.redraw_pending);drain();assert(captured_count==64);
+ unsigned index=0;for(unsigned n=0;n<64;n++)if(n!=0&&n!=32)check_number(index++,MUI_EVENT_ID_INPUT,n);
+ check_number(index++,MUI_EVENT_ID_INPUT,9000);check_number(index,MUI_EVENT_ID_INPUT,9001);cases++;
+ /* Unknown future event kinds are not treated as disposable. */
+ setup();mui_event_set_callback(&ui.queue,capture,&ui);captured_count=0;
+ for(unsigned n=0;n<64;n++)post_number(n==8?MUI_EVENT_ID_REDRAW:99,n);
+ post_number(MUI_EVENT_ID_INPUT,9000);drain();assert(captured_count==64);
+ index=0;for(unsigned n=0;n<64;n++)if(n!=8)check_number(index++,99,n);
+ check_number(index,MUI_EVENT_ID_INPUT,9000);cases++;
+ return cases;
+}
+int main(void){unsigned cases=0;
+ for(unsigned mirror=0;mirror<2;mirror++){setup();settings.swap_buttons=mirror;
+  for(unsigned i=0;i<1000;i++){tick();short_press(INPUT_KEY_CENTER);drain();assert(selected==i+1);assert(!ui.queue.count);}
+  assert(selected==1000);cases+=1000;
+ }
+ for(unsigned fill=0;fill<=64;fill++)for(unsigned key_index=0;key_index<3;key_index++){
+  unsigned key=(key_index+1)%3; /* Center first: the user-facing regression witness. */
+  setup();for(unsigned n=0;n<fill;n++)tick();short_press(key);drain();bool accepted=true;
+  if(key==INPUT_KEY_CENTER && selected!=1)fprintf(stderr,"Lost center SHORT: %u transient events preceded PRESS/RELEASE/SHORT; selected=%u\n",fill,selected);
+  assert(selected==((key==INPUT_KEY_CENTER)&&accepted));
+  if(key==INPUT_KEY_LEFT)assert(list.focus_index==(accepted?3:0));
+  if(key==INPUT_KEY_RIGHT)assert(list.focus_index==(accepted?1:0));
+  if(key==INPUT_KEY_CENTER){uint8_t diag[104];assert(mui_nav_diag_snapshot(diag,sizeof(diag)));
+   assert(get16(diag+42)==accepted && get16(diag+52)==!accepted && get16(diag+62)==accepted);
+  }cases++;
+ }
+ /* With PRESS already dispatched, RELEASE consumes the last free slot. */
+ setup();raw(INPUT_KEY_CENTER,BSP_BTN_EVENT_PRESSED);drain();for(unsigned n=0;n<63;n++)tick();
+ raw(INPUT_KEY_CENTER,BSP_BTN_EVENT_RELEASED);raw(INPUT_KEY_CENTER,BSP_BTN_EVENT_SHORT);drain();assert(selected==1);cases++;
+ /* Loss occurs inside an actual selection callback, not only artificial
+  * queue prefill before dispatch. Source timer callback produces each tick. */
+ setup();synthetic_stall_ticks=64;short_press(INPUT_KEY_CENTER);drain();assert(attempts==2 && selected==2);cases++;
+ short_press(INPUT_KEY_CENTER);drain();assert(selected==3);cases++;
+ /* Directional repeats can recover after the queue drains. Center repeat is
+  * deliberately ignored to avoid repeatedly activating a menu selection. */
+ setup();for(unsigned n=0;n<64;n++)tick();short_press(INPUT_KEY_CENTER);drain();assert(selected==1);
+ raw(INPUT_KEY_CENTER,BSP_BTN_EVENT_REPEAT);drain();assert(selected==1);
+ raw(INPUT_KEY_RIGHT,BSP_BTN_EVENT_REPEAT);drain();assert(list.focus_index==1);cases++;
+ /* One retained SHORT can change the active dialog, but is never replayed. */
+ setup();for(unsigned n=0;n<64;n++)tick();handoff=true;short_press(INPUT_KEY_CENTER);drain();
+ for(unsigned n=0;n<20;n++)mui_event_dispatch(&ui.queue);
+ assert(selected==1 && dialog_short==0);cases++;
+ cases+=stress_ring();
+ mui_event_queue_deinit(&ui.queue);assert(!irq_depth);
+ printf("PASS %u cases: real input/core/view/list pipeline, 2000 normal center clicks, all transient pressure boundaries, FIFO through all ring/eviction positions, redraw invariant, IRQ nesting/reentry, bounded all-input overflow and no dialog replay.\n",cases);
+}

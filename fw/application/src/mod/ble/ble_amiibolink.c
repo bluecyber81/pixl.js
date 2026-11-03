@@ -68,7 +68,12 @@ static bool link_commit_transfer(void) {
     if (m_event_handler) {
         m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, (uint8_t *)&m_ntag, sizeof(m_ntag));
     }
-    return true;
+    /* The slot callback may fail while saving the newly received tag. Its
+     * bytes then belong to the NFC owner's pending-save state, not this
+     * retired transport transaction. Do not ACK success or restore the old
+     * transfer: the callback may already have started another transaction.
+     * A successful cycle-mode callback may also select the next tag. */
+    return !ntag_emu_save_pending();
 }
 
 

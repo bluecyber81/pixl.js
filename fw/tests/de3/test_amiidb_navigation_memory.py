@@ -1,5 +1,6 @@
 """Real catalog/UI loaders and Mlib/TLSF under bounded heap pressure; no hardware."""
 from pathlib import Path
+from packed_crc_source import packed_type_prefix
 import argparse,hashlib,json,os,re,subprocess,tempfile
 FW=Path(__file__).resolve().parents[2]
 HERE=Path(__file__).resolve().parent
@@ -19,7 +20,7 @@ def main():
   for name,fw in [('candidate',FW)]+([('baseline',a.baseline.resolve())] if a.baseline else []):
    src=fw/'application/src';lst=(src/'mui/view/mui_list_view.c').read_text();game=(src/'app/amiidb/scene/amiidb_scene_game_list.c').read_text();search=(src/'app/amiidb/scene/amiidb_scene_amiibo_search.c').read_text()
    bodies='\n'.join(extract(lst,f) for f in ['mui_list_view_try_add_item_ext','mui_list_view_add_item','mui_list_view_add_item_ext','mui_list_view_clear_items','mui_list_view_set_focus','mui_list_view_get_focus','mui_list_view_sort','mui_list_view_set_selected_cb','mui_list_view_set_user_data'])
-   packed=(src/'mod/vfs/packed_fs.c').read_text();packed=packed[:packed.index('static uint32_t crc(')]
+   packed=packed_type_prefix((src/'mod/vfs/packed_fs.c').read_text())
    sources=[src/'app/amiidb/api/amiidb_api_db.c',src/'app/amiidb/api/amiidb_api_db.h',src/'app/amiidb/app_amiidb.h',src/'app/amiidb/scene/amiidb_scene_game_list.c',src/'app/amiidb/scene/amiidb_scene_amiibo_search.c',src/'mui/view/mui_list_view.c',src/'mui/mui_alloc.h',src/'mui/mui_mem.c',src/'mod/vfs/packed_fs.c',src/'amiidb/db_game.c',src/'amiidb/db_amiibo.c',src/'amiidb/db_link.c',fw/'components/tlsf/tlsf.c']
    source_hashes={str(x.relative_to(fw)):hashlib.sha256(x.read_bytes()).hexdigest() for x in sources}
    code=(HERE/'amiidb_navigation_memory_host.c.in').read_text().replace('@LIST@',bodies).replace('@GAME@',re.sub(r'^#include[^\n]*\n','',game,flags=re.M)).replace('@SEARCH@',re.sub(r'^#include[^\n]*\n','',search,flags=re.M)).replace('@PACKED@',packed)

@@ -32,7 +32,10 @@ void chameleon_scene_menu_card_data_on_event(mui_list_view_event_t event, mui_li
         break;
     case CHAMELEON_MENU_FACTORY: {
         uint8_t slot = tag_emulation_get_slot();
-        tag_helper_factory_data(slot);
+        if (!tag_helper_factory_data(slot)) {
+            mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED));
+            break;
+        }
         mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_FACTORY_SUCCESS));
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     } break;

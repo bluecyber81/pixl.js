@@ -21,7 +21,8 @@ typedef enum {
     BLE_DEVICE_MODE_PIXLJS,
     BLE_DEVICE_MODE_AMIIBOLINK,
     BLE_DEVICE_MODE_AMIIBOLINK_V2,
-    BLE_DEVICE_MODE_AMILOOP
+    BLE_DEVICE_MODE_AMILOOP,
+    BLE_DEVICE_MODE_REMOTE
 } ble_device_mode_t;
 
 typedef enum {
@@ -38,6 +39,21 @@ typedef void (*nus_rx_data_handler_t)(const uint8_t *data, size_t data_len);
 typedef void (*nus_tx_ready_handler_t)(void);
 
 
+/* Session snapshots; foreground policy never treats a disconnect request as completion. */
+uint32_t ble_session_generation(void);
+uint32_t ble_link_generation(void);
+bool ble_remote_mode_active(void);
+bool ble_remote_mode_owned(void);
+bool ble_remote_transport_ready(void);
+bool ble_transport_idle(void);
+bool ble_mode_transition_pending(void);
+void ble_hold_advertising_after_disconnect(void);
+void ble_release_advertising_hold(void);
+/* Foreground remote handoff: submit the final ACK and switch NUS ownership
+ * atomically. No GAP/address/MTU change on the retained connection. */
+uint32_t ble_remote_open_file_link(const uint8_t *reply, size_t length, uint32_t generation);
+/* Called only by the newly opened file UI; consumes its one-shot adoption. */
+bool ble_file_link_adopt(void);
 void ble_init(void);
 /* Main loop only: dispatch queued NUS work and disconnect cleanup. */
 void ble_process_pending(void);

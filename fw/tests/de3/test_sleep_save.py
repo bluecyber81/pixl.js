@@ -63,6 +63,7 @@ typedef struct { ntag_t ntag; } cache_data_t;
 #define BTN_ID_SLEEP 2
 #define BUTTON_PULL 3
 static int order[12], count, warnings, save_result;
+static bool remote_stopped;
 static cache_data_t cache;
 static ntag_t current = {{1,2,3,4}};
 #define NRF_LOG_DEBUG(...) ((void)0)
@@ -71,7 +72,8 @@ static ntag_t current = {{1,2,3,4}};
 static void step(int value) { assert(count < 12); order[count++] = value; }
 static void nrf_pwr_mgmt_cancel_shutdown(void) {}
 static bool ntag_emu_prepare_change(void) {step(-2);current.bytes[0]=42;return true;}
-static void ble_disable(void) {step(-1);}
+static void ble_remote_shutdown(void) {assert(count==1 && !remote_stopped);remote_stopped=true;}
+static void ble_disable(void) {assert(remote_stopped);step(-1);}
 static void ble_process_pending(void) {step(0);}
 static void *mini_app_launcher(void) { return 0; }
 static void mini_app_launcher_sleep(void *value) {(void)value;assert(count==3&&current.bytes[0]==42);step(1);}
@@ -91,13 +93,13 @@ static void bsp_board_leds_off(void) {step(9);}
 int main(void) {
   const int results[] = {0,-91,8};
   for (unsigned i=0;i<3;i++) {
-    count=warnings=0;save_result=results[i];memset(&cache,0,sizeof(cache));current.bytes[0]=1;
+    count=warnings=0;remote_stopped=false;save_result=results[i];memset(&cache,0,sizeof(cache));current.bytes[0]=1;
     assert(shutdown_handler(NRF_PWR_MGMT_EVT_PREPARE_WAKEUP));
-    assert(count==12 && warnings==(results[i]!=0));
+    assert(count==12 && remote_stopped && warnings==(results[i]!=0));
     for(int j=0;j<12;j++)assert(order[j]==j-2);
     assert(cache.ntag.bytes[0]==42 && memcmp(&cache.ntag,&current,sizeof(current))==0);
   }
-  count=warnings=0;assert(shutdown_handler(0));assert(count==0&&warnings==0);
+  count=warnings=0;remote_stopped=false;assert(shutdown_handler(0));assert(count==0&&warnings==0&&!remote_stopped);
   puts("PASS: NFC flush before BLE/app teardown/retention; save before flash sleep; either sign of error is reported");
   return 0;
 }

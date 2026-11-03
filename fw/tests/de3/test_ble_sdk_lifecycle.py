@@ -37,7 +37,8 @@ static uint32_t sdk_error;
 static uint16_t m_conn_handle=65535,m_ble_nus_max_data_len=247;
 static uint16_t m_nus_session_handle=65535,m_release_handle=65535;
 static uint32_t m_link_generation,m_file_join_tick,m_file_join_generation;
-static bool m_file_join_pending;
+static bool m_file_join_pending,m_remote_mode,m_timeout_overridden;
+static uint32_t m_session_generation;
 static uint32_t app_timer_cnt_get(void) {return 0;}
 static void nrf_pwr_mgmt_feed(void) {}
 static bool m_release_attempted,m_release_requested,m_file_mode=false,m_sessions_enabled=true;
@@ -102,6 +103,9 @@ int main(void){
     assert(!memcmp(data+5,expected,4));assert(data[0]==0x5a && data[9]==0x5a);
     adv.scan_rsp_data.len=3;ble_service_id_set(0);assert(data[1]==0x5a);
     m_advertising.p_adv_data=NULL;ble_service_id_set(0);
+    connection(false);m_remote_mode=true;power_timeout=30;connection(true);assert(power_timeout==30&&!m_timeout_overridden);
+    power_timeout=15;connection(false);assert(power_timeout==15); /* preserve local setting changed under remote */
+    m_sessions_enabled=false;power_timeout=60;connection(true);assert(!m_timeout_overridden);connection(false);assert(power_timeout==60);
     puts("PASS standard SDK counted names, reconnect MTU reset, GATT update, unaligned advertising suffix and lifecycle controls");
 }
 '''

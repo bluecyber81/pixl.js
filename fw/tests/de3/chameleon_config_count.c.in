@@ -71,6 +71,11 @@ static void calc_14a_crc_lut(uint8_t *p, unsigned n, uint8_t *out) {
 @fds_write_sync@
 @tag_emulation_decode_config@
 @tag_emulation_load_config@
+static int32_t fds_compare_sync(uint16_t id,uint16_t key,uint16_t length,const uint8_t *data) {
+ unsigned stored_length=TAG_SLOT_CONFIG_SIZE(settings_get_data()->chameleon_slot_num);
+ assert(id==FDS_EMULATION_CONFIG_FILE_ID && stored_length<=length);
+ return file_size==stored_length && !memcmp(file,data,stored_length);
+}
 @tag_emulation_save_config@
 @tag_emulation_slot_set_enable@
 @tag_emulation_slot_find_next@
@@ -144,9 +149,9 @@ int main(void) {
  }
  /* Normalized configuration remains dirty across write failure, then commits once. */
  fixture(50,49,8);assert_load_readonly();uint16_t old_crc=m_slot_config_crc;
- fail_write=true;tag_emulation_save_config();assert(writes==1&&m_slot_config_crc==old_crc&&file_size==404&&file[1]==49);
- fail_write=false;tag_emulation_save_config();assert(writes==2&&file_size==68&&file[1]==0);
- tag_emulation_save_config();assert(writes==2);assert(tag_emulation_load_config()==68);cases++;
+ fail_write=true;assert(!tag_emulation_save_config());assert(writes==1&&m_slot_config_crc==old_crc&&file_size==404&&file[1]==49);
+ fail_write=false;assert(tag_emulation_save_config());assert(writes==2&&file_size==68&&file[1]==0);
+ assert(tag_emulation_save_config());assert(writes==2);assert(tag_emulation_load_config()==68);cases++;
  /* Legacy expansion honors the reduced current count too. */
  fixture(20,19,8);memset(file,0,sizeof(file));file_size=84;file[0]=19;
  /* Legacy active values >=8 are the v8 version discriminator and invalid by design. */

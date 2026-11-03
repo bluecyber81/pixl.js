@@ -397,6 +397,7 @@ typedef struct {
     bool opened;
     bool abandoned;
     bool read_pending; /* Only an accepted READ may continue after TX_READY. */
+    bool atomic_meta; /* Uses existing padding; only explicit CLOSE publishes. */
     vfs_file_t vfs_fd;
     vfs_driver_t *vfs_driver;
     int32_t err_code;
@@ -422,7 +423,9 @@ void df_proto_vfs_cleanup(void) {
     close_directory(&dir_chunk_state);
     dir_chunk_state.driver = NULL;
     if (file_chunk_state.opened && file_chunk_state.vfs_driver != NULL) {
-        int32_t result = file_chunk_state.abandoned ? file_chunk_state.err_code :
+        int32_t result = file_chunk_state.atomic_meta
+            ? vfs_abort_file(file_chunk_state.vfs_driver, &file_chunk_state.vfs_fd) :
+            file_chunk_state.abandoned ? file_chunk_state.err_code :
             file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
         if (result != VFS_OK) {
             runtime_diag_vfs_error(DF_PROTO_CMD_VFS_FILE_CLOSE, result);
@@ -457,13 +460,22 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
             return;
         }
         size_t flag_size = buff_get_remain_size(&buff);
-        if (flag_size != 1 && flag_size != sizeof(flags)) {
+        bool atomic_meta = flag_size == 1 + VFS_MAX_META_LEN;
+        if (flag_size != 1 && flag_size != sizeof(flags) && !atomic_meta) {
             send_error(evt->df->cmd);
             return;
         }
         // The official web client sends u8; other clients send u32 little-endian.
         flags = 0;
-        memcpy(&flags, buff_get_data_ptr_pos(&buff), flag_size);
+        memcpy(&flags, buff_get_data_ptr_pos(&buff), atomic_meta ? 1 : flag_size);
+        /* This extension is advertised only for Packed E:. Reject it before
+         * touching any old handle on other drives or incompatible flags. */
+        if (atomic_meta && (path[0] != 'E' ||
+            flags != (VFS_MODE_WRITEONLY | VFS_MODE_CREATE | VFS_MODE_TRUNC)
+#ifndef VFS_PACKED_LFS_ENABLE
+            || true
+#endif
+            )) { send_error(evt->df->cmd); return; }
 
         vfs_driver_t *p_driver = get_driver_by_path(path);
         if (p_driver == NULL) {
@@ -482,7 +494,9 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
             }
         }
         if (file_chunk_state.opened) {
-            err_code = file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
+            err_code = file_chunk_state.atomic_meta
+                ? vfs_abort_file(file_chunk_state.vfs_driver, &file_chunk_state.vfs_fd)
+                : file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
             if (err_code != VFS_OK) {
                 runtime_diag_vfs_error(evt->df->cmd, err_code);
                 file_chunk_state.err_code = err_code;
@@ -504,6 +518,18 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
         file_chunk_state.opened = true;
         file_chunk_state.vfs_driver = p_driver;
         file_chunk_state.err_code = VFS_OK;
+        file_chunk_state.read_pending = false;
+        file_chunk_state.atomic_meta = atomic_meta;
+#ifdef VFS_PACKED_LFS_ENABLE
+        if (atomic_meta) {
+            err_code = vfs_packed_stage_meta(&file_chunk_state.vfs_fd, buff_get_data_ptr_pos(&buff) + 1);
+            if (err_code != VFS_OK) {
+                df_proto_vfs_cleanup();
+                send_vfs_error(evt->df->cmd, err_code);
+                return;
+            }
+        }
+#endif
 
         NEW_BUFFER_ZERO(out_buff, out.data, sizeof(out.data));
         buff_put_u8(&out_buff, 0); // always 0
@@ -534,6 +560,12 @@ void df_proto_handler_vfs_file_close(df_event_t *evt) {
             return;
         }
 
+        if (file_chunk_state.atomic_meta && file_chunk_state.err_code != VFS_OK) {
+            int32_t prior_error = file_chunk_state.err_code;
+            df_proto_vfs_cleanup();
+            send_vfs_error(evt->df->cmd, prior_error);
+            return;
+        }
         err_code = file_chunk_state.vfs_driver->close_file(&file_chunk_state.vfs_fd);
         if (err_code != VFS_OK) {
             runtime_diag_vfs_error(evt->df->cmd, err_code);
@@ -722,7 +754,7 @@ void df_proto_handler_vfs_file_read(df_event_t *evt) {
             return;
         }
 
-        if (!file_chunk_state.opened || file_chunk_state.abandoned) {
+        if (!file_chunk_state.opened || file_chunk_state.abandoned || file_chunk_state.atomic_meta) {
             runtime_diag_vfs_error(evt->df->cmd, RUNTIME_DIAG_BAD_STATE);
             OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_VFS_FILE_READ, DF_STATUS_ERR);
             df_core_send_frame(&out);
@@ -825,7 +857,8 @@ void df_proto_handler_vfs_storage_diag(df_event_t *evt) {
  * All attributes (including unknown TLVs and padding) are copied verbatim. */
 static void df_proto_handler_vfs_storage_info(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
-    if (evt->df->status != 0 || evt->df->chunk != 0 || evt->df->length != 1) {
+    bool extended = evt->df->length == 2 && evt->df->data[1] == 1;
+    if (evt->df->status != 0 || evt->df->chunk != 0 || (evt->df->length != 1 && !extended)) {
         send_error(evt->df->cmd);
         return;
     }
@@ -836,7 +869,9 @@ static void df_proto_handler_vfs_storage_info(df_event_t *evt) {
     out.data[1] = evt->df->data[0];
 #if defined(VFS_PACKED_LFS_ENABLE)
     out.data[2] = 3;
-    out.data[4] = 7;
+    /* Old clients validate the known flag mask strictly. The new capability
+     * appears only after the explicit extended request [drive,1]. */
+    out.data[4] = extended && evt->df->data[0] == 'E' ? 15 : 7;
 #elif defined(VFS_LFS_ENABLE)
     out.data[2] = 2;
     out.data[4] = 7; /* raw read/write; mount never autoformats */

@@ -1,0 +1,90 @@
+/* Additional SDK/UI boundaries. Transport policy functions are inserted unchanged. */
+static unsigned remote_rx, sends, sdk_send_result, mode_prepares, adv_starts, scene_inits, scene_views;
+static int m_nus;
+static uint8_t ack[12];
+static void ble_on_received_data(const uint8_t *p,size_t n){on_rx(p,n);}
+static void ble_on_transmit_ready(void){on_tx();}
+static unsigned ble_nus_data_send(void *nus,void *data,uint16_t *len,uint16_t handle) {
+ CHECK(nus==&m_nus&&critical_depth&&handle==m_conn_handle&&*len==12);
+ if(!sdk_send_result){memcpy(ack,data,12);sends++;}return sdk_send_result;
+}
+void ble_device_mode_prepare(ble_device_mode_t mode){CHECK(!critical_depth&&m_conn_handle==BLE_CONN_HANDLE_INVALID&&mode==BLE_DEVICE_MODE_PIXLJS);mode_prepares++;m_mode_pending=true;}
+void ble_adv_start(void){CHECK(!critical_depth);adv_starts++;}
+void ble_nus_set_handler(nus_rx_data_handler_t rx,nus_tx_ready_handler_t tx){CHECK(rx==ble_on_received_data&&tx==ble_on_transmit_ready);}
+void ble_init(void){scene_inits++;}
+typedef struct{void *p_ble_view,*p_view_dispatcher;}app_ble_t;
+static char addr[32];
+static void ble_scene_connect_status_view_event_cb(void){}
+static void ble_scene_link_state_changed(ble_link_state_t state){(void)state;}
+void ble_get_addr_str(char p[]){strcpy(p,"ADDRESS");}
+static char *ble_status_view_get_ble_addr(void *v){(void)v;return addr;}
+static void ble_status_view_set_event_cb(void *v,void(*cb)(void)){(void)v;CHECK(cb==ble_scene_connect_status_view_event_cb);}
+void ble_link_state_observe(ble_link_state_handler_t h){CHECK(h==ble_scene_link_state_changed);}
+#define BLE_VIEW_ID_MAIN 0
+static void mui_view_dispatcher_switch_to_view(void *v,unsigned id){(void)v;CHECK(id==0);scene_views++;}
+/* ACTUAL_HANDOFF */
+/* ACTUAL_SCENE */
+static void immediate_rx(void){CHECK(!critical_depth&&!m_remote_mode&&m_file_mode);nus(BLE_NUS_EVT_RX_DATA,4);}
+static void stop_cccd(void){nus(BLE_NUS_EVT_COMM_STOPPED,4);}
+static void disconnect_irq(void){physical_handle=BLE_CONN_HANDLE_INVALID;gap(false,4);}
+static const uint8_t reply[12]={80,88,1,132,6,0,0,3,31,0,0,0};
+static void remote_setup(void){setup();m_file_mode=false;m_remote_mode=true;timeout=45;connect_peer(4,true);m_ble_nus_max_data_len=247;CHECK(!m_timeout_overridden&&timeout==45);}
+static void old_remote_rx(const uint8_t *p,size_t n){(void)p;(void)n;remote_rx++;}
+static void enter_scene(void){app_ble_t app={0};ble_scene_connect_start_on_enter(&app);}
+int main(int argc,char **argv) {
+ CHECK(argc==2);remote_setup();const char *test=argv[1];uint32_t before=m_session_generation;
+ if(!strcmp(test,"atomic_first_frame")) {
+  ble_work_set_handlers(old_remote_rx,NULL);ble_work_process(ble_on_disconnected);
+  const uint8_t stale=0x42;CHECK(ble_work_receive(&stale,1));unsigned old_cleanups=cleanups;
+  pending_irq=immediate_rx;
+  CHECK(ble_remote_open_file_link(reply,sizeof(reply),before)==0);
+  CHECK(sends==1&&!memcmp(ack,reply,12)&&m_session_generation==before+1&&!m_remote_mode&&m_file_mode);
+  CHECK(m_conn_handle==4&&m_nus_session_handle==4&&!disconnects&&!mode_prepares&&!adv_starts);
+  CHECK(m_ble_nus_max_data_len==247&&m_file_link_handoff==1&&timeout==180&&m_previous_pwr_mgmt_sleep_timeout==45);
+  enter_scene();CHECK(m_file_link_handoff==2&&!scene_inits&&scene_views==1&&!mode_prepares);
+  CHECK(!ble_file_link_adopt());ble_process_pending();
+  CHECK(rx_calls==1&&!remote_rx&&cleanups==old_cleanups+1&&ble_work_can_send());
+  ble_process_pending();CHECK(rx_calls==1&&!disconnects&&!mode_prepares);
+ } else if(!strcmp(test,"backpressure")) {
+  sdk_send_result=NRF_ERROR_RESOURCES;CHECK(ble_remote_open_file_link(reply,12,before)==NRF_ERROR_RESOURCES);
+  CHECK(!sends&&!m_file_link_handoff&&m_remote_mode&&!m_file_mode&&m_session_generation==before&&timeout==45);
+  sdk_send_result=0;CHECK(ble_remote_open_file_link(reply,12,before)==0);CHECK(sends==1);
+  CHECK(ble_remote_open_file_link(reply,12,before)==NRF_ERROR_INVALID_STATE&&sends==1);
+ } else if(!strcmp(test,"sdk_error")) {
+  sdk_send_result=42;CHECK(ble_remote_open_file_link(reply,12,before)==42);CHECK(!sends&&m_remote_mode&&!m_file_link_handoff&&timeout==45);
+ } else if(!strcmp(test,"stale_epoch")) {
+  CHECK(ble_remote_open_file_link(reply,12,before-1)==NRF_ERROR_INVALID_STATE&&!sends);
+  physical_handle=BLE_CONN_HANDLE_INVALID;gap(false,4);connect_peer(4,true);
+  CHECK(ble_remote_open_file_link(reply,12,before)==NRF_ERROR_INVALID_STATE&&!sends&&!ble_file_link_adopt());
+ } else if(!strcmp(test,"cccd_before")) {
+  nus(BLE_NUS_EVT_COMM_STOPPED,4);CHECK(ble_remote_open_file_link(reply,12,before)==NRF_ERROR_INVALID_STATE&&!sends);
+  CHECK(!ble_file_link_adopt());ble_process_pending();CHECK(disconnects==1);
+ } else if(!strcmp(test,"cccd_after")) {
+  pending_irq=stop_cccd;CHECK(ble_remote_open_file_link(reply,12,before)==0);
+  CHECK(!ble_file_link_adopt());ble_process_pending();CHECK(disconnects==1&&!rx_calls);
+ } else if(!strcmp(test,"disconnect_after")) {
+  pending_irq=disconnect_irq;CHECK(ble_remote_open_file_link(reply,12,before)==0);
+  CHECK(!ble_file_link_adopt()&&timeout==45&&!m_timeout_overridden);
+  ble_process_pending();CHECK(mode_prepares==1&&adv_starts==1&&!m_file_link_handoff);
+  ble_process_pending();CHECK(mode_prepares==1);
+ } else if(!strcmp(test,"normal_disconnect")) {
+  CHECK(ble_remote_open_file_link(reply,12,before)==0);enter_scene();
+  CHECK(m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled);
+  ble_process_pending();CHECK(!mode_prepares);disconnect_irq();ble_process_pending();
+  CHECK(mode_prepares==1&&adv_starts==1&&timeout==45&&!m_timeout_overridden);
+ } else if(!strcmp(test,"local_exit")) {
+  CHECK(ble_remote_open_file_link(reply,12,before)==0);enter_scene();ble_process_pending();
+  manual_exit=true;ble_disable();CHECK(!m_file_link_handoff&&!m_sessions_enabled&&disconnects==1);
+  disconnect_irq();ble_process_pending();CHECK(!mode_prepares&&!adv_starts&&timeout==45);
+ } else if(!strcmp(test,"mode_pending")) {
+  m_mode_pending=true;CHECK(ble_remote_open_file_link(reply,12,before)==NRF_ERROR_INVALID_STATE&&!sends&&!ble_file_link_adopt());
+ } else if(!strcmp(test,"malformed_bounds")) {
+  CHECK(ble_remote_open_file_link(NULL,12,before)==NRF_ERROR_DATA_SIZE);
+  CHECK(ble_remote_open_file_link(reply,248,before)==NRF_ERROR_DATA_SIZE);
+  CHECK(!sends&&!m_file_link_handoff&&m_remote_mode);
+ } else if(!strcmp(test,"wrong_peer_adopt")) {
+  CHECK(ble_remote_open_file_link(reply,12,before)==0);disconnect_irq();connect_peer(4,true);
+  CHECK(!ble_file_link_adopt());
+ } else CHECK(false);
+ CHECK(!critical_depth&&!irq);printf("PASS same-link %s\n",test);return 0;
+}

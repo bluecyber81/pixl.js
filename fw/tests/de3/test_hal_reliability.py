@@ -40,7 +40,8 @@ void nrf_gpio_pin_write(uint32_t p,uint32_t v) {(void)p;(void)v;}
 void u8x8_gpio_SetDC(u8x8_t*d,uint8_t v) {(void)d;(void)v;}
 void app_util_critical_region_enter(uint8_t*n) {*n=masked;masked=true;enters++;}
 void app_util_critical_region_exit(uint8_t n) {
-    assert(masked&&!selected);exits++;if(!n)masked=false;
+    /* Nested SDK exits keep IRQs masked and may occur with CS still held. */
+    assert(masked&&(n||!selected));exits++;if(!n)masked=false;
     if(inject_read&&!injected&&!in_irq&&!masked&&command==CMD_WREN){
         injected=true;in_irq=true;uint8_t scratch[4];
         assert(hal_spi_flash_read(0x2000,scratch,sizeof scratch)==NRF_SUCCESS);in_irq=false;
@@ -68,6 +69,9 @@ static void reset(void){
     masked=selected=in_irq=inject_read=injected=wel=deny_wel=stuck=post_stuck=false;
     command=transfers=fail_at=commits=erases=polls=busy_left=post_busy=enters=exits=wrdi=0;
     ticks=wire_address=0;tick_step=1;m_dev.cs_pin=FLASH_CS_PIN;
+    /* A fresh modeled device lifecycle also invalidates HAL readiness. */
+    assert(hal_spi_flash_init()==NRF_SUCCESS);
+    command=transfers=enters=exits=0;
 }
 static void clean(void){assert(!selected&&!masked&&enters==exits);}
 static ret_code_t operation(unsigned op){uint8_t data[16]={0};flash_info_t info;

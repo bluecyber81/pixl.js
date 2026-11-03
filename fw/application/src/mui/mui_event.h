@@ -32,6 +32,8 @@ typedef struct {
 bool mui_event_queue_init(mui_event_queue_t *p_queue);
 void mui_event_queue_deinit(mui_event_queue_t *p_queue);
 void mui_event_set_callback(mui_event_queue_t *p_queue, mui_event_handler_t dispatcher, void * context);
+/* A full queue preserves input by evicting its oldest ANIM/REDRAW, if any.
+ * Input is never reordered or replayed; an all-input overflow stays bounded. */
 void mui_event_post(mui_event_queue_t *p_queue, mui_event_t *p_event);
 void mui_event_dispatch(mui_event_queue_t *p_queue);
 void mui_event_dispatch_now(mui_event_queue_t *p_queue, mui_event_t* p_event);

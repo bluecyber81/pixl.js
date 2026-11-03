@@ -63,6 +63,8 @@ static unsigned chameleon_view_get_index(void*p){(void)p;return 6;}
 static bool tag_helper_valid_default_slot(void){return false;}
 static bool tag_emulation_slot_is_enabled(unsigned i,int s){(void)i;(void)s;return false;}
 static void tag_emulation_change_slot(unsigned i,bool s){(void)i;(void)s;}
+static void tag_emulation_sense_end(void){assert(!freed&&!exited);}
+static void hal_nfc_set_nrfx_irq_enable(bool enabled){assert(!enabled&&!freed&&!exited);}
 static void tag_emulation_save(void){}
 static void settings_save(void){}
 static void mui_view_dispatcher_detach(void*p,int l){(void)p;(void)l;}

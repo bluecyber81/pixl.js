@@ -39,6 +39,25 @@ void mui_event_set_callback(mui_event_queue_t *p_queue, mui_event_handler_t disp
     app_util_critical_region_exit(nested);
 }
 
+/* Called with the queue locked. Preserve the order of every retained event;
+ * only a replaceable animation tick or redraw may make room for input. */
+static bool mui_event_make_room_for_input(mui_event_queue_t *p_queue) {
+    for (unsigned i = 0; i < p_queue->count; i++) {
+        unsigned index = (p_queue->head + i) % MAX_EVENT_MSG;
+        uint32_t id = p_queue->events[index].id;
+        if (id != MUI_EVENT_ID_ANIM && id != MUI_EVENT_ID_REDRAW) continue;
+        if (id == MUI_EVENT_ID_REDRAW) p_queue->redraw_pending = false;
+        for (unsigned j = i; j + 1 < p_queue->count; j++) {
+            unsigned from = (p_queue->head + j + 1) % MAX_EVENT_MSG;
+            unsigned to = (p_queue->head + j) % MAX_EVENT_MSG;
+            p_queue->events[to] = p_queue->events[from];
+        }
+        p_queue->count--;
+        return true;
+    }
+    return false;
+}
+
 void mui_event_post(mui_event_queue_t *p_queue, mui_event_t *p_event) {
     if (!p_queue || !p_event) return;
     bool full = false;
@@ -46,6 +65,8 @@ void mui_event_post(mui_event_queue_t *p_queue, mui_event_t *p_event) {
     uint8_t nested;
     app_util_critical_region_enter(&nested);
     if (p_queue->events && !(p_event->id == MUI_EVENT_ID_REDRAW && p_queue->redraw_pending)) {
+        if (p_event->id == MUI_EVENT_ID_INPUT && p_queue->count == MAX_EVENT_MSG)
+            (void)mui_event_make_room_for_input(p_queue);
         if (p_queue->count < MAX_EVENT_MSG) {
             uint8_t tail = (p_queue->head + p_queue->count) % MAX_EVENT_MSG;
             p_queue->events[tail] = *p_event;

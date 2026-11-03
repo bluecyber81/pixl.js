@@ -1,0 +1,43 @@
+name: Unsigned LCD application and BL8 builds
+
+# Manual because fetching the external Nordic SDK image is an explicit setup
+# step. This workflow never signs, flashes, formats or publishes anything.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  application:
+    name: DE3.55 application
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Fetch pinned external SDK and ARM toolchain
+        run: docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
+      - name: Compile and verify unsigned release application offline
+        run: python3 tools/build_lcd.py --jobs 4
+      - name: Show bound build result
+        run: cat build/lcd-de355/BUILD_RESULT.json
+
+  bootloader:
+    name: BL8 corresponding-source build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: bootloader-bl8
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Fetch pinned external SDK and ARM toolchain
+        run: docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
+      - name: Verify BL8 source binding
+        run: python3 build.py --check
+      - name: Compile and verify unsigned BL8 offline
+        run: python3 build.py

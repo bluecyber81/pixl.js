@@ -1,0 +1,87 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <stddef.h>
+#include "hf/nfc_mf0_ntag.h"
+#define TEST_BASELINE @BASELINE@
+#define NRF_SUCCESS 0
+#define NFC_TAG_NTAG_DATA_SIZE 4
+typedef uint32_t ret_code_t;
+typedef enum{TAG_GROUP_UNKNOWN,TAG_GROUP_MIFARE,TAG_GROUP_NTAG}tag_group_type_t;
+static tag_specific_type_t active_type;
+static uint8_t card[4500] __attribute__((aligned(4)));
+static tag_data_buffer_t buffer={sizeof(card),card,NULL};
+static bool missing;
+static ret_code_t rand_error;
+static unsigned rand_calls;
+static const uint8_t generated[]={0xee,0x10,0x22,0x33,0x44,0x55,0x66};
+static tag_specific_type_t tag_helper_get_active_tag_type(void){return active_type;}
+tag_data_buffer_t *get_buffer_by_tag_type(tag_specific_type_t t){(void)t;return missing?NULL:&buffer;}
+static ret_code_t utils_rand_bytes(uint8_t*out,uint8_t n){assert(n==7);rand_calls++;memcpy(out,generated,n);return rand_error;}
+@GROUP@
+@HELPER@
+@ENUM@
+typedef struct{void*p_scene_dispatcher,*p_toast_view;unsigned id_edit_type;}app_chameleon_t;
+typedef struct{void*user_data;}mui_list_view_t;
+typedef struct{void*user_data;}mui_list_item_t;
+typedef unsigned mui_list_view_event_t;
+#define _T(s) #s
+#define nfc_tag_mf1_is_use_mf1_coll_res() false
+#define nfc_tag_mf1_set_use_mf1_coll_res(...) ((void)0)
+#define nfc_tag_mf1_set_gen1a_magic_mode(...) ((void)0)
+#define nfc_tag_mf1_set_gen2_magic_mode(...) ((void)0)
+#define tag_helper_load_coll_res_from_block0() ((void)0)
+#define mui_scene_dispatcher_next_scene(...) ((void)0)
+#define mui_scene_dispatcher_previous_scene(...) ((void)0)
+#define APP_CHAMELEON_ID_EDIT_TYPE_UID 1
+#define APP_CHAMELEON_ID_EDIT_TYPE_SAK 2
+#define APP_CHAMELEON_ID_EDIT_TYPE_ATQA 3
+#define APP_CHAMELEON_ID_EDIT_TYPE_ATS 4
+static const char *toast;
+static unsigned reloads;
+static void mui_toast_view_show(void*v,const char*s){(void)v;toast=s;}
+static void chameleon_scene_menu_card_advanced_reload(app_chameleon_t*a){(void)a;reloads++;}
+@UI@
+int main(void){
+ const tag_specific_type_t types[]={TAG_TYPE_MF0ICU1,TAG_TYPE_MF0ICU2,TAG_TYPE_MF0UL11,TAG_TYPE_MF0UL21,
+   TAG_TYPE_NTAG_210,TAG_TYPE_NTAG_212,TAG_TYPE_NTAG_213,TAG_TYPE_NTAG_215,TAG_TYPE_NTAG_216};
+ app_chameleon_t app={0};mui_list_view_t view={&app};mui_list_item_t item={(void*)CHAMELEON_MENU_GEN_UID};
+ uint8_t before[sizeof(card)],expected[sizeof(card)];
+ for(unsigned t=0;t<9;t++)for(unsigned err=0;err<2;err++){
+  memset(card,0xa5,sizeof(card));memcpy(before,card,sizeof(card));memcpy(expected,card,sizeof(card));
+  active_type=types[t];rand_error=err?17:0;rand_calls=reloads=0;toast=NULL;
+  chameleon_scene_menu_card_advanced_on_event(0,&view,&item);
+  assert(rand_calls==1&&reloads==1&&toast);
+  if(err){assert(!memcmp(before,card,sizeof(card)));
+#if TEST_BASELINE
+   assert(!strcmp(toast,"APP_CHAMELEON_CARD_GENERATE_UID_SUCCESS"));
+#else
+   assert(!strcmp(toast,"FAILED"));
+#endif
+  }else{
+   nfc_tag_mf0_ntag_information_t *e=(void*)expected,*actual=(void*)card;
+   uint8_t uid[7];memcpy(uid,generated,7);uid[0]=4;
+   memcpy(e->res_coll.uid,uid,7);memcpy(e->memory[0],uid,3);e->memory[0][3]=0x88^uid[0]^uid[1]^uid[2];
+   memcpy(e->memory[1],uid+3,4);e->memory[2][0]=uid[3]^uid[4]^uid[5]^uid[6];
+   assert(!memcmp(expected,card,sizeof(card)));
+   assert(!memcmp(actual->res_coll.uid,actual->memory[0],3)&&!memcmp(actual->res_coll.uid+3,actual->memory[1],4));
+   assert(!strcmp(toast,"APP_CHAMELEON_CARD_GENERATE_UID_SUCCESS"));
+  }
+ }
+#if TEST_BASELINE
+ puts("REPRO DE349: all9 MF0/NTAG types claim UID success after failed RNG; data unchanged");
+#else
+ for(unsigned fault=0;fault<4;fault++){
+  memset(card,0x5a,sizeof(card));memcpy(before,card,sizeof(card));active_type=TAG_TYPE_NTAG_215;missing=false;buffer.buffer=card;buffer.length=sizeof(card);rand_calls=0;
+  if(fault==0)missing=true;
+  if(fault==1)buffer.buffer=NULL;
+  if(fault==2)buffer.length=offsetof(nfc_tag_mf0_ntag_information_t,memory)+11;
+  if(fault==3)active_type=TAG_TYPE_MIFARE_1024;
+  assert(!tag_helper_generate_uid()&&!rand_calls&&!memcmp(before,card,sizeof(card)));
+ }
+ puts("PASS 18 actual helper+UI RNG outcome cases; UID/BCC and unchanged remainder; 4 invalid-buffer/type cases");
+#endif
+ puts("PASS UID result handling");return 0;
+}

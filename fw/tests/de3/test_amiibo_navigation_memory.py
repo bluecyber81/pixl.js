@@ -1,5 +1,6 @@
 """Real emulator browser/neighbor C + headers + TLSF; synthetic VFS only."""
 from pathlib import Path
+from packed_crc_source import packed_type_prefix
 import argparse,hashlib,json,os,re,subprocess,tempfile
 from test_amiidb_navigation_memory import extract
 FW=Path(__file__).resolve().parents[2]
@@ -12,7 +13,7 @@ def run(fw,baseline=False,arm=False,sanitize=False):
   names=['amiibo_scene_amiibo_detail_list_item_cmp'] if baseline else ['app_amiibo_file_neighbor']
   names+=['amiibo_scene_amiibo_detail_reload_files']
   ds='\n'.join(extract(detail,f) for f in names)
-  packed=(src/'mod/vfs/packed_fs.c').read_text();packed=packed[:packed.index('static uint32_t crc(')]
+  packed=packed_type_prefix((src/'mod/vfs/packed_fs.c').read_text())
   files=[src/'app/amiibo/app_amiibo.h',src/'app/amiibo/app_amiibo.c',src/'app/amiibo/scene/amiibo_scene_file_browser.c',src/'app/amiibo/scene/amiibo_scene_amiibo_detail.c',src/'app/amiibo/view/amiibo_detail_view.h',src/'mui/view/mui_list_view.c',src/'mui/mui_mem.c',src/'mod/cache.h',src/'mod/vfs/packed_fs.c',fw/'components/tlsf/tlsf.c',fw/'components/cwalk/src/cwalk.c',fw/'components/cwalk/include/cwalk.h']
   before={str(p.relative_to(fw)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
   cache='' if baseline else '\n'.join(extract((src/'app/amiibo/app_amiibo.c').read_text(),f) for f in ['app_amiibo_restore_browser_cache','app_amiibo_save_browser_cache'])

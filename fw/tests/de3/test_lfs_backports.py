@@ -33,7 +33,7 @@ report = {
         "https://github.com/littlefs-project/littlefs/commit/8b75de74c916ed516c634388f81c1bbcac446d41",
         "https://github.com/littlefs-project/littlefs/commit/366100b1403d2b680ed7a0f3bd0ba982c34d5c07",
     ],
-    "library_baseline": "2.8.0 plus only the two listed backports",
+    "library_baseline": "2.8.1 plus the two listed backports and b9b95ab (2.8.2 superblock wear threshold)",
     "disk_format": "LittleFS 2.1 / PFS1 unchanged",
     "limits": [
         "Synchronous host NOR simulation; not a real device or physical power-loss test.",

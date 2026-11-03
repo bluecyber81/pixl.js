@@ -60,6 +60,10 @@ typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_vie
 typedef struct {void *p_handle;} mini_app_inst_t;
 typedef struct {bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,flip_display,swap_buttons;} settings_data_t;
 static settings_data_t data;
+/* Remote state is a RAM-only dependency; these save fixtures do not select it. */
+static bool fixture_remote_enabled;
+static bool ble_remote_enabled(void){return fixture_remote_enabled;}
+static bool ble_remote_set_enabled(bool enabled){fixture_remote_enabled=enabled;return true;}
 static int result,save_calls,reset_calls,toast_calls,kills,reboots,resets,reloads,logs,cleanup_calls,dfus;
 static int settings_save(void){save_calls++;return result;}
 static int settings_reset(void){reset_calls++;return result;}

@@ -3,6 +3,7 @@ static bool geometry_ok=true, import_pending=true, import_bound, handles_idle=tr
 static unsigned finish_calls,bind_calls,reboot_calls,disable_calls;
 static int32_t finish_error,bind_error;
 static uint8_t archive_digest[32];
+int32_t vfs_packed_stage_meta(vfs_file_t *fd,const uint8_t meta[128]){(void)fd;(void)meta;return VFS_ERR_UNSUPT;}
 bool vfs_packed_geometry_valid(void){return geometry_ok;}
 bool vfs_packed_import_pending(void){return import_pending;}
 bool vfs_packed_handles_idle(void){return handles_idle;}

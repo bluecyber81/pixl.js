@@ -30,7 +30,7 @@ static timer_t *registered[6];
 static int app_timer_start(timer_t*t,uint32_t delay,void*p){if(start_failures){start_failures--;return 4;}if(!t->running){t->deadline=now+delay;t->period=delay;t->context=p;t->running=true;}return 0;}
 static int app_timer_stop(timer_t*t){t->running=false;if(stop_failures){stop_failures--;return 4;}return 0;}
 static int app_timer_create(timer_t**t,int mode,void(*cb)(void*)){assert(timer_create_calls<6);registered[timer_create_calls++]=*t;(*t)->handler=cb;(*t)->repeated=mode;return 0;}
-static int app_button_init(const app_button_cfg_t*c,uint32_t n,uint32_t d){assert(n==3&&d==50&&c);for(unsigned i=0;i<3;i++){assert(!gpio_owned[i]);gpio_owned[i]=true;}app_init_calls++;return 0;}
+static int app_button_init(const app_button_cfg_t*c,uint32_t n,uint32_t d){assert(n==3&&d==20&&c);for(unsigned i=0;i<3;i++){assert(!gpio_owned[i]);gpio_owned[i]=true;}app_init_calls++;return 0;}
 static int app_button_enable(void){enable_calls++;sdk_enabled=true;return 0;}
 static int app_button_disable(void){disable_calls++;sdk_enabled=false;return 0;}
 static void nrf_drv_gpiote_in_uninit(uint32_t pin){assert(pin>=5&&pin<=7&&gpio_owned[pin-5]);gpio_owned[pin-5]=false;}

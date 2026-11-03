@@ -1,0 +1,131 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "ble_remote.h"
+#include "ble_remote_protocol.h"
+#include "ble_work.h"
+#include "app_util_platform.h"
+int critical_depth;
+enum {NRF_SUCCESS=0,NRF_ERROR_RESOURCES=1,NRF_ERROR_INVALID_STATE=2};
+enum {MINI_APP_ID_BLE=1,MINI_APP_ID_AMIIBOLINK=2,BLE_DEVICE_MODE_REMOTE=3};
+enum {MUI_EVENT_ID_INPUT=1,INPUT_TYPE_SHORT=2,INPUT_TYPE_LONG=3,INPUT_KEY_CENTER=1};
+#define MAX_EVENT_MSG 64
+#define APP_TIMER_TICKS(n) (n)
+#define NFCT_FIELDPRESENT_FIELDPRESENT_Msk 1
+#define NFCT_FIELDPRESENT_LOCKDETECT_Msk 2
+static struct {uint32_t FIELDPRESENT;} nfct;
+#define NRF_NFCT (&nfct)
+typedef struct {unsigned id,arg_int;void *arg_ptr;} mui_event_t;
+typedef struct {mui_event_t *events;void *dispatcher;unsigned head,count;} mui_event_queue_t;
+typedef struct {bool initialized,memory_error;mui_event_queue_t event_queue;} mui_t;
+typedef struct {bool file,loop;} mini_app_launcher_t;
+static mui_event_t input_events[64];
+static mui_t mock_ui;
+static mini_app_launcher_t mock_launcher;
+static bool mock_permission_safe,mock_recovery,mock_mode,mock_connected,mock_ready,mock_pending,mock_cleanup;
+static bool mock_hold,mock_advertising,mock_launch_fail;
+static unsigned mock_session,mock_link,mock_tick,mock_send_result,mock_actions,mock_launches,mock_feed,mock_sent,mock_aborts,mock_releases;
+static int mock_action_effect;
+static unsigned mock_input;
+static uint8_t mock_reply[12];
+static uint32_t app_timer_cnt_get(void){return mock_tick;}
+static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return a-b;}
+static mini_app_launcher_t *mini_app_launcher(void){return &mock_launcher;}
+static void *mini_app_launcher_get_app_handle(mini_app_launcher_t *l,unsigned id){return id==1?(l->file?l:NULL):(l->loop?l:NULL);}
+static void mini_app_launcher_run(mini_app_launcher_t *l,unsigned id){assert(!critical_depth && id==1);mock_launches++;if(!mock_launch_fail){l->file=true;mock_mode=false;mock_pending=true;}}
+static mui_t *mui(void){return &mock_ui;}
+static bool ntag_emu_remote_input_safe(void){return mock_permission_safe;}
+static bool vfs_packed_recovery_required(void){return mock_recovery;}
+static bool ble_remote_mode_active(void){return mock_mode;}
+static bool ble_remote_mode_owned(void){return mock_mode;}
+static bool ble_remote_transport_ready(void){return mock_mode&&mock_ready&&mock_connected&&ble_work_can_send();}
+static bool ble_transport_idle(void){return !mock_connected&&mock_cleanup;}
+static bool ble_is_connected(void){return mock_connected;}
+static bool ble_mode_transition_pending(void){return mock_pending;}
+static uint32_t ble_session_generation(void){return mock_session;}
+static uint32_t ble_link_generation(void){return mock_link;}
+static void ble_hold_advertising_after_disconnect(void){mock_hold=true;}
+static void ble_release_advertising_hold(void){mock_releases++;if(!mock_pending&&mock_mode){mock_hold=false;if(ble_transport_idle())mock_advertising=true;}}
+static void ble_disable(void){mock_mode=false;mock_ready=false;mock_session++;ble_work_disconnected();}
+static void ble_init(void){}
+static void ble_device_mode_prepare(unsigned mode){assert(mode==3);mock_mode=true;}
+static void ble_adv_start(void){mock_advertising=true;}
+static void ble_nus_set_handler(ble_work_rx_t rx,ble_work_notify_t tx){ble_work_set_handlers(rx,tx);}
+static void ble_nus_abort_transfer(void){mock_aborts++;ble_work_disconnected();}
+static uint32_t ble_nus_tx_data(void *data,size_t n){assert(critical_depth>0 && n==12);if(!mock_send_result){memcpy(mock_reply,data,12);mock_sent++;}return mock_send_result;}
+static uint32_t ble_remote_open_file_link(const uint8_t *data,size_t n,uint32_t generation){assert(generation==mock_session);uint32_t r=ble_nus_tx_data((void *)data,n);if(!r){mock_mode=false;mock_session++;}return r;}
+static void nrf_pwr_mgmt_feed(void){mock_feed++;}
+static void mui_event_dispatch_now(mui_event_queue_t *q,mui_event_t *e){
+    assert(!critical_depth && q==&mock_ui.event_queue && e->id==MUI_EVENT_ID_INPUT);
+    mock_actions++;mock_input=e->arg_int;
+    if(mock_action_effect==1)ble_remote_shutdown();
+    if(mock_action_effect==2){mock_session++;mock_link+=2;mock_ready=true;}
+    if(mock_action_effect==3)assert(!ble_remote_set_enabled(false));
+    if(mock_action_effect==4){mock_pending=true;mock_launcher.loop=true;}
+}
+/* ACTUAL_REMOTE_SOURCE */
+static unsigned cases;
+#define CHECK(x) do{assert(x);cases++;}while(0)
+static void clean(void){assert(!critical_depth);mock_cleanup=true;}
+static void connect(void){mock_session++;mock_link++;mock_connected=mock_ready=true;mock_cleanup=false;ble_work_connected();ble_work_process(clean);}
+static void disconnect(void){mock_connected=mock_ready=false;mock_session++;mock_link++;mock_cleanup=false;ble_work_disconnected();if(!mock_hold)mock_advertising=true;}
+static void reset(void){
+    ble_remote_shutdown();ble_work_disconnected();ble_work_set_handlers(ble_remote_receive,NULL);ble_work_process(clean);
+    memset(&mock_ui,0,sizeof(mock_ui));memset(&mock_launcher,0,sizeof(mock_launcher));memset(&protocol,0,sizeof(protocol));
+    memset(input_events,0,sizeof(input_events));mock_ui.initialized=true;mock_ui.event_queue.events=input_events;mock_ui.event_queue.dispatcher=&mock_ui;
+    mock_permission_safe=true;mock_recovery=mock_pending=mock_hold=mock_advertising=mock_launch_fail=false;mock_mode=true;mock_ready=mock_connected=false;
+    mock_tick=mock_actions=mock_launches=mock_feed=mock_sent=mock_aborts=mock_releases=mock_send_result=0;mock_action_effect=0;nfct.FIELDPRESENT=0;
+    CHECK(!ble_remote_enabled());CHECK(ble_remote_set_enabled(true));connect();ble_remote_poll();
+}
+static void enqueue(unsigned op,unsigned seq,unsigned arg){uint8_t b[8]={80,88,1,op,seq,seq>>8,arg,0};CHECK(ble_remote_receive_irq(b,8));}
+static void request(unsigned op,unsigned seq,unsigned arg){enqueue(op,seq,arg);ble_work_process(clean);ble_remote_poll();CHECK(!critical_depth);}
+static void handshake(void){request(0,1,0);CHECK(mock_reply[6]==0&&mock_reply[7]==1&&mock_reply[8]==31);}
+int main(void){
+    reset();request(2,1,0);CHECK(mock_reply[6]==REMOTE_UNSUPPORTED&&mock_actions==0);request(0,2,0);CHECK(protocol.handshake);
+    for(unsigned key=0;key<3;key++){request(2,3+key,key);CHECK(mock_input==((2u<<8)|key));}
+    CHECK(mock_actions==3);request(3,6,0);CHECK(mock_actions==4&&mock_input==((3u<<8)|1));
+    request(3,6,0);CHECK(mock_actions==4&&mock_reply[6]==0);request(2,6,2);CHECK(mock_actions==4&&mock_reply[6]==REMOTE_SEQUENCE);
+    request(2,7,3);CHECK(mock_actions==4&&mock_reply[6]==REMOTE_INVALID);request(9,8,0);CHECK(mock_reply[6]==REMOTE_UNSUPPORTED);
+    request(0,0,0);CHECK(mock_reply[6]==REMOTE_SEQUENCE&&protocol.next_sequence==9);
+    reset();handshake();mock_send_result=1;request(2,2,0);CHECK(mock_actions==1&&protocol.replying);for(unsigned i=0;i<50;i++)ble_remote_poll();CHECK(mock_actions==1);mock_send_result=0;ble_remote_poll();CHECK(mock_reply[6]==0&&mock_actions==1);
+    reset();handshake();enqueue(2,2,0);ble_remote_local_activity();ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0&&mock_reply[6]==REMOTE_BUSY);
+    request(2,3,0);CHECK(mock_actions==1);
+    reset();handshake();enqueue(2,2,0);ble_work_process(clean);ble_remote_local_activity();ble_remote_poll();CHECK(mock_actions==0&&mock_reply[6]==REMOTE_BUSY);
+    reset();handshake();enqueue(2,2,0);disconnect();connect();ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0);handshake();request(2,2,0);CHECK(mock_actions==1);
+    reset();handshake();mock_session++;CHECK(execute(NULL,REMOTE_TAP,1,local_generation)==REMOTE_BUSY&&!mock_actions);
+    reset();handshake();mock_action_effect=1;request(2,2,1);CHECK(mock_actions==1&&mock_sent==1&&!ble_remote_enabled());
+    reset();handshake();mock_action_effect=2;request(2,2,1);CHECK(mock_actions==1&&mock_sent==1); /* old ACK never targets new generation */
+    reset();handshake();mock_action_effect=3;request(2,2,1);CHECK(ble_remote_enabled()&&mock_actions==1);
+    for(unsigned guard=0;guard<7;guard++){
+        reset();handshake();if(guard==0)mock_permission_safe=false;if(guard==1)nfct.FIELDPRESENT=1;if(guard==2)nfct.FIELDPRESENT=2;if(guard==3)mock_recovery=true;
+        if(guard==4)mock_ui.memory_error=true;if(guard==5)mock_ui.event_queue.dispatcher=NULL;if(guard==6){mock_ui.event_queue.count=1;input_events[0].id=MUI_EVENT_ID_INPUT;}
+        request(2,2,1);CHECK(!mock_actions&&mock_reply[6]==(guard<4?REMOTE_UNSAFE:REMOTE_BUSY));
+    }
+    reset();handshake();request(1,2,0);CHECK(mock_reply[6]==REMOTE_REQUESTED&&mock_reply[7]==REMOTE_TRANSITION&&handoff_armed&&mock_hold);
+    ble_remote_poll();CHECK(!mock_launches);disconnect();ble_remote_poll();CHECK(!mock_launches);ble_work_process(clean);ble_remote_poll();CHECK(mock_launches==1&&mock_launcher.file);
+    for(unsigned cancel=0;cancel<8;cancel++){
+        reset();handshake();request(1,2,0);CHECK(mock_hold);
+        if(cancel==0)ble_remote_local_activity();if(cancel==1)mock_tick=10000;
+        disconnect();ble_work_process(clean);
+        if(cancel==2)mock_permission_safe=false;if(cancel==3)mock_ui.memory_error=true;if(cancel==4)mock_recovery=true;if(cancel==5)mock_launch_fail=true;
+        if(cancel==6)mock_link+=2;if(cancel==7)nfct.FIELDPRESENT=2;
+        ble_remote_poll();CHECK(!handoff_requested&&!handoff_armed&&!mock_hold&&mock_advertising&&!mock_launcher.file);
+    }
+    reset();handshake();request(1,2,0);ble_remote_local_activity();ble_remote_poll();CHECK(!mock_hold);disconnect();ble_work_process(clean);ble_remote_poll();CHECK(mock_advertising&&!mock_launcher.file);
+    reset();handshake();mock_send_result=1;request(1,2,0);CHECK(handoff_requested&&!handoff_armed);disconnect();ble_work_process(clean);ble_remote_poll();CHECK(!mock_hold&&!mock_launches);
+    reset();handshake();enqueue(2,2,0);enqueue(2,3,0);ble_work_process(clean);ble_remote_poll();CHECK(mock_aborts==1&&!mock_actions);
+    reset();handshake();enqueue(2,2,0);CHECK(!ble_remote_receive_irq(NULL,7));ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0&&mock_sent==1);
+    reset();handshake();for(unsigned i=0;i<BLE_WORK_CAPACITY;i++)enqueue(2,2,0);uint8_t good[247]={80,88,1,2,2,0,0,0};CHECK(!ble_remote_receive_irq(good,8));ble_work_process(clean);ble_remote_poll();CHECK(!mock_actions);
+    for(unsigned len=0;len<=247;len++){reset();CHECK(ble_remote_receive_irq(good,len)==(len==8));}
+    reset();CHECK(!ble_remote_receive_irq(NULL,8));reset();handshake();
+    /* Exhaust the full wire sequence space and wrap; STATUS must not keep awake. */
+    unsigned feeds=mock_feed;
+    for(unsigned seq=2;seq<=65535;seq++){request(0,seq,0);CHECK(mock_reply[6]==0);}
+    request(0,1,0);CHECK(mock_reply[6]==0&&protocol.next_sequence==2&&mock_feed==feeds);
+    reset();handshake();protocol.next_sequence=65535;request(2,65535,0);request(2,65535,0);CHECK(mock_actions==1);request(2,1,2);CHECK(mock_actions==2);
+    ble_remote_shutdown();ble_remote_poll();CHECK(!mock_mode&&!ble_remote_enabled());
+    printf("PASS %u remote assertions; IRQ queue epochs, replay/wrap, ACK backpressure, NFC, handoff/abort and shutdown\n",cases);
+    return 0;
+}

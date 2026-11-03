@@ -27,6 +27,10 @@ bool ntag_emu_prepare_change(void);
  * survives; only another explicit transition retries, never the main loop. */
 void ntag_emu_save_failed(void);
 bool ntag_emu_save_pending(void);
+/* Foreground status snapshot only; never flushes, pauses or changes a tag.
+ * A true result is not a reservation against a later RF interrupt. Normal
+ * tag/owner changes must still use the existing prepare_change safeguards. */
+bool ntag_emu_remote_input_safe(void);
 bool ntag_emu_retry_save(void);
 /* Explicit UI confirmation only. Leaves persisted bytes untouched. */
 bool ntag_emu_discard_changes(void);

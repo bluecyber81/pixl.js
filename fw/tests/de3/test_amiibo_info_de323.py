@@ -32,6 +32,7 @@ class FigureInfoTests(unittest.TestCase):
                 'ACTUAL_FILE_INPUT':function((SRC/'app/amiibo/view/amiibo_detail_view.c').read_text(encoding='utf-8'),'amiibo_detail_view_on_input'),
                 'ACTUAL_DB_BACK_CALLBACK':function((SRC/'app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c').read_text(encoding='utf-8'),'amiidb_scene_figure_info_back'),
                 'ACTUAL_DB_INPUT':function((SRC/'app/amiidb/view/amiibo_view.c').read_text(encoding='utf-8'),'amiibo_view_on_input'),
+                'ACTUAL_DB_QR':function((SRC/'app/amiidb/view/amiibo_view.c').read_text(encoding='utf-8'),'amiibo_view_draw_qrcode'),
             }
             for key,value in replacements.items():template=template.replace('/*'+key+'*/',value)
             (folder/'main.c').write_text(template,encoding='utf-8')
@@ -54,7 +55,7 @@ class FigureInfoTests(unittest.TestCase):
             ran=subprocess.run([str(binary),str(renders)],capture_output=True,text=True,timeout=30)
             self.assertEqual(ran.returncode,0,ran.stdout+ran.stderr)
             self.assertIn('PASS figure-info',ran.stdout)
-            self.assertEqual(len(list(renders.glob('*.pbm'))),10)
+            self.assertEqual(len(list(renders.glob('*.pbm'))),14)
             print(ran.stdout.strip())
 
 

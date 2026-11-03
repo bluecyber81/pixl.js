@@ -20,7 +20,9 @@ static db_link_t link={"Linked description with many useful details, enough text
 extern const char *const lang_de_DE[];
 const char *getLangString(int id) { return lang_de_DE[id]; }
 static bool isChineseLanguage(void) { return chinese; }
-const db_amiibo_t *get_amiibo_by_id(uint32_t h,uint32_t t) { return (h==0 && t==2) ? &entry : NULL; }
+const db_amiibo_t *get_amiibo_by_id(uint32_t h,uint32_t t) {
+    return (h==0 && t==2) || (h==4 && t==0x04431c02) || (h==0x000a0004 && t==0x04451c02) ? &entry : NULL;
+}
 static const db_link_t *get_link_by_id(unsigned game,uint32_t h,uint32_t t) {
     (void)game;return linked && get_amiibo_by_id(h,t) ? &link : NULL;
 }
@@ -90,7 +92,7 @@ int main(int argc,char **argv) {
     u8g2_t u,ru,eu;mui_canvas_t canvas,rc,ec;
     setup(&canvas,&u,buffer,64);setup(&rc,&ru,reference,64);setup(&ec,&eu,expected,64);
     amiibo_view_t v;mui_view_t view;ntag_t tag;init_view(&v,&view,&tag);
-    char url[48];CHECK(amiibo_info_url(url,sizeof(url),&tag));
+    char url[AMIIBO_INFO_URL_CAPACITY];CHECK(amiibo_info_url(url,sizeof(url),&tag));
     CHECK(draw_qrcode(&rc,91,25,37,url));
     snprintf((char *)tag.notes,sizeof(tag.notes),"Long own notes with detailed information across several lines; keep this QR visible while scrolling all the description text.");
     if(!strcmp(argv[2],"negative-offset3")) {
@@ -164,6 +166,26 @@ int main(int argc,char **argv) {
     event.key=INPUT_KEY_LEFT;event.type=INPUT_TYPE_SHORT;amiibo_view_on_input(&view,&event);CHECK(v.info_page==1);
     event.key=INPUT_KEY_RIGHT;amiibo_view_on_input(&view,&event);CHECK(v.info_page==2);
     event.key=INPUT_KEY_CENTER;amiibo_view_on_input(&view,&event);CHECK(v.info_page==0 && menu_events==1);
+    /* The two product-page overrides must keep complete QR symbols stationary
+     * alongside the actual scrolling description, including the longer V4 URL. */
+    const uint8_t product_ids[2][8]={{0,0,0,4,4,0x43,0x1c,2},{0,0x0a,0,4,4,0x45,0x1c,2}};
+    for(unsigned item=0;item<2;item++) {
+        memcpy(tag.data+84,product_ids[item],8);
+        snprintf((char *)tag.notes,sizeof(tag.notes),"Long product notes remain separate from the complete stationary QR while all pages and animation offsets scroll.");
+        CHECK(amiibo_info_url(url,sizeof(url),&tag));
+        unsigned box=strlen(url)>53?41:37,left=128-box,top=box==41?23:25;
+        memset(reference,0,1024);CHECK(draw_qrcode(&rc,left,top,box,url));
+        amiibo_view_reset_desc_scroll(&v);draw(&canvas,&view);
+        unsigned max=amiibo_view_desc_max_offset(&v);CHECK(max>8);
+        for(unsigned offset=0;offset<=max;offset++) {
+            v.desc_offset=offset;draw(&canvas,&view);
+            same_region(buffer,reference,left,top,box,box);qr_checks++;
+            expected_description(&ec,&tag,left-2,offset);
+            same_region(buffer,expected,0,24,left-2,40);
+            for(unsigned y=top;y<64;y++)for(unsigned x=left-2;x<left;x++)CHECK(!pixel(buffer,x,y));
+        }
+        char name[40];snprintf(name,sizeof(name),"product_%u_scroll_qr",item);save_frame(argv[1],name,buffer);
+    }
     printf("PASS amiidb QR: %u real framebuffer frames, %u complete QR comparisons; notes/links/locales/readonly/off/failure/manual/animation/info/long-lines\n",frames,qr_checks);
     return 0;
 }

@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "publicationDate": "2026-11-03",
+  "firmware": "2.22.0-DE3.55",
+  "web": "3.33.1",
+  "freshPublicationChecks": {
+    "applicationBuild": "DE3_55_PUBLIC_BUILD.json",
+    "matchesArchivedBinHexElfMap": true,
+    "bootloaderBuild": "../../bootloader-bl8/BUILD_VERIFICATION.json",
+    "bootloaderPaddedRegionMatched": true,
+    "signedPackageChecks": 3,
+    "signatureNegativeControls": 9
+  },
+  "archivedChecks": {
+    "date": "2026-11-02",
+    "firmwareHostGroups": 136,
+    "webHostTests": 1057,
+    "productionRootTests": 21,
+    "productionPagesTests": 21,
+    "targetedSanitizerArmStorageTestsPassed": true
+  },
+  "deviceObservation": {
+    "date": "2026-11-02",
+    "application": "2.22.0-DE3.55",
+    "bootloader": "BL8",
+    "softdevice": "S1127.3.0",
+    "fwid": "0x0126",
+    "attMtuTested": [
+      250,
+      23
+    ],
+    "atomicOperations": 86,
+    "mtuOperations": 212,
+    "testFilesRemoved": true,
+    "startupApplicationMilliseconds": 2309,
+    "startupStorageMilliseconds": 2216,
+    "userConfirmed": [
+      "known NFC figure recognized by Switch 2",
+      "short middle press",
+      "wake"
+    ]
+  },
+  "limits": [
+    "Device observation is dated, not a fresh read during publication.",
+    "Only bounded scratch-file, metadata and reconnect tests; no changes to user collection.",
+    "Startup excludes bootloader and early SDK startup.",
+    "Heap samples are not a physical stack watermark or all-RAM coverage.",
+    "NFC/middle/wake are owner reports, not automated physical measurements.",
+    "No exhaustive power-loss/endurance/board compatibility claim."
+  ],
+  "sourceReports": {
+    "firmwareHost": "428e46de2d104b34c51ddbb7c80e92ea7c5849271878faaff8bb02e7db5b4b05",
+    "firmwareArm": "25d852f50f97780c55061fa8b6d369deb16ecbb32a34d1cb35e3d6e5705cca4c",
+    "signedPackage": "5d44031c27872e38435e810e116a22f7e48c36d6388a31c4cc17e1589250e8e8",
+    "deviceSummary": "52c512eec605f049feda421a149b3d65ec02e296430dd79fc11c4409e3e70948",
+    "webPublicReadback": "d9788e78c8864b874f06caa24ccdafda6ea8eb59e881363a5368c6ada5f809ac"
+  }
+}

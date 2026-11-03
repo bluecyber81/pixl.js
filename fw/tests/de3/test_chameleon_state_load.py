@@ -12,6 +12,10 @@ def definition(text, name, result):
 
 class ChameleonStateTests(unittest.TestCase):
     def compile_run(self, source):
+        # Save transactions now inspect the real MF1 Shadow configuration.
+        if 'nfc_tag_mf1_configure_t *pending_shadow' in source:
+            header = (TAG_DIR/'hf/nfc_mf1.h').read_text(encoding='utf8').replace('#include "netdata.h"', '').replace('"nfc_14a.h"', '"hf/nfc_14a.h"')
+            source = source.replace('#include "tag_emulation.h"', header)
         with tempfile.TemporaryDirectory(prefix='pixl-chameleon-state-') as temp:
             folder=Path(temp)
             (folder/'app_util.h').write_text('#define PACKED __attribute__((packed))\n#define STATIC_ASSERT(x) _Static_assert(x,#x)\n')
@@ -43,6 +47,8 @@ class ChameleonStateTests(unittest.TestCase):
         code=Path(__file__).with_name('chameleon_state_lifecycle.c.in').read_text(encoding='utf-8')
         for name in ['app_chameleon_init_error_cb','app_chameleon_show_load_error','app_chameleon_on_run','app_chameleon_on_kill']:
             code=code.replace('@'+name+'@',definition(text,name,'void'))
+        if os.environ.get('PIXL_KILL_MUTANT') == 'late-nfc-stop':
+            code=code.replace('        tag_emulation_sense_end();\n        hal_nfc_set_nrfx_irq_enable(false);\n', '')
         self.compile_run(code)
 
     def test_nfc_wakeup_uses_existing_ntag_fallback_if_chameleon_init_fails(self):
@@ -107,6 +113,7 @@ static void calc_14a_crc_lut(uint8_t*p,unsigned n,uint8_t*out){out[0]=0x34;out[1
 tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t){return TAG_SENSE_HF;}
 static void get_fds_map_by_slot_sense_type_for_dump(unsigned s,unsigned t,fds_slot_record_map_t*m){m->id=1;m->key=1;}
 static bool fds_write_sync(unsigned id,unsigned key,unsigned n,void*b){attempts++;return !fail_write;}
+static int32_t fds_compare_sync(unsigned id,unsigned key,unsigned n,const void*b){return 1;}
 '''+definition(source,'save_data_by_tag_type','bool')+r'''
 int main(void){
  fail_write=true;save_data_by_tag_type(0,TAG_TYPE_MIFARE_1024);assert(attempts==1 && saved_crc==0);

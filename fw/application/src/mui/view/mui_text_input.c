@@ -77,11 +77,9 @@ static const mui_text_input_key_t *get_row(uint8_t row_index) {
 }
 
 static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
-    mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
     mui_text_input_t *p_mui_text_input = p_view->user_data;
 
     const char *text = string_get_cstr(p_mui_text_input->input_text);
-    uint8_t needed_string_width = mui_canvas_get_width(p_canvas) - 8;
     uint8_t start_pos = 4;
     size_t text_length = string_size(p_mui_text_input->input_text);
 
@@ -89,24 +87,30 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     mui_canvas_set_draw_color(p_canvas, 1);
     mui_canvas_draw_utf8(p_canvas, 2, 10, string_get_cstr(p_mui_text_input->header));
 
-    mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
     mui_canvas_draw_rframe(p_canvas, 1, 12, 126, 15, 1);
 
-    if (mui_canvas_string_width(p_canvas, text) > needed_string_width) {
+    /* Measure in the same font/UTF-8 mode used to draw the name, including
+     * room for the cursor or selection frame. Never split a UTF-8 character
+     * when showing the tail of a long name. No temporary allocation needed. */
+    uint16_t right = mui_canvas_get_width(p_canvas) > 4 ? mui_canvas_get_width(p_canvas) - 4 : 0;
+    uint16_t reserve = p_mui_text_input->clear_default_text ? 1 : mui_canvas_get_utf8_width(p_canvas, "_") + 1;
+    uint16_t available = right > start_pos + reserve ? right - start_pos - reserve : 0;
+    uint16_t text_width = mui_canvas_get_utf8_width(p_canvas, text);
+    if (text_width > available) {
         mui_canvas_draw_utf8(p_canvas, start_pos, 22, "...");
-        start_pos += 6;
-        needed_string_width -= 8;
+        start_pos += mui_canvas_get_utf8_width(p_canvas, "...") + 1;
+        available = right > start_pos + reserve ? right - start_pos - reserve : 0;
     }
 
-    while (text != 0 && mui_canvas_string_width(p_canvas, text) > needed_string_width) {
-        text++;
+    while (*text && text_width > available) {
+        text += mui_canvas_get_utf8_bytes(text);
+        text_width = mui_canvas_get_utf8_width(p_canvas, text);
     }
 
-    mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     if (p_mui_text_input->clear_default_text) {
-        mui_canvas_draw_rframe(p_canvas, start_pos - 1, 14, mui_canvas_string_width(p_canvas, text) + 2, 10, 1);
+        mui_canvas_draw_rframe(p_canvas, start_pos - 1, 14, text_width + 2, 10, 1);
     } else {
-        mui_canvas_draw_utf8(p_canvas, start_pos + mui_canvas_string_width(p_canvas, text) + 1, 22, "_");
+        mui_canvas_draw_utf8(p_canvas, start_pos + text_width + 1, 22, "_");
     }
     mui_canvas_draw_utf8(p_canvas, start_pos, 22, text);
 

@@ -1,0 +1,91 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#define NFC_TAG_NTAG_DATA_SIZE 4
+#define _T(x) (x)
+typedef unsigned tag_specific_type_t;
+typedef bool(*tag_datas_factory_t)(uint8_t,tag_specific_type_t);
+typedef struct { uint8_t *buffer; } tag_data_buffer_t;
+typedef struct { uint8_t memory[6][4]; } nfc_tag_mf0_ntag_information_t;
+typedef struct { uint8_t cc[4],page4[4],page5[4]; } ntag_delivery_defaults_t;
+typedef struct { void *p_scene_dispatcher,*p_toast_view; } app_chameleon_t;
+typedef struct { void *user_data; } mui_list_view_t;
+typedef struct { void *user_data; } mui_list_item_t;
+typedef struct { void *user_data; } mui_msg_box_t;
+typedef unsigned mui_list_view_event_t;
+typedef unsigned mui_msg_box_event_t;
+typedef uintptr_t chameleon_menu_item_t;
+enum { CHAMELEON_MENU_BACK,CHAMELEON_MENU_LOAD_DATA,CHAMELEON_MENU_SAVE_DATA,CHAMELEON_MENU_FACTORY,
+       CHAMELEON_SCENE_MENU_CARD_DATA_FILE_LOAD,CHAMELEON_SCENE_MENU_CARD_DATA_FILE_SAVE,
+       APP_CHAMELEON_CARD_DATA_FACTORY_SUCCESS,APP_CHAMELEON_CARD_DATA_SAVE_FAILED,
+       MUI_MSG_BOX_EVENT_SELECT_LEFT,MUI_MSG_BOX_EVENT_SELECT_RIGHT };
+static bool write_ok,load_ok,config_ok,has_factory,m_tag_data_loaded;
+static unsigned write_calls,load_calls,config_calls,success_toasts,error_toasts,backs;
+static uint8_t working[24];
+static bool factory(uint8_t slot,tag_specific_type_t type){write_calls++;return write_ok;}
+static tag_datas_factory_t get_data_factory_from_tag_type(tag_specific_type_t type){return has_factory?factory:NULL;}
+static uint8_t tag_emulation_get_slot(void){return 0;}
+static void load_data_by_tag_type(uint8_t slot,tag_specific_type_t type){
+ load_calls++;m_tag_data_loaded=load_ok;if(load_ok)memset(working,0x55,sizeof(working));
+}
+static bool tag_emulation_save_config(void){config_calls++;return config_ok;}
+static tag_specific_type_t tag_helper_get_active_tag_type(void){return 1;}
+static const ntag_delivery_defaults_t *get_ntag_delivery_defaults(tag_specific_type_t type){return NULL;}
+static tag_data_buffer_t *get_buffer_by_tag_type(tag_specific_type_t type){return NULL;}
+static void tag_emulation_save(void){assert(!"factory helper must not perform an unchecked second save");}
+static void mui_toast_view_show(void*p,unsigned text){
+ if(text==APP_CHAMELEON_CARD_DATA_FACTORY_SUCCESS)success_toasts++;
+ else {assert(text==APP_CHAMELEON_CARD_DATA_SAVE_FAILED);error_toasts++;}
+}
+static void mui_scene_dispatcher_previous_scene(void*p){backs++;}
+static void mui_scene_dispatcher_next_scene(void*p,unsigned scene){assert(!"unexpected navigation");}
+@FACTORY@
+@HELPER@
+@DATA_UI@
+@TYPE_UI@
+static void reset(void){
+ write_ok=load_ok=config_ok=has_factory=m_tag_data_loaded=true;
+ write_calls=load_calls=config_calls=success_toasts=error_toasts=backs=0;
+ memset(working,0xa5,sizeof(working));
+}
+int main(void){
+ app_chameleon_t app={0};mui_list_view_t list={&app};mui_list_item_t item={(void*)CHAMELEON_MENU_FACTORY};mui_msg_box_t msg={&app};
+ unsigned cases=0;
+ for(unsigned ui=0;ui<2;ui++){
+  for(unsigned fault=0;fault<5;fault++){
+   reset();has_factory=fault!=0;write_ok=fault!=1;load_ok=fault!=2;config_ok=fault!=3;
+   if(ui)chameleon_scene_menu_card_type_factory_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&msg);
+   else chameleon_scene_menu_card_data_on_event(0,&list,&item);
+   bool success=fault==4;
+   assert(success_toasts==success && error_toasts==!success && backs==success);
+   assert(write_calls==(fault!=0) && load_calls==(fault>=2) && config_calls==(fault>=3));
+   if(fault<2){
+    assert(m_tag_data_loaded);
+    for(unsigned i=0;i<sizeof(working);i++)assert(working[i]==0xa5);
+   }
+   if(fault==2)assert(!m_tag_data_loaded);
+   if(fault>=3)assert(m_tag_data_loaded);
+   /* Retrying each recoverable error must perform the operation and exit. */
+   if(!success){
+    write_ok=load_ok=config_ok=has_factory=true;
+    if(ui)chameleon_scene_menu_card_type_factory_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&msg);
+    else chameleon_scene_menu_card_data_on_event(0,&list,&item);
+    assert(success_toasts==1 && error_toasts==1 && backs==1 && m_tag_data_loaded);
+   }
+   cases++;
+  }
+ }
+ reset();chameleon_scene_menu_card_type_factory_cb(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&msg);
+ assert(backs==1 && !write_calls && !load_calls && !config_calls && !success_toasts && !error_toasts);
+ reset();m_tag_data_loaded=false;load_ok=false;config_ok=false;
+ assert(tag_emulation_factory_data(1,1));
+ assert(write_calls==1 && !load_calls && !config_calls && !m_tag_data_loaded);
+ /* Generic factory initialization must not publish config.bin before all slots. */
+ reset();config_ok=false;
+ assert(tag_emulation_factory_data(0,1));
+ assert(write_calls==1 && load_calls==1 && !config_calls && m_tag_data_loaded);
+ printf("PASS %u actual factory/UI fault and success cases, retries, cancel, inactive target; write/read/config errors never announce success\n",cases);
+ return 0;
+}

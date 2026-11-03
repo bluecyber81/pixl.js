@@ -13,7 +13,7 @@ import tempfile
 
 
 def function(source, name):
-    match = re.search(r'^(?:static )?void ' + re.escape(name) + r'\([^;]*?\)\s*\{', source, re.M)
+    match = re.search(r'^(?:static )?(?:void|ret_code_t|int8_t) ' + re.escape(name) + r'\([^;]*?\)\s*\{', source, re.M)
     if not match:
         raise ValueError('Missing production function: ' + name)
     start = match.start()
@@ -43,8 +43,10 @@ def main():
     harness = Path(__file__).with_name('progress_bar_host.c').read_text(encoding='utf-8')
     harness = harness.replace('/* ACTUAL_PROGRESS_HEADER */', re.sub(r'^#include .*$', '', header.read_text(encoding='utf-8'), flags=re.M))
     harness = harness.replace('/* ACTUAL_PROGRESS_SOURCE */', re.sub(r'^#include .*$', '', progress.read_text(encoding='utf-8'), flags=re.M))
-    harness = harness.replace('/* ACTUAL_DISPLAY_SETTERS */', '\n'.join(function(u8g2, name) for name in (
-        'mui_u8g2_set_backlight_level', 'mui_u8g2_set_contrast_level')))
+    names = ['mui_u8g2_set_backlight_level', 'mui_u8g2_set_contrast_level']
+    if 'backlight_pwm_duty_set' in u8g2:
+        names = ['backlight_pwm_duty_set', 'mui_u8g2_get_backlight_level'] + names
+    harness = harness.replace('/* ACTUAL_DISPLAY_SETTERS */', '\n'.join(function(u8g2, name) for name in names))
     harness = harness.replace('/* ACTUAL_SETTINGS_CALLBACKS */', callbacks)
     with tempfile.TemporaryDirectory(prefix='pixl-slider-') as directory:
         temp = Path(directory)

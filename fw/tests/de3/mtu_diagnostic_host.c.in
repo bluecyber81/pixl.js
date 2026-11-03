@@ -1,5 +1,5 @@
 #include <stdbool.h>
-static volatile bool m_file_mode,m_sessions_enabled,m_file_join_pending;
+static volatile bool m_file_mode=true,m_sessions_enabled,m_file_join_pending,m_remote_mode;
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -24,6 +24,7 @@ static volatile bool m_file_mode,m_sessions_enabled,m_file_join_pending;
 #define OPCODE_LENGTH 1
 #define HANDLE_LENGTH 2
 #define DEVICE_NAME_PIXLJS "Pixl.js"
+#define DEVICE_NAME_REMOTE "Pixl.Remote"
 #define DEVICE_NAME_AMIIBOLINK "amiibolink"
 #define DEVICE_NAME_AMILOOP "AMILOOP"
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -33,6 +34,7 @@ static volatile bool m_file_mode,m_sessions_enabled,m_file_join_pending;
 #define NRF_LOG_ERROR(...) ((void)0)
 #define APP_ERROR_CHECK(x) CHECK((x)==0)
 #define VERIFY_PARAM_NOT_NULL(x) do { if (!(x)) return NRF_ERROR_NULL; } while (0)
+static uint32_t m_session_generation;
 static unsigned critical_depth;
 #define CRITICAL_REGION_ENTER() do { ++critical_depth;
 #define CRITICAL_REGION_EXIT() --critical_depth; } while (0)
@@ -77,9 +79,9 @@ static void gap_params_init(void){}
 static void services_init(void){}
 static void conn_params_init(void){}
 void df_core_init(void){}
-static void ble_set_device_name(const char *name){strcpy(device_name,name);}
-static void ble_addr_set(uint8_t value){address_offset=value;}
-static void advertising_init(void){++advertising_calls;}
+static uint32_t ble_set_device_name(const char *name){strcpy(device_name,name);return 0;}
+static uint32_t ble_addr_set(uint8_t value){address_offset=value;return 0;}
+static uint32_t advertising_init(bool remote){(void)remote;++advertising_calls;return 0;}
 static void ble_service_id_set(uint32_t value){service_suffix=value;}
 void df_core_send_frame(df_frame_t *frame){++sends;response=*frame;}
 /* ACTUAL_FUNCTIONS */
@@ -151,16 +153,22 @@ int main(void){
         m_gatt.att_mtu_desired_periph=250;
     }
     memset(&file_chunk_state,0,sizeof(file_chunk_state));dir_chunk_state.dir_closed=true;
-    /* Mode preparation resets only the next-link preference, all four modes. */
+    /* Actual mode configuration resets the next-link preference. The separate
+     * DE347 mode suite covers the public deferred prepare/cleanup gate. */
     for(unsigned mode=0;mode<4;mode++){
-        m_gatt.att_mtu_desired_periph=23;ble_device_mode_prepare((ble_device_mode_t)mode);
+        m_gatt.att_mtu_desired_periph=23;CHECK(ble_apply_device_mode((ble_device_mode_t)mode)==NRF_SUCCESS);
         CHECK(m_gatt.att_mtu_desired_periph==250 && m_gatt.links[0].att_mtu_effective==250);
         issue(NULL,0,0,0);snapshot(250,250,mode==0?7:5);
         set_mtu(23);if(mode)rejected();else snapshot(250,23,7);
     }
-    ble_device_mode_prepare(BLE_DEVICE_MODE_PIXLJS);
+    CHECK(ble_apply_device_mode(BLE_DEVICE_MODE_PIXLJS)==NRF_SUCCESS);
     CHECK(address_offset==0 && service_suffix==0x6e400001 && advertising_calls==5);
-    name_error=true;set_mtu(23);rejected();issue(NULL,0,0,0);snapshot(250,250,5);name_error=false;
+    /* Same-link handoff owns the file parser while GAP still says Remote.
+     * Name lookup failure also cannot override the actual parser ownership. */
+    strcpy(device_name,"Pixl.Remote");name_error=true;
+    set_mtu(23);snapshot(250,23,7);issue(NULL,0,0,0);snapshot(250,23,7);
+    m_file_mode=false;set_mtu(250);rejected();issue(NULL,0,0,0);snapshot(250,23,5);
+    m_file_mode=true;name_error=false;set_mtu(250);snapshot(250,250,7);
     disconnect_peer();set_mtu(23);rejected();issue(NULL,0,0,0);snapshot(0,250,6);
     connect_peer(23);issue(NULL,0,0,0);snapshot(23,250,7);
     /* Direct API bounds, no partial snapshot write on rejection. */

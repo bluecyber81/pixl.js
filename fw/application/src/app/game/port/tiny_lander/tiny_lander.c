@@ -506,7 +506,7 @@ void Tiny_Flip(uint8_t mode, GAME * game, DIGITAL * score, DIGITAL * velX, DIGIT
 void SetLandingMap(uint8_t level, GAME *game)
 {
   uint8_t i;
-  uint8_t prev;
+  uint8_t prev = 0;
   game->LandingPadLEFT = 0;
   game->LandingPadRIGHT = 255;
   for (i = 0; i < 27; i++)

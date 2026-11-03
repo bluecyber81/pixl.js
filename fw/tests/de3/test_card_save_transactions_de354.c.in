@@ -1,0 +1,173 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+@HEADER@
+@VFS@
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define FDS_EMULATION_CONFIG_FILE_ID 1
+#define FDS_EMULATION_CONFIG_RECORD_KEY 2
+#define FDS_SLOT_TAG_DUMP_FILE_ID_BASE 100
+#define SLOT_MAX TAG_MAX_SLOT_NUM
+static uint8_t data[4500] __attribute__((aligned(4)));
+static uint8_t disk[4500], config_disk[sizeof(tag_slot_config_t)];
+static nfc_tag_mf1_information_t *m_tag_information=(void*)data;
+static tag_specific_type_t m_tag_type;
+static bool m_tag_data_loaded=true;
+static tag_slot_config_t slotConfig;
+static uint16_t stored_crc,m_slot_config_crc;
+static tag_data_buffer_t buffer={sizeof(data),data,&stored_crc};
+typedef struct {uint8_t chameleon_slot_num;} settings_data_t;
+static settings_data_t settings={8};
+static settings_data_t *settings_get_data(void){return &settings;}
+static unsigned disk_size,config_size,writes,opens,closes,aborts,reads,read_bytes,max_read,offset,cases;
+static bool mounted_ok=true,driver_present=true,write_failure,open_failure,close_failure;
+static int stat_failure,read_failure_call,zero_read_call,oversize_read_call;
+static unsigned read_limit;
+static uint8_t *active_disk;static unsigned active_size;
+static bool mounted(void){return mounted_ok;}
+static bool config_path(const char *path){return !strcmp(path,"/chameleon/slots/config.bin");}
+static int32_t mock_stat(const char *path,vfs_obj_t *obj){
+ if(stat_failure)return stat_failure;
+ obj->type=VFS_TYPE_REG;obj->size=config_path(path)?config_size:disk_size;return 0;
+}
+static int32_t mock_open(const char *path,vfs_file_t *file,uint32_t flags){
+ opens++;assert(flags==VFS_MODE_READONLY);if(open_failure)return -11;
+ active_disk=config_path(path)?config_disk:disk;active_size=config_path(path)?config_size:disk_size;
+ offset=0;file->handle=&offset;return 0;
+}
+static int32_t mock_read(vfs_file_t *file,void *out,size_t n){
+ assert(file->handle==&offset && n<=128);reads++;if(n>max_read)max_read=n;
+ if(read_failure_call==(int)reads)return -12;
+ if(zero_read_call==(int)reads)return 0;
+ if(oversize_read_call==(int)reads)return (int)n+1;
+ if(read_limit && n>read_limit)n=read_limit;
+ if(n>active_size-offset)n=active_size-offset;
+ memcpy(out,active_disk+offset,n);offset+=n;read_bytes+=n;return n;
+}
+static int32_t mock_close(vfs_file_t *file){closes++;assert(file->handle==&offset);if(close_failure)return -13;file->handle=NULL;return 0;}
+static int32_t mock_abort(vfs_file_t *file){aborts++;file->handle=NULL;return 0;}
+static int32_t mock_write(const char *path,void *in,size_t n){
+ writes++;if(write_failure)return VFS_ERR_NOSPC;
+ if(config_path(path)){assert(n<=sizeof(config_disk));memcpy(config_disk,in,n);config_size=n;}
+ else{assert(n<=sizeof(disk));memcpy(disk,in,n);disk_size=n;}
+ return n;
+}
+static vfs_driver_t driver={.mounted=mounted,.stat_file=mock_stat,.open_file=mock_open,.read_file=mock_read,.close_file=mock_close,.abort_file=mock_abort,.write_file_data=mock_write};
+vfs_driver_t *vfs_get_default_driver(void){return driver_present?&driver:NULL;}
+@MAP@
+@COMPARE@
+@WRITE@
+@CRC@
+@BLOCKS@
+@SIZE@
+@SAVER@
+tag_data_buffer_t *get_buffer_by_tag_type(tag_specific_type_t type){return &buffer;}
+static tag_datas_savecb_t get_data_savecb_from_tag_type(tag_specific_type_t type){return nfc_tag_mf1_data_savecb;}
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t type){return TAG_SENSE_HF;}
+typedef struct{uint16_t id,key;}fds_slot_record_map_t;
+static void get_fds_map_by_slot_sense_type_for_dump(uint8_t slot,tag_sense_type_t type,fds_slot_record_map_t *map){map->id=100+slot;map->key=type;}
+@SAVE@
+@CONFIG@
+static void counters(void){
+ writes=opens=closes=aborts=reads=read_bytes=max_read=offset=0;write_failure=open_failure=close_failure=false;
+ stat_failure=read_failure_call=zero_read_call=oversize_read_call=0;read_limit=0;mounted_ok=driver_present=true;
+}
+static void reset(tag_specific_type_t type){
+ counters();m_tag_type=type;buffer.length=sizeof(data);buffer.buffer=data;buffer.crc=&stored_crc;
+ memset(data,0,sizeof(data));m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_NORMAL;
+ disk_size=get_information_size_by_tag_type(type);memcpy(disk,data,disk_size);
+ calc_14a_crc_lut(data,disk_size,(uint8_t*)&stored_crc);
+}
+static bool data_equal(void){return disk_size==(unsigned)get_information_size_by_tag_type(m_tag_type)&&!memcmp(data,disk,disk_size);}
+static unsigned collide_data(void){
+ m_tag_information->memory[4][0]^=1;uint16_t crc;unsigned candidate;
+ for(candidate=0;candidate<=65535;candidate++){
+  m_tag_information->memory[4][1]=candidate&255;m_tag_information->memory[4][2]=candidate>>8;
+  calc_14a_crc_lut(data,get_information_size_by_tag_type(m_tag_type),(uint8_t*)&crc);
+  if(crc==stored_crc)return candidate;
+ }
+ assert(0);return 0;
+}
+int main(void){
+ tag_specific_type_t types[]={TAG_TYPE_MIFARE_Mini,TAG_TYPE_MIFARE_1024,TAG_TYPE_MIFARE_2048,TAG_TYPE_MIFARE_4096};
+ for(unsigned t=0;t<4;t++){
+  reset(types[t]);assert(save_data_by_tag_type(0,m_tag_type));
+  assert(!writes&&read_bytes==disk_size&&reads==(disk_size+127)/128&&max_read<=128&&closes==1);
+  printf("UNCHANGED type=%u bytes=%u readCalls=%u writes=%u\n",m_tag_type,read_bytes,reads,writes);cases++;
+  counters();m_tag_information->memory[4][0]=0x5a;write_failure=true;uint16_t before=stored_crc;
+  assert(!save_data_by_tag_type(0,m_tag_type));assert(stored_crc==before&&!reads&&writes==1);
+  write_failure=false;assert(save_data_by_tag_type(0,m_tag_type)&&writes==2&&data_equal());cases++;
+  reset(types[t]);m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW_REQ;
+  m_tag_information->memory[4][0]=0x33;before=stored_crc;write_failure=true;
+  for(unsigned fail=0;fail<3;fail++){assert(!save_data_by_tag_type(0,m_tag_type));assert(m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW_REQ&&stored_crc==before&&writes==fail+1);cases++;}
+  write_failure=false;assert(save_data_by_tag_type(0,m_tag_type)&&writes==4&&data_equal());
+  assert(m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW);cases++;
+  counters();m_tag_information->memory[4][0]^=4;assert(save_data_by_tag_type(0,m_tag_type)&&!writes&&!reads);cases++;
+  reset(types[t]);m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW_REQ;buffer.length=disk_size-1;
+  assert(!save_data_by_tag_type(0,m_tag_type)&&!writes&&m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW_REQ);cases++;
+ }
+ reset(TAG_TYPE_MIFARE_Mini);unsigned collision=collide_data();assert(!data_equal());write_failure=true;
+ assert(!save_data_by_tag_type(0,m_tag_type)&&writes==1&&reads>0);write_failure=false;
+ assert(save_data_by_tag_type(0,m_tag_type)&&writes==2&&data_equal());
+ counters();assert(save_data_by_tag_type(0,m_tag_type)&&!writes&&data_equal());
+ printf("COLLISION_RETRY candidate=%04x then exact no-op bytes=%u reads=%u writes=%u\n",collision,read_bytes,reads,writes);cases++;
+ for(unsigned fault=0;fault<8;fault++){
+  reset(TAG_TYPE_MIFARE_Mini);
+  if(fault==0)stat_failure=-71;
+  if(fault==1)open_failure=true;
+  if(fault==2)read_failure_call=2;
+  if(fault==3)zero_read_call=2;
+  if(fault==4)oversize_read_call=1;
+  if(fault==5)close_failure=true;
+  if(fault==6)mounted_ok=false;
+  if(fault==7)driver_present=false;
+  assert(!save_data_by_tag_type(0,m_tag_type)&&!writes&&data_equal());
+  if(fault==5)assert(aborts==1);else assert(!aborts);
+  counters();assert(save_data_by_tag_type(0,m_tag_type)&&!writes&&data_equal());cases++;
+ }
+ /* The real callback canonicalizes REQ to SHADOW before comparison. An I/O
+  * failure must restore REQ, including a genuine CRC-collision candidate. */
+ for(unsigned fault=0;fault<2;fault++){
+  reset(TAG_TYPE_MIFARE_Mini);
+  m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW;
+  collide_data();
+  m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW_REQ;
+  if(fault==0)read_failure_call=1;else close_failure=true;
+  assert(!save_data_by_tag_type(0,m_tag_type)&&!writes);
+  assert(m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW_REQ);
+  counters();assert(save_data_by_tag_type(0,m_tag_type)&&writes==1&&data_equal());
+  assert(m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW);cases++;
+ }
+ for(int size=-1;size<=1;size+=2){reset(TAG_TYPE_MIFARE_Mini);disk_size+=size;assert(save_data_by_tag_type(0,m_tag_type)&&writes==1&&!reads&&data_equal());cases++;}
+ reset(TAG_TYPE_MIFARE_Mini);stat_failure=VFS_ERR_NOOBJ;assert(save_data_by_tag_type(0,m_tag_type)&&writes==1&&!reads);cases++;
+ reset(TAG_TYPE_MIFARE_Mini);read_limit=17;assert(save_data_by_tag_type(0,m_tag_type)&&!writes&&reads==(disk_size+16)/17&&read_bytes==disk_size);cases++;
+ /* Config equality uses exactly the prefix that the writer actually stores. */
+ counters();memset(&slotConfig,0,sizeof(slotConfig));slotConfig.version=8;settings.chameleon_slot_num=8;
+ config_size=TAG_SLOT_CONFIG_SIZE(8);memcpy(config_disk,&slotConfig,config_size);
+ calc_14a_crc_lut((uint8_t*)&slotConfig,sizeof(slotConfig),(uint8_t*)&m_slot_config_crc);
+ assert(tag_emulation_save_config()&&!writes&&read_bytes==68&&reads==1);cases++;
+ /* Search valid configurations: both active slots remain enabled; sixteen
+  * other enabled flags vary, every slot type remains a supported MF1 1K. */
+ counters();settings.chameleon_slot_num=20;
+ for(unsigned i=0;i<20;i++){slotConfig.slots[i].tag_hf=TAG_TYPE_MIFARE_1024;slotConfig.slots[i].enabled_hf=1;}
+ slotConfig.active_slot=0;config_size=TAG_SLOT_CONFIG_SIZE(20);memcpy(config_disk,&slotConfig,config_size);
+ calc_14a_crc_lut((uint8_t*)&slotConfig,sizeof(slotConfig),(uint8_t*)&m_slot_config_crc);
+ slotConfig.active_slot=1;bool found=false;
+ for(unsigned mask=0;mask<=65535;mask++){
+  for(unsigned i=0;i<16;i++)slotConfig.slots[i+2].enabled_hf=(mask>>i)&1;
+  uint16_t crc;calc_14a_crc_lut((uint8_t*)&slotConfig,sizeof(slotConfig),(uint8_t*)&crc);
+  if(crc==m_slot_config_crc){found=true;break;}
+ }
+ assert(found&&memcmp(config_disk,&slotConfig,config_size));write_failure=true;
+ assert(!tag_emulation_save_config()&&writes==1);write_failure=false;
+ assert(tag_emulation_save_config()&&writes==2&&!memcmp(config_disk,&slotConfig,config_size));
+ counters();assert(tag_emulation_save_config()&&!writes&&read_bytes==config_size&&reads==2);cases++;
+ printf("SHORT_CONFIG bytes=%u readCalls=%u writes=%u\n",read_bytes,reads,writes);
+ counters();read_failure_call=1;assert(!tag_emulation_save_config()&&!writes);cases++;
+ printf("PASS %u actual MF1/FDS/save cases; exact comparisons, transient-error retries, 128-byte maximum read, zero unchanged writes\n",cases);
+ return 0;
+}

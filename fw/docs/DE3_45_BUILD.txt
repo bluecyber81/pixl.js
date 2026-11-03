@@ -1,0 +1,26 @@
+DE3.45 / application counter 617
+
+Based on the complete DE3.44 snapshot. The only functional firmware change is
+the PackedFS CRC implementation: a 256-entry read-only flash table processes
+one byte per iteration. Seeds, polynomial, streaming state and finalization
+are identical to the previous implementation. Header, record, index, manifest
+and full-body validation remain enabled. No per-mount or permanent RAM cache
+is added, and no read, recovery or validation step is removed.
+
+All PFS1 geometry, stored data, 128-byte metadata, paths and LittleFS version
+remain unchanged. Existing volumes do not require formatting, migration or
+restoration. The portable engine identity changes because code changes; the
+matching browser capacity simulator must therefore use the DE3.45 profile.
+Older browser simulator profiles are retained for earlier firmware.
+
+Application-only update for the already migrated own LCD Allmiibo. BL8,
+SoftDevice S112 7.3.0, flash partitions, RAM allocation, button driver, NFC,
+AmiLoop, QR display and previous DE3.44 improvements are retained. The current
+BL8 counter 11 does not require another system package.
+
+Verification: preserve all 115 existing host suites and add independent CRC
+equivalence checks. Test the actual storage sources with simulated faults and
+the collection-shaped fixture, then bind tests to the Cortex-M4 binary and
+verify the signed package. Offline timing is not physical device latency.
+Measure the startup diagnostic again after installation before claiming a
+specific reduction in the user's button-to-menu startup time.

@@ -1,0 +1,38 @@
+DE3.46 / application counter 618
+
+Based on the complete DE3.45 snapshot. Changes:
+- An exclusive PackedFS stage writer no longer repeats the collection scan
+  already completed on open when the transaction has sufficient space.
+  If reservation fails with NOSPC, collection and reservation still retry.
+  Existing reader/directory snapshots stay valid, and failed commits can abort.
+  Repeated commits after a late failure still collect unpublished outputs;
+  the tracking flag fits existing writer-handle padding without growing it.
+- Application fault recovery avoids guessed exception-frame addresses,
+  formatted logging, UI calls and unchecked fault-info pointers. It invalidates
+  retained resume data with one store in the existing enabled field. Release
+  resets; DEBUG stops for the debugger. Normal cache layout and CRC stay intact.
+- Tiny Lander initializes the prior map value before its first comparison.
+- SPI DMA offsets use explicit byte pointers; two slot-label format strings
+  use the matching unsigned type. These are bounded portability corrections.
+
+All PFS1 geometry, stored collection data, Raw128 metadata, paths, LittleFS
+version, board pin mappings and normal NFC/BLE/input behavior remain unchanged.
+No formatting, PREP, migration or restoration is required. The engine identity
+changes with source code, so the browser simulator gets a matching profile;
+all earlier simulator profiles remain available in Dateimanager 3.29.5.
+
+Application-only update for the already migrated own LCD device. BL8 counter11
+and S112 7.3.0 stay installed. Neither component is included in the application
+package. Their source/package policies are rechecked separately.
+
+Verification includes all116 inherited host suites and three new suites:
+stage-writer snapshot/space-pressure behavior; fault and retained-cache recovery;
+200000 deterministic NFC frames using the actual parser and HAL with RF mocked.
+Simulated NOR failures, ASan/UBSan and ARM32/QEMU supplement the real Cortex-M4
+build and independent signed-package review. Nothing in this offline audit
+proves a physical power-cut test, whole-firmware stack watermark or new NFC game
+compatibility. Keep the previously confirmed DE3.45 results distinct.
+
+The storage fixture records about12-15percent fewer NOR reads for26-byte saves.
+This is not a startup-time or physical latency measurement. No extra permanent
+RAM cache, larger heap, weaker integrity check or layout conversion is added.

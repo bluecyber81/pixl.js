@@ -38,7 +38,7 @@ void chameleon_scene_menu_card_slot_select_on_enter(void *user_data) {
 
     for (uint32_t i = 0; i < TAG_MAX_SLOT_NUM; i++) {
         if (tag_emulation_slot_is_enabled(i, TAG_SENSE_HF)) {
-            sprintf(buff, "%s %02d", _T(APP_CHAMELEON_CARD_SLOT), i + 1);
+            sprintf(buff, "%s %02u", _T(APP_CHAMELEON_CARD_SLOT), (unsigned)(i + 1));
             mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, buff, NULL, (void *)(uintptr_t)i);
         }
     }

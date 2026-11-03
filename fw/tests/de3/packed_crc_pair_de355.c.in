@@ -1,0 +1,71 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <string.h>
+#include "lfs_util.c"
+
+@PRODUCTION@
+
+static unsigned cases;
+#define REQUIRE(x) do { if (!(x)) { fprintf(stderr,"FAIL %u line%d: %s\n",cases,__LINE__,#x);return 77; } } while (0)
+static uint32_t oracle(uint32_t c,const void *data,size_t n) {
+    const uint8_t *p=data;
+    while(n--){c^=*p++;for(unsigned bit=0;bit<8;bit++)c=(c>>1)^((c&1)?0xedb88320u:0u);}
+    return c;
+}
+static uint32_t random32(uint32_t *state) {
+    uint32_t s=*state;s^=s<<13;s^=s>>17;s^=s<<5;return *state=s;
+}
+static int check_pair(uint32_t a,uint32_t b,const void *data,size_t n) {
+    uint32_t second=b,expected_a=oracle(a,data,n),expected_b=oracle(b,data,n);
+    REQUIRE(crc_pair(a,&second,data,n)==expected_a && second==expected_b);
+    REQUIRE(crc(a,data,n)==expected_a && crc(b,data,n)==expected_b);
+    REQUIRE(lfs_crc(a,data,n)==expected_a && lfs_crc(b,data,n)==expected_b);
+    return 0;
+}
+int main(void) {
+    static uint8_t data[4112],record_bytes[16+64+128+2048+4];
+    uint32_t state=0x13579bdfu;
+    const uint32_t seeds[]={0,1,0xffffffffu,0x80000000u,0x12345678u,0xedb88320u};
+    for(unsigned i=0;i<sizeof(data);i++)data[i]=(uint8_t)random32(&state);
+    for(unsigned s=0;s<sizeof(seeds)/sizeof(*seeds);s++) {
+        ++cases;REQUIRE(check_pair(seeds[s],seeds[(s+1)%6],NULL,0)==0);
+        for(unsigned byte=0;byte<256;byte++) {
+            uint8_t value=(uint8_t)byte;++cases;
+            REQUIRE(check_pair(seeds[s],seeds[(s+1)%6],&value,1)==0);
+        }
+    }
+    uint32_t second=~0u;++cases;
+    REQUIRE(~crc_pair(~0u,&second,"123456789",9)==0xcbf43926u && ~second==0xcbf43926u);
+    for(unsigned n=0;n<=4097;n++)for(unsigned offset=0;offset<4;offset++) {
+        uint32_t a=random32(&state),b=random32(&state);++cases;
+        REQUIRE(check_pair(a,b,data+offset,n)==0);
+        unsigned split=n?random32(&state)%(n+1):0;second=b;
+        uint32_t first=crc_pair(a,&second,data+offset,split);
+        first=crc_pair(first,&second,data+offset+split,n-split);
+        REQUIRE(first==oracle(a,data+offset,n) && second==oracle(b,data+offset,n));
+    }
+    for(unsigned bit=0;bit<32;bit++)for(unsigned offset=0;offset<8;offset++) {
+        ++cases;REQUIRE(check_pair(1u<<bit,~(1u<<bit),data+offset,1031)==0);
+    }
+    /* Stream actual header/path/meta/payload sections. The four stored CRC
+     * bytes are present in the fixture but never enter the shard stream. */
+    uint32_t shard=~0u,expected_shard=~0u,lfs_shard=~0u;
+    for(unsigned record=0;record<384;record++) {
+        unsigned path=1+random32(&state)%63,payload=random32(&state)%2049;
+        unsigned length=16+path+128+payload;
+        memcpy(record_bytes,data,length);
+        uint32_t expected_record=oracle(~0u,record_bytes,length);
+        for(unsigned j=0;j<4;j++)record_bytes[length+j]=(uint8_t)(~expected_record>>(8*j));
+        uint32_t sum=crc_pair(~0u,&shard,record_bytes,16);
+        sum=crc_pair(sum,&shard,record_bytes+16,path);
+        unsigned off=16+path;
+        while(off<length){unsigned part=length-off;if(part>256)part=256;
+            sum=crc_pair(sum,&shard,record_bytes+off,part);off+=part;}
+        expected_shard=oracle(expected_shard,record_bytes,length);
+        lfs_shard=lfs_crc(lfs_shard,record_bytes,length);
+        ++cases;REQUIRE(sum==expected_record && shard==expected_shard && shard==lfs_shard);
+    }
+    printf("{\"passed\":true,\"cases\":%u,\"max_length\":4097,\"alignments\":8,\"streamed_records\":384}\nPASS\n",cases);
+    return 0;
+}

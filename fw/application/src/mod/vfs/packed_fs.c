@@ -71,7 +71,7 @@ struct pfs_file {
   location_t loc;
   uint32_t pos;
   int flags;
-  bool writing;
+  bool writing, commit_started;
 };
 struct pfs_dir {
   handle_t h;
@@ -88,11 +88,63 @@ typedef struct {
   bool subtree, exists;
 } change_t;
 
+  static const uint32_t table[256] = {
+    0x00000000u, 0x77073096u, 0xee0e612cu, 0x990951bau, 0x076dc419u, 0x706af48fu, 0xe963a535u, 0x9e6495a3u,
+    0x0edb8832u, 0x79dcb8a4u, 0xe0d5e91eu, 0x97d2d988u, 0x09b64c2bu, 0x7eb17cbdu, 0xe7b82d07u, 0x90bf1d91u,
+    0x1db71064u, 0x6ab020f2u, 0xf3b97148u, 0x84be41deu, 0x1adad47du, 0x6ddde4ebu, 0xf4d4b551u, 0x83d385c7u,
+    0x136c9856u, 0x646ba8c0u, 0xfd62f97au, 0x8a65c9ecu, 0x14015c4fu, 0x63066cd9u, 0xfa0f3d63u, 0x8d080df5u,
+    0x3b6e20c8u, 0x4c69105eu, 0xd56041e4u, 0xa2677172u, 0x3c03e4d1u, 0x4b04d447u, 0xd20d85fdu, 0xa50ab56bu,
+    0x35b5a8fau, 0x42b2986cu, 0xdbbbc9d6u, 0xacbcf940u, 0x32d86ce3u, 0x45df5c75u, 0xdcd60dcfu, 0xabd13d59u,
+    0x26d930acu, 0x51de003au, 0xc8d75180u, 0xbfd06116u, 0x21b4f4b5u, 0x56b3c423u, 0xcfba9599u, 0xb8bda50fu,
+    0x2802b89eu, 0x5f058808u, 0xc60cd9b2u, 0xb10be924u, 0x2f6f7c87u, 0x58684c11u, 0xc1611dabu, 0xb6662d3du,
+    0x76dc4190u, 0x01db7106u, 0x98d220bcu, 0xefd5102au, 0x71b18589u, 0x06b6b51fu, 0x9fbfe4a5u, 0xe8b8d433u,
+    0x7807c9a2u, 0x0f00f934u, 0x9609a88eu, 0xe10e9818u, 0x7f6a0dbbu, 0x086d3d2du, 0x91646c97u, 0xe6635c01u,
+    0x6b6b51f4u, 0x1c6c6162u, 0x856530d8u, 0xf262004eu, 0x6c0695edu, 0x1b01a57bu, 0x8208f4c1u, 0xf50fc457u,
+    0x65b0d9c6u, 0x12b7e950u, 0x8bbeb8eau, 0xfcb9887cu, 0x62dd1ddfu, 0x15da2d49u, 0x8cd37cf3u, 0xfbd44c65u,
+    0x4db26158u, 0x3ab551ceu, 0xa3bc0074u, 0xd4bb30e2u, 0x4adfa541u, 0x3dd895d7u, 0xa4d1c46du, 0xd3d6f4fbu,
+    0x4369e96au, 0x346ed9fcu, 0xad678846u, 0xda60b8d0u, 0x44042d73u, 0x33031de5u, 0xaa0a4c5fu, 0xdd0d7cc9u,
+    0x5005713cu, 0x270241aau, 0xbe0b1010u, 0xc90c2086u, 0x5768b525u, 0x206f85b3u, 0xb966d409u, 0xce61e49fu,
+    0x5edef90eu, 0x29d9c998u, 0xb0d09822u, 0xc7d7a8b4u, 0x59b33d17u, 0x2eb40d81u, 0xb7bd5c3bu, 0xc0ba6cadu,
+    0xedb88320u, 0x9abfb3b6u, 0x03b6e20cu, 0x74b1d29au, 0xead54739u, 0x9dd277afu, 0x04db2615u, 0x73dc1683u,
+    0xe3630b12u, 0x94643b84u, 0x0d6d6a3eu, 0x7a6a5aa8u, 0xe40ecf0bu, 0x9309ff9du, 0x0a00ae27u, 0x7d079eb1u,
+    0xf00f9344u, 0x8708a3d2u, 0x1e01f268u, 0x6906c2feu, 0xf762575du, 0x806567cbu, 0x196c3671u, 0x6e6b06e7u,
+    0xfed41b76u, 0x89d32be0u, 0x10da7a5au, 0x67dd4accu, 0xf9b9df6fu, 0x8ebeeff9u, 0x17b7be43u, 0x60b08ed5u,
+    0xd6d6a3e8u, 0xa1d1937eu, 0x38d8c2c4u, 0x4fdff252u, 0xd1bb67f1u, 0xa6bc5767u, 0x3fb506ddu, 0x48b2364bu,
+    0xd80d2bdau, 0xaf0a1b4cu, 0x36034af6u, 0x41047a60u, 0xdf60efc3u, 0xa867df55u, 0x316e8eefu, 0x4669be79u,
+    0xcb61b38cu, 0xbc66831au, 0x256fd2a0u, 0x5268e236u, 0xcc0c7795u, 0xbb0b4703u, 0x220216b9u, 0x5505262fu,
+    0xc5ba3bbeu, 0xb2bd0b28u, 0x2bb45a92u, 0x5cb36a04u, 0xc2d7ffa7u, 0xb5d0cf31u, 0x2cd99e8bu, 0x5bdeae1du,
+    0x9b64c2b0u, 0xec63f226u, 0x756aa39cu, 0x026d930au, 0x9c0906a9u, 0xeb0e363fu, 0x72076785u, 0x05005713u,
+    0x95bf4a82u, 0xe2b87a14u, 0x7bb12baeu, 0x0cb61b38u, 0x92d28e9bu, 0xe5d5be0du, 0x7cdcefb7u, 0x0bdbdf21u,
+    0x86d3d2d4u, 0xf1d4e242u, 0x68ddb3f8u, 0x1fda836eu, 0x81be16cdu, 0xf6b9265bu, 0x6fb077e1u, 0x18b74777u,
+    0x88085ae6u, 0xff0f6a70u, 0x66063bcau, 0x11010b5cu, 0x8f659effu, 0xf862ae69u, 0x616bffd3u, 0x166ccf45u,
+    0xa00ae278u, 0xd70dd2eeu, 0x4e048354u, 0x3903b3c2u, 0xa7672661u, 0xd06016f7u, 0x4969474du, 0x3e6e77dbu,
+    0xaed16a4au, 0xd9d65adcu, 0x40df0b66u, 0x37d83bf0u, 0xa9bcae53u, 0xdebb9ec5u, 0x47b2cf7fu, 0x30b5ffe9u,
+    0xbdbdf21cu, 0xcabac28au, 0x53b39330u, 0x24b4a3a6u, 0xbad03605u, 0xcdd70693u, 0x54de5729u, 0x23d967bfu,
+    0xb3667a2eu, 0xc4614ab8u, 0x5d681b02u, 0x2a6f2b94u, 0xb40bbe37u, 0xc30c8ea1u, 0x5a05df1bu, 0x2d02ef8du,
+  };
 static uint32_t crc(uint32_t c, const void *data, size_t n) {
-  /* Pinned LittleFS uses the same reflected CRC32, seed and finalization.
-   * Reuse its two-nibble implementation instead of storing a second table. */
-  return lfs_crc(c, data, n);
+  /* The same reflected CRC32 and caller-owned seed/finalization as lfs_crc.
+   * One byte per lookup avoids two nibble steps while mount validates every
+   * payload twice (record and shard). The immutable 1-KiB table stays in flash;
+   * no additional heap, stack buffer or mutable state is needed. */
+
+  const uint8_t *bytes = data;
+  for (size_t i = 0; i < n; i++)
+    c = (c >> 8) ^ table[(c ^ bytes[i]) & 0xffu];
+  return c;
 }
+static uint32_t crc_pair(uint32_t c, uint32_t *second, const void *data, size_t n) {
+  const uint8_t *p = data;
+  uint32_t d = *second;
+  for (size_t i = 0; i < n; i++) {
+    uint8_t b = p[i];
+    c = (c >> 8) ^ table[(c ^ b) & 255u];
+    d = (d >> 8) ^ table[(d ^ b) & 255u];
+  }
+  *second = d;
+  return c;
+}
+
 static void catalog_add(catalog_t *c, uint32_t hash) {
   for (unsigned i = 0; i < 2; i++, hash >>= 16) {
     unsigned bit = hash & 255u;
@@ -307,6 +359,82 @@ static int verify_record(pfs_t *fs, io_t *io, const location_t *loc,
   uint8_t stored[4];
   int r = read_at(fs, io, loc->offset + loc->size - 4, stored, 4);
   return r ? r : u32(stored) == ~sum ? 0 : LFS_ERR_CORRUPT;
+}
+/* Mount consumes immutable records in order. Decode the prefix and include
+ * those same bytes in both checksums before reading metadata and payload.
+ * Rewinding after read_record would evict a crossed LittleFS cache page and
+ * seek through the CTZ chain again. Every record byte is still validated;
+ * the trailing record CRC remains excluded from the shard body CRC. */
+static int read_verified_record(pfs_t *fs, io_t *io, uint32_t offset,
+                                uint32_t limit, pfs_info_t *info,
+                                location_t *loc, uint32_t *body_crc) {
+  uint8_t b[RH];
+  if (offset > limit || RH > limit - offset)
+    return LFS_ERR_CORRUPT;
+  int r = read_at(fs, io, offset, b, sizeof(b));
+  if (r)
+    return r;
+  unsigned n = (unsigned)b[8] | ((unsigned)b[9] << 8);
+  uint32_t size = u32(b + 4);
+  if (u32(b) != R_MAGIC || b[11] || u32(b + 12) != ~crc(~0u, b, 12) || !n ||
+      n >= PFS_PATH_MAX || (b[10] != PFS_FILE && b[10] != PFS_DIR) ||
+      size > DISK || (b[10] == PFS_DIR && size) ||
+      RH + n + PFS_META_SIZE + 4 > limit - offset ||
+      size > limit - offset - (RH + n + PFS_META_SIZE + 4))
+    return LFS_ERR_CORRUPT;
+  uint32_t sum = crc_pair(~0u, body_crc, b, sizeof(b));
+  memset(info, 0, sizeof(*info));
+  info->size = size;
+  info->type = b[10];
+  r = read_at(fs, io, offset + RH, info->path, n);
+  if (r)
+    return r;
+  if (memchr(info->path, 0, n) || valid_path(info->path, false))
+    return LFS_ERR_CORRUPT;
+  sum = crc_pair(sum, body_crc, info->path, n);
+  loc->offset = offset;
+  loc->data = offset + RH + n + PFS_META_SIZE;
+  loc->size = RH + n + PFS_META_SIZE + size + 4;
+  uint32_t pos = offset + RH + n;
+  uint32_t end = offset + loc->size - 4;
+  while (pos < end) {
+    uint32_t length = end - pos;
+    if (length > PFS_CACHE_SIZE)
+      length = PFS_CACHE_SIZE;
+    r = read_at(fs, io, pos, fs->copy, length);
+    if (r)
+      return r;
+    sum = crc_pair(sum, body_crc, fs->copy, length);
+    pos += length;
+  }
+  uint8_t stored[4];
+  r = read_at(fs, io, end, stored, sizeof(stored));
+  return r ? r : u32(stored) == ~sum ? 0 : LFS_ERR_CORRUPT;
+}
+/* Allocation-free mount fallback: every sequentially verified record must
+ * occur in the on-disk index. The later pass checks the complete index CRC,
+ * strict (hash, offset) order and footer, so equal record/index counts prove
+ * a bijection even when no temporary index buffer is available. */
+static int mount_index_contains(pfs_t *fs, io_t *io, uint32_t count,
+                                uint32_t body, uint32_t hash, uint32_t offset) {
+  uint32_t lo = 0, hi = count;
+  while (lo < hi) {
+    uint32_t mid = lo + (hi - lo) / 2;
+    uint8_t entry[IX];
+    int r = read_at(fs, io, SH + body + mid * IX, entry, IX);
+    if (r)
+      return r;
+    if (u32(entry + 8) != ~crc(~0u, entry, 8))
+      return LFS_ERR_CORRUPT;
+    uint32_t h = u32(entry), o = u32(entry + 4);
+    if (h == hash && o == offset)
+      return 0;
+    if (h < hash || (h == hash && o < offset))
+      lo = mid + 1;
+    else
+      hi = mid;
+  }
+  return LFS_ERR_CORRUPT;
 }
 static int cursor_close(pfs_t *fs, cursor_t *c, int r) {
   return io_close(fs, &c->io, r);
@@ -694,17 +822,27 @@ int pfs_mount(pfs_t *fs) {
     r = io_open(fs, &io, path, LFS_O_RDONLY);
     if (r)
       break;
-    uint32_t count, body;
+    uint32_t count = 0, body;
     r = shard_header(fs, &io, fs->current.ids[i], &count, &body);
+    /* Reuse the first sequential validation pass to build the exact index.
+     * This avoids seeking back through every payload for each index entry.
+     * At most 384 * 8 bytes, released before opening the next shard. A low
+     * heap uses the bounded on-disk fallback without losing any checks. */
+    index_t *expected = !r && count ? fs->alloc(count * sizeof(*expected)) : NULL;
     catalog_t *cat = &fs->catalog[i % CATALOG_SLOTS];
     memset(cat, 0, sizeof(*cat));
     uint32_t offset = SH, sum = ~0u;
     for (unsigned j = 0; !r && j < count; j++) {
       pfs_info_t info;
       location_t loc;
-      r = read_record(fs, &io, offset, SH + body, &info, &loc, false);
-      if (!r)
-        r = verify_record(fs, &io, &loc, &sum);
+      r = read_verified_record(fs, &io, offset, SH + body, &info, &loc, &sum);
+      if (!r) {
+        uint32_t hash = path_hash(info.path);
+        if (expected)
+          index_add(expected, j, hash, offset);
+        else
+          r = mount_index_contains(fs, &io, count, body, hash, offset);
+      }
       if (!r) {
         catalog_parent_add(cat, info.path);
         offset += loc.size;
@@ -714,26 +852,27 @@ int pfs_mount(pfs_t *fs) {
     uint8_t footer[4];
     if (!r && offset != SH + body)
       r = LFS_ERR_CORRUPT;
-    uint32_t previous = 0;
+    uint32_t previous = 0, previous_offset = 0;
     for (unsigned j = 0; !r && j < count; j++) {
       uint8_t entry[IX];
       r = read_at(fs, &io, offset, entry, IX);
       if (r)
         break;
       uint32_t hash = u32(entry), record_offset = u32(entry + 4);
-      if (u32(entry + 8) != ~crc(~0u, entry, 8) || (j && hash < previous) ||
+      if (u32(entry + 8) != ~crc(~0u, entry, 8) ||
+          (j && (hash < previous ||
+                 (hash == previous && record_offset <= previous_offset))) ||
           record_offset < SH || record_offset >= SH + body) {
         r = LFS_ERR_CORRUPT;
         break;
       }
-      pfs_info_t indexed;
-      location_t loc;
-      r = read_record(fs, &io, record_offset, SH + body, &indexed, &loc, false);
-      if (!r && hash != path_hash(indexed.path))
+      if (expected && (hash != expected[j].hash ||
+                       record_offset != expected[j].offset))
         r = LFS_ERR_CORRUPT;
       if (!r)
         catalog_add(cat, hash);
       previous = hash;
+      previous_offset = record_offset;
       sum = crc(sum, entry, IX);
       offset += IX;
     }
@@ -742,6 +881,8 @@ int pfs_mount(pfs_t *fs) {
     if (!r && u32(footer) != ~sum)
       r = LFS_ERR_CORRUPT;
     r = io_close(fs, &io, r);
+    if (expected)
+      fs->release(expected);
     /* Reuse this already verified index. An unsuccessful shard never
      * becomes a valid cache entry, including footer/close failures. */
     if (!r) {
@@ -1003,9 +1144,17 @@ static int transact(pfs_t *fs, const change_t *c) {
     return BUSY;
   if (fs->current.generation == UINT32_MAX)
     return LFS_ERR_NOSPC;
-  r = collect(fs);
-  if (r)
-    return r;
+  /* A stage writer already collected before it acquired the exclusive
+   * writer slot. No other mutation can create garbage until publication.
+   * Readers may have released old snapshots in the meantime; collect those
+   * only if the reserved transaction space actually needs them. A retry after
+   * an earlier commit attempt must also collect its unpublished outputs. */
+  bool staged = fs->writer && fs->writer == c->stage;
+  if (!staged || c->stage->commit_started) {
+    r = collect(fs);
+    if (r)
+      return r;
+  }
   bool affected[PFS_MAX_SHARDS] = {0};
   uint32_t counts[PFS_MAX_SHARDS] = {0}, bodies[PFS_MAX_SHARDS] = {0};
   pfs_info_t info;
@@ -1099,12 +1248,19 @@ static int transact(pfs_t *fs, const change_t *c) {
     if (affected[i] && counts[i])
       needed += blocks_for(SH + bodies[i] + counts[i] * IX + 4);
   r = reserve(fs, needed);
+  if (r == LFS_ERR_NOSPC && staged) {
+    r = collect(fs);
+    if (!r)
+      r = reserve(fs, needed);
+  }
   if (r)
     return r;
   manifest_t m = fs->current;
   m.count = 0;
   m.objects = objects;
   m.generation++;
+  if (staged)
+    c->stage->commit_started = true;
   fs->transaction = true;
   for (unsigned i = 0; !r && i < slots; i++) {
     if (!affected[i]) {
@@ -1359,6 +1515,17 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   if (writing)
     fs->writer = file;
   *output = file;
+  return 0;
+}
+uint32_t pfs_generation(const pfs_t *fs) {
+  return fs && fs->mounted && !fs->poisoned ? fs->current.generation : 0;
+}
+int pfs_file_set_meta(pfs_file_t *file, const uint8_t meta[PFS_META_SIZE]) {
+  if (!file || !file->writing || !meta || file->commit_started)
+    return LFS_ERR_BADF;
+  if (file->h.fs->poisoned)
+    return LFS_ERR_IO;
+  memcpy(file->info.meta, meta, PFS_META_SIZE);
   return 0;
 }
 lfs_ssize_t pfs_read(pfs_file_t *file, void *buffer, lfs_size_t size) {

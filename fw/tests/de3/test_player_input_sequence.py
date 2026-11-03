@@ -56,6 +56,7 @@ typedef int mui_layer_t;
 #define ICON_ERROR 0xe1bb
 #define _T(x) #x
 #define NRF_LOG_DEBUG(...) ((void)0)
+static void ble_remote_local_activity(void) {}
 '''
 
 STUBS = r'''

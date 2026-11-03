@@ -100,7 +100,7 @@ typedef struct { struct { int evt_id; } header;
           struct { uint16_t conn_handle; } gattc_evt, gatts_evt; } evt; } ble_evt_t;
 typedef struct { int rx_phys, tx_phys; } ble_gap_phys_t;
 typedef struct { int type; uint16_t conn_handle; struct { struct { const uint8_t *p_data; size_t length; } rx_data; } params; } ble_nus_evt_t;
-typedef struct { int adv_mode_current, adv_handle; struct { bool ble_adv_on_disconnect_disabled; } adv_modes_config; } advertising_t;
+typedef struct { void *p_adv_data; int adv_mode_current, adv_handle; struct { bool ble_adv_on_disconnect_disabled; } adv_modes_config; } advertising_t;
 static advertising_t m_advertising;
 static int critical_depth, irq, redraws, updates, observed, feeds, disconnects, adv_starts, queues;
 static int adv_error, softdevice_connect_during_restart, frees, indications, last_indication;
@@ -124,6 +124,11 @@ static void ble_work_disconnected(void) {}
 static void ble_on_disconnected(void) {}
 static void ble_work_process(void (*cleanup)(void)) { (void)cleanup; CHECK(!critical_depth); }
 static void ble_df_driver_poll(void) {}
+static void ble_pending_mode_poll(void) {} /* Remote modes have a dedicated harness. */
+static void ble_file_link_poll(void) {} /* Actual owner covered by DE351 handoff suite. */
+static bool m_mode_pending,m_mode_adv_requested,m_mode_handlers_ready,m_mode_wait_reply;
+static bool ble_remote_receive_irq(const uint8_t*p,size_t n){(void)p;(void)n;CHECK(false);return false;}
+void ble_get_addr_str(char *addr){strcpy(addr,"00:00:00:00:00:00");}
 static bool ble_work_receive(const uint8_t *p,size_t n) { (void)p;(void)n;queues++;return true; }
 static bool ble_work_tx_ready(void) { queues++;return true; }
 static void nrf_pwr_mgmt_feed(void) { feeds++; }
@@ -179,7 +184,7 @@ static void input(ble_status_view_t *v,input_key_t key,input_type_t type) {
  mui_input_event_t e={key,type};v->p_view->input_cb(v->p_view,&e);
 }
 static void setup(void) {
- m_sessions_enabled=true;m_file_mode=false;m_ble_initialized=true;m_conn_handle=BLE_CONN_HANDLE_INVALID;m_advertising_active=false;
+ m_advertising.p_adv_data=&m_advertising; m_sessions_enabled=true;m_file_mode=false;m_ble_initialized=true;m_conn_handle=BLE_CONN_HANDLE_INVALID;m_advertising_active=false;
  m_advertising.adv_mode_current=BLE_ADV_MODE_IDLE;ble_link_state_observe(observed_state);
  ble_process_pending();CHECK(observed==1);observed=0;
 }
@@ -211,7 +216,8 @@ int main(int argc,char **argv) {
   adv_error=0;CHECK(ble_restart_advertising()&&ble_link_state_get()==BLE_LINK_ADVERTISING);
  } else if(!strcmp(test,"disable")) {
   adv(BLE_ADV_EVT_FAST);ble_disable();CHECK(ble_link_state_get()==BLE_LINK_INACTIVE);
-  event(BLE_GAP_EVT_CONNECTED);ble_disable();CHECK(disconnects==1);
+  event(BLE_GAP_EVT_CONNECTED);CHECK(disconnects==1); /* late CONNECT after disable is rejected */
+  ble_disable();CHECK(disconnects==2);
   event(BLE_GAP_EVT_DISCONNECTED);CHECK(ble_link_state_get()==BLE_LINK_INACTIVE);
  } else if(!strcmp(test,"no_packet_redraw")) {
   event(BLE_GAP_EVT_CONNECTED);ble_process_pending();CHECK(observed==1);
@@ -292,9 +298,9 @@ class StatusTests(unittest.TestCase):
         ble = self.ble if ble is None else ble
         view = self.view if view is None else view
         names = ("ble_file_join_poll", "ble_release_stopped_session", "ble_link_state_get", "ble_link_state_observe", "ble_restart_advertising",
-                 "ble_process_pending", "on_adv_evt", "ble_evt_handler", "ble_disable", "nus_data_handler")
+                 "ble_process_pending", "on_adv_evt", "ble_evt_handler", "ble_stop_transport", "ble_disable", "nus_data_handler")
         declarations = []
-        for name in ("m_conn_handle", "m_ble_initialized", "m_advertising_active", "m_reported_link_state", "m_link_state_handler", "m_nus_session_handle", "m_release_handle", "m_link_generation", "m_release_attempted", "m_file_mode", "m_sessions_enabled", "m_file_join_pending", "m_file_join_tick"):
+        for name in ("m_conn_handle", "m_ble_initialized", "m_advertising_active", "m_reported_link_state", "m_link_state_handler", "m_nus_session_handle", "m_release_handle", "m_link_generation", "m_release_attempted", "m_file_mode", "m_sessions_enabled", "m_file_join_pending", "m_file_join_tick", "m_remote_mode", "m_session_generation", "m_timeout_overridden", "m_file_link_handoff"):
             declarations.append(re.search(r"^static[^\n]*\b" + name + r"\b[^\n]*;[^\n]*", ble, re.M)[0])
         source = HARNESS.replace("/* GLOBALS */", "\n".join(declarations))
         source = source.replace("/* ACTUAL_BLE */", "\n".join(function(ble, n) for n in names))
@@ -337,8 +343,8 @@ class StatusTests(unittest.TestCase):
         self.compile_run(("click_race",), view=wrong, failure=True)
         wrong = self.kill.replace("    ble_link_state_observe(NULL);", "")
         self.compile_run(("lifetime",), kill=wrong, failure=True)
-        wrong = self.ble.replace("    m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;\n    ble_advertising_start",
-                                 "    ble_advertising_start")
+        wrong = self.ble.replace("    m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = true;\n    if (m_advertising.p_adv_data)",
+                                 "    if (m_advertising.p_adv_data)")
         self.assertNotEqual(wrong, self.ble)
         self.compile_run(("disable",), ble=wrong, failure=True)
 

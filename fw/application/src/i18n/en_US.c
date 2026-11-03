@@ -245,4 +245,9 @@ const char * const lang_en_US[_L_COUNT] = {
     [_L_DE3_SAVE_NO_SELECTED] = "[No]       Yes",
     [_L_DE3_SAVE_YES_SELECTED] = " No       [Yes]",
     [_L_DE3_SAVE_CONFIRM] = "Center: confirm",
+    [_L_DE3_REMOTE_SESSION] = "Remote (until off)",
+    [_L_APP_CHAMELEON_DISNEY_PROFILE] = "Disney Infinity",
+    [_L_APP_CHAMELEON_DISNEY_CONFIRM] = "Replace identity?\nKeep dump data.",
+    [_L_APP_CHAMELEON_DISNEY_NEEDS_MINI] = "Load a Mini dump first",
+    [_L_APP_CHAMELEON_DISNEY_SHADOW] = "Shadow mode: unchanged",
 };

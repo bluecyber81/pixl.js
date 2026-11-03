@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "status": "source_export_hash_checked_and_public_rebuild_matches_BL8",
+  "createdUtc": "2026-11-03T06:55:06.153345+00:00",
+  "source": "BL8 candidate production inputs bound by historical ARM report; unchanged export",
+  "currentVerification": {
+    "productionFiles": 20,
+    "boundInputsIncludingSDKOverrideAndNotice": 22,
+    "allInputHashesMatched": true,
+    "publicDockerRebuildPassed": true,
+    "paddedBootloaderSHA256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+    "buildVerificationSha256": "a127cc2b1f4eeaeabfe73274abcd16975cf0804d35ec750bbafb0b24efba5245",
+    "publicPackageSignaturesFreshlyVerified": 3,
+    "signatureNegativeControlsPassed": 9,
+    "signatureReportSha256": "e4759b74bf56462c737f62888c6c8e2c9c6707f8f7210bda183c346f7cf184f1",
+    "originalVendorSoftDevicePayloadMatched": true,
+    "deviceAccess": false,
+    "signingPerformed": false,
+    "privateKeyAccess": false
+  },
+  "historicalTests": {
+    "2026-10-28": {
+      "executeCommitCasesNative": 35,
+      "executeCommitCasesASAN_UBSAN": 35,
+      "ownershipAssertions": 23,
+      "regressionGroups": 5,
+      "physicalDeviceAccess": false
+    },
+    "2026-10-29": {
+      "status": "passed_bounded_offline_reaudit_no_new_bootloader_patch",
+      "inheritedGroups": 5,
+      "executeCommitSanitizedCases": 35,
+      "initialRunnerFailure": "Wrong source-directory argument; preserved initial failure and corrected passing run. Not a production-code failure.",
+      "physicalDeviceAccess": false
+    }
+  },
+  "historicalLocalEvidenceSha256": {
+    "outputs/allmiibo_review_20261028/bootloader/bl8_build/ARM_BUILD_CURRENT.json": "1f09747413c40c1e65ba9515f3d09482d3a8e47885e7700d3bd4228bfd192c24",
+    "outputs/allmiibo_review_20261028/bootloader/BL8_REVIEW.json": "5bb2d3c485e719e06f4e4ab2ed9611e98e66e77cf9cfe0f5aebbef833264de31",
+    "outputs/allmiibo_review_20261028/bootloader/bl8_requeue_native/RESULTS.json": "3a3238ef64a93440557ba1b5e5394ea47a3b94f0545fc6911925d3da1745eaef",
+    "outputs/allmiibo_review_20261028/bootloader/bl8_requeue_sanitize/RESULTS.json": "9222a5fdd774d247618dbb640a037253c3bbf0714b40f6657513e60a44e240bf",
+    "outputs/allmiibo_review_20261028/bootloader/bl8_ownership_sanitize/RESULTS.json": "ec04210919a1d9100b08734bc29344a8977ba615d6f3dd66d19f71e759d76f3e",
+    "outputs/allmiibo_review_20261028/bootloader/bl8_regression/RESULTS.json": "643df0890357c55260d01663d5661b1f0143cda4c6bfea72f9582c2975fc4a8c",
+    "outputs/allmiibo_reaudit_20261029/bootloader/BOOTLOADER_SOFTDEVICE_REAUDIT.json": "a7d2476da7625a85e3248b6a8cb8c0f53161d95391190f9ecd73a8d60a087365",
+    "outputs/allmiibo_reaudit_20261029/bootloader/commit_sanitize_verified/RESULTS.json": "5aceb1e7718e09aedd60bb66cd3af4e26c9820a81584d4c9766df104bb5b7606",
+    "outputs/allmiibo_bl8_delivery_20261028/PUBLIC_PACKAGE_AUDIT.json": "cf777cc7fc25fc160ed6823030682fad18a6ba8b1d31452987c1318cf66cd7f7",
+    "outputs/allmiibo_bruder_de355_20261102/SIGNED_COMPONENT_COMBINATION_REVIEW.json": "55a78e7c0b06c1cce1ed9358767c335f60f327622b57d0277991249fb551cc7e"
+  },
+  "publicationScope": {
+    "sourceAndBuildOnly": true,
+    "bootloaderBinaryIncluded": false,
+    "softdeviceBinaryIncluded": false,
+    "fullSDKIncluded": false,
+    "privateSigningKeyIncluded": false,
+    "publicVerificationKeySourceIncluded": true,
+    "userCollectionOrPrivateDeviceReportIncluded": false,
+    "combinedCandidateNotGenerallyReleased": true
+  },
+  "limits": [
+    "No new hardware installation, physical radio, interrupted-power recovery or stack-watermark test.",
+    "Historical selected-C host test harnesses depend on external SDK/review trees; they are not part of this portable source export.",
+    "A matching rebuilt code hash does not establish target board, bootloader counter or signing compatibility.",
+    "Nordic S112 is the original vendor binary; complete binary correctness is not claimed.",
+    "Combined BL8-Z11/S112/DE355 remains a target-specific candidate pending identity/migration checks; standalone BL8-Z9 cannot upgrade counter9 or higher."
+  ]
+}

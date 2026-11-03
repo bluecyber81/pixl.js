@@ -90,8 +90,8 @@ void chameleon_scene_menu_card_advanced_on_event(mui_list_view_event_t event, mu
 
     case CHAMELEON_MENU_GEN_UID: {
 
-        tag_helper_generate_uid();
-        mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_GENERATE_UID_SUCCESS));
+        mui_toast_view_show(app->p_toast_view, tag_helper_generate_uid()
+            ? _T(APP_CHAMELEON_CARD_GENERATE_UID_SUCCESS) : _T(FAILED));
 
         chameleon_scene_menu_card_advanced_reload(app);
 

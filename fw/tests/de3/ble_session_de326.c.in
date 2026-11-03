@@ -45,7 +45,7 @@ static int disconnect_result;
 static uint16_t m_ble_nus_max_data_len, m_previous_pwr_mgmt_sleep_timeout, timeout=30;
 static int m_qwr;
 enum { BLE_ADV_MODE_IDLE };
-static struct { int adv_handle; struct {bool ble_adv_on_disconnect_disabled;}adv_modes_config;} m_advertising;
+static struct { void *p_adv_data; int adv_handle; struct {bool ble_adv_on_disconnect_disabled;}adv_modes_config;} m_advertising;
 /* GLOBALS */
 static void runtime_diag_ble_abort(unsigned reason) {(void)reason;}
 static void runtime_diag_ble_disconnected(unsigned reason) {(void)reason;}
@@ -68,6 +68,10 @@ static unsigned sd_ble_gap_disconnect(uint16_t handle,int reason) {
  CHECK(!irq&&reason==0x13&&(manual_exit||ble_work_cleanup_complete())&&!file_open);
  last_disconnect=handle;disconnects++;return disconnect_result;
 }
+static bool m_mode_pending,m_mode_adv_requested,m_mode_handlers_ready,m_mode_wait_reply;
+static void ble_pending_mode_poll(void) {} /* Dedicated DE347 mode harness tests this owner. */
+static void ble_file_link_poll(void) {} /* DE351 suite compiles the actual handoff owner. */
+static bool ble_remote_receive_irq(const uint8_t *p,size_t n){(void)p;(void)n;CHECK(false);return false;}
 /* ACTUAL_BLE */
 static void gap(bool connected,uint16_t handle) {
  ble_evt_t event={.evt.gap_evt.conn_handle=handle,.evt.gap_evt.params.disconnected.reason=0x13};
@@ -93,7 +97,7 @@ static void connect_peer(uint16_t handle,bool subscribe) {
  ble_process_pending();
 }
 static void setup(void) {
- m_ble_initialized=true;m_sessions_enabled=true;m_file_mode=true;ble_work_set_handlers(on_rx,on_tx);
+ m_advertising.p_adv_data=&m_advertising; m_ble_initialized=true;m_sessions_enabled=true;m_file_mode=true;ble_work_set_handlers(on_rx,on_tx);
  ble_process_pending();cleanups=0;poll_calls=0;
 }
 int main(int argc,char **argv) {

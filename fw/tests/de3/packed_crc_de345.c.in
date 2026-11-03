@@ -1,0 +1,57 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
+#include "lfs_util.c"
+
+@PRODUCTION@
+
+static unsigned cases;
+#define REQUIRE(x) do { if(!(x)){fprintf(stderr,"FAIL %u line%d: %s\n",cases,__LINE__,#x);return 77;} }while(0)
+static uint32_t oracle(uint32_t c,const void *data,size_t n) {
+    const uint8_t *p=data;
+    while(n--){c^=*p++;for(unsigned bit=0;bit<8;bit++)c=(c>>1)^((c&1)?0xedb88320u:0u);}
+    return c;
+}
+static uint32_t random32(uint32_t *state) {
+    uint32_t s=*state;s^=s<<13;s^=s>>17;s^=s<<5;return *state=s;
+}
+int main(void) {
+    static uint8_t data[4104];uint32_t state=0x13579bdfu;
+    const uint32_t seeds[]={0,1,0xffffffffu,0x80000000u,0x12345678u,0xedb88320u};
+    for(unsigned i=0;i<sizeof(data);i++)data[i]=(uint8_t)random32(&state);
+    for(unsigned s=0;s<sizeof(seeds)/sizeof(*seeds);s++){
+        ++cases;REQUIRE(crc(seeds[s],NULL,0)==seeds[s]);
+        for(unsigned byte=0;byte<256;byte++){
+            uint8_t value=(uint8_t)byte;++cases;
+            REQUIRE(crc(seeds[s],&value,1)==oracle(seeds[s],&value,1));
+        }
+    }
+    ++cases;REQUIRE(~crc(~0u,"123456789",9)==0xcbf43926u);
+    /* Every length through a flash-block boundary, including all byte tails. */
+    for(unsigned n=0;n<=4097;n++){
+        unsigned offset=n&3;uint32_t seed=random32(&state);++cases;
+        uint32_t expected=oracle(seed,data+offset,n);
+        REQUIRE(crc(seed,data+offset,n)==expected);
+        REQUIRE(lfs_crc(seed,data+offset,n)==expected);
+        unsigned split=n?(random32(&state)%(n+1)):0;
+        REQUIRE(crc(crc(seed,data+offset,split),data+offset+split,n-split)==expected);
+    }
+    /* Arbitrary initial-state bits and byte-alignment, independent of ~0. */
+    for(unsigned bit=0;bit<32;bit++)for(unsigned offset=0;offset<8;offset++){
+        uint32_t seed=1u<<bit;++cases;
+        REQUIRE(crc(seed,data+offset,1031)==oracle(seed,data+offset,1031));
+    }
+    /* Record/shard streams exclude each record's stored CRC, preserving order. */
+    uint32_t shard=~0u,shard_oracle=~0u;
+    for(unsigned record=0;record<384;record++){
+        unsigned n=random32(&state)%2049;uint32_t sum=~0u;unsigned off=0;
+        while(off<n){unsigned part=n-off;if(part>256)part=256;
+            sum=crc(sum,data+off,part);shard=crc(shard,data+off,part);off+=part;}
+        ++cases;REQUIRE(sum==oracle(~0u,data,n));
+        shard_oracle=oracle(shard_oracle,data,n);REQUIRE(shard==shard_oracle);
+    }
+    printf("{\"passed\":true,\"cases\":%u,\"max_length\":4097,\"all_seed_bits\":32,\"streamed_records\":384}\nPASS\n",cases);
+    return 0;
+}

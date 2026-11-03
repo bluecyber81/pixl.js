@@ -73,8 +73,9 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
                         results['baseline_unavailable']=str(source_path);continue
                     source=source_path.read_text(encoding='utf-8')
                     body=template
+                    qr_names = ['amiibo_view_draw_qrcode'] if 'static uint16_t amiibo_view_draw_qrcode' in source else []
                     for key,value in {**replacements,'ACTUAL_DEFINES':'\n'.join(re.findall(r'^#define .*$',source,re.M)),
-                                      'ACTUAL_VIEW_FUNCTIONS':'\n'.join(function(source,name) for name in names)}.items():
+                                      'ACTUAL_VIEW_FUNCTIONS':'\n'.join(function(source,name) for name in qr_names + names)}.items():
                         body=body.replace('/*'+key+'*/',value)
                     generated=folder/(label+'.c');generated.write_text(body,encoding='utf-8')
                     binary=folder/(label+'.exe')

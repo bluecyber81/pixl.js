@@ -1,43 +1,50 @@
 {
-  "version": "2.22.0-DE3.37",
-  "counter": 609,
+  "schema": 2,
+  "publication_date": "2026-11-03",
+  "version": "2.22.0-DE3.55",
+  "counter": 627,
   "board": "LCD",
-  "web_version": "3.27.0",
-  "upstream_repositories": [
-    "https://github.com/cylin577/pixl.js",
-    "https://github.com/solosky/pixl.js"
-  ],
+  "web_version": "3.33.1",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "ecb484e3a35968c9d5b04088ec19c460088b9c7a5b6863a3122e61d263a0cf73",
-  "application_sha256": "3a3d060d9359c57fc1633e2daecff5a5764841890152599eeded010ee39d8b27",
+  "ota_sha256": "1740a38054674ef5acb3ebce7f99636087cca50090ca074e13f2a03fb1266fa3",
+  "application_sha256": "e80712735b8076b2d97e0b5fac42ef1c5311d40eeb53725be6232db172c0453d",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
     "0x0126"
   ],
+  "bootloader": {
+    "code_version": "BL8",
+    "source": "bootloader-bl8",
+    "region_sha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+    "stored_counter_is_not_code_version": true
+  },
+  "softdevice": {
+    "vendor": "Nordic Semiconductor",
+    "name": "S112",
+    "version": "7.3.0",
+    "fwid": "0x0126",
+    "custom_rebuilt": false,
+    "binary_in_standard_bundle": false
+  },
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 102,
-  "sanitizer_suites": 5,
-  "web_host_tests": 659,
-  "web_worker_tests": 7,
-  "device_evidence": {
-    "date": "2026-10-26",
-    "source": "owner report",
-    "result": "DE3.37 flashed and tested functions working",
-    "limits": "No independent full image readback or new exhaustive physical error/MTU/NFC suite is claimed."
-  },
+  "host_firmware_suites": 136,
+  "web_host_tests": 1057,
+  "web_root_production_tests": 21,
+  "web_pages_production_tests": 21,
+  "evidence": "docs/validation/DE3_55.json",
   "privacy": {
     "private_keys_in_distribution": false,
-    "user_backups_or_figure_dumps_in_distribution": false,
-    "test_address_replaced_with_synthetic": true
+    "user_backups_or_figure_dumps_in_distribution": false
   },
   "limits": [
-    "Only the matching LCD hardware/layout is in scope.",
-    "RAM-retained unsaved NFC changes do not survive power removal or forced reset.",
-    "The inherited public upstream signing key does not prove exclusive publisher identity."
+    "Matching LCD hardware/layout only.",
+    "Unsigned builds and host tests are not physical device proof.",
+    "Public inherited signing key does not prove exclusive publisher identity.",
+    "No universal BL/SD combined update is supplied."
   ]
 }

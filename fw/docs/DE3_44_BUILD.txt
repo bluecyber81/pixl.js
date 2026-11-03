@@ -1,0 +1,22 @@
+DE3.44 / Application counter 616 - additional software review, 28 October 2026
+
+Compared with DE3.43:
+* The name editor measures and draws UTF-8 using the same production font.
+  Long names are shortened for display at complete character boundaries with
+  reserved room for the cursor. Stored/input text is not changed; drawing
+  does not require a temporary allocation.
+* AmiiboLink/AmiLoop no longer acknowledges a newly received tag as saved
+  when its synchronous owner callback leaves an NFC save pending. The new
+  bytes remain in the NFC owner for an explicit save retry. Retired transport
+  state is not revived; successful cycle changes remain supported.
+* Additional real-source rendering, transport/persistence integration and
+  storage fault-injection tests accompany the fixes.
+
+Packed LittleFS/PFS1 format and geometry are unchanged. No migration or
+format is required. Application RAM layout, GPIO mapping, BL8 code and S112
+7.3.0 are unchanged. The earlier DE3.43 fixes remain included.
+
+Tests use PC compilers, real selected C components/fonts and simulated
+hardware. Passing these tests does not certify physical switch contacts,
+radio interoperability, display timing or a full-device RAM high-water mark.
+The new software still needs a short on-device regression after flashing.

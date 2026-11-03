@@ -22,6 +22,7 @@ static tag_datas_savecb_t get_data_savecb_from_tag_type(tag_specific_type_t t){r
 tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t){return t==TAG_TYPE_MIFARE_1024?TAG_SENSE_HF:TAG_SENSE_NO;}
 static void get_fds_map_by_slot_sense_type_for_dump(unsigned s,unsigned t,fds_slot_record_map_t*m){m->id=s;m->key=t;}
 static bool fds_write_sync(unsigned id,unsigned key,unsigned n,void*b){writes++;if(fail_write)return false;assert(n==16);memcpy(files[id],b,n);return true;}
+static int32_t fds_compare_sync(unsigned id,unsigned key,unsigned n,const void*b){assert(n==16);return memcmp(files[id],b,n)==0;}
 static void tag_emulation_sense_switch_all(bool on){sensing=on;if(on)starts++;else stops++;}
 void tag_emulation_load_data(void){loads++;memcpy(data,files[slotConfig.active_slot],16);saved_crc=checksum(data);m_tag_data_loaded=true;}
 @save_data_by_tag_type@
@@ -55,7 +56,7 @@ int main(void){
   tag_emulation_change_slot(3,sense);assert(slotConfig.active_slot==3 && loads==1 && !writes && sensing==sense);cases++;
   setup(7,sense);shadow=true;tag_emulation_change_slot(3,sense);
   assert(slotConfig.active_slot==3 && loads==1 && !writes && files[7][0]==8 && sensing==sense);cases++;
-  setup(7,sense);saved_crc=checksum(data);tag_emulation_change_slot(3,sense);
+  setup(7,sense);memcpy(files[7],data,16);saved_crc=checksum(data);tag_emulation_change_slot(3,sense);
   assert(slotConfig.active_slot==3 && loads==1 && !writes && sensing==sense);cases++;
  }
  for(unsigned ok=0;ok<2;ok++){

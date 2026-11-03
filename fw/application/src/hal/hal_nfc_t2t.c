@@ -736,14 +736,16 @@ ret_code_t hal_nfc_stop(void) {
     if (m_nrfx_irq_enabled) return NRF_SUCCESS;
     CRITICAL_REGION_ENTER();
     m_custom_enabled = false;
-    NVIC_DisableIRQ(NFCT_IRQn);
+    /* Keep the saved SoftDevice critical-region mask in sync, so leaving
+     * this region cannot re-enable the stopped NFC interrupt. */
+    (void)sd_nvic_DisableIRQ(NFCT_IRQn);
     NVIC_ClearPendingIRQ(NFCT_IRQn);
     NRF_NFCT->INTENCLR = UINT32_MAX;
     NRF_NFCT->TASKS_DISABLE = 1;
 #if defined(HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND) || defined(HAL_NFC_NRF52840_ENGINEERING_ABC_WORKAROUND)
     NRF_TIMER4->TASKS_SHUTDOWN = 1;
     NRF_TIMER4->EVENTS_COMPARE[0] = 0;
-    NVIC_DisableIRQ(TIMER4_IRQn);
+    (void)sd_nvic_DisableIRQ(TIMER4_IRQn);
     NVIC_ClearPendingIRQ(TIMER4_IRQn);
 #endif
     if (m_field_on) {

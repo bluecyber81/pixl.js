@@ -1,0 +1,27 @@
+DE3.53: optional Disney Infinity card profile
+
+Card emulator -> current slot menu -> Disney Infinity
+
+First choose a MiFare Mini slot (20 blocks / 320 bytes) and load your own
+compatible dump through Data -> Load. Then select Disney Infinity and confirm
+the identity change. Cancel is selected by default.
+
+The profile uses the seven UID bytes from block 0, enables Custom Mode,
+selects a seven-byte UID, SAK 09 and displayed ATQA 00 44. It sets the UID
+length before reading block 0. It saves the active card configuration and
+keeps every dump data byte, nickname, slot type and unrelated option unchanged.
+A failed save restores the previous in-memory identity and configuration.
+An already identical profile makes no write. Changed identity bytes are always
+committed, including the case where their CRC16 equals the previous identity.
+
+Other card types are rejected rather than converted. Shadow mode is rejected
+because its temporary card data must not be persisted by a configuration
+shortcut. No dump is selected, generated, downloaded or replaced automatically.
+The existing manual Advanced controls remain available. Later imports still
+use the existing block-0 identity import behavior.
+
+This is a configuration shortcut, not a guarantee that a particular figure,
+base or console works. No Infinity portal or console was tested for this change.
+
+Primary reference:
+https://github.com/skylandersNFC/Disney-Infinity-NFC/blob/main/Infinity_Docs/Disney_Infinity_on_Allmiibo/README.md

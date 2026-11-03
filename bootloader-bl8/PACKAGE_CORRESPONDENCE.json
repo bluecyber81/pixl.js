@@ -1,0 +1,75 @@
+{
+  "status": "passed_fresh_public_signature_and_payload_comparison",
+  "testedAt": "2026-11-03",
+  "records": [
+    {
+      "firmware_type": 3,
+      "counter": 11,
+      "hardware": 52,
+      "sd_req": [
+        259,
+        294
+      ],
+      "bytes": 126204,
+      "sizes": [
+        98068,
+        28136,
+        0
+      ],
+      "sha256": "4f01201a55cee997671133cc0a6bc70a0e2730f6fd20b80cac37c9a22bb3effb",
+      "ecdsa_p256_sha256_verified": true,
+      "crc_boot_validation_count": 2,
+      "debug": false,
+      "negative_controls_passed": 3
+    },
+    {
+      "firmware_type": 0,
+      "counter": 627,
+      "hardware": 52,
+      "sd_req": [
+        259,
+        294
+      ],
+      "bytes": 370120,
+      "sizes": [
+        0,
+        0,
+        370120
+      ],
+      "sha256": "e80712735b8076b2d97e0b5fac42ef1c5311d40eeb53725be6232db172c0453d",
+      "ecdsa_p256_sha256_verified": true,
+      "crc_boot_validation_count": 1,
+      "debug": false,
+      "negative_controls_passed": 3
+    },
+    {
+      "firmware_type": 2,
+      "counter": 9,
+      "hardware": 52,
+      "sd_req": [
+        259,
+        294
+      ],
+      "bytes": 28136,
+      "sizes": [
+        0,
+        28136,
+        0
+      ],
+      "sha256": "270a71603d305aaffcfe9da1998be99fea27aebe5dc824de90cf3867c3666398",
+      "ecdsa_p256_sha256_verified": true,
+      "crc_boot_validation_count": 1,
+      "debug": false,
+      "negative_controls_passed": 3
+    }
+  ],
+  "negativeControlsPassed": 9,
+  "sameOriginalNordicSD": true,
+  "sameStandaloneBL8": true,
+  "sdSHA256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+  "blSHA256": "270a71603d305aaffcfe9da1998be99fea27aebe5dc824de90cf3867c3666398",
+  "comboSHA256": "43c1e128d8d90e7308d3361d04ec173adecd0b70b7f1c6566f324cc72d4028e5",
+  "privateKeysAccessed": false,
+  "deviceAccess": false,
+  "newSigning": false
+}

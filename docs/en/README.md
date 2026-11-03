@@ -1,3 +1,5 @@
+> Historical upstream documentation. For the current DE3.55 community build, installation boundaries and contributions, start at [the project README](../../README.md), [build guide](../BUILD_DE3_55.md) and [CONTRIBUTING](../../CONTRIBUTING.md). The old full-system/signing commands below are not the current release procedure.
+
 
 # **Welcome to the pixl.js project documentation !**
 
@@ -18,10 +20,10 @@ This fork is divided in two main sections, Hardware and Firmware
 - [Pictures](01-Hardware.md#Pictures)
 - [Demo](01-Hardware.md#Demo)
 - [Shell](01-Hardware.md#Shell)
-- [OLED version](01-Hardware.md#OLED-version) 
+- [OLED version](01-Hardware.md#OLED-version)
 
 
-# Firmware 
+# Firmware
 
 - A guide to [Flash the Firmware](02-Flash-Firmware.md "Flash the Firmware")
 - To help on the internationalization of the Firmware you can follow the [Guide](05+5-translation.md).

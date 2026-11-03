@@ -1,0 +1,92 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <stddef.h>
+#include "hf/nfc_mf0_ntag.h"
+#define ASSERT(x) assert(x)
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+@DEFINITIONS@
+static tag_specific_type_t m_tag_type;
+@FUNCTIONS@
+@MAX_TYPE@
+typedef struct {unsigned id,key;} fds_slot_record_map_t;
+static unsigned writes;
+static bool write_ok;
+static unsigned saved_size;
+static nfc_tag_mf0_ntag_information_max_t saved;
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t){return TAG_SENSE_HF;}
+void get_fds_map_by_slot_sense_type_for_dump(unsigned slot,tag_sense_type_t sense,fds_slot_record_map_t *map){
+ assert(slot==3 && sense==TAG_SENSE_HF);map->id=123;map->key=456;
+}
+static bool fds_write_sync(unsigned id,unsigned key,unsigned size,void *data){
+ assert(id==123 && key==456 && size<=sizeof(saved));
+ ++writes;saved_size=size;memset(&saved,0xa5,sizeof(saved));memcpy(&saved,data,size);return write_ok;
+}
+@FACTORY@
+int main(void){
+ const tag_specific_type_t types[]={TAG_TYPE_MF0ICU1,TAG_TYPE_MF0ICU2,TAG_TYPE_MF0UL11,TAG_TYPE_MF0UL21,
+   TAG_TYPE_NTAG_210,TAG_TYPE_NTAG_212,TAG_TYPE_NTAG_213,TAG_TYPE_NTAG_215,TAG_TYPE_NTAG_216};
+ const unsigned pages[]={16,36,20,41,20,41,45,135,231};
+ const unsigned cfg[]={0,0,16,37,16,37,41,131,227};
+ const unsigned version_page[]={0,0,23,44,21,42,46,136,232};
+ const unsigned storage_size[]={0,0,0x0b,0x0e,0x0b,0x0e,0x0f,0x11,0x13};
+ unsigned cases=0;
+ for(unsigned active=0;active<10;++active){
+  for(unsigned requested=0;requested<9;++requested){
+   m_tag_type=active<9?types[active]:TAG_TYPE_UNDEFINED;
+   tag_specific_type_t old=m_tag_type;
+   unsigned before=writes;write_ok=true;
+   assert(nfc_tag_mf0_ntag_data_factory(3,types[requested]));
+   assert(writes==before+1 && m_tag_type==old);
+   assert(saved_size==(unsigned)get_information_size_by_tag_type(types[requested]));
+   const uint8_t expected_uid[]={4,0x68,0x95,0xfa,0x5c,0x64,0x80};
+   assert(saved.res_coll.size==NFC_TAG_14A_UID_DOUBLE_SIZE);
+   assert(memcmp(saved.res_coll.uid,expected_uid,sizeof(expected_uid))==0);
+   assert(memcmp(saved.res_coll.uid,saved.memory[0],3)==0);
+   assert(memcmp(saved.res_coll.uid+3,saved.memory[1],4)==0);
+   assert((uint8_t)(0x88^saved.memory[0][0]^saved.memory[0][1]^saved.memory[0][2])==saved.memory[0][3]);
+   assert((uint8_t)(saved.memory[1][0]^saved.memory[1][1]^saved.memory[1][2]^saved.memory[1][3])==saved.memory[2][0]);
+   assert(saved.res_coll.ats.length==0 && saved.config.mode_uid_magic==0);
+   assert(saved.memory[2][2]==0 && saved.memory[2][3]==0);
+   if(requested>=4){
+    const uint8_t cc_size[]={0x06,0x10,0x12,0x3e,0x6d};
+    const uint8_t cc[]={0xe1,0x10,cc_size[requested-4],0};
+    const uint8_t p4short[]={3,0,0xfe,0};
+    const uint8_t p4reserved[]={1,3,requested==5?0x90:0xa0,requested==5?0x0a:0x0c};
+    const uint8_t p5zero[]={0,0,0,0};
+    const uint8_t p5tlv[]={0x34,3,0,0xfe};
+    assert(memcmp(saved.memory[3],cc,4)==0);
+    assert(memcmp(saved.memory[4],requested==5||requested==6?p4reserved:p4short,4)==0);
+    assert(memcmp(saved.memory[5],requested==5||requested==6?p5tlv:p5zero,4)==0);
+   }else{
+    const uint8_t zero[12]={0};assert(memcmp(saved.memory[3],zero,sizeof(zero))==0);
+   }
+   if(cfg[requested]){
+    assert(saved.memory[cfg[requested]][3]==0xff);
+    assert(saved.memory[cfg[requested]][0]==(requested>=6?4:0));
+    for(unsigned b=0;b<4;b++)assert(saved.memory[cfg[requested]+2][b]==0xff);
+   }
+   if(version_page[requested]){
+    const uint8_t *v=saved.memory[version_page[requested]];
+    const uint8_t expected[]={0,4,requested<4?3:4,requested==4||requested==5?1:2,1,0,(uint8_t)storage_size[requested],3};
+    assert(memcmp(v,expected,sizeof(expected))==0);
+    assert(get_signature_page_by_tag_type(types[requested])==(int)version_page[requested]+2);
+   }else assert(get_signature_page_by_tag_type(types[requested])<0);
+   assert(get_nr_pages_by_tag_type(types[requested])==(int)pages[requested]);
+   before=writes;write_ok=false;
+   assert(!nfc_tag_mf0_ntag_data_factory(3,types[requested]));
+   assert(writes==before+1 && m_tag_type==old);
+   cases+=2;
+  }
+ }
+ unsigned before=writes;write_ok=true;
+ assert(!nfc_tag_mf0_ntag_data_factory(3,TAG_TYPE_UNDEFINED));
+ assert(!nfc_tag_mf0_ntag_data_factory(TAG_MAX_SLOT_NUM,TAG_TYPE_NTAG_215));
+ assert(!nfc_tag_mf0_ntag_data_factory(UINT8_MAX,TAG_TYPE_NTAG_215));
+ assert(writes==before);
+ printf("PASS %u actual MF0 factory target/active-type/write-error cases plus invalid target; UID/BCC consistent, complete CC/NDEF in one write, all nine types\n",cases);
+ return 0;
+}

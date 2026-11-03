@@ -1,6 +1,7 @@
 #include "hal_spi_flash.h"
 #include "hal_spi_bus.h"
 #include "app_timer.h"
+#include "app_util_platform.h"
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf_drv_spi.h"
@@ -59,8 +60,35 @@
 
 static spi_device_t m_dev;
 
+/* All program/erase calls are synchronous foreground VFS operations. No
+ * external master or IRQ writer owns this flash. Once RDSR1 proves ready,
+ * ordinary reads cannot make it busy; skip that redundant transaction until
+ * init/sleep, a mutation or an I/O failure invalidates the observation.
+ * This is a readiness hint, never a data cache or a concurrency lock. */
+static volatile bool m_read_ready;
+static volatile uint32_t m_io_fault_generation;
+
+static inline void hal_spi_flash_command_begin(uint8_t command) {
+    /* Called only after acquiring the bus IRQ guard. An IRQ reader before
+     * acquisition may have refreshed the earlier readiness observation. */
+    if (command == CMD_PP || command == CMD_ERASE_4K || command == CMD_DP || command == CMD_RDP) {
+        m_read_ready = false;
+    }
+}
+
+static inline void hal_spi_flash_io_result(ret_code_t result) {
+    if (result != NRF_SUCCESS) {
+        uint8_t nested;
+        app_util_critical_region_enter(&nested);
+        m_read_ready = false;
+        m_io_fault_generation++;
+        app_util_critical_region_exit(nested);
+    }
+}
+
 static inline ret_code_t hal_spi_flash_write_read(uint8_t *tx_data, uint8_t tx_len, uint8_t *rx_data, uint32_t rx_len) {
     hal_spi_bus_aquire(&m_dev);
+    hal_spi_flash_command_begin(tx_data[0]);
 
     spi_transaction_t trans_tx = {
         .p_tx_buffer = tx_data,
@@ -82,12 +110,16 @@ static inline ret_code_t hal_spi_flash_write_read(uint8_t *tx_data, uint8_t tx_l
         result = hal_spi_bus_xfer(&trans_rx);
     }
 
+    /* Invalidate before releasing the IRQ guard, so an interleaved reader
+     * cannot reuse an observation made before this failed transaction. */
+    hal_spi_flash_io_result(result);
     hal_spi_bus_release(&m_dev);
     return result;
 }
 
 static inline ret_code_t hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_len, const uint8_t *tx_data2, uint32_t tx_len2) {
     hal_spi_bus_aquire(&m_dev);
+    hal_spi_flash_command_begin(tx_data[0]);
 
     spi_transaction_t trans_tx = {
         .p_tx_buffer = tx_data,
@@ -109,6 +141,7 @@ static inline ret_code_t hal_spi_flash_write_write(uint8_t *tx_data, uint8_t tx_
         result = hal_spi_bus_xfer(&trans_rx);
     }
 
+    hal_spi_flash_io_result(result);
     hal_spi_bus_release(&m_dev);
     return result;
 }
@@ -126,16 +159,28 @@ static inline ret_code_t hal_spi_flash_write_cmd(uint8_t cmd) {
 }
 
 static ret_code_t hal_spi_flash_wait_busy(uint32_t timeout_ticks) {
+    m_read_ready = false;
     uint32_t started = app_timer_cnt_get();
     for (uint32_t polls = 0; polls < FLASH_BUSY_POLL_LIMIT; polls++) {
         uint8_t status;
+        uint32_t fault_generation = m_io_fault_generation;
         ret_code_t result = hal_spi_flash_read_status(CMD_RDSR1, &status);
         if (result != NRF_SUCCESS) return result;
-        if (!(status & FLASH_STATUS_BUSY)) return NRF_SUCCESS;
+        if (!(status & FLASH_STATUS_BUSY)) {
+            /* An IRQ reader can run at CS release. A newer failure must not
+             * be hidden by the older successful status observation. */
+            uint8_t nested;
+            app_util_critical_region_enter(&nested);
+            m_read_ready = fault_generation == m_io_fault_generation;
+            app_util_critical_region_exit(nested);
+            return NRF_SUCCESS;
+        }
         if (app_timer_cnt_diff_compute(app_timer_cnt_get(), started) >= timeout_ticks) {
+            hal_spi_flash_io_result(NRF_ERROR_TIMEOUT);
             return NRF_ERROR_TIMEOUT;
         }
     }
+    hal_spi_flash_io_result(NRF_ERROR_TIMEOUT);
     return NRF_ERROR_TIMEOUT;
 }
 
@@ -146,12 +191,14 @@ static ret_code_t hal_spi_flash_write_enable(void) {
     result = hal_spi_flash_read_status(CMD_RDSR1, &status);
     if (result != NRF_SUCCESS) return result;
     if ((status & (FLASH_STATUS_BUSY | FLASH_STATUS_WEL)) != FLASH_STATUS_WEL) {
+        hal_spi_flash_io_result(NRF_ERROR_INVALID_STATE);
         return NRF_ERROR_INVALID_STATE;
     }
     return NRF_SUCCESS;
 }
 
 ret_code_t hal_spi_flash_init() {
+    m_read_ready = false;
     m_dev.cs_pin = FLASH_CS_PIN;
     hal_spi_bus_attach(&m_dev);
 
@@ -227,8 +274,10 @@ ret_code_t hal_spi_flash_read(uint32_t address, void *buffer, size_t size) {
     if (buffer == NULL || address >= FLASH_ADDRESS_LIMIT || size > FLASH_ADDRESS_LIMIT - address) {
         return NRF_ERROR_INVALID_PARAM;
     }
-    ret_code_t result = hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
-    if (result != NRF_SUCCESS) return result;
+    if (!m_read_ready) {
+        ret_code_t result = hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
+        if (result != NRF_SUCCESS) return result;
+    }
     /* READ does not require WRDI. Do not clear another operation's WEL. */
 
     tx[0] = CMD_READ;
@@ -257,6 +306,7 @@ ret_code_t hal_spi_flash_prog(uint32_t address, const void *buffer, size_t size)
     tx[1] = (address >> 16);
     tx[2] = (address >> 8);
     tx[3] = (address);
+    m_read_ready = false;
     result = hal_spi_flash_write_write(tx, 4, buffer, size);
     if (result != NRF_SUCCESS) return result;
     return hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_PROGRAM_TIMEOUT_MS));
@@ -276,12 +326,14 @@ ret_code_t hal_spi_flash_erase(uint32_t address) {
     tx[1] = (address >> 16);
     tx[2] = (address >> 8);
     tx[3] = (address);
+    m_read_ready = false;
     result = hal_spi_flash_write_read(tx, 4, NULL, 0);
     if (result != NRF_SUCCESS) return result;
     return hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
 }
 
 void hal_spi_flash_sleep() {
+    m_read_ready = false;
     ret_code_t result = hal_spi_flash_write_cmd(CMD_DP);
     if (result != NRF_SUCCESS) NRF_LOG_WARNING("Flash sleep failed: %lu", (unsigned long)result);
 }

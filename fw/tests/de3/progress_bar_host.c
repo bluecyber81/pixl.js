@@ -57,7 +57,14 @@ static void u8g2_SetContrast(int *display, double value) {
     CHECK(display==&ui.u8g2 && isfinite(value) && value>=0 && value<=255);
     last_contrast=(uint8_t)value; ++contrast_calls;
 }
-enum { NRFX_DRV_STATE_POWERED_ON=1, NRF_ERROR_BUSY=2 };
+enum { NRFX_DRV_STATE_POWERED_ON=1, NRF_ERROR_BUSY=2, NRF_ERROR_TIMEOUT=3, NRF_ERROR_INVALID_STATE=4, NRF_SUCCESS=0 };
+typedef unsigned ret_code_t;
+typedef unsigned app_pwm_duty_t;
+#define m_pwm_initialized true
+#define BACKLIGHT_PWM_MAX_ATTEMPTS 200u
+#define NRF_LOG_WARNING(...) ((void)0)
+#define _T(x) #x
+static void nrf_delay_us(unsigned n){(void)n;}
 typedef struct { unsigned state; } pwm_control_t;
 static pwm_control_t pwm_control;
 static struct { pwm_control_t *p_cb; } pwm1={&pwm_control};
@@ -67,8 +74,10 @@ static void app_pwm_disable(void *p) { CHECK(p==&pwm1); ++pwm_disables; pwm_cont
 static int app_pwm_channel_duty_set(void *p,int channel,unsigned duty) {
     CHECK(p==&pwm1 && channel==0 && duty<=100); last_duty=duty; ++backlight_calls; return 0;
 }
+static unsigned app_pwm_channel_duty_get(void*p,unsigned ch){CHECK(p==&pwm1 && ch==0);return last_duty;}
 /* ACTUAL_DISPLAY_SETTERS */
-typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher; } app_settings_t;
+typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p_toast_view; } app_settings_t;
+static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;CHECK(false);}
 typedef struct { uint8_t lcd_backlight, oled_contrast; } settings_data_t;
 static settings_data_t settings;
 static settings_data_t *settings_get_data(void) { return &settings; }
@@ -124,7 +133,7 @@ static unsigned expected_contrast(int32_t value) {
     return (uint8_t)((value-1)*(255.0/99.0));
 }
 static void callbacks_test(void) {
-    mui_progress_bar_t *bar=mui_progress_bar_create(); app_settings_t app={bar,NULL}; bar->user_data=&app;
+    mui_progress_bar_t *bar=mui_progress_bar_create(); app_settings_t app={.p_progress_bar=bar}; bar->user_data=&app;
     for(int32_t value=-5;value<=105;value++) {
         int32_t clamped=value<0?0:value>100?100:value;
         settings.lcd_backlight=31;settings.oled_contrast=71;unsigned previous=previous_scenes;

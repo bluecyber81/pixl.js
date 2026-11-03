@@ -1,0 +1,108 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+typedef unsigned ret_code_t;
+typedef unsigned app_pwm_duty_t;
+typedef struct {int pin_polarity[1];} app_pwm_config_t;
+enum {NRF_SUCCESS=0,NRF_ERROR_BUSY=17,NRF_ERROR_TIMEOUT=13,NRF_ERROR_INVALID_STATE=8,
+      NRFX_DRV_STATE_POWERED_ON=2,APP_PWM_POLARITY_ACTIVE_HIGH=1};
+#define APP_PWM_DEFAULT_CONFIG_1CH(period,pin) ((app_pwm_config_t){0})
+#define LCD_BL_PIN 30
+#define LCD_SCREEN
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_WARNING(...) ((void)0)
+#define _T(x) #x
+typedef struct {unsigned state;} control_t;
+typedef struct {control_t*p_cb;} app_pwm_t;
+static control_t control;
+static app_pwm_t pwm1={&control};
+static bool m_pwm_initialized;
+typedef struct {uint8_t lcd_backlight;unsigned oled_contrast,sleep_timeout_sec,language;bool flip_display;} settings_data_t;
+static settings_data_t settings;
+static settings_data_t*settings_get_data(void){return &settings;}
+static unsigned calls,delays,enables,disables,init_calls,get_calls,init_error,duty_error,busy_calls,duty;
+static ret_code_t app_pwm_init(app_pwm_t*p,app_pwm_config_t*c,void*cb){
+ assert(p==&pwm1 && c->pin_polarity[0]==1 && cb==NULL);init_calls++;
+ if(!init_error)control.state=1;
+ return init_error;
+}
+static void app_pwm_enable(app_pwm_t*p){assert(p==&pwm1 && m_pwm_initialized);control.state=2;duty=0;enables++;}
+static void app_pwm_disable(app_pwm_t*p){assert(p==&pwm1 && m_pwm_initialized);control.state=1;duty=0;disables++;}
+static ret_code_t app_pwm_channel_duty_set(app_pwm_t*p,unsigned ch,app_pwm_duty_t value){
+ assert(p==&pwm1 && ch==0 && m_pwm_initialized && control.state==2 && value<=100);
+ calls++;if(calls<=busy_calls)return NRF_ERROR_BUSY;
+ if(duty_error)return duty_error;
+ duty=value;return NRF_SUCCESS;
+}
+static app_pwm_duty_t app_pwm_channel_duty_get(app_pwm_t*p,unsigned ch){
+ assert(p==&pwm1 && ch==0 && m_pwm_initialized && control.state==2);get_calls++;return duty;
+}
+static void nrf_delay_us(unsigned us){assert(us==10);delays++;}
+typedef struct {void*p_scene_dispatcher,*p_toast_view;} app_settings_t;
+typedef struct {void*user_data;int32_t current;} mui_progress_bar_t;
+typedef unsigned mui_progress_bar_event_t;
+enum {MUI_PROGRESS_BAR_EVENT_DECREMENT,MUI_PROGRESS_BAR_EVENT_INCREMENT,MUI_PROGRESS_BAR_EVENT_CONFIRMED};
+static int32_t mui_progress_bar_get_current_value(mui_progress_bar_t*p){return p->current;}
+static void mui_progress_bar_set_current_value(mui_progress_bar_t*p,int32_t n){p->current=n;}
+static unsigned left_scenes,toasts,contrast_sets,flip_sets,sleep_sets,language_sets;
+static const char*last_toast;
+static void mui_scene_dispatcher_previous_scene(void*p){(void)p;left_scenes++;}
+static void mui_toast_view_show(void*p,const char*s){(void)p;toasts++;last_toast=s;}
+static void mui_u8g2_set_contrast_level(unsigned n){(void)n;contrast_sets++;}
+static void mui_u8g2_set_flip_display(bool n){(void)n;flip_sets++;}
+static void nrf_pwr_mgmt_set_timeout(unsigned n){(void)n;sleep_sets++;}
+static void setLanguage(unsigned n){(void)n;language_sets++;}
+@PRODUCTION@
+static void reset(bool initialized,bool powered){
+ calls=delays=enables=disables=init_calls=get_calls=init_error=duty_error=busy_calls=0;
+ left_scenes=toasts=contrast_sets=flip_sets=sleep_sets=language_sets=0;last_toast=NULL;
+ m_pwm_initialized=initialized;control.state=powered?2:initialized?1:0;duty=powered?30:0;
+ settings=(settings_data_t){.lcd_backlight=30};
+}
+int main(void){unsigned cases=0;
+ reset(false,false);init_error=NRF_ERROR_INVALID_STATE;
+ assert(pwm_init()==NRF_ERROR_INVALID_STATE && init_calls==1 && !m_pwm_initialized);
+ assert(mui_u8g2_set_backlight_level(0)==NRF_ERROR_INVALID_STATE);
+ assert(mui_u8g2_set_backlight_level(50)==NRF_ERROR_INVALID_STATE);
+ assert(mui_u8g2_get_backlight_level()==-1 && !calls&&!enables&&!disables&&!get_calls);cases++;
+ init_error=0;assert(pwm_init()==NRF_SUCCESS && init_calls==2 && m_pwm_initialized && duty==30);cases++;
+ for(unsigned powered=0;powered<2;powered++)for(unsigned n=0;n<250;n++){
+  reset(true,powered);busy_calls=n;
+  ret_code_t result=mui_u8g2_set_backlight_level(70);
+  if(n<200){assert(result==NRF_SUCCESS && duty==70 && calls==n+1 && delays==n && !disables);}
+  else {assert(result==NRF_ERROR_TIMEOUT && calls==200 && delays==199);
+   assert(duty==(powered?30:0) && disables==!powered && control.state==(powered?2:1));}
+  cases++;
+ }
+ for(unsigned powered=0;powered<2;powered++){
+  reset(true,powered);duty_error=NRF_ERROR_INVALID_STATE;
+  assert(mui_u8g2_set_backlight_level(70)==NRF_ERROR_INVALID_STATE && calls==1 && !delays);
+  assert(duty==(powered?30:0) && disables==!powered);cases++;
+ }
+ for(unsigned value=0;value<=255;value++){
+  reset(true,true);assert(mui_u8g2_set_backlight_level(value)==NRF_SUCCESS);
+  assert(mui_u8g2_get_backlight_level()==(int)(value>100?100:value));cases++;
+ }
+ reset(false,false);busy_calls=100000;assert(pwm_init()==NRF_ERROR_TIMEOUT);
+ assert(calls==200 && delays==199 && disables==1 && mui_u8g2_get_backlight_level()==0);cases++;
+ app_settings_t app={0};mui_progress_bar_t bar={.user_data=&app};
+ for(unsigned event=0;event<3;event++)for(unsigned powered=0;powered<2;powered++){
+  reset(true,powered);bar.current=70;busy_calls=100000;
+  settings_scene_lcd_backlight_event_cb(event,&bar);
+  assert(settings.lcd_backlight==30 && left_scenes==0 && toasts==1 && !strcmp(last_toast,"ERR"));
+  assert(bar.current==(powered?30:0));cases++;
+ }
+ reset(false,false);bar.current=70;settings_scene_lcd_backlight_event_cb(MUI_PROGRESS_BAR_EVENT_CONFIRMED,&bar);
+ assert(bar.current==30 && settings.lcd_backlight==30 && toasts==1 && !left_scenes && !get_calls);cases++;
+ reset(true,true);bar.current=60;settings_scene_lcd_backlight_event_cb(MUI_PROGRESS_BAR_EVENT_INCREMENT,&bar);
+ assert(duty==60 && settings.lcd_backlight==30 && !toasts && !left_scenes);
+ settings_scene_lcd_backlight_event_cb(MUI_PROGRESS_BAR_EVENT_CONFIRMED,&bar);
+ assert(settings.lcd_backlight==60 && left_scenes==1 && !toasts);cases++;
+ reset(false,false);settings_reset_default(&app);
+ assert(toasts==1 && !strcmp(last_toast,"ERR") && contrast_sets==1 && flip_sets==1 && sleep_sets==1 && language_sets==1);cases++;
+ reset(true,true);settings_reset_default(&app);
+ assert(toasts==1 && !strcmp(last_toast,"APP_SET_RESET_DEFAULT_SUCCESS"));cases++;
+ printf("PASS %u actual PWM/settings cases: bounded BUSY, immediate errors, init failure/retry, no uninitialized SDK access, old output/config preserved, no false confirmation, all256 values.\n",cases);
+}

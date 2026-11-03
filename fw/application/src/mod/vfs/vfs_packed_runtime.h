@@ -7,6 +7,11 @@
 #include <stdint.h>
 
 #ifdef VFS_PACKED_LFS_ENABLE
+#include "vfs.h"
+/* Cache identity changes after mutation and successful remount/format. */
+uint64_t vfs_packed_revision(void);
+/* Only a guarded external writer may attach raw128 to its private stage. */
+int32_t vfs_packed_stage_meta(vfs_file_t *fd, const uint8_t meta[128]);
 /* Adapter functions: physical geometry was checked before publishing it. */
 bool vfs_packed_geometry_valid(void);
 bool vfs_packed_import_pending(void);

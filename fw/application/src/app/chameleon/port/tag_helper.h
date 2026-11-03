@@ -31,7 +31,8 @@ void tag_helper_format_uid(char *buff, uint8_t *uid, uint8_t uid_len);
 const char *tag_helper_get_mf_write_mode_name(nfc_tag_mf1_write_mode_t write_mode);
 void tag_helper_load_coll_res_from_block0();
 
-void tag_helper_factory_data(uint8_t slot);
+bool tag_helper_factory_data(uint8_t slot);
+bool tag_helper_apply_disney_profile(void);
 
 void tag_helper_get_nickname(char *buff, size_t buff_len);
 int32_t tag_helper_set_nickname(const char *nickname);
@@ -41,7 +42,7 @@ uint8_t *tag_helper_get_active_tag_memory_data();
 
 bool tag_helper_is_active_tag_writable();
 
-void tag_helper_generate_uid();
+bool tag_helper_generate_uid(void);
 
 bool tag_helper_is_defult_slot();
 

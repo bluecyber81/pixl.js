@@ -30,6 +30,10 @@ typedef struct {
     /* Only the successful, immediately following Home exit may skip its second save. */
     bool exit_saved;
 
+    /* Session-only position of the parent menu, independent of submenu lists. */
+    uint16_t main_focus;
+    uint16_t main_scroll;
+
     settings_storage_snapshot_t storage_snapshot;
 
 } app_settings_t;

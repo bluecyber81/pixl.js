@@ -15,7 +15,7 @@ class ChameleonConfigCountTests(unittest.TestCase):
         settings = (fw / 'application/src/mod/settings.c').read_text(encoding='utf-8')
         code = Path(__file__).with_name('chameleon_config_count.c.in').read_text(encoding='utf-8')
         for name, result in [('tag_emulation_decode_config', 'bool'), ('tag_emulation_load_config', 'int32_t'),
-                             ('tag_emulation_save_config', 'void'), ('tag_emulation_slot_set_enable', 'void'),
+                             ('tag_emulation_save_config', 'bool'), ('tag_emulation_slot_set_enable', 'void'),
                              ('tag_emulation_slot_find_next', 'uint8_t'), ('tag_emulation_slot_find_prev', 'uint8_t')]:
             code = code.replace('@' + name + '@', support.definition(tag, name, result))
         for name, result in [('fds_map_file_name', 'void'), ('fds_read_config', 'int32_t'), ('fds_write_sync', 'bool')]:

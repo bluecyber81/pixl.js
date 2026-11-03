@@ -31,7 +31,7 @@ def main():
             (folder/name).write_text('#pragma once\n',encoding='utf-8')
         code=(TESTS/'button_independent_host.c').read_text(encoding='utf-8')
         code=code.replace('/* ACTUAL_BUTTON_INCLUDE */','#include "'+(SRC/'mod/bsp_btn.c').as_posix()+'"')
-        code=code.replace('/* ACTUAL_INPUT_MAPPER */',function((SRC/'mui/mui_input.c').read_text(encoding='utf-8'),'mui_input_on_bsp_btn_event'))
+        code=code.replace('/* ACTUAL_INPUT_MAPPER */','static void ble_remote_local_activity(void) {}\n'+function((SRC/'mui/mui_input.c').read_text(encoding='utf-8'),'mui_input_on_bsp_btn_event'))
         code=code.replace('/* ACTUAL_GAME_INPUT */',function((SRC/'app/game/view/game_view.c').read_text(encoding='utf-8'),'game_view_on_input'))
         code=code.replace('/* ACTUAL_INPUT_DEINIT */',function((SRC/'mui/mui_input.c').read_text(encoding='utf-8'),'mui_input_deinit'))
         code=code.replace('/* ACTUAL_MUI_DEINIT */',function((SRC/'mui/mui_core.c').read_text(encoding='utf-8'),'mui_deinit'))
@@ -40,7 +40,9 @@ def main():
                  '-Wno-unused-parameter','-I',str(folder)]
         if os.environ.get('PIXL_SANITIZE')=='1':command+=['-fsanitize=address,undefined','-fno-omit-frame-pointer']
         debounce=(TESTS/'button_sdk_debounce_host.c').read_text(encoding='utf-8')
-        debounce=debounce.replace('/* ACTUAL_SDK_BUTTON_INCLUDE */','#include "'+(TESTS/'hardware_fixture/pinned_app_button.c').as_posix()+'"')
+        # DE3.43 keeps the pinned original as baseline evidence and compiles
+        # the narrowly patched production port for current hardware tests.
+        debounce=debounce.replace('/* ACTUAL_SDK_BUTTON_INCLUDE */','#include "'+(SRC/'mod/app_button_de343.c').as_posix()+'"')
         debounce=debounce.replace('/* ACTUAL_BUTTON_INCLUDE */','#include "'+(SRC/'mod/bsp_btn.c').as_posix()+'"')
         for name,text in [('buttons',code),('sdk_debounce',debounce),('adc_timeout',adc_fixture.replace('/* ACTUAL_BATTERY_INCLUDE */','#include "'+(SRC/'bat.c').as_posix()+'"'))]:
             cfile=folder/(name+'.c');exe=folder/(name+('.exe' if os.name=='nt' else ''))

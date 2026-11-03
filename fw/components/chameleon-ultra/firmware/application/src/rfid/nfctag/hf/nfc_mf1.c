@@ -5,6 +5,7 @@
 #include "hex_utils.h"
 #include "fds_util.h"
 #include "tag_persistence.h"
+#include "mui_mem.h"
 
 #ifdef NFC_MF1_FAST_SIM
 #include "mf1_crypto1.h"
@@ -1134,16 +1135,31 @@ int nfc_tag_mf1_data_loadcb(tag_specific_type_t type, tag_data_buffer_t *buffer)
 
 // Factory data for initialization of MF1
 bool nfc_tag_mf1_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
-    // default mf1 data
-    uint8_t default_blk0[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x22, 0x08, 0x04, 0x00, 0x01, 0x77, 0xA2, 0xCC, 0x35, 0xAF, 0xA5, 0x1D };
-    uint8_t default_data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    uint8_t default_trail[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x80, 0x69, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-
-    // default mf1 info
-    nfc_tag_mf1_information_t mf1_tmp_information;
-    nfc_tag_mf1_information_t *p_mf1_information;
-    p_mf1_information = &mf1_tmp_information;
+    if (slot >= TAG_MAX_SLOT_NUM ||
+        (tag_type != TAG_TYPE_MIFARE_Mini && tag_type != TAG_TYPE_MIFARE_1024 &&
+         tag_type != TAG_TYPE_MIFARE_2048 && tag_type != TAG_TYPE_MIFARE_4096)) {
+        return false;
+    }
     int block_max = get_block_max_by_tag_type(tag_type);
+    int info_size = get_information_size_by_tag_type(tag_type);
+    if (block_max <= 0 || block_max > NFC_TAG_MF1_BLOCK_MAX ||
+        info_size <= 0 || (size_t)info_size > sizeof(nfc_tag_mf1_information_t)) {
+        return false;
+    }
+    // default mf1 data
+    static const uint8_t default_blk0[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x22, 0x08, 0x04, 0x00, 0x01, 0x77, 0xA2, 0xCC, 0x35, 0xAF, 0xA5, 0x1D };
+    static const uint8_t default_data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t default_trail[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x80, 0x69, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+    // Allocate only the serialized prefix for this card size, not a 4 KiB
+    // card on the shared stack. Clear UID/ATS tails and reserved config bytes
+    // as well as card memory before writing the complete image to storage.
+    nfc_tag_mf1_information_t *p_mf1_information = mui_mem_malloc((size_t)info_size);
+    if (!p_mf1_information) {
+        NRF_LOG_ERROR("Not enough RAM for MF1 factory data.");
+        return false;
+    }
+    memset(p_mf1_information, 0, (size_t)info_size);
     for (int block = 0; block < block_max; block++) {
         if (block == 0) {
             memcpy(p_mf1_information->memory[block], default_blk0, sizeof(default_blk0));
@@ -1176,9 +1192,9 @@ bool nfc_tag_mf1_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
     tag_sense_type_t sense_type = get_sense_type_from_tag_type(tag_type);
     fds_slot_record_map_t map_info;
     get_fds_map_by_slot_sense_type_for_dump(slot, sense_type, &map_info);
-    int info_size = get_information_size_by_tag_type(tag_type);
     NRF_LOG_INFO("MF1 info size: %d", info_size);
     bool ret = fds_write_sync(map_info.id, map_info.key, info_size, p_mf1_information);
+    mui_mem_free(p_mf1_information);
     if (ret) {
         NRF_LOG_INFO("Factory slot data success.");
     } else {

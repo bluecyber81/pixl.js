@@ -1,0 +1,122 @@
+#include <stdlib.h>
+static unsigned checks;
+#define CHECK(c, message) do { if (!(c)) { fprintf(stderr,"FAIL %s at %u ms\n",message,now); abort(); } } while(0)
+static void reset_inputs(void) {
+ bsp_btn_deinit();memset(gpio_high,1,sizeof gpio_high);memset(event_counts,0,sizeof event_counts);
+ now=0;bsp_btn_init(capture);CHECK(registered_count==7,"seven stable timer nodes");
+}
+static unsigned start_case(unsigned key,unsigned phase,bool warm) {
+ reset_inputs();
+ if(warm){pin((key+1)%3,true);advance(100+phase);}
+ return now;
+}
+static void all_released(void) {
+ for(unsigned key=0;key<3;key++)pin(key,false);
+ advance(now+100);
+ CHECK(!m_pin_active&&!m_detection_delay_timer_id->running,"idle poller stopped");
+ for(unsigned key=0;key<3;key++)CHECK(state_get(5+key)==BTN_IDLE,"SDK idle state");
+ CHECK(gpio_owned[30],"other GPIOTE owner preserved");
+}
+static void short_count(unsigned key,unsigned want) {
+ CHECK(event_counts[key][BSP_BTN_EVENT_PRESSED]==want,"press count");
+ CHECK(event_counts[key][BSP_BTN_EVENT_RELEASED]==want,"release count");
+ CHECK(event_counts[key][BSP_BTN_EVENT_SHORT]==want,"short count");
+ CHECK(!event_counts[key][BSP_BTN_EVENT_LONG]&&!event_counts[key][BSP_BTN_EVENT_REPEAT],"short is not long/repeat");
+}
+static void rejected_pulses(void) {
+ for(unsigned key=0;key<3;key++)for(unsigned width=1;width<30;width++){
+  reset_inputs();pin(key,true);advance(width);pin(key,false);advance(1000);
+  short_count(key,0);
+  CHECK(state_get(5+key)==BTN_IDLE,"rejected pulse IDLE");
+  CHECK(!m_pin_active&&!m_detection_delay_timer_id->running,"rejected pulse must stop polling");
+  checks++;
+ }
+}
+static void quick_press_witness(void) {
+ reset_inputs();pin(1,true);advance(60);pin(1,false);advance(160);
+ CHECK(event_counts[1][BSP_BTN_EVENT_SHORT]==1,"60ms clean press accepted");
+ all_released();
+}
+static void clean_press_phases(void) {
+ for(unsigned key=0;key<3;key++)for(unsigned warm=0;warm<2;warm++)
+ for(unsigned phase=0;phase<(warm?20u:1u);phase++)for(unsigned width=1;width<=80;width++){
+  unsigned start=start_case(key,phase,warm);
+  unsigned first_sample=warm?((start/10)+1)*10:start+10;
+  unsigned threshold=first_sample+20-start;
+  pin(key,true);advance(start+width);pin(key,false);advance(start+width+100);
+  short_count(key,width>=threshold);
+  all_released();checks++;
+ }
+}
+static void disturbance_with_other_key(void) {
+ for(unsigned key=0;key<3;key++)for(unsigned phase=0;phase<20;phase++)for(unsigned width=1;width<=10;width++){
+  unsigned start=start_case(key,phase,true),anchor=(key+1)%3;
+  pin(key,true);advance(start+width);pin(key,false);advance(start+width+100);
+  short_count(key,0);
+  CHECK(m_pin_active==(1ULL<<(5+anchor)),"noise ownership cleared without clearing held key");
+  CHECK(m_detection_delay_timer_id->running,"held other key still polled");
+  CHECK(event_counts[anchor][BSP_BTN_EVENT_PRESSED]==1&&!event_counts[anchor][BSP_BTN_EVENT_RELEASED],"held other key retained");
+  all_released();checks++;
+ }
+}
+static void rapid_two_clicks(void) {
+ for(unsigned key=0;key<3;key++)for(unsigned phase=0;phase<20;phase++)for(unsigned gap=1;gap<=40;gap++){
+  unsigned start=start_case(key,phase,true);
+  pin(key,true);advance(start+40);pin(key,false);advance(start+40+gap);
+  pin(key,true);advance(start+80+gap);pin(key,false);advance(start+180+gap);
+  unsigned shorts=event_counts[key][BSP_BTN_EVENT_SHORT];
+  CHECK(shorts>=1&&shorts<=2,"two raw clicks cannot invent a third");
+  if(gap>=20)CHECK(shorts==2,"two 40ms clicks with at least20ms release");
+  short_count(key,shorts);all_released();checks++;
+ }
+}
+static void contact_bounce_sequences(void) {
+ for(unsigned key=0;key<3;key++)for(unsigned phase=0;phase<20;phase++){
+  start_case(key,phase,true);
+  pin(key,true);advance(now+4);pin(key,false);advance(now+3);
+  pin(key,true);advance(now+6);pin(key,false);advance(now+5);
+  pin(key,true);advance(now+80);
+  /* Brief contact dropouts during one held press must not become clicks. */
+  pin(key,false);advance(now+7);pin(key,true);advance(now+50);
+  pin(key,false);advance(now+10);pin(key,true);advance(now+50);
+  pin(key,false);advance(now+4);pin(key,true);advance(now+3);
+  pin(key,false);advance(now+6);pin(key,true);advance(now+5);
+  pin(key,false);advance(now+100);
+  short_count(key,1);all_released();checks++;
+ }
+}
+static void long_repeat_phases(void) {
+ for(unsigned key=0;key<3;key++)for(unsigned phase=0;phase<20;phase++){
+  unsigned start=start_case(key,phase,true),pushed=((start/10)+1)*10+20;
+  pin(key,true);advance(pushed+999);
+  CHECK(event_counts[key][BSP_BTN_EVENT_PRESSED]==1&&!event_counts[key][BSP_BTN_EVENT_LONG],"LONG not early");
+  advance(pushed+1000);CHECK(event_counts[key][BSP_BTN_EVENT_LONG]==1,"LONG at1000ms after accepted PRESS");
+  advance(pushed+1199);CHECK(!event_counts[key][BSP_BTN_EVENT_REPEAT],"REPEAT not early");
+  advance(pushed+1200);CHECK(event_counts[key][BSP_BTN_EVENT_REPEAT]==1,"first REPEAT");
+  advance(pushed+1600);CHECK(event_counts[key][BSP_BTN_EVENT_REPEAT]==3,"200ms repeats");
+  pin(key,false);advance(pushed+2000);
+  CHECK(event_counts[key][BSP_BTN_EVENT_RELEASED]==1&&!event_counts[key][BSP_BTN_EVENT_SHORT],"LONG releases without SHORT");
+  CHECK(event_counts[key][BSP_BTN_EVENT_REPEAT]==3,"repeats stop on release");
+  all_released();checks++;
+ }
+}
+static void lifecycle_all_states(void) {
+ const unsigned stages[]={5,15,25,40,1030,1230};
+ for(unsigned key=0;key<3;key++)for(unsigned state=0;state<6;state++){
+  reset_inputs();pin(key,true);advance(stages[state]);bsp_btn_deinit();check_stopped();
+  unsigned previous[3][5];memcpy(previous,event_counts,sizeof previous);
+  for(unsigned i=0;i<registered_count;i++)if(registered[i]->context)registered[i]->handler(registered[i]->context);
+  CHECK(!memcmp(previous,event_counts,sizeof previous),"late callbacks after deinit ignored");
+  pin(key,false);advance(now+100);bsp_btn_init(capture);memset(event_counts,0,sizeof event_counts);
+  pin(key,true);advance(now+40);pin(key,false);advance(now+100);short_count(key,1);
+  all_released();checks++;
+ }
+}
+int main(int argc,char **argv) {
+ memset(gpio_high,1,sizeof gpio_high);gpio_owned[30]=true;
+ if(argc>1&&!strcmp(argv[1],"idle")){rejected_pulses();return 0;}
+ if(argc>1&&!strcmp(argv[1],"quick")){quick_press_witness();return 0;}
+ quick_press_witness();rejected_pulses();clean_press_phases();disturbance_with_other_key();
+ rapid_two_clicks();contact_bounce_sequences();long_repeat_phases();lifecycle_all_states();
+ printf("PASS %u actual SDK+BSP cases: all3keys, warm/cold phases, <=10ms noise, rapid clicks, bounce, idle polling, long/repeat and reinit\n",checks);
+}

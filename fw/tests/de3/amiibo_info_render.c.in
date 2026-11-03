@@ -15,6 +15,7 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t h,uint32_t t) {
     return (h==0 && t==2) || (h==0x1f030100 && t==0x04c91e03) ? &known : NULL;
 }
 /*ACTUAL_ENDIAN_FUNCTION*/
+/*ACTUAL_DB_QR*/
 
 static const u8x8_display_info_t display_info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
 static unsigned frames;
@@ -102,7 +103,7 @@ int main(int argc,char **argv) {
     const uint8_t id[8]={0x1f,3,1,0,4,0xc9,0x1e,3};
     memcpy(v3.data+84,id,8);v3.type=NTAG_I2C_PLUS_2K;
     memset(unknown.data+84,0xab,8);unknown.type=NTAG_215;
-    char a[48],b[48];assert(amiibo_info_url(a,sizeof(a),&v3));
+    char a[AMIIBO_INFO_URL_CAPACITY],b[AMIIBO_INFO_URL_CAPACITY];assert(amiibo_info_url(a,sizeof(a),&v3));
     assert(!strcmp(a,"https://amiibo.life/nfc/1f030100-04c91e03"));
     memset(v3.data,0x6a,84);memset(v3.data+92,0x6a,sizeof(v3.data)-92);memset(v3.notes,'X',sizeof(v3.notes));
     assert(amiibo_info_url(b,sizeof(b),&v3) && !strcmp(a,b));
@@ -130,6 +131,33 @@ int main(int argc,char **argv) {
     assert(!draw_qrcode(&canvas,0,28,37,a));assert(!memcmp(saved,buffer,1024));
     assert(!draw_qrcode(&canvas,0,0,28,a));assert(!memcmp(saved,buffer,1024));
     memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,39,0,50,"https://pixl.amiibo.xyz"));pbm(argv[1],"ble_qr_top_edge",buffer);
+    const uint8_t product_ids[2][8]={{0,0,0,4,4,0x43,0x1c,2},{0,0x0a,0,4,4,0x45,0x1c,2}};
+    const char *product_urls[2]={"https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car",
+                               "https://amiibo.life/amiibo/my-mario-wood-blocks/toad"};
+    for(unsigned item=0;item<2;item++) {
+        ntag_t product={0};memcpy(product.data+84,product_ids[item],8);
+        assert(amiibo_info_url(a,sizeof(a),&product) && !strcmp(a,product_urls[item]));
+        for(size_t capacity=1;capacity<=strlen(product_urls[item]);capacity++) {
+            memset(b,0x5a,sizeof(b));assert(!amiibo_info_url(b,capacity,&product));
+            assert(!b[0] && b[capacity]==0x5a);
+        }
+        assert(amiibo_info_url(b,strlen(a)+1,&product) && !strcmp(a,b));
+        char name[40];snprintf(name,sizeof(name),"product_%u_info_qr",item);
+        image(&canvas,&product,2,argv[1],name);
+        memset(buffer,0xff,sizeof(buffer));
+        /* Execute the real layout helper: long URLs must be fully visible,
+         * preserve the name/header and leave room for scrolling text. */
+        assert(amiibo_view_draw_qrcode(&canvas,23,a)==(strlen(a)>53 ? 85 : 89));
+        unsigned box=strlen(a)>53?41:37,left=128-box,top=box==41?23:25;
+        for(unsigned y=0;y<64;y++)for(unsigned x=0;x<128;x++) {
+            bool dot=!!(buffer[(y/8)*128+x]&(1U<<(y%8)));
+            if(x<left||y<top||y>=top+box)assert(dot);
+            else if(x<left+4||x>=124||y<top+4||y>=top+box-4)assert(!dot);
+        }
+        snprintf(name,sizeof(name),"product_%u_database_qr",item);pbm(argv[1],name,buffer);
+        memcpy(saved,buffer,1024);assert(amiibo_view_draw_qrcode(&canvas,30,a)==128);
+        assert(!memcmp(saved,buffer,1024));
+    }
     navigation_tests();
     printf("PASS figure-info: %u actual128x64 u8g2/font frames, public-only URL, unchanged tag, QR quiet-zone/bounds, both view return paths\n",frames);
     return 0;

@@ -120,6 +120,10 @@ static int update_meta(const char*p,void*b,size_t n){(void)p;(void)b;(void)n;met
 static vfs_driver_t driver={.stat_file=stat_file,.read_file_data=read_data,.update_file_meta=update_meta};
 vfs_driver_t *vfs_get_driver(vfs_drive_t d){assert(d==VFS_DRIVE_EXT);return &driver;}
 int32_t vfs_persist_recover(vfs_driver_t*d){assert(d==&driver);return recovery_error;}
+int32_t vfs_persist_write(vfs_driver_t*d,const char*p,const void*b,size_t n){
+ (void)d;(void)p;(void)b;(void)n;
+ assert(!"Unexpected NFC-update path in slot-replacement contract");return VFS_ERR_FAIL;
+}
 int32_t vfs_persist_write_meta(vfs_driver_t*d,const char*p,const void*b,size_t n,const uint8_t*m){
  assert(d==&driver && p && b && m && (n==540 || n==2048));
  for(size_t i=0;i<128;i++)assert(m[i]==0xa6);

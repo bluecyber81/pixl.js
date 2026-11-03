@@ -23,6 +23,8 @@ typedef void (*amiibo_slot_info_cb_t)(amiidb_slot_info_t* p_info, void* ctx);
 
 int32_t amiidb_api_slot_read(uint8_t slot, ntag_t* p_ntag);
 int32_t amiidb_api_slot_write(uint8_t slot, ntag_t* p_ntag);
+/* Save NFC changes without replacing the existing format or raw metadata. */
+int32_t amiidb_api_slot_update(uint8_t slot, ntag_t* p_ntag);
 int32_t amiidb_api_slot_remove(uint8_t slot);
 
 

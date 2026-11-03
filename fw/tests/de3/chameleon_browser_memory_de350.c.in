@@ -1,0 +1,98 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "app_chameleon.h"
+#include "mui_mem.c"
+#include "mui_alloc.h"
+#include "mui_icons.h"
+#include "vfs_meta.h"
+#include "language.h"
+@PACKED@
+#undef assert
+#define assert(x) do{if(!(x)){fprintf(stderr,"FAIL line %u: %s\n",__LINE__,#x);exit(71);}}while(0)
+#define NRF_LOG_INFO(...) ((void)0)
+#define LIST_ITEM_HEIGHT 13
+#define CHELEMEON_DUMP_FOLDER "/chameleon/dump"
+static mui_t fake_mui;
+static unsigned oom,errors,scenes,reads,closes,cases;
+static const char *toast;
+mui_t *mui(void){return &fake_mui;}
+void mui_show_memory_error(mui_t*m){m->memory_error=true;oom++;}
+const char*getLangString(L_StringID id){return lang_de_DE[id];}
+void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,uint32_t id){(void)d;(void)id;}
+void mui_scene_dispatcher_previous_scene(mui_scene_dispatcher_t*d){(void)d;scenes++;}
+void mui_scene_dispatcher_back_scene(mui_scene_dispatcher_t*d,uint32_t n){(void)d;scenes+=n;}
+void mui_toast_view_show(mui_toast_view_t*v,const char*t){(void)v;toast=t;errors++;}
+static vfs_obj_t objects[1000],expected[1000];
+static unsigned count,iter,fail_read,read_size;
+static bool openfail,closefail,is_mounted=true;
+static int open_dir(const char*p,vfs_dir_t*d){(void)d;iter=0;return openfail?VFS_ERR_FAIL:VFS_OK;}
+static int read_dir(vfs_dir_t*d,vfs_obj_t*o){(void)d;reads++;if(fail_read&&iter==fail_read)return VFS_ERR_CRPT;if(iter==count)return VFS_ERR_EOF;*o=objects[(iter++*37)%count];return VFS_OK;}
+static int close_dir(vfs_dir_t*d){(void)d;closes++;return closefail?VFS_ERR_FAIL:VFS_OK;}
+static bool mounted(void){return is_mounted;}
+static int stat_file(const char*p,vfs_obj_t*o){(void)p;memset(o,0,sizeof(*o));o->type=VFS_TYPE_REG;o->size=4096;return VFS_OK;}
+static int read_data(const char*p,void*out,size_t n){(void)p;memset(out,0x31,n);return read_size;}
+static vfs_driver_t driver={.mounted=mounted,.open_dir=open_dir,.read_dir=read_dir,.close_dir=close_dir,.stat_file=stat_file,.read_file_data=read_data};
+vfs_driver_t*vfs_get_default_driver(void){return &driver;}
+static uint8_t tag_data[4096];
+static uint8_t *tag_helper_get_active_tag_memory_data(void){return tag_data;}
+static size_t tag_helper_get_active_tag_data_size(void){return sizeof(tag_data);}
+static void tag_helper_load_coll_res_from_block0(void){}
+static int tag_helper_set_nickname(const char*s){(void)s;return 0;}
+@LIST@
+@BROWSER@
+static void*fixed[32];static unsigned nf;
+static void reserve(size_t n){void*p=mui_mem_malloc(n);assert(p&&nf<32);memset(p,0,n);fixed[nf++]=p;}
+static app_chameleon_t *begin(bool pressure){
+ mui_mem_init();oom=errors=reads=closes=scenes=0;fake_mui.memory_error=false;nf=0;fail_read=0;openfail=closefail=false;is_mounted=true;toast=NULL;
+ app_chameleon_t*a=mui_mem_malloc(sizeof(*a));assert(a);memset(a,0,sizeof(*a));
+ a->p_list_view=mui_mem_malloc(sizeof(*a->p_list_view));assert(a->p_list_view);memset(a->p_list_view,0,sizeof(*a->p_list_view));mui_list_item_array_init(a->p_list_view->items);a->p_list_view->user_data=a;
+ if(pressure){
+  if(sizeof(void*)==4){reserve(sizeof(struct pfs));reserve(sizeof(mui_event_t)*MAX_EVENT_MSG);reserve(sizeof(mui_text_input_t));reserve(sizeof(mui_msg_box_t));reserve(sizeof(mui_toast_view_t));reserve(sizeof(chameleon_view_t));reserve(sizeof(mui_view_dispatcher_t));reserve(sizeof(mui_view_dispatcher_t));reserve(sizeof(mui_scene_dispatcher_t));reserve(sizeof(mui_view_port_t));reserve(sizeof(mui_view_port_t));for(unsigned i=0;i<5;i++)reserve(sizeof(mui_view_t));}
+  else{mui_mem_monitor_t m;mui_mem_monitor(&m);if(m.free_biggest_size>4508)reserve(m.free_biggest_size-4508);}
+ }
+ return a;
+}
+static void end(app_chameleon_t*a){mui_list_view_clear_items(a->p_list_view);mui_list_item_array_clear(a->p_list_view->items);mui_mem_free(a->p_list_view);mui_mem_free(a);while(nf)mui_mem_free(fixed[--nf]);mui_mem_monitor_t m;mui_mem_monitor(&m);assert(m.used_cnt==0);assert(tlsf_check(m_tlsf)==0);mui_mem_deinit();cases++;}
+static int cmp_obj(const void*x,const void*y){const vfs_obj_t*a=x,*b=y;if(a->type!=b->type)return a->type==VFS_TYPE_DIR?-1:1;return strcmp(a->name,b->name);}
+static void make(unsigned n,bool mixed){count=n;for(unsigned i=0;i<n;i++){vfs_obj_t*o=&objects[i];memset(o,0,sizeof(*o));o->type=mixed&&i%11==0?VFS_TYPE_DIR:VFS_TYPE_REG;snprintf(o->name,sizeof(o->name),"%04u-abcdefghijklmnopqrstuvwxyz-long.bin",i);expected[i]=*o;}qsort(expected,n,sizeof(*expected),cmp_obj);}
+#if !TEST_BASELINE
+static mui_list_item_t *control(app_chameleon_t*a,uintptr_t key){for(size_t i=0;i<a->p_list_view->items->size;i++)if((uintptr_t)a->p_list_view->items->ptr[i].user_data==key)return&a->p_list_view->items->ptr[i];return NULL;}
+static void click(app_chameleon_t*a,uintptr_t key){mui_list_item_t*x=control(a,key);assert(x);chameleon_scene_menu_card_data_file_load_on_event(MUI_LIST_VIEW_EVENT_SELECTED,a->p_list_view,x);}
+static unsigned checkpage(app_chameleon_t*a,unsigned offset){assert(!oom&&!errors&&a->p_list_view->items->size<=28&&a->p_list_view->items->alloc<=32);unsigned n=0;for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];uintptr_t k=(uintptr_t)x->user_data;if(k==CHAMELEON_MENU_FILE||k==CHAMELEON_MENU_FOLDER){assert(!strcmp(string_get_cstr(x->text),expected[offset+n].name));assert(x->icon==(expected[offset+n].type==VFS_TYPE_DIR?ICON_FOLDER:ICON_FILE));n++;}}assert(n<=24);assert(control(a,CHAMELEON_MENU_BACK));return n;}
+static void paging(unsigned n){make(n,true);app_chameleon_t*a=begin(true);mui_mem_monitor_t before;mui_mem_monitor(&before);chameleon_scene_menu_card_data_file_load_on_enter(a);unsigned seen=0,start=0;do{start=seen;seen+=checkpage(a,seen);if(!control(a,CHAMELEON_MENU_NEXT_PAGE))break;click(a,CHAMELEON_MENU_NEXT_PAGE);}while(1);assert(seen==count);while(control(a,CHAMELEON_MENU_PREVIOUS_PAGE)){click(a,CHAMELEON_MENU_PREVIOUS_PAGE);start-=24;checkpage(a,start);}assert(start==0);printf("PASS pages %u entries, <=24 entries +4 controls; initial free %u\n",n,before.free_size);end(a);}
+static void failures(void){
+ for(unsigned f=0;f<5;f++){make(100,true);app_chameleon_t*a=begin(true);openfail=f==0;fail_read=f==1?10:0;closefail=f==2;is_mounted=f!=3;if(f==4)memset(objects[4].name,'X',sizeof(objects[4].name));chameleon_scene_menu_card_data_file_load_on_enter(a);assert(errors==1&&!oom);assert(a->p_list_view->items->size==1&&control(a,CHAMELEON_MENU_BACK));assert(closes==(f!=0&&f!=3));click(a,CHAMELEON_MENU_BACK);assert(scenes==1);end(a);}
+ make(100,false);app_chameleon_t*a=begin(true);chameleon_scene_menu_card_data_file_load_on_enter(a);click(a,CHAMELEON_MENU_NEXT_PAGE);click(a,CHAMELEON_MENU_NEXT_PAGE);make(24,false);chameleon_scene_menu_card_data_file_load_reload(a);assert(a->browser_direction==0);checkpage(a,0);end(a);
+ puts("PASS open/read/close/unmounted/unterminated-name errors: no partial list; missing-page fallback");
+}
+static void nested(void){make(100,true);app_chameleon_t*a=begin(true);chameleon_scene_menu_card_data_file_load_on_enter(a);click(a,CHAMELEON_MENU_FOLDER);assert(strncmp(current_dir,CHELEMEON_DUMP_FOLDER"/",16)==0);assert(!a->browser_direction&&control(a,CHAMELEON_MENU_PARENT_DIR));click(a,CHAMELEON_MENU_NEXT_PAGE);assert(a->browser_direction==1);click(a,CHAMELEON_MENU_PARENT_DIR);assert(!current_dir[0]&&!a->browser_direction);checkpage(a,0);char before[VFS_MAX_PATH_LEN];memcpy(before,current_dir,sizeof(before));char longname[200];memset(longname,'x',199);longname[199]=0;assert(!update_current_directory(longname)&&!memcmp(before,current_dir,sizeof(before)));end(a);puts("PASS nested folders, paging, parent return and overlong path rejection");}
+static void allocation_failure(void){make(100,true);app_chameleon_t*a=begin(false);mui_mem_monitor_t m;mui_mem_monitor(&m);while(m.free_biggest_size>200){reserve(m.free_biggest_size/2);mui_mem_monitor(&m);}chameleon_scene_menu_card_data_file_load_on_enter(a);assert(oom==1&&!a->p_list_view->items->size&&closes==1);end(a);puts("PASS severe allocation pressure closes directory and frees partial page");}
+static void max_names(void){
+ make(100,false);
+ for(unsigned i=0;i<count;i++){memset(objects[i].name,'q',47);objects[i].name[0]='0'+i/100;objects[i].name[1]='0'+i/10%10;objects[i].name[2]='0'+i%10;objects[i].name[47]=0;expected[i]=objects[i];}
+ qsort(expected,count,sizeof(*expected),cmp_obj);app_chameleon_t*a=begin(true);chameleon_scene_menu_card_data_file_load_on_enter(a);
+ unsigned seen=0;do{seen+=checkpage(a,seen);if(!control(a,CHAMELEON_MENU_NEXT_PAGE))break;click(a,CHAMELEON_MENU_NEXT_PAGE);assert(a->browser_anchor[47]==0);}while(1);
+ assert(seen==100);end(a);puts("PASS all 100 maximum-length 47-byte names remain reachable across pages");
+}
+static void import_buffer(void){
+ make(1000,false);app_chameleon_t*a=begin(sizeof(void*)==4);chameleon_scene_menu_card_data_file_load_on_enter(a);
+ memset(tag_data,0xa5,sizeof(tag_data));read_size=4095;click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==0&&!oom);
+ for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0xa5);
+ errors=0;read_size=4096;click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==2&&!oom);
+ assert(!strcmp(toast,_T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS)));
+ for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0x31);
+ end(a);puts("PASS 4KiB card import from 1000-file page; short-read preservation and successful retry");
+}
+#endif
+int main(void){
+ printf("SIZES ptr=%u app=%u pfs=%u TLSFcontrol=%u\n",(unsigned)sizeof(void*),(unsigned)sizeof(app_chameleon_t),(unsigned)sizeof(struct pfs),(unsigned)tlsf_size());
+#if TEST_BASELINE
+ make(1000,true);app_chameleon_t*a=begin(true);chameleon_scene_menu_card_data_file_load_on_enter(a);assert(oom>0&&fake_mui.memory_error&&closes==1);printf("REPRO DE349: 1000 import entries exhaust actual TLSF pool; OOM count=%u\n",oom);end(a);
+ make(100,true);a=begin(false);fail_read=10;chameleon_scene_menu_card_data_file_load_on_enter(a);assert(!errors&&a->p_list_view->items->size==11);puts("REPRO DE349: read failure presents partial 10-file list without error");end(a);
+#else
+ unsigned counts[]={0,1,24,25,100,256,1000};for(unsigned repeat=0;repeat<3;repeat++)for(unsigned i=0;i<7;i++)paging(counts[i]);failures();nested();allocation_failure();max_names();import_buffer();
+#endif
+ printf("PASS %u leak-free real-TLSF cases\n",cases);return 0;
+}

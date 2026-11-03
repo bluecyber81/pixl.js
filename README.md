@@ -1,79 +1,53 @@
 # Allmiibo LCD — DE3 community firmware and file manager
 
-[Deutsch](README.de.md) · [DE3.37 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.37) · [Changes](CHANGELOG_DE3_SERIES.md) · [Build guide](docs/BUILD_DE3_37.md)
+[Deutsch](README.de.md) · [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Current downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.55) · [Contributing](CONTRIBUTING.md)
 
-Firmware source snapshot under `fw/`: **2.22.0-DE3.37**, DFU counter **609**. The current browser file manager under `web/` is **3.32.5**; the firmware documentation below still describes the DE3.37 release. This community fork combines the [cylin577/pixl.js](https://github.com/cylin577/pixl.js) codebase with the DE-series changes and a custom Packed LittleFS storage layer. The original project is [solosky/pixl.js](https://github.com/solosky/pixl.js). This is not an official release from either upstream project.
+Current published components, checked **3 November 2026**:
 
-**DE3.37 is an application update for matching LCD devices already using this fork's Packed LittleFS (PFS1).** A device still running SPIFFS, including the earlier public DE3.16, requires a separate backup and migration. Upstream's ordinary LittleFS layout is also different. Flashing this application alone does not convert or restore either layout. Read [the storage guide](docs/MIGRATION_PFS1.md) before changing an older device.
+| Component | Version / source | Installation |
+| --- | --- | --- |
+| LCD application | **2.22.0-DE3.55**, DFU counter **627**; [`fw/`](fw) | Application-only OTA, existing compatible PFS1 devices |
+| Browser file manager | **3.33.1**; [`web/`](web) | [Online](https://bluecyber81.github.io/pixl.js/) or portable ZIP; no device flash |
+| Bootloader | **BL8**; [`bootloader-bl8/`](bootloader-bl8) | Separate advanced component; not replaced by application OTA |
+| Nordic Bluetooth stack | **S112 7.3.0**, FWID **0x0126** | Nordic binary under vendor terms; not our own SoftDevice build |
+| File storage | **Packed LittleFS, PFS1** | Not interchangeable with SPIFFS or ordinary upstream LittleFS |
 
-## Online file manager 3.32.5
+This is bluecyber81's community continuation of [cylin577/pixl.js](https://github.com/cylin577/pixl.js), originally [solosky/pixl.js](https://github.com/solosky/pixl.js). It combines selected upstream work with the DE-series changes. It is not an official release from either upstream and does not claim every later upstream change has been merged. The version prefix identifies the base, not equality with a current upstream tag.
 
-**[Open file manager](https://bluecyber81.github.io/pixl.js/) · [DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable packages and corresponding sources](https://github.com/bluecyber81/pixl.js/releases/tag/web3.32.5)**
+## Start here
 
-The website works without an always-on local server. Chrome on Android or a
-supported computer connects directly to the Allmiibo within Bluetooth range.
-Private figure files and backups are not uploaded to GitHub. See the
-[website guide](docs/DATEIMANAGER_WEB.md) for use, deployment and limitations.
+Use the [online file manager](https://bluecyber81.github.io/pixl.js/) in a browser supporting Web Bluetooth. On the Allmiibo, open **Bluetooth file transfer**, then connect from the page. Bluetooth uses the computer/phone running that browser; a VPN does not extend its radio range. The [online DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) handles supported **application** updates.
 
-The file manager optionally offers **DE3.55 / 627** for the matching LCD device
-with **Packed LittleFS (PFS1), BL8 and S112 7.3.0**. This is application-only;
-using the file manager does not itself require a firmware update. The exact
-DE3.55 sources are supplied as a separate archive in the linked web release.
-The older `fw/` tree below is **not** the source snapshot for that firmware.
+For offline use, extract `Allmiibo_Dateimanager_3_33_1.zip` and run `Start-Dateimanager.cmd` on Windows with Python installed. The outer complete-download ZIP is **not** a flashable firmware package. Use the unchanged inner `Allmiibo_LCD_DE3_55_627_TESTSTAND.zip` for the application. Its historical filename is retained so existing checksums stay valid.
 
-## Downloads and installation
+**Before updating an older device:** confirm board, bootloader/SoftDevice and storage layout. DE3.8/DE3.16 SPIFFS devices need a complete backup and a separate migration. Flashing this application alone does not convert their collection. See [installation and component compatibility](docs/INSTALLATION.md) and [PFS1 migration](docs/MIGRATION_PFS1.md). Existing compatible PFS1 devices need no new formatting for DE3.55. Do not flash a guessed combined system package onto an unidentified device.
 
-| Download | Purpose |
-| --- | --- |
-| `Allmiibo_LCD_DE3_37_609.zip` | Flashable application OTA for the matching LCD/PFS1 configuration. Select this ZIP unchanged in Secure DFU. |
-| `Allmiibo_Dateimanager_3_27_0_PUBLIC.zip` | Ready-built PC/browser file manager, source and notices. Extract on the computer; do not flash it. |
-| `Allmiibo_DE3_37_Quellcode_PUBLIC.zip` | Public source snapshot with build instructions and regression tests. |
-| `Allmiibo_DE3_37_Gesamtpaket_PUBLIC.zip` | Download bundle containing the separate packages and documentation. The outer ZIP is **not** a flashable firmware package. |
-| `BL6_CODE_ZAEHLER7_BOOTLOADER_ONLY.zip` | Optional advanced bootloader-only OTA, stored counter 7. Read the separate compatibility guide first. |
-| `SHA256SUMS.txt` | Checksums for the published release assets. |
+## What this fork adds
 
-For an already migrated matching device:
+- German/English device UI, readable slow scrolling, stable scannable QR pages, figure information, favorites and bounded folder/database lists for larger collections.
+- Corrected short middle-button handling, explicit Bluetooth radio/client states and timeouts, diagnostics for application heap, storage and startup phases.
+- Negotiated file transfer including MTU23, atomic small-file and Raw128 metadata commits, retry/abort handling, retained unsaved NFC changes when persistence fails, and session-limited optional Bluetooth remote control.
+- Packed LittleFS small-file storage, cached/streamed mount work, targeted cache/read-error and metadata-wear fixes. DE3.55 calculates two CRC states in one pass without changing PFS1 records. It does not increase physical RAM or promise a universal boot time.
+- Optional Disney Infinity card-emulator profile for a suitable user-supplied 320-byte MiFare Mini file; no figure data is supplied.
+- Web file previews/images, device-folder search, combined file/folder/ZIP uploads, resumable ZIP/Raw128 backups, recovery and migration simulation, component comparison, runtime/startup diagnostics and clearer DFU errors.
+- Catalogue freshness checks and device collection audit: **green** = ID found, **orange** = inspection note, **red** = not found after a complete whole-drive content scan. Missing metadata or a partial scan remains unconfirmed. Results survive disconnect only as a dated observation in the open page; reconnect/change/reload invalidates them.
 
-1. Save a current file backup, then disconnect the file-manager session and enter the device's DFU mode.
-2. Select `Allmiibo_LCD_DE3_37_609.zip` in the DFU client and complete the transfer.
-3. Confirm the normal menu and version `2.22.0-DE3.37`, then check folders, center-button wake and a familiar NFC tag.
+The bundled catalogue contains **952 IDs**. Catalogue metadata and images are not valid figure dumps, and finding an ID is not proof of cryptographic validity or game compatibility. User-supplied files/HTTPS sources can be inspected and uploaded; the project does not distribute a private collection. See [changes](CHANGELOG_DE3_SERIES.md).
 
-No new formatting or restoration is required for this PFS1 application update. It does not install a bootloader, Nordic SoftDevice, PC Bluetooth driver, figure collection or `key_retail.bin`. BL6 and S112 7.3.0 are separate components in the tested configuration; they are not silently installed by this OTA. The application package declares hardware version 52 and SoftDevice requirements `0x0103`/`0x0126`; these declarations do not identify a particular board or prove that every accepted device is compatible.
+## Build, test and contribute
 
-BL6 is available separately with [its exact source, portable tests and compatibility instructions](bootloader-bl6/README.md). Existing BL6 installations do not need another flash. The integrated browser flasher accepts application-only packages; use a compatible Nordic Secure DFU client, such as the Android nRF Device Firmware Update app, for the optional bootloader package. A bootloader update can invalidate the application, so keep the matching application OTA available. No SoftDevice binary is included in this release.
+Read [CONTRIBUTING.md](CONTRIBUTING.md), the [DE3.55 application build guide](docs/BUILD_DE3_55.md), and the independent [BL8 guide](bootloader-bl8/README.md). The public checkout now contains the matching application and bootloader sources, not just release ZIPs. A pinned Docker toolchain builds the application without signing or accessing a device. Web dependencies are pinned in `web/package-lock.json`; CI checks the web build and a documented subset of portable firmware tests.
 
-## What changed
+On 3 November, a fresh build from this publication checkout reproduced the DE3.55 **BIN, HEX, ELF and map byte for byte** against the archived build. Release evidence also records **136 firmware host test groups**, targeted sanitizer/ARM/storage tests, and **1,057 web tests plus 21 checks for each production build**. [Validation summary](docs/validation/DE3_55.json) separates archived evidence, fresh publication checks and actual device observations.
 
-DE3.37 fixes a persistence failure: if a console changes a tag but the write to storage fails, the unsaved tag now remains in RAM. Changing the application/tag or going to sleep cannot silently discard it. An allocation-free error dialog offers another save attempt or a separate discard confirmation, with **No** selected initially. Confirmed discard removes only the unsaved RAM change and leaves the previously stored file intact. Unsaved RAM still cannot survive power loss or a forced reset. AmiLoop also stops reporting a rejected tag commit as successful.
+On 2 November, bounded device tests read DE3.55, BL8 and S112 7.3.0, exercised actual ATT MTU **250 and 23**, checked scratch-file read/write/Raw128/reconnect operations and removed their test files. The owner separately confirmed NFC recognition, short middle press and wake. The startup marker observation was about **2.31 s**, excluding bootloader and early SDK startup. These are dated, scoped observations, not universal timing or exhaustive hardware validation.
 
-File manager 3.27.0 preserves folder notes/read-only flags changed during ZIP import, reopens its local recovery database after the browser closes it, and gives clearer restoration and disconnect messages. Missing migration capabilities no longer suggest installing an old SPIFFS preparation firmware on an already migrated or unknown device. The component comparison knows DE3.37/609, BL6 and S112 7.3.0; it is a local expected-version comparison, not an automatic Internet update service.
+## Hardware and limits
 
-The cumulative DE-series work includes German/English UI, readable slow scrolling, stable QR information pages, search/favorites, bounded lists for larger collections, MTU23-compatible negotiated file transfer, explicit connection/session handling, diagnostic views and more robust file operations. The PFS1 layer packs small files and all 128 metadata bytes, with checked commits, recovery state and a browser-assisted migration. Later improvements reuse verified indexes, reduce repeated storage reads, release unused list caches and fix two reproduced LittleFS cache/read-error cases. These do not increase physical RAM or promise a fixed transfer speed. See [the cumulative changelog](CHANGELOG_DE3_SERIES.md).
+The verified target is the matching **128×64 monochrome LCD / nRF52832 / 512 KiB internal flash / 64 KiB RAM** design. The application binary is **370,120 bytes**, leaving **2,616 bytes** in its configured application flash region; the application heap pool is **18,432 bytes**. Heap samples do not cover all chip RAM or the physical stack high-water mark. OLED and other Allmiibo board revisions are not automatically compatible.
 
-## File manager
+BL8 and S112 are separate from the application. BL8 code identity and its stored DFU version counter are different values; see [components](docs/COMPONENTS.md). The inherited upstream DFU key is publicly known: a valid signature proves key/package compatibility, not exclusive publisher identity. Public source packages exclude private credentials, device backups and figure dumps. No claim is made that all defects, physical power failures or endurance limits have been tested.
 
-Extract the public file-manager ZIP and run `Start-Dateimanager.cmd`. The ready-built package uses a local Python server; Node.js is needed only to rebuild the web application. `Start_8768.cmd` selects port 8768. On the same computer, open `http://127.0.0.1:8768/` in a browser supporting Web Bluetooth, such as Chrome, and open Bluetooth file transfer on the device.
+## Credits and licenses
 
-The three work areas cover files, backup/restoration and device updates. Additional device details include storage, application-heap diagnostics, BLE counters and read-only bootloader/SoftDevice information. ZIP import preserves paths and metadata; restoration supports resuming with the same backup and one final complete content/Raw128 comparison. The file manager does not automatically upload private backups. A stopped browser download does not mean that the file was saved; diagnostic preview/copy and alternative save actions remain available.
-
-`127.0.0.1` always refers to the computer or phone opening the link. Opening the page over a VPN does not extend Bluetooth range. Browser support, secure-context requirements and local network access still apply.
-
-## Hardware, verification and limits
-
-The tested target is an Allmiibo **128×64 monochrome LCD** device with an **nRF52832 (512 KiB internal flash, 64 KiB RAM)**, wheel/center button and USB-C connector. `BOARD=LCD` does not establish compatibility with OLED devices or every revision sold under the Allmiibo name. No pin mapping or partition changes are introduced by DE3.37.
-
-- A fresh unsigned rebuild from the public application source is byte-identical to the application binary in the signed DE3.37 OTA. The separate BL6 public source also reproduces its 28 KiB padded release region.
-- **102 firmware host test groups**, five targeted ASan/UBSan suites, ARM compilation, source binding, memory-map bounds and OTA signature checks passed for DE3.37.
-- **659 file-manager tests** and **7 built-worker/WASM tests** passed for 3.27.0. The production interface was checked at desktop and narrow widths.
-- BL6 DFU completion, entry and transport cases were reviewed again in host tests. This does not make an unrelated board bootloader-compatible.
-- On 26 October 2026, the device owner reported successful DE3.37 flashing and operation. This is a user report of normal function, not a newly instrumented full NFC/BLE/MTU23 run or physical fault-injection test.
-
-The application binary is 358,880 bytes, leaving 13,856 bytes in the existing application-flash region. The application heap remains 18,432 bytes; those figures are distinct from the full chip RAM and the external file-storage capacity. Static stack-path checks are not a physical stack-watermark measurement. Host tests do not prove every event order, hardware revision, power-loss scenario or complete absence of defects.
-
-The inherited upstream DFU signing key is publicly known. The signature establishes compatibility with that key and package format, **not** a secret publisher identity. Compare release checksums when obtaining the published files.
-
-## Sources and credits
-
-Application sources are in `fw/`, browser sources in `web/`. The [build guide](docs/BUILD_DE3_37.md) uses a pinned SDK image and a documented header override to reproduce the application without signing, flashing or installing a SoftDevice. The ordinary upstream `make all` workflow is not the release procedure for this custom application.
-
-Thanks to solosky, cylin577 and the component contributors. The original [GPL version 2 text](LICENSE) and individual component notices are retained; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and `LICENSES/`. This repository does not relicense the bundled components. Public packages exclude private credentials, device backups, private signing keys and figure dumps. Catalog names and IDs are metadata, not a source of valid tag data or a guarantee that every game supports a figure.
+Thanks to solosky, cylin577 and the component contributors. Mochi inspired web usability ideas; its separately developed project is [tasken/Mochi](https://github.com/tasken/Mochi). The original [license text](LICENSE), component notices and attribution remain in place. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); Nordic components retain their vendor terms. This repository does not relicense every component under one license.

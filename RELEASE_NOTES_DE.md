@@ -1,41 +1,25 @@
-# DE3.37 — Allmiibo LCD mit Packed LittleFS
+# DE3.55: aktueller Quellstand und Gesamtpaket
 
-**Anwendung 2.22.0-DE3.37 / Zähler 609 · Dateimanager 3.27.0**
+**Anwendung 2.22.0-DE3.55 / Zähler 627 · Dateimanager 3.33.1 · BL8-Quellen · S112-7.3.0-Dokumentation**
 
-Community-Veröffentlichung auf Grundlage von cylin577/pixl.js, ursprünglich solosky/pixl.js. Kein offizielles Upstream-Update.
+Der Hauptzweig und die Entwicklerdokumentation entsprechen jetzt den aktuellen Downloads. Die bisherigen Anwendungs- und Browserdateien bleiben unverändert. Wer DE3.55 bereits installiert hat, muss deshalb nicht erneut flashen.
 
-**Vor dem Flashen:** Dieses Anwendungspaket ist für passende LCD-Geräte vorgesehen, die bereits unser **Packed LittleFS (PFS1)** verwenden. Von DE3.16/SPIFFS oder dem normalen Upstream-LittleFS ist es kein direktes, datenbewahrendes Update. Zuerst [Speicherlayout und Migrationsweg prüfen](https://github.com/bluecyber81/pixl.js/blob/de3.37/docs/MIGRATION_PFS1.md). Ein bestehendes PFS1-Gerät muss für DE3.37 nicht erneut formatiert werden.
+- Passende Firmware- und BL8-Quellen, SDK-Korrekturen, Bauanleitungen, Beitragsleitfaden und CI.
+- Frische unabhängige Builds reproduzieren Anwendung und BL8 bytegenau.
+- Bisherige Speicher-, Tasten-, Bluetooth-/NFC- und DFU-Korrekturen sowie der aktuelle Browser mit Bildern, Katalogprüfung und farbiger Sammlungsanzeige bleiben enthalten.
 
-## Die wichtigsten Änderungen
+## Downloads
 
-- Ein fehlgeschlagener NFC-Speichervorgang behält die Änderung im RAM. App-/Figurenwechsel und Schlafen dürfen sie nicht still verwerfen. Der Fehlerdialog ermöglicht erneutes Speichern oder getrennt bestätigtes Verwerfen mit vorausgewähltem Nein. Die bisher gespeicherte Datei bleibt bei bewusstem Verwerfen bestehen. Ungesicherter RAM ist weiterhin nicht stromausfallsicher.
-- AmiLoop meldet eine abgewiesene Tagübernahme nicht mehr als Erfolg.
-- Der Dateimanager schützt zwischenzeitlich geänderte Ordnernotizen und Schreibschutz beim ZIP-Import.
-- Die lokale Wiederherstellungsablage öffnet nach einer browserseitigen Schließung bei der nächsten Aktion erneut. Fehlende/unpassende Belege werden verständlicher gemeldet.
-- Unbekannte Speicherfähigkeiten lösen keine falsche Empfehlung zur SPIFFS-Vorbereitungsfirmware auf einem bereits umgestellten Gerät aus.
-- Absichtliches Trennen im Leerlauf erscheint als Information; echte Verbindungsfehler bleiben Fehlermeldungen. Nicht unterstützte optionale Diagnoseabfragen erzeugen keinen falschen Gerätefehler.
+- **Allmiibo_LCD_DE3_55_627_TESTSTAND.zip**: unveränderte flashbare Anwendung für passende LCD/PFS1-Geräte.
+- **Allmiibo_Dateimanager_3_33_1.zip**: aktueller portabler Dateimanager.
+- **Allmiibo_DE3_55_BL8_Web3_33_1_Projektquellen.zip**: aktueller öffentlicher Quellstand mit unabhängig baubaren Firmware-/BL8-Quellen und Browser.
+- **Allmiibo_DE3_55_Web3_33_1_Gesamtpaket.zip**: alle genannten Downloads mit Anleitung und Prüfsummen. Das äußere Archiv ist **nicht flashbar**.
+- **SHA256SUMS.txt**: Prüfsummen der veröffentlichten Dateien.
 
-Die früheren Verbesserungen für Darstellung, QR-Seiten, Bluetooth/MTU23, große Listen, RAM-Nutzung, PFS1 und gezielte LittleFS-Korrekturen sind enthalten. [Kumulative Änderungen](https://github.com/bluecyber81/pixl.js/blob/de3.37/CHANGELOG_DE3_SERIES.md).
+[Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [DFU für Anwendungen](https://bluecyber81.github.io/pixl.js/dfu/web.html)
 
-## Dateien
+**DE3.8/DE3.16/SPIFFS und normales Upstream-LittleFS benötigen einen eigenen Migrationsweg.** Die Anwendung allein überträgt deren Sammlung nicht. Bereits passendes PFS1 braucht keine Formatierung. Das Anwendungsupdate ersetzt weder BL8 noch S112; kein pauschales kombiniertes Systemupdate wird angeboten. Private Schlüssel, Sicherungen und Figurendateien sind nicht enthalten.
 
-- **Flashen:** `Allmiibo_LCD_DE3_37_609.zip` unverändert im Secure-DFU-Programm auswählen.
-- **Dateimanager:** `Allmiibo_Dateimanager_3_27_0_PUBLIC.zip` am PC entpacken und `Start-Dateimanager.cmd` starten.
-- **Quellen:** `Allmiibo_DE3_37_Quellcode_PUBLIC.zip`.
-- **Alles zusammen:** `Allmiibo_DE3_37_Gesamtpaket_PUBLIC.zip` entpacken; die äußere ZIP ist nicht flashbar.
-- **Optionaler Bootloader:** `BL6_CODE_ZAEHLER7_BOOTLOADER_ONLY.zip`, gespeicherter Zähler 7. [Kompatibilitätsanleitung und Quellen](https://github.com/bluecyber81/pixl.js/blob/de3.37/bootloader-bl6/README.md). Bei vorhandenem BL6 nicht erneut nötig. Für dieses Paket einen Nordic-Secure-DFU-Client verwenden; der integrierte Browser-Flasher ist für Anwendungen. Nach einem Bootloader-Update kann eine erneute Anwendungsinstallation erforderlich sein.
-- Prüfsummen: `SHA256SUMS.txt`.
+Prüfumfang: archivierte 136 Firmware-Testgruppen, gezielte Sanitizer-/ARM-/Speichertests; 1.057 Webtests und je 21 Produktionsprüfungen. Begrenzte Gerätetests mit echter MTU23/250 bestanden am 2. November; NFC, Mitteldruck und Aufwachen wurden vom Besitzer bestätigt. Keine Garantie für jede Platine oder jeden Fehlerfall.
 
-Die Anwendungs-OTA ersetzt **weder Bootloader noch SoftDevice**. Sie enthält keine Figurensammlung, privaten Sicherungen oder Signierschlüssel. BL6/S112 sind getrennte Komponenten und kein notwendiges erneutes Update für ein bereits passendes Gerät. Keine Freigabe für beliebige OLED-/LCD-Platinen allein anhand des Namens Allmiibo.
-
-Ein SoftDevice-Binärpaket ist nicht enthalten.
-
-## Prüfstand
-
-Die öffentliche Quelle wurde frisch neu gebaut: Anwendungs-BIN und separat der vollständige 28-KiB-BL6-Bereich sind bytegleich mit den zugeordneten Release-Binärdaten.
-
-102 Firmware-Hostprüfreihen, fünf gezielte ASan/UBSan-Prüfreihen, ARM-Build, Quellbindung, Speichergrenzen und OTA-Signatur bestanden. Dateimanager: 659 Tests und 7 Tests des gebauten Workers/WASM bestanden. BL6-DFU-Abschluss, Einstieg und Transport wurden zusätzlich im Host geprüft.
-
-Der Besitzer bestätigte am **26.10.2026**, dass DE3.37 geflasht wurde und die ausprobierten Funktionen laufen. Das ist kein vollständiger neuer instrumentierter Hardware-/NFC-/MTU23- oder Fehlerfalltest. Keine Zusicherung vollständiger Fehlerfreiheit. Anwendungs-BIN 358.880 Byte, Flashreserve 13.856 Byte, Anwendungsheap weiterhin 18.432 Byte.
-
-Der geerbte Upstream-DFU-Schlüssel ist öffentlich bekannt; die Signatur ist kein Nachweis einer geheimen Herausgeberidentität. Quellen, Bauanleitung, Prüfsummen und Lizenzen ermöglichen die Zuordnung der veröffentlichten Dateien.
+[Bedienung](https://github.com/bluecyber81/pixl.js/blob/de3.55/README.de.md) · [Mitarbeiten](https://github.com/bluecyber81/pixl.js/blob/de3.55/CONTRIBUTING.md) · [Prüfgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.55/docs/validation/DE3_55.json)

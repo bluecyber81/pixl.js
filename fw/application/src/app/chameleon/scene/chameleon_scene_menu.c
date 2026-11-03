@@ -26,12 +26,49 @@ typedef enum {
     CHAMELEON_MENU_CARD_DATA,
     CHAMELEON_MENU_CARD_TYPE,
     CHAMELEON_MENU_CARD_ADVANCED,
+    CHAMELEON_MENU_DISNEY_PROFILE,
 } chameleon_menu_item_t;
+
+void chameleon_scene_menu_on_enter(void *user_data);
+
+static void chameleon_scene_disney_profile_cb(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_chameleon_t *app = box->user_data;
+    if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        bool saved = tag_helper_apply_disney_profile();
+        mui_toast_view_show(app->p_toast_view, saved ? _T(APP_CHAMELEON_CARD_DATA_SAVE_SUCCESS)
+                                                   : _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED));
+        if (saved) {
+            mui_list_view_clear_items(app->p_list_view);
+            chameleon_scene_menu_on_enter(app);
+        }
+    }
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_LIST);
+}
+
+static void chameleon_scene_disney_profile_confirm(app_chameleon_t *app) {
+    if (tag_helper_get_active_tag_type() != TAG_TYPE_MIFARE_Mini) {
+        mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_DISNEY_NEEDS_MINI));
+        return;
+    }
+    if (nfc_tag_mf1_get_write_mode() >= NFC_TAG_MF1_WRITE_SHADOW) {
+        mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_DISNEY_SHADOW));
+        return;
+    }
+    mui_msg_box_set_header(app->p_msg_box, _T(APP_CHAMELEON_DISNEY_PROFILE));
+    mui_msg_box_set_message(app->p_msg_box, _T(APP_CHAMELEON_DISNEY_CONFIRM));
+    mui_msg_box_set_btn_text(app->p_msg_box, _T(CONFIRM), NULL, _T(CANCEL));
+    mui_msg_box_set_btn_focus(app->p_msg_box, 2);
+    mui_msg_box_set_event_cb(app->p_msg_box, chameleon_scene_disney_profile_cb);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_MSG_BOX);
+}
 
 void chameleon_scene_menu_on_event(mui_list_view_event_t event, mui_list_view_t *p_list_view, mui_list_item_t *p_item) {
     app_chameleon_t *app = p_list_view->user_data;
     chameleon_menu_item_t item = (chameleon_menu_item_t)p_item->user_data;
     switch (item) {
+    case CHAMELEON_MENU_DISNEY_PROFILE:
+        chameleon_scene_disney_profile_confirm(app);
+        break;
     case CHAMELEON_MENU_HOME:
         mini_app_launcher_exit(mini_app_launcher());
         break;
@@ -113,6 +150,8 @@ void chameleon_scene_menu_on_enter(void *user_data) {
     mui_list_view_add_item(app->p_list_view, ICON_FILE, _T(APP_CHAMELEON_CARD_DATA), (void *)CHAMELEON_MENU_CARD_DATA);
     mui_list_view_add_item(app->p_list_view, ICON_PAGE, _T(APP_CHAMELEON_CARD_ADVANCED),
                            (void *)CHAMELEON_MENU_CARD_ADVANCED);
+    mui_list_view_add_item(app->p_list_view, ICON_PAGE, _T(APP_CHAMELEON_DISNEY_PROFILE),
+                           (void *)CHAMELEON_MENU_DISNEY_PROFILE);
     mui_list_view_add_item(app->p_list_view, ICON_SLOT, _T(APP_CHAMELEON_CARD_SLOT_SETTINGS),
                            (void *)CHAMELEON_MENU_SLOT);
 

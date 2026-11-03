@@ -245,4 +245,9 @@ const char * const lang_de_DE[_L_COUNT] = {
     [_L_DE3_SAVE_NO_SELECTED] = "[Nein]       Ja",
     [_L_DE3_SAVE_YES_SELECTED] = " Nein       [Ja]",
     [_L_DE3_SAVE_CONFIRM] = "Mitte: bestaetigen",
+    [_L_DE3_REMOTE_SESSION] = "Fernbedienung (bis Aus)",
+    [_L_APP_CHAMELEON_DISNEY_PROFILE] = "Disney Infinity",
+    [_L_APP_CHAMELEON_DISNEY_CONFIRM] = "Kennung ersetzen?\nDump bleibt erhalten.",
+    [_L_APP_CHAMELEON_DISNEY_NEEDS_MINI] = "Zuerst Mini-Dump laden",
+    [_L_APP_CHAMELEON_DISNEY_SHADOW] = "Schattenmodus: unveraendert",
 };

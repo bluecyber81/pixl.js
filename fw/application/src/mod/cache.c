@@ -57,7 +57,17 @@ static uint32_t cache_enable_retention(uintptr_t start, uintptr_t end) {
     return NRF_SUCCESS;
 }
 
+void cache_invalidate(void) {
+    /* Existing retained field, no new RAM or layout. A volatile aligned store
+     * must survive the imminent reset; cache_valid rejects it regardless of
+     * any old or coincidentally matching CRC. The launcher also requires 1. */
+    *(volatile int32_t *)&m_cache_data.enabled = -1;
+}
+
 bool cache_valid(){
+    if (m_cache_data.enabled != 0 && m_cache_data.enabled != 1) {
+        return false;
+    }
     NRF_LOG_INFO("noinit area: [0x%X, 0x%X], %u bytes", &__start_noinit, &__stop_noinit,
                  (uint32_t)cache_noinit_size());
     NRF_LOG_INFO("m_cache_data address: 0x%X", &m_cache_data);

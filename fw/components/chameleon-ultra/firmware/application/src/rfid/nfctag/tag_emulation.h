@@ -81,6 +81,8 @@ bool tag_emulation_active_data_ready(void);
 bool tag_emulation_prepare_slot_count(uint8_t count);
 //Some of the data stored in RAM can be saved to Flash through this interface
 void tag_emulation_save(void);
+/* Force one commit after the caller's exact changed-field comparison. */
+bool tag_emulation_save_active_data(void);
 
 // Starting and ending of the simulation card
 void tag_emulation_sense_run(void);
@@ -92,6 +94,9 @@ void tag_emulation_sense_switch(tag_sense_type_t type, bool enable);
 void tag_emulation_delete_data(uint8_t slot, tag_sense_type_t sense_type);
 // Initial data of the factory data of the specified card slot into the factory of the specified type of card
 bool tag_emulation_factory_data(uint8_t slot, tag_specific_type_t tag_type);
+/* Persist UI configuration only after its card data has been written/loaded.
+ * Factory initialization uses the lower-level factory API without this commit. */
+bool tag_emulation_save_config(void);
 // Change the type of the card that is being simulated
 void tag_emulation_change_type(uint8_t slot, tag_specific_type_t tag_type);
 //Load the data from the memory to the simulation card buffer

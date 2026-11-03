@@ -9,6 +9,7 @@
 #include "i18n/language.h"
 #include "settings.h"
 #include "tag_helper.h"
+#include "hal_nfc_t2t.h"
 
 static void app_chameleon_on_run(mini_app_inst_t *p_app_inst);
 static void app_chameleon_on_kill(mini_app_inst_t *p_app_inst);
@@ -128,6 +129,10 @@ void app_chameleon_on_kill(mini_app_inst_t *p_app_inst) {
     }
 
     if (p_app_handle->initialized) {
+        /* Launcher/shutdown may kill the active emulation scene directly.
+         * Freeze NFC writers before comparing or persisting their buffer. */
+        tag_emulation_sense_end();
+        hal_nfc_set_nrfx_irq_enable(false);
         settings_data_t *settings = settings_get_data();
         if (tag_helper_valid_default_slot() &&
             tag_emulation_slot_is_enabled(settings->chameleon_default_slot_index, TAG_SENSE_HF)) {

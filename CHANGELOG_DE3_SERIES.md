@@ -1,6 +1,34 @@
+# Current publication: DE3.55 / Dateimanager 3.33.1 / BL8 / S112 7.3.0
+
+Published source and documentation synchronized on 2026-11-03. This synchronization changes no installed firmware and keeps existing OTA bytes/checksums intact. [Current component matrix](docs/COMPONENTS.md).
+
+## Since the former main-branch DE3.37 snapshot
+
+- Application source now matches DE3.55/627. Retained additions include boot/storage work reduction, streamed index checks and CRC work sharing; targeted LittleFS read/cache/wear corrections preserve PFS1.
+- Middle-button debounce/event handling, retained-state and UI allocation paths were corrected; diagnostics expose separate startup phases and heap observations. The hardware RAM size is unchanged.
+- BLE session cleanup, remote-control lifecycle/file-mode transitions, bounded reads/atomic writes and NFC/card-emulator validation received targeted fixes and tests. The optional Disney Infinity profile configures a suitable own MiFare Mini file; LEGO/NTAG213 UID handling is corrected.
+- BL8 corresponding source and its exact SDK overrides are now exported independently. Bootloader DFU completion/entry/transport corrections and the Nordic header compatibility correction are documented there. S112 remains Nordic 7.3.0, not a custom rebuilt stack.
+- The web manager has current pinned library patches, improved DFU object/resume handling (including a leftover longer init packet), diagnostic exports, preview/images and cross-folder search, ZIP/Raw128 import/backup/recovery, and distinct storage-engine simulation profiles.
+- 3.33.0 added catalogue freshness and collection/own-source transfer tools. 3.33.1 fixes unconfirmed-versus-missing classification, makes full-card green/orange/red borders visible and keeps a completed disconnected observation with its date in page memory only.
+- Complete application and BL8 sources, contributor instructions, build helpers and non-deploying CI now accompany the download artifacts. A fresh public-source application rebuild matches the released binary.
+
+## DE3.55 specifics
+
+Calculate the two PFS1 CRC states together over the same data; retain stored CRC values and disk structures. Correct LittleFS metadata-wear selection with NOR geometry, occupancy, relocation, error-injection and remount tests. This changes the storage-engine fingerprint, not the PFS1 format. Matching DE3.55 WASM checks coexist with earlier simulator profiles; older results are not relabelled as tests of this engine.
+
+## Evidence and scope
+
+136 application host test groups passed in the archived DE3.55 build; 1,057 web tests and 21 checks for each root/Pages production build passed for 3.33.1. Bounded DE3.55 device transfer tests include actual MTU23 and MTU250, with owner-confirmed NFC/middle/wake checks. These dated observations are separate from source/build/CI checks and are not an exhaustive hardware guarantee. [Validation summary](docs/validation/DE3_55.json).
+
+---
+
+## Historical DE3.37 and earlier release record
+
+The following sections retain the original version-specific claims and instructions as history. Their current-version wording is not the current component matrix.
+
 # Cumulative DE-series changes / Kumulative Änderungen der DE-Reihe
 
-Current release: **2.22.0-DE3.37 / application counter 609**, with **file manager 3.27.0**, dated 26 October 2026. The earlier DE1–DE3.16 record is retained below as a historical record; its version-specific tests, open questions and software versions are not current-release claims.
+Historical release: **2.22.0-DE3.37 / application counter 609**, with **file manager 3.27.0**, dated 26 October 2026. The earlier DE1–DE3.16 record is retained below as a historical record; its version-specific tests, open questions and software versions are not current-release claims.
 
 This is a component summary of the retained development work, not an assertion that every intermediate version introduced a distinct feature or that all defects have been eliminated. The application derives from cylin577/pixl.js and the original solosky/pixl.js project. The custom Packed LittleFS layer is not interchangeable with ordinary upstream LittleFS.
 

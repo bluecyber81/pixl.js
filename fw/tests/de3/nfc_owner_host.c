@@ -50,7 +50,7 @@ static void nrf_drv_clock_hfclk_release(void) { ++releases; }
 static void nrf_nfct_field_lost_hfclk_handle(void) { ++resets; }
 static void hal_nfc_common_hw_setup(void) { ++setups; }
 static void field_timer_with_callback_config(void) { enabled[TIMER4_IRQn] = true; }
-static void NVIC_DisableIRQ(int irq) { enabled[irq] = false; }
+static uint32_t sd_nvic_DisableIRQ(int irq) { enabled[irq] = false; return NRF_SUCCESS; }
 static void NVIC_EnableIRQ(int irq) { enabled[irq] = true; }
 static void NVIC_ClearPendingIRQ(int irq) { pending[irq] = false; }
 static void NVIC_SetPriority(int irq, int priority) { (void)irq; assert(priority == 6); }

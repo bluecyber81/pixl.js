@@ -58,7 +58,7 @@ static bool m_active_slot_persist=true,m_tag_ready=true,dirty=true;
 static int read_result;
 static app_amiidb_t *active_app;
 static ntag_t old_tag;
-static int amiidb_api_slot_write(uint8_t slot,ntag_t*tag){saves++;saved_index=slot;saved_value=tag->data[16];return VFS_OK;}
+static int amiidb_api_slot_update(uint8_t slot,ntag_t*tag){saves++;saved_index=slot;saved_value=tag->data[16];return VFS_OK;}
 static int amiidb_api_slot_read(uint8_t slot,ntag_t*tag){assert(saves==1&&saved_index==2);memset(tag,0,sizeof(*tag));tag->data[16]=slot;return read_result;}
 static void ntag_store_new_rand(ntag_t*tag){memset(tag,0,sizeof(*tag));}
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t*app,int text){(void)app;(void)text;errors++;}

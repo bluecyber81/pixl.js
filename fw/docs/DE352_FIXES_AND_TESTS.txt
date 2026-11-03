@@ -1,0 +1,25 @@
+DE3.52 / application counter 624 / LCD / 2026-11-01
+
+Relative to DE3.51:
+- Validate NFC SECTOR_SELECT framing before changing its pending state:
+  packet 1 must be C2 FF, packet 2 exactly four bytes after HAL CRC removal.
+  Malformed input receives NACK, exits pending selection and permits recovery.
+  Valid sector mappings and permissive RFU handling remain unchanged.
+- Correct the public information/QR destinations for MyMario Mario (Melody
+  Car) and Toad. Their model IDs and tag contents are unchanged. Other model
+  IDs retain the established NFC lookup URL. QR layout tests cover actual
+  encoder output on the 128x64 LCD and decode the generated images.
+
+This is an application-only update. BL8, S112 7.3.0, device pin mapping,
+RAM/flash partitions, Packed LittleFS PFS1 and its exact storage engine are
+retained. No formatting, migration or rewriting of the Amiibo collection.
+All previous application fixes and features are retained.
+
+Validation is bound to exact source and final ARM binary. Host regression,
+native C, ASan/UBSan, ARM32 QEMU and signature checks are separate evidence.
+Modeled peripherals do not prove physical NFC timing, wake behavior, radio
+range or whole-device RAM/stack watermarks. Device installation remains a
+separate step; known figure recognition should be checked after flashing.
+
+NFC reference: NXP NT3H2111/NT3H2211 Rev.3.6, section10.12, Figure28.
+https://www.nxp.com/docs/en/data-sheet/NT3H2111_2211.pdf

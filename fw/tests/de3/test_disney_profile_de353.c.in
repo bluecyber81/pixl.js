@@ -1,0 +1,146 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <stddef.h>
+#include "hf/nfc_mf1.h"
+#include "hf/nfc_mf0_ntag.h"
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+typedef enum {TAG_GROUP_UNKNOWN,TAG_GROUP_MIFARE,TAG_GROUP_NTAG} tag_group_type_t;
+static uint8_t card[4500] __attribute__((aligned(4)));
+static uint8_t persisted[4500], original[4500], expected[4500];
+static nfc_tag_mf1_information_t *m_tag_information = (void *)card;
+static nfc_tag_14a_coll_res_reference_t m_shadow_coll_res;
+static tag_slot_config_t slotConfig;
+static uint16_t stored_crc;
+static tag_data_buffer_t buffer = {sizeof(card),card,&stored_crc};
+static bool missing, m_tag_data_loaded, write_ok, missing_saver;
+static int save_length_override;
+static unsigned writes, scenarios;
+static tag_specific_type_t tag_helper_get_active_tag_type(void) {return slotConfig.slots[slotConfig.active_slot].tag_hf;}
+uint8_t tag_emulation_get_slot(void) {return slotConfig.active_slot;}
+bool tag_emulation_active_data_ready(void) {return m_tag_data_loaded;}
+tag_data_buffer_t *get_buffer_by_tag_type(tag_specific_type_t type) {return missing?NULL:&buffer;}
+bool nfc_tag_mf1_is_use_mf1_coll_res(void) {return m_tag_information->config.use_mf1_coll_res;}
+nfc_tag_mf1_write_mode_t nfc_tag_mf1_get_write_mode(void) {return m_tag_information->config.mode_block_write;}
+@GET_COLL@
+static nfc_tag_14a_coll_res_reference_t *tag_helper_get_active_coll_res_ref(void) {return get_mifare_coll_res();}
+@GROUP@
+@LOAD_COLL@
+/* Return actual Mini representation size, including identity and configuration. */
+static int saver(tag_specific_type_t t,tag_data_buffer_t *b) {assert(t==TAG_TYPE_MIFARE_Mini);return save_length_override!=-99?save_length_override:(int)(offsetof(nfc_tag_mf1_information_t,memory)+320);}
+static tag_datas_savecb_t get_data_savecb_from_tag_type(tag_specific_type_t t) {return missing_saver?NULL:saver;}
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t) {return TAG_SENSE_HF;}
+typedef struct {uint16_t id,key;} fds_slot_record_map_t;
+static void get_fds_map_by_slot_sense_type_for_dump(uint8_t slot,tag_sense_type_t t,fds_slot_record_map_t *out) {
+ assert(slot==slotConfig.active_slot && t==TAG_SENSE_HF);out->id=slot;out->key=2;
+}
+/* Use the production CRC, including collision behavior in dirty tracking. */
+@ACTUAL_CRC@
+static bool fds_write_sync(uint16_t id,uint16_t key,int len,const uint8_t *data) {
+ assert(id==slotConfig.active_slot && key==2 && len==offsetof(nfc_tag_mf1_information_t,memory)+320);
+ writes++;if(write_ok)memcpy(persisted,data,len);return write_ok;
+}
+static int32_t fds_compare_sync(uint16_t id,uint16_t key,uint16_t length,const uint8_t *data) { return memcmp(persisted,data,length)==0; }
+@SAVE@
+@COMMIT@
+@PROFILE@
+@ENUM@
+typedef struct {void *user_data;} mui_msg_box_t;
+typedef unsigned mui_msg_box_event_t;
+typedef struct {void *p_scene_dispatcher,*p_toast_view,*p_view_dispatcher,*p_list_view;mui_msg_box_t *p_msg_box;} app_chameleon_t;
+#define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
+#define CHAMELEON_VIEW_ID_LIST 1
+#define CHAMELEON_VIEW_ID_MSG_BOX 2
+#define _T(s) #s
+static const char *toast,*message,*header,*left,*right;
+static unsigned focus,view,clears,reloads;
+static void (*callback)(mui_msg_box_event_t,mui_msg_box_t*);
+static void mui_toast_view_show(void*v,const char*s){toast=s;}
+static void mui_list_view_clear_items(void*v){clears++;}
+static void chameleon_scene_menu_on_enter(void*v){reloads++;}
+static void mui_view_dispatcher_switch_to_view(void*v,unsigned id){view=id;}
+static void mui_msg_box_set_header(mui_msg_box_t*b,const char*s){header=s;}
+static void mui_msg_box_set_message(mui_msg_box_t*b,const char*s){message=s;}
+static void mui_msg_box_set_btn_text(mui_msg_box_t*b,const char*l,const char*c,const char*r){assert(!c);left=l;right=r;}
+static void mui_msg_box_set_btn_focus(mui_msg_box_t*b,unsigned f){focus=f;}
+static void mui_msg_box_set_event_cb(mui_msg_box_t*b,void(*cb)(mui_msg_box_event_t,mui_msg_box_t*)){callback=cb;}
+@CALLBACK@
+@CONFIRM@
+static void reset(unsigned seed,unsigned mode) {
+ for(unsigned i=0;i<sizeof(card);i++)card[i]=(i*13+seed)&255;
+ m_tag_information->config.mode_block_write=mode;
+ m_tag_information->config.use_mf1_coll_res=true;
+ m_tag_information->res_coll.size=4;
+ memset(&slotConfig,0,sizeof(slotConfig));slotConfig.active_slot=3;slotConfig.slots[3].tag_hf=TAG_TYPE_MIFARE_Mini;
+ memcpy(original,card,sizeof(card));memcpy(expected,card,sizeof(card));memcpy(persisted,card,sizeof(card));
+ buffer.buffer=card;buffer.length=sizeof(card);buffer.crc=&stored_crc;
+ calc_14a_crc_lut(card,offsetof(nfc_tag_mf1_information_t,memory)+320,(uint8_t*)&stored_crc);
+ missing=missing_saver=false;m_tag_data_loaded=write_ok=true;writes=clears=reloads=0;callback=NULL;
+ save_length_override=-99;
+ toast=message=header=left=right=NULL;focus=99;view=CHAMELEON_VIEW_ID_LIST;
+}
+static void check_expected(void) {
+ nfc_tag_mf1_information_t *e=(void*)expected;
+ e->config.use_mf1_coll_res=false;e->res_coll.size=7;
+ memcpy(e->res_coll.uid,e->memory[0],7);e->res_coll.sak[0]=9;e->res_coll.atqa[0]=0x44;e->res_coll.atqa[1]=0;
+ assert(!memcmp(card,expected,sizeof(card)));
+ assert(!memcmp(persisted,expected,offsetof(nfc_tag_mf1_information_t,memory)+320));
+ assert(!memcmp(m_tag_information->memory,original+offsetof(nfc_tag_mf1_information_t,memory),sizeof(m_tag_information->memory)));
+}
+int main(void) {
+ app_chameleon_t app={0};mui_msg_box_t box={&app};app.p_msg_box=&box;
+ for(unsigned seed=0;seed<64;seed++)for(unsigned mode=0;mode<3;mode++) {
+  reset(seed,mode);chameleon_scene_disney_profile_confirm(&app);
+  assert(callback && focus==2 && view==CHAMELEON_VIEW_ID_MSG_BOX && !writes && !memcmp(card,original,sizeof(card)));
+  assert(!strcmp(header,"APP_CHAMELEON_DISNEY_PROFILE")&&!strcmp(message,"APP_CHAMELEON_DISNEY_CONFIRM"));
+  assert(!strcmp(left,"CONFIRM")&&!strcmp(right,"CANCEL"));
+  callback(0,&box);assert(writes==1 && clears==1 && reloads==1 && view==CHAMELEON_VIEW_ID_LIST);
+  assert(!strcmp(toast,"APP_CHAMELEON_CARD_DATA_SAVE_SUCCESS"));check_expected();
+  assert(tag_helper_apply_disney_profile() && writes==1); /* idempotent: no repeated flash write */
+  check_expected();scenarios++;
+  reset(seed,mode);write_ok=false;uint16_t crc=stored_crc;
+  chameleon_scene_disney_profile_confirm(&app);callback(0,&box);
+  assert(writes==1&&!clears&&!reloads&&stored_crc==crc&&!memcmp(card,original,sizeof(card))&&!memcmp(persisted,original,sizeof(card)));
+  assert(!strcmp(toast,"APP_CHAMELEON_CARD_DATA_SAVE_FAILED"));
+  write_ok=true;assert(tag_helper_apply_disney_profile()&&writes==2);check_expected();scenarios++;
+ }
+ for(unsigned event=1;event<=2;event++) {
+  reset(1,0);chameleon_scene_disney_profile_confirm(&app);callback(event,&box);
+  assert(!writes&&!clears&&!reloads&&!toast&&!memcmp(card,original,sizeof(card))&&view==CHAMELEON_VIEW_ID_LIST);scenarios++;
+ }
+ /* Two distinct identities, real CRC16 b24d: the changed profile must commit. */
+ reset(1,0);m_tag_information->res_coll.uid[0]=0xbd;m_tag_information->res_coll.uid[1]=0x5c;
+ memcpy(original,card,sizeof(card));memcpy(persisted,card,sizeof(card));
+ calc_14a_crc_lut(card,offsetof(nfc_tag_mf1_information_t,memory)+320,(uint8_t*)&stored_crc);
+ uint16_t collision_crc=stored_crc;assert(collision_crc==0xb24d);
+ assert(tag_helper_apply_disney_profile() && writes==1 && stored_crc==collision_crc);
+ assert(memcmp(original,card,sizeof(card)));check_expected();
+ assert(tag_helper_apply_disney_profile() && writes==1);scenarios++;
+ for(unsigned fault=0;fault<12;fault++) {
+  reset(2,0);if(fault==0)missing=true;
+  if(fault==1)buffer.buffer=NULL;
+  if(fault==2)buffer.length=offsetof(nfc_tag_mf1_information_t,memory)+319;
+  if(fault==3)m_tag_data_loaded=false;
+  if(fault==4)slotConfig.slots[3].tag_hf=TAG_TYPE_NTAG_213;
+  if(fault==5)missing_saver=true;
+  if(fault==6)m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW;
+  if(fault==7)m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW_REQ;
+  if(fault==8)buffer.crc=NULL;
+  if(fault==9)save_length_override=0;
+  if(fault==10)save_length_override=-1;
+  if(fault==11)save_length_override=sizeof(card)+1;
+  memcpy(original,card,sizeof(card));assert(!tag_helper_apply_disney_profile()&&!writes&&!memcmp(card,original,sizeof(card)));scenarios++;
+ }
+ for(unsigned unsupported=0;unsupported<3;unsupported++) {
+  reset(9,0);
+  if(!unsupported)slotConfig.slots[3].tag_hf=TAG_TYPE_NTAG_215;
+  else m_tag_information->config.mode_block_write=unsupported==1?NFC_TAG_MF1_WRITE_SHADOW:NFC_TAG_MF1_WRITE_SHADOW_REQ;
+  memcpy(original,card,sizeof(card));chameleon_scene_disney_profile_confirm(&app);
+  assert(!callback&&!writes&&view==CHAMELEON_VIEW_ID_LIST&&toast&&!memcmp(card,original,sizeof(card)));scenarios++;
+ }
+ printf("PASS %u profile/confirm/save/retry/cancel/invalid cases; unchanged dump bytes and unrelated configuration\n",scenarios);
+ return 0;
+}

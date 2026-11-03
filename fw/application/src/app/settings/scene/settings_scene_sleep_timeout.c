@@ -74,6 +74,17 @@ void settings_scene_sleep_timeout_on_enter(void *user_data) {
     mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_3MIN), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_3MIN);
     mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_EXIT);
 
+    uint16_t focus = 0;
+    switch (settings_get_data()->sleep_timeout_sec) {
+    case 15: focus = 1; break;
+    case 30: focus = 2; break;
+    case 45: focus = 3; break;
+    case 60: focus = 4; break;
+    case 120: focus = 5; break;
+    case 180: focus = 6; break;
+    default: break;
+    }
+    mui_list_view_set_focus(app->p_list_view, focus);
     mui_list_view_set_selected_cb(app->p_list_view, settings_scene_sleep_timeout_list_view_on_selected);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
 }

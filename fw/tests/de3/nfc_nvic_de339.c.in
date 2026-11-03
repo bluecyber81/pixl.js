@@ -1,0 +1,159 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#define HAL_NFC_ENGINEERING_BC_FTPAN_WORKAROUND 1
+#define HAL_NFC_DEBUG_PIN_SET(...) ((void)0)
+#define HAL_NFC_DEBUG_PIN_CLEAR(...) ((void)0)
+#define NRF_LOG_INFO(...) ((void)0)
+
+#define HAL_NFC_EVENT_FIELD_OFF 1
+#define NFC_HAL_FIELDPRESENT_MASK 3
+#define NFC_HAL_FIELDPRESENT_IS_LOST 0
+#define NRF_SUCCESS 0
+#define NRF_ERROR_INVALID_STATE 8
+#define NRF_NFCT_ERRORSTATUS_ALL UINT32_MAX
+#define NRF_DRV_CLOCK_EVT_HFCLK_STARTED 1
+#define NFCT_CONFIG_IRQ_PRIORITY 6
+#define NFCT_IRQn 0
+#define TIMER4_IRQn 1
+typedef int nfct_field_sense_state_t;
+typedef int nrf_drv_clock_evt_type_t;
+typedef uint32_t ret_code_t;
+static struct {
+    uint32_t FIELDPRESENT, TASKS_ACTIVATE, INTENCLR, TASKS_DISABLE, ERRORSTATUS, TASKS_SENSE;
+    uint32_t EVENTS_FIELDDETECTED, EVENTS_FIELDLOST, EVENTS_SELECTED, EVENTS_TXFRAMEEND;
+    uint32_t EVENTS_RXFRAMEEND, EVENTS_RXERROR, EVENTS_ERROR;
+} nfct;
+static struct { uint32_t TASKS_SHUTDOWN, TASKS_CLEAR, TASKS_START, EVENTS_COMPARE[1]; } timer4;
+#define NRF_NFCT (&nfct)
+#define NRF_TIMER4 (&timer4)
+static unsigned requests, releases, resets, setups, callbacks;
+static uint8_t m_nrfx_irq_enabled;
+static bool m_custom_enabled, m_field_on, m_slp_req_received;
+static bool enabled[2], pending[2];
+static uint32_t field_state_cnt;
+static int m_clock_handler_item;
+static void *m_nfc_lib_context;
+static void custom_callback(void *ctx, int event, const uint8_t *data, size_t size) {
+    (void)ctx; (void)data; (void)size; assert(event == HAL_NFC_EVENT_FIELD_OFF); ++callbacks;
+}
+static void (*m_nfc_lib_callback)(void *, int, const uint8_t *, size_t) = custom_callback;
+static inline void nrf_nfct_clock_event_handler(nrf_drv_clock_evt_type_t event);
+static void nrf_drv_clock_hfclk_request(void *item) {
+    (void)item; ++requests;
+    /* The clock may already be running: the SDK can invoke this immediately. */
+    nrf_nfct_clock_event_handler(NRF_DRV_CLOCK_EVT_HFCLK_STARTED);
+}
+static void nrf_drv_clock_hfclk_release(void) { ++releases; }
+static void nrf_nfct_field_lost_hfclk_handle(void) { ++resets; }
+static void hal_nfc_common_hw_setup(void) { ++setups; }
+static void field_timer_with_callback_config(void) { enabled[TIMER4_IRQn] = true; }
+static void NVIC_DisableIRQ(int irq) { enabled[irq] = false; }
+static void NVIC_EnableIRQ(int irq) { enabled[irq] = true; }
+static void NVIC_ClearPendingIRQ(int irq) { pending[irq] = false; }
+static void NVIC_SetPriority(int irq, int priority) { (void)irq; assert(priority == 6); }
+static void nrf_nfct_event_clear(volatile uint32_t *event) { *event = 0; }
+static void hal_nfc_field_check(void);
+static inline void hal_nfc_re_setup(void);
+
+
+/* W1S/W1C NVIC hardware semantics are the only modeled boundary. */
+#define __STATIC_INLINE static inline
+#define __NRF_NVIC_APP_IRQS_0 3u
+#define __NRF_NVIC_APP_IRQS_1 0u
+#define NRF_ERROR_SOC_NVIC_INTERRUPT_NOT_AVAILABLE 16u
+#define NRF_ERROR_SOC_NVIC_INTERRUPT_PRIORITY_NOT_ALLOWED 17u
+typedef int IRQn_Type;
+static struct { uint32_t ICER[2], ISER[2]; } virtual_nvic;
+#define NVIC (&virtual_nvic)
+static struct { volatile uint32_t __irq_masks[2], __cr_flag; } nrf_nvic_state;
+static int masked;
+static unsigned outer_enters, outer_exits;
+static bool unrelated_radio_enabled = true;
+static bool __sd_nvic_app_accessible_irq(IRQn_Type i) { return i == 0 || i == 1; }
+static bool __sd_nvic_is_app_accessible_priority(uint32_t p) { return p == 6; }
+static uint32_t NVIC_GetPriority(IRQn_Type i) { (void)i; return 6; }
+static int __sd_nvic_irq_disable(void) { int old = masked; masked = 1; return old; }
+static void __sd_nvic_irq_enable(void) { masked = 0; }
+/* SDK_NVIC_FUNCTIONS */
+static void critical_enter(uint8_t *nested) {
+    if (!nrf_nvic_state.__cr_flag) {
+        virtual_nvic.ICER[0] = (enabled[0] ? 1u : 0u) | (enabled[1] ? 2u : 0u);
+        virtual_nvic.ICER[1] = 0;
+        ++outer_enters;
+    }
+    assert(sd_nvic_critical_region_enter(nested) == NRF_SUCCESS);
+    if (!*nested) {
+        /* A write of 1 to ICER clears that hardware enable bit. */
+        if (virtual_nvic.ICER[0] & 1u) enabled[0] = false;
+        if (virtual_nvic.ICER[0] & 2u) enabled[1] = false;
+    }
+    assert(unrelated_radio_enabled && !masked);
+}
+static void critical_exit(uint8_t nested) {
+    bool outer = nrf_nvic_state.__cr_flag && !nested;
+    assert(sd_nvic_critical_region_exit(nested) == NRF_SUCCESS);
+    if (outer) {
+        /* A write of 1 to ISER sets that hardware enable bit. */
+        if (virtual_nvic.ISER[0] & 1u) enabled[0] = true;
+        if (virtual_nvic.ISER[0] & 2u) enabled[1] = true;
+        ++outer_exits;
+    }
+    assert(unrelated_radio_enabled && !masked);
+}
+#define CRITICAL_REGION_ENTER() do { uint8_t nested; critical_enter(&nested);
+#define CRITICAL_REGION_EXIT() critical_exit(nested); } while (0)
+
+/* ACTUAL_SOURCE */
+
+int main(void) {
+    hal_nfc_start(); assert(enabled[NFCT_IRQn] && enabled[TIMER4_IRQn] && m_custom_enabled);
+    nfct.FIELDPRESENT = 3; nrf_nfct_field_event_handler(1);
+    assert(m_field_on && requests == 1 && nfct.TASKS_ACTIVATE == 1 && timer4.TASKS_START == 1);
+    TIMER4_IRQHandler(); assert(field_state_cnt == 0 && resets == 0);
+    puts("PASS normal field detection and synchronous HFCLK-ready activation");
+    pending[0] = pending[1] = true;
+    nfct.EVENTS_FIELDDETECTED = nfct.EVENTS_FIELDLOST = nfct.EVENTS_SELECTED = 1;
+    nfct.EVENTS_TXFRAMEEND = nfct.EVENTS_RXFRAMEEND = nfct.EVENTS_RXERROR = nfct.EVENTS_ERROR = 1;
+    hal_nfc_set_nrfx_irq_enable(true);
+    assert(m_nrfx_irq_enabled && !m_custom_enabled && !m_field_on);
+    assert(!enabled[0] && !enabled[1] && !pending[0] && !pending[1]);
+    assert(timer4.TASKS_SHUTDOWN == 1 && releases == 1 && resets == 1 && callbacks == 0);
+    assert(!nfct.EVENTS_FIELDDETECTED && !nfct.EVENTS_FIELDLOST && !nfct.EVENTS_SELECTED);
+    assert(!nfct.EVENTS_TXFRAMEEND && !nfct.EVENTS_RXFRAMEEND && !nfct.EVENTS_RXERROR && !nfct.EVENTS_ERROR);
+    unsigned old_setups = setups;
+    nfct.TASKS_ACTIVATE = 0; nfct.FIELDPRESENT = 0;
+    for (int i = 0; i < 9; ++i) TIMER4_IRQHandler();
+    nrf_nfct_clock_event_handler(NRF_DRV_CLOCK_EVT_HFCLK_STARTED);
+    assert(resets == 1 && releases == 1 && setups == old_setups && callbacks == 0 && !nfct.TASKS_ACTIVATE);
+    assert(hal_nfc_start() == NRF_ERROR_INVALID_STATE);
+    hal_nfc_stop(); assert(resets == 1 && releases == 1);
+    puts("PASS nrfx handoff stops Timer4/IRQs/HFCLK once; stale timer/clock cannot touch new owner");
+    hal_nfc_set_nrfx_irq_enable(false); hal_nfc_start();
+    assert(enabled[0] && enabled[1] && m_custom_enabled);
+    nfct.FIELDPRESENT = 3; nrf_nfct_field_event_handler(1);
+    assert(requests == 2 && m_field_on);
+    nfct.FIELDPRESENT = 0;
+    for (int i = 0; i < 8; ++i) TIMER4_IRQHandler();
+    assert(resets == 2 && releases == 2 && callbacks == 1 && !m_field_on);
+    hal_nfc_stop(); hal_nfc_stop();
+    assert(resets == 2 && releases == 2 && !enabled[0] && !enabled[1]);
+    puts("PASS return to custom owner restores sensing; repeated stop cannot double-release clock");
+
+    /* Stop must update saved masks even inside an existing nested region. */
+    hal_nfc_start();
+    CRITICAL_REGION_ENTER();
+    assert(!enabled[0] && !enabled[1]);
+    hal_nfc_stop();
+    assert(nrf_nvic_state.__cr_flag && !enabled[0] && !enabled[1]);
+    CRITICAL_REGION_EXIT();
+    assert(!enabled[0] && !enabled[1] && !nrf_nvic_state.__cr_flag);
+    /* Preserve one disabled IRQ as well as unrelated radio IRQs. */
+    enabled[0] = true; enabled[1] = false;
+    hal_nfc_stop();
+    assert(!enabled[0] && !enabled[1] && unrelated_radio_enabled);
+    assert(outer_enters == outer_exits);
+    puts("PASS actual Nordic critical masks: stop, nested stop, mixed prior enable, radio preserved");
+    return 0;
+}

@@ -123,14 +123,14 @@ uint32_t hal_spi_bus_xfer(spi_transaction_t *p_trans) {
     for (uint32_t i = 0; i < max_xfer_bytes; i += 128) {
 
         if (i < p_trans->tx_length) {
-            spim_xfer_desc.p_tx_buffer = p_trans->p_tx_buffer + i;
+            spim_xfer_desc.p_tx_buffer = (const uint8_t *)p_trans->p_tx_buffer + i;
             spim_xfer_desc.tx_length = p_trans->tx_length - i < 128 ? p_trans->tx_length - i : 128;
         } else {
             spim_xfer_desc.p_tx_buffer = NULL;
             spim_xfer_desc.tx_length = 0;
         }
         if (i < p_trans->rx_length) {
-            spim_xfer_desc.p_rx_buffer = p_trans->p_rx_buffer + i;
+            spim_xfer_desc.p_rx_buffer = (uint8_t *)p_trans->p_rx_buffer + i;
             spim_xfer_desc.rx_length = p_trans->rx_length - i < 128 ? p_trans->rx_length - i : 128;
         } else {
             spim_xfer_desc.p_rx_buffer = NULL;
