@@ -64,6 +64,14 @@ function harness(overrides = {}) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-info.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/transfer-meter.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/figure-info.js'), 'utf8').replace(/export /g, ''), context);
+  for (const [file, names] of [
+    ['startup-diagnostics.js',['normalizeStartupDiagnostics']],
+    ['device-extra-diagnostics.js',['normalizeMtuDiagnostics','normalizeUiDiagnostics']],
+    ['diagnostic-snapshot.js',['collectDiagnosticSnapshot','createCombinedDiagnosticReport']]
+  ]) {
+    const source=fs.readFileSync(path.join(__dirname,'../src/lib/',file),'utf8').replace(/^import .*$/gm,'').replace(/export /g,'');
+    vm.runInContext('{ '+source+'\n'+names.map(name=>'globalThis.'+name+'='+name+';').join('')+' }',context);
+  }
   vm.runInContext(descriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'module.exports ='), context);
   const options = context.module.exports;
   const instance = {
@@ -270,7 +278,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.34.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.35.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -282,7 +290,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.34.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.35.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -369,7 +377,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.34.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.35.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -910,7 +918,7 @@ test('production template compiles with Vue 3 and modern Element Plus bindings',
   assert.deepEqual(compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'ui' }).errors, []);
   assert.doesNotMatch(descriptor.template.content, /slot-scope|\.(?:native|sync)(?==|\s|>)/);
   assert.match(descriptor.template.content, /<h1>\{\{ \$t\('workflow\.appTitle'\) \}\}<\/h1>/);
-  assert.match(descriptor.template.content, /<strong>3\.34\.0<\/strong>/);
+  assert.match(descriptor.template.content, /<strong>3\.35\.0<\/strong>/);
 });
 
 test('3.26 workspaces open and focus without navigation, disconnect or loss of transfer state',()=>{
@@ -1392,10 +1400,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.34.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.35.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.34.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.35.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -1957,4 +1965,50 @@ test('3.32.1 an explicit download waits for its selected file preview then reads
  let finish;const paths=[],app=connected(harness({vfs_helper_read_file(path,yes,no,done){paths.push(path);if(paths.length===1)finish=yes;else{yes(figureBytes());done?.();}}})),row=figureRow();app.tableData=[row];
  const preview=app.select_file_row(0,row);await Promise.resolve();const download=app.download_preview_selection();finish(figureBytes());await preview;await download;
  assert.deepEqual(paths,['E:/Figure.bin','E:/Figure.bin']);assert.equal(app.lastDownload.filename,'Figure.bin');assert.equal(app.pendingDownloads,0);assert.equal(app.previewSelection.id,'0000000000000002');
+});
+
+
+test('3.35 combined diagnostic reads serialize eight sections, export startup and tolerate unsupported old firmware', async()=>{
+ const order=[];let active=0;
+ const reader=(key,value)=>async()=>{order.push(key);assert.equal(active++,0);await new Promise(setImmediate);--active;return value;};
+ const startup={schemaVersion:1,scope:'application-storage-start-to-first-dispatch',phaseMask:63,elapsedMilliseconds:[0,2473,2504,2558,2558,2576]};
+ const h=harness({get_runtime_diagnostics:reader('runtime',{schemaVersion:1,scope:'since-device-restart',heapFreeBytes:10668,stackMinFreeBytes:null}),
+  get_boot_diagnostics:reader('boot',null),get_power_diagnostics:reader('power',null),get_startup_diagnostics:reader('startup',startup),
+  vfs_get_drive_list:reader('drives',{status:0,data:[{label:'E',status:0,total_size:100,free_size:40}]}),
+  vfs_storage_info_extended:reader('storage',{status:255}),get_mtu_diagnostics:reader('mtu',null),get_ui_diagnostics:reader('ui',null)});
+ const app=connected(h);app.firmwareVersion='2.22.0-DE3.56';const pending=app.read_all_diagnostics();
+ assert.equal(app.busy,true);await app.read_all_diagnostics();app.save_diagnostics();assert.equal(app.diagnosticsDialog,false);
+ await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
+ assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
+ assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.35.0');
+ assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
+ assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
+});
+
+test('3.35 changed Bluetooth session discards a pending diagnostic without more reads or unlocking the replacement',async()=>{
+ const gate=deferred();let bootReads=0;
+ const app=connected(harness({get_runtime_diagnostics:()=>gate.promise,get_boot_diagnostics:async()=>{++bootReads;return null;}}));
+ const pending=app.read_all_diagnostics();++app.sessionGeneration;app.fullDiagnosticBusy=true;
+ gate.resolve(null);await pending;assert.equal(bootReads,0);assert.equal(app.fullDiagnosticSnapshot,null);
+ assert.equal(app.fullDiagnosticBusy,true);
+});
+
+test('3.35 failed fresh drive reads clear old space; primitive failure is exported without arbitrary text',async()=>{
+ const h=harness({get_runtime_diagnostics:async()=>{throw null;},vfs_get_drive_list:async()=>{throw Error('PRIVATE FILE');},vfs_storage_info_extended:async()=>({status:255})});
+ const app=connected(h);app.driveInfo=[{label:'E',status:0,totalBytes:100,freeBytes:99}];await app.read_all_diagnostics();
+ assert.equal(app.driveInfo.length,0);assert.equal(app.fullDiagnosticSnapshot.sections.runtime.state,'failed');
+ assert.equal(app.fullDiagnosticSnapshot.sections.drives.state,'failed');app.save_diagnostics();
+ assert.doesNotMatch(app.diagnosticsJson,/PRIVATE/);assert.equal(JSON.parse(app.diagnosticsJson).drives.length,0);
+ app.driveInfo=[{label:'E',status:0,totalBytes:100,freeBytes:99}];await app.refresh_device_info();
+ assert.equal(app.driveInfo.length,0);assert.equal(app.fullDiagnosticSnapshot,null);
+});
+
+test('3.35 storage diagnostic uses only info and layout reads and never import/format operations',async()=>{
+ const calls=[];const info={schema:1,drive:'E',backend:3,mounted:true,flags:15,metaLen:128,pathMax:64,nameMax:48};
+ const layout={schema:1,drive:'E',backend:3,mounted:true,magic:0x31534650,flags:7,flashBytes:2097152,blockSize:4096,blockCount:512,readSize:16,progSize:16,cacheSize:256,metadataBytes:128,shardTarget:4096,maxShards:16,pathCap:64,nameCap:48,maxHandles:4,engineSha256:'a'.repeat(64)};
+ const app=connected(harness({vfs_storage_info_extended:async drive=>{calls.push('info'+drive);return {status:0,data:info};},
+  vfs_storage_layout:async drive=>{calls.push('layout'+drive);return {status:0,data:layout};},
+  vfs_import_state:async()=>assert.fail('Must not import'),vfs_drive_format:async()=>assert.fail('Must not format')}));
+ await app.read_all_diagnostics();assert.deepEqual(calls,['infoE','layoutE']);assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.layout.cacheSize,256);
 });

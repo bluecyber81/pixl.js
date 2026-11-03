@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnoseansicht — synthetische Testdaten</title>
+<style>body{margin:0;background:#e9eff4;font-family:system-ui,sans-serif}main{max-width:1220px;margin:auto;padding:20px}.fixture-note{padding:14px;border:2px dashed #976b27;background:#fff6de;color:#5d430e}button,select{font:inherit;padding:8px;margin:4px}</style></head>
+<body><main><div class="fixture-note"><strong>ENTWICKLUNGSVORSCHAU · NUR SYNTHETISCHE TESTDATEN</strong><p>Keine echte Geräteprüfung. Keine Bluetooth-Verbindung, kein Export und keine Gerätebefehle.</p></div><div id="app"></div></main>
+<script type="module">
+import {createApp,h,ref} from 'vue';
+import DiagnosticOverview from '../../src/components/DiagnosticOverview.vue';
+import {diagnosticSnapshot} from './diagnostic-overview-data.mjs';
+createApp({setup(){const locale=ref('de_DE'),snapshot=ref(diagnosticSnapshot()),loading=ref(false),connected=ref(true),message=ref('');
+return()=>h('div',[h('label',['Sprache ',h('select',{value:locale.value,onChange:e=>locale.value=e.target.value},[h('option',{value:'de_DE'},'Deutsch'),h('option',{value:'en_US'},'English')])]),
+h('button',{onClick:()=>{const data=diagnosticSnapshot();data.sections.runtime={state:'failed',observedAt:data.completedAt,data:null,errorCode:'RESPONSE_INVALID'};data.sections.ui={state:'unavailable',observedAt:null,data:null,errorCode:null};snapshot.value=data;}},'Teilbericht zeigen'),
+h('button',{onClick:()=>snapshot.value=diagnosticSnapshot()},'Alle Beispieldaten'),
+h('button',{onClick:()=>connected.value=!connected.value},'Verbindungsanzeige wechseln'),
+h(DiagnosticOverview,{locale:locale.value,snapshot:snapshot.value,connected:connected.value,loading:loading.value,
+onRead:()=>{message.value='Nur Vorschau: kein Gerät wird gelesen.';},onExport:()=>{message.value='Nur Vorschau: kein Download ausgelöst.';}}),h('p',message.value)])}}).mount('#app');
+</script></body></html>

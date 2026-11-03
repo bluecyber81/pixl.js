@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.34.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.35.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -221,9 +221,10 @@
     <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview">
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
+      <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <StartupDiagnostics :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.34.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.35.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -245,7 +246,7 @@
         <button type="button" @click="refresh_runtime_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('info.runtimeRead') }}</button>
         <button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('info.bootRead') }}</button>
         <button type="button" @click="refresh_power_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.powerRead') }}</button>
-        <button type="button" @click="save_diagnostics" :disabled="diagnosticsBusy">{{ $t('info.export') }}</button>
+        <button type="button" @click="save_diagnostics" :disabled="diagnosticsBusy || fullDiagnosticBusy">{{ $t('info.export') }}</button>
       </div>
       <div class="runtime-status" role="status" aria-live="polite" aria-atomic="true">
         <p v-if="runtimeState === 'loading'">{{ $t('info.runtimeLoading') }}</p>
@@ -451,6 +452,7 @@ import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
 import { normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
 import { normalizeDrives, normalizeRuntimeDiagnostics, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
+import { collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { assertPortableEntryName, portableNameKey } from "./lib/portable-names.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
@@ -465,13 +467,14 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.34.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.35.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
+      fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown',
@@ -532,7 +535,7 @@ export default {
     elementLocale() { return getElementLocale(this.language) },
     breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
     figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
-    busy() { return this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
+    busy() { return this.fullDiagnosticBusy || this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
     lastTransfer() { return this.transferHistory.at(-1) || null; },
     connectionDisconnectLocked() { return this.collectionWriting || this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
     zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
@@ -682,11 +685,11 @@ export default {
       this.open_zip();
       if (this.zipDialog) await this.on_zip_file(event);
     },
-    read_startup_diagnostics() { return proto.get_startup_diagnostics(); },
+    read_startup_diagnostics() { this.fullDiagnosticSnapshot = null; return proto.get_startup_diagnostics(); },
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.34.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.35.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1011,6 +1014,7 @@ export default {
     },
     async refresh_device_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
+      this.fullDiagnosticSnapshot=null; this.driveInfo=[];
       const generation = this.sessionGeneration; this.infoLoading = true;
       try { await this.read_drive_info(generation); this.refresh_local_metrics(); }
       catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
@@ -1018,6 +1022,7 @@ export default {
     },
     async refresh_runtime_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
+      this.fullDiagnosticSnapshot=null;
       const generation=this.sessionGeneration; this.infoLoading=true;
       this.runtimeInfo=null; this.runtimeState='loading';
       try {
@@ -1033,6 +1038,7 @@ export default {
     },
     async refresh_boot_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
+      this.fullDiagnosticSnapshot=null;
       const generation=this.sessionGeneration; this.infoLoading=true;
       this.bootInfo=null; this.bootState='loading';
       try {
@@ -1047,6 +1053,7 @@ export default {
     },
     async refresh_power_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
+      this.fullDiagnosticSnapshot=null;
       const generation=this.sessionGeneration; this.infoLoading=true;
       this.powerInfo=null; this.powerState='loading';
       try {
@@ -1061,14 +1068,64 @@ export default {
     },
     format_hex(value) { return formatHexWord(value) ?? this.$t('info.unknown'); },
     format_optional_size(value) { return value === null || value === undefined ? this.$t('info.unknown') : this.format_size(value); },
+    async read_all_diagnostics() {
+      if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;
+      const generation=this.sessionGeneration;
+      this.fullDiagnosticBusy=true; this.fullDiagnosticSnapshot=null; this.fullDiagnosticProgress='runtime';
+      this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading';
+      this.powerInfo=null; this.powerState='loading'; this.driveInfo=[];
+      const guard=()=>this.session_current(generation) && !this.disconnecting;
+      const read=fn=>async()=>{
+        this.assert_session(generation);
+        try { const value=await fn(); this.assert_session(generation); return value; }
+        catch(error) {
+          const code=error?.code || proto.get_transport_diagnostics?.()?.lastErrorCode || 'DIAGNOSTIC_FAILED';
+          throw Object.assign(new Error('Diagnostic read failed.'), {code});
+        }
+      };
+      try {
+        const snapshot=await collectDiagnosticSnapshot({isCurrent:guard,
+          readers:{
+            runtime:read(()=>proto.get_runtime_diagnostics?.()), boot:read(()=>proto.get_boot_diagnostics?.()),
+            power:read(()=>proto.get_power_diagnostics?.()), startup:read(()=>proto.get_startup_diagnostics?.()),
+            drives:read(async()=>normalizeDrives(this.checked(await proto.vfs_get_drive_list()))),
+            storage:read(async()=>{
+              const response=await proto.vfs_storage_info_extended('E'); this.assert_session(generation);
+              if(response?.status===255) return null;
+              const info=this.checked(response);
+              let layout=null;
+              if(info.backend===3) {
+                const result=await proto.vfs_storage_layout('E'); this.assert_session(generation);
+                if(result?.status!==255) layout=this.checked(result);
+              }
+              return {info,layout};
+            }),
+            mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.())
+          }, onProgress:({index})=>{if(guard())this.fullDiagnosticProgress=['runtime','boot','power','startup','drives','storage','mtu','ui'][index] || null;}
+        });
+        this.assert_session(generation); this.fullDiagnosticSnapshot=snapshot;
+        for(const key of ['runtime','boot','power']) {
+          this[key+'Info']=snapshot.sections[key].data; this[key+'State']=snapshot.sections[key].state;
+        }
+        this.driveInfo=snapshot.sections.drives.data || []; this.refresh_local_metrics();
+      } catch(error) {
+        if(guard()) {
+          this.runtimeState='failed'; this.bootState='failed'; this.powerState='failed';
+          this.show_transfer_error(error);
+        }
+      } finally {
+        if(generation===this.sessionGeneration) {this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;}
+      }
+    },
     save_diagnostics() {
-      if (this.diagnosticsBusy) return;
+      if (this.diagnosticsBusy || this.fullDiagnosticBusy) return;
       this.refresh_local_metrics();
-      const report = createDiagnostics({ firmwareVersion: this.firmwareVersion, connected: this.connected,
+      const baseReport = createDiagnostics({ firmwareVersion: this.firmwareVersion, connected: this.connected,
         browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator !== 'undefined' && !!navigator.bluetooth },
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
+      const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.34.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.35.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1291,6 +1348,7 @@ export default {
     async on_ble_connected() {
       this.collectionObservation=null;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
+      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;
       this.disconnecting = false;
       this.reset_figure_info(); this.meta_diag_visible = false;
       this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
@@ -1315,6 +1373,7 @@ export default {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
+      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
       const expectedDfu = this._disconnectIntent?.generation === this.sessionGeneration && this._disconnectIntent.reason === 'dfu';
@@ -1359,6 +1418,7 @@ export default {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
+      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
       this.remember_interruption(); this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;

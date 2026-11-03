@@ -1,4 +1,12 @@
-ALLMIIBO DATEIMANAGER 3.34.0
+ALLMIIBO DATEIMANAGER 3.35.0
+
+NEU: GEMEINSAME DIAGNOSE
+Geraet & Diagnose -> Alle Diagnosewerte auslesen -> Gesamtdiagnose speichern.
+RAM, Startzeiten, Bootloader/SoftDevice, Akku, Laufwerk, LittleFS-Geometrie,
+Firmware-MTU und letzte Einstellungsmenue-Sitzung in einem Bericht.
+Je Abschnitt Abrufzeit und Lesestatus; keine Hintergrundabfrage.
+Die Cachegroesse ist Konfiguration, die reale Stackreserve ggf. unbekannt.
+Kein neues Flashen fuer diese Browser-Erweiterung notwendig.
 
 STARTEN
 Online: https://bluecyber81.github.io/pixl.js/
@@ -100,7 +108,7 @@ in package-lock.json und third-party/npm/SOURCES.json gebunden.
 Firmware-/Projektquelle:
 https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip
 Dateimanagerquelle:
-https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0_Quellcode.zip
+https://github.com/bluecyber81/pixl.js/releases/download/web3.35.0/Allmiibo_Dateimanager_3_35_0_Quellcode.zip
 
 PRUEFGRENZEN
 Regressionstests decken Katalogwechsel, Bildfreigaben, Fehlerantworten,

@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "date": "2026-11-03",
+  "web": "3.35.0",
+  "firmware": "2.22.0-DE3.56",
+  "applicationCounter": 628,
+  "firmwareChanged": false,
+  "bootloaderChanged": false,
+  "softdeviceChanged": false,
+  "storageLayoutChanged": false,
+  "catalogueChanged": false,
+  "checks": {
+    "web": {
+      "tests": 1128,
+      "pass": 1128,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "logSha256": "64655b4da72de7bd27856a1f8ca31d85f0bd332a547c2815d449ec15690fcea0"
+    },
+    "root": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "logSha256": "5258610266b7b6fea97eff58f316655f6e561a81245a0e7ee9a4d8d1d5f26b97"
+    },
+    "pages": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "logSha256": "6eb5fdb9131880326d192ea87d35eecf2d392bcfaa9107afbcfd126ec19b87fb"
+    }
+  },
+  "testedDiagnosticCommands": [
+    "INFO0x04-empty",
+    "INFO0x05-empty",
+    "INFO0x06",
+    "INFO0x07",
+    "INFO0x08",
+    "INFO0x09",
+    "VFS0x10",
+    "VFS0x1c-read",
+    "VFS0x1f-read"
+  ],
+  "coverage": [
+    "Strict wire validation and allowlisted export",
+    "MTU23/185/250 fragmented mocked transport",
+    "Serialized reads and unsupported firmware",
+    "Disconnect and session generation invalidation",
+    "Duplicate click and UI busy gates",
+    "Partial failure and stale free-space removal",
+    "Unmeasured battery, stack and cache fields not invented"
+  ],
+  "browser": {
+    "desktopChecked": true,
+    "mobileWidth": 390,
+    "horizontalOverflow": false,
+    "consoleErrors": 0,
+    "syntheticFixtureLabelled": true
+  },
+  "deviceAccess": false,
+  "deviceReadbackPending": true,
+  "limits": [
+    "No physical readback of this web release: device currently available only on the phone.",
+    "Firmware MTU is stack-reported, not an independent radio measurement.",
+    "No new NFC, battery, physical key or load test implied.",
+    "Stack watermark and cache hit/miss counters are not supplied by this firmware."
+  ],
+  "bundledApplicationZipSha256": "e858792304b372969376b06e81d3e4280e13700d66c4008e6e457878824e3973"
+}

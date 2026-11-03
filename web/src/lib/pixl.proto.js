@@ -5,6 +5,7 @@ import ByteBuffer from "bytebuffer"
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
+import { parseMtuDiagnostics, parseUiDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
 import i18n from '../i18n'
@@ -244,6 +245,28 @@ export function enter_dfu() {
 
 // Optional application diagnostics. Older firmware's UNKNOWN_COMMAND reply is
 // expected; a malformed successful reply must still be reported as an error.
+// Both requests are empty reads. In particular, never send the MTU! command
+// which changes the firmware's preference for its next Bluetooth connection.
+export function get_mtu_diagnostics() {
+    const generation = transport_generation;
+    return op_queue_push(0x05, () => {}, b =>
+        parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16 })
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 255 ? null : checked_response(response);
+        });
+}
+
+export function get_ui_diagnostics() {
+    const generation = transport_generation;
+    return op_queue_push(0x04, () => {}, b =>
+        parseUiDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 104 })
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 255 ? null : checked_response(response);
+        });
+}
+
 export function get_runtime_diagnostics() {
     const generation = transport_generation;
     return op_queue_push(0x06, () => {}, b =>
@@ -978,7 +1001,7 @@ function on_rx_data(data) {
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
         const unsupportedProbe = h.cmd===0x1c && op.storage_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x1c || h.cmd === 0x1f) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;

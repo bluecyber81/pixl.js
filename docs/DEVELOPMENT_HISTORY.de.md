@@ -1,7 +1,7 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
 Stand: **3. November 2026**. Aktueller Anwendungsstand:
-**2.22.0-DE3.56 / DFU-Zähler 628**; Dateimanager **3.34.0**.
+**2.22.0-DE3.56 / DFU-Zähler 628**; Dateimanager **3.35.0**.
 
 Diese Übersicht beginnt mit den frühen Änderungen von **DE1 bis DE3.16** und
 erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.56**. Sie
@@ -20,6 +20,12 @@ jeden möglichen Gerätefehler lässt sich daraus nicht ableiten.
 Bootloader und Nordic-Stack werden getrennt in
 [Bootloader- und SoftDevice-Änderungen](BOOTLOADER_SOFTDEVICE_CHANGES.md)
 erklärt. Ein Anwendungsupdate ersetzt diese Komponenten nicht.
+
+## Dateimanager 3.35.0: gemeinsame Lesediagnose
+
+Acht vorhandene Diagnosebereiche werden auf einen Klick nacheinander gelesen und mit einzelnen Abrufzeiten exportiert. Startzeiten, zusätzliche RAM-Werte, Firmware-MTU, LittleFS-Geometrie/Cachekonfiguration und letzte Einstellungs-Tastensitzung sind zusammen sichtbar. Fehlende Akkumessungen und nicht unterstützte Speicherbefehle erzeugen keine irreführenden Werte. Alte Freispeicherwerte werden nach fehlgeschlagener Aktualisierung verworfen.
+
+Firmware DE3.56, BL8, S112 und PFS1 bleiben unverändert. [Bedienung und Grenzen](DIAGNOSTICS_3_35.md).
 
 ## DE3.56 / Dateimanager 3.34.0: Eingabe, Galerie und konsistenter Katalog
 

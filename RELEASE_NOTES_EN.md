@@ -1,3 +1,15 @@
+# File manager 3.35.0 – combined read-only diagnostics
+
+Browser-only update. Firmware DE3.56/628, BL8 and S112 7.3.0 are unchanged.
+
+Device & diagnostics → Read all diagnostic values collects eight sections sequentially. The combined report adds startup markers, RAM details, configured stack/cache sizes, firmware-reported MTU, storage geometry and the last settings-menu session, with per-section receipt times and partial failures. Unknown battery state and unsupported storage commands no longer produce misleading values/errors. No background reads, file changes, formatting or firmware flash.
+
+[Online file manager](https://bluecyber81.github.io/pixl.js/) · [Downloads and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.0) · [Usage and limits](docs/DIAGNOSTICS_3_35.md)
+
+Physical readback of this new browser version remains pending because the device is currently available only on the phone. Host tests use simulated responses.
+
+---
+
 # DE3.56 and Dateimanager 3.34.0: clearer input and an image gallery
 
 **LCD application 2.22.0-DE3.56 / counter 628 Â· Dateimanager 3.34.0 Â· BL8 Â· Nordic S112 7.3.0 Â· Packed LittleFS PFS1**

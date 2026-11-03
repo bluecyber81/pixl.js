@@ -1,6 +1,8 @@
-# Dateimanager 3.34.0
+# Dateimanager 3.35.0
 
-[Startanleitung und Bedienung](LIESMICH_3_34_0.txt) · [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Release-Hinweise](../RELEASE_NOTES_DE.md)
+Neu: **Gerät & Diagnose → Alle Diagnosewerte auslesen → Gesamtdiagnose speichern**. Zusätzliche Speicher-, RAM-, MTU- und Tastenwerte ohne neues Flashen. [Bedienung und Grenzen](https://github.com/bluecyber81/pixl.js/blob/web3.35.0/docs/DIAGNOSTICS_3_35.md).
+
+[Startanleitung und Bedienung](LIESMICH_3_35_0.txt) · [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Release-Hinweise](../RELEASE_NOTES_DE.md)
 
 ## Neu: Galerie und Bestandsfilter
 
@@ -86,7 +88,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.56 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0_Quellcode.zip)
+Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.35.0/Allmiibo_Dateimanager_3_35_0_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen

@@ -48,7 +48,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
   const capacity = value => Number.isInteger(value) && value >= 20 && value <= 247 ? value : null;
   // Explicit allowlist: never spread arbitrary device data or exception text.
   return {
-    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.34.0',
+    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.35.0',
     firmwareVersion: /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion || '') ? firmwareVersion : null,
     connected: connected === true,
     runtime: normalizeRuntimeDiagnostics(runtime),
@@ -56,6 +56,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
     power: normalizePowerDiagnostics(power),
     browser: { secureContext: browser?.secureContext === true, webBluetooth: browser?.webBluetooth === true },
     transport: transport ? {
+      connectionState: fixed(transport.connectionState, ['disconnected', 'connecting', 'connected', 'disconnecting']),
       chunkMode: fixed(transport.chunkMode, ['not-negotiated', 'legacy', 'chunked']),
       reportedGattValueCapacity: capacity(transport.reportedGattValueCapacity),
       effectiveGattValueCapacity: capacity(transport.effectiveGattValueCapacity),

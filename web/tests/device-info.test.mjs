@@ -15,7 +15,7 @@ test('runtime diagnostics preserve signed errors and unknown stack measurements 
   const data=normalizeRuntimeDiagnostics(runtime);
   assert.equal(data.lastVfsError,-10002);assert.equal(data.stackMinFreeBytes,null);assert.equal(data.memorySamples,3);
   const report=createDiagnostics({runtime,history:[{kind:'sync',status:'interrupted',bytes:12,verified:false}]});
-  assert.equal(report.applicationVersion,'3.34.0');assert.equal(report.recentTransfers[0].status,'interrupted');
+  assert.equal(report.applicationVersion,'3.35.0');assert.equal(report.recentTransfers[0].status,'interrupted');
   assert.doesNotMatch(JSON.stringify(report),/PRIVATE/);
   assert.equal(normalizeRuntimeDiagnostics({schemaVersion:2}),null);
 });
@@ -57,4 +57,14 @@ test('diagnostics reject untrusted version text and bound transfer history', () 
   const report = createDiagnostics({ firmwareVersion: '2.21.0 /private/path', history: Array.from({ length: 100 }, () => ({kind:'x',status:'y',bytes:Infinity})) });
   assert.equal(report.firmwareVersion, null); assert.equal(report.recentTransfers.length, 20);
   assert.equal(report.recentTransfers[0].bytes, null);
+});
+
+test('diagnostic connection state accepts only known local states without copying device identifiers', () => {
+  for (const state of ['disconnected', 'connecting', 'connected', 'disconnecting']) {
+    assert.equal(createDiagnostics({ transport: { connectionState: state, deviceAddress: 'SECRET' } }).transport.connectionState, state);
+  }
+  for (const state of ['SECRET', null, 1, {}]) {
+    const report = createDiagnostics({ transport: { connectionState: state, deviceAddress: 'SECRET' } });
+    assert.equal(report.transport.connectionState, null); assert.doesNotMatch(JSON.stringify(report), /SECRET/);
+  }
 });

@@ -1,8 +1,12 @@
 # Improvements and fixed bugs in the DE series
 
-**DE3.56 / application counter 628 · Dateimanager 3.34.0 · BL8 · Nordic S112 7.3.0**
+**DE3.56 / application counter 628 · Dateimanager 3.35.0 · BL8 · Nordic S112 7.3.0**
 
 This is the English entry point to the [detailed German before/after record](DEVELOPMENT_HISTORY.de.md), which links each topic to published source and regression tests. The [earlier cumulative changelog](../CHANGELOG_DE3_SERIES.md) retains DE1–DE3.16 history. “Before” refers to the reviewed older downstream code: it is not an assertion that the same problem exists in today's upstream repositories. Some fixes address regressions introduced during this fork's own storage transition.
+
+## File manager 3.35.0: combined read-only diagnostics
+
+Eight existing firmware diagnostic sections are read sequentially on demand, with per-section receipt times and one allowlisted JSON export. Adds startup/RAM details, firmware MTU, PFS geometry/cache configuration and the last settings session. Corrects stale free-space displays, unknown battery state and misleading errors for unsupported read commands. Firmware DE3.56, BL8, S112 and PFS1 are unchanged. [Usage and limits](DIAGNOSTICS_3_35.md).
 
 ## DE3.56 / Dateimanager 3.34.0: input, gallery and catalogue consistency
 

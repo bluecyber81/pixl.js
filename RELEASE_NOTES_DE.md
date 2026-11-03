@@ -1,3 +1,19 @@
+# Dateimanager 3.35.0 – gemeinsame Lesediagnose
+
+Nur Browserupdate; Firmware DE3.56/628, BL8 und S112 7.3.0 bleiben unverändert.
+
+- Gerät & Diagnose → Alle Diagnosewerte auslesen: acht Bereiche in einer seriellen, lesenden Abfrage.
+- Gemeinsamer Export mit Startzeiten, Heap-Minima/Maximalbelegung, reserviertem Stack, Firmware-MTU, LittleFS-Geometrie/Cachekonfiguration und letzter Einstellungsmenü-Sitzung.
+- Abrufzeiten und klare Zustände für gelesen, nicht unterstützt und fehlgeschlagen; keine alten Freispeicherwerte nach fehlgeschlagener Aktualisierung.
+- Mobile Übersicht mit aufklappbaren technischen Werten; keine Hintergrundabfragen.
+- Nicht unterstützte Speicherabfragen erzeugen keinen falschen Gerätefehler. Ohne Akkustichprobe bleibt der Ladezustand unbekannt.
+
+[Online öffnen](https://bluecyber81.github.io/pixl.js/) · [Downloads und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.0) · [Bedienung und Grenzen](docs/DIAGNOSTICS_3_35.md)
+
+Die reale Ausleseprüfung dieses neuen Browserstands ist offen, da das Gerät derzeit nur am Handy verfügbar ist. Automatisierte Tests verwenden simulierte Antworten, keine neue physische Geräteprüfung.
+
+---
+
 # DE3.56 und Dateimanager 3.34.0: bessere Eingabe und Bildergalerie
 
 **Anwendung 2.22.0-DE3.56 / ZÃ¤hler 628 Â· Dateimanager 3.34.0 Â· BL8 Â· Nordic S112 7.3.0 Â· Packed LittleFS PFS1**
