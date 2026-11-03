@@ -6,7 +6,7 @@ Device & diagnostics → Read all diagnostic values collects eight sections sequ
 
 [Online file manager](https://bluecyber81.github.io/pixl.js/) · [Downloads and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.0) · [Usage and limits](docs/DIAGNOSTICS_3_35.md)
 
-Physical readback of this new browser version remains pending because the device is currently available only on the phone. Host tests use simulated responses.
+A subsequent user-provided phone report confirms all eight diagnostic sections in 1.352 seconds without section errors. This is readback evidence, not a complete hardware or stress test. [Evidence and limits](docs/validation/WEB3_35_0_READBACK.json).
 
 ---
 

@@ -67,4 +67,4 @@ Thanks to solosky, cylin577 and component contributors. [Mochi](https://github.c
 
 [Current DE3.56 verification](docs/validation/DE3_56.json) — 137 firmware host suites, 1,082 web tests and 21 production checks for each deployment.
 
-[File manager 3.35.0 verification](docs/validation/WEB3_35_0.json) — 1,128 web tests and 21 production checks per deployment passed. New device readback pending; no firmware change.
+[File manager 3.35.0 verification](docs/validation/WEB3_35_0.json) — 1,128 web tests and 21 production checks per deployment passed. [User-provided phone readback](docs/validation/WEB3_35_0_READBACK.json) confirms all eight sections; no firmware change.

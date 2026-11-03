@@ -10,7 +10,7 @@ Nur Browserupdate; Firmware DE3.56/628, BL8 und S112 7.3.0 bleiben unverändert.
 
 [Online öffnen](https://bluecyber81.github.io/pixl.js/) · [Downloads und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.0) · [Bedienung und Grenzen](docs/DIAGNOSTICS_3_35.md)
 
-Die reale Ausleseprüfung dieses neuen Browserstands ist offen, da das Gerät derzeit nur am Handy verfügbar ist. Automatisierte Tests verwenden simulierte Antworten, keine neue physische Geräteprüfung.
+Ein anschließend vom Nutzer am Handy gelieferter Bericht bestätigt alle acht Diagnosebereiche in 1,352 Sekunden ohne Sektionsfehler. Das ist ein realer Auslesebericht, kein vollständiger Hardware-/Belastungstest. [Nachweis und Grenzen](docs/validation/WEB3_35_0_READBACK.json).
 
 ---
 

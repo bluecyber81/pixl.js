@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "date": "2026-11-03",
+  "evidenceSource": "user-supplied diagnostic report from phone; not an independent agent Bluetooth read",
+  "web": "3.35.0",
+  "firmware": "2.22.0-DE3.56",
+  "applicationCounter": 628,
+  "allEightSectionsAvailable": true,
+  "sectionErrors": false,
+  "collectionDurationMilliseconds": 1352,
+  "runtimeErrorCountersAllZero": true,
+  "heapFreeBytes": 10668,
+  "largestFreeBlockBytes": 10560,
+  "heapPoolBytes": 18432,
+  "memorySamples": 3,
+  "stackMinFreeBytes": null,
+  "effectiveAttMtuReportedByFirmware": 250,
+  "gattValueCapacity": 247,
+  "storageMounted": true,
+  "storageEngineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248",
+  "storageMatchesDE356Evidence": true,
+  "bootRegionMatchesBL8Evidence": true,
+  "softdevice": "S112 7.3.0 / FWID 0x0126",
+  "startupStorageMilliseconds": 2475,
+  "startupApplicationMilliseconds": 2578,
+  "settingsSessions": 0,
+  "limits": [
+    "Readback confirms diagnostic availability, not a full hardware or long-running stress test.",
+    "Zero settings sessions is no physical key test.",
+    "Firmware-reported MTU is not an independent radio measurement.",
+    "Startup timing excludes bootloader and early SDK startup."
+  ]
+}

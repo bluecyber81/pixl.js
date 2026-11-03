@@ -61,4 +61,4 @@ Danke an solosky, cylin577 und die Komponentenentwickler; [Mochi](https://github
 
 [Aktueller DE3.56-Prüfbericht](docs/validation/DE3_56.json) — 137 Firmware-Testsuiten, 1.082 Webtests, je 21 Produktionsprüfungen für lokal und GitHub Pages.
 
-[Dateimanager 3.35.0: Prüfbericht](docs/validation/WEB3_35_0.json) — 1.128 Webtests und je 21 Produktionsprüfungen bestanden. Neuer Geräte-Lesetest noch offen; kein Firmwarewechsel.
+[Dateimanager 3.35.0: Prüfbericht](docs/validation/WEB3_35_0.json) — 1.128 Webtests und je 21 Produktionsprüfungen bestanden. [Vom Nutzer gelieferter Handybericht](docs/validation/WEB3_35_0_READBACK.json) bestätigt alle acht Bereiche; kein Firmwarewechsel.
