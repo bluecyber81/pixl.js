@@ -26,23 +26,28 @@ def snapshot():
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--report', required=True, type=Path)
+parser.add_argument('--minimum-suites', type=int, default=1)
 args = parser.parse_args()
 if args.report.exists():
     raise SystemExit('Use a new report path; preserve previous evidence')
+if not __debug__:
+    raise SystemExit('Full firmware regressions require Python assertions')
+scripts = [script for folder in ('de2', 'de3') for script in sorted((FW / 'tests' / folder).glob('test_*.py'))]
+if not scripts or len(scripts) < args.minimum_suites:
+    raise SystemExit(f'Expected at least {args.minimum_suites} firmware suites, found {len(scripts)}')
 before = snapshot()
 results = []
-for folder in ('de2', 'de3'):
-    for script in sorted((FW / 'tests' / folder).glob('test_*.py')):
-        command = [sys.executable, '-B', str(script)]
-        try:
-            run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
-            result = dict(script=folder + '/' + script.name, exit_code=run.returncode, stdout=run.stdout, stderr=run.stderr)
-        except subprocess.TimeoutExpired as error:
-            result = dict(script=folder + '/' + script.name, exit_code=-1, stdout='', stderr=str(error))
-        results.append(result)
-        print(('PASS' if result['exit_code'] == 0 else 'FAIL') + ': ' + result['script'], flush=True)
-        if result['exit_code']:
-            print(result['stdout'] + result['stderr'], flush=True)
+for script in scripts:
+    command = [sys.executable, '-B', str(script)]
+    try:
+        run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
+        result = dict(script=script.relative_to(FW / 'tests').as_posix(), exit_code=run.returncode, stdout=run.stdout, stderr=run.stderr)
+    except subprocess.TimeoutExpired as error:
+        result = dict(script=script.relative_to(FW / 'tests').as_posix(), exit_code=-1, stdout='', stderr=str(error))
+    results.append(result)
+    print(('PASS' if result['exit_code'] == 0 else 'FAIL') + ': ' + result['script'], flush=True)
+    if result['exit_code']:
+        print(result['stdout'] + result['stderr'], flush=True)
 after = snapshot()
 report = {'finished_utc': datetime.now(timezone.utc).isoformat(), 'device_access': False,
           'hardware_mocked': True, 'source_snapshot': after, 'sources_unchanged_during_tests': before == after,

@@ -35,3 +35,11 @@ Make writes the generated ID header under `fw/_build`. A change to an included i
 | Stack reserved by the linker | 8,192 B | 8,192 B |
 
 The flash calculation includes linker alignment. The 18 KiB application allocator and runtime stack watermark have separate diagnostics. Pull requests that touch the build inputs compile an unsigned candidate with the same layout and reserve checks. Pushes to `main` and manual builds additionally verify the release BIN hash. For development with a separate version, update the source version header and use `--mode development --version YOUR_VERSION --counter 632` or a higher counter. Each mode produces unsigned local binaries.
+
+## Firmware release checks on GitHub
+
+The **Unsigned LCD application and BL8 builds** workflow builds the ARM application and runs every DE2 and DE3 host regression discovered by `fw/tests/de3/run_all.py`. Discovery must reach the published suite count. The SDK test inputs come from the same digest-pinned image as the ARM build. The workflow also executes `check_stack_watermark_elf.py` with Unicorn 2.1.4 on the ELF it just built. Release runs check the OTA payload and ECDSA signature against that build and the BL8 public key, including three negative controls. Pull requests may build candidate bytes.
+
+Download **lcd-firmware-evidence** from the run for the build log, BIN, HEX, ELF, linker map, source manifest, budgets, host report and ARM stack result. A failed job retains available diagnostics. These tests use a simulated CPU and host-side hardware substitutes.
+
+Before publishing a firmware release, require a successful full run at the exact release commit with the signed OTA check. Run it manually for a documentation-only commit if the build path filters did not trigger. A release workflow can also call `.github/workflows/unsigned-firmware.yml` using `workflow_call` and make its publication job depend on that call with `needs`. The workflow is read-only and produces the evidence artifact after the tests. Firmware and web releases use the existing publication procedure.
