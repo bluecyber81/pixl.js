@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "date": "2026-11-04",
+  "web": "3.36.0",
+  "firmware": "2.22.0-DE3.58",
+  "evidenceSource": "Owner-supplied full diagnostic and startup exports. The owner separately confirmed that the comparison appeared on the public GitHub Pages site.",
+  "allEightSectionsAvailable": true,
+  "sectionErrors": false,
+  "applicationCounter": 630,
+  "startupScope": "application-storage-start-to-first-dispatch",
+  "previousDE357Milliseconds": [
+    0,
+    2450,
+    2481,
+    2534,
+    2535,
+    2553
+  ],
+  "currentDE358Milliseconds": [
+    0,
+    2337,
+    2370,
+    2424,
+    2424,
+    2446
+  ],
+  "bothExportsContainSameMarkers": true,
+  "applicationComparisonDeltaMilliseconds": {
+    "storage": -113,
+    "total": -107
+  },
+  "ownerConfirmedComparisonShownOnGitHubPages": true,
+  "limits": [
+    "The two exports contain the same cached startup measurement. The earlier DE3.58 device readback documents a different start.",
+    "Startup timings begin at storage initialization and end at first application dispatch."
+  ]
+}
