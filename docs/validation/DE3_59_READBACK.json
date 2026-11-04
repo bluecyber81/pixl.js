@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "date": "2026-11-04",
+  "scope": "Read-only BLE diagnostic session on one Allmiibo LCD after the application update.",
+  "status": "passed",
+  "firmware": "2.22.0-DE3.59",
+  "firmwareSourceCommit": "ab8e6e23d8b9c7ab7b88ee139d965fde64db576b",
+  "boot": {
+    "applicationCounter": 631,
+    "bootloaderCounter": 11,
+    "settingsCrcValid": true,
+    "bootRegionSha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+    "softDeviceFwid": 294,
+    "geometryMatchesBaseline": true,
+    "wearCountersAvailable": false
+  },
+  "softDevice": "Nordic S112 7.3.0",
+  "bootloaderRegionMatches": "BL8",
+  "startMarkers": {
+    "scope": "application-storage-start-to-first-dispatch",
+    "phases": [
+      "storageBegin",
+      "storageDone",
+      "displayBegin",
+      "displayDone",
+      "launcherDone",
+      "dispatchDone"
+    ],
+    "beforeDE3_58_ms": [
+      0,
+      2338,
+      2371,
+      2424,
+      2425,
+      2443
+    ],
+    "afterDE3_59_ms": [
+      0,
+      2321,
+      2354,
+      2408,
+      2408,
+      2426
+    ],
+    "delta_ms": {
+      "storage": -17,
+      "total": -17
+    },
+    "startsPerVersion": 1
+  },
+  "runtime": {
+    "stackReservedBytes": 8192,
+    "stackMinFreeBytes": 5240,
+    "heapFreeBytes": 10644,
+    "largestFreeBlockBytes": 10560,
+    "errorCountsSinceRestart": {
+      "disconnects": 0,
+      "queue_overflows": 0,
+      "timeouts": 0,
+      "allocation_failures": 0,
+      "vfs_errors": 0
+    },
+    "errorCounterIncrementsDuringReadback": {
+      "disconnects": 0,
+      "queue_overflows": 0,
+      "timeouts": 0,
+      "allocation_failures": 0,
+      "vfs_errors": 0
+    }
+  },
+  "limits": [
+    "The timing starts at application storage initialization and ends at first dispatch. Bootloader, early SDK startup and the first visible LCD output fall outside this interval.",
+    "One recorded start per firmware on the same device does not establish a typical speedup.",
+    "The observed stack watermark covers execution since marking began at application entry. The BLE read did not exercise worst-case stack or heap use.",
+    "This BLE client read firmware version, boot diagnostics and runtime markers. The complete application image, browser interface, collection contents, physical button operation and NFC were outside this session."
+  ]
+}

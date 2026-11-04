@@ -59,8 +59,9 @@
   "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "DE3.59 hardware readback and physical bench scenarios are separate from the successful local tests.",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": "Repeated cold starts, stack/heap under load, BLE interruptions, NFC repetitions, sleep current and recovery under physical power loss. See docs/validation/DE3_59_RECOVERY.md.",
   "previous_device_readback_evidence": "docs/validation/DE3_58_READBACK.json",
-  "production_source_id_sha256": "7b4822b045b48707f1bc1737933a234040989e74bb275d13a454154776618a22"
+  "production_source_id_sha256": "7b4822b045b48707f1bc1737933a234040989e74bb275d13a454154776618a22",
+  "device_readback_evidence": "docs/validation/DE3_59_READBACK.json"
 }

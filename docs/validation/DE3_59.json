@@ -66,7 +66,7 @@
       "vfs_errors": 0
     }
   },
-  "physicalCandidateTest": "Owner reports flashing completed. First post-flash read could not discover device.",
+  "physicalCandidateTest": "Passed read-only BLE diagnostics on one LCD device after flashing DE3.59.",
   "bootloader": {
     "unchanged": true,
     "inputsChecked": 22,
@@ -80,6 +80,7 @@
       "dfu_image_size_test.py"
     ]
   },
-  "scope": "Local compiler, host, simulated media, Cortex-M4 emulation; readback above is from DE3.58, not DE3.59. No physical power interruption, sleep-current measurement, or complete personal collection audit.",
-  "recoveryAndBenchMatrix": "DE3_59_RECOVERY.md"
+  "scope": "Independent compiler builds, host tests, simulated media and Cortex-M4 emulation. Read-only hardware diagnostics cover one recorded application start each on DE3.58 and DE3.59. Physical power interruption, sleep current, a complete collection audit and the scenarios in the bench matrix remain unmeasured on DE3.59.",
+  "recoveryAndBenchMatrix": "DE3_59_RECOVERY.md",
+  "physicalCandidateEvidence": "DE3_59_READBACK.json"
 }

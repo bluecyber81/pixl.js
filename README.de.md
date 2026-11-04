@@ -7,7 +7,9 @@
 * **Schneller lesen beim Start.** Vier bereits vorhandene RAM-Seiten werden jetzt nach dem letzten Zugriff wiederverwendet. Beim Einbinden derselben nachgebildeten Sammlung (1.131 Dateien, 77 Ordner) sank die Anzahl der SPI-Lesezugriffe von 4.802 auf 4.712. Der temporäre Cache bleibt 1.032 Byte groß. Das ist ein Vergleich der Zugriffe, keine Stoppuhrmessung am Gerät.
 * **Kartenemulator → Steckplätze → Anzahl der Plätze.** Scheitert die Speicherung, zeigt „Platzanzahl im RAM“, dass die Änderung noch nicht dauerhaft gesichert ist. Kurz Mitte versucht das Speichern erneut. Lang Mitte geht zurück und behält die ausstehende Änderung für einen späteren regulären Speichervorgang.
 * **Gerät & Diagnose → Laufzeitdiagnose.** DE3.59 meldet den bisher unberührten Teil des reservierten Stacks. Unter **Startzeiten → Mehrere Kaltstarts auswerten** berechnet der Browser Median und Spannweite aus 3–20 Berichten derselben Firmware.
-* **Einstellungen → Versionsinfo.** Die zwölfstellige Quellkennung für diesen Build lautet `7b4822b045b4`. Beide unabhängigen Builds ergeben dasselbe Anwendungsprogramm. Der Katalogabgleich der fertigen Firmware umfasst 952 Figuren-IDs, 82 Spiele und 1.344 Zuordnungen.
+* **Einstellungen → Version → Source-ID.** Die zwölfstellige Quellkennung für diesen Build lautet `7b4822b045b4`. Beide unabhängigen Builds ergeben dasselbe Anwendungsprogramm. Der Katalogabgleich der fertigen Firmware umfasst 952 Figuren-IDs, 82 Spiele und 1.344 Zuordnungen.
+
+**Am LCD-Gerät gemessen.** Bei je einem Start auf demselben Gerät brauchte der Speicher mit DE3.59 2.321 ms (DE3.58: 2.338 ms). Bis zur ersten Ereignisverarbeitung vergingen 2.426 ms (zuvor 2.443 ms). Beide Abschnitte waren in diesem Vergleich 17 ms kürzer. Bootloader und sichtbarer Displaystart liegen außerhalb der Messung. Bei der Bluetooth-Abfrage meldete die Firmware 5.240 von 8.192 Byte unberührten Stack und 10.644 Byte freien Heap. [Gerätemessung](docs/validation/DE3_59_READBACK.json)
 
 [Alle Änderungen und Bedienwege](RELEASE_NOTES_DE.md) · [Prüfergebnisse](docs/validation/DE3_59.json)
 
