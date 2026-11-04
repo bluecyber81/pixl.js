@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "date": "2026-11-04",
-  "scope": "Two read-only BLE sessions on one owner LCD and two separately reported user checks after application DFU.",
+  "scope": "Two read-only BLE sessions on one owner LCD and three separately reported user checks after application DFU.",
   "firmware": "2.22.0-DE3.58",
   "releaseSourceCommit": "354e13b77edc4a1f3997008c0999b0d96851d1dd",
   "boot": {
@@ -79,7 +79,8 @@
   },
   "ownerConfirmed": {
     "cardEmulatorSlotSwitchAndReturn": true,
-    "knownAmiiboRecognizedBySwitch2": true
+    "knownAmiiboRecognizedBySwitch2": true,
+    "wokeFromSleepWithShortCenterPressWhileLaptopUsbConnected": true
   },
   "limits": [
     "Startup markers exclude the bootloader, early SDK startup and physical display response. One start per version does not establish a mean or a range.",

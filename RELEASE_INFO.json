@@ -61,6 +61,6 @@
   "previous_web_device_readback_evidence": "docs/validation/WEB3_35_0_READBACK.json",
   "device_readback_evidence": "docs/validation/DE3_58_READBACK.json",
   "device_readback_passed": true,
-  "device_validation_pending_scope": "Deliberate storage-failure recovery on hardware, wake and full collection verification remain outside the recorded checks. Readback, startup timing and owner tests of card-slot switching and Switch 2 NFC are complete.",
+  "device_validation_pending_scope": "Deliberate storage-failure recovery on hardware and full collection verification remain outside the recorded checks. Readback, startup timing and owner tests of card-slot switching, Switch 2 NFC and wake by short center press with laptop USB connected are complete.",
   "previous_device_readback_evidence": "docs/validation/DE3_57_READBACK.json"
 }
