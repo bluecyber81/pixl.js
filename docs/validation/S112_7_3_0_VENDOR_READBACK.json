@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "checked_utc": "2026-11-04T15:19:42+00:00",
+  "provider": {
+    "name": "Nordic Semiconductor",
+    "landing_page": "https://www.nordicsemi.com/Products/Development-software/S112/Download",
+    "selected_product": "7.3.0 SoftDevice S112",
+    "selection_control_id": "289B5A55FCF14561972AAFD6EAC42067",
+    "selected_filename": "s112_nrf52_7.3.0.zip",
+    "verified_link_href": "https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/softdevices/s112/s112_nrf52_7.3.0.zip",
+    "source_of_href": "Live browser read of the link under the selected version on the official Nordic page."
+  },
+  "https_get": {
+    "final_url": "https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/softdevices/s112/s112_nrf52_7.3.0.zip",
+    "http_status": 200,
+    "content_type": "application/zip",
+    "etag": "\"0x8D9B57C1C01D500\"",
+    "last_modified": "Thu, 02 Dec 2021 10:11:30 GMT",
+    "bytes": 248706,
+    "sha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "byte_identical_to_archived_zip": true
+  },
+  "intel_hex": {
+    "member": "s112_nrf52_7.3.0_softdevice.hex",
+    "bytes": 283793,
+    "sha256": "92bcdc1aa51142ed212bb0dbcdf57093a1bad391f1cf5adca60effe14bdb7ec6",
+    "validation": "ZIP CRCs, Intel HEX record lengths, checksums, upper addresses, unique explicit data addresses and terminal EOF checked."
+  },
+  "project_comparison": {
+    "reference": "S112_7_3_0_ARCHIVE_COMPARISON.json",
+    "ota_zip": "Allmiibo_LCD_BL8_Z11_S112_7_3_DE3_44_KOMPLETT.zip",
+    "ota_zip_sha256": "017a5e6085753c220492be6f1d1cf6817eb7809d0a1e103d2f64d80c0c28951d",
+    "ota_member": "sd_bl.bin",
+    "family": 112,
+    "version_code": 7003000,
+    "fwid": "0x126",
+    "start_inclusive": "0x1000",
+    "end_exclusive": "0x18f14",
+    "explicit_bytes": 98068,
+    "vendor_segment_sha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "ota_prefix_sha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "different_bytes": 0,
+    "outside_compared_segment": {
+      "vendor_explicit_mbr_bytes": 2816,
+      "combined_ota_bootloader_suffix_bytes": 28136
+    }
+  },
+  "limitations": [
+    "Compared explicitly addressed SoftDevice bytes from the fresh manufacturer download with the SoftDevice component in the archived combined OTA package. No padding was substituted.",
+    "No readback of installed flash and no hardware test. Transport provenance and byte identity do not constitute an independent vendor signature."
+  ]
+}

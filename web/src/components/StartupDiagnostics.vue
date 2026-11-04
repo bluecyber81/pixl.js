@@ -26,17 +26,44 @@
       <p v-if="baselineError" role="status">{{ text.invalidBaseline }}</p>
       <p v-if="difference" role="status">{{ text.difference }} · {{ text.storage }} {{ signed(difference.storage) }} ms · {{ text.total }} {{ signed(difference.total) }} ms</p>
     </details>
+    <details><summary>{{ de ? 'Mehrere Kaltstarts auswerten' : 'Compare multiple cold starts' }}</summary>
+      <p>{{ de ? '3 bis 20 JSON-Berichte auswählen: je einer pro echtem Neustart, am selben Gerät mit derselben Firmware, Sammlung und ähnlicher Akkuspannung.' : 'Select 3 to 20 JSON reports: one per physical restart, from the same device, firmware and collection at a similar battery voltage.' }}</p>
+      <input type="file" multiple accept=".json,application/json" :aria-label="de ? 'Kaltstartberichte' : 'Cold-start reports'" @change="loadSeries"/>
+      <p v-if="seriesError" role="status">{{ de ? 'Keine vergleichbare Reihe: Version fehlt oder weicht ab, Zeitmarken fehlen oder wiederholen sich, oder Anzahl bzw. Dateigröße ist zu groß.' : 'No comparable series: missing or different versions, missing or duplicate markers, or invalid file count or size.' }}</p>
+      <p v-if="series" role="status">{{ series.version }} · {{ series.count }} {{ de ? 'Starts' : 'boots' }} · Median (min–max):
+        {{ text.storage }} {{ series.storage.median }} ms ({{ series.storage.min }}–{{ series.storage.max }}) ·
+        {{ text.total }} {{ series.total.median }} ms ({{ series.total.min }}–{{ series.total.max }})</p>
+    </details>
     <p class="limits">{{ text.limits }}</p>
   </section>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
-const props = defineProps({ connected: Boolean, blocked: Boolean, generation: { type: Number, default: 0 },
+import { startupSeries, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
+const props = defineProps({ firmwareVersion: String, connected: Boolean, blocked: Boolean, generation: { type: Number, default: 0 },
   locale: { type: String, default: 'de_DE' }, readDiagnostics: { type: Function, default: null } });
 const emit = defineEmits(['busy', 'export']);
 const state = ref('unknown'), info = ref(null), observedAt = ref(null);
 const text = computed(() => startupDiagnosticsText(props.locale));
+const de = computed(() => props.locale.startsWith('de'));
+const series = ref(null), seriesError = ref(false);
+let seriesRequest = 0;
+async function loadSeries(event) {
+  const id = ++seriesRequest, files = Array.from(event.target.files || []);
+  series.value = null; seriesError.value = false;
+  if (!files.length) return;
+  try {
+    if (files.length < 3 || files.length > 20 || files.some(f => f.size > 1024*1024)) throw new Error();
+    const reports = [];
+    for (const file of files) {
+      if (id !== seriesRequest) return;
+      const doc = JSON.parse(await file.text());
+      reports.push({firmwareVersion:doc?.firmwareVersion, startup:doc?.startup});
+    }
+    if (id !== seriesRequest) return;
+    series.value = startupSeries(reports); seriesError.value = !series.value;
+  } catch { if (id === seriesRequest) seriesError.value = true; }
+}
 const loading = computed(() => state.value === 'loading');
 const rows = computed(() => startupDiagnosticRows(info.value));
 // Compare only a complete series. A partial recording cannot identify the
@@ -71,7 +98,7 @@ function clear() {
   if (wasLoading) emit('busy', false);
 }
 watch(() => [props.connected, props.generation], clear, { flush: 'sync' });
-onBeforeUnmount(() => { mounted = false; clear(); });
+onBeforeUnmount(() => { mounted = false; ++seriesRequest; clear(); });
 async function read() {
   if (!props.connected || props.blocked || loading.value || !props.readDiagnostics) return;
   clear();
@@ -90,7 +117,7 @@ async function read() {
 }
 function exportReport() {
   if (!props.connected || !info.value || loading.value) return;
-  emit('export', createStartupDiagnosticReport(info.value, observedAt.value));
+  emit('export', createStartupDiagnosticReport(info.value, observedAt.value, props.firmwareVersion));
 }
 </script>
 <style scoped>

@@ -34,6 +34,7 @@ enum runtime_diag_cause {
 #define RUNTIME_DIAG_BAD_STATE (-1001)
 
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
+void runtime_diag_stack_init(void);
 void runtime_diag_boot_capture(uint32_t reset_reason);
 void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms);
 bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity);
@@ -47,6 +48,7 @@ void runtime_diag_heap_reset(void);
 void runtime_diag_heap_sample(uint32_t total, uint32_t free, uint32_t largest);
 bool runtime_diag_snapshot(uint8_t *out, size_t capacity);
 #else
+static inline void runtime_diag_stack_init(void) {}
 static inline void runtime_diag_boot_capture(uint32_t reason) { (void)reason; }
 static inline void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms) {
     (void)phase; (void)elapsed_ms;

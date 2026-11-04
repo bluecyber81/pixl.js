@@ -53,6 +53,7 @@ typedef struct {bool has_flags;unsigned flags;} vfs_meta_t;
 #define string_cmp_str(a,b) strcmp(a,b)
 #define string_size(s) strlen(s)
 #define string_set_str(s,v) strcpy(s,v)
+#define string_reset(s) ((s)[0]='\0')
 #define string_set(s,v) strcpy(s,v)
 #define string_left(s,n) ((s)[n]=0)
 #define string_cat_str(s,v) strcat(s,v)

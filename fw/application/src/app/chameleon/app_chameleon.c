@@ -32,6 +32,7 @@ static void app_chameleon_resume(app_chameleon_t *app) {
     app->exit_prepared = false;
     if (!app->exit_paused) return;
     app->exit_paused = false;
+    app->retry_slot_count = false;
     if (app->p_view_dispatcher->p_active_view == &app->save_error_view) {
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, app->exit_view_id);
     }
@@ -51,7 +52,8 @@ bool app_chameleon_save(app_chameleon_t *app) {
     if (!app || app->exit_prepared) return false;
     if (!app->initialized) return true;
     app_chameleon_pause(app);
-    if (!tag_emulation_save() || settings_save() != NRF_SUCCESS) {
+    bool saved = app->retry_slot_count ? tag_emulation_save_config() : tag_emulation_save();
+    if (!saved || settings_save() != NRF_SUCCESS) {
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
         return false;
     }
@@ -60,8 +62,9 @@ bool app_chameleon_save(app_chameleon_t *app) {
 }
 
 static void app_chameleon_save_error_draw(mui_view_t *view, mui_canvas_t *canvas) {
-    (void)view;
-    const char *lines[] = {_T(DE3_SAVE_FAILED), _T(DE3_SAVE_RAM_ONLY), _T(DE3_SAVE_RETRY), _T(DE3_BLE_BACK)};
+    app_chameleon_t *app = view->user_data;
+    const char *detail = app->retry_slot_count ? _T(DE3_SLOT_COUNT_PENDING) : _T(DE3_SAVE_RAM_ONLY);
+    const char *lines[] = {_T(DE3_SAVE_FAILED), detail, _T(DE3_SAVE_RETRY), _T(DE3_BLE_BACK)};
     mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
     mui_canvas_set_draw_color(canvas, 1);
     for (uint8_t i = 0; i < 4; i++) mui_canvas_draw_utf8(canvas, 0, 12 + 15 * i, lines[i]);

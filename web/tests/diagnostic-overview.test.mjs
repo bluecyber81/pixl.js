@@ -72,7 +72,7 @@ test('all real normalized sections render extra memory, startup, layout and firm
   assert.match(row(ram,'Kleinster beobachteter größter Block'),/9728 B/);
   assert.match(row(ram,'Maximal belegte Heap-Nutzdaten'),/5260 B/);
   assert.match(row(ram,'Reservierter Stackbereich'),/8192 B/);
-  assert.equal(row(ram,'Gemeldeter kleinster freier Stack'),'Nicht erfasst');
+  assert.equal(row(ram,'Unberührter Stack seit Anwendungsstart'),'Nicht erfasst');
   assert.match(text(ram),/Reservierter Stack ist kein gemessener freier Stack/);
   assert.equal(row(card(h.root,'startup'),'Anwendungsstart bis erste Verarbeitung'),'2312 ms');
   assert.match(row(card(h.root,'startup'),'Längster gemessener Abschnitt'),/2218 ms/);

@@ -37,13 +37,14 @@ export function startupDiagnosticRows(value) {
     sincePreviousMilliseconds: index && info.elapsedMilliseconds[index] !== null
       ? info.elapsedMilliseconds[index] - info.elapsedMilliseconds[index - 1] : null })) : [];
 }
-export function createStartupDiagnosticReport(value, observedAt) {
+export function createStartupDiagnosticReport(value, observedAt, firmwareVersion) {
   const info = normalizeStartupDiagnostics(value);
   if (!info || typeof observedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(observedAt) ||
       !Number.isFinite(Date.parse(observedAt)) || new Date(observedAt).toISOString() !== observedAt) {
     throw new Error('Invalid startup diagnostic report');
   }
   return { reportSchema: 1, observation: 'cached-startup-markers-read-in-current-session', observedAt,
+    ...(typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+-DE\d+\.\d+$/.test(firmwareVersion) ? {firmwareVersion} : {}),
     startup: info, phases: startupDiagnosticRows(info),
     limits: ['Excludes bootloader and early SDK startup.',
       'Software markers do not prove successful storage access or visible display output.',
@@ -54,6 +55,25 @@ export function compareStartup(report, current) {
   if (before?.phaseMask !== 63 || after?.phaseMask !== 63) return null;
   const delta = index => after.elapsedMilliseconds[index] - before.elapsedMilliseconds[index];
   return { storage: delta(1), total: delta(5) };
+}
+// Timings are cached for a whole boot. Conservatively reject identical complete
+// marker sets (even if separate boots coincidentally produced the same values).
+export function startupSeries(reports) {
+  if (!Array.isArray(reports) || reports.length < 3 || reports.length > 20) return null;
+  const seen = new Set(), storage = [], total = [], version = reports[0]?.firmwareVersion;
+  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+-DE\d+\.\d+$/.test(version)) return null;
+  for (const report of reports) {
+    const s = normalizeStartupDiagnostics(report?.startup);
+    if (report?.firmwareVersion !== version || s?.phaseMask !== 63 || !s.elapsedMilliseconds[5]) return null;
+    const key = s.elapsedMilliseconds.join(',');
+    if (seen.has(key)) return null;
+    seen.add(key); storage.push(s.elapsedMilliseconds[1]); total.push(s.elapsedMilliseconds[5]);
+  }
+  const stats = a => {
+    a.sort((x,y) => x-y); const n=a.length;
+    return {median:(a[Math.floor((n-1)/2)]+a[Math.floor(n/2)])/2,min:a[0],max:a[n-1]};
+  };
+  return {version, count:reports.length, storage:stats(storage),total:stats(total)};
 }
 export function startupDiagnosticsText(locale = 'de_DE') {
   return locale.startsWith('de') ? {

@@ -131,6 +131,9 @@ SECTIONS
 
 INCLUDE "nrf_common.ld"
 
+ASSERT(__StackTop > __StackLimit && ((__StackTop | __StackLimit) & 3) == 0,
+       "Application stack must consist of aligned, complete words")
+
 /* Linker script to configure memory regions. */
 
 SECTIONS

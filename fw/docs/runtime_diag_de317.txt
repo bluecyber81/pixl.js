@@ -19,7 +19,7 @@ Offset Width Type    Meaning
 6      1     bits    bit0 current TLSF pool available
                     bit1 free-space samples available
                     bit2 static linker stack reservation available
-                    bit3 measured stack low-water supported (always0 here)
+                    bit3 stack watermark available (LCD nRF52832 since DE3.59)
                     bit5 HCI disconnect observation available
                     bit6 VFS error observation available
                     bits4/7 reserved0
@@ -39,7 +39,7 @@ Offset Width Type    Meaning
 40     4     u32LE   configured TLSF pool size, bytes (bit0)
 44     4     u32LE   maximum observed TLSF payload balance after MUI calls, bytes
 48     4     u32LE   static linker stack reservation, bytes (bit2)
-52     4     u32LE   minimum free stack bytes: unsupported=0xFFFFFFFF
+52     4     u32LE   remaining unmarked-use margin in bytes (bit3), else 0xFFFFFFFF
 56     4     u32LE   valid free-space samples (saturates0xFFFFFFFF)
 60     4     u32LE   VFS error observations (saturates0xFFFFFFFF)
 
@@ -74,10 +74,19 @@ measured. This is not an uninterrupted physical allocator peak and also excludes
 allocator metadata, static RAM, the SDK heap and stack. It cannot be subtracted
 from all nRF52832 RAM to claim a safety reserve.
 
-The current implementation never paints, scans or writes the live stack. The
-linker reservation is a configured capacity, not a measured unused reserve.
-Runtime stack low-water is deliberately reported unsupported. A future safe
-measurement requires startup/interrupt/call-chain validation on the real board.
+From DE3.59 onwards the first action in main marks unused aligned words below
+the active Main Stack Pointer (MSP), within the linker's reserved stack. On
+an INFO 0x06 query, the firmware counts the contiguous intact words from the
+bottom, capped at the current MSP and the previous low-water observation.
+Zero means the marker at the stack bottom was touched, or the MSP reached
+the bottom. A missing/unsupported result keeps bit3 clear. No ongoing polling
+or flash writes are involved. The largest scan is 2048 RAM words (8 KiB).
+
+The watermark includes writes from interrupts and S112 on the shared MSP
+after marking. It excludes bootloader/early SDK activity. Untouched reserved
+frames and writes that happen to restore their markers may be missed. The
+result is approximate and cannot by itself justify reducing the reservation.
+https://docs.nordicsemi.com/r/bundle/sds_s112/page/sds/s1xx/mem_usage/mem_resource_reqs.html
 
 Implementation footprint: runtime diagnostic state is compile-time bounded to
 56 RAM bytes; no dynamic diagnostic allocation, persistent writes or paths.

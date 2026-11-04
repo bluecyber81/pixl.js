@@ -250,4 +250,5 @@ const char * const lang_de_DE[_L_COUNT] = {
     [_L_APP_CHAMELEON_DISNEY_CONFIRM] = "Kennung ersetzen?\nDump bleibt erhalten.",
     [_L_APP_CHAMELEON_DISNEY_NEEDS_MINI] = "Zuerst Mini-Dump laden",
     [_L_APP_CHAMELEON_DISNEY_SHADOW] = "Schattenmodus aktiv",
+    [_L_DE3_SLOT_COUNT_PENDING] = "Platzanzahl im RAM",
 };

@@ -245,6 +245,7 @@ static char long_value[512];
 static const char *version_get_version(void *p) { (void)p; return "2.21.0-DE3.9"; }
 static const char *version_get_builddate(void *p) { (void)p; return "2026-10-21"; }
 static const char *version_get_githash(void *p) { (void)p; return NULL; }
+static const char *version_get_source_id(void) { return "0123456789abcdef"; }
 static const char *version_get_gitbranch(void *p) { (void)p; return long_value; }
 static unsigned version_get_target(void *p) { (void)p; return 52; }
 static unsigned version_get_dirty_flag(void *p) { (void)p; return 1; }
@@ -265,7 +266,8 @@ int main(void) {
     setup(); memset(long_value, 'x', sizeof(long_value)); long_value[511] = 0;
     mui_list_view_t list = {0}; app_settings_t app = {&list, 0, 0}; list.user_data = &app;
     settings_scene_version_on_enter(&app);
-    assert(items == 10 && switched == 1);
+    assert(items == 11 && switched == 1);
+    assert(!strcmp(labels[9], "Source-ID") && !strcmp(values[9], "[0123456789ab]"));
     assert(!strcmp(values[0], "[2.21.0-DE3.9]"));
     assert(!strcmp(values[2], "[?]")); assert(strlen(values[3]) == 31 && values[3][30] == ']');
     assert(!strcmp(labels[4], "DE39_INFO_BUILD_TARGET") && !strcmp(values[4], "[LCD/ST7567]"));

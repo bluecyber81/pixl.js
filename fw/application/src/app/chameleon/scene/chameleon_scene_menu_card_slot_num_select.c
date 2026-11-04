@@ -20,7 +20,7 @@ void chameleon_scene_menu_card_slot_num_select_on_event(mui_list_view_event_t ev
     app_chameleon_t *app = p_list_view->user_data;
     switch (p_item->icon) {
     case ICON_DATA: {
-        if (!tag_helper_set_slot_num((uint8_t)(uintptr_t)p_item->user_data)) {
+        if (!tag_helper_set_slot_num((uint8_t)(uintptr_t)p_item->user_data, &app->retry_slot_count)) {
             if (tag_helper_get_active_tag_type() != TAG_TYPE_UNDEFINED && !tag_emulation_active_data_ready())
                 app_chameleon_show_load_error(app);
             else

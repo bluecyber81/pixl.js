@@ -1,0 +1,85 @@
+{
+  "firmware": "2.22.0-DE3.59",
+  "applicationCounter": 631,
+  "web": "3.37.0",
+  "applicationOnly": true,
+  "sha256Zip": "79387111d02a5bbaf5caee25b5032769c07562d6862f46f89161c66602d5d924",
+  "sha256Bin": "02c99fd79c1d21ec24377530103edadc4aac08795dd7e8f9476711ecd33430fd",
+  "sourceId": "7b4822b045b48707f1bc1737933a234040989e74bb275d13a454154776618a22",
+  "sourceFiles": 696,
+  "twoIndependentBuildsMatched": true,
+  "compilerWarnings": 0,
+  "layout": {
+    "binary_bytes": 363576,
+    "linker_flash_used_bytes": 363584,
+    "observed": {
+      "flash_reserve_bytes": 9152,
+      "heap_stack_gap_bytes": 1936,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "catalog": {
+    "figures": true,
+    "games": true,
+    "links": true
+  },
+  "catalogCounts": {
+    "figures": 952,
+    "games": 82,
+    "links": 1344
+  },
+  "vectorsChecked": 128,
+  "hostFirmwareSuites": 142,
+  "hostWebTests": 1133,
+  "distRootTests": 21,
+  "distPagesTests": 21,
+  "signature": {
+    "verified": true,
+    "negativeControls": 3
+  },
+  "pendingUiTextPixels": {
+    "de_DE_DE3_SLOT_COUNT_PENDING": 100,
+    "en_US_DE3_SLOT_COUNT_PENDING": 93
+  },
+  "physicalBaselineRead": {
+    "version": "2.22.0-DE3.58",
+    "applicationCounter": 630,
+    "observedAt": "2026-11-04T15:13:14.694Z",
+    "elapsedApplicationMilliseconds": [
+      0,
+      2338,
+      2371,
+      2424,
+      2425,
+      2443
+    ],
+    "errorCounterChanges": {
+      "disconnects": 0,
+      "queue_overflows": 0,
+      "timeouts": 0,
+      "allocation_failures": 0,
+      "vfs_errors": 0
+    }
+  },
+  "physicalCandidateTest": "Owner reports flashing completed. First post-flash read could not discover device.",
+  "bootloader": {
+    "unchanged": true,
+    "inputsChecked": 22,
+    "byteIdenticalRegion": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+    "sanitizedExecuteCases": 35,
+    "regressionGroups": [
+      "transport_final_ack_test.py",
+      "display_disconnect_test.py",
+      "compact_font_test.py",
+      "activation_test.py",
+      "dfu_image_size_test.py"
+    ]
+  },
+  "scope": "Local compiler, host, simulated media, Cortex-M4 emulation; readback above is from DE3.58, not DE3.59. No physical power interruption, sleep-current measurement, or complete personal collection audit.",
+  "recoveryAndBenchMatrix": "DE3_59_RECOVERY.md"
+}

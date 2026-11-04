@@ -9,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.58 / 630**; [unsigned build guide](docs/BUILD_DE3_58.md) |
+| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.59 / 631**; [unsigned build guide](docs/BUILD_DE3_59.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.36.0**; [web README](web/README.md) |
+| Browser file manager | `web/`, currently **3.37.0**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Matching BL8 bootloader | `bootloader-bl8/`; [source binding and separate unsigned build](bootloader-bl8/README.md) |
@@ -51,7 +51,7 @@ The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-Follow [BUILD_DE3_58.md](docs/BUILD_DE3_58.md) to reproduce the unsigned LCD
+Follow [BUILD_DE3_59.md](docs/BUILD_DE3_59.md) to reproduce the unsigned LCD
 application. No signing key is required. The current release helper preserves
 generated resources and the version header. For an intentional change, use its
 development mode with a distinct version and explicit counter.
@@ -102,7 +102,7 @@ separate browser simulation profile; do not silently replace an old profile.
 
 The [checks workflow](.github/workflows/checks.yml) runs Web tests/builds and the
 portable firmware subsets with read-only repository permissions. The separate
-[unsigned firmware workflow](.github/workflows/unsigned-firmware.yml) is manual:
-separate DE3.58 and BL8 jobs download the same pinned SDK image before their
-offline unsigned builds. New workflow files are not evidence of a successful
-GitHub Actions run; consult the actual run.
+[unsigned firmware workflow](.github/workflows/unsigned-firmware.yml) compiles the
+LCD application and checks its linked flash and RAM reserves for changes to the
+build inputs. Pull requests build candidates. Pushes to main verify the release
+hash. A manual run also rebuilds BL8 from its corresponding sources.

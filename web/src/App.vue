@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.36.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.37.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -222,9 +222,9 @@
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
-      <StartupDiagnostics :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
+      <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.36.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.37.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -259,6 +259,7 @@
           <div><dt>{{ $t('info.heapFree') }}</dt><dd>{{ format_optional_size(runtimeInfo.heapFreeBytes) }} / {{ format_optional_size(runtimeInfo.heapPoolBytes) }}</dd></div>
           <div><dt>{{ $t('info.heapLargest') }}</dt><dd>{{ format_optional_size(runtimeInfo.largestFreeBlockBytes) }}</dd></div>
           <div><dt>{{ $t('info.heapMinimum') }}</dt><dd>{{ format_optional_size(runtimeInfo.sampledMinFreeBytes) }}</dd></div>
+          <div><dt>{{ $t('info.stackMark') }}</dt><dd>{{ format_optional_size(runtimeInfo.stackMinFreeBytes) }} / {{ format_optional_size(runtimeInfo.stackReservedBytes) }}</dd></div>
           <div><dt>{{ $t('info.heapSamples') }}</dt><dd>{{ runtimeInfo.memorySamples ?? $t('info.unknown') }}</dd></div>
           <div><dt>{{ $t('info.runtimeDisconnects') }}</dt><dd>{{ runtimeInfo.disconnects ?? $t('info.unknown') }}</dd></div>
           <div><dt>{{ $t('info.runtimeTimeouts') }}</dt><dd>{{ runtimeInfo.timeouts ?? $t('info.unknown') }}</dd></div>
@@ -267,7 +268,7 @@
           <div><dt>{{ $t('info.runtimeVfs') }}</dt><dd>{{ runtimeInfo.vfsErrors ?? $t('info.unknown') }} · {{ runtimeInfo.lastVfsError ?? '—' }}</dd></div>
           <div><dt>{{ $t('info.runtimeBleCause') }}</dt><dd>{{ runtimeInfo.lastLocalBleCause ?? '—' }} / {{ runtimeInfo.lastHciReason ?? '—' }}</dd></div>
         </dl><p class="backup-hint">{{ $t('info.runtimeVfsHint') }} {{ runtime_vfs_detail(runtimeInfo.lastVfsError) }}</p>
-        <p class="backup-hint">{{ $t('info.runtimeLimits') }}</p>
+        <p class="backup-hint">{{ $t('info.runtimeLimits') }} {{ $t(runtimeInfo.stackMinFreeBytes == null ? 'info.stackMissing' : 'info.stackHint') }}</p>
       </section>
       <p v-if="bootState === 'loading'" role="status">{{ $t('info.bootLoading') }}</p>
       <p v-if="bootState === 'unavailable'" role="status">{{ $t('info.bootUnavailable') }}</p>
@@ -471,7 +472,7 @@ export default {
   components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.36.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.37.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
@@ -690,7 +691,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.36.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.37.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1127,7 +1128,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.36.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.37.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },

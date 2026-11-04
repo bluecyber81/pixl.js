@@ -17,6 +17,9 @@ typedef struct Version Version;
  */
 const Version* version_get(void);
 
+/** SHA-256 over the application's versioned source input manifest. */
+const char* version_get_source_id(void);
+
 /** Get git commit hash.
  *
  * @param      v     pointer to Version data. NULL for currently running

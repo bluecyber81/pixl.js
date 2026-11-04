@@ -74,7 +74,8 @@ export const infoEnglish = {
   heapFree:'Free application heap / pool', heapLargest:'Largest free heap block', heapMinimum:'Lowest sampled free heap', heapSamples:'Memory samples',
   runtimeDisconnects:'Device BLE disconnects', runtimeTimeouts:'Device timeouts', runtimeQueue:'BLE queue overflows', runtimeAllocations:'Failed heap allocations',
   runtimeVfs:'Failed or rejected file requests / last code', runtimeBleCause:'Last local BLE cause / HCI reason code',
-  runtimeLimits:'These are application heap values, not the total RAM available on the chip. Sampled minima can miss peaks. No physical stack low-water measurement is available.',
+  stackMark:'Untouched stack / reserved', stackHint:'The marker starts at application entry. Unwritten stack space can remain undetected; this is not a guaranteed safety margin.', stackMissing:'This firmware did not report a stack watermark.',
+  runtimeLimits:'These are application heap values, not the total RAM available on the chip. Sampled minima can miss peaks.',
   driveUnavailable: 'Destination drive is unavailable. No upload was started.',
   notEnoughSpace: 'The destination reports insufficient free storage. No upload was started.',
   estimateHint: 'Rate and remaining time are estimates for the current phase; verification and ZIP creation may take additional time.'
@@ -155,7 +156,8 @@ export const infoGerman = {
   heapFree:'Freier Anwendungs-Heap / Pool', heapLargest:'Größter freier Heap-Block', heapMinimum:'Kleinster gemessener freier Heap', heapSamples:'Speicherstichproben',
   runtimeDisconnects:'BLE-Trennungen am Gerät', runtimeTimeouts:'Zeitüberschreitungen am Gerät', runtimeQueue:'BLE-Warteschlangenüberläufe', runtimeAllocations:'Fehlgeschlagene Heap-Zuteilungen',
   runtimeVfs:'Fehlgeschlagene/abgewiesene Datei-Anfragen / letzter Code', runtimeBleCause:'Letzte lokale BLE-Ursache / HCI-Code',
-  runtimeLimits:'Dies sind Werte des Anwendungs-Heaps, nicht des gesamten Chip-RAMs. Stichproben können Belastungsspitzen übersehen. Eine physische Messung der kleinsten Stackreserve ist nicht verfügbar.',
+  stackMark:'Unberührter Stack / reserviert', stackHint:'Die Markierung beginnt beim Einstieg in die Anwendung. Unbeschriebene Stackbereiche können unentdeckt bleiben; der Wert ist keine garantierte Reserve.', stackMissing:'Diese Firmware meldet keinen Stack-Messwert.',
+  runtimeLimits:'Dies sind Werte des Anwendungs-Heaps, nicht des gesamten Chip-RAMs. Stichproben können Belastungsspitzen übersehen.',
   driveUnavailable: 'Das Ziellaufwerk ist nicht verfügbar. Der Upload wurde nicht gestartet.',
   notEnoughSpace: 'Das Ziel meldet zu wenig freien Speicher. Der Upload wurde nicht gestartet.',
   estimateHint: 'Rate und Restzeit sind Schätzungen für den aktuellen Schritt. Prüfung und ZIP-Erstellung können zusätzliche Zeit benötigen.'

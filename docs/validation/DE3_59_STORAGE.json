@@ -1,0 +1,39 @@
+{
+  "firmware": "2.22.0-DE3.59",
+  "comparison": "Physical SPI read callbacks on one identical simulated cold-mount image. No hardware time inferred.",
+  "syntheticFiles": 1131,
+  "syntheticFolders": 77,
+  "syntheticImageSha256": "82ce8cda2ea4e005dd56b9c59b602bec4e663264526a78be52b492b2576c89ec",
+  "readSize": 256,
+  "previousReads": 4802,
+  "currentReads": 4712,
+  "bytesAvoided": 23040,
+  "previousCacheBytes": 1032,
+  "currentCacheBytes": 1032,
+  "programsDuringMount": 0,
+  "erasesDuringMount": 0,
+  "byInstrumentedPhaseReads": {
+    "lfs_mount": 46,
+    "manifest": 17,
+    "shard_open": 897,
+    "header": 108,
+    "records": 3590,
+    "index": 54
+  },
+  "scope": "Diagnostic build with phase labels yields the same 4712 reads. Footer/close did not add physical reads in this trace. No on-device phase stopwatch beyond existing startup markers.",
+  "extraASanUBSanCases": {
+    "passed": true,
+    "equalSaveReadFaults": 54,
+    "equalSaveAllocationFaults": 5,
+    "equalSaveLengthChecks": 14,
+    "mountReadFaults": 30,
+    "liveAtEnd": 0,
+    "peakRequestedHeap": 4152,
+    "deviceAccess": false
+  },
+  "firmwareFixtureFaults": {
+    "read": 425,
+    "programOrErase": 26,
+    "allocation": 9
+  }
+}

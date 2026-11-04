@@ -38,6 +38,7 @@ export function normalizeRuntimeDiagnostics(value) {
     'sampledMinLargestBlockBytes','maxAllocatedPayloadBytes','stackReservedBytes','stackMinFreeBytes','memorySamples','vfsErrors']) {
     result[field] = nonnegative(value[field]) && value[field] <= 0xffffffff ? value[field] : null;
   }
+  if (result.stackReservedBytes === null || result.stackMinFreeBytes > result.stackReservedBytes) result.stackMinFreeBytes = null;
   result.lastVfsError = Number.isInteger(value.lastVfsError) && value.lastVfsError >= -2147483648 && value.lastVfsError <= 2147483647 ? value.lastVfsError : null;
   return result;
 }
@@ -48,7 +49,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
   const capacity = value => Number.isInteger(value) && value >= 20 && value <= 247 ? value : null;
   // Explicit allowlist: never spread arbitrary device data or exception text.
   return {
-    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.36.0',
+    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.37.0',
     firmwareVersion: /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion || '') ? firmwareVersion : null,
     connected: connected === true,
     runtime: normalizeRuntimeDiagnostics(runtime),

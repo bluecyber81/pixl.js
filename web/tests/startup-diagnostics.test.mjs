@@ -1,3 +1,4 @@
+import { startupSeries } from '../src/lib/startup-diagnostics.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -149,4 +150,14 @@ test('disconnect, generation changes, and unmount ignore both late success and l
     assert.doesNotMatch(text(f.root),/101 ms|nicht gültig/);
     if(next){pending.resolve(null);await next;assert.deepEqual(f.busy,[true,false,true,false]);f.app.unmount();}
   }
+});
+
+test('cold starts: equal firmware, independent marker sets, protected median/range and legacy fallback', () => {
+  const sample = t => createStartupDiagnosticReport(parseStartupDiagnostics(packet(63,[0,t,t+3,t+50,t+50,t+55])),
+    '2026-11-04T10:00:00.000Z','2.22.0-DE3.59');
+  const a=sample(2100), b=sample(2300), c=sample(2200), d=sample(2000);
+  assert.deepEqual(startupSeries([a,b,c]).storage,{min:2100,median:2200,max:2300});
+  assert.equal(startupSeries([a,b,c,d]).total.median,2205);
+  for (const list of [[a,b],[a,b,{...a,observedAt:'later'}],[a,b,{...c,firmwareVersion:null}],
+    [a,b,{...c,firmwareVersion:'2.22.0-DE3.58'}],[a,b,{...c,startup:null}]]) assert.equal(startupSeries(list),null);
 });

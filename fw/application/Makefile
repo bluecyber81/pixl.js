@@ -762,6 +762,19 @@ TEMPLATE_PATH := $(SDK_ROOT)/components/toolchain/gcc
 
 include $(TEMPLATE_PATH)/Makefile.common
 
+# Nordic uses a recursive make to print a response file. Keep its exact text
+# without passing jobserver descriptors through an unmarked recipe on POSIX.
+ifneq ($(OS),Windows_NT)
+define dump
+$(eval CONTENT_TO_DUMP := $(1)) printf '%s\n' "$$CONTENT_TO_DUMP"
+endef
+endif
+
+.PHONY: check_source_id
+$(OUTPUT_DIRECTORY)/production_id.h: check_source_id | $(OUTPUT_DIRECTORY)
+	@python3 ../scripts/production_id.py --header $@ --manifest $(OUTPUT_DIRECTORY)/production-inputs.json
+$(OUTPUT_DIRECTORY)/pixljs/version2.c.o: $(OUTPUT_DIRECTORY)/production_id.h
+
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 .PHONY: flash flash_softdevice erase

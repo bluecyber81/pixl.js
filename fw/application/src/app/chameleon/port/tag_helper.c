@@ -321,7 +321,8 @@ bool tag_helper_apply_disney_profile(void) {
         return settings->chameleon_default_slot_index != INVALID_SLOT_INDEX;
     }
 
-    bool tag_helper_set_slot_num(uint8_t slot_num) {
+    bool tag_helper_set_slot_num(uint8_t slot_num, bool *pending) {
+        *pending = false;
         if (!tag_emulation_prepare_slot_count(slot_num)) return false;
         if (tag_helper_get_active_tag_type() != TAG_TYPE_UNDEFINED && !tag_emulation_active_data_ready()) return false;
 
@@ -335,5 +336,6 @@ bool tag_helper_apply_disney_profile(void) {
         }
         /* The active card is already saved. The count controls the config file length.
          * Keep the pending choice in RAM if either write fails, so Retry can finish both. */
-        return tag_emulation_save_config() && settings_save() == NRF_SUCCESS;
+        *pending = !tag_emulation_save_config() || settings_save() != NRF_SUCCESS;
+        return !*pending;
     }

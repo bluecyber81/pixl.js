@@ -4,6 +4,48 @@
 #include "mui_mem.h"
 #include <string.h>
 
+#if (defined(__arm__) || defined(__thumb__)) && defined(NRF52832)
+#include "nrf.h"
+extern uint32_t __StackLimit, __StackTop;
+/* Zero until the first successful paint. Thereafter only moves towards the
+ * stack limit, including when an earlier overwritten word matches again. */
+static uintptr_t stack_watermark_end;
+
+static uint32_t stack_mark(uintptr_t address) {
+    return UINT32_C(0x6d91c32b) ^ (uint32_t)address;
+}
+
+static bool application_msp_valid(uintptr_t sp) {
+    return (__get_CONTROL() & 2u) == 0 && __get_IPSR() == 0 &&
+           sp >= (uintptr_t)&__StackLimit && sp <= (uintptr_t)&__StackTop &&
+           (sp & 3u) == 0;
+}
+
+void runtime_diag_stack_init(void) {
+    const uintptr_t sp = __get_MSP();
+    if (stack_watermark_end || !application_msp_valid(sp)) return;
+    /* First action in main, before enabling peripherals or S112. Paint only
+     * below this frame, never another word after normal execution starts.
+     * A preempting handler returns before this loop can write again. */
+    for (uintptr_t p = (uintptr_t)&__StackLimit; p < sp; p += sizeof(uint32_t))
+        *(volatile uint32_t *)p = stack_mark(p);
+    stack_watermark_end = sp;
+}
+
+static uint32_t stack_min_free(void) {
+    const uintptr_t sp = __get_MSP();
+    if (!stack_watermark_end || !application_msp_valid(sp)) return UINT32_MAX;
+    const uintptr_t limit = (uintptr_t)&__StackLimit;
+    const uintptr_t end = sp < stack_watermark_end ? sp : stack_watermark_end;
+    uintptr_t p = limit;
+    while (p < end && *(volatile const uint32_t *)p == stack_mark(p)) p += sizeof(uint32_t);
+    stack_watermark_end = p;
+    return (uint32_t)(p - limit);
+}
+#else
+void runtime_diag_stack_init(void) {}
+#endif
+
 typedef struct {
     uint16_t disconnects, overflows, timeouts, allocation_failures;
     uint8_t cause, hci_reason, vfs_command;
@@ -148,8 +190,7 @@ bool runtime_diag_power_snapshot(uint8_t *out, size_t capacity) {
 }
 bool runtime_diag_snapshot(uint8_t *out, size_t capacity) {
     if (out == NULL || capacity < RUNTIME_DIAG_SIZE) return false;
-    /* Foreground-only query. Monitoring samples the pool, without allocation.
-     * No stack fill: live stack low-water remains explicitly unsupported. */
+    /* Foreground-only query. Monitoring samples the pool without allocation. */
     mui_mem_monitor_t memory;
     mui_mem_monitor(&memory);
     runtime_diag_state_t saved;
@@ -185,7 +226,14 @@ bool runtime_diag_snapshot(uint8_t *out, size_t capacity) {
         out[6] |= 4u;
     }
 #endif
-    put32(out + 52, UINT32_MAX); /* no measured stack low-water */
+    put32(out + 52, UINT32_MAX);
+#if (defined(__arm__) || defined(__thumb__)) && defined(NRF52832)
+    uint32_t free_stack = stack_min_free();
+    if (free_stack != UINT32_MAX) {
+        put32(out + 52, free_stack);
+        out[6] |= 8u;
+    }
+#endif
     put32(out + 56, saved.samples);
     put32(out + 60, saved.vfs_errors);
     return true;

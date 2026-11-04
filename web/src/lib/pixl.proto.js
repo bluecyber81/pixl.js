@@ -325,6 +325,10 @@ export function parse_runtime_diagnostics(buffer) {
     if (pool !== null && (free > pool || largest > free || minFree > pool || minLargest > pool)) {
         throw new Error('Invalid runtime memory counters');
     }
+    const reserved = available(48, 4), untouched = available(52, 8);
+    if (untouched !== null && (reserved === null || untouched > reserved)) {
+        throw new Error('Invalid runtime stack bounds');
+    }
     return Object.freeze({
         schemaVersion: 1, scope: 'since-device-restart',
         lastLocalBleCause: bytes[7], lastHciReason: flags & 32 ? bytes[8] : null,
@@ -334,8 +338,8 @@ export function parse_runtime_diagnostics(buffer) {
         lastVfsError: flags & 64 ? v.getInt32(20, true) : null,
         heapPoolBytes: pool, heapFreeBytes: free, largestFreeBlockBytes: largest,
         sampledMinFreeBytes: minFree, sampledMinLargestBlockBytes: minLargest,
-        maxAllocatedPayloadBytes: available(44, 1), stackReservedBytes: available(48, 4),
-        stackMinFreeBytes: available(52, 8), memorySamples: u32(56), vfsErrors: u32(60)
+        maxAllocatedPayloadBytes: available(44, 1), stackReservedBytes: reserved,
+        stackMinFreeBytes: untouched, memorySamples: u32(56), vfsErrors: u32(60)
     });
 }
 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define HAS_EXIT_GUARD @HAS_GUARD@
+#define HAS_COUNT_RETRY @HAS_COUNT_RETRY@
 #define NRF_LOG_INFO(...) ((void)0)
 #define NRF_LOG_ERROR(...) ((void)0)
 #define TAG_FIELD_LED_OFF() ((void)0)
@@ -61,6 +62,8 @@ bool g_is_tag_emulating;
 static bool sense_active, irq_enabled, fail_compare_read, fail_config_load;
 static int data_write_error, config_write_error, settings_error;
 static unsigned file_size, config_size, data_writes, config_writes, settings_writes, loads;
+static unsigned card_opens;
+static const char *detail_line;
 static unsigned live, allocations, scenes_exited, drawn, updates, cases;
 static mini_app_inst_t *current;
 static void app_chameleon_on_kill(mini_app_inst_t *);
@@ -102,7 +105,7 @@ static int32_t backend_stat(const char *path,vfs_obj_t *obj) {
 }
 static struct {unsigned number,offset;} read_handle;
 static int32_t backend_open(const char *path,vfs_file_t *fd,uint32_t flags) {
-    assert(flags==VFS_MODE_READONLY);read_handle.number=path_number(path);read_handle.offset=0;fd->handle=&read_handle;return VFS_OK;
+    assert(flags==VFS_MODE_READONLY);read_handle.number=path_number(path);read_handle.offset=0;fd->handle=&read_handle;if(read_handle.number<2)card_opens++;return VFS_OK;
 }
 static int32_t backend_read(vfs_file_t *fd,void *output,size_t n) {
     assert(fd->handle==&read_handle);if(fail_compare_read)return VFS_ERR_FAIL;
@@ -133,6 +136,7 @@ static int32_t tag_emulation_load_config(void) {
 }
 static bool fds_config_file_exists(void) {return config_size!=0;}
 @CRC@
+static tag_specific_type_t tag_helper_get_active_tag_type(void) {return slotConfig.slots[slotConfig.active_slot].tag_hf;}
 @PERSISTENCE@
 
 static void *mui_mem_malloc(size_t n) {void *p=calloc(1,n);assert(p);allocations++;live++;return p;}
@@ -187,11 +191,18 @@ static void *mui(void) {return NULL;}
 static void mui_update(void *m) {updates++;}
 static void mui_canvas_set_font(mui_canvas_t *c,const uint8_t *font) {}
 static void mui_canvas_set_draw_color(mui_canvas_t *c,unsigned color) {}
-static void mui_canvas_draw_utf8(mui_canvas_t *c,unsigned x,unsigned y,const char *text) {assert(x==0&&y<=64&&text);drawn++;}
+static void mui_canvas_draw_utf8(mui_canvas_t *c,unsigned x,unsigned y,const char *text) {assert(x==0&&y<=64&&text);if(y==27)detail_line=text;drawn++;}
 static void *mini_app_launcher(void) {return current;}
 static void mini_app_launcher_exit(void *launcher) {assert(launcher==current);app_chameleon_on_kill(current);}
 @MENU_EXIT@
 @APP_SOURCE@
+#if HAS_COUNT_RETRY
+enum { ICON_BACK, ICON_DATA };
+typedef int mui_list_view_event_t;
+typedef struct {unsigned icon; void *user_data;} mui_list_item_t;
+static void mui_scene_dispatcher_previous_scene(mui_scene_dispatcher_t *d) {d->scene=CHAMELEON_SCENE_MENU;}
+@COUNT_SCENE@
+#endif
 
 /* The original launcher always called kill_cb after only the unrelated NTAG
  * guard. The baseline adapter reproduces that decision, not a patched saver. */
@@ -382,7 +393,61 @@ static void test_failed_init_can_leave(void) {
     assert(prepare(&inst,MINI_APP_EXIT_SWITCH));app_chameleon_info.kill_cb(&inst);
     assert(!live&&!inst.p_handle&&writes==data_writes+config_writes+settings_writes);cases++;
 }
+#if HAS_COUNT_RETRY
+static void test_count_change_retry_and_resume(bool go_back, bool fail_card_first) {
+    mini_app_inst_t inst;
+    setup(&inst,INVALID_SLOT_INDEX,NFC_TAG_MF1_WRITE_NORMAL);
+    app_chameleon_t *app=inst.p_handle;
+    tag_emulation_sense_end();
+    hal_nfc_set_nrfx_irq_enable(false);
+    mui_scene_dispatcher_next_scene(app->p_scene_dispatcher,CHAMELEON_SCENE_MENU);
+    mui_list_item_t item={ICON_DATA,(void *)(uintptr_t)20};
+    mui_canvas_t canvas={0};
+    unsigned before_alloc=allocations;
+    m_tag_information->memory[4][0]=0x22;
+    if(fail_card_first) {
+        data_write_error=VFS_ERR_NOSPC;
+        chameleon_scene_menu_card_slot_num_select_on_event(0,app->p_list_view,&item);
+        app->save_error_view.draw_cb(&app->save_error_view,&canvas);
+        assert(!strcmp(detail_line,"DE3_SAVE_RAM_ONLY")&&settings.chameleon_slot_num==8);
+        retry_input(&inst,INPUT_TYPE_LONG);
+        data_write_error=0;
+    }
+    config_write_error=VFS_ERR_NOSPC;
+    chameleon_scene_menu_card_slot_num_select_on_event(0,app->p_list_view,&item);
+    app->save_error_view.draw_cb(&app->save_error_view,&canvas);
+    assert(!strcmp(detail_line,"DE3_SLOT_COUNT_PENDING")&&disk_byte(0)==0x22);
+    assert(settings.chameleon_slot_num==20&&persisted_settings.chameleon_slot_num==8);
+    assert(config_size==TAG_SLOT_CONFIG_SIZE(8)&&!settings_writes);
+    unsigned opens=card_opens, writes=data_writes;
+    config_write_error=0;settings_error=8;
+    retry_input(&inst,INPUT_TYPE_SHORT);
+    assert(app->p_view_dispatcher->p_active_view==&app->save_error_view);
+    assert(app->retry_slot_count&&config_size==TAG_SLOT_CONFIG_SIZE(20));
+    assert(settings_writes==1&&persisted_settings.chameleon_slot_num==8);
+    assert(card_opens==opens&&data_writes==writes);
+    settings_error=0;
+    if(go_back) {
+        retry_input(&inst,INPUT_TYPE_LONG);
+        assert(app->p_view_dispatcher->p_active_view==mui_list_view_get_view(app->p_list_view));
+        assert(!app->retry_slot_count&&settings.chameleon_slot_num==20);
+        assert(settings_writes==1&&!sense_active&&!irq_enabled);
+        m_tag_information->memory[4][0]=0x44; /* new edit after returning */
+        assert(app_chameleon_save(app));
+        assert(disk_byte(0)==0x44&&data_writes==writes+1);
+    } else {
+        retry_input(&inst,INPUT_TYPE_SHORT);
+        assert(!app->retry_slot_count&&card_opens==opens&&data_writes==writes);
+    }
+    assert(settings_writes==2&&persisted_settings.chameleon_slot_num==20);
+    assert(config_size==TAG_SLOT_CONFIG_SIZE(20)&&allocations==before_alloc);
+    cleanup_success(&inst);cases++;
+}
+#endif
 int main(void) {
+#if HAS_COUNT_RETRY
+    for(unsigned i=0;i<4;i++)test_count_change_retry_and_resume(i&1,i&2);
+#endif
     mini_app_exit_reason_t reasons[]={MINI_APP_EXIT_SWITCH,MINI_APP_EXIT_SLEEP,MINI_APP_EXIT_RESET};
     for(unsigned r=0;r<3;r++)for(unsigned fault=0;fault<6;fault++)test_error_retry(fault,reasons[r]);
     uint8_t defaults[]={INVALID_SLOT_INDEX,0,1,TAG_MAX_SLOT_NUM,8};

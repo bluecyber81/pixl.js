@@ -1,16 +1,21 @@
 name: Unsigned LCD application and BL8 builds
 
-# Manual because fetching the external Nordic SDK image is an explicit setup
-# step. This workflow never signs, flashes, formats or publishes anything.
+# Pull requests compile candidate bytes against the same measured budgets.
+# The release branch additionally requires the published application hash.
 on:
   workflow_dispatch:
+  pull_request:
+    paths: ['fw/application/**', 'fw/components/**', 'fw/data/**', 'fw/ld/**', 'fw/scripts/**', 'tools/**', '.github/workflows/unsigned-firmware.yml']
+  push:
+    branches: [main]
+    paths: ['fw/application/**', 'fw/components/**', 'fw/data/**', 'fw/ld/**', 'fw/scripts/**', 'tools/**', '.github/workflows/unsigned-firmware.yml']
 
 permissions:
   contents: read
 
 jobs:
   application:
-    name: DE3.58 application
+    name: DE3.59 application
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -19,13 +24,18 @@ jobs:
           persist-credentials: false
       - name: Fetch pinned external SDK and ARM toolchain
         run: docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
-      - name: Compile and verify unsigned release application offline
-        run: python3 tools/build_lcd.py --jobs 4
+      - name: Exercise linker budget gates
+        run: python3 fw/tests/de3/test_application_budget.py
+      - name: Compile unsigned LCD and inspect actual flash and RAM reserves
+        env:
+          BUILD_MODE: ${{ github.event_name == 'pull_request' && 'candidate' || 'release' }}
+        run: python3 tools/build_lcd.py --mode "$BUILD_MODE" --jobs 4
       - name: Show bound build result
-        run: cat build/lcd-de358/BUILD_RESULT.json
+        run: cat build/lcd-de359/BUILD_RESULT.json
 
   bootloader:
     name: BL8 corresponding-source build
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:

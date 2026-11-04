@@ -59,6 +59,9 @@ void settings_scene_version_on_enter(void *user_data) {
     snprintf(txt, sizeof(txt), "[%u]", (unsigned)version_get_dirty_flag(NULL));
     mui_list_view_add_item_ext(app->p_list_view, 0xe1cc, "Dirty", txt, (void *)0xFF);
 
+    snprintf(txt, sizeof(txt), "[%.12s]", version_get_source_id());
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c9, "Source-ID", txt, (void *)0xFF);
+
     mui_list_view_add_item(app->p_list_view, 0xe1cd, getLangString(_L_BACK), (void *)0);
 
     mui_list_view_set_selected_cb(app->p_list_view, settings_scene_version_list_view_on_selected);

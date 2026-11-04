@@ -91,7 +91,7 @@ test('local server identity, routes and authenticated self-stop reject wrong tok
   const exited = new Promise(resolve => child.once('exit', resolve));
   try {
     const health = await waitHealth(port);
-    assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.36.0', instance: crypto.createHash('sha256').update(token).digest('hex') });
+    assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.37.0', instance: crypto.createHash('sha256').update(token).digest('hex') });
     assert.ok(!JSON.stringify(health).includes(token));
     const head = await request(port, healthPath, 'HEAD');
     assert.equal(head.status, 200); assert.equal(head.body, ''); assert.ok(Number(head.headers['content-length']) > 0);
@@ -99,7 +99,7 @@ test('local server identity, routes and authenticated self-stop reject wrong tok
     assert.equal(index.status, 200); assert.match(index.body, /New arbitrary UI title/);
     assert.equal(index.headers['x-content-type-options'], 'nosniff');
     const dfu = await request(port, '/dfu/web.html');
-    assert.equal(dfu.status, 200); assert.match(dfu.body, /Allmiibo DFU 3\.36\.0/);
+    assert.equal(dfu.status, 200); assert.match(dfu.body, /Allmiibo DFU 3\.37\.0/);
     assert.match(dfu.headers['content-type'], /text\/html/);
     const base = new URL(`http://127.0.0.1:${port}/dfu/web.html`);
     assert.match(dfu.body, /<a\b[^>]*href="\.\.\/"/);

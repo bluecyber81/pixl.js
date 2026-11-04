@@ -6,8 +6,8 @@ Publication baseline: **2026-11-04**. Components have independent versions.
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Application | 2.22.0-DE3.58 | DFU counter 630, hardware requirement 52 |
-| File manager | 3.36.0 | Browser software, not a device image |
+| Application | 2.22.0-DE3.59 | DFU counter 631, hardware requirement 52 |
+| File manager | 3.37.0 | Browser software, not a device image |
 | Bootloader | BL8 | Code region SHA-256 below; stored DFU counters depend on packaging |
 | SoftDevice | Nordic S112 7.3.0 | FWID 0x0126; binary from Nordic, not rebuilt here |
 | Filesystem | Packed LittleFS PFS1 | Same logical layout as previous PFS1 DE releases; not standard upstream LittleFS |
@@ -29,3 +29,5 @@ On the owner's matching device, the 2026-11-02 read-only diagnostic matched DE3.
 ## Byte comparison of Nordic S112 7.3.0 on 4 November 2026
 
 The 98,068 explicitly addressed bytes in the vendor HEX from 0x1000 through 0x18F13 matched the entire SoftDevice prefix of the archived BL8/S112 system OTA. Both byte sequences have SHA-256 `176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2`. The comparison excluded the 28,136-byte bootloader suffix and the MBR. These are archive measurements, with no flash readback from a connected unit. [Inputs, ranges and checksums](validation/S112_7_3_0_ARCHIVE_COMPARISON.json).
+
+Fresh vendor download and direct byte comparison: [S112 official 7.3.0](validation/S112_7_3_0_VENDOR_READBACK.json). BL8 was separately rebuilt and matched its existing region fingerprint.

@@ -32,7 +32,7 @@ def main():
                            ('test_runtime_diag.py','runtime_diag_host.c','ble_mtu_host.c')},
             'limits':['Nordic events/radio and VFS endpoints mocked; no physical MTU or flash timing.',
                       'Actual TLSF heap on host ABI; payload high-water is not whole-system RAM usage.',
-                      'Sampled free minima are not continuous minima; stack low-water unsupported.']}
+                      'Sampled heap minima are not continuous minima; this host has no device stack watermark.']}
     with tempfile.TemporaryDirectory(prefix='pixl-runtime-diag-') as temporary:
         folder=Path(temporary)
         tree=ast.parse(inspect.getsource(fixture.main))
@@ -105,6 +105,7 @@ def main():
             report['negative_controls'].append({'name':name,'exit_code':run.returncode,'output':run.stderr.strip()})
             print('PASS rejected control',name)
     main_source=(SRC/'main.c').read_text(encoding='utf-8').split('int main(void) {',1)[1]
+    assert main_source.lstrip().startswith('runtime_diag_stack_init();')
     assert main_source.index('runtime_diag_boot_capture(nrf_power_resetreas_get());') < main_source.index('log_init();')
     battery=(SRC/'bat.c').read_text(encoding='utf-8')
     for signature in ('static void chrg_read(', 'void chrg_init('):

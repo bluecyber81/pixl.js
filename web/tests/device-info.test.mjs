@@ -15,7 +15,7 @@ test('runtime diagnostics preserve signed errors and unknown stack measurements 
   const data=normalizeRuntimeDiagnostics(runtime);
   assert.equal(data.lastVfsError,-10002);assert.equal(data.stackMinFreeBytes,null);assert.equal(data.memorySamples,3);
   const report=createDiagnostics({runtime,history:[{kind:'sync',status:'interrupted',bytes:12,verified:false}]});
-  assert.equal(report.applicationVersion,'3.36.0');assert.equal(report.recentTransfers[0].status,'interrupted');
+  assert.equal(report.applicationVersion,'3.37.0');assert.equal(report.recentTransfers[0].status,'interrupted');
   assert.doesNotMatch(JSON.stringify(report),/PRIVATE/);
   assert.equal(normalizeRuntimeDiagnostics({schemaVersion:2}),null);
 });
@@ -67,4 +67,11 @@ test('diagnostic connection state accepts only known local states without copyin
     const report = createDiagnostics({ transport: { connectionState: state, deviceAddress: 'SECRET' } });
     assert.equal(report.transport.connectionState, null); assert.doesNotMatch(JSON.stringify(report), /SECRET/);
   }
+});
+
+test('watermark accepts an exhausted marked area but rejects impossible or unsupported stack readings', () => {
+  const read = (reserved, measured) => normalizeRuntimeDiagnostics({schemaVersion:1,scope:'since-device-restart',
+    stackReservedBytes:reserved, stackMinFreeBytes:measured}).stackMinFreeBytes;
+  assert.equal(read(8192, 0), 0); assert.equal(read(8192, 5116), 5116);
+  assert.equal(read(8192, null), null); assert.equal(read(null, 512), null); assert.equal(read(8192, 8193), null);
 });

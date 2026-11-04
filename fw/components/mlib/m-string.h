@@ -272,7 +272,7 @@ m_string_clear_get_cstr(m_string_t v)
 
 /* Make the string empty */
 static inline void
-m_string_reset(m_string_t v)
+m_string_reset(m_string_ptr v)
 {
   M_STR1NG_CONTRACT (v);
   m_str1ng_set_size(v, 0);

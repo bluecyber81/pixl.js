@@ -230,8 +230,8 @@ class BuildEvidenceTests(unittest.TestCase):
             evidence.verify_host_tests(self.fw, self.host(), self.manifest)
 
     def test_wrong_version_or_counter_rejected(self):
-        self.assertEqual(evidence.VERSION, '2.22.0-DE3.58')
-        self.assertEqual(evidence.COUNTER, 630)
+        self.assertEqual(evidence.VERSION, '2.22.0-DE3.59')
+        self.assertEqual(evidence.COUNTER, 631)
         for field, value in [('version', '2.22.0-DE3.57'), ('counter', 629), ('version', '2.22.0-DE3.48'), ('counter', 620), ('version', '2.22.0-DE3.39'), ('counter', 611), ('version', '2.22.0-DE3.38'), ('counter', 610),
                              ('version', '2.21.0-DE3'), ('version', '2.21.0-DE3.2'),
                              ('version', '2.21.0-DE3.3'), ('version', '2.21.0-DE3.4'), ('version', '2.21.0-DE3.5'), ('version', '2.21.0-DE3.6'), ('version', '2.21.0-DE3.17'), ('version', '2.21.0-DE3.190'), ('version', '2.21.0-DE3.20'), ('version', '2.21.0-DE3.21'), ('version', '2.21.0-DE3.23'), ('counter', 577), ('counter', 579), ('counter', 580), ('counter', 581), ('counter', 582), ('counter', 583), ('counter', 585), ('counter', 586), ('counter', 587), ('counter', 589), ('version', '2.21.0-DE3.25'), ('counter', 590), ('counter', 591), ('version', '2.21.0-DE3.26'), ('version', '2.21.0-DE3.27'), ('version', '2.21.0-DE3.28'), ('version', '2.21.0-DE3.30'), ('counter', 596), ('counter', 599), ('counter', 592), ('counter', 593), ('counter', 594), ('counter', 595), ('counter', 597), ('counter', 604), ('version', '2.22.0-DE3.32')]:
@@ -246,7 +246,7 @@ class BuildEvidenceTests(unittest.TestCase):
             self.verify()
 
     def test_exact_terminated_version_not_prefix(self):
-        expected = '2.22.0-DE3.58'
+        expected = '2.22.0-DE3.59'
         current = expected.encode('ascii')
         header = f'#define VERSION "{expected}"\n'
         evidence.verify_version_marker(b'prefix ' + current + b'\0 trailer', header)

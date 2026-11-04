@@ -250,4 +250,5 @@ const char * const lang_en_US[_L_COUNT] = {
     [_L_APP_CHAMELEON_DISNEY_CONFIRM] = "Replace identity?\nKeep dump data.",
     [_L_APP_CHAMELEON_DISNEY_NEEDS_MINI] = "Load a Mini dump first",
     [_L_APP_CHAMELEON_DISNEY_SHADOW] = "Shadow mode: unchanged",
+    [_L_DE3_SLOT_COUNT_PENDING] = "Slot count in RAM",
 };

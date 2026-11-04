@@ -16,7 +16,8 @@ static bool geometry_valid;
 static const vfs_driver_t persist_raw_driver;
 /* The read-only mount walk revisits the first page of LittleFS blocks for
  * directory metadata and CTZ links. Keep just these pages during that walk;
- * ordinary payload streaming must not evict them. Block tags are one-based. */
+ * ordinary payload streaming must not evict them. Four associative slots avoid
+ * collisions. Low two tag bits store LRU rank (0 = most recent). */
 typedef struct {
   uint16_t tag[4];
   uint8_t page[4][PFS_CACHE_SIZE];
@@ -56,21 +57,38 @@ static bool range(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
          c->block_count == PFS_BLOCK_COUNT && b < c->block_count &&
          o <= c->block_size && n <= c->block_size - o;
 }
+enum { MOUNT_SLOTS = 4 };
+_Static_assert(PFS_BLOCK_COUNT <= UINT16_MAX >> 2, "block tag and LRU rank must fit");
+static void mount_touch(unsigned slot, uint16_t id) {
+  /* Empty slots are older than every valid entry. Only promote younger peers. */
+  unsigned limit = mount_pages->tag[slot] ? (mount_pages->tag[slot] & 3u) : MOUNT_SLOTS;
+  for (unsigned i = 0; i < MOUNT_SLOTS; ++i)
+    if (mount_pages->tag[i] && (mount_pages->tag[i] & 3u) < limit)
+      ++mount_pages->tag[i];
+  mount_pages->tag[slot] = (uint16_t)(id << 2);
+}
 static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
                       void *data, lfs_size_t n) {
   if (!range(c, b, o, n) || (n && !data))
     return LFS_ERR_IO;
   bool cacheable = mount_pages && !o && n == PFS_CACHE_SIZE;
-  unsigned slot = b % 4;
-  if (cacheable && mount_pages->tag[slot] == b + 1) {
-    memcpy(data, mount_pages->page[slot], n);
-    return 0;
+  unsigned slot = 0;
+  if (cacheable) {
+    for (unsigned i = 0; i < MOUNT_SLOTS; ++i) {
+      uint16_t tag = mount_pages->tag[i];
+      if ((tag >> 2) == b + 1) {
+        memcpy(data, mount_pages->page[i], n);
+        if (tag & 3u) mount_touch(i, (uint16_t)(b + 1));
+        return 0;
+      }
+      if (!tag || (tag & 3u) == MOUNT_SLOTS - 1) slot = i;
+    }
   }
   if (hal_spi_flash_read(b * c->block_size + o, data, n) != NRF_SUCCESS)
     return LFS_ERR_IO;
   if (cacheable) {
     memcpy(mount_pages->page[slot], data, n);
-    mount_pages->tag[slot] = (uint16_t)(b + 1);
+    mount_touch(slot, (uint16_t)(b + 1));
   }
   return 0;
 }

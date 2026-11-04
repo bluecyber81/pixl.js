@@ -99,26 +99,23 @@ static void amiibo_scene_amiibo_detail_delete_tag_confirmed(mui_msg_box_event_t 
             return;
         }
 
-        if (res == VFS_OK) {
-            char next[VFS_MAX_NAME_LEN];
-            uint16_t focus, total;
-            /* The removed name is still our anchor; prefer the previous tag,
-             * or the first successor when the first tag was deleted. */
-            int8_t direction = amiibo_detail_view_get_focus(app->p_amiibo_detail_view) ? -1 : 1;
-            int32_t scan = app_amiibo_file_neighbor(app, direction, next, &focus, &total);
-            bool reload = scan == VFS_OK && total;
-            if (reload && !mui_string_try_set_str(app->current_file, next)) {
-                mui_show_memory_error(mui());
-                return;
-            }
-            if (!reload) string_set_str(app->current_file, "");
-
-            if (reload) {
-                app->reload_amiibo_files = true;
-                mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
-            } else {
-                mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
-            }
+        char next[VFS_MAX_NAME_LEN];
+        uint16_t focus, total;
+        /* The removed name is still our anchor; prefer the previous tag,
+         * or the first successor when the first tag was deleted. */
+        int8_t direction = amiibo_detail_view_get_focus(app->p_amiibo_detail_view) ? -1 : 1;
+        int32_t scan = app_amiibo_file_neighbor(app, direction, next, &focus, &total);
+        bool reload = scan == VFS_OK && total;
+        if (reload && !mui_string_try_set_str(app->current_file, next)) {
+            mui_show_memory_error(mui());
+            return;
+        }
+        if (reload) {
+            app->reload_amiibo_files = true;
+            mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+        } else {
+            string_reset(app->current_file);
+            mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
         }
     } else {
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);

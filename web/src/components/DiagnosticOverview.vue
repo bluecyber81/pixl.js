@@ -104,7 +104,7 @@ const runtime = data => ({
     [pick('Kleinster beobachteter größter Block', 'Smallest sampled largest block'), bytes(data.sampledMinLargestBlockBytes)],
     [pick('Maximal belegte Heap-Nutzdaten', 'Maximum allocated heap payload'), bytes(data.maxAllocatedPayloadBytes)],
     [pick('Reservierter Stackbereich', 'Reserved stack region'), bytes(data.stackReservedBytes)],
-    [pick('Gemeldeter kleinster freier Stack', 'Reported minimum free stack'), data.stackMinFreeBytes === null ? t.value.absent : bytes(data.stackMinFreeBytes)],
+    [pick('Unberührter Stack seit Anwendungsstart', 'Untouched stack since application entry'), data.stackMinFreeBytes === null ? t.value.absent : bytes(data.stackMinFreeBytes)],
     [pick('Speicherstichproben', 'Memory samples'), number(data.memorySamples)],
     [pick('Fehlgeschlagene Zuteilungen', 'Failed allocations'), number(data.allocationFailures)],
     [pick('BLE-Warteschlangenüberläufe', 'BLE queue overflows'), number(data.queueOverflows)],

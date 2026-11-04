@@ -317,6 +317,7 @@ static uint32_t startup_elapsed_ms(uint32_t started) {
 #endif
 
 int main(void) {
+    runtime_diag_stack_init();
     runtime_diag_boot_capture(nrf_power_resetreas_get());
     ret_code_t err_code;
 

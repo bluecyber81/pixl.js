@@ -33,6 +33,7 @@ typedef struct {
     mui_view_t save_error_view;
     uint32_t exit_view_id;
     bool exit_paused, exit_prepared, exit_resume_nfc;
+    bool retry_slot_count; /* count in RAM; card already saved and NFC paused */
     /* Only one sorted import page is retained in the application heap. */
     char browser_anchor[48];
     uint16_t browser_anchor_icon;

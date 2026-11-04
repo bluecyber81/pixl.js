@@ -22,10 +22,10 @@ test('page locks changing package while busy and disables unsupported Bluetooth'
         assert.equal(h.nodes.get('button').disabled,!supported);}
 });
 test('selected ZIP is compared with a recent file-manager read, and clearing it clears the preview',()=>{
-  const target={counter:630,hardware:52,softDevices:[259,294]};
+  const target={counter:631,hardware:52,softDevices:[259,294]};
   for(const recent of [true,false]){
     const read=Date.now()-(recent?0:700000);
-    const h=harness(true,{URLSearchParams,location:{href:'https://example.test/dfu/web.html',hash:'#read='+read+'&app=631&bl=11&sd=300'}});
+    const h=harness(true,{URLSearchParams,location:{href:'https://example.test/dfu/web.html',hash:'#read='+read+'&app=632&bl=11&sd=300'}});
     h.options.onState({ready:true,target});
     const text=h.nodes.get('package-target').textContent;
     assert.match(text,/Hardwarefeld 52/);assert.match(text,/0x0126/);
@@ -47,7 +47,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_DE3_58_Quellcode.zip','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.59/Allmiibo_DE3_59_Quellcode.zip','../licenses/index.html']);
     assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

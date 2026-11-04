@@ -4,7 +4,7 @@
   "name": "S112",
   "version": "7.3.0",
   "fwid": "0x0126",
-  "checkedAt": "2026-11-03",
+  "checkedAt": "2026-11-04",
   "vendorUrl": "https://www.nordicsemi.com/Products/Development-software/S112/Download",
   "componentRelease": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "archive": "s112_nrf52_7.3.0.zip",
@@ -23,5 +23,7 @@
   "limits": [
     "Nordic vendor fixes are not claimed as original project work.",
     "Board/key/counter/storage qualification is separate from component identity."
-  ]
+  ],
+  "vendorAssetUrl": "https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/softdevices/s112/s112_nrf52_7.3.0.zip",
+  "freshVerification": "docs/validation/S112_7_3_0_VENDOR_READBACK.json"
 }

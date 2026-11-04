@@ -1,5 +1,14 @@
 # Improvements and fixed bugs in the DE series
 
+## DE3.59 / 631
+
+**DE3.59 / 631** is an application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume. **File manager 3.37.0** also supports older diagnostic reports. The BL8 bootloader, Nordic S112 7.3.0, on-disk format and catalog remain in place.
+
+* **Startup reads.** The four existing cache pages now keep recently used block headers. Mounting the same synthetic collection (1,131 files, 77 directories) required 4,712 SPI reads instead of 4,802. The mount-only cache still needs 1,032 bytes. This measures reads, not elapsed time on hardware.
+* **Card emulator → Slots → Slot count.** A failed save identifies a slot count that is still in RAM. A short center press retries without re-reading a card that was already saved; a long press returns and preserves the pending change for a later save.
+* **Device diagnostics → Runtime.** DE3.59 reports the untouched portion of the reserved stack. In **Startup times → Compare multiple cold starts**, the browser calculates median and range from 3–20 reports of the same firmware.
+* **Settings → Version info.** The short source identifier for this release is `7b4822b045b4`. Two independent builds produced the same image. The catalog in that image contains 952 figure IDs, 82 games and 1,344 associations.
+
 **DE3.58 / application counter 630 · Dateimanager 3.36.0 · BL8 · Nordic S112 7.3.0**
 
 This is the English entry point to the [detailed German before/after record](DEVELOPMENT_HISTORY.de.md), which links each topic to published source and regression tests. The [earlier cumulative changelog](../CHANGELOG_DE3_SERIES.md) retains DE1–DE3.16 history. “Before” refers to the reviewed older downstream code: it is not an assertion that the same problem exists in today's upstream repositories. Some fixes address regressions introduced during this fork's own storage transition.

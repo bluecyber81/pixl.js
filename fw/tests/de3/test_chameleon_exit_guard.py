@@ -60,6 +60,17 @@ def build_harness(fw):
         parts.append(definition(text, name, result))
     if has_guard:
         parts.append(definition(tag, 'tag_emulation_save_for_exit', 'bool'))
+    count_scene = ''
+    has_count_retry = 'retry_slot_count' in app
+    if has_count_retry:
+        helper = (src / 'app/chameleon/port/tag_helper.c').read_text(encoding='utf8')
+        scene = (src / 'app/chameleon/scene/chameleon_scene_menu_card_slot_num_select.c').read_text(encoding='utf8')
+        parts.extend([definition(tag, 'tag_emulation_prepare_slot_count', 'bool'),
+                      definition(tag, 'tag_emulation_slot_set_enable', 'void'),
+                      definition(helper.replace('    bool tag_helper_set_slot_num','bool tag_helper_set_slot_num'),
+                                 'tag_helper_set_slot_num','bool')])
+        count_scene = definition(scene, 'chameleon_scene_menu_card_slot_num_select_on_event','void')
+    code = code.replace('@COUNT_SCENE@', count_scene).replace('@HAS_COUNT_RETRY@', str(int(has_count_retry)))
     code = code.replace('@PERSISTENCE@', '\n\n'.join(parts))
     code = code.replace('@MENU_EXIT@', definition(menu, 'chameleon_scene_menu_on_exit', 'void'))
     code = code.replace('@APP_SOURCE@', without_includes(app))
@@ -71,6 +82,8 @@ class ChameleonExitGuardTests(unittest.TestCase):
     def test_real_card_and_app_exit_failure_retry_default_shadow_cancel(self):
         fw = Path(os.environ.get('PIXL_CHAMELEON_EXIT_SOURCE', FW))
         code, tag_dir = build_harness(fw)
+        if 'PIXL_CHAMELEON_EXIT_SOURCE' not in os.environ:
+            self.assertIn('#define HAS_COUNT_RETRY 1', code)
         compile_actual(self, code, tag_dir)
 
 
