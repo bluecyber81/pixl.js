@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-11-04",
+  "scope": "Two read-only BLE sessions on one owner LCD and two separately reported user checks after application DFU.",
+  "firmware": "2.22.0-DE3.58",
+  "releaseSourceCommit": "354e13b77edc4a1f3997008c0999b0d96851d1dd",
+  "boot": {
+    "applicationCounter": 630,
+    "bootloaderCounter": 11,
+    "settingsCrcValid": true,
+    "bootRegionSha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+    "softDeviceFwid": 294,
+    "geometryMatchesBaseline": true,
+    "wearCountersAvailable": false
+  },
+  "softDevice": "Nordic S112 7.3.0",
+  "bootloaderRegionMatches": "BL8",
+  "startMarkers": {
+    "scope": "application-storage-start-to-first-dispatch",
+    "phases": [
+      "storageBegin",
+      "storageDone",
+      "displayBegin",
+      "displayDone",
+      "launcherDone",
+      "dispatchDone"
+    ],
+    "beforeDE3_57_ms": [
+      0,
+      2450,
+      2481,
+      2534,
+      2535,
+      2553
+    ],
+    "afterDE3_58_ms": [
+      0,
+      2387,
+      2418,
+      2471,
+      2472,
+      2490
+    ],
+    "delta_ms": {
+      "storage": -63,
+      "total": -63
+    },
+    "startsPerVersion": 1
+  },
+  "runtime": {
+    "errorCountsSinceRestartAtFirstRead": {
+      "disconnects": 0,
+      "queue_overflows": 0,
+      "timeouts": 0,
+      "allocation_failures": 0,
+      "vfs_errors": 0
+    },
+    "errorIncrementsDuringSecondRead": {
+      "disconnects": 0,
+      "queue_overflows": 0,
+      "timeouts": 0,
+      "allocation_failures": 0,
+      "vfs_errors": 0
+    },
+    "applicationHeapBytes": {
+      "heap_pool": 18432,
+      "free_heap": 10668,
+      "largest_free_block": 10560,
+      "minimum_sampled_free_heap": 10668,
+      "samples": 4
+    },
+    "negotiatedAttMtu": 250
+  },
+  "readOnlyFileCheck": {
+    "entriesInRootBefore": 9,
+    "entriesInRootAfter": 9,
+    "settingsBytesMatchBefore": true,
+    "secondSessionReleased": true
+  },
+  "ownerConfirmed": {
+    "cardEmulatorSlotSwitchAndReturn": true,
+    "knownAmiiboRecognizedBySwitch2": true
+  },
+  "limits": [
+    "Startup markers exclude the bootloader, early SDK startup and physical display response. One start per version does not establish a mean or a range.",
+    "These reads did not measure flash wear, provoke write errors or independently verify every figure file.",
+    "The application version and counter were read; the complete application binary was not read back."
+  ]
+}

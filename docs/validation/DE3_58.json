@@ -4,7 +4,7 @@
   "firmware": "2.22.0-DE3.58",
   "counter": 630,
   "web": "3.36.0",
-  "scope": "Host, ARM build and artifact verification. Physical DE3.58 readback and use are pending.",
+  "scope": "Host, ARM build and artifact verification at packaging time. For the later device check see DE3_58_READBACK.json.",
   "firmwareHostSuites": 141,
   "webHostTests": 1131,
   "productionRootTests": 21,

@@ -6,7 +6,7 @@ This is the English entry point to the [detailed German before/after record](DEV
 
 ## DE3.58 and file manager 3.36.0
 
-The emulator reports save and load failures separately and saves the old card once when shrinking the slot count. The DFU page shows package fields and can compare them with a recent boot diagnostic. Physical DE3.58 testing is pending. [Changes and verification](../RELEASE_NOTES_EN.md).
+The emulator reports save and load failures separately and saves the old card once when shrinking the slot count. The DFU page shows package fields and can compare them with a recent boot diagnostic. The owner confirmed switching card slots and reading a figure on Switch 2. The device reported DE3.58/630 over Bluetooth. [Device readback](validation/DE3_58_READBACK.json) · [Changes and verification](../RELEASE_NOTES_EN.md).
 
 ## New in DE3.57 / file manager 3.35.1
 

@@ -59,8 +59,8 @@
   "web_device_readback_pending": true,
   "web_device_readback_evidence": null,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_35_0_READBACK.json",
-  "device_readback_evidence": null,
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "Physical DE3.58 application readback, startup timing, save/slot/exit behavior, NFC, controls and wake with the final signed image.",
+  "device_readback_evidence": "docs/validation/DE3_58_READBACK.json",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": "Deliberate storage-failure recovery on hardware, wake and full collection verification remain outside the recorded checks. Readback, startup timing and owner tests of card-slot switching and Switch 2 NFC are complete.",
   "previous_device_readback_evidence": "docs/validation/DE3_57_READBACK.json"
 }

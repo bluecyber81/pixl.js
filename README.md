@@ -2,11 +2,11 @@
 
 [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Firmware and downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.58) · [Deutsch](README.de.md)
 
-For **Allmiibo LCD with nRF52832 and an existing Packed LittleFS (PFS1) installation**. The 4 November 2026 release combines **2.22.0-DE3.58, counter 630**, **file manager 3.36.0**, **BL8** and **Nordic S112 7.3.0**. DE3.58 is a host-tested build pending physical-device validation.
+For **Allmiibo LCD with nRF52832 and an existing Packed LittleFS (PFS1) installation**. The 4 November 2026 release combines **2.22.0-DE3.58, counter 630**, **file manager 3.36.0**, **BL8** and **Nordic S112 7.3.0**. The tested Allmiibo reported DE3.58/630. Its owner confirmed card-slot switching and NFC recognition of a figure on Switch 2. [Device readback](docs/validation/DE3_58_READBACK.json).
 
 * **Card emulator.** Slot changes distinguish save errors from load errors. Shrinking from 50 to 8 slots can no longer leave the old slot selected on a failed second save. Selecting the card ID skips unnecessary storage access.
 * **Web DFU.** Selecting a ZIP displays the application counter, hardware field and allowed SoftDevice IDs. A boot snapshot received within the last ten minutes enables comparison. Mixed or contradictory init packets are rejected before opening the Bluetooth chooser.
-* **Startup.** Compare a saved startup report with current timings in the diagnostics panel. Mounting the synthetic collection needed 379 fewer physical reads. New on-device timings are pending.
+* **Startup.** Compare a saved startup report with current timings in the diagnostics panel. Across one startup per version on the same Allmiibo, storage initialization took 2,387 ms versus 2,450 ms on DE3.57. The first application dispatch occurred at 2,490 ms versus 2,553 ms.
 * **Device UI.** German menus have shorter labels. On the emulator's save-error screen a short middle press retries and a long press goes back.
 
 [Changes and menu paths](RELEASE_NOTES_EN.md) · [Validation](docs/validation/DE3_58.json)

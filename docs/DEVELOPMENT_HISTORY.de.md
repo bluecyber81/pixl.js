@@ -23,7 +23,7 @@ erklärt. Ein Anwendungsupdate ersetzt diese Komponenten nicht.
 
 ## DE3.58 und Dateimanager 3.36.0
 
-Im Kartenemulator werden Speicher- und Lesefehler getrennt angezeigt. Die App sichert beim Verkleinern der Slotanzahl den bisherigen Slot einmal. Die DFU-Seite zeigt die Paketfelder und kann sie mit einer aktuellen Bootdiagnose vergleichen. Der Hardwaretest von DE3.58 steht aus. [Bedienung und Prüfstand](../RELEASE_NOTES_DE.md).
+Im Kartenemulator werden Speicher- und Lesefehler getrennt angezeigt. Die App sichert beim Verkleinern der Slotanzahl den bisherigen Slot einmal. Die DFU-Seite zeigt die Paketfelder und kann sie mit einer aktuellen Bootdiagnose vergleichen. Der Besitzer bestätigte den Platzwechsel und die NFC-Erkennung an der Switch 2. Die Bluetooth-Abfrage ergab DE3.58/630. [Geräteprüfung](validation/DE3_58_READBACK.json) · [Bedienung und Prüfstand](../RELEASE_NOTES_DE.md).
 
 ## Neu in DE3.57 / Dateimanager 3.35.1
 

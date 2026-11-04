@@ -18,7 +18,7 @@
 
 **Device & diagnostics → Read startup timings → Compare earlier startup report** compares the current six markers with a saved startup or combined diagnostic for the same device and a comparable collection. The browser handles the saved file locally. Negative differences in storage/application time mean faster. The markers exclude the bootloader and early SDK initialization.
 
-With 1,131 synthetic files and 77 folders the host storage test took **4,802 physical reads instead of 5,181**, reducing reads by 379 and bytes read by 97,024. On 4 November the physical DE3.57 reference measured **2,450 ms for storage and 2,553 ms to first application dispatch**. A comparable measurement under DE3.58 is pending. The DFU page also compares SHA-256 of the entire BIN with the hash in its matching DAT.
+With 1,131 synthetic files and 77 folders the host storage test took **4,802 physical reads instead of 5,181**, reducing reads by 379 and bytes read by 97,024. On 4 November, storage initialization on the same Allmiibo took **2,387 ms on DE3.58 versus 2,450 ms on DE3.57**. Time to first application dispatch was **2,490 versus 2,553 ms**. Both differences were 63 ms across one startup per version. The DFU page also compares SHA-256 of the entire BIN with the hash in its matching DAT.
 
 In the NOR model, 100 saves of one unchanged 540-byte file required zero program or erase operations. When the last payload byte changed each time, the model still recorded 2,412 program operations and 279 erases. Comparing the changed bytes incurred extra reads. [Storage measurements](docs/validation/DE3_58_STORAGE.json).
 
@@ -38,7 +38,7 @@ The built ARM image was checked for **952 figure IDs and 1,344 game mappings wit
 
 The final sources passed 141 firmware suites and 1131 browser host tests. The built pages passed 21 production checks at the root and 21 under the GitHub Pages path. The public ARM rebuild produced the same application bytes as the signed OTA.
 
-A physical-device test of DE3.58 is pending. DE3.57 has a separate record of Bluetooth readback and the LCD advertising-symbol observation. [DE3.58 validation](docs/validation/DE3_58.json) · [DE3.57 device evidence](docs/validation/DE3_57_READBACK.json) · [BL8 and Nordic S112 evidence](docs/COMPONENTS.md) · [Build instructions](docs/BUILD_DE3_58.md).
+The Allmiibo reported DE3.58/630, the BL8 fingerprint and Nordic S112 7.3.0 over Bluetooth. Its application heap had 10,668 bytes free, with a largest free block of 10,560 bytes. The settings matched the baseline byte for byte, and the root directory still contained nine entries. The owner confirmed card-slot switching and NFC recognition of a figure on Switch 2. Deliberate storage failure tests ran on the host. [DE3.58 device readback](docs/validation/DE3_58_READBACK.json) · [DE3.58 validation](docs/validation/DE3_58.json) · [DE3.57 device evidence](docs/validation/DE3_57_READBACK.json) · [BL8 and Nordic S112 evidence](docs/COMPONENTS.md) · [Build instructions](docs/BUILD_DE3_58.md).
 
 
 ---

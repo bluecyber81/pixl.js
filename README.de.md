@@ -2,11 +2,11 @@
 
 [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Firmware und Pakete herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.58) · [English](README.md)
 
-Für **Allmiibo LCD mit nRF52832 und vorhandenem Packed LittleFS (PFS1)**. Aktueller Stand vom 4. November 2026 sind **Firmware 2.22.0-DE3.58, Zähler 630**, **Dateimanager 3.36.0**, **Bootloader BL8** und **Nordic S112 7.3.0**. DE3.58 ist ein auf dem PC geprüfter Teststand. Der Gerätetest steht aus.
+Für **Allmiibo LCD mit nRF52832 und vorhandenem Packed LittleFS (PFS1)**. Aktueller Stand vom 4. November 2026 sind **Firmware 2.22.0-DE3.58, Zähler 630**, **Dateimanager 3.36.0**, **Bootloader BL8** und **Nordic S112 7.3.0**. Das getestete Allmiibo meldete DE3.58/630. Der Besitzer bestätigte den Kartenplatzwechsel und die Erkennung einer Figur per NFC an der Switch 2. [Geräteprüfung](docs/validation/DE3_58_READBACK.json).
 
 * **Kartenemulator.** Beim Slotwechsel meldet das Gerät getrennt, ob Speichern oder Laden fehlgeschlagen ist. Der reproduzierte Fehler beim Verkleinern von 50 auf 8 Slots ist korrigiert. Die Karten-ID lässt sich ohne unnötigen Speicherzugriff ansehen.
 * **Web-Update.** Die DFU-Seite zeigt Paketversion, Hardwarefeld und erlaubte SoftDevice-IDs schon bei der Dateiauswahl. Eine höchstens zehn Minuten alte Bootdiagnose ermöglicht einen direkten Vergleich. Widersprüchliche Startpakete werden vor der Bluetooth-Auswahl zurückgewiesen.
-* **Startzeit.** Unter **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** zeigt ein lokal ausgewählter älterer Bericht den Zeitunterschied. Im Speicher-Hosttest waren 379 Lesezugriffe weniger nötig. Eine neue Zeit am Gerät steht aus.
+* **Startzeit.** Unter **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** zeigt ein lokal ausgewählter älterer Bericht den Zeitunterschied. Je ein Start desselben Allmiibos ergab 2.387 statt 2.450 ms für die Speicherinitialisierung und 2.490 statt 2.553 ms bis zur ersten Ereignisverarbeitung.
 * **Am Gerät.** Die deutschen Menüs verwenden kürzere Bezeichnungen. Bei einem Speicherfehler im Kartenemulator führt ein kurzer Mitteldruck zur erneuten Sicherung und ein langer zurück.
 
 [Alle Änderungen und Bedienwege](RELEASE_NOTES_DE.md) · [Prüfergebnisse](docs/validation/DE3_58.json)
