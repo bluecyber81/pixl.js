@@ -14,6 +14,7 @@
 #include "nrf_soc.h"
 #include "string.h"
 #include "utils2.h"
+#include "mini_app_launcher.h"
 
 ret_code_t utils_rand_bytes(uint8_t rand[], uint8_t bytes) {
     ret_code_t err;
@@ -36,24 +37,52 @@ void int32_to_bytes_le(uint32_t val, uint8_t *data) {
     data[3] = val >> 0;
 }
 
-void enter_dfu() {
-    /* CLR takes a bit mask: zero clears nothing. Replace only the SDK-owned
-     * DFU magic bits, preserving unrelated GPREGRET bits 1 and 2. */
+bool system_prepare_reset(void) {
+    return mini_app_launcher_prepare_exit(mini_app_launcher(), MINI_APP_EXIT_RESET);
+}
+
+bool system_reset_prepared(void) {
+    return mini_app_launcher_exit_prepared(mini_app_launcher(), MINI_APP_EXIT_RESET);
+}
+
+void system_cancel_reset(void) {
+    mini_app_launcher_t *launcher = mini_app_launcher();
+    if (launcher->exit_prepared && launcher->exit_reason == MINI_APP_EXIT_RESET)
+        mini_app_launcher_cancel_exit(launcher);
+}
+
+bool enter_dfu(void) {
+    /* No flag mutation, transport teardown or reset before the app is saved. */
+    if (!system_prepare_reset()) return false;
+    /* CLR takes a bit mask: zero clears nothing. Preserve unrelated bits 1/2. */
     ret_code_t err = sd_power_gpregret_clr(0, BOOTLOADER_DFU_START_MASK);
     if (err != NRF_SUCCESS) {
         NRF_LOG_ERROR("DFU flag clear failed: %u", (unsigned)err);
-        return;
+        system_cancel_reset();
+        return false;
     }
     err = sd_power_gpregret_set(0, BOOTLOADER_DFU_START);
     if (err != NRF_SUCCESS) {
         NRF_LOG_ERROR("DFU flag set failed: %u", (unsigned)err);
-        return;
+        system_cancel_reset();
+        return false;
     }
-    /* Reset only after the complete DFU flag has been installed. */
+    /* Reset itself stops BLE. Keep the live transport intact on preparation
+     * or SVC failure, and disarm the magic if a mocked/failed reset returns. */
     err = sd_nvic_SystemReset();
     NRF_LOG_ERROR("DFU reset unexpectedly returned: %u", (unsigned)err);
+    err = sd_power_gpregret_clr(0, BOOTLOADER_DFU_START_MASK);
+    if (err != NRF_SUCCESS) NRF_LOG_ERROR("DFU cleanup failed: %u", (unsigned)err);
+    system_cancel_reset();
+    return false;
 }
 
-void system_reboot() { sd_nvic_SystemReset(); }
+bool system_reboot(void) {
+    if (!system_prepare_reset()) return false;
+    ret_code_t err = sd_nvic_SystemReset();
+    NRF_LOG_ERROR("Reset unexpectedly returned: %u", (unsigned)err);
+    system_cancel_reset();
+    return false;
+}
 
 void go_sleep() { nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF); }

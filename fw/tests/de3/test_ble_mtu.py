@@ -58,7 +58,7 @@ def main():
         for name, text in {
             'boards.h': '',
             'app_timer.h': '#include <stdint.h>\n#define APP_TIMER_TICKS(ms) (ms)\nuint32_t app_timer_cnt_get(void);\nuint32_t app_timer_cnt_diff_compute(uint32_t now, uint32_t before);\n',
-            'utils2.h': 'void enter_dfu(void);\n',
+            'utils2.h': '#pragma once\n#include <stdbool.h>\nbool enter_dfu(void);\nbool system_reboot(void);\nbool system_prepare_reset(void);\nbool system_reset_prepared(void);\nvoid system_cancel_reset(void);\n',
             # The new read-only UI command has its own actual-module tests.
             'mui_nav_diag.h': '#include <stdbool.h>\n#include <stddef.h>\n#include <stdint.h>\n#define MUI_NAV_DIAG_SNAPSHOT_SIZE 104u\nstatic inline bool mui_nav_diag_snapshot(uint8_t *out, size_t cap) { (void)out; (void)cap; return false; }\n',
             'version2.h': 'static inline int version_get(void) { return 0; }\nstatic inline const char *version_get_version(int unused) { (void)unused; return "2.21.0-DE3.10"; }\n',

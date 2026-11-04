@@ -3,6 +3,7 @@
 #include <string.h>
 #ifdef VFS_PACKED_LFS_ENABLE
 #include "lfs_util.h"
+#include "vfs_packed_runtime.h"
 #endif
 
 #define RECORD_MAGIC 0x31524750u /* PGR1 */
@@ -297,6 +298,27 @@ void vfs_persist_writer_end(const vfs_driver_t *driver) {
  * It stages data and all metadata before one manifest publication. */
 extern int32_t vfs_packed_persist_replace(const char *path, const void *data,
                                          size_t size, const uint8_t *meta);
+/* Caller holds the persistence lock and has matched size and raw metadata.
+ * Opening the immutable PackedFS record verifies its stored CRC first. */
+static int32_t same_payload(const char *path, const uint8_t *data, size_t size, bool *same) {
+    vfs_file_t file;
+    int32_t result = raw_fs->open_file(path, &file, VFS_MODE_READONLY);
+    if (result != VFS_OK) return result;
+    uint8_t buffer[COPY_SIZE];
+    *same = true;
+    while (size) {
+        size_t n = size < sizeof(buffer) ? size : sizeof(buffer);
+        result = exact_read(&file, buffer, n);
+        if (result != VFS_OK) break;
+        if (memcmp(buffer, data, n)) {
+            *same = false;
+            break;
+        }
+        data += n;
+        size -= n;
+    }
+    return close_result(&file, result);
+}
 static int32_t write_locked(const char *path, const void *data, size_t size, const uint8_t *meta) {
     /* Upgrades may retain an interrupted journal from older applications.
      * Finish that exact recovery contract before any new atomic replacement. */
@@ -310,6 +332,13 @@ static int32_t write_locked(const char *path, const void *data, size_t size, con
     result = raw_fs->stat_file(path, &obj);
     if (result == VFS_OK) {
         if (obj.type != VFS_TYPE_REG || obj.size > VFS_PERSIST_MAX_DATA) return VFS_ERR_UNSUPT;
+        if (obj.size == size && (!meta || !memcmp(obj.meta, meta, sizeof(obj.meta))) &&
+            !vfs_packed_import_pending()) {
+            bool same;
+            result = same_payload(path, data, size, &same);
+            if (result != VFS_OK) return result;
+            if (same) return (int32_t)size;
+        }
         memcpy(committed_meta, obj.meta, sizeof(committed_meta));
     } else if (result != VFS_ERR_NOOBJ) return result;
     if (meta) memcpy(committed_meta, meta, sizeof(committed_meta));

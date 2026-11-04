@@ -14,6 +14,14 @@ static pfs_t *store;
 static uint32_t mount_epoch;
 static bool geometry_valid;
 static const vfs_driver_t persist_raw_driver;
+/* The read-only mount walk revisits the first page of LittleFS blocks for
+ * directory metadata and CTZ links. Keep just these pages during that walk;
+ * ordinary payload streaming must not evict them. Block tags are one-based. */
+typedef struct {
+  uint16_t tag[4];
+  uint8_t page[4][PFS_CACHE_SIZE];
+} mount_pages_t;
+static mount_pages_t *mount_pages;
 typedef struct {
   pfs_file_t *file;
   bool external_writer;
@@ -52,9 +60,19 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
                       void *data, lfs_size_t n) {
   if (!range(c, b, o, n) || (n && !data))
     return LFS_ERR_IO;
-  return hal_spi_flash_read(b * c->block_size + o, data, n) == NRF_SUCCESS
-             ? 0
-             : LFS_ERR_IO;
+  bool cacheable = mount_pages && !o && n == PFS_CACHE_SIZE;
+  unsigned slot = b % 4;
+  if (cacheable && mount_pages->tag[slot] == b + 1) {
+    memcpy(data, mount_pages->page[slot], n);
+    return 0;
+  }
+  if (hal_spi_flash_read(b * c->block_size + o, data, n) != NRF_SUCCESS)
+    return LFS_ERR_IO;
+  if (cacheable) {
+    memcpy(mount_pages->page[slot], data, n);
+    mount_pages->tag[slot] = (uint16_t)(b + 1);
+  }
+  return 0;
 }
 static int flash_prog(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
                       const void *data, lfs_size_t n) {
@@ -132,7 +150,12 @@ static int32_t packed_mount(void) {
   int32_t r = configure();
   if (r)
     return r;
+  mount_pages_t *pages = mui_mem_malloc(sizeof(*pages));
+  if (pages) memset(pages->tag, 0, sizeof(pages->tag));
+  mount_pages = pages;
   r = pfs_mount(store);
+  mount_pages = NULL;
+  if (pages) mui_mem_free(pages);
   if (r)
     return map_error(r);
   mounted_revision();

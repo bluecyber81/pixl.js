@@ -82,9 +82,9 @@ static void mui_update_now(void*p){(void)p;}
 static void mui_show_memory_error(void*p){(void)p;assert(0);}
 static void *mini_app_launcher(void){return NULL;}
 static void mini_app_launcher_kill(void*p,unsigned id){(void)p;(void)id;assert(0);}
-static void system_reboot(void){assert(0);}
+static bool system_reboot(void){assert(0);return false;}
 static void go_sleep(void){assert(0);}
-static void enter_dfu(void){assert(0);}
+static bool enter_dfu(void){assert(0);return false;}
 static void mui_view_dispatcher_switch_to_view(void*p,unsigned id){(void)p;(void)id;}
 #define mui_msg_box_set_header(...) ((void)0)
 #define mui_msg_box_set_message(...) ((void)0)

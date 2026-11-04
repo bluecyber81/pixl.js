@@ -6,13 +6,14 @@ typedef struct{void*p_scene_dispatcher,*p_view_dispatcher,*p_chameleon_view;}app
 typedef struct{void*user_data;}chameleon_view_t;
 typedef unsigned chameleon_view_event_t;
 enum{TAG_TYPE_UNDEFINED,CHAMELEON_SCENE_MENU_CARD_TYPE,CHAMELEON_SCENE_MENU,CHAMELEON_VIEW_ID_MAIN,CHAMELEON_VIEW_EVENT_MENU,CHAMELEON_VIEW_EVENT_PREV,CHAMELEON_VIEW_EVENT_NEXT};
-static unsigned type,scenes,error,irq,sense,view,changed;static bool ready;
+static unsigned type,scenes,error,save_error,irq,sense,view,changed;static bool ready,save_ok;
 static unsigned tag_helper_get_active_tag_type(void){return type;}
 static bool tag_emulation_active_data_ready(void){return ready;}
 static unsigned tag_emulation_get_slot(void){return 0;}
 static unsigned tag_emulation_slot_find_prev(unsigned s){return 1;}
 static unsigned tag_emulation_slot_find_next(unsigned s){return 2;}
-static void tag_emulation_change_slot(unsigned s,bool r){assert(r);changed++;}
+static bool tag_emulation_change_slot(unsigned s,bool r){assert(r);changed++;return save_ok;}
+static void app_chameleon_show_save_error(app_chameleon_t*a){save_error++;}
 static void mui_scene_dispatcher_next_scene(void*p,unsigned s){assert(s==CHAMELEON_SCENE_MENU_CARD_TYPE||s==CHAMELEON_SCENE_MENU);scenes++;}
 static void app_chameleon_show_load_error(app_chameleon_t*a){error++;}
 static void hal_nfc_set_nrfx_irq_enable(bool on){assert(on);irq++;}
@@ -27,7 +28,10 @@ int main(void){app_chameleon_t app={0};chameleon_view_t v={&app};
   assert(scenes==!t && error==(t&&!r) && irq==(t&&r) && sense==(t&&r) && view==(t&&r));
  }
  for(unsigned r=0;r<2;r++)for(unsigned direction=CHAMELEON_VIEW_EVENT_PREV;direction<=CHAMELEON_VIEW_EVENT_NEXT;direction++){
-  ready=r;changed=error=0;chameleon_scene_main_event_cb(direction,&v);assert(changed==1&&error==!r);
+  for(unsigned ok=0;ok<2;ok++){
+   ready=r;save_ok=ok;changed=error=save_error=0;chameleon_scene_main_event_cb(direction,&v);
+   assert(changed==1 && save_error==!ok && error==(ok&&!r));
+  }
  }
- puts("PASS 8 actual main entry/slot-change cases: empty type routes to selection, invalid data never renders");
+ puts("PASS 12 actual main entry/slot-change cases: empty type routes to selection, invalid data never renders");
 }

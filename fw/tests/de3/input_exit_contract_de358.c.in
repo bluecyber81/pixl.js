@@ -1,0 +1,71 @@
+typedef struct { bool memory_error, auto_update; } mui_t;
+typedef struct { uint32_t arg_int; } mui_event_t;
+typedef struct { uint8_t key, type; } mui_input_event_t;
+typedef unsigned mui_layer_t;
+enum { MUI_LAYER_FULLSCREEN = 0, MUI_LAYER_WINDOW = 1, MUI_LAYER_DESKTOP = 2 };
+enum { INPUT_KEY_CENTER = 7, INPUT_TYPE_SHORT = 1 };
+typedef struct mui_view_port {
+    void (*input_cb)(struct mui_view_port *, mui_input_event_t *);
+} mui_view_port_t;
+static unsigned save_input_calls, view_lookup_calls, view_input_calls, ui_updates;
+static bool save_dialog_active;
+static mui_t input_ui = {.auto_update = true};
+static mui_event_t input_event = {.arg_int = INPUT_KEY_CENTER | (INPUT_TYPE_SHORT << 8)};
+static void fixture_view_input(mui_view_port_t *vp, mui_input_event_t *event) {
+    (void)vp; assert(event->key == INPUT_KEY_CENTER && event->type == INPUT_TYPE_SHORT);
+    ++view_input_calls;
+}
+static mui_view_port_t input_view = {.input_cb = fixture_view_input};
+static bool mui_nfc_save_input(mui_t *ui, mui_event_t *event) {
+    assert(ui == &input_ui && event == &input_event);
+    ++save_input_calls; return save_dialog_active;
+}
+static mui_view_port_t *mui_find_view_port_enabled(mui_t *ui, mui_layer_t layer) {
+    assert(ui == &input_ui && layer == MUI_LAYER_FULLSCREEN);
+    ++view_lookup_calls; return &input_view;
+}
+static void mui_update(void *ui) { (void)ui; ++ui_updates; }
+
+/* ACTUAL_INPUT_HANDLER */
+
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    unsigned scenario = (unsigned)strtoul(argv[1], NULL, 10);
+    fixture_start(MINI_APP_ID_CHAMELEON);
+    mini_app_inst_t *owner = test_launcher->p_main_app_inst;
+    if (scenario == 0 || scenario == 3 || scenario == 4)
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+    if (scenario == 1)
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_SLEEP));
+    if (scenario == 2) test_launcher->exit_busy = true; /* Explicit synchronous callback phase. */
+    if (scenario == 4) { input_ui.memory_error = true; save_dialog_active = true; }
+    if (scenario == 5) {
+        allow_prepare = false;
+        assert(!mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        assert(!mini_app_launcher_input_blocked(test_launcher));
+    }
+    mui_process_input(&input_ui, &input_event);
+    if (scenario <= 4) {
+        assert(!save_input_calls && !view_lookup_calls && !view_input_calls && !ui_updates);
+        assert(test_launcher->p_main_app_inst == owner && owner->p_handle);
+        assert(!runs[MINI_APP_ID_DESKTOP] && !runs[MINI_APP_ID_STATUS_BAR] && !kills[MINI_APP_ID_CHAMELEON]);
+        if (scenario == 4) assert(input_ui.memory_error);
+        if (scenario == 2) test_launcher->exit_busy = false;
+        else mini_app_launcher_cancel_exit(test_launcher);
+        assert(!mini_app_launcher_input_blocked(test_launcher));
+        input_ui.memory_error = false; save_dialog_active = false;
+        mui_process_input(&input_ui, &input_event);
+        assert(save_input_calls == 1 && view_lookup_calls == 1 && view_input_calls == 1);
+        assert(ui_updates == 1);
+        /* After cancellation the pre-existing NTAG modal retains first refusal. */
+        save_dialog_active = true;
+        mui_process_input(&input_ui, &input_event);
+        assert(save_input_calls == 2 && view_input_calls == 1 && ui_updates == 1);
+    } else {
+        assert(save_input_calls == 1 && view_input_calls == 1 && ui_updates == 1);
+    }
+    fixture_dispose();
+    printf("PASS input reservation contract case %u\n", scenario);
+    return 0;
+}
+

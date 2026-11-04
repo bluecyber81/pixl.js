@@ -14,7 +14,7 @@ class FigureInfoTests(unittest.TestCase):
             folder=Path(tmp)
             for name in ['amiibo_info_draw.c','amiibo_info_draw.h','mui_qrcode_helper.c','mui_qrcode_helper.h']:
                 shutil.copyfile(SRC/name,folder/name)
-            for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','u8g2_font_wqy12_t_gb2312a_lite.c','u8g2_font_siji_t_6x10.c']:
+            for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']:
                 shutil.copyfile(SRC/'mui'/name,folder/name)
             shutil.copyfile(SRC/'ntag/ntag_def.h',folder/'ntag_def.h')
             (folder/'mui_common.h').write_text('#include <stdbool.h>\n#include <stdint.h>\n#include <string.h>\n#include "u8g2.h"\n',encoding='utf-8')
@@ -42,7 +42,7 @@ class FigureInfoTests(unittest.TestCase):
                   'u8g2_buffer.c','u8g2_bitmap.c','u8g2_circle.c',
                   'u8x8_setup.c','u8x8_display.c','u8x8_cad.c','u8x8_byte.c','u8x8_gpio.c',
                   'u8x8_capture.c','u8x8_u16toa.c','u8x8_u8toa.c']
-            sources=[folder/n for n in ['main.c','amiibo_info_draw.c','mui_qrcode_helper.c','mui_canvas.c','u8g2_font_wqy12_t_gb2312a_lite.c','u8g2_font_siji_t_6x10.c']]
+            sources=[folder/n for n in ['main.c','amiibo_info_draw.c','mui_qrcode_helper.c','mui_canvas.c','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']]
             sources += [SRC/'i18n/de_DE.c',SRC/'i18n/en_US.c',FW/'components/qrcode/c/qrcodegen.c']+[u8/n for n in libs]
             binary=folder/'render.exe'
             cmd=[shutil.which('gcc'),'-std=c11','-O1','-ffunction-sections','-fdata-sections',

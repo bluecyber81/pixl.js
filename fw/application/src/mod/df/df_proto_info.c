@@ -28,26 +28,35 @@ void df_proto_handler_info_get_version(df_event_t *evt) {
     }
 }
 
+static bool dfu_pending;
+
+void df_proto_info_cancel_pending(void) {
+    if (dfu_pending) {
+        dfu_pending = false;
+        system_cancel_reset();
+    }
+}
+
 void df_proto_handler_info_enter_dfu(df_event_t *evt) {
-    /* TX_READY has no response frame. Remember whether this request was
-     * accepted: an error reply must never reset the device when transmitted.
-     * The core clears its selected handler on disconnect, and each new DFU
-     * request replaces this flag before any subsequent TX_READY can use it. */
-    static bool pending;
-    if (evt->type == DF_EVENT_DATA_RECEVIED) {
-        /* DFU is an empty command, never a stream or a reply. Legacy RX
-         * preserves header fields, so validate here as well as in framed RX.
-         * A rejected request must also disarm a previously accepted one. */
-        pending = evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
-                  df_proto_vfs_file_transfer_closed();
+    if (evt->type == DF_EVENT_LINK_DISCONNECTED) {
+        df_proto_info_cancel_pending();
+    } else if (evt->type == DF_EVENT_DATA_RECEVIED) {
+        df_proto_info_cancel_pending();
+        /* Flush and reserve the exact current owner before acknowledging.
+         * Errors and superseded requests must never reset on TX_READY. */
+        dfu_pending = evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
+                      df_proto_vfs_file_transfer_closed() && system_prepare_reset();
         df_frame_t out;
-        OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_ENTER_DFU, pending ? DF_STATUS_OK : DF_STATUS_ERR);
+        OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_ENTER_DFU, dfu_pending ? DF_STATUS_OK : DF_STATUS_ERR);
         df_core_send_frame(&out);
-    } else if (evt->type == DF_EVENT_DATA_TRANSMIT_READY && pending) {
-        pending = false;
-        NRF_LOG_INFO("enter dfu ...");
-        ble_disable();
-        enter_dfu();
+    } else if (evt->type == DF_EVENT_DATA_TRANSMIT_READY && dfu_pending) {
+        dfu_pending = false;
+        if (system_reset_prepared()) {
+            NRF_LOG_INFO("enter dfu ...");
+            (void)enter_dfu();
+        } else {
+            system_cancel_reset();
+        }
     }
 }
 

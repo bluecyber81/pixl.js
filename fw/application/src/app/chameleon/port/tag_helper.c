@@ -321,23 +321,19 @@ bool tag_helper_apply_disney_profile(void) {
         return settings->chameleon_default_slot_index != INVALID_SLOT_INDEX;
     }
 
-    void tag_helper_set_slot_num(uint8_t slot_num){
-        if (!tag_emulation_prepare_slot_count(slot_num)) return;
-        //set slot number in settings
+    bool tag_helper_set_slot_num(uint8_t slot_num) {
+        if (!tag_emulation_prepare_slot_count(slot_num)) return false;
+        if (tag_helper_get_active_tag_type() != TAG_TYPE_UNDEFINED && !tag_emulation_active_data_ready()) return false;
+
         settings_data_t *settings = settings_get_data();
         settings->chameleon_slot_num = slot_num;
-
-        //check default card settings
-        if(settings->chameleon_default_slot_index >= slot_num){
+        if (settings->chameleon_default_slot_index >= slot_num) {
             settings->chameleon_default_slot_index = INVALID_SLOT_INDEX;
         }
-
-        settings_save();
-
-        //disable slots larger than slot_num
         for (uint8_t i = slot_num; i < TAG_MAX_SLOT_NUM; i++) {
-            tag_emulation_slot_set_enable(i, TAG_SENSE_HF,false);
+            tag_emulation_slot_set_enable(i, TAG_SENSE_HF, false);
         }
-        //save config and data buffer...
-        tag_emulation_save();
+        /* The active card is already saved. The count controls the config file length.
+         * Keep the pending choice in RAM if either write fails, so Retry can finish both. */
+        return tag_emulation_save_config() && settings_save() == NRF_SUCCESS;
     }

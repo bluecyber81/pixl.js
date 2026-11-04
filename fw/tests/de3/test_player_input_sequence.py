@@ -78,6 +78,7 @@ static mui_view_port_t *mui_find_view_port_enabled(mui_t *m,mui_layer_t layer){r
 void mui_view_port_enable_set(mui_view_port_t *v,bool enabled){v->enabled=enabled;}
 void mui_view_port_update(mui_view_port_t *v){(void)v;}
 static void *mini_app_launcher(void){return NULL;}
+static bool mini_app_launcher_input_blocked(void*p){(void)p;return false;}
 static void *mini_app_launcher_get_app_handle(void *l,int id){return NULL;}
 static void mini_app_launcher_run(void *l,int id){assert(0);}
 static void mini_app_launcher_kill(void *l,int id){assert(id==MINI_APP_ID_PLAYER);kills++;}

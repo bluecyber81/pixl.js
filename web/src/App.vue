@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.35.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.36.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -214,7 +214,7 @@
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
               :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
       <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" :href="dfuPageUrl" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
-      <UpdateCheck :session="{ connected, firmwareVersion, bootState }" :boot="bootInfo" :locale="language" />
+      <UpdateCheck :session="{ connected, firmwareVersion, bootState, dfuReference: lastDfuReference }" :boot="bootInfo" :locale="language" />
       <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
       </div>
     </details>
@@ -224,7 +224,7 @@
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <StartupDiagnostics :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.35.1</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.36.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -462,6 +462,7 @@ import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure
 import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
 import { metadataNoteInfo } from "./lib/metadata-note.js"
 import { deploymentPath } from "./lib/deployment-path.js"
+import { dfuReference } from "./lib/release-packages.js"
 import catalogueBaseline from "./data/catalogue.json"
 
 
@@ -470,14 +471,14 @@ export default {
   components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.35.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.36.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
-      transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown',
+      transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1,
@@ -526,7 +527,7 @@ export default {
     catalogueObservationHistorical() { return !this.connected && !this.connecting && !this.collectionStale && !!this.collectionObservation; },
     cataloguePresenceReport() { return this.catalogueObservationHistorical ? this.collectionObservation.report : this.collectionReport; },
     catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },
-    dfuPageUrl() { return deploymentPath('dfu/web.html'); },
+    dfuPageUrl() { return deploymentPath('dfu/web.html') + (this.lastDfuReference || ''); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
     uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
     metadataNote() { return metadataNoteInfo(this.meta_form.notes); },
@@ -689,7 +690,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.35.1.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.36.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1040,13 +1041,13 @@ export default {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
       this.fullDiagnosticSnapshot=null;
       const generation=this.sessionGeneration; this.infoLoading=true;
-      this.bootInfo=null; this.bootState='loading';
+      this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
       try {
         const data=await proto.get_boot_diagnostics?.(); this.assert_session(generation);
         if (data == null) { this.bootState='unavailable'; return; }
         const normalized=normalizeBootDiagnostics(data);
         if (!normalized) throw new Error(this.$t('info.bootFailed'));
-        this.bootInfo=normalized; this.bootState='available';
+        this.bootInfo=normalized; this.bootState='available'; this.lastDfuReference=dfuReference(normalized);
       } catch(error) {
         if(this.session_current(generation)) { this.bootState='failed'; this.show_transfer_error(error); }
       } finally {if(generation===this.sessionGeneration)this.infoLoading=false;}
@@ -1072,7 +1073,7 @@ export default {
       if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;
       const generation=this.sessionGeneration;
       this.fullDiagnosticBusy=true; this.fullDiagnosticSnapshot=null; this.fullDiagnosticProgress='runtime';
-      this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading';
+      this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
       this.powerInfo=null; this.powerState='loading'; this.driveInfo=[];
       const guard=()=>this.session_current(generation) && !this.disconnecting;
       const read=fn=>async()=>{
@@ -1107,6 +1108,7 @@ export default {
         for(const key of ['runtime','boot','power']) {
           this[key+'Info']=snapshot.sections[key].data; this[key+'State']=snapshot.sections[key].state;
         }
+        this.lastDfuReference=dfuReference(this.bootInfo);
         this.driveInfo=snapshot.sections.drives.data || []; this.refresh_local_metrics();
       } catch(error) {
         if(guard()) {
@@ -1125,7 +1127,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.35.1.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.36.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1356,6 +1358,7 @@ export default {
       this.bootInfo=null; this.bootState='unknown';
       const generation = ++this.sessionGeneration;
       this.driveInfo = []; this.transferHistory = []; this.infoLoading = false;
+      this.lastDfuReference = '';
       this.connected = true; this.connecting = false; this.connBtnType = 'success';
       this.connBtnText = this.$t('conn.disconnect');
       this.$notify({ title: 'Allmiibo', type: 'success', message: this.$t('conn.consuccess'), duration: 5000 });

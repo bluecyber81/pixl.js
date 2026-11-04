@@ -19,6 +19,8 @@ typedef enum {
 
 
 
+/* Disarm accepted asynchronous requests on disconnect or replacement. */
+void df_proto_info_cancel_pending(void);
 extern const df_cmd_entry_t df_proto_handler_info_entries[];
 
 #endif

@@ -17,7 +17,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='packed-recovery-') as temp:
         folder=Path(temp)
         for name,body in {'boards.h':'','nrf_log.h':'#define NRF_LOG_INFO(...) ((void)0)\n',
-                          'ble_main.h':'void ble_disable(void);\n','utils2.h':'void system_reboot(void);\n'}.items():
+                          'ble_main.h':'void ble_disable(void);\n','utils2.h':'#pragma once\n#include <stdbool.h>\nbool enter_dfu(void);\nbool system_reboot(void);\nbool system_prepare_reset(void);\nbool system_reset_prepared(void);\nvoid system_cancel_reset(void);\n'}.items():
             (folder/name).write_text(body)
         module=(SRC/'mod/df/df_proto_vfs.c').read_text().replace('#include "../runtime_diag.h"',
                '#include "'+(SRC/'mod/runtime_diag.h').as_posix()+'"')

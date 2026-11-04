@@ -5,20 +5,30 @@
 #include <string.h>
 #include "tag_emulation.h"
 static tag_slot_config_t slotConfig;
-static unsigned saved_old,changed,written,size_written;static bool save_ok;
+static unsigned saved_old,changed,written,size_written,fail_save_attempt;
+static bool config_ok=true,settings_ok=true,load_ok=true;
 typedef struct{unsigned chameleon_slot_num,chameleon_default_slot_index;}settings_data_t;
 static settings_data_t settings;
 #define INVALID_SLOT_INDEX 255
 tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t t){return t==TAG_TYPE_MIFARE_1024?TAG_SENSE_HF:TAG_SENSE_NO;}
-static bool save_data_by_tag_type(unsigned slot,tag_specific_type_t t){assert(slot==49);saved_old++;return save_ok;}
-void tag_emulation_change_slot(uint8_t slot,bool sense){assert(saved_old && save_ok);changed++;slotConfig.active_slot=slot;}
+static bool save_data_by_tag_type(unsigned slot,tag_specific_type_t t){return ++saved_old!=fail_save_attempt;}
+bool g_is_tag_emulating;
+void tag_emulation_sense_end(void){}
+void tag_emulation_sense_run(void){}
+void tag_emulation_load_data(void){changed++;}
+void tag_emulation_set_slot(uint8_t slot){slotConfig.active_slot=slot;}
+bool tag_emulation_save_data(void){return save_data_by_tag_type(slotConfig.active_slot,slotConfig.slots[slotConfig.active_slot].tag_hf);}
+bool tag_emulation_active_data_ready(void){return load_ok;}
+static tag_specific_type_t tag_helper_get_active_tag_type(void){return slotConfig.slots[slotConfig.active_slot].tag_hf;}
+@tag_emulation_change_slot@
 @tag_emulation_prepare_slot_count@
 @tag_emulation_slot_find_next@
 @tag_emulation_slot_find_prev@
 static settings_data_t*settings_get_data(void){return &settings;}
-static void settings_save(void){written++;}
+#define NRF_SUCCESS 0
+static int settings_save(void){written++;return settings_ok?NRF_SUCCESS:1;}
 void tag_emulation_slot_set_enable(uint8_t slot,tag_sense_type_t sense,bool enable){slotConfig.slots[slot].enabled_hf=enable;}
-void tag_emulation_save(void){size_written=4+8*settings.chameleon_slot_num;assert(slotConfig.active_slot<settings.chameleon_slot_num);}
+bool tag_emulation_save_config(void){size_written=4+8*settings.chameleon_slot_num;assert(slotConfig.active_slot<settings.chameleon_slot_num);return config_ok;}
 @tag_helper_set_slot_num@
 int main(void){
  for(unsigned i=0;i<TAG_MAX_SLOT_NUM;i++)for(unsigned j=0;j<TAG_MAX_SLOT_NUM;j++){
@@ -26,14 +36,23 @@ int main(void){
   slotConfig.slots[j].enabled_lf=1;
   assert(tag_emulation_slot_find_next(i)==i && tag_emulation_slot_find_prev(i)==i);
  }
- for(unsigned ok=0;ok<2;ok++)for(unsigned empty=0;empty<2;empty++){
+ for(unsigned fail=0;fail<=2;fail++)for(unsigned empty=0;empty<2;empty++){
   memset(&slotConfig,0,sizeof(slotConfig));slotConfig.active_slot=49;
   if(!empty){slotConfig.slots[3].enabled_hf=1;slotConfig.slots[3].tag_hf=TAG_TYPE_MIFARE_1024;}
-  settings=(settings_data_t){50,49};save_ok=ok;saved_old=changed=written=size_written=0;
-  tag_helper_set_slot_num(8);assert(saved_old==1);
+  settings=(settings_data_t){50,49};fail_save_attempt=fail;saved_old=changed=written=size_written=0;
+  bool ok=fail!=1;
+  assert(tag_helper_set_slot_num(8)==ok && saved_old==1);
   assert(changed==ok && written==ok && size_written==(ok?68:0));
   assert(settings.chameleon_slot_num==(ok?8:50));assert(slotConfig.active_slot==(ok?(empty?0:3):49));
  }
+ /* The new count is retriable after a config or settings write failure. */
+ fail_save_attempt=0;config_ok=false;settings=(settings_data_t){50,49};slotConfig.active_slot=49;
+ written=0;assert(!tag_helper_set_slot_num(8) && !written && slotConfig.active_slot<8);
+ config_ok=true;settings_ok=false;assert(!tag_helper_set_slot_num(8) && written==1 && slotConfig.active_slot<8);
+ settings_ok=true;assert(tag_helper_set_slot_num(8) && written==2);
+ load_ok=false;settings=(settings_data_t){50,49};slotConfig.active_slot=49;
+ slotConfig.slots[3].enabled_hf=1;slotConfig.slots[3].tag_hf=TAG_TYPE_MIFARE_1024;
+ written=0;assert(!tag_helper_set_slot_num(8) && !written && settings.chameleon_slot_num==50);
  assert(!tag_emulation_prepare_slot_count(0)&&!tag_emulation_prepare_slot_count(51));
  puts("PASS 2500 HF-only navigation cases and 6 slot-shrink/save-failure bounds cases");
 }

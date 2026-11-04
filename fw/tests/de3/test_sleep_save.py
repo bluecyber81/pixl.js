@@ -14,8 +14,8 @@ class SleepSaveTests(HostTests):
 #include <stdio.h>
 typedef struct mini_app_inst mini_app_inst_t;
 typedef struct {int id; bool hibernate_enabled; void(*kill_cb)(mini_app_inst_t*);} mini_app_t;
-struct mini_app_inst {mini_app_t*p_app;uint8_t*p_retain_data;};
-typedef struct {mini_app_inst_t*p_main_app_inst;} mini_app_launcher_t;
+struct mini_app_inst {mini_app_t*p_app;uint8_t*p_retain_data;void*p_handle;int state;};
+typedef struct {mini_app_inst_t*p_main_app_inst;bool exit_busy;} mini_app_launcher_t;
 typedef struct {int id;bool enabled;uint8_t retain_data[312];} cache_data_t;
 typedef struct {bool hibernate_enabled;} settings_data_t;
 static cache_data_t cache;
@@ -29,7 +29,10 @@ static void kill(mini_app_inst_t*app){
  else {assert(!cache.enabled);for(int i=0;i<312;i++)assert(cache.retain_data[i]==0);}
 }
 #define NRF_LOG_INFO(...) ((void)0)
-''' + function(source, 'mini_app_launcher_sleep') + r'''
+enum { MINI_APP_EXIT_SLEEP, APP_STATE_RUNNING, APP_STATE_KILLED };
+static bool mini_app_launcher_prepare_exit(mini_app_launcher_t*l,int reason){(void)l;(void)reason;return true;}
+static void mini_app_launcher_clear_exit(mini_app_launcher_t*l){(void)l;}
+''' + function(source, 'mini_app_launcher_inst_kill') + function(source, 'mini_app_launcher_sleep') + r'''
 int main(void){
  mini_app_t type={.id=7,.kill_cb=kill};mini_app_inst_t app={.p_app=&type};
  mini_app_launcher_t launcher={.p_main_app_inst=&app};
@@ -37,7 +40,8 @@ int main(void){
   memset(&cache,0xa5,sizeof(cache));app.p_retain_data=cache.retain_data;
   settings.hibernate_enabled=enabled;type.hibernate_enabled=supported;
   expected_retain=enabled&&supported;kills=0;
-  mini_app_launcher_sleep(&launcher);assert(kills==1);
+  launcher.p_main_app_inst=&app;app.p_handle=&app;app.state=APP_STATE_RUNNING;
+  assert(mini_app_launcher_sleep(&launcher));assert(kills==1&&!launcher.p_main_app_inst&&app.state==APP_STATE_KILLED);
   if(expected_retain)assert(cache.retain_data[0]==42);
  }
  launcher.p_main_app_inst=NULL;kills=0;mini_app_launcher_sleep(&launcher);assert(kills==0);
@@ -76,7 +80,10 @@ static void ble_remote_shutdown(void) {assert(count==1 && !remote_stopped);remot
 static void ble_disable(void) {assert(remote_stopped);step(-1);}
 static void ble_process_pending(void) {step(0);}
 static void *mini_app_launcher(void) { return 0; }
-static void mini_app_launcher_sleep(void *value) {(void)value;assert(count==3&&current.bytes[0]==42);step(1);}
+enum { MINI_APP_EXIT_SLEEP };
+static bool mini_app_launcher_prepare_exit(void*app,int reason){(void)app;(void)reason;return ntag_emu_prepare_change();}
+static void mini_app_launcher_cancel_exit(void*app){(void)app;}
+static bool mini_app_launcher_sleep(void *value) {(void)value;assert(count==3&&current.bytes[0]==42);step(1);return true;}
 static cache_data_t *cache_get_data(void) { return &cache; }
 static ntag_t *ntag_emu_get_current_tag(void) { return &current; }
 static void cache_save(void) {step(2);}

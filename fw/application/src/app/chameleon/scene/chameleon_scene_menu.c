@@ -29,6 +29,8 @@ typedef enum {
     CHAMELEON_MENU_DISNEY_PROFILE,
 } chameleon_menu_item_t;
 
+#define CHAMELEON_MENU_CARD_ID ((void *)UINTPTR_MAX)
+
 void chameleon_scene_menu_on_enter(void *user_data);
 
 static void chameleon_scene_disney_profile_cb(mui_msg_box_event_t event, mui_msg_box_t *box) {
@@ -64,7 +66,12 @@ static void chameleon_scene_disney_profile_confirm(app_chameleon_t *app) {
 
 void chameleon_scene_menu_on_event(mui_list_view_event_t event, mui_list_view_t *p_list_view, mui_list_item_t *p_item) {
     app_chameleon_t *app = p_list_view->user_data;
-    chameleon_menu_item_t item = (chameleon_menu_item_t)p_item->user_data;
+    if (p_item->user_data == CHAMELEON_MENU_CARD_ID) return;
+    chameleon_menu_item_t item = (chameleon_menu_item_t)(uintptr_t)p_item->user_data;
+    /* Save before a scene transition can discard this menu; exit_cb cannot
+     * veto a transition. Home uses the launcher's app preparation instead. */
+    if (item != CHAMELEON_MENU_HOME && item != CHAMELEON_MENU_DEFAULT_CARD &&
+        item != CHAMELEON_MENU_DISNEY_PROFILE && !app_chameleon_save(app)) return;
     switch (item) {
     case CHAMELEON_MENU_DISNEY_PROFILE:
         chameleon_scene_disney_profile_confirm(app);
@@ -90,8 +97,8 @@ void chameleon_scene_menu_on_event(mui_list_view_event_t event, mui_list_view_t 
             settings->chameleon_default_slot_index = slot;
         }
 
-        settings_save();
         mui_list_view_item_set_sub_text(p_item, slot == settings->chameleon_default_slot_index ? _T(ON_F) : _T(OFF_F));
+        if (!app_chameleon_save(app)) return;
     } break;
 
     case CHAMELEON_MENU_SLOT_SELECT:
@@ -136,7 +143,7 @@ void chameleon_scene_menu_on_enter(void *user_data) {
     strcpy(buff, "[");
     tag_helper_format_uid(buff + 1, coll_res->uid, *(coll_res->size));
     strcat(buff, "]");
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, _T(APP_CHAMELEON_CARD_ID), buff, (void *)-1);
+    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, _T(APP_CHAMELEON_CARD_ID), buff, CHAMELEON_MENU_CARD_ID);
 
     sprintf(buff, "[%s]", tag_name->long_name);
     mui_list_view_add_item_ext(app->p_list_view, ICON_FAVORITE, _T(APP_CHAMELEON_CARD_TYPE), buff,
@@ -164,6 +171,5 @@ void chameleon_scene_menu_on_enter(void *user_data) {
 
 void chameleon_scene_menu_on_exit(void *user_data) {
     app_chameleon_t *app = user_data;
-    tag_emulation_save();
     mui_list_view_clear_items(app->p_list_view);
 }

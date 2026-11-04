@@ -24,7 +24,7 @@ vfs_driver_t *vfs_get_driver(vfs_drive_t drive) {CHECK(drive==VFS_DRIVE_EXT);ret
 static bool mock_mounted(void) {return mounted;}
 static int32_t mock_mount(void) {++mount_calls;return VFS_ERR_FAIL;}
 static int32_t mock_format(void) {++format_calls;return VFS_ERR_FAIL;}
-void enter_dfu(void) {++dfu_calls;}
+bool enter_dfu(void) {++dfu_calls;return true;}
 static int32_t mock_stat_file(const char *path,vfs_obj_t *object) {
     ++stat_calls;CHECK(strlen(path)<sizeof(last_path));strcpy(last_path,path);
     if(stat_result)return stat_result;

@@ -143,6 +143,8 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
 }
 
 static void mui_process_input(mui_t *p_mui, mui_event_t *p_event) {
+    /* An accepted reset/sleep request owns the saved buffers until commit or cancel. */
+    if (mini_app_launcher_input_blocked(mini_app_launcher())) return;
     if (mui_nfc_save_input(p_mui, p_event)) return;
     if (p_mui->memory_error) {
         uint32_t arg = p_event->arg_int;

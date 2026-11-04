@@ -29,6 +29,10 @@ typedef struct {
 
     app_chameleon_id_edit_type_t id_edit_type;
     bool initialized;
+    /* Embedded error view preserves existing dialogs and needs no error-time allocation. */
+    mui_view_t save_error_view;
+    uint32_t exit_view_id;
+    bool exit_paused, exit_prepared, exit_resume_nfc;
     /* Only one sorted import page is retained in the application heap. */
     char browser_anchor[48];
     uint16_t browser_anchor_icon;
@@ -43,10 +47,14 @@ typedef enum {
     CHAMELEON_VIEW_ID_MAIN,
     CHAMELEON_VIEW_ID_MSG_BOX,
     CHAMELEON_VIEW_ID_TEXT_INPUT,
-    CHAMELEON_VIEW_ID_TOAST
+    CHAMELEON_VIEW_ID_TOAST,
+    CHAMELEON_VIEW_ID_SAVE_ERROR
 } app_chameleon_view_id_t;
 
 extern mini_app_t app_chameleon_info;
+void app_chameleon_show_save_error(app_chameleon_t *app);
 void app_chameleon_show_load_error(app_chameleon_t *app);
+/* Normal menu save; failure leaves the scene/buffer alive behind a retry view. */
+bool app_chameleon_save(app_chameleon_t *app);
 
 #endif

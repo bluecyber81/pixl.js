@@ -1,0 +1,52 @@
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    unsigned scenario = (unsigned)strtoul(argv[1], NULL, 10);
+    fixture_start(scenario == 5 ? MINI_APP_ID_BLE : MINI_APP_ID_CHAMELEON);
+    mini_app_inst_t *owner = test_launcher->p_main_app_inst;
+    void *handle = owner->p_handle;
+    cache_data_t before = test_cache;
+    if (scenario == 0 || scenario == 6) allow_prepare = false;
+    if (scenario == 1) { allow_ntag = false; ntag_clean = false; }
+    if (scenario == 3) test_settings.hibernate_enabled = false;
+    if (scenario == 4) settings_save_result = 17;
+    if (scenario == 5) recovery = true;
+    if (scenario == 7) assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+    bool accepted = shutdown_handler(NRF_PWR_MGMT_EVT_PREPARE_WAKEUP);
+    if (scenario == 0 || scenario == 1 || scenario == 6 || scenario == 7) {
+        assert(!accepted && shutdown_cancels == 1);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(!ble_remote_stops && !ble_stops && !ble_pending);
+        assert(!cache_saves && !settings_saves && !ui_deinits && !flash_sleeps && !nfc_sleeps);
+        if (scenario == 1) assert(!prepare_calls);
+        if (scenario == 6) {
+            allow_prepare = true;
+            assert(shutdown_handler(NRF_PWR_MGMT_EVT_PREPARE_WAKEUP));
+            assert(kills[MINI_APP_ID_CHAMELEON] == 1 && cache_saves == 1 && flash_sleeps == 1);
+        }
+    } else {
+        assert(accepted && !shutdown_cancels);
+        assert(kills[owner->p_app->id] == 1 && !owner->p_handle);
+        assert(ble_remote_stops == 1 && ble_stops == 1 && ble_pending == 1);
+        assert(cache_saves == 1 && settings_saves == 1 && ui_deinits == 1 && flash_sleeps == 1);
+        if (scenario != 5) {
+            assert(prepare_calls == 1 && app_writer_paused);
+            assert(event_pos(E_PREPARE) < event_pos(E_BLE_REMOTE_STOP));
+            assert(event_pos(E_PREPARE) < event_pos(E_BLE_STOP));
+            assert(nfc_sleeps == 1);
+        } else {
+            assert(!prepare_calls && !nfc_sleeps);
+            assert(!test_cache.enabled);
+            assert(!memcmp(&test_cache.ntag, &default_ntag215, sizeof(ntag_t)));
+        }
+        assert(event_pos(E_BLE_STOP) < event_pos(E_KILL));
+        assert(event_pos(E_KILL) < event_pos(E_UI_DEINIT));
+        assert(event_pos(E_CACHE_SAVE) < event_pos(E_FLASH_SLEEP));
+        assert(event_pos(E_SETTINGS_SAVE) < event_pos(E_FLASH_SLEEP));
+        assert(event_pos(E_UI_DEINIT) < event_pos(E_FLASH_SLEEP));
+        if (scenario == 3) assert(!test_cache.enabled);
+    }
+    fixture_dispose();
+    printf("PASS shutdown exit contract case %u\n", scenario);
+    return 0;
+}
+

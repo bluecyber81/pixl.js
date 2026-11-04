@@ -415,10 +415,17 @@ bool df_proto_vfs_is_idle(void) {
            !file_chunk_state.read_pending && dir_chunk_state.dir_closed;
 }
 
-void df_proto_vfs_cleanup(void) {
+void df_proto_vfs_cancel_restart(void) {
 #ifdef VFS_PACKED_LFS_ENABLE
-    packed_restart_pending = false;
+    if (packed_restart_pending) {
+        packed_restart_pending = false;
+        system_cancel_reset();
+    }
 #endif
+}
+
+void df_proto_vfs_cleanup(void) {
+    df_proto_vfs_cancel_restart();
     file_chunk_state.read_pending = false;
     close_directory(&dir_chunk_state);
     dir_chunk_state.driver = NULL;
@@ -953,14 +960,14 @@ static void df_proto_handler_vfs_import_state(df_event_t *evt) {
     if (evt->type == DF_EVENT_DATA_TRANSMIT_READY) {
         if (packed_restart_pending) {
             packed_restart_pending = false;
-            ble_disable();
-            system_reboot();
+            if (system_reset_prepared()) (void)system_reboot();
+            else system_cancel_reset();
         }
         return;
     }
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     /* Every new request, including malformed ones, disarms a queued restart. */
-    packed_restart_pending = false;
+    df_proto_vfs_cancel_restart();
     if (evt->df->status || evt->df->chunk || evt->df->length < 2) {
         send_error(evt->df->cmd); return;
     }
@@ -977,7 +984,9 @@ static void df_proto_handler_vfs_import_state(df_event_t *evt) {
         if (operation == 3) result = vfs_packed_bind_import(evt->df->data + 2);
         if (result != VFS_OK) { send_vfs_error(evt->df->cmd, result); return; }
         if (operation == 2) {
-            if (vfs_packed_import_pending()) { send_error(evt->df->cmd); return; }
+            if (vfs_packed_import_pending() || !system_prepare_reset()) {
+                send_error(evt->df->cmd); return;
+            }
             packed_restart_pending = true;
         }
     }

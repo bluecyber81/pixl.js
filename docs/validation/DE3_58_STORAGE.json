@@ -1,0 +1,83 @@
+{
+  "scope": "Independent offline comparison of the production storage adapter and PackedFS against modeled NOR (read/program/erase HAL). No radio/NFC, live flash or device elapsed-time measurement.",
+  "baseline": "Unchanged DE3.58-CF1 storage paths identical to DE3.57 for these comparisons",
+  "beforeAfterIdenticalStartImage": true,
+  "mount": {
+    "syntheticImageSha256": "82ce8cda2ea4e005dd56b9c59b602bec4e663264526a78be52b492b2576c89ec",
+    "files": 1131,
+    "directories": 77,
+    "results": {
+      "baseline": {
+        "callbacks": 5181,
+        "bytes": 1326336,
+        "sectorPrograms": 0,
+        "sectorErases": 0
+      },
+      "candidate": {
+        "callbacks": 4802,
+        "bytes": 1229312,
+        "sectorPrograms": 0,
+        "sectorErases": 0
+      }
+    },
+    "coldMountOnlyTemporaryCacheBytes": 1032,
+    "coldMountCacheStaticPointerBytesOnArm": 4,
+    "releasedOnMountSuccessAndFailure": true
+  },
+  "saves": {
+    "fileBytes": 540,
+    "repeatCount": 100,
+    "independentResetToSameNORForEachSeries": true,
+    "baseline": {
+      "identical": {
+        "readCalls": 71970,
+        "programCalls": 2412,
+        "erases": 279,
+        "readBytes": 18424320,
+        "programBytes": 617472
+      },
+      "changed_data_last_byte": {
+        "readCalls": 71970,
+        "programCalls": 2412,
+        "erases": 279,
+        "readBytes": 18424320,
+        "programBytes": 617472
+      },
+      "changed_meta_last_byte": {
+        "readCalls": 71970,
+        "programCalls": 2412,
+        "erases": 279,
+        "readBytes": 18424320,
+        "programBytes": 617472
+      }
+    },
+    "candidate": {
+      "identical": {
+        "readCalls": 7200,
+        "programCalls": 0,
+        "erases": 0,
+        "readBytes": 1843200,
+        "programBytes": 0
+      },
+      "changed_data_last_byte": {
+        "readCalls": 75858,
+        "programCalls": 2412,
+        "erases": 279,
+        "readBytes": 19419648,
+        "programBytes": 617472
+      },
+      "changed_meta_last_byte": {
+        "readCalls": 71970,
+        "programCalls": 2412,
+        "erases": 279,
+        "readBytes": 18424320,
+        "programBytes": 617472
+      }
+    },
+    "dataChange": "Only the last payload byte changes",
+    "metadataChange": "Only raw128 byte127 changes",
+    "verifiedAfterUnmountRemount": true
+  },
+  "storageEngineUnchanged": true,
+  "physicalPowerCutTest": false
+}

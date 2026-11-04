@@ -3,11 +3,18 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseStartupDiagnostics, normalizeStartupDiagnostics, startupDiagnosticRows, createStartupDiagnosticReport, startupDiagnosticsText } from '../src/lib/startup-diagnostics.js';
+import { compareStartup, parseStartupDiagnostics, normalizeStartupDiagnostics, startupDiagnosticRows, createStartupDiagnosticReport, startupDiagnosticsText } from '../src/lib/startup-diagnostics.js';
 function packet(mask=63, times=[0,37,45,92,97,101]) {
   const bytes=new Uint8Array(32),view=new DataView(bytes.buffer);bytes.set([80,88,83,84,1,32,mask,0]);
   times.forEach((ms,i)=>view.setUint32(8+4*i,mask&(1<<i)?ms:0,true));return bytes;
 }
+test('previous saved start and full report compare the same two intervals; partial measurements are excluded',()=>{
+  const prior=parseStartupDiagnostics(packet()), now=parseStartupDiagnostics(packet(63,[0,30,38,86,100,110]));
+  for(const report of [{reportSchema:1,startup:prior},{schema:1,startup:prior,diagnosticSnapshot:{}}])
+    assert.deepEqual(compareStartup(report,now),{storage:-7,total:9});
+  assert.equal(compareStartup({startup:parseStartupDiagnostics(packet(31))},now),null);
+  assert.equal(compareStartup({startup:{...prior,scope:'other'}},now),null);
+});
 test('startup parses exact v1 six-marker wire data including offset buffers and unsigned times',()=>{
   const bytes=packet(),p=parseStartupDiagnostics(bytes),padded=new Uint8Array(50);padded.set(bytes,7);
   assert.deepEqual(parseStartupDiagnostics(padded.subarray(7,39)),p);assert.deepEqual(parseStartupDiagnostics(bytes.buffer),p);

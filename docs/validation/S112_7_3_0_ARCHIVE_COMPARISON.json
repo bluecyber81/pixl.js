@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "method": "Decoded Intel HEX, validated all record lengths/checksums, addressing, EOF and non-overlap. Compared each explicit vendor byte in the full SoftDevice segment directly with the sd_size-byte prefix of sd_bl.bin, with no fill or omission.",
+  "checked_utc": "2026-11-04T13:38:59.455453+00:00",
+  "vendor_reference_url": "https://www.nordicsemi.com/Products/Development-software/S112/Download",
+  "softdevice": {
+    "family": 112,
+    "version": "7.3.0",
+    "version_code": 7003000,
+    "fwid": "0x126",
+    "start_inclusive": "0x1000",
+    "end_exclusive": "0x18f14",
+    "bytes": 98068,
+    "explicit_hex_bytes": 98068,
+    "vendor_decoded_sha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "ota_prefix_sha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "different_bytes": 0,
+    "byte_for_byte_equal": true
+  },
+  "mbr": {
+    "page_start": "0x0",
+    "page_end_exclusive": "0x1000",
+    "vendor_explicit_data_start": "0x0",
+    "vendor_explicit_data_end_exclusive": "0xb00",
+    "explicit_bytes": 2816,
+    "explicit_bytes_sha256": "1bc875feba5eb16d68022068cb252598f9bf0f9835e93a632bc2e72828a4aa9e",
+    "unrepresented_tail_in_vendor_hex": "0xb00..0xfff",
+    "contained_in_ota": false
+  },
+  "limits": [
+    "Compared the two local archived files, with SHA-256 checked against pinned release metadata.",
+    "No readback of SoftDevice or MBR flash from a device, no acceptance or runtime test, no signing or flashing.",
+    "The HEX contains no additional data beyond its MBR and SoftDevice segments. The empty address ranges were not treated as payload."
+  ],
+  "vendor_archive": {
+    "sha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "hex_member": "s112_nrf52_7.3.0_softdevice.hex",
+    "hex_sha256": "92bcdc1aa51142ed212bb0dbcdf57093a1bad391f1cf5adca60effe14bdb7ec6",
+    "hashes_match_reference": true,
+    "filename": "s112_nrf52_7.3.0.zip"
+  },
+  "ota_archive": {
+    "sha256": "017a5e6085753c220492be6f1d1cf6817eb7809d0a1e103d2f64d80c0c28951d",
+    "components": "sd_bl.bin",
+    "combined_size": 126204,
+    "combined_sha256": "4f01201a55cee997671133cc0a6bc70a0e2730f6fd20b80cac37c9a22bb3effb",
+    "initpacket_sha256": "e8d2b17171a9cfd219862b8b5865af208abb88a28d72aefddfd0c788f8425fc0",
+    "component_lengths_match_manifest_and_original_initpacket_report": true,
+    "bootloader_suffix_bytes_excluded": 28136,
+    "bootloader_suffix_sha256": "270a71603d305aaffcfe9da1998be99fea27aebe5dc824de90cf3867c3666398",
+    "filename": "Allmiibo_LCD_BL8_Z11_S112_7_3_DE3_44_KOMPLETT.zip"
+  }
+}

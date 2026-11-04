@@ -1,0 +1,119 @@
+/* ACTUAL_LAUNCHER_FIXTURE */
+/* RESET_BOUNDARY_FIXTURE */
+
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    unsigned scenario = (unsigned)strtoul(argv[1], NULL, 10);
+    reset_fixture_start();
+    mini_app_inst_t *owner = test_launcher->p_main_app_inst;
+    void *handle = owner->p_handle;
+    cache_data_t cache_before = test_cache;
+    const uint8_t initial_flags = gpregret;
+    switch (scenario) {
+    case 0: /* App cannot commit: direct DFU must be entirely inert. */
+        allow_prepare = false;
+        assert(!enter_dfu());
+        assert(prepare_calls == 1 && ntag_calls == 1);
+        assert(last_reason == MINI_APP_EXIT_RESET);
+        assert(!system_reset_prepared() && !mini_app_launcher_input_blocked(test_launcher));
+        assert_no_reset_side_effects();
+        assert(gpregret == initial_flags);
+        break;
+    case 1: /* The existing NTAG guard remains first for direct reset. */
+        allow_ntag = false; ntag_clean = false;
+        assert(!system_reboot());
+        assert(!prepare_calls && ntag_calls == 1 && !ntag_cancel_calls);
+        assert(ntag_paused && !system_reset_prepared());
+        assert_no_reset_side_effects();
+        assert(gpregret == initial_flags);
+        break;
+    case 2: /* First SVC error cannot stop BLE or set magic/reset. */
+        fail_clear_call = 1;
+        assert(!enter_dfu());
+        assert(flag_clear_calls == 1 && !flag_set_calls && !reset_calls);
+        assert(gpregret == initial_flags && reset_logs == 1);
+        assert_reset_cancelled();
+        break;
+    case 3: /* A rejected SET leaves DFU disarmed and releases the owner. */
+        fail_flag_set = true;
+        assert(!enter_dfu());
+        assert(flag_clear_calls == 1 && flag_set_calls == 1 && !reset_calls);
+        assert(gpregret == (initial_flags & 0x06u) && reset_logs == 1);
+        assert_reset_cancelled();
+        break;
+    case 4: /* Unexpected reset return clears only our magic, then cancels. */
+        assert(!enter_dfu());
+        assert(flag_clear_calls == 2 && flag_set_calls == 1 && reset_calls == 1);
+        assert(gpregret_at_reset == ((initial_flags & 0x06u) | 0xb1u));
+        assert(gpregret == (initial_flags & 0x06u));
+        assert(event_pos(E_PREPARE) < event_pos(E_FLAG_CLEAR));
+        assert(event_pos(E_FLAG_CLEAR) < event_pos(E_FLAG_SET));
+        assert(event_pos(E_FLAG_SET) < event_pos(E_RESET));
+        assert(event_pos(E_RESET) < event_pos(E_CANCEL));
+        assert_reset_cancelled();
+        break;
+    case 5: /* The real non-returning DFU path keeps the committed owner locked. */
+        simulate_nonreturn = true;
+        if (setjmp(reset_boundary) == 0) {
+            (void)enter_dfu();
+            assert(!"a successful hardware reset cannot return");
+        }
+        assert(flag_clear_calls == 1 && flag_set_calls == 1 && reset_calls == 1);
+        assert(gpregret_at_reset == ((initial_flags & 0x06u) | 0xb1u));
+        assert(system_reset_prepared() && app_writer_paused && ntag_paused);
+        assert(prepare_calls == 1 && ntag_calls == 1 && !cancel_calls);
+        assert(!ble_stops && !ble_remote_stops && !kills[MINI_APP_ID_CHAMELEON]);
+        break;
+    case 6: /* A direct normal reboot never changes bootloader flags. */
+        assert(!system_reboot());
+        assert(!flag_clear_calls && !flag_set_calls && reset_calls == 1);
+        assert(gpregret == initial_flags && gpregret_at_reset == initial_flags);
+        assert_reset_cancelled();
+        break;
+    case 7: /* Reserved async RESET is reused without a second save. */
+        assert(system_prepare_reset());
+        assert(system_prepare_reset());
+        assert(prepare_calls == 1 && ntag_calls == 1);
+        assert(!system_reboot());
+        assert(prepare_calls == 1 && ntag_calls == 1 && reset_calls == 1);
+        assert_reset_cancelled();
+        break;
+    case 8: /* Reset cancellation must not steal a prepared SLEEP. */
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_SLEEP));
+        system_cancel_reset();
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_SLEEP));
+        assert(!enter_dfu() && !system_reboot());
+        assert(prepare_calls == 1 && ntag_calls == 1 && !cancel_calls);
+        assert(app_writer_paused && ntag_paused);
+        assert_no_reset_side_effects();
+        assert(gpregret == initial_flags);
+        break;
+    case 9: /* Refusal remains retryable without destroying application state. */
+        allow_prepare = false;
+        assert(!system_reboot());
+        assert_no_reset_side_effects();
+        allow_prepare = true;
+        assert(system_prepare_reset());
+        assert(prepare_calls == 2 && system_reset_prepared());
+        system_cancel_reset();
+        assert(cancel_calls == 1 && !mini_app_launcher_input_blocked(test_launcher));
+        assert(!app_writer_paused && !ntag_paused);
+        break;
+    case 10: /* Repeated reset cancellation neither saves again nor double-releases. */
+        system_cancel_reset();
+        assert(!cancel_calls && !prepare_calls && !ntag_calls);
+        assert(system_prepare_reset());
+        system_cancel_reset();
+        system_cancel_reset();
+        assert(prepare_calls == 1 && ntag_calls == 1);
+        assert_reset_cancelled();
+        assert_no_reset_side_effects();
+        break;
+    default:
+        assert(!"unknown scenario");
+    }
+    assert_owner_unchanged(owner, handle, &cache_before);
+    fixture_dispose();
+    puts("PASS real launcher + utils reset boundary");
+    return 0;
+}

@@ -97,7 +97,11 @@ static uint8_t captured[DF_PAYLOAD_LEN];
 static size_t captured_length;
 void ble_get_addr_str(char *value) { strcpy(value,"01:23:45:67:89:AB"); }
 void ble_disable(void) { ++disable_calls; }
-void enter_dfu(void) { ++dfu_calls; }
+static bool reset_reserved;
+bool system_prepare_reset(void){reset_reserved=true;return true;}
+bool system_reset_prepared(void){return reset_reserved;}
+void system_cancel_reset(void){reset_reserved=false;}
+bool enter_dfu(void) { ++dfu_calls; reset_reserved=false; return true; }
 /* The volatile MTU command has separate actual-SDK contract tests. */
 bool ble_mtu_diagnostic(uint16_t requested,uint8_t *snapshot,size_t capacity) {
     (void)requested; (void)snapshot; (void)capacity; return false;
@@ -122,7 +126,7 @@ static void reset(unsigned mtu) {
     df_core_init(); ble_work_set_handlers(ble_on_received_data,ble_on_transmit_ready);
     ble_work_connected(); ble_work_process(ble_on_disconnected);
     sends=attempts=disconnected=file_closes=dir_closes=dir_reads=0;
-    clock_tick=dfu_calls=disable_calls=capture_calls=capture_ready=captured_length=write_calls=written_length=0;
+    clock_tick=dfu_calls=disable_calls=capture_calls=capture_ready=captured_length=write_calls=written_length=0;reset_reserved=false;
     send_error_code=disconnect_error=0;
     fail_read=fail_dir_close=overlong_read=switch_peer_during_read=false;
     file_length=file_offset=entry_count=entry_index=0;
@@ -350,7 +354,7 @@ int main(int argc,char **argv) {
         }
     } else if(scenario==24) {
         reset(23);request(2,NULL,0);CHECK(sends==1 && !dfu_calls && !disable_calls);
-        ready();CHECK(dfu_calls==1 && disable_calls==1);ready();CHECK(dfu_calls==1);
+        ready();CHECK(dfu_calls==1 && disable_calls==0);ready();CHECK(dfu_calls==1);
         reset(23);request(2,NULL,0);ble_work_disconnected();ble_work_process(ble_on_disconnected);
         ready();CHECK(!dfu_calls && !disable_calls);
         reset(23);send_error_code=19;request(2,NULL,0);ready();CHECK(disconnected==1 && !dfu_calls);

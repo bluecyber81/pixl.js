@@ -174,7 +174,7 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
 
         /* Flush accepted NFC writes before app retention/teardown, even if the
          * RF field is still present. Then close BLE before flash sleep. */
-        if (!ntag_emu_prepare_change()) {
+        if (!mini_app_launcher_prepare_exit(mini_app_launcher(), MINI_APP_EXIT_SLEEP)) {
             nrf_pwr_mgmt_cancel_shutdown();
             return false;
         }
@@ -182,7 +182,11 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
         ble_disable();
         ble_process_pending();
 
-        mini_app_launcher_sleep(mini_app_launcher());
+        if (!mini_app_launcher_sleep(mini_app_launcher())) {
+            mini_app_launcher_cancel_exit(mini_app_launcher());
+            nrf_pwr_mgmt_cancel_shutdown();
+            return false;
+        }
 
         // save ntag to cache
         cache_data_t *p_cache_data = cache_get_data();

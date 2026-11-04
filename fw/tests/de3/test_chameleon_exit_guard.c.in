@@ -1,0 +1,399 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define HAS_EXIT_GUARD @HAS_GUARD@
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define TAG_FIELD_LED_OFF() ((void)0)
+#define NRF_SUCCESS 0
+#define INVALID_SLOT_INDEX 255
+#define FDS_EMULATION_CONFIG_FILE_ID 1
+#define FDS_EMULATION_CONFIG_RECORD_KEY 2
+#define FDS_SLOT_TAG_DUMP_FILE_ID_BASE 100
+#define SLOT_MAX TAG_MAX_SLOT_NUM
+#define _T(x) #x
+#define _L_APP_CHAMELEON 1
+#define MINI_APP_ID_CHAMELEON 7
+@MF1_HEADER@
+@VFS_HEADER@
+typedef struct {unsigned unused;} xbm_t;
+static const xbm_t app_card_emulator_32x32 = {0};
+@CORE_HEADER@
+typedef struct {unsigned unused;} mui_canvas_t;
+typedef enum {INPUT_KEY_LEFT, INPUT_KEY_CENTER, INPUT_KEY_RIGHT} input_key_t;
+typedef enum {INPUT_TYPE_PRESS, INPUT_TYPE_RELEASE, INPUT_TYPE_SHORT, INPUT_TYPE_LONG, INPUT_TYPE_REPEAT} input_type_t;
+typedef struct {input_key_t key; input_type_t type;} mui_input_event_t;
+@VIEW_HEADER@
+typedef struct {mui_view_t view; void *user_data;} chameleon_view_t;
+typedef struct {mui_view_t view; void *user_data;} mui_list_view_t;
+typedef struct {mui_view_t view; void *user_data;} mui_text_input_t;
+typedef struct {mui_view_t view; void *user_data;} mui_toast_view_t;
+typedef enum {MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_CENTER, MUI_MSG_BOX_EVENT_SELECT_RIGHT} mui_msg_box_event_t;
+typedef struct mui_msg_box_s {
+    mui_view_t view; void *user_data;
+    void (*event_cb)(mui_msg_box_event_t, struct mui_msg_box_s *);
+    const char *header, *message;
+    unsigned focus;
+} mui_msg_box_t;
+typedef struct {struct {uint32_t id; mui_view_t *view;} views[8]; uint8_t view_count; mui_view_t *p_active_view;} mui_view_dispatcher_t;
+typedef struct {void *user_data; uint32_t scene; bool active;} mui_scene_dispatcher_t;
+@APP_HEADER@
+enum {CHAMELEON_SCENE_MAIN=1, CHAMELEON_SCENE_FACTORY, CHAMELEON_SCENE_MENU, CHAMELEON_SCENE_MAX};
+enum {MUI_LAYER_FULLSCREEN, MUI_LAYER_TOAST};
+static const int chameleon_scene_defines[] = {0};
+static const uint8_t u8g2_font_wqy12_t_gb2312a[] = {0};
+typedef struct {uint8_t chameleon_default_slot_index, chameleon_slot_num;} settings_data_t;
+static settings_data_t settings, persisted_settings;
+static uint8_t data[4500] __attribute__((aligned(4)));
+static uint8_t files[2][4500] __attribute__((aligned(4)));
+static uint8_t config_file[sizeof(tag_slot_config_t)] __attribute__((aligned(4)));
+static uint16_t data_crc, m_slot_config_crc;
+static tag_slot_config_t slotConfig;
+static nfc_tag_mf1_information_t *m_tag_information=(void*)data;
+static tag_specific_type_t m_tag_type=TAG_TYPE_MIFARE_Mini;
+static tag_data_buffer_t buffer={sizeof(data),data,&data_crc};
+static bool m_tag_data_loaded;
+bool g_is_tag_emulating;
+static bool sense_active, irq_enabled, fail_compare_read, fail_config_load;
+static int data_write_error, config_write_error, settings_error;
+static unsigned file_size, config_size, data_writes, config_writes, settings_writes, loads;
+static unsigned live, allocations, scenes_exited, drawn, updates, cases;
+static mini_app_inst_t *current;
+static void app_chameleon_on_kill(mini_app_inst_t *);
+static void chameleon_scene_menu_on_exit(void *);
+static void calc_14a_crc_lut(uint8_t *, int, uint8_t *);
+static int get_information_size_by_tag_type(tag_specific_type_t);
+static settings_data_t *settings_get_data(void) {return &settings;}
+static int32_t settings_save(void) {
+    assert(!sense_active&&!irq_enabled);settings_writes++;
+    if (!settings_error) persisted_settings=settings;
+    return settings_error;
+}
+static bool tag_helper_valid_default_slot(void) {return settings.chameleon_default_slot_index!=INVALID_SLOT_INDEX;}
+bool tag_emulation_slot_is_enabled(uint8_t slot, tag_sense_type_t sense) {assert(slot<TAG_MAX_SLOT_NUM);return slotConfig.slots[slot].enabled_hf;}
+static void hal_nfc_set_nrfx_irq_enable(uint8_t enable) {irq_enabled=enable;}
+static void tag_emulation_sense_switch_all(bool enable) {sense_active=enable;}
+static unsigned path_number(const char *path) {
+    if (!strcmp(path,"/chameleon/slots/config.bin")) return 2;
+    if (!strcmp(path,"/chameleon/slots/00.bin")) return 0;
+    assert(!strcmp(path,"/chameleon/slots/01.bin"));return 1;
+}
+static uint8_t *path_bytes(unsigned number) {return number==2?config_file:files[number];}
+static unsigned path_size(unsigned number) {return number==2?config_size:file_size;}
+static bool backend_mounted(void) {return true;}
+static int32_t backend_write(const char *path,void *input,size_t n) {
+    assert(!sense_active&&!irq_enabled);
+    unsigned number=path_number(path);
+    if(number==2) {config_writes++;if(config_write_error)return config_write_error;assert(n<=sizeof(config_file));config_size=n;}
+    else {data_writes++;if(data_write_error)return data_write_error;assert(n<=sizeof(files[0]));}
+    memcpy(path_bytes(number),input,n);return (int32_t)n;
+}
+static int32_t backend_read_data(const char *path,void *output,size_t n) {
+    unsigned number=path_number(path);loads++;
+    if(n>path_size(number))n=path_size(number);
+    memcpy(output,path_bytes(number),n);return (int32_t)n;
+}
+static int32_t backend_stat(const char *path,vfs_obj_t *obj) {
+    unsigned number=path_number(path);memset(obj,0,sizeof(*obj));obj->type=VFS_TYPE_REG;obj->size=path_size(number);return VFS_OK;
+}
+static struct {unsigned number,offset;} read_handle;
+static int32_t backend_open(const char *path,vfs_file_t *fd,uint32_t flags) {
+    assert(flags==VFS_MODE_READONLY);read_handle.number=path_number(path);read_handle.offset=0;fd->handle=&read_handle;return VFS_OK;
+}
+static int32_t backend_read(vfs_file_t *fd,void *output,size_t n) {
+    assert(fd->handle==&read_handle);if(fail_compare_read)return VFS_ERR_FAIL;
+    if(n>path_size(read_handle.number)-read_handle.offset)n=path_size(read_handle.number)-read_handle.offset;
+    memcpy(output,path_bytes(read_handle.number)+read_handle.offset,n);read_handle.offset+=n;return (int32_t)n;
+}
+static int32_t backend_close(vfs_file_t *fd) {fd->handle=NULL;return VFS_OK;}
+static vfs_driver_t driver={.mounted=backend_mounted,.stat_file=backend_stat,.open_file=backend_open,
+    .read_file=backend_read,.close_file=backend_close,.abort_file=backend_close,
+    .read_file_data=backend_read_data,.write_file_data=backend_write};
+vfs_driver_t *vfs_get_default_driver(void) {return &driver;}
+typedef struct {uint16_t id,key;} fds_slot_record_map_t;
+static void get_fds_map_by_slot_sense_type_for_dump(uint8_t slot,tag_sense_type_t type,fds_slot_record_map_t *map) {
+    assert(slot<2&&type==TAG_SENSE_HF);map->id=FDS_SLOT_TAG_DUMP_FILE_ID_BASE+slot;map->key=type;
+}
+tag_data_buffer_t *get_buffer_by_tag_type(tag_specific_type_t type) {return &buffer;}
+tag_sense_type_t get_sense_type_from_tag_type(tag_specific_type_t type) {return type==TAG_TYPE_MIFARE_Mini?TAG_SENSE_HF:TAG_SENSE_NO;}
+static int mock_load_callback(tag_specific_type_t type,tag_data_buffer_t *b) {
+    int size=get_information_size_by_tag_type(type);if(size>b->length)return 0;
+    m_tag_information=(void*)b->buffer;m_tag_type=type;return size;
+}
+static tag_datas_loadcb_t get_data_loadcb_from_tag_type(tag_specific_type_t type) {return mock_load_callback;}
+static tag_datas_savecb_t get_data_savecb_from_tag_type(tag_specific_type_t type) {return nfc_tag_mf1_data_savecb;}
+static int32_t tag_emulation_load_config(void) {
+    if(fail_config_load)return -1;
+    memset(&slotConfig,0,sizeof(slotConfig));memcpy(&slotConfig,config_file,config_size);
+    calc_14a_crc_lut((uint8_t*)&slotConfig,sizeof(slotConfig),(uint8_t*)&m_slot_config_crc);return config_size;
+}
+static bool fds_config_file_exists(void) {return config_size!=0;}
+@CRC@
+@PERSISTENCE@
+
+static void *mui_mem_malloc(size_t n) {void *p=calloc(1,n);assert(p);allocations++;live++;return p;}
+static void mui_mem_free(void *p) {if(p){assert(live);live--;free(p);}}
+#define OBJ(name,type) static type *name##_create(void){return mui_mem_malloc(sizeof(type));} static void name##_free(type *p){mui_mem_free(p);}
+OBJ(mui_view_dispatcher,mui_view_dispatcher_t)
+OBJ(mui_scene_dispatcher,mui_scene_dispatcher_t)
+OBJ(chameleon_view,chameleon_view_t)
+OBJ(mui_list_view,mui_list_view_t)
+OBJ(mui_msg_box,mui_msg_box_t)
+OBJ(mui_toast_view,mui_toast_view_t)
+OBJ(mui_text_input,mui_text_input_t)
+#define VIEW_HELPERS(name,type) static void name##_set_user_data(type *p,void *u){p->user_data=u;p->view.user_data=u;} static mui_view_t *name##_get_view(type *p){return &p->view;}
+VIEW_HELPERS(chameleon_view,chameleon_view_t)
+VIEW_HELPERS(mui_list_view,mui_list_view_t)
+VIEW_HELPERS(mui_msg_box,mui_msg_box_t)
+VIEW_HELPERS(mui_toast_view,mui_toast_view_t)
+VIEW_HELPERS(mui_text_input,mui_text_input_t)
+static void mui_view_dispatcher_add_view(mui_view_dispatcher_t *d,uint32_t id,mui_view_t *view) {
+    assert(d->view_count<8);d->views[d->view_count].id=id;d->views[d->view_count++].view=view;
+}
+static void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t *d,uint32_t id) {
+    if(id==VIEW_NONE){d->p_active_view=NULL;return;}
+    for(unsigned i=0;i<d->view_count;i++)if(d->views[i].id==id){d->p_active_view=d->views[i].view;return;}
+    assert(0);
+}
+static void mui_view_dispatcher_attach(mui_view_dispatcher_t *d,unsigned layer) {}
+static void mui_view_dispatcher_detach(mui_view_dispatcher_t *d,unsigned layer) {}
+static void mui_scene_dispatcher_set_user_data(mui_scene_dispatcher_t *d,void *u) {d->user_data=u;}
+static void mui_scene_dispatcher_set_scene_defines(mui_scene_dispatcher_t *d,const void *defs,unsigned count) {}
+static unsigned mui_scene_dispatcher_current_scene(mui_scene_dispatcher_t *d) {return d->scene;}
+static void mui_scene_dispatcher_next_scene(mui_scene_dispatcher_t *d,unsigned scene) {
+    d->scene=scene;d->active=true;app_chameleon_t *app=d->user_data;
+    if(scene==CHAMELEON_SCENE_MAIN) {irq_enabled=true;tag_emulation_sense_run();mui_view_dispatcher_switch_to_view(app->p_view_dispatcher,CHAMELEON_VIEW_ID_MAIN);}
+    else mui_view_dispatcher_switch_to_view(app->p_view_dispatcher,CHAMELEON_VIEW_ID_LIST);
+}
+static void mui_scene_dispatcher_exit(mui_scene_dispatcher_t *d) {
+    if (!d->active) return;
+    scenes_exited++;
+    d->active=false;
+    if(d->scene==CHAMELEON_SCENE_MENU)chameleon_scene_menu_on_exit(d->user_data);
+    else if(d->scene==CHAMELEON_SCENE_MAIN){tag_emulation_sense_end();hal_nfc_set_nrfx_irq_enable(false);}
+}
+static void mui_list_view_clear_items(mui_list_view_t *p) {}
+static void mui_msg_box_set_header(mui_msg_box_t *p,const char *s) {p->header=s;}
+static void mui_msg_box_set_message(mui_msg_box_t *p,const char *s) {p->message=s;}
+static void mui_msg_box_set_btn_text(mui_msg_box_t *p,const char *l,const char *c,const char *r) {}
+static void mui_msg_box_set_btn_focus(mui_msg_box_t *p,unsigned focus) {p->focus=focus;}
+static void mui_msg_box_set_event_cb(mui_msg_box_t *p,void (*cb)(mui_msg_box_event_t,mui_msg_box_t *)) {p->event_cb=cb;}
+static unsigned chameleon_view_get_index(chameleon_view_t *p) {return 7;}
+static void *mui(void) {return NULL;}
+static void mui_update(void *m) {updates++;}
+static void mui_canvas_set_font(mui_canvas_t *c,const uint8_t *font) {}
+static void mui_canvas_set_draw_color(mui_canvas_t *c,unsigned color) {}
+static void mui_canvas_draw_utf8(mui_canvas_t *c,unsigned x,unsigned y,const char *text) {assert(x==0&&y<=64&&text);drawn++;}
+static void *mini_app_launcher(void) {return current;}
+static void mini_app_launcher_exit(void *launcher) {assert(launcher==current);app_chameleon_on_kill(current);}
+@MENU_EXIT@
+@APP_SOURCE@
+
+/* The original launcher always called kill_cb after only the unrelated NTAG
+ * guard. The baseline adapter reproduces that decision, not a patched saver. */
+static bool prepare(mini_app_inst_t *inst,mini_app_exit_reason_t reason) {
+#if HAS_EXIT_GUARD
+    return app_chameleon_info.prepare_exit_cb(inst,reason);
+#else
+    app_chameleon_info.kill_cb(inst);return true;
+#endif
+}
+static void cancel(mini_app_inst_t *inst) {
+#if HAS_EXIT_GUARD
+    app_chameleon_info.cancel_exit_cb(inst);
+#else
+    (void)inst;
+#endif
+}
+static void retry_input(mini_app_inst_t *inst,input_type_t type) {
+#if HAS_EXIT_GUARD
+    app_chameleon_t *app=inst->p_handle;mui_input_event_t event={INPUT_KEY_CENTER,type};
+    assert(app->p_view_dispatcher->p_active_view==&app->save_error_view);
+    app->save_error_view.input_cb(&app->save_error_view,&event);
+#else
+    (void)inst;(void)type;
+#endif
+}
+static uint8_t disk_byte(unsigned slot) {return ((nfc_tag_mf1_information_t*)files[slot])->memory[4][0];}
+static void setup(mini_app_inst_t *inst,uint8_t def,nfc_tag_mf1_write_mode_t mode) {
+    assert(!live);memset(inst,0,sizeof(*inst));current=inst;
+    settings=(settings_data_t){def,8};persisted_settings=settings;memset(&slotConfig,0,sizeof(slotConfig));
+    slotConfig.version=TAG_SLOT_CONFIG_CURRENT_VERSION;slotConfig.active_slot=0;
+    for(unsigned i=0;i<2;i++){slotConfig.slots[i].enabled_hf=1;slotConfig.slots[i].tag_hf=TAG_TYPE_MIFARE_Mini;}
+    config_size=TAG_SLOT_CONFIG_SIZE(settings.chameleon_slot_num);memcpy(config_file,&slotConfig,config_size);
+    memset(data,0,sizeof(data));m_tag_information=(void*)data;m_tag_type=TAG_TYPE_MIFARE_Mini;
+    file_size=get_information_size_by_tag_type(m_tag_type);
+    for(unsigned i=0;i<2;i++){
+        m_tag_information->config.mode_block_write=mode;m_tag_information->memory[4][0]=i?0x33:0x11;
+        memcpy(files[i],data,file_size);
+    }
+    memset(data,0,sizeof(data));data_write_error=config_write_error=settings_error=0;
+    fail_compare_read=fail_config_load=false;sense_active=irq_enabled=false;
+    data_writes=config_writes=settings_writes=loads=allocations=scenes_exited=drawn=updates=0;
+    app_chameleon_info.run_cb(inst);assert(inst->p_handle&&live==9&&m_tag_data_loaded&&sense_active&&irq_enabled);
+    assert(m_tag_information->memory[4][0]==0x11&&tag_emulation_get_slot()==0);
+}
+static void cleanup_success(mini_app_inst_t *inst) {
+    assert(prepare(inst,MINI_APP_EXIT_SWITCH));
+    unsigned writes=data_writes+config_writes+settings_writes;
+    app_chameleon_info.kill_cb(inst);assert(!inst->p_handle&&!live);
+    assert(data_writes+config_writes+settings_writes==writes); /* cleanup cannot publish */
+}
+static void check_error_keeps_owner(mini_app_inst_t *inst,void *owner,unsigned before_alloc) {
+    assert(inst->p_handle==owner&&live==9&&((app_chameleon_t*)owner)->initialized);
+    assert(!sense_active&&!irq_enabled&&!scenes_exited&&allocations==before_alloc);
+    assert(tag_emulation_get_slot()==0);
+#if HAS_EXIT_GUARD
+    app_chameleon_t *app=owner;assert(app->p_view_dispatcher->p_active_view==&app->save_error_view);
+    mui_canvas_t canvas={0};app->save_error_view.draw_cb(&app->save_error_view,&canvas);assert(drawn%4==0);
+#endif
+}
+static void test_error_retry(unsigned fault,mini_app_exit_reason_t reason) {
+    mini_app_inst_t inst;setup(&inst,INVALID_SLOT_INDEX,NFC_TAG_MF1_WRITE_NORMAL);
+    void *owner=inst.p_handle;unsigned before_alloc=allocations;uint16_t before_crc=data_crc;
+    if(fault!=3)m_tag_information->memory[4][0]=0x22;
+    if(fault==0)data_write_error=VFS_ERR_NOSPC;
+    if(fault==1)data_write_error=VFS_ERR_FAIL;
+    if(fault==2){slotConfig.slots[1].enabled_hf=0;config_write_error=VFS_ERR_NOSPC;}
+    if(fault==3)fail_compare_read=true;
+    if(fault==4)settings_error=-91;
+    if(fault==5)settings_error=8;
+    assert(!prepare(&inst,reason)); /* Same assertion deliberately fails on DE3.57. */
+    check_error_keeps_owner(&inst,owner,before_alloc);
+    assert(m_tag_information->memory[4][0]==(fault==3?0x11:0x22));
+    if(fault<2){assert(data_crc==before_crc&&disk_byte(0)==0x11&&!config_writes&&!settings_writes);}
+    else if(fault==2)assert(disk_byte(0)==0x22&&!settings_writes);
+    /* A second failure must not replace the remembered view or the RAM copy. */
+    retry_input(&inst,INPUT_TYPE_SHORT);check_error_keeps_owner(&inst,owner,before_alloc);
+    data_write_error=config_write_error=settings_error=0;fail_compare_read=false;
+    retry_input(&inst,INPUT_TYPE_SHORT);
+    assert(inst.p_handle==owner&&sense_active&&irq_enabled&&live==9);
+    assert(disk_byte(0)==(fault==3?0x11:0x22));
+    cleanup_success(&inst);
+    app_chameleon_info.run_cb(&inst);assert(m_tag_information->memory[4][0]==(fault==3?0x11:0x22));
+    cleanup_success(&inst);cases++;
+}
+static void test_default_and_cancel(uint8_t def,bool disabled,nfc_tag_mf1_write_mode_t mode) {
+    mini_app_inst_t inst;setup(&inst,def,mode);app_chameleon_t *app=inst.p_handle;
+    if(disabled)slotConfig.slots[1].enabled_hf=0;
+    m_tag_information->memory[4][0]=0x22;
+    uint8_t before[4500];memcpy(before,data,sizeof(before));unsigned before_loads=loads;
+    assert(prepare(&inst,MINI_APP_EXIT_RESET));
+    assert(!sense_active&&!irq_enabled&&inst.p_handle==app&&loads==before_loads);
+    assert(!memcmp(data,before,sizeof(before))&&tag_emulation_get_slot()==0);
+    uint8_t expected=def==1&&!disabled?1:0;
+    assert(((tag_slot_config_t*)config_file)->active_slot==expected);
+    uint8_t expected_default=(def==0||(def==1&&!disabled))?def:INVALID_SLOT_INDEX;
+    assert(settings.chameleon_default_slot_index==expected_default);
+    assert(persisted_settings.chameleon_default_slot_index==expected_default);
+    assert(tag_helper_valid_default_slot()==(expected_default!=INVALID_SLOT_INDEX));
+    assert(disk_byte(0)==(mode==NFC_TAG_MF1_WRITE_SHADOW?0x11:0x22));
+    unsigned writes=data_writes+config_writes+settings_writes;
+    assert(prepare(&inst,MINI_APP_EXIT_RESET)&&writes==data_writes+config_writes+settings_writes);
+    cancel(&inst);assert(sense_active&&irq_enabled&&!memcmp(data,before,sizeof(before))&&loads==before_loads);
+    /* Restoring the RAM selection must not falsify the persisted config CRC. */
+    tag_emulation_sense_end();hal_nfc_set_nrfx_irq_enable(false);
+#if HAS_EXIT_GUARD
+    assert(tag_emulation_save());
+#else
+    tag_emulation_save();
+#endif
+    assert(((tag_slot_config_t*)config_file)->active_slot==0);
+    hal_nfc_set_nrfx_irq_enable(true);tag_emulation_sense_run();
+    cleanup_success(&inst);cases++;
+}
+static void test_default_config_retry(void) {
+    mini_app_inst_t inst;setup(&inst,1,NFC_TAG_MF1_WRITE_NORMAL);
+    m_tag_information->memory[4][0]=0x22;config_write_error=VFS_ERR_FAIL;
+    unsigned before_loads=loads;void *owner=inst.p_handle;
+    assert(!prepare(&inst,MINI_APP_EXIT_SLEEP));
+    assert(inst.p_handle==owner&&loads==before_loads&&tag_emulation_get_slot()==0&&m_tag_information->memory[4][0]==0x22);
+    assert(disk_byte(0)==0x22&&((tag_slot_config_t*)config_file)->active_slot==0);
+    config_write_error=0;assert(prepare(&inst,MINI_APP_EXIT_SLEEP));
+    assert(loads==before_loads&&((tag_slot_config_t*)config_file)->active_slot==1&&tag_emulation_get_slot()==0);
+    cancel(&inst);assert(sense_active&&irq_enabled&&m_tag_information->memory[4][0]==0x22);
+    cleanup_success(&inst);
+    app_chameleon_info.run_cb(&inst);assert(tag_emulation_get_slot()==1&&m_tag_information->memory[4][0]==0x33);
+    cleanup_success(&inst);cases++;
+}
+static void test_invalid_default_failure_rollback(uint8_t def,unsigned fault) {
+    mini_app_inst_t inst;setup(&inst,def,NFC_TAG_MF1_WRITE_NORMAL);
+    slotConfig.slots[1].enabled_hf=0; /* invalid default 1, and a dirty config */
+    m_tag_information->memory[4][0]=0x22;
+    if(fault==0)data_write_error=VFS_ERR_NOSPC;
+    if(fault==1)config_write_error=VFS_ERR_NOSPC;
+    if(fault==2)settings_error=-1;
+    unsigned before_loads=loads;void *owner=inst.p_handle;
+    assert(!prepare(&inst,MINI_APP_EXIT_RESET));
+    assert(inst.p_handle==owner&&loads==before_loads&&!sense_active&&!irq_enabled);
+    assert(settings.chameleon_default_slot_index==def&&persisted_settings.chameleon_default_slot_index==def);
+    assert(tag_emulation_get_slot()==0&&m_tag_information->memory[4][0]==0x22);
+    data_write_error=config_write_error=settings_error=0;
+    assert(prepare(&inst,MINI_APP_EXIT_RESET));
+    assert(settings.chameleon_default_slot_index==INVALID_SLOT_INDEX);
+    assert(persisted_settings.chameleon_default_slot_index==INVALID_SLOT_INDEX&&!tag_helper_valid_default_slot());
+    assert(loads==before_loads&&disk_byte(0)==0x22);
+    cancel(&inst);assert(sense_active&&irq_enabled&&m_tag_information->memory[4][0]==0x22);
+    cleanup_success(&inst);cases++;
+}
+static void test_shadow_request_retry(void) {
+    mini_app_inst_t inst;setup(&inst,1,NFC_TAG_MF1_WRITE_NORMAL);
+    m_tag_information->config.mode_block_write=NFC_TAG_MF1_WRITE_SHADOW_REQ;
+    m_tag_information->memory[4][0]=0x22;uint16_t old_crc=data_crc;
+    data_write_error=VFS_ERR_NOSPC;
+    assert(!prepare(&inst,MINI_APP_EXIT_RESET));
+    assert(m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW_REQ&&data_crc==old_crc&&disk_byte(0)==0x11);
+    data_write_error=0;config_write_error=VFS_ERR_NOSPC;
+    assert(!prepare(&inst,MINI_APP_EXIT_RESET));
+    assert(m_tag_information->config.mode_block_write==NFC_TAG_MF1_WRITE_SHADOW&&disk_byte(0)==0x22);
+    unsigned saved=data_writes;config_write_error=0;
+    assert(prepare(&inst,MINI_APP_EXIT_RESET)&&data_writes==saved);cancel(&inst);
+    m_tag_information->memory[4][0]=0x44;cleanup_success(&inst);
+    assert(disk_byte(0)==0x22);cases++;
+}
+static void existing_dialog_cb(mui_msg_box_event_t event,mui_msg_box_t *box) {(void)event;(void)box;}
+static void test_cancel_dialog_and_menu_cleanup(void) {
+    mini_app_inst_t inst;setup(&inst,INVALID_SLOT_INDEX,NFC_TAG_MF1_WRITE_NORMAL);
+    app_chameleon_t *app=inst.p_handle;
+    tag_emulation_sense_end();hal_nfc_set_nrfx_irq_enable(false);
+    app->p_scene_dispatcher->scene=CHAMELEON_SCENE_MENU;
+    app->p_msg_box->event_cb=existing_dialog_cb;app->p_msg_box->message="original dialog";
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher,CHAMELEON_VIEW_ID_MSG_BOX);
+    m_tag_information->memory[4][0]=0x22;data_write_error=VFS_ERR_NOSPC;
+    assert(!prepare(&inst,MINI_APP_EXIT_SWITCH));retry_input(&inst,INPUT_TYPE_LONG);
+    assert(!sense_active&&!irq_enabled&&m_tag_information->memory[4][0]==0x22&&disk_byte(0)==0x11);
+    assert(app->p_msg_box->event_cb==existing_dialog_cb&&!strcmp(app->p_msg_box->message,"original dialog"));
+    assert(app->p_view_dispatcher->p_active_view==mui_msg_box_get_view(app->p_msg_box));
+    data_write_error=0;assert(prepare(&inst,MINI_APP_EXIT_SWITCH));
+    unsigned writes=data_writes+config_writes+settings_writes;
+    /* Cleanup must not re-save even if the backend starts failing now. */
+    data_write_error=config_write_error=VFS_ERR_NOSPC;settings_error=-1;
+    app_chameleon_info.kill_cb(&inst);assert(!live&&!inst.p_handle&&writes==data_writes+config_writes+settings_writes);cases++;
+}
+static void test_failed_init_can_leave(void) {
+    mini_app_inst_t inst;setup(&inst,INVALID_SLOT_INDEX,NFC_TAG_MF1_WRITE_NORMAL);cleanup_success(&inst);
+    fail_config_load=true;app_chameleon_info.run_cb(&inst);app_chameleon_t *app=inst.p_handle;
+    assert(app&&!app->initialized&&!sense_active&&!irq_enabled);
+    unsigned writes=data_writes+config_writes+settings_writes;
+    assert(prepare(&inst,MINI_APP_EXIT_SWITCH));app_chameleon_info.kill_cb(&inst);
+    assert(!live&&!inst.p_handle&&writes==data_writes+config_writes+settings_writes);cases++;
+}
+int main(void) {
+    mini_app_exit_reason_t reasons[]={MINI_APP_EXIT_SWITCH,MINI_APP_EXIT_SLEEP,MINI_APP_EXIT_RESET};
+    for(unsigned r=0;r<3;r++)for(unsigned fault=0;fault<6;fault++)test_error_retry(fault,reasons[r]);
+    uint8_t defaults[]={INVALID_SLOT_INDEX,0,1,TAG_MAX_SLOT_NUM,8};
+    for(unsigned mode=0;mode<2;mode++)for(unsigned i=0;i<sizeof(defaults);i++)
+        test_default_and_cancel(defaults[i],false,mode?NFC_TAG_MF1_WRITE_SHADOW:NFC_TAG_MF1_WRITE_NORMAL);
+    test_default_and_cancel(1,true,NFC_TAG_MF1_WRITE_NORMAL);
+    test_default_and_cancel(1,true,NFC_TAG_MF1_WRITE_SHADOW);
+    uint8_t invalid_defaults[]={1,8,TAG_MAX_SLOT_NUM};
+    for(unsigned d=0;d<sizeof(invalid_defaults);d++)for(unsigned fault=0;fault<3;fault++)
+        test_invalid_default_failure_rollback(invalid_defaults[d],fault);
+    test_default_config_retry();test_shadow_request_retry();test_cancel_dialog_and_menu_cleanup();test_failed_init_can_leave();
+    printf("PASS %u real Chameleon exit cases: NOSPC/IO/config/compare/settings failures retain owner and RAM; retry then exit/reload; defaults without preload, Shadow/REQ, cancel and write-free cleanup\n",cases);
+    return 0;
+}

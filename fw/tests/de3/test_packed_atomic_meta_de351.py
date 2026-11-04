@@ -37,7 +37,7 @@ class PackedAtomicMetaTests(unittest.TestCase):
             folder=Path(tmp)
             (folder/'nrf_log.h').write_text('#define NRF_LOG_INFO(...) ((void)0)\n')
             (folder/'ble_main.h').write_text('void ble_disable(void);\n')
-            (folder/'utils2.h').write_text('void system_reboot(void);\n')
+            (folder/'utils2.h').write_text('#pragma once\n#include <stdbool.h>\nbool enter_dfu(void);\nbool system_reboot(void);\nbool system_prepare_reset(void);\nbool system_reset_prepared(void);\nvoid system_cancel_reset(void);\n')
             (folder/'boards.h').write_text('#pragma once\n#define VFS_PACKED_LFS_ENABLE 1\n')
             (folder/'mui_mem.h').write_text('#include <stddef.h>\nvoid *mui_mem_malloc(size_t);\nvoid mui_mem_free(void*);\n')
             (folder/'hal_spi_flash.h').write_text('''#pragma once

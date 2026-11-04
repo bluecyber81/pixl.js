@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 typedef struct{void*p_handle,*p_retain_data;}mini_app_inst_t;
-typedef struct{void*p_view_dispatcher,*p_chameleon_view,*p_scene_dispatcher,*p_list_view,*p_msg_box,*p_toast_view,*p_text_input,*p_view_dispatcher_toast;bool initialized;}app_chameleon_t;
+typedef struct{void *user_data;void (*draw_cb)(void*,void*);void (*input_cb)(void*,void*);}mui_view_t;
+static void app_chameleon_save_error_draw(void*a,void*b){assert(!"unused in failed-init test");}
+static void app_chameleon_save_error_input(void*a,void*b){assert(!"unused in failed-init test");}
+typedef struct{void*p_view_dispatcher,*p_chameleon_view,*p_scene_dispatcher,*p_list_view,*p_msg_box,*p_toast_view,*p_text_input,*p_view_dispatcher_toast;bool initialized;mui_view_t save_error_view;}app_chameleon_t;
 typedef struct{uint8_t cycle_mode_index;}app_chameleon_retain_data_t;
 typedef void mui_msg_box_t;typedef unsigned mui_msg_box_event_t;
 typedef struct{unsigned chameleon_default_slot_index;}settings_data_t;
@@ -71,22 +74,22 @@ static unsigned chameleon_view_get_index(void*p){return 7;}
 @app_chameleon_on_run@
 @app_chameleon_on_kill@
 int main(void){
- for(unsigned ok=0;ok<2;ok++)for(unsigned present=0;present<2;present++)for(unsigned retained=0;retained<2;retained++)for(unsigned def=0;def<2;def++){
-  init_ok=ok;exists=present;scenes=switched=exited=tag_saves=settings_saves=slot_changes=exists_calls=0;
+ /* Successful lifecycle persistence now belongs to prepare_exit, tested with
+  * real save functions and backend faults by test_chameleon_exit_guard.py. */
+ for(unsigned present=0;present<2;present++)for(unsigned retained=0;retained<2;retained++)for(unsigned def=0;def<2;def++){
+  init_ok=false;exists=present;scenes=switched=exited=tag_saves=settings_saves=slot_changes=exists_calls=0;
   header=message=focus=0;dialog_cb=NULL;settings.chameleon_default_slot_index=9;
   sense_active=irq_enabled=false;sense_stops=irq_stops=0;default_valid=def;
   app_chameleon_retain_data_t data={0};mini_app_inst_t inst={NULL,retained?&data:NULL};current=&inst;
   app_chameleon_on_run(&inst);assert(inst.p_handle && live==9);
   assert(((app_chameleon_t*)inst.p_handle)->initialized==init_ok);
-  assert(scenes==ok && exists_calls==ok);
-  if(!ok){
-   assert(switched==1 && header==ERR && message==DE3_STORAGE_IO_ERROR && focus==1 && dialog_cb);
-   dialog_cb(0,NULL);assert(inst.p_handle && live==9);dialog_cb(MUI_MSG_BOX_EVENT_SELECT_CENTER,NULL);
-  }else app_chameleon_on_kill(&inst);
-  assert(!inst.p_handle && !live && exited==1 && tag_saves==ok && settings_saves==ok && slot_changes==(ok&&def));
-  assert(settings.chameleon_default_slot_index==((ok&&!def)?INVALID_SLOT_INDEX:9));
-  assert(sense_stops==ok&&irq_stops==ok&&!sense_active&&!irq_enabled);
+  assert(!scenes && !exists_calls);
+  assert(switched==1 && header==ERR && message==DE3_STORAGE_IO_ERROR && focus==1 && dialog_cb);
+  dialog_cb(0,NULL);assert(inst.p_handle && live==9);dialog_cb(MUI_MSG_BOX_EVENT_SELECT_CENTER,NULL);
+  assert(!inst.p_handle && !live && exited==1 && !tag_saves && !settings_saves && !slot_changes);
+  assert(settings.chameleon_default_slot_index==9);
+  assert(!sense_stops&&!irq_stops&&!sense_active&&!irq_enabled);
   if(retained)assert(data.cycle_mode_index==7);
  }
- puts("PASS 16 actual app start/exit cases: NFC stopped before save/default-slot change; invalid init preserves stored state");
+ puts("PASS 8 actual failed-init app cases: dialog exits without scenes, saves, default changes or NFC activation");
 }

@@ -1,0 +1,243 @@
+/* Each process executes one observable lifecycle contract. */
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    unsigned scenario = (unsigned)strtoul(argv[1], NULL, 10);
+    unsigned id = scenario == 8 ? TEST_APP_NO_HIBERNATE :
+                  scenario == 12 ? TEST_APP_FAILED_INIT : MINI_APP_ID_CHAMELEON;
+    fixture_start(id);
+    mini_app_inst_t *owner = test_launcher->p_main_app_inst;
+    void *handle = owner ? owner->p_handle : NULL;
+    cache_data_t before = test_cache;
+    switch (scenario) {
+    case 0: /* App-level refusal: switch cannot free the only dirty owner. */
+        allow_prepare = false;
+        mini_app_launcher_run_with_retain_data(test_launcher, TEST_APP_OTHER, (uint8_t *)"retained");
+        assert_owner_unchanged(owner, handle, &before);
+        assert(prepare_calls == 1 && ntag_calls == 1 && last_reason == MINI_APP_EXIT_SWITCH);
+        break;
+    case 1: /* Direct kill and exit must use the same refusal path. */
+        allow_prepare = false;
+        mini_app_launcher_kill(test_launcher, MINI_APP_ID_CHAMELEON);
+        mini_app_launcher_exit(test_launcher);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(prepare_calls == 2 && last_reason == MINI_APP_EXIT_SWITCH);
+        break;
+    case 2: /* The older NTAG guard still runs before any Chameleon callback. */
+        allow_ntag = false; ntag_clean = false;
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        mini_app_launcher_exit(test_launcher);
+        assert(!mini_app_launcher_sleep(test_launcher));
+        assert(!mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        assert_owner_unchanged(owner, handle, &before);
+        assert(!prepare_calls && ntag_calls == 4);
+        break;
+    case 3: /* Successful switch commits once and keeps the writer paused. */
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        assert(kills[MINI_APP_ID_CHAMELEON] == 1 && runs[TEST_APP_OTHER] == 1);
+        assert(!owner->p_handle && owner->state == APP_STATE_KILLED);
+        assert(test_launcher->p_main_app_inst->p_app->id == TEST_APP_OTHER);
+        assert(event_pos(E_NTAG) < event_pos(E_PREPARE));
+        assert(event_pos(E_PREPARE) < event_pos(E_KILL) && event_pos(E_KILL) < event_pos(E_RUN));
+        assert(!cancel_calls && app_writer_paused);
+        break;
+    case 4: /* Successful explicit exit reaches the Desktop exactly once. */
+        mini_app_launcher_exit(test_launcher);
+        assert(kills[MINI_APP_ID_CHAMELEON] == 1 && runs[MINI_APP_ID_DESKTOP] == 1);
+        assert(test_launcher->p_main_app_inst->p_app->id == MINI_APP_ID_DESKTOP);
+        break;
+    case 5: /* Sleep refusal: no cached identity, retain pointer or cleanup changes. */
+        allow_prepare = false;
+        assert(!mini_app_launcher_sleep(test_launcher));
+        assert_owner_unchanged(owner, handle, &before);
+        assert(last_reason == MINI_APP_EXIT_SLEEP);
+        break;
+    case 6: /* Hibernate success writes retain bytes only at the approved cleanup. */
+        assert(mini_app_launcher_sleep(test_launcher));
+        assert(kills[id] == 1 && !owner->p_handle && owner->state == APP_STATE_KILLED);
+        assert(test_cache.enabled && test_cache.id == id && test_cache.retain_data[0] == 0xd7);
+        assert(last_reason == MINI_APP_EXIT_SLEEP);
+        break;
+    case 7: /* Settings-disabled hibernate still cleans up, without retaining. */
+        test_settings.hibernate_enabled = false;
+        assert(mini_app_launcher_sleep(test_launcher));
+        assert(kills[id] == 1 && !owner->p_handle && !test_cache.enabled);
+        for (unsigned n = 0; n < sizeof(test_cache.retain_data); ++n) assert(!test_cache.retain_data[n]);
+        assert(!owner->p_retain_data);
+        break;
+    case 8: /* App-disabled hibernate has the same cleanup contract. */
+        assert(mini_app_launcher_sleep(test_launcher));
+        assert(kills[id] == 1 && !owner->p_handle && !test_cache.enabled);
+        assert(!owner->p_retain_data && last_reason == MINI_APP_EXIT_SLEEP);
+        break;
+    case 9: /* A prepared sleep is held, reusable by sleep, and not stolen by run/kill. */
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_SLEEP));
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_SLEEP));
+        assert(!mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        mini_app_launcher_exit(test_launcher);
+        mini_app_launcher_kill(test_launcher, id);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(prepare_calls == 1);
+        assert(mini_app_launcher_sleep(test_launcher));
+        assert(kills[id] == 1 && prepare_calls == 1);
+        break;
+    case 10: /* Prepared reset locks ownership; cancel then makes switching possible. */
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        mini_app_launcher_kill(test_launcher, id);
+        mini_app_launcher_exit(test_launcher);
+        assert(!mini_app_launcher_sleep(test_launcher));
+        assert_owner_unchanged(owner, handle, &before);
+        assert(app_writer_paused && ntag_paused);
+        mini_app_launcher_cancel_exit(test_launcher);
+        assert(cancel_calls == 1 && ntag_cancel_calls == 1);
+        assert(!app_writer_paused && !ntag_paused);
+        assert(!mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        assert(kills[id] == 1 && runs[TEST_APP_OTHER] == 1);
+        break;
+    case 11: /* A daemon does not own or flush main-app dirty data. */
+        allow_prepare = allow_ntag = false;
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_STATUS_BAR);
+        assert(runs[MINI_APP_ID_STATUS_BAR] == 1 && !ntag_calls && !prepare_calls);
+        assert(test_launcher->p_main_app_inst == owner);
+        mini_app_launcher_kill(test_launcher, MINI_APP_ID_STATUS_BAR);
+        assert(kills[MINI_APP_ID_STATUS_BAR] == 1 && !ntag_calls && !prepare_calls);
+        assert_owner_unchanged(owner, handle, &before);
+        break;
+    case 12: /* Failed init has no live app state to prepare/cancel/free twice. */
+        assert(!owner);
+        mini_app_launcher_kill(test_launcher, TEST_APP_FAILED_INIT);
+        assert(!prepare_calls && !cancel_calls && !kills[TEST_APP_FAILED_INIT]);
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_DESKTOP);
+        assert(test_launcher->p_main_app_inst && runs[MINI_APP_ID_DESKTOP] == 1);
+        assert(!prepare_calls);
+        break;
+    case 13: /* Reentrancy from the NTAG flush cannot replace the source owner. */
+        reenter_from = REENTER_NTAG;
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        assert(reentry_checks >= 1 && kills[id] == 1 && runs[TEST_APP_OTHER] == 1);
+        break;
+    case 14: /* Reentrancy from the app preparation is refused. */
+        reenter_from = REENTER_PREPARE;
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        assert(reentry_checks == 1 && kills[id] == 1 && runs[TEST_APP_OTHER] == 1);
+        break;
+    case 15: /* Reentrant cleanup cannot start another app during transition. */
+        reenter_from = REENTER_KILL;
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        assert(reentry_checks == 1 && kills[id] == 1 && runs[TEST_APP_OTHER] == 1);
+        break;
+    case 16: /* Reentrant target initialization cannot replace the pending owner. */
+        reenter_from = REENTER_RUN;
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        assert(reentry_checks == 1 && kills[id] == 1 && runs[TEST_APP_OTHER] == 1);
+        break;
+    case 17: /* Cancel callback itself cannot launch or cancel a nested transition. */
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        reenter_from = REENTER_CANCEL;
+        mini_app_launcher_cancel_exit(test_launcher);
+        assert(reentry_checks == 1 && cancel_calls == 1);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(!mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        break;
+    case 18: /* Readiness binds exact instance, handle, running state and reason. */
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        owner->p_handle = NULL;
+        assert(!mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        owner->p_handle = handle; owner->state = APP_STATE_KILLED;
+        assert(!mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        owner->state = APP_STATE_RUNNING;
+        test_launcher->p_main_app_inst = NULL;
+        assert(!mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        test_launcher->p_main_app_inst = owner;
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        break;
+    case 19: /* Storage recovery redirect also obeys the active-owner refusal. */
+        recovery = true; allow_prepare = false;
+        mini_app_launcher_run_with_retain_data(test_launcher, TEST_APP_OTHER, old_retain);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(!runs[MINI_APP_ID_BLE]);
+        allow_prepare = true;
+        mini_app_launcher_run_with_retain_data(test_launcher, TEST_APP_OTHER, old_retain);
+        assert(kills[id] == 1 && runs[MINI_APP_ID_BLE] == 1);
+        assert(test_launcher->p_main_app_inst->p_app->id == MINI_APP_ID_BLE);
+        assert(!test_launcher->p_main_app_inst->p_retain_data);
+        break;
+    case 20: /* Restarting the same app must not bypass refusal. */
+        allow_prepare = false;
+        mini_app_launcher_run(test_launcher, id);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(!runs[id]);
+        break;
+    case 21: /* Cancel is harmless without a prepared transition and idempotent. */
+        mini_app_launcher_cancel_exit(test_launcher);
+        assert(!cancel_calls && !ntag_cancel_calls);
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_cancel_exit(test_launcher);
+        mini_app_launcher_cancel_exit(test_launcher);
+        assert(cancel_calls == 1 && ntag_cancel_calls == 1);
+        assert_owner_unchanged(owner, handle, &before);
+        break;
+    case 22: /* Unknown app IDs do not flush or change the current app. */
+        mini_app_launcher_run(test_launcher, 12345);
+        mini_app_launcher_kill(test_launcher, 12345);
+        assert_owner_unchanged(owner, handle, &before);
+        assert(!prepare_calls && !ntag_calls);
+        break;
+    case 23: /* Legacy app with NULL hooks still participates in the NTAG guard. */
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        clear_observations();
+        allow_ntag = false;
+        mini_app_inst_t *other = test_launcher->p_main_app_inst;
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_DESKTOP);
+        assert(test_launcher->p_main_app_inst == other && other->p_handle);
+        assert(!kills[TEST_APP_OTHER] && !prepare_calls);
+        allow_ntag = true;
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_DESKTOP);
+        assert(kills[TEST_APP_OTHER] == 1 && runs[MINI_APP_ID_DESKTOP] == 1);
+        break;
+    case 24: { /* Pending exits also suppress mutation through application events. */
+        mini_app_event_t event = {.id = 0x123};
+        mini_app_launcher_post_event(test_launcher, id, &event);
+        assert(app_events[id] == 1);
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_post_event(test_launcher, id, &event);
+        assert(app_events[id] == 1);
+        mini_app_launcher_cancel_exit(test_launcher);
+        mini_app_launcher_post_event(test_launcher, id, &event);
+        assert(app_events[id] == 2);
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_SLEEP));
+        mini_app_launcher_post_event(test_launcher, id, &event);
+        assert(app_events[id] == 2);
+        mini_app_launcher_cancel_exit(test_launcher);
+        test_launcher->exit_busy = true;
+        mini_app_launcher_post_event(test_launcher, id, &event);
+        assert(app_events[id] == 2);
+        test_launcher->exit_busy = false;
+        assert_owner_unchanged(owner, handle, &before);
+        break;
+    }
+    case 25: { /* A live status daemon can still receive independent events. */
+        mini_app_event_t event = {.id = 0x123};
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_STATUS_BAR);
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_post_event(test_launcher, MINI_APP_ID_STATUS_BAR, &event);
+        assert(app_events[MINI_APP_ID_STATUS_BAR] == 1 && !app_events[id]);
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_RESET));
+        mini_app_launcher_cancel_exit(test_launcher);
+        mini_app_launcher_kill(test_launcher, MINI_APP_ID_STATUS_BAR);
+        mini_app_launcher_post_event(test_launcher, MINI_APP_ID_STATUS_BAR, &event);
+        assert(app_events[MINI_APP_ID_STATUS_BAR] == 1);
+        assert_owner_unchanged(owner, handle, &before);
+        break;
+    }
+    default: return 2;
+    }
+    fixture_dispose();
+    printf("PASS launcher exit contract case %u\n", scenario);
+    return 0;
+}
+

@@ -1,3 +1,48 @@
+# DE3.58 and file manager 3.36.0
+
+**2.22.0-DE3.58 · DFU counter 630 · Allmiibo LCD with Packed LittleFS (PFS1)**
+
+## On the Allmiibo
+
+* **Card emulator → short middle press → Slot.** Cycling with left/right or selecting from the list now reports a failure to save the old card. In that case the old slot and its changed data remain in RAM. A failure to load the newly selected card has a separate error message.
+* **Card emulator → short middle press → Slots Settings… → Slot Num…** With slot 50 selected, shrinking to eight slots could leave slot 50 active after an error on the second storage access. The emulator now saves the previous card once. Failure before a new slot is selected preserves the previous count and slot. Configuration and settings writes can be retried.
+* **Card ID.** Pressing or holding the middle button on this information row no longer triggers a flash access.
+* **Exiting, sleeping or restarting.** The emulator pauses NFC while it saves. If saving fails the app remains open. A short middle press retries and a long middle press returns to the previous view. Choose the intended action again after a successful retry. Cancelling preserves intentionally volatile Shadow state.
+* **German menus.** Shorter labels cover firmware update, restart, wake on NFC/BLE, tag count and middle-button confirmation. **Settings → Info** lists bluecyber81 and cylin577.
+
+## In the browser
+
+1. For an optional device comparison, open **Device & diagnostics → Read all diagnostic values** in the file manager and read the boot information. Disconnect the file session before switching to DFU.
+2. Open the **DFU page** and choose an application ZIP. Step 1 shows its application counter, hardware field and allowed SoftDevice FWIDs. A boot snapshot received within the previous ten minutes enables a comparison, including a lower counter or unexpected FWID. Without a snapshot, step 1 still displays the package data.
+3. The page rejects mixed or contradictory initialization data before Bluetooth selection. The comparison does not verify LCD wiring or identify the device chosen in the subsequent Bluetooth dialog. Put the intended device in DFU mode and select it for transfer.
+
+**Device & diagnostics → Read startup timings → Compare earlier startup report** compares the current six markers with a saved startup or combined diagnostic for the same device and a comparable collection. The browser handles the saved file locally. Negative differences in storage/application time mean faster. The markers exclude the bootloader and early SDK initialization.
+
+With 1,131 synthetic files and 77 folders the host storage test took **4,802 physical reads instead of 5,181**, reducing reads by 379 and bytes read by 97,024. On 4 November the physical DE3.57 reference measured **2,450 ms for storage and 2,553 ms to first application dispatch**. A comparable measurement under DE3.58 is pending. The DFU page also compares SHA-256 of the entire BIN with the hash in its matching DAT.
+
+In the NOR model, 100 saves of one unchanged 540-byte file required zero program or erase operations. When the last payload byte changed each time, the model still recorded 2,412 program operations and 279 erases. Comparing the changed bytes incurred extra reads. [Storage measurements](docs/validation/DE3_58_STORAGE.json).
+
+## Downloads
+
+- **Flash this inner application ZIP** as downloaded. [Allmiibo_LCD_DE3_58_630_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_LCD_DE3_58_630_TESTSTAND.zip)
+- **Portable file manager** with Windows launcher. [Allmiibo_Dateimanager_3_36_0.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_Dateimanager_3_36_0.zip)
+- **Full corresponding source** including firmware, tests and build instructions. [Allmiibo_DE3_58_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_DE3_58_Quellcode.zip)
+- **Web source** including browser tests. [Allmiibo_Dateimanager_3_36_0_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_Dateimanager_3_36_0_Quellcode.zip)
+- **Complete bundle** containing the four individual archives and checksums. Extract it to find the application ZIP. [Allmiibo_DE3_58_Web3_36_0_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_DE3_58_Web3_36_0_Gesamtpaket.zip)
+
+## Compatibility and evidence
+
+On matching LCD/PFS1 devices this is an application update. It requires no formatting or collection restore. SPIFFS and ordinary upstream LittleFS need a separate migration. BL8 and the Nordic SoftDevice have their own component documentation.
+
+The built ARM image was checked for **952 figure IDs and 1,344 game mappings with three localized texts per mapping**. That comparison covers the firmware catalogue. To check a personal collection, connect the device and run the file manager's collection scan.
+
+The final sources passed 141 firmware suites and 1131 browser host tests. The built pages passed 21 production checks at the root and 21 under the GitHub Pages path. The public ARM rebuild produced the same application bytes as the signed OTA.
+
+A physical-device test of DE3.58 is pending. DE3.57 has a separate record of Bluetooth readback and the LCD advertising-symbol observation. [DE3.58 validation](docs/validation/DE3_58.json) · [DE3.57 device evidence](docs/validation/DE3_57_READBACK.json) · [BL8 and Nordic S112 evidence](docs/COMPONENTS.md) · [Build instructions](docs/BUILD_DE3_58.md).
+
+
+---
+
 # DE3.57 / file manager 3.35.1 – Bluetooth status at a glance
 
 **LCD application 2.22.0-DE3.57 / counter 629 · file manager 3.35.1 · BL8 · Nordic S112 7.3.0 · Packed LittleFS PFS1**
@@ -42,7 +87,7 @@ A subsequent user-provided phone report confirms all eight diagnostic sections i
 
 # DE3.56 and Dateimanager 3.34.0: clearer input and an image gallery
 
-**LCD application 2.22.0-DE3.56 / counter 628 Â· Dateimanager 3.34.0 Â· BL8 Â· Nordic S112 7.3.0 Â· Packed LittleFS PFS1**
+**LCD application 2.22.0-DE3.56 / counter 628 · Dateimanager 3.34.0 · BL8 · Nordic S112 7.3.0 · Packed LittleFS PFS1**
 
 This release improves LCD and browser usability. It also fixes inconsistent catalogue use after an update: device search, selection previews, file properties and local file inspection now use the same updated session catalogue as the catalogue panel.
 
@@ -54,8 +99,8 @@ This release improves LCD and browser usability. It also fixes inconsistent cata
 
 ## In the file manager
 
-1. **Figure catalogue â†’ Show images:** An optional gallery loads images only for the current page. No gallery images are requested before opt-in. A fixed-size placeholder handles unavailable images. URLs are pinned to the active catalogue revision. GitHub receives the public figure ID and the visitor's IP address, not device files.
-2. **Figure catalogue â†’ Filter collection:** After a collection scan, select present, not found, needs inspection, or unconfirmed/outdated entries. Existing green/orange/red evidence rules remain intact: a partial scan cannot establish absence, and a result retained after disconnection remains labelled as an earlier observation.
+1. **Figure catalogue → Show images:** An optional gallery loads images only for the current page. No gallery images are requested before opt-in. A fixed-size placeholder handles unavailable images. URLs are pinned to the active catalogue revision. GitHub receives the public figure ID and the visitor's IP address, not device files.
+2. **Figure catalogue → Filter collection:** After a collection scan, select present, not found, needs inspection, or unconfirmed/outdated entries. Existing green/orange/red evidence rules remain intact: a partial scan cannot establish absence, and a result retained after disconnection remains labelled as an earlier observation.
 3. **Next/Previous:** Explicit page changes reveal and focus the start of the new results. Typing does not move focus or scroll the view. Old details close on a page change; the gallery preference remains selected.
 4. **Check for new figures:** Accepted catalogue data also applies to device-wide search, selection previews, file properties and local figure-file inspection. An in-progress device search stops when the catalogue changes and can be restarted with the new data. Late results or image errors from the old revision cannot replace the current selection.
 
@@ -70,7 +115,7 @@ The bundled catalogue still contains **952 IDs**. Catalogue entries and images a
 - [Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip): complete download with instructions and checksums. **The outer archive is not flashable.**
 - `SHA256SUMS.txt`: published asset checksums.
 
-[Online file manager](https://bluecyber81.github.io/pixl.js/) Â· [Application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) Â· [Build guide](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/BUILD_DE3_56.md)
+[Online file manager](https://bluecyber81.github.io/pixl.js/) · [Application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Build guide](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/BUILD_DE3_56.md)
 
 The browser additions do not require a device update. DE3.56 is required for the new keyboard rendering and scrollbar. **BL8, Nordic S112 7.3.0 and the PFS1 storage layout are unchanged.** An existing compatible collection needs no format or restore. Old DE3.8/DE3.16/SPIFFS and ordinary upstream LittleFS still require their own migration path; this ZIP does not convert their storage. [Separate BL8/S112 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) retain their own installation requirements.
 

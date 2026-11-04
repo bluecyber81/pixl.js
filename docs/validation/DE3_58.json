@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "date": "2026-11-04",
+  "firmware": "2.22.0-DE3.58",
+  "counter": 630,
+  "web": "3.36.0",
+  "scope": "Host, ARM build and artifact verification. Physical DE3.58 readback and use are pending.",
+  "firmwareHostSuites": 141,
+  "webHostTests": 1131,
+  "productionRootTests": 21,
+  "productionPagesTests": 21,
+  "applicationBytes": 363016,
+  "applicationPartitionBytes": 372736,
+  "linkerFlashReserveBytes": 9712,
+  "staticLinkerRamGapBytes": 1936,
+  "applicationSha256": "a2ad6ea6c6a668b1a2d7614f45aee586296750d3e76c73645435d17710838efb",
+  "otaSha256": "da1f816de4981513c89d08b8ee959b931751444aa43a1ccde72f292e5082a242",
+  "checks": {
+    "unsignedRebuild": "DE3_58_PUBLIC_BUILD.json",
+    "reproducedApplicationBytesMatch": true,
+    "armCatalog": "DE3_58_CATALOG.json",
+    "physicalReadModelAndWrites": "DE3_58_STORAGE.json",
+    "s112ArchivedBytes": "S112_7_3_0_ARCHIVE_COMPARISON.json",
+    "chameleonTargetedHostSuites": 12,
+    "deviceTested": false,
+    "hostSourcesUnchanged": true,
+    "hostEvidenceSha256": "c5892fac06eafa32b1fde4fbbdbce95be0e1ee8a8c3831aeded101e07fbc1157",
+    "independentDfuSignatureCheck": {
+      "signedImages": 1,
+      "negativeControlsRejected": 3,
+      "detail": "DE3_58_OTA.json"
+    },
+    "web": {
+      "tests": 1131,
+      "passed": 1131,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "f95d34edbc04194c38aeb2e659a15fefe70272c222351002015b00ba1277e2cf"
+    },
+    "root": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "247f8df5a7be378273fb286484991652bae8c8e60bf3285e7501340abe272e75"
+    },
+    "pages": {
+      "tests": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "34e6960f5db172954c7adc5a2313cffeeaa42c05aa2b9ac762f0ff9b4b176f4b"
+    }
+  },
+  "limitations": [
+    "Linker RAM gap is not a runtime stack watermark.",
+    "Modeled NOR operations cannot be converted directly to physical device wall-clock seconds.",
+    "Catalog checks cover the linked tables, not a user collection or game NFC readback.",
+    "No inference about a second device or an installed SoftDevice from comparing archived bytes."
+  ],
+  "priorDeviceStartupReference": {
+    "date": "2026-11-04",
+    "firmware": "2.22.0-DE3.57",
+    "applicationCounter": 629,
+    "storageDoneMs": 2450,
+    "firstDispatchMs": 2553,
+    "scope": "application storage start to first dispatch; excludes bootloader and early SDK",
+    "candidateDeviceMeasurementAvailable": false
+  },
+  "otaBytes": 363619
+}

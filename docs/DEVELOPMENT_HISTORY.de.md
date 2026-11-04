@@ -1,10 +1,10 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
-Stand: **3. November 2026**. Aktueller Anwendungsstand:
-**2.22.0-DE3.57 / DFU-Zähler 629**; Dateimanager **3.35.1**.
+Stand: **4. November 2026**. Aktueller Anwendungsstand:
+**2.22.0-DE3.58 / DFU-Zähler 630**; Dateimanager **3.36.0**.
 
 Diese Übersicht beginnt mit den frühen Änderungen von **DE1 bis DE3.16** und
-erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.57**. Sie
+erklärt anschließend ausführlich die Weiterentwicklung bis **DE3.58**. Sie
 verbindet den [historischen Änderungsbericht](../CHANGELOG_DE3_SERIES.md)
 mit den inzwischen veröffentlichten Quellen und Regressionstests. Die Angaben
 „vorher“ beziehen sich auf den jeweils untersuchten älteren DE-Stand. Sie bedeuten
@@ -21,13 +21,17 @@ Bootloader und Nordic-Stack werden getrennt in
 [Bootloader- und SoftDevice-Änderungen](BOOTLOADER_SOFTDEVICE_CHANGES.md)
 erklärt. Ein Anwendungsupdate ersetzt diese Komponenten nicht.
 
+## DE3.58 und Dateimanager 3.36.0
+
+Im Kartenemulator werden Speicher- und Lesefehler getrennt angezeigt. Die App sichert beim Verkleinern der Slotanzahl den bisherigen Slot einmal. Die DFU-Seite zeigt die Paketfelder und kann sie mit einer aktuellen Bootdiagnose vergleichen. Der Hardwaretest von DE3.58 steht aus. [Bedienung und Prüfstand](../RELEASE_NOTES_DE.md).
+
 ## Neu in DE3.57 / Dateimanager 3.35.1
 
 Das kleine feste Zeichen links neben der Akkuspannung wird durch eine echte **Bluetooth-Statusanzeige** ersetzt: durchgestrichen = inaktiv, Funkwellen = sichtbar, offener Punkt = Funkverbindung ohne bereiten Datenkanal, gefüllter Punkt = Datenkanal bereit, Minus = Trennung oder Moduswechsel läuft. Die Anzeige gilt auch bei aktivierter Fernbedienung. Sie aktiviert Bluetooth nicht selbst und blinkt nicht.
 
 Der Status wird bei Änderungen aus den vorhandenen Firmwarezuständen übernommen. Es gibt keine zusätzlichen Funkabfragen, Timer oder Schreibzugriffe. Die Dateiübertragungsanzeige behält ihre eigenen Statusmeldungen. [Symbole, Bedienung und Grenzen](BLUETOOTH_STATUS_DE3_57.md).
 
-Dateimanager **3.35.1** aktualisiert das passende DFU-Paket und den erwarteten Anwendungsstand auf DE3.57. Die Diagnosefunktionen aus 3.35.0 bleiben erhalten. **BL8, Nordic S112 7.3.0, PFS1 und vorhandene Amiibos bleiben unverändert.** Die Geräteprüfung der neuen Anzeige steht noch aus; Hosttests und Buildnachweise sind getrennt davon dokumentiert.
+Dateimanager **3.35.1** aktualisiert das passende DFU-Paket und den erwarteten Anwendungsstand auf DE3.57. Die Diagnosefunktionen aus 3.35.0 bleiben erhalten. **BL8, Nordic S112 7.3.0, PFS1 und vorhandene Amiibos bleiben unverändert.** Die sichtbaren Funkwellen wurden anschließend am Allmiibo bestätigt. [DE3.57-Geräteprüfung](validation/DE3_57_READBACK.json).
 
 ## Dateimanager 3.35.0: gemeinsame Lesediagnose
 
@@ -795,4 +799,3 @@ Besitzerbeobachtung bleiben getrennte Nachweisarten.
 Siehe [Prüfzusammenfassung](validation/DE3_55.json),
 [Anwendungsbau](BUILD_DE3_55.md), [Mitarbeiten/CI](../CONTRIBUTING.md),
 [Installation](INSTALLATION.md) und [Komponenten](COMPONENTS.md).
-

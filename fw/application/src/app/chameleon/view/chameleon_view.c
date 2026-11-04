@@ -1,6 +1,4 @@
 #include "chameleon_view.h"
-#include "amiibo_helper.h"
-#include "db_header.h"
 #include "i18n/language.h"
 #include "mui_element.h"
 #include "nrf_log.h"
@@ -12,7 +10,6 @@
 static void chameleon_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
     chameleon_view_t *p_chameleon_view = p_view->user_data;
-    ntag_t *ntag = ntag_emu_get_current_tag();
     char buff[64];
 
     mui_canvas_set_font(p_canvas, MUI_FONT_NORMAL);

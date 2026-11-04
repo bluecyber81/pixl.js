@@ -49,9 +49,17 @@ export function createStartupDiagnosticReport(value, observedAt) {
       'Software markers do not prove successful storage access or visible display output.',
       'A saved report is a dated observation, not a new device readback.'] };
 }
+export function compareStartup(report, current) {
+  const before = normalizeStartupDiagnostics(report?.startup), after = normalizeStartupDiagnostics(current);
+  if (before?.phaseMask !== 63 || after?.phaseMask !== 63) return null;
+  const delta = index => after.elapsedMilliseconds[index] - before.elapsedMilliseconds[index];
+  return { storage: delta(1), total: delta(5) };
+}
 export function startupDiagnosticsText(locale = 'de_DE') {
   return locale.startsWith('de') ? {
     title: 'Startzeiten der Anwendung', read: 'Startzeiten lesen', export: 'Startbericht speichern',
+    baseline:'Früheren Startbericht vergleichen', baselineHint:'Wähle eine gespeicherte Start- oder Gesamtdiagnose desselben Geräts mit derselben Sammlung. Minus bedeutet schneller, Plus langsamer.',
+    difference:'Änderung gegenüber der gewählten Datei', storage:'Speicher', total:'Anwendungsstart', invalidBaseline:'Vollständige Startzeiten fehlen oder die JSON-Datei ist ungültig (maximal 1 MiB).',
     measuredTotal: 'Gemessener Anwendungsstart', longestInterval: 'Längster gemessener Abschnitt',
     scope: 'Gespeicherte Zeitmarken dieses Anwendungsstarts. Abruf nur per Klick; kein Neustart.',
     limits: 'Beginn ist die Speicherinitialisierung. Bootloader und früher SDK-Start sind nicht enthalten. Die Marken bestätigen weder erfolgreichen Speicherzugriff noch sichtbare Displayausgabe.',
@@ -65,6 +73,8 @@ export function startupDiagnosticsText(locale = 'de_DE') {
       launcherDone: 'App-Auswahl initialisiert', dispatchDone: 'Erste Ereignisverarbeitung beendet' }
   } : {
     title: 'Application startup times', read: 'Read startup times', export: 'Save startup report',
+    baseline:'Compare a previous startup report', baselineHint:'Choose a saved startup or full report from the same device and collection. Negative means faster, positive means slower.',
+    difference:'Change since the selected file', storage:'Storage', total:'Application startup', invalidBaseline:'Missing complete startup markers or invalid JSON file (maximum 1 MiB).',
     measuredTotal: 'Measured application startup', longestInterval: 'Longest measured interval',
     scope: 'Cached markers from this application start. Read only on click; no restart.',
     limits: 'Timing starts at storage initialization. Bootloader and early SDK startup are excluded. Markers do not prove successful storage access or visible display output.',

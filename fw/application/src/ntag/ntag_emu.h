@@ -22,6 +22,8 @@ void ntag_emu_uninit(void);
 /* Main context only. Complete old writes before changing an app's tag buffer or
  * persistence target. Reception stays paused until set_tag/set_update_cb. */
 bool ntag_emu_prepare_change(void);
+/* Cancel a successfully prepared transition without discarding dirty data. */
+void ntag_emu_cancel_change(void);
 /* A persistence callback (or the foreground BLE importer owning the current
  * tag) reports failure before returning. Dirty data then
  * survives; only another explicit transition retries, never the main loop. */

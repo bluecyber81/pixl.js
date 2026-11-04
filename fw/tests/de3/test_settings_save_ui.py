@@ -73,9 +73,9 @@ static void settings_reset_default(void*p){(void)p;resets++;}
 static void settings_scene_main_reload(void*p){(void)p;reloads++;}
 static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_SETTINGS);kills++;}
 static void *mini_app_launcher(void){return NULL;}
-static void system_reboot(void){reboots++;}
+static bool system_reboot(void){reboots++;return true;}
 static void go_sleep(void){}
-static void enter_dfu(void){dfus++;}
+static bool enter_dfu(void){dfus++;return true;}
 static void mui_scene_dispatcher_next_scene(void*p,unsigned n){(void)p;(void)n;}
 static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;(void)n;}
 static void *mui(void){return NULL;}

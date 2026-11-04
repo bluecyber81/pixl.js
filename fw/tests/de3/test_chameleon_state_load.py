@@ -47,8 +47,7 @@ class ChameleonStateTests(unittest.TestCase):
         code=Path(__file__).with_name('chameleon_state_lifecycle.c.in').read_text(encoding='utf-8')
         for name in ['app_chameleon_init_error_cb','app_chameleon_show_load_error','app_chameleon_on_run','app_chameleon_on_kill']:
             code=code.replace('@'+name+'@',definition(text,name,'void'))
-        if os.environ.get('PIXL_KILL_MUTANT') == 'late-nfc-stop':
-            code=code.replace('        tag_emulation_sense_end();\n        hal_nfc_set_nrfx_irq_enable(false);\n', '')
+        # Successful prepare/cancel and NFC freeze are covered by test_chameleon_exit_guard.
         self.compile_run(code)
 
     def test_nfc_wakeup_uses_existing_ntag_fallback_if_chameleon_init_fails(self):
@@ -140,10 +139,10 @@ int main(void){
         tag=(TAG_DIR/'tag_emulation.c').read_text(encoding='utf-8')
         helper=(SRC/'app/chameleon/port/tag_helper.c').read_text(encoding='utf-8')
         code=Path(__file__).with_name('chameleon_slot_bounds.c.in').read_text(encoding='utf-8')
-        for name,result in [('tag_emulation_prepare_slot_count','bool'),('tag_emulation_slot_find_next','uint8_t'),('tag_emulation_slot_find_prev','uint8_t')]:
+        for name,result in [('tag_emulation_change_slot','bool'),('tag_emulation_prepare_slot_count','bool'),('tag_emulation_slot_find_next','uint8_t'),('tag_emulation_slot_find_prev','uint8_t')]:
             code=code.replace('@'+name+'@',definition(tag,name,result))
         # This source uses indentation before the function definition.
-        code=code.replace('@tag_helper_set_slot_num@',definition(helper.replace('    void tag_helper_set_slot_num','void tag_helper_set_slot_num'),'tag_helper_set_slot_num','void'))
+        code=code.replace('@tag_helper_set_slot_num@',definition(helper.replace('    bool tag_helper_set_slot_num','bool tag_helper_set_slot_num'),'tag_helper_set_slot_num','bool'))
         self.compile_run(code)
 
     def test_main_entry_and_after_slot_change_require_ready_hf_data(self):
@@ -152,6 +151,45 @@ int main(void){
         for name in ['chameleon_scene_main_event_cb','chameleon_scene_main_on_enter']:
             code=code.replace('@'+name+'@',definition(text,name,'void'))
         self.compile_run(code)
+
+    def test_uid_row_short_and_long_never_save_or_navigate(self):
+        menu = (SRC/'app/chameleon/scene/chameleon_scene_menu.c').read_text(encoding='utf8')
+        menu_enum = re.search(r'typedef enum \{[^{}]+\} chameleon_menu_item_t;', menu).group()
+        uid_define = re.search(r'^#define CHAMELEON_MENU_CARD_ID .+$', menu, re.MULTILINE).group()
+        enter = definition(menu, 'chameleon_scene_menu_on_enter', 'void')
+        self.assertRegex(enter, r'_T\(APP_CHAMELEON_CARD_ID\), buff, CHAMELEON_MENU_CARD_ID')
+        self.compile_run('''
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <assert.h>
+typedef unsigned mui_list_view_event_t;
+typedef struct { void *user_data; } mui_list_view_t, mui_list_item_t;
+typedef struct { void *p_scene_dispatcher; } app_chameleon_t;
+typedef struct { unsigned chameleon_default_slot_index; } settings_data_t;
+static unsigned saves, navigations;
+static bool storage_ok;
+static bool app_chameleon_save(app_chameleon_t *a){saves++;return storage_ok;}
+static settings_data_t persisted;
+#define settings_get_data() (&persisted)
+#define tag_emulation_get_slot() 0
+#define INVALID_SLOT_INDEX 255
+#define mui_list_view_item_set_sub_text(...) ((void)0)
+#define chameleon_scene_disney_profile_confirm(...) navigations++
+#define mini_app_launcher_exit(...) navigations++
+#define mui_scene_dispatcher_previous_scene(...) navigations++
+#define mui_scene_dispatcher_next_scene(...) navigations++
+''' + uid_define + '\n' + menu_enum + definition(menu, 'chameleon_scene_menu_on_event', 'void') + '''
+int main(void){
+ app_chameleon_t app={0}; mui_list_view_t view={&app}; mui_list_item_t item={(void*)CHAMELEON_MENU_CARD_ID};
+ for(unsigned ok=0;ok<2;ok++)for(unsigned event=0;event<2;event++){
+  storage_ok=ok;chameleon_scene_menu_on_event(event,&view,&item);assert(!saves && !navigations);
+ }
+ item.user_data=(void*)CHAMELEON_MENU_BACK;storage_ok=false;chameleon_scene_menu_on_event(0,&view,&item);
+ assert(saves==1 && !navigations);storage_ok=true;chameleon_scene_menu_on_event(0,&view,&item);
+ assert(saves==2 && navigations==1);puts("PASS display-only UID and save-guarded real navigation");
+}
+''')
 
     def test_empty_type_selection_back_has_a_home_exit(self):
         text=(SRC/'app/chameleon/scene/chameleon_scene_menu_card_type.c').read_text(encoding='utf-8')
@@ -189,9 +227,9 @@ int main(void){app_chameleon_t app={0};mui_list_view_t view={&app};mui_list_item
     def test_failed_save_prevents_slot_overwrite_and_successful_retry_preserves_data(self):
         text=(TAG_DIR/'tag_emulation.c').read_text(encoding='utf-8')
         code=Path(__file__).with_name('chameleon_slot_save_retry.c.in').read_text(encoding='utf-8')
-        for name,result in [('save_data_by_tag_type','bool'),('tag_emulation_save_data','void'),('tag_emulation_sense_run','void'),
+        for name,result in [('save_data_by_tag_type','bool'),('tag_emulation_save_data','bool'),('tag_emulation_sense_run','void'),
                             ('tag_emulation_sense_end','void'),('tag_emulation_get_slot','uint8_t'),
-                            ('tag_emulation_set_slot','void'),('tag_emulation_change_slot','void'),
+                            ('tag_emulation_set_slot','void'),('tag_emulation_change_slot','bool'),
                             ('tag_emulation_prepare_slot_count','bool')]:
             code=code.replace('@'+name+'@',definition(text,name,result))
         self.compile_run(code)

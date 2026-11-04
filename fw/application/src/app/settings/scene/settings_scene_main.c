@@ -108,7 +108,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
             mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
             break;
         }
-        enter_dfu();
+        if (!enter_dfu()) mui_toast_view_show(app->p_toast_view, _T(ERR));
         break;
 
     case SETTINGS_MAIN_MENU_STORAGE:
@@ -190,7 +190,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
             mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
             break;
         }
-        system_reboot();
+        if (!system_reboot()) mui_toast_view_show(app->p_toast_view, _T(ERR));
         break;
 
     case SETTINGS_MAIN_MENU_RESET_DEFAULT: {

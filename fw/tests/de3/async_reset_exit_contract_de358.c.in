@@ -1,0 +1,351 @@
+/* Actual launcher, reset utilities, protocol handlers and complete DF core.
+ * VFS handles and BLE submission are boundary mocks. The abort test explicitly
+ * delivers disconnect cleanup; Nordic/BLE work-queue ordering is covered by
+ * test_dfu_transfer_guard.py, not emulated here. */
+/* ACTUAL_LAUNCHER_FIXTURE */
+/* RESET_BOUNDARY_FIXTURE */
+/* ACTUAL_PROTOCOL_HEADERS */
+
+#define VFS_OK 0
+#define VFS_ERR_FAIL -5
+#define RUNTIME_DIAG_BAD_REQUEST -101
+#define RUNTIME_DIAG_BAD_STATE -102
+typedef enum { VFS_DRIVE_INT, VFS_DRIVE_EXT } vfs_drive_t;
+typedef struct { unsigned opaque; } vfs_file_t;
+typedef struct { unsigned opaque; } vfs_dir_t;
+typedef struct { unsigned opaque; } vfs_obj_t;
+typedef struct {
+    bool (*mounted)(void);
+    int32_t (*close_file)(vfs_file_t *file);
+    int32_t (*close_dir)(vfs_dir_t *dir);
+} vfs_driver_t;
+
+static bool mounted = true, drive_enabled = true, handles_idle = true, import_pending;
+static int32_t finish_result, bind_result, close_result, abort_result;
+static unsigned finish_calls, bind_calls, status_calls, close_calls, close_dir_calls, abort_file_calls;
+static unsigned vfs_errors;
+static int32_t last_vfs_error;
+static bool mock_mounted(void) { return mounted; }
+static int32_t mock_close_file(vfs_file_t *file) { (void)file; ++close_calls; return close_result; }
+static int32_t mock_close_dir(vfs_dir_t *dir) { (void)dir; ++close_dir_calls; return VFS_OK; }
+static vfs_driver_t mock_vfs_driver = {mock_mounted, mock_close_file, mock_close_dir};
+static bool vfs_drive_enabled(vfs_drive_t drive) { return drive == VFS_DRIVE_EXT && drive_enabled; }
+static vfs_driver_t *vfs_get_driver(vfs_drive_t drive) {
+    assert(drive == VFS_DRIVE_EXT); return &mock_vfs_driver;
+}
+static int32_t vfs_abort_file(vfs_driver_t *driver, vfs_file_t *file) {
+    (void)file; assert(driver == &mock_vfs_driver); ++abort_file_calls; return abort_result;
+}
+static bool vfs_packed_handles_idle(void) { return handles_idle; }
+static bool vfs_packed_import_pending(void) { return import_pending; }
+static int32_t vfs_packed_finish_import(void) { ++finish_calls; return finish_result; }
+static int32_t vfs_packed_bind_import(const uint8_t *digest) {
+    assert(digest[0] == 0x5a); ++bind_calls; return bind_result;
+}
+static void vfs_packed_import_status(uint8_t drive, uint8_t *data) {
+    assert(drive == 'E'); ++status_calls; memset(data, 0x77, 40);
+}
+static void runtime_diag_vfs_error(uint8_t command, int32_t error) {
+    (void)command; ++vfs_errors; last_vfs_error = error;
+}
+
+/* ACTUAL_VFS_STATE */
+/* ACTUAL_PENDING_STATE */
+/* ACTUAL_VFS_FUNCTIONS */
+/* ACTUAL_DFU_FUNCTIONS */
+
+static df_event_handler_t transport_event;
+static df_frame_t last_reply;
+static unsigned replies, transport_aborts;
+static bool fail_send, abort_pending;
+static bool reserved_at_reply, blocked_at_reply, app_paused_at_reply, ntag_paused_at_reply;
+static unsigned app_saves_at_reply, ntag_saves_at_reply, resets_at_reply, clears_at_reply;
+
+static int32_t mock_driver_init(df_event_handler_t callback) { transport_event = callback; return 0; }
+static int32_t mock_driver_send(df_frame_t *out) {
+    ++replies; record(E_REPLY);
+    memset(&last_reply, 0, sizeof(last_reply));
+    last_reply.cmd = out->cmd; last_reply.status = out->status;
+    last_reply.chunk = out->chunk; last_reply.length = out->length;
+    assert(out->length <= sizeof(out->data));
+    memcpy(last_reply.data, out->data, out->length);
+    reserved_at_reply = system_reset_prepared();
+    blocked_at_reply = mini_app_launcher_input_blocked(test_launcher);
+    app_paused_at_reply = app_writer_paused; ntag_paused_at_reply = ntag_paused;
+    app_saves_at_reply = prepare_calls; ntag_saves_at_reply = ntag_calls;
+    resets_at_reply = reset_calls; clears_at_reply = flag_clear_calls;
+    return fail_send ? -19 : 0;
+}
+static df_driver_t mock_df_driver = {mock_driver_init, mock_driver_send};
+static df_driver_t *ble_get_df_driver(void) { return &mock_df_driver; }
+static size_t ble_nus_max_data_length(void) { return DF_MAX_LEN; }
+static void ble_nus_abort_transfer(void) {
+    ++transport_aborts; abort_pending = true; record(E_ABORT);
+}
+static void mock_read_only_handler(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, evt->df->cmd, DF_STATUS_OK);
+    df_core_send_frame(&out);
+}
+/* Narrow registration boundary: real handlers under test, unrelated handler
+ * replaced by a read-only response. The actual DF core performs all dispatch. */
+const df_cmd_entry_t df_proto_handler_info_entries[] = {
+    {DF_PROTO_CMD_INFO_VERSION_INFO, mock_read_only_handler},
+    {DF_PROTO_CMD_INFO_ENTER_DFU, df_proto_handler_info_enter_dfu},
+    {0, NULL}
+};
+const df_cmd_entry_t df_proto_handler_vfs_entries[] = {
+    {DF_PROTO_CMD_VFS_IMPORT_STATE, df_proto_handler_vfs_import_state},
+    {0, NULL}
+};
+
+/* ACTUAL_DF_CORE */
+
+static df_frame_t request;
+static void receive(void) {
+    df_event_t evt = {DF_EVENT_DATA_RECEVIED, &request};
+    assert(transport_event); transport_event(&evt);
+}
+static void request_dfu(void) {
+    memset(&request, 0, sizeof(request)); request.cmd = DF_PROTO_CMD_INFO_ENTER_DFU; receive();
+}
+static void request_import(unsigned operation) {
+    memset(&request, 0, sizeof(request));
+    request.cmd = DF_PROTO_CMD_VFS_IMPORT_STATE; request.data[0] = 'E';
+    request.data[1] = (uint8_t)operation; request.length = operation == 3 ? 34 : 2;
+    memset(request.data + 2, 0x5a, 32); receive();
+}
+static void ready(void) {
+    df_event_t evt = {DF_EVENT_DATA_TRANSMIT_READY, NULL}; transport_event(&evt);
+}
+static void disconnect_event(void) {
+    df_event_t evt = {DF_EVENT_LINK_DISCONNECTED, NULL}; transport_event(&evt);
+    abort_pending = false;
+}
+static void assert_pending_before_ack(bool dfu) {
+    assert(last_reply.status == DF_STATUS_OK);
+    assert(last_reply.cmd == (dfu ? DF_PROTO_CMD_INFO_ENTER_DFU : DF_PROTO_CMD_VFS_IMPORT_STATE));
+    assert(last_reply.length == (dfu ? 0 : 40));
+    assert(reserved_at_reply && blocked_at_reply && app_paused_at_reply && ntag_paused_at_reply);
+    assert(app_saves_at_reply == prepare_calls && ntag_saves_at_reply == ntag_calls);
+    assert(!resets_at_reply && !clears_at_reply);
+    assert(dfu_pending == dfu && packed_restart_pending != dfu);
+    assert(event_pos(E_PREPARE) < event_pos(E_REPLY));
+    assert_no_reset_side_effects();
+}
+static void assert_rejected(void) {
+    assert(last_reply.status == DF_STATUS_ERR);
+    assert(!dfu_pending && !packed_restart_pending && !system_reset_prepared());
+    assert(!reserved_at_reply && !blocked_at_reply);
+    ready();
+    assert_no_reset_side_effects();
+}
+static void assert_disarmed(void) {
+    assert(!dfu_pending && !packed_restart_pending && !system_reset_prepared());
+    assert(!mini_app_launcher_input_blocked(test_launcher));
+    assert(!app_writer_paused && !ntag_paused);
+    ready();
+    assert_no_reset_side_effects();
+}
+
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    unsigned scenario = (unsigned)strtoul(argv[1], NULL, 10);
+    reset_fixture_start(); df_core_init();
+    mini_app_inst_t *owner = test_launcher->p_main_app_inst;
+    void *handle = owner->p_handle;
+    cache_data_t cache_before = test_cache;
+    uint8_t initial_flags = gpregret;
+    bool changed_owner = false;
+    switch (scenario) {
+    case 0:
+        allow_prepare = false; request_dfu(); assert_rejected();
+        assert(prepare_calls == 1 && ntag_calls == 1);
+        break;
+    case 1:
+        allow_prepare = false; request_import(2); assert_rejected();
+        assert(prepare_calls == 1 && ntag_calls == 1 && !status_calls);
+        break;
+    case 2:
+        allow_ntag = false; ntag_clean = false; request_dfu(); assert_rejected();
+        assert(!prepare_calls && ntag_calls == 1 && !ntag_cancel_calls && ntag_paused);
+        break;
+    case 3:
+        allow_ntag = false; ntag_clean = false; request_import(2); assert_rejected();
+        assert(!prepare_calls && ntag_calls == 1 && !ntag_cancel_calls && ntag_paused);
+        break;
+    case 4: /* Malformed DFU: no save, regardless of which wire field is bad. */
+        for (unsigned field = 0; field < 3; ++field) {
+            memset(&request, 0, sizeof(request)); request.cmd = DF_PROTO_CMD_INFO_ENTER_DFU;
+            if (field == 0) request.status = 1;
+            if (field == 1) request.chunk = 1;
+            if (field == 2) request.length = 1;
+            receive(); assert_rejected();
+        }
+        assert(!prepare_calls && !ntag_calls);
+        break;
+    case 5: /* Import protocol rejects invalid shape before touching the owner. */
+        for (unsigned field = 0; field < 7; ++field) {
+            memset(&request, 0, sizeof(request)); request.cmd = DF_PROTO_CMD_VFS_IMPORT_STATE;
+            request.length = 2; request.data[0] = 'E'; request.data[1] = 2;
+            if (field == 0) request.length = 1;
+            if (field == 1) request.status = 1;
+            if (field == 2) request.chunk = 1;
+            if (field == 3) request.data[0] = 'I';
+            if (field == 4) request.data[1] = 4;
+            if (field == 5) request.length = 3;
+            if (field == 6) request.length = 34;
+            receive(); assert_rejected();
+        }
+        assert(!prepare_calls && !ntag_calls && !status_calls);
+        break;
+    case 6: /* Existing open/abandoned file ownership still forbids DFU. */
+        file_chunk_state.opened = true; file_chunk_state.abandoned = true;
+        request_dfu(); assert_rejected();
+        assert(file_chunk_state.opened && file_chunk_state.abandoned);
+        assert(!prepare_calls && !ntag_calls && !close_calls && !abort_file_calls);
+        break;
+    case 7: /* Every actual VFS busy predicate forbids import restart. */
+        for (unsigned busy = 0; busy < 4; ++busy) {
+            memset(&file_chunk_state, 0, sizeof(file_chunk_state)); dir_chunk_state.dir_closed = true;
+            if (busy == 0) file_chunk_state.opened = true;
+            if (busy == 1) file_chunk_state.abandoned = true;
+            if (busy == 2) file_chunk_state.read_pending = true;
+            if (busy == 3) dir_chunk_state.dir_closed = false;
+            request_import(2); assert_rejected();
+        }
+        assert(!prepare_calls && !ntag_calls && !status_calls);
+        break;
+    case 8: /* Mount, driver handle and import transaction preconditions stay first. */
+        mounted = false; request_import(2); assert_rejected();
+        mounted = true; handles_idle = false; request_import(2); assert_rejected();
+        handles_idle = true; import_pending = true; request_import(2); assert_rejected();
+        assert(!prepare_calls && !ntag_calls && !status_calls);
+        break;
+    case 9: /* Accepted DFU only commits at TX_READY; the ACK already held the owner. */
+        request_dfu(); assert_pending_before_ack(true); ready();
+        assert(reset_calls == 1 && flag_clear_calls == 2 && flag_set_calls == 1);
+        assert(!dfu_pending && !packed_restart_pending);
+        assert(prepare_calls == 1 && ntag_calls == 1);
+        assert_reset_cancelled(); ready(); assert(reset_calls == 1);
+        break;
+    case 10:
+        request_import(2); assert_pending_before_ack(false); ready();
+        assert(reset_calls == 1 && !flag_clear_calls && !flag_set_calls);
+        assert(!dfu_pending && !packed_restart_pending);
+        assert(prepare_calls == 1 && ntag_calls == 1);
+        assert_reset_cancelled(); ready(); assert(reset_calls == 1);
+        break;
+    case 11:
+        request_dfu(); assert_pending_before_ack(true); disconnect_event(); assert_disarmed();
+        assert(cancel_calls == 1 && ntag_cancel_calls == 1);
+        break;
+    case 12:
+        request_import(2); assert_pending_before_ack(false); disconnect_event(); assert_disarmed();
+        assert(cancel_calls == 1 && ntag_cancel_calls == 1);
+        break;
+    case 13: /* Transport error schedules actual protocol disconnect cleanup. */
+        fail_send = true; request_dfu();
+        assert(transport_aborts == 1 && abort_pending && !reset_calls);
+        assert(event_pos(E_REPLY) < event_pos(E_ABORT));
+        disconnect_event(); assert_disarmed(); assert(cancel_calls == 1);
+        break;
+    case 14:
+        fail_send = true; request_import(2);
+        assert(transport_aborts == 1 && abort_pending && !reset_calls);
+        disconnect_event(); assert_disarmed(); assert(cancel_calls == 1);
+        break;
+    case 15: /* An unrelated normal command disarms the old DFU before dispatch. */
+        request_dfu(); memset(&request, 0, sizeof(request));
+        request.cmd = DF_PROTO_CMD_INFO_VERSION_INFO; receive();
+        assert(last_reply.status == DF_STATUS_OK && !reserved_at_reply);
+        assert_disarmed(); assert(cancel_calls == 1 && prepare_calls == 1);
+        break;
+    case 16: /* Even an unknown replacement cannot inherit a pending restart. */
+        request_import(2); memset(&request, 0, sizeof(request)); request.cmd = 0xee; receive();
+        assert(last_reply.status == 255 && !reserved_at_reply);
+        assert_disarmed(); assert(cancel_calls == 1 && prepare_calls == 1);
+        break;
+    case 17: { /* DFU -> import must perform only the newly requested normal reset. */
+        request_dfu(); request_import(2); assert_pending_before_ack(false);
+        assert(prepare_calls == 2 && cancel_calls == 1);
+        df_event_t stale = {DF_EVENT_DATA_TRANSMIT_READY, NULL};
+        df_proto_handler_info_enter_dfu(&stale);
+        assert(!reset_calls && system_reset_prepared() && packed_restart_pending);
+        ready(); assert(reset_calls == 1 && !flag_clear_calls && !flag_set_calls);
+        assert(cancel_calls == 2 && prepare_calls == 2);
+        break;
+    }
+    case 18: { /* Import -> DFU must consume only DFU, not the old import intent. */
+        request_import(2); request_dfu(); assert_pending_before_ack(true);
+        assert(prepare_calls == 2 && cancel_calls == 1);
+        df_event_t stale = {DF_EVENT_DATA_TRANSMIT_READY, NULL};
+        df_proto_handler_vfs_import_state(&stale);
+        assert(!reset_calls && system_reset_prepared() && dfu_pending);
+        ready(); assert(reset_calls == 1 && flag_set_calls == 1 && flag_clear_calls == 2);
+        assert(cancel_calls == 2 && prepare_calls == 2);
+        break;
+    }
+    case 19: /* Replacement request may fail its new save, without reviving old OK. */
+        request_dfu(); allow_prepare = false; request_dfu(); assert_rejected();
+        assert(prepare_calls == 2 && cancel_calls == 1 && ntag_cancel_calls == 2);
+        break;
+    case 20:
+        request_import(2); request.data[1] = 4; receive(); assert_rejected();
+        assert(prepare_calls == 1 && cancel_calls == 1);
+        break;
+    case 21: { /* Ready cannot bind an old reservation to a changed handle. */
+        request_dfu(); uint8_t other_handle[8] = {0}; owner->p_handle = other_handle;
+        ready(); assert(!dfu_pending && !system_reset_prepared() && !reset_calls);
+        assert(!cancel_calls && !mini_app_launcher_input_blocked(test_launcher));
+        assert(owner->p_handle == other_handle);
+        owner->p_handle = handle;
+        break;
+    }
+    case 22: /* An explicit cancellation permits switch; old ACK cannot reset its successor. */
+        request_import(2); system_cancel_reset();
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER); changed_owner = true;
+        assert(test_launcher->p_main_app_inst->p_app->id == TEST_APP_OTHER);
+        unsigned saves = prepare_calls;
+        ready(); assert(!packed_restart_pending && !reset_calls && prepare_calls == saves);
+        assert(test_launcher->p_main_app_inst->p_app->id == TEST_APP_OTHER);
+        assert(!mini_app_launcher_input_blocked(test_launcher));
+        break;
+    case 23: /* Query, finish and bind retain their non-reset semantics. */
+        request_import(0); assert(last_reply.status == DF_STATUS_OK && !reserved_at_reply);
+        request_import(1); assert(last_reply.status == DF_STATUS_OK && !reserved_at_reply);
+        request_import(3); assert(last_reply.status == DF_STATUS_OK && !reserved_at_reply);
+        ready(); assert_no_reset_side_effects();
+        assert(!prepare_calls && !ntag_calls && status_calls == 3 && finish_calls == 1 && bind_calls == 1);
+        break;
+    case 24:
+        finish_result = VFS_ERR_FAIL; request_import(1); assert_rejected();
+        bind_result = VFS_ERR_FAIL; request_import(3); assert_rejected();
+        assert(!prepare_calls && !ntag_calls && !status_calls && finish_calls == 1 && bind_calls == 1);
+        break;
+    case 25: /* Pending helpers and disconnect cleanup are idempotent. */
+        request_dfu(); df_proto_info_cancel_pending(); df_proto_info_cancel_pending();
+        df_proto_vfs_cancel_restart(); disconnect_event(); assert_disarmed();
+        assert(prepare_calls == 1 && cancel_calls == 1 && ntag_cancel_calls == 1);
+        break;
+    case 26: /* Neither request may steal a separately prepared sleep. */
+        assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_SLEEP));
+        request_dfu(); assert(last_reply.status == DF_STATUS_ERR && !dfu_pending);
+        request_import(2); assert(last_reply.status == DF_STATUS_ERR && !packed_restart_pending);
+        ready(); disconnect_event();
+        assert(mini_app_launcher_exit_prepared(test_launcher, MINI_APP_EXIT_SLEEP));
+        assert(prepare_calls == 1 && ntag_calls == 1 && !cancel_calls);
+        assert_no_reset_side_effects();
+        break;
+    default:
+        assert(!"unknown scenario");
+    }
+    if (!changed_owner) assert_owner_unchanged(owner, handle, &cache_before);
+    if (!flag_clear_calls) assert(gpregret == initial_flags);
+    assert(!ble_stops && !ble_remote_stops && !ble_pending);
+    assert(!cache_saves && !settings_saves && !ui_deinits && !flash_sleeps);
+    fixture_dispose();
+    puts("PASS actual asynchronous reset/DFU protocol ownership");
+    return 0;
+}

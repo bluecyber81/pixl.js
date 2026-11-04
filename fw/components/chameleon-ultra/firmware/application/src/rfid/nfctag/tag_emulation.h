@@ -80,7 +80,13 @@ bool tag_emulation_init(void);
 bool tag_emulation_active_data_ready(void);
 bool tag_emulation_prepare_slot_count(uint8_t count);
 //Some of the data stored in RAM can be saved to Flash through this interface
-void tag_emulation_save(void);
+bool tag_emulation_save_data(void);
+bool tag_emulation_save(void);
+/* Caller freezes NFC first and keeps it frozen until cleanup/cancel. Save the
+ * current card, then persist the default selection without loading over RAM.
+ * On success, invalid/disabled defaults become UINT8_MAX; caller must persist
+ * that setting and restore it if settings_save fails. Failure keeps RAM intact. */
+bool tag_emulation_save_for_exit(uint8_t *default_slot);
 /* Force one commit after the caller's exact changed-field comparison. */
 bool tag_emulation_save_active_data(void);
 
@@ -110,7 +116,8 @@ void tag_emulation_set_slot(uint8_t index);
 // Get the card slot currently used
 uint8_t tag_emulation_get_slot(void);
 // Switch the card slot to control whether the passing parameter control is closed during the switching period to listen to
-void tag_emulation_change_slot(uint8_t index, bool sense_disable);
+/* False preserves the old selection. A new selection also needs a ready card before use. */
+bool tag_emulation_change_slot(uint8_t index, bool sense_disable);
 // Get the card slot to enable the state
 bool tag_emulation_slot_is_enabled(uint8_t slot, tag_sense_type_t sense_type);
 // Set the card slot to enable

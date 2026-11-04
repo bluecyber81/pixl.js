@@ -65,6 +65,8 @@ static void info_handler(df_event_t *e) {
     if(e->type==DF_EVENT_DATA_RECEVIED) { df_frame_t o={.cmd=1}; df_core_send_frame(&o); }
 }
 const df_cmd_entry_t df_proto_handler_info_entries[]={{1,info_handler},{0,NULL}};
+/* INFO is a deliberate mock in this VFS-only suite. */
+void df_proto_info_cancel_pending(void) {}
 
 static void reset(void) {
     close_result=0; df_proto_vfs_cleanup();

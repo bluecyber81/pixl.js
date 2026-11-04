@@ -10,7 +10,11 @@ size_t df_core_max_payload(void){return DF_PAYLOAD_LEN;}
 bool vfs_drive_enabled(vfs_drive_t drive){return drive==VFS_DRIVE_EXT;}
 vfs_driver_t *vfs_get_driver(vfs_drive_t drive){REQUIRE(drive==VFS_DRIVE_EXT);return driver();}
 void ble_disable(void){}
-void system_reboot(void){}
+static bool reset_reserved;
+bool system_prepare_reset(void){reset_reserved=true;return true;}
+bool system_reset_prepared(void){return reset_reserved;}
+void system_cancel_reset(void){reset_reserved=false;}
+bool system_reboot(void){reset_reserved=false;return true;}
 int32_t vfs_packed_layout(uint8_t drive,uint8_t out[72]){(void)drive;(void)out;return VFS_ERR_UNSUPT;}
 void vfs_packed_import_status(uint8_t drive,uint8_t out[40]){(void)drive;memset(out,0,40);}
 static uint8_t replacement_meta[128];

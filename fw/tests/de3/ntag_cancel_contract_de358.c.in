@@ -1,0 +1,43 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+static unsigned critical_depth, critical_enters, callback_calls;
+#define CRITICAL_REGION_ENTER() do { assert(critical_depth == 0); ++critical_depth; ++critical_enters;
+#define CRITICAL_REGION_EXIT() assert(critical_depth == 1); --critical_depth; } while (0)
+static struct {
+    bool busy, dirty, save_failed, paused, pending;
+    void (*update_cb)(void);
+    void (*action)(void);
+    uint32_t generation;
+} ntag_emu;
+static void no_callback(void) { ++callback_calls; }
+
+/* ACTUAL_NTAG_CANCEL */
+
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    unsigned initial_pause = (unsigned)strtoul(argv[1], NULL, 10);
+    assert(initial_pause <= 1);
+    for (unsigned state = 0; state < 16; ++state) {
+        memset(&ntag_emu, 0, sizeof(ntag_emu));
+        ntag_emu.busy = !!(state & 1); ntag_emu.dirty = !!(state & 2);
+        ntag_emu.save_failed = !!(state & 4); ntag_emu.update_cb = (state & 8) ? no_callback : NULL;
+        ntag_emu.paused = initial_pause;
+        ntag_emu.pending = true; ntag_emu.action = no_callback; ntag_emu.generation = 0x12345678;
+        unsigned before_enters = critical_enters;
+        ntag_emu_cancel_change();
+        bool expected = (state & 7) ? initial_pause : !(state & 8);
+        assert(ntag_emu.paused == expected);
+        assert(ntag_emu.busy == !!(state & 1) && ntag_emu.dirty == !!(state & 2));
+        assert(ntag_emu.save_failed == !!(state & 4));
+        assert(ntag_emu.pending && ntag_emu.action == no_callback && ntag_emu.generation == 0x12345678);
+        assert(ntag_emu.update_cb == ((state & 8) ? no_callback : NULL));
+        assert(!callback_calls && !critical_depth && critical_enters == before_enters + 1);
+    }
+    printf("PASS NTAG cancel matrix from paused=%u:16 states\n", initial_pause);
+    return 0;
+}
+

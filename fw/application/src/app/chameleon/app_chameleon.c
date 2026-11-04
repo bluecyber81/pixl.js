@@ -15,6 +15,89 @@ static void app_chameleon_on_run(mini_app_inst_t *p_app_inst);
 static void app_chameleon_on_kill(mini_app_inst_t *p_app_inst);
 static void app_chameleon_on_event(mini_app_inst_t *p_app_inst, mini_app_event_t *p_event);
 
+static void app_chameleon_pause(app_chameleon_t *app) {
+    if (app->exit_paused) return;
+    app->exit_paused = true;
+    app->exit_resume_nfc = mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) == CHAMELEON_SCENE_MAIN;
+    app->exit_view_id = VIEW_NONE;
+    mui_view_dispatcher_t *views = app->p_view_dispatcher;
+    for (uint8_t i = 0; i < views->view_count; i++) {
+        if (views->views[i].view == views->p_active_view) app->exit_view_id = views->views[i].id;
+    }
+    tag_emulation_sense_end();
+    hal_nfc_set_nrfx_irq_enable(false);
+}
+
+static void app_chameleon_resume(app_chameleon_t *app) {
+    app->exit_prepared = false;
+    if (!app->exit_paused) return;
+    app->exit_paused = false;
+    if (app->p_view_dispatcher->p_active_view == &app->save_error_view) {
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, app->exit_view_id);
+    }
+    if (app->exit_resume_nfc && tag_emulation_active_data_ready()) {
+        hal_nfc_set_nrfx_irq_enable(true);
+        tag_emulation_sense_run();
+    }
+    mui_update(mui());
+}
+
+void app_chameleon_show_save_error(app_chameleon_t *app) {
+    app_chameleon_pause(app);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
+}
+
+bool app_chameleon_save(app_chameleon_t *app) {
+    if (!app || app->exit_prepared) return false;
+    if (!app->initialized) return true;
+    app_chameleon_pause(app);
+    if (!tag_emulation_save() || settings_save() != NRF_SUCCESS) {
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
+        return false;
+    }
+    app_chameleon_resume(app);
+    return true;
+}
+
+static void app_chameleon_save_error_draw(mui_view_t *view, mui_canvas_t *canvas) {
+    (void)view;
+    const char *lines[] = {_T(DE3_SAVE_FAILED), _T(DE3_SAVE_RAM_ONLY), _T(DE3_SAVE_RETRY), _T(DE3_BLE_BACK)};
+    mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
+    mui_canvas_set_draw_color(canvas, 1);
+    for (uint8_t i = 0; i < 4; i++) mui_canvas_draw_utf8(canvas, 0, 12 + 15 * i, lines[i]);
+}
+
+static void app_chameleon_save_error_input(mui_view_t *view, mui_input_event_t *event) {
+    app_chameleon_t *app = view->user_data;
+    if (app->exit_prepared || event->key != INPUT_KEY_CENTER) return;
+    if (event->type == INPUT_TYPE_SHORT) (void)app_chameleon_save(app);
+    else if (event->type == INPUT_TYPE_LONG) app_chameleon_resume(app);
+}
+
+static bool app_chameleon_prepare_exit(mini_app_inst_t *inst, mini_app_exit_reason_t reason) {
+    (void)reason;
+    app_chameleon_t *app = inst->p_handle;
+    if (!app || !app->initialized || app->exit_prepared) return true;
+    app_chameleon_pause(app);
+    settings_data_t *settings = settings_get_data();
+    uint8_t default_slot = settings->chameleon_default_slot_index;
+    if (!tag_emulation_save_for_exit(&settings->chameleon_default_slot_index) ||
+        settings_save() != NRF_SUCCESS) {
+        settings->chameleon_default_slot_index = default_slot;
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
+        return false;
+    }
+    /* Launcher blocks all UI input while its exit reservation is held.
+     * NFC remains stopped until cleanup or the matching cancellation. */
+    app->exit_prepared = true;
+    return true;
+}
+
+static void app_chameleon_cancel_exit(mini_app_inst_t *inst) {
+    app_chameleon_t *app = inst->p_handle;
+    if (app) app_chameleon_resume(app);
+}
+
 static void app_chameleon_init_error_cb(mui_msg_box_event_t event, mui_msg_box_t *box) {
     (void)box;
     if (event == MUI_MSG_BOX_EVENT_SELECT_CENTER) mini_app_launcher_exit(mini_app_launcher());
@@ -57,6 +140,11 @@ void app_chameleon_on_run(mini_app_inst_t *p_app_inst) {
     p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
     if (!p_app_handle->p_view_dispatcher_toast) goto startup_failed;
     p_app_inst->p_handle = p_app_handle;
+    p_app_handle->save_error_view.user_data = p_app_handle;
+    p_app_handle->save_error_view.draw_cb = app_chameleon_save_error_draw;
+    p_app_handle->save_error_view.input_cb = app_chameleon_save_error_input;
+    mui_view_dispatcher_add_view(p_app_handle->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR,
+                                 &p_app_handle->save_error_view);
 
 
 
@@ -128,22 +216,8 @@ void app_chameleon_on_kill(mini_app_inst_t *p_app_inst) {
         p_retain->cycle_mode_index = chameleon_view_get_index(p_app_handle->p_chameleon_view);
     }
 
-    if (p_app_handle->initialized) {
-        /* Launcher/shutdown may kill the active emulation scene directly.
-         * Freeze NFC writers before comparing or persisting their buffer. */
-        tag_emulation_sense_end();
-        hal_nfc_set_nrfx_irq_enable(false);
-        settings_data_t *settings = settings_get_data();
-        if (tag_helper_valid_default_slot() &&
-            tag_emulation_slot_is_enabled(settings->chameleon_default_slot_index, TAG_SENSE_HF)) {
-            tag_emulation_change_slot(settings->chameleon_default_slot_index, false);
-        } else {
-            settings->chameleon_default_slot_index = INVALID_SLOT_INDEX;
-        }
-        tag_emulation_save();
-        settings_save();
-    }
-
+    /* Persistence and NFC quiescence belong to prepare_exit_cb. No writes
+     * may be hidden in cleanup after the launcher has accepted the exit. */
     mui_scene_dispatcher_exit(p_app_handle->p_scene_dispatcher);
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
 
@@ -175,4 +249,6 @@ mini_app_t app_chameleon_info = {.id = MINI_APP_ID_CHAMELEON,
                                  .icon_32x32 = &app_card_emulator_32x32,
                                  .run_cb = app_chameleon_on_run,
                                  .kill_cb = app_chameleon_on_kill,
-                                 .on_event_cb = app_chameleon_on_event};
+                                 .on_event_cb = app_chameleon_on_event,
+                                 .prepare_exit_cb = app_chameleon_prepare_exit,
+                                 .cancel_exit_cb = app_chameleon_cancel_exit};

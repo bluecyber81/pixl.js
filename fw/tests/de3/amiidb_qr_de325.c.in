@@ -15,8 +15,13 @@ static struct { bool anim_enabled,qrcode_enabled; } settings={true,true};
 static bool chinese,linked=true;
 static unsigned animation_starts,animation_stops,menu_events,desc_events,slot_events,frames,qr_checks;
 static db_amiibo_t entry={"AAA","AAA"};
-static db_link_t link={"Linked description with many useful details, enough text to scroll across multiple lines and pages. More information follows.",
+static db_notes_t descriptions={"Linked description with many useful details, enough text to scroll across multiple lines and pages. More information follows.",
                        "A different Chinese-language linked description with many details and enough text to cross several pages. More follows here."};
+#ifdef LEGACY_INLINE_NOTES
+#define link descriptions
+#else
+static db_link_t link={&descriptions};
+#endif
 extern const char *const lang_de_DE[];
 const char *getLangString(int id) { return lang_de_DE[id]; }
 static bool isChineseLanguage(void) { return chinese; }
@@ -78,7 +83,7 @@ static void qr_matches(const uint8_t *actual,const uint8_t *reference) {
         if(x<95||x>=124||y<29||y>=58)CHECK(!pixel(actual,x,y));
 }
 static const char *description(ntag_t *tag) {
-    return tag->notes[0] ? (const char *)tag->notes : !linked ? "" : chinese ? link.note_cn : link.note_en;
+    return tag->notes[0] ? (const char *)tag->notes : !linked ? "" : chinese ? descriptions.cn : descriptions.en;
 }
 static void expected_description(mui_canvas_t *c,ntag_t *tag,unsigned width,unsigned offset) {
     memset(c->fb->tile_buf_ptr,0,1024);mui_canvas_set_draw_color(c,1);
@@ -125,8 +130,8 @@ int main(int argc,char **argv) {
     /* Own notes take precedence even when linked metadata changes. */
     chinese=false;linked=true;snprintf((char *)tag.notes,sizeof(tag.notes),"Own notes remain authoritative for this figure.");
     amiibo_view_reset_desc_scroll(&v);draw(&canvas,&view);memcpy(before,buffer,1024);
-    const char *saved_link=link.note_en;link.note_en="Different linked metadata must not replace own notes.";
-    draw(&canvas,&view);CHECK(!memcmp(before,buffer,1024));link.note_en=saved_link;
+    const char *saved_link=descriptions.en;descriptions.en="Different linked metadata must not replace own notes.";
+    draw(&canvas,&view);CHECK(!memcmp(before,buffer,1024));descriptions.en=saved_link;
     /* Without QR, the existing full-width description and scrollbar remain. */
     tag.notes[0]=0;settings.qrcode_enabled=false;amiibo_view_reset_desc_scroll(&v);draw(&canvas,&view);
     expected_description(&ec,&tag,128,0);same_region(buffer,expected,0,24,128,40);

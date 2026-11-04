@@ -230,9 +230,9 @@ class BuildEvidenceTests(unittest.TestCase):
             evidence.verify_host_tests(self.fw, self.host(), self.manifest)
 
     def test_wrong_version_or_counter_rejected(self):
-        self.assertEqual(evidence.VERSION, '2.22.0-DE3.57')
-        self.assertEqual(evidence.COUNTER, 629)
-        for field, value in [('version', '2.22.0-DE3.48'), ('counter', 620), ('version', '2.22.0-DE3.39'), ('counter', 611), ('version', '2.22.0-DE3.38'), ('counter', 610),
+        self.assertEqual(evidence.VERSION, '2.22.0-DE3.58')
+        self.assertEqual(evidence.COUNTER, 630)
+        for field, value in [('version', '2.22.0-DE3.57'), ('counter', 629), ('version', '2.22.0-DE3.48'), ('counter', 620), ('version', '2.22.0-DE3.39'), ('counter', 611), ('version', '2.22.0-DE3.38'), ('counter', 610),
                              ('version', '2.21.0-DE3'), ('version', '2.21.0-DE3.2'),
                              ('version', '2.21.0-DE3.3'), ('version', '2.21.0-DE3.4'), ('version', '2.21.0-DE3.5'), ('version', '2.21.0-DE3.6'), ('version', '2.21.0-DE3.17'), ('version', '2.21.0-DE3.190'), ('version', '2.21.0-DE3.20'), ('version', '2.21.0-DE3.21'), ('version', '2.21.0-DE3.23'), ('counter', 577), ('counter', 579), ('counter', 580), ('counter', 581), ('counter', 582), ('counter', 583), ('counter', 585), ('counter', 586), ('counter', 587), ('counter', 589), ('version', '2.21.0-DE3.25'), ('counter', 590), ('counter', 591), ('version', '2.21.0-DE3.26'), ('version', '2.21.0-DE3.27'), ('version', '2.21.0-DE3.28'), ('version', '2.21.0-DE3.30'), ('counter', 596), ('counter', 599), ('counter', 592), ('counter', 593), ('counter', 594), ('counter', 595), ('counter', 597), ('counter', 604), ('version', '2.22.0-DE3.32')]:
             manifest = dict(self.manifest, **{field: value})
@@ -246,14 +246,14 @@ class BuildEvidenceTests(unittest.TestCase):
             self.verify()
 
     def test_exact_terminated_version_not_prefix(self):
-        expected = '2.22.0-DE3.57'
+        expected = '2.22.0-DE3.58'
         current = expected.encode('ascii')
         header = f'#define VERSION "{expected}"\n'
         evidence.verify_version_marker(b'prefix ' + current + b'\0 trailer', header)
         malformed = [b'2.21.0-DE3\0', current, current + b'0\0']
         other_versions = [b'2.21.0-DE3'] + [f'2.21.0-DE3.{number}'.encode('ascii')
                                           for number in range(1, 30)]
-        other_versions += [b'2.22.0-DE3.29', b'2.22.0-DE3.33', b'2.22.0-DE3.34', b'2.22.0-DE3.35', b'2.22.0-DE3.36', b'2.22.0-DE3.39', b'2.22.0-DE3.38-PREP', b'2.21.0-DE3.30', b'2.21.0-DE3.290', b'2.21.0-DE3.291']
+        other_versions += [b'2.22.0-DE3.57', b'2.22.0-DE3.58-CF1', b'2.22.0-DE3.29', b'2.22.0-DE3.33', b'2.22.0-DE3.34', b'2.22.0-DE3.35', b'2.22.0-DE3.36', b'2.22.0-DE3.39', b'2.22.0-DE3.38-PREP', b'2.21.0-DE3.30', b'2.21.0-DE3.290', b'2.21.0-DE3.291']
         malformed += [current + b'\0 ' + other + b'\0' for other in other_versions]
         malformed += [current + b'\0 2.22.0-DE3.48\0', current + b'\0 2.22.0-DE3.43\0', current + b'\0 2.22.0-DE3.57-PREP\0']
         for payload in malformed:

@@ -109,8 +109,9 @@ class DatabaseRefreshTests(unittest.TestCase):
         generated = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
         self.assertIn('{0xabcdef01, 0x23456789, "New \\"figure\\" \\\\ test\\nnext line", ""}', generated)
         self.assertNotIn('"None"', generated)
-        self.assertIn('{255, 1, "", "", ""}',
-                      (self.generated / "db_link.c").read_text(encoding="utf8"))
+        links = (self.generated / "db_link.c").read_text(encoding="utf8")
+        self.assertIn('{"", "", ""}', links)
+        self.assertIn('{255, 1, &notes[0]}', links)
         first = {p.name: p.read_bytes() for p in self.generated.glob("*.c")}
         self.assertEqual(self.execute(["--refresh"], body)[0], 0)
         self.assertEqual(first, {p.name: p.read_bytes() for p in self.generated.glob("*.c")})
@@ -170,9 +171,9 @@ class DatabaseRefreshTests(unittest.TestCase):
                         'return strcmp(amiibo_list[1].name_en, expected) || '
                         'strcmp(game_list[0].name_en, expected) || '
                         'strcmp(game_list[0].name_cn, expected) || '
-                        'strcmp(link_list[0].note_en, expected) || '
-                        'strcmp(link_list[0].note_cn, expected) || '
-                        'strcmp(link_list[0].note_it, expected); }\n', encoding="utf8")
+                        'strcmp(link_list[0].notes->en, expected) || '
+                        'strcmp(link_list[0].notes->cn, expected) || '
+                        'strcmp(link_list[0].notes->it, expected); }\n', encoding="utf8")
         compiler = shutil.which("gcc")
         self.assertIsNotNone(compiler, "Existing host C compiler is required")
         executable = self.generated / ("test.exe" if os.name == "nt" else "test")
@@ -219,7 +220,8 @@ class DatabaseRefreshTests(unittest.TestCase):
                 data = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
                 links = (self.generated / "db_link.c").read_text(encoding="utf8")
                 self.assertIn('"Local alias", "Local translation"', data)
-                self.assertIn('{1, 0, "Note", "", ""}', links)
+                self.assertIn('{"Note", "", ""}', links)
+                self.assertIn('{1, 0, &notes[0]}', links)
                 self.assertNotIn("{255,", links)
                 with (self.project / "data/amiidb_amiibo.csv").open(encoding="utf8", newline="") as stream:
                     self.assertEqual(len(list(csv.reader(stream))), 1)

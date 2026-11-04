@@ -1,6 +1,15 @@
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { deploymentPath } from './deployment-path.js';
 
+// Carry only firmware counters and FWID across the transition into DFU.
+// The URL fragment isn't sent to the server and contains no device identity.
+export function dfuReference(boot, time = Date.now()) {
+  if (!boot?.settingsCrcValid || !boot.softDeviceValid) return '';
+  const values = [boot.applicationCounter, boot.bootloaderCounter, boot.softDeviceFwid];
+  if (!values.every(n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff) || values[2] > 0xffff) return '';
+  return '#' + new URLSearchParams({ read: time, app: values[0], bl: values[1], sd: values[2] });
+}
+
 // Rendering uses only the bundled JSON, never URL parameters or external feeds.
 // The independent DFU loader validates the complete catalogue and actual bytes.
 export function packagePresentation(entry, session = {}, boot = null) {
@@ -12,12 +21,12 @@ export function packagePresentation(entry, session = {}, boot = null) {
   const relation=match&&target?[1,2,3,...(match[4]?[4]:[])].map(i=>Number(match[i])-Number(target[i])).find(n=>n!==0)||0:0;
   const newer=relation>0||(diagnostic?.settingsCrcValid&&diagnostic.applicationCounter>entry.counter);
   return {newer:Boolean(newer),installed,
-    downloadUrl:deploymentPath(`firmware/${entry.file}`),dfuUrl:deploymentPath('dfu/web.html')};
+    downloadUrl:deploymentPath(`firmware/${entry.file}`),dfuUrl:deploymentPath('dfu/web.html') + (session?.dfuReference || '')};
 }
 
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
-    source:'Quellcode der mitgelieferten Firmware DE3.57',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    source:'Quellcode der mitgelieferten Firmware DE3.58',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
     scope:'Für unser Allmiibo LCD mit Packed LittleFS (PFS1), BL8 und S112 7.3.0. Nur die Anwendung; keine Speicherumstellung.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Die DFU-Seite prüft die Paketidentität mit SHA-256. Signatur und Versionszähler prüft der Bootloader. Übertragen startet erst nach deiner Geräteauswahl.',
@@ -25,7 +34,7 @@ export function firmwarePackageText(locale='de_DE') {
     newer:'Die gelesene Anwendung ist neuer als dieses Paket. Ein Downgrade wird nicht angeboten.',
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
-    source:'Source code for bundled firmware DE3.57',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    source:'Source code for bundled firmware DE3.58',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
     scope:'For our Allmiibo LCD with Packed LittleFS (PFS1), BL8 and S112 7.3.0. Application only; no storage migration.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The DFU page verifies package identity with SHA-256. The bootloader checks the signature and version counter. Transfer begins only after you select a device.',

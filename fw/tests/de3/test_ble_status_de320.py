@@ -12,6 +12,7 @@ import shlex
 import subprocess
 import tempfile
 import unittest
+import hashlib
 
 FW = Path(__file__).resolve().parents[2]
 SRC = FW / "application/src"
@@ -349,9 +350,11 @@ class StatusTests(unittest.TestCase):
         self.assertNotEqual(wrong, self.ble)
         self.compile_run(("disable",), ble=wrong, failure=True)
 
-    def test_previous_static_view_fails_new_inactive_behavior(self):
-        baseline = FW.parents[1] / "allmiibo_de319_20261023/fw/application/src/app/ble/view/ble_status_view.c"
-        self.assertTrue(baseline.is_file(), "DE3.19 baseline required")
+    def test_published_static_view_fails_new_inactive_behavior(self):
+        # Published static DE3.16 view, commit ec9c7f8ebd06ba449c0f8811c5c3b6dcfdcaa7bd.
+        # Replaces the unavailable, untracked local DE3.19 directory dependency.
+        baseline = Path(__file__).with_name("ble_status_de316.c.in")
+        self.assertEqual(hashlib.sha256(baseline.read_bytes()).hexdigest(), "9991c7e2be9088ce0afb000e1c22261ce19d3266e3f5cf3a17dc7cbbc1937bdf")
         self.compile_run(("ui",), view=baseline.read_text(encoding="utf-8"), failure=True)
 
     def test_exact_font_fits_lcd_and_locales_fallback(self):

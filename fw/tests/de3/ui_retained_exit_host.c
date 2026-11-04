@@ -11,8 +11,6 @@
 #define MUI_LAYER_TOAST 1
 #define AMIIBO_SCENE_AMIIBO_DETAIL 3
 #define AMIIBO_SCENE_FILE_BROWSER 4
-#define TAG_SENSE_HF 1
-#define INVALID_SLOT_INDEX 255
 typedef struct { unsigned char data[2048]; } ntag_t;
 typedef struct {void *p_handle; unsigned char *p_retain_data;} mini_app_inst_t;
 typedef struct {bool hibernate_enabled;} mini_app_t;
@@ -39,9 +37,6 @@ typedef app_amiibo_t app_chameleon_t;
 mini_app_t app_amiibo_info={true},app_amiidb_info={false};
 static struct {ntag_t ntag;} cache;
 #define cache_get_data() (&cache)
-typedef struct {uint8_t chameleon_default_slot_index;} settings_data_t;
-static settings_data_t mock_settings={255};
-#define settings_get_data() (&mock_settings)
 #define string_get_cstr(x) (x)
 #define string_clear(x) ((void)(x))
 #define string_array_clear(x) ((void)(x))
@@ -60,13 +55,8 @@ static unsigned mui_list_view_get_focus(void*p){(void)p;list_focus_reads++;retur
 static unsigned mui_list_view_get_scroll_offset(void*p){(void)p;return 26;}
 static unsigned amiibolink_view_get_index(void*p){(void)p;return 5;}
 static unsigned chameleon_view_get_index(void*p){(void)p;return 6;}
-static bool tag_helper_valid_default_slot(void){return false;}
-static bool tag_emulation_slot_is_enabled(unsigned i,int s){(void)i;(void)s;return false;}
-static void tag_emulation_change_slot(unsigned i,bool s){(void)i;(void)s;}
-static void tag_emulation_sense_end(void){assert(!freed&&!exited);}
-static void hal_nfc_set_nrfx_irq_enable(bool enabled){assert(!enabled&&!freed&&!exited);}
-static void tag_emulation_save(void){}
-static void settings_save(void){}
+/* Chameleon persistence and NFC quiescence belong to prepare_exit, covered by
+ * test_chameleon_exit_guard.py. This fixture exercises cleanup/retention only. */
 static void mui_view_dispatcher_detach(void*p,int l){(void)p;(void)l;}
 static void noop(void*p){(void)p;assert(exited==1 && freed==0);}
 static void scene_exit(void*p){(void)p;assert(exited==0 && freed==0);exited++;}

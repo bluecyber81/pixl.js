@@ -491,6 +491,13 @@ bool ntag_emu_prepare_change(void) {
     return !ntag_emu.save_failed && !ntag_emu.dirty;
 }
 
+void ntag_emu_cancel_change(void) {
+    CRITICAL_REGION_ENTER();
+    if (!ntag_emu.busy && !ntag_emu.dirty && !ntag_emu.save_failed)
+        ntag_emu.paused = ntag_emu.update_cb == NULL;
+    CRITICAL_REGION_EXIT();
+}
+
 uint32_t ntag_emu_get_generation(void) { return ntag_emu.generation; }
 
 void ntag_emu_request_action(void (*action)(void *), void *context, uint32_t generation) {

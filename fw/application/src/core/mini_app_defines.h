@@ -2,6 +2,7 @@
 #define MINI_APP_DEFINES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "mui_resource.h"
 
 #include "cache.h"
@@ -18,6 +19,16 @@ typedef struct {
     void* arg_ptr;
 }mini_app_event_t;
 
+
+typedef enum {
+    MINI_APP_EXIT_SWITCH,
+    MINI_APP_EXIT_SLEEP,
+    MINI_APP_EXIT_RESET
+} mini_app_exit_reason_t;
+
+/* Foreground only: false retains the live app and its unsaved buffers. */
+typedef bool (*mini_app_prepare_exit_cb_t)(mini_app_inst_t *, mini_app_exit_reason_t);
+typedef void (*mini_app_cancel_exit_cb_t)(mini_app_inst_t *);
 
 typedef void (* mini_app_run_cb_t)(mini_app_inst_t* p_app_inst);
 typedef void (* mini_app_kill_cb_t)(mini_app_inst_t* p_app_inst);
@@ -51,6 +62,8 @@ struct mini_app_s {
     const mini_app_run_cb_t run_cb;
     const mini_app_kill_cb_t kill_cb;
     const mini_app_post_event_cb_t on_event_cb;
+    const mini_app_prepare_exit_cb_t prepare_exit_cb;
+    const mini_app_cancel_exit_cb_t cancel_exit_cb;
 };
 
 #endif

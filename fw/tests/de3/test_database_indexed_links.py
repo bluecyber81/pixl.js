@@ -57,12 +57,13 @@ static const reference_t expected[] = {
 int main(void) {
  const size_t count=sizeof(expected)/sizeof(*expected);
  assert(sizeof(link_list)/sizeof(*link_list)==count+1);
+ assert(sizeof(notes)/sizeof(*notes)==110);
  for(size_t i=0;i<count;i++) {
   const reference_t *ref=&expected[i];const db_link_t *link=&link_list[i];
   assert(link->game_id==ref->game && link->amiibo_index<amiibo_list_size);
   const db_amiibo_t *figure=&amiibo_list[link->amiibo_index];
   assert(figure->head==ref->head && figure->tail==ref->tail);
-  assert(!strcmp(link->note_en,ref->en) && !strcmp(link->note_cn,ref->cn) && !strcmp(link->note_it,ref->it));
+  assert(!strcmp(link->notes->en,ref->en) && !strcmp(link->notes->cn,ref->cn) && !strcmp(link->notes->it,ref->it));
   size_t first=0;while(first<i && (expected[first].game!=ref->game || expected[first].head!=ref->head || expected[first].tail!=ref->tail)) first++;
   assert(get_link_by_id(ref->game,ref->head,ref->tail)==&link_list[first]);
  }

@@ -161,8 +161,8 @@ static void preserve_pending(size_t n) {
 int main(void) {
     assert(crc_bytes("123456789",9)==0xcbf43926u);
     const size_t sizes[]={0,24,26,532,540,572,2048};
-    unsigned interruptions=0, errors=0, shorts=0;
-    for(unsigned s=0;s<sizeof(sizes)/sizeof(*sizes);s++) {
+    volatile unsigned interruptions=0, errors=0, shorts=0;
+    for(volatile unsigned s=0;s<sizeof(sizes)/sizeof(*sizes);s++) {
         size_t n=sizes[s];unsigned steps=complete_steps(n);
         for(volatile unsigned step=1;step<=steps;step++) {
             setup(n);stop_at=step;reset_armed=true;

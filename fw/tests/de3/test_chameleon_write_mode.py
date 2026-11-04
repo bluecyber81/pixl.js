@@ -74,6 +74,7 @@ def main():
                  for slot in (0, 1, 2, 3, 7, 49) for mode in range(4)]
     scenarios += [(f'back_slot_{slot}', ['back', str(slot)]) for slot in (0, 7, 49)]
     scenarios += [(f'real_slot_selector_{slot}', ['slot', str(slot)]) for slot in (0, 3, 49)]
+    scenarios += [(failure, [failure]) for failure in ('save_error', 'load_error')]
     scenarios += [('menu_exit_cleanup', ['exit'])]
     report = {'scope': __doc__, 'sanitize': args.sanitize,
               'source_root': str(args.source_root.resolve()),

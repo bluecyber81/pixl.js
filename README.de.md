@@ -1,74 +1,22 @@
-# Allmiibo LCD — DE3-Firmware und Dateimanager
+# Allmiibo LCD – Firmware und Dateimanager
 
-[English](README.md) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.57) · [Mitarbeiten](CONTRIBUTING.md)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Firmware und Pakete herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.58) · [English](README.md)
 
-Quellstand **3. November 2026**: **Firmware 2.22.0-DE3.57 / Zähler 629**, **Dateimanager 3.35.1**, **Bootloader BL8**, **Nordic S112 7.3.0 / FWID 0x0126**, Dateisystem **Packed LittleFS/PFS1**.
+Für **Allmiibo LCD mit nRF52832 und vorhandenem Packed LittleFS (PFS1)**. Aktueller Stand vom 4. November 2026 sind **Firmware 2.22.0-DE3.58, Zähler 630**, **Dateimanager 3.36.0**, **Bootloader BL8** und **Nordic S112 7.3.0**. DE3.58 ist ein auf dem PC geprüfter Teststand. Der Gerätetest steht aus.
 
-Diese Community-Weiterentwicklung von bluecyber81 baut auf [cylin577/pixl.js](https://github.com/cylin577/pixl.js) und ursprünglich [solosky/pixl.js](https://github.com/solosky/pixl.js) auf. Sie ist keine offizielle Version dieser Entwickler. Aus späteren Upstream-Versionen wurden ausgewählte Änderungen übernommen; die Versionsnummer bedeutet keine vollständige Gleichheit mit deren aktuellem Stand.
+* **Kartenemulator.** Beim Slotwechsel meldet das Gerät getrennt, ob Speichern oder Laden fehlgeschlagen ist. Der reproduzierte Fehler beim Verkleinern von 50 auf 8 Slots ist korrigiert. Die Karten-ID lässt sich ohne unnötigen Speicherzugriff ansehen.
+* **Web-Update.** Die DFU-Seite zeigt Paketversion, Hardwarefeld und erlaubte SoftDevice-IDs schon bei der Dateiauswahl. Eine höchstens zehn Minuten alte Bootdiagnose ermöglicht einen direkten Vergleich. Widersprüchliche Startpakete werden vor der Bluetooth-Auswahl zurückgewiesen.
+* **Startzeit.** Unter **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** zeigt ein lokal ausgewählter älterer Bericht den Zeitunterschied. Im Speicher-Hosttest waren 379 Lesezugriffe weniger nötig. Eine neue Zeit am Gerät steht aus.
+* **Am Gerät.** Die deutschen Menüs verwenden kürzere Bezeichnungen. Bei einem Speicherfehler im Kartenemulator führt ein kurzer Mitteldruck zur erneuten Sicherung und ein langer zurück.
 
-## Neu in DE3.57 / Dateimanager 3.35.1
+[Alle Änderungen und Bedienwege](RELEASE_NOTES_DE.md) · [Prüfergebnisse](docs/validation/DE3_58.json)
 
-Das kleine feste Zeichen links neben der Akkuspannung wird durch eine echte **Bluetooth-Statusanzeige** ersetzt: durchgestrichen = inaktiv, Funkwellen = sichtbar, offener Punkt = Funkverbindung ohne bereiten Datenkanal, gefüllter Punkt = Datenkanal bereit, Minus = Trennung oder Moduswechsel läuft. Die Anzeige gilt auch bei aktivierter Fernbedienung. Sie aktiviert Bluetooth nicht selbst und blinkt nicht.
+## Installation und Mitarbeit
 
-Der Status wird bei Änderungen aus den vorhandenen Firmwarezuständen übernommen. Es gibt keine zusätzlichen Funkabfragen, Timer oder Schreibzugriffe. Die Dateiübertragungsanzeige behält ihre eigenen Statusmeldungen. [Symbole, Bedienung und Grenzen](docs/BLUETOOTH_STATUS_DE3_57.md).
+1. Bei einem passenden LCD/PFS1-Gerät die eigene Sammlung sichern. Für DE3.58 die innere ZIP **Allmiibo_LCD_DE3_58_630_TESTSTAND.zip** aus dem Release verwenden. Auf dem Gerät **Firmware-Update** wählen und den Anweisungen der [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) folgen. Ein vorhandenes PFS1 benötigt keine erneute Umstellung.
+2. Zum Dateizugriff am Gerät **Bluetooth-Dateiübertragung** öffnen und es im Browser über **Verbinden** auswählen. Für den lokalen Windows-Start das portable ZIP entpacken und **Start-Dateimanager.cmd** öffnen. [Dateimanager-Anleitung](docs/DATEIMANAGER_WEB.md)
+3. Wer weiterentwickeln möchte, findet die Anwendungsquellen unter [fw](fw), die Browserquellen unter [web](web) und die passenden BL8-Quellen unter [bootloader-bl8](bootloader-bl8). [Mitarbeiten](CONTRIBUTING.md) · [Firmware bauen](docs/BUILD_DE3_58.md)
 
-Dateimanager **3.35.1** aktualisiert das passende DFU-Paket und den erwarteten Anwendungsstand auf DE3.57. Die Diagnosefunktionen aus 3.35.0 bleiben erhalten. **BL8, Nordic S112 7.3.0, PFS1 und vorhandene Amiibos bleiben unverändert.** Die Geräteprüfung der neuen Anzeige steht noch aus; Hosttests und Buildnachweise sind getrennt davon dokumentiert.
+Die ursprüngliche Firmware stammt von [solosky](https://github.com/solosky/pixl.js). Dieser Community-Zweig von bluecyber81 übernimmt auch Arbeit von [cylin577](https://github.com/cylin577/pixl.js). Die Herkunft von BL8, dem separat gelieferten Nordic-SoftDevice und den SDK-Korrekturen ist dokumentiert. [Komponenten und Nachweise](docs/COMPONENTS.md) · [Änderungsgeschichte](docs/DEVELOPMENT_HISTORY.de.md) · [Lizenz](LICENSE) · [Fremdkomponenten](THIRD_PARTY_NOTICES.md)
 
-## Neu im Dateimanager 3.35.0
-
-**Gerät & Diagnose → Alle Diagnosewerte auslesen** sammelt RAM, Startzeiten, Bootloader/SoftDevice, Akku, Laufwerke, Packed-LittleFS-Geometrie, Firmware-MTU und die letzte Einstellungsmenü-Diagnose. Ein gemeinsamer JSON-Bericht enthält Abrufzeiten und Teilfehler. **Kein neues Flashen erforderlich.** [Bedienung und Messgrenzen](docs/DIAGNOSTICS_3_35.md) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.0).
-
-## Neu in DE3.56 und 3.34.0
-
-- **Beim Suchen und Umbenennen am Gerät:** Die Tastatur zeigt das Zeichen, das ein kurzer Mitteldruck wirklich einfügt. Oben erklärt etwa `q/Q` kurz/lang und `_/SP` Unterstrich/Leerzeichen. Lange Titel überdecken die Hilfe nicht. Die bisherige Eingabefunktion bleibt erhalten.
-- **In Listen und Ordnern:** Der Scrollbalken bleibt auch bei vielen Einträgen sichtbar und erreicht die Enden korrekt.
-- **Figurenkatalog → Bilder anzeigen:** Optionale Galerie mit Bildern der aktuellen Seite, fester Bildfläche und Platzhalter bei fehlenden Bildern. Ohne Einschalten erfolgt kein Galerie-Bildabruf.
-- **Figurenkatalog → Bestand filtern:** Vorhandene, nicht gefundene, auffällige und unbestätigte/veraltete Einträge getrennt anzeigen. Grundlage bleibt die Sammlungsprüfung mit ihren bisherigen Grenzen.
-- **Weiter/Zurück im Katalog:** Die Ansicht führt zum Anfang der neuen Ergebnisse. Tippen in der Suche verschiebt den Fokus nicht.
-- **Nach neuen Figuren suchen:** Übernommene Katalogdaten gelten jetzt auch für Gerätesuche, Auswahlvorschau, Dateieigenschaften und lokale Dateiprüfung. Ergebnisse und verspätete Bildfehler des alten Stands überschreiben den neuen Stand nicht.
-
-[Bedienwege und vollständige Release-Hinweise](RELEASE_NOTES_DE.md). Der Nutzer meldet DE3.56 als installiert und funktionierend; die bereitgestellten Diagnosewerte sind datierte Beobachtungen, kein vollständiger Hardwaretest. Für dieses Update wird kein zusätzlicher Startzeitgewinn behauptet.
-
-## Benutzen und installieren
-
-1. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) in einem Browser mit Web Bluetooth öffnen, am Gerät **Bluetooth-Dateiübertragung** starten und auf der Seite verbinden.
-2. Für die neue Bluetooth-Anzeige **Allmiibo_LCD_DE3_57_629_TESTSTAND.zip** unverändert auf der [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) auswählen. **Dieses Paket ersetzt nur die Anwendung.**
-3. Für die lokale Nutzung **Allmiibo_Dateimanager_3_35_1.zip** entpacken und unter Windows mit installiertem Python `Start-Dateimanager.cmd` starten. Das äußere **Allmiibo_DE3_57_Web3_35_1_Gesamtpaket.zip** ist ein Downloadarchiv, keine flashbare ZIP.
-
-Die Browserverbesserungen benötigen kein Geräteupdate. **BL8, S112 7.3.0 und das PFS1-Speicherlayout bleiben unverändert.** Eine vorhandene passende Sammlung benötigt keine Formatierung oder Wiederherstellung.
-
-**Alte Geräte mit DE3.8/DE3.16 oder SPIFFS benötigen vorher eine vollständige Sicherung und eine getrennte Speicherumstellung.** Normales Upstream-LittleFS hat ebenfalls ein anderes Layout. Die Firmware allein überträgt deren Sammlung nicht. Siehe [Installation](docs/INSTALLATION.md), [Migration](docs/MIGRATION_PFS1.md) und [Komponenten](docs/COMPONENTS.md). Bluetooth nutzt das Gerät, auf dem der Browser läuft; ein VPN verlängert dessen Funkreichweite nicht.
-
-## Beibehaltene Verbesserungen
-
-- Deutsche/englische Menüs, gut lesbarer Lauftext, stabile QR-Seiten, Figureninformationen, Favoriten und begrenzte Listen für große Ordner/Datenbanken.
-- Korrigierte Mitteldrücke, klare Bluetooth-Zustände, Freigabe unvollständiger Clients und Diagnose für Heap, Speicher und Startphasen.
-- MTU23-Dateiübertragung, atomare kleine Speicherungen samt Raw128-Metadaten, Abbruch/Wiederholung und Schutz ungespeicherter NFC-Änderungen nach Speicherfehlern.
-- Optionale Bluetooth-Fernbedienung bis zum Ausschalten und Disney-Infinity-Profil für eine passende eigene 320-Byte-MiFare-Mini-Datei.
-- Packed LittleFS mit Caches, gestreamten Initialisierungsschritten, geteilter CRC-Arbeit sowie gezielten Lese-/Cache-/Verschleißkorrekturen.
-- Browser-Vorschau, Suche über Geräteordner, gemeinsamer Upload, ZIP/Raw128-Sicherung mit Fortsetzen, Wiederherstellung/Migrationssimulation, Versionsvergleich und Laufzeit-/Startdiagnose.
-- Farbiger Sammlungsabgleich: **Grün ID gefunden**, **Orange Prüfhinweis**, **Rot nicht gefunden nach vollständiger Inhaltsprüfung von E:**. Teilprüfungen oder fehlende Metadaten bleiben unbestätigt. Nach Trennung bleibt eine datierte Beobachtung sichtbar; erneutes Verbinden, Änderungen oder Neuladen verwerfen sie.
-
-Der mitgelieferte Katalog umfasst **952 IDs**, keine Figurendateien. Ein ID-Treffer bestätigt weder Signaturgültigkeit noch Spielunterstützung. Bildabrufe übermitteln die öffentliche Figuren-ID und die IP-Adresse an den Bildanbieter, keine Gerätedateien. Eigene Dateien bzw. HTTPS-Quellen können geprüft und hochgeladen werden. [Änderungsverlauf](CHANGELOG_DE3_SERIES.md).
-
-## Entwickeln, prüfen und zusammenarbeiten
-
-[Ausführliche Verbesserungen/Fehlerbehebungen](docs/DEVELOPMENT_HISTORY.de.md) · [BL8-/S112-Arbeit](docs/BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate Komponentendownloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0)
-
-BL8 liegt mit eigener Quelle und signiertem Einzelpaket vor. [S112 7.3.0](softdevice-s112/README.md) ist die unveränderte Nordic-Originaldatei mit Lizenz. Unsere Integration, SDK-Korrektur und Diagnosen sind getrennt von Nordics Änderungen beschrieben. Die Einzelpakete behalten ihre Zähler- und Installationsvoraussetzungen.
-
-[Mitarbeit und Tests](CONTRIBUTING.md) · [Firmware bauen](docs/BUILD_DE3_57.md) · [BL8 bauen](bootloader-bl8/README.md) · [DE3.57-Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_DE3_57_Quellcode.zip) · [Dateimanager-Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/de3.57/Allmiibo_Dateimanager_3_35_1_Quellcode.zip)
-
-Gezielte Regressionen prüfen Katalogwechsel, Bildfreigaben/-fehler, Statusfilter, Seitenwechsel sowie Tastatur und Scrollanzeige. Abschließende Prüfergebnisse werden versionsgebunden dokumentiert. Die [früheren DE3.55-Gerätetests](docs/validation/DE3_55.json) einschließlich MTU23/250, NFC, Mitteldruck, Aufwachen und Startmarken sind keine Hardwareprüfung von DE3.57.
-
-Zielhardware: passende 128×64-LCD-Platine, nRF52832 mit 512 KiB internem Flash und 64 KiB RAM. Der Anwendungs-Heap bleibt 18.432 Bytes groß. Der Build weist die tatsächliche Flashbelegung aus; Heap-Stichproben messen nicht den gesamten RAM/Stack und geben keine beliebige Allmiibo-/OLED-Variante frei.
-
-## Herkunft und Lizenzen
-
-Danke an solosky, cylin577 und die Komponentenentwickler; [Mochi](https://github.com/tasken/Mochi) lieferte Anregungen zur Browserbedienung. [Lizenzhinweise](THIRD_PARTY_NOTICES.md) und Originalvermerke bleiben erhalten. S112 ist Nordic-Software unter deren Bedingungen. Der bekannte Upstream-Signierschlüssel beweist Paketkompatibilität, keine exklusive Herausgeberidentität. Private Schlüssel, Sicherungen und Figurensammlungen werden nicht veröffentlicht.
-
-[DE3.57-Prüfbericht](docs/validation/DE3_57.json) dokumentiert die neuen Release-Prüfungen; die Geräteprüfung steht noch aus.
-
-[Historischer DE3.56-Prüfbericht](docs/validation/DE3_56.json) — 137 Firmware-Testsuiten, 1.082 Webtests, je 21 Produktionsprüfungen für lokal und GitHub Pages.
-
-[Dateimanager 3.35.0: Prüfbericht](docs/validation/WEB3_35_0.json) — 1.128 Webtests und je 21 Produktionsprüfungen bestanden. [Vom Nutzer gelieferter Handybericht](docs/validation/WEB3_35_0_READBACK.json) bestätigt alle acht Bereiche; kein Firmwarewechsel.
+Geräte mit SPIFFS, etwa DE3.8, und solche mit gewöhnlichem Upstream-LittleFS brauchen vor einem Wechsel einen passenden Migrationsweg. [Migration und Sicherung](docs/MIGRATION_PFS1.md)

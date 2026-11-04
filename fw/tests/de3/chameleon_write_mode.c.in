@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define TAG_MAX_SLOT_NUM 50
 @ACTUAL_ENUM@
 #define ICON_DATA 1
 #define ICON_BACK 2
@@ -21,12 +22,13 @@ typedef struct {struct {nfc_tag_mf1_write_mode_t mode_block_write;} config; uint
 static card_t cards[50], scratch;
 static card_t *m_tag_information = &scratch;
 static struct {uint8_t active_slot;struct{int tag_hf;}slots[50];} slotConfig;
-static bool g_is_tag_emulating;
+static bool g_is_tag_emulating, save_fail, load_fail;
+static unsigned save_errors, load_errors;
 static unsigned saves,loads,sense_stops,sense_starts,previous,view_switches,clears;
 static int require(bool ok,const char *what){if(!ok){fprintf(stderr,"FAIL: %s\n",what);return 0;}return 1;}
 #define CHECK(x) do {if(!require((x),#x))return 1;}while(0)
 static void tag_emulation_save_data(void){cards[slotConfig.active_slot]=scratch;saves++;}
-static bool save_data_by_tag_type(uint8_t slot,int type){tag_emulation_save_data();return true;}
+static bool save_data_by_tag_type(uint8_t slot,int type){if(save_fail)return false;tag_emulation_save_data();return true;}
 static void tag_emulation_load_data(void){scratch=cards[slotConfig.active_slot];loads++;}
 static void tag_emulation_sense_end(void){sense_stops++;}
 static void tag_emulation_sense_run(void){sense_starts++;}
@@ -39,6 +41,9 @@ static void mui_list_view_set_selected_cb(mui_list_view_t *view,selected_t callb
 static void mui_view_dispatcher_switch_to_view(void *dispatcher,int view){view_switches++;}
 static void mui_list_view_clear_items(mui_list_view_t *view){view->count=0;clears++;}
 
+static bool tag_emulation_active_data_ready(void){return !load_fail;}
+static void app_chameleon_show_save_error(app_chameleon_t *app){save_errors++;}
+static void app_chameleon_show_load_error(app_chameleon_t *app){load_errors++;}
 @ACTUAL_FUNCTIONS@
 
 static void setup(unsigned slot,mui_list_view_t *view,app_chameleon_t *app){
@@ -87,6 +92,12 @@ int main(int argc,char **argv){
   CHECK(tag_emulation_get_slot()==slot && saves==1 && loads==1 && previous==1);
   CHECK(cards[original].marker[0]==123 && scratch.marker[0]==slot+1);
   CHECK(!g_is_tag_emulating && sense_stops==0 && sense_starts==0);
+ }else if(strcmp(argv[1],"save_error")==0 || strcmp(argv[1],"load_error")==0){
+  save_fail=strcmp(argv[1],"save_error")==0;load_fail=!save_fail;
+  setup(7,&view,&app);mui_list_item_t selected={ICON_DATA,(void *)(uintptr_t)3,"slot"};
+  chameleon_scene_menu_card_slot_select_on_event(0,&view,&selected);
+  CHECK(save_errors==(unsigned)save_fail && load_errors==(unsigned)load_fail && previous==0);
+  CHECK(tag_emulation_get_slot()==(save_fail?7:3));
  }else if(strcmp(argv[1],"exit")==0){
   chameleon_scene_menu_card_write_mode_select_on_enter(&app);
   chameleon_scene_menu_card_write_mode_select_on_exit(&app);

@@ -163,9 +163,9 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         } else if (link != NULL) {
             const char *notes;
             if (isChineseLanguage()) {
-                notes = link->note_cn;
+                notes = link->notes->cn;
             } else {
-                notes = link->note_en;
+                notes = link->notes->en;
             }
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,

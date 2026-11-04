@@ -1,5 +1,8 @@
 # Unsere Bootloader- und S112-Arbeit bis BL8
 
+**Zusätzlich am 4. November 2026 geprüft.** Alle 98.068 SoftDevice-Bytes des archivierten BL8/S112-Pakets stimmen mit dem Nordic-HEX für S112 7.3.0 überein. Die MBR-Seite und der Bootloaderanteil gehören nicht zu diesem Vergleich. [Bereiche und SHA-256](validation/S112_7_3_0_ARCHIVE_COMPARISON.json).
+
+
 [Komponenten-Downloads und Installationsgrenzen](COMPONENT_DOWNLOADS.md) ·
 [S112-Herkunft und Lizenz](../softdevice-s112/README.md)
 

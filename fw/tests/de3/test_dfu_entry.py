@@ -27,6 +27,7 @@ def extract_function(source, signature):
 
 PREFIX = r'''
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 typedef uint32_t ret_code_t;
@@ -34,7 +35,9 @@ typedef uint32_t ret_code_t;
 /* Pinned SDK nrf_bootloader_info.h:168-178; checked against the build image. */
 #define BOOTLOADER_DFU_START_MASK 0xF9u
 #define BOOTLOADER_DFU_START 0xB1u
-static uint8_t reg_value;
+static uint8_t reg_value, reg_at_reset;
+static bool system_prepare_reset(void){return true;}
+static void system_cancel_reset(void){}
 static unsigned clr_calls, set_calls, reset_calls, log_calls, call_order;
 static uint32_t clr_error, set_error, last_log;
 static void record_log(const char *format, unsigned error) {
@@ -56,7 +59,7 @@ static uint32_t sd_power_gpregret_set(uint32_t id, uint32_t mask) {
     return NRF_SUCCESS;
 }
 static uint32_t sd_nvic_SystemReset(void) {
-    ++reset_calls; call_order=call_order*10+3;
+    ++reset_calls; call_order=call_order*10+3; reg_at_reset=reg_value;
     return 0x1005u; /* The real NVIC reset does not normally return. */
 }
 '''
@@ -71,8 +74,9 @@ int main(void) {
             enter_dfu();
             int ok;
             if(state==0) {
-                ok=(reg_value&0xF9u)==0xB1u && (reg_value&0x06u)==(initial&0x06u) &&
-                   clr_calls==1 && set_calls==1 && reset_calls==1 && call_order==123 &&
+                ok=(reg_at_reset&0xF9u)==0xB1u && (reg_at_reset&0x06u)==(initial&0x06u) &&
+                   reg_value==(initial&0x06u) &&
+                   clr_calls==2 && set_calls==1 && reset_calls==1 && call_order==1231 &&
                    log_calls==1 && last_log==0x1005u;
             } else if(state==1) {
                 ok=reg_value==initial && clr_calls==1 && set_calls==0 && reset_calls==0 &&
@@ -96,13 +100,13 @@ def main():
     parser.add_argument('--sanitize', action='store_true')
     args = parser.parse_args()
     original_hash = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
-    body = extract_function(SOURCE.read_text(encoding='utf-8'), 'void enter_dfu()')
+    body = extract_function(SOURCE.read_text(encoding='utf-8'), 'bool enter_dfu(void)')
     report = {'device_access': False, 'sanitizers': args.sanitize,
               'source_sha256': {'application/src/utils.c': original_hash},
               'sdk_image': SDK_IMAGE,
               'limits': ['Only the actual production entry body is compiled; SVC/reset behavior is mocked.',
                          'GPREGRET SVC failures are defensive tests; the SDK documents NRF_SUCCESS.',
-                         'The void API cannot report failure to the DFU caller, which already disabled BLE.',
+                         'The bool API cancels preparation on failure; no caller-side BLE teardown is needed.',
                          'No installed bootloader identity, real register/timing, BLE, or recovery proof.'],
               'negative_controls': []}
     mutants = {

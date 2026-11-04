@@ -9,16 +9,23 @@ const wait = () => new Promise(setImmediate);
 const deferred = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 async function archive(manifest = { application: { dat_file: 'app.dat', bin_file: 'app.bin' } }, options = {}) {
     const zip = new JSZip(); zip.file('manifest.json', JSON.stringify({manifest}));
-    zip.file('app.dat', new Uint8Array([1,2,3])); zip.file('app.bin', new Uint8Array([4,5,6,7]));
+    zip.file('app.dat', require('./dfu-init-fixture.cjs')(4)); zip.file('app.bin', new Uint8Array([4,5,6,7]));
     if (options.edit) options.edit(zip);
     return zip.generateAsync({ type: 'uint8array', compression: options.compression || 'STORE' });
 }
 test('valid STORED and DEFLATE application archives load and image buffers are independent copies', async () => {
     for (const compression of ['STORE', 'DEFLATE']) {
         const pkg = await new Package(await archive(undefined,{compression})).load();
+        assert.deepEqual(pkg.image.target, {counter:630,hardware:52,softDevices:[259,294]});
         const first = await pkg.getAppImage(); new Uint8Array(first.imageData)[0] = 9;
         assert.deepEqual([...new Uint8Array((await pkg.getAppImage()).imageData)], [4,5,6,7]);
     }
+});
+test('Nordic start packet must describe the actual application before choosing a device', async () => {
+    for (const dat of [Uint8Array.of(1,2,3), require('./dfu-init-fixture.cjs')(3), require('./dfu-init-fixture.cjs')(4,2)]) {
+        await assert.rejects(new Package(await archive(undefined,{edit: z => z.file('app.dat', dat)})).load());
+    }
+    await assert.rejects(new Package(await archive(undefined,{edit:z=>z.file('app.bin',Uint8Array.of(7,6,5,4))})).load(),/SHA-256/);
 });
 const fixtureFolder = process.env.ALLMIIBO_DFU_FIXTURES || path.resolve(__dirname, '../../../../outputs/allmiibo_de317_20261023');
 const realFixtures = {

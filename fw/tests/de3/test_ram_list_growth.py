@@ -42,6 +42,7 @@ static bool entered;
 static mui_t *mui(void){return &core;}
 static void mui_update(mui_t*m){(void)m;++updates;}
 static void *mini_app_launcher(void){return NULL;}
+static bool mini_app_launcher_input_blocked(void*p){(void)p;return false;}
 static void *mini_app_launcher_get_app_handle(void*l,unsigned id){(void)l;(void)id;return (void*)1;}
 static void mini_app_launcher_run(void*l,unsigned id){
  (void)l;assert(id==MINI_APP_ID_DESKTOP && entered && running);

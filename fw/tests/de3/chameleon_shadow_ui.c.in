@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define TAG_MAX_SLOT_NUM 50
 @ACTUAL_ENUM@
 #define ICON_DATA 1
 #define ICON_BACK 2

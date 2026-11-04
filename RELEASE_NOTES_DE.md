@@ -1,3 +1,48 @@
+# DE3.58 und Dateimanager 3.36.0
+
+**2.22.0-DE3.58 · DFU-Zähler 630 · Allmiibo LCD mit Packed LittleFS (PFS1)**
+
+## Auf dem Allmiibo
+
+* **Kartenemulator → kurz Mitte → Steckplatz.** Beim Wechsel nach links oder rechts und bei der Auswahl aus der Liste zeigt das Gerät einen Speicherfehler an, wenn es die bisherige Karte nicht sichern konnte. Der bisherige Slot und seine geänderten Daten bleiben dann im RAM. Kann es den gewählten Slot nicht lesen, erscheint ein Lesefehler.
+* **Kartenemulator → kurz Mitte → Steckplätze… → Anzahl der Plätze.** Beim Wechsel von 50 auf 8 Slots konnte bisher Slot 50 aktiv bleiben, wenn der zweite Speicherzugriff fehlschlug. Die Anwendung sichert die alte Karte jetzt einmal. Bei einem Fehler bleiben die ursprüngliche Anzahl und Auswahl erhalten, solange kein neuer Slot übernommen wurde. Fehlgeschlagene Konfigurations- und Einstellungsschreibvorgänge lassen sich wiederholen.
+* **Kartenemulator → kurz Mitte → ID.** Die ID-Zeile zeigt die Kennung. Ein kurzer oder langer Mitteldruck auf dieser Zeile löst keinen Flashzugriff aus.
+* **Kartenemulator verlassen, Ruhezustand oder Neustart.** Während der Sicherung pausiert die NFC-Emulation. Scheitert die Sicherung, bleibt die Anwendung geöffnet. Ein kurzer Mitteldruck versucht die Speicherung erneut. Ein langer Mitteldruck führt zur vorherigen Ansicht. Nach erfolgreicher Wiederholung die gewünschte Aktion erneut wählen. Absichtlich flüchtige Shadow-Daten behalten beim Abbrechen ihr vorgesehenes Verhalten.
+* **Bedienung.** Die deutschen Menütexte verwenden unter anderem „Kartenemulator“, „Firmware-Update“, „Neu starten“, „NFC/BLE wach“, „Zu Tag-Details“, „Tag-Anzahl“ und „Mitte: bestätigen“. Unter **Einstellungen → Info** stehen bluecyber81 und cylin577.
+
+## Im Browser
+
+1. Im Dateimanager **Gerät & Diagnose → Alle Diagnosewerte auslesen** wählen, um auf Wunsch eine aktuelle Bootdiagnose einzulesen. Die übliche Dateiverbindung anschließend für den Wechsel in den DFU-Modus trennen.
+2. **DFU-Seite öffnen** und die gewünschte Anwendungs-ZIP wählen. Schritt 1 zeigt aus dem Paket den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Liegt aus dem Dateimanager eine höchstens zehn Minuten alte Bootdiagnose vor, zeigt die Seite zusätzlich den Vergleich und gegebenenfalls einen Hinweis auf eine niedrigere Version oder abweichende FWID. Ohne diese Diagnose stehen die Paketdaten zur Verfügung.
+3. Eine ZIP mit vermischten oder widersprüchlichen Init-Daten wird bereits vor der Bluetooth-Auswahl abgewiesen. Ein Vergleich allein bestätigt weder die LCD-Verdrahtung noch die Identität des später im Bluetooth-Dialog gewählten Geräts. Zum Übertragen das eigene Allmiibo in den DFU-Modus versetzen und dort auswählen.
+
+Unter **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** kannst du die aktuelle Messung mit einer früheren Start- oder Gesamtdiagnose desselben Geräts und einer vergleichbaren Sammlung vergleichen. Der Browser verarbeitet die Datei lokal. Er vergleicht sechs Zeitmarken und zeigt die Differenz für Speicher und Anwendung in Millisekunden. Ein negativer Wert bedeutet schneller. Bootloader und frühe SDK-Initialisierung liegen vor der ersten Messmarke.
+
+Im Hostversuch mit 1.131 synthetischen Dateien und 77 Ordnern benötigte der Speicherstart **4.802 statt 5.181 physische Lesezugriffe**. Das sind 379 Zugriffe beziehungsweise 97.024 gelesene Bytes weniger. Die frische Referenz am selben Gerät unter DE3.57 vom 4. November beträgt **2.450 ms für den Speicherstart und 2.553 ms bis zur ersten Ereignisverarbeitung der Anwendung**. Ein direkt vergleichbarer Wert unter DE3.58 steht noch aus. Beim Firmwarepaket vergleicht der Browser außerdem SHA-256 der kompletten BIN mit dem Hash aus der zugehörigen DAT-Datei.
+
+Bei 100 wiederholten Speicherungen derselben unveränderten 540-Byte-Datei benötigte das NOR-Modell keine Programmierung und keine Löschung. War das letzte Nutzdatenbyte verändert, waren es weiterhin 2.412 Programmierungen und 279 Löschungen. Das Vergleichen der Daten erforderte in diesem Fall zusätzliche Lesezugriffe. [Speichertest mit Einzelwerten](docs/validation/DE3_58_STORAGE.json).
+
+## Paket auswählen
+
+- **Zum Flashen** die unveränderte innere Anwendungs-ZIP auswählen. [Allmiibo_LCD_DE3_58_630_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_LCD_DE3_58_630_TESTSTAND.zip)
+- **Offline-Dateimanager** mit Windows-Starter. [Allmiibo_Dateimanager_3_36_0.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_Dateimanager_3_36_0.zip)
+- **Vollständiger Projektquellcode** mit Firmware, Tests und Buildanleitung. [Allmiibo_DE3_58_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_DE3_58_Quellcode.zip)
+- **Browserquellcode** mit Tests. [Allmiibo_Dateimanager_3_36_0_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_Dateimanager_3_36_0_Quellcode.zip)
+- **Gesamtpaket** mit den vier Einzelarchiven und Prüfsummen. Vor dem Flashen das äußere Archiv entpacken. [Allmiibo_DE3_58_Web3_36_0_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.58/Allmiibo_DE3_58_Web3_36_0_Gesamtpaket.zip)
+
+## Gerät und Nachweise
+
+Für ein passendes LCD-Gerät mit bestehendem PFS1 reicht das Anwendungsupdate. Eine erneute Formatierung oder Wiederherstellung ist nicht erforderlich. SPIFFS und gewöhnliches Upstream-LittleFS benötigen einen eigenen Migrationsweg. BL8 und das Nordic-SoftDevice gehören zu den separat dokumentierten Komponenten.
+
+Im erzeugten Firmware-Abbild wurden **952 Figuren-IDs und 1.344 Spielzuordnungen mit jeweils drei Sprachtexten** mit den Vergleichsdaten abgeglichen. Die Prüfung betrifft den eingebauten Katalog. Die Anzahl der persönlichen Figurendateien auf einem Gerät lässt sich im verbundenen Dateimanager prüfen.
+
+Für die finalen Quellen sind 141 Firmware-Testsuiten und 1131 Browser-Hosttests bestanden. Die fertigen Web-Builds bestanden 21 Prüfungen am lokalen Wurzelpfad und 21 unter dem GitHub-Pages-Pfad. Der öffentliche ARM-Neubau ergibt die gleichen Anwendungsbytes wie das signierte Paket.
+
+Ein frischer Praxistest von DE3.58 am physischen Gerät steht aus. Für DE3.57 wurden bereits Bluetooth-Lesezugriffe und die Funkwellenanzeige am LCD bestätigt. Die vollständigen Ergebnisse und der Vergleich des separaten Nordic-S112-Pakets sind verlinkt. [DE3.58-Prüfstand](docs/validation/DE3_58.json) · [DE3.57-Gerätebeleg](docs/validation/DE3_57_READBACK.json) · [BL8 und S112](docs/COMPONENTS.md) · [Buildanleitung](docs/BUILD_DE3_58.md).
+
+
+---
+
 # DE3.57 / Dateimanager 3.35.1 – Bluetooth auf einen Blick
 
 **LCD-Anwendung 2.22.0-DE3.57 / Zähler 629 · Dateimanager 3.35.1 · BL8 · Nordic S112 7.3.0 · Packed LittleFS PFS1**
@@ -46,43 +91,43 @@ Ein anschließend vom Nutzer am Handy gelieferter Bericht bestätigt alle acht D
 
 # DE3.56 und Dateimanager 3.34.0: bessere Eingabe und Bildergalerie
 
-**Anwendung 2.22.0-DE3.56 / ZÃ¤hler 628 Â· Dateimanager 3.34.0 Â· BL8 Â· Nordic S112 7.3.0 Â· Packed LittleFS PFS1**
+**Anwendung 2.22.0-DE3.56 / Zähler 628 · Dateimanager 3.34.0 · BL8 · Nordic S112 7.3.0 · Packed LittleFS PFS1**
 
-Diese Version verbessert die Bedienung am LCD und im Browser. Sie korrigiert auÃŸerdem eine Inkonsistenz nach der Katalogaktualisierung: GerÃ¤tesuche, Auswahlvorschau, Dateieigenschaften und lokale DateiprÃ¼fung verwenden jetzt denselben aktualisierten Sitzungskatalog wie der Figurenkatalog.
+Diese Version verbessert die Bedienung am LCD und im Browser. Sie korrigiert außerdem eine Inkonsistenz nach der Katalogaktualisierung: Gerätesuche, Auswahlvorschau, Dateieigenschaften und lokale Dateiprüfung verwenden jetzt denselben aktualisierten Sitzungskatalog wie der Figurenkatalog.
 
 ## Am Allmiibo
 
-- **Beim Suchen und Umbenennen:** Die Tastatur zeigt auch bei leerem Feld das Zeichen, das ein kurzer Mitteldruck tatsÃ¤chlich einfÃ¼gt. Zuvor konnte sie einen GroÃŸbuchstaben anzeigen, obwohl ein Kleinbuchstabe eingefÃ¼gt wurde.
-- **Kurzer oder langer Mitteldruck:** Oben zeigt beispielsweise `q/Q` die Eingaben fÃ¼r kurz/lang an; `_/SP` bedeutet Unterstrich kurz und Leerzeichen lang. Die bestehende Eingabefunktion bleibt erhalten. Lange Titel werden so begrenzt, dass sie diese Hilfe nicht Ã¼berdecken. DafÃ¼r wird kein zusÃ¤tzlicher Heap-Speicher angefordert.
-- **Listenposition:** Der Scrollbalken ist auch in groÃŸen Ordnern mindestens drei Pixel hoch und erreicht den Anfang bzw. das Ende der Leiste. Die Berechnung verwendet Ganzzahlen statt FlieÃŸkomma; leere Listen zeigen keinen irrefÃ¼hrenden Positionsmarker.
+- **Beim Suchen und Umbenennen:** Die Tastatur zeigt auch bei leerem Feld das Zeichen, das ein kurzer Mitteldruck tatsächlich einfügt. Zuvor konnte sie einen Großbuchstaben anzeigen, obwohl ein Kleinbuchstabe eingefügt wurde.
+- **Kurzer oder langer Mitteldruck:** Oben zeigt beispielsweise `q/Q` die Eingaben für kurz/lang an; `_/SP` bedeutet Unterstrich kurz und Leerzeichen lang. Die bestehende Eingabefunktion bleibt erhalten. Lange Titel werden so begrenzt, dass sie diese Hilfe nicht überdecken. Dafür wird kein zusätzlicher Heap-Speicher angefordert.
+- **Listenposition:** Der Scrollbalken ist auch in großen Ordnern mindestens drei Pixel hoch und erreicht den Anfang bzw. das Ende der Leiste. Die Berechnung verwendet Ganzzahlen statt Fließkomma; leere Listen zeigen keinen irreführenden Positionsmarker.
 
 ## Im Dateimanager
 
-1. **Figurenkatalog â†’ Bilder anzeigen:** Eine optionale Galerie lÃ¤dt Bilder nur fÃ¼r die aktuelle Seite. Vor dem Einschalten erfolgt kein Galerie-Bildabruf. Fehlende Bilder erhalten einen Platzhalter mit fester FlÃ¤che, damit die Karten nicht springen. Die Bildadressen sind an die aktive Katalogrevision gebunden. Der Abruf von GitHub Ã¼bermittelt die Ã¶ffentliche Figuren-ID und die IP-Adresse, keine GerÃ¤tedateien.
-2. **Figurenkatalog â†’ Bestand filtern:** Nach â€žSammlung prÃ¼fenâ€œ lassen sich vorhandene, nicht gefundene und auffÃ¤llige Figuren sowie unbestÃ¤tigte/veraltete EintrÃ¤ge gezielt anzeigen. GrÃ¼n/Orange/Rot behalten ihre bisherigen PrÃ¼fregeln. Insbesondere wird eine TeilprÃ¼fung nicht als Nachweis fehlender Figuren behandelt; ein Ergebnis nach dem Trennen bleibt als frÃ¼here Beobachtung gekennzeichnet.
-3. **Weiter/ZurÃ¼ck:** Ein bewusster Seitenwechsel fÃ¼hrt zum Anfang der neuen Ergebnisse. Die Sucheingabe verschiebt weder Fokus noch Ansicht. Beim Seitenwechsel schlieÃŸen sich alte Details, wÃ¤hrend die Galerieauswahl erhalten bleibt.
-4. **Nach neuen Figuren suchen:** Ãœbernommene Katalogdaten gelten jetzt auch unter â€žAuf dem GerÃ¤t suchenâ€œ, in der Auswahlvorschau, den Dateieigenschaften und â€žEigene Figurendatei lokal prÃ¼fenâ€œ. Eine laufende GerÃ¤tesuche wird beim Katalogwechsel beendet und kann mit dem neuen Stand neu gestartet werden. VerspÃ¤tete Ergebnisse/Bildfehler des alten Stands Ã¼berschreiben nicht die neue Auswahl.
+1. **Figurenkatalog → Bilder anzeigen:** Eine optionale Galerie lädt Bilder nur für die aktuelle Seite. Vor dem Einschalten erfolgt kein Galerie-Bildabruf. Fehlende Bilder erhalten einen Platzhalter mit fester Fläche, damit die Karten nicht springen. Die Bildadressen sind an die aktive Katalogrevision gebunden. Der Abruf von GitHub übermittelt die öffentliche Figuren-ID und die IP-Adresse, keine Gerätedateien.
+2. **Figurenkatalog → Bestand filtern:** Nach „Sammlung prüfen“ lassen sich vorhandene, nicht gefundene und auffällige Figuren sowie unbestätigte/veraltete Einträge gezielt anzeigen. Grün/Orange/Rot behalten ihre bisherigen Prüfregeln. Insbesondere wird eine Teilprüfung nicht als Nachweis fehlender Figuren behandelt; ein Ergebnis nach dem Trennen bleibt als frühere Beobachtung gekennzeichnet.
+3. **Weiter/Zurück:** Ein bewusster Seitenwechsel führt zum Anfang der neuen Ergebnisse. Die Sucheingabe verschiebt weder Fokus noch Ansicht. Beim Seitenwechsel schließen sich alte Details, während die Galerieauswahl erhalten bleibt.
+4. **Nach neuen Figuren suchen:** Übernommene Katalogdaten gelten jetzt auch unter „Auf dem Gerät suchen“, in der Auswahlvorschau, den Dateieigenschaften und „Eigene Figurendatei lokal prüfen“. Eine laufende Gerätesuche wird beim Katalogwechsel beendet und kann mit dem neuen Stand neu gestartet werden. Verspätete Ergebnisse/Bildfehler des alten Stands überschreiben nicht die neue Auswahl.
 
-Der gebÃ¼ndelte Katalog enthÃ¤lt weiterhin **952 IDs**. Bilder und Katalogangaben sind keine Figurendateien; ein ID-Treffer bestÃ¤tigt weder SignaturgÃ¼ltigkeit noch SpielunterstÃ¼tzung. Es wurde keine neue private BIN-Sammlung ergÃ¤nzt.
+Der gebündelte Katalog enthält weiterhin **952 IDs**. Bilder und Katalogangaben sind keine Figurendateien; ein ID-Treffer bestätigt weder Signaturgültigkeit noch Spielunterstützung. Es wurde keine neue private BIN-Sammlung ergänzt.
 
 ## Downloads und Installation
 
-- [Allmiibo_LCD_DE3_56_628_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_LCD_DE3_56_628_TESTSTAND.zip): flashbare **Anwendung** fÃ¼r passende LCD/PFS1-GerÃ¤te. Das ZIP unverÃ¤ndert verwenden.
+- [Allmiibo_LCD_DE3_56_628_TESTSTAND.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_LCD_DE3_56_628_TESTSTAND.zip): flashbare **Anwendung** für passende LCD/PFS1-Geräte. Das ZIP unverändert verwenden.
 - [Allmiibo_Dateimanager_3_34_0.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0.zip): portabler Dateimanager mit lokalem Startprogramm.
 - [Allmiibo_DE3_56_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Quellcode.zip): Firmware-/Projektquellen und Entwicklerdokumentation.
 - [Allmiibo_Dateimanager_3_34_0_Quellcode.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_Dateimanager_3_34_0_Quellcode.zip): Browserquellen und Tests.
-- [Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip): Gesamtdownload mit Anleitung und PrÃ¼fsummen. **Das Ã¤uÃŸere Archiv ist nicht flashbar.**
-- `SHA256SUMS.txt`: PrÃ¼fsummen der verÃ¶ffentlichten Dateien.
+- [Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip](https://github.com/bluecyber81/pixl.js/releases/download/de3.56/Allmiibo_DE3_56_Web3_34_0_Gesamtpaket.zip): Gesamtdownload mit Anleitung und Prüfsummen. **Das äußere Archiv ist nicht flashbar.**
+- `SHA256SUMS.txt`: Prüfsummen der veröffentlichten Dateien.
 
-[Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) Â· [DFU-Seite fÃ¼r Anwendungen](https://bluecyber81.github.io/pixl.js/dfu/web.html) Â· [Bauanleitung](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/BUILD_DE3_56.md)
+[Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite für Anwendungen](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Bauanleitung](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/BUILD_DE3_56.md)
 
-Die neuen Browserfunktionen benÃ¶tigen kein GerÃ¤teupdate. FÃ¼r die neue Tastaturdarstellung und Scrollleiste ist DE3.56 erforderlich. **BL8, Nordic S112 7.3.0 und das PFS1-Datenlayout bleiben unverÃ¤ndert.** Eine vorhandene passende Sammlung benÃ¶tigt keine Formatierung oder Wiederherstellung. Alte DE3.8/DE3.16-SPIFFS-GerÃ¤te und normales Upstream-LittleFS benÃ¶tigen weiterhin einen getrennten, passenden Migrationsweg; dieses ZIP stellt deren Speicher nicht um. Die [separaten BL8-/S112-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) behalten ihre eigenen Installationsvoraussetzungen.
+Die neuen Browserfunktionen benötigen kein Geräteupdate. Für die neue Tastaturdarstellung und Scrollleiste ist DE3.56 erforderlich. **BL8, Nordic S112 7.3.0 und das PFS1-Datenlayout bleiben unverändert.** Eine vorhandene passende Sammlung benötigt keine Formatierung oder Wiederherstellung. Alte DE3.8/DE3.16-SPIFFS-Geräte und normales Upstream-LittleFS benötigen weiterhin einen getrennten, passenden Migrationsweg; dieses ZIP stellt deren Speicher nicht um. Die [separaten BL8-/S112-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0) behalten ihre eigenen Installationsvoraussetzungen.
 
-## PrÃ¼fung und Grenzen
+## Prüfung und Grenzen
 
-Gezielte Regressionen prÃ¼fen die tatsÃ¤chlichen Vue-Komponenten mit Katalogwechseln, Bildfreigaben, Filtern und Seitenwechseln sowie die GerÃ¤te-Texteingabe und Scrollanzeige in Host-Tests. Die abschlieÃŸenden Ergebnisse gehÃ¶ren zum versionsgebundenen PrÃ¼fbericht; frÃ¼here DE3.55-GerÃ¤tebeobachtungen gelten nicht als GerÃ¤tetest von DE3.56. **Eine direkte GerÃ¤teprÃ¼fung dieser neuen Version steht noch aus.** Ein schnellerer Start oder neue Funk-/NFC-Funktionen werden fÃ¼r dieses Update nicht behauptet.
+Gezielte Regressionen prüfen die tatsächlichen Vue-Komponenten mit Katalogwechseln, Bildfreigaben, Filtern und Seitenwechseln sowie die Geräte-Texteingabe und Scrollanzeige in Host-Tests. Die abschließenden Ergebnisse gehören zum versionsgebundenen Prüfbericht; frühere DE3.55-Gerätebeobachtungen gelten nicht als Gerätetest von DE3.56. **Eine direkte Geräteprüfung dieser neuen Version steht noch aus.** Ein schnellerer Start oder neue Funk-/NFC-Funktionen werden für dieses Update nicht behauptet.
 
-Die bisherigen Speicher-, Tasten-, Bluetooth-/NFC-, DFU-, Sicherungs- und Migrationsfunktionen bleiben Teil der Quellen. Private SchlÃ¼ssel, GerÃ¤tesicherungen und Figurendateien sind nicht enthalten. Herkunft und Lizenzen von solosky, cylin577 und den Komponenten bleiben erhalten. [AusfÃ¼hrlicher Verlauf](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/DEVELOPMENT_HISTORY.de.md).
+Die bisherigen Speicher-, Tasten-, Bluetooth-/NFC-, DFU-, Sicherungs- und Migrationsfunktionen bleiben Teil der Quellen. Private Schlüssel, Gerätesicherungen und Figurendateien sind nicht enthalten. Herkunft und Lizenzen von solosky, cylin577 und den Komponenten bleiben erhalten. [Ausführlicher Verlauf](https://github.com/bluecyber81/pixl.js/blob/de3.56/docs/DEVELOPMENT_HISTORY.de.md).
 
 ## Vorschau
 

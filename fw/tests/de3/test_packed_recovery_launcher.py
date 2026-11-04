@@ -55,7 +55,7 @@ int main(void){
 
     def test_recovery_blocks_retained_and_explicit_apps_until_new_boot(self):
         text=(SRC/'core/mini_app_launcher.c').read_text(encoding='utf-8')
-        names=('mini_app_launcher_find','mini_app_launcher_inst_kill','mini_app_launcher_inst_run',
+        names=('mini_app_launcher_input_blocked', 'mini_app_launcher_clear_exit', 'mini_app_launcher_exit_prepared', 'mini_app_launcher_cancel_exit', 'mini_app_launcher_prepare_exit', 'mini_app_launcher_find','mini_app_launcher_inst_kill','mini_app_launcher_inst_run',
                'mini_app_launcher_run_with_retain_data','mini_app_launcher_run','mini_app_launcher_kill',
                'mini_app_launcher_exit','mini_app_launcher_init')
         source=COMMON+'typedef int xbm_t;\n'+stripped('core/mini_app_defines.h')+stripped('core/mini_app_launcher.h')

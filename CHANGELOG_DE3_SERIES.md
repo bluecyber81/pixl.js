@@ -1,6 +1,10 @@
-# Current publication: DE3.57 / Dateimanager 3.35.1 / BL8 / S112 7.3.0
+# Current publication: DE3.58 / Dateimanager 3.36.0 / BL8 / S112 7.3.0
 
 **[Detailed history (English)](docs/DEVELOPMENT_HISTORY.md) · [Änderungen und Bedienung (Deutsch)](RELEASE_NOTES_DE.md) · [Release notes](RELEASE_NOTES_EN.md)**
+
+## DE3.58 and file manager 3.36.0
+
+Card-slot persistence and failed exits have targeted regressions. The browser shows init packet fields before connecting. [Usage and limitations](RELEASE_NOTES_EN.md).
 
 ## New in DE3.57 / file manager 3.35.1
 
@@ -8,7 +12,7 @@ The static symbol beside the battery voltage is replaced by a **Bluetooth status
 
 Existing firmware state changes update the indicator, without extra radio queries, timers or storage writes. The file-transfer screen retains its own status messages. [Symbols, use and limits](docs/BLUETOOTH_STATUS_DE3_57.md).
 
-File manager **3.35.1** updates the packaged application OTA and expected application identity to DE3.57; diagnostics from 3.35.0 remain available. **BL8, Nordic S112 7.3.0, PFS1 and existing Amiibos are unchanged.** Physical testing of the new indicator is pending and remains separate from host/build evidence.
+File manager **3.35.1** updates the packaged application OTA and expected application identity to DE3.57; diagnostics from 3.35.0 remain available. **BL8, Nordic S112 7.3.0, PFS1 and existing Amiibos are unchanged.** The DE3.57 advertising icon was subsequently confirmed on the LCD. Other indicator states have their own test scope. [DE3.57 readback](docs/validation/DE3_57_READBACK.json).
 
 ## DE3.56 / 3.34.0 — 3 November 2026
 

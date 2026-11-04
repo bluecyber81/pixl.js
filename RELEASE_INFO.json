@@ -1,14 +1,14 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-03",
-  "version": "2.22.0-DE3.57",
-  "counter": 629,
+  "publication_date": "2026-11-04",
+  "version": "2.22.0-DE3.58",
+  "counter": 630,
   "board": "LCD",
-  "web_version": "3.35.1",
+  "web_version": "3.36.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "d23d76e03b14c8dd78f7976b7024f7664482894ee5bd0db1f9f5f16c8e42d155",
-  "application_sha256": "9996b5a64e833b04a17e3c3b878f9c11749a00937ec3210b3a0eb5dc5bb784d2",
+  "ota_sha256": "da1f816de4981513c89d08b8ee959b931751444aa43a1ccde72f292e5082a242",
+  "application_sha256": "a2ad6ea6c6a668b1a2d7614f45aee586296750d3e76c73645435d17710838efb",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -30,17 +30,18 @@
     "custom_rebuilt": false,
     "binary_in_standard_bundle": false,
     "reference_distribution": "softdevice-s112/REFERENCE.json",
-    "binary_in_separate_component_release": true
+    "binary_in_separate_component_release": true,
+    "archived_vendor_bytes_comparison": "docs/validation/S112_7_3_0_ARCHIVE_COMPARISON.json"
   },
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 138,
-  "web_host_tests": 1128,
+  "host_firmware_suites": 141,
+  "web_host_tests": 1131,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "evidence": "docs/validation/DE3_57.json",
+  "evidence": "docs/validation/DE3_58.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -53,12 +54,13 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/DE3_57.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.35.1",
+  "web_evidence": "docs/validation/DE3_58.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.58",
   "web_device_readback_pending": true,
   "web_device_readback_evidence": null,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_35_0_READBACK.json",
-  "device_readback_evidence": "docs/validation/DE3_57_READBACK.json",
-  "device_readback_passed": true,
-  "device_validation_pending_scope": "Remaining individual LCD states, remote-mode display and physical NFC/key/sleep/stress checks; read-only BLE checks and advertising LCD observation passed."
+  "device_readback_evidence": null,
+  "device_readback_passed": false,
+  "device_validation_pending_scope": "Physical DE3.58 application readback, startup timing, save/slot/exit behavior, NFC, controls and wake with the final signed image.",
+  "previous_device_readback_evidence": "docs/validation/DE3_57_READBACK.json"
 }

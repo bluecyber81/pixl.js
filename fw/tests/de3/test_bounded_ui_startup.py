@@ -17,6 +17,7 @@ COMMON = r'''
 #include <string.h>
 static bool nfc_change_allowed=true;static unsigned guard_calls;
 static bool ntag_emu_prepare_change(void){guard_calls++;return nfc_change_allowed;}
+static void ntag_emu_cancel_change(void){}
 static unsigned calls, fail_at, live, errors;
 static void *mui_mem_malloc(size_t n) {
  if (++calls == fail_at) return NULL;
@@ -117,7 +118,7 @@ int main(void){
 
     def test_actual_launcher_failure_retry_state_and_unknown_ids(self):
         text = (SRC / 'core/mini_app_launcher.c').read_text(encoding='utf-8')
-        names = ('mini_app_launcher_find', 'mini_app_launcher_inst_kill', 'mini_app_launcher_inst_run',
+        names = ('mini_app_launcher_input_blocked', 'mini_app_launcher_clear_exit', 'mini_app_launcher_exit_prepared', 'mini_app_launcher_cancel_exit', 'mini_app_launcher_prepare_exit', 'mini_app_launcher_find', 'mini_app_launcher_inst_kill', 'mini_app_launcher_inst_run',
                  'mini_app_launcher_run_with_retain_data', 'mini_app_launcher_run', 'mini_app_launcher_kill',
                  'mini_app_launcher_exit', 'mini_app_launcher_get_app_handle', 'mini_app_launcher_post_event')
         source = COMMON + 'typedef int xbm_t;\n' + stripped('core/mini_app_defines.h') + stripped('core/mini_app_launcher.h')

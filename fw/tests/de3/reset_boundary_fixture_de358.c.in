@@ -1,0 +1,70 @@
+/* Nordic SVC boundary only. Launcher and utils implementations below are real.
+ * A longjmp models a non-returning hardware reset without touching a device. */
+#include <setjmp.h>
+
+#define BOOTLOADER_DFU_START_MASK 0xf9u
+#define BOOTLOADER_DFU_START 0xb1u
+
+bool system_prepare_reset(void);
+bool system_reset_prepared(void);
+void system_cancel_reset(void);
+bool enter_dfu(void);
+bool system_reboot(void);
+
+enum { E_FLAG_CLEAR = 40, E_FLAG_SET, E_RESET, E_REPLY, E_ABORT };
+static uint8_t gpregret, gpregret_at_reset;
+static unsigned flag_clear_calls, flag_set_calls, reset_calls, reset_logs;
+static unsigned fail_clear_call;
+static bool fail_flag_set, simulate_nonreturn;
+static jmp_buf reset_boundary;
+
+static void reset_error_log(const char *format, ...) { (void)format; ++reset_logs; }
+#undef NRF_LOG_ERROR
+#define NRF_LOG_ERROR(...) reset_error_log(__VA_ARGS__)
+
+static ret_code_t sd_power_gpregret_clr(uint32_t id, uint32_t mask) {
+    assert(id == 0 && mask == BOOTLOADER_DFU_START_MASK);
+    assert(system_reset_prepared() && app_writer_paused && ntag_paused);
+    ++flag_clear_calls; record(E_FLAG_CLEAR);
+    if (flag_clear_calls == fail_clear_call) return 7;
+    gpregret &= (uint8_t)~mask;
+    return NRF_SUCCESS;
+}
+static ret_code_t sd_power_gpregret_set(uint32_t id, uint32_t mask) {
+    assert(id == 0 && mask == BOOTLOADER_DFU_START);
+    assert(system_reset_prepared() && app_writer_paused && ntag_paused);
+    ++flag_set_calls; record(E_FLAG_SET);
+    if (fail_flag_set) return 8;
+    gpregret |= (uint8_t)mask;
+    return NRF_SUCCESS;
+}
+static ret_code_t sd_nvic_SystemReset(void) {
+    assert(system_reset_prepared() && app_writer_paused && ntag_paused);
+    assert(mini_app_launcher_input_blocked(test_launcher));
+    ++reset_calls; gpregret_at_reset = gpregret; record(E_RESET);
+    if (simulate_nonreturn) longjmp(reset_boundary, 1);
+    return 0x1005; /* Unexpected return is deliberately observable. */
+}
+
+/* ACTUAL_RESET_FUNCTIONS */
+
+static void reset_fixture_start(void) {
+    fixture_start(MINI_APP_ID_CHAMELEON);
+    app_writer_paused = ntag_paused = false;
+    gpregret = 0x6e;
+}
+static void assert_no_reset_side_effects(void) {
+    assert(!flag_clear_calls && !flag_set_calls && !reset_calls);
+    assert(!ble_stops && !ble_remote_stops && !ble_pending);
+    assert(!cache_saves && !settings_saves && !ui_deinits && !flash_sleeps);
+    assert(!kills[MINI_APP_ID_CHAMELEON]);
+}
+static void assert_reset_cancelled(void) {
+    assert(!system_reset_prepared());
+    assert(!mini_app_launcher_input_blocked(test_launcher));
+    assert(!app_writer_paused && !ntag_paused);
+    assert(cancel_calls == 1 && ntag_cancel_calls == 1);
+    assert(!ble_stops && !ble_remote_stops && !ble_pending);
+    assert(!cache_saves && !settings_saves && !ui_deinits && !flash_sleeps);
+    assert(!kills[MINI_APP_ID_CHAMELEON]);
+}

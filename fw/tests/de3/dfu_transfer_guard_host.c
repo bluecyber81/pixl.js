@@ -34,9 +34,9 @@ static void expect_success(void) {
     CHECK(replies[sends-1].status==DF_STATUS_OK && !replies[sends-1].length);
     CHECK(dfu_calls==before && disable_calls==disabled);
     ready();
-    CHECK(dfu_calls==before+1 && disable_calls==disabled+1);
+    CHECK(dfu_calls==before+1 && disable_calls==disabled);
     ready();
-    CHECK(dfu_calls==before+1 && disable_calls==disabled+1);
+    CHECK(dfu_calls==before+1 && disable_calls==disabled);
 }
 
 static void reconnect(void) {

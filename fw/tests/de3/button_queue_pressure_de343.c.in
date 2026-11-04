@@ -51,6 +51,7 @@ static void mui_post(mui_t*m,mui_event_t*e){mui_event_post(&m->queue,e);}
 static void mui_update(mui_t*m){mui_event_t e={.id=MUI_EVENT_ID_REDRAW};mui_post(m,&e);}
 static bool mui_nfc_save_input(mui_t*m,mui_event_t*e){(void)m;(void)e;return false;}
 static void*mini_app_launcher(void){return NULL;}
+static bool mini_app_launcher_input_blocked(void*p){(void)p;return false;}
 static void*mini_app_launcher_get_app_handle(void*p,unsigned n){(void)p;(void)n;return &ui;}
 static void mini_app_launcher_run(void*p,unsigned n){(void)p;(void)n;abort();}
 static bool mui_list_view_anim_enabled(void){return false;}

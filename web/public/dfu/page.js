@@ -8,6 +8,24 @@ const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = d
 const supported = globalThis.isSecureContext && !!navigator.bluetooth?.requestDevice;
 if (!supported) capabilityText.textContent = 'Web Bluetooth ist hier nicht verfügbar. Für die spätere Geräteprüfung ist ein unterstützter Chrome-/Edge-Browser in einem sicheren Kontext nötig.';
 let bundled = null, latestState = { busy:false, loading:false, ready:false };
+const hexId = value => '0x' + value.toString(16).toUpperCase().padStart(4, '0');
+function targetDescription(target) {
+    if (!target) return '';
+    const lines = [`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`];
+    const ref = new URLSearchParams(globalThis.location.hash?.slice(1) || '');
+    const names = ['read', 'app', 'bl', 'sd'];
+    const values = names.map(key => Number(ref.get(key)));
+    const [when, app, bl, sd] = values;
+    if (names.every(k => /^\d{1,16}$/.test(ref.get(k) || '')) && values.every(Number.isSafeInteger) &&
+        app <= 0xffffffff && bl <= 0xffffffff && sd <= 0xffff && when <= Date.now() && Date.now() - when < 600000) {
+        lines.push(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`);
+        if (app > target.counter) lines.push('Die ausgewählte Anwendung ist älter als der ausgelesene Stand.');
+        if (!target.softDevices.includes(sd)) lines.push('Die ausgelesene FWID steht nicht in der Anforderungsliste.');
+        lines.push('Prüfe, dass du dasselbe Gerät auswählst.');
+    } else lines.push('Für den Vergleich im Dateimanager die Bootdaten lesen und von dort die DFU-Seite öffnen.');
+    lines.push('Die Displayvariante ist aus dem Hardwarefeld nicht bestimmbar.');
+    return lines.join(' ');
+}
 function controls() {
     const loading = bundled?.loading === true;
     fileInput.disabled = latestState.busy || latestState.loading || loading;
@@ -20,7 +38,7 @@ const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     createDfu: () => new SecureDfu(CRC32.buf),
     onStatus: text => { statusText.textContent = text; },
-    onState: state => { latestState = state; controls(); },
+    onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },
     onProgress: state => {
         const valid = state && Number.isFinite(state.totalBytes) && state.totalBytes > 0 && Number.isFinite(state.currentBytes);
         progressBar.hidden = !valid;

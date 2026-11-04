@@ -113,7 +113,10 @@ static void ble_remote_shutdown(void) {}
 static void ble_disable(void) {}
 static void ble_process_pending(void) {}
 static void *mini_app_launcher(void) { return NULL; }
-static void mini_app_launcher_sleep(void *app) { (void)app; }
+enum { MINI_APP_EXIT_SLEEP };
+static bool mini_app_launcher_prepare_exit(void *app,int reason) {(void)app;(void)reason;return ntag_emu_prepare_change();}
+static void mini_app_launcher_cancel_exit(void *app) {(void)app;}
+static bool mini_app_launcher_sleep(void *app) { (void)app; return true; }
 static cache_data_t *cache_get_data(void) { return &cache; }
 static ntag_t *ntag_emu_get_current_tag(void) { return &tag; }
 static void cache_save(void) {}

@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-11-04T14:08:44.548338+00:00",
+  "scope": "signed app-only test release; hardware tests pending",
+  "package": {
+    "name": "Allmiibo_LCD_DE3_58_630_TESTSTAND.zip",
+    "sha256": "da1f816de4981513c89d08b8ee959b931751444aa43a1ccde72f292e5082a242",
+    "bytes": 363619,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 630,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 363016,
+        "sha256": "a2ad6ea6c6a668b1a2d7614f45aee586296750d3e76c73645435d17710838efb",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 363016,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "sourceManifestSha256": "2fbe594fb68444f4454fb5c5e3271f2b9abf99a3fae2e99c60efee4710da6417",
+  "appBytes": 363016,
+  "appSha256": "a2ad6ea6c6a668b1a2d7614f45aee586296750d3e76c73645435d17710838efb",
+  "remainingFlashBytes": 9720,
+  "linkerReserve": 9712,
+  "hostSuitesPassed": 141,
+  "hostEvidenceSha256": "c5892fac06eafa32b1fde4fbbdbce95be0e1ee8a8c3831aeded101e07fbc1157",
+  "armLayoutEvidenceSha256": "5503f57a4568b73df9fd8211d9de1166bda2667016445dd2a43e92d544e9eeed",
+  "storageFormat": "PFS1",
+  "engineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248",
+  "deviceAccess": false,
+  "publicRebuildVerified": true,
+  "bootloaderOrSoftDeviceIncluded": false
+}

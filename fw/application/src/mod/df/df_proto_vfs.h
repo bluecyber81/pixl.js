@@ -27,6 +27,7 @@ typedef enum {
 
 extern const df_cmd_entry_t df_proto_handler_vfs_entries[];
 void df_proto_vfs_cleanup(void);
+void df_proto_vfs_cancel_restart(void);
 /* False also for an abandoned descriptor whose cleanup has not succeeded. */
 bool df_proto_vfs_file_transfer_closed(void);
 /* Includes unfinished directory reads and failed/abandoned file ownership. */

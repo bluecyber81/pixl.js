@@ -17,6 +17,9 @@ size_t ble_nus_max_data_length(void) { return wire_capacity; }
 void ble_nus_abort_transfer(void) { assert(!"unexpected transport abort"); }
 void ble_amiibolink_reset_transfer(void) {}
 void df_proto_vfs_cleanup(void) {}
+/* Reset handlers are outside this read-only diagnostic fixture. */
+void df_proto_info_cancel_pending(void) {}
+void df_proto_vfs_cancel_restart(void) {}
 uint32_t ble_nus_tx_data(void *data,size_t size) {
     assert(size>=4 && size<=wire_capacity && wire_count<32);
     df_frame_t *frame=&wire[wire_count++]; memset(frame,0,sizeof(*frame));

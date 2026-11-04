@@ -15,16 +15,12 @@ static void chameleon_scene_main_event_cb(chameleon_view_event_t event, chameleo
     app_chameleon_t *app = p_view->user_data;
     if (event == CHAMELEON_VIEW_EVENT_MENU) {
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, CHAMELEON_SCENE_MENU);
-    } else if (event == CHAMELEON_VIEW_EVENT_PREV) {
-        uint8_t slot = tag_emulation_get_slot();
-        slot = tag_emulation_slot_find_prev(slot);
-        tag_emulation_change_slot(slot, true);
-        if (!tag_emulation_active_data_ready()) app_chameleon_show_load_error(app);
-    } else if (event == CHAMELEON_VIEW_EVENT_NEXT) {
-        uint8_t slot = tag_emulation_get_slot();
-        slot = tag_emulation_slot_find_next(slot);
-        tag_emulation_change_slot(slot, true);
-        if (!tag_emulation_active_data_ready()) app_chameleon_show_load_error(app);
+    } else if (event == CHAMELEON_VIEW_EVENT_PREV || event == CHAMELEON_VIEW_EVENT_NEXT) {
+        uint8_t current = tag_emulation_get_slot();
+        uint8_t next = event == CHAMELEON_VIEW_EVENT_PREV ? tag_emulation_slot_find_prev(current)
+                                                         : tag_emulation_slot_find_next(current);
+        if (!tag_emulation_change_slot(next, true)) app_chameleon_show_save_error(app);
+        else if (!tag_emulation_active_data_ready()) app_chameleon_show_load_error(app);
     }
 }
 

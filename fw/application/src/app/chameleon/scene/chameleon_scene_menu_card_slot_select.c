@@ -21,7 +21,14 @@ void chameleon_scene_menu_card_slot_select_on_event(mui_list_view_event_t event,
     switch (p_item->icon) {
     case ICON_DATA: {
         uint8_t slot = (uint8_t)(uintptr_t)p_item->user_data;
-        tag_emulation_change_slot(slot, false);
+        if (!tag_emulation_change_slot(slot, false)) {
+            app_chameleon_show_save_error(app);
+            return;
+        }
+        if (!tag_emulation_active_data_ready()) {
+            app_chameleon_show_load_error(app);
+            return;
+        }
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     } break;
 

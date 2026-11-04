@@ -78,7 +78,7 @@ test('cancel during SHA leaves no stale package and no accidental transfer',asyn
 });
 test('hash-verified bytes pass the real ZIP parser and updater without starting DFU',async()=>{
  const JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js'),Updater=require('../public/dfu/updater.js'),Package=require('../public/dfu/package.js');
- const zip=new JSZip();zip.file('manifest.json',JSON.stringify({manifest:{application:{dat_file:'app.dat',bin_file:'app.bin'}}}));zip.file('app.dat',Uint8Array.of(1));zip.file('app.bin',Uint8Array.of(2,3));
+ const zip=new JSZip();zip.file('manifest.json',JSON.stringify({manifest:{application:{dat_file:'app.dat',bin_file:'app.bin'}}}));zip.file('app.dat',require('./dfu-init-fixture.cjs')(2));zip.file('app.bin',Uint8Array.of(2,3));
  const data=await zip.generateAsync({type:'uint8array'});const selected={...entry,bytes:data.length,sha256:crypto.createHash('sha256').update(data).digest('hex')};
  let creates=0;const updater=new Updater({Package,createDfu:()=>{creates++;throw Error('must require separate click');}});
  const h=harness({catalog:{schema:1,packages:[selected]},updater,fetchImpl:async()=>response(data)});

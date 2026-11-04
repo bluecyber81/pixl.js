@@ -34,7 +34,14 @@ typedef struct {void *var;void (*exec_cb)(void *,int32_t);int32_t start_value,en
             (folder/'db_header.h').write_text('''#pragma once
 #include <stdint.h>
 typedef struct {const char *name_en,*name_cn;} db_amiibo_t;
-typedef struct {const char *note_en,*note_cn;} db_link_t;
+typedef struct {const char *en,*cn;} db_notes_t;
+#ifdef LEGACY_INLINE_NOTES
+typedef db_notes_t db_link_t;
+#define note_en en
+#define note_cn cn
+#else
+typedef struct {const db_notes_t *notes;} db_link_t;
+#endif
 const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
 ''')
             (folder/'i18n').mkdir()
@@ -82,6 +89,8 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
                     cmd=[shutil.which('gcc'),'-std=c11','-O1','-DU8G2_USE_LARGE_FONTS','-ffunction-sections','-fdata-sections',
                          '-I',str(folder),'-I',str(u8),'-I',str(FW/'components/qrcode/c'),
                          str(generated),*map(str,common),'-Wl,--gc-sections','-o',str(binary)]
+                    if label=='baseline_de324':
+                        cmd.insert(1, '-DLEGACY_INLINE_NOTES')
                     if os.environ.get('PIXL_SANITIZE')=='1':
                         cmd[1:1]=['-g','-fsanitize=address,undefined','-fno-omit-frame-pointer','-no-pie']
                     built=subprocess.run(cmd,capture_output=True,text=True,timeout=90)

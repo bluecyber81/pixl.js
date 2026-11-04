@@ -19,7 +19,11 @@ int32_t vfs_packed_bind_import(const uint8_t in[32]){
     import_bound=true;memcpy(archive_digest,in,32);return 0;
 }
 void ble_disable(void){++disable_calls;}
-void system_reboot(void){++reboot_calls;CHECK(disable_calls==reboot_calls);}
+static bool reset_reserved;
+bool system_prepare_reset(void){reset_reserved=true;return true;}
+bool system_reset_prepared(void){return reset_reserved;}
+void system_cancel_reset(void){reset_reserved=false;}
+bool system_reboot(void){++reboot_calls;CHECK(disable_calls==0);reset_reserved=false;return true;}
 const vfs_driver_t vfs_driver_fs={.mounted=mock_mounted};
 @RUNTIME@
 

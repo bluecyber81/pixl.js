@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloadpakete und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.32.5)
+[Downloadpakete und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.58)
 
 ## Verbinden
 
@@ -36,39 +36,13 @@ GitHub erhält die üblichen Abrufe der Webseite. Figurenbilder werden anhand
 öffentlicher Figuren-IDs geladen. Persönliche UID, lokale Dateinamen und
 Figurendateiinhalte sind dafür nicht erforderlich.
 
-## Firmware-Update
+## Firmware-Update mit 3.36.0
 
-Der Dateimanager kann ohne erneutes Flashen verwendet werden. Die angebotene
-`Allmiibo_LCD_DE3_55_627_TESTSTAND.zip` ist ausschließlich die Anwendung für
-das passende LCD-/PFS1-Gerät mit BL8 und S112 7.3.0. Sie enthält weder Bootloader
-noch SoftDevice, Sammlung oder einen PC-Bluetooth-Treiber. Es ist keine neue
-Formatierung erforderlich. Für andere Platinen oder SPIFFS/gewöhnliches
-Upstream-LittleFS gilt das Paket nicht als kompatibel.
+Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 
-Die DFU-Seite prüft die Identität des mitgelieferten Pakets. Geräteauswahl und
-Übertragung bleiben eine bewusste Benutzeraktion. Ein erfolgreicher Download
-oder eine passende Prüfsumme beweist keine Hardwarekompatibilität.
+Die innere Datei `Allmiibo_LCD_DE3_58_630_TESTSTAND.zip` enthält die LCD-Anwendung. Bestehende passende PFS1-Geräte benötigen dafür keine Formatierung. Für alte SPIFFS-Geräte gilt die eigene Migrationsanleitung. [Anwendung und Paketgrenzen](INSTALLATION.md) · [Migration](MIGRATION_PFS1.md) · [Quellcode und Build](BUILD_DE3_58.md).
 
-Die zugehörigen DE3.55-Quellen stehen als `Allmiibo_DE3_55_Quellcode.zip` in der
-verlinkten Veröffentlichung bereit. Der unveränderte Firmwarebaum `fw/` dieses
-Repositorys beschreibt noch DE3.37. `RELEASE_INFO.json` dokumentiert ebenfalls
-diese historische Firmwareveröffentlichung und ist keine Online-Versionsabfrage.
 
-## Veröffentlichung und Rückkehr
+## Startzeiten vergleichen
 
-Der Zweig `gh-pages` enthält ausschließlich die fertigen öffentlichen Webdateien,
-deren Lizenzhinweise und das ausdrücklich angebotene Anwendungspaket. GitHub
-Pages veröffentlicht diesen Zweig unter `/pixl.js/` mit HTTPS. Der aktuelle
-Webquellcode steht unter `web/` im Hauptzweig und als separates Release-Archiv.
-Die festgelegte Lockdatei bleibt für reproduzierbare Abhängigkeiten maßgeblich.
-
-Die portable Ausgabe bleibt verfügbar und verwendet weiterhin einen lokalen
-Server. Eine Änderung der Webseite aktualisiert keine Gerätefirmware automatisch.
-Ältere Website-Commits und veröffentlichte Pakete bleiben über GitHub erreichbar.
-
-## Prüfgrenzen
-
-Die Veröffentlichung wird mit Quelltests, fertigen Root- und Unterpfad-Builds,
-WASM-/Paketidentitäten und HTTP-/Browserprüfungen kontrolliert. Bluetooth und
-NFC benötigen darüber hinaus ein reales Gerät. Die Webadresse ist keine Zusage,
-dass jeder Browser, jede Platine oder jede Gerätefirmware unterstützt wird.
+**Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** öffnet die lokale Dateiauswahl für einen früheren Startbericht oder eine Gesamtdiagnose. Die Unterschiede beziehen sich auf die sechs Zeitmarken seit Beginn der Speicherinitialisierung. Ein negativer Wert in Millisekunden bedeutet eine kürzere Zeit. Bootloader und frühe SDK-Initialisierung liegen davor. Verwende Berichte derselben Sammlung und desselben Geräts.

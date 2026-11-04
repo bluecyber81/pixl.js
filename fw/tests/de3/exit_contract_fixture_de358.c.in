@@ -1,0 +1,259 @@
+/* Shared deterministic host boundary for the real launcher and shutdown.
+ * This does not emulate Nordic interrupt/flash timing or a physical device. */
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define VFS_PACKED_LFS_ENABLE 1
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_DEBUG(...) ((void)0)
+#define NRF_LOG_WARNING(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define NRF_LOG_FLUSH() ((void)0)
+#define nrf_log_push(s) (s)
+#define NRF_POWER_RESETREAS_NFC_MASK 4u
+#define NRF_SUCCESS 0
+#define APP_ERROR_CHECK(e) assert((e) == NRF_SUCCESS)
+#define BTN_ID_SLEEP 1
+#define BUTTON_PULL 1
+typedef int ret_code_t;
+typedef int xbm_t;
+typedef struct { uint8_t bytes[8]; } ntag_t;
+typedef struct {
+    bool enabled;
+    uint32_t id;
+    uint8_t retain_data[32];
+    ntag_t ntag;
+} cache_data_t;
+typedef struct { bool hibernate_enabled; } settings_data_t;
+typedef enum {
+    NRF_PWR_MGMT_EVT_PREPARE_WAKEUP = 1,
+    NRF_PWR_MGMT_EVT_PREPARE_RESET = 2,
+    NRF_PWR_MGMT_EVT_PREPARE_DFU = 3
+} nrf_pwr_mgmt_evt_t;
+
+/* ACTUAL_LAUNCHER_TYPES */
+
+enum {
+    MINI_APP_ID_DESKTOP = 1, MINI_APP_ID_BLE = 2,
+    MINI_APP_ID_STATUS_BAR = 3, MINI_APP_ID_CHAMELEON = 4,
+    TEST_APP_OTHER = 5, TEST_APP_NO_HIBERNATE = 6,
+    TEST_APP_FAILED_INIT = 7, TEST_APP_COUNT = 8
+};
+
+enum {
+    E_NTAG = 1, E_PREPARE, E_CANCEL, E_NTAG_CANCEL, E_KILL, E_RUN,
+    E_BLE_REMOTE_STOP, E_BLE_STOP, E_BLE_PENDING, E_CACHE_SAVE,
+    E_SETTINGS_SAVE, E_UI_DEINIT, E_FLASH_SLEEP, E_GPIO, E_WAKE,
+    E_NFC_SLEEP, E_LED_OFF, E_SHUTDOWN_CANCEL
+};
+
+static mini_app_launcher_t *test_launcher;
+static cache_data_t test_cache;
+static settings_data_t test_settings;
+static unsigned events[256], event_count;
+static unsigned runs[TEST_APP_COUNT], kills[TEST_APP_COUNT], app_events[TEST_APP_COUNT];
+static unsigned prepare_calls, cancel_calls, ntag_calls, ntag_cancel_calls;
+static unsigned memory_errors, alloc_calls, alloc_live, alloc_fail_at;
+static unsigned ble_remote_stops, ble_stops, ble_pending, cache_saves, settings_saves;
+static unsigned ui_deinits, flash_sleeps, shutdown_cancels, nfc_sleeps;
+static bool allow_prepare, allow_ntag, ntag_clean, app_writer_paused, ntag_paused;
+static bool recovery, default_slot_valid;
+static int settings_save_result;
+static mini_app_exit_reason_t last_reason;
+static uint8_t old_retain[32];
+static void *allocations[128];
+enum { REENTER_NONE, REENTER_NTAG, REENTER_PREPARE, REENTER_CANCEL, REENTER_KILL, REENTER_RUN };
+static unsigned reenter_from, reentry_checks;
+static bool probing_reentry;
+
+static void record(unsigned event) {
+    assert(event_count < sizeof(events) / sizeof(events[0]));
+    events[event_count++] = event;
+}
+static unsigned event_pos(unsigned event) {
+    for (unsigned n = 0; n < event_count; ++n) if (events[n] == event) return n;
+    assert(!"required event was not recorded");
+    return 0;
+}
+static void *mui_mem_malloc(size_t size) {
+    ++alloc_calls;
+    if (alloc_calls == alloc_fail_at) return NULL;
+    void *p = calloc(1, size);
+    assert(p && alloc_live < 128);
+    allocations[alloc_live++] = p;
+    return p;
+}
+static void mui_mem_free(void *p) {
+    if (!p) return;
+    unsigned n;
+    for (n = 0; n < alloc_live; ++n) if (allocations[n] == p) break;
+    assert(n < alloc_live);
+    allocations[n] = allocations[--alloc_live];
+    free(p);
+}
+static void *mui(void) { return (void *)&test_cache; }
+static void mui_show_memory_error(void *p) { assert(p == mui()); ++memory_errors; }
+static cache_data_t *cache_get_data(void) { return &test_cache; }
+static settings_data_t *settings_get_data(void) { return &test_settings; }
+static bool vfs_packed_recovery_required(void) { return recovery; }
+static bool tag_helper_valid_default_slot(void) { return default_slot_valid; }
+
+static void probe_reentry(void) {
+    if (probing_reentry) return;
+    probing_reentry = true;
+    mini_app_inst_t *owner = test_launcher->p_main_app_inst;
+    unsigned before_runs[TEST_APP_COUNT], before_kills[TEST_APP_COUNT];
+    memcpy(before_runs, runs, sizeof(runs));
+    memcpy(before_kills, kills, sizeof(kills));
+    unsigned p = prepare_calls, n = ntag_calls, c = cancel_calls, live = alloc_live;
+    cache_data_t cache_before = test_cache;
+    mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+    if (owner) mini_app_launcher_kill(test_launcher, owner->p_app->id);
+    mini_app_launcher_exit(test_launcher);
+    assert(!mini_app_launcher_sleep(test_launcher));
+    assert(!mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));
+    mini_app_launcher_cancel_exit(test_launcher);
+    assert(test_launcher->p_main_app_inst == owner);
+    assert(!memcmp(before_runs, runs, sizeof(runs)));
+    assert(!memcmp(before_kills, kills, sizeof(kills)));
+    assert(prepare_calls == p && ntag_calls == n && cancel_calls == c);
+    assert(alloc_live == live && !memcmp(&cache_before, &test_cache, sizeof(test_cache)));
+    ++reentry_checks;
+    probing_reentry = false;
+}
+static bool ntag_emu_prepare_change(void) {
+    ++ntag_calls; ntag_paused = true; record(E_NTAG);
+    if (reenter_from == REENTER_NTAG) probe_reentry();
+    return allow_ntag;
+}
+static void ntag_emu_cancel_change(void) {
+    ++ntag_cancel_calls; record(E_NTAG_CANCEL);
+    if (ntag_clean) ntag_paused = false;
+}
+static void fixture_run(mini_app_inst_t *inst) {
+    unsigned id = inst->p_app->id;
+    assert(id < TEST_APP_COUNT);
+    ++runs[id]; record(E_RUN);
+    if (id == TEST_APP_FAILED_INIT) return;
+    inst->p_handle = mui_mem_malloc(8);
+    if (reenter_from == REENTER_RUN) probe_reentry();
+}
+static bool fixture_prepare(mini_app_inst_t *inst, mini_app_exit_reason_t reason) {
+    assert(inst && inst->p_handle && inst->state == APP_STATE_RUNNING);
+    assert(inst == test_launcher->p_main_app_inst);
+    ++prepare_calls; last_reason = reason; record(E_PREPARE);
+    app_writer_paused = true;
+    if (reenter_from == REENTER_PREPARE) probe_reentry();
+    return allow_prepare;
+}
+static void fixture_cancel(mini_app_inst_t *inst) {
+    assert(inst && inst->p_handle && inst->state == APP_STATE_RUNNING);
+    ++cancel_calls; record(E_CANCEL);
+    if (reenter_from == REENTER_CANCEL) probe_reentry();
+    app_writer_paused = false;
+}
+static void fixture_kill(mini_app_inst_t *inst) {
+    assert(inst && inst->p_handle && inst->state == APP_STATE_RUNNING);
+    if (inst->p_app->prepare_exit_cb) assert(app_writer_paused);
+    ++kills[inst->p_app->id]; record(E_KILL);
+    if (reenter_from == REENTER_KILL) probe_reentry();
+    if (inst->p_retain_data) inst->p_retain_data[0] = 0xd7;
+    mui_mem_free(inst->p_handle);
+    inst->p_handle = NULL;
+}
+static void fixture_event(mini_app_inst_t *inst, mini_app_event_t *event) {
+    assert(inst && inst->p_handle && inst->state == APP_STATE_RUNNING);
+    assert(event && event->id == 0x123);
+    ++app_events[inst->p_app->id];
+}
+static const mini_app_t test_apps[] = {
+    {.id=MINI_APP_ID_DESKTOP,.run_cb=fixture_run,.kill_cb=fixture_kill,.hibernate_enabled=true},
+    {.id=MINI_APP_ID_BLE,.run_cb=fixture_run,.kill_cb=fixture_kill},
+    {.id=MINI_APP_ID_STATUS_BAR,.run_cb=fixture_run,.kill_cb=fixture_kill,.deamon=true,
+     .on_event_cb=fixture_event},
+    {.id=MINI_APP_ID_CHAMELEON,.run_cb=fixture_run,.kill_cb=fixture_kill,.hibernate_enabled=true,
+     .prepare_exit_cb=fixture_prepare,.cancel_exit_cb=fixture_cancel,.on_event_cb=fixture_event},
+    {.id=TEST_APP_OTHER,.run_cb=fixture_run,.kill_cb=fixture_kill,.hibernate_enabled=true},
+    {.id=TEST_APP_NO_HIBERNATE,.run_cb=fixture_run,.kill_cb=fixture_kill,
+     .prepare_exit_cb=fixture_prepare,.cancel_exit_cb=fixture_cancel},
+    {.id=TEST_APP_FAILED_INIT,.run_cb=fixture_run,.kill_cb=fixture_kill,
+     .prepare_exit_cb=fixture_prepare,.cancel_exit_cb=fixture_cancel}
+};
+static const mini_app_t *mini_app_registry_find_by_id(uint32_t id) {
+    return id > 0 && id < TEST_APP_COUNT ? &test_apps[id - 1] : NULL;
+}
+
+/* ACTUAL_LAUNCHER_MODULE */
+
+static void clear_observations(void) {
+    memset(runs, 0, sizeof(runs)); memset(kills, 0, sizeof(kills));
+    memset(app_events, 0, sizeof(app_events));
+    event_count = prepare_calls = cancel_calls = ntag_calls = ntag_cancel_calls = 0;
+    memory_errors = ble_remote_stops = ble_stops = ble_pending = cache_saves = settings_saves = 0;
+    ui_deinits = flash_sleeps = shutdown_cancels = nfc_sleeps = 0;
+}
+static void fixture_start(unsigned id) {
+    test_launcher = mini_app_launcher();
+    memset(test_launcher, 0, sizeof(*test_launcher));
+    memset(&test_cache, 0, sizeof(test_cache));
+    test_cache.enabled = true; test_cache.id = 0x777;
+    memset(test_cache.retain_data, 0x44, sizeof(test_cache.retain_data));
+    memset(old_retain, 0x66, sizeof(old_retain));
+    test_settings.hibernate_enabled = true;
+    allow_prepare = allow_ntag = ntag_clean = true;
+    mini_app_launcher_run(test_launcher, id);
+    if (id != TEST_APP_FAILED_INIT) {
+        assert(test_launcher->p_main_app_inst && test_launcher->p_main_app_inst->p_handle);
+        test_launcher->p_main_app_inst->p_retain_data = old_retain;
+    }
+    clear_observations();
+}
+static void assert_owner_unchanged(mini_app_inst_t *owner, void *handle, const cache_data_t *cache) {
+    assert(test_launcher->p_main_app_inst == owner);
+    assert(owner->p_handle == handle && owner->state == APP_STATE_RUNNING);
+    assert(owner->p_retain_data == old_retain && old_retain[0] == 0x66);
+    assert(!memcmp(&test_cache, cache, sizeof(test_cache)));
+    assert(!kills[owner->p_app->id] && !runs[TEST_APP_OTHER] && !runs[MINI_APP_ID_DESKTOP]);
+}
+static void fixture_dispose(void) {
+    reenter_from = REENTER_NONE;
+    mini_app_launcher_cancel_exit(test_launcher);
+    while (test_launcher->instances) {
+        mini_app_inst_t *inst = test_launcher->instances;
+        test_launcher->instances = inst->next;
+        mui_mem_free(inst->p_handle);
+        mui_mem_free(inst);
+    }
+    memset(test_launcher, 0, sizeof(*test_launcher));
+    assert(!alloc_live);
+}
+
+/* Optional main shutdown function uses these deterministic boundaries. */
+static void nrf_pwr_mgmt_cancel_shutdown(void) {
+    ++shutdown_cancels; record(E_SHUTDOWN_CANCEL);
+}
+static void ble_remote_shutdown(void) { ++ble_remote_stops; record(E_BLE_REMOTE_STOP); }
+static void ble_disable(void) { ++ble_stops; record(E_BLE_STOP); }
+static void ble_process_pending(void) { ++ble_pending; record(E_BLE_PENDING); }
+static const ntag_t *ntag_emu_get_current_tag(void) {
+    static const ntag_t tag = {{1,2,3,4,5,6,7,8}};
+    return &tag;
+}
+const ntag_t default_ntag215 = {{0}};
+static void cache_save(void) { ++cache_saves; record(E_CACHE_SAVE); }
+static int32_t settings_save(void) { ++settings_saves; record(E_SETTINGS_SAVE); return settings_save_result; }
+static void mui_deinit(void *p) { assert(p == mui()); ++ui_deinits; record(E_UI_DEINIT); }
+static void hal_spi_flash_sleep(void) { ++flash_sleeps; record(E_FLASH_SLEEP); }
+static unsigned bsp_board_button_idx_to_pin(unsigned pin) { return pin + 3; }
+static void nrf_gpio_cfg_input(unsigned pin, unsigned pull) {
+    assert(pin == BTN_ID_SLEEP + 3 && pull == BUTTON_PULL); record(E_GPIO);
+}
+static ret_code_t bsp_wakeup_button_enable(unsigned pin) { assert(pin == BTN_ID_SLEEP); record(E_WAKE); return 0; }
+static ret_code_t bsp_nfc_sleep_mode_prepare(void) { ++nfc_sleeps; record(E_NFC_SLEEP); return 0; }
+static void bsp_board_leds_off(void) { record(E_LED_OFF); }
+

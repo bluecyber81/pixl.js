@@ -20,12 +20,18 @@
           <td><span>{{ row.sincePreviousMilliseconds === null ? '—' : `${row.sincePreviousMilliseconds} ${text.ms}` }}</span><span v-if="summary && row.sincePreviousMilliseconds > 0" class="phase-meter" aria-hidden="true"><span :style="{width: (row.sincePreviousMilliseconds / summary.total * 100) + '%'}"></span></span></td></tr></tbody>
       </table>
     </div>
+    <details v-if="summary"><summary>{{ text.baseline }}</summary>
+      <p>{{ text.baselineHint }}</p>
+      <input type="file" accept=".json,application/json" :aria-label="text.baseline" @change="loadBaseline" />
+      <p v-if="baselineError" role="status">{{ text.invalidBaseline }}</p>
+      <p v-if="difference" role="status">{{ text.difference }} · {{ text.storage }} {{ signed(difference.storage) }} ms · {{ text.total }} {{ signed(difference.total) }} ms</p>
+    </details>
     <p class="limits">{{ text.limits }}</p>
   </section>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
+import { compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
 const props = defineProps({ connected: Boolean, blocked: Boolean, generation: { type: Number, default: 0 },
   locale: { type: String, default: 'de_DE' }, readDiagnostics: { type: Function, default: null } });
 const emit = defineEmits(['busy', 'export']);
@@ -42,9 +48,24 @@ const summary = computed(() => {
   const longest = rows.value.slice(1).reduce((best, row) => row.sincePreviousMilliseconds > best.sincePreviousMilliseconds ? row : best);
   return {total, longest};
 });
-let request = 0, mounted = true;
+let request = 0, baselineRequest = 0, mounted = true;
+const difference = ref(null), baselineError = ref(false);
+const signed = value => value > 0 ? '+' + value : String(value);
+async function loadBaseline(event) {
+  const file = event.target.files?.[0], id = ++baselineRequest;
+  difference.value = null; baselineError.value = false;
+  if (!file) return;
+  try {
+    if (file.size > 1024 * 1024) throw new Error();
+    const report = JSON.parse(await file.text());
+    if (id !== baselineRequest) return;
+    difference.value = compareStartup(report, info.value);
+    baselineError.value = !difference.value;
+  } catch { if (id === baselineRequest) baselineError.value = true; }
+}
 function clear() {
   ++request;
+  ++baselineRequest; difference.value = null; baselineError.value = false;
   const wasLoading = loading.value;
   state.value = 'unknown'; info.value = null; observedAt.value = null;
   if (wasLoading) emit('busy', false);

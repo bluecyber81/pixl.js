@@ -397,10 +397,9 @@ void tag_emulation_load_data(void) {
  *Save the emulated card configuration data. At the right time, this function should be called for data preservation of
  *data
  */
-void tag_emulation_save_data(void) {
+bool tag_emulation_save_data(void) {
     uint8_t slot = tag_emulation_get_slot();
-    save_data_by_tag_type(slot, slotConfig.slots[slot].tag_hf);
-    // save_data_by_tag_type(slot, slotConfig.slots[slot].tag_lf);
+    return save_data_by_tag_type(slot, slotConfig.slots[slot].tag_hf);
 }
 
 /* Explicit changed-only commit: the caller has already compared the edited
@@ -679,23 +678,44 @@ bool tag_emulation_active_data_ready(void) { return m_tag_data_loaded; }
  * Keep the old selection and data if saving it fails. */
 bool tag_emulation_prepare_slot_count(uint8_t count) {
     if (!count || count > TAG_MAX_SLOT_NUM) return false;
-    if (slotConfig.active_slot < count) return true;
-    if (!save_data_by_tag_type(slotConfig.active_slot, slotConfig.slots[slotConfig.active_slot].tag_hf)) return false;
+    if (slotConfig.active_slot < count) return tag_emulation_save_data();
     uint8_t next = 0;
     for (uint8_t i = 0; i < count; i++) {
         if (slotConfig.slots[i].enabled_hf &&
             get_sense_type_from_tag_type(slotConfig.slots[i].tag_hf) == TAG_SENSE_HF) { next = i; break; }
     }
-    tag_emulation_change_slot(next, false);
-    return true;
+    /* The slot change commits the old card exactly once before replacing its buffer. */
+    return tag_emulation_change_slot(next, false);
 }
 
 /**
  *Save the label data (written from RAM to Flash)
  */
-void tag_emulation_save(void) {
-    tag_emulation_save_config(); // Save the card slot configuration
-    tag_emulation_save_data();   // Save card slot data
+bool tag_emulation_save(void) {
+    /* Never publish configuration over a failed card-data commit. */
+    return tag_emulation_save_data() && tag_emulation_save_config();
+}
+
+bool tag_emulation_save_for_exit(uint8_t *default_slot) {
+    uint8_t active = slotConfig.active_slot;
+    uint8_t count = settings_get_data()->chameleon_slot_num;
+    if (!default_slot || active >= TAG_MAX_SLOT_NUM || active >= count) return false;
+    if (!tag_emulation_save_data()) return false;
+    /* The next init loads the default. Do not replace the current buffer:
+     * a cancelled exit must retain even deliberately volatile Shadow bytes. */
+    uint8_t next = *default_slot;
+    if (next < TAG_MAX_SLOT_NUM && next < count && slotConfig.slots[next].enabled_hf &&
+        get_sense_type_from_tag_type(slotConfig.slots[next].tag_hf) == TAG_SENSE_HF) {
+        slotConfig.active_slot = next;
+    } else {
+        next = UINT8_MAX; /* Invalid default must not enable NFC wake. */
+    }
+    bool saved = tag_emulation_save_config();
+    slotConfig.active_slot = active;
+    if (saved) *default_slot = next;
+    /* Keep the CRC of the configuration actually written. Restoring RAM must
+     * not turn a later ordinary save into a false equal-data/no-op decision. */
+    return saved;
 }
 
 /**
@@ -714,7 +734,8 @@ void tag_emulation_set_slot(uint8_t index) {
 /**
  * Switch to the card slot of the specified index, this function will automatically complete the data loading
  */
-void tag_emulation_change_slot(uint8_t index, bool sense_disable) {
+bool tag_emulation_change_slot(uint8_t index, bool sense_disable) {
+    if (index >= TAG_MAX_SLOT_NUM) return false;
     if (sense_disable) {
         // Turn off the analog card to avoid triggering the simulation when switching the card slot
         tag_emulation_sense_end();
@@ -722,7 +743,7 @@ void tag_emulation_change_slot(uint8_t index, bool sense_disable) {
     /* A failed save must not be followed by a load over the only dirty RAM copy. */
     if (!save_data_by_tag_type(slotConfig.active_slot, slotConfig.slots[slotConfig.active_slot].tag_hf)) {
         if (sense_disable) tag_emulation_sense_run();
-        return;
+        return false;
     }
     g_is_tag_emulating = false;    // Reset the logo position
     tag_emulation_set_slot(index); // Update the index of the activated card slot
@@ -731,6 +752,7 @@ void tag_emulation_change_slot(uint8_t index, bool sense_disable) {
         // According to the configuration of the new card slot, the monitoring status of our update
         tag_emulation_sense_run();
     }
+    return true;
 }
 
 /**

@@ -37,12 +37,13 @@ def harness():
     inst_types = inst_header[inst_header.index('struct mini_app_inst_s;'):inst_header.rindex('#endif')]
     replace('typedef struct {void *p_handle;} mini_app_inst_t;', 'typedef int xbm_t;\n' + inst_types + r'''
 #define MINI_APP_ID_DESKTOP 4
-typedef struct {mini_app_inst_t *p_main_app_inst,*instances;} mini_app_launcher_t;
+typedef struct {mini_app_inst_t *p_main_app_inst,*instances,*prepared_inst;void*prepared_handle;mini_app_exit_reason_t exit_reason;bool exit_prepared,exit_busy;} mini_app_launcher_t;
 static mini_app_launcher_t launcher;
 static mini_app_inst_t instance;
 static unsigned desktop_runs, frees, active_view, frames, frames_at_save;
 static unsigned header_sets, message_sets, button_clears, callback_clears;
 static bool ntag_emu_prepare_change(void){return true;}
+static void ntag_emu_cancel_change(void){}
 static bool home_save;
 static char header_text[64]="STALE FORMAT CONFIRM", message_text[64];
 static void mini_app_launcher_run(mini_app_launcher_t*l,uint32_t id){
@@ -68,7 +69,7 @@ static int settings_save(void){
             'static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;assert(active_view==SETTINGS_VIEW_ID_MAIN);toast_calls++;}')
     launcher_src = (SRC / 'core/mini_app_launcher.c').read_text(encoding='utf-8')
     launcher_functions = '\n'.join(native.function(launcher_src, name) for name in
-                                  ('mini_app_launcher_find', 'mini_app_launcher_inst_kill', 'mini_app_launcher_kill'))
+                                  ('mini_app_launcher_input_blocked', 'mini_app_launcher_clear_exit', 'mini_app_launcher_exit_prepared', 'mini_app_launcher_cancel_exit', 'mini_app_launcher_prepare_exit', 'mini_app_launcher_find', 'mini_app_launcher_inst_kill', 'mini_app_launcher_kill'))
     replace('static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_SETTINGS);kills++;}', launcher_functions)
     replace('static void *mini_app_launcher(void){return NULL;}',
             'static mini_app_launcher_t *mini_app_launcher(void){return &launcher;}')
@@ -109,7 +110,7 @@ static void start_settings(void){
  assert(app->p_list_view&&app->p_msg_box&&app->p_toast_view&&app->p_progress_bar&&app->p_scene_dispatcher&&app->p_view_dispatcher&&app->p_view_dispatcher_toast);
  app->p_list_view->user_data=app;app->p_msg_box->user_data=app;
  instance=(mini_app_inst_t){.p_app=&settings_info,.state=APP_STATE_RUNNING,.p_handle=app};
- launcher=(mini_app_launcher_t){&instance,&instance};active_view=SETTINGS_VIEW_ID_MAIN;
+ launcher=(mini_app_launcher_t){.p_main_app_inst=&instance,.instances=&instance};active_view=SETTINGS_VIEW_ID_MAIN;
  strcpy(header_text,"STALE FORMAT CONFIRM");
 }
 static void select_home(int event){

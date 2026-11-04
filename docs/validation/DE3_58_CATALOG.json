@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "vectorsChecked": 128,
+  "vectorMismatches": [],
+  "irqBindingChanges": [],
+  "observerOrNoInitSizeChanges": {},
+  "catalogBytesDecodedMatch": {
+    "figures": true,
+    "games": true,
+    "links": true
+  },
+  "figureCount": 952,
+  "gameCount": 82,
+  "linkCount": 1344,
+  "referenceBinSha256": "8521df0f2730d50a137f8a95350ccafd8c9ebc78fe2436ab501726fe3f760ab6",
+  "imageSha256": "a2ad6ea6c6a668b1a2d7614f45aee586296750d3e76c73645435d17710838efb",
+  "passed": true
+}

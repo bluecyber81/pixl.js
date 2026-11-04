@@ -8,6 +8,7 @@ test('package presentation is explicit local scope and never claims unread stora
  for(const locale of ['de_DE','en_US']){const t=firmwarePackageText(locale);assert.ok(t.scope&&t.unread&&t.limits&&t.empty&&t.local);}
  assert.match(firmwarePackageText('de_DE').unread,/nicht ausgelesen.*keine Gerätekompatibilität/);
  assert.match(firmwarePackageText('en_US').unread,/not read.*does not confirm/);
+ assert.deepEqual(packagePresentation(entry,null),packagePresentation(entry));
  assert.deepEqual(packagePresentation(entry),{newer:false,installed:null,downloadUrl:'/firmware/'+entry.file,dfuUrl:'/dfu/web.html'});
 });
 test('newer application version or CRC-verified counter suppresses downgrade links',()=>{

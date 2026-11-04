@@ -25,18 +25,22 @@ typedef struct _db_game_t {
     uint16_t link_cnt;
 } db_game_t;
 
+typedef struct {
+    const char *en;
+    const char *cn;
+    const char *it;
+} db_notes_t;
+
 typedef struct _db_link_t {
     uint8_t  game_id;
     /* Internal generated-table reference, never persisted in tag/slot files. */
     uint16_t amiibo_index;
-    const char *note_en;
-    const char *note_cn;
-    const char *note_it;
+    const db_notes_t *notes;
     
 } db_link_t;
 
 #if UINTPTR_MAX == UINT32_MAX
-_Static_assert(sizeof(db_link_t) == 16, "indexed link table must remain compact and aligned");
+_Static_assert(sizeof(db_link_t) == 8, "indexed link table must remain compact and aligned");
 #endif
 
 typedef struct _db_v3_t {

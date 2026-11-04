@@ -52,11 +52,15 @@ static void df_core_default_handler(df_event_t *evt) {
 
 static void df_core_on_event(df_event_t *evt) {
     if (evt->type == DF_EVENT_LINK_DISCONNECTED) {
+        df_proto_info_cancel_pending();
         // Close all VFS state, not only the handler of the last command (which
         // may have been GET_VERSION while a file was still open).
         df_proto_vfs_cleanup();
         m_df_ctx.cmd = NULL;
     } else if (evt->type == DF_EVENT_DATA_RECEVIED) {
+        /* Any replacement command invalidates an older reset reservation. */
+        df_proto_info_cancel_pending();
+        df_proto_vfs_cancel_restart();
         m_df_ctx.cmd = df_core_find_proto_handler_entry(evt->df->cmd);
         NRF_LOG_INFO("cmd entry:%X", m_df_ctx.cmd);
         if (m_df_ctx.cmd) {
