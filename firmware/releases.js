@@ -3,12 +3,12 @@ globalThis.AllmiiboFirmwareReleases = {
   "schema": 1,
   "packages": [
     {
-      "id": "de3.57-lcd-app",
-      "version": "2.22.0-DE3.57",
-      "counter": 629,
-      "file": "Allmiibo_LCD_DE3_57_629_TESTSTAND.zip",
-      "bytes": 371331,
-      "sha256": "d23d76e03b14c8dd78f7976b7024f7664482894ee5bd0db1f9f5f16c8e42d155",
+      "id": "de3.58-lcd-app",
+      "version": "2.22.0-DE3.58",
+      "counter": 630,
+      "file": "Allmiibo_LCD_DE3_58_630_TESTSTAND.zip",
+      "bytes": 363619,
+      "sha256": "da1f816de4981513c89d08b8ee959b931751444aa43a1ccde72f292e5082a242",
       "board": "LCD",
       "storage": "PFS1",
       "bootloader": "BL8",

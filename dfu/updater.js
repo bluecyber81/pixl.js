@@ -9,7 +9,7 @@
             Object.assign(this, { Package, createDfu, onStatus, onProgress, onState });
             this.package = null; this.busy = false; this.loading = false; this.sequence = 0; this.lastResult = null;
         }
-        state() { this.onState({ busy: this.busy, loading: this.loading, ready: !!this.package && !this.loading && !this.busy }); }
+        state() { this.onState({ busy: this.busy, loading: this.loading, ready: !!this.package && !this.loading && !this.busy, target: this.package?.image?.target }); }
         async setPackage(file) {
             if (this.busy) return false;
             const sequence = ++this.sequence;

@@ -9,6 +9,64 @@
     const MAX_ZIP = 2 * 1024 * 1024, MAX_CONTENT = 1024 * 1024;
     const MAX_APPLICATION = 372736;
     function requireThat(ok, message) { if (!ok) throw new Error(message); }
+    // Nordic dfu-cc.proto uses varints and length-delimited fields here.
+    // Decode only the envelope and fields needed by the application updater.
+    function readVarint(bytes, pos) {
+        let value = 0;
+        for (let i = 0; i < 5 && pos.at < bytes.length; i++) {
+            const b = bytes[pos.at++];
+            value += (b & 127) * 2 ** (7 * i);
+            if (b < 128 && value <= 0xffffffff) return value;
+        }
+        throw new Error('Ungültige Zahl im Nordic-Startpaket.');
+    }
+    function fields(bytes) {
+        const result = new Map(), pos = { at: 0 };
+        while (pos.at < bytes.length) {
+            const tag = readVarint(bytes, pos), id = Math.floor(tag / 8), wire = tag % 8;
+            requireThat(id > 0 && (wire === 0 || wire === 2), 'Unbekanntes Format im Startpaket.');
+            let value = readVarint(bytes, pos);
+            if (wire === 2) {
+                requireThat(value <= bytes.length - pos.at, 'Unvollständiges Startpaket.');
+                const end = pos.at + value;
+                value = bytes.subarray(pos.at, end);
+                pos.at = end;
+            }
+            if (!result.has(id)) result.set(id, []);
+            result.get(id).push(value);
+        }
+        return result;
+    }
+    function one(map, id, numeric = false) {
+        const list = map.get(id);
+        requireThat(list?.length === 1 && (typeof list[0] === 'number') === numeric, 'Feld im Startpaket fehlt oder ist mehrdeutig.');
+        return list[0];
+    }
+    async function requirements(data, image) {
+        const packet = fields(new Uint8Array(data));
+        requireThat(!packet.has(1), 'Erwartet wird ein signiertes Nordic-Startpaket.');
+        const signed = fields(one(packet, 2)), command = fields(one(signed, 1));
+        requireThat(one(signed, 2, true) === 0 && one(signed, 3).length === 64 && one(command, 1, true) === 1,
+            'Ungültiger Signaturrahmen oder Updatebefehl.');
+        const init = fields(one(command, 2));
+        requireThat(one(init, 4, true) === 0 && one(init, 7, true) === image.byteLength &&
+            [5, 6].every(id => !init.has(id) || one(init, id, true) === 0), 'Startpaket und Anwendungsdatei passen nicht zusammen.');
+        const hash = fields(one(init, 8)), expected = one(hash, 2);
+        requireThat(one(hash, 1, true) === 3 && expected.length === 32, 'SHA-256-Prüfsumme im Startpaket fehlt.');
+        requireThat(globalThis.crypto?.subtle, 'Für die SHA-256-Prüfung die Seite über HTTPS oder localhost öffnen.');
+        const digest = new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', image));
+        requireThat(digest.every((n, i) => n === expected[31 - i]), 'Die Anwendung passt nicht zur SHA-256-Prüfsumme im Startpaket.');
+        const softDevices = [];
+        for (const field of init.get(3) || []) {
+            if (typeof field === 'number') softDevices.push(field);
+            else {
+                const pos = { at: 0 };
+                while (pos.at < field.length) softDevices.push(readVarint(field, pos));
+            }
+        }
+        requireThat(softDevices.length > 0 && softDevices.every(n => n <= 0xffff), 'Ungültige SoftDevice-Anforderung.');
+        return Object.freeze({ counter: one(init, 1, true), hardware: one(init, 2, true), softDevices: Object.freeze(softDevices) });
+    }
     function text(bytes) {
         let value = ''; for (const byte of bytes) value += String.fromCharCode(byte); return value;
     }
@@ -107,7 +165,8 @@
                 'Paketgröße oder zusätzliche Dateien passen nicht zu diesem LCD-Anwendungs-OTA.');
             const initData = await readEntry(zip, init), imageData = await readEntry(zip, app);
             requireThat(initData.byteLength === init.size && imageData.byteLength === app.size, 'Entpackte Größen stimmen nicht.');
-            this.image = Object.freeze({ type: 'application', initFile: init.name, imageFile: app.name, initData, imageData });
+            const target = await requirements(initData, imageData);
+            this.image = Object.freeze({ type: 'application', initFile: init.name, imageFile: app.name, initData, imageData, target });
             return this;
         }
         async getAppImage() {
