@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.37.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.37.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -77,14 +77,27 @@
       <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
       <strong>{{ $t('tools.' + transfer.phase) }}</strong>
       <span class="transfer-path">{{ transfer.path }}</span>
-      <progress :value="Number.isSafeInteger(transfer.total) ? transferPercent : undefined" max="100" :aria-label="$t('tools.transfer')"></progress>
-      <span v-if="Number.isSafeInteger(transfer.total)">{{ transferPercent }}%</span>
-      <span>{{ format_size(transfer.done) }} / {{ format_size(transfer.total) }}</span>
-      <span v-if="Number.isSafeInteger(transfer.filesTotal)">{{ $t('workflow.backupFiles',{done:transfer.filesDone,total:transfer.filesTotal}) }}</span>
+      <progress v-if="backupReadTime && transfer.phase === 'verifying'" :value="transfer.timing.completed" :max="transfer.timing.total" :aria-label="$t('tools.verifying')"></progress>
+      <progress v-else :value="Number.isSafeInteger(transfer.total) ? transferPercent : undefined" max="100" :aria-label="$t('tools.transfer')"></progress>
+      <template v-if="!backingUp || transfer.phase === 'reading'">
+        <span v-if="Number.isSafeInteger(transfer.total)">{{ transferPercent }}%</span>
+        <span>{{ format_size(transfer.done) }}<template v-if="Number.isSafeInteger(transfer.total)"> / {{ format_size(transfer.total) }}</template></span>
+        <span v-if="Number.isSafeInteger(transfer.filesTotal)">{{ $t('workflow.backupFiles',{done:transfer.filesDone,total:transfer.filesTotal}) }}</span>
+      </template>
+      <span v-if="backupReadTime && transfer.phase === 'listing'">{{ $t('workflow.backupListing',{folders:transfer.foldersListed,files:transfer.filesTotal}) }}</span>
+      <span v-if="backupReadTime && transfer.phase === 'verifying'">{{ $t('workflow.backupVerifying',{done:transfer.timing.completed,total:transfer.timing.total}) }}</span>
       <span v-if="transferStats?.bytesPerSecond != null">{{ format_size(Math.round(transferStats.bytesPerSecond)) }}/s</span>
-      <span v-if="transferStats?.etaSeconds != null">{{ $t('info.remaining', { seconds: Math.ceil(transferStats.etaSeconds) }) }}</span>
-      <span v-if="transferStats?.stalled">{{ $t('info.waiting') }}</span>
-      <small class="transfer-estimate-hint">{{ $t('info.estimateHint') }}</small>
+      <template v-if="backupReadTime">
+        <span>{{ $t('workflow.backupElapsed',{time:formatReadDuration(backupReadTime.jobSeconds)}) }}</span>
+        <strong v-if="!cancellingBackup && backupReadTime.remainingSeconds != null">{{ $t('workflow.backupRemaining',{time:formatReadDuration(backupReadTime.remainingSeconds)}) }}</strong>
+        <small v-else-if="!cancellingBackup && backupReadTime.waiting && transfer.phase !== 'archiving'">{{ $t('workflow.backupWaiting') }}</small>
+        <small v-else-if="!cancellingBackup && transfer.phase === 'reading'">{{ $t('workflow.backupEstimating') }}</small>
+      </template>
+      <template v-else-if="!backingUp">
+        <span v-if="transferStats?.etaSeconds != null">{{ $t('info.remaining', { seconds: Math.ceil(transferStats.etaSeconds) }) }}</span>
+        <span v-if="transferStats?.stalled">{{ $t('info.waiting') }}</span>
+        <small class="transfer-estimate-hint">{{ $t('info.estimateHint') }}</small>
+      </template>
       <button v-if="zipBusy || syncing || backingUp || pendingUploads || pendingDownloads" type="button" @click="cancel_transfer" :disabled="transferCancelling">{{ $t('tools.cancel') }}</button>
       <span v-if="cancellingBackup">{{ $t('tools.cancelling') }}</span>
       <span v-if="cancellingUploads">{{ $t('info.finishingCommit') }}</span>
@@ -221,10 +234,10 @@
     <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview">
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
-      <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
+      <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.37.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.37.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -306,7 +319,7 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <CollectionAssistant :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <CollectionAssistant :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
     <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
@@ -450,10 +463,11 @@ import { getElementLocale } from "./i18n"
 import { read_saved_language, save_language } from "./lib/locale"
 import { filterRows, joinDevicePath, sha256, saveBlob, saveBlobWithPicker } from "./lib/browser-tools.js"
 import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
+import { readTimeEstimate, formatReadDuration } from "./lib/read-time-estimate.js"
 import { normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
 import { normalizeDrives, normalizeRuntimeDiagnostics, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
-import { collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
+import { DIAGNOSTIC_SECTION_KEYS, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { assertPortableEntryName, portableNameKey } from "./lib/portable-names.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
@@ -472,11 +486,11 @@ export default {
   components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.37.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.37.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
-      fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null,
+      fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
@@ -558,6 +572,12 @@ export default {
     selectedDriveInfo() { return this.connected ? this.driveInfo.find(d => d.label === this.current_dir[0] && d.status === 0) || null : null; },
     statusDriveInfo() { return this.connected ? this.selectedDriveInfo || this.driveInfo.find(d => d.label === 'E' && d.status === 0) || null : null; },
     transferPercent() { return Math.floor(this.transferStats?.percent ?? 0); },
+    backupReadTime() {
+      const timing = this.backingUp && this.transfer?.timing;
+      if (!timing) return null;
+      const now = Math.max(timing.updatedAt, this.readClock);
+      return { ...readTimeEstimate(timing, now), jobSeconds: Math.floor((now - timing.jobStartedAt) / 1000) };
+    },
     backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; }
   },
   methods: {
@@ -691,7 +711,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.37.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.37.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -733,7 +753,9 @@ export default {
     },
     show_device_panel() { return this.show_workspace('device'); },
     runtime_vfs_detail(code) { return this.$t('info.' + runtimeVfsDetailKey(code)); },
+    formatReadDuration(seconds) { return formatReadDuration(seconds); },
     refresh_local_metrics() {
+      if (this.fullDiagnosticBusy || this.collectionBusy || this.backingUp) this.readClock = performance.now();
       this.transportInfo = proto.get_transport_diagnostics?.() || null;
       if (this.transfer && this._transferMeter) this.transferStats = this._transferMeter.snapshot();
     },
@@ -1073,7 +1095,12 @@ export default {
     async read_all_diagnostics() {
       if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;
       const generation=this.sessionGeneration;
-      this.fullDiagnosticBusy=true; this.fullDiagnosticSnapshot=null; this.fullDiagnosticProgress='runtime';
+      this.fullDiagnosticBusy = true;
+      this.fullDiagnosticSnapshot = null;
+      this.fullDiagnosticInterrupted = false;
+      const startedAt = performance.now();
+      this.readClock = startedAt;
+      this.fullDiagnosticProgress = { completed: 0, total: DIAGNOSTIC_SECTION_KEYS.length, startedAt, updatedAt: startedAt, sections: {} };
       this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
       this.powerInfo=null; this.powerState='loading'; this.driveInfo=[];
       const guard=()=>this.session_current(generation) && !this.disconnecting;
@@ -1103,7 +1130,12 @@ export default {
               return {info,layout};
             }),
             mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.())
-          }, onProgress:({index})=>{if(guard())this.fullDiagnosticProgress=['runtime','boot','power','startup','drives','storage','mtu','ui'][index] || null;}
+          },
+          onProgress: ({ key, index, section }) => {
+            if (!guard()) return;
+            const progress = this.fullDiagnosticProgress;
+            this.fullDiagnosticProgress = { ...progress, completed: index, updatedAt: performance.now(), sections: { ...progress.sections, [key]: section } };
+          }
         });
         this.assert_session(generation); this.fullDiagnosticSnapshot=snapshot;
         for(const key of ['runtime','boot','power']) {
@@ -1113,6 +1145,7 @@ export default {
         this.driveInfo=snapshot.sections.drives.data || []; this.refresh_local_metrics();
       } catch(error) {
         if(guard()) {
+          this.fullDiagnosticInterrupted = true;
           this.runtimeState='failed'; this.bootState='failed'; this.powerState='failed';
           this.show_transfer_error(error);
         }
@@ -1128,7 +1161,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.37.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.37.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1245,7 +1278,7 @@ export default {
       const checkpointState = this._backupCheckpoint;
       this.backingUp = true; this.cancellingBackup = false;
       const controller = new AbortController(); this._backupController = controller;
-      this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: 0 });
+      this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: null });
       try {
         const result = await createBackup({ rootPath, deviceKey, checkpointState, firmwareVersion: this.firmwareVersion, signal: controller.signal, preserveLegacyNames: true,
           readDirectory: async path => {
@@ -1259,7 +1292,8 @@ export default {
             this.assert_session(generation); return bytes;
           },
           onProgress: progress => {
-            if (this.session_current(generation)) { this.set_transfer({ phase: progress.phase, path: progress.path, done: progress.bytesDone, total: progress.bytesTotal, complete: progress.phase === 'complete',
+            if (this.session_current(generation)) { this.set_transfer({ phase: progress.phase, path: progress.path, done: progress.bytesDone, total: progress.phase === 'reading' || progress.phase === 'complete' ? progress.bytesTotal : null, complete: progress.phase === 'complete',
+              timing:progress.timing, foldersListed:progress.foldersListed,
               filesDone:Number.isSafeInteger(progress.filesDone)?progress.filesDone:null,filesTotal:Number.isSafeInteger(progress.filesTotal)?progress.filesTotal:null }); this.refresh_backup_checkpoint(); }
           }
         });
@@ -1351,7 +1385,7 @@ export default {
     async on_ble_connected() {
       this.collectionObservation=null;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
-      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;
+      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
       this.disconnecting = false;
       this.reset_figure_info(); this.meta_diag_visible = false;
       this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
@@ -1377,7 +1411,7 @@ export default {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
-      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;
+      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
       const expectedDfu = this._disconnectIntent?.generation === this.sessionGeneration && this._disconnectIntent.reason === 'dfu';
@@ -1422,7 +1456,7 @@ export default {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
-      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;
+      this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
       this.remember_interruption(); this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;

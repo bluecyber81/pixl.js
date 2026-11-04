@@ -1,15 +1,22 @@
 <template>
-  <section class="diagnostic-overview" :aria-busy="loading">
+  <section class="diagnostic-overview">
     <header class="overview-heading"><div><p class="eyebrow">{{ t.eyebrow }}</p><h3>{{ t.title }}</h3></div>
-      <span class="overview-count">{{ availableCount }} / {{ cards.length }} {{ t.readable }}</span></header>
+      <span v-if="!loading" class="overview-count">{{ availableCount }} / {{ cards.length }} {{ t.readable }}</span></header>
     <p class="intro">{{ t.intro }}</p>
     <div class="overview-actions">
       <button class="primary-action" type="button" :disabled="!connected || blocked || loading" @click="read">{{ loading ? t.reading : t.read }}</button>
       <button type="button" :disabled="!canExport" @click="exportSnapshot">{{ t.export }}</button>
     </div>
-    <p class="overview-state" role="status">{{ loading ? progressLabel : !snapshot ? (connected ? t.empty : t.disconnected) : !connected ? t.historical : t.snapshot }}</p>
+    <p class="overview-state" role="status">{{ statusLabel }}</p>
+    <div v-if="activeProgress" class="read-progress">
+      <progress :value="activeProgress.completed" :max="activeProgress.total" :aria-label="t.progress"></progress>
+      <p class="read-time"><span>{{ t.elapsed }} {{ formatReadDuration(timing.elapsedSeconds) }}</span>
+        <span v-if="timing.waiting">{{ t.waiting }}</span>
+        <span v-else-if="timing.remainingSeconds != null">{{ t.remaining }} {{ formatReadDuration(timing.remainingSeconds) }}</span>
+        <span v-else>{{ t.estimating }}</span></p>
+    </div>
     <p v-if="startedAt" class="snapshot-time">{{ t.started }}: <time :datetime="startedAt">{{ displayTime(startedAt) }}</time><template v-if="completedAt"> · {{ t.completed }}: <time :datetime="completedAt">{{ displayTime(completedAt) }}</time></template></p>
-    <div class="diagnostic-grid">
+    <div class="diagnostic-grid" :aria-busy="loading">
       <article v-for="card in cards" :key="card.id" class="diagnostic-card" :class="'state-' + card.state" :data-section="card.id">
         <header class="card-heading"><h4>{{ card.title }}</h4><span class="section-state">{{ t.states[card.state] }}</span></header>
         <p class="section-time">{{ t.observed }}: <time v-if="card.observedAt" :datetime="card.observedAt">{{ displayTime(card.observedAt) }}</time><span v-else>—</span></p>
@@ -32,7 +39,8 @@
 <script setup>
 import { computed } from 'vue';
 import { normalizeRuntimeDiagnostics } from '../lib/device-info.js';
-import { normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
+import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
+import { DIAGNOSTIC_SECTION_KEYS, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
 import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
@@ -40,7 +48,8 @@ import { normalizeMtuDiagnostics, normalizeUiDiagnostics } from '../lib/device-e
 
 const props = defineProps({
   connected: Boolean, blocked: Boolean, loading: Boolean,
-  snapshot: { type: Object, default: null }, progress: { type: String, default: null },
+  snapshot: { type: Object, default: null }, progress: { type: Object, default: null },
+  readClock: { type: Number, default: 0 }, interrupted: Boolean,
   locale: { type: String, default: 'de_DE' },
 });
 const emit = defineEmits(['read', 'export']);
@@ -50,8 +59,13 @@ const t = computed(() => ({
   eyebrow: pick('GERÄTEDIAGNOSE', 'DEVICE DIAGNOSTICS'),
   title: pick('Eine Abfrage, alle verfügbaren Werte', 'One read, all available values'),
   readable: pick('Bereiche ausgelesen', 'sections read'),
-  intro: pick('Liest die Werte nacheinander auf deinen Klick. Ein nicht unterstützter Bereich verhindert die übrigen Abfragen nicht.', 'Reads values sequentially when you click. An unsupported section does not prevent the remaining reads.'),
+  intro: pick('Acht Bereiche werden nacheinander über Bluetooth gelesen. Bei langsamer Verbindung kann das länger dauern.', 'Eight sections are read over Bluetooth in sequence. A slow connection can take longer.'),
   read: pick('Alle Diagnosewerte auslesen', 'Read all diagnostic values'), reading: pick('Diagnose wird gelesen …', 'Reading diagnostics …'),
+  progress: pick('Fortschritt der Geräteabfrage', 'Device read progress'),
+  elapsed: pick('Vergangen', 'Elapsed'), remaining: pick('Noch ca.', 'Estimated time left'),
+  waiting: pick('Warte auf Geräteantwort …', 'Waiting for the device to respond …'),
+  estimating: pick('Restzeit wird ermittelt …', 'Estimating time remaining …'),
+  interrupted: pick('Die Abfrage wurde unterbrochen. Prüfe die Bluetooth-Verbindung und versuche es erneut.', 'The read was interrupted. Check the Bluetooth connection and try again.'),
   export: pick('Gesamtdiagnose speichern', 'Save combined diagnostics'),
   empty: pick('Bereit zum Auslesen. Noch keine Gesamtaufnahme.', 'Ready to read. No combined snapshot yet.'),
   disconnected: pick('Zum Auslesen zuerst mit dem Allmiibo verbinden.', 'Connect to the Allmiibo before reading.'),
@@ -86,7 +100,7 @@ const canExport = computed(() => !!validSnapshot.value && !props.loading);
 function read() { if (props.connected && !props.blocked && !props.loading) emit('read'); }
 function exportSnapshot() { if (canExport.value) emit('export', props.snapshot); }
 function section(id, title, normalizer, present) {
-  const source = validSnapshot.value?.sections[id];
+  const source = props.loading ? activeProgress.value?.sections[id] : validSnapshot.value?.sections[id];
   let state = ['available', 'unavailable', 'failed'].includes(source?.state) ? source.state : 'unknown';
   let data = null;
   if (state === 'available') {
@@ -205,7 +219,21 @@ const cards = computed(() => [
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
 ]);
-const progressLabel = computed(() => cards.value.find(card => card.id === props.progress)?.title || t.value.reading);
+const activeProgress = computed(() => props.loading && props.connected ? props.progress : null);
+const timing = computed(() => readTimeEstimate(activeProgress.value, Math.max(props.readClock, activeProgress.value.updatedAt)));
+const progressLabel = computed(() => {
+  const { completed, total } = activeProgress.value;
+  const key = DIAGNOSTIC_SECTION_KEYS[completed];
+  const name = cards.value.find(card => card.id === key)?.title;
+  return name ? pick(`Bereich ${completed + 1} von ${total} · ${name}`, `Section ${completed + 1} of ${total} · ${name}`)
+    : pick('Abfrage wird abgeschlossen …', 'Finishing the read …');
+});
+const statusLabel = computed(() => {
+  if (activeProgress.value) return progressLabel.value;
+  if (props.interrupted) return t.value.interrupted;
+  if (validSnapshot.value) return props.connected ? t.value.snapshot : t.value.historical;
+  return props.connected ? t.value.empty : t.value.disconnected;
+});
 const availableCount = computed(() => cards.value.filter(card => card.state === 'available').length);
 </script>
 <style scoped>
@@ -214,6 +242,7 @@ const availableCount = computed(() => cards.value.filter(card => card.state === 
 h3{margin:0;font-size:1.12rem;line-height:1.4}h4{margin:0;font-size:.92rem;line-height:1.4}.overview-count{font-size:.73rem;padding:7px 10px;border-radius:20px;background:#e0ecf3;white-space:nowrap}
 p{line-height:1.5}.intro,.overview-state{font-size:.83rem}.overview-actions{display:flex;flex-wrap:wrap;gap:10px}.overview-actions button{min-height:44px;padding:10px 14px;border:1px solid #9eb8cb;border-radius:9px;background:#fff;color:#244f71;font:inherit;font-size:.85rem;cursor:pointer}.overview-actions .primary-action{background:#215c80;border-color:#215c80;color:#fff}
 button:disabled{opacity:.5;cursor:default}button:focus-visible,summary:focus-visible{outline:3px solid #66a6ce;outline-offset:3px}.snapshot-time,.section-time{font-size:.69rem;color:#64788a;overflow-wrap:anywhere}
+.read-progress{margin:0 0 12px}.read-progress progress{display:block;width:100%;height:.65rem;accent-color:#215c80}.read-time{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin:.35rem 0;font-size:.8rem;color:#39576c;font-variant-numeric:tabular-nums}
 .diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}.diagnostic-card{min-width:0;padding:15px;border:1px solid #d6e2e9;border-radius:12px;background:#fff}
 .section-state{font-size:.64rem;padding:4px 7px;border-radius:12px;background:#edf1f5;color:#52697a;white-space:nowrap}.state-available .section-state{background:#e6f2eb;color:#246343}.state-failed .section-state{background:#fff0e6;color:#91501e}
 .key-values,.detail-values{display:grid;gap:11px;margin:14px 0}.key-values>div,.detail-values>div{display:grid;gap:4px}.key-values dt,.detail-values dt{font-size:.73rem;color:#5e7486}.key-values dd{font-weight:650;font-size:.9rem}.key-values dd,.detail-values dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.detail-values dd{font-size:.76rem}.technical-details{border-top:1px solid #e2eaf0;padding-top:9px}.technical-details>summary{cursor:pointer;font-size:.76rem;color:#2c668b;padding:4px 0}.scope-note,.section-message,.overall-limits{font-size:.71rem;color:#617588}.scope-note{margin-bottom:0}.overall-limits{margin-bottom:0}

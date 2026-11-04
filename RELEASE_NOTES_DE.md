@@ -1,4 +1,10 @@
-# DE3.59 · Dateimanager 3.37.0
+# DE3.59 · Dateimanager
+
+## Dateimanager 3.37.1
+
+Die Sammlungsprüfung und die Ordnersicherung zeigen, wie weit das Einlesen über Bluetooth ist. Beim Lesen zählt eine geschätzte Restzeit herunter. Beim Ordnervergleich der ZIP-Sicherung beginnt eine neue Schätzung für diesen Schritt. Die Gerätediagnose nennt den jeweils laufenden Bereich. Orange Katalogkarten erklären den konkreten Prüfhinweis zur Figur. Öffne den aktualisierten Dateimanager im Browser. [Web-Download](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.1)
+
+## Firmware DE3.59 und Dateimanager 3.37.0
 
 **DE3.59 / 631** ist ein Anwendungsupdate für das Allmiibo LCD mit nRF52832 und bestehendem Packed LittleFS (PFS1). **Dateimanager 3.37.0** funktioniert auch mit älteren Diagnoseberichten. Bootloader BL8, Nordic S112 7.3.0, Dateiformate und Katalog bleiben erhalten.
 

@@ -4,7 +4,7 @@
     <p class="catalogue-hint">{{ de ? 'Katalogdaten sind keine Figurendateien und bestätigen keine Spielunterstützung.' : 'Catalogue metadata is not a figure file or confirmation of game support.' }}</p>
     <div class="presence-legend" :aria-label="de ? 'Bedeutung der Bestandsmarkierungen' : 'Collection status legend'">
       <span class="legend-present">✓ {{ de ? 'Grün: ID gefunden' : 'Green: ID found' }}</span>
-      <span class="legend-attention">! {{ de ? 'Orange: Eintrag mit Prüfhinweis' : 'Orange: entry needs inspection' }}</span>
+      <span class="legend-attention">! {{ de ? 'Orange · Datei gefunden, Zuordnung oder Format prüfen' : 'Orange · file found, check ID or format' }}</span>
       <span class="legend-missing">− {{ de ? 'Rot: keine passende Datei nachgewiesen' : 'Red: no matching file found' }}</span>
       <span>· {{ de ? 'Neutral: nicht bestätigt oder veraltet' : 'Neutral: unconfirmed or outdated' }}</span>
     </div>
@@ -46,6 +46,9 @@
         </div>
         <div class="entry-title"><strong>{{ entry.name }}</strong><span class="entry-type">{{ entry.type }}</span></div>
         <span class="presence-label">{{ presenceLabel(presenceFor(entry.id)) }}</span>
+        <div v-if="presenceFor(entry.id).state === 'attention'" class="warning-reasons" role="list">
+          <p v-for="reason in presenceFor(entry.id).reasons" :key="reason" role="listitem">{{ reasonText(reason) }}</p>
+        </div>
         <small v-if="historical" class="observation-date">{{ observationDate }}</small>
         <span class="entry-series">{{ entry.series }}</span><code>{{ entry.id }}</code>
         <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="releaseLabel(entry, today).state === 'upcoming'"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
@@ -86,6 +89,27 @@ const presenceScope = computed(() => {
   };
   return states[presence.value.status]?.[de.value ? 0 : 1] || '';
 });
+const reasonLabels = {
+  'metadata-mismatch': ['Die Figuren-ID in den Dateieigenschaften weicht von der ID im Dateiinhalt ab.', 'The figure ID in the file properties differs from the ID in the file.'],
+  'classic-without-final-eight-bytes': ['532-Byte-Format. Die letzten 8 Byte der üblichen 540-Byte-Datei fehlen.', '532-byte format. The final 8 bytes of the usual 540-byte file are absent.'],
+  'classic-with-unverified-extra-bytes': ['572-Byte-Format mit 32 zusätzlichen, ungeprüften Bytes.', '572-byte format with 32 extra, unchecked bytes.'],
+  'two-kib-layout-not-fully-validated': ['2-KiB-Format. Der Prüfer kann den Aufbau nur teilweise auswerten.', '2 KiB format. The checker supports only part of this layout.'],
+  'unsupported-length': ['Der Prüfer unterstützt diese Dateigröße nicht.', 'The checker does not support this file size.'],
+  manufacturer: ['Das Herstellerbyte weicht vom erwarteten Wert ab.', 'The manufacturer byte differs from the expected value.'],
+  bcc0: ['Das erste Prüfbyte der Tag-Seriennummer stimmt nicht.', 'The first check byte of the tag serial number does not match.'],
+  bcc1: ['Das zweite Prüfbyte der Tag-Seriennummer stimmt nicht.', 'The second check byte of the tag serial number does not match.'],
+  'missing-id': ['Im Dateiinhalt fehlt eine gültige Figuren-ID.', 'The file contents contain no valid figure ID.'],
+  'v3-length': ['Die Dateigröße passt nicht zur V3-Figuren-ID.', 'The file size does not match the V3 figure ID.'],
+  'read-size-mismatch': ['Die gelesene Größe weicht vom Ordnereintrag ab.', 'The number of bytes read differs from the directory entry.'],
+  'read-failed': ['Die Datei konnte bei der Prüfung nicht gelesen werden.', 'The checker could not read the file.'],
+  'not-read-limit': ['Die Datei lag außerhalb der Lesegrenze dieser Prüfung.', 'This file exceeded the read limit for this check.'],
+  'not-read': ['Die Prüfung endete, bevor diese Datei gelesen wurde.', 'The check ended before this file was read.'],
+  'content-unconfirmed': ['Die Prüfung konnte die Figuren-ID im Inhalt nicht bestätigen.', 'The check could not confirm the figure ID in the contents.'],
+  'file-attention': ['Mindestens eine zugeordnete Datei ist auffällig.', 'At least one associated file needs inspection.'],
+};
+function reasonText(reason) {
+  return (reasonLabels[reason] || reasonLabels['file-attention'])[de.value ? 0 : 1];
+}
 function presenceLabel(value) {
   if(historical.value) {
     const labels={present:value.basis==='metadata' ? ['ID laut Eigenschaften','ID from properties'] : ['ID gefunden','ID found'],attention:['Prüfhinweis','Needs inspection'],missing:['Nicht gefunden','Not found'],unknown:['Nicht bestätigt','Unconfirmed']};
@@ -96,7 +120,8 @@ function presenceLabel(value) {
     : (de.value ? '✓ Vorhanden · ID bestätigt' : '✓ Present · ID confirmed');
   if (value.state === 'attention') return value.basis === 'metadata'
     ? (de.value ? '! Eigenschaften nennen ID · Datei prüfen' : '! Properties name ID · inspect file')
-    : (de.value ? '! Vorhanden · Abweichung prüfen' : '! Present · inspect differences');
+    : value.basis === 'content' ? (de.value ? '! Vorhanden · Abweichung prüfen' : '! Present · inspect differences')
+    : (de.value ? '! Fundstelle · Datei prüfen' : '! File found · inspect contents');
   if (value.state === 'missing') return de.value ? '− Nicht gefunden' : '− Not found';
   if (value.state === 'stale') return de.value ? '· Prüfung veraltet' : '· Scan outdated';
   return de.value ? '· Bestand nicht bestätigt' : '· Presence unconfirmed';
@@ -156,6 +181,7 @@ button { min-height:42px; padding:8px 14px; border:1px solid #b8ccdc; border-rad
 .entries li.presence-present { border:3px solid #23834f; background:#f4fbf6; } .entries li.presence-present .presence-label { color:#176c41; }
 .entries li.presence-attention { border:3px solid #c47a16; background:#fffaf1; } .entries li.presence-attention .presence-label { color:#92500a; }
 .entries li.presence-missing { border:3px solid #c24343; background:#fff7f7; } .entries li.presence-missing .presence-label { color:#aa3030; }
+.warning-reasons { font-size:.76rem; line-height:1.4; color:#75480b; } .warning-reasons p { margin:0 0 .25em; }
 .entries li.presence-stale { border-style:dashed; }
 nav { display:flex; justify-content:center; align-items:center; gap:14px; font-size:.8rem; color:#60788b; } .source-details { border-top:1px solid #dce5ed; margin-top:16px; padding-top:5px; } .source { font-size:.78rem; overflow-wrap:anywhere; color:#526575; line-height:1.5; margin:5px 0 8px; } .empty-result { border:1px dashed #bacddd; border-radius:10px; padding:20px; background:white; font-size:.9rem; line-height:1.5; }
 /* App's workspace navigation sits above the results on narrow screens. */

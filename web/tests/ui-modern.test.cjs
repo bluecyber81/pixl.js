@@ -64,11 +64,12 @@ function harness(overrides = {}) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/boot-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-info.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/transfer-meter.js'), 'utf8').replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/read-time-estimate.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/figure-info.js'), 'utf8').replace(/export /g, ''), context);
   for (const [file, names] of [
     ['startup-diagnostics.js',['normalizeStartupDiagnostics']],
     ['device-extra-diagnostics.js',['normalizeMtuDiagnostics','normalizeUiDiagnostics']],
-    ['diagnostic-snapshot.js',['collectDiagnosticSnapshot','createCombinedDiagnosticReport']]
+    ['diagnostic-snapshot.js',['DIAGNOSTIC_SECTION_KEYS','collectDiagnosticSnapshot','createCombinedDiagnosticReport']]
   ]) {
     const source=fs.readFileSync(path.join(__dirname,'../src/lib/',file),'utf8').replace(/^import .*$/gm,'').replace(/export /g,'');
     vm.runInContext('{ '+source+'\n'+names.map(name=>'globalThis.'+name+'='+name+';').join('')+' }',context);
@@ -279,7 +280,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.37.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.37.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -291,7 +292,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.37.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.37.1.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -378,7 +379,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.37.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.37.1.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -919,7 +920,7 @@ test('production template compiles with Vue 3 and modern Element Plus bindings',
   assert.deepEqual(compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'ui' }).errors, []);
   assert.doesNotMatch(descriptor.template.content, /slot-scope|\.(?:native|sync)(?==|\s|>)/);
   assert.match(descriptor.template.content, /<h1>\{\{ \$t\('workflow\.appTitle'\) \}\}<\/h1>/);
-  assert.match(descriptor.template.content, /<strong>3\.37\.0<\/strong>/);
+  assert.match(descriptor.template.content, /<strong>3\.37\.1<\/strong>/);
 });
 
 test('3.26 workspaces open and focus without navigation, disconnect or loss of transfer state',()=>{
@@ -1401,10 +1402,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.37.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.37.1.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.37.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.37.1.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -1416,6 +1417,25 @@ test('3.25 active backup exposes actual aggregate percent/file counts and never 
   progress({phase:'reading',path:'E:/tags/two',bytesDone:63653,bytesTotal:687555,filesDone:119,filesTotal:1131});assert.equal(app.transferPercent,9);
   gate.resolve();await pending;assert.equal(app.backupCanResume,true);assert.equal(app.backupResumeInfo.files,119);
   assert.match(descriptor.template.content,/v-if="backupCanResume"/);assert.match(descriptor.template.content,/transferPercent }}%/);
+});
+
+test('ZIP backup countdown ticks across filenames and clears on interruption', async () => {
+  const gate=deferred(); let emit;
+  const h=harness({createBackup:async options=>{emit=options.onProgress;await gate.promise;throw Error('interrupted')}});
+  const app=connected(h);
+  const job=app.on_backup();
+  assert.equal(app.transfer.total,null);
+  emit({phase:'reading',path:'E:/third',bytesDone:1080,bytesTotal:5400,filesDone:2,filesTotal:10,
+    timing:{jobStartedAt:0,startedAt:1000,updatedAt:5000,completed:2,total:10}});
+  app.readClock=5000;
+  assert.equal(app.backupReadTime.remainingSeconds,16);
+  app.readClock=6000;
+  assert.equal(app.backupReadTime.remainingSeconds,15);
+  app.readClock=14000;
+  assert.equal(app.backupReadTime.remainingSeconds,null);
+  assert.equal(app.backupReadTime.waiting,true);
+  gate.resolve(); await job;
+  assert.equal(app.backupReadTime,null);
 });
 
 test('cancelled backup cannot replace the prior complete backup or strand the UI', async () => {
@@ -1982,7 +2002,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.37.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.37.1');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -1993,6 +2013,32 @@ test('3.35 changed Bluetooth session discards a pending diagnostic without more 
  const pending=app.read_all_diagnostics();++app.sessionGeneration;app.fullDiagnosticBusy=true;
  gate.resolve(null);await pending;assert.equal(bootReads,0);assert.equal(app.fullDiagnosticSnapshot,null);
  assert.equal(app.fullDiagnosticBusy,true);
+});
+
+test('completed diagnostics publish partial results without queuing extra requests on the render clock', async () => {
+ const next = deferred(); let bootReads = 0;
+ const app = connected(harness({
+   get_runtime_diagnostics: async () => null,
+   get_boot_diagnostics: () => { ++bootReads; return next.promise; }
+ }));
+ const pending = app.read_all_diagnostics();
+ assert.equal(app.fullDiagnosticProgress.completed, 0);
+ await new Promise(setImmediate);
+ assert.equal(app.fullDiagnosticProgress.completed, 1);
+ assert.equal(app.fullDiagnosticProgress.sections.runtime.state, 'unavailable');
+ const progress = app.fullDiagnosticProgress;
+ app.refresh_local_metrics();
+ assert.equal(app.fullDiagnosticProgress, progress);
+ assert.equal(bootReads, 1);
+ assert.ok(app.readClock >= progress.updatedAt);
+ next.reject(Object.assign(Error('timeout'), { code:'TIMEOUT' }));
+ await pending;
+ assert.equal(app.fullDiagnosticProgress, null);
+ assert.equal(app.fullDiagnosticSnapshot, null);
+ assert.equal(app.fullDiagnosticBusy, false);
+ assert.equal(app.fullDiagnosticInterrupted, true);
+ app.on_ble_disconnected();
+ assert.equal(app.fullDiagnosticInterrupted, false);
 });
 
 test('3.35 failed fresh drive reads clear old space; primitive failure is exported without arbitrary text',async()=>{

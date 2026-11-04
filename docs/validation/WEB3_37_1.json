@@ -1,0 +1,24 @@
+{
+  "version": "3.37.1",
+  "firmware": "2.22.0-DE3.59",
+  "appCounter": 631,
+  "firmwareChanged": false,
+  "applicationZipSha256": "79387111d02a5bbaf5caee25b5032769c07562d6862f46f89161c66602d5d924",
+  "collectionBrowserCheck": {
+    "mode": "production browser UI, synthetic Bluetooth responses and accelerated clock",
+    "filesRead": 8,
+    "clockAdvancedBetweenTwoFileCompletions": true,
+    "realDeviceAccess": false
+  },
+  "backupBrowserCheck": {
+    "mode": "German mobile viewport, production Vue backup action and ZIP creation, synthetic reads and clock",
+    "filesRead": 110,
+    "fileBytes": 59400,
+    "resultZipBytes": 144118,
+    "countdownChangesBetweenFileCompletions": true,
+    "listingAndArchiveHaveNoFixedEstimate": true,
+    "realDeviceAccess": false
+  },
+  "reproduction": ["npm test", "npm run build", "npm run build:pages"],
+  "scope": "The estimate covers the current step and depends on observed progress. Browser test timings are simulated and do not predict physical device throughput."
+}

@@ -52,7 +52,7 @@ test('overview is passive and gates read/export while disconnected, blocked or l
   assert.equal(save().props.disabled,true);save().props.onClick();assert.equal(h.events.length,0);
   await change(h,{connected:true,blocked:true});read().props.onClick();assert.equal(h.events.length,0);
   await change(h,{blocked:false});read().props.onClick();assert.deepEqual(h.events,[['read']]);
-  await change(h,{loading:true,progress:'runtime'});
+  await change(h,{loading:true,progress:{completed:0,total:8,startedAt:0,updatedAt:0,sections:{}}});
   assert.equal(button(h.root,'Diagnose wird gelesen …').props.disabled,true);
   button(h.root,'Diagnose wird gelesen …').props.onClick();assert.equal(h.events.length,1);
   assert.match(text(nodes(h.root).find(n=>n.props.role==='status')),/RAM und Laufzeit/);
@@ -155,11 +155,37 @@ test('partial startup markers have no invented total or slowest complete-start c
  }finally{h.app.unmount();}
 });
 
+test('read progress uses completed replies, ticks without more reads and clears on interruption', async () => {
+  const sample = diagnosticSnapshot();
+  const progress = { startedAt: 1000, updatedAt: 5000, total: 8, completed: 2,
+    sections: { runtime: sample.sections.runtime, boot: { state: 'unavailable', observedAt: null, data: null, errorCode: null } } };
+  const h = await mount({ loading: true, readClock: 5000, progress });
+  try {
+    const bar = () => nodes(h.root, 'progress')[0];
+    assert.equal(bar().props.value, 2);
+    assert.equal(bar().props.max, 8);
+    assert.match(text(h.root), /Bereich 3 von 8 · Strom und Ruhezeit/);
+    assert.match(text(h.root), /Noch ca. 0:12/);
+    assert.match(text(card(h.root, 'runtime')), /Ausgelesen/);
+    assert.match(text(card(h.root, 'boot')), /Nicht verfügbar/);
+    await change(h, { readClock: 6100 });
+    assert.match(text(h.root), /Noch ca. 0:11/);
+    assert.match(text(h.root), /Vergangen 0:05/);
+    await change(h, { readClock: 17000 });
+    assert.match(text(h.root), /Warte auf Geräteantwort/);
+    assert.doesNotMatch(text(h.root), /Noch ca\./);
+    await change(h, { loading: false, interrupted: true, progress: null });
+    assert.match(text(h.root), /Abfrage wurde unterbrochen/);
+    assert.equal(bar(), undefined);
+    assert.equal(h.events.length, 0);
+  } finally { h.app.unmount(); }
+});
+
 test('English and Chinese locales use coherent English fallback and localized progress',async()=>{
- const h=await mount({locale:'en_US',snapshot:diagnosticSnapshot(),loading:true,progress:'storage'});
+ const h=await mount({locale:'en_US',snapshot:diagnosticSnapshot(),loading:true,progress:{completed:5,total:8,startedAt:0,updatedAt:2000,sections:{}}});
  try{
   assert.match(text(h.root),/Storage layout and cache/);assert.match(text(h.root),/Read timestamps|read timestamps/);
-  assert.equal(text(nodes(h.root).find(n=>n.props.role==='status')),'Storage layout and cache');
+  assert.equal(text(nodes(h.root).find(n=>n.props.role==='status')),'Section 6 of 8 · Storage layout and cache');
   await change(h,{locale:'zh_CN',loading:false});
   assert.ok(button(h.root,'Read all diagnostic values'));assert.ok(button(h.root,'Save combined diagnostics'));
   assert.match(text(card(h.root,'ui')),/Current\/last settings view only/);

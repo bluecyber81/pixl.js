@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as Vue from 'vue';
 import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
 import { auditCollection } from '../src/lib/collection-audit.js';
+import { formatReadDuration, readTimeEstimate } from '../src/lib/read-time-estimate.js';
 import { prepareFigureTransfer, suggestedFigureFilename } from '../src/lib/figure-transfer.js';
 import { filterCatalogue, releaseLabel } from '../src/lib/catalogue.js';
 
@@ -18,7 +19,7 @@ assert.deepEqual(compiled.errors, []);
 const template = compiled.code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,
   (_, names) => `const {${names.replace(/\s+as\s+/g, ':')}}=Vue;`).replace('export function render', 'function render');
 const make = new Function('Vue', 'baseline', 'checkCatalogueUpdates', 'auditCollection', 'prepareFigureTransfer',
-  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker',
+  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration',
   script + '\n' + template + '\ncomponent.render=render;return component;');
 const A = '0000000000000102', B = '0000000000000202';
 const baseline = { checkedDate: '2026-11-02', entries: [A, B].map(id => ({ id, name: `Synthetic ${id}`, series: 'Test', release: { eu: '2020-01-01' } })) };
@@ -42,7 +43,7 @@ function mount(overrides = {}) {
     overrides.catalogue || (async () => { throw Error('No network expected'); }), overrides.audit || auditCollection,
     overrides.prepare || prepareFigureTransfer, overrides.transfer || (async () => ({ committed: true })),
     suggestedFigureFilename, filterCatalogue, releaseLabel, (...args) => saves.push(args),
-    async (...args) => { saves.push(args); return { status: 'saved' }; });
+    async (...args) => { saves.push(args); return { status: 'saved' }; },readTimeEstimate,formatReadDuration);
   const app = renderer.createApp({ render: () => Vue.h(Component, { ...props, ref: v => vm = v,
     onBusy: v => events.push(['busy', v]), onWriting: v => events.push(['writing', v]), onChanged: v => events.push(['changed', v]),
     onRecovery: v => events.push(['recovery', v]), onCatalogue: v => events.push(['catalogue', v]),
@@ -52,6 +53,26 @@ function mount(overrides = {}) {
 }
 const partial = (mode = 'full') => ({ schema: 1, rootPath: 'E:/', mode, scanComplete: false, contentComplete: false, complete: false,
   present: [], missing: [], unconfirmed: [{ id: A, name: 'Not confirmed', state: 'not-observed-unconfirmed' }], upcoming: [], duplicates: [], unknown: [], files: [] });
+
+test('collection progress shows the measured countdown only during content reads and clears it on cancel', async () => {
+  const gate = deferred(); let progress;
+  const h = mount({audit: async options => { progress = options.onProgress; await gate.promise; return partial(); }});
+  try {
+    const pending = h.vm.scan();
+    progress({phase:'listing', folders:2, candidates:10, filesRead:0, totalToRead:null});
+    await tick(); assert.match(text(h.root), /2 Ordner gelesen/); assert.doesNotMatch(text(h.root), /Noch ca\./);
+    progress({phase:'reading', folders:2, candidates:10, filesRead:0, totalToRead:10});
+    progress({phase:'reading', folders:2, candidates:10, filesRead:2, totalToRead:10});
+    // Place the reactive clock at known monotonic sample times.
+    h.vm.progress = {...h.vm.progress, phaseStartedAt:1000, updatedAt:5000};
+    h.props.readClock = 5000; await tick();
+    assert.match(text(h.root), /2 \/ 10 Dateien gelesen/); assert.match(text(h.root), /Noch ca\. 0:16/);
+    h.props.readClock = 6000; await tick(); assert.match(text(h.root), /Noch ca\. 0:15/);
+    h.props.readClock = 14000; await tick(); assert.match(text(h.root), /Warte auf das Gerät/);
+    h.vm.cancel(); await tick(); assert.match(text(h.root), /wird abgebrochen/); assert.doesNotMatch(text(h.root), /Warte auf das Gerät/);
+    gate.resolve(); await pending; await tick(); assert.equal(h.vm.progress, null);
+  } finally { h.app.unmount(); }
+});
 
 test('scan holds the BLE busy lock while an aborted read drains and disallows a second operation', async () => {
   const gate = deferred(); let lists = 0;
@@ -370,6 +391,17 @@ test('App clears catalogue presence on disconnect/error and binds both report an
   assert.match(appDescriptor.template.content, /:collection-observed-at="catalogueObservationAt"/);
 });
 
+test('Figurensammlung explains the orange outline before connecting or scanning', async () => {
+  const h = mount();
+  try {
+    h.props.connected = false; await tick();
+    assert.match(text(h.root), /Was bedeutet Orange/);
+    assert.match(text(h.root), /Figuren-ID in den Eigenschaften vom Dateiinhalt abweicht/);
+    h.props.locale = 'en_US'; await tick();
+    assert.match(text(h.root), /Each orange-bordered card shows the reason/);
+  } finally { h.app.unmount(); }
+});
+
 test('whole catalogue cards render green/red/orange states with text, and stale/quick states cannot retain red', async () => {
   const full = { ...partial(), status: 'complete', complete: true, scanComplete: true, contentComplete: true, errors: [], limitsReached: [], stats: {},
     present: [{ id: A, contentConfirmed: true, paths: ['E:/a.bin'] }], missing: [{ id: B, state: 'no-structurally-consistent-file-observed' }],
@@ -383,7 +415,11 @@ test('whole catalogue cards render green/red/orange states with text, and stale/
     assert.match(cards()[1].props.class, /presence-missing/); assert.match(text(cards()[1]), /Nicht gefunden/);
     h.props.collectionReport = { ...full, files: [{ ...full.files[0], formatContext: 'classic-without-final-eight-bytes' }] }; await tick();
     assert.equal(cards()[0].props['data-presence'], 'attention'); assert.match(text(cards()[0]), /Vorhanden · Abweichung prüfen/);
-    h.props.collectionStale = true; await tick(); assert.ok(cards().every(n => n.props['data-presence'] === 'stale')); assert.match(text(h.root), /Prüfung veraltet/);
+    assert.match(text(cards()[0]), /532-Byte-Format/); assert.doesNotMatch(text(cards()[1]), /532-Byte-Format/);
+    h.props.collectionReport = { ...full, files: [{ ...full.files[0], metadataId: B }] }; await tick();
+    for (const card of cards()) assert.match(text(card), /Figuren-ID in den Dateieigenschaften weicht/);
+    assert.match(text(cards()[1]), /Eigenschaften nennen ID/);
+    h.props.collectionStale = true; await tick(); assert.doesNotMatch(text(h.root), /Figuren-ID in den Dateieigenschaften weicht/); assert.ok(cards().every(n => n.props['data-presence'] === 'stale')); assert.match(text(h.root), /Prüfung veraltet/);
     h.props.collectionStale = false; h.props.collectionReport = { ...full, mode: 'quick', contentComplete: false,
       files: [{ ...full.files[0], status: 'metadata-only' }], present: [{ ...full.present[0], contentConfirmed: false }] }; await tick();
     assert.deepEqual(cards().map(n => n.props['data-presence']), ['present', 'unknown']); assert.match(text(cards()[0]), /Vorhanden laut Eigenschaften/);

@@ -1,4 +1,4 @@
-Allmiibo Dateimanager 3.37.0
+Allmiibo Dateimanager 3.37.1
 4. November 2026
 
 Online öffnen
@@ -9,9 +9,10 @@ Am Windows-PC ohne Webserver starten
 Das portable ZIP vollständig entpacken, Python 3 installieren, falls es fehlt, und Start-Dateimanager.cmd öffnen. Der lokale Server ist über http://127.0.0.1:8765/ erreichbar. Zum Beenden Stop-Dateimanager.cmd verwenden. Der fertige Browser-Build benötigt weder npm noch Node.js. Einen anderen lokalen Port mit Start-Dateimanager.ps1 -Port 8780 wählen. Für das Handy die HTTPS-Adresse oben verwenden. 127.0.0.1 bezeichnet immer das Gerät, auf dem der Browser läuft.
 
 Firmwarepaket ansehen und installieren
-Das passende Anwendungsupdate heißt Allmiibo_LCD_DE3_59_631_TESTSTAND.zip. Die ZIP in ihrer ursprünglichen Form belassen. Die DFU-Seite zeigt bei der Dateiauswahl den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Eine höchstens zehn Minuten alte Bootdiagnose aus dem Dateimanager ermöglicht zusätzlich einen Vergleich. Auf dem vorgesehenen LCD/PFS1-Gerät Firmware-Update wählen und das eigene DFU-Gerät im Browser auswählen. Nach dem Neustart unter Einstellungen → Info die Firmwareversion prüfen.
+Das passende Anwendungsupdate heißt Allmiibo_LCD_DE3_59_631_TESTSTAND.zip. Die ZIP in ihrer ursprünglichen Form belassen. Die DFU-Seite zeigt bei der Dateiauswahl den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Eine höchstens zehn Minuten alte Bootdiagnose aus dem Dateimanager ermöglicht zusätzlich einen Vergleich. Auf dem vorgesehenen LCD/PFS1-Gerät Firmware-Update wählen und das eigene DFU-Gerät im Browser auswählen. Nach dem Neustart unter Einstellungen → Version die Firmwareversion prüfen.
 
 Dateien sichern und Diagnose lesen
+Beim Prüfen der Sammlung und beim Sichern vieler kleiner Figurendateien kann das Lesen über Bluetooth mehrere Minuten dauern. Die Anzeige zeigt zuerst die Ordnersuche und danach eine geschätzte Restzeit für den laufenden Schritt. Auf einer orange umrandeten Figurenkarte steht der jeweilige Prüfhinweis.
 Gerät & Diagnose → Alle Diagnosewerte auslesen → Gesamtdiagnose speichern. Einträge enthalten ihren jeweiligen Abrufzeitpunkt. Die Sammlung vor Änderungen über die ZIP-Sicherung auf dem eigenen Gerät speichern. Hinweise zu eigenen Bildern, Katalog und Dateiverwaltung stehen in README.md.
 
 

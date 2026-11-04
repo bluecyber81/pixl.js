@@ -37,6 +37,33 @@ test('full scan reads all supported BIN contents despite valid but stale metadat
   assert.equal(report.stats.bytesRead, 1072); assert.equal(report.stats.folders, 2);
 });
 
+test('progress discovers the scope once and counts only scheduled reads in the content phase', async () => {
+  const a = adapter({ 'E:/': [file('one.bin'),folder('sub'),file('unknown.bin', 400)],
+    'E:/sub': [file('two.bin'),file('over-budget.bin'),file('notes.txt')] });
+  const events = [];
+  const r = await auditCollection({ ...a.options, limits:{bytes:1080}, onProgress:stats=>events.push(stats) });
+  assert.deepEqual(a.calls.map(c=>c.slice(0,2)), [
+    ['list','E:/'],['list','E:/sub'],['read','E:/one.bin'],['read','E:/sub/two.bin'],
+  ]);
+  assert.ok(events.filter(p=>p.phase === 'listing').every(p=>p.totalToRead === null));
+  assert.deepEqual(events.filter(p=>p.phase === 'reading').map(p=>[p.filesRead,p.totalToRead]), [[0,2],[1,2],[2,2]]);
+  assert.equal(r.status,'partial'); assert.deepEqual(r.missing,[]);
+});
+
+test('cancelling at the last read or when the plan becomes available cannot turn a partial audit into confirmed absence', async () => {
+  for (const completed of [0, 1]) {
+    const a = adapter(), controller = new AbortController();
+    const report = await auditCollection({ ...a.options, signal:controller.signal, onProgress(event) {
+      if(event.phase === 'reading' && event.filesRead === completed) controller.abort();
+    } });
+    assert.equal(report.status,'cancelled');
+    assert.equal(report.complete,false);
+    assert.equal(report.stats.filesRead,completed);
+    assert.deepEqual(report.missing,[]);
+    assert.equal(a.calls.filter(c=>c[0] === 'read').length,completed);
+  }
+});
+
 test('quick mode does not read bytes and never confirms contents or missing IDs', async () => {
   const a = adapter({ 'E:/': [file('a.bin', 540, A), file('b.bin', 540, B)] });
   const report = await auditCollection({ ...a.options, mode: 'quick', readFile() { throw new Error('forbidden'); } });

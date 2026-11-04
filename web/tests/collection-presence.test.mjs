@@ -43,7 +43,7 @@ test('duplicate public IDs alone are green, not corruption or byte-equality evid
 test('a good copy plus another matching file with structural issues is orange', () => {
   const s = buildCollectionPresence(report({ files: [file(), file(A, { path: 'E:/bad.bin', status: 'attention', issues: ['bcc0'] })] }));
   assert.equal(state(s, A), 'attention'); assert.equal(collectionPresenceFor(s, A).basis, 'content');
-  assert.ok(collectionPresenceFor(s, A).reasons.includes('file-attention'));
+  assert.ok(collectionPresenceFor(s, A).reasons.includes('bcc0'));
 });
 test('metadata mismatch colors actual content and contradicted metadata IDs orange with different basis', () => {
   const s = buildCollectionPresence(report({ files: [file(A, { metadataId: B })], metadataMismatches: [{ contentId: A, metadataId: B, path: `E:/${A}.bin` }] }));
@@ -53,7 +53,7 @@ test('metadata mismatch colors actual content and contradicted metadata IDs oran
 for (const formatContext of ['classic-without-final-eight-bytes', 'classic-with-unverified-extra-bytes', 'two-kib-layout-not-fully-validated']) {
   test(`${formatContext} has an orange format limit without calling it damaged`, () => {
     const s = buildCollectionPresence(report({ files: [file(A, { formatContext })] }));
-    assert.equal(state(s, A), 'attention'); assert.deepEqual(collectionPresenceFor(s, A).reasons, ['format-limit']);
+    assert.equal(state(s, A), 'attention'); assert.deepEqual(collectionPresenceFor(s, A).reasons, [formatContext]);
   });
 }
 test('unsupported or unread content with only a metadata ID cannot become green or red', () => {

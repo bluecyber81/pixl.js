@@ -1,6 +1,8 @@
 import { figureId } from './figure-info.js';
 
 const FORMAT_LIMITS = new Set(['classic-without-final-eight-bytes', 'classic-with-unverified-extra-bytes', 'two-kib-layout-not-fully-validated']);
+const knownIssues = new Set(['bcc0', 'bcc1', 'manufacturer', 'missing-id', 'v3-length', 'unsupported-length', 'read-size-mismatch', 'read-failed']);
+const unreadStates = new Set(['not-read', 'not-read-limit', 'read-failed', 'read-size-mismatch', 'unsupported-length']);
 const record = (state, basis = null, reasons = [], files = 0) => Object.freeze({ state, basis, reasons: Object.freeze(reasons), files });
 const UNKNOWN = record('unknown'), STALE = record('stale', null, ['stale-report']);
 
@@ -48,11 +50,13 @@ export function buildCollectionPresence(report, { stale = false } = {}) {
     if (metadata) { pathAt(metadata, row.path); metadata.metadata = true; }
     const items = new Set([content, metadata].filter(Boolean));
     for (const item of items) {
-      if (Array.isArray(row.issues) && row.issues.length) item.reasons.add('file-attention');
-      if (FORMAT_LIMITS.has(row.formatContext)) item.reasons.add('format-limit');
-      if (row.status === 'unsupported-length') item.reasons.add('unsupported-length');
-      else if (!['structure-consistent', 'metadata-only'].includes(row.status)) item.reasons.add('content-unconfirmed');
-      if (full && !id && metadataId) item.reasons.add('content-unconfirmed');
+      const issues = Array.isArray(row.issues) ? row.issues : [];
+      for (const issue of issues) item.reasons.add(knownIssues.has(issue) ? issue : 'file-attention');
+      if (FORMAT_LIMITS.has(row.formatContext)) item.reasons.add(row.formatContext);
+      if (unreadStates.has(row.status)) item.reasons.add(row.status);
+      else if (!issues.length && (!['structure-consistent', 'metadata-only'].includes(row.status) || (full && !id && metadataId))) {
+        item.reasons.add('content-unconfirmed');
+      }
     }
     if (full && id && metadataId && id !== metadataId) {
       content.reasons.add('metadata-mismatch'); metadata.reasons.add('metadata-mismatch');

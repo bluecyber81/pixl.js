@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloadpakete und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.59)
+[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.1)
 
 ## Verbinden
 
@@ -17,6 +17,10 @@ Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
 
 ## Funktionen und Daten
+
+* **Figurensammlung → Sammlung prüfen.** Beim Suchen der Ordner siehst du die verstrichene Zeit und die bisher gefundenen BIN-Dateien. Die Inhaltsprüfung zeigt anschließend „gelesen / gesamt“ und schätzt die Restzeit aus abgeschlossenen Dateilesevorgängen.
+* **Sicherung & Wiederherstellung → Ordner sichern (ZIP).** Nach der Ordnersuche erscheint die geschätzte Restzeit für das Lesen. Bei einer fortgesetzten Sicherung zählen bereits zwischengespeicherte Dateien nicht zur gemessenen Lesegeschwindigkeit. Der anschließende Ordnervergleich hat seinen eigenen Fortschritt. Danach erstellt der Browser die ZIP.
+* **Orange im Figurenkatalog.** Zu dieser ID gibt es einen Eintrag mit einem Prüfhinweis. Ein Beispiel ist eine abweichende ID in Dateieigenschaften und Inhalt. Auf der Karte steht der konkrete Grund. Die Farbe allein sagt nichts über die Erkennung an einer Konsole aus.
 
 Dateien und Ordner, Bilder und Figureninfos, Suche, ZIP-Sicherung und Import,
 Diagnose, Fernbedienung sowie die DFU-Seite bleiben erhalten. Einzelne
@@ -36,7 +40,7 @@ GitHub erhält die üblichen Abrufe der Webseite. Figurenbilder werden anhand
 öffentlicher Figuren-IDs geladen. Persönliche UID, lokale Dateinamen und
 Figurendateiinhalte sind dafür nicht erforderlich.
 
-## Firmware-Update mit 3.37.0
+## Firmware-Update mit 3.37.1
 
 Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 

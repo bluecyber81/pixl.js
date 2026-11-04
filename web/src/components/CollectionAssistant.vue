@@ -2,6 +2,8 @@
   <section class="collection-assistant" aria-labelledby="collection-assistant-title">
     <header><div><p class="eyebrow">{{ de ? 'ENTDECKEN · VERGLEICHEN · ERGÄNZEN' : 'DISCOVER · COMPARE · ADD' }}</p><h2 id="collection-assistant-title">{{ de ? 'Deine Figurensammlung' : 'Your figure collection' }}</h2></div><span class="badge">{{ entries.length }} {{ de ? 'Katalog-IDs' : 'catalogue IDs' }}</span></header>
     <p class="intro">{{ de ? 'Neue Figuren nachschlagen, den Gerätebestand prüfen und passende Dateien direkt übernehmen.' : 'Look for new figures, check your device collection and transfer matching files.' }}</p>
+    <p class="orange-help"><strong>{{ de ? 'Was bedeutet Orange?' : 'What does orange mean?' }}</strong>
+      {{ de ? 'Der Katalog hat eine Datei zu dieser Figur gefunden. Orange kann bedeuten, dass die Figuren-ID in den Eigenschaften vom Dateiinhalt abweicht oder dass ein Format nur teilweise geprüft werden kann. Den Grund siehst du auf der orange umrandeten Figurenkarte.' : 'The catalogue found a file associated with this figure. Orange can mean its properties name a different figure than its contents, or the checker supports only part of its format. Each orange-bordered card shows the reason.' }}</p>
     <div class="action-grid">
       <article class="action-card">
         <span class="step">01</span><h3>{{ de ? 'Neue Figuren' : 'New figures' }}</h3>
@@ -16,10 +18,26 @@
         <label>{{ de ? 'Prüfung' : 'Check' }}<select v-model="mode" :disabled="!!running"><option value="full">{{ de ? 'Dateiinhalte prüfen (empfohlen)' : 'Check file contents (recommended)' }}</option><option value="quick">{{ de ? 'Schnellübersicht aus Dateieigenschaften' : 'Quick overview from file properties' }}</option></select></label>
         <button type="button" class="primary" :disabled="!connected || blocked || !!running || scope === 'folder' && !directory" @click="scan">{{ de ? 'Sammlung prüfen' : 'Check collection' }}</button>
         <p v-if="!connected" class="small">{{ de ? 'Allmiibo in der Bluetooth-Dateiübertragung verbinden.' : 'Connect your Allmiibo in Bluetooth file transfer mode.' }}</p>
-        <p class="small">{{ de ? 'Liest Dateien nacheinander. Keine Reparatur oder Löschung. Die Schnellübersicht bestätigt keine Dateiinhalte.' : 'Reads files sequentially. No repairs or deletions. The quick overview does not verify file contents.' }}</p>
+        <p class="small">{{ de ? 'Die Schnellübersicht liest die Ordnereinträge. Die Inhaltsprüfung liest danach jede passende BIN-Datei über Bluetooth. Bei großen Sammlungen kann das mehrere Minuten dauern.' : 'Quick overview reads the directory entries. The content check then reads each supported BIN file over Bluetooth. Large collections can take several minutes.' }}</p>
       </article>
     </div>
-    <div v-if="running" class="activity" role="status" aria-live="polite"><span>{{ runningLabel }}<template v-if="progress"> · {{ progress.folders || 0 }} {{ de ? 'Ordner' : 'folders' }} · {{ progress.filesRead || 0 }} {{ de ? 'Dateien gelesen' : 'files read' }}</template></span><button type="button" @click="cancel">{{ de ? 'Abbrechen' : 'Cancel' }}</button></div>
+    <div v-if="running" class="activity">
+      <div><strong role="status">{{ runningLabel }}</strong>
+        <div v-if="running === 'scan' && progress && !scanAborting" class="scan-progress">
+          <template v-if="progress.phase === 'reading'">
+            <span>{{ progress.filesRead }} / {{ progress.totalToRead }} {{ de ? 'Dateien gelesen' : 'files read' }}</span>
+            <progress :value="progress.filesRead" :max="progress.totalToRead" :aria-label="de ? 'Gelesene Dateien' : 'Files read'"></progress>
+          </template>
+          <span v-else>{{ progress.folders }} {{ de ? 'Ordner gelesen' : 'folders listed' }} · {{ progress.candidates }} {{ de ? 'BIN-Dateien gefunden' : 'BIN files found' }}</span>
+          <span>{{ de ? 'Vergangen' : 'Elapsed' }} {{ formatReadDuration(scanElapsed) }}
+            <template v-if="scanTime.waiting"> · {{ de ? 'Warte auf das Gerät …' : 'Waiting for the device …' }}</template>
+            <template v-else-if="scanTime.remainingSeconds != null"> · {{ de ? 'Noch ca.' : 'About' }} {{ formatReadDuration(scanTime.remainingSeconds) }} {{ de ? '' : 'remaining' }}</template>
+            <template v-else-if="progress.phase === 'reading' && progress.filesRead < progress.totalToRead"> · {{ de ? 'Restzeit wird geschätzt …' : 'Estimating time remaining …' }}</template>
+          </span>
+        </div>
+      </div>
+      <button type="button" :disabled="running === 'scan' && scanAborting" @click="cancel">{{ de ? 'Abbrechen' : 'Cancel' }}</button>
+    </div>
     <p v-if="error" class="notice error" role="alert">{{ error }}</p>
     <p v-if="message" class="notice" role="status">{{ message }}</p>
     <div v-if="updates?.added.length" class="new-figures"><h3>{{ de ? 'Neu im Online-Katalog' : 'New in the online catalogue' }}</h3><p class="small">{{ de ? 'Neu gegenüber dem mitgelieferten Datenstand, nicht zwingend gerade erschienen.' : 'New compared with the bundled snapshot, not necessarily newly released.' }}</p><ul><li v-for="entry in updates.added.slice(0, 40)" :key="entry.id"><button type="button" :disabled="!!running" @click="choose(entry)"><strong>{{ entry.name }}</strong><span>{{ entry.series }} · {{ dateLabel(entry) }}</span></button></li></ul><p v-if="updates.added.length > 40">{{ de ? 'Weitere Einträge stehen im Katalog unten.' : 'More entries are available in the catalogue below.' }}</p></div>
@@ -57,16 +75,27 @@
 import baseline from '../data/catalogue.json';
 import { checkCatalogueUpdates } from '../lib/catalogue-updates.js';
 import { auditCollection } from '../lib/collection-audit.js';
+import { formatReadDuration, readTimeEstimate } from '../lib/read-time-estimate.js';
 import { prepareFigureTransfer, transferFigureToDevice, suggestedFigureFilename } from '../lib/figure-transfer.js';
 import { filterCatalogue, releaseLabel } from '../lib/catalogue.js';
 import { saveBlob, saveBlobWithPicker } from '../lib/browser-tools.js';
 export default {
-  props:{connected:Boolean,blocked:Boolean,generation:Number,revision:Number,directory:String,locale:{type:String,default:'de_DE'},getSession:Function,getTransferSession:Function,selectedFigure:Object},
+  props:{connected:Boolean,blocked:Boolean,generation:Number,revision:Number,directory:String,locale:{type:String,default:'de_DE'},getSession:Function,getTransferSession:Function,selectedFigure:Object,readClock:{type:Number,default:0}},
   emits:['busy','writing','catalogue','changed','recovery','report','report-stale'],
-  data(){return {entries:baseline.entries,updates:null,running:'',progress:null,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
+  data(){return {entries:baseline.entries,updates:null,running:'',progress:null,scanStartedAt:0,scanAborting:false,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
   computed:{
     de(){return this.locale.startsWith('de');},
-    runningLabel(){const texts={catalogue:['Online-Katalog wird geprüft …','Checking online catalogue …'],scan:['Gerätebestand wird gelesen …','Reading device collection …'],prepare:['Figurendatei wird gelesen …','Reading figure file …'],upload:['Übertragen und nachlesen …','Transferring and reading back …']};return texts[this.running]?.[this.de?0:1]||'';},
+    runningLabel(){
+      if(this.running === 'scan'){
+        if(this.scanAborting) return this.de ? 'Prüfung wird abgebrochen …' : 'Cancelling check …';
+        if(this.progress?.phase === 'reading') return this.de ? 'Dateiinhalte werden geprüft …' : 'Checking file contents …';
+        return this.de ? 'Ordner werden eingelesen …' : 'Listing folders …';
+      }
+      const texts={catalogue:['Online-Katalog wird geprüft …','Checking online catalogue …'],prepare:['Figurendatei wird gelesen …','Reading figure file …'],upload:['Übertragen und nachlesen …','Transferring and reading back …']};return texts[this.running]?.[this.de?0:1]||'';
+    },
+    scanNow(){return Math.max(this.readClock, this.progress?.updatedAt ?? this.scanStartedAt);},
+    scanElapsed(){return Math.floor((this.scanNow - this.scanStartedAt) / 1000);},
+    scanTime(){return readTimeEstimate({startedAt:this.progress.phaseStartedAt, updatedAt:this.progress.updatedAt, completed:this.progress.filesRead, total:this.progress.totalToRead}, this.scanNow);},
     choices(){const items=filterCatalogue(this.entries,{query:this.figureQuery}).slice(0,60);return this.chosen&&!items.some(e=>e.id===this.chosen.id)?[this.chosen,...items]:items;},
     issues(){return this.report?.files?.filter(row=>row.issues?.length || row.id && row.metadataId && row.id!==row.metadataId || ['classic-without-final-eight-bytes','classic-with-unverified-extra-bytes','two-kib-layout-not-fully-validated'].includes(row.formatContext) || !['structure-consistent','metadata-only','skipped-non-tag'].includes(row.status)).map(row=>row.id && row.metadataId && row.id!==row.metadataId?{...row,issues:[...row.issues,'metadata-id-mismatch']}:row)||[];},
     resultRows(){return this.filter==='issues'?this.issues:this.report?.[this.filter]||[];},
@@ -76,15 +105,16 @@ export default {
   beforeUnmount(){this._alive=false;this.invalidate();},
   watch:{report(value){this.$emit('report',value);},stale(value){this.$emit('report-stale',value);},generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},revision(){if(this.report)this.stale=true;},selectedFigure(value){if(value&&!this.running)this.choose(value,false);}},
   methods:{
+    formatReadDuration,
     localDate(value){return value?new Date(value).toLocaleString(this.de?'de-DE':'en-GB'):'';},
     entryFor(id){return this.entries.find(e=>e.id===id);},
     rowName(row){return row.name||row.entry?.name||row.figure?.name||this.entryFor(row.id)?.name||row.path||row.id||(this.de?'Unbekannter Eintrag':'Unknown entry');},
     dateLabel(entry){if(entry.releaseDate)return entry.releaseDate;const label=releaseLabel(entry,new Date().toISOString().slice(0,10));return (label.date||'—')+(label.state==='upcoming'?(this.de?' · angekündigt':' · upcoming'):'');},
     issueLabel(issue){const texts={manufacturer:['Herstellerkennung','Manufacturer byte'],bcc0:['Erstes UID-Prüfbyte','First UID check byte'],bcc1:['Zweites UID-Prüfbyte','Second UID check byte'],'missing-id':['ID fehlt','Missing ID'],'v3-length':['V3-Größe passt nicht','V3 size mismatch'],'metadata-id-mismatch':['Abweichende Eigenschaften-ID','Metadata ID differs']};return texts[issue]?.[this.de?0:1]||issue;},
     formatLabel(context){if(context==='two-kib-layout-not-fully-validated'&&this.report?.mode==='quick')return this.de?'2-KiB-Datei laut Verzeichnis; Inhalt und Layout ungeprüft':'2 KiB file according to directory; contents and layout unchecked';const labels={'classic-without-final-eight-bytes':['Verkürzter klassischer Dump: letzte 8 Bytes nicht enthalten','Short classic dump: final 8 bytes not included'],'classic-540':['Klassische 540-Byte-Darstellung; Kryptografie ungeprüft','Classic 540-byte representation; cryptography unchecked'],'classic-with-unverified-extra-bytes':['Klassischer Dump mit ungeprüftem Zusatzbereich','Classic dump with unchecked extra data'],'two-kib-layout-not-fully-validated':['2-KiB-Datei: Größe und öffentliche ID geprüft; übriges Layout nicht vollständig geprüft','2 KiB file: size and public ID checked; remaining layout not fully checked'],'unsupported-length':['Dateigröße nicht als Figurenformat geprüft','File size not checked as a figure format']};return labels[context]?.[this.de?0:1]||context;},
-    statusLabel(status){const texts={'unsupported-length':['Andere Dateigröße – nicht als Figur geprüft','Other file size – not inspected as a figure'],attention:['Grundstruktur auffällig','Basic structure needs attention'],'read-error':['Lesefehler','Read error'],'structure-consistent':['Grundstruktur unauffällig','Basic structure consistent'],'metadata-only':['Nur Eigenschaften gelesen','Properties only']};return texts[status]?.[this.de?0:1]||status;},
+    statusLabel(status){const texts={'not-read':['Inhalt noch nicht gelesen','Contents not yet read'],'not-read-limit':['Lesegrenze erreicht','Read limit reached'],'unsupported-length':['Andere Dateigröße – nicht als Figur geprüft','Other file size – not inspected as a figure'],attention:['Grundstruktur auffällig','Basic structure needs attention'],'read-error':['Lesefehler','Read error'],'structure-consistent':['Grundstruktur unauffällig','Basic structure consistent'],'metadata-only':['Nur Eigenschaften gelesen','Properties only']};return texts[status]?.[this.de?0:1]||status;},
     invalidate(){++this._serial;this._controller?.abort();this._controller=null;this.running='';this.progress=null;this.report=null;this.stale=false;this.$emit('busy',false);this.$emit('writing',false);},
-    cancel(){this._controller?.abort();},
+    cancel(){if(this.running === 'scan')this.scanAborting = true;this._controller?.abort();},
     clearPrepared(){this.prepared=null;this.message='';},
     chooseById(id){this.choose(this.entryFor(id),false);},
     choose(entry,focus=true){if(this.running)return;this.chosen=entry||null;this.clearPrepared();this.error='';if(entry)this.filename=suggestedFigureFilename(entry);if(focus)this.$nextTick(()=>this.$refs.transferArea?.focus());},
@@ -97,7 +127,21 @@ export default {
     },
     async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
     async scanContents(){if(!this.connected||this.blocked||this.running||this.scope==='folder'&&!this.directory)return;this.mode='full';await this.scan();},
-    async scan(){if(!this.connected||this.blocked||this.running||this.scope==='folder'&&!this.directory)return;this.report=null;this.stale=false;await this.operation('scan',async(signal,current)=>{const session=this.getSession();const result=await auditCollection({rootPath:this.scope==='device'?'E:/':this.directory,catalogue:this.entries,mode:this.mode,...session,signal,onProgress:stats=>{if(current())this.progress=stats;}});if(current()){this.report=result;this.reportTime=new Date().toISOString();this.resultPage=1;this.filter=result.contentComplete?'missing':'unconfirmed';}});},
+    async scan(){
+      if(!this.connected || this.blocked || this.running || this.scope === 'folder' && !this.directory)return;
+      this.report=null;this.stale=false;this.scanAborting=false;
+      this.scanStartedAt=performance.now();
+      await this.operation('scan',async(signal,current)=>{
+        const result=await auditCollection({rootPath:this.scope==='device'?'E:/':this.directory,catalogue:this.entries,mode:this.mode,...this.getSession(),signal,
+          onProgress:stats=>{
+            if(!current() || signal.aborted || stats.phase === 'finished')return;
+            const updatedAt=performance.now();
+            const phaseStartedAt=this.progress?.phase === stats.phase ? this.progress.phaseStartedAt : updatedAt;
+            this.progress={...stats,phaseStartedAt,updatedAt};
+          }});
+        if(current()){this.report=result;this.reportTime=new Date().toISOString();this.resultPage=1;this.filter=result.contentComplete?'missing':'unconfirmed';}
+      });
+    },
     async prepareLocal(event){const file=event.target.files?.[0];event.target.value='';if(file&&this.chosen)await this.prepare({file});},
     async prepareRemote(){if(this.sourceUrl&&this.chosen)await this.prepare({url:this.sourceUrl});},
     async prepare(source){if(this.running)return;this.prepared=null;const id=this.chosen?.id;if(!id)return;await this.operation('prepare',async(signal,current)=>{const result=await prepareFigureTransfer({...source,expectedId:id,signal});if(current()&&this.chosen?.id===id){this.prepared=result;this.filename=suggestedFigureFilename(this.chosen);this.destination=this.directory?.startsWith('E:/')?this.directory:'E:/';}});},
@@ -108,5 +152,7 @@ export default {
 };
 </script>
 <style scoped>
+.orange-help{margin:.6rem 0 1rem;padding:.65rem .85rem;border-left:3px solid #c47a16;background:#fffaf1;color:#654112;font-size:.82rem;line-height:1.5}.orange-help strong{display:block}
+.scan-progress{display:grid;gap:4px;margin-top:5px;font-variant-numeric:tabular-nums}.scan-progress progress{width:min(100%,18rem);accent-color:#1e656c}
 .collection-assistant{color:#193247;padding:22px;background:#f4f8fb;border:1px solid #d4e1ea;border-radius:18px;margin:16px 0}.collection-assistant header{display:flex;align-items:center;justify-content:space-between;gap:12px}.eyebrow{color:#5f788c;letter-spacing:.08em;font-size:.68rem;margin:0 0 7px}.collection-assistant h2{font-size:1.5rem;margin:0}.badge{padding:7px 11px;border-radius:30px;background:white;font-size:.78rem;white-space:nowrap}.intro{font-size:.94rem;line-height:1.6;color:#4b657b}.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.action-card,.figure-import{border:1px solid #d4e1ea;border-radius:13px;background:white;padding:19px}.step{font-size:.8rem;font-weight:700;color:#3c7d83}.collection-assistant h3{font-size:1.06rem;margin:7px 0 12px}.action-card p,.figure-import p{font-size:.85rem;line-height:1.55}.small{font-size:.77rem!important;color:#5a7183;line-height:1.55}.collection-assistant label{display:flex;flex-direction:column;gap:6px;font-size:.8rem;margin:11px 0}.collection-assistant input,.collection-assistant select,.collection-assistant button{font:inherit;color:inherit;border:1px solid #afc4d3;border-radius:8px;box-sizing:border-box;min-height:42px;padding:9px 11px;background:white;max-width:100%}.collection-assistant button{cursor:pointer;font-size:.82rem}.collection-assistant button.primary{background:#1e656c;border-color:#1e656c;color:white}.collection-assistant button:disabled{opacity:.5;cursor:default}.collection-assistant button:hover:enabled{filter:brightness(.96)}.collection-assistant :focus-visible{outline:3px solid #79b5d4;outline-offset:3px}.collection-assistant code{font-size:.76rem;overflow-wrap:anywhere}.activity,.notice{background:#e7f1f7;padding:12px;border-radius:9px;margin:14px 0;font-size:.85rem;line-height:1.5}.activity{display:flex;justify-content:space-between;align-items:center;gap:10px}.error{background:#fff2dd;color:#7a4a0c}.new-figures ul,.report-list{list-style:none;padding:0}.new-figures ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}.new-figures button{width:100%;text-align:left;display:grid;gap:6px}.new-figures span{font-size:.75rem;color:#597286}.audit-results{border-top:1px solid #d4e1ea;margin:22px 0;padding-top:16px}.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.summary-grid>div{background:white;border:1px solid #d4e1ea;border-radius:10px;padding:13px;display:grid;gap:6px}.summary-grid strong{font-size:1.5rem}.summary-grid span{font-size:.74rem;color:#5a7183}.report-toolbar{display:flex;align-items:end;gap:12px;justify-content:space-between;margin-top:12px}.report-toolbar label{flex:1}.report-toolbar button{margin-bottom:11px}.report-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #d4e1ea;padding:13px 0}.report-list li>div{display:grid;gap:5px;min-width:0}.report-list strong{font-size:.86rem}.report-list small,.path{font-size:.76rem;color:#5a7183;overflow-wrap:anywhere}.report-list button{flex-shrink:0}.pagination{display:flex;justify-content:center;align-items:center;gap:12px;font-size:.8rem}.figure-import{margin-top:20px}.import-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px}.import-fields>*,.import-fields label{min-width:0}.import-actions{display:flex;gap:9px;flex-wrap:wrap}.prepared{background:#eff7f3;border:1px solid #c4dfd0;border-radius:10px;padding:16px;margin-top:16px;font-size:.87rem}.prepared p{overflow-wrap:anywhere}.chosen{padding:12px;background:#f4f8fb;border-radius:8px}.empty{font-size:.84rem;color:#5a7183}.figure-import:focus{outline:3px solid #79b5d4;outline-offset:3px}@media(max-width:700px){.collection-assistant{padding:14px}.action-grid,.import-fields{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr 1fr}.report-list li{align-items:flex-start;flex-direction:column}.collection-assistant header{align-items:flex-start}.collection-assistant h2{font-size:1.25rem}.badge{font-size:.67rem}.report-toolbar{align-items:stretch;flex-direction:column;gap:0}.report-toolbar button{align-self:flex-start}}
 </style>

@@ -281,13 +281,36 @@ async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onP
   const snapshots = [], records = [], zipEntries = [], checksums = []
   let filesTotal = 0, filesDone = 0, bytesTotal = 0, bytesDone = 0, observerError = null
   let reusedFiles = 0, reusedBytes = 0
+  const jobStartedAt = performance.now()
+  let step = '', startedAt = jobStartedAt, updatedAt = jobStartedAt, previousDone = 0
+  let cachedFiles = 0, cachedBytes = 0, verifiedFolders = 0
   function checkpoint() {
     if (signal?.aborted) { const e = new Error('Backup cancelled. No archive was created.'); e.name = 'AbortError'; throw e }
     if (observerError) throw observerError
   }
   function progress(phase, path, activeBytes = 0) {
     if (onProgress) {
-      try { onProgress(Object.freeze({ phase, path, filesDone, filesTotal, bytesDone: bytesDone + activeBytes, bytesTotal, reusedFiles, reusedBytes })) }
+      // Compare completed BLE reads across file boundaries. Already retained
+      // files add no new BLE work. For one or two files use chunk progress.
+      let completed = 0, total = null
+      if (phase === 'listing') completed = snapshots.length
+      if (phase === 'reading') {
+        const count = filesTotal - cachedFiles
+        if (count <= 2 && bytesTotal > cachedBytes) {
+          completed = bytesDone + activeBytes - reusedBytes
+          total = bytesTotal - cachedBytes
+        } else {
+          completed = filesDone - reusedFiles
+          total = count
+        }
+      }
+      if (phase === 'verifying') { completed = verifiedFolders; total = snapshots.length }
+      const now = performance.now()
+      if (step !== phase) { step = phase; startedAt = now; updatedAt = now }
+      if (completed !== previousDone) updatedAt = now
+      previousDone = completed
+      const timing = { jobStartedAt, startedAt, updatedAt, completed, total }
+      try { onProgress(Object.freeze({ phase, path, filesDone, filesTotal, bytesDone: bytesDone + activeBytes, bytesTotal, reusedFiles, reusedBytes, timing, foldersListed: snapshots.length })) }
       catch (error) { observerError = error }
     }
   }
@@ -328,6 +351,8 @@ async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onP
         resume.entries.delete(path); resume.bytes -= entry.bytes.length
       }
     }
+    cachedFiles = resume.entries.size
+    cachedBytes = resume.bytes
   }
   for (const record of records) {
     checkpoint()
@@ -383,6 +408,7 @@ async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onP
     if (JSON.stringify(current) !== JSON.stringify(snapshot.entries)) {
       fail('BACKUP_CHANGED', 'Directory contents, sizes or metadata changed during the backup.')
     }
+    ++verifiedFolders
   }
   if (readRawMetadata) for (const record of records) {
     checkpoint()

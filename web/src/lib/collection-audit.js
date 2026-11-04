@@ -67,16 +67,17 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
     readErrors: 0, invalidEntries: 0, metadataMismatches: 0, candidateMetadataCount: 0, metadataMissing: 0 };
   const files = [], errors = [], limitsReached = new Set(), pending = [{ path: rootPath, depth: 0 }];
   const scheduled = new Set([rootPath]), seen = new Set(), observed = new Map(), confirmed = new Map();
-  let status = 'complete', cursor = 0, traversalDone = false;
+  let status = 'complete', cursor = 0, traversalDone = false, plannedBytes = 0, plannedFiles = 0;
   const stop = reason => { const error = new Error(reason); error.auditStop = reason; throw error; };
   const check = () => {
     if (signal?.aborted) stop('cancelled');
     try { assertSession(); } catch { stop('session-changed'); }
   };
-  const progress = phase => { try { onProgress({ phase, mode, ...stats, limited: !!limitsReached.size }); } catch { /* observer only */ } };
+  const progress = phase => { try { onProgress({ phase, mode, ...stats, totalToRead: phase === 'reading' ? plannedFiles : null, limited: !!limitsReached.size }); } catch { /* observer only */ } };
   const addId = (map, id, row) => { if (id) { if (!map.has(id)) map.set(id, []); map.get(id).push(row); } };
   const limit = key => { limitsReached.add(key); };
   try {
+    progress('listing');
     while (cursor < pending.length) {
       check();
       if (stats.folders >= bounds.folders) { limit('folders'); break; }
@@ -122,47 +123,55 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
         if (mode === 'quick') {
           row.id = metadataId; row.status = 'metadata-only'; row.known = index.has(row.id);
           if (!TAG_LENGTHS.includes(row.size)) { row.issues.push('unsupported-length'); ++stats.unsupportedFiles; }
-          addId(observed, row.id, row); progress('scanning'); continue;
+          addId(observed, row.id, row); progress('listing'); continue;
         }
         if (!TAG_LENGTHS.includes(row.size)) {
           row.status = 'unsupported-length'; row.issues.push('unsupported-length'); ++stats.unsupportedFiles;
           continue; // Unknown formats are not labelled corrupt and are never read.
         }
-        if (stats.bytesReserved + row.size > bounds.bytes) { limit('bytes'); row.status = 'not-read-limit'; continue; }
-        check(); ++stats.readAttempts; stats.bytesReserved += row.size;
-        try {
-          // No file bytes are retained outside this iteration or emitted to observers.
-          const data = await readFile(path, { maxBytes: row.size });
-          check();
-          const bytes = data instanceof Uint8Array ? data : data instanceof ArrayBuffer ? new Uint8Array(data) : null;
-          if (!bytes || bytes.byteLength !== row.size) {
-            row.status = 'read-size-mismatch'; row.issues.push('read-size-mismatch');
-            ++stats.readErrors; errors.push({ path, code: 'read-size-mismatch' }); stop('partial');
-          }
-          ++stats.filesRead; stats.bytesRead += bytes.byteLength;
-          const inspection = inspectTagStructure(bytes);
-          row.id = inspection.id; row.status = inspection.status; row.issues = [...inspection.issues];
-          row.known = index.has(row.id);
-          if (row.status !== 'structure-consistent') ++stats.invalidFiles;
-          addId(observed, row.id, row);
-          if (row.status === 'structure-consistent') addId(confirmed, row.id, row);
-          if (metadataId && row.id && metadataId !== row.id) ++stats.metadataMismatches;
-        } catch (error) {
-          if (error.auditStop) throw error;
-          check(); row.status = 'read-failed'; row.issues = ['read-failed']; ++stats.readErrors;
-          errors.push({ path, code: 'file-read-failed' }); stop('partial');
-        }
-        progress('scanning');
+        if (plannedBytes + row.size > bounds.bytes) { limit('bytes'); row.status = 'not-read-limit'; continue; }
+        plannedBytes += row.size;
+        ++plannedFiles;
       }
-      progress('scanning');
+      progress('listing');
       if (limitsReached.has('entries')) break;
     }
     check(); traversalDone = cursor === pending.length;
+    // Reuse the validated directory rows so the exact content-read total costs no additional BLE calls.
+    if (plannedFiles) progress('reading');
+    for (const row of files) {
+      if (row.status !== 'not-read') continue;
+      const { path, size, metadataId } = row;
+      check(); ++stats.readAttempts; stats.bytesReserved += size;
+      try {
+        const data = await readFile(path, { maxBytes: size });
+        check();
+        const bytes = data instanceof Uint8Array ? data : data instanceof ArrayBuffer ? new Uint8Array(data) : null;
+        if (!bytes || bytes.byteLength !== size) {
+          row.status = 'read-size-mismatch'; row.issues.push('read-size-mismatch');
+          ++stats.readErrors; errors.push({ path, code: 'read-size-mismatch' }); stop('partial');
+        }
+        ++stats.filesRead; stats.bytesRead += bytes.byteLength;
+        const inspection = inspectTagStructure(bytes);
+        row.id = inspection.id; row.status = inspection.status; row.issues = [...inspection.issues];
+        row.known = index.has(row.id);
+        if (row.status !== 'structure-consistent') ++stats.invalidFiles;
+        addId(observed, row.id, row);
+        if (row.status === 'structure-consistent') addId(confirmed, row.id, row);
+        if (metadataId && row.id && metadataId !== row.id) ++stats.metadataMismatches;
+      } catch (error) {
+        if (error.auditStop) throw error;
+        check(); row.status = 'read-failed'; row.issues = ['read-failed']; ++stats.readErrors;
+        errors.push({ path, code: 'file-read-failed' }); stop('partial');
+      }
+      progress('reading');
+    }
+    check();
   } catch (error) {
     if (!error.auditStop) throw error;
     status = error.auditStop;
   }
-  const scanComplete = traversalDone && !limitsReached.size && !stats.readErrors && !stats.invalidEntries;
+  const scanComplete = status === 'complete' && traversalDone && !limitsReached.size && !stats.readErrors && !stats.invalidEntries;
   const contentComplete = mode === 'full' && scanComplete;
   const complete = scanComplete && (mode === 'quick' || contentComplete);
   if (status === 'complete' && !complete) status = 'partial';

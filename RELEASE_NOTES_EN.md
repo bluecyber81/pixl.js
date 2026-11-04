@@ -1,4 +1,10 @@
-# DE3.59 · File manager 3.37.0
+# DE3.59 · File manager
+
+## File manager 3.37.1
+
+Collection scans and folder backups show Bluetooth read progress with an estimated countdown. Folder verification during a ZIP backup has a separate estimate. Combined device diagnostics show the section being read. Orange catalogue cards explain the specific warning for each figure. Reload the file manager in the browser to use it. [Web download](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.1)
+
+## DE3.59 firmware and file manager 3.37.0
 
 **DE3.59 / 631** is an application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume. **File manager 3.37.0** also supports older diagnostic reports. The BL8 bootloader, Nordic S112 7.3.0, on-disk format and catalog remain in place.
 

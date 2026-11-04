@@ -24,6 +24,35 @@ function fixture(overrides = {}) {
 function reads(f) { return f.fs.log.filter(event => event.op === 'read').map(event => event.args[0]) }
 function lists(f) { return f.fs.log.filter(event => event.op === 'list').map(event => event.args[0]) }
 
+test('backup time samples separate listing, aggregate BLE reads, directory verification and ZIP', async () => {
+  const f = fixture();
+  await createBackup(f.options);
+  const forPhase = phase => f.progress.filter(p => p.phase === phase);
+  assert.ok(forPhase('listing').every(p => p.timing.total === null));
+  const reading = forPhase('reading');
+  assert.deepEqual([...new Set(reading.map(p => p.timing.completed))], [0, 1, 2, 3]);
+  assert.ok(reading.every(p => p.timing.startedAt === reading[0].timing.startedAt && p.timing.total === 3));
+  assert.deepEqual(forPhase('verifying').map(p => [p.timing.completed, p.timing.total]), [[0,2],[1,2]]);
+  assert.equal(forPhase('archiving')[0].timing.total, null);
+  // Successful ZIP creation clears the checkpoint. Interrupt after the final
+  // file to exercise a retry which only has directories left to verify.
+  await interruptAfterFiles(f, 3);
+  f.progress.length = 0;
+  f.fs.log.length = 0;
+  await createBackup(f.options);
+  assert.deepEqual(reads(f), []);
+  assert.ok(forPhase('reading').every(p => p.timing.completed === 0 && p.timing.total === 0));
+});
+
+test('resumed folder backup excludes cached data from remaining BLE byte estimates', async () => {
+  const f = fixture();
+  await interruptAfterFiles(f);
+  await createBackup(f.options);
+  const reading = f.progress.filter(p => p.phase === 'reading');
+  assert.ok(reading.every(p => p.timing.total === 3 && p.timing.completed === p.bytesDone - p.reusedBytes));
+  assert.equal(reading.at(-1).timing.completed, 3);
+});
+
 async function interruptAfterFiles(f, count = 1) {
   const controller = new AbortController()
   await assert.rejects(createBackup({ ...f.options, signal: controller.signal,
