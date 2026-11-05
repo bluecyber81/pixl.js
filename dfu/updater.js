@@ -5,15 +5,15 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
     return class Updater {
-        constructor({ Package, createDfu, onStatus = () => {}, onProgress = () => {}, onState = () => {} }) {
-            Object.assign(this, { Package, createDfu, onStatus, onProgress, onState });
+        constructor({ Package, createDfu, onStatus = () => {}, onProgress = () => {}, onState = () => {}, onPhase = () => {} }) {
+            Object.assign(this, { Package, createDfu, onStatus, onProgress, onState, onPhase });
             this.package = null; this.busy = false; this.loading = false; this.sequence = 0; this.lastResult = null;
         }
         state() { this.onState({ busy: this.busy, loading: this.loading, ready: !!this.package && !this.loading && !this.busy, target: this.package?.image?.target }); }
         async setPackage(file) {
             if (this.busy) return false;
             const sequence = ++this.sequence;
-            this.package = null; this.lastResult = null; this.loading = true; this.onProgress(null); this.state();
+            this.package = null; this.lastResult = null; this.loading = true; this.onPhase(null); this.onProgress(null); this.state();
             if (!file) { this.loading = false; this.onStatus('Noch kein Paket ausgewählt.'); this.state(); return false; }
             this.onStatus('Firmware-Paket wird geprüft …');
             try {
@@ -28,11 +28,13 @@
         }
         async selectDevice() {
             if (this.busy || this.loading || !this.package) return false;
-            const selected = this.package; this.busy = true; this.lastResult = null; this.state(); this.onProgress(null);
-            let dfu; const progress = event => this.onProgress(event);
+            const selected = this.package; this.busy = true; this.lastResult = null; this.onPhase(null); this.state(); this.onProgress(null);
+            let dfu, currentPhase = null;
+            const phase = name => { currentPhase = name; this.onStatus(''); this.onPhase(name); };
+            const progress = event => this.onProgress(event);
             const log = event => { if (typeof event?.message === 'string') this.onStatus(event.message); };
             try {
-                dfu = this.createDfu(); dfu.addEventListener('progress', progress); dfu.addEventListener('log', log);
+                dfu = this.createDfu(); dfu.addEventListener('progress', progress); dfu.addEventListener('log', log); dfu.addEventListener('phase', phase);
                 this.onStatus('DFU-Gerät auswählen …');
                 // Keep this call before the first await: Web Bluetooth needs
                 // the user's click, not an asynchronous follow-up invocation.
@@ -40,19 +42,21 @@
                 if (!device) throw new Error('Kein DFU-Gerät ausgewählt.');
                 const image = await selected.getAppImage();
                 if (!image?.initData?.byteLength || !image?.imageData?.byteLength) throw new Error('Keine vollständige Anwendung im Paket.');
-                this.onStatus('Anwendung wird übertragen …');
+                this.onStatus('Verbindung mit dem Bootloader wird hergestellt …');
                 await dfu.update(device, image.initData, image.imageData);
                 const result = dfu.lastResult;
                 if (!result?.transferVerified || !result.executeAcknowledged) throw new Error('Der Abschluss wurde vom Bootloader nicht bestätigt.');
                 this.lastResult = { ...result };
+                this.onPhase('reconnect');
                 this.onStatus(result.rebootObserved
                     ? 'Übertragung bestätigt; Bluetooth wurde getrennt. Bitte Menü und Firmwareversion am Gerät prüfen.'
                     : 'Übertragung bestätigt; Neustart noch nicht beobachtet. Bitte Menü und Firmwareversion am Gerät prüfen.');
                 return true;
             } catch (error) {
+                this.onPhase(currentPhase, true);
                 this.onStatus('Vorgang nicht bestätigt: ' + error.message); return false;
             } finally {
-                if (dfu?.removeEventListener) { dfu.removeEventListener('progress', progress); dfu.removeEventListener('log', log); }
+                if (dfu?.removeEventListener) { dfu.removeEventListener('progress', progress); dfu.removeEventListener('log', log); dfu.removeEventListener('phase', phase); }
                 // Keep the last acknowledged byte position visible on errors.
                 // A new package or attempt resets it before starting.
                 this.busy = false; this.state();

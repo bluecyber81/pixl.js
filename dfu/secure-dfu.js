@@ -97,6 +97,9 @@
     handleNotification(event){
       if(!this._active||!this._pending)return;
       const pending=this._pending;
+      // Exactly one reply belongs to this command. A duplicate while its
+      // GATT write is still settling must not replace the first reply.
+      if(pending.ackData)return;
       try{
         const view=event?.target?.value;
         if(!view||view.byteLength<3)throw new Error('Truncated DFU response');
@@ -109,6 +112,7 @@
           const error=new Error(extended===null?(RESULT[result]||'DFU error '+result):(EXTENDED[extended]||'Extended DFU error '+extended));
           error.code=result;error.extendedCode=extended;throw error;
         }
+        if(pending.opcode===4&&view.byteLength!==3)throw new Error('Invalid DFU Execute response length');
         if(this._finalExecute&&pending.opcode===4)this._finalAck=true;
         const data=new DataView(view.buffer,view.byteOffset+3,view.byteLength-3);
         // Retain a private copy; Web Bluetooth may reuse characteristic buffers.
@@ -180,9 +184,13 @@
       }
       // Check the cumulative CRC once per object, rather than rehashing the
       // whole image for every 20-byte receipt. Never Execute an unchecked object.
+      if(type==='firmware'&&end===bytes.length)this.dispatchEvent('phase','verify');
       await this._checksum(bytes,end);
     }
-    async _execute(final=false){this._finalExecute=final;try{await this.sendControl([4]);}finally{this._finalExecute=false;}}
+    async _execute(final=false){
+      if(final)this.dispatchEvent('phase','finalize');
+      this._finalExecute=final;try{await this.sendControl([4]);}finally{this._finalExecute=false;}
+    }
     async transferInit(input){
       const bytes=asBytes(input),state=await this._select(1,bytes.length);
       if(bytes.length>state.maxSize)throw new Error('Init packet exceeds bootloader object size');
@@ -197,6 +205,7 @@
     }
     async transferFirmware(input){
       const bytes=asBytes(input),state=await this._select(2,bytes.length);let offset=state.offset;
+      if(offset===bytes.length)this.dispatchEvent('phase','verify');
       if(offset&&state.crc!==this._crc(bytes.subarray(0,offset)))throw new Error('Resume CRC32 differs; existing partial data does not match this package. No firmware data was overwritten. A previous interrupted transfer may be the cause.');
       this.progress('firmware',bytes.length,offset);
       if(offset){
@@ -223,6 +232,7 @@
         this._start(device);
         await this.connect(device);
         await this.sendControl([2,1,0]); // PRN=1: one device-confirmed packet in flight.
+        this.dispatchEvent('phase','transfer');
         await this.transferInit(initBytes);await this.transferFirmware(firmwareBytes);
         if(!this._finalAck)throw new Error('Final firmware Execute was not acknowledged');
         if(!this._disconnected)await new Promise(resolve=>{const timer=setTimeout(()=>{this._rebootResolve=null;resolve();},this.timeouts.reboot);this._rebootResolve=()=>{clearTimeout(timer);this._rebootResolve=null;resolve();};});
