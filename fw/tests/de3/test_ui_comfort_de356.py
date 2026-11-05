@@ -28,7 +28,7 @@ HARNESS = r'''
 #define LV_MAX(a,b) ((a)>(b)?(a):(b))
 enum {INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_TYPE_REPEAT};
 enum {INPUT_KEY_LEFT,INPUT_KEY_RIGHT,INPUT_KEY_CENTER};
-extern const uint8_t u8g2_font_wqy12_t_gb2312a[],u8g2_font_siji_t_6x10[];
+extern const uint8_t u8g2_font_wqy12_t_gb2312a[],u8g2_font_siji_t_6x10[],u8g2_font_likeminecraft_te[];
 static unsigned key_x,key_y,key_glyph,seen_hint,scroll_mode,boxes,dots,thumb_y,thumb_h;
 static const char *expected_hint;
 uint8_t original_draw_utf8(mui_canvas_t *,uint8_t,uint8_t,const char *);
@@ -59,6 +59,39 @@ void mui_canvas_draw_dot(mui_canvas_t *c,uint8_t x,uint8_t y) {
 /*ACTUAL_FUNCTIONS*/
 /*ACTUAL_SCROLLBAR*/
 /*ACTUAL_ROW*/
+typedef struct { bool show_mem_usage; } settings_data_t;
+typedef struct { uint8_t used_pct,frag_pct; } mui_mem_monitor_t;
+static settings_data_t settings;
+static mui_mem_monitor_t sampled_memory;
+static settings_data_t *settings_get_data(void) { return &settings; }
+static void mui_mem_monitor(mui_mem_monitor_t *out) { *out=sampled_memory; }
+/*ACTUAL_MEMORY_OVERLAY*/
+static void check_memory_overlay(mui_canvas_t *canvas,uint8_t *buffer) {
+    uint8_t expected[1024];
+    const uint8_t *previous_fonts[]={u8g2_font_likeminecraft_te,u8g2_font_siji_t_6x10,u8g2_font_wqy12_t_gb2312a};
+    const mui_mem_monitor_t samples[]={{0,0},{42,1},{100,100}};
+    memset(buffer,0x55,1024);memcpy(expected,buffer,1024);
+    mui_draw_mem_mon(canvas);
+    CHECK(!memcmp(expected,buffer,1024));
+    settings.show_mem_usage=true;
+    for(unsigned i=0;i<3;i++) {
+        sampled_memory=samples[i];
+        char label[32];snprintf(label,sizeof(label),"u:%02d%% f:%02d%%",samples[i].used_pct,samples[i].frag_pct);
+        memset(buffer,0x55,1024);
+        mui_canvas_set_font(canvas,u8g2_font_wqy12_t_gb2312a);
+        unsigned width=mui_canvas_get_utf8_width(canvas,label);
+        mui_canvas_set_draw_color(canvas,0);original_draw_box(canvas,128-width,54,width,12);
+        mui_canvas_set_draw_color(canvas,1);original_draw_utf8(canvas,128-width,64,label);
+        memcpy(expected,buffer,1024);
+        for(unsigned j=0;j<3;j++) {
+            memset(buffer,0x55,1024);
+            mui_canvas_set_font(canvas,previous_fonts[j]);
+            mui_draw_mem_mon(canvas);
+            CHECK(!memcmp(expected,buffer,1024));
+        }
+    }
+    puts("PASS RAM overlay: right-aligned in all 9 font/sample combinations and disabled state");
+}
 static const u8x8_display_info_t display_info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
 static void save_frame(const char *directory,const char *name,const uint8_t *buf) {
     if (!directory) return;
@@ -95,6 +128,7 @@ int main(int argc,char **argv) {
     u8g2_SetupBuffer(&u,buffer,8,u8g2_ll_hvline_vertical_top_lsb,&u8g2_cb_r0);
     canvas.fb=&u;mui_canvas_set_frame(&canvas,0,0,128,64);
     mui_canvas_set_font(&canvas,u8g2_font_wqy12_t_gb2312a);
+    check_memory_overlay(&canvas,buffer);
     const char *values[]={"[AN]","[AUS]","[ON]","[OFF]"};
     const char *titles[]={"Fernbedienung (bis Aus)","Schnelles Aufwachen","漢字漢字漢字漢字漢字漢字"};
     for(unsigned t=0;t<3;t++)for(unsigned v=0;v<4;v++){
@@ -250,9 +284,12 @@ class ComfortRenderingTests(unittest.TestCase):
         rows = (SRC / 'mui/view/mui_list_view.c').read_text()
         code = code.replace('/*ACTUAL_ROW*/', '\n'.join(function(rows, name) for name in (
             'mui_list_view_value_x', 'mui_list_view_draw_row_text')))
+        code = code.replace('/*ACTUAL_MEMORY_OVERLAY*/',
+                            function((SRC / 'mui/mui_core.c').read_text(), 'mui_draw_mem_mon'))
         with tempfile.TemporaryDirectory(prefix='pixl-ui-comfort-') as tmp:
             folder = Path(tmp)
-            for name in ('mui_canvas.h', 'u8g2_font_wqy12_t_gb2312a.c', 'u8g2_font_siji_t_6x10.c'):
+            fonts = ('u8g2_font_wqy12_t_gb2312a.c', 'u8g2_font_siji_t_6x10.c', 'u8g2_font_likeminecraft_te.c')
+            for name in ('mui_canvas.h', *fonts):
                 shutil.copyfile(SRC / 'mui' / name, folder / name)
             shutil.copyfile(SRC / 'mui/view/mui_text_input.h', folder / 'mui_text_input.h')
             (folder / 'mui_common.h').write_text('#pragma once\n#include <stdbool.h>\n#include <stdint.h>\n#include <string.h>\n#include "u8g2.h"\n')
@@ -268,7 +305,7 @@ class ComfortRenderingTests(unittest.TestCase):
             cmd = ['gcc', '-std=c11', '-O1', '-g', '-Wno-unused-variable', '-I', str(folder), '-I', str(u8), '-I', str(FW / 'components/mlib')]
             if os.environ.get('PIXL_SANITIZE') == '1':
                 cmd += ['-fsanitize=address,undefined', '-fno-sanitize-recover=all']
-            cmd += [str(folder / n) for n in ('main.c', 'mui_canvas.c', 'u8g2_font_wqy12_t_gb2312a.c', 'u8g2_font_siji_t_6x10.c')]
+            cmd += [str(folder / n) for n in ('main.c', 'mui_canvas.c', *fonts)]
             cmd += [str(u8 / n) for n in LIBS] + ['-o', str(binary)]
             build = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
             self.assertEqual(build.returncode, 0, build.stdout + build.stderr)

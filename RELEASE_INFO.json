@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "publication_date": "2026-11-05",
-  "version": "2.22.0-DE3.60",
-  "counter": 632,
+  "version": "2.22.0-DE3.61",
+  "counter": 633,
   "board": "LCD",
-  "web_version": "3.37.3",
+  "web_version": "3.37.4",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "b591ed01341b73cbcec308829bf6ac6420710586453c4d7a84ba37555a463974",
-  "application_sha256": "9dbeb98dabb016dd73c1b2c89b41772bd6c6c074e22c7e44d707b4af5b468bd8",
+  "ota_sha256": "60413358ab8fae550c4ba520b027662572fe14ae16a4109a9b6f561fbd82200a",
+  "application_sha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -38,11 +38,11 @@
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 142,
-  "web_host_tests": 1164,
+  "host_firmware_suites": 143,
+  "web_host_tests": 1170,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "evidence": "docs/validation/DE3_60.json",
+  "evidence": "docs/validation/DE3_61.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -55,12 +55,18 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_37_3.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.3",
+  "web_evidence": "docs/validation/WEB3_37_4.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.4",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
   "device_readback_passed": false,
-  "device_validation_pending_scope": "LCD key, QR scan, settings, storage error handling and NFC on installed DE3.60.",
+  "device_validation_pending_scope": "DE3.61 on-device startup checkpoints, file transfer and LCD confirmation.",
   "previous_device_readback_evidence": "docs/validation/DE3_59_READBACK.json",
-  "production_source_id_sha256": "dcc8494500015ebce2a260d17b3367ac380f307d58ea4b312a45d6ea900dd7ce"
+  "production_source_id_sha256": "fcf19a7c25eb881945da7b896611fa580949f8c299fbc04874956d1f5a6d2508",
+  "tested_bootloader": {
+    "name": "Z15",
+    "counter": 15,
+    "padded_region_sha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
+    "qualification": "DE3.60 user device report; DE3.61 signed package checks in emulated Z15. Physical DE3.61 test pending."
+  }
 }

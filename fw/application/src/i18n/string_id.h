@@ -254,6 +254,7 @@ typedef enum {
     _L_DE3_SLOT_COUNT_PENDING,
     _L_DE360_EXISTS,
     _L_DE360_NO_RAM,
+    _L_DE361_UNTIL_OFF,
     _L_COUNT,
 } L_StringID;
 #endif

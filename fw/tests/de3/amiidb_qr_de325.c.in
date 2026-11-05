@@ -20,7 +20,8 @@ static db_notes_t descriptions={"Linked description with many useful details, en
 #ifdef LEGACY_INLINE_NOTES
 #define link descriptions
 #else
-static db_link_t link={&descriptions};
+static db_link_t link={0};
+static const db_notes_t *const db_usage_notes=&descriptions;
 #endif
 extern const char *const lang_de_DE[];
 const char *getLangString(int id) { return lang_de_DE[id]; }

@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-11-05T11:24:46.846357+00:00",
+  "baseCommit": "c5cc8a12b2c74d0586fc4af00b3ddbd23f693ee3",
+  "headAtEvidence": "c5cc8a12b2c74d0586fc4af00b3ddbd23f693ee3",
+  "testedVersion": "3.37.4",
+  "testedSourceManifest": {
+    "files": 406,
+    "sha256": "d9e9bdae49fc803299d7cd3b58763642d37db5d554d9a199b22a4e0234b2320e"
+  },
+  "sourceDigestDefinition": "Sorted relative paths and individual SHA256: hex digest, two ASCII spaces, POSIX path, newline; SHA256 of UTF8 concatenation. Existing tracked and non-ignored untracked web files at evidence generation.",
+  "node": "v26.13.0",
+  "tests": [
+    {
+      "log": "web3374-final-with-policy-test.log",
+      "logSha256": "4ccfb0c0750f1fd21a5d3e8282c94187004af8078cad28b1e41ae2dc5c736825",
+      "counts": {
+        "tests": 1170,
+        "pass": 1170,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "log": "web3374-final-run-build.log",
+      "logSha256": "65023935e62957fd97742f3143adb4367d4ad1796407422e0dc4bbe220804581",
+      "counts": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "log": "web3374-final-run-build-pages.log",
+      "logSha256": "d016a851c33483b50dd967e685e6b35e78b8daaab1480b036c4513ab62263bc7",
+      "counts": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    }
+  ],
+  "productionBuilds": {
+    "dist": {
+      "tree": {
+        "files": 147,
+        "sha256": "a8f6d099df2c69b9187955b8f40d1c631ff72e916393ccf16ae55a5ebe162a6c"
+      },
+      "applicationPackage": {
+        "package": "Allmiibo_LCD_DE3_61_633_TESTSTAND.zip",
+        "bytes": 362343,
+        "packageSha256": "60413358ab8fae550c4ba520b027662572fe14ae16a4109a9b6f561fbd82200a",
+        "innerApplicationSha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+        "components": [
+          "application"
+        ]
+      }
+    },
+    "dist-pages": {
+      "tree": {
+        "files": 147,
+        "sha256": "397e8bb3900b0a55b13ef6b6c294239d550954b6a9ef4ba64277888923cbef0c"
+      },
+      "applicationPackage": {
+        "package": "Allmiibo_LCD_DE3_61_633_TESTSTAND.zip",
+        "bytes": 362343,
+        "packageSha256": "60413358ab8fae550c4ba520b027662572fe14ae16a4109a9b6f561fbd82200a",
+        "innerApplicationSha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+        "components": [
+          "application"
+        ]
+      }
+    }
+  },
+  "chromeOffline": [
+    {
+      "route": "/",
+      "checks": {
+        "cards": 8,
+        "visible": true,
+        "mtu": true,
+        "offline": true,
+        "z15": true,
+        "z16": true,
+        "target": true,
+        "package": true
+      }
+    },
+    {
+      "route": "/pixl.js/",
+      "checks": {
+        "cards": 8,
+        "visible": true,
+        "mtu": true,
+        "offline": true,
+        "z15": true,
+        "z16": true,
+        "target": true,
+        "package": true
+      }
+    }
+  ],
+  "existingDeviceExport": {
+    "sections": 8,
+    "values": {
+      "effectiveAttMtu": 250,
+      "gattValueBytes": 247,
+      "maxRequestPayload": 243,
+      "appStartMs": 2279
+    },
+    "checks": {
+      "hardware": "match",
+      "application": "different",
+      "bootloader": "match",
+      "softDevice": "match"
+    },
+    "sourceApp": "2.22.0-DE3.60",
+    "sourceWeb": "3.37.3"
+  },
+  "liveDeviceAccess": false,
+  "bootloaderWritten": false,
+  "limits": "Local host/production, headless Chrome, historical Z15/DE3.60 export. No BLE connection, NFC scan, power fault or on-device DE3.61 timing."
+}

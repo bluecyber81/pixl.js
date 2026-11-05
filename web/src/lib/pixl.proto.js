@@ -88,7 +88,7 @@ export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
             p_reject: reject,
             max_response_bytes,
             progress_cb: options.progress_cb,
-            storage_probe: options.storage_probe === true
+            optional_probe: options.optional_probe === true
         }
         op_queue.push(op);
         process_op_queue();
@@ -300,14 +300,19 @@ export function get_power_diagnostics() {
 }
 
 // Explicit optional read, serialized by the same queue as all file operations.
-export function get_startup_diagnostics() {
+export function get_startup_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    return op_queue_push(0x09, () => {}, b =>
-        parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 32 })
-        .then(response => {
-            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
-            return response.status === 255 ? null : checked_response(response);
-        });
+    const series = /^2\.22\.0-DE3\.(\d+)$/.exec(firmwareVersion || '');
+    function read(detail) {
+        return op_queue_push(0x09, b => { if (detail) b.writeUint8(1); }, b =>
+            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: detail ? 40 : 32, optional_probe: detail })
+            .then(response => {
+                if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+                if (detail && (response.status === 1 || response.status === 255)) return read(false);
+                return response.status === 255 ? null : checked_response(response);
+            });
+    }
+    return read(series !== null && Number(series[1]) >= 61);
 }
 
 export function parse_runtime_diagnostics(buffer) {
@@ -399,7 +404,7 @@ function read_storage_info(drive, extended, query={}) {
             (data[4] & ~(extended?15:7)) || ((data[4]&8) && (drive!=='E'||data[2]!==3||(data[4]&7)!==7)) ||
             data[5] !== 128 || data[6] !== 64 || data[7] !== 48) throw new Error('Unsupported storage information.');
         return {schema:1,drive,backend:data[2],mounted:!!data[3],flags:data[4],metaLen:data[5],pathMax:data[6],nameMax:data[7]};
-    },{storage_probe:extended}).then(response => {
+    },{optional_probe:extended}).then(response => {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
         if (storage_info_queries.get(drive)===query) {
             if (response.status === 0) storage_info_cache.set(drive, Object.freeze({...response.data}));
@@ -1004,7 +1009,7 @@ function on_rx_data(data) {
         }
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
-        const unsupportedProbe = h.cmd===0x1c && op.storage_probe && (h.status===1 || h.status===255);
+        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09) && op.optional_probe && (h.status===1 || h.status===255);
         if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x1c || h.cmd === 0x1f) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';

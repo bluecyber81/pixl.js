@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "nrf_error.h"
+#include "runtime_diag.h"
 #include "nrf_log.h"
 #include "vfs.h"
 #include "vfs_meta.h"
@@ -136,12 +137,15 @@ int32_t settings_init() {
     if (!p_driver->mounted()) {
         return NRF_ERROR_INVALID_STATE;
     }
+    startup_storage_checkpoint(STARTUP_MOUNT_READY);
 #ifdef VFS_PACKED_LFS_ENABLE
     if (vfs_packed_recovery_required()) return NRF_ERROR_INVALID_STATE;
 #endif
     if (vfs_persist_recover(p_driver) != VFS_OK) {
         return NRF_ERROR_INVALID_STATE;
     }
+
+    startup_storage_checkpoint(STARTUP_JOURNAL_READY);
 
     /* One extra byte detects oversized files without truncating them into a
      * seemingly valid configuration. Unknown/partial files stay untouched. */

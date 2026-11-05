@@ -15,6 +15,19 @@ spec.loader.exec_module(generator)
 
 
 class IndexedLinksTests(HostTests):
+    def test_note_indices_do_not_wrap_and_empty_catalog_has_a_terminator(self):
+        figure = SimpleNamespace(id='0000000000000001')
+        def note(number):
+            return SimpleNamespace(amiibo_id=figure.id, game_id='1',
+                                   note_en=str(number), note_cn='', note_it='')
+        self.assertIn('const db_link_t link_list[] = {\n    {0}\n};',
+                      generator.render_amiibo_links([], [figure]))
+        links = [note(i) for i in range(65536)]
+        self.assertIn('{1, 0, 65535}', generator.render_amiibo_links(links, [figure]))
+        links.append(note(65536))
+        with self.assertRaisesRegex(ValueError, 'Usage note index'):
+            generator.render_amiibo_links(links, [figure])
+
     def test_current_complete_tables_render_byte_identically_without_publication(self):
         figures = sorted(generator.read_amiibo_from_csv(), key=lambda row: int(row.id, 16))
         links = generator.gen_other_link(figures, generator.read_link_from_csv())
@@ -57,13 +70,14 @@ static const reference_t expected[] = {
 int main(void) {
  const size_t count=sizeof(expected)/sizeof(*expected);
  assert(sizeof(link_list)/sizeof(*link_list)==count+1);
- assert(sizeof(notes)/sizeof(*notes)==110);
+ assert(sizeof(db_usage_notes)/sizeof(*db_usage_notes)==110);
  for(size_t i=0;i<count;i++) {
   const reference_t *ref=&expected[i];const db_link_t *link=&link_list[i];
   assert(link->game_id==ref->game && link->amiibo_index<amiibo_list_size);
   const db_amiibo_t *figure=&amiibo_list[link->amiibo_index];
   assert(figure->head==ref->head && figure->tail==ref->tail);
-  assert(!strcmp(link->notes->en,ref->en) && !strcmp(link->notes->cn,ref->cn) && !strcmp(link->notes->it,ref->it));
+  assert(link->note_index < sizeof(db_usage_notes)/sizeof(*db_usage_notes));
+  assert(!strcmp(db_usage_notes[link->note_index].en,ref->en) && !strcmp(db_usage_notes[link->note_index].cn,ref->cn) && !strcmp(db_usage_notes[link->note_index].it,ref->it));
   size_t first=0;while(first<i && (expected[first].game!=ref->game || expected[first].head!=ref->head || expected[first].tail!=ref->tail)) first++;
   assert(get_link_by_id(ref->game,ref->head,ref->tail)==&link_list[first]);
  }

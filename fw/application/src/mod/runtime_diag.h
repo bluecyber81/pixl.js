@@ -9,6 +9,8 @@
 #define RUNTIME_DIAG_SIZE 64u
 #define POWER_DIAG_SIZE 16u
 #define STARTUP_DIAG_SIZE 32u
+#define STARTUP_STORAGE_DIAG_SIZE 40u
+enum startup_storage_checkpoint { STARTUP_MOUNT_READY, STARTUP_JOURNAL_READY };
 
 /* Milliseconds since the application starts storage initialization. This does
  * not measure bootloader/early SDK time or the panel's physical response. */
@@ -35,9 +37,12 @@ enum runtime_diag_cause {
 
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
 void runtime_diag_stack_init(void);
+/* The two successful milestones occur once in settings_init during startup. */
+void startup_storage_checkpoint(enum startup_storage_checkpoint step);
+void runtime_diag_storage_mark(enum startup_storage_checkpoint step, uint32_t elapsed_ms);
 void runtime_diag_boot_capture(uint32_t reset_reason);
 void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms);
-bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity);
+bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity, bool detail);
 void runtime_diag_power_sample(uint16_t voltage_mv, bool valid, bool lipo, bool charging, uint16_t sleep_seconds);
 bool runtime_diag_power_snapshot(uint8_t *out, size_t capacity);
 void runtime_diag_ble_abort(uint8_t cause);
@@ -49,12 +54,13 @@ void runtime_diag_heap_sample(uint32_t total, uint32_t free, uint32_t largest);
 bool runtime_diag_snapshot(uint8_t *out, size_t capacity);
 #else
 static inline void runtime_diag_stack_init(void) {}
+static inline void startup_storage_checkpoint(enum startup_storage_checkpoint step) { (void)step; }
 static inline void runtime_diag_boot_capture(uint32_t reason) { (void)reason; }
 static inline void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms) {
     (void)phase; (void)elapsed_ms;
 }
-static inline bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity) {
-    (void)out; (void)capacity; return false;
+static inline bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity, bool detail) {
+    (void)detail; (void)out; (void)capacity; return false;
 }
 static inline void runtime_diag_power_sample(uint16_t mv, bool valid, bool lipo, bool charging, uint16_t seconds) {
     (void)mv; (void)valid; (void)lipo; (void)charging; (void)seconds;

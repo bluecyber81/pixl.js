@@ -309,11 +309,16 @@ static void prepare_storage_recovery_ui(void) {
 }
 
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
+static uint32_t startup_started;
 static uint32_t startup_elapsed_ms(uint32_t started) {
     uint32_t ticks = app_timer_cnt_diff_compute(app_timer_cnt_get(), started);
     uint64_t ms = (uint64_t)ticks * 1000u * (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u) /
                   APP_TIMER_CLOCK_FREQ;
     return ms > UINT32_MAX ? UINT32_MAX : (uint32_t)ms;
+}
+
+void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
+    runtime_diag_storage_mark(step, startup_elapsed_ms(startup_started));
 }
 #endif
 
@@ -366,7 +371,7 @@ int main(void) {
      * APP_TIMER_KEEPS_RTC_ACTIVE=0, app_timer_init alone is not a time origin.
      * The 24-bit counter span is sufficient for this synchronous startup;
      * this trace deliberately excludes bootloader and early SDK startup. */
-    const uint32_t startup_started = app_timer_cnt_get();
+    startup_started = app_timer_cnt_get();
     runtime_diag_startup_mark(STARTUP_STORAGE_BEGIN, 0);
 #endif
     err_code = settings_init();

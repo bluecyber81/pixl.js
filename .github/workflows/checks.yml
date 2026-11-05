@@ -59,6 +59,8 @@ jobs:
         run: python3 fw/tests/de3/test_lfs_wear_de355.py
       - name: LCD keyboard pixels, input and scrollbar boundaries
         run: python3 fw/tests/de3/test_ui_comfort_de356.py
+      - name: Check static settings rows with the production font
+        run: python3 fw/tests/de3/test_settings_label_width_de361.py
       - name: Existing LCD editor rendering
         run: python3 fw/tests/de3/test_text_input_render_de344.py
       - name: Bluetooth status lifecycle and LCD pixels

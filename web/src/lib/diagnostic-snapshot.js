@@ -142,6 +142,9 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
     power: normalized ? sectionData('power') : baseReport.power });
   return { ...report, startup: sectionData('startup'), diagnosticSnapshot: normalized,
     limitations: [...report.limitations,
+      ...(sectionData('mtu')?.effectiveAttMtu != null
+        ? ['The firmware reported the effective ATT MTU for its connection in diagnosticSnapshot.sections.mtu.']
+        : ['This report contains no firmware reading of the effective ATT MTU.']),
       'Sections were read sequentially; this is not an atomic device snapshot.',
       'Read timestamps describe browser receipt, not the age of cached firmware samples.',
       'Startup markers exclude bootloader and early SDK startup.',

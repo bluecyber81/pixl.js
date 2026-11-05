@@ -1,4 +1,4 @@
-import { startupSeries } from '../src/lib/startup-diagnostics.js';
+import { startupSeries, startupStorageIntervals } from '../src/lib/startup-diagnostics.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -9,6 +9,28 @@ function packet(mask=63, times=[0,37,45,92,97,101]) {
   const bytes=new Uint8Array(32),view=new DataView(bytes.buffer);bytes.set([80,88,83,84,1,32,mask,0]);
   times.forEach((ms,i)=>view.setUint32(8+4*i,mask&(1<<i)?ms:0,true));return bytes;
 }
+
+function detailedPacket(mask, mount, journal, phaseMask=63) {
+  const bytes = new Uint8Array(40), view = new DataView(bytes.buffer);
+  bytes.set(packet(phaseMask)); bytes.set([2,40,phaseMask,mask],4);
+  view.setUint32(32,mount,true); view.setUint32(36,journal,true);
+  return bytes;
+}
+test('extended wire snapshots export a bounded storage breakdown and compare with both schemas', () => {
+  const original=parseStartupDiagnostics(packet());
+  const current=parseStartupDiagnostics(detailedPacket(3,20,30));
+  const prior=parseStartupDiagnostics(detailedPacket(3,24,32));
+  assert.deepEqual(startupStorageIntervals(current).map(row=>row.milliseconds), [20,10,7]);
+  assert.deepEqual(compareStartup({startup:original},current),{storage:0,total:0});
+  assert.deepEqual(compareStartup({startup:current},original),{storage:0,total:0});
+  assert.deepEqual(compareStartup({startup:prior},current).storageIntervals.map(row=>row.milliseconds),[-4,2,2]);
+  assert.deepEqual(createStartupDiagnosticReport(current,'2026-11-05T10:00:00.000Z').startup.storageElapsedMilliseconds,[20,30]);
+  assert.deepEqual(startupStorageIntervals(parseStartupDiagnostics(detailedPacket(1,0,0))).map(row=>row.milliseconds),[0,null,null]);
+  assert.deepEqual(startupStorageIntervals(parseStartupDiagnostics(detailedPacket(0,0,0))).map(row=>row.milliseconds),[null,null,null]);
+  for (const args of [[2,0,30],[1,5,10],[3,23,22],[3,22,38],[3,0,0,0],[0,1,0]]) {
+    assert.throws(()=>parseStartupDiagnostics(detailedPacket(...args)));
+  }
+});
 test('previous saved start and full report compare the same two intervals; partial measurements are excluded',()=>{
   const prior=parseStartupDiagnostics(packet()), now=parseStartupDiagnostics(packet(63,[0,30,38,86,100,110]));
   for(const report of [{reportSchema:1,startup:prior},{schema:1,startup:prior,diagnosticSnapshot:{}}])

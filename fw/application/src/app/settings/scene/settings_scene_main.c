@@ -80,7 +80,6 @@ static void settings_scene_main_msg_box_reset_settings_cb(mui_msg_box_event_t ev
 static void settings_scene_main_list_view_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                       mui_list_item_t *p_item) {
     app_settings_t *app = p_list_view->user_data;
-    char txt[32];
 
     settings_data_t *p_settings = settings_get_data();
 
@@ -231,25 +230,25 @@ static void settings_scene_main_reload(void *user_data) {
 
     mui_list_view_clear_items(app->p_list_view);
 
-    snprintf(txt, sizeof(txt), "[%s]", version_get_version(version_get()));
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c7, _T(APP_SET_VERSION), txt, (void *)SETTINGS_MAIN_MENU_VERSION);
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c7, _T(APP_SET_VERSION), version_get_version(version_get()),
+                               (void *)SETTINGS_MAIN_MENU_VERSION);
 
-    snprintf(txt, sizeof(txt), "[%s]", getLangDesc(p_settings->language));
-    mui_list_view_add_item_ext(app->p_list_view, 0xe26d, _T(APP_SET_LANGUAGE), txt,
+    mui_list_view_add_item_ext(app->p_list_view, 0xe26d, _T(APP_SET_LANGUAGE), getLangDesc(p_settings->language),
                                (void *)SETTINGS_MAIN_MENU_LANGUAGE);
 
     vfs_driver_t *p_driver = vfs_get_default_driver();
     vfs_stat_t stat = {0};
     int32_t res = settings_storage_snapshot_read(&app->storage_snapshot, p_driver, &stat);
+    const char *storage_value = _T(NOT_MOUNTED);
     if (res == VFS_OK && stat.avaliable && stat.total_bytes && stat.free_bytes <= stat.total_bytes) {
-        snprintf(txt, sizeof(txt), "[%s %02d%%]", _T(APP_SET_STORAGE_USED),
+        snprintf(txt, sizeof(txt), "%s %d%%", _T(APP_SET_STORAGE_USED),
                  (uint8_t)((stat.total_bytes - stat.free_bytes) / (float)stat.total_bytes * 100));
-    } else {
-        snprintf(txt, sizeof(txt), "[%s]", _T(NOT_MOUNTED));
+        storage_value = txt;
     }
-    mui_list_view_add_item_ext(app->p_list_view, 0xe146, _T(APP_SET_STORAGE), txt, (void *)SETTINGS_MAIN_MENU_STORAGE);
+    mui_list_view_add_item_ext(app->p_list_view, 0xe146, _T(APP_SET_STORAGE), storage_value,
+                               (void *)SETTINGS_MAIN_MENU_STORAGE);
 
-    snprintf(txt, sizeof(txt), "[%d%%]", p_settings->oled_contrast);
+    snprintf(txt, sizeof(txt), "%d%%", p_settings->oled_contrast);
 #ifdef OLED_SCREEN
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_BRIGHTNESS), txt,
                                (void *)SETTINGS_MAIN_MENU_OLED_CONTRAST);
@@ -259,52 +258,51 @@ static void settings_scene_main_reload(void *user_data) {
 #endif
 
 #ifdef LCD_SCREEN
-    if (p_settings->lcd_backlight == 0) {
-        snprintf(txt, sizeof(txt), "%s", getLangString(_L_OFF_F));
-    } else {
-        snprintf(txt, sizeof(txt), "[%d%%]", p_settings->lcd_backlight);
+    const char *backlight_value = _T(OFF);
+    if (p_settings->lcd_backlight) {
+        snprintf(txt, sizeof(txt), "%d%%", p_settings->lcd_backlight);
+        backlight_value = txt;
     }
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_LCD_BACKLIGHT), txt,
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_LCD_BACKLIGHT), backlight_value,
                                (void *)SETTINGS_MAIN_MENU_BACK_LIGHT);
 #endif
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_FLIP_DISPLAY),
-                               p_settings->flip_display ? _T(ON_F) : _T(OFF_F),
+                               p_settings->flip_display ? _T(ON) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_FLIP_DISPLAY);
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_SWAP_BUTTONS),
-                               p_settings->swap_buttons ? _T(ON_F) : _T(OFF_F),
+                               p_settings->swap_buttons ? _T(ON) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_SWAP_BUTTONS);
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe1dc, _T(APP_SET_ANIM),
-                               p_settings->anim_enabled ? _T(ON_F) : _T(OFF_F),
+                               p_settings->anim_enabled ? _T(ON) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_ANIM_ENABLED);
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe08f, _T(APP_SET_LIPO_BAT),
-                               p_settings->bat_mode ? _T(ON_F) : _T(OFF_F), (void *)SETTINGS_MAIN_MENU_LI_MODE);
+                               p_settings->bat_mode ? _T(ON) : _T(OFF), (void *)SETTINGS_MAIN_MENU_LI_MODE);
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe1f3, _T(APP_SET_SHOW_MEM_USAGE),
-                               p_settings->show_mem_usage ? _T(ON_F) : _T(OFF_F),
+                               p_settings->show_mem_usage ? _T(ON) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_SHOW_MEM_USAGE);
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe232, _T(APP_SET_HIBERNATE),
-                               p_settings->hibernate_enabled ? _T(ON_F) : _T(OFF_F),
+                               p_settings->hibernate_enabled ? _T(ON) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_ENABLE_HIBERNATE);
 
-    if (nrf_pwr_mgmt_get_timeout() == 0) {
-        snprintf(txt, sizeof(txt), "%s", getLangString(_L_OFF_F));
-    } else if (nrf_pwr_mgmt_get_timeout() > 0 && nrf_pwr_mgmt_get_timeout() < 60) {
-        snprintf(txt, sizeof(txt), "[%ds]", nrf_pwr_mgmt_get_timeout());
-    } else {
-        snprintf(txt, sizeof(txt), "[%dm]", nrf_pwr_mgmt_get_timeout() / 60);
+    uint16_t seconds = nrf_pwr_mgmt_get_timeout();
+    const char *timeout_value = _T(OFF);
+    if (seconds) {
+        snprintf(txt, sizeof(txt), "%d%c", seconds < 60 ? seconds : seconds / 60, seconds < 60 ? 's' : 'm');
+        timeout_value = txt;
     }
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c9, _T(APP_SET_SLEEP_TIMEOUT), txt,
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c9, _T(APP_SET_SLEEP_TIMEOUT), timeout_value,
                                (void *)SETTINGS_MAIN_MENU_SLEEP_TIMEOUT);
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c9, _T(APP_SET_NO_SLEEP),
-                               p_settings->no_sleep_mode ? _T(ON_F) : _T(OFF_F),
+                               p_settings->no_sleep_mode ? _T(ON) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_NO_SLEEP);
     mui_list_view_add_item_ext(app->p_list_view, 0xe1d0, _T(DE3_REMOTE_SESSION),
-                               ble_remote_enabled() ? _T(ON_F) : _T(OFF_F),
+                               ble_remote_enabled() ? _T(DE361_UNTIL_OFF) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_REMOTE);
     mui_list_view_add_item(app->p_list_view, 0xe1d0, _T(APP_SET_APP_MGMT), (void *)SETTINGS_MAIN_MENU_APP_MANAGEMENT);
     mui_list_view_add_item(app->p_list_view, 0xe1c9, _T(APP_SET_GO_SLEEP), (void *)SETTINGS_MAIN_MENU_GO_SLEEP);

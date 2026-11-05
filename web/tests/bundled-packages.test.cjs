@@ -38,6 +38,7 @@ test('default browser fetch retains its global receiver rather than the Loader i
 test('catalogue is bounded, strict and rejects traversal, external URLs, malformed metadata and unsupported scope',()=>{
  assert.deepEqual(validateCatalog({schema:1,packages:[]}).packages,[]);
  assert.equal(validateCatalog({schema:1,packages:[{...entry,bootloader:'BL8/Z13'}]}).packages[0].bootloader,'BL8/Z13');
+ assert.equal(validateCatalog({schema:1,packages:[{...entry,bootloader:'BL8/Z13/Z15'}]}).packages[0].bootloader,'BL8/Z13/Z15');
  const changed=[{file:'../evil.zip'},{file:'https://example.com/a.zip'},{file:'//evil/a.zip'},{file:entry.file+'?x'},{file:entry.file+'#x'},
  {sha256:'0'.repeat(64)},{sha256:'bad'},{bytes:0},{bytes:MAX_BYTES+1},{counter:1},{board:'OLED'},{storage:'SPIFFS'},
  {bootloader:'unknown'},{softDevice:'S140'},{applicationOnly:false},{migrationRequired:true},{extra:true},{version:'2.22.0-DE3.53-PREP'}];

@@ -275,7 +275,34 @@ static void repeated_saves(void) {
     REQUIRE(pfs_replace(store, "/.pixl_txn_pending", bad_marker, sizeof(bad_marker), NULL) == sizeof(bad_marker));
     REQUIRE(vfs_persist_write(driver(), path, tag, sizeof(tag)) == VFS_ERR_CRPT);
 }
+/* Repeated directory lookups use LittleFS's global read cache. Its buffer is
+ * reused across pages/blocks; the physical flash page, not that pointer, is the key. */
+static void mount_metadata_cache(void) {
+    nor_init(&media);
+    mount_pages_t pages = {0};
+    uint8_t payload[PFS_CACHE_SIZE];
+    uint8_t *metadata = media.config.read_buffer;
+    for (unsigned b = 0; b < 2; ++b)
+        for (unsigned page = 0; page < 16; ++page)
+            memset(media.disk + b * PFS_BLOCK_SIZE + page * PFS_CACHE_SIZE,
+                   16 * b + page, PFS_CACHE_SIZE);
+    mount_pages = &pages;
+    read_calls = 0;
+    REQUIRE(flash_read(&media.config, 0, 256, metadata, 256) == 0 && metadata[0] == 1);
+    REQUIRE(flash_read(&media.config, 0, 512, metadata, 256) == 0 && metadata[0] == 2);
+    REQUIRE(flash_read(&media.config, 1, 256, metadata, 256) == 0 && metadata[0] == 17);
+    REQUIRE(flash_read(&media.config, 0, 256, metadata, 256) == 0 && metadata[0] == 1 && read_calls == 3);
+    REQUIRE(flash_read(&media.config, 0, 256, payload, 256) == 0 && payload[255] == 1 && read_calls == 4);
+    read_fail_at = 5;
+    REQUIRE(flash_read(&media.config, 0, 768, metadata, 256) == LFS_ERR_IO);
+    REQUIRE(flash_read(&media.config, 0, 768, metadata, 256) == 0 && metadata[255] == 3 && read_calls == 6);
+    mount_pages = NULL;
+    REQUIRE(flash_read(&media.config, 0, 256, metadata, 256) == 0 && read_calls == 7);
+    read_fail_at = read_calls = 0;
+}
+
 int main(void){
+    mount_metadata_cache();
     for(unsigned i=0;i<2048;i++){old_data[i]=(uint8_t)(i*7+3);new_data[i]=(uint8_t)(i*13+5);}
     for(unsigned i=0;i<128;i++)meta[i]=(uint8_t)(i*9+17);
     baseline();boundary_api();handles();oom();fault_io();fault_read();mount_oom();mount_io();repeated_saves();recovery_before_compare();drop();

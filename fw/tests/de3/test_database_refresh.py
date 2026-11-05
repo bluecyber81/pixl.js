@@ -111,7 +111,7 @@ class DatabaseRefreshTests(unittest.TestCase):
         self.assertNotIn('"None"', generated)
         links = (self.generated / "db_link.c").read_text(encoding="utf8")
         self.assertIn('{"", "", ""}', links)
-        self.assertIn('{255, 1, &notes[0]}', links)
+        self.assertIn('{255, 1, 0}', links)
         first = {p.name: p.read_bytes() for p in self.generated.glob("*.c")}
         self.assertEqual(self.execute(["--refresh"], body)[0], 0)
         self.assertEqual(first, {p.name: p.read_bytes() for p in self.generated.glob("*.c")})
@@ -171,9 +171,9 @@ class DatabaseRefreshTests(unittest.TestCase):
                         'return strcmp(amiibo_list[1].name_en, expected) || '
                         'strcmp(game_list[0].name_en, expected) || '
                         'strcmp(game_list[0].name_cn, expected) || '
-                        'strcmp(link_list[0].notes->en, expected) || '
-                        'strcmp(link_list[0].notes->cn, expected) || '
-                        'strcmp(link_list[0].notes->it, expected); }\n', encoding="utf8")
+                        'strcmp(db_usage_notes[link_list[0].note_index].en, expected) || '
+                        'strcmp(db_usage_notes[link_list[0].note_index].cn, expected) || '
+                        'strcmp(db_usage_notes[link_list[0].note_index].it, expected); }\n', encoding="utf8")
         compiler = shutil.which("gcc")
         self.assertIsNotNone(compiler, "Existing host C compiler is required")
         executable = self.generated / ("test.exe" if os.name == "nt" else "test")
@@ -221,7 +221,7 @@ class DatabaseRefreshTests(unittest.TestCase):
                 links = (self.generated / "db_link.c").read_text(encoding="utf8")
                 self.assertIn('"Local alias", "Local translation"', data)
                 self.assertIn('{"Note", "", ""}', links)
-                self.assertIn('{1, 0, &notes[0]}', links)
+                self.assertIn('{1, 0, 0}', links)
                 self.assertNotIn("{255,", links)
                 with (self.project / "data/amiidb_amiibo.csv").open(encoding="utf8", newline="") as stream:
                     self.assertEqual(len(list(csv.reader(stream))), 1)

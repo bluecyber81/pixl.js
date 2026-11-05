@@ -20,11 +20,16 @@
           <td><span>{{ row.sincePreviousMilliseconds === null ? '—' : `${row.sincePreviousMilliseconds} ${text.ms}` }}</span><span v-if="summary && row.sincePreviousMilliseconds > 0" class="phase-meter" aria-hidden="true"><span :style="{width: (row.sincePreviousMilliseconds / summary.total * 100) + '%'}"></span></span></td></tr></tbody>
       </table>
     </div>
+    <details v-if="storageIntervals.length"><summary>{{ text.storageIntervals }}</summary>
+      <dl><div v-for="item in storageIntervals" :key="item.id"><dt>{{ text.intervals[item.id] }}</dt>
+        <dd>{{ item.milliseconds === null ? text.absent : item.milliseconds + ' ms' }}</dd></div></dl>
+    </details>
     <details v-if="summary"><summary>{{ text.baseline }}</summary>
       <p>{{ text.baselineHint }}</p>
       <input type="file" accept=".json,application/json" :aria-label="text.baseline" @change="loadBaseline" />
       <p v-if="baselineError" role="status">{{ text.invalidBaseline }}</p>
-      <p v-if="difference" role="status">{{ text.difference }} · {{ text.storage }} {{ signed(difference.storage) }} ms · {{ text.total }} {{ signed(difference.total) }} ms</p>
+      <p v-if="difference" role="status">{{ text.difference }} · {{ text.storage }} {{ signed(difference.storage) }} ms · {{ text.total }} {{ signed(difference.total) }} ms
+        <span v-for="item in difference.storageIntervals" :key="item.id"> · {{ text.intervals[item.id] }} {{ signed(item.milliseconds) }} ms</span></p>
     </details>
     <details><summary>{{ de ? 'Mehrere Kaltstarts auswerten' : 'Compare multiple cold starts' }}</summary>
       <p>{{ de ? '3 bis 20 JSON-Berichte auswählen: je einer pro echtem Neustart, am selben Gerät mit derselben Firmware, Sammlung und ähnlicher Akkuspannung.' : 'Select 3 to 20 JSON reports: one per physical restart, from the same device, firmware and collection at a similar battery voltage.' }}</p>
@@ -39,7 +44,7 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { startupSeries, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
+import { startupSeries, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals } from '../lib/startup-diagnostics.js';
 const props = defineProps({ firmwareVersion: String, connected: Boolean, blocked: Boolean, generation: { type: Number, default: 0 },
   locale: { type: String, default: 'de_DE' }, readDiagnostics: { type: Function, default: null } });
 const emit = defineEmits(['busy', 'export']);
@@ -66,6 +71,7 @@ async function loadSeries(event) {
 }
 const loading = computed(() => state.value === 'loading');
 const rows = computed(() => startupDiagnosticRows(info.value));
+const storageIntervals = computed(() => startupStorageIntervals(info.value));
 // Compare only a complete series. A partial recording cannot identify the
 // slowest interval of the whole measured application start.
 const summary = computed(() => {

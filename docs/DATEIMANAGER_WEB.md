@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.3)
+[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.4)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 

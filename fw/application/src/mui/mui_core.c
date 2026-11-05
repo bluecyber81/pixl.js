@@ -72,11 +72,11 @@ static void mui_draw_mem_mon(mui_canvas_t *p_canvas) {
         mui_mem_monitor_t mon;
         mui_mem_monitor(&mon);
         sprintf(mem, "u:%02d%% f:%02d%%", mon.used_pct, mon.frag_pct);
+        mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
         uint8_t w = (uint8_t)mui_canvas_get_utf8_width(p_canvas, mem);
         uint8_t x = mui_canvas_get_width(p_canvas) - w;
         uint8_t y = mui_canvas_get_height(p_canvas);
 
-        mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
         mui_canvas_set_draw_color(p_canvas, 0);
         mui_canvas_draw_box(p_canvas, x, y - 10, w, 12);
         mui_canvas_set_draw_color(p_canvas, 1);

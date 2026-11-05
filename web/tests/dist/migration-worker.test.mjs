@@ -13,7 +13,7 @@ assert.ok(['/', '/pixl.js/'].includes(base))
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={
- current:{url:'/lfs-capacity-de355.wasm',wasm:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engine:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248',counter:632,version:'2.22.0-DE3.60'},
+ current:{url:'/lfs-capacity-de355.wasm',wasm:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engine:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248',counter:633,version:'2.22.0-DE3.61'},
  de354:{url:'/lfs-capacity-current.wasm',wasm:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engine:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d',counter:626,version:'2.22.0-DE3.54'},
  de350:{url:'/lfs-capacity-de350.wasm',wasm:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engine:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059',counter:622,version:'2.22.0-DE3.50'},
  de345:{url:'/lfs-capacity-de345.wasm',wasm:'a4cfd3b1d823f2d596ba67625364260bbe74979b28c7123fc863e549b7199c99',engine:'532b316e72fd7b9edef868bd318d30c8a6be45880d98b68464bf12da31bac9e8',counter:617,version:'2.22.0-DE3.45'},
@@ -88,7 +88,7 @@ for(const [id,profile]of Object.entries(profiles)) {
 }
 test('built worker defaults an omitted profile to current, without selecting legacy implicitly',async()=>{
  const {result,fetches}=await runWorker({rows:[],archiveSha256:'ab'.repeat(32)})
- assert.equal(result.kind,'result');assert.equal(result.report.capacityProfile,'current');assert.equal(result.report.applicationCounter,632)
+ assert.equal(result.kind,'result');assert.equal(result.report.capacityProfile,'current');assert.equal(result.report.applicationCounter,633)
  assert.equal(fetches[0].url,deployed(profiles.current.url))
 })
 test('built worker rejects unknown profiles and raw target injection before any fetch or progress',async()=>{

@@ -57,5 +57,5 @@ test('production entry points use the common resolver and pass query/hash to the
   assert.match(read('src/App.vue'), /dfuPageUrl\(\) \{ return deploymentPath\('dfu\/web.html'\)/)
   assert.match(read('index.html'), /src="%BASE_URL%dfu\/vendor\/jszip-3.10.2.min.js"/)
   assert.match(read('src/main.js'), /search: window.location.search, hash: window.location.hash/)
-  for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /https:\/\/github.com\/bluecyber81\/pixl.js\/releases\/download\/de3.60\/Allmiibo_DE3_60_Quellcode.zip/)
+  for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /https:\/\/github.com\/bluecyber81\/pixl.js\/releases\/download\/de3.61\/Allmiibo_DE3_61_Quellcode.zip/)
 })

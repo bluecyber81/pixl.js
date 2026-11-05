@@ -162,10 +162,11 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     df_frame_t out = {0};
     OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, DF_STATUS_ERR);
-    if (evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
-        runtime_diag_startup_snapshot(out.data, sizeof(out.data))) {
+    bool detail = evt->df->length == 1 && evt->df->data[0] == 1;
+    if ((!evt->df->length || detail) && !evt->df->status && !evt->df->chunk &&
+        runtime_diag_startup_snapshot(out.data, sizeof(out.data), detail)) {
         out.status = DF_STATUS_OK;
-        out.length = STARTUP_DIAG_SIZE;
+        out.length = detail ? STARTUP_STORAGE_DIAG_SIZE : STARTUP_DIAG_SIZE;
     }
     df_core_send_frame(&out);
 }

@@ -23,20 +23,26 @@ with tempfile.TemporaryDirectory(prefix='pixl-settings-') as temporary:
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#define PIXL_RUNTIME_DIAGNOSTICS 1
 #include "SOURCE_FILE"
+static unsigned startup_marks;
+static int recovery_result;
+void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
+    startup_marks |= 1u << step;
+}
 /* DE3 module boundary is mocked here; fault/restart tests compile its real C separately. */
-int32_t vfs_persist_recover(vfs_driver_t *d) {(void)d;return VFS_OK;}
+int32_t vfs_persist_recover(vfs_driver_t *d) {(void)d;return recovery_result;}
 int32_t vfs_persist_write(vfs_driver_t *d,const char *p,const void *b,size_t n) {return d->write_file_data(p,(void*)b,n);}
 int32_t vfs_persist_write_meta(vfs_driver_t*d,const char*p,const void*b,size_t n,const uint8_t*m) {
  int32_t r=vfs_persist_write(d,p,b,n);if(r==(int32_t)n&&m){int32_t c=d->update_file_meta(p,(void*)m,128);if(c<0)return c;}return r;
 }
 static unsigned char stored[64];
 static int stored_size, read_error, writes, write_result, metadata_result, remove_result;
-static bool available, no_driver;
+static bool available, no_driver, mount_success;
 static vfs_driver_t driver;
 vfs_driver_t *vfs_get_default_driver(void) { return no_driver ? NULL : &driver; }
 static bool mounted(void) { return available; }
-static int32_t mount_mock(void) { return available ? 0 : -1; }
+static int32_t mount_mock(void) { available = mount_success; return available ? 0 : -1; }
 static int32_t read_mock(const char *name, void *data, size_t capacity) {
     (void)name;
     if (read_error) return read_error;
@@ -52,6 +58,7 @@ static int32_t meta_mock(const char *n, void *d, size_t z) {
 static int32_t remove_mock(const char *n) { (void)n; return remove_result; }
 void vfs_meta_encode(uint8_t *a, uint8_t n, vfs_meta_t *m) { (void)a;(void)n;(void)m; }
 static void reset(void) {
+    startup_marks=0; recovery_result=0; mount_success=false;
     available=true; no_driver=false; stored_size=26; read_error=0; writes=0;
     write_result=26; metadata_result=0; remove_result=0;
     memcpy(stored, &def_settings_data, 26);
@@ -110,6 +117,13 @@ int main(void) {
     puts("PASS slot index upper bound is exclusive and sort enum validated");
 
     reset(); available=false; assert(settings_init()!=0 && settings_save()!=0 && settings_reset()!=0);
+    assert(startup_marks==0);
+    reset(); available=false; mount_success=true;
+    assert(settings_init()==0 && startup_marks==3);
+    reset(); recovery_result=VFS_ERR_CRPT;
+    assert(settings_init()!=0 && startup_marks==1 && writes==0);
+    reset(); read_error=VFS_ERR_FAIL;
+    assert(settings_init()!=0 && startup_marks==3 && writes==0);
     reset(); no_driver=true; assert(settings_init()!=0 && settings_save()!=0 && settings_reset()!=0);
     reset(); assert(settings_init()==0); remove_result=-1; assert(settings_reset()!=0);
     remove_result=VFS_ERR_NOOBJ; assert(settings_reset()==0);

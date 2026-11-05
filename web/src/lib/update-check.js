@@ -48,9 +48,11 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const bootCounter = diagnostic?.settingsCrcValid ? diagnostic.bootloaderCounter : null;
   // Match each firmware region to its own counter. Keep known BL8 rollback
   // images distinct even when their settings retain a higher counter.
-  const identity = bootHash === target.bootloaderZ13.sha256 ||
-    (bootHash !== target.bootloader.sha256 && bootCounter === target.bootloaderZ13.counter)
-    ? target.bootloaderZ13 : target.bootloader;
+  const profiles = [target.bootloader, target.bootloaderZ13, target.bootloaderZ15, target.bootloaderZ16];
+  const exact = profiles.find(profile => profile.sha256 === bootHash && profile.counter === bootCounter);
+  const identity = exact ?? profiles.find(profile => profile.sha256 === bootHash)
+    ?? profiles.find(profile => profile.counter === bootCounter)
+    ?? target.bootloader;
   row('bootloader', [
     compare('bootHash', bootHash, identity.sha256),
     compare('bootCounter', bootCounter, identity.counter),
@@ -62,7 +64,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     flag('bootVectors', diagnostic?.bootVectorsValid),
     flag('settingsCrc', diagnostic?.settingsCrcValid),
     compare('addressConflict', diagnostic ? diagnostic.addressConflict : null, false)
-  ], ['bootScope']);
+  ], exact === target.bootloaderZ16 ? ['z16Recovery', 'bootScope'] : ['bootScope']);
   row('softDevice', [
     compare('sdVariant', diagnostic?.softDeviceValid ? diagnostic.softDeviceVariant : null, target.softDevice.variant),
     compare('sdVersion', diagnostic?.softDeviceValid ? diagnostic.softDeviceVersion : null, target.softDevice.version),
@@ -74,9 +76,9 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
 export function updateCheckText(locale = 'de_DE') {
   const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
-  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · BL8 / Z13 · S112 7.3.0`,
+  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · BL8 / Z13 / Z15 / Z16 · S112 7.3.0`,
     targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}`,
-      bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter})` },
+      bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'})` },
     reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
 }
 
@@ -114,6 +116,7 @@ const COPY = {
       olderApplication: '',
       preparationApplication: 'Vorbereitungsfirmware: kein Nachweis einer abgeschlossenen LittleFS-Umstellung. Speicherbackend, vollständige Sicherung und Kapazität sind getrennt zu prüfen.',
       newerApplication: 'Diese Anwendung ist neuer als der mitgelieferte Vergleichsstand. Das allein belegt weder einen Fehler noch Inkompatibilität. Kein Downgrade wird vorgeschlagen.',
+      z16Recovery: 'Z16-Rückkehrpaket erkannt. Der Bootbereich enthält den Z13-Programmcode mit Zähler 16.',
       bootScope: 'Der Zähler allein reicht nicht. Der Bereichs-Hash enthält auch Füllbytes; er prüft keine Signatur.',
       softDeviceScope: 'Ausgelesene SoftDevice-Metadaten; keine Funk- oder Funktionstestbestätigung.'
     },
@@ -137,6 +140,7 @@ const COPY = {
       olderApplication: '',
       preparationApplication: 'Preparation firmware: not evidence of a completed LittleFS migration. Check the storage backend, complete backup and physical capacity separately.',
       newerApplication: 'This application is newer than the bundled comparison profile. That alone does not establish a fault or incompatibility. No downgrade is suggested.',
+      z16Recovery: 'Z16 rollback package recognized. The boot region contains the Z13 code with counter 16.',
       bootScope: 'The counter alone is insufficient. The region hash includes padding; it does not verify a signature.',
       softDeviceScope: 'Read SoftDevice metadata; not confirmation of radio or functional tests.'
     },

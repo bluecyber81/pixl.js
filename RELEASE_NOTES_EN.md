@@ -1,3 +1,14 @@
+# DE3.61 · Web 3.37.4
+
+**DE3.61 / 633** is a signed application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume, including the tested Z15 device configuration with Nordic S112 7.3.0. This application has passed computer-based checks. On-device testing of DE3.61 is pending.
+
+* **Settings.** All 21 main settings and their values fit the German and English LCD layouts with menu animation disabled. The remote control state shows when it expires. The RAM overlay uses its drawing font to calculate text width.
+* **Storage startup.** Mounting the same test image with 1,131 files and 77 directories took 4,531 flash reads instead of 4,712. **Device & diagnostics → Read startup times** now separates mounting, journal recovery and the rest of storage initialization.
+* **Catalog.** More compact references leave 2,644 additional bytes free in application flash. The final image preserves all 952 figures, 82 games, 1,344 links and their localized descriptions.
+* **File manager 3.37.4.** Diagnostics distinguish the firmware-reported ATT MTU from the usable transport value size. The version comparison recognizes Z15 and identifies the Z16 return package with its Z13 code separately.
+
+[LCD comparison](docs/validation/DE3_61_LCD.png) · [Validation results](docs/validation/DE3_61.json)
+
 # DE3.60 · Web 3.37.3
 
 **DE3.60 / 632** improves the 128 × 64 LCD controls. The signed update contains the device application for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume.

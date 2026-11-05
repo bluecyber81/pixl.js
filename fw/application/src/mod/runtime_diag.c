@@ -68,6 +68,16 @@ static struct {
     uint8_t phases;
 } startup_state;
 _Static_assert(sizeof(startup_state) <= 28, "startup diagnostic RAM budget");
+static uint32_t storage_elapsed[2];
+static uint8_t storage_mask;
+
+/* settings_init executes synchronously before the file service can be reached. */
+void runtime_diag_storage_mark(enum startup_storage_checkpoint step, uint32_t elapsed_ms) {
+    if ((unsigned)step > STARTUP_JOURNAL_READY || startup_state.phases != 1u ||
+        storage_mask != (1u << step) - 1u || (step && elapsed_ms < storage_elapsed[0])) return;
+    storage_elapsed[step] = elapsed_ms;
+    storage_mask |= (1u << step);
+}
 
 void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms) {
     if (phase >= STARTUP_PHASE_COUNT) return;
@@ -160,15 +170,20 @@ static void put16(uint8_t *out, uint16_t value) {
 static void put32(uint8_t *out, uint32_t value) {
     for (unsigned i = 0; i < 4; ++i) out[i] = (uint8_t)(value >> (8 * i));
 }
-bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity) {
-    if (!out || capacity < STARTUP_DIAG_SIZE) return false;
+bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity, bool detail) {
+    if (!out || capacity < (detail ? STARTUP_STORAGE_DIAG_SIZE : STARTUP_DIAG_SIZE)) return false;
     memset(out, 0, STARTUP_DIAG_SIZE);
     memcpy(out, "PXST", 4);
-    out[4] = 1;
-    out[5] = STARTUP_DIAG_SIZE;
+    out[4] = detail ? 2 : 1;
+    out[5] = detail ? STARTUP_STORAGE_DIAG_SIZE : STARTUP_DIAG_SIZE;
+    if (detail) {
+        out[7] = storage_mask;
+        put32(out + 32, storage_elapsed[0]);
+        put32(out + 36, storage_elapsed[1]);
+    }
     CRITICAL_REGION_ENTER();
     out[6] = startup_state.phases;
-    /* Byte 7 is reserved; unset values are zero, qualified by the mask. */
+    /* Empty requests keep the original six markers and reserved byte. */
     for (unsigned phase = 0; phase < STARTUP_PHASE_COUNT; ++phase)
         put32(out + 8 + 4 * phase, startup_state.elapsed_ms[phase]);
     CRITICAL_REGION_EXIT();

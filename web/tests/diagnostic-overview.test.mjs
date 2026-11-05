@@ -118,7 +118,24 @@ test('MTU capacity and next-connection configuration never substitute for an abs
   assert.equal(row(card(h.root,'mtu'),'Aktuelle ATT-MTU laut Firmware'),'Nicht erfasst');
   assert.equal(row(card(h.root,'mtu'),'Aktuelle GATT-Wertkapazität'),'Nicht erfasst');
   assert.equal(row(card(h.root,'mtu'),'Grenze für nächste Verbindung'),'23');
-  assert.match(text(card(h.root,'mtu')),/Browser misst die ATT-MTU nicht selbst/);
+  assert.match(text(card(h.root,'mtu')),/keine aktuelle ATT-MTU gemeldet/);
+ }finally{h.app.unmount();}
+});
+
+test('storage detail durations appear in the combined overview only when supplied by firmware',async()=>{
+ const snapshot=diagnosticSnapshot(),h=await mount({snapshot});
+ try{
+  assert.doesNotMatch(text(card(h.root,'startup')),/Journal|journal/);
+  const startup=snapshot.sections.startup.data;
+  snapshot.sections.startup.data={...startup,schemaVersion:2,storageDetailMask:3,storageElapsedMilliseconds:[106,2011]};
+  await change(h,{snapshot:structuredClone(snapshot)});
+  assert.equal(row(card(h.root,'startup'),'Bis das Laufwerk eingebunden ist'),'106 ms');
+  assert.equal(row(card(h.root,'startup'),'Prüfen und Wiederherstellen des Speicherjournals'),'1905 ms');
+  assert.equal(row(card(h.root,'startup'),'Übrige Speicherinitialisierung'),'207 ms');
+  snapshot.sections.startup.data.storageDetailMask=1;
+  snapshot.sections.startup.data.storageElapsedMilliseconds=[106,null];
+  await change(h,{snapshot:structuredClone(snapshot),locale:'en_US'});
+  assert.equal(row(card(h.root,'startup'),'Storage journal check and recovery'),'Not recorded');
  }finally{h.app.unmount();}
 });
 
@@ -134,6 +151,8 @@ test('button events retain settings-only scope and unrecorded results do not bec
   assert.match(row(ui,'Letzter kurzer Mitteldruck'),/Speichern 0/);
   const next=diagnosticSnapshot();next.sections.ui.data.queueHighWater=255;next.sections.ui.data.rawEvents.center.press=65535;
   await change(h,{snapshot:next});assert.match(text(card(h.root,'ui')),/65535/);
+  next.sections.ui.data.active=false; next.sections.ui.data.sessions=0;
+  await change(h,{snapshot:structuredClone(next)});assert.match(text(card(h.root,'ui')),/keine Einstellungssitzung erfasst/);
  }finally{h.app.unmount();}
 });
 

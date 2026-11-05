@@ -165,6 +165,21 @@ test('fresh failed or unsupported reads never fall back to old cached values in 
   assert.equal(report.diagnosticSnapshot.sections.boot.state, 'unavailable');
 });
 
+test('export names the ATT MTU source and only claims a firmware reading when it exists', async () => {
+  const transport = {chunkMode: 'chunked', effectiveGattValueCapacity: 247, reportedGattValueCapacity: 247};
+  const baseReport = createDiagnostics({transport});
+  assert.match(baseReport.limitations.join(' '), /Browser transport counters and GATT/);
+  assert(!baseReport.limitations.includes('Not a measurement of ATT MTU'));
+  const current = fixture().mtu;
+  for (const value of [current, {...current, sessionReady: false, effectiveAttMtu: null, gattValueCapacity: null}, null]) {
+    const snapshot = await collectDiagnosticSnapshot({readers: {mtu: () => value}, now: clock()});
+    const result = createCombinedDiagnosticReport({baseReport, snapshot});
+    assert.equal(result.limitations.some(text => text.includes('firmware reported the effective ATT MTU')), value === current);
+    assert.equal(result.limitations.some(text => text.includes('no firmware reading')), value !== current);
+  }
+  assert.equal(createCombinedDiagnosticReport({baseReport}).diagnosticSnapshot, null);
+});
+
 test('snapshot normalization rejects incomplete/invalid records and never exports failed-section payloads', async () => {
   const snapshot = await collectDiagnosticSnapshot({ now: clock() });
   assert.equal(normalizeDiagnosticSnapshot({ ...snapshot, startedAt: '2026-02-30T12:00:00.000Z' }), null);

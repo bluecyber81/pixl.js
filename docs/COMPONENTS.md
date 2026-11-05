@@ -6,11 +6,13 @@ Publication baseline: **2026-11-05**. Components have independent versions.
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Application | 2.22.0-DE3.60 | DFU counter 632, hardware requirement 52 |
-| File manager | 3.37.3 | Browser software, not a device image |
-| Bootloader | BL8 | Code region SHA-256 below; stored DFU counters depend on packaging |
+| Application | 2.22.0-DE3.61 (test release) | DFU counter 633, hardware requirement 52 |
+| File manager | 3.37.4 | Browser software, not a device image |
+| Reference bootloader | BL8 | Code region SHA-256 below; stored DFU counters depend on packaging |
 | SoftDevice | Nordic S112 7.3.0 | FWID 0x0126; binary from Nordic, not rebuilt here |
 | Filesystem | Packed LittleFS PFS1 | Same logical layout as previous PFS1 DE releases; not standard upstream LittleFS |
+
+The device used for the DE3.60 readback runs Z15, counter 15. Its full 28 KiB region hashes to `c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade`. [DE3.61 validation](validation/DE3_61.json) records admission of the signed 633 application by the Z15 ARM code and rejection of an invalid signature or incompatible SoftDevice. Z15 also permits an older correctly signed application.
 
 The normal application OTA accepts declared SoftDevice IDs 0x0103 (S112 7.2.0) and 0x0126 (7.3.0). This declaration is not a readback of the recipient device. Its manifest contains only an application image. It does not update the bootloader, SoftDevice, host Bluetooth driver or figure files.
 

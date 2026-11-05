@@ -1,4 +1,8 @@
-# Current publication: DE3.58 / Dateimanager 3.36.0 / BL8 / S112 7.3.0
+# Allmiibo LCD application and file manager history
+
+## DE3.61 / File manager 3.37.4
+
+[Release notes](RELEASE_NOTES_EN.md) · [Deutsch](RELEASE_NOTES_DE.md)
 
 **[Detailed history (English)](docs/DEVELOPMENT_HISTORY.md) · [Änderungen und Bedienung (Deutsch)](RELEASE_NOTES_DE.md) · [Release notes](RELEASE_NOTES_EN.md)**
 

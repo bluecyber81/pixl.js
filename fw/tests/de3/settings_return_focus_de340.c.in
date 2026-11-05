@@ -18,7 +18,9 @@
 #define INPUT_TYPE_SHORT 2
 #define INPUT_TYPE_LONG 3
 #define MINI_APP_ID_SETTINGS 3
+#ifndef _T
 #define _T(x) #x
+#endif
 #define mui_nav_diag_begin() ((void)0)
 #define mui_nav_diag_end() ((void)0)
 #define mui_nav_diag_settings(...) ((void)0)
@@ -33,7 +35,9 @@ enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_MSG_BOX };
 enum { SETTINGS_SCENE_MAIN, SETTINGS_SCENE_VERSION, SETTINGS_SCENE_SLEEP_TIMEOUT,
        SETTINGS_SCENE_LCD_BACKLIGHT, SETTINGS_SCENE_OLED_CONTRAST, SETTINGS_SCENE_LANGUAGE,
        SETTINGS_SCENE_STORAGE, SETTINGS_SCENE_ABOUT, SETTINGS_SCENE_APP_MANAGEMENT, SETTINGS_SCENE_MAX };
+#ifndef LANGUAGE_STRING_ID_H
 enum { _L_OFF_F, _L_OFF, _L_15S, _L_30S, _L_45S, _L_1MIN, _L_2MIN, _L_3MIN, _L_BACK };
+#endif
 typedef int mui_list_view_event_t, mui_msg_box_event_t;
 typedef struct { void *user_data; uint16_t icon; char text[96],subtext[96]; } mui_list_item_t;
 typedef struct mui_list_view_s mui_list_view_t;
@@ -62,12 +66,14 @@ static int settings_save(void){saves++;return 0;}
 static int settings_reset(void){resets++;return 0;}
 static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){p->valid=false;}
 static vfs_driver_t driver;
+static vfs_stat_t fixture_drive={true,2048,1024};
 static vfs_driver_t *vfs_get_default_driver(void){return &driver;}
 static int32_t settings_storage_snapshot_read(settings_storage_snapshot_t*p,vfs_driver_t*d,vfs_stat_t*s){
- (void)p;(void)d;*s=(vfs_stat_t){true,2048,1024};return VFS_OK;
+ (void)p;(void)d;*s=fixture_drive;return VFS_OK;
 }
 static void *version_get(void){return NULL;}
-static const char *version_get_version(void*p){(void)p;return "DE3.40";}
+static const char *fixture_version="DE3.40";
+static const char *version_get_version(void*p){(void)p;return fixture_version;}
 static const char *getLangDesc(unsigned n){assert(n<LANGUAGE_COUNT);return n?"English":"Deutsch";}
 static const char *getLangString(int n){(void)n;return "label";}
 static void setLanguage(unsigned n){assert(n<LANGUAGE_COUNT);language_sets++;}

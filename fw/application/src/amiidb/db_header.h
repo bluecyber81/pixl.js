@@ -35,13 +35,11 @@ typedef struct _db_link_t {
     uint8_t  game_id;
     /* Internal generated-table reference, never persisted in tag/slot files. */
     uint16_t amiibo_index;
-    const db_notes_t *notes;
+    uint16_t note_index;
     
 } db_link_t;
 
-#if UINTPTR_MAX == UINT32_MAX
-_Static_assert(sizeof(db_link_t) == 8, "indexed link table must remain compact and aligned");
-#endif
+_Static_assert(sizeof(db_link_t) == 6, "catalog links must keep their six-byte layout");
 
 typedef struct _db_v3_t {
     uint32_t head;
@@ -52,6 +50,7 @@ extern const db_amiibo_t amiibo_list[];
 extern const size_t amiibo_list_size;
 extern const db_game_t game_list[];
 extern const db_link_t link_list[];
+extern const db_notes_t db_usage_notes[];
 
 const db_amiibo_t * get_amiibo_by_id(uint32_t head, uint32_t tail);
 const db_link_t* get_link_by_id(uint8_t game_id, uint32_t head, uint32_t tail);

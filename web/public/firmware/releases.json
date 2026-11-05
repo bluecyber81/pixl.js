@@ -2,15 +2,15 @@
   "schema": 1,
   "packages": [
     {
-      "id": "de3.60-lcd-app",
-      "version": "2.22.0-DE3.60",
-      "counter": 632,
-      "file": "Allmiibo_LCD_DE3_60_632_TESTSTAND.zip",
-      "bytes": 364987,
-      "sha256": "b591ed01341b73cbcec308829bf6ac6420710586453c4d7a84ba37555a463974",
+      "id": "de3.61-lcd-app",
+      "version": "2.22.0-DE3.61",
+      "counter": 633,
+      "file": "Allmiibo_LCD_DE3_61_633_TESTSTAND.zip",
+      "bytes": 362343,
+      "sha256": "60413358ab8fae550c4ba520b027662572fe14ae16a4109a9b6f561fbd82200a",
       "board": "LCD",
       "storage": "PFS1",
-      "bootloader": "BL8/Z13",
+      "bootloader": "BL8/Z13/Z15",
       "softDevice": "S112 7.3.0",
       "applicationOnly": true,
       "migrationRequired": false

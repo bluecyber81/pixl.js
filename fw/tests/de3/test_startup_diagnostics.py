@@ -42,9 +42,9 @@ int main(void) {
  uint8_t data[STARTUP_DIAG_SIZE];
  for(unsigned i=0;i<sizeof(data);i++)data[i]=0xa5;
  runtime_diag_startup_mark(0,0);
- assert(!runtime_diag_startup_snapshot(data,sizeof(data)));
+ assert(!runtime_diag_startup_snapshot(data,sizeof(data),false));
  for(unsigned i=0;i<sizeof(data);i++)assert(data[i]==0xa5);
- assert(!runtime_diag_startup_snapshot(NULL,0));
+ assert(!runtime_diag_startup_snapshot(NULL,0,false));
  puts("PASS");return 0;
 }
 ''')
@@ -52,7 +52,7 @@ int main(void) {
     def test_measurement_phase_order_and_existing_clock(self):
         main = (SRC / 'main.c').read_text(encoding='utf-8').split('int main(void) {', 1)[1]
         ordered = ('nrf_pwr_mgmt_init();', 'nrf_sdh_enable_request();',
-                   'const uint32_t startup_started = app_timer_cnt_get();',
+                   'startup_started = app_timer_cnt_get();',
                    'runtime_diag_startup_mark(STARTUP_STORAGE_BEGIN', 'settings_init();',
                    'runtime_diag_startup_mark(STARTUP_STORAGE_DONE', 'check_wakeup_src();',
                    'amiibo_helper_try_load_amiibo_keys_from_vfs();',
@@ -64,6 +64,10 @@ int main(void) {
                    'startup_dispatched = true;')
         indexes = [main.index(item) for item in ordered]
         self.assertEqual(indexes, sorted(indexes))
+        settings = function((SRC / 'mod/settings.c').read_text(encoding='utf-8'), 'settings_init')
+        checkpoints = ['p_driver->mount()', 'STARTUP_MOUNT_READY', 'vfs_packed_recovery_required()',
+                       'vfs_persist_recover(p_driver)', 'STARTUP_JOURNAL_READY', 'p_driver->read_file_data(']
+        self.assertEqual(sorted(settings.index(k) for k in checkpoints), [settings.index(k) for k in checkpoints])
         power = (SRC / 'sdk/pwr_mgmt/nrf_pwr_mgmt.c').read_text(encoding='utf-8')
         self.assertIn('app_timer_start(m_pwr_mgmt_timer, APP_TIMER_TICKS(1000), NULL)', power)
 

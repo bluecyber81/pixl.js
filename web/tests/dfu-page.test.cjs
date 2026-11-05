@@ -30,6 +30,7 @@ test('selected ZIP is compared with a recent file-manager read, and clearing it 
     const text=h.nodes.get('package-target').textContent;
     assert.match(text,/Hardwarefeld 52/);assert.match(text,/0x0126/);
     assert.equal(text.includes('älter als'),recent);assert.equal(text.includes('steht nicht'),recent);
+      assert.equal(text.includes('Z15 kann sie bei gültiger Signatur installieren'),recent);
     h.options.onState({ready:false});assert.equal(h.nodes.get('package-target').textContent,'');
   }
 });
@@ -47,7 +48,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.60/Allmiibo_DE3_60_Quellcode.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.61/Allmiibo_DE3_61_Quellcode.zip','../','../licenses/index.html']);
     assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

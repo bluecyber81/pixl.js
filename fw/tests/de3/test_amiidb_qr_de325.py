@@ -40,7 +40,7 @@ typedef db_notes_t db_link_t;
 #define note_en en
 #define note_cn cn
 #else
-typedef struct {const db_notes_t *notes;} db_link_t;
+typedef struct {uint16_t note_index;} db_link_t;
 #endif
 const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
 ''')

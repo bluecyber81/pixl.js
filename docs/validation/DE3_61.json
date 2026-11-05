@@ -1,0 +1,165 @@
+{
+  "application": "2.22.0-DE3.61",
+  "applicationCounter": 633,
+  "delivery": {
+    "name": "Allmiibo_LCD_DE3_61_633_TESTSTAND.zip",
+    "sha256": "60413358ab8fae550c4ba520b027662572fe14ae16a4109a9b6f561fbd82200a",
+    "bytes": 362343,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 633,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 361740,
+        "sha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 361740,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "productionSourceId": "fcf19a7c25eb881945da7b896611fa580949f8c299fbc04874956d1f5a6d2508",
+  "repeatedBuildSha256": {
+    "pixljs.bin": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+    "pixljs.hex": "5650ffc817f8a792b0574d59ad3082d7d0ac5b0c7f93d2ff762ff41370e7d0ab",
+    "pixljs.out": "b698c1904a1ad7fc7f51ceee8057b71c6a0059fd3be78287df424dd53dcf3652",
+    "pixljs.map": "da72d2a87a91e5c0c9273bf5895307621ed21877ebe6192cdd488f6f306184be"
+  },
+  "linker": {
+    "binary_bytes": 361740,
+    "linker_flash_used_bytes": 361748,
+    "observed": {
+      "flash_reserve_bytes": 10988,
+      "heap_stack_gap_bytes": 1904,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "priorAppAndCatalog": {
+    "version": "1",
+    "vectorsChecked": 128,
+    "vectorMismatches": [],
+    "irqBindingChanges": [],
+    "observerOrNoInitSizeChanges": {},
+    "catalogBytesDecodedMatch": {
+      "figures": true,
+      "games": true,
+      "links": true
+    },
+    "figureCount": 952,
+    "gameCount": 82,
+    "linkCount": 1344,
+    "referenceBinSha256": "8521df0f2730d50a137f8a95350ccafd8c9ebc78fe2436ab501726fe3f760ab6",
+    "imageSha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+    "passed": true
+  },
+  "hostSuites": {
+    "passed": 143,
+    "failed": 0,
+    "hardwareMocked": true
+  },
+  "packedStorage": {
+    "synthetic": true,
+    "deviceAccess": false,
+    "imageSHA256": "82ce8cda2ea4e005dd56b9c59b602bec4e663264526a78be52b492b2576c89ec",
+    "results": {
+      "DE3.60": {
+        "reads": 4712,
+        "bytesReadAtMount": 1206272,
+        "peakRequestedBytesOnHost": 4576,
+        "files": 1131,
+        "directories": 77,
+        "bytesVerified": 687077,
+        "all128MetadataBytesVerified": true,
+        "imageUnchanged": true,
+        "mountAndReadProgramEraseSync": 0,
+        "adapterSHA256": "172ce6001ed2bf2edfef28356075dfc43df9913af6aeefb128f4ee3cdb70a35d"
+      },
+      "candidate": {
+        "reads": 4531,
+        "bytesReadAtMount": 1159936,
+        "peakRequestedBytesOnHost": 4576,
+        "files": 1131,
+        "directories": 77,
+        "bytesVerified": 687077,
+        "all128MetadataBytesVerified": true,
+        "imageUnchanged": true,
+        "mountAndReadProgramEraseSync": 0,
+        "adapterSHA256": "884e7096098092b5e6ab0729b9d12f4e26c73601dc1dc6dc61113f3ffb950f2e"
+      }
+    }
+  },
+  "z15ApplicationAdmission": {
+    "bootRegionSha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
+    "signedApplicationSha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+    "scope": "Z15 Thumb code with modeled device memory and SoftDevice ID. No hardware or radio.",
+    "cases": [
+      {
+        "case": "upgrade",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 361740,
+        "bank0Code": 0
+      },
+      {
+        "case": "same version",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 361740,
+        "bank0Code": 0
+      },
+      {
+        "case": "signed older application, permitted by Z15 policy",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 361740,
+        "bank0Code": 0
+      },
+      {
+        "case": "wrong SoftDevice",
+        "code": 18,
+        "destination": 0,
+        "dataBytes": 0,
+        "bank0Code": 1
+      },
+      {
+        "case": "bad signature",
+        "code": 5,
+        "destination": 0,
+        "dataBytes": 0,
+        "bank0Code": 1
+      }
+    ],
+    "fullHashAndSingleBitControlOnAcceptedInputs": true
+  },
+  "screen": {
+    "settingsRows": 21,
+    "renderedStateVariants": 504,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "memoryOverlayCases": 9,
+    "preview": "DE3_61_LCD.png"
+  },
+  "input": {
+    "holdScenarios": 36,
+    "editorTransitions": 12,
+    "runtime": "Cortex-M4 emulation"
+  },
+  "deviceReadback": false,
+  "limits": [
+    "Host/emulator results and synthetic flash image. Startup latency including bootloader, flash power-loss behavior, BLE and NFC on actual hardware require a device test."
+  ]
+}

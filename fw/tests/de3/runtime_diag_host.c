@@ -180,35 +180,58 @@ int main(int argc,char **argv) {
         diagnostic(out); /* Original 64-byte PXDG v1 still works unmodified. */
     } else if(scenario==8) {
         memset(out,0xa5,sizeof(out));
-        CHECK(!runtime_diag_startup_snapshot(NULL,32));
-        CHECK(!runtime_diag_startup_snapshot(out,31));
+        CHECK(!runtime_diag_startup_snapshot(NULL,32,false));
+        CHECK(!runtime_diag_startup_snapshot(out,31,false));
         for(unsigned i=0;i<64;i++)CHECK(out[i]==0xa5);
-        CHECK(runtime_diag_startup_snapshot(out,32));
+        CHECK(runtime_diag_startup_snapshot(out,32,false));
         CHECK(!memcmp(out,"PXST",4) && out[4]==1 && out[5]==32 && !out[6] && !out[7]);
         for(unsigned i=32;i<64;i++)CHECK(out[i]==0xa5);
         runtime_diag_startup_mark(6,100);
         runtime_diag_startup_mark(UINT32_MAX,100);
         runtime_diag_startup_mark(1,100); /* Cannot invent phase zero. */
         runtime_diag_startup_mark(0,1); /* Origin must be zero. */
-        CHECK(runtime_diag_startup_snapshot(out,32) && !out[6]);
+        CHECK(runtime_diag_startup_snapshot(out,32,false) && !out[6]);
         runtime_diag_startup_mark(0,0);
         runtime_diag_startup_mark(1,4500);
         runtime_diag_startup_mark(1,9999); /* Repeated calls cannot overwrite. */
         runtime_diag_startup_mark(2,4499); /* Reversed/wrapped observation rejected. */
-        CHECK(runtime_diag_startup_snapshot(out,32) && out[6]==3 && get32(out+12)==4500);
+        CHECK(runtime_diag_startup_snapshot(out,32,false) && out[6]==3 && get32(out+12)==4500);
         runtime_diag_startup_mark(2,4500);
         runtime_diag_startup_mark(3,4600);
         runtime_diag_startup_mark(4,4700);
         runtime_diag_startup_mark(5,UINT32_MAX);
-        CHECK(runtime_diag_startup_snapshot(out,32) && out[6]==63 && !out[7]);
+        CHECK(runtime_diag_startup_snapshot(out,32,false) && out[6]==63 && !out[7]);
         CHECK(get32(out+8)==0 && get32(out+12)==4500 && get32(out+16)==4500 &&
               get32(out+20)==4600 && get32(out+24)==4700 && get32(out+28)==UINT32_MAX);
         CHECK(!critical_depth);
     } else if(scenario==9) {
-        for(unsigned phase=0;phase<6;phase++)runtime_diag_startup_mark(phase,phase*100);
+        const uint8_t selector=1;
+        runtime_diag_storage_mark(STARTUP_MOUNT_READY,20); /* before storageBegin */
+        runtime_diag_startup_mark(0,0);
+        runtime_diag_storage_mark((enum startup_storage_checkpoint)-1,5);
+        runtime_diag_storage_mark((enum startup_storage_checkpoint)2,5);
+        runtime_diag_storage_mark(STARTUP_JOURNAL_READY,5); /* error before mount */
+        CHECK(!runtime_diag_startup_snapshot(out,39,true));
+        for(unsigned steps=0;steps<3;steps++) {
+            if(steps==1) {
+                runtime_diag_storage_mark(STARTUP_MOUNT_READY,98);
+                runtime_diag_storage_mark(STARTUP_MOUNT_READY,99); /* duplicate */
+                runtime_diag_storage_mark(STARTUP_JOURNAL_READY,97); /* reversed */
+            }
+            if(steps==2) runtime_diag_storage_mark(STARTUP_JOURNAL_READY,98);
+            sends=attempts=0;request(9,&selector,1);finish_stream();
+            CHECK(merge(out,40,9)==40 && !memcmp(out,"PXST",4));
+            CHECK(out[4]==2 && out[5]==40 && out[6]==1 && out[7]==((1u<<steps)-1u));
+            CHECK(get32(out+32)==(steps ? 98u : 0u) && get32(out+36)==(steps==2 ? 98u : 0u));
+        }
+        for(unsigned phase=1;phase<6;phase++)runtime_diag_startup_mark(phase,phase*100);
+        runtime_diag_storage_mark(STARTUP_MOUNT_READY,1000); /* already dispatched */
         sends=attempts=0;request(9,NULL,0);finish_stream();
-        CHECK(merge(out,32,9)==32 && !memcmp(out,"PXST",4) && out[6]==63 && get32(out+28)==500);
+        CHECK(merge(out,32,9)==32 && !memcmp(out,"PXST",4) && out[4]==1 && !out[7] && out[6]==63 && get32(out+28)==500);
         memcpy(before,out,32);
+        sends=attempts=0;request(9,&selector,1);finish_stream();
+        CHECK(merge(out,40,9)==40 && out[4]==2 && out[7]==3 && !memcmp(out+8,before+8,24));
+        CHECK(get32(out+32)==98 && get32(out+36)==98);
         for(unsigned field=0;field<3;field++) {
             df_frame_t invalid={0};
             if(field==0)invalid.length=1;
@@ -220,7 +243,7 @@ int main(int argc,char **argv) {
         }
         unsigned count=sends;df_event_t ready_event={.type=DF_EVENT_DATA_TRANSMIT_READY,.df=NULL};
         df_proto_handler_info_startup_diagnostic(&ready_event);CHECK(sends==count);
-        CHECK(runtime_diag_startup_snapshot(out,32) && !memcmp(out,before,32));
+        CHECK(runtime_diag_startup_snapshot(out,32,false) && !memcmp(out,before,32));
         diagnostic(out); /* Existing diagnostic wire contract remains intact. */
     } else CHECK(false);
     if(scenario==3) {

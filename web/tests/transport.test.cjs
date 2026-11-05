@@ -99,6 +99,23 @@ function startupPacket() {
  const bytes=new Uint8Array(32),view=new DataView(bytes.buffer);bytes.set([80,88,83,84,1,32,63,0]);
  [0,37,45,92,97,101].forEach((ms,i)=>view.setUint32(8+4*i,ms,true));return bytes;
 }
+test('startup extension is selected by firmware, retries only a rejected option and keeps the error state clean', async()=>{
+ const nextTurn=()=>new Promise(resolve=>setImmediate(resolve));
+ for(const version of ['2.22.0-DE3.60','2.22.0-DE3.60-PREP','unknown',undefined]){
+   const f=protocolFixture(),p=f.api.get_startup_diagnostics(version);
+   assert.deepEqual(f.writes,[[9,0,0,0]]);f.rx(9,startupPacket());assert.equal((await p).schemaVersion,1);
+ }
+ for(const status of [1,255]){
+   const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.61');
+   assert.deepEqual(f.writes,[[9,0,0,0,1]]);f.rx(9,[],0,status);await nextTurn();
+   assert.deepEqual(f.writes[1],[9,0,0,0]);f.rx(9,startupPacket());assert.equal((await p).schemaVersion,1);
+   assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+ }
+ const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.61');
+ const bytes=new Uint8Array(40);bytes.set(startupPacket());bytes.set([2,40,63,3],4);bytes[32]=12;bytes[36]=19;
+ f.rx(9,bytes.subarray(0,16),0x8000);f.rx(9,bytes.subarray(16,32),0x8001);f.rx(9,bytes.subarray(32),2);
+ assert.deepEqual(Array.from((await p).storageElapsedMilliseconds),[12,19]);assert.equal(f.writes.length,1);
+});
 test('optional startup request is explicit, serialized after earlier work and exact32B',async()=>{
  const f=protocolFixture();assert.equal(f.writes.length,0);
  const prior=command(f),p=f.api.get_startup_diagnostics();assert.deepEqual(f.writes,[[0x14,0,0,0]]);

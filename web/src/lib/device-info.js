@@ -49,7 +49,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
   const capacity = value => Number.isInteger(value) && value >= 20 && value <= 247 ? value : null;
   // Explicit allowlist: never spread arbitrary device data or exception text.
   return {
-    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.37.3',
+    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.37.4',
     firmwareVersion: /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion || '') ? firmwareVersion : null,
     connected: connected === true,
     runtime: normalizeRuntimeDiagnostics(runtime),
@@ -76,6 +76,6 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
       kind: fixed(item.kind, ['upload', 'download', 'backup', 'sync']), status: fixed(item.status, ['success', 'failed', 'cancelled', 'interrupted']),
       bytes: number(item.bytes), verified: item.verified === true
     })),
-    limitations: ['Not a measurement of ATT MTU', 'No hardware test implied', 'Free-space snapshots may become stale']
+    limitations: ['Browser transport counters and GATT value capacities do not measure the ATT MTU.', 'No hardware test implied', 'Free-space snapshots may become stale']
   };
 }

@@ -43,7 +43,7 @@ import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.
 import { DIAGNOSTIC_SECTION_KEYS, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
-import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText } from '../lib/startup-diagnostics.js';
+import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals } from '../lib/startup-diagnostics.js';
 import { normalizeMtuDiagnostics, normalizeUiDiagnostics } from '../lib/device-extra-diagnostics.js';
 
 const props = defineProps({
@@ -136,7 +136,8 @@ function startup(data) {
   return {
     summary: [[pick('Anwendungsstart bis erste Verarbeitung', 'Application start to first dispatch'), complete ? ms(rows.at(-1).elapsedMilliseconds) : pick('Unvollständige Aufzeichnung', 'Incomplete recording')],
       ...(longest ? [[pick('Längster gemessener Abschnitt', 'Longest measured interval'), `${text.phases[longest.id]} · ${ms(longest.sincePreviousMilliseconds)}`]] : [])],
-    details: rows.map(row => [text.phases[row.id], row.elapsedMilliseconds === null ? t.value.absent : `${ms(row.elapsedMilliseconds)}${row.sincePreviousMilliseconds === null ? '' : ` (+${ms(row.sincePreviousMilliseconds)})`}`]),
+    details: [...rows.map(row => [text.phases[row.id], row.elapsedMilliseconds === null ? t.value.absent : `${ms(row.elapsedMilliseconds)}${row.sincePreviousMilliseconds === null ? '' : ` (+${ms(row.sincePreviousMilliseconds)})`}`]),
+      ...startupStorageIntervals(data).map(row => [text.intervals[row.id], row.milliseconds === null ? t.value.absent : ms(row.milliseconds)])],
     note: pick('Gespeicherte Marken dieses Anwendungsstarts. Beginn: Speicherinitialisierung. Bootloader/früher SDK-Start fehlen; die Marken beweisen keine sichtbare Displayausgabe.', 'Cached markers of this application start, beginning at storage initialization. Bootloader/early SDK startup are excluded; markers do not prove visible display output.'),
   };
 }
@@ -192,7 +193,9 @@ const mtu = data => ({
     [pick('Konfigurierte maximale ATT-MTU', 'Configured maximum ATT MTU'), number(data.configuredMaxAttMtu)],
     [pick('Dateiclient bereit / Dateimodus', 'File client ready / file mode'), `${yesNo(data.sessionReady)} / ${yesNo(data.fileMode)}`],
     [pick('Übertragung im Leerlauf', 'Transfer idle'), yesNo(data.transferIdle)]],
-  note: pick('Die aktuelle MTU wird ausdrücklich von der Firmware gemeldet. GATT-Wertkapazität und Konfigurationsgrenzen sind andere Größen; der Browser misst die ATT-MTU nicht selbst.', 'Current MTU is explicitly reported by the firmware. GATT value capacity and configured limits are different quantities; the browser does not measure ATT MTU itself.'),
+  note: data.effectiveAttMtu === null
+    ? pick('Für diese Verbindung hat die Firmware keine aktuelle ATT-MTU gemeldet. Die unten angezeigten Grenzen sind Einstellungen für die Verbindung.', 'The firmware reported no current ATT MTU for this connection. The limits below are connection settings.')
+    : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.'),
 });
 function ui(data) {
   const attempt = (label, value) => [label, `${pick('Anzahl', 'Count')} ${number(value.count)} · ${pick('Auswahl', 'selection')} ${number(value.selection)} · ${pick('Fokus', 'focus')} ${number(value.focus)} · ${pick('Stufe', 'stage')} ${number(value.stage)} · ${pick('Speichern', 'save')} ${signed(value.saveResult)}`];
@@ -206,7 +209,9 @@ function ui(data) {
       { label: pick('Rechts roh', 'Right raw'), values: data.rawEvents.right }, { label: pick('Mitte eingereiht', 'Middle queued'), values: data.centerPosted },
       { label: pick('Mitte verworfen', 'Middle dropped'), values: data.centerDropped }, { label: pick('Mitte zugestellt', 'Middle delivered'), values: data.centerDelivered },
     ],
-    note: pick('Nur die aktuelle/letzte Einstellungsansicht, keine allgemeine Tastenstatistik aller Menüs. Die Zahlen beweisen weder einen Defekt noch eine erfolgreiche physische Tastenprüfung.', 'Current/last settings view only, not general button statistics across all menus. Counts prove neither a defect nor a successful physical button test.'),
+    note: data.sessions === 0
+      ? pick('Seit dem Neustart wurde keine Einstellungssitzung erfasst. Zum Prüfen am Gerät die Einstellungen öffnen, die Mitteltaste betätigen und die Diagnose erneut auslesen.', 'No settings session was recorded since restart. To check the middle button, open Settings on the device, use the button and read diagnostics again.')
+      : pick('Nur die aktuelle/letzte Einstellungsansicht, keine allgemeine Tastenstatistik aller Menüs. Die Zahlen beweisen weder einen Defekt noch eine erfolgreiche physische Tastenprüfung.', 'Current/last settings view only, not general button statistics across all menus. Counts prove neither a defect nor a successful physical button test.'),
   };
 }
 const cards = computed(() => [
