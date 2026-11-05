@@ -2,9 +2,11 @@
 
 [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Firmware and downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.59) · [Deutsch](README.de.md)
 
-**DE3.59 / 631** is an application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume. **File manager 3.37.1** also supports older diagnostic reports. The BL8 bootloader, Nordic S112 7.3.0, on-disk format and catalog remain in place.
+**DE3.59 / 631** is an application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume. **File manager 3.37.2** also supports older diagnostic reports. The BL8 bootloader, Nordic S112 7.3.0, on-disk format and catalog remain in place.
 
-The file manager shows the current step and a time estimate when enough progress has been measured during collection scans, folder ZIP backups and device diagnostics. Orange figure cards explain which check needs attention. Reload the website to use these changes. [File manager 3.37.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.1)
+If Bluetooth disconnects during a figure upload, the file manager retains the affected paths and the original session. If the outcome is uncertain, reconnect the same device and check the destination folder before retrying. Keep the browser tab open to retain the notice.
+
+The file manager shows the current step and a time estimate when enough progress has been measured during collection scans, folder ZIP backups and device diagnostics. Orange figure cards explain which check needs attention. Reload the website to use these changes. [File manager 3.37.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2)
 
 * **Startup reads.** The four existing cache pages now keep recently used block headers. Mounting the same synthetic collection (1,131 files, 77 directories) required 4,712 SPI reads instead of 4,802. The mount-only cache still needs 1,032 bytes. This measures reads, not elapsed time on hardware.
 * **Card emulator → Slots → Slot count.** A failed save identifies a slot count that is still in RAM. A short center press retries without re-reading a card that was already saved; a long press returns and preserves the pending change for a later save.

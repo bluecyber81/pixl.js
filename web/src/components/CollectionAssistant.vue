@@ -113,16 +113,41 @@ export default {
     issueLabel(issue){const texts={manufacturer:['Herstellerkennung','Manufacturer byte'],bcc0:['Erstes UID-Prüfbyte','First UID check byte'],bcc1:['Zweites UID-Prüfbyte','Second UID check byte'],'missing-id':['ID fehlt','Missing ID'],'v3-length':['V3-Größe passt nicht','V3 size mismatch'],'metadata-id-mismatch':['Abweichende Eigenschaften-ID','Metadata ID differs']};return texts[issue]?.[this.de?0:1]||issue;},
     formatLabel(context){if(context==='two-kib-layout-not-fully-validated'&&this.report?.mode==='quick')return this.de?'2-KiB-Datei laut Verzeichnis; Inhalt und Layout ungeprüft':'2 KiB file according to directory; contents and layout unchecked';const labels={'classic-without-final-eight-bytes':['Verkürzter klassischer Dump: letzte 8 Bytes nicht enthalten','Short classic dump: final 8 bytes not included'],'classic-540':['Klassische 540-Byte-Darstellung; Kryptografie ungeprüft','Classic 540-byte representation; cryptography unchecked'],'classic-with-unverified-extra-bytes':['Klassischer Dump mit ungeprüftem Zusatzbereich','Classic dump with unchecked extra data'],'two-kib-layout-not-fully-validated':['2-KiB-Datei: Größe und öffentliche ID geprüft; übriges Layout nicht vollständig geprüft','2 KiB file: size and public ID checked; remaining layout not fully checked'],'unsupported-length':['Dateigröße nicht als Figurenformat geprüft','File size not checked as a figure format']};return labels[context]?.[this.de?0:1]||context;},
     statusLabel(status){const texts={'not-read':['Inhalt noch nicht gelesen','Contents not yet read'],'not-read-limit':['Lesegrenze erreicht','Read limit reached'],'unsupported-length':['Andere Dateigröße – nicht als Figur geprüft','Other file size – not inspected as a figure'],attention:['Grundstruktur auffällig','Basic structure needs attention'],'read-error':['Lesefehler','Read error'],'structure-consistent':['Grundstruktur unauffällig','Basic structure consistent'],'metadata-only':['Nur Eigenschaften gelesen','Properties only']};return texts[status]?.[this.de?0:1]||status;},
-    invalidate(){++this._serial;this._controller?.abort();this._controller=null;this.running='';this.progress=null;this.report=null;this.stale=false;this.$emit('busy',false);this.$emit('writing',false);},
+    setError(message, fromDevice = false) {
+      this.error = message;
+      this._errorFromDevice = fromDevice;
+    },
+    invalidate() {
+      ++this._serial;
+      this._controller?.abort();
+      this._controller = null;
+      this.running = '';
+      this.progress = null;
+      this.report = null;
+      this.stale = false;
+      this.message = '';
+      if (this._errorFromDevice) this.setError('');
+      this.$emit('busy', false);
+      this.$emit('writing', false);
+    },
     cancel(){if(this.running === 'scan')this.scanAborting = true;this._controller?.abort();},
     clearPrepared(){this.prepared=null;this.message='';},
     chooseById(id){this.choose(this.entryFor(id),false);},
-    choose(entry,focus=true){if(this.running)return;this.chosen=entry||null;this.clearPrepared();this.error='';if(entry)this.filename=suggestedFigureFilename(entry);if(focus)this.$nextTick(()=>this.$refs.transferArea?.focus());},
-    async operation(kind,fn){
+    choose(entry,focus=true){if(this.running)return;this.chosen=entry||null;this.clearPrepared();this.setError('');if(entry)this.filename=suggestedFigureFilename(entry);if(focus)this.$nextTick(()=>this.$refs.transferArea?.focus());},
+    async operation(kind,fn,recoveryOrigin=null){
       if(this.running)return;const serial=++this._serial,generation=this.generation,controller=new AbortController();
       const device=kind==='scan'||kind==='upload';const current=()=>this._alive&&this._serial===serial&&(!device||generation===this.generation&&this.connected);
-      this._controller=controller;this.running=kind;this.error='';this.message='';this.progress=null;if(device)this.$emit('busy',true);if(kind==='upload')this.$emit('writing',true);
-      try{return await fn(controller.signal,current);}catch(error){if(current()){this.error=error?.name==='AbortError'?(this.de?'Vorgang abgebrochen.':'Operation cancelled.'):(error?.message||String(error));if(device)this.$emit('recovery',error);}}
+      this._controller=controller;this.running=kind;this.setError('');this.message='';this.progress=null;if(device)this.$emit('busy',true);if(kind==='upload')this.$emit('writing',true);
+      try{return await fn(controller.signal,current);}catch(error){
+        // Preserve old-session recovery evidence without changing the new session's UI or locks.
+        if(device&&this._alive&&(current()||kind==='upload'&&error?.recovery))this.$emit('recovery',recoveryOrigin?{...error,recoveryOrigin:Object.freeze({...recoveryOrigin})}:error);
+        if (current()) {
+          const message = error?.name === 'AbortError'
+            ? (this.de ? 'Vorgang abgebrochen.' : 'Operation cancelled.')
+            : (error?.message || String(error));
+          this.setError(message, device);
+        }
+      }
       finally{if(current()){this.running='';this._controller=null;this.progress=null;if(device)this.$emit('busy',false);if(kind==='upload')this.$emit('writing',false);}}
     },
     async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
@@ -145,9 +170,21 @@ export default {
     async prepareLocal(event){const file=event.target.files?.[0];event.target.value='';if(file&&this.chosen)await this.prepare({file});},
     async prepareRemote(){if(this.sourceUrl&&this.chosen)await this.prepare({url:this.sourceUrl});},
     async prepare(source){if(this.running)return;this.prepared=null;const id=this.chosen?.id;if(!id)return;await this.operation('prepare',async(signal,current)=>{const result=await prepareFigureTransfer({...source,expectedId:id,signal});if(current()&&this.chosen?.id===id){this.prepared=result;this.filename=suggestedFigureFilename(this.chosen);this.destination=this.directory?.startsWith('E:/')?this.directory:'E:/';}});},
-    async savePrepared(){if(!this.prepared||this.running)return;const blob=new Blob([this.prepared.bytes],{type:'application/octet-stream'}),name=this.filename||suggestedFigureFilename(this.chosen);try{const result=await saveBlobWithPicker(blob,name);if(result.status==='unsupported')saveBlob(blob,name);}catch(error){this.error=error.message;}},
-    async saveReport(){if(this.running||!this.report)return;const blob=new Blob([JSON.stringify({schema:1,checkedAt:this.reportTime,changedSinceCheck:this.stale,report:this.report},null,2)],{type:'application/json'}),name='Allmiibo-Sammlungspruefung.json';try{const result=await saveBlobWithPicker(blob,name);if(result.status==='unsupported')saveBlob(blob,name);}catch(error){this.error=error.message;}},
-    async upload(){if(!this.connected||this.blocked||this.running||!this.prepared)return;const generation=this.generation;this.stale=!!this.report;let receipt;await this.operation('upload',async(signal,current)=>{const adapter=this.getTransferSession();receipt=await transferFigureToDevice({prepared:this.prepared,parentPath:this.destination,filename:this.filename,adapter,signal,onProgress:()=>{}});if(current()){this.message=this.de?'Datei übertragen und per SHA-256 bestätigt.':'File transferred and verified with SHA-256.';this.$emit('recovery',receipt);}});if(receipt&&this._alive&&this.connected&&generation===this.generation)this.$emit('changed',receipt);}
+    async savePrepared(){if(!this.prepared||this.running)return;const blob=new Blob([this.prepared.bytes],{type:'application/octet-stream'}),name=this.filename||suggestedFigureFilename(this.chosen);try{const result=await saveBlobWithPicker(blob,name);if(result.status==='unsupported')saveBlob(blob,name);}catch(error){this.setError(error.message);}},
+    async saveReport(){if(this.running||!this.report)return;const blob=new Blob([JSON.stringify({schema:1,checkedAt:this.reportTime,changedSinceCheck:this.stale,report:this.report},null,2)],{type:'application/json'}),name='Allmiibo-Sammlungspruefung.json';try{const result=await saveBlobWithPicker(blob,name);if(result.status==='unsupported')saveBlob(blob,name);}catch(error){this.setError(error.message);}},
+    async upload(){
+      if(!this.connected||this.blocked||this.running||!this.prepared)return;
+      const generation=this.generation,recoveryOrigin={sessionGeneration:generation,deviceKey:null};
+      this.stale=!!this.report;let receipt;
+      await this.operation('upload',async(signal,current)=>{
+        const adapter=this.getTransferSession();
+        recoveryOrigin.deviceKey=typeof adapter.recoveryOrigin?.deviceKey==='string'?adapter.recoveryOrigin.deviceKey:null;
+        receipt=await transferFigureToDevice({prepared:this.prepared,parentPath:this.destination,filename:this.filename,adapter,signal,onProgress:()=>{}});
+        if(this._alive&&(current()||receipt?.recovery?.committed===null||receipt?.recovery?.restored||(receipt?.recovery?.recoveryFiles||receipt?.recoveryFiles||[]).length))this.$emit('recovery',{...receipt,recoveryOrigin:Object.freeze({...recoveryOrigin})});
+        if(current())this.message=this.de?'Datei übertragen und per SHA-256 bestätigt.':'File transferred and verified with SHA-256.';
+      },recoveryOrigin);
+      if(receipt&&this._alive&&this.connected&&generation===this.generation)this.$emit('changed',receipt);
+    }
   }
 };
 </script>

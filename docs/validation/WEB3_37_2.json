@@ -1,0 +1,72 @@
+{
+  "version": "3.37.2",
+  "date": "2026-11-05",
+  "firmware": "2.22.0-DE3.59",
+  "appCounter": 631,
+  "firmwareChanged": false,
+  "applicationZipSha256": "79387111d02a5bbaf5caee25b5032769c07562d6862f46f89161c66602d5d924",
+  "collectionRecovery": {
+    "patchId": "WEB-RECOVERY-01",
+    "reviewedInputPatchSha256": "77eb2a1d3c30e2d82fabeeb800ffcf95fd10470080b99be6780f45dbbf6caac0",
+    "candidateFilesVerifiedBeforeIntegration": 403,
+    "suppliedTests": 10,
+    "additionalRegressionTests": 2,
+    "additionalFix": "Clear previous-device success and error messages at session change while retaining recovery receipts and unrelated local file errors."
+  },
+  "productionBrowser": {
+    "scope": "Actual Chrome loading production builds with synthetic Web Bluetooth devices and GATT acknowledgements, without physical device access.",
+    "runs": {
+      "root": {
+        "version": "156.0.8078.80",
+        "title": "Allmiibo Dateimanager 3.37.2",
+        "indexSha256": "55585e8b09c3a6a01ceb1eea7365fa4833e7e3b7911ce7ac719638cc926e6abe",
+        "scenariosPassed": 5
+      },
+      "pages": {
+        "version": "156.0.8078.80",
+        "title": "Allmiibo Dateimanager 3.37.2",
+        "indexSha256": "4270e97ac7e07ea0732213db769ed5cdc4af720649708829e1e631897205ed1a",
+        "scenariosPassed": 5
+      }
+    },
+    "casesPerBuild": [
+      "Successful upload and readback on A, then reconnect to B and check that the success text clears.",
+      "Lost write-close acknowledgement while disconnected.",
+      "Lost final rename acknowledgement while disconnected.",
+      "Lost write-close acknowledgement delivered after reconnection and a scan started on B.",
+      "Lost final rename acknowledgement delivered after reconnection and a scan started on B."
+    ]
+  },
+  "productionBuildTests": {
+    "root": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pages": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "reproduction": [
+    "npm ci",
+    "npm test",
+    "npm run build",
+    "npm run build:pages"
+  ],
+  "limitations": [
+    "Recovery notes live only in the open browser tab.",
+    "These checks did not interrupt a physical Bluetooth upload."
+  ],
+  "windowsWebSuite": {
+    "node": "26.13.0",
+    "npm": "11.19.1",
+    "tests": 1157,
+    "pass": 1157,
+    "fail": 0,
+    "skipped": 0
+  }
+}

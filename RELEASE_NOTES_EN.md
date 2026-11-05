@@ -1,5 +1,9 @@
 # DE3.59 · File manager
 
+## File manager 3.37.2
+
+If Bluetooth disconnects during a figure upload, the file manager retains the affected paths and the original session. If the outcome is uncertain, reconnect the same device and check the destination folder before retrying. Keep the browser tab open to retain the notice. Switching devices clears the previous device’s success and error messages. Recovery notes still identify the original session. [GitHub Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2)
+
 ## File manager 3.37.1
 
 Collection scans and folder backups show Bluetooth read progress with an estimated countdown. Folder verification during a ZIP backup has a separate estimate. Combined device diagnostics show the section being read. Orange catalogue cards explain the specific warning for each figure. Reload the file manager in the browser to use it. [Web download](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.1)

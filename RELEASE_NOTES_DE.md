@@ -1,5 +1,9 @@
 # DE3.59 · Dateimanager
 
+## Dateimanager 3.37.2
+
+Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet. Beim Gerätewechsel verschwinden die Erfolgs- und Fehlermeldungen des vorherigen Geräts. Hinweise auf zu prüfende Dateien bleiben bei ihrer ursprünglichen Sitzung. [GitHub Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2)
+
 ## Dateimanager 3.37.1
 
 Die Sammlungsprüfung und die Ordnersicherung zeigen, wie weit das Einlesen über Bluetooth ist. Beim Lesen zählt eine geschätzte Restzeit herunter. Beim Ordnervergleich der ZIP-Sicherung beginnt eine neue Schätzung für diesen Schritt. Die Gerätediagnose nennt den jeweils laufenden Bereich. Orange Katalogkarten erklären den konkreten Prüfhinweis zur Figur. Öffne den aktualisierten Dateimanager im Browser. [Web-Download](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.1)

@@ -1,5 +1,7 @@
-Allmiibo Dateimanager 3.37.1
-4. November 2026
+Allmiibo Dateimanager 3.37.2
+5. November 2026
+
+Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet. Beim Gerätewechsel verschwinden die Erfolgs- und Fehlermeldungen des vorherigen Geräts. Hinweise auf zu prüfende Dateien bleiben bei ihrer ursprünglichen Sitzung.
 
 Online öffnen
 https://bluecyber81.github.io/pixl.js/
