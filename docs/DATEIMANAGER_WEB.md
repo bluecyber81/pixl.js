@@ -50,7 +50,7 @@ Bricht die Verbindung ab, bevor der Bootloader den Abschluss bestätigt, zeigt d
 
 Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 
-Die innere Datei `Allmiibo_LCD_DE3_59_631_TESTSTAND.zip` enthält die LCD-Anwendung. Bestehende passende PFS1-Geräte benötigen dafür keine Formatierung. Für alte SPIFFS-Geräte gilt die eigene Migrationsanleitung. [Anwendung und Paketgrenzen](INSTALLATION.md) · [Migration](MIGRATION_PFS1.md) · [Quellcode und Build](BUILD_DE3_59.md).
+Die innere Datei `Allmiibo_LCD_DE3_60_632_TESTSTAND.zip` enthält die LCD-Anwendung. Bestehende passende PFS1-Geräte benötigen dafür keine Formatierung. Für alte SPIFFS-Geräte gilt die eigene Migrationsanleitung. [Anwendung und Paketgrenzen](INSTALLATION.md) · [Migration](MIGRATION_PFS1.md) · [Quellcode und Build](BUILD_DE3_60.md).
 
 
 ## Startzeiten vergleichen

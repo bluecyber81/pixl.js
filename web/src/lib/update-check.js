@@ -44,9 +44,16 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   row('application', applicationChecks, ['applicationScope',
     ...(previousDe?.[5] ? ['preparationApplication'] : []),
     ...(relation < 0 ? ['olderApplication'] : relation > 0 ? ['newerApplication'] : [])]);
+  const bootHash = diagnostic?.bootHashValid ? diagnostic.bootRegionSha256 : null;
+  const bootCounter = diagnostic?.settingsCrcValid ? diagnostic.bootloaderCounter : null;
+  // Match each firmware region to its own counter. Keep known BL8 rollback
+  // images distinct even when their settings retain a higher counter.
+  const identity = bootHash === target.bootloaderZ13.sha256 ||
+    (bootHash !== target.bootloader.sha256 && bootCounter === target.bootloaderZ13.counter)
+    ? target.bootloaderZ13 : target.bootloader;
   row('bootloader', [
-    compare('bootHash', diagnostic?.bootHashValid ? diagnostic.bootRegionSha256 : null, target.bootloader.sha256),
-    compare('bootCounter', diagnostic?.settingsCrcValid ? diagnostic.bootloaderCounter : null, target.bootloader.counter),
+    compare('bootHash', bootHash, identity.sha256),
+    compare('bootCounter', bootCounter, identity.counter),
     compare('bootAddress', diagnostic?.bootAddressValid ? diagnostic.bootAddress : null, target.bootloader.address),
     compare('bootBytes', diagnostic?.bootHashValid ? diagnostic.bootRegionBytes : null, target.bootloader.bytes),
     compare('paramsAddress', diagnostic?.paramsLayoutKnown ? diagnostic.effectiveParamsAddress : null, target.bootloader.paramsAddress),
@@ -67,9 +74,9 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
 export function updateCheckText(locale = 'de_DE') {
   const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
-  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · ${UPDATE_TARGET.bootloader.name} · S112 7.3.0`,
+  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · BL8 / Z13 · S112 7.3.0`,
     targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}`,
-      bootloader: `${UPDATE_TARGET.bootloader.name} · ${german ? 'Bereichs-Hash und Zähler' : 'region hash and counter'} ${UPDATE_TARGET.bootloader.counter}` },
+      bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter})` },
     reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
 }
 

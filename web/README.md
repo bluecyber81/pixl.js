@@ -10,6 +10,8 @@ Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Brows
 
 ## Firmwarepaket vor der Übertragung prüfen
 
+Der Eintrag „BL8/Z13“ im Paketkatalog nennt die bekannten Bootloader für dieses Anwendungsupdate. Ein LCD-Gerät mit passendem BL8 kann die Anwendung direkt installieren. Bei **Gerät & Diagnose → Versionsabgleich** vergleicht der Dateimanager den Bereichs-Hash und den zugehörigen Zähler. BL8/Zähler 11 und Z13/Zähler 13 sind getrennte Referenzen. Ein zurückgespielter BL8 mit höherem Zähler wird als Abweichung angezeigt. Die Kompatibilität der konkreten Platine ist gesondert zu prüfen.
+
 In Schritt 1 der DFU-Seite zeigt die Dateiauswahl den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Eine höchstens zehn Minuten alte Bootdiagnose aus dem Dateimanager ermöglicht einen Vergleich. Ein Hinweis auf einen niedrigeren Zähler oder eine abweichende FWID ist vor der Geräteauswahl sichtbar. Vermischte oder widersprüchliche Startdaten werden vor Bluetooth abgewiesen.
 
 Unter **Gerät & Diagnose → Alle Diagnosewerte auslesen → Gesamtdiagnose speichern** lässt sich die Diagnose als JSON sichern. Der Abschnitt zum Speicher nennt konfigurierte Cachegrößen. Der kleinste freie Stack ist nur verfügbar, wenn ihn die Firmware tatsächlich gemessen hat.
@@ -51,11 +53,11 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 Über **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** einen früheren Start- oder Gesamtdiagnosebericht auswählen. Für einen aussagekräftigen Vergleich Berichte desselben Geräts mit vergleichbarer Sammlung verwenden. Die Datei wird lokal gelesen. Für die Phasen Speicher und Anwendung bedeutet ein negativer Unterschied eine kürzere Zeit.
 
-Das aktuelle PFS1-Profil berücksichtigt die fünf expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630 und DE3.59/631. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.59-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.59/Allmiibo_DE3_59_Quellcode.zip).
+Das aktuelle PFS1-Profil berücksichtigt die sechs expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630, DE3.59/631 und DE3.60/632. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.60-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.60/Allmiibo_DE3_60_Quellcode.zip).
 
 ## Bauen, testen und veröffentlichen
 
-Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.59/CONTRIBUTING.md) verwenden:
+Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.60/CONTRIBUTING.md) verwenden:
 
 ```sh
 npm ci

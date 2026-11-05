@@ -37,9 +37,10 @@ test('default browser fetch retains its global receiver rather than the Loader i
 });
 test('catalogue is bounded, strict and rejects traversal, external URLs, malformed metadata and unsupported scope',()=>{
  assert.deepEqual(validateCatalog({schema:1,packages:[]}).packages,[]);
+ assert.equal(validateCatalog({schema:1,packages:[{...entry,bootloader:'BL8/Z13'}]}).packages[0].bootloader,'BL8/Z13');
  const changed=[{file:'../evil.zip'},{file:'https://example.com/a.zip'},{file:'//evil/a.zip'},{file:entry.file+'?x'},{file:entry.file+'#x'},
  {sha256:'0'.repeat(64)},{sha256:'bad'},{bytes:0},{bytes:MAX_BYTES+1},{counter:1},{board:'OLED'},{storage:'SPIFFS'},
- {softDevice:'S140'},{applicationOnly:false},{migrationRequired:true},{extra:true},{version:'2.22.0-DE3.53-PREP'}];
+ {bootloader:'unknown'},{softDevice:'S140'},{applicationOnly:false},{migrationRequired:true},{extra:true},{version:'2.22.0-DE3.53-PREP'}];
  for(const patch of changed)assert.throws(()=>validateCatalog({schema:1,packages:[{...entry,...patch}]}),JSON.stringify(patch));
  for(const bad of [{schema:2,packages:[]},{schema:1,packages:[],extra:1},{schema:1,packages:[entry,entry]},{schema:1,packages:Array(9).fill(entry)}])assert.throws(()=>validateCatalog(bad));
  assert(Object.isFrozen(validateCatalog(catalog).packages[0]));
