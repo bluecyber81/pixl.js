@@ -27,6 +27,8 @@ functions = menu_enum + '\n' + '\n'.join([
     function('chameleon_scene_menu_card_data_file_load.c', 'static int chameleon_scene_menu_card_data_list_item_cmp('),
     function('chameleon_scene_menu_card_data_file_load.c', 'static void chameleon_scene_menu_card_data_file_load_from_file('),
     function('chameleon_scene_menu_card_data_file_load.c', 'bool update_current_directory('),
+    function('chameleon_scene_menu_card_data_file_save.c', 'static void chameleon_export_close_error('),
+    function('chameleon_scene_menu_card_data_file_save.c', 'static void chameleon_export_show_error('),
     function('chameleon_scene_menu_card_data_file_save.c', 'static void chameleon_scene_menu_card_data_file_save_text_input_event_cb('),
     function('../port/fds_utils.c', 'bool fds_read_sync('),
     function('../port/fds_utils.c', 'bool fds_write_sync('),
@@ -56,7 +58,16 @@ static settings_data_t *settings_get_data(void) {return &settings;}
 static void fds_map_file_name(uint16_t id,uint16_t key,char *p) {(void)id;(void)key;strcpy(p,"/slot.bin");}
 typedef int mui_text_input_event_t;
 typedef struct {void *user_data;} mui_text_input_t;
-typedef struct {void *p_toast_view; void *p_scene_dispatcher; void *browser_cache;} app_chameleon_t;
+typedef struct {void *p_toast_view; void *p_scene_dispatcher; void *browser_cache,*p_msg_box,*p_view_dispatcher;} app_chameleon_t;
+typedef int mui_msg_box_event_t;
+typedef struct { void *user_data; } mui_msg_box_t;
+enum {CHAMELEON_VIEW_ID_TEXT_INPUT,CHAMELEON_VIEW_ID_MSG_BOX};
+static void (*ack)(mui_msg_box_event_t,mui_msg_box_t*);
+static int current_view;static const char *export_error;
+static void mui_msg_box_set_error(void *box,const char *msg,void (*cb)(mui_msg_box_event_t,mui_msg_box_t*)){
+ (void)box;ack=cb;export_error=msg;
+}
+static void mui_view_dispatcher_switch_to_view(void *views,int id){(void)views;current_view=id;}
 typedef struct {int type; size_t size;} vfs_obj_t;
 typedef struct {
     bool (*mounted)(void);
@@ -121,8 +132,12 @@ int main(void) {
     for(int n=-1;n<64;n++) {
         reset();result=n;
         chameleon_scene_menu_card_data_file_save_text_input_event_cb(1,&text);
-        assert(writes==1 && backs==0 && strstr(last_toast,"FAILED"));
+        assert(writes==1 && backs==0 && ack && strstr(export_error,"FAILED") && current_view==CHAMELEON_VIEW_ID_MSG_BOX);
+        mui_msg_box_t box={&app};ack(1,&box);
+        assert(current_view==CHAMELEON_VIEW_ID_TEXT_INPUT && writes==1 && backs==0);
     }
+    reset();chameleon_scene_menu_card_data_file_save_text_input_event_cb(0,&text);
+    assert(writes==0 && backs==1);
     reset();chameleon_scene_menu_card_data_file_save_text_input_event_cb(1,&text);
     assert(writes==1 && backs==1);
     puts("PASS save requires exact byte count");

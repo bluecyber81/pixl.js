@@ -73,8 +73,8 @@ static int settings_save(void){
     replace('static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_SETTINGS);kills++;}', launcher_functions)
     replace('static void *mini_app_launcher(void){return NULL;}',
             'static mini_app_launcher_t *mini_app_launcher(void){return &launcher;}')
-    replace('static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;(void)n;}',
-            'static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){assert(p);active_view=n;}')
+    replace('static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;visible=n;}',
+            'static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){assert(p);active_view=n;visible=n;}')
     core_src = (SRC / 'mui/mui_core.c').read_text(encoding='utf-8')
     event_src = (SRC / 'mui/mui_event.c').read_text(encoding='utf-8')
     replace('static void *mui(void){return NULL;}\nstatic void mui_update_now(void*p){(void)p;}', r'''
@@ -125,10 +125,11 @@ static void select_home(int event){
 int main(void){
  const int failures[]={-91,8};
  for(unsigned i=0;i<2;i++){
-  start_settings();int s=save_calls,t=toast_calls;unsigned d=desktop_runs,f=frees;
+  start_settings();int s=save_calls,t=toast_calls;unsigned d=desktop_runs,f=frees,e=errors;
   result=failures[i];select_home(0);
-  assert(save_calls==s+1&&toast_calls==t+1&&desktop_runs==d&&frees==f);
-  assert(instance.p_handle&&instance.state==APP_STATE_RUNNING&&active_view==SETTINGS_VIEW_ID_MAIN);
+  assert(save_calls==s+1&&errors==e+1&&toast_calls==t&&desktop_runs==d&&frees==f);
+  assert(instance.p_handle&&instance.state==APP_STATE_RUNNING&&active_view==SETTINGS_VIEW_ID_MSG_BOX);
+  app_settings_t *app=instance.p_handle;assert(ack);ack(1,app->p_msg_box);assert(active_view==SETTINGS_VIEW_ID_MAIN);
   assert(!((app_settings_t*)instance.p_handle)->exit_saved);
   /* Same app can retry, and its successful kill must not save a second time. */
   result=0;select_home(0);

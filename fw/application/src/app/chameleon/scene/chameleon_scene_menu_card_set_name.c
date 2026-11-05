@@ -39,6 +39,8 @@ static void chameleon_scene_menu_card_set_name_text_input_event_cb(mui_text_inpu
         } else {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
         }
+    } else {
+        mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     }
 }
 

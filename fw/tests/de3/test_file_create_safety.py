@@ -38,6 +38,7 @@ HARNESS = r'''
 #define CHECK(x) do { if(!(x)){fprintf(stderr,"CHECK line %d: %s\n",__LINE__,#x);exit(71);} } while(0)
 #define MUI_TEXT_INPUT_EVENT_CONFIRMED 1
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 1
+#define MUI_MSG_BOX_EVENT_SELECT_CENTER 2
 #define AMIIBO_SCENE_FILE_BROWSER 2
 #define AMIIBO_VIEW_ID_MSG_BOX 3
 #define AMIIBO_VIEW_ID_LIST 4
@@ -99,7 +100,9 @@ static void amiibo_scene_file_browser_show_messege(app_amiibo_t*a,const char*m){
 static void mui_scene_dispatcher_previous_scene(void*p){(void)p;navigations++;}
 static void mui_scene_dispatcher_next_scene(void*p,int n){(void)p;(void)n;navigations++;}
 static void mui_msg_box_set_header(void*a,const char*b){(void)a;(void)b;}
-static void mui_msg_box_set_message(void*a,const char*b){(void)a;(void)b;}
+static char last_progress[48];
+static void mui_msg_box_set_message(void*a,const char*b){(void)a;snprintf(last_progress,sizeof(last_progress),"%s",b);}
+static void mui_msg_box_set_event_cb(void *a, void (*cb)(mui_msg_box_event_t,mui_msg_box_t*)){(void)a;(void)cb;}
 static void mui_msg_box_set_btn_text(void*a,const char*b,const char*c,const char*d){(void)a;(void)b;(void)c;(void)d;}
 static void mui_msg_box_set_btn_focus(void*a,int b){(void)a;(void)b;}
 static void mui_view_dispatcher_switch_to_view(void*a,int b){(void)a;(void)b;}
@@ -134,8 +137,9 @@ int main(int argc,char **argv){
   if(scenario==6){stat_result=VFS_ERR_CRPT;error_index=3;}
   write_fail_at=scenario==15?2:0;
   amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(1,&t);
-  if(scenario==5)CHECK(writes==50 && stats==50 && navigations==1 && !errors);
-  else if(scenario==15)CHECK(writes==2 && stats==3 && !navigations && errors==1);
+  while(amiibo_batch_step()) {}
+  if(scenario==5)CHECK(writes==50 && stats==100 && navigations==1 && !errors);
+  else if(scenario==15)CHECK(writes==2 && stats==5 && !navigations && errors==1);
   else CHECK(!writes && stats==3 && errors==1 && !navigations && stored[0]==0xa5);
   CHECK(recoveries==1);break;
  case 4: {
@@ -171,10 +175,11 @@ int main(int argc,char **argv){
   amiibo_scene_file_browser_text_input_create_folder_event_cb(0,&t);
   amiibo_scene_file_browser_text_input_create_amiibo_event_cb(0,&t);
   amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(0,&t);
-  CHECK(!writes && !stats && !recoveries && !errors && !navigations && !create_calls);break;
+  CHECK(!writes && !stats && !recoveries && !errors && navigations==3 && !create_calls);break;
  case 19:
   input="0002";amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(1,&t);
-  CHECK(writes==2 && stats==2 && navigations==1 && !errors);break;
+  while(amiibo_batch_step()) {}
+  CHECK(writes==2 && stats==4 && navigations==1 && !errors);break;
  case 20: case 21:
   fail_alloc=1;input=scenario==20?"new.bin":"50";
   if(scenario==20)amiibo_scene_file_browser_text_input_create_amiibo_event_cb(1,&t);
@@ -184,10 +189,27 @@ int main(int argc,char **argv){
  case 22:
   input="3";mutate_folder=1;
   amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(1,&t);
+  while(amiibo_batch_step()) {}
   CHECK(alloc_calls==1 && free_calls==1 && !writes && !navigations && errors==1);break;
  case 23:
   input="";amiibo_scene_file_browser_text_input_create_amiibo_event_cb(1,&t);
   CHECK(!alloc_calls && !free_calls && !writes && !stats && !recoveries && !errors && navigations==1);break;
+#ifdef COOPERATIVE_BATCH
+ case 24: case 25: case 26: case 27:
+  input="3";amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(1,&t);
+  CHECK(!writes && batch_owner==&a);
+  if(scenario!=24){CHECK(amiibo_batch_step() && writes==1 && strstr(last_progress,"1/3"));}
+  if(scenario==26){
+   existing_index=2;CHECK(!amiibo_batch_step() && errors==1 && strstr(last_error,"-4"));
+  } else if(scenario==27) {
+   amiibo_batch_release(); /* Identical release on scene exit, before the app's views are freed. */
+  } else {
+   amiibo_batch_cancel(MUI_MSG_BOX_EVENT_SELECT_CENTER,&b);
+   CHECK(navigations==1 && !errors);
+  }
+  CHECK(!amiibo_batch_step() && writes==(scenario==24?0:1) && free_calls==1);
+  break;
+#endif
  default: return 2;
  }
  CHECK(live_tag==NULL);
@@ -203,6 +225,12 @@ def build_and_run(root, baseline=False):
     cwalk = (root / "application/src/mod/cwalk2.c").read_text(encoding="utf-8")
     pieces = [function(cwalk, name) for name in ("bounded_path_length", "cwalk_append_segment")]
     pieces += [function(source, name) for name in HELPERS if name + "(" in source]
+    if "bool amiibo_batch_step(" in source:
+        pieces.append("#define COOPERATIVE_BATCH 1")
+        pieces.append(source[source.index("static app_amiibo_t *batch_owner;"):source.index("static void amiibo_batch_release(")])
+        pieces += [function(source, name) for name in ("amiibo_batch_release", "amiibo_batch_cancel", "amiibo_batch_step")]
+    else:
+        pieces.append("static bool amiibo_batch_step(void){return false;}")
     pieces += [function(source, name) for name in CALLBACKS]
     with tempfile.TemporaryDirectory(prefix="pixl-create-menu-") as td:
         folder = Path(td)
@@ -215,7 +243,7 @@ def build_and_run(root, baseline=False):
             "-I", str(folder), "-I", str(root / "application/src/mod/vfs"),
             "-I", str(root / "application/src/ntag"), str(cfile), "-o", str(binary)]
         subprocess.run(command, check=True, timeout=60)
-        for case in ([0, 3, 4, 9, 10] if baseline else range(24)):
+        for case in ([0, 3, 4, 9, 10] if baseline else range(28)):
             run = subprocess.run([str(binary), str(case)], capture_output=True, text=True, timeout=15)
             if baseline:
                 assert run.returncode == 71 and "CHECK" in run.stderr, (case, run.stdout, run.stderr)

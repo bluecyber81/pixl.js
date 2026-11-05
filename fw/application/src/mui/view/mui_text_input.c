@@ -1,4 +1,5 @@
 #include "mui_text_input.h"
+#include "i18n/language.h"
 
 #define LIST_ITEM_HEIGHT 13
 
@@ -20,7 +21,7 @@ static const mui_text_input_key_t keyboard_keys_row_1[] = {
 static const mui_text_input_key_t keyboard_keys_row_2[] = {
     {'a', 1, 20},   {'s', 10, 20},  {'d', 19, 20},  {'f', 28, 20}, {'g', 37, 20},
     {'h', 46, 20},  {'j', 55, 20},  {'k', 64, 20},  {'l', 73, 20}, {BACKSPACE_KEY, 82, 20},
-    {'4', 100, 20}, {'5', 110, 20}, {'6', 120, 20},
+    {CANCEL_KEY, 91, 20}, {'4', 100, 20}, {'5', 110, 20}, {'6', 120, 20},
 };
 
 static const mui_text_input_key_t keyboard_keys_row_3[] = {
@@ -83,14 +84,17 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     mui_canvas_set_draw_color(p_canvas, 1);
     /* The keycap shows short/held input, without allocating or changing the
      * entered name. SP is the held underscore key's space character. */
-    char hint[5] = {0};
+    char key_pair[5] = {0};
+    const char *hint = key_pair;
     if (p_mui_text_input->focus_row < keyboard_row_count &&
         p_mui_text_input->focus_column < get_row_size(p_mui_text_input->focus_row)) {
         char key = get_row(p_mui_text_input->focus_row)[p_mui_text_input->focus_column].text;
         if (key >= 'a' && key <= 'z') {
-            hint[0] = key; hint[1] = '/'; hint[2] = char_to_uppercase(key);
+            key_pair[0] = key; key_pair[1] = '/'; key_pair[2] = char_to_uppercase(key);
         } else if (key == '_') {
-            memcpy(hint, "_/SP", sizeof(hint));
+            hint = "_/SP";
+        } else if (key == CANCEL_KEY) {
+            hint = getLangString(_L_CANCEL);
         }
     }
     uint8_t header_width = 124;
@@ -145,7 +149,7 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
     mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
 
-    for (uint8_t row = 0; row <= keyboard_row_count; row++) {
+    for (uint8_t row = 0; row < keyboard_row_count; row++) {
         const uint8_t column_count = get_row_size(row);
         const mui_text_input_key_t *keys = get_row(row);
 
@@ -166,7 +170,8 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
                     mui_canvas_draw_utf8(p_canvas, keyboard_origin_x + keys[column].x,
                                          keyboard_origin_y + keys[column].y, "OK");
                 }
-            } else if (keys[column].text == BACKSPACE_KEY) {
+            } else if (keys[column].text == BACKSPACE_KEY || keys[column].text == CANCEL_KEY) {
+                uint16_t glyph = keys[column].text == BACKSPACE_KEY ? 0xe12e : 'X';
                 mui_canvas_set_draw_color(p_canvas, 1);
                 if (p_mui_text_input->focus_row == row && p_mui_text_input->focus_column == column) {
                     mui_canvas_set_draw_color(p_canvas, 1);
@@ -174,12 +179,12 @@ static void mui_text_input_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
                                         keyboard_origin_y + keys[column].y - 8, 7, 10);
                     mui_canvas_set_draw_color(p_canvas, 0);
                     mui_canvas_draw_glyph(p_canvas, keyboard_origin_x + keys[column].x,
-                                          keyboard_origin_y + keys[column].y, 0xe12e);
+                                          keyboard_origin_y + keys[column].y, glyph);
                     mui_canvas_set_draw_color(p_canvas, 1);
                 } else {
 
                     mui_canvas_draw_glyph(p_canvas, keyboard_origin_x + keys[column].x,
-                                          keyboard_origin_y + keys[column].y, 0xe12e);
+                                          keyboard_origin_y + keys[column].y, glyph);
                 }
             } else {
                 if (p_mui_text_input->focus_row == row && p_mui_text_input->focus_column == column) {
@@ -251,6 +256,8 @@ static void mui_text_input_on_input(mui_view_t *p_view, mui_input_event_t *event
 
         case INPUT_KEY_CENTER: {
             char c = get_row(p_mui_text_input->focus_row)[p_mui_text_input->focus_column].text;
+            /* A hold delivers LONG followed by REPEAT. Only deletion repeats. */
+            if (event->type == INPUT_TYPE_REPEAT && c != BACKSPACE_KEY) return;
             if (c == BACKSPACE_KEY) {
                 if (string_size(p_mui_text_input->input_text) == 0) break;
                 size_t length = string_size(p_mui_text_input->input_text) - 1;
@@ -258,10 +265,12 @@ static void mui_text_input_on_input(mui_view_t *p_view, mui_input_event_t *event
                 while (length && (((unsigned char)text[length] & 0xc0) == 0x80)) length--;
                 /* Removing a character must also work when the heap is full. */
                 string_left(p_mui_text_input->input_text, length);
-            } else if (c == ENTER_KEY) {
+            } else if (c == ENTER_KEY || c == CANCEL_KEY) {
                 if (p_mui_text_input->event_cb) {
-                    p_mui_text_input->event_cb(MUI_TEXT_INPUT_EVENT_CONFIRMED, p_mui_text_input);
+                    p_mui_text_input->event_cb(c == ENTER_KEY ? MUI_TEXT_INPUT_EVENT_CONFIRMED :
+                                               MUI_TEXT_INPUT_EVENT_CANCELLED, p_mui_text_input);
                 }
+                return; /* A scene callback can replace or release the editor. */
             } else {
                 if (event->type == INPUT_TYPE_LONG) {
                     c = char_to_uppercase(c);

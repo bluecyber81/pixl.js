@@ -12,7 +12,7 @@ static void ble_status_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) 
     if (vfs_packed_recovery_required()) p_status_view->page = 0;
 #endif
     if (p_status_view->page == 1) {
-        draw_qrcode(p_canvas, 39, 0, 50, "https://pixl.amiibo.xyz");
+        draw_qrcode(p_canvas, 39, 0, 50, "https://bluecyber81.github.io/pixl.js/");
         return;
     }
     p_status_view->drawn_link_state = ble_link_state_get();
@@ -34,21 +34,20 @@ static void ble_status_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) 
         mui_canvas_draw_utf8(p_canvas, 4, 36, getLangString(
             p_status_view->drawn_link_state == BLE_LINK_CONNECTED ?
                 _L_DE3_BLE_CONNECTED :
-            p_status_view->drawn_link_state == BLE_LINK_HOST_CONNECTED ? _L_DE3_BLE_HOST :
+            p_status_view->drawn_link_state == BLE_LINK_HOST_CONNECTED ? _L_DE3_BLE_WAIT_CLIENT :
             p_status_view->drawn_link_state == BLE_LINK_DISCONNECTING ? _L_DE3_BLE_CLOSING : _L_DE3_BLE_VISIBLE));
 #ifdef VFS_PACKED_LFS_ENABLE
         if (vfs_packed_recovery_required())
             mui_canvas_draw_utf8(p_canvas, 4, 48, getLangString(_L_DE331_STORAGE_CONTINUE));
         else
 #endif
-        mui_canvas_draw_utf8(p_canvas, 4, 48, getLangString(
-            p_status_view->drawn_link_state == BLE_LINK_HOST_CONNECTED ? _L_DE3_BLE_WAIT_CLIENT : _L_DE3_BLE_QR));
+        mui_canvas_draw_utf8(p_canvas, 4, 48, getLangString(_L_DE3_BLE_QR));
     }
 }
 
 static void ble_status_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     ble_status_view_t *p_ble_status_view = p_view->user_data;
-    if (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_REPEAT || event->type == INPUT_TYPE_LONG) {
+    if (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_LONG) {
         switch (event->key) {
         case INPUT_KEY_LEFT:
         case INPUT_KEY_RIGHT:
@@ -66,7 +65,6 @@ static void ble_status_view_on_input(mui_view_t *p_view, mui_input_event_t *even
             }
             break;
         case INPUT_KEY_CENTER:
-            if (event->type == INPUT_TYPE_REPEAT) break;
             if (p_ble_status_view->event_cb) {
                 /* Follow the action the user actually saw. If a connection
                  * arrives between drawing and pressing, the guarded restart

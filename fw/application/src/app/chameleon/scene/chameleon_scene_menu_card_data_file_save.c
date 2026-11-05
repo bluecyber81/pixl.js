@@ -21,6 +21,17 @@ typedef enum {
     CHAMELEON_MENU_FILE,
 } chameleon_menu_item_t;
 
+static void chameleon_export_close_error(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    (void)event; /* The dialog offers only the centre button. */
+    app_chameleon_t *app = box->user_data;
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_TEXT_INPUT);
+}
+
+static void chameleon_export_show_error(app_chameleon_t *app) {
+    mui_msg_box_set_error(app->p_msg_box, _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED), chameleon_export_close_error);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_MSG_BOX);
+}
+
 static void chameleon_scene_menu_card_data_file_save_text_input_event_cb(mui_text_input_event_t event,
                                                                          mui_text_input_t *p_text_input) {
     app_chameleon_t *app = p_text_input->user_data;
@@ -35,12 +46,12 @@ static void chameleon_scene_menu_card_data_file_save_text_input_event_cb(mui_tex
             if (length < 0 || (size_t)length >= sizeof(path) || !p_driver || !p_driver->mounted() ||
                 !tag_buffer || tag_data_size == 0 || strchr(text, '/') || strchr(text, '\\') ||
                 strcmp(text, ".") == 0 || strcmp(text, "..") == 0) {
-                mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED));
+                chameleon_export_show_error(app);
                 return;
             }
             int32_t err = p_driver->write_file_data(path, tag_buffer, tag_data_size);
             if (err < 0 || (size_t)err != tag_data_size) {
-                mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_SAVE_FAILED));
+                chameleon_export_show_error(app);
                 return;
             }
             mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_SAVE_SUCCESS));
@@ -48,6 +59,8 @@ static void chameleon_scene_menu_card_data_file_save_text_input_event_cb(mui_tex
         } else {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
         }
+    } else {
+        mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     }
 }
 

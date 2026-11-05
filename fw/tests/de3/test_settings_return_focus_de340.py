@@ -38,6 +38,7 @@ def harness(mutant=None):
         start = text.index('enum ' + enumeration)
         pieces.append(text[start:text.index('};', start) + 2])
     pieces += [function(main, name) for name in ('settings_reset_default',
+        'settings_scene_main_close_error', 'settings_scene_main_save_error',
         'settings_scene_main_msg_box_reset_settings_cb', 'settings_scene_main_list_view_on_selected')]
     # Skip the forward declaration when extracting the reload body.
     pieces.append(function(main[main.rfind('\nstatic void settings_scene_main_reload('):],

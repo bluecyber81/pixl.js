@@ -21,6 +21,8 @@ class LcdTextScrollTests(HostTests):
         helper = ''
         if 'static int32_t mui_list_view_lcd_text_path(' in source:
             helper = '#ifdef LCD_SCREEN\n' + function(source, 'mui_list_view_lcd_text_path') + '\n#endif\n'
+        if 'static uint16_t mui_list_view_value_x(' in source:
+            helper += function(source, 'mui_list_view_value_x') + '\n'
         update = (function(source, 'mui_list_view_update_canvas')
                   if 'static void mui_list_view_update_canvas(' in source else
                   'static void mui_list_view_update_canvas(mui_list_view_t *v, const mui_canvas_t *c) '
@@ -184,6 +186,9 @@ int main(void){
  mui_anim_t zero=list.text_anim;zero.start_value=zero.end_value=0;zero.act_time=UINT32_MAX;
  assert(zero.path_cb(&zero)==0);
  enabled=false;mui_list_view_start_text_anim(&list);assert(!active(&list.text_anim) && list.text_offset==0);
+ list.canvas_width=128;list.focus_index=0;list.items->data[0].text="128";list.items->data[0].sub_text="33";
+ mui_list_view_start_text_anim(&list);assert(active(&list.text_anim) && list.text_anim.end_value==-53);
+ list.items->data[0].text="75";mui_list_view_start_text_anim(&list);assert(!active(&list.text_anim));
  enabled=true;list.focus_index=99;mui_list_view_start_text_anim(&list);assert(!active(&list.text_anim));
  list.items->count=0;list.focus_index=0;mui_list_view_start_text_anim(&list);assert(!active(&list.text_anim));
  puts("PASS LCD 2px/s, first movement3500ms, both end holds3520ms, no redundant redraw, concurrent animation, focus/resize, bounds");

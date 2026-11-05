@@ -87,6 +87,7 @@
 #include "nrf_pwr_mgmt.h"
 
 #include "amiibo_helper.h"
+#include "amiibo_scene.h"
 
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
@@ -440,7 +441,9 @@ int main(void) {
             nrf_pwr_mgmt_feed();
         }
 
-        nrf_pwr_mgmt_run();
+        /* Between file commits, service keys, BLE and the power timer. */
+        if (amiibo_batch_step()) nrf_pwr_mgmt_feed();
+        else nrf_pwr_mgmt_run();
     }
 }
 

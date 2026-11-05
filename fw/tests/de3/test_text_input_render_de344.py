@@ -20,6 +20,8 @@ HARNESS = r'''
 #include <stdlib.h>
 #include <string.h>
 #define ENTER_KEY '\r'
+#define CANCEL_KEY '\x1b'
+#define getLangString(key) "Abbrechen"
 #define BACKSPACE_KEY '\b'
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"line %u: %s\n",__LINE__,#x); exit(73); } } while (0)
 typedef struct { void *user_data; } mui_view_t;

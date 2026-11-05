@@ -229,7 +229,7 @@ int main(int argc,char **argv) {
  } else if(!strcmp(test,"session_ui")) {
   m_file_mode=true;ble_status_view_t *v=ble_status_view_create();strcpy(v->ble_addr,"01:23:45:67:89:AB");
   event(BLE_GAP_EVT_CONNECTED);draw(v);
-  CHECK(v->drawn_link_state==BLE_LINK_HOST_CONNECTED&&!strcmp(drawn[2],"BT verbunden")&&!strcmp(drawn[3],"Wartet auf Client"));
+  CHECK(v->drawn_link_state==BLE_LINK_HOST_CONNECTED&&!strcmp(drawn[2],"BT wartet auf Client")&&!strcmp(drawn[3],"<> QR  Mitte: zurück"));
   ble_nus_evt_t e={.type=BLE_NUS_EVT_COMM_STARTED,.conn_handle=4};nus_data_handler(&e);draw(v);
   CHECK(v->drawn_link_state==BLE_LINK_CONNECTED&&!strcmp(drawn[2],"Dateisitzung aktiv"));
   e.type=BLE_NUS_EVT_COMM_STOPPED;nus_data_handler(&e);draw(v);
@@ -250,9 +250,12 @@ int main(int argc,char **argv) {
    CHECK(ble_link_state_get()==(!strcmp(test,"click_race")?BLE_LINK_CONNECTED:BLE_LINK_ADVERTISING));
    draw(v);CHECK(drawn_n==4&&!strcmp(drawn[1],v->ble_addr));
    input(v,INPUT_KEY_CENTER,INPUT_TYPE_REPEAT);CHECK(!disconnects&&active_app==app);
-   input(v,INPUT_KEY_LEFT,INPUT_TYPE_SHORT);CHECK(v->page==1);int old=redraws;
+   input(v,INPUT_KEY_LEFT,INPUT_TYPE_LONG);CHECK(v->page==1);int old=redraws;
+   for (unsigned repeat=0; repeat<8; ++repeat) input(v,INPUT_KEY_LEFT,INPUT_TYPE_REPEAT);
+   CHECK(v->page==1 && redraws==old);
    ble_process_pending();CHECK(redraws==old); /* QR need not repaint on link events. */
    input(v,INPUT_KEY_RIGHT,INPUT_TYPE_SHORT);CHECK(v->page==0);
+   input(v,INPUT_KEY_RIGHT,INPUT_TYPE_REPEAT);CHECK(v->page==0);
    if(!strcmp(test,"ui")) {adv(BLE_ADV_EVT_IDLE);draw(v);input(v,INPUT_KEY_CENTER,INPUT_TYPE_LONG);CHECK(!active_app);}
    else {draw(v);input(v,INPUT_KEY_CENTER,INPUT_TYPE_SHORT);CHECK(disconnects==1&&!active_app);}
    ble_link_state_observe(NULL);ble_status_view_free(v);mui_mem_free(app);

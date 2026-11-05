@@ -1,0 +1,8 @@
+{
+  "firmwareElfSha256": "ad0d113c4a45a066ba92d0fdfadd3c61bfb1d0d36453ca94b77c134205cad683",
+  "cases": 36,
+  "QRholdIncludingRecovery": 8,
+  "centerExitRestartAndDesktopTail": 20,
+  "editorXorOkWithRetainedOrChangedView": 8,
+  "scope": "Actual ARM input handlers; radio, callbacks and current-view transitions are modeled. No physical timing or hardware readback."
+}

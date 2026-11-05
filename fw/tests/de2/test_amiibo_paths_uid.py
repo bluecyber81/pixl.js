@@ -15,7 +15,11 @@ class PathUidTests(unittest.TestCase):
             source = (SCENES / filename).read_text(encoding="utf-8")
             calls = list(re.finditer(r"cwalk_append_segment\(", source))
             for call in calls:
-                self.assertEqual(source[call.start()-1], "!", filename)
+                # Failure guards reject invalid paths; the batch transaction
+                # uses a success guard around its stat/write pair instead.
+                prefix = source[:call.start()].splitlines()[-1]
+                self.assertTrue(prefix.rstrip().endswith("!") or
+                                re.fullmatch(r"\s*if\s*\(\s*", prefix), filename)
             count += len(calls)
         self.assertEqual(count, 13)
 

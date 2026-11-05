@@ -23,7 +23,8 @@ class SettingsSaveUiTests(native.NativeTests):
         app = (SRC / 'app_settings.c').read_text()
         enum_start = main.index('enum settings_main_menu_t')
         enumeration = main[enum_start:main.index('};', enum_start) + 2]
-        reset = native.function(main, 'settings_scene_main_msg_box_reset_settings_cb')
+        reset = '\n'.join(native.function(main, n) for n in ('settings_scene_main_close_error',
+            'settings_scene_main_save_error', 'settings_scene_main_msg_box_reset_settings_cb'))
         selected = native.function(main, 'settings_scene_main_list_view_on_selected')
         leave = native.function(management, 'settings_scene_app_management_on_exit')
         kill = native.function(app[app.rfind('\nvoid app_settings_on_kill('):], 'app_settings_on_kill')
@@ -77,7 +78,12 @@ static bool system_reboot(void){reboots++;return true;}
 static void go_sleep(void){}
 static bool enter_dfu(void){dfus++;return true;}
 static void mui_scene_dispatcher_next_scene(void*p,unsigned n){(void)p;(void)n;}
-static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;(void)n;}
+static unsigned visible, errors;
+static void (*ack)(mui_msg_box_event_t,mui_msg_box_t*);
+static void mui_msg_box_set_error(void *box,const char *s,void (*cb)(mui_msg_box_event_t,mui_msg_box_t*)){
+ (void)box;assert(s && cb);ack=cb;errors++;
+}
+static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;visible=n;}
 static void *mui(void){return NULL;}
 static void mui_update_now(void*p){(void)p;}
 static void mui_u8g2_set_flip_display(bool b){(void)b;}
@@ -107,18 +113,19 @@ int main(void){
   result=failures[i];item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_REBOOT;
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(reboots==0 && kills==0);
   item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_EXIT;
-  settings_scene_main_list_view_on_selected(0,&list,&item);assert(kills==0);
+  settings_scene_main_list_view_on_selected(0,&list,&item);assert(kills==0 && visible==SETTINGS_VIEW_ID_MSG_BOX && ack);
+  ack(1,&box);assert(visible==SETTINGS_VIEW_ID_MAIN);
   item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_DFU;
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(dfus==0);
-  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==0 && reloads==0);
+  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==0 && reloads==0 && visible==SETTINGS_VIEW_ID_MSG_BOX);
  }
- assert(save_calls==6 && reset_calls==2 && toast_calls==8);
+ assert(save_calls==6 && reset_calls==2 && errors==8 && toast_calls==0);
  result=0;item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_REBOOT;settings_scene_main_list_view_on_selected(0,&list,&item);assert(reboots==1);
  item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_EXIT;settings_scene_main_list_view_on_selected(0,&list,&item);assert(kills==1);
  item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_DFU;settings_scene_main_list_view_on_selected(0,&list,&item);assert(dfus==1);
  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==1 && reloads==1);
  settings_scene_main_msg_box_reset_settings_cb(2,&box);assert(reset_calls==3);
- result=-91;settings_scene_app_management_on_exit(&app);assert(toast_calls==9);
+ result=-91;settings_scene_app_management_on_exit(&app);assert(toast_calls==1);
  app.exit_saved=false;mini_app_inst_t instance={&app};app_settings_on_kill(&instance);assert(logs==1 && cleanup_calls>0 && instance.p_handle==NULL);
  result=0;instance.p_handle=&app;app_settings_on_kill(&instance);assert(logs==1 && instance.p_handle==NULL);
  puts("PASS: failed save blocks reboot/menu kill/DFU, successful save allows DFU, failed reset has no success, unavoidable exits report errors");return 0;

@@ -1,0 +1,68 @@
+{
+  "firmwareElfSha256": "ad0d113c4a45a066ba92d0fdfadd3c61bfb1d0d36453ca94b77c134205cad683",
+  "cancelledEvent": 1,
+  "confirmedEvent": 0,
+  "callbacks": {
+    "amiibo_scene_amiibo_detail_menu_text_input_set_id_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 1,
+      "nonstackWrites": 0
+    },
+    "amiibo_scene_file_browser_menu_text_input_rename_folder_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "amiibo_scene_file_browser_text_input_create_amiibo_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "amiibo_scene_file_browser_text_input_create_folder_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "amiidb_scene_fav_list_menu_text_input_event_cb": {
+      "reached": "amiidb_scene_fav_list_menu_on_enter",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "amiidb_scene_fav_list_text_input_event_cb": {
+      "reached": "amiidb_scene_fav_list_reload",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "amiidb_scene_fav_select_text_input_event_cb": {
+      "reached": "amiidb_scene_fav_select_reload",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "chameleon_scene_menu_card_data_file_save_text_input_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "chameleon_scene_menu_card_set_name_text_input_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "search_input_cb": {
+      "reached": "amiidb_scene_amiibo_search_reload",
+      "textReads": 0,
+      "nonstackWrites": 0
+    },
+    "text_input_event_cb": {
+      "reached": "mui_scene_dispatcher_previous_scene",
+      "textReads": 0,
+      "nonstackWrites": 0
+    }
+  },
+  "limits": "Actual Thumb code runs until navigation entry. The navigation target is mocked. No physical display or flash operations."
+}

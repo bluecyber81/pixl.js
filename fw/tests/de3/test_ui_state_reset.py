@@ -51,6 +51,7 @@ static void mui_u8g2_set_flip_display(bool x){display_flipped=x;}
 static void nrf_pwr_mgmt_set_timeout(unsigned x){(void)x;}
 static void setLanguage(unsigned x){(void)x;}
 static void mui_toast_view_show(void*a,const char*b){(void)a;(void)b;}
+static void settings_scene_main_save_error(app_settings_t *app){(void)app;assert(false);}
 static void settings_scene_main_reload(void*a){(void)a;++reloads;}
 static void mui_view_dispatcher_switch_to_view(void*a,unsigned x){(void)a;(void)x;++view_switches;}
 '''

@@ -70,7 +70,7 @@ void mui_canvas_draw_utf8(mui_canvas_t *p, int x, int y, const char *s) {
     (void)p; (void)x; (void)y; CHECK(s && strlen(s) < 100); text_draws++;
 }
 void draw_qrcode(mui_canvas_t *p, int x, int y, int size, const char *s) {
-    (void)p; (void)x; (void)y; (void)size; CHECK(!strcmp(s, "https://pixl.amiibo.xyz")); qr_draws++;
+    (void)p; (void)x; (void)y; (void)size; CHECK(!strcmp(s, "https://bluecyber81.github.io/pixl.js/")); qr_draws++;
 }
 const char *getLangString(int key) { (void)key; return "Bluetooth"; }
 void *mui(void) { return &auto_update; }

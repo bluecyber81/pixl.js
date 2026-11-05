@@ -1,12 +1,12 @@
 # Component identity and update boundaries
 
-Publication baseline: **2026-11-04**. Components have independent versions.
+Publication baseline: **2026-11-05**. Components have independent versions.
 
 **[Detailed bootloader/SoftDevice changes](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Application | 2.22.0-DE3.59 | DFU counter 631, hardware requirement 52 |
+| Application | 2.22.0-DE3.60 | DFU counter 632, hardware requirement 52 |
 | File manager | 3.37.3 | Browser software, not a device image |
 | Bootloader | BL8 | Code region SHA-256 below; stored DFU counters depend on packaging |
 | SoftDevice | Nordic S112 7.3.0 | FWID 0x0126; binary from Nordic, not rebuilt here |
@@ -25,6 +25,10 @@ Nordic supplies [S112 downloads and release notes](https://www.nordicsemi.com/Pr
 The public standard download bundle contains the application OTA, portable browser and corresponding sources. It does **not** contain an automatically selected BL8/S112 combined OTA. A locally prepared older-device system candidate is not a general compatibility approval: board, flash layout, existing bootloader/key/counter, SoftDevice transition and preservation/migration of external storage must be qualified first. Ordinary application maintenance does not require repeating a system update.
 
 On the owner's matching device, the 2026-11-02 read-only diagnostic matched DE3.55, the BL8 region hash and S112 7.3.0. This is dated evidence for that device only; no second device is inferred compatible from its product name or photograph.
+
+## Z13 and the development bootloader
+
+The application-only DE3.60 update works with the installed Z13 LCD bootloader and S112 7.3.0 on the matching PFS1 configuration. Counter 13 and padded-region SHA-256 97b2751f1b041de8bcba131d875be725fe91294bfc72e4a7f7a3dc5526e88002 identify this Z13 reference. The independent bench candidate retries missed display work and preserves 2,220 bytes of boot flash, up from 328. Its physical qualification is pending. [Builds, measurements and recovery gesture](validation/Bootloader-Pruefstand_DE-EN.md)
 
 ## Byte comparison of Nordic S112 7.3.0 on 4 November 2026
 

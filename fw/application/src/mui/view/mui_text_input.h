@@ -5,6 +5,7 @@
 
 #define ENTER_KEY '\r'
 #define BACKSPACE_KEY '\b'
+#define CANCEL_KEY '\x1b'
 
 struct mui_text_input_s;
 typedef struct mui_text_input_s mui_text_input_t;

@@ -23,6 +23,9 @@ HARNESS = r'''
 #include <stdlib.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"line %u: %s\n",__LINE__,#x); exit(73); } } while (0)
+#define getLangString(key) "Abbrechen"
+#define LV_MIN(a,b) ((a)<(b)?(a):(b))
+#define LV_MAX(a,b) ((a)>(b)?(a):(b))
 enum {INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_TYPE_REPEAT};
 enum {INPUT_KEY_LEFT,INPUT_KEY_RIGHT,INPUT_KEY_CENTER};
 extern const uint8_t u8g2_font_wqy12_t_gb2312a[],u8g2_font_siji_t_6x10[];
@@ -55,6 +58,7 @@ void mui_canvas_draw_dot(mui_canvas_t *c,uint8_t x,uint8_t y) {
 /*ACTUAL_KEYBOARD*/
 /*ACTUAL_FUNCTIONS*/
 /*ACTUAL_SCROLLBAR*/
+/*ACTUAL_ROW*/
 static const u8x8_display_info_t display_info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
 static void save_frame(const char *directory,const char *name,const uint8_t *buf) {
     if (!directory) return;
@@ -64,9 +68,15 @@ static void save_frame(const char *directory,const char *name,const uint8_t *buf
         fprintf(f,"%u%c",!!(buf[(y/8)*128+x] & (1U<<(y%8))),x==127?'\n':' ');
     fclose(f);
 }
-static unsigned confirmations;
+static unsigned confirmations, cancellations;
+static void dispose(mui_text_input_event_t event,mui_text_input_t *input) {
+    CHECK(event==MUI_TEXT_INPUT_EVENT_CONFIRMED || event==MUI_TEXT_INPUT_EVENT_CANCELLED);
+    input->p_view->user_data=NULL;
+    free(input); /* ASan detects a handler that still accesses the editor on return. */
+}
 static void confirmed(mui_text_input_event_t event,mui_text_input_t *input) {
-    CHECK(event==MUI_TEXT_INPUT_EVENT_CONFIRMED);CHECK(input);confirmations++;
+    CHECK(input);
+    if(event==MUI_TEXT_INPUT_EVENT_CONFIRMED) confirmations++; else {CHECK(event==MUI_TEXT_INPUT_EVENT_CANCELLED);cancellations++;}
 }
 static void press(mui_text_input_t *input,int type) {
     mui_input_event_t e={type,INPUT_KEY_CENTER};mui_text_input_on_input(input->p_view,&e);
@@ -84,6 +94,29 @@ int main(int argc,char **argv) {
     u.u8x8.display_info=&display_info;
     u8g2_SetupBuffer(&u,buffer,8,u8g2_ll_hvline_vertical_top_lsb,&u8g2_cb_r0);
     canvas.fb=&u;mui_canvas_set_frame(&canvas,0,0,128,64);
+    mui_canvas_set_font(&canvas,u8g2_font_wqy12_t_gb2312a);
+    const char *values[]={"[AN]","[AUS]","[ON]","[OFF]"};
+    const char *titles[]={"Fernbedienung (bis Aus)","Schnelles Aufwachen","漢字漢字漢字漢字漢字漢字"};
+    for(unsigned t=0;t<3;t++)for(unsigned v=0;v<4;v++){
+        unsigned x=mui_list_view_value_x(128,mui_canvas_get_utf8_width(&canvas,values[v]));CHECK(x>13);
+        uint8_t reference[1024];memset(buffer,0,1024);
+        original_draw_utf8(&canvas,x,10,values[v]);memcpy(reference,buffer,sizeof(reference));
+        for(int step=0;step<=4;step++){
+            memset(buffer,0,1024);mui_list_view_draw_row_text(&canvas,0,-step*12,titles[t],values[v]);
+            CHECK(!memcmp(buffer+x-2,reference+x-2,128-x+2));
+            CHECK(!memcmp(buffer+128+x-2,reference+128+x-2,128-x+2));
+        }
+    }
+    if (argc>1) {
+        memset(buffer,0,1024);
+        mui_list_view_draw_row_text(&canvas,0,0,titles[0],values[1]);
+        mui_list_view_draw_row_text(&canvas,13,0,titles[1],values[0]);
+        save_frame(argv[1],"settings-value-rows",buffer);
+    }
+    u8g2_SetClipWindow(&u,93,1,108,8);
+    mui_list_view_draw_row_text(&canvas,0,-10,titles[0],values[0]);
+    CHECK(u.clip_x0==93 && u.clip_x1==108 && u.clip_y0==1 && u.clip_y1==8);
+    u8g2_SetMaxClipWindow(&u);
     mui_text_input_t input={0};mui_view_t view={.user_data=&input};input.p_view=&view;
     string_init(input.input_text);string_init(input.header);string_set_str(input.header,"Dateiname");
     input.event_cb=confirmed;
@@ -99,7 +132,8 @@ int main(int argc,char **argv) {
         const char *result=string_get_cstr(input.input_text);
         CHECK(result[nonempty?5:0]==key && result[(nonempty?5:0)+1]==0);
         string_set_str(input.input_text,nonempty?"Mario":"");
-        press(&input,INPUT_TYPE_LONG);result=string_get_cstr(input.input_text);
+        press(&input,INPUT_TYPE_LONG);for(unsigned r=0;r<6;r++)press(&input,INPUT_TYPE_REPEAT);
+        result=string_get_cstr(input.input_text);CHECK(result[(nonempty?5:0)+1]==0);
         CHECK(result[nonempty?5:0]==key-'a'+'A');cases++;
     }
     expected_hint="q/Q";string_set_str(input.input_text,"");redraw(&input,&canvas,buffer,'q');
@@ -120,6 +154,20 @@ int main(int argc,char **argv) {
     string_set_str(input.input_text,"a\xc3\xa4");press(&input,INPUT_TYPE_SHORT);
     CHECK(!strcmp(string_get_cstr(input.input_text),"a"));
     mui_text_input_set_focus_key(&input,ENTER_KEY);press(&input,INPUT_TYPE_SHORT);CHECK(confirmations==1);
+    press(&input,INPUT_TYPE_LONG);for(unsigned r=0;r<6;r++)press(&input,INPUT_TYPE_REPEAT);CHECK(confirmations==2);
+    expected_hint="Abbrechen";mui_text_input_set_focus_key(&input,CANCEL_KEY);seen_hint=0;
+    memset(buffer,0,sizeof(buffer));mui_text_input_on_draw(&view,&canvas);CHECK(seen_hint==1);
+    save_frame(argc>1?argv[1]:NULL,"keyboard-cancel",buffer);
+    press(&input,INPUT_TYPE_LONG);for(unsigned r=0;r<6;r++)press(&input,INPUT_TYPE_REPEAT);
+    CHECK(cancellations==1 && confirmations==2 && !strcmp(string_get_cstr(input.input_text),"a"));
+    for(unsigned key=0;key<2;key++) {
+        mui_text_input_t *temporary=calloc(1,sizeof(*temporary));CHECK(temporary);
+        mui_view_t transient={.user_data=temporary};temporary->p_view=&transient;temporary->event_cb=dispose;
+        mui_text_input_set_focus_key(temporary,key?ENTER_KEY:CANCEL_KEY);press(temporary,INPUT_TYPE_SHORT);
+        CHECK(transient.user_data==NULL);
+    }
+    mui_text_input_set_focus_key(&input,BACKSPACE_KEY);press(&input,INPUT_TYPE_REPEAT);
+    CHECK(!*string_get_cstr(input.input_text));
     input.focus_row=255;input.focus_column=255;mui_text_input_on_draw(&view,&canvas);
     input.focus_row=0;input.focus_column=0;
     string_set_str(input.header,"Ein sehr langer Titel im Eingabefeld");
@@ -163,6 +211,7 @@ int main(int argc,char **argv) {
       }
     }
     mui_canvas_set_frame(&canvas,0,0,128,64);
+    puts("PASS: 60 fixed-value pixel comparisons, clipped column, held keys, cancellation and callback disposal");
     printf("PASS: %u actual UTF-8 title/hint pixel comparisons and clip restoration cases\n",header_cases);
     string_clear(input.input_text);string_clear(input.header);
 
@@ -198,6 +247,9 @@ class ComfortRenderingTests(unittest.TestCase):
         code = code.replace('/*ACTUAL_FUNCTIONS*/', '\n'.join(function(source, name) for name in (
             'mui_text_input_on_draw', 'mui_text_input_on_input', 'mui_text_input_set_focus_key')))
         code = code.replace('/*ACTUAL_SCROLLBAR*/', function((SRC / 'mui/mui_element.c').read_text(), 'mui_element_scrollbar'))
+        rows = (SRC / 'mui/view/mui_list_view.c').read_text()
+        code = code.replace('/*ACTUAL_ROW*/', '\n'.join(function(rows, name) for name in (
+            'mui_list_view_value_x', 'mui_list_view_draw_row_text')))
         with tempfile.TemporaryDirectory(prefix='pixl-ui-comfort-') as tmp:
             folder = Path(tmp)
             for name in ('mui_canvas.h', 'u8g2_font_wqy12_t_gb2312a.c', 'u8g2_font_siji_t_6x10.c'):

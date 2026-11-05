@@ -5,7 +5,7 @@ from root_host import HostTests, SRC, function
 class ListTests(HostTests):
     def test_empty_navigation_bounds_and_complete_disposal(self):
         source = (SRC / 'mui/view/mui_list_view.c').read_text()
-        code = '\n'.join(function(source, n) for n in ('mui_list_view_start_text_anim',
+        code = '\n'.join(function(source, n) for n in ('mui_list_view_value_x', 'mui_list_view_start_text_anim',
             'mui_list_view_on_input', 'mui_list_view_on_exit', 'mui_list_view_free', 'mui_list_view_set_item'))
         self.compile_run(r'''
 #include <assert.h>

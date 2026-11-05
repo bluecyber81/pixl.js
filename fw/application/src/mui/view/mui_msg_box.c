@@ -1,4 +1,5 @@
 #include "mui_msg_box.h"
+#include "i18n/language.h"
 
 static uint8_t mui_msg_box_get_button_num(mui_msg_box_t *p_mui_msg_box) {
     return (string_size(p_mui_msg_box->btn_left_text) > 0) + (string_size(p_mui_msg_box->btn_center_text) > 0) +
@@ -160,6 +161,14 @@ void mui_msg_box_set_btn_text(mui_msg_box_t *p_view, const char *left, const cha
         string_reset(p_view->btn_right_text);
     }
 }
+void mui_msg_box_set_error(mui_msg_box_t *box, const char *message, mui_msg_box_event_cb_t close) {
+    mui_msg_box_set_header(box, _T(ERR));
+    mui_msg_box_set_message(box, message);
+    mui_msg_box_set_btn_text(box, NULL, _T(BACK), NULL);
+    mui_msg_box_set_btn_focus(box, MUI_MSG_BOX_EVENT_SELECT_CENTER);
+    mui_msg_box_set_event_cb(box, close);
+}
+
 void mui_msg_box_reset(mui_msg_box_t *p_view) {
     string_reset(p_view->header);
     string_reset(p_view->message);

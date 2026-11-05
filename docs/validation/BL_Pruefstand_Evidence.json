@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "target": "nRF52832 LCD, S112 7.3.0 FWID 0x0126, isolated development candidate",
+  "hardwareAccess": false,
+  "signedOta": false,
+  "releaseCounterAssigned": false,
+  "installedReference": {
+    "bootCounter": 13,
+    "payloadBytes": 28344,
+    "headroomBytes": 328,
+    "bssBytes": 11148,
+    "initializedRamBytes": 84,
+    "paddedRegionSha256": "97b2751f1b041de8bcba131d875be725fe91294bfc72e4a7f7a3dc5526e88002",
+    "payloadSha256": "8fc9b7bf17e0cbdbdbf94d21c67c78ee522ba0f208afb1c68e58cefe04cc3560"
+  },
+  "candidate": {
+    "sourceBase": "fe7565d74116c3df43ac9cc06fe8f91b5da2f5a1",
+    "sourceInputs": 22,
+    "sourceBindingSha256": "6c9780b29b2f5204864ba88bec5c18db95583aa41b727579468fbb44ab92b955",
+    "sdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+    "bootBase": "0x77000",
+    "mbrParams": "0x7e000",
+    "settings": "0x7f000",
+    "physicalBootRegionBytes": 28672,
+    "payloadBytes": 26452,
+    "headroomBytes": 2220,
+    "enforcedMinimumBytes": 1024,
+    "bssBytes": 11016,
+    "initializedRamBytes": 72,
+    "reservedStackBytes": 4096,
+    "bootloaderRegionSha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
+    "payloadSha256": "bbbda3519466621ebe5a56ce45b76ad4c6a9d7935eddd0b21b18d3eca48b00fc",
+    "elfSha256": "c58a4097f47ac097fc9d5555788ba3d2bb2e0bc0212f92b03f1c8d98a27de74a",
+    "patchSha256": "c9aa37f90a27a43577a8d5de7d3e72787ae03e7d7bae6fed96da0e775710e776"
+  },
+  "tests": {
+    "compiledTwice": {
+      "identical": [
+        "BOOTLOADER_UNSIGNED_ANALYSIS.bin",
+        "bootloader.out",
+        "bootloader.hex"
+      ],
+      "mapIdenticalAfterNormalizingGccTempNames": true
+    },
+    "failedLinksByDesign": [
+      1200,
+      2048
+    ],
+    "hostReset": {
+      "transactionCases": 48,
+      "softDeviceStorageCases": 19,
+      "builds": [
+        "native",
+        "ASan/UBSan"
+      ]
+    },
+    "hostSessionCasesPerBuild": 26,
+    "hostIngressCasesPerBuild": 8,
+    "armCryptoPassed": 69,
+    "armCryptoObservedStackWrittenSpan": 1060,
+    "armUiIrqCuts": 44,
+    "armUiNegativeControls": 4,
+    "armUiEntryControls": 4,
+    "armQueueCases": [
+      "Waiting after scheduler refusal",
+      "Ready after scheduler refusal",
+      "terminal cleanup dispatched once after late reconnect"
+    ],
+    "armButtonCases": [
+      {
+        "case": "released",
+        "decision": "App",
+        "modeledMs": 0
+      },
+      {
+        "case": "short press",
+        "decision": "App",
+        "modeledMs": 80
+      },
+      {
+        "case": "near threshold",
+        "decision": "App",
+        "modeledMs": 2990
+      },
+      {
+        "case": "release by the later read",
+        "decision": "App",
+        "modeledMs": 3000
+      },
+      {
+        "case": "held through both reads",
+        "decision": "DFU",
+        "modeledMs": 3000
+      },
+      {
+        "case": "application request",
+        "decision": "DFU",
+        "modeledMs": 0
+      },
+      {
+        "case": "new press before later read",
+        "decision": "DFU",
+        "modeledMs": 0
+      }
+    ],
+    "hostControllers": [
+      "LCD128",
+      "SH1106_132"
+    ],
+    "hostFramesComparedPerController": 8,
+    "hostFrameBoundsPerController": 2304,
+    "spiBusyPositionsPerController": 32,
+    "all256RawLengthsWithDataAndFill": true,
+    "largestSupportedTransfer": 255,
+    "stageBufferBytes": 132,
+    "patchRoundTrip": true
+  },
+  "limits": [
+    "Host and CPU-model tests only. Real BLE radio, GPIO timing/display, flash/power interruption and SWD recovery require hardware.",
+    "Selected crypto call stack span is not a whole-bootloader worst case.",
+    "Signed DAT fixtures exercise verification; no signed candidate update has been created."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "hostDecoder": "OpenCV 5.0.0",
+  "input": "ble-qr.pbm",
+  "url": "https://bluecyber81.github.io/pixl.js/",
+  "symbolModules": 29,
+  "pixelsPerModule": 1,
+  "quietPixelsLTRB": [
+    10,
+    11,
+    10,
+    11
+  ],
+  "physicalCameraTest": false
+}

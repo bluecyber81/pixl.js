@@ -11,6 +11,8 @@ typedef enum {
 } amiibo_scene_id_t;
 #undef ADD_SCENE
 
+bool amiibo_batch_step(void);
+
 extern const mui_scene_t amiibo_scene_defines[];
 
 

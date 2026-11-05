@@ -90,6 +90,7 @@ static void mui_view_dispatcher_switch_to_view(void*p,unsigned id){(void)p;(void
 #define mui_msg_box_set_message(...) ((void)0)
 #define mui_msg_box_set_btn_text(...) ((void)0)
 #define mui_msg_box_set_btn_focus(...) ((void)0)
+#define mui_msg_box_set_error(...) ((void)0)
 #define mui_msg_box_set_event_cb(...) ((void)0)
 static unsigned mui_list_item_array_size(list_items_t*p){return p->size;}
 static unsigned mui_list_view_item_size(mui_list_view_t*p){return p->items->size;}

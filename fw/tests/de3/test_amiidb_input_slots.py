@@ -46,7 +46,7 @@ int main(void) {
  mui_text_input_set_max_length(&input,2);assert(strcmp(string_get_cstr(input.input_text),"a")==0);
  mui_text_input_set_max_length(&input,0);mui_text_input_set_input_text(&input,"a\xe2\x82\xac");
  mui_text_input_set_focus_key(&input,BACKSPACE_KEY);key(&input,INPUT_TYPE_SHORT,INPUT_KEY_CENTER);assert(strcmp(string_get_cstr(input.input_text),"a")==0);
- input.focus_row=0;input.focus_column=13;key(&input,INPUT_TYPE_LONG,INPUT_KEY_RIGHT);assert(input.focus_row==1 && input.focus_column==12);
+ input.focus_row=0;input.focus_column=13;key(&input,INPUT_TYPE_LONG,INPUT_KEY_RIGHT);assert(input.focus_row==1 && input.focus_column==13);
  key(&input,INPUT_TYPE_SHORT,INPUT_KEY_CENTER);assert(strcmp(string_get_cstr(input.input_text),"a6")==0);
  input.focus_row=250;input.focus_column=250;key(&input,INPUT_TYPE_SHORT,INPUT_KEY_CENTER);assert(input.focus_row==0 && input.focus_column==13);
  mui_text_input_set_max_length(&input,1);mui_text_input_on_exit(&view);assert(input.max_length==0);

@@ -163,7 +163,7 @@ int main(void) {
  mini_app_inst_t instance={&app}; active_settings=&instance; uint8_t out[104];
  mui_nav_diag_begin(); mui_nav_diag_list(2,SETTINGS_MAIN_MENU_EXIT,20);
  result=-91; settings_scene_main_list_view_on_selected(0,&list,&item);
- assert(kills==0 && toast_calls==1 && instance.p_handle==&app);
+ assert(kills==0 && errors==1 && visible==SETTINGS_VIEW_ID_MSG_BOX && instance.p_handle==&app);
  assert(mui_nav_diag_snapshot(out,104) && out[5]==1 && out[84]==5 && (int32_t)get32(out+76)==-91);
  mui_nav_diag_list(3,SETTINGS_MAIN_MENU_EXIT,20);
  result=0; settings_scene_main_list_view_on_selected(1,&list,&item);

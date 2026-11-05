@@ -1,4 +1,12 @@
-# DE3.59 · Dateimanager
+# DE3.60 · Web 3.37.3
+
+**DE3.60 / 632** verbessert die Bedienung auf dem 128 × 64 Pixel großen LCD. Das signierte Update enthält die Geräte-App für ein nRF52832-Allmiibo mit Packed LittleFS (PFS1).
+
+* **Bluetooth-Dateiübertragung.** Links oder rechts wechselt einmal auf den QR-Code, auch beim Halten. Der Code öffnet den Dateimanager auf GitHub Pages. Auf der Statusseite steht auch die Taste für den Rückweg.
+* **Bildschirmtastatur.** Ein langer Mitteldruck auf einen Buchstaben schreibt einen Großbuchstaben. Bestätigen löst beim Halten einmal aus. Halten auf der Löschtaste löscht weiter. Das X bricht eine Eingabe ohne Speichern ab.
+* **Einstellungen.** Kurze Werte wie AN und AUS bekommen rechts festen Platz. Lange Titel bleiben auch mit abgeschalteter Animation lesbar. Scheitert das Speichern, bleibt die Fehlermeldung bis zur Bestätigung stehen. Beim Kartenexport bleibt der eingegebene Name für einen erneuten Versuch erhalten.
+* **Amiibo-Emulator → Dateimenü → mehrere Tags erstellen.** Das Display zeigt die aktuelle Datei und ihre Nummer. Mit „Abbrechen“ stoppst du zwischen zwei Dateien. Bereits geschriebene Dateien bleiben erhalten. Belegte Namen, voller Gerätespeicher und zu wenig RAM haben eigene Hinweise.
+* **Dateimanager 3.37.3 → Firmware-Update.** Die Seite zeigt Übertragung, Prüfsummenvergleich und die Bestätigung des Abschlussbefehls als getrennte Schritte. Der tatsächliche Neustart lässt sich im normalen Menü bzw. durch erneutes Auslesen bestätigen.
 
 ## Dateimanager 3.37.3
 

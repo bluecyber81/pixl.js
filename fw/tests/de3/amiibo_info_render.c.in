@@ -130,7 +130,7 @@ int main(int argc,char **argv) {
     assert(!draw_qrcode(&canvas,92,25,37,a));assert(!memcmp(saved,buffer,1024));
     assert(!draw_qrcode(&canvas,0,28,37,a));assert(!memcmp(saved,buffer,1024));
     assert(!draw_qrcode(&canvas,0,0,28,a));assert(!memcmp(saved,buffer,1024));
-    memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,39,0,50,"https://pixl.amiibo.xyz"));pbm(argv[1],"ble_qr_top_edge",buffer);
+    memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,39,0,50,"https://bluecyber81.github.io/pixl.js/"));pbm(argv[1],"ble_qr_top_edge",buffer);
     const uint8_t product_ids[2][8]={{0,0,0,4,4,0x43,0x1c,2},{0,0x0a,0,4,4,0x45,0x1c,2}};
     const char *product_urls[2]={"https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car",
                                "https://amiibo.life/amiibo/my-mario-wood-blocks/toad"};

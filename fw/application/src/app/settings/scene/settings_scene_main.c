@@ -51,12 +51,24 @@ static void settings_reset_default(void *user_data) {
                        backlight_result == NRF_SUCCESS ? _T(APP_SET_RESET_DEFAULT_SUCCESS) : _T(ERR));
 }
 
+static void settings_scene_main_close_error(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    (void)event; /* The dialog offers only the centre button. */
+    app_settings_t *app = box->user_data;
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
+}
+
+static void settings_scene_main_save_error(app_settings_t *app) {
+    mui_msg_box_set_error(app->p_msg_box, _T(DE3_STORAGE_IO_ERROR), settings_scene_main_close_error);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MSG_BOX);
+}
+
 static void settings_scene_main_msg_box_reset_settings_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
     app_settings_t *app = p_msg_box->user_data;
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
         settings_storage_snapshot_invalidate(&app->storage_snapshot);
         if (settings_reset() != NRF_SUCCESS) {
-            mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
+            settings_scene_main_save_error(app);
+            return;
         } else {
             settings_reset_default(app);
             settings_scene_main_reload(app);
@@ -105,7 +117,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     case SETTINGS_MAIN_MENU_DFU:
         settings_storage_snapshot_invalidate(&app->storage_snapshot);
         if (settings_save() != NRF_SUCCESS) {
-            mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
+            settings_scene_main_save_error(app);
             break;
         }
         if (!enter_dfu()) mui_toast_view_show(app->p_toast_view, _T(ERR));
@@ -174,8 +186,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
         int32_t save_result = settings_save();
         mui_nav_diag_save_result(diag_type, save_result);
         if (save_result != NRF_SUCCESS) {
-            mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
-            mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
+            settings_scene_main_save_error(app);
             break;
         }
         app->exit_saved = true;
@@ -187,7 +198,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     case SETTINGS_MAIN_MENU_REBOOT:
         settings_storage_snapshot_invalidate(&app->storage_snapshot);
         if (settings_save() != NRF_SUCCESS) {
-            mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
+            settings_scene_main_save_error(app);
             break;
         }
         if (!system_reboot()) mui_toast_view_show(app->p_toast_view, _T(ERR));

@@ -1,4 +1,4 @@
-"""Bind one DE3.59 build to immutable inputs and products; no device operations.
+"""Bind one DE3.60 build to immutable inputs and products; no device operations.
 
 Generated sources/version must be ready before begin. Previous application
 objects/products are archived before normal make. Private keys are never read here.
@@ -11,10 +11,10 @@ import os
 from pathlib import Path
 import re
 
-VERSION = '2.22.0-DE3.59'
-COUNTER = 631
+VERSION = '2.22.0-DE3.60'
+COUNTER = 632
 IMAGE = 'solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16'
-ARTIFACTS = ('pixljs_ota_v2.22.0-DE3.59.zip', 'pixljs.bin', 'pixljs.out', 'pixljs.map',
+ARTIFACTS = ('pixljs_ota_v2.22.0-DE3.60.zip', 'pixljs.bin', 'pixljs.out', 'pixljs.map',
              'pixljs.hex', 'size_report_LCD.json', 'size_report_LCD.txt')
 ROOTS = ('application', 'bootloader', 'components', 'ld', 'data', 'scripts', 'tests', 'resources', 'docs')
 SUFFIXES = {'.c','.h','.s','.S','.cc','.cpp','.hpp','.inc','.ld','.mk','.a','.lib',
