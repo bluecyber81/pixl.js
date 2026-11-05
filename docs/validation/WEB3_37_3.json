@@ -1,0 +1,163 @@
+{
+  "version": "3.37.3",
+  "date": "2026-11-05",
+  "dfuChanges": [
+    "Distinct transfer, full checksum verification, final Execute and manual reconnect steps.",
+    "Exact Execute acknowledgement length; retain first acknowledgement while the GATT write settles."
+  ],
+  "dfuHostTests": 86,
+  "productionBuildTests": {
+    "root": 21,
+    "pages": 21
+  },
+  "productionBrowser": {
+    "root": {
+      "browser": "156.0.8078.80",
+      "base": "/",
+      "version": "3.37.3",
+      "simulated": true,
+      "tests": [
+        {
+          "scenario": "complete",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize",
+            "phase-reconnect"
+          ],
+          "outcome": "Übertragung bestätigt; Bluetooth wurde getrennt. Bitte Menü und Firmwareversion am Gerät prüfen.",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "resume",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize",
+            "phase-reconnect"
+          ],
+          "outcome": "Übertragung bestätigt; Bluetooth wurde getrennt. Bitte Menü und Firmwareversion am Gerät prüfen.",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "no-disconnect",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize",
+            "phase-reconnect"
+          ],
+          "outcome": "Übertragung bestätigt; Neustart noch nicht beobachtet. Bitte Menü und Firmwareversion am Gerät prüfen.",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "crc",
+          "phases": [
+            "phase-transfer",
+            "phase-verify"
+          ],
+          "outcome": "Vorgang nicht bestätigt: DFU CRC32 mismatch",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "disconnect-before-ack",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize"
+          ],
+          "outcome": "Vorgang nicht bestätigt: Bluetooth disconnected before confirmed DFU completion",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "invalid-ack",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize"
+          ],
+          "outcome": "Vorgang nicht bestätigt: Invalid DFU Execute response length",
+          "mobileWidth": 320
+        }
+      ]
+    },
+    "pages": {
+      "browser": "156.0.8078.80",
+      "base": "/pixl.js/",
+      "version": "3.37.3",
+      "simulated": true,
+      "tests": [
+        {
+          "scenario": "complete",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize",
+            "phase-reconnect"
+          ],
+          "outcome": "Übertragung bestätigt; Bluetooth wurde getrennt. Bitte Menü und Firmwareversion am Gerät prüfen.",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "resume",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize",
+            "phase-reconnect"
+          ],
+          "outcome": "Übertragung bestätigt; Bluetooth wurde getrennt. Bitte Menü und Firmwareversion am Gerät prüfen.",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "no-disconnect",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize",
+            "phase-reconnect"
+          ],
+          "outcome": "Übertragung bestätigt; Neustart noch nicht beobachtet. Bitte Menü und Firmwareversion am Gerät prüfen.",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "crc",
+          "phases": [
+            "phase-transfer",
+            "phase-verify"
+          ],
+          "outcome": "Vorgang nicht bestätigt: DFU CRC32 mismatch",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "disconnect-before-ack",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize"
+          ],
+          "outcome": "Vorgang nicht bestätigt: Bluetooth disconnected before confirmed DFU completion",
+          "mobileWidth": 320
+        },
+        {
+          "scenario": "invalid-ack",
+          "phases": [
+            "phase-transfer",
+            "phase-verify",
+            "phase-finalize"
+          ],
+          "outcome": "Vorgang nicht bestätigt: Invalid DFU Execute response length",
+          "mobileWidth": 320
+        }
+      ]
+    }
+  },
+  "scope": "Unmodified production bundles; desktop Chrome with a 320 CSS-pixel viewport and synthetic Web Bluetooth GATT responses. No physical DFU, reboot observation or validation of an installed firmware is implied.",
+  "reproduce": [
+    "cd web",
+    "npm ci",
+    "npm test",
+    "npm run build",
+    "npm run build:pages"
+  ]
+}

@@ -34,10 +34,38 @@ function controls() {
     loadBundled.disabled = bundledSelect.disabled || !bundledSelect.value;
     cancelBundled.hidden = !loading; cancelBundled.disabled = latestState.busy;
 }
+const phaseNames = ['transfer', 'verify', 'finalize', 'reconnect'];
+const phases = document.getElementById('phases');
+const phaseDetail = document.getElementById('phase-detail');
+const reconnectLink = document.getElementById('reconnect-link');
+let phaseText = dfuPhaseLanguages.de_DE;
+try {
+    const saved = globalThis.localStorage?.getItem('allmiibo.language');
+    if (Object.hasOwn(dfuPhaseLanguages, saved)) phaseText = dfuPhaseLanguages[saved];
+} catch (_) { /* Use the default if browser storage is unavailable. */ }
+phases.lang = phaseText.lang;
+reconnectLink.textContent = phaseText.open;
+const phaseItems = phaseNames.map((name, index) => {
+    const item = document.getElementById('phase-' + name);
+    item.textContent = phaseText.steps[index];
+    return item;
+});
+function showPhase(name, failed = false) {
+    const index = phaseNames.indexOf(name);
+    phases.hidden = index < 0;
+    phaseItems.forEach((item, i) => {
+        item.className = i < index ? 'done' : i === index && failed ? 'failed' : '';
+        if (i === index) item.setAttribute('aria-current', 'step');
+        else item.removeAttribute('aria-current');
+    });
+    phaseDetail.textContent = index < 0 ? '' : failed ? phaseText.failed : phaseText.details[index];
+    reconnectLink.hidden = name !== 'reconnect' || failed;
+}
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     createDfu: () => new SecureDfu(CRC32.buf),
     onStatus: text => { statusText.textContent = text; },
+    onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },
     onProgress: state => {
         const valid = state && Number.isFinite(state.totalBytes) && state.totalBytes > 0 && Number.isFinite(state.currentBytes);

@@ -1,5 +1,9 @@
 # DE3.59 · Dateimanager
 
+## Dateimanager 3.37.3
+
+Die DFU-Seite zeigt beim Anwendungsupdate, wann der Bootloader Daten empfängt, wann die Prüfsumme verglichen wird und wann er den Abschluss bestätigt. Nach seiner Bestätigung führt „Dateimanager öffnen“ zur erneuten Verbindung. Prüfe vorher am Allmiibo die gestartete Version. Bei einer unterbrochenen Übertragung bleibt der letzte bestätigte Byte-Stand sichtbar. [DFU-Anleitung](docs/DATEIMANAGER_WEB.md)
+
 ## Dateimanager 3.37.2
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet. Beim Gerätewechsel verschwinden die Erfolgs- und Fehlermeldungen des vorherigen Geräts. Hinweise auf zu prüfende Dateien bleiben bei ihrer ursprünglichen Sitzung. [GitHub Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2)

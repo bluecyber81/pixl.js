@@ -11,7 +11,7 @@ host-test contribution; say clearly which checks were performed on a real device
 | --- | --- |
 | Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.59 / 631**; [unsigned build guide](docs/BUILD_DE3_59.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.37.2**; [web README](web/README.md) |
+| Browser file manager | `web/`, currently **3.37.3**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Matching BL8 bootloader | `bootloader-bl8/`; [source binding and separate unsigned build](bootloader-bl8/README.md) |

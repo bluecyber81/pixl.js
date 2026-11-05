@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.37.2</title>
+  <title>Allmiibo DFU 3.37.3</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
 <main>
   <a href="../" class="back-link">← Zurück zum Dateimanager</a>
-  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.37.2</p>
+  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.37.3</p>
   <h1>Firmware übertragen</h1>
   <p class="notice"><strong>Deine Sammlung bleibt erhalten.</strong> Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</p>
   <section>
@@ -32,7 +32,15 @@
     <p>Am Allmiibo unter „Einstellungen“ den Menüpunkt für das Firmware-Update öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>
     <button id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
     <p id="capability"></p>
-    <progress id="progress" max="100" value="0" hidden></progress>
+    <div id="phases" hidden>
+      <ol class="phases" aria-label="DFU">
+        <li id="phase-transfer">Übertragen</li><li id="phase-verify">Prüfen</li>
+        <li id="phase-finalize">Abschließen</li><li id="phase-reconnect">Wiederverbinden</li>
+      </ol>
+      <p id="phase-detail" role="status"></p>
+      <a id="reconnect-link" href="../" hidden>Dateimanager öffnen</a>
+    </div>
+    <progress id="progress" max="100" value="0" aria-describedby="transfer" aria-label="DFU" hidden></progress>
     <p id="transfer"></p>
     <p id="status" role="status" aria-live="polite">Noch kein Paket ausgewählt.</p>
   </section>
@@ -49,6 +57,7 @@
 <script src="updater.js"></script>
 <script src="../firmware/releases.js"></script>
 <script src="bundled-packages.js"></script>
+<script src="phase-labels.js"></script>
 <script src="page.js"></script>
 </body>
 </html>

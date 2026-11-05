@@ -1,10 +1,10 @@
-# Allmiibo Dateimanager 3.37.2
+# Allmiibo Dateimanager 3.37.3
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet. Beim Gerätewechsel verschwinden die Erfolgs- und Fehlermeldungen des vorherigen Geräts. Hinweise auf zu prüfende Dateien bleiben bei ihrer ursprünglichen Sitzung.
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable-Version und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2) · [Startanleitung](LIESMICH_3_37_2.txt)
+[Online öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable-Version und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.3) · [Startanleitung](LIESMICH_3_37_3.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
@@ -83,7 +83,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.59 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.37.2/Allmiibo_Dateimanager_3_37_2_Quellcode.zip)
+Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.37.3/Allmiibo_Dateimanager_3_37_3_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen
@@ -99,6 +99,6 @@ Informationslinks funktionieren lokal als `/?amiibo=01010000000e0002` oder
 Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 `/a/<8Hex>-<8Hex>` benötigt einen lokalen Server und ist kein Pages-Routeersatz.
 
-Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit dem Online-Dateimanager 3.37.2, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
+Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit dem Online-Dateimanager 3.37.3, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.

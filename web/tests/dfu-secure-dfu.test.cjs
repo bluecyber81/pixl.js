@@ -31,7 +31,9 @@ function peripheral(options={}){
       else if(op===3){const bytes=state.selected===1?state.init:state.data;const r=new Uint8Array(8),dv=new DataView(r.buffer);dv.setUint32(0,bytes.length+(options.badOffset?1:0),true);dv.setUint32(4,(crc(bytes)+(options.badCrc||(options.badFinalCrc&&state.selected===2&&bytes.length===IMAGE.length)?1:0))>>>0,true);reply(op,r);}
       else if(op===4){state.executes++;const final=state.selected===2&&state.data.length===IMAGE.length;
         if(final&&options.disconnectBeforeAck){device.gatt.disconnect();return;}
-        reply(op);
+        if(final&&options.malformedFinalAck)reply(op,Uint8Array.of(7));
+        else reply(op);
+        if(final&&options.duplicateWhileWriting)reply(op,new Uint8Array(),8);
         if(final&&options.finalDisconnect!==false)device.gatt.disconnect();
       }else if(op===2){state.prn=v.getUint16(1,true);state.packetCount=0;reply(op);}else throw new Error('unexpected opcode '+op);
       if(options.slowControlWrite)await wait(3);
@@ -45,6 +47,33 @@ function peripheral(options={}){
   return{device,control,packet,state,reply};
 }
 function dfu(){return new SecureDfu(crc,{},0,{timeouts:{operation:30,gatt:35,reboot:5}});}
+test('DFU phase order follows final CRC and Execute for fresh, partial and full resumes',async()=>{
+  for(const len of [0,7,32,91,93]){
+    const p=peripheral({data:IMAGE.slice(0,len)}),d=dfu(),phases=[];
+    d.addEventListener('phase',step=>phases.push([step,p.state.data.length]));
+    await d.update(p.device,INIT,IMAGE);
+    assert.deepEqual(phases,[['transfer',len],['verify',IMAGE.length],['finalize',IMAGE.length]]);
+    assert.equal(d.lastResult.executeAcknowledged,true);
+  }
+});
+test('a bad final checksum or a full resume mismatch cannot reach the finalization step',async()=>{
+  for(const opt of [{badFinalCrc:true},{badResumeCrc:true,data:IMAGE}]){
+    const p=peripheral(opt),d=dfu(),phases=[];
+    d.addEventListener('phase',step=>phases.push(step));
+    await assert.rejects(d.update(p.device,INIT,IMAGE),/CRC/i);
+    assert.deepEqual(phases,['transfer','verify']);assert.equal(d.lastResult,null);
+  }
+});
+test('malformed final Execute acknowledgement cannot become confirmed on immediate disconnect',async()=>{
+  const p=peripheral({malformedFinalAck:true}),d=dfu();
+  await assert.rejects(d.update(p.device,INIT,IMAGE),/Execute response length/);
+  assert.equal(d.lastResult,null);
+});
+test('duplicate while final write is settling cannot replace the acknowledgement or resend Execute',async()=>{
+  const p=peripheral({duplicateWhileWriting:true,slowControlWrite:true}),d=dfu();
+  await d.update(p.device,INIT,IMAGE);assert.equal(d.lastResult.executeAcknowledged,true);
+  assert.equal(p.state.executes,4);assert.equal(p.state.overlap,false);
+});
 test('fresh update CRC/offset/EXECUTE verification, bounded20B packets and cleanup',async()=>{const p=peripheral(),d=dfu();await d.update(p.device,INIT,IMAGE);assert.deepEqual(p.state.data,[...IMAGE]);assert.ok(p.state.packetSizes.every(n=>n<=20&&n>0));assert.equal(p.state.executes,4);assert.deepEqual(d.lastResult,{transferVerified:true,executeAcknowledged:true,rebootObserved:true});assert.equal(p.device.listenerCount()+p.control.listenerCount(),0);});
 test('a confirmed final ACK without reboot is distinguished',async()=>{const p=peripheral({finalDisconnect:false}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.equal(d.lastResult.rebootObserved,false);assert.equal(d.lastResult.transferVerified,true);assert.equal(p.device.gatt.connected,false);});
 test('a disconnect without final ACK is never success',async()=>{const p=peripheral({disconnectBeforeAck:true}),d=dfu();await assert.rejects(d.update(p.device,INIT,IMAGE),/disconnected/);assert.equal(d.lastResult,null);});

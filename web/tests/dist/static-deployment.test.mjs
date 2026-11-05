@@ -79,7 +79,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  for (const [tag,file] of [['web3.37.2','Allmiibo_Dateimanager_3_37_2_Quellcode.zip'], ['de3.59','Allmiibo_DE3_59_Quellcode.zip']]) {
+  for (const [tag,file] of [['web3.37.3','Allmiibo_Dateimanager_3_37_3_Quellcode.zip'], ['de3.59','Allmiibo_DE3_59_Quellcode.zip']]) {
     assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/releases/download/' + tag + '/' + file))
   }
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))

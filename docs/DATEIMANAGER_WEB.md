@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2)
+[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.3)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -42,7 +42,11 @@ GitHub erhält die üblichen Abrufe der Webseite. Figurenbilder werden anhand
 öffentlicher Figuren-IDs geladen. Persönliche UID, lokale Dateinamen und
 Figurendateiinhalte sind dafür nicht erforderlich.
 
-## Firmware-Update mit 3.37.2
+## Firmware-Update mit 3.37.3
+
+Auf dem Handy und am PC zeigt Schritt 2 den Verlauf. Unter **Übertragen** bestätigt der Bootloader die empfangenen Bytes. **Prüfen** vergleicht die Prüfsumme der gesamten Anwendung. **Abschließen** wartet auf die Antwort des Bootloaders. Auch bei 100 % kann diese Antwort noch ausstehen. Nach seiner Bestätigung erscheint **Wiederverbinden**. Prüfe die Version im Gerätemenü, öffne die Bluetooth-Dateiübertragung und wähle auf der DFU-Seite **Dateimanager öffnen → Verbinden**.
+
+Bricht die Verbindung ab, bevor der Bootloader den Abschluss bestätigt, zeigt die Seite den betroffenen Schritt und den letzten bestätigten Byte-Stand. Prüfe zuerst die Version am Gerät. Ein weiterer Updateversuch erfordert eine neue Geräteauswahl.
 
 Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 

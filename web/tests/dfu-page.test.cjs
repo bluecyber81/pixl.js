@@ -2,14 +2,14 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const html=fs.readFileSync(path.join(__dirname,'../public/dfu/web.html'),'utf8');
 const Bundled=require('../public/dfu/bundled-packages.js'),crypto=require('node:crypto');
 function harness(supported=true,extra={}){
-    const node=()=>({disabled:false,hidden:false,textContent:'',value:'',children:[],events:{},addEventListener(n,fn){this.events[n]=fn;},appendChild(child){this.children.push(child);}});
+    const node=()=>({disabled:false,hidden:false,textContent:'',value:'',children:[],events:{},setAttribute(n,v){this[n]=v;},removeAttribute(n){delete this[n];},addEventListener(n,fn){this.events[n]=fn;},appendChild(child){this.children.push(child);}});
     const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
     const windowEvents={},calls=[];let options,instance;
     class FakeUpdater{constructor(o){options=o;instance=this;this.busy=false;}setPackage(f){calls.push(['package',f]);options.onState({busy:this.busy,loading:false,ready:!!f});return Promise.resolve(!!f);}selectDevice(){calls.push(['select']);}}
     const context=vm.createContext({document:{getElementById:id=>nodes.get(id),createElement:node},navigator:{bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
         location:{href:'http://127.0.0.1:8768/dfu/web.html'},AllmiiboBundledPackages:Bundled,AllmiiboFirmwareReleases:{schema:1,packages:[]},
         window:{addEventListener:(n,fn)=>windowEvents[n]=fn},AllmiiboDfuUpdater:FakeUpdater,SecureDfuPackage:class{},SecureDfu:class{},CRC32:{buf(){}},...extra});
-    vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu/page.js'),'utf8'),context);
+    for (const file of ['phase-labels.js','page.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu',file),'utf8'),context);
     return {nodes,windowEvents,calls,get options(){return options;},get updater(){return instance;}};
 }
 test('page binds one click to device selection and one file event to package load',()=>{
@@ -47,8 +47,40 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.59/Allmiibo_DE3_59_Quellcode.zip','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.59/Allmiibo_DE3_59_Quellcode.zip','../','../licenses/index.html']);
     assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
+});
+
+test('phases distinguish full payload from acknowledged completion and reset on retry',()=>{
+    const {options,nodes}=harness();
+    options.onPhase('verify');
+    options.onProgress({object:'firmware',totalBytes:16,currentBytes:16});
+    assert.equal(nodes.get('progress').value,100);
+    assert.equal(nodes.get('phase-verify')['aria-current'],'step');
+    assert.equal(nodes.get('reconnect-link').hidden,true);
+    options.onPhase('finalize',true);
+    assert.equal(nodes.get('phase-finalize').className,'failed');
+    assert.match(nodes.get('phase-detail').textContent,/nicht bestätigt/);
+    assert.equal(nodes.get('reconnect-link').hidden,true);
+    options.onPhase(null);assert.equal(nodes.get('phases').hidden,true);
+    options.onPhase('reconnect');
+    assert.equal(nodes.get('phase-finalize').className,'done');
+    assert.equal(nodes.get('phase-reconnect')['aria-current'],'step');
+    assert.equal(nodes.get('reconnect-link').hidden,false);
+    assert.match(nodes.get('phase-detail').textContent,/Version im Gerätemenü/);
+});
+
+test('DFU step labels follow all saved file-manager languages and tolerate blocked storage',()=>{
+    for(const [saved,lang] of Object.entries({en:'en',es:'es',de_DE:'de',sv_SE:'sv',ru_RU:'ru',ja_JP:'ja',zh_CN:'zh-Hans',zh_TW:'zh-Hant',unexpected:'de'})){
+        const h=harness(true,{localStorage:{getItem:()=>saved}});
+        assert.equal(h.nodes.get('phases').lang,lang);
+        for(const phase of ['transfer','verify','finalize','reconnect']){
+            h.options.onPhase(phase);
+            assert.ok(h.nodes.get('phase-'+phase).textContent);
+            assert.ok(h.nodes.get('phase-detail').textContent);
+        }
+    }
+    assert.equal(harness(true,{localStorage:{getItem(){throw Error('blocked');}}}).nodes.get('phases').lang,'de');
 });
 
 test('empty bundled catalogue does not claim availability or request a device',()=>{

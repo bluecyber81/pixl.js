@@ -1,5 +1,9 @@
 # DE3.59 · File manager
 
+## File manager 3.37.3
+
+The DFU page shows when the bootloader receives application data, when the final checksum is checked, and when the bootloader acknowledges completion. You can then open the file manager to reconnect. Check the version in the device menu first. Interrupted transfers retain the last acknowledged byte count. [DFU instructions](docs/DATEIMANAGER_WEB.md)
+
 ## File manager 3.37.2
 
 If Bluetooth disconnects during a figure upload, the file manager retains the affected paths and the original session. If the outcome is uncertain, reconnect the same device and check the destination folder before retrying. Keep the browser tab open to retain the notice. Switching devices clears the previous device’s success and error messages. Recovery notes still identify the original session. [GitHub Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.2)
