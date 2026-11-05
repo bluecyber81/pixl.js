@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.37.3</title>
+  <title>Allmiibo DFU 3.37.4</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
 <main>
   <a href="../" class="back-link">← Zurück zum Dateimanager</a>
-  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.37.3</p>
+  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.37.4</p>
   <h1>Firmware übertragen</h1>
   <p class="notice"><strong>Deine Sammlung bleibt erhalten.</strong> Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</p>
   <section>
@@ -19,14 +19,14 @@
     <select id="bundled" disabled><option value="">Kein mitgeliefertes Paket</option></select>
     <button id="load-bundled" type="button" disabled>Paket laden und prüfen</button>
     <button id="cancel-bundled" type="button" hidden>Auswahl abbrechen</button>
-    <p id="bundled-info" role="status">Paket für unser LCD-Gerät mit PFS1 und S112 7.3.0. BL8 und Z13 sind die bekannten Bootloader. Ein passender BL8 kann die Anwendung direkt aktualisieren.</p>
+    <p id="bundled-info" role="status">Paket für unser LCD-Gerät mit PFS1 und S112 7.3.0. BL8, Z13 und Z15 sind die bekannten Bootloader. Ein passender BL8 kann die Anwendung direkt aktualisieren.</p>
     <p>Das mitgelieferte Paket laden oder eine passende Anwendungs-ZIP von deinem Computer oder Handy wählen.</p>
     <label for="file">Eigene Firmware-ZIP</label>
     <input id="file" type="file" accept=".zip,application/zip">
     <p id="package-target" role="status" aria-live="polite"></p>
-    <details><summary>Welche Pakete passen?</summary><p>Das mitgelieferte Paket gehört zu unserem Allmiibo LCD mit PFS1, BL8 oder Z13 und S112 7.3.0. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p>Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen Signatur und Versionszähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
+    <details><summary>Welche Pakete passen?</summary><p>Das mitgelieferte Paket gehört zu unserem Allmiibo LCD mit PFS1, BL8, Z13 oder Z15 und S112 7.3.0. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p>Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen die Signatur. Z15 kann auch eine ältere, gültig signierte Anwendung installieren. Bei einer aktuellen Gerätediagnose warnt der Browser vor einem niedrigeren App-Zähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
   </section>
-  <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.60/Allmiibo_DE3_60_Quellcode.zip" target="_blank" rel="noopener noreferrer">Quellcode der mitgelieferten Firmware DE3.60 herunterladen</a></p>
+  <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.61/Allmiibo_DE3_61_Quellcode.zip" target="_blank" rel="noopener noreferrer">Quellcode der mitgelieferten Firmware DE3.61 herunterladen</a></p>
   <section>
     <h2>2. Gerät auswählen und übertragen</h2>
     <p>Am Allmiibo unter „Einstellungen“ den Menüpunkt für das Firmware-Update öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>

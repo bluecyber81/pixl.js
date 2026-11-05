@@ -19,7 +19,7 @@ function targetDescription(target) {
     if (names.every(k => /^\d{1,16}$/.test(ref.get(k) || '')) && values.every(Number.isSafeInteger) &&
         app <= 0xffffffff && bl <= 0xffffffff && sd <= 0xffff && when <= Date.now() && Date.now() - when < 600000) {
         lines.push(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`);
-        if (app > target.counter) lines.push('Die ausgewählte Anwendung ist älter als der ausgelesene Stand.');
+        if (app > target.counter) lines.push('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15 kann sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.');
         if (!target.softDevices.includes(sd)) lines.push('Die ausgelesene FWID steht nicht in der Anforderungsliste.');
         lines.push('Prüfe, dass du dasselbe Gerät auswählst.');
     } else lines.push('Für den Vergleich im Dateimanager die Bootdaten lesen und von dort die DFU-Seite öffnen.');
