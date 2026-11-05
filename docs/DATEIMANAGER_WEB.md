@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.4)
+[Dateimanager herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.5)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -21,7 +21,7 @@ bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
 ## Funktionen und Daten
 
 * **Figurensammlung → Sammlung prüfen.** Beim Suchen der Ordner siehst du die verstrichene Zeit und die bisher gefundenen BIN-Dateien. Die Inhaltsprüfung zeigt anschließend „gelesen / gesamt“ und schätzt die Restzeit aus abgeschlossenen Dateilesevorgängen.
-* **Sicherung & Wiederherstellung → Ordner sichern (ZIP).** Nach der Ordnersuche erscheint die geschätzte Restzeit für das Lesen. Bei einer fortgesetzten Sicherung zählen bereits zwischengespeicherte Dateien nicht zur gemessenen Lesegeschwindigkeit. Der anschließende Ordnervergleich hat seinen eigenen Fortschritt. Danach erstellt der Browser die ZIP.
+* **Sicherung & Wiederherstellung → Ordner sichern (ZIP).** Du kannst das erkannte Laufwerk hier direkt öffnen. Für eine Sicherung des gesamten Laufwerks muss bei „Geöffneter Ordner“ sein Hauptverzeichnis stehen, etwa **E:/**. Nach der Ordnersuche erscheint die geschätzte Restzeit für das Lesen. Bei einer fortgesetzten Sicherung zählen bereits zwischengespeicherte Dateien nicht zur gemessenen Lesegeschwindigkeit. Der anschließende Ordnervergleich hat seinen eigenen Fortschritt. Danach erstellt der Browser die ZIP.
 * **Orange im Figurenkatalog.** Zu dieser ID gibt es einen Eintrag mit einem Prüfhinweis. Ein Beispiel ist eine abweichende ID in Dateieigenschaften und Inhalt. Auf der Karte steht der konkrete Grund. Die Farbe allein sagt nichts über die Erkennung an einer Konsole aus.
 
 Dateien und Ordner, Bilder und Figureninfos, Suche, ZIP-Sicherung und Import,

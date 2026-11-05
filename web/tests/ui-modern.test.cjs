@@ -280,7 +280,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.37.4'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.37.5'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -292,7 +292,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.37.4.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.37.5.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -379,7 +379,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.37.4.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.37.5.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -920,7 +920,7 @@ test('production template compiles with Vue 3 and modern Element Plus bindings',
   assert.deepEqual(compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'ui' }).errors, []);
   assert.doesNotMatch(descriptor.template.content, /slot-scope|\.(?:native|sync)(?==|\s|>)/);
   assert.match(descriptor.template.content, /<h1>\{\{ \$t\('workflow\.appTitle'\) \}\}<\/h1>/);
-  assert.match(descriptor.template.content, /<strong>3\.37\.4<\/strong>/);
+  assert.match(descriptor.template.content, /<strong>3\.37\.5<\/strong>/);
 });
 
 test('3.26 workspaces open and focus without navigation, disconnect or loss of transfer state',()=>{
@@ -1402,10 +1402,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.37.4.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.37.5.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.37.4.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.37.5.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2002,7 +2002,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.37.4');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.37.5');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -2058,4 +2058,68 @@ test('3.35 storage diagnostic uses only info and layout reads and never import/f
   vfs_storage_layout:async drive=>{calls.push('layout'+drive);return {status:0,data:layout};},
   vfs_import_state:async()=>assert.fail('Must not import'),vfs_drive_format:async()=>assert.fail('Must not format')}));
  await app.read_all_diagnostics();assert.deepEqual(calls,['infoE','layoutE']);assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.layout.cacheSize,256);
+});
+
+test('backup picker opens the available legacy E drive from Backup without starting a transfer', async () => {
+  const paths = [], listing = deferred();
+  const {instance: app} = harness({vfs_read_folder: path => { paths.push(path); return listing.promise; }});
+  Object.assign(app, {connected: true, current_dir: '', activeWorkspace: 'backup',
+    driveInfo: [{label:'I', status:1}, {label:'E', status:0}], searchQuery:'Mario', typeFilter:'REG'});
+  assert.deepEqual(Array.from(app.availableBackupDrives, drive => drive.label), ['E']);
+  assert.equal(app.btn_disabled(), true);
+  await app.open_backup_drive('I');
+  await app.open_backup_drive('E:/other');
+  assert.deepEqual(paths, []);
+  const pending = app.open_backup_drive('E');
+  assert.equal(app.btn_disabled(), true);
+  await app.open_backup_drive('E');
+  listing.resolve({status:0, data:[file('test.bin')]});
+  await pending;
+  assert.deepEqual(paths, ['E:/']);
+  assert.equal(app.searchQuery, '');
+  assert.equal(app.current_dir, 'E:/');
+  assert.equal(app.tableData[0].name, 'test.bin');
+  assert.equal(app.activeWorkspace, 'backup');
+  assert.equal(app.btn_disabled(), false);
+  assert.equal(app.backingUp, false);
+  assert.equal(app.transfer, null);
+});
+
+test('failed backup drive listing returns to drive selection and permits a read-only retry', async () => {
+  let attempts = 0, scans = 0;
+  const {instance: app} = harness({
+    vfs_read_folder: async () => { if (++attempts === 1) throw Error('Interrupted'); return {status:0,data:[]}; },
+    vfs_get_drive_list: async () => { ++scans; return {status:0,data:[{label:'E', name:'Internal', status:0,total_size:1920401,free_size:649086}]}; }
+  });
+  Object.assign(app, {connected:true, current_dir:'', activeWorkspace:'backup', driveInfo:[{label:'E',status:0}]});
+  await app.open_backup_drive('E');
+  assert.equal(app.current_dir, '');
+  assert.equal(app.btn_disabled(), true);
+  assert.equal(scans, 1);
+  await app.open_backup_drive('E');
+  assert.equal(app.current_dir, 'E:/');
+  assert.equal(app.btn_disabled(), false);
+});
+
+test('backup picker ignores stale failures and refuses new opens while disconnected or occupied', async () => {
+  const listing = deferred(); let calls = 0, scans = 0;
+  const {instance: app} = harness({
+    vfs_read_folder: () => { ++calls; return listing.promise; },
+    vfs_get_drive_list: () => { ++scans; throw Error('unexpected scan'); }
+  });
+  Object.assign(app,{connected:false,driveInfo:[{label:'E',status:0}]});
+  await app.open_backup_drive('E');
+  app.connected = true;
+  for (const flag of ['table_loading','upload_diag_visible','disconnecting']) {
+    app[flag] = true; await app.open_backup_drive('E'); app[flag] = false;
+  }
+  assert.equal(calls,0);
+  const pending = app.open_backup_drive('E');
+  ++app.sessionGeneration; ++app.listingGeneration;
+  Object.assign(app,{current_dir:'I:/',table_loading:false});
+  listing.reject(Error('late failure from previous session'));
+  await pending;
+  assert.equal(calls,1);
+  assert.equal(scans,0);
+  assert.equal(app.current_dir,'I:/');
 });

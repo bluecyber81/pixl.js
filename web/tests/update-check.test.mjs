@@ -147,14 +147,14 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.37.4'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.37.5'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
-  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.37\.4'/);
-  assert.match(read('../serve_local.py'), /'version': '3\.37\.4'/);
-  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.37\.4'/);
-  assert.match(read('../src/App.vue'), /<strong>3\.37\.4<\/strong>/);
-  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.37\.4/);
+  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.37\.5'/);
+  assert.match(read('../serve_local.py'), /'version': '3\.37\.5'/);
+  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.37\.5'/);
+  assert.match(read('../src/App.vue'), /<strong>3\.37\.5<\/strong>/);
+  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.37\.5/);
 });
 
 test('missing, failed and unavailable reads remain unknown, even with a matching version string', () => {

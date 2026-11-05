@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.37.4</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.37.5</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -217,6 +217,14 @@
       <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
       <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
       <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
+      <div v-if="connected && !current_dir" class="workspace-actions backup-drive-picker">
+        <el-button v-for="drive in availableBackupDrives" :key="drive.label" type="primary"
+          :disabled="busy || disconnecting || upload_diag_visible" @click="open_backup_drive(drive.label)">
+          {{ $t('workflow.openDrive', { drive: drive.label }) }}
+        </el-button>
+        <el-button v-if="!availableBackupDrives.length" :disabled="busy || disconnecting || upload_diag_visible"
+          @click="on_btn_refresh">{{ $t('workflow.refreshDrives') }}</el-button>
+      </div>
       <div class="workspace-actions"><el-button size="small" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
     <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
       </div>
@@ -237,7 +245,7 @@
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.37.4</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.37.5</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -486,7 +494,7 @@ export default {
   components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.37.4.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.37.5.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
@@ -569,6 +577,7 @@ export default {
     pagedRows() { const start = (Math.min(this.page, this.pageCount) - 1) * this.pageSize; return this.sortedRows.slice(start, start + this.pageSize); },
     transferCancelling() { return this.cancellingBackup || this.cancellingUploads || this.workflowCancelling; },
     connectionSummaryKey() { return this.disconnecting ? 'info.disconnecting' : this.connecting ? 'conn.connecting' : this.connected ? 'info.connected' : this.demoMode ? 'tools.previewOpen' : 'info.disconnected'; },
+    availableBackupDrives() { return this.driveInfo.filter(drive => drive.status === 0); },
     selectedDriveInfo() { return this.connected ? this.driveInfo.find(d => d.label === this.current_dir[0] && d.status === 0) || null : null; },
     statusDriveInfo() { return this.connected ? this.selectedDriveInfo || this.driveInfo.find(d => d.label === 'E' && d.status === 0) || null : null; },
     transferPercent() { return Math.floor(this.transferStats?.percent ?? 0); },
@@ -713,7 +722,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.37.4.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.37.5.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1164,7 +1173,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.37.4.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.37.5.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1262,6 +1271,17 @@ export default {
     discard_backup_checkpoint() {
       if (this.busy || this.backupResumeInfo?.busy) return;
       this._backupCheckpoint?.clear(); this._backupCheckpoint = null; this.backupResumeInfo = null;
+    },
+    async open_backup_drive(label) {
+      if (!this.connected || this.current_dir || this.busy || this.disconnecting || this.upload_diag_visible ||
+          !this.availableBackupDrives.some(drive => drive.label === label)) return;
+      const generation = this.sessionGeneration, root = label + ':/';
+      this.reset_filters();
+      this.current_dir = root;
+      await this.reload_folder();
+      if (this.session_current(generation) && this.current_dir === root && this.listingError) {
+        await this.reload_drive();
+      }
     },
     async on_backup(resume = false) {
       if (this.btn_disabled() || this.upload_diag_visible) return;

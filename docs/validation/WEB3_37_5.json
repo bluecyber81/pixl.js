@@ -1,0 +1,45 @@
+{
+  "version": "3.37.5",
+  "testScope": "Web-only update. Host and browser checks with a simulated legacy BLE peripheral. No physical device was accessed for these tests.",
+  "tests": [
+    {
+      "log": "test.log",
+      "passed": 1173,
+      "failures": 0,
+      "sha256": "86afda22462e57f9df76f207f9ba059e789cab30bec86ec8a44f6810ca05ca40"
+    },
+    {
+      "log": "run_build.log",
+      "passed": 21,
+      "failures": 0,
+      "sha256": "9fd87155b7010388da8edeaac4abe1a2f0b489002b9b3022036ae355ea6f1549"
+    },
+    {
+      "log": "run_build_pages.log",
+      "passed": 21,
+      "failures": 0,
+      "sha256": "6547edf2fabbe1f7250980a0aaa41b7ea9d10acf8ad3a6dc28e5222119351d1a"
+    }
+  ],
+  "backupEndToEnd": {
+    "mockFirmware": "2.21.0-DE3.8",
+    "web": "Allmiibo Dateimanager 3.37.5",
+    "chrome": "156.0.8078.80",
+    "width": 360,
+    "worked": true,
+    "physicalDevice": false,
+    "fixtureFiles": 1,
+    "commands": [
+      3,
+      1,
+      16,
+      22,
+      22,
+      18,
+      20,
+      19,
+      22
+    ]
+  },
+  "zipPayloadManifestAndChecksumsVerified": true
+}

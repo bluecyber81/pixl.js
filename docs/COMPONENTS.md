@@ -7,7 +7,7 @@ Publication baseline: **2026-11-05**. Components have independent versions.
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
 | Application | 2.22.0-DE3.61 (test release) | DFU counter 633, hardware requirement 52 |
-| File manager | 3.37.4 | Browser software, not a device image |
+| File manager | 3.37.5 | Browser software, not a device image |
 | Reference bootloader | BL8 | Code region SHA-256 below; stored DFU counters depend on packaging |
 | SoftDevice | Nordic S112 7.3.0 | FWID 0x0126; binary from Nordic, not rebuilt here |
 | Filesystem | Packed LittleFS PFS1 | Same logical layout as previous PFS1 DE releases; not standard upstream LittleFS |

@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## File manager 3.37.5
+
+Open a detected drive directly from the Backup screen, including on Android with legacy DE3.8 firmware. Choose the root before starting a full-drive ZIP backup. [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.5)
+
 ## DE3.61 / File manager 3.37.4
 
 [Release notes](RELEASE_NOTES_EN.md) · [Deutsch](RELEASE_NOTES_DE.md)
