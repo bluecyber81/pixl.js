@@ -1,3 +1,9 @@
+# Web 3.39.1 · Display bei laufenden Vorgängen wach halten
+
+Bei Sicherungen, Dateiübertragungen und längeren Geräteabfragen fordert die sichtbare Seite auf unterstützten Browsern eine Screen Wake Lock an. Die Anzeige meldet den tatsächlichen Zustand, lässt sich abschalten und bietet einen erneuten Versuch an. Die Sperre wird bei Abschluss, Trennung und Verlassen der App freigegeben; ein verdeckter Tab fordert sie nach Rückkehr neu an. Es gibt keine automatische Wiederholungsschleife nach einer Systemfreigabe.
+
+Manuelles Sperren, Browser-Suspend und Energiesparen können Bluetooth weiterhin unterbrechen. Kein Live-Geräte- oder Android-Nachweis. App DE3.62/634, Z17 und S112 bleiben unverändert. [Details](docs/RELEASE_WEB3_39_1.de.md).
+
 # Web 3.39.0 · App DE3.62 / 634 unverändert
 
 Lokal vorbereiteter Browserstand vom 6. November 2026. Veröffentlichung, aktuelle Gerätesicherung und tatsächliche Hardwareprüfung sind separate, hier nicht bestätigte Schritte.

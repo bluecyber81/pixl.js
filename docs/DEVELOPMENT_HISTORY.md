@@ -1,5 +1,10 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.39.1
+
+Optional screen wake lock during active operations, visible state, explicit retry and release at completion, disconnect or unmount. No BLE/device changes; manual screen locking remains outside its guarantee.
+
+
 ## File manager 3.39.0
 
 This locally prepared browser update adds catalogue notes to figure details and the selected-file preview: 952 figures, 1,344 associations, eight partial German translations used by 13 associations, with English fallback. These are not game-test results. Collection checks separate matching IDs from SHA-256 content groups without additional BLE reads. Local MF0 slot inspection offers a corrected copy only for matching v8 configuration/slot files, the known legacy UID-copy pattern and valid BCC bytes. Normal ZIP restores visibly exclude inactive OLD/NEW journals; active or unknown transactions block the entire import. App DE3.62/634, Z17 and S112 remain unchanged. Publication, physical testing and a fresh personal backup remain separate steps. [Usage and limits](RELEASE_WEB3_39_0.de.md).

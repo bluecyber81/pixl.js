@@ -65,7 +65,7 @@ try{
   await context.route('**/*',route=>route.request().url().startsWith(origin+'/')||route.request().url().startsWith('data:')?route.continue():route.abort());
   const page=await context.newPage();page.on('pageerror',error=>errors.push({kind,message:error.message}));
   await page.goto(origin+base);await page.locator('.version-context').waitFor();
-  check(kind+' current browser version',await page.locator('.version-context').innerText().then(s=>s.includes('3.39.0')));
+  check(kind+' current browser version',await page.locator('.version-context').innerText().then(s=>s.includes('3.39.1')));
   await page.evaluate(data=>{
    const app=document.querySelector('#app')._vnode.component.proxy;window.__ui=app;
    Object.assign(app,{connected:true,connBtnText:'Trennen',connBtnType:'success',firmwareVersion:'2.22.0-DE3.62',driveInfo:[{label:'E',status:0,totalBytes:2097152,freeBytes:1093632}],fullDiagnosticSnapshot:data});

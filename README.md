@@ -2,7 +2,9 @@
 
 [Open file manager](https://bluecyber81.github.io/pixl.js/) · [DE3.62 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.62) · [Deutsch](README.de.md)
 
-**DE3.62 / 634** and **file manager 3.39.0** support the nRF52832 Allmiibo LCD with an existing Packed LittleFS PFS1 volume. Web 3.39.0 is a host- and Chrome-tested update: catalogue usage notes, SHA-256 groups within duplicate IDs, optional local MF0 slot repair copies and safer ZIP restores. Physical device testing remains a separate step. The application, **Z17 / 17 bootloader candidate** and Nordic S112 7.3.0 remain unchanged.
+Web 3.39.1 adds a visible, optional screen wake-lock helper during backups, file transfers and longer device reads. Browser and power policies may deny it; manual screen locking and background Bluetooth are not guaranteed. [Usage and limits](docs/RELEASE_WEB3_39_1.de.md).
+
+**DE3.62 / 634** and **file manager 3.39.1** support the nRF52832 Allmiibo LCD with an existing Packed LittleFS PFS1 volume. Web 3.39.0 is a host- and Chrome-tested update: catalogue usage notes, SHA-256 groups within duplicate IDs, optional local MF0 slot repair copies and safer ZIP restores. Physical device testing remains a separate step. The application, **Z17 / 17 bootloader candidate** and Nordic S112 7.3.0 remain unchanged.
 
 - Figure details and the selected-file preview show bundled catalogue associations for 952 figures and 1,344 links. Eight editorial German translations cover 13 associations; other available notes retain their English source. These are catalogue notes, not game testing.
 - A full collection check compares already-read bytes without extra Bluetooth reads. Matching figure IDs alone do not prove matching file contents; quick mode makes no byte-equality claim.

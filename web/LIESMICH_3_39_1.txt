@@ -1,0 +1,31 @@
+Allmiibo Dateimanager 3.39.1
+6. November 2026 · lokal vorbereiteter Browserstand
+
+Starten
+Das portable Paket vollständig entpacken und unter Windows Start-Dateimanager.cmd öffnen. Der fertige Browser-Build verwendet Python 3 für den lokalen Server; npm und Node.js sind dafür nicht erforderlich. Standardadresse: http://127.0.0.1:8765/ . Mit Stop-Dateimanager.cmd beenden. Die Online-Seite https://bluecyber81.github.io/pixl.js/ hat ihren separaten Veröffentlichungsstand. Oben die angezeigte Browser-Software-Version prüfen.
+
+Figurenhinweise
+Figurenkatalog → Details und Bild sowie die Dateivorschau zeigen Katalogzuordnungen und vorhandene Nutzungshinweise. Der Quellenstand umfasst 952 Figuren und 1.344 Verknüpfungen. Acht deutsche Teilübersetzungen decken 13 Zuordnungen ab. Weitere vorhandene Hinweise bleiben als englischer Quelltext gekennzeichnet; übersetzte Hinweise bieten das Original zum Aufklappen. Zuordnung und Beschreibung sind keine Spielprüfung und keine Garantie für eine Belohnung.
+
+Gleiche Figuren-ID und gleicher Dateiinhalt
+Figurensammlung → Prüfung: Dateiinhalte prüfen (empfohlen) → Sammlung prüfen → Anzeigen → Gleiche Figuren-ID / Dateiinhalte. SHA-256-Gruppen verwenden bereits gelesene Bytes ohne zusätzliche Bluetooth-Lesezugriffe. Die Schnellprüfung liest nur Eigenschaften und behauptet keine Dateigleichheit. UID, Spielstand und Varianten können bei gleicher ID abweichen. Keine automatische Löschung. Nach Schreibvorgängen den als veraltet markierten Bericht erneut prüfen.
+
+Karten-Slot lokal prüfen
+Gerät & Diagnose → Karten-Slot lokal prüfen. Zuerst chameleon/slots/config.bin im Format v8 aus der eigenen Sicherung auswählen, dann den Slot und die zugehörige NN.bin; Slot 1 entspricht 00.bin. Dateien müssen aus derselben Sicherung stammen. Das headerlose Slotformat kann diese Herkunft nicht selbst beweisen.
+Unterstützt: MF0ICU1, MF0ICU2, MF0UL11 und MF0UL21 mit passendem Layout und Dateiumfang. Nur bei bekanntem altem UID-Kopiermuster und gültigem BCC0/BCC1 erscheint Korrigierte Kopie herunterladen. NN.uid-corrected.bin wird erneut geprüft und ändert höchstens vier UID-Bytes. Quelldatei und alle übrigen Bytes bleiben erhalten. Kein Schreiben auf das Gerät; Karteninhalt, Authentifizierung und Lesegerätfunktion sind nicht bestätigt.
+
+Sicherung und ZIP-Import
+Sicherung → Laufwerk öffnen → Ordner sichern (ZIP). Für das ganze Laufwerk muss als geöffneter Ordner sein Stamm, beispielsweise E:/, angezeigt werden. Die ZIP ausdrücklich auf dem eigenen Computer oder Handy speichern.
+ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen. Im normalen Schema-1-Restore bleiben die exakten inaktiven Stammdateien .pixl_txn_old und .pixl_txn_new im Archiv erhalten und sind sichtbar gesperrt. Andere sichere Dateien bleiben auswählbar. Aktive/unklare Stamm-Transaktionseinträge, einschließlich .pixl_txn_pending und Ordnern mit Journalnamen, sperren den gesamten Import. Quelle, Zielumleitung und frischer Zielzustand werden geprüft. Es wird nichts automatisch bereinigt. Schema-2-Sicherungen mit Raw128-Daten gehören weiterhin in den Migrationsassistenten.
+
+Stand und Grenzen
+Die Geräteanwendung DE3.62/634, Bootloader Z17 und Nordic S112 7.3.0 bleiben unverändert. Für dieses Webupdate ist kein neues Flashpaket nötig. Die lokale Softwarearbeit enthält keine tatsächliche Hardwareprüfung und hat noch keine neue Sicherung der eigenen Sammlung erstellt. Beides sind separate Schritte. Keine privaten Sicherungen oder Figurendateien gehören in ein veröffentlichtes Softwarepaket.
+
+Weitere Anleitung: https://github.com/bluecyber81/pixl.js/blob/main/docs/RELEASE_WEB3_39_1.de.md
+
+Handy-Display waehrend langer Vorgaenge:
+Der Browser fordert bei sichtbarem Tab eine Screen Wake Lock an. Die Anzeige
+zeigt, ob sie aktiv, nicht verfuegbar oder vom System beendet ist. Wachhalten
+ist abwaehlbar; nach einer Freigabe kann es erneut versucht werden. Tab im
+Vordergrund lassen. Manuelles Sperren, Energiesparen und Browser-Suspend
+koennen Bluetooth weiterhin unterbrechen. Kein Hintergrund-BLE-Versprechen.

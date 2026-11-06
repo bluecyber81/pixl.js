@@ -1,5 +1,10 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## Dateimanager 3.39.1
+
+Abwählbare Screen Wake Lock während laufender Vorgänge mit Statusanzeige, explizitem Wiederholungsversuch und Freigabe bei Abschluss, Trennung oder Unmount. Keine BLE- oder Geräteänderung; manuelles Sperren bleibt außerhalb der Zusage.
+
+
 ## Dateimanager 3.39.0
 
 Der lokal vorbereitete Browserstand ergänzt Kataloghinweise in Figurendetails und Dateivorschau: 952 Figuren, 1.344 Zuordnungen, acht deutsche Teilübersetzungen für 13 Zuordnungen und englischer Rückfall. Die Hinweise sind keine Spielprüfung. Die Sammlungsprüfung trennt gleiche IDs von SHA-256-Inhaltsgruppen ohne zusätzliche BLE-Lesezugriffe. Eine lokale MF0-Slotprüfung bietet bei passender v8-Konfiguration, Slotdatei, altem UID-Kopiermuster und gültigen BCCs eine korrigierte Kopie an. Normale ZIP-Restores schließen inaktive OLD/NEW-Journale sichtbar aus; aktive/unklare Transaktionen sperren den ganzen Import. App DE3.62/634, Z17 und S112 bleiben unverändert. Geräteprüfung, Veröffentlichung und eigene neue Sicherung sind separate Schritte. [Bedienung und Grenzen](RELEASE_WEB3_39_0.de.md).

@@ -1,3 +1,9 @@
+# Web 3.39.1 · Keep the screen awake during active operations
+
+During backups, file transfers and longer device reads, the visible page requests a screen wake lock where supported. The status is visible, can be disabled, and offers an explicit retry. Completion, disconnect and unmount release it; returning to a visible tab requests it again. An OS release does not trigger an automatic retry loop.
+
+Manual locking, browser suspension and power policies can still interrupt Bluetooth. No live device or Android qualification. App DE3.62/634, Z17 and S112 are unchanged. [Details](docs/RELEASE_WEB3_39_1.de.md).
+
 # Web 3.39.0 · App DE3.62 / 634 unchanged
 
 Locally prepared browser update dated 6 November 2026. Publication, a fresh personal backup and physical device testing are separate steps not established by these notes.

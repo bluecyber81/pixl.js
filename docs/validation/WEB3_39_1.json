@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "version": "3.39.1",
+  "date": "2026-11-06",
+  "scope": "Exact production bundles in isolated Chrome with simulated browser wake locks and synthetic UI state, local Node host tests and extracted Windows launcher. No real Bluetooth or phone test.",
+  "tests": {
+    "web-tests-final.log": {
+      "tests": 1247,
+      "pass": 1247,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "3f0ee0fd44f56847e3b636ab105c6614533ab3f2f61faecc1f18509d3ce621b0"
+    },
+    "build-root.log": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "10b39f5390f066e5169ba931b48e3584ef383b82be69768b7356702101ef87d0"
+    },
+    "build-pages.log": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "9febebe68d53c74b17c308f6af9a55c16566abd4574f13d5600a94c3c98dd6ae"
+    }
+  },
+  "browser": [
+    {
+      "report": "browser-root/browser-evidence.json",
+      "sha256": "ebd300353f6e6d7feac05a47e7bbe71edbe1b53b54d1fcbf0cbcbf5073a1bb93",
+      "checks": 57,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153
+    },
+    {
+      "report": "browser-collection-root/collection-tools-browser-evidence.json",
+      "sha256": "124a6c96c7cfdb879216d1ebfb2456924afc1fd984dc1e070e692993c11c2c24",
+      "checks": 158,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153
+    },
+    {
+      "report": "browser-awake/root/screen-awake-browser-evidence.json",
+      "sha256": "9192ce7cdc505d4a400811accebe326fb8b9532c624b195228c588769796d936",
+      "checks": 133,
+      "screenshots": 16,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153
+    },
+    {
+      "report": "browser-pages/browser-evidence.json",
+      "sha256": "b5da639bdb07fc2a4064be0c5d6aaa4fedfa55c87012036f81f613683b8edaf2",
+      "checks": 57,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153
+    },
+    {
+      "report": "browser-collection-pages/collection-tools-browser-evidence.json",
+      "sha256": "b6146b31397bc239dd792ec0689f46190482512b35e10bc154bcfad90815d660",
+      "checks": 158,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153
+    },
+    {
+      "report": "browser-awake/pages/screen-awake-browser-evidence.json",
+      "sha256": "82bf6c67ec4adb74c502742fd6ddff0d8c6fccdcddc8855e6e2f403f41ff1fd6",
+      "checks": 133,
+      "screenshots": 16,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153
+    }
+  ],
+  "wakeLockHostCases": 16,
+  "environment": {
+    "version": "3.39.1",
+    "node": "v26.13.0",
+    "npmUsed": "11.19.1",
+    "lockfileSha256": "47fe660f45861a43f9c0432d15c85cdf2b4a9dccfe8adfb8a884574192d1e5b5",
+    "rootVersionOnlyLockChange": true,
+    "dependencyChanges": false,
+    "productionSourceCount": 696,
+    "productionSourceSha256": "5a0eec38856ea04743c235ae269c910dbecab5cf7aff1b5342f78526c5eba81d",
+    "productionSourceUnchanged": true
+  },
+  "dependencyAudit": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 53,
+      "dev": 38,
+      "optional": 27,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 90
+    }
+  },
+  "sourceManifest": {
+    "files": 432,
+    "sha256": "0d23c71055fdeb6bebb7d4d27126feb74c7c84ec2721815f4cb18f9e11f7ce76"
+  },
+  "portable": {
+    "archive": "Allmiibo_Dateimanager_3_39_1_Portable.zip",
+    "bytes": 1151071,
+    "sha256": "808b2e9c8d53ef1e8f83d34707945f5e7a776d07d9a760cb6584af3668b3ed92",
+    "entries": 162,
+    "rootBuildFiles": 153,
+    "crcPassed": true,
+    "allFilesByteMatched": true,
+    "startPath": "Allmiibo_Dateimanager_3_39_1/Start-Dateimanager.cmd",
+    "readmeSha256": "00c07505068ec4705be8bd445efe01bf1ec91a2d0ea718b4f82f04b76808b3a0",
+    "extractedLauncherSmoke": {
+      "startPassed": true,
+      "launcherReturnedExitCode": 0,
+      "healthVersion": "3.39.1",
+      "indexByteMatched": true,
+      "dfuByteMatched": true,
+      "browserOpened": false,
+      "deviceAccess": false,
+      "authenticatedStopPassed": true
+    }
+  },
+  "changes": [
+    "Optional visible screen wake lock during active backups, transfers and longer device queries.",
+    "Visibility return reacquires; idle, disconnect and unmount release; stale pending acquisitions are released.",
+    "Queued acquisition is skipped if work ends before its microtask starts.",
+    "Permission errors and unsupported browsers never gate a transfer; explicit retry after OS release avoids automatic retry loops."
+  ],
+  "limitations": [
+    "Screen Wake Lock is best effort and does not guarantee Bluetooth in background or after manual screen locking.",
+    "Browser tests simulate permission and lifecycle behavior; physical Android/phone power policy remains untested.",
+    "App DE3.62/634, Z17 and S112 sources and delivery bytes are unchanged.",
+    "No personal backup, tag UID, key or game payload is included in the public artifacts."
+  ]
+}

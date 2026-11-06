@@ -1,6 +1,10 @@
-# Allmiibo Dateimanager 3.39.0
+# Allmiibo Dateimanager 3.39.1
 
-**3.39.0** ist ein am Rechner und in Chrome geprüfter Browserstand. Unter **Figurenkatalog → Details und Bild** und in der **Dateivorschau** erscheinen Kataloghinweise zu 952 Figuren und 1.344 Zuordnungen. Acht redaktionelle deutsche Teilübersetzungen decken 13 Zuordnungen ab; weitere vorhandene Texte bleiben gekennzeichnet englisch. Eine Zuordnung bestätigt keine Spielkompatibilität oder Belohnung.
+**3.39.1** ergänzt während laufender Sicherungen, Dateiübertragungen und längerer Geräteabfragen eine sichtbare Display-Wachhaltehilfe. Unterstützte Browser fordern bei sichtbarem Tab eine Screen Wake Lock an. Die Anzeige zeigt den tatsächlichen Zustand, lässt sich abschalten und bietet bei Ablehnung oder Freigabe einen erneuten Versuch. Nach Ende oder Trennen wird die Sperre freigegeben.
+
+Den Tab im Vordergrund lassen: manuelles Sperren, Energiesparen oder Browser-Suspend können Bluetooth weiterhin unterbrechen. Die Hilfe garantiert keine Hintergrundübertragung. Die Funktionen aus 3.39.0 bleiben enthalten. [Bedienung und Prüfgrenzen](../docs/RELEASE_WEB3_39_1.de.md).
+
+**Der vorherige Stand 3.39.0** ist ein am Rechner und in Chrome geprüfter Browserstand. Unter **Figurenkatalog → Details und Bild** und in der **Dateivorschau** erscheinen Kataloghinweise zu 952 Figuren und 1.344 Zuordnungen. Acht redaktionelle deutsche Teilübersetzungen decken 13 Zuordnungen ab; weitere vorhandene Texte bleiben gekennzeichnet englisch. Eine Zuordnung bestätigt keine Spielkompatibilität oder Belohnung.
 
 **Figurensammlung → Prüfung: Dateiinhalte prüfen (empfohlen) → Sammlung prüfen → Anzeigen → Gleiche Figuren-ID / Dateiinhalte** trennt gleiche IDs von SHA-256-Inhaltsgruppen. Verwendet werden bereits gelesene Dateibytes; zusätzliche Bluetooth-Lesezugriffe entfallen. Die Schnellprüfung vergleicht keine Inhalte. Kein Eintrag wird automatisch gelöscht. Nach einem Schreibvorgang den als veraltet markierten Bericht erneut prüfen.
 
@@ -8,7 +12,7 @@
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen** schließt im normalen Schema-1-Restore die exakten inaktiven Stammdateien `.pixl_txn_old` und `.pixl_txn_new` sichtbar aus, erhält sie aber im Archiv. Aktive/unklare Stamm-Transaktionseinträge sperren den gesamten Import. Quelle, I:/-/E:/-Zielumleitung und frischer Zielzustand werden geprüft. Gleichnamige Dateien in gewöhnlichen Unterordnern bleiben normale Nutzdaten. Schema-2-Restores verwenden weiterhin den Migrationsassistenten.
 
-App **DE3.62 / 634**, **Z17** und **S112 7.3.0** bleiben unverändert. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_0.de.md) · [Startanleitung 3.39.0](LIESMICH_3_39_0.txt).
+App **DE3.62 / 634**, **Z17** und **S112 7.3.0** bleiben unverändert. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_0.de.md) · [Startanleitung 3.39.1](LIESMICH_3_39_1.txt).
 
 Seit **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
 auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
@@ -45,7 +49,7 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Bisher veröffentlichte Version 3.38.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.1) · [Startanleitung](LIESMICH_3_39_0.txt)
+[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.1) · [Startanleitung](LIESMICH_3_39_1.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
@@ -142,6 +146,6 @@ Informationslinks funktionieren lokal als `/?amiibo=01010000000e0002` oder
 Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 `/a/<8Hex>-<8Hex>` benötigt einen lokalen Server und ist kein Pages-Routeersatz.
 
-Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit Dateimanager 3.39.0, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
+Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit Dateimanager 3.39.1, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.

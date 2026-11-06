@@ -28,7 +28,7 @@ if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyCon
                 if ($existingHash -ceq $existing.instance) {
                     $existingHealth = Invoke-RestMethod -Uri ($serverUrl + '.well-known/allmiibo-dateimanager') -TimeoutSec 2
                     $existingMatches = $existingHealth.application -ceq 'allmiibo-dateimanager' -and
-                        $existingHealth.version -ceq '3.39.0' -and $existingHealth.instance -ceq $existing.instance
+                        $existingHealth.version -ceq '3.39.1' -and $existingHealth.instance -ceq $existing.instance
                 }
             }
         }
@@ -36,7 +36,7 @@ if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyCon
     if (-not $existingMatches) {
         throw "Port $Port ist bereits durch eine andere oder nicht zugeordnete Instanz belegt. Beende zuerst den dort gestarteten Dateimanager oder waehle einen anderen -Port."
     }
-    Write-Output "Dateimanager 3.39.0 laeuft bereits: $serverUrl"
+    Write-Output "Dateimanager 3.39.1 laeuft bereits: $serverUrl"
     Open-DateimanagerBrowser
     return
 }
@@ -61,7 +61,7 @@ try {
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
         try {
             $health = Invoke-RestMethod -Uri ($serverUrl + '.well-known/allmiibo-dateimanager') -TimeoutSec 1
-            if ($health.application -ceq 'allmiibo-dateimanager' -and $health.version -ceq '3.39.0' -and $health.instance -ceq $instanceHash) { $ready = $true; break }
+            if ($health.application -ceq 'allmiibo-dateimanager' -and $health.version -ceq '3.39.1' -and $health.instance -ceq $instanceHash) { $ready = $true; break }
         } catch { }
         Start-Sleep -Milliseconds 150
     }
@@ -77,6 +77,6 @@ try {
     if (Test-Path -LiteralPath $stateTemp -PathType Leaf) { Remove-Item -LiteralPath $stateTemp }
     throw
 }
-Write-Output "Dateimanager 3.39.0: $serverUrl (nur auf diesem PC erreichbar)"
+Write-Output "Dateimanager 3.39.1: $serverUrl (nur auf diesem PC erreichbar)"
 Write-Output "Beenden: Stop-Dateimanager.cmd -Port $Port"
 Open-DateimanagerBrowser
