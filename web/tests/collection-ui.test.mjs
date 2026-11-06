@@ -444,3 +444,72 @@ test('real reports without properties IDs render neutral in quick mode, green/re
     assert.deepEqual(cards().map(n => n.props['data-presence']), ['present', 'unknown']);
   } finally { h.app.unmount(); }
 });
+
+function duplicateFixture() {
+  const reads = [], lists = [], changed = tag(A); changed[100] = 42;
+  const contents = new Map([['E:/a.bin', tag(A)], ['E:/copy.bin', tag(A)], ['E:/changed.bin', changed]]);
+  return { reads, lists, session: {
+    readDirectory: async path => {
+      lists.push(path);
+      return [...contents.keys()].map(path => ({ name: path.slice(3), type: 0, size: 540,
+        meta: { valid: true, amiibo: { head: parseInt(A.slice(0, 8), 16), tail: parseInt(A.slice(8), 16) } } }));
+    },
+    readFile: async (path, options) => { reads.push(path); assert.equal(options.maxBytes, 540); return contents.get(path).slice(); },
+  } };
+}
+const reportList = root => flat(root).find(n => n.type === 'ul' && n.props.class === 'report-list');
+
+test('actual duplicate scan renders two matching files separately from one different payload in DE and EN', async () => {
+  const fixture = duplicateFixture(), h = mount({ session: fixture.session });
+  try {
+    await h.vm.scan(); h.vm.filter = 'duplicates'; await tick();
+    assert.deepEqual(fixture.lists, ['E:/']); assert.deepEqual(fixture.reads, ['E:/a.bin', 'E:/copy.bin', 'E:/changed.bin']);
+    assert.equal(h.vm.report.duplicates.length, 1);
+    assert.deepEqual(h.vm.report.duplicates[0].contentGroups.map(group => group.paths), [['E:/a.bin', 'E:/copy.bin'], ['E:/changed.bin']]);
+    let rows = text(reportList(h.root));
+    assert.match(rows, /Dateiinhalte verglichen \(SHA-256\)/);
+    assert.match(rows, /Gleicher Dateiinhalt: E:\/a\.bin · E:\/copy\.bin/);
+    assert.match(rows, /Abweichender Dateiinhalt: E:\/changed\.bin/);
+    assert.match(rows, /Keine automatische Löschung/); assert.match(rows, /Dateieigenschaften werden hier nicht auf Gleichheit geprüft/);
+    assert.doesNotMatch(rows, /Dateiinhalte nicht verglichen/);
+    h.props.locale = 'en'; await tick(); rows = text(reportList(h.root));
+    assert.match(rows, /File contents compared \(SHA-256\)/);
+    assert.match(rows, /Same file contents: E:\/a\.bin · E:\/copy\.bin/);
+    assert.match(rows, /Different file contents: E:\/changed\.bin/);
+    assert.match(rows, /No automatic deletion/); assert.equal(fixture.reads.length, 3);
+  } finally { h.app.unmount(); }
+});
+
+test('actual quick-mode duplicate view claims shared IDs only and performs no content reads', async () => {
+  const fixture = duplicateFixture(), h = mount({ session: fixture.session });
+  try {
+    h.vm.mode = 'quick'; await h.vm.scan(); h.vm.filter = 'duplicates'; await tick();
+    assert.deepEqual(fixture.lists, ['E:/']); assert.deepEqual(fixture.reads, []);
+    assert.equal(h.vm.report.duplicates.length, 1); assert.deepEqual(h.vm.report.duplicates[0].contentGroups, []);
+    assert.match(text(reportList(h.root)), /Nur gleiche Figuren-ID; Dateiinhalte nicht verglichen/);
+    assert.doesNotMatch(text(reportList(h.root)), /SHA-256|Gleicher Dateiinhalt:|Abweichender Dateiinhalt:/);
+    h.props.locale = 'en'; await tick();
+    assert.match(text(reportList(h.root)), /Same figure ID only; file contents not compared/);
+    assert.doesNotMatch(text(reportList(h.root)), /SHA-256|Same file contents:|Different file contents:/);
+    assert.deepEqual(fixture.reads, []);
+  } finally { h.app.unmount(); }
+});
+
+test('duplicate hashes remain a visibly stale snapshot after revision and export the stale marker without rereads', async () => {
+  const fixture = duplicateFixture(), h = mount({ session: fixture.session });
+  try {
+    await h.vm.scan(); h.vm.filter = 'duplicates'; await tick();
+    const report = h.vm.report, checkedAt = h.vm.reportTime;
+    h.props.revision++; await tick();
+    assert.equal(h.vm.stale, true); assert.equal(h.vm.report, report); assert.equal(h.vm.reportTime, checkedAt);
+    assert.match(text(h.root), /Seit dieser Prüfung.*Schreib- oder Wiederherstellungsvorgang.*erneut prüfen/);
+    assert.equal(h.staleEvents.at(-1), true); assert.deepEqual(fixture.lists, ['E:/']); assert.equal(fixture.reads.length, 3);
+    await h.vm.saveReport();
+    const saved = JSON.parse(await h.saves[0][0].text());
+    assert.equal(saved.changedSinceCheck, true); assert.equal(saved.checkedAt, checkedAt);
+    assert.deepEqual(saved.report.duplicates, report.duplicates);
+    h.props.generation++; await tick();
+    assert.equal(h.vm.report, null); assert.equal(reportList(h.root), undefined);
+    assert.equal(fixture.reads.length, 3);
+  } finally { h.app.unmount(); }
+});

@@ -33,6 +33,11 @@ jobs:
       - name: Select the declared npm version
         run: npm install --global npm@11.19.1
       - run: npm ci
+      - name: Validate public catalogue and generated usage notes
+        run: |
+          python3 ../fw/scripts/amiibo_db_validate.py
+          python3 ../fw/scripts/amiibo_usage_export.py --check
+          python3 tests/test_figure_usage_export.py
       - run: npm test
       - run: npm run build
       - run: npm run build:pages

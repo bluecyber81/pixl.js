@@ -162,6 +162,12 @@ watch([query, series, kind, knownOnly, presenceFilter], () => { page.value = 1; 
 watch([showImages, () => data.value.commit, () => result.value.page], () => { failedImages.value = new Set(); });
 </script>
 <style scoped>
+/* Header badges may move onto a second line when users enlarge text. */
+.catalogue { min-width:0; overflow-wrap:anywhere; }
+.catalogue-heading { flex-wrap:wrap; }
+.catalogue-heading > *, .entries li { min-width:0; }
+.catalogue .count-badge { max-width:100%; white-space:normal; box-sizing:border-box; }
+.catalogue input, .catalogue select { min-width:0; }
 .catalogue { border:1px solid #d3dee8; border-radius:16px; padding:20px; margin:16px 0; background:#f5f8fb; color:#193247; }
 .presence-legend { display:flex; flex-wrap:wrap; gap:8px 14px; font-size:.75rem; line-height:1.5; color:#526575; padding:10px 12px; border:1px solid #d9e3ec; border-radius:8px; background:white; }
 .legend-present { color:#176c41; } .legend-attention { color:#92500a; } .legend-missing { color:#aa3030; }

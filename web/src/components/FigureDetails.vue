@@ -46,6 +46,7 @@
       </figure>
     </div>
 
+    <FigureUsage :id="resolvedId" :locale="locale" />
     <details v-if="entry" class="extra-details">
       <summary>{{ de ? 'Regionale Veröffentlichungstermine' : 'Regional release dates' }}</summary>
       <dl class="release-dates"><div v-for="region in regions" :key="region.id"><dt>{{ region.label }}</dt><dd>{{ entry.release?.[region.id] || (de ? 'Nicht gelistet' : 'Not listed') }}</dd></div></dl>
@@ -64,6 +65,7 @@
   </section>
 </template>
 <script setup>
+import FigureUsage from './FigureUsage.vue';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import data from '../data/catalogue.json';

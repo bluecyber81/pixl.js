@@ -1,0 +1,225 @@
+// Exact production bundle in isolated installed Chrome, with real DOM actions.
+// No component harness, Vue state injection, device connection or private files.
+// All input files below are synthetic. Every nonlocal page request is blocked.
+// Existing runtime only: PLAYWRIGHT_MODULE=/absolute/playwright/index.mjs
+// node scripts/verify-collection-tools-browser.mjs <dist> <evidence> [base-path]
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import http from 'node:http';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+import { syntheticConfig, syntheticSlot } from '../tests/fixtures/chameleon-slot-synthetic.mjs';
+import { figureUsage } from '../src/lib/figure-usage.js';
+
+const root = path.resolve(process.argv[2] || 'dist'), output = path.resolve(process.argv[3] || 'browser-collection-evidence');
+const base = process.argv[4] || '/';
+assert.match(base, /^\/(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*\/)*$/);
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright');
+const usage = JSON.parse(await fs.readFile(new URL('../src/data/figure-usage.json', import.meta.url)));
+const catalogue = JSON.parse(await fs.readFile(new URL('../src/data/catalogue.json', import.meta.url)));
+const notes = new Map(usage.notes.map(note => [note.id, note]));
+const available = figure => catalogue.entries.some(entry => entry.id === figure.id);
+const german = usage.figures.find(figure => available(figure) && figure.associations.some(row => notes.get(row.noteId)?.de));
+const fallback = usage.figures.find(figure => available(figure) && figure.associations.some(row => notes.get(row.noteId)?.en && !notes.get(row.noteId)?.de));
+const empty = usage.figures.find(figure => available(figure) && figure.associations.every(row => !notes.get(row.noteId)?.en));
+assert.ok(german && fallback && empty, 'real bundled catalogue test cases exist');
+const germanNote = figureUsage(german.id, usage, 'de_DE').find(row => row.translated);
+const fallbackNote = figureUsage(fallback.id, usage, 'de_DE').find(row => row.language === 'en');
+const config = Buffer.from(syntheticConfig(1103, 1, 2)), slot = Buffer.from(syntheticSlot()), original = Buffer.from(slot);
+const unknownFigure = Buffer.alloc(540);
+unknownFigure.set([4, 1, 2, 0x8f, 3, 4, 5, 6, 4]);
+unknownFigure.set(Buffer.from('f1234567f1234502', 'hex'), 84);
+await fs.mkdir(output, { recursive: true });
+const hashes = {}, checks = [], screenshots = [], layouts = [], errors = [], externalAttempts = [], downloads = [];
+const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const check = (name, value) => { assert.ok(value, name); checks.push(name); };
+async function hashTree(dir) {
+  for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+    const filename = path.join(dir, entry.name);
+    if (entry.isDirectory()) await hashTree(filename);
+    else if (entry.isFile()) hashes[path.relative(root, filename).replaceAll('\\', '/')] = sha256(await fs.readFile(filename));
+  }
+}
+await hashTree(root);
+const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.png': 'image/png' };
+const server = http.createServer(async (req, res) => {
+  try {
+    const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    if (!pathname.startsWith(base)) throw Error('outside base');
+    const suffix = pathname.slice(base.length), filename = path.resolve(root, suffix.endsWith('/') ? suffix + 'index.html' : suffix || 'index.html');
+    if (!filename.startsWith(root + path.sep)) throw Error('outside root');
+    const bytes = await fs.readFile(filename);
+    res.writeHead(200, { 'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+    res.end(bytes);
+  } catch { res.writeHead(404); res.end('Not found'); }
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const origin = `http://127.0.0.1:${server.address().port}`;
+const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_EXECUTABLE ? { executablePath: process.env.CHROME_EXECUTABLE } : {}) });
+async function shot(page, name, locator) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const clip = await locator.boundingBox(); assert.ok(clip, name + ' visible screenshot target');
+  const file = name + '.png', filename = path.join(output, file);
+  await page.screenshot({ path: filename, fullPage: true, clip, animations: 'disabled' });
+  screenshots.push({ file, sha256: sha256(await fs.readFile(filename)) });
+}
+async function textScale(page, factor) {
+  // Explicit text-only zoom simulation: double every computed font size,
+  // preserving viewport, images, dimensions and control geometry. Compute the
+  // original sizes together to avoid recursively multiplying inherited fonts.
+  await page.evaluate(factor => {
+    for (const [element, original] of window.__fontScaleOriginals || []) {
+      if (original.value) element.style.setProperty('font-size', original.value, original.priority);
+      else element.style.removeProperty('font-size');
+    }
+    window.__fontScaleOriginals = [];
+    if (factor === 1) return;
+    const measured = [...document.querySelectorAll('body *')].map(element => [element, parseFloat(getComputedStyle(element).fontSize), { value: element.style.getPropertyValue('font-size'), priority: element.style.getPropertyPriority('font-size') }]);
+    for (const [element, size, original] of measured) {
+      if (size > 0 && Number.isFinite(size)) { window.__fontScaleOriginals.push([element, original]); element.style.setProperty('font-size', `${size * factor}px`, 'important'); }
+    }
+  }, factor);
+}
+async function fits(page, name, selector, factor) {
+  await textScale(page, factor);
+  const measured = await page.evaluate(selector => {
+    const target = document.querySelector(selector), box = target.getBoundingClientRect();
+    return { viewport: innerWidth, document: document.documentElement.scrollWidth, panel: { width: box.width, scroll: target.scrollWidth, client: target.clientWidth },
+      textZoom: window.__fontScaleOriginals?.length ? 2 : 1,
+      visibleOverflow: [...target.querySelectorAll('*')].filter(el => {
+        const rect = el.getBoundingClientRect(); return rect.width && rect.height && (rect.right > innerWidth + 1 || rect.left < -1);
+      }).slice(0, 12).map(el => ({ tag: el.tagName, class: el.className, right: el.getBoundingClientRect().right })),
+      globalOverflow: [...document.querySelectorAll('body *')].filter(el => {
+        const rect = el.getBoundingClientRect(); return rect.width && rect.height && (rect.right > innerWidth + 1 || rect.left < -1);
+      }).slice(0, 16).map(el => ({ tag: el.tagName, class: el.className, right: el.getBoundingClientRect().right })),
+      internalOverflow: [target, ...target.querySelectorAll('*')].filter(el => el.clientWidth && el.scrollWidth > el.clientWidth + 1).slice(0, 12).map(el => ({ tag: el.tagName, class: el.className, scroll: el.scrollWidth, client: el.clientWidth })) };
+  }, selector);
+  layouts.push({ name, ...measured });
+  if (measured.document > measured.viewport + 1 || measured.panel.scroll > measured.panel.client + 1 || measured.visibleOverflow.length) {
+    await page.screenshot({ path: path.join(output, 'overflow-' + name.replaceAll(' ', '-') + '.png'), fullPage: true, animations: 'disabled' });
+  }
+  check(name + ' document fits viewport', measured.document <= measured.viewport + 1);
+  check(name + ' panel has no horizontal overflow', measured.panel.scroll <= measured.panel.client + 1);
+  check(name + ' controls and text remain inside viewport', measured.visibleOverflow.length === 0);
+}
+async function chooseLanguage(page, language) {
+  await textScale(page, 1);
+  await page.locator('.header-language button').click();
+  const options = page.locator('.el-dropdown-menu:visible .el-dropdown-menu__item');
+  await options.nth(language === 'en' ? 2 : 5).click();
+  await page.waitForFunction(language => document.querySelector('.workspace-nav button[aria-controls="catalogue-workspace"] strong')?.textContent === (language === 'en' ? 'Figure catalogue' : 'Figurenkatalog'), language);
+}
+async function selectFigure(page, id) {
+  await textScale(page, 1);
+  const search = page.locator('.catalogue .search-field input');
+  await search.fill(id);
+  const entry = page.locator('.catalogue .entries > li').filter({ has: page.locator('code', { hasText: id }) });
+  await entry.waitFor();
+  const details = entry.locator('button'); await details.focus(); await page.keyboard.press('Enter');
+  const panel = page.locator('.catalogue .selected-detail'); await panel.waitFor();
+  await page.waitForFunction(id => document.querySelector('.catalogue .selected-detail')?.textContent.includes(id), id);
+  return panel.locator('.figure-usage');
+}
+let failure = null;
+try {
+  for (const [kind, viewport, zoom] of [
+    ['desktop', { width: 1440, height: 1000 }, 1], ['mobile', { width: 390, height: 844 }, 1],
+    ['desktop-text200', { width: 1440, height: 1000 }, 2], ['mobile-text200', { width: 390, height: 844 }, 2],
+  ]) {
+    const context = await browser.newContext({ viewport, locale: 'de-DE', deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: true });
+    await context.addInitScript(() => {
+      window.__testBleRequests = 0;
+      Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: { requestDevice: async () => { window.__testBleRequests++; throw Error('No hardware in browser tests'); } } });
+    });
+    await context.route('**/*', route => {
+      const url = route.request().url();
+      if (url.startsWith(origin + '/') || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
+      externalAttempts.push({ kind, url }); return route.abort();
+    });
+    const page = await context.newPage();
+    page.on('pageerror', error => errors.push({ kind, message: error.message }));
+    await page.goto(origin + base);
+    await page.locator('.version-context').waitFor();
+    check(kind + ' exact web version 3.39.0', (await page.locator('.version-context').innerText()).includes('3.39.0'));
+    const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
+    await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
+    const card = page.locator('.card-slot-inspection'); await card.waitFor();
+    await card.locator('summary').focus(); await page.keyboard.press('Enter');
+    check(kind + ' card details open by keyboard', await card.evaluate(el => el.open));
+    await page.keyboard.press('Tab');
+    check(kind + ' keyboard reaches local config file input', await card.locator('input').evaluate(el => el === document.activeElement));
+    await card.locator('input').setInputFiles({ name: 'config.bin', mimeType: 'application/octet-stream', buffer: config });
+    await card.locator('select').waitFor();
+    check(kind + ' no slot selected implicitly', await card.locator('select').inputValue() === '');
+    await card.locator('select').selectOption('1');
+    const slotInput = card.locator('input').nth(1); await slotInput.waitFor();
+    await slotInput.setInputFiles({ name: '00.bin', mimeType: 'application/octet-stream', buffer: slot });
+    await card.getByRole('alert').waitFor();
+    check(kind + ' mismatched slot filename rejected', (await card.getByRole('alert').innerText()).includes('01.bin'));
+    check(kind + ' mismatch exposes no repair action', await card.getByRole('button', { name: 'Korrigierte Kopie herunterladen' }).count() === 0);
+    await shot(page, kind + '-slot-wrong-name', card);
+    await slotInput.setInputFiles({ name: '01.bin', mimeType: 'application/octet-stream', buffer: slot });
+    await card.getByRole('button', { name: 'Korrigierte Kopie herunterladen' }).waitFor();
+    check(kind + ' known defect with valid BCC', (await card.innerText()).includes('BCC0: ja · BCC1: ja'));
+    await fits(page, kind + ' card diagnosis', '.card-slot-inspection', zoom);
+    await shot(page, kind + '-slot-diagnosis', card);
+    const downloadPromise = page.waitForEvent('download');
+    await card.getByRole('button', { name: 'Korrigierte Kopie herunterladen' }).focus(); await page.keyboard.press('Enter');
+    const download = await downloadPromise, corrected = await fs.readFile(await download.path());
+    check(kind + ' corrected copy filename', download.suggestedFilename() === '01.uid-corrected.bin');
+    const changedOffsets = [...slot.keys()].filter(index => slot[index] !== corrected[index]);
+    assert.deepEqual(changedOffsets, [7, 8, 9, 10]); assert.deepEqual(slot, original); assert.equal(corrected.length, slot.length);
+    check(kind + ' only UID bytes 7..10 changed and source preserved', true);
+    downloads.push({ kind, filename: download.suggestedFilename(), size: corrected.length, changedOffsets, sha256: sha256(corrected), synthetic: true });
+    await download.saveAs(path.join(output, kind + '-01.uid-corrected.bin'));
+    await textScale(page, 1);
+    await page.locator('.workspace-nav button[aria-controls="catalogue-workspace"]').click();
+    await page.locator('.catalogue .search-field input').waitFor();
+    let usagePanel = await selectFigure(page, german.id);
+    check(kind + ' exact German editorial translation', (await usagePanel.innerText()).includes(germanNote.text));
+    check(kind + ' translation visibly labelled', (await usagePanel.innerText()).includes('Redaktionelle Übersetzung aus dem Englischen'));
+    const originalSummary = usagePanel.locator('.usage-original summary').first();
+    await originalSummary.focus(); await page.keyboard.press('Enter');
+    check(kind + ' English source expands by keyboard', (await usagePanel.locator('.usage-original[open]').innerText()).includes(germanNote.original));
+    check(kind + ' source link has exact pinned source line', (await usagePanel.locator('a').first().getAttribute('href')) === germanNote.sourceUrl);
+    await fits(page, kind + ' German catalogue usage', '.selected-detail .figure-usage', zoom);
+    await shot(page, kind + '-usage-de', usagePanel);
+    await chooseLanguage(page, 'en');
+    usagePanel = page.locator('.catalogue .selected-detail .figure-usage');
+    check(kind + ' English source rendered in English locale', (await usagePanel.innerText()).includes(germanNote.original));
+    check(kind + ' English does not claim German translation', await usagePanel.locator('.usage-language').count() === 0);
+    await fits(page, kind + ' English catalogue usage', '.selected-detail .figure-usage', zoom);
+    await shot(page, kind + '-usage-en', usagePanel);
+    await chooseLanguage(page, 'de_DE');
+    usagePanel = await selectFigure(page, fallback.id);
+    check(kind + ' missing translation falls back to exact English', (await usagePanel.innerText()).includes(fallbackNote.text));
+    check(kind + ' fallback language visibly labelled', (await usagePanel.innerText()).includes('Englischer Quelltext · keine deutsche Übersetzung hinterlegt'));
+    await fits(page, kind + ' untranslated catalogue usage', '.selected-detail .figure-usage', zoom);
+    await shot(page, kind + '-usage-fallback', usagePanel);
+    usagePanel = await selectFigure(page, empty.id);
+    check(kind + ' note-free association is labelled', (await usagePanel.innerText()).includes('Katalogzuordnung ohne deutschen oder englischen Nutzungshinweis'));
+    check(kind + ' no unearned compatibility claim', (await usagePanel.innerText()).includes('Keine Bestätigung der Spielkompatibilität oder Belohnungen'));
+    await fits(page, kind + ' catalogue association without note', '.selected-detail .figure-usage', zoom);
+    await shot(page, kind + '-usage-empty', usagePanel);
+    await textScale(page, 1);
+    const localInspector = page.locator('.catalogue .local-inspector');
+    await localInspector.locator('summary').focus(); await page.keyboard.press('Enter');
+    await localInspector.locator('input').setInputFiles({ name: 'synthetic-unknown-figure.bin', mimeType: 'application/octet-stream', buffer: unknownFigure });
+    const unknownUsage = localInspector.locator('.figure-usage'); await unknownUsage.waitFor();
+    check(kind + ' unknown synthetic public ID has no invented note', (await unknownUsage.innerText()).includes('Für diese ID ist hier kein Kataloghinweis hinterlegt'));
+    await fits(page, kind + ' unknown synthetic figure', '.local-inspector .figure-usage', zoom);
+    await shot(page, kind + '-usage-unknown', unknownUsage);
+    check(kind + ' no real Bluetooth request', await page.evaluate(() => window.__testBleRequests === 0));
+    await context.close();
+  }
+  check('no browser runtime errors', errors.length === 0);
+  check('no attempted external page requests', externalAttempts.length === 0);
+} catch (error) { failure = { message: error.message, stack: error.stack }; throw error; }
+finally {
+  await fs.writeFile(path.join(output, 'collection-tools-browser-evidence.json'), JSON.stringify({ schema: 1, generatedAt: new Date().toISOString(),
+    scope: 'Exact production bundle, real DOM navigation/file inputs/keyboard/download. Synthetic files only, no harness or Vue state injection. All external page requests blocked; Bluetooth disabled. Text zoom is explicit computed-font doubling, not browser optical zoom.',
+    browser: browser.version(), buildRoot: root, deploymentBase: base, filesSha256: hashes, checks, layouts, downloads, screenshots, errors, externalAttempts, failure }, null, 2));
+  await browser.close(); await new Promise(resolve => server.close(resolve));
+}
+console.log(JSON.stringify({ checks: checks.length, screenshots: screenshots.length, downloads: downloads.length, errors: errors.length, output }));

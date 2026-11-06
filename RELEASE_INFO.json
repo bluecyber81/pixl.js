@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.62",
   "counter": 634,
   "board": "LCD",
-  "web_version": "3.38.1",
+  "web_version": "3.39.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "f733ff1b30e17b9f62113c0a10a2abf9bfcc6dfd8f3aad7b03ca0f6da356503f",
@@ -38,8 +38,8 @@
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 145,
-  "web_host_tests": null,
+  "host_firmware_suites": 146,
+  "web_host_tests": 1231,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
   "evidence": "docs/validation/DE3_62.json",
@@ -55,8 +55,8 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_38_1.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.1",
+  "web_evidence": "docs/validation/WEB3_39_0.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
   "device_readback_passed": false,
@@ -77,10 +77,10 @@
     "physical_test_pending": true,
     "included_in_application_ota": false
   },
-  "web_host_final_targeted_tests": 217,
-  "web_host_test_scope": "3.38.1: affected component and version checks plus both production/browser builds; see WEB3_38_1.json. Complete Linux CI results are bound to the published commit in GitHub Actions.",
-  "web_browser_checks_per_build": 57,
-  "web_browser_screenshots_per_build": 28,
+  "web_host_final_targeted_tests": null,
+  "web_host_test_scope": "1231 local Web tests plus 38 catalogue/export/lookup tests (5 lookup tests also included in Web); both production bundles and exact-byte Chrome tests. Final public commit CI is separate; no live hardware proof.",
+  "web_browser_checks_per_build": 215,
+  "web_browser_screenshots_per_build": 56,
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -90,5 +90,32 @@
     "ci_skipped": 3,
     "commit": "0df66ceafba94daee1c205de29e0f3df9d811b7c"
   },
-  "firmware_production_unchanged_since": "0df66ceafba94daee1c205de29e0f3df9d811b7c"
+  "firmware_production_unchanged_since": "0df66ceafba94daee1c205de29e0f3df9d811b7c",
+  "previous_web_validation": {
+    "version": "3.38.1",
+    "evidence": "docs/validation/WEB3_38_1.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.1",
+    "host_final_targeted_tests": 217,
+    "host_test_scope": "3.38.1: affected component and version checks plus both production/browser builds; see WEB3_38_1.json. Complete Linux CI results are bound to the published commit in GitHub Actions.",
+    "root_production_tests": 21,
+    "pages_production_tests": 21,
+    "browser_checks_per_build": 57,
+    "browser_screenshots_per_build": 28
+  },
+  "web_release_status": "host-tested",
+  "web_release_notes": "docs/RELEASE_WEB3_39_0.de.md",
+  "web_personal_backup_status": "not-created-by-this-update",
+  "web_changes": {
+    "figure_usage": {
+      "figures": 952,
+      "associations": 1344,
+      "unique_german_translations": 8,
+      "german_note_associations": 13,
+      "english_fallback": true,
+      "game_testing_claimed": false
+    },
+    "collection_duplicate_comparison": "SHA-256 and size of already-read bytes; quick mode not compared; no additional BLE reads",
+    "local_slot_repair": "Optional copy only: supported MF0, matching v8 config/NN.bin, known legacy UID pattern and valid BCC; no device write",
+    "zip_restore": "Inactive exact root OLD/NEW files excluded but retained in archive; pending or unknown transactions block whole import"
+  }
 }

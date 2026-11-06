@@ -23,6 +23,15 @@ const parentOf = path => path.slice(0, path.lastIndexOf('/')) || ''
 const deviceParent = path => path.lastIndexOf('/') === 2 ? path.slice(0, 3) : parentOf(path)
 const nameOf = path => path.slice(path.lastIndexOf('/') + 1)
 const sourcePrefix = root => root.endsWith('/') ? root : root + '/'
+// Firmware reserves this exact, case-sensitive prefix at a drive root. OLD/NEW
+// files without another transaction entry are retained in backups but must not
+// be restored. Directories, descendants and unknown suffixes are not inactive.
+function transactionKind(path, type) {
+  const local = path.slice(2)
+  if (!local.startsWith('/.pixl_txn')) return null
+  return type === 'file' && ['/.pixl_txn_old', '/.pixl_txn_new'].includes(local) ? 'inactive' : 'pending'
+}
+const pendingTransactions = (entries, root) => entries.some(entry => transactionKind(root + entry.name, entry.type === 1 ? 'directory' : 'file') === 'pending')
 function rootOf(value) {
   const root = value?.length > 3 && value.endsWith('/') ? value.slice(0, -1) : value
   assertDevicePath(root)
@@ -205,13 +214,23 @@ export async function previewZipImport({ archive, rootPath, deviceKey, readDirec
   const listings = new Map(), folders = new Map([[root, { available: true }]]), records = []
   const checkpoint = () => check(signal, assertSession)
   async function list(path) { checkpoint(); if (!listings.has(path)) { const entries = checkedDirectory(await readDirectory(path)); checkpoint(); listings.set(path, entries) } return listings.get(path) }
-  const rootWritable = await writableDirectoryPath(root, list, checkpoint)
+  // Check original identities as well as remapped paths: moving a journal into
+  // a subfolder does not make it user data, and remapping can create a reserved
+  // target from a formerly ordinary nested name. One unresolved transaction
+  // blocks the entire restore, including otherwise unrelated selected files.
+  const archivePending = targets.some(record => transactionKind(record.sourcePath, record.type) === 'pending' || transactionKind(record.targetPath, record.type) === 'pending')
+  const driveRoot = root.slice(0, 3)
+  const transactionPending = archivePending || pendingTransactions(await list(driveRoot), driveRoot)
+  const rootWritable = !transactionPending && await writableDirectoryPath(root, list, checkpoint)
   folders.set(root, { available: rootWritable, blocked: !rootWritable })
   if (rootWritable) await list(root)
   for (const record of targets) {
     checkpoint(); const parent = deviceParent(record.targetPath), parentState = folders.get(parent), name = nameOf(record.targetPath)
     const entry = { ...record, status: 'add', expected: null }
-    if (!parentState || parentState.blocked) { entry.status = 'blocked'; entry.reason = 'PARENT_BLOCKED' }
+    const internalJournal = transactionKind(record.sourcePath, record.type) === 'inactive' || transactionKind(record.targetPath, record.type) === 'inactive'
+    if (transactionPending) { entry.status = 'blocked'; entry.reason = 'TRANSACTION_PENDING' }
+    else if (internalJournal) { entry.status = 'blocked'; entry.reason = 'INTERNAL_TRANSACTION_JOURNAL' }
+    else if (!parentState || parentState.blocked) { entry.status = 'blocked'; entry.reason = 'PARENT_BLOCKED' }
     else if (parentState.available) {
       const aliases = (await list(parent)).filter(item => portableNameKey(item.name) === portableNameKey(name)), existing = aliases[0]
       if (aliases.length > 1 || existing && existing.name !== name) { entry.status = 'blocked'; entry.reason = 'NAME_COLLISION' }
@@ -235,7 +254,7 @@ export async function previewZipImport({ archive, rootPath, deviceKey, readDirec
         }
       }
     }
-    if (record.type === 'file' && record.size > UPLOAD_LIMITS.maxFileBytes) { entry.status = 'blocked'; entry.reason = 'UPLOAD_SIZE_LIMIT' }
+    if (!transactionPending && !internalJournal && record.type === 'file' && record.size > UPLOAD_LIMITS.maxFileBytes) { entry.status = 'blocked'; entry.reason = 'UPLOAD_SIZE_LIMIT' }
     if (record.type === 'directory') folders.set(record.targetPath, { available: !!entry.expected, blocked: entry.status === 'blocked' || entry.expected?.metadata.flags.readonly === true })
     records.push(entry); observe(onProgress, { phase: 'checking', unit: 'entries', path: record.targetPath, done: records.length, total: targets.length })
   }
@@ -277,6 +296,11 @@ export async function executeZipImport({ plan, deviceKey, selectedPaths = [], re
       const now = current.get(entry.targetPath)
       requireThat(now && now.status !== 'blocked' && expectedKey(now.expected) === expectedKey(entry.expected), 'ZIP_STALE', 'A destination changed after the ZIP preview; preview again.')
     }
+    // Hash comparisons can take time. Re-read the transaction namespace after
+    // that work, before the first mutating adapter (including mkdir) can run.
+    checkpoint(); const driveRoot = plan.rootPath.slice(0, 3)
+    const rootEntries = checkedDirectory(await readDirectory(driveRoot)); checkpoint()
+    requireThat(!pendingTransactions(rootEntries, driveRoot), 'ZIP_STALE', 'A destination transaction appeared after the ZIP preview; resolve it before restoring.')
     for (const entry of requiredDirs) {
       checkpoint()
       requireThat(await writableDirectoryPath(deviceParent(entry.targetPath), readDirectory, checkpoint), 'ZIP_STALE', 'The destination folder or an ancestor is no longer writable.')

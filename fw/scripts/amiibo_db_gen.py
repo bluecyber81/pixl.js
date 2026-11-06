@@ -37,6 +37,7 @@ class Link:
         self.note_en = None
         self.note_cn = None
         self.note_it = None
+        self.legacy_empty_column = False
 
 
 
@@ -83,18 +84,31 @@ def c_string(value):
                    for char in value)
 
 
-def read_amiibo_from_csv():
-    csv_file = get_prorject_directory() + "/data/amiidb_amiibo.csv"
-    if not os.path.exists(csv_file):
-        return list()
+def csv_rows(csv_file, width, allow_empty_extension=False):
+    """Read exact schemas, optionally tolerating one historical empty link field."""
+    with open(csv_file, "r", encoding="utf8", newline="") as stream:
+        reader = csv.reader(stream, strict=True)
+        try:
+            for row in reader:
+                compatible = allow_empty_extension and len(row) == width + 1 and row[-1] == ""
+                if len(row) != width and not compatible:
+                    raise ValueError("%s:%d: expected exactly %d columns, found %d" %
+                                     (Path(csv_file).name, reader.line_num, width, len(row)))
+                yield row
+        except csv.Error as error:
+            raise ValueError("%s:%d: invalid CSV: %s" %
+                             (Path(csv_file).name, reader.line_num, error)) from error
+
+
+def read_amiibo_from_csv(data_dir=None):
+    csv_file = Path(data_dir or Path(get_prorject_directory()) / "data") / "amiidb_amiibo.csv"
     amiibos = list()
-    with open(csv_file, "r", encoding="utf8") as f:
-        for r in csv.reader(f):
-            amiibo = Amiibo()
-            amiibo.id = r[0]
-            amiibo.name_en = r[1]
-            amiibo.name_cn = r[2]
-            amiibos.append(amiibo)
+    for r in csv_rows(csv_file, 3):
+        amiibo = Amiibo()
+        amiibo.id = r[0]
+        amiibo.name_en = r[1]
+        amiibo.name_cn = r[2]
+        amiibos.append(amiibo)
     
     return amiibos
 
@@ -202,37 +216,34 @@ def render_amiibo_data(amiibos):
         return f.getvalue()
 
 
-def read_games_from_csv():
-    csv_file = get_prorject_directory() + "/data/amiidb_game.csv"
-    if not os.path.exists(csv_file):
-        return list()
+def read_games_from_csv(data_dir=None):
+    csv_file = Path(data_dir or Path(get_prorject_directory()) / "data") / "amiidb_game.csv"
     games = list()
-    with open(csv_file, "r", encoding="utf8") as f:
-        for r in csv.reader(f):
-            game = Game()
-            game.id = r[0]
-            game.parent_id = r[1]
-            game.name_en = r[2]
-            game.name_cn = r[3] 
-            game.order = r[4]
-            games.append(game)
+    for r in csv_rows(csv_file, 5):
+        game = Game()
+        game.id = r[0]
+        game.parent_id = r[1]
+        game.name_en = r[2]
+        game.name_cn = r[3]
+        game.order = r[4]
+        games.append(game)
     return games
 
 
-def read_link_from_csv():
-    csv_file = get_prorject_directory() + "/data/amiidb_link.csv"
-    if not os.path.exists(csv_file):
-        return list()
+def read_link_from_csv(data_dir=None):
+    csv_file = Path(data_dir or Path(get_prorject_directory()) / "data") / "amiidb_link.csv"
     links = list()
-    with open(csv_file, "r", encoding="utf8") as f:
-        for r in csv.reader(f):
-                link = Link()
-                link.game_id = r[0]
-                link.amiibo_id = r[1]
-                link.note_en = r[2]
-                link.note_cn = r[3]
-                link.note_it = r[4]
-                links.append(link)
+    # Preserve the original CSV bytes: they participate in APP_SOURCE_SHA256.
+    # Only one empty sixth field is tolerated; no nonempty or further fields.
+    for r in csv_rows(csv_file, 5, allow_empty_extension=True):
+        link = Link()
+        link.game_id = r[0]
+        link.amiibo_id = r[1]
+        link.note_en = r[2]
+        link.note_cn = r[3]
+        link.note_it = r[4]
+        link.legacy_empty_column = len(r) == 6
+        links.append(link)
     return links
 
 
@@ -282,6 +293,72 @@ def validate_games(games, links):
     for game in games:
         if count_game_links(games, links, game.id) > 65535:
             raise ValueError("Game link count exceeds uint16: " + game.id)
+
+
+def text_field(value, label, required=False):
+    # Empty translations and notes are intentional and use the existing UI fallback.
+    # A NUL would silently truncate a C string; lone surrogates cannot be UTF-8.
+    if not isinstance(value, str) or "\0" in value or (required and not value.strip()):
+        raise ValueError("%s must be %sUTF-8 text without NUL" %
+                         (label, "non-empty " if required else ""))
+    try:
+        value.encode("utf8")
+    except UnicodeEncodeError as error:
+        raise ValueError("%s is not valid UTF-8 text" % label) from error
+
+
+def validate_catalog(amiibos, games, links):
+    """Validate source metadata before generation, network refresh or publication."""
+    if not amiibos or len(amiibos) > 2048:
+        raise ValueError("Catalog must contain 1..2048 figures supported by firmware search")
+    if not games:
+        raise ValueError("Catalog must contain at least one game/group")
+    identifiers = set()
+    for row, amiibo in enumerate(amiibos, 1):
+        if not isinstance(amiibo.id, str) or re.fullmatch(r"[0-9a-fA-F]{16}", amiibo.id) is None:
+            raise ValueError("Amiibo row %d: expected a 16-digit hexadecimal ID" % row)
+        identifier = int(amiibo.id, 16)
+        if not identifier or identifier in identifiers:
+            raise ValueError("Amiibo row %d: duplicate or reserved zero ID %s" % (row, amiibo.id))
+        identifiers.add(identifier)
+        text_field(amiibo.name_en, "Amiibo %s English name" % amiibo.id, required=True)
+        text_field(amiibo.name_cn, "Amiibo %s Chinese name" % amiibo.id)
+    validate_games(games, links)
+    for game in games:
+        text_field(game.name_en, "Game %s English name" % game.id, required=True)
+        text_field(game.name_cn, "Game %s Chinese name" % game.id)
+    pairs = set()
+    for row, link in enumerate(links, 1):
+        if not isinstance(link.amiibo_id, str) or re.fullmatch(r"[0-9a-fA-F]{16}", link.amiibo_id) is None:
+            raise ValueError("Link row %d: expected a 16-digit hexadecimal Amiibo ID" % row)
+        identifier = int(link.amiibo_id, 16)
+        if identifier not in identifiers:
+            raise ValueError("Link row %d: Amiibo ID absent from catalog: %s" % (row, link.amiibo_id))
+        pair = (int(link.game_id), identifier)
+        if pair in pairs:
+            raise ValueError("Link row %d: duplicate game/Amiibo pair: %s/%s" %
+                             (row, link.game_id, link.amiibo_id))
+        pairs.add(pair)
+        for language in ("en", "cn", "it"):
+            text_field(getattr(link, "note_" + language), "Link row %d %s note" % (row, language))
+    if len({(link.note_en, link.note_cn, link.note_it) for link in links}) > 65536:
+        raise ValueError("Usage note index exceeds uint16")
+    unlinked = identifiers - {identifier for _, identifier in pairs}
+    if unlinked and 255 not in {int(game.id) for game in games}:
+        raise ValueError("Uncategorized figures require game/group 255")
+    return {"figures": len(amiibos), "games": len(games), "links": len(links),
+            "legacyEmptyLinkColumns": sum(bool(getattr(link, "legacy_empty_column", False)) for link in links),
+            "uncategorizedFigures": len(unlinked),
+            "englishNoteLinks": sum(bool(link.note_en) for link in links),
+            "uniqueEnglishNotes": len({link.note_en for link in links if link.note_en})}
+
+
+def read_catalog(data_dir=None):
+    amiibos = read_amiibo_from_csv(data_dir)
+    games = read_games_from_csv(data_dir)
+    links = read_link_from_csv(data_dir)
+    validate_catalog(amiibos, games, links)
+    return amiibos, games, links
 
 
 def link_indices(amiibos, links):
@@ -384,17 +461,16 @@ def main():
     mode.add_argument("--offline", action="store_true", help="Use local CSVs without network access (default).")
     mode.add_argument("--refresh", action="store_true", help="Fetch AmiiboAPI and update the source CSV before generation.")
     args = parser.parse_args()
+    amiibos_csv, games, links = read_catalog()
     try:
         amiibos_api = fetch_amiibo_from_api() if args.refresh else []
     except (OSError, ValueError) as error:
         parser.exit(1, "AmiiboAPI refresh failed; local files were not changed: %s\n" % error)
-    amiibos_csv = read_amiibo_from_csv()
     amiibos_merged = merge_amiibo(amiibos_csv, amiibos_api)
-    games = read_games_from_csv()
-    links = read_link_from_csv()
     amiibos_merged.sort(key=lambda x: x.id.lower())
     print("Found %d amiibo records." % len(amiibos_merged))
     links = gen_other_link(amiibos_merged, links)
+    validate_catalog(amiibos_merged, games, links)
     link_indices(amiibos_merged, links)
     generated = Path(get_prorject_directory()) / "application/src/amiidb"
     outputs = {

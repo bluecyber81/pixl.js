@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "translationPolicy": "Redaktionelle Übersetzungen vorhandener englischer Katalognotizen. Keine unabhängige Spielprüfung; Eigennamen sind nicht als offizielle deutsche Spielbegriffe bestätigt.",
+  "texts": {
+    "Gerudo-King Fabric": "Stoff des Gerudo-Königs",
+    "Princess Zelda Fabric": "Stoff von Prinzessin Zelda",
+    "Paraglider Skin Material": "Material für ein Parasegel-Design",
+    "Wolf Link (hearts depend on save data)": "Wolf-Link (Herzen hängen von den Speicherdaten ab)",
+    "Change background music while riding Vi-O-La/Replenish health and boost max health by 99 once per day": "Hintergrundmusik beim Fahren mit Vi-O-La ändern / Gesundheit auffüllen und maximale Gesundheit einmal täglich um 99 erhöhen",
+    "Change Vi-O-La's color/Improve Vi-O-La boost regeneration once per day/See total distance traveled on Vi-O-La": "Farbe von Vi-O-La ändern / Einmal täglich die Boost-Regeneration von Vi-O-La verbessern / Gesamte mit Vi-O-La zurückgelegte Strecke ansehen",
+    "View a particular completed cutscene after beating game without needing 100% completion/Hear a random voice line from Sylux": "Nach dem Durchspielen eine bestimmte bereits abgeschlossene Zwischensequenz ohne 100-%-Abschluss ansehen / Eine zufällige Sprachzeile von Sylux hören",
+    "Change decoration in Bellabel Park hub": "Dekoration im zentralen Bereich des Bellabel-Parks ändern"
+  }
+}

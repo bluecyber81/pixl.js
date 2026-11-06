@@ -100,7 +100,7 @@ test('quick zero properties IDs leave all catalogue presence undetermined; a ful
   assert.deepEqual(full.missing.map(row => row.id), [B, V3]);
 });
 
-test('unknown IDs, structural errors and duplicates are distinct without claiming duplicate byte equality', async () => {
+test('unknown IDs, structural errors and equal observed file hashes remain distinct', async () => {
   const bad = tag(B); bad[3] ^= 1;
   const unknown = 'ffffffffffffff02';
   const a = adapter({ 'E:/': [file('a.bin'), file('copy.bin'), file('bad.bin'), file('unknown.bin')] },
@@ -108,8 +108,14 @@ test('unknown IDs, structural errors and duplicates are distinct without claimin
   const r = await auditCollection(a.options);
   assert.equal(r.complete, true); assert.equal(r.stats.invalidFiles, 1);
   assert.deepEqual(r.present.map(x => x.id), [A]); assert.ok(r.missing.some(x => x.id === B));
-  assert.deepEqual(r.duplicates, [{ id: A, paths: ['E:/a.bin', 'E:/copy.bin'], consistentFiles: 2 }]);
-  assert.equal(r.unknown[0].id, unknown); assert.equal(r.claims.duplicateBytes, 'not-compared');
+  assert.equal(r.duplicates.length,1);
+  assert.equal(r.duplicates[0].id,A);
+  assert.deepEqual(r.duplicates[0].paths,['E:/a.bin','E:/copy.bin']);
+  assert.equal(r.duplicates[0].consistentFiles,2);
+  assert.equal(r.duplicates[0].byteComparison,'sha256-observed-files');
+  assert.equal(r.duplicates[0].contentGroups.length,1);
+  assert.equal(r.duplicates[0].contentGroups[0].paths.length,2);
+  assert.equal(r.unknown[0].id, unknown); assert.equal(r.claims.duplicateBytes, 'sha256-of-observed-bytes-only');
 });
 
 for (const size of [532, 540, 572, 2048]) test(`supported ${size}-byte file is read in full with an exact bound`, async () => {
@@ -334,4 +340,28 @@ test('session change during a rejected read wins over generic transport failure 
     async readFile() { alive = false; throw new Error('private bytes'); } });
   assert.equal(r.status, 'session-changed'); assert.equal(r.stats.readErrors, 0); assert.equal(r.stats.filesRead, 0);
   assert.equal(r.complete, false); assert.doesNotMatch(JSON.stringify(r), /private (address|bytes)/);
+});
+
+
+test('same model ID keeps distinct payloads and sizes separate without extra device reads', async () => {
+  const changed = tag(A); changed[100] = 42;
+  const a = adapter({'E:/':[file('a.bin'),file('copy.bin'),file('changed.bin'),file('short.bin',532)]},
+    {'E:/a.bin':tag(A),'E:/copy.bin':tag(A),'E:/changed.bin':changed,'E:/short.bin':tag(A,532)});
+  const result = await auditCollection(a.options);
+  assert.equal(result.duplicates.length,1);
+  const group = result.duplicates[0];
+  assert.equal(group.byteComparison,'sha256-observed-files');
+  assert.deepEqual(group.contentGroups.map(g=>g.paths),[['E:/a.bin','E:/copy.bin'],['E:/changed.bin'],['E:/short.bin']]);
+  assert.equal(a.calls.filter(c=>c[0]==='read').length,4);
+  assert.equal(result.stats.bytesRead,2152);
+  assert.equal(result.claims.ownerAndGameData,'not-checked');
+});
+
+test('quick metadata duplicates never claim byte equality or trigger file reads', async () => {
+  const a = adapter({'E:/':[file('a.bin',540,A),file('b.bin',540,A)]});
+  const result=await auditCollection({...a.options,mode:'quick'});
+  assert.equal(result.duplicates[0].byteComparison,'not-compared');
+  assert.deepEqual(result.duplicates[0].contentGroups,[]);
+  assert.equal(result.claims.duplicateBytes,'not-compared');
+  assert.equal(a.calls.filter(c=>c[0]==='read').length,0);
 });

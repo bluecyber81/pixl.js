@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "version": "3.39.0",
+  "date": "2026-11-06",
+  "scope": "Host, actual compiled Vue, isolated production Chrome and extracted Windows launcher. Synthetic card fixtures; no real BLE connection, flash or collection modification.",
+  "tests": {
+    "web-tests-final.log": {
+      "tests": 1231,
+      "pass": 1231,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "703daaef0fc5d9d7ec1615c5c6a2dc8176627d94f6d08f61cf0710fdce2cb168"
+    },
+    "build-root.log": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "a9c5f9bbd978eef79b2c1229dcaf0d01dac7c648c2838644a7218e5a246c0a15"
+    },
+    "build-pages.log": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "c596f076a484357d90cc37a1ea512699788669868273a0820fbb179faa4249df"
+    }
+  },
+  "browser": [
+    {
+      "report": "browser-root/browser-evidence.json",
+      "sha256": "2c91630b2f24ea0a0f043516a1575d146cbf4aa0c17de74141b63da3053fd06e",
+      "checks": 57,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 151,
+      "buildTreeSha256": "d0058a9619820928c9484e0e0187a737e10f8785d6f2f77283e2bdbac4a833fd"
+    },
+    {
+      "report": "browser-new/root/collection-tools-browser-evidence.json",
+      "sha256": "313bbc9c0e2ed4e6af99ccd08cd5bf6ab03611befa0f1482eb38e4cd975ae49d",
+      "checks": 158,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 151,
+      "buildTreeSha256": "d0058a9619820928c9484e0e0187a737e10f8785d6f2f77283e2bdbac4a833fd"
+    },
+    {
+      "report": "browser-pages/browser-evidence.json",
+      "sha256": "fb69fa95fd9038862e295e8e1b8103262c113ca30263aefa288532ed6a1b0dca",
+      "checks": 57,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 151,
+      "buildTreeSha256": "bf9a5c678ba9a7ade601e5cf9c71c1ed1d1caca42ff71c9b261f4f305b82c8b4"
+    },
+    {
+      "report": "browser-new/pages/collection-tools-browser-evidence.json",
+      "sha256": "3b7c8c9b2d5dcbbacfe16335773d78ab2510de2fa7ea250bbe8cf49345f9b416",
+      "checks": 158,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 151,
+      "buildTreeSha256": "bf9a5c678ba9a7ade601e5cf9c71c1ed1d1caca42ff71c9b261f4f305b82c8b4"
+    }
+  ],
+  "catalogueTests": {
+    "catalogueValidator": 10,
+    "existingRefresh": 14,
+    "existingIndexedCParity": 4,
+    "export": 5,
+    "vueAndLookup": 5,
+    "total": 38
+  },
+  "catalogueCoverage": {
+    "figures": 952,
+    "groups": 82,
+    "associations": 1344,
+    "englishNoteAssociations": 63,
+    "uniqueEnglishNotes": 54,
+    "uniqueGermanTranslations": 8,
+    "germanNoteAssociations": 13,
+    "sourceChineseNoteAssociations": 623,
+    "sourceItalianNoteAssociations": 57,
+    "legacyEmptyLinkColumns": 3
+  },
+  "catalogueReportSha256": "bae2df7e40eb21bca2ba6a9c2baee7aaf6a845c5c1f94ef8a1a00367dcd59da5",
+  "productionSource": {
+    "count": 696,
+    "sha256": "5a0eec38856ea04743c235ae269c910dbecab5cf7aff1b5342f78526c5eba81d",
+    "unchanged": true
+  },
+  "dependencyChanges": false,
+  "environment": {
+    "version": "3.39.0",
+    "node": "v26.13.0",
+    "npmUsed": "11.19.1",
+    "lockfileSha256": "ff2f4293ee151f090b81f5c74a313d6622a05c2f8a402baa824f9b6a1bdfd0a1",
+    "rootVersionOnlyLockChange": true,
+    "matchedInstalled": 65,
+    "missingOptionalOtherPlatform": 25,
+    "dependencyChanges": false
+  },
+  "sourceManifest": {
+    "files": 453,
+    "sha256": "c4a76b4e2b12e6badb03dce572ce64676898533cc3a733f94a2d65317522b7a3"
+  },
+  "portable": {
+    "archive": "Allmiibo_Dateimanager_3_39_0_Portable.zip",
+    "bytes": 1149509,
+    "sha256": "f745f43ab5aed274dec7b8a2d1bca1ddd9078acfe43aa79c3d5f735afd3cf1a4",
+    "entries": 160,
+    "rootBuildFiles": 151,
+    "crcPassed": true,
+    "allFilesByteMatched": true,
+    "startPath": "Allmiibo_Dateimanager_3_39_0/Start-Dateimanager.cmd",
+    "readmeSha256": "d83d3af0b88c9052a169a4d48ff499d55961866f45f9a4c28fef6e144bcdd28d",
+    "extractedLauncherSmoke": {
+      "startPassed": true,
+      "launcherReturnedExitCode": 0,
+      "healthVersion": "3.39.0",
+      "indexByteMatched": true,
+      "dfuByteMatched": true,
+      "browserOpened": false,
+      "deviceAccess": false,
+      "authenticatedStopPassed": true
+    }
+  },
+  "fixes": [
+    "ZIP preview/restore excludes exact inactive root OLD/NEW journals and blocks pending or unknown transactions before mutation.",
+    "Collection content checks group SHA-256 and size from already-read bytes, without further BLE reads.",
+    "Public usage notes use exact catalogue IDs, source lines and partial explicit German translations.",
+    "Optional local MF0 v8 slot repair copy requires matching filename, supported layout, exact legacy UID copy pattern and valid BCC; only offsets 7..10 may change.",
+    "Mobile diagnosis/catalogue text and badges wrap at 390px with doubled text size.",
+    "Catalogue preflight rejects malformed IDs/references/cycles/invalid text; legacy empty fields normalize in memory while retaining exact production inputs."
+  ],
+  "limitations": [
+    "No device NFC, battery, wake, physical BLE or real flash qualification in this web update.",
+    "Text scaling simulates 200 percent computed font sizes, not browser-native zoom.",
+    "Catalogue associations do not establish game support, reward behavior or worldwide catalogue completeness.",
+    "SHA-256 groups compare observed file contents only, not metadata or atomic device state; no automatic deletion.",
+    "Headerless slot/config provenance cannot be authenticated.",
+    "App DE3.62/634, Z17 and S112 delivery bytes are unchanged."
+  ]
+}

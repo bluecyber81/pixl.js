@@ -70,7 +70,7 @@ test('unknown, malformed and unsupported file previews have no guessed image',as
 
 test('offline selected example states catalogue-only origin and leaves device actions disabled',async()=>{
  const {root,app}=await mount('SelectionPreview',{selection:{row:{name:'Demo-Mario.bin',sizeBytes:540},id:'0000000000000002',state:'ready',source:'demo'},blocked:true});
- try{assert.equal(nodes(root,'img')[0].props.alt,'Mario');assert.match(text(root),/Keine? Gerät|Kein Gerät/);assert.match(text(root),/keine Figurendatei gelesen oder erzeugt/);for(const button of nodes(root,'button'))assert.equal(button.props.disabled,true);}finally{app.unmount();}
+ try{assert.equal(nodes(root,'img')[0].props.alt,'Mario');assert.match(text(root),/Keine? Gerät|Kein Gerät/);assert.match(text(root),/keine Figurendatei gelesen oder erzeugt/);const actions=nodes(root,'button').filter(button=>['Eigenschaften & QR','Datei herunterladen'].includes(text(button)));assert.equal(actions.length,2);for(const button of actions)assert.equal(button.props.disabled,true);const expand=nodes(root,'button').find(button=>text(button).startsWith('Alle '));assert.ok(expand);assert.notEqual(expand.props.disabled,true);expand.props.onClick();await Vue.nextTick();assert.match(text(root),/Weniger anzeigen/);}finally{app.unmount();}
 });
 
 test('an online catalogue addition resolves the selected figure and pins its image to the same revision',async()=>{

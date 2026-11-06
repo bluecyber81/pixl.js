@@ -1,3 +1,14 @@
+# Web 3.39.0 · App DE3.62 / 634 unchanged
+
+Locally prepared browser update dated 6 November 2026. Publication, a fresh personal backup and physical device testing are separate steps not established by these notes.
+
+* **Figure details and selected-file preview:** Bundled notes for 952 figures and 1,344 associations. Eight partial German translations cover 13 associations; other available notes retain their English source. Associations are not game-test results.
+* **Collection check:** Matching figure IDs are distinguished from SHA-256 file-content groups using bytes already read, without extra BLE reads. Quick mode makes no byte-equality claim; no automatic deletion.
+* **Device & diagnostics → Inspect card slot locally:** An optional local repair copy requires a supported MF0 type, matching v8 configuration and `NN.bin`, the known legacy UID-copy pattern and valid BCC bytes. Original files remain intact; nothing is written to the device.
+* **Import ZIP:** Exact inactive OLD/NEW journal files remain archived and are visibly excluded from restore. Active or unknown transactions block the whole import; source paths, remapped targets and fresh target state are checked.
+
+App **DE3.62 / 634**, bootloader **Z17** and **S112 7.3.0** remain unchanged. [Usage and limits](docs/RELEASE_WEB3_39_0.de.md).
+
 # DE3.61 · Web 3.37.4
 
 **DE3.61 / 633** is a signed application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume, including the tested Z15 device configuration with Nordic S112 7.3.0. This application has passed computer-based checks. On-device testing of DE3.61 is pending.

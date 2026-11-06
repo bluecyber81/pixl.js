@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.39.0
+
+This locally prepared browser update adds catalogue notes to figure details and the selected-file preview: 952 figures, 1,344 associations, eight partial German translations used by 13 associations, with English fallback. These are not game-test results. Collection checks separate matching IDs from SHA-256 content groups without additional BLE reads. Local MF0 slot inspection offers a corrected copy only for matching v8 configuration/slot files, the known legacy UID-copy pattern and valid BCC bytes. Normal ZIP restores visibly exclude inactive OLD/NEW journals; active or unknown transactions block the entire import. App DE3.62/634, Z17 and S112 remain unchanged. Publication, physical testing and a fresh personal backup remain separate steps. [Usage and limits](RELEASE_WEB3_39_0.de.md).
+
 ## File manager 3.38.1
 
 A failed backup-drive opening keeps its error visible after a successful return to drive selection. Retry and connection resets clear the scoped error. The browser fixture now reproduces the previously missed listing-error reset. App634/DE3.62, Z17 and S112 are unchanged. The card-buffer test now counts all 5,150 existing assertions; this is a reporting correction, not another firmware fix. [Review](RELEASE_WEB3_38_1.de.md).

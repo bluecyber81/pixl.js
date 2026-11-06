@@ -1,4 +1,6 @@
 export const workflowGerman = {
+  INTERNAL_TRANSACTION_JOURNAL: 'Interne Sicherungsdatei – bleibt im ZIP, wird nicht wiederhergestellt.',
+  TRANSACTION_PENDING: 'Ungeklärte interne Transaktion. Gerät neu starten und Zustand prüfen; Import gesperrt.',
   listingFailed: 'Die Ordneransicht konnte nicht geladen werden. Mit „Aktualisieren“ erneut versuchen; dies bedeutet nicht, dass der Ordner leer ist.',
   folderPath: 'Ordnerpfad', drives: 'Laufwerke', pageSize: 'Einträge pro Seite', backupShort: 'Sicherung', updateShort: 'Update',
   appTitle: 'Dateimanager', skipToFiles: 'Zur Dateiverwaltung', workspaces: 'Arbeitsbereiche',
@@ -57,6 +59,8 @@ export const workflowGerman = {
   zipPath: 'Das Archiv enthält ungültige oder mehrdeutige Namen. Die Einträge wurden nicht automatisch umbenannt.'
 }
 export const workflowEnglish = {
+  INTERNAL_TRANSACTION_JOURNAL: 'Internal recovery file – kept in the ZIP, excluded from restoration.',
+  TRANSACTION_PENDING: 'Unresolved internal transaction. Restart the device and check its state; import blocked.',
   listingFailed: 'The folder view could not be loaded. Select “Refresh” to try again; this does not mean the folder is empty.',
   folderPath: 'Folder path', drives: 'Drives', pageSize: 'Entries per page', backupShort: 'Backup', updateShort: 'Update',
   appTitle: 'File manager', skipToFiles: 'Skip to files', workspaces: 'Workspaces',

@@ -1,3 +1,4 @@
+import { sha256Bytes } from './safe-upload.js';
 import bundledCatalogue from '../data/catalogue.json' with { type: 'json' };
 import { assertDevicePath, joinDevicePath } from './portable-names.js';
 import { figureId, metadataFigureId, inspectTagStructure, TAG_LENGTHS } from './figure-info.js';
@@ -43,7 +44,8 @@ export const COLLECTION_AUDIT_CATALOGUE = freeze({ checkedDate: bundledCatalogue
  * operation; adapters must enforce maxBytes and close/drain reads before settling.
  * A content scan reads every supported-length BIN even when metadata has an ID.
  * It proves only observed public IDs and limited structure, never cryptographic
- * authenticity, NFC operation, owner/game data or byte identity between duplicates.
+ * authenticity, NFC operation or owner/game data. SHA-256 groups compare only
+ * the observed file bytes; metadata and whole-device atomicity are not covered.
  * Cancel/session/read failures return an explicitly partial report, with no next IO.
  */
 export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION_AUDIT_CATALOGUE, mode = 'full',
@@ -152,6 +154,9 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
           ++stats.readErrors; errors.push({ path, code: 'read-size-mismatch' }); stop('partial');
         }
         ++stats.filesRead; stats.bytesRead += bytes.byteLength;
+        const contentSha256 = await sha256Bytes(bytes);
+        check();
+        row.sha256 = contentSha256;
         const inspection = inspectTagStructure(bytes);
         row.id = inspection.id; row.status = inspection.status; row.issues = [...inspection.issues];
         row.known = index.has(row.id);
@@ -186,8 +191,18 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
   // not identify the files. Interrupted content scans have the same limitation.
   const missing = contentComplete ? notObserved : [];
   const unconfirmed = contentComplete ? [] : notObserved;
-  const grouped = ([id, rows]) => ({ id, paths: rows.map(row => row.path),
-    consistentFiles: mode === 'full' ? rows.filter(row => row.status === 'structure-consistent').length : 0 });
+  const grouped = ([id, rows]) => {
+    const groups = new Map();
+    for (const row of rows) if (row.sha256) {
+      const key = `${row.size}:${row.sha256}`;
+      if (!groups.has(key)) groups.set(key, { sha256: row.sha256, size: row.size, paths: [] });
+      groups.get(key).paths.push(row.path);
+    }
+    return { id, paths: rows.map(row => row.path),
+      consistentFiles: mode === 'full' ? rows.filter(row => row.status === 'structure-consistent').length : 0,
+      byteComparison: mode === 'full' && rows.every(row => row.sha256) ? 'sha256-observed-files' : 'not-compared',
+      contentGroups: [...groups.values()] };
+  };
   const report = { schema: 1, mode, rootPath, today, status, complete, scanComplete, contentComplete,
     contentConfirmed: contentComplete, cancelled: status === 'cancelled', sessionChanged: status === 'session-changed',
     catalogue: { entries: snapshot.entries.length, checkedDate: snapshot.checkedDate, commit: snapshot.commit,
@@ -201,7 +216,7 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
       .map(row => ({ path: row.path, metadataId: row.metadataId, contentId: row.id })),
     errors, limitsReached: [...limitsReached], limits: bounds,
     claims: { cryptography: 'not-checked', ownerAndGameData: 'not-checked', nfcOperation: 'not-checked',
-      duplicateBytes: 'not-compared', allFilesComplete: 'not-established',
+      duplicateBytes: mode === 'full' ? 'sha256-of-observed-bytes-only' : 'not-compared', allFilesComplete: 'not-established',
       catalogueCompleteness: 'snapshot-only', fileScope: 'BIN files except exact E:/settings.bin and E:/key_retail.bin',
       unsupportedLengths: 'not-read-not-classified-as-corrupt', twoKiB: 'public-id-only-no-classic-header-guarantee',
       missingMeaning: 'No matching structurally consistent file observed in this scan; not proof of worldwide completeness or absence in unsupported files.',

@@ -1,3 +1,14 @@
+# Web 3.39.0 · App DE3.62 / 634 unverändert
+
+Lokal vorbereiteter Browserstand vom 6. November 2026. Veröffentlichung, aktuelle Gerätesicherung und tatsächliche Hardwareprüfung sind separate, hier nicht bestätigte Schritte.
+
+* **Figurendetails und Dateivorschau:** Kataloghinweise für 952 Figuren und 1.344 Zuordnungen. Acht deutsche Teilübersetzungen decken 13 Zuordnungen ab; weitere vorhandene Hinweise bleiben englisch. Zuordnungen sind keine Spielprüfung.
+* **Sammlung prüfen:** Gleiche Figuren-ID und SHA-256-Dateigleichheit werden getrennt angezeigt. Der Vergleich nutzt bereits gelesene Bytes, ohne zusätzliche BLE-Lesezugriffe. Die Schnellprüfung behauptet keine Dateigleichheit; keine automatische Löschung.
+* **Gerät & Diagnose → Karten-Slot lokal prüfen:** Lokale optionale Reparaturkopie nur für unterstützte MF0-Typen, passende v8-Konfiguration und `NN.bin`, bekanntes altes UID-Kopiermuster und gültige BCCs. Quelle bleibt erhalten; kein Geräteschreiben.
+* **ZIP importieren:** Exakte inaktive OLD/NEW-Journaldateien werden sichtbar ausgeschlossen und im Archiv erhalten. Aktive/unklare Transaktionen sperren den gesamten Import; Quelle, Zielumleitung und frischer Zielzustand werden geprüft.
+
+App **DE3.62 / 634**, Bootloader **Z17** und **S112 7.3.0** bleiben unverändert. [Benutzung und Prüfgrenzen](docs/RELEASE_WEB3_39_0.de.md).
+
 # DE3.61 · Web 3.37.4
 
 Das signierte Anwendungsupdate **DE3.61 / 633** ist für das nRF52832-Allmiibo LCD mit vorhandenem Packed LittleFS (PFS1) gedacht. Das eigene Gerät mit Z15 und S112 7.3.0 kann die App separat über Bluetooth erhalten. DE3.61 wurde am Rechner geprüft. Der erste Praxistest dieser App steht aus.
