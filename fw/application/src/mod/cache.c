@@ -71,14 +71,14 @@ bool cache_valid(){
     NRF_LOG_INFO("noinit area: [0x%X, 0x%X], %u bytes", &__start_noinit, &__stop_noinit,
                  (uint32_t)cache_noinit_size());
     NRF_LOG_INFO("m_cache_data address: 0x%X", &m_cache_data);
-    return m_cache_crc32 == crc32_compute((const int8_t *)&m_cache_data, sizeof(cache_data_t), NULL);
+    return m_cache_crc32 == crc32_compute((const uint8_t *)&m_cache_data, sizeof(cache_data_t), NULL);
 }
 
 int32_t cache_clean() {
     NRF_LOG_INFO("Cleaning cache...");
     // 重置一下noinit ram区域
     memset(&__start_noinit, 0x0, cache_noinit_size());
-    m_cache_crc32 = crc32_compute(&m_cache_data, sizeof(cache_data_t), NULL);
+    m_cache_crc32 = crc32_compute((const uint8_t *)&m_cache_data, sizeof(cache_data_t), NULL);
 
     NRF_LOG_INFO("Reset noinit ram done.");
     return NRF_SUCCESS;
@@ -86,7 +86,7 @@ int32_t cache_clean() {
 
 int32_t cache_save() {
     NRF_LOG_INFO("Saving cache...");
-    m_cache_crc32 = crc32_compute(&m_cache_data, sizeof(cache_data_t), NULL);
+    m_cache_crc32 = crc32_compute((const uint8_t *)&m_cache_data, sizeof(cache_data_t), NULL);
     NRF_LOG_INFO("Cache data: enabled = %d, id = %d", m_cache_data.enabled, m_cache_data.id);
 
     return cache_enable_retention((uintptr_t)&__start_noinit, (uintptr_t)&__stop_noinit);

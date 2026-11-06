@@ -22,6 +22,11 @@
         <p class="section-time">{{ t.observed }}: <time v-if="card.observedAt" :datetime="card.observedAt">{{ displayTime(card.observedAt) }}</time><span v-else>—</span></p>
         <template v-if="card.state === 'available'">
           <dl class="key-values"><div v-for="row in card.summary" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
+          <p v-if="card.sampleNote" class="sample-note">{{ card.sampleNote }}</p>
+          <details v-if="card.mount" class="technical-details mount-profile"><summary>{{ card.mount.title }}</summary>
+            <dl class="detail-values"><div v-for="row in card.mount.rows" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
+            <p class="scope-note">{{ card.mount.note }}</p>
+          </details>
           <details v-if="card.details.length || card.events" class="technical-details"><summary>{{ t.details }}</summary>
             <dl v-if="card.details.length" class="detail-values"><div v-for="row in card.details" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
             <div v-if="card.events" class="event-table-wrap"><table><caption>{{ t.buttons }}</caption><thead><tr><th scope="col">{{ t.source }}</th><th v-for="event in eventTypes" :key="event" scope="col">{{ t.events[event] }}</th></tr></thead>
@@ -38,12 +43,13 @@
 </template>
 <script setup>
 import { computed } from 'vue';
-import { normalizeRuntimeDiagnostics } from '../lib/device-info.js';
+import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/device-info.js';
+import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
 import { DIAGNOSTIC_SECTION_KEYS, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
-import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals } from '../lib/startup-diagnostics.js';
+import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
 import { normalizeMtuDiagnostics, normalizeUiDiagnostics } from '../lib/device-extra-diagnostics.js';
 
 const props = defineProps({
@@ -94,8 +100,10 @@ const validTime = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2
   && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value ? value : null;
 const displayTime = value => value.replace('T', ' ').replace('Z', ' UTC');
 const validSnapshot = computed(() => props.snapshot?.schemaVersion === 1 && props.snapshot?.sections && typeof props.snapshot.sections === 'object' ? props.snapshot : null);
-const startedAt = computed(() => validTime(validSnapshot.value?.startedAt));
-const completedAt = computed(() => validTime(validSnapshot.value?.completedAt));
+// A new sequential read must not display the previous report's completion time
+// as though the pending operation had already completed.
+const startedAt = computed(() => props.loading ? null : validTime(validSnapshot.value?.startedAt));
+const completedAt = computed(() => props.loading ? null : validTime(validSnapshot.value?.completedAt));
 const canExport = computed(() => !!validSnapshot.value && !props.loading);
 function read() { if (props.connected && !props.blocked && !props.loading) emit('read'); }
 function exportSnapshot() { if (canExport.value) emit('export', props.snapshot); }
@@ -111,6 +119,7 @@ function section(id, title, normalizer, present) {
   return { id, title, state, observedAt: validTime(source?.observedAt), errorCode, summary: [], details: [], ...(data ? present(data) : {}) };
 }
 const runtime = data => ({
+  sampleNote: (de.value ? infoGerman : infoEnglish)[memorySampleEvidenceKey(data.memorySamples)].replace('{count}', String(data.memorySamples)),
   summary: [[pick('Freier Anwendungs-Heap / Pool', 'Free application heap / pool'), `${bytes(data.heapFreeBytes)} / ${bytes(data.heapPoolBytes)}`]],
   details: [
     [pick('Größter freier Heap-Block', 'Largest free heap block'), bytes(data.largestFreeBlockBytes)],
@@ -131,11 +140,14 @@ const runtime = data => ({
 });
 function startup(data) {
   const rows = startupDiagnosticRows(data), text = startupDiagnosticsText(props.locale);
+  const mount = startupMountPresentation(data, props.locale);
   const complete = data.phaseMask === 63, intervals = rows.slice(1).filter(row => row.sincePreviousMilliseconds !== null);
   const longest = complete ? intervals.reduce((best, row) => !best || row.sincePreviousMilliseconds > best.sincePreviousMilliseconds ? row : best, null) : null;
   return {
+    mount,
     summary: [[pick('Anwendungsstart bis erste Verarbeitung', 'Application start to first dispatch'), complete ? ms(rows.at(-1).elapsedMilliseconds) : pick('Unvollständige Aufzeichnung', 'Incomplete recording')],
-      ...(longest ? [[pick('Längster gemessener Abschnitt', 'Longest measured interval'), `${text.phases[longest.id]} · ${ms(longest.sincePreviousMilliseconds)}`]] : [])],
+      ...(longest ? [[pick('Längster gemessener Abschnitt', 'Longest measured interval'), `${text.phases[longest.id]} · ${ms(longest.sincePreviousMilliseconds)}`]] : []),
+      ...(mount?.rows.length ? mount.rows.slice(data.mount.result === 0 ? 1 : 0,3) : [])],
     details: [...rows.map(row => [text.phases[row.id], row.elapsedMilliseconds === null ? t.value.absent : `${ms(row.elapsedMilliseconds)}${row.sincePreviousMilliseconds === null ? '' : ` (+${ms(row.sincePreviousMilliseconds)})`}`]),
       ...startupStorageIntervals(data).map(row => [text.intervals[row.id], row.milliseconds === null ? t.value.absent : ms(row.milliseconds)])],
     note: pick('Gespeicherte Marken dieses Anwendungsstarts. Beginn: Speicherinitialisierung. Bootloader/früher SDK-Start fehlen; die Marken beweisen keine sichtbare Displayausgabe.', 'Cached markers of this application start, beginning at storage initialization. Bootloader/early SDK startup are excluded; markers do not prove visible display output.'),
@@ -253,4 +265,5 @@ button:disabled{opacity:.5;cursor:default}button:focus-visible,summary:focus-vis
 .key-values,.detail-values{display:grid;gap:11px;margin:14px 0}.key-values>div,.detail-values>div{display:grid;gap:4px}.key-values dt,.detail-values dt{font-size:.73rem;color:#5e7486}.key-values dd{font-weight:650;font-size:.9rem}.key-values dd,.detail-values dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.detail-values dd{font-size:.76rem}.technical-details{border-top:1px solid #e2eaf0;padding-top:9px}.technical-details>summary{cursor:pointer;font-size:.76rem;color:#2c668b;padding:4px 0}.scope-note,.section-message,.overall-limits{font-size:.71rem;color:#617588}.scope-note{margin-bottom:0}.overall-limits{margin-bottom:0}
 .event-table-wrap{overflow-x:auto;margin-top:12px}table{width:100%;border-collapse:collapse;font-size:.67rem}caption{text-align:left;padding:5px 0;font-weight:600}th,td{padding:7px 5px;text-align:left;border-bottom:1px solid #e2eaf0}tbody th{font-weight:400}td{font-variant-numeric:tabular-nums}
 @media(min-width:1200px){.diagnostic-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.diagnostic-overview{padding:12px}.diagnostic-grid{grid-template-columns:1fr}.overview-heading{flex-wrap:wrap}.overview-actions button{flex:1 1 230px}.card-heading{flex-wrap:wrap}}
+.sample-note{padding:10px 12px;border-left:3px solid #7596ac;background:#edf4f8;color:#294c64;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}
 </style>

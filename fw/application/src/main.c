@@ -95,6 +95,7 @@
 #include "mui_mem.h"
 
 #include "hal_spi_bus.h"
+#include "hal_nfc_t2t.h"
 #include "hal_spi_flash.h"
 
 #include "tag_helper.h"

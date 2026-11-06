@@ -1,4 +1,4 @@
-import { startupSeries, startupStorageIntervals } from '../src/lib/startup-diagnostics.js';
+import { startupSeries, startupStorageIntervals, startupMountPresentation } from '../src/lib/startup-diagnostics.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -16,6 +16,45 @@ function detailedPacket(mask, mount, journal, phaseMask=63) {
   view.setUint32(32,mount,true); view.setUint32(36,journal,true);
   return bytes;
 }
+function mountPacket(flags=23,result=0) {
+ const bytes=new Uint8Array(80),view=new DataView(bytes.buffer);bytes.set(detailedPacket(3,20,30));bytes.set([3,80],4);
+ view.setUint32(40,flags,true);view.setInt32(44,result,true);
+ [5,15,200,51200,800,180,20,0].forEach((n,i)=>view.setUint32(48+i*4,n,true));return bytes;
+}
+test('schema3 consumes the independently generated production C and DF-transport fixture',()=>{
+ const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/startup-de362-wire.json',import.meta.url),'utf8'));
+ const actual=parseStartupDiagnostics(Uint8Array.from(Buffer.from(fixture.wireHex,'hex'))),expected=fixture.expected;
+ assert.equal(actual.schemaVersion,3);assert.equal(actual.phaseMask,0);
+ assert.deepEqual(actual.elapsedMilliseconds,[null,null,null,null,null,null]);
+ assert.deepEqual(actual.storageElapsedMilliseconds,[null,null]);
+ for(const field of ['flags','result','configureMilliseconds','scanMilliseconds','physicalReadAttempts','cacheHits','bypassReads','physicalReadErrors'])
+  assert.equal(actual.mount[field],expected[field],field);
+ assert.equal(actual.mount.physicalReadBytes,expected.successfulReadBytes);
+ assert.equal(actual.mount.cacheMisses,expected.eligibleCacheMisses);
+ assert.equal(fixture.deviceAccess,false);
+});
+test('schema3 mount profile retains counters and signed result, uses exact bounds and preserves legacy comparisons',()=>{
+ const bytes=mountPacket(),p=parseStartupDiagnostics(bytes),padded=new Uint8Array(90);padded.set(bytes,5);
+ assert.deepEqual(parseStartupDiagnostics(padded.subarray(5,85)),p);
+ assert.deepEqual(p.mount,{scope:'last-packedfs-mount',flags:23,result:0,configureMilliseconds:5,scanMilliseconds:15,
+  physicalReadAttempts:200,physicalReadBytes:51200,cacheHits:800,cacheMisses:180,bypassReads:20,physicalReadErrors:0});
+ assert(Object.isFrozen(p.mount));assert.deepEqual(startupStorageIntervals(p).map(r=>r.milliseconds),[20,10,7]);
+ assert.deepEqual(compareStartup({startup:parseStartupDiagnostics(detailedPacket(3,20,30))},p).storageIntervals.map(r=>r.milliseconds),[0,0,0]);
+ assert.equal(parseStartupDiagnostics(mountPacket(17,-12)).mount.result,-12);
+ const noTime=parseStartupDiagnostics(mountPacket(3));assert.equal(noTime.mount.configureMilliseconds,null);
+ assert.match(startupMountPresentation(noTime).rows[1][1],/Nicht gemessen/);
+ assert.match(startupMountPresentation(parseStartupDiagnostics(mountPacket(31)),'en').note,/lower bounds/);
+ assert.match(startupMountPresentation(parseStartupDiagnostics(mountPacket(31))).rows[4][1],/≥ 200/);
+ const empty=mountPacket();empty.fill(0,40);const absent=parseStartupDiagnostics(empty);assert.equal(absent.mount,null);
+ assert.equal(startupMountPresentation(absent).rows.length,0);assert.match(startupMountPresentation(absent).note,/Fehlende Werte/);
+ for(const [offset,n] of [[4,4],[5,79],[40,0],[40,2],[40,55],[44,1]]){const b=mountPacket();new DataView(b.buffer).setUint8(offset,n);assert.throws(()=>parseStartupDiagnostics(b));}
+ for(const n of [79,81,96])assert.throws(()=>parseStartupDiagnostics(new Uint8Array(n)));
+ for(const patch of [{mount:undefined},{mount:{...p.mount,scope:'boot'}},{mount:{...p.mount,flags:0}},
+  {mount:{...p.mount,cacheHits:-1}},{mount:{...p.mount,cacheHits:0x100000000}},{mount:{...p.mount,scanMilliseconds:null}}])
+  assert.equal(normalizeStartupDiagnostics({...p,...patch}),null);
+ const dirty={...p,mount:{...p.mount,deviceId:'SECRET'}};
+ assert.doesNotMatch(JSON.stringify(createStartupDiagnosticReport(dirty,'2026-11-06T12:00:00.000Z')),/SECRET/);
+});
 test('extended wire snapshots export a bounded storage breakdown and compare with both schemas', () => {
   const original=parseStartupDiagnostics(packet());
   const current=parseStartupDiagnostics(detailedPacket(3,20,30));
@@ -120,6 +159,17 @@ test('3.29 partial or all-zero startup series never claim an overall bottleneck'
     try {await readButton(f.root).props.onClick();await f.Vue.nextTick();assert(!nodes(f.root).some(n=>n.props.class==='timing-summary'||n.props.class==='phase-meter'));}
     finally{f.app.unmount();}
   }
+});
+test('actual startup panel renders profile evidence and clears it on a fresh unsupported read',async()=>{
+ const f=await mount({readDiagnostics:async()=>parseStartupDiagnostics(mountPacket())});
+ try{
+  await readButton(f.root).props.onClick();await f.Vue.nextTick();
+  assert.match(text(f.root),/Laufwerk einbinden: Zeit und Lesezugriffe/);assert.match(text(f.root),/51200 B/);
+  assert.match(text(f.root),/kein Messzeitpunkt/);assert.match(text(f.root),/Temporärer Lesecache erhalten/);
+  f.data.locale='ja_JP';await f.Vue.nextTick();assert.match(text(f.root),/Mounting the drive/);
+  f.data.readDiagnostics=async()=>parseStartupDiagnostics(packet());await f.Vue.nextTick();
+  await readButton(f.root).props.onClick();await f.Vue.nextTick();assert.doesNotMatch(text(f.root),/Mounting the drive|51200 B/);
+ }finally{f.app.unmount();}
 });
 test('real component never calls automatically, blocks duplicate actions and displays six markers only after explicit read',async()=>{
   const d=deferred();let calls=0;const f=await mount({readDiagnostics:()=>{calls++;return d.promise;}});

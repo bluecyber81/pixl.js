@@ -79,7 +79,7 @@ def main():
             return exe
         exe=build('candidate')
         for mtu in (23,185,250):
-            for scenario in range(10):
+            for scenario in range(11):
                 run=subprocess.run([str(exe),str(scenario),str(mtu)],capture_output=True,text=True,timeout=20)
                 row={'mtu':mtu,'scenario':scenario,'exit_code':run.returncode,'output':run.stdout+run.stderr}
                 report['cases'].append(row)
@@ -115,6 +115,6 @@ def main():
     if args.report:
         args.report.parent.mkdir(parents=True,exist_ok=True)
         args.report.write_text(json.dumps(report,indent=2)+'\n')
-    print('PASS 30 actual-C runtime/power/startup diagnostic cases; no device access')
+    print('PASS 33 actual-C runtime/power/startup diagnostic cases; no device access')
 
 if __name__=='__main__': main()

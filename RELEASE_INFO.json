@@ -1,14 +1,14 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-05",
-  "version": "2.22.0-DE3.61",
-  "counter": 633,
+  "publication_date": "2026-11-06",
+  "version": "2.22.0-DE3.62",
+  "counter": 634,
   "board": "LCD",
-  "web_version": "3.37.5",
+  "web_version": "3.38.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "60413358ab8fae550c4ba520b027662572fe14ae16a4109a9b6f561fbd82200a",
-  "application_sha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7",
+  "ota_sha256": "f733ff1b30e17b9f62113c0a10a2abf9bfcc6dfd8f3aad7b03ca0f6da356503f",
+  "application_sha256": "597d61e301d663f30abfd63512c5d44faba7cfe5345a2b216d715003704aa9ca",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -38,11 +38,11 @@
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 143,
-  "web_host_tests": 1173,
+  "host_firmware_suites": 145,
+  "web_host_tests": 1180,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "evidence": "docs/validation/DE3_61.json",
+  "evidence": "docs/validation/DE3_62.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -55,18 +55,30 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_37_5.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.5",
+  "web_evidence": "docs/validation/WEB3_38_0.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
   "device_readback_passed": false,
-  "device_validation_pending_scope": "DE3.61 on-device startup checkpoints, file transfer and LCD confirmation.",
+  "device_validation_pending_scope": "DE3.62 live startup profile, file transfer, NFC, LCD, buttons and wake tests pending.",
   "previous_device_readback_evidence": "docs/validation/DE3_59_READBACK.json",
-  "production_source_id_sha256": "fcf19a7c25eb881945da7b896611fa580949f8c299fbc04874956d1f5a6d2508",
+  "production_source_id_sha256": "5a0eec38856ea04743c235ae269c910dbecab5cf7aff1b5342f78526c5eba81d",
   "tested_bootloader": {
     "name": "Z15",
     "counter": 15,
     "padded_region_sha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
-    "qualification": "DE3.60 user device report; DE3.61 signed package checks in emulated Z15. Physical DE3.61 test pending."
-  }
+    "qualification": "Z15 source/ARM and historical user readback; new DE3.62 physical integration pending."
+  },
+  "candidate_bootloader": {
+    "name": "Z17",
+    "counter": 17,
+    "source": "bootloader-z17",
+    "padded_region_sha256": "5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584",
+    "physical_test_pending": true,
+    "included_in_application_ota": false
+  },
+  "web_host_final_targeted_tests": 24,
+  "web_host_test_scope": "1180-test full suite before final Z18-only profile registration; 24 affected checks and both production builds/browser runs repeated afterwards.",
+  "web_browser_checks_per_build": 57,
+  "web_browser_screenshots_per_build": 28
 }

@@ -11,7 +11,7 @@
 
 #define NFC_TAG_NTAG_DATA_SIZE 4
 
-const static tag_specific_type_name_t tag_type_names[] = {
+static const tag_specific_type_name_t tag_type_names[] = {
     {TAG_TYPE_UNDEFINED, "-", "-", 0},
     // MiFare series
     {TAG_TYPE_MIFARE_Mini, "MF Mini", "MiFare Mini", 20 * NFC_TAG_MF1_DATA_SIZE},
@@ -39,7 +39,7 @@ const static tag_specific_type_name_t tag_type_names[] = {
 //     NFC_TAG_MF1_WRITE_SHADOW    = 3u,
 // } nfc_tag_mf1_write_mode_t;
 
-const static uint32_t mf1_write_mode_names[4] = {
+static const uint32_t mf1_write_mode_names[4] = {
     [NFC_TAG_MF1_WRITE_NORMAL] = _L_APP_CHAMELEON_TAG_MF1_WRITE_NORMAL,
     [NFC_TAG_MF1_WRITE_DENIED] = _L_APP_CHAMELEON_TAG_MF1_WRITE_DENIED,
     [NFC_TAG_MF1_WRITE_DECEIVE] = _L_APP_CHAMELEON_TAG_MF1_WRITE_DECEIVE,
@@ -179,10 +179,10 @@ bool tag_helper_apply_disney_profile(void) {
 }
 
     tag_specific_type_t tag_helper_get_active_tag_type() {
-        tag_specific_type_t tag_type[2];
+        tag_slot_specific_type_t tag_types = {0};
         uint8_t slot = tag_emulation_get_slot();
-        tag_emulation_get_specific_types_by_slot(slot, tag_type);
-        return tag_type[0];
+        tag_emulation_get_specific_types_by_slot(slot, &tag_types);
+        return tag_types.tag_hf;
     }
 
     void tag_helper_format_uid(char *buff, uint8_t *uid, uint8_t uid_len) {
@@ -249,20 +249,26 @@ bool tag_helper_apply_disney_profile(void) {
     size_t tag_helper_get_active_tag_data_size() {
         tag_specific_type_t tag_type = tag_helper_get_active_tag_type();
         const tag_specific_type_name_t *tag_type_name = tag_helper_get_tag_type_name(tag_type);
-        return tag_type_name->data_size;
+        return tag_type_name ? tag_type_name->data_size : 0;
     }
 
     uint8_t *tag_helper_get_active_tag_memory_data() {
         tag_specific_type_t tag_type = tag_helper_get_active_tag_type();
         tag_data_buffer_t *tag_buffer = get_buffer_by_tag_type(tag_type);
         tag_group_type_t tag_group_type = tag_helper_get_tag_group_type(tag_type);
+        if (!tag_buffer || !tag_buffer->buffer) return NULL;
+        size_t data_size = tag_helper_get_active_tag_data_size();
+        if (data_size == 0) return NULL;
         if (tag_group_type == TAG_GROUP_MIFARE) {
+            if (tag_buffer->length < offsetof(nfc_tag_mf1_information_t, memory) + data_size) return NULL;
             nfc_tag_mf1_information_t *m_tag_information = (nfc_tag_mf1_information_t *)tag_buffer->buffer;
-            return &m_tag_information->memory;
-        } else {
+            return &m_tag_information->memory[0][0];
+        } else if (tag_group_type == TAG_GROUP_NTAG) {
+            if (tag_buffer->length < offsetof(nfc_tag_mf0_ntag_information_t, memory) + data_size) return NULL;
             nfc_tag_mf0_ntag_information_t *m_tag_information = (nfc_tag_mf0_ntag_information_t *)tag_buffer->buffer;
-            return &m_tag_information->memory;
+            return &m_tag_information->memory[0][0];
         }
+        return NULL;
     }
 
     bool tag_helper_is_active_tag_writable() {
@@ -272,7 +278,7 @@ bool tag_helper_apply_disney_profile(void) {
             return nfc_tag_mf1_get_write_mode() != NFC_TAG_MF1_WRITE_DENIED;
         } else if (tag_group_type == TAG_GROUP_NTAG) {
             uint8_t *memory = tag_helper_get_active_tag_memory_data();
-            return (memory[2 * NFC_TAG_NTAG_DATA_SIZE + 2] & 0x07) != 0x07;
+            return memory && (memory[2 * NFC_TAG_NTAG_DATA_SIZE + 2] & 0x07) != 0x07;
         }
         return false;
     }

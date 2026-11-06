@@ -26,7 +26,7 @@ int main(int argc,char **argv) {
     driver=(vfs_driver_t){.stat=mock_stat,.open_file=mock_open,.close_file=mock_close,
         .read_file=mock_read,.write_file=mock_write,.open_dir=mock_open_dir,.read_dir=mock_read_dir,
         .close_dir=mock_close_dir};
-    uint8_t out[64],before[64];
+    uint8_t out[80],before[80];
     reset(mtu); modern();
     if (scenario==0) {
         diagnostic(out);
@@ -245,6 +245,54 @@ int main(int argc,char **argv) {
         df_proto_handler_info_startup_diagnostic(&ready_event);CHECK(sends==count);
         CHECK(runtime_diag_startup_snapshot(out,32,false) && !memcmp(out,before,32));
         diagnostic(out); /* Existing diagnostic wire contract remains intact. */
+    } else if (scenario==10) {
+        const uint8_t selector=2;
+        memset(out,0xa5,sizeof(out));
+        CHECK(!runtime_diag_startup_mount_snapshot(NULL,80));
+        CHECK(!runtime_diag_startup_mount_snapshot(out,79));
+        for(unsigned i=0;i<80;i++) CHECK(out[i]==0xa5);
+        CHECK(runtime_diag_startup_mount_snapshot(out,80));
+        CHECK(out[4]==3 && out[5]==80);
+        for(unsigned i=40;i<80;i++) CHECK(out[i]==0);
+        runtime_diag_mount_begin();
+        runtime_diag_mount_configured(17);
+        runtime_diag_mount_cache(true,true);
+        runtime_diag_mount_cache(false,true);
+        runtime_diag_mount_cache(false,false);
+        runtime_diag_mount_read(256,true);
+        runtime_diag_mount_read(256,false);
+        CHECK(runtime_diag_startup_mount_snapshot(out,80));
+        for(unsigned i=40;i<80;i++) CHECK(out[i]==0); /* incomplete is unavailable */
+        runtime_diag_mount_complete(-1,22,true);
+        sends=attempts=0;request(9,&selector,1);finish_stream();
+        CHECK(merge(out,80,9)==80 && !memcmp(out,"PXST",4) && out[4]==3 && out[5]==80);
+        CHECK(get32(out+40)==21 && (int32_t)get32(out+44)==-1);
+        CHECK(get32(out+48)==17 && get32(out+52)==22);
+        CHECK(get32(out+56)==2 && get32(out+60)==256 && get32(out+64)==1);
+        CHECK(get32(out+68)==1 && get32(out+72)==1 && get32(out+76)==1);
+        memcpy(before,out,80);
+        runtime_diag_mount_complete(0,99,false);
+        runtime_diag_mount_cache(false,false);runtime_diag_mount_read(999,true);
+        CHECK(runtime_diag_startup_mount_snapshot(out,80) && !memcmp(out,before,80));
+        runtime_diag_mount_begin();runtime_diag_mount_configured(0);
+        mount_state.reads=mount_state.bytes=mount_state.hits=UINT32_MAX;
+        runtime_diag_mount_cache(true,true);runtime_diag_mount_read(256,true);
+        runtime_diag_mount_complete(0,77,false);
+        CHECK(runtime_diag_startup_mount_snapshot(out,80));
+        CHECK(get32(out+40)==27 && get32(out+44)==0 && get32(out+52)==77);
+        CHECK(get32(out+56)==UINT32_MAX && get32(out+60)==UINT32_MAX && get32(out+64)==UINT32_MAX);
+        CHECK(!get32(out+68) && !get32(out+72) && !get32(out+76));
+        for(unsigned field=0;field<4;field++) {
+            df_frame_t invalid={0}; invalid.length=1;invalid.data[0]=2;
+            if(field==0)invalid.length=2;
+            if(field==1)invalid.status=1;
+            if(field==2)invalid.chunk=1;
+            if(field==3)invalid.data[0]=3;
+            df_event_t event={.type=DF_EVENT_DATA_RECEVIED,.df=&invalid};
+            sends=attempts=0;df_proto_handler_info_startup_diagnostic(&event);
+            CHECK(sends==1 && replies[0].status==1 && !replies[0].length);finish_stream();
+        }
+        diagnostic(out);
     } else CHECK(false);
     if(scenario==3) {
         printf("WIRE ");for(unsigned i=0;i<64;i++)printf("%02x",out[i]);printf("\n");

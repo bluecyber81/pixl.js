@@ -148,5 +148,6 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
       'Sections were read sequentially; this is not an atomic device snapshot.',
       'Read timestamps describe browser receipt, not the age of cached firmware samples.',
       'Startup markers exclude bootloader and early SDK startup.',
+      ...(sectionData('startup')?.schemaVersion === 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
       'Storage cache sizes are configuration values, not measured cache usage.'] };
 }

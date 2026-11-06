@@ -7,6 +7,9 @@
 #include "vfs_driver_fs.h"
 #include "vfs_packed_runtime.h"
 #include "vfs_persist.h"
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+#include "app_timer.h"
+#endif
 #include <limits.h>
 #include <string.h>
 
@@ -28,6 +31,17 @@ typedef struct {
   bool external_writer;
 } packed_handle_t;
 
+#if defined(PIXL_RUNTIME_DIAGNOSTICS)
+static uint32_t mount_tick(void) { return app_timer_cnt_get(); }
+static uint32_t mount_elapsed_ms(uint32_t started) {
+  uint32_t ticks = app_timer_cnt_diff_compute(app_timer_cnt_get(), started);
+  uint64_t ms = (uint64_t)ticks * (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u) * 1000u / APP_TIMER_CLOCK_FREQ;
+  return ms > UINT32_MAX ? UINT32_MAX : (uint32_t)ms;
+}
+#else
+static uint32_t mount_tick(void) { return 0; }
+static uint32_t mount_elapsed_ms(uint32_t started) { (void)started; return 0; }
+#endif
 static int32_t map_error(int r) {
   switch (r) {
   case 0:
@@ -72,8 +86,9 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
                       void *data, lfs_size_t n) {
   if (!range(c, b, o, n) || (n && !data))
     return LFS_ERR_IO;
-  bool cacheable = mount_pages && n == PFS_CACHE_SIZE && o % PFS_CACHE_SIZE == 0 &&
-                   (o == 0 || data == c->read_buffer);
+  bool eligible = n == PFS_CACHE_SIZE && o % PFS_CACHE_SIZE == 0 &&
+                  (o == 0 || data == c->read_buffer);
+  bool cacheable = mount_pages && eligible;
   uint16_t page = (uint16_t)(b * (PFS_BLOCK_SIZE / PFS_CACHE_SIZE) + o / PFS_CACHE_SIZE + 1);
   unsigned slot = 0;
   if (cacheable) {
@@ -82,13 +97,16 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
       if ((tag >> 2) == page) {
         memcpy(data, mount_pages->page[i], n);
         if (tag & 3u) mount_touch(i, page);
+        runtime_diag_mount_cache(true, true);
         return 0;
       }
       if (!tag || (tag & 3u) == MOUNT_SLOTS - 1) slot = i;
     }
   }
-  if (hal_spi_flash_read(b * c->block_size + o, data, n) != NRF_SUCCESS)
-    return LFS_ERR_IO;
+  runtime_diag_mount_cache(false, eligible);
+  bool success = hal_spi_flash_read(b * c->block_size + o, data, n) == NRF_SUCCESS;
+  runtime_diag_mount_read(n, success);
+  if (!success) return LFS_ERR_IO;
   if (cacheable) {
     memcpy(mount_pages->page[slot], data, n);
     mount_touch(slot, page);
@@ -168,13 +186,20 @@ static void mounted_revision(void) {
 static int32_t packed_mount(void) {
   if (pfs_mounted(store))
     return pfs_poisoned(store) ? VFS_ERR_CRPT : VFS_OK;
+  runtime_diag_mount_begin();
+  uint32_t started = mount_tick();
   int32_t r = configure();
-  if (r)
+  runtime_diag_mount_configured(mount_elapsed_ms(started));
+  if (r) {
+    runtime_diag_mount_complete(r, 0, false);
     return r;
+  }
   mount_pages_t *pages = mui_mem_malloc(sizeof(*pages));
   if (pages) memset(pages->tag, 0, sizeof(pages->tag));
   mount_pages = pages;
+  started = mount_tick();
   r = pfs_mount(store);
+  runtime_diag_mount_complete(map_error(r), mount_elapsed_ms(started), pages != NULL);
   mount_pages = NULL;
   if (pages) mui_mem_free(pages);
   if (r)

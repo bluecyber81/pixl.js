@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "status": "passed-host-only",
+  "counter": 17,
+  "sourceManifestSha256": "ad8a6216eb0a2ce8e67adf5d1ec73e6febc70d3730b6263a6f89ced3926075f6",
+  "testManifestSha256": "06fbee775a836e7950be6d3fde9cbe379c167be7ea660642d43bbbe5f005694f",
+  "payloadBytes": 26612,
+  "physicalBootRegionBytes": 28672,
+  "flashHeadroomBytes": 2060,
+  "minimumRequiredHeadroomBytes": 1024,
+  "initializedRamBytes": 72,
+  "bssBytes": 11016,
+  "heapBytes": 0,
+  "reservedStackBytes": 4096,
+  "ramUnchangedFromZ15": true,
+  "payloadSha256": "5219e8abaab8cd8bd335116f6438dbb85ffe5d6b36467abef266e78b56e2e7cd",
+  "bootRegionSha256": "5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584",
+  "dockerAndNativeBinHexIdentical": true,
+  "nativeHostOverrideVariablesRemoved": true,
+  "nativePoisonedEnvironmentBuildPassed": true,
+  "strictOwnCModules": 9,
+  "sdkModulesWithoutAdditionalWarningFlags": 69,
+  "cryptoArmCases": 69,
+  "resetTransactionCasesPerMode": 48,
+  "resetSdkCasesPerMode": 19,
+  "sessionCasesPerMode": 26,
+  "ingressCasesPerMode": 8,
+  "irqCuts": 44,
+  "irqNegativeControls": 4,
+  "buttonCases": 7,
+  "buildExportNegativeAndBoundaryCases": 11,
+  "signedUpdateCases": 13,
+  "postBootloaderApplicationPhases": 2,
+  "signatureNegativeControlsPerCombinedArchive": 6,
+  "physicalDeviceAccess": false,
+  "hardwareTested": false,
+  "installedVersionClaimed": false,
+  "rollback": {
+    "counter": 18,
+    "code": "exact-Z15",
+    "payloadSha256": "bbbda3519466621ebe5a56ce45b76ad4c6a9d7935eddd0b21b18d3eca48b00fc",
+    "bootRegionSha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
+    "counter17RejectedAfterReturn": true
+  },
+  "packages": {
+    "Allmiibo_LCD_Z17_DE3_62_634_ANDROID_DFU_TESTSTAND.zip": {
+      "sha256": "a7eab3205ccfbaa989cdcd0819c98c5982bedfddacf027824f30a7e8e358a9ee",
+      "bytes": 276804
+    },
+    "Allmiibo_LCD_Z18_RUECKKEHR_Z15_CODE_DE3_62_634_ANDROID_DFU.zip": {
+      "sha256": "aa63238d141ec798cf355cba130ae5555521fede1b8ffe1f0c0a623d1f53702d",
+      "bytes": 276788
+    },
+    "Allmiibo_LCD_Z17_NUR_BOOTLOADER_TESTSTAND.zip": {
+      "sha256": "e9fdec854404c5351f71cf6842d45eae37f88f186fa263e885a3674af1518de7",
+      "bytes": 27193
+    }
+  },
+  "limits": [
+    "CPU models and mocked hardware boundaries do not prove radio, flash-power-failure or physical display behavior.",
+    "Native and Docker ELF debug paths may differ; the loaded payload and HEX are equal.",
+    "New phase messages have no minimum dwell and can be brief."
+  ]
+}

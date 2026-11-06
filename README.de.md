@@ -1,22 +1,23 @@
-# Allmiibo LCD – Firmware und Dateimanager
+# Allmiibo LCD: Firmware und Dateimanager
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Firmware und Pakete herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.61) · [English](README.md)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [DE3.62 herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.62) · [English](README.md)
 
-Das signierte Anwendungsupdate **DE3.61 / 633** ist für das nRF52832-Allmiibo LCD mit vorhandenem Packed LittleFS (PFS1) gedacht. Das eigene Gerät mit Z15 und S112 7.3.0 kann die App separat über Bluetooth erhalten. DE3.61 wurde am Rechner geprüft. Der erste Praxistest dieser App steht aus.
+**DE3.62 / 634**, **Dateimanager 3.38.0** und der getrennte **Bootloader-Teststand Z17 / 17** setzen die bisherige Entwicklung fort. Ziel ist das nRF52832-Allmiibo mit LCD und bestehendem Packed LittleFS (PFS1). Die neuen Stände sind am Rechner geprüft; ihre praktische Bestätigung auf dem Gerät steht noch aus.
 
-* **Einstellungen.** Die 21 Hauptoptionen und ihre Werte sind auf Deutsch und Englisch bei ausgeschalteter Menüanimation lesbar. „Fernsteuern“ zeigt „bis Aus“, wenn die Fernbedienung für diese Sitzung eingeschaltet ist. Die RAM-Anzeige berücksichtigt die tatsächlich gezeichnete Schrift bis zum rechten Displayrand.
-* **Speicher beim Einschalten.** Im Test mit 1.131 Dateien und 77 Ordnern sank die Zahl der Lesezugriffe beim Einbinden von 4.712 auf 4.531. Der Dateimanager zeigt unter **Gerät & Diagnose → Startzeiten lesen**, wie lange das Einbinden, die Journalprüfung und der Rest des Speicherstarts jeweils brauchen.
-* **Figurenkatalog.** Kürzere interne Verweise lassen 2.644 Byte mehr Flash für die Firmware frei. Alle 952 Figuren, 82 Spiele und 1.344 Spielzuordnungen samt Beschreibungstexten wurden im fertigen Programm verglichen.
-* **Dateimanager 3.37.5.** Unter **Sicherung** kannst du ein erkanntes Laufwerk direkt öffnen und den gesamten Inhalt als ZIP sichern. Die Diagnose trennt die von der Firmware gemeldete ATT-MTU von der nutzbaren Größe eines Bluetooth-Datenpakets. Der Versionsvergleich kennt Z15 sowie den getrennt gekennzeichneten Rückkehrstand Z16 mit Z13-Code.
+- **Kartenemulator:** Fehlende, unbekannte und zu kurze Kartenpuffer werden beim Dateiimport/-export abgefangen. Gültige Figuren- und Kartendaten behalten ihr Format. Schnittstellentypen für Kartentyp, Menüwerte, Cache-CRC, NFC und AmiLoop sind bereinigt.
+- **Genauere Startdiagnose:** Unter „Gerät & Diagnose → Startzeiten auslesen“ erscheinen die Mountabschnitte, physische Lesezugriffe, Cachetreffer und Lesefehler. Frühere Firmware bleibt lesbar. Keine zusätzliche Startbeschleunigung wird behauptet; gleich große Cachealternativen waren im festen Test schlechter.
+- **Komfort im Dateimanager:** Kleine RAM-Stichproben werden verständlich eingeordnet. Unter „Sicherung“ erscheinen Laufwerksfehler und Wartehinweise direkt. Während einer neuen Diagnose wird kein altes Abschlussdatum gezeigt.
+- **Bootloader Z17:** Zeigt während des tatsächlichen Updateabschlusses „Pruefen…“ und „Speichern…“. Die dafür nötigen Buchstaben sind im kleinen LCD-Zeichensatz enthalten. Z17 gehört nicht zum normalen App-Update; Nordic S112 bleibt unverändert.
+- **Für Entwickler:** Strenge Typprüfung der eigenen C-Module, nachbaubare Docker- und Linux-Builds, vollständige Quellbindung, ELF/Map und reproduzierbare Tests. [Mitmachen](CONTRIBUTING.md)
 
-[LCD-Vergleich](docs/validation/DE3_61_LCD.png) · [Prüfergebnisse](docs/validation/DE3_61.json)
+## Aktualisieren
 
-## Installation und Mitarbeit
+Für ein bereits auf PFS1 umgestelltes LCD-Gerät ist **Allmiibo_LCD_DE3_62_634_TESTSTAND.zip** das Anwendungsupdate. Es verändert weder Bootloader noch SoftDevice und benötigt keine erneute Speicherumstellung. Sicherung aufbewahren. Auf dem Handy funktioniert die [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) für dieses App-ZIP; die getrennten Bootloader-Pakete haben eigene Anweisungen.
 
-1. Bei einem passenden LCD/PFS1-Gerät die eigene Sammlung sichern. Für DE3.61 die innere ZIP **Allmiibo_LCD_DE3_61_633_TESTSTAND.zip** aus dem Release verwenden. Auf dem Gerät **Firmware-Update** wählen und den Anweisungen der [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) folgen. Ein vorhandenes PFS1 benötigt keine erneute Umstellung.
-2. Zum Dateizugriff am Gerät **Bluetooth-Dateiübertragung** öffnen und es im Browser über **Verbinden** auswählen. Für den lokalen Windows-Start das portable ZIP entpacken und **Start-Dateimanager.cmd** öffnen. [Dateimanager-Anleitung](docs/DATEIMANAGER_WEB.md)
-3. Wer weiterentwickeln möchte, findet die Anwendungsquellen unter [fw](fw), die Browserquellen unter [web](web) und die passenden BL8-Quellen unter [bootloader-bl8](bootloader-bl8). [Mitarbeiten](CONTRIBUTING.md) · [Firmware bauen](docs/BUILD_DE3_61.md)
+Alte SPIFFS-Geräte, andere Boards und gewöhnliches Upstream-LittleFS benötigen ihre jeweilige geprüfte Umstellung. [Migration](docs/MIGRATION_PFS1.md)
 
-Die ursprüngliche Firmware stammt von [solosky](https://github.com/solosky/pixl.js). Dieser Community-Zweig von bluecyber81 übernimmt auch Arbeit von [cylin577](https://github.com/cylin577/pixl.js). Die Herkunft von BL8, dem separat gelieferten Nordic-SoftDevice und den SDK-Korrekturen ist dokumentiert. [Komponenten und Nachweise](docs/COMPONENTS.md) · [Änderungsgeschichte](docs/DEVELOPMENT_HISTORY.de.md) · [Lizenz](LICENSE) · [Fremdkomponenten](THIRD_PARTY_NOTICES.md)
+## Quellen und Nachweise
 
-Geräte mit SPIFFS, etwa DE3.8, und solche mit gewöhnlichem Upstream-LittleFS brauchen vor einem Wechsel einen passenden Migrationsweg. [Migration und Sicherung](docs/MIGRATION_PFS1.md)
+[Änderungen und Grenzen](docs/RELEASE_DE3_62.md) · [App nachbauen](docs/BUILD_DE3_62.md) · [Start-/Speicherdiagnose](docs/diagnostics/DE3_62_STORAGE.md) · [Z17-Quellen](bootloader-z17/) · [App-Prüfbericht](docs/validation/DE3_62.json) · [Web-Anleitung](web/README.md)
+
+Community-Fortführung durch bluecyber81 auf Grundlage von [solosky](https://github.com/solosky/pixl.js) und [cylin577](https://github.com/cylin577/pixl.js). [Komponenten](docs/COMPONENTS.md) · [Entwicklungsgeschichte](docs/DEVELOPMENT_HISTORY.md) · [Lizenzen](THIRD_PARTY_NOTICES.md)

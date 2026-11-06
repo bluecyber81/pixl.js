@@ -43,6 +43,24 @@ async function mount(props={}){
 }
 const change=async(h,patch)=>{Object.assign(h.state,patch);await Vue.nextTick();};
 
+test('RAM sample evidence is visible before technical details and follows locale fallback and fresh missing data',async()=>{
+ const h=await mount();
+ try {
+  for(const [samples,de,en] of [[0,/Noch keine Speicherstichprobe/,/No memory samples/],
+    [1,/Nur 1 Speicherstichprobe/,/Only 1 memory sample/],[3,/Erst 3 Speicherstichproben/,/Only 3 memory samples/],
+    [25,/25 Speicherstichproben erfasst/,/25 memory samples recorded/],[undefined,/Stichprobenzahl nicht verfügbar/,/Sample count unavailable/]]){
+   const snapshot=diagnosticSnapshot();snapshot.sections.runtime.data.memorySamples=samples;
+   for(const locale of ['de_DE','en','ja_JP']){
+    await change(h,{snapshot,locale});const ram=card(h.root,'runtime'),note=nodes(ram,'p').find(n=>n.props.class==='sample-note');
+    assert.ok(note);assert.equal(note.parent,ram);assert.match(text(note),locale==='de_DE'?de:en);
+    assert.doesNotMatch(text(note),/RAM.*(?:OK|bestanden)|healthy|passed/);
+   }
+  }
+  const snapshot=diagnosticSnapshot();snapshot.sections.runtime={state:'unavailable',observedAt:null,data:null,errorCode:null};
+  await change(h,{snapshot});assert.equal(nodes(card(h.root,'runtime'),'p').filter(n=>n.props.class==='sample-note').length,0);
+ }finally{h.app.unmount();}
+});
+
 test('overview is passive and gates read/export while disconnected, blocked or loading',async()=>{
  const h=await mount({connected:false});
  try{
@@ -58,6 +76,9 @@ test('overview is passive and gates read/export while disconnected, blocked or l
   assert.match(text(nodes(h.root).find(n=>n.props.role==='status')),/RAM und Laufzeit/);
   await change(h,{loading:false,snapshot:diagnosticSnapshot()});
   save().props.onClick();assert.equal(h.events[1][0],'export');assert.equal(h.events[1][1],h.state.snapshot);
+  assert.equal(nodes(h.root,'p').filter(n=>n.props.class==='snapshot-time').length,1);
+  await change(h,{loading:true,progress:{completed:0,total:8,startedAt:0,updatedAt:0,sections:{}}});
+  assert.equal(nodes(h.root,'p').filter(n=>n.props.class==='snapshot-time').length,0,'pending read must hide the earlier completion timestamp');
  }finally{h.app.unmount();}
 });
 
@@ -83,6 +104,20 @@ test('all real normalized sections render extra memory, startup, layout and firm
   assert.match(text(card(h.root,'boot')),/S112 7\.3\.0/);assert.doesNotMatch(text(card(h.root,'boot')),/BL11/);
   assert.match(text(card(h.root,'power')),/4\.123 V/);
   assert.equal(nodes(h.root,'img').length,0);assert.equal(nodes(h.root,'a').length,0);assert.equal(h.events.length,0);
+ }finally{h.app.unmount();}
+});
+test('combined view shows schema3 mount evidence, unavailable profile and failure without stale counters',async()=>{
+ const snapshot=diagnosticSnapshot(),startup=snapshot.sections.startup.data;
+ Object.assign(startup,{schemaVersion:3,storageDetailMask:3,storageElapsedMilliseconds:[2100,2180],mount:{scope:'last-packedfs-mount',flags:23,result:0,
+  configureMilliseconds:100,scanMilliseconds:2000,physicalReadAttempts:500,physicalReadBytes:128000,cacheHits:850,cacheMisses:450,bypassReads:50,physicalReadErrors:0}});
+ const h=await mount({snapshot});
+ try{
+  assert.match(text(card(h.root,'startup')),/PackedFS einlesen2000 ms/);assert.match(text(card(h.root,'startup')),/128000 B/);
+  assert.match(text(card(h.root,'storage')),/Konfigurationswert/);
+  const unavailable=structuredClone(snapshot);unavailable.sections.startup.data.mount=null;await change(h,{snapshot:unavailable});
+  assert.match(text(card(h.root,'startup')),/Kein abgeschlossenes PackedFS/);assert.doesNotMatch(text(card(h.root,'startup')),/128000 B/);
+  unavailable.sections.startup={state:'failed',observedAt:snapshot.completedAt,data:null,errorCode:'RESPONSE_INVALID'};
+  await change(h,{snapshot:structuredClone(unavailable)});assert.doesNotMatch(text(card(h.root,'startup')),/Mountprofil|128000 B/);
  }finally{h.app.unmount();}
 });
 

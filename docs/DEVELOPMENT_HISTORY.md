@@ -1,5 +1,18 @@
 # Improvements and fixed bugs in the DE series
 
+## DE3.62 / 634 and file manager3.38.0
+
+The card-buffer boundary is checked before import/export. Critical own-C type
+diagnostics now fail the build. Docker and native Linux builds reproduce the
+same application bytes. Startup schema3 exposes actual mount counters without
+changing the storage layout or cache size. The browser explains RAM sample
+counts and shows backup drive failures where the action was started.
+
+The separate Z17 candidate adds real final-validation/commit LCD phases and
+the required font glyphs. S112 remains Nordic7.3.0. Host results are complete;
+new physical tests are pending. [Release record](RELEASE_DE3_62.md) ·
+[Build and tests](BUILD_DE3_62.md) · [Storage evidence](diagnostics/DE3_62_STORAGE.md).
+
 ## DE3.59 / 631
 
 **DE3.59 / 631** is an application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume. **File manager 3.37.0** also supports older diagnostic reports. The BL8 bootloader, Nordic S112 7.3.0, on-disk format and catalog remain in place.

@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeDrives, normalizeRuntimeDiagnostics, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from '../src/lib/device-info.js';
+import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from '../src/lib/device-info.js';
+
+test('memory sample evidence distinguishes absent, zero, one, few and many without a health verdict', () => {
+  for (const n of [undefined,null,NaN,-1,0.1,'1',0x100000000]) assert.equal(memorySampleEvidenceKey(n),'memorySamplesUnknown');
+  for (const [n,key] of [[0,'None'],[1,'Single'],[2,'Few'],[9,'Few'],[10,'Many'],[0xffffffff,'Many']])
+    assert.equal(memorySampleEvidenceKey(n),'memorySamples'+key);
+});
 
 test('last VFS code is explained without classifying the entire historical counter as storage damage', () => {
   assert.equal(runtimeVfsDetailKey(-1000), 'runtimeBadRequest');
@@ -15,7 +21,7 @@ test('runtime diagnostics preserve signed errors and unknown stack measurements 
   const data=normalizeRuntimeDiagnostics(runtime);
   assert.equal(data.lastVfsError,-10002);assert.equal(data.stackMinFreeBytes,null);assert.equal(data.memorySamples,3);
   const report=createDiagnostics({runtime,history:[{kind:'sync',status:'interrupted',bytes:12,verified:false}]});
-  assert.equal(report.applicationVersion,'3.37.5');assert.equal(report.recentTransfers[0].status,'interrupted');
+  assert.equal(report.applicationVersion,'3.38.0');assert.equal(report.recentTransfers[0].status,'interrupted');
   assert.doesNotMatch(JSON.stringify(report),/PRIVATE/);
   assert.equal(normalizeRuntimeDiagnostics({schemaVersion:2}),null);
 });

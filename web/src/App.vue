@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.37.5</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.38.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -217,6 +217,8 @@
       <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
       <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
       <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
+      <p v-if="table_loading" class="backup-hint" role="status">{{ $t('workflow.backupDriveOpening') }}</p>
+      <p v-else-if="listingError && connected" class="notice error" role="alert">{{ $t('workflow.backupDriveFailed') }}</p>
       <div v-if="connected && !current_dir" class="workspace-actions backup-drive-picker">
         <el-button v-for="drive in availableBackupDrives" :key="drive.label" type="primary"
           :disabled="busy || disconnecting || upload_diag_visible" @click="open_backup_drive(drive.label)">
@@ -225,7 +227,7 @@
         <el-button v-if="!availableBackupDrives.length" :disabled="busy || disconnecting || upload_diag_visible"
           @click="on_btn_refresh">{{ $t('workflow.refreshDrives') }}</el-button>
       </div>
-      <div class="workspace-actions"><el-button size="small" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
+      <div class="workspace-actions"><el-button size="small" type="primary" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
     <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
       </div>
     </details>
@@ -245,7 +247,7 @@
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.37.5</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.38.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -276,6 +278,7 @@
       </div>
       <section v-if="runtimeInfo" class="runtime-info">
         <p>{{ $t('info.runtimeScope') }}</p>
+        <p class="sample-note">{{ $t('info.' + memory_sample_key(runtimeInfo.memorySamples), { count: runtimeInfo.memorySamples }) }}</p>
         <dl class="device-info-grid">
           <div><dt>{{ $t('info.heapFree') }}</dt><dd>{{ format_optional_size(runtimeInfo.heapFreeBytes) }} / {{ format_optional_size(runtimeInfo.heapPoolBytes) }}</dd></div>
           <div><dt>{{ $t('info.heapLargest') }}</dt><dd>{{ format_optional_size(runtimeInfo.largestFreeBlockBytes) }}</dd></div>
@@ -474,7 +477,7 @@ import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
 import { readTimeEstimate, formatReadDuration } from "./lib/read-time-estimate.js"
 import { normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
-import { normalizeDrives, normalizeRuntimeDiagnostics, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
+import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { DIAGNOSTIC_SECTION_KEYS, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { assertPortableEntryName, portableNameKey } from "./lib/portable-names.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
@@ -494,7 +497,7 @@ export default {
   components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.37.5.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.38.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
@@ -590,6 +593,7 @@ export default {
     backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; }
   },
   methods: {
+    memory_sample_key(count) { return memorySampleEvidenceKey(count); },
     select_file_row(index, row) {
       const demo=!this.connected&&this.demoMode&&row.demoFigure===true;
       if ((!this.connected&&!demo) || (this.busy && !this.previewBusy)) return;
@@ -722,7 +726,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.37.5.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.38.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1173,7 +1177,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.37.5.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.38.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -2267,4 +2271,5 @@ body{padding:0;background:#f5f6f8;color:#2d3943}.filemanager{max-width:1680px;mi
 
 .sidebar-device{padding:22px 10px;margin-top:15px;border-top:1px solid #e3e8ec;font-size:11px;color:#6c7984}.sidebar-caption{font-size:9px;letter-spacing:.13em;color:#99a3ab}.sidebar-device strong{font-size:12px;color:#485b68}.sidebar-device p{line-height:1.6}.sidebar-path{overflow-wrap:anywhere}.sidebar-device progress{width:100%;height:5px;accent-color:#748e84;display:block;margin:12px 0}.workspace-nav .sidebar-upload{border:1px dashed #b7c5ce;background:white;justify-content:center;text-align:center;font-size:12px;margin-top:15px}.workspace-nav .sidebar-upload:disabled{opacity:.5;cursor:default}.background-work{padding:12px 16px;margin:0 0 12px;background:#eef5f2;border-radius:8px;font-size:12px}.background-work button{border:0;background:transparent;color:#397262;cursor:pointer;text-decoration:underline}@media(max-width:650px){.sidebar-device{display:none}}
 .mobile-preview-close{display:none}@media(max-width:960px){.selection-context.has-selection{position:fixed;bottom:0;left:0;right:0;z-index:20;max-height:50svh;overflow:auto;border:1px solid #d7e0e5;border-radius:16px 16px 0 0;background:white;box-shadow:0 -10px 40px #20313e24;padding-bottom:env(safe-area-inset-bottom)}.selection-context.has-selection .mobile-preview-close{display:block;position:sticky;top:0;z-index:1;margin:0 0 0 auto;padding:12px 18px;border:0;background:white;color:#506b7a;font:inherit;font-size:12px;cursor:pointer}.selection-context.has-selection .selection-preview{padding-top:4px}.selection-context.has-selection .preview-caption{font-size:10px}.selection-context.has-selection .preview-eyebrow{margin-bottom:10px}}
+.sample-note{padding:10px 12px;border-left:3px solid #7596ac;background:#edf4f8;color:#294c64;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}
 </style>

@@ -85,3 +85,7 @@ server-state-*.tmp
 server-*.log
 *.local.json
 /bootloader-bl6/build/
+# Z17 build evidence is distributed as a separate review artifact.
+/bootloader-z17/_build/
+/bootloader-z17/_checks/
+/bootloader-z17/**/__pycache__/

@@ -5,6 +5,13 @@
 #include PROTOCOL
 static df_frame_t answer;
 void runtime_diag_vfs_error(uint8_t command,int32_t error){(void)command;(void)error;}
+/* Diagnostics are outside this old atomic-data test's scope. */
+void runtime_diag_mount_begin(void){}
+void runtime_diag_mount_configured(uint32_t ms){(void)ms;}
+void runtime_diag_mount_complete(int32_t result,uint32_t ms,bool cache){(void)result;(void)ms;(void)cache;}
+void runtime_diag_mount_cache(bool hit,bool eligible){(void)hit;(void)eligible;}
+void runtime_diag_mount_read(uint32_t bytes,bool success){(void)bytes;(void)success;}
+
 void df_core_send_frame(df_frame_t *frame){answer=*frame;}
 size_t df_core_max_payload(void){return DF_PAYLOAD_LEN;}
 bool vfs_drive_enabled(vfs_drive_t drive){return drive==VFS_DRIVE_EXT;}

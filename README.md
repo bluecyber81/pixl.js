@@ -1,22 +1,18 @@
 # Allmiibo LCD firmware and file manager
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Firmware and downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.61) · [Deutsch](README.de.md)
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [DE3.62 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.62) · [Deutsch](README.de.md)
 
-**DE3.61 / 633** is a signed application update for the nRF52832 Allmiibo LCD with an existing Packed LittleFS (PFS1) volume, including the tested Z15 device configuration with Nordic S112 7.3.0. This application has passed computer-based checks. On-device testing of DE3.61 is pending.
+**DE3.62 / 634** and **file manager 3.38.0** support the nRF52832 Allmiibo LCD with an existing Packed LittleFS PFS1 volume. The separate **Z17 / 17 bootloader candidate** adds real final-validation and settings-commit display states. These new versions have passed computer-based checks; physical integration tests remain pending.
 
-* **Settings.** All 21 main settings and their values fit the German and English LCD layouts with menu animation disabled. The remote control state shows when it expires. The RAM overlay uses its drawing font to calculate text width.
-* **Storage startup.** Mounting the same test image with 1,131 files and 77 directories took 4,531 flash reads instead of 4,712. **Device & diagnostics → Read startup times** now separates mounting, journal recovery and the rest of storage initialization.
-* **Catalog.** More compact references leave 2,644 additional bytes free in application flash. The final image preserves all 952 figures, 82 games, 1,344 links and their localized descriptions.
-* **File manager 3.37.5.** Open a detected drive directly in **Backup** to save its files to a ZIP. Diagnostics distinguish the firmware-reported ATT MTU from the usable transport value size. The version comparison recognizes Z15 and identifies the Z16 return package with its Z13 code separately.
-
-[LCD comparison](docs/validation/DE3_61_LCD.png) · [Validation results](docs/validation/DE3_61.json)
+- Card import/export rejects missing, unknown and truncated buffers. C interfaces for tag types, menu values, retained-cache CRC, NFC and AmiLoop are corrected and checked during every build.
+- Startup diagnostics separate mount setup and scan times and expose physical reads, bytes, cache hits and failures. Older diagnostic formats remain supported. Equal-size cache alternatives were slower on the fixed test image and were not adopted; no additional startup speedup is claimed.
+- Backup now shows drive-opening failures and progress where the user is working. RAM diagnostics explain small sample counts. A new diagnostic request no longer displays an old completion timestamp.
+- Docker and native Linux builds produce identical BIN/HEX payloads. Source manifests, ELF, linker maps, strict own-C diagnostics and reproducible host tests support further development.
 
 ## Install or contribute
 
-1. Back up the collection on a compatible LCD/PFS1 device. Select the inner **Allmiibo_LCD_DE3_61_633_TESTSTAND.zip** from the release. Enter firmware-update mode on the device and follow the [DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html). Existing PFS1 devices need no storage conversion.
-2. For ordinary transfer, open Bluetooth file transfer on the device and choose **Connect** in the browser. For offline Windows use, extract the portable ZIP and open **Start-Dateimanager.cmd**. [File manager instructions](web/README.md)
-3. Contributors can find the [application](fw), [browser source](web), and [BL8 source](bootloader-bl8) in this tree. [Contribution guide](CONTRIBUTING.md) · [Build the LCD application](docs/BUILD_DE3_61.md)
+Keep a backup. For an existing LCD/PFS1 device, use **Allmiibo_LCD_DE3_62_634_TESTSTAND.zip** on the [application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html). This package updates the application only; it does not replace the bootloader or S112 and requires no new filesystem migration. Bootloader candidates have separate instructions. Older SPIFFS devices and upstream LittleFS need their respective migration paths.
 
-This community continuation by bluecyber81 draws on work by [solosky](https://github.com/solosky/pixl.js) and [cylin577](https://github.com/cylin577/pixl.js). The source and distribution boundaries for BL8, Nordic S112 and SDK corrections are documented. [Components and evidence](docs/COMPONENTS.md) · [Development history](docs/DEVELOPMENT_HISTORY.md) · [License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+[Release details and limitations](docs/RELEASE_DE3_62.md) · [Build guide](docs/BUILD_DE3_62.md) · [Contributing](CONTRIBUTING.md) · [Storage diagnostics](docs/diagnostics/DE3_62_STORAGE.md) · [Z17 source](bootloader-z17/) · [Web instructions](web/README.md) · [Migration](docs/MIGRATION_PFS1.md)
 
-Older SPIFFS devices including DE3.8 and ordinary upstream LittleFS devices require their own migration path. [Migration and backup](docs/MIGRATION_PFS1.md)
+Community continuation by bluecyber81, based on [solosky](https://github.com/solosky/pixl.js) and [cylin577](https://github.com/cylin577/pixl.js). [Components](docs/COMPONENTS.md) · [History](docs/DEVELOPMENT_HISTORY.md) · [License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

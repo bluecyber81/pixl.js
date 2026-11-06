@@ -24,6 +24,10 @@
       <dl><div v-for="item in storageIntervals" :key="item.id"><dt>{{ text.intervals[item.id] }}</dt>
         <dd>{{ item.milliseconds === null ? text.absent : item.milliseconds + ' ms' }}</dd></div></dl>
     </details>
+    <details v-if="mount" class="mount-profile" open><summary>{{ mount.title }}</summary>
+      <dl><div v-for="row in mount.rows" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
+      <p class="limits">{{ mount.note }}</p>
+    </details>
     <details v-if="summary"><summary>{{ text.baseline }}</summary>
       <p>{{ text.baselineHint }}</p>
       <input type="file" accept=".json,application/json" :aria-label="text.baseline" @change="loadBaseline" />
@@ -44,7 +48,7 @@
 </template>
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { startupSeries, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals } from '../lib/startup-diagnostics.js';
+import { startupSeries, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
 const props = defineProps({ firmwareVersion: String, connected: Boolean, blocked: Boolean, generation: { type: Number, default: 0 },
   locale: { type: String, default: 'de_DE' }, readDiagnostics: { type: Function, default: null } });
 const emit = defineEmits(['busy', 'export']);
@@ -72,6 +76,7 @@ async function loadSeries(event) {
 const loading = computed(() => state.value === 'loading');
 const rows = computed(() => startupDiagnosticRows(info.value));
 const storageIntervals = computed(() => startupStorageIntervals(info.value));
+const mount = computed(() => startupMountPresentation(info.value, props.locale));
 // Compare only a complete series. A partial recording cannot identify the
 // slowest interval of the whole measured application start.
 const summary = computed(() => {
@@ -142,4 +147,5 @@ th,td { padding:8px; border-bottom:1px solid #d7e2ec; text-align:left; } tbody t
 .phase-meter>span { display:block; height:100%; border-radius:4px; background:#3d7da8; }
 @media(max-width:480px) { .timing-summary { grid-template-columns:1fr; } }
 @media(max-width:600px) { .startup-diagnostics { padding:10px; } th,td { padding:6px; } }
+.mount-profile{padding:12px;margin:12px 0;border:1px solid #d7e2ec;border-radius:8px;background:#fff}.mount-profile summary{cursor:pointer;font-size:.86rem;font-weight:600}.mount-profile dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:.8rem}.mount-profile dt{color:#536b80}.mount-profile dd{margin:4px 0 0;font-variant-numeric:tabular-nums}
 </style>

@@ -45,6 +45,10 @@ int main(void) {
  assert(!runtime_diag_startup_snapshot(data,sizeof(data),false));
  for(unsigned i=0;i<sizeof(data);i++)assert(data[i]==0xa5);
  assert(!runtime_diag_startup_snapshot(NULL,0,false));
+ assert(!runtime_diag_startup_mount_snapshot(NULL,0));
+ runtime_diag_mount_begin(); runtime_diag_mount_configured(1);
+ runtime_diag_mount_cache(true,true); runtime_diag_mount_read(256,true);
+ runtime_diag_mount_complete(0,2,true);
  puts("PASS");return 0;
 }
 ''')

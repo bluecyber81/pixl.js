@@ -35,7 +35,7 @@ def main():
     raw = {name: path.read_bytes() for name, path in paths.items()}
     src = {name: data.decode('utf-8') for name, data in raw.items()}
     enum = re.search(r'typedef enum\s*\{\s*NFC_TAG_MF1_WRITE_NORMAL[\s\S]*?\}\s*nfc_tag_mf1_write_mode_t\s*;', src[MF1_H])
-    table = re.search(r'const static uint32_t mf1_write_mode_names\[4\]\s*=\s*\{[\s\S]*?\};', src[HELPER])
+    table = re.search(r'(?:const static|static const) uint32_t mf1_write_mode_names\[4\]\s*=\s*\{[\s\S]*?\};', src[HELPER])
     if enum is None or table is None:
         raise ValueError('Actual enum/name table not found')
     functions = '\n\n'.join([

@@ -1,0 +1,32 @@
+{
+  "source": "Actual production C runtime_diag + DF transport host fixture at MTU23/185/250",
+  "deviceAccess": false,
+  "wireHex": "5058535403500000000000000000000000000000000000000000000000000000000000000000000015000000ffffffff1100000016000000020000000001000001000000010000000100000001000000",
+  "expected": {
+    "schemaVersion": 3,
+    "phaseMask": 0,
+    "elapsedMilliseconds": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "storageDetailMask": 0,
+    "storageElapsedMilliseconds": [
+      0,
+      0
+    ],
+    "flags": 21,
+    "result": -1,
+    "configureMilliseconds": 17,
+    "scanMilliseconds": 22,
+    "physicalReadAttempts": 2,
+    "successfulReadBytes": 256,
+    "cacheHits": 1,
+    "eligibleCacheMisses": 1,
+    "bypassReads": 1,
+    "physicalReadErrors": 1
+  }
+}

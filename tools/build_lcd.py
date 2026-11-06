@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Offline unsigned LCD application build. Python standard library + Docker only."""
+"""Offline unsigned LCD build, using pinned Docker or native Linux tools."""
 
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -18,13 +19,15 @@ from production_id import fingerprint, source_hashes
 
 
 IMAGE = "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
-RELEASE_VERSION = "2.22.0-DE3.61"
-RELEASE_COUNTER = 633
-RELEASE_BIN_SHA256 = "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7"
+RELEASE_VERSION = "2.22.0-DE3.62"
+RELEASE_COUNTER = 634
+RELEASE_BIN_SHA256 = "597d61e301d663f30abfd63512c5d44faba7cfe5345a2b216d715003704aa9ca"
 SOURCE_DATE_EPOCH = 1793836800
 NVIC_BEFORE_SHA256 = "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210"
 NVIC_AFTER_SHA256 = "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
 ARTIFACTS = ("pixljs.bin", "pixljs.hex", "pixljs.out", "pixljs.map")
+SDK_ARCHIVE_SHA256 = "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6"
+GCC_SHA256 = "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3"
 EXCLUDED_PARTS = {".git", "keys", "node_modules", "_build", "build", "__pycache__", ".venv"}
 EXCLUDED_SUFFIXES = {".pem", ".key", ".p12", ".pfx", ".p8", ".jks", ".keystore"}
 EXCLUDED_TREES = ("fw/components/chameleon-ultra/firmware/nrf52_sdk", "fw/components/chameleon-ultra/software")
@@ -46,16 +49,16 @@ def build_identity(root, mode, version, counter):
         if version is not None or counter is not None:
             raise ValueError("Release identity is fixed; --version/--counter are for development mode.")
         expected = {"GIT_COMMIT": '"unknown"', "GIT_BRANCH": '"source-archive"',
-                    "GIT_BRANCH_NUM": '"n/a"', "VERSION": '"2.22.0-DE3.61"',
+                    "GIT_BRANCH_NUM": '"n/a"', "VERSION": json.dumps(RELEASE_VERSION),
                     "BUILD_DIRTY": "1", "BUILD_DIRTY_KNOWN": "0",
-                    "BUILD_DATE": '"2026-11-05"', "TARGET": "0"}
+                    "BUILD_DATE": '"2026-11-06"', "TARGET": "0"}
         if values != expected:
-            raise ValueError("Release mode requires the archived DE3.61 version.inc.h metadata.")
+            raise ValueError("Release mode requires the archived DE3.62 version.inc.h metadata.")
         return RELEASE_VERSION, RELEASE_COUNTER, sha256(header)
     if not version or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}", version):
         raise ValueError("Development mode requires an explicit simple --version identifier.")
-    if version == RELEASE_VERSION or counter is None or not 634 <= counter <= 0xFFFFFFFF:
-        raise ValueError("Use a new development version and explicit counter >=634; 633 identifies DE3.61.")
+    if version == RELEASE_VERSION or counter is None or not 635 <= counter <= 0xFFFFFFFF:
+        raise ValueError("Use a new development version and explicit counter >=635; 634 identifies DE3.62.")
     if values.get("VERSION") != json.dumps(version):
         raise ValueError("First update VERSION in your development source version.inc.h to match --version.")
     return version, counter, sha256(header)
@@ -84,36 +87,88 @@ def make_archive(root, destination):
         archive.add(root / "fw", arcname="fw", filter=archive_filter)
 
 
+def native_build(temp, export, args, version, counter, record, log):
+    """Use a disposable SDK copy; never patch the supplied SDK or toolchain."""
+    if os.name != "posix":
+        raise RuntimeError("Native builds require Linux/WSL; Windows can use --backend docker.")
+    if not args.sdk_archive or not args.toolchain:
+        raise ValueError("Native builds need --sdk-archive and --toolchain; no tools are installed automatically.")
+    sdk_archive = args.sdk_archive.resolve()
+    tool_bin = args.toolchain.resolve() / "bin"
+    compiler = tool_bin / "arm-none-eabi-gcc"
+    if sha256(sdk_archive) != SDK_ARCHIVE_SHA256:
+        raise ValueError("SDK archive does not match the pinned Nordic 17.1.0 build sources.")
+    if sha256(compiler) != GCC_SHA256:
+        raise ValueError("Compiler does not match the pinned ARM GNU 12.2.Rel1 Linux compiler.")
+    # Environment-supplied CFLAGS/MAKEFILES/GCC_EXEC_PREFIX could change a build
+    # without changing its source manifest. Pass only process essentials.
+    env = {key: os.environ[key] for key in ("PATH", "HOME", "TMPDIR") if key in os.environ}
+    env.update(LANG="C.UTF-8", LC_ALL="C.UTF-8")
+    compiler_version = subprocess.check_output([str(compiler), "--version"], text=True, env=env).splitlines()[0]
+    make_version = subprocess.check_output(["make", "--version"], text=True, env=env).splitlines()[0]
+    work, sdk = temp / "work", temp / "sdk"
+    work.mkdir(); sdk.mkdir()
+    for archive_path, target in ((temp / "source.tar", work), (sdk_archive, sdk)):
+        with tarfile.open(archive_path) as archive:
+            archive.extractall(target, filter="data")
+    nvic = sdk / "components/softdevice/s112/headers/nrf_nvic.h"
+    if sha256(nvic) != NVIC_BEFORE_SHA256:
+        raise ValueError("Unexpected original SDK NVIC header.")
+    shutil.copyfile(temp / "nrf_nvic.h", nvic)
+    env.update(NRF52_SDK_ROOT=str(sdk), SOURCE_DATE_EPOCH=str(SOURCE_DATE_EPOCH),
+               MAKEFLAGS="--no-print-directory")
+    command = ["make", "-C", str(work / "fw/application"), "-j" + str(args.jobs),
+               "pixljs", "BOARD=LCD", "RELEASE=1", "APP_VERSION=" + version,
+               "APP_VERSION_NUM=" + str(counter), "GNU_INSTALL_ROOT=" + str(tool_bin) + "/",
+               "GNU_PREFIX=arm-none-eabi"]
+    record["native_tools"] = {"compiler": compiler_version, "compiler_sha256": GCC_SHA256,
+                              "make": make_version, "sdk_archive_sha256": SDK_ARCHIVE_SHA256,
+                              "sdk_copy_patched": True, "input_sdk_modified": False,
+                              "environment_policy": "PATH/HOME/TMPDIR only; fixed locale and build variables"}
+    result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=env, timeout=900)
+    if result.returncode == 0:
+        for name in (*ARTIFACTS, "production-inputs.json"):
+            shutil.copyfile(work / "fw/_build" / name, export / name)
+    return result
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("release", "candidate", "development"), default="release")
     parser.add_argument("--version", help="New development VERSION already set in the source header")
     parser.add_argument("--counter", type=int, help="Explicit development DFU counter; no OTA is generated")
     parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument("--backend", choices=("docker", "native"), default="docker")
+    parser.add_argument("--sdk-archive", type=Path, help="Pinned SDK source tar for native Linux builds")
+    parser.add_argument("--toolchain", type=Path, help="ARM GNU 12.2.Rel1 directory containing bin/")
+    parser.add_argument("--output", type=Path, help="New/empty output directory; existing results are preserved")
     args = parser.parse_args(argv)
     if not 1 <= args.jobs <= 64:
         parser.error("--jobs must be between 1 and 64")
     root = Path(__file__).resolve().parents[1]
     try:
         version, counter, header_hash = build_identity(root, args.mode, args.version, args.counter)
-        if shutil.which("docker") is None:
+        if args.backend == "docker" and shutil.which("docker") is None:
             raise RuntimeError("Docker CLI is required. Install/configure it separately; this helper installs nothing.")
         # --pull never below prevents an implicit network download. Fetch this
         # exact image explicitly before using the offline build helper.
-        subprocess.run(["docker", "image", "inspect", IMAGE], check=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=30)
+        if args.backend == "docker":
+            subprocess.run(["docker", "image", "inspect", IMAGE], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=30)
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        destination = root / "build/lcd-de361"
+        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de362"))
         if destination.resolve() != destination:
-            raise RuntimeError("build/lcd-de361 must not resolve through a symlink or junction.")
+            raise RuntimeError("Output must not resolve through a symlink or junction.")
         destination.mkdir(parents=True, exist_ok=True)
         if any(destination.iterdir()):
-            raise RuntimeError("build/lcd-de361 must be empty. Preserve or move its previous results before rebuilding.")
+            raise RuntimeError("Output must be empty. Preserve or move its previous results before rebuilding.")
         record = {"status": "preparing", "mode": args.mode, "version": version,
-                  "counter": counter, "board": "LCD", "sdk_image": IMAGE,
-                  "network": "none", "signed": False, "device_access": False,
+                  "counter": counter, "board": "LCD", "backend": args.backend,
+                  "sdk_image": IMAGE if args.backend == "docker" else None,
+                  "network": "none" if args.backend == "docker" else "no downloads performed",
+                  "signed": False, "device_access": False,
                   "version_header_sha256": header_hash,
                   "sdk_header_override": {"path": "components/softdevice/s112/headers/nrf_nvic.h",
                                           "before_sha256": NVIC_BEFORE_SHA256,
@@ -151,10 +206,12 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
                        NVIC_BEFORE_SHA256, NVIC_AFTER_SHA256]
             record["status"] = "compiling"
             with (destination / "build.log").open("wb") as log:
-                result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=900)
+                result = (native_build(temp, export, args, version, counter, record, log)
+                          if args.backend == "native" else
+                          subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=900))
             record["exit_code"] = result.returncode
             if result.returncode:
-                raise RuntimeError("Compilation failed; inspect build/lcd-de361/build.log")
+                raise RuntimeError("Compilation failed; inspect " + str(destination / "build.log"))
             hashes = {name: sha256(export / name) for name in ARTIFACTS}
             inputs = json.loads((export / "production-inputs.json").read_bytes())
             if inputs != source_hashes(root / "fw"):

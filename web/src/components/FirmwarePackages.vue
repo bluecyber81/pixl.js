@@ -14,7 +14,7 @@
         <details><summary>{{ text.details }}</summary><p>{{ entry.file }}</p><p>{{ text.hash }} (SHA-256): <code>{{ entry.sha256 }}</code></p></details>
       </div>
       <p class="hint">{{ text.limits }}</p>
-      <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.61/Allmiibo_DE3_61_Quellcode.zip" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
+      <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.62/Allmiibo_DE3_62_Quellcode.zip" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
     </template>
     <p class="hint">{{ text.local }}</p>
   </section>

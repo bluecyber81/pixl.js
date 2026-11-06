@@ -777,6 +777,12 @@ $(OUTPUT_DIRECTORY)/pixljs/version2.c.o: $(OUTPUT_DIRECTORY)/production_id.h
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
+# Project-owned C must not silently compile undeclared functions or mismatched
+# pointer/integer interfaces. Keep vendor library warning policy separate.
+OWN_C_SOURCES := $(sort $(filter $(PROJ_DIR)/%.c,$(SRC_FILES)))
+OWN_C_OBJECTS := $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(notdir $(OWN_C_SOURCES))))
+$(OWN_C_OBJECTS): CFLAGS += -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Werror=int-conversion
+
 .PHONY: flash flash_softdevice erase
 .PHONY: size_report size_report_files
 

@@ -304,15 +304,16 @@ export function get_startup_diagnostics(firmwareVersion) {
     const generation = transport_generation;
     const series = /^2\.22\.0-DE3\.(\d+)$/.exec(firmwareVersion || '');
     function read(detail) {
-        return op_queue_push(0x09, b => { if (detail) b.writeUint8(1); }, b =>
-            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: detail ? 40 : 32, optional_probe: detail })
+        return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b =>
+            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: [32,40,80][detail], optional_probe: detail > 0 })
             .then(response => {
                 if (generation !== transport_generation) throw new Error('Bluetooth session changed');
-                if (detail && (response.status === 1 || response.status === 255)) return read(false);
+                if (detail && (response.status === 1 || response.status === 255)) return read(detail - 1);
                 return response.status === 255 ? null : checked_response(response);
             });
     }
-    return read(series !== null && Number(series[1]) >= 61);
+    const revision = series === null ? 0 : Number(series[1]);
+    return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
 }
 
 export function parse_runtime_diagnostics(buffer) {

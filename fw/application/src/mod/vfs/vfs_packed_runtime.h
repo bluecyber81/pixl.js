@@ -2,6 +2,7 @@
 #ifndef VFS_PACKED_RUNTIME_H
 #define VFS_PACKED_RUNTIME_H
 #include "boards.h"
+#include "../runtime_diag.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

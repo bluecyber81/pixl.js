@@ -123,6 +123,29 @@ test('optional startup request is explicit, serialized after earlier work and ex
  f.rx(9,startupPacket());const result=await p;assert.deepEqual(Array.from(result.elapsedMilliseconds),[0,37,45,92,97,101]);
  assert.equal(f.disconnects,0);
 });
+test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data and falls back only on option rejection',async()=>{
+ const packet=new Uint8Array(80);packet.set(startupPacket());packet.set([3,80,63,3],4);packet[32]=20;packet[36]=30;
+ const view=new DataView(packet.buffer);view.setUint32(40,23,true);
+ [5,15,200,51200,800,180,20,0].forEach((n,i)=>view.setUint32(48+i*4,n,true));
+ for(const capacity of [20,182,247]){
+  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.62');assert.deepEqual(f.writes,[[9,0,0,0,2]]);
+  const chunk=capacity-4;
+  for(let offset=0,index=0;offset<packet.length;offset+=chunk,index++)f.rx(9,packet.subarray(offset,offset+chunk),offset+chunk<packet.length?0x8000|index:index);
+  assert.equal((await p).mount.cacheHits,800);assert.equal(f.writes.length,1);
+ }
+ for(const status of [1,255]){
+  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.62');f.rx(9,[],0,status);await flush();
+  assert.deepEqual(f.writes[1],[9,0,0,0,1]);f.rx(9,[],0,status);await flush();
+  assert.deepEqual(f.writes[2],[9,0,0,0]);f.rx(9,startupPacket());assert.equal((await p).schemaVersion,1);
+  assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+ }
+ for(const payload of [new Uint8Array(81),(()=>{const b=packet.slice();b[40]=255;return b;})()]){
+  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.62'),rejected=assert.rejects(p);
+  f.rx(9,payload);await rejected;assert.equal(f.writes.length,1);
+ }
+ const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.62'),rejected=assert.rejects(p);
+ f.bus.emit('ble_disconnected');await rejected;f.rx(9,packet);assert.equal(f.writes.length,1);
+});
 test('unsupported startup is not a device fault, does not clear an earlier error and leaves queue usable',async()=>{
  const f=protocolFixture(),p=f.api.get_startup_diagnostics();f.rx(9,[],0,255);
  assert.equal(await p,null);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);assert.equal(f.disconnects,0);

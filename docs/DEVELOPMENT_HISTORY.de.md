@@ -1,5 +1,19 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## DE3.62 / 634 und Dateimanager 3.38.0
+
+Der Kartenemulator fängt fehlende, unbekannte und verkürzte Puffer vor dem
+Import/Export ab. Eigene C-Module werden auf kritische Typfehler streng geprüft;
+Docker und Linux erzeugen dieselben Firmwarebytes. Die Startdiagnose zeigt
+zusätzliche Mountzeiten und Lesezähler. RAM-Stichproben sowie Laufwerksfehler
+unter „Sicherung“ werden verständlicher angezeigt.
+
+Der getrennte Z17-Teststand ergänzt „Pruefen…“/„Speichern…“ am tatsächlichen
+DFU-Abschluss und die fehlenden Schriftzeichen. S112 bleibt Nordic 7.3.0.
+Weitere Startbeschleunigung wird nicht behauptet; ungünstigere Cachevarianten
+wurden verworfen. Der neue Gerätetest steht aus.
+[Änderungen und Grenzen](RELEASE_DE3_62.md) · [Nachbau](BUILD_DE3_62.md).
+
 ## DE3.59 / 631
 
 **DE3.59 / 631** ist ein Anwendungsupdate für das Allmiibo LCD mit nRF52832 und bestehendem Packed LittleFS (PFS1). **Dateimanager 3.37.0** funktioniert auch mit älteren Diagnoseberichten. Bootloader BL8, Nordic S112 7.3.0, Dateiformate und Katalog bleiben erhalten.
