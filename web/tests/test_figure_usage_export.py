@@ -24,6 +24,10 @@ class UsageExportTests(unittest.TestCase):
         self.translations = ROOT / 'web/src/data/usage-translations.de.json'
         self.output = ROOT / 'web/src/data/figure-usage.json'
 
+    def test_firmware_and_web_share_the_exact_reviewed_german_translation_source(self):
+        self.assertEqual((self.data / 'usage-translations.de.json').read_bytes(),
+                         self.translations.read_bytes())
+
     def test_every_association_and_english_note_is_traceable_to_the_original_csv_row(self):
         data = json.loads(self.output.read_text(encoding='utf8'))
         with (self.data / 'amiidb_link.csv').open(encoding='utf8', newline='') as stream:

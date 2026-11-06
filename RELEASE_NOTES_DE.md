@@ -1,3 +1,17 @@
+# DE3.63 / 635 · Dateimanager 3.39.2
+
+**Amiibo-Datenbank → Figur öffnen → kurz Mitte → Notiz / Hinweise** macht persönliche Notiz und Spielhinweis unabhängig erreichbar. Kurz links/rechts wechselt zwischen den beiden Seiten, Halten scrollt in ganzen Textzeilen, Mitte kehrt zum Menü zurück. Dasselbe Menü ist in der Datenbank-Slotansicht vorhanden. Die Informationsseiten verändern weder Tagdaten noch Notizen, Schreibschutz oder Spielstände.
+
+Acht bereits im Dateimanager vorhandene deutsche Übersetzungen für 13 Katalogzuordnungen sind nun auch in der Firmware verfügbar. Die Auswahl erfolgt anhand des exakten englischen Quelltextes; andere vorhandene Texte bleiben Englisch. Der Spielhinweis hängt vom ausgewählten Datenbankspiel ab. Ein fehlender Hinweis ist keine Aussage zur Spielkompatibilität.
+
+**LCD-Darstellung korrigiert:** Die bisher im Produktionsfont fehlenden Großumlaute **Ä, Ö und Ü** sind ergänzt. Dadurch lassen sich auch persönliche Notizen mit diesen Zeichen anzeigen. Die vorhandenen Zeichen bleiben erhalten; andere nicht unterstützte Unicode-Zeichen werden damit nicht automatisch ergänzt.
+
+Web 3.39.2 zeigt in Figurendetails und Dateivorschau neben „Kataloghinweise“ den eingebauten Datenstand. Die bisherigen Wachhalte-, Sicherungs- und Sammlungsfunktionen bleiben enthalten.
+
+Das LCD/PFS1-Paket **Allmiibo_LCD_DE3_63_635_TESTSTAND.zip** aktualisiert nur die Anwendung. Bootloader, S112 und PFS1 werden nicht ersetzt; eine neue Migration oder Formatierung ist nicht erforderlich. Die Änderung verspricht keinen schnelleren Start. Die Geräteprüfung von DE3.63 und längerer Handy-/Bluetooth-Betrieb bleiben offen. Für Z17 zusammen mit DE3.62 liegt inzwischen ein Diagnoseexport mit positiver Nutzerrückmeldung vom 6. November 2026 vor; dies ersetzt nicht die Prüfung der neuen App. [Bedienung und Prüfgrenzen](docs/RELEASE_DE3_63.md) · [Build](docs/BUILD_DE3_63.md) · [Web](docs/RELEASE_WEB3_39_2.de.md)
+
+---
+
 # Web 3.39.1 · Display bei laufenden Vorgängen wach halten
 
 Bei Sicherungen, Dateiübertragungen und längeren Geräteabfragen fordert die sichtbare Seite auf unterstützten Browsern eine Screen Wake Lock an. Die Anzeige meldet den tatsächlichen Zustand, lässt sich abschalten und bietet einen erneuten Versuch an. Die Sperre wird bei Abschluss, Trennung und Verlassen der App freigegeben; ein verdeckter Tab fordert sie nach Rückkehr neu an. Es gibt keine automatische Wiederholungsschleife nach einer Systemfreigabe.

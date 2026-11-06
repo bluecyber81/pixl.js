@@ -1,4 +1,6 @@
-# Allmiibo Dateimanager 3.39.1
+# Allmiibo Dateimanager 3.39.2
+
+**3.39.2** zeigt neben **Kataloghinweise** den Datenstand aus dem tatsächlich eingebauten Katalog. Die Beschriftung bricht auf schmalen Displays um; andere Sprachen verwenden den englischen Fallback. Die Daten und persönlichen Notizen werden dadurch nicht verändert. [Änderungen und Prüfgrenzen](../docs/RELEASE_WEB3_39_2.de.md).
 
 **3.39.1** ergänzt während laufender Sicherungen, Dateiübertragungen und längerer Geräteabfragen eine sichtbare Display-Wachhaltehilfe. Unterstützte Browser fordern bei sichtbarem Tab eine Screen Wake Lock an. Die Anzeige zeigt den tatsächlichen Zustand, lässt sich abschalten und bietet bei Ablehnung oder Freigabe einen erneuten Versuch. Nach Ende oder Trennen wird die Sperre freigegeben.
 
@@ -12,7 +14,7 @@ Den Tab im Vordergrund lassen: manuelles Sperren, Energiesparen oder Browser-Sus
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen** schließt im normalen Schema-1-Restore die exakten inaktiven Stammdateien `.pixl_txn_old` und `.pixl_txn_new` sichtbar aus, erhält sie aber im Archiv. Aktive/unklare Stamm-Transaktionseinträge sperren den gesamten Import. Quelle, I:/-/E:/-Zielumleitung und frischer Zielzustand werden geprüft. Gleichnamige Dateien in gewöhnlichen Unterordnern bleiben normale Nutzdaten. Schema-2-Restores verwenden weiterhin den Migrationsassistenten.
 
-App **DE3.62 / 634**, **Z17** und **S112 7.3.0** bleiben unverändert. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_0.de.md) · [Startanleitung 3.39.1](LIESMICH_3_39_1.txt).
+Die DFU-Seite enthält App **DE3.63 / 635** als Anwendungsupdate für passende LCD/PFS1-Geräte. Bootloader und **S112** werden dabei nicht ersetzt; ein Webupdate allein installiert keine Gerätefirmware. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_2.de.md) · [Startanleitung 3.39.2](LIESMICH_3_39_2.txt).
 
 Seit **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
 auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
@@ -49,7 +51,7 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.1) · [Startanleitung](LIESMICH_3_39_1.txt)
+[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.2) · [Startanleitung](LIESMICH_3_39_2.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
@@ -98,11 +100,11 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 Über **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** einen früheren Start- oder Gesamtdiagnosebericht auswählen. Für einen aussagekräftigen Vergleich Berichte desselben Geräts mit vergleichbarer Sammlung verwenden. Die Datei wird lokal gelesen. Für die Phasen Speicher und Anwendung bedeutet ein negativer Unterschied eine kürzere Zeit.
 
-Das aktuelle PFS1-Profil berücksichtigt die acht expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630, DE3.59/631, DE3.60/632, DE3.61/633 und DE3.62/634. DE3.62 wurde am Rechner geprüft. Ein Test dieser Anwendung am Gerät steht aus. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.62-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.62/Allmiibo_DE3_62_Quellcode.zip).
+Das aktuelle PFS1-Profil berücksichtigt die neun expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630, DE3.59/631, DE3.60/632, DE3.61/633, DE3.62/634 und DE3.63/635. Die identische Speicher-Engine und Geometrie sind gebunden; die Aufnahme von DE3.63 ist keine neue Speicherumstellung. Ein Test dieser Anwendung am Gerät steht aus. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.63-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.63/Allmiibo_DE3_63_Quellcode.zip).
 
 ## Bauen, testen und veröffentlichen
 
-Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.62/CONTRIBUTING.md) verwenden:
+Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.63/CONTRIBUTING.md) verwenden:
 
 ```sh
 npm ci
@@ -146,6 +148,6 @@ Informationslinks funktionieren lokal als `/?amiibo=01010000000e0002` oder
 Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 `/a/<8Hex>-<8Hex>` benötigt einen lokalen Server und ist kein Pages-Routeersatz.
 
-Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit Dateimanager 3.39.1, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
+Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit Dateimanager 3.39.2, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.

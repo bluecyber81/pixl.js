@@ -19,9 +19,9 @@ from production_id import fingerprint, source_hashes
 
 
 IMAGE = "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
-RELEASE_VERSION = "2.22.0-DE3.62"
-RELEASE_COUNTER = 634
-RELEASE_BIN_SHA256 = "597d61e301d663f30abfd63512c5d44faba7cfe5345a2b216d715003704aa9ca"
+RELEASE_VERSION = "2.22.0-DE3.63"
+RELEASE_COUNTER = 635
+RELEASE_BIN_SHA256 = "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41"
 SOURCE_DATE_EPOCH = 1793836800
 NVIC_BEFORE_SHA256 = "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210"
 NVIC_AFTER_SHA256 = "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
@@ -53,12 +53,12 @@ def build_identity(root, mode, version, counter):
                     "BUILD_DIRTY": "1", "BUILD_DIRTY_KNOWN": "0",
                     "BUILD_DATE": '"2026-11-06"', "TARGET": "0"}
         if values != expected:
-            raise ValueError("Release mode requires the archived DE3.62 version.inc.h metadata.")
+            raise ValueError("Release mode requires the archived DE3.63 version.inc.h metadata.")
         return RELEASE_VERSION, RELEASE_COUNTER, sha256(header)
     if not version or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}", version):
         raise ValueError("Development mode requires an explicit simple --version identifier.")
-    if version == RELEASE_VERSION or counter is None or not 635 <= counter <= 0xFFFFFFFF:
-        raise ValueError("Use a new development version and explicit counter >=635; 634 identifies DE3.62.")
+    if version == RELEASE_VERSION or counter is None or not 636 <= counter <= 0xFFFFFFFF:
+        raise ValueError("Use a new development version and explicit counter >=636; 635 identifies DE3.63.")
     if values.get("VERSION") != json.dumps(version):
         raise ValueError("First update VERSION in your development source version.inc.h to match --version.")
     return version, counter, sha256(header)
@@ -158,7 +158,7 @@ def main(argv=None):
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de362"))
+        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de363"))
         if destination.resolve() != destination:
             raise RuntimeError("Output must not resolve through a symlink or junction.")
         destination.mkdir(parents=True, exist_ok=True)

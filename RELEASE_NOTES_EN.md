@@ -1,3 +1,17 @@
+# DE3.63 / 635 · File manager 3.39.2
+
+**Amiibo database → open figure → short centre press → Note / hints** makes the personal note and selected game's catalogue hint independently accessible. Short left/right changes between two pages, holding scrolls whole text lines, and centre returns to the menu. The same menu is available in the database slot view. Reading these pages changes no tag data, personal note, protection flag or save.
+
+Eight existing German translations covering 13 catalogue associations are now also available in the firmware. Lookup requires the exact English source text; other available notes retain English. The hint depends on the selected database game. A missing hint does not establish game incompatibility.
+
+**LCD rendering fix:** The production font now includes the previously missing uppercase umlauts **Ä, Ö and Ü**, including when used in personal notes. Existing glyphs are retained; this does not add support for all other Unicode characters.
+
+Web 3.39.2 displays the bundled data version beside “Catalogue notes” in figure details and the selected-file preview. Existing screen-awake, backup and collection features remain included.
+
+**Allmiibo_LCD_DE3_63_635_TESTSTAND.zip** updates only the application on matching LCD/PFS1 devices. It does not replace the bootloader, S112 or PFS1 and requires no new migration or formatting. No startup-speed improvement is claimed. Physical qualification of DE3.63 and extended phone/Bluetooth operation remain pending. A diagnostic export and positive user report dated 6 November 2026 now identify Z17 together with DE3.62; this does not qualify the new app. [Usage and limits](docs/RELEASE_DE3_63.md) · [Build](docs/BUILD_DE3_63.md) · [Web](docs/RELEASE_WEB3_39_2.de.md)
+
+---
+
 # Web 3.39.1 · Keep the screen awake during active operations
 
 During backups, file transfers and longer device reads, the visible page requests a screen wake lock where supported. The status is visible, can be disabled, and offers an explicit retry. Completion, disconnect and unmount release it; returning to a visible tab requests it again. An OS release does not trigger an automatic retry loop.

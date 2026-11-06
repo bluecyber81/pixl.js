@@ -1,4 +1,7 @@
 export default {
+  figureUsage: {
+    catalogueVersion: 'Katalogstand: {version}'
+  },
   lang: {
     choose: 'Sprache/Language',
     zhcn: '简体中文',

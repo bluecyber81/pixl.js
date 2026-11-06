@@ -47,7 +47,7 @@ def main():
         env.update(NRF5_SDK_PATH=str(sdk), NRF52_SDK_ROOT=str(sdk), LANG='C.UTF-8', LC_ALL='C.UTF-8',
                    PYTHONDONTWRITEBYTECODE='1', PYTHONOPTIMIZE='0')
         command = [sys.executable, '-B', str(folder / 'fw/tests/de3/run_all.py'),
-                   '--minimum-suites', '146', '--report', str(report)]
+                   '--minimum-suites', '148', '--report', str(report)]
         with report.with_suffix('.log').open('w', encoding='utf-8') as log:
             child = subprocess.Popen(command, cwd=folder, env=env, text=True,
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

@@ -141,7 +141,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.39.1', (await page.locator('.version-context').innerText()).includes('3.39.1'));
+    check(kind + ' exact web version 3.39.2', (await page.locator('.version-context').innerText()).includes('3.39.2'));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
     const card = page.locator('.card-slot-inspection'); await card.waitFor();
@@ -177,6 +177,7 @@ try {
     await page.locator('.workspace-nav button[aria-controls="catalogue-workspace"]').click();
     await page.locator('.catalogue .search-field input').waitFor();
     let usagePanel = await selectFigure(page, german.id);
+    check(kind + ' German catalogue version is visible', await usagePanel.locator('.usage-version').innerText() === `Katalogstand: ${usage.dataVersion}`);
     check(kind + ' exact German editorial translation', (await usagePanel.innerText()).includes(germanNote.text));
     check(kind + ' translation visibly labelled', (await usagePanel.innerText()).includes('Redaktionelle Übersetzung aus dem Englischen'));
     const originalSummary = usagePanel.locator('.usage-original summary').first();
@@ -187,6 +188,7 @@ try {
     await shot(page, kind + '-usage-de', usagePanel);
     await chooseLanguage(page, 'en');
     usagePanel = page.locator('.catalogue .selected-detail .figure-usage');
+    check(kind + ' English catalogue version is visible', await usagePanel.locator('.usage-version').innerText() === `Catalogue version: ${usage.dataVersion}`);
     check(kind + ' English source rendered in English locale', (await usagePanel.innerText()).includes(germanNote.original));
     check(kind + ' English does not claim German translation', await usagePanel.locator('.usage-language').count() === 0);
     await fits(page, kind + ' English catalogue usage', '.selected-detail .figure-usage', zoom);

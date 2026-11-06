@@ -20,6 +20,11 @@ mui_dir = os.path.join(data_dir, "../application/src/mui")
 # Name of the output file
 output_file = "pixjs.txt"
 
+# User filenames and personal notes are not known when this source is built.
+# Keep German umlauts and lowercase sharp s even if menu/catalogue text
+# happens not to contain a particular uppercase umlaut in this release.
+REQUIRED_UI_CHARACTERS = "ÄÖÜäöüß"
+
 
 def write_to_file(file_path, content):
     with open(file_path, "w", encoding="utf-8") as f:
@@ -27,7 +32,7 @@ def write_to_file(file_path, content):
 
 
 def extract_non_printable_chars():
-    non_printable_chars = set()
+    non_printable_chars = set(REQUIRED_UI_CHARACTERS)
     for source_dir in source_dirs:
         for root, _, files in os.walk(source_dir):
             for file in files:

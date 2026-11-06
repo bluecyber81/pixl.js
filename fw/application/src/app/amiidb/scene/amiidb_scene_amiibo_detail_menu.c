@@ -21,6 +21,7 @@
 
 enum amiidb_detail_menu_t {
     AMIIDB_DETAIL_MENU_FIGURE_INFO,
+    AMIIDB_DETAIL_MENU_NOTES,
     AMIIDB_DETAIL_MENU_RAND_UID,
     AMIIDB_DETAIL_MENU_AUTO_RAND_UID,
     AMIIDB_DETAIL_MENU_READ_ONLY,
@@ -64,7 +65,8 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 
     switch (selection) {
     case AMIIDB_DETAIL_MENU_FIGURE_INFO:
-        app->p_amiibo_view->info_page = 1;
+    case AMIIDB_DETAIL_MENU_NOTES:
+        app->p_amiibo_view->info_page = selection == AMIIDB_DETAIL_MENU_NOTES ? 3 : 1;
         amiibo_view_set_event_cb(app->p_amiibo_view, amiidb_scene_figure_info_back);
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_DETAIL);
         break;
@@ -160,6 +162,9 @@ void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
 
     mui_list_view_add_item(app->p_list_view, 0xe0ae, _T(DE3_FIGURE_INFO),
                            (void *)AMIIDB_DETAIL_MENU_FIGURE_INFO);
+    mui_list_view_add_item(app->p_list_view, 0xe0ae,
+                           getLanguage() == LANGUAGE_DE_DE ? "Notiz / Hinweise" : "Note / hints",
+                           (void *)AMIIDB_DETAIL_MENU_NOTES);
 
     mui_list_view_add_item(app->p_list_view, 0xe1c5, getLangString(_L_RANDOM_GENERATION),
                            (void *)AMIIDB_DETAIL_MENU_RAND_UID);

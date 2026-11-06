@@ -7,6 +7,7 @@
 #include "mui_qrcode_helper.h"
 #include "ntag_store.h"
 #include "settings.h"
+#include "amiibo_usage_de.h"
 
 #define ICON_LEFT 0xe1ac
 #define ICON_RIGHT 0xe1aa
@@ -84,10 +85,56 @@ static void amiibo_view_update_desc_anim(amiibo_view_t *p_amiibo_view) {
     p_amiibo_view->desc_anim_running = true;
 }
 
+/* Read-only pages entered from the detail menu. Reuse the existing page and
+ * scroll state; looking at a note must never select another slot or alter NFC. */
+static const char *amiibo_view_usage(const amiibo_view_t *view) {
+    const ntag_t *tag = view->ntag;
+    const db_link_t *link = get_link_by_id(view->game_id, to_little_endian_int32(&tag->data[84]),
+                                         to_little_endian_int32(&tag->data[88]));
+    if (!link) return "";
+    const db_notes_t *notes = &db_usage_notes[link->note_index];
+    if (isChineseLanguage()) return notes->cn;
+    return getLanguage() == LANGUAGE_DE_DE ? amiibo_usage_de(notes->en) : notes->en;
+}
+
+static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas) {
+    const bool german = getLanguage() == LANGUAGE_DE_DE;
+    const bool own = view->info_page == 3;
+    const char *text = own ? (const char *)view->ntag->notes : amiibo_view_usage(view);
+    if (!*text) text = own ? (german ? "Keine eigene Notiz." : "No personal note.") :
+        (german ? "Kein Hinweis zur Spielauswahl. Spiel in der Datenbank waehlen." :
+                  "No hint for this game selection. Choose a game in the database.");
+    mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
+    mui_canvas_set_draw_color(canvas, 1);
+    mui_canvas_draw_box(canvas, 0, 0, mui_canvas_get_width(canvas), 12);
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_utf8(canvas, 2, 10, own ? (german ? "Deine Notiz" : "Your note") :
+                                                  (german ? "Spielhinweis" : "Game hint"));
+    mui_canvas_draw_utf8(canvas, 105, 10, own ? "1/2" : "2/2");
+    mui_canvas_set_draw_color(canvas, 1);
+    /* Whole-line scrolling also makes the final page readable at its limit. */
+    view->desc_step = mui_canvas_current_font_height(canvas);
+    view->desc_page_size = view->desc_step * 2;
+    /* This fixed 13px font needs its two descent pixels below each baseline.
+     * The 29px viewport preserves the second line above the footer (y=41).
+     * Clear only the previous line's descent at the top, not the scrollbar. */
+    view->desc_total = mui_element_autowrap_text_box(canvas, 0, 12, mui_canvas_get_width(canvas),
+                                                    29, view->desc_offset, 0, text);
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_box(canvas, 0, 12, mui_canvas_get_width(canvas) - 4, 2);
+    mui_canvas_set_draw_color(canvas, 1);
+    mui_canvas_draw_utf8(canvas, 1, 52, german ? "L/R kurz: Seite" : "L/R short: page");
+    mui_canvas_draw_utf8(canvas, 1, 63, german ? "lang:scroll M:zur." : "hold:scroll M:back");
+}
+
 static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     char buff[AMIIBO_INFO_URL_CAPACITY];
     amiibo_view_t *p_amiibo_view = p_view->user_data;
     ntag_t *ntag = p_amiibo_view->ntag;
+    if (p_amiibo_view->info_page >= 3) {
+        amiibo_view_draw_notes(p_amiibo_view, p_canvas);
+        return;
+    }
     if (p_amiibo_view->info_page) {
         amiibo_info_draw(p_canvas, ntag, p_amiibo_view->info_page);
         return;
@@ -155,18 +202,12 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         p_amiibo_view->desc_step = 8;
         p_amiibo_view->desc_page_size = clip_win_cur.h;
         p_amiibo_view->desc_total = 0;
-        const db_link_t *link = get_link_by_id(p_amiibo_view->game_id, head, tail);
         if (strlen(ntag->notes) > 0) {
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
                                               p_amiibo_view->desc_offset, 0, ntag->notes);
-        } else if (link != NULL) {
-            const char *notes;
-            if (isChineseLanguage()) {
-                notes = db_usage_notes[link->note_index].cn;
-            } else {
-                notes = db_usage_notes[link->note_index].en;
-            }
+        } else {
+            const char *notes = amiibo_view_usage(p_amiibo_view);
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
                                               p_amiibo_view->desc_offset, 0, notes);
@@ -193,7 +234,22 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
 static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     amiibo_view_t *p_amiibo_view = p_view->user_data;
-    if (p_amiibo_view->info_page) {
+    if (p_amiibo_view->info_page >= 3) {
+        if (event->key == INPUT_KEY_CENTER &&
+            (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_LONG)) {
+            p_amiibo_view->info_page = 0;
+            if (p_amiibo_view->event_cb) p_amiibo_view->event_cb(AMIIBO_VIEW_EVENT_MENU, p_amiibo_view);
+            return;
+        }
+        if (event->type == INPUT_TYPE_SHORT &&
+            (event->key == INPUT_KEY_LEFT || event->key == INPUT_KEY_RIGHT)) {
+            p_amiibo_view->info_page = p_amiibo_view->info_page == 3 ? 4 : 3;
+            amiibo_view_reset_desc_scroll(p_amiibo_view);
+            p_amiibo_view->desc_auto_scroll_disabled = true;
+            return;
+        }
+        /* Long/repeat left or right reuses text scrolling below, never slots. */
+    } else if (p_amiibo_view->info_page) {
         if (amiibo_info_input(&p_amiibo_view->info_page, event) && p_amiibo_view->event_cb)
             p_amiibo_view->event_cb(AMIIBO_VIEW_EVENT_MENU, p_amiibo_view);
         return;
@@ -272,6 +328,7 @@ static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
 static void amiibo_view_on_enter(mui_view_t *p_view) {
     amiibo_view_t *p_amiibo_view = p_view->user_data;
     amiibo_view_reset_desc_scroll(p_amiibo_view);
+    if (p_amiibo_view->info_page >= 3) p_amiibo_view->desc_auto_scroll_disabled = true;
 }
 
 static void amiibo_view_on_exit(mui_view_t *p_view) {

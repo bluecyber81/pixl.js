@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "version": "2.22.0-DE3.63",
+  "counter": 635,
+  "date": "2026-11-06",
+  "scope": "Source-bound host, native/Docker ARM build, compiled-catalogue, signature and LCD rendering checks. No new device access.",
+  "sourceId": "b79d733781b3e4e1077bca9ddf50e20d1b66d3be77e83849f67c6f75b4ac7aa8",
+  "applicationBytes": 363956,
+  "applicationSha256": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_63_635_TESTSTAND.zip",
+    "sha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4",
+    "bytes": 364559,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 635,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 363956,
+        "sha256": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 363956,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "sourceId": "b79d733781b3e4e1077bca9ddf50e20d1b66d3be77e83849f67c6f75b4ac7aa8",
+    "engineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248",
+    "hostSuites": 148,
+    "hardwareTested": false,
+    "applicationOnly": true
+  },
+  "linkerBudget": {
+    "binary_bytes": 363956,
+    "linker_flash_used_bytes": 363964,
+    "observed": {
+      "flash_reserve_bytes": 8772,
+      "heap_stack_gap_bytes": 1840,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "previousLinkerBudget": {
+    "binary_bytes": 362332,
+    "linker_flash_used_bytes": 362340,
+    "observed": {
+      "flash_reserve_bytes": 10396,
+      "heap_stack_gap_bytes": 1840,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "hostSuites": 148,
+  "hostPassed": true,
+  "sourceUnchangedDuringHostTests": true,
+  "independentBuilds": {
+    "docker": {
+      "pixljs.bin": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
+      "pixljs.hex": "d3687e1e47d286d1ee1a27dc7b7b6e206fa7ffe819e65a8f4765b7dd9fc316c5",
+      "pixljs.out": "45cc2a84e6fa7814ccdeb7bca45e58208c3f0372a88f3d1a5566762e74ad902c",
+      "pixljs.map": "58cae9a39fd3ecd14f7b5b1610926022a82a06bc1ce60921ce44758e00bffeea"
+    },
+    "native": {
+      "pixljs.bin": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
+      "pixljs.hex": "d3687e1e47d286d1ee1a27dc7b7b6e206fa7ffe819e65a8f4765b7dd9fc316c5",
+      "pixljs.out": "408a79f149258c25fbdefc7ec4548fddb52547feceddfaf8760ab192ce86c5ac",
+      "pixljs.map": "d519bd0415d1384290b02aa3a345035ce19ce72926ce69bb8a5303f7e41a7f4b"
+    },
+    "binHexIdentical": true
+  },
+  "compiledCatalogue": {
+    "version": "1",
+    "vectorsChecked": 128,
+    "vectorMismatches": [],
+    "irqBindingChanges": [],
+    "observerOrNoInitSizeChanges": {},
+    "catalogBytesDecodedMatch": {
+      "figures": true,
+      "games": true,
+      "links": true
+    },
+    "figureCount": 952,
+    "gameCount": 82,
+    "linkCount": 1344,
+    "referenceBinSha256": "8521df0f2730d50a137f8a95350ccafd8c9ebc78fe2436ab501726fe3f760ab6",
+    "imageSha256": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
+    "passed": true
+  },
+  "cortexM4": "PASS Cortex-M4 release ELF: 8192 reserved, initial test watermark 7664, then 1416/256/256/0. Caller and guards intact; unavailable sentinel verified.\n",
+  "lcd": {
+    "actualCFrames": 551,
+    "qrComparisons": 531,
+    "existingInfoFrames": 14,
+    "scope": "Production C renderer and font in host harness; no physical LCD test",
+    "controls": [
+      "Unchanged tag bytes and slot focus",
+      "Menu entry and return",
+      "Translation exact match and English fallback",
+      "Full lines including descenders, no old-line pixels above scrolled text",
+      "Previous QR regression negative control"
+    ]
+  },
+  "unchanged": [
+    "Packed LittleFS PFS1 engine and format",
+    "Bootloader and SoftDevice",
+    "Figure IDs and stored user data",
+    "Startup/storage/cache algorithms"
+  ],
+  "limits": [
+    "DE3.63 physical test pending",
+    "No startup speedup claimed",
+    "No hardware power-loss or radio qualification from host tests"
+  ],
+  "font": {
+    "baselineArrayBytes": 22956,
+    "baselineByteIdentical": true,
+    "candidateArrayBytes": 22998,
+    "extraBytes": 42,
+    "bitmapsCompared": 914,
+    "newGlyphsCompared": 3,
+    "framebufferBytesPerGlyph": 1024,
+    "compareExitCode": 0,
+    "productionFontSha256": "b6d3cf07cc7e8b1b9cc219f443698d3b0478fbfee3977a6a11a7acda8be0cc50",
+    "correction": "Add uppercase German umlauts U+00C4/U+00D6/U+00DC; all existing glyphs pixel-identical"
+  }
+}

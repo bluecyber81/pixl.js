@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as Vue from 'vue';
+import * as VueI18n from 'vue-i18n';
+import deLocale from '../src/i18n/de_DE.js';
+import enLocale from '../src/i18n/en_US.js';
 import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
 import { auditCollection } from '../src/lib/collection-audit.js';
 import { formatReadDuration, readTimeEstimate } from '../src/lib/read-time-estimate.js';
@@ -279,8 +282,8 @@ test('App mounts collection with v-show workspace persistence and binds revision
   }
 });
 
-// Compile/mount the actual script-setup catalogue and details too. Only locale,
-// DOM host and the unrelated local-file inspector are replaced at the boundary.
+// Compile/mount the actual script-setup catalogue and details with real i18n.
+// Only the DOM host and unrelated local-file inspector are replaced at the boundary.
 async function loadSfc(filename) {
   const { descriptor } = parse(fs.readFileSync(filename, 'utf8'), { filename });
   const compiledScript = compileScript(descriptor, { id: filename });
@@ -294,7 +297,7 @@ async function loadSfc(filename) {
   const modules = [];
   for (const { spec } of imports) {
     if (spec === 'vue') modules.push({ ...Vue, vModelText: {}, vModelSelect: {}, vModelCheckbox: {} });
-    else if (spec === 'vue-i18n') modules.push({ useI18n: () => ({ locale: Vue.ref('de_DE') }) });
+    else if (spec === 'vue-i18n') modules.push(VueI18n);
     else {
       const target = path.resolve(path.dirname(filename), spec);
       modules.push(spec.endsWith('LocalTagInspector.vue') ? { default: { render: () => null } } : spec.endsWith('.vue') ? { default: await loadSfc(target) } :
@@ -307,6 +310,7 @@ async function loadSfc(filename) {
 async function mountSfc(name, values) {
   const Component = await loadSfc(fileURLToPath(new URL(`../src/components/${name}.vue`, import.meta.url)));
   const props = Vue.reactive(values), root = node('root'), app = renderer.createApp({ render: () => Vue.h(Component, props) });
+  app.use(VueI18n.createI18n({ legacy: false, locale: 'de_DE', fallbackLocale: 'en', messages: { de_DE: deLocale, en: enLocale } }));
   app.mount(root); await tick(); return { props, root, app };
 }
 test('new catalogue selection passes the real public entry and respects the BLE operation block', async () => {

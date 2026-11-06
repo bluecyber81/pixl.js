@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.62 application
+    name: DE3.63 application
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -53,18 +53,18 @@ jobs:
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
         run: |
-          python3 -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-de362/FIRMWARE_TESTS.json
+          python3 -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-de363/FIRMWARE_TESTS.json
       - name: Execute stack and PXDG checks on this build's Cortex-M4 ELF
         shell: bash
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-de362/pixljs.out | tee build/lcd-de362/STACK_ELF.txt
-          cat build/lcd-de362/BUILD_RESULT.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-de363/pixljs.out | tee build/lcd-de363/STACK_ELF.txt
+          cat build/lcd-de363/BUILD_RESULT.json
       - name: Archive the actual build and test results
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lcd-firmware-evidence-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/lcd-de362/
+          path: build/lcd-de363/
           if-no-files-found: error
           retention-days: 30
 

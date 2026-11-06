@@ -2,8 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as Vue from 'vue';
+import * as VueI18n from 'vue-i18n';
 import { parse, compileScript } from '@vue/compiler-sfc';
 import { figureUsage } from '../src/lib/figure-usage.js';
+import deLocale from '../src/i18n/de_DE.js';
+import enLocale from '../src/i18n/en_US.js';
 
 const data = JSON.parse(fs.readFileSync(new URL('../src/data/figure-usage.json', import.meta.url), 'utf8'));
 const german = data.figures.find(figure => figure.associations.some(row => data.notes.find(note => note.id === row.noteId)?.de));
@@ -52,10 +55,10 @@ const filename = new URL('../src/components/FigureUsage.vue', import.meta.url).p
 const { descriptor } = parse(fs.readFileSync(new URL('../src/components/FigureUsage.vue', import.meta.url), 'utf8'), { filename });
 let source = compileScript(descriptor, { id: 'figure-usage-test', inlineTemplate: true }).content;
 source = source.replace(/import\s+(.+?)\s+from\s+['"]([^'"]+)['"];?/g, (_, binding, module) => {
-  const value = module === 'vue' ? 'Vue' : module.endsWith('.json') ? 'data' : 'usageModule';
+  const value = module === 'vue' ? 'Vue' : module === 'vue-i18n' ? 'VueI18n' : module.endsWith('.json') ? 'data' : 'usageModule';
   return `const ${binding.startsWith('{') ? binding.replace(/\s+as\s+/g, ':') : binding} = ${value};`;
 });
-const Component = new Function('Vue', 'data', 'usageModule', source.replace('export default', 'return'))(Vue, data, { figureUsage });
+const Component = new Function('Vue', 'VueI18n', 'data', 'usageModule', source.replace('export default', 'return'))(Vue, VueI18n, data, { figureUsage });
 const node = (type, text = '') => ({ type, text, children: [], props: {}, parent: null });
 const renderer = Vue.createRenderer({
   createElement: type => node(type), createText: text => node('#text', text), createComment: text => node('#comment', text),
@@ -70,8 +73,29 @@ function text(item) { return item.text + item.children.map(text).join(''); }
 async function mount(props) {
   const state = Vue.reactive(props), root = node('root');
   const app = renderer.createApp({ render: () => Vue.h(Component, state) });
+  app.use(VueI18n.createI18n({ legacy: false, locale: 'de_DE', fallbackLocale: 'en', missingWarn: false, fallbackWarn: false, messages: { de_DE: deLocale, en: enLocale } }));
   app.mount(root); await Vue.nextTick(); return { state, root, app };
 }
+
+test('actual component shows the bundled catalogue version beside its heading and follows locale with English fallback', async () => {
+  const { root, state, app } = await mount({ id: german.id, locale: 'de_DE' });
+  try {
+    const heading = nodes(root, 'div').find(item => item.props.class === 'usage-heading');
+    assert.ok(heading, 'version belongs to the visible catalogue heading');
+    assert.match(text(heading), /Kataloghinweise/);
+    assert.ok(text(heading).includes(`Katalogstand: ${data.dataVersion}`));
+    state.locale = 'en_US'; await Vue.nextTick();
+    assert.ok(text(heading).includes(`Catalogue version: ${data.dataVersion}`));
+    for (const locale of ['es', 'zh_CN', 'ru_RU', 'ja_JP']) {
+      state.locale = locale; await Vue.nextTick();
+      assert.ok(text(heading).includes(`Catalogue version: ${data.dataVersion}`), locale);
+      assert.ok(!text(heading).includes('figureUsage.catalogueVersion'));
+    }
+    state.id = 'ffffffffffffffff'; state.locale = 'de_DE'; await Vue.nextTick();
+    assert.ok(text(heading).includes(`Katalogstand: ${data.dataVersion}`), 'version remains visible for unknown IDs');
+    assert.equal(nodes(root, 'a').length, 0, 'version adds no network request or external link');
+  } finally { app.unmount(); }
+});
 
 test('actual component labels claims, translations, exact sources and unknown/empty notes honestly', async () => {
   const { root, state, app } = await mount({ id: german.id, locale: 'de_DE' });

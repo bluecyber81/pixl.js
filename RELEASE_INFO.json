@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "publication_date": "2026-11-06",
-  "version": "2.22.0-DE3.62",
-  "counter": 634,
+  "version": "2.22.0-DE3.63",
+  "counter": 635,
   "board": "LCD",
-  "web_version": "3.39.1",
+  "web_version": "3.39.2",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "f733ff1b30e17b9f62113c0a10a2abf9bfcc6dfd8f3aad7b03ca0f6da356503f",
-  "application_sha256": "597d61e301d663f30abfd63512c5d44faba7cfe5345a2b216d715003704aa9ca",
+  "ota_sha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4",
+  "application_sha256": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -20,7 +20,8 @@
     "region_sha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
     "stored_counter_is_not_code_version": true,
     "standalone_ota_counter": 9,
-    "standalone_ota_is_upgrade_for_counter_11": false
+    "standalone_ota_is_upgrade_for_counter_11": false,
+    "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "softdevice": {
     "vendor": "Nordic Semiconductor",
@@ -38,11 +39,11 @@
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 146,
-  "web_host_tests": 1247,
+  "host_firmware_suites": 148,
+  "web_host_tests": 1248,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "evidence": "docs/validation/DE3_62.json",
+  "evidence": "docs/validation/DE3_63.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -55,19 +56,19 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_39_1.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.1",
+  "web_evidence": "docs/validation/WEB3_39_2.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.2",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
   "device_readback_passed": false,
-  "device_validation_pending_scope": "DE3.62 live startup profile, file transfer, NFC, LCD, buttons and wake tests pending.",
+  "device_validation_pending_scope": "DE3.63 physical LCD notes/hints, NFC, buttons, wake and file-transfer checks pending.",
   "previous_device_readback_evidence": "docs/validation/DE3_59_READBACK.json",
-  "production_source_id_sha256": "5a0eec38856ea04743c235ae269c910dbecab5cf7aff1b5342f78526c5eba81d",
+  "production_source_id_sha256": "b79d733781b3e4e1077bca9ddf50e20d1b66d3be77e83849f67c6f75b4ac7aa8",
   "tested_bootloader": {
-    "name": "Z15",
-    "counter": 15,
-    "padded_region_sha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
-    "qualification": "Z15 source/ARM and historical user readback; new DE3.62 physical integration pending."
+    "name": "Z17",
+    "counter": 17,
+    "padded_region_sha256": "5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584",
+    "qualification": "2026-11-06 user-supplied DE3.62 diagnostic reports matching Z17 region hash and valid settings; user reports normal operation. DE3.63 physical integration and controlled failure testing remain open."
   },
   "candidate_bootloader": {
     "name": "Z17",
@@ -75,12 +76,14 @@
     "source": "bootloader-z17",
     "padded_region_sha256": "5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584",
     "physical_test_pending": true,
-    "included_in_application_ota": false
+    "included_in_application_ota": false,
+    "installation_readback_observed": true,
+    "physical_test_pending_scope": "Controlled interruption/recovery qualification; new DE3.63 integration. Normal Z17 installation and operation reported by user on 2026-11-06."
   },
-  "web_host_final_targeted_tests": 16,
-  "web_host_test_scope": "Complete local Node suite and both production builds; exact-byte Chrome browser tests, simulated wake-lock lifecycle, extracted launcher. No physical phone/BLE proof.",
-  "web_browser_checks_per_build": 348,
-  "web_browser_screenshots_per_build": 72,
+  "web_host_final_targeted_tests": 6,
+  "web_host_test_scope": "Complete local Node suite and both final production builds; exact-byte Chrome catalogue/diagnostic/DFU checks and extracted Windows launcher. Current OTA ZIP SHA and DAT counter/FWID verified without Bluetooth. No physical phone/BLE proof.",
+  "web_browser_checks_per_build": 229,
+  "web_browser_screenshots_per_build": 56,
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -90,14 +93,14 @@
     "ci_skipped": 3,
     "commit": "0df66ceafba94daee1c205de29e0f3df9d811b7c"
   },
-  "firmware_production_unchanged_since": "0df66ceafba94daee1c205de29e0f3df9d811b7c",
+  "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.39.0",
-    "evidence": "docs/validation/WEB3_39_0.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.0"
+    "version": "3.39.1",
+    "evidence": "docs/validation/WEB3_39_1.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.1"
   },
   "web_release_status": "host-tested",
-  "web_release_notes": "docs/RELEASE_WEB3_39_1.de.md",
+  "web_release_notes": "docs/RELEASE_WEB3_39_2.de.md",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {

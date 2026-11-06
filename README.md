@@ -1,25 +1,24 @@
 # Allmiibo LCD firmware and file manager
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [DE3.62 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.62) · [Deutsch](README.de.md)
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [DE3.63 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.63) · [Deutsch](README.de.md)
 
-Web 3.39.1 adds a visible, optional screen wake-lock helper during backups, file transfers and longer device reads. Browser and power policies may deny it; manual screen locking and background Bluetooth are not guaranteed. [Usage and limits](docs/RELEASE_WEB3_39_1.de.md).
+**DE3.63 / 635** and **file manager 3.39.2** add clearer access to figure notes on the nRF52832 Allmiibo LCD with an existing Packed LittleFS PFS1 volume. The application update leaves the installed bootloader, Nordic S112 and filesystem unchanged. Physical qualification of this new application remains separate from computer tests.
 
-**DE3.62 / 634** and **file manager 3.39.1** support the nRF52832 Allmiibo LCD with an existing Packed LittleFS PFS1 volume. Web 3.39.0 is a host- and Chrome-tested update: catalogue usage notes, SHA-256 groups within duplicate IDs, optional local MF0 slot repair copies and safer ZIP restores. Physical device testing remains a separate step. The application, **Z17 / 17 bootloader candidate** and Nordic S112 7.3.0 remain unchanged.
+- **On the device:** Open a figure in the Amiibo database, press the centre button briefly and select **Note / hints**. The two pages show your personal note and the selected game's catalogue hint independently. Short left/right changes pages, holding left/right scrolls whole text lines, and centre returns to the menu. This menu also exists in the database slot view. It does not change a figure, save, note or protection flag.
+- **German hints:** Eight existing editorial translations cover 13 catalogue associations. They are selected by exact English source text; other available text stays English. A missing hint does not establish game incompatibility. The normal figure/slot navigation and QR view are retained.
+- **LCD text fix:** The font now includes the previously missing uppercase umlauts **Ä, Ö and Ü**, so personal notes containing them can be displayed. Other existing glyphs are retained; this is not full Unicode coverage.
+- **File manager:** Figure details and the selected-file preview show the bundled catalogue version next to **Catalogue notes**, with wrapping on small screens. The catalogue still contains 952 public figure IDs and 1,344 associations. Notes and associations are not game tests.
 
-- Figure details and the selected-file preview show bundled catalogue associations for 952 figures and 1,344 links. Eight editorial German translations cover 13 associations; other available notes retain their English source. These are catalogue notes, not game testing.
-- A full collection check compares already-read bytes without extra Bluetooth reads. Matching figure IDs alone do not prove matching file contents; quick mode makes no byte-equality claim.
-- **Device & diagnostics → Inspect card slot locally** accepts a matching v8 configuration and MF0 slot file from the same backup. A repair copy is offered only for the recognized legacy UID-copy pattern with valid BCC bytes. It never writes to the device.
-- ZIP restore visibly excludes inactive root OLD/NEW journals while keeping them in the archive. Active or unknown root transaction entries block the entire import, including when paths are remapped.
-
-- Card import/export rejects missing, unknown and truncated buffers. C interfaces for tag types, menu values, retained-cache CRC, NFC and AmiLoop are corrected and checked during every build.
-- Startup diagnostics separate mount setup and scan times and expose physical reads, bytes, cache hits and failures. Older diagnostic formats remain supported. Equal-size cache alternatives were slower on the fixed test image and were not adopted; no additional startup speedup is claimed.
-- Backup keeps a drive-opening failure visible after returning to drive selection; retry and connection resets clear the scoped error. RAM diagnostics explain small sample counts. A new diagnostic request no longer displays an old completion timestamp.
-- Docker and native Linux builds produce identical BIN/HEX payloads. Source manifests, ELF, linker maps, strict own-C diagnostics and reproducible host tests support further development.
+The prior backup and collection tools remain available: best-effort screen wake lock during active operations, SHA-256 content groups for already-read files, local MF0 legacy-slot inspection and optional repair copies, and transaction-aware ZIP restore. A matching figure ID alone does not prove matching bytes. The screen helper cannot guarantee background Bluetooth or prevent manual screen locking. [Web instructions](web/README.md)
 
 ## Install or contribute
 
-Keep a backup. For an existing LCD/PFS1 device, use **Allmiibo_LCD_DE3_62_634_TESTSTAND.zip** on the [application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html). This package updates the application only; it does not replace the bootloader or S112 and requires no new filesystem migration. Bootloader candidates have separate instructions. Older SPIFFS devices and upstream LittleFS need their respective migration paths.
+For an existing compatible LCD/PFS1 device, use **Allmiibo_LCD_DE3_63_635_TESTSTAND.zip** on the [application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html). Keep your backup. This application-only package requires neither formatting nor a new filesystem migration. It does not install Z17 or S112. Older SPIFFS devices, upstream LittleFS and other boards require their own checked migration or installation path.
 
-[File manager 3.39.0 notes](docs/RELEASE_WEB3_39_0.de.md) · [Release details and limitations](docs/RELEASE_DE3_62.md) · [Build guide](docs/BUILD_DE3_62.md) · [Contributing](CONTRIBUTING.md) · [Storage diagnostics](docs/diagnostics/DE3_62_STORAGE.md) · [Z17 source](bootloader-z17/) · [Web instructions](web/README.md) · [Migration](docs/MIGRATION_PFS1.md)
+Bootloader **Z17 / 17** is separately documented. A diagnostic export and user confirmation on 6 November 2026 identify Z17 with DE3.62 and S112 7.3.0 on the user's device; this is not qualification of every bootloader path or of the new DE3.63 application. The new application does not require replacing an already compatible bootloader. Nordic **S112 7.3.0** remains the unchanged vendor component.
+
+The release includes source binding and reproducible build/test instructions. Actual hashes and memory measurements belong to the matching release manifest and build results; historical measurements are not new-device evidence. The display changes make no startup-speed claim. [Build guide](docs/BUILD_DE3_63.md) · [Contributing](CONTRIBUTING.md)
+
+[DE3.63 changes and limits](docs/RELEASE_DE3_63.md) · [Web 3.39.2](docs/RELEASE_WEB3_39_2.de.md) · [Handoff](docs/UEBERGABE_DE3_63.de.md) · [Existing storage diagnostics](docs/diagnostics/DE3_62_STORAGE.md) · [Z17 source](bootloader-z17/) · [Migration](docs/MIGRATION_PFS1.md)
 
 Community continuation by bluecyber81, based on [solosky](https://github.com/solosky/pixl.js) and [cylin577](https://github.com/cylin577/pixl.js). [Components](docs/COMPONENTS.md) · [History](docs/DEVELOPMENT_HISTORY.md) · [License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

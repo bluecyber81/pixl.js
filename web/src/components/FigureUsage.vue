@@ -1,6 +1,9 @@
 <template>
   <section class="figure-usage" :class="{ compact }" :aria-label="de ? 'Kataloghinweise zur Figur' : 'Figure catalogue notes'">
-    <h5>{{ de ? 'Kataloghinweise' : 'Catalogue notes' }}</h5>
+    <div class="usage-heading">
+      <h5>{{ de ? 'Kataloghinweise' : 'Catalogue notes' }}</h5>
+      <p v-if="usageData.dataVersion" class="usage-version">{{ catalogueVersion }}</p>
+    </div>
     <p class="usage-limit">{{ de ? 'Zuordnungen und Hinweise aus dem mitgelieferten Katalog. Keine Bestätigung der Spielkompatibilität oder Belohnungen.' : 'Associations and notes from the bundled catalogue. Game compatibility and rewards have not been verified.' }}</p>
     <p v-if="!rows.length" class="usage-empty">{{ de ? 'Für diese ID ist hier kein Kataloghinweis hinterlegt. Daraus lässt sich keine Aussage zur Spielunterstützung ableiten.' : 'No catalogue note is stored here for this ID. This does not establish whether a game supports it.' }}</p>
     <template v-else>
@@ -21,10 +24,13 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import usageData from '../data/figure-usage.json';
 import { figureUsage } from '../lib/figure-usage.js';
 const props = defineProps({ id: { type: String, default: null }, locale: { type: String, default: 'de_DE' }, compact: Boolean });
+const { t } = useI18n();
 const de = computed(() => props.locale.startsWith('de'));
+const catalogueVersion = computed(() => t('figureUsage.catalogueVersion', { version: usageData.dataVersion }, { locale: de.value ? 'de_DE' : props.locale }));
 const rows = computed(() => figureUsage(props.id, usageData, props.locale));
 const expanded = ref(false);
 const visibleRows = computed(() => props.compact && !expanded.value ? rows.value.slice(0, 3) : rows.value);
@@ -33,6 +39,9 @@ watch(() => props.id, () => { expanded.value = false; }, { flush: 'sync' });
 <style scoped>
 .figure-usage { margin:16px 0; border-top:1px solid #dce5eb; padding-top:12px; overflow-wrap:anywhere; }
 h5 { margin:0 0 8px; font-size:.9rem; color:#284d63; }
+.usage-heading { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin:0 0 8px; }
+.usage-heading h5 { margin:0; }
+.usage-version { margin:0; max-width:100%; color:#617282; font-size:.73rem; line-height:1.5; overflow-wrap:anywhere; }
 .usage-limit,.usage-empty { color:#617282; font-size:.78rem; line-height:1.5; }
 .usage-limit { margin:0 0 12px; }
 ul { list-style:none; margin:0; padding:0; display:grid; gap:12px; }

@@ -15,6 +15,11 @@ const root=path.resolve(process.argv[2]||'dist'),output=path.resolve(process.arg
 const base=process.argv[4]||'/';
 assert.match(base,/^\/(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*\/)*$/,'a local deployment base path is required');
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:'playwright');
+const packageInfo=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url)));
+const releaseInfo=JSON.parse(await fs.readFile(new URL('../../RELEASE_INFO.json',import.meta.url)));
+const firmwareCatalog=JSON.parse(await fs.readFile(new URL('../src/data/firmware-releases.json',import.meta.url)));
+const applicationPackage=firmwareCatalog.packages.find(entry=>entry.version===releaseInfo.version&&entry.counter===releaseInfo.counter);
+assert.ok(applicationPackage?.applicationOnly,'browser check requires the current bound application-only package');
 await fs.mkdir(output,{recursive:true});
 const hashes={};
 async function hashTree(dir){for(const e of await fs.readdir(dir,{withFileTypes:true})){
@@ -65,12 +70,12 @@ try{
   await context.route('**/*',route=>route.request().url().startsWith(origin+'/')||route.request().url().startsWith('data:')?route.continue():route.abort());
   const page=await context.newPage();page.on('pageerror',error=>errors.push({kind,message:error.message}));
   await page.goto(origin+base);await page.locator('.version-context').waitFor();
-  check(kind+' current browser version',await page.locator('.version-context').innerText().then(s=>s.includes('3.39.1')));
-  await page.evaluate(data=>{
+  check(kind+' current browser version',await page.locator('.version-context').innerText().then(s=>s.includes(packageInfo.version)));
+  await page.evaluate(({data,version})=>{
    const app=document.querySelector('#app')._vnode.component.proxy;window.__ui=app;
-   Object.assign(app,{connected:true,connBtnText:'Trennen',connBtnType:'success',firmwareVersion:'2.22.0-DE3.62',driveInfo:[{label:'E',status:0,totalBytes:2097152,freeBytes:1093632}],fullDiagnosticSnapshot:data});
+   Object.assign(app,{connected:true,connBtnText:'Trennen',connBtnType:'success',firmwareVersion:version,driveInfo:[{label:'E',status:0,totalBytes:2097152,freeBytes:1093632}],fullDiagnosticSnapshot:data});
    app.show_workspace('device');
-  },snapshot);
+  },{data:snapshot,version:releaseInfo.version});
   for(const [samples,label]of [[0,'zero'],[1,'one'],[null,'unknown']]){
    await page.evaluate(({data,samples})=>{data.sections.runtime.data.memorySamples=samples;window.__ui.fullDiagnosticSnapshot=data;window.__ui.runtimeInfo=data.sections.runtime.data;window.__ui.runtimeState='available';},{data:structuredClone(snapshot),samples});
    const ram=page.locator('[data-section="runtime"]');await ram.locator('.sample-note').waitFor();
@@ -132,10 +137,15 @@ try{
   check(kind+' failed read removes old RAM evidence',await page.locator('[data-section="runtime"]').innerText().then(s=>s.includes('Abfrage fehlgeschlagen')));
   await shot(page,kind+'-diagnostic-error',page.locator('.diagnostic-overview'));
   await page.goto(origin+base+'dfu/web.html');await page.locator('#bundled option').nth(1).waitFor({state:'attached'});
-  await page.locator('#bundled').selectOption(await page.locator('#bundled option').nth(1).getAttribute('value'));
+  await page.locator('#bundled').selectOption(applicationPackage.id);
   await page.locator('#load-bundled:not([disabled])').waitFor();
+  const packageResponsePromise=page.waitForResponse(response=>new URL(response.url()).pathname===base+'firmware/'+applicationPackage.file);
   await page.locator('#load-bundled').click();await page.locator('#button:not([disabled])').waitFor({timeout:30000});
+  const packageResponse=await packageResponsePromise;
+  check(kind+' exact current application ZIP bytes were served',createHash('sha256').update(await packageResponse.body()).digest('hex')===applicationPackage.sha256);
   check(kind+' DFU package validated before any hardware selection',await page.locator('#status').innerText().then(s=>s.length>0));
+  check(kind+' exact current application ZIP was validated',await page.locator('#status').innerText().then(s=>s.includes(applicationPackage.version)&&s.includes('Paketidentität per SHA-256 bestätigt')));
+  check(kind+' parsed DFU target matches current counter',await page.locator('#package-target').innerText().then(s=>s.includes(`Zähler ${releaseInfo.counter} ·`)&&s.includes('0x0126')));
   await noOverflow(page,kind+' application DFU');await shot(page,kind+'-dfu-ready');
   await page.locator('#file').setInputFiles({name:'invalid.zip',mimeType:'application/zip',buffer:Buffer.from('not a firmware archive')});
   await page.locator('#button[disabled]').waitFor();await shot(page,kind+'-dfu-invalid');

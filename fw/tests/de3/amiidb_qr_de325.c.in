@@ -4,6 +4,7 @@
 #include "mui_qrcode_helper.h"
 #include "db_header.h"
 #include "i18n/language.h"
+#include "amiibo_usage_de.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +13,8 @@
 /*ACTUAL_DEFINES*/
 static struct { bool anim_enabled,qrcode_enabled; } settings={true,true};
 #define settings_get_data() (&settings)
-static bool chinese,linked=true;
+static bool chinese,german,linked=true;
+int getLanguage(void) { return german ? LANGUAGE_DE_DE : LANGUAGE_EN_US; }
 static unsigned animation_starts,animation_stops,menu_events,desc_events,slot_events,frames,qr_checks;
 static db_amiibo_t entry={"AAA","AAA"};
 static db_notes_t descriptions={"Linked description with many useful details, enough text to scroll across multiple lines and pages. More information follows.",
@@ -192,6 +194,75 @@ int main(int argc,char **argv) {
         }
         char name[40];snprintf(name,sizeof(name),"product_%u_scroll_qr",item);save_frame(argv[1],name,buffer);
     }
+    /* DE3.63: personal notes and game hints stay independently reachable.
+     * These are actual C view/input callbacks plus actual u8g2 glyphs/wrapping.
+     * No callback may switch a slot while an information page is active. */
+    tag.data[84]=tag.data[85]=tag.data[86]=tag.data[87]=0;
+    tag.data[88]=tag.data[89]=tag.data[90]=0;tag.data[91]=2;
+    strcpy((char *)tag.notes,"Meine eigene Notiz bleibt erhalten.");
+    ntag_t saved_tag=tag;unsigned old_slots=slot_events,old_menus=menu_events;
+    v.info_page=3;v.focus=1;german=true;chinese=false;linked=true;
+    amiibo_view_on_enter(&view);CHECK(v.desc_auto_scroll_disabled && !v.desc_anim_running);
+    draw(&canvas,&view);save_frame(argv[1],"de_personal_note",buffer);memcpy(before,buffer,1024);
+    descriptions.en="Gerudo-King Fabric";
+    draw(&canvas,&view);CHECK(!memcmp(before,buffer,1024));
+    event.key=INPUT_KEY_RIGHT;event.type=INPUT_TYPE_SHORT;amiibo_view_on_input(&view,&event);
+    CHECK(v.info_page==4 && v.focus==1 && slot_events==old_slots && !v.desc_offset);
+    draw(&canvas,&view);save_frame(argv[1],"de_game_hint",buffer);
+    memset(expected,0,1024);mui_canvas_set_draw_color(&ec,1);
+    mui_element_autowrap_text_box(&ec,0,12,128,29,0,0,"Stoff des Gerudo-Königs");
+    same_region(buffer,expected,0,14,128,27);
+    const char *labels[]={"Deine Notiz","Spielhinweis","L/R kurz: Seite","lang:scroll M:zur.",
+                          "Your note","Game hint","L/R short: page","hold:scroll M:back"};
+    for(unsigned i=0;i<sizeof(labels)/sizeof(labels[0]);i++)
+        CHECK(mui_canvas_get_utf8_width(&canvas,labels[i])<=(i<2?100:126));
+    const unsigned german_glyphs[]={0x00c4,0x00d6,0x00dc,0x00e4,0x00f6,0x00fc,0x00df};
+    for(unsigned i=0;i<sizeof(german_glyphs)/sizeof(german_glyphs[0]);i++)
+        CHECK(u8g2_IsGlyph(&u,german_glyphs[i]) && u8g2_GetGlyphWidth(&u,german_glyphs[i])>0);
+    descriptions.en=amiibo_usage_de_texts[6].en;draw(&canvas,&view);
+    unsigned end=amiibo_view_desc_max_offset(&v);CHECK(end>56);
+    event.type=INPUT_TYPE_LONG;amiibo_view_on_input(&view,&event);
+    CHECK(v.info_page==4 && v.focus==1 && v.desc_offset==mui_canvas_current_font_height(&canvas) && slot_events==old_slots);
+    event.type=INPUT_TYPE_REPEAT;
+    for(unsigned i=0;i<100;i++)amiibo_view_on_input(&view,&event);
+    CHECK(v.desc_offset==end && !v.desc_anim_running);draw(&canvas,&view);
+    for(unsigned y=12;y<14;y++)for(unsigned x=0;x<124;x++)CHECK(!pixel(buffer,x,y));
+    save_frame(argv[1],"de_game_hint_scrolled_end",buffer);
+    event.type=INPUT_TYPE_SHORT;event.key=INPUT_KEY_LEFT;amiibo_view_on_input(&view,&event);
+    CHECK(v.info_page==3 && !v.desc_offset && v.desc_auto_scroll_disabled);
+    draw(&canvas,&view);same_region(buffer,before,0,0,128,64);
+    CHECK(!memcmp(&saved_tag,&tag,sizeof(tag)) && slot_events==old_slots);
+    event.key=INPUT_KEY_CENTER;amiibo_view_on_input(&view,&event);
+    CHECK(v.info_page==0 && menu_events==old_menus+1 && v.focus==1);
+    v.info_page=4;event.type=INPUT_TYPE_LONG;amiibo_view_on_input(&view,&event);
+    CHECK(v.info_page==0 && menu_events==old_menus+2 && slot_events==old_slots);
+    /* Missing per-game metadata is not a statement of game incompatibility. */
+    v.info_page=4;linked=false;amiibo_view_on_enter(&view);draw(&canvas,&view);
+    save_frame(argv[1],"de_game_hint_missing",buffer);
+    v.info_page=3;tag.notes[0]=0;amiibo_view_on_enter(&view);draw(&canvas,&view);
+    save_frame(argv[1],"de_personal_note_empty",buffer);
+    /* English remains untouched; unknown English text is an exact fallback. */
+    linked=true;v.info_page=4;german=false;descriptions.en="Untranslated catalogue source.";
+    amiibo_view_on_enter(&view);draw(&canvas,&view);save_frame(argv[1],"en_game_hint",buffer);
+    german=true;draw(&canvas,&view);
+    memset(expected,0,1024);mui_canvas_set_draw_color(&ec,1);
+    mui_element_autowrap_text_box(&ec,0,12,128,29,0,0,descriptions.en);
+    same_region(buffer,expected,0,14,128,27);
+    /* The first line's accents and the second line's descenders must both
+     * survive the info viewport; compare against unclipped real glyphs. */
+    v.info_page=3;strcpy((char *)tag.notes,"ÄÖÜäöüß gjpqy\nÄÖÜäöüß gjpqy");
+    amiibo_view_on_enter(&view);draw(&canvas,&view);CHECK(v.desc_step==13);
+    memset(expected,0,1024);mui_canvas_set_draw_color(&ec,1);
+    mui_element_autowrap_text_box(&ec,0,12,128,50,0,0,(const char *)tag.notes);
+    same_region(buffer,expected,0,14,124,27);
+    unsigned accents=0,descenders=0;
+    for(unsigned x=0;x<124;x++) {
+        for(unsigned y=14;y<19;y++)accents+=pixel(buffer,x,y);
+        for(unsigned y=39;y<41;y++)descenders+=pixel(buffer,x,y);
+    }
+    CHECK(accents && descenders);
+    for(unsigned y=12;y<14;y++)for(unsigned x=0;x<124;x++)CHECK(!pixel(buffer,x,y));
+    save_frame(argv[1],"de_complete_glyph_lines",buffer);
     printf("PASS amiidb QR: %u real framebuffer frames, %u complete QR comparisons; notes/links/locales/readonly/off/failure/manual/animation/info/long-lines\n",frames,qr_checks);
     return 0;
 }

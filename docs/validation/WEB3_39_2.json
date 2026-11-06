@@ -1,0 +1,163 @@
+{
+  "schema": 1,
+  "version": "3.39.2",
+  "date": "2026-11-06",
+  "scope": "Final bound production bundles in isolated Chrome: actual catalogue DOM interactions and synthetic diagnostic states, exact app-only OTA ZIP parsed and hashed without Bluetooth. Local host tests and extracted Windows launcher. No physical phone/BLE or device test.",
+  "tests": {
+    "node-tests.log": {
+      "tests": 1248,
+      "pass": 1248,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "e894335f2b9a99feda097c4b2ced4f037132e450ae048f5422cdf9ee2cc66b4d"
+    },
+    "build-root.log": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "a4dd395900ed676a2ffb362c8b14d0432f5990680a3655b880f659daca702a26"
+    },
+    "build-pages.log": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "sha256": "3164a9cdaa5929e0d15e0b34089269bb9261a46aad334934b59521cc3006af39"
+    }
+  },
+  "pythonUsageTests": {
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "sha256": "09736f0e26ab7224bda356fdd95310f4392a6ff3e274c74d0dc67d946da36c56"
+  },
+  "browser": [
+    {
+      "report": "browser-root/browser-evidence.json",
+      "sha256": "a305c1d21c372c37faf8fdeb162867e3d2c53f203cee45f0f54511ac1df59833",
+      "checks": 63,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153,
+      "runtimeErrors": 0,
+      "scope": "Exact production bundle rendered in isolated Chrome with synthetic Vue observations and mocked folder-read boundary; no hardware test."
+    },
+    {
+      "report": "browser-pages/browser-evidence.json",
+      "sha256": "fc5b823fec0783ca8a7cf4aee9fae910672f77cf4dc441c9ba55bf7d829c1568",
+      "checks": 63,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153,
+      "runtimeErrors": 0,
+      "scope": "Exact production bundle rendered in isolated Chrome with synthetic Vue observations and mocked folder-read boundary; no hardware test."
+    },
+    {
+      "report": "collection-root/collection-tools-browser-evidence.json",
+      "sha256": "cbfb2a0c5ea3d8f735771e1f6725cd76511703e9c11beaaeb584868539d0e7bc",
+      "checks": 166,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153,
+      "runtimeErrors": 0,
+      "scope": "Exact production bundle, real DOM navigation/file inputs/keyboard/download. Synthetic files only, no harness or Vue state injection. All external page requests blocked; Bluetooth disabled. Text zoom is explicit computed-font doubling, not browser optical zoom."
+    },
+    {
+      "report": "collection-pages/collection-tools-browser-evidence.json",
+      "sha256": "29969f47c7b176bb324432436a1652aa9ddd9ea35d6ae1ff81548ebc256a54e5",
+      "checks": 166,
+      "screenshots": 28,
+      "browser": "156.0.8078.80",
+      "boundFiles": 153,
+      "runtimeErrors": 0,
+      "scope": "Exact production bundle, real DOM navigation/file inputs/keyboard/download. Synthetic files only, no harness or Vue state injection. All external page requests blocked; Bluetooth disabled. Text zoom is explicit computed-font doubling, not browser optical zoom."
+    }
+  ],
+  "totals": {
+    "hostTests": 1248,
+    "productionTests": 42,
+    "browserChecks": 458,
+    "screenshots": 112,
+    "runtimeErrors": 0
+  },
+  "environment": {
+    "node": "v26.13.0",
+    "npmUsed": "11.19.1",
+    "lockfileSha256": "fc0c25b9a04ff7758c5f4ad17f37e744b2e4ad6286b79bab0b06704dd5750f1a",
+    "rootVersionOnlyLockChange": true,
+    "dependencyChanges": false
+  },
+  "firmware": {
+    "version": "2.22.0-DE3.63",
+    "counter": 635,
+    "otaSha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4",
+    "applicationSha256": "0093c1944cd54d2c0014f55d18364ff0288c841aedf421266b5a6ddf2655ab41",
+    "sourceId": "b79d733781b3e4e1077bca9ddf50e20d1b66d3be77e83849f67c6f75b4ac7aa8",
+    "applicationOnly": true,
+    "bootloaderOrSoftDeviceTransferred": false
+  },
+  "changes": {
+    "catalogueVersionVisible": "2026-11-06.1",
+    "localeFallback": "German/English, English fallback for other UI languages",
+    "dataUnchanged": true,
+    "privateMetadataChanged": false,
+    "migrationCompatibility": "Explicit DE3.63/635 pair added; all eight prior current-profile pairs retained; same WASM and PFS1 engine hashes"
+  },
+  "portable": {
+    "archive": "Allmiibo_Dateimanager_3_39_2_Portable.zip",
+    "bytes": 1154005,
+    "sha256": "5ff450f7360ca81677df62e317031d8794df5d77e4eba0504e8788096588e974",
+    "entries": 162,
+    "rootBuildFiles": 153,
+    "crcPassed": true,
+    "allFilesByteMatched": true,
+    "startPath": "Allmiibo_Dateimanager_3_39_2/Start-Dateimanager.cmd",
+    "readmeSha256": "4d0436eff4467b2ef1afad1c092c4ab14efaff7a6c76d8b29eef05476e61aad6",
+    "extractedLauncherSmoke": {
+      "startPassed": true,
+      "launcherReturnedExitCode": 0,
+      "healthVersion": "3.39.2",
+      "indexByteMatched": true,
+      "dfuByteMatched": true,
+      "browserOpened": false,
+      "deviceAccess": false,
+      "authenticatedStopPassed": true
+    }
+  },
+  "visualReview": [
+    {
+      "file": "collection-root/mobile-usage-de.png",
+      "sha256": "d9aa872d8ec79149106dac122e3850c4e0fb503e5de0a4f57cba0a5d7b057eaa",
+      "observed": "Readable, no overlapping text or cropped controls. Narrow/200-percent-text catalogue version wraps. DFU shows DE3.63 and counter635."
+    },
+    {
+      "file": "collection-pages/mobile-text200-usage-en.png",
+      "sha256": "d3079282a88fce3f367046efaf721ec87533bc39adc2615c907b732a46bc9cb0",
+      "observed": "Readable, no overlapping text or cropped controls. Narrow/200-percent-text catalogue version wraps. DFU shows DE3.63 and counter635."
+    },
+    {
+      "file": "collection-root/desktop-usage-de.png",
+      "sha256": "f4917d8328e9c1a2e2afc8a274c7ed3b192efd56f41eef394b4fd8ea436c5036",
+      "observed": "Readable, no overlapping text or cropped controls. Narrow/200-percent-text catalogue version wraps. DFU shows DE3.63 and counter635."
+    },
+    {
+      "file": "browser-pages/mobile-dfu-ready.png",
+      "sha256": "c72635de826ff3c6050149d8b0e25ff95e794858636288056bb06b6f74269173",
+      "observed": "Readable, no overlapping text or cropped controls. Narrow/200-percent-text catalogue version wraps. DFU shows DE3.63 and counter635."
+    }
+  ],
+  "limits": [
+    "Fresh DE3.63 physical LCD, input, wake, NFC and BLE checks remain separate.",
+    "Screen Wake Lock lifecycle has unchanged prior browser evidence; current full host suite retains its tests. No new real phone long-transfer claim.",
+    "Catalogue version is a bundled data version, not a fresh online update check.",
+    "No private collection, keys or backups distributed."
+  ],
+  "testHarnessCorrections": [
+    "Replaced obsolete locale-only stub in collection UI tests with real Vue i18n.",
+    "DFU browser check now follows the actual final status (version and SHA confirmation), verifies response ZIP bytes against the pinned hash and parsed DAT counter/FWID."
+  ]
+}

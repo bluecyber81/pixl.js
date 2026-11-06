@@ -21,6 +21,7 @@ class DatabaseQrTests(unittest.TestCase):
                 shutil.copyfile(SRC/'mui'/name,folder/name)
             shutil.copyfile(SRC/'ntag/ntag_def.h',folder/'ntag_def.h')
             shutil.copyfile(SRC/'app/amiidb/view/amiibo_view.h',folder/'amiibo_view.h')
+            shutil.copyfile(SRC/'app/amiidb/view/amiibo_usage_de.h',folder/'amiibo_usage_de.h')
             (folder/'mui_common.h').write_text('#pragma once\n#include <stdbool.h>\n#include <stdint.h>\n#include <string.h>\n#include "u8g2.h"\n')
             (folder/'bsp.h').write_text('typedef int bsp_event_t;\n')
             (folder/'mui_u8g2.h').write_text('#include "u8g2.h"\n')
@@ -46,7 +47,7 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
 ''')
             (folder/'i18n').mkdir()
             shutil.copyfile(SRC/'i18n/string_id.h',folder/'i18n/string_id.h')
-            (folder/'i18n/language.h').write_text('#pragma once\n#include "string_id.h"\nconst char *getLangString(int);\n#define _T(name) getLangString(_L_ ## name)\n')
+            (folder/'i18n/language.h').write_text('#pragma once\n#include "string_id.h"\nenum {LANGUAGE_DE_DE,LANGUAGE_EN_US};\nint getLanguage(void);\nconst char *getLangString(int);\n#define _T(name) getLangString(_L_ ## name)\n')
             u8=FW/'components/u8g2/csrc'
             libs=['u8g2_setup.c','u8g2_font.c','u8g2_hvline.c','u8g2_ll_hvline.c','u8g2_box.c',
                   'u8g2_intersection.c','u8g2_line.c','u8g2_kerning.c','u8x8_8x8.c','u8g2_buffer.c',
@@ -81,8 +82,10 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
                     source=source_path.read_text(encoding='utf-8')
                     body=template
                     qr_names = ['amiibo_view_draw_qrcode'] if 'static uint16_t amiibo_view_draw_qrcode' in source else []
+                    note_names = ['amiibo_view_usage', 'amiibo_view_draw_notes'] if 'static void amiibo_view_draw_notes' in source else []
+                    # Helpers refer to the wrapper, but not the later renderer.
                     for key,value in {**replacements,'ACTUAL_DEFINES':'\n'.join(re.findall(r'^#define .*$',source,re.M)),
-                                      'ACTUAL_VIEW_FUNCTIONS':'\n'.join(function(source,name) for name in qr_names + names)}.items():
+                                      'ACTUAL_VIEW_FUNCTIONS':'\n'.join(function(source,name) for name in qr_names + note_names + names)}.items():
                         body=body.replace('/*'+key+'*/',value)
                     generated=folder/(label+'.c');generated.write_text(body,encoding='utf-8')
                     binary=folder/(label+'.exe')
