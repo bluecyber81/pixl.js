@@ -7,7 +7,7 @@ Publication baseline: **2026-11-06**. Components have independent versions.
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
 | Application | 2.22.0-DE3.62 (test release) | DFU counter 634, hardware requirement 52 |
-| File manager | 3.38.0 | Browser software, not a device image |
+| File manager | 3.38.1 | Browser software, not a device image |
 | New bootloader candidate | Z17 | Counter17, separate source and Android test package; physical test pending |
 | Previously installed reference | Z15 | Counter 15; region SHA-256 below |
 | Older reference bootloader | BL8 | Historical corresponding source retained; counters depend on packaging |

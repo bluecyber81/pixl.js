@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.38.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.38.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -218,7 +218,7 @@
       <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
       <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
       <p v-if="table_loading" class="backup-hint" role="status">{{ $t('workflow.backupDriveOpening') }}</p>
-      <p v-else-if="listingError && connected" class="notice error" role="alert">{{ $t('workflow.backupDriveFailed') }}</p>
+      <p v-else-if="(listingError || backupDriveOpenError) && connected" class="notice error" role="alert">{{ $t('workflow.backupDriveFailed') }}</p>
       <div v-if="connected && !current_dir" class="workspace-actions backup-drive-picker">
         <el-button v-for="drive in availableBackupDrives" :key="drive.label" type="primary"
           :disabled="busy || disconnecting || upload_diag_visible" @click="open_backup_drive(drive.label)">
@@ -247,7 +247,7 @@
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.38.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.38.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -497,7 +497,7 @@ export default {
   components: { DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.38.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.38.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false,
@@ -516,7 +516,7 @@ export default {
       connBtnText: `${this.$t("conn.connect")}`,
       version: "",
       connected: false,
-      table_loading: false, listingError: false,
+      table_loading: false, listingError: false, backupDriveOpenError: false,
       mutating: false, connecting: false, disconnecting: false, enteringDfu: false, pendingUploads: 0, pendingDownloads: 0,
       sessionGeneration: 0, listingGeneration: 0, firmwareVersion: "",
       current_dir: "",
@@ -726,7 +726,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.38.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.38.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1177,7 +1177,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.38.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.38.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1284,6 +1284,8 @@ export default {
       this.current_dir = root;
       await this.reload_folder();
       if (this.session_current(generation) && this.current_dir === root && this.listingError) {
+        // A successful drive refresh must not erase the failed folder opening.
+        this.backupDriveOpenError = true;
         await this.reload_drive();
       }
     },
@@ -1410,6 +1412,7 @@ export default {
       }
     },
     async on_ble_connected() {
+      this.backupDriveOpenError = false;
       this.collectionObservation=null;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
       this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
@@ -1462,7 +1465,7 @@ export default {
       this.connected = false;
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : 'conn.connect');
       this.version = "";
-      this.table_loading = false; this.listingError = false;
+      this.table_loading = false; this.listingError = false; this.backupDriveOpenError = false;
       this.tableData = [];
       this.current_dir = "";
       this.$notify({
@@ -1503,7 +1506,7 @@ export default {
       this.connBtnType = "";
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : 'conn.connect');
       this.version = "";
-      this.table_loading = false; this.listingError = false;
+      this.table_loading = false; this.listingError = false; this.backupDriveOpenError = false;
       this.tableData = [];
       this.current_dir = "";
       this.$notify({
@@ -1902,6 +1905,7 @@ export default {
 
     async reload_folder() {
       if (!this.connected) return;
+      this.backupDriveOpenError = false;
       this.previewSelection=null;++this.previewSerial;
       const dir = this.current_dir, listing = ++this.listingGeneration, generation = this.sessionGeneration;
       this.table_loading = true; this.listingError = false; this.tableData = []; this.table_selection = [];

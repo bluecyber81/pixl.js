@@ -1,5 +1,9 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## Dateimanager 3.38.1
+
+Ein fehlgeschlagenes Öffnen des Sicherungslaufwerks behält seinen Fehlerhinweis auch nach erfolgreicher Rückkehr zur Laufwerksauswahl. Wiederholung und neue Verbindungen bereinigen den passenden Zustand. Der Browser-Test bildet die bisher übersehene Rücksetzung des Listenfehlers nach. App634/DE3.62, Bootloader Z17 und S112 bleiben unverändert. Die Kartenpuffer-Prüfung zählt jetzt alle 5.150 bereits vorhandenen Assertions; es ist keine weitere Firmwarekorrektur. [Nachprüfung](RELEASE_WEB3_38_1.de.md).
+
 ## DE3.62 / 634 und Dateimanager 3.38.0
 
 Der Kartenemulator fängt fehlende, unbekannte und verkürzte Puffer vor dem

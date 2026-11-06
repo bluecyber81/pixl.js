@@ -1,0 +1,42 @@
+Allmiibo Dateimanager 3.38.1
+6. November 2026
+
+Unter Sicherung kannst du das erkannte Laufwerk direkt öffnen. Steht bei „Geöffneter Ordner“ das Hauptverzeichnis E:/, sichert Ordner sichern (ZIP) die Dateien auf dem ganzen Laufwerk. Bei DE3.8 ist das der erste Schritt vor der späteren Sicherung aller 128 Metadatenbytes für die Speicherumstellung.
+
+Unter „Gerät & Diagnose → Alle Diagnosewerte auslesen“ steht im Bluetooth-Abschnitt die von der Firmware gemeldete ATT-MTU. Die GATT-Wertgröße der Transportübersicht gibt an, wie viele Bytes ein Wert fassen kann. Ein Teilexport enthält nur die tatsächlich gelesenen Daten.
+
+Unter „Startzeiten lesen“ sind ab DE3.61 die Zeitanteile für das Einbinden des Laufwerks, die Journalprüfung und den Rest des Speicherstarts aufklappbar. Bei älterer Firmware stehen die bisherigen sechs Zeitmarken zur Verfügung. Der Versionsabgleich erkennt die bekannten Bootloader nur anhand des passenden vollständigen Bereichshashes und Zählers. Z17 ist das neue Vergleichsprofil; Z18 bezeichnet ausdrücklich das Rückkehrpaket mit unverändertem Z15-Code und Zähler 18, keine neue Bootloader-Implementierung.
+
+Beim Firmware-Update zeigt die DFU-Seite vier Schritte. „Übertragen“ zeigt bestätigte Bytes. „Prüfen“ vergleicht die gesamte Prüfsumme. „Abschließen“ wartet auf die Bestätigung des Bootloaders. Unter „Wiederverbinden“ die Version am Gerät prüfen, die Bluetooth-Dateiübertragung öffnen und im Dateimanager neu verbinden. Bei einem Abbruch vor der Abschlussbestätigung zuerst die Version am Gerät prüfen.
+
+Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet. Beim Gerätewechsel verschwinden die Erfolgs- und Fehlermeldungen des vorherigen Geräts. Hinweise auf zu prüfende Dateien bleiben bei ihrer ursprünglichen Sitzung.
+
+Online öffnen
+https://bluecyber81.github.io/pixl.js/
+Auf Android oder am Computer einen Browser mit Web Bluetooth verwenden. Auf dem Allmiibo Bluetooth-Dateiübertragung öffnen. Auf Verbinden drücken und das eigene Gerät auswählen.
+
+Am Windows-PC ohne Webserver starten
+Das portable ZIP vollständig entpacken, Python 3 installieren, falls es fehlt, und Start-Dateimanager.cmd öffnen. Der lokale Server ist über http://127.0.0.1:8765/ erreichbar. Zum Beenden Stop-Dateimanager.cmd verwenden. Der fertige Browser-Build benötigt weder npm noch Node.js. Einen anderen lokalen Port mit Start-Dateimanager.ps1 -Port 8780 wählen. Für das Handy die HTTPS-Adresse oben verwenden. 127.0.0.1 bezeichnet immer das Gerät, auf dem der Browser läuft.
+
+Firmwarepaket ansehen und installieren
+Das passende Anwendungsupdate heißt Allmiibo_LCD_DE3_62_634_TESTSTAND.zip. Die ZIP in ihrer ursprünglichen Form belassen. Die DFU-Seite zeigt bei der Dateiauswahl den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Eine höchstens zehn Minuten alte Bootdiagnose aus dem Dateimanager ermöglicht zusätzlich einen Vergleich. Auf dem vorgesehenen LCD/PFS1-Gerät Firmware-Update wählen und das eigene DFU-Gerät im Browser auswählen. Nach dem Neustart unter Einstellungen → App die laufende Version DE3.62 prüfen. Bei älterer Firmware kann der Menüpunkt „Version“ heißen.
+
+Dateien sichern und Diagnose lesen
+Beim Prüfen der Sammlung und beim Sichern vieler kleiner Figurendateien kann das Lesen über Bluetooth mehrere Minuten dauern. Die Anzeige zeigt zuerst die Ordnersuche und danach eine geschätzte Restzeit für den laufenden Schritt. Auf einer orange umrandeten Figurenkarte steht der jeweilige Prüfhinweis.
+Gerät & Diagnose → Alle Diagnosewerte auslesen → Gesamtdiagnose speichern. Einträge enthalten ihren jeweiligen Abrufzeitpunkt. DE3.62 wurde am Rechner geprüft. Der Hardwaretest dieser Anwendung steht aus. Die Sammlung vor Änderungen über die ZIP-Sicherung auf dem eigenen Gerät speichern. Weitere Hinweise zu eigenen Bildern, Katalog und Dateiverwaltung stehen im Quellprojekt: https://github.com/bluecyber81/pixl.js/tree/main/web
+
+
+Startzeiten vergleichen
+Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen. Einen früheren Start- oder Gesamtdiagnosebericht desselben Geräts auswählen. Die Datei wird lokal gelesen. Die sechs Zeitmarken beginnen mit dem Speicherstart der Anwendung. Bei den Differenzen in Millisekunden bedeutet ein negativer Wert schneller und ein positiver langsamer.
+
+Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.
+
+Neu in 3.38.1
+Sicherung: Ein Fehler beim Öffnen von E:/ bleibt sichtbar, auch wenn danach die Laufwerksliste erfolgreich neu gelesen wird. Laufwerk erneut auswählen, um das Öffnen zu wiederholen. Ein neuer Öffnungsversuch oder ein Verbindungswechsel entfernt den alten Hinweis. Dafür ist kein Firmwareupdate erforderlich; keine Gerätedateien werden verändert.
+
+Weiterhin enthalten aus 3.38.0
+RAM: Hinweise zu keiner/einer/wenigen/vielen/unbekannten Speicherstichproben. Keine automatische Aussage über bestandene Belastungstests.
+Startdiagnose ab DE3.62: Flashvorbereitung, PackedFS-Scan und tatsächliche Mount-Lese-/Cachezähler. Frühere Firmware bleibt lesbar.
+Sicherung: sichtbare Warte- und Fehlermeldung beim Öffnen des Laufwerks, hervorgehobener aktiver Sicherungsknopf.
+
+Das mitgelieferte Firmwarepaket ist nur ein Anwendungsupdate für das passende LCD-Gerät mit bestehendem Packed LittleFS PFS1. Es enthält keinen Bootloader und kein SoftDevice. Geräte mit SPIFFS oder anderem Datenlayout müssen zuerst den vorgesehenen Sicherungs-/Migrationsweg durchlaufen.

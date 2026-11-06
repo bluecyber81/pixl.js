@@ -58,8 +58,10 @@ int main(void) {
             assert(tag_helper_is_active_tag_writable());
             --buffer.length;
             assert(tag_helper_get_active_tag_memory_data() == NULL);
-            if (tag_helper_get_tag_group_type(type) == TAG_GROUP_NTAG)
+            if (tag_helper_get_tag_group_type(type) == TAG_GROUP_NTAG) {
                 assert(!tag_helper_is_active_tag_writable());
+                ++checks;
+            }
             buffer.length = sizeof(card); buffer.buffer = NULL;
             assert(tag_helper_get_active_tag_memory_data() == NULL);
             buffer.buffer = card; missing = true;

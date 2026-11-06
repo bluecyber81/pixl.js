@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.62",
   "counter": 634,
   "board": "LCD",
-  "web_version": "3.38.0",
+  "web_version": "3.38.1",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "f733ff1b30e17b9f62113c0a10a2abf9bfcc6dfd8f3aad7b03ca0f6da356503f",
@@ -39,7 +39,7 @@
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
   "host_firmware_suites": 145,
-  "web_host_tests": 1180,
+  "web_host_tests": null,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
   "evidence": "docs/validation/DE3_62.json",
@@ -55,8 +55,8 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_38_0.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.0",
+  "web_evidence": "docs/validation/WEB3_38_1.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.1",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
   "device_readback_passed": false,
@@ -77,8 +77,18 @@
     "physical_test_pending": true,
     "included_in_application_ota": false
   },
-  "web_host_final_targeted_tests": 24,
-  "web_host_test_scope": "1180-test full suite before final Z18-only profile registration; 24 affected checks and both production builds/browser runs repeated afterwards.",
+  "web_host_final_targeted_tests": 217,
+  "web_host_test_scope": "3.38.1: affected component and version checks plus both production/browser builds; see WEB3_38_1.json. Complete Linux CI results are bound to the published commit in GitHub Actions.",
   "web_browser_checks_per_build": 57,
-  "web_browser_screenshots_per_build": 28
+  "web_browser_screenshots_per_build": 28,
+  "previous_web_full_suite": {
+    "version": "3.38.0",
+    "local_passed": 1180,
+    "local_skipped": 0,
+    "ci_total": 1181,
+    "ci_passed": 1178,
+    "ci_skipped": 3,
+    "commit": "0df66ceafba94daee1c205de29e0f3df9d811b7c"
+  },
+  "firmware_production_unchanged_since": "0df66ceafba94daee1c205de29e0f3df9d811b7c"
 }

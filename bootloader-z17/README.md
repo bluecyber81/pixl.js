@@ -1,6 +1,6 @@
 # Allmiibo LCD Z17 – separat geprüfter Bootloader-Kandidat
 
-Stand: 6. November 2026. Basis ist der exakt gebundene Z15-Bootloader, nicht eine ältere BL8-Arbeitskopie. Z16 ist für einen Rückkehrstand reserviert; dieser funktionale Kandidat benötigt bei einer späteren DFU-Paketierung Zähler **17**. Die Dateien in `_build` sind unsignierte Analyseartefakte, keine direkt auswählbare DFU-ZIP. Es wurde kein Gerät verändert und kein Hardwaretest durchgeführt.
+Stand: 6. November 2026. Basis ist der exakt gebundene Z15-Bootloader, nicht eine ältere BL8-Arbeitskopie. Für diesen funktionalen Kandidaten liegt ein optionales DFU-Paket mit Bootloader-Zähler **17** vor. Das vorhandene **Z18-Rückkehrpaket** enthält unveränderten Z15-Code mit dem höheren Bootloader-Zähler **18** und App634 als zweite Phase. Die Dateien in `_build` sind unsignierte Analyseartefakte, keine direkt auswählbare DFU-ZIP. Es wurde kein Gerät verändert und kein Hardwaretest durchgeführt.
 
 ## Änderungen und Nutzen
 

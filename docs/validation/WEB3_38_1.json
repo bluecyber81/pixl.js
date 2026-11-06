@@ -1,0 +1,706 @@
+{
+  "schema": 1,
+  "version": "3.38.1",
+  "date": "2026-11-06",
+  "applicationTarget": "2.22.0-DE3.62",
+  "applicationCounter": 634,
+  "bootloaderTarget": "Z17",
+  "bootloaderCounter": 17,
+  "evidenceScope": "Targeted host tests, isolated production browser and extracted portable launcher; no real Bluetooth, firmware flash or device access.",
+  "fixes": [
+    "Backup drive-opening error survives a successful fallback drive-list refresh.",
+    "Retry or connection reset clears the dedicated error; obsolete session completions do not restore it.",
+    "Browser folder-list mock now matches production listing-error clearing and exposes the original regression.",
+    "One consistent Web 3.38.1 identity across UI, diagnostics, launchers, DFU title, source-license links and tests."
+  ],
+  "dependencyChanges": false,
+  "firmwareBinaryChanges": false,
+  "environment": {
+    "node": "v26.13.0",
+    "npmUsed": "11.19.1",
+    "npmHost": "11.20.0",
+    "npmSource": "existing offline npm cache; npm exec --offline --package=npm@11.19.1",
+    "packageManagerDeclared": "npm@11.19.1",
+    "vite": "8.3.5",
+    "playwright": "1.64.0",
+    "chrome": "156.0.8078.80",
+    "lockfileSha256": "da77dd9276a3e6b423139d09c687fb614c0485c329f46fb0b9e4e922fb5ca237",
+    "baselineLockSha256": "f9b9445dd5fc55ec208148b41448d65ed3379afcd153d4a1e4cff690fa365963",
+    "rootVersionOnlyLockChange": true,
+    "allInstalledLockDependenciesMatched": 65,
+    "uninstalledOptionalOtherPlatformPackages": 25
+  },
+  "finalVerification": {
+    "targetedHostTests": 217,
+    "productionTestsPerBuild": 21,
+    "browserChecksPerBuild": 57,
+    "fullHostSuiteRepeated": false,
+    "localFirmwareRetest": false,
+    "ci": "Complete Linux CI belongs to the final published commit; these are local targeted maintenance results."
+  },
+  "commands": [
+    "node --test tests/ui-modern.test.cjs",
+    "node --test tests/device-info.test.mjs tests/launcher.test.cjs tests/update-check.test.mjs",
+    "npm run build",
+    "npm run build:pages",
+    "node scripts/verify-browser.mjs dist <root-evidence> /",
+    "node scripts/verify-browser.mjs dist-pages <pages-evidence> /pixl.js/"
+  ],
+  "tests": {
+    "ui-modern.log": {
+      "sha256": "ff021abf84a4d066ee599a55b191f4e950a5bca35d1a8925eaa771a3827626d9",
+      "tests": 180,
+      "pass": 180,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "version-launcher.log": {
+      "sha256": "31f287d581cbd45b5b1c7efb2f5875ac9913df320c020e4fc020dc246b8d7f9f",
+      "tests": 37,
+      "pass": 37,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "build-root.log": {
+      "sha256": "5cb1375d0b72798b18cf37a187879303990be6c24f4b44cfa7ea1aca2019209b",
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "build-pages.log": {
+      "sha256": "92604f98c2eb943212f02b61a9f6c9d3d954688f333e05ebdf4e32edda8b63e6",
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    }
+  },
+  "browser": [
+    {
+      "manifest": "browser-root/browser-evidence.json",
+      "manifestSha256": "bc8638b5874d698c747148fcf7b5abb2cfd9fc500eadd687be1de8dd979e9976",
+      "checks": 57,
+      "screenshots": 28,
+      "runtimeErrors": 0,
+      "browser": "156.0.8078.80",
+      "deploymentBase": "/",
+      "boundFiles": 147,
+      "buildTreeSha256": "f45a2d20ff6acc877dda8ac9c407797f8c6fd31d3bed1952c91b2dc3271950f1",
+      "filesSha256": {
+        ".nojekyll": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "assets/catalogue-BeUkLBYF.js": "35a852131f024e1ca8f6c012917acbcfae04adfbb3a737ce14d17c4b383128c3",
+        "assets/CataloguePanel-BgjjNRwp.js": "bd56abe34589a5397b1602aba1e903f876b171ef9a4c12911d2133ddb76f4b9d",
+        "assets/CataloguePanel-DkIbfO52.css": "f254eabce9302d2e4d378deb21159e4df915a7acfc9aac58a92f6451061ecf09",
+        "assets/CollectionAssistant-CiZY2NMD.js": "751c79fcc0e1d70a8cf1f872794d755ac353a4ae8b6df2ec10cd483d77f1f21e",
+        "assets/CollectionAssistant-fF4wWEDV.css": "fa61dd093ba95120473496bbff80abd6555df7e7c51233770944111474173410",
+        "assets/DeviceSearch-BaST2DB0.css": "1be7562f75991643f7ea20b6a4a076621f56dea1b3fae9780b59ee6e079388d4",
+        "assets/DeviceSearch-OeBYEn3j.js": "e094563a31dc28086299467715e57d1730e226b1aa5db83bcdc4fab404a3ff87",
+        "assets/DiagnosticOverview-BxtEkh0m.css": "041f8e105ee3a2def13dfd10d1525c960736e19ca48e780dd486f10a57b64221",
+        "assets/DiagnosticOverview-DYe4BK_Y.js": "e27e38e530b069159ea308276ca632c8eade75edeff0ff5382122668b8d6f560",
+        "assets/FigureDetails-BvwyZtM3.js": "bec637c30e08592b1fe4ca2b8b2439c509a352ddf8e991258f40026cfca2479d",
+        "assets/FigureDetails-EN8RIv8R.css": "729f40ef5691d068f3815720df11b0c117801d2fbedb2441f407e4aeacd7334d",
+        "assets/index-B1bCVNG_.css": "dcbd6ae1724555a0ebf4ebc7ea442ff0335a7e38538f10463c1028bb75968433",
+        "assets/index-C4QTGLbD.js": "f492ee1f683205fe02d746e0ada29c7bab91aff6786927afbc9b1f6127cd63c5",
+        "assets/migration-capacity-worker-DK8L_Fc4.js": "0961ecbfb0cd9813680025baf2146ebcab0c1d6838e6ca63e2abdac1b5bd4e4c",
+        "assets/MigrationAssistant-Bv0T7thK.js": "f529bb468e406fb84674294427bff0318d8e1d340c5dc4e13090e896d963fbf2",
+        "assets/MigrationAssistant-C271bwHe.css": "3198fd12916813800ca5e64c15b706035c1b55709b0df583b85c7219705f995c",
+        "assets/RemoteControl-CSqBjHCM.css": "31c8d7918f5bd79501c429f5a5a6ad88c9d13b927b38ee66dba10df9f6b8d1db",
+        "assets/RemoteControl-DByTbZl4.js": "d4c9c7e41f67c18c44ed01962ca65ea3b1b21f00d6ac91c56fe4366cd9bea127",
+        "assets/SelectionPreview-Cz7gzvCo.css": "3715bb36a83196e4d7a5b5c2939e6b2b3161606c76149684a31b099a41c0ffc8",
+        "assets/SelectionPreview-DCOVo2v6.js": "905a9badc907e6a81ca8ae9f99f60ef018bc5cb99bb83fbfef86391891242a49",
+        "assets/StartupDiagnostics-BWY-oKj6.css": "dae033d17f55aaa0459ea19903c40bf16fb45db623b95ac60776089cde0d9e72",
+        "assets/StartupDiagnostics-C5J99_Xi.js": "b75dfe5067ade172796cabd03e308bdc6845aa41fbe3850cbc53fb078f36ea48",
+        "assets/TransferStatus-COVeGMSw.js": "63dd162e0642ae556da89528b27f9898b8a75d6377fd4644efa217ec4481f41c",
+        "assets/TransferStatus-nWAZERUQ.css": "fab2a74739d5553a89ebf48e008db5b398db75d1ff66e6b27a1f49d599fc6db7",
+        "assets/UpdateCheck-C0lJD8_p.css": "c941c9593aa99fcbcaa20bfb5995a58f3732fd2141ca38fd53c81fcdd866d431",
+        "assets/UpdateCheck-CUrFqhhf.js": "a09fe238f8438ff1904855027722dc6de6af3a40184c89e9e6fdce10abb378a4",
+        "dfu/bundled-packages.js": "33af281a9425efc53290fe6a55f73eee8acd9da09262a9fabf41e372eaf0a2fe",
+        "dfu/LICENSE.txt": "2afc378dc870b9cbade5270eeff6f86083fe3f99c2eb2583c74cad06db56538d",
+        "dfu/package.js": "2ba685accd1f02562bac267546072e72eae791838e3476efdb98d53c89f3cb89",
+        "dfu/package.json": "87b46668c6916594201bf729e09353a9d2e03226ca884dbfeefb600c086409a7",
+        "dfu/page.js": "003e8a64c30b65eb5dc73077ca047222b5a4fbac8692bc3e684d9623939215da",
+        "dfu/phase-labels.js": "f1cae2bd91de8a68dd1331636de875a7723e53324a5ea0bfb6ae0c4ee1f8694e",
+        "dfu/secure-dfu.js": "370223b10ba04c3d6fb492c8d67d47f2adb208d53c943aaaf0e326d32beb61a7",
+        "dfu/updater.css": "619c68ae6d8a1ca083234e54202f7ff7ddd7faffaeb433cefc77de3ec6c61b87",
+        "dfu/updater.js": "67142cb17959231fa986359bf2b263c5e414791b6d8d2c08282bd6acc22b5fe2",
+        "dfu/vendor/CRC32-LICENSE.txt": "c542ba7851b5d39a5face477e47a27cb7c00a9759e321b66824e79718bffe1ac",
+        "dfu/vendor/crc32.js": "8450a98f18b8a24ed088d07d64c5134896e54079757f783945054167a9d2e75e",
+        "dfu/vendor/jszip-3.10.2.min.js": "7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1",
+        "dfu/vendor/JSZip-LICENSE.txt": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4",
+        "dfu/vendor/SOURCES.json": "c676cd5bc18d21b784adebc4a1e13b78044da29b5549da2752ddea493fd3c452",
+        "dfu/web.html": "aee0f165a3f41204993e14fed0f3c64c50c3e8ba93b9a3ab645e43478afe8b52",
+        "firmware/Allmiibo_LCD_DE3_62_634_TESTSTAND.zip": "f733ff1b30e17b9f62113c0a10a2abf9bfcc6dfd8f3aad7b03ca0f6da356503f",
+        "firmware/releases.js": "1bf7e95da0a06fed524470bd5d49deae22ce0c9c542ecc949f2886da617dac66",
+        "firmware/releases.json": "fc1a24f87b558c8190b0c042d8eb1941a9f7bbde1948a841ab467668bf1ec3bb",
+        "index.html": "57240256c3614175c71484829c381c907ed3cf28ddba197f714570b8a2d53bb0",
+        "lfs-capacity-current.wasm": "50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105",
+        "lfs-capacity-de344.wasm": "06500c5b69bd61310352cecc07eadb50a17b0eecd22c9381d1118c3cf0f8ec9f",
+        "lfs-capacity-de345.wasm": "a4cfd3b1d823f2d596ba67625364260bbe74979b28c7123fc863e549b7199c99",
+        "lfs-capacity-de350.wasm": "0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b",
+        "lfs-capacity-de355.wasm": "652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9",
+        "lfs-capacity-previous.wasm": "410f213e0818a3a5e1d0ce381e202514f7dd3b834b1cec854d5fe6f180574b1f",
+        "lfs-capacity.wasm": "8830aece6d900679ccfec27e4b1321ffc160aba9381023cd26c397d3e0dcb1d4",
+        "licenses/index.html": "c128594de7af3fb15412a183c182d49a55aab9cbc87ad109d1b13a0dd2bfabaf",
+        "licenses/LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/qrcode-generator-MIT.txt": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+        "licenses/qrcode-generator-provenance.json": "94be890bfbe9af7c95b7bd73820ca2dfa32e2302e13a417f8ee427044abbfe29",
+        "licenses/third-party/amiiboapi/LICENSE": "9b56b63c5868ea07cc41314159b614cf689474e5b92bde94f3f32821ff9e05d3",
+        "licenses/third-party/amiiboapi/SOURCE.txt": "7e4f6caf7f458e34030a3c45dcffc2f936e3b12f3effa3a113a272bccb0a5bd3",
+        "licenses/third-party/npm/licenses/async-validator-4.2.5/LICENSE.md": "5d0427088e37071c4b942de990f6365d5c2d195f3e957ce925322d184784e2eb",
+        "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.11/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.7/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__helper-validator-identifier-7.29.7/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__parser-7.29.12/LICENSE": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+        "licenses/third-party/npm/licenses/babel__parser-7.29.9/LICENSE": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+        "licenses/third-party/npm/licenses/babel__types-7.29.11/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__types-7.29.8/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/bytebuffer-5.0.1/LICENSE": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+        "licenses/third-party/npm/licenses/csstype-3.2.3/LICENSE": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e",
+        "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.1/LICENSE": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+        "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.2/LICENSE": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+        "licenses/third-party/npm/licenses/dayjs-1.11.23/LICENSE": "5faab7526d055651be3aab769d58897be6bd91f3d39d137f25f12dba1b31d5dc",
+        "licenses/third-party/npm/licenses/detect-libc-2.1.2/LICENSE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+        "licenses/third-party/npm/licenses/element-plus-2.14.7/LICENSE": "0790118bb4d66681db1d63181f72ef68e632d632f6db0373ef87cf328561af27",
+        "licenses/third-party/npm/licenses/element-plus__icons-vue-2.3.2/LICENSE": "5db4ebb3abd8353774ae148723ccc14087d6dab99473f77a7b799b55defd8dfe",
+        "licenses/third-party/npm/licenses/entities-7.0.1/LICENSE": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+        "licenses/third-party/npm/licenses/estree-walker-2.0.2/LICENSE": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e",
+        "licenses/third-party/npm/licenses/fdir-6.5.0/LICENSE": "9a39f2aadab11a3697edd668ff2d8ad885b649737b7ab4d3bf12b34e5ada0c86",
+        "licenses/third-party/npm/licenses/floating-ui__core-1.8.0/LICENSE": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+        "licenses/third-party/npm/licenses/floating-ui__dom-1.8.0/LICENSE": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+        "licenses/third-party/npm/licenses/floating-ui__utils-0.2.12/LICENSE": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+        "licenses/third-party/npm/licenses/intlify__core-base-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/intlify__devtools-types-11.4.17/LICENSE": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d",
+        "licenses/third-party/npm/licenses/intlify__message-compiler-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/intlify__shared-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/jridgewell__sourcemap-codec-1.6.0/LICENSE": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c",
+        "licenses/third-party/npm/licenses/lightningcss-1.33.0/LICENSE": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+        "licenses/third-party/npm/licenses/lightningcss-win32-x64-msvc-1.33.0/LICENSE": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+        "licenses/third-party/npm/licenses/lodash-4.18.1/LICENSE": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+        "licenses/third-party/npm/licenses/lodash-es-4.18.1/LICENSE": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+        "licenses/third-party/npm/licenses/long-3.2.0/LICENSE": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+        "licenses/third-party/npm/licenses/magic-string-0.30.21/LICENSE": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484",
+        "licenses/third-party/npm/licenses/memoize-one-6.0.0/LICENSE": "b1c501095de70182748cb8e8d97ac5577701a4ef3b755ba30d59fd87b24bdb0f",
+        "licenses/third-party/npm/licenses/nanoid-3.3.20/LICENSE": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987",
+        "licenses/third-party/npm/licenses/normalize-wheel-es-1.2.0/LICENSE": "658d037c5c078a24c27ab1e0f37050d407ad6628be94886a4e48f3e761f47f7d",
+        "licenses/third-party/npm/licenses/oxc-project__types-0.155.0/LICENSE": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+        "licenses/third-party/npm/licenses/oxc-project__types-0.156.0/LICENSE": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+        "licenses/third-party/npm/licenses/picocolors-1.1.1/LICENSE": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750",
+        "licenses/third-party/npm/licenses/picomatch-4.0.7/LICENSE": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+        "licenses/third-party/npm/licenses/postcss-8.5.31/LICENSE": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+        "licenses/third-party/npm/licenses/postcss-8.5.32/LICENSE": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+        "licenses/third-party/npm/licenses/rolldown-1.2.15/LICENSE": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+        "licenses/third-party/npm/licenses/rolldown-1.2.16/LICENSE": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+        "licenses/third-party/npm/licenses/rolldown__pluginutils-1.0.1/LICENSE": "e1919b3b98b8bf6c1b99fcc60a0ed46027c97ac947432e1278446c9606f50161",
+        "licenses/third-party/npm/licenses/source-map-js-1.2.2/LICENSE": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd",
+        "licenses/third-party/npm/licenses/sxzz__popperjs-es-2.11.8/LICENSE.md": "bf67e2c9b7974543bb18ced3a0b37f53729aaff953b442dd89a3adaf90fd93e8",
+        "licenses/third-party/npm/licenses/tinyglobby-0.2.17/LICENSE": "22c68811e174cbbfb3813d4135918df4f540959c14d872e601d9abe83d3cde8f",
+        "licenses/third-party/npm/licenses/types__lodash-4.17.27/LICENSE": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "licenses/third-party/npm/licenses/types__lodash-es-4.17.12/LICENSE": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "licenses/third-party/npm/licenses/types__web-bluetooth-0.0.21/LICENSE": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "licenses/third-party/npm/licenses/vite-8.3.5/LICENSE.md": "a22152baa1aef74402443008e767e7c689a524c0909d19b0431d97f5ab066a13",
+        "licenses/third-party/npm/licenses/vitejs__plugin-vue-6.0.10/LICENSE": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5",
+        "licenses/third-party/npm/licenses/vue-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.13/LICENSE": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+        "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.14/LICENSE": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+        "licenses/third-party/npm/licenses/vue-i18n-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/vueuse__core-15.0.0/LICENSE": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+        "licenses/third-party/npm/licenses/vueuse__metadata-15.0.0/LICENSE": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+        "licenses/third-party/npm/licenses/vueuse__shared-15.0.0/LICENSE": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+        "licenses/third-party/npm/licenses/vue__compiler-core-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__compiler-dom-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__compiler-sfc-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__compiler-ssr-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__reactivity-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__runtime-core-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__runtime-dom-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__server-renderer-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__shared-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/SOURCES.json": "c8ba680f1dfbf1c10c63430e55870eb3de45313177644e4c10f6e424c8489b1c",
+        "licenses/third-party/packed-simulator/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-current/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-current/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de344/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de344/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de345/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de345/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de350/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de350/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de355/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de355/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-previous/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-previous/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/project/LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/qrcode-generator/LICENSE": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+        "remote-protocol-v1.json": "466a406be11f010e452eca096ab3a01f6177f1078e8332d4473629e6931d0df3",
+        "_redirects": "faddc50d8b4f77f60a98186ba256e7ac0fd96f4bd68a26bd90b53fd4f24f4187"
+      },
+      "screenshotHashes": [
+        {
+          "file": "desktop-diagnostic-zero.png",
+          "sha256": "7c23ea1d83ab9839a80473c10749ec83e91339cb074ad0dcec35c9781b2e3ead"
+        },
+        {
+          "file": "desktop-diagnostic-one.png",
+          "sha256": "27aa060b401ec91ee931bb69e861b69f2fec1b7901940bc7596265a24d266d70"
+        },
+        {
+          "file": "desktop-runtime-single.png",
+          "sha256": "1407ea68c98d44d66f17a0831f7d986abbe6ee225123a209b01a1964d75c3aa7"
+        },
+        {
+          "file": "desktop-diagnostic-unknown.png",
+          "sha256": "a76062eb054ee47e823f1b8f7b8c3cb270e918dfe1ebbdfc79896462ee451533"
+        },
+        {
+          "file": "desktop-diagnostic-reading.png",
+          "sha256": "998c8c95943acbbc939b00ffc146b8dc41d6878e5c78f3e6fe3fcf10478b018c"
+        },
+        {
+          "file": "desktop-mount-details.png",
+          "sha256": "c8cc833168655974eff91b5f7db1b155b6ad23692986d8cfe5f11006c615ae36"
+        },
+        {
+          "file": "desktop-z18-rollback.png",
+          "sha256": "fa8e4876f5ec4f0aa920ea3ab6e87ca86df7f81abd371f2d12e72f618d4c90d4"
+        },
+        {
+          "file": "desktop-backup-select-drive.png",
+          "sha256": "4f2ad0608509036f4f257849b92ab09397770f29f32c557af6374772d0d22927"
+        },
+        {
+          "file": "desktop-backup-reading.png",
+          "sha256": "959e759eb08e824d6bb467eda04393fe2281f3a84428e37db0fba86f594ad130"
+        },
+        {
+          "file": "desktop-backup-ready.png",
+          "sha256": "790bc609b361375518fad8a611eb473a9743af2e64d6a0a271693581670f5158"
+        },
+        {
+          "file": "desktop-backup-retry.png",
+          "sha256": "c380778158d7ce3402401119a7bbfa863857ab2cdf02d93693a800edf9eb8dd3"
+        },
+        {
+          "file": "desktop-diagnostic-error.png",
+          "sha256": "4c4790ff02619209cf223ca3bdcf0ce04f416b4bb373b78d6b753489f78435ef"
+        },
+        {
+          "file": "desktop-dfu-ready.png",
+          "sha256": "4ba5598a1f4c6393ee8e58e5de7b2e1c4705a3dd673742e150a4e9eed0c382a1"
+        },
+        {
+          "file": "desktop-dfu-invalid.png",
+          "sha256": "4b54814840886d0b21f2928a2396344d68c9d54d68760ceebe4a1d268ad448c7"
+        },
+        {
+          "file": "mobile-diagnostic-zero.png",
+          "sha256": "caff4c3c282ebec6e3cc7b727c4eb48d223533f778cea46d4bbf2cbf1e6aaf81"
+        },
+        {
+          "file": "mobile-diagnostic-one.png",
+          "sha256": "6aa6622848c092db6ddd26a9f68e6572a58cd0d64f31a17cc6829afdefd9da26"
+        },
+        {
+          "file": "mobile-runtime-single.png",
+          "sha256": "7b8a665b0bd8f3ec7747cdf6ba58855fe15aaef7500cb18e410ac77d17fd69bb"
+        },
+        {
+          "file": "mobile-diagnostic-unknown.png",
+          "sha256": "0681a55e691c5d3e175d7ef7f57b37f8cf738db115e176d81838eea80b0467bd"
+        },
+        {
+          "file": "mobile-diagnostic-reading.png",
+          "sha256": "a9e07fd8414b99420051acd22ea7006c93c7759396afae383035e7d778dbb54b"
+        },
+        {
+          "file": "mobile-mount-details.png",
+          "sha256": "003703c75b4917b1dda301b6b0d2835bd570f1d813ff4bd97b21c2201f09a1ff"
+        },
+        {
+          "file": "mobile-z18-rollback.png",
+          "sha256": "629ea831a1ea2a331aa94eed5c8f3a65befd2882ea32d2f73ad80140c29672eb"
+        },
+        {
+          "file": "mobile-backup-select-drive.png",
+          "sha256": "632f173026deda2b80510536b7a4290e59496f1d527491415259b9f1b19c0c1c"
+        },
+        {
+          "file": "mobile-backup-reading.png",
+          "sha256": "00613d068bec72e89ea0233be9ebcec12c7d75ac3137ae780fd626ecba355536"
+        },
+        {
+          "file": "mobile-backup-ready.png",
+          "sha256": "6c6b5ca4863042091c8b0871bfbc57192041d0bebb5b10dfc9a73e92f42479f7"
+        },
+        {
+          "file": "mobile-backup-retry.png",
+          "sha256": "b7089b0d81b095258ded8cb3b2d83bf8b284eb70afe84b50f37f264390dc586d"
+        },
+        {
+          "file": "mobile-diagnostic-error.png",
+          "sha256": "ce957d8a2fec8d0d13af5a3dea31821e286cc7eae28edc3f0893a08e382bc9c6"
+        },
+        {
+          "file": "mobile-dfu-ready.png",
+          "sha256": "28f18d3b5059063674ac5cd8127d483f7f483f6536c975de7e0a64555ab5ddc5"
+        },
+        {
+          "file": "mobile-dfu-invalid.png",
+          "sha256": "8660ab83d8ce50d055c0c1e6771bb5d1bf3bb4231e4ccb001eea1ec83bd5504a"
+        }
+      ]
+    },
+    {
+      "manifest": "browser-pages/browser-evidence.json",
+      "manifestSha256": "d1403c50353574758cdacfe65856c9ab9385ca1e542955d27470a2ba3f693660",
+      "checks": 57,
+      "screenshots": 28,
+      "runtimeErrors": 0,
+      "browser": "156.0.8078.80",
+      "deploymentBase": "/pixl.js/",
+      "boundFiles": 147,
+      "buildTreeSha256": "1e10c806fd99085ac70e749b5cde4de468cf094f13c822028123f5e84c9fe413",
+      "filesSha256": {
+        ".nojekyll": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "assets/catalogue-BeUkLBYF.js": "35a852131f024e1ca8f6c012917acbcfae04adfbb3a737ce14d17c4b383128c3",
+        "assets/CataloguePanel-CiuVT4zb.js": "e4fac8ecbd96ced96eaeb2de55aa1afea4403126a16cf20411a4d895a6532750",
+        "assets/CataloguePanel-DkIbfO52.css": "f254eabce9302d2e4d378deb21159e4df915a7acfc9aac58a92f6451061ecf09",
+        "assets/CollectionAssistant-fF4wWEDV.css": "fa61dd093ba95120473496bbff80abd6555df7e7c51233770944111474173410",
+        "assets/CollectionAssistant-mcuHR-Nu.js": "c48e701eb6eda46c6c731dbea2e1ad35ad5cea6c581520e0db7d58fd848d17c9",
+        "assets/DeviceSearch-BaST2DB0.css": "1be7562f75991643f7ea20b6a4a076621f56dea1b3fae9780b59ee6e079388d4",
+        "assets/DeviceSearch-DFMal1Fx.js": "9d81dbce2656c98545af5dd2b96e8690bdddf5b70c2deae03f1e3429396d947f",
+        "assets/DiagnosticOverview-BxtEkh0m.css": "041f8e105ee3a2def13dfd10d1525c960736e19ca48e780dd486f10a57b64221",
+        "assets/DiagnosticOverview-S2lxFNFM.js": "e8a647e0bfd94e5cb6e6b46cbb0e6a03325cbe0e1aad8f6aa058b445b6894d77",
+        "assets/FigureDetails-CVqDFCYE.js": "6b80fef26a84eb922a5e7d6af5f6e688121e95ed71e518c5940ccb1ff78e7883",
+        "assets/FigureDetails-EN8RIv8R.css": "729f40ef5691d068f3815720df11b0c117801d2fbedb2441f407e4aeacd7334d",
+        "assets/index-B1bCVNG_.css": "dcbd6ae1724555a0ebf4ebc7ea442ff0335a7e38538f10463c1028bb75968433",
+        "assets/index-rVzcEQDb.js": "53b14d69547fe626168c409da18ddddd949cbb2ba9ab6ac264f11a52a9c74a24",
+        "assets/migration-capacity-worker-D7duJUje.js": "451a0ae53029b6dddb9df7923c1dff7135fdcb72b1f72f6b070c16911e64c46f",
+        "assets/MigrationAssistant-C271bwHe.css": "3198fd12916813800ca5e64c15b706035c1b55709b0df583b85c7219705f995c",
+        "assets/MigrationAssistant-YdMoXnwk.js": "06af8854ed814b4b7635bd7411d5ff62619fe2ee316ce6d881aa0b78000251d8",
+        "assets/RemoteControl-CEuhHpBr.js": "5986eee0171954cb0deec64b84db353ae0f1e12057c43e9e88084f67375a952e",
+        "assets/RemoteControl-CSqBjHCM.css": "31c8d7918f5bd79501c429f5a5a6ad88c9d13b927b38ee66dba10df9f6b8d1db",
+        "assets/SelectionPreview-Cz7gzvCo.css": "3715bb36a83196e4d7a5b5c2939e6b2b3161606c76149684a31b099a41c0ffc8",
+        "assets/SelectionPreview-Zc8ulD4J.js": "171cb455222b18a4cb370a719e73dc0ea18596e4bd26caf8566863f12f505f92",
+        "assets/StartupDiagnostics-BWY-oKj6.css": "dae033d17f55aaa0459ea19903c40bf16fb45db623b95ac60776089cde0d9e72",
+        "assets/StartupDiagnostics-CVvskc-9.js": "53ec94ac6439a50a74ffe576036c4ce6d467aa5e23ecfc779524fe09ed885465",
+        "assets/TransferStatus-BqHRHpBR.js": "7504fccebf8dab4ac44aad529aa91bbccdfd3ea5683a659d7e5a772a7f2f5690",
+        "assets/TransferStatus-nWAZERUQ.css": "fab2a74739d5553a89ebf48e008db5b398db75d1ff66e6b27a1f49d599fc6db7",
+        "assets/UpdateCheck-C0lJD8_p.css": "c941c9593aa99fcbcaa20bfb5995a58f3732fd2141ca38fd53c81fcdd866d431",
+        "assets/UpdateCheck-DJxhChzw.js": "bf5a0bbfee85277443b6e37955d886400e6fce63af3536e43cdb68c5c84d3ca4",
+        "dfu/bundled-packages.js": "33af281a9425efc53290fe6a55f73eee8acd9da09262a9fabf41e372eaf0a2fe",
+        "dfu/LICENSE.txt": "2afc378dc870b9cbade5270eeff6f86083fe3f99c2eb2583c74cad06db56538d",
+        "dfu/package.js": "2ba685accd1f02562bac267546072e72eae791838e3476efdb98d53c89f3cb89",
+        "dfu/package.json": "87b46668c6916594201bf729e09353a9d2e03226ca884dbfeefb600c086409a7",
+        "dfu/page.js": "003e8a64c30b65eb5dc73077ca047222b5a4fbac8692bc3e684d9623939215da",
+        "dfu/phase-labels.js": "f1cae2bd91de8a68dd1331636de875a7723e53324a5ea0bfb6ae0c4ee1f8694e",
+        "dfu/secure-dfu.js": "370223b10ba04c3d6fb492c8d67d47f2adb208d53c943aaaf0e326d32beb61a7",
+        "dfu/updater.css": "619c68ae6d8a1ca083234e54202f7ff7ddd7faffaeb433cefc77de3ec6c61b87",
+        "dfu/updater.js": "67142cb17959231fa986359bf2b263c5e414791b6d8d2c08282bd6acc22b5fe2",
+        "dfu/vendor/CRC32-LICENSE.txt": "c542ba7851b5d39a5face477e47a27cb7c00a9759e321b66824e79718bffe1ac",
+        "dfu/vendor/crc32.js": "8450a98f18b8a24ed088d07d64c5134896e54079757f783945054167a9d2e75e",
+        "dfu/vendor/jszip-3.10.2.min.js": "7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1",
+        "dfu/vendor/JSZip-LICENSE.txt": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4",
+        "dfu/vendor/SOURCES.json": "c676cd5bc18d21b784adebc4a1e13b78044da29b5549da2752ddea493fd3c452",
+        "dfu/web.html": "aee0f165a3f41204993e14fed0f3c64c50c3e8ba93b9a3ab645e43478afe8b52",
+        "firmware/Allmiibo_LCD_DE3_62_634_TESTSTAND.zip": "f733ff1b30e17b9f62113c0a10a2abf9bfcc6dfd8f3aad7b03ca0f6da356503f",
+        "firmware/releases.js": "1bf7e95da0a06fed524470bd5d49deae22ce0c9c542ecc949f2886da617dac66",
+        "firmware/releases.json": "fc1a24f87b558c8190b0c042d8eb1941a9f7bbde1948a841ab467668bf1ec3bb",
+        "index.html": "e1a92f1fce15bc84653a4d0d130126c92466053fd056a4c5ab086de3cfbf5ccc",
+        "lfs-capacity-current.wasm": "50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105",
+        "lfs-capacity-de344.wasm": "06500c5b69bd61310352cecc07eadb50a17b0eecd22c9381d1118c3cf0f8ec9f",
+        "lfs-capacity-de345.wasm": "a4cfd3b1d823f2d596ba67625364260bbe74979b28c7123fc863e549b7199c99",
+        "lfs-capacity-de350.wasm": "0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b",
+        "lfs-capacity-de355.wasm": "652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9",
+        "lfs-capacity-previous.wasm": "410f213e0818a3a5e1d0ce381e202514f7dd3b834b1cec854d5fe6f180574b1f",
+        "lfs-capacity.wasm": "8830aece6d900679ccfec27e4b1321ffc160aba9381023cd26c397d3e0dcb1d4",
+        "licenses/index.html": "c128594de7af3fb15412a183c182d49a55aab9cbc87ad109d1b13a0dd2bfabaf",
+        "licenses/LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/qrcode-generator-MIT.txt": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+        "licenses/qrcode-generator-provenance.json": "94be890bfbe9af7c95b7bd73820ca2dfa32e2302e13a417f8ee427044abbfe29",
+        "licenses/third-party/amiiboapi/LICENSE": "9b56b63c5868ea07cc41314159b614cf689474e5b92bde94f3f32821ff9e05d3",
+        "licenses/third-party/amiiboapi/SOURCE.txt": "7e4f6caf7f458e34030a3c45dcffc2f936e3b12f3effa3a113a272bccb0a5bd3",
+        "licenses/third-party/npm/licenses/async-validator-4.2.5/LICENSE.md": "5d0427088e37071c4b942de990f6365d5c2d195f3e957ce925322d184784e2eb",
+        "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.11/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.7/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__helper-validator-identifier-7.29.7/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__parser-7.29.12/LICENSE": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+        "licenses/third-party/npm/licenses/babel__parser-7.29.9/LICENSE": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+        "licenses/third-party/npm/licenses/babel__types-7.29.11/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/babel__types-7.29.8/LICENSE": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+        "licenses/third-party/npm/licenses/bytebuffer-5.0.1/LICENSE": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+        "licenses/third-party/npm/licenses/csstype-3.2.3/LICENSE": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e",
+        "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.1/LICENSE": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+        "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.2/LICENSE": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+        "licenses/third-party/npm/licenses/dayjs-1.11.23/LICENSE": "5faab7526d055651be3aab769d58897be6bd91f3d39d137f25f12dba1b31d5dc",
+        "licenses/third-party/npm/licenses/detect-libc-2.1.2/LICENSE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+        "licenses/third-party/npm/licenses/element-plus-2.14.7/LICENSE": "0790118bb4d66681db1d63181f72ef68e632d632f6db0373ef87cf328561af27",
+        "licenses/third-party/npm/licenses/element-plus__icons-vue-2.3.2/LICENSE": "5db4ebb3abd8353774ae148723ccc14087d6dab99473f77a7b799b55defd8dfe",
+        "licenses/third-party/npm/licenses/entities-7.0.1/LICENSE": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+        "licenses/third-party/npm/licenses/estree-walker-2.0.2/LICENSE": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e",
+        "licenses/third-party/npm/licenses/fdir-6.5.0/LICENSE": "9a39f2aadab11a3697edd668ff2d8ad885b649737b7ab4d3bf12b34e5ada0c86",
+        "licenses/third-party/npm/licenses/floating-ui__core-1.8.0/LICENSE": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+        "licenses/third-party/npm/licenses/floating-ui__dom-1.8.0/LICENSE": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+        "licenses/third-party/npm/licenses/floating-ui__utils-0.2.12/LICENSE": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+        "licenses/third-party/npm/licenses/intlify__core-base-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/intlify__devtools-types-11.4.17/LICENSE": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d",
+        "licenses/third-party/npm/licenses/intlify__message-compiler-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/intlify__shared-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/jridgewell__sourcemap-codec-1.6.0/LICENSE": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c",
+        "licenses/third-party/npm/licenses/lightningcss-1.33.0/LICENSE": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+        "licenses/third-party/npm/licenses/lightningcss-win32-x64-msvc-1.33.0/LICENSE": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+        "licenses/third-party/npm/licenses/lodash-4.18.1/LICENSE": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+        "licenses/third-party/npm/licenses/lodash-es-4.18.1/LICENSE": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+        "licenses/third-party/npm/licenses/long-3.2.0/LICENSE": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+        "licenses/third-party/npm/licenses/magic-string-0.30.21/LICENSE": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484",
+        "licenses/third-party/npm/licenses/memoize-one-6.0.0/LICENSE": "b1c501095de70182748cb8e8d97ac5577701a4ef3b755ba30d59fd87b24bdb0f",
+        "licenses/third-party/npm/licenses/nanoid-3.3.20/LICENSE": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987",
+        "licenses/third-party/npm/licenses/normalize-wheel-es-1.2.0/LICENSE": "658d037c5c078a24c27ab1e0f37050d407ad6628be94886a4e48f3e761f47f7d",
+        "licenses/third-party/npm/licenses/oxc-project__types-0.155.0/LICENSE": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+        "licenses/third-party/npm/licenses/oxc-project__types-0.156.0/LICENSE": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+        "licenses/third-party/npm/licenses/picocolors-1.1.1/LICENSE": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750",
+        "licenses/third-party/npm/licenses/picomatch-4.0.7/LICENSE": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+        "licenses/third-party/npm/licenses/postcss-8.5.31/LICENSE": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+        "licenses/third-party/npm/licenses/postcss-8.5.32/LICENSE": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+        "licenses/third-party/npm/licenses/rolldown-1.2.15/LICENSE": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+        "licenses/third-party/npm/licenses/rolldown-1.2.16/LICENSE": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+        "licenses/third-party/npm/licenses/rolldown__pluginutils-1.0.1/LICENSE": "e1919b3b98b8bf6c1b99fcc60a0ed46027c97ac947432e1278446c9606f50161",
+        "licenses/third-party/npm/licenses/source-map-js-1.2.2/LICENSE": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd",
+        "licenses/third-party/npm/licenses/sxzz__popperjs-es-2.11.8/LICENSE.md": "bf67e2c9b7974543bb18ced3a0b37f53729aaff953b442dd89a3adaf90fd93e8",
+        "licenses/third-party/npm/licenses/tinyglobby-0.2.17/LICENSE": "22c68811e174cbbfb3813d4135918df4f540959c14d872e601d9abe83d3cde8f",
+        "licenses/third-party/npm/licenses/types__lodash-4.17.27/LICENSE": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "licenses/third-party/npm/licenses/types__lodash-es-4.17.12/LICENSE": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "licenses/third-party/npm/licenses/types__web-bluetooth-0.0.21/LICENSE": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "licenses/third-party/npm/licenses/vite-8.3.5/LICENSE.md": "a22152baa1aef74402443008e767e7c689a524c0909d19b0431d97f5ab066a13",
+        "licenses/third-party/npm/licenses/vitejs__plugin-vue-6.0.10/LICENSE": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5",
+        "licenses/third-party/npm/licenses/vue-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.13/LICENSE": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+        "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.14/LICENSE": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+        "licenses/third-party/npm/licenses/vue-i18n-11.4.17/LICENSE": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+        "licenses/third-party/npm/licenses/vueuse__core-15.0.0/LICENSE": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+        "licenses/third-party/npm/licenses/vueuse__metadata-15.0.0/LICENSE": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+        "licenses/third-party/npm/licenses/vueuse__shared-15.0.0/LICENSE": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+        "licenses/third-party/npm/licenses/vue__compiler-core-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__compiler-dom-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__compiler-sfc-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__compiler-ssr-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__reactivity-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__runtime-core-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__runtime-dom-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__server-renderer-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/licenses/vue__shared-3.5.44/LICENSE": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+        "licenses/third-party/npm/SOURCES.json": "c8ba680f1dfbf1c10c63430e55870eb3de45313177644e4c10f6e424c8489b1c",
+        "licenses/third-party/packed-simulator/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-current/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-current/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de344/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de344/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de345/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de345/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de350/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de350/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-de355/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-de355/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/packed-simulator-previous/GPL-2.0-LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/packed-simulator-previous/LITTLEFS-LICENSE.md": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+        "licenses/third-party/project/LICENSE": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+        "licenses/third-party/qrcode-generator/LICENSE": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+        "remote-protocol-v1.json": "466a406be11f010e452eca096ab3a01f6177f1078e8332d4473629e6931d0df3",
+        "_redirects": "faddc50d8b4f77f60a98186ba256e7ac0fd96f4bd68a26bd90b53fd4f24f4187"
+      },
+      "screenshotHashes": [
+        {
+          "file": "desktop-diagnostic-zero.png",
+          "sha256": "7c23ea1d83ab9839a80473c10749ec83e91339cb074ad0dcec35c9781b2e3ead"
+        },
+        {
+          "file": "desktop-diagnostic-one.png",
+          "sha256": "27aa060b401ec91ee931bb69e861b69f2fec1b7901940bc7596265a24d266d70"
+        },
+        {
+          "file": "desktop-runtime-single.png",
+          "sha256": "1407ea68c98d44d66f17a0831f7d986abbe6ee225123a209b01a1964d75c3aa7"
+        },
+        {
+          "file": "desktop-diagnostic-unknown.png",
+          "sha256": "a76062eb054ee47e823f1b8f7b8c3cb270e918dfe1ebbdfc79896462ee451533"
+        },
+        {
+          "file": "desktop-diagnostic-reading.png",
+          "sha256": "998c8c95943acbbc939b00ffc146b8dc41d6878e5c78f3e6fe3fcf10478b018c"
+        },
+        {
+          "file": "desktop-mount-details.png",
+          "sha256": "c8cc833168655974eff91b5f7db1b155b6ad23692986d8cfe5f11006c615ae36"
+        },
+        {
+          "file": "desktop-z18-rollback.png",
+          "sha256": "fa8e4876f5ec4f0aa920ea3ab6e87ca86df7f81abd371f2d12e72f618d4c90d4"
+        },
+        {
+          "file": "desktop-backup-select-drive.png",
+          "sha256": "4f2ad0608509036f4f257849b92ab09397770f29f32c557af6374772d0d22927"
+        },
+        {
+          "file": "desktop-backup-reading.png",
+          "sha256": "959e759eb08e824d6bb467eda04393fe2281f3a84428e37db0fba86f594ad130"
+        },
+        {
+          "file": "desktop-backup-ready.png",
+          "sha256": "790bc609b361375518fad8a611eb473a9743af2e64d6a0a271693581670f5158"
+        },
+        {
+          "file": "desktop-backup-retry.png",
+          "sha256": "c380778158d7ce3402401119a7bbfa863857ab2cdf02d93693a800edf9eb8dd3"
+        },
+        {
+          "file": "desktop-diagnostic-error.png",
+          "sha256": "99eb0438896ffc1970c239760e5a257e66c6e3bf88e3f95c4c69b78ec5221471"
+        },
+        {
+          "file": "desktop-dfu-ready.png",
+          "sha256": "4ba5598a1f4c6393ee8e58e5de7b2e1c4705a3dd673742e150a4e9eed0c382a1"
+        },
+        {
+          "file": "desktop-dfu-invalid.png",
+          "sha256": "4b54814840886d0b21f2928a2396344d68c9d54d68760ceebe4a1d268ad448c7"
+        },
+        {
+          "file": "mobile-diagnostic-zero.png",
+          "sha256": "caff4c3c282ebec6e3cc7b727c4eb48d223533f778cea46d4bbf2cbf1e6aaf81"
+        },
+        {
+          "file": "mobile-diagnostic-one.png",
+          "sha256": "6aa6622848c092db6ddd26a9f68e6572a58cd0d64f31a17cc6829afdefd9da26"
+        },
+        {
+          "file": "mobile-runtime-single.png",
+          "sha256": "7b8a665b0bd8f3ec7747cdf6ba58855fe15aaef7500cb18e410ac77d17fd69bb"
+        },
+        {
+          "file": "mobile-diagnostic-unknown.png",
+          "sha256": "0681a55e691c5d3e175d7ef7f57b37f8cf738db115e176d81838eea80b0467bd"
+        },
+        {
+          "file": "mobile-diagnostic-reading.png",
+          "sha256": "a9e07fd8414b99420051acd22ea7006c93c7759396afae383035e7d778dbb54b"
+        },
+        {
+          "file": "mobile-mount-details.png",
+          "sha256": "003703c75b4917b1dda301b6b0d2835bd570f1d813ff4bd97b21c2201f09a1ff"
+        },
+        {
+          "file": "mobile-z18-rollback.png",
+          "sha256": "629ea831a1ea2a331aa94eed5c8f3a65befd2882ea32d2f73ad80140c29672eb"
+        },
+        {
+          "file": "mobile-backup-select-drive.png",
+          "sha256": "632f173026deda2b80510536b7a4290e59496f1d527491415259b9f1b19c0c1c"
+        },
+        {
+          "file": "mobile-backup-reading.png",
+          "sha256": "00613d068bec72e89ea0233be9ebcec12c7d75ac3137ae780fd626ecba355536"
+        },
+        {
+          "file": "mobile-backup-ready.png",
+          "sha256": "6c6b5ca4863042091c8b0871bfbc57192041d0bebb5b10dfc9a73e92f42479f7"
+        },
+        {
+          "file": "mobile-backup-retry.png",
+          "sha256": "b7089b0d81b095258ded8cb3b2d83bf8b284eb70afe84b50f37f264390dc586d"
+        },
+        {
+          "file": "mobile-diagnostic-error.png",
+          "sha256": "b618dbb8ad54a2c6a2a645c92747844e99efd20916b4fd8c25e6c2052ef467d9"
+        },
+        {
+          "file": "mobile-dfu-ready.png",
+          "sha256": "28f18d3b5059063674ac5cd8127d483f7f483f6536c975de7e0a64555ab5ddc5"
+        },
+        {
+          "file": "mobile-dfu-invalid.png",
+          "sha256": "8660ab83d8ce50d055c0c1e6771bb5d1bf3bb4231e4ccb001eea1ec83bd5504a"
+        }
+      ]
+    }
+  ],
+  "visualReview": {
+    "passed": true,
+    "screenshots": [
+      "browser-root/mobile-backup-retry.png",
+      "browser-pages/desktop-backup-retry.png"
+    ],
+    "observations": [
+      "Web 3.38.1 visible.",
+      "Persistent error explains that a failed listing does not mean an empty drive.",
+      "Retry button visible, backup controls disabled until folder opens.",
+      "No horizontal clipping at 390 px; desktop layout remains readable."
+    ]
+  },
+  "priorNegativeControl": {
+    "sourceVersion": "3.38.0",
+    "scope": "Corrected runner against untouched published baseline production build during independent incoming-patch review.",
+    "expectedFailure": "Backup alert absent after successful fallback drive refresh; locator timeout at #backup-workspace .workspace-content > p[role=\"alert\"].",
+    "baselineBuildUnchanged": true,
+    "evidenceSha256": "6503547ef877f6fa9838a61375f68e5106d4c71e9dabcce47767f3f173ba58a4"
+  },
+  "sourceBinding": {
+    "manifest": "WEB_SOURCE_SHA256.json",
+    "manifestSha256": "b6574bf51746c0deeae6cdafe41b199b7e89860a9a93cd09095472afdb341516",
+    "files": 412,
+    "changedPaths": [
+      "web/README.md",
+      "web/Start-Dateimanager.ps1",
+      "web/index.html",
+      "web/package-lock.json",
+      "web/package.json",
+      "web/public/dfu/package.json",
+      "web/public/dfu/web.html",
+      "web/scripts/check-pfs-compatibility.py",
+      "web/scripts/copy-license-notices.mjs",
+      "web/scripts/verify-browser.mjs",
+      "web/serve_local.py",
+      "web/src/App.vue",
+      "web/src/lib/device-info.js",
+      "web/tests/device-info.test.mjs",
+      "web/tests/dist/static-deployment.test.mjs",
+      "web/tests/launcher.test.cjs",
+      "web/tests/ui-modern.test.cjs",
+      "web/tests/update-check.test.mjs",
+      "web/LIESMICH_3_38_1.txt"
+    ]
+  },
+  "portable": {
+    "archive": "Allmiibo_Dateimanager_3_38_1_Portable.zip",
+    "bytes": 1126340,
+    "sha256": "bc296d7a5938ace8196190a857a8aebf80d72308adb2b9b598d0a798e0865aeb",
+    "entries": 156,
+    "rootBuildFiles": 147,
+    "crcPassed": true,
+    "allFilesByteMatched": true,
+    "startPath": "Allmiibo_Dateimanager_3_38_1/Start-Dateimanager.cmd",
+    "readmeSha256": "b4720196dadedfc86062589675645048a605b7dd8ef8886bcf8bd85239322c54",
+    "extractedLauncherSmoke": {
+      "startPassed": true,
+      "launcherReturnedExitCode": 0,
+      "healthVersion": "3.38.1",
+      "indexByteMatched": true,
+      "dfuByteMatched": true,
+      "browserOpened": false,
+      "deviceAccess": false,
+      "authenticatedStopPassed": true
+    }
+  },
+  "limitations": [
+    "Synthetic observations cannot prove device BLE/NFC/button/storage hardware behavior.",
+    "DE3.62/634 and Z17 binaries are unchanged; no new hardware test is claimed.",
+    "Optional historical external OTA fixtures are not part of the targeted suites.",
+    "Source ZIP is to be created from the new commit, not from generated working files."
+  ]
+}

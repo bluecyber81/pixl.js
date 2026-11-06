@@ -11,7 +11,7 @@ host-test contribution; say clearly which checks were performed on a real device
 | --- | --- |
 | Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.62 / 634**; [unsigned build guide](docs/BUILD_DE3_62.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.38.0**; [web README](web/README.md) |
+| Browser file manager | `web/`, currently **3.38.1**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | New Z17 bootloader candidate | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; physical test pending |

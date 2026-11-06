@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.38.1
+
+A failed backup-drive opening keeps its error visible after a successful return to drive selection. Retry and connection resets clear the scoped error. The browser fixture now reproduces the previously missed listing-error reset. App634/DE3.62, Z17 and S112 are unchanged. The card-buffer test now counts all 5,150 existing assertions; this is a reporting correction, not another firmware fix. [Review](RELEASE_WEB3_38_1.de.md).
+
 ## DE3.62 / 634 and file manager3.38.0
 
 The card-buffer boundary is checked before import/export. Critical own-C type

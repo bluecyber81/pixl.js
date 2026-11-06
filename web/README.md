@@ -1,4 +1,10 @@
-# Allmiibo Dateimanager 3.38.0
+# Allmiibo Dateimanager 3.38.1
+
+In **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
+auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
+wird. Das Laufwerk lässt sich direkt erneut auswählen. Ein erfolgreicher neuer
+Öffnungsversuch oder ein Verbindungswechsel entfernt den alten Hinweis. Die
+Korrektur benötigt kein Firmwareupdate und verändert keine Gerätedateien.
 
 Die RAM-Ansicht erklärt jetzt direkt, wie viele Speicherstichproben vorliegen:
 keine, eine, wenige, viele oder unbekannt. Eine fehlerfreie Einzelaufnahme gilt
@@ -29,13 +35,13 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable-Version und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.0) · [Startanleitung](LIESMICH_3_38_0.txt)
+[Online öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Portable-Version und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.1) · [Startanleitung](LIESMICH_3_38_1.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
 ## Firmwarepaket vor der Übertragung prüfen
 
-Bei **Gerät & Diagnose → Versionsabgleich** vergleicht der Dateimanager den SHA-256-Wert des Bootloaderbereichs mit dem zugehörigen Zähler. Die gespeicherten Referenzen sind BL8 (11), Z13 (13) und Z15 (15). Z13-Code mit Zähler 16 wird als bekanntes Z16-Rückkehrpaket bezeichnet. Andere Kombinationen werden getrennt als Abweichung angezeigt. Der Paketkatalog beschreibt die mitgelieferte Anwendung und ihre Voraussetzungen separat. Bei einer aktuellen Gerätediagnose warnt die DFU-Seite vor einem niedrigeren App-Zähler. Z15 kann eine ältere, gültig signierte Anwendung installieren. Für Bootloader-Pakete gilt ein eigener Versionszähler.
+Bei **Gerät & Diagnose → Versionsabgleich** vergleicht der Dateimanager den SHA-256-Wert des Bootloaderbereichs mit dem zugehörigen Zähler. Die gespeicherten Referenzen sind BL8 (11), Z13 (13), Z15 (15) und Z17 (17). Z13-Code mit Zähler 16 wird als bekanntes Z16-Rückkehrpaket bezeichnet; Z18 ist das Rückkehrpaket mit unverändertem Z15-Code und Zähler 18. Andere Kombinationen werden getrennt als Abweichung angezeigt. Der Paketkatalog beschreibt die mitgelieferte Anwendung und ihre Voraussetzungen separat. Bei einer aktuellen Gerätediagnose warnt die DFU-Seite vor einem niedrigeren App-Zähler. Z15 kann eine ältere, gültig signierte Anwendung installieren. Für Bootloader-Pakete gilt ein eigener Versionszähler.
 
 In Schritt 1 der DFU-Seite zeigt die Dateiauswahl den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Eine höchstens zehn Minuten alte Bootdiagnose aus dem Dateimanager ermöglicht einen Vergleich. Ein Hinweis auf einen niedrigeren Zähler oder eine abweichende FWID ist vor der Geräteauswahl sichtbar. Vermischte oder widersprüchliche Startdaten werden vor Bluetooth abgewiesen.
 
@@ -78,11 +84,11 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 Über **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** einen früheren Start- oder Gesamtdiagnosebericht auswählen. Für einen aussagekräftigen Vergleich Berichte desselben Geräts mit vergleichbarer Sammlung verwenden. Die Datei wird lokal gelesen. Für die Phasen Speicher und Anwendung bedeutet ein negativer Unterschied eine kürzere Zeit.
 
-Das aktuelle PFS1-Profil berücksichtigt die sieben expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630, DE3.59/631, DE3.60/632 und DE3.61/633. DE3.61 wurde am Rechner geprüft. Ein Test dieser Anwendung am Gerät steht aus. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.61-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.61/Allmiibo_DE3_61_Quellcode.zip).
+Das aktuelle PFS1-Profil berücksichtigt die acht expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630, DE3.59/631, DE3.60/632, DE3.61/633 und DE3.62/634. DE3.62 wurde am Rechner geprüft. Ein Test dieser Anwendung am Gerät steht aus. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.62-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.62/Allmiibo_DE3_62_Quellcode.zip).
 
 ## Bauen, testen und veröffentlichen
 
-Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.61/CONTRIBUTING.md) verwenden:
+Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.62/CONTRIBUTING.md) verwenden:
 
 ```sh
 npm ci
@@ -110,7 +116,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.59 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.38.0/Allmiibo_Dateimanager_3_38_0_Quellcode.zip)
+Das separate [Web-Quellpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.38.1/Allmiibo_Dateimanager_3_38_1_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen
@@ -126,6 +132,6 @@ Informationslinks funktionieren lokal als `/?amiibo=01010000000e0002` oder
 Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 `/a/<8Hex>-<8Hex>` benötigt einen lokalen Server und ist kein Pages-Routeersatz.
 
-Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit dem Online-Dateimanager 3.38.0, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
+Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit dem Online-Dateimanager 3.38.1, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.
