@@ -24,9 +24,12 @@ class UsageExportTests(unittest.TestCase):
         self.translations = ROOT / 'web/src/data/usage-translations.de.json'
         self.output = ROOT / 'web/src/data/figure-usage.json'
 
-    def test_firmware_and_web_share_the_exact_reviewed_german_translation_source(self):
-        self.assertEqual((self.data / 'usage-translations.de.json').read_bytes(),
-                         self.translations.read_bytes())
+    def test_device_translations_are_an_exact_subset_of_the_full_web_catalogue(self):
+        firmware = json.loads((self.data / 'usage-translations.de.json').read_text(encoding='utf8'))
+        web = json.loads(self.translations.read_text(encoding='utf8'))
+        self.assertTrue(firmware['texts'])
+        for source, translation in firmware['texts'].items():
+            self.assertEqual(web['texts'][source], translation)
 
     def test_every_association_and_english_note_is_traceable_to_the_original_csv_row(self):
         data = json.loads(self.output.read_text(encoding='utf8'))
@@ -43,8 +46,10 @@ class UsageExportTests(unittest.TestCase):
         self.assertEqual(actual, {i: (int(row[0]), row[1].lower(), row[2]) for i, row in enumerate(rows, 1)})
         self.assertEqual(len(actual), 1344)
         self.assertEqual(data['coverage']['englishNoteAssociations'], 63)
-        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 8)
-        self.assertEqual(data['coverage']['germanNoteAssociations'], 13)
+        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 54)
+        self.assertEqual(data['coverage']['germanNoteAssociations'], 63)
+        self.assertTrue(data['policy']['germanTranslationsAreComplete'])
+        self.assertEqual({row['en'] for row in data['notes'] if row['de']}, {row[2] for row in rows if row[2]})
         self.assertFalse(data['policy']['verifiedInGame'])
         self.assertFalse(data['policy']['associationsAreCompatibilityProof'])
         self.assertFalse(data['policy']['notesAreComplete'])

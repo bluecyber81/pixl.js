@@ -41,7 +41,7 @@ test('exact independent BL8 / S112 7.3 / DE3.63 synthetic observations match the
   assert.equal(report.status, 'match'); assert.equal(report.active, true);
   assert.deepEqual(report.rows.map(item => [item.id, item.status]), [['hardware', 'match'], ['application', 'match'], ['bootloader', 'match'], ['softDevice', 'match']]);
   assert.ok(report.rows.every(item => item.checks.every(check => check.status === 'match')));
-  assert.equal(UPDATE_TARGET.id, 'allmiibo-lcd-de3.63-bl8-z13-z15-z16-z17-z18-s112-7.3.0');
+  assert.equal(UPDATE_TARGET.id, 'allmiibo-lcd-de3.63-bl8-z13-z15-z16-z17-z18-z19-s112-7.3.0');
   for (const value of [UPDATE_TARGET, UPDATE_TARGET.application, UPDATE_TARGET.bootloader, UPDATE_TARGET.softDevice, UPDATE_TARGET.hardware]) assert.equal(Object.isFrozen(value), true);
 });
 
@@ -55,6 +55,18 @@ test('BL8 target keeps verified SoftDevice and memory geometry unchanged', () =>
   assert.equal(UPDATE_TARGET.bootloader.paramsAddress, 0x7e000);
   assert.equal(UPDATE_TARGET.bootloader.settingsAddress, 0x7f000);
   assert.equal(UPDATE_TARGET.bootloader.sha256, 'add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130');
+});
+
+test('local comparison explains DE3.64 and DE3.65 only for their own validated counter', () => {
+  for (const [version, counter] of [['2.22.0-DE3.64',636], ['2.22.0-DE3.65',637]]) {
+    const local = { ...session, firmwareVersion:version };
+    const app = row(result(change(60,counter),local),'application');
+    assert.equal(app.status,'different');
+    assert.ok(app.reasons.includes('knownLocalApplication'));
+    assert.ok(app.reasons.includes('newerApplication'));
+    assert.ok(!row(result(change(60,counter + 1),local),'application').reasons.includes('knownLocalApplication'));
+    assert.ok(!row(result(null,local),'application').reasons.includes('knownLocalApplication'));
+  }
 });
 
 test('a DE3.60 device with Z15 matches the bootloader and is offered an application update only', () => {
@@ -71,8 +83,10 @@ test('Z13 and BL8 identify the exact hash/counter pair; unknown images and BL8 r
   const z13='97b2751f1b041de8bcba131d875be725fe91294bfc72e4a7f7a3dc5526e88002';
   const z15='c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade';
   const z17='5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584';
+  const z19='51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd';
   for(const [counter,hash,expectedHash,expectedCounter] of [
     [13,z13,'match','match'],[11,z13,'match','different'],
+    [19,z19,'match','match'],[18,z19,'match','different'],[19,z17,'match','different'],
     [15,z15,'match','match'],[13,z15,'match','different'],[15,z13,'match','different'],
     [16,z13,'match','match'],[16,z15,'match','different'],[15,'00'.repeat(31)+'01','different','match'],
     [17,z17,'match','match'],[15,z17,'match','different'],[17,z15,'match','different'],
@@ -87,6 +101,7 @@ test('Z13 and BL8 identify the exact hash/counter pair; unknown images and BL8 r
     const boot=row(result(packet),'bootloader');
     assert.equal(boot.reasons.includes('z16Recovery'),counter === 16 && hash === z13);
     assert.equal(boot.reasons.includes('z18Recovery'),counter === 18 && hash === z15);
+    assert.equal(boot.reasons.includes('localZ19'), counter === 19 && hash === z19);
     assert.equal(boot.checks.find(c=>c.key==='bootHash').status,expectedHash);
     assert.equal(boot.checks.find(c=>c.key==='bootCounter').status,expectedCounter);
     assert.equal(boot.status,expectedHash==='match'&&expectedCounter==='match'?'match':'different');
@@ -170,14 +185,14 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.39.3'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.39.4'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
-  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.39\.3'/);
-  assert.match(read('../serve_local.py'), /'version': '3\.39\.3'/);
-  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.39\.3'/);
-  assert.match(read('../src/App.vue'), /<strong>3\.39\.3<\/strong>/);
-  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.39\.3/);
+  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.39\.4'/);
+  assert.match(read('../serve_local.py'), /'version': '3\.39\.4'/);
+  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.39\.4'/);
+  assert.match(read('../src/App.vue'), /<strong>3\.39\.4<\/strong>/);
+  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.39\.4/);
 });
 
 test('missing, failed and unavailable reads remain unknown, even with a matching version string', () => {

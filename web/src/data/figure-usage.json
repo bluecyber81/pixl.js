@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-06.1",
+  "dataVersion": "2026-11-07.1",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
@@ -48,7 +48,8 @@
     "verifiedInGame": false,
     "associationsAreCompatibilityProof": false,
     "notesAreComplete": false,
-    "germanTranslationsAreComplete": false,
+    "germanTranslationsAreComplete": true,
+    "germanTranslationScope": "existing English usage notes in this catalogue snapshot",
     "translationPolicy": "Redaktionelle Übersetzungen vorhandener englischer Katalognotizen. Keine unabhängige Spielprüfung; Eigennamen sind nicht als offizielle deutsche Spielbegriffe bestätigt."
   },
   "coverage": {
@@ -58,8 +59,8 @@
     "legacyEmptyLinkColumns": 3,
     "englishNoteAssociations": 63,
     "uniqueEnglishNotes": 54,
-    "uniqueGermanTranslations": 8,
-    "germanNoteAssociations": 13
+    "uniqueGermanTranslations": 54,
+    "germanNoteAssociations": 63
   },
   "groups": [
     {
@@ -743,26 +744,26 @@
     {
       "id": 1,
       "en": "Starting Champion Dress Set/Paraglider Skin Material/Traveler's & Soldier's Sword & Shield/Rupee",
-      "de": null,
-      "translation": null
+      "de": "Anfangsgewand des Recken / Material für ein Parasegel-Design / Schwerter und Schilde für Reisende und Soldaten / Rubin",
+      "translation": "editorial-from-english"
     },
     {
       "id": 2,
       "en": "Dragon Bone Boko-related equipment/Meat/Paraglider Skin Material",
-      "de": null,
-      "translation": null
+      "de": "Boko-Ausrüstung aus Drachenknochen / Fleisch / Material für ein Parasegel-Design",
+      "translation": "editorial-from-english"
     },
     {
       "id": 3,
       "en": "Rudania's Divine Helm Set/Paraglider Skin Material/Boulder Breaker/Diamond",
-      "de": null,
-      "translation": null
+      "de": "Helmset von Vah Rudania / Material für ein Parasegel-Design / Bergspalter / Diamant",
+      "translation": "editorial-from-english"
     },
     {
       "id": 4,
       "en": "Twilight Sword/Rupee/Gem/Star Fragment Bomb",
-      "de": null,
-      "translation": null
+      "de": "Schattenschwert / Rubin / Edelstein / Sternensplitter-Bombe",
+      "translation": "editorial-from-english"
     },
     {
       "id": 5,
@@ -773,122 +774,122 @@
     {
       "id": 6,
       "en": "Dragonbone Boko related gear/Meat/Paraglider Skin Material",
-      "de": null,
-      "translation": null
+      "de": "Boko-Ausrüstung aus Drachenknochen / Fleisch / Material für ein Parasegel-Design",
+      "translation": "editorial-from-english"
     },
     {
       "id": 7,
       "en": "Twilight Dress Set/Traveler's Sword & Shield/Paraglider Skin Material/Fruit/Horse",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Zwielichts / Schwert und Schild für Reisende / Material für ein Parasegel-Design / Obst / Pferd",
+      "translation": "editorial-from-english"
     },
     {
       "id": 8,
       "en": "Falcon Bow/Paraglider Skin Material/Fish & Meat/Knight's & Royal Bow/Various Arrows",
-      "de": null,
-      "translation": null
+      "de": "Falkenbogen / Material für ein Parasegel-Design / Fisch und Fleisch / Ritterbogen und Königsbogen / verschiedene Pfeile",
+      "translation": "editorial-from-english"
     },
     {
       "id": 9,
       "en": "Dream Weaver Dress Set/Paraglider Skin Material/Knight's & Royal Spear/Sword & Two-handed Sword/Fish",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Traumwebers / Material für ein Parasegel-Design / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 10,
       "en": "Fierce Deity Dress Set/Fierce Deity Sword/Paraglider Skin Material/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Gewandset und Schwert der grimmigen Gottheit / Material für ein Parasegel-Design / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 11,
       "en": "Hero of Time Dress Set/Master Sword/Paraglider Skin Material/Meat",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Helden der Zeit / Master-Schwert / Material für ein Parasegel-Design / Fleisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 12,
       "en": "Bridle & Saddle/Paraglider Skin Material/Moonlight Scimitar/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Zaumzeug und Sattel / Material für ein Parasegel-Design / Mondsäbel / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 13,
       "en": "Skyward Sword Dress Set/Skyward Sword/Paraglider Skin Material/Rupee",
-      "de": null,
-      "translation": null
+      "de": "Gewandset aus Skyward Sword / Himmelsschwert / Material für ein Parasegel-Design / Rubin",
+      "translation": "editorial-from-english"
     },
     {
       "id": 14,
       "en": "Modern Hero Cloth Fabric/Paraglider Skin Material/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Stoff des modernen Helden / Material für ein Parasegel-Design / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 15,
       "en": "Meat/Paraglider Skin Material",
-      "de": null,
-      "translation": null
+      "de": "Fleisch / Material für ein Parasegel-Design",
+      "translation": "editorial-from-english"
     },
     {
       "id": 16,
       "en": "Ruto's Divine Helm Set/Paraglider Skin Material/Silver Scale Spear/Fish",
-      "de": null,
-      "translation": null
+      "de": "Göttliches Helmset von Ruto / Material für ein Parasegel-Design / Silberschuppenlanze / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 17,
       "en": "Medoh's Divine Helm Set/Paraglider Skin Material/Great Eagle Bow/Fruit/Diamond",
-      "de": null,
-      "translation": null
+      "de": "Helmset von Vah Medoh / Material für ein Parasegel-Design / Adlerbogen / Obst / Diamant",
+      "translation": "editorial-from-english"
     },
     {
       "id": 18,
       "en": "Sheikah Suit Set/Paraglider Skin Material/Curved Longsword/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Shiekah-Gewandset / Material für ein Parasegel-Design / gebogenes Langschwert / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 19,
       "en": "Hero of Wind Dress Set/Paraglider Skin Material/Sea-Breeze Boomerang/Traveler's & Soldier's Sword/Fish",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Helden des Windes / Material für ein Parasegel-Design / Seebrisen-Bumerang / Reiseschwert und Soldatenschwert / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 20,
       "en": "Hero's Shield/Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Heldenschild / Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 21,
       "en": "Naydra's Divine Helm Set/Paraglider Skin Material/Revali-related equipment/Meat",
-      "de": null,
-      "translation": null
+      "de": "Göttliches Helmset von Naydra / Material für ein Parasegel-Design / Ausrüstung mit Bezug zu Revali / Fleisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 22,
       "en": "Hero of Time Dress Set/Paraglider Skin Material/Knight's & Royal Spear/Sword & Two-handed Sword/Fish",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Helden der Zeit / Material für ein Parasegel-Design / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 23,
       "en": "Twilight Bow/Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Bogen des Zwielichts / Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 24,
       "en": "Sunshield/Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Sonnenschild / Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 25,
       "en": "Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 26,
@@ -905,74 +906,74 @@
     {
       "id": 28,
       "en": "Hero of the Wild Set/Traveler's and Soldier's Sword & Shield/Rupee",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Helden der Wildnis / Schwerter und Schilde für Reisende und Soldaten / Rubin",
+      "translation": "editorial-from-english"
     },
     {
       "id": 29,
       "en": "Champion's Tunic Fabric/Paraglider Skin Material/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Stoff im Design des Reckengewands / Material für ein Parasegel-Design / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 30,
       "en": "Rudania's Divine Helm/Boulder Breaker/Diamond",
-      "de": null,
-      "translation": null
+      "de": "Helm von Vah Rudania / Bergspalter / Diamant",
+      "translation": "editorial-from-english"
     },
     {
       "id": 31,
       "en": "Twilight Sword/Rupee/Gem/Star Fragment Bomb Barrel",
-      "de": null,
-      "translation": null
+      "de": "Schattenschwert / Rubin / Edelstein / explosives Fass mit Sternensplitter",
+      "translation": "editorial-from-english"
     },
     {
       "id": 32,
       "en": "Guardian Weapons/Shields/Spears/Core/Treasure/Arrow",
-      "de": null,
-      "translation": null
+      "de": "Wächterwaffen / Schilde / Lanzen / Kern / Schatz / Pfeil",
+      "translation": "editorial-from-english"
     },
     {
       "id": 33,
       "en": "Twilight Set/Traveler's Sword & Shield/Fruit/Horse",
-      "de": null,
-      "translation": null
+      "de": "Gewandset des Zwielichts / Schwert und Schild für Reisende / Obst / Pferd",
+      "translation": "editorial-from-english"
     },
     {
       "id": 34,
       "en": "Falcon Bow/Fish & Meat/Knight's and Royal Bow/Various Arrows",
-      "de": null,
-      "translation": null
+      "de": "Falkenbogen / Fisch und Fleisch / Ritterbogen und Königsbogen / verschiedene Pfeile",
+      "translation": "editorial-from-english"
     },
     {
       "id": 35,
       "en": "Dreamweaver Set/Knight's and Royal Spear/Sword/and Claymore/Fish",
-      "de": null,
-      "translation": null
+      "de": "Set des Traumwebers / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 36,
       "en": "Phantom Set/Phantom Greatsword/Soldier's and Knight's Claymore/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Phantom-Set / Phantom-Großschwert / Zweihänder für Soldaten und Ritter / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 37,
       "en": "Time Traveler Set/Biggoron Sword/Meat",
-      "de": null,
-      "translation": null
+      "de": "Zeitreisenden-Set / Biggoron-Schwert / Fleisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 38,
       "en": "Bridle and Saddle/Moonlight Scimitar/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Zaumzeug und Sattel / Mondsäbel / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 39,
       "en": "Skyward Set/Skyward Sword/Soldier's and Traveler's Sword & Shield/Rupee",
-      "de": null,
-      "translation": null
+      "de": "Himmelsset / Himmelsschwert / Schwerter und Schilde für Soldaten und Reisende / Rubin",
+      "translation": "editorial-from-english"
     },
     {
       "id": 40,
@@ -983,62 +984,62 @@
     {
       "id": 41,
       "en": "Ruto's Divine Helm/Silver Long Spear/Fish",
-      "de": null,
-      "translation": null
+      "de": "Göttlicher Helm von Ruto / silberne Langlanze / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 42,
       "en": "Medoh's Divine Helm/Falcon Bow/Fruit/Diamond",
-      "de": null,
-      "translation": null
+      "de": "Helm von Vah Medoh / Falkenbogen / Obst / Diamant",
+      "translation": "editorial-from-english"
     },
     {
       "id": 43,
       "en": "Sheik Set/Eightfold Blade/Mushroom",
-      "de": null,
-      "translation": null
+      "de": "Shiek-Set / Achtfache Klinge / Pilz",
+      "translation": "editorial-from-english"
     },
     {
       "id": 44,
       "en": "Wind Set/Boomerang/Traveler's and Soldier's Sword/Fish",
-      "de": null,
-      "translation": null
+      "de": "Wind-Set / Bumerang / Reiseschwert und Soldatenschwert / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 45,
       "en": "Hylian Shield/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Hylia-Schild / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 46,
       "en": "Naydra's Divine Helm/Gurudo related gear/Meat",
-      "de": null,
-      "translation": null
+      "de": "Göttlicher Helm von Naydra / Gerudo-Ausrüstung / Fleisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 47,
       "en": "Time Traveler Set/Knight's and Royal Spear/Sword/and Claymore/Fish",
-      "de": null,
-      "translation": null
+      "de": "Zeitreisenden-Set / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
+      "translation": "editorial-from-english"
     },
     {
       "id": 48,
       "en": "Twilight Bow/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Bogen des Zwielichts / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 49,
       "en": "Daybreaker Shield/Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Schild der Morgenröte / Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 50,
       "en": "Star Fragment & Gem/Grass/Fruit/Carrot",
-      "de": null,
-      "translation": null
+      "de": "Sternensplitter und Edelstein / Gras / Obst / Karotte",
+      "translation": "editorial-from-english"
     },
     {
       "id": 51,

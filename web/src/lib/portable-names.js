@@ -55,9 +55,10 @@ export function assertPortableEntryName(name) {
   // Check before a sync plan can approve it or create its parent directories.
   assertNameByteLimit(name)
   if (forbidden.test(name) || /[. ]$/u.test(name) || reserved.test(name.split('.')[0].trimEnd())) {
-    fail('NAME_PORTABLE', 'The new name is not portable to Windows, macOS and ZIP backups.')
+    throw new NameError('NAME_PORTABLE', 'The new name is not portable to Windows, macOS and ZIP backups.', { value: name })
   }
-  if (name !== name.normalize('NFC')) fail('NAME_NORMALIZATION', 'Use the NFC spelling of the new name.')
+  const normalized = name.normalize('NFC')
+  if (name !== normalized) throw new NameError('NAME_NORMALIZATION', 'Use the NFC spelling of the new name.', { value: name, normalized })
   return name
 }
 

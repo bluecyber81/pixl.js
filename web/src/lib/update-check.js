@@ -42,13 +42,15 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const previousDe = deVersion(firmware), targetDe = deVersion(target.application.version);
   const relation = previousDe && targetDe ? [1,2,3,4].map(i=>Number(previousDe[i])-Number(targetDe[i])).find(n=>n!==0)||0 : 0;
   row('application', applicationChecks, ['applicationScope',
+    ...(Object.hasOwn(target.localApplications, firmware) && diagnostic?.settingsCrcValid &&
+      diagnostic.applicationCounter === target.localApplications[firmware] ? ['knownLocalApplication'] : []),
     ...(previousDe?.[5] ? ['preparationApplication'] : []),
     ...(relation < 0 ? ['olderApplication'] : relation > 0 ? ['newerApplication'] : [])]);
   const bootHash = diagnostic?.bootHashValid ? diagnostic.bootRegionSha256 : null;
   const bootCounter = diagnostic?.settingsCrcValid ? diagnostic.bootloaderCounter : null;
   // Match each firmware region to its own counter. Keep known BL8 rollback
   // images distinct even when their settings retain a higher counter.
-  const profiles = [target.bootloader, target.bootloaderZ13, target.bootloaderZ15, target.bootloaderZ16, target.bootloaderZ17, target.bootloaderZ18];
+  const profiles = [target.bootloader, target.bootloaderZ13, target.bootloaderZ15, target.bootloaderZ16, target.bootloaderZ17, target.bootloaderZ18, target.bootloaderZ19];
   const exact = profiles.find(profile => profile.sha256 === bootHash && profile.counter === bootCounter);
   const identity = exact ?? profiles.find(profile => profile.sha256 === bootHash)
     ?? profiles.find(profile => profile.counter === bootCounter)
@@ -64,7 +66,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     flag('bootVectors', diagnostic?.bootVectorsValid),
     flag('settingsCrc', diagnostic?.settingsCrcValid),
     compare('addressConflict', diagnostic ? diagnostic.addressConflict : null, false)
-  ], exact === target.bootloaderZ16 ? ['z16Recovery', 'bootScope'] : exact === target.bootloaderZ18 ? ['z18Recovery', 'bootScope'] : ['bootScope']);
+  ], exact === target.bootloaderZ16 ? ['z16Recovery', 'bootScope'] : exact === target.bootloaderZ18 ? ['z18Recovery', 'bootScope'] : exact === target.bootloaderZ19 ? ['localZ19', 'bootScope'] : ['bootScope']);
   row('softDevice', [
     compare('sdVariant', diagnostic?.softDeviceValid ? diagnostic.softDeviceVariant : null, target.softDevice.variant),
     compare('sdVersion', diagnostic?.softDeviceValid ? diagnostic.softDeviceVersion : null, target.softDevice.version),
@@ -76,9 +78,9 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
 export function updateCheckText(locale = 'de_DE') {
   const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
-  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · BL8 / Z13 / Z15 / Z16 / Z17 / Z18 · S112 7.3.0`,
+  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · BL8 / Z13 / Z15 / Z16 / Z17 / Z18 / Z19 · S112 7.3.0`,
     targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}`,
-      bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'}) / Z17 (${UPDATE_TARGET.bootloaderZ17.counter}) / Z18 (${german ? 'Rückkehr zu Z15-Code' : 'rollback to Z15 code'})` },
+      bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'}) / Z17 (${UPDATE_TARGET.bootloaderZ17.counter}) / Z18 (${german ? 'Rückkehr zu Z15-Code' : 'rollback to Z15 code'}) / Z19 (${UPDATE_TARGET.bootloaderZ19.counter})` },
     reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
 }
 
@@ -115,6 +117,8 @@ const COPY = {
       applicationScope: 'Versionsmeldung und gespeicherter Zähler; kein Hashnachweis der laufenden Anwendung.',
       olderApplication: '',
       preparationApplication: 'Vorbereitungsfirmware: kein Nachweis einer abgeschlossenen LittleFS-Umstellung. Speicherbackend, vollständige Sicherung und Kapazität sind getrennt zu prüfen.',
+      knownLocalApplication: 'Die gelesene Version und der Zähler gehören zu einem bekannten LCD-Teststand. Der mitgelieferte öffentliche Download ist DE3.63/635.',
+      localZ19: 'Bereichs-Hash und Zähler stimmen mit dem bekannten LCD-Bootloader Z19 überein.',
       newerApplication: 'Diese Anwendung ist neuer als der mitgelieferte Vergleichsstand. Das allein belegt weder einen Fehler noch Inkompatibilität. Kein Downgrade wird vorgeschlagen.',
       z16Recovery: 'Z16-Rückkehrpaket erkannt. Der Bootbereich enthält den Z13-Programmcode mit Zähler 16.',
       z18Recovery: 'Z18-Rückkehrpaket erkannt. Der Bootbereich enthält unveränderten Z15-Programmcode mit Zähler 18. Dies ist keine neue Bootloader-Implementierung.',
@@ -140,6 +144,8 @@ const COPY = {
       applicationScope: 'Reported version and stored counter; not a hash verification of the running application.',
       olderApplication: '',
       preparationApplication: 'Preparation firmware: not evidence of a completed LittleFS migration. Check the storage backend, complete backup and physical capacity separately.',
+      knownLocalApplication: 'The reported version and counter belong to a known LCD test build. The bundled public download is DE3.63/635.',
+      localZ19: 'The region hash and counter match the known Z19 LCD bootloader.',
       newerApplication: 'This application is newer than the bundled comparison profile. That alone does not establish a fault or incompatibility. No downgrade is suggested.',
       z16Recovery: 'Z16 rollback package recognized. The boot region contains the Z13 code with counter 16.',
       z18Recovery: 'Z18 rollback package recognized. The boot region contains unchanged Z15 code with counter 18. This is not a new bootloader implementation.',

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "db_note_index.h"
 
 typedef struct {
     uint32_t head;
@@ -32,14 +33,14 @@ typedef struct {
 } db_notes_t;
 
 typedef struct _db_link_t {
-    uint8_t  game_id;
-    /* Internal generated-table reference, never persisted in tag/slot files. */
+    /* Internal ROM indices, independent of tag/slot formats. */
     uint16_t amiibo_index;
-    uint16_t note_index;
+    uint8_t game_id;
+    db_note_index_t note_index;
     
 } db_link_t;
 
-_Static_assert(sizeof(db_link_t) == 6, "catalog links must keep their six-byte layout");
+_Static_assert(sizeof(db_link_t) == 2 + 2 * sizeof(db_note_index_t), "unexpected ROM link padding");
 
 typedef struct _db_v3_t {
     uint32_t head;

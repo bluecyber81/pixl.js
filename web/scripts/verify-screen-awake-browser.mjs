@@ -23,7 +23,7 @@ async function hashTree(dir){for(const entry of await fs.readdir(dir,{withFileTy
  else if(entry.isFile())filesSha256[path.relative(root,filename).replaceAll('\\','/')]=sha256(await fs.readFile(filename));
 }}
 await hashTree(root);
-const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.wasm':'application/wasm'};
+const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.wasm':'application/wasm'};
 const server=http.createServer(async(req,res)=>{try{
  const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
  if(!pathname.startsWith(base))throw Error('outside base');
@@ -81,7 +81,7 @@ async function contextFor(viewport,mode,kind){
  });
  const page=await context.newPage();page.on('pageerror',e=>errors.push({kind,message:e.message}));
  await page.goto(origin+base);await page.locator('.version-context').waitFor();
- check(kind+' web version 3.39.3',(await page.locator('.version-context').innerText()).includes('3.39.3'));
+ check(kind+' web version 3.39.4',(await page.locator('.version-context').innerText()).includes('3.39.4'));
  await page.evaluate(()=>{window.__ui=document.querySelector('#app')._vnode.component.proxy;window.__ui.show_workspace('backup');});
  return {context,page};
 }

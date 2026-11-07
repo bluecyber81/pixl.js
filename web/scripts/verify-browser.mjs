@@ -10,13 +10,14 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {diagnosticSnapshot} from '../tests/fixtures/diagnostic-overview-data.mjs';
+import { UPDATE_TARGET } from '../src/lib/update-target.js';
 
 const root=path.resolve(process.argv[2]||'dist'),output=path.resolve(process.argv[3]||'browser-evidence');
 const base=process.argv[4]||'/';
 assert.match(base,/^\/(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*\/)*$/,'a local deployment base path is required');
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:'playwright');
 const packageInfo=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url)));
-const releaseInfo=JSON.parse(await fs.readFile(new URL('../../RELEASE_INFO.json',import.meta.url)));
+const releaseInfo=UPDATE_TARGET.application;
 const firmwareCatalog=JSON.parse(await fs.readFile(new URL('../src/data/firmware-releases.json',import.meta.url)));
 const applicationPackage=firmwareCatalog.packages.find(entry=>entry.version===releaseInfo.version&&entry.counter===releaseInfo.counter);
 assert.ok(applicationPackage?.applicationOnly,'browser check requires the current bound application-only package');
@@ -26,7 +27,7 @@ async function hashTree(dir){for(const e of await fs.readdir(dir,{withFileTypes:
  const p=path.join(dir,e.name);if(e.isDirectory())await hashTree(p);else if(e.isFile())hashes[path.relative(root,p).replaceAll('\\','/')]=createHash('sha256').update(await fs.readFile(p)).digest('hex');
 }}
 await hashTree(root);
-const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.wasm':'application/wasm','.zip':'application/zip','.png':'image/png'};
+const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.wasm':'application/wasm','.zip':'application/zip','.png':'image/png'};
 const server=http.createServer(async(req,res)=>{
  try{
   const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);

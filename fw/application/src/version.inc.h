@@ -1,8 +1,8 @@
 #define GIT_COMMIT "unknown"
 #define GIT_BRANCH "source-archive"
 #define GIT_BRANCH_NUM "n/a"
-#define VERSION "2.22.0-DE3.63"
+#define VERSION "2.22.0-DE3.65"
 #define BUILD_DIRTY 1
 #define BUILD_DIRTY_KNOWN 0
-#define BUILD_DATE "2026-11-06"
+#define BUILD_DATE "2026-11-07"
 #define TARGET 0

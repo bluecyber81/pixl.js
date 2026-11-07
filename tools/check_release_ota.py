@@ -158,11 +158,12 @@ def verify_zip(path, binary, release, key):
 def main():
     root = Path(__file__).resolve().parents[1]
     release = json.loads((root / 'RELEASE_INFO.json').read_bytes())
-    build = root / 'build/lcd-de363'
+    build = root / 'build/lcd-de365'
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
     need(result['mode'] == 'release' and result['status'] == 'passed', 'Fresh release build required')
-    firmware_dir = root / 'web/public/firmware'
-    [ota] = sorted(firmware_dir.glob('*.zip'))
+    firmware_dir = (root / 'fw/releases').resolve()
+    ota = (root / release['application_ota_path']).resolve()
+    need(ota.parent == firmware_dir and ota.suffix == '.zip', 'Application release ZIP in fw/releases')
     need(sha(ota.read_bytes()) == release['ota_sha256'], 'Reviewed OTA SHA-256')
     binary = (build / 'pixljs.bin').read_bytes()
     need(sha(binary) == release['application_sha256'], 'Released application SHA-256')

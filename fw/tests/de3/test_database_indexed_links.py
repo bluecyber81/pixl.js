@@ -23,10 +23,36 @@ class IndexedLinksTests(HostTests):
         self.assertIn('const db_link_t link_list[] = {\n    {0}\n};',
                       generator.render_amiibo_links([], [figure]))
         links = [note(i) for i in range(65536)]
-        self.assertIn('{1, 0, 65535}', generator.render_amiibo_links(links, [figure]))
+        self.assertIn('{0, 1, 65535}', generator.render_amiibo_links(links, [figure]))
+        self.assertIn('typedef uint8_t', generator.render_note_index_header(links[:256]))
+        self.assertIn('typedef uint16_t', generator.render_note_index_header(links[:257]))
         links.append(note(65536))
         with self.assertRaisesRegex(ValueError, 'Usage note index'):
             generator.render_amiibo_links(links, [figure])
+
+    def test_generated_link_layout_handles_both_index_widths(self):
+        figure = SimpleNamespace(id='0000000000000001')
+        for count, stride in ((256, 4), (257, 6)):
+            with self.subTest(count=count), tempfile.TemporaryDirectory() as temp:
+                folder = Path(temp)
+                links = [SimpleNamespace(amiibo_id=figure.id, game_id='255', note_en=str(i),
+                                         note_cn='', note_it='') for i in range(count)]
+                (folder/'db_header.h').write_bytes((SRC/'amiidb/db_header.h').read_bytes())
+                (folder/'db_note_index.h').write_text(generator.render_note_index_header(links))
+                (folder/'db_link.c').write_text(generator.render_amiibo_links(links, [figure]))
+                code = f'''#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "db_link.c"
+int main(void) {{
+    _Static_assert(sizeof(db_link_t) == {stride}, "link byte size");
+    const db_link_t *last = &link_list[{count-1}];
+    assert(last->game_id == 255 && last->amiibo_index == 0 && last->note_index == {count-1});
+    assert(!strcmp(db_usage_notes[last->note_index].en, "{count-1}"));
+    assert(!link_list[{count}].game_id);
+    puts("PASS narrow/wide generated index");
+}}'''
+                self.compile_run(code, includes=[folder])
 
     def test_current_complete_tables_render_byte_identically_without_publication(self):
         figures = sorted(generator.read_amiibo_from_csv(), key=lambda row: int(row.id, 16))
@@ -36,6 +62,7 @@ class IndexedLinksTests(HostTests):
             'db_amiibo.c': generator.render_amiibo_data(figures),
             'db_game.c': generator.render_amiibo_games(games, links),
             'db_link.c': generator.render_amiibo_links(links, figures),
+            'db_note_index.h': generator.render_note_index_header(links),
         }
         for name, text in rendered.items():
             with self.subTest(name=name):

@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## DE3.65 / 637 and file manager 3.39.4
+
+The LCD application corrects the three-line scrollbar and frees 2,672 bytes of program flash versus DE3.64. The file manager explains filename conflicts, translates the 54 distinct English catalogue hints into German and supports a screen wake lock during DFU. The signed app was accepted by Z19 with App636 in an ARM model. [Application and checks](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4)
+
 ## File manager 3.37.5
 
 Open a detected drive directly from the Backup screen, including on Android with legacy DE3.8 firmware. Choose the root before starting a full-drive ZIP backup. [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.37.5)

@@ -1,0 +1,12 @@
+{
+  "dateUTC": "2026-11-07",
+  "application": "2.22.0-DE3.64",
+  "applicationCounter": 636,
+  "bootloaderCounter": 19,
+  "bootRegionSHA256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+  "softdevice": "S112 7.3.0",
+  "softdeviceFwid": "0x0126",
+  "mounted": true,
+  "storedSettingsCrcEqualsComputed": true,
+  "scope": "Previous physical App636 observation. App637 device validation pending."
+}

@@ -1,3 +1,7 @@
+# DE3.65 / 637 und Dateimanager 3.39.4
+
+Der Scrollbalken der LCD-App zeigt das Ende einer dreizeiligen Notiz an. Die Katalogtabelle spart gegenüber DE3.64 netto 2.672 Byte Programmflash. Der Dateimanager erleichtert die Korrektur von Dateinamen, übersetzt 54 Spielhinweise ins Deutsche und kann das Display auf der DFU-Seite wach halten. Für den geprüften Z19/636-Ausgangsstand gibt es eine signierte App-ZIP. [App und Nachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Dateimanager](docs/RELEASE_WEB3_39_4.de.md)
+
 # Dateimanager 3.39.3 · DFU-Abschluss und Dateinamen
 
 Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. Der Neustart lässt sich nach der Rückkehr ins Hauptmenü unter **Gerät & Diagnose** anhand der ausgelesenen Version prüfen. [Bedienung und Prüfnachweise](docs/RELEASE_WEB3_39_3.de.md)

@@ -1,0 +1,31 @@
+Allmiibo Dateimanager 3.39.4 · 7. November 2026
+
+Online öffnen
+https://bluecyber81.github.io/pixl.js/
+Auf der Startseite steht „Browser-Software 3.39.4“. Einen offenen Tab nach
+Abschluss seiner Übertragung neu laden.
+
+Unter Windows
+Das portable ZIP entpacken und Start-Dateimanager.cmd öffnen. Der Starter
+verwendet Python 3 und einen lokalen Server auf diesem PC. Zum Beenden
+Stop-Dateimanager.cmd öffnen. Für Bluetooth am Gerät die Dateiübertragung
+öffnen und im Dateimanager mit Chrome oder Edge auf „Verbinden“ klicken.
+
+Was ist neu?
+Unter „Dateien“ nennt der Abgleich beide kollidierenden Namen oder den
+ungeeigneten Namen. Bei abweichender Unicode-Schreibweise zeigt er eine
+passende Fassung an. Im Figurenkatalog erscheinen alle 54 vorhandenen
+englischen Nutzungshinweise auch auf Deutsch.
+
+Unter „Update“ findest du zwei Wege. Auf der DFU-Seite ist das bisherige
+Paket DE3.63/635 eingebaut. DE3.65/637 ist ein separater Download für
+LCD mit Packed LittleFS und S112 7.3.0. Es enthält nur die Anwendung;
+der Funktionstest am Gerät steht aus. Zum Ausprobieren „Testversion DE3.65“
+öffnen, die ZIP speichern und auf der DFU-Seite als eigene Firmware wählen.
+Die Seite kann während des Updates den Bildschirm wach halten. Lass sie
+im Vordergrund. Nach einer Unterbrechung dasselbe Gerät und dieselbe ZIP
+auswählen. Der gespeicherte Gerätestand bestimmt die Fortsetzungsposition.
+
+Quellen, Downloads und Prüfnachweise
+https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.65

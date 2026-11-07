@@ -21,11 +21,10 @@ const catalogue = JSON.parse(await fs.readFile(new URL('../src/data/catalogue.js
 const notes = new Map(usage.notes.map(note => [note.id, note]));
 const available = figure => catalogue.entries.some(entry => entry.id === figure.id);
 const german = usage.figures.find(figure => available(figure) && figure.associations.some(row => notes.get(row.noteId)?.de));
-const fallback = usage.figures.find(figure => available(figure) && figure.associations.some(row => notes.get(row.noteId)?.en && !notes.get(row.noteId)?.de));
+const wolfLink = usage.figures.find(figure => available(figure) && figure.associations.some(row => notes.get(row.noteId)?.en === 'Wolf Link (hearts depend on save data)'));
 const empty = usage.figures.find(figure => available(figure) && figure.associations.every(row => !notes.get(row.noteId)?.en));
-assert.ok(german && fallback && empty, 'real bundled catalogue test cases exist');
+assert.ok(german && wolfLink && empty, 'real bundled catalogue test cases exist');
 const germanNote = figureUsage(german.id, usage, 'de_DE').find(row => row.translated);
-const fallbackNote = figureUsage(fallback.id, usage, 'de_DE').find(row => row.language === 'en');
 const config = Buffer.from(syntheticConfig(1103, 1, 2)), slot = Buffer.from(syntheticSlot()), original = Buffer.from(slot);
 const unknownFigure = Buffer.alloc(540);
 unknownFigure.set([4, 1, 2, 0x8f, 3, 4, 5, 6, 4]);
@@ -42,7 +41,7 @@ async function hashTree(dir) {
   }
 }
 await hashTree(root);
-const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.png': 'image/png' };
+const mime = { '.html': 'text/html', '.js': 'text/javascript','.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.png': 'image/png' };
 const server = http.createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
@@ -141,7 +140,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.39.3', (await page.locator('.version-context').innerText()).includes('3.39.3'));
+    check(kind + ' exact web version 3.39.4', (await page.locator('.version-context').innerText()).includes('3.39.4'));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
     const card = page.locator('.card-slot-inspection'); await card.waitFor();
@@ -194,11 +193,11 @@ try {
     await fits(page, kind + ' English catalogue usage', '.selected-detail .figure-usage', zoom);
     await shot(page, kind + '-usage-en', usagePanel);
     await chooseLanguage(page, 'de_DE');
-    usagePanel = await selectFigure(page, fallback.id);
-    check(kind + ' missing translation falls back to exact English', (await usagePanel.innerText()).includes(fallbackNote.text));
-    check(kind + ' fallback language visibly labelled', (await usagePanel.innerText()).includes('Englischer Quelltext · keine deutsche Übersetzung hinterlegt'));
-    await fits(page, kind + ' untranslated catalogue usage', '.selected-detail .figure-usage', zoom);
-    await shot(page, kind + '-usage-fallback', usagePanel);
+    usagePanel = await selectFigure(page, wolfLink.id);
+    check(kind + ' Wolf Link shows its German save-data condition', (await usagePanel.innerText()).includes('Herzen hängen von den Speicherdaten ab'));
+    check(kind + ' translation keeps its English source available', await usagePanel.locator('.usage-original').count() > 0);
+    await fits(page, kind + ' translated catalogue usage', '.selected-detail .figure-usage', zoom);
+    await shot(page, kind + '-usage-wolf-link', usagePanel);
     usagePanel = await selectFigure(page, empty.id);
     check(kind + ' note-free association is labelled', (await usagePanel.innerText()).includes('Katalogzuordnung ohne deutschen oder englischen Nutzungshinweis'));
     check(kind + ' no unearned compatibility claim', (await usagePanel.innerText()).includes('Keine Bestätigung der Spielkompatibilität oder Belohnungen'));

@@ -10,7 +10,8 @@ import enLocale from '../src/i18n/en_US.js';
 
 const data = JSON.parse(fs.readFileSync(new URL('../src/data/figure-usage.json', import.meta.url), 'utf8'));
 const german = data.figures.find(figure => figure.associations.some(row => data.notes.find(note => note.id === row.noteId)?.de));
-const english = data.figures.find(figure => figure.associations.some(row => { const note = data.notes.find(note => note.id === row.noteId); return note?.en && !note.de; }));
+// A later catalogue may add an English note before its translation is available.
+const partial = { ...data, notes: data.notes.map(note => ({ ...note, de: null })) };
 const groupingOnly = data.figures.find(figure => figure.associations.length && figure.associations.every(row => row.noteId === null));
 
 test('usage lookup is exact-ID only, with no name/series/private-note inference', () => {
@@ -30,8 +31,9 @@ test('German translations keep the original; missing translations fall back only
   assert.equal(en.text, translated.original);
   assert.equal(en.original, null);
   assert.equal(en.translated, false);
-  const fallback = figureUsage(english.id, data, 'de_DE').find(row => row.language === 'en');
-  assert.ok(fallback.text);
+  const fallback = figureUsage(german.id, partial, 'de_DE').find(row => row.groupId === translated.groupId);
+  assert.equal(fallback.text, translated.original);
+  assert.equal(fallback.language, 'en');
   assert.equal(fallback.translated, false);
   for (const row of figureUsage(groupingOnly.id, data)) assert.equal(row.text, null);
 });
@@ -47,7 +49,7 @@ test('all exported rows keep a group path and pinned source line without externa
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated }, { associations: 1344, notes: 63, translated: 13 });
+  assert.deepEqual({ associations, notes, translated }, { associations: 1344, notes: 63, translated: 63 });
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.
@@ -58,7 +60,7 @@ source = source.replace(/import\s+(.+?)\s+from\s+['"]([^'"]+)['"];?/g, (_, bindi
   const value = module === 'vue' ? 'Vue' : module === 'vue-i18n' ? 'VueI18n' : module.endsWith('.json') ? 'data' : 'usageModule';
   return `const ${binding.startsWith('{') ? binding.replace(/\s+as\s+/g, ':') : binding} = ${value};`;
 });
-const Component = new Function('Vue', 'VueI18n', 'data', 'usageModule', source.replace('export default', 'return'))(Vue, VueI18n, data, { figureUsage });
+const makeComponent = new Function('Vue', 'VueI18n', 'data', 'usageModule', source.replace('export default', 'return'));
 const node = (type, text = '') => ({ type, text, children: [], props: {}, parent: null });
 const renderer = Vue.createRenderer({
   createElement: type => node(type), createText: text => node('#text', text), createComment: text => node('#comment', text),
@@ -70,7 +72,8 @@ const renderer = Vue.createRenderer({
 });
 function nodes(item, type) { return [item, ...item.children.flatMap(child => nodes(child))].filter(child => !type || child.type === type); }
 function text(item) { return item.text + item.children.map(text).join(''); }
-async function mount(props) {
+async function mount(props, dataset = data) {
+  const Component = makeComponent(Vue, VueI18n, dataset, { figureUsage });
   const state = Vue.reactive(props), root = node('root');
   const app = renderer.createApp({ render: () => Vue.h(Component, state) });
   app.use(VueI18n.createI18n({ legacy: false, locale: 'de_DE', fallbackLocale: 'en', missingWarn: false, fallbackWarn: false, messages: { de_DE: deLocale, en: enLocale } }));
@@ -104,14 +107,20 @@ test('actual component labels claims, translations, exact sources and unknown/em
     assert.match(text(root), /Redaktionelle Übersetzung aus dem Englischen/);
     assert.match(text(root), /Englischen Quelltext anzeigen/);
     for (const link of nodes(root, 'a')) { assert.match(link.props.href, /#L\d+$/); assert.equal(link.props.referrerpolicy, 'no-referrer'); }
-    state.id = english.id; await Vue.nextTick();
-    assert.match(text(root), /Englischer Quelltext · keine deutsche Übersetzung hinterlegt/);
     state.id = groupingOnly.id; await Vue.nextTick();
     assert.match(text(root), /Katalogzuordnung ohne deutschen oder englischen Nutzungshinweis/);
     state.id = 'ffffffffffffffff'; await Vue.nextTick();
     assert.match(text(root), /Daraus lässt sich keine Aussage zur Spielunterstützung ableiten/);
     assert.equal(nodes(root, 'a').length, 0);
     assert.equal(nodes(root, 'img').length, 0);
+  } finally { app.unmount(); }
+});
+
+test('the component still labels an untranslated note from a partial catalogue', async () => {
+  const { root, app } = await mount({ id: german.id, locale: 'de_DE' }, partial);
+  try {
+    assert.match(text(root), /Englischer Quelltext · keine deutsche Übersetzung hinterlegt/);
+    assert.ok(nodes(root, 'p').some(p => p.props.lang === 'en' && p.text));
   } finally { app.unmount(); }
 });
 

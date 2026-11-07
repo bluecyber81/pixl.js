@@ -87,12 +87,13 @@ def export_usage(data_dir, translations_path):
                              'readNormalization': normalization})
     return {
         'schemaVersion': 1,
-        'dataVersion': '2026-11-06.1',
+        'dataVersion': '2026-11-07.1',
         'source': {'label': 'Bundled firmware catalogue', 'referenceCommit': SOURCE_COMMIT,
                    'files': source_files,
                    'hashPolicy': 'sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.'},
         'policy': {'verifiedInGame': False, 'associationsAreCompatibilityProof': False,
-                   'notesAreComplete': False, 'germanTranslationsAreComplete': False,
+                   'notesAreComplete': False, 'germanTranslationsAreComplete': bool(english) and set(texts) == english,
+                   'germanTranslationScope': 'existing English usage notes in this catalogue snapshot',
                    'translationPolicy': translations['translationPolicy']},
         'coverage': {'figures': len(figures), 'groups': len(games), 'associations': len(links),
                      'legacyEmptyLinkColumns': sum(link.legacy_empty_column for link in links),

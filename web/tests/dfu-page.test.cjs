@@ -6,15 +6,34 @@ function harness(supported=true,extra={}){
     const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
     const windowEvents={},calls=[];let options,instance;
     class FakeUpdater{constructor(o){options=o;instance=this;this.busy=false;}setPackage(f){calls.push(['package',f]);options.onState({busy:this.busy,loading:false,ready:!!f});return Promise.resolve(!!f);}selectDevice(){calls.push(['select']);}}
-    const context=vm.createContext({document:{getElementById:id=>nodes.get(id),createElement:node},navigator:{bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
+    const context=vm.createContext({document:{getElementById:id=>nodes.get(id),createElement:node,visibilityState:'visible',addEventListener(){},removeEventListener(){}},navigator:{bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
         location:{href:'http://127.0.0.1:8768/dfu/web.html'},AllmiiboBundledPackages:Bundled,AllmiiboFirmwareReleases:{schema:1,packages:[]},
         window:{addEventListener:(n,fn)=>windowEvents[n]=fn},AllmiiboDfuUpdater:FakeUpdater,SecureDfuPackage:class{},SecureDfu:class{},CRC32:{buf(){}},...extra});
-    for (const file of ['phase-labels.js','page.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu',file),'utf8'),context);
+    context.createScreenAwake = require('../public/dfu/screen-awake.mjs').createScreenAwake;
+    vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu/phase-labels.js'),'utf8'),context);
+    const page = fs.readFileSync(path.join(__dirname,'../public/dfu/page.js'),'utf8');
+    vm.runInContext(page.replace("import { createScreenAwake } from './screen-awake.mjs';", ''), context);
     return {nodes,windowEvents,calls,get options(){return options;},get updater(){return instance;}};
 }
 test('page binds one click to device selection and one file event to package load',()=>{
     const h=harness();h.nodes.get('file').files=['selected'];h.nodes.get('file').events.change();h.nodes.get('button').events.click();
     assert.deepEqual(h.calls,[['package',null],['package','selected'],['select']]);
+});
+test('wake lock starts only in DFU, releases late/failed sessions and honors the opt-out',async()=>{
+    const tick=()=>new Promise(resolve=>setImmediate(resolve));
+    let requests=0,releases=0,grant;
+    const navigator={wakeLock:{request(){requests++;return new Promise(resolve=>{grant=()=>resolve({release(){releases++;},addEventListener(){}});});}}};
+    const h=harness(true,{navigator}), choice=h.nodes.get('awake-choice'), panel=h.nodes.get('awake-panel');
+    choice.checked=true;
+    h.options.onPhase(null);await tick();assert.equal(requests,0);
+    h.options.onPhase('transfer');await tick();assert.equal(requests,1);assert.equal(panel.hidden,false);
+    h.options.onPhase('reconnect');grant();await tick();assert.equal(releases,1);assert.equal(panel.hidden,true);
+    h.options.onPhase('transfer');await tick();grant();await tick();h.options.onPhase('verify',true);
+    assert.equal(releases,2);
+    choice.checked=false;h.options.onPhase('transfer');await tick();assert.equal(requests,2);
+    choice.checked=true;choice.events.change();await tick();assert.equal(requests,3);
+    h.windowEvents.pagehide();grant();await tick();assert.equal(releases,3);
+    h.options.onPhase('reconnect');h.windowEvents.pageshow();await tick();assert.equal(requests,3);
 });
 test('page locks changing package while busy and disables unsupported Bluetooth',()=>{
     for(const supported of [true,false]){const h=harness(supported);h.options.onState({busy:true,ready:false});assert.equal(h.nodes.get('file').disabled,true);
@@ -48,7 +67,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.63/Allmiibo_DE3_63_Quellcode.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.63/Allmiibo_DE3_63_Quellcode.zip','../','../licenses/index.html']);
     assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

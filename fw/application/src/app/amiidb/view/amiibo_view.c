@@ -102,7 +102,7 @@ static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas) {
     const bool own = view->info_page == 3;
     const char *text = own ? (const char *)view->ntag->notes : amiibo_view_usage(view);
     if (!*text) text = own ? (german ? "Keine eigene Notiz." : "No personal note.") :
-        (german ? "Kein Hinweis zur Spielauswahl. Spiel in der Datenbank waehlen." :
+        (german ? "Kein Hinweis zur Spielauswahl. Spiel in der Datenbank wählen." :
                   "No hint for this game selection. Choose a game in the database.");
     mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
     mui_canvas_set_draw_color(canvas, 1);
@@ -119,12 +119,12 @@ static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas) {
      * The 29px viewport preserves the second line above the footer (y=41).
      * Clear only the previous line's descent at the top, not the scrollbar. */
     view->desc_total = mui_element_autowrap_text_box(canvas, 0, 12, mui_canvas_get_width(canvas),
-                                                    29, view->desc_offset, 0, text);
+                                                    29, view->desc_page_size, view->desc_offset, 0, text);
     mui_canvas_set_draw_color(canvas, 0);
     mui_canvas_draw_box(canvas, 0, 12, mui_canvas_get_width(canvas) - 4, 2);
     mui_canvas_set_draw_color(canvas, 1);
-    mui_canvas_draw_utf8(canvas, 1, 52, german ? "L/R kurz: Seite" : "L/R short: page");
-    mui_canvas_draw_utf8(canvas, 1, 63, german ? "lang:scroll M:zur." : "hold:scroll M:back");
+    mui_canvas_draw_utf8(canvas, 1, 52, german ? "L/R: Seite  M: zurück" : "L/R: page  M: back");
+    mui_canvas_draw_utf8(canvas, 1, 63, german ? "L/R halten: blättern" : "Hold L/R: scroll");
 }
 
 static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
@@ -205,12 +205,12 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         if (strlen(ntag->notes) > 0) {
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
-                                              p_amiibo_view->desc_offset, 0, ntag->notes);
+                                              p_amiibo_view->desc_page_size, p_amiibo_view->desc_offset, 0, ntag->notes);
         } else {
             const char *notes = amiibo_view_usage(p_amiibo_view);
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
-                                              p_amiibo_view->desc_offset, 0, notes);
+                                              p_amiibo_view->desc_page_size, p_amiibo_view->desc_offset, 0, notes);
         }
         mui_canvas_set_clip_window(p_canvas, &clip_win_prev);
         amiibo_view_update_desc_anim(p_amiibo_view);

@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "version": "3.39.4",
+  "validationDate": "2026-11-07",
+  "publicBase": "0aa5832bb32d737aaa0e823e18a520bef8463e0a",
+  "node": "26.13.0",
+  "npm": "11.19.1",
+  "chrome": "156.0.8078.80",
+  "units": {
+    "tests": 1264,
+    "pass": 1264,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "dfuResume": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "catalog": {
+    "associations": 1344,
+    "bytes": 234869,
+    "englishNoteAssociations": 63,
+    "figures": 952,
+    "germanNoteAssociations": 63,
+    "groups": 82,
+    "legacyEmptyLinkColumns": 3,
+    "uniqueEnglishNotes": 54,
+    "uniqueGermanTranslations": 54,
+    "valid": true
+  },
+  "catalogExportTests": 6,
+  "bundledApplication": {
+    "version": "2.22.0-DE3.63",
+    "counter": 635,
+    "file": "Allmiibo_LCD_DE3_63_635_TESTSTAND.zip",
+    "sha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4"
+  },
+  "separateApplication": {
+    "version": "2.22.0-DE3.65",
+    "counter": 637,
+    "file": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+    "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+    "deviceFunctionTest": "pending"
+  },
+  "hardwareAccess": false,
+  "builds": {
+    "root": {
+      "files": 154,
+      "indexHtmlSha256": "bfe9a55f95bb47d8b763d7a179e88964ddc4252b38e8ddf36af4fd79e1e64473",
+      "filesManifestSha256": "6afc15d9202136349a3608686bde16e0858a62f7386df5b721d13ba80ddc184e",
+      "distTests": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "browser": {
+        "figures": {
+          "checks": 166,
+          "errors": 0,
+          "screenshots": 28
+        },
+        "screen": {
+          "checks": 133,
+          "errors": 0,
+          "screenshots": 16
+        },
+        "general": {
+          "checks": 63,
+          "errors": 0,
+          "screenshots": 28
+        },
+        "webFixes": {
+          "checks": 14,
+          "errors": 0,
+          "screenshots": 0
+        }
+      }
+    },
+    "pages": {
+      "files": 154,
+      "indexHtmlSha256": "8e03a204d619c82f25e14a350300c22da80017467142a0941a201f496d611bbe",
+      "filesManifestSha256": "3442a292f1e64ccb2752787bb40e64c4ac9883591e88543c3c9db62ea9617438",
+      "distTests": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "browser": {
+        "figures": {
+          "checks": 166,
+          "errors": 0,
+          "screenshots": 28
+        },
+        "screen": {
+          "checks": 133,
+          "errors": 0,
+          "screenshots": 16
+        },
+        "general": {
+          "checks": 63,
+          "errors": 0,
+          "screenshots": 28
+        },
+        "webFixes": {
+          "checks": 14,
+          "errors": 0,
+          "screenshots": 0
+        }
+      }
+    }
+  },
+  "scope": "The installed desktop Chrome exercised the real production bundles, mobile-sized and desktop viewports, including actual Nordic package bytes, with synthetic peripherals, wake providers and interrupted receipts; no physical DFU transfer."
+}

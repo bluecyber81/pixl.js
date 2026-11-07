@@ -28,6 +28,21 @@ test('sync local entry limit includes distinct required folders before any devic
   assert.equal(vfs.log.length,0);assert.equal(reads,0);
 })
 
+test('rejected names identify the original input before any local or device read', async () => {
+  for (const [names, code, details] of [
+    [['Link.bin', 'link.bin'], 'SYNC_COLLISION', { first: 'E:/Link.bin', second: 'E:/link.bin' }],
+    [['CON.bin'], 'NAME_PORTABLE', { value: 'CON.bin' }],
+    [['e\u0301.bin'], 'NAME_NORMALIZATION', { value: 'e\u0301.bin', normalized: 'é.bin' }]
+  ]) {
+    const vfs = memoryVfs();
+    let reads = 0;
+    const files = names.map(name => ({ name, size: 1, arrayBuffer() { ++reads; throw Error('unexpected read'); } }));
+    await assert.rejects(compare(vfs, files, { rootPath: 'E:/' }), { code, details });
+    assert.equal(reads, 0);
+    assert.equal(vfs.log.length, 0);
+  }
+});
+
 test('sync rechecks ancestor metadata after preview and before creating a child', async () => {
   for(const when of ['before-preflight','after-preflight']) {
     const vfs=memoryVfs();vfs.nodes.set('E:/tags/series',{type:1,meta:metadata()});

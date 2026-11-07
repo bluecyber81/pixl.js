@@ -3,7 +3,7 @@ import { snapshotFile, sha256Bytes, asBytes, checkedDirectory, copyMetadata, met
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
 export class SyncError extends Error {
-  constructor(code, message) { super(message); this.name = 'SyncError'; this.code = code }
+  constructor(code, message, details) { super(message); this.name = 'SyncError'; this.code = code; if (details) this.details = details }
 }
 const fail = (code, message) => { throw new SyncError(code, message) }
 const pathKey = path => path.split('/').map(part => part.normalize('NFC').toLowerCase()).join('/')
@@ -39,7 +39,9 @@ function sourcesOf(files, rootPath) {
       current = joinDevicePath(current, segments[index]); relative += (relative ? '/' : '') + segments[index]
       const type = index === segments.length - 1 ? 'file' : 'directory', key = pathKey(current)
       const known = identities.get(key)
-      if (known && (known.path !== current || known.type !== type || type === 'file')) fail('SYNC_COLLISION', 'Selected paths collide by case, Unicode or file/folder type.')
+      if (known && (known.path !== current || known.type !== type || type === 'file')) {
+        throw new SyncError('SYNC_COLLISION', 'Selected paths collide by case, Unicode or file/folder type.', { first: known.path, second: current })
+      }
       identities.set(key, { path: current, type })
       if (identities.size > SYNC_LIMITS.maxEntries) fail('SYNC_LIMIT', 'Selected files and required folders exceed 4096 entries.')
       if (type === 'directory') directories.set(current, { path: current, relativePath: relative })

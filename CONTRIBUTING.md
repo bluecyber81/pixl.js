@@ -9,19 +9,20 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.62 / 634**; [unsigned build guide](docs/BUILD_DE3_62.md) |
+| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.65 / 637**; [unsigned build guide](docs/RELEASE_DE3_65.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.38.1**; [web README](web/README.md) |
+| Browser file manager | `web/`, currently **3.39.4**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
-| New Z17 bootloader candidate | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; physical test pending |
+| Current Z19 bootloader | `bootloader-z19/`, source-bound build and host/ARM tests; device counter 19 |
+| Historical Z17 bootloader | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; physical test pending |
 | Matching BL8 bootloader | `bootloader-bl8/`; [source binding and separate unsigned build](bootloader-bl8/README.md) |
 | Historical releases | Git tags, release assets and dated documentation, including [DE3.37](docs/BUILD_DE3_37.md) |
 
 The current application is ordinary editable C source in this repository, not
 only a release ZIP. Release archives provide a fixed corresponding-source copy.
 The `fw/bootloader/` and `bootloader-bl6/` trees have separate history; the historical
-BL8 source is in `bootloader-bl8/`; the new Z17 candidate source is in `bootloader-z17/`. Building the application does not build or
+BL8 source is in `bootloader-bl8/`; the Z17 and Z19 trees have separate source and test bindings. Building the application does not build or
 install BL8 or Nordic S112. Do not infer an installed bootloader from a source
 checkout.
 
@@ -52,7 +53,7 @@ The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-Follow [BUILD_DE3_62.md](docs/BUILD_DE3_62.md) to reproduce the unsigned LCD
+Follow [BUILD_DE3_62.md](docs/RELEASE_DE3_65.md) to reproduce the unsigned LCD
 application. No signing key is required. The current release helper preserves
 generated resources and the version header. For an intentional change, use its
 development mode with a distinct version and explicit counter.

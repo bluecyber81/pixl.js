@@ -74,9 +74,21 @@ void mui_element_autowrap_text(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, uin
     }
 }
 
-uint16_t mui_element_autowrap_text_box(mui_canvas_t *p_canvas, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
-                                       uint16_t offset_y, uint8_t square_r, const char *text) {
+/* Advance one complete character, including for malformed or truncated input. */
+static uint16_t box_glyph(mui_canvas_t *canvas, const char **cursor, char glyph[5]) {
+    uint8_t bytes = mui_canvas_get_utf8_bytes(*cursor);
+    memcpy(glyph, *cursor, bytes);
+    glyph[bytes] = '\0';
+    *cursor += bytes;
+    return mui_canvas_get_utf8_width(canvas, glyph);
+}
 
+uint16_t mui_element_autowrap_text_box(mui_canvas_t *p_canvas, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+                                       uint16_t page_height, uint16_t offset_y, uint8_t square_r, const char *text) {
+
+    if (w <= 4 || !h) return 0;
+    /* Visible glyph descent can extend beyond the logical scroll page. */
+    if (!page_height) page_height = h;
     mui_rect_t clip_win_prev;
     mui_rect_t clip_win_cur;
     mui_canvas_get_clip_window(p_canvas, &clip_win_prev);
@@ -86,59 +98,60 @@ uint16_t mui_element_autowrap_text_box(mui_canvas_t *p_canvas, uint16_t x, uint1
     clip_win_cur.h = h;
     mui_canvas_set_clip_window(p_canvas, &clip_win_cur);
 
-    uint8_t canvas_height = mui_canvas_get_height(p_canvas);
     uint8_t font_height = mui_canvas_current_font_height(p_canvas);
-    uint16_t xi = x;
     uint16_t text_y = y + font_height;
     uint16_t yi = text_y;
-    uint16_t wi = w - 4;
 
     const char *p = text;
     char utf8[5];
 
-    while (*p != 0) {
-
-        if (*p == '\n') {
-            xi = x;
-            yi += font_height;
-            p++;
-            continue;
-        }
-
-        wi = w - 4; // scrollbar width
+    while (*p) {
+        uint16_t wi = w - 4; /* Reserve the scrollbar on every line. */
         if (yi < text_y + square_r) {
-            wi -= square_r;
+            wi = wi > square_r ? wi - square_r : 0;
         }
-
-        uint8_t utf8_size = mui_canvas_get_utf8_bytes(p);
-        memcpy(utf8, p, utf8_size);
-        utf8[utf8_size] = '\0';
-        uint8_t utf8_x = mui_canvas_get_utf8_width(p_canvas, utf8);
-        if (utf8_x + 1 + xi > x + wi) {
-            xi = x;
-            yi += font_height;
+        const char *end = p, *space = NULL, *hyphen = NULL;
+        uint16_t used = 0;
+        while (*end && *end != '\n') {
+            const char *start = end;
+            uint16_t width = box_glyph(p_canvas, &end, utf8);
+            if (*start == ' ' && start != p) space = start;
+            if (used + width > wi && start != p) {
+                end = space ? space : (hyphen ? hyphen : start);
+                break;
+            }
+            used += width + 1;
+            if (*start == '-') hyphen = end;
         }
-        uint8_t utf8_w = 0;
-        /* Canvas coordinates are uint8_t. Off-screen rows of long descriptions
-         * must not wrap from e.g. y=256 back to the top of the display. */
-        if (yi > offset_y && yi - offset_y <= UINT8_MAX) {
-            utf8_w = mui_canvas_draw_utf8(p_canvas, xi, yi - offset_y, utf8);
-        } else {
-            // not draw
-            utf8_w = utf8_x;
+        /* Revisit only visible glyphs. The baseline may be just outside the
+         * viewport while the tops/descenders are still inside the clip. */
+        if (yi > offset_y && yi - offset_y <= UINT8_MAX &&
+            yi - offset_y + font_height >= y && yi - offset_y < y + h + font_height) {
+            uint16_t xi = x;
+            while (p < end) {
+                uint16_t width = box_glyph(p_canvas, &p, utf8);
+                mui_canvas_draw_utf8(p_canvas, xi, yi - offset_y, utf8);
+                xi += width + 1;
+            }
         }
-        xi += utf8_x + 1; // 1 pix for margin
-        p += utf8_size;
+        p = end;
+        if (!*p) break;
+        if (*p == ' ') {
+            while (*p == ' ') ++p;
+            if (!*p) break;
+        }
+        if (*p == '\n') ++p;
+        yi += font_height;
     }
 
-    uint16_t total = (yi - y + h - 1) / h;
-    uint16_t pos = offset_y / h;
+    uint16_t total = (yi - y + page_height - 1) / page_height;
+    uint16_t pos = offset_y / page_height;
 
     if (total > 1) {
         pos = pos < total - 1 ? pos : total - 1;
 
         // scrollbar
-        uint8_t width = w;
+        uint8_t width = x + w;
         uint8_t height = h;
         // prevent overflows
         mui_canvas_set_draw_color(p_canvas, 0);

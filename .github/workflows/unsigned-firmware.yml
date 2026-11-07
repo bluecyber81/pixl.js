@@ -6,17 +6,17 @@ on:
   workflow_dispatch:
   workflow_call:
   pull_request:
-    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', '.github/workflows/unsigned-firmware.yml']
+    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', '.github/workflows/unsigned-firmware.yml']
   push:
     branches: [main]
-    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', '.github/workflows/unsigned-firmware.yml']
+    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', '.github/workflows/unsigned-firmware.yml']
 
 permissions:
   contents: read
 
 jobs:
   application:
-    name: DE3.63 application
+    name: DE3.65 application
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -53,18 +53,18 @@ jobs:
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
         run: |
-          python3 -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-de363/FIRMWARE_TESTS.json
+          python3 -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-de365/FIRMWARE_TESTS.json
       - name: Execute stack and PXDG checks on this build's Cortex-M4 ELF
         shell: bash
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-de363/pixljs.out | tee build/lcd-de363/STACK_ELF.txt
-          cat build/lcd-de363/BUILD_RESULT.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-de365/pixljs.out | tee build/lcd-de365/STACK_ELF.txt
+          cat build/lcd-de365/BUILD_RESULT.json
       - name: Archive the actual build and test results
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lcd-firmware-evidence-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/lcd-de363/
+          path: build/lcd-de365/
           if-no-files-found: error
           retention-days: 30
 
@@ -87,37 +87,50 @@ jobs:
       - name: Compile and verify unsigned BL8 offline
         run: python3 build.py
 
-  bootloader-z17:
-    name: Z17 source-bound candidate and ARM tests
+  bootloader-current-and-previous:
+    name: ${{ matrix.boot }} source-bound build and ARM tests
+    strategy:
+      fail-fast: false
+      matrix:
+        boot: [z17, z19]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
       run:
-        working-directory: bootloader-z17
+        working-directory: bootloader-${{ matrix.boot }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - name: Fetch the pinned SDK and compile the exact unsigned Z17 image
+      - name: Fetch the pinned SDK and compile the bound unsigned bootloader
         run: |
           docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
           python3 build.py --check
           python3 build.py
       - name: Prepare the pinned ARM emulator
         run: |
-          python3 -m venv "$RUNNER_TEMP/z17-venv"
-          "$RUNNER_TEMP/z17-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r ../tools/ci-unicorn-linux-x64.txt
+          python3 -m venv "$RUNNER_TEMP/boot-venv"
+          "$RUNNER_TEMP/boot-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r ../tools/ci-unicorn-linux-x64.txt
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
       - name: Run source-bound reset, session, LCD and ARM crypto tests
-        run: '"$RUNNER_TEMP/z17-venv/bin/python" tests/run_offline.py --output _checks'
+        run: '"$RUNNER_TEMP/boot-venv/bin/python" tests/run_offline.py --output _checks'
+      - name: Check offline runner and resume the released application in the Z19 transfer model
+        if: matrix.boot == 'z19'
+        shell: bash
+        run: |
+          python3 -B tests/test_runner_modes.py
+          ota="../$(jq -er .application_ota_path ../RELEASE_INFO.json)"
+          payload="$(unzip -p "$ota" manifest.json | jq -er .manifest.application.bin_file)"
+          unzip -p "$ota" "$payload" > "$RUNNER_TEMP/released-app.bin"
+          python3 -B tests/DFU_Stream/check_app_stream.py --test-bin "$RUNNER_TEMP/released-app.bin" --expected-sha256 "$(jq -er .application_sha256 ../RELEASE_INFO.json)" --output _checks/application-resume.json
       - name: Archive bootloader evidence
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: z17-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          name: ${{ matrix.boot }}-evidence-${{ github.sha }}-${{ github.run_attempt }}
           path: |
-            bootloader-z17/_build/
-            bootloader-z17/_checks/
+            bootloader-${{ matrix.boot }}/_build/
+            bootloader-${{ matrix.boot }}/_checks/
           if-no-files-found: error
           retention-days: 30

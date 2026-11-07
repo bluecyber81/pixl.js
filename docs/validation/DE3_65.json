@@ -1,0 +1,157 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "version": "2.22.0-DE3.65",
+  "counter": 637,
+  "board": "LCD",
+  "sourceId": "dfae20623f467fcb4e2fd82b0c2355bce64efa3eace34177f04559270bad11d4",
+  "productionInputs": 699,
+  "sdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "artifactsSha256": {
+    "pixljs.bin": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+    "pixljs.hex": "0726d17457e2b3db8fbe7fb7520369bbf0ec9e262314f43465d79804dd764977",
+    "pixljs.out": "202d775dddd7b44120963fceefe7437ed7e9e110a3cb194da179eb9cda1e51d2",
+    "pixljs.map": "de76584f1ff358572855f20e506b2e75634bcf4644e59f0b8ec33fdddc7fce50"
+  },
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+    "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+    "bytes": 362167,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 637,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 361564,
+        "sha256": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 361564,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "linkerBudget": {
+    "binary_bytes": 361564,
+    "linker_flash_used_bytes": 361572,
+    "observed": {
+      "flash_reserve_bytes": 11164,
+      "heap_stack_gap_bytes": 1840,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "deltaVsDE364": {
+    "binaryBytes": -2672,
+    "linkerReserveBytes": 2672,
+    "heapStackGapBytes": 0
+  },
+  "rebuild": {
+    "dockerReleaseBuildByteIdenticalToCandidate": true,
+    "verifiedFiles": [
+      "pixljs.bin",
+      "pixljs.hex",
+      "pixljs.out",
+      "pixljs.map"
+    ]
+  },
+  "host": {
+    "passedStandardSuites": 142,
+    "passedExtraSuites": 6,
+    "failures": 0,
+    "skipped": 0,
+    "extraSuites": [
+      "de2/test_cache_nfc.py",
+      "de2/test_metadata.py",
+      "de2/test_vfs_protocol.py",
+      "de3/test_lfs_wear_de355.py",
+      "de3/test_math_precision_de335.py",
+      "de3/test_nfc_frames_de346.py"
+    ]
+  },
+  "catalogue": {
+    "figures": 952,
+    "links": 1344,
+    "lcdGermanUsageNotes": 8,
+    "webGermanUsageNotes": 54,
+    "indexedWidthsComparedAtNoteCounts": [
+      256,
+      257
+    ],
+    "bytesPerLink": 4
+  },
+  "lcd": {
+    "framebuffers": 554,
+    "qrComparisons": 531,
+    "scrollbar3LinesStartY": 12,
+    "scrollbar3LinesEndY": 26,
+    "deviceAccess": false
+  },
+  "armDfu": {
+    "passed": true,
+    "checkedAt": "2026-11-07T08:58:55.732858+00:00",
+    "unicorn": "2.0.1",
+    "applicationOnly": true,
+    "baselineAppCounter": 636,
+    "targetAppCounter": 637,
+    "bootloaderCounter": 19,
+    "appZip": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+    "appZipSha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+    "applicationBinSha256": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+    "applicationBytes": 361564,
+    "initDatSha256": "4bb6fb6bec7f0265c6492d8e025b14aa33fd3569fd8c2b4371be727b7c21aefe",
+    "previousAppZipSha256": "75d7fd2481de3dd0108ab1b8fbb9523f9f95c66cf597b01be2ed33df212e76e2",
+    "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "elfSha256": "b9d3fef9b1e710fb5ca84c08df9ded9f7404a2ed9c331bb57e390e443ea8f199",
+    "softDeviceFwid": "0x0126",
+    "softDeviceZipSha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "tests": [
+      {
+        "scenario": "Z19_App636_to_App637",
+        "signedInitResult": {
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361564,
+          "bank0Code": 0
+        },
+        "armPayloadHashPassed": true,
+        "armExtractedBootValidation": "CRC",
+        "armExtractedCrc32": "54f0d5c0",
+        "armBootValidationPassed": true,
+        "sdAndBootRegionsIdenticalInModel": true
+      },
+      {
+        "scenario": "Z19_empty_app_bank_to_App637",
+        "signedInitResult": {
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361564,
+          "bank0Code": 0
+        },
+        "armPayloadHashPassed": true,
+        "armExtractedBootValidation": "CRC",
+        "armExtractedCrc32": "54f0d5c0",
+        "armBootValidationPassed": true,
+        "sdAndBootRegionsIdenticalInModel": true
+      }
+    ],
+    "limitations": [
+      "Independently initialized ARM function tests. Packaged app data placed in model flash.",
+      "No physical DFU transfer, MBR copy, reset, executed app entrypoint or boot-time measurement."
+    ]
+  },
+  "limits": [
+    "LCD application only. No bootloader, SoftDevice or storage migration in the OTA.",
+    "No physical DE3.65 reset, screen, NFC or Bluetooth readback. Startup timing on hardware has not been measured here."
+  ]
+}

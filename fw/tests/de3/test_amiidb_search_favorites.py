@@ -92,7 +92,7 @@ int main(void) {
 const db_amiibo_t amiibo_list[]={{1,2,"Zulu",""},{2,2,"Alpha",""},{3,2,"Beta",""}};
 const size_t amiibo_list_size=3;
 const db_game_t game_list[]={{1,0,"Parent","",0,0},{2,1,"Child","",0,0},{3,2,"Grandchild","",0,0},{4,5,"CycleA","",0,0},{5,4,"CycleB","",0,0},{0}};
-const db_link_t link_list[]={{2,0,0},{3,1,0},{4,2,0},{2,0,0},{0}};
+const db_link_t link_list[]= {{.game_id=2,.amiibo_index=0},{.game_id=3,.amiibo_index=1},{.game_id=4,.amiibo_index=2},{.game_id=2,.amiibo_index=0},{0}};
 #include "amiidb_api_db.c"
 int main(void) {
  const db_amiibo_t *items[AMIIDB_RESULT_PAGE_SIZE];uint16_t total;

@@ -41,7 +41,7 @@ class DatabaseRefreshTests(unittest.TestCase):
         self.write_csv("amiidb_game.csv", [["1", "0", "Game", "游戏", "1"],
                                             ["255", "0", "Other", "其他", "2"]])
         self.write_csv("amiidb_link.csv", [["1", EXISTING, "", "", ""]])
-        for filename in ("db_amiibo.c", "db_game.c", "db_link.c"):
+        for filename in ("db_amiibo.c", "db_game.c", "db_link.c", "db_note_index.h"):
             (self.generated / filename).write_bytes(b"preserved previous generated file\n")
 
     def write_csv(self, filename, rows):
@@ -111,7 +111,7 @@ class DatabaseRefreshTests(unittest.TestCase):
         self.assertNotIn('"None"', generated)
         links = (self.generated / "db_link.c").read_text(encoding="utf8")
         self.assertIn('{"", "", ""}', links)
-        self.assertIn('{255, 1, 0}', links)
+        self.assertIn('{1, 255, 0}', links)
         first = {p.name: p.read_bytes() for p in self.generated.glob("*.c")}
         self.assertEqual(self.execute(["--refresh"], body)[0], 0)
         self.assertEqual(first, {p.name: p.read_bytes() for p in self.generated.glob("*.c")})
@@ -221,14 +221,14 @@ class DatabaseRefreshTests(unittest.TestCase):
                 links = (self.generated / "db_link.c").read_text(encoding="utf8")
                 self.assertIn('"Local alias", "Local translation"', data)
                 self.assertIn('{"Note", "", ""}', links)
-                self.assertIn('{1, 0, 0}', links)
-                self.assertNotIn("{255,", links)
+                self.assertIn('{0, 1, 0}', links)
+                self.assertNotIn(", 255,", links)
                 with (self.project / "data/amiidb_amiibo.csv").open(encoding="utf8", newline="") as stream:
                     self.assertEqual(len(list(csv.reader(stream))), 1)
 
     def test_each_publication_failure_restores_original_files_and_refresh_csv(self):
         real_replace = os.replace
-        for failure_index in range(1, 5):
+        for failure_index in range(1, 6):
             before = self.snapshot()
             calls = []
             def replace(source, destination):
@@ -243,7 +243,7 @@ class DatabaseRefreshTests(unittest.TestCase):
 
     def test_staging_failure_never_publishes_any_output(self):
         real_copy = shutil.copy2
-        for failure_index in range(1, 5):
+        for failure_index in range(1, 6):
             before = self.snapshot()
             calls = []
             def copy(source, destination):

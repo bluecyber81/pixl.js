@@ -1,14 +1,15 @@
 # Component identity and update boundaries
 
-Publication baseline: **2026-11-06**. Components have independent versions.
+Publication baseline: **2026-11-07**. Components have independent versions.
 
 **[Detailed bootloader/SoftDevice changes](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Application | 2.22.0-DE3.62 (test release) | DFU counter 634, hardware requirement 52 |
-| File manager | 3.38.1 | Browser software, not a device image |
-| New bootloader candidate | Z17 | Counter17, separate source and Android test package; physical test pending |
+| Application | 2.22.0-DE3.65 (test release) | DFU counter 637, hardware requirement 52 |
+| File manager | 3.39.4 | Browser software, not a device image |
+| Current LCD bootloader | [Z19](../bootloader-z19/) | Counter 19; same boot image as used with App636; current application package contains only App637 |
+| Previous bootloader | Z17 | Counter17, separate source and Android test package; physical test pending |
 | Previously installed reference | Z15 | Counter 15; region SHA-256 below |
 | Older reference bootloader | BL8 | Historical corresponding source retained; counters depend on packaging |
 | SoftDevice | Nordic S112 7.3.0 | FWID 0x0126; binary from Nordic, not rebuilt here |
@@ -22,7 +23,7 @@ BL8 code has been packaged with more than one monotonic bootloader counter (incl
 
 `add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130`
 
-The historical BL8 corresponding source, SDK overrides, public verification key, source-input hashes and unsigned build instructions are in [bootloader-bl8](../bootloader-bl8/README.md). The new Z17 corresponding source is in [bootloader-z17](../bootloader-z17/README.md). `bootloader-bl6/` and the inherited `fw/bootloader/` are older references; their whole-system/key-generation instructions are not the current release process.
+The historical BL8 corresponding source, SDK overrides, public verification key, source-input hashes and unsigned build instructions are in [bootloader-bl8](../bootloader-bl8/README.md). The historical Z17 corresponding source is in [bootloader-z17](../bootloader-z17/README.md). `bootloader-bl6/` and the inherited `fw/bootloader/` are older references; their whole-system/key-generation instructions are not the current release process.
 
 Nordic supplies [S112 downloads and release notes](https://www.nordicsemi.com/Products/Development-software/S112/Download). S112 is a separate vendor binary with its own license and hardware restrictions. The corrected `nrf_nvic.h` SDK header used by this project is a host compilation input; changing it is not a replacement SoftDevice binary. No new Nordic version or elimination of every Nordic known issue is claimed.
 

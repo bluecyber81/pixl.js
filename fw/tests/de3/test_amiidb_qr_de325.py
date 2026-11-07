@@ -60,8 +60,10 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
             view_path=SRC/'app/amiidb/view/amiibo_view.c'
             wrapper_path=SRC/'mui/mui_element.c'
             helper_path=SRC/'amiibo_helper.c'
+            wrapper_source=wrapper_path.read_text(encoding='utf-8')
             replacements={'ACTUAL_ENDIAN_FUNCTION':function(helper_path.read_text(encoding='utf-8'),'to_little_endian_int32'),
-                          'ACTUAL_WRAPPER':function(wrapper_path.read_text(encoding='utf-8'),'mui_element_autowrap_text_box')}
+                          'ACTUAL_WRAPPER':'\n'.join(function(wrapper_source,name) for name in
+                                                    ('box_glyph','mui_element_autowrap_text_box'))}
             names=['amiibo_view_desc_max_offset','amiibo_view_desc_anim_exec','amiibo_view_stop_desc_anim',
                    'amiibo_view_reset_desc_scroll','amiibo_view_update_desc_anim','amiibo_view_on_draw',
                    'amiibo_view_on_input','amiibo_view_on_enter','amiibo_view_on_exit']

@@ -91,7 +91,36 @@ static const char *description(ntag_t *tag) {
 static void expected_description(mui_canvas_t *c,ntag_t *tag,unsigned width,unsigned offset) {
     memset(c->fb->tile_buf_ptr,0,1024);mui_canvas_set_draw_color(c,1);
     mui_canvas_set_font(c,u8g2_font_wqy12_t_gb2312a);
-    mui_element_autowrap_text_box(c,0,23,width,c->height-23,offset,0,description(tag));
+    mui_element_autowrap_text_box(c,0,23,width,c->height-23,c->height-23,offset,0,description(tag));
+}
+
+/* Independent row oracle uses the font metrics and explicit line boundaries. */
+static unsigned row_pixels(mui_canvas_t *c, const char *row, unsigned y, bool draw_row) {
+    unsigned x=0;
+    while (*row && *row!='\n') {
+        char glyph[5]={0};uint8_t size=mui_canvas_get_utf8_bytes(row);
+        memcpy(glyph,row,size);row+=size;
+        if (draw_row) mui_canvas_draw_utf8(c,x,y,glyph);
+        x+=mui_canvas_get_utf8_width(c,glyph)+1;
+    }
+    return x ? x-1 : 0;
+}
+static void expect_wrap(mui_canvas_t *c,mui_canvas_t *reference,unsigned usable,unsigned square,
+                        const char *input,const char *rows) {
+    memset(c->fb->tile_buf_ptr,0,1024);memset(reference->fb->tile_buf_ptr,0,1024);
+    mui_canvas_set_draw_color(c,1);mui_canvas_set_draw_color(reference,1);
+    mui_canvas_set_font(c,u8g2_font_wqy12_t_gb2312a);mui_canvas_set_font(reference,u8g2_font_wqy12_t_gb2312a);
+    const unsigned step=mui_canvas_current_font_height(c);
+    unsigned baseline=step;
+    for (;;) {
+        row_pixels(reference,rows,baseline,true);
+        rows=strchr(rows,'\n');if (!rows) break;
+        ++rows;baseline+=step;
+    }
+    unsigned height=mui_element_autowrap_text_box(c,0,0,usable+4,64,64,0,square,input);
+    if(height!=baseline) fprintf(stderr,"wrap height %u expected %u, width %u, inset %u, text %s\n",height,baseline,usable,square,input);
+    CHECK(height==baseline);
+    same_region(c->fb->tile_buf_ptr,reference->fb->tile_buf_ptr,0,0,128,64);
 }
 
 int main(int argc,char **argv) {
@@ -210,10 +239,10 @@ int main(int argc,char **argv) {
     CHECK(v.info_page==4 && v.focus==1 && slot_events==old_slots && !v.desc_offset);
     draw(&canvas,&view);save_frame(argv[1],"de_game_hint",buffer);
     memset(expected,0,1024);mui_canvas_set_draw_color(&ec,1);
-    mui_element_autowrap_text_box(&ec,0,12,128,29,0,0,"Stoff des Gerudo-Königs");
+    mui_element_autowrap_text_box(&ec,0,12,128,29,26,0,0,"Stoff des Gerudo-Königs");
     same_region(buffer,expected,0,14,128,27);
-    const char *labels[]={"Deine Notiz","Spielhinweis","L/R kurz: Seite","lang:scroll M:zur.",
-                          "Your note","Game hint","L/R short: page","hold:scroll M:back"};
+    const char *labels[]={"Deine Notiz","Spielhinweis","L/R: Seite  M: zurück","L/R halten: blättern",
+                          "Your note","Game hint","L/R: page  M: back","Hold L/R: scroll"};
     for(unsigned i=0;i<sizeof(labels)/sizeof(labels[0]);i++)
         CHECK(mui_canvas_get_utf8_width(&canvas,labels[i])<=(i<2?100:126));
     const unsigned german_glyphs[]={0x00c4,0x00d6,0x00dc,0x00e4,0x00f6,0x00fc,0x00df};
@@ -246,14 +275,14 @@ int main(int argc,char **argv) {
     amiibo_view_on_enter(&view);draw(&canvas,&view);save_frame(argv[1],"en_game_hint",buffer);
     german=true;draw(&canvas,&view);
     memset(expected,0,1024);mui_canvas_set_draw_color(&ec,1);
-    mui_element_autowrap_text_box(&ec,0,12,128,29,0,0,descriptions.en);
+    mui_element_autowrap_text_box(&ec,0,12,128,29,26,0,0,descriptions.en);
     same_region(buffer,expected,0,14,128,27);
     /* The first line's accents and the second line's descenders must both
      * survive the info viewport; compare against unclipped real glyphs. */
     v.info_page=3;strcpy((char *)tag.notes,"ÄÖÜäöüß gjpqy\nÄÖÜäöüß gjpqy");
     amiibo_view_on_enter(&view);draw(&canvas,&view);CHECK(v.desc_step==13);
     memset(expected,0,1024);mui_canvas_set_draw_color(&ec,1);
-    mui_element_autowrap_text_box(&ec,0,12,128,50,0,0,(const char *)tag.notes);
+    mui_element_autowrap_text_box(&ec,0,12,128,50,26,0,0,(const char *)tag.notes);
     same_region(buffer,expected,0,14,124,27);
     unsigned accents=0,descenders=0;
     for(unsigned x=0;x<124;x++) {
@@ -263,6 +292,33 @@ int main(int argc,char **argv) {
     CHECK(accents && descenders);
     for(unsigned y=12;y<14;y++)for(unsigned x=0;x<124;x++)CHECK(!pixel(buffer,x,y));
     save_frame(argv[1],"de_complete_glyph_lines",buffer);
+    expect_wrap(&canvas,&ec,124,0,"Stoff des Gerudo-Königs","Stoff des\nGerudo-Königs");
+    expect_wrap(&canvas,&ec,row_pixels(&canvas,"Gerudo-",0,false),0,"Gerudo-Königs","Gerudo-\nKönigs");
+    expect_wrap(&canvas,&ec,row_pixels(&canvas,"ÖÖÖ",0,false),0,"ÖÖÖÖÖÖ","ÖÖÖ\nÖÖÖ");
+    expect_wrap(&canvas,&ec,row_pixels(&canvas,"ÖÖÖ",0,false),0,"ÖÖÖ   \nß","ÖÖÖ\nß");
+    expect_wrap(&canvas,&ec,row_pixels(&canvas,"中文",0,false),0,"中文中文","中文\n中文");
+    expect_wrap(&canvas,&ec,124,0,"ÄÖÜäöüß\n\ngjpqy\n","ÄÖÜäöüß\n\ngjpqy\n");
+    unsigned full=row_pixels(&canvas,"WW",0,false);
+    expect_wrap(&canvas,&ec,full,3,"WW WW","W\nW\nWW");
+
+    /* Keep logical scroll pages and indicator pages in agreement even when
+     * the glyph clip is taller to preserve descenders. This fails on App636. */
+    v.info_page=3;german=true;
+    strcpy((char *)tag.notes,"Zeile eins\nZeile zwei\nZeile drei");
+    amiibo_view_on_enter(&view);draw(&canvas,&view);
+    CHECK(v.desc_total==39 && v.desc_page_size==26 && v.desc_step==13);
+    unsigned first_thumb=255,last_thumb=255;
+    for(unsigned y=12;y<41;y++)if(pixel(buffer,125,y)){first_thumb=y;break;}
+    save_frame(argv[1],"scrollbar_regression_first",buffer);
+    event.key=INPUT_KEY_RIGHT;event.type=INPUT_TYPE_LONG;
+    amiibo_view_on_input(&view,&event);draw(&canvas,&view);CHECK(v.desc_offset==13);
+    save_frame(argv[1],"scrollbar_regression_intermediate",buffer);
+    event.type=INPUT_TYPE_REPEAT;amiibo_view_on_input(&view,&event);draw(&canvas,&view);
+    CHECK(v.desc_offset==26 && v.desc_offset==amiibo_view_desc_max_offset(&v));
+    for(unsigned y=12;y<41;y++)if(pixel(buffer,125,y)){last_thumb=y;break;}
+    save_frame(argv[1],"scrollbar_regression_final",buffer);
+    CHECK(first_thumb==12 && last_thumb==26 && last_thumb>first_thumb);
+
     printf("PASS amiidb QR: %u real framebuffer frames, %u complete QR comparisons; notes/links/locales/readonly/off/failure/manual/animation/info/long-lines\n",frames,qr_checks);
     return 0;
 }

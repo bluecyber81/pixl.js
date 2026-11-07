@@ -1,24 +1,17 @@
 # Allmiibo LCD firmware and file manager
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [DE3.63 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.63) · [Deutsch](README.de.md)
+[Open the online file manager](https://bluecyber81.github.io/pixl.js/) · [Download the DE3.65 LCD application](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Deutsch](README.de.md)
 
-File manager 3.39.3 reports when the browser requested the Bluetooth disconnect after a confirmed firmware transfer. During uploads, folder sync and renaming, length errors now identify the name or path, its size in UTF-8 bytes and the limit. Open the website to load the browser update. The bundled device application for LCD models with Packed LittleFS PFS1 is **DE3.63 / 635**.
+**File manager 3.39.4** is available on GitHub Pages. Open Bluetooth file transfer on the device and select **Connect** in Chrome or Edge. The browser compares files directly with the connected device. Use the figure catalogue for game hints and the collection inventory to check files on the device.
 
-- **On the device:** Open a figure in the Amiibo database, press the centre button briefly and select **Note / hints**. The two pages show your personal note and the selected game's catalogue hint independently. Short left/right changes pages, holding left/right scrolls whole text lines, and centre returns to the menu. This menu also exists in the database slot view. It does not change a figure, save, note or protection flag.
-- **German hints:** Eight existing editorial translations cover 13 catalogue associations. They are selected by exact English source text; other available text stays English. A missing hint does not establish game incompatibility. The normal figure/slot navigation and QR view are retained.
-- **LCD text fix:** The font now includes the previously missing uppercase umlauts **Ä, Ö and Ü**, so personal notes containing them can be displayed. Other existing glyphs are retained; this is not full Unicode coverage.
-- **File manager:** Figure details and the selected-file preview show the bundled catalogue version next to **Catalogue notes**, with wrapping on small screens. The catalogue still contains 952 public figure IDs and 1,344 associations. Notes and associations are not game tests.
+The file manager shows the affected names when files collide or need a portable spelling. All 54 distinct English usage notes now have German translations. The standalone DFU page can keep a supported phone screen awake during a transfer and reports whether the request succeeded. [Web guide](web/README.md) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4)
 
-The prior backup and collection tools remain available: best-effort screen wake lock during active operations, SHA-256 content groups for already-read files, local MF0 legacy-slot inspection and optional repair copies, and transaction-aware ZIP restore. A matching figure ID alone does not prove matching bytes. The screen helper cannot guarantee background Bluetooth or prevent manual screen locking. [Web instructions](web/README.md)
+**DE3.65 / 637** is an optional LCD application test release for existing Packed LittleFS PFS1 devices. Open a figure in the Amiibo database, press the centre button and choose **Note / hints**. The scrollbar now reaches the end of three-line notes. The compact catalogue preserves all 952 figure IDs and 1,344 associations while freeing 2,672 bytes of program flash compared with DE3.64.
 
-## Install or contribute
+On the tested Z19/S112 layout, select the application ZIP above in nRF Device Firmware Update for Android or as a custom ZIP in Web DFU. The original Z19 ARM code admitted the signed application over the previous App636 in the model. Physical DE3.65 qualification is pending at publication. Older SPIFFS devices have a separate migration procedure. [Application release and evidence](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Migration](docs/MIGRATION_PFS1.md)
 
-For an existing compatible LCD/PFS1 device, use **Allmiibo_LCD_DE3_63_635_TESTSTAND.zip** on the [application DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html). Keep your backup. This application-only package requires neither formatting nor a new filesystem migration. It does not install Z17 or S112. Older SPIFFS devices, upstream LittleFS and other boards require their own checked migration or installation path.
+## Source and development
 
-Bootloader **Z17 / 17** is separately documented. A diagnostic export and user confirmation on 6 November 2026 identify Z17 with DE3.62 and S112 7.3.0 on the user's device; this is not qualification of every bootloader path or of the new DE3.63 application. The new application does not require replacing an already compatible bootloader. Nordic **S112 7.3.0** remains the unchanged vendor component.
-
-The release includes source binding and reproducible build/test instructions. Actual hashes and memory measurements belong to the matching release manifest and build results; historical measurements are not new-device evidence. The display changes make no startup-speed claim. [Build guide](docs/BUILD_DE3_63.md) · [Contributing](CONTRIBUTING.md)
-
-[DE3.63 changes and limits](docs/RELEASE_DE3_63.md) · [Web 3.39.3](docs/RELEASE_WEB3_39_3.de.md) · [Handoff](docs/UEBERGABE_DE3_63.de.md) · [Existing storage diagnostics](docs/diagnostics/DE3_62_STORAGE.md) · [Z17 source](bootloader-z17/) · [Migration](docs/MIGRATION_PFS1.md)
+The repository includes corresponding application, Z19 bootloader and web sources. Nordic supplies the S112 7.3.0 radio stack. In the existing 100-figure model the combined transaction reduced programming calls by 48.0% and erase calls by 42.7%. The four-page mount cache saved 431 reads in the 952-figure model. [Storage measurements](docs/validation/DE3_65_SPEICHER.md) · [Z19 source](bootloader-z19/) · [S112](softdevice-s112/) · [Contributing](CONTRIBUTING.md)
 
 Community continuation by bluecyber81, based on [solosky](https://github.com/solosky/pixl.js) and [cylin577](https://github.com/cylin577/pixl.js). [Components](docs/COMPONENTS.md) · [History](docs/DEVELOPMENT_HISTORY.md) · [License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
