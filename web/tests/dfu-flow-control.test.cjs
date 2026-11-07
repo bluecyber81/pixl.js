@@ -176,7 +176,7 @@ test('bounded slow receiver: complete 32 KiB plus tail, 4096-byte objects, no qu
   assert.deepEqual(p.state.creates.filter(x=>x.type===2).map(x=>x.size),[...Array(8).fill(4096),97]);
   assert.equal(p.state.receipts.length,p.state.packets.length);
   assert.equal(p.state.executes.length,10);
-  assert.deepEqual(d.lastResult,{transferVerified:true,executeAcknowledged:true,rebootObserved:true});
+  assert.deepEqual(d.lastResult,{resultSchema:2,transferVerified:true,executeAcknowledged:true,disconnectObserved:true,localDisconnectRequested:false,rebootObserved:false});
   clean(p,d);
 });
 
@@ -224,6 +224,30 @@ test('disconnect while waiting for a packet receipt never reports success',async
   const image=bytes(100),p=bootloader(image,{disconnectAt:1}),d=client();
   await assert.rejects(d.update(p.device,INIT,image),/disconnect/i);
   assert.equal(p.state.firmwarePacketCount,1);assert.equal(d.lastResult,null);clean(p,d);
+});
+
+test('reconnect after loss of a receipt resumes from the device CRC and offset across a 4096-byte object',async()=>{
+  const image=bytes(4096+53);
+  // 205 packets complete the first object. The device consumes 20 more bytes
+  // of the next object and drops the link before the browser gets its receipt.
+  const p=bootloader(image,{disconnectAt:206}), first=client(), second=client();
+  const before=[], after=[];
+  first.addEventListener('progress',e=>{if(e.object==='firmware')before.push(e.currentBytes);});
+  await assert.rejects(first.update(p.device,INIT,image),/disconnect/i);
+  assert.equal(before.at(-1),4096);
+  assert.equal(p.state.firmware.length,4116);
+  assert.equal(first.lastResult,null);
+  clean(p,first);
+
+  const packetsBeforeResume=p.state.packets.length;
+  second.addEventListener('progress',e=>{if(e.object==='firmware')after.push(e.currentBytes);});
+  await second.update(p.device,INIT,image);
+  assert.equal(after[0],4116);
+  assert.deepEqual(p.state.packets.slice(packetsBeforeResume).flatMap(record=>record.data),[...image.slice(4116)]);
+  assert.deepEqual(p.state.executes.filter(record=>record.type===2).map(record=>record.offset),[4096,image.length]);
+  assert.deepEqual(p.state.firmware,[...image]);
+  assert.equal(second.lastResult.executeAcknowledged,true);
+  clean(p,second);
 });
 
 test('cancel while waiting for a packet receipt prevents further writes',async()=>{

@@ -1,3 +1,9 @@
+# File manager 3.39.3 · DFU completion and file names
+
+File manager 3.39.3 reports when the browser requested the Bluetooth disconnect after a confirmed firmware transfer. During uploads, folder sync and renaming, length errors now identify the name or path, its size in UTF-8 bytes and the limit. After the device returns to its main menu, reconnect and check its reported firmware version under **Device & diagnostics**. [Usage and test evidence](docs/RELEASE_WEB3_39_3.de.md)
+
+---
+
 # DE3.63 / 635 · File manager 3.39.2
 
 **Amiibo database → open figure → short centre press → Note / hints** makes the personal note and selected game's catalogue hint independently accessible. Short left/right changes between two pages, holding scrolls whole text lines, and centre returns to the menu. The same menu is available in the database slot view. Reading these pages changes no tag data, personal note, protection flag or save.

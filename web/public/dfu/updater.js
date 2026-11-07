@@ -48,9 +48,13 @@
                 if (!result?.transferVerified || !result.executeAcknowledged) throw new Error('Der Abschluss wurde vom Bootloader nicht bestätigt.');
                 this.lastResult = { ...result };
                 this.onPhase('reconnect');
-                this.onStatus(result.rebootObserved
-                    ? 'Übertragung bestätigt; Bluetooth wurde getrennt. Bitte Menü und Firmwareversion am Gerät prüfen.'
-                    : 'Übertragung bestätigt; Neustart noch nicht beobachtet. Bitte Menü und Firmwareversion am Gerät prüfen.');
+                // Old cached transports used rebootObserved for a disconnected
+                // GATT link. Reading that field only as a link event is safe.
+                const disconnected = result.disconnectObserved ?? result.rebootObserved;
+                let detail = 'Neustart noch nicht beobachtet.';
+                if (result.localDisconnectRequested) detail = 'Der Browser hat die Bluetooth-Trennung angefordert.';
+                else if (disconnected) detail = 'Bluetooth wurde getrennt.';
+                this.onStatus('Übertragung bestätigt. ' + detail + ' Bitte Menü und Firmwareversion am Gerät prüfen.');
                 return true;
             } catch (error) {
                 this.onPhase(currentPhase, true);

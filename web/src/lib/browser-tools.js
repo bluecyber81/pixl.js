@@ -1,3 +1,5 @@
+import { assertNameByteLimit, assertPathByteLimit } from './portable-names.js';
+
 // Display filtering never changes the device's file identities.
 export function filterRows(rows, query = '', type = 'all') {
   const fold = value => String(value || '').normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase();
@@ -17,9 +19,8 @@ export function joinDevicePath(directory, name) {
     throw new Error('Invalid Unicode in file name or device path');
   }
   const path = directory.replace(/\/$/, '') + '/' + name;
-  if (new TextEncoder().encode(name).length > 47 || new TextEncoder().encode(path.slice(2)).length > 63) {
-    throw new Error('File name or device path exceeds the device limit');
-  }
+  assertNameByteLimit(name);
+  assertPathByteLimit(path);
   return path;
 }
 

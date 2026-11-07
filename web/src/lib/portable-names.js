@@ -4,9 +4,31 @@ const forbidden = /[\u0000-\u001f\u007f<>:"/\\|?*]/u
 const reserved = /^(?:con|prn|aux|nul|conin\$|conout\$|com[1-9¹²³]|lpt[1-9¹²³])$/iu
 
 export class NameError extends Error {
-  constructor(code, message) { super(message); this.name = 'NameError'; this.code = code }
+  constructor(code, message, details) {
+    super(message)
+    this.name = 'NameError'
+    this.code = code
+    if (details) this.details = details
+  }
 }
 const fail = (code, text) => { throw new NameError(code, text) }
+
+export function assertNameByteLimit(name) {
+  const bytes = encoder.encode(name).length
+  const limit = 47
+  if (bytes > limit) {
+    throw new NameError('NAME_LIMIT', `The name “${name}” uses ${bytes} UTF-8 bytes. The limit is ${limit}.`, { value: name, bytes, limit })
+  }
+}
+
+export function assertPathByteLimit(path) {
+  // The device stores the leading slash, but not the drive label.
+  const bytes = encoder.encode(path.slice(2)).length
+  const limit = 63
+  if (bytes > limit) {
+    throw new NameError('PATH_LIMIT', `The path “${path}” uses ${bytes} UTF-8 bytes on the device. The limit is ${limit}.`, { value: path, bytes, limit })
+  }
+}
 
 export function validUnicode(text) {
   if (typeof text !== 'string') return false
@@ -31,7 +53,7 @@ export function assertPortableEntryName(name) {
   assertDeviceEntryName(name)
   // The VFS stores each new component in a 48-byte NUL-terminated buffer.
   // Check before a sync plan can approve it or create its parent directories.
-  if (encoder.encode(name).length > 47) fail('NAME_LIMIT', 'The new name exceeds 47 UTF-8 bytes.')
+  assertNameByteLimit(name)
   if (forbidden.test(name) || /[. ]$/u.test(name) || reserved.test(name.split('.')[0].trimEnd())) {
     fail('NAME_PORTABLE', 'The new name is not portable to Windows, macOS and ZIP backups.')
   }
@@ -46,7 +68,7 @@ export function assertDevicePath(path) {
   if (!validUnicode(path) || !/^[A-Z]:\//u.test(path)) fail('PATH_INVALID', 'Invalid device path.')
   const tail = path.slice(3)
   if (tail) tail.split('/').forEach(assertDeviceEntryName)
-  if (encoder.encode(path.slice(2)).length > 63) fail('PATH_LIMIT', 'The device path exceeds 63 UTF-8 bytes.')
+  assertPathByteLimit(path)
   return path
 }
 

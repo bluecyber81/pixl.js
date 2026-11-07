@@ -127,7 +127,17 @@ test('final ACK without disconnect leaves reboot unconfirmed and never claims ap
 test('observed disconnect still asks for menu/version verification', async () => {
     const h=harness({lastResult:{transferVerified:true,executeAcknowledged:true,rebootObserved:true}});
     await h.updater.setPackage(await archive());assert.equal(await h.updater.selectDevice(),true);
+    assert.match(h.statuses.at(-1),/Bluetooth wurde getrennt/);
     assert.match(h.statuses.at(-1),/Menü und Firmwareversion/);
+});
+test('local post-ACK disconnect gets a distinct completion message for both event timings', async () => {
+    for (const disconnectObserved of [false,true]) {
+        const h=harness({lastResult:{resultSchema:2,transferVerified:true,executeAcknowledged:true,
+            disconnectObserved,localDisconnectRequested:true,rebootObserved:false}});
+        await h.updater.setPackage(await archive());
+        assert.equal(await h.updater.selectDevice(),true);
+        assert.match(h.statuses.at(-1),/Übertragung bestätigt.*Browser.*Trennung angefordert.*Menü und Firmwareversion/);
+    }
 });
 test('no package or package still loading cannot open Bluetooth chooser', async () => {
     const h=harness();assert.equal(await h.updater.selectDevice(),false);const load=h.updater.setPackage(await archive());

@@ -1,4 +1,6 @@
-# Allmiibo Dateimanager 3.39.2
+# Allmiibo Dateimanager 3.39.3
+
+Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. [Bedienung und Grenzen](../docs/RELEASE_WEB3_39_3.de.md).
 
 **3.39.2** zeigt neben **Kataloghinweise** den Datenstand aus dem tatsächlich eingebauten Katalog. Die Beschriftung bricht auf schmalen Displays um; andere Sprachen verwenden den englischen Fallback. Die Daten und persönlichen Notizen werden dadurch nicht verändert. [Änderungen und Prüfgrenzen](../docs/RELEASE_WEB3_39_2.de.md).
 
@@ -14,7 +16,7 @@ Den Tab im Vordergrund lassen: manuelles Sperren, Energiesparen oder Browser-Sus
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen** schließt im normalen Schema-1-Restore die exakten inaktiven Stammdateien `.pixl_txn_old` und `.pixl_txn_new` sichtbar aus, erhält sie aber im Archiv. Aktive/unklare Stamm-Transaktionseinträge sperren den gesamten Import. Quelle, I:/-/E:/-Zielumleitung und frischer Zielzustand werden geprüft. Gleichnamige Dateien in gewöhnlichen Unterordnern bleiben normale Nutzdaten. Schema-2-Restores verwenden weiterhin den Migrationsassistenten.
 
-Die DFU-Seite enthält App **DE3.63 / 635** als Anwendungsupdate für passende LCD/PFS1-Geräte. Bootloader und **S112** werden dabei nicht ersetzt; ein Webupdate allein installiert keine Gerätefirmware. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_2.de.md) · [Startanleitung 3.39.2](LIESMICH_3_39_2.txt).
+Die DFU-Seite enthält App **DE3.63 / 635** als Anwendungsupdate für passende LCD/PFS1-Geräte. Bootloader und **S112** werden dabei nicht ersetzt; ein Webupdate allein installiert keine Gerätefirmware. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_3.de.md) · [Startanleitung 3.39.3](LIESMICH_3_39_3.txt).
 
 Seit **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
 auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
@@ -51,7 +53,7 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.2) · [Startanleitung](LIESMICH_3_39_2.txt)
+[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.3](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.3) · [Startanleitung](LIESMICH_3_39_3.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 

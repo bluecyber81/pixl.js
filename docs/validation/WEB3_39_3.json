@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "version": "3.39.3",
+  "date": "2026-11-07",
+  "scope": "Public file manager source with two browser fixes, tested on the host and in Chrome. Device firmware remains the separately distributed DE3.63/635 package.",
+  "node": {
+    "logSha256": "6e30438db05bd5becab70e43223a449ac328325de473cbc7c6f3ffed450338dc",
+    "tests": 1259,
+    "pass": 1259,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "productionTests": {
+    "root": {
+      "logSha256": "a7c296a74bb9968601da1154844b11280cbd58e497a190cb28aed78fd649202c",
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "pages": {
+      "logSha256": "bfa602abace33107569e6263f3a5c5e1ab479a3c165eb44f03b341de815ba6c2",
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    }
+  },
+  "browser": [
+    {
+      "build": "root",
+      "browser": "156.0.8078.80",
+      "checks": 63,
+      "screenshots": 28,
+      "pageErrors": 0,
+      "boundFiles": 153,
+      "browserEvidenceSha256": "d1637b3947e881570d17261ae7758ef412c0abc03f524f00ea36b350827d9572",
+      "entryHtmlSha256": "f368f73d52515451edd15632d183e2786f5fb54024317c3883f625912fdb307b",
+      "dfuTransportSha256": "e84a8476ae8ba18adb99b9e9608681aecb7a889fae4c316ab47b8341bf19fbae"
+    },
+    {
+      "build": "pages",
+      "browser": "156.0.8078.80",
+      "checks": 63,
+      "screenshots": 28,
+      "pageErrors": 0,
+      "boundFiles": 153,
+      "browserEvidenceSha256": "068bc172aaeb73b0c7b36d531bb620d4bf0e22dbb26a5955c21448b43cf12550",
+      "entryHtmlSha256": "d0e9b71b4016ba958fc2eb75fc8de1168243758659b5bbf89d1f7a50fd360f40",
+      "dfuTransportSha256": "e84a8476ae8ba18adb99b9e9608681aecb7a889fae4c316ab47b8341bf19fbae"
+    }
+  ],
+  "portableWindows": {
+    "archive": "Allmiibo_Dateimanager_3_39_3_Portable.zip",
+    "bytes": 1151674,
+    "sha256": "d8315aeeb7d3d72ada2b1b951d19998b9946420931b063d78dc4d86097ccc561",
+    "entries": 162,
+    "rootBuildFiles": 153,
+    "crcPassed": true,
+    "allFilesByteMatched": true,
+    "extractedLauncherSmoke": {
+      "startPassed": true,
+      "launcherReturnedExitCode": 0,
+      "healthVersion": "3.39.3",
+      "indexByteMatched": true,
+      "dfuByteMatched": true,
+      "browserOpened": false,
+      "deviceAccess": false,
+      "authenticatedStopPassed": true
+    }
+  },
+  "dfuApplication": {
+    "version": "2.22.0-DE3.63",
+    "counter": 635,
+    "zipSha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4"
+  },
+  "regressions": [
+    "Transport cancellation after final acknowledgement is distinct from a device-initiated disconnection. A link disconnection alone does not establish a reboot.",
+    "A new client can resume a simulated transfer from the offset and cumulative CRC returned by the target after a lost receipt.",
+    "File operations report the offending name or path, UTF-8 byte count and limit in German or English. The 47/63-byte boundaries are tested before device I/O."
+  ],
+  "hardwareTested": false
+}

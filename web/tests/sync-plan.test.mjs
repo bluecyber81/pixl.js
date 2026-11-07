@@ -60,6 +60,16 @@ test('oversized new file and folder names fail before listing, hashing, or creat
   }
 })
 
+test('sync keeps exact 47-byte names and 63-byte internal paths including the leading slash', async () => {
+  const name = 'ä'.repeat(23) + 'x'
+  const directory = 'ö'.repeat(7)
+  const relativePath = directory + '/' + name
+  const vfs = memoryVfs()
+  const plan = await compare(vfs, [{ relativePath, file: localFile(name) }], { rootPath: 'E:/' })
+  assert.deepEqual(plan.entries.map(entry => [entry.targetPath, entry.status]), [['E:/' + relativePath, 'add']])
+  assert.ok(!vfs.log.some(isMutation))
+})
+
 test('comparison is read-only, hashes bytes rather than names/sizes and lists device-only files without deleting', async () => {
   const vfs = memoryVfs(); vfs.put('E:/tags/same.bin', [1, 2]); vfs.put('E:/tags/change.bin', [1, 2]); vfs.put('E:/tags/device.bin', [99])
   const files = [localFile('same.bin', [1, 2]), localFile('change.bin', [3, 4]), localFile('new.bin', [5])]

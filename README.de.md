@@ -2,7 +2,7 @@
 
 [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [DE3.63 herunterladen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.63) · [English](README.md)
 
-**DE3.63 / 635** und **Dateimanager 3.39.2** machen Figurenhinweise besser erreichbar. Ziel ist das nRF52832-Allmiibo mit LCD und bestehendem Packed LittleFS PFS1. Das Anwendungsupdate erhält den installierten Bootloader, Nordic S112 und das Dateisystem. Die Geräteprüfung dieser neuen Anwendung ist zusätzlich zur Rechnerprüfung erforderlich.
+Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. Das Browserupdate wird beim Öffnen der Seite geladen. Die angebotene Geräte-App für LCD-Modelle mit Packed LittleFS PFS1 ist **DE3.63 / 635**.
 
 - **Am Gerät:** Unter **Amiibo-Datenbank → Figur öffnen → kurz Mitte → Notiz / Hinweise** stehen persönliche Notiz und Spielhinweis auf getrennten Seiten. Kurz links/rechts wechselt die Seite, links/rechts halten scrollt in ganzen Textzeilen, Mitte führt ins Menü zurück. Das Menü gibt es auch in der Slotansicht der Datenbank. Figur, Spielstand, Notiz und Schreibschutz werden dabei nicht verändert.
 - **Deutsche Hinweise:** Acht vorhandene redaktionelle Übersetzungen decken 13 Katalogzuordnungen ab. Sie gelten nur für den genau passenden englischen Quelltext; weitere vorhandene Hinweise bleiben Englisch. Ein fehlender Hinweis bedeutet nicht, dass die Figur im Spiel nicht unterstützt wird. Normaler Figuren-/Slotwechsel und QR-Ansicht bleiben erhalten.
@@ -21,6 +21,6 @@ Für ein passendes LCD-Gerät mit bestehendem PFS1 ist **Allmiibo_LCD_DE3_63_635
 
 Quellbindung, Buildrezept und Tests gehören zum Release. Aktuelle Hashes und Speicherwerte stehen im zugehörigen Release-Manifest und den tatsächlichen Buildresultaten. Frühere Messungen gelten nicht als neue Geräteprüfung; die Anzeigeänderungen versprechen keinen schnelleren Start.
 
-[Änderungen und Grenzen](docs/RELEASE_DE3_63.md) · [Dateimanager 3.39.2](docs/RELEASE_WEB3_39_2.de.md) · [App nachbauen](docs/BUILD_DE3_63.md) · [Übergabe](docs/UEBERGABE_DE3_63.de.md) · [Bisherige Start-/Speicherdiagnose](docs/diagnostics/DE3_62_STORAGE.md) · [Z17-Quellen](bootloader-z17/) · [Migration](docs/MIGRATION_PFS1.md) · [Mitmachen](CONTRIBUTING.md)
+[Änderungen und Grenzen](docs/RELEASE_DE3_63.md) · [Dateimanager 3.39.3](docs/RELEASE_WEB3_39_3.de.md) · [App nachbauen](docs/BUILD_DE3_63.md) · [Übergabe](docs/UEBERGABE_DE3_63.de.md) · [Bisherige Start-/Speicherdiagnose](docs/diagnostics/DE3_62_STORAGE.md) · [Z17-Quellen](bootloader-z17/) · [Migration](docs/MIGRATION_PFS1.md) · [Mitmachen](CONTRIBUTING.md)
 
 Community-Fortführung durch bluecyber81 auf Grundlage von [solosky](https://github.com/solosky/pixl.js) und [cylin577](https://github.com/cylin577/pixl.js). [Komponenten](docs/COMPONENTS.md) · [Entwicklungsgeschichte](docs/DEVELOPMENT_HISTORY.md) · [Lizenzen](THIRD_PARTY_NOTICES.md)

@@ -32,7 +32,7 @@ function peripheral(options={}){
       else if(op===4){state.executes++;const final=state.selected===2&&state.data.length===IMAGE.length;
         if(final&&options.disconnectBeforeAck){device.gatt.disconnect();return;}
         if(final&&options.malformedFinalAck)reply(op,Uint8Array.of(7));
-        else reply(op);
+        else {reply(op);if(final)options.afterFinalAck?.();}
         if(final&&options.duplicateWhileWriting)reply(op,new Uint8Array(),8);
         if(final&&options.finalDisconnect!==false)device.gatt.disconnect();
       }else if(op===2){state.prn=v.getUint16(1,true);state.packetCount=0;reply(op);}else throw new Error('unexpected opcode '+op);
@@ -74,9 +74,74 @@ test('duplicate while final write is settling cannot replace the acknowledgement
   await d.update(p.device,INIT,IMAGE);assert.equal(d.lastResult.executeAcknowledged,true);
   assert.equal(p.state.executes,4);assert.equal(p.state.overlap,false);
 });
-test('fresh update CRC/offset/EXECUTE verification, bounded20B packets and cleanup',async()=>{const p=peripheral(),d=dfu();await d.update(p.device,INIT,IMAGE);assert.deepEqual(p.state.data,[...IMAGE]);assert.ok(p.state.packetSizes.every(n=>n<=20&&n>0));assert.equal(p.state.executes,4);assert.deepEqual(d.lastResult,{transferVerified:true,executeAcknowledged:true,rebootObserved:true});assert.equal(p.device.listenerCount()+p.control.listenerCount(),0);});
+test('fresh update CRC/offset/EXECUTE verification, bounded20B packets and cleanup',async()=>{const p=peripheral(),d=dfu();await d.update(p.device,INIT,IMAGE);assert.deepEqual(p.state.data,[...IMAGE]);assert.ok(p.state.packetSizes.every(n=>n<=20&&n>0));assert.equal(p.state.executes,4);assert.deepEqual(d.lastResult,{resultSchema:2,transferVerified:true,executeAcknowledged:true,disconnectObserved:true,localDisconnectRequested:false,rebootObserved:false});assert.equal(p.device.listenerCount()+p.control.listenerCount(),0);});
 test('a confirmed final ACK without reboot is distinguished',async()=>{const p=peripheral({finalDisconnect:false}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.equal(d.lastResult.rebootObserved,false);assert.equal(d.lastResult.transferVerified,true);assert.equal(p.device.gatt.connected,false);});
 test('a disconnect without final ACK is never success',async()=>{const p=peripheral({disconnectBeforeAck:true}),d=dfu();await assert.rejects(d.update(p.device,INIT,IMAGE),/disconnected/);assert.equal(d.lastResult,null);});
+for (const timing of ['before final write settles','while waiting for disconnect']) {
+  test('local cancel '+timing+' preserves the final ACK and reports only an ordered local disconnect',async()=>{
+    const client=dfu();
+    const mock=peripheral({finalDisconnect:false,afterFinalAck(){
+      if(timing==='before final write settles')client.cancel();
+      else setImmediate(()=>client.cancel());
+    }});
+    await client.update(mock.device,INIT,IMAGE);
+    assert.deepEqual(client.lastResult,{
+      resultSchema:2,transferVerified:true,executeAcknowledged:true,disconnectObserved:true,
+      localDisconnectRequested:true,rebootObserved:false
+    });
+    assert.equal(mock.state.executes,4);
+    assert.equal(mock.state.disconnects,1);
+    assert.equal(mock.device.listenerCount()+mock.control.listenerCount(),0);
+  });
+}
+test('ACK plus a finished observation window excludes the later cleanup disconnect',async()=>{
+  const mock=peripheral({finalDisconnect:false}), client=dfu();
+  await client.update(mock.device,INIT,IMAGE);
+  assert.equal(mock.state.disconnects,1);
+  assert.equal(client.lastResult.disconnectObserved,false);
+  assert.equal(client.lastResult.localDisconnectRequested,false);
+  assert.equal(client.lastResult.rebootObserved,false);
+});
+test('a stale disconnect callback or queued old link event cannot cancel the next session',async()=>{
+  const client=dfu();
+  let stale;
+  const first=peripheral({afterFinalAck(){
+    [stale]=first.device.events.get('gattserverdisconnected');
+  }});
+  await client.update(first.device,INIT,IMAGE);
+  const second=peripheral({finalDisconnect:false});
+  client.addEventListener('phase',phase=>{
+    if(phase==='transfer'){
+      stale();
+      second.device.emit('gattserverdisconnected'); // Still connected to the current link.
+    }
+  });
+  await client.update(second.device,INIT,IMAGE);
+  assert.equal(client.lastResult.disconnectObserved,false);
+  assert.deepEqual(second.state.data,[...IMAGE]);
+});
+for (const interruptionOffset of [20,32,IMAGE.length]) {
+  test('a second client resumes the same device after a real transfer interruption at '+interruptionOffset,async()=>{
+    const mock=peripheral(), first=dfu(), second=dfu();
+    first.addEventListener('progress',({object,currentBytes})=>{
+      if(object==='firmware'&&currentBytes===interruptionOffset)mock.device.gatt.disconnect();
+    });
+    await assert.rejects(first.update(mock.device,INIT,IMAGE),/disconnect|session ended/i);
+    assert.equal(first.lastResult,null);
+    assert.deepEqual(mock.state.data,[...IMAGE.slice(0,interruptionOffset)]);
+    assert.equal(mock.device.listenerCount()+mock.control.listenerCount(),0);
+    const packetsBeforeResume=mock.state.packetSizes.length, progress=[];
+    second.addEventListener('progress',event=>{if(event.object==='firmware')progress.push(event.currentBytes);});
+    await second.update(mock.device,INIT,IMAGE);
+    assert.equal(mock.state.connections,2);
+    assert.equal(progress[0],interruptionOffset);
+    assert.equal(mock.state.packetSizes.slice(packetsBeforeResume).reduce((a,b)=>a+b,0),IMAGE.length-interruptionOffset);
+    assert.deepEqual(mock.state.init,[...INIT]);
+    assert.deepEqual(mock.state.data,[...IMAGE]);
+    assert.equal(second.lastResult.executeAcknowledged,true);
+    assert.equal(mock.device.listenerCount()+mock.control.listenerCount(),0);
+  });
+}
 test('DataView byteOffset and length are respected',async()=>{const p=peripheral({viewOffset:true}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.equal(d.lastResult.transferVerified,true);});
 test('control writes settle before another GATT operation begins',async()=>{const p=peripheral({slowControlWrite:true}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.equal(p.state.overlap,false);});
 for(const len of [0,7,32,64,91,93])test('valid prefix firmware resume at '+len,async()=>{const p=peripheral({data:IMAGE.slice(0,len)}),d=dfu();await d.update(p.device,INIT,IMAGE);assert.deepEqual(p.state.data,[...IMAGE]);assert.equal(d.lastResult.transferVerified,true);assert.ok(!p.state.writes.some(w=>w.size===0));});
@@ -139,7 +204,7 @@ test('integration: real ZIP package, UI coordinator and transport; invalid manif
   assert.equal(await updater.setPackage(file),true);
   assert.equal(requests,0);
   assert.equal(await updater.selectDevice(),true);
-  assert.deepEqual(updater.lastResult,{transferVerified:true,executeAcknowledged:true,rebootObserved:true});
+  assert.deepEqual(updater.lastResult,{resultSchema:2,transferVerified:true,executeAcknowledged:true,disconnectObserved:true,localDisconnectRequested:false,rebootObserved:false});
   assert.deepEqual(p.state.init,[...initPacket]);assert.deepEqual(p.state.data,[...IMAGE]);
   assert.equal(CRC32.buf(Uint8Array.from(p.state.data))>>>0,crc(IMAGE));
   assert.equal(p.state.executes,2);assert.equal(requests,1);assert.equal(creations,1);

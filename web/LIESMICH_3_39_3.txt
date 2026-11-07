@@ -1,0 +1,19 @@
+Allmiibo Dateimanager 3.39.3
+7. November 2026
+
+Starten unter Windows
+Entpacke das vollständige ZIP und öffne Start-Dateimanager.cmd. Der lokale Server benötigt Python 3. Die Standardadresse ist http://127.0.0.1:8765/. Zum Beenden öffne Stop-Dateimanager.cmd. Für die Geräteverbindung brauchst du einen Browser mit Web Bluetooth, etwa Chrome oder Edge.
+
+Online öffnen
+https://bluecyber81.github.io/pixl.js/
+Oben steht „Browser-Software 3.39.3“. Lade die Seite nach Abschluss laufender Übertragungen neu, falls dort noch eine ältere Version steht.
+
+Firmwareupdate
+Nach der finalen Bestätigung durch den Bootloader zeigt die DFU-Seite an, wenn der Browser die Bluetooth-Trennung angefordert hat. Warte auf das Hauptmenü und lies die installierte Version nach dem erneuten Verbinden unter „Gerät & Diagnose“. Die beiden Browserkorrekturen erfordern kein Flashen.
+
+Zu langer Name oder Pfad
+Beim Hochladen, Synchronisieren und Umbenennen nennt die Meldung den betroffenen Wert und die Byteanzahl. Ein neuer Name darf 47 UTF-8-Bytes belegen. Beim Pfad zählen 63 UTF-8-Bytes ab dem ersten Schrägstrich hinter dem Laufwerksbuchstaben. Ein „ü“ belegt zwei Bytes. Kürze den markierten Namen oder wähle einen kürzeren Zielordner.
+
+Quellcode, Prüfnachweise und Downloads
+https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.3
+Die öffentlichen Hinweise zu den Bibliotheken stehen im Dateimanager unter „Quellen & Lizenzen“.

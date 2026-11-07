@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.63",
   "counter": 635,
   "board": "LCD",
-  "web_version": "3.39.2",
+  "web_version": "3.39.3",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4",
@@ -40,7 +40,7 @@
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
   "host_firmware_suites": 148,
-  "web_host_tests": 1248,
+  "web_host_tests": 1259,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
   "evidence": "docs/validation/DE3_63.json",
@@ -56,8 +56,8 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_39_2.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.2",
+  "web_evidence": "docs/validation/WEB3_39_3.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.3",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
   "device_readback_passed": false,
@@ -80,10 +80,9 @@
     "installation_readback_observed": true,
     "physical_test_pending_scope": "Controlled interruption/recovery qualification; new DE3.63 integration. Normal Z17 installation and operation reported by user on 2026-11-06."
   },
-  "web_host_final_targeted_tests": 6,
-  "web_host_test_scope": "Complete local Node suite and both final production builds; exact-byte Chrome catalogue/diagnostic/DFU checks and extracted Windows launcher. Current OTA ZIP SHA and DAT counter/FWID verified without Bluetooth. No physical phone/BLE proof.",
-  "web_browser_checks_per_build": 229,
-  "web_browser_screenshots_per_build": 56,
+  "web_host_test_scope": "Complete Node suite, production checks for both bundles, Chrome visual checks with synthetic data, and extracted Windows start/stop. The recovery test used a simulated transfer.",
+  "web_browser_checks_per_build": 63,
+  "web_browser_screenshots_per_build": 28,
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -95,12 +94,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.39.1",
-    "evidence": "docs/validation/WEB3_39_1.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.1"
+    "version": "3.39.2",
+    "evidence": "docs/validation/WEB3_39_2.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.2"
   },
   "web_release_status": "host-tested",
-  "web_release_notes": "docs/RELEASE_WEB3_39_2.de.md",
+  "web_release_notes": "docs/RELEASE_WEB3_39_3.de.md",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -114,6 +113,8 @@
     "collection_duplicate_comparison": "SHA-256 and size of already-read bytes; quick mode not compared; no additional BLE reads",
     "local_slot_repair": "Optional copy only: supported MF0, matching v8 config/NN.bin, known legacy UID pattern and valid BCC; no device write",
     "zip_restore": "Inactive exact root OLD/NEW files excluded but retained in archive; pending or unknown transactions block whole import",
-    "screen_awake": "Best-effort screen wake lock for active operations; visible state, opt-out and explicit retry; no background-Bluetooth guarantee"
+    "screen_awake": "Best-effort screen wake lock for active operations; visible state, opt-out and explicit retry; no background-Bluetooth guarantee",
+    "dfu_completion": "Final acknowledgement, observed GATT disconnect and browser-requested cleanup are reported separately.",
+    "name_and_path_errors": "Localized 47-byte name and 63-byte device-path limits include the actual UTF-8 byte count."
   }
 }

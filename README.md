@@ -2,7 +2,7 @@
 
 [Open file manager](https://bluecyber81.github.io/pixl.js/) · [DE3.63 downloads](https://github.com/bluecyber81/pixl.js/releases/tag/de3.63) · [Deutsch](README.de.md)
 
-**DE3.63 / 635** and **file manager 3.39.2** add clearer access to figure notes on the nRF52832 Allmiibo LCD with an existing Packed LittleFS PFS1 volume. The application update leaves the installed bootloader, Nordic S112 and filesystem unchanged. Physical qualification of this new application remains separate from computer tests.
+File manager 3.39.3 reports when the browser requested the Bluetooth disconnect after a confirmed firmware transfer. During uploads, folder sync and renaming, length errors now identify the name or path, its size in UTF-8 bytes and the limit. Open the website to load the browser update. The bundled device application for LCD models with Packed LittleFS PFS1 is **DE3.63 / 635**.
 
 - **On the device:** Open a figure in the Amiibo database, press the centre button briefly and select **Note / hints**. The two pages show your personal note and the selected game's catalogue hint independently. Short left/right changes pages, holding left/right scrolls whole text lines, and centre returns to the menu. This menu also exists in the database slot view. It does not change a figure, save, note or protection flag.
 - **German hints:** Eight existing editorial translations cover 13 catalogue associations. They are selected by exact English source text; other available text stays English. A missing hint does not establish game incompatibility. The normal figure/slot navigation and QR view are retained.
@@ -19,6 +19,6 @@ Bootloader **Z17 / 17** is separately documented. A diagnostic export and user c
 
 The release includes source binding and reproducible build/test instructions. Actual hashes and memory measurements belong to the matching release manifest and build results; historical measurements are not new-device evidence. The display changes make no startup-speed claim. [Build guide](docs/BUILD_DE3_63.md) · [Contributing](CONTRIBUTING.md)
 
-[DE3.63 changes and limits](docs/RELEASE_DE3_63.md) · [Web 3.39.2](docs/RELEASE_WEB3_39_2.de.md) · [Handoff](docs/UEBERGABE_DE3_63.de.md) · [Existing storage diagnostics](docs/diagnostics/DE3_62_STORAGE.md) · [Z17 source](bootloader-z17/) · [Migration](docs/MIGRATION_PFS1.md)
+[DE3.63 changes and limits](docs/RELEASE_DE3_63.md) · [Web 3.39.3](docs/RELEASE_WEB3_39_3.de.md) · [Handoff](docs/UEBERGABE_DE3_63.de.md) · [Existing storage diagnostics](docs/diagnostics/DE3_62_STORAGE.md) · [Z17 source](bootloader-z17/) · [Migration](docs/MIGRATION_PFS1.md)
 
 Community continuation by bluecyber81, based on [solosky](https://github.com/solosky/pixl.js) and [cylin577](https://github.com/cylin577/pixl.js). [Components](docs/COMPONENTS.md) · [History](docs/DEVELOPMENT_HISTORY.md) · [License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
