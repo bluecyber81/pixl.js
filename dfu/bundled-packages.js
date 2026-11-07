@@ -14,9 +14,9 @@
             need(item&&Object.keys(item).sort().join(',')===[...keys].sort().join(','),'Unvollständiger Firmware-Eintrag.');
             const version=/^2\.22\.0-DE3\.([1-9][0-9]{0,3})$/.exec(item.version);
             need(version&&item.id===`de3.${version[1]}-lcd-app`&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.');
-            need([`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`].includes(item.file),'Ungültiger Firmware-Dateiname.');
+            need([`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`].includes(item.file),'Ungültiger Firmware-Dateiname.');
             need(Number.isInteger(item.bytes)&&item.bytes>0&&item.bytes<=MAX_BYTES&&typeof item.sha256==='string'&&/^[a-f0-9]{64}$/.test(item.sha256)&&!/^0{64}$/.test(item.sha256),'Paketgröße oder SHA-256 fehlt.');
-            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.');
+            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.');
             seen.add(item.id);return Object.freeze({...item});
         });
         return Object.freeze({schema:1,packages:Object.freeze(packages)});
