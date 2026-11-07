@@ -59,6 +59,23 @@ test('progress clamps invalid values and unload warning only applies while runni
     let stopped=0;const e={preventDefault(){stopped++;}};h.windowEvents.beforeunload(e);assert.equal(stopped,0);
     h.updater.busy=true;h.windowEvents.beforeunload(e);assert.equal(stopped,1);
 });
+test('DFU speed and remaining time count only bytes acknowledged in this attempt',()=>{
+    let clock=0;
+    const h=harness(true,{performance:{now:()=>clock}});
+    const read=bytes=>{
+        h.options.onProgress({object:'firmware',totalBytes:102400,currentBytes:bytes});
+        return h.nodes.get('transfer').textContent;
+    };
+    assert.doesNotMatch(read(81920),/KiB\/s/);
+    clock=2000;
+    assert.match(read(83968),/1 KiB\/s · ≈ 0:18 min/);
+    assert.doesNotMatch(read(4096),/KiB\/s/);
+    clock=4000;
+    assert.match(read(8192),/2 KiB\/s · ≈ 0:46 min/);
+    h.options.onProgress(null);
+    assert.doesNotMatch(read(50000),/KiB\/s/);
+    assert.doesNotMatch(read(102400),/KiB\/s/);
+});
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
     for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource)),resource);}
@@ -67,7 +84,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
     assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

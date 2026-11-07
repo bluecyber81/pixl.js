@@ -21,13 +21,15 @@ RELEASE_PAYLOADS = {
         '115593075921247d7d37bc1138beb43437b140ad9c38e0b4e67c4a78795dd1b0',  # DE3.64 / 636
     '01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2':
         'ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298',  # DE3.65 / 637
+    '7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed':
+        '26c3ad95953ae4df204fe7de93b68423f1d5f1c0bb7581663afb52e795932ef3',  # DE3.66 / 638
 }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     image_source = parser.add_mutually_exclusive_group(required=True)
-    image_source.add_argument('--app-only', type=Path, help='Exact signed app-only release, DE3.64/636 or DE3.65/637.')
+    image_source.add_argument('--app-only', type=Path, help='Exact signed app-only release listed in RELEASE_PAYLOADS.')
     image_source.add_argument('--test-bin', type=Path, help='A local candidate binary; also supply its pinned SHA-256.')
     parser.add_argument('--expected-sha256', help='Expected payload digest for --test-bin.')
     parser.add_argument('--output', type=Path, required=True)
@@ -42,7 +44,7 @@ def main():
         with args.app_only.open('rb') as source:
             expected = RELEASE_PAYLOADS.get(sha256(source.read()).hexdigest())
             if args.expected_sha256 or expected is None:
-                parser.error('Expected the exact signed DE3.64/636 or DE3.65/637 reference package.')
+                parser.error('Expected an exact signed reference package listed in RELEASE_PAYLOADS.')
             source.seek(0)
             with ZipFile(source) as archive:
                 entry = json.loads(archive.read('manifest.json'))['manifest']['application']

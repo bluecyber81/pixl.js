@@ -158,7 +158,7 @@ def verify_zip(path, binary, release, key):
 def main():
     root = Path(__file__).resolve().parents[1]
     release = json.loads((root / 'RELEASE_INFO.json').read_bytes())
-    build = root / 'build/lcd-de365'
+    build = root / 'build/lcd-de366'
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
     need(result['mode'] == 'release' and result['status'] == 'passed', 'Fresh release build required')
     firmware_dir = (root / 'fw/releases').resolve()
@@ -184,7 +184,7 @@ def main():
     web_dir = root / 'web/public/firmware'
     offers = unique_json((web_dir / 'releases.json').read_bytes())['packages']
     current = [item for item in offers if item.get('sha256') == release['ota_sha256']]
-    need(len(current) == 1, 'Current stable application must be offered once in Web DFU')
+    need(len(current) == 1, 'Current application must be offered once in Web DFU')
     offer = current[0]
     need(offer['version'] == release['version'] and offer['counter'] == release['counter']
          and offer['file'] == ota.name and offer['bytes'] == ota.stat().st_size and offer['applicationOnly'] is True,

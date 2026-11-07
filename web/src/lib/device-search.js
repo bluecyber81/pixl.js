@@ -78,7 +78,8 @@ export async function searchDevice({ rootPath, query, recursive = true, readDire
       }
       if (tokens.every(token => haystack.includes(token))) {
         results.push({ path, parent: current.path, name: entry.name, type: entry.type,
-          id, figureName: figure?.name || '', series: figure?.series || '' });
+          id, size: entry.size, idFromContent: fileRead && Boolean(id),
+          figureName: figure?.name || '', series: figure?.series || '' });
         stats.matches = results.length;
       }
       if (fileRead) progress();

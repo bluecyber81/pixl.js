@@ -87,6 +87,25 @@ function showPhase(name, failed = false) {
     phaseDetail.textContent = index < 0 ? '' : failed ? phaseText.failed : phaseText.details[index];
     reconnectLink.hidden = name !== 'reconnect' || failed;
 }
+let rateSample = null;
+function transferEstimate(state, now) {
+    if (state?.object !== 'firmware' || !(state.currentBytes >= 0 && state.currentBytes <= state.totalBytes)) {
+        rateSample = null;
+        return '';
+    }
+    if (!rateSample || rateSample.total !== state.totalBytes || state.currentBytes < rateSample.last) {
+        rateSample = { total: state.totalBytes, first: state.currentBytes, last: state.currentBytes, start: now };
+        return '';
+    }
+    rateSample.last = state.currentBytes;
+    const elapsed = now - rateSample.start;
+    const bytes = state.currentBytes - rateSample.first;
+    if (elapsed < 1000 || bytes === 0 || state.currentBytes === state.totalBytes) return '';
+    const bytesPerSecond = 1000 * bytes / elapsed;
+    const remaining = Math.ceil((state.totalBytes - state.currentBytes) / bytesPerSecond);
+    const rate = (bytesPerSecond / 1024).toLocaleString(phaseText.lang, { maximumFractionDigits: 1 });
+    return ` · ${rate} KiB/s · ≈ ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')} min`;
+}
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     createDfu: () => new SecureDfu(CRC32.buf),
@@ -96,7 +115,8 @@ const updater = new AllmiiboDfuUpdater({
     onProgress: state => {
         const valid = state && Number.isFinite(state.totalBytes) && state.totalBytes > 0 && Number.isFinite(state.currentBytes);
         progressBar.hidden = !valid;
-        transferText.textContent = valid ? `${state.object === 'init' ? 'Paketprüfung' : 'Anwendung'}: ${state.currentBytes} / ${state.totalBytes} Bytes bestätigt` : '';
+        const estimate = transferEstimate(valid ? state : null, globalThis.performance?.now() ?? Date.now());
+        transferText.textContent = valid ? `${state.object === 'init' ? 'Paketprüfung' : 'Anwendung'}: ${state.currentBytes} / ${state.totalBytes} Bytes bestätigt${estimate}` : '';
         if (valid) progressBar.value = Math.min(100, Math.max(0, 100 * state.currentBytes / state.totalBytes));
     }
 });
@@ -107,7 +127,7 @@ try {
         bundledSelect.textContent = '';
         const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Mitgeliefertes Paket wählen';bundledSelect.appendChild(placeholder);
         for(const entry of bundled.catalog.packages){
-            const option=document.createElement('option');option.value=entry.id;option.textContent=`${entry.version} · ${(entry.bytes/1024).toFixed(1)} KiB`;bundledSelect.appendChild(option);
+            const option=document.createElement('option');option.value=entry.id;option.textContent=`${entry.version}${entry.channel === 'prerelease' ? ' (Testversion)' : ''} · ${(entry.bytes/1024).toFixed(1)} KiB`;bundledSelect.appendChild(option);
         }
     } else bundledInfo.textContent='Kein mitgeliefertes Paket in diesem Dateimanager. Eine eigene passende Anwendungs-ZIP kann unten ausgewählt werden.';
 } catch(error) {

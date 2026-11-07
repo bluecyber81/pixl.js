@@ -8,6 +8,9 @@
 #include "../runtime_diag.h"
 #ifdef VFS_PACKED_LFS_ENABLE
 #include "vfs_packed_runtime.h"
+#ifdef PIXL_FILE_DIGEST_ENABLE
+#include "mbedtls/sha256.h"
+#endif
 #include "ble_main.h"
 #include "utils2.h"
 static bool packed_restart_pending;
@@ -945,6 +948,35 @@ static void df_proto_handler_vfs_raw_meta(df_event_t *evt) {
 }
 
 #ifdef VFS_PACKED_LFS_ENABLE
+#ifdef PIXL_FILE_DIGEST_ENABLE
+/* Revalidate cached small files in one read-only request. Read one extra
+ * byte to detect growth between listing and reading, including empty files. */
+static void df_proto_handler_vfs_file_sha256(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    NEW_BUFFER_READ(buff, evt->df->data, evt->df->length);
+    char path[VFS_MAX_FULL_PATH_LEN];
+    if (evt->df->status || evt->df->chunk || !df_proto_vfs_is_idle() ||
+        !read_path(&buff, path, sizeof(path)) || path[0] != 'E' ||
+        !raw_meta_path_valid(path, false) || buff_get_remain_size(&buff) != 2) {
+        send_error(evt->df->cmd); return;
+    }
+    uint8_t bytes[573]; /* Up to 572 bytes, including common NFC file sizes. */
+    const uint8_t *wire_size = buff_get_data_ptr_pos(&buff);
+    size_t expected = wire_size[0] | ((size_t)wire_size[1] << 8);
+    if (expected >= sizeof(bytes)) { send_error(evt->df->cmd); return; }
+    vfs_driver_t *driver = get_driver_by_label('E');
+    if (!driver || !driver->mounted()) { send_vfs_error(evt->df->cmd, VFS_ERR_NODEV); return; }
+    int32_t count = driver->read_file_data(get_file_path(path), bytes, expected + 1);
+    if (count < 0) { send_vfs_error(evt->df->cmd, count); return; }
+    df_frame_t out = {0};
+    if ((size_t)count != expected || mbedtls_sha256_ret(bytes, expected, out.data, 0) != 0) {
+        send_vfs_error(evt->df->cmd, VFS_ERR_FAIL); return;
+    }
+    OUT_FRAME_WITH_DATA_0(out, evt->df->cmd, DF_STATUS_OK, 32);
+    df_core_send_frame(&out);
+}
+#endif
+
 static void df_proto_handler_vfs_packed_layout(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     if (evt->df->status || evt->df->chunk || evt->df->length != 1 ||
@@ -1015,6 +1047,9 @@ const df_cmd_entry_t df_proto_handler_vfs_entries[] = {
 #ifdef VFS_PACKED_LFS_ENABLE
     {DF_PROTO_CMD_VFS_PACKED_LAYOUT, df_proto_handler_vfs_packed_layout},
     {DF_PROTO_CMD_VFS_IMPORT_STATE, df_proto_handler_vfs_import_state},
+#ifdef PIXL_FILE_DIGEST_ENABLE
+    {DF_PROTO_CMD_VFS_FILE_SHA256, df_proto_handler_vfs_file_sha256},
+#endif
 #endif
 #if defined(BOARD_LCD) && defined(VFS_SPIFFS_ENABLE)
     {DF_PROTO_CMD_VFS_STORAGE_DIAG, df_proto_handler_vfs_storage_diag},

@@ -12,6 +12,8 @@ def main():
     args=ap.parse_args()
     sources=[SRC/'mod/df/df_proto_vfs.c',SRC/'mod/vfs/vfs_packed_runtime.c',SRC/'mod/vfs/vfs_packed_runtime.h',
              SRC/'mod/vfs/packed_fs.h',SRC/'mod/vfs/vfs_packed_identity.h']
+    vendor=HERE/'boot_diag_fixture'
+    sources.extend((SRC/'mod/df/df_proto_vfs.h',vendor/'sha256.c',HERE/'packed_recovery_protocol.c.in'))
     hashes=lambda:{p.relative_to(FW).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
     report=dict(device_access=False,sanitize=args.sanitize,source_sha256=hashes(),cases=[])
     with tempfile.TemporaryDirectory(prefix='packed-recovery-') as temp:
@@ -27,20 +29,26 @@ def main():
         extra=(HERE/'packed_recovery_protocol.c.in').read_text().replace('@RUNTIME@',
                '#include "'+(SRC/'mod/vfs/vfs_packed_runtime.c').as_posix()+'"')
         (folder/'test.c').write_text(prefix+extra)
+        (folder/'hash_config.h').write_text('#define MBEDTLS_SHA256_C\n')
         exe=folder/'test.exe'
         cmd=['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function',
              '-Wno-sign-compare','-Wno-misleading-indentation','-DPIXL_RUNTIME_DIAGNOSTICS=1','-DVFS_LFS_ENABLE=1','-DVFS_PACKED_LFS_ENABLE=1']
-        for inc in (folder,SRC/'mod/df',SRC/'mod/vfs',FW/'components/littlefs'):cmd+=['-I',str(inc)]
+        cmd+=['-DPIXL_FILE_DIGEST_ENABLE=1','-DMBEDTLS_CONFIG_FILE="hash_config.h"']
+        for inc in (folder,vendor,SRC/'mod/df',SRC/'mod/vfs',FW/'components/littlefs'):cmd+=['-I',str(inc)]
         if args.sanitize:cmd+=['-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer','-fno-pie','-no-pie']
-        built=subprocess.run(cmd+[str(folder/'test.c'),'-o',str(exe)],capture_output=True,text=True,timeout=60)
+        built=subprocess.run(cmd+[str(folder/'test.c'),str(vendor/'sha256.c'),'-o',str(exe)],capture_output=True,text=True,timeout=60)
         assert built.returncode==0,built.stdout+built.stderr
-        for scenario in range(20):
+        for scenario in range(25):
             run=subprocess.run([str(exe),str(scenario)],capture_output=True,text=True,timeout=20)
             row=dict(scenario=scenario,exit_code=run.returncode,output=run.stdout+run.stderr)
             report['cases'].append(row);assert run.returncode==0,row
+            if scenario==20:
+                for length in (0,3,540,572):
+                    pattern=bytes(i % 256 for i in range(length))
+                    assert f'{length} {hashlib.sha256(pattern).hexdigest()}' in run.stdout
     assert hashes()==report['source_sha256']
     report['passed']=True
     if args.report:args.report.parent.mkdir(parents=True,exist_ok=True);args.report.write_text(json.dumps(report,indent=2)+'\n')
-    print('PASS 20 actual C recovery protocol/runtime scenarios; no device writes')
+    print('PASS 25 actual C recovery and read-only backup digest scenarios')
 
 if __name__=='__main__':main()

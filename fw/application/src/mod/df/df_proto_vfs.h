@@ -22,7 +22,8 @@ typedef enum {
     DF_PROTO_CMD_VFS_RAW_META_READ = 0x1d,
     DF_PROTO_CMD_VFS_RAW_META_WRITE = 0x1e,
     DF_PROTO_CMD_VFS_PACKED_LAYOUT = 0x1f,
-    DF_PROTO_CMD_VFS_IMPORT_STATE = 0x20
+    DF_PROTO_CMD_VFS_IMPORT_STATE = 0x20,
+    DF_PROTO_CMD_VFS_FILE_SHA256 = 0x21
 } df_proto_cmd_vfs_t;
 
 extern const df_cmd_entry_t df_proto_handler_vfs_entries[];

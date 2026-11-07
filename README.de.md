@@ -2,7 +2,9 @@
 
 [Online-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [LCD-App DE3.65 für das Handy herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [English](README.md)
 
-**Dateimanager 3.39.5** läuft auf dieser GitHub-Seite. In Chrome oder Edge die Bluetooth-Dateiübertragung am Allmiibo öffnen und im Dateimanager **Verbinden** wählen. Die Website führt den Bestandsabgleich im Browser mit dem verbundenen Gerät aus. Öffne **Figurenkatalog** für die Spielhinweise oder **Figurensammlung → Bestand prüfen** zum Vergleichen der Gerätesammlung.
+**LCD-Testversion DE3.66 / 638** ergänzt Displayfotos und den Inhaltsvergleich kleiner Dateien beim Fortsetzen einer Sicherung. Im Dateimanager 3.40.0 findest du neun Nintendo-Ankündigungen und eine direkte Figurenbild-Vorschau in der Gerätesuche. Der Test auf deinem LCD steht aus. [Anleitung und Änderungen](docs/RELEASE_DE3_66.md) · [Android-Download](https://github.com/bluecyber81/pixl.js/releases/download/de3.66/Allmiibo_LCD_DE3_66_638_NUR_APP.zip)
+
+**Dateimanager 3.40.0** läuft auf dieser GitHub-Seite. In Chrome oder Edge die Bluetooth-Dateiübertragung am Allmiibo öffnen und im Dateimanager **Verbinden** wählen. Die Website führt den Bestandsabgleich im Browser mit dem verbundenen Gerät aus. Öffne **Figurenkatalog** für die Spielhinweise oder **Figurensammlung → Bestand prüfen** zum Vergleichen der Gerätesammlung.
 
 Beim Dateiabgleich zeigt die neue Fassung die betroffenen Namen und eine mögliche Korrektur an. Für alle 54 unterschiedlichen Spielhinweise mit englischem Ausgangstext gibt es eine deutsche Fassung. Bei Bluetooth-Updates kann die separate DFU-Seite den sichtbaren Handybildschirm während der Übertragung wach halten. Der Browser zeigt an, ob das Betriebssystem die Anfrage angenommen hat. [Web-Anleitung](web/README.md) · [Versionshinweise zum Dateimanager](docs/RELEASE_WEB3_39_5.de.md)
 

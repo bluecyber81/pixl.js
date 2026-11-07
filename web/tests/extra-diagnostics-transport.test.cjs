@@ -11,8 +11,8 @@ const ByteBuffer = require('bytebuffer');
 function load(name, bindings = {}) {
     const root = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib');
     const source = fs.readFileSync(path.join(root, name), 'utf8');
-    const exports = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
-    const code = source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
+    const exports = [...source.matchAll(/export (?:async )?function (\w+)\(/g)].map(match => match[1]);
+    const code = source.replace(/^import .*$/gm, '').replace(/export ((?:async )?function )/g, '$1');
     const context = {ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array,
         DataView, TextDecoder, TextEncoder, console: {log() {}, error() {}},
         module: {exports: {}}, ...bindings};
@@ -20,7 +20,7 @@ function load(name, bindings = {}) {
     return context.module.exports;
 }
 
-function fixture() {
+function fixture(extra = {}) {
     const bus = load('event.js').sharedEventDispatcher();
     const writes = [], timers = new Map();
     let timerId = 0, disconnects = 0;
@@ -30,7 +30,7 @@ function fixture() {
         disconnect() { ++disconnects; bus.emit('ble_disconnected'); }
     };
     const parsers = load('device-extra-diagnostics.js');
-    const api = load('pixl.proto.js', {pixl, ...parsers,
+    const api = load('pixl.proto.js', {pixl, ...parsers, ...extra,
         i18n: {global: {t: key => key}}, sharedEventDispatcher: () => bus,
         setTimeout: callback => {const id = ++timerId; timers.set(id, callback); return id;},
         clearTimeout: id => timers.delete(id)});
@@ -43,6 +43,36 @@ function fixture() {
 async function flush() {for (let i = 0; i < 100; ++i) await Promise.resolve();}
 const plain = value => JSON.parse(JSON.stringify(value));
 const next = f => f.api.op_queue_push(0x14, () => {}, b => b.readBytes(b.remaining()).toArrayBuffer());
+
+test('LCD page reads negotiate old devices, MTU23 fragmentation, disconnect and queued file access', async () => {
+    const module = await import('../src/lib/display-photo.js');
+    const version = '2.22.0-DE3.66', cmd = 0x0a;
+    const pixels = Uint8Array.from({length: 1024}, (_, i) => (i * 17) & 255);
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', pixels));
+    const f = fixture(module);
+    for (const legacy of ['2.22.0-DE3.65', '', '2.29.0']) assert.equal(await f.api.get_display_photo(legacy), null);
+    assert.deepEqual(f.writes, []);
+    const prior = next(f), photo = f.api.get_display_photo(version);
+    assert.equal(f.writes.length, 1);
+    f.rx(0x14, [9]); await prior;
+    for (let i = 0; i < 8; i++) {
+        await flush();
+        assert.deepEqual(f.writes.at(-1), [cmd,0,0,0,76,67,68,49,i]);
+        const reply = Uint8Array.from([80,88,76,67,1,i,128,64,...digest,...pixels.subarray(i*128,(i+1)*128)]);
+        for (let offset = 0; offset < reply.length; offset += 16) {
+            f.rx(cmd, reply.subarray(offset, offset+16), offset / 16 | (offset+16 < reply.length ? 0x8000 : 0));
+        }
+    }
+    assert.deepEqual(await photo, pixels);
+    const following = next(f); f.rx(0x14, [11]); await following;
+    const unsupported = f.api.get_display_photo(version);
+    f.rx(cmd, [], 0, 255); assert.equal(await unsupported, null);
+    assert.equal(f.api.get_transport_diagnostics().lastErrorCode, null);
+    const interrupted = f.api.get_display_photo(version);
+    const rejected = assert.rejects(interrupted);
+    f.bus.emit('ble_disconnected'); await rejected;
+    assert.deepEqual(f.writes.at(-1), [cmd,0,0,0,76,67,68,49,0]);
+});
 
 function mtuPacket() {
     return Uint8Array.from([77,84,85,68,1,7,250,0,250,0,250,0,247,0,0,0]);

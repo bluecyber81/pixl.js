@@ -185,14 +185,14 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.39.5'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.40.0'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
-  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.39\.5'/);
-  assert.match(read('../serve_local.py'), /'version': '3\.39\.5'/);
-  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.39\.5'/);
-  assert.match(read('../src/App.vue'), /<strong>3\.39\.5<\/strong>/);
-  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.39\.5/);
+  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.40\.0'/);
+  assert.match(read('../serve_local.py'), /'version': '3\.40\.0'/);
+  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.40\.0'/);
+  assert.match(read('../src/App.vue'), /<strong>3\.40\.0<\/strong>/);
+  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.40\.0/);
 });
 
 test('missing, failed and unavailable reads remain unknown, even with a matching version string', () => {
@@ -220,7 +220,7 @@ test('an installed DE3.25 is shown as older and different without downgrading ma
   assert.equal(report.status, 'different'); assert.equal(row(report, 'application').status, 'different');
   assert.ok(row(report, 'application').reasons.includes('olderApplication'));
   assert.equal(row(report, 'bootloader').status, 'match'); assert.equal(row(report, 'softDevice').status, 'match');
-  const newer = result(change(60, 638), { ...session, firmwareVersion: '2.22.0-DE3.66' });
+  const newer = result(change(60, 639), { ...session, firmwareVersion: '2.22.0-DE3.67' });
   assert.equal(row(newer, 'application').status, 'different');
   assert.ok(!row(newer, 'application').reasons.includes('olderApplication'));
   assert.ok(row(newer, 'application').reasons.includes('newerApplication'));

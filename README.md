@@ -2,7 +2,9 @@
 
 [Open the online file manager](https://bluecyber81.github.io/pixl.js/) · [Download the DE3.65 LCD application](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Deutsch](README.de.md)
 
-**File manager 3.39.5** is available on GitHub Pages. Open Bluetooth file transfer on the device and select **Connect** in Chrome or Edge. The browser compares files directly with the connected device. Use the figure catalogue for game hints and the collection inventory to check files on the device.
+**LCD test release DE3.66 / 638** adds LCD screenshots and on-device content checks for resuming backups of small files. File manager 3.40.0 adds nine Nintendo announcements and inline figure previews in device search. Physical validation of DE3.66 is pending. [Release notes](docs/RELEASE_DE3_66.md) · [Android download](https://github.com/bluecyber81/pixl.js/releases/download/de3.66/Allmiibo_LCD_DE3_66_638_NUR_APP.zip)
+
+**File manager 3.40.0** is available on GitHub Pages. Open Bluetooth file transfer on the device and select **Connect** in Chrome or Edge. The browser compares files directly with the connected device. Use the figure catalogue for game hints and the collection inventory to check files on the device.
 
 The file manager shows the affected names when files collide or need a portable spelling. All 54 distinct English usage notes now have German translations. The standalone DFU page can keep a supported phone screen awake during a transfer and reports whether the request succeeded. [Web guide](web/README.md) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.5)
 

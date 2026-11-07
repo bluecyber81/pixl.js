@@ -6,6 +6,11 @@
 #include "mui_nav_diag.h"
 #include "../runtime_diag.h"
 #include "../boot_diag.h"
+#include "boards.h"
+#ifdef LCD_SCREEN
+#include "mui_core.h"
+#include "mbedtls/sha256.h"
+#endif
 
 #include "nrf_log.h"
 #include "ble_main.h"
@@ -173,6 +178,37 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
     df_core_send_frame(&out);
 }
 
+#ifdef LCD_SCREEN
+/* Rendering and DF commands both run in the foreground. Each reply binds its
+ * page to the entire framebuffer as seen during this command. The client
+ * can discard a changed frame without pinning or duplicating the LCD buffer. */
+static void df_proto_handler_info_display_page(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_DISPLAY_PAGE, DF_STATUS_ERR);
+    const df_frame_t *request = evt->df;
+    if (!request->status && !request->chunk && request->length == 5 &&
+        memcmp(request->data, "LCD1", 4) == 0 && request->data[4] < 8 && df_proto_vfs_is_idle()) {
+        mui_t *ui = mui();
+        if (ui && ui->initialized && u8g2_GetBufferTileHeight(&ui->u8g2) == 8 &&
+            u8g2_GetBufferTileWidth(&ui->u8g2) == 16) {
+            const uint8_t *pixels = u8g2_GetBufferPtr(&ui->u8g2);
+            if (pixels && mbedtls_sha256_ret(pixels, 1024, out.data + 8, 0) == 0) {
+                memcpy(out.data, "PXLC", 4);
+                out.data[4] = 1;
+                out.data[5] = request->data[4];
+                out.data[6] = 128;
+                out.data[7] = 64;
+                memcpy(out.data + 40, pixels + 128 * request->data[4], 128);
+                out.length = 168;
+                out.status = DF_STATUS_OK;
+            }
+        }
+    }
+    df_core_send_frame(&out);
+}
+#endif
+
 const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_VERSION_INFO, df_proto_handler_info_get_version},
     {DF_PROTO_CMD_INFO_ENTER_DFU, df_proto_handler_info_enter_dfu},
@@ -183,4 +219,7 @@ const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_BOOT_DIAGNOSTIC, df_proto_handler_info_boot_diagnostic},
     {DF_PROTO_CMD_INFO_POWER_DIAGNOSTIC, df_proto_handler_info_power_diagnostic},
     {DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, df_proto_handler_info_startup_diagnostic},
+#ifdef LCD_SCREEN
+    {DF_PROTO_CMD_INFO_DISPLAY_PAGE, df_proto_handler_info_display_page},
+#endif
     {0, NULL}};

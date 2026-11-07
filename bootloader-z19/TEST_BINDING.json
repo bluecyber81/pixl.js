@@ -62,8 +62,8 @@
     "tests/verify_z17_signed.py": "8a99e5933b4924efd96322e70bf790988cbb8d91112433a9ec09927d9c3d01a2",
     "tests/check_z19_app.py": "4478a89e03dca11f937ab569cc833344f54c4fd2c77cae633f53f30143e451e6",
     "tests/test_runner_modes.py": "843b345dd09e900dda213c4359966526d82a217bf62a080cfc031c78c621a291",
-    "tests/DFU_Stream/check_app_stream.py": "fe14d01b5f766e486a95fa1e5310ceb16a7a4123d30031f051864cf83fa7b939",
+    "tests/DFU_Stream/check_app_stream.py": "c430c0b5635861d6f23ac5665c393b0f7405f3dae1870541b5d7e659aea31afc",
     "tests/DFU_Stream/app_stream.c": "8b4cdc50da293b96f845906822be425a9854ff69020a1b6bac33d6926b95a4b5",
-    "tests/test_app_stream_modes.py": "f70440e299c1b9533d73d64161c35b4b7676d3499521a43226adba5c9988d7ed"
+    "tests/test_app_stream_modes.py": "4f6ecc8fd3af62c8920dc5e0b692e5a35f29fedb87d4e247493ad00513aa3d87"
   }
 }

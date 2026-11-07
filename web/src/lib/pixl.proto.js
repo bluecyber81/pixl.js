@@ -3,6 +3,7 @@ import * as pixl from "./pixl.ble"
 import ByteBuffer from "bytebuffer"
 
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
+import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMtuDiagnostics, parseUiDiagnostics } from "./device-extra-diagnostics.js"
@@ -27,6 +28,7 @@ const SAFE_GATT_PAYLOAD = 20
 var transport_generation = 0
 var transport_capabilities = null
 var transport_probe = null
+var file_digest_unsupported = false
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
 var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0 }
@@ -267,6 +269,18 @@ export function get_ui_diagnostics() {
         });
 }
 
+export function get_display_photo(firmwareVersion) {
+    if (!supportsDisplayPhoto(firmwareVersion)) return Promise.resolve(null);
+    const generation = transport_generation;
+    const checkSession = () => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+    };
+    return captureDisplayPhoto(page => op_queue_push(0x0a,
+        b => { b.writeUTF8String('LCD1'); b.writeUint8(page); },
+        b => parseDisplayPage(b.readBytes(b.remaining()).toArrayBuffer(), page), { max_bytes: 168 })
+        .then(response => response.status === 255 ? null : checked_response(response)), checkSession);
+}
+
 export function get_runtime_diagnostics() {
     const generation = transport_generation;
     return op_queue_push(0x06, () => {}, b =>
@@ -451,6 +465,22 @@ export function vfs_import_state(drive, operation = 0, archiveSha256 = null) {
             (data[6] && /^0{64}$/u.test(hash))) throw new Error('Invalid import state.');
         return Object.freeze({schema:1,drive,backend:3,mounted:!!data[3],pending:!!data[4],ready:!!data[5],
             bound:!!data[6],rebootRequired:!!data[7],archiveSha256:data[6]?hash:null});
+    });
+}
+export function vfs_backup_digest(path, size, firmwareVersion) {
+    path_validation(path);
+    if (!Number.isSafeInteger(size) || size < 0 || path.length <= 3) throw new Error('Invalid backup file.');
+    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
+    if (file_digest_unsupported || !version || Number(version[1]) < 66 || size > 572 || !path.startsWith('E:/')) return Promise.resolve(null);
+    const generation = transport_generation;
+    return op_queue_push(0x21, b => { write_string(b, path); b.writeUint16(size); }, b => {
+        if (b.remaining() !== 32) throw new Error('Invalid backup digest length.');
+        const bytes = new Uint8Array(b.readBytes(32).toArrayBuffer());
+        return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    }, { max_bytes: 32 }).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        if (response.status === 255) { file_digest_unsupported = true; return null; }
+        return checked_response(response);
     });
 }
 export function vfs_read_raw_meta(path) {
@@ -1011,7 +1041,7 @@ function on_rx_data(data) {
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
         const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09) && op.optional_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x1c || h.cmd === 0x1f) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;
@@ -1026,6 +1056,7 @@ function on_ble_disconnected(reason) {
     if (!transport_last_error) transport_last_error = 'DISCONNECTED';
     ++transport_generation;
     transport_capabilities = null;
+    file_digest_unsupported = false;
     transport_probe = null;
     storage_info_cache.clear();
     storage_info_queries.clear();

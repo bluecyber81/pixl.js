@@ -27,6 +27,27 @@ bool system_reboot(void){++reboot_calls;CHECK(disable_calls==0);reset_reserved=f
 const vfs_driver_t vfs_driver_fs={.mounted=mock_mounted};
 @RUNTIME@
 
+void mbedtls_platform_zeroize(void *data, size_t size) {
+    volatile uint8_t *bytes = data;
+    while (size--) *bytes++ = 0;
+}
+static int32_t digest_size;
+static unsigned digest_reads;
+static int32_t read_digest_file(const char *path, void *dest, size_t capacity) {
+    CHECK(!strcmp(path, "/figure.bin") && capacity <= 573);
+    ++digest_reads;
+    if (digest_size < 0) return digest_size;
+    size_t length = (size_t)digest_size > capacity ? capacity : (size_t)digest_size;
+    for (size_t i = 0; i < length; ++i) ((uint8_t *)dest)[i] = (uint8_t)i;
+    return (int32_t)length;
+}
+static df_frame_t digest_request(const char *path, unsigned expected) {
+    df_frame_t f = frame(0x21, path);
+    f.data[f.length++] = (uint8_t)expected;
+    f.data[f.length++] = (uint8_t)(expected >> 8);
+    return f;
+}
+
 static df_frame_t state(uint8_t op){
     df_frame_t f={.cmd=0x20,.length=op==3?34:2,.data={'E',op}};
     if(op==3)for(unsigned i=0;i<32;++i)f.data[i+2]=(uint8_t)(31-i);
@@ -111,6 +132,37 @@ int main(int argc,char **argv){
     }else if(scenario==19){
         df_frame_t f={.cmd=0x11,.length=1,.data={'E'}};
         f.status=1;expect_bad(f);f.status=0;f.chunk=1;expect_bad(f);f.chunk=0;f.length=2;expect_bad(f);
+    }else if(scenario==20){
+        mock_driver.read_file_data=read_digest_file;
+        const unsigned sizes[]={0,3,540,572};
+        for(unsigned i=0;i<4;++i){
+            digest_size=(int32_t)sizes[i];request(digest_request("E:/figure.bin",sizes[i]));
+            CHECK(response.status==0 && response.length==32 && digest_reads==i+1);
+            printf("%u ",sizes[i]);
+            for(unsigned j=0;j<32;++j)printf("%02x",response.data[j]);
+            putchar('\n');
+        }
+    }else if(scenario==21){
+        mock_driver.read_file_data=read_digest_file;
+        df_frame_t f=digest_request("E:/figure.bin",540);
+        digest_size=539;expect_bad(f);digest_size=541;expect_bad(f);
+        digest_size=VFS_ERR_CRPT;expect_bad(f);CHECK(last_error==VFS_ERR_CRPT && digest_reads==3);
+    }else if(scenario==22){
+        expect_bad(digest_request("E:/figure.bin",573));expect_bad(digest_request("I:/figure.bin",1));
+        expect_bad(digest_request("E:/../figure.bin",1));expect_bad(digest_request("E:/",0));
+        df_frame_t f=digest_request("E:/figure.bin",3);++f.length;expect_bad(f);f.length-=2;expect_bad(f);
+        CHECK(!digest_reads);
+    }else if(scenario==23){
+        df_frame_t f=digest_request("E:/figure.bin",540);
+        f.chunk=1;expect_bad(f);f.chunk=0;f.status=1;expect_bad(f);f.status=0;
+        file_chunk_state.opened=true;expect_bad(f);file_chunk_state.opened=false;
+        mounted=false;expect_bad(f);CHECK(last_error==VFS_ERR_NODEV && !digest_reads);
+    }else if(scenario==24){
+        df_frame_t f=digest_request("E:/figure.bin",540);
+        for(unsigned e=0;e<=DF_EVENT_DATA_TRANSMIT_READY;++e){
+            if(e!=DF_EVENT_DATA_RECEVIED)dispatch(&f,(df_event_type_t)e);
+        }
+        CHECK(!sends && !digest_reads);
     }else CHECK(!"unknown scenario");
     CHECK(!format_calls && !mount_calls && !dfu_calls);
     printf("PASS packed recovery protocol scenario %u\n",scenario);return 0;

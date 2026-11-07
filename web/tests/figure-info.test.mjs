@@ -74,6 +74,44 @@ test('V3 requires its 2K extent; 2K unknown/padded slots never inherit classic h
   }
 });
 
+test('vehicle hints use observed public board codes only on known 2K Air Riders files', () => {
+  const rider = '1f00000004c41e03';
+  function vehicle(id, code, subtype, size = 2048) {
+    const bytes = fixture(size, id);
+    if (size === 2048) {
+      bytes.set([2, 0], 960);
+      bytes.fill(0xbd, 962, 979);
+      bytes.set(Buffer.from(code, 'ascii'), 979);
+      bytes.set([0x20, 1, 1, subtype], 985);
+    }
+    return bytes;
+  }
+  for (const [code, subtype, names] of [
+    ['PB4W17', 2, ['Warp Star']], ['PB4W17', 4, ['Winged Star']],
+    ['P45S63', 4, ['Winged Star']], ['PB5T42', 4, ['Shadow Star']],
+    ['PC6V28', 4, ['Tank Star', 'Hop Star']], ['UNSEEN', 4, []], ['PB4W17', 1, []],
+  ]) {
+    const bytes = vehicle(rider, code, subtype);
+    const original = bytes.slice();
+    const result = inspectTagStructure(bytes);
+    assert.deepEqual(result.vehicleCandidates, names);
+    assert.deepEqual(result.issues, []);
+    assert.equal(result.status, 'structure-consistent');
+    assert.deepEqual(bytes, original);
+    assert.ok(!JSON.stringify(result).includes(code));
+  }
+  const otherRider = vehicle('1f01000004c61e03', 'PB4W17', 2);
+  assert.deepEqual(inspectTagStructure(otherRider).vehicleCandidates, ['Warp Star']);
+  for (const offset of [960, 961, 985, 986, 987]) {
+    const altered = otherRider.slice();
+    altered[offset] ^= 1;
+    assert.deepEqual(inspectTagStructure(altered).vehicleCandidates, []);
+  }
+  for (const bytes of [vehicle(rider, 'PB4W17', 2, 540), vehicle('0000000000000002', 'PB4W17', 2), vehicle('ffffffffffffff03', 'PB4W17', 2)]) {
+    assert.equal(inspectTagStructure(bytes).vehicleCandidates, undefined);
+  }
+});
+
 test('local file reading rejects unsupported/oversize inputs before allocating and catches truncated reads', async () => {
   for (const size of [0,531,541,2049,1e12]) {
     let reads=0;

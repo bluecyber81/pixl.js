@@ -9,7 +9,7 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.65 / 637**; [unsigned build guide](docs/BUILD_DE3_65.md) |
+| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.66 / 638 (prerelease)**; [unsigned build guide](docs/BUILD_DE3_66.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
 | Browser file manager | `web/`, currently **3.39.5**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
@@ -53,7 +53,7 @@ The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-Follow [BUILD_DE3_62.md](docs/RELEASE_DE3_65.md) to reproduce the unsigned LCD
+Follow [the LCD build guide](docs/BUILD_DE3_66.md) to reproduce the unsigned LCD
 application. No signing key is required. The current release helper preserves
 generated resources and the version header. For an intentional change, use its
 development mode with a distinct version and explicit counter.

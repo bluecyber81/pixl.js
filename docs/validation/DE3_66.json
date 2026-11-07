@@ -1,0 +1,88 @@
+{
+  "build": {
+    "status": "passed",
+    "mode": "release",
+    "version": "2.22.0-DE3.66",
+    "counter": 638,
+    "board": "LCD",
+    "backend": "docker",
+    "sdk_image": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+    "network": "none",
+    "signed": false,
+    "device_access": false,
+    "version_header_sha256": "6572d861cddf7e3e13acdb210e598ac9f36c056f256f8f2303b878ed9e85b992",
+    "sdk_header_override": {
+      "path": "components/softdevice/s112/headers/nrf_nvic.h",
+      "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+      "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+    },
+    "expected_bin_sha256": "26c3ad95953ae4df204fe7de93b68423f1d5f1c0bb7581663afb52e795932ef3",
+    "source_tar_sha256": "6f12feedd6735ae4e3a0aed22434f287251a9192954783ac70cce297d4923786",
+    "exit_code": 0,
+    "source_id_sha256": "cdd78f4eb532d5b64162f9daec601737ecd02be5b08bcd2e3465868da2e0336a",
+    "source_input_count": 699,
+    "linker_budget": {
+      "binary_bytes": 362060,
+      "linker_flash_used_bytes": 362068,
+      "observed": {
+        "flash_reserve_bytes": 10668,
+        "heap_stack_gap_bytes": 1840,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "artifacts_sha256": {
+      "pixljs.bin": "26c3ad95953ae4df204fe7de93b68423f1d5f1c0bb7581663afb52e795932ef3",
+      "pixljs.hex": "771f309ca181ec30adc1e8b6f4ae3942b42fdc7275aab4905582f4e30cd44908",
+      "pixljs.out": "5e9792e64c3d8e3e5d5c9df90133038c2214a3d1b56124389a03b90618d8297c",
+      "pixljs.map": "c929918057f9588ab5595363e7cf6910a1e93f2796ac09167633f4935ab4b1da"
+    },
+    "matches_archived_release_binary": true
+  },
+  "reproducibleArtifacts": {
+    "pixljs.bin": "26c3ad95953ae4df204fe7de93b68423f1d5f1c0bb7581663afb52e795932ef3",
+    "pixljs.hex": "771f309ca181ec30adc1e8b6f4ae3942b42fdc7275aab4905582f4e30cd44908",
+    "pixljs.out": "5e9792e64c3d8e3e5d5c9df90133038c2214a3d1b56124389a03b90618d8297c",
+    "pixljs.map": "c929918057f9588ab5595363e7cf6910a1e93f2796ac09167633f4935ab4b1da"
+  },
+  "signedPackage": {
+    "name": "Allmiibo_LCD_DE3_66_638_NUR_APP.zip",
+    "sha256": "7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed",
+    "bytes": 362663,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 638,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 362060,
+        "sha256": "26c3ad95953ae4df204fe7de93b68423f1d5f1c0bb7581663afb52e795932ef3",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 362060,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "deviceTestPending": true,
+  "hostVerification": {
+    "firmwareSuitesPassed": 149,
+    "z19OfflineGroupsPassed": 10,
+    "z19BoundTestFiles": 64,
+    "interruptedTransfer": {
+      "interruptionAtBytes": 4136,
+      "modelReportedResumeOffset": 0,
+      "completedApplicationBytes": 362060,
+      "qualification": "The tested interruption led to a validated restart at byte zero."
+    }
+  }
+}

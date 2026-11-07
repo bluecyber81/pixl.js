@@ -45,10 +45,10 @@ Für die Übertragung aller App-Bytes durch den regulären Z19-Datenpfad, einsch
 
 ```sh
 python3 -B tests/test_app_stream_modes.py
-python3 -B tests/DFU_Stream/check_app_stream.py --app-only ../fw/releases/Allmiibo_LCD_DE3_65_637_NUR_APP.zip --output _checks/transfer637.json
+python3 -B tests/DFU_Stream/check_app_stream.py --app-only ../fw/releases/Allmiibo_LCD_DE3_66_638_NUR_APP.zip --output _checks/transfer638.json
 ```
 
-Der erste Aufruf prüft die Meldungen des Testwerkzeugs. Der zweite überträgt die Bytes des signierten Referenzpakets im C-Modell. Der Tester erkennt App637 und das frühere App636-Paket an den fest hinterlegten ZIP- und Nutzdaten-Prüfsummen. Für andere Builds steht `--test-bin DATEI --expected-sha256 HASH` zur Verfügung. Bei App637 trennt das Modell nach 4.136 Bytes. Es bestätigt den gespeicherten Stand 0 und vergleicht anschließend alle 361.564 erneut übertragenen Bytes und deren CRC. Ein separater Fall prüft die Wiederaufnahme an einer bestätigten Objektgrenze. Funk, MBR-Kopie und Neustart auf realer Hardware erfordern zusätzliche Geräteversuche.
+Der erste Aufruf prüft die Meldungen des Testwerkzeugs. Der zweite überträgt die Bytes des signierten Referenzpakets im C-Modell. Der Tester erkennt die signierten Pakete App636, App637 und App638 an den fest hinterlegten ZIP- und Nutzdaten-Prüfsummen. Für andere Builds steht `--test-bin DATEI --expected-sha256 HASH` zur Verfügung. Bei App638 trennt das Modell nach 4.136 Bytes. Der Bootloader meldet den gespeicherten Offset 0. Der Test überträgt alle 362.060 Bytes erneut und vergleicht anschließend Inhalt und CRC mit der signierten Anwendungsdatei. Ein separater Fall prüft die Wiederaufnahme an einer bestätigten Objektgrenze. Funk, MBR-Kopie und Neustart auf realer Hardware erfordern zusätzliche Geräteversuche.
 
 Der Standardlauf bestätigt vorab mit einer Kontrollprobe, dass die Erkennung von Speicherlecks aktiv ist. Kann die Kontrolle nicht laufen, schreibt das Werkzeug `BLOCKED` und das Kontrollprotokoll in die Ergebnisdatei und beendet sich mit Exitcode 2. Für einen getrennten Lauf ohne Leakprüfung `--no-leak-check` und einen neuen Ausgabedateinamen angeben. ASan und UBSan bleiben eingeschaltet, `leakDetectionConfirmed` ist dann `false`. Beide Prüfstarter verlangen Python mit aktiven Prüfanweisungen. Ein Aufruf mit `-O` endet vor dem ersten Test.
 

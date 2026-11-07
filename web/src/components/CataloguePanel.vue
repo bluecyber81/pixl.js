@@ -11,6 +11,7 @@
     <p class="presence-scope" role="status">{{ presenceScope }}</p>
     <p v-if="historical" class="presence-observation" role="status">{{ de ? 'Gerät getrennt. Letzte Prüfung vom' : 'Device disconnected. Last check at' }} {{ observationDate }}. {{ de ? 'Die Farben zeigen diesen damaligen Prüfstand, keinen aktuellen Live-Bestand.' : 'Colours show that past observation, not the current live collection.' }}</p>
     <label class="search-field">{{ de ? 'Name, Serie oder öffentliche ID' : 'Name, series or public ID' }}<input ref="searchInput" v-model="query" type="search" maxlength="200" :placeholder="de ? 'Zum Beispiel Mario oder Link …' : 'For example Mario or Link …'" /></label>
+    <FigureAnnouncements v-if="announcements.length" :groups="announcements" :de="de" :searching="Boolean(query.trim())" />
     <div class="catalogue-tools">
       <label class="presence-filter">{{ de ? 'Bestand filtern' : 'Filter collection' }}<select v-model="presenceFilter">
         <option value="">{{ de ? 'Alle Einträge' : 'All entries' }}</option>
@@ -37,7 +38,9 @@
     </div>
     <LocalTagInspector :catalogue="data" />
     <div ref="resultAnchor" tabindex="-1" class="result-bar"><p aria-live="polite"><strong>{{ result.total }}</strong> {{ de ? 'Treffer' : 'results' }} <span>· {{ de ? 'Seite' : 'Page' }} {{ result.page }}/{{ result.pages }}</span></p></div>
-    <p v-if="!result.total" class="empty-result">{{ de ? 'Keine passenden Figuren. Versuche einen kürzeren Suchbegriff oder setze die Filter zurück.' : 'No matching figures. Try a shorter search or reset the filters.' }}</p>
+    <p v-if="!result.total" class="empty-result">{{ announcements.length && query.trim()
+      ? (de ? 'Treffer stehen oben in den Ankündigungen.' : 'See matching figures in the announcements above.')
+      : (de ? 'Keine passenden Figuren. Versuche einen kürzeren Suchbegriff oder setze die Filter zurück.' : 'No matching figures. Try a shorter search or reset the filters.') }}</p>
     <ul class="entries">
       <li v-for="entry in result.entries" :key="entry.id" :class="['presence-' + presenceFor(entry.id).state, { selected: selectedId === entry.id }]" :data-presence="presenceFor(entry.id).state">
         <div v-if="showImages" class="entry-picture">
@@ -64,9 +67,11 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import baseline from '../data/catalogue.json';
-import { filterCatalogue, cataloguePage, releaseLabel } from '../lib/catalogue.js';
+import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '../lib/catalogue.js';
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import { publicFigureImage } from '../lib/figure-info.js';
+import { announcementGroups } from '../data/announced-figures.js';
+import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
 const props = defineProps({ catalogue: Object, blocked: Boolean, collectionReport: Object, collectionStale: Boolean, collectionHistorical: Boolean, collectionObservedAt: String });
@@ -138,6 +143,14 @@ function imageFailed(id, event) {
 const selectedId = ref(null), detailAnchor = ref(null), searchInput = ref(null), resultAnchor = ref(null);
 let selectedTrigger = null;
 const activeFilters = computed(() => Number(Boolean(series.value)) + Number(Boolean(kind.value)) + Number(knownOnly.value) + Number(Boolean(presenceFilter.value)));
+const announcements = computed(() => {
+  if (knownOnly.value || presenceFilter.value || (kind.value && kind.value !== 'Figure')) return [];
+  const matches = catalogueMatcher(query.value);
+  return announcementGroups.filter(group => !series.value || group.series === series.value).map(group => ({
+    ...group,
+    figures: group.figures.filter(figure => matches(figure.en, figure.de, group.series, figure.proposedId)),
+  })).filter(group => group.figures.length);
+});
 function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; knownOnly.value = false; presenceFilter.value = ''; }
 async function closeDetails() { selectedId.value = null; await nextTick(); if (selectedTrigger?.isConnected) selectedTrigger.focus?.(); else searchInput.value?.focus?.(); }
 async function selectEntry(id, event) { if(props.blocked)return; emit('select-entry',data.value.entries.find(entry=>entry.id===id)); selectedTrigger = event?.currentTarget || null; selectedId.value = id; await nextTick(); detailAnchor.value?.focus?.(); }

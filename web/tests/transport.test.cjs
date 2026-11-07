@@ -302,6 +302,29 @@ test('import binding transmits exactly 32 owned hash bytes and receives a fragme
     fragmentedReply(f,0x20,[1,69,3,1,1,0,1,1,...new Array(32).fill(0xab)]);assert.equal((await p).data.archiveSha256,hash);
     const g=protocolFixture();for(const bad of ['ab','zz'.repeat(32),'0'.repeat(64)])await assert.rejects(g.api.vfs_import_state('E',3,bad));await assert.rejects(g.api.vfs_import_state('E',0,hash));assert.equal(g.writes.length,0);
 });
+test('backup checksum uses one read-only logical request with a little-endian size and accepts a fragmented SHA-256', async()=>{
+    const f=protocolFixture();await modernProtocol(f);
+    const path='E:/図.bin', expected=Array.from({length:32},(_,i)=>i*3);
+    const request=f.api.vfs_backup_digest(path,540,'2.22.0-DE3.66');await flush();
+    assert(f.writes.every(frame=>frame[0]===0x21 && frame.length<=20));
+    const name=[...Buffer.from(path)];assert.deepEqual(f.writes.flatMap(frame=>frame.slice(4)),[name.length,0,...name,28,2]);
+    fragmentedReply(f,0x21,expected);assert.equal(await request,Buffer.from(expected).toString('hex'));
+});
+test('backup checksum falls back on older devices, internal drives and large files, and remembers unsupported only in its connection', async()=>{
+    const f=protocolFixture(), version='2.22.0-DE3.66';
+    for(const [path,size,fw] of [['E:/x',540,'2.22.0-DE3.65'],['E:/x',573,version],['I:/x',10,version],['E:/x',5,'2.21.0-DE3.8']]){
+        assert.equal(await f.api.vfs_backup_digest(path,size,fw),null);
+    }
+    assert.equal(f.writes.length,0);
+    const first=f.api.vfs_backup_digest('E:/x',1,version);f.rx(0x21,[],0,255);
+    assert.equal(await first,null);assert.equal(await f.api.vfs_backup_digest('E:/y',1,version),null);
+    assert.equal(f.writes.length,1);f.bus.emit('ble_disconnected');
+    const next=f.api.vfs_backup_digest('E:/x',0,version);f.rx(0x21,new Array(32).fill(1));assert.equal(await next,'01'.repeat(32));
+    for(const [status,bytes] of [[1,0],[0,31],[0,33]]){
+        const h=protocolFixture(),result=h.api.vfs_backup_digest('E:/x',2,version),failure=assert.rejects(result);
+        h.rx(0x21,new Array(bytes).fill(0),0,status);await failure;
+    }
+});
 test('raw128 read preserves exact bytes at 20-byte transport frames and uses uint16 UTF-8 path length',async()=>{
     const f=protocolFixture();await modernProtocol(f);const path='E:/日本/é',encoded=[...Buffer.from(path)],p=f.api.vfs_read_raw_meta(path);await flush();
     assert.deepEqual(f.writes.flatMap(frame=>frame.slice(4)),[encoded.length,0,...encoded]);

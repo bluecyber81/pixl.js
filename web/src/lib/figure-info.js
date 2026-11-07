@@ -2,6 +2,22 @@
 // signatures, keys, file contents or paths are returned or sent to a service.
 export const IMAGE_COMMIT = '5fc4e058fea1092761a419e4ad1aeda56a39452e';
 export const TAG_LENGTHS = Object.freeze([532, 540, 572, 2048]);
+const airRidersIds = new Set(['1f00000004c41e03', '1f03010004c91e03', '1f04000004ca1e03', '1f02000004c71e03', '1f01000004c61e03']);
+const observedVehicles = {
+  'PB4W17:2': ['Warp Star'],
+  'PB4W17:4': ['Winged Star'],
+  'P45S63:4': ['Winged Star'],
+  'PB5T42:4': ['Shadow Star'],
+  'PC6V28:4': ['Tank Star', 'Hop Star'],
+};
+
+// Board codes overlap between vehicles. Only suggest models seen with this
+// header in physical samples. Never return a per-copy identifier.
+function vehicleCandidates(bytes) {
+  if (bytes[960] !== 2 || bytes[961] !== 0 || bytes[985] !== 0x20 || bytes[986] !== 1 || bytes[987] !== 1) return [];
+  const code = String.fromCharCode(...bytes.subarray(979, 985));
+  return [...(observedVehicles[`${code}:${bytes[988]}`] || [])];
+}
 
 export function figureId(value) {
   if (typeof value !== 'string') return null;
@@ -48,7 +64,9 @@ export function inspectTagStructure(input) {
   if (!id) issues.push('missing-id');
   const isV3 = id?.endsWith('03') === true;
   if (isV3 && bytes.byteLength !== 2048) issues.push('v3-length');
-  return { ...base, id, isV3, issues, status: issues.length ? 'attention' : 'structure-consistent' };
+  const result = { ...base, id, isV3, issues, status: issues.length ? 'attention' : 'structure-consistent' };
+  if (bytes.byteLength === 2048 && airRidersIds.has(id)) result.vehicleCandidates = vehicleCandidates(bytes);
+  return result;
 }
 
 // Validate size before touching the buffer (also protects against huge files).

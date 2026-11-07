@@ -54,6 +54,27 @@ async function mount(name,props={}){
 }
 async function click(root,label){ const button=nodes(root,'button').find(node=>text(node)===label);assert.ok(button,label);button.props.onClick();await Vue.nextTick(); }
 
+test('a single selected file without metadata is read on demand and cannot deliver an old preview after reconnect',async()=>{
+ const reads=[],bytes=new Uint8Array(540);
+ bytes[0]=4;bytes[3]=0x88^4;bytes[91]=2;
+ let finish;
+ const {root,state,app}=await mount('DeviceSearch',{connected:true,generation:1,directory:'E:/',getSession:()=>({
+  readDirectory:async()=>[{name:'custom.bin',type:0,size:540,meta:{}}],
+  readFile:(name,options)=>{reads.push([name,options.maxBytes]);return new Promise(resolve=>finish=resolve);}
+ })});
+ try{
+  nodes(root,'input')[0].props['onUpdate:modelValue']('custom');
+  await Vue.nextTick();await nodes(root,'form')[0].props.onSubmit({preventDefault(){}});await Vue.nextTick();
+  const item=nodes(root,'button').find(node=>text(node).includes('custom.bin'));
+  assert.equal(reads.length,0);
+  const selected=item.props.onClick();finish(bytes);await selected;await Vue.nextTick();
+  assert.match(text(root),/ID aus dem Dateiinhalt/);assert.equal(nodes(root,'img').length,1);
+  await item.props.onClick();const late=item.props.onClick();
+  state.generation=2;await Vue.nextTick();finish(bytes);await late;await Vue.nextTick();
+  assert.equal(nodes(root,'img').length,0);assert.deepEqual(reads,[['E:/custom.bin',540],['E:/custom.bin',540]]);
+ }finally{app.unmount();}
+});
+
 
 test('device search UI reads local catalogue metadata, emits navigation and keeps no results across sessions',async()=>{
  const busy=[],navigations=[],reads=[];
@@ -62,7 +83,10 @@ test('device search UI reads local catalogue metadata, emits navigation and keep
   nodes(root,'input')[0].props['onUpdate:modelValue']('mario');await Vue.nextTick();
   await nodes(root,'form')[0].props.onSubmit({preventDefault(){}});await Vue.nextTick();
   assert.match(text(root),/Mario/);assert.match(text(root),/Suche abgeschlossen/);assert.deepEqual(reads,['E:/']);assert.deepEqual(busy,[true,false]);
-  const result=nodes(root,'button').find(n=>text(n).includes('Original.BIN'));result.props.onClick();assert.equal(navigations[0].generation,4);assert.equal(navigations[0].path,'E:/Original.BIN');
+  const result=nodes(root,'button').find(n=>text(n).includes('Original.BIN'));await result.props.onClick();await Vue.nextTick();
+  assert.match(nodes(root,'img')[0].props.src,/icon_00000000-00000002\.png$/);
+  assert.equal(navigations.length,0);assert.deepEqual(reads,['E:/']);
+  await click(root,'Im Ordner anzeigen');assert.equal(navigations[0].generation,4);assert.equal(navigations[0].path,'E:/Original.BIN');
   state.generation=5;await Vue.nextTick();assert.doesNotMatch(text(root),/Original.BIN/);
  }finally{app.unmount();}
 });
@@ -134,7 +158,9 @@ test('device search uses the active online catalogue without downloading tag con
   nodes(root,'input').find(n=>n.props.type==='search').props['onUpdate:modelValue']('future figure');await Vue.nextTick();
   await nodes(root,'form')[0].props.onSubmit({preventDefault(){}});await Vue.nextTick();
   assert.deepEqual(reads,['E:/']);assert.match(text(root),/Future Figure Review Fixture/);assert.match(text(root),/New Series/);
-  nodes(root,'button').find(n=>text(n).includes('anonymous.bin')).props.onClick();
+  await nodes(root,'button').find(n=>text(n).includes('anonymous.bin')).props.onClick();await Vue.nextTick();
+  assert.match(nodes(root,'img')[0].props.src,/a{40}\/images\/icon_f1234567-00000002/);
+  await click(root,'Im Ordner anzeigen');
   assert.equal(navigations[0].id,id);assert.equal(navigations[0].path,'E:/anonymous.bin');
  }finally{app.unmount();}
 });

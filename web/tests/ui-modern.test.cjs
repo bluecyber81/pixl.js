@@ -355,7 +355,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.39.5'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.40.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -367,7 +367,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.39.5.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.40.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -454,7 +454,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.39.5.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.40.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -995,7 +995,7 @@ test('production template compiles with Vue 3 and modern Element Plus bindings',
   assert.deepEqual(compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'ui' }).errors, []);
   assert.doesNotMatch(descriptor.template.content, /slot-scope|\.(?:native|sync)(?==|\s|>)/);
   assert.match(descriptor.template.content, /<h1>\{\{ \$t\('workflow\.appTitle'\) \}\}<\/h1>/);
-  assert.match(descriptor.template.content, /<strong>3\.39\.5<\/strong>/);
+  assert.ok(descriptor.template.content.includes('<strong>' + require('../package.json').version + '</strong>'));
 });
 
 test('3.26 workspaces open and focus without navigation, disconnect or loss of transfer state',()=>{
@@ -1477,10 +1477,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.39.5.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.40.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.39.5.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.40.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -1858,14 +1858,14 @@ test('3.22 backup checkpoint survives disconnect, prevents resume while busy, an
   const h=harness({createBackupCheckpoint:()=>{created++;return checkpoint;},createBackup:async options=>{calls++;lastOptions=options;if(calls===1){state.busy=true;options.onProgress({phase:'reading',bytesDone:1080,bytesTotal:2160});await gate.promise;state.busy=false;throw Error('interrupted');}return{blob:new Blob(['zip']),filename:'resumed.zip',manifest:{files:2,bytes:1080}};}}),app=connected(h);
   app.firmwareVersion=state.firmwareVersion;const pending=app.on_backup();assert.equal(app.backupResumeInfo.files,2);
   app.on_ble_disconnected();assert.equal(lastOptions.signal.aborted,true);assert.equal(app._backupCheckpoint,checkpoint);assert.equal(app.backupResumeInfo.busy,true);
-  app.connected=true;app.current_dir='E:/';app.firmwareVersion=state.firmwareVersion;
+  app.connected=true;app.current_dir='';app.firmwareVersion=state.firmwareVersion;
   await app.on_backup(true);assert.equal(calls,1);app.discard_backup_checkpoint();assert.equal(app._backupCheckpoint,checkpoint);
   gate.resolve();await pending;assert.equal(app.backupResumeInfo.busy,false);assert.equal(app.backupResumeInfo.files,2);
   await app.on_backup(true);assert.equal(calls,2);assert.equal(created,1);assert.equal(lastOptions.checkpointState,checkpoint);assert.equal(lastOptions.deviceKey,'private-test-device');
-  assert.equal(app.lastBackup.filename,'resumed.zip');
+  assert.equal(app.lastBackup.filename,'resumed.zip');assert.equal(lastOptions.rootPath,'E:/');
 });
 
-test('3.22 real checkpoint rejects changed device, firmware or root before any BLE read', async()=>{
+test('backup resumes the saved root regardless of navigation and rejects another device or firmware before BLE reads', async()=>{
   const {createBackup,createBackupCheckpoint}=await import('../src/lib/backup.js');
   for(const change of ['device','firmware','root']){
     let reads=0;const override={deviceKey:'private-test-device',createBackup,createBackupCheckpoint,vfs_read_folder:async()=>{reads++;return{status:0,data:[]};}};
@@ -1873,9 +1873,39 @@ test('3.22 real checkpoint rejects changed device, firmware or root before any B
     app._backupCheckpoint=createBackupCheckpoint({rootPath:'E:/',deviceKey:'private-test-device',firmwareVersion:app.firmwareVersion,preserveLegacyNames:true});
     app.refresh_backup_checkpoint();
     if(change==='device')override.deviceKey='different';else if(change==='firmware')app.firmwareVersion='other';else app.current_dir='E:/other';
-    await app.on_backup(true);assert.equal(reads,0);assert.equal(app.lastBackup,null);assert.equal(app.busy,false);
+    await app.on_backup(true);assert.equal(app.busy,false);
+    if(change==='root'){assert.equal(reads,2);assert.equal(app.lastBackup.manifest.rootPath,'E:/');continue;}
+    assert.equal(reads,0);assert.equal(app.lastBackup,null);
     assert.equal(h.messages.at(-1).message,'workflow.checkpointIdentity');
   }
+});
+
+test('reconnect from the drive list validates identical-length changed files through the UI and includes their current contents', async()=>{
+  const {createBackup,createBackupCheckpoint}=await import('../src/lib/backup.js');
+  const crypto=require('node:crypto'), hash=data=>crypto.createHash('sha256').update(data).digest('hex');
+  const meta={valid:true,notes:'',flags:{raw:0,hide:false,readonly:false},amiibo:{head:0,tail:0}};
+  const source=new Map([['E:/a.bin',Uint8Array.of(1,2)],['E:/b.bin',Uint8Array.of(3,4)]]);
+  const digestCalls=[], transfers=[];
+  let interrupt=true,app;
+  const h=harness({createBackup,createBackupCheckpoint,
+    vfs_read_folder:async path=>{assert.equal(path,'E:/');return{status:0,data:[...source].map(([name,b])=>({name:name.slice(3),type:0,size:b.length,meta}))};},
+    vfs_backup_digest:async(path, size, firmware)=>{
+      digestCalls.push(path);assert.equal(size,2);assert.equal(firmware,'2.22.0-DE3.66');return hash(source.get(path));
+    },
+    vfs_helper_read_file(path,resolve,reject){
+      if(interrupt && path==='E:/b.bin'){app.on_ble_disconnected();reject(Error('disconnected'));return;}
+      transfers.push(path);resolve(source.get(path).buffer);
+    }
+  });
+  app=connected(h);app.firmwareVersion='2.22.0-DE3.66';await app.on_backup();
+  assert.equal(app.connected,false);assert.equal(app.backupResumeInfo.files,1);
+  assert.equal(app.backupResumeMatches,false);source.get('E:/a.bin').fill(7);
+  interrupt=false;app.connected=true;app.current_dir='';app.firmwareVersion='2.22.0-DE3.66';
+  assert.equal(app.backupResumeMatches,true);
+  await app.on_backup(true);assert.equal(app.lastBackup.manifest.files,2);
+  const first=app.lastBackup.manifest.entries.find(file=>file.sourcePath==='E:/a.bin');
+  assert.equal(first.sha256,hash(Uint8Array.of(7,7)));
+  assert.deepEqual(digestCalls,['E:/a.bin']);assert.deepEqual(transfers,['E:/a.bin','E:/a.bin','E:/b.bin']);
 });
 
 test('3.22 completed backup drops the resume byte cache but keeps its savable complete archive', async()=>{
@@ -2077,7 +2107,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.39.5');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.40.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

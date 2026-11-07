@@ -49,6 +49,7 @@ export function createBackupCheckpoint({ rootPath, deviceKey, firmwareVersion, p
   }
   if (!state.firmwareVersion) fail('BACKUP_API', 'A firmware version is required to resume a backup.')
   const handle = Object.freeze({
+    matchesDevice: (key, version) => state.deviceKey === key && state.firmwareVersion === version,
     summary: () => Object.freeze({ rootPath: state.root, firmwareVersion: state.firmwareVersion,
       preserveLegacyNames: state.preserveLegacyNames, files: state.entries.size, bytes: state.bytes, busy: state.busy }),
     clear: () => {
@@ -247,13 +248,14 @@ async function zipStore(entries, date, checkpoint) {
  * This is a checked sequential export, not an atomic filesystem snapshot or a
  * raw-metadata backup. Same-size content changes between reads are not detected.
  */
-export async function createBackup({ rootPath, readDirectory, readFile, readRawMetadata, onProgress, signal, firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState }) {
+export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState }) {
   if (typeof preserveLegacyNames !== 'boolean') fail('BACKUP_API', 'Invalid name preservation option.')
   const root = checkedRoot(rootPath, preserveLegacyNames)
   if (typeof readDirectory !== 'function' || typeof readFile !== 'function') {
     fail('BACKUP_API', 'Directory and file readers are required.')
   }
   checkedFirmwareVersion(firmwareVersion)
+  if (readFileDigest !== undefined && typeof readFileDigest !== 'function') fail('BACKUP_API', 'Invalid digest reader.')
   if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
   let resume = null
   if (checkpointState != null) {
@@ -267,7 +269,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readRawM
     resume.busy = true
   }
   try {
-    const result = await buildBackup({ root, readDirectory, readFile, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume })
+    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume })
     // A returned Blob owns its bytes. Keep no second resumable copy after success.
     if (resume) { resume.entries.clear(); resume.bytes = 0 }
     return result
@@ -276,32 +278,30 @@ export async function createBackup({ rootPath, readDirectory, readFile, readRawM
   }
 }
 
-async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume }) {
+async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume }) {
   const started = new Date()
   const snapshots = [], records = [], zipEntries = [], checksums = []
   let filesTotal = 0, filesDone = 0, bytesTotal = 0, bytesDone = 0, observerError = null
   let reusedFiles = 0, reusedBytes = 0
   const jobStartedAt = performance.now()
   let step = '', startedAt = jobStartedAt, updatedAt = jobStartedAt, previousDone = 0
-  let cachedFiles = 0, cachedBytes = 0, verifiedFolders = 0
+  let verifiedFolders = 0
   function checkpoint() {
     if (signal?.aborted) { const e = new Error('Backup cancelled. No archive was created.'); e.name = 'AbortError'; throw e }
     if (observerError) throw observerError
   }
   function progress(phase, path, activeBytes = 0) {
     if (onProgress) {
-      // Compare completed BLE reads across file boundaries. Already retained
-      // files add no new BLE work. For one or two files use chunk progress.
+      // Resumed files also need a fresh read or digest from the device.
       let completed = 0, total = null
       if (phase === 'listing') completed = snapshots.length
       if (phase === 'reading') {
-        const count = filesTotal - cachedFiles
-        if (count <= 2 && bytesTotal > cachedBytes) {
-          completed = bytesDone + activeBytes - reusedBytes
-          total = bytesTotal - cachedBytes
+        if (filesTotal <= 2 && bytesTotal > 0) {
+          completed = bytesDone + activeBytes
+          total = bytesTotal
         } else {
-          completed = filesDone - reusedFiles
-          total = count
+          completed = filesDone
+          total = filesTotal
         }
       }
       if (phase === 'verifying') { completed = verifiedFolders; total = snapshots.length }
@@ -351,8 +351,6 @@ async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onP
         resume.entries.delete(path); resume.bytes -= entry.bytes.length
       }
     }
-    cachedFiles = resume.entries.size
-    cachedBytes = resume.bytes
   }
   for (const record of records) {
     checkpoint()
@@ -367,6 +365,19 @@ async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onP
     progress('reading', record.sourcePath); checkpoint()
     const identity = fileIdentity(record)
     let cached = resume?.entries.get(record.sourcePath)
+    if (cached) {
+      const digest = readFileDigest ? await readFileDigest(record.sourcePath, record.size) : null
+      checkpoint()
+      if (digest !== null && (typeof digest !== 'string' || !/^[a-f0-9]{64}$/u.test(digest))) {
+        fail('BACKUP_DIGEST', 'Invalid SHA-256 response while resuming a backup.')
+      }
+      if (digest !== cached.sha256) {
+        // A changed file or a device without digest support needs current bytes.
+        resume.entries.delete(record.sourcePath)
+        resume.bytes -= cached.bytes.length
+        cached = undefined
+      }
+    }
     if (cached) {
       ++reusedFiles; reusedBytes += cached.bytes.length
     } else {
@@ -422,7 +433,7 @@ async function buildBackup({ root, readDirectory, readFile, readRawMetadata, onP
     files: filesTotal, directories: snapshots.length - 1, bytes: bytesTotal,
     metadataEncoding: readRawMetadata ? 'Exact 128-byte VFS attributes in rawMeta128Hex; decoded metadata is informational, including unknown or malformed fields.' : 'Decoded protocol fields: notes, raw flags, hide/readonly and amiibo IDs; not raw metadata bytes.',
     nameMapping: preserveLegacyNames ? 'Unportable or colliding names have unique portable ZIP aliases. Each sourcePath is the exact original device identity; archivePath locates its unchanged data. Do not infer original names from ZIP aliases.' : 'Original names retained; unsafe or colliding names rejected.',
-    consistency: 'Serial reads; exact listed sizes; directory name/type/size/decoded-metadata snapshots compared before and after. Not an atomic snapshot; same-size content changes between reads or retries without listed metadata changes are not detected.',
+    consistency: 'Serial reads; exact listed sizes; directory name/type/size/decoded-metadata snapshots compared before and after. Cached bytes are reused only after their current device SHA-256 matches. Not an atomic snapshot: files may change after their individual read or digest.',
     resume: { reusedFiles, reusedBytes, retainedInBrowserMemoryOnly: !!resume },
     entries: records,
   }

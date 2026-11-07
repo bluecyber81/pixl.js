@@ -98,6 +98,52 @@ async function filter(root, value) {
   nodes(classNode(root, 'presence-filter'), 'select')[0].props['onUpdate:modelValue'](value); await Vue.nextTick();
 }
 
+test('nine announced figures have official links and do not enter catalogue counts or the missing filter', async () => {
+  const { root, app } = await mount({ collectionReport: report() });
+  try {
+    const section = classNode(root, 'announcements');
+    assert.equal(section.props.open, false);
+    assert.match(text(nodes(section, 'summary')[0]), /Angekündigte Figuren \(9\)/);
+    const figures = nodes(section, 'li');
+    assert.equal(figures.length, 9);
+    for (const figure of figures) {
+      const official = nodes(figure, 'a')[0];
+      assert.equal(new URL(official.props.href).hostname, 'www.nintendo.com');
+      assert.equal(official.props.rel, 'noopener noreferrer');
+    }
+    assert.equal(nodes(section, 'code').length, 2);
+    assert.equal(nodes(section, 'img').length, 0);
+    assert.equal(cards(root).length, 4);
+    assert.match(text(classNode(root, 'result-bar')), /^4 Treffer/);
+    await filter(root, 'missing');
+    assert.equal(classNode(root, 'announcements'), undefined);
+    assert.equal(cards(root).length, 1);
+  } finally { app.unmount(); }
+});
+
+test('announcement search opens relevant results by either language or proposed ID and separates them from known IDs', async () => {
+  const { root, app } = await mount({}, 'en_US');
+  try {
+    const search = nodes(root, 'input').find(node => node.props.type === 'search');
+    for (const term of ['junger link', 'YOUNG LINK', '0100000004FD0902']) {
+      search.props['onUpdate:modelValue'](term); await Vue.nextTick();
+      const section = classNode(root, 'announcements');
+      assert.equal(section.props.open, true);
+      assert.equal(nodes(section, 'li').length, 1);
+      assert.match(text(section), /Young Link/);
+      assert.match(text(section), /Unconfirmed community ID0100000004fd0902/);
+      assert.match(text(section), /Other compatible Zelda figures give you items/);
+      assert.equal(cards(root).length, 0);
+      assert.match(text(classNode(root, 'empty-result')), /announcements above/);
+    }
+    search.props['onUpdate:modelValue']('01000000037c0002'); await Vue.nextTick();
+    assert.equal(classNode(root, 'announcements'), undefined, 'the existing Smash edition has another ID');
+    search.props['onUpdate:modelValue']('Proto Man'); await Vue.nextTick();
+    assert.match(text(classNode(root, 'announcements')), /Spring 2027/);
+    assert.equal(nodes(classNode(root, 'announcements'), 'code').length, 0);
+  } finally { app.unmount(); }
+});
+
 test('gallery has no image requests before opt-in and renders only lazy images from the active page and commit', async () => {
   const { root, app } = await mount({ catalogue: catalogue(81) });
   try {

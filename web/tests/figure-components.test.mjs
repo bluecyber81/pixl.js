@@ -162,8 +162,9 @@ test('compact figure details keep warnings and image consent visible while techn
 
 test('catalogue search reset and selection changes preserve pagination and clear earlier image permission',async()=>{
   const {root,app}=await mount('CataloguePanel');
+  const catalogueCards = () => nodes(root, 'li').filter(node => node.props['data-presence'] !== undefined);
   try {
-    assert.equal(nodes(root,'li').length,40);
+    assert.equal(catalogueCards().length,40);
     const detailsButton=nodes(root,'button').find(node=>text(node)==='Details und Bild');
     detailsButton.props.onClick({currentTarget:detailsButton});await Vue.nextTick();await Vue.nextTick();
     assert.match(text(root),/Ausgewählte Figur/);assert.equal(nodes(root,'img').length,0);
@@ -171,7 +172,7 @@ test('catalogue search reset and selection changes preserve pagination and clear
     const search=nodes(root,'input').find(node=>node.props.type==='search');
     search.props['onUpdate:modelValue']('zzzz-no-match');await Vue.nextTick();
     assert.equal(nodes(root,'img').length,0);assert.match(text(root),/Keine passenden Figuren/);assert.doesNotMatch(text(root),/Ausgewählte Figur/);
-    await click(root,'Suche und Filter zurücksetzen');assert.equal(nodes(root,'li').length,40);assert.equal(nodes(root,'img').length,0);
+    await click(root,'Suche und Filter zurücksetzen');assert.equal(catalogueCards().length,40);assert.equal(nodes(root,'img').length,0);
     const filters=nodes(root,'details').find(node=>node.props.class==='filter-details');
     assert.ok(filters);assert.notEqual(filters.props.open,true);
   } finally { app.unmount(); }

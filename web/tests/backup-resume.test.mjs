@@ -16,6 +16,7 @@ function fixture(overrides = {}) {
   const checkpointState = createBackupCheckpoint(identity)
   const options = { ...identity, checkpointState, onProgress: p => progress.push(p),
     readDirectory: async path => { fs.api.assertSession(); const rows = await fs.api.readDirectory(path); fs.api.assertSession(); return rows },
+    readFileDigest: async path => { fs.api.assertSession(); return digest(fs.nodes.get(path).bytes) },
     readFile: async (path, settings) => { fs.api.assertSession(); const bytes = await fs.api.readFile(path, settings); fs.api.assertSession(); return bytes },
   }
   return { fs, progress, identity, checkpointState, options }
@@ -41,15 +42,15 @@ test('backup time samples separate listing, aggregate BLE reads, directory verif
   f.fs.log.length = 0;
   await createBackup(f.options);
   assert.deepEqual(reads(f), []);
-  assert.ok(forPhase('reading').every(p => p.timing.completed === 0 && p.timing.total === 0));
+  assert.ok(forPhase('reading').every(p => p.timing.completed === p.filesDone && p.timing.total === 3));
 });
 
-test('resumed folder backup excludes cached data from remaining BLE byte estimates', async () => {
+test('resumed folder backup counts digest checks and fresh files in the time estimate', async () => {
   const f = fixture();
   await interruptAfterFiles(f);
   await createBackup(f.options);
   const reading = f.progress.filter(p => p.phase === 'reading');
-  assert.ok(reading.every(p => p.timing.total === 3 && p.timing.completed === p.bytesDone - p.reusedBytes));
+  assert.ok(reading.every(p => p.timing.total === 3 && p.timing.completed === p.filesDone));
   assert.equal(reading.at(-1).timing.completed, 3);
 });
 
@@ -220,13 +221,29 @@ test('new legacy ZIP aliases are recomputed, but cached data is matched only by 
   assert(!reads(f).includes('E:/tags/CON')); assert.equal(result.manifest.resume.reusedFiles, 1)
 })
 
-test('same-size silent content changes remain an explicitly disclosed snapshot limitation', async () => {
+test('same-size file changes after disconnection are recovered with and without on-device digest support', async () => {
+  for (const mode of ['supported', 'unsupported', 'legacy']) {
+    const f = fixture(); await interruptAfterFiles(f)
+    f.fs.nodes.get('E:/tags/a.bin').bytes.fill(99)
+    if (mode === 'unsupported') f.options.readFileDigest = async () => null
+    if (mode === 'legacy') delete f.options.readFileDigest
+    const result = await createBackup(f.options)
+    assert.deepEqual(await zipFile(result.blob, 'files/a.bin'), new Uint8Array([99, 99, 99]))
+    assert.equal(result.manifest.resume.reusedFiles, 0)
+    assert.equal(result.manifest.entries.find(row => row.sourcePath.endsWith('/a.bin')).sha256, digest(new Uint8Array([99,99,99])))
+  }
+})
+
+test('an invalid or interrupted digest never publishes unchecked cached bytes', async () => {
   const f = fixture(); await interruptAfterFiles(f)
-  f.fs.nodes.get('E:/tags/a.bin').bytes.fill(99)
-  const result = await createBackup(f.options)
-  assert.deepEqual(await zipFile(result.blob, 'files/a.bin'), new Uint8Array([1, 2, 3]))
-  assert.match(result.manifest.consistency, /same-size content changes.*retries.*not detected/)
-  assert.equal(result.manifest.resume.reusedFiles, 1)
+  const valid = f.options.readFileDigest
+  f.options.readFileDigest = async () => 'abc'
+  await assert.rejects(createBackup(f.options), code('BACKUP_DIGEST'))
+  f.options.readFileDigest = async () => { throw new Error('Disconnected during digest') }
+  await assert.rejects(createBackup(f.options), /Disconnected during digest/)
+  assert.equal(f.checkpointState.summary().files, 1)
+  f.options.readFileDigest = valid
+  assert.equal((await createBackup(f.options)).manifest.resume.reusedFiles, 1)
 })
 
 test('cache owns adapter buffers; failed or incomplete reads are not cached', async () => {

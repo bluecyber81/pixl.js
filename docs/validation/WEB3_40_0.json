@@ -1,0 +1,29 @@
+{
+  "version": "3.40.0",
+  "physicalDevice": false,
+  "chromeLayouts": {
+    "root": {
+      "files": 157,
+      "passed": {
+        "catalog": 198,
+        "screen": 133,
+        "overview": 63,
+        "fixes": 27
+      },
+      "totalChecks": 421,
+      "productionTestsPassed": 21
+    },
+    "pages": {
+      "files": 157,
+      "passed": {
+        "catalog": 198,
+        "screen": 133,
+        "overview": 63,
+        "fixes": 27
+      },
+      "totalChecks": 421,
+      "productionTestsPassed": 21
+    }
+  },
+  "web_host_tests": 1279
+}

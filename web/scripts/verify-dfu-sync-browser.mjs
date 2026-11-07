@@ -9,7 +9,8 @@ const [dist, base, report] = process.argv.slice(2);
 assert.ok(dist && report && ['/', '/pixl.js/'].includes(base));
 const build = path.resolve(dist);
 const libraries = new URL('../src/lib/', import.meta.url);
-const helperNames = ['sync-plan.js', 'safe-upload.js', 'portable-names.js'];
+const webVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
+const helperNames = ['sync-plan.js', 'safe-upload.js', 'portable-names.js', 'backup.js', 'raw-metadata.js', 'zip-crc32.js'];
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json' };
 const server = createServer(async (req, res) => {
   try {
@@ -45,13 +46,18 @@ try {
     await page.waitForFunction(() => !document.querySelector('.el-message'));
   };
   await page.locator('.version-context').waitFor();
-  assert.match(await page.title(), /3\.39\.5$/);
+  assert.equal(await page.title(), 'Allmiibo Dateimanager ' + webVersion);
   await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
   const finalFile = 'Allmiibo_LCD_DE3_65_637_NUR_APP.zip';
+  const previewFile = 'Allmiibo_LCD_DE3_66_638_NUR_APP.zip';
   const update = page.locator('.firmware-packages');
-  assert.equal(await update.locator('a[download]').getAttribute('href'), base + 'firmware/' + finalFile);
-  assert.match(await update.innerText(), /DE3\.65.*Zähler 637/);
-  checks.push({ feature:'released application 637 available from Update' });
+  for (const [file, version, counter] of [[finalFile, 'DE3.65', 637], [previewFile, 'DE3.66', 638]]) {
+    const row = update.locator('.package').filter({ has: page.locator('strong', { hasText: version }) });
+    assert.equal(await row.locator('a[download]').getAttribute('href'), base + 'firmware/' + file);
+    assert.ok((await row.innerText()).includes('Zähler ' + counter));
+    if (counter === 638) assert.match(await row.innerText(), /Testversion/);
+    checks.push({ feature:'listed application available from Update', version, counter });
+  }
   for (const lang of ['de_DE','en']) {
     await page.evaluate(lang => {
       const app = document.querySelector('#app')._vnode.component.proxy;
@@ -61,6 +67,25 @@ try {
     const hint = page.locator('.workspace-description:visible');
     await hint.filter({hasText:lang === 'de_DE' ? 'Beim Schließen oder Neuladen' : 'Closing or reloading'}).waitFor();
     checks.push({lang,feature:'backup checkpoint lifetime visible before a backup'});
+    const observed = await page.evaluate(async () => {
+      const {createBackup, createBackupCheckpoint} = await import('/parser/backup.js');
+      const {memoryVfs} = await import('/fixtures/memory-vfs.mjs');
+      const vfs = memoryVfs(), deviceKey = 'synthetic-browser-device';
+      vfs.put('E:/a.bin', [1,2]); vfs.put('E:/b.bin', [3]);
+      const options = {...vfs.api, rootPath:'E:/', firmwareVersion:'2.21.0-DE3.8', deviceKey};
+      options.checkpointState = createBackupCheckpoint(options);
+      const abort = new AbortController();
+      try { await createBackup({...options, signal:abort.signal, onProgress: p => { if (p.filesDone === 1) abort.abort(); }}); }
+      catch (error) { if (error.name !== 'AbortError') throw error; }
+      const retained = options.checkpointState.summary().files;
+      vfs.disconnect(); vfs.reconnect(); vfs.put('E:/a.bin', [9,9]); vfs.log.length = 0;
+      const resumed = await createBackup(options);
+      const expected = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', Uint8Array.of(9,9))), n=>n.toString(16).padStart(2,'0')).join('');
+      return {retained, changed:resumed.manifest.entries[0].sha256 === expected, reused:resumed.manifest.resume.reusedFiles,
+        reads:vfs.log.filter(op=>op.op==='read').length, writes:vfs.log.filter(op=>['write','rename','remove','meta','mkdir'].includes(op.op)).length};
+    });
+    assert.deepEqual(observed, {retained:1,changed:true,reused:0,reads:2,writes:0});
+    checks.push({lang,feature:'legacy backup resumes after reconnect with current bytes, including a same-size change',...observed});
     const before = await page.locator('.el-message').count();
     await page.evaluate(() => {
       const app = document.querySelector('#app')._vnode.component.proxy;
@@ -165,21 +190,28 @@ try {
     }}});
   });
   await page.goto(origin + base + 'dfu/web.html');
-  assert.equal(await page.locator('a[download]').getAttribute('href'), '../firmware/' + finalFile);
+  for (const file of [finalFile, previewFile]) {
+    assert.equal(await page.locator('a[download][href$="' + file + '"]').getAttribute('href'), '../firmware/' + file);
+  }
   assert.ok(await page.locator('#button').isDisabled());
-  assert.equal(await page.locator('#bundled option').count(), 2);
-  assert.match(await page.locator('#bundled option').last().innerText(), /DE3\.65/);
-  checks.push({ feature:'final signed package in local DFU chooser and idle device selector' });
+  assert.equal(await page.locator('#bundled option').count(), 3);
+  assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65/);
+  assert.match(await page.locator('#bundled option[value="de3.66-lcd-app"]').innerText(), /DE3\.66.*Testversion/);
+  checks.push({ feature:'stable and preview releases in local DFU chooser and idle device selector' });
   if (process.env.ALLMIIBO_CANDIDATE_OTA) {
     await page.locator('#file').setInputFiles(process.env.ALLMIIBO_CANDIDATE_OTA);
-    await page.waitForFunction(() => document.querySelector('#package-target').textContent.includes('Zähler 637'));
+    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previewFile ? 638 : 637;
+    await page.waitForFunction(counter => document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
     assert.match(await page.locator('#package-target').innerText(), /Hardwarefeld 52.*0x0126/);
     assert.equal(await page.evaluate(() => probe.requests), 0);
-    checks.push({ feature:'production parser accepted explicit App 637 ZIP without device selection' });
+    checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  await page.locator('#bundled').selectOption({ index:1 });
-  await page.locator('#load-bundled').click();
-  await page.waitForFunction(() => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler 637'));
+  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.66-lcd-app', 638]]) {
+    await page.locator('#bundled').selectOption(id);
+    await page.locator('#load-bundled').click();
+    await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
+    checks.push({ feature:'production parser loaded bundled ZIP and reached device selection', counter });
+  }
   await page.evaluate(() => {
     const state = window.probe;
     SecureDfu.prototype.requestDevice = function() { state.chooserActive = navigator.userActivation.isActive; return {}; };

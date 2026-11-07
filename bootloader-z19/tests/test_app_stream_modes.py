@@ -16,6 +16,16 @@ spec.loader.exec_module(stream)
 
 
 class StreamModeTests(unittest.TestCase):
+    def test_current_signed_release_is_pinned_for_resume(self):
+        root = HERE.parents[1]
+        if not (root / 'RELEASE_INFO.json').exists() and not (root / 'fw/releases').is_dir():
+            self.skipTest('Release ZIP binding requires the complete repository.')
+        release = json.loads((root / 'RELEASE_INFO.json').read_text())
+        archive = root / release['application_ota_path']
+        archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+        self.assertEqual(archive_hash, release['ota_sha256'])
+        self.assertEqual(stream.RELEASE_PAYLOADS[archive_hash], release['application_sha256'])
+
     def check_blocked(self, no_leak):
         with tempfile.TemporaryDirectory() as tmp:
             stage = Path(tmp)

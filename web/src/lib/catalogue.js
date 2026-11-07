@@ -1,16 +1,23 @@
 // Metadata only. A catalogue entry does not establish file ownership, file
 // presence on a device, a release date in every region, or emulation support.
 const normalize = value => String(value ?? '').normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('en');
+export function catalogueMatcher(query) {
+  const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+  if (!terms.length) return () => true;
+  return (...fields) => {
+    const text = normalize(fields.join(' '));
+    return terms.every(term => text.includes(term));
+  };
+}
 export function parseKnownFigureIds(text) {
   const values = String(text).split(/\r?\n/).map(line => line.trim().toLowerCase()).filter(Boolean);
   if (values.some(id => !/^[0-9a-f]{16}$/.test(id))) throw new Error('Invalid known figure ID');
   return new Set(values);
 }
 export function filterCatalogue(entries, { query = '', series = '', kind = '', knownOnly = false } = {}) {
-  const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+  const matches = catalogueMatcher(query);
   return entries.filter(entry => (!series || entry.series === series) && (!kind || entry.type === kind) &&
-    (!knownOnly || entry.firmwareIdKnown === true) && terms.every(term =>
-      normalize([entry.id, entry.name, entry.series, entry.game, entry.type].join(' ')).includes(term)));
+    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type));
 }
 
 export function cataloguePage(entries, page, size = 40) {

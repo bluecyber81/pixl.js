@@ -11,7 +11,8 @@
         need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=8,'Ungültiger lokaler Firmware-Katalog.');
         const seen=new Set();
         const packages=input.packages.map(item=>{
-            need(item&&Object.keys(item).sort().join(',')===[...keys].sort().join(','),'Unvollständiger Firmware-Eintrag.');
+            const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
+            need(item&&Object.keys(item).sort().join(',')===[...fields].sort().join(','),'Unvollständiger Firmware-Eintrag.');
             const version=/^2\.22\.0-DE3\.([1-9][0-9]{0,3})$/.exec(item.version);
             need(version&&item.id===`de3.${version[1]}-lcd-app`&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.');
             need([`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`].includes(item.file),'Ungültiger Firmware-Dateiname.');

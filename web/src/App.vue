@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.39.5</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.40.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -108,7 +108,7 @@
       <p>{{ backupResumeInfo.rootPath }} · {{ $t('workflow.cached', {count:backupResumeInfo.files,bytes:format_size(backupResumeInfo.bytes)}) }}</p>
       <p>{{ $t('workflow.resumeHint') }}</p>
       <details><summary>{{ $t('workflow.resumeLimitsTitle') }}</summary><p>{{ $t('workflow.resumeLimits') }}</p></details>
-      <button type="button" @click="on_backup(true)" :disabled="btn_disabled() || upload_diag_visible || backupResumeInfo.busy || current_dir !== backupResumeInfo.rootPath">{{ $t('workflow.resume') }}</button>
+      <button type="button" @click="on_backup(true)" :disabled="!backupResumeMatches || busy || disconnecting || upload_diag_visible">{{ $t('workflow.resume') }}</button>
       <button type="button" @click="discard_backup_checkpoint" :disabled="busy || backupResumeInfo.busy">{{ $t('workflow.discard') }}</button>
     </section>
     <section v-if="lastBackup" class="backup-ready" role="status">
@@ -246,10 +246,11 @@
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
+      <DisplayPhoto :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.39.5</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.40.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -496,13 +497,13 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.39.5.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.40.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
-      powerInfo: null, powerState: 'unknown', startupBusy: false,
+      powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
@@ -565,7 +566,7 @@ export default {
     elementLocale() { return getElementLocale(this.language) },
     breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
     figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
-    busy() { return this.fullDiagnosticBusy || this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
+    busy() { return this.displayPhotoBusy || this.fullDiagnosticBusy || this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
     lastTransfer() { return this.transferHistory.at(-1) || null; },
     connectionDisconnectLocked() { return this.collectionWriting || this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
     zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
@@ -593,7 +594,8 @@ export default {
       const now = Math.max(timing.updatedAt, this.readClock);
       return { ...readTimeEstimate(timing, now), jobSeconds: Math.floor((now - timing.jobStartedAt) / 1000) };
     },
-    backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; }
+    backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; },
+    backupResumeMatches() { return !!(this.connected && this.backupResumeInfo && this._backupCheckpoint?.matchesDevice(pixl.get_device_key?.(), this.firmwareVersion)); }
   },
   methods: {
     memory_sample_key(count) { return memorySampleEvidenceKey(count); },
@@ -725,11 +727,12 @@ export default {
       this.open_zip();
       if (this.zipDialog) await this.on_zip_file(event);
     },
+    read_display_photo(version) { return proto.get_display_photo(version); },
     read_startup_diagnostics() { this.fullDiagnosticSnapshot = null; return proto.get_startup_diagnostics(this.firmwareVersion); },
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.39.5.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.40.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1180,7 +1183,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.39.5.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.40.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1293,8 +1296,10 @@ export default {
       }
     },
     async on_backup(resume = false) {
-      if (this.btn_disabled() || this.upload_diag_visible) return;
-      const rootPath = this.current_dir, generation = this.sessionGeneration;
+      if (!this.connected || this.busy || this.disconnecting || this.upload_diag_visible) return;
+      const rootPath = resume === true ? this.backupResumeInfo?.rootPath : this.current_dir;
+      if (!rootPath) return;
+      const generation = this.sessionGeneration;
       if (this.backupResumeInfo?.busy) return;
       const deviceKey = pixl.get_device_key?.();
       if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
@@ -1317,6 +1322,11 @@ export default {
             this.assert_session(generation);
             const entries = this.checked(await proto.vfs_read_folder(path));
             this.assert_session(generation); return entries;
+          },
+          readFileDigest: async (path, size) => {
+            this.assert_session(generation);
+            const digest = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
+            this.assert_session(generation); return digest;
           },
           readFile: async (path, options) => {
             this.assert_session(generation);
