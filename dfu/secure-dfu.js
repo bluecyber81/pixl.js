@@ -55,12 +55,21 @@
     dispatchEvent(name, detail) { for(const callback of this._events.get(name)||[]) {try{callback(detail);}catch(error){globalThis.console?.error('DFU event listener failed',error);}} }
     log(message) {this.dispatchEvent('log',{message});}
     progress(object,totalBytes,currentBytes) {this.dispatchEvent('progress',{object,totalBytes,currentBytes});}
-    _listen(target,name,callback){target.addEventListener(name,callback);this._listeners.push(()=>target.removeEventListener(name,callback));}
+    _listen(target,name,callback){
+      const epoch=this._epoch;
+      const currentSession=event=>{if(this._active&&this._epoch===epoch)callback(event);};
+      target.addEventListener(name,currentSession);
+      this._listeners.push(()=>target.removeEventListener(name,currentSession));
+    }
     _assertActive(epoch=this._epoch){if(!this._active||epoch!==this._epoch)throw new Error('DFU session ended');}
-    _disconnect(){if(!this._device||OWNERS.get(this._device)!==this._ownerToken)return;try{this._device.gatt.disconnect();}catch(_) {}}
+    _disconnect(){
+      if(!this._device||OWNERS.get(this._device)!==this._ownerToken||this._localDisconnectRequested)return;
+      this._localDisconnectRequested=true;
+      try{this._device.gatt.disconnect();}catch(_) {}
+    }
     _rejectPending(error){if(this._pending){const pending=this._pending;this._pending=null;clearTimeout(pending.timer);pending.reject(error);}}
     _finishPending(){const pending=this._pending;if(pending?.ackData&&pending.writeSettled){this._pending=null;clearTimeout(pending.timer);pending.resolve(pending.ackData);}}
-    _cleanup(){this._active=false;if(this._ownerToken)this._ownerToken.active=false;this._rejectPending(new Error('DFU session ended'));for(const remove of this._listeners.splice(0))remove();this.controlChar=null;this.packetChar=null;this._rebootResolve=null;}
+    _cleanup(){this._active=false;if(this._ownerToken)this._ownerToken.active=false;this._rejectPending(new Error('DFU session ended'));for(const remove of this._listeners.splice(0))remove();this.controlChar=null;this.packetChar=null;this._finishDisconnectWait=null;}
     _bounded(promise,ms,label){
       const epoch=this._epoch;
       return new Promise((resolve,reject)=>{
@@ -80,9 +89,11 @@
       if(OWNERS.get(device)?.active)throw new Error('This Bluetooth device already has an active DFU session');
       this._ownerToken={active:true};OWNERS.set(device,this._ownerToken);
       this._active=true;this._epoch++;this._device=device;this._disconnected=false;this._finalAck=false;this._finalExecute=false;
+      this._localDisconnectRequested=false;this._stopAfterAck=false;
       this._listen(device,'gattserverdisconnected',()=>{
+        if(device.gatt.connected)return; // A deferred event from a previous connection.
         this._disconnected=true;
-        if(this._finalAck){this._rebootResolve?.();return;}
+        if(this._finalAck){this._finishDisconnectWait?.();return;}
         this._active=false;this._rejectPending(new Error('Bluetooth disconnected before confirmed DFU completion'));
       });
     }
@@ -235,13 +246,32 @@
         this.dispatchEvent('phase','transfer');
         await this.transferInit(initBytes);await this.transferFirmware(firmwareBytes);
         if(!this._finalAck)throw new Error('Final firmware Execute was not acknowledged');
-        if(!this._disconnected)await new Promise(resolve=>{const timer=setTimeout(()=>{this._rebootResolve=null;resolve();},this.timeouts.reboot);this._rebootResolve=()=>{clearTimeout(timer);this._rebootResolve=null;resolve();};});
-        this.lastResult=Object.freeze({transferVerified:true,executeAcknowledged:true,rebootObserved:this._disconnected});
+        if(!this._disconnected&&!this._stopAfterAck){
+          await new Promise(resolve=>{
+            const finish=()=>{clearTimeout(timer);this._finishDisconnectWait=null;resolve();};
+            const timer=setTimeout(finish,this.timeouts.reboot);
+            this._finishDisconnectWait=finish;
+          });
+        }
+        if(this._stopAfterAck&&!this._disconnected)this._disconnect();
+        // Version 1 treated any disconnect as evidence of reboot. Keep the old
+        // boolean readable, but this transport never verifies the next boot.
+        // These observations end before routine cleanup disconnects the link.
+        this.lastResult=Object.freeze({resultSchema:2,transferVerified:true,executeAcknowledged:true,
+          disconnectObserved:this._disconnected,localDisconnectRequested:this._localDisconnectRequested,rebootObserved:false});
         return device;
       }catch(error){this._disconnect();throw error;}
       finally{this._cleanup();this._disconnect();this._busy=false;}
     }
-    cancel(){if(this._busy){this._active=false;this._rejectPending(new Error('DFU cancelled; completion is unconfirmed'));this._disconnect();}}
+    cancel(){
+      if(!this._busy||!this._active)return;
+      if(this._finalAck){
+        // A receipt may arrive before the last browser write settles. Let it
+        // settle normally, then end only the optional wait for a disconnect.
+        this._stopAfterAck=true;this._finishDisconnectWait?.();return;
+      }
+      this._active=false;this._rejectPending(new Error('DFU cancelled; completion is unconfirmed'));this._disconnect();
+    }
   }
   return SecureDfu;
 });
