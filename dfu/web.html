@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.39.5</title>
+  <title>Allmiibo DFU 3.40.0</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
 <main>
   <a href="../" class="back-link">← Zurück zum Dateimanager</a>
-  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.39.5</p>
+  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.40.0</p>
   <h1>Firmware übertragen</h1>
   <p class="notice"><strong>Deine Sammlung bleibt erhalten.</strong> Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</p>
   <section>
@@ -24,6 +24,7 @@
     <label for="file">Eigene Firmware-ZIP</label>
     <input id="file" type="file" accept=".zip,application/zip">
     <p><a href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>DE3.65 als ZIP für das Handy herunterladen</a></p>
+    <p><a href="../firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip" download>DE3.66 für LCD als Testversion herunterladen</a> · Mit Displayfoto und schnellerer Prüfung beim Fortsetzen einer Sicherung. Der Praxistest auf dem LCD-Gerät steht aus.</p>
     <p id="package-target" role="status" aria-live="polite"></p>
     <details><summary>Welche Pakete passen?</summary><p>Der mitgelieferte öffentliche Download ist die LCD-Anwendung DE3.65/637 für PFS1 und S112 7.3.0. Für Z19 steht im Dateimanager ein Vergleich anhand von Bereichs-Hash und Zähler bereit. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p>Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen die Signatur. Z15 und Z17 können auch eine ältere, gültig signierte Anwendung installieren. Bei einer aktuellen Gerätediagnose warnt der Browser vor einem niedrigeren App-Zähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
   </section>
