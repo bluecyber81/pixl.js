@@ -1,5 +1,5 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
-'use strict';
+import { createScreenAwake } from './screen-awake.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
 const progressBar = document.getElementById('progress'), capabilityText = document.getElementById('capability');
@@ -38,6 +38,30 @@ const phaseNames = ['transfer', 'verify', 'finalize', 'reconnect'];
 const phases = document.getElementById('phases');
 const phaseDetail = document.getElementById('phase-detail');
 const reconnectLink = document.getElementById('reconnect-link');
+const awakePanel = document.getElementById('awake-panel');
+const awakeChoice = document.getElementById('awake-choice');
+const awakeStatus = document.getElementById('awake-status');
+let transferActive = false;
+function renderAwake(state) {
+    const text = {
+        active: 'Der Browser hält das Display wach.',
+        requesting: 'Der Browser fordert das Wachhalten an …',
+        unsupported: 'Bitte halte das Display selbst eingeschaltet.',
+        unavailable: 'Der Browser hat das Wachhalten abgelehnt. Bitte halte das Display selbst eingeschaltet.',
+        released: 'Das Display kann sich wieder ausschalten. Bitte halte es während des Updates eingeschaltet.',
+        hidden: 'Öffne diesen Tab wieder, um das Display wach zu halten.'
+    };
+    awakeStatus.textContent = transferActive && awakeChoice.checked ? text[state.status] || '' : '';
+}
+const newAwakeController = () => createScreenAwake({ document, wakeLock: navigator.wakeLock, onChange: renderAwake });
+let awake = newAwakeController();
+function updateAwake() {
+    awakePanel.hidden = !transferActive;
+    awake?.setActive(transferActive && awakeChoice.checked);
+}
+awakeChoice.addEventListener('change', updateAwake);
+window.addEventListener('pagehide', () => { awake?.dispose(); awake = null; });
+window.addEventListener('pageshow', () => { if (!awake) { awake = newAwakeController(); updateAwake(); } });
 let phaseText = dfuPhaseLanguages.de_DE;
 try {
     const saved = globalThis.localStorage?.getItem('allmiibo.language');
@@ -52,6 +76,8 @@ const phaseItems = phaseNames.map((name, index) => {
 });
 function showPhase(name, failed = false) {
     const index = phaseNames.indexOf(name);
+    transferActive = !failed && ['transfer', 'verify', 'finalize'].includes(name);
+    updateAwake();
     phases.hidden = index < 0;
     phaseItems.forEach((item, i) => {
         item.className = i < index ? 'done' : i === index && failed ? 'failed' : '';
