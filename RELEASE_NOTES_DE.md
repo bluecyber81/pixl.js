@@ -1,4 +1,12 @@
-# DE3.65 final und Dateimanager 3.39.5
+# Veröffentlichungen für das Allmiibo LCD
+
+## DE3.66 / 638 und Dateimanager 3.40.0 · 7. November 2026
+
+Die LCD-Testversion liefert das aktuelle Displaybild und kann beim Fortsetzen einer Sicherung Dateien bis 572 Byte auf E: direkt per SHA-256 vergleichen. Web 3.40.0 ergänzt neun Figurenankündigungen, die Bildvorschau in der Gerätesuche und die Restzeitschätzung beim Firmware-Update. Der Bestandsabgleich umfasst 952 bestätigte Figuren-IDs. DE3.65 / 637 ist die am LCD geprüfte stabile App mit Z19 und Nordic S112 7.3.0. Für DE3.66 stehen Displayfoto und unterbrochene Sicherung am Gerät zur Prüfung aus. [Menüwege und Paketauswahl](docs/RELEASE_DE3_66.md) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
+
+[Geräte-Firmware und Bootloader](docs/VERSIONEN_FIRMWARE.md) · [Alle dokumentierten Dateimanager-Versionen](docs/VERSIONEN_WEB.md)
+
+## DE3.65 final und Dateimanager 3.39.5
 
 Der Abgleich erklärt auf Deutsch und Englisch, wann sich eine Datei seit dem Vergleich geändert hat und wie man den Vergleich wiederholt. Die Sicherung nennt die Grenzen der Wiederaufnahme. Der Web-Updater und der Handy-Download verwenden dieselbe App 637. Das Gerät wurde mit Z19 und Nordic S112 7.3.0 ausgelesen. [LCD](docs/validation/DE3_65_LCD_READBACK.json) · [Web](docs/RELEASE_WEB3_39_5.de.md)
 

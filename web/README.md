@@ -1,10 +1,10 @@
 # Allmiibo Dateimanager 3.40.0
 
-Neue Funktionen sind die direkte Figurenvorschau in der Gerätesuche, neun Ankündigungen und die Wiederaufnahme einer Sicherung mit frischem Inhaltsvergleich. Mit der LCD-Testversion DE3.66 lässt sich unter **Gerät & Diagnose** das aktuelle Display als PNG speichern. [Änderungen und Handy-Update](../docs/RELEASE_DE3_66.md)
+Neue Funktionen sind die direkte Figurenvorschau in der Gerätesuche, neun Ankündigungen und die Wiederaufnahme einer Sicherung mit frischem Inhaltsvergleich. Mit der LCD-Testversion DE3.66 lässt sich unter **Gerät & Diagnose** das aktuelle Display als PNG speichern. [Änderungen und Handy-Update](https://github.com/bluecyber81/pixl.js/blob/de3.66/docs/RELEASE_DE3_66.md) · [Alle dokumentierten Web-Versionen](https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md)
 
 Der Dateimanager erklärt Namenskollisionen, für Windows ungeeignete Dateinamen und abweichende Unicode-Schreibweisen direkt beim Vergleich. Im Figurenkatalog gibt es alle 54 vorhandenen englischen Nutzungshinweise auch auf Deutsch. Auf der DFU-Seite kann der Browser während des Updates das Display wach halten.
 
-Unter **Update** und auf der DFU-Seite ist DE3.65/637 für LCD mit vorhandenem PFS1 und S112 7.3.0 eingebunden. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.40.0](LIESMICH_3_40_0.txt).
+Unter **Update** und auf der DFU-Seite stehen für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die optionale Testversion DE3.66/638 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.40.0](LIESMICH_3_40_0.txt).
 
 Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. [Bedienung und Grenzen](../docs/RELEASE_WEB3_39_3.de.md).
 
@@ -108,11 +108,11 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 Über **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** einen früheren Start- oder Gesamtdiagnosebericht auswählen. Für einen aussagekräftigen Vergleich Berichte desselben Geräts mit vergleichbarer Sammlung verwenden. Die Datei wird lokal gelesen. Für die Phasen Speicher und Anwendung bedeutet ein negativer Unterschied eine kürzere Zeit.
 
-Das aktuelle PFS1-Profil berücksichtigt die elf Versions-/Zählerpaare von DE3.55/627 bis DE3.65/637. Die Speicherumstellung prüft das genaue Paar, die Geometrie und den Fingerabdruck der Speicher-Engine. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser prüft den SHA-256 der vollständigen Anwendung anhand der Init-Daten ihrer DAT-Datei. [DE3.65-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip).
+Das aktuelle PFS1-Profil berücksichtigt die zwölf Versions-/Zählerpaare von DE3.55/627 bis DE3.66/638. Die Speicherumstellung prüft das genaue Paar, die Geometrie und den Fingerabdruck der Speicher-Engine. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser prüft den SHA-256 der vollständigen Anwendung anhand der Init-Daten ihrer DAT-Datei. [DE3.65-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip).
 
 ## Bauen, testen und veröffentlichen
 
-Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/de3.63/CONTRIBUTING.md) verwenden:
+Node/npm gemäß [Mitarbeit und Werkzeuge](https://github.com/bluecyber81/pixl.js/blob/main/CONTRIBUTING.md) verwenden:
 
 ```sh
 npm ci
@@ -140,7 +140,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.59 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das bisher veröffentlichte [Web-Quellpaket 3.38.1](https://github.com/bluecyber81/pixl.js/releases/download/web3.38.1/Allmiibo_Dateimanager_3_38_1_Quellcode.zip)
+Das [Web-Quellpaket 3.40.0](https://github.com/bluecyber81/pixl.js/releases/download/web3.40.0/Allmiibo_Dateimanager_3_40_0_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen
@@ -156,6 +156,6 @@ Informationslinks funktionieren lokal als `/?amiibo=01010000000e0002` oder
 Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 `/a/<8Hex>-<8Hex>` benötigt einen lokalen Server und ist kein Pages-Routeersatz.
 
-Browser-Hosttests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Eine direkte Bluetooth-Abfrage am Allmiibo mit DE3.59 lieferte die [Start- und RAM-Werte](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59_READBACK.json). Praxistests mit Dateimanager 3.39.2, NFC und absichtlich ausgelösten Speicherfehlern stehen für diese Version aus. [Nachweise und Messgrenzen](https://github.com/bluecyber81/pixl.js/blob/de3.59/docs/validation/DE3_59.json).
+Die Web-Tests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Für die stabile App DE3.65 sind Bluetooth-Auslesung, NFC, Scrollbalken und Aufwachen am LCD bestätigt. Der Praxistest für Displayfoto und Sicherungsfortsetzung mit App DE3.66 und Web 3.40.0 steht aus. [Gerätebefund DE3.65](https://github.com/bluecyber81/pixl.js/blob/web3.39.5/docs/validation/DE3_65_LCD_READBACK.json) · [Prüfnachweise DE3.66](https://github.com/bluecyber81/pixl.js/blob/de3.66/docs/validation/DE3_66.json)
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.

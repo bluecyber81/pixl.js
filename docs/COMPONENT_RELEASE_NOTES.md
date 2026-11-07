@@ -1,8 +1,10 @@
-# BL8 + Nordic S112 7.3.0 — Quellen, Komponenten und Verbesserungen
+# Historische Release Notes für BL8 und Nordic S112 7.3.0
+
+Dieses Dokument gehört zur [Komponentenveröffentlichung vom 3. November 2026](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0). Die aktuelle [Komponentenübersicht](COMPONENTS.md) führt Z19, die stabile LCD-App DE3.65, die Testversion DE3.66 und den Dateimanager 3.40.0 auf.
 
 **Bootloader und SoftDevice gehören sichtbar zu diesem Projekt.** Hier stehen die geprüften Einzeldateien, zugehörigen Quellen, Lizenzen und die Beschreibung unserer Arbeit.
 
-- [Alle Bootloader-/SoftDevice-Änderungen](https://github.com/bluecyber81/pixl.js/blob/main/docs/BOOTLOADER_SOFTDEVICE_CHANGES.md): bisherige Fehler, Korrekturen, Herkunft und Prüfumfang.
+- [Bootloader-Änderungen und S112-Integration](BOOTLOADER_SOFTDEVICE_CHANGES.md) mit Fehlerkorrekturen, Herkunft und Prüfumfang.
 - [Firmware-/Dateimanager-Historie](https://github.com/bluecyber81/pixl.js/blob/main/docs/DEVELOPMENT_HISTORY.de.md): RAM, Speicher, Bluetooth/NFC, Bedienung, DFU und Browser.
 - [Dateien und Voraussetzungen](https://github.com/bluecyber81/pixl.js/blob/main/docs/COMPONENT_DOWNLOADS.md).
 
@@ -16,7 +18,7 @@
 
 BL8 enthält eigene Korrekturen an DFU-Abschluss, Flash-/Settings-Bestätigung, Antwortwarteschlangen und LCD-Pfaden. S112 selbst ist Nordic-Software; unsere Beiträge sind Integration, die dokumentierte SDK-NVIC-Korrektur, Diagnose und Validierung. Die Bluetooth-/Dateiübertragungsverbesserungen der Anwendung stehen separat im Änderungsverlauf.
 
-Anwendung **DE3.55/627** und Dateimanager **3.33.1** bleiben unverändert: [normales Software-Release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.55). Diese ergänzende Veröffentlichung erfordert auf einem bereits passenden Gerät kein neues Flashen. Kein universelles Z11-Mischpaket, keine Figurensammlung und keine privaten Schlüssel enthalten.
+Die ergänzende BL8-Veröffentlichung gehörte zur damaligen [Anwendung DE3.55/627 mit Dateimanager 3.33.1](https://github.com/bluecyber81/pixl.js/releases/tag/de3.55). Wer diesen Stand bereits nutzte, konnte die Dokumentation ohne erneutes Flashen verwenden.
 
 ## English
 

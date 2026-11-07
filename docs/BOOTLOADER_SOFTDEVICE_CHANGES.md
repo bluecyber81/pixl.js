@@ -1,4 +1,19 @@
-# Unsere Bootloader- und S112-Arbeit bis BL8
+# Bootloader und Nordic S112 beim LCD-Allmiibo
+
+## Z19, Z17 und frühere Stände
+
+| Stand | Änderung und Nutzen | Nachweis |
+| --- | --- | --- |
+| Z19 | Vor dem Abschluss eines Datentransfers prüft der Bootloader den Updateauftrag und die Bildgröße. Nach einem Verbindungsabbruch prüft er den gespeicherten Auftrag erneut. Das Handy kann den bestätigten Stand abfragen und fehlende Daten senden. | [Z19-Code, Wiederaufnahmetests und Messwerte](../bootloader-z19/README.md) |
+| Z17 | Das Display zeigt beim Update „Pruefen...“ und „Speichern...“ für die jeweiligen Phasen. Die Bootloader-Bauanleitung beschreibt die zusätzlichen Compilerprüfungen und den bytegleichen Nachbau. | [Z17-Änderungen und Prüfnachweise](../bootloader-z17/README.md) |
+| Z18-Rückkehrpaket | Enthält den Z15-Code mit Paket-Zähler 18. Der höhere Zähler ermöglicht den vorgesehenen Rückweg von Z17. | [Zähler und geprüfte Paket-Hashes](validation/Z17.json) |
+| Z13 und Z15 | Die historischen Gerätebelege und Bootbereich-Prüfsummen ordnen die installierten Codefassungen zu. | [Komponentenübersicht](COMPONENTS.md#historical-z13-z15-and-z17-components) |
+
+Am LCD-Gerät wurden DE3.64 und später die stabile DE3.65 mit Z19 und S112 7.3.0 ausgelesen. Für DE3.66 belegen die Rechnerprüfungen die Wiederaufnahme am bestätigten Objektende und das erneute Senden ab dem gemeldeten Offset. Installation, Displayfoto und Fortsetzung einer unterbrochenen Sicherung am Gerät sind für diese Testversion offen. Die Sicherung im Dateimanager und die DFU-Wiederaufnahme im Bootloader sind zwei getrennte Vorgänge. [Gerätebeleg DE3.65](validation/DE3_65_LCD_READBACK.json) · [Z19-Transfermodell](../bootloader-z19/README.md) · [DE3.66 und Web 3.40.0](RELEASE_DE3_66.md)
+
+Nordic stellt die Funksoftware S112 7.3.0 bereit. Unsere Änderungen betreffen den Bootloader und die Einbindung des Nordic-SDK. [S112-Herkunft, Version und Lizenz](../softdevice-s112/README.md)
+
+## Entwicklung bis BL8
 
 **Zusätzlich am 4. November 2026 geprüft.** Alle 98.068 SoftDevice-Bytes des archivierten BL8/S112-Pakets stimmen mit dem Nordic-HEX für S112 7.3.0 überein. Die MBR-Seite und der Bootloaderanteil gehören nicht zu diesem Vergleich. [Bereiche und SHA-256](validation/S112_7_3_0_ARCHIVE_COMPARISON.json).
 
@@ -6,7 +21,7 @@
 [Komponenten-Downloads und Installationsgrenzen](COMPONENT_DOWNLOADS.md) ·
 [S112-Herkunft und Lizenz](../softdevice-s112/README.md)
 
-Stand: **3. November 2026**. BL8 umfasst die über mehrere Prüfstände entwickelten
+Der folgende historische Bericht vom **3. November 2026** beschreibt BL8. BL8 umfasst die über mehrere Prüfstände entwickelten
 Verbesserungen an Anzeige, Nordic Secure DFU, Fehlerbehandlung und Updateabschluss.
 Der letzte BL8-Fix ist nur ein Teil davon. **Nordic S112 7.3.0 selbst wurde nicht
 von uns entwickelt oder verändert**; unsere Arbeit betrifft seine Integration,

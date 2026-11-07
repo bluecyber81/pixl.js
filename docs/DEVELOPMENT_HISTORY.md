@@ -1,5 +1,11 @@
 # Improvements and fixed bugs in the DE series
 
+## DE3.66 / 638 and file manager 3.40.0 · 7 November 2026
+
+The LCD test application supports display capture and can hash files up to 572 bytes on E: when resuming a backup. Web 3.40.0 adds nine figure announcements, inline search previews and estimated time remaining during DFU. Inventory still uses 952 confirmed figure IDs. DE3.65 / 637 is the stable application verified on LCD with Z19 and Nordic S112 7.3.0. Display capture and interrupted backup on a physical DE3.66 unit are pending. [Features and installation](RELEASE_DE3_66.md) · [Web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
+
+[Firmware and bootloader history](VERSIONEN_FIRMWARE.md) · [File manager patch history](VERSIONEN_WEB.md)
+
 ## DE3.65 final and file manager 3.39.5
 
 Sync explains how to repeat a comparison when a device or local file has changed. Backup explains the limits of resuming. Web DFU and the phone download offer identical App637 bytes. An LCD device reported Z19 and Nordic S112 7.3.0. [LCD](validation/DE3_65_LCD_READBACK.json) · [Web](RELEASE_WEB3_39_5.de.md)
@@ -43,7 +49,7 @@ new physical tests are pending. [Release record](RELEASE_DE3_62.md) ·
 * **Device diagnostics → Runtime.** DE3.59 reports the untouched portion of the reserved stack. In **Startup times → Compare multiple cold starts**, the browser calculates median and range from 3–20 reports of the same firmware.
 * **Settings → Version info.** The short source identifier for this release is `7b4822b045b4`. Two independent builds produced the same image. The catalog in that image contains 952 figure IDs, 82 games and 1,344 associations.
 
-**DE3.58 / application counter 630 · Dateimanager 3.36.0 · BL8 · Nordic S112 7.3.0**
+Historical baseline for the following comparison: **DE3.58 / 630 · file manager 3.36.0 · BL8 · Nordic S112 7.3.0**.
 
 This is the English entry point to the [detailed German before/after record](DEVELOPMENT_HISTORY.de.md), which links each topic to published source and regression tests. The [earlier cumulative changelog](../CHANGELOG_DE3_SERIES.md) retains DE1–DE3.16 history. “Before” refers to the reviewed older downstream code: it is not an assertion that the same problem exists in today's upstream repositories. Some fixes address regressions introduced during this fork's own storage transition.
 

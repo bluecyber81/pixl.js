@@ -33,6 +33,7 @@ export function copyNotices(mode) {
   const webRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/web3.40.0/'
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Allmiibo ${escape(version)} – Quellen und Lizenzen</title></head><body>
 <main><a href="../">Zurück zum Dateimanager</a><h1>Quellen und Lizenzen · ${escape(version)}</h1>
+<p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">Versionsgeschichte des Dateimanagers</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">LCD-Firmware, Bootloader und SoftDevice</a></p>
 <p>Diese Seite verteilt den Dateimanager mit seinen Bibliotheken und sieben gebundenen Speicher-Simulatoren. Die jeweiligen Lizenztexte bleiben erhalten.</p>
 <ul><li><a href="${webRelease}Allmiibo_Dateimanager_3_40_0_Quellcode.zip">Quellcode des Dateimanagers 3.40.0 einschließlich Simulatorquellen und Build-Anleitungen</a></li>
 <li><a href="${sourceUrl}">Exakter Quellstand der mitgelieferten Firmware DE3.65/637</a></li>

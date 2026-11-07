@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Bisher veröffentlichte Version 3.38.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.38.1)
+[Downloads für 3.40.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -18,9 +18,13 @@ Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
 
-## Neu im lokal vorbereiteten Dateimanager 3.39.0
+## Dateimanager 3.40.0
 
-**Figurenkatalog → Details und Bild** und die **Dateivorschau** zeigen Katalogzuordnungen und vorhandene Nutzungshinweise. Der Quellenstand umfasst 952 Figuren und 1.344 Zuordnungen. Acht deutsche Teilübersetzungen werden bei 13 Zuordnungen verwendet; weitere Texte bleiben als englischer Quelltext gekennzeichnet. Übersetzte Hinweise bieten den englischen Originaltext zum Aufklappen. Das ist keine Bestätigung von Spielkompatibilität oder Belohnungen.
+Unter **Figurenkatalog → Angekündigte Figuren** sind neun Ankündigungen mit Regionsangaben aufgeführt. In der Gerätesuche öffnet ein Dateitreffer die Figurenbild-Vorschau. Mit der LCD-Testfirmware DE3.66 kannst du unter **Gerät & Diagnose → LCD-Displayfoto → Displayfoto aufnehmen** den aktuellen Bildschirm als PNG speichern. Die DFU-Seite schätzt während der Übertragung die verbleibende Zeit anhand bestätigter Bytes. [Anleitung für 3.40.0](RELEASE_DE3_66.md)
+
+## Figurensammlung, Karten-Slots und Sicherungsimport
+
+**Figurenkatalog → Details und Bild** und die **Dateivorschau** zeigen Katalogzuordnungen und vorhandene Nutzungshinweise. Der Quellenstand umfasst 952 Figuren und 1.344 Zuordnungen. Alle 54 unterschiedlichen englischen Nutzungshinweise liegen auch auf Deutsch vor. Übersetzte Hinweise bieten den englischen Originaltext zum Aufklappen. Das ist keine Bestätigung von Spielkompatibilität oder Belohnungen.
 
 **Figurensammlung → Prüfung: Dateiinhalte prüfen (empfohlen) → Sammlung prüfen → Anzeigen → Gleiche Figuren-ID / Dateiinhalte** zeigt getrennte SHA-256-Gruppen innerhalb einer Figuren-ID. Der Vergleich nutzt bereits gelesene Bytes, ohne weitere BLE-Dateilesen. Gleiche ID allein genügt nicht: UID, Spielstand und Varianten können abweichen. Die Schnellprüfung sagt ausdrücklich, dass Inhalte ungeprüft sind. Es wird nichts automatisch gelöscht. Nach Schreibvorgängen den veralteten Bericht erneut prüfen.
 
@@ -28,7 +32,7 @@ bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen:** Exakte inaktive Stamm-Journaldateien `.pixl_txn_old` und `.pixl_txn_new` bleiben in der Schema-1-Sicherung erhalten, werden aber als gesperrt angezeigt. Andere sichere Dateien bleiben auswählbar. Aktive oder unbekannte Stamm-Transaktionseinträge, darunter `.pixl_txn_pending` oder ein Ordner mit Journalnamen, sperren den gesamten Import. Quelle und Zielumleitung werden kontrolliert, der Zielzustand vor Schreiben erneut gelesen. Normale Unterordner mit gleichnamigen Dateien werden nicht pauschal ausgeschlossen. Schema 2 bleibt beim Migrationsassistenten. Keine automatische Journalbereinigung.
 
-Für diese Funktionen ist kein neues Flashpaket erforderlich: App DE3.62/634, Z17 und S112 7.3.0 bleiben unverändert. Ein echter Gerätetest und die neue eigene Sammlungssicherung sind noch nicht erledigt. Die Online-Seite hat ihren separaten Veröffentlichungsstand; die angezeigte Browserversion prüfen. [Releasehinweise](RELEASE_WEB3_39_0.de.md).
+Sammlungsabgleich und lokale Slotprüfung wurden mit Web 3.39.0 eingeführt. [Versionshinweise zu 3.39.0](RELEASE_WEB3_39_0.de.md)
 
 ## Funktionen und Daten
 
@@ -62,7 +66,7 @@ Bricht die Verbindung ab, bevor der Bootloader den Abschluss bestätigt, zeigt d
 
 Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 
-Die innere Datei `Allmiibo_LCD_DE3_62_634_TESTSTAND.zip` enthält die unveränderte LCD-Anwendung. Bestehende passende PFS1-Geräte benötigen dafür keine Formatierung. Für alte SPIFFS-Geräte gilt die eigene Migrationsanleitung. [Anwendung und Paketgrenzen](INSTALLATION.md) · [Migration](MIGRATION_PFS1.md) · [Quellcode und Build](BUILD_DE3_62.md).
+Im Web-Updater ist DE3.65/637 die stabile LCD-App. DE3.66/638 ist als Testversion auswählbar. Beide Anwendungs-ZIPs setzen passendes LCD und vorhandenes PFS1 voraus. [Pakete und Voraussetzungen](INSTALLATION.md) · [Migration von anderen Speicherformaten](MIGRATION_PFS1.md) · [Nachbau der Testversion](BUILD_DE3_66.md)
 
 
 ## Startzeiten vergleichen

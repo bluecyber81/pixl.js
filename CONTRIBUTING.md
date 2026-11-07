@@ -9,22 +9,21 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.66 / 638 (prerelease)**; [unsigned build guide](docs/BUILD_DE3_66.md) |
+| LCD application | [DE3.66 / 638 prerelease source](fw/application/src/) and [unsigned build guide](docs/BUILD_DE3_66.md). To reproduce the device-tested DE3.65 / 637 release, check out [tag `de3.65`](https://github.com/bluecyber81/pixl.js/tree/de3.65) and follow its [build guide](https://github.com/bluecyber81/pixl.js/blob/de3.65/docs/BUILD_DE3_65.md). |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.39.5**; [web README](web/README.md) |
+| Browser file manager | [Web sources and build instructions](web/README.md). The [3.40.0 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) includes portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
-| Current Z19 bootloader | `bootloader-z19/`, source-bound build and host/ARM tests; device counter 19 |
+| Current Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |
 | Historical Z17 bootloader | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; [historical device readback](docs/COMPONENTS.md) |
-| Matching BL8 bootloader | `bootloader-bl8/`; [source binding and separate unsigned build](bootloader-bl8/README.md) |
+| Historical BL8 bootloader | [Source binding and separate unsigned build](bootloader-bl8/README.md) |
 | Historical releases | Git tags, release assets and dated documentation, including [DE3.37](docs/BUILD_DE3_37.md) |
 
-The current application is ordinary editable C source in this repository, not
-only a release ZIP. Release archives provide a fixed corresponding-source copy.
-The `fw/bootloader/` and `bootloader-bl6/` trees have separate history; the historical
-BL8 source is in `bootloader-bl8/`; the Z17 and Z19 trees have separate source and test bindings. Building the application does not build or
-install BL8 or Nordic S112. Do not infer an installed bootloader from a source
-checkout.
+Release archives and Git tags preserve the source used for a particular build.
+The application, Z19, Z17 and BL8 each have their own build instructions.
+The inherited `fw/bootloader/` and `bootloader-bl6/` trees document earlier
+implementations. The device diagnosis reports the installed bootloader counter
+and code-region hash. [Component identities and Nordic S112 integration](docs/COMPONENTS.md)
 
 ## Web development
 
@@ -58,8 +57,8 @@ application. No signing key is required. The current release helper preserves
 generated resources and the version header. For an intentional change, use its
 development mode with a distinct version and explicit counter.
 
-For the small portable host set used by CI, install Python **3.10+** and GCC on
-the host, then run these commands from the repository root:
+For two quick storage checks from the portable CI subset, install Python
+**3.10+** and GCC on the host and run from the repository root:
 
 ```sh
 python3 fw/tests/de3/test_packed_crc_pair_de355.py
@@ -73,12 +72,11 @@ outputs are checked against independent oracles, and LittleFS wear behavior is
 compared with the previous predicate under simulated NOR and interrupted writes.
 The old variant is made only in a temporary directory.
 
-These two suites are a useful CI subset, **not the full 136-suite DE3.55 release
-matrix**. Other runners document their own dependencies; some require the Nordic
-SDK, sanitizers or ARM Linux/QEMU. The published validation summary describes
-release evidence separately. Do not disable a failing assertion, drop older
-tests or claim a host result proves NFC, radio timing or physical power-loss
-behavior.
+The [DE3.66 build guide](docs/BUILD_DE3_66.md) describes how to run the full
+149-suite firmware matrix and test the linked Cortex-M4 executable. Each
+individual runner documents its dependencies. Publish hardware observations,
+such as NFC recognition or behavior during an interrupted radio transfer,
+separately from host test results.
 
 The Bluetooth indicator regression is `python3 fw/tests/de3/test_ble_status_de357.py`; `test_ui_comfort_de356.py` retains keyboard/scrollbar coverage. For `test_device_info.py`, set `NRF5_SDK_PATH` or `NRF52_SDK_ROOT` to a matching Nordic SDK 17.1.0 tree. It requires the hash-pinned S112 7.2.0 reference from that SDK as a test input; this does not downgrade the device from S112 7.3.0. Missing or mismatched SDK inputs fail explicitly. This test is not part of the small portable CI subset.
 
@@ -107,4 +105,6 @@ portable firmware subsets with read-only repository permissions. The separate
 [unsigned firmware workflow](.github/workflows/unsigned-firmware.yml) compiles the
 LCD application and checks its linked flash and RAM reserves for changes to the
 build inputs. Pull requests build candidates. Pushes to main verify the release
-hash. A manual run also rebuilds BL8 from its corresponding sources.
+hash and signed application package. The same workflow builds Z17 and Z19,
+runs their host and ARM tests, and exercises interrupted application transfer
+with the Z19 model. Manual runs also rebuild historical BL8.

@@ -2,13 +2,14 @@
 
 Publication baseline: **2026-11-07**. Components have independent versions.
 
-**[Detailed bootloader/SoftDevice changes](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
+**[Installation](INSTALLATION.md) · [Bootloader and SoftDevice history](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Application | 2.22.0-DE3.65 (stable) | DFU counter 637, hardware requirement 52 |
-| File manager | 3.39.5 | Browser software, not a device image |
-| Current LCD bootloader | [Z19](../bootloader-z19/) | Counter 19; same boot image as used with App636; current application package contains only App637 |
+| Stable LCD application | [2.22.0-DE3.65](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) | Application-only DFU, counter 637, hardware field 52. [LCD device checks](FINAL_DE3_65.md) |
+| LCD test application | [2.22.0-DE3.66](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) | Application-only DFU, counter 638, hardware field 52. Build and model tests passed. Physical verification of installation, display capture and backup resume is pending. [Evidence](validation/DE3_66.json) |
+| File manager | [3.40.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) | Runs in the browser. [Version-specific features and older-device fallback](RELEASE_DE3_66.md) |
+| Current LCD bootloader | [Z19](../bootloader-z19/README.md) | Counter 19. The same 28 KiB boot region was read back with [App636](validation/Z19_APP636_BASELINE.json) and [App637](validation/DE3_65_LCD_READBACK.json). |
 | Previous bootloader | Z17 | Counter 17, observed in the device export for App634 |
 | Previously installed reference | Z15 | Counter 15; region SHA-256 below |
 | Older reference bootloader | BL8 | Historical corresponding source retained; counters depend on packaging |
@@ -17,7 +18,7 @@ Publication baseline: **2026-11-07**. Components have independent versions.
 
 On 7 November 2026 the LCD device reported App637, Z19 and S112 7.3.0. The Z19 boot region matched the rebuilt reference, and the boot settings CRC matched. [Device readback](validation/DE3_65_LCD_READBACK.json)
 
-The device used for the DE3.60 readback runs Z15, counter 15. Its full 28 KiB region hashes to `c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade`. [DE3.61 validation](validation/DE3_61.json) records admission of the signed 633 application by the Z15 ARM code and rejection of an invalid signature or incompatible SoftDevice. Z15 also permits an older correctly signed application.
+The earlier DE3.60 readback after the Z15 update reported counter 15. Its full 28 KiB region hashed to `c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade`. [DE3.61 validation](validation/DE3_61.json) records admission of the signed 633 application by the Z15 ARM code and rejection of an invalid signature or incompatible SoftDevice. Z15 also permits an older correctly signed application.
 
 The normal application OTA accepts declared SoftDevice IDs 0x0103 (S112 7.2.0) and 0x0126 (7.3.0). This declaration is not a readback of the recipient device. Its manifest contains only an application image. It does not update the bootloader, SoftDevice, host Bluetooth driver or figure files.
 
@@ -29,7 +30,7 @@ The historical BL8 corresponding source, SDK overrides, public verification key,
 
 Nordic supplies [S112 downloads and release notes](https://www.nordicsemi.com/Products/Development-software/S112/Download). S112 is a separate vendor binary with its own license and hardware restrictions. The corrected `nrf_nvic.h` SDK header used by this project is a host compilation input; changing it is not a replacement SoftDevice binary. No new Nordic version or elimination of every Nordic known issue is claimed.
 
-The public standard download bundle contains the application OTA, portable browser and corresponding sources. It does **not** contain an automatically selected BL8/S112 combined OTA. A locally prepared older-device system candidate is not a general compatibility approval: board, flash layout, existing bootloader/key/counter, SoftDevice transition and preservation/migration of external storage must be qualified first. Ordinary application maintenance does not require repeating a system update.
+The firmware releases distribute signed application ZIPs. The [web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) distributes the portable file manager, web source and review archive. Devices coming from SPIFFS or another layout have a separate [migration procedure](MIGRATION_PFS1.md). A system update requires a match for the board, installed bootloader key and counter, SoftDevice and flash layout.
 
 On the owner's matching device, the 2026-11-02 read-only diagnostic matched DE3.55, the BL8 region hash and S112 7.3.0. This is dated evidence for that device only; no second device is inferred compatible from its product name or photograph.
 
@@ -46,7 +47,7 @@ The Z18 return package uses the existing Z15 code with a higher accepted DFU
 counter, not new Z18 functionality. Its code-region hash stays
 `c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade`.
 This distinction matters because an older counter16 package cannot undo a
-counter17 bootloader update. See the separate package instructions.
+counter17 bootloader update. [Z17 and Z18 package notes](../bootloader-z17/README.md)
 
 The paragraphs below describe earlier reference states.
 

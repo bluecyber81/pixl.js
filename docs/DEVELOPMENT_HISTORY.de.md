@@ -1,5 +1,11 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## DE3.66 / 638 und Dateimanager 3.40.0 · 7. November 2026
+
+Die LCD-Testversion liefert das aktuelle Displaybild und kann beim Fortsetzen einer Sicherung Dateien bis 572 Byte auf E: direkt per SHA-256 vergleichen. Web 3.40.0 ergänzt neun Figurenankündigungen, die Bildvorschau in der Gerätesuche und die Restzeitschätzung beim Firmware-Update. Der Bestandsabgleich umfasst 952 bestätigte Figuren-IDs. DE3.65 / 637 ist die am LCD geprüfte stabile App mit Z19 und Nordic S112 7.3.0. Für DE3.66 stehen Displayfoto und unterbrochene Sicherung am Gerät zur Prüfung aus. [Menüwege und Paketauswahl](RELEASE_DE3_66.md) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
+
+[Geräte-Firmware und Bootloader](VERSIONEN_FIRMWARE.md) · [Alle dokumentierten Dateimanager-Versionen](VERSIONEN_WEB.md)
+
 ## Dateimanager 3.39.1
 
 Abwählbare Screen Wake Lock während laufender Vorgänge mit Statusanzeige, explizitem Wiederholungsversuch und Freigabe bei Abschluss, Trennung oder Unmount. Keine BLE- oder Geräteänderung; manuelles Sperren bleibt außerhalb der Zusage.
@@ -36,7 +42,7 @@ wurden verworfen. Der neue Gerätetest steht aus.
 * **Gerät & Diagnose → Laufzeitdiagnose.** DE3.59 meldet den bisher unberührten Teil des reservierten Stacks. Unter **Startzeiten → Mehrere Kaltstarts auswerten** berechnet der Browser Median und Spannweite aus 3–20 Berichten derselben Firmware.
 * **Einstellungen → Versionsinfo.** Die zwölfstellige Quellkennung für diesen Build lautet `7b4822b045b4`. Beide unabhängigen Builds ergeben dasselbe Anwendungsprogramm. Der Katalogabgleich der fertigen Firmware umfasst 952 Figuren-IDs, 82 Spiele und 1.344 Zuordnungen.
 
-Stand: **4. November 2026**. Aktueller Anwendungsstand:
+Historischer Vergleich vom **4. November 2026** mit
 **2.22.0-DE3.58 / DFU-Zähler 630**; Dateimanager **3.36.0**.
 
 Diese Übersicht beginnt mit den frühen Änderungen von **DE1 bis DE3.16** und

@@ -4,10 +4,10 @@ This guide distinguishes an application update from a storage conversion. It doe
 
 ## Identify the current layout first
 
-| Current device storage | What DE3.58 means |
+| Current device storage | LCD application update (DE3.65 stable or DE3.66 test) |
 | --- | --- |
 | This fork's Packed LittleFS, identifier **PFS1**, migration completed | Application-only update on matching LCD hardware. Preserve existing files; do not format again. |
-| **SPIFFS**, including the old public DE3.16 | Separate migration required. Flashing DE3.58 alone is not a conversion and does not preserve accessibility of SPIFFS files. |
+| **SPIFFS**, including the old public DE3.16 | Separate migration required. Flashing either application alone is not a conversion and does not preserve accessibility of SPIFFS files. |
 | Ordinary upstream **LittleFS** | A different on-disk layout. Do not assume compatibility because both names contain LittleFS. No automatic cross-layout conversion is promised by this release. |
 | Unknown, failed query or failed mount | Resolve the identity/read error first. A query failure is not proof of an empty device and is not permission to format. |
 
@@ -15,9 +15,9 @@ Read storage information in the file manager's **Backup & restoration → Little
 
 ## Existing PFS1 device
 
-Save a current backup, disconnect file transfer, then install the matching application OTA. DE3.58 keeps the PFS1 layout and existing storage partitions. There is no reason to repeat initialization or restoration for this application update. If an earlier restoration is still incomplete, resume it with its original saved ZIP and matching device/receipt; merely mounting PFS1 does not prove completion.
+Save a current backup, disconnect file transfer, then install the matching application OTA. Both application packages keep the PFS1 layout and existing storage partitions. There is no reason to repeat initialization or restoration for this application update. If an earlier restoration is still incomplete, resume it with its original saved ZIP and matching device/receipt; merely mounting PFS1 does not prove completion.
 
-Do not downgrade a PFS1 device to an old SPIFFS preparation build to make an optional query work. The file manager 3.33.1 error paths explicitly avoid that suggestion.
+Do not downgrade a PFS1 device to an old SPIFFS preparation build to make an optional query work. Use the connected device’s storage information and the [installation guide](INSTALLATION.md) to select the appropriate path.
 
 ## First migration from SPIFFS
 
@@ -31,9 +31,9 @@ The required stages are:
 4. Restore from the saved archive. The transfer checks protocol acknowledgements and conflicts without fully rereading every file immediately. A disconnected operation can resume using the same archive, device and matching recovery state.
 5. Perform the **one final complete comparison** of files and Raw128 metadata, then acknowledge completion. A copied-file counter or a mounted target by itself is not the final verification. Restart and test navigation and a known tag.
 
-File manager 3.33.1 has a separately bound **DE3.55/627** storage-engine profile and retains previously qualified older profiles. PFS1 remains format-compatible, but a different engine fingerprint requires its matching simulation profile. An unknown identity is not automatically accepted. If the assistant cannot establish the required source capabilities or matching target profile, stop the migration sequence and resolve that specific prerequisite; do not choose format as a workaround.
+Web 3.40.0 accepts twelve exact application/counter pairs from **DE3.55/627 through DE3.66/638** for the current engine. It also retains separately qualified older profiles. [Supported profiles in the source](../web/src/lib/migration-capacity.js) PFS1 remains format-compatible, but a different engine fingerprint requires its matching simulation profile. An unknown identity is not automatically accepted. If the assistant cannot establish the required source capabilities or matching target profile, stop the migration sequence and resolve that specific prerequisite; do not choose format as a workaround.
 
-The published DE3.58 application and complete download bundle are not a universal one-click migration kit. Do not apply the old public DE3.15/DE3.16 recovery packages to PFS1 storage as a file-restoration method. Returning to SPIFFS would require its own deliberate storage conversion and compatible data restore, as well as DFU version compatibility.
+The published LCD application and review bundles are not a universal one-click migration kit. Do not apply the old public DE3.15/DE3.16 recovery packages to PFS1 storage as a file-restoration method. Returning to SPIFFS would require its own deliberate storage conversion and compatible data restore, as well as DFU version compatibility.
 
 ## Data and performance boundaries
 
@@ -45,7 +45,7 @@ No figure dumps, private backups, device addresses or signing keys are included 
 
 ## Deutsch
 
-**Bereits PFS1:** DE3.58 als Anwendung aktualisieren, vorhandene Dateien behalten und nicht erneut formatieren. **Noch SPIFFS/DE3.16 oder normales Upstream-LittleFS:** kein direktes, datenbewahrendes Update. Erst Speicherlayout, passende Hardware, vollständige externe Sicherung einschließlich Raw128-Metadaten und einen unterstützten Umstellungsweg bestätigen.
+**Bereits PFS1:** Die stabile LCD-App DE3.65/637 oder die Testversion DE3.66/638 als Anwendung aktualisieren, vorhandene Dateien behalten und nicht erneut formatieren. **Noch SPIFFS/DE3.16 oder normales Upstream-LittleFS:** kein direktes, datenbewahrendes Update. Erst Speicherlayout, passende Hardware, vollständige externe Sicherung einschließlich Raw128-Metadaten und einen unterstützten Umstellungsweg bestätigen.
 
 Eine erstmalige Umstellung umfasst Sicherung, passende Vorbereitung/Zielprüfung, ausdrücklich bestätigtes Löschen und Initialisieren von E:, Wiederherstellung und einen vollständigen Abschlussvergleich. Die alte DE3.30-PREP600 ist nur Teil des historischen SPIFFS-Vorbereitungswegs; sie ist keine allgemeine Rückkehr- oder Reparaturfirmware und kann wegen Versionszähler/Dateisystem unpassend sein. Fehlende Diagnosewerte rechtfertigen weder ein Downgrade noch Formatieren.
 
