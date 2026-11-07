@@ -1,0 +1,60 @@
+DEUTSCHE DFU-ANZEIGE – QUELLVORSCHLAG UND NACHBAU
+Für DE3.65/637 und Bootloader Z19
+
+Status
+
+Dies ist ein isolierter Quellvorschlag. Der Referenzstand des Geräts ist Z19. SHA-256 der mit 0xFF aufgefüllten Bootregion:
+51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd
+Die deutsche Anzeige wird durch das normale App637-Update nicht installiert.
+
+Dateien im aktuellen Gesamtpaket
+
+1. Das Archiv aus 01_Quellen entpacken. Die gesuchte Repositorywurzel enthält fw/, web/ und bootloader-z19/.
+2. Das Nachweisarchiv aus 02_App_und_Bootloader entpacken. Darin liegen die originalen Z19-Artefakte im Verzeichnis Z19/ und der Anzeigevorschlag unter Optionaler_Anzeigeversuch/Bootanzeige_DE_Quellvorschlag.zip.
+3. Das Vorschlags-ZIP getrennt entpacken. DFU_Anzeige_Vorschau.png zeigt sechs Zustände; SHA256SUMS.txt bindet die enthaltenen Dateien. Die Geräteanzeige hat 128 × 64 sichtbare Pixel.
+
+Eigene Kandidatenkopie vorbereiten
+
+Eine neue vollständige Kopie des Verzeichnisses bootloader-z19/ anlegen, beispielsweise bootanzeige-de-kandidat/. Die Inhalte von Geaenderte_Dateien/source/ aus dem entpackten Vorschlags-ZIP in diese Kopie übernehmen und dort die gleichnamigen Dateien ersetzen. Der Pfadbestandteil source/ des Vorschlags ist eine Wurzelzuordnung, kein weiteres Unterverzeichnis im Kandidaten.
+
+Die zwei produktiv geänderten Dateien liegen danach unter fw/bootloader/src/main.c und fw/bootloader/src/bitmap.h innerhalb der Kandidatenkopie. Weitere Ersetzungen betreffen Testdaten, Schriftgenerator und Bindungsdateien. Das originale bootloader-z19/ und die Originalartefakte bleiben getrennt erhalten. Ein mitgeliefertes source/_build wird im aktuellen Paket nicht vorausgesetzt.
+
+Buildumgebung und Build
+
+Die aktuelle Buildanleitung ist bootloader-z19/README.md im vollständigen Quellarchiv. Für den Standardbuild wird das dort über Digest festgelegte SDK-/Compiler-Containerimage verwendet; sein erstmaliger Bezug ist ein separater Download. Der native Weg braucht den exakt gebundenen GCC und das SDKarchiv, die build.py anhand ihrer SHA-256-Werte prüft. Das optionale Anzeige-ZIP enthält diese Abhängigkeiten nicht.
+
+build.py aus der Kandidatenwurzel ausführen und --derive sowie einen neuen, leeren Ausgabepfad angeben. Beispiel für vorhandene native Abhängigkeiten:
+
+python3 -B build.py --mode native --toolchain /absoluter/pfad/toolchain --sdk-archive /absoluter/pfad/sdk.tar.gz --derive --output /absoluter/pfad/Neubau_DE
+
+--derive ist erforderlich, weil die Vorschlagsquellen absichtlich weiterhin die Produktionsbasis als Vergleich benennen und einen davon abgeleiteten, anderen Firmwarehash erzeugen. Das ist kein signiertes oder zur Installation freigegebenes OTA-Paket.
+
+Gezielte Prüfung
+
+Aus der Kandidatenwurzel:
+python3 -B tests/Display/run_display.py tests/Display/Referenz . /absoluter/pfad/Display_DE.json
+python3 -B tests/Display/run_final_phases.py . /absoluter/pfad/Endphasen_DE
+
+Diese Tests benutzen native C-Modelle und benötigen die in der README beschriebene Sanitizerumgebung. Falls LSan nicht unterstützt wird, dessen Abschaltung ausdrücklich dokumentieren; ASan und UBSan bleiben aktiv. Eine ARM-Ausführung setzt zusätzlich Unicorn 2.x voraus und verwendet ausdrücklich das ELF aus Neubau_DE, nicht das originale Z19-ELF:
+python3 -B tests/Display/run_arm_ui.py /absoluter/pfad/Neubau_DE/bootloader.out /absoluter/pfad/ARM_UI_DE.json
+
+Fehlende Voraussetzungen sind als blockiert zu protokollieren. Vorhandene Lieferberichte ersetzen keinen neuen eigenen Testlauf.
+
+Erwartete Zuordnung
+
+Original-Z19: 26772 Byte Payload, 1900 Byte Reserve.
+Deutscher Vorschlag: 26788 Byte Payload, 1884 Byte Reserve, gepaddeter SHA-256:
+608235fcfdc530889a31f4c9c0917664cc8bb00e077d161738165e6cccc467b6
+
+Die native Wiederholung dieser Prüfung hat den Kandidatenhash reproduziert. Die nativen Display- und Endphasenmodelle bestanden. Tatsächlicher Kontrast, Blinkeffekte, Funk und Laufzeit am Gerät sind davon nicht abgedeckt. Die ARM-Ergebnisse im Vorschlagsarchiv stammen aus dem separat gebauten Anzeigevorschlag.
+
+Texte und Bedeutung
+
+Update / Warten...
+Update / Verbunden
+Update / Datenempfang
+Update / Pruefen...
+Update / Speichern...
+Updatefehler / Erneut senden
+
+Erst eine tatsächliche Transportverbindung führt zu Verbunden. Prüfung und Speicherung zeigen Fortschritt; sie melden nicht vorzeitig Erfolg. Der Abschluss beendet die Anzeige. Gleiche Zustände werden nicht unnötig erneut gezeichnet. ASCII-Umschreibungen wie Pruefen... halten das kleine Schriftsubset bei 27 Glyphen.

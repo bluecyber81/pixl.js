@@ -1,0 +1,23 @@
+Allmiibo Dateimanager 3.39.5 · 7. November 2026
+
+Online in Chrome: https://bluecyber81.github.io/pixl.js/
+Lokal am Windows-PC: portable ZIP entpacken und Start-Dateimanager.cmd starten.
+
+Am Allmiibo „Bluetooth-Dateiübertragung“ öffnen, dann im Dateimanager „Verbinden“
+wählen. Unter „Sicherung“ zuerst den gewünschten Ordner öffnen. Eine unterbrochene
+Sicherung lässt sich im selben offenen Tab mit demselben Gerät fortsetzen. Beim
+Schließen oder Neuladen geht der Zwischenstand verloren.
+
+Wenn sich nach dem Vergleich eine lokale Datei oder das Zielgerät geändert hat,
+zeigt der Dateimanager auf Deutsch oder Englisch, welcher Vergleich zu erneuern ist.
+
+Die DFU-Seite enthält die freigegebene App DE3.65 (Zähler 637) für das
+Allmiibo LCD mit bereits eingerichtetem Packed LittleFS/PFS1 und S112 7.3.0.
+Unter „Update“ öffnest du die DFU-Seite. Dort das mitgelieferte Paket wählen und
+„Paket laden und prüfen“ anklicken. Die signierte ZIP ist dort auch einzeln
+für das Handy erhältlich. Das Paket erneuert ausschließlich die Anwendung.
+Die LittleFS-Umstellung eines älteren Geräts verwendet den gesonderten Assistenten.
+
+Quellen und Prüfnachweise
+https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.5
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.65

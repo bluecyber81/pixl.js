@@ -2,10 +2,10 @@
 // observation is not permission to flash another device or proof of its wiring.
 const z13Hash = '97b2751f1b041de8bcba131d875be725fe91294bfc72e4a7f7a3dc5526e88002';
 export const UPDATE_TARGET = Object.freeze({
-  profileSchema: 1, profileRevision: '2026-11-07-de363-bl8-z13-z15-z16-z17-z18-z19',
-  id: 'allmiibo-lcd-de3.63-bl8-z13-z15-z16-z17-z18-z19-s112-7.3.0',
-  application: Object.freeze({ version: '2.22.0-DE3.63', counter: 635 }),
-  localApplications: Object.freeze({ '2.22.0-DE3.64': 636, '2.22.0-DE3.65': 637 }),
+  profileSchema: 1, profileRevision: '2026-11-07-de365-bl8-z13-z15-z16-z17-z18-z19',
+  id: 'allmiibo-lcd-de3.65-bl8-z13-z15-z16-z17-z18-z19-s112-7.3.0',
+  application: Object.freeze({ version: '2.22.0-DE3.65', counter: 637 }),
+  localApplications: Object.freeze({ '2.22.0-DE3.64': 636 }),
   bootloader: Object.freeze({ name: 'BL8', counter: 11, address: 0x77000, bytes: 28672,
     sha256: 'add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130',
     paramsAddress: 0x7e000, settingsAddress: 0x7f000, settingsVersion: 2 }),

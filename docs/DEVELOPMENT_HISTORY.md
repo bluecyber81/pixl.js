@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## DE3.65 final and file manager 3.39.5
+
+Sync explains how to repeat a comparison when a device or local file has changed. Backup explains the limits of resuming. Web DFU and the phone download offer identical App637 bytes. An LCD device reported Z19 and Nordic S112 7.3.0. [LCD](validation/DE3_65_LCD_READBACK.json) · [Web](RELEASE_WEB3_39_5.de.md)
+
 ## DE3.65 / 637 and file manager 3.39.4
 
 The LCD application corrects the three-line scrollbar and frees 2,672 bytes of program flash versus DE3.64. The file manager explains filename conflicts, translates the 54 distinct English catalogue hints into German and supports a screen wake lock during DFU. The signed app was accepted by Z19 with App636 in an ARM model. [Application and checks](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4)

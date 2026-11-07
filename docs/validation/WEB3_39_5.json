@@ -1,0 +1,64 @@
+{
+  "version": "3.39.5",
+  "date": "2026-11-07",
+  "units": {
+    "tests": 1266,
+    "pass": 1266,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "bundledApplication": {
+    "id": "de3.65-lcd-app",
+    "version": "2.22.0-DE3.65",
+    "counter": 637,
+    "file": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+    "bytes": 362167,
+    "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+    "board": "LCD",
+    "storage": "PFS1",
+    "bootloader": "BL8/Z13/Z15/Z17/Z19",
+    "softDevice": "S112 7.3.0",
+    "applicationOnly": true,
+    "migrationRequired": false
+  },
+  "hardwareAccessInWebTests": false,
+  "layouts": {
+    "root": {
+      "files": 154,
+      "entrySHA256": "8b008e6962e75696775f3ec9e3bed44c4ea240289dbbb6c6a71bb5d62817ac9d",
+      "productionTests": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "browserChecks": {
+        "catalog": 166,
+        "screen": 133,
+        "overview": 63,
+        "fixes": 22
+      },
+      "screenshots": 76
+    },
+    "pages": {
+      "files": 154,
+      "entrySHA256": "38cd542b8690471bc3a3b59f784620363dec06dabfd9d7cc8a22a17561a7ca58",
+      "productionTests": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "browserChecks": {
+        "catalog": 166,
+        "screen": 133,
+        "overview": 63,
+        "fixes": 22
+      },
+      "screenshots": 76
+    }
+  }
+}

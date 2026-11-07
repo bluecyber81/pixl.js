@@ -1,4 +1,4 @@
-"""Verify an application-only release archive against this build and the BL8 public key."""
+"""Verify the released LCD application against this build and the bound Z19 public key."""
 import hashlib
 import json
 from pathlib import Path
@@ -167,13 +167,32 @@ def main():
     need(sha(ota.read_bytes()) == release['ota_sha256'], 'Reviewed OTA SHA-256')
     binary = (build / 'pixljs.bin').read_bytes()
     need(sha(binary) == release['application_sha256'], 'Released application SHA-256')
-    source = (root / 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c').read_text()
+    boot = root / 'bootloader-z19'
+    binding = unique_json((boot / 'SOURCE_BINDING.json').read_bytes())
+    key_path = 'fw/bootloader/src/dfu_public_key.c'
+    key_bytes = (boot / key_path).read_bytes()
+    need(sha(key_bytes) == binding['files'][key_path], 'Z19 public key source binding')
+    need(binding['expectedPaddedBootloaderSha256'] == release['tested_bootloader']['padded_region_sha256'],
+         'Z19 boot region bound to this release')
+    source = key_bytes.decode('utf-8')
     initializer = re.search(r'pk\[64\]\s*=\s*\{([^}]+)\}', source).group(1)
     public = bytes(int(n, 16) for n in re.findall(r'0x([0-9a-fA-F]{2})', initializer))
-    need(len(public) == 64, 'BL8 P-256 public key')
+    need(len(public) == 64, 'Z19 P-256 public key')
     key = ec.EllipticCurvePublicNumbers(int.from_bytes(public[:32], 'little'),
                                          int.from_bytes(public[32:], 'little'), ec.SECP256R1()).public_key()
     evidence = verify_zip(ota, binary, release, key)
+    web_dir = root / 'web/public/firmware'
+    offers = unique_json((web_dir / 'releases.json').read_bytes())['packages']
+    current = [item for item in offers if item.get('sha256') == release['ota_sha256']]
+    need(len(current) == 1, 'Current stable application must be offered once in Web DFU')
+    offer = current[0]
+    need(offer['version'] == release['version'] and offer['counter'] == release['counter']
+         and offer['file'] == ota.name and offer['bytes'] == ota.stat().st_size and offer['applicationOnly'] is True,
+         'Web DFU offer matches the signed LCD application identity')
+    need((web_dir / ota.name).read_bytes() == ota.read_bytes(), 'Web and release ZIP bytes differ')
+    evidence['identicalWebPackage'] = 'web/public/firmware/' + ota.name
+    evidence['publicKeySource'] = 'bootloader-z19/' + key_path
+    evidence['publicKeySourceSha256'] = sha(key_bytes)
     (build / 'SIGNED_OTA.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf8')
     print(f"Verified signature, payload and three negative controls for {ota.name}")
 

@@ -1,8 +1,8 @@
-# Allmiibo Dateimanager 3.39.4
+# Allmiibo Dateimanager 3.39.5
 
 Der Dateimanager erklärt Namenskollisionen, für Windows ungeeignete Dateinamen und abweichende Unicode-Schreibweisen direkt beim Vergleich. Im Figurenkatalog gibt es alle 54 vorhandenen englischen Nutzungshinweise auch auf Deutsch. Auf der DFU-Seite kann der Browser während des Updates das Display wach halten.
 
-Im Bereich **Update** findest du die optionale DE3.65/637 für LCD als eigenen ZIP-Download. Ihr Praxistest steht aus. Eingebaut bleibt die Anwendung DE3.63/635. Die Diagnose kennt Z19 anhand von Bereichs-Hash und Zähler. [Änderungen und Prüfung](../docs/RELEASE_WEB3_39_4.de.md) · [Anleitung](LIESMICH_3_39_4.txt).
+Unter **Update** und auf der DFU-Seite ist DE3.65/637 für LCD mit vorhandenem PFS1 und S112 7.3.0 eingebunden. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.39.5](LIESMICH_3_39_5.txt).
 
 Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. [Bedienung und Grenzen](../docs/RELEASE_WEB3_39_3.de.md).
 
@@ -20,7 +20,7 @@ Den Tab im Vordergrund lassen: manuelles Sperren, Energiesparen oder Browser-Sus
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen** schließt im normalen Schema-1-Restore die exakten inaktiven Stammdateien `.pixl_txn_old` und `.pixl_txn_new` sichtbar aus, erhält sie aber im Archiv. Aktive/unklare Stamm-Transaktionseinträge sperren den gesamten Import. Quelle, I:/-/E:/-Zielumleitung und frischer Zielzustand werden geprüft. Gleichnamige Dateien in gewöhnlichen Unterordnern bleiben normale Nutzdaten. Schema-2-Restores verwenden weiterhin den Migrationsassistenten.
 
-Die DFU-Seite enthält App **DE3.63 / 635** als Anwendungsupdate für passende LCD/PFS1-Geräte. Bootloader und **S112** werden dabei nicht ersetzt; ein Webupdate allein installiert keine Gerätefirmware. Die tatsächliche Hardwareprüfung bleibt ein separater Schritt. [Releasehinweise und Grenzen](../docs/RELEASE_WEB3_39_4.de.md) · [Startanleitung 3.39.4](LIESMICH_3_39_4.txt).
+Die DFU-Seite enthält **DE3.65 / 637** als reines Anwendungsupdate für LCD-Geräte mit PFS1 und S112 7.3.0. Nach der Auswahl prüft der Dateimanager die ZIP-Datei. Die Bluetooth-Übertragung startet durch die Geräteauswahl in Schritt 2. [Startanleitung 3.39.5](LIESMICH_3_39_5.txt).
 
 Seit **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
 auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
@@ -57,13 +57,13 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4) · [Startanleitung](LIESMICH_3_39_4.txt)
+[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.39.5](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.5) · [Startanleitung](LIESMICH_3_39_5.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
 ## Firmwarepaket vor der Übertragung prüfen
 
-Bei **Gerät & Diagnose → Versionsabgleich** vergleicht der Dateimanager den SHA-256-Wert des Bootloaderbereichs mit dem zugehörigen Zähler. Die gespeicherten Referenzen sind BL8 (11), Z13 (13), Z15 (15) und Z17 (17). Z13-Code mit Zähler 16 wird als bekanntes Z16-Rückkehrpaket bezeichnet; Z18 ist das Rückkehrpaket mit unverändertem Z15-Code und Zähler 18. Andere Kombinationen werden getrennt als Abweichung angezeigt. Der Paketkatalog beschreibt die mitgelieferte Anwendung und ihre Voraussetzungen separat. Bei einer aktuellen Gerätediagnose warnt die DFU-Seite vor einem niedrigeren App-Zähler. Z15 kann eine ältere, gültig signierte Anwendung installieren. Für Bootloader-Pakete gilt ein eigener Versionszähler.
+Bei **Gerät & Diagnose → Versionsabgleich** vergleicht der Dateimanager den SHA-256-Wert des Bootloaderbereichs mit dem zugehörigen Zähler. Die gespeicherten Referenzen sind BL8 (11), Z13 (13), Z15 (15) und Z17 (17) sowie Z19 (19). Z13-Code mit Zähler 16 wird als bekanntes Z16-Rückkehrpaket bezeichnet; Z18 ist das Rückkehrpaket mit unverändertem Z15-Code und Zähler 18. Andere Kombinationen werden getrennt als Abweichung angezeigt. Der Paketkatalog beschreibt die mitgelieferte Anwendung und ihre Voraussetzungen separat. Bei einer aktuellen Gerätediagnose warnt die DFU-Seite vor einem niedrigeren App-Zähler. Z15 kann eine ältere, gültig signierte Anwendung installieren. Für Bootloader-Pakete gilt ein eigener Versionszähler.
 
 In Schritt 1 der DFU-Seite zeigt die Dateiauswahl den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs. Eine höchstens zehn Minuten alte Bootdiagnose aus dem Dateimanager ermöglicht einen Vergleich. Ein Hinweis auf einen niedrigeren Zähler oder eine abweichende FWID ist vor der Geräteauswahl sichtbar. Vermischte oder widersprüchliche Startdaten werden vor Bluetooth abgewiesen.
 
@@ -106,7 +106,7 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 Über **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** einen früheren Start- oder Gesamtdiagnosebericht auswählen. Für einen aussagekräftigen Vergleich Berichte desselben Geräts mit vergleichbarer Sammlung verwenden. Die Datei wird lokal gelesen. Für die Phasen Speicher und Anwendung bedeutet ein negativer Unterschied eine kürzere Zeit.
 
-Das aktuelle PFS1-Profil berücksichtigt die neun expliziten Paare DE3.55/627, DE3.56/628, DE3.57/629, DE3.58/630, DE3.59/631, DE3.60/632, DE3.61/633, DE3.62/634 und DE3.63/635. Die identische Speicher-Engine und Geometrie sind gebunden; die Aufnahme von DE3.63 ist keine neue Speicherumstellung. Ein Test dieser Anwendung am Gerät steht aus. Die Speicherumstellung prüft Version, Zähler und Engine-Identität. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser überprüft die SHA-256 der vollständigen BIN gegen die Init-Daten ihrer DAT-Datei. [DE3.63-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.63/Allmiibo_DE3_63_Quellcode.zip).
+Das aktuelle PFS1-Profil berücksichtigt die elf Versions-/Zählerpaare von DE3.55/627 bis DE3.65/637. Die Speicherumstellung prüft das genaue Paar, die Geometrie und den Fingerabdruck der Speicher-Engine. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser prüft den SHA-256 der vollständigen Anwendung anhand der Init-Daten ihrer DAT-Datei. [DE3.65-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip).
 
 ## Bauen, testen und veröffentlichen
 

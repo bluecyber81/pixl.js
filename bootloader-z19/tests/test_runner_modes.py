@@ -11,6 +11,18 @@ import run_offline as runner
 
 
 class ModeTests(unittest.TestCase):
+    def test_optimized_python_cannot_report_a_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)/'result'
+            for command in ([str(runner.TESTS/'run_offline.py')],
+                            [str(runner.TESTS/'DFU_Stream/check_app_stream.py'), '--test-bin', 'unused.bin']):
+                with self.subTest(command=command):
+                    result = subprocess.run([sys.executable, '-B', '-O', *command, '--output', str(out)],
+                                            text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn('assertions', result.stderr)
+                    self.assertFalse(out.exists())
+
     def invoke(self, mode, blocked=False):
         with tempfile.TemporaryDirectory() as stage:
             out = Path(stage)/'run'

@@ -3,15 +3,15 @@ globalThis.AllmiiboFirmwareReleases = {
   "schema": 1,
   "packages": [
     {
-      "id": "de3.63-lcd-app",
-      "version": "2.22.0-DE3.63",
-      "counter": 635,
-      "file": "Allmiibo_LCD_DE3_63_635_TESTSTAND.zip",
-      "bytes": 364559,
-      "sha256": "96115bd9fa460be9d9f98fdb6fd030dbe657882cfeb1b5d1be2262f9fbef3bd4",
+      "id": "de3.65-lcd-app",
+      "version": "2.22.0-DE3.65",
+      "counter": 637,
+      "file": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+      "bytes": 362167,
+      "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
       "board": "LCD",
       "storage": "PFS1",
-      "bootloader": "BL8/Z13/Z15/Z17",
+      "bootloader": "BL8/Z13/Z15/Z17/Z19",
       "softDevice": "S112 7.3.0",
       "applicationOnly": true,
       "migrationRequired": false

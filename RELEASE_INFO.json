@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.65",
   "counter": 637,
   "board": "LCD",
-  "web_version": "3.39.4",
+  "web_version": "3.39.5",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
@@ -15,13 +15,11 @@
     "0x0126"
   ],
   "bootloader": {
-    "code_version": "BL8",
-    "source": "bootloader-bl8",
-    "region_sha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
-    "stored_counter_is_not_code_version": true,
-    "standalone_ota_counter": 9,
-    "standalone_ota_is_upgrade_for_counter_11": false,
-    "role": "Historical corresponding-source BL8 reference; not a current device observation."
+    "code_version": "Z19",
+    "source": "bootloader-z19",
+    "region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "counter": 19,
+    "included_in_application_ota": false
   },
   "softdevice": {
     "vendor": "Nordic Semiconductor",
@@ -40,7 +38,7 @@
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
   "host_firmware_suites": 148,
-  "web_host_tests": 1264,
+  "web_host_tests": 1266,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
   "evidence": "docs/validation/DE3_65.json",
@@ -55,13 +53,13 @@
     "No universal BL/SD combined update is supplied."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
-  "device_validation_pending": true,
-  "web_evidence": "docs/validation/WEB3_39_4.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4",
+  "device_validation_pending": false,
+  "web_evidence": "docs/validation/WEB3_39_5.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.5",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "Physical DE3.65 update, display, NFC and wake on the target device.",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": null,
   "previous_device_readback_evidence": "docs/validation/Z19_APP636_BASELINE.json",
   "production_source_id_sha256": "dfae20623f467fcb4e2fd82b0c2355bce64efa3eace34177f04559270bad11d4",
   "tested_bootloader": {
@@ -71,20 +69,11 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Existing Z19 and App636 observed on LCD hardware. App637 signature, image hash and startup CRC verified by original Z19 ARM code in a model. Physical App637 readback pending."
+    "qualification": "App637 and Z19 confirmed on the LCD device. Rebuilt BIN and padded region match the reference. Host tests and ARM checks are documented separately."
   },
-  "candidate_bootloader": {
-    "name": "Z19",
-    "counter": 19,
-    "source": "bootloader-z19",
-    "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
-    "included_in_application_ota": false,
-    "installation_readback_observed": true,
-    "qualification": "Existing Z19 and App636 observed on LCD hardware. App637 signature, image hash and startup CRC verified by original Z19 ARM code in a model. Physical App637 readback pending."
-  },
-  "web_host_test_scope": "Complete Node suite and both production builds. Chrome tested mobile and desktop layouts, explicit App 637 file selection, bundled App 635 and simulated wake and interrupted transfers. Physical App 637 test pending.",
-  "web_browser_checks_per_build": 376,
-  "web_browser_screenshots_per_build": 72,
+  "web_host_test_scope": "Local and Pages-path production builds, real Chrome on both builds, simulated device operations and Windows launcher. The physical LCD readback was a separate BLE session.",
+  "web_browser_checks_per_build": 384,
+  "web_browser_screenshots_per_build": 76,
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -96,12 +85,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.39.3",
-    "evidence": "docs/validation/WEB3_39_3.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.3"
+    "version": "3.39.4",
+    "evidence": "docs/validation/WEB3_39_4.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4"
   },
-  "web_release_status": "host-tested",
-  "web_release_notes": "docs/RELEASE_WEB3_39_4.de.md",
+  "web_release_status": "stable",
+  "web_release_notes": "docs/RELEASE_WEB3_39_5.de.md",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -119,10 +108,24 @@
     "dfu_completion": "Final acknowledgement, observed GATT disconnect and browser-requested cleanup are reported separately.",
     "name_and_path_errors": "German and English explanations for name limits, alias collisions, reserved names and normalization, with affected name and suggested form.",
     "firmware_downloads": {
-      "bundled": "DE3.63/635",
-      "separate_pre_release": "DE3.65/637",
+      "bundled": "DE3.65/637",
+      "download": "DE3.65/637",
       "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.65"
-    }
+    },
+    "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
+    "backup_resume": "In-tab and device-session scope visible before backup."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_65_637_NUR_APP.zip"
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+  "historical_bootloader_bl8": {
+    "code_version": "BL8",
+    "source": "bootloader-bl8",
+    "region_sha256": "add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130",
+    "stored_counter_is_not_code_version": true,
+    "standalone_ota_counter": 9,
+    "standalone_ota_is_upgrade_for_counter_11": false,
+    "role": "Historical corresponding-source BL8 reference; not a current device observation."
+  },
+  "status": "stable",
+  "device_evidence": "docs/validation/DE3_65_LCD_READBACK.json",
+  "final_report": "docs/FINAL_DE3_65.md"
 }

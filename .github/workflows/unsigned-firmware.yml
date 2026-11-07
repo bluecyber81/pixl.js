@@ -46,7 +46,7 @@ jobs:
           docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec '
             tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
           ' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
-      - name: Verify the packaged application against the release build and BL8 key
+      - name: Verify the packaged application against the release build and bound Z19 key
         if: github.event_name != 'pull_request'
         run: /usr/bin/python3 tools/check_release_ota.py
       - name: Exercise every DE2 and DE3 host suite
@@ -102,6 +102,9 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Verify the Z19 test input hashes
+        if: matrix.boot == 'z19'
+        run: jq -er '.files | to_entries[] | .value + "  " + .key' TEST_BINDING.json | sha256sum --check --strict -
       - name: Fetch the pinned SDK and compile the bound unsigned bootloader
         run: |
           docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
@@ -120,10 +123,9 @@ jobs:
         shell: bash
         run: |
           python3 -B tests/test_runner_modes.py
+          python3 -B tests/test_app_stream_modes.py
           ota="../$(jq -er .application_ota_path ../RELEASE_INFO.json)"
-          payload="$(unzip -p "$ota" manifest.json | jq -er .manifest.application.bin_file)"
-          unzip -p "$ota" "$payload" > "$RUNNER_TEMP/released-app.bin"
-          python3 -B tests/DFU_Stream/check_app_stream.py --test-bin "$RUNNER_TEMP/released-app.bin" --expected-sha256 "$(jq -er .application_sha256 ../RELEASE_INFO.json)" --output _checks/application-resume.json
+          python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$ota" --output _checks/application-resume.json
       - name: Archive bootloader evidence
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

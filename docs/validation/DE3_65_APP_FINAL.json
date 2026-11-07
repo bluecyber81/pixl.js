@@ -1,0 +1,720 @@
+{
+  "application": "2.22.0-DE3.65",
+  "counter": 637,
+  "board": "LCD",
+  "build": {
+    "sourceID": "dfae20623f467fcb4e2fd82b0c2355bce64efa3eace34177f04559270bad11d4",
+    "productionInputs": 699,
+    "matchingReleaseArtifacts": {
+      "pixljs.bin": true,
+      "pixljs.hex": true,
+      "pixljs.out": true,
+      "pixljs.map": true
+    },
+    "sha256": {
+      "pixljs.bin": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+      "pixljs.hex": "0726d17457e2b3db8fbe7fb7520369bbf0ec9e262314f43465d79804dd764977",
+      "pixljs.out": "202d775dddd7b44120963fceefe7437ed7e9e110a3cb194da179eb9cda1e51d2",
+      "pixljs.map": "de76584f1ff358572855f20e506b2e75634bcf4644e59f0b8ec33fdddc7fce50"
+    },
+    "budget": {
+      "binary_bytes": 361564,
+      "linker_flash_used_bytes": 361572,
+      "observed": {
+        "flash_reserve_bytes": 11164,
+        "heap_stack_gap_bytes": 1840,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    }
+  },
+  "signedOTA": {
+    "name": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+    "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+    "bytes": 362167,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 637,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 361564,
+        "sha256": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 361564,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "firmwareHost": {
+    "suiteCount": 148,
+    "allSuitesPassed": true,
+    "sourceUnchanged": true,
+    "suites": [
+      {
+        "suite": "de2/test_amiibo_file_io.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_amiibo_paths_uid.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_cache_nfc.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_chameleon_files.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_cwalk2.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_metadata.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_player_v3.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_settings.py",
+        "exit": 0
+      },
+      {
+        "suite": "de2/test_vfs_protocol.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiibo_file_errors.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiibo_info_de323.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiibo_key_import.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiibo_navigation_memory.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiibo_notes_de363.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiibolink_commit_de344.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiidb_input_slots.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiidb_navigation_memory.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiidb_qr_de325.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiidb_search_favorites.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_amiidb_slot_persistence_de348.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_animation_iteration.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_app_startup_allocations.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_application_budget.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_backlight_busy_de343.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_foreground.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_mtu.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_remote_de347.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_remote_modes_de347.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_same_link_de351.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_sdk_lifecycle.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_session_de326.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_status_de320.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ble_status_de357.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_boot_diagnostic.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_bounded_ui_startup.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_build_evidence.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_button_debounce_de343.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_button_queue_pressure_de343.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_canvas_bounds_utf8.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_card_save_transactions_de354.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_catalog_de3_9.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_browser_cache_de351.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_browser_memory_de350.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_buffer_contract_de362.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_config_count.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_exit_guard.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_factory_errors_de349.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_inputs.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_shadow_ui.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_state_load.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_uid_errors_de350.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_chameleon_write_mode.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_database_catalog_validation.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_database_indexed_links.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_database_refresh.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_desktop_animation_lifecycle.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_device_info.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_dfu_entry.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_dfu_transfer_guard.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_directory_rename_de3_11.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_disney_profile_de353.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_exit_contract_de358.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_factory_helper_disabled.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_fault_reset_de346.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_favorites_navigation_memory.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_file_create_safety.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_flash_read_ready_de350.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_font_german_de363.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_generic_view_allocations.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_hal_reliability.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_hardware_de3_3.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_lcd_text_scroll.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_lfs_backend.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_lfs_backports.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_lfs_wear_de355.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_list_capacity_release.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_list_lifecycle.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_math_precision_de335.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_mf0_factory_target_de342.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_mf1_factory_de342.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_mount_profile_de362.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_mtu_diagnostic.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_app_handoffs_de3_3.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_file_persist_handoffs_de337.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_frame_delay_de3_22.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_frames_de346.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_lifecycle_de3_3.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_nvic_de339.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_remote_guard_de347.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_save_dialog_de337.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_save_retry_de337.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_nfc_sector_de352.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_atomic_meta_de351.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_crc_de345.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_crc_pair_de355.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_mount_stream_de341.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_recovery_launcher.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_recovery_protocol.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_stage_gc_de346.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_packed_vfs_persistence_de344.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_persistence.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_player_browser_memory.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_player_close_lifecycle.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_player_input_sequence.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_progress_bar_bounds.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_qrcode_stack.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ram_list_growth.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_read_reply_lifecycle.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_reset_exit_contract_de358.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_runtime_diag.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_settings_home_save_lifecycle.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_settings_label_width_de361.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_settings_return_focus_de340.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_settings_save_ui.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_settings_slot_limit_de348.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_settings_storage_snapshot.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_sleep_save.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spi_completion.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spi_transactions.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spiffs_allocator_read_failure.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spiffs_cache_failures.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spiffs_erase_failures.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spiffs_integration.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spiffs_sentinel.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_spiffs_writeback_failures.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_startup_diagnostics.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_storage_battery.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_storage_diag.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_storage_diag_tybalt.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_storage_metadata_protocol.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_storage_paths_de3_7.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_text_input_render_de344.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_tree_generator_preflight.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_comfort_de356.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_diagnostic_reader.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_lifecycle_de3_2.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_nav_diag.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_nav_diag_protocol.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_state_reset.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_temporary_allocations.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_ui_views_de3_9.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_upstream_startup_i18n.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_version_source_archive.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_vfs_abandon.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_vfs_drive_bounds_de342.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_vfs_namespace.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_vfs_remove_open.py",
+        "exit": 0
+      },
+      {
+        "suite": "de3/test_wake_gpio.py",
+        "exit": 0
+      }
+    ]
+  },
+  "LCD": {
+    "release": "PASS amiidb QR: 554 real framebuffer frames, 531 complete QR comparisons; notes/links/locales/readonly/off/failure/manual/animation/info/long-lines",
+    "sanitizers": "ASan/UBSan with default leak check on WSL",
+    "historicalDE324": {
+      "sourceSHA256": "a6aade79b724c1179cd647e7761bb05555e8fab7903515641e2da551ace2630e",
+      "observedExit": 71,
+      "oracle": "Expected QR pixel mismatch at offset 3 using its legacy single-height call contract."
+    },
+    "threeLineNotes": {
+      "initialThumbY": 12,
+      "finalThumbY": 26,
+      "offset": 26,
+      "maxOffset": 26,
+      "textHeight": 39,
+      "logicalPage": 26,
+      "viewport": 29
+    }
+  },
+  "catalog": {
+    "catalogIDs": 952,
+    "groupRows": 82,
+    "associations": 1344,
+    "webGermanHints": 54,
+    "firmwareGermanHints": 8,
+    "associationsWithNotes": 63,
+    "associationsWithGermanFirmwareHints": 13,
+    "scope": "Structural and source-string verification, not completeness of releases or game compatibility."
+  },
+  "mountProfile": {
+    "file": "mount-attribution.json",
+    "sha256": "a6dbcb0d3a17bf61b5d15c5ea61eb8eb866e54a810696cb3e8577788ff22f26c",
+    "matchedIndependentTrace": true,
+    "noWriteOrEraseOnMount": true,
+    "recovery": "PASS",
+    "verifiedData": "Each cached mount checks /saved plus all uniquely tagged synthetic 540-byte images and Raw128 records.",
+    "physicalModelReads": [
+      {
+        "figures": 100,
+        "noCache": 398,
+        "fourPages": 342,
+        "repeats": 3
+      },
+      {
+        "figures": 500,
+        "noCache": 1858,
+        "fourPages": 1603,
+        "repeats": 3
+      },
+      {
+        "figures": 952,
+        "noCache": 3864,
+        "fourPages": 3433,
+        "repeats": 3
+      }
+    ],
+    "eightPageReplayAt952": 3257,
+    "changeToDeviceStorage": false,
+    "hardwareTimeMeasured": false
+  },
+  "scope": "Rebuilt, modeled and software-tested on the laptop. Switch/scroll hardware confirmation and boot timing belong to the earlier dated device observation. No device writes or reads in this app run."
+}

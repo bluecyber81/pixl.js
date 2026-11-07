@@ -23,7 +23,7 @@ python3 -B build.py --check
 python3 -B build.py --stack-report
 ```
 
-Der zweite Befehl verwendet das in `build.py` per Digest festgelegte Docker-Image und schreibt in das zunächst leere Verzeichnis `_build`. Alternativ lässt sich der Build mit Python ab 3.12 und GNU Make nativ auf Linux ausführen. `TOOLCHAIN` ist der entpackte Arm-GNU-Toolchain-Ordner 12.2.Rel1 für x86_64 und arm-none-eabi. `SDK_ARCHIV` ist die Datei `Nordic_SDK_Buildquellen_17_1_0.tar.gz` aus dem Gesamtprüfpaket. Der Builder prüft Compiler, SDK-Archiv, Flashadressen und die beiden erwarteten Eigenschaften des fertigen Bootloaders, Größe und Regionshash.
+Der zweite Befehl verwendet das in `build.py` per Digest festgelegte Docker-Image und schreibt in das zunächst leere Verzeichnis `_build`. Alternativ lässt sich der Build mit Python ab 3.12 und GNU Make nativ auf Linux ausführen. `TOOLCHAIN` ist der entpackte Arm-GNU-Toolchain-Ordner 12.2.Rel1 für x86_64 und arm-none-eabi. `SDK_ARCHIV` ist die Datei `Nordic_SDK_Buildquellen_17_1_0.tar.gz` aus dem [hashgenauen SDK-Export](../docs/BUILD_DE3_65.md#sdk-archiv-für-den-nativen-build). Der Builder prüft Compiler, SDK-Archiv, Flashadressen und die beiden erwarteten Eigenschaften des fertigen Bootloaders, Größe und Regionshash.
 
 ```sh
 python3 -B build.py --mode native --toolchain "$TOOLCHAIN" --sdk-archive "$SDK_ARCHIV" --stack-report
@@ -44,9 +44,12 @@ Der Hosttest läuft mit GCC, Bash, AddressSanitizer und UndefinedBehaviorSanitiz
 Für die Übertragung aller App-Bytes durch den regulären Z19-Datenpfad, einschließlich einer modellierten Unterbrechung, zusätzlich verwenden:
 
 ```sh
-python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$APP636_ZIP" --output _checks/transfer636.json
+python3 -B tests/test_app_stream_modes.py
+python3 -B tests/DFU_Stream/check_app_stream.py --app-only ../fw/releases/Allmiibo_LCD_DE3_65_637_NUR_APP.zip --output _checks/transfer637.json
 ```
 
-`APP636_ZIP` bezeichnet das signierte Referenzpaket `Allmiibo_LCD_DE3_64_636_NUR_APP.zip`. Für eine neue App lässt sich derselbe Datenpfad mit `--test-bin DATEI --expected-sha256 HASH` prüfen. Bei der Referenz-App wurde nach 4.136 übertragenen Bytes getrennt. Das Modell meldete den gespeicherten Stand 0 zurück. Alle 364.236 Bytes wurden anschließend erneut übertragen und byteweise sowie per CRC verglichen. Ein separater Fall prüft die Wiederaufnahme an einer bestätigten Objektgrenze. Funk, MBR-Kopie und Neustart auf realer Hardware erfordern zusätzliche Geräteversuche.
+Der erste Aufruf prüft die Meldungen des Testwerkzeugs. Der zweite überträgt die Bytes des signierten Referenzpakets im C-Modell. Der Tester erkennt App637 und das frühere App636-Paket an den fest hinterlegten ZIP- und Nutzdaten-Prüfsummen. Für andere Builds steht `--test-bin DATEI --expected-sha256 HASH` zur Verfügung. Bei App637 trennt das Modell nach 4.136 Bytes. Es bestätigt den gespeicherten Stand 0 und vergleicht anschließend alle 361.564 erneut übertragenen Bytes und deren CRC. Ein separater Fall prüft die Wiederaufnahme an einer bestätigten Objektgrenze. Funk, MBR-Kopie und Neustart auf realer Hardware erfordern zusätzliche Geräteversuche.
 
-Die deutschsprachige Displaystudie ist ein separater Quellvorschlag. Hier steht der reproduzierte Z19 mit den ausgelieferten DFU-Texten.
+Der Standardlauf bestätigt vorab mit einer Kontrollprobe, dass die Erkennung von Speicherlecks aktiv ist. Kann die Kontrolle nicht laufen, schreibt das Werkzeug `BLOCKED` und das Kontrollprotokoll in die Ergebnisdatei und beendet sich mit Exitcode 2. Für einen getrennten Lauf ohne Leakprüfung `--no-leak-check` und einen neuen Ausgabedateinamen angeben. ASan und UBSan bleiben eingeschaltet, `leakDetectionConfirmed` ist dann `false`. Beide Prüfstarter verlangen Python mit aktiven Prüfanweisungen. Ein Aufruf mit `-O` endet vor dem ersten Test.
+
+Die [Anleitung zum deutschen Bootdisplay](docs/Bootanzeige_DE.txt) beschreibt den separaten Quellvorschlag und seinen Nachbau.

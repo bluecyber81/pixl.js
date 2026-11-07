@@ -9,13 +9,13 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.65 / 637**; [unsigned build guide](docs/RELEASE_DE3_65.md) |
+| Current LCD application | `fw/application/src/`, currently **2.22.0-DE3.65 / 637**; [unsigned build guide](docs/BUILD_DE3_65.md) |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | `web/`, currently **3.39.4**; [web README](web/README.md) |
+| Browser file manager | `web/`, currently **3.39.5**; [web README](web/README.md) |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z19 bootloader | `bootloader-z19/`, source-bound build and host/ARM tests; device counter 19 |
-| Historical Z17 bootloader | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; physical test pending |
+| Historical Z17 bootloader | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; [historical device readback](docs/COMPONENTS.md) |
 | Matching BL8 bootloader | `bootloader-bl8/`; [source binding and separate unsigned build](bootloader-bl8/README.md) |
 | Historical releases | Git tags, release assets and dated documentation, including [DE3.37](docs/BUILD_DE3_37.md) |
 

@@ -1,0 +1,20 @@
+{
+  "utc": "2026-11-07T10:27:36.903291+00:00",
+  "inputs": {
+    "Allmiibo_DE365_Z19_Web3394_Pruefnachweise_2026-11-07.zip": {
+      "sha256": "10318cdeffbed293c3755c7c018ed0d1854abaf9638cc24d547d4ac713102df7",
+      "entriesIncludingManifest": 197
+    },
+    "Allmiibo_DE3_65_Z19_Web3_39_4_ChatGPT_Pruefpaket.zip": {
+      "sha256": "8fdcb716648f9a8c5c6c4c6563d3c2f92ed6e635592a22410d550cf1159913e6",
+      "entriesIncludingManifest": 19
+    }
+  },
+  "deviceExportSha256": "ca0e88e407295f9c624cd1d9f5fed9b60a1ea927dac7eed498effe4bb6e787f9",
+  "s112Source": "https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/softdevices/s112/s112_nrf52_7.3.0.zip",
+  "s112ArchiveBytes": 248706,
+  "s112ArchiveSha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+  "s112HexSha256": "92bcdc1aa51142ed212bb0dbcdf57093a1bad391f1cf5adca60effe14bdb7ec6",
+  "licenseSha256": "8e1113e1345d80f0673b06c94dad665a4f6e81637bc7c9a69359e618c57570f8",
+  "scope": "Input ZIP inventories and CRCs, attached reports, archived device export, and fresh manufacturer byte comparison."
+}

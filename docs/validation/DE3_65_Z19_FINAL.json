@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "component": "LCD Z19",
+  "applicationCounter": 637,
+  "firmwareChanged": false,
+  "sourceAndTestBindings": {
+    "SOURCE_BINDING.json": 23,
+    "TEST_BINDING.json": 64
+  },
+  "build": {
+    "dockerAndNativeBinHexMatch": true,
+    "payloadBytes": 26772,
+    "flashHeadroomBytes": 1900,
+    "bootRegionBytes": 28672,
+    "binSha256": "5c3eca5391d40677d95d5c256bfcbeb5e0ffdb3e9368408a27e45100738590af",
+    "hexSha256": "e565fbd66bef939f8ca3421277b3006eaad27fa0bd18b8b977d3d72b31193a3f",
+    "paddedBootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "dockerElfSha256": "da674e7ffa4246b48f04959f486c8a15f05648e04091c427c8559336d9a5ab75",
+    "nativeElfSha256": "31a93b89f891b9d05f76714cc551298afcee213793865dd1b4ccc2f5ad6ac9d3",
+    "compilerSha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "sdkArchiveSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "container": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
+  },
+  "stack": {
+    "individualLtoFrames": 192,
+    "largestIndividualFrameBytes": 528,
+    "reservedStackBytes": 4096,
+    "totalRuntimePeakBytes": null
+  },
+  "fullSuite": {
+    "at": "2026-11-07T10:32:09.395181+00:00",
+    "unicorn": "2.0.1",
+    "groups": {
+      "source-binding": "PASS",
+      "build-export-contract": "PASS",
+      "reset-bind": "PASS",
+      "reset-native-sanitizers": "PASS",
+      "session-native-sanitizers": "PASS",
+      "ingress-native-sanitizers": "PASS",
+      "display-native-sanitizers": "PASS",
+      "final-phases-native-sanitizers": "PASS",
+      "display-buttons-arm": "PASS",
+      "crypto-arm-69": "PASS"
+    },
+    "loadedElfSha256": "e81087b486617a8621ddb65599f3fee0fc57ded6d43452d6953861de3d832844",
+    "sanitizers": {
+      "compilerFlags": [
+        "-fsanitize=address,undefined"
+      ],
+      "options": {
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+        "UBSAN_OPTIONS": "halt_on_error=1",
+        "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+      },
+      "control": "PASS",
+      "leakDetectionConfirmed": true
+    },
+    "armCryptoCasesPassed": 69
+  },
+  "signedApp637ArmAcceptance": {
+    "passed": true,
+    "cases": [
+      {
+        "scenario": "Z19_App636_to_App637",
+        "signedInitResult": {
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361564,
+          "bank0Code": 0
+        },
+        "armPayloadHashPassed": true,
+        "armExtractedBootValidation": "CRC",
+        "armExtractedCrc32": "54f0d5c0",
+        "armBootValidationPassed": true,
+        "sdAndBootRegionsIdenticalInModel": true
+      },
+      {
+        "scenario": "Z19_empty_app_bank_to_App637",
+        "signedInitResult": {
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361564,
+          "bank0Code": 0
+        },
+        "armPayloadHashPassed": true,
+        "armExtractedBootValidation": "CRC",
+        "armExtractedCrc32": "54f0d5c0",
+        "armBootValidationPassed": true,
+        "sdAndBootRegionsIdenticalInModel": true
+      }
+    ],
+    "loadedElfSha256": "da674e7ffa4246b48f04959f486c8a15f05648e04091c427c8559336d9a5ab75",
+    "softDeviceFwid": "0x0126",
+    "signedZipSha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2"
+  },
+  "dataStreams": {
+    "release637Default": {
+      "payloadBytes": 361564,
+      "appSha256": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+      "finalCrc32": 1425069504,
+      "linkCutOffset": 4136,
+      "reportedResumeOffset": 0,
+      "packetReceipts": 18303,
+      "objectExecutes": 90,
+      "sanitizerControl": "PASS",
+      "leakDetectionConfirmed": true,
+      "sanitizerOptions": {
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+        "UBSAN_OPTIONS": "halt_on_error=1",
+        "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+      },
+      "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2"
+    },
+    "release637WithoutLSan": {
+      "payloadBytes": 361564,
+      "appSha256": "ad07ceafabfea1071d512ef63414fa553854659326ba70220a36316754a4a298",
+      "finalCrc32": 1425069504,
+      "linkCutOffset": 4136,
+      "reportedResumeOffset": 0,
+      "packetReceipts": 18303,
+      "objectExecutes": 90,
+      "sanitizerControl": "PASS",
+      "leakDetectionConfirmed": false,
+      "sanitizerOptions": {
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=0",
+        "UBSAN_OPTIONS": "halt_on_error=1",
+        "LSAN_OPTIONS": "detect_leaks=0:exitcode=23"
+      },
+      "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2"
+    },
+    "reference636": {
+      "payloadBytes": 364236,
+      "appSha256": "115593075921247d7d37bc1138beb43437b140ad9c38e0b4e67c4a78795dd1b0",
+      "finalCrc32": 2229538336,
+      "linkCutOffset": 4136,
+      "reportedResumeOffset": 0,
+      "packetReceipts": 18437,
+      "objectExecutes": 90,
+      "sanitizerControl": "PASS",
+      "leakDetectionConfirmed": true,
+      "sanitizerOptions": {
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+        "UBSAN_OPTIONS": "halt_on_error=1",
+        "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+      },
+      "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2"
+    }
+  },
+  "runnerContracts": {
+    "streamModesAndMissingCompiler": 3,
+    "suiteModesAndAssertions": 3
+  },
+  "optionalDisplay": {
+    "sourceAndTestBindings": {
+      "SOURCE_BINDING.json": 23,
+      "TEST_BINDING.json": 64
+    },
+    "build": {
+      "dockerAndNativeBinHexMatch": true,
+      "payloadBytes": 26788,
+      "flashHeadroomBytes": 1884,
+      "bootRegionBytes": 28672,
+      "binSha256": "228f0606272059f83838e7b08f8a25159fb86095fcd9e49fbf089e234cae6a62",
+      "hexSha256": "f60a2d17fa5195727c1bc2bdee5133ea612b3d786d9a7e93b6204567eb5e319e",
+      "paddedBootRegionSha256": "608235fcfdc530889a31f4c9c0917664cc8bb00e077d161738165e6cccc467b6",
+      "dockerElfSha256": "d9dd5a323e50a1017d2612ba58ea687d420d3e88343e329225339d226809e5e4",
+      "nativeElfSha256": "345f600f05925a89e1864624af29b277685a5d16646ec5a6ca77446d1d79411e",
+      "compilerSha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+      "sdkArchiveSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+      "container": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
+    },
+    "controllers": [
+      "LCD128",
+      "SH1106_132"
+    ],
+    "finalPhaseChecksPassed": true,
+    "armIrqCuts": 44,
+    "archive": "Bootanzeige_DE_Quellvorschlag.zip",
+    "archiveEntries": 41,
+    "sha256": "167eff196e72e2212f9db2a28be832f6e35356b238a2f681af0a56d907586564"
+  },
+  "limits": [
+    "Host and linked ARM models. No new physical update, intentional interruption, radio or recovery attempt.",
+    "The optional German display was built and tested in models. It is a separate unsigned source proposal.",
+    "The static stack report covers individual function frames. A worst-case total and hardware stress margin were not measured."
+  ]
+}

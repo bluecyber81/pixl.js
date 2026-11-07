@@ -91,12 +91,15 @@ def main():
     mode.add_argument('--arm-only', action='store_true')
     parser.add_argument('--no-leak-check', action='store_true', help='Explicitly disable host leak detection; keep ASan and UBSan.')
     args = parser.parse_args()
+    if not __debug__:
+        parser.error('Bootloader tests require Python assertions. Remove -O and PYTHONOPTIMIZE.')
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     selected = 'host' if args.host_only else 'arm' if args.arm_only else 'full'
     wanted = {'host', 'arm'} if selected == 'full' else {selected}
     reasons = {kind: prerequisites(kind) for kind in sorted(wanted)}
     env = os.environ.copy()
+    env.pop('PYTHONOPTIMIZE', None)
     sanitizer = None
     if 'host' in wanted:
         leaks = not args.no_leak_check

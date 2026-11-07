@@ -108,7 +108,7 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
                                             'exit_code':ran.returncode,'stdout':ran.stdout,'stderr':ran.stderr})
                     self.assertEqual(ran.returncode,0 if label=='candidate' else 71,ran.stdout+ran.stderr)
                     if label=='candidate':self.assertIn('PASS amiidb QR',ran.stdout)
-                    else:self.assertIn('CHECK failed',ran.stderr)
+                    else:self.assertIn('CHECK failed: pixel(a,x,y)==pixel(b,x,y)',ran.stderr)
                     print(ran.stdout.strip() if ran.returncode==0 else 'PASS DE3.24 negative control: QR pixel comparison fails at offset3')
                 for path,digest in hashes.items():self.assertEqual(hashlib.sha256(Path(path).read_bytes()).hexdigest(),digest)
                 results['passed']=True

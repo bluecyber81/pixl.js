@@ -39,7 +39,7 @@ test('3.29 selects each reviewed engine independently and never inherits approva
   h.vm.changeCapacityProfile('de344');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.42–DE3.44 \/ 614–616/);
   h.vm.changeCapacityProfile('de345');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.45 \/ 617/);
   h.vm.changeCapacityProfile('de354');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.51–DE3.54 \/ 623–626/);
-  h.vm.changeCapacityProfile('current');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.55–DE3.63 \/ 627–635/);assert.equal(h.calls.length,1);
+  h.vm.changeCapacityProfile('current');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.55–DE3.65 \/ 627–637/);assert.equal(h.calls.length,1);
  }finally{h.app.unmount()}
 })
 

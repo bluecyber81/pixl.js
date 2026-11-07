@@ -101,6 +101,36 @@ test('unknown transfer codes preserve the supplied message and dismissals stay s
   assert.equal(h.messages[0].message, 'Unknown operation');
 });
 
+test('sync compares local and target contents again and explains the abort in both languages', async () => {
+  const sync = await import('../src/lib/sync-plan.js');
+  const { memoryVfs, localFile } = await import('./helpers/memory-vfs.mjs');
+  const { workflowGerman, workflowEnglish } = await import('../src/i18n/workflow.js');
+  const { createI18n } = await import('vue-i18n');
+  for (const [locale, workflow] of [['de_DE', workflowGerman], ['en', workflowEnglish]]) {
+    const i18n = createI18n({ legacy: false, locale, messages: { [locale]: { workflow } } });
+    for (const changed of ['target', 'local']) {
+      const h = harness(sync), app = connected(h), vfs = memoryVfs();
+      const name = 'Änderung.bin', target = 'E:/' + name;
+      vfs.put(target, [1, 2]); vfs.put('E:/Behalten.bin', [8, 9]);
+      app.$t = (key, params) => key.startsWith('workflow.') ? i18n.global.t(key, params) : key;
+      app.transfer_adapters = () => vfs.api;
+      app.refresh_current = async () => {};
+      app.open_sync(); app.on_sync_files({target: { files: [localFile(name, [2, 3])] }});
+      await app.build_sync_plan();
+      assert.equal(app.syncPlan.summary.change, 1);
+      app.syncSelected = [target];
+      if (changed === 'target') vfs.put(target, [1, 4]);
+      else app._syncFiles = [localFile(name, [2, 4])];
+      const before = structuredClone([...vfs.nodes]);
+      await app.run_sync();
+      assert.equal(app.lastTransfer.status, 'failed');
+      assert.equal(h.messages.at(-1).message, workflow[changed === 'target' ? 'syncStale' : 'syncLocalChanged']);
+      assert.deepEqual([...vfs.nodes], before);
+      assert.deepEqual(vfs.log.filter(row => ['write','rename','remove','mkdir','meta'].includes(row.op)), []);
+    }
+  }
+});
+
 test('rename and folder sync show the same localized name/path byte limits before device I/O', async () => {
   const { createSyncPlan } = await import('../src/lib/sync-plan.js');
   const { workflowGerman, workflowEnglish } = await import('../src/i18n/workflow.js');
@@ -325,7 +355,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.39.4'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.39.5'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -337,7 +367,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.39.4.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.39.5.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -424,7 +454,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.39.4.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.39.5.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -965,7 +995,7 @@ test('production template compiles with Vue 3 and modern Element Plus bindings',
   assert.deepEqual(compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'ui' }).errors, []);
   assert.doesNotMatch(descriptor.template.content, /slot-scope|\.(?:native|sync)(?==|\s|>)/);
   assert.match(descriptor.template.content, /<h1>\{\{ \$t\('workflow\.appTitle'\) \}\}<\/h1>/);
-  assert.match(descriptor.template.content, /<strong>3\.39\.4<\/strong>/);
+  assert.match(descriptor.template.content, /<strong>3\.39\.5<\/strong>/);
 });
 
 test('3.26 workspaces open and focus without navigation, disconnect or loss of transfer state',()=>{
@@ -1447,10 +1477,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.39.4.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.39.5.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.39.4.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.39.5.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2047,7 +2077,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.39.4');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.39.5');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

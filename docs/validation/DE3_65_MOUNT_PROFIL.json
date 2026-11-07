@@ -1,0 +1,704 @@
+{
+  "scope": "Host NOR cold mounts. Extra /saved file. Each column table partitions the same read callbacks; do not add the tables.",
+  "method": "Diagnostic cache outcomes plus native symbolic call stacks. No change to target sources. Payload/Raw128 checked for every file after each cached mount.",
+  "modelHeapPeakBytes": "Simulated allocation high-water for the host ABI during mount, excluding the test harness. Not a target RAM or stack measurement.",
+  "hardwareTimingMeasured": false,
+  "targetRAMMeasured": false,
+  "programsDuringMount": 0,
+  "erasesDuringMount": 0,
+  "readFailureAndCleanRemountWith952Files": "PASS",
+  "sourceSHA256": {
+    "application/src/mod/vfs/packed_fs.c": "9f50e5c9cc1096a52ab3238b06cd7890c07ce2cc750bba6df13b538a10042771",
+    "application/src/mod/vfs/vfs_driver_packed.c": "9ac52106267ad821eaa55bd56932286fa061ca0e3e78c969e944bd5314397f90",
+    "components/littlefs/lfs.c": "1377c9f3b89731cb87a8a09e197fc440d2635ae4fc4469677bf2110c513b601c",
+    "tests/de3/packed_vfs_persistence_de344.c": "dc61f95606686050f94ae66e73097a0ffd430e90cc905be44d5416473755296c",
+    "tests/de3/mount_read_attribution.c": "83cacf14fa70b6d7b84c0d8686d0a5a21c74189cae3016905ddb9c405e590fee",
+    "tests/de3/mount_read_attribution.py": "8eaf6a38a9723351a4a02c0cbcb14be93c3f5b54c836c67c478819a5951c25fb"
+  },
+  "samples": [
+    {
+      "figures": 100,
+      "repeat": 1,
+      "uncachedReads": 398,
+      "physicalReads": 342,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 4,
+          "eligibleMiss": 14,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 6,
+          "eligibleMiss": 4,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 16,
+          "eligibleMiss": 26,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 10,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 30,
+          "eligibleMiss": 17,
+          "bypass": 254
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 6
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 5
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 2
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 4
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 25,
+          "eligibleMiss": 40,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 1,
+          "eligibleMiss": 4,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 23,
+          "eligibleMiss": 15,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 7,
+          "eligibleMiss": 12,
+          "bypass": 271
+        }
+      }
+    },
+    {
+      "figures": 100,
+      "repeat": 2,
+      "uncachedReads": 398,
+      "physicalReads": 342,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 4,
+          "eligibleMiss": 14,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 6,
+          "eligibleMiss": 4,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 16,
+          "eligibleMiss": 26,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 10,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 30,
+          "eligibleMiss": 17,
+          "bypass": 254
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 6
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 5
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 2
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 4
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 25,
+          "eligibleMiss": 40,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 1,
+          "eligibleMiss": 4,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 23,
+          "eligibleMiss": 15,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 7,
+          "eligibleMiss": 12,
+          "bypass": 271
+        }
+      }
+    },
+    {
+      "figures": 100,
+      "repeat": 3,
+      "uncachedReads": 398,
+      "physicalReads": 342,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 4,
+          "eligibleMiss": 14,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 6,
+          "eligibleMiss": 4,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 16,
+          "eligibleMiss": 26,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 10,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 30,
+          "eligibleMiss": 17,
+          "bypass": 254
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 6
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 5
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 2
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 4
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 25,
+          "eligibleMiss": 40,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 1,
+          "eligibleMiss": 4,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 23,
+          "eligibleMiss": 15,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 7,
+          "eligibleMiss": 12,
+          "bypass": 271
+        }
+      }
+    },
+    {
+      "figures": 500,
+      "repeat": 1,
+      "uncachedReads": 1858,
+      "physicalReads": 1603,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 4,
+          "eligibleMiss": 17,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 8,
+          "eligibleMiss": 5,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 88,
+          "eligibleMiss": 127,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 46,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 155,
+          "eligibleMiss": 88,
+          "bypass": 1214
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 24
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 22
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 20
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 40
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 98,
+          "eligibleMiss": 123,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 2,
+          "eligibleMiss": 26,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 121,
+          "eligibleMiss": 78,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 34,
+          "eligibleMiss": 56,
+          "bypass": 1320
+        }
+      }
+    },
+    {
+      "figures": 500,
+      "repeat": 2,
+      "uncachedReads": 1858,
+      "physicalReads": 1603,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 4,
+          "eligibleMiss": 17,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 8,
+          "eligibleMiss": 5,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 88,
+          "eligibleMiss": 127,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 46,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 155,
+          "eligibleMiss": 88,
+          "bypass": 1214
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 24
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 22
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 20
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 40
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 98,
+          "eligibleMiss": 123,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 2,
+          "eligibleMiss": 26,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 121,
+          "eligibleMiss": 78,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 34,
+          "eligibleMiss": 56,
+          "bypass": 1320
+        }
+      }
+    },
+    {
+      "figures": 500,
+      "repeat": 3,
+      "uncachedReads": 1858,
+      "physicalReads": 1603,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 4,
+          "eligibleMiss": 17,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 8,
+          "eligibleMiss": 5,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 88,
+          "eligibleMiss": 127,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 46,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 155,
+          "eligibleMiss": 88,
+          "bypass": 1214
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 24
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 22
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 20
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 40
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 98,
+          "eligibleMiss": 123,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 2,
+          "eligibleMiss": 26,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 121,
+          "eligibleMiss": 78,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 34,
+          "eligibleMiss": 56,
+          "bypass": 1320
+        }
+      }
+    },
+    {
+      "figures": 952,
+      "repeat": 1,
+      "uncachedReads": 3864,
+      "physicalReads": 3433,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 6,
+          "eligibleMiss": 48,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 5,
+          "eligibleMiss": 14,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 125,
+          "eligibleMiss": 611,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 86,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 295,
+          "eligibleMiss": 168,
+          "bypass": 2299
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 44
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 43
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 40
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 80
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 134,
+          "eligibleMiss": 603,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 2,
+          "eligibleMiss": 70,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 231,
+          "eligibleMiss": 148,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 64,
+          "eligibleMiss": 106,
+          "bypass": 2506
+        }
+      }
+    },
+    {
+      "figures": 952,
+      "repeat": 2,
+      "uncachedReads": 3864,
+      "physicalReads": 3433,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 6,
+          "eligibleMiss": 48,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 5,
+          "eligibleMiss": 14,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 125,
+          "eligibleMiss": 611,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 86,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 295,
+          "eligibleMiss": 168,
+          "bypass": 2299
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 44
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 43
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 40
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 80
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 134,
+          "eligibleMiss": 603,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 2,
+          "eligibleMiss": 70,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 231,
+          "eligibleMiss": 148,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 64,
+          "eligibleMiss": 106,
+          "bypass": 2506
+        }
+      }
+    },
+    {
+      "figures": 952,
+      "repeat": 3,
+      "uncachedReads": 3864,
+      "physicalReads": 3433,
+      "modelHeapPeakBytes": 4504,
+      "packedStage": {
+        "littlefsMount": {
+          "hit": 6,
+          "eligibleMiss": 48,
+          "bypass": 0
+        },
+        "manifest": {
+          "hit": 5,
+          "eligibleMiss": 14,
+          "bypass": 0
+        },
+        "openShard": {
+          "hit": 125,
+          "eligibleMiss": 611,
+          "bypass": 0
+        },
+        "shardHeader": {
+          "hit": 0,
+          "eligibleMiss": 86,
+          "bypass": 0
+        },
+        "recordMetadataAndPayloadForCRC": {
+          "hit": 295,
+          "eligibleMiss": 168,
+          "bypass": 2299
+        },
+        "recordPath": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 44
+        },
+        "shardIndexOrFooter": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 43
+        },
+        "recordStoredCRC": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 40
+        },
+        "recordHeader": {
+          "hit": 0,
+          "eligibleMiss": 0,
+          "bypass": 80
+        }
+      },
+      "littlefsRoute": {
+        "otherLittleFS": {
+          "hit": 134,
+          "eligibleMiss": 603,
+          "bypass": 0
+        },
+        "littlefsMetadataCRC": {
+          "hit": 2,
+          "eligibleMiss": 70,
+          "bypass": 0
+        },
+        "ctzLink": {
+          "hit": 231,
+          "eligibleMiss": 148,
+          "bypass": 0
+        },
+        "fileDataPage": {
+          "hit": 64,
+          "eligibleMiss": 106,
+          "bypass": 2506
+        }
+      }
+    }
+  ]
+}

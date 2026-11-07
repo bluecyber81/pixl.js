@@ -4,7 +4,7 @@ Im Menü **Amiibo-Datenbank** eine Figur öffnen und ihre Spielhinweise oder eig
 
 Am Ende einer mehrzeiligen Notiz erreicht der Scrollbalken jetzt die untere Position. Bei einer dreizeiligen Notiz wanderte er im Test der 128 × 64 Pixel großen Anzeige von Zeile 12 bis Zeile 26. Buchstaben mit Unterlängen behalten ihren Platz.
 
-Die Anwendung benötigt **2.672 Byte weniger Flash** als DE3.64/636. Die 1.344 Zuordnungen von Figuren zu Spielen und Hinweisen verwenden im aktuellen Katalog vier Byte je Verknüpfung. Der Generator wählt bei einem größeren Hinweisbestand automatisch breitere Indizes. Alle 952 Figuren und die verfügbaren Sprachtexte sind erhalten. Auf dem LCD stehen acht deutsche Nutzungshinweise mit englischem Rückfall bereit. Der Web-Dateimanager 3.39.4 enthält alle 54 deutschen Hinweise.
+Die Anwendung benötigt **2.672 Byte weniger Flash** als DE3.64/636. Die 1.344 Zuordnungen von Figuren zu Spielen und Hinweisen verwenden im aktuellen Katalog vier Byte je Verknüpfung. Der Generator wählt bei einem größeren Hinweisbestand automatisch breitere Indizes. Alle 952 Figuren und die verfügbaren Sprachtexte sind erhalten. Auf dem LCD stehen acht deutsche Nutzungshinweise mit englischem Rückfall bereit. Der Web-Dateimanager 3.39.5 enthält alle 54 deutschen Hinweise.
 
 | Messung | DE3.64/636 | DE3.65/637 |
 | --- | ---: | ---: |
@@ -22,4 +22,4 @@ Am Handy das Gerät in den DFU-Modus bringen und die ZIP unverändert in der Nor
 
 ## Nachweise
 
-148 Firmware-Testsuiten bestanden. Der Bildschirmtest erzeugte 554 Bilder mit dem tatsächlichen C-Zeichencode und verglich 531 QR-Darstellungen. Beide Indexbreiten und die 1.344 Zuordnungen wurden gegen die Quelldaten geprüft. Die ARM-Prüfung mit dem Z19-ELF bestätigte die Annahme der signierten App, die Integrität des Inhalts und die Startprüfsumme für das Update von App 636 sowie für eine leere App-Bank. Die Bestätigung eines tatsächlichen Neustarts auf dem Gerät steht noch aus. [Reproduzierbarer Build](BUILD_DE3_65.md) · [Prüfdaten mit Hashes](validation/DE3_65.json)
+148 Firmware-Testsuiten bestanden. Der Bildschirmtest erzeugte 554 Bilder mit dem tatsächlichen C-Zeichencode und verglich 531 QR-Darstellungen. Beide Indexbreiten und die 1.344 Zuordnungen wurden gegen die Quelldaten geprüft. Die ARM-Prüfung mit dem Z19-ELF bestätigte die Annahme der signierten App, die Integrität des Inhalts und die Startprüfsumme für das Update von App 636 sowie für eine leere App-Bank. Die Geräteauslesung bestätigte DE3.65/637, Z19, S112 7.3.0 und das eingebundene PFS1. Am Gerät funktionierten der Scrollbalken, eine bekannte Figur an der Switch und das Aufwachen nach automatischem Abschalten. Das gemessene App-Startfenster betrug 2,376 Sekunden. [Gerätenachweis](validation/DE3_65_LCD_READBACK.json) [Reproduzierbarer Build](BUILD_DE3_65.md) · [Prüfdaten mit Hashes](validation/DE3_65.json)

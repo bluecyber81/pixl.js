@@ -35,7 +35,12 @@ const server=http.createServer(async(req,res)=>{
   const suffix=pathname.slice(base.length);
   const p=path.resolve(root,suffix.endsWith('/')?suffix+'index.html':suffix||'index.html');
   if(!p.startsWith(root+path.sep))throw Error('outside test root');
-  const bytes=await fs.readFile(p);res.writeHead(200,{'Content-Type':mime[path.extname(p)]||'application/octet-stream','Cache-Control':'no-store'});res.end(bytes);
+  const bytes=await fs.readFile(p);
+  const headers={'Content-Type':mime[path.extname(p)]||'application/octet-stream','Cache-Control':'no-store','Content-Length':bytes.length};
+  // Bind this specific response to the bytes served. Chrome can discard a
+  // streamed body before Playwright retrieves a second copy over CDP.
+  if(path.extname(p)==='.zip') headers['X-Test-Payload-SHA256']=createHash('sha256').update(bytes).digest('hex');
+  res.writeHead(200,headers);res.end(bytes);
  }catch{res.writeHead(404);res.end('Not found');}
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -143,7 +148,9 @@ try{
   const packageResponsePromise=page.waitForResponse(response=>new URL(response.url()).pathname===base+'firmware/'+applicationPackage.file);
   await page.locator('#load-bundled').click();await page.locator('#button:not([disabled])').waitFor({timeout:30000});
   const packageResponse=await packageResponsePromise;
-  check(kind+' exact current application ZIP bytes were served',createHash('sha256').update(await packageResponse.body()).digest('hex')===applicationPackage.sha256);
+  check(kind+' exact current application ZIP bytes were served', packageResponse.ok() &&
+    await packageResponse.headerValue('x-test-payload-sha256')===applicationPackage.sha256 &&
+    Number(await packageResponse.headerValue('content-length'))===applicationPackage.bytes);
   check(kind+' DFU package validated before any hardware selection',await page.locator('#status').innerText().then(s=>s.length>0));
   check(kind+' exact current application ZIP was validated',await page.locator('#status').innerText().then(s=>s.includes(applicationPackage.version)&&s.includes('Paketidentität per SHA-256 bestätigt')));
   check(kind+' parsed DFU target matches current counter',await page.locator('#package-target').innerText().then(s=>s.includes(`Zähler ${releaseInfo.counter} ·`)&&s.includes('0x0126')));

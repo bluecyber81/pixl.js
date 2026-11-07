@@ -2,13 +2,15 @@
 
 [Open the online file manager](https://bluecyber81.github.io/pixl.js/) · [Download the DE3.65 LCD application](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Deutsch](README.de.md)
 
-**File manager 3.39.4** is available on GitHub Pages. Open Bluetooth file transfer on the device and select **Connect** in Chrome or Edge. The browser compares files directly with the connected device. Use the figure catalogue for game hints and the collection inventory to check files on the device.
+**File manager 3.39.5** is available on GitHub Pages. Open Bluetooth file transfer on the device and select **Connect** in Chrome or Edge. The browser compares files directly with the connected device. Use the figure catalogue for game hints and the collection inventory to check files on the device.
 
-The file manager shows the affected names when files collide or need a portable spelling. All 54 distinct English usage notes now have German translations. The standalone DFU page can keep a supported phone screen awake during a transfer and reports whether the request succeeded. [Web guide](web/README.md) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.4)
+The file manager shows the affected names when files collide or need a portable spelling. All 54 distinct English usage notes now have German translations. The standalone DFU page can keep a supported phone screen awake during a transfer and reports whether the request succeeded. [Web guide](web/README.md) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.5)
 
-**DE3.65 / 637** is an optional LCD application test release for existing Packed LittleFS PFS1 devices. Open a figure in the Amiibo database, press the centre button and choose **Note / hints**. The scrollbar now reaches the end of three-line notes. The compact catalogue preserves all 952 figure IDs and 1,344 associations while freeing 2,672 bytes of program flash compared with DE3.64.
+The stable LCD application **DE3.65 / 637** was checked on an LCD unit running Packed LittleFS PFS1, Z19 and S112 7.3.0. Bluetooth readback, the note scrollbar, NFC recognition of a known figure on Switch, and short-button wake after auto-sleep were confirmed. Web DFU offers the same signed application as the phone download. [Device checks](docs/validation/DE3_65_LCD_READBACK.json)
 
-On the tested Z19/S112 layout, select the application ZIP above in nRF Device Firmware Update for Android or as a custom ZIP in Web DFU. The original Z19 ARM code admitted the signed application over the previous App636 in the model. Physical DE3.65 qualification is pending at publication. Older SPIFFS devices have a separate migration procedure. [Application release and evidence](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Migration](docs/MIGRATION_PFS1.md)
+Open a figure in the Amiibo database, press the centre button and choose **Note / hints**. The scrollbar now reaches the end of three-line notes. The compact catalogue preserves all 952 figure IDs and 1,344 associations while freeing 2,672 bytes of program flash compared with DE3.64.
+
+On the tested Z19/S112 layout, select the application ZIP above in nRF Device Firmware Update for Android or select the bundled application in Web DFU. Existing DE3.65 installations can open the new file manager directly. Older SPIFFS devices have a separate migration procedure. [Application release and evidence](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Migration](docs/MIGRATION_PFS1.md)
 
 ## Source and development
 

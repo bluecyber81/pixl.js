@@ -1,0 +1,35 @@
+# Abschlussprüfung Allmiibo LCD · 7. November 2026
+
+Freigegeben sind die LCD-Anwendung **2.22.0-DE3.65 / 637** und der **Dateimanager 3.39.5**. Das geprüfte Gerät verwendet **Bootloader Z19**, **Nordic S112 7.3.0** und **Packed LittleFS PFS1**. Wer diesen Stand bereits benutzt, kann den neuen Dateimanager direkt öffnen. Für andere Geräte sind LCD-Hardware und vorhandenes Speicherlayout vor einem Update zu klären. [Handy-Download](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Speichermigration](MIGRATION_PFS1.md)
+
+## Prüfergebnisse
+
+| Bereich | Befund, Änderung und Abnahme |
+| --- | --- |
+| Synchronisieren | Wurden seit dem Vergleich die lokalen Bytes oder die Dateien auf dem Gerät geändert, erschien bei deutscher Sprache ein englischer Text. Beide Meldungen benennen jetzt die richtige Seite und erklären, wie sich der Vergleich wiederholen lässt. Ein Test beider Bedienwege prüft in Deutsch und Englisch den vollständigen Zielinhalt und zählt die schreibenden Aufrufe. Der Abbruch löst jeweils keinen solchen Aufruf aus. |
+| Sicherung und DFU | Vor der Sicherung steht jetzt, dass ihr Zwischenstand an den offenen Tab und die Gerätesitzung gebunden ist. Im Web-Updater war noch App635 voreingestellt. Beide Downloadwege liefern jetzt die signierte App637. Der Platzsimulator ordnet 636 und 637 dem anhand der Quellen abgeglichenen PFS1-Profil zu. Upgrade und Speicherumstellung bleiben getrennte Bedienwege. |
+| Bootloader-Prüfprogramm | Der Test verlangt standardmäßig funktionierende Leckerkennung. Ein ausdrücklich gewählter Lauf ohne diese Prüfung behält AddressSanitizer und UndefinedBehaviorSanitizer bei. Fehlende Voraussetzungen und deaktivierte Python-Prüfungen können keinen Erfolg vortäuschen. Beide Betriebsarten wurden am vollständigen App637-Bild ausgeführt. |
+| Unterbrochenes Update | Im Z19-Übertragungsmodell riss die Verbindung nach 4.136 Byte ab. Das Gerät meldete den zuletzt bestätigten Stand bei Byte 0. Nach der Wiederholung stimmten alle 361.564 Byte und die CRC32. Das prüft einen genau definierten Verbindungsabbruch. Einen Stromausfall während eines echten Bootloader-Updates haben wir am Gerät nicht ausgelöst. |
+| Deutsches Bootdisplay | Die Anleitung verwies auf Verzeichnisse aus einem früheren Paket. Anleitung, Quellvorschlag und Datei-Inventar passen nun zusammen. Der optionale Vorschlag wurde in zwei Buildumgebungen nachgebaut und für beide Displaycontroller im Modell geprüft. Seine Auslieferung als eigener Bootloader würde eine eigene Kennung und eine Prüfung am Display erfordern. |
+| Weitere Funde | Die Paketprüfung verwendet den quellgebundenen Schlüssel des aktuellen Z19. Das öffentliche Statusdokument führt Z19 als aktuellen und BL8 als historischen Stand. Der LCD-Prüfaufbau erreicht mit der historischen DE3.24-Quelle wieder gezielt den früheren QR-Pixelfehler. Für den nativen Nachbau gibt es ein ausgeführtes Rezept, das aus dem gepinnten Image das bytegenaue SDK-Archiv erzeugt. |
+
+Die App bestand **148 Firmware-Prüfgruppen**. Die Displayprüfung renderte **554 Zustände** mit dem tatsächlichen C-Zeichencode und verglich **531 QR-Darstellungen**. App und Bootloader wurden erneut gebaut. Die installierbaren Programmbytes stimmen mit den geprüften Referenzen überein. Beim Z19 können lokale Debugpfade die Bytes ganzer ELF- und Map-Dateien beeinflussen. Die ursprünglichen Artefakte sind im Prüfarchiv als Referenz erhalten. Die Paketprüfung umfasst Signatur, Bildinhalt und drei Negativkontrollen. Der reguläre Z19 hat 1.900 Byte freien Boot-Flash, die App 11.164 Byte freien Programmflash und 1.840 Byte Abstand zwischen Heap und Stack. [App und LCD](validation/DE3_65_APP_FINAL.json) · [Bootloader und Update](validation/DE3_65_Z19_FINAL.json) · [S112 und Eingabedateien](validation/DE3_65_EINGANG_UND_S112.json)
+
+## Am Gerät bestätigt
+
+Das eigene LCD-Allmiibo meldete nach dem Flashen App637, Z19 und S112 7.3.0. Bootregion und Einstellungsprüfsumme stimmten, PFS1 war eingebunden. Drei gelesene Dateien stimmten mit der privaten Sicherung überein. Der Nutzer bestätigte eine bekannte Figur an der Switch, den unteren Anschlag des Scrollbalkens und das Aufwachen bis ins Menü per kurzem Mitteldruck nach dem automatischen Abschalten. In der Bluetooth-Lesesitzung standen alle erfassten Fehlerzähler auf null. Im Heap waren 10.668 Byte frei. [Geräteprotokoll](validation/DE3_65_LCD_READBACK.json)
+
+## Startzeit, Cache und Verschleiß
+
+Auf dem Gerät lagen zwischen Beginn der Speicherinitialisierung und der ersten Verarbeitung im Hauptprogramm **2.376 ms**. Der zuletzt protokollierte Mountscan meldete **2.188 ms** und 4.408 physische Lesezugriffe. Der einzelne Vorgängerwert für das App-Fenster lag bei 2.375 ms. Bootloader und früher SDK-Start liegen außerhalb dieses Fensters.
+
+Das zusätzliche Rechnerprofil unterscheidet unter anderem Nutzdaten-/Metadatenprüfung, Zeigerseiten und Cache-Umgehungen. Bei 952 synthetischen Figuren und einer Referenzdatei benötigte der vorhandene Vier-Seiten-Cache 3.433 statt 3.864 physische Lesezugriffe. 2.299 der 2.506 Umgehungen betrafen die Prüfung von Daten und Metadaten. Nach dem modellierten Lesefehler ließen sich Bestand und alle 128 Metadatenbytes erneut lesen. Die neun Vergleichsläufe mit 100, 500 und 952 Figuren kamen beim Einbinden ohne Schreib- und Löschoperationen aus. [Einzelmessungen](validation/DE3_65_MOUNT_PROFIL.json)
+
+Für einen nächsten Geschwindigkeitsversuch bietet sich das Lesen während der Integritätsprüfung an. Über einen größeren Cache lässt sich erst anhand der freien Speichermenge während des Mounts und mehrerer Kaltstarts mit identischer Sammlung entscheiden. Der Acht-Seiten-Replay ergab 3.257 Lesezugriffe im 952-Figuren-Modell. Eine reale Zeitersparnis und die RAM-Spitze im Gerät sind offen.
+
+## Umfang und verbleibende Nachweise
+
+* Die Webprüfungen decken beide Auslieferungspfade, Windows-Start und -Stopp, echte Chrome-Darstellung, die Updateauswahl und simulierte Gerätefehler ab. Ein erneutes physisches DFU oder Schreiben der privaten Sammlung war für die Webänderungen entbehrlich. [Webprüfung](validation/WEB3_39_5.json)
+* Der Katalog enthält 952 IDs, 82 Gruppen und 1.344 Zuordnungen. Im Web sind die 54 unterschiedlichen englischen Spielhinweise ins Deutsche übersetzt. Die LCD-Firmware enthält acht deutsche Texte und nutzt für weitere vorhandene Hinweise die englische Fassung. Eine Prüfung aller Figuren in allen Spielen liegt außerhalb dieser Abnahme.
+* Unter **Amiibo-Datenbank → Figur → Notiz / Hinweise** steht **1/2** für die eigene Notiz und **2/2** für den Spielhinweis. Der Balken rechts zeigt die Position im Text. Kurze Links-/Rechtsdrücke wechseln die Ansicht, Halten blättert im Text. So lässt sich der Stand mit der vorhandenen Firmware ablesen.
+* Reale Stromunterbrechungen, der maximale Gesamtstack bei gleichzeitig eintreffenden Interrupts und eine vollständige erneute Lesung der privaten Sammlung auf App637 bleiben getrennte Untersuchungen. Für die hier geprüften Betriebsfälle ist kein neuer Flashvorgang erforderlich.

@@ -140,7 +140,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.39.4', (await page.locator('.version-context').innerText()).includes('3.39.4'));
+    check(kind + ' exact web version 3.39.5', (await page.locator('.version-context').innerText()).includes('3.39.5'));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
     const card = page.locator('.card-slot-inspection'); await card.waitFor();

@@ -1,3 +1,7 @@
+# DE3.65 final und Dateimanager 3.39.5
+
+Der Abgleich erklärt auf Deutsch und Englisch, wann sich eine Datei seit dem Vergleich geändert hat und wie man den Vergleich wiederholt. Die Sicherung nennt die Grenzen der Wiederaufnahme. Der Web-Updater und der Handy-Download verwenden dieselbe App 637. Das Gerät wurde mit Z19 und Nordic S112 7.3.0 ausgelesen. [LCD](docs/validation/DE3_65_LCD_READBACK.json) · [Web](docs/RELEASE_WEB3_39_5.de.md)
+
 # DE3.65 / 637 und Dateimanager 3.39.4
 
 Der Scrollbalken der LCD-App zeigt das Ende einer dreizeiligen Notiz an. Die Katalogtabelle spart gegenüber DE3.64 netto 2.672 Byte Programmflash. Der Dateimanager erleichtert die Korrektur von Dateinamen, übersetzt 54 Spielhinweise ins Deutsche und kann das Display auf der DFU-Seite wach halten. Für den geprüften Z19/636-Ausgangsstand gibt es eine signierte App-ZIP. [App und Nachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Dateimanager](docs/RELEASE_WEB3_39_4.de.md)

@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "firmware": "2.22.0-DE3.65",
+  "readAt": "2026-11-07T09:20:22.966414+00:00",
+  "sourceExportSha256": "ca0e88e407295f9c624cd1d9f5fed9b60a1ea927dac7eed498effe4bb6e787f9",
+  "deviceCheck": {
+    "readAt": "2026-11-07T09:20:22.966414+00:00",
+    "bootloader": "Z19",
+    "softDevice": "S112 7.3.0",
+    "applicationCounter": 637,
+    "settingsCrcValid": true,
+    "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "fileSystem": "PFS1",
+    "mounted": true,
+    "drive": {
+      "status": 0,
+      "label": "E",
+      "name": "External Flash",
+      "size": 2097152,
+      "freeBytes": 1138688
+    },
+    "runtime": {
+      "disconnects": 0,
+      "queue_overflows": 0,
+      "timeouts": 0,
+      "allocation_failures": 0,
+      "vfs_errors": 0,
+      "last_vfs_error": 0,
+      "free_heap": 10668,
+      "minimum_sampled_free_heap": 10668,
+      "largest_free_block": 10560,
+      "heap_pool": 18432,
+      "stack_reservation": 8192,
+      "samples": 2,
+      "last_abort_cause": 0,
+      "last_hci_reason": 0
+    },
+    "stackSampledMinimum": 5592,
+    "stackUnit": "bytes",
+    "mtu": {
+      "firmwareATT": 250,
+      "gattValue": 247,
+      "hostATT": 250
+    },
+    "samplesComparedWithPrivateBackup": 3,
+    "matchingSamples": 3,
+    "persistentDeviceWrites": false,
+    "disconnectedAfterCheck": true,
+    "userConfirmed": {
+      "lcdScrollbarReachesEnd": true,
+      "switchRecognizesKnownFigure": true
+    }
+  },
+  "startup": {
+    "schemaVersion": 3,
+    "scope": "application-storage-start-to-first-dispatch",
+    "phaseMask": 63,
+    "elapsedMilliseconds": [
+      0,
+      2274,
+      2303,
+      2357,
+      2357,
+      2376
+    ],
+    "storageDetailMask": 3,
+    "storageElapsedMilliseconds": [
+      2188,
+      2250
+    ],
+    "mount": {
+      "scope": "last-packedfs-mount",
+      "flags": 23,
+      "result": 0,
+      "configureMilliseconds": 0,
+      "scanMilliseconds": 2188,
+      "physicalReadAttempts": 4408,
+      "physicalReadBytes": 1128448,
+      "cacheHits": 563,
+      "cacheMisses": 1149,
+      "bypassReads": 3259,
+      "physicalReadErrors": 0
+    }
+  },
+  "userFollowUp": {
+    "date": "2026-11-07",
+    "shortCenterPressAfterAutoSleepReturnsToMenu": true
+  },
+  "limits": [
+    "One LCD device. Version and app counter read via BLE. No complete installed application hash.",
+    "Three files compared with backup. A known figure was recognized. Startup interval excludes bootloader and early SDK."
+  ]
+}

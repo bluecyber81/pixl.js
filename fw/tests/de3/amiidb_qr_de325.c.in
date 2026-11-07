@@ -41,7 +41,16 @@ static void mui_anim_set_values(mui_anim_t *a,int32_t start,int32_t end) { a->st
 static void mui_anim_start(mui_anim_t *a) { animation_starts++;a->exec_cb(a->var,a->start_value); }
 /*ACTUAL_ENDIAN_FUNCTION*/
 /*ACTUAL_WRAPPER*/
+#ifdef LEGACY_INLINE_NOTES
+/* The DE3.24 view passed one height for both clipping and paging. Keep the
+ * old call contract only inside that historical view for its QR control. */
+#define mui_element_autowrap_text_box(c,x,y,w,h,off,r,text) \
+    mui_element_autowrap_text_box((c),(x),(y),(w),(h),(h),(off),(r),(text))
+#endif
 /*ACTUAL_VIEW_FUNCTIONS*/
+#ifdef LEGACY_INLINE_NOTES
+#undef mui_element_autowrap_text_box
+#endif
 
 static const u8x8_display_info_t display_info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
 static void setup(mui_canvas_t *c,u8g2_t *u,uint8_t *buf,unsigned height) {

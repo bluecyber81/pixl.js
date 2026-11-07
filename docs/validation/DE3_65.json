@@ -152,6 +152,7 @@
   },
   "limits": [
     "LCD application only. No bootloader, SoftDevice or storage migration in the OTA.",
-    "No physical DE3.65 reset, screen, NFC or Bluetooth readback. Startup timing on hardware has not been measured here."
-  ]
+    "The build, display and ARM sections above are host results. The linked LCD device check and user observations cover one unit, three file samples, one NFC figure, the scrollbar and wake."
+  ],
+  "deviceEvidence": "DE3_65_LCD_READBACK.json"
 }

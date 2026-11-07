@@ -6,14 +6,16 @@ Publication baseline: **2026-11-07**. Components have independent versions.
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Application | 2.22.0-DE3.65 (test release) | DFU counter 637, hardware requirement 52 |
-| File manager | 3.39.4 | Browser software, not a device image |
+| Application | 2.22.0-DE3.65 (stable) | DFU counter 637, hardware requirement 52 |
+| File manager | 3.39.5 | Browser software, not a device image |
 | Current LCD bootloader | [Z19](../bootloader-z19/) | Counter 19; same boot image as used with App636; current application package contains only App637 |
-| Previous bootloader | Z17 | Counter17, separate source and Android test package; physical test pending |
+| Previous bootloader | Z17 | Counter 17, observed in the device export for App634 |
 | Previously installed reference | Z15 | Counter 15; region SHA-256 below |
 | Older reference bootloader | BL8 | Historical corresponding source retained; counters depend on packaging |
 | SoftDevice | Nordic S112 7.3.0 | FWID 0x0126; binary from Nordic, not rebuilt here |
 | Filesystem | Packed LittleFS PFS1 | Same logical layout as previous PFS1 DE releases; not standard upstream LittleFS |
+
+On 7 November 2026 the LCD device reported App637, Z19 and S112 7.3.0. The Z19 boot region matched the rebuilt reference, and the boot settings CRC matched. [Device readback](validation/DE3_65_LCD_READBACK.json)
 
 The device used for the DE3.60 readback runs Z15, counter 15. Its full 28 KiB region hashes to `c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade`. [DE3.61 validation](validation/DE3_61.json) records admission of the signed 633 application by the Z15 ARM code and rejection of an invalid signature or incompatible SoftDevice. Z15 also permits an older correctly signed application.
 
@@ -31,13 +33,13 @@ The public standard download bundle contains the application OTA, portable brows
 
 On the owner's matching device, the 2026-11-02 read-only diagnostic matched DE3.55, the BL8 region hash and S112 7.3.0. This is dated evidence for that device only; no second device is inferred compatible from its product name or photograph.
 
-## Z13 and the development bootloader
+## Historical Z13, Z15 and Z17 components
 
-The current Z17 candidate is source-bound in [`bootloader-z17`](../bootloader-z17/).
-Its 26612-byte payload leaves2060 bytes of boot flash; padded-region SHA-256 is
+The previous Z17 implementation is source-bound in [`bootloader-z17`](../bootloader-z17/).
+Its 26612-byte payload leaves 2,060 bytes of boot flash; padded-region SHA-256 is
 `5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584`.
 Docker/native payloads match. Host/ARM/sanitizer tests and the separate Android
-two-phase package are checked; real Z17 device validation remains pending.
+two-phase package were checked. A device export for App634 subsequently reported counter 17 and the same padded-region hash.
 Its application-only DE3.62 counterpart does not install a bootloader or S112.
 
 The Z18 return package uses the existing Z15 code with a higher accepted DFU
