@@ -11,6 +11,7 @@ import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
 import { auditCollection } from '../src/lib/collection-audit.js';
 import { formatReadDuration, readTimeEstimate } from '../src/lib/read-time-estimate.js';
 import { prepareFigureTransfer, suggestedFigureFilename } from '../src/lib/figure-transfer.js';
+import { figureDownloadLinkKey, observeFigureDownloadLink, readFigureDownloadLink, writeFigureDownloadLink } from '../src/lib/figure-download-links.js';
 import { filterCatalogue, releaseLabel } from '../src/lib/catalogue.js';
 
 const file = process.env.PIXL_COLLECTION_SOURCE ? pathToFileURL(path.resolve(process.env.PIXL_COLLECTION_SOURCE)) :
@@ -22,7 +23,7 @@ assert.deepEqual(compiled.errors, []);
 const template = compiled.code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,
   (_, names) => `const {${names.replace(/\s+as\s+/g, ':')}}=Vue;`).replace('export function render', 'function render');
 const make = new Function('Vue', 'baseline', 'checkCatalogueUpdates', 'auditCollection', 'prepareFigureTransfer',
-  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration',
+  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration','readFigureDownloadLink','observeFigureDownloadLink',
   script + '\n' + template + '\ncomponent.render=render;return component;');
 const A = '0000000000000102', B = '0000000000000202';
 const baseline = { checkedDate: '2026-11-02', entries: [A, B].map(id => ({ id, name: `Synthetic ${id}`, series: 'Test', release: { eu: '2020-01-01' } })) };
@@ -46,7 +47,7 @@ function mount(overrides = {}) {
     overrides.catalogue || (async () => { throw Error('No network expected'); }), overrides.audit || auditCollection,
     overrides.prepare || prepareFigureTransfer, overrides.transfer || (async () => ({ committed: true })),
     suggestedFigureFilename, filterCatalogue, releaseLabel, (...args) => saves.push(args),
-    async (...args) => { saves.push(args); return { status: 'saved' }; },readTimeEstimate,formatReadDuration);
+    async (...args) => { saves.push(args); return { status: 'saved' }; },readTimeEstimate,formatReadDuration,overrides.readLink || readFigureDownloadLink,observeFigureDownloadLink);
   const app = renderer.createApp({ render: () => Vue.h(Component, { ...props, ref: v => vm = v,
     onBusy: v => events.push(['busy', v]), onWriting: v => events.push(['writing', v]), onChanged: v => events.push(['changed', v]),
     onRecovery: v => events.push(['recovery', v]), onCatalogue: v => events.push(['catalogue', v]),
@@ -161,6 +162,79 @@ test('changing the selected figure removes prepared bytes and cannot redirect an
   try { h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(A) }); assert.equal(h.vm.prepared.id, A);
     h.props.selectedFigure = baseline.entries[1]; await tick(); assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null);
   } finally { h.app.unmount(); }
+});
+
+test('each figure selection prefills only its own saved URL and clears drafts from other figures', async () => {
+  const savedA = 'https://files.example.com/A.bin';
+  const h = mount({ props: { selectedFigure: baseline.entries[0] }, readLink: id => id === A ? savedA : '' });
+  try {
+    assert.equal(h.vm.sourceUrl, savedA);
+    h.vm.sourceUrl = 'https://files.example.com/private-draft.bin?key=x';
+    h.props.selectedFigure = baseline.entries[1];
+    await tick();
+    assert.equal(h.vm.sourceUrl, '');
+    h.vm.chooseById(A);
+    assert.equal(h.vm.sourceUrl, savedA);
+    h.props.selectedFigure = null;
+    await tick();
+    assert.equal(h.vm.sourceUrl, '');
+  } finally { h.app.unmount(); }
+});
+
+test('saved and removed links update a selected figure across tabs while drafts and prepared files stay intact', async () => {
+  const values = new Map(), browser = new EventTarget();
+  browser.localStorage = {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: key => values.delete(key)
+  };
+  const oldWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: browser });
+  const h = mount({ props: { selectedFigure: baseline.entries[0] } });
+  const source = 'https://files.example.com/A.bin', second = 'https://files.example.com/new.bin';
+  const storageChanged = key => browser.dispatchEvent(Object.assign(new Event('storage'), { key }));
+  try {
+    writeFigureDownloadLink(A, source);
+    assert.equal(h.vm.sourceUrl, source);
+    writeFigureDownloadLink(B, second);
+    assert.equal(h.vm.sourceUrl, source);
+    writeFigureDownloadLink(A, '');
+    assert.equal(h.vm.sourceUrl, '');
+    values.set(figureDownloadLinkKey(A), second);
+    storageChanged(figureDownloadLinkKey(B));
+    assert.equal(h.vm.sourceUrl, '');
+    storageChanged(figureDownloadLinkKey(A));
+    assert.equal(h.vm.sourceUrl, second);
+    values.clear();
+    storageChanged(null);
+    assert.equal(h.vm.sourceUrl, '');
+
+    h.vm.sourceUrl = 'https://files.example.com/draft.bin';
+    writeFigureDownloadLink(A, source);
+    assert.equal(h.vm.sourceUrl, 'https://files.example.com/draft.bin');
+    h.vm.chooseById(A);
+    const gate = deferred();
+    const reading = h.vm.prepare({ file: { size: 540, arrayBuffer: () => gate.promise } });
+    writeFigureDownloadLink(A, second);
+    assert.equal(h.vm.sourceUrl, source);
+    gate.resolve(tag(A).buffer);
+    await reading;
+    await tick();
+    assert.equal(h.vm.sourceUrl, source);
+    assert.deepEqual(h.vm.prepared.bytes, tag(A));
+    writeFigureDownloadLink(A, '');
+    assert.equal(h.vm.sourceUrl, source);
+    assert.deepEqual(h.vm.prepared.bytes, tag(A));
+    h.vm.clearPrepared();
+    await tick();
+    assert.equal(h.vm.sourceUrl, '');
+    assert.deepEqual(h.events, []);
+    assert.deepEqual(h.saves, []);
+  } finally {
+    h.app.unmount();
+    if (oldWindow) Object.defineProperty(globalThis, 'window', oldWindow);
+    else Reflect.deleteProperty(globalThis, 'window');
+  }
 });
 
 test('partial and quick result views explicitly withhold full-content and absence claims', async () => {

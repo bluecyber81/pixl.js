@@ -1,0 +1,39 @@
+Allmiibo Dateimanager 3.41.0 · 7. November 2026
+
+Online in Chrome: https://bluecyber81.github.io/pixl.js/
+Lokal am Windows-PC: portable ZIP entpacken und Start-Dateimanager.cmd starten.
+
+Figur auf das Handy oder den PC herunterladen
+Im Figurenkatalog bei der Figur „Downloadlink eintragen“ öffnen, die direkte
+HTTPS-Adresse zur BIN-Datei eingeben und „Link speichern“ wählen. Danach
+den Figurennamen mit dem Pfeil antippen. Größe, Grundstruktur und Figuren-ID
+werden vor dem Speichern geprüft. Dafür brauchst du keine Bluetooth-Verbindung.
+Die Adresse bleibt in diesem Browser. Über „Downloadlink bearbeiten“ lässt
+sie sich ändern oder entfernen. Der Dateiserver muss den Browserabruf erlauben.
+
+Am Allmiibo „Bluetooth-Dateiübertragung“ öffnen, dann im Dateimanager „Verbinden“
+wählen. Für das ganze Laufwerk unter „Sicherung“ das Laufwerk E: öffnen. Für einen
+Unterordner diesen zuerst unter „Dateien“ öffnen und dann zu „Sicherung“ wechseln. Eine unterbrochene
+Sicherung lässt sich im selben offenen Tab mit demselben Gerät fortsetzen. Beim
+Schließen oder Neuladen geht der Zwischenstand verloren.
+
+Wenn sich nach dem Vergleich eine lokale Datei oder das Zielgerät geändert hat,
+zeigt der Dateimanager auf Deutsch oder Englisch, welcher Vergleich zu erneuern ist.
+
+Die DFU-Seite enthält die freigegebene App DE3.65 (Zähler 637) für das
+Allmiibo LCD mit bereits eingerichtetem Packed LittleFS/PFS1 und S112 7.3.0.
+Unter „Update“ öffnest du die DFU-Seite für die gewünschte Version. Dort
+„Paket laden und prüfen“ anklicken. Die signierte ZIP ist dort auch einzeln
+für das Handy erhältlich. Das Paket erneuert ausschließlich die Anwendung.
+Die LittleFS-Umstellung eines älteren Geräts verwendet den gesonderten Assistenten.
+
+Quellen und Prüfnachweise
+https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.65
+
+Unter Gerät & Diagnose kannst du mit DE3.66 ein Foto des aktuellen LCD-Bildes holen.
+Der Figurenkatalog führt Nintendo-Ankündigungen unter einem eigenen Eintrag.
+
+Die Abschlussmeldung zeigt nach der Sicherung die Anzahl frisch gelesener und wiederverwendeter Dateien. Im Figurenkatalog lassen sich auch Serien aus den Ankündigungen auswählen.
+
+Ein HTTPS-Downloadlink gehört zur einzelnen Figuren-ID. Im Figurenkatalog „Downloadlink eintragen“ wählen, den direkten Link zur BIN-Datei speichern und auf den Figurennamen mit Pfeil tippen. Dies funktioniert auch bei getrenntem Allmiibo.

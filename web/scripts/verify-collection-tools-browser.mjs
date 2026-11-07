@@ -1,6 +1,7 @@
 // Exact production bundle in isolated installed Chrome, with real DOM actions.
 // No component harness, Vue state injection, device connection or private files.
-// All input files below are synthetic. Every nonlocal page request is blocked.
+// All input files are synthetic. Two HTTPS fixtures are fulfilled in memory.
+// Every other nonlocal page request is blocked.
 // Existing runtime only: PLAYWRIGHT_MODULE=/absolute/playwright/index.mjs
 // node scripts/verify-collection-tools-browser.mjs <dist> <evidence> [base-path]
 import fs from 'node:fs/promises';
@@ -29,6 +30,16 @@ const config = Buffer.from(syntheticConfig(1103, 1, 2)), slot = Buffer.from(synt
 const unknownFigure = Buffer.alloc(540);
 unknownFigure.set([4, 1, 2, 0x8f, 3, 4, 5, 6, 4]);
 unknownFigure.set(Buffer.from('f1234567f1234502', 'hex'), 84);
+const marioId = '0000000000000002', siblingId = '0000000000340102';
+const marioUrl = 'https://fixtures.example.org/mario.bin', siblingUrl = 'https://fixtures.example.org/sibling.bin';
+function syntheticFigure(id) {
+  const bytes = Buffer.from(unknownFigure);
+  bytes.set(Buffer.from(id, 'hex'), 84);
+  bytes.write('synthetic browser fixture', 180, 'ascii');
+  return bytes;
+}
+const figureFixtures = new Map([[marioUrl, syntheticFigure(marioId)], [siblingUrl, syntheticFigure(siblingId)]]);
+const fixtureRequests = [];
 await fs.mkdir(output, { recursive: true });
 const hashes = {}, checks = [], screenshots = [], layouts = [], errors = [], externalAttempts = [], downloads = [];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -115,10 +126,96 @@ async function selectFigure(page, id) {
   await search.fill(id);
   const entry = page.locator('.catalogue .entries > li').filter({ has: page.locator('code', { hasText: id }) });
   await entry.waitFor();
-  const details = entry.locator('button'); await details.focus(); await page.keyboard.press('Enter');
+  const details = entry.getByRole('button', { name: /^Details (zu|for) / }); await details.focus(); await page.keyboard.press('Enter');
   const panel = page.locator('.catalogue .selected-detail'); await panel.waitFor();
   await page.waitForFunction(id => document.querySelector('.catalogue .selected-detail')?.textContent.includes(id), id);
   return panel.locator('.figure-usage');
+}
+async function checkFigureDownloads(page, kind, zoom, touch) {
+  const requests = () => fixtureRequests.filter(row => row.kind === kind);
+  const seenDownloads = [];
+  page.on('download', file => seenDownloads.push(file.suggestedFilename()));
+  const search = page.locator('.catalogue .search-field input');
+  const card = page.locator('.catalogue .entries > li').filter({ has: page.getByText(marioId, { exact: true }) });
+  const sibling = page.locator('.catalogue .entries > li').filter({ has: page.getByText(siblingId, { exact: true }) });
+  const editor = card.locator('.figure-download-link');
+  const summary = editor.locator('summary');
+  const input = editor.locator('input[type="url"]');
+  const save = editor.getByRole('button', { name: 'Link speichern', exact: true });
+  const remove = editor.getByRole('button', { name: 'Link entfernen', exact: true });
+  const importSource = page.locator('.figure-import input[type="url"]');
+  const download = card.getByRole('button', { name: 'Mario herunterladen', exact: true });
+  const activateDownload = () => touch ? download.tap() : download.press('Enter');
+
+  await textScale(page, 1);
+  await search.fill(marioId);
+  await card.waitFor();
+  check(kind + ' new figure has link editor and no download action',
+    (await summary.innerText()) === 'Downloadlink eintragen' && !await download.count());
+  await summary.click();
+  await input.fill(siblingUrl);
+  await save.click();
+  await download.waitFor();
+  await search.fill(siblingId);
+  await sibling.waitFor();
+  check(kind + ' same-name Mario variant has its own link setting',
+    !await sibling.getByRole('button', { name: 'Mario herunterladen', exact: true }).count() &&
+    (await sibling.locator('.figure-download-link summary').innerText()) === 'Downloadlink eintragen');
+  check(kind + ' no Bluetooth request before catalogue reload', await page.evaluate(() => window.__testBleRequests === 0));
+  await page.reload();
+  await page.locator('.workspace-nav button[aria-controls="catalogue-workspace"]').click();
+  await search.fill(marioId);
+  await download.waitFor();
+  check(kind + ' download link survives page reload', (await summary.innerText()) === 'Downloadlink bearbeiten');
+  await summary.click();
+  check(kind + ' saved address shown for the selected ID', await input.inputValue() === siblingUrl);
+  await summary.click();
+  await card.getByRole('button', { name: 'Details zu Mario', exact: true }).click();
+  await page.locator('.catalogue .selected-detail').getByRole('button', { name: 'Details schließen' }).click();
+  check(kind + ' import form uses the selected variant’s saved link', await importSource.inputValue() === siblingUrl);
+  check(kind + ' saving, switching figures and reloading make zero file requests and zero downloads',
+    !requests().length && !seenDownloads.length);
+
+  await activateDownload();
+  const mismatch = card.getByRole('status').filter({ hasText: 'Die Datei gehört zu einer anderen Figuren-ID' });
+  await mismatch.waitFor();
+  check(kind + ' wrong ID produces figure mismatch message', await mismatch.isVisible());
+  assert.deepEqual(requests().map(({ method, url }) => [method, url]), [['GET', siblingUrl]]);
+  check(kind + ' wrong variant requested once without creating a download', seenDownloads.length === 0);
+
+  await summary.click();
+  await input.fill(marioUrl);
+  await save.click();
+  await download.waitFor();
+  check(kind + ' editing a stored link updates the selected import source in the same tab', await importSource.inputValue() === marioUrl);
+  check(kind + ' editing a source makes no file request', requests().length === 1);
+  await fits(page, kind + ' saved catalogue download', '.catalogue .entries > li', zoom);
+  await shot(page, kind + '-figure-download', card);
+  const downloadEvent = page.waitForEvent('download');
+  await activateDownload();
+  const file = await downloadEvent, filename = 'Mario_' + marioId + '.bin';
+  const bytes = await fs.readFile(await file.path());
+  assert.deepEqual(bytes, figureFixtures.get(marioUrl));
+  assert.deepEqual(requests().map(({ method, url }) => [method, url]), [['GET', siblingUrl], ['GET', marioUrl]]);
+  assert.deepEqual(seenDownloads, [filename]);
+  check(kind + ' explicit action downloads exactly one byte-identical 540-byte BIN for the selected ID',
+    bytes.length === 540 && file.suggestedFilename() === filename);
+  downloads.push({ kind, filename, size: bytes.length, sha256: sha256(bytes), synthetic: true });
+  await file.saveAs(path.join(output, kind + '-' + filename));
+  await textScale(page, 1);
+  await summary.click();
+  await remove.click();
+  await download.waitFor({ state: 'detached' });
+  check(kind + ' removing the link restores setup without fetching',
+    (await summary.innerText()) === 'Downloadlink eintragen' && await importSource.inputValue() === '' && requests().length === 2);
+  const manualUrl = 'https://fixtures.example.org/manual.bin';
+  await importSource.fill(manualUrl);
+  await summary.click();
+  await input.fill(marioUrl);
+  await save.click();
+  await download.waitFor();
+  check(kind + ' storing another link preserves a manually entered import address without fetching',
+    await importSource.inputValue() === manualUrl && requests().length === 2 && seenDownloads.length === 1);
 }
 let failure = null;
 try {
@@ -126,7 +223,8 @@ try {
     ['desktop', { width: 1440, height: 1000 }, 1], ['mobile', { width: 390, height: 844 }, 1],
     ['desktop-text200', { width: 1440, height: 1000 }, 2], ['mobile-text200', { width: 390, height: 844 }, 2],
   ]) {
-    const context = await browser.newContext({ viewport, locale: 'de-DE', deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: true });
+    const touch = kind.startsWith('mobile');
+    const context = await browser.newContext({ viewport, hasTouch: touch, locale: 'de-DE', deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: true });
     await context.addInitScript(() => {
       window.__testBleRequests = 0;
       Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: { requestDevice: async () => { window.__testBleRequests++; throw Error('No hardware in browser tests'); } } });
@@ -134,13 +232,20 @@ try {
     await context.route('**/*', route => {
       const url = route.request().url();
       if (url.startsWith(origin + '/') || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
+      if (figureFixtures.has(url)) {
+        const bytes = figureFixtures.get(url);
+        fixtureRequests.push({ kind, method: route.request().method(), url });
+        return route.fulfill({ status: 200, headers: {
+          'Content-Type': 'application/octet-stream', 'Content-Length': String(bytes.length), 'Access-Control-Allow-Origin': origin
+        }, body: bytes });
+      }
       externalAttempts.push({ kind, url }); return route.abort();
     });
     const page = await context.newPage();
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.40.1', (await page.locator('.version-context').innerText()).includes('3.40.1'));
+    check(kind + ' exact web version 3.41.0', (await page.locator('.version-context').innerText()).includes('3.41.0'));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
     const card = page.locator('.card-slot-inspection'); await card.waitFor();
@@ -248,6 +353,7 @@ try {
     check(kind + ' unknown synthetic public ID has no invented note', (await unknownUsage.innerText()).includes('Für diese ID ist hier kein Kataloghinweis hinterlegt'));
     await fits(page, kind + ' unknown synthetic figure', '.local-inspector .figure-usage', zoom);
     await shot(page, kind + '-usage-unknown', unknownUsage);
+    await checkFigureDownloads(page, kind, zoom, touch);
     check(kind + ' no real Bluetooth request', await page.evaluate(() => window.__testBleRequests === 0));
     await context.close();
   }
@@ -256,8 +362,8 @@ try {
 } catch (error) { failure = { message: error.message, stack: error.stack }; throw error; }
 finally {
   await fs.writeFile(path.join(output, 'collection-tools-browser-evidence.json'), JSON.stringify({ schema: 1, generatedAt: new Date().toISOString(),
-    scope: 'Exact production bundle, real DOM navigation/file inputs/keyboard/download. Synthetic files only, no harness or Vue state injection. All external page requests blocked; Bluetooth disabled. Text zoom is explicit computed-font doubling, not browser optical zoom.',
-    browser: browser.version(), buildRoot: root, deploymentBase: base, filesSha256: hashes, checks, layouts, downloads, screenshots, errors, externalAttempts, failure }, null, 2));
+    scope: 'Exact production bundle, real DOM navigation/file inputs/keyboard/touch/download. Synthetic files only, no harness or Vue state injection. Two HTTPS fixtures fulfilled in memory, all other external requests blocked. Bluetooth disabled. Text zoom is explicit computed-font doubling, not browser optical zoom.',
+    browser: browser.version(), buildRoot: root, deploymentBase: base, filesSha256: hashes, checks, layouts, downloads, screenshots, errors, fixtureRequests, externalAttempts, failure }, null, 2));
   await browser.close(); await new Promise(resolve => server.close(resolve));
 }
 console.log(JSON.stringify({ checks: checks.length, screenshots: screenshots.length, downloads: downloads.length, errors: errors.length, output }));

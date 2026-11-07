@@ -1,5 +1,9 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## Dateimanager 3.41.0 · 7. November 2026
+
+Im Figurenkatalog lässt sich für jede Figuren-ID ein eigener direkter HTTPS-Link zur BIN-Datei hinterlegen. Nach dem Speichern genügt ein Klick auf den Figurennamen. Der Browser prüft Größe, Grundstruktur und Figuren-ID vor dem Download. [Web 3.41.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0) · [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3410)
+
 ## Dateimanager 3.40.1 · 7. November 2026
 
 Die Paketkarte wählt die gewünschte Firmware im Updater vor. Ein Wechsel der Auswahl verwirft die zuvor geladene ZIP. Im Katalog lassen sich auch die drei Serien mit ausschließlich angekündigten Figuren filtern. Nach einer Sicherung sind frisch gelesene und wiederverwendete Dateien getrennt ausgewiesen. [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3401) · [Geräteprüfung einschließlich Android-Sicherung](docs/validation/DE3_66_LCD_READBACK.md)

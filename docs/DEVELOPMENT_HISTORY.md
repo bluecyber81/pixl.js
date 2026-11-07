@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.41.0 · 7 November 2026
+
+Each catalogue entry can remember a direct HTTPS link to its BIN file. Click the figure name to download it. The browser checks the size, basic structure and figure ID first. [Web 3.41.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0) · [Usage](DATEIMANAGER_WEB.md#dateimanager-3410)
+
 ## File manager 3.40.1 · 7 November 2026
 
 The updater preselects the package from its download card and clears the loaded ZIP when the selection changes. The catalogue filter includes the three series with announcements only. Completed backups report fresh and reused file counts and sizes. [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) · [LCD and Android backup observations](validation/DE3_66_LCD_READBACK.md)

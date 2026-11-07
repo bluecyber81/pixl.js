@@ -81,6 +81,7 @@ import { checkCatalogueUpdates } from '../lib/catalogue-updates.js';
 import { auditCollection } from '../lib/collection-audit.js';
 import { formatReadDuration, readTimeEstimate } from '../lib/read-time-estimate.js';
 import { prepareFigureTransfer, transferFigureToDevice, suggestedFigureFilename } from '../lib/figure-transfer.js';
+import { observeFigureDownloadLink, readFigureDownloadLink } from '../lib/figure-download-links.js';
 import { filterCatalogue, releaseLabel } from '../lib/catalogue.js';
 import { saveBlob, saveBlobWithPicker } from '../lib/browser-tools.js';
 export default {
@@ -89,6 +90,7 @@ export default {
   data(){return {entries:baseline.entries,updates:null,running:'',progress:null,scanStartedAt:0,scanAborting:false,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
   computed:{
     de(){return this.locale.startsWith('de');},
+    canRefreshSourceUrl() { return !this.running && !this.prepared; },
     runningLabel(){
       if(this.running === 'scan'){
         if(this.scanAborting) return this.de ? 'Prüfung wird abgebrochen …' : 'Cancelling check …';
@@ -106,8 +108,12 @@ export default {
     shownRows(){return this.resultRows.slice((this.resultPage-1)*30,this.resultPage*30);}
   },
   created(){this._serial=0;this._alive=true;},
-  beforeUnmount(){this._alive=false;this.invalidate();},
-  watch:{report(value){this.$emit('report',value);},stale(value){this.$emit('report-stale',value);},generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},revision(){if(this.report)this.stale=true;},selectedFigure(value){if(value&&!this.running)this.choose(value,false);}},
+  mounted() { this._stopLinkUpdates = observeFigureDownloadLink(() => this.chosen?.id, this.refreshSourceUrl); },
+  beforeUnmount(){this._stopLinkUpdates?.();this._alive=false;this.invalidate();},
+  watch:{report(value){this.$emit('report',value);},stale(value){this.$emit('report-stale',value);},generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},revision(){if(this.report)this.stale=true;},
+    selectedFigure: { immediate: true, handler(value) { this.choose(value, false); } },
+    canRefreshSourceUrl(ready) { if (ready) this.refreshSourceUrl(); }
+  },
   methods:{
     formatReadDuration,
     localDate(value){return value?new Date(value).toLocaleString(this.de?'de-DE':'en-GB'):'';},
@@ -136,8 +142,23 @@ export default {
     },
     cancel(){if(this.running === 'scan')this.scanAborting = true;this._controller?.abort();},
     clearPrepared(){this.prepared=null;this.message='';},
+    refreshSourceUrl() {
+      if (!this.chosen || !this.canRefreshSourceUrl) return;
+      const saved = readFigureDownloadLink(this.chosen.id);
+      if (this.sourceUrl === this._lastSavedSourceUrl) this.sourceUrl = saved;
+      this._lastSavedSourceUrl = saved;
+    },
     chooseById(id){this.choose(this.entryFor(id),false);},
-    choose(entry,focus=true){if(this.running)return;this.chosen=entry||null;this.clearPrepared();this.setError('');if(entry)this.filename=suggestedFigureFilename(entry);if(focus)this.$nextTick(()=>this.$refs.transferArea?.focus());},
+    choose(entry, focus = true) {
+      if (this.running) return;
+      this.chosen = entry || null;
+      this.sourceUrl = readFigureDownloadLink(entry?.id);
+      this._lastSavedSourceUrl = this.sourceUrl;
+      this.clearPrepared();
+      this.setError('');
+      this.filename = entry ? suggestedFigureFilename(entry) : '';
+      if (focus) this.$nextTick(() => this.$refs.transferArea?.focus());
+    },
     async operation(kind,fn,recoveryOrigin=null){
       if(this.running)return;const serial=++this._serial,generation=this.generation,controller=new AbortController();
       const device=kind==='scan'||kind==='upload';const current=()=>this._alive&&this._serial===serial&&(!device||generation===this.generation&&this.connected);

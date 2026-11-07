@@ -47,7 +47,7 @@
           <img v-if="!failedImages.has(imageFor(entry.id))" :key="imageFor(entry.id)" :src="imageFor(entry.id)" :alt="entry.name" width="160" height="140" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" @error="imageFailed(entry.id, $event)" />
           <span v-else class="image-placeholder"><span aria-hidden="true">◇</span>{{ de ? 'Bild nicht verfügbar' : 'Image unavailable' }}</span>
         </div>
-        <div class="entry-title"><strong>{{ entry.name }}</strong><span class="entry-type">{{ entry.type }}</span></div>
+        <FigureDownload :entry="entry" :de="de" />
         <span class="presence-label">{{ presenceLabel(presenceFor(entry.id)) }}</span>
         <div v-if="presenceFor(entry.id).state === 'attention'" class="warning-reasons" role="list">
           <p v-for="reason in presenceFor(entry.id).reasons" :key="reason" role="listitem">{{ reasonText(reason) }}</p>
@@ -71,6 +71,7 @@ import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import { publicFigureImage } from '../lib/figure-info.js';
 import { announcementGroups } from '../data/announced-figures.js';
+import FigureDownload from './FigureDownload.vue';
 import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
@@ -199,7 +200,7 @@ button { min-height:42px; padding:8px 14px; border:1px solid #b8ccdc; border-rad
 .selected-detail { outline:none; } .selection-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.8rem; color:#526575; padding-top:8px; } .selection-toolbar button { min-height:36px; } .result-bar p { font-size:.83rem; margin:15px 0 10px; } .result-bar span { color:#60788b; }
 .result-bar { scroll-margin-top:20px; border-radius:6px; } .result-bar:focus-visible { outline:2px solid #8eb8d8; outline-offset:4px; }
 .entry-picture { display:grid; place-items:center; height:152px; margin:-3px -3px 7px; border-radius:8px; background:linear-gradient(145deg,#f0f4f6,#fafcfd); } .entry-picture img { width:160px; height:140px; max-width:100%; object-fit:contain; } .image-placeholder { display:flex; flex-direction:column; align-items:center; gap:8px; font-size:.76rem; color:#60788b; } .image-placeholder>span { font-size:36px; color:#9bafbd; }
-.entries { list-style:none; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; margin:10px 0 16px; } .entries li { display:flex; flex-direction:column; gap:6px; border:1px solid #d9e3ec; background:white; border-radius:11px; padding:14px; overflow-wrap:anywhere; } .entries li.selected { border-color:#719fc4; box-shadow:0 0 0 2px #dcebf6; } .entry-title { display:flex; gap:8px; align-items:flex-start; justify-content:space-between; } .entry-title strong { font-size:.96rem; line-height:1.35; } .entry-type { font-size:.65rem; color:#60788b; background:#f0f5f9; padding:3px 6px; border-radius:5px; } .entry-series { font-size:.8rem; color:#526575; } code { font-size:.75rem; color:#60788b; } small { color:#60788b; font-size:.72rem; line-height:1.45; } .firmware-name { margin:2px 0 4px; } .entries button { margin-top:auto; background:#f6f9fc; }
+.entries { list-style:none; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; margin:10px 0 16px; } .entries li { display:flex; flex-direction:column; gap:6px; border:1px solid #d9e3ec; background:white; border-radius:11px; padding:14px; overflow-wrap:anywhere; } .entries li.selected { border-color:#719fc4; box-shadow:0 0 0 2px #dcebf6; } .entry-series { font-size:.8rem; color:#526575; } code { font-size:.75rem; color:#60788b; } small { color:#60788b; font-size:.72rem; line-height:1.45; } .firmware-name { margin:2px 0 4px; } .entries button { margin-top:auto; background:#f6f9fc; }
 .entries li.presence-present { border:3px solid #23834f; background:#f4fbf6; } .entries li.presence-present .presence-label { color:#176c41; }
 .entries li.presence-attention { border:3px solid #c47a16; background:#fffaf1; } .entries li.presence-attention .presence-label { color:#92500a; }
 .entries li.presence-missing { border:3px solid #c24343; background:#fff7f7; } .entries li.presence-missing .presence-label { color:#aa3030; }

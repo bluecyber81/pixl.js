@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.66",
   "counter": 638,
   "board": "LCD",
-  "web_version": "3.40.1",
+  "web_version": "3.41.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed",
@@ -51,9 +51,9 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1",
-  "web_device_readback_pending": false,
-  "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0",
+  "web_device_readback_pending": true,
+  "previous_web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
   "device_readback_passed": true,
   "device_validation_pending_scope": null,
   "previous_device_readback_evidence": "docs/validation/DE3_65_LCD_READBACK.json",
@@ -67,7 +67,7 @@
     "installation_readback_observed": true,
     "qualification": "Z19 boot region and App638 read back together from one LCD unit with S112 7.3.0."
   },
-  "web_host_test_scope": "Web 3.40.1 tests and production Chrome checks for root and Pages. Physical LCD readback and backup resume over Windows BLE used 3.40.0. Owner confirmed end-to-end backup resume and ZIP save in Android Chrome; Android web version not recorded.",
+  "web_host_test_scope": "Local source suites and production Chrome checks for root and Pages. Historical physical LCD and backup observations are documented separately.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -79,12 +79,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.40.0",
-    "evidence": "docs/validation/WEB3_40_0.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0"
+    "version": "3.40.1",
+    "evidence": "docs/validation/WEB3_40_1.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3401",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3410",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -115,7 +115,8 @@
     "announcements": "Separate Nintendo announcements; excluded from inventory coverage",
     "search_preview": "Inline public image from the local catalogue ID",
     "dfu_package_selection": "Carries the selected bundled package into the DFU page.",
-    "announcement_series_filter": "Includes series with announcements only; announcements remain separate from inventory."
+    "announcement_series_filter": "Includes series with announcements only; announcements remain separate from inventory.",
+    "figure_download_links": "Explicit per-ID HTTPS links stored on this browser origin. The name button downloads only after BIN structure and public figure ID match. No Bluetooth session required."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_66_638_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -128,12 +129,11 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_40_1.json",
-  "web_browser_checks_per_build": 446,
+  "web_evidence": "docs/validation/WEB3_41_0.json",
+  "device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
+  "web_device_readback_pending_scope": "Physical Bluetooth and Android checks using web 3.41.0.",
+  "web_host_tests": 1290,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "web_host_tests": 1284,
-  "device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "web_device_readback_pending_scope": null,
-  "web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md"
+  "web_browser_checks_per_build": 514
 }

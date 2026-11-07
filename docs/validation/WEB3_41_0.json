@@ -1,0 +1,69 @@
+{
+  "version": "3.41.0",
+  "physicalDevice": false,
+  "scope": "Local source tests, production deployment tests and Chrome on the two compiled layouts. Device and Android observations from earlier versions are documented separately.",
+  "previousDeviceEvidence": "DE3_66_LCD_READBACK.md",
+  "chromeLayouts": {
+    "root": {
+      "files": 157,
+      "passed": {
+        "catalog": 278,
+        "overview": 77,
+        "screen": 133,
+        "fixes": 26
+      },
+      "totalChecks": 514,
+      "productionTestsPassed": 21
+    },
+    "pages": {
+      "files": 157,
+      "passed": {
+        "catalog": 278,
+        "overview": 77,
+        "screen": 133,
+        "fixes": 26
+      },
+      "totalChecks": 514,
+      "productionTestsPassed": 21
+    }
+  },
+  "web_host_tests": 1290,
+  "hostTestCounts": {
+    "tests": 1290,
+    "pass": 1290,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "figureDownloadTest": {
+    "root": {
+      "client": "156.0.8078.80",
+      "downloadedBytes": 540,
+      "sha256": "56c92f532edc07b46bb6bba5afceb031ddcc4531c871e3f31c1fa9df5b40d273",
+      "scenarios": [
+        "desktop",
+        "mobile",
+        "desktop-text200",
+        "mobile-text200"
+      ],
+      "syntheticFile": true,
+      "unexpectedNetworkRequests": 0,
+      "source": "Two synthetic HTTPS responses served in memory. The browser exercised editing, persistence, the selected name, a mismatched ID and the resulting local download."
+    },
+    "pages": {
+      "client": "156.0.8078.80",
+      "downloadedBytes": 540,
+      "sha256": "56c92f532edc07b46bb6bba5afceb031ddcc4531c871e3f31c1fa9df5b40d273",
+      "scenarios": [
+        "desktop",
+        "mobile",
+        "desktop-text200",
+        "mobile-text200"
+      ],
+      "syntheticFile": true,
+      "unexpectedNetworkRequests": 0,
+      "source": "Two synthetic HTTPS responses served in memory. The browser exercised editing, persistence, the selected name, a mismatched ID and the resulting local download."
+    }
+  }
+}
