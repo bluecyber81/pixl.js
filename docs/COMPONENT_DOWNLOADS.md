@@ -3,8 +3,8 @@
 | Gesucht | Paket oder Quelle |
 | --- | --- |
 | Firmware für ein bereits passendes LCD-Allmiibo mit PFS1, Z19 und S112 7.3.0 | [DE3.65 / 637, gerätegeprüft](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65). Die ZIP aktualisiert die Anwendung. |
-| Neue LCD-Funktionen erproben | [DE3.66 / 638, Testversion](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66). Der Praxistest am Gerät steht aus. |
-| Dateimanager oder Prüfpaket für die Entwicklung | [Web 3.40.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) enthält die portable Version, den Webquellcode und ein separates Prüfarchiv mit App- und Bootloader-Artefakten. |
+| Neue LCD-Funktionen erproben | [DE3.66 / 638, Testversion](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66). [Ergebnisse vom LCD-Gerät](validation/DE3_66_LCD_READBACK.md). |
+| Dateimanager oder Prüfpaket für die Entwicklung | [Web 3.40.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) enthält die portable Version, den Webquellcode und ein separates Prüfarchiv mit App- und Bootloader-Artefakten. |
 | Z19 nachbauen oder den DFU-Wiederanlauf prüfen | [Z19-Quellen, Bauanleitung und Tests](../bootloader-z19/README.md). Die Diagnose kann den eingebauten Stand über den Zähler und die Prüfsumme des Bootbereichs zuordnen. |
 | Nordic S112 7.3.0 | [Referenzdistribution und Lizenz](../softdevice-s112/README.md). Das Nordic-Archiv enthält die HEX-Datei, die Programmierschnittstelle und die Herstellerhinweise. |
 

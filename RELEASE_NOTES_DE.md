@@ -1,8 +1,12 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## Dateimanager 3.40.1 · 7. November 2026
+
+Die Paketkarte wählt die gewünschte Firmware im Updater vor. Ein Wechsel der Auswahl verwirft die zuvor geladene ZIP. Im Katalog lassen sich auch die drei Serien mit ausschließlich angekündigten Figuren filtern. Nach einer Sicherung sind frisch gelesene und wiederverwendete Dateien getrennt ausgewiesen. [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3401) · [Geräteprüfung einschließlich Android-Sicherung](docs/validation/DE3_66_LCD_READBACK.md)
+
 ## DE3.66 / 638 und Dateimanager 3.40.0 · 7. November 2026
 
-Die LCD-Testversion liefert das aktuelle Displaybild und kann beim Fortsetzen einer Sicherung Dateien bis 572 Byte auf E: direkt per SHA-256 vergleichen. Web 3.40.0 ergänzt neun Figurenankündigungen, die Bildvorschau in der Gerätesuche und die Restzeitschätzung beim Firmware-Update. Der Bestandsabgleich umfasst 952 bestätigte Figuren-IDs. DE3.65 / 637 ist die am LCD geprüfte stabile App mit Z19 und Nordic S112 7.3.0. Für DE3.66 stehen Displayfoto und unterbrochene Sicherung am Gerät zur Prüfung aus. [Menüwege und Paketauswahl](docs/RELEASE_DE3_66.md) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
+Die LCD-Testversion liefert das aktuelle Displaybild und kann beim Fortsetzen einer Sicherung Dateien bis 572 Byte auf E: direkt per SHA-256 vergleichen. Web 3.40.0 ergänzt neun Figurenankündigungen, die Bildvorschau in der Gerätesuche und die Restzeitschätzung beim Firmware-Update. Der Bestandsabgleich umfasst 952 bestätigte Figuren-IDs. DE3.65 / 637 ist die am LCD geprüfte stabile App mit Z19 und Nordic S112 7.3.0. Am LCD sind Displayfoto, Tastendruck, Menü und NFC an der Switch bestätigt. Eine unterbrochene Sicherung wurde am Windows-Laptop und in Android-Chrome fortgesetzt. [Menüwege und Paketauswahl](docs/RELEASE_DE3_66.md) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
 
 [Geräte-Firmware und Bootloader](docs/VERSIONEN_FIRMWARE.md) · [Alle dokumentierten Dateimanager-Versionen](docs/VERSIONEN_WEB.md)
 

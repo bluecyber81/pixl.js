@@ -11,7 +11,7 @@ host-test contribution; say clearly which checks were performed on a real device
 | --- | --- |
 | LCD application | [DE3.66 / 638 prerelease source](fw/application/src/) and [unsigned build guide](docs/BUILD_DE3_66.md). To reproduce the device-tested DE3.65 / 637 release, check out [tag `de3.65`](https://github.com/bluecyber81/pixl.js/tree/de3.65) and follow its [build guide](https://github.com/bluecyber81/pixl.js/blob/de3.65/docs/BUILD_DE3_65.md). |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). The [3.40.0 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) includes portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). The [3.40.1 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) includes portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |

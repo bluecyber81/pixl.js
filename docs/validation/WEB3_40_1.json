@@ -1,0 +1,31 @@
+{
+  "version": "3.40.1",
+  "physicalDevice": false,
+  "scope": "Local automated suites and both production bundles in Chrome. Physical DE3.66 and user-reported Android observations are recorded separately.",
+  "deviceEvidence": "DE3_66_LCD_READBACK.md",
+  "chromeLayouts": {
+    "root": {
+      "files": 157,
+      "passed": {
+        "catalog": 210,
+        "screen": 133,
+        "overview": 77,
+        "fixes": 26
+      },
+      "totalChecks": 446,
+      "productionTestsPassed": 21
+    },
+    "pages": {
+      "files": 157,
+      "passed": {
+        "catalog": 210,
+        "screen": 133,
+        "overview": 77,
+        "fixes": 26
+      },
+      "totalChecks": 446,
+      "productionTestsPassed": 21
+    }
+  },
+  "web_host_tests": 1284
+}

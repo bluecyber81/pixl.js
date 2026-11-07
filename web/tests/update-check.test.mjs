@@ -185,14 +185,14 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.40.0'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.40.1'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
-  assert.match(read('../src/lib/device-info.js'), /applicationVersion: '3\.40\.0'/);
-  assert.match(read('../serve_local.py'), /'version': '3\.40\.0'/);
-  assert.match(read('../Start-Dateimanager.ps1'), /-ceq '3\.40\.0'/);
-  assert.match(read('../src/App.vue'), /<strong>3\.40\.0<\/strong>/);
-  assert.match(read('../index.html'), /Allmiibo Dateimanager 3\.40\.0/);
+  assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));
+  assert.ok(read('../serve_local.py').includes("'version': '" + pkg.version + "'"));
+  assert.ok(read('../Start-Dateimanager.ps1').includes("-ceq '" + pkg.version + "'"));
+  assert.ok(read('../src/App.vue').includes('<strong>' + pkg.version + '</strong>'));
+  assert.ok(read('../index.html').includes('Allmiibo Dateimanager ' + pkg.version + '</title>'));
 });
 
 test('missing, failed and unavailable reads remain unknown, even with a matching version string', () => {
@@ -331,7 +331,7 @@ test('real bundled-package component explains manual scope and removes downgrade
   try{
     assert.match(text(root),/Speicherprofil.*nicht ausgelesen/);assert.equal(nodes(root).filter(n=>n.type==='a').length,3);
     assert.equal(nodes(root).filter(n=>n.type==='button').length,0);
-    const hrefs=nodes(root).filter(n=>n.type==='a').map(n=>n.props.href);assert(hrefs.includes('/dfu/web.html'));assert(hrefs.includes('/firmware/'+fixture.packages[0].file));
+    const hrefs=nodes(root).filter(n=>n.type==='a').map(n=>n.props.href);assert(hrefs.includes('/dfu/web.html?package=' + fixture.packages[0].id));assert(hrefs.includes('/firmware/'+fixture.packages[0].file));
     props.session.firmwareVersion='2.22.0-DE3.62';await Vue.nextTick();assert.equal(nodes(root).filter(n=>n.type==='a').length,1);assert.match(nodes(root).find(n=>n.type==='a').props.href,/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9\.zip$/);assert.match(text(root),/Downgrade wird nicht angeboten/);
     props.locale='en_US';await Vue.nextTick();assert.match(text(root),/No downgrade is offered/);
   }finally{app.unmount();}

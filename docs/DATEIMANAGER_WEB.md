@@ -2,7 +2,7 @@
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloads für 3.40.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
+[Downloads für 3.40.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -17,6 +17,12 @@ Das Allmiibo muss sich beim verwendeten Handy oder Computer befinden. Die
 Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
+
+## Dateimanager 3.40.1
+
+- **Update** – Beim Öffnen des Updaters über die Paketkarte ist die gewählte Version bereits markiert. Paketprüfung und Bluetooth-Übertragung startest du selbst.
+- **Figurenkatalog → Filter → Serie** – Auch eine Serie, zu der erst Ankündigungen vorliegen, lässt sich auswählen. Ankündigungen zählen separat von den bestätigten Katalog-IDs.
+- **Sicherung** – Nach einer abgeschlossenen Sicherung siehst du, wie viele Dateien frisch gelesen und wie viele aus dem geprüften Zwischenstand übernommen wurden.
 
 ## Dateimanager 3.40.0
 

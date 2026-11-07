@@ -6,7 +6,7 @@ function harness(supported=true,extra={}){
     const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
     const windowEvents={},calls=[];let options,instance;
     class FakeUpdater{constructor(o){options=o;instance=this;this.busy=false;}setPackage(f){calls.push(['package',f]);options.onState({busy:this.busy,loading:false,ready:!!f});return Promise.resolve(!!f);}selectDevice(){calls.push(['select']);}}
-    const context=vm.createContext({document:{getElementById:id=>nodes.get(id),createElement:node,visibilityState:'visible',addEventListener(){},removeEventListener(){}},navigator:{bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
+    const context=vm.createContext({URLSearchParams,document:{getElementById:id=>nodes.get(id),createElement:node,visibilityState:'visible',addEventListener(){},removeEventListener(){}},navigator:{bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
         location:{href:'http://127.0.0.1:8768/dfu/web.html'},AllmiiboBundledPackages:Bundled,AllmiiboFirmwareReleases:{schema:1,packages:[]},
         window:{addEventListener:(n,fn)=>windowEvents[n]=fn},AllmiiboDfuUpdater:FakeUpdater,SecureDfuPackage:class{},SecureDfu:class{},CRC32:{buf(){}},...extra});
     context.createScreenAwake = require('../public/dfu/screen-awake.mjs').createScreenAwake;
@@ -84,7 +84,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.66','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
     assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -136,4 +136,45 @@ test('bundled loading disables manual/device controls while keeping cancellation
  h.nodes.get('button').events.click();assert.equal(h.calls.some(c=>c[0]==='select'),false);
  h.nodes.get('cancel-bundled').events.click();assert.equal(h.nodes.get('file').disabled,false);assert.equal(h.nodes.get('button').disabled,true);
  resolve({});await loading;assert.equal(h.calls.some(c=>c[0]==='select'),false);
+});
+
+test('only a unique bundled catalogue ID is preselected, with no load or transfer on navigation', () => {
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
+    const [stable, preview] = catalog.packages;
+    const pages = 'https://bluecyber81.github.io/pixl.js/dfu/web.html';
+    for (const [query, expected] of [
+        ['?package=' + preview.id, preview], ['?package=' + stable.id, stable],
+        ['', null], ['?package=https://example.org/file.zip', null],
+        ['?package=' + stable.id + '&package=' + preview.id, null], ['?package=', null]
+    ]) {
+        const recentBoot = '#read=' + Date.now() + '&app=638&bl=19&sd=294';
+        const h = harness(true, {location:new URL(pages + query + recentBoot), AllmiiboFirmwareReleases:catalog});
+        const select = h.nodes.get('bundled');
+        assert.equal(select.value, expected?.id || '');
+        assert.equal(h.nodes.get('load-bundled').disabled, !expected);
+        assert.equal(h.nodes.get('button').disabled, true);
+        assert.deepEqual(h.calls, []);
+        if (expected) assert.ok(h.nodes.get('bundled-info').textContent.includes(expected.version));
+        else if (query) assert.match(h.nodes.get('bundled-info').textContent, /Bitte ein Paket auswählen/);
+        h.options.onState({ready:true,target:{counter:637,hardware:52,softDevices:[294]}});
+        assert.match(h.nodes.get('package-target').textContent, /App-Zähler 638/);
+    }
+});
+
+test('changing the selected package clears a previously ready image and a manual file clears the dropdown', async () => {
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
+    const h = harness(true, {AllmiiboFirmwareReleases:catalog});
+    const select = h.nodes.get('bundled'), manual = h.nodes.get('file');
+    select.value = catalog.packages[0].id;
+    manual.files = ['manual.zip'];
+    await manual.events.change();
+    assert.equal(select.value, '');
+    assert.equal(h.nodes.get('button').disabled, false);
+    manual.value = 'manual.zip';
+    select.value = catalog.packages[1].id;
+    select.events.change();
+    assert.equal(manual.value, '');
+    assert.deepEqual(h.calls.at(-1), ['package', null]);
+    assert.equal(h.nodes.get('button').disabled, true);
+    assert.equal(h.nodes.get('load-bundled').disabled, false);
 });

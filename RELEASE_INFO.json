@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.66",
   "counter": 638,
   "board": "LCD",
-  "web_version": "3.40.0",
+  "web_version": "3.40.1",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed",
@@ -50,12 +50,12 @@
     "No universal BL/SD combined update is supplied."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
-  "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0",
-  "web_device_readback_pending": true,
+  "device_validation_pending": false,
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1",
+  "web_device_readback_pending": false,
   "previous_web_device_readback_evidence": "docs/validation/WEB3_36_0_READBACK.json",
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "DE3.66 installation, LCD photo and interrupted backup on real hardware",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": null,
   "previous_device_readback_evidence": "docs/validation/DE3_65_LCD_READBACK.json",
   "production_source_id_sha256": "cdd78f4eb532d5b64162f9daec601737ecd02be5b08bcd2e3465868da2e0336a",
   "tested_bootloader": {
@@ -65,9 +65,9 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Z19 and App637 previously observed together. For the App638 package, host and device results are separate."
+    "qualification": "Z19 boot region and App638 read back together from one LCD unit with S112 7.3.0."
   },
-  "web_host_test_scope": "Host tests and root/Pages production checks. Device verification on Android is pending.",
+  "web_host_test_scope": "Web 3.40.1 tests and production Chrome checks for root and Pages. Physical LCD readback and backup resume over Windows BLE used 3.40.0. Owner confirmed end-to-end backup resume and ZIP save in Android Chrome; Android web version not recorded.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -79,12 +79,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.39.5",
-    "evidence": "docs/validation/WEB3_39_5.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.39.5"
+    "version": "3.40.0",
+    "evidence": "docs/validation/WEB3_40_0.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/RELEASE_DE3_66.md",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3401",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -110,10 +110,12 @@
       "prerelease": "DE3.66/638"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
-    "backup_resume": "Same-tab, same-device reconnect with content revalidation",
+    "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
     "display_photo": "Read-only LCD snapshot under DE3.66",
     "announcements": "Separate Nintendo announcements; excluded from inventory coverage",
-    "search_preview": "Inline public image from the local catalogue ID"
+    "search_preview": "Inline public image from the local catalogue ID",
+    "dfu_package_selection": "Carries the selected bundled package into the DFU page.",
+    "announcement_series_filter": "Includes series with announcements only; announcements remain separate from inventory."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_66_638_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -126,9 +128,12 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_40_0.json",
-  "web_browser_checks_per_build": 421,
+  "web_evidence": "docs/validation/WEB3_40_1.json",
+  "web_browser_checks_per_build": 446,
   "web_root_production_tests": 21,
   "web_pages_production_tests": 21,
-  "web_host_tests": 1279
+  "web_host_tests": 1284,
+  "device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
+  "web_device_readback_pending_scope": null,
+  "web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md"
 }

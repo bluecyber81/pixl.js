@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.40.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.40.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -112,7 +112,14 @@
       <button type="button" @click="discard_backup_checkpoint" :disabled="busy || backupResumeInfo.busy">{{ $t('workflow.discard') }}</button>
     </section>
     <section v-if="lastBackup" class="backup-ready" role="status">
-      <span>{{ lastBackup.filename }}</span><button type="button" @click="lastBackup = null">{{ $t('info.discard') }}</button>
+      <span class="backup-archive">
+        <strong>{{ $t(backupReadSummary ? 'tools.readyArchive' : 'tools.previousArchive') }}</strong> {{ lastBackup.filename }}
+        <small v-if="backupReadSummary">
+          {{ $t('tools.backupFresh', { count: backupReadSummary.freshFiles, bytes: format_size(backupReadSummary.freshBytes) }, backupReadSummary.freshFiles) }}
+          · {{ $t('tools.backupReused', { count: backupReadSummary.reusedFiles, bytes: format_size(backupReadSummary.reusedBytes) }, backupReadSummary.reusedFiles) }}
+        </small>
+      </span>
+      <button type="button" @click="lastBackup = null">{{ $t('info.discard') }}</button>
       <button type="button" @click="save_last_backup">{{ $t('tools.saveBackup') }}</button>
     </section>
     <section v-if="lastDownload" class="backup-ready" role="status">
@@ -250,7 +257,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.40.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.40.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -500,7 +507,7 @@ export default {
   components: { DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.40.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.40.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
@@ -593,6 +600,12 @@ export default {
       if (!timing) return null;
       const now = Math.max(timing.updatedAt, this.readClock);
       return { ...readTimeEstimate(timing, now), jobSeconds: Math.floor((now - timing.jobStartedAt) / 1000) };
+    },
+    backupReadSummary() {
+      const backup = this.lastBackup;
+      if (!backup?.manifest?.resume || backup.sessionGeneration !== this.sessionGeneration) return null;
+      const { files, bytes, resume: { reusedFiles, reusedBytes } } = backup.manifest;
+      return { freshFiles: files - reusedFiles, freshBytes: bytes - reusedBytes, reusedFiles, reusedBytes };
     },
     backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; },
     backupResumeMatches() { return !!(this.connected && this.backupResumeInfo && this._backupCheckpoint?.matchesDevice(pixl.get_device_key?.(), this.firmwareVersion)); }
@@ -732,7 +745,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.40.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.40.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1183,7 +1196,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.40.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.40.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1313,6 +1326,8 @@ export default {
         this._backupCheckpoint = createBackupCheckpoint({rootPath,deviceKey,firmwareVersion:this.firmwareVersion,preserveLegacyNames:true});
       } else if (!this._backupCheckpoint) return;
       const checkpointState = this._backupCheckpoint;
+      // A previous ZIP remains downloadable if this attempt is interrupted.
+      if (this.lastBackup) this.lastBackup.sessionGeneration = null;
       this.backingUp = true; this.cancellingBackup = false;
       const controller = new AbortController(); this._backupController = controller;
       this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: null });
@@ -1339,7 +1354,7 @@ export default {
               filesDone:Number.isSafeInteger(progress.filesDone)?progress.filesDone:null,filesTotal:Number.isSafeInteger(progress.filesTotal)?progress.filesTotal:null }); this.refresh_backup_checkpoint(); }
           }
         });
-        this.assert_session(generation); this.lastBackup = result;
+        this.assert_session(generation); this.lastBackup = { ...result, sessionGeneration: generation };
         this.remember_transfer('backup', 'success', result.manifest.bytes || 0);
         // Keep the archive in memory until the user's explicit Save click.
         // This preserves browser activation and allows a cancelled save to retry.
@@ -2112,6 +2127,7 @@ input[type="search"], select { font: inherit; border: 1px solid #c7d1df; border-
 .transfer-panel button, .backup-ready button { padding: 7px 12px; cursor: pointer; border: 1px solid #9aadc4; border-radius: 5px; background: white; color: #253047; }
 .backup-ready { background: #edf8f1; border-color: #b6dbc3; }
 .backup-ready span { overflow-wrap: anywhere; flex: 1; }
+.backup-archive small { display: block; margin-top: 4px; }
 .preview-controls { padding: 12px; background: #eff5fc; border-radius: 8px; margin: 12px 0; }
 .preview-controls button { font: inherit; padding: 7px 12px; color: #2459a6; background: white; border: 1px solid #9aadc4; border-radius: 5px; cursor: pointer; }
 .preview-controls p { font-size: 14px; line-height: 1.5; margin: 10px 0 0; }

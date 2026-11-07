@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {diagnosticSnapshot} from '../tests/fixtures/diagnostic-overview-data.mjs';
+import { createBackup, createBackupCheckpoint } from '../src/lib/backup.js';
+import { memoryVfs } from '../tests/helpers/memory-vfs.mjs';
 import { UPDATE_TARGET } from '../src/lib/update-target.js';
 
 const root=path.resolve(process.argv[2]||'dist'),output=path.resolve(process.argv[3]||'browser-evidence');
@@ -53,6 +55,26 @@ snapshot.sections.drives.data=[{label:'E',status:0,totalBytes:2097152,freeBytes:
 Object.assign(snapshot.sections.startup.data,{schemaVersion:3,storageDetailMask:3,storageElapsedMilliseconds:[2100,2180],
  mount:{scope:'last-packedfs-mount',flags:23,result:0,configureMilliseconds:100,scanMilliseconds:2000,
  physicalReadAttempts:500,physicalReadBytes:128000,cacheHits:850,cacheMisses:450,bypassReads:50,physicalReadErrors:0}});
+// Exercise the real ZIP writer and resume verification before submitting the
+// resulting archive as a UI observation. Only the file source is synthetic.
+async function resumedTwoFileBackup() {
+ const source = memoryVfs();
+ source.put('E:/a.bin', [1,2,3]);
+ source.put('E:/b.bin', [4,5,6,7,8]);
+ const identity = { rootPath: 'E:/', deviceKey: 'synthetic-device', firmwareVersion: releaseInfo.version };
+ const options = { ...identity, checkpointState: createBackupCheckpoint(identity),
+  readDirectory: source.api.readDirectory, readFile: source.api.readFile,
+  readFileDigest: file => createHash('sha256').update(source.nodes.get(file).bytes).digest('hex') };
+ const controller = new AbortController();
+ await assert.rejects(createBackup({ ...options, signal: controller.signal,
+  onProgress: value => { if (value.filesDone === 1) controller.abort(); } }), { name: 'AbortError' });
+ source.log.length = 0;
+ const { blob, filename, manifest } = await createBackup(options);
+ assert.deepEqual(source.log.filter(entry => entry.op === 'read').map(entry => entry.args[0]), ['E:/b.bin']);
+ assert.equal(manifest.files, 2);
+ assert.equal(manifest.resume.reusedFiles, 1);
+ return { filename, manifest, bytes: Array.from(new Uint8Array(await blob.arrayBuffer())) };
+}
 async function shot(page,name,locator){
  const target=path.join(output,name+'.png');
  // Avoid scrolling a tall card under the mobile sticky navigation. Capture
@@ -65,6 +87,7 @@ async function shot(page,name,locator){
 }
 async function noOverflow(page,name){check(name+' fits viewport',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
 try{
+ const backupFixture = await resumedTwoFileBackup();
  for(const [kind,viewport]of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]]){
   const context=await browser.newContext({viewport,locale:'de-DE',deviceScaleFactor:1,serviceWorkers:'block'});
   // Replacement supplied before any application JS runs. No operating-system
@@ -74,7 +97,7 @@ try{
    Object.defineProperty(navigator,'bluetooth',{configurable:true,value:{requestDevice:async()=>{window.__testBleRequests++;throw new Error('Synthetic browser test: no hardware allowed');}}});
   });
   await context.route('**/*',route=>route.request().url().startsWith(origin+'/')||route.request().url().startsWith('data:')?route.continue():route.abort());
-  const page=await context.newPage();page.on('pageerror',error=>errors.push({kind,message:error.message}));
+  let page=await context.newPage();page.on('pageerror',error=>errors.push({kind,message:error.message}));
   await page.goto(origin+base);await page.locator('.version-context').waitFor();
   check(kind+' current browser version',await page.locator('.version-context').innerText().then(s=>s.includes(packageInfo.version)));
   await page.evaluate(({data,version})=>{
@@ -132,6 +155,31 @@ try{
   check(kind+' folder read enables backup',await page.getByRole('button',{name:'Ordner sichern (ZIP)',exact:true}).isEnabled());
   check(kind+' picker did not start a backup',await page.evaluate(()=>!window.__ui.backingUp&&window.__ui.transfer===null));
   await noOverflow(page,kind+' backup');await shot(page,kind+'-backup-ready');
+  await page.evaluate(({ filename, manifest, bytes }) => {
+   window.__ui.lastBackup = { filename, manifest, blob: new Blob([Uint8Array.from(bytes)], {type:'application/zip'}),
+    sessionGeneration: window.__ui.sessionGeneration };
+  }, backupFixture);
+  const readyZip = page.locator('.backup-ready').filter({hasText:backupFixture.filename});
+  await readyZip.waitFor();
+  check(kind+' completed ZIP shows fresh and verified reused files with the correct byte totals in German',
+   (await readyZip.innerText()).includes('1 Datei frisch vom Gerät gelesen (5 B)') &&
+   (await readyZip.innerText()).includes('1 Datei nach Prüfsummenvergleich wiederverwendet (3 B)'));
+  await noOverflow(page,kind+' completed backup');await shot(page,kind+'-backup-result',readyZip);
+  await page.evaluate(()=>{window.__ui.language='en';window.__ui.$i18n.locale='en';});
+  await readyZip.getByRole('button',{name:'Save backup ZIP',exact:true}).waitFor();
+  const englishSummary=await readyZip.innerText();
+  check(kind+' completed ZIP shows fresh and verified reused files with the correct byte totals in English',
+   englishSummary.includes('1 file read from the device (5 B)') &&
+   englishSummary.includes('1 file reused after checksum verification (3 B)'));
+  const downloadPromise = page.waitForEvent('download');
+  await readyZip.getByRole('button',{name:'Save backup ZIP',exact:true}).click();
+  const download = await downloadPromise;
+  check(kind+' save downloads the exact resumed two-file ZIP',
+   download.suggestedFilename() === backupFixture.filename &&
+   (await fs.readFile(await download.path())).equals(Buffer.from(backupFixture.bytes)));
+  await readyZip.getByRole('button',{name:'Dismiss',exact:true}).click();
+  check(kind+' discarding the ZIP clears its summary',await readyZip.count() === 0);
+  await page.evaluate(()=>{window.__ui.language='de_DE';window.__ui.$i18n.locale='de_DE';});
   await page.evaluate(()=>{window.__ui.current_dir='';window.__folderReadFail=true;});
   await page.locator('.backup-drive-picker button').first().click();await page.evaluate(()=>window.__folderReadDone());
   await page.waitForFunction(()=>window.__ui.current_dir==='');
@@ -142,8 +190,15 @@ try{
   await page.waitForFunction(()=>!document.querySelector('[data-section="runtime"] .sample-note'));
   check(kind+' failed read removes old RAM evidence',await page.locator('[data-section="runtime"]').innerText().then(s=>s.includes('Abfrage fehlgeschlagen')));
   await shot(page,kind+'-diagnostic-error',page.locator('.diagnostic-overview'));
-  await page.goto(origin+base+'dfu/web.html');await page.locator('#bundled option').nth(1).waitFor({state:'attached'});
-  await page.locator('#bundled').selectOption(applicationPackage.id);
+  await page.locator('button[aria-controls="update-workspace"]').click();
+  const card = page.locator('.firmware-packages .package').filter({has:page.getByText(applicationPackage.version, {exact:true})});
+  const opensUpdater = page.waitForEvent('popup');
+  await card.locator('.actions a[target="_blank"]').click();
+  page = await opensUpdater;
+  page.on('pageerror',error=>errors.push({kind,message:error.message}));
+  await page.locator('#bundled option').nth(1).waitFor({state:'attached'});
+  check(kind+' firmware card opens its own verified catalogue entry', await page.locator('#bundled').inputValue() === applicationPackage.id);
+  check(kind+' package link awaits explicit loading', await page.locator('#button').isDisabled());
   await page.locator('#load-bundled:not([disabled])').waitFor();
   const packageResponsePromise=page.waitForResponse(response=>new URL(response.url()).pathname===base+'firmware/'+applicationPackage.file);
   await page.locator('#load-bundled').click();await page.locator('#button:not([disabled])').waitFor({timeout:30000});
@@ -163,7 +218,7 @@ try{
  check('no browser runtime errors',errors.length===0);
 }finally{
  await fs.writeFile(path.join(output,'browser-evidence.json'),JSON.stringify({schema:1,generatedAt:new Date().toISOString(),
-  scope:'Exact production bundle rendered in isolated Chrome with synthetic Vue observations and mocked folder-read boundary; no hardware test.',
+  scope:'Exact production bundle rendered in isolated Chrome with synthetic Vue observations, a mocked folder listing and a resumed two-file fixture ZIP; no hardware test.',
   browser:browser.version(),buildRoot:root,deploymentBase:base,filesSha256:hashes,checks,screenshots,errors},null,2));
  await browser.close();await new Promise(resolve=>server.close(resolve));
 }

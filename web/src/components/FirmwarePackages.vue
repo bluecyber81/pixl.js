@@ -6,7 +6,7 @@
       <p>{{ text.scope }}</p><p class="hint">{{ text.unread }}</p>
       <div v-for="entry in releases.packages" :key="entry.id" class="package">
         <strong>{{ entry.version }}</strong> <span>· {{ text.counter }} {{ entry.counter }} · {{ (entry.bytes / 1024).toFixed(1) }} KiB</span>
-        <p v-if="entry.channel === 'prerelease'">{{ locale.startsWith('de') ? 'Testversion für LCD. Der Praxistest am Gerät steht aus.' : 'LCD test release. Physical device validation is pending.' }}</p>
+        <p v-if="entry.channel === 'prerelease'">{{ text.prerelease }} · <a :href="'https://github.com/bluecyber81/pixl.js/releases/tag/' + entry.version.split('-')[1].toLowerCase()" target="_blank" rel="noopener noreferrer">{{ text.releaseNotes }}</a></p>
         <p v-if="state(entry).newer" role="status">{{ text.newer }}</p>
         <div v-else class="actions">
           <a :href="state(entry).downloadUrl" :download="entry.file">{{ text.download }}</a>

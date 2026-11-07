@@ -11,7 +11,6 @@
     <p class="presence-scope" role="status">{{ presenceScope }}</p>
     <p v-if="historical" class="presence-observation" role="status">{{ de ? 'Gerät getrennt. Letzte Prüfung vom' : 'Device disconnected. Last check at' }} {{ observationDate }}. {{ de ? 'Die Farben zeigen diesen damaligen Prüfstand, keinen aktuellen Live-Bestand.' : 'Colours show that past observation, not the current live collection.' }}</p>
     <label class="search-field">{{ de ? 'Name, Serie oder öffentliche ID' : 'Name, series or public ID' }}<input ref="searchInput" v-model="query" type="search" maxlength="200" :placeholder="de ? 'Zum Beispiel Mario oder Link …' : 'For example Mario or Link …'" /></label>
-    <FigureAnnouncements v-if="announcements.length" :groups="announcements" :de="de" :searching="Boolean(query.trim())" />
     <div class="catalogue-tools">
       <label class="presence-filter">{{ de ? 'Bestand filtern' : 'Filter collection' }}<select v-model="presenceFilter">
         <option value="">{{ de ? 'Alle Einträge' : 'All entries' }}</option>
@@ -32,13 +31,14 @@
       <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur IDs im mitgelieferten Firmware-Namenskatalog' : 'Only IDs in the included firmware name catalogue' }}</label>
     </details>
     <button v-if="query || activeFilters" type="button" class="reset-filters" @click="resetFilters">{{ de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters' }}</button>
+    <FigureAnnouncements v-if="announcements.length" :groups="announcements" :de="de" :expanded="Boolean(query.trim() || series)" />
     <div v-if="selectedId" ref="detailAnchor" tabindex="-1" class="selected-detail">
       <div class="selection-toolbar"><span>{{ de ? 'Ausgewählte Figur' : 'Selected figure' }}</span><button type="button" @click="closeDetails">{{ de ? 'Details schließen' : 'Close details' }}</button></div>
       <FigureDetails :key="selectedId" :id="selectedId" :catalogue-entry="data.entries.find(entry=>entry.id===selectedId)" :image-commit="data.commit" />
     </div>
     <LocalTagInspector :catalogue="data" />
-    <div ref="resultAnchor" tabindex="-1" class="result-bar"><p aria-live="polite"><strong>{{ result.total }}</strong> {{ de ? 'Treffer' : 'results' }} <span>· {{ de ? 'Seite' : 'Page' }} {{ result.page }}/{{ result.pages }}</span></p></div>
-    <p v-if="!result.total" class="empty-result">{{ announcements.length && query.trim()
+    <div ref="resultAnchor" tabindex="-1" class="result-bar"><p aria-live="polite"><strong>{{ result.total }}</strong> {{ announcements.length && !result.total ? (de ? 'Treffer mit Katalog-ID' : 'results with a catalogue ID') : (de ? 'Treffer' : 'results') }} <span v-if="result.total">· {{ de ? 'Seite' : 'Page' }} {{ result.page }}/{{ result.pages }}</span></p></div>
+    <p v-if="!result.total" class="empty-result">{{ announcements.length
       ? (de ? 'Treffer stehen oben in den Ankündigungen.' : 'See matching figures in the announcements above.')
       : (de ? 'Keine passenden Figuren. Versuche einen kürzeren Suchbegriff oder setze die Filter zurück.' : 'No matching figures. Try a shorter search or reset the filters.') }}</p>
     <ul class="entries">
@@ -59,7 +59,7 @@
         <button type="button" :aria-label="(de ? 'Details zu ' : 'Details for ') + entry.name" :disabled="blocked" :aria-expanded="selectedId === entry.id" @click="selectEntry(entry.id, $event)">{{ de ? 'Details und Bild' : 'Details and image' }}</button>
       </li>
     </ul>
-    <nav :aria-label="de ? 'Katalogseiten' : 'Catalogue pages'"><button type="button" :disabled="result.page <= 1" @click="changePage(result.page - 1)">{{ de ? 'Zurück' : 'Previous' }}</button><span>{{ result.page }} / {{ result.pages }}</span><button type="button" :disabled="result.page >= result.pages" @click="changePage(result.page + 1)">{{ de ? 'Weiter' : 'Next' }}</button></nav>
+    <nav v-if="result.total" :aria-label="de ? 'Katalogseiten' : 'Catalogue pages'"><button type="button" :disabled="result.page <= 1" @click="changePage(result.page - 1)">{{ de ? 'Zurück' : 'Previous' }}</button><span>{{ result.page }} / {{ result.pages }}</span><button type="button" :disabled="result.page >= result.pages" @click="changePage(result.page + 1)">{{ de ? 'Weiter' : 'Next' }}</button></nav>
     <details class="source-details"><summary>{{ de ? 'Quelle und Datenstand' : 'Source and data snapshot' }}</summary><p class="source">{{ de ? 'Geprüfter Datenabruf' : 'Snapshot checked' }}: {{ data.checkedDate }} · <a :href="data.sourceUrl" target="_blank" rel="noopener noreferrer">AmiiboAPI · {{ data.commit.slice(0, 8) }}</a></p><p class="source">{{ de ? 'Stand der Quelle, keine Vollständigkeitsgarantie. Varianten können zusätzliche Daten erfordern. Die Vorschau verbindet sich nicht mit einem Allmiibo.' : 'Source snapshot, not guaranteed complete. Variants may require additional data. The preview does not connect to an Allmiibo.' }}</p></details>
   </section>
 </template>
@@ -155,7 +155,10 @@ function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; 
 async function closeDetails() { selectedId.value = null; await nextTick(); if (selectedTrigger?.isConnected) selectedTrigger.focus?.(); else searchInput.value?.focus?.(); }
 async function selectEntry(id, event) { if(props.blocked)return; emit('select-entry',data.value.entries.find(entry=>entry.id===id)); selectedTrigger = event?.currentTarget || null; selectedId.value = id; await nextTick(); detailAnchor.value?.focus?.(); }
 const today = new Date().toISOString().slice(0, 10);
-const seriesOptions = computed(() => [...new Set(data.value.entries.map(entry => entry.series))].sort());
+const seriesOptions = computed(() => [...new Set([
+  ...data.value.entries.map(entry => entry.series),
+  ...announcementGroups.map(group => group.series),
+])].sort());
 const typeOptions = computed(() => [...new Set(data.value.entries.map(entry => entry.type))].sort());
 const filtered = computed(() => filterCatalogue(data.value.entries, { query: query.value, series: series.value, kind: kind.value, knownOnly: knownOnly.value }).filter(entry => {
   if (!presenceFilter.value) return true;

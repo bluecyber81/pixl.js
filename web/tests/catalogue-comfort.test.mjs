@@ -144,6 +144,49 @@ test('announcement search opens relevant results by either language or proposed 
   } finally { app.unmount(); }
 });
 
+test('series dropdown includes announcement-only series and keeps their counts separate from catalogue and device filters', async () => {
+  const cat = catalogue(2);
+  cat.entries[0].series = 'Kirby Air Riders';
+  const { root, app } = await mount({ catalogue: cat }, 'en_US');
+  try {
+    const [series, kind] = nodes(classNode(root, 'filters'), 'select');
+    const options = nodes(series, 'option').map(text);
+    assert.deepEqual(options, ['All series', 'Kirby Air Riders', 'Mega Man: Dual Override', 'Metroid Ravenous',
+      'Second series', 'The Legend of Zelda: Ocarina of Time']);
+    for (const [name, count] of [['Mega Man: Dual Override', 2], ['Metroid Ravenous', 3], ['The Legend of Zelda: Ocarina of Time', 2]]) {
+      series.props['onUpdate:modelValue'](name); await Vue.nextTick();
+      const section = classNode(root, 'announcements');
+      assert.equal(section.props.open, true);
+      assert.deepEqual(nodes(section, 'strong').map(text), [name]);
+      assert.equal(nodes(section, 'li').length, count);
+      assert.equal(text(nodes(section, 'summary')[0]), `Announced figures (${count})`);
+      assert.equal(cards(root).length, 0);
+      assert.match(text(classNode(root, 'result-bar')), /^0 results with a catalogue ID/);
+      assert.match(text(classNode(root, 'empty-result')), /announcements above/);
+      assert.equal(nodes(root, 'nav').length, 0);
+    }
+    const known = nodes(classNode(root, 'known'), 'input')[0];
+    known.props['onUpdate:modelValue'](true); await Vue.nextTick();
+    assert.equal(classNode(root, 'announcements'), undefined);
+    known.props['onUpdate:modelValue'](false); await Vue.nextTick();
+    await filter(root, 'missing');
+    assert.equal(classNode(root, 'announcements'), undefined);
+    assert.equal(cards(root).length, 0);
+    await filter(root, '');
+
+    series.props['onUpdate:modelValue']('Kirby Air Riders'); await Vue.nextTick();
+    assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 2);
+    assert.equal(cards(root).length, 1);
+    assert.equal(text(classNode(root, 'count-badge')), '2 entries');
+    assert.equal(nodes(root, 'nav').length, 1);
+    kind.props['onUpdate:modelValue']('Figure'); await Vue.nextTick();
+    assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 2);
+    await click(root, 'Reset search and filters');
+    assert.equal(classNode(root, 'announcements').props.open, false);
+    assert.equal(cards(root).length, 2);
+  } finally { app.unmount(); }
+});
+
 test('gallery has no image requests before opt-in and renders only lazy images from the active page and commit', async () => {
   const { root, app } = await mount({ catalogue: catalogue(81) });
   try {

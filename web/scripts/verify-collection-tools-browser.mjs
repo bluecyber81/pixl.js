@@ -140,7 +140,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.40.0', (await page.locator('.version-context').innerText()).includes('3.40.0'));
+    check(kind + ' exact web version 3.40.1', (await page.locator('.version-context').innerText()).includes('3.40.1'));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
     const card = page.locator('.card-slot-inspection'); await card.waitFor();
@@ -182,6 +182,23 @@ try {
     await fits(page, kind + ' nine announcements', '.catalogue .announcements', zoom);
     await shot(page, kind + '-announcements-de', announced);
     await textScale(page, 1);
+    await announced.locator('summary').click();
+    const seriesFilters = page.locator('.catalogue .filter-details');
+    await seriesFilters.locator('summary').click();
+    const series = seriesFilters.locator('label').filter({ hasText: /^Serie/ }).getByRole('combobox');
+    await series.selectOption({ label: 'Metroid Ravenous' });
+    await announced.locator('li').first().waitFor();
+    check(kind + ' selected announcement-only series opens with its own title and count',
+      await announced.evaluate(el => el.open) && await announced.locator('.group-title strong').innerText() === 'Metroid Ravenous' &&
+      await announced.locator('summary').innerText() === 'Angekündigte Figuren (3)');
+    check(kind + ' three Metroid announcements remain separate from catalogue ID and device counts',
+      await announced.locator('li > a').count() === 3 && await page.locator('.catalogue .entries > li').count() === 0 &&
+      (await page.locator('.catalogue .result-bar').innerText()).includes('0 Treffer mit Katalog-ID'));
+    await page.locator('.catalogue .presence-filter select').selectOption('missing');
+    check(kind + ' missing inventory excludes the announcement-only series',
+      await announced.count() === 0 && await page.locator('.catalogue .entries > li').count() === 0);
+    await page.locator('.catalogue .reset-filters').click();
+    await seriesFilters.locator('summary').click();
     await page.locator('.catalogue .search-field input').fill('0101000004ff0902');
     check(kind + ' proposed Zelda ID outside main inventory', await announced.locator('li').count() === 1 && await page.locator('.catalogue .entries > li').count() === 0);
     await chooseLanguage(page, 'en');

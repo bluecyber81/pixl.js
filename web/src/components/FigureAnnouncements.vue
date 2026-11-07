@@ -1,5 +1,5 @@
 <template>
-  <details class="announcements" :open="searching">
+  <details class="announcements" :open="expanded">
     <summary>{{ de ? 'Angekündigte Figuren' : 'Announced figures' }} ({{ count }})</summary>
     <p class="scope">{{ de
       ? 'Stand 7. November 2026. Diese Vorschau zählt separat vom Gerätebestand. Die Termine gelten für die angegebene Region.'
@@ -28,7 +28,7 @@
 import { computed } from 'vue';
 import { zeldaIdProposal } from '../data/announced-figures.js';
 
-const props = defineProps({ groups: { type: Array, required: true }, de: Boolean, searching: Boolean });
+const props = defineProps({ groups: { type: Array, required: true }, de: Boolean, expanded: Boolean });
 const count = computed(() => props.groups.reduce((total, group) => total + group.figures.length, 0));
 
 function dateLabel(date) {

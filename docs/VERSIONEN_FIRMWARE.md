@@ -5,9 +5,9 @@ Stand 7. November 2026. Für ein LCD-Allmiibo mit eingerichtetem Packed LittleFS
 | Stand | Was du bekommst | Nachweis |
 | --- | --- | --- |
 | **[DE3.65 / App637](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · stabil** | Korrigierter Scrollbalken für Figurennotizen und kompaktere Spielzuordnungen. | Am LCD mit Z19 und S112 7.3.0 ausgelesen. NFC-Erkennung, Scrollbalken und Aufwachen am Gerät bestätigt. [Abschlussbericht](FINAL_DE3_65.md) |
-| **[DE3.66 / App638](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) · Vorabversion** | LCD-Bild über den Dateimanager als PNG lesen. Beim Fortsetzen einer Sicherung kann der Browser Dateien auf Laufwerk E bis 572 Byte anhand einer auf dem Gerät berechneten SHA-256 prüfen. | [Bau und Paketprüfung](validation/DE3_66.json) am Rechner. Der Test dieser Version auf dem physischen LCD steht aus. [Bedienung](RELEASE_DE3_66.md) |
+| **[DE3.66 / App638](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) · Vorabversion** | LCD-Bild über den Dateimanager als PNG lesen. Beim Fortsetzen einer Sicherung kann der Browser Dateien auf Laufwerk E bis 572 Byte anhand einer auf dem Gerät berechneten SHA-256 prüfen. | [Bau und Paketprüfung](validation/DE3_66.json) am Rechner. [Displayfoto, Sicherung, Bedienung und NFC am Gerät geprüft](validation/DE3_66_LCD_READBACK.md). [Bedienung](RELEASE_DE3_66.md) |
 
-Beide ZIPs enthalten die Anwendung. Der dazugehörige öffentliche [Dateimanager 3.40.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) läuft im Browser. Für Geräte mit SPIFFS oder einem anderen LittleFS-Layout gilt die [Anleitung zur Speicherumstellung](MIGRATION_PFS1.md).
+Beide ZIPs enthalten die Anwendung. Der dazugehörige öffentliche [Dateimanager 3.40.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) läuft im Browser. Für Geräte mit SPIFFS oder einem anderen LittleFS-Layout gilt die [Anleitung zur Speicherumstellung](MIGRATION_PFS1.md).
 
 ## Anwendungen bis DE3.64
 
@@ -97,4 +97,4 @@ Die Bezeichnung **BL** beschreibt bei den frühen Fassungen den Programmstand. *
 
 Die historischen LCD-Testpakete enthielten BL4 mit Z4, BL5 mit Z6, BL6 mit Z7, BL7 mit Z8 und BL8 mit Z9 bzw. Z11. Daneben gab es Rückkehrpakete mit älterem Code unter höherem Zähler: BL2 mit Z5, BL4 mit Z7, BL5 mit Z8, BL6 mit Z9 sowie BL7 mit Z10 oder Z12. Beispielsweise kann Z9 auf zwei verschiedene Bootloader-Codebilder verweisen. Die Bootdiagnose liefert zusätzlich den SHA-256-Fingerabdruck der gesamten Bootregion. [Komponenten und Identifikation](COMPONENTS.md)
 
-**Nordic S112.** Die frühere Reihe nutzte S112 7.2.0 (FWID `0x0103`). Auf dem qualifizierten LCD ist S112 7.3.0 (FWID `0x0126`) mit Z19 und App637 ausgelesen worden. Nordic liefert die Funksoftware. Das Projekt hat sie integriert, die reservierten Interrupts im SDK-Header korrigiert und die verwendeten Herstellerbytes verglichen. [Herkunft und Lizenz](../softdevice-s112/README.md) · [Binärprüfung](validation/DE3_65_EINGANG_UND_S112.json)
+**Nordic S112.** Die frühere Reihe nutzte S112 7.2.0 (FWID `0x0103`). Auf dem qualifizierten LCD ist S112 7.3.0 (FWID `0x0126`) mit Z19, App637 und später [App638](validation/DE3_66_LCD_READBACK.md) ausgelesen worden. Nordic liefert die Funksoftware. Das Projekt hat sie integriert, die reservierten Interrupts im SDK-Header korrigiert und die verwendeten Herstellerbytes verglichen. [Herkunft und Lizenz](../softdevice-s112/README.md) · [Binärprüfung](validation/DE3_65_EINGANG_UND_S112.json)

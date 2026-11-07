@@ -7,7 +7,7 @@ Keep a current backup. Choose the application for the release you intend to run.
 | LCD application | Release and intended use |
 | --- | --- |
 | **DE3.65 / 637** | [Stable release and checksums](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65). Verified on an LCD with Z19 and Nordic S112 7.3.0, including Bluetooth readback, scrolling, NFC and wake. |
-| **DE3.66 / 638** | [Test release and signed application](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66). Adds display capture and on-device hashing for backup resume. [Build and test evidence](validation/DE3_66.json). Physical checks of the new functions are pending. |
+| **DE3.66 / 638** | [Test release and signed application](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66). Adds display capture and on-device hashing for backup resume. [Build and test evidence](validation/DE3_66.json). [LCD capture, interrupted backup and owner checks](validation/DE3_66_LCD_READBACK.md). |
 
 1. Open the [Web DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) and select the intended application. On Android you can also select the signed `NUR_APP.zip` from that release in nRF Device Firmware Update. Keep the ZIP intact.
 2. Put the matching LCD into DFU mode and select its DFU advertisement. After completion, confirm the expected version in the normal menu or reconnect to the file manager and read the version.

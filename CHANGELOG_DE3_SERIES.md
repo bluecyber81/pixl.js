@@ -1,8 +1,12 @@
 # Allmiibo LCD application and file manager history
 
+## File manager 3.40.1 · 7 November 2026
+
+The updater preselects the package from its download card and clears the loaded ZIP when the selection changes. The catalogue filter includes the three series with announcements only. Completed backups report fresh and reused file counts and sizes. [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) · [LCD and Android backup observations](docs/validation/DE3_66_LCD_READBACK.md)
+
 ## DE3.66 / 638 and file manager 3.40.0 · 7 November 2026
 
-The LCD test application supports display capture and can hash files up to 572 bytes on E: when resuming a backup. Web 3.40.0 adds nine figure announcements, inline search previews and estimated time remaining during DFU. Inventory still uses 952 confirmed figure IDs. DE3.65 / 637 is the stable application verified on LCD with Z19 and Nordic S112 7.3.0. Display capture and interrupted backup on a physical DE3.66 unit are pending. [Features and installation](docs/RELEASE_DE3_66.md) · [Web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
+The LCD test application supports display capture and can hash files up to 572 bytes on E: when resuming a backup. Web 3.40.0 adds nine figure announcements, inline search previews and estimated time remaining during DFU. Inventory still uses 952 confirmed figure IDs. DE3.65 / 637 is the stable application verified on LCD with Z19 and Nordic S112 7.3.0. Display capture, button input, menus and NFC on a Switch were confirmed on one LCD unit. An interrupted backup resumed over Windows Bluetooth and in Chrome on Android. [Features and installation](docs/RELEASE_DE3_66.md) · [Web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0)
 
 [Firmware and bootloader history](docs/VERSIONEN_FIRMWARE.md) · [File manager patch history](docs/VERSIONEN_WEB.md)
 
