@@ -5,6 +5,7 @@ const statusText = document.getElementById('status'), transferText = document.ge
 const progressBar = document.getElementById('progress'), capabilityText = document.getElementById('capability');
 const bundledSelect = document.getElementById('bundled'), loadBundled = document.getElementById('load-bundled');
 const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = document.getElementById('bundled-info');
+const defaultBundledInfo = bundledInfo.textContent;
 const supported = globalThis.isSecureContext && !!navigator.bluetooth?.requestDevice;
 if (!supported) capabilityText.textContent = 'Web Bluetooth ist hier nicht verfügbar. Für die spätere Geräteprüfung ist ein unterstützter Chrome-/Edge-Browser in einem sicheren Kontext nötig.';
 let bundled = null, latestState = { busy:false, loading:false, ready:false };
@@ -129,14 +130,37 @@ try {
         for(const entry of bundled.catalog.packages){
             const option=document.createElement('option');option.value=entry.id;option.textContent=`${entry.version}${entry.channel === 'prerelease' ? ' (Testversion)' : ''} · ${(entry.bytes/1024).toFixed(1)} KiB`;bundledSelect.appendChild(option);
         }
+        const requested = new URLSearchParams(globalThis.location.search).getAll('package');
+        if (requested.length) {
+            const selected = requested.length === 1 && bundled.catalog.packages.find(entry => entry.id === requested[0]);
+            if (selected) {
+                bundledSelect.value = selected.id;
+                bundledInfo.textContent = `${selected.version} ist vorausgewählt. Tippe auf „Paket laden und prüfen“.`;
+            } else {
+                bundledInfo.textContent = 'Der Link gehört zu keinem eindeutigen mitgelieferten Paket. Bitte ein Paket auswählen.';
+            }
+        }
     } else bundledInfo.textContent='Kein mitgeliefertes Paket in diesem Dateimanager. Eine eigene passende Anwendungs-ZIP kann unten ausgewählt werden.';
 } catch(error) {
     bundledInfo.textContent='Mitgelieferte Pakete nicht verfügbar: '+error.message;
 }
 controls();
-bundledSelect.addEventListener('change', controls);
+bundledSelect.addEventListener('change', () => {
+    if (latestState.busy) return;
+    fileInput.value = '';
+    bundledInfo.textContent = defaultBundledInfo;
+    bundled?.invalidate();
+    controls();
+});
 loadBundled.addEventListener('click', () => { if (!latestState.busy) { fileInput.value=''; return bundled?.load(bundledSelect.value); } });
 cancelBundled.addEventListener('click', () => bundled?.cancel());
-fileInput.addEventListener('change', () => bundled ? bundled.manual(fileInput.files?.[0]) : updater.setPackage(fileInput.files?.[0]));
+fileInput.addEventListener('change', () => {
+    if (latestState.busy) return;
+    if (bundled?.catalog.packages.length) {
+        bundledSelect.value = '';
+        bundledInfo.textContent = defaultBundledInfo;
+    }
+    return bundled ? bundled.manual(fileInput.files?.[0]) : updater.setPackage(fileInput.files?.[0]);
+});
 selectButton.addEventListener('click', () => { if (!bundled?.loading) updater.selectDevice(); });
 window.addEventListener('beforeunload', event => { if (updater.busy) { event.preventDefault(); event.returnValue = ''; } });
