@@ -4,39 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.43.1</title>
+  <title>Allmiibo DFU 3.44.0</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
 <main>
-  <a href="../" class="back-link">← Zurück zum Dateimanager</a>
-  <p class="eyebrow">ALLMIIBO · LCD · DATEIMANAGER 3.43.1</p>
-  <h1>Firmware übertragen</h1>
-  <p><a href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
-  <p class="notice"><strong>Deine Sammlung bleibt erhalten.</strong> Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</p>
+  <a data-en="← Back to the file manager" href="../" class="back-link">← Zurück zum Dateimanager</a>
+  <p class="eyebrow">ALLMIIBO · LCD · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.44.0</p>
+  <h1 data-en="Update firmware">Firmware übertragen</h1>
+  <p><a data-en="Guide to firmware, the bootloader and LittleFS" id="guide-link" href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
+  <p class="notice"><strong data-en="Your collection stays on the device.">Deine Sammlung bleibt erhalten.</strong> <span data-en="The bundled update installs the application and preserves the bootloader, SoftDevice and existing Packed LittleFS file system.">Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</span></p>
   <section>
-    <h2>1. Update auswählen</h2>
-    <label for="bundled">Mitgeliefertes Paket</label>
-    <select id="bundled" disabled><option value="">Kein mitgeliefertes Paket</option></select>
-    <button id="load-bundled" type="button" disabled>Paket laden und prüfen</button>
-    <button id="cancel-bundled" type="button" hidden>Auswahl abbrechen</button>
-    <p id="bundled-info" role="status">Anwendung für Allmiibo LCD mit PFS1 und S112 7.3.0 wählen.</p>
-    <p>Das mitgelieferte Paket laden oder eine passende Anwendungs-ZIP von deinem Computer oder Handy wählen.</p>
-    <label for="file">Eigene Firmware-ZIP</label>
+    <h2 data-en="1. Choose an update">1. Update auswählen</h2>
+    <label data-en="Bundled package" for="bundled">Mitgeliefertes Paket</label>
+    <select id="bundled" disabled><option data-en="No bundled package" value="">Kein mitgeliefertes Paket</option></select>
+    <button data-en="Load and check package" id="load-bundled" type="button" disabled>Paket laden und prüfen</button>
+    <button data-en="Cancel selection" id="cancel-bundled" type="button" hidden>Auswahl abbrechen</button>
+    <p data-en="Choose an application for an Allmiibo LCD with PFS1 and S112 7.3.0." id="bundled-info" role="status">Anwendung für Allmiibo LCD mit PFS1 und S112 7.3.0 wählen.</p>
+    <p data-en="Load a bundled package or select a compatible application ZIP from your computer or phone.">Das mitgelieferte Paket laden oder eine passende Anwendungs-ZIP von deinem Computer oder Handy wählen.</p>
+    <label data-en="Your firmware ZIP" for="file">Eigene Firmware-ZIP</label>
     <input id="file" type="file" accept=".zip,application/zip">
-    <p><a href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>DE3.65 als ZIP für das Handy herunterladen</a></p>
-    <p><a href="../firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip" download>DE3.67 für LCD als Testversion herunterladen</a> · Mit allen 54 deutschen Spielhinweisen und korrigiertem Scrollbalken. LCD- und QR-Praxistest dieser Version stehen noch aus. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.67" target="_blank" rel="noopener noreferrer">Versionshinweise und Prüfstand</a></p>
+    <p><a data-en="Download DE3.65 as a ZIP for your phone" href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>DE3.65 als ZIP für das Handy herunterladen</a></p>
+    <p><a data-en="Download DE3.67 for LCD as a test release" href="../firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip" download>DE3.67 für LCD als Testversion herunterladen</a> · <span data-en="Includes all 54 German game hints and the scrollbar fix. See the release notes for LCD and QR test results.">Mit allen 54 deutschen Spielhinweisen und korrigiertem Scrollbalken. Den Prüfstand zu LCD und QR-Code findest du in den Versionshinweisen.</span> <a data-en="Release notes and test results" href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.67" target="_blank" rel="noopener noreferrer">Versionshinweise und Prüfstand</a></p>
     <p id="package-target" role="status" aria-live="polite"></p>
-    <details><summary>Welche Pakete passen?</summary><p>Beide mitgelieferten Pakete sind LCD-Anwendungen für PFS1 und S112 7.3.0. Für Z19 steht im Dateimanager ein Vergleich anhand von Bereichs-Hash und Zähler bereit. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p>Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen die Signatur. Z15 und Z17 können auch eine ältere, gültig signierte Anwendung installieren. Bei einer aktuellen Gerätediagnose warnt der Browser vor einem niedrigeren App-Zähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
+    <details><summary data-en="Which packages can I use?">Welche Pakete passen?</summary><p data-en="Both bundled packages are LCD applications for PFS1 and S112 7.3.0. In the file manager you can check Z19 against its boot region hash and counter. Check the display variant on the device. This page accepts application updates only. It rejects combined archives and bootloader or SoftDevice packages.">Beide mitgelieferten Pakete sind LCD-Anwendungen für PFS1 und S112 7.3.0. Für Z19 steht im Dateimanager ein Vergleich anhand von Bereichs-Hash und Zähler bereit. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p data-en="For each package, this page checks the application length and SHA-256 against the Nordic init packet. For a bundled package it also checks the entire ZIP. The bootloader verifies the signature during transfer. Z15 and Z17 can also install an older, correctly signed application. If you recently read the device details, the browser warns you about a lower application counter. Transfer starts after you select a device in step 2.">Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen die Signatur. Z15 und Z17 können auch eine ältere, gültig signierte Anwendung installieren. Bei einer aktuellen Gerätediagnose warnt der Browser vor einem niedrigeren App-Zähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
   </section>
-  <p><a href="https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip" target="_blank" rel="noopener noreferrer">Quellcode der mitgelieferten Firmware DE3.65 herunterladen</a></p>
+  <p><a data-en="Download the source code for the bundled DE3.65 firmware" href="https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip" target="_blank" rel="noopener noreferrer">Quellcode der mitgelieferten Firmware DE3.65 herunterladen</a></p>
   <section>
-    <h2>2. Gerät auswählen und übertragen</h2>
-    <p>Am Allmiibo unter „Einstellungen“ den Menüpunkt für das Firmware-Update öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>
-    <button id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
+    <h2 data-en="2. Select a device and transfer">2. Gerät auswählen und übertragen</h2>
+    <p data-en="On your Allmiibo, open the firmware update option in Settings. Use the button below and select “pixl dfu”. The transfer then starts automatically.">Am Allmiibo unter „Einstellungen“ den Menüpunkt für das Firmware-Update öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>
+    <button data-en="Select DFU device and transfer" id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
     <p id="capability"></p>
     <div id="awake-panel" hidden>
-      <label><input id="awake-choice" type="checkbox" checked> Display während des Updates wach halten</label>
+      <label><input id="awake-choice" type="checkbox" checked> <span data-en="Keep the screen awake during the update">Display während des Updates wach halten</span></label>
       <span id="awake-status" role="status"></span>
     </div>
     <div id="phases" hidden>
@@ -49,22 +49,24 @@
     </div>
     <progress id="progress" max="100" value="0" aria-describedby="transfer" aria-label="DFU" hidden></progress>
     <p id="transfer"></p>
-    <p id="status" role="status" aria-live="polite">Noch kein Paket ausgewählt.</p>
+    <p data-en="No package selected yet." id="status" role="status" aria-live="polite">Noch kein Paket ausgewählt.</p>
   </section>
   <section>
-    <h2>3. Neustart prüfen</h2>
-    <p>Nach dem Update erscheint wieder das normale Menü. Dort die neue Version prüfen. Für den Dateimanager anschließend „Bluetooth-Dateiübertragung“ öffnen.</p>
-    <details><summary>Übertragung unterbrochen?</summary><p>Wähle dieselbe Firmware-ZIP und dasselbe DFU-Gerät erneut. Die Seite liest Position und Prüfsumme aus dem Bootloader. Je nach gespeichertem Stand beginnt die Übertragung dort oder wieder am Anfang.</p></details>
+    <h2 data-en="3. Check the restart">3. Neustart prüfen</h2>
+    <p data-en="After the update, check the new version in the device menu. Then open Bluetooth file transfer to reconnect to the file manager.">Nach dem Update erscheint wieder das normale Menü. Dort die neue Version prüfen. Für den Dateimanager anschließend „Bluetooth-Dateiübertragung“ öffnen.</p>
+    <details><summary data-en="Transfer interrupted?">Übertragung unterbrochen?</summary><p data-en="Select the same firmware ZIP and DFU device again. The page reads the offset and checksum from the bootloader. Depending on what was saved, the transfer resumes there or starts again from the beginning.">Wähle dieselbe Firmware-ZIP und dasselbe DFU-Gerät erneut. Die Seite liest Position und Prüfsumme aus dem Bootloader. Je nach gespeichertem Stand beginnt die Übertragung dort oder wieder am Anfang.</p></details>
   </section>
-  <footer>Lokale Dateien, keine Cloud-Übertragung. <a href="../licenses/index.html">Quellen &amp; Lizenzen</a></footer>
+  <footer><span data-en="Files stay local.">Lokale Dateien, keine Cloud-Übertragung.</span> <a data-en="Sources and licenses" href="../licenses/index.html">Quellen &amp; Lizenzen</a></footer>
 </main>
 <script src="vendor/crc32.js"></script>
 <script src="vendor/jszip-3.10.2.min.js"></script>
 <script src="secure-dfu.js"></script>
+<script src="validation-error.js"></script>
 <script src="package.js"></script>
 <script src="updater.js"></script>
 <script src="../firmware/releases.js"></script>
 <script src="bundled-packages.js"></script>
+<script src="../language-preference.js"></script>
 <script src="phase-labels.js"></script>
 <script type="module" src="page.js"></script>
 </body>

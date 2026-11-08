@@ -53,7 +53,7 @@
     addEventListener(name, callback) { if (!this._events.has(name)) this._events.set(name,new Set());this._events.get(name).add(callback); }
     removeEventListener(name, callback) { this._events.get(name)?.delete(callback); }
     dispatchEvent(name, detail) { for(const callback of this._events.get(name)||[]) {try{callback(detail);}catch(error){globalThis.console?.error('DFU event listener failed',error);}} }
-    log(message) {this.dispatchEvent('log',{message});}
+    log(message, english) {this.dispatchEvent('log',{message, english});}
     progress(object,totalBytes,currentBytes) {this.dispatchEvent('progress',{object,totalBytes,currentBytes});}
     _listen(target,name,callback){
       const epoch=this._epoch;
@@ -206,7 +206,7 @@
       const bytes=asBytes(input),state=await this._select(1,bytes.length);
       if(bytes.length>state.maxSize)throw new Error('Init packet exceeds bootloader object size');
       let offset=state.offset;
-      if(offset>bytes.length)this.log('Ein längeres Init-Paket eines früheren DFU-Versuchs wird neu angelegt. Die Firmwaredaten werden anschließend weiter mit CRC geprüft.');
+      if(offset>bytes.length)this.log('Ein längeres Init-Paket eines früheren DFU-Versuchs wird neu angelegt. Die Firmwaredaten werden anschließend weiter mit CRC geprüft.', 'Replacing the longer init packet from an earlier update. The firmware transfer will continue with CRC verification.');
       if(!offset||offset>bytes.length||state.crc!==this._crc(bytes.subarray(0,offset))){await this._create(1,bytes.length);offset=0;}
       this.progress('init',bytes.length,offset);
       if(offset<bytes.length)await this._stream(bytes,offset,bytes.length,'init');

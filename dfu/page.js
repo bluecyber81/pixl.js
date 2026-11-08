@@ -6,25 +6,40 @@ const progressBar = document.getElementById('progress'), capabilityText = docume
 const bundledSelect = document.getElementById('bundled'), loadBundled = document.getElementById('load-bundled');
 const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = document.getElementById('bundled-info');
 const defaultBundledInfo = bundledInfo.textContent;
+const language = globalThis.AllmiiboLanguage;
+const pageLocales = ['de_DE', 'en'];
+let english = language.getLocale(pageLocales) === 'en';
+const messages = new Map();
+function setText(element, de, en = de) {
+    messages.set(element, [de, en]);
+    element.textContent = english ? en : de;
+}
+for (const element of document.querySelectorAll('[data-en]')) {
+    setText(element, element.textContent, element.dataset.en);
+}
+const defaultBundledInfoEnglish = bundledInfo.dataset.en;
+const choose = (de, en) => english ? en : de;
 const supported = globalThis.isSecureContext && !!navigator.bluetooth?.requestDevice;
-if (!supported) capabilityText.textContent = 'Web Bluetooth ist hier nicht verfügbar. Für die spätere Geräteprüfung ist ein unterstützter Chrome-/Edge-Browser in einem sicheren Kontext nötig.';
+if (!supported) setText(capabilityText, 'Web Bluetooth ist hier nicht verfügbar. Für die spätere Geräteprüfung ist ein unterstützter Chrome-/Edge-Browser in einem sicheren Kontext nötig.', 'Web Bluetooth is unavailable here. To connect, open this page over HTTPS or localhost in a supported Chrome or Edge browser.');
 let bundled = null, latestState = { busy:false, loading:false, ready:false };
 const hexId = value => '0x' + value.toString(16).toUpperCase().padStart(4, '0');
 function targetDescription(target) {
     if (!target) return '';
-    const lines = [`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`];
+    const lines = [choose(`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`,
+        `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
     const ref = new URLSearchParams(globalThis.location.hash?.slice(1) || '');
     const names = ['read', 'app', 'bl', 'sd'];
     const values = names.map(key => Number(ref.get(key)));
     const [when, app, bl, sd] = values;
     if (names.every(k => /^\d{1,16}$/.test(ref.get(k) || '')) && values.every(Number.isSafeInteger) &&
         app <= 0xffffffff && bl <= 0xffffffff && sd <= 0xffff && when <= Date.now() && Date.now() - when < 600000) {
-        lines.push(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`);
-        if (app > target.counter) lines.push('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15 kann sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.');
-        if (!target.softDevices.includes(sd)) lines.push('Die ausgelesene FWID steht nicht in der Anforderungsliste.');
-        lines.push('Prüfe, dass du dasselbe Gerät auswählst.');
-    } else lines.push('Für den Vergleich im Dateimanager die Bootdaten lesen und von dort die DFU-Seite öffnen.');
-    lines.push('Die Displayvariante ist aus dem Hardwarefeld nicht bestimmbar.');
+        lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
+            `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
+        if (app > target.counter) lines.push(choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15 kann sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
+        if (!target.softDevices.includes(sd)) lines.push(choose('Die ausgelesene FWID steht nicht in der Anforderungsliste.', 'The reported FWID is absent from the list of accepted IDs.'));
+        lines.push(choose('Prüfe, dass du dasselbe Gerät auswählst.', 'Make sure you select the same device.'));
+    } else lines.push(choose('Für den Vergleich im Dateimanager die Bootdaten lesen und von dort die DFU-Seite öffnen.', 'To compare versions, read the boot details in the file manager and open the DFU page from there.'));
+    lines.push(choose('Die Displayvariante ist aus dem Hardwarefeld nicht bestimmbar.', 'Check the display variant on the device. The hardware field cannot identify it.'));
     return lines.join(' ');
 }
 function controls() {
@@ -44,15 +59,16 @@ const awakeChoice = document.getElementById('awake-choice');
 const awakeStatus = document.getElementById('awake-status');
 let transferActive = false;
 function renderAwake(state) {
-    const text = {
-        active: 'Der Browser hält das Display wach.',
-        requesting: 'Der Browser fordert das Wachhalten an …',
-        unsupported: 'Bitte halte das Display selbst eingeschaltet.',
-        unavailable: 'Der Browser hat das Wachhalten abgelehnt. Bitte halte das Display selbst eingeschaltet.',
-        released: 'Das Display kann sich wieder ausschalten. Bitte halte es während des Updates eingeschaltet.',
-        hidden: 'Öffne diesen Tab wieder, um das Display wach zu halten.'
+    const texts = {
+        active: ['Der Browser hält das Display wach.', 'The browser is keeping the screen awake.'],
+        requesting: ['Der Browser fordert das Wachhalten an …', 'Requesting a screen wake lock …'],
+        unsupported: ['Bitte halte das Display selbst eingeschaltet.', 'Please keep the screen on.'],
+        unavailable: ['Der Browser hat das Wachhalten abgelehnt. Bitte halte das Display selbst eingeschaltet.', 'The browser could not keep the screen awake. Please keep it on.'],
+        released: ['Das Display kann sich wieder ausschalten. Bitte halte es während des Updates eingeschaltet.', 'The screen can turn off again. Please keep it on during the update.'],
+        hidden: ['Öffne diesen Tab wieder, um das Display wach zu halten.', 'Return to this tab to keep the screen on.']
     };
-    awakeStatus.textContent = transferActive && awakeChoice.checked ? text[state.status] || '' : '';
+    const text = transferActive && awakeChoice.checked && texts[state.status];
+    setText(awakeStatus, ...(text || ['']));
 }
 const newAwakeController = () => createScreenAwake({ document, wakeLock: navigator.wakeLock, onChange: renderAwake });
 let awake = newAwakeController();
@@ -63,17 +79,25 @@ function updateAwake() {
 awakeChoice.addEventListener('change', updateAwake);
 window.addEventListener('pagehide', () => { awake?.dispose(); awake = null; });
 window.addEventListener('pageshow', () => { if (!awake) { awake = newAwakeController(); updateAwake(); } });
-let phaseText = dfuPhaseLanguages.de_DE;
-try {
-    const saved = globalThis.localStorage?.getItem('allmiibo.language');
-    if (Object.hasOwn(dfuPhaseLanguages, saved)) phaseText = dfuPhaseLanguages[saved];
-} catch (_) { /* Use the default if browser storage is unavailable. */ }
-phases.lang = phaseText.lang;
-reconnectLink.textContent = phaseText.open;
-const phaseItems = phaseNames.map((name, index) => {
-    const item = document.getElementById('phase-' + name);
-    item.textContent = phaseText.steps[index];
-    return item;
+let phaseText;
+let currentPhaseIndex = -1, currentPhaseFailed = false;
+const phaseItems = phaseNames.map(name => document.getElementById('phase-' + name));
+function renderPhaseDetail() {
+    phaseDetail.textContent = currentPhaseIndex < 0 ? '' : currentPhaseFailed ? phaseText.failed : phaseText.details[currentPhaseIndex];
+}
+language.subscribe(({ locale }) => {
+    english = locale === 'en';
+    document.documentElement.lang = english ? 'en' : 'de';
+    for (const [element, [de, en]] of messages) element.textContent = english ? en : de;
+    document.getElementById('guide-link').setAttribute('href', english ? '../guide/en.html' : '../guide/index.html');
+    document.getElementById('package-target').textContent = targetDescription(latestState.target);
+}, pageLocales);
+language.subscribe(({ locale }) => {
+    phaseText = dfuPhaseLanguages[locale];
+    phases.lang = phaseText.lang;
+    phaseItems.forEach((item, index) => { item.textContent = phaseText.steps[index]; });
+    reconnectLink.textContent = phaseText.open;
+    renderPhaseDetail();
 });
 function showPhase(name, failed = false) {
     const index = phaseNames.indexOf(name);
@@ -85,7 +109,9 @@ function showPhase(name, failed = false) {
         if (i === index) item.setAttribute('aria-current', 'step');
         else item.removeAttribute('aria-current');
     });
-    phaseDetail.textContent = index < 0 ? '' : failed ? phaseText.failed : phaseText.details[index];
+    currentPhaseIndex = index;
+    currentPhaseFailed = failed;
+    renderPhaseDetail();
     reconnectLink.hidden = name !== 'reconnect' || failed;
 }
 let rateSample = null;
@@ -110,45 +136,58 @@ function transferEstimate(state, now) {
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     createDfu: () => new SecureDfu(CRC32.buf),
-    onStatus: text => { statusText.textContent = text; },
+    onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },
     onProgress: state => {
         const valid = state && Number.isFinite(state.totalBytes) && state.totalBytes > 0 && Number.isFinite(state.currentBytes);
         progressBar.hidden = !valid;
         const estimate = transferEstimate(valid ? state : null, globalThis.performance?.now() ?? Date.now());
-        transferText.textContent = valid ? `${state.object === 'init' ? 'Paketprüfung' : 'Anwendung'}: ${state.currentBytes} / ${state.totalBytes} Bytes bestätigt${estimate}` : '';
+        if (valid) setText(transferText,
+            `${state.object === 'init' ? 'Paketprüfung' : 'Anwendung'}: ${state.currentBytes} / ${state.totalBytes} Bytes bestätigt${estimate}`,
+            `${state.object === 'init' ? 'Init packet' : 'Application'}: ${state.currentBytes} / ${state.totalBytes} bytes acknowledged${estimate}`);
+        else setText(transferText, '');
         if (valid) progressBar.value = Math.min(100, Math.max(0, 100 * state.currentBytes / state.totalBytes));
     }
 });
 try {
     bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
-        pageUrl:globalThis.location.href,onStatus:text=>{statusText.textContent=text;},onState:controls});
+        pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
     if (bundled.catalog.packages.length) {
         bundledSelect.textContent = '';
-        const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Mitgeliefertes Paket wählen';bundledSelect.appendChild(placeholder);
-        for(const entry of bundled.catalog.packages){
-            const option=document.createElement('option');option.value=entry.id;option.textContent=`${entry.version}${entry.channel === 'prerelease' ? ' (Testversion)' : ''} · ${(entry.bytes/1024).toFixed(1)} KiB`;bundledSelect.appendChild(option);
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        setText(placeholder, 'Mitgeliefertes Paket wählen', 'Select a bundled package');
+        bundledSelect.appendChild(placeholder);
+        for (const entry of bundled.catalog.packages) {
+            const option = document.createElement('option');
+            option.value = entry.id;
+            const size = (entry.bytes / 1024).toFixed(1) + ' KiB';
+            const preview = entry.channel === 'prerelease';
+            setText(option, `${entry.version}${preview ? ' (Testversion)' : ''} · ${size}`,
+                `${entry.version}${preview ? ' (test release)' : ''} · ${size}`);
+            bundledSelect.appendChild(option);
         }
         const requested = new URLSearchParams(globalThis.location.search).getAll('package');
         if (requested.length) {
             const selected = requested.length === 1 && bundled.catalog.packages.find(entry => entry.id === requested[0]);
             if (selected) {
                 bundledSelect.value = selected.id;
-                bundledInfo.textContent = `${selected.version} ist vorausgewählt. Tippe auf „Paket laden und prüfen“.`;
+                setText(bundledInfo, `${selected.version} ist vorausgewählt. Tippe auf „Paket laden und prüfen“.`,
+                    `${selected.version} is preselected. Choose “Load and check package”.`);
             } else {
-                bundledInfo.textContent = 'Der Link gehört zu keinem eindeutigen mitgelieferten Paket. Bitte ein Paket auswählen.';
+                setText(bundledInfo, 'Der Link gehört zu keinem eindeutigen mitgelieferten Paket. Bitte ein Paket auswählen.', 'This link does not identify a single bundled package. Please choose one.');
             }
         }
-    } else bundledInfo.textContent='Kein mitgeliefertes Paket in diesem Dateimanager. Eine eigene passende Anwendungs-ZIP kann unten ausgewählt werden.';
+    } else setText(bundledInfo, 'Kein mitgeliefertes Paket in diesem Dateimanager. Eine eigene passende Anwendungs-ZIP kann unten ausgewählt werden.', 'There are no bundled packages in this file manager. Select your application ZIP below.');
 } catch(error) {
-    bundledInfo.textContent='Mitgelieferte Pakete nicht verfügbar: '+error.message;
+    setText(bundledInfo, 'Mitgelieferte Pakete nicht verfügbar: '+error.message, 'Bundled packages unavailable: '+(error.english ?? error.message));
 }
 controls();
 bundledSelect.addEventListener('change', () => {
     if (latestState.busy) return;
     fileInput.value = '';
-    bundledInfo.textContent = defaultBundledInfo;
+    setText(bundledInfo, defaultBundledInfo, defaultBundledInfoEnglish);
     bundled?.invalidate();
     controls();
 });
@@ -158,7 +197,7 @@ fileInput.addEventListener('change', () => {
     if (latestState.busy) return;
     if (bundled?.catalog.packages.length) {
         bundledSelect.value = '';
-        bundledInfo.textContent = defaultBundledInfo;
+        setText(bundledInfo, defaultBundledInfo, defaultBundledInfoEnglish);
     }
     return bundled ? bundled.manual(fileInput.files?.[0]) : updater.setPackage(fileInput.files?.[0]);
 });
