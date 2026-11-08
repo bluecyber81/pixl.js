@@ -5,6 +5,7 @@
 #include "db_header.h"
 #include "i18n/language.h"
 #include "amiibo_usage_de.h"
+#include "expected_notes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -257,7 +258,7 @@ int main(int argc,char **argv) {
     const unsigned german_glyphs[]={0x00c4,0x00d6,0x00dc,0x00e4,0x00f6,0x00fc,0x00df};
     for(unsigned i=0;i<sizeof(german_glyphs)/sizeof(german_glyphs[0]);i++)
         CHECK(u8g2_IsGlyph(&u,german_glyphs[i]) && u8g2_GetGlyphWidth(&u,german_glyphs[i])>0);
-    descriptions.en=amiibo_usage_de_texts[6].en;draw(&canvas,&view);
+    descriptions.en="View a particular completed cutscene after beating game without needing 100% completion/Hear a random voice line from Sylux";draw(&canvas,&view);
     unsigned end=amiibo_view_desc_max_offset(&v);CHECK(end>56);
     event.type=INPUT_TYPE_LONG;amiibo_view_on_input(&view,&event);
     CHECK(v.info_page==4 && v.focus==1 && v.desc_offset==mui_canvas_current_font_height(&canvas) && slot_events==old_slots);
@@ -328,6 +329,39 @@ int main(int argc,char **argv) {
     save_frame(argv[1],"scrollbar_regression_final",buffer);
     CHECK(first_thumb==12 && last_thumb==26 && last_thumb>first_thumb);
 
+    /* Compare the shipped German text to independently supplied reviewed strings
+     * in every note viewport and again in the narrower view beside the QR. */
+    settings.qrcode_enabled=true;german=true;chinese=false;linked=true;tag.notes[0]=0;
+    CHECK(amiibo_info_url(url,sizeof(url),&tag));
+    memset(reference,0,sizeof(reference));CHECK(draw_qrcode(&rc,91,25,37,url));
+    unsigned page_checks=0, bottom_checks=0;
+    for(size_t i=0;i<sizeof(expected_notes)/sizeof(expected_notes[0]);++i) {
+        const char *en=expected_notes[i].en,*de=expected_notes[i].de;
+        descriptions.en=en;v.info_page=4;amiibo_view_on_enter(&view);
+        for(unsigned page=0;;++page) {
+            CHECK(page<64);draw(&canvas,&view);
+            memset(expected,0,sizeof(expected));
+            mui_canvas_set_draw_color(&ec,1);
+            unsigned expected_total=mui_element_autowrap_text_box(&ec,0,12,128,29,26,v.desc_offset,0,de);
+            CHECK(v.desc_total==expected_total);
+            same_region(buffer,expected,0,14,124,27);
+            ++page_checks;
+            if(v.desc_offset==amiibo_view_desc_max_offset(&v)) {
+                if(v.desc_total>v.desc_page_size) {CHECK(pixel(buffer,125,40));++bottom_checks;}
+                break;
+            }
+            unsigned prior_offset=v.desc_offset;
+            event.key=INPUT_KEY_RIGHT;event.type=INPUT_TYPE_REPEAT;
+            amiibo_view_on_input(&view,&event);CHECK(v.desc_offset>prior_offset);
+        }
+        v.info_page=0;amiibo_view_on_enter(&view);draw(&canvas,&view);
+        qr_matches(buffer,reference);
+        descriptions.en=de;expected_description(&ec,&tag,89,0);
+        same_region(buffer,expected,0,24,89,40);
+    }
+    CHECK(bottom_checks>0);
+    printf("PASS DE3.67 reviewed note pixels: %zu strings, %u scroll positions, %u nontrivial final pages and %zu complete adjacent QR checks.\n",
+           sizeof(expected_notes)/sizeof(expected_notes[0]),page_checks,bottom_checks,sizeof(expected_notes)/sizeof(expected_notes[0]));
     printf("PASS amiidb QR: %u real framebuffer frames, %u complete QR comparisons; notes/links/locales/readonly/off/failure/manual/animation/info/long-lines\n",frames,qr_checks);
     return 0;
 }

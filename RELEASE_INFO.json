@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "publication_date": "2026-11-08",
-  "version": "2.22.0-DE3.66",
-  "counter": 638,
+  "version": "2.22.0-DE3.67",
+  "counter": 639,
   "board": "LCD",
-  "web_version": "3.42.2",
+  "web_version": "3.43.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed",
-  "application_sha256": "26c3ad95953ae4df204fe7de93b68423f1d5f1c0bb7581663afb52e795932ef3",
+  "ota_sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+  "application_sha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -38,7 +38,7 @@
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
   "host_firmware_suites": 149,
-  "evidence": "docs/validation/DE3_66.json",
+  "evidence": "docs/validation/DE3_67.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -50,14 +50,14 @@
     "No universal BL/SD combined update is supplied."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
-  "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2",
+  "device_validation_pending": true,
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "device_readback_passed": true,
-  "device_validation_pending_scope": null,
-  "previous_device_readback_evidence": "docs/validation/DE3_65_LCD_READBACK.json",
-  "production_source_id_sha256": "cdd78f4eb532d5b64162f9daec601737ecd02be5b08bcd2e3465868da2e0336a",
+  "device_readback_passed": false,
+  "device_validation_pending_scope": "Physical update of an LCD unit to App639, German notes, LCD scrollbar, QR scan and runtime stack observation.",
+  "previous_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
+  "production_source_id_sha256": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
   "tested_bootloader": {
     "name": "Z19",
     "counter": 19,
@@ -79,12 +79,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.42.1",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1",
-    "evidence": "docs/validation/WEB3_42_1.json"
+    "version": "3.42.2",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2",
+    "evidence": "docs/validation/WEB3_42_2.json"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3422",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3430",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -104,10 +104,10 @@
     "firmware_downloads": {
       "bundled": [
         "DE3.65/637",
-        "DE3.66/638"
+        "DE3.67/639"
       ],
       "stable": "DE3.65/637",
-      "prerelease": "DE3.66/638"
+      "prerelease": "DE3.67/639"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -119,9 +119,10 @@
     "figure_download_links": "Explicit per-ID HTTPS links stored on this browser origin. The name button downloads only after BIN structure and public figure ID match. No Bluetooth session required.",
     "web_3_42_0": "Home now opens figure import or firmware updates directly. If a source blocks a catalogue download, open it in the browser and check the saved BIN. Download files directly from device search results and export the checked inventory as a CSV for Excel. Illustrated shortcuts distinguish figure and firmware actions; the mobile navigation uses larger labels.",
     "web_3_42_1": "Six workspaces have distinct accent colours. The illustrated mobile shortcuts open figure import and firmware updates. The connected-device card shows the current directory, entry count, free and total capacity, and a wide teal-to-indigo meter for used storage. Figure import keeps the first click while the view loads. The guide adds Nordic’s desktop Bluetooth DFU option and adapter requirements. README screenshots illustrate simulated device data.",
-    "web_3_42_2": "Compact figure-import and firmware-update shortcuts. The file manager links its source and review ZIPs. Versioned Pages URLs and release documentation provide both archives for web 3.42.2 and 3.42.1."
+    "web_3_42_2": "Compact figure-import and firmware-update shortcuts. The file manager links its source and review ZIPs. Versioned Pages URLs and release documentation provide both archives for web 3.42.2 and 3.42.1.",
+    "web_3_43_0": "Optional restartable folder backups, per-browser catalogue favourites and named filters, JSON link import and export, 180-degree LCD PNG rotation, translated preparation errors, lazy ZIP reader and DE3.67/639 in the LCD test channel."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_66_638_NUR_APP.zip",
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -132,11 +133,11 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_42_2.json",
-  "device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "web_device_readback_pending_scope": "Physical Bluetooth and Android checks using web 3.42.2.",
-  "web_host_tests": 1306,
+  "web_evidence": "docs/validation/WEB3_43_0.json",
+  "device_readback_evidence": null,
+  "web_device_readback_pending_scope": "Windows and Android verification using the released 3.43.0 web bundle. The earlier RC backup module was tested on Windows with an LCD device, a BLE read bridge and a Chrome process restart.",
+  "web_host_tests": 1318,
   "web_root_production_tests": 22,
   "web_pages_production_tests": 22,
-  "web_browser_checks_per_build": 570
+  "web_browser_checks_per_build": 574
 }

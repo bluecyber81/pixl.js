@@ -87,20 +87,20 @@ static void amiibo_view_update_desc_anim(amiibo_view_t *p_amiibo_view) {
 
 /* Read-only pages entered from the detail menu. Reuse the existing page and
  * scroll state; looking at a note must never select another slot or alter NFC. */
-static const char *amiibo_view_usage(const amiibo_view_t *view) {
+static const char *amiibo_view_usage(const amiibo_view_t *view, char *translated) {
     const ntag_t *tag = view->ntag;
     const db_link_t *link = get_link_by_id(view->game_id, to_little_endian_int32(&tag->data[84]),
                                          to_little_endian_int32(&tag->data[88]));
     if (!link) return "";
     const db_notes_t *notes = &db_usage_notes[link->note_index];
     if (isChineseLanguage()) return notes->cn;
-    return getLanguage() == LANGUAGE_DE_DE ? amiibo_usage_de(notes->en) : notes->en;
+    return getLanguage() == LANGUAGE_DE_DE ? amiibo_usage_de(notes->en, translated, AMIIBO_USAGE_DE_BUFFER_BYTES) : notes->en;
 }
 
-static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas) {
+static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas, char *translated) {
     const bool german = getLanguage() == LANGUAGE_DE_DE;
     const bool own = view->info_page == 3;
-    const char *text = own ? (const char *)view->ntag->notes : amiibo_view_usage(view);
+    const char *text = own ? (const char *)view->ntag->notes : amiibo_view_usage(view, translated);
     if (!*text) text = own ? (german ? "Keine eigene Notiz." : "No personal note.") :
         (german ? "Kein Hinweis zur Spielauswahl. Spiel in der Datenbank wählen." :
                   "No hint for this game selection. Choose a game in the database.");
@@ -128,11 +128,13 @@ static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas) {
 }
 
 static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
-    char buff[AMIIBO_INFO_URL_CAPACITY];
+    /* The UID or QR text is consumed before drawing the translated note. */
+    union { char label[AMIIBO_INFO_URL_CAPACITY]; char de[AMIIBO_USAGE_DE_BUFFER_BYTES]; } scratch;
+    char *buff = scratch.label;
     amiibo_view_t *p_amiibo_view = p_view->user_data;
     ntag_t *ntag = p_amiibo_view->ntag;
     if (p_amiibo_view->info_page >= 3) {
-        amiibo_view_draw_notes(p_amiibo_view, p_canvas);
+        amiibo_view_draw_notes(p_amiibo_view, p_canvas, scratch.de);
         return;
     }
     if (p_amiibo_view->info_page) {
@@ -196,7 +198,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
          * the scrollbar from painting over the scan target. */
         uint16_t text_width = clip_win_cur.w;
         if (settings_get_data()->qrcode_enabled) {
-            if (amiibo_info_url(buff, sizeof(buff), ntag))
+            if (amiibo_info_url(buff, sizeof(scratch.label), ntag))
                 text_width = amiibo_view_draw_qrcode(p_canvas, y, buff);
         }
         p_amiibo_view->desc_step = 8;
@@ -207,7 +209,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
                                               p_amiibo_view->desc_page_size, p_amiibo_view->desc_offset, 0, ntag->notes);
         } else {
-            const char *notes = amiibo_view_usage(p_amiibo_view);
+            const char *notes = amiibo_view_usage(p_amiibo_view, scratch.de);
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
                                               p_amiibo_view->desc_page_size, p_amiibo_view->desc_offset, 0, notes);
@@ -222,7 +224,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         sprintf(buff, "[%08x:%08x]", head, tail);
         mui_canvas_draw_utf8(p_canvas, 0, y += 15, buff);
         if (settings_get_data()->qrcode_enabled) {
-            if (amiibo_info_url(buff, sizeof(buff), ntag)) amiibo_view_draw_qrcode(p_canvas, 24, buff);
+            if (amiibo_info_url(buff, sizeof(scratch.label), ntag)) amiibo_view_draw_qrcode(p_canvas, 24, buff);
         }
     } else {
         amiibo_view_stop_desc_anim(p_amiibo_view);

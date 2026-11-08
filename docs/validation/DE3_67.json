@@ -1,0 +1,203 @@
+{
+  "build": {
+    "status": "passed",
+    "mode": "release",
+    "version": "2.22.0-DE3.67",
+    "counter": 639,
+    "board": "LCD",
+    "backend": "native",
+    "sdk_image": null,
+    "network": "no downloads performed",
+    "signed": false,
+    "device_access": false,
+    "version_header_sha256": "123cd168a284acaa59b33b0da5925d4dc7c3bd3e195eae71743d1dd3574a1968",
+    "sdk_header_override": {
+      "path": "components/softdevice/s112/headers/nrf_nvic.h",
+      "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+      "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+    },
+    "expected_bin_sha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+    "source_tar_sha256": "15200acdbc7c96d9ca3834f28652cbc582e773047e72a94ceab6c53d8c39e458",
+    "native_tools": {
+      "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+      "compiler_sha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+      "make": "GNU Make 4.3",
+      "sdk_archive_sha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+      "sdk_copy_patched": true,
+      "input_sdk_modified": false,
+      "environment_policy": "PATH/HOME/TMPDIR only; fixed locale and build variables"
+    },
+    "exit_code": 0,
+    "source_id_sha256": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
+    "source_input_count": 699,
+    "linker_budget": {
+      "binary_bytes": 364116,
+      "linker_flash_used_bytes": 364124,
+      "observed": {
+        "flash_reserve_bytes": 8612,
+        "heap_stack_gap_bytes": 1840,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "artifacts_sha256": {
+      "pixljs.bin": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+      "pixljs.hex": "b6a5576066b7df184bb8611093c80d1e353013725c9e1c1885bd11219f0a4466",
+      "pixljs.out": "b13477f43976f2f5826ecc7ff042ca5921a53fec0d102e16eee83e5e7df4b419",
+      "pixljs.map": "895825666bce1bf60befb6da8b9ac02476cdeb6aed1e45998b14e58512ce3a30"
+    },
+    "matches_archived_release_binary": true
+  },
+  "signedPackage": {
+    "name": "Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
+    "sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+    "bytes": 364719,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 639,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 364116,
+        "sha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 364116,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "dfuValidation": {
+    "version": "2.22.0-DE3.67",
+    "counter": 639,
+    "date": "2026-11-08",
+    "board": "LCD",
+    "scope": "DE3.66 to DE3.67 via application-only DFU",
+    "appSignature": {
+      "schema": 1,
+      "version": "2.22.0-DE3.67",
+      "board": "LCD",
+      "counter": 639,
+      "applicationOnly": true,
+      "checkedBootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+      "candidateSourceId": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
+      "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3",
+      "doubleBuildBinMatch": true,
+      "testedElfSha256": "e1f502a44c49b3647e49ee370a4cdce4d03a7350284ec2b0ee2b00816e1fa3e1",
+      "package": {
+        "name": "Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
+        "sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+        "bytes": 364719,
+        "images": [
+          {
+            "type": "application",
+            "firmware_type": 0,
+            "counter": 639,
+            "sd_req": [
+              259,
+              294
+            ],
+            "bytes": 364116,
+            "sha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+            "signature_verified": true,
+            "sd_size": 0,
+            "bl_size": 0,
+            "app_size": 364116,
+            "boot_validation": "GENERATED_CRC",
+            "negative_controls_passed": 3
+          }
+        ]
+      },
+      "hardwareAccess": false
+    },
+    "z19Execution": {
+      "passed": true,
+      "release": "2.22.0-DE3.67",
+      "oldAppCounter": 638,
+      "appCounter": 639,
+      "bootCounter": 19,
+      "softDevice": "S112 7.3.0",
+      "fwid": 294,
+      "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+      "packageSha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+      "payloadSha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+      "accepted": {
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 364116,
+        "bank0Code": 0
+      },
+      "actualElfInitAccepted": true,
+      "actualElfImageHashAccepted": true,
+      "actualElfBootCrcAccepted": true,
+      "physicalDevice": false,
+      "scope": "Unicorn executes original Z19 ELF for an existing DE3.66 bank. Memory, SoftDevice interaction and handover are modeled."
+    },
+    "nativeStream": {
+      "payloadBytes": 364116,
+      "linkCutOffset": 4136,
+      "reportedResumeOffset": 0,
+      "packetReceipts": 18431,
+      "objectExecutes": 90,
+      "finalCrc32": 2311441849,
+      "passed": true,
+      "status": "PASS",
+      "sanitizerControl": "PASS",
+      "leakDetectionEnabled": true,
+      "leakDetectionConfirmed": true,
+      "appSha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+      "inputKind": "local-test-binary",
+      "deviceAccess": false,
+      "sanitizerOptions": {
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+        "UBSAN_OPTIONS": "halt_on_error=1",
+        "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+      },
+      "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+      "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+      "limitations": [
+        "Signature/activation validator, flash hardware and S112 are modeled here.",
+        "No physical reset, MBR boot copy, or actual radio connection."
+      ]
+    },
+    "srcPatchSha256": "35a3ae635f4fbdad6a452d673708f179532e1cb2e70ce95f93bcd6c83de14555",
+    "physicalOwnerFlashTest": "pending"
+  },
+  "display": {
+    "version": "2.22.0-DE3.67",
+    "counter": 639,
+    "sourceFingerprint": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
+    "elfSha256": "b13477f43976f2f5826ecc7ff042ca5921a53fec0d102e16eee83e5e7df4b419",
+    "binSha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+    "figures": 952,
+    "groups": 82,
+    "associations": 1344,
+    "withNote": 63,
+    "distinctEnglishNotes": 54,
+    "translatedDistinct": 54,
+    "localeCalls": 2688,
+    "unknownGroupAndFigureCases": 2,
+    "result": "passed",
+    "hardware": false,
+    "emulator": "Unicorn Cortex-M (Thumb), real release-optimized ELF instructions",
+    "checked": "Original English or reviewed German per association, byte for byte, plus stack return, protected flash, output guards and immutable input ID."
+  },
+  "deviceTestPending": true,
+  "hostVerification": {
+    "scope": "149 complete firmware test scripts on Linux, no physical hardware",
+    "scriptsPassed": 149,
+    "sourceId": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
+    "screenFrames": 822,
+    "completeQrComparisons": 585,
+    "stackElfCheck": "PASS Cortex-M4 release ELF: 8192 reserved, initial test watermark 7664, then 1416/256/256/0. Caller and guards intact; unavailable sentinel verified."
+  }
+}

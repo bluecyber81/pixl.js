@@ -1,13 +1,14 @@
 # LCD-Firmware, Bootloader und SoftDevice
 
-Stand 7. November 2026. Für ein LCD-Allmiibo mit eingerichtetem Packed LittleFS (PFS1) gibt es zwei Anwendungsstände:
+Stand 8. November 2026. Für ein LCD-Allmiibo mit eingerichtetem Packed LittleFS (PFS1) gibt es diese Anwendungsstände:
 
 | Stand | Was du bekommst | Nachweis |
 | --- | --- | --- |
 | **[DE3.65 / App637](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · stabil** | Korrigierter Scrollbalken für Figurennotizen und kompaktere Spielzuordnungen. | Am LCD mit Z19 und S112 7.3.0 ausgelesen. NFC-Erkennung, Scrollbalken und Aufwachen am Gerät bestätigt. [Abschlussbericht](FINAL_DE3_65.md) |
+| **[DE3.67 / App639](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) · Vorabversion** | Enthält alle 54 deutschen Spielhinweise und korrigiert das Ende des Scrollbalkens. | Zwei ARM-Bauten mit identischer BIN/HEX, 822 gerenderte LCD-Bilder und 585 QR-Vergleiche. [Praxistest](RELEASE_DE3_67.md) am LCD steht aus. |
 | **[DE3.66 / App638](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) · Vorabversion** | LCD-Bild über den Dateimanager als PNG lesen. Beim Fortsetzen einer Sicherung kann der Browser Dateien auf Laufwerk E bis 572 Byte anhand einer auf dem Gerät berechneten SHA-256 prüfen. | [Bau und Paketprüfung](validation/DE3_66.json) am Rechner. [Displayfoto, Sicherung, Bedienung und NFC am Gerät geprüft](validation/DE3_66_LCD_READBACK.md). [Bedienung](RELEASE_DE3_66.md) |
 
-Beide ZIPs enthalten die Anwendung. Der dazugehörige öffentliche [Dateimanager 3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) läuft im Browser. Für Geräte mit SPIFFS oder einem anderen LittleFS-Layout gilt die [Anleitung zur Speicherumstellung](MIGRATION_PFS1.md).
+Die ZIPs enthalten die Anwendung. Der dazugehörige öffentliche [Dateimanager 3.43.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0) läuft im Browser. Für Geräte mit SPIFFS oder einem anderen LittleFS-Layout gilt die [Anleitung zur Speicherumstellung](MIGRATION_PFS1.md).
 
 ## Anwendungen bis DE3.64
 

@@ -39,7 +39,8 @@ export function copyNotices(mode) {
 <ul><li><a href="${archives.source}" download>Quellcode des veröffentlichten Dateimanagers ${escape(archives.version)} einschließlich Simulatorquellen und Build-Anleitungen (ZIP)</a></li>
 <li><a href="${archives.testKit}" download>Prüfpaket für ChatGPT zu ${escape(archives.version)} mit App- und Bootloader-Artefakten (ZIP)</a></li>
 <li><a href="${sourceUrl}">Exakter Quellstand der mitgelieferten Firmware DE3.65/637</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">Quellstand der LCD-Testversion DE3.66/638</a></li></ul>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">Quellstand der früheren LCD-Testversion DE3.66/638</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.67">Quellstand der LCD-Testversion DE3.67/639 mit deutschen Spielhinweisen</a></li></ul>
 <p>Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.</p>
 <p>Die aktuelle Bibliothekszuordnung steht in <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>. Weitere alte Lizenzkopien bleiben als historische, nicht mehr zugeordnete Hinweise erhalten. Bereits mitgelieferte <a href="../dfu/LICENSE.txt">DFU-Lizenz</a> und <a href="../dfu/vendor/SOURCES.json">DFU-Bibliotheksnachweise</a> liegen daneben unverändert vor.</p>
 <h2>Mitgelieferte Lizenz- und Quellenhinweise</h2><ul>${files.map(file => `<li><a href="${escape(file)}">${escape(file)}</a></li>`).join('\n')}</ul></main></body></html>\n`

@@ -21,7 +21,7 @@ test('runtime diagnostics preserve signed errors and unknown stack measurements 
   const data=normalizeRuntimeDiagnostics(runtime);
   assert.equal(data.lastVfsError,-10002);assert.equal(data.stackMinFreeBytes,null);assert.equal(data.memorySamples,3);
   const report=createDiagnostics({runtime,history:[{kind:'sync',status:'interrupted',bytes:12,verified:false}]});
-  assert.equal(report.applicationVersion,'3.43.0-rc.1');assert.equal(report.recentTransfers[0].status,'interrupted');
+  assert.equal(report.applicationVersion,'3.43.0');assert.equal(report.recentTransfers[0].status,'interrupted');
   assert.doesNotMatch(JSON.stringify(report),/PRIVATE/);
   assert.equal(normalizeRuntimeDiagnostics({schemaVersion:2}),null);
 });

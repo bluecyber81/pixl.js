@@ -6,7 +6,7 @@ Step-by-step in the file manager: [Deutsch: Speicher umstellen](https://bluecybe
 
 ## Identify the current layout first
 
-| Current device storage | LCD application update (DE3.65 stable or DE3.66 test) |
+| Current device storage | LCD application update (DE3.65 stable or DE3.67 test) |
 | --- | --- |
 | This fork's Packed LittleFS, identifier **PFS1**, migration completed | Application-only update on matching LCD hardware. Preserve existing files; do not format again. |
 | **SPIFFS**, including the old public DE3.16 | Separate migration required. Flashing either application alone is not a conversion and does not preserve accessibility of SPIFFS files. |
@@ -33,7 +33,7 @@ The required stages are:
 4. Restore from the saved archive. The transfer checks protocol acknowledgements and conflicts without fully rereading every file immediately. A disconnected operation can resume using the same archive, device and matching recovery state.
 5. Perform the **one final complete comparison** of files and Raw128 metadata, then acknowledge completion. A copied-file counter or a mounted target by itself is not the final verification. Restart and test navigation and a known tag.
 
-Web 3.40.0 accepts twelve exact application/counter pairs from **DE3.55/627 through DE3.66/638** for the current engine. It also retains separately qualified older profiles. [Supported profiles in the source](../web/src/lib/migration-capacity.js) PFS1 remains format-compatible, but a different engine fingerprint requires its matching simulation profile. An unknown identity is not automatically accepted. If the assistant cannot establish the required source capabilities or matching target profile, stop the migration sequence and resolve that specific prerequisite; do not choose format as a workaround.
+Web 3.43.0 accepts thirteen exact application/counter pairs from **DE3.55/627 through DE3.67/639** for the current engine. It also retains separately qualified older profiles. [Supported profiles in the source](../web/src/lib/migration-capacity.js) PFS1 remains format-compatible, but a different engine fingerprint requires its matching simulation profile. An unknown identity is not automatically accepted. If the assistant cannot establish the required source capabilities or matching target profile, stop the migration sequence and resolve that specific prerequisite; do not choose format as a workaround.
 
 The published LCD application and review bundles are not a universal one-click migration kit. Do not apply the old public DE3.15/DE3.16 recovery packages to PFS1 storage as a file-restoration method. Returning to SPIFFS would require its own deliberate storage conversion and compatible data restore, as well as DFU version compatibility.
 
@@ -47,7 +47,7 @@ No figure dumps, private backups, device addresses or signing keys are included 
 
 ## Deutsch
 
-**Bereits PFS1:** Die stabile LCD-App DE3.65/637 oder die Testversion DE3.66/638 als Anwendung aktualisieren, vorhandene Dateien behalten und nicht erneut formatieren. **Noch SPIFFS/DE3.16 oder normales Upstream-LittleFS:** kein direktes, datenbewahrendes Update. Erst Speicherlayout, passende Hardware, vollständige externe Sicherung einschließlich Raw128-Metadaten und einen unterstützten Umstellungsweg bestätigen.
+**Bereits PFS1:** Die stabile LCD-App DE3.65/637 oder die Testversion DE3.67/639 als Anwendung aktualisieren, vorhandene Dateien behalten und nicht erneut formatieren. **Noch SPIFFS/DE3.16 oder normales Upstream-LittleFS:** kein direktes, datenbewahrendes Update. Erst Speicherlayout, passende Hardware, vollständige externe Sicherung einschließlich Raw128-Metadaten und einen unterstützten Umstellungsweg bestätigen.
 
 Eine erstmalige Umstellung umfasst Sicherung, passende Vorbereitung/Zielprüfung, ausdrücklich bestätigtes Löschen und Initialisieren von E:, Wiederherstellung und einen vollständigen Abschlussvergleich. Die alte DE3.30-PREP600 ist nur Teil des historischen SPIFFS-Vorbereitungswegs; sie ist keine allgemeine Rückkehr- oder Reparaturfirmware und kann wegen Versionszähler/Dateisystem unpassend sein. Fehlende Diagnosewerte rechtfertigen weder ein Downgrade noch Formatieren.
 

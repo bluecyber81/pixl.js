@@ -56,6 +56,11 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
             common=[folder/n for n in ['amiibo_info_draw.c','mui_qrcode_helper.c','mui_canvas.c',
                                        'u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']]
             common += [SRC/'i18n/de_DE.c',FW/'components/qrcode/c/qrcodegen.c']+[u8/n for n in libs]
+            translations=json.loads((FW/'data/usage-translations.de.json').read_bytes())['texts']
+            pairs=',\n'.join('    {%s, %s}' % (json.dumps(en,ensure_ascii=False), json.dumps(de,ensure_ascii=False))
+                             for en,de in translations.items())
+            (folder/'expected_notes.h').write_text(
+                'static const struct {const char *en, *de;} expected_notes[]={\n'+pairs+'\n};\n',encoding='utf-8')
             template=Path(__file__).with_name('amiidb_qr_de325.c.in').read_text(encoding='utf-8')
             view_path=SRC/'app/amiidb/view/amiibo_view.c'
             wrapper_path=SRC/'mui/mui_element.c'

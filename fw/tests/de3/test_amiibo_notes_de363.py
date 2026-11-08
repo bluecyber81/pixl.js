@@ -13,7 +13,16 @@ class NotesTests(HostTests):
     def test_generated_header_matches_reviewed_firmware_translation_source(self):
         data = json.loads(generator.INPUT.read_text(encoding="utf-8"))
         self.assertEqual(generator.OUTPUT.read_text(encoding="utf-8"), generator.render(data))
-        self.assertEqual(len(data["texts"]), 8)
+        self.assertEqual(len(data["texts"]), 54)
+        enc, dictionary = generator.pack(list(data["texts"].values()))
+        self.assertEqual(len(enc), 54)
+        for value, packed in zip(data["texts"].values(), enc):
+            decoded = "".join(dictionary[ord(ch)-1] if ord(ch) < 32 else ch for ch in packed)
+            self.assertEqual(decoded, value)
+            self.assertLessEqual(len(decoded.encode("utf-8")), generator.MAX_UTF8)
+        self.assertEqual(generator.render(data), generator.render({
+            **data, "texts": dict(reversed(list(data["texts"].items())))
+        }))
         # Every exact English key exists in the shipped C catalogue, not merely
         # in a translation file. Renamed catalogue text must receive review.
         catalogue = (SRC / "amiidb/db_link.c").read_text(encoding="utf-8")
@@ -23,8 +32,9 @@ class NotesTests(HostTests):
     def test_generator_rejects_empty_oversized_control_and_invalid_utf8_tables(self):
         invalid = [{}, {"schemaVersion": 2, "texts": {"a": "b"}},
                    {"schemaVersion": 1, "texts": {}},
-                   {"schemaVersion": 1, "texts": {str(i): "b" for i in range(33)}},
+                   {"schemaVersion": 1, "texts": {str(i): "b" for i in range(55)}},
                    {"schemaVersion": 1, "texts": {"a": ""}},
+                   {"schemaVersion": 1, "texts": {"a": "ä" * 96}},
                    {"schemaVersion": 1, "texts": {"a": "b\0"}},
                    {"schemaVersion": 1, "texts": {"a": "\ud800"}}]
         for data in invalid:
@@ -33,7 +43,7 @@ class NotesTests(HostTests):
 
     def test_real_translation_lookup_exact_keys_fallback_and_input_immutable(self):
         data = json.loads(generator.INPUT.read_text(encoding="utf-8"))
-        assertions = "\n".join("assert(!strcmp(amiibo_usage_de(%s), %s));" %
+        assertions = "\n".join("assert(!strcmp(amiibo_usage_de(%s,out,AMIIBO_USAGE_DE_BUFFER_BYTES), %s));" %
             (json.dumps(en, ensure_ascii=False), json.dumps(de, ensure_ascii=False))
             for en, de in data["texts"].items())
         self.compile_run(r'''
@@ -41,11 +51,18 @@ class NotesTests(HostTests):
 #include <stdio.h>
 #include "amiibo_usage_de.h"
 int main(void) {
+unsigned char guard[AMIIBO_USAGE_DE_BUFFER_BYTES + 2];memset(guard,0xdd,sizeof(guard));char *out=(char *)guard+1;
 ''' + assertions + r'''
 char changed[]="Gerudo-King Fabric ";char copy[sizeof(changed)];memcpy(copy,changed,sizeof(changed));
-assert(amiibo_usage_de(changed)==changed && !memcmp(copy,changed,sizeof(changed)));
-assert(!strcmp(amiibo_usage_de(""),"") && !strcmp(amiibo_usage_de(NULL),""));
-assert(!strcmp(amiibo_usage_de("Untranslated source text"),"Untranslated source text"));
+assert(amiibo_usage_de(changed,out,AMIIBO_USAGE_DE_BUFFER_BYTES)==changed && !memcmp(copy,changed,sizeof(changed)));
+assert(!strcmp(amiibo_usage_de("",out,AMIIBO_USAGE_DE_BUFFER_BYTES),"") && !strcmp(amiibo_usage_de(NULL,out,AMIIBO_USAGE_DE_BUFFER_BYTES),""));
+assert(!strcmp(amiibo_usage_de("Untranslated source text",out,AMIIBO_USAGE_DE_BUFFER_BYTES),"Untranslated source text"));
+assert(guard[0]==0xdd && guard[sizeof(guard)-1]==0xdd);
+const char *known="Gerudo-King Fabric";
+memset(out,0x55,AMIIBO_USAGE_DE_BUFFER_BYTES);
+assert(amiibo_usage_de(known,out,AMIIBO_USAGE_DE_BUFFER_BYTES-1)==known);
+for(size_t i=0;i<AMIIBO_USAGE_DE_BUFFER_BYTES;i++)assert(out[i]==0x55);
+assert(amiibo_usage_de(known,NULL,0)==known);
 puts("PASS reviewed DE text, exact-key EN fallback and immutable input");return 0;}
 ''', includes=[SRC / "app/amiidb/view"])
 

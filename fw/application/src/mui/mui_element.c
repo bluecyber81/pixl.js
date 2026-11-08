@@ -163,8 +163,11 @@ uint16_t mui_element_autowrap_text_box(mui_canvas_t *p_canvas, uint16_t x, uint1
         }
         // Position block
         if (total) {
-            float block_h = ((float)height) / total;
-            mui_canvas_draw_box(p_canvas, width - 3, y + block_h * pos, 3, block_h > 1 ? block_h : 1);
+            /* Round the shared edges once. The last page ends at y+height
+             * even when the viewport height is not divisible by the page count. */
+            uint16_t top = (uint32_t)height * pos / total;
+            uint16_t bottom = (uint32_t)height * (pos + 1u) / total;
+            mui_canvas_draw_box(p_canvas, width - 3, y + top, 3, bottom > top ? bottom - top : 1u);
         }
     }
 

@@ -1,0 +1,159 @@
+{
+  "version": "3.43.0",
+  "date": "2026-11-08",
+  "scope": "Release web source/production builds and real Chrome with synthetic device fixtures. No installation or physical test of DE3.67 in these suites.",
+  "previousPhysicalReadback": "DE3_66_LCD_READBACK.md",
+  "host": {
+    "tests": 1318,
+    "pass": 1318,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "sourceSha256ManifestDigest": "9bce47fba63106b855cff88947a7269be2017d94850c48fda9a3083459611d1e",
+  "layouts": {
+    "root": {
+      "assets": 163,
+      "filesManifestSha256": "8db523fd431d8eedbebe5e2b0faefcc1635e9e2ec37d6de2cf3c2ac5ddc4a77b",
+      "checks": {
+        "catalog": 338,
+        "overview": 77,
+        "screen": 133,
+        "dfu": 26
+      },
+      "totalChecks": 574,
+      "production": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "pages": {
+      "assets": 163,
+      "filesManifestSha256": "78ffd12a0c672b860ebbda88bcbe2d9e471595bd14566e03cf5e1d5eb189092b",
+      "checks": {
+        "catalog": 338,
+        "overview": 77,
+        "screen": 133,
+        "dfu": 26
+      },
+      "totalChecks": 574,
+      "production": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    }
+  },
+  "catalogueSettings": [
+    {
+      "language": "de",
+      "viewport": 320,
+      "textScale": 2,
+      "keyboard": true,
+      "linkRoundTrip": true,
+      "favorites": true,
+      "filterRestore": true,
+      "externalRequests": 0,
+      "geometry": {
+        "viewport": 320,
+        "document": 320,
+        "panels": [
+          [
+            248,
+            248
+          ],
+          [
+            248,
+            248
+          ],
+          [
+            246,
+            246
+          ]
+        ]
+      }
+    },
+    {
+      "language": "en",
+      "viewport": 320,
+      "textScale": 2,
+      "keyboard": true,
+      "linkRoundTrip": true,
+      "favorites": true,
+      "filterRestore": true,
+      "externalRequests": 0,
+      "geometry": {
+        "viewport": 320,
+        "document": 320,
+        "panels": [
+          [
+            248,
+            248
+          ],
+          [
+            248,
+            248
+          ],
+          [
+            246,
+            246
+          ]
+        ]
+      }
+    }
+  ],
+  "persistentBackupChrome": {
+    "chrome": "156.0.8078.80",
+    "checks": [
+      "Three completed files survived reload and a complete Chrome process restart.",
+      "Device, folder, firmware and naming-mode mismatches preserve the checkpoint.",
+      "Concurrent tabs and a stale discard cannot replace the active or newer checkpoint.",
+      "Fresh archive bytes, CRC and independent SHA-256 agree after a same-size change, deletion and addition.",
+      "Transaction abort or quota failure retained exactly one file; after reload the full ZIP reused that file.",
+      "Raw128 plus persistent storage is rejected before any device access.",
+      "Late completion quota preserves a downloadable ZIP; downloaded bytes and file hashes are verified.",
+      "Corrupted stored bytes prevent ZIP creation; unknown checkpoint metadata is preserved until an explicit discard.",
+      "Explicit discard survived restart; an unsupported IndexedDB version was retained until explicitly discarded."
+    ],
+    "scope": "Real Chrome IndexedDB, synthetic read-only device, injected storage faults."
+  },
+  "bundledApplications": [
+    {
+      "id": "de3.65-lcd-app",
+      "version": "2.22.0-DE3.65",
+      "counter": 637,
+      "file": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+      "bytes": 362167,
+      "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "BL8/Z13/Z15/Z17/Z19",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false
+    },
+    {
+      "id": "de3.67-lcd-app",
+      "version": "2.22.0-DE3.67",
+      "counter": 639,
+      "file": "Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
+      "bytes": 364719,
+      "sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "BL8/Z13/Z15/Z17/Z19",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    }
+  ]
+}

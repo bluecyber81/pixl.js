@@ -3,7 +3,7 @@
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Anleitung für Firmware, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html) ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloads für 3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
+[Downloads für 3.43.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -19,13 +19,22 @@ Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
 
+## Dateimanager 3.43.0
+
+1. **Sicherung** öffnen. Vor dem Lesen einer normalen Ordnersicherung **Ordnersicherung nach Schließen des Browsers fortsetzen** einschalten. Nach einem Neustart dieselbe Webadresse im selben Browserprofil öffnen, dasselbe Gerät verbinden und denselben Ordner wählen. Der Dateimanager vergleicht die gespeicherten Dateien frisch mit dem Gerät. Die fertige ZIP über den Download sichern.
+2. **Figurenkatalog → Webfavoriten und gespeicherte Filter** öffnen. Bei einer Figur den Stern wählen oder eine Suche unter einem eigenen Filternamen speichern. Die Rahmenfarben zeigen weiter den geprüften Gerätebestand.
+3. Unter **Downloadlinks sichern und übertragen** Links als JSON speichern oder eine Datei für die Vorschau wählen. „Nur neue Links ergänzen“ erhält vorhandene Werte. „Geänderte Links aus der Datei übernehmen“ ersetzt die angezeigten Abweichungen. Der Export enthält die vollständigen URLs einschließlich etwaiger privater Zugangsparameter.
+4. **Gerät & Diagnose → LCD-Displayfoto** aufnehmen. **Um 180° drehen** dreht Vorschau und gespeichertes PNG. Das funktioniert mit LCD-App DE3.66 oder neuer.
+
+- **3.43.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
+
 ## Dateimanager 3.42.2
 
 Für die aktuelle Version tippe unten im Dateimanager auf **Quellcode (ZIP)** oder **Prüfpaket für ChatGPT (ZIP)**. Beide Downloads funktionieren auch ohne Geräteverbindung.
 
 Die bebilderten Schaltflächen für Figurenimport und Firmwareupdate nehmen oben weniger Platz ein. Beide bleiben direkt antippbar. Am Handy kannst du für 3.42.2 und 3.42.1 jeweils den Web-Quellcode oder das ChatGPT-Prüfpaket herunterladen. Die Quellcode-ZIP ist für die Arbeit am Dateimanager gedacht. Wähle das Prüfpaket, wenn du ChatGPT die Quellen und Nachweise zu DE3.66, Z19 und dem jeweiligen Dateimanager übergeben möchtest.
 
-- **3.42.2 (aktuell)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
+- **3.42.2** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
 - **3.42.1 (Vorgängerversion)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
 
 ## Dateimanager 3.42.1
@@ -107,7 +116,7 @@ Bricht die Verbindung ab, bevor der Bootloader den Abschluss bestätigt, zeigt d
 
 Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 
-Im Web-Updater ist DE3.65/637 die stabile LCD-App. DE3.66/638 ist als Testversion auswählbar. Beide Anwendungs-ZIPs setzen passendes LCD und vorhandenes PFS1 voraus. [Pakete und Voraussetzungen](INSTALLATION.md) · [Migration von anderen Speicherformaten](MIGRATION_PFS1.md) · [Nachbau der Testversion](BUILD_DE3_66.md)
+Im Web-Updater ist DE3.65/637 die stabile LCD-App. DE3.67/639 ist als Testversion mit deutschen Spielhinweisen auswählbar. Beide Anwendungs-ZIPs setzen passendes LCD und vorhandenes PFS1 voraus. [Pakete und Voraussetzungen](INSTALLATION.md) · [Migration von anderen Speicherformaten](MIGRATION_PFS1.md) · [Nachbau der Testversion](BUILD_DE3_67.md)
 
 
 ## Startzeiten vergleichen

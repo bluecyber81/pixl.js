@@ -1,6 +1,6 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
-**Stand 8. November 2026.** Online läuft 3.42.2. Für das LCD-Allmiibo mit PFS1 und S112 7.3.0 bietet der Updater die gerätegeprüfte App DE3.65/637 und separat die Testversion DE3.66/638 an. Wer nur den Dateimanager aktualisieren möchte, kann eine laufende Übertragung abschließen und danach die Webseite neu öffnen. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll zu 3.42.2](validation/WEB3_42_2.json)
+**Stand 8. November 2026.** Online läuft 3.43.0. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.67/639. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_43_0.json)
 
 ## Veröffentlichungen auf GitHub
 
@@ -8,6 +8,7 @@ Jede verlinkte Version führt zu ihren damaligen Hinweisen und Downloads. 3.34.0
 
 | Dateimanager | Änderung gegenüber dem vorherigen Stand |
 | --- | --- |
+| [3.43.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0) | Ordnersicherungen nach Browserneustart fortsetzen, Webfavoriten und Filter speichern, Linklisten austauschen und LCD-PNG drehen. [Anleitung](DATEIMANAGER_WEB.md#dateimanager-3430) |
 | [3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) | Kompaktere Schnelleinstiege zu Figurenimport und Firmwareupdate. Die [Handy-Downloads](DATEIMANAGER_WEB.md#dateimanager-3422) bieten Quellcode und ChatGPT-Prüfpaket für 3.42.2 und 3.42.1 getrennt an. |
 | [3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) | Sechs farblich gekennzeichnete Arbeitsbereiche und eine Gerätekarte mit breitem Speicherbalken. Der mobile Figurenimport öffnet sich auch bei langsamem Laden mit dem ersten Klick. Die Anleitung ergänzt Bluetooth-DFU am PC mit passender Nordic-Hardware. |
 | [3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) | Zwei bebilderte Schnelleinstiege, lokaler BIN-Vergleich nach externem Download, Download aus Suchtreffern, Sammlungs-CSV und eine [Anleitung für Firmware und Speicher](https://bluecyber81.github.io/pixl.js/guide/index.html). |
