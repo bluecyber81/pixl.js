@@ -1,4 +1,5 @@
 export const toolsEnglish = {
+  previewFolder: 'Demo-folder-', previewFile: 'Demo-file-',
   previewOpen: 'Preview without a device', previewClose: 'Close preview', previewData: 'Example only - not on your device',
   previewNotice: 'Preview with 245 invented entries. Try search, filters, sorting and pages. Device actions are disabled; no Bluetooth connection is made.',
   subtitle: 'Files, backups and transfers · Bluetooth',
@@ -19,7 +20,7 @@ export const toolsEnglish = {
   verificationFailed: 'Read-back does not match the uploaded file. The file was written but is not verified.',
   uploadNotice: 'Existing files are protected by default. Verification reads the complete file back after writing.',
   uploadChanged: 'This upload belongs to an ended connection. Choose the file again.',
-  browserUnavailable: 'Web Bluetooth is unavailable here. Open the local page in Chrome or Edge.',
+  browserUnavailable: 'Web Bluetooth is unavailable in this browser. Open the file manager in a browser that supports Web Bluetooth, such as Chrome on Android or Windows.',
   insecure: 'Open this application through localhost or HTTPS to use Bluetooth.',
   disconnectHint: 'Disconnecting cancels active transfers. A partial uploaded file can remain on the device.',
   sessionChanged: 'The Bluetooth connection has changed. Please try again.',
@@ -28,6 +29,7 @@ export const toolsEnglish = {
 };
 
 export const toolsGerman = {
+  previewFolder: 'Demo-Ordner-', previewFile: 'Demo-Datei-',
   previewOpen: 'Vorschau ohne Gerät', previewClose: 'Vorschau schließen', previewData: 'Nur Beispiel - nicht auf deinem Gerät',
   previewNotice: 'Vorschau mit 245 erfundenen Einträgen. Suche, Filter, Sortierung und Seiten ausprobieren. Geräteaktionen sind gesperrt; es wird keine Bluetooth-Verbindung aufgebaut.',
   subtitle: 'Dateien, Sicherungen und Übertragungen · Bluetooth',

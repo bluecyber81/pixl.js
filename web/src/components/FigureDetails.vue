@@ -85,7 +85,7 @@ const vehicles = computed(() => props.inspection?.id === resolvedId.value ? prop
 const catalogueData = computed(() => Array.isArray(props.catalogue?.entries) ? props.catalogue : data);
 const entry = computed(() => resolvedId.value ? (props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : catalogueData.value.entries.find(item => item?.id === resolvedId.value)) : null);
 const imageUrl = computed(() => entry.value ? publicFigureImage(resolvedId.value, props.imageCommit ?? catalogueData.value.commit) : null);
-const regions = [{ id: 'eu', label: 'Europa / Europe' }, { id: 'na', label: 'Nordamerika / North America' }, { id: 'jp', label: 'Japan' }, { id: 'au', label: 'Australien / Australia' }];
+const regions = computed(() => [{ id: 'eu', label: de.value ? 'Europa' : 'Europe' }, { id: 'na', label: de.value ? 'Nordamerika' : 'North America' }, { id: 'jp', label: 'Japan' }, { id: 'au', label: de.value ? 'Australien' : 'Australia' }]);
 const imageRequested = ref(false), imageFailed = ref(false), qrVisible = ref(false);
 const qr = computed(() => qrVisible.value ? publicFigureQr(resolvedId.value) : null);
 function hideImage() { imageRequested.value = false; imageFailed.value = false; }

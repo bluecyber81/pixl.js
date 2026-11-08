@@ -350,11 +350,12 @@ test('unmounted component cannot publish late scan results or busy events', asyn
 const appFile = new URL('../src/App.vue', import.meta.url);
 const appDescriptor = parse(fs.readFileSync(appFile, 'utf8'), { filename: appFile.pathname }).descriptor;
 function appOptions(proto = {}, pixl = {}) {
-  return new Function('defineAsyncComponent', 'DeviceStorageCard', 'catalogueBaseline', 'proto', 'pixl',
-    appDescriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'return'))(loader => ({ loader }), {name:'DeviceStorageCard'}, baseline, proto, pixl);
+  return new Function('defineAsyncComponent', 'DeviceStorageCard', 'catalogueBaseline', 'proto', 'pixl', 'window',
+    appDescriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'return'))(loader => ({ loader }), {name:'DeviceStorageCard'}, baseline, proto, pixl,
+      { AllmiiboLanguage: { getMode: () => 'auto' } });
 }
 test('App applies collection busy to global operation lock and writing to disconnect lock', () => {
-  const options = appOptions(), state = options.data.call({ $t: x => x });
+  const options = appOptions(), state = options.data.call({ $t: x => x, $i18n: { locale: 'en' } });
   state.collectionBusy = true; assert.equal(options.computed.busy.call(state), true);
   assert.equal(!!options.computed.connectionDisconnectLocked.call(state), false);
   state.collectionWriting = true; assert.equal(options.computed.connectionDisconnectLocked.call(state), true);
@@ -481,7 +482,7 @@ test('collection report and stale transitions are emitted to the catalogue owner
 test('App clears catalogue presence on disconnect/error and binds both report and stale props', async () => {
   const options = appOptions({}, { get_connection_state: () => 'disconnected' });
   for (const method of ['on_ble_disconnected', 'on_ble_connect_error']) {
-    const state = { ...options.data.call({ $t: x => x }), collectionReport: partial(), collectionStale: true, $t: x => x, $notify() {} };
+    const state = { ...options.data.call({ $t: x => x, $i18n: { locale: 'en' } }), collectionReport: partial(), collectionStale: true, $t: x => x, $notify() {} };
     for (const name of ['reset_figure_info', 'remember_interruption', 'clear_dfu_attempt', 'clear_migration_restart',
       'refresh_local_metrics', 'invalidate_sync', 'invalidate_zip', 'refresh_backup_checkpoint', 'set_transfer']) state[name] = () => {};
     options.methods[method].call(state, Error('synthetic'));

@@ -565,31 +565,6 @@ test('DE3.17 opaque device key exists only during connection and is absent from 
     f.api.disconnect();assert.equal(f.api.get_device_key(),null);
 });
 
-test('browser locale accepts hyphens, case and region; unknown language falls back to English',()=>{
-    const api=load('locale.js',{}),locales=['en','zh_TW','es','zh_CN','ru_RU','de_DE','sv_SE','ja_JP'];
-    for(const language of ['de-DE','de-AT','de_CH','DE-de'])assert.equal(api.detectLanguage(language,locales),'de_DE');
-    assert.equal(api.detectLanguage('zh-CN',locales),'zh_CN');assert.equal(api.detectLanguage('zh-TW',locales),'zh_TW');
-    assert.equal(api.detectLanguage('en-US',locales),'en');assert.equal(api.detectLanguage(undefined,locales),'en');
-});
-test('saved language round-trips and ignores unsupported or stale locale values',()=>{
-    const api=load('locale.js',{}),values=new Map(),locales=['en','de_DE','ja_JP'];
-    const storage={getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)};
-    assert.equal(api.read_saved_language(storage,locales),'de_DE');
-    api.save_language(storage,'ja_JP');assert.equal(values.get('allmiibo.language'),'ja_JP');
-    assert.equal(api.read_saved_language(storage,locales),'ja_JP');
-    for(const invalid of ['de','unsupported','<script>',null]){
-        values.set('allmiibo.language',invalid);assert.equal(api.read_saved_language(storage,locales),'de_DE');
-    }
-    assert.equal(api.read_saved_language(storage,['en']),'en');
-});
-test('blocked or unavailable language storage cannot prevent application startup or session selection',()=>{
-    const api=load('locale.js',{}),locales=['en','de_DE'];
-    const blocked={getItem(){throw new Error('SecurityError');},setItem(){throw new Error('QuotaExceededError');}};
-    for(const storage of [null,undefined,blocked]){
-        assert.equal(api.read_saved_language(storage,locales),'de_DE');
-        assert.doesNotThrow(()=>api.save_language(storage,'en'));
-    }
-});
 test('real Vue I18n 11 translations reject oversized paths and notes without writing to device',async()=>{
     const {default:i18n}=await import(pathToFileURL(path.join(__dirname,'../src/i18n/index.js')).href);
     const f=protocolFixture(i18n);

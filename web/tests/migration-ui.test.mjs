@@ -125,7 +125,7 @@ test('failed saved ZIP reread invalidates the earlier archive/proof and never pe
  try{await load(h);h.vm.capacityProof={passed:true};await load(h);assert.equal(h.vm.archive,null);assert.equal(h.vm.capacityProof,null);assert.match(h.vm.status,/ZIP_HASH/);assert.equal(h.calls.filter(x=>x[0]==='verify').length,0)}finally{h.app.unmount()}
 })
 test('English view exposes identical limits and explicit journal exclusions; report download is local only',async()=>{
- const h=mount();try{h.props.language='en_US';await Vue.nextTick();assert.match(text(h.root),/Do not format/);assert.match(text(h.root),/never restored/);await load(h);await h.vm.verifySource();h.vm.saveReport();assert.equal(h.saves.length,1);assert.equal(h.saves[0][1],'Allmiibo-Migrationspruefung.json');h.vm.clear();assert.equal(h.vm.archive,null);assert.equal(h.vm.report,null)}finally{h.app.unmount()}
+ const h=mount();try{h.props.language='en_US';await Vue.nextTick();assert.match(text(h.root),/Do not format/);assert.match(text(h.root),/never restored/);await load(h);await h.vm.verifySource();h.vm.saveReport();assert.equal(h.saves.length,1);assert.equal(h.saves[0][1],'Allmiibo-Migration-Verification.json');h.vm.clear();assert.equal(h.vm.archive,null);assert.equal(h.vm.report,null)}finally{h.app.unmount()}
 })
 test('3.27 unknown raw capability asks for a fresh query, never a PREP downgrade',async()=>{
  const h=mount();try{h.props.getSession=()=>({readStorageInfo:async()=>{throw Object.assign(new Error('255'),{code:'MIGRATION_PREPARATION_REQUIRED'})},assertSession(){}})

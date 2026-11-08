@@ -124,8 +124,7 @@ async function fits(page, name, selector, factor) {
 async function chooseLanguage(page, language) {
   await textScale(page, 1);
   await page.locator('.header-language button').click();
-  const options = page.locator('.el-dropdown-menu:visible .el-dropdown-menu__item');
-  await options.nth(language === 'en' ? 2 : 5).click();
+  await page.getByRole('menuitem', { name: language === 'en' ? 'English' : 'Deutsch', exact: true }).click();
   await page.waitForFunction(language => document.querySelector('.workspace-nav button[aria-controls="catalogue-workspace"] strong')?.textContent === (language === 'en' ? 'Figure catalogue' : 'Figurenkatalog'), language);
 }
 async function selectFigure(page, id) {
@@ -322,7 +321,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.43.1', (await page.locator('.version-context').innerText()).includes('3.43.1'));
+    check(kind + ' exact web version 3.44.0', (await page.locator('.version-context').innerText()).includes('3.44.0'));
     const starts = page.locator('.start-actions');
     await fits(page, kind + ' start actions', '.start-actions', zoom);
     await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();

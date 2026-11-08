@@ -1,5 +1,13 @@
 # Allmiibo LCD release notes
 
+## File manager 3.44.0 · 8 November 2026
+
+When you open the file manager, it selects the first supported language in your browser’s preference list. Use the language menu to choose a fixed language or return to automatic selection.
+
+The firmware updater, guide and download page also support German and English. The English interface now shows catalogue errors, report filenames and region names in English. Switching languages never renames any files on your device.
+
+- **3.44.0** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
+
 ## File manager 3.43.1 · 8 November 2026
 
 The local LittleFS capacity check shows DE3.67 with application counter 639 as the latest verified firmware. This storage profile covers DE3.55 through DE3.67.

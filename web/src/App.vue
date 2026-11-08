@@ -7,33 +7,36 @@
         <div><p class="app-eyebrow">ALLMIIBO · LCD</p><h1>{{ $t('workflow.appTitle') }}</h1><p class="app-subtitle">{{ $t('tools.subtitle') }}</p></div>
       </div>
       <div class="header-tools">    <div class="header-language">
-      <el-dropdown trigger="click" class="international" @command="handle_set_language">
+      <el-dropdown trigger="click" class="international" popper-class="language-menu-popup" @command="handle_set_language">
         <div>
           <el-button size="small" type="primary" >{{ $t('lang.choose') }}</el-button>
         </div>
         <template #dropdown><el-dropdown-menu>
-          <el-dropdown-item :disabled="language === 'zh_CN'" command="zh_CN" divided>
+          <el-dropdown-item :disabled="languageMode === 'auto'" command="auto">
+            {{ $t('lang.auto') }}
+          </el-dropdown-item>
+          <el-dropdown-item :disabled="languageMode === 'zh_CN'" command="zh_CN" divided>
             {{ $t('lang.zhcn') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'zh_TW'" command="zh_TW" divided>
+          <el-dropdown-item :disabled="languageMode === 'zh_TW'" command="zh_TW" divided>
             {{ $t('lang.zhtw') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'en'" command="en" divided>
+          <el-dropdown-item :disabled="languageMode === 'en'" command="en" divided>
             {{ $t('lang.en') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'es'" command="es" divided>
+          <el-dropdown-item :disabled="languageMode === 'es'" command="es" divided>
             {{ $t('lang.es') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'ru_RU'" command="ru_RU" divided>
+          <el-dropdown-item :disabled="languageMode === 'ru_RU'" command="ru_RU" divided>
             {{ $t('lang.ru') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'de_DE'" command="de_DE" divided>
+          <el-dropdown-item :disabled="languageMode === 'de_DE'" command="de_DE" divided>
             {{ $t('lang.de') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'sv_SE'" command="sv_SE" divided>
+          <el-dropdown-item :disabled="languageMode === 'sv_SE'" command="sv_SE" divided>
             {{ $t('lang.sv') }}
           </el-dropdown-item>
-          <el-dropdown-item :disabled="language === 'ja_JP'" command="ja_JP" divided>
+          <el-dropdown-item :disabled="languageMode === 'ja_JP'" command="ja_JP" divided>
             {{ $t('lang.ja') }}
           </el-dropdown-item>
         </el-dropdown-menu></template>
@@ -43,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.43.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.44.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -279,7 +282,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.43.1</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.44.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -479,6 +482,7 @@
           <div class="el-upload__text">{{ $t('upload.drag') }} <em>{{ $t('upload.click') }}</em></div>
           <template #tip><div class="el-upload__tip">
             <ul>
+              <li>{{ $t('upload.fileSizeLimit') }}</li>
               <li>{{ $t('upload.maxsize') }}</li>
               <li>{{ $t('upload.maxname') }}</li>
             </ul>
@@ -509,7 +513,6 @@ import * as pixl from "./lib/pixl.ble"
 import { sharedEventDispatcher } from "./lib/event"
 import * as proto from "./lib/pixl.proto"
 import { getElementLocale } from "./i18n"
-import { read_saved_language, save_language } from "./lib/locale"
 import { filterRows, joinDevicePath, sha256, saveBlob, saveBlobWithPicker } from "./lib/browser-tools.js"
 import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
 import { readTimeEstimate, formatReadDuration } from "./lib/read-time-estimate.js"
@@ -537,7 +540,7 @@ export default {
   components: { DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.43.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
@@ -563,7 +566,8 @@ export default {
       current_dir: "",
       upload_diag_visible: false,
       table_selection: [],
-      language: "de_DE",
+      language: this.$i18n.locale,
+      languageMode: window.AllmiiboLanguage.getMode(),
       meta_diag_visible: false,
       figureInspection: null, figureInfoState: 'idle', figureInfoGeneration: 0,
       meta_form: {
@@ -598,7 +602,10 @@ export default {
     dfuPageUrl() { return deploymentPath('dfu/web.html') + (this.lastDfuReference || ''); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
     archiveLinks() { return projectDownloads(webVersion); },
-    guideUrl() { return deploymentPath(this.language.startsWith('de') ? 'guide/index.html' : 'guide/en.html'); },
+    guideUrl() {
+      if (this.languageMode === 'auto') return deploymentPath('guide') + '/';
+      return deploymentPath(this.language === 'de_DE' ? 'guide/index.html' : 'guide/en.html');
+    },
     uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
     metadataNote() { return metadataNoteInfo(this.meta_form.notes); },
     diagnosticsBusy() { return this.diagnosticsSaving || this.diagnosticsCopying; },
@@ -804,7 +811,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.43.1.json';
+      this.diagnosticsFilename = this.report_filename(true);
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1279,7 +1286,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.43.1.json';
+      this.diagnosticsFilename = this.report_filename(false);
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1336,14 +1343,15 @@ export default {
       this.demoMode = !this.demoMode;
       this.current_dir = '';
       this.tableData = this.demoMode ? Array.from({ length: 245 }, (_, index) => ({
-        name: (index % 25 === 0 ? 'Demo-Ordner-' : 'Demo-Datei-') + String(index + 1).padStart(3, '0') + (index % 25 === 0 ? '' : '.bin'),
+        name: '',
         type: index % 25 === 0 ? 'DIR' : 'REG', sizeBytes: index % 25 === 0 ? 0 : 540,
-        size: index % 25 === 0 ? '' : '540 B', notes: this.$t('tools.previewData')
+        size: index % 25 === 0 ? '' : '540 B', notes: ''
       })) : [];
       if(this.demoMode){
         // Public catalogue identities only, never fabricated tag bytes.
         const examples=[{name:'Mario',head:0,tail:2},{name:'Link',head:0x01000000,tail:0x00040002}];
-        for(let i=0;i<examples.length;i++)this.tableData[i+1]={name:`0${i+1}-Demo-${examples[i].name}.bin`,type:'REG',sizeBytes:540,size:'540 B',notes:this.$t('tools.previewData'),demoFigure:true,metadataValid:true,flags:{},amiibo:{head:examples[i].head,tail:examples[i].tail}};
+        for(let i=0;i<examples.length;i++)this.tableData[i+1]={name:`0${i+1}-Demo-${examples[i].name}.bin`,type:'REG',sizeBytes:540,size:'540 B',notes:'',demoFigure:true,metadataValid:true,flags:{},amiibo:{head:examples[i].head,tail:examples[i].tail}};
+        this.refresh_listing_language();
       }
       this.on_filter_change();
     },
@@ -1810,7 +1818,7 @@ export default {
       let path;
       try { path = this.new_entry_path(dir, options.file.name); }
       catch (error) { return Promise.reject(error); }
-      if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.maxsize')));
+      if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.fileSizeLimit')));
       ++this.pendingUploads;
       const checkPreflight = () => {
         this.assert_session(generation);
@@ -1916,7 +1924,7 @@ export default {
         await this.mutate(async () => {
           this.checked(await proto.vfs_drive_format(row.name.slice(0, 1)));
           if (!this.session_current(generation)) return;
-          this.$message({ type: 'success', message: row.name + this.$t('format.formatok') });
+          this.$message({ type: 'success', message: this.$t('format.formatok') + ' (' + row.name + ')' });
           await this.reload_drive();
         });
       } catch (error) { this.show_transfer_error(error); }
@@ -2064,7 +2072,8 @@ export default {
         if (!this.session_current(generation) || listing !== this.listingGeneration) return;
         this.driveInfo = normalizeDrives(data); this.refresh_local_metrics();
         this.tableData = data.map(drive => ({ name: drive.label + ':/ [' + drive.name + ']', type: 'DRIVE', notes: '', sizeBytes: drive.total_size,
-          size: drive.status === 0 ? this.$t('drive.free', { free: this.format_size(drive.free_size), total: this.format_size(drive.total_size) }) : this.$t('drive.message') + drive.status + this.$t('drive.messageend') }));
+          driveStatus: drive.status, freeBytes: drive.free_size, size: '' }));
+        this.refresh_listing_language();
       } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) { this.listingError = true; this.show_transfer_error(error); } }
       finally { if (listing === this.listingGeneration) this.table_loading = false; }
     },
@@ -2133,13 +2142,38 @@ export default {
       }
     },
 
-    handle_set_language(lang) {
-      if (!this.$i18n.availableLocales.includes(lang)) return;
-      this.language = lang; this.$i18n.locale = lang;
-      document.documentElement.lang = lang.replace('_', '-');
-      save_language(this.storage(), lang);
+    report_filename(startup) {
+      const name = this.language === 'de_DE' ? (startup ? 'Startdiagnose' : 'Diagnose') : (startup ? 'Startup-diagnostics' : 'Diagnostics');
+      return 'Allmiibo-' + name + '-' + webVersion + '.json';
+    },
+    refresh_listing_language() {
+      for (const [index, row] of this.tableData.entries()) {
+        if (this.demoMode) {
+          row.notes = this.$t('tools.previewData');
+          if (row.demoFigure) continue;
+          const folder = row.type === 'DIR';
+          const prefix = this.$t(folder ? 'tools.previewFolder' : 'tools.previewFile');
+          row.name = prefix + String(index + 1).padStart(3, '0') + (folder ? '' : '.bin');
+        } else if (row.type === 'DRIVE') {
+          row.size = row.driveStatus === 0 ? this.$t('drive.free', { free: this.format_size(row.freeBytes), total: this.format_size(row.sizeBytes) })
+            : this.$t('drive.message') + row.driveStatus + this.$t('drive.messageend');
+        } else if (row.metadataValid === false) {
+          row.notes = this.$t('properties.invalidmeta');
+        }
+      }
+    },
+    apply_language({ mode, locale }) {
+      this.languageMode = mode;
+      this.language = locale;
+      this.$i18n.locale = locale;
+      document.documentElement.lang = locale.replace('_', '-');
+      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion;
+      this.refresh_listing_language();
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
       this.version = this.firmwareVersion ? this.$t('status.connected') + this.firmwareVersion : '';
+    },
+    handle_set_language(mode) {
+      if (!window.AllmiiboLanguage.setMode(mode)) return;
       this.$message({ message: this.$t('lang.changeok'), type: 'success' });
     }
 
@@ -2158,17 +2192,10 @@ export default {
 
     proto.init();
 
-    var lang = read_saved_language(this.storage(), this.$i18n.availableLocales, "de_DE")
-    if (!lang || this.$i18n.availableLocales.indexOf(lang) < 0) {
-      lang = this.$i18n.locale
-    }
-
-    this.language = lang
-    this.$i18n.locale = lang
-    document.documentElement.lang = lang.replace('_', '-');
-    this.connBtnText = `${this.$t("conn.connect")}`;
+    this._unsubscribeLanguage = window.AllmiiboLanguage.subscribe(this.apply_language);
   },
   beforeUnmount() {
+    this._unsubscribeLanguage?.();
     this.reset_figure_info();
     this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
     this.invalidate_sync(); this.invalidate_zip(); this._uploadController?.abort(); this._uploadController=null;
@@ -2188,6 +2215,11 @@ export default {
 </script>
 
 <style>
+.language-menu-popup { max-inline-size: min(18rem, calc(100vw - 1rem)); }
+.language-menu-popup .el-dropdown-menu__item { white-space: normal; overflow-wrap: anywhere; }
+/* A closing popup still uses its old position while a language or font change reflows its labels. */
+.language-menu-popup.el-zoom-in-top-leave-active { display: none; }
+
 .source-footer { display:flex; flex-wrap:wrap; align-items:center; gap:0 1rem; padding:.5rem 1rem; }
 .source-footer a { display:inline-flex; align-items:center; min-height:44px; color:#12565d; text-underline-offset:.18em; }
 .el-message--error .el-message__content {

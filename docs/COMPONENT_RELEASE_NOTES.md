@@ -1,6 +1,6 @@
 # Historische Release Notes für BL8 und Nordic S112 7.3.0
 
-Dieses Dokument gehört zur [Komponentenveröffentlichung vom 3. November 2026](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0). Die aktuelle [Komponentenübersicht](COMPONENTS.md) führt Z19, die stabile LCD-App DE3.65, die Testversion DE3.67 und den Dateimanager 3.43.1 auf.
+Dieses Dokument gehört zur [Komponentenveröffentlichung vom 3. November 2026](https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0). Die aktuelle [Komponentenübersicht](COMPONENTS.md) führt Z19, die stabile LCD-App DE3.65, die Testversion DE3.67 und den Dateimanager 3.44.0 auf.
 
 **Bootloader und SoftDevice gehören sichtbar zu diesem Projekt.** Hier stehen die geprüften Einzeldateien, zugehörigen Quellen, Lizenzen und die Beschreibung unserer Arbeit.
 

@@ -32,6 +32,17 @@ function fakeFetch(data = source(), options = {}) {
 const run = (options = {}) => checkCatalogueUpdates({ baseline: [entry()], cryptoImpl: webcrypto, ...options });
 const isCode = code => error => error instanceof CatalogueUpdateError && error.code === code;
 
+test('online catalogue errors are shown in the selected language and retain the HTTP status', async () => {
+  for (const [status, code, english] of [[403, 'rate-limit', /GitHub is limiting/], [503, 'http', /unavailable \(HTTP 503\)/]]) {
+    await assert.rejects(run({fetchImpl: async () => new Response(null, {status})}), error => {
+      assert.equal(error.code, code);
+      assert.match(error.localizedMessage('en'), english);
+      assert.equal(error.localizedMessage('de_DE'), error.message);
+      return true;
+    });
+  }
+});
+
 test('normalizes exactly public metadata, excluding machine records and remote URLs/support flags', () => {
   const raw = source(); raw.machine = { '0x1f00000004c41e03': { name: 'Warp Star' } };
   raw.amiibos[`0x${entry().id}`].image = 'https://untrusted.invalid/private';

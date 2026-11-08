@@ -2,18 +2,20 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const html=fs.readFileSync(path.join(__dirname,'../public/dfu/web.html'),'utf8');
 const Bundled=require('../public/dfu/bundled-packages.js'),crypto=require('node:crypto');
 function harness(supported=true,extra={}){
-    const node=()=>({disabled:false,hidden:false,textContent:'',value:'',children:[],events:{},setAttribute(n,v){this[n]=v;},removeAttribute(n){delete this[n];},addEventListener(n,fn){this.events[n]=fn;},appendChild(child){this.children.push(child);}});
+    const node=()=>({disabled:false,hidden:false,textContent:'',value:'',children:[],dataset:{},events:{},setAttribute(n,v){this[n]=v;},removeAttribute(n){delete this[n];},addEventListener(n,fn){this.events[n]=fn;},appendChild(child){this.children.push(child);}});
     const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
     const windowEvents={},calls=[];let options,instance;
     class FakeUpdater{constructor(o){options=o;instance=this;this.busy=false;}setPackage(f){calls.push(['package',f]);options.onState({busy:this.busy,loading:false,ready:!!f});return Promise.resolve(!!f);}selectDevice(){calls.push(['select']);}}
-    const context=vm.createContext({URLSearchParams,document:{getElementById:id=>nodes.get(id),createElement:node,visibilityState:'visible',addEventListener(){},removeEventListener(){}},navigator:{bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
+    const context=vm.createContext({URLSearchParams,document:{documentElement:{},querySelectorAll:()=>[],getElementById:id=>nodes.get(id),createElement:node,visibilityState:'visible',addEventListener(){},removeEventListener(){}},navigator:{language:'de-DE',bluetooth:supported?{requestDevice(){}}:undefined},isSecureContext:supported,
         location:{href:'http://127.0.0.1:8768/dfu/web.html'},AllmiiboBundledPackages:Bundled,AllmiiboFirmwareReleases:{schema:1,packages:[]},
-        window:{addEventListener:(n,fn)=>windowEvents[n]=fn},AllmiiboDfuUpdater:FakeUpdater,SecureDfuPackage:class{},SecureDfu:class{},CRC32:{buf(){}},...extra});
+        addEventListener:(n,fn)=>windowEvents[n]=fn,AllmiiboDfuUpdater:FakeUpdater,SecureDfuPackage:class{},SecureDfu:class{},CRC32:{buf(){}},...extra});
+    context.window=context;
+    vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.createScreenAwake = require('../public/dfu/screen-awake.mjs').createScreenAwake;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu/phase-labels.js'),'utf8'),context);
     const page = fs.readFileSync(path.join(__dirname,'../public/dfu/page.js'),'utf8');
     vm.runInContext(page.replace("import { createScreenAwake } from './screen-awake.mjs';", ''), context);
-    return {nodes,windowEvents,calls,get options(){return options;},get updater(){return instance;}};
+    return {nodes,windowEvents,calls,context,get options(){return options;},get updater(){return instance;}};
 }
 test('page binds one click to device selection and one file event to package load',()=>{
     const h=harness();h.nodes.get('file').files=['selected'];h.nodes.get('file').events.change();h.nodes.get('button').events.click();
@@ -85,7 +87,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
     assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.67','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
-    assert.match(html,/<a href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
+    assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
 test('phases distinguish full payload from acknowledged completion and reset on retry',()=>{
@@ -177,4 +179,27 @@ test('changing the selected package clears a previously ready image and a manual
     assert.deepEqual(h.calls.at(-1), ['package', null]);
     assert.equal(h.nodes.get('button').disabled, true);
     assert.equal(h.nodes.get('load-bundled').disabled, false);
+});
+
+test('DFU changes display language during a transfer without starting or resetting it', () => {
+    const navigator = { languages: ['es-MX', 'de-CH'], bluetooth: {requestDevice(){}} };
+    const h = harness(true, {navigator});
+    assert.equal(h.context.document.documentElement.lang, 'de');
+    assert.equal(h.nodes.get('phases').lang, 'es');
+    h.options.onPhase('transfer');
+    h.options.onProgress({object:'firmware', currentBytes:20, totalBytes:100});
+    h.options.onState({busy:true,ready:false});
+    h.options.onStatus('Verbunden', 'Connected');
+    navigator.languages = ['es-MX', 'en-CA'];
+    h.windowEvents.languagechange();
+    assert.equal(h.context.document.documentElement.lang, 'en');
+    assert.equal(h.nodes.get('guide-link').href, '../guide/en.html');
+    assert.equal(h.nodes.get('status').textContent, 'Connected');
+    assert.match(h.nodes.get('transfer').textContent, /20 \/ 100 bytes acknowledged/);
+    h.context.AllmiiboLanguage.setMode('en');
+    assert.equal(h.nodes.get('phase-transfer').textContent, 'Transfer');
+    assert.equal(h.nodes.get('phase-transfer')['aria-current'], 'step');
+    assert.equal(h.nodes.get('progress').value, 20);
+    assert.equal(h.nodes.get('button').disabled, true);
+    assert.deepEqual(h.calls, []);
 });

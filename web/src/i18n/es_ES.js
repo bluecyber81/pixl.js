@@ -1,6 +1,7 @@
 export default {
   lang: {
-    choose: '语言/Language',
+    auto: 'Automático (idioma del navegador)',
+    choose: 'Idioma / Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
     en: 'English',
@@ -62,6 +63,7 @@ export default {
     remarktoolongend: ' Bytes）'
   },
   upload: {
+    fileSizeLimit: 'El tamaño máximo por archivo es de 2 MiB.',
     title: 'Subir Archivos',
     drag: 'Arrastre archivos aquí, o',
     click: 'haga clic para subirlos',

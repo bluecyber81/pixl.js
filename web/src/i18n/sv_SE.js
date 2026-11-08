@@ -1,6 +1,7 @@
 export default {
   lang: {
-    choose: '语言/Language',
+    auto: 'Automatiskt (webbläsarens språk)',
+    choose: 'Språk / Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
     en: 'English',
@@ -62,6 +63,7 @@ export default {
     remarktoolongend: ' bytes）'
   },
   upload: {
+    fileSizeLimit: 'Du kan ladda upp filer på högst 2 MiB vardera.',
     title: 'Ladda upp',
     drag: 'Dra filer hit, eller ',
     click: 'klicka för att ladda upp.',

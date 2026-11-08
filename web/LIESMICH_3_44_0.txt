@@ -1,0 +1,30 @@
+Allmiibo Dateimanager 3.44.0 · 8. November 2026
+
+Online in Chrome öffnen
+https://bluecyber81.github.io/pixl.js/
+
+Unter Windows die portable ZIP vollständig entpacken und Start-Dateimanager.cmd starten. Stop-Dateimanager.cmd beendet den lokalen Server. Gespeicherte Einstellungen und Zwischenstände gehören jeweils zur Webadresse und zum Browserprofil.
+
+Sprache wählen
+Beim Öffnen wählt der Dateimanager die erste unterstützte Sprache aus der Sprachliste des Browsers. Im Sprachmenü kannst du eine feste Sprache wählen.
+
+Eine zuvor gespeicherte Sprache hat Vorrang. Mit „Automatisch (Browsersprache)“ folgt die Seite wieder deinem Browser. Gibt es für keine deiner bevorzugten Sprachen eine Übersetzung, erscheint die Seite auf Englisch.
+
+Lokale Platzprüfung
+Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639 als neueste geprüfte Firmware. Das Speicherprofil gilt für DE3.55 bis DE3.67.
+
+Eine Ordnersicherung nach Browserneustart fortsetzen
+„Sicherung“ öffnen, Laufwerk oder Ordner wählen und „Ordnersicherung nach Schließen des Browsers fortsetzen“ vor der ersten Datei einschalten. Bei einer Unterbrechung dieselbe Webseite im selben Browserprofil öffnen. Dasselbe Gerät verbinden und denselben Ordner wählen. Die fertige ZIP herunterladen.
+
+Figurenkatalog
+Mit dem Stern eine Figur merken. Unter „Webfavoriten und gespeicherte Filter“ lässt sich eine Suche benennen. Unter „Downloadlinks sichern und übertragen“ die HTTPS-Liste als JSON exportieren oder nach einer Vorschau aus einer Datei übernehmen.
+
+Displayfoto
+Unter „Gerät & Diagnose → LCD-Displayfoto“ das Bild aufnehmen. „Um 180° drehen“ gilt für die Vorschau und den PNG-Download.
+
+LCD-Testversion DE3.67
+Auf einem passenden LCD mit eingerichtetem PFS1, Z19 und S112 7.3.0 genügt die App-ZIP. Am Gerät „Firmware flashen“ öffnen. Am Android-Handy in nRF Device Firmware Update die ungeöffnete ZIP und „pixl dfu“ auswählen. Nach dem Neustart DE3.67 kontrollieren. Die stabile Version wird auf der Updateseite als DE3.65/637 geführt.
+https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip
+
+Quellen, Downloads und Prüfpaket
+https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0

@@ -2,6 +2,7 @@ import { readonly } from "vue";
 
 export default {
   lang: {
+    auto: '自动（浏览器语言）',
     choose: '语言/Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
@@ -64,6 +65,7 @@ export default {
     remarktoolongend: ' 字节）'
   },
   upload: {
+    fileSizeLimit: '每个上传文件最大为 2 MiB。',
     title: '上传',
     drag: '将文件拖到此处，或 ',
     click: '点击上传',

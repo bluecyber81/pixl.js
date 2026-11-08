@@ -114,3 +114,13 @@ test('published JSON, source JSON and browser data agree exactly and pass schema
  const context=vm.createContext({});vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/firmware/releases.js'),'utf8'),context);
  assert.deepEqual(source,publicData);assert.deepEqual(JSON.parse(JSON.stringify(context.AllmiiboFirmwareReleases)),publicData);validateCatalog(source);
 });
+
+test('a rejected bundled package shows the check that failed in both languages', async () => {
+    const statuses = [];
+    const h = harness({ fetchImpl: async () => response(Uint8Array.from(bytes, b => b + 1)),
+        onStatus: (...text) => statuses.push(text) });
+    assert.equal(await h.loader.load(entry.id), false);
+    assert.match(statuses.at(-1)[0], /SHA-256 stimmt nicht/);
+    assert.match(statuses.at(-1)[1], /^Package not loaded: The package SHA-256 does not match/);
+    assert.equal(h.updater.package, null);
+});

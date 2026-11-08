@@ -32,18 +32,23 @@ export function copyNotices(mode) {
   const version = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8')).version
   const sourceUrl = 'https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'
   const archives = projectDownloads(version)
-  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Allmiibo ${escape(version)} – Quellen und Lizenzen</title></head><body>
-<main><a href="../">Zurück zum Dateimanager</a><h1>Quellen und Lizenzen · ${escape(version)}</h1>
-<p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">Versionsgeschichte des Dateimanagers</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">LCD-Firmware, Bootloader und SoftDevice</a></p>
-<p>Diese Seite verteilt den Dateimanager mit seinen Bibliotheken und sieben gebundenen Speicher-Simulatoren. Die jeweiligen Lizenztexte bleiben erhalten.</p>
-<ul><li><a href="${archives.source}" download>Quellcode des veröffentlichten Dateimanagers ${escape(archives.version)} einschließlich Simulatorquellen und Build-Anleitungen (ZIP)</a></li>
-<li><a href="${archives.testKit}" download>Prüfpaket für ChatGPT zu ${escape(archives.version)} mit App- und Bootloader-Artefakten (ZIP)</a></li>
-<li><a href="${sourceUrl}">Exakter Quellstand der mitgelieferten Firmware DE3.65/637</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">Quellstand der früheren LCD-Testversion DE3.66/638</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.67">Quellstand der LCD-Testversion DE3.67/639 mit deutschen Spielhinweisen</a></li></ul>
-<p>Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.</p>
-<p>Die aktuelle Bibliothekszuordnung steht in <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>. Weitere alte Lizenzkopien bleiben als historische, nicht mehr zugeordnete Hinweise erhalten. Bereits mitgelieferte <a href="../dfu/LICENSE.txt">DFU-Lizenz</a> und <a href="../dfu/vendor/SOURCES.json">DFU-Bibliotheksnachweise</a> liegen daneben unverändert vor.</p>
-<h2>Mitgelieferte Lizenz- und Quellenhinweise</h2><ul>${files.map(file => `<li><a href="${escape(file)}">${escape(file)}</a></li>`).join('\n')}</ul></main></body></html>\n`
+  const label = (de, en) => `<span data-en="${escape(en)}">${escape(de)}</span>`
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-en="Allmiibo ${escape(version)} – Sources and licenses">Allmiibo ${escape(version)} – Quellen und Lizenzen</title>
+<script defer src="../language-preference.js"></script><script defer src="language.js"></script></head><body>
+<main><a href="../">${label('Zurück zum Dateimanager', 'Back to the file manager')}</a><h1>${label('Quellen und Lizenzen', 'Sources and licenses')} · ${escape(version)}</h1>
+<p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">${label('Versionsgeschichte des Dateimanagers', 'File manager version history')}</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">${label('LCD-Firmware, Bootloader und SoftDevice', 'LCD firmware, bootloader and SoftDevice')}</a></p>
+<p>${label('Der Dateimanager enthält die hier aufgeführten Bibliotheken und sieben Speicher-Simulatoren.', 'The file manager includes the libraries listed here and seven storage simulators.')}</p>
+<ul><li><a href="${archives.source}" download>${label(`Quellcode des Dateimanagers ${archives.version} mit Simulatorquellen und Build-Anleitungen (ZIP)`, `File manager ${archives.version} source code, simulator sources and build instructions (ZIP)`)}</a></li>
+<li><a href="${archives.testKit}" download>${label(`ChatGPT-Prüfpaket für ${archives.version} mit App- und Bootloader-Artefakten (ZIP)`, `ChatGPT test kit for ${archives.version} with application and bootloader build artifacts (ZIP)`)}</a></li>
+<li><a href="${sourceUrl}">${label('Exakter Quellstand der mitgelieferten Firmware DE3.65/637', 'Source code for the bundled DE3.65/637 firmware')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.67">${label('Quellstand der LCD-Testversion DE3.67/639 mit deutschen Spielhinweisen', 'Source code for the DE3.67/639 LCD test release with German game hints')}</a></li></ul>
+<p>${label('Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.', 'The main branch can contain a different firmware revision. The DE3.65 application ZIP is the public download for Allmiibo LCD with PFS1 and S112 7.3.0.')}</p>
+<p>${label('Aktuelle Bibliotheken und Quellen', 'Current libraries and sources')} · <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>.
+${label('Die Liste unten enthält auch historische Lizenzhinweise.', 'The list below also includes historical notices.')}
+<a href="../dfu/LICENSE.txt">${label('DFU-Lizenz', 'DFU license')}</a> · <a href="../dfu/vendor/SOURCES.json">${label('DFU-Bibliotheksnachweise', 'DFU library sources')}</a></p>
+<h2>${label('Mitgelieferte Lizenz- und Quellenhinweise', 'Bundled license and source notices')}</h2><ul>${files.map(file => `<li><a href="${escape(file)}">${escape(file)}</a></li>`).join('\n')}</ul></main></body></html>\n`
   fs.writeFileSync(path.join(output, 'licenses/index.html'), html, 'utf8')
   return files
 }

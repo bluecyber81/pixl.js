@@ -15,7 +15,7 @@ async function press(control) { await control.focus(); await control.press('Ente
 async function selectLanguage(page, en) {
   if ((await page.locator('.workspace-nav [aria-controls="catalogue-workspace"] strong').innerText()) === (en ? 'Figure catalogue' : 'Figurenkatalog')) return;
   await page.locator('.header-language button').click();
-  await page.locator('.el-dropdown-menu:visible .el-dropdown-menu__item').nth(en ? 2 : 5).click();
+  await page.getByRole('menuitem', { name: en ? 'English' : 'Deutsch', exact: true }).click();
 }
 async function openCatalogue(page) {
   await press(page.locator('.workspace-nav [aria-controls="catalogue-workspace"]'));

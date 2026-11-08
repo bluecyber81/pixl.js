@@ -9,10 +9,10 @@
       <h3>{{ entry?.name || selection.row.name }}</h3>
       <p v-if="entry" class="preview-series">{{ entry.series }}</p>
       <p v-if="selection.state === 'reading'" role="status">{{ de ? 'Figuren-ID wird gelesen…' : 'Reading figure ID…' }}</p>
-      <p v-else-if="selection.state === 'invalid'" class="preview-warning" role="status">{{ de ? 'Die Dateistruktur ist auffällig. Keine sichere Bildzuordnung.' : 'The file structure needs attention. No reliable image assignment.' }}</p>
+      <p v-else-if="selection.state === 'invalid'" class="preview-warning" role="status">{{ de ? 'Die Dateistruktur ist auffällig. Keine sichere Bildzuordnung.' : 'The file structure looks unusual, so its image cannot be identified reliably.' }}</p>
       <p v-else-if="selection.state === 'failed'" class="preview-warning" role="status">{{ de ? 'Datei konnte nicht gelesen werden. Erneut auswählen.' : 'Could not read file. Select it again to retry.' }}</p>
       <p v-else-if="selection.state === 'unsupported'" role="status">{{ de ? 'Keine unterstützte Amiibo-Dateigröße. Dateiaktionen bleiben verfügbar.' : 'Not a supported amiibo file size. File actions remain available.' }}</p>
-      <p v-else-if="!entry" role="status">{{ de ? 'Figur im lokalen Katalog unbekannt. Es wird kein Bild geraten.' : 'Figure unknown in the local catalogue. No image is guessed.' }}</p>
+      <p v-else-if="!entry" role="status">{{ de ? 'Figur im lokalen Katalog unbekannt. Es wird kein Bild geraten.' : 'This figure is not in the local catalogue, so no image is shown.' }}</p>
       <p v-if="failed" role="status">{{ de ? 'Bild nicht verfügbar oder blockiert.' : 'Image unavailable or blocked.' }} <button type="button" @click="failed=false">{{ de ? 'Erneut laden' : 'Retry' }}</button></p>
       <dl><div><dt>{{ de ? 'Datei' : 'File' }}</dt><dd>{{ selection.row.name }}</dd></div><div><dt>{{ de ? 'Größe' : 'Size' }}</dt><dd>{{ selection.row.sizeBytes }} B</dd></div><div v-if="selection.id"><dt>{{ de ? 'Figuren-ID' : 'Figure ID' }}</dt><dd class="preview-id">{{ selection.id }}</dd></div><div v-if="selection.row.notes"><dt>{{ de ? 'Deine Dateinotiz' : 'Your file note' }}</dt><dd>{{ selection.row.notes }}</dd></div></dl>
       <FigureUsage :id="selection.id" :locale="locale" compact />

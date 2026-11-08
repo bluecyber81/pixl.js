@@ -16,9 +16,26 @@ const REGIONS = ['au', 'na', 'eu', 'jp'];
 const FIELDS = ['name', 'series', 'game', 'type'];
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 export class CatalogueUpdateError extends Error {
-  constructor(code, message) { super(message); this.name = 'CatalogueUpdateError'; this.code = code; }
+  constructor(code, message, httpStatus) {
+    super(message); this.name = 'CatalogueUpdateError'; this.code = code; this.httpStatus = httpStatus;
+  }
+  localizedMessage(locale) {
+    if (String(locale).startsWith('de')) return this.message;
+    const messages = {
+      'invalid-data': 'The online source returned invalid or unexpected catalogue data.',
+      'source-redirect': 'The catalogue source redirected the request unexpectedly.',
+      'rate-limit': 'GitHub is limiting requests. Please try again later.',
+      'http': `The catalogue source is unavailable (HTTP ${this.httpStatus}).`,
+      'too-large': 'The catalogue response exceeds the size limit.',
+      'unsupported-browser': 'This check needs a browser that supports secure connections and streamed downloads.',
+      'invalid-options': 'The time limit for the update check is invalid.',
+      'timeout': 'The catalogue check timed out. Please try again later.',
+      'network': 'Could not load the catalogue. Check your connection and try again. GitHub or the browser may be blocking the request.'
+    };
+    return Object.hasOwn(messages, this.code) ? messages[this.code] : 'Could not check the online catalogue.';
+  }
 }
-const fail = (code, message) => { throw new CatalogueUpdateError(code, message); };
+const fail = (code, message, status) => { throw new CatalogueUpdateError(code, message, status); };
 const invalid = () => fail('invalid-data', 'Die Onlinequelle enthält ungültige oder unerwartete Katalogdaten.');
 function record(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
@@ -155,7 +172,7 @@ async function fetchBytes(url, maxBytes, fetchImpl, signal) {
         ['opaque', 'opaqueredirect'].includes(response.type)) fail('source-redirect', 'Die Katalogquelle wurde unerwartet umgeleitet.');
     if (!response.ok || response.status !== 200) {
       if (response.status === 429 || response.status === 403) fail('rate-limit', 'GitHub begrenzt die Abfragen. Bitte später erneut versuchen.');
-      fail('http', `Die Katalogquelle ist nicht erreichbar (HTTP ${Number(response.status) || 0}).`);
+      fail('http', `Die Katalogquelle ist nicht erreichbar (HTTP ${Number(response.status) || 0}).`, Number(response.status) || 0);
     }
     const contentType = response.headers?.get('content-type') || '';
     if (contentType && !/^(?:application\/json|text\/plain)(?:\s*;|$)/iu.test(contentType)) invalid();

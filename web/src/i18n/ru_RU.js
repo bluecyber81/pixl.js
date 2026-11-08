@@ -1,6 +1,7 @@
 export default {
     lang: {
-        choose: '语言/Language',
+        auto: 'Автоматически (язык браузера)',
+        choose: 'Язык / Language',
         zhcn: '简体中文',
         zhtw: '繁體中文(臺灣)',
         en: 'English',
@@ -63,6 +64,7 @@ export default {
         remarktoolongend: ' байт.'
     },
     upload: {
+        fileSizeLimit: 'Максимальный размер загружаемого файла — 2 МиБ.',
         title: 'Загрузка',
         drag: 'Перетащите файлы сюда или ',
         click: 'выберите файлы.',

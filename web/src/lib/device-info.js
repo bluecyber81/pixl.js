@@ -58,7 +58,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
   const capacity = value => Number.isInteger(value) && value >= 20 && value <= 247 ? value : null;
   // Explicit allowlist: never spread arbitrary device data or exception text.
   return {
-    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.43.1',
+    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.44.0',
     firmwareVersion: /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion || '') ? firmwareVersion : null,
     connected: connected === true,
     runtime: normalizeRuntimeDiagnostics(runtime),

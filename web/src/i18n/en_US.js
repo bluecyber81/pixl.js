@@ -3,7 +3,8 @@ export default {
     catalogueVersion: 'Catalogue version: {version}'
   },
   lang: {
-    choose: '语言/Language',
+    auto: 'Automatic (browser language)',
+    choose: 'Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
     en: 'English',
@@ -12,7 +13,7 @@ export default {
     de: 'Deutsch',
     sv: 'Svenska',
     ja: '日本語',
-    changeok: 'Switch Language Success'
+    changeok: 'Language changed'
   },
   btn: {
     ok: 'OK',
@@ -21,33 +22,33 @@ export default {
   },
   menu: {
     upload: 'Upload',
-    newfolder: 'New Folder',
+    newfolder: 'New folder',
     del: 'Delete',
-    up: 'Parent Folder',
+    up: 'Parent folder',
     refresh: 'Refresh',
     dfu: 'DFU',
     dfupage: 'Open DFU page',
     enterdfu: 'Put device in DFU mode',
   },
   status: {
-    connected: 'Connected, Version: ',
+    connected: 'Connected · firmware ',
     version: 'Version:',
-    mac: 'MAC Address:',
-    loading: 'loading…',
+    mac: 'MAC address:',
+    loading: 'Loading…',
   },
   conn: {
     connect: 'Connect',
     connecting: 'Connecting…',
-    disconnect: 'Disconnect…',
-    consuccess: 'Successfully connected to Pixl.js!',
-    disconnected: 'Pixl.js has been disconnected!',
-    connfailed: 'Pixl.js connection failed!'
+    disconnect: 'Disconnect',
+    consuccess: 'Connected to Pixl.js.',
+    disconnected: 'Disconnected from Pixl.js.',
+    connfailed: 'Could not connect to Pixl.js.'
   },
   labels: {
     name: 'Name',
     size: 'Size',
     type: 'Type',
-    remark: 'Remark'
+    remark: 'Note'
   },
   contxmenu: {
     del: 'Delete…',
@@ -61,68 +62,69 @@ export default {
     noteinvalid: 'The note contains a NUL or incomplete Unicode character. Please remove or retype it.',
     notebytes: '{actual} of {max} bytes. Accented letters and emojis use multiple bytes.',
     title: 'Properties',
-    remark: 'Remark',
-    entermsg: 'Please enter remarks',
+    remark: 'Note',
+    entermsg: 'Enter a note',
     attrib: 'Attributes',
-    hide: 'Hide',
-    readonly: "Read only",
-    errupdate: 'Failed to update properties!',
-    remarktoolong: 'Remarks can only be up to 90 bytes!, that is, 90 characters or 30 Chinese characters (current: ',
-    remarktoolongend: ' Bytes）'
+    hide: 'Hidden',
+    readonly: 'Read-only',
+    errupdate: 'Could not save the properties.',
+    remarktoolong: 'The note exceeds the 90-byte limit (current size: ',
+    remarktoolongend: ' UTF-8 bytes).'
   },
   upload: {
+    fileSizeLimit: 'Uploads are limited to 2 MiB per file.',
     title: 'Upload',
-    drag: 'Drag files here, or ',
+    drag: 'Drag files here or ',
     click: 'click to upload.',
-    maxsize: 'The total length of the file path cannot exceed 63 bytes.',
-    maxname: 'The file name cannot exceed 47 bytes.',
-    closetitle: 'Confirm to close?',
-    closemessage: 'Closing dialog will clear the upload record.  And will abort the upload queue.',
+    maxsize: 'The path after the drive letter can use up to 63 UTF-8 bytes.',
+    maxname: 'File names can use up to 47 UTF-8 bytes.',
+    closetitle: 'Cancel uploads and close?',
+    closemessage: 'Closing this window cancels the remaining uploads and clears the upload list.',
     errupload: 'Upload failed: '
   },
   format: {
-    title: 'Formatear',
-    messrow1a: 'Do you want to format ',
-    messrow1b: ' ?',
-    messrow2: 'Formatting will delete all data!',
-    messrow3: 'Formatting may take about 10 seconds, please be patient.',
-    formatok: 'Format completed!',
-    formaterr: 'Format failed!: '
+    title: 'Format drive',
+    messrow1a: 'Format ',
+    messrow1b: '?',
+    messrow2: 'Formatting erases all data on this drive.',
+    messrow3: 'Formatting may take about 10 seconds.',
+    formatok: 'Drive formatted.',
+    formaterr: 'Could not format the drive: '
   },
   del: {
     title: 'Delete',
-    message: 'Delete file: ',
-    messageend: ' ?',
-    error: 'Failed to delete file!: ',
-    deleteok: 'File deleted successfully!'
+    message: 'Delete ',
+    messageend: '?',
+    error: 'Could not delete this entry: ',
+    deleteok: 'Deleted.'
   },
   dfumode: {
-    title: 'DFU Mode',
+    title: 'Firmware update (DFU)',
     startconfirm: 'Enter DFU mode?',
     commandaccepted: 'The device accepted the DFU command. Check whether DFU mode is ready on the separately opened DFU page. No firmware has been transferred yet.',
-    updateconfirm: 'Entering DFU mode successfully. Do you want to open the DFU upgrade page?',
-    updatetitle: 'DFU Mode accepted'
+    updateconfirm: 'The device accepted the DFU request. Open the firmware update page?',
+    updatetitle: 'DFU request accepted'
   },
   oldfirm: {
-    title: 'Upgrade tips',
-    message: 'The firmware version of your device is too low. Please update the latest version of the firmware before using the upload function.'
+    title: 'Firmware update required',
+    message: 'This device firmware does not support uploads. Install a compatible firmware version to upload files.'
   },
   newfolder: {
-    title: 'New Folder',
-    message: 'Please enter the folder name',
-    newfoldererr: 'Failed to create folder!:'
+    title: 'New folder',
+    message: 'Enter a folder name',
+    newfoldererr: 'Could not create the folder: '
   },
   rename: {
     title: 'Rename',
-    message: 'Please enter a new file name: ',
-    errrename: 'Rename failed!: ',
-    nametoolong: 'The maximum file path length cannot exceed 63 bytes',
-    pathtoolong: 'The maximum file name cannot exceed 47 bytes'
+    message: 'Enter a new name',
+    errrename: 'Could not rename this entry: ',
+    nametoolong: 'The path after the drive letter can use up to 63 UTF-8 bytes.',
+    pathtoolong: 'File names can use up to 47 UTF-8 bytes.'
   },
   drive: {
     free: '{free} free of {total}',
-    message: '(Disk not available [error code: ',
-    messageend: '])'
+    message: 'Drive unavailable (error ',
+    messageend: ')'
   },
   transfer: {
     busy: 'File transfer is running. Close the upload dialog to cancel.',

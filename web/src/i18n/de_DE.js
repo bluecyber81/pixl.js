@@ -3,6 +3,7 @@ export default {
     catalogueVersion: 'Katalogstand: {version}'
   },
   lang: {
+    auto: 'Automatisch (Browsersprache)',
     choose: 'Sprache/Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
@@ -71,6 +72,7 @@ export default {
     remarktoolongend: ' Bytes）'
   },
   upload: {
+    fileSizeLimit: 'Pro Datei können bis zu 2 MiB hochgeladen werden.',
     title: 'Hochladen',
     drag: 'Dateien hier rein ziehen, oder',
     click: 'klicken zum Hochladen.',

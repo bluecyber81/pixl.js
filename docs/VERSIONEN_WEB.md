@@ -1,6 +1,6 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
-**Stand 8. November 2026.** Online läuft 3.43.1. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.67/639. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_43_1.json)
+**Stand 8. November 2026.** Online läuft 3.44.0. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.67/639. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_44_0.json)
 
 ## Veröffentlichungen auf GitHub
 
@@ -8,6 +8,7 @@ Jede verlinkte Version führt zu ihren damaligen Hinweisen und Downloads. 3.34.0
 
 | Dateimanager | Änderung gegenüber dem vorherigen Stand |
 | --- | --- |
+| [3.44.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0) | Beim Öffnen wählt der Dateimanager die erste unterstützte Sprache aus der Sprachliste des Browsers. Im Sprachmenü kannst du eine feste Sprache wählen oder wieder zur automatischen Auswahl wechseln. [Anleitung](DATEIMANAGER_WEB.md#dateimanager-3440) |
 | [3.43.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1) | Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639 als neueste geprüfte Firmware. Das Speicherprofil gilt für DE3.55 bis DE3.67. [Anleitung](DATEIMANAGER_WEB.md#dateimanager-3431) |
 | [3.43.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0) | Ordnersicherungen nach Browserneustart fortsetzen, Webfavoriten und Filter speichern, Linklisten austauschen und LCD-PNG drehen. [Anleitung](DATEIMANAGER_WEB.md#dateimanager-3430) |
 | [3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) | Kompaktere Schnelleinstiege zu Figurenimport und Firmwareupdate. Die [Handy-Downloads](DATEIMANAGER_WEB.md#dateimanager-3422) bieten Quellcode und ChatGPT-Prüfpaket für 3.42.2 und 3.42.1 getrennt an. |

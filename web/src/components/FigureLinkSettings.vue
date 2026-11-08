@@ -66,7 +66,7 @@ function errorMessage(error) { return errors[error?.code] || ['Datei konnte nich
 function download() {
   try {
     const text = exportFigureLinks();
-    saveBlob(new Blob([text], { type: 'application/json' }), 'Allmiibo-Figurenlinks.json');
+    saveBlob(new Blob([text], { type: 'application/json' }), props.de ? 'Allmiibo-Figurenlinks.json' : 'Allmiibo-Figure-Links.json');
     feedback.value = ['Download der Linkdatei angefordert.', 'Link file download requested.'];
   } catch (error) { feedback.value = errorMessage(error); }
 }

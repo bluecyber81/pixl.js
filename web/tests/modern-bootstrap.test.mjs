@@ -6,6 +6,23 @@ import i18n, { getElementLocale, getLanguage } from '../src/i18n/index.js'
 import { amiiboDeepLink } from '../src/deep-link.js'
 import { installUiComponents } from '../src/ui-components.js'
 
+test('English covers every German file manager message and preserves its named placeholders', () => {
+  function collect(messages, prefix = '') {
+    return Object.entries(messages).flatMap(([key, value]) => {
+      const path = prefix + key
+      if (typeof value !== 'string') return collect(value, path + '.')
+      assert.ok(value.trim(), path)
+      return [[path, [...value.matchAll(/\{(\w+)\}/g)].map(match => match[1]).sort()]]
+    }).sort(([a], [b]) => a.localeCompare(b))
+  }
+  const english = i18n.global.getLocaleMessage('en')
+  assert.deepEqual(collect(english), collect(i18n.global.getLocaleMessage('de_DE')))
+  assert.equal(english.format.title, 'Format drive')
+  assert.match(english.format.messrow2, /erases all data on this drive/)
+  assert.match(english.rename.nametoolong, /63 UTF-8 bytes/)
+  assert.match(english.rename.pathtoolong, /47 UTF-8 bytes/)
+})
+
 test('focused Element Plus bootstrap registers every production template tag and required service', () => {
   const app = createApp({})
   installUiComponents(app)
@@ -26,9 +43,10 @@ test('Vue 3 composition i18n preserves injected Options API locale access and tr
   const app = createApp({})
   app.use(i18n)
   assert.equal(i18n.mode, 'composition')
-  assert.equal(getLanguage(), 'de_DE')
+  assert.equal(getLanguage(), 'en')
   const global = app.config.globalProperties
-  assert.equal(global.$i18n.locale, 'de_DE')
+  assert.equal(global.$i18n.locale, 'en')
+  global.$i18n.locale = 'de_DE'
   assert.equal(global.$t('transfer.cancelled'), 'Übertragung abgebrochen')
   global.$i18n.locale = 'en'
   assert.equal(i18n.global.locale.value, 'en')
@@ -43,20 +61,16 @@ test('Element Plus locale follows each supported app language and rejects unknow
   for (const [appLocale, componentLocale] of Object.entries(expected)) {
     assert.equal(getElementLocale(appLocale).name, componentLocale)
   }
-  assert.equal(getElementLocale('invalid').name, 'de')
-  assert.equal(getElementLocale('__proto__').name, 'de')
-  assert.equal(getElementLocale('constructor').name, 'de')
+  assert.equal(getElementLocale('invalid').name, 'en')
+  assert.equal(getElementLocale('__proto__').name, 'en')
+  assert.equal(getElementLocale('constructor').name, 'en')
 })
 
-test('initial locale respects saved language and survives blocked browser storage', () => {
+test('initial Vue locale reads the same preference as the standalone pages', () => {
   const original = globalThis.window
   try {
-    globalThis.window = { localStorage: { getItem: () => 'es' } }
+    globalThis.window = { AllmiiboLanguage: { getLocale: () => 'es' } }
     assert.equal(getLanguage(), 'es')
-    globalThis.window = { localStorage: { getItem: () => 'unknown' } }
-    assert.equal(getLanguage(), 'de_DE')
-    globalThis.window = Object.defineProperty({}, 'localStorage', { get() { throw new Error('blocked') } })
-    assert.equal(getLanguage(), 'de_DE')
   } finally {
     if (original === undefined) delete globalThis.window
     else globalThis.window = original

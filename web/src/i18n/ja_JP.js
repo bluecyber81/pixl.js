@@ -1,6 +1,7 @@
 export default {
   lang: {
-    choose: '语言/Language',
+    auto: '自動（ブラウザーの言語）',
+    choose: '言語 / Language',
     zhcn: '简体中文',
     zhtw: '繁體中文(臺灣)',
     en: 'English',
@@ -62,6 +63,7 @@ export default {
     remarktoolongend: ' バイト）'
   },
   upload: {
+    fileSizeLimit: 'アップロードできるファイルのサイズは、1件につき最大2 MiBです。',
     title: 'アップロード',
     drag: 'ここにファイルをドラッグ、または ',
     click: 'クリックしてアップロード。',

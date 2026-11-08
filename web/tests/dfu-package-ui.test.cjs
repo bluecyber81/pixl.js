@@ -177,3 +177,13 @@ test('3.30.1 init recovery explanation is visible and listeners are removed afte
     assert.match(statuses.at(-1),failed?/nicht bestätigt/:/Neustart noch nicht beobachtet/);
   }
 });
+
+test('package failures keep specific German and English details in the updater', async () => {
+    const statuses = [];
+    const updater = new Updater({ Package, onStatus: (...text) => statuses.push(text) });
+    const mixed = await archive({ bootloader: { dat_file: 'app.dat', bin_file: 'app.bin' } });
+    assert.equal(await updater.setPackage(mixed), false);
+    assert.match(statuses.at(-1)[0], /ausschließlich ein Anwendungs-OTA/);
+    assert.match(statuses.at(-1)[1], /^Package rejected: Select an application-only OTA package/);
+    assert.equal(updater.package, null);
+});

@@ -21,15 +21,17 @@ const renderer=Vue.createRenderer({createElement:node,createText:node,createComm
   insert(n,p){n.parent=p;p.children.push(n);},remove(){},parentNode:n=>n.parent,nextSibling:()=>null});
 function mountApp(){
   let connects=0;
-  const options=new Function('defineAsyncComponent','DeviceStorageCard','catalogueBaseline','proto','pixl',
+  const options=new Function('defineAsyncComponent','DeviceStorageCard','catalogueBaseline','proto','pixl','window',
     appDescriptor.script.content.replace(/^import .*$/gm,'').replace('export default','return'))(
       loader=>({loader}),{name:'DeviceStorageCard'},baseline,{get_version:async()=>({status:0,data:{ver:'2.22.0-DE3.55'}})},
-      {get_connection_state:()=> 'disconnected',connect(){connects++;},disconnect(){}});
+      {get_connection_state:()=> 'disconnected',connect(){connects++;},disconnect(){}},
+      { AllmiiboLanguage: { getMode: () => 'auto' } });
   const quiet={};
   for(const name of ['reset_figure_info','remember_interruption','clear_dfu_attempt','clear_migration_restart','refresh_local_metrics',
     'invalidate_sync','invalidate_zip','refresh_backup_checkpoint','set_transfer','reload_drive'])quiet[name]=()=>{};
   const app=renderer.createApp({data:options.data,computed:options.computed,watch:options.watch,methods:{...options.methods,...quiet},render:()=>Vue.h('div')});
   app.config.globalProperties.$t=x=>x;app.config.globalProperties.$notify=()=>{};
+  app.config.globalProperties.$i18n = { locale: 'en' };
   const vm=app.mount(node());vm.connected=true;
   return {vm,app,get connects(){return connects;}};
 }

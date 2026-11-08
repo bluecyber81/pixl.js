@@ -3,7 +3,7 @@
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Anleitung für Firmware, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html) ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloads für 3.43.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
+[Downloads für 3.44.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -18,6 +18,14 @@ Das Allmiibo muss sich beim verwendeten Handy oder Computer befinden. Die
 Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
+
+## Dateimanager 3.44.0
+
+Beim Öffnen wählt der Dateimanager die erste unterstützte Sprache aus der Sprachliste des Browsers. Im Sprachmenü kannst du eine feste Sprache wählen.
+
+Eine zuvor gespeicherte Sprache hat Vorrang. Mit „Automatisch (Browsersprache)“ folgt die Seite wieder deinem Browser. Gibt es für keine deiner bevorzugten Sprachen eine Übersetzung, erscheint die Seite auf Englisch.
+
+- **3.44.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
 
 ## Dateimanager 3.43.1
 

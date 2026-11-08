@@ -15,7 +15,6 @@ import ruLocale from './ru_RU.js'
 import deLocale from './de_DE.js'
 import svLocale from './sv_SE.js'
 import jaLocale from './ja_JP.js'
-import { read_saved_language } from '../lib/locale.js'
 
 import { toolsEnglish, toolsGerman } from './tools.js'
 import { workflowEnglish, workflowGerman } from './workflow.js'
@@ -30,14 +29,10 @@ const elementLocales = {
   ru_RU: elementRu, de_DE: elementDe, sv_SE: elementSv, ja_JP: elementJa
 }
 export function getElementLocale(language) {
-  return Object.hasOwn(elementLocales, language) ? elementLocales[language] : elementDe
+  return Object.hasOwn(elementLocales, language) ? elementLocales[language] : elementEn
 }
 export function getLanguage() {
-  let storage
-  try {
-    if (typeof window !== 'undefined') storage = window.localStorage
-  } catch (_) { /* Privacy settings can also block the localStorage getter. */ }
-  return read_saved_language(storage, Object.keys(messages), 'de_DE')
+  return globalThis.window?.AllmiiboLanguage?.getLocale() ?? 'en'
 }
 export default createI18n({
   legacy: false,

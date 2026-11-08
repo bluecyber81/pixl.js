@@ -195,7 +195,7 @@ export default {
           const message = error?.name === 'AbortError'
             ? (this.de ? 'Vorgang abgebrochen.' : 'Operation cancelled.')
             : (this.de && kind === 'prepare' && Object.hasOwn(prepareErrors, error?.code)
-              ? prepareErrors[error.code] : (error?.message || String(error)));
+              ? prepareErrors[error.code] : (kind === 'catalogue' && typeof error?.localizedMessage === 'function' ? error.localizedMessage(this.locale) : error?.message || String(error)));
           this.setError(message, device);
         }
       }
@@ -247,7 +247,7 @@ export default {
     async saveReport(format = 'json') {
       const csv = format === 'csv';
       if (this.running || !this.report || (csv && !this.canExportCsv)) return;
-      const name = csv ? (this.de ? 'Allmiibo-Figurenbestand.csv' : 'Allmiibo-Collection.csv') : 'Allmiibo-Sammlungspruefung.json';
+      const name = csv ? (this.de ? 'Allmiibo-Figurenbestand.csv' : 'Allmiibo-Collection.csv') : (this.de ? 'Allmiibo-Sammlungspruefung.json' : 'Allmiibo-Collection.json');
       try {
         const content = csv ? collectionCsv(this.report, this.locale) : JSON.stringify({
           schema: 1, checkedAt: this.reportTime, changedSinceCheck: this.stale, report: this.report,

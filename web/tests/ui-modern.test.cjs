@@ -16,7 +16,7 @@ function deferred() {
 }
 function harness(overrides = {}) {
   const messages = [], notifications = [], stored = new Map(), listeners = new Map();
-  const storage = { getItem: key => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) };
+  const storage = { getItem: key => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value), removeItem: key => stored.delete(key) };
   const dispatcher = {
     addListener(name, fn) { listeners.set(name, fn); },
     removeListener(name, fn) { if (listeners.get(name) === fn) listeners.delete(name); }
@@ -28,12 +28,15 @@ function harness(overrides = {}) {
   let disconnected = 0;
   const pixl = { connect() {}, get_device_key: () => overrides.deviceKey || 'private-test-device', disconnect() { ++disconnected; listeners.get('ble_disconnected')?.(); } };
   const document = { documentElement: { lang: '' } };
-  const window = { localStorage: storage, location: { href: 'local-dateimanager' } };
-  const navigator = {};
+  const navigator = { languages: ['de-AT'] };
+  const events = new EventTarget();
+  const window = { localStorage: storage, location: { href: 'local-dateimanager' }, navigator,
+    addEventListener: events.addEventListener.bind(events), removeEventListener: events.removeEventListener.bind(events),
+    dispatchEvent: events.dispatchEvent.bind(events) };
   const timeouts = [];
   const context = vm.createContext({ module: { exports: {} }, proto, pixl, document, window, navigator,
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
-    sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), console,
+    sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
     catalogueBaseline: JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/catalogue.json'),'utf8')),
     TextEncoder, Uint8Array, ArrayBuffer, Blob, AbortController, crypto: require('node:crypto').webcrypto,
@@ -56,8 +59,7 @@ function harness(overrides = {}) {
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/power-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
-  const localeSource = fs.readFileSync(path.join(__dirname, '../src/lib/locale.js'), 'utf8');
-  vm.runInContext(localeSource.replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/language-preference.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nObject.assign(globalThis, { assertPortableEntryName, portableNameKey, assertNameByteLimit, assertPathByteLimit }); }', context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/browser-tools.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
@@ -387,7 +389,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.43.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.44.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -399,7 +401,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.43.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.44.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -486,7 +488,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.43.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.44.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1218,14 +1220,23 @@ test('unmount removes event listeners and invalidates a pending rejection before
   assert.equal(app.connected, false); assert.equal(h.messages.length, 0); assert.equal(h.notifications.length, 0);
 });
 
-test('German startup and English selection persist without another device request', () => {
+test('file manager follows browser language, supports a manual override and resumes automatic updates', () => {
   const h = harness(); h.mount();
   assert.equal(h.instance.language, 'de_DE'); assert.equal(h.document.documentElement.lang, 'de-DE');
+  assert.equal(h.instance.languageMode, 'auto'); assert.equal(h.stored.has('allmiibo.language'), false);
+  h.instance.handle_set_language('de_DE'); // Pin the already detected language.
+  h.navigator.languages = ['es-MX']; h.window.dispatchEvent(new Event('languagechange'));
+  assert.equal(h.instance.language, 'de_DE');
   h.instance.handle_set_language('en');
   assert.equal(h.instance.$i18n.locale, 'en'); assert.equal(h.stored.get('allmiibo.language'), 'en');
   assert.equal(h.document.documentElement.lang, 'en');
-  h.instance.language = 'de_DE'; h.mount(); assert.equal(h.instance.language, 'en');
   h.instance.handle_set_language('__proto__'); assert.equal(h.instance.language, 'en');
+  h.instance.handle_set_language('auto'); assert.equal(h.instance.$i18n.locale, 'es');
+  assert.equal(h.stored.has('allmiibo.language'), false);
+  h.navigator.languages = ['ja-JP']; h.window.dispatchEvent(new Event('languagechange'));
+  assert.equal(h.document.documentElement.lang, 'ja-JP');
+  h.unmount(); h.navigator.languages = ['de-CH']; h.window.dispatchEvent(new Event('languagechange'));
+  assert.equal(h.document.documentElement.lang, 'ja-JP');
 });
 
 test('download callbacks cannot display errors or save bytes from a previous connection', () => {
@@ -1509,10 +1520,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.43.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.44.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.43.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.44.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -1590,16 +1601,58 @@ test('new uploads do not wait for an old-session replacement dialog', async () =
 
 test('offline preview supports search and pagination but cannot perform device operations', async () => {
   const h = harness(), app = h.instance;
+  const { toolsGerman, toolsEnglish } = await import('../src/i18n/tools.js');
+  app.$t = key => (app.$i18n.locale === 'de_DE' ? toolsGerman : toolsEnglish)[key.slice(6)] || key;
   app.toggle_preview();
   assert.equal(app.demoMode, true); assert.equal(app.connected, false);
   assert.equal(app.tableData.length, 245); assert.equal(app.pageCount, 3);
   app.change_page(2); assert.equal(app.pagedRows.length, 100);
   app.searchQuery = 'Demo-Ordner'; app.on_filter_change(); assert.equal(app.filteredRows.length, 10);
+  app.apply_language({ mode: 'en', locale: 'en' });
+  app.searchQuery = 'Demo-folder'; assert.equal(app.filteredRows.length, 10);
+  assert.equal(app.tableData[4].name, 'Demo-file-005.bin');
+  assert.equal(app.tableData[4].notes, toolsEnglish.previewData);
+  assert.equal(app.tableData[1].name, '01-Demo-Mario.bin');
   assert.equal(app.btn_disabled(), true);
   await app.on_backup(); await app.on_btn_remove(); await app.on_btn_new_folder();
   assert.equal(app.busy, false); assert.equal(h.messages.length, 0);
   app.on_btn_ble_connect();
   assert.equal(app.demoMode, false); assert.equal(app.tableData.length, 0); assert.equal(app.connecting, true);
+});
+
+test('changing the interface language refreshes drive information and diagnostic names without reading files or translating user notes', async () => {
+  const { default: i18n } = await import('../src/i18n/index.js');
+  let reads = 0;
+  const h = harness({ vfs_get_drive_list: async () => { ++reads; return driveReply(512); } });
+  const app = connected(h);
+  app.$t = (key, values = {}) => i18n.global.t(key, values, { locale: app.$i18n.locale });
+  await app.reload_drive();
+  assert.equal(app.tableData[0].size, '512 B frei von 4.00 KB');
+  app.apply_language({ mode: 'en', locale: 'en' });
+  assert.equal(app.tableData[0].size, '512 B free of 4.00 KB');
+  assert.equal(reads, 1);
+  const original = { type: 'REG', name: 'Meine Figur.bin', notes: 'Mein Spielstand' };
+  app.tableData = [original, { type: 'REG', name: 'problem.bin', metadataValid: false, notes: '' }];
+  app.apply_language({ mode: 'en', locale: 'en' });
+  assert.equal(app.tableData[0].name, 'Meine Figur.bin');
+  assert.equal(app.tableData[0].notes, 'Mein Spielstand');
+  assert.match(app.tableData[1].notes, /unknown metadata/);
+  app.open_startup_report({ reportSchema: 1 });
+  assert.equal(app.diagnosticsFilename, 'Allmiibo-Startup-diagnostics-' + require('../package.json').version + '.json');
+  app.save_diagnostics();
+  assert.equal(app.diagnosticsFilename, 'Allmiibo-Diagnostics-' + require('../package.json').version + '.json');
+});
+
+test('an oversized upload reports the per-file limit before queuing or reading the device', async () => {
+  const { default: i18n } = await import('../src/i18n/index.js');
+  const app = connected(harness());
+  app.$t = key => i18n.global.t(key, {}, { locale: 'en' });
+  const file = { name: 'figure.bin', size: 2 * 1024 * 1024 + 1 };
+  await assert.rejects(app.on_upload_request({ file }), /2 MiB per file/);
+  assert.equal(app.pendingUploads, 0);
+  for (const locale of i18n.global.availableLocales) {
+    assert.ok(i18n.global.te('upload.fileSizeLimit', locale), locale);
+  }
 });
 
 const driveReply = (free, extra = {}) => ({ status: 0, data: [
@@ -2225,7 +2278,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.43.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.44.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
