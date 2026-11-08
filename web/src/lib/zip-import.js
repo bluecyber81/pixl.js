@@ -3,6 +3,7 @@ import { safeUpload, checkedDirectory, copyMetadata, metadataKey, sha256Bytes, a
 import { rawMetadataHex, decodeRawMetadata } from './raw-metadata.js'
 import { parseUniqueJson } from './unique-json.js'
 import { updateZipCrc32 } from './zip-crc32.js'
+import { loadZipReader } from './zip-reader.js'
 
 export const ZIP_IMPORT_LIMITS = Object.freeze({ zipBytes: 32 * 1024 * 1024, expandedBytes: 24 * 1024 * 1024,
   dataBytes: 16 * 1024 * 1024, fileBytes: 8 * 1024 * 1024, manifestBytes: 4 * 1024 * 1024, entries: 4096, depth: 32 })
@@ -125,15 +126,17 @@ function metadataOf(value) {
 }
 
 /** Parses our checked backup schema only. No device/network/Windows filesystem I/O. */
-export async function loadBackupZip(input, { JSZip = globalThis.JSZip, signal, onProgress } = {}) {
+export async function loadBackupZip(input, { JSZip, signal, onProgress } = {}) {
   check(signal)
-  requireThat(typeof JSZip?.loadAsync === 'function', 'ZIP_API', 'The bundled ZIP reader is unavailable.')
   requireThat(uint(input?.size ?? input?.byteLength, ZIP_IMPORT_LIMITS.zipBytes) && (input.size ?? input.byteLength) >= 22, 'ZIP_LIMIT', 'ZIP file is empty or larger than 32 MiB.')
   const bytes = typeof input.arrayBuffer === 'function' ? new Uint8Array(await input.arrayBuffer()) : new Uint8Array(asBytes(input))
   check(signal); requireThat(bytes.length <= ZIP_IMPORT_LIMITS.zipBytes && bytes.length >= 22, 'ZIP_LIMIT', 'ZIP byte length changed.')
   const entries = inspectZip(bytes), manifestEntry = entries.get('manifest.json'), sumsEntry = entries.get('SHA256SUMS.txt')
   requireThat(manifestEntry && !manifestEntry.directory && manifestEntry.size > 0 && manifestEntry.size <= ZIP_IMPORT_LIMITS.manifestBytes && sumsEntry && !sumsEntry.directory && sumsEntry.size <= 2 * 1024 * 1024, 'ZIP_MANIFEST', 'Choose an Allmiibo backup ZIP with manifest.json and SHA256SUMS.txt; firmware and private correction packages are not supported here.')
-  const zip = await JSZip.loadAsync(bytes, { checkCRC32: false, createFolders: false })
+  const reader = JSZip ?? await loadZipReader(signal)
+  check(signal)
+  requireThat(typeof reader?.loadAsync === 'function', 'ZIP_API', 'The bundled ZIP reader is unavailable.')
+  const zip = await reader.loadAsync(bytes, { checkCRC32: false, createFolders: false })
   check(signal)
   requireThat(Object.keys(zip.files).length === entries.size && Object.keys(zip.files).every(name => entries.has(name)), 'ZIP_STRUCTURE', 'The ZIP reader changed entry paths.')
   const manifestBytes = await boundedEntry(zip, manifestEntry, signal), sumsBytes = await boundedEntry(zip, sumsEntry, signal)

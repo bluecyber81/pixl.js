@@ -36,8 +36,8 @@ export function copyNotices(mode) {
 <main><a href="../">Zurück zum Dateimanager</a><h1>Quellen und Lizenzen · ${escape(version)}</h1>
 <p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">Versionsgeschichte des Dateimanagers</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">LCD-Firmware, Bootloader und SoftDevice</a></p>
 <p>Diese Seite verteilt den Dateimanager mit seinen Bibliotheken und sieben gebundenen Speicher-Simulatoren. Die jeweiligen Lizenztexte bleiben erhalten.</p>
-<ul><li><a href="${archives.source}" download>Quellcode des Dateimanagers ${escape(version)} einschließlich Simulatorquellen und Build-Anleitungen (ZIP)</a></li>
-<li><a href="${archives.testKit}" download>Prüfpaket für ChatGPT mit App- und Bootloader-Artefakten (ZIP)</a></li>
+<ul><li><a href="${archives.source}" download>Quellcode des veröffentlichten Dateimanagers ${escape(archives.version)} einschließlich Simulatorquellen und Build-Anleitungen (ZIP)</a></li>
+<li><a href="${archives.testKit}" download>Prüfpaket für ChatGPT zu ${escape(archives.version)} mit App- und Bootloader-Artefakten (ZIP)</a></li>
 <li><a href="${sourceUrl}">Exakter Quellstand der mitgelieferten Firmware DE3.65/637</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">Quellstand der LCD-Testversion DE3.66/638</a></li></ul>
 <p>Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.</p>

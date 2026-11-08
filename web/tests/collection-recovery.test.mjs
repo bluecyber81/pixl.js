@@ -197,7 +197,7 @@ test('disconnect clears a device error while retaining its recovery note and lat
 
     await h.vm.prepare({ file: new Uint8Array(1) });
     const localError = h.vm.error;
-    assert.match(localError, /figure file lengths/);
+    assert.equal(localError, 'Die Dateigröße passt zu keinem unterstützten BIN-Format.');
     await h.reconnect();
     assert.equal(h.vm.error, localError);
     assert.deepEqual(h.parent.recoveryNotes, [note]);

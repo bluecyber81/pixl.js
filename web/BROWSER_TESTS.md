@@ -45,3 +45,35 @@ Firmware-Metadaten geändert wurden.
 Diese Prüfung ist keine Bluetooth-, Flash-, NFC-, Tasten-, Speicherhaltbarkeits-
 oder Hardwareprüfung. Auch die erfolgreiche lokale Prüfung einer Firmware-ZIP
 bestätigt keine Installation und keine Kompatibilität eines ausgewählten Geräts.
+
+## Ordnersicherung nach Browserneustart
+
+Führe aus dem Verzeichnis `web` folgenden Test mit Playwright und Chrome aus.
+
+```powershell
+node scripts/verify-stored-backup-browser.mjs
+```
+
+Der Test startet Chrome mit einem eigenen temporären Profil, liest feste Testdateien
+und öffnet das Profil nach einem vollständigen Browserneustart erneut. Er vergleicht
+die wiederaufgenommene ZIP mit einer frisch erstellten Referenz. Er kontrolliert
+geänderte, neue und entfernte Dateien, die Bindung an Gerät, Ordner, Firmware und
+Namenmodus sowie gleichzeitige Zugriffe aus zwei Tabs. Er erzwingt einen
+Transaktionsabbruch und einen Speicherplatzfehler und verändert gespeicherte
+Prüfdaten. Diese Fälle prüfen das Verhalten der Webanwendung bei den jeweiligen
+Fehlern. Die Bluetooth-Gegenstelle und die Dateien sind synthetisch.
+
+Die Prüfung in `scripts/verify-collection-tools-browser.mjs` bedient zusätzlich
+die Schaltflächen des gebauten Dateimanagers. Sie aktiviert die lokale Ablage,
+speichert die ZIP, lädt die Seite neu, verbindet das Testgerät erneut und verwirft
+den Zwischenstand. Für den Gerätetest auf Windows oder Android sind die tatsächlich
+eingesetzten Browser- und Dateimanagerversionen und der erfolgreiche ZIP-Download
+nach dem Neustart separat festzuhalten.
+
+Am 8. November 2026 bestand zusätzlich ein Lesetest mit Windows-Chrome, einem
+echten Allmiibo und einer Windows-BLE-Lesebrücke. Nach dem vollständigen
+Browserneustart und erneutem Verbinden bestätigte das Gerät eine zuvor gelesene
+540-Byte-Datei. Beide Dateien der ZIP stimmten per CRC, SHA-256 und
+Referenzvergleich überein. Der Test schrieb keine Daten auf das Gerät. Die
+Wiederaufnahme nach einem vollständigen Chrome-Neustart auf einem echten
+Android-Handy steht noch aus.

@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.42.2</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.43.0-rc.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -242,7 +242,21 @@
         <el-button v-if="!availableBackupDrives.length" :disabled="busy || disconnecting || upload_diag_visible"
           @click="on_btn_refresh">{{ $t('workflow.refreshDrives') }}</el-button>
       </div>
-      <div class="workspace-actions"><el-button size="small" type="primary" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
+      <div class="workspace-actions"><el-button size="small" type="primary" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible || (storeBackup && (storedBusy || !!storedHead || !!storedError))">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
+      <label><input type="checkbox" :checked="storeBackup" :disabled="busy || storedBusy" @change="toggle_stored_backup($event.target.checked)"> {{ $t('workflow.storeOption') }}</label>
+      <div v-if="storeBackup" class="backup-resume">
+        <p>{{ $t('workflow.storeInfo') }}</p>
+        <p v-if="persistStatus">{{ $t('workflow.' + persistStatus) }}</p>
+        <p v-if="storedError" role="alert">{{ $t('workflow.' + storedError) }}</p>
+        <template v-if="storedHead">
+          <strong>{{ $t(storedHead.invalid ? 'workflow.storeInvalid' : storedHead.status === 'exported' ? 'workflow.storeExported' : 'workflow.storeIncomplete') }}</strong>
+          <p v-if="!storedHead.invalid">{{ storedHead.context.rootPath }} · {{ storedHead.context.firmwareVersion }} · {{ $t('workflow.storeProgress',{count:storedHead.files,bytes:format_size(storedHead.bytes)}) }}</p>
+          <p v-if="!storedHead.invalid && !storedBackupMatches">{{ $t('workflow.storeReconnect') }}</p>
+          <button type="button" @click="on_backup('stored')" :disabled="!storedBackupMatches || busy || storedBusy || disconnecting || upload_diag_visible">{{ $t('workflow.resume') }}</button>
+          <button type="button" @click="discard_stored_backup" :disabled="busy || storedBusy">{{ $t('workflow.discard') }}</button>
+        </template>
+        <button type="button" @click="refresh_stored_backup()" :disabled="busy || storedBusy">{{ $t('workflow.storeRefresh') }}</button>
+      </div>
     <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
       </div>
     </details>
@@ -265,7 +279,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.42.2</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.43.0-rc.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -478,8 +492,8 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}</a>
-    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Prüfpaket für ChatGPT (ZIP)' : 'Test kit for ChatGPT (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Prüfpaket für ChatGPT (ZIP)' : 'Test kit for ChatGPT (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
   </main></el-config-provider>
@@ -523,8 +537,9 @@ export default {
   components: { DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.42.2.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
-      backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.43.0-rc.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
+      zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
@@ -633,6 +648,12 @@ export default {
       return { freshFiles: files - reusedFiles, freshBytes: bytes - reusedBytes, reusedFiles, reusedBytes };
     },
     backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; },
+    storedBackupMatches() {
+      const context = this.storedHead?.context;
+      const root = this.current_dir?.length > 3 ? this.current_dir.replace(/\/$/u, '') : this.current_dir;
+      return !!(context && this.connected && context.deviceKey === pixl.get_device_key?.() &&
+        context.firmwareVersion === this.firmwareVersion && context.rootPath === root && context.preserveLegacyNames === true);
+    },
     backupResumeMatches() { return !!(this.connected && this.backupResumeInfo && this._backupCheckpoint?.matchesDevice(pixl.get_device_key?.(), this.firmwareVersion)); }
   },
   methods: {
@@ -783,7 +804,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.42.2.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.43.0-rc.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -987,7 +1008,7 @@ export default {
       this.workflowCancelling=false; this._zipController=controller; this.zipBusy=true; this.zipPlan=null; this.zipSelected=[]; this._zipArchive=null; this.zipFilename='';
       this.zipStatus=this.$t('workflow.validating');
       try {
-        const archive=await loadBackupZip(file,{JSZip:window.JSZip,signal:controller.signal,
+        const archive=await loadBackupZip(file,{signal:controller.signal,
           onProgress:progress=>{if(this.session_current(generation))this.show_zip_progress(progress);}});
         this.assert_session(generation);
         if (controller.signal.aborted) return;
@@ -1258,7 +1279,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.42.2.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.43.0-rc.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1353,6 +1374,45 @@ export default {
     refresh_backup_checkpoint() {
       this.backupResumeInfo = this._backupCheckpoint?.summary() || null;
     },
+    stored_backup_problem(error) {
+      return ({ STORED_BACKUP_QUOTA:'storeQuota', STORED_BACKUP_CHANGED:'storeChanged', STORED_BACKUP_BUSY:'storeBusy',
+        BACKUP_CHECKPOINT_IDENTITY:'storeReconnect', STORED_BACKUP_CORRUPT:'storeInvalid' })[error?.code] || 'storeUnavailable';
+    },
+    async refresh_stored_backup(keepError = false) {
+      this.storedBusy = true;
+      try {
+        const {inspectStoredBackup} = await import('./lib/stored-backup.js');
+        this.storedHead = await inspectStoredBackup();
+        if (!keepError) this.storedError = '';
+      } catch (error) { this.storedHead = null; this.storedError = this.stored_backup_problem(error); }
+      finally { this.storedBusy = false; }
+    },
+    async toggle_stored_backup(enabled, userGesture = true) {
+      this.storeBackup = enabled;
+      this.storedError = ''; this.persistStatus = '';
+      try { if (userGesture) this.storage()?.setItem('allmiibo-folder-checkpoint-enabled', enabled ? '1' : '0'); } catch { /* optional preference */ }
+      if (!enabled) { this.storedHead = null; return; }
+      this.storedBusy = true;
+      try {
+        const policy = navigator.storage;
+        if (policy?.persisted && await policy.persisted()) this.persistStatus = 'storeGranted';
+        else if (userGesture && policy?.persist) this.persistStatus = await policy.persist() ? 'storeGranted' : 'storeNotGranted';
+        else this.persistStatus = policy?.persisted ? 'storeNotGranted' : 'storePolicyUnknown';
+      } catch { this.persistStatus = 'storePolicyUnknown'; }
+      await this.refresh_stored_backup();
+    },
+    async discard_stored_backup() {
+      if (!this.storedHead || this.busy || this.storedBusy) return;
+      const expected = this.storedHead;
+      try { await this.ask_dialog(() => this.$confirm(this.$t('workflow.storeDiscardConfirm'), this.$t('workflow.discard'), this.confirm_options())); }
+      catch { return; }
+      this.storedBusy = true; this.storedError = '';
+      try {
+        const {discardStoredBackup} = await import('./lib/stored-backup.js');
+        await discardStoredBackup(expected);
+      } catch (error) { this.storedError = this.stored_backup_problem(error); }
+      await this.refresh_stored_backup(true);
+    },
     discard_backup_checkpoint() {
       if (this.busy || this.backupResumeInfo?.busy) return;
       this._backupCheckpoint?.clear(); this._backupCheckpoint = null; this.backupResumeInfo = null;
@@ -1372,13 +1432,16 @@ export default {
     },
     async on_backup(resume = false) {
       if (!this.connected || this.busy || this.disconnecting || this.upload_diag_visible) return;
+      const persistent = this.storeBackup && resume !== true;
+      if (persistent && (this.storedBusy || (resume === 'stored' ? !this.storedBackupMatches : !!this.storedHead || !!this.storedError))) return;
+      const expected = resume === 'stored' ? this.storedHead : null;
       const rootPath = resume === true ? this.backupResumeInfo?.rootPath : this.current_dir;
       if (!rootPath) return;
       const generation = this.sessionGeneration;
       if (this.backupResumeInfo?.busy) return;
       const deviceKey = pixl.get_device_key?.();
       if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
-      if (resume !== true) {
+      if (!persistent && resume !== true) {
         if (this.backupResumeInfo?.files) {
           try { await this.ask_dialog(() => this.$confirm(this.$t('workflow.discardConfirm'), this.$t('tools.backup'), this.confirm_options())); }
           catch(error) { this.show_transfer_error(error); return; }
@@ -1386,15 +1449,17 @@ export default {
         }
         this.discard_backup_checkpoint();
         this._backupCheckpoint = createBackupCheckpoint({rootPath,deviceKey,firmwareVersion:this.firmwareVersion,preserveLegacyNames:true});
-      } else if (!this._backupCheckpoint) return;
-      const checkpointState = this._backupCheckpoint;
+      } else if (!persistent && !this._backupCheckpoint) return;
+      const checkpointState = persistent ? undefined : this._backupCheckpoint;
+      if (persistent) this.storedError = '';
       // A previous ZIP remains downloadable if this attempt is interrupted.
       if (this.lastBackup) this.lastBackup.sessionGeneration = null;
       this.backingUp = true; this.cancellingBackup = false;
       const controller = new AbortController(); this._backupController = controller;
       this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: null });
       try {
-        const result = await createBackup({ rootPath, deviceKey, checkpointState, firmwareVersion: this.firmwareVersion, signal: controller.signal, preserveLegacyNames: true,
+        const context = {rootPath, deviceKey, firmwareVersion:this.firmwareVersion, preserveLegacyNames:true};
+        const run = storedBackup => createBackup({ ...context, checkpointState, storedBackup, signal: controller.signal,
           readDirectory: async path => {
             this.assert_session(generation);
             const entries = this.checked(await proto.vfs_read_folder(path));
@@ -1416,7 +1481,9 @@ export default {
               filesDone:Number.isSafeInteger(progress.filesDone)?progress.filesDone:null,filesTotal:Number.isSafeInteger(progress.filesTotal)?progress.filesTotal:null }); this.refresh_backup_checkpoint(); }
           }
         });
+        const result = persistent ? await (await import('./lib/stored-backup.js')).withStoredBackup(context, expected, run) : await run();
         this.assert_session(generation); this.lastBackup = { ...result, sessionGeneration: generation };
+        if (result.storedCompletionError) this.storedError = this.stored_backup_problem(result.storedCompletionError);
         this.remember_transfer('backup', 'success', result.manifest.bytes || 0);
         // Keep the archive in memory until the user's explicit Save click.
         // This preserves browser activation and allows a cancelled save to retry.
@@ -1424,11 +1491,15 @@ export default {
       } catch (error) {
         if (this.session_current(generation)) {
           this.remember_transfer('backup', controller.signal.aborted ? 'cancelled' : 'failed', this.transfer?.done || 0);
-          if (!controller.signal.aborted) this.show_transfer_error(error);
+          if (!controller.signal.aborted) {
+            if (persistent && (error?.code?.startsWith('STORED_BACKUP_') || error?.code === 'BACKUP_CHECKPOINT_IDENTITY')) this.storedError = this.stored_backup_problem(error);
+            else this.show_transfer_error(error);
+          }
         }
       } finally {
         if (this._backupController === controller) this._backupController = null;
-        if (this._backupCheckpoint === checkpointState) this.refresh_backup_checkpoint();
+        if (persistent) await this.refresh_stored_backup(true);
+        else if (this._backupCheckpoint === checkpointState) this.refresh_backup_checkpoint();
         if (generation === this.sessionGeneration) { this.backingUp = false; this.cancellingBackup = false; this.set_transfer(null); }
       }
     },
@@ -2074,6 +2145,7 @@ export default {
 
 
   }, mounted() {
+    try { if (this.storage()?.getItem('allmiibo-folder-checkpoint-enabled') === '1') void this.toggle_stored_backup(true, false); } catch { /* storage disabled */ }
     this._metricsTimer = window.setInterval?.(() => this.refresh_local_metrics(), 500);
     this.browserIssue = typeof navigator !== 'undefined' && !navigator.bluetooth ? 'tools.browserUnavailable' : '';
     if (typeof window !== 'undefined' && window.isSecureContext === false) this.browserIssue = 'tools.insecure';

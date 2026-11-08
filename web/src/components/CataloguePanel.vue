@@ -25,11 +25,33 @@
     <details class="filter-details">
       <summary>{{ de ? 'Filter' : 'Filters' }}<span v-if="activeFilters" class="filter-count">{{ activeFilters }}</span></summary>
       <div class="filters">
-        <label>{{ de ? 'Serie' : 'Series' }}<select v-model="series"><option value="">{{ de ? 'Alle Serien' : 'All series' }}</option><option v-for="item in seriesOptions" :key="item">{{ item }}</option></select></label>
-        <label>{{ de ? 'Art' : 'Type' }}<select v-model="kind"><option value="">{{ de ? 'Alle Arten' : 'All types' }}</option><option v-for="item in typeOptions" :key="item">{{ item }}</option></select></label>
+        <label>{{ de ? 'Serie' : 'Series' }}<select v-model="series"><option value="">{{ de ? 'Alle Serien' : 'All series' }}</option><option v-if="series && !seriesOptions.includes(series)" :value="series">{{ series }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in seriesOptions" :key="item">{{ item }}</option></select></label>
+        <label>{{ de ? 'Art' : 'Type' }}<select v-model="kind"><option value="">{{ de ? 'Alle Arten' : 'All types' }}</option><option v-if="kind && !typeOptions.includes(kind)" :value="kind">{{ kind }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in typeOptions" :key="item">{{ item }}</option></select></label>
       </div>
       <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur IDs im mitgelieferten Firmware-Namenskatalog' : 'Only IDs in the included firmware name catalogue' }}</label>
     </details>
+
+    <details class="filter-details saved-filters">
+      <summary>{{ de ? 'Webfavoriten und gespeicherte Filter' : 'Web favourites and saved filters' }}</summary>
+      <p>{{ de ? 'Deine Favoriten und Filter bleiben in diesem Browser. Die Bestandsanzeige kommt aus der Geräteprüfung.' : 'Your favourites and filters stay in this browser. Collection status comes from the device scan.' }}</p>
+      <label class="known"><input v-model="favoritesOnly" type="checkbox" />{{ de ? 'Nur Webfavoriten' : 'Web favourites only' }}</label>
+      <form @submit.prevent="changePreference({op:'create', name:newFilterName, criteria:currentCriteria})">
+        <label>{{ de ? 'Name für diesen Filter' : 'Name for this filter' }}<input v-model="newFilterName" type="text" :maxlength="FILTER_NAME_LIMIT" /></label>
+        <button type="submit" :disabled="!newFilterName.trim()">{{ de ? 'Neuen Filter speichern' : 'Save new filter' }}</button>
+      </form>
+      <template v-if="preferences.filters.length">
+        <label>{{ de ? 'Gespeicherter Filter' : 'Saved filter' }}<select v-model="selectedFilterName">
+          <option value="">{{ de ? 'Filter auswählen' : 'Choose a filter' }}</option>
+          <option v-for="saved in preferences.filters" :key="saved.name" :value="saved.name">{{ saved.name }}</option>
+        </select></label>
+        <div class="preset-actions">
+          <button type="button" :disabled="!selectedPreset" @click="applyPreset">{{ de ? 'Filter anwenden' : 'Apply filter' }}</button>
+          <button type="button" :disabled="!selectedPreset" @click="changePreference({op:'update',name:selectedFilterName,criteria:currentCriteria})">{{ de ? 'Mit aktuellen Filtern überschreiben' : 'Overwrite with current filters' }}</button>
+          <button type="button" :disabled="!selectedPreset" @click="changePreference({op:'remove',name:selectedFilterName})">{{ de ? 'Gespeicherten Filter löschen' : 'Delete saved filter' }}</button>
+        </div>
+      </template>
+    </details>
+    <p v-if="preferenceMessage" role="status">{{ preferenceMessage[de ? 0 : 1] }}</p>
     <button v-if="query || activeFilters" type="button" class="reset-filters" @click="resetFilters">{{ de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters' }}</button>
     <FigureAnnouncements v-if="announcements.length" :groups="announcements" :de="de" :expanded="Boolean(query.trim() || series)" />
     <div v-if="selectedId" ref="detailAnchor" tabindex="-1" class="selected-detail">
@@ -37,6 +59,7 @@
       <FigureDetails :key="selectedId" :id="selectedId" :catalogue-entry="data.entries.find(entry=>entry.id===selectedId)" :image-commit="data.commit" />
     </div>
     <LocalTagInspector :catalogue="data" />
+    <FigureLinkSettings :de="de" />
     <div ref="resultAnchor" tabindex="-1" class="result-bar"><p aria-live="polite"><strong>{{ result.total }}</strong> {{ announcements.length && !result.total ? (de ? 'Treffer mit Katalog-ID' : 'results with a catalogue ID') : (de ? 'Treffer' : 'results') }} <span v-if="result.total">· {{ de ? 'Seite' : 'Page' }} {{ result.page }}/{{ result.pages }}</span></p></div>
     <p v-if="!result.total" class="empty-result">{{ announcements.length
       ? (de ? 'Treffer stehen oben in den Ankündigungen.' : 'See matching figures in the announcements above.')
@@ -47,6 +70,11 @@
           <img v-if="!failedImages.has(imageFor(entry.id))" :key="imageFor(entry.id)" :src="imageFor(entry.id)" :alt="entry.name" width="160" height="140" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" @error="imageFailed(entry.id, $event)" />
           <span v-else class="image-placeholder"><span aria-hidden="true">◇</span>{{ de ? 'Bild nicht verfügbar' : 'Image unavailable' }}</span>
         </div>
+        <button type="button" class="web-favorite" :aria-pressed="favoriteSet.has(entry.id)"
+          :aria-label="(de ? 'Webfavorit · ' : 'Web favourite · ') + entry.name"
+          @click="toggleFavorite(entry.id, $event)">
+          <span aria-hidden="true">{{ favoriteSet.has(entry.id) ? '★' : '☆' }}</span> {{ de ? 'Webfavorit' : 'Web favourite' }}
+        </button>
         <FigureDownload :entry="entry" :de="de" :blocked="blocked" :open-import="openImport" />
         <span class="presence-label">{{ presenceLabel(presenceFor(entry.id)) }}</span>
         <div v-if="presenceFor(entry.id).state === 'attention'" class="warning-reasons" role="list">
@@ -64,7 +92,7 @@
   </section>
 </template>
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import baseline from '../data/catalogue.json';
 import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '../lib/catalogue.js';
@@ -72,6 +100,8 @@ import { buildCollectionPresence, collectionPresenceFor } from '../lib/collectio
 import { publicFigureImage } from '../lib/figure-info.js';
 import { announcementGroups } from '../data/announced-figures.js';
 import FigureDownload from './FigureDownload.vue';
+import FigureLinkSettings from './FigureLinkSettings.vue';
+import { CATALOGUE_PREFERENCES_KEY, FILTER_NAME_LIMIT, readCataloguePreferences, updateCataloguePreferences } from '../lib/catalogue-preferences.js';
 import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
@@ -133,6 +163,58 @@ function presenceLabel(value) {
   return de.value ? '· Bestand nicht bestätigt' : '· Presence unconfirmed';
 }
 const query = ref(''), series = ref(''), kind = ref(''), knownOnly = ref(false), presenceFilter = ref(''), page = ref(1);
+const favoritesOnly = ref(false), newFilterName = ref(''), selectedFilterName = ref('');
+const preferences = ref({ favorites: [], filters: [] }), preferenceMessage = ref(null);
+const favoriteSet = computed(() => new Set(preferences.value.favorites));
+const selectedPreset = computed(() => preferences.value.filters.find(row => row.name === selectedFilterName.value));
+const currentCriteria = computed(() => ({ query:query.value, series:series.value, kind:kind.value, presence:presenceFilter.value, knownOnly:knownOnly.value, favoritesOnly:favoritesOnly.value }));
+function reloadPreferences(event) {
+  if (event && event.key !== null && event.key !== CATALOGUE_PREFERENCES_KEY) return;
+  try {
+    preferences.value = readCataloguePreferences();
+    if (!selectedPreset.value) selectedFilterName.value = '';
+  } catch { preferenceMessage.value = ['Favoriten und Filter konnten nicht gelesen werden.', 'Could not read favourites and filters.']; }
+}
+onMounted(() => {
+  if (!globalThis.window) return;
+  reloadPreferences();
+  window.addEventListener?.('storage', reloadPreferences);
+});
+onBeforeUnmount(() => globalThis.window?.removeEventListener?.('storage', reloadPreferences));
+async function changePreference(change) {
+  try {
+    const write = () => updateCataloguePreferences(change);
+    const locks = globalThis.window?.navigator?.locks;
+    preferences.value = locks ? await locks.request(CATALOGUE_PREFERENCES_KEY, write) : write();
+    preferenceMessage.value = null;
+    if (change.op === 'create') { selectedFilterName.value = change.name.trim().normalize('NFC'); newFilterName.value = ''; }
+    if (change.op === 'remove') selectedFilterName.value = '';
+    if (change.op !== 'favorite') preferenceMessage.value = change.op === 'remove' ? ['Filter gelöscht.', 'Filter deleted.'] : ['Filter gespeichert.', 'Filter saved.'];
+  } catch (error) {
+    const messages = {
+      PREF_EXISTS: ['Dieser Filtername wird bereits verwendet.', 'This filter name is already in use.'],
+      PREF_NAME: ['Bitte einen gültigen Filternamen eingeben.', 'Enter a valid filter name.'],
+      PREF_MISSING: ['Dieser Filter wurde bereits entfernt.', 'This filter has already been removed.'],
+      PREF_LIMIT: ['Die Höchstzahl für Favoriten oder Filter ist erreicht.', 'The favourites or filter limit has been reached.']
+    };
+    preferenceMessage.value = messages[error.code] || ['Der Browser konnte die Änderung nicht speichern.', 'The browser could not save the change.'];
+  }
+}
+async function toggleFavorite(id, event) {
+  const trigger = event.currentTarget;
+  await changePreference({ op:'favorite', id, enabled:!favoriteSet.value.has(id) });
+  await nextTick();
+  if (!trigger.isConnected && favoritesOnly.value && !globalThis.document?.activeElement?.closest('.catalogue')) resultAnchor.value?.focus?.({preventScroll:true});
+}
+function applyPreset() {
+  const preset = selectedPreset.value;
+  if (!preset) return;
+  const value = preset.criteria;
+  query.value = value.query; series.value = value.series; kind.value = value.kind; presenceFilter.value = value.presence;
+  favoritesOnly.value = value.favoritesOnly; knownOnly.value = value.knownOnly;
+  page.value = 1; selectedId.value = null;
+  preferenceMessage.value = ['Filter angewendet · ' + preset.name, 'Filter applied · ' + preset.name];
+}
 const showImages = ref(false), failedImages = ref(new Set());
 const imageFor = id => publicFigureImage(id, data.value.commit);
 function imageFailed(id, event) {
@@ -143,16 +225,16 @@ function imageFailed(id, event) {
 }
 const selectedId = ref(null), detailAnchor = ref(null), searchInput = ref(null), resultAnchor = ref(null);
 let selectedTrigger = null;
-const activeFilters = computed(() => Number(Boolean(series.value)) + Number(Boolean(kind.value)) + Number(knownOnly.value) + Number(Boolean(presenceFilter.value)));
+const activeFilters = computed(() => Number(Boolean(series.value)) + Number(Boolean(kind.value)) + Number(knownOnly.value) + Number(Boolean(presenceFilter.value)) + Number(favoritesOnly.value));
 const announcements = computed(() => {
-  if (knownOnly.value || presenceFilter.value || (kind.value && kind.value !== 'Figure')) return [];
+  if (favoritesOnly.value || knownOnly.value || presenceFilter.value || (kind.value && kind.value !== 'Figure')) return [];
   const matches = catalogueMatcher(query.value);
   return announcementGroups.filter(group => !series.value || group.series === series.value).map(group => ({
     ...group,
     figures: group.figures.filter(figure => matches(figure.en, figure.de, group.series, figure.proposedId)),
   })).filter(group => group.figures.length);
 });
-function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; knownOnly.value = false; presenceFilter.value = ''; }
+function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; knownOnly.value = false; presenceFilter.value = ''; favoritesOnly.value = false; selectedFilterName.value = ''; preferenceMessage.value = null; }
 async function closeDetails() { selectedId.value = null; await nextTick(); if (selectedTrigger?.isConnected) selectedTrigger.focus?.(); else searchInput.value?.focus?.(); }
 async function selectEntry(id, event) { if(props.blocked)return; emit('select-entry',data.value.entries.find(entry=>entry.id===id)); selectedTrigger = event?.currentTarget || null; selectedId.value = id; await nextTick(); detailAnchor.value?.focus?.(); }
 const today = new Date().toISOString().slice(0, 10);
@@ -162,6 +244,7 @@ const seriesOptions = computed(() => [...new Set([
 ])].sort());
 const typeOptions = computed(() => [...new Set(data.value.entries.map(entry => entry.type))].sort());
 const filtered = computed(() => filterCatalogue(data.value.entries, { query: query.value, series: series.value, kind: kind.value, knownOnly: knownOnly.value }).filter(entry => {
+  if (favoritesOnly.value && !favoriteSet.value.has(entry.id)) return false;
   if (!presenceFilter.value) return true;
   const state = presenceFor(entry.id).state;
   return presenceFilter.value === 'unconfirmed' ? state === 'unknown' || state === 'stale' : state === presenceFilter.value;
@@ -175,7 +258,8 @@ async function changePage(nextPage) {
   resultAnchor.value?.focus?.({ preventScroll: true });
   resultAnchor.value?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
 }
-watch([query, series, kind, knownOnly, presenceFilter], () => { page.value = 1; selectedId.value = null; });
+watch([query, series, kind, knownOnly, presenceFilter, favoritesOnly], () => { page.value = 1; selectedId.value = null; });
+watch(() => result.value.page, value => { page.value = value; });
 watch([showImages, () => data.value.commit, () => result.value.page], () => { failedImages.value = new Set(); });
 </script>
 <style scoped>
@@ -210,4 +294,9 @@ nav { display:flex; justify-content:center; align-items:center; gap:14px; font-s
 /* App's workspace navigation sits above the results on narrow screens. */
 @media(max-width:650px) { .result-bar { scroll-margin-top:160px; } }
 @media(max-width:480px) { .catalogue { padding:14px; border-radius:12px; } h3 { font-size:1.16rem; } .count-badge { font-size:.7rem; padding:5px 8px; } .entries { grid-template-columns:1fr; } .selection-toolbar { align-items:flex-start; } }
+.saved-filters label:not(.known) { display:grid; gap:.3rem; margin:.5rem 0; }
+.saved-filters input[type=text] { min-width:0; width:100%; max-width:24rem; min-height:44px; padding:.4rem .65rem; font:inherit; box-sizing:border-box; }
+.preset-actions { display:flex; flex-wrap:wrap; gap:.35rem; margin-bottom:.55rem; }
+.entries button.web-favorite { align-self:flex-start; margin:0; min-height:44px; }
+.entries button.web-favorite[aria-pressed=true] { color:#5c3900; background:#fff1b9; border-color:#9c711f; }
 </style>

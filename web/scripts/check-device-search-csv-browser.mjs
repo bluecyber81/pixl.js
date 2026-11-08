@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 // Install only the browser peripheral boundary. The production BLE, protocol, VFS,
 // catalogue, download and Vue code run unchanged in an isolated browser context.
-function installReadOnlyPeripheral({files, capacity}) {
+function installReadOnlyPeripheral({files, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
   const encoder = new TextEncoder(), decoder = new TextDecoder();
   const commands = [], violations = [];
   window.testPeripheral = { commands, violations, connections: 0 };
@@ -16,7 +16,7 @@ function installReadOnlyPeripheral({files, capacity}) {
   let open;
   function payload(cmd, frame, record) {
     if (cmd === 3) return [80, 88, 68, 70, 1, 3, ...word(243), ...word(247)];
-    if (cmd === 1) return string('2.22.0-DE3.66');
+    if (cmd === 1) return string(firmwareVersion);
     if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(capacity.total), ...dword(capacity.free)];
     if (cmd === 0x12 || cmd === 0x16) {
       const length = frame[4] | frame[5] << 8;
@@ -183,5 +183,51 @@ export async function checkDeviceSearchAndCsv({browser, url, check, shot}) {
     await checkDeviceCard(cardPage, capacity, check, shot);
     assert.deepEqual(runtimeErrors, []);
     assert.deepEqual(external, []);
+  } finally { await context.close(); }
+  await checkStoredBackupControls({browser, url, check});
+}
+
+export async function checkStoredBackupControls({browser, url, check}) {
+  const context = await browser.newContext({locale:'de-DE', acceptDownloads:true, serviceWorkers:'block'});
+  try {
+    await context.addInitScript(installReadOnlyPeripheral, {files:{'E:/A/Twin.bin':[1,2,3],'E:/B/Twin.bin':[4]},
+      capacity:{total:2097152,free:1000000}, firmwareVersion:'2.22.0-DE3.65'});
+    const page = await context.newPage();
+    page.setDefaultTimeout(10000);
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    const workspace = page.locator('#backup-workspace');
+    const tab = page.locator('.workspace-nav').getByRole('button', {name:/Sicherung/});
+    const option = workspace.getByRole('checkbox', {name:/Schließen des Browsers/});
+    const resume = workspace.getByRole('button', {name:'Sicherung fortsetzen', exact:true});
+    const ready = workspace.getByText('ZIP erstellt.', {exact:false});
+    async function connect() {
+      await page.locator('.header-tools').getByRole('button', {name:'Verbinden', exact:true}).click();
+      await page.locator('.version-context').getByText('2.22.0-DE3.65', {exact:true}).waitFor();
+      await tab.click();
+      await workspace.getByRole('button', {name:'Laufwerk E: öffnen', exact:true}).click();
+      await workspace.locator('.workspace-location strong').filter({hasText:'E:/'}).waitFor();
+    }
+    await page.goto(url);
+    await connect();
+    check('ordinary backup starts without a persistent checkpoint database',
+      !await option.isChecked() && !await page.evaluate(async () => (await indexedDB.databases()).some(db => db.name === 'allmiibo-folder-backup')));
+    await option.check();
+    await workspace.getByRole('button', {name:'Ordner sichern (ZIP)',exact:true}).click();
+    await ready.waitFor();
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button',{name:'Sicherungs-ZIP speichern',exact:true}).click()]);
+    check('opt-in folder backup creates a downloadable ZIP', /^allmiibo-backup-E-.*\.zip$/.test(download.suggestedFilename()) && !(await download.failure()));
+    await page.reload();
+    await tab.click();
+    await ready.waitFor();
+    check('saved checkpoint is visible after reload and needs a fresh connection', await option.isChecked() && await resume.isDisabled());
+    await connect();
+    await resume.click();
+    await page.getByRole('button',{name:'Sicherungs-ZIP speichern',exact:true}).waitFor();
+    await workspace.getByRole('button',{name:'Zwischenstand verwerfen',exact:true}).click();
+    await page.locator('.el-message-box').getByRole('button',{name:'OK',exact:true}).click();
+    await ready.waitFor({state:'detached'});
+    check('resuming and discarding work through the built UI', !await resume.count() &&
+      (await page.evaluate(() => testPeripheral.violations)).length === 0 && !errors.length);
   } finally { await context.close(); }
 }

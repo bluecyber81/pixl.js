@@ -1,6 +1,6 @@
 <template>
   <div class="entry-title">
-    <button v-if="link" type="button" class="figure-name" :disabled="busy"
+    <button v-if="link" type="button" class="figure-name" :disabled="busy || saving"
       :aria-label="de ? entry.name + ' herunterladen' : 'Download ' + entry.name" @click="download">
       {{ entry.name }} <span aria-hidden="true">↓</span>
     </button>
@@ -16,8 +16,8 @@
       </label>
       <small>{{ de ? 'Der Link wird nur in diesem Browser gespeichert.' : 'The link is saved only in this browser.' }}</small>
       <div class="link-actions">
-        <button type="submit">{{ de ? 'Link speichern' : 'Save link' }}</button>
-        <button v-if="link" type="button" @click="remove">{{ de ? 'Link entfernen' : 'Remove link' }}</button>
+        <button type="submit" :disabled="saving">{{ de ? 'Link speichern' : 'Save link' }}</button>
+        <button v-if="link" type="button" :disabled="saving" @click="remove">{{ de ? 'Link entfernen' : 'Remove link' }}</button>
       </div>
     </form>
   </details>
@@ -38,7 +38,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { FIGURE_DOWNLOAD_LIMITS, prepareFigureTransfer, suggestedFigureFilename } from '../lib/figure-transfer.js';
-import { figureDownloadLinkKey, readFigureDownloadLink, writeFigureDownloadLink } from '../lib/figure-download-links.js';
+import { observeFigureDownloadLink, readFigureDownloadLink, writeFigureDownloadLink, withFigureLinkLock } from '../lib/figure-download-links.js';
 import { saveBlob } from '../lib/browser-tools.js';
 
 const props = defineProps({ entry: { type: Object, required: true }, de: Boolean, blocked: Boolean, openImport: Function });
@@ -47,6 +47,8 @@ const editor = ref(null), editing = ref(false), draft = ref('');
 const feedback = ref(null), feedbackError = ref(false), busy = ref(false);
 const manualSource = ref('');
 const checkedFile = ref(null);
+const saving = ref(false);
+let disposed = false;
 let controller;
 
 function show(message, error = false) {
@@ -71,16 +73,14 @@ function refreshLink() {
   show(null);
 }
 
-function onStorage(event) {
-  if (event.key === null || event.key === figureDownloadLinkKey(props.entry.id)) refreshLink();
-}
-
+let stopObserving;
 onMounted(() => {
   refreshLink();
-  globalThis.addEventListener?.('storage', onStorage);
+  stopObserving = observeFigureDownloadLink(() => props.entry.id, refreshLink);
 });
 onBeforeUnmount(() => {
-  globalThis.removeEventListener?.('storage', onStorage);
+  disposed = true;
+  stopObserving?.();
   stopDownload();
 });
 
@@ -93,9 +93,13 @@ function toggleEditor(event) {
   }
 }
 
-function store(value) {
+async function store(value) {
+  if (saving.value || disposed) return;
+  const id = props.entry.id;
+  saving.value = true;
   try {
-    const saved = writeFigureDownloadLink(props.entry.id, value);
+    const saved = await withFigureLinkLock(() => writeFigureDownloadLink(id, value));
+    if (disposed || id !== props.entry.id) return;
     stopDownload();
     link.value = saved;
     draft.value = saved;
@@ -105,10 +109,11 @@ function store(value) {
       ? ['Gespeichert. Zum Herunterladen den Figurennamen antippen.', 'Saved. Tap the figure name to download.']
       : ['Downloadlink entfernt.', 'Download link removed.']);
   } catch (error) {
-    show(error.code === 'FIGURE_STORAGE'
+    if (disposed || id !== props.entry.id) return;
+    show(error.code === 'FIGURE_STORAGE' || error.code === 'FIGURE_LINK_LIMIT'
       ? ['Der Browser konnte die Änderung nicht speichern.', 'The browser could not save the change.']
       : ['Gib einen direkten öffentlichen HTTPS-Link zur BIN-Datei ein.', 'Enter a direct public HTTPS link to the BIN file.'], true);
-  }
+  } finally { saving.value = false; }
 }
 
 function save() {

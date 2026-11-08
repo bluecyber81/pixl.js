@@ -21,8 +21,7 @@ export class BackupError extends Error {
 
 function fail(code, message) { throw new BackupError(code, message) }
 
-// A checkpoint has no serializable data or public byte buffers. A page reload
-// drops it; it is intentionally not an archive, a filesystem snapshot or storage.
+// The ordinary checkpoint only lives in this page. Persistent storage is opt-in.
 const backupCheckpoints = new WeakMap()
 
 function checkedFirmwareVersion(version) {
@@ -39,15 +38,20 @@ function checkedDeviceKey(key) {
   return key
 }
 
-/** Retain only completed file reads in this browser page, up to maxBytes. */
-export function createBackupCheckpoint({ rootPath, deviceKey, firmwareVersion, preserveLegacyNames = false }) {
+export function backupContext({ rootPath, deviceKey, firmwareVersion, preserveLegacyNames = false }) {
   if (typeof preserveLegacyNames !== 'boolean') fail('BACKUP_API', 'Invalid name preservation option.')
+  if (!firmwareVersion) fail('BACKUP_API', 'A firmware version is required to resume a backup.')
+  return Object.freeze({deviceKey: checkedDeviceKey(deviceKey), rootPath: checkedRoot(rootPath, preserveLegacyNames),
+    firmwareVersion: checkedFirmwareVersion(firmwareVersion), preserveLegacyNames})
+}
+
+/** Retain only completed file reads in this browser page, up to maxBytes. */
+export function createBackupCheckpoint(options) {
+  const {rootPath, deviceKey, firmwareVersion, preserveLegacyNames} = backupContext(options)
   const state = {
-    root: checkedRoot(rootPath, preserveLegacyNames), deviceKey: checkedDeviceKey(deviceKey),
-    firmwareVersion: checkedFirmwareVersion(firmwareVersion), preserveLegacyNames,
+    root: rootPath, deviceKey, firmwareVersion, preserveLegacyNames,
     entries: new Map(), bytes: 0, busy: false,
   }
-  if (!state.firmwareVersion) fail('BACKUP_API', 'A firmware version is required to resume a backup.')
   const handle = Object.freeze({
     matchesDevice: (key, version) => state.deviceKey === key && state.firmwareVersion === version,
     summary: () => Object.freeze({ rootPath: state.root, firmwareVersion: state.firmwareVersion,
@@ -248,7 +252,7 @@ async function zipStore(entries, date, checkpoint) {
  * This is a checked sequential export, not an atomic filesystem snapshot or a
  * raw-metadata backup. Same-size content changes between reads are not detected.
  */
-export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState }) {
+export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState, storedBackup }) {
   if (typeof preserveLegacyNames !== 'boolean') fail('BACKUP_API', 'Invalid name preservation option.')
   const root = checkedRoot(rootPath, preserveLegacyNames)
   if (typeof readDirectory !== 'function' || typeof readFile !== 'function') {
@@ -256,7 +260,10 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
   }
   checkedFirmwareVersion(firmwareVersion)
   if (readFileDigest !== undefined && typeof readFileDigest !== 'function') fail('BACKUP_API', 'Invalid digest reader.')
-  if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
+  if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null || storedBackup != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
+  if (storedBackup != null && (checkpointState != null || !storedBackup.matches?.(backupContext({rootPath:root, deviceKey, firmwareVersion, preserveLegacyNames})))) {
+    fail('BACKUP_CHECKPOINT_IDENTITY', 'The stored checkpoint does not match this folder backup.')
+  }
   let resume = null
   if (checkpointState != null) {
     resume = backupCheckpoints.get(checkpointState)
@@ -269,7 +276,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
     resume.busy = true
   }
   try {
-    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume })
+    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup })
     // A returned Blob owns its bytes. Keep no second resumable copy after success.
     if (resume) { resume.entries.clear(); resume.bytes = 0 }
     return result
@@ -278,7 +285,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
   }
 }
 
-async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume }) {
+async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup }) {
   const started = new Date()
   const snapshots = [], records = [], zipEntries = [], checksums = []
   let filesTotal = 0, filesDone = 0, bytesTotal = 0, bytesDone = 0, observerError = null
@@ -342,6 +349,10 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   checkpoint()
   if (!globalThis.crypto?.subtle) fail('BACKUP_CRYPTO', 'SHA-256 requires a secure browser context.')
   await listDirectory(root, '', 0)
+  if (storedBackup) {
+    checkpoint()
+    await storedBackup.prune(new Map(records.filter(record => record.type === 'file').map(record => [record.sourcePath, fileIdentity(record)])))
+  }
   if (resume) {
     const current = new Map(records.filter(record => record.type === 'file').map(record => [record.sourcePath, fileIdentity(record)]))
     // Evict removed/renamed/changed files before retaining any new bytes. The
@@ -364,8 +375,11 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     }
     progress('reading', record.sourcePath); checkpoint()
     const identity = fileIdentity(record)
-    let cached = resume?.entries.get(record.sourcePath)
+    let cached = storedBackup ? await storedBackup.get(record.sourcePath, identity, record.size) : resume?.entries.get(record.sourcePath)
+    checkpoint()
     if (cached) {
+      // Browser storage is mutable. Check its bytes as well as the current device.
+      if (storedBackup && await sha256(cached.bytes) !== cached.sha256) fail('STORED_BACKUP_CORRUPT', 'Stored backup bytes failed SHA-256 verification.')
       const digest = readFileDigest ? await readFileDigest(record.sourcePath, record.size) : null
       checkpoint()
       if (digest !== null && (typeof digest !== 'string' || !/^[a-f0-9]{64}$/u.test(digest))) {
@@ -373,8 +387,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       }
       if (digest !== cached.sha256) {
         // A changed file or a device without digest support needs current bytes.
-        resume.entries.delete(record.sourcePath)
-        resume.bytes -= cached.bytes.length
+        if (resume) { resume.entries.delete(record.sourcePath); resume.bytes -= cached.bytes.length }
         cached = undefined
       }
     }
@@ -399,6 +412,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       const hash = await sha256(bytes)
       checkpoint()
       cached = { identity, bytes, sha256: hash }
+      if (storedBackup) { await storedBackup.put(record.sourcePath, cached); checkpoint() }
       if (resume) {
         if (resume.entries.size >= BACKUP_LIMITS.maxEntries || resume.bytes + bytes.length > BACKUP_LIMITS.maxBytes) {
           fail('BACKUP_LIMIT', 'The backup checkpoint exceeds its memory limit.')
@@ -434,7 +448,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     metadataEncoding: readRawMetadata ? 'Exact 128-byte VFS attributes in rawMeta128Hex; decoded metadata is informational, including unknown or malformed fields.' : 'Decoded protocol fields: notes, raw flags, hide/readonly and amiibo IDs; not raw metadata bytes.',
     nameMapping: preserveLegacyNames ? 'Unportable or colliding names have unique portable ZIP aliases. Each sourcePath is the exact original device identity; archivePath locates its unchanged data. Do not infer original names from ZIP aliases.' : 'Original names retained; unsafe or colliding names rejected.',
     consistency: 'Serial reads; exact listed sizes; directory name/type/size/decoded-metadata snapshots compared before and after. Cached bytes are reused only after their current device SHA-256 matches. Not an atomic snapshot: files may change after their individual read or digest.',
-    resume: { reusedFiles, reusedBytes, retainedInBrowserMemoryOnly: !!resume },
+    resume: { reusedFiles, reusedBytes, retainedInBrowserMemoryOnly: !!resume, ...(storedBackup ? {checkpointStorage:'indexeddb'} : {}) },
     entries: records,
   }
   const manifestBytes = encoder.encode(JSON.stringify(manifest, null, 2) + '\n')

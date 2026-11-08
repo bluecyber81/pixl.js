@@ -346,3 +346,33 @@ test('catalogue local-file inspection receives the active catalogue through the 
     assert.equal(nodes(root, 'img').length, 0);
   } finally { app.unmount(); }
 });
+
+test('web favourites follow public IDs through rename, removal and return in DE/EN; filtered pagination stays valid', async t => {
+  const values = new Map();
+  const browser = Object.assign(new EventTarget(), {localStorage:{getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)}});
+  const prior = Object.getOwnPropertyDescriptor(globalThis,'window');
+  Object.defineProperty(globalThis,'window',{configurable:true,value:browser});
+  t.after(()=>prior ? Object.defineProperty(globalThis,'window',prior) : Reflect.deleteProperty(globalThis,'window'));
+  for (const locale of ['de_DE','en_US']) {
+    values.clear();
+    const cat = catalogue(45);
+    const {root,state,app} = await mount({catalogue:cat},locale);
+    try {
+      await click(root,locale==='de_DE'?'Weiter':'Next');
+      const favorite=classNode(cards(root)[0],'web-favorite');
+      await favorite.props.onClick({currentTarget:favorite}); await Vue.nextTick();
+      const scope=classNode(root,'saved-filters'), only=nodes(scope,'input').find(el=>el.props.type==='checkbox');
+      only.props['onUpdate:modelValue'](true); await Vue.nextTick();
+      assert.equal(cards(root).length,1); assert.match(text(classNode(root,'result-bar')),/1\/1/);
+      const selected=cat.entries[40];
+      state.catalogue={...cat,entries:[{...selected,name:'Renamed figure'}]}; await Vue.nextTick();
+      assert.match(text(cards(root)[0]),/Renamed figure/);
+      assert.equal(classNode(cards(root)[0],'web-favorite').props['aria-pressed'],true);
+      assert.equal(cards(root)[0].props['data-presence'],'unknown');
+      state.catalogue={...cat,entries:cat.entries.slice(0,2)}; await Vue.nextTick();
+      assert.equal(cards(root).length,0); assert.equal(nodes(root,'nav').length,0);
+      state.catalogue=cat; await Vue.nextTick(); assert.equal(cards(root).length,1);
+      assert.equal(nodes(cards(root)[0],'code')[0].text,selected.id);
+    } finally { app.unmount(); }
+  }
+});

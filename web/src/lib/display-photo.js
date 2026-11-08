@@ -42,7 +42,7 @@ export async function captureDisplayPhoto(readPage, checkSession) {
 }
 
 // The ST7567 stores eight vertical pixels per byte, least significant bit at the top.
-export function renderDisplayPhoto(pixels, canvas) {
+export function renderDisplayPhoto(pixels, canvas, rotated = false) {
     if (pixels.length !== width * pages) throw new Error('Invalid LCD pixel count');
     canvas.width = width;
     canvas.height = height;
@@ -51,7 +51,8 @@ export function renderDisplayPhoto(pixels, canvas) {
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             const color = pixels[(y >> 3) * width + x] & (1 << (y % 8)) ? 0 : 255;
-            const index = 4 * (y * width + x);
+            const pixel = y * width + x;
+            const index = 4 * (rotated ? width * height - 1 - pixel : pixel);
             image.data[index] = image.data[index + 1] = image.data[index + 2] = color;
             image.data[index + 3] = 255;
         }

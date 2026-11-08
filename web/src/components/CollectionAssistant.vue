@@ -181,9 +181,21 @@ export default {
         // Preserve old-session recovery evidence without changing the new session's UI or locks.
         if(device&&this._alive&&(current()||kind==='upload'&&error?.recovery))this.$emit('recovery',recoveryOrigin?{...error,recoveryOrigin:Object.freeze({...recoveryOrigin})}:error);
         if (current()) {
+          const prepareErrors = {
+            FIGURE_ID_MISMATCH: 'Die BIN-Datei gehört zu einer anderen Figur. Wähle die passende Datei aus.',
+            FIGURE_SIZE: 'Die Dateigröße passt zu keinem unterstützten BIN-Format.',
+            FIGURE_STRUCTURE: 'Die Datei hat keine passende BIN-Struktur.',
+            FIGURE_URL: 'Gib einen direkten öffentlichen HTTPS-Link zur BIN-Datei ein.',
+            FIGURE_NETWORK: 'Die Datei konnte nicht geladen werden. Prüfe Verbindung und Downloadlink.',
+            FIGURE_HTTP: 'Die Quelle hat keine vollständig lesbare BIN-Datei geliefert.',
+            FIGURE_TIMEOUT: 'Das Laden der Datei hat zu lange gedauert. Bitte erneut versuchen.',
+            FIGURE_STREAM: 'Der begrenzte Dateidownload ist fehlgeschlagen. Prüfe den Downloadlink.',
+            UPLOAD_CHANGED: 'Die lokale Datei hat sich beim Lesen geändert. Wähle sie erneut aus.',
+          };
           const message = error?.name === 'AbortError'
             ? (this.de ? 'Vorgang abgebrochen.' : 'Operation cancelled.')
-            : (error?.message || String(error));
+            : (this.de && kind === 'prepare' && Object.hasOwn(prepareErrors, error?.code)
+              ? prepareErrors[error.code] : (error?.message || String(error)));
           this.setError(message, device);
         }
       }

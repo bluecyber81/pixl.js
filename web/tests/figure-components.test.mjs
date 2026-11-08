@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import * as Vue from 'vue';
+import { figureDownloadLinkKey } from '../src/lib/figure-download-links.js';
 import * as VueI18n from 'vue-i18n';
 import { parse, compileScript } from '@vue/compiler-sfc';
 
@@ -56,7 +57,7 @@ const marioDownloadId = '0000000000000002';
 function mountDownloadCard(t, source, props = {}) {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
   Object.defineProperty(globalThis, 'window', {
-    configurable: true, value: { localStorage: { getItem: () => source } }
+    configurable: true, value: { localStorage: { getItem: key => key === figureDownloadLinkKey(marioDownloadId) ? source : null } }
   });
   t.after(() => {
     if (previous) Object.defineProperty(globalThis, 'window', previous);

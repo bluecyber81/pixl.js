@@ -53,4 +53,13 @@ test('unexpected payloads are rejected and the browser draws the physical LCD pi
         assert.equal(rendered[i*4+3],255);
     }
     assert.deepEqual(dark,[0,7*128,8*128,8191]);
+    const original = rendered.slice();
+    const raw = pixels.slice();
+    renderDisplayPhoto(pixels,canvas,true);
+    const rotatedDark = [];
+    for (let i=0; i<8192; i++) if (rendered[i*4]===0) rotatedDark.push(i);
+    assert.deepEqual(rotatedDark,dark.map(i=>8191-i).reverse());
+    renderDisplayPhoto(pixels,canvas,false);
+    assert.deepEqual(rendered,original);
+    assert.deepEqual(pixels,raw);
 });

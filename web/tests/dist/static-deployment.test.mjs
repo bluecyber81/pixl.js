@@ -98,7 +98,8 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  const version = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8')).version
+  const buildVersion = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8')).version
+  const version = buildVersion.includes('-') ? '3.42.2' : buildVersion
   const fileVersion = version.replaceAll('.', '_')
   for (const name of [
     'Allmiibo_Dateimanager_' + fileVersion + '_Quellcode.zip',

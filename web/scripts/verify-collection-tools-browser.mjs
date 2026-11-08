@@ -162,7 +162,7 @@ async function checkFigureDownloads(page, kind, zoom, touch) {
     (await summary.innerText()) === 'Downloadlink eintragen' && !await download.count());
   await summary.click();
   await input.fill(siblingUrl);
-  await save.click();
+  await save.click(); await input.waitFor({ state: 'hidden' });
   await download.waitFor();
   await search.fill(siblingId);
   await sibling.waitFor();
@@ -193,7 +193,7 @@ async function checkFigureDownloads(page, kind, zoom, touch) {
 
   await summary.click();
   await input.fill(marioUrl);
-  await save.click();
+  await save.click(); await input.waitFor({ state: 'hidden' });
   await download.waitFor();
   check(kind + ' editing a stored link updates the selected import source in the same tab', await importSource.inputValue() === marioUrl);
   check(kind + ' editing a source makes no file request', requests().length === 1);
@@ -220,13 +220,13 @@ async function checkFigureDownloads(page, kind, zoom, touch) {
   await importSource.fill(manualUrl);
   await summary.click();
   await input.fill(marioUrl);
-  await save.click();
+  await save.click(); await input.waitFor({ state: 'hidden' });
   await download.waitFor();
   check(kind + ' storing another link preserves a manually entered import address without fetching',
     await importSource.inputValue() === manualUrl && requests().length === 2 && seenDownloads.length === 1);
   await summary.click();
   await input.fill(blockedUrl);
-  await save.click();
+  await save.click(); await input.waitFor({ state: 'hidden' });
   await activateDownload();
   const fallback = card.locator('.manual-download');
   const source = fallback.getByRole('link', { name: 'Quelle im Browser öffnen' });
@@ -322,7 +322,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.42.2', (await page.locator('.version-context').innerText()).includes('3.42.2'));
+    check(kind + ' exact web version 3.43.0-rc.1', (await page.locator('.version-context').innerText()).includes('3.43.0-rc.1'));
     const starts = page.locator('.start-actions');
     await fits(page, kind + ' start actions', '.start-actions', zoom);
     await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();
@@ -375,7 +375,7 @@ try {
     await shot(page, kind + '-announcements-de', announced);
     await textScale(page, 1);
     await announced.locator('summary').click();
-    const seriesFilters = page.locator('.catalogue .filter-details');
+    const seriesFilters = page.locator('.catalogue details').filter({ has: page.locator('.filters select') });
     await seriesFilters.locator('summary').click();
     const series = seriesFilters.locator('label').filter({ hasText: /^Serie/ }).getByRole('combobox');
     await series.selectOption({ label: 'Metroid Ravenous' });

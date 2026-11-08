@@ -172,7 +172,7 @@ test('a foreign figure ID never becomes prepared or reaches the device transfer 
   let calls = 0; const h = mount({ transfer: async () => { calls++; } });
   try {
     h.vm.choose(baseline.entries[0], false); await h.vm.prepare({ file: tag(B) }); await h.vm.upload(); await tick();
-    assert.equal(h.vm.prepared, null); assert.equal(calls, 0); assert.match(h.vm.error, /different figure/);
+    assert.equal(h.vm.prepared, null); assert.equal(calls, 0); assert.match(h.vm.error, /gehört zu einer anderen Figur/);
   } finally { h.app.unmount(); }
 });
 
