@@ -38,12 +38,12 @@
 .filemanager .connection-pill { color:#425456; background:#eaece8; }
 .filemanager .connection-pill.online { color:#195839; background:#deefdf; }
 
-.filemanager .start-actions { gap:12px; margin:16px clamp(12px,2.4vw,36px); }
+.filemanager .start-actions { gap:10px; margin:12px clamp(12px,2.4vw,36px); }
 .filemanager .start-actions button {
   --tile-deep:#15545a; --tile-fade:#25695f; --tile-detail:#d1e9dd; --tile-line:#34736b;
   --art-plate:#e2efcf; --art-border:#b9d5aa;
   grid-template-columns:auto minmax(0,1fr) auto;
-  column-gap:clamp(12px,1.6vw,23px); padding:13px clamp(13px,1.8vw,27px) 13px 16px;
+  min-height:44px; column-gap:clamp(10px,1.3vw,18px); padding:10px clamp(12px,1.5vw,22px) 10px 12px;
   border:1px solid var(--tile-line); border-radius:16px;
   color:#fffdf3; background:linear-gradient(115deg,var(--tile-deep) 35%,var(--tile-fade));
   box-shadow:0 2px 4px #193b3e11;
@@ -56,7 +56,7 @@
 .filemanager .start-actions button:focus-visible { outline:3px solid var(--tile-deep); outline-offset:3px; }
 .filemanager .start-actions button::after { width:8px; height:8px; opacity:.85; }
 .filemanager .action-art {
-  width:96px; height:72px; padding:0; border:1px solid var(--art-border); border-radius:10px;
+  width:76px; height:57px; padding:0; border:1px solid var(--art-border); border-radius:9px;
   box-shadow:0 2px 0 #122d3b2f; background-color:var(--art-plate); image-rendering:pixelated;
 }
 .filemanager .action-copy strong { font-size:clamp(1rem,1.15vw,1.22rem); letter-spacing:-.018em; }
@@ -122,8 +122,8 @@
 .filemanager :is(.workspace-actions,.file-navigation,.import-actions,.overview-actions) { row-gap:8px; }
 
 @media(max-width:850px) {
-  .filemanager .start-actions button { padding:10px 13px 10px 10px; gap:10px; }
-  .filemanager .action-art { width:64px; height:48px; }
+  .filemanager .start-actions button { padding:8px 11px 8px 8px; gap:8px; }
+  .filemanager .action-art { width:56px; height:42px; }
 }
 @media(max-width:650px) {
   .filemanager .app-header { min-height:auto; padding:12px 14px; row-gap:10px; }
@@ -131,8 +131,9 @@
   .filemanager .brand-mark svg { width:24px; height:24px; }
   .filemanager .header-language .el-button,.filemanager .header-tools>.el-button { font-size:.78rem; }
   .filemanager .workspace-body { padding:12px 8px; }
-  .filemanager .start-actions { margin:10px; gap:7px; }
-  .filemanager .start-actions button { border-radius:11px; gap:10px; }
+  .filemanager .start-actions { margin:8px 10px; gap:6px; }
+  .filemanager .start-actions button { border-radius:11px; }
+  .filemanager .action-art { width:48px; height:36px; }
   .filemanager .action-copy strong { font-size:.95rem; }
   .filemanager .action-copy>span { font-size:.81rem; }
   .filemanager .workspace-nav { padding:6px; gap:3px; }
@@ -148,9 +149,6 @@
     min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere;
   }
   .filemanager .remote-pad strong { max-width:100%; }
-}
-@media(max-width:360px) {
-  .filemanager .action-art { width:48px; height:36px; }
 }
 @media(forced-colors:active) {
   .filemanager .workspace-nav>button[aria-current="page"] { outline:2px solid Highlight; outline-offset:-2px; }

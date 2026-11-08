@@ -1,5 +1,12 @@
 # Allmiibo LCD release notes
 
+## File manager 3.42.2 · 8 November 2026
+
+The illustrated shortcuts for figure import and firmware updates take up less space at the top. Both still open with one tap. On a phone you can download the web source or the ChatGPT review package for either 3.42.2 or 3.42.1. [Web 3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) · [Web guide](docs/DATEIMANAGER_WEB.md#dateimanager-3422)
+
+- **3.42.2 (current)** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
+- **3.42.1 (previous release)** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
+
 ## File manager 3.42.1 · 8 November 2026
 
 Two illustrated shortcuts open figure import and firmware updates on a phone. The six workspaces have distinct accent colours. Your device shows the current folder and a wide gradient bar for used storage. Figure import now opens on the first click even while the browser is still loading the view. The guide also covers Nordic’s desktop Bluetooth DFU option with a compatible adapter. [Web 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Web guide](docs/DATEIMANAGER_WEB.md#dateimanager-3421)

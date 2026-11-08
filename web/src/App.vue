@@ -43,7 +43,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.42.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.42.2</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -265,7 +265,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.42.1</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.42.2</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -477,7 +477,11 @@
       </template>
     </el-dialog>
 
-  <footer class="source-footer"><a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a></footer>
+  <footer class="source-footer">
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}</a>
+    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Prüfpaket für ChatGPT (ZIP)' : 'Test kit for ChatGPT (ZIP)' }}</a>
+    <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
+  </footer>
   </main></el-config-provider>
 </template>
 
@@ -508,6 +512,8 @@ import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure
 import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
 import { metadataNoteInfo } from "./lib/metadata-note.js"
 import { deploymentPath } from "./lib/deployment-path.js"
+import { version as webVersion } from "../package.json"
+import { projectDownloads } from "./lib/project-downloads.js"
 import { dfuReference } from "./lib/release-packages.js"
 import catalogueBaseline from "./data/catalogue.json"
 
@@ -517,7 +523,7 @@ export default {
   components: { DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.42.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.42.2.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
@@ -576,6 +582,7 @@ export default {
     catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },
     dfuPageUrl() { return deploymentPath('dfu/web.html') + (this.lastDfuReference || ''); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
+    archiveLinks() { return projectDownloads(webVersion); },
     guideUrl() { return deploymentPath(this.language.startsWith('de') ? 'guide/index.html' : 'guide/en.html'); },
     uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
     metadataNote() { return metadataNoteInfo(this.meta_form.notes); },
@@ -776,7 +783,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.42.1.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.42.2.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -1251,7 +1258,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.42.1.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.42.2.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -2109,6 +2116,8 @@ export default {
 </script>
 
 <style>
+.source-footer { display:flex; flex-wrap:wrap; align-items:center; gap:0 1rem; padding:.5rem 1rem; }
+.source-footer a { display:inline-flex; align-items:center; min-height:44px; color:#12565d; text-underline-offset:.18em; }
 .el-message--error .el-message__content {
   min-width: 0;
   overflow-wrap: anywhere;

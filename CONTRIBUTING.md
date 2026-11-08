@@ -11,7 +11,7 @@ host-test contribution; say clearly which checks were performed on a real device
 | --- | --- |
 | LCD application | [DE3.66 / 638 prerelease source](fw/application/src/) and [unsigned build guide](docs/BUILD_DE3_66.md). To reproduce the device-tested DE3.65 / 637 release, check out [tag `de3.65`](https://github.com/bluecyber81/pixl.js/tree/de3.65) and follow its [build guide](https://github.com/bluecyber81/pixl.js/blob/de3.65/docs/BUILD_DE3_65.md). |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). The [3.42.1 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) includes portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). The [3.42.2 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) includes portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |
@@ -46,7 +46,13 @@ the finished bundles. The development server binds to `127.0.0.1:8010`. Normal
 tests use synthetic fixtures, mocked Bluetooth and local WASM, not a device.
 Windows-specific launcher tests are skipped on other operating systems.
 
-For Pages, only the contents of `dist-pages/` belong in the publication branch.
+Publish the contents of `dist-pages/` to the Pages branch. For mobile downloads,
+copy the two published release ZIPs (source and ChatGPT test kit) into
+`downloads/web<VERSION>/` on that branch, keeping their original filenames.
+The application footer and license page use these versioned URLs. Before linking
+them in the release notes, download each URL without signing in and compare its
+SHA-256 with the corresponding GitHub release asset. Keep older linked versions
+available. The portable bundle does not need to include the download archives.
 Do not publish a source checkout, `node_modules/`, server state or private files.
 The CI below tests builds; it does not deploy Pages or create releases.
 

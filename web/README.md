@@ -1,4 +1,9 @@
-# Allmiibo Dateimanager 3.42.1
+# Allmiibo Dateimanager 3.42.2
+
+Die bebilderten Schaltflächen für Figurenimport und Firmwareupdate nehmen oben weniger Platz ein. Beide bleiben direkt antippbar. Am Handy kannst du für 3.42.2 und 3.42.1 jeweils den Web-Quellcode oder das ChatGPT-Prüfpaket herunterladen. [Bedienung](../docs/DATEIMANAGER_WEB.md#dateimanager-3422)
+
+- **3.42.2 (aktuell)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
+- **3.42.1 (Vorgängerversion)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
 
 Auf dem Handy führen die bebilderten Schaltflächen direkt zu Figurenimport und Firmwareupdate. Die sechs Bereiche haben eigene Farbakzente. „Dein Gerät“ zeigt den aktuellen Ordner und die Speicherbelegung mit einem breiten Verlaufsbalken. Der Figurenimport öffnet sich jetzt auch beim ersten Klick, wenn der Browser die Ansicht noch lädt. Die Anleitung beschreibt zusätzlich Nordics PC-Weg für Bluetooth-DFU mit einem passenden Adapter. [Bedienung](../docs/DATEIMANAGER_WEB.md#dateimanager-3421)
 
@@ -10,7 +15,7 @@ Seit 3.40.0 gibt es die direkte Figurenvorschau in der Gerätesuche, neun Ankün
 
 Der Dateimanager erklärt Namenskollisionen, für Windows ungeeignete Dateinamen und abweichende Unicode-Schreibweisen direkt beim Vergleich. Im Figurenkatalog gibt es alle 54 vorhandenen englischen Nutzungshinweise auch auf Deutsch. Auf der DFU-Seite kann der Browser während des Updates das Display wach halten.
 
-Unter **Update** und auf der DFU-Seite stehen für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die optionale Testversion DE3.66/638 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.42.1](LIESMICH_3_42_1.txt).
+Unter **Update** und auf der DFU-Seite stehen für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die optionale Testversion DE3.66/638 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.42.2](LIESMICH_3_42_2.txt).
 
 Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. [Bedienung und Grenzen](../docs/RELEASE_WEB3_39_3.de.md).
 
@@ -28,7 +33,7 @@ Den Tab im Vordergrund lassen: manuelles Sperren, Energiesparen oder Browser-Sus
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen** schließt im normalen Schema-1-Restore die exakten inaktiven Stammdateien `.pixl_txn_old` und `.pixl_txn_new` sichtbar aus, erhält sie aber im Archiv. Aktive/unklare Stamm-Transaktionseinträge sperren den gesamten Import. Quelle, I:/-/E:/-Zielumleitung und frischer Zielzustand werden geprüft. Gleichnamige Dateien in gewöhnlichen Unterordnern bleiben normale Nutzdaten. Schema-2-Restores verwenden weiterhin den Migrationsassistenten.
 
-Die DFU-Seite enthält **DE3.65 / 637** als reines Anwendungsupdate für LCD-Geräte mit PFS1 und S112 7.3.0. Nach der Auswahl prüft der Dateimanager die ZIP-Datei. Die Bluetooth-Übertragung startet durch die Geräteauswahl in Schritt 2. [Startanleitung 3.42.1](LIESMICH_3_42_1.txt).
+Die DFU-Seite enthält **DE3.65 / 637** als reines Anwendungsupdate für LCD-Geräte mit PFS1 und S112 7.3.0. Nach der Auswahl prüft der Dateimanager die ZIP-Datei. Die Bluetooth-Übertragung startet durch die Geräteauswahl in Schritt 2. [Startanleitung 3.42.2](LIESMICH_3_42_2.txt).
 
 Seit **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
 auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
@@ -65,7 +70,7 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Startanleitung](LIESMICH_3_42_1.txt)
+[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) · [Startanleitung](LIESMICH_3_42_2.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
@@ -146,7 +151,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.59 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das [Web-Quellpaket 3.42.1](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip)
+Das [Web-Quellpaket 3.42.2](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen

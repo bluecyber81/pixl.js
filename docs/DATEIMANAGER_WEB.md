@@ -3,7 +3,7 @@
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Anleitung für Firmware, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html) ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloads für 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
+[Downloads für 3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -19,9 +19,18 @@ Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
 
+## Dateimanager 3.42.2
+
+Für die aktuelle Version tippe unten im Dateimanager auf **Quellcode (ZIP)** oder **Prüfpaket für ChatGPT (ZIP)**. Beide Downloads funktionieren auch ohne Geräteverbindung.
+
+Die bebilderten Schaltflächen für Figurenimport und Firmwareupdate nehmen oben weniger Platz ein. Beide bleiben direkt antippbar. Am Handy kannst du für 3.42.2 und 3.42.1 jeweils den Web-Quellcode oder das ChatGPT-Prüfpaket herunterladen. Die Quellcode-ZIP ist für die Arbeit am Dateimanager gedacht. Wähle das Prüfpaket, wenn du ChatGPT die Quellen und Nachweise zu DE3.66, Z19 und dem jeweiligen Dateimanager übergeben möchtest.
+
+- **3.42.2 (aktuell)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
+- **3.42.1 (Vorgängerversion)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
+
 ## Dateimanager 3.42.1
 
-Die sechs Arbeitsbereiche haben eigene Farbakzente. Auf dem Handy führen zwei bebilderte Schaltflächen direkt zum Figurenimport und zum Firmwareupdate. Bei verbundenem Allmiibo zeigt „Dein Gerät“ den geöffneten Ordner, die Zahl seiner Einträge und die Speicherbelegung. Der breite Balken am unteren Rand zeigt den belegten Anteil mit einem Verlauf von Petrol zu Indigo. Neben dem Balken stehen freie und gesamte Kapazität sowie der belegte Prozentanteil. Auf dem Desktop findest du die Karte in der Seitenleiste, auf dem Handy unter den sechs Navigationsschaltflächen. Beide Beispielansichten zeigen simulierte Gerätedaten. [Handy](images/web-3.42.1/mobile.png) · [Desktop](images/web-3.42.1/desktop.png)
+Die sechs Arbeitsbereiche haben eigene Farbakzente. Auf dem Handy führen zwei bebilderte Schaltflächen direkt zum Figurenimport und zum Firmwareupdate. Bei verbundenem Allmiibo zeigt „Dein Gerät“ den geöffneten Ordner, die Zahl seiner Einträge und die Speicherbelegung. Der breite Balken am unteren Rand zeigt den belegten Anteil mit einem Verlauf von Petrol zu Indigo. Neben dem Balken stehen freie und gesamte Kapazität sowie der belegte Prozentanteil. Auf dem Desktop findest du die Karte in der Seitenleiste, auf dem Handy unter den sechs Navigationsschaltflächen. Beide Beispielansichten aus **3.42.1** zeigen simulierte Gerätedaten. [Handy](images/web-3.42.1/mobile.png) · [Desktop](images/web-3.42.1/desktop.png)
 
 Auch bei langsamer Verbindung genügt ein Klick auf **Ich möchte eine Figur hinzufügen**. Sobald die Ansicht geladen ist, springt der Dateimanager zur Figurenauswahl. Unter **Anleitung → Programme und Downloads** findest du den PC-Weg mit nRF Util für Bluetooth-DFU und die dafür erforderliche Nordic-Hardware. Für diesen Browser-Patch ist kein Flashen erforderlich.
 

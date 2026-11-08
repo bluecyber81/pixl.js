@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.42.2 · 8 November 2026
+
+The illustrated shortcuts for figure import and firmware updates take up less space at the top. Both still open with one tap. On a phone you can download the web source or the ChatGPT review package for either 3.42.2 or 3.42.1. [Web 3.42.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2) · [Web guide](DATEIMANAGER_WEB.md#dateimanager-3422)
+
 ## File manager 3.42.1 · 8 November 2026
 
 Two illustrated shortcuts open figure import and firmware updates on a phone. The six workspaces have distinct accent colours. Your device shows the current folder and a wide gradient bar for used storage. Figure import now opens on the first click even while the browser is still loading the view. The guide also covers Nordic’s desktop Bluetooth DFU option with a compatible adapter. [Web 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Web guide](DATEIMANAGER_WEB.md#dateimanager-3421)
