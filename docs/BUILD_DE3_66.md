@@ -21,6 +21,10 @@ python3 tools/run_firmware_tests.py --sdk-archive /pfad/Nordic_SDK_Buildquellen_
 python3 fw/tests/de3/check_stack_watermark_elf.py build/lcd-de366/pixljs.out
 ```
 
+Mit `--profile bounded-host` führt derselbe Starter die kürzere Auswahl auf dem Host aus. Von den 149 bekannten Skripten wählt sie 143 aus. Die sechs benannten längeren Kampagnen und ihre Gründe stehen im JSON. Neue Tests laufen in beiden Profilen mit. Das Profil benötigt Python, GCC und dasselbe geprüfte SDK-Archiv. `--profile full` ist die Voreinstellung. Beide Berichte enthalten die Produktions-SourceID, die Auswahl und die Einzelergebnisse. Ein Skript kann mehrere eigene Prüffälle enthalten.
+
+Der optionale Buildschalter `--stack-report` exportiert die bereits beim Kompilieren entstandenen GCC-Dateien unter `stack-usage/`. `STACK_USAGE.json` enthält Datei, Funktion, Einzelrahmen in Byte und die Einordnung des Compilers. Der Neubau der App638 lieferte mit und ohne Export dasselbe BIN und HEX. Einzelrahmen enthalten keine aufgerufenen Funktionen. Indirekte Aufrufe, Assembler und verschachtelte Interrupts benötigen eigene Belege. Den aktuellen Mindestabstand zur Laufzeit meldet die Stackdiagnose des Geräts.
+
 [Änderungen und Installation](RELEASE_DE3_66.md) · [Ergebnisse und Hashes der geprüften Fassung](validation/DE3_66.json)
 
 ## SDK-Archiv für den nativen Build

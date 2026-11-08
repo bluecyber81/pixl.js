@@ -8,6 +8,17 @@ import subprocess
 import sys
 
 FW = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(FW / 'scripts'))
+from production_id import fingerprint, source_hashes
+
+BOUNDED_OMISSIONS = {
+    'de2/test_cache_nfc.py': 'Extended NFC campaign',
+    'de2/test_metadata.py': 'Extended metadata campaign',
+    'de2/test_vfs_protocol.py': 'Extended VFS campaign',
+    'de3/test_lfs_wear_de355.py': 'Extended storage-wear campaign',
+    'de3/test_math_precision_de335.py': 'Extended game-trajectory sweep',
+    'de3/test_nfc_frames_de346.py': 'Extended NFC frame campaign',
+}
 
 def snapshot():
     paths = list((FW / 'application/src').rglob('*.c')) + list((FW / 'application/src').rglob('*.h'))
@@ -27,6 +38,7 @@ def snapshot():
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--report', required=True, type=Path)
 parser.add_argument('--minimum-suites', type=int, default=1)
+parser.add_argument('--profile', choices=('full', 'bounded-host'), default='full')
 args = parser.parse_args()
 if args.report.exists():
     raise SystemExit('Use a new report path; preserve previous evidence')
@@ -36,8 +48,15 @@ scripts = [script for folder in ('de2', 'de3') for script in sorted((FW / 'tests
 if not scripts or len(scripts) < args.minimum_suites:
     raise SystemExit(f'Expected at least {args.minimum_suites} firmware suites, found {len(scripts)}')
 before = snapshot()
+source_id = fingerprint(source_hashes(FW))
+available = {script.relative_to(FW / 'tests').as_posix(): script for script in scripts}
+omitted = BOUNDED_OMISSIONS if args.profile == 'bounded-host' else {}
+if set(omitted) - available.keys():
+    raise SystemExit('Review the bounded-host profile: one or more named omissions no longer exist.')
+selected = [name for name in available if name not in omitted]
 results = []
-for script in scripts:
+for name in selected:
+    script = available[name]
     command = [sys.executable, '-B', str(script)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
@@ -50,6 +69,10 @@ for script in scripts:
         print(result['stdout'] + result['stderr'], flush=True)
 after = snapshot()
 report = {'finished_utc': datetime.now(timezone.utc).isoformat(), 'device_access': False,
+          'profile': args.profile, 'source_id_sha256': source_id,
+          'available_count': len(available), 'selected_scripts': selected, 'omitted_scripts': omitted,
+          'executed_count': len(results), 'passed_count': sum(r['exit_code'] == 0 for r in results),
+          'limits': 'Default script arguments; optional ARM32, sanitizer and separate ELF runs need their own evidence. No device or RF measurement.',
           'hardware_mocked': True, 'source_snapshot': after, 'sources_unchanged_during_tests': before == after,
           'scripts': results, 'passed': before == after and all(r['exit_code'] == 0 for r in results)}
 args.report.parent.mkdir(exist_ok=True, parents=True)

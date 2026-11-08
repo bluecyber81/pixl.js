@@ -1,17 +1,18 @@
 DEUTSCHE DFU-ANZEIGE – QUELLVORSCHLAG UND NACHBAU
-Für DE3.65/637 und Bootloader Z19
+Für DE3.66/638 mit Bootloader Z19; Quellvorschlag aus dem früheren DE3.65/637-Prüfpaket
 
 Status
 
 Dies ist ein isolierter Quellvorschlag. Der Referenzstand des Geräts ist Z19. SHA-256 der mit 0xFF aufgefüllten Bootregion:
 51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd
-Die deutsche Anzeige wird durch das normale App637-Update nicht installiert.
+Die deutsche Anzeige wird weder durch das normale App637- noch durch das App638-Update installiert. Der originale Bootloader Z19 ist in beiden Prüfpaketen unverändert.
 
-Dateien im aktuellen Gesamtpaket
+Dateien im aktuellen DE3.66/638-Gesamtpaket und zusätzliche Voraussetzung
 
-1. Das Archiv aus 01_Quellen entpacken. Die gesuchte Repositorywurzel enthält fw/, web/ und bootloader-z19/.
-2. Das Nachweisarchiv aus 02_App_und_Bootloader entpacken. Darin liegen die originalen Z19-Artefakte im Verzeichnis Z19/ und der Anzeigevorschlag unter Optionaler_Anzeigeversuch/Bootanzeige_DE_Quellvorschlag.zip.
-3. Das Vorschlags-ZIP getrennt entpacken. DFU_Anzeige_Vorschau.png zeigt sechs Zustände; SHA256SUMS.txt bindet die enthaltenen Dateien. Die Geräteanzeige hat 128 × 64 sichtbare Pixel.
+1. Das Archiv aus 01_Quellen entpacken. Die gesuchte Repositorywurzel enthält fw/, web/ und bootloader-z19/. Die originalen Z19-Artefakte liegen im aktuellen Gesamtpaket unter 03_Z19/; 02_App638/ enthält die App638-Artefakte.
+2. Das optionale Anzeige-ZIP ist im aktuellen Gesamtpaket nicht enthalten. Für diesen Nachbau wird zusätzlich das frühere DE3.65/637-Nachweisarchiv Allmiibo_DE3_65_Z19_Pruefnachweise.zip aus 02_App_und_Bootloader des damaligen Prüfpakets benötigt. Darin liegt Optionaler_Anzeigeversuch/Bootanzeige_DE_Quellvorschlag.zip. Das Vorschlags-ZIP hat 63065 Byte und SHA-256:
+2bbf2e223bf645745bdfa88b633cdc66a1888df5d95d96f0ccf3ecc7c785a04e
+3. Erst nach Beschaffung und Prüfung dieses Vorschlags-ZIP getrennt entpacken und mit der Kandidatenkopie fortfahren. DFU_Anzeige_Vorschau.png zeigt sechs Zustände; SHA256SUMS.txt bindet die enthaltenen Dateien. Die Geräteanzeige hat 128 × 64 sichtbare Pixel. Ohne diese zusätzliche Quelle beschreibt die Anleitung einen historischen Vorschlag, keinen aus dem aktuellen Gesamtpaket allein nachbaubaren Kandidaten.
 
 Eigene Kandidatenkopie vorbereiten
 
@@ -46,7 +47,7 @@ Original-Z19: 26772 Byte Payload, 1900 Byte Reserve.
 Deutscher Vorschlag: 26788 Byte Payload, 1884 Byte Reserve, gepaddeter SHA-256:
 608235fcfdc530889a31f4c9c0917664cc8bb00e077d161738165e6cccc467b6
 
-Die native Wiederholung dieser Prüfung hat den Kandidatenhash reproduziert. Die nativen Display- und Endphasenmodelle bestanden. Tatsächlicher Kontrast, Blinkeffekte, Funk und Laufzeit am Gerät sind davon nicht abgedeckt. Die ARM-Ergebnisse im Vorschlagsarchiv stammen aus dem separat gebauten Anzeigevorschlag.
+Historische Prüfung zum DE3.65/637-Vorschlag: Die damalige native Wiederholung hat den Kandidatenhash reproduziert; die nativen Display- und Endphasenmodelle bestanden. Dies ist kein neuer Prüflauf dieses Kandidaten im DE3.66/638-Paket. Tatsächlicher Kontrast, Blinkeffekte, Funk und Laufzeit am Gerät sind davon nicht abgedeckt. Die ARM-Ergebnisse im Vorschlagsarchiv stammen aus dem separat gebauten Anzeigevorschlag.
 
 Texte und Bedeutung
 

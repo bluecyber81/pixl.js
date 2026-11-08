@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the full portable firmware suite in a disposable Linux source/SDK copy."""
+"""Run the full or bounded host firmware profile in a disposable Linux source/SDK copy."""
 import argparse
 from datetime import datetime, timezone
 import json
@@ -18,14 +18,23 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--sdk-archive', type=Path, required=True)
     parser.add_argument('--report', type=Path, required=True)
+    parser.add_argument('--profile', choices=('full', 'bounded-host'), default='full')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     if sys.platform != 'linux' or sys.version_info < (3, 12) or not __debug__:
         parser.error('Use Linux/WSL Python >=3.12 with assertions enabled.')
     if sha256(args.sdk_archive) != SDK_ARCHIVE_SHA256:
         parser.error('SDK archive SHA-256 does not match the pinned source archive.')
-    import unicorn
-    for command in ('gcc', 'arm-linux-gnueabihf-gcc'):
+    commands = ['gcc']
+    unicorn_version = None
+    if args.profile == 'full':
+        commands.append('arm-linux-gnueabihf-gcc')
+        try:
+            import unicorn
+        except ImportError:
+            parser.error('The full profile requires Python Unicorn.')
+        unicorn_version = unicorn.__version__
+    for command in commands:
         if not shutil.which(command):
             parser.error('Missing test compiler: ' + command)
     report = args.report.absolute()
@@ -47,7 +56,7 @@ def main():
         env.update(NRF5_SDK_PATH=str(sdk), NRF52_SDK_ROOT=str(sdk), LANG='C.UTF-8', LC_ALL='C.UTF-8',
                    PYTHONDONTWRITEBYTECODE='1', PYTHONOPTIMIZE='0')
         command = [sys.executable, '-B', str(folder / 'fw/tests/de3/run_all.py'),
-                   '--minimum-suites', '149', '--report', str(report)]
+                   '--minimum-suites', '149', '--profile', args.profile, '--report', str(report)]
         with report.with_suffix('.log').open('w', encoding='utf-8') as log:
             child = subprocess.Popen(command, cwd=folder, env=env, text=True,
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -57,10 +66,11 @@ def main():
             status = child.wait()
     unchanged = before == source_hashes(root / 'fw')
     metadata = {'observedUTC': datetime.now(timezone.utc).isoformat(), 'python': sys.version,
-                'unicorn': unicorn.__version__, 'deviceAccess': False,
+                'profile': args.profile, 'unicorn': unicorn_version, 'deviceAccess': False,
                 'isolation': 'temporary Linux source and SDK copies',
                 'gcc': subprocess.check_output(['gcc', '--version'], text=True).splitlines()[0],
-                'armCompiler': subprocess.check_output(['arm-linux-gnueabihf-gcc', '--version'], text=True).splitlines()[0],
+                'armCompiler': (subprocess.check_output(['arm-linux-gnueabihf-gcc', '--version'], text=True).splitlines()[0]
+                                if 'arm-linux-gnueabihf-gcc' in commands else None),
                 'sdkArchiveSHA256': SDK_ARCHIVE_SHA256, 'productionInputsUnchanged': unchanged,
                 'productionInputs': before, 'exitCode': status}
     report.with_suffix('.environment.json').write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')

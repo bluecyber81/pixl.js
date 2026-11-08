@@ -52,4 +52,4 @@ Der erste Aufruf prüft die Meldungen des Testwerkzeugs. Der zweite überträgt 
 
 Der Standardlauf bestätigt vorab mit einer Kontrollprobe, dass die Erkennung von Speicherlecks aktiv ist. Kann die Kontrolle nicht laufen, schreibt das Werkzeug `BLOCKED` und das Kontrollprotokoll in die Ergebnisdatei und beendet sich mit Exitcode 2. Für einen getrennten Lauf ohne Leakprüfung `--no-leak-check` und einen neuen Ausgabedateinamen angeben. ASan und UBSan bleiben eingeschaltet, `leakDetectionConfirmed` ist dann `false`. Beide Prüfstarter verlangen Python mit aktiven Prüfanweisungen. Ein Aufruf mit `-O` endet vor dem ersten Test.
 
-Die [Anleitung zum deutschen Bootdisplay](docs/Bootanzeige_DE.txt) beschreibt den separaten Quellvorschlag und seinen Nachbau.
+Die [Anleitung zum deutschen Bootdisplay](docs/Bootanzeige_DE.txt) beschreibt den historischen separaten Quellvorschlag und seinen Nachbau. Seine Quellen müssen zusätzlich aus dem früheren DE3.65/637-Nachweisarchiv beschafft werden; das aktuelle DE3.66/638-Gesamtpaket enthält dieses optionale ZIP nicht. Die Anleitung nennt den erwarteten Archivhash und die Zuordnung der aktuellen Paketverzeichnisse.

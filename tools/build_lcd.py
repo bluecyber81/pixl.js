@@ -87,6 +87,27 @@ def make_archive(root, destination):
         archive.add(root / "fw", arcname="fw", filter=archive_filter)
 
 
+def stack_report(raw):
+    """Read actual GCC .su files. Paths identify separate translation units."""
+    frames = []
+    files = {}
+    for path in sorted(raw.rglob("*.su")):
+        relative = path.relative_to(raw).as_posix()
+        files[relative] = sha256(path)
+        for line in path.read_text(encoding="utf-8").splitlines():
+            location, size, qualifier = line.rsplit("\t", 2)
+            source, number, column, function = location.rsplit(":", 3)
+            frames.append({"unit": relative, "source": Path(source).name, "line": int(number),
+                           "column": int(column), "function": function, "bytes": int(size),
+                           "qualifier": qualifier})
+    if not frames:
+        raise ValueError("Compiler produced no stack-usage entries.")
+    return {"compiler_files_sha256": files, "frame_count": len(frames), "frames": frames,
+            "scope": "Compiler estimates per translation unit, including unlinked functions. Callees, "
+                     "indirect calls, assembler and nested interrupts require separate analysis. "
+                     "This is not a runtime stack watermark."}
+
+
 def native_build(temp, export, args, version, counter, record, log):
     """Use a disposable SDK copy; never patch the supplied SDK or toolchain."""
     if os.name != "posix":
@@ -129,6 +150,12 @@ def native_build(temp, export, args, version, counter, record, log):
     if result.returncode == 0:
         for name in (*ARTIFACTS, "production-inputs.json"):
             shutil.copyfile(work / "fw/_build" / name, export / name)
+        if args.stack_report:
+            build_dir = work / "fw/_build"
+            for path in build_dir.rglob("*.su"):
+                output = export / "stack-usage" / path.relative_to(build_dir)
+                output.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(path, output)
     return result
 
 
@@ -142,6 +169,7 @@ def main(argv=None):
     parser.add_argument("--sdk-archive", type=Path, help="Pinned SDK source tar for native Linux builds")
     parser.add_argument("--toolchain", type=Path, help="ARM GNU 12.2.Rel1 directory containing bin/")
     parser.add_argument("--output", type=Path, help="New/empty output directory; existing results are preserved")
+    parser.add_argument("--stack-report", action="store_true", help="Export existing GCC .su files and parsed per-function estimates")
     args = parser.parse_args(argv)
     if not 1 <= args.jobs <= 64:
         parser.error("--jobs must be between 1 and 64")
@@ -196,6 +224,8 @@ cd /work
 make -C fw/application -j\"$1\" pixljs BOARD=LCD RELEASE=1 APP_VERSION=\"$2\" APP_VERSION_NUM=\"$3\"
 cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw/_build/pixljs.out fw/_build/pixljs.map /output/
 """
+            if args.stack_report:
+                script += 'mkdir /output/stack-usage\ncd fw/_build\nfind . -type f -name "*.su" -exec cp --parents -t /output/stack-usage -- {} +\n'
             (temp / "build.sh").write_text(script, encoding="utf-8", newline="\n")
             command = ["docker", "run", "--rm", "--pull", "never", "--network", "none",
                        "--env", "MAKEFLAGS=--no-print-directory",
@@ -228,6 +258,14 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
             record["matches_archived_release_binary"] = matches
             if args.mode == "release" and not matches:
                 raise RuntimeError("Release binary SHA-256 mismatch; no firmware artifacts exported. See build.log.")
+            if args.stack_report:
+                stack = stack_report(export / "stack-usage")
+                stack_path = destination / "STACK_USAGE.json"
+                stack_path.write_text(json.dumps(stack, indent=2) + "\n", encoding="utf-8")
+                shutil.copytree(export / "stack-usage", destination / "stack-usage")
+                record["stack_usage"] = {"report_sha256": sha256(stack_path),
+                                         "files": len(stack["compiler_files_sha256"]),
+                                         "frames": stack["frame_count"]}
             for name in (*ARTIFACTS, "production-inputs.json"):
                 shutil.copyfile(export / name, destination / name)
             record["status"] = "passed" if args.mode == "release" else "unsigned_" + args.mode
