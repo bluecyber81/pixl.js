@@ -70,6 +70,8 @@
             <li><h3>An application transfer was interrupted</h3><p>When <b>pixl dfu</b> reappears, select the same device and the same application ZIP. The web updater reads the saved position and checksum. Depending on the device's confirmed state, it resumes or starts again. For an interrupted system update, use the recovery procedure for that package in its supported client.</p></li></ul>
         </section>
         <section id="programme"><h2>Programs and downloads</h2><p>Use Chrome on Android or a Web Bluetooth browser such as Chrome or Edge on a laptop. The file manager itself runs in your browser. Updating the website requires no firmware flash.</p>
+          <h3>System updates on a PC with a Nordic radio adapter</h3>
+          <p>For a compatible signed system package, <b>nRF Util</b> supports transfers over Bluetooth LE on a PC with <code>nrfutil nrf5sdk-tools dfu ble</code>. This requires a separate Nordic radio adapter connected over USB, such as the <b>nRF52840 Dongle (PCA10059)</b> or a compatible Nordic development kit. The laptop’s built-in Bluetooth alone cannot run this procedure. For application updates you can use the web updater. For a compatible combined package on a phone, follow the <a href="#bootloader">Android steps</a>. <a href="https://docs.nordicsemi.com/r/bundle/nrfutil/page/nrfutil-nrf5sdk-tools/nrfutil-nrf5sdk-tools-dfu.html/dfu-over-bluetooth-low-energy">Nordic’s guide to DFU over Bluetooth LE on a PC</a>.</p>
           <ul class="downloads"><li><a href="../">Open file manager</a></li>
             <li><a href="../dfu/web.html">Web DFU for the application</a></li>
             <li><a href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>Stable LCD app DE3.65 (ZIP)</a></li>
