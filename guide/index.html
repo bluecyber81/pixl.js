@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Allmiibo aktualisieren · Allmiibo</title>
+  <meta name="description" content="So aktualisierst du ein LCD-Allmiibo, übernimmst deine Sammlung in Packed LittleFS und erkennst, wann ein Bootloader-Paket passt.">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="alternate" hreflang="en" href="en.html">
+</head>
+<body id="top">
+  <header class="bar"><nav aria-label="Seitennavigation">
+    <a class="return" href="../"><span aria-hidden="true">←</span> Zum Dateimanager</a>
+    <a lang="en" hreflang="en" href="en.html">English</a>
+  </nav></header>
+  <main>
+    <div class="intro"><h1>Allmiibo aktualisieren</h1><p>So aktualisierst du ein LCD-Allmiibo, übernimmst deine Sammlung in Packed LittleFS und erkennst, wann ein Bootloader-Paket passt.</p></div>
+    <nav class="choices" aria-labelledby="choose"><h2 id="choose">Was möchtest du machen?</h2>
+      <ul><li><a href="#flash"><b>Die Geräte-App aktualisieren</b><span>Für ein passendes LCD mit bereits eingerichtetem PFS1.</span></a></li>
+        <li><a href="#littlefs"><b>Die Sammlung auf LittleFS umziehen</b><span>Für Geräte mit bestätigtem SPIFFS oder einem offenen Import.</span></a></li>
+        <li><a href="#bootloader"><b>Bootloader oder Funksoftware prüfen</b><span>Für eine gezielte Systemänderung mit eigenem, passendem Paket.</span></a></li></ul>
+    </nav>
+    <div class="layout">
+      <nav class="contents" aria-labelledby="contents"><h2 id="contents">Direkt zu</h2>
+        <a href="#diagnose">Zuerst den Gerätestand lesen</a>
+        <a href="#flash">Die Geräte-App aktualisieren</a>
+        <a href="#littlefs">Die Sammlung auf LittleFS umziehen</a>
+        <a href="#bootloader">Bootloader oder Funksoftware prüfen</a>
+        <a href="#programme">Programme und Downloads</a>
+        <a href="#hilfe">Wenn ein Schritt anhält</a>
+      </nav>
+      <div class="chapters">
+        <section id="diagnose">
+          <h2>Zuerst den Gerätestand lesen</h2>
+          <p>Öffne die <a href="../" target="_blank" rel="noopener">Geräteübersicht im Dateimanager</a>. Öffne auf dem Allmiibo <b>BLE Dateitransfer</b> (bei älteren Versionen „Bluetooth-Dateiübertragung“), klicke im Browser auf <b>Verbinden</b> und wähle dein <b>Pixl.js</b>. Wenn mehrere Geräte in der Nähe sind, lass nur das Zielgerät sichtbar.</p>
+          <ol class="steps"><li><h3>Modell und Software festhalten</h3><p>Prüfe am Gerät die Displayvariante. Die hier angebotenen Firmwaredateien sind für das LCD-Modell. Im Dateimanager stehen Browser- und Geräteversion getrennt. Unter <b>Gerät &amp; Diagnose</b> kannst du mit <b>Bootloader- und SoftDevice-Angaben lesen</b> Bootloaderzähler, SoftDevice und Prüfergebnisse abfragen.</p></li>
+            <li><h3>Speicher erkennen</h3><p>Unter <b>Sicherung → LittleFS: Umstellung &amp; Wiederherstellung → Speicherstatus lesen</b> siehst du, ob E: schon Packed LittleFS (PFS1) verwendet. Bei abgeschlossenem Import geht es direkt zum <a href="#flash">App-Update</a>. Bei offenem Import geht es zum <a href="#littlefs">Fortsetzen mit der gespeicherten ZIP</a>.</p></li>
+            <li><h3>Unbekannte Angaben klären</h3><p>Eine ältere App wie DE3.8 kann Bootloader- oder Speicherangaben offenlassen. Vor einem Wechsel müssen LCD-Platine, Speicherlayout und Zielpaket feststehen. Für OLED, gewöhnliches LittleFS anderer Firmware oder einen Lesefehler ist hier kein allgemeiner Umstellungsweg freigegeben.</p></li></ol>
+        </section>
+        <section id="flash">
+          <h2>Die Geräte-App per Bluetooth flashen</h2>
+          <p>Für das passende LCD mit fertig eingerichtetem PFS1 sind <b>DE3.65 / 637</b> die stabile Version und <b>DE3.66 / 638</b> die Testversion mit Displayfoto. Zur erprobten Kombination gehören Z19 und Nordic S112 7.3.0. Wenn bereits die gewünschte App läuft, ist dieser Schritt erledigt.</p>
+          <ol class="steps"><li><h3>Sammlung sichern</h3><p>Halte eine aktuelle Sicherung bereit. Öffne dafür im Dateimanager <b>Dateien → E:/</b>, dann <b>Sicherung → Ordner sichern (ZIP)</b>. Speichere die fertige ZIP in Downloads. Für eine erstmalige Speicherumstellung brauchst du die vollständigere <a href="#littlefs">Raw128-Sicherung im Assistenten</a>.</p></li>
+            <li><h3>Anwendung auswählen</h3><p>Öffne <b>Update</b> im verbundenen Dateimanager oder die <a href="../dfu/web.html" target="_blank" rel="noopener">Web-DFU-Seite</a>. Wähle die gewünschte LCD-Version und <b>Paket laden und prüfen</b>. Für den lokalen Download gibt es unten beide unveränderten Anwendungs-ZIPs. Ist auf dem Gerät eine höhere Version installiert, bleib auf dem neueren Stand, wenn du keinen gezielten Rückweg planst.</p></li>
+            <li><h3>Das richtige Funkgerät auswählen</h3><p>Trenne die Dateiübertragung und andere verbundene Apps. Öffne auf dem Allmiibo <b>Einstellungen → Firmware-Update</b>. Auf der DFU-Seite wählst du <b>DFU-Gerät auswählen und übertragen → pixl dfu</b>. Nach deiner Auswahl beginnt die Übertragung. Halte Gerät und Browser währenddessen in Reichweite und das Handy wach.</p></li>
+            <li><h3>Neustart bestätigen</h3><p>Warte auf das normale Menü. Öffne <b>BLE Dateitransfer</b>, verbinde im Dateimanager wieder <b>Pixl.js</b> und lies die neue Geräteversion. Öffne einen gewohnten Ordner und eine Figur. Das App-Paket aktualisiert nur die Gerätesoftware und erhält deine Sammlung auf PFS1.</p></li></ol>
+        </section>
+        <section id="littlefs">
+          <h2>Von SPIFFS auf Packed LittleFS umstellen</h2>
+          <p>Dieser Weg richtet Laufwerk <b>E:</b> einmalig neu ein. Er setzt einen bestätigten, für genau dein Gerät geeigneten Vorbereitungs- und Zielstand voraus. Bei DE3.8 oder DE3.16 ist ein direktes App-Update keine Speicherumstellung.</p>
+          <ol class="steps"><li><h3>Original und vollständige Sicherung aufbewahren</h3><p>Sichere zuerst das erreichbare E:/ außerhalb des Geräts. Der Migrationsassistent braucht Zugriff auf alle 128 Attributbytes jedes Eintrags (<b>Raw128</b>). Im historischen SPIFFS-Weg ermöglichte dies DE3.30-PREP / 600. Verwende eine Vorbereitung nur, wenn sie für deine Platine, das vorhandene SPIFFS und den bisherigen Updatezähler geprüft ist. Ein bereits vorhandenes PFS1 benötigt diese Vorbereitung nicht.</p></li>
+            <li><h3>Gespeicherte Dateien mit der Quelle vergleichen</h3><p>Unter <b>Sicherung → LittleFS: Umstellung &amp; Wiederherstellung</b> wählst du <b>Vollständige Sicherung erstellen → ZIP speichern → Gespeicherte ZIP erneut auswählen → Quelle vollständig prüfen</b>. Warte, bis der vollständige Vergleich übereinstimmt. Behalte die ZIP sowie denselben Browser mit derselben Dateimanager-Adresse für den Prüfbeleg.</p></li>
+            <li><h3>Platzbedarf vor dem Löschen prüfen</h3><p>Wähle das Profil für exakt deine Ziel-Firmware und klicke auf <b>LittleFS-Belegung lokal simulieren</b>. Der Test berücksichtigt auch vorübergehend belegte Blöcke und eine Platzreserve. Bei fehlendem Profil, Prüffehler oder zu wenig Platz bleib beim bisherigen Speicherstand.</p></li>
+            <li><h3>Zielgerät prüfen und E: bewusst einrichten</h3><p>Installiere den für dieses Gerät geprüften Ziel-/Wiederherstellungsstand und verbinde dasselbe Allmiibo erneut. Wähle <b>Zielgerät prüfen</b>. Erst wenn Sicherung, Quellvergleich und Platzprüfung passen, kannst du <b>Speicher einrichten …</b> bestätigen. <strong>Dieser Schritt löscht den bisherigen Inhalt von E:.</strong> Danach bindet <b>Sicherung für Import bestätigen …</b> die Wiederherstellung an genau diese ZIP.</p></li>
+            <li><h3>Wiederherstellen und einmal vollständig vergleichen</h3><p>Wähle <b>Alle Nutzdaten wiederherstellen / fortsetzen</b>. Danach klicke auf <b>Import nach vollständiger Nachprüfung abschließen</b>. Der Vergleich umfasst Dateien, Ordner und Rohattribute. Warte auf <b>Importabschluss vom Gerät bestätigt</b>. Mit <b>Gerät bewusst neu starten …</b> startest du ins Menü. Prüfe Ordner und eine bekannte Figur.</p></li>
+            <li><h3>Eine Unterbrechung fortsetzen</h3><p>Verbinde dasselbe Gerät im bisherigen Browser erneut, wähle dieselbe gespeicherte ZIP und nutze <b>Alle Nutzdaten wiederherstellen / fortsetzen</b>. Bei offenem Import ist E: bereits eingerichtet. Eine lange Sammlung kann über Bluetooth viele Minuten dauern.</p></li></ol>
+        </section>
+        <section id="bootloader">
+          <h2>Bootloader und SoftDevice aktualisieren</h2>
+          <p>Der <b>Bootloader</b> nimmt Updates an und startet die Geräte-App. Das <b>Nordic SoftDevice S112</b> ist die Funksoftware. Ein gewöhnliches App-Update braucht auf einem bereits passenden System kein zusätzliches Systempaket.</p>
+          <ol class="steps"><li><h3>Mit dem Zielstand vergleichen</h3><p>Lies unter <b>Gerät &amp; Diagnose</b> die Bootloader- und SoftDevice-Angaben. Für Z19 gehören der Bootloaderzähler <b>19</b> und der veröffentlichte Hash des Bootbereichs zusammen; S112 7.3.0 hat die Firmware-ID <b>0x0126</b>. Stimmen die Werte bereits, ist ein weiteres Flashen derselben Komponenten überflüssig. <a href="https://github.com/bluecyber81/pixl.js/blob/main/bootloader-z19/README.md">Z19-Referenzwerte</a>.</p></li>
+            <li><h3>Passendes Paket beschaffen</h3><p>Ein Systemupdate benötigt eine für diese LCD-Platine signierte Nordic-Secure-DFU-ZIP. Prüfe anhand der Paketunterlagen den zugelassenen Ausgangsstand, Signierschlüssel, Versionszähler, SoftDevice-Übergang und die anschließende App. Die öffentlichen Z19-Quellen und das Nordic-HEX-Archiv dienen dem Nachbau und Vergleich. Ein allgemeines Z19-Kombipaket wird hier nicht angeboten. <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/COMPONENT_DOWNLOADS.md">Öffentliche Komponenten und Voraussetzungen</a>.</p></li>
+            <li><h3>Mit dem Android-Handy übertragen</h3><p>Wenn das passende Systempaket vorliegt, speichere die ZIP unverändert aufs Handy. Öffne <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">nRF Device Firmware Update</a>. Trenne den Browser vom Gerät, aktiviere auf dem Allmiibo <b>Einstellungen → Firmware-Update</b>, wähle in der Nordic-App die ZIP und dein <b>pixl dfu</b> und starte die Übertragung. Bei einem zweiteiligen Kombipaket überträgt die App zuerst die Systemkomponenten und anschließend die Anwendung. Lass auch die zweite Phase und den Neustart abschließen.</p></li>
+            <li><h3>Ergebnis am Gerät lesen</h3><p>Bei einem reinen Systempaket kann noch eine passende Anwendungs-ZIP nötig sein. Folge der Reihenfolge des Pakets. Verbinde danach <b>Pixl.js</b> im Dateimanager. Vergleiche App-Version, Bootloaderzähler, Bereichs-Hash und S112-Firmware-ID mit den erwarteten Werten. Schlägt der Vergleich fehl, sichere den Diagnosebericht für die gezielte Prüfung.</p></li></ol>
+        </section>
+        <section id="hilfe">
+          <h2>Wenn ein Schritt anhält</h2>
+          <ul class="steps"><li><h3>„Ordner sichern“ bleibt grau</h3><p>Öffne unter <b>Dateien</b> zuerst das Laufwerk <b>E:/</b>. Ein verbundener Dateimanager allein hat noch keinen Ordner ausgewählt.</p></li>
+            <li><h3>Das Handy findet das Gerät nicht</h3><p>Öffne für den Dateimanager <b>BLE Dateitransfer</b> und wähle <b>Pixl.js</b>. Für ein Update öffne <b>Firmware-Update</b> und wähle <b>pixl dfu</b>. Trenne andere verbundene Browser und Handy-Apps.</p></li>
+            <li><h3>Das App-Update wurde unterbrochen</h3><p>Ist <b>pixl dfu</b> wieder sichtbar, verwende dasselbe Gerät und dieselbe Anwendungs-ZIP. Der Web-Updater liest die gespeicherte Position und Prüfsumme. Abhängig vom bestätigten Stand setzt er dort fort oder beginnt erneut. Bei einer unterbrochenen Systemübertragung verwende die zum Systempaket gehörende Anleitung und denselben geeigneten Client.</p></li></ul>
+        </section>
+        <section id="programme"><h2>Programme und Downloads</h2><p>Für die Web-Anleitung und Dateiübertragung eignen sich Chrome auf Android oder ein Browser mit Web Bluetooth wie Chrome oder Edge auf dem Laptop. Der Dateimanager selbst läuft im Browser. Ein Update der Website erfordert keinen Flashvorgang.</p>
+          <ul class="downloads"><li><a href="../">Dateimanager öffnen</a></li>
+            <li><a href="../dfu/web.html">Web-DFU für die App</a></li>
+            <li><a href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>Stabile LCD-App DE3.65 (ZIP)</a></li>
+            <li><a href="../firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip" download>LCD-Testversion DE3.66 (ZIP)</a></li>
+            <li><a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">Nordic DFU für Android</a></li>
+            <li><a href="https://github.com/nordicsemi/Android-DFU-Library/#application">Nordics Anleitung zur App</a></li>
+            <li><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/MIGRATION_PFS1.md">Technische Migrationsanleitung</a></li></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer><a href="../">Zurück zum Dateimanager</a><a href="#top">Zum Seitenanfang ↑</a></footer>
+</body>
+</html>

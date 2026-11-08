@@ -9,3 +9,14 @@
 .phases .failed[aria-current="step"] { color:#842d20; border-color:#a34030 }
 #phase-detail { margin:.5rem 0 }
 #reconnect-link { color:#215842; font-weight:600 }
+
+/* Carry the firmware shortcut's indigo accent into the update steps. */
+:root { background:#f4f4fa; color:#263347; }
+main { border-top:4px solid #56549c; }
+h1 { color:#35366b; }
+main > section { border-color:#d8daeb; box-shadow:0 2px 8px #3636550a; }
+main > section > h2 { border-inline-start:4px solid #7774b7; padding-inline-start:.65em; }
+#load-bundled, #button { background:#504d90; }
+#load-bundled:hover:enabled, #button:hover:enabled { background:#3c3976; }
+button:disabled, #load-bundled:disabled, #button:disabled { background:#e6e7ee; color:#606474; opacity:1; }
+progress { accent-color:#504d90; }
