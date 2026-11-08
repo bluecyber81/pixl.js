@@ -90,7 +90,7 @@ import { collectionCsv } from '../lib/collection-csv.js';
 import { saveBlob, saveBlobWithPicker } from '../lib/browser-tools.js';
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,revision:Number,directory:String,locale:{type:String,default:'de_DE'},getSession:Function,getTransferSession:Function,selectedFigure:Object,readClock:{type:Number,default:0}},
-  emits:['busy','writing','catalogue','changed','recovery','report','report-stale'],
+  emits:['busy','writing','catalogue','changed','recovery','report','report-stale','import-ready'],
   data(){return {entries:baseline.entries,updates:null,running:'',progress:null,scanStartedAt:0,scanAborting:false,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
   computed:{
     de(){return this.locale.startsWith('de');},
@@ -116,7 +116,10 @@ export default {
     shownRows(){return this.resultRows.slice((this.resultPage-1)*30,this.resultPage*30);}
   },
   created(){this._serial=0;this._alive=true;},
-  mounted() { this._stopLinkUpdates = observeFigureDownloadLink(() => this.chosen?.id, this.refreshSourceUrl); },
+  mounted() {
+    this._stopLinkUpdates = observeFigureDownloadLink(() => this.chosen?.id, this.refreshSourceUrl);
+    this.$emit('import-ready');
+  },
   beforeUnmount(){this._stopLinkUpdates?.();this._alive=false;this.invalidate();},
   watch:{report(value){this.$emit('report',value);},stale(value){this.$emit('report-stale',value);},generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},revision(){if(this.report)this.stale=true;},
     selectedFigure: { immediate: true, handler(value) {

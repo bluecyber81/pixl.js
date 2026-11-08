@@ -1,0 +1,158 @@
+/* Shared application surfaces. Inventory, transfer and diagnostic states keep their own colours. */
+.filemanager {
+  --paper:#f4f5f0;
+  --surface:#fffefa;
+  --ink:#183b3c;
+  --muted:#50696a;
+  --rule:#ccd8d3;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,"Segoe UI",system-ui,sans-serif;
+}
+
+.filemanager .app-header {
+  min-height:76px; height:auto; padding:16px clamp(16px,3vw,46px);
+  border-bottom:0; background:linear-gradient(108deg,#123f45 4%,#193a4a 58%,#343756);
+}
+.filemanager .brand-mark {
+  width:43px; height:43px; border-radius:13px; color:#d4f5db; background:#ffffff12;
+  border:1px solid #b0dacc67;
+}
+.filemanager .brand-mark svg { width:29px; height:29px; }
+.filemanager .app-header h1 { color:#fffdf2; font-size:clamp(1.25rem,2vw,1.6rem); line-height:1.15; }
+.filemanager .app-eyebrow { color:#b8ddd2; font-size:.65rem; letter-spacing:.13em; }
+.filemanager .header-language .el-button { color:#e3f1ed; border-color:#85a3a7; background:transparent; }
+.filemanager .header-language .el-button:hover { color:white; background:#ffffff18; }
+.filemanager .header-tools>.el-button--primary { color:#163e37; border-color:#b4e6c6; background:#c0edcf; }
+.filemanager .header-tools>.el-button--primary:hover:enabled { background:#d6f8db; }
+.filemanager .header-tools>.el-button--primary:disabled { color:#45595a; background:#c6d1cc; border-color:#c6d1cc; }
+.filemanager .header-tools :focus-visible { outline:3px solid #ffdb92; outline-offset:3px; }
+.filemanager .version-context,.filemanager .quick-status { padding-inline:clamp(16px,3vw,46px); background:var(--surface); }
+.filemanager .version-context { color:#4e6262; font-size:.72rem; }
+.filemanager .version-context strong { color:#263f40; }
+.filemanager .quick-status { flex-wrap:wrap; border-bottom:1px solid var(--rule); }
+.filemanager .quick-status .status-links { margin-inline-start:auto; }
+.filemanager .status-links .guide-link,.filemanager .quick-status .status-links button {
+  color:#245a60; font-size:.82rem; font-weight:600;
+}
+.filemanager .connection-pill { color:#425456; background:#eaece8; }
+.filemanager .connection-pill.online { color:#195839; background:#deefdf; }
+
+.filemanager .start-actions { gap:12px; margin:16px clamp(12px,2.4vw,36px); }
+.filemanager .start-actions button {
+  --tile-deep:#15545a; --tile-fade:#25695f; --tile-detail:#d1e9dd; --tile-line:#34736b;
+  --art-plate:#e2efcf; --art-border:#b9d5aa;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  column-gap:clamp(12px,1.6vw,23px); padding:13px clamp(13px,1.8vw,27px) 13px 16px;
+  border:1px solid var(--tile-line); border-radius:16px;
+  color:#fffdf3; background:linear-gradient(115deg,var(--tile-deep) 35%,var(--tile-fade));
+  box-shadow:0 2px 4px #193b3e11;
+}
+.filemanager .start-actions .start-firmware {
+  --tile-deep:#3d416b; --tile-fade:#565782; --tile-detail:#e7e6f4; --tile-line:#55577e;
+  --art-plate:#e5e2f5; --art-border:#d1cde4;
+}
+.filemanager .start-actions button:hover { box-shadow:0 3px 10px #20323927; border-color:var(--tile-deep); }
+.filemanager .start-actions button:focus-visible { outline:3px solid var(--tile-deep); outline-offset:3px; }
+.filemanager .start-actions button::after { width:8px; height:8px; opacity:.85; }
+.filemanager .action-art {
+  width:96px; height:72px; padding:0; border:1px solid var(--art-border); border-radius:10px;
+  box-shadow:0 2px 0 #122d3b2f; background-color:var(--art-plate); image-rendering:pixelated;
+}
+.filemanager .action-copy strong { font-size:clamp(1rem,1.15vw,1.22rem); letter-spacing:-.018em; }
+.filemanager .action-copy>span { color:var(--tile-detail); font-size:.86rem; }
+
+.filemanager :is(#file-workspace,[aria-controls="file-workspace"]) { --zone:#236154; --wash:#e2f0e6; }
+.filemanager :is(#backup-workspace,[aria-controls="backup-workspace"]) { --zone:#336573; --wash:#e0eef1; }
+.filemanager :is(#update-workspace,[aria-controls="update-workspace"]) { --zone:#514f83; --wash:#ebeaf7; }
+.filemanager :is(#remote-workspace,[aria-controls="remote-workspace"]) { --zone:#70516f; --wash:#f1e8ef; }
+.filemanager :is(#device-overview,[aria-controls="device-overview"]) { --zone:#345a80; --wash:#e5edf6; }
+.filemanager :is(#catalogue-workspace,[aria-controls="catalogue-workspace"]) { --zone:#695886; --wash:#eee9f4; }
+.filemanager .workspace-nav { padding-top:18px; background:#f5f7f2; border-color:var(--rule); }
+.filemanager .workspace-nav>button {
+  min-width:0; min-height:48px; gap:11px; border:1px solid transparent; border-radius:10px;
+}
+.filemanager .workspace-nav>button:hover { background:#edf2eb; }
+.filemanager .workspace-nav>button[aria-current="page"] {
+  background:var(--wash); border-color:color-mix(in srgb,var(--zone) 34%,white);
+  box-shadow:inset 3px 0 var(--zone);
+}
+.filemanager .workspace-nav .workspace-icon {
+  display:grid; width:30px; height:30px; background:var(--wash); color:var(--zone); border-radius:8px;
+}
+.filemanager .workspace-nav button[aria-current="page"] .workspace-icon { color:white; background:var(--zone); }
+.filemanager .workspace-nav button[aria-current="page"] strong { color:var(--zone); }
+.filemanager .workspace-nav>button>span:nth-child(2) { min-width:0; overflow-wrap:anywhere; }
+.filemanager .workspace-nav strong { color:#293e42; font-size:.875rem; }
+.filemanager .workspace-nav small { color:var(--muted); }
+
+.filemanager .workspace-body { padding:clamp(15px,2vw,30px); }
+.filemanager .workspace-body>:is(.files-workspace,.workspace-panel,.remote-workspace,.device-panel,.extra-tools) {
+  min-width:0; border:1px solid var(--rule); border-top:4px solid var(--zone); border-radius:15px;
+  background-color:var(--surface); box-shadow:0 3px 12px #253a3908;
+}
+.filemanager .workspace-body>.files-workspace { margin:0; }
+.filemanager .workspace-body :is(.section-heading h2,.extra-tools>h2),
+.filemanager .workspace-body>:is(.workspace-panel,.remote-workspace,.device-panel)>summary {
+  color:var(--zone); margin:0; font-size:clamp(1.28rem,1.7vw,1.62rem); letter-spacing:-.025em;
+  line-height:1.24; overflow-wrap:anywhere;
+}
+.filemanager .workspace-body>:is(.workspace-panel,.remote-workspace,.device-panel)>summary {
+  border-color:var(--rule); padding-block-end:14px;
+}
+.filemanager .workspace-body>.workspace-panel>summary>span { color:var(--muted); letter-spacing:0; font-size:.8rem; }
+.filemanager .workspace-description,.filemanager .workspace-body>.extra-tools>p { color:var(--muted); font-size:.88rem; }
+.filemanager .section-eyebrow { color:var(--zone); font-size:.65rem; letter-spacing:.11em; }
+.filemanager .workspace-content>.guide-link { display:inline-block; margin:5px 0 12px; color:var(--zone); }
+.filemanager .file-filters label,.filemanager .file-name-action { font-size:.86rem; }
+.filemanager .el-table th.el-table__cell { color:#476356; --el-table-header-bg-color:#ebf3ea; }
+.filemanager .folder-path,.filemanager .device-search { background:#eff5ed; border-color:#cbdcce; }
+.filemanager .selection-context { background:#f6f8f2; border-color:var(--rule); }
+.filemanager .connection-guide { border-style:solid; background:#f0f6ee; }
+.filemanager .connection-guide-symbol { border-radius:8px; }
+.filemanager .connection-guide h3 { font-size:1rem; }
+.filemanager .connection-guide p { color:#415b50; font-size:.86rem; }
+.filemanager .update-steps>div,.filemanager .firmware-packages .package { border-color:#d8d6e6; background:#f8f7fb; }
+.filemanager .update-steps>div>span { border-radius:7px; color:#fff; background:var(--zone); }
+.filemanager #backup-workspace .migration-panel { background:#f5f9f9; border-color:#c6dbde; }
+.filemanager #remote-workspace .remote-control { background:#fbf7fa; border-color:#ded1de; }
+.filemanager #device-overview :is(.diagnostic-overview,.startup-diagnostics) { background:#f4f7fb; border-color:#ccd9e6; }
+.filemanager #catalogue-workspace :is(.collection-assistant,.catalogue) { background:#f7f5fa; border-color:#d9d3e3; }
+.filemanager #catalogue-workspace .catalogue-toggle { color:var(--zone); background:var(--wash); border-color:#bdb2cc; }
+.filemanager :is(.workspace-actions,.file-navigation,.import-actions,.overview-actions) { row-gap:8px; }
+
+@media(max-width:850px) {
+  .filemanager .start-actions button { padding:10px 13px 10px 10px; gap:10px; }
+  .filemanager .action-art { width:64px; height:48px; }
+}
+@media(max-width:650px) {
+  .filemanager .app-header { min-height:auto; padding:12px 14px; row-gap:10px; }
+  .filemanager .brand-mark { width:35px; height:35px; border-radius:10px; }
+  .filemanager .brand-mark svg { width:24px; height:24px; }
+  .filemanager .header-language .el-button,.filemanager .header-tools>.el-button { font-size:.78rem; }
+  .filemanager .workspace-body { padding:12px 8px; }
+  .filemanager .start-actions { margin:10px; gap:7px; }
+  .filemanager .start-actions button { border-radius:11px; gap:10px; }
+  .filemanager .action-copy strong { font-size:.95rem; }
+  .filemanager .action-copy>span { font-size:.81rem; }
+  .filemanager .workspace-nav { padding:6px; gap:3px; }
+  .filemanager .workspace-nav>button { min-height:44px; gap:3px; padding:5px 2px; border-radius:8px; }
+  .filemanager .workspace-nav .workspace-icon { width:21px; height:21px; border-radius:5px; font-size:16px; }
+  .filemanager .workspace-nav strong { font-size:.76rem; line-height:1.2; }
+  .filemanager .workspace-nav>button[aria-current="page"] { box-shadow:inset 0 -2px var(--zone); }
+  .filemanager .quick-status { padding-block:5px; gap:3px 8px; }
+  .filemanager .quick-status .status-links { margin-inline-start:0; }
+  .filemanager .workspace-body>:is(.workspace-panel,.remote-workspace,.device-panel,.extra-tools) { padding:14px 12px; }
+  .filemanager .remote-control .remote-pad { grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr); }
+  .filemanager .remote-pad button,.filemanager .device-panel .info-actions button {
+    min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere;
+  }
+  .filemanager .remote-pad strong { max-width:100%; }
+}
+@media(max-width:360px) {
+  .filemanager .action-art { width:48px; height:36px; }
+}
+@media(forced-colors:active) {
+  .filemanager .workspace-nav>button[aria-current="page"] { outline:2px solid Highlight; outline-offset:-2px; }
+  .filemanager .start-actions button,.filemanager .brand-mark { border:1px solid ButtonText; }
+}

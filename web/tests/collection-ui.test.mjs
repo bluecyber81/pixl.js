@@ -350,8 +350,8 @@ test('unmounted component cannot publish late scan results or busy events', asyn
 const appFile = new URL('../src/App.vue', import.meta.url);
 const appDescriptor = parse(fs.readFileSync(appFile, 'utf8'), { filename: appFile.pathname }).descriptor;
 function appOptions(proto = {}, pixl = {}) {
-  return new Function('defineAsyncComponent', 'catalogueBaseline', 'proto', 'pixl',
-    appDescriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'return'))(loader => ({ loader }), baseline, proto, pixl);
+  return new Function('defineAsyncComponent', 'DeviceStorageCard', 'catalogueBaseline', 'proto', 'pixl',
+    appDescriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'return'))(loader => ({ loader }), {name:'DeviceStorageCard'}, baseline, proto, pixl);
 }
 test('App applies collection busy to global operation lock and writing to disconnect lock', () => {
   const options = appOptions(), state = options.data.call({ $t: x => x });

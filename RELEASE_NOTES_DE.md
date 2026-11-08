@@ -1,5 +1,9 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## Dateimanager 3.42.1 · 8. November 2026
+
+Auf dem Handy führen die bebilderten Schaltflächen direkt zu Figurenimport und Firmwareupdate. Die sechs Bereiche haben eigene Farbakzente. „Dein Gerät“ zeigt den aktuellen Ordner und die Speicherbelegung mit einem breiten Verlaufsbalken. Der Figurenimport öffnet sich jetzt auch beim ersten Klick, wenn der Browser die Ansicht noch lädt. Die Anleitung beschreibt zusätzlich Nordics PC-Weg für Bluetooth-DFU mit einem passenden Adapter. [Web 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3421)
+
 ## Dateimanager 3.42.0 · 8. November 2026
 
 Die Startseite führt direkt zum Figurenimport oder zum Firmwareupdate. Bei blockierten Downloads kannst du die Quelle separat öffnen und die gespeicherte BIN prüfen. Treffer in der Gerätesuche lassen sich direkt herunterladen. Den geprüften Bestand kannst du als CSV für Excel speichern. [Web 3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) · [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3420) · [Anleitung: Flashen, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html)

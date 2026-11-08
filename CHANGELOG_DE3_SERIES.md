@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## File manager 3.42.1 · 8 November 2026
+
+Two illustrated shortcuts open figure import and firmware updates on a phone. The six workspaces have distinct accent colours. Your device shows the current folder and a wide gradient bar for used storage. Figure import now opens on the first click even while the browser is still loading the view. The guide also covers Nordic’s desktop Bluetooth DFU option with a compatible adapter. [Web 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Web guide](docs/DATEIMANAGER_WEB.md#dateimanager-3421)
+
 ## File manager 3.42.0 · 8 November 2026
 
 Home now opens figure import or firmware updates directly. If a source blocks a catalogue download, open it in the browser and check the saved BIN. Download files directly from device search results and export the checked inventory as a CSV for Excel. [Web 3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) · [Web guide](docs/DATEIMANAGER_WEB.md#dateimanager-3420)

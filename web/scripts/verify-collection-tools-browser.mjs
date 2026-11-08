@@ -69,11 +69,17 @@ const server = http.createServer(async (req, res) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_EXECUTABLE ? { executablePath: process.env.CHROME_EXECUTABLE } : {}) });
-async function shot(page, name, locator) {
-  await page.evaluate(() => window.scrollTo(0, 0));
-  const clip = await locator.boundingBox(); assert.ok(clip, name + ' visible screenshot target');
+async function shot(page, name, locator, frame = 'clip') {
   const file = name + '.png', filename = path.join(output, file);
-  await page.screenshot({ path: filename, fullPage: true, clip, animations: 'disabled' });
+  if (frame === 'element') {
+    await locator.screenshot({ path: filename, animations: 'disabled' });
+  } else if (frame === 'viewport') {
+    await page.screenshot({ path: filename, animations: 'disabled' });
+  } else {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const clip = await locator.boundingBox(); assert.ok(clip, name + ' visible screenshot target');
+    await page.screenshot({ path: filename, fullPage: true, clip, animations: 'disabled' });
+  }
   screenshots.push({ file, sha256: sha256(await fs.readFile(filename)) });
 }
 async function textScale(page, factor) {
@@ -242,9 +248,53 @@ async function checkFigureDownloads(page, kind, zoom, touch) {
   check(kind + ' checking locally does not start another download or write', seenDownloads.length === 1 &&
     await prepared.getByRole('button', { name: 'Auf Gerät übertragen' }).isDisabled());
 }
+async function checkColdImportShortcut(action) {
+  const context = await browser.newContext({ locale: 'de-DE', serviceWorkers: 'block' });
+  const chunk = /\/CollectionAssistant-[^/]+\.js$/;
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  try {
+    await context.addInitScript(() => {
+      window.importFocusCount = 0;
+      document.addEventListener('focusin', event => {
+        if (event.target.matches('.figure-import')) window.importFocusCount++;
+      });
+      Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: {} });
+    });
+    await context.route('**/*', async route => {
+      const resource = new URL(route.request().url());
+      if (resource.origin !== origin) return route.abort();
+      if (chunk.test(resource.pathname)) await gate;
+      return route.continue();
+    });
+    const page = await context.newPage();
+    const pendingRequest = page.waitForRequest(request => chunk.test(new URL(request.url()).pathname));
+    await page.goto(origin + base, { waitUntil: 'domcontentloaded' });
+    await page.locator('.start-figure').click();
+    await pendingRequest;
+    await page.waitForFunction(() => document.activeElement?.id === 'catalogue-workspace');
+    assert.equal(await page.locator('.figure-import').count(), 0);
+
+    if (action === 'leave' || action === 'return') {
+      await page.locator('.workspace-nav [aria-controls="update-workspace"]').click();
+      if (action === 'return') await page.locator('.workspace-nav [aria-controls="catalogue-workspace"]').click();
+    } else if (action === 'continue-in-catalogue') {
+      await page.locator('.catalogue-toggle').click();
+    }
+    const expected = { open: '.figure-import', leave: '#update-workspace summary',
+      return: '#catalogue-workspace', 'continue-in-catalogue': '.catalogue-toggle' }[action];
+    if (action !== 'open') await page.waitForFunction(selector => document.activeElement?.matches(selector), expected);
+    release();
+    await page.locator('.figure-import').waitFor({ state: 'attached' });
+    await page.waitForFunction(selector => document.activeElement?.matches(selector), expected);
+    check('delayed collection chunk: ' + action + ' preserves the requested focus', await page.evaluate(() => window.importFocusCount) === (action === 'open' ? 1 : 0));
+  } finally { release(); await context.close(); }
+}
+
 let failure = null;
 try {
-  await checkDeviceSearchAndCsv({ browser, url: origin + base, check });
+  for (const action of ['open', 'leave', 'return', 'continue-in-catalogue']) await checkColdImportShortcut(action);
+  await checkDeviceSearchAndCsv({ browser, url: origin + base, check, shot });
   for (const [kind, viewport, zoom] of [
     ['desktop', { width: 1440, height: 1000 }, 1], ['mobile', { width: 390, height: 844 }, 1],
     ['desktop-text200', { width: 1440, height: 1000 }, 2], ['mobile-text200', { width: 390, height: 844 }, 2],
@@ -272,7 +322,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.42.0', (await page.locator('.version-context').innerText()).includes('3.42.0'));
+    check(kind + ' exact web version 3.42.1', (await page.locator('.version-context').innerText()).includes('3.42.1'));
     const starts = page.locator('.start-actions');
     await fits(page, kind + ' start actions', '.start-actions', zoom);
     await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();

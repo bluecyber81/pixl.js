@@ -54,6 +54,21 @@ async function mount(name,props={}){
 }
 async function click(root,label){ const button=nodes(root,'button').find(node=>text(node)===label);assert.ok(button,label);button.props.onClick();await Vue.nextTick(); }
 
+test('device card renders a measured zero but hides an unavailable folder count or drive', async () => {
+  const {root, state, app} = await mount('DeviceStorageCard', {connected:true, directory:'I:/', entries:null, drive:null, locale:'en'});
+  const count = () => nodes(root, 'span').find(node => node.props.class === 'device-count');
+  try {
+    assert.equal(count(), undefined);
+    assert.deepEqual(nodes(root, 'meter'), []);
+    state.entries = 0; await Vue.nextTick();
+    assert.equal(text(count()), '0 entries');
+    state.locale = 'de_DE'; state.entries = 1; await Vue.nextTick();
+    assert.equal(text(count()), '1 Eintrag');
+    state.entries = null; await Vue.nextTick();
+    assert.equal(count(), undefined);
+  } finally { app.unmount(); }
+});
+
 test('a single selected file without metadata is read on demand and cannot deliver an old preview after reconnect',async()=>{
  const reads=[],bytes=new Uint8Array(540);
  bytes[0]=4;bytes[3]=0x88^4;bytes[91]=2;

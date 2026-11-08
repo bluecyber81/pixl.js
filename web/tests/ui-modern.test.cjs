@@ -34,7 +34,7 @@ function harness(overrides = {}) {
   const context = vm.createContext({ module: { exports: {} }, proto, pixl, document, window, navigator,
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), console,
-    defineAsyncComponent: loader => ({ loader }),
+    defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
     catalogueBaseline: JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/catalogue.json'),'utf8')),
     TextEncoder, Uint8Array, ArrayBuffer, Blob, AbortController, crypto: require('node:crypto').webcrypto,
     performance: require('node:perf_hooks').performance,
@@ -58,6 +58,7 @@ function harness(overrides = {}) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   const localeSource = fs.readFileSync(path.join(__dirname, '../src/lib/locale.js'), 'utf8');
   vm.runInContext(localeSource.replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nObject.assign(globalThis, { assertPortableEntryName, portableNameKey, assertNameByteLimit, assertPathByteLimit }); }', context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/browser-tools.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/folder-navigation.js'), 'utf8').replace(/export /g, ''), context);
@@ -246,6 +247,37 @@ test('3.29 refreshing a large folder retains search and page, clamping only afte
   length = 0; await app.on_btn_refresh(); assert.equal(app.page, 1);
 });
 
+test('device card exposes a folder count only after its successful listing', async () => {
+  let read = deferred();
+  const app = connected(harness({vfs_read_folder: () => read.promise}));
+  const failed = app.reload_folder();
+  assert.equal(app.folderEntryCount, null);
+  read.reject(new Error('Listing failed'));
+  await failed;
+  assert.equal(app.folderEntryCount, null);
+  read = deferred();
+  const retry = app.reload_folder();
+  assert.equal(app.folderEntryCount, null);
+  read.resolve({status:0, data:[]}); await retry;
+  assert.equal(app.folderEntryCount, 0);
+  app.tableData = [file('A'), file('B')];
+  app.searchQuery = 'A';
+  assert.equal(app.folderEntryCount, 2);
+  app.current_dir = ''; assert.equal(app.folderEntryCount, null);
+});
+
+test('the selected drive owns its status even if another drive has usable capacity', () => {
+  const app = connected(harness());
+  const external = {label:'E', status:0, totalBytes:2048, freeBytes:1536};
+  const internal = {label:'I', status:0, totalBytes:8192, freeBytes:512};
+  app.driveInfo = [external, {...internal, status:1}];
+  app.current_dir = 'I:/'; assert.equal(app.statusDriveInfo, null); assert.equal(app.quickFreeSpace, null);
+  app.driveInfo = [external]; assert.equal(app.statusDriveInfo, null);
+  app.driveInfo = [external, internal]; assert.equal(app.statusDriveInfo, internal); assert.equal(app.quickFreeSpace, '512 B');
+  app.current_dir = ''; assert.equal(app.statusDriveInfo, external); assert.equal(app.quickFreeSpace, '1,5 KiB');
+  app.on_ble_disconnected(); assert.equal(app.statusDriveInfo, null);
+});
+
 test('3.29 failed listing is not announced as empty and a successful retry clears the error', async () => {
   let fail = true;
   const h = harness({vfs_read_folder: async () => {
@@ -355,7 +387,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.42.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.42.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -367,7 +399,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.42.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.42.1.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -454,7 +486,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.42.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.42.1.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1477,10 +1509,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.42.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.42.1.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.42.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.42.1.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2193,7 +2225,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.42.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.42.1');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

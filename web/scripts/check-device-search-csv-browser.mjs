@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 // Install only the browser peripheral boundary. The production BLE, protocol, VFS,
 // catalogue, download and Vue code run unchanged in an isolated browser context.
-function installReadOnlyPeripheral(files) {
+function installReadOnlyPeripheral({files, capacity}) {
   const encoder = new TextEncoder(), decoder = new TextDecoder();
   const commands = [], violations = [];
   window.testPeripheral = { commands, violations, connections: 0 };
@@ -17,7 +17,7 @@ function installReadOnlyPeripheral(files) {
   function payload(cmd, frame, record) {
     if (cmd === 3) return [80, 88, 68, 70, 1, 3, ...word(243), ...word(247)];
     if (cmd === 1) return string('2.22.0-DE3.66');
-    if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(2097152), ...dword(1000000)];
+    if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(capacity.total), ...dword(capacity.free)];
     if (cmd === 0x12 || cmd === 0x16) {
       const length = frame[4] | frame[5] << 8;
       record.path = decoder.decode(frame.subarray(6, 6 + length));
@@ -61,8 +61,63 @@ function installReadOnlyPeripheral(files) {
   Object.defineProperty(window, 'showSaveFilePicker', {configurable:true, value:undefined});
 }
 
-export async function checkDeviceSearchAndCsv({browser, url, check}) {
-  const context = await browser.newContext({locale:'de-DE', acceptDownloads:true, serviceWorkers:'block'});
+async function checkDeviceCard(page, capacity, check, shot) {
+  const card = page.locator('.sidebar-device');
+  const notification = page.locator('.el-notification');
+  if (await notification.isVisible()) {
+    await notification.locator('.el-notification__closeBtn').click();
+    await notification.waitFor({ state:'hidden' });
+  }
+  const sizes = [
+    {name:'Desktop', width:1440, height:1000, suffix:''},
+    {name:'Handyformat', width:390, height:844, suffix:'-Handy'}
+  ];
+  await page.locator('.workspace-nav [aria-controls="file-workspace"]').click();
+  await page.locator('.file-name-action[data-file-name^="E:/"]').click();
+  await page.locator('.file-name-action[data-file-name="A"]').waitFor();
+  check('device card changes to the root listing from GATT', (await card.locator('.device-location').innerText()).trim() === 'E:/' &&
+    (await card.locator('.device-count').innerText()).trim() === '2 Einträge');
+  await page.locator('.file-name-action[data-file-name="A"]').click();
+  await page.locator('.file-name-action[data-file-name="Twin.bin"]').waitFor();
+
+  for (const size of sizes) {
+    await page.setViewportSize({width:size.width, height:size.height});
+    const meter = card.getByRole('meter', {name: /\S/});
+    await meter.waitFor();
+    const measured = await meter.evaluate(element => ({
+      native:element instanceof HTMLMeterElement && element.matches('.device-used-meter'),
+      min:element.min, used:element.value, total:element.max
+    }));
+    check(size.name + ' native accessible meter shows the used bytes out of total bytes',
+      measured.native && measured.min === 0 && measured.used === capacity.total - capacity.free && measured.total === capacity.total);
+    const freeText = await card.locator('.device-free').innerText();
+    const percent = Math.round(100 * (capacity.total - capacity.free) / capacity.total);
+    check(size.name + ' free capacity and used percentage match the synthetic drive', /976,56\s*KiB\s*frei/.test(freeText) &&
+      new RegExp(percent + '\\s*%\\s*belegt').test(await card.locator('.device-used-label').innerText()));
+    check(size.name + ' card displays the actual selected folder and its single entry',
+      (await card.locator('.device-location').innerText()).trim() === 'E:/A' &&
+      (await card.locator('.device-count').innerText()).trim() === '1 Eintrag' && /von 2\s*MiB/.test(await card.locator('.device-footnote').innerText()));
+    const bounds = await card.boundingBox();
+    check(size.name + ' card fits the viewport', bounds && bounds.x >= 0 && bounds.x + bounds.width <= size.width + 1);
+    await shot(page, 'Geraetekarte-verbunden' + size.suffix, card, 'element');
+    await page.evaluate(() => window.scrollTo({ top:0, behavior:'instant' }));
+    await card.scrollIntoViewIfNeeded();
+    await shot(page, 'Dateimanager-verbunden' + size.suffix, card, 'viewport');
+  }
+  await page.locator('.header-tools').getByRole('button', {name:'Trennen', exact:true}).click();
+  await page.locator('.header-tools').getByRole('button', {name:'Verbinden', exact:true}).waitFor();
+  for (const size of sizes) {
+    await page.setViewportSize({width:size.width, height:size.height});
+    const contents = await card.innerText();
+    check(size.name + ' discards previous device capacity, path and entry count on disconnect',
+      !await card.getByRole('meter').count() && !await card.locator('.device-free, .device-used-label, .device-location, .device-count').count() &&
+      !/976[,.]56|E:\/A|\b1\s+(Datei|Eintrag)/i.test(contents));
+  }
+}
+
+export async function checkDeviceSearchAndCsv({browser, url, check, shot}) {
+  const context = await browser.newContext({locale:'de-DE', deviceScaleFactor:2, acceptDownloads:true, serviceWorkers:'block'});
+  const capacity = {total:2097152, free:1000000};
   const files = {};
   for (const [folder, id] of [['A','0000000000000002'], ['B','0000000000340102']]) {
     const figure = Buffer.alloc(540);
@@ -72,7 +127,7 @@ export async function checkDeviceSearchAndCsv({browser, url, check}) {
   }
   try {
     const runtimeErrors = [], external = [];
-    await context.addInitScript(installReadOnlyPeripheral, files);
+    await context.addInitScript(installReadOnlyPeripheral, {files, capacity});
     await context.route('**/*', route => {
       const target = new URL(route.request().url());
       if (target.origin === new URL(url).origin || ['data:', 'blob:'].includes(target.protocol)) return route.continue();
@@ -120,6 +175,12 @@ export async function checkDeviceSearchAndCsv({browser, url, check}) {
     assert.deepEqual(await history(), afterAudit);
     const state = await page.evaluate(() => ({connections:window.testPeripheral.connections, violations:window.testPeripheral.violations}));
     check('CSV export uses the completed result with zero further device calls and a single connection', state.connections === 1 && !state.violations.length);
+    const cardPage = await context.newPage();
+    cardPage.on('pageerror', error => runtimeErrors.push(error.message));
+    await cardPage.goto(url);
+    await cardPage.locator('.header-tools').getByRole('button', {name:'Verbinden', exact:true}).click();
+    await cardPage.locator('.version-context').getByText('2.22.0-DE3.66', {exact:true}).waitFor();
+    await checkDeviceCard(cardPage, capacity, check, shot);
     assert.deepEqual(runtimeErrors, []);
     assert.deepEqual(external, []);
   } finally { await context.close(); }

@@ -29,7 +29,7 @@ class AppHandler(SimpleHTTPRequestHandler):
             self.send_error(403, 'Unexpected Host')
             return None
         if urlsplit(original).path == '/.well-known/allmiibo-dateimanager':
-            body = json.dumps({'application': 'allmiibo-dateimanager', 'version': '3.42.0',
+            body = json.dumps({'application': 'allmiibo-dateimanager', 'version': '3.42.1',
                                'instance': hashlib.sha256(self.instance_token.encode('ascii')).hexdigest()}).encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -145,7 +145,7 @@ def main():
     if not re.fullmatch(r'[a-f0-9]{32}', token):
         parser.error('The instance token must contain exactly 32 lowercase hexadecimal characters')
     with ThreadingHTTPServer(('127.0.0.1', args.port), partial(AppHandler, directory=str(directory), instance_token=token)) as server:
-        print(f'Allmiibo Dateimanager 3.42.0: http://127.0.0.1:{args.port}/', flush=True)
+        print(f'Allmiibo Dateimanager 3.42.1: http://127.0.0.1:{args.port}/', flush=True)
         server.serve_forever()
 
 

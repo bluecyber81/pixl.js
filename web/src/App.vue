@@ -43,12 +43,12 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.42.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.42.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
       <span v-else class="quick-location">{{ $t(demoMode ? 'workflow.previewShort' : 'workflow.connectHint') }}</span></div>
-      <span v-if="statusDriveInfo" class="quick-storage">{{ statusDriveInfo.label }}: {{ $t('workflow.freeSpace',{bytes:format_size(statusDriveInfo.freeBytes)}) }}</span>
+      <span v-if="quickFreeSpace" class="quick-storage">{{ statusDriveInfo.label }}: {{ $t('workflow.freeSpace',{bytes:quickFreeSpace}) }}</span>
       <div class="status-links">
         <a class="guide-link" :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
         <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
@@ -73,14 +73,7 @@
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
       <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
-      <div class="sidebar-device">
-        <p class="sidebar-caption">{{ language === 'de_DE' ? 'DEIN GERÄT' : 'YOUR DEVICE' }}</p>
-        <strong>{{ connected ? 'Allmiibo LCD' : $t('info.disconnected') }}</strong>
-        <p v-if="statusDriveInfo">{{ statusDriveInfo.label }}: {{ format_size(statusDriveInfo.freeBytes) }} {{ language === 'de_DE' ? 'frei' : 'free' }}</p>
-        <progress v-if="statusDriveInfo?.totalBytes" :value="statusDriveInfo.totalBytes-statusDriveInfo.freeBytes" :max="statusDriveInfo.totalBytes" :aria-label="$t('info.used')"></progress>
-        <p v-if="current_dir" class="sidebar-path">{{ current_dir }}<br>{{ tableData.length }} {{ language === 'de_DE' ? 'Einträge' : 'entries' }}</p>
-        <button type="button" class="sidebar-upload" :disabled="btn_disabled()" @click="on_btn_upload">↑ {{ $t('menu.upload') }}</button>
-      </div>
+      <DeviceStorageCard :connected="connected" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" @upload="on_btn_upload" />
     </nav>
     <div class="workspace-body">
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
@@ -272,7 +265,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.42.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.42.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -355,7 +348,7 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <CollectionAssistant ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <CollectionAssistant ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
     <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" :open-import="open_figure_import" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
@@ -491,6 +484,8 @@
 
 
 <script>
+import DeviceStorageCard from "./components/DeviceStorageCard.vue"
+import { storageUsage, storageAmount } from "./lib/device-storage-display.js"
 import { defineAsyncComponent } from "vue"
 import * as pixl from "./lib/pixl.ble"
 import { sharedEventDispatcher } from "./lib/event"
@@ -519,12 +514,12 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.42.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.42.1.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
-      activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
+      activeWorkspace: 'files', figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
@@ -609,7 +604,14 @@ export default {
     connectionSummaryKey() { return this.disconnecting ? 'info.disconnecting' : this.connecting ? 'conn.connecting' : this.connected ? 'info.connected' : this.demoMode ? 'tools.previewOpen' : 'info.disconnected'; },
     availableBackupDrives() { return this.driveInfo.filter(drive => drive.status === 0); },
     selectedDriveInfo() { return this.connected ? this.driveInfo.find(d => d.label === this.current_dir[0] && d.status === 0) || null : null; },
-    statusDriveInfo() { return this.connected ? this.selectedDriveInfo || this.driveInfo.find(d => d.label === 'E' && d.status === 0) || null : null; },
+    quickFreeSpace() { const info = storageUsage(this.statusDriveInfo); return info ? storageAmount(info.free, this.language) : null; },
+    statusDriveInfo() {
+      if (this.current_dir) return this.selectedDriveInfo;
+      return this.connected ? this.driveInfo.find(d => d.label === 'E' && d.status === 0) || null : null;
+    },
+    folderEntryCount() {
+      return this.connected && this.current_dir && !this.table_loading && !this.listingError ? this.tableData.length : null;
+    },
     transferPercent() { return Math.floor(this.transferStats?.percent ?? 0); },
     backupReadTime() {
       const timing = this.backingUp && this.transfer?.timing;
@@ -774,7 +776,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.42.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.42.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -798,22 +800,37 @@ export default {
     show_figure_import() {
       this.show_workspace('catalogue');
       if (this.activeWorkspace !== 'catalogue') return;
-      this.$nextTick(() => {
-        const target = this.$refs.catalogueWorkspace?.querySelector('[aria-labelledby="figure-import-title"]');
-        target?.focus({ preventScroll: true });
-        target?.scrollIntoView({ block: 'start' });
-      });
+      this.figureImportFocusPending = true;
+      this.$nextTick(this.focus_pending_figure_import);
+    },
+    focus_pending_figure_import() {
+      if (!this.figureImportFocusPending) return;
+      const panel = this.$refs.catalogueWorkspace;
+      if (this.activeWorkspace !== 'catalogue' || document.activeElement !== panel) {
+        this.figureImportFocusPending = false;
+        return;
+      }
+      const target = panel.querySelector('[aria-labelledby="figure-import-title"]');
+      if (!target) return;
+      this.figureImportFocusPending = false;
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: 'start' });
     },
     show_workspace(name) {
       const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
       const panel = Object.hasOwn(refs, name) ? this.$refs[refs[name]] : null;
       if (!panel || (this.migrationBusy && name !== 'backup')) return;
+      this.figureImportFocusPending = false;
       this.activeWorkspace = name;
       if (name === 'catalogue') this.catalogueOpen = true;
       if (!['files','catalogue'].includes(name)) panel.open = true;
       panel.scrollIntoView?.({ block: 'start', behavior: 'auto' });
       (['files','catalogue'].includes(name) ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll: true });
-      this.$nextTick(() => { panel.scrollIntoView?.({ block:'start', behavior:'auto' }); (['files','catalogue'].includes(name) ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll:true }); });
+      this.$nextTick(() => {
+        if (this.activeWorkspace !== name) return;
+        panel.scrollIntoView?.({ block:'start', behavior:'auto' });
+        (['files','catalogue'].includes(name) ? panel : panel.querySelector?.('summary'))?.focus?.({ preventScroll:true });
+      });
     },
     on_migration_busy(value) {
       this.migrationBusy = !!value;
@@ -1234,7 +1251,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.42.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.42.1.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -2432,3 +2449,4 @@ body,.filemanager { background:var(--shell-paper); }
 .guide-link:focus-visible { outline:3px solid #317b67; outline-offset:3px; }
 .status-links .guide-link { font-size:.8rem; }
 </style>
+<style src="./styles/workspaces.css"></style>

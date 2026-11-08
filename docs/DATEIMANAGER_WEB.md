@@ -3,7 +3,7 @@
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Anleitung für Firmware, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html) ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloads für 3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
+[Downloads für 3.42.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.1) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -18,6 +18,12 @@ Das Allmiibo muss sich beim verwendeten Handy oder Computer befinden. Die
 Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
+
+## Dateimanager 3.42.1
+
+Die sechs Arbeitsbereiche haben eigene Farbakzente. Auf dem Handy führen zwei bebilderte Schaltflächen direkt zum Figurenimport und zum Firmwareupdate. Bei verbundenem Allmiibo zeigt „Dein Gerät“ den geöffneten Ordner, die Zahl seiner Einträge und die Speicherbelegung. Der breite Balken am unteren Rand zeigt den belegten Anteil mit einem Verlauf von Petrol zu Indigo. Neben dem Balken stehen freie und gesamte Kapazität sowie der belegte Prozentanteil. Auf dem Desktop findest du die Karte in der Seitenleiste, auf dem Handy unter den sechs Navigationsschaltflächen. Beide Beispielansichten zeigen simulierte Gerätedaten. [Handy](images/web-3.42.1/mobile.png) · [Desktop](images/web-3.42.1/desktop.png)
+
+Auch bei langsamer Verbindung genügt ein Klick auf **Ich möchte eine Figur hinzufügen**. Sobald die Ansicht geladen ist, springt der Dateimanager zur Figurenauswahl. Unter **Anleitung → Programme und Downloads** findest du den PC-Weg mit nRF Util für Bluetooth-DFU und die dafür erforderliche Nordic-Hardware. Für diesen Browser-Patch ist kein Flashen erforderlich.
 
 ## Dateimanager 3.42.0
 
