@@ -1,5 +1,9 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## Dateimanager 3.42.0 · 8. November 2026
+
+Die Startseite führt direkt zum Figurenimport oder zum Firmwareupdate. Bei blockierten Downloads kannst du die Quelle separat öffnen und die gespeicherte BIN prüfen. Treffer in der Gerätesuche lassen sich direkt herunterladen. Den geprüften Bestand kannst du als CSV für Excel speichern. [Web 3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) · [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3420) · [Anleitung: Flashen, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html)
+
 ## Dateimanager 3.41.0 · 7. November 2026
 
 Im Figurenkatalog lässt sich für jede Figuren-ID ein eigener direkter HTTPS-Link zur BIN-Datei hinterlegen. Nach dem Speichern genügt ein Klick auf den Figurennamen. Der Browser prüft Größe, Grundstruktur und Figuren-ID vor dem Download. [Web 3.41.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0) · [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3410)

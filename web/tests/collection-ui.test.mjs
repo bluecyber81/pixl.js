@@ -9,6 +9,7 @@ import deLocale from '../src/i18n/de_DE.js';
 import enLocale from '../src/i18n/en_US.js';
 import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
 import { auditCollection } from '../src/lib/collection-audit.js';
+import { collectionCsv } from '../src/lib/collection-csv.js';
 import { formatReadDuration, readTimeEstimate } from '../src/lib/read-time-estimate.js';
 import { prepareFigureTransfer, suggestedFigureFilename } from '../src/lib/figure-transfer.js';
 import { figureDownloadLinkKey, observeFigureDownloadLink, readFigureDownloadLink, writeFigureDownloadLink } from '../src/lib/figure-download-links.js';
@@ -23,7 +24,7 @@ assert.deepEqual(compiled.errors, []);
 const template = compiled.code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,
   (_, names) => `const {${names.replace(/\s+as\s+/g, ':')}}=Vue;`).replace('export function render', 'function render');
 const make = new Function('Vue', 'baseline', 'checkCatalogueUpdates', 'auditCollection', 'prepareFigureTransfer',
-  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration','readFigureDownloadLink','observeFigureDownloadLink',
+  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration','readFigureDownloadLink','observeFigureDownloadLink','collectionCsv',
   script + '\n' + template + '\ncomponent.render=render;return component;');
 const A = '0000000000000102', B = '0000000000000202';
 const baseline = { checkedDate: '2026-11-02', entries: [A, B].map(id => ({ id, name: `Synthetic ${id}`, series: 'Test', release: { eu: '2020-01-01' } })) };
@@ -47,7 +48,7 @@ function mount(overrides = {}) {
     overrides.catalogue || (async () => { throw Error('No network expected'); }), overrides.audit || auditCollection,
     overrides.prepare || prepareFigureTransfer, overrides.transfer || (async () => ({ committed: true })),
     suggestedFigureFilename, filterCatalogue, releaseLabel, (...args) => saves.push(args),
-    async (...args) => { saves.push(args); return { status: 'saved' }; },readTimeEstimate,formatReadDuration,overrides.readLink || readFigureDownloadLink,observeFigureDownloadLink);
+    async (...args) => { saves.push(args); return { status: overrides.pickerStatus || 'saved' }; },readTimeEstimate,formatReadDuration,overrides.readLink || readFigureDownloadLink,observeFigureDownloadLink,collectionCsv);
   const app = renderer.createApp({ render: () => Vue.h(Component, { ...props, ref: v => vm = v,
     onBusy: v => events.push(['busy', v]), onWriting: v => events.push(['writing', v]), onChanged: v => events.push(['changed', v]),
     onRecovery: v => events.push(['recovery', v]), onCatalogue: v => events.push(['catalogue', v]),
@@ -57,6 +58,32 @@ function mount(overrides = {}) {
 }
 const partial = (mode = 'full') => ({ schema: 1, rootPath: 'E:/', mode, scanComplete: false, contentComplete: false, complete: false,
   present: [], missing: [], unconfirmed: [{ id: A, name: 'Not confirmed', state: 'not-observed-unconfirmed' }], upcoming: [], duplicates: [], unknown: [], files: [] });
+
+test('catalogue local file handoff stages the verified bytes without uploading or replacing an active operation', async () => {
+  const h = mount();
+  try {
+    const prepared = await prepareFigureTransfer({ file: tag(A), expectedId: A });
+    h.props.directory = 'E:/Favourites';
+    await tick();
+    h.vm.choose(baseline.entries[1], false);
+    assert.equal(h.vm.acceptCheckedFigure(prepared), true);
+    h.props.selectedFigure = baseline.entries[0];
+    await tick();
+    assert.equal(h.vm.prepared, prepared);
+    assert.equal(h.vm.chosen.id, A);
+    assert.equal(h.vm.destination, 'E:/Favourites');
+    assert.ok(h.vm.filename.endsWith(A + '.bin'));
+    const second = await prepareFigureTransfer({ file: tag(B), expectedId: B });
+    h.vm.running = 'upload';
+    assert.equal(h.vm.acceptCheckedFigure(second), false);
+    h.vm.running = '';
+    h.props.blocked = true;
+    await tick();
+    assert.equal(h.vm.acceptCheckedFigure(second), false);
+    assert.equal(h.vm.prepared, prepared);
+    assert.deepEqual(h.events, []);
+  } finally { h.app.unmount(); }
+});
 
 test('collection progress shows the measured countdown only during content reads and clears it on cancel', async () => {
   const gate = deferred(); let progress;
@@ -536,6 +563,47 @@ function duplicateFixture() {
   } };
 }
 const reportList = root => flat(root).find(n => n.type === 'ul' && n.props.class === 'report-list');
+
+test('CSV exports the current completed scan from memory and refuses stale or unfinished scans', async () => {
+  const fixture = duplicateFixture(), h = mount({ session: fixture.session });
+  try {
+    await h.vm.scan(); await tick();
+    const csvButton = h.button('Bestand als CSV speichern');
+    assert.equal(csvButton.props.disabled, false);
+    await csvButton.props.onClick();
+    const [blob, filename] = h.saves[0];
+    assert.equal(filename, 'Allmiibo-Figurenbestand.csv');
+    assert.equal(blob.type, 'text/csv;charset=utf-8');
+    assert.deepEqual([...new Uint8Array(await blob.slice(0, 3).arrayBuffer())], [239, 187, 191]);
+    const output = await blob.text();
+    assert.equal(output.trimEnd().split('\r\n').length, 5);
+    for (const path of ['E:/a.bin', 'E:/copy.bin', 'E:/changed.bin']) assert.ok(output.includes('"0x' + A + '";"Vorhanden · ID bestätigt";"' + path + '"'));
+    assert.ok(output.includes('"0x' + B + '";"Nicht gefunden";""'));
+    h.props.locale = 'en_US'; await tick(); await h.button('Save collection as CSV').props.onClick();
+    assert.equal(h.saves[1][1], 'Allmiibo-Collection.csv');
+    assert.match(await h.saves[1][0].text(), /"Collection status","Device path"/);
+    h.props.revision++; await tick();
+    assert.equal(h.button('Save collection as CSV').props.disabled, true);
+    await h.vm.saveReport('csv'); assert.equal(h.saves.length, 2);
+    h.vm.report = partial(); h.vm.stale = false; await tick();
+    assert.equal(h.button('Save collection as CSV').props.disabled, true);
+    await h.vm.saveReport('csv'); assert.equal(h.saves.length, 2);
+    h.props.connected = false; await tick();
+    await h.vm.saveReport('csv'); assert.equal(h.saves.length, 2);
+    assert.deepEqual(fixture.lists, ['E:/']); assert.equal(fixture.reads.length, 3);
+  } finally { h.app.unmount(); }
+});
+
+test('CSV cancellation never triggers a second download; browsers without a picker use the fallback', async () => {
+  for (const pickerStatus of ['cancelled', 'unsupported']) {
+    const h = mount({ pickerStatus });
+    try {
+      await h.vm.scan(); await h.vm.saveReport('csv');
+      assert.equal(h.saves.length, pickerStatus === 'unsupported' ? 2 : 1);
+      if (pickerStatus === 'unsupported') assert.deepEqual(h.saves[0], h.saves[1]);
+    } finally { h.app.unmount(); }
+  }
+});
 
 test('actual duplicate scan renders two matching files separately from one different payload in DE and EN', async () => {
   const fixture = duplicateFixture(), h = mount({ session: fixture.session });

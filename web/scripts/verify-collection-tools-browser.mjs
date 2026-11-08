@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { syntheticConfig, syntheticSlot } from '../tests/fixtures/chameleon-slot-synthetic.mjs';
 import { figureUsage } from '../src/lib/figure-usage.js';
+import { checkDeviceSearchAndCsv } from './check-device-search-csv-browser.mjs';
 
 const root = path.resolve(process.argv[2] || 'dist'), output = path.resolve(process.argv[3] || 'browser-collection-evidence');
 const base = process.argv[4] || '/';
@@ -40,6 +41,7 @@ function syntheticFigure(id) {
 }
 const figureFixtures = new Map([[marioUrl, syntheticFigure(marioId)], [siblingUrl, syntheticFigure(siblingId)]]);
 const fixtureRequests = [];
+const blockedUrl = 'https://fixtures.example.org/blocked.bin';
 await fs.mkdir(output, { recursive: true });
 const hashes = {}, checks = [], screenshots = [], layouts = [], errors = [], externalAttempts = [], downloads = [];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -216,9 +218,33 @@ async function checkFigureDownloads(page, kind, zoom, touch) {
   await download.waitFor();
   check(kind + ' storing another link preserves a manually entered import address without fetching',
     await importSource.inputValue() === manualUrl && requests().length === 2 && seenDownloads.length === 1);
+  await summary.click();
+  await input.fill(blockedUrl);
+  await save.click();
+  await activateDownload();
+  const fallback = card.locator('.manual-download');
+  const source = fallback.getByRole('link', { name: 'Quelle im Browser öffnen' });
+  await source.waitFor();
+  check(kind + ' blocked source opens only by user action and without a referrer',
+    await source.getAttribute('href') === blockedUrl && await source.getAttribute('referrerpolicy') === 'no-referrer');
+  const local = fallback.locator('input[type=file]');
+  await local.setInputFiles({ name: 'Mario.bin', mimeType: 'application/octet-stream', buffer: figureFixtures.get(siblingUrl) });
+  await card.getByRole('status').filter({ hasText: 'Diese BIN gehört zu einer anderen Figur' }).waitFor();
+  check(kind + ' same filename with another ID is rejected after manual download',
+    !await fallback.getByRole('button', { name: 'Im Geräteimport öffnen' }).count());
+  await local.setInputFiles({ name: 'Mario.bin', mimeType: 'application/octet-stream', buffer: figureFixtures.get(marioUrl) });
+  await fallback.getByRole('button', { name: 'Im Geräteimport öffnen' }).click();
+  const prepared = page.locator('.figure-import .prepared');
+  await prepared.waitFor();
+  check(kind + ' locally verified bytes reach the import for the same figure',
+    (await prepared.innerText()).includes(sha256(figureFixtures.get(marioUrl))) &&
+    (await page.locator('.figure-import .chosen').innerText()).includes(marioId));
+  check(kind + ' checking locally does not start another download or write', seenDownloads.length === 1 &&
+    await prepared.getByRole('button', { name: 'Auf Gerät übertragen' }).isDisabled());
 }
 let failure = null;
 try {
+  await checkDeviceSearchAndCsv({ browser, url: origin + base, check });
   for (const [kind, viewport, zoom] of [
     ['desktop', { width: 1440, height: 1000 }, 1], ['mobile', { width: 390, height: 844 }, 1],
     ['desktop-text200', { width: 1440, height: 1000 }, 2], ['mobile-text200', { width: 390, height: 844 }, 2],
@@ -232,6 +258,7 @@ try {
     await context.route('**/*', route => {
       const url = route.request().url();
       if (url.startsWith(origin + '/') || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
+      if (url === blockedUrl) return route.abort('accessdenied');
       if (figureFixtures.has(url)) {
         const bytes = figureFixtures.get(url);
         fixtureRequests.push({ kind, method: route.request().method(), url });
@@ -245,7 +272,17 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.41.0', (await page.locator('.version-context').innerText()).includes('3.41.0'));
+    check(kind + ' exact web version 3.42.0', (await page.locator('.version-context').innerText()).includes('3.42.0'));
+    const starts = page.locator('.start-actions');
+    await fits(page, kind + ' start actions', '.start-actions', zoom);
+    await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();
+    await page.waitForFunction(() => document.activeElement?.matches('.figure-import'));
+    check(kind + ' figure shortcut goes directly to the import even offline', await page.locator('.figure-import input[type=search]').isVisible());
+    await page.locator('.workspace-nav button[aria-controls="file-workspace"]').click();
+    await starts.getByRole('button', { name: /Ich möchte die Firmware aktualisieren/ }).click();
+    check(kind + ' firmware shortcut opens the package overview and keeps DFU idle',
+      await page.locator('#update-workspace .firmware-packages').isVisible() && context.pages().length === 1 &&
+      await page.evaluate(() => window.__testBleRequests === 0));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');
     const card = page.locator('.card-slot-inspection'); await card.waitFor();
@@ -362,7 +399,7 @@ try {
 } catch (error) { failure = { message: error.message, stack: error.stack }; throw error; }
 finally {
   await fs.writeFile(path.join(output, 'collection-tools-browser-evidence.json'), JSON.stringify({ schema: 1, generatedAt: new Date().toISOString(),
-    scope: 'Exact production bundle, real DOM navigation/file inputs/keyboard/touch/download. Synthetic files only, no harness or Vue state injection. Two HTTPS fixtures fulfilled in memory, all other external requests blocked. Bluetooth disabled. Text zoom is explicit computed-font doubling, not browser optical zoom.',
+    scope: 'Exact production bundle, real DOM navigation/file inputs/keyboard/touch/download. Synthetic files only, no Vue state injection. A read-only synthetic GATT session checks device search and CSV. Real Bluetooth disabled. Two HTTPS fixtures fulfilled in memory, all other external requests blocked. Text zoom is explicit computed-font doubling, not browser optical zoom.',
     browser: browser.version(), buildRoot: root, deploymentBase: base, filesSha256: hashes, checks, layouts, downloads, screenshots, errors, fixtureRequests, externalAttempts, failure }, null, 2));
   await browser.close(); await new Promise(resolve => server.close(resolve));
 }

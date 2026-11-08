@@ -34,7 +34,7 @@ test('App shares the same catalogue update with search, selection and properties
     previewSelection: null, preview_selection_current: () => false,
     meta_form: { row: { type: 'REG' }, path: 'E:/synthetic.bin', amiibo: { head: 0xf1234567, tail: 2 } },
     figureInspection: null, device_search_session() { throw Error('No device access expected'); },
-    navigate_search_result() {}, download_preview_selection() {}, open_preview_properties() {},
+    navigate_search_result() {}, download_search_result() {}, download_preview_selection() {}, open_preview_properties() {},
   };
   const renderBindings = () => renderToString(Vue.createSSRApp({ components, setup: () => state, render }));
   await renderBindings();

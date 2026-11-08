@@ -61,6 +61,9 @@ async function fetchFigureBytes(input, { signal, fetchImpl, timeoutMs }) {
       fail('FIGURE_HTTP', 'The source did not return a complete readable file.');
     }
     if (response.url && response.url !== url.href) fail('FIGURE_HTTP', 'The download source changed.');
+    if (/^(?:text\/html|application\/xhtml\+xml)(?:\s*;|$)/i.test(response.headers?.get?.('content-type') || '')) {
+      fail('FIGURE_HTTP', 'The source returned a web page instead of a BIN file.');
+    }
     const rawLength = response.headers?.get?.('content-length');
     if (rawLength !== null && rawLength !== undefined && (!/^\d+$/u.test(rawLength) || !TAG_LENGTHS.includes(Number(rawLength)))) {
       fail('FIGURE_SIZE', 'The source length is not a supported figure file.');

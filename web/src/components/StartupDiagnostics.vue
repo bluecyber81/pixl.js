@@ -133,6 +133,7 @@ function exportReport() {
 </script>
 <style scoped>
 .startup-diagnostics { margin:16px 0; padding:16px; border:1px solid #c6d8e6; border-radius:12px; background:#f7fafc; color:#20364b; }
+.startup-diagnostics input[type="file"] { min-width:0; max-width:100%; }
 h3 { margin:0 0 10px; } p { font-size:.86rem; line-height:1.5; } .actions { display:flex; flex-wrap:wrap; gap:10px; }
 button { min-height:44px; padding:8px 12px; border:1px solid #9eb8cb; border-radius:7px; background:#fff; color:#244f71; cursor:pointer; }
 button:disabled { opacity:.55; cursor:default; } button:focus-visible { outline:3px solid #4e94c9; outline-offset:2px; }

@@ -1,5 +1,9 @@
 # Allmiibo LCD release notes
 
+## File manager 3.42.0 · 8 November 2026
+
+Home now opens figure import or firmware updates directly. If a source blocks a catalogue download, open it in the browser and check the saved BIN. Download files directly from device search results and export the checked inventory as a CSV for Excel. [Web 3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) · [Guide: firmware, bootloader and LittleFS](https://bluecyber81.github.io/pixl.js/guide/en.html)
+
 ## File manager 3.41.0 · 7 November 2026
 
 Each catalogue entry can remember a direct HTTPS link to its BIN file. Click the figure name to download it. The browser checks the size, basic structure and figure ID first. [Web 3.41.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0) · [Usage](docs/DATEIMANAGER_WEB.md#dateimanager-3410)

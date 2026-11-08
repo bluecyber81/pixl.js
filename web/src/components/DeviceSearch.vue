@@ -18,7 +18,7 @@
       <li v-for="result in results" :key="result.path">
         <button type="button" :disabled="!connected || blocked || running || readingPreview"
           :aria-expanded="result.type === 0 ? preview?.path === result.path : undefined"
-          @click="result.type === 1 ? navigate(result) : showPreview(result)">
+          @click="result.type === 1 ? selectResult('navigate', result) : showPreview(result)">
           <strong>{{ result.name }}</strong><span>{{ result.parent }}</span>
           <span v-if="result.figureName">{{ result.figureName }} · {{ result.series }}</span>
           <small>{{ result.type === 1 ? text.openFolder : text.preview }}</small>
@@ -29,8 +29,12 @@
           <strong v-if="previewEntry">{{ previewEntry.name }} · {{ previewEntry.series }}</strong>
           <p v-if="preview.id"><code>{{ preview.id }}</code></p>
           <p role="status">{{ imageFailed ? text.imageFailed : text[preview.state] }}</p>
-          <button type="button" :disabled="blocked || readingPreview || !connected" @click="navigate(result)">{{ text.showFile }}</button>
+          <button type="button" :disabled="blocked || readingPreview || !connected" @click="selectResult('navigate', result)">{{ text.showFile }}</button>
         </div>
+        <button v-if="result.type === 0" type="button" class="result-download"
+          :disabled="!connected || blocked || running || readingPreview"
+          :aria-label="text.download + ' · ' + result.path"
+          @click="selectResult('download', result)">{{ text.download }}</button>
       </li>
     </ol>
   </details>
@@ -44,6 +48,7 @@ const copy = {
   en: { title:'Search on the device', query:'File, figure, series or note', placeholder:'For example Zelda or Animal Crossing', scope:'Search scope', folder:'Current folder', device:'Entire collection (E:)', search:'Search', cancel:'Cancel', hint:'Reads folders and metadata only. Figure names and series come from the local catalogue; without a saved figure ID only filenames and notes are searchable. No BIN files are downloaded.', searching:'Searching.', done:'Search complete.', cancelled:'Search cancelled. Results found so far remain visible.', failed:'Search could not finish. Check the connection and search again.', folders:'folders', entries:'entries', matches:'matches', limited:'Partial result: a search limit was reached or invalid entries were skipped. Search a smaller folder or use a more precise query.', openFolder:'Open folder', showFile:'Show in folder' }
 };
 Object.assign(copy.de, {
+  download:'Vom Gerät herunterladen',
   preview:'Figurenvorschau', metadata:'ID aus den Dateieigenschaften.', content:'ID aus dem Dateiinhalt.',
   reading:'Figur wird gelesen …', unknown:'Kein passendes Figurenbild im Katalog.', unavailable:'Keine Figurenvorschau für diese Datei.',
   invalid:'Die Dateistruktur ist auffällig.', readError:'Lesen fehlgeschlagen. Zum Wiederholen den Treffer erneut öffnen.',
@@ -55,6 +60,7 @@ Object.assign(copy.de, {
   catalogueChanged:'Katalog aktualisiert. Bitte die Suche erneut starten.',
 });
 Object.assign(copy.en, {
+  download:'Download from device',
   preview:'Figure preview', metadata:'ID from file properties.', content:'ID from file contents.',
   reading:'Reading figure…', unknown:'No matching figure image in the catalogue.', unavailable:'No figure preview for this file.',
   invalid:'The file structure needs attention.', readError:'Could not read the file. Reopen this result to retry.',
@@ -66,7 +72,7 @@ Object.assign(copy.en, {
   catalogueChanged:'Catalogue updated. Please start the search again.',
 });
 export default {
-  props: { connected:Boolean, blocked:Boolean, generation:Number, directory:String, locale:{type:String,default:'de_DE'}, catalogue:Object, getSession:Function }, emits:['busy','navigate'],
+  props: { connected:Boolean, blocked:Boolean, generation:Number, directory:String, locale:{type:String,default:'de_DE'}, catalogue:Object, getSession:Function }, emits:['busy','navigate','download'],
   data(){return {query:'',scope:'device',inspectMissingIds:false,running:false,status:'',stats:null,results:[],preview:null,readingPreview:false,imageFailed:false};},
   computed:{text(){return copy[this.locale.startsWith('de')?'de':'en'];},catalogueData(){return Array.isArray(this.catalogue?.entries)?this.catalogue:catalogueBaseline;},
     previewEntry(){return this.preview?.id && this.catalogueData.entries.find(item=>item.id===this.preview.id);},
@@ -108,7 +114,11 @@ export default {
       }
     },
     cancel(){this._controller?.abort();},
-    navigate(result){if(this.connected&&!this.blocked&&!this.running&&!this.readingPreview&&this.results.includes(result))this.$emit('navigate',{...result,generation:this.generation});},
+    selectResult(action, result) {
+      if (this.connected && !this.blocked && !this.running && !this.readingPreview && this.results.includes(result)) {
+        this.$emit(action, { ...result, generation: this.generation });
+      }
+    },
     async run(){
       if(!this.connected||this.blocked||this.running||this.readingPreview||!this.query.trim()||(this.scope==='folder'&&!this.directory))return;
       this.preview=null;
@@ -139,4 +149,5 @@ export default {
 .result-preview{border:1px solid #a7bad2;border-top:0;padding:.75rem;background:white;border-radius:0 0 8px 8px;overflow-wrap:anywhere}
 .result-preview img{display:block;margin:.25rem auto .6rem;max-height:9rem;max-width:100%;object-fit:contain}
 .result-preview p{margin:.4rem 0}.result-preview button{width:auto}
+.search-results .result-download{width:auto;margin-top:.25rem}
 </style>

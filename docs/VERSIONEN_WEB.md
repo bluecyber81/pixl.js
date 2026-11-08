@@ -1,6 +1,6 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
-**Stand 7. November 2026.** Online läuft 3.41.0. Für das LCD-Allmiibo mit PFS1 und S112 7.3.0 bietet der Updater die gerätegeprüfte App DE3.65/637 und separat die Testversion DE3.66/638 an. Wer nur den Dateimanager aktualisieren möchte, kann eine laufende Übertragung abschließen und danach die Webseite neu öffnen. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll zu 3.41.0](validation/WEB3_41_0.json)
+**Stand 8. November 2026.** Online läuft 3.42.0. Für das LCD-Allmiibo mit PFS1 und S112 7.3.0 bietet der Updater die gerätegeprüfte App DE3.65/637 und separat die Testversion DE3.66/638 an. Wer nur den Dateimanager aktualisieren möchte, kann eine laufende Übertragung abschließen und danach die Webseite neu öffnen. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll zu 3.42.0](validation/WEB3_42_0.json)
 
 ## Veröffentlichungen auf GitHub
 
@@ -8,6 +8,7 @@ Jede verlinkte Version führt zu ihren damaligen Hinweisen und Downloads. 3.34.0
 
 | Dateimanager | Änderung gegenüber dem vorherigen Stand |
 | --- | --- |
+| [3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) | Zwei bebilderte Schnelleinstiege, lokaler BIN-Vergleich nach externem Download, Download aus Suchtreffern, Sammlungs-CSV und eine [Anleitung für Firmware und Speicher](https://bluecyber81.github.io/pixl.js/guide/index.html). |
 | [3.41.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0) | Direkten HTTPS-Link bei einer Figuren-ID speichern. Ein Klick auf ihren Namen lädt die geprüfte BIN-Datei herunter. |
 | [3.40.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.1) | Die Paketkarte übernimmt die Auswahl in den DFU-Updater. Auch Serien mit ausschließlich angekündigten Figuren sind filterbar. Nach einer Sicherung zeigt der Dateimanager, wie viele Dateien frisch gelesen oder nach Prüfung wiederverwendet wurden. |
 | [3.40.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.40.0) | Neun Nintendo-Ankündigungen getrennt von 952 bestätigten Katalog-IDs. Gerätesuche mit Bild, Restzeit beim Web-DFU und Inhaltsvergleich beim Fortsetzen einer Sicherung. Mit DE3.66 zusätzlich LCD-Displayfoto und Geräteprüfsumme für kleine Dateien bis 572 Byte auf E:. |

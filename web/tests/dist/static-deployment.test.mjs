@@ -13,6 +13,25 @@ assert.ok(['/', '/pixl.js/'].includes(base))
 const origin = 'https://bluecyber81.github.io'
 const read = relative => fs.readFileSync(path.join(dist, relative), 'utf8')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
+
+test(`${base}: both setup guides have working anchors and bundled destinations`, () => {
+  for (const [filename, lang] of [['index.html', 'de'], ['en.html', 'en']]) {
+    const here = new URL(base + 'guide/' + filename, origin)
+    const guide = read('guide/' + filename)
+    assert.ok(guide.includes('<html lang="' + lang + '"'))
+    for (const id of ['diagnose', 'programme', 'flash', 'littlefs', 'bootloader', 'hilfe']) {
+      assert.ok(guide.includes('id="' + id + '"'), id)
+    }
+    for (const [, href] of guide.matchAll(/\shref="([^"]+)"/g)) {
+      const target = new URL(href, here)
+      if (target.origin !== origin) continue
+      assert.ok(target.pathname.startsWith(base), href)
+      const rel = target.pathname.slice(base.length)
+      const contents = fs.readFileSync(path.join(dist, rel.endsWith('/') || !rel ? rel + 'index.html' : rel))
+      if (target.hash) assert.ok(contents.includes(Buffer.from('id="' + target.hash.slice(1) + '"')), href)
+    }
+  }
+})
 function localFile(url) {
   assert.equal(url.origin, origin)
   assert.ok(url.pathname.startsWith(base), `Escapes ${base}: ${url}`)
@@ -79,7 +98,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/releases/download/web3.41.0/Allmiibo_Dateimanager_3_41_0_Quellcode.zip'))
+  assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/releases/download/web3.42.0/Allmiibo_Dateimanager_3_42_0_Quellcode.zip'))
   assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'))
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
   localFile(new URL('../dfu/vendor/SOURCES.json', origin + base + 'licenses/index.html'))

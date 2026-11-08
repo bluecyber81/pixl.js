@@ -52,6 +52,104 @@ async function mount(name,props={}){
 }
 async function click(root,label){ const button=nodes(root,'button').find(node=>text(node)===label);assert.ok(button,label);button.props.onClick();await Vue.nextTick(); }
 
+const marioDownloadId = '0000000000000002';
+function mountDownloadCard(t, source, props = {}) {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true, value: { localStorage: { getItem: () => source } }
+  });
+  t.after(() => {
+    if (previous) Object.defineProperty(globalThis, 'window', previous);
+    else delete globalThis.window;
+  });
+  return mount('FigureDownload', { entry: { name: 'Mario', id: marioDownloadId }, de: true, ...props });
+}
+
+function marioDownloadBytes(id = marioDownloadId) {
+  const bytes = new Uint8Array(540);
+  bytes[0] = 4;
+  bytes[3] = 0x8c;
+  bytes.set(Buffer.from(id, 'hex'), 84);
+  return bytes;
+}
+
+test('blocked figure download offers the saved public source and checks the chosen file on the same card', async t => {
+  const fetch = t.mock.method(globalThis, 'fetch', async () => { throw new TypeError('Network error'); });
+  const url = 'https://files.example.org/my-download?id=mario';
+  const handoffs = [];
+  const { app, root } = await mountDownloadCard(t, url, { openImport: file => { handoffs.push(file); return true; } });
+  try {
+    assert.equal(nodes(root, 'a').length, 0);
+    const download = nodes(root, 'button').find(button => button.props['aria-label'] === 'Mario herunterladen');
+    await download.props.onClick();
+    await Vue.nextTick();
+    const open = nodes(root, 'a')[0];
+    assert.equal(text(open).trim(), 'Quelle im Browser öffnen');
+    assert.equal(open.props.href, url);
+    assert.equal(open.props.target, '_blank');
+    assert.equal(open.props.rel, 'noopener noreferrer');
+    assert.equal(open.props.referrerpolicy, 'no-referrer');
+    assert.match(text(root), /Heruntergeladene BIN prüfen/);
+    const picker = nodes(root, 'input').find(input => input.props.type === 'file');
+    async function pick(bytes) {
+      const target = { value: 'selected', files: bytes ? [new Blob([bytes])] : [] };
+      await picker.props.onChange({ target });
+      await Vue.nextTick();
+      assert.equal(target.value, '');
+    }
+    await pick(marioDownloadBytes('0000000000340102'));
+    assert.match(text(root), /gehört zu einer anderen Figur/);
+    await pick(new Uint8Array(540));
+    assert.match(text(root), /keine passende BIN-Struktur/);
+    await pick(new Uint8Array(541));
+    assert.match(text(root), /Dateigröße passt/);
+    await pick(marioDownloadBytes());
+    assert.match(text(root), /Dateigröße und Figuren-ID passen zu Mario \(0000000000000002\)/);
+    await pick(null);
+    assert.doesNotMatch(text(root), /Download angefordert|Gespeichert/);
+    assert.equal(handoffs.length, 0);
+    await click(root, 'Im Geräteimport öffnen');
+    assert.equal(handoffs.length, 1);
+    assert.equal(handoffs[0].id, marioDownloadId);
+    assert.deepEqual(handoffs[0].bytes, marioDownloadBytes());
+    await pick(marioDownloadBytes('0000000000340102'));
+    assert.doesNotMatch(text(root), /Im Geräteimport öffnen/);
+    assert.equal(fetch.mock.callCount(), 1);
+  } finally { app.unmount(); }
+});
+
+test('an unsafe stored URL never exposes an external download link', async t => {
+  const unsafe = await mountDownloadCard(t, 'javascript:alert(1)');
+  try {
+    assert.equal(nodes(unsafe.root, 'a').length, 0);
+    assert.equal(nodes(unsafe.root, 'button').length, 0);
+  } finally { unsafe.app.unmount(); }
+});
+
+test('an HTML share page exposes the manual source and local check in English', async t => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('<!doctype html>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } }));
+  const { root, app } = await mountDownloadCard(t, 'https://files.example.org/share', { de: false });
+  try {
+    await nodes(root, 'button')[0].props.onClick();
+    await Vue.nextTick();
+    assert.match(text(root), /Open source in browser/);
+    assert.match(text(root), /Check downloaded BIN/);
+    assert.doesNotMatch(text(root), /Download requested/);
+  } finally { app.unmount(); }
+});
+
+test('a remote ID mismatch does not offer an unverified external download', async t => {
+  t.mock.method(globalThis, 'fetch', async () => new Response(marioDownloadBytes('0000000000340102')));
+  const { root, app } = await mountDownloadCard(t, 'https://files.example.org/mario.bin');
+  try {
+    await nodes(root, 'button')[0].props.onClick();
+    await Vue.nextTick();
+    assert.match(text(root), /anderen Figuren-ID/);
+    assert.equal(nodes(root, 'a').length, 0);
+    assert.equal(nodes(root, 'input').length, 0);
+  } finally { app.unmount(); }
+});
+
 test('figure images need opt-in for each identity; QR is local and resets on identity switch',async()=>{
   const {root,state,app}=await mount('FigureDetails',{id:'0000000000000002'});
   try {

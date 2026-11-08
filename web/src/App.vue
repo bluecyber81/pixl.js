@@ -43,15 +43,28 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.41.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.42.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
       <span v-else class="quick-location">{{ $t(demoMode ? 'workflow.previewShort' : 'workflow.connectHint') }}</span></div>
       <span v-if="statusDriveInfo" class="quick-storage">{{ statusDriveInfo.label }}: {{ $t('workflow.freeSpace',{bytes:format_size(statusDriveInfo.freeBytes)}) }}</span>
-      <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
+      <div class="status-links">
+        <a class="guide-link" :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
+        <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
+      </div>
     </section>
     <p v-if="browserIssue" class="notice error" role="alert">{{ $t(browserIssue) }}</p>
+    <nav v-if="activeWorkspace === 'files'" class="start-actions" :aria-label="$t('workflow.startActions')">
+      <button type="button" class="start-figure" aria-controls="catalogue-workspace" @click="show_figure_import">
+        <img class="action-art" src="./assets/figure-import-pixel.png" alt="" width="72" height="54">
+        <span class="action-copy"><strong>{{ $t('workflow.startFigure') }}</strong><span>{{ $t('workflow.startFigureHint') }}</span></span>
+      </button>
+      <button type="button" class="start-firmware" aria-controls="update-workspace" @click="show_workspace('update')">
+        <img class="action-art" src="./assets/lcd-update-pixel.png" alt="" width="72" height="54">
+        <span class="action-copy"><strong>{{ $t('workflow.startFirmware') }}</strong><span>{{ $t('workflow.startFirmwareHint') }}</span></span>
+      </button>
+    </nav>
     <div class="app-layout">
     <nav class="workspace-nav" :aria-label="$t('workflow.workspaces')">
       <button type="button" @click="show_workspace('files')" :aria-current="activeWorkspace === 'files' ? 'page' : undefined" aria-controls="file-workspace"><span class="workspace-icon" aria-hidden="true">▤</span><span><strong>{{ $t('workflow.filesTitle') }}</strong><small>{{ $t('workflow.filesBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
@@ -136,13 +149,13 @@
     <p v-if="enteringDfu" class="notice" role="status">{{ $t('info.enteringDfu') }}</p>
     <section v-show="activeWorkspace === 'files'" class="files-workspace" id="file-workspace" ref="fileWorkspace" tabindex="-1" :aria-label="$t('workflow.filesTitle')">
       <div class="collection-layout"><div class="collection-main">
-      <div class="section-heading"><div><p class="section-eyebrow">{{ $t('workflow.collection') }}</p><h2>{{ $t('workflow.filesTitle') }}</h2></div><div class="file-navigation"><el-button size="small" @click="on_btn_up" :disabled="btn_disabled()">{{ $t('menu.up')  }}</el-button><el-button size="small" @click="on_btn_refresh" :disabled="!connected || busy">{{ $t('menu.refresh') }}</el-button></div></div>
-      <div class="file-toolbar"><el-button-group><el-button size="small" type="primary" @click="on_btn_upload"
+      <div class="section-heading"><div><p class="section-eyebrow">{{ $t('workflow.collection') }}</p><h2>{{ $t('workflow.filesTitle') }}</h2></div><div v-show="connected || demoMode" class="file-navigation"><el-button size="small" @click="on_btn_up" :disabled="btn_disabled()">{{ $t('menu.up')  }}</el-button><el-button size="small" @click="on_btn_refresh" :disabled="!connected || busy">{{ $t('menu.refresh') }}</el-button></div></div>
+      <div v-if="!connected && !connecting && !demoMode" class="connection-guide"><span class="connection-guide-symbol" aria-hidden="true">↔</span><div><h3>{{ $t('workflow.readyToConnect') }}</h3><p>{{ $t('workflow.connectGuide') }}</p></div></div>
+      <div v-if="!connected && !connecting" class="preview-controls"><button type="button" @click="toggle_preview">{{ $t(demoMode ? 'tools.previewClose' : 'tools.previewOpen') }}</button><p v-if="demoMode" role="status">{{ $t('tools.previewNotice') }}</p></div>
+      <div v-show="connected || demoMode" class="file-toolbar"><el-button-group><el-button size="small" type="primary" @click="on_btn_upload"
               :disabled="btn_disabled()">{{ $t('menu.upload')  }}</el-button><el-button size="small" @click="on_btn_new_folder"
               :disabled="btn_disabled()">{{ $t('menu.newfolder')  }}</el-button></el-button-group><el-button-group><el-button size="small" type="danger" @click="on_btn_remove"
               :disabled="btn_disabled() || !table_selection.length">{{ $t('menu.del')  }}</el-button></el-button-group><span v-if="table_selection.length" class="selection-counter">{{ $t('workflow.selectedCount',{count:table_selection.length}) }}</span></div>
-      <div v-if="!connected && !connecting && !demoMode" class="connection-guide"><span class="connection-guide-symbol" aria-hidden="true">↔</span><div><h3>{{ $t('workflow.readyToConnect') }}</h3><p>{{ $t('workflow.connectGuide') }}</p></div></div>
-      <div v-if="!connected && !connecting" class="preview-controls"><button type="button" @click="toggle_preview">{{ $t(demoMode ? 'tools.previewClose' : 'tools.previewOpen') }}</button><p v-if="demoMode" role="status">{{ $t('tools.previewNotice') }}</p></div>
     <el-row>
       <el-col :span="24">
         <div class="folder-path">
@@ -156,7 +169,7 @@
         </div>
       </el-col>
     </el-row>
-    <DeviceSearch :connected="connected" :blocked="(busy && !searchBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible" :generation="sessionGeneration" :directory="current_dir" :locale="language" :catalogue="collectionCatalogue" :get-session="device_search_session" @busy="searchBusy = $event" @navigate="navigate_search_result" />
+    <DeviceSearch :connected="connected" :blocked="(busy && !searchBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible" :generation="sessionGeneration" :directory="current_dir" :locale="language" :catalogue="collectionCatalogue" :get-session="device_search_session" @busy="searchBusy = $event" @navigate="navigate_search_result" @download="download_search_result" />
     <div class="file-filters">
       <label class="search-label">{{ $t('tools.search') }}<input type="search" v-model="searchQuery" @input="on_filter_change" :placeholder="$t('tools.search')"></label>
       <label>{{ $t('tools.filter') }} <select v-model="typeFilter" @change="on_filter_change">
@@ -224,6 +237,7 @@
     <details v-show="activeWorkspace === 'backup'" class="workspace-panel" ref="backupWorkspace" id="backup-workspace" @toggle="keep_migration_visible">
       <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
       <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.backupScope') }}</p>
+      <a class="guide-link" :href="guideUrl + '#littlefs'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.migrationGuide') }}</a>
       <p class="workspace-location">{{ $t('workflow.sourceFolder') }} <strong>{{ current_dir || $t('workflow.chooseDrive') }}</strong></p>
       <p v-if="table_loading" class="backup-hint" role="status">{{ $t('workflow.backupDriveOpening') }}</p>
       <p v-else-if="(listingError || backupDriveOpenError) && connected" class="notice error" role="alert">{{ $t('workflow.backupDriveFailed') }}</p>
@@ -242,6 +256,7 @@
     <details v-show="activeWorkspace === 'update'" class="workspace-panel" ref="updateWorkspace" id="update-workspace">
       <summary>{{ $t('workflow.updateTitle') }}<span>{{ $t('workflow.updateBrief') }}</span></summary>
       <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
+      <a class="guide-link" :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
               :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
       <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" :href="dfuPageUrl" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
@@ -257,7 +272,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.41.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.42.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -340,8 +355,8 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <CollectionAssistant :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
-    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" @select-entry="collectionSelected = $event" /></div>
+    <CollectionAssistant ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" :open-import="open_figure_import" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
     <el-dialog :title="$t('info.diagnosticPreviewTitle')" v-model="diagnosticsDialog" width="min(800px, 94vw)" :close-on-click-modal="!diagnosticsBusy" :close-on-press-escape="!diagnosticsBusy" :show-close="!diagnosticsBusy">
@@ -507,7 +522,7 @@ export default {
   components: { DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
-      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.41.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
+      diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: 'Allmiibo-Diagnose-3.42.0.json', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
@@ -566,6 +581,7 @@ export default {
     catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },
     dfuPageUrl() { return deploymentPath('dfu/web.html') + (this.lastDfuReference || ''); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
+    guideUrl() { return deploymentPath(this.language.startsWith('de') ? 'guide/index.html' : 'guide/en.html'); },
     uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
     metadataNote() { return metadataNoteInfo(this.meta_form.notes); },
     diagnosticsBusy() { return this.diagnosticsSaving || this.diagnosticsCopying; },
@@ -672,6 +688,12 @@ export default {
         sessionGeneration:generation, deviceKey:pixl.get_device_key?.() || null
       }) };
     },
+    open_figure_import(checkedFile) {
+      const assistant = this.$refs.figureImport;
+      if (!assistant?.acceptCheckedFigure(checkedFile)) return false;
+      this.collectionSelected = assistant.chosen;
+      return true;
+    },
     on_collection_catalogue(result) {
       this.collectionObservation=null;
       this.collectionCatalogue={...catalogueBaseline,entries:result.entries,checkedDate:result.observedAt.slice(0,10),commit:result.source.commit,sourceUrl:result.source.url};
@@ -707,11 +729,18 @@ export default {
         this.assert_session(generation); return bytes;
       } };
     },
-    async navigate_search_result(result) {
-      if (!result || !this.connected || this.busy || result.generation !== this.sessionGeneration || ![0,1].includes(result.type)) return;
+    current_search_result(result) {
+      if (!result || !this.connected || this.busy || result.generation !== this.sessionGeneration || ![0,1].includes(result.type)) return false;
       try {
-        if (joinDevicePath(result.parent, result.name) !== result.path) return;
-      } catch { return; }
+        return joinDevicePath(result.parent, result.name) === result.path;
+      } catch { return false; }
+    },
+    download_search_result(result) {
+      if (!this.current_search_result(result) || result.type !== 0 || !Number.isSafeInteger(result.size) || result.size < 0) return;
+      return this.download_device_file(result.path, result.name, result.size, true);
+    },
+    async navigate_search_result(result) {
+      if (!this.current_search_result(result)) return;
       const generation = this.sessionGeneration, dir = result.type === 1 ? result.path : result.parent;
       this.reset_filters(); this.current_dir = dir;
       await this.reload_folder();
@@ -745,7 +774,7 @@ export default {
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.41.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Startdiagnose-3.42.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
     },
     navigate_breadcrumb(path) {
@@ -765,6 +794,15 @@ export default {
       const plan = kind === 'zip' ? this.zipPlan : kind === 'sync' ? this.syncPlan : null;
       if (!plan) return;
       this[kind + 'Selected'] = additionsOnly ? plan.entries.filter(e => e.status === 'add').map(e => e.targetPath) : [];
+    },
+    show_figure_import() {
+      this.show_workspace('catalogue');
+      if (this.activeWorkspace !== 'catalogue') return;
+      this.$nextTick(() => {
+        const target = this.$refs.catalogueWorkspace?.querySelector('[aria-labelledby="figure-import-title"]');
+        target?.focus({ preventScroll: true });
+        target?.scrollIntoView({ block: 'start' });
+      });
     },
     show_workspace(name) {
       const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
@@ -1196,7 +1234,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
-      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.41.0.json';
+      this.diagnosticsFilename = 'Allmiibo-Diagnose-3.42.0.json';
       this.diagnosticsStatus = 'info.diagnosticReady';
       this.diagnosticsDialog = true;
     },
@@ -1894,26 +1932,29 @@ export default {
         this.reset_filters();
         return this.reload_folder();
       }
-      const generation = this.sessionGeneration;
-      ++this.pendingDownloads;
-      this.set_transfer({ phase: 'download', path: row.name, done: 0, total: row.sizeBytes || 0 });
       let path;
       try { path = this.append_segment(this.current_dir, row.name); }
-      catch (error) { --this.pendingDownloads; this.set_transfer(null); this.show_transfer_error(error); return; }
+      catch (error) { this.show_transfer_error(error); return; }
+      return this.download_device_file(path, row.name, row.sizeBytes);
+    },
+    download_device_file(path, name, size, saveOnRead = false) {
+      const generation = this.sessionGeneration;
+      ++this.pendingDownloads;
+      this.set_transfer({ phase: 'download', path, done: 0, total: size || 0 });
       return proto.vfs_helper_read_file(path, data => {
         if (!this.session_current(generation)) return;
-        if (Number.isSafeInteger(row.sizeBytes) && data.byteLength !== row.sizeBytes) {
+        if (Number.isSafeInteger(size) && data.byteLength !== size) {
           this.remember_transfer('download', 'failed', data.byteLength);
           this.show_transfer_error(new Error(this.$t('tools.sizeChanged'))); return;
         }
-        // Keep bytes until an explicit click; a blocked/cancelled browser save
-        // can then be retried without another Bluetooth read.
-        this.lastDownload = { blob: new Blob([data], { type: 'application/octet-stream' }), filename: row.name };
+        // Retain complete bytes so a blocked browser save can be retried without reading again.
+        this.lastDownload = { blob: new Blob([data], { type: 'application/octet-stream' }), filename: name };
         this.remember_transfer('download', 'success', data.byteLength);
+        if (saveOnRead) this.save_last_download();
       }, error => { if (this.session_current(generation)) { this.remember_transfer('download', 'failed'); this.show_transfer_error(error); } }, () => {
         if (generation === this.sessionGeneration) { --this.pendingDownloads; if (!this.pendingDownloads) this.set_transfer(null); }
-      }, { ...(Number.isSafeInteger(row.sizeBytes) ? { max_bytes: row.sizeBytes } : {}), progress_cb: progress => {
-        if (this.session_current(generation)) this.set_transfer({ phase: 'download', path: row.name, done: progress.received_bytes, total: row.sizeBytes || 0 });
+      }, { ...(Number.isSafeInteger(size) ? { max_bytes: size } : {}), progress_cb: progress => {
+        if (this.session_current(generation)) this.set_transfer({ phase: 'download', path, done: progress.received_bytes, total: size || 0 });
       } });
     },
 
@@ -2318,4 +2359,76 @@ body{padding:0;background:#f5f6f8;color:#2d3943}.filemanager{max-width:1680px;mi
 .sidebar-device{padding:22px 10px;margin-top:15px;border-top:1px solid #e3e8ec;font-size:11px;color:#6c7984}.sidebar-caption{font-size:9px;letter-spacing:.13em;color:#99a3ab}.sidebar-device strong{font-size:12px;color:#485b68}.sidebar-device p{line-height:1.6}.sidebar-path{overflow-wrap:anywhere}.sidebar-device progress{width:100%;height:5px;accent-color:#748e84;display:block;margin:12px 0}.workspace-nav .sidebar-upload{border:1px dashed #b7c5ce;background:white;justify-content:center;text-align:center;font-size:12px;margin-top:15px}.workspace-nav .sidebar-upload:disabled{opacity:.5;cursor:default}.background-work{padding:12px 16px;margin:0 0 12px;background:#eef5f2;border-radius:8px;font-size:12px}.background-work button{border:0;background:transparent;color:#397262;cursor:pointer;text-decoration:underline}@media(max-width:650px){.sidebar-device{display:none}}
 .mobile-preview-close{display:none}@media(max-width:960px){.selection-context.has-selection{position:fixed;bottom:0;left:0;right:0;z-index:20;max-height:50svh;overflow:auto;border:1px solid #d7e0e5;border-radius:16px 16px 0 0;background:white;box-shadow:0 -10px 40px #20313e24;padding-bottom:env(safe-area-inset-bottom)}.selection-context.has-selection .mobile-preview-close{display:block;position:sticky;top:0;z-index:1;margin:0 0 0 auto;padding:12px 18px;border:0;background:white;color:#506b7a;font:inherit;font-size:12px;cursor:pointer}.selection-context.has-selection .selection-preview{padding-top:4px}.selection-context.has-selection .preview-caption{font-size:10px}.selection-context.has-selection .preview-eyebrow{margin-bottom:10px}}
 .sample-note{padding:10px 12px;border-left:3px solid #7596ac;background:#edf4f8;color:#294c64;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}
+:root {
+  --shell-paper:#f6f5ef; --shell-rule:#d7dfd7; --shell-teal:#185c52; --shell-teal-wash:#e6f2eb;
+  --shell-indigo:#484571; --shell-indigo-wash:#eeedf7;
+  --el-color-primary:#21675b; --el-color-primary-dark-2:#194e45; --el-color-primary-light-3:#548a7f;
+  --el-color-primary-light-5:#86aca2; --el-color-primary-light-7:#b6cec5;
+  --el-color-primary-light-8:#d1e1d9; --el-color-primary-light-9:#ebf3ee;
+}
+body,.filemanager { background:var(--shell-paper); }
+.app-header,.version-context,.quick-status { background:#fffdf7; border-color:var(--shell-rule); }
+.app-header h1 { color:#173c37; }
+.app-eyebrow,.section-eyebrow,.sidebar-caption { color:#536961; }
+.brand-mark { background:#23594e; color:#f1f6dc; }
+.workspace-nav { background:#faf9f3; border-color:var(--shell-rule); }
+.workspace-nav button strong { color:#31453f; font-size:13px; }
+.workspace-nav button small { color:#54695f; font-size:11px; }
+.workspace-nav button:not(:disabled):hover { background:#edf2e9; }
+.workspace-nav button[aria-current="page"] { background:#dfede3; color:var(--shell-teal); box-shadow:inset 3px 0 var(--shell-teal); }
+.workspace-nav button[aria-current="page"] strong,.workspace-nav button[aria-current="page"] .workspace-icon { color:#174b42; }
+.workspace-nav .workspace-icon { color:#537069; }
+.files-workspace,.workspace-body>.workspace-panel,.workspace-body>.device-panel,.workspace-body>.remote-workspace,.workspace-body>.extra-tools { border-color:var(--shell-rule); }
+.filemanager .section-heading h2,.workspace-body .extra-tools h2 { color:#20473d; }
+.filemanager .el-table { --el-table-header-bg-color:#f0f5ee; --el-table-row-hover-bg-color:#f0f7f1; }
+.filemanager .el-table th.el-table__cell { color:#4a6359; font-size:12px; }
+.file-symbol { color:#52796c; }
+.connection-guide { background:#f1f7f0; border-style:solid; border-color:#c7dbcb; }
+.connection-guide-symbol { color:#266353; background:transparent; }
+.connection-guide p,.extra-tools>p { color:#536860; }
+#update-workspace>summary,#device-overview>summary { color:var(--shell-indigo); }
+.update-steps>div>span { color:var(--shell-indigo); background:var(--shell-indigo-wash); }
+.start-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:14px 24px; }
+.start-actions button {
+  --action-ink:#194f43; --action-border:#accbbb; --action-wash:var(--shell-teal-wash);
+  display:grid; grid-template-columns:72px minmax(0,1fr) auto; align-items:center; gap:12px;
+  padding:12px 17px 12px 10px; text-align:start; border:1px solid var(--action-border); border-radius:13px;
+  background:var(--action-wash); color:var(--action-ink); cursor:pointer; font:inherit;
+}
+.start-actions .start-firmware { --action-ink:#45436c; --action-border:#c7c5db; --action-wash:var(--shell-indigo-wash); }
+.start-actions button::after { content:""; width:7px; height:7px; border:solid currentColor; border-width:2px 2px 0 0; transform:rotate(45deg); }
+.start-actions button:hover { border-color:var(--action-ink); box-shadow:0 2px 6px #243e3b12; }
+.start-actions button:focus-visible { outline:3px solid var(--action-ink); outline-offset:3px; }
+.action-art { display:block; width:72px; height:54px; image-rendering:pixelated; }
+.action-copy { min-width:0; display:grid; gap:4px; overflow-wrap:anywhere; }
+.action-copy strong { font-size:1rem; line-height:1.25; }
+.action-copy>span { font-size:.82rem; line-height:1.45; color:#4e6058; }
+.start-firmware .action-copy>span { color:#58576e; }
+@media(max-width:650px) {
+  .app-header { gap:8px; }
+  .header-tools { width:auto; min-width:0; max-width:100%; margin-inline-start:auto; justify-content:flex-end; flex-wrap:wrap; }
+  .header-language,.header-language .el-dropdown,.header-language .el-tooltip__trigger { min-width:0; max-width:100%; }
+  .header-language .el-button,.header-tools>.el-button { max-width:100%; height:auto; white-space:normal; overflow-wrap:anywhere; line-height:1.25; }
+  .header-language .el-button,.header-tools>.el-button,.quick-status button { min-height:44px; }
+  .workspace-nav { gap:4px; padding:6px 8px; background:#faf9f3; }
+  .workspace-nav button { min-height:46px; padding:5px 3px; gap:3px; }
+  .workspace-nav button strong { font-size:12px; line-height:1.25; }
+  .workspace-nav button[aria-current="page"] { box-shadow:inset 0 -3px var(--shell-teal); }
+  .start-actions { grid-template-columns:1fr; margin:10px; gap:7px; }
+  .start-actions button { grid-template-columns:48px minmax(0,1fr) auto; padding:9px 13px 9px 7px; gap:8px; }
+  .action-art { width:48px; height:36px; }
+  .action-copy { gap:2px; }
+  .action-copy strong { font-size:.91rem; }
+  .action-copy>span { font-size:.78rem; line-height:1.35; }
+  .figure-import { scroll-margin-top:8rem; }
+}
+@media(max-width:430px) {
+  .app-header { flex-direction:column; align-items:stretch; padding:10px 14px 6px; }
+  .header-tools { flex-direction:row-reverse; justify-content:flex-end; align-self:start; margin-inline-start:0; gap:7px; }
+}
+.status-links { display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; }
+.guide-link { color:#285d58; font-size:.875rem; font-weight:600; line-height:1.45; text-underline-offset:.18em; }
+.guide-link:hover { color:#16443b; }
+.guide-link:focus-visible { outline:3px solid #317b67; outline-offset:3px; }
+.status-links .guide-link { font-size:.8rem; }
 </style>

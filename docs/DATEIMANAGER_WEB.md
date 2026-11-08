@@ -1,8 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
+[Anleitung für Firmware, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html) ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·
-[Downloads für 3.41.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.41.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
+[Downloads für 3.42.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.0) · [Versionsgeschichte mit Zwischenständen](VERSIONEN_WEB.md)
 
 Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den betroffenen Speicherort und die ursprüngliche Sitzung an. Steht der Abschluss noch aus, verbinde dasselbe Gerät erneut und prüfe den Zielordner, bevor du den Upload wiederholst. Halte den Browsertab dafür geöffnet.
 
@@ -17,6 +18,13 @@ Das Allmiibo muss sich beim verwendeten Handy oder Computer befinden. Die
 Webseite verbindet sich über dessen Bluetooth; sie macht kein entferntes
 Allmiibo über das Internet erreichbar. Der Laptop zu Hause kann ausgeschaltet
 bleiben. Die Vorschau und der Figurenkatalog lassen sich ohne Gerät ansehen.
+
+## Dateimanager 3.42.0
+
+1. **Ich möchte eine Figur hinzufügen** öffnet die Figurenauswahl und den Import. **Ich möchte die Firmware aktualisieren** öffnet die Geräte- und Paketübersicht für unterstützte LCD-Geräte.
+2. Wenn ein eingetragener HTTPS-Link im Katalog nicht direkt geladen werden kann, öffne **Quelle im Browser öffnen**. Wähle anschließend bei derselben Figur **Heruntergeladene BIN prüfen** und die gespeicherte Datei. Bei passender ID kannst du dieselben geprüften Daten mit **Im Geräteimport öffnen** zur Übertragung vorbereiten.
+3. Öffne unter **Dateien → Auf dem Gerät suchen** beim gewünschten Dateitreffer **Vom Gerät herunterladen**. Der angezeigte Ordnerpfad hilft bei gleichnamigen Dateien.
+4. Unter **Figurenkatalog → Bestand prüfen** kannst du nach dem Vergleich das Ergebnis als CSV für Excel speichern. Dazu ist keine weitere Bluetooth-Abfrage nötig. Der Export enthält Pfad und Prüfbereich. Das Präfix `0x` hält die komplette Figuren-ID in Tabellenkalkulationen lesbar.
 
 ## Dateimanager 3.41.0
 

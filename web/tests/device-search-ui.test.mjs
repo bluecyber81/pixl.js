@@ -90,6 +90,43 @@ test('device search UI reads local catalogue metadata, emits navigation and keep
   state.generation=5;await Vue.nextTick();assert.doesNotMatch(text(root),/Original.BIN/);
  }finally{app.unmount();}
 });
+test('each file result can download directly while the search and preview stay open', async () => {
+  const downloads = [];
+  const {root, state, app} = await mount('DeviceSearch', {
+    connected: true, generation: 9, directory: 'E:/Tags',
+    getSession: () => ({readDirectory: async () => [
+      {name:'Mario', type:1}, {name:'Mario.bin', type:0, size:540, meta:{amiibo:{head:0,tail:2}}}
+    ]}),
+    onDownload: result => downloads.push(result)
+  });
+  try {
+    nodes(root, 'input')[0].props['onUpdate:modelValue']('Mario');
+    nodes(root, 'select')[0].props['onUpdate:modelValue']('folder');
+    await Vue.nextTick();
+    await nodes(root, 'form')[0].props.onSubmit({preventDefault() {}});
+    await Vue.nextTick();
+    const fileButton = nodes(root, 'button').find(node => text(node).includes('Mario.bin'));
+    const actions = nodes(root, 'button').filter(node => text(node) === 'Vom Gerät herunterladen');
+    assert.equal(actions.length, 1);
+    assert.match(actions[0].props['aria-label'], /E:\/Tags\/Mario\.bin/);
+    await click(root, 'Vom Gerät herunterladen');
+    assert.equal(downloads[0].path, 'E:/Tags/Mario.bin');
+    assert.equal(downloads[0].generation, 9);
+    await fileButton.props.onClick(); await Vue.nextTick();
+    state.blocked = true; state.locale = 'en'; await Vue.nextTick();
+    assert.ok(actions[0].props.disabled);
+    await click(root, 'Download from device');
+    assert.equal(downloads.length, 1);
+    state.blocked = false; await Vue.nextTick();
+    await click(root, 'Download from device');
+    assert.equal(downloads.length, 2);
+    assert.equal(fileButton.props['aria-expanded'], true);
+    assert.equal(nodes(root, 'li').length, 2);
+    state.generation++; await Vue.nextTick();
+    actions[0].props.onClick();
+    assert.equal(downloads.length, 2);
+  } finally { app.unmount(); }
+});
 test('in-flight stale search cannot overwrite a new connection or emit busy late',async()=>{
  let finish;const busy=[];const {root,state,app}=await mount('DeviceSearch',{connected:true,generation:1,directory:'E:/',getSession:()=>({readDirectory:()=>new Promise(r=>finish=r)}),onBusy:v=>busy.push(v)});
  try{

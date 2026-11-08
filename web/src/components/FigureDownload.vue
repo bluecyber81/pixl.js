@@ -22,6 +22,17 @@
     </form>
   </details>
   <small v-if="feedback" class="link-feedback" :class="{ error: feedbackError }" role="status">{{ feedback[de ? 0 : 1] }}</small>
+  <div v-if="manualSource" class="manual-download">
+    <a :href="manualSource" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
+      {{ de ? 'Quelle im Browser öffnen' : 'Open source in browser' }}
+    </a>
+    <label>{{ de ? 'Heruntergeladene BIN prüfen' : 'Check downloaded BIN' }}
+      <input type="file" accept=".bin,application/octet-stream" :disabled="busy" @change="checkLocal" />
+    </label>
+    <button v-if="checkedFile && openImport" type="button" :disabled="blocked || busy" @click="handoff">
+      {{ de ? 'Im Geräteimport öffnen' : 'Open in device import' }}
+    </button>
+  </div>
 </template>
 
 <script setup>
@@ -30,10 +41,12 @@ import { FIGURE_DOWNLOAD_LIMITS, prepareFigureTransfer, suggestedFigureFilename 
 import { figureDownloadLinkKey, readFigureDownloadLink, writeFigureDownloadLink } from '../lib/figure-download-links.js';
 import { saveBlob } from '../lib/browser-tools.js';
 
-const props = defineProps({ entry: { type: Object, required: true }, de: Boolean });
+const props = defineProps({ entry: { type: Object, required: true }, de: Boolean, blocked: Boolean, openImport: Function });
 const link = ref(readFigureDownloadLink(props.entry.id));
 const editor = ref(null), editing = ref(false), draft = ref('');
 const feedback = ref(null), feedbackError = ref(false), busy = ref(false);
+const manualSource = ref('');
+const checkedFile = ref(null);
 let controller;
 
 function show(message, error = false) {
@@ -45,6 +58,8 @@ function stopDownload() {
   controller?.abort();
   controller = null;
   busy.value = false;
+  manualSource.value = '';
+  checkedFile.value = null;
 }
 
 function refreshLink() {
@@ -105,27 +120,66 @@ function remove() { store(''); }
 
 const downloadErrors = {
   FIGURE_ID_MISMATCH: ['Die Datei gehört zu einer anderen Figuren-ID. Prüfe den Link.', 'The file belongs to a different figure ID. Check the link.'],
-  FIGURE_TIMEOUT: ['Die Quelle antwortet zu langsam. Versuche es erneut.', 'The source timed out. Try again.'],
   FIGURE_SIZE: ['Die Dateigröße passt zu keinem unterstützten BIN-Format.', 'The file size does not match a supported BIN format.'],
-  FIGURE_STRUCTURE: ['Die Datei hat keine passende BIN-Struktur. Prüfe den Link.', 'The file does not have a supported BIN structure. Check the link.']
+  FIGURE_STRUCTURE: ['Die Datei hat keine passende BIN-Struktur.', 'The file does not have a supported BIN structure.']
 };
-async function download() {
+const manualDownloadErrors = new Set(['FIGURE_NETWORK', 'FIGURE_HTTP', 'FIGURE_TIMEOUT', 'FIGURE_STREAM']);
+
+function download() { return loadFigure(); }
+
+function checkLocal(event) {
+  const picker = event.target;
+  const file = picker.files?.[0];
+  picker.value = '';
+  if (file) return loadFigure(file);
+}
+
+function handoff() {
+  refreshLink();
+  if (!checkedFile.value || props.blocked || busy.value) return;
+  if (!props.openImport?.(checkedFile.value)) {
+    show(['Der Geräteimport ist gerade nicht verfügbar. Versuche es nach dem laufenden Vorgang erneut.',
+      'Device import is currently unavailable. Try again after the current operation.'], true);
+  }
+}
+
+async function loadFigure(localFile) {
   if (busy.value) return;
   refreshLink();
-  if (!link.value) return;
+  if (!link.value || (localFile && !manualSource.value)) return;
+  const url = link.value;
+  checkedFile.value = null;
+  if (!localFile) manualSource.value = '';
   const request = new AbortController();
   controller = request;
   busy.value = true;
-  show(['Datei wird geladen und geprüft …', 'Downloading and checking file …']);
+  show(localFile ? ['Lokale BIN wird geprüft …', 'Checking local BIN …']
+    : ['Datei wird geladen und geprüft …', 'Downloading and checking file …']);
   try {
-    const file = await prepareFigureTransfer({ url: link.value, expectedId: props.entry.id, signal: request.signal });
+    const source = localFile ? { file: localFile } : { url };
+    const file = await prepareFigureTransfer({ ...source, expectedId: props.entry.id, signal: request.signal });
     if (request.signal.aborted) return;
+    if (localFile) {
+      checkedFile.value = file;
+      show([`Dateigröße und Figuren-ID passen zu ${props.entry.name} (${file.id}).`,
+        `File size and figure ID match ${props.entry.name} (${file.id}).`]);
+      return;
+    }
     saveBlob(new Blob([file.bytes], { type: 'application/octet-stream' }), suggestedFigureFilename(props.entry));
     show(['Download angefordert.', 'Download requested.']);
   } catch (error) {
-    if (!request.signal.aborted) show(downloadErrors[error.code] ||
-      ['Download fehlgeschlagen. Prüfe, ob der Link direkt zur BIN-Datei führt und der Server Browserzugriff erlaubt (CORS).',
-       'Download failed. Check that the link points directly to the BIN file and the server allows browser access (CORS).'], true);
+    if (request.signal.aborted) return;
+    if (!localFile && manualDownloadErrors.has(error.code)) {
+      manualSource.value = url;
+      show(['Der direkte Download ist fehlgeschlagen. Öffne die Quelle, speichere die BIN und wähle sie hier zur Prüfung aus.',
+        'The direct download failed. Open the source, save the BIN, then choose it here to check it.'], true);
+    } else if (localFile && error.code === 'FIGURE_ID_MISMATCH') {
+      show(['Diese BIN gehört zu einer anderen Figur. Wähle die passende Datei aus.',
+        'This BIN belongs to a different figure. Choose the matching file.'], true);
+    } else {
+      show(downloadErrors[error.code] || (localFile ? ['Die lokale BIN konnte nicht gelesen werden.', 'Could not read the local BIN.']
+        : ['Download fehlgeschlagen. Prüfe den Link.', 'Download failed. Check the link.']), true);
+    }
   } finally {
     if (controller === request) {
       controller = null;
@@ -151,4 +205,7 @@ input { min-width:0; box-sizing:border-box; width:100%; min-height:40px; border:
 button:focus-visible, summary:focus-visible, input:focus-visible { outline:3px solid #78a7cb; outline-offset:2px; }
 small { color:#526575; font-size:.75rem; line-height:1.45; }
 .link-feedback.error { color:#813c1a; }
+.manual-download { display:grid; gap:.5rem; margin-block:.35rem; font-size:.8rem; }
+.manual-download a { width:fit-content; color:#205580; }
+.manual-download a:focus-visible { outline:3px solid #78a7cb; outline-offset:2px; }
 </style>

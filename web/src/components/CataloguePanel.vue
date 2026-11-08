@@ -47,7 +47,7 @@
           <img v-if="!failedImages.has(imageFor(entry.id))" :key="imageFor(entry.id)" :src="imageFor(entry.id)" :alt="entry.name" width="160" height="140" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" @error="imageFailed(entry.id, $event)" />
           <span v-else class="image-placeholder"><span aria-hidden="true">◇</span>{{ de ? 'Bild nicht verfügbar' : 'Image unavailable' }}</span>
         </div>
-        <FigureDownload :entry="entry" :de="de" />
+        <FigureDownload :entry="entry" :de="de" :blocked="blocked" :open-import="openImport" />
         <span class="presence-label">{{ presenceLabel(presenceFor(entry.id)) }}</span>
         <div v-if="presenceFor(entry.id).state === 'attention'" class="warning-reasons" role="list">
           <p v-for="reason in presenceFor(entry.id).reasons" :key="reason" role="listitem">{{ reasonText(reason) }}</p>
@@ -75,7 +75,7 @@ import FigureDownload from './FigureDownload.vue';
 import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
-const props = defineProps({ catalogue: Object, blocked: Boolean, collectionReport: Object, collectionStale: Boolean, collectionHistorical: Boolean, collectionObservedAt: String });
+const props = defineProps({ catalogue: Object, blocked: Boolean, openImport: Function, collectionReport: Object, collectionStale: Boolean, collectionHistorical: Boolean, collectionObservedAt: String });
 const emit = defineEmits(['select-entry']);
 const data = computed(() => props.catalogue || baseline);
 const { locale } = useI18n();

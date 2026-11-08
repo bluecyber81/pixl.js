@@ -2,6 +2,8 @@
 
 This guide distinguishes an application update from a storage conversion. It does not authorize erasing a device or assume every Allmiibo has the same hardware.
 
+Step-by-step in the file manager: [Deutsch: Speicher umstellen](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) · [English: migrate storage](https://bluecyber81.github.io/pixl.js/guide/en.html#littlefs).
+
 ## Identify the current layout first
 
 | Current device storage | LCD application update (DE3.65 stable or DE3.66 test) |

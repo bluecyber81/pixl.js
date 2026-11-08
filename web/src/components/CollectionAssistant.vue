@@ -54,7 +54,10 @@
         <p class="small">{{ de ? 'Gewählter Bereich' : 'Selected scope' }}: {{ scope === 'device' ? 'E:/' : directory }}</p>
       </div>
       <div class="summary-grid"><div><strong>{{ report.present.length }}</strong><span>{{ de ? 'Figuren-IDs gefunden' : 'Figure IDs found' }}</span></div><div><strong>{{ report.contentComplete ? report.missing.length : (report.unconfirmed?.length || 0) }}</strong><span>{{ report.contentComplete ? (de ? 'Keine passende Datei im geprüften Bereich gefunden' : 'No matching file found in the checked scope') : (de ? 'Bestand nicht bestimmbar' : 'Presence undetermined') }}</span></div><div><strong>{{ issues.length }}</strong><span>{{ de ? 'Dateien zur Prüfung' : 'Files to inspect' }}</span></div><div><strong>{{ report.duplicates.length }}</strong><span>{{ de ? 'Mehrfach vorhanden' : 'Multiple copies' }}</span></div></div>
-      <div class="report-toolbar"><label>{{ de ? 'Anzeigen' : 'Show' }}<select v-model="filter" @change="resultPage = 1"><option v-if="report.contentComplete" value="missing">{{ de ? 'Nicht gefunden im geprüften Bereich' : 'Not found in the checked scope' }}</option><option v-else value="unconfirmed">{{ de ? 'Bestand nicht bestimmbar' : 'Presence undetermined' }}</option><option value="issues">{{ de ? 'Dateien zur Prüfung' : 'Files to inspect' }}</option><option value="duplicates">{{ de ? 'Gleiche Figuren-ID / Dateiinhalte' : 'Same figure ID / file contents' }}</option><option value="present">{{ de ? 'Gefunden' : 'Found' }}</option><option value="upcoming">{{ de ? 'Angekündigt' : 'Upcoming' }}</option><option value="unknown">{{ de ? 'Unbekannte IDs' : 'Unknown IDs' }}</option></select></label><button type="button" :disabled="!!running" @click="saveReport">{{ de ? 'Prüfbericht speichern' : 'Save report' }}</button></div>
+      <div class="report-toolbar"><label>{{ de ? 'Anzeigen' : 'Show' }}<select v-model="filter" @change="resultPage = 1"><option v-if="report.contentComplete" value="missing">{{ de ? 'Nicht gefunden im geprüften Bereich' : 'Not found in the checked scope' }}</option><option v-else value="unconfirmed">{{ de ? 'Bestand nicht bestimmbar' : 'Presence undetermined' }}</option><option value="issues">{{ de ? 'Dateien zur Prüfung' : 'Files to inspect' }}</option><option value="duplicates">{{ de ? 'Gleiche Figuren-ID / Dateiinhalte' : 'Same figure ID / file contents' }}</option><option value="present">{{ de ? 'Gefunden' : 'Found' }}</option><option value="upcoming">{{ de ? 'Angekündigt' : 'Upcoming' }}</option><option value="unknown">{{ de ? 'Unbekannte IDs' : 'Unknown IDs' }}</option></select></label>
+        <button type="button" :disabled="!!running" @click="saveReport()">{{ de ? 'Prüfbericht speichern' : 'Save report' }}</button>
+        <button type="button" :disabled="!canExportCsv" @click="saveReport('csv')">{{ de ? 'Bestand als CSV speichern' : 'Save collection as CSV' }}</button>
+      </div>
       <p v-if="!resultRows.length" class="empty">{{ de ? 'Keine Einträge in dieser Ansicht.' : 'No entries in this view.' }}</p>
       <ul class="report-list"><li v-for="(row, index) in shownRows" :key="row.path || row.id || index"><div><strong>{{ rowName(row) }}</strong><span v-if="row.id"><code>{{ row.id }}</code></span><span v-if="row.path" class="path">{{ row.path }}</span><span v-if="row.paths && (filter !== 'duplicates' || !row.contentGroups?.length)" class="path">{{ row.paths.join(' · ') }}</span><template v-if="filter === 'duplicates'">
         <small>{{ row.byteComparison === 'sha256-observed-files' ? (de ? 'Dateiinhalte verglichen (SHA-256)' : 'File contents compared (SHA-256)') : (de ? 'Nur gleiche Figuren-ID; Dateiinhalte nicht verglichen.' : 'Same figure ID only; file contents not compared.') }}</small>
@@ -83,6 +86,7 @@ import { formatReadDuration, readTimeEstimate } from '../lib/read-time-estimate.
 import { prepareFigureTransfer, transferFigureToDevice, suggestedFigureFilename } from '../lib/figure-transfer.js';
 import { observeFigureDownloadLink, readFigureDownloadLink } from '../lib/figure-download-links.js';
 import { filterCatalogue, releaseLabel } from '../lib/catalogue.js';
+import { collectionCsv } from '../lib/collection-csv.js';
 import { saveBlob, saveBlobWithPicker } from '../lib/browser-tools.js';
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,revision:Number,directory:String,locale:{type:String,default:'de_DE'},getSession:Function,getTransferSession:Function,selectedFigure:Object,readClock:{type:Number,default:0}},
@@ -90,6 +94,10 @@ export default {
   data(){return {entries:baseline.entries,updates:null,running:'',progress:null,scanStartedAt:0,scanAborting:false,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
   computed:{
     de(){return this.locale.startsWith('de');},
+    canExportCsv() {
+      return this.connected && !this.running && !this.blocked && !this.stale &&
+        this.report?.status === 'complete' && this.report.complete && this.report.scanComplete;
+    },
     canRefreshSourceUrl() { return !this.running && !this.prepared; },
     runningLabel(){
       if(this.running === 'scan'){
@@ -111,7 +119,10 @@ export default {
   mounted() { this._stopLinkUpdates = observeFigureDownloadLink(() => this.chosen?.id, this.refreshSourceUrl); },
   beforeUnmount(){this._stopLinkUpdates?.();this._alive=false;this.invalidate();},
   watch:{report(value){this.$emit('report',value);},stale(value){this.$emit('report-stale',value);},generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},revision(){if(this.report)this.stale=true;},
-    selectedFigure: { immediate: true, handler(value) { this.choose(value, false); } },
+    selectedFigure: { immediate: true, handler(value) {
+      if (value && value.id === this.chosen?.id && value.id === this.prepared?.id) return;
+      this.choose(value, false);
+    } },
     canRefreshSourceUrl(ready) { if (ready) this.refreshSourceUrl(); }
   },
   methods:{
@@ -194,9 +205,43 @@ export default {
     },
     async prepareLocal(event){const file=event.target.files?.[0];event.target.value='';if(file&&this.chosen)await this.prepare({file});},
     async prepareRemote(){if(this.sourceUrl&&this.chosen)await this.prepare({url:this.sourceUrl});},
-    async prepare(source){if(this.running)return;this.prepared=null;const id=this.chosen?.id;if(!id)return;await this.operation('prepare',async(signal,current)=>{const result=await prepareFigureTransfer({...source,expectedId:id,signal});if(current()&&this.chosen?.id===id){this.prepared=result;this.filename=suggestedFigureFilename(this.chosen);this.destination=this.directory?.startsWith('E:/')?this.directory:'E:/';}});},
+    setPrepared(result) {
+      this.prepared = result;
+      this.filename = suggestedFigureFilename(this.chosen);
+      this.destination = this.directory?.startsWith('E:/') ? this.directory : 'E:/';
+    },
+    acceptCheckedFigure(result) {
+      if (this.running || this.blocked || result?.source?.kind !== 'local') return false;
+      const entry = this.entryFor(result.id);
+      if (!entry) return false;
+      this.choose(entry);
+      this.setPrepared(result);
+      return true;
+    },
+    async prepare(source) {
+      if (this.running) return;
+      this.prepared = null;
+      const id = this.chosen?.id;
+      if (!id) return;
+      await this.operation('prepare', async (signal, current) => {
+        const result = await prepareFigureTransfer({ ...source, expectedId: id, signal });
+        if (current() && this.chosen?.id === id) this.setPrepared(result);
+      });
+    },
     async savePrepared(){if(!this.prepared||this.running)return;const blob=new Blob([this.prepared.bytes],{type:'application/octet-stream'}),name=this.filename||suggestedFigureFilename(this.chosen);try{const result=await saveBlobWithPicker(blob,name);if(result.status==='unsupported')saveBlob(blob,name);}catch(error){this.setError(error.message);}},
-    async saveReport(){if(this.running||!this.report)return;const blob=new Blob([JSON.stringify({schema:1,checkedAt:this.reportTime,changedSinceCheck:this.stale,report:this.report},null,2)],{type:'application/json'}),name='Allmiibo-Sammlungspruefung.json';try{const result=await saveBlobWithPicker(blob,name);if(result.status==='unsupported')saveBlob(blob,name);}catch(error){this.setError(error.message);}},
+    async saveReport(format = 'json') {
+      const csv = format === 'csv';
+      if (this.running || !this.report || (csv && !this.canExportCsv)) return;
+      const name = csv ? (this.de ? 'Allmiibo-Figurenbestand.csv' : 'Allmiibo-Collection.csv') : 'Allmiibo-Sammlungspruefung.json';
+      try {
+        const content = csv ? collectionCsv(this.report, this.locale) : JSON.stringify({
+          schema: 1, checkedAt: this.reportTime, changedSinceCheck: this.stale, report: this.report,
+        }, null, 2);
+        const blob = new Blob([content], { type: csv ? 'text/csv;charset=utf-8' : 'application/json' });
+        const result = await saveBlobWithPicker(blob, name);
+        if (result.status === 'unsupported') saveBlob(blob, name);
+      } catch (error) { this.setError(error.message); }
+    },
     async upload(){
       if(!this.connected||this.blocked||this.running||!this.prepared)return;
       const generation=this.generation,recoveryOrigin={sessionGeneration:generation,deviceKey:null};

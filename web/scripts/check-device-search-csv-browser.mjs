@@ -1,0 +1,126 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+// Install only the browser peripheral boundary. The production BLE, protocol, VFS,
+// catalogue, download and Vue code run unchanged in an isolated browser context.
+function installReadOnlyPeripheral(files) {
+  const encoder = new TextEncoder(), decoder = new TextDecoder();
+  const commands = [], violations = [];
+  window.testPeripheral = { commands, violations, connections: 0 };
+  const device = new EventTarget(), rx = new EventTarget();
+  const uuid = suffix => '6e40000' + suffix + '-b5a3-f393-e0a9-e50e24dcca9e';
+  const word = n => [n & 255, (n >>> 8) & 255];
+  const dword = n => [...word(n), ...word(n >>> 16)];
+  const string = s => { const bytes = encoder.encode(s); return [...word(bytes.length), ...bytes]; };
+  const entry = (name, size, type) => [...string(name), ...dword(size), type, 0];
+  let open;
+  function payload(cmd, frame, record) {
+    if (cmd === 3) return [80, 88, 68, 70, 1, 3, ...word(243), ...word(247)];
+    if (cmd === 1) return string('2.22.0-DE3.66');
+    if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(2097152), ...dword(1000000)];
+    if (cmd === 0x12 || cmd === 0x16) {
+      const length = frame[4] | frame[5] << 8;
+      record.path = decoder.decode(frame.subarray(6, 6 + length));
+      if (cmd === 0x12 && frame[6 + length] === 8 && files[record.path] && !open) {
+        open = record.path;
+        return [1];
+      }
+      if (cmd === 0x16) {
+        if (record.path === 'E:/') return [...entry('A', 0, 1), ...entry('B', 0, 1)];
+        const file = files[record.path + '/Twin.bin'];
+        if (file) return entry('Twin.bin', file.length, 0);
+      }
+    }
+    if (cmd === 0x14 && frame[4] === 1 && open) return files[open];
+    if (cmd === 0x13 && frame[4] === 1 && open) { open = null; return []; }
+    violations.push(record);
+    throw Error('Unexpected synthetic device operation: ' + JSON.stringify(record));
+  }
+  Object.assign(rx, {uuid:uuid(3), properties:{notify:true}, startNotifications:async () => rx, stopNotifications:async () => rx});
+  const tx = {uuid:uuid(2), properties:{write:true}, async writeValueWithResponse(data) {
+    const frame = new Uint8Array(data), cmd = frame[0], record = {cmd};
+    commands.push(record);
+    const bytes = payload(cmd, frame, record);
+    for (let offset = 0, sequence = 0; offset < bytes.length || sequence === 0; offset += 243, sequence++) {
+      const more = offset + 243 < bytes.length;
+      rx.value = new DataView(Uint8Array.from([cmd, 0, ...word(sequence | (more ? 0x8000 : 0)), ...bytes.slice(offset, offset + 243)]).buffer);
+      rx.dispatchEvent(new Event('characteristicvaluechanged'));
+    }
+  }};
+  const service = {uuid:uuid(1), getCharacteristics:async () => [rx, tx]};
+  Object.assign(device, {name:'Pixl.js', id:'synthetic-browser', gatt:{
+    connected:false, async connect() { this.connected = true; return this; },
+    getPrimaryServices:async () => [service],
+    disconnect() { this.connected = false; device.dispatchEvent(new Event('gattserverdisconnected')); }
+  }});
+  Object.defineProperty(navigator, 'bluetooth', {configurable:true, value:{requestDevice:async () => {
+    window.testPeripheral.connections++;
+    return device;
+  }}});
+  // Exercise real downloaded bytes via the Android-style save path without opening an OS picker.
+  Object.defineProperty(window, 'showSaveFilePicker', {configurable:true, value:undefined});
+}
+
+export async function checkDeviceSearchAndCsv({browser, url, check}) {
+  const context = await browser.newContext({locale:'de-DE', acceptDownloads:true, serviceWorkers:'block'});
+  const files = {};
+  for (const [folder, id] of [['A','0000000000000002'], ['B','0000000000340102']]) {
+    const figure = Buffer.alloc(540);
+    figure.set([4, 1, 2, 0x8f, 3, 4, 5, 6, 4]);
+    figure.set(Buffer.from(id, 'hex'), 84);
+    files['E:/' + folder + '/Twin.bin'] = [...figure];
+  }
+  try {
+    const runtimeErrors = [], external = [];
+    await context.addInitScript(installReadOnlyPeripheral, files);
+    await context.route('**/*', route => {
+      const target = new URL(route.request().url());
+      if (target.origin === new URL(url).origin || ['data:', 'blob:'].includes(target.protocol)) return route.continue();
+      external.push(target.origin);
+      return route.abort();
+    });
+    const page = await context.newPage();
+    page.setDefaultTimeout(10000);
+    page.on('pageerror', error => runtimeErrors.push(error.message));
+    await page.goto(url);
+    await page.locator('.header-tools').getByRole('button', {name:'Verbinden', exact:true}).click();
+    await page.locator('.version-context').getByText('2.22.0-DE3.66', {exact:true}).waitFor();
+    const search = page.locator('.device-search');
+    await search.locator('summary').click();
+    const query = search.getByRole('searchbox');
+    await query.fill('Twin');
+    await search.getByRole('button', {name:'Suchen', exact:true}).click();
+    await search.getByText('Suche abgeschlossen.', {exact:false}).waitFor();
+    const selected = 'E:/B/Twin.bin';
+    const fileAction = search.getByRole('button', {name:'Vom Gerät herunterladen · ' + selected, exact:true});
+    const [bin] = await Promise.all([page.waitForEvent('download'), fileAction.click()]);
+    check('search click downloads the exact selected remote file bytes', bin.suggestedFilename() === 'Twin.bin' &&
+      (await readFile(await bin.path())).equals(Buffer.from(files[selected])));
+    check('direct download preserves the search, both duplicate names and current folder', await query.inputValue() === 'Twin' &&
+      await search.locator('.search-results li').count() === 2 && await fileAction.isVisible() &&
+      (await page.locator('.quick-location').innerText()).includes('Laufwerk auswählen'));
+    const history = () => page.evaluate(() => window.testPeripheral.commands);
+    const afterDownload = await history();
+    assert.deepEqual(afterDownload.filter(call => call.cmd === 0x12).map(call => call.path), [selected]);
+    await page.locator('.workspace-nav button[aria-controls="catalogue-workspace"]').click();
+    const collection = page.locator('.collection-assistant');
+    await collection.getByRole('button', {name:'Sammlung prüfen', exact:true}).click();
+    const csvAction = collection.getByRole('button', {name:'Bestand als CSV speichern'});
+    await csvAction.waitFor();
+    const afterAudit = await history();
+    check('full inventory read both synthetic files through the BLE protocol',
+      JSON.stringify(afterAudit.slice(afterDownload.length).filter(call => call.cmd === 0x12).map(call => call.path).sort()) ===
+      JSON.stringify(Object.keys(files).sort()));
+    const [csv] = await Promise.all([page.waitForEvent('download'), csvAction.click()]);
+    const bytes = await readFile(await csv.path()), rows = bytes.toString('utf8').split('\r\n');
+    check('CSV downloads as UTF-8 with both distinct confirmed catalogue IDs and device paths', csv.suggestedFilename() === 'Allmiibo-Figurenbestand.csv' &&
+      bytes.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])) &&
+      rows.some(row => row.includes('"0x0000000000000002";"Vorhanden · ID bestätigt";"E:/A/Twin.bin"')) &&
+      rows.some(row => row.includes('"0x0000000000340102";"Vorhanden · ID bestätigt";"E:/B/Twin.bin"')));
+    assert.deepEqual(await history(), afterAudit);
+    const state = await page.evaluate(() => ({connections:window.testPeripheral.connections, violations:window.testPeripheral.violations}));
+    check('CSV export uses the completed result with zero further device calls and a single connection', state.connections === 1 && !state.violations.length);
+    assert.deepEqual(runtimeErrors, []);
+    assert.deepEqual(external, []);
+  } finally { await context.close(); }
+}

@@ -1,5 +1,7 @@
 # Choose the correct installation path
 
+Read the illustrated file manager's step-by-step guide for the required apps, backup, device update and storage migration. [English](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](https://bluecyber81.github.io/pixl.js/guide/index.html)
+
 ## Compatible LCD with Packed LittleFS PFS1 already in use
 
 Keep a current backup. Choose the application for the release you intend to run.

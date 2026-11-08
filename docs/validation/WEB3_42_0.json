@@ -1,0 +1,149 @@
+{
+  "version": "3.42.0",
+  "physicalDevice": false,
+  "scope": "Local source tests, production deployment tests and Chrome on the two compiled layouts. Device and Android observations from earlier versions are documented separately.",
+  "previousDeviceEvidence": "DE3_66_LCD_READBACK.md",
+  "chromeLayouts": {
+    "root": {
+      "files": 160,
+      "passed": {
+        "catalog": 319,
+        "overview": 77,
+        "screen": 133,
+        "fixes": 26
+      },
+      "totalChecks": 555,
+      "productionTestsPassed": 22
+    },
+    "pages": {
+      "files": 160,
+      "passed": {
+        "catalog": 319,
+        "overview": 77,
+        "screen": 133,
+        "fixes": 26
+      },
+      "totalChecks": 555,
+      "productionTestsPassed": 22
+    }
+  },
+  "web_host_tests": 1302,
+  "hostTestCounts": {
+    "tests": 1302,
+    "pass": 1302,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "releaseFeatureBrowserChecks": {
+    "root": {
+      "homeActions": [
+        "desktop figure shortcut goes directly to the import even offline",
+        "desktop firmware shortcut opens the package overview and keeps DFU idle",
+        "mobile figure shortcut goes directly to the import even offline",
+        "mobile firmware shortcut opens the package overview and keeps DFU idle",
+        "desktop-text200 figure shortcut goes directly to the import even offline",
+        "desktop-text200 firmware shortcut opens the package overview and keeps DFU idle",
+        "mobile-text200 figure shortcut goes directly to the import even offline",
+        "mobile-text200 firmware shortcut opens the package overview and keeps DFU idle"
+      ],
+      "manualFigureFile": [
+        "desktop blocked source opens only by user action and without a referrer",
+        "desktop same filename with another ID is rejected after manual download",
+        "desktop locally verified bytes reach the import for the same figure",
+        "desktop checking locally does not start another download or write",
+        "mobile blocked source opens only by user action and without a referrer",
+        "mobile same filename with another ID is rejected after manual download",
+        "mobile locally verified bytes reach the import for the same figure",
+        "mobile checking locally does not start another download or write",
+        "desktop-text200 blocked source opens only by user action and without a referrer",
+        "desktop-text200 same filename with another ID is rejected after manual download",
+        "desktop-text200 locally verified bytes reach the import for the same figure",
+        "desktop-text200 checking locally does not start another download or write",
+        "mobile-text200 blocked source opens only by user action and without a referrer",
+        "mobile-text200 same filename with another ID is rejected after manual download",
+        "mobile-text200 locally verified bytes reach the import for the same figure",
+        "mobile-text200 checking locally does not start another download or write"
+      ],
+      "deviceSearchDownload": [
+        "search click downloads the exact selected remote file bytes",
+        "direct download preserves the search, both duplicate names and current folder"
+      ],
+      "inventoryCsv": [
+        "full inventory read both synthetic files through the BLE protocol",
+        "CSV downloads as UTF-8 with both distinct confirmed catalogue IDs and device paths",
+        "CSV export uses the completed result with zero further device calls and a single connection"
+      ]
+    },
+    "pages": {
+      "homeActions": [
+        "desktop figure shortcut goes directly to the import even offline",
+        "desktop firmware shortcut opens the package overview and keeps DFU idle",
+        "mobile figure shortcut goes directly to the import even offline",
+        "mobile firmware shortcut opens the package overview and keeps DFU idle",
+        "desktop-text200 figure shortcut goes directly to the import even offline",
+        "desktop-text200 firmware shortcut opens the package overview and keeps DFU idle",
+        "mobile-text200 figure shortcut goes directly to the import even offline",
+        "mobile-text200 firmware shortcut opens the package overview and keeps DFU idle"
+      ],
+      "manualFigureFile": [
+        "desktop blocked source opens only by user action and without a referrer",
+        "desktop same filename with another ID is rejected after manual download",
+        "desktop locally verified bytes reach the import for the same figure",
+        "desktop checking locally does not start another download or write",
+        "mobile blocked source opens only by user action and without a referrer",
+        "mobile same filename with another ID is rejected after manual download",
+        "mobile locally verified bytes reach the import for the same figure",
+        "mobile checking locally does not start another download or write",
+        "desktop-text200 blocked source opens only by user action and without a referrer",
+        "desktop-text200 same filename with another ID is rejected after manual download",
+        "desktop-text200 locally verified bytes reach the import for the same figure",
+        "desktop-text200 checking locally does not start another download or write",
+        "mobile-text200 blocked source opens only by user action and without a referrer",
+        "mobile-text200 same filename with another ID is rejected after manual download",
+        "mobile-text200 locally verified bytes reach the import for the same figure",
+        "mobile-text200 checking locally does not start another download or write"
+      ],
+      "deviceSearchDownload": [
+        "search click downloads the exact selected remote file bytes",
+        "direct download preserves the search, both duplicate names and current folder"
+      ],
+      "inventoryCsv": [
+        "full inventory read both synthetic files through the BLE protocol",
+        "CSV downloads as UTF-8 with both distinct confirmed catalogue IDs and device paths",
+        "CSV export uses the completed result with zero further device calls and a single connection"
+      ]
+    }
+  },
+  "figureDownloadTest": {
+    "root": {
+      "client": "156.0.8078.80",
+      "downloadedBytes": 540,
+      "sha256": "56c92f532edc07b46bb6bba5afceb031ddcc4531c871e3f31c1fa9df5b40d273",
+      "scenarios": [
+        "desktop",
+        "mobile",
+        "desktop-text200",
+        "mobile-text200"
+      ],
+      "syntheticFile": true,
+      "unexpectedNetworkRequests": 0,
+      "source": "Two synthetic HTTPS responses served in memory. The browser exercised editing, persistence, the selected name, a mismatched ID and the resulting local download."
+    },
+    "pages": {
+      "client": "156.0.8078.80",
+      "downloadedBytes": 540,
+      "sha256": "56c92f532edc07b46bb6bba5afceb031ddcc4531c871e3f31c1fa9df5b40d273",
+      "scenarios": [
+        "desktop",
+        "mobile",
+        "desktop-text200",
+        "mobile-text200"
+      ],
+      "syntheticFile": true,
+      "unexpectedNetworkRequests": 0,
+      "source": "Two synthetic HTTPS responses served in memory. The browser exercised editing, persistence, the selected name, a mismatched ID and the resulting local download."
+    }
+  }
+}

@@ -30,12 +30,12 @@ export function copyNotices(mode) {
   const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;')
   const version = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8')).version
   const sourceUrl = 'https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'
-  const webRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/web3.41.0/'
+  const webRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/web3.42.0/'
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Allmiibo ${escape(version)} – Quellen und Lizenzen</title></head><body>
 <main><a href="../">Zurück zum Dateimanager</a><h1>Quellen und Lizenzen · ${escape(version)}</h1>
 <p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">Versionsgeschichte des Dateimanagers</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">LCD-Firmware, Bootloader und SoftDevice</a></p>
 <p>Diese Seite verteilt den Dateimanager mit seinen Bibliotheken und sieben gebundenen Speicher-Simulatoren. Die jeweiligen Lizenztexte bleiben erhalten.</p>
-<ul><li><a href="${webRelease}Allmiibo_Dateimanager_3_41_0_Quellcode.zip">Quellcode des Dateimanagers 3.41.0 einschließlich Simulatorquellen und Build-Anleitungen</a></li>
+<ul><li><a href="${webRelease}Allmiibo_Dateimanager_3_42_0_Quellcode.zip">Quellcode des Dateimanagers 3.42.0 einschließlich Simulatorquellen und Build-Anleitungen</a></li>
 <li><a href="${sourceUrl}">Exakter Quellstand der mitgelieferten Firmware DE3.65/637</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">Quellstand der LCD-Testversion DE3.66/638</a></li></ul>
 <p>Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.</p>

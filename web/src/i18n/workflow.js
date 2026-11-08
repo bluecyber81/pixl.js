@@ -1,4 +1,8 @@
 export const workflowGerman = {
+  startActions: 'Schnelleinstieg',
+  flashGuide: 'Anleitung für Firmware und Speicher', migrationGuide: 'LittleFS-Umstellung Schritt für Schritt',
+  startFigure: 'Ich möchte eine Figur hinzufügen', startFigureHint: 'Figur auswählen und die passende BIN-Datei prüfen.',
+  startFirmware: 'Ich möchte die Firmware aktualisieren', startFirmwareHint: 'Gerätestand ansehen und das passende LCD-Paket wählen.',
   INTERNAL_TRANSACTION_JOURNAL: 'Interne Sicherungsdatei – bleibt im ZIP, wird nicht wiederhergestellt.',
   TRANSACTION_PENDING: 'Ungeklärte interne Transaktion. Gerät neu starten und Zustand prüfen; Import gesperrt.',
   listingFailed: 'Die Ordneransicht konnte nicht geladen werden. Mit „Aktualisieren“ erneut versuchen; dies bedeutet nicht, dass der Ordner leer ist.',
@@ -65,6 +69,10 @@ export const workflowGerman = {
   zipPath: 'Das Archiv enthält ungültige oder mehrdeutige Namen. Die Einträge wurden nicht automatisch umbenannt.'
 }
 export const workflowEnglish = {
+  startActions: 'Quick start',
+  flashGuide: 'Firmware and storage guide', migrationGuide: 'LittleFS migration step by step',
+  startFigure: 'I want to add a figure', startFigureHint: 'Choose a figure and check its BIN file.',
+  startFirmware: 'I want to update the firmware', startFirmwareHint: 'Check the device version and choose a matching LCD package.',
   INTERNAL_TRANSACTION_JOURNAL: 'Internal recovery file – kept in the ZIP, excluded from restoration.',
   TRANSACTION_PENDING: 'Unresolved internal transaction. Restart the device and check its state; import blocked.',
   listingFailed: 'The folder view could not be loaded. Select “Refresh” to try again; this does not mean the folder is empty.',
