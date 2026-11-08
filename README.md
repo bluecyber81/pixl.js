@@ -4,19 +4,20 @@
 
 [Open the online file manager](https://bluecyber81.github.io/pixl.js/) · [Guide: firmware, LittleFS and bootloader](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Download the DE3.65 LCD application](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Deutsch](README.de.md)
 
-**File manager 3.43.0** · 8 November 2026. Folder backups can resume after restarting the browser. The figure catalogue saves web favourites, named filters and HTTPS link lists. You can rotate an LCD capture by 180° before saving it.
+**File manager 3.43.1** · 8 November 2026. The local LittleFS capacity check shows DE3.67 with application counter 639 as the latest verified firmware. This storage profile covers DE3.55 through DE3.67.
 
+- **3.43.1** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
 - **3.43.0** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
 - **3.42.2** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
 - **3.42.1** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
 
-**LCD test release DE3.67 / 639.** All 54 distinct usage notes across 63 game associations can be read in German on the device. Long notes scroll to the last pixel. Physical LCD and QR checks are pending. [What to test](docs/RELEASE_DE3_67.md) · [Rebuild](docs/BUILD_DE3_67.md) · [Download for Android](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip)
+**LCD test release DE3.67 / 639.** All 54 distinct usage notes across 63 game associations can be read in German on the device. Long notes scroll to the last pixel. German usage notes and QR scanning were confirmed on an LCD Allmiibo running DE3.67, Z19 and S112 7.3.0. [What to test](docs/RELEASE_DE3_67.md) · [Rebuild](docs/BUILD_DE3_67.md) · [Download for Android](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip)
 
 **File manager 3.42.1.** The six workspaces have distinct accent colours. On a phone, two illustrated buttons lead directly to figure import and firmware updates. When the Allmiibo is connected, Your device shows the open folder, its entry count and storage usage. A wide teal-to-indigo bar at the bottom shows the occupied share. Figure import now opens on the first click even while the browser is still loading the view. The guide also covers Nordic’s desktop Bluetooth DFU option with a compatible adapter.
 
 These screenshots from **3.42.1** use a simulated connection and simulated storage values. [Phone preview](docs/images/web-3.42.1/mobile.png) · [Desktop preview](docs/images/web-3.42.1/desktop.png)
 
-The file manager shows the affected names when files collide or need a portable spelling. All 54 distinct English usage notes now have German translations. The standalone DFU page can keep a supported phone screen awake during a transfer and reports whether the request succeeded. [Web guide](web/README.md) · [Web 3.43.0 downloads, source and test package](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0)
+The file manager shows the affected names when files collide or need a portable spelling. All 54 distinct English usage notes now have German translations. The standalone DFU page can keep a supported phone screen awake during a transfer and reports whether the request succeeded. [Web guide](web/README.md) · [Web 3.43.1 downloads, source and test package](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1)
 
 The stable LCD application **DE3.65 / 637** was checked on an LCD unit running Packed LittleFS PFS1, Z19 and S112 7.3.0. Bluetooth readback, the note scrollbar, NFC recognition of a known figure on Switch, and short-button wake after auto-sleep were confirmed. Web DFU offers this signed application as the stable choice. [Device checks](docs/validation/DE3_65_LCD_READBACK.json)
 

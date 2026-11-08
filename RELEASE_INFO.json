@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.67",
   "counter": 639,
   "board": "LCD",
-  "web_version": "3.43.0",
+  "web_version": "3.43.1",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
@@ -51,11 +51,11 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "Physical update of an LCD unit to App639, German notes, LCD scrollbar, QR scan and runtime stack observation.",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": "Physical check of the bottom scrollbar position on this release.",
   "previous_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
   "production_source_id_sha256": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
   "tested_bootloader": {
@@ -65,7 +65,7 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Z19 boot region and App638 read back together from one LCD unit with S112 7.3.0."
+    "qualification": "Z19 region SHA-256 and S112 7.3.0 were confirmed during the readback of App639 on one LCD unit."
   },
   "web_host_test_scope": "Local source suites and production Chrome checks for root and Pages. Historical physical LCD and backup observations are documented separately.",
   "previous_web_full_suite": {
@@ -79,12 +79,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.42.2",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.42.2",
-    "evidence": "docs/validation/WEB3_42_2.json"
+    "version": "3.43.0",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0",
+    "evidence": "docs/validation/WEB3_43_0.json"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3430",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3431",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -120,7 +120,8 @@
     "web_3_42_0": "Home now opens figure import or firmware updates directly. If a source blocks a catalogue download, open it in the browser and check the saved BIN. Download files directly from device search results and export the checked inventory as a CSV for Excel. Illustrated shortcuts distinguish figure and firmware actions; the mobile navigation uses larger labels.",
     "web_3_42_1": "Six workspaces have distinct accent colours. The illustrated mobile shortcuts open figure import and firmware updates. The connected-device card shows the current directory, entry count, free and total capacity, and a wide teal-to-indigo meter for used storage. Figure import keeps the first click while the view loads. The guide adds Nordic’s desktop Bluetooth DFU option and adapter requirements. README screenshots illustrate simulated device data.",
     "web_3_42_2": "Compact figure-import and firmware-update shortcuts. The file manager links its source and review ZIPs. Versioned Pages URLs and release documentation provide both archives for web 3.42.2 and 3.42.1.",
-    "web_3_43_0": "Optional restartable folder backups, per-browser catalogue favourites and named filters, JSON link import and export, 180-degree LCD PNG rotation, translated preparation errors, lazy ZIP reader and DE3.67/639 in the LCD test channel."
+    "web_3_43_0": "Optional restartable folder backups, per-browser catalogue favourites and named filters, JSON link import and export, 180-degree LCD PNG rotation, translated preparation errors, lazy ZIP reader and DE3.67/639 in the LCD test channel.",
+    "web_3_43_1": "The local LittleFS capacity check shows DE3.67 with application counter 639 as the latest verified firmware. This storage profile covers DE3.55 through DE3.67."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -133,10 +134,10 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_43_0.json",
-  "device_readback_evidence": null,
-  "web_device_readback_pending_scope": "Windows and Android verification using the released 3.43.0 web bundle. The earlier RC backup module was tested on Windows with an LCD device, a BLE read bridge and a Chrome process restart.",
-  "web_host_tests": 1318,
+  "web_evidence": "docs/validation/WEB3_43_1.json",
+  "device_readback_evidence": "docs/RELEASE_DE3_67.md",
+  "web_device_readback_pending_scope": "Windows and Android verification using the released 3.43.1 web bundle. The earlier RC backup module was tested on Windows with an LCD device, a BLE read bridge and a Chrome process restart.",
+  "web_host_tests": 1319,
   "web_root_production_tests": 22,
   "web_pages_production_tests": 22,
   "web_browser_checks_per_build": 574

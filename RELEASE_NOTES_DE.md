@@ -1,5 +1,11 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## Dateimanager 3.43.1 · 8. November 2026
+
+Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639 als neueste geprüfte Firmware. Das Speicherprofil gilt für DE3.55 bis DE3.67.
+
+- **3.43.1** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
+
 ## Dateimanager 3.43.0 und LCD-Testversion DE3.67 · 8. November 2026
 
 Ordnersicherungen lassen sich nach einem Browserneustart fortsetzen. Der Figurenkatalog speichert Webfavoriten, benannte Filter und HTTPS-Linklisten. LCD-Displayfotos kannst du vor dem Speichern um 180° drehen. [Bedienung](docs/DATEIMANAGER_WEB.md#dateimanager-3430)

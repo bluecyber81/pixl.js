@@ -1,7 +1,10 @@
-# Allmiibo Dateimanager 3.43.0
+# Allmiibo Dateimanager 3.43.1
+
+Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639. Das vorausgewählte Profil passt für DE3.55 bis DE3.67. [Platzprüfung](../docs/DATEIMANAGER_WEB.md#dateimanager-3431)
 
 Ordnersicherungen lassen sich nach einem Browserneustart fortsetzen. Der Figurenkatalog speichert Webfavoriten, benannte Filter und HTTPS-Linklisten. LCD-Displayfotos kannst du vor dem Speichern um 180° drehen. [Bedienung](../docs/DATEIMANAGER_WEB.md#dateimanager-3430)
 
+- **3.43.1** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
 - **3.43.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
 - **3.42.2** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
 - **3.42.1** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
@@ -16,7 +19,7 @@ Seit 3.40.0 gibt es die direkte Figurenvorschau in der Gerätesuche, neun Ankün
 
 Der Dateimanager erklärt Namenskollisionen, für Windows ungeeignete Dateinamen und abweichende Unicode-Schreibweisen direkt beim Vergleich. Im Figurenkatalog gibt es alle 54 vorhandenen englischen Nutzungshinweise auch auf Deutsch. Auf der DFU-Seite kann der Browser während des Updates das Display wach halten.
 
-Unter **Update** und auf der DFU-Seite stehen für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die optionale Testversion DE3.67/639 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.43.0](LIESMICH_3_43_0.txt).
+Unter **Update** und auf der DFU-Seite stehen für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die optionale Testversion DE3.67/639 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.43.1](LIESMICH_3_43_1.txt).
 
 Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. [Bedienung und Grenzen](../docs/RELEASE_WEB3_39_3.de.md).
 
@@ -34,7 +37,7 @@ Den Tab im Vordergrund lassen: manuelles Sperren, Energiesparen oder Browser-Sus
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen** schließt im normalen Schema-1-Restore die exakten inaktiven Stammdateien `.pixl_txn_old` und `.pixl_txn_new` sichtbar aus, erhält sie aber im Archiv. Aktive/unklare Stamm-Transaktionseinträge sperren den gesamten Import. Quelle, I:/-/E:/-Zielumleitung und frischer Zielzustand werden geprüft. Gleichnamige Dateien in gewöhnlichen Unterordnern bleiben normale Nutzdaten. Schema-2-Restores verwenden weiterhin den Migrationsassistenten.
 
-Die DFU-Seite enthält **DE3.65 / 637** als reines Anwendungsupdate für LCD-Geräte mit PFS1 und S112 7.3.0. Nach der Auswahl prüft der Dateimanager die ZIP-Datei. Die Bluetooth-Übertragung startet durch die Geräteauswahl in Schritt 2. [Startanleitung 3.43.0](LIESMICH_3_43_0.txt).
+Die DFU-Seite enthält **DE3.65 / 637** als reines Anwendungsupdate für LCD-Geräte mit PFS1 und S112 7.3.0. Nach der Auswahl prüft der Dateimanager die ZIP-Datei. Die Bluetooth-Übertragung startet durch die Geräteauswahl in Schritt 2. [Startanleitung 3.43.1](LIESMICH_3_43_1.txt).
 
 Seit **3.38.1** bleibt unter **Sicherung** der Fehler beim Öffnen eines Laufwerks
 auch dann sichtbar, wenn anschließend die Laufwerksliste erfolgreich neu gelesen
@@ -71,7 +74,7 @@ Wenn Bluetooth beim Hochladen einer Figur abbricht, zeigt der Dateimanager den b
 
 Bei der Sammlungsprüfung und der ZIP-Sicherung zeigt die Ordnersuche ihren Fortschritt. Sobald genug Dateien gelesen sind, zählt eine Schätzung für den laufenden Schritt herunter. Bei ausbleibender Geräteantwort erscheint ein Wartehinweis. Die Gerätediagnose zeigt zusätzlich den aktuellen Diagnosebereich. Orange Figurenkarten erklären den jeweiligen Prüfhinweis.
 
-[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.43.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.0) · [Startanleitung](LIESMICH_3_43_0.txt)
+[Online-Seite (separater Veröffentlichungsstand) öffnen](https://bluecyber81.github.io/pixl.js/) · [DFU-Seite](https://bluecyber81.github.io/pixl.js/dfu/web.html) · [Version 3.43.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1) · [Startanleitung](LIESMICH_3_43_1.txt)
 
 Auf dem Allmiibo **Bluetooth-Dateiübertragung** öffnen und das Gerät im Browser über **Verbinden** auswählen. Wer die Seite lokal nutzt, entpackt das portable ZIP und startet unter Windows **Start-Dateimanager.cmd**. Der Standardport ist **8765**.
 
@@ -152,7 +155,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.59 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das [Web-Quellpaket 3.43.0](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip)
+Das [Web-Quellpaket 3.43.1](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen

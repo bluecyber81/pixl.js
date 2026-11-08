@@ -68,9 +68,24 @@ const de354={...de350,url:'/lfs-capacity-current.wasm',wasmSha256:'50466efc47783
   approvedApplications:[{firmwareVersion:'2.22.0-DE3.51',applicationCounter:623},{firmwareVersion:'2.22.0-DE3.52',applicationCounter:624},{firmwareVersion:'2.22.0-DE3.53',applicationCounter:625},{firmwareVersion:'2.22.0-DE3.54',applicationCounter:626}],
   geometry:{...de350.geometry},layout:{...de350.layout,engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'}}
 // DE3.55 through DE3.67 use this CRC/wear engine and geometry.
+const currentApplications = [
+  {firmwareVersion:'2.22.0-DE3.55',applicationCounter:627},
+  {firmwareVersion:'2.22.0-DE3.56',applicationCounter:628},
+  {firmwareVersion:'2.22.0-DE3.57',applicationCounter:629},
+  {firmwareVersion:'2.22.0-DE3.58',applicationCounter:630},
+  {firmwareVersion:'2.22.0-DE3.59',applicationCounter:631},
+  {firmwareVersion:'2.22.0-DE3.60',applicationCounter:632},
+  {firmwareVersion:'2.22.0-DE3.61',applicationCounter:633},
+  {firmwareVersion:'2.22.0-DE3.62',applicationCounter:634},
+  {firmwareVersion:'2.22.0-DE3.63',applicationCounter:635},
+  {firmwareVersion:'2.22.0-DE3.64',applicationCounter:636},
+  {firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},
+  {firmwareVersion:'2.22.0-DE3.66',applicationCounter:638},
+  {firmwareVersion:'2.22.0-DE3.67',applicationCounter:639},
+]
 const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',
-  firmwareVersion:'2.22.0-DE3.65',applicationCounter:637,
-  approvedApplications:[{firmwareVersion:'2.22.0-DE3.55',applicationCounter:627},{firmwareVersion:'2.22.0-DE3.56',applicationCounter:628},{firmwareVersion:'2.22.0-DE3.57',applicationCounter:629},{firmwareVersion:'2.22.0-DE3.58',applicationCounter:630},{firmwareVersion:'2.22.0-DE3.59',applicationCounter:631},{firmwareVersion:'2.22.0-DE3.60',applicationCounter:632},{firmwareVersion:'2.22.0-DE3.61',applicationCounter:633},{firmwareVersion:'2.22.0-DE3.62',applicationCounter:634},{firmwareVersion:'2.22.0-DE3.63',applicationCounter:635},{firmwareVersion:'2.22.0-DE3.64',applicationCounter:636},{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},{firmwareVersion:'2.22.0-DE3.66',applicationCounter:638},{firmwareVersion:'2.22.0-DE3.67',applicationCounter:639}],
+  ...currentApplications.at(-1),
+  approvedApplications:currentApplications,
   geometry:{...de354.geometry},layout:{...de354.layout,engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'}}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)

@@ -1,5 +1,11 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.43.1 · 8 November 2026
+
+The local LittleFS capacity check shows DE3.67 with application counter 639 as the latest verified firmware. This storage profile covers DE3.55 through DE3.67.
+
+- **3.43.1** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
+
 ## File manager 3.43.0 and LCD test release DE3.67 · 8 November 2026
 
 Folder backups can resume after restarting the browser. The figure catalogue saves web favourites, named filters and HTTPS link lists. You can rotate an LCD capture by 180° before saving it. [User guide](DATEIMANAGER_WEB.md#dateimanager-3430)
