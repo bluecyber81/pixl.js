@@ -158,7 +158,7 @@ def verify_zip(path, binary, release, key):
 def main():
     root = Path(__file__).resolve().parents[1]
     release = json.loads((root / 'RELEASE_INFO.json').read_bytes())
-    build = root / 'build/lcd-de367'
+    build = root / 'build/lcd-de368'
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
     need(result['mode'] == 'release' and result['status'] == 'passed', 'Fresh release build required')
     firmware_dir = (root / 'fw/releases').resolve()

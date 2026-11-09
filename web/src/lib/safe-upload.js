@@ -58,18 +58,23 @@ export function targetEntry(entries, name) {
 }
 // A folder's metadata lives in its parent listing, not in its own list.
 // Drive roots have no metadata record. Never normalize an existing identity.
-export async function writableDirectoryPath(path, readDirectory, check) {
+export async function directoryPathAccess(path, readDirectory, check, stopAtReadonly = false) {
   const root = assertDevicePath(path)
   let current = root.slice(0, 3)
+  let access = 'writable'
   for (const segment of root.slice(3).split('/').filter(Boolean)) {
     check(); const entries = checkedDirectory(await readDirectory(current)); check()
     const aliases = entries.filter(entry => portableNameKey(entry.name) === portableNameKey(segment))
-    if (aliases.length !== 1 || aliases[0].name !== segment || aliases[0].type !== 1) return false
-    try { if (copyMetadata(aliases[0].meta).flags.readonly) return false }
-    catch (error) { if (error.code === 'UPLOAD_METADATA') return false; throw error }
+    if (aliases.length !== 1 || aliases[0].name !== segment || aliases[0].type !== 1) return 'unavailable'
+    try { if (copyMetadata(aliases[0].meta).flags.readonly) access = 'readonly' }
+    catch (error) { if (error.code !== 'UPLOAD_METADATA') throw error; access = 'readonly' }
+    if (stopAtReadonly && access === 'readonly') return access
     current = joinDevicePath(current, segment)
   }
-  return true
+  return access
+}
+export async function writableDirectoryPath(path, readDirectory, check) {
+  return await directoryPathAccess(path, readDirectory, check, true) === 'writable'
 }
 const sameExpected = (a, b) => !a && !b || !!a && !!b && a.size === b.size && a.sha256 === b.sha256 && metadataKey(a.metadata) === metadataKey(b.metadata)
 function randomHex() {

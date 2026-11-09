@@ -1,15 +1,16 @@
 # Component identity and update boundaries
 
-Publication baseline: **2026-11-08**. Components have independent versions.
+The table lists the independently versioned components as of **9 November 2026**.
 
 **[Installation](INSTALLATION.md) · [Bootloader and SoftDevice history](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
 | Stable LCD application | [2.22.0-DE3.65](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) | Application-only DFU, counter 637, hardware field 52. [LCD device checks](FINAL_DE3_65.md) |
-| LCD test application | [2.22.0-DE3.67](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) | Application-only DFU, counter 639. German notes for 63 game associations and corrected final scrollbar pixel. Physical LCD and QR checks pending. |
-| Previous LCD test application | [2.22.0-DE3.66](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) | Application-only DFU, counter 638, hardware field 52. Build and model tests passed. Installation, display capture and backup resume over Windows Bluetooth were verified on one LCD. [Device checks](validation/DE3_66_LCD_READBACK.md). [Evidence](validation/DE3_66.json) |
-| File manager | [3.44.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0) | Runs in the browser. [File manager changes](DATEIMANAGER_WEB.md#dateimanager-3440) · [Latest LCD test release](RELEASE_DE3_67.md) |
+| LCD test application | [2.22.0-DE3.68](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68) | Application-only DFU, counter 640. Returning to the main menu reselects the last opened app when visible. |
+| Previous LCD test application | [2.22.0-DE3.67](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) | Application-only DFU, counter 639. German game hints and QR scanning were verified on an LCD. [Release and readback](RELEASE_DE3_67.md) |
+| Earlier LCD test application | [2.22.0-DE3.66](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) | Application-only DFU, counter 638, hardware field 52. Build and model tests passed. Installation, display capture and backup resume over Windows Bluetooth were verified on one LCD. [Device checks](validation/DE3_66_LCD_READBACK.md). [Evidence](validation/DE3_66.json) |
+| File manager | [3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0) | Runs in the browser. [File manager changes](DATEIMANAGER_WEB.md) · [Latest LCD test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68) |
 | Current LCD bootloader | [Z19](../bootloader-z19/README.md) | Counter 19. The same 28 KiB boot region was read back with [App636](validation/Z19_APP636_BASELINE.json), [App637](validation/DE3_65_LCD_READBACK.json) and [App638](validation/DE3_66_LCD_READBACK.md). |
 | Previous bootloader | Z17 | Counter 17, observed in the device export for App634 |
 | Previously installed reference | Z15 | Counter 15; region SHA-256 below |
@@ -31,7 +32,7 @@ The historical BL8 corresponding source, SDK overrides, public verification key,
 
 Nordic supplies [S112 downloads and release notes](https://www.nordicsemi.com/Products/Development-software/S112/Download). S112 is a separate vendor binary with its own license and hardware restrictions. The corrected `nrf_nvic.h` SDK header used by this project is a host compilation input; changing it is not a replacement SoftDevice binary. No new Nordic version or elimination of every Nordic known issue is claimed.
 
-The firmware releases distribute signed application ZIPs. The [web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0) distributes the portable file manager, web source and review archive. Devices coming from SPIFFS or another layout have a separate [migration procedure](MIGRATION_PFS1.md). A system update requires a match for the board, installed bootloader key and counter, SoftDevice and flash layout.
+The firmware releases distribute signed application ZIPs. The [web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0) distributes the portable file manager, web source and review archive. Devices coming from SPIFFS or another layout have a separate [migration procedure](MIGRATION_PFS1.md). A system update requires a match for the board, installed bootloader key and counter, SoftDevice and flash layout.
 
 On the owner's matching device, the 2026-11-02 read-only diagnostic matched DE3.55, the BL8 region hash and S112 7.3.0. This is dated evidence for that device only; no second device is inferred compatible from its product name or photograph.
 

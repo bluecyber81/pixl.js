@@ -8,7 +8,8 @@
         </svg>
       </span>
       <div><p class="device-eyebrow">{{ de ? 'Dein Gerät' : 'Your device' }}</p>
-      <strong class="device-name">{{ connected ? 'Allmiibo LCD' : $t('info.disconnected') }}</strong></div>
+      <strong class="device-name">{{ connected ? (nickname || 'Allmiibo LCD') : $t('info.disconnected') }}</strong>
+      <small v-if="connected && nickname" class="device-model">Allmiibo LCD</small></div>
     </header>
     <template v-if="connected">
       <div v-if="directory" class="device-folder">
@@ -30,7 +31,7 @@
 import { storageUsage, storageAmount, occupiedPercent } from '../lib/device-storage-display.js';
 export default {
   name:'DeviceStorageCard',
-  props:{ connected:Boolean, drive:Object, directory:String, entries:Number, locale:String, uploadDisabled:Boolean },
+  props:{ connected:Boolean, nickname:String, drive:Object, directory:String, entries:Number, locale:String, uploadDisabled:Boolean },
   emits:['upload'],
   computed:{
     de(){ return this.locale?.startsWith('de'); },
@@ -47,6 +48,8 @@ aside.device-card { --device-teal:#075a5a; --device-line:#c1d6d7; display:block;
 .device-art{flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;border:1px solid #bfdbd6;border-radius:11px;background:#f6fffc;color:#23685f;}
 .device-art svg{width:30px;height:27px;}
 .device-card-head>div{min-width:0;}
+.device-card .device-name{overflow-wrap:anywhere;}
+.device-model{display:block;color:#465861;}
 .device-card .device-eyebrow{margin:0 0 1px;font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#46655f;}
 .device-card .device-name{font-size:1rem;line-height:1.2;letter-spacing:-.015em;color:#193d46;}
 .device-folder{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:5px;margin:12px 0 0;padding:8px 0 9px;border-block:1px solid #d1e1df;}

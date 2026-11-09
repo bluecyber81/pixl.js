@@ -38,8 +38,10 @@ static inline void app_list_view_set_event_cb(app_list_view_t* p_view, app_list_
     p_view->event_cb = event_cb;
 }
 
-static inline void app_list_view_add_app(app_list_view_t* p_view, const mini_app_t* p_app){
-    if (p_view->item_count < 10) p_view->items[p_view->item_count++] = p_app;
+static inline void app_list_view_add_app(app_list_view_t *view, const mini_app_t *app, bool focused) {
+    if (view->item_count >= sizeof(view->items) / sizeof(view->items[0])) return;
+    if (focused) view->focus = view->item_count;
+    view->items[view->item_count++] = app;
 }
 
 static inline const mini_app_t* app_list_view_get(app_list_view_t* p_view, uint8_t index){

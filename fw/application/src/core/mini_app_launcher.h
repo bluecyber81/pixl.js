@@ -10,6 +10,7 @@
 
 typedef struct {
     mini_app_inst_t* p_main_app_inst; 
+    uint32_t last_menu_app_id;
     mini_app_inst_t *instances;
     mini_app_inst_t *prepared_inst;
     void *prepared_handle;

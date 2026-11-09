@@ -2,10 +2,13 @@
   <details class="announcements" :open="expanded">
     <summary>{{ de ? 'Angekündigte Figuren' : 'Announced figures' }} ({{ count }})</summary>
     <p class="scope">{{ de
-      ? 'Stand 7. November 2026. Diese Vorschau zählt separat vom Gerätebestand. Die Termine gelten für die angegebene Region.'
-      : 'Checked 7 November 2026. These announcements are separate from your device inventory. Dates apply to the region shown.' }}</p>
+      ? 'Diese Vorschau zählt separat vom Gerätebestand. Die Termine gelten für die angegebene Region.'
+      : 'These announcements are separate from your device inventory. Dates apply to the region shown.' }}
+      <template v-if="sharedCheckedOn">{{ de ? 'Quellen geprüft am' : 'Sources checked on' }} {{ dateLabel(sharedCheckedOn) }}.</template>
+    </p>
     <section v-for="group in groups" :key="group.series" class="announcement-group">
       <p class="group-title"><strong>{{ group.series }}</strong> · {{ dateLabel(group.date) }} ({{ group.region }})</p>
+      <p v-if="!sharedCheckedOn" class="scope">{{ de ? 'Quellen geprüft am' : 'Sources checked on' }} {{ dateLabel(group.sourceCheckedOn) }}.</p>
       <ul>
         <li v-for="figure in group.figures" :key="figure.en">
           <a :href="figure.source" target="_blank" rel="noopener noreferrer">{{ de ? figure.de : figure.en }}</a>
@@ -15,9 +18,7 @@
           </div>
         </li>
       </ul>
-      <p v-if="group.usage" class="game-note">{{ de
-        ? 'In Ocarina of Time auf Switch 2 schalten die beiden angekündigten Figuren besondere Masken frei. Andere kompatible Zelda-Figuren geben Gegenstände.'
-        : 'In Ocarina of Time on Switch 2, the two announced figures unlock special masks. Other compatible Zelda figures give you items.' }}
+      <p v-if="group.usage && group.note" class="game-note">{{ de ? group.note.de : group.note.en }}
         <a :href="group.usage" target="_blank" rel="noopener noreferrer">{{ de ? 'Nintendo-Spielhinweis' : 'Nintendo game guide' }}</a>
       </p>
     </section>
@@ -30,6 +31,10 @@ import { zeldaIdProposal } from '../data/announced-figures.js';
 
 const props = defineProps({ groups: { type: Array, required: true }, de: Boolean, expanded: Boolean });
 const count = computed(() => props.groups.reduce((total, group) => total + group.figures.length, 0));
+const sharedCheckedOn = computed(() => {
+  const dates = new Set(props.groups.map(group => group.sourceCheckedOn));
+  return dates.size === 1 ? [...dates][0] : null;
+});
 
 function dateLabel(date) {
   if (date === 'spring-2027') return props.de ? 'Frühjahr 2027' : 'Spring 2027';

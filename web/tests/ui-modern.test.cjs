@@ -38,6 +38,7 @@ function harness(overrides = {}) {
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
+    ...require('../src/lib/device-nickname.js'), ...require('../src/lib/deployment-path.js'),
     catalogueBaseline: JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/catalogue.json'),'utf8')),
     TextEncoder, Uint8Array, ArrayBuffer, Blob, AbortController, crypto: require('node:crypto').webcrypto,
     performance: require('node:perf_hooks').performance,
@@ -389,7 +390,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.44.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.45.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -401,7 +402,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.44.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.45.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -488,7 +489,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.44.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.45.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1520,10 +1521,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.44.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.45.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.44.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.45.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2186,6 +2187,72 @@ test('3.32 unified folder picker stages original files for comparison and cannot
  app.on_upload_folder_choice({target:{files,value:'x'}});assert.equal(app.upload_diag_visible,false);assert.equal(app.syncDialog,true);assert.equal(app.syncFileCount,1);assert.equal(app._syncFiles[0],files[0]);assert.equal(app.syncRoot,'E:/');
  app.syncDialog=false;app.upload_diag_visible=true;app.pendingUploads=1;app.on_upload_folder_choice({target:{files,value:'x'}});assert.equal(app.syncDialog,false);assert.equal(app.upload_diag_visible,true);
 });
+test('nicknames follow the exact application identity across disconnects and device switches', async () => {
+ const h = harness(), app = connected(h);
+ let deviceId = 'browser-permission-A';
+ h.pixl.get_device_key = () => deviceId;
+ await app.load_device_nickname();
+ assert.equal(app.nicknameReady,true);
+ app.nicknameDraft = '  Familie 🌿  '; app.save_device_nickname();
+ assert.equal(app.deviceNickname,'Familie 🌿');
+ assert.equal(h.stored.size,1);
+ assert.ok(![...h.stored.keys()][0].includes(deviceId));
+ app.on_ble_disconnected();
+ assert.equal(app.nicknameDraft,''); assert.equal(app.deviceNickname,'');
+ deviceId = 'browser-permission-B'; app.connected = true;
+ await app.load_device_nickname();
+ assert.equal(app.deviceNickname,'');
+ app.nicknameDraft = 'Gerät B'; app.save_device_nickname();
+ deviceId = 'browser-permission-A'; app.nicknameDraft = 'Falsches Gerät'; app.save_device_nickname();
+ await app.load_device_nickname(); assert.equal(app.deviceNickname,'Familie 🌿');
+ app.nicknameDraft = 'Nähe'; app.save_device_nickname(); assert.equal(app.deviceNickname,'Nähe');
+ app.save_device_nickname(true); assert.equal(app.deviceNickname,'');
+ await app.load_device_nickname(); assert.equal(app.deviceNickname,'');
+ const obsolete = app.load_device_nickname(); ++app.sessionGeneration; deviceId = 'browser-permission-B';
+ await app.load_device_nickname(); await obsolete;
+ assert.equal(app.deviceNickname,'Gerät B');
+ app.save_diagnostics();
+ assert.doesNotMatch(app.diagnosticsJson,/Gerät B|browser-permission-B/);
+ assert.ok(!app.dfuPageUrl.includes('Gerät') && !app.dfuPageUrl.includes(deviceId));
+});
+test('folder comparison maps contents against the selected device folder and clears stale selection on rejection', () => {
+ const app = connected(harness());
+ const file = {name:'link.bin', webkitRelativePath:'Backup/Series2/link.bin'};
+ app.open_sync();
+ app.on_sync_files({target:{files:[file]}}, true);
+ assert.equal(app._syncFiles[0].relativePath,'Series2/link.bin');
+ assert.equal(app._syncFiles[0].file,file);
+ assert.equal(app.syncFolderName,'Backup');
+ app.syncSelected = ['E:/stale.bin'];
+ app.on_sync_files({target:{files:Array(4097).fill(file)}}, true);
+ assert.equal(app.syncFileCount,0);
+ assert.equal(app.syncSelected.length,0);
+ assert.equal(app.syncPlan,null);
+});
+test('comparison filters and pages the whole relative path union and saves only a current device-side result', () => {
+ const app = connected(harness());
+ const deviceOnly = Array.from({length:1001}, (_,i) => ({path:'E:/tags/nested/' + String(i).padStart(4,'0') + '.bin',size:3}));
+ const entries = ['same','add','change','blocked'].map(comparison => ({
+   status:comparison, comparison, relativePath:comparison+'.bin',targetPath:'E:/tags/'+comparison+'.bin',size:7,
+   expected:comparison === 'change' ? {size:2} : null
+ }));
+ app.syncPlan = {rootPath:'E:/tags',entries,deviceOnly};
+ app._syncGeneration = app.sessionGeneration;
+ app._syncDeviceKey = 'private-test-device';
+ const calls = [];
+ app.download_device_file = (...args) => calls.push(args);
+ assert.deepEqual({...app.syncCounts},{all:1005,add:1,deviceOnly:1001,change:1,same:1,blocked:1});
+ app.syncFilter = 'deviceOnly'; app.syncPage = 11;
+ assert.equal(app.syncPageCount,11);
+ assert.deepEqual(Array.from(app.syncPagedEntries, e => e.relativePath), ['nested/1000.bin']);
+ app.download_sync_entry('E:/tags/nested/1000.bin');
+ app.download_sync_entry('E:/tags/change.bin');
+ app.download_sync_entry('E:/tags/add.bin');
+ app.download_sync_entry('E:/tags/absent.bin');
+ app._syncGeneration--;
+ app.download_sync_entry('E:/tags/nested/1000.bin');
+ assert.deepEqual(calls, [['E:/tags/nested/1000.bin','1000.bin',3,true], ['E:/tags/change.bin','change.bin',2,true]]);
+});
 test('3.32 unified ZIP picker uses existing validator and only stages archive until explicit preview/import',async()=>{
  let checked=0;const file={name:'backup.zip',size:100};const h=harness({loadBackupZip:async selected=>{assert.equal(selected,file);checked++;return {fileCount:1,byteCount:540};}}),app=connected(h);app.upload_diag_visible=true;
  await app.on_upload_zip_choice({target:{files:[file],value:'x'}});assert.equal(checked,1);assert.equal(app.zipDialog,true);assert.equal(app.upload_diag_visible,false);assert.equal(app.zipFilename,'backup.zip');assert.equal(app.zipPlan,null);
@@ -2278,7 +2345,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.44.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.45.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

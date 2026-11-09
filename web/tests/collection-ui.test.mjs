@@ -483,6 +483,7 @@ test('App clears catalogue presence on disconnect/error and binds both report an
   const options = appOptions({}, { get_connection_state: () => 'disconnected' });
   for (const method of ['on_ble_disconnected', 'on_ble_connect_error']) {
     const state = { ...options.data.call({ $t: x => x, $i18n: { locale: 'en' } }), collectionReport: partial(), collectionStale: true, $t: x => x, $notify() {} };
+    state.clear_device_nickname = options.methods.clear_device_nickname.bind(state);
     for (const name of ['reset_figure_info', 'remember_interruption', 'clear_dfu_attempt', 'clear_migration_restart',
       'refresh_local_metrics', 'invalidate_sync', 'invalidate_zip', 'refresh_backup_checkpoint', 'set_transfer']) state[name] = () => {};
     options.methods[method].call(state, Error('synthetic'));

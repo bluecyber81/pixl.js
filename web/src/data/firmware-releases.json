@@ -16,12 +16,12 @@
       "migrationRequired": false
     },
     {
-      "id": "de3.67-lcd-app",
-      "version": "2.22.0-DE3.67",
-      "counter": 639,
-      "file": "Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
-      "bytes": 364719,
-      "sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+      "id": "de3.68-lcd-app",
+      "version": "2.22.0-DE3.68",
+      "counter": 640,
+      "file": "Allmiibo_LCD_DE3_68_640_NUR_APP.zip",
+      "bytes": 364755,
+      "sha256": "891762b78ffbd6c7b30b4719e3539a9007b58918aea4ed19397a5f44b1ebc8fc",
       "board": "LCD",
       "storage": "PFS1",
       "bootloader": "BL8/Z13/Z15/Z17/Z19",

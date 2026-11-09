@@ -60,7 +60,8 @@ try {
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
   await page.evaluate(data => {
     const app = document.querySelector('#app')._vnode.component.proxy;
-    Object.assign(app, { connected: true, firmwareVersion: '2.22.0-DE3.67',
+    // The shared synthetic diagnostic packet reports application counter 628.
+    Object.assign(app, { connected: true, firmwareVersion: '2.22.0-DE3.56',
       current_dir: 'E:/', driveInfo: [{ label: 'E', status: 0, totalBytes: 2097152, freeBytes: 1048576 }],
       fullDiagnosticSnapshot: data });
   }, diagnosticSnapshot());

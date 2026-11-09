@@ -52,6 +52,7 @@
       </figure>
     </div>
 
+    <GameGuide v-for="game in matchingGames" :key="game.id" :game="game" :de="de" />
     <FigureUsage :id="resolvedId" :locale="locale" />
     <details v-if="entry" class="extra-details">
       <summary>{{ de ? 'Regionale Veröffentlichungstermine' : 'Regional release dates' }}</summary>
@@ -72,6 +73,8 @@
 </template>
 <script setup>
 import FigureUsage from './FigureUsage.vue';
+import GameGuide from './GameGuide.vue';
+import { gameGuides } from '../data/game-guides.js';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import data from '../data/catalogue.json';
@@ -81,6 +84,7 @@ const props = defineProps({ id: { type: String, default: null }, metadata: { typ
 const { locale } = useI18n();
 const de = computed(() => locale.value.startsWith('de'));
 const resolvedId = computed(() => figureId(props.id) || metadataFigureId(props.metadata));
+const matchingGames = computed(() => gameGuides.filter(game => game.ids.includes(resolvedId.value)));
 const vehicles = computed(() => props.inspection?.id === resolvedId.value ? props.inspection?.vehicleCandidates : undefined);
 const catalogueData = computed(() => Array.isArray(props.catalogue?.entries) ? props.catalogue : data);
 const entry = computed(() => resolvedId.value ? (props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : catalogueData.value.entries.find(item => item?.id === resolvedId.value)) : null);

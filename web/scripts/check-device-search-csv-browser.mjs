@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 // Install only the browser peripheral boundary. The production BLE, protocol, VFS,
 // catalogue, download and Vue code run unchanged in an isolated browser context.
-function installReadOnlyPeripheral({files, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
+export function installReadOnlyPeripheral({files, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
   const encoder = new TextEncoder(), decoder = new TextDecoder();
   const commands = [], violations = [];
   window.testPeripheral = { commands, violations, connections: 0 };

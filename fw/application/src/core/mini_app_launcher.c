@@ -124,7 +124,10 @@ void mini_app_launcher_run_with_retain_data(mini_app_launcher_t *launcher, uint3
     }
     mini_app_launcher_clear_exit(launcher);
     mini_app_inst_t *inst = mini_app_launcher_inst_run(launcher, id, retain);
-    if (!app->deamon) launcher->p_main_app_inst = inst;
+    if (!app->deamon) {
+        launcher->p_main_app_inst = inst;
+        if (inst && !app->sys) launcher->last_menu_app_id = app->id;
+    }
     launcher->exit_busy = false;
     if (!inst) mui_show_memory_error(mui());
 }

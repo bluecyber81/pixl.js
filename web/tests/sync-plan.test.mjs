@@ -101,6 +101,26 @@ test('recursive plan and execution create only required folders and transfer onl
   assert.equal(vfs.log.filter(entry => entry.op === 'write').length, 1)
   assert(!vfs.log.some(entry => entry.op === 'remove' && entry.args[0].includes('keep.bin')))
 })
+test('comparison inventories a protected device folder and distinguishes contents without allowing uploads', async () => {
+  const vfs = memoryVfs()
+  vfs.nodes.get('E:/tags').meta = metadata(4)
+  vfs.put('E:/tags/remote.bin', [1])
+  vfs.put('E:/tags/same.bin', [2])
+  vfs.put('E:/tags/different.bin', [3])
+  const files = [localFile('same.bin', [2]), localFile('different.bin', [4]), localFile('local.bin', [5])]
+  const plan = await compare(vfs, files)
+  assert.deepEqual(plan.entries.map(e => [e.status, e.comparison]), [['blocked', 'same'], ['blocked', 'change'], ['blocked','add']])
+  assert.deepEqual(plan.deviceOnly, [{path:'E:/tags/remote.bin', size:1}])
+  await assert.rejects(execute(vfs, plan, files, {selectedPaths:['E:/tags/different.bin']}), {code:'SYNC_SELECTION'})
+  assert(!vfs.log.some(isMutation))
+})
+
+test('a missing or renamed root does not produce spurious device inventory results', async () => {
+  const vfs = memoryVfs()
+  await assert.rejects(compare(vfs, [localFile('new.bin')], {rootPath:'E:/other'}), {code:'SYNC_STALE'})
+  assert(!vfs.log.some(isMutation))
+})
+
 test('selected paths explicitly restrict changes and may omit blocked entries', async () => {
   const vfs = memoryVfs(); vfs.put('E:/tags/locked.bin', [0], metadata(4))
   const files = [localFile('one.bin'), localFile('two.bin'), localFile('locked.bin')], plan = await compare(vfs, files)

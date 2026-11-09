@@ -1,0 +1,81 @@
+typedef int mui_view_t;
+typedef int mui_anim_t;
+enum { MINI_APP_ID_SETTINGS = TEST_APP_NO_HIBERNATE };
+static uint32_t mini_app_registry_get_app_num(void) {
+    return sizeof(test_apps) / sizeof(test_apps[0]);
+}
+static const mini_app_t *mini_app_registry_find_by_index(uint32_t i) {
+    return &test_apps[i];
+}
+
+/* PRODUCTION_DESKTOP */
+
+static app_list_view_t build_menu(uint32_t visible) {
+    app_list_view_t view = {0};
+    app_desktop_populate_list(&view, visible, test_launcher->last_menu_app_id);
+    assert(view.item_count && view.focus < view.item_count);
+    return view;
+}
+
+static void expect_focus(uint32_t visible, unsigned id) {
+    app_list_view_t view = build_menu(visible);
+    assert(app_list_view_get(&view, view.focus)->id == id);
+}
+
+int main(int argc, char **argv) {
+    assert(argc == 2);
+    const unsigned scenario = (unsigned)atoi(argv[1]);
+    fixture_start(MINI_APP_ID_DESKTOP);
+    switch (scenario) {
+    case 0: {
+        app_list_view_t menu = build_menu(UINT32_MAX);
+        assert(menu.focus == 0 && menu.items[0]->id == MINI_APP_ID_BLE);
+        menu.focus = 1;
+        assert(menu.items[1]->id == MINI_APP_ID_CHAMELEON);
+        app_desktop_list_view_on_selected(APP_LIST_ITEM_SELECTED, &menu);
+        assert(test_launcher->p_main_app_inst->p_app->id == MINI_APP_ID_CHAMELEON);
+        mini_app_launcher_exit(test_launcher);
+        expect_focus(UINT32_MAX, MINI_APP_ID_CHAMELEON);
+        break;
+    }
+    case 1:
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_DESKTOP);
+        expect_focus(UINT32_MAX & ~(1u << MINI_APP_ID_CHAMELEON), TEST_APP_OTHER);
+        expect_focus(UINT32_MAX & ~(1u << TEST_APP_OTHER), MINI_APP_ID_BLE);
+        expect_focus(0, MINI_APP_ID_SETTINGS);
+        break;
+    case 2:
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_CHAMELEON);
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_STATUS_BAR);
+        allow_prepare = false;
+        mini_app_launcher_run(test_launcher, TEST_APP_OTHER);
+        allow_prepare = true;
+        mini_app_launcher_run(test_launcher, TEST_APP_FAILED_INIT);
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_DESKTOP);
+        expect_focus(UINT32_MAX, MINI_APP_ID_CHAMELEON);
+        break;
+    case 3:
+    case 4:
+        mini_app_launcher_run(test_launcher, MINI_APP_ID_CHAMELEON);
+        assert(mini_app_launcher_sleep(test_launcher));
+        fixture_dispose();
+        if (scenario == 4) memset(&test_cache, 0, sizeof(test_cache));
+        mini_app_launcher_init(test_launcher, 0);
+        if (scenario == 3) {
+            assert(test_launcher->p_main_app_inst->p_app->id == MINI_APP_ID_CHAMELEON);
+            mini_app_launcher_exit(test_launcher);
+            expect_focus(UINT32_MAX, MINI_APP_ID_CHAMELEON);
+        } else {
+            assert(test_launcher->p_main_app_inst->p_app->id == MINI_APP_ID_DESKTOP);
+            expect_focus(UINT32_MAX, MINI_APP_ID_BLE);
+        }
+        break;
+    default:
+        assert(false);
+    }
+    assert(!cache_saves && !settings_saves);
+    fixture_dispose();
+    puts("PASS");
+    return 0;
+}

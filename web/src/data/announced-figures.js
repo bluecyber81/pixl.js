@@ -9,7 +9,12 @@ export const ocarinaUsage = 'https://en-americas-support.nintendo.com/app/answer
 
 export const announcementGroups = [
   {
-    series: 'Kirby Air Riders', date: '2026-11-12', datePrecision: 'day', region: 'US', sourceCheckedOn,
+    series: 'Kirby Air Riders', game: 'kirby-air-riders', date: '2026-11-12', datePrecision: 'day', region: 'US', sourceCheckedOn,
+    usage: 'https://www.nintendo.com/us/store/products/amiibo-noir-dedede-hydra-kirby-air-riders-series-125233/',
+    note: {
+      de: 'Beide Fahrer lassen sich als Figurenspieler trainieren. Ihr Level bleibt erhalten, wenn du sie auf eine andere Maschine setzt.',
+      en: 'You can train both riders as Figure Players. They keep their level when moved to another machine.',
+    },
     figures: [
       { en: 'Sword Kirby & Dragoon', de: 'Kirby mit Schwert & Dragoon', source: northAmericanDetails + 'sword-kirby-and-dragoon-kirby-air-riders-series/' },
       { en: 'Noir Dedede & Hydra', de: 'Dedede Noir & Hydra', source: northAmericanDetails + 'noir-dedede-and-hydra-kirby-air-riders-series/' },
@@ -31,8 +36,12 @@ export const announcementGroups = [
     ],
   },
   {
-    series: 'The Legend of Zelda: Ocarina of Time', date: '2027', datePrecision: 'year', region: 'US', sourceCheckedOn,
+    series: 'The Legend of Zelda: Ocarina of Time', game: 'ocarina-of-time', date: '2027', datePrecision: 'year', region: 'US', sourceCheckedOn,
     usage: ocarinaUsage,
+    note: {
+      de: 'In Ocarina of Time auf Switch 2 schalten die beiden angekündigten Figuren besondere Masken frei. Andere kompatible Zelda-Figuren geben Gegenstände.',
+      en: 'In Ocarina of Time on Switch 2, the two announced figures unlock special masks. Other compatible Zelda figures give you items.',
+    },
     figures: [
       { en: 'Young Link', de: 'Junger Link', proposedId: '0100000004fd0902', source: northAmericanDetails + 'young-link-the-legend-of-zelda-ocarina-of-time-series/' },
       { en: 'Young Zelda', de: 'Junge Zelda', proposedId: '0101000004ff0902', source: northAmericanDetails + 'young-zelda-the-legend-of-zelda-ocarina-of-time-series/' },

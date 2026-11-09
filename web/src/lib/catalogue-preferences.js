@@ -3,7 +3,7 @@ import { figureId } from './figure-info.js';
 export const CATALOGUE_PREFERENCES_KEY = 'allmiibo.catalogue.preferences.v1';
 export const FILTER_NAME_LIMIT = 48;
 const MAX_FAVORITES = 4096, MAX_FILTERS = 80;
-const validPresence = new Set(['', 'present', 'missing', 'attention', 'unconfirmed']);
+const validPresence = new Set(['', 'observed', 'present', 'missing', 'attention', 'unconfirmed']);
 const fail = code => { throw Object.assign(new Error(code), { code }); };
 const text = (s, max) => typeof s === 'string' && s.length <= max && !/[\u0000-\u001f\u007f]/u.test(s);
 const clean = () => ({ version: 1, favorites: [], filters: [] });
@@ -18,7 +18,8 @@ export function filterName(value) {
 function criteria(value) {
   if (!value || !text(value.query, 200) || !text(value.series, 256) || !text(value.kind, 256) ||
       !validPresence.has(value.presence) || typeof value.knownOnly !== 'boolean' || typeof value.favoritesOnly !== 'boolean') fail('PREF_FORMAT');
-  return { query:value.query, series:value.series, kind:value.kind, presence:value.presence, knownOnly:value.knownOnly, favoritesOnly:value.favoritesOnly };
+  if (value.game !== undefined && (!text(value.game, 64) || !/^[a-z0-9-]*$/.test(value.game))) fail('PREF_FORMAT');
+  return { query:value.query, series:value.series, kind:value.kind, presence:value.presence, knownOnly:value.knownOnly, favoritesOnly:value.favoritesOnly, ...(value.game ? { game:value.game } : {}) };
 }
 
 export function readCataloguePreferences(storage = window.localStorage) {

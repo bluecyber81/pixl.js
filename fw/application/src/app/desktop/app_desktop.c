@@ -25,6 +25,15 @@ static void app_desktop_list_view_on_selected(app_list_view_event_t event, app_l
     if (app) mini_app_launcher_run(mini_app_launcher(), app->id);
 }
 
+static void app_desktop_populate_list(app_list_view_t *view, uint32_t enabled_apps, uint32_t last_app_id) {
+    for (uint32_t i = 0; i < mini_app_registry_get_app_num(); i++) {
+        const mini_app_t *app = mini_app_registry_find_by_index(i);
+        if (app->sys) continue;
+        if ((enabled_apps & (1u << app->id)) || app->id == MINI_APP_ID_SETTINGS)
+            app_list_view_add_app(view, app, app->id == last_app_id);
+    }
+}
+
 void app_desktop_on_run(mini_app_inst_t *p_app_inst) {
 
     app_desktop_t *p_app_handle = mui_mem_malloc(sizeof(app_desktop_t));
@@ -39,16 +48,8 @@ void app_desktop_on_run(mini_app_inst_t *p_app_inst) {
 
 
 
-    settings_data_t *p_settings = settings_get_data();
-    for (uint32_t i = 0; i < mini_app_registry_get_app_num(); i++) {
-        const mini_app_t *p_app = mini_app_registry_find_by_index(i);
-        if (!p_app->sys) {
-            bool is_enabled = (p_settings->app_enable_bits & (1 << p_app->id)) != 0;
-            if (is_enabled || p_app->id == MINI_APP_ID_SETTINGS) {
-                app_list_view_add_app(p_app_handle->p_app_list_view, p_app);
-            }
-        }
-    }
+    app_desktop_populate_list(p_app_handle->p_app_list_view, settings_get_data()->app_enable_bits,
+                              mini_app_launcher()->last_menu_app_id);
 
     app_list_view_set_event_cb(p_app_handle->p_app_list_view, app_desktop_list_view_on_selected);
 

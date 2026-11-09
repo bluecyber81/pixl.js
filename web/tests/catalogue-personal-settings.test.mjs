@@ -85,6 +85,9 @@ test('saved filters preserve language-independent fields and explicit overwrite,
   assert.throws(()=>updateCataloguePreferences({op:'create',name:'Fu\u0308r später',criteria},storage),{code:'PREF_EXISTS'});
   updateCataloguePreferences({op:'update',name:'Für später',criteria:{...criteria,query:''}},storage);
   assert.equal(readCataloguePreferences(storage).filters[0].criteria.query,'');
+  const gameCriteria={ ...criteria, game:'kirby-air-riders', presence:'observed' };
+  updateCataloguePreferences({op:'update',name:'Für später',criteria:gameCriteria},storage);
+  assert.deepEqual(readCataloguePreferences(storage).filters[0].criteria,gameCriteria);
   const before=map.get(CATALOGUE_PREFERENCES_KEY);
   assert.throws(()=>updateCataloguePreferences({op:'update',name:'Für später',criteria:{...criteria,presence:'bad'}},storage));
   assert.equal(map.get(CATALOGUE_PREFERENCES_KEY),before);

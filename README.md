@@ -1,11 +1,16 @@
 # Allmiibo LCD firmware and file manager
 
+## File manager 3.45.0 · LCD DE3.68 / 640 · 2026-11-09
+
+Choose a game in the catalogue to see matching figures from your collection. In Backup, the folder comparison also lists files present only on the device. On the LCD, test firmware DE3.68 remembers the last opened app when returning to the main menu. You can give each connected device a name in this browser. Switching devices shows the name associated with the current connection. [DE3.68 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip) · [Web 3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0)
+
 [Firmware and bootloader history](docs/VERSIONEN_FIRMWARE.md) · [File manager patch history](docs/VERSIONEN_WEB.md)
 
 [Open the online file manager](https://bluecyber81.github.io/pixl.js/) · [Guide: firmware, LittleFS and bootloader](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Download the DE3.65 LCD application](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Deutsch](README.de.md)
 
 **File manager 3.44.0** · 8 November 2026. When you open the file manager, it selects the first supported language in your browser’s preference list. Use the language menu to choose a fixed language or return to automatic selection.
 
+- **3.45.0** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.45.0/Allmiibo_Dateimanager_3_45_0_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.45.0/Allmiibo_DE3_68_Z19_Web3_45_0_ChatGPT_Pruefpaket.zip)
 - **3.44.0** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
 - **3.43.1** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
 - **3.43.0** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)

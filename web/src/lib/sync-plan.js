@@ -1,5 +1,5 @@
 import { assertPortableEntryName, assertDevicePath, joinDevicePath, portableNameKey } from './portable-names.js'
-import { snapshotFile, sha256Bytes, asBytes, checkedDirectory, copyMetadata, metadataKey, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
+import { snapshotFile, sha256Bytes, asBytes, checkedDirectory, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
 export class SyncError extends Error {
@@ -84,23 +84,24 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       if (entry.type === 1) await walk(child, depth + 1)
     }
   }
-  const rootBlocked = !await writableRoot(root, readDirectory, check)
-  if (!rootBlocked) await walk(root, 0)
+  const rootAccess = await directoryPathAccess(root, readDirectory, check)
+  if (rootAccess === 'unavailable') fail('SYNC_STALE', 'The device folder is no longer available under its original path.')
+  await walk(root, 0)
   const directories = [...sources.directories.values()].map(directory => {
     const aliases = remoteKeys.get(pathKey(directory.path)) || [], actual = remote.get(directory.path)
-    const blocked = aliases.some(path => path !== directory.path) || aliases.length > 1 || actual && !writableDirectory(actual)
-    return { ...directory, status: blocked ? 'blocked' : actual ? 'existing' : 'create' }
+    const pathConflict = aliases.some(path => path !== directory.path) || aliases.length > 1 || !!actual && actual.type !== 1
+    const blocked = pathConflict || actual && !writableDirectory(actual)
+    return { ...directory, pathConflict, status: blocked ? 'blocked' : actual ? 'existing' : 'create' }
   })
+  const blockedDirectories = directories.filter(directory => directory.status === 'blocked')
   const entries = []
   for (const source of sources.files.values()) {
     check(); progress('checking', source.targetPath, 0, source.size)
     const bytes = await snapshotFile(source.file); check(); const hash = await sha256Bytes(bytes); check()
     const entry = { relativePath: source.relativePath, targetPath: source.targetPath, size: source.size, sha256: hash, status: 'add', expected: null }
     const aliases = remoteKeys.get(pathKey(source.targetPath)) || [], actual = remote.get(source.targetPath)
-    const parentBlocked = rootBlocked || directories.some(directory => directory.status === 'blocked' && source.targetPath.startsWith(directory.path + '/'))
-    if (parentBlocked) {
-      entry.status = 'blocked'; entry.reason = 'PARENT_BLOCKED'
-    } else if (aliases.some(path => path !== source.targetPath) || aliases.length > 1) {
+    const blockedParents = blockedDirectories.filter(directory => source.targetPath.startsWith(directory.path + '/'))
+    if (aliases.some(path => path !== source.targetPath) || aliases.length > 1) {
       entry.status = 'blocked'; entry.reason = 'NAME_COLLISION'
     } else if (actual) {
       if (actual.type !== 0) { entry.status = 'blocked'; entry.reason = 'DIRECTORY_CONFLICT' }
@@ -119,6 +120,12 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
           entry.status = 'blocked'; entry.reason = 'INVALID_METADATA'
         }
       }
+    }
+    // Reading a protected file may establish equality or a difference, while transfer remains blocked.
+    entry.comparison = entry.reason === 'READONLY' ? 'change' : entry.status
+    if (rootAccess !== 'writable' || blockedParents.length) {
+      if (blockedParents.some(directory => directory.pathConflict)) entry.comparison = 'blocked'
+      entry.status = 'blocked'; entry.reason = 'PARENT_BLOCKED'
     }
     entries.push(entry); ++filesDone; progress('compared', source.targetPath)
   }

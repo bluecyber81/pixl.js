@@ -19,9 +19,9 @@ from production_id import fingerprint, source_hashes
 
 
 IMAGE = "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
-RELEASE_VERSION = "2.22.0-DE3.67"
-RELEASE_COUNTER = 639
-RELEASE_BIN_SHA256 = "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236"
+RELEASE_VERSION = "2.22.0-DE3.68"
+RELEASE_COUNTER = 640
+RELEASE_BIN_SHA256 = "0cc4aefa5de41fd7b11d8f356ab545414381bdd22c88a5fbdeb53b2f9eb37f02"
 SOURCE_DATE_EPOCH = 1793836800
 NVIC_BEFORE_SHA256 = "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210"
 NVIC_AFTER_SHA256 = "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
@@ -51,9 +51,9 @@ def build_identity(root, mode, version, counter):
         expected = {"GIT_COMMIT": '"unknown"', "GIT_BRANCH": '"source-archive"',
                     "GIT_BRANCH_NUM": '"n/a"', "VERSION": json.dumps(RELEASE_VERSION),
                     "BUILD_DIRTY": "1", "BUILD_DIRTY_KNOWN": "0",
-                    "BUILD_DATE": '"2026-11-08"', "TARGET": "0"}
+                    "BUILD_DATE": '"2026-11-09"', "TARGET": "0"}
         if values != expected:
-            raise ValueError("Release mode requires the archived DE3.67 version.inc.h metadata.")
+            raise ValueError("Release mode requires the archived DE3.68 version.inc.h metadata.")
         return RELEASE_VERSION, RELEASE_COUNTER, sha256(header)
     if not version or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}", version):
         raise ValueError("Development mode requires an explicit simple --version identifier.")
@@ -186,7 +186,7 @@ def main(argv=None):
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de367"))
+        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de368"))
         if destination.resolve() != destination:
             raise RuntimeError("Output must not resolve through a symlink or junction.")
         destination.mkdir(parents=True, exist_ok=True)

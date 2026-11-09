@@ -7,6 +7,8 @@ import * as Vue from 'vue';
 import * as VueI18n from 'vue-i18n';
 import { parse, compileScript } from '@vue/compiler-sfc';
 import postcss from 'postcss';
+import { gameGuides } from '../src/data/game-guides.js';
+import { announcementGroups } from '../src/data/announced-figures.js';
 
 // Exercise the production SFC with Vue's renderer/reactivity. The host records
 // rendered image requests, button events and focus/scroll calls without network
@@ -97,6 +99,63 @@ async function gallery(root, value) {
 async function filter(root, value) {
   nodes(classNode(root, 'presence-filter'), 'select')[0].props['onUpdate:modelValue'](value); await Vue.nextTick();
 }
+
+test('documented games select exact editions and intersect with device evidence in both languages', async () => {
+  const realCatalogue = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
+  const fatalFury = gameGuides.find(game => game.id === 'fatal-fury-cotw');
+  const [clean, inspected] = fatalFury.ids;
+  const device = report();
+  device.files[0].id = clean;
+  device.files[1].id = inspected;
+  for (const locale of ['de_DE', 'en_US']) {
+    const de = locale === 'de_DE';
+    const { root, state, app } = await mount({ catalogue: realCatalogue, collectionReport: device }, locale);
+    try {
+      const select = nodes(classNode(root, 'game-filter'), 'select')[0];
+      select.props['onUpdate:modelValue'](fatalFury.id); await Vue.nextTick();
+      const guide = classNode(root, 'game-guide');
+      assert.match(text(guide), de ? /Startersets/ : /starter sets/);
+      assert.equal(nodes(guide, 'a')[0].props.href, fatalFury.source);
+      const shownIds = () => cards(root).map(card => nodes(card, 'code')[0].text);
+      assert.deepEqual(new Set(shownIds()), new Set(fatalFury.ids));
+      const matches = realCatalogue.entries.filter(entry => fatalFury.ids.includes(entry.id));
+      assert.equal(matches.filter(entry => entry.type === 'Figure').length, 2);
+      assert.deepEqual(matches.filter(entry => entry.type === 'Card').map(entry => entry.name).sort(),
+        ['Chun-Li','Chun-Li','Ken','Ken','Mai','Mai','Terry','Terry']);
+      assert.equal(classNode(root, 'announcements'), undefined);
+      await filter(root, 'observed');
+      assert.deepEqual(new Set(shownIds()), new Set([clean, inspected]));
+      assert.deepEqual(cards(root).map(card => card.props['data-presence']).sort(), ['attention', 'present']);
+      state.collectionStale = true; await Vue.nextTick();
+      assert.deepEqual(shownIds(), []);
+      await filter(root, '');
+      select.props['onUpdate:modelValue']('kirby-air-riders'); await Vue.nextTick();
+      assert.equal(cards(root).length, 5);
+      assert.match(text(classNode(root, 'game-guide')), /Air Riders Stat Tracker/);
+      const announced = classNode(root, 'announcements');
+      assert.equal(nodes(announced, 'li').length, 2);
+      assert.equal(announced.props.open, true);
+      assert.match(text(announced), de ? /Figurenspieler/ : /Figure Players/);
+      const checked = new Intl.DateTimeFormat(de ? 'de-DE' : 'en-GB', {dateStyle:'long', timeZone:'UTC'})
+        .format(new Date(announcementGroups[0].sourceCheckedOn + 'T00:00:00Z'));
+      assert.ok(text(announced).includes(checked));
+      await click(root, de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters');
+      assert.equal(classNode(root, 'game-guide'), undefined);
+      assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 9);
+    } finally { app.unmount(); }
+  }
+});
+
+test('all documented game IDs resolve in the baseline and stay separate from announcement ID proposals', () => {
+  const { entries } = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
+  const known = new Set(entries.map(entry => entry.id));
+  const proposed = new Set(announcementGroups.flatMap(group => group.figures.map(figure => figure.proposedId).filter(Boolean)));
+  for (const game of gameGuides) {
+    assert.equal(new Set(game.ids).size, game.ids.length, game.id);
+    assert.ok(game.ids.every(id => known.has(id) && !proposed.has(id)), game.id);
+    assert.ok(new URL(game.source).hostname.endsWith('.nintendo.com'), game.id);
+  }
+});
 
 test('nine announced figures have official links and do not enter catalogue counts or the missing filter', async () => {
   const { root, app } = await mount({ collectionReport: report() });

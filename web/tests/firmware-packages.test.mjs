@@ -24,7 +24,7 @@ test('disconnect ignores the former device version and private session fields ar
 
 test('each card links its own catalogue ID and keeps the diagnostics fragment intact', () => {
  const diagnostic = '#read=100&app=637&bl=19&sd=294';
- for (const id of ['de3.65-lcd-app', 'de3.67-lcd-app']) {
+ for (const id of ['de3.65-lcd-app', 'de3.68-lcd-app']) {
    const item = {...entry, id};
    const url = new URL(packagePresentation(item, {dfuReference:diagnostic}).dfuUrl, 'https://example.test');
    assert.equal(url.pathname, '/dfu/web.html');

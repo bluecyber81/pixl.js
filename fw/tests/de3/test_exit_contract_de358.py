@@ -6,7 +6,7 @@ for existing startup/NFC/remote tests.
 """
 import unittest
 from pathlib import Path
-from exit_contract_support_de358 import HERE, SRC, function, launcher_fixture, compile_cases
+from exit_contract_support_de358 import HERE, SRC, actual, function, launcher_fixture, compile_cases
 
 LAUNCHER_CASES = (
     "save failure preserves old owner on switch",
@@ -43,6 +43,21 @@ class ExitLifecycleContractTests(unittest.TestCase):
         source = launcher_fixture()
         source += (HERE / "launcher_exit_contract_de358.c.in").read_text(encoding="utf-8")
         compile_cases(self, source, LAUNCHER_CASES, "launcher-exit")
+
+    def test_desktop_reselects_last_visible_foreground_app(self):
+        desktop = (SRC / "app/desktop/app_desktop.c").read_text(encoding="utf-8")
+        fixture = (HERE / "desktop_menu_focus.c.in").read_text(encoding="utf-8")
+        source = launcher_fixture() + fixture.replace(
+            "/* PRODUCTION_DESKTOP */", actual("app/desktop/view/app_list_view.h") + "\n" +
+            function(desktop, "app_desktop_populate_list") + "\n" +
+            function(desktop, "app_desktop_list_view_on_selected"))
+        compile_cases(self, source, (
+            "cold desktop and return from an app selected in the carousel",
+            "hidden selected app and shifted visible indexes",
+            "daemon, denied switch and failed start preserve the last app",
+            "wake resumes an app; exiting it focuses its icon",
+            "cold reset forgets the prior session",
+        ), "desktop-menu-focus")
 
     def test_real_shutdown_handler_uses_guard_before_teardown(self):
         body = function((SRC / "main.c").read_text(encoding="utf-8"), "shutdown_handler")

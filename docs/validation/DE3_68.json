@@ -1,0 +1,66 @@
+{
+  "version": "2.22.0-DE3.68",
+  "counter": 640,
+  "previous": "DE3.67/639",
+  "board": "LCD",
+  "applicationOnly": true,
+  "source_id_sha256": "01b48c1325a96242a240e7eb4bfa43122807527862597281cdf86a81167dc473",
+  "artifacts_sha256": {
+    "pixljs.bin": "0cc4aefa5de41fd7b11d8f356ab545414381bdd22c88a5fbdeb53b2f9eb37f02",
+    "pixljs.hex": "38b16caf06b4676c8786500d30ca8b372ea9326324f03c74db38f876f0e46620",
+    "pixljs.out": "153c5eda1f0085f4105898a41d9a6668a241c3e4037971eff27269e6787e48ba",
+    "pixljs.map": "407c20e1b57b35ae25b17cbe64146f9477683d3bd3fbc99a1aeeb746ea36b1f9"
+  },
+  "otaSha256": "891762b78ffbd6c7b30b4719e3539a9007b58918aea4ed19397a5f44b1ebc8fc",
+  "bytes": 364152,
+  "candidateAndReleaseBinAndHexIdentical": true,
+  "linkerBudget": {
+    "flash_reserve_bytes": 8576,
+    "heap_stack_gap_bytes": 1840,
+    "stack_reserved_bytes": 8192
+  },
+  "signingVerification": "tools/check_release_ota.py",
+  "physicalDeviceTest": false,
+  "z19Transfer": {
+    "payloadBytes": 364152,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18433,
+    "objectExecutes": 90,
+    "finalCrc32": 241817798,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "0cc4aefa5de41fd7b11d8f356ab545414381bdd22c88a5fbdeb53b2f9eb37f02",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "menuRegression": {
+    "previousIndexAfterOpeningSecondApp": 0,
+    "newIndexAfterOpeningSecondApp": 1,
+    "scope": "Compiled launcher and desktop C in the host fixture; test_exit_contract_de358.py"
+  },
+  "host": {
+    "passed": true,
+    "profile": "full",
+    "passed_count": 149,
+    "executed_count": 149,
+    "available_count": 149,
+    "hardware_mocked": true,
+    "sources_unchanged_during_tests": true
+  },
+  "cortexM4StackWatermark": "Passed on the release ELF: 8192 reserved, guards intact, unavailable sentinel verified."
+}

@@ -12,8 +12,14 @@
     <p v-if="historical" class="presence-observation" role="status">{{ de ? 'Gerät getrennt. Letzte Prüfung vom' : 'Device disconnected. Last check at' }} {{ observationDate }}. {{ de ? 'Die Farben zeigen diesen damaligen Prüfstand, keinen aktuellen Live-Bestand.' : 'Colours show that past observation, not the current live collection.' }}</p>
     <label class="search-field">{{ de ? 'Name, Serie oder öffentliche ID' : 'Name, series or public ID' }}<input ref="searchInput" v-model="query" type="search" maxlength="200" :placeholder="de ? 'Zum Beispiel Mario oder Link …' : 'For example Mario or Link …'" /></label>
     <div class="catalogue-tools">
+      <label class="game-filter">{{ de ? 'Nach Spiel filtern' : 'Filter by game' }}<select v-model="gameId">
+        <option value="">{{ de ? 'Alle Spiele und Figuren' : 'All games and figures' }}</option>
+        <option v-if="gameId && !selectedGame" :value="gameId">{{ gameId }} · {{ de ? 'kein aktueller Spielhinweis' : 'no current game guide' }}</option>
+        <option v-for="game in gameGuides" :key="game.id" :value="game.id">{{ game.title }} · {{ game.platform }}</option>
+      </select></label>
       <label class="presence-filter">{{ de ? 'Bestand filtern' : 'Filter collection' }}<select v-model="presenceFilter">
         <option value="">{{ de ? 'Alle Einträge' : 'All entries' }}</option>
+        <option value="observed">{{ de ? 'Auf dem Gerät gefunden (inkl. Prüfhinweisen)' : 'Found on device (including inspection notes)' }}</option>
         <option value="present">{{ de ? 'Vorhanden' : 'Present' }}</option>
         <option value="missing">{{ de ? 'Nicht gefunden' : 'Not found' }}</option>
         <option value="attention">{{ de ? 'Prüfhinweis' : 'Needs inspection' }}</option>
@@ -21,6 +27,10 @@
       </select></label>
       <label class="gallery-switch"><input v-model="showImages" type="checkbox" />{{ de ? 'Bilder anzeigen' : 'Show images' }}</label>
     </div>
+    <template v-if="selectedGame">
+      <GameGuide :game="selectedGame" :de="de" />
+      <p class="presence-scope">{{ de ? 'Die Auswahl enthält Katalog-IDs mit belegter Spielzuordnung. Mit dem Bestandsfilter kannst du die Treffer auf dein Gerät eingrenzen.' : 'This selection lists catalogue IDs with a documented game association. Use the collection filter to show matches from your device.' }}</p>
+    </template>
     <p class="gallery-note">{{ de ? 'Bilder sind optional und werden nur für die aktuelle Seite von GitHub geladen. Dabei werden die öffentliche Figuren-ID und deine IP-Adresse sichtbar; keine Gerätedaten.' : 'Images are optional and load from GitHub for the current page only. This exposes the public figure ID and your IP address, not device data.' }}</p>
     <details class="filter-details">
       <summary>{{ de ? 'Filter' : 'Filters' }}<span v-if="activeFilters" class="filter-count">{{ activeFilters }}</span></summary>
@@ -53,7 +63,7 @@
     </details>
     <p v-if="preferenceMessage" role="status">{{ preferenceMessage[de ? 0 : 1] }}</p>
     <button v-if="query || activeFilters" type="button" class="reset-filters" @click="resetFilters">{{ de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters' }}</button>
-    <FigureAnnouncements v-if="announcements.length" :groups="announcements" :de="de" :expanded="Boolean(query.trim() || series)" />
+    <FigureAnnouncements v-if="announcements.length" :groups="announcements" :de="de" :expanded="Boolean(query.trim() || series || gameId)" />
     <div v-if="selectedId" ref="detailAnchor" tabindex="-1" class="selected-detail">
       <div class="selection-toolbar"><span>{{ de ? 'Ausgewählte Figur' : 'Selected figure' }}</span><button type="button" @click="closeDetails">{{ de ? 'Details schließen' : 'Close details' }}</button></div>
       <FigureDetails :key="selectedId" :id="selectedId" :catalogue-entry="data.entries.find(entry=>entry.id===selectedId)" :image-commit="data.commit" />
@@ -99,6 +109,8 @@ import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import { publicFigureImage } from '../lib/figure-info.js';
 import { announcementGroups } from '../data/announced-figures.js';
+import { gameGuides } from '../data/game-guides.js';
+import GameGuide from './GameGuide.vue';
 import FigureDownload from './FigureDownload.vue';
 import FigureLinkSettings from './FigureLinkSettings.vue';
 import { CATALOGUE_PREFERENCES_KEY, FILTER_NAME_LIMIT, readCataloguePreferences, updateCataloguePreferences } from '../lib/catalogue-preferences.js';
@@ -163,11 +175,13 @@ function presenceLabel(value) {
   return de.value ? '· Bestand nicht bestätigt' : '· Presence unconfirmed';
 }
 const query = ref(''), series = ref(''), kind = ref(''), knownOnly = ref(false), presenceFilter = ref(''), page = ref(1);
+const gameId = ref('');
+const selectedGame = computed(() => gameGuides.find(game => game.id === gameId.value));
 const favoritesOnly = ref(false), newFilterName = ref(''), selectedFilterName = ref('');
 const preferences = ref({ favorites: [], filters: [] }), preferenceMessage = ref(null);
 const favoriteSet = computed(() => new Set(preferences.value.favorites));
 const selectedPreset = computed(() => preferences.value.filters.find(row => row.name === selectedFilterName.value));
-const currentCriteria = computed(() => ({ query:query.value, series:series.value, kind:kind.value, presence:presenceFilter.value, knownOnly:knownOnly.value, favoritesOnly:favoritesOnly.value }));
+const currentCriteria = computed(() => ({ query:query.value, series:series.value, kind:kind.value, presence:presenceFilter.value, knownOnly:knownOnly.value, favoritesOnly:favoritesOnly.value, game:gameId.value }));
 function reloadPreferences(event) {
   if (event && event.key !== null && event.key !== CATALOGUE_PREFERENCES_KEY) return;
   try {
@@ -210,6 +224,7 @@ function applyPreset() {
   const preset = selectedPreset.value;
   if (!preset) return;
   const value = preset.criteria;
+  gameId.value = value.game || '';
   query.value = value.query; series.value = value.series; kind.value = value.kind; presenceFilter.value = value.presence;
   favoritesOnly.value = value.favoritesOnly; knownOnly.value = value.knownOnly;
   page.value = 1; selectedId.value = null;
@@ -225,16 +240,16 @@ function imageFailed(id, event) {
 }
 const selectedId = ref(null), detailAnchor = ref(null), searchInput = ref(null), resultAnchor = ref(null);
 let selectedTrigger = null;
-const activeFilters = computed(() => Number(Boolean(series.value)) + Number(Boolean(kind.value)) + Number(knownOnly.value) + Number(Boolean(presenceFilter.value)) + Number(favoritesOnly.value));
+const activeFilters = computed(() => Number(Boolean(series.value)) + Number(Boolean(kind.value)) + Number(knownOnly.value) + Number(Boolean(presenceFilter.value)) + Number(favoritesOnly.value) + Number(Boolean(gameId.value)));
 const announcements = computed(() => {
   if (favoritesOnly.value || knownOnly.value || presenceFilter.value || (kind.value && kind.value !== 'Figure')) return [];
   const matches = catalogueMatcher(query.value);
-  return announcementGroups.filter(group => !series.value || group.series === series.value).map(group => ({
+  return announcementGroups.filter(group => (!series.value || group.series === series.value) && (!gameId.value || group.game === gameId.value)).map(group => ({
     ...group,
     figures: group.figures.filter(figure => matches(figure.en, figure.de, group.series, figure.proposedId)),
   })).filter(group => group.figures.length);
 });
-function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; knownOnly.value = false; presenceFilter.value = ''; favoritesOnly.value = false; selectedFilterName.value = ''; preferenceMessage.value = null; }
+function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; gameId.value = ''; knownOnly.value = false; presenceFilter.value = ''; favoritesOnly.value = false; selectedFilterName.value = ''; preferenceMessage.value = null; }
 async function closeDetails() { selectedId.value = null; await nextTick(); if (selectedTrigger?.isConnected) selectedTrigger.focus?.(); else searchInput.value?.focus?.(); }
 async function selectEntry(id, event) { if(props.blocked)return; emit('select-entry',data.value.entries.find(entry=>entry.id===id)); selectedTrigger = event?.currentTarget || null; selectedId.value = id; await nextTick(); detailAnchor.value?.focus?.(); }
 const today = new Date().toISOString().slice(0, 10);
@@ -244,9 +259,11 @@ const seriesOptions = computed(() => [...new Set([
 ])].sort());
 const typeOptions = computed(() => [...new Set(data.value.entries.map(entry => entry.type))].sort());
 const filtered = computed(() => filterCatalogue(data.value.entries, { query: query.value, series: series.value, kind: kind.value, knownOnly: knownOnly.value }).filter(entry => {
+  if (gameId.value && !selectedGame.value?.ids.includes(entry.id)) return false;
   if (favoritesOnly.value && !favoriteSet.value.has(entry.id)) return false;
   if (!presenceFilter.value) return true;
   const state = presenceFor(entry.id).state;
+  if (presenceFilter.value === 'observed') return state === 'present' || state === 'attention';
   return presenceFilter.value === 'unconfirmed' ? state === 'unknown' || state === 'stale' : state === presenceFilter.value;
 }));
 const result = computed(() => cataloguePage(filtered.value, page.value));
@@ -258,7 +275,7 @@ async function changePage(nextPage) {
   resultAnchor.value?.focus?.({ preventScroll: true });
   resultAnchor.value?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
 }
-watch([query, series, kind, knownOnly, presenceFilter, favoritesOnly], () => { page.value = 1; selectedId.value = null; });
+watch([query, series, kind, gameId, knownOnly, presenceFilter, favoritesOnly], () => { page.value = 1; selectedId.value = null; });
 watch(() => result.value.page, value => { page.value = value; });
 watch([showImages, () => data.value.commit, () => result.value.page], () => { failedImages.value = new Set(); });
 </script>
@@ -269,6 +286,7 @@ watch([showImages, () => data.value.commit, () => result.value.page], () => { fa
 .catalogue-heading > *, .entries li { min-width:0; }
 .catalogue .count-badge { max-width:100%; white-space:normal; box-sizing:border-box; }
 .catalogue input, .catalogue select { min-width:0; }
+.game-filter { display:grid; gap:6px; flex:1 1 245px; max-width:380px; color:#465f74; font-size:.8rem; }
 .catalogue { border:1px solid #d3dee8; border-radius:16px; padding:20px; margin:16px 0; background:#f5f8fb; color:#193247; }
 .presence-legend { display:flex; flex-wrap:wrap; gap:8px 14px; font-size:.75rem; line-height:1.5; color:#526575; padding:10px 12px; border:1px solid #d9e3ec; border-radius:8px; background:white; }
 .legend-present { color:#176c41; } .legend-attention { color:#92500a; } .legend-missing { color:#aa3030; }

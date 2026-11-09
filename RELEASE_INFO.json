@@ -1,14 +1,14 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-08",
-  "version": "2.22.0-DE3.67",
-  "counter": 639,
+  "publication_date": "2026-11-09",
+  "version": "2.22.0-DE3.68",
+  "counter": 640,
   "board": "LCD",
-  "web_version": "3.44.0",
+  "web_version": "3.45.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
-  "application_sha256": "db1ec1258c05aacf6fcdea83d29ea5962424d50c56d28b6c7b249a7f0766a236",
+  "ota_sha256": "891762b78ffbd6c7b30b4719e3539a9007b58918aea4ed19397a5f44b1ebc8fc",
+  "application_sha256": "0cc4aefa5de41fd7b11d8f356ab545414381bdd22c88a5fbdeb53b2f9eb37f02",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -38,7 +38,7 @@
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
   "host_firmware_suites": 149,
-  "evidence": "docs/validation/DE3_67.json",
+  "evidence": "docs/validation/DE3_68.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -51,13 +51,13 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "device_readback_passed": true,
-  "device_validation_pending_scope": "Physical check of the bottom scrollbar position on this release.",
-  "previous_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "production_source_id_sha256": "b7ed89791ca1dc1558739ebdb56c4ee748bfa7cf9a368a5571b527040d517640",
+  "device_readback_passed": false,
+  "device_validation_pending_scope": "Physical check of the LCD launcher selection after leaving an app.",
+  "previous_device_readback_evidence": "docs/RELEASE_DE3_67.md",
+  "production_source_id_sha256": "01b48c1325a96242a240e7eb4bfa43122807527862597281cdf86a81167dc473",
   "tested_bootloader": {
     "name": "Z19",
     "counter": 19,
@@ -65,7 +65,7 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Z19 region SHA-256 and S112 7.3.0 were confirmed during the readback of App639 on one LCD unit."
+    "qualification": "The Z19/S112 installation was last confirmed on hardware running App639. App640 is checked against the same Z19 signing key."
   },
   "web_host_test_scope": "Local source suites and production Chrome checks for root and Pages. Historical physical LCD and backup observations are documented separately.",
   "previous_web_full_suite": {
@@ -79,12 +79,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.43.1",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1",
-    "evidence": "docs/validation/WEB3_43_1.json"
+    "version": "3.44.0",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0",
+    "evidence": "docs/validation/WEB3_44_0.json"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3440",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3450",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -104,10 +104,10 @@
     "firmware_downloads": {
       "bundled": [
         "DE3.65/637",
-        "DE3.67/639"
+        "DE3.68/640"
       ],
       "stable": "DE3.65/637",
-      "prerelease": "DE3.67/639"
+      "prerelease": "DE3.68/640"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -122,9 +122,10 @@
     "web_3_42_2": "Compact figure-import and firmware-update shortcuts. The file manager links its source and review ZIPs. Versioned Pages URLs and release documentation provide both archives for web 3.42.2 and 3.42.1.",
     "web_3_43_0": "Optional restartable folder backups, per-browser catalogue favourites and named filters, JSON link import and export, 180-degree LCD PNG rotation, translated preparation errors, lazy ZIP reader and DE3.67/639 in the LCD test channel.",
     "web_3_43_1": "The local LittleFS capacity check shows DE3.67 with application counter 639 as the latest verified firmware. This storage profile covers DE3.55 through DE3.67.",
-    "web_3_44_0": "When you open the file manager, it selects the first supported language in your browser’s preference list. Use the language menu to choose a fixed language or return to automatic selection."
+    "web_3_44_0": "When you open the file manager, it selects the first supported language in your browser’s preference list. Use the language menu to choose a fixed language or return to automatic selection.",
+    "web_3_45_0": "Game compatibility filters, owned figures, dated announcements and a two-way folder comparison. Optional local device nicknames on supported Web Bluetooth sessions."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_68_640_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -135,11 +136,11 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_44_0.json",
-  "device_readback_evidence": "docs/RELEASE_DE3_67.md",
-  "web_device_readback_pending_scope": "Windows and Android verification using the released 3.44.0 web bundle. The earlier RC backup module was tested on Windows with an LCD device, a BLE read bridge and a Chrome process restart.",
-  "web_host_tests": 1327,
+  "web_evidence": "docs/validation/WEB3_45_0.json",
+  "device_readback_evidence": null,
+  "web_device_readback_pending_scope": "New folder comparison and game filter on a real device.",
+  "web_host_tests": 1337,
   "web_root_production_tests": 22,
   "web_pages_production_tests": 22,
-  "web_browser_checks_per_build": 596
+  "web_browser_checks_per_build": 600
 }

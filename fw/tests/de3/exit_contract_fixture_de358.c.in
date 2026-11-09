@@ -172,9 +172,9 @@ static void fixture_event(mini_app_inst_t *inst, mini_app_event_t *event) {
     ++app_events[inst->p_app->id];
 }
 static const mini_app_t test_apps[] = {
-    {.id=MINI_APP_ID_DESKTOP,.run_cb=fixture_run,.kill_cb=fixture_kill,.hibernate_enabled=true},
+    {.id=MINI_APP_ID_DESKTOP,.run_cb=fixture_run,.kill_cb=fixture_kill,.sys=true,.hibernate_enabled=true},
     {.id=MINI_APP_ID_BLE,.run_cb=fixture_run,.kill_cb=fixture_kill},
-    {.id=MINI_APP_ID_STATUS_BAR,.run_cb=fixture_run,.kill_cb=fixture_kill,.deamon=true,
+    {.id=MINI_APP_ID_STATUS_BAR,.run_cb=fixture_run,.kill_cb=fixture_kill,.sys=true,.deamon=true,
      .on_event_cb=fixture_event},
     {.id=MINI_APP_ID_CHAMELEON,.run_cb=fixture_run,.kill_cb=fixture_kill,.hibernate_enabled=true,
      .prepare_exit_cb=fixture_prepare,.cancel_exit_cb=fixture_cancel,.on_event_cb=fixture_event},

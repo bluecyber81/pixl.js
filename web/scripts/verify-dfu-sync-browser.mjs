@@ -49,13 +49,13 @@ try {
   assert.equal(await page.title(), 'Allmiibo Dateimanager ' + webVersion);
   await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
   const finalFile = 'Allmiibo_LCD_DE3_65_637_NUR_APP.zip';
-  const previewFile = 'Allmiibo_LCD_DE3_67_639_NUR_APP.zip';
+  const previewFile = 'Allmiibo_LCD_DE3_68_640_NUR_APP.zip';
   const update = page.locator('.firmware-packages');
-  for (const [file, version, counter] of [[finalFile, 'DE3.65', 637], [previewFile, 'DE3.67', 639]]) {
+  for (const [file, version, counter] of [[finalFile, 'DE3.65', 637], [previewFile, 'DE3.68', 640]]) {
     const row = update.locator('.package').filter({ has: page.locator('strong', { hasText: version }) });
     assert.equal(await row.locator('a[download]').getAttribute('href'), base + 'firmware/' + file);
     assert.ok((await row.innerText()).includes('Zähler ' + counter));
-    if (counter === 639) assert.match(await row.innerText(), /Testversion/);
+    if (counter === 640) assert.match(await row.innerText(), /Testversion/);
     checks.push({ feature:'listed application available from Update', version, counter });
   }
   for (const lang of ['de_DE','en']) {
@@ -180,6 +180,52 @@ try {
       checks.push({ lang, code, text, reads:0 });
     }
   }
+  for (const [lang, onlyDevice, different] of [['de_DE','Nur auf dem Gerät','Inhalt verschieden'], ['en','Device only','Different contents']]) {
+    await page.evaluate(async lang => {
+      const { createSyncPlan } = await import('/parser/sync-plan.js');
+      const { memoryVfs, localFile, metadata } = await import('/fixtures/memory-vfs.mjs');
+      const vfs = memoryVfs();
+      vfs.nodes.set('E:/tags/series', {type:1, meta:metadata()});
+      vfs.put('E:/tags/series/remote.bin', [1]);
+      vfs.put('E:/tags/shared.bin', [2]);
+      const app = document.querySelector('#app')._vnode.component.proxy;
+      app.$i18n.locale = lang;
+      app.syncRoot = 'E:/tags'; app.syncFilter = 'all'; app.syncPage = 1;
+      app.syncPlan = await createSyncPlan({...vfs.api, rootPath:app.syncRoot, deviceKey:'synthetic', files:[localFile('shared.bin',[3])]});
+      app.syncDialog = true;
+    }, lang);
+    const filters = page.locator('.sync-filter:visible');
+    await filters.getByRole('button', {name:onlyDevice + ' (1)', exact:true}).click();
+    const rows = page.locator('.sync-plan:visible .sync-entry');
+    assert.equal(await rows.count(), 1);
+    assert.match(await rows.innerText(), /series\/remote\.bin/);
+    assert.equal(await rows.locator('input[type="checkbox"]').count(), 0);
+    assert.ok(await rows.getByRole('button', {name:lang === 'de_DE' ? 'Geräteversion speichern' : 'Save device copy'}).count());
+    await filters.getByRole('button', {name:different + ' (1)', exact:true}).click();
+    assert.match(await rows.innerText(), /shared\.bin/);
+    assert.equal(await rows.locator('input[type="checkbox"]').count(), 1);
+    await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.invalidate_sync());
+    checks.push({lang, feature:'mobile folder comparison lists nested device-only and different-content paths, filters and separate save action'});
+    await page.evaluate(() => {
+      const app = document.querySelector('#app')._vnode.component.proxy;
+      app.connected = true; app.deviceNickname = 'Family 🦊'; app.nicknameDraft = app.deviceNickname;
+      app.nicknameReady = true; app.show_workspace('device');
+    });
+    await page.locator('.device-nickname-form:visible').waitFor();
+    assert.equal(await page.locator('#device-nickname').inputValue(), 'Family 🦊');
+    assert.ok((await page.locator('.quick-status .connection-pill').innerText()).includes('Family 🦊'));
+    assert.equal(await page.locator('.device-card .device-name').textContent(), 'Family 🦊');
+    await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
+    const updateName = page.locator('.device-nickname-context:visible');
+    assert.ok((await updateName.innerText()).includes(lang === 'de_DE' ? 'Verbundenes Gerät: Family 🦊' : 'Connected device: Family 🦊'));
+    await page.evaluate(() => {
+      const app = document.querySelector('#app')._vnode.component.proxy;
+      app.connected = false; app.clear_device_nickname();
+    });
+    assert.equal(await page.locator('.device-nickname-context').count(), 0);
+    assert.equal(await page.locator('.connected-nickname').count(), 0);
+    checks.push({lang, feature:'locally named device visible in mobile status, sidebar, diagnostic editor and before DFU, cleared on disconnect'});
+  }
   await page.addInitScript(() => {
     const state = window.probe = { requests:0, releases:0, chooserActive:false };
     Object.defineProperty(navigator, 'bluetooth', { configurable:true, value:{ requestDevice(){} } });
@@ -196,17 +242,17 @@ try {
   assert.ok(await page.locator('#button').isDisabled());
   assert.equal(await page.locator('#bundled option').count(), 3);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65/);
-  assert.match(await page.locator('#bundled option[value="de3.67-lcd-app"]').innerText(), /DE3\.67.*Testversion/);
+  assert.match(await page.locator('#bundled option[value="de3.68-lcd-app"]').innerText(), /DE3\.68.*Testversion/);
   checks.push({ feature:'stable and preview releases in local DFU chooser and idle device selector' });
   if (process.env.ALLMIIBO_CANDIDATE_OTA) {
     await page.locator('#file').setInputFiles(process.env.ALLMIIBO_CANDIDATE_OTA);
-    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previewFile ? 639 : 637;
+    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previewFile ? 640 : 637;
     await page.waitForFunction(counter => document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
     assert.match(await page.locator('#package-target').innerText(), /Hardwarefeld 52.*0x0126/);
     assert.equal(await page.evaluate(() => probe.requests), 0);
     checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.67-lcd-app', 639]]) {
+  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.68-lcd-app', 640]]) {
     await page.locator('#bundled').selectOption(id);
     await page.locator('#load-bundled').click();
     await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);

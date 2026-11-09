@@ -9,7 +9,8 @@ Keep a current backup. Choose the application for the release you intend to run.
 | LCD application | Release and intended use |
 | --- | --- |
 | **DE3.65 / 637** | [Stable release and checksums](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65). Verified on an LCD with Z19 and Nordic S112 7.3.0, including Bluetooth readback, scrolling, NFC and wake. |
-| **DE3.67 / 639** | [LCD test release and signed app](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67). All 54 German game notes across 63 associations and an adjusted final scrollbar pixel. [Device test steps](RELEASE_DE3_67.md) · [Build instructions](BUILD_DE3_67.md). Physical LCD and QR checks are pending. |
+| **DE3.68 / 640** | [LCD test release and signed app](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68). Exiting an app selects its icon again on the main menu. A cold start selects the first visible app. |
+| **DE3.67 / 639** | [Earlier LCD test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67). All 54 German game notes across 63 associations and an adjusted final scrollbar pixel. German hints and QR scanning were confirmed on an LCD Allmiibo. [Device checks](RELEASE_DE3_67.md) · [Build instructions](BUILD_DE3_67.md). |
 | **DE3.66 / 638** | [Test release and signed application](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66). Adds display capture and on-device hashing for backup resume. [Build and test evidence](validation/DE3_66.json). [LCD capture, interrupted backup and owner checks](validation/DE3_66_LCD_READBACK.md). |
 
 1. Open the [Web DFU page](https://bluecyber81.github.io/pixl.js/dfu/web.html) and select the intended application. On Android you can also select the signed `NUR_APP.zip` from that release in nRF Device Firmware Update. Keep the ZIP intact.

@@ -1,5 +1,11 @@
 # Allmiibo-Dateimanager im Browser
 
+<a id="dateimanager-3450"></a>
+
+## Dateimanager 3.45.0 · LCD DE3.68 / 640 · 2026-11-09
+
+Im Figurenkatalog kannst du ein Spiel auswählen und die passenden Figuren aus deiner Sammlung anzeigen. Unter Sicherung zeigt der Ordnervergleich auch die Dateien, die nur auf dem Gerät liegen. Die LCD-Testversion DE3.68 merkt sich beim Zurückkehren ins Hauptmenü die zuletzt geöffnete App. Im Dateimanager lässt sich jedem verbundenen Gerät ein eigener Name für diesen Browser geben. Beim Gerätewechsel erscheint der jeweils zugeordnete Name. [DE3.68 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip) · [Web 3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0)
+
 **[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)** ·
 [Anleitung für Firmware, Bootloader und LittleFS](https://bluecyber81.github.io/pixl.js/guide/index.html) ·
 [Firmware übertragen](https://bluecyber81.github.io/pixl.js/dfu/web.html) ·

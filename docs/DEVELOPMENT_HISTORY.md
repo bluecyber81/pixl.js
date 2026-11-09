@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.45.0 · LCD DE3.68 / 640 · 2026-11-09
+
+Choose a game in the catalogue to see matching figures from your collection. In Backup, the folder comparison also lists files present only on the device. On the LCD, test firmware DE3.68 remembers the last opened app when returning to the main menu. [DE3.68 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip) · [Web 3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0)
+
 ## File manager 3.44.0 · 8 November 2026
 
 When you open the file manager, it selects the first supported language in your browser’s preference list. Use the language menu to choose a fixed language or return to automatic selection.

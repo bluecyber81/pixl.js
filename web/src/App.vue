@@ -46,9 +46,9 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.44.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.45.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
-      <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}</span>
+      <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
       <span v-else class="quick-location">{{ $t(demoMode ? 'workflow.previewShort' : 'workflow.connectHint') }}</span></div>
       <span v-if="quickFreeSpace" class="quick-storage">{{ statusDriveInfo.label }}: {{ $t('workflow.freeSpace',{bytes:quickFreeSpace}) }}</span>
@@ -76,7 +76,7 @@
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
       <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
-      <DeviceStorageCard :connected="connected" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" @upload="on_btn_upload" />
+      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" @upload="on_btn_upload" />
     </nav>
     <div class="workspace-body">
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
@@ -266,6 +266,7 @@
     <details v-show="activeWorkspace === 'update'" class="workspace-panel" ref="updateWorkspace" id="update-workspace">
       <summary>{{ $t('workflow.updateTitle') }}<span>{{ $t('workflow.updateBrief') }}</span></summary>
       <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
+      <p v-if="connected && deviceNickname" class="device-nickname-context"><strong>{{ $t('info.nicknameDevice', {name:deviceNickname}) }}</strong> {{ $t('info.nicknameDfu') }}</p>
       <a class="guide-link" :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
               :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
@@ -277,12 +278,20 @@
     <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview">
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
+      <form v-if="connected" class="device-nickname-form" @submit.prevent="save_device_nickname()">
+        <label for="device-nickname">{{ $t('info.nicknameLabel') }}</label>
+        <input id="device-nickname" v-model="nicknameDraft" :disabled="!nicknameReady || disconnecting" autocomplete="off" :placeholder="$t('info.nicknameExample')" aria-describedby="device-nickname-hint">
+        <button type="submit" :disabled="!nicknameReady || disconnecting || !nicknameDraft.trim() || nicknameDraft === deviceNickname">{{ $t('info.nicknameSave') }}</button>
+        <button v-if="deviceNickname" type="button" :disabled="!nicknameReady || disconnecting" @click="save_device_nickname(true)">{{ $t('info.nicknameRemove') }}</button>
+        <small id="device-nickname-hint">{{ $t('info.nicknameHint') }}</small>
+        <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
+      </form>
       <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <DisplayPhoto :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.44.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.45.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -437,20 +446,26 @@
     <el-dialog :title="$t('info.syncOpen')" v-model="syncDialog" width="min(780px, 94vw)" :before-close="close_sync">
       <p>{{ $t('info.syncNotice') }}</p>
       <p>{{ syncRoot }}</p>
+      <p v-if="syncFolderName">{{ $t(syncFolderContents ? 'info.syncContentsHint' : 'info.syncUploadFolderHint', {folder: syncFolderName}) }}</p>
       <label class="sync-picker">{{ $t('info.syncFiles') }} <input type="file" multiple :disabled="busy" @change="on_sync_files"></label>
-      <label class="sync-picker">{{ $t('info.syncFolder') }} <input type="file" webkitdirectory multiple :disabled="busy" @change="on_sync_files"></label>
+      <label class="sync-picker">{{ $t('info.syncFolder') }} <input type="file" webkitdirectory multiple :disabled="busy" @change="on_sync_files($event, true)"></label>
       <p>{{ $t('info.syncSelectedFiles', { count: syncFileCount }) }}</p>
       <el-button @click="build_sync_plan" :disabled="!connected || busy || !syncFileCount">{{ $t('info.syncCompare') }}</el-button>
       <section v-if="syncPlan" class="sync-plan">
-        <p>{{ $t('info.syncSummary', syncPlan.summary) }}</p>
-        <p>{{ $t('info.syncKeepDevice', { count: syncPlan.deviceOnly.length }) }}</p>
+        <div class="sync-filter" role="group" :aria-label="$t('info.syncShow')">
+          <button v-for="(count, key) in syncCounts" :key="key" type="button" :aria-pressed="syncFilter === key"
+            @click="syncFilter = key; syncPage = 1">{{ $t('info.compare_' + key) }} ({{ count }})</button>
+        </div>
         <div class="selection-actions"><button type="button" :disabled="busy" @click="select_plan('sync',true)">{{ $t('workflow.onlyNew') }}</button><button type="button" :disabled="busy" @click="select_plan('sync',false)">{{ $t('workflow.clearSelection') }}</button><span>{{ $t('workflow.selectedCount',{count:syncSelected.length}) }}</span></div>
         <div class="sync-entries">
-          <label v-for="entry in syncPagedEntries" :key="entry.relativePath" class="sync-entry">
-            <input v-if="entry.status === 'add' || entry.status === 'change'" type="checkbox" :value="entry.targetPath" v-model="syncSelected" :disabled="busy">
-            <span>{{ $t('info.sync_' + entry.status) }} · {{ entry.relativePath }}</span>
+          <div v-for="entry in syncPagedEntries" :key="entry.targetPath" class="sync-entry">
+            <label><input v-if="entry.status === 'add' || entry.status === 'change'" type="checkbox" :value="entry.targetPath" v-model="syncSelected" :disabled="busy">
+              <span>{{ $t('info.compare_' + entry.comparison) }} · {{ entry.relativePath }}</span>
+            </label>
+            <button v-if="entry.comparison === 'deviceOnly' || entry.comparison === 'change'" type="button" :disabled="busy || !connected" @click="download_sync_entry(entry.targetPath)">{{ $t('info.syncSaveDevice') }}</button>
             <small v-if="entry.reason">{{ plan_reason(entry.reason) }}</small>
-          </label>
+          </div>
+          <p v-if="!syncPagedEntries.length">{{ $t('info.syncEmpty') }}</p>
         </div>
         <div class="sync-pages"><button type="button" @click="syncPage--" :disabled="busy || syncPage <= 1">{{ $t('tools.previous') }}</button>
           <span>{{ $t('tools.page', {page:syncPage,total:syncPageCount}) }}</span>
@@ -507,6 +522,7 @@
 
 <script>
 import DeviceStorageCard from "./components/DeviceStorageCard.vue"
+import { deviceNicknameStorageKey, normalizeDeviceNickname } from "./lib/device-nickname.js"
 import { storageUsage, storageAmount } from "./lib/device-storage-display.js"
 import { defineAsyncComponent } from "vue"
 import * as pixl from "./lib/pixl.ble"
@@ -551,7 +567,7 @@ export default {
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
-      syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1,
+      syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
       collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
@@ -563,6 +579,7 @@ export default {
       table_loading: false, listingError: false, backupDriveOpenError: false,
       mutating: false, connecting: false, disconnecting: false, enteringDfu: false, pendingUploads: 0, pendingDownloads: 0,
       sessionGeneration: 0, listingGeneration: 0, firmwareVersion: "",
+      deviceNickname:'', nicknameDraft:'', nicknameReady:false, nicknameStatus:'',
       current_dir: "",
       upload_diag_visible: false,
       table_selection: [],
@@ -618,8 +635,23 @@ export default {
     connectionDisconnectLocked() { return this.collectionWriting || this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
     zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
     zipPagedEntries() { return (this.zipPlan?.entries || []).slice((this.zipPage - 1) * 100, this.zipPage * 100); },
-    syncPageCount() { return Math.max(1,Math.ceil((this.syncPlan?.entries.length || 0)/100)); },
-    syncPagedEntries() { return (this.syncPlan?.entries || []).slice((this.syncPage-1)*100,this.syncPage*100); },
+    syncOverview() {
+      if (!this.syncPlan) return [];
+      const {entries, deviceOnly, rootPath} = this.syncPlan;
+      const prefix = rootPath.endsWith('/') ? rootPath : rootPath + '/';
+      const remoteRows = deviceOnly.map(({path, size}) => ({
+        status: 'deviceOnly', comparison: 'deviceOnly', targetPath: path, relativePath: path.slice(prefix.length), size
+      }));
+      return [...entries, ...remoteRows].sort((a,b) => a.relativePath.localeCompare(b.relativePath));
+    },
+    syncCounts() {
+      const counts = {all:this.syncOverview.length, add:0, deviceOnly:0, change:0, same:0, blocked:0};
+      for (const entry of this.syncOverview) ++counts[entry.comparison];
+      return counts;
+    },
+    syncFilteredEntries() { return this.syncFilter === 'all' ? this.syncOverview : this.syncOverview.filter(entry => entry.comparison === this.syncFilter); },
+    syncPageCount() { return Math.max(1, Math.ceil(this.syncFilteredEntries.length / 100)); },
+    syncPagedEntries() { return this.syncFilteredEntries.slice((this.syncPage - 1) * 100, this.syncPage * 100); },
     filteredRows() { return filterRows(this.tableData, this.searchQuery, this.typeFilter); },
     nameCollator() { return new Intl.Collator(this.language.replace('_', '-'), { numeric: true, sensitivity: 'base' }); },
     sortedRows() {
@@ -1078,14 +1110,24 @@ export default {
       this.workflowCancelling = false; this._syncController?.abort(); this._syncController = null; this._syncFiles = [];
       this._syncGeneration = null; this._syncDeviceKey = null;
       this.syncDialog = false; this.syncing = false; this.syncFileCount = 0;
+      this.syncFolderName = ''; this.syncFolderContents = false;
       this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
     },
-    on_sync_files(event) {
+    on_sync_files(event, folderContents = false) {
       if (!this.connected || !this.syncDialog || this.busy) return;
       const files = Array.from(event.target.files || []); event.target.value = '';
-      if (files.length > 4096) { this.show_transfer_error(new Error(this.$t('info.syncTooMany'))); event.target.value = ''; return; }
-      this._syncFiles = files; this.syncFileCount = files.length;
       this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
+      this._syncFiles = []; this.syncFileCount = 0; this.syncFolderName = ''; this.syncFolderContents = false;
+      if (files.length > 4096) { this.show_transfer_error(new Error(this.$t('info.syncTooMany'))); return; }
+      // The folder picker includes its own name. The comparison pairs folder contents,
+      // whereas the existing upload entry point intentionally transfers the whole folder.
+      this._syncFiles = folderContents ? files.map(file => {
+        const path = file.webkitRelativePath || file.name;
+        return {file, relativePath: path.slice(path.indexOf('/') + 1)};
+      }) : files;
+      this.syncFileCount = files.length;
+      this.syncFolderName = files[0]?.webkitRelativePath?.split('/')[0] || '';
+      this.syncFolderContents = folderContents;
     },
     async build_sync_plan() {
       if (!this.connected || this.busy || !this.syncFileCount) return;
@@ -1101,7 +1143,7 @@ export default {
           }});
         this.assert_session(generation);
         this._syncGeneration = generation; this._syncDeviceKey = deviceKey; this.syncPlan = plan;
-        this.syncPage=1; this.syncSelected = plan.entries.filter(entry=>entry.status==='add').map(entry=>entry.targetPath);
+        this.syncPage=1; this.syncFilter='all'; this.syncSelected = plan.entries.filter(entry=>entry.status==='add').map(entry=>entry.targetPath);
         this.syncStatus = this.$t('info.syncPlanReady');
       } catch(error) {
         if (this.session_current(generation)) {
@@ -1112,6 +1154,14 @@ export default {
         if (this._syncController === controller) this._syncController = null;
         if (generation === this.sessionGeneration) { this.workflowCancelling=false; this.syncing = false; this.set_transfer(null); }
       }
+    },
+    download_sync_entry(targetPath) {
+      if (!this.connected || this.busy || !this.syncPlan || this._syncGeneration !== this.sessionGeneration ||
+          this._syncDeviceKey !== pixl.get_device_key?.()) return;
+      const entry = this.syncOverview.find(row => row.targetPath === targetPath);
+      if (!entry || (entry.comparison !== 'deviceOnly' && entry.comparison !== 'change')) return;
+      const size = entry.comparison === 'deviceOnly' ? entry.size : entry.expected.size;
+      return this.download_device_file(entry.targetPath, entry.relativePath.split('/').pop(), size, true);
     },
     async run_sync() {
       if (!this.connected || this.busy || !this.syncPlan || !this.syncSelected.length) return;
@@ -1581,6 +1631,36 @@ export default {
         this.connecting = true; this.connBtnText = this.$t('conn.connecting'); pixl.connect();
       }
     },
+    clear_device_nickname() {
+      this._nicknameBinding = null; this.deviceNickname = ''; this.nicknameDraft = '';
+      this.nicknameReady = false; this.nicknameStatus = '';
+    },
+    async load_device_nickname() {
+      this.clear_device_nickname();
+      const generation = this.sessionGeneration, id = pixl.get_device_key?.();
+      const current = () => this.session_current(generation) && pixl.get_device_key?.() === id;
+      if (!id) { this.nicknameStatus = 'nicknameUnavailable'; return; }
+      try {
+        const key = await deviceNicknameStorageKey(id);
+        if (!current()) return;
+        if (!key) { this.nicknameStatus = 'nicknameUnavailable'; return; }
+        const name = normalizeDeviceNickname(window.localStorage.getItem(key)) || '';
+        this._nicknameBinding = {generation, id, key}; this.deviceNickname = name;
+        this.nicknameDraft = name; this.nicknameReady = true;
+      } catch { if (current()) this.nicknameStatus = 'nicknameUnavailable'; }
+    },
+    save_device_nickname(remove = false) {
+      const binding = this._nicknameBinding;
+      if (!binding || this.disconnecting || !this.session_current(binding.generation) || binding.id !== pixl.get_device_key?.()) return;
+      const name = remove ? '' : normalizeDeviceNickname(this.nicknameDraft);
+      if (!remove && !name) { this.nicknameStatus = 'nicknameInvalid'; return; }
+      try {
+        if (remove) window.localStorage.removeItem(binding.key);
+        else window.localStorage.setItem(binding.key, name);
+        this.deviceNickname = name; this.nicknameDraft = name;
+        this.nicknameStatus = remove ? 'nicknameRemoved' : 'nicknameSaved';
+      } catch { this.nicknameStatus = 'nicknameUnavailable'; }
+    },
     async on_ble_connected() {
       this.backupDriveOpenError = false;
       this.collectionObservation=null;this.collectionReport=null;this.collectionStale=false;
@@ -1595,6 +1675,7 @@ export default {
       this.driveInfo = []; this.transferHistory = []; this.infoLoading = false;
       this.lastDfuReference = '';
       this.connected = true; this.connecting = false; this.connBtnType = 'success';
+      this.load_device_nickname();
       this.connBtnText = this.$t('conn.disconnect');
       this.$notify({ title: 'Allmiibo', type: 'success', message: this.$t('conn.consuccess'), duration: 5000 });
       try {
@@ -1607,6 +1688,7 @@ export default {
       } catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
     },
     on_ble_disconnected() {
+      this.clear_device_nickname();
       if(this.collectionStale || this.collectionWriting || this.mutating || this.pendingUploads>0 || this.syncing || this.zipBusy || this.migrationBusy)this.collectionObservation=null;
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
@@ -1652,6 +1734,7 @@ export default {
       this.connBtnText = this.$t(this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
     },
     on_ble_connect_error(error) {
+      this.clear_device_nickname();
       this.collectionObservation=null;
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
@@ -1692,7 +1775,9 @@ export default {
       const generation = this.sessionGeneration;
       let attempt;
       try {
-        await this.ask_dialog(() => this.$confirm(this.$t('dfumode.startconfirm'), this.$t('dfumode.title'), this.confirm_options()));
+        const namedDevice = this._nicknameBinding?.id === pixl.get_device_key?.() && this.deviceNickname;
+        const prompt = (namedDevice ? this.$t('info.nicknameDevice', {name:namedDevice}) + '. ' : '') + this.$t('dfumode.startconfirm');
+        await this.ask_dialog(() => this.$confirm(prompt, this.$t('dfumode.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
         attempt = { generation, timer: null };
         this._dfuAttempt = attempt; this.enteringDfu = true;
@@ -2195,6 +2280,7 @@ export default {
     this._unsubscribeLanguage = window.AllmiiboLanguage.subscribe(this.apply_language);
   },
   beforeUnmount() {
+    this.clear_device_nickname();
     this._unsubscribeLanguage?.();
     this.reset_figure_info();
     this.clear_dfu_attempt(); this.clear_migration_restart(); this._disconnectIntent = null;
@@ -2264,9 +2350,18 @@ export default {
 .catalogue-toggle { margin: 4px 0 12px; padding: 8px 12px; cursor: pointer; }
 .sync-picker { display: block; margin: 12px 0; overflow-wrap: anywhere; }
 .sync-picker input { display: block; max-width: 100%; margin-top: 6px; }
+.device-nickname-form { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:14px 0; }
+.device-nickname-form label,.device-nickname-form small,.device-nickname-form p { flex-basis:100%; }
+.device-nickname-form input { min-width:0; max-width:100%; padding:7px 9px; }
+.device-nickname-form button { min-height:36px; }
+.device-nickname-context,.connected-nickname { overflow-wrap:anywhere; }
+.sync-filter { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.sync-filter button { min-height: 38px; padding: 5px 10px; border: 1px solid #87989f; border-radius: 6px; background: #fff; color: #233e47; }
+.sync-filter button[aria-pressed="true"] { background: #135968; border-color: #135968; color: #fff; }
 .sync-entries { max-height: 360px; overflow: auto; margin: 12px 0; border: 1px solid #cad9eb; }
 .sync-entry { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-bottom: 1px solid #e1e8ef; overflow-wrap: anywhere; }
 .sync-entry span { min-width: 0; flex: 1; }
+.sync-entry label { min-width: 0; flex: 1 1 14em; }
 .sync-entry small { width: 100%; }
 .recovery-note { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
 .device-panel { margin: 16px 0; padding: 14px; border: 1px solid #cad9eb; border-radius: 8px; background: #f8fafd; }
