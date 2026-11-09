@@ -67,7 +67,7 @@ const de354={...de350,url:'/lfs-capacity-current.wasm',wasmSha256:'50466efc47783
   firmwareVersion:'2.22.0-DE3.54',applicationCounter:626,
   approvedApplications:[{firmwareVersion:'2.22.0-DE3.51',applicationCounter:623},{firmwareVersion:'2.22.0-DE3.52',applicationCounter:624},{firmwareVersion:'2.22.0-DE3.53',applicationCounter:625},{firmwareVersion:'2.22.0-DE3.54',applicationCounter:626}],
   geometry:{...de350.geometry},layout:{...de350.layout,engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'}}
-// DE3.55 through DE3.69 use this CRC/wear engine and geometry.
+// DE3.55 through DE3.70 use this CRC/wear engine and geometry.
 const currentApplications = [
   {firmwareVersion:'2.22.0-DE3.55',applicationCounter:627},
   {firmwareVersion:'2.22.0-DE3.56',applicationCounter:628},
@@ -84,6 +84,7 @@ const currentApplications = [
   {firmwareVersion:'2.22.0-DE3.67',applicationCounter:639},
   {firmwareVersion:'2.22.0-DE3.68',applicationCounter:640},
   {firmwareVersion:'2.22.0-DE3.69',applicationCounter:641},
+  {firmwareVersion:'2.22.0-DE3.70',applicationCounter:642},
 ]
 const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',
   ...currentApplications.at(-1),

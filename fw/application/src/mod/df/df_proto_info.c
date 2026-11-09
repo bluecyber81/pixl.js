@@ -91,10 +91,15 @@ static void df_proto_handler_info_ui_diagnostic(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     df_frame_t out = {0};
     OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_UI_DIAGNOSTIC, DF_STATUS_ERR);
-    if (evt->df->length == 0 && evt->df->status == 0 && evt->df->chunk == 0 &&
-        mui_nav_diag_snapshot(out.data, sizeof(out.data))) {
-        out.status = DF_STATUS_OK;
-        out.length = MUI_NAV_DIAG_SNAPSHOT_SIZE;
+    if (!evt->df->status && !evt->df->chunk) {
+        if (!evt->df->length && mui_nav_diag_snapshot(out.data, sizeof(out.data)))
+            out.length = MUI_NAV_DIAG_SNAPSHOT_SIZE;
+#ifdef MUI_FIRST_MENU_DIAG
+        else if (evt->df->length == 1 && evt->df->data[0] == 1 &&
+                 mui_menu_diag_snapshot(out.data, sizeof(out.data)))
+            out.length = MUI_MENU_DIAG_SIZE;
+#endif
+        if (out.length) out.status = DF_STATUS_OK;
     }
     df_core_send_frame(&out);
 }

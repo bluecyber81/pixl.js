@@ -2,6 +2,58 @@
 #include "app_util_platform.h"
 #include <limits.h>
 #include <string.h>
+#ifdef MUI_FIRST_MENU_DIAG
+#include "app_timer.h"
+enum {
+    MENU_ENTERED = 1u, MENU_SELECTED = 2u, MENU_RETURNED = 4u,
+    MENU_TARGET_ACTIVE = 8u, MENU_LEFT = 16u, MENU_SATURATED = 32u
+};
+static struct {
+    uint32_t launch_time; /* start tick until MENU_RETURNED, then elapsed ms */
+    uint8_t flags, app_id, center[3];
+} first_menu;
+
+static bool menu_waiting_for_selection(void) {
+    return (first_menu.flags & (MENU_ENTERED | MENU_SELECTED | MENU_LEFT)) == MENU_ENTERED;
+}
+void mui_menu_diag_enter(void) {
+    uint8_t nested;
+    app_util_critical_region_enter(&nested);
+    first_menu.flags |= MENU_ENTERED;
+    app_util_critical_region_exit(nested);
+}
+void mui_menu_diag_leave(void) {
+    uint8_t nested;
+    app_util_critical_region_enter(&nested);
+    if (menu_waiting_for_selection()) first_menu.flags |= MENU_LEFT;
+    app_util_critical_region_exit(nested);
+}
+bool mui_menu_diag_select(uint8_t app_id) {
+    uint8_t nested;
+    app_util_critical_region_enter(&nested);
+    bool first = menu_waiting_for_selection();
+    if (first) {
+        first_menu.app_id = app_id;
+        first_menu.flags |= MENU_SELECTED;
+        first_menu.launch_time = app_timer_cnt_get();
+    }
+    app_util_critical_region_exit(nested);
+    return first;
+}
+void mui_menu_diag_return(bool selected_app_active) {
+    /* Foreground only, after selection froze all IRQ counters. The elapsed
+     * duration uses the 24-bit RTC modulo interval (1024 s on this board).
+     * User idle time before selection is deliberately outside this interval. */
+    if ((first_menu.flags & (MENU_SELECTED | MENU_RETURNED)) != MENU_SELECTED) return;
+    uint32_t ticks = app_timer_cnt_diff_compute(app_timer_cnt_get(), first_menu.launch_time);
+    uint64_t ms = (uint64_t)ticks * 1000u * (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u) / APP_TIMER_CLOCK_FREQ;
+    uint8_t nested;
+    app_util_critical_region_enter(&nested);
+    first_menu.launch_time = ms > UINT32_MAX ? UINT32_MAX : (uint32_t)ms;
+    first_menu.flags |= MENU_RETURNED | (selected_app_active ? MENU_TARGET_ACTIVE : 0);
+    app_util_critical_region_exit(nested);
+}
+#endif
 
 typedef struct {
     uint32_t selection;
@@ -58,6 +110,12 @@ void mui_nav_diag_raw(uint8_t key, uint8_t type) {
     if (key >= 3 || type >= 5) return;
     uint8_t nested;
     app_util_critical_region_enter(&nested);
+#ifdef MUI_FIRST_MENU_DIAG
+    if (key == 1 && type < 3 && menu_waiting_for_selection()) {
+        if (first_menu.center[type] == UINT8_MAX) first_menu.flags |= MENU_SATURATED;
+        else ++first_menu.center[type];
+    }
+#endif
     if (state.active) increment(&state.raw[key][type]);
     app_util_critical_region_exit(nested);
 }
@@ -146,6 +204,24 @@ static void write16(uint8_t *out, uint16_t value) {
 static void write32(uint8_t *out, uint32_t value) {
     for (unsigned i = 0; i < 4; ++i) out[i] = (uint8_t)(value >> (8 * i));
 }
+
+#ifdef MUI_FIRST_MENU_DIAG
+bool mui_menu_diag_snapshot(uint8_t *out, size_t capacity) {
+    if (!out || capacity < MUI_MENU_DIAG_SIZE) return false;
+    uint8_t nested;
+    app_util_critical_region_enter(&nested);
+    memcpy(out, "PXMI", 4);
+    out[4] = 1;
+    out[5] = MUI_MENU_DIAG_SIZE;
+    out[6] = first_menu.flags;
+    out[7] = first_menu.app_id;
+    memcpy(out + 8, first_menu.center, 3);
+    out[11] = 0;
+    write32(out + 12, (first_menu.flags & MENU_RETURNED) ? first_menu.launch_time : 0);
+    app_util_critical_region_exit(nested);
+    return true;
+}
+#endif
 
 bool mui_nav_diag_snapshot(uint8_t *out, size_t capacity) {
     if (!out || capacity < MUI_NAV_DIAG_SNAPSHOT_SIZE) return false;

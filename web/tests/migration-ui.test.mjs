@@ -30,20 +30,20 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('latest target and simulated profile show DE3.69 while an inspected DE3.65 device keeps its own version',async()=>{
+test('latest target and simulated profile show DE3.70 while an inspected DE3.65 device keeps its own version',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
   assert.equal(options[0].props.value,'current')
-  assert.equal(text(options[0]),'DE3.69 / 641')
-  assert.match(text(h.root),/Dieses Prüfprofil passt zu DE3.55–DE3.69 \/ 627–641/)
+  assert.equal(text(options[0]),'DE3.70 / 642')
+  assert.match(text(h.root),/Dieses Prüfprofil passt zu DE3.55–DE3.70 \/ 627–642/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.69 \/ 641/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.70 \/ 642/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE3.69 \/ 641/)
+  assert.match(text(h.root),/Simulated profile DE3.70 \/ 642/)
  }finally{h.app.unmount()}
 })
 
@@ -57,7 +57,7 @@ test('3.29 selects each reviewed engine independently and never inherits approva
   h.vm.changeCapacityProfile('de344');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.42–DE3.44 \/ 614–616/);
   h.vm.changeCapacityProfile('de345');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.45 \/ 617/);
   h.vm.changeCapacityProfile('de354');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.51–DE3.54 \/ 623–626/);
-  h.vm.changeCapacityProfile('current');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.55–DE3.69 \/ 627–641/);assert.equal(h.calls.length,1);
+  h.vm.changeCapacityProfile('current');await Vue.nextTick();assert.match(h.vm.capacityProfileLabel,/DE3.55–DE3.70 \/ 627–642/);assert.equal(h.calls.length,1);
  }finally{h.app.unmount()}
 })
 

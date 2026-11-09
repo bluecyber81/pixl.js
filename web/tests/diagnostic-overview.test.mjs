@@ -188,6 +188,43 @@ test('button events retain settings-only scope and unrecorded results do not bec
   await change(h,{snapshot:next});assert.match(text(card(h.root,'ui')),/65535/);
   next.sections.ui.data.active=false; next.sections.ui.data.sessions=0;
   await change(h,{snapshot:structuredClone(next)});assert.match(text(card(h.root,'ui')),/keine Einstellungssitzung erfasst/);
+  for(const locale of ['de_DE','en_US']){
+    await change(h,{locale});
+    const empty=card(h.root,'ui');
+    assert.equal(nodes(empty,'table').length,0);
+    assert.equal(nodes(empty,'details').length,0);
+    assert.equal(row(empty,locale==='de_DE'?'Gezählte Einstellungssitzungen':'Counted settings sessions'),'0');
+    assert.match(text(empty),locale==='de_DE'?/Hauptmenü/:/Main menu/);
+  }
+ }finally{h.app.unmount();}
+});
+
+test('first menu displays the frozen launch call separately from settings and hardware display timing',async()=>{
+ const snapshot=diagnosticSnapshot(),h=await mount({snapshot});
+ try{
+  assert.equal(card(h.root,'menu'),undefined);
+  const base={schemaVersion:1,scope:'first-main-menu-since-restart',menuEntered:false,selectionAttempted:false,
+    launcherReturned:false,targetActive:false,leftBeforeSelection:false,countsSaturated:false,targetAppId:null,
+    launchCallMilliseconds:null,centerCounts:{press:0,release:0,short:0}};
+  const present=async(patch,locale='de_DE')=>{
+    snapshot.sections.menu={state:'available',observedAt:snapshot.completedAt,data:{...base,...patch},errorCode:null};
+    await change(h,{snapshot:structuredClone(snapshot),locale});
+    return card(h.root,'menu');
+  };
+  assert.match(text(await present({})),/Hauptmenü noch nicht geöffnet/);
+  assert.doesNotMatch(text(card(h.root,'menu')),/0 ms|0 \/ 0 \/ 0/);
+  assert.match(text(await present({menuEntered:true,leftBeforeSelection:true})),/ohne App-Auswahl verlassen/);
+  const selected={menuEntered:true,selectionAttempted:true,targetAppId:2};
+  assert.match(text(await present(selected)),/Rückkehr des Startaufrufs offen/);
+  assert.doesNotMatch(text(card(h.root,'menu')),/0 ms/);
+  const shown=await present({...selected,launcherReturned:true,targetActive:true,launchCallMilliseconds:0,
+    countsSaturated:true,centerCounts:{press:255,release:254,short:254}});
+  assert.equal(row(shown,'Gewählte App'),'Amiibo-Emulator');
+  assert.equal(row(shown,'Dauer des App-Startaufrufs'),'0 ms');
+  assert.match(text(shown),/≥255 \/ 254 \/ 254/);
+  const unknown=await present({...selected,targetAppId:42,launcherReturned:true,launchCallMilliseconds:120},'en_US');
+  assert.equal(row(unknown,'Selected app'),'App 42');
+  assert.match(text(unknown),/inactive when launch finished/);
  }finally{h.app.unmount();}
 });
 

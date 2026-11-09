@@ -185,7 +185,7 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.46.0'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.47.0'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
   assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));
@@ -220,7 +220,7 @@ test('an installed DE3.25 is shown as older and different without downgrading ma
   assert.equal(report.status, 'different'); assert.equal(row(report, 'application').status, 'different');
   assert.ok(row(report, 'application').reasons.includes('olderApplication'));
   assert.equal(row(report, 'bootloader').status, 'match'); assert.equal(row(report, 'softDevice').status, 'match');
-  for (const [firmwareVersion, counter] of [['2.22.0-DE3.67', 639], ['2.22.0-DE3.68', 640], ['2.22.0-DE3.69', 641]]) {
+  for (const [firmwareVersion, counter] of [['2.22.0-DE3.67', 639], ['2.22.0-DE3.68', 640], ['2.22.0-DE3.69', 641], ['2.22.0-DE3.70', 642]]) {
     const newer = row(result(change(60, counter), { ...session, firmwareVersion }), 'application');
     assert.equal(newer.status, 'different');
     assert.ok(!newer.reasons.includes('olderApplication'));

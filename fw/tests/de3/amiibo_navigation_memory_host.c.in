@@ -28,13 +28,32 @@ static void mini_app_launcher_kill(void*p,unsigned id){(void)p;(void)id;kills++;
 static void amiibo_scene_amiibo_detail_reload_error(app_amiibo_t*a,const char*p,int32_t e){(void)a;(void)p;(void)e;errors++;}
 void vfs_meta_decode(uint8_t*p,uint8_t n,vfs_meta_t*m){(void)n;memset(m,0,sizeof(*m));m->has_flags=true;m->flags=p[0];}
 static vfs_obj_t objects[1000],expected[1000];static unsigned count,iter,fail_read;static bool openfail,closefail;
+enum directory_order { NAMES_ASCENDING, NAMES_DESCENDING, NAMES_SHUFFLED };
+static enum directory_order read_order = NAMES_SHUFFLED;
 static int open_dir(const char*p,vfs_dir_t*d){(void)d;iter=0;return openfail||p[0]!='/'||(strlen(p)>1&&p[strlen(p)-1]=='/')?VFS_ERR_FAIL:VFS_OK;}
-static int read_dir(vfs_dir_t*d,vfs_obj_t*o){(void)d;reads++;if(fail_read&&iter==fail_read)return VFS_ERR_CRPT;if(iter==count)return VFS_ERR_EOF;*o=objects[(iter++*37)%count];return VFS_OK;}
+static int read_dir(vfs_dir_t *dir, vfs_obj_t *obj) {
+    (void)dir;
+    reads++;
+    if (fail_read && iter == fail_read) return VFS_ERR_CRPT;
+    if (iter == count) return VFS_ERR_EOF;
+    unsigned index = iter++;
+    if (read_order == NAMES_DESCENDING) index = count - 1 - index;
+    if (read_order == NAMES_SHUFFLED) index = index * 37 % count;
+    *obj = objects[index];
+    return VFS_OK;
+}
 static int close_dir(vfs_dir_t*d){(void)d;closes++;return closefail?VFS_ERR_FAIL:VFS_OK;}
 static vfs_driver_t driver={.open_dir=open_dir,.read_dir=read_dir,.close_dir=close_dir};
 vfs_driver_t*vfs_get_driver(vfs_drive_t d){(void)d;return &driver;}
 @LIST@
+static unsigned page_sorts;
+static void count_page_sort(mui_list_view_t *view, mui_list_view_item_cmp_cb compare) {
+    page_sorts++;
+    mui_list_view_sort(view, compare);
+}
+#define mui_list_view_sort count_page_sort
 @BROWSER@
+#undef mui_list_view_sort
 @DETAIL@
 @CACHE@
 static void*fixed[32];static unsigned nf;
@@ -78,7 +97,36 @@ static void parent_paths(void){
  puts("PASS 8 actual-Cwalk parent/root/UTF8/retained trailing-separator paths and repeated back-to-home");
 }
 static unsigned checkpage(app_amiibo_t*a,unsigned offset){assert(!oom&&!errors&&a->p_list_view->items->size<=27&&a->p_list_view->items->alloc<=32);unsigned n=0;for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];if(x->icon==ICON_FILE||x->icon==ICON_FOLDER){assert(!strcmp(string_get_cstr(x->text),expected[offset+n].name));assert(x->icon==(expected[offset+n].type==VFS_TYPE_DIR?ICON_FOLDER:ICON_FILE));n++;}}assert(n<=24);return n;}
-static void paging(unsigned n){unsigned visible=make(n,true);app_amiibo_t*a=begin(true);mui_mem_monitor_t before;mui_mem_monitor(&before);amiibo_scene_file_browser_on_enter(a);unsigned seen=0,start=0;do{start=seen;seen+=checkpage(a,seen);if(!control(a,FOLDER_LIST_NEXT))break;click(a,FOLDER_LIST_NEXT);}while(1);assert(seen==visible);while(control(a,FOLDER_LIST_PREVIOUS)){click(a,FOLDER_LIST_PREVIOUS);start-=24;checkpage(a,start);}assert(start==0);printf("PASS pages %u total/%u visible, <=24 entries +3 controls; free before %u\n",n,visible,before.free_size);end(a);}
+static void paging(unsigned n, enum directory_order order) {
+    unsigned visible = make(n, true);
+    read_order = order;
+    app_amiibo_t *app = begin(true);
+    page_sorts = 0;
+    amiibo_scene_file_browser_on_enter(app);
+    unsigned pages = 1, seen = 0, start = 0;
+    for (;;) {
+        start = seen;
+        unsigned page_entries = checkpage(app, start);
+        unsigned remaining = visible - start;
+        assert(page_entries == (remaining > 24 ? 24 : remaining));
+        assert(page_sorts == pages);
+        seen += page_entries;
+        if (!control(app, FOLDER_LIST_NEXT)) break;
+        click(app, FOLDER_LIST_NEXT);
+        pages++;
+    }
+    assert(seen == visible);
+    while (control(app, FOLDER_LIST_PREVIOUS)) {
+        click(app, FOLDER_LIST_PREVIOUS);
+        start -= 24;
+        assert(checkpage(app, start) == 24);
+        pages++;
+        assert(page_sorts == pages);
+    }
+    assert(start == 0 && page_sorts == pages);
+    printf("PASS %u entries order %u, %u sorted pages including reverse traversal\n", n, (unsigned)order, pages);
+    end(app);
+}
 static void neighbors(void){make(1000,false);app_amiibo_t*a=begin(true);char name[48];uint16_t focus,total;unsigned indexes[]={0,1,23,24,255,500,999};for(unsigned k=0;k<7;k++){unsigned at=indexes[k];string_set_str(a->current_file,objects[at].name);assert(amiibo_scene_amiibo_detail_reload_files(a));assert(a->p_amiibo_detail_view->focus==at&&a->p_amiibo_detail_view->max_ntags==1000);mui_mem_monitor_t before,after;mui_mem_monitor(&before);for(int direction=-1;direction<=1;direction+=2){assert(app_amiibo_file_neighbor(a,direction,name,&focus,&total)==VFS_OK);unsigned want=(at+1000+direction)%1000;assert(total==1000&&focus==want&&!strcmp(name,objects[want].name));}mui_mem_monitor(&after);assert(before.free_size==after.free_size&&before.used_cnt==after.used_cnt);}
  for(unsigned fault=0;fault<3;fault++){openfail=fault==0;fail_read=fault==1?15:0;closefail=fault==2;assert(!amiibo_scene_amiibo_detail_reload_files(a));assert(!a->p_amiibo_detail_view->max_ntags&&!a->p_amiibo_detail_view->focus);openfail=closefail=false;fail_read=0;}
  printf("PASS 1000-tag streaming rank/neighbor/wrap + open/read/close failures, zero traversal allocations\n");end(a);}
@@ -101,6 +149,11 @@ int main(void){
  make(100,false);app_amiibo_t*a=begin(true);mui_mem_monitor_t before;mui_mem_monitor(&before);amiibo_scene_file_browser_reload_folders(a);assert(oom&&fake_mui.memory_error&&!a->p_list_view->items->size);printf("REPRO DE331: 100 names, beforefree=%u largest=%u OOM=%u\n",before.free_size,before.free_biggest_size,oom);end(a);
  make(1000,false);a=begin(true);assert(!amiibo_scene_amiibo_detail_reload_files(a));assert(oom);printf("REPRO DE331: whole-folder tag cache OOM\n");end(a);
 #else
- unsigned counts[]={0,1,24,25,100,256,1000};for(unsigned repeat=0;repeat<3;repeat++)for(unsigned i=0;i<7;i++)paging(counts[i]);neighbors();retained();parent_paths();
+ /* Hidden entries leave exactly 24 and 25 visible rows at 26 and 27. */
+ const unsigned counts[] = {0, 1, 24, 25, 26, 27, 100, 256, 1000};
+ for (unsigned order = NAMES_ASCENDING; order <= NAMES_SHUFFLED; order++)
+     for (unsigned i = 0; i < sizeof(counts)/sizeof(counts[0]); i++)
+         paging(counts[i], (enum directory_order)order);
+ neighbors();retained();parent_paths();
 #endif
  printf("PASS %u leak-free real-TLSF cases\n",cases);return 0;}

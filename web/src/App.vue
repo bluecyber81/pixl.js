@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.46.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.47.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -287,12 +287,12 @@
         <small id="device-nickname-hint">{{ $t('info.nicknameHint') }}</small>
         <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
       </form>
-      <DiagnosticOverview :connected="connected" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
+      <DiagnosticOverview :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
       <DisplayPhoto :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.46.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.47.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -536,7 +536,8 @@ import { readTimeEstimate, formatReadDuration } from "./lib/read-time-estimate.j
 import { normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
-import { DIAGNOSTIC_SECTION_KEYS, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
+import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
+import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, portableNameKey } from "./lib/portable-names.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
@@ -1276,7 +1277,8 @@ export default {
       this.fullDiagnosticInterrupted = false;
       const startedAt = performance.now();
       this.readClock = startedAt;
-      this.fullDiagnosticProgress = { completed: 0, total: DIAGNOSTIC_SECTION_KEYS.length, startedAt, updatedAt: startedAt, sections: {} };
+      const includeMenu = supportsMenuDiagnostics(this.firmwareVersion);
+      this.fullDiagnosticProgress = { completed: 0, total: diagnosticSectionKeys(includeMenu).length, startedAt, updatedAt: startedAt, sections: {} };
       this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
       this.powerInfo=null; this.powerState='loading'; this.driveInfo=[];
       const guard=()=>this.session_current(generation) && !this.disconnecting;
@@ -1305,7 +1307,8 @@ export default {
               }
               return {info,layout};
             }),
-            mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.())
+            mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.()),
+            ...(includeMenu ? {menu:read(()=>proto.get_menu_diagnostics(this.firmwareVersion))} : {})
           },
           onProgress: ({ key, index, section }) => {
             if (!guard()) return;

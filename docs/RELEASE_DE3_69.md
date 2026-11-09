@@ -9,3 +9,5 @@ Für das LCD mit eingerichtetem Packed LittleFS PFS1 und passendem Bootloader/S1
 Beim Anlegen eines Favoriten übernimmt die App die tatsächlich angezeigte Figur und ihren Spielkontext. Der LCD-Build für Deutsch und Englisch belegt 5.404 Byte weniger Flash als DE3.68. Alle 952 Figuren und 1.344 Spielzuordnungen wurden in beiden Katalogprofilen geprüft. Der Linker weist 13.980 Byte Flashreserve aus. Die fünf Verlaufseinträge belegen 25 Byte RAM. Der Abstand zwischen reserviertem Heap und Stack beträgt 1.808 Byte.
 
 [Quellbau](BUILD_DE3_69.md) · [Prüfergebnisse](validation/DE3_69.json)
+
+Der Geräteexport vom 9. November bestätigt DE3.69/641, Z19 und S112 7.3.0. Der gemessene App-Start dauerte 2.174 ms. Der erste Mitteldruck im Hauptmenü wurde von diesem Stand nicht gesondert erfasst.

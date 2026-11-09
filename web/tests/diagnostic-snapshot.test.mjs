@@ -165,6 +165,38 @@ test('fresh failed or unsupported reads never fall back to old cached values in 
   assert.equal(report.diagnosticSnapshot.sections.boot.state, 'unavailable');
 });
 
+test('export distinguishes a settings counter with no observations from a measured session', async () => {
+  for (const sessions of [0, 1, null]) {
+    const snapshot = await collectDiagnosticSnapshot({readers: {
+      ui: () => sessions === null ? null : {...fixture().ui, sessions},
+    }, now: clock()});
+    const report = createCombinedDiagnosticReport({snapshot});
+    const notes = report.limitations.join(' ');
+    assert.equal(notes.includes('no observations'), sessions === 0);
+    assert.equal(notes.includes('Main menu input is outside'), sessions === 1);
+    assert.equal(report.diagnosticSnapshot.sections.ui.data?.sessions ?? null, sessions);
+  }
+});
+
+test('an optional ninth main-menu read survives export without changing older eight-section reports', async () => {
+  const data = {schemaVersion: 1, scope:'first-main-menu-since-restart', menuEntered: true, selectionAttempted: true,
+    launcherReturned: true, targetActive: true, leftBeforeSelection: false, countsSaturated: false,
+    targetAppId: 2, launchCallMilliseconds: 0, centerCounts: {press:0,release:0,short:0}};
+  const progress = [];
+  const snapshot = await collectDiagnosticSnapshot({readers:{menu:() => ({...data, private:'SECRET'})},
+    now:clock(), onProgress:e=>progress.push(e)});
+  assert.equal(progress.length,9);
+  assert.deepEqual(progress.map(e=>e.total),Array(9).fill(9));
+  assert.equal(progress.at(-1).key,'menu');
+  const report = createCombinedDiagnosticReport({snapshot});
+  assert.deepEqual(report.diagnosticSnapshot.sections.menu.data,data);
+  assert.doesNotMatch(JSON.stringify(report),/SECRET/);
+  assert.match(report.limitations.join(' '),/first main menu/);
+  const legacy = await collectDiagnosticSnapshot({now:clock()});
+  assert.deepEqual(Object.keys(createCombinedDiagnosticReport({snapshot:legacy}).diagnosticSnapshot.sections), DIAGNOSTIC_SECTION_KEYS);
+  assert.doesNotMatch(createCombinedDiagnosticReport({snapshot:legacy}).limitations.join(' '),/menu trace/);
+});
+
 test('export names the ATT MTU source and only claims a firmware reading when it exists', async () => {
   const transport = {chunkMode: 'chunked', effectiveGattValueCapacity: 247, reportedGattValueCapacity: 247};
   const baseReport = createDiagnostics({transport});

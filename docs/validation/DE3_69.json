@@ -85,5 +85,16 @@
       "en"
     ],
     "fullAndLcdProfileTest": "fw/tests/de3/test_database_indexed_links.py"
+  },
+  "deviceDiagnosticReadback": {
+    "date": "2026-11-09",
+    "source": "user-supplied diagnostic and startup exports from a single boot",
+    "appCounter": 641,
+    "bootloaderCounter": 19,
+    "softDevice": "S112 7.3.0",
+    "paddedBootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "applicationMeasuredStartupMs": 2174,
+    "packedScanMs": 2014,
+    "mainMenuPressTraceAvailable": false
   }
 }

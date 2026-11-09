@@ -6,6 +6,7 @@
 #include "app_list_view.h"
 #include "i18n/language.h"
 #include "mini_app_launcher.h"
+#include "mui_nav_diag.h"
 
 #include "settings.h"
 
@@ -22,7 +23,11 @@ typedef struct {
 
 static void app_desktop_list_view_on_selected(app_list_view_event_t event, app_list_view_t *p_view) {
     const mini_app_t *app = app_list_view_get(p_view, app_list_view_get_focus(p_view));
-    if (app) mini_app_launcher_run(mini_app_launcher(), app->id);
+    if (!app) return;
+    mini_app_launcher_t *launcher = mini_app_launcher();
+    bool first = mui_menu_diag_select(app->id);
+    mini_app_launcher_run(launcher, app->id);
+    if (first) mui_menu_diag_return(launcher->p_main_app_inst && launcher->p_main_app_inst->p_app == app);
 }
 
 static void app_desktop_populate_list(app_list_view_t *view, uint32_t enabled_apps, uint32_t last_app_id) {
@@ -57,6 +62,7 @@ void app_desktop_on_run(mini_app_inst_t *p_app_inst) {
                                  app_list_view_get_view(p_app_handle->p_app_list_view));
     mui_view_dispatcher_attach(p_app_handle->p_view_dispatcher, MUI_LAYER_WINDOW);
     mui_view_dispatcher_switch_to_view(p_app_handle->p_view_dispatcher, DESKTOP_VIEW_ID_MAIN);
+    mui_menu_diag_enter();
 
     return;
 
@@ -70,6 +76,7 @@ startup_failed:
 void app_desktop_on_kill(mini_app_inst_t *p_app_inst) {
     app_desktop_t *p_app_handle = p_app_inst->p_handle;
     if (!p_app_handle) return;
+    mui_menu_diag_leave();
 
     mui_view_dispatcher_switch_to_view(p_app_handle->p_view_dispatcher, VIEW_NONE);
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_WINDOW);

@@ -1,6 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseMtuDiagnostics, normalizeMtuDiagnostics, parseUiDiagnostics, normalizeUiDiagnostics} from '../src/lib/device-extra-diagnostics.js';
+import {parseMenuDiagnostics, normalizeMenuDiagnostics, parseMtuDiagnostics, normalizeMtuDiagnostics, parseUiDiagnostics, normalizeUiDiagnostics} from '../src/lib/device-extra-diagnostics.js';
+
+test('menu trace validates each lifecycle state, flag order, optional fields and counter saturation', () => {
+  const packet = (flags, app = 0) => Uint8Array.from([80,88,77,73,1,16,flags,app,0,0,0,0,0,0,0,0]);
+  for (const flags of [0,1,3,7,15,17]) {
+    const raw = packet(flags, flags & 2 ? 2 : 0);
+    const row = parseMenuDiagnostics(raw);
+    assert.equal(row.selectionAttempted, Boolean(flags & 2));
+    assert.equal(row.launchCallMilliseconds, flags & 4 ? 0 : null);
+    assert.deepEqual(normalizeMenuDiagnostics({...row, filename:'PRIVATE'}),row);
+  }
+  const sat = packet(33); sat[8] = 255;
+  assert.equal(parseMenuDiagnostics(sat).countsSaturated,true);
+  for (const flags of [2,4,8,16,19,32,64,128]) assert.throws(()=>parseMenuDiagnostics(packet(flags, flags & 2 ? 2 : 0)));
+  for (const [offset,value] of [[0,1],[4,2],[5,15],[7,2],[8,1],[11,1],[12,1]]) {
+    const raw = packet(0); raw[offset] = value; assert.throws(()=>parseMenuDiagnostics(raw));
+  }
+  const valid = parseMenuDiagnostics(packet(15,2));
+  for (const patch of [{scope:'all-buttons'}, {targetAppId:-1}, {launchCallMilliseconds:null},
+      {countsSaturated:true}, {centerCounts:{press:256, release:0, short:0}}]) {
+    assert.equal(normalizeMenuDiagnostics({...valid,...patch}),null);
+  }
+});
 
 function mtu(flags = 7, effective = 250, next = 250, maximum = 250, capacity = 247) {
   const bytes = new Uint8Array(16), view = new DataView(bytes.buffer);

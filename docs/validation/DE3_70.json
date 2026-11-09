@@ -1,0 +1,236 @@
+{
+  "version": "2.22.0-DE3.70",
+  "counter": 642,
+  "previous": "DE3.69/641",
+  "board": "LCD",
+  "applicationOnly": true,
+  "source_id_sha256": "d4ba1c82bf0d687b6b0d10bb9541bb06ef780d74158a4bf192d21f4d53b99d91",
+  "artifacts_sha256": {
+    "pixljs.bin": "45aa511db37076bf9b0dce6d73c27522407b0234a6de9f38e2ec058aa4d01844",
+    "pixljs.hex": "b8d26104c6f8a22a94358f7917367d27f751b3586b1d6310e1c377e4c4ef10e9",
+    "pixljs.out": "d89d99fab8c0a5b04a991f00aa7718917feff502cbf44c788578812d1067d997",
+    "pixljs.map": "effcc5cb1fede80f3c56be91d75257c4a04d1ca3c0694003b1baa8a32f3526d4"
+  },
+  "otaSha256": "03c438a1e4b561a6ddf9ed8c787ce82a4899c2bd416eb08f588bff5111a4f080",
+  "bytes": 359212,
+  "candidateAndReleaseBinAndHexIdentical": true,
+  "linkerBudget": {
+    "flash_reserve_bytes": 13516,
+    "heap_stack_gap_bytes": 1808,
+    "stack_reserved_bytes": 8192
+  },
+  "signingVerification": "tools/check_release_ota.py",
+  "physicalDeviceTest": false,
+  "host": {
+    "passed": true,
+    "profile": "full",
+    "passed_count": 149,
+    "executed_count": 149,
+    "available_count": 149,
+    "hardware_mocked": true,
+    "sources_unchanged_during_tests": true
+  },
+  "z19Transfer": {
+    "payloadBytes": 359212,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18185,
+    "objectExecutes": 89,
+    "finalCrc32": 2471761905,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "45aa511db37076bf9b0dce6d73c27522407b0234a6de9f38e2ec058aa4d01844",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "otaVerification": {
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "zipBytes": 359815,
+    "applicationBytes": 359212,
+    "softDeviceBytes": 0,
+    "bootloaderBytes": 0
+  },
+  "cortexM4FirstMenuTrace": {
+    "scope": "Emulated release ELF, simulated button callbacks and RTC.",
+    "passed": true,
+    "result": "PASS Cortex-M4 first-menu wire, local counts, app 2, RTC rollover 125 ms, frozen across re-entry"
+  },
+  "cortexM4StackWatermark": "PASS Cortex-M4 release ELF: 8192 reserved, initial test watermark 7664, then 1416/256/256/0. Caller and guards intact; unavailable sentinel verified.",
+  "comparisonWithDE3_69": {
+    "flash_reserve_bytes": {
+      "previous": 13980,
+      "current": 13516,
+      "delta": -464
+    },
+    "heap_stack_gap_bytes": {
+      "previous": 1808,
+      "current": 1808,
+      "delta": 0
+    },
+    "stack_reserved_bytes": {
+      "previous": 8192,
+      "current": 8192,
+      "delta": 0
+    }
+  },
+  "minimumLinkerBudget": {
+    "flash_reserve_bytes": 8192,
+    "heap_stack_gap_bytes": 1536,
+    "stack_reserved_bytes": 8192
+  },
+  "amiiboBrowser": {
+    "casesPerRun": 50,
+    "environments": [
+      "host GCC",
+      "host GCC with ASan/UBSan",
+      "QEMU ARM32"
+    ],
+    "fixture": "fw/tests/de3/amiibo_navigation_memory_host.c.in",
+    "order": [
+      "ascending",
+      "descending",
+      "deterministically shuffled"
+    ],
+    "syntheticDirectorySizes": [
+      0,
+      1,
+      24,
+      25,
+      26,
+      27,
+      100,
+      256,
+      1000
+    ],
+    "verified": [
+      "content, type and exact order of every visible row while traversing forward and backward",
+      "one sort per completed page",
+      "hidden rows, directories, empty and exact page boundaries",
+      "TLSF balanced after every scenario"
+    ],
+    "firstPageComparison": {
+      "scope": "First page of 1000 synthetic regular files, 24 visible rows. Same read_dir callback count including EOF. Comparator counts include the list-item comparator only.",
+      "samples": {
+        "ascending": {
+          "sortCallsDE3_69": 25,
+          "sortCallsDE3_70": 1,
+          "listItemComparisonsDE3_69": 1200,
+          "listItemComparisonsDE3_70": 154,
+          "readDirCallsEach": 1001
+        },
+        "descending": {
+          "sortCallsDE3_69": 1001,
+          "sortCallsDE3_70": 1,
+          "listItemComparisonsDE3_69": 121466,
+          "listItemComparisonsDE3_70": 22587,
+          "readDirCallsEach": 1001
+        },
+        "shuffled": {
+          "sortCallsDE3_69": 113,
+          "sortCallsDE3_70": 1,
+          "listItemComparisonsDE3_69": 10893,
+          "listItemComparisonsDE3_70": 2181,
+          "readDirCallsEach": 1001
+        }
+      },
+      "targetTimingMeasured": false
+    }
+  },
+  "pfsCompatibility": {
+    "format": "PFS1",
+    "layoutConstantsUnchanged": true,
+    "engines": {
+      "old": "7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d",
+      "new": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248"
+    },
+    "filesInitially": 1131,
+    "directoriesInitially": 77,
+    "mutations": [
+      "replace existing content and raw128",
+      "rename existing file",
+      "remove existing file",
+      "add8193-byte file",
+      "add empty file",
+      "old-engine replacement after new-engine writes"
+    ],
+    "verification": "Every active path, kind, size, content byte, raw128 byte, import identity and complete namespace at each phase, including remount.",
+    "passed": true,
+    "deviceAccess": false,
+    "syntheticDataOnly": true,
+    "phases": [
+      {
+        "engine": "old",
+        "action": "create",
+        "phase": 0,
+        "expectedRows": 1208,
+        "passed": true,
+        "programs": 97693,
+        "erases": 7876
+      },
+      {
+        "engine": "new",
+        "action": "verify",
+        "phase": 0,
+        "expectedRows": 1208,
+        "passed": true,
+        "programs": 0,
+        "erases": 0
+      },
+      {
+        "engine": "new",
+        "action": "modify",
+        "phase": 1,
+        "expectedRows": 1209,
+        "passed": true,
+        "programs": 455,
+        "erases": 33
+      },
+      {
+        "engine": "old",
+        "action": "verify",
+        "phase": 1,
+        "expectedRows": 1209,
+        "passed": true,
+        "programs": 0,
+        "erases": 0
+      },
+      {
+        "engine": "old",
+        "action": "modify",
+        "phase": 2,
+        "expectedRows": 1209,
+        "passed": true,
+        "programs": 70,
+        "erases": 5
+      },
+      {
+        "engine": "new",
+        "action": "verify",
+        "phase": 2,
+        "expectedRows": 1209,
+        "passed": true,
+        "programs": 0,
+        "erases": 0
+      }
+    ],
+    "limitations": [
+      "Host synthetic flash only. Not a device readback, timing benchmark or proof against every power interruption.",
+      "Read-only stages perform no flash programming/erase. Writable phases exercise normal APIs and GC, not injected flash failures."
+    ]
+  }
+}

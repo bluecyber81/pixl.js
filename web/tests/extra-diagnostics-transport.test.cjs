@@ -44,6 +44,28 @@ async function flush() {for (let i = 0; i < 100; ++i) await Promise.resolve();}
 const plain = value => JSON.parse(JSON.stringify(value));
 const next = f => f.api.op_queue_push(0x14, () => {}, b => b.readBytes(b.remaining()).toArrayBuffer());
 
+test('first main menu read is version gated, queued, and distinguishes missing, valid and broken replies', async () => {
+    const v = '2.22.0-DE3.70', f = fixture();
+    for (const old of ['2.22.0-DE3.69', '2.27.0', '', undefined]) assert.equal(await f.api.get_menu_diagnostics(old), null);
+    assert.deepEqual(f.writes, []);
+    const file = next(f), pending = f.api.get_menu_diagnostics(v);
+    assert.equal(f.writes.length, 1);
+    f.rx(0x14, [9]); await file; await flush();
+    assert.deepEqual(f.writes.at(-1), [4,0,0,0,1]);
+    const packet = Uint8Array.from([80,88,77,73,1,16,15,2,1,1,1,0,42,0,0,0]);
+    f.rx(4, packet);
+    const data = await pending;
+    assert.equal(data.launchCallMilliseconds, 42); assert.equal(data.targetAppId, 2);
+    assert.deepEqual(plain(data.centerCounts), {press: 1, release: 1, short: 1});
+    for (const status of [1,255]) {
+        const p = f.api.get_menu_diagnostics(v); f.rx(4, [], 0, status);
+        assert.equal(await p, null); assert.equal(f.api.get_transport_diagnostics().lastErrorCode, null);
+    }
+    const broken = f.api.get_menu_diagnostics(v), rejected = assert.rejects(broken);
+    f.rx(4, packet.subarray(1)); await rejected;
+    assert.equal(f.api.get_transport_diagnostics().lastErrorCode, 'RESPONSE_INVALID');
+});
+
 test('LCD page reads negotiate old devices, MTU23 fragmentation, disconnect and queued file access', async () => {
     const module = await import('../src/lib/display-photo.js');
     const version = '2.22.0-DE3.66', cmd = 0x0a;

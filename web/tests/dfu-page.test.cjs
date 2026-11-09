@@ -87,7 +87,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.69','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.70','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

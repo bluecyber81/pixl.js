@@ -1,6 +1,6 @@
 # LCD-Firmware, Bootloader und SoftDevice
 
-Unter **Sicherung** kannst du zwei gespeicherte Sicherungs-ZIPs auswählen. Die Ansicht zeigt neue, entfernte und geänderte Einträge. Der Vergleich läuft auch bei getrenntem Gerät. Unter **Update** öffnet „In nRF DFU öffnen“ das gewählte öffentliche LCD-Paket auf Android. Die LCD-Testversion DE3.69 zeigt die letzten fünf geöffneten Figuren in der Amiibo-Datenbank. [DE3.69 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip) · [Web 3.46.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.46.0)
+Der Amiibo-Emulator sortiert die sichtbare Seite im Figurenordner einmal. Unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** zeigt der Dateimanager mit DE3.70 die erkannten Mitteltastenereignisse bis zur ersten Auswahl im Hauptmenü und die Dauer des App-Aufrufs. Die Daten bleiben bis zum Neustart im RAM. [LCD DE3.70 (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip) · [Web 3.47.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0)
 
 
 Stand 9. November 2026. Für ein LCD-Allmiibo mit eingerichtetem Packed LittleFS (PFS1) gibt es diese Anwendungsstände:
@@ -8,6 +8,7 @@ Stand 9. November 2026. Für ein LCD-Allmiibo mit eingerichtetem Packed LittleFS
 | Stand | Was du bekommst | Nachweis |
 | --- | --- | --- |
 | **[DE3.65 / App637](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · stabil** | Korrigierter Scrollbalken für Figurennotizen und kompaktere Spielzuordnungen. | Am LCD mit Z19 und S112 7.3.0 ausgelesen. NFC-Erkennung, Scrollbalken und Aufwachen am Gerät bestätigt. [Abschlussbericht](FINAL_DE3_65.md) |
+| **[DE3.70 / App642](https://github.com/bluecyber81/pixl.js/releases/tag/de3.70) · Vorabversion** | Weniger Sortierarbeit im Figurenordner, erste Menüauswahl auslesbar. | [Bedienung](RELEASE_DE3_70.md) · [Build](validation/DE3_70.json) |
 | **[DE3.69 / App641](https://github.com/bluecyber81/pixl.js/releases/tag/de3.69) · Vorabversion** | Die fünf zuletzt geöffneten Figuren im LCD-Menü aufrufen. | [Bedienung und Gerätestand](RELEASE_DE3_69.md) · [Build](validation/DE3_69.json) |
 | **[DE3.68 / App640](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68) · Vorabversion** | Beim Verlassen einer App bleibt ihr Symbol im Hauptmenü ausgewählt. | [Vergleich, Installation und Gerätetest](RELEASE_DE3_68.md) · [Buildnachweise](validation/DE3_68.json) |
 | **[DE3.67 / App639](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) · Vorabversion** | Enthält alle 54 deutschen Spielhinweise und korrigiert das Ende des Scrollbalkens. | Zwei ARM-Bauten mit identischer BIN/HEX, 822 gerenderte LCD-Bilder und 585 QR-Vergleiche. Deutsche Hinweise und QR-Scan am LCD bestätigt. [Praxistest](RELEASE_DE3_67.md). |

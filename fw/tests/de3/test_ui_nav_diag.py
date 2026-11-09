@@ -34,13 +34,21 @@ static uint32_t get32(const uint8_t *p) {
 
 
 class NavDiagnosticTests(unittest.TestCase):
-    def compile_run(self, body, queue=False):
+    def compile_run(self, body, queue=False, first_menu=False):
         cc = os.environ.get('CC') or shutil.which('gcc')
         if not cc:
             raise RuntimeError('An existing C compiler is required')
         with tempfile.TemporaryDirectory(prefix='pixl-nav-diag-') as temporary:
             folder = Path(temporary)
             (folder / 'app_util_platform.h').write_text('#pragma once\n')
+            if first_menu:
+                (folder / 'app_timer.h').write_text('''#pragma once
+#define APP_TIMER_CLOCK_FREQ 32768u
+#define APP_TIMER_CONFIG_RTC_FREQUENCY 1u
+static uint32_t tick, reads;
+static uint32_t app_timer_cnt_get(void) { ++reads; return tick; }
+static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b) { return (a-b)&0xffffffu; }
+''')
             for name in ('mui_nav_diag.c', 'mui_nav_diag.h'):
                 (folder / name).write_bytes((SRC / 'mui' / name).read_bytes())
             code = PREAMBLE + '\n#include "mui_nav_diag.c"\n'
@@ -61,10 +69,71 @@ class NavDiagnosticTests(unittest.TestCase):
             binary = folder / ('test.exe' if os.name == 'nt' else 'test')
             command = [cc, '-std=c11', '-O1', '-Wall', '-Wextra', '-Werror',
                        '-Wno-unused-function', '-I', str(folder), str(source), '-o', str(binary)]
+            if first_menu:
+                command += ['-DPIXL_RUNTIME_DIAGNOSTICS=1', '-DBOARD_LCD=1']
             if os.environ.get('UI_SANITIZE') == '1':
                 command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']
             subprocess.run(command, check=True, timeout=60)
             subprocess.run([str(binary)], check=True, timeout=30)
+
+    def test_first_desktop_capture_is_bounded_and_frozen(self):
+        self.compile_run(r'''
+int main(void) {
+ uint8_t out[18], last[16];
+ memset(out,0xa5,sizeof(out));
+ for (unsigned n=0;n<16;n++) {
+     assert(!mui_menu_diag_snapshot(out,n));
+     for(unsigned i=0;i<sizeof(out);i++) assert(out[i]==0xa5);
+ }
+ assert(!mui_menu_diag_snapshot(NULL,16));
+ mui_nav_diag_raw(1,0); mui_menu_diag_leave();
+ assert(!mui_menu_diag_select(2)); mui_menu_diag_return(true);
+ assert(mui_menu_diag_snapshot(out,16) && !memcmp(out,"PXMI",4));
+ assert(out[4]==1 && out[5]==16 && out[6]==0 && out[7]==0 && !reads);
+ mui_menu_diag_enter();
+ mui_nav_diag_raw(0,0); mui_nav_diag_raw(2,1); mui_nav_diag_raw(1,3);
+ mui_nav_diag_raw(1,0); mui_nav_diag_raw(1,1); mui_nav_diag_raw(1,2);
+ for(unsigned i=0;i<300;i++) mui_nav_diag_raw(1,0);
+ assert(mui_menu_diag_snapshot(out,16) && out[6]==33 && !reads);
+ assert(out[8]==255 && out[9]==1 && out[10]==1);
+ tick=0xffff00; assert(mui_menu_diag_select(2) && reads==1);
+ mui_nav_diag_raw(1,1); mui_menu_diag_leave();
+ assert(mui_menu_diag_snapshot(out,sizeof(out)) && out[6]==35 && out[7]==2);
+ assert(out[9]==1 && out[11]==0 && get32(out+12)==0);
+ tick=0x700; mui_menu_diag_return(true);
+ assert(mui_menu_diag_snapshot(out,sizeof(out)) && out[6]==47 && reads==2);
+ assert(get32(out+12)==125 && out[16]==0xa5 && out[17]==0xa5);
+ memcpy(last,out,16); mui_menu_diag_enter(); mui_nav_diag_raw(1,2);
+ assert(!mui_menu_diag_select(7)); mui_menu_diag_return(false); mui_menu_diag_leave();
+ assert(mui_menu_diag_snapshot(out,16) && !memcmp(out,last,16) && reads==2);
+ assert(!critical_depth); puts("PASS");
+}
+''', first_menu=True)
+
+    def test_first_menu_departure_without_selection_never_tracks_a_later_session(self):
+        self.compile_run(r'''
+int main(void) {
+ uint8_t out[16];
+ mui_menu_diag_enter(); mui_nav_diag_raw(1,0); mui_menu_diag_leave();
+ mui_menu_diag_enter(); mui_nav_diag_raw(1,1); assert(!mui_menu_diag_select(2));
+ mui_menu_diag_return(true); mui_menu_diag_leave();
+ assert(mui_menu_diag_snapshot(out,16) && out[6]==17 && out[7]==0);
+ assert(out[8]==1 && out[9]==0 && out[10]==0 && get32(out+12)==0 && reads==0);
+ puts("PASS");
+}
+''', first_menu=True)
+
+    def test_remote_selection_and_unsuccessful_launch_are_distinguishable(self):
+        self.compile_run(r'''
+int main(void) {
+ uint8_t out[16];
+ mui_menu_diag_enter(); assert(mui_menu_diag_select(6));
+ mui_menu_diag_return(false);
+ assert(mui_menu_diag_snapshot(out,16) && out[6]==7 && out[7]==6);
+ assert(out[8]==0 && out[9]==0 && out[10]==0 && get32(out+12)==0 && reads==2);
+ puts("PASS");
+}
+''', first_menu=True)
 
     def test_wire_bounds_lifecycle_separate_attempts_and_inactive_capture(self):
         self.compile_run(r'''

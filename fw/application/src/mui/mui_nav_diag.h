@@ -6,6 +6,24 @@
 #include <stdint.h>
 
 #define MUI_NAV_DIAG_SNAPSHOT_SIZE 104u
+#define MUI_MENU_DIAG_SIZE 16u
+
+/* The first desktop lifetime in this boot. Freeze the debounced button counts
+ * when a selection begins or the desktop leaves without one. A new entry
+ * never resets the record. Only the synchronous launcher call is timed. */
+#if defined(PIXL_RUNTIME_DIAGNOSTICS) && defined(BOARD_LCD)
+#define MUI_FIRST_MENU_DIAG
+void mui_menu_diag_enter(void);
+void mui_menu_diag_leave(void);
+bool mui_menu_diag_select(uint8_t app_id);
+void mui_menu_diag_return(bool selected_app_active);
+bool mui_menu_diag_snapshot(uint8_t *out, size_t capacity);
+#else
+static inline void mui_menu_diag_enter(void) {}
+static inline void mui_menu_diag_leave(void) {}
+static inline bool mui_menu_diag_select(uint8_t id) { (void)id; return false; }
+static inline void mui_menu_diag_return(bool active) { (void)active; }
+#endif
 
 /* RAM-only Settings navigation observation. Keys are LEFT/CENTER/RIGHT (0..2);
  * event types are PRESS/RELEASE/SHORT/LONG/REPEAT (0..4), matching MUI/BSP.

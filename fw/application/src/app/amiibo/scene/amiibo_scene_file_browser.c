@@ -54,6 +54,7 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
     mui_list_view_clear_items(list);
     bool complete = true;
     uint32_t eligible = 0, excluded = 0;
+    mui_list_item_t *boundary = NULL;
     int32_t res = driver ? driver->open_dir(string_get_cstr(app->current_folder), &dir) : VFS_ERR_NODEV;
     if (res == VFS_OK) {
         while ((res = driver->read_dir(&dir, &obj)) == VFS_OK) {
@@ -62,10 +63,12 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
             if (meta.has_flags && (meta.flags & VFS_OBJ_FLAG_HIDDEN)) continue;
             if (!memchr(obj.name, 0, sizeof(obj.name))) { res = VFS_ERR_CRPT; break; }
             uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
-            int cmp = icon != app->browser_anchor_icon ? (int)icon - app->browser_anchor_icon
-                                                       : strcmp(obj.name, app->browser_anchor);
-            if (app->browser_direction && (app->browser_direction > 0 ? cmp <= 0 : cmp >= 0)) {
-                excluded++; continue;
+            if (app->browser_direction) {
+                int cmp = icon != app->browser_anchor_icon ? (int)icon - app->browser_anchor_icon
+                                                           : strcmp(obj.name, app->browser_anchor);
+                if (app->browser_direction > 0 ? cmp <= 0 : cmp >= 0) {
+                    excluded++; continue;
+                }
             }
             eligible++;
             size_t count = mui_list_item_array_size(list->items);
@@ -76,14 +79,21 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
             } else {
                 /* Keep only the nearest 24 names. Backwards traversal retains
                  * the greatest keys below its anchor; both pages display ASC. */
-                mui_list_item_t *worst = mui_list_item_array_get(list->items,
-                                        app->browser_direction < 0 ? 0 : count - 1);
-                cmp = icon != worst->icon ? (int)icon - (int)worst->icon : strcmp(obj.name, string_get_cstr(worst->text));
+                if (!boundary) {
+                    boundary = mui_list_item_array_get(list->items, 0);
+                    for (size_t i = 1; i < count; ++i) {
+                        mui_list_item_t *item = mui_list_item_array_get(list->items, i);
+                        int order = amiibo_scene_file_browser_list_item_cmp(item, boundary);
+                        if (app->browser_direction < 0 ? order < 0 : order > 0) boundary = item;
+                    }
+                }
+                int cmp = icon != boundary->icon ? (int)icon - (int)boundary->icon
+                                                  : strcmp(obj.name, string_get_cstr(boundary->text));
                 if (app->browser_direction < 0 ? cmp <= 0 : cmp >= 0) continue;
-                if (!mui_string_try_set_str(worst->text, obj.name)) { complete = false; break; }
-                worst->icon = icon;
+                if (!mui_string_try_set_str(boundary->text, obj.name)) { complete = false; break; }
+                boundary->icon = icon;
+                boundary = NULL;
             }
-            mui_list_view_sort(list, amiibo_scene_file_browser_list_item_cmp);
         }
         int32_t close_res = driver->close_dir(&dir);
         if (res == VFS_ERR_EOF) res = close_res;

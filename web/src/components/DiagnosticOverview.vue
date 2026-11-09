@@ -46,14 +46,15 @@ import { computed } from 'vue';
 import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/device-info.js';
 import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
-import { DIAGNOSTIC_SECTION_KEYS, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
+import { diagnosticSectionKeys, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
 import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
-import { normalizeMtuDiagnostics, normalizeUiDiagnostics } from '../lib/device-extra-diagnostics.js';
+import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics, supportsMenuDiagnostics } from '../lib/device-extra-diagnostics.js';
 
 const props = defineProps({
   connected: Boolean, blocked: Boolean, loading: Boolean,
+  firmwareVersion: { type: String, default: '' },
   snapshot: { type: Object, default: null }, progress: { type: Object, default: null },
   readClock: { type: Number, default: 0 }, interrupted: Boolean,
   locale: { type: String, default: 'de_DE' },
@@ -65,7 +66,7 @@ const t = computed(() => ({
   eyebrow: pick('GERÄTEDIAGNOSE', 'DEVICE DIAGNOSTICS'),
   title: pick('Eine Abfrage, alle verfügbaren Werte', 'One read, all available values'),
   readable: pick('Bereiche ausgelesen', 'sections read'),
-  intro: pick('Acht Bereiche werden nacheinander über Bluetooth gelesen. Bei langsamer Verbindung kann das länger dauern.', 'Eight sections are read over Bluetooth in sequence. A slow connection can take longer.'),
+  intro: pick('Die Bereiche werden nacheinander über Bluetooth gelesen. Bei langsamer Verbindung kann das länger dauern.', 'Sections are read over Bluetooth in sequence. A slow connection can take longer.'),
   read: pick('Alle Diagnosewerte auslesen', 'Read all diagnostic values'), reading: pick('Diagnose wird gelesen …', 'Reading diagnostics …'),
   progress: pick('Fortschritt der Geräteabfrage', 'Device read progress'),
   elapsed: pick('Vergangen', 'Elapsed'), remaining: pick('Noch ca.', 'Estimated time left'),
@@ -210,6 +211,13 @@ const mtu = data => ({
     : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.'),
 });
 function ui(data) {
+  if (data.sessions === 0) {
+    return {
+      summary: [[pick('Gezählte Einstellungssitzungen', 'Counted settings sessions'), '0']],
+      note: pick('Seit dem Neustart wurde keine Einstellungssitzung erfasst. Öffne zum Testen am Gerät die Einstellungen, drücke dort die Mitte und lies die Diagnose erneut aus. Tastendrücke im Hauptmenü liegen außerhalb dieser Messung.',
+        'No settings session was recorded since restart. To test the middle button, open Settings on the device, press it there and read diagnostics again. Main menu presses are outside this measurement.'),
+    };
+  }
   const attempt = (label, value) => [label, `${pick('Anzahl', 'Count')} ${number(value.count)} · ${pick('Auswahl', 'selection')} ${number(value.selection)} · ${pick('Fokus', 'focus')} ${number(value.focus)} · ${pick('Stufe', 'stage')} ${number(value.stage)} · ${pick('Speichern', 'save')} ${signed(value.saveResult)}`];
   return { summary: [[pick('Einstellungsdiagnose aktiv', 'Settings diagnostics active'), yesNo(data.active)],
     [pick('Gezählte Einstellungssitzungen', 'Counted settings sessions'), number(data.sessions)]],
@@ -221,11 +229,35 @@ function ui(data) {
       { label: pick('Rechts roh', 'Right raw'), values: data.rawEvents.right }, { label: pick('Mitte eingereiht', 'Middle queued'), values: data.centerPosted },
       { label: pick('Mitte verworfen', 'Middle dropped'), values: data.centerDropped }, { label: pick('Mitte zugestellt', 'Middle delivered'), values: data.centerDelivered },
     ],
-    note: data.sessions === 0
-      ? pick('Seit dem Neustart wurde keine Einstellungssitzung erfasst. Zum Prüfen am Gerät die Einstellungen öffnen, die Mitteltaste betätigen und die Diagnose erneut auslesen.', 'No settings session was recorded since restart. To check the middle button, open Settings on the device, use the button and read diagnostics again.')
-      : pick('Nur die aktuelle/letzte Einstellungsansicht, keine allgemeine Tastenstatistik aller Menüs. Die Zahlen beweisen weder einen Defekt noch eine erfolgreiche physische Tastenprüfung.', 'Current/last settings view only, not general button statistics across all menus. Counts prove neither a defect nor a successful physical button test.'),
+    note: pick('Die Zähler gelten für die aktuelle/letzte Einstellungsansicht. Tastendrücke im Hauptmenü liegen außerhalb dieser Messung.', 'Current/last settings view only. Main menu presses are outside this measurement.'),
   };
 }
+function firstMenu(data) {
+  let state;
+  if (!data.menuEntered) state = pick('Hauptmenü noch nicht geöffnet', 'Main menu has not opened yet');
+  else if (data.leftBeforeSelection) state = pick('Hauptmenü ohne App-Auswahl verlassen', 'Left the main menu before selecting an app');
+  else if (!data.selectionAttempted) state = pick('Hauptmenü geöffnet, keine App ausgewählt', 'Main menu opened, no app selected');
+  else if (!data.launcherReturned) state = pick('App-Auswahl erfasst, Rückkehr des Startaufrufs offen', 'App selection recorded, launcher has yet to return');
+  else state = data.targetActive ? pick('Gewählte App ist beim Abschluss aktiv', 'Selected app active when launch finished')
+    : pick('Beim Abschluss war die gewählte App nicht aktiv', 'Selected app was inactive when launch finished');
+  const summary = [[pick('Erste Menüauswahl', 'First menu selection'), state]];
+  if (data.selectionAttempted) {
+    const names = {2: pick('Amiibo-Emulator', 'Amiibo Emulator'), 3: pick('Amiibo-Datenbank', 'Amiibo Database'), 4: 'AmiiboLink',
+      5: pick('Videoplayer', 'Video Player'), 6: pick('Bluetooth-Dateiübertragung', 'Bluetooth File Transfer'),
+      7: pick('Einstellungen', 'Settings'), 8: pick('Kartenemulator', 'Card Emulator'), 9: pick('Spiele', 'Games')};
+    summary.push([pick('Gewählte App', 'Selected app'), names[data.targetAppId] ?? `App ${data.targetAppId}`]);
+  }
+  if (data.launcherReturned) summary.push([pick('Dauer des App-Startaufrufs', 'Time in app launch call'), ms(data.launchCallMilliseconds)]);
+  if (data.menuEntered) {
+    const count = key => data.countsSaturated && data.centerCounts[key] === 255 ? '≥255' : number(data.centerCounts[key]);
+    summary.push([pick('Mitteltaste · Drücken / Loslassen / Kurz', 'Middle button · press / release / short'),
+      ['press','release','short'].map(count).join(' / ')]);
+  }
+  return {summary, note: pick('Erfasst die entprellte Gerätetaste beim ersten Hauptmenü seit dem Neustart bis zur App-Auswahl oder zum Verlassen des Menüs. Die Dauer endet bei der Rückkehr des Startaufrufs. Wann die App auf dem Display sichtbar wurde, bleibt offen.',
+    'Tracks the debounced device button in the first main menu since restart until selection or leaving that menu. Timing ends when the launcher returns. When the app appeared on the display is unknown.')};
+}
+const includeMenu = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true).length
+  : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'menu') : supportsMenuDiagnostics(props.firmwareVersion));
 const cards = computed(() => [
   section('runtime', pick('RAM und Laufzeit', 'RAM and runtime'), normalizeRuntimeDiagnostics, runtime),
   section('startup', pick('Startzeiten', 'Startup timing'), normalizeStartupDiagnostics, startup),
@@ -235,12 +267,13 @@ const cards = computed(() => [
   section('power', pick('Strom und Ruhezeit', 'Power and sleep'), normalizePowerDiagnostics, power),
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
+  ...(includeMenu.value ? [section('menu', pick('Erstes Hauptmenü nach Neustart', 'First main menu after restart'), normalizeMenuDiagnostics, firstMenu)] : []),
 ]);
 const activeProgress = computed(() => props.loading && props.connected ? props.progress : null);
 const timing = computed(() => readTimeEstimate(activeProgress.value, Math.max(props.readClock, activeProgress.value.updatedAt)));
 const progressLabel = computed(() => {
   const { completed, total } = activeProgress.value;
-  const key = DIAGNOSTIC_SECTION_KEYS[completed];
+  const key = diagnosticSectionKeys(includeMenu.value)[completed];
   const name = cards.value.find(card => card.id === key)?.title;
   return name ? pick(`Bereich ${completed + 1} von ${total} · ${name}`, `Section ${completed + 1} of ${total} · ${name}`)
     : pick('Abfrage wird abgeschlossen …', 'Finishing the read …');

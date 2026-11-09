@@ -282,10 +282,10 @@ test('DE355 keeps PFS1 geometry but cannot reuse a DE354 capacity or identity pr
  assert.throws(()=>matchMigrationLayout({...target.layout,mounted:true},old,previous),{code:'MIGRATION_LAYOUT'})
 })
 
-test('the final PFS1 profile requires the matching engine, version, counter and settings CRC for 636 through 641',async()=>{
+test('the final PFS1 profile requires the matching engine, version, counter and settings CRC for 636 through 642',async()=>{
  const {MIGRATION_CAPACITY_TARGET:target}=await import('../src/lib/migration-capacity.js')
  const layout={...target.layout,mounted:true}
- for (const [version,counter] of [['2.22.0-DE3.64',636],['2.22.0-DE3.65',637],['2.22.0-DE3.66',638],['2.22.0-DE3.67',639],['2.22.0-DE3.68',640],['2.22.0-DE3.69',641]]) {
+ for (const [version,counter] of [['2.22.0-DE3.64',636],['2.22.0-DE3.65',637],['2.22.0-DE3.66',638],['2.22.0-DE3.67',639],['2.22.0-DE3.68',640],['2.22.0-DE3.69',641],['2.22.0-DE3.70',642]]) {
   const observation={firmwareVersion:version,applicationCounter:counter,settingsCrcValid:true}
   assert(matchMigrationLayout(layout,observation,target))
   for (const altered of [{...observation,applicationCounter:counter-1},{...observation,settingsCrcValid:false}])

@@ -90,3 +90,40 @@ export function parseUiDiagnostics(buffer) {
   if (!result) invalid('UI');
   return result;
 }
+
+export function supportsMenuDiagnostics(version) {
+  const match = /^2\.22\.0-DE3\.(\d+)$/.exec(version || '');
+  return !!match && Number(match[1]) >= 70;
+}
+
+export function normalizeMenuDiagnostics(value) {
+  if (!value || value.schemaVersion !== 1 || value.scope !== 'first-main-menu-since-restart' ||
+      !booleanFields(value, ['menuEntered', 'selectionAttempted', 'launcherReturned', 'targetActive',
+        'leftBeforeSelection', 'countsSaturated'])) return null;
+  const counts = value.centerCounts;
+  if (!['press', 'release', 'short'].every(key => uint(counts?.[key], 255))) return null;
+  const {menuEntered, selectionAttempted, launcherReturned, targetActive, leftBeforeSelection, countsSaturated,
+    targetAppId, launchCallMilliseconds} = value;
+  if ((!menuEntered && (selectionAttempted || leftBeforeSelection || counts.press || counts.release || counts.short)) ||
+      (leftBeforeSelection && selectionAttempted) || (launcherReturned && !selectionAttempted) ||
+      (targetActive && !launcherReturned) || (countsSaturated && Math.max(counts.press, counts.release, counts.short) !== 255) ||
+      (selectionAttempted ? !uint(targetAppId, 255) || targetAppId === 0 : targetAppId !== null) ||
+      (launcherReturned ? !word(launchCallMilliseconds) : launchCallMilliseconds !== null)) return null;
+  return Object.freeze({schemaVersion: 1, scope: value.scope, menuEntered, selectionAttempted, launcherReturned,
+    targetActive, leftBeforeSelection, countsSaturated, targetAppId, launchCallMilliseconds,
+    centerCounts: Object.freeze({press: counts.press, release: counts.release, short: counts.short})});
+}
+
+export function parseMenuDiagnostics(buffer) {
+  const {bytes, view} = wire(buffer, 16, 'PXMI');
+  const flags = bytes[6], elapsed = view.getUint32(12, true);
+  if (bytes[5] !== bytes.length || (flags & 0xc0) || bytes[11] ||
+      (!(flags & 2) && bytes[7]) || (!(flags & 4) && elapsed)) invalid('menu');
+  const result = normalizeMenuDiagnostics({schemaVersion: 1, scope: 'first-main-menu-since-restart',
+    menuEntered: !!(flags & 1), selectionAttempted: !!(flags & 2), launcherReturned: !!(flags & 4),
+    targetActive: !!(flags & 8), leftBeforeSelection: !!(flags & 16), countsSaturated: !!(flags & 32),
+    targetAppId: flags & 2 ? bytes[7] : null, launchCallMilliseconds: flags & 4 ? elapsed : null,
+    centerCounts: {press: bytes[8], release: bytes[9], short: bytes[10]}});
+  if (!result) invalid('menu');
+  return result;
+}

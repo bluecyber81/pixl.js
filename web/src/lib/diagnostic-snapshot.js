@@ -2,9 +2,11 @@ import { createDiagnostics, normalizeDrives, normalizeRuntimeDiagnostics } from 
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { normalizePowerDiagnostics } from './power-diagnostics.js';
 import { normalizeStartupDiagnostics } from './startup-diagnostics.js';
-import { normalizeMtuDiagnostics, normalizeUiDiagnostics } from './device-extra-diagnostics.js';
+import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics } from './device-extra-diagnostics.js';
 
 export const DIAGNOSTIC_SECTION_KEYS = Object.freeze(['runtime', 'boot', 'power', 'startup', 'drives', 'storage', 'mtu', 'ui']);
+const menuSectionKeys = Object.freeze([...DIAGNOSTIC_SECTION_KEYS, 'menu']);
+export const diagnosticSectionKeys = hasMenu => hasMenu ? menuSectionKeys : DIAGNOSTIC_SECTION_KEYS;
 const fatalCodes = new Set(['DISCONNECTED', 'CONNECT_FAILED', 'CONNECT_TIMEOUT', 'TX_FAILED', 'TIMEOUT', 'RX_INVALID']);
 const errorCodes = new Set([...fatalCodes, 'RESPONSE_INVALID', 'DEVICE_STATUS', 'REQUEST_INVALID', 'DIAGNOSTIC_INVALID_DATA', 'DIAGNOSTIC_FAILED']);
 const uint = (value, maximum = 0xffffffff) => Number.isInteger(value) && value >= 0 && value <= maximum;
@@ -51,6 +53,7 @@ export function normalizeDiagnosticSectionData(key, value) {
       case 'storage': return normalizeStorageDiagnostics(value);
       case 'mtu': return normalizeMtuDiagnostics(value);
       case 'ui': return normalizeUiDiagnostics(value);
+      case 'menu': return normalizeMenuDiagnostics(value);
       case 'drives':
         return Array.isArray(value) ? normalizeDrives(value.map(drive => ({ label: drive?.label,
           status: drive?.status, total_size: drive?.totalBytes, free_size: drive?.freeBytes }))) : null;
@@ -75,7 +78,8 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
   const time = () => { const value = now(); if (!timestamp(value)) throw fault('DIAGNOSTIC_INVALID_TIME'); return value; };
   check();
   const startedAt = time(), sections = {};
-  for (const [index, key] of DIAGNOSTIC_SECTION_KEYS.entries()) {
+  const keys = diagnosticSectionKeys(typeof readers.menu === 'function');
+  for (const [index, key] of keys.entries()) {
     check();
     let section;
     if (typeof readers[key] !== 'function') {
@@ -99,7 +103,7 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
       }
     }
     sections[key] = freeze(section);
-    if (onProgress) onProgress(Object.freeze({ key, index: index + 1, total: DIAGNOSTIC_SECTION_KEYS.length, section }));
+    if (onProgress) onProgress(Object.freeze({ key, index: index + 1, total: keys.length, section }));
     check();
   }
   return freeze({ schemaVersion: 1, startedAt, completedAt: time(), sections });
@@ -109,7 +113,7 @@ export function normalizeDiagnosticSnapshot(value) {
   if (!value || value.schemaVersion !== 1 || !timestamp(value.startedAt) || !timestamp(value.completedAt) ||
       !value.sections || typeof value.sections !== 'object') return null;
   const sections = {};
-  for (const key of DIAGNOSTIC_SECTION_KEYS) {
+  for (const key of diagnosticSectionKeys(Object.hasOwn(value.sections, 'menu'))) {
     const section = value.sections[key];
     if (!section || !['available', 'unavailable', 'failed'].includes(section.state) ||
         (section.observedAt !== null && !timestamp(section.observedAt)) ||
@@ -130,7 +134,8 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
   if (!baseReport || typeof baseReport !== 'object') baseReport = {};
   const normalized = snapshot === null ? null : normalizeDiagnosticSnapshot(snapshot);
   if (snapshot !== null && !normalized) throw fault('DIAGNOSTIC_INVALID_DATA');
-  const sectionData = key => normalized?.sections[key].data ?? null;
+  const sectionData = key => normalized?.sections[key]?.data ?? null;
+  const settingsUi = sectionData('ui');
   // Reconstruct rather than spread the supplied report: callers may pass extra
   // object properties, and failed fresh sections must not reuse cached values.
   const report = createDiagnostics({ firmwareVersion: baseReport.firmwareVersion, connected: baseReport.connected,
@@ -148,6 +153,10 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
       'Sections were read sequentially; this is not an atomic device snapshot.',
       'Read timestamps describe browser receipt, not the age of cached firmware samples.',
       'Startup markers exclude bootloader and early SDK startup.',
+      ...(settingsUi ? [settingsUi.sessions === 0
+        ? 'No settings session was recorded. The settings button counters contain no observations.'
+        : 'Settings button counters describe the current or last settings session. Main menu input is outside their scope.'] : []),
+      ...(sectionData('menu') ? ['The menu trace covers the first main menu after application restart. Launch timing ends when the launcher returns and does not measure physical display latency.'] : []),
       ...(sectionData('startup')?.schemaVersion === 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
       'Storage cache sizes are configuration values, not measured cache usage.'] };
 }

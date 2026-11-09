@@ -19,10 +19,12 @@ class DiagnosticProtocolTests(HostTests):
 #define DF_STATUS_OK 0
 #define DF_STATUS_ERR 1
 #define MUI_NAV_DIAG_SNAPSHOT_SIZE 104u
+#define MUI_FIRST_MENU_DIAG
+#define MUI_MENU_DIAG_SIZE 16u
 typedef struct { uint8_t cmd, status; uint16_t chunk, length; uint8_t data[243]; } df_frame_t;
 typedef struct { int type; df_frame_t *df; } df_event_t;
 #define OUT_FRAME_NO_DATA(f,c,s) do { (f).cmd=(c); (f).status=(s); (f).length=0; (f).chunk=0; } while(0)
-static unsigned reads, sends;
+static unsigned reads, sends, menu_reads;
 static bool available = true;
 static df_frame_t reply;
 static bool mui_nav_diag_snapshot(uint8_t *out, size_t cap) {
@@ -30,6 +32,10 @@ static bool mui_nav_diag_snapshot(uint8_t *out, size_t cap) {
     if (!available) return false;
     for (unsigned i=0;i<104;i++) out[i]=(uint8_t)i;
     return true;
+}
+static bool mui_menu_diag_snapshot(uint8_t *out, size_t cap) {
+    ++menu_reads; assert(cap>=16); if (!available) return false;
+    memset(out,0,16); memcpy(out,"PXMI",4); return true;
 }
 static void df_core_send_frame(df_frame_t *out) { ++sends; reply=*out; }
 ''' + handler + r'''
@@ -40,6 +46,19 @@ int main(void) {
         assert(reads==i+1 && sends==i+1);
         assert(reply.cmd==4 && reply.status==0 && reply.chunk==0 && reply.length==104);
         for(unsigned j=0;j<104;j++) assert(reply.data[j]==j);
+    }
+    assert(!menu_reads);
+    request.length=1; request.data[0]=1;
+    df_proto_handler_info_ui_diagnostic(&event);
+    assert(reply.status==0 && reply.length==16 && !memcmp(reply.data,"PXMI",4) && menu_reads==1 && reads==2);
+    available=false; df_proto_handler_info_ui_diagnostic(&event);
+    assert(reply.status==1 && reply.length==0 && menu_reads==2 && reads==2);
+    available=true;
+    for(unsigned field=0;field<4;field++) {
+        request.length=field==0?2:1; request.data[0]=field==1?2:1;
+        request.chunk=field==2; request.status=field==3;
+        df_proto_handler_info_ui_diagnostic(&event);
+        assert(reply.status==1 && reply.length==0 && menu_reads==2 && reads==2);
     }
     unsigned previous=reads;
     for(unsigned field=0;field<3;field++) {
