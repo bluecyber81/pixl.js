@@ -70,7 +70,7 @@ int main(void){
 '''
 auto = base+r'''
 typedef struct { unsigned prev_scene_id; } app_amiidb_t;
-enum {AMIIDB_SCENE_GAME_LIST=1,AMIIDB_SCENE_FAV_LIST=2,AMIIDB_SCENE_AMIIBO_SEARCH=3,AMIIDB_SCENE_DATA_LIST=4};
+enum {AMIIDB_SCENE_GAME_LIST=1,AMIIDB_SCENE_FAV_LIST=2,AMIIDB_SCENE_AMIIBO_SEARCH=3,AMIIDB_SCENE_DATA_LIST=4,AMIIDB_SCENE_RECENT=5};
 static unsigned generations,updates;
 static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t*a){(void)a;++generations;}
 static void*mui(void){return NULL;}
@@ -82,6 +82,7 @@ int main(void){
  a.prev_scene_id=AMIIDB_SCENE_AMIIBO_SEARCH;ntag_generate_timer_handler(&a);assert(generations==3 && updates==3);
  a.prev_scene_id=AMIIDB_SCENE_DATA_LIST;ntag_generate_timer_handler(&a);assert(generations==3 && updates==4);
  a.prev_scene_id=99;ntag_generate_timer_handler(&a);assert(generations==3 && updates==5);
+ a.prev_scene_id=AMIIDB_SCENE_RECENT;ntag_generate_timer_handler(&a);assert(generations==4 && updates==6);
  puts("PASS game/favorite/search generate; slot and unrelated scenes do not");
 }
 '''

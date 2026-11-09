@@ -91,7 +91,7 @@ test('local server identity, routes and authenticated self-stop reject wrong tok
   const exited = new Promise(resolve => child.once('exit', resolve));
   try {
     const health = await waitHealth(port);
-    assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.45.0', instance: crypto.createHash('sha256').update(token).digest('hex') });
+    assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.46.0', instance: crypto.createHash('sha256').update(token).digest('hex') });
     assert.ok(!JSON.stringify(health).includes(token));
     const head = await request(port, healthPath, 'HEAD');
     assert.equal(head.status, 200); assert.equal(head.body, ''); assert.ok(Number(head.headers['content-length']) > 0);

@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.45.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.46.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -247,6 +247,7 @@
       </div>
       <div class="workspace-actions"><el-button size="small" type="primary" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible || (storeBackup && (storedBusy || !!storedHead || !!storedError))">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
       <label><input type="checkbox" :checked="storeBackup" :disabled="busy || storedBusy" @change="toggle_stored_backup($event.target.checked)"> {{ $t('workflow.storeOption') }}</label>
+      <BackupComparison v-if="activeWorkspace === 'backup'" :locale="language" />
       <div v-if="storeBackup" class="backup-resume">
         <p>{{ $t('workflow.storeInfo') }}</p>
         <p v-if="persistStatus">{{ $t('workflow.' + persistStatus) }}</p>
@@ -291,7 +292,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.45.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.46.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -553,7 +554,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,

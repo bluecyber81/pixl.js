@@ -8,6 +8,12 @@
 #include "db_header.h"
 #define AMIIDB_SEARCH_MAX_BYTES 32
 #define AMIIDB_RESULT_PAGE_SIZE 24
+#define AMIIDB_RECENT_LIMIT 5
+
+/* Figure pointers refer to immutable catalog entries. History lives until reset. */
+void amiidb_recent_note(const db_amiibo_t *figure, uint8_t game_id);
+uint8_t amiidb_recent_game(const db_amiibo_t *figure);
+uint8_t amiidb_recent_copy(const db_amiibo_t *items[AMIIDB_RECENT_LIMIT]);
 
 typedef void (*amiidb_db_search_cb_t)(const db_amiibo_t *p_amiibo, void *ctx);
 

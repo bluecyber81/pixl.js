@@ -32,6 +32,22 @@ typedef struct {
     const char *it;
 } db_notes_t;
 
+/* A desktop catalog includes every translation. The LCD embeds the ones its
+ * language selector supports; German hints are translated from the English. */
+#ifdef BOARD_LCD
+#include "i18n/language_list.h"
+#endif
+#if defined(BOARD_LCD) && !defined(LANGUAGE_HAS_ZH_HANS)
+#define DB_NOTE_CN(text) ""
+#else
+#define DB_NOTE_CN(text) text
+#endif
+#if defined(BOARD_LCD) && !defined(LANGUAGE_HAS_IT_IT)
+#define DB_NOTE_IT(text) ""
+#else
+#define DB_NOTE_IT(text) text
+#endif
+
 typedef struct _db_link_t {
     /* Internal ROM indices, independent of tag/slot formats. */
     uint16_t amiibo_index;

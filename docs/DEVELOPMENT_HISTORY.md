@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## File manager 3.46.0
+
+Under **Backup**, choose two saved backup ZIPs to see added, removed and changed entries, even while disconnected. Under **Update**, open a published LCD package in the Nordic DFU app on Android. The DE3.69 LCD test release lists the last five figures opened in the amiibo database. [DE3.69 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip) · [Web 3.46.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.46.0)
+
 ## File manager 3.45.0 · LCD DE3.68 / 640 · 2026-11-09
 
 Choose a game in the catalogue to see matching figures from your collection. In Backup, the folder comparison also lists files present only on the device. On the LCD, test firmware DE3.68 remembers the last opened app when returning to the main menu. [DE3.68 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip) · [Web 3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0)
@@ -20,7 +24,7 @@ The local LittleFS capacity check shows DE3.67 with application counter 639 as t
 
 Folder backups can resume after restarting the browser. The figure catalogue saves web favourites, named filters and HTTPS link lists. You can rotate an LCD capture by 180° before saving it. [User guide](DATEIMANAGER_WEB.md#dateimanager-3430)
 
-**LCD test release DE3.67 / 639.** All 54 distinct usage notes across 63 game associations can be read in German on the device. Long notes scroll to the last pixel. Physical LCD and QR checks are pending. [Download for Android](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip)
+**LCD test release DE3.67 / 639.** All 54 distinct usage notes across 63 game associations can be read in German on the device. Long notes scroll to the last pixel. German game hints and the QR code were confirmed on the LCD. The renderer test covers the last scroll pixel. [Download for Android](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip)
 
 - **3.43.0** · [Web source (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT review package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
 

@@ -110,7 +110,7 @@ class DatabaseRefreshTests(unittest.TestCase):
         self.assertIn('{0xabcdef01, 0x23456789, "New \\"figure\\" \\\\ test\\nnext line", ""}', generated)
         self.assertNotIn('"None"', generated)
         links = (self.generated / "db_link.c").read_text(encoding="utf8")
-        self.assertIn('{"", "", ""}', links)
+        self.assertIn('{"", DB_NOTE_CN(""), DB_NOTE_IT("")}', links)
         self.assertIn('{1, 255, 0}', links)
         first = {p.name: p.read_bytes() for p in self.generated.glob("*.c")}
         self.assertEqual(self.execute(["--refresh"], body)[0], 0)
@@ -220,7 +220,7 @@ class DatabaseRefreshTests(unittest.TestCase):
                 data = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
                 links = (self.generated / "db_link.c").read_text(encoding="utf8")
                 self.assertIn('"Local alias", "Local translation"', data)
-                self.assertIn('{"Note", "", ""}', links)
+                self.assertIn('{"Note", DB_NOTE_CN(""), DB_NOTE_IT("")}', links)
                 self.assertIn('{0, 1, 0}', links)
                 self.assertNotIn(", 255,", links)
                 with (self.project / "data/amiidb_amiibo.csv").open(encoding="utf8", newline="") as stream:

@@ -104,7 +104,12 @@ int main(void) {
   const db_amiibo_t *figure=&amiibo_list[link->amiibo_index];
   assert(figure->head==ref->head && figure->tail==ref->tail);
   assert(link->note_index < sizeof(db_usage_notes)/sizeof(*db_usage_notes));
-  assert(!strcmp(db_usage_notes[link->note_index].en,ref->en) && !strcmp(db_usage_notes[link->note_index].cn,ref->cn) && !strcmp(db_usage_notes[link->note_index].it,ref->it));
+ assert(!strcmp(db_usage_notes[link->note_index].en,ref->en));
+ #ifdef BOARD_LCD
+ assert(!*db_usage_notes[link->note_index].cn && !*db_usage_notes[link->note_index].it);
+ #else
+ assert(!strcmp(db_usage_notes[link->note_index].cn,ref->cn) && !strcmp(db_usage_notes[link->note_index].it,ref->it));
+ #endif
   size_t first=0;while(first<i && (expected[first].game!=ref->game || expected[first].head!=ref->head || expected[first].tail!=ref->tail)) first++;
   assert(get_link_by_id(ref->game,ref->head,ref->tail)==&link_list[first]);
  }
@@ -121,6 +126,7 @@ int main(void) {
 }
 '''
         self.compile_run(code, includes=[SRC / 'amiidb'])
+        self.compile_run('#define BOARD_LCD\n' + code, includes=[SRC / 'amiidb', SRC])
 
     def test_generator_rejects_invalid_references_before_output(self):
         figure = lambda value: SimpleNamespace(id=value)

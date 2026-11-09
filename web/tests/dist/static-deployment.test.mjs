@@ -99,11 +99,11 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.ok(index.includes(`href="${file}"`), file)
   }
   const buildVersion = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8')).version
-  const version = buildVersion.includes('-') ? '3.45.0' : buildVersion
+  const version = buildVersion.includes('-') ? '3.46.0' : buildVersion
   const fileVersion = version.replaceAll('.', '_')
   for (const name of [
     'Allmiibo_Dateimanager_' + fileVersion + '_Quellcode.zip',
-    'Allmiibo_DE3_68_Z19_Web' + fileVersion + '_ChatGPT_Pruefpaket.zip'
+    'Allmiibo_DE3_69_Z19_Web' + fileVersion + '_ChatGPT_Pruefpaket.zip'
   ]) {
     assert.ok(index.includes('href="https://bluecyber81.github.io/pixl.js/downloads/web' + version + '/' + name + '" download'), name)
   }

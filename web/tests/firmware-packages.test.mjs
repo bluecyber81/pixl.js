@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { packagePresentation,firmwarePackageText } from '../src/lib/release-packages.js';
 import { parseBootDiagnostics } from '../src/lib/boot-diagnostics.js';
+import { nrfDfuLink } from '../public/dfu/nrf-dfu-link.mjs';
 import bootPacket from './boot-fixture.cjs';
 const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmiibo_LCD_DE3_53_625_TESTSTAND.zip'};
 test('package presentation is explicit local scope and never claims unread storage compatibility',()=>{
@@ -24,11 +25,22 @@ test('disconnect ignores the former device version and private session fields ar
 
 test('each card links its own catalogue ID and keeps the diagnostics fragment intact', () => {
  const diagnostic = '#read=100&app=637&bl=19&sd=294';
- for (const id of ['de3.65-lcd-app', 'de3.68-lcd-app']) {
+ for (const id of ['de3.65-lcd-app', 'de3.69-lcd-app']) {
    const item = {...entry, id};
    const url = new URL(packagePresentation(item, {dfuReference:diagnostic}).dfuUrl, 'https://example.test');
    assert.equal(url.pathname, '/dfu/web.html');
    assert.deepEqual([...url.searchParams], [['package', id]]);
    assert.equal(url.hash, diagnostic);
+ }
+});
+
+test('only a named LCD app release can be handed to nRF DFU', () => {
+ const app = {...entry, board:'LCD', applicationOnly:true, file:'Allmiibo_LCD_DE3_53_625_NUR_APP.zip'};
+ const link = new URL(nrfDfuLink(app));
+ assert.deepEqual([...link.searchParams], [['file','https://bluecyber81.github.io/pixl.js/firmware/' + app.file]]);
+ for (const changed of [null, {...app, applicationOnly:false}, {...app, board:'OLED'}, {...app, counter:626},
+   {...app, file:entry.file}, {...app, id:'de3.65-lcd-app'}, {...app, file:'../test.zip'},
+   {...app, file:'https://example.com/firmware.zip'}, {...app, file:app.file + '?device=private'}]) {
+   assert.equal(nrfDfuLink(changed),null);
  }
 });

@@ -41,10 +41,10 @@
         </section>
         <section id="flash">
           <h2>Flash the application over Bluetooth</h2>
-          <p>For a compatible LCD with a completed PFS1 setup, <b>DE3.65 / 637</b> is the stable release. <b>DE3.68 / 640</b> is the test release that reselects the app icon when you return to the main menu. The tested system uses Z19 and Nordic S112 7.3.0. If your intended version is already installed, you are done with this step.</p>
+          <p>For a compatible LCD with a completed PFS1 setup, <b>DE3.65 / 637</b> is the stable release. <b>DE3.69 / 641</b> is the test release with recent figures in the amiibo database. The tested system uses Z19 and Nordic S112 7.3.0. If your intended version is already installed, you are done with this step.</p>
           <ol class="steps"><li><h3>Back up your collection</h3><p>Keep a current backup. In the file manager, open <b>Files → E:/</b>, then <b>Backup → Back up folder (ZIP)</b>. Save the finished ZIP to Downloads. A first-time storage migration uses the <a href="#littlefs">full Raw128 migration backup</a>.</p></li>
-            <li><h3>Select the application</h3><p>Use <b>Update</b> in the connected file manager or open the <a href="../dfu/web.html" target="_blank" rel="noopener">Web DFU page</a>. Select the desired LCD application and choose <b>Load and check package</b>. Both application ZIPs can also be downloaded below. If your device already runs a newer application, retain it unless you specifically intend to downgrade.</p></li>
-            <li><h3>Select the device in update mode</h3><p>Disconnect file transfer and other connected apps. On the device open <b>Settings → Firmware update</b>. On the Web DFU page choose <b>Select DFU device and transfer</b> and select <b>pixl dfu</b>. Transfer starts after selection. Keep the device within range and the phone awake.</p></li>
+            <li><h3>Select the application</h3><p>Use <b>Update</b> in the file manager or open the <a href="../dfu/web.html" target="_blank" rel="noopener">Web DFU page</a>. Choose your LCD version. On Android, <b>Open in nRF DFU (Android)</b> opens the selected package in the installed Nordic app. To update in the browser, choose <b>Load and check package</b>. Both application ZIPs are also available for download below.</p></li>
+            <li><h3>Select the device in update mode</h3><p>Disconnect file transfer and other connected apps. On the Allmiibo open <b>Settings → Firmware update</b>. In the Nordic app select <b>pixl dfu</b> and start the transfer. On the Web DFU page the transfer starts when you choose <b>Select DFU device and transfer → pixl dfu</b>. Keep the device within range and the phone awake.</p></li>
             <li><h3>Check the restart</h3><p>Wait for the normal menu. Open <b>BLE file transfer</b>, reconnect to <b>Pixl.js</b> in the file manager and read back the device version. Open a familiar folder and figure. This package updates the application and retains your existing PFS1 collection.</p></li></ol>
         </section>
         <section id="littlefs">
@@ -77,7 +77,7 @@
           <ul class="downloads"><li><a href="../">Open file manager</a></li>
             <li><a href="../dfu/web.html">Web DFU for the application</a></li>
             <li><a href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>Stable LCD app DE3.65 (ZIP)</a></li>
-            <li><a href="../firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip" download>LCD test release DE3.68 (ZIP)</a></li>
+            <li><a href="../firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip" download>LCD test release DE3.69 (ZIP)</a></li>
             <li><a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">Nordic DFU for Android</a></li>
             <li><a href="https://github.com/nordicsemi/Android-DFU-Library/#application">Nordic's app documentation</a></li>
             <li><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/MIGRATION_PFS1.md">Technical migration guide</a></li></ul>

@@ -416,7 +416,7 @@ def render_amiibo_links(links, amiibos):
         f.write('#include "db_header.h"\n')
         f.write('const db_notes_t db_usage_notes[] = {\n')
         for values in note_ids:
-            f.write('    {"%s", "%s", "%s"},\n' % tuple(map(c_string, values)))
+            f.write('    {"%s", DB_NOTE_CN("%s"), DB_NOTE_IT("%s")},\n' % tuple(map(c_string, values)))
         if not note_ids:
             f.write("    {0}\n")
         f.write('};\n')

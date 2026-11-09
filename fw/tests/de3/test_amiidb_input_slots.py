@@ -163,6 +163,10 @@ static uint32_t to_little_endian_int32(const uint8_t *p){return ((uint32_t)p[0]<
     def test_real_search_ui_paging_filter_and_selected_record(self):
         source = (SRC / 'app/amiidb/scene/amiidb_scene_amiibo_search.c').read_text()
         source = '\n'.join(line for line in source.splitlines() if not line.startswith('#include'))
+        recent = (SRC / 'app/amiidb/scene/amiidb_scene_main.c').read_text(encoding='utf-8')
+        source += '\n' + '\n'.join(native.function(recent, name) for name in (
+            'amiidb_scene_main_on_exit', 'recent_selected', 'amiidb_scene_recent_on_enter',
+            'amiidb_scene_recent_on_exit'))
         self.compile_run(r'''
 #include <assert.h>
 #include <stdio.h>
@@ -176,6 +180,7 @@ enum {MUI_LIST_VIEW_EVENT_SELECTED,MUI_LIST_VIEW_EVENT_LONG_SELECTED};
 enum {MUI_TEXT_INPUT_EVENT_CONFIRMED,MUI_TEXT_INPUT_EVENT_CANCELLED};
 enum {ICON_EXIT,ICON_SEARCH,ICON_SETTINGS,ICON_PREV,ICON_NEXT,ICON_FILE,ICON_FOLDER,ICON_PAGE,ICON_ERROR};
 enum {AMIIDB_SCENE_MAIN,AMIIDB_SCENE_AMIIBO_SEARCH,AMIIDB_SCENE_AMIIBO_DETAIL};
+enum {ICON_EMPTY=20, AMIIDB_SCENE_RECENT=21};
 enum {AMIIDB_VIEW_ID_INPUT,AMIIDB_VIEW_ID_LIST};
 typedef int mui_list_view_event_t;typedef int mui_text_input_event_t;
 typedef struct {unsigned icon;void *user_data;char text[128];} mui_list_item_t;
@@ -207,6 +212,11 @@ static bool isChineseLanguage(void){return false;}
 const char *get_amiibo_display_name(const db_amiibo_t*a){return a->name_en;}
 const db_game_t game_list[]={{1,0,"Zulu game","",0,0},{2,0,"Alpha game","",0,0},{0}};
 static db_amiibo_t records[305];
+static unsigned recent_count;
+uint8_t amiidb_recent_copy(const db_amiibo_t *items[AMIIDB_RECENT_LIMIT]){
+ for(unsigned i=0;i<recent_count;i++)items[i]=&records[4-i];
+ return recent_count;
+}
 int32_t amiidb_api_db_search_page(const char*s,uint8_t game,uint16_t page,const db_amiibo_t**items,uint16_t*total){
  *total=game?1:305;if(strcmp(s,"missing")==0){*total=0;return 0;}
  unsigned offset=game?0:(page>305/AMIIDB_RESULT_PAGE_SIZE?305/AMIIDB_RESULT_PAGE_SIZE*AMIIDB_RESULT_PAGE_SIZE:page*AMIIDB_RESULT_PAGE_SIZE),count=game?1:305-offset;if(count>AMIIDB_RESULT_PAGE_SIZE)count=AMIIDB_RESULT_PAGE_SIZE;
@@ -233,6 +243,15 @@ int main(void){
  choose(&list,ICON_SEARCH);assert(view==AMIIDB_VIEW_ID_INPUT && input.max==32 && input.cb==search_input_cb);
  strcpy(input.text,"missing");input.cb(MUI_TEXT_INPUT_EVENT_CONFIRMED,&input);assert(app.result_count==0 && app.result_total==0 && find(&list,ICON_ERROR) && view==AMIIDB_VIEW_ID_LIST);
  choose(&list,ICON_EXIT);assert(scene==AMIIDB_SCENE_MAIN && errors==0);
+ amiidb_scene_amiibo_search_on_exit(&app);amiidb_scene_recent_on_enter(&app);
+ assert(list.count==2 && list.items[0].icon==ICON_EMPTY && list.focus==1);
+ recent_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items[1]);assert(scene==AMIIDB_SCENE_MAIN);
+ amiidb_scene_recent_on_exit(&app);recent_count=5;amiidb_scene_recent_on_enter(&app);
+ assert(list.count==6 && list.focus==0 && list.items[3].user_data==&records[1]);
+ recent_selected(MUI_LIST_VIEW_EVENT_LONG_SELECTED,&list,&list.items[3]);assert(scene==AMIIDB_SCENE_MAIN);
+ recent_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items[3]);
+ assert(scene==AMIIDB_SCENE_AMIIBO_DETAIL && app.prev_scene_id==AMIIDB_SCENE_RECENT && app.cur_amiibo==&records[1]);
+ amiidb_scene_recent_on_exit(&app);assert(list.count==0);
  string_clear(app.search_str);puts("PASS: actual search UI next/previous, selected page record, filter sorting/reset and text return");return 0;}
 ''', includes=[SRC / 'amiidb', SRC / 'app/amiidb/api', FW / 'components/mlib'])
 

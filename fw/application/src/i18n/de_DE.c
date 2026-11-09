@@ -254,4 +254,6 @@ const char * const lang_de_DE[_L_COUNT] = {
     [_L_DE360_EXISTS] = "Name schon vergeben",
     [_L_DE360_NO_RAM] = "Zu wenig RAM",
     [_L_DE361_UNTIL_OFF] = "bis Aus",
+    [_L_AMIIDB_RECENT] = "Zuletzt geöffnet",
+    [_L_AMIIDB_RECENT_EMPTY] = "Noch keine Figur",
 };

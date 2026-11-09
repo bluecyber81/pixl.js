@@ -18,6 +18,7 @@ def run(fw,baseline=False,arm=False,sanitize=False):
   if not baseline:files.append(src/'app/amiidb/scene/amiidb_fav_page.h')
   before={str(p.relative_to(fw)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
   text=(HERE/'favorites_navigation_memory_host.c.in').read_text().replace('@LIST@',bodies).replace('@BROWSER@',re.sub(r'^#include[^\n]*\n','',browser,flags=re.M)).replace('@DETAIL@',ds).replace('@PACKED@',packed)
+  text=text.replace('@READ_ID@',extract((src/'amiibo_helper.c').read_text(),'to_little_endian_int32'))
   c=td/'probe.c';c.write_text(text,encoding='utf-8',newline='\n');exe=td/'probe.exe'
   inc=[td,src,src/'mui',src/'mui/view',src/'core',src/'mod',src/'mod/vfs',src/'ntag',src/'app/amiidb',src/'app/amiidb/api',src/'app/amiidb/view',src/'app/amiidb/scene',src/'amiidb',src/'i18n',fw/'components/mlib',fw/'components/u8g2/csrc',fw/'components/tlsf',fw/'components/littlefs']
   cmd=['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-unused-variable','-Wno-type-limits','-Wno-comment','-Wno-unused-value','-Wno-sign-compare','-Wno-missing-field-initializers','-Wno-pointer-to-int-cast','-Wno-pointer-sign','-DTEST_BASELINE='+str(int(baseline))]

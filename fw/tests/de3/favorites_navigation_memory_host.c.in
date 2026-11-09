@@ -41,12 +41,18 @@ void mui_text_input_set_event_cb(mui_text_input_t*v,mui_text_input_event_cb_t cb
 #define NRF_LOG_INFO(...) ((void)0)
 void mui_scene_dispatcher_previous_scene(mui_scene_dispatcher_t*d){(void)d;scene_changes++;}
 void mui_text_input_clear_input_text(mui_text_input_t*v){(void)v;}
-const db_amiibo_t *get_amiibo_by_id(uint32_t head,uint32_t tail){(void)head;(void)tail;return NULL;}
+@READ_ID@
+static const db_amiibo_t slot_figure={.head=0x11223344,.tail=0x55667788,.name_en="Slot"};
+const db_amiibo_t *get_amiibo_by_id(uint32_t head,uint32_t tail){
+ return head==slot_figure.head && tail==slot_figure.tail ? &slot_figure : NULL;
+}
 static void amiidb_fav_show_error(app_amiidb_t*a,int32_t result){(void)a;(void)result;errors++;}
 static amiidb_fav_info_t infos[1024];static unsigned info_count,read_count,close_count;static int32_t read_failure;static unsigned fail_after;static bool folders;
 int32_t amiidb_api_fav_list_dir(const char*folder,amiidb_fav_cb_t cb,void*ctx){(void)folder;for(unsigned i=0;i<info_count;i++){if(read_failure&&i==fail_after){close_count++;return read_failure;}read_count++;cb(&infos[info_count-1-i],ctx);}close_count++;return read_failure;}
 int32_t amiidb_api_fav_create_dir(const char*p){(void)p;return VFS_OK;}
-int32_t amiidb_api_fav_add(const char*p,const amiidb_fav_t*f){(void)p;(void)f;return VFS_OK;}
+static amiidb_fav_t saved_fav;
+static unsigned fav_saves;
+int32_t amiidb_api_fav_add(const char*p,const amiidb_fav_t*f){(void)p;saved_fav=*f;fav_saves++;return VFS_OK;}
 @BROWSER@
 @DETAIL@
 
@@ -93,6 +99,23 @@ static unsigned expected_count(bool select){unsigned n=0;for(unsigned i=0;i<info
 static unsigned checkpage(app_amiidb_t*a,unsigned offset){bound(a);assert(a->p_list_view->items->size<=28);unsigned n=0;for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];if(x->icon==ICON_FOLDER){assert(expected[offset+n].fav_type==FAV_TYPE_FOLDER&&!strcmp(string_get_cstr(x->text),expected[offset+n].fav_data.folder_name));n++;}else if(x->icon==ICON_FILE){assert(expected[offset+n].fav_type==FAV_TYPE_FAV);amiidb_fav_t*f=x->user_data,*e=&expected[offset+n].fav_data.fav;assert(f&&f->game_id==e->game_id&&f->amiibo_head==e->amiibo_head&&f->amiibo_tail==e->amiibo_tail);n++;}}assert(n<=24);return n;}
 static void pages(unsigned n,unsigned mix,bool select){make(n,mix==1);if(mix==2)for(unsigned i=0;i<n;i+=5){infos[i].fav_type=FAV_TYPE_FOLDER;snprintf(infos[i].fav_data.folder_name,48,"%04u-abcdefghijklmnopqrstu",i);}unsigned total=expected_count(select);app_amiidb_t*a=begin(true);if(select)amiidb_scene_fav_select_on_enter(a);else amiidb_scene_fav_list_on_enter(a);unsigned seen=0,start=0;do{start=seen;seen+=checkpage(a,seen);if(!item(a,ICON_NEXT))break;click(a,ICON_NEXT);}while(1);assert(seen==total);while(item(a,ICON_PREV)){click(a,ICON_PREV);start-=24;checkpage(a,start);}assert(start==0);assert(!errors);end(a);cases++;}
 static void errors_and_return(void){
+ make(1,true);
+ app_amiidb_t *context=begin(false);
+ amiibo_view_t view={.game_id=255};
+ db_amiibo_t recent={.head=12,.tail=34};
+ context->p_amiibo_view=&view;context->cur_amiibo=&recent;
+ context->prev_scene_id=AMIIDB_SCENE_RECENT;
+ amiidb_scene_fav_select_on_enter(context);
+ click(context,ICON_FOLDER);
+ assert(fav_saves==1 && saved_fav.game_id==255 && saved_fav.amiibo_head==12 && saved_fav.amiibo_tail==34);
+ context->prev_scene_id=AMIIDB_SCENE_DATA_LIST;
+ click(context,ICON_FOLDER);assert(fav_saves==1);
+ const uint8_t slot_id[]={0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
+ memcpy(&context->ntag.data[84],slot_id,sizeof(slot_id));
+ click(context,ICON_FOLDER);
+ assert(fav_saves==2 && saved_fav.game_id==0 && saved_fav.amiibo_head==slot_figure.head && saved_fav.amiibo_tail==slot_figure.tail);
+ amiidb_scene_fav_select_on_exit(context);end(context);cases++;
+
  for(unsigned select=0;select<2;select++)for(unsigned err=0;err<2;err++){make(35,select);app_amiidb_t*a=begin(true);fail_after=err?info_count:6;read_failure=err?VFS_ERR_FAIL:VFS_ERR_CRPT;if(select)amiidb_scene_fav_select_on_enter(a);else amiidb_scene_fav_list_on_enter(a);assert(errors==1&&data_count(a)==0&&close_count==1&&!oom&&item(a,ICON_EXIT));end(a);cases++;}
  make(100,false);expected_count(false);app_amiidb_t*a=begin(true);amiidb_scene_fav_list_on_enter(a);click(a,ICON_NEXT);mui_list_view_set_focus(a->p_list_view,7);amiidb_fav_t selected=*(amiidb_fav_t*)a->p_list_view->items->ptr[7].user_data;a->p_list_view->selected_cb(MUI_LIST_VIEW_EVENT_SELECTED,a->p_list_view,&a->p_list_view->items->ptr[7]);assert(a->cur_fav.game_id==selected.game_id&&a->cur_fav.amiibo_head==selected.amiibo_head&&last_scene==AMIIDB_SCENE_AMIIBO_DETAIL);amiidb_scene_fav_list_on_exit(a);amiidb_scene_fav_list_on_enter(a);assert(a->p_list_view->focus_index==7);checkpage(a,24);end(a);cases++;
  make(49,false);expected_count(false);a=begin(true);amiidb_scene_fav_list_on_enter(a);click(a,ICON_NEXT);click(a,ICON_NEXT);info_count=20;expected_count(false);amiidb_scene_fav_list_reload(a);assert(a->fav_page_direction==0);checkpage(a,0);end(a);cases++;

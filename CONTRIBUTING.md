@@ -1,7 +1,5 @@
 # Contributing
 
-Choose a game in the catalogue to see matching figures from your collection. In Backup, the folder comparison also lists files present only on the device. On the LCD, test firmware DE3.68 remembers the last opened app when returning to the main menu. [DE3.68 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip) · [Web 3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0)
-
 Contributions to this community fork are welcome. Start from `main`; keep a pull
 request focused on one reproducible problem. Explain the trigger, the resulting
 behavior and how you checked it. Hardware access is not required for a source or
@@ -11,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| LCD application | [DE3.68 / 640 prerelease source](fw/application/src/) and [unsigned build guide](docs/BUILD_DE3_68.md). To reproduce the device-tested DE3.65 / 637 release, check out [tag `de3.65`](https://github.com/bluecyber81/pixl.js/tree/de3.65) and follow its [build guide](https://github.com/bluecyber81/pixl.js/blob/de3.65/docs/BUILD_DE3_65.md). |
+| LCD application | [DE3.69 / 641 prerelease source](fw/application/src/) and [unsigned build guide](docs/BUILD_DE3_69.md). To reproduce the device-tested DE3.65 / 637 release, check out [tag `de3.65`](https://github.com/bluecyber81/pixl.js/tree/de3.65) and follow its [build guide](https://github.com/bluecyber81/pixl.js/blob/de3.65/docs/BUILD_DE3_65.md). |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). The [3.45.0 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0) includes portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). The [3.46.0 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.46.0) includes portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |
@@ -60,7 +58,7 @@ The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-Follow [the LCD build guide](docs/BUILD_DE3_68.md) to reproduce the unsigned LCD
+Follow [the LCD build guide](docs/BUILD_DE3_69.md) to reproduce the unsigned LCD
 application. No signing key is required. The current release helper preserves
 generated resources and the version header. For an intentional change, use its
 development mode with a distinct version and explicit counter.
@@ -80,7 +78,7 @@ outputs are checked against independent oracles, and LittleFS wear behavior is
 compared with the previous predicate under simulated NOR and interrupted writes.
 The old variant is made only in a temporary directory.
 
-The [DE3.67 build guide](docs/BUILD_DE3_68.md) describes how to run the full
+The [DE3.67 build guide](docs/BUILD_DE3_69.md) describes how to run the full
 149-suite firmware matrix and test the linked Cortex-M4 executable. Each
 individual runner documents its dependencies. Publish hardware observations,
 such as NFC recognition or behavior during an interrupted radio transfer,

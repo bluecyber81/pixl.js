@@ -3,6 +3,38 @@
 
 #define QUERY_MAX_IDS 2048
 
+static const db_amiibo_t *recent_figures[AMIIDB_RECENT_LIMIT];
+static uint8_t recent_games[AMIIDB_RECENT_LIMIT];
+
+static unsigned recent_index(const db_amiibo_t *figure) {
+    unsigned i = 0;
+    while (i < AMIIDB_RECENT_LIMIT && recent_figures[i] && recent_figures[i] != figure) i++;
+    return i;
+}
+
+void amiidb_recent_note(const db_amiibo_t *figure, uint8_t game_id) {
+    if (!figure) return;
+    unsigned i = recent_index(figure);
+    if (i == AMIIDB_RECENT_LIMIT) i--;
+    for (; i > 0; i--) {
+        recent_figures[i] = recent_figures[i - 1];
+        recent_games[i] = recent_games[i - 1];
+    }
+    recent_figures[0] = figure;
+    recent_games[0] = game_id;
+}
+
+uint8_t amiidb_recent_game(const db_amiibo_t *figure) {
+    unsigned i = recent_index(figure);
+    return i < AMIIDB_RECENT_LIMIT && recent_figures[i] ? recent_games[i] : 0;
+}
+
+uint8_t amiidb_recent_copy(const db_amiibo_t *items[AMIIDB_RECENT_LIMIT]) {
+    unsigned count = recent_index(NULL);
+    memcpy(items, recent_figures, count * sizeof(*items));
+    return count;
+}
+
 static unsigned char ascii_lower(unsigned char c) { return c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c; }
 static bool contains_text(const char *name, const char *query) {
     if (!name) return false;

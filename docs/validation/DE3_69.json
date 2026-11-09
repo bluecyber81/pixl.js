@@ -1,0 +1,89 @@
+{
+  "version": "2.22.0-DE3.69",
+  "counter": 641,
+  "previous": "DE3.68/640",
+  "board": "LCD",
+  "applicationOnly": true,
+  "source_id_sha256": "9bf9feb7362b3dbd687b2c048b939bdde020624901a4801fa4f1094f50439c9d",
+  "artifacts_sha256": {
+    "pixljs.bin": "3c52e23507a851d786d86f3e7f7ec6f6ccc9e17ef14fafbb68ec8a87b6e5caf0",
+    "pixljs.hex": "8a8a541581ed4c16cae67ce4dcbcb178f1c694c6edd335c1599218896b34267e",
+    "pixljs.out": "7f95af319bbc409f836d80bfb8ad6b45c5b029af6b53a6e72b696da72320841b",
+    "pixljs.map": "0dbfe1f795eb6536489205245a6cbd38fe0c0185f6daeb1ac3aed1e54718c927"
+  },
+  "otaSha256": "8056bc504552f20c14fc34b6b6677a1b3bba83afc3727208939d0eda59c83d00",
+  "bytes": 358748,
+  "candidateAndReleaseBinAndHexIdentical": true,
+  "linkerBudget": {
+    "flash_reserve_bytes": 13980,
+    "heap_stack_gap_bytes": 1808,
+    "stack_reserved_bytes": 8192
+  },
+  "signingVerification": "tools/check_release_ota.py",
+  "physicalDeviceTest": false,
+  "host": {
+    "passed": true,
+    "profile": "full",
+    "passed_count": 149,
+    "executed_count": 149,
+    "available_count": 149,
+    "hardware_mocked": true,
+    "sources_unchanged_during_tests": true
+  },
+  "z19Transfer": {
+    "payloadBytes": 358748,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18162,
+    "objectExecutes": 89,
+    "finalCrc32": 3005163606,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "3c52e23507a851d786d86f3e7f7ec6f6ccc9e17ef14fafbb68ec8a87b6e5caf0",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "cortexM4StackWatermark": "PASS Cortex-M4 release ELF: 8192 reserved, initial test watermark 7664, then 1416/256/256/0. Caller and guards intact; unavailable sentinel verified.",
+  "comparisonWithDE3_68": {
+    "flash_reserve_bytes": {
+      "previous": 8576,
+      "current": 13980,
+      "delta": 5404
+    },
+    "heap_stack_gap_bytes": {
+      "previous": 1840,
+      "current": 1808,
+      "delta": -32
+    },
+    "stack_reserved_bytes": {
+      "previous": 8192,
+      "current": 8192,
+      "delta": 0
+    }
+  },
+  "lcdCatalogue": {
+    "figures": 952,
+    "gameAssociations": 1344,
+    "recentCount": 5,
+    "physicalDeviceTestPending": true,
+    "languages": [
+      "de",
+      "en"
+    ],
+    "fullAndLcdProfileTest": "fw/tests/de3/test_database_indexed_links.py"
+  }
+}

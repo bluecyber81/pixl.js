@@ -126,7 +126,16 @@ function metadataOf(value) {
 }
 
 /** Parses our checked backup schema only. No device/network/Windows filesystem I/O. */
-export async function loadBackupZip(input, { JSZip, signal, onProgress } = {}) {
+export function loadBackupZip(input, options = {}) {
+  return readVerifiedBackup(input, options, true)
+}
+
+// Verify the same bytes as an import, but retain only records for offline comparison.
+export function loadBackupIndex(input, options = {}) {
+  return readVerifiedBackup(input, options, false)
+}
+
+async function readVerifiedBackup(input, { JSZip, signal, onProgress }, keepFileData) {
   check(signal)
   requireThat(uint(input?.size ?? input?.byteLength, ZIP_IMPORT_LIMITS.zipBytes) && (input.size ?? input.byteLength) >= 22, 'ZIP_LIMIT', 'ZIP file is empty or larger than 32 MiB.')
   const bytes = typeof input.arrayBuffer === 'function' ? new Uint8Array(await input.arrayBuffer()) : new Uint8Array(asBytes(input))
@@ -176,24 +185,24 @@ export async function loadBackupZip(input, { JSZip, signal, onProgress } = {}) {
     requireThat(match && !checksums.has(match[2]), 'ZIP_HASH', 'Invalid or duplicate checksum line.'); checksums.set(match[2], match[1])
   }
   requireThat(checksums.size === fileCount + 1 && checksums.get('manifest.json') === await sha256Bytes(manifestBytes), 'ZIP_HASH', 'Backup manifest checksum does not match.')
-  const data = new Map(); let done = 0
+  const data = keepFileData ? new Map() : null; let done = 0
   for (const record of records) {
     const contents = await boundedEntry(zip, entries.get(record.archivePath), signal); check(signal)
     if (record.type === 'file') {
       requireThat(checksums.get(record.archivePath) === record.sha256 && await sha256Bytes(contents) === record.sha256, 'ZIP_HASH', 'Backup file checksum does not match.')
       check(signal)
-      data.set(record.sourcePath, contents); ++done
+      data?.set(record.sourcePath, contents); ++done
     }
     observe(onProgress, { phase: 'parsing', unit: 'files', path: record.sourcePath, done, total: fileCount })
   }
   check(signal)
-  const archiveSha256 = await sha256Bytes(bytes)
+  const archiveSha256 = keepFileData ? await sha256Bytes(bytes) : undefined
   // Web Crypto cannot be interrupted. Honour cancellation after it settles,
   // before exposing the archive as verified or retaining its owned file bytes.
   check(signal)
   const archive = freeze({ format: 'allmiibo-folder-backup', version: manifest.version, rootPath, entries: records, fileCount, directoryCount, byteCount,
-    archiveSha256, firmwareVersion: typeof manifest.firmwareVersion === 'string' ? manifest.firmwareVersion.slice(0,128) : '' })
-  archives.set(archive, data)
+    ...(keepFileData ? { archiveSha256 } : {}), firmwareVersion: typeof manifest.firmwareVersion === 'string' ? manifest.firmwareVersion.slice(0,128) : '' })
+  if (data) archives.set(archive, data)
   return archive
 }
 

@@ -105,6 +105,32 @@ int main(void) {
 }
 ''', includes=[SRC / 'amiidb', SRC / 'app/amiidb/api'])
 
+    def test_recent_catalog_history_order_context_and_snapshot(self):
+        self.compile_run(r'''
+#include <assert.h>
+#include <stdio.h>
+#include "db_amiibo.c"
+#include "db_link.c"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#include "db_game.c"
+#pragma GCC diagnostic pop
+#include "amiidb_api_db.c"
+int main(void) {
+ const db_amiibo_t *window[AMIIDB_RECENT_LIMIT], *next[AMIIDB_RECENT_LIMIT];
+ assert(!amiidb_recent_copy(window) && !amiidb_recent_game(&amiibo_list[0]));
+ amiidb_recent_note(NULL,255);assert(!amiidb_recent_copy(window));
+ for(unsigned i=0;i<6;i++) amiidb_recent_note(&amiibo_list[i],i+1);
+ assert(amiidb_recent_copy(window)==5 && !amiidb_recent_game(&amiibo_list[0]));
+ for(unsigned i=0;i<5;i++) assert(window[i]==&amiibo_list[5-i]);
+ amiidb_recent_note(window[2],255);
+ assert(amiidb_recent_game(window[2])==255 && amiidb_recent_copy(next)==5);
+ assert(next[0]==window[2] && next[1]==window[0] && next[2]==window[1] && next[3]==window[3] && next[4]==window[4]);
+ amiidb_recent_note(next[0],0);assert(!amiidb_recent_game(next[0]) && amiidb_recent_copy(next)==5);
+ puts("PASS: five most recent figures, duplicate, evicted, max and no game, stable detail navigation");
+}
+''', includes=[SRC / 'amiidb', SRC / 'app/amiidb/api'])
+
     def test_actual_favorite_parser_paths_and_io_failures(self):
         self.compile_run(r'''
 #include <assert.h>

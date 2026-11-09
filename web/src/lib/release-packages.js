@@ -31,6 +31,7 @@ export function firmwarePackageText(locale='de_DE') {
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15 und Z17 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
+    android:'In nRF DFU öffnen (Android)',androidHint:'Die installierte nRF-DFU-App lädt die gewählte ZIP von GitHub Pages. In der App wählst du dein Gerät und startest die Übertragung.',
     prerelease:'Testversion für LCD',releaseNotes:'Versionshinweise und Prüfstand',
     newer:'Die gelesene Anwendung ist neuer als dieses Paket. Ein Downgrade wird nicht angeboten.',
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
@@ -40,6 +41,7 @@ export function firmwarePackageText(locale='de_DE') {
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15 and Z17 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',
+    android:'Open in nRF DFU (Android)',androidHint:'The installed nRF DFU app downloads the selected ZIP from GitHub Pages. Choose your device in the app and start the transfer there.',
     prerelease:'LCD test release',releaseNotes:'Release notes and test status',
     newer:'The read application is newer than this package. No downgrade is offered.',
     hash:'Package checksum',counter:'Counter',details:'Package details',local:'Local package list, not an online update check.'

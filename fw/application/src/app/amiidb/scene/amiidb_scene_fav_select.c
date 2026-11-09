@@ -52,8 +52,13 @@ static void amiidb_scene_fav_select_list_view_on_selected(mui_list_view_event_t 
     } break;
 
     case ICON_FOLDER: {
-        uint8_t cur_game_id = app->prev_scene_id == AMIIDB_SCENE_AMIIBO_SEARCH ? app->search_game_id : app->game_id_path[app->game_id_index];
+        uint8_t cur_game_id = app->p_amiibo_view->game_id;
         const db_amiibo_t *p_amiibo = app->cur_amiibo;
+        if (app->prev_scene_id == AMIIDB_SCENE_DATA_LIST) {
+            cur_game_id = 0;
+            p_amiibo = get_amiibo_by_id(to_little_endian_int32(&app->ntag.data[84]),
+                                       to_little_endian_int32(&app->ntag.data[88]));
+        }
         if (!p_amiibo) { amiidb_fav_show_error(app, VFS_ERR_FAIL); return; }
         amiidb_fav_t fav = {.game_id = cur_game_id, .amiibo_head = p_amiibo->head, .amiibo_tail = p_amiibo->tail};
         int res = amiidb_api_fav_add(string_get_cstr(p_item->text), &fav);

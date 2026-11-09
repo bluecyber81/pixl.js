@@ -12,9 +12,10 @@ function harness(supported=true,extra={}){
     context.window=context;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.createScreenAwake = require('../public/dfu/screen-awake.mjs').createScreenAwake;
+    context.nrfDfuLink = require('../public/dfu/nrf-dfu-link.mjs').nrfDfuLink;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu/phase-labels.js'),'utf8'),context);
     const page = fs.readFileSync(path.join(__dirname,'../public/dfu/page.js'),'utf8');
-    vm.runInContext(page.replace("import { createScreenAwake } from './screen-awake.mjs';", ''), context);
+    vm.runInContext(page.replace(/^import .*;$/gm, ''), context);
     return {nodes,windowEvents,calls,context,get options(){return options;},get updater(){return instance;}};
 }
 test('page binds one click to device selection and one file event to package load',()=>{
@@ -86,7 +87,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.68','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.69','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -179,6 +180,43 @@ test('changing the selected package clears a previously ready image and a manual
     assert.deepEqual(h.calls.at(-1), ['package', null]);
     assert.equal(h.nodes.get('button').disabled, true);
     assert.equal(h.nodes.get('load-bundled').disabled, false);
+});
+
+test('native DFU follows the selected release, omits device data and clears the link for incompatible states', async () => {
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
+    const [stable, preview] = catalog.packages;
+    const location = new URL('https://example.test/dfu/web.html?package=' + preview.id);
+    location.hash = new URLSearchParams({ read:Date.now(), app:preview.counter, bl:19, sd:294 });
+    const h = harness(false, {location, AllmiiboFirmwareReleases:catalog});
+    const link = h.nodes.get('android-dfu-link'), panel = h.nodes.get('android-handoff');
+    const verify = entry => {
+        assert.equal(panel.hidden, false);
+        const url = new URL(link.href);
+        assert.equal(url.origin + url.pathname, 'https://www.nordicsemi.com/dfu/');
+        assert.deepEqual([...url.searchParams], [['file', 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file]]);
+        assert.equal(url.hash, '');
+    };
+    verify(preview);
+    assert.deepEqual(h.calls, []);
+    const select = h.nodes.get('bundled');
+    select.value = stable.id;
+    select.events.change();
+    assert.equal(panel.hidden, true);
+    assert.equal(link.href, undefined);
+    location.hash = '';
+    select.events.change();
+    verify(stable);
+    h.options.onState({busy:true});
+    assert.equal(panel.hidden, true);
+    assert.equal(link.href, undefined);
+    h.options.onState({busy:false});
+    verify(stable);
+    const manual = h.nodes.get('file');
+    manual.files = ['my-private-package.zip'];
+    await manual.events.change();
+    assert.equal(panel.hidden, true);
+    assert.equal(link.href, undefined);
+    assert.equal(h.calls.some(([type]) => type === 'select'), false);
 });
 
 test('DFU changes display language during a transfer without starting or resetting it', () => {

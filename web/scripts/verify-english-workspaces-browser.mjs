@@ -4,6 +4,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { diagnosticSnapshot } from '../tests/fixtures/diagnostic-overview-data.mjs';
+import { createBackup } from '../src/lib/backup.js';
+import { memoryVfs } from '../tests/helpers/memory-vfs.mjs';
 
 const [directory, base, report] = process.argv.slice(2);
 assert.ok(directory && report && ['/', '/pixl.js/'].includes(base),
@@ -58,6 +60,36 @@ try {
   await page.goto(origin + base);
   await page.getByRole('heading', { name: 'File manager', exact: true }).waitFor();
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
+  // Use the normal workspace, file picker and verified ZIP reader with Bluetooth disconnected.
+  const comparisonFile = async (name, value) => {
+    const vfs = memoryVfs();
+    vfs.put('E:/tags/Mario.bin', [value]);
+    vfs.put('E:/tags/Link.bin', [5]);
+    const { blob } = await createBackup({ rootPath: 'E:/tags', ...vfs.api });
+    return { name, mimeType: 'application/x-zip-compressed', buffer: Buffer.from(await blob.arrayBuffer()) };
+  };
+  await page.locator('.workspace-nav [aria-controls="backup-workspace"]').click();
+  const compareBox = page.locator('#backup-workspace .backup-comparison');
+  await compareBox.locator('summary').click();
+  await compareBox.getByLabel('A · Earlier backup').setInputFiles(await comparisonFile('before.zip', 1));
+  await compareBox.getByLabel('B · Later backup').setInputFiles(await comparisonFile('after.zip', 2));
+  await compareBox.getByRole('button', { name: 'Compare backups', exact: true }).click();
+  await compareBox.locator('.comparison-rows li').filter({ hasText: 'Mario.bin' }).getByText('Content changed').waitFor();
+  assert.equal(await compareBox.locator('.comparison-rows li').count(), 1);
+  await compareBox.getByLabel('Show unchanged entries').check();
+  await compareBox.locator('.comparison-rows li').filter({ hasText: 'Link.bin' }).getByText('Unchanged').waitFor();
+  await page.locator('.header-language button').click();
+  await page.getByRole('menuitem', { name: 'Deutsch', exact: true }).click();
+  await compareBox.locator('.comparison-rows li').filter({ hasText: 'Mario.bin' }).getByText('Inhalt geändert').waitFor();
+  await compareBox.getByLabel('Unveränderte Einträge anzeigen').uncheck();
+  await compareBox.getByLabel('B · Neuere Sicherung').setInputFiles({ name:'invalid.zip', mimeType:'application/zip', buffer:Buffer.from('invalid') });
+  await compareBox.getByRole('button', { name: 'Sicherungen vergleichen', exact:true }).click();
+  await compareBox.getByRole('alert').filter({ hasText: 'Sicherung B' }).waitFor();
+  assert.equal(await compareBox.locator('.comparison-rows').count(), 0);
+  assert.equal(await page.evaluate(() => window.bluetoothRequests), 0);
+  await page.locator('.header-language button').click();
+  await page.getByRole('menuitem', { name: 'English', exact: true }).click();
+  checks.push('Offline backup comparison verifies two archives, filters equal files, switches languages and invalidates old results on a bad second archive without Bluetooth');
   await page.evaluate(data => {
     const app = document.querySelector('#app')._vnode.component.proxy;
     // The shared synthetic diagnostic packet reports application counter 628.

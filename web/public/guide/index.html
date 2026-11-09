@@ -41,10 +41,10 @@
         </section>
         <section id="flash">
           <h2>Die Geräte-App per Bluetooth flashen</h2>
-          <p>Für das passende LCD mit fertig eingerichtetem PFS1 sind <b>DE3.65 / 637</b> die stabile Version und <b>DE3.68 / 640</b> die Testversion mit Rückkehr zum zuletzt verwendeten App-Symbol im Hauptmenü. Zur erprobten Kombination gehören Z19 und Nordic S112 7.3.0. Wenn bereits die gewünschte App läuft, ist dieser Schritt erledigt.</p>
+          <p>Für das passende LCD mit fertig eingerichtetem PFS1 sind <b>DE3.65 / 637</b> die stabile Version und <b>DE3.69 / 641</b> die Testversion mit den zuletzt geöffneten Figuren in der Amiibo-Datenbank. Zur erprobten Kombination gehören Z19 und Nordic S112 7.3.0. Wenn bereits die gewünschte App läuft, ist dieser Schritt erledigt.</p>
           <ol class="steps"><li><h3>Sammlung sichern</h3><p>Halte eine aktuelle Sicherung bereit. Öffne dafür im Dateimanager <b>Dateien → E:/</b>, dann <b>Sicherung → Ordner sichern (ZIP)</b>. Speichere die fertige ZIP in Downloads. Für eine erstmalige Speicherumstellung brauchst du die vollständigere <a href="#littlefs">Raw128-Sicherung im Assistenten</a>.</p></li>
-            <li><h3>Anwendung auswählen</h3><p>Öffne <b>Update</b> im verbundenen Dateimanager oder die <a href="../dfu/web.html" target="_blank" rel="noopener">Web-DFU-Seite</a>. Wähle die gewünschte LCD-Version und <b>Paket laden und prüfen</b>. Für den lokalen Download gibt es unten beide unveränderten Anwendungs-ZIPs. Ist auf dem Gerät eine höhere Version installiert, bleib auf dem neueren Stand, wenn du keinen gezielten Rückweg planst.</p></li>
-            <li><h3>Das richtige Funkgerät auswählen</h3><p>Trenne die Dateiübertragung und andere verbundene Apps. Öffne auf dem Allmiibo <b>Einstellungen → Firmware-Update</b>. Auf der DFU-Seite wählst du <b>DFU-Gerät auswählen und übertragen → pixl dfu</b>. Nach deiner Auswahl beginnt die Übertragung. Halte Gerät und Browser währenddessen in Reichweite und das Handy wach.</p></li>
+            <li><h3>Anwendung auswählen</h3><p>Öffne <b>Update</b> im Dateimanager oder die <a href="../dfu/web.html" target="_blank" rel="noopener">Web-DFU-Seite</a>. Wähle die gewünschte LCD-Version. Auf Android öffnet <b>In nRF DFU öffnen (Android)</b> die installierte Nordic-App mit dem gewählten Paket. Im Browser wählst du <b>Paket laden und prüfen</b>. Beide Anwendungs-ZIPs findest du auch unten zum Herunterladen.</p></li>
+            <li><h3>Das richtige Funkgerät auswählen</h3><p>Trenne die Dateiübertragung und andere verbundene Apps. Öffne auf dem Allmiibo <b>Einstellungen → Firmware-Update</b>. In der Nordic-App wählst du <b>pixl dfu</b> und startest die Übertragung. Auf der Web-DFU-Seite beginnt sie mit <b>DFU-Gerät auswählen und übertragen → pixl dfu</b>. Halte Gerät und Handy währenddessen in Reichweite und das Handy wach.</p></li>
             <li><h3>Neustart bestätigen</h3><p>Warte auf das normale Menü. Öffne <b>BLE Dateitransfer</b>, verbinde im Dateimanager wieder <b>Pixl.js</b> und lies die neue Geräteversion. Öffne einen gewohnten Ordner und eine Figur. Das App-Paket aktualisiert nur die Gerätesoftware und erhält deine Sammlung auf PFS1.</p></li></ol>
         </section>
         <section id="littlefs">
@@ -77,7 +77,7 @@
           <ul class="downloads"><li><a href="../">Dateimanager öffnen</a></li>
             <li><a href="../dfu/web.html">Web-DFU für die App</a></li>
             <li><a href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>Stabile LCD-App DE3.65 (ZIP)</a></li>
-            <li><a href="../firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip" download>LCD-Testversion DE3.68 (ZIP)</a></li>
+            <li><a href="../firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip" download>LCD-Testversion DE3.69 (ZIP)</a></li>
             <li><a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">Nordic DFU für Android</a></li>
             <li><a href="https://github.com/nordicsemi/Android-DFU-Library/#application">Nordics Anleitung zur App</a></li>
             <li><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/MIGRATION_PFS1.md">Technische Migrationsanleitung</a></li></ul>

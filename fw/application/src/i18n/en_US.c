@@ -254,4 +254,6 @@ const char * const lang_en_US[_L_COUNT] = {
     [_L_DE360_EXISTS] = "Name already used",
     [_L_DE360_NO_RAM] = "Out of RAM",
     [_L_DE361_UNTIL_OFF] = "until off",
+    [_L_AMIIDB_RECENT] = "Recently opened",
+    [_L_AMIIDB_RECENT_EMPTY] = "None opened yet",
 };

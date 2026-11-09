@@ -1,0 +1,282 @@
+{
+  "version": "3.46.0",
+  "date": "2026-11-09",
+  "scope": "Release web source/production builds and real Chrome with synthetic device fixtures. No installation or physical test of DE3.69 in these suites.",
+  "host": {
+    "tests": 1344,
+    "pass": 1344,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "sourceSha256ManifestDigest": "559404df196e0bf3fb7fba5f9bd1b21268eb4721ea680b3921fe527589fb53a4",
+  "layouts": {
+    "root": {
+      "assets": 172,
+      "filesManifestSha256": "ba56aa7d73acfddf6c2357a71666792cf7e1f0939f5625a11fea150cd8631f7a",
+      "checks": {
+        "catalog": 338,
+        "overview": 77,
+        "screen": 133,
+        "dfu": 30,
+        "language": 6,
+        "englishWorkspaces": 17
+      },
+      "totalChecks": 601,
+      "production": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "pages": {
+      "assets": 172,
+      "filesManifestSha256": "9085cba0d8641a14a6956f957d78113b0ba2d34613c5318b664ac12057615b9e",
+      "checks": {
+        "catalog": 338,
+        "overview": 77,
+        "screen": 133,
+        "dfu": 30,
+        "language": 6,
+        "englishWorkspaces": 17
+      },
+      "totalChecks": 601,
+      "production": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    }
+  },
+  "catalogueSettings": [
+    {
+      "language": "de",
+      "viewport": 320,
+      "textScale": 2,
+      "keyboard": true,
+      "linkRoundTrip": true,
+      "favorites": true,
+      "filterRestore": true,
+      "gameFilters": true,
+      "syntheticDeviceScan": true,
+      "externalRequests": 0,
+      "geometry": {
+        "viewport": 320,
+        "document": 320,
+        "panels": [
+          [
+            248,
+            248
+          ],
+          [
+            248,
+            248
+          ],
+          [
+            246,
+            246
+          ]
+        ]
+      }
+    },
+    {
+      "language": "en",
+      "viewport": 320,
+      "textScale": 2,
+      "keyboard": true,
+      "linkRoundTrip": true,
+      "favorites": true,
+      "filterRestore": true,
+      "gameFilters": true,
+      "syntheticDeviceScan": true,
+      "externalRequests": 0,
+      "geometry": {
+        "viewport": 320,
+        "document": 320,
+        "panels": [
+          [
+            248,
+            248
+          ],
+          [
+            248,
+            248
+          ],
+          [
+            246,
+            246
+          ]
+        ]
+      }
+    }
+  ],
+  "catalogueSettingsBundle": {
+    "layout": "root",
+    "filesManifestSha256": "ba56aa7d73acfddf6c2357a71666792cf7e1f0939f5625a11fea150cd8631f7a",
+    "scope": "German and English in installed Chrome: game selection, separate announcements, source date, tracker link, collection filter before and after a scan of two synthetic files via the production Bluetooth stack, and filter reset."
+  },
+  "persistentBackupChrome": {
+    "chrome": "156.0.8078.80",
+    "checks": [
+      "Three completed files survived reload and a complete Chrome process restart.",
+      "Device, folder, firmware and naming-mode mismatches preserve the checkpoint.",
+      "Concurrent tabs and a stale discard cannot replace the active or newer checkpoint.",
+      "Fresh archive bytes, CRC and independent SHA-256 agree after a same-size change, deletion and addition.",
+      "Transaction abort or quota failure retained exactly one file; after reload the full ZIP reused that file.",
+      "Raw128 plus persistent storage is rejected before any device access.",
+      "Late completion quota preserves a downloadable ZIP; downloaded bytes and file hashes are verified.",
+      "Corrupted stored bytes prevent ZIP creation; unknown checkpoint metadata is preserved until an explicit discard.",
+      "Explicit discard survived restart; an unsupported IndexedDB version was retained until explicitly discarded."
+    ],
+    "scope": "Real Chrome IndexedDB, synthetic read-only device, injected storage faults."
+  },
+  "bundledApplications": [
+    {
+      "id": "de3.65-lcd-app",
+      "version": "2.22.0-DE3.65",
+      "counter": 637,
+      "file": "Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+      "bytes": 362167,
+      "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "BL8/Z13/Z15/Z17/Z19",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false
+    },
+    {
+      "id": "de3.69-lcd-app",
+      "version": "2.22.0-DE3.69",
+      "counter": 641,
+      "file": "Allmiibo_LCD_DE3_69_641_NUR_APP.zip",
+      "bytes": 359351,
+      "sha256": "8056bc504552f20c14fc34b6b6677a1b3bba83afc3727208939d0eda59c83d00",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "BL8/Z13/Z15/Z17/Z19",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    }
+  ],
+  "nordicAndroidLinkBrowser": {
+    "updater": {
+      "passed": true,
+      "checks": 8,
+      "scope": "Chrome, 360px, local HTTPS-link rendering, no app launch or device access",
+      "results": [
+        {
+          "base": "/",
+          "locale": "de-DE",
+          "counter": 637
+        },
+        {
+          "base": "/",
+          "locale": "de-DE",
+          "counter": 641
+        },
+        {
+          "base": "/",
+          "locale": "en-US",
+          "counter": 637
+        },
+        {
+          "base": "/",
+          "locale": "en-US",
+          "counter": 641
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "de-DE",
+          "counter": 637
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "de-DE",
+          "counter": 641
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "en-US",
+          "counter": 637
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "en-US",
+          "counter": 641
+        }
+      ]
+    },
+    "fileManager": {
+      "passed": true,
+      "scope": "Chrome 360px; real component, click intercepted at Nordic origin; no physical app launch or transfer",
+      "cases": [
+        {
+          "base": "/",
+          "locale": "de-DE",
+          "counter": 637,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/",
+          "locale": "de-DE",
+          "counter": 641,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/",
+          "locale": "en-US",
+          "counter": 637,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/",
+          "locale": "en-US",
+          "counter": 641,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "de-DE",
+          "counter": 637,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "de-DE",
+          "counter": 641,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "en-US",
+          "counter": 637,
+          "handoffClickObserved": true
+        },
+        {
+          "base": "/pixl.js/",
+          "locale": "en-US",
+          "counter": 641,
+          "handoffClickObserved": true
+        }
+      ]
+    }
+  },
+  "offlineBackupComparison": {
+    "scope": "Synthetic archives in installed Chrome, including file selection, extracted file comparison, error recovery and German/English, without Bluetooth",
+    "layouts": [
+      "root",
+      "Pages"
+    ],
+    "privacy": "Test fixtures are synthetic; public artifacts contain no personal backups."
+  }
+}

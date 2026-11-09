@@ -1,9 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
-Im Figurenkatalog kannst du ein Spiel auswählen und die passenden Figuren aus deiner Sammlung anzeigen. Unter Sicherung zeigt der Ordnervergleich auch die Dateien, die nur auf dem Gerät liegen. Die LCD-Testversion DE3.68 merkt sich beim Zurückkehren ins Hauptmenü die zuletzt geöffnete App. [DE3.68 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip) · [Web 3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0)
+Unter **Sicherung** kannst du zwei gespeicherte Sicherungs-ZIPs auswählen. Die Ansicht zeigt neue, entfernte und geänderte Einträge. Der Vergleich läuft auch bei getrenntem Gerät. Unter **Update** öffnet „In nRF DFU öffnen“ das gewählte öffentliche LCD-Paket auf Android. Die LCD-Testversion DE3.69 zeigt die letzten fünf geöffneten Figuren in der Amiibo-Datenbank. [DE3.69 LCD (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip) · [Web 3.46.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.46.0)
 
 
-**Stand 9. November 2026.** Online läuft 3.45.0. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.68/640. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_45_0.json)
+**Stand 9. November 2026.** Online läuft 3.46.0. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.69/641. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_46_0.json)
 
 ## Veröffentlichungen auf GitHub
 
@@ -11,6 +11,7 @@ Jede verlinkte Version führt zu ihren damaligen Hinweisen und Downloads. 3.34.0
 
 | Dateimanager | Änderung gegenüber dem vorherigen Stand |
 | --- | --- |
+| [3.46.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.46.0) | Zwei Sicherungen offline vergleichen und veröffentlichte LCD-Pakete direkt in der Android-DFU-App öffnen. |
 | [3.45.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.45.0) | Figuren nach Spiel, vollständiger Ordnervergleich in beide Richtungen und eigener Anzeigename pro verbundenem Gerät. |
 | [3.44.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.44.0) | Beim Öffnen wählt der Dateimanager die erste unterstützte Sprache aus der Sprachliste des Browsers. Im Sprachmenü kannst du eine feste Sprache wählen oder wieder zur automatischen Auswahl wechseln. [Anleitung](DATEIMANAGER_WEB.md#dateimanager-3440) |
 | [3.43.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.43.1) | Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639 als neueste geprüfte Firmware. Das Speicherprofil gilt für DE3.55 bis DE3.67. [Anleitung](DATEIMANAGER_WEB.md#dateimanager-3431) |

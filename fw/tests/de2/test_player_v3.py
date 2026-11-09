@@ -226,27 +226,33 @@ int main(void) {
 typedef int ret_code_t;
 typedef struct {uint32_t head,tail;} db_amiibo_t;
 typedef struct {unsigned char data[2048];} ntag_t;
-typedef struct {const db_amiibo_t *cur_amiibo;ntag_t ntag;} app_amiidb_t;
+typedef struct {uint8_t game_id;} view_t;
+typedef struct {const db_amiibo_t *cur_amiibo;ntag_t ntag;view_t *p_amiibo_view;} app_amiidb_t;
 #define NRF_SUCCESS 0
 #define NRF_ERROR_INVALID_DATA 1
 #define NRF_ERROR_NOT_SUPPORTED 2
 #define _T(x) #x
 static bool m_tag_ready;
-static int result,emulated;
+static int result,emulated,noted;
+static bool reject,blocked;
+static void amiidb_recent_note(const db_amiibo_t *figure,unsigned game){assert(figure && game==42);noted++;}
 static const char *message;
 static int amiibo_helper_generate_amiibo(uint32_t h,uint32_t t,ntag_t *n) {(void)h;(void)t;(void)n;return result;}
-static bool ntag_emu_set_tag(ntag_t *n) {(void)n;emulated++;return true;}
-static bool ntag_emu_prepare_change(void) {return true;}
+static bool ntag_emu_set_tag(ntag_t *n) {(void)n;emulated++;return !reject;}
+static bool ntag_emu_prepare_change(void) {return !blocked;}
 static bool m_active_slot_persist;
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app,const char *text) {(void)app;message=text;}
 ''' + generate + '''
 int main(void) {
- db_amiibo_t tag={1,2};app_amiidb_t app={.cur_amiibo=&tag};
+ db_amiibo_t tag={1,2};view_t view={42};app_amiidb_t app={.cur_amiibo=&tag,.p_amiibo_view=&view};
  result=NRF_ERROR_NOT_SUPPORTED;amiidb_scene_amiibo_game_list_generate(&app);
  assert(!m_tag_ready && emulated==0 && strcmp(message,"APP_AMIIDB_NOT_SUPPORT_V3")==0);
  result=NRF_ERROR_INVALID_DATA;amiidb_scene_amiibo_game_list_generate(&app);assert(!m_tag_ready && emulated==0);
  app.cur_amiibo=NULL;amiidb_scene_amiibo_game_list_generate(&app);assert(!m_tag_ready && emulated==0);
- app.cur_amiibo=&tag;result=0;amiidb_scene_amiibo_game_list_generate(&app);assert(m_tag_ready && emulated==1);
+ assert(noted==0);
+ app.cur_amiibo=&tag;result=0;amiidb_scene_amiibo_game_list_generate(&app);assert(m_tag_ready && emulated==1 && noted==1);
+ reject=true;amiidb_scene_amiibo_game_list_generate(&app);assert(!m_tag_ready && emulated==2 && noted==1);
+ blocked=true;amiidb_scene_amiibo_game_list_generate(&app);assert(!m_tag_ready && emulated==2 && noted==1);
  puts("PASS: UI applies successful generation only; all failures leave emulator unchanged");return 0;
 }''')
 
@@ -262,6 +268,8 @@ typedef struct {uint8_t game_id;uint32_t head,tail;} db_link_t;
 typedef struct {unsigned max,focus,game;} view_t;
 typedef struct {uint16_t game_id_path[8];uint8_t game_id_index,search_game_id,prev_scene_id;const db_amiibo_t *cur_amiibo;view_t *p_amiibo_view;uint16_t result_count;const db_amiibo_t *result_items[100];} app_amiidb_t;\n#define AMIIDB_SCENE_AMIIBO_SEARCH 9\n#define _T(x) #x\nstatic int m_tag_ready;\nstatic void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *a,const char*m) {(void)a;(void)m;}
 static db_link_t link_list[401];static db_amiibo_t tags[400];
+#define AMIIDB_SCENE_RECENT 10
+static uint8_t amiidb_recent_game(const db_amiibo_t *figure){return (uint8_t)figure->head;}
 static bool ntag_emu_prepare_change(void){return true;}
 static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t *a) {(void)a;}
 static void amiibo_view_set_max_ntags(view_t*v,unsigned n) {v->max=n;}
@@ -276,7 +284,13 @@ int main(void) {
  app.result_count=100;for(unsigned i=0;i<100;i++)app.result_items[i]=&tags[i];\n amiidb_scene_amiibo_game_list_init(&app);assert(view.max==100 && view.focus==99);
  view.focus=0;amiidb_scene_amiibo_game_list_update(&app);assert(app.cur_amiibo==&tags[0]);
  view.focus=99;amiidb_scene_amiibo_game_list_update(&app);assert(app.cur_amiibo==&tags[99]);
- for(unsigned i=0;i<100;i++){app.result_items[i]=&tags[100+i];}app.cur_amiibo=&tags[199];\n amiidb_scene_amiibo_game_list_init(&app);assert(view.max==100 && view.focus==99);\n view.focus=0;amiidb_scene_amiibo_game_list_update(&app);assert(app.cur_amiibo==&tags[100]);\n puts("PASS: 400-link category navigation follows visible page one and two");return 0;
+ for(unsigned i=0;i<100;i++)app.result_items[i]=&tags[100+i];
+ app.cur_amiibo=&tags[199];amiidb_scene_amiibo_game_list_init(&app);assert(view.max==100 && view.focus==99);
+ view.focus=0;amiidb_scene_amiibo_game_list_update(&app);assert(app.cur_amiibo==&tags[100]);
+ app.prev_scene_id=AMIIDB_SCENE_RECENT;amiidb_scene_amiibo_game_list_init(&app);
+ assert(view.game==101);view.focus=1;amiidb_scene_amiibo_game_list_update(&app);
+ assert(app.cur_amiibo==&tags[101] && view.game==102);
+ puts("PASS: 400-link category navigation follows visible page one and two");return 0;
 }''')
 
 

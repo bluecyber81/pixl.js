@@ -62,5 +62,10 @@
     "hardware_mocked": true,
     "sources_unchanged_during_tests": true
   },
-  "cortexM4StackWatermark": "Passed on the release ELF: 8192 reserved, guards intact, unavailable sentinel verified."
+  "cortexM4StackWatermark": "Passed on the release ELF: 8192 reserved, guards intact, unavailable sentinel verified.",
+  "launcherFocusDeviceObservation": {
+    "date": "2026-11-09",
+    "source": "user confirmation",
+    "cardEmulatorAndSecondAppNormalExitKeepSelection": true
+  }
 }

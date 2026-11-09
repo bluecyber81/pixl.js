@@ -1,10 +1,12 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
+import { nrfDfuLink } from './nrf-dfu-link.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
 const progressBar = document.getElementById('progress'), capabilityText = document.getElementById('capability');
 const bundledSelect = document.getElementById('bundled'), loadBundled = document.getElementById('load-bundled');
 const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = document.getElementById('bundled-info');
+const androidHandoff = document.getElementById('android-handoff'), androidLink = document.getElementById('android-dfu-link');
 const defaultBundledInfo = bundledInfo.textContent;
 const language = globalThis.AllmiiboLanguage;
 const pageLocales = ['de_DE', 'en'];
@@ -23,16 +25,22 @@ const supported = globalThis.isSecureContext && !!navigator.bluetooth?.requestDe
 if (!supported) setText(capabilityText, 'Web Bluetooth ist hier nicht verfügbar. Für die spätere Geräteprüfung ist ein unterstützter Chrome-/Edge-Browser in einem sicheren Kontext nötig.', 'Web Bluetooth is unavailable here. To connect, open this page over HTTPS or localhost in a supported Chrome or Edge browser.');
 let bundled = null, latestState = { busy:false, loading:false, ready:false };
 const hexId = value => '0x' + value.toString(16).toUpperCase().padStart(4, '0');
-function targetDescription(target) {
-    if (!target) return '';
-    const lines = [choose(`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`,
-        `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
+function recentBootReference() {
     const ref = new URLSearchParams(globalThis.location.hash?.slice(1) || '');
     const names = ['read', 'app', 'bl', 'sd'];
     const values = names.map(key => Number(ref.get(key)));
     const [when, app, bl, sd] = values;
     if (names.every(k => /^\d{1,16}$/.test(ref.get(k) || '')) && values.every(Number.isSafeInteger) &&
-        app <= 0xffffffff && bl <= 0xffffffff && sd <= 0xffff && when <= Date.now() && Date.now() - when < 600000) {
+        app <= 0xffffffff && bl <= 0xffffffff && sd <= 0xffff && when <= Date.now() && Date.now() - when < 600000) return {app, bl, sd};
+    return null;
+}
+function targetDescription(target) {
+    if (!target) return '';
+    const lines = [choose(`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`,
+        `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
+    const ref = recentBootReference();
+    if (ref) {
+        const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
         if (app > target.counter) lines.push(choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15 kann sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
@@ -48,6 +56,11 @@ function controls() {
     selectButton.disabled = !supported || !latestState.ready || loading;
     bundledSelect.disabled = latestState.busy || latestState.loading || loading || !bundled?.catalog.packages.length;
     loadBundled.disabled = bundledSelect.disabled || !bundledSelect.value;
+    const selected = bundled?.catalog.packages.find(entry => entry.id === bundledSelect.value);
+    const androidUrl = selected && !bundledSelect.disabled && !(recentBootReference()?.app > selected.counter) && nrfDfuLink(selected);
+    if (androidUrl) androidLink.setAttribute('href', androidUrl);
+    else androidLink.removeAttribute('href');
+    androidHandoff.hidden = !androidUrl;
     cancelBundled.hidden = !loading; cancelBundled.disabled = latestState.busy;
 }
 const phaseNames = ['transfer', 'verify', 'finalize', 'reconnect'];
