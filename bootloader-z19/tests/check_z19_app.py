@@ -14,6 +14,8 @@ def main():
     parser.add_argument('--softdevice', type=Path, required=True)
     parser.add_argument('--application', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--previous-application', type=Path,
+                        help='Exercise an existing application bank using this exact prior signed release.')
     args = parser.parse_args()
     model.SOFTDEVICE = args.softdevice
     sd = model.sd_image()
@@ -24,11 +26,17 @@ def main():
     assert region_sha == binding['expectedPaddedBootloaderSha256']
     application = model.package(args.application, 'application')
     payload = application['payload']
-    assert application['counter'] == 635
+    if args.previous_application:
+        previous = model.package(args.previous_application, 'application')
+        assert previous['counter'] < application['counter']
+    else:
+        # Retain the historical App635 fixture and equal-counter acceptance case.
+        assert application['counter'] == 635
+        previous = application
     rows = []
-    for previous_bank in ('App635 present', 'App bank empty after bootloader update'):
-        machine = model.Machine(compiled, sd, 19, payload, 0x126)
-        machine.put(machine.settings + 8, 635)
+    for previous_bank in (f"App{previous['counter']} present", 'App bank empty after bootloader update'):
+        machine = model.Machine(compiled, sd, 19, previous['payload'], 0x126)
+        machine.put(machine.settings + 8, previous['counter'])
         if previous_bank.startswith('App bank empty'):
             for offset in (24, 28, 32):
                 machine.put(machine.settings + offset, 0)
@@ -46,10 +54,12 @@ def main():
         rows.append({'before': previous_bank, 'signedInitAccepted': True, 'imageHashAccepted': True,
                      'bootCrcAccepted': True, **result})
     args.output.write_text(json.dumps({'passed': True, 'hardwareAccess': False, 'bootCounter': 19,
-                                       'bootRegionSha256': region_sha, 'appCounter': 635,
+                                       'bootRegionSha256': region_sha, 'appCounter': application['counter'],
+                                       'previousAppCounter': previous['counter'],
+                                       'previousAppSha256': model.SHA(previous['payload']),
                                        'appPayloadSha256': model.SHA(payload), 'cases': rows,
                                        'limits': 'Actual ELF routines. Flash, radio and handover simulated.'}, indent=2) + '\n')
-    print('PASS: signed App635 with S112 7.3.0, existing App635 and empty App bank')
+    print(f"PASS: signed App{application['counter']} with S112 7.3.0, existing App{previous['counter']} and empty bank")
 
 
 if __name__ == '__main__':

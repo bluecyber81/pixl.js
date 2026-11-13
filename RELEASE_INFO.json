@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "publication_date": "2026-11-13",
-  "version": "2.22.0-DE3.71t1",
-  "counter": 644,
+  "version": "2.22.0-DE3.72",
+  "counter": 645,
   "board": "LCD",
   "web_version": "3.48.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb",
-  "application_sha256": "fbade80d03a44a3bb3bb7e76df422b24a879d2ff81b433e6bf4f6d6e1b955273",
+  "ota_sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
+  "application_sha256": "000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -36,8 +36,8 @@
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 156,
-  "evidence": "docs/validation/DE3_71T1.json",
+  "host_firmware_suites": 157,
+  "evidence": "docs/validation/DE3_72.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -53,10 +53,10 @@
   "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
-  "device_readback_passed": true,
-  "device_validation_pending_scope": "Load, Android persistence, NFC write cases and controlled recovery. A tester confirmed figure list return and sleep/wake in both apps.",
-  "previous_device_readback_evidence": "docs/RELEASE_DE3_69.md",
-  "production_source_id_sha256": "3c62a24a8aecab7a81af6b73cb86642d4a248755d739c5e37b1fcdeea7451d02",
+  "device_readback_passed": false,
+  "device_validation_pending_scope": "First device readback on App645, database slot 3 and next-figure list return, the four LCD game-note corrections, NFC and sleep/wake. Physical DFU interruption and power-loss recovery also remain open.",
+  "previous_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
+  "production_source_id_sha256": "d1a80a8a13b9e0bd8f1513216e268bb0694e9a74ff52986aaa65a1ee7f893b6d",
   "tested_bootloader": {
     "name": "Z19",
     "counter": 19,
@@ -64,7 +64,7 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "The connected App644 diagnostic export reported this Z19 region hash and S112 7.3.0."
+    "qualification": "App644's connected diagnostic export reported this Z19 region digest and S112 7.3.0. App645 was verified with the Z19 public key and host transfer model. Its first device readback is pending."
   },
   "web_host_test_scope": "Local source suites and production Chrome checks for root and Pages. Historical physical LCD and backup observations are documented separately.",
   "previous_web_full_suite": {
@@ -127,7 +127,7 @@
     "web_3_47_0": "Read the first main-menu selection and distinguish it from settings-session input.",
     "web_3_48_0": "Portable profiles, filtered ZIP comparisons, backup protection, PXMIv2 diagnostics and App644 capacity profile. Correct Windows background shutdown detection."
   },
-  "application_ota_path": "fw/releases/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip",
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -139,7 +139,7 @@
   },
   "status": "prerelease",
   "web_evidence": "docs/validation/WEB3_48_0.json",
-  "device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
+  "device_readback_evidence": null,
   "web_device_readback_pending_scope": "Device readback with the published 3.48.0. Existing connected readback used the 3.47.0-T1 candidate.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true
 }
