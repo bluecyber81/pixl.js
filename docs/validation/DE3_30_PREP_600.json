@@ -1,0 +1,30 @@
+{
+  "version": "2.22.0-DE3.30-PREP",
+  "zipSha256": "7b5c972bc018c220997e1cea3f9566bdafd4750e53130e05a5cd5ebd913764b2",
+  "binSha256": "d0f3cc27916fd80e1d86aed0e6f0537bd81bb9a2345d318fffef81fe9da2114d",
+  "target": {
+    "counter": 600,
+    "hardware_version": 52,
+    "softdevice_requirements": [
+      "0x103",
+      "0x126"
+    ]
+  },
+  "result": {
+    "type": "application",
+    "firmware_type": 0,
+    "counter": 600,
+    "sd_req": [
+      259,
+      294
+    ],
+    "bytes": 366112,
+    "sha256": "d0f3cc27916fd80e1d86aed0e6f0537bd81bb9a2345d318fffef81fe9da2114d",
+    "signature_verified": true,
+    "sd_size": 0,
+    "bl_size": 0,
+    "app_size": 366112,
+    "boot_validation": "GENERATED_CRC",
+    "negative_controls_passed": 3
+  }
+}

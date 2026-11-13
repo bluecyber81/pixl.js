@@ -1,0 +1,209 @@
+{
+  "package": "Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip",
+  "bytes": 341565,
+  "sha256": "37a4d51639a4502fdab170eb6a985ce80d6f09109fea0f9e6ff10b4f28410b82",
+  "manifest": {
+    "softdevice_bootloader": {
+      "bin_file": "sd_bl.bin",
+      "dat_file": "sd_bl.dat",
+      "info_read_only_metadata": {
+        "bl_size": 26772,
+        "sd_size": 98068
+      }
+    },
+    "application": {
+      "bin_file": "app_645.bin",
+      "dat_file": "app_645.dat"
+    }
+  },
+  "members": {
+    "manifest.json": "71a513c8078317d3671f0ec2086fd9fcaec67d402e81ea58deae3164c053800d",
+    "sd_bl.bin": "8c8ae9ab04612308787411aa62caa7343fff59be9ffeed0ecf7d6dea74b75fb0",
+    "sd_bl.dat": "b05d9e90a2e78046b6ac3ffcc8f93978eb3ff20474e54ab637a8c2ce07060c25",
+    "app_645.bin": "000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88",
+    "app_645.dat": "db29ec4bd0ece1922ecdf191db54f527566b7d577cd0eced7515bb97968be83f"
+  },
+  "appOnlyPackageSha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
+  "appSourceId": "d1a80a8a13b9e0bd8f1513216e268bb0694e9a74ff52986aaa65a1ee7f893b6d",
+  "appSourceManifestRows": 700,
+  "applicationRawImageEqualsBuild": true,
+  "applicationSignatureUnchangedFromAppOnly": true,
+  "hardwareTest": false,
+  "board": "Allmiibo LCD / nRF52832, 512 KiB flash, 64 KiB RAM",
+  "testedOn": "2026-11-13",
+  "appVersion": "2.22.0-DE3.72",
+  "appCounter": 645,
+  "bootCounter": 19,
+  "softDevice": "S112 7.3.0 / 0x0126",
+  "systemInit": {
+    "counter": 19,
+    "hardware": 52,
+    "type": 3,
+    "sdReq": [
+      259,
+      294
+    ],
+    "sizeFields": [
+      98068,
+      26772,
+      0
+    ],
+    "signatureVerified": true,
+    "payloadSha256": "8c8ae9ab04612308787411aa62caa7343fff59be9ffeed0ecf7d6dea74b75fb0",
+    "signedDigestVerified": true,
+    "datSha256": "b05d9e90a2e78046b6ac3ffcc8f93978eb3ff20474e54ab637a8c2ce07060c25",
+    "negativeControlsPassed": 2,
+    "softDeviceSha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "bootloaderSha256": "5c3eca5391d40677d95d5c256bfcbeb5e0ffdb3e9368408a27e45100738590af",
+    "paddedBootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "noMbrOrUicrInPayload": true,
+    "sourceHexAndSignedReferencesVerified": true
+  },
+  "sourceEvidence": {
+    "softDeviceVendorArchiveSha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "softDeviceIntelHexSha256": "92bcdc1aa51142ed212bb0dbcdf57093a1bad391f1cf5adca60effe14bdb7ec6",
+    "softDevicePayloadStart": "0x1000",
+    "applicationStart": "0x19000",
+    "bootloaderStart": "0x77000",
+    "mbrParameterPage": "0x7E000",
+    "dfuSettingsPage": "0x7F000",
+    "rightBootloaderBinaryAndPaddedRegionVerified": true,
+    "z19ElfSha256": "b9d3fef9b1e710fb5ca84c08df9ded9f7404a2ed9c331bb57e390e443ea8f199"
+  },
+  "systemPhaseModel": [
+    {
+      "from": "2.15.0",
+      "bootHash": "99e570190b0983d92ff3c070767dfbaf5e84556132ee23bddb8c5c5665229184",
+      "softDevice": "0x103",
+      "counter": 1,
+      "results": {
+        "signed": 1,
+        "installedCount19": 16,
+        "installedCountHigher": 16,
+        "unexpectedFwid": 18,
+        "damagedSignature": 5
+      },
+      "fullAndAlteredImageHashChecked": true
+    },
+    {
+      "from": "2.16.0",
+      "bootHash": "28056b365c992861cfd1b72440cc685aa56d537db25f56bd865987598622b82e",
+      "softDevice": "0x103",
+      "counter": 1,
+      "results": {
+        "signed": 1,
+        "installedCount19": 16,
+        "installedCountHigher": 16,
+        "unexpectedFwid": 18,
+        "damagedSignature": 5
+      },
+      "fullAndAlteredImageHashChecked": true
+    },
+    {
+      "from": "Z15",
+      "bootHash": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
+      "softDevice": "0x126",
+      "counter": 15,
+      "results": {
+        "signed": 1,
+        "installedCount19": 16,
+        "installedCountHigher": 16,
+        "unexpectedFwid": 18,
+        "damagedSignature": 5
+      },
+      "fullAndAlteredImageHashChecked": true
+    },
+    {
+      "from": "Z17",
+      "bootHash": "5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584",
+      "softDevice": "0x126",
+      "counter": 17,
+      "results": {
+        "signed": 1,
+        "installedCount19": 16,
+        "installedCountHigher": 16,
+        "unexpectedFwid": 18,
+        "damagedSignature": 5
+      },
+      "fullAndAlteredImageHashChecked": true
+    },
+    {
+      "from": "Z19",
+      "bootHash": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+      "softDevice": "0x126",
+      "counter": 19,
+      "correctlyRejectedSystemReinstall": true,
+      "returnCode": 16,
+      "oldApplicationBankValid": true
+    },
+    {
+      "from": "Z19",
+      "bootHash": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+      "softDevice": "0x126",
+      "counter": 20,
+      "correctlyRejectedSystemReinstall": true,
+      "returnCode": 16,
+      "oldApplicationBankValid": true
+    }
+  ],
+  "applicationPhaseModel": {
+    "from": "Z19",
+    "signedSystemFirst": true,
+    "emptyApplicationBank": true,
+    "applicationCounter": 645,
+    "sha256": "000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88",
+    "results": {
+      "signed": 1,
+      "unexpectedFwid": 18,
+      "damagedSignature": 5
+    },
+    "imageHashAndBootCRCChecked": true
+  },
+  "nordicArchiveReader": {
+    "library": "Nordic Android DFU library 2.11.0 (official AAR ArchiveInputStream)",
+    "aarSha256": "8065d517456fe6bbaead5dc19d58601174c00d6bd6f40214baf9a9dd8f7e593f",
+    "classesJarFromAar": true,
+    "packageSha256": "37a4d51639a4502fdab170eb6a985ce80d6f09109fea0f9e6ff10b4f28410b82",
+    "contentType": 7,
+    "systemBytes": 124840,
+    "applicationBytes": 363340,
+    "matchedBothInitPackets": true,
+    "completePayloadsRead": 2,
+    "chunkSize": 243,
+    "platform": "Linux JVM with Android Log and Build.VERSION stubs",
+    "realPhoneOrBluetooth": false
+  },
+  "applicationTransferResume": {
+    "payloadBytes": 363340,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18392,
+    "objectExecutes": 90,
+    "finalCrc32": 3462071638,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "observedModelLimits": [
+    "A compatible signed system update can invalidate the previous application bank while staging. Complete both phases and allow the DFU client to reconnect.",
+    "The C transport model cut the application phase at byte 4136. The modeled device reported offset 0; resending the whole payload produced the expected CRC and full binary. Other devices or interruption points may report a different offset.",
+    "No physical Android transfer, MBR flash activation, real disconnect or power-cut trial was performed for this combo.",
+    "The device and its DFU key, addresses, SoftDevice prerequisites, filesystem and bootloader counter must match. OLED or other board layouts are outside qualification."
+  ]
+}

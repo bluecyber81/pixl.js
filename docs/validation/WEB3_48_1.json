@@ -1,0 +1,44 @@
+{
+  "version": "3.48.1",
+  "vue": "3.5.44",
+  "firmware": "2.22.0-DE3.72",
+  "applicationCounter": 645,
+  "host": {
+    "total": 1420,
+    "passed": 1420,
+    "skipped": 0,
+    "failed": 0
+  },
+  "layouts": {
+    "dist": {
+      "indexSha256": "df432aa60f4b4cf38582410b6af18d8abffbc5116a3ee1c935cb86312af499e7",
+      "fileCount": 178,
+      "fileManifestSha256": "34621c1c5f833f6e8aa856d39b75c7311053b877f4eacfe648602b08ee472509",
+      "distributionChecks": 22,
+      "chromeDfuSyncChecks": 31
+    },
+    "dist-pages": {
+      "indexSha256": "0711dee9cf93f3b57347217573a0e844cc015c41be526a47523c9e4465d8a9ec",
+      "fileCount": 178,
+      "fileManifestSha256": "8591dfc9297ff84e221f562892fce08e98da0353cc3d4a08432196325c69d966",
+      "distributionChecks": 22,
+      "chromeDfuSyncChecks": 31
+    }
+  },
+  "installGuide": {
+    "languages": [
+      "de",
+      "en"
+    ],
+    "viewsChecked": 8,
+    "navigationChecks": 24
+  },
+  "deviceFirmwareReadback": false,
+  "otherEvidence": [
+    "DE3_72.json",
+    "DE3_72_COMBO.json",
+    "DE3_72_PFS.json",
+    "DE3_30_PREP_600.json"
+  ],
+  "scope": "Chrome read actual signed firmware ZIPs from the published-layout production builds. Device communication in those tests was simulated."
+}

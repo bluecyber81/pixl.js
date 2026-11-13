@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.72",
   "counter": 645,
   "board": "LCD",
-  "web_version": "3.48.0",
+  "web_version": "3.48.1",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
@@ -46,11 +46,11 @@
     "Matching LCD hardware/layout only.",
     "Unsigned builds and host tests are not physical device proof.",
     "Public inherited signing key does not prove exclusive publisher identity.",
-    "No universal BL/SD combined update is supplied."
+    "The two-stage system package supports only the documented LCD layout, signing key, bootloader counter and S112 IDs. No hardware transfer of this new package was observed."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.1",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
   "device_readback_passed": false,
@@ -66,7 +66,7 @@
     "installation_readback_observed": true,
     "qualification": "App644's connected diagnostic export reported this Z19 region digest and S112 7.3.0. App645 was verified with the Z19 public key and host transfer model. Its first device readback is pending."
   },
-  "web_host_test_scope": "Local source suites and production Chrome checks for root and Pages. Historical physical LCD and backup observations are documented separately.",
+  "web_host_test_scope": "1420 web tests with local, pinned historical firmware fixtures; both production layouts, Chrome DFU simulations, signed ZIP selection and installation guides.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -103,10 +103,10 @@
     "firmware_downloads": {
       "bundled": [
         "DE3.65/637",
-        "DE3.71t1/644"
+        "DE3.72/645"
       ],
       "stable": "DE3.65/637",
-      "prerelease": "DE3.71t1/644"
+      "prerelease": "DE3.72/645"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -125,7 +125,8 @@
     "web_3_45_0": "Game compatibility filters, owned figures, dated announcements and a two-way folder comparison. Optional local device nicknames on supported Web Bluetooth sessions.",
     "web_3_46_0": "Open each published LCD application package in Nordic DFU on Android. Compare two complete backup ZIPs offline.",
     "web_3_47_0": "Read the first main-menu selection and distinguish it from settings-session input.",
-    "web_3_48_0": "Portable profiles, filtered ZIP comparisons, backup protection, PXMIv2 diagnostics and App644 capacity profile. Correct Windows background shutdown detection."
+    "web_3_48_0": "Portable profiles, filtered ZIP comparisons, backup protection, PXMIv2 diagnostics and App644 capacity profile. Correct Windows background shutdown detection.",
+    "web_3_48_1": "App645 firmware selection, signed package identity and three installation paths. Local PFS1 capacity check accepts the exact version and counter."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -138,8 +139,32 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_48_0.json",
+  "web_evidence": "docs/validation/WEB3_48_1.json",
   "device_readback_evidence": null,
-  "web_device_readback_pending_scope": "Device readback with the published 3.48.0. Existing connected readback used the 3.47.0-T1 candidate.",
-  "fresh_public_unsigned_rebuild_matches_signed_application": true
+  "web_device_readback_pending_scope": "The release was tested with production web builds and the signed App645 ZIP. Connected App645 and Web 3.48.1 readback is pending.",
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
+  "firmware_downloads": {
+    "application": {
+      "file": "Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
+      "sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
+      "counter": 645
+    },
+    "system_and_application": {
+      "file": "Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip",
+      "sha256": "37a4d51639a4502fdab170eb6a985ce80d6f09109fea0f9e6ff10b4f28410b82",
+      "evidence": "docs/validation/DE3_72_COMBO.json",
+      "requiredBootloaderCounterBelow": 19,
+      "startingSoftDeviceFwids": [
+        "0x0103",
+        "0x0126"
+      ],
+      "androidPhases": 2
+    },
+    "spiffs_preparation": {
+      "file": "Allmiibo_LCD_SPIFFS_DE3_30_PREP_600.zip",
+      "sha256": "7b5c972bc018c220997e1cea3f9566bdafd4750e53130e05a5cd5ebd913764b2",
+      "counter": 600,
+      "evidence": "docs/validation/DE3_30_PREP_600.json"
+    }
+  }
 }
