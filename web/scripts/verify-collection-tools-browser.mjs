@@ -321,7 +321,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.48.0', (await page.locator('.version-context').innerText()).includes('3.48.0'));
+    check(kind + ' exact web version 3.48.1', (await page.locator('.version-context').innerText()).includes('3.48.1'));
     const starts = page.locator('.start-actions');
     await fits(page, kind + ' start actions', '.start-actions', zoom);
     await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();

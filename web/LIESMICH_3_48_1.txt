@@ -1,0 +1,28 @@
+Allmiibo Dateimanager 3.48.1 · Windows-Starter R3
+
+Die ZIP vollständig in einen eigenen Ordner entpacken. Die Starter benötigen
+Python 3.8 oder neuer. Für Bluetooth Chrome oder Edge verwenden.
+
+Start-Dateimanager.cmd öffnet die Weboberfläche im Browser. Stop-Dateimanager.cmd
+beendet den Server dieser Kopie. R3 liest unter Windows die aktiven IPv4-Listener
+aus und kann dadurch ein erfolgreiches Beenden zuverlässig bestätigen.
+
+Beim Direktstart mit Start-Dateimanager-Direkt.cmd bleibt ein Fenster sichtbar.
+Die dort angezeigte lokale Adresse im Browser öffnen. Strg+C beendet diesen Modus.
+
+Unter Sicherung zwei ZIPs vergleichen, nach Pfad oder Status filtern und die
+Treffer als CSV oder JSON exportieren. Eine fertig erstellte Sicherung vor dem
+Schließen des Tabs speichern. Unter Figurensammlung können lokale Favoriten
+und Filter nach Vorschau zusammengeführt oder ersetzt werden.
+
+Unter Gerät & Diagnose lassen sich zwei exportierte PXMIv2-Diagnosen vergleichen.
+Die Firmware-Hashwerte der Paketreferenz beziehen sich auf die veröffentlichte
+Datei. Die Geräteverbindung liefert Versionsmeldung und validierte Zähler.
+
+Unter Update stehen die stabile DE3.65/637 und die optionale signierte
+Testanwendung DE3.72/645 für ein LCD-Gerät mit Z19, S112 7.3.0 und bereits
+eingerichtetem PFS1. Unter Sicherung unterstützt die lokale Platzprüfung
+explizit das Profil dieser Testanwendung. Die Anleitung lässt sich im
+Dateimanager auf Deutsch und Englisch öffnen.
+
+Für die drei Firmware-Downloads und die SPIFFS-Umstellung öffnen Sie die Anleitung. Auf Android die System-ZIP in Nordic nRF Device Firmware Update wählen.

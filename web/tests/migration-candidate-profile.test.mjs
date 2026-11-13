@@ -30,3 +30,10 @@ test('T1 registration does not bypass any exact geometry/engine/mounted or archi
  assert.throws(()=>checkImportState(state,{archiveSha256:'b'.repeat(64)}),{code:'MIGRATION_LAYOUT'});
  assert.throws(()=>checkImportState(state,{ready:true}),{code:'MIGRATION_LAYOUT'});
 });
+
+test('DE3.72 is qualified only with its exact counter and verified settings',()=>{
+ const current={...identity,firmwareVersion:'2.22.0-DE3.72',applicationCounter:645};
+ assert.equal(migrationApplicationMatches(current,target),true);
+ for(const patch of [{applicationCounter:644},{applicationCounter:646},{settingsCrcValid:false},{firmwareVersion:'2.22.0-DE3.71'}])
+   assert.equal(migrationApplicationMatches({...current,...patch},target),false);
+});

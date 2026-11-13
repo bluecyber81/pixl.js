@@ -16,12 +16,12 @@
       "migrationRequired": false
     },
     {
-      "id": "de3.71t1-lcd-app",
-      "version": "2.22.0-DE3.71t1",
-      "counter": 644,
-      "file": "Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip",
-      "bytes": 249137,
-      "sha256": "e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb",
+      "id": "de3.72-lcd-app",
+      "version": "2.22.0-DE3.72",
+      "counter": 645,
+      "file": "Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
+      "bytes": 249275,
+      "sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
       "board": "LCD",
       "storage": "PFS1",
       "bootloader": "Z19",
