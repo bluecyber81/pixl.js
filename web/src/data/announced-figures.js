@@ -17,8 +17,8 @@ export const announcementGroups = [
       en: 'You can train both riders as Figure Players. They keep their level when moved to another machine.',
     },
     figures: [
-      { en: 'Sword Kirby & Dragoon', de: 'Kirby mit Schwert & Dragoon', source: northAmericanDetails + 'sword-kirby-and-dragoon-kirby-air-riders-series/' },
-      { en: 'Noir Dedede & Hydra', de: 'Dedede Noir & Hydra', source: northAmericanDetails + 'noir-dedede-and-hydra-kirby-air-riders-series/' },
+      { catalogueId: '1f00010004c51e03', en: 'Sword Kirby & Dragoon', de: 'Kirby mit Schwert & Dragoon', source: northAmericanDetails + 'sword-kirby-and-dragoon-kirby-air-riders-series/' },
+      { catalogueId: '1f02010004c81e03', en: 'Noir Dedede & Hydra', de: 'Dedede Noir & Hydra', source: northAmericanDetails + 'noir-dedede-and-hydra-kirby-air-riders-series/' },
     ],
   },
   {
@@ -49,3 +49,8 @@ export const announcementGroups = [
     ],
   },
 ];
+
+export const releasedFigureNames = new Map(
+  announcementGroups.filter(group => group.released).flatMap(group =>
+    group.figures.filter(figure => figure.catalogueId).map(figure => [figure.catalogueId, [figure.de, figure.en]]))
+);

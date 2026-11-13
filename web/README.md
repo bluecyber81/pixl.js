@@ -1,4 +1,10 @@
-# Allmiibo Dateimanager 3.48.2
+# Allmiibo Dateimanager
+
+## Version 3.48.3
+
+954 Figuren im Offline-Katalog, darunter die zwei neuen Fahrer für Kirby Air Riders. Die deutsche Suche führt direkt zur jeweiligen Figurenkarte. Der Spielfilter zeigt sieben Fahrer. [Windows-Download](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.3/Allmiibo_Dateimanager_3_48_3_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.3/Allmiibo_Dateimanager_3_48_3_Quellcode.zip) · [Start und Bedienung](LIESMICH_3_48_3.txt)
+
+## Version 3.48.2
 
 Beim Sichern unterscheidet der Dateimanager den Fortschritt im offenen Tab, die im Browser gespeicherte Sicherung und die heruntergeladene ZIP. Beim Schreiben erkennt er reservierte Pfade im Stammordner. Die lokale LittleFS-Platzprüfung unterstützt DE3.73/App646.
 

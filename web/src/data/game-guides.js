@@ -23,7 +23,7 @@ export const gameGuides = [
     de: 'Setze den Fahrer auf eine Maschine und scanne die Kombination, um ihn als Figurenspieler zu trainieren. Die Katalog-ID bezeichnet den Fahrer.',
     en: 'Place the rider on a machine and scan the combination to train a Figure Player. The catalogue ID identifies the rider.',
     communityLink: 'https://github.com/Bing-Bong-Bang/air-riders-amiibo-tracker/releases/tag/v0.1.0',
-    ids: ['1f00000004c41e03', '1f03010004c91e03', '1f01000004c61e03', '1f02000004c71e03', '1f04000004ca1e03'],
+    ids: ['1f00000004c41e03', '1f03010004c91e03', '1f01000004c61e03', '1f02000004c71e03', '1f04000004ca1e03', '1f00010004c51e03', '1f02010004c81e03'],
   },
   {
     id: 'metroid-dread', title: 'Metroid Dread', platform: 'Switch',

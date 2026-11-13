@@ -102,6 +102,36 @@ async function filter(root, value) {
   nodes(classNode(root, 'presence-filter'), 'select')[0].props['onUpdate:modelValue'](value); await Vue.nextTick();
 }
 
+test('both November riders remain visible under the Kirby game filter after an online catalogue update in DE and EN', async () => {
+  const current = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
+  const ids = ['1f00010004c51e03', '1f02010004c81e03'];
+  const before = { ...current, entries: current.entries.filter(entry => !ids.includes(entry.id)) };
+  for (const locale of ['de_DE', 'en_US']) {
+    const { root, state, app } = await mount({ catalogue: before }, locale);
+    try {
+      const select = nodes(classNode(root, 'game-filter'), 'select')[0];
+      select.props['onUpdate:modelValue']('kirby-air-riders'); await Vue.nextTick();
+      assert.equal(cards(root).length, 5);
+      assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 2);
+      state.catalogue = current; await Vue.nextTick();
+      assert.equal(cards(root).length, 7);
+      assert.equal(classNode(root, 'announcements'), undefined);
+      const search = nodes(root, 'input').find(node => node.props.type === 'search');
+      assert.ok(search);
+      for (const id of ids) {
+        search.props['onUpdate:modelValue'](id); await Vue.nextTick();
+        assert.equal(cards(root).length, 1);
+        assert.equal(nodes(cards(root)[0], 'code')[0].text, id);
+        assert.equal(classNode(root, 'announcements'), undefined);
+      }
+      search.props['onUpdate:modelValue']('Kirby mit Schwert'); await Vue.nextTick();
+      assert.equal(cards(root).length, 1);
+      assert.equal(nodes(cards(root)[0], 'code')[0].text, ids[0]);
+      assert.equal(classNode(root, 'announcements'), undefined);
+    } finally { app.unmount(); }
+  }
+});
+
 test('documented games select exact editions and intersect with device evidence in both languages', async () => {
   const realCatalogue = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
   const fatalFury = gameGuides.find(game => game.id === 'fatal-fury-cotw');
@@ -132,19 +162,12 @@ test('documented games select exact editions and intersect with device evidence 
       assert.deepEqual(shownIds(), []);
       await filter(root, '');
       select.props['onUpdate:modelValue']('kirby-air-riders'); await Vue.nextTick();
-      assert.equal(cards(root).length, 5);
+      assert.equal(cards(root).length, 7);
       assert.match(text(classNode(root, 'game-guide')), /Air Riders Stat Tracker/);
-      const announced = classNode(root, 'announcements');
-      assert.equal(nodes(announced, 'li').length, 2);
-      assert.equal(announced.props.open, true);
-      assert.match(text(classNode(announced, 'group-title')), de ? /Erschienen/ : /Released/);
-      assert.match(text(announced), de ? /Figurenspieler/ : /Figure Players/);
-      const checked = new Intl.DateTimeFormat(de ? 'de-DE' : 'en-GB', {dateStyle:'long', timeZone:'UTC'})
-        .format(new Date(announcementGroups[0].sourceCheckedOn + 'T00:00:00Z'));
-      assert.ok(text(announced).includes(checked));
+      assert.equal(classNode(root, 'announcements'), undefined, 'released riders already appear as catalogue cards');
       await click(root, de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters');
       assert.equal(classNode(root, 'game-guide'), undefined);
-      assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 9);
+      assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 7);
     } finally { app.unmount(); }
   }
 });

@@ -85,7 +85,7 @@ class LauncherTests(unittest.TestCase):
         class ForeignHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 calls.append('GET')
-                body = b'{"application":"allmiibo-dateimanager","version":"3.48.2","instance":"foreign"}'
+                body = b'{"application":"allmiibo-dateimanager","version":"3.48.3","instance":"foreign"}'
                 self.send_response(200)
                 self.send_header('Content-Length', str(len(body)))
                 self.end_headers()
@@ -354,7 +354,7 @@ class LauncherTests(unittest.TestCase):
                     break
                 time.sleep(0.05)
             self.assertIsNotNone(health, 'Direct server did not answer')
-            self.assertEqual(health['version'], '3.48.2')
+            self.assertEqual(health['version'], '3.48.3')
             self.assertEqual(self.state_path.read_bytes(), before)
             self.assertFalse((self.root / 'launcher-{}.lock'.format(self.port)).exists())
             self.assertFalse(self.module.error_log_path(self.port).exists())

@@ -50,11 +50,11 @@ test('normalizes exactly public metadata, excluding machine records and remote U
   raw.download = 'https://untrusted.invalid/dumps';
   assert.deepEqual(normalizeCatalogueSource(raw), [{ ...entry(), firmwareIdKnown: false }]);
 });
-test('all 952 bundled entries roundtrip through the researched raw schema without metadata drift', async () => {
+test('all 954 bundled entries roundtrip through the researched raw schema without metadata drift', async () => {
   const bundled = JSON.parse(await readFile(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
   const normalized = normalizeCatalogueSource(source(bundled.entries));
   const diff = compareCatalogueEntries(bundled, normalized);
-  assert.equal(bundled.entries.length, 952);
+  assert.equal(bundled.entries.length, 954);
   assert.deepEqual([diff.added, diff.changed, diff.absentFromSource], [[], [], []]);
 });
 test('addition, metadata change and source absence are distinct; union never deletes baseline IDs', () => {

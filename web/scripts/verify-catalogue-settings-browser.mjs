@@ -4,7 +4,6 @@ import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { installReadOnlyPeripheral } from './check-device-search-csv-browser.mjs';
-import { announcementGroups } from '../src/data/announced-figures.js';
 
 const target = new URL('http://127.0.0.1/');
 const dist = path.resolve(process.argv[2]);
@@ -43,13 +42,11 @@ async function checkGames(page, en) {
   const game = cat.locator('.game-filter select'), inventory = cat.locator('.presence-filter select');
   const cards = cat.locator('.entries > li');
   await game.selectOption('kirby-air-riders');
-  assert.equal(await cards.count(), 5);
-  const announcements = cat.locator('.announcements');
-  assert.equal(await announcements.locator('li').count(), 2);
-  const checkedDate = new Intl.DateTimeFormat(en ? 'en-GB' : 'de-DE', {dateStyle:'long',timeZone:'UTC'})
-    .format(new Date(announcementGroups[0].sourceCheckedOn + 'T00:00:00Z'));
-  const announcementText = await announcements.innerText();
-  assert.ok(announcementText.includes(checkedDate), JSON.stringify({checkedDate, announcementText}));
+  assert.equal(await cards.count(), 7);
+  assert.equal(await cat.locator('.announcements li').count(), 0);
+  for (const id of ['1f00010004c51e03', '1f02010004c81e03']) {
+    assert.equal(await cards.locator('code').filter({hasText: id}).count(), 1);
+  }
   assert.equal(await cat.getByRole('link', {name:/Air Riders Stat Tracker/}).getAttribute('href'),
     'https://github.com/Bing-Bong-Bang/air-riders-amiibo-tracker/releases/tag/v0.1.0');
   await game.selectOption('fatal-fury-cotw');

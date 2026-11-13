@@ -1,0 +1,52 @@
+{
+  "version": "3.48.3",
+  "sourceBase": "075ba646f12f1e38151158cbf64211cc9b017d3c",
+  "date": "2026-11-13",
+  "data": {
+    "metadataRecords": 954,
+    "firmwareNamesInApp646": 952,
+    "game": "Kirby Air Riders",
+    "documentedRiders": 7,
+    "newRiderIds": [
+      "1f00010004c51e03",
+      "1f02010004c81e03"
+    ],
+    "metadataCommit": "855a0ff4308278de756bed01de1eca89936f456b",
+    "metadataSha256": "cacc7d31f935f43e601fa9f4f957f3f9b74956304206049c1cfadfa3b2e3278c",
+    "firmwareAssociations": 1344,
+    "additionalNintendoWebAssociations": 2
+  },
+  "tests": {
+    "focusedCatalogueAndNotes": {
+      "passed": 29,
+      "failed": 0
+    },
+    "usageExport": {
+      "passed": 6,
+      "failed": 0
+    },
+    "windowsPythonLauncher": {
+      "passed": 22,
+      "skippedPosixCases": 2
+    }
+  },
+  "layouts": {
+    "root": {
+      "productionChecksPassed": 22,
+      "indexSha256": "759d130d5772cfd063017cda6e124d6edfee889d5c5776843d52aa7a3cfe319c"
+    },
+    "pages": {
+      "productionChecksPassed": 22,
+      "indexSha256": "4c3ac8efa58c54f9e327d35d64a873f508433522f1e2c816c1004ff347f6a930"
+    }
+  },
+  "firmware": {
+    "stableCounter": 637,
+    "experimentalCounter": 646,
+    "kind": "existing signed packages"
+  },
+  "hardware": {
+    "thisWebClientUsedForLiveReadback": false,
+    "newFiguresTestedOnConsole": false
+  }
+}

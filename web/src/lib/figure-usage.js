@@ -38,7 +38,10 @@ export function figureUsage(id, data, locale = 'de_DE') {
     const group = groups.get(association.groupId);
     const note = notes.get(association.noteId);
     const label = group.labelPath.join(' › ');
-    const attribution = { groupId: group.id, label, sourceUrl: `${linkSource.referenceUrl}#L${association.sourceLine}` };
+    const attribution = { groupId: group.id, label, sourceUrl: association.sourceUrl || `${linkSource.referenceUrl}#L${association.sourceLine}` };
+    if (association.sourceUrl) {
+      return { ...attribution, officialAssociation: true, text: null, original: null, language: null, translated: false };
+    }
     const correction = nintendoUsage(normalized, label, de);
     if (correction) return {
       ...attribution, ...correction, language: de ? 'de' : 'en',

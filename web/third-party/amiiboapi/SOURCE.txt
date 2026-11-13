@@ -1,5 +1,7 @@
-Metadata only. Source pinned to https://github.com/8bitDream/AmiiboAPI/tree/5fc4e058fea1092761a419e4ad1aeda56a39452e
-SHA256 6c538e28f838211a9b9425bdda3a3efdb091ed33e1edd738d81e34dfecdca16a
-Retrieved 2026-10-23; upstream last-updated.json is stale and is not used as retrieval date.
+Metadata only. Source pinned to https://github.com/8bitDream/AmiiboAPI/tree/855a0ff4308278de756bed01de1eca89936f456b
+SHA256 cacc7d31f935f43e601fa9f4f957f3f9b74956304206049c1cfadfa3b2e3278c
+Retrieved 2026-11-13; upstream last-updated.json is stale and is not used as retrieval date.
 Machine entries are not standalone figures and are not merged into this catalogue.
+Two reviewed rider additions: Sword Kirby (& Dragoon), Noir Dedede (& Hydra).
 No images, keys or tag dumps included.
+Firmware name flags use the 952 IDs from the published DE3.73/App646 baseline.
