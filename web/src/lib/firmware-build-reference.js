@@ -8,11 +8,17 @@ export const TEST_FIRMWARE_REFERENCE = Object.freeze({
   artifactStatus: 'experimental-signed-application', hardwareAcceptance: 'first-device-run-reported',
   otaSha256: 'e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb',
 });
-const latestReference = Object.freeze({
+const app645 = Object.freeze({
   ...TEST_FIRMWARE_REFERENCE, firmwareVersion: '2.22.0-DE3.72', applicationCounter: 645,
   applicationBytes: 363340, applicationBinSha256: '000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88',
   sourceId: 'd1a80a8a13b9e0bd8f1513216e268bb0694e9a74ff52986aaa65a1ee7f893b6d', otaSha256: 'e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc', hardwareAcceptance: 'pending',
 });
+const app646 = Object.freeze({
+  ...app645, firmwareVersion: '2.22.0-DE3.73', applicationCounter: 646,
+  applicationBytes: 364092, applicationBinSha256: '5d8937db3482c777cd9f768bf15ecedf909adff9dd094446809faa0a3a045ddb',
+  sourceId: '53e1fb72f45fdd0b8ed8bef3c11752c90c4198ae15bf79fc5ca3d97071ea05d0', otaSha256: 'e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe',
+});
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
@@ -24,7 +30,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
     sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = version === TEST_FIRMWARE_REFERENCE.firmwareVersion ? TEST_FIRMWARE_REFERENCE : latestReference;
+  const reference = references.find(item => item.firmwareVersion === version) ?? app646;
   const relation = version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
   return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,

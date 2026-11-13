@@ -4,9 +4,9 @@
     <p v-if="!releases.packages.length" role="status">{{ text.empty }}</p>
     <template v-else>
       <p>{{ text.scope }}</p><p class="hint">{{ text.unread }}</p>
-      <div v-for="{entry, newer, downloadUrl, dfuUrl, androidUrl} in packages" :key="entry.id" class="package">
+      <div v-for="{entry, newer, downloadUrl, dfuUrl, androidUrl, releaseNotesUrl} in packages" :key="entry.id" class="package">
         <strong>{{ entry.version }}</strong> <span>· {{ text.counter }} {{ entry.counter }} · {{ (entry.bytes / 1024).toFixed(1) }} KiB</span>
-        <p v-if="entry.channel === 'prerelease'">{{ text.prerelease }} · <a :href="'https://github.com/bluecyber81/pixl.js/releases/tag/' + entry.version.split('-')[1].toLowerCase()" target="_blank" rel="noopener noreferrer">{{ text.releaseNotes }}</a></p>
+        <p v-if="entry.channel === 'prerelease'">{{ text.prerelease }} · <a :href="releaseNotesUrl" target="_blank" rel="noopener noreferrer">{{ text.releaseNotes }}</a></p>
         <p v-if="newer" role="status">{{ text.newer }}</p>
         <div v-else class="actions">
           <a :href="downloadUrl" :download="entry.file">{{ text.download }}</a>

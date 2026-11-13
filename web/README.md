@@ -1,4 +1,10 @@
-# Allmiibo Dateimanager 3.48.1
+# Allmiibo Dateimanager 3.48.2
+
+Beim Sichern unterscheidet der Dateimanager den Fortschritt im offenen Tab, die im Browser gespeicherte Sicherung und die heruntergeladene ZIP. Beim Schreiben erkennt er reservierte Pfade im Stammordner. Die lokale LittleFS-Platzprüfung unterstützt DE3.73/App646.
+
+[Im Browser öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Download](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Quellcode.zip) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip) · [Windows-Start und Bedienung](LIESMICH_3_48_2.txt)
+
+## Allmiibo Dateimanager 3.48.1
 
 Unter **Sicherung** lassen sich zwei ZIPs nach Pfad und Änderungsart vergleichen und die Treffer als CSV oder JSON speichern. Die **Figurensammlung** übernimmt bei schneller Auswahl die zuletzt gewählte Figur. Favoriten und gespeicherte Filter lassen sich auf einen anderen Browser übertragen. Für LCD-Allmiibo mit Z19, S112 7.3.0 und PFS1 steht die optionale signierte Testanwendung DE3.72/645 bereit.
 

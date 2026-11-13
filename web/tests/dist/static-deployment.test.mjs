@@ -98,13 +98,11 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  const version = '3.48.1' // Last published source and test archives
-  const fileVersion = version.replaceAll('.', '_')
-  for (const name of [
-    'Allmiibo_Dateimanager_' + fileVersion + '_Quellcode.zip',
-    'Allmiibo_DE3_72_Z19_Web' + fileVersion + '_ChatGPT_Pruefpaket.zip'
+  for (const releaseFile of [
+    'web3.48.2/Allmiibo_Dateimanager_3_48_2_Quellcode.zip',
+    'de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip'
   ]) {
-    assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/' + name + '" download'), name)
+    assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/' + releaseFile + '" download'), releaseFile)
   }
   assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'))
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
