@@ -1,3 +1,5 @@
+import { releasedFigureNames } from '../data/announced-figures.js';
+
 // Metadata only. A catalogue entry does not establish file ownership, file
 // presence on a device, a release date in every region, or emulation support.
 const normalize = value => String(value ?? '').normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('en');
@@ -17,7 +19,7 @@ export function parseKnownFigureIds(text) {
 export function filterCatalogue(entries, { query = '', series = '', kind = '', knownOnly = false } = {}) {
   const matches = catalogueMatcher(query);
   return entries.filter(entry => (!series || entry.series === series) && (!kind || entry.type === kind) &&
-    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type));
+    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type, ...(releasedFigureNames.get(entry.id) || [])));
 }
 
 export function cataloguePage(entries, page, size = 40) {

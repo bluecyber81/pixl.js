@@ -27,6 +27,10 @@ SOURCE_REFERENCE_SHA256 = {
 NAME_CORRECTIONS = [{'operation': 'correct-display-name', 'id': '018b000002460502', 'columns': ['name_en', 'name_cn'], 'from': 'Cyrrus', 'to': 'Cyrus'}, {'operation': 'correct-display-name', 'id': '04d0000101960502', 'columns': ['name_en', 'name_cn'], 'from': '[AC] 339 - Fritta', 'to': '[AC] 339 - Frita'}, {'operation': 'correct-display-name', 'id': '033f0001008f0502', 'columns': ['name_en', 'name_cn'], 'from': '[AC] 076 - Jeramiah', 'to': '[AC] 076 - Jeremiah'}, {'operation': 'trim-trailing-space', 'id': '0a02000103b30502', 'columns': ['name_en', 'name_cn'], 'from': '412 - C.J. ', 'to': '412 - C.J.'}, {'operation': 'trim-trailing-space', 'id': '0a0c000103c30502', 'columns': ['name_en', 'name_cn'], 'from': '428 - Audie ', 'to': '428 - Audie'}, {'operation': 'trim-trailing-space', 'id': '0a0e000103c50502', 'columns': ['name_en', 'name_cn'], 'from': '430 - Judy ', 'to': '430 - Judy'}]
 GROUP_CORRECTIONS = [{'operation': 'trim-trailing-space', 'id': '49', 'columns': ['name_en'], 'from': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ', 'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}]
 LINK_HYGIENE_LINES = (1332, 1333, 1334)
+# Nintendo documents support for these exact riders since Kirby Air Riders 1.3.3.
+# Keep these web associations separate from the versioned firmware CSV rows.
+NINTENDO_KIRBY_UPDATE = 'https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html'
+WEB_RIDER_IDS = ('1f00010004c51e03', '1f02010004c81e03')
 
 
 def source_lines(path):
@@ -76,6 +80,8 @@ def export_usage(data_dir, translations_path):
         associations[link.amiibo_id.lower()].append({
             'groupId': int(link.game_id), 'noteId': note_ids.get(link.note_en), 'sourceLine': line,
         })
+    for rider in WEB_RIDER_IDS:
+        associations[rider] = [{'groupId': 75, 'noteId': None, 'sourceUrl': NINTENDO_KIRBY_UPDATE}]
     source_files = []
     for filename in ('amiidb_amiibo.csv', 'amiidb_game.csv', 'amiidb_link.csv'):
         normalization = []
@@ -93,7 +99,7 @@ def export_usage(data_dir, translations_path):
                              'readNormalization': normalization})
     return {
         'schemaVersion': 1,
-        'dataVersion': '2026-11-13.zelda',
+        'dataVersion': '2026-11-13.kirby',
         'source': {'label': 'Bundled firmware catalogue', 'referenceCommit': SOURCE_COMMIT,
                    'files': source_files,
                    'hashPolicy': 'sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.'},
@@ -101,7 +107,8 @@ def export_usage(data_dir, translations_path):
                    'notesAreComplete': False, 'germanTranslationsAreComplete': bool(english) and set(texts) == english,
                    'germanTranslationScope': 'existing English usage notes in this catalogue snapshot',
                    'translationPolicy': translations['translationPolicy']},
-        'coverage': {'figures': len(figures), 'groups': len(games), 'associations': len(links),
+        'coverage': {'figures': len(associations), 'groups': len(games), 'associations': len(links) + len(WEB_RIDER_IDS),
+                     'firmwareAssociations': len(links), 'nintendoWebAssociations': len(WEB_RIDER_IDS),
                      'legacyEmptyLinkColumns': sum(link.legacy_empty_column for link in links),
                      'englishNoteAssociations': sum(bool(link.note_en) for link in links),
                      'uniqueEnglishNotes': len(notes), 'uniqueGermanTranslations': len(texts),

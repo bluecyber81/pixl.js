@@ -1,8 +1,10 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
-## DE3.73 / App646 und Dateimanager 3.48.2
+## DE3.73 / App646 und Dateimanager 3.48.3
 
-DE3.73 ist eine optionale LCD-Testversion. Ein langer Druck auf „Zurück“ in der Slotliste lässt die Slots unberührt. Bei der Rückkehr aus den Figurendetails bleibt die Auswahl auch über Favoritenseiten hinweg erhalten. Der Dateimanager 3.48.2 prüft die lokale Belegung für App646 und erkennt reservierte Speicherpfade bereits vor dem Schreiben.
+Der Offline-Katalog umfasst 954 Figuren. Unter **Figurenkatalog → Spiel → Kirby Air Riders** findest du sieben Fahrer, darunter Kirby mit Schwert & Dragoon sowie Dedede Noir & Hydra. Beide lassen sich auch unter ihrem deutschen Namen finden. Der Firmware-Namensfilter umfasst die 952 IDs der veröffentlichten App646.
+
+DE3.73 ist eine optionale LCD-Testversion. Ein langer Druck auf „Zurück“ in der Slotliste lässt die Slots unberührt. Bei der Rückkehr aus den Figurendetails bleibt die Auswahl auch über Favoritenseiten hinweg erhalten. Der Dateimanager 3.48.3 prüft die lokale Belegung für App646 und erkennt reservierte Speicherpfade bereits vor dem Schreiben.
 
 | Ausgangslage beim LCD-Allmiibo | Passender Download |
 | --- | --- |
@@ -12,7 +14,7 @@ DE3.73 ist eine optionale LCD-Testversion. Ein langer Druck auf „Zurück“ in
 
 Durch die Einrichtung von LittleFS wird das bisherige Laufwerk E: gelöscht. Spiele anschließend die geprüfte Sicherung zurück und vergleiche die wiederhergestellten Daten mit dem Gerät.
 
-[Stabile LCD-Firmware DE3.65 / 637](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/index.html) · [Windows-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Quellcode.zip) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
+[Stabile LCD-Firmware DE3.65 / 637](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/index.html) · [Windows-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.3/Allmiibo_Dateimanager_3_48_3_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.3/Allmiibo_Dateimanager_3_48_3_Quellcode.zip) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
 
 ## DE3.72 / App645 und Dateimanager 3.48.1
 

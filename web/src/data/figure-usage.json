@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-13.zelda",
+  "dataVersion": "2026-11-13.kirby",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
@@ -124,9 +124,11 @@
     "translationPolicy": "Redaktionelle Übersetzungen vorhandener englischer Katalognotizen. Keine unabhängige Spielprüfung; Eigennamen sind nicht als offizielle deutsche Spielbegriffe bestätigt."
   },
   "coverage": {
-    "figures": 952,
+    "figures": 954,
     "groups": 82,
-    "associations": 1344,
+    "associations": 1346,
+    "firmwareAssociations": 1344,
+    "nintendoWebAssociations": 2,
     "legacyEmptyLinkColumns": 3,
     "englishNoteAssociations": 63,
     "uniqueEnglishNotes": 53,
@@ -10393,6 +10395,16 @@
       ]
     },
     {
+      "id": "1f00010004c51e03",
+      "associations": [
+        {
+          "groupId": 75,
+          "noteId": null,
+          "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
+        }
+      ]
+    },
+    {
       "id": "1f01000000270002",
       "associations": [
         {
@@ -10489,6 +10501,16 @@
           "groupId": 75,
           "noteId": null,
           "sourceLine": 1336
+        }
+      ]
+    },
+    {
+      "id": "1f02010004c81e03",
+      "associations": [
+        {
+          "groupId": 75,
+          "noteId": null,
+          "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
         }
       ]
     },

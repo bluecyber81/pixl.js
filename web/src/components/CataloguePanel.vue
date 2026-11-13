@@ -393,9 +393,13 @@ const activeFilters = computed(() => Number(Boolean(series.value)) + Number(Bool
 const announcements = computed(() => {
   if (favoritesOnly.value || knownOnly.value || presenceFilter.value || (kind.value && kind.value !== 'Figure')) return [];
   const matches = catalogueMatcher(query.value);
+  // Suppress duplicate release cards only when the same reviewed ID is in
+  // the matching catalogue results; retain German aliases for other searches.
+  const matchingCatalogueIds = new Set(filtered.value.map(entry => entry.id));
   return announcementGroups.filter(group => (!series.value || group.series === series.value) && (!gameId.value || group.game === gameId.value)).map(group => ({
     ...group,
-    figures: group.figures.filter(figure => matches(figure.en, figure.de, group.series, figure.proposedId)),
+    figures: group.figures.filter(figure => (!figure.catalogueId || !matchingCatalogueIds.has(figure.catalogueId)) &&
+      matches(figure.en, figure.de, group.series, figure.proposedId, figure.catalogueId)),
   })).filter(group => group.figures.length);
 });
 function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; gameId.value = ''; knownOnly.value = false; presenceFilter.value = ''; favoritesOnly.value = false; selectedFilterName.value = ''; preferenceMessage.value = null; }

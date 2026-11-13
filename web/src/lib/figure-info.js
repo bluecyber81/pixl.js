@@ -1,8 +1,8 @@
 // Public figure metadata and local structural checks only. No owner data, UID,
 // signatures, keys, file contents or paths are returned or sent to a service.
-export const IMAGE_COMMIT = '5fc4e058fea1092761a419e4ad1aeda56a39452e';
+export const IMAGE_COMMIT = '855a0ff4308278de756bed01de1eca89936f456b';
 export const TAG_LENGTHS = Object.freeze([532, 540, 572, 2048]);
-const airRidersIds = new Set(['1f00000004c41e03', '1f03010004c91e03', '1f04000004ca1e03', '1f02000004c71e03', '1f01000004c61e03']);
+const airRidersIds = new Set(['1f00000004c41e03', '1f03010004c91e03', '1f04000004ca1e03', '1f02000004c71e03', '1f01000004c61e03', '1f00010004c51e03', '1f02010004c81e03']);
 const observedVehicles = {
   'PB4W17:2': ['Warp Star'],
   'PB4W17:4': ['Winged Star'],

@@ -37,14 +37,22 @@ class UsageExportTests(unittest.TestCase):
             rows = list(csv.reader(stream))
         notes = {note['id']: note for note in data['notes']}
         actual = {}
+        nintendo_web_rows = []
         for figure in data['figures']:
             for association in figure['associations']:
                 note = notes.get(association['noteId'])
+                if 'sourceUrl' in association:
+                    nintendo_web_rows.append(figure['id'])
+                    self.assertEqual(association, {'groupId': 75, 'noteId': None, 'sourceUrl': exporter.NINTENDO_KIRBY_UPDATE})
+                    continue
                 line = association['sourceLine']
                 self.assertNotIn(line, actual)
                 actual[line] = (association['groupId'], figure['id'], note['en'] if note else '')
         self.assertEqual(actual, {i: (int(row[0]), row[1].lower(), row[2]) for i, row in enumerate(rows, 1)})
         self.assertEqual(len(actual), 1344)
+        self.assertEqual(nintendo_web_rows, ['1f00010004c51e03', '1f02010004c81e03'])
+        self.assertEqual(data['coverage']['associations'], len(actual) + len(nintendo_web_rows))
+        self.assertEqual(data['coverage']['figures'], 954)
         self.assertEqual(data['coverage']['englishNoteAssociations'], 63)
         self.assertEqual(data['coverage']['uniqueGermanTranslations'], 53)
         self.assertEqual(data['coverage']['germanNoteAssociations'], 63)

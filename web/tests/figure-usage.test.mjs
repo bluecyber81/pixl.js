@@ -47,10 +47,16 @@ test('all exported rows keep a group path and pinned source line without externa
       if (row.translated) translated++;
       if (row.guideUrl) official++;
       assert.ok(row.label);
+      if (row.officialAssociation) {
+        assert.ok(['1f00010004c51e03', '1f02010004c81e03'].includes(figure.id));
+        assert.equal(row.groupId, 75);
+        assert.match(row.sourceUrl, /^https:\/\/www\.nintendo\.com\/de-de\/.*2967700\.html$/);
+        continue;
+      }
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1344, notes: 63, translated: 59, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1346, notes: 63, translated: 59, official: 4 });
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.
@@ -114,6 +120,22 @@ test('actual component labels claims, translations, exact sources and unknown/em
     assert.match(text(root), /Daraus lässt sich keine Aussage zur Spielunterstützung ableiten/);
     assert.equal(nodes(root, 'a').length, 0);
     assert.equal(nodes(root, 'img').length, 0);
+  } finally { app.unmount(); }
+});
+
+test('both Kirby riders link to the official game update in DE and EN', async () => {
+  const { root, state, app } = await mount({ id: '1f00010004c51e03', locale: 'de_DE' });
+  try {
+    for (const id of ['1f00010004c51e03', '1f02010004c81e03']) {
+      for (const locale of ['de_DE', 'en_US']) {
+        state.id = id; state.locale = locale; await Vue.nextTick();
+        assert.match(text(root), /1\.3\.3/);
+        const links = nodes(root, 'a');
+        assert.equal(links.length, 1);
+        assert.equal(text(links[0]), locale === 'de_DE' ? 'Quelle: Nintendo-Spielupdate' : 'Source: Nintendo game update');
+        assert.match(links[0].props.href, /^https:\/\/www\.nintendo\.com\/de-de\/.*2967700\.html$/);
+      }
+    }
   } finally { app.unmount(); }
 });
 
