@@ -92,12 +92,15 @@ static bool isChineseLanguage(void) { return false; }
 typedef struct { unsigned game; uint32_t head,tail; const char *en,*cn,*it; } reference_t;
 static const reference_t expected[] = {
 ''' + ',\n'.join(rows) + '\n};\n'
+        distinct_note_triples = len({tuple(row[2:5]) for row in links})
+        self.assertEqual(distinct_note_triples, 109)
+        code += f'#define EXPECTED_NOTE_TRIPLES {distinct_note_triples}\n'
         code += (SRC / 'amiidb/db_search.c').read_text().replace('#include "settings.h"', '')
         code += r'''
 int main(void) {
  const size_t count=sizeof(expected)/sizeof(*expected);
  assert(sizeof(link_list)/sizeof(*link_list)==count+1);
- assert(sizeof(db_usage_notes)/sizeof(*db_usage_notes)==110);
+ assert(sizeof(db_usage_notes)/sizeof(*db_usage_notes)==EXPECTED_NOTE_TRIPLES);
  for(size_t i=0;i<count;i++) {
   const reference_t *ref=&expected[i];const db_link_t *link=&link_list[i];
   assert(link->game_id==ref->game && link->amiibo_index<amiibo_list_size);

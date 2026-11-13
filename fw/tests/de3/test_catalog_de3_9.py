@@ -38,7 +38,7 @@ class CatalogDE39Tests(unittest.TestCase):
             lines = content.splitlines(keepends=True)
             self.assertEqual(len(lines), old_count + 2)
             # Preserve the reviewed historical prefix byte-for-byte after
-            # reversing exactly the six later display-name corrections.
+            # reversing only the later reviewed name and note corrections.
             prefix = b"".join(lines[:old_count])
             if filename == "amiidb_amiibo.csv":
                 for aid, old, new in [
@@ -52,6 +52,17 @@ class CatalogDE39Tests(unittest.TestCase):
                     corrected = f"{aid},{new},{new}".encode()
                     self.assertEqual(prefix.count(corrected), 1)
                     prefix = prefix.replace(corrected, f"{aid},{old},{old}".encode())
+            else:
+                # Preserve the DE3.9 digest after reversing only the four later
+                # reward descriptions. The game/figure key on each line is fixed.
+                old_rows = (Path(__file__).parent / "fixtures" / "zelda_champion_notes_before_correction.csv").read_bytes().splitlines(keepends=True)
+                self.assertEqual(len(old_rows), 4)
+                for line_number, old_row in zip((17, 23, 54, 60), old_rows):
+                    current = lines[line_number - 1]
+                    self.assertEqual(current.split(b",", 2)[:2], old_row.split(b",", 2)[:2])
+                    self.assertNotEqual(current, old_row)
+                    lines[line_number - 1] = old_row
+                prefix = b"".join(lines[:old_count])
             self.assertEqual(sha256(prefix).hexdigest(), old_hash)
             rows[filename] = list(csv.reader(io.StringIO(content.decode("utf8"))))
         amiibos = rows["amiidb_amiibo.csv"]
