@@ -13,9 +13,9 @@ class NotesTests(HostTests):
     def test_generated_header_matches_reviewed_firmware_translation_source(self):
         data = json.loads(generator.INPUT.read_text(encoding="utf-8"))
         self.assertEqual(generator.OUTPUT.read_text(encoding="utf-8"), generator.render(data))
-        self.assertEqual(len(data["texts"]), 54)
+        self.assertEqual(len(data["texts"]), 53)
         enc, dictionary = generator.pack(list(data["texts"].values()))
-        self.assertEqual(len(enc), 54)
+        self.assertEqual(len(enc), len(data["texts"]))
         for value, packed in zip(data["texts"].values(), enc):
             decoded = "".join(dictionary[ord(ch)-1] if ord(ch) < 32 else ch for ch in packed)
             self.assertEqual(decoded, value)
@@ -28,6 +28,46 @@ class NotesTests(HostTests):
         catalogue = (SRC / "amiidb/db_link.c").read_text(encoding="utf-8")
         for english in data["texts"]:
             self.assertIn(json.dumps(english, ensure_ascii=False), catalogue)
+
+    def test_champion_rewards_follow_figure_and_game_ids_in_compiled_lcd_tables(self):
+        self.compile_run(r'''
+#include <assert.h>
+#include <stdio.h>
+#include "db_amiibo.c"
+#include "db_link.c"
+#include "amiibo_usage_de.h"
+int main(void) {
+    const struct { uint32_t head, tail; const char *beast; } figures[] = {
+        {0x01060000, 0x03590902, "Vah Naboris"},
+        {0x01070000, 0x035a0902, "Vah Ruta"}
+    };
+    for (size_t f = 0; f < sizeof(figures) / sizeof(*figures); ++f) {
+        unsigned found[5] = {0};
+        for (size_t i = 0; link_list[i].game_id; ++i) {
+            db_link_t link = link_list[i];
+            if (link.game_id != 1 && link.game_id != 4) continue;
+            const db_amiibo_t *figure = &amiibo_list[link.amiibo_index];
+            if (figure->head != figures[f].head || figure->tail != figures[f].tail) continue;
+            char decoded[AMIIBO_USAGE_DE_BUFFER_BYTES];
+            const char *en = db_usage_notes[link.note_index].en;
+            const char *de = amiibo_usage_de(en, decoded, sizeof(decoded));
+            assert(de == decoded && strstr(de, "Waffen") && strstr(de, "Materialien"));
+            assert(strstr(en, "weapons") && strstr(en, "materials"));
+            if (link.game_id == 4) {
+                assert(strstr(de, "Helm") && strstr(en, "headgear"));
+                assert(strstr(de, figures[f].beast) && strstr(en, figures[f].beast));
+            } else {
+                assert(strstr(de, "Parasegelstoff") && strstr(en, "paraglider fabric"));
+                assert(!strstr(de, "Helm") && !strstr(en, "headgear"));
+            }
+            ++found[link.game_id];
+        }
+        assert(found[1] == 1 && found[4] == 1);
+    }
+    puts("PASS four LCD rewards identified by figure and game");
+    return 0;
+}
+''', includes=[SRC / "amiidb", SRC / "app/amiidb/view"])
 
     def test_generator_rejects_empty_oversized_control_and_invalid_utf8_tables(self):
         invalid = [{}, {"schemaVersion": 2, "texts": {"a": "b"}},

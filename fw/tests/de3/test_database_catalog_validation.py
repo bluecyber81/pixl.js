@@ -186,7 +186,7 @@ class CatalogValidationTests(unittest.TestCase):
         summary = generator.validate_catalog(*generator.read_catalog())
         self.assertEqual(summary, {'figures': 952, 'games': 82, 'links': 1344,
                                   'legacyEmptyLinkColumns': 3,
-                                  'uncategorizedFigures': 0, 'englishNoteLinks': 63, 'uniqueEnglishNotes': 54})
+                                  'uncategorizedFigures': 0, 'englishNoteLinks': 63, 'uniqueEnglishNotes': 53})
         cli = FW / 'scripts/amiibo_db_validate.py'
         result = subprocess.run([sys.executable, '-B', str(cli), '--data-dir', str(self.data)],
                                 capture_output=True, text=True, timeout=20)

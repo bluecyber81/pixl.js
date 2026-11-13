@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-12.T1",
+  "dataVersion": "2026-11-13.zelda",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
@@ -94,9 +94,9 @@
       },
       {
         "path": "fw/data/amiidb_link.csv",
-        "sha256": "13491f3b5aad3f22e52c72014f0fe273760af8f54cd6388f34f3d0d67fbad2b9",
-        "referenceSha256": "13491f3b5aad3f22e52c72014f0fe273760af8f54cd6388f34f3d0d67fbad2b9",
-        "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/6e0004969cd1481a027c2eaa86838a4c3fa1553d/fw/data/amiidb_link.csv",
+        "sha256": "2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38",
+        "referenceSha256": "2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38",
+        "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/494514c958ad5e0544467bfed59d3047a7468c40/fw/data/amiidb_link.csv",
         "transformationsFromReference": [],
         "readNormalization": [
           {
@@ -129,8 +129,8 @@
     "associations": 1344,
     "legacyEmptyLinkColumns": 3,
     "englishNoteAssociations": 63,
-    "uniqueEnglishNotes": 54,
-    "uniqueGermanTranslations": 54,
+    "uniqueEnglishNotes": 53,
+    "uniqueGermanTranslations": 53,
     "germanNoteAssociations": 63
   },
   "groups": [
@@ -904,8 +904,8 @@
     },
     {
       "id": 16,
-      "en": "Ruto's Divine Helm Set/Paraglider Skin Material/Silver Scale Spear/Fish",
-      "de": "Göttliches Helmset von Ruto / Material für ein Parasegel-Design / Silberschuppenlanze / Fisch",
+      "en": "May give weapons, materials and special paraglider fabric.",
+      "de": "Möglich sind Waffen, Materialien und besonderer Parasegelstoff.",
       "translation": "editorial-from-english"
     },
     {
@@ -934,204 +934,198 @@
     },
     {
       "id": 21,
-      "en": "Naydra's Divine Helm Set/Paraglider Skin Material/Revali-related equipment/Meat",
-      "de": "Göttliches Helmset von Naydra / Material für ein Parasegel-Design / Ausrüstung mit Bezug zu Revali / Fleisch",
-      "translation": "editorial-from-english"
-    },
-    {
-      "id": 22,
       "en": "Hero of Time Dress Set/Paraglider Skin Material/Knight's & Royal Spear/Sword & Two-handed Sword/Fish",
       "de": "Gewandset des Helden der Zeit / Material für ein Parasegel-Design / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
       "translation": "editorial-from-english"
     },
     {
-      "id": 23,
+      "id": 22,
       "en": "Twilight Bow/Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Bogen des Zwielichts / Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 24,
+      "id": 23,
       "en": "Sunshield/Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Sonnenschild / Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 25,
+      "id": 24,
       "en": "Paraglider Skin Material/Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Material für ein Parasegel-Design / Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 26,
+      "id": 25,
       "en": "Princess Zelda Fabric",
       "de": "Stoff von Prinzessin Zelda",
       "translation": "editorial-from-english"
     },
     {
-      "id": 27,
+      "id": 26,
       "en": "Paraglider Skin Material",
       "de": "Material für ein Parasegel-Design",
       "translation": "editorial-from-english"
     },
     {
-      "id": 28,
+      "id": 27,
       "en": "Hero of the Wild Set/Traveler's and Soldier's Sword & Shield/Rupee",
       "de": "Gewandset des Helden der Wildnis / Schwerter und Schilde für Reisende und Soldaten / Rubin",
       "translation": "editorial-from-english"
     },
     {
-      "id": 29,
+      "id": 28,
       "en": "Champion's Tunic Fabric/Paraglider Skin Material/Mushroom",
       "de": "Stoff im Design des Reckengewands / Material für ein Parasegel-Design / Pilz",
       "translation": "editorial-from-english"
     },
     {
-      "id": 30,
+      "id": 29,
       "en": "Rudania's Divine Helm/Boulder Breaker/Diamond",
       "de": "Helm von Vah Rudania / Bergspalter / Diamant",
       "translation": "editorial-from-english"
     },
     {
-      "id": 31,
+      "id": 30,
       "en": "Twilight Sword/Rupee/Gem/Star Fragment Bomb Barrel",
       "de": "Schattenschwert / Rubin / Edelstein / explosives Fass mit Sternensplitter",
       "translation": "editorial-from-english"
     },
     {
-      "id": 32,
+      "id": 31,
       "en": "Guardian Weapons/Shields/Spears/Core/Treasure/Arrow",
       "de": "Wächterwaffen / Schilde / Lanzen / Kern / Schatz / Pfeil",
       "translation": "editorial-from-english"
     },
     {
-      "id": 33,
+      "id": 32,
       "en": "Twilight Set/Traveler's Sword & Shield/Fruit/Horse",
       "de": "Gewandset des Zwielichts / Schwert und Schild für Reisende / Obst / Pferd",
       "translation": "editorial-from-english"
     },
     {
-      "id": 34,
+      "id": 33,
       "en": "Falcon Bow/Fish & Meat/Knight's and Royal Bow/Various Arrows",
       "de": "Falkenbogen / Fisch und Fleisch / Ritterbogen und Königsbogen / verschiedene Pfeile",
       "translation": "editorial-from-english"
     },
     {
-      "id": 35,
+      "id": 34,
       "en": "Dreamweaver Set/Knight's and Royal Spear/Sword/and Claymore/Fish",
       "de": "Set des Traumwebers / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
       "translation": "editorial-from-english"
     },
     {
-      "id": 36,
+      "id": 35,
       "en": "Phantom Set/Phantom Greatsword/Soldier's and Knight's Claymore/Mushroom",
       "de": "Phantom-Set / Phantom-Großschwert / Zweihänder für Soldaten und Ritter / Pilz",
       "translation": "editorial-from-english"
     },
     {
-      "id": 37,
+      "id": 36,
       "en": "Time Traveler Set/Biggoron Sword/Meat",
       "de": "Zeitreisenden-Set / Biggoron-Schwert / Fleisch",
       "translation": "editorial-from-english"
     },
     {
-      "id": 38,
+      "id": 37,
       "en": "Bridle and Saddle/Moonlight Scimitar/Mushroom",
       "de": "Zaumzeug und Sattel / Mondsäbel / Pilz",
       "translation": "editorial-from-english"
     },
     {
-      "id": 39,
+      "id": 38,
       "en": "Skyward Set/Skyward Sword/Soldier's and Traveler's Sword & Shield/Rupee",
       "de": "Himmelsset / Himmelsschwert / Schwerter und Schilde für Soldaten und Reisende / Rubin",
       "translation": "editorial-from-english"
     },
     {
-      "id": 40,
+      "id": 39,
       "en": "Wolf Link (hearts depend on save data)",
       "de": "Wolf-Link (Herzen hängen von den Speicherdaten ab)",
       "translation": "editorial-from-english"
     },
     {
-      "id": 41,
-      "en": "Ruto's Divine Helm/Silver Long Spear/Fish",
-      "de": "Göttlicher Helm von Ruto / silberne Langlanze / Fisch",
+      "id": 40,
+      "en": "May give weapons, materials and headgear inspired by Vah Ruta.",
+      "de": "Möglich sind Waffen, Materialien und ein Helm nach dem Vorbild von Vah Ruta.",
       "translation": "editorial-from-english"
     },
     {
-      "id": 42,
+      "id": 41,
       "en": "Medoh's Divine Helm/Falcon Bow/Fruit/Diamond",
       "de": "Helm von Vah Medoh / Falkenbogen / Obst / Diamant",
       "translation": "editorial-from-english"
     },
     {
-      "id": 43,
+      "id": 42,
       "en": "Sheik Set/Eightfold Blade/Mushroom",
       "de": "Shiek-Set / Achtfache Klinge / Pilz",
       "translation": "editorial-from-english"
     },
     {
-      "id": 44,
+      "id": 43,
       "en": "Wind Set/Boomerang/Traveler's and Soldier's Sword/Fish",
       "de": "Wind-Set / Bumerang / Reiseschwert und Soldatenschwert / Fisch",
       "translation": "editorial-from-english"
     },
     {
-      "id": 45,
+      "id": 44,
       "en": "Hylian Shield/Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Hylia-Schild / Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 46,
-      "en": "Naydra's Divine Helm/Gurudo related gear/Meat",
-      "de": "Göttlicher Helm von Naydra / Gerudo-Ausrüstung / Fleisch",
+      "id": 45,
+      "en": "May give weapons, materials and headgear inspired by Vah Naboris.",
+      "de": "Möglich sind Waffen, Materialien und ein Helm nach dem Vorbild von Vah Naboris.",
       "translation": "editorial-from-english"
     },
     {
-      "id": 47,
+      "id": 46,
       "en": "Time Traveler Set/Knight's and Royal Spear/Sword/and Claymore/Fish",
       "de": "Zeitreisenden-Set / Ritterlanze und Königslanze / Schwert und Zweihänder / Fisch",
       "translation": "editorial-from-english"
     },
     {
-      "id": 48,
+      "id": 47,
       "en": "Twilight Bow/Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Bogen des Zwielichts / Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 49,
+      "id": 48,
       "en": "Daybreaker Shield/Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Schild der Morgenröte / Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 50,
+      "id": 49,
       "en": "Star Fragment & Gem/Grass/Fruit/Carrot",
       "de": "Sternensplitter und Edelstein / Gras / Obst / Karotte",
       "translation": "editorial-from-english"
     },
     {
-      "id": 51,
+      "id": 50,
       "en": "Change background music while riding Vi-O-La/Replenish health and boost max health by 99 once per day",
       "de": "Hintergrundmusik beim Fahren mit Vi-O-La ändern / Gesundheit auffüllen und maximale Gesundheit einmal täglich um 99 erhöhen",
       "translation": "editorial-from-english"
     },
     {
-      "id": 52,
+      "id": 51,
       "en": "Change Vi-O-La's color/Improve Vi-O-La boost regeneration once per day/See total distance traveled on Vi-O-La",
       "de": "Farbe von Vi-O-La ändern / Einmal täglich die Boost-Regeneration von Vi-O-La verbessern / Gesamte mit Vi-O-La zurückgelegte Strecke ansehen",
       "translation": "editorial-from-english"
     },
     {
-      "id": 53,
+      "id": 52,
       "en": "View a particular completed cutscene after beating game without needing 100% completion/Hear a random voice line from Sylux",
       "de": "Nach dem Durchspielen eine bestimmte bereits abgeschlossene Zwischensequenz ohne 100-%-Abschluss ansehen / Eine zufällige Sprachzeile von Sylux hören",
       "translation": "editorial-from-english"
     },
     {
-      "id": 54,
+      "id": 53,
       "en": "Change decoration in Bellabel Park hub",
       "de": "Dekoration im zentralen Bereich des Bellabel-Parks ändern",
       "translation": "editorial-from-english"
@@ -1328,7 +1322,7 @@
       "associations": [
         {
           "groupId": 76,
-          "noteId": 54,
+          "noteId": 53,
           "sourceLine": 1338
         }
       ]
@@ -1988,7 +1982,7 @@
       "associations": [
         {
           "groupId": 76,
-          "noteId": 54,
+          "noteId": 53,
           "sourceLine": 1340
         }
       ]
@@ -2158,7 +2152,7 @@
       "associations": [
         {
           "groupId": 76,
-          "noteId": 54,
+          "noteId": 53,
           "sourceLine": 1339
         }
       ]
@@ -2198,7 +2192,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 33,
+          "noteId": 32,
           "sourceLine": 45
         },
         {
@@ -2228,7 +2222,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 37,
+          "noteId": 36,
           "sourceLine": 49
         },
         {
@@ -2258,7 +2252,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 36,
+          "noteId": 35,
           "sourceLine": 48
         },
         {
@@ -2278,7 +2272,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 33,
+          "noteId": 32,
           "sourceLine": 52
         },
         {
@@ -2298,7 +2292,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 39,
+          "noteId": 38,
           "sourceLine": 51
         },
         {
@@ -2323,7 +2317,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 28,
+          "noteId": 27,
           "sourceLine": 40
         },
         {
@@ -2348,7 +2342,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 34,
+          "noteId": 33,
           "sourceLine": 46
         },
         {
@@ -2373,7 +2367,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 38,
+          "noteId": 37,
           "sourceLine": 50
         },
         {
@@ -2388,7 +2382,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 22,
+          "noteId": 21,
           "sourceLine": 24
         },
         {
@@ -2398,7 +2392,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 47,
+          "noteId": 46,
           "sourceLine": 61
         },
         {
@@ -2423,7 +2417,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 35,
+          "noteId": 34,
           "sourceLine": 47
         },
         {
@@ -2458,7 +2452,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 44,
+          "noteId": 43,
           "sourceLine": 57
         },
         {
@@ -2493,7 +2487,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 44,
+          "noteId": 43,
           "sourceLine": 58
         },
         {
@@ -2518,7 +2512,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 23,
+          "noteId": 22,
           "sourceLine": 25
         },
         {
@@ -2528,7 +2522,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 48,
+          "noteId": 47,
           "sourceLine": 62
         },
         {
@@ -2568,7 +2562,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 45,
+          "noteId": 44,
           "sourceLine": 59
         },
         {
@@ -2593,12 +2587,12 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 24,
+          "noteId": 23,
           "sourceLine": 26
         },
         {
           "groupId": 4,
-          "noteId": 49,
+          "noteId": 48,
           "sourceLine": 63
         },
         {
@@ -2613,7 +2607,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 26,
+          "noteId": 25,
           "sourceLine": 28
         }
       ]
@@ -2633,7 +2627,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 43,
+          "noteId": 42,
           "sourceLine": 56
         },
         {
@@ -2668,7 +2662,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 25,
+          "noteId": 24,
           "sourceLine": 27
         },
         {
@@ -2678,7 +2672,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 50,
+          "noteId": 49,
           "sourceLine": 64
         },
         {
@@ -2703,7 +2697,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 31,
+          "noteId": 30,
           "sourceLine": 43
         },
         {
@@ -2763,7 +2757,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 40,
+          "noteId": 39,
           "sourceLine": 53
         },
         {
@@ -2803,7 +2797,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 30,
+          "noteId": 29,
           "sourceLine": 42
         },
         {
@@ -2828,12 +2822,12 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 21,
+          "noteId": 16,
           "sourceLine": 23
         },
         {
           "groupId": 4,
-          "noteId": 46,
+          "noteId": 45,
           "sourceLine": 60
         },
         {
@@ -2863,7 +2857,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 41,
+          "noteId": 40,
           "sourceLine": 54
         },
         {
@@ -2893,7 +2887,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 42,
+          "noteId": 41,
           "sourceLine": 55
         },
         {
@@ -2918,7 +2912,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 27,
+          "noteId": 26,
           "sourceLine": 29
         }
       ]
@@ -2928,7 +2922,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 27,
+          "noteId": 26,
           "sourceLine": 30
         }
       ]
@@ -2938,7 +2932,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 27,
+          "noteId": 26,
           "sourceLine": 31
         }
       ]
@@ -2948,7 +2942,7 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": 27,
+          "noteId": 26,
           "sourceLine": 32
         }
       ]
@@ -2973,7 +2967,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 32,
+          "noteId": 31,
           "sourceLine": 44
         },
         {
@@ -3003,7 +2997,7 @@
         },
         {
           "groupId": 4,
-          "noteId": 29,
+          "noteId": 28,
           "sourceLine": 41
         },
         {
@@ -8188,7 +8182,7 @@
         },
         {
           "groupId": 74,
-          "noteId": 52,
+          "noteId": 51,
           "sourceLine": 1321
         }
       ]
@@ -8203,7 +8197,7 @@
         },
         {
           "groupId": 74,
-          "noteId": 51,
+          "noteId": 50,
           "sourceLine": 1320
         }
       ]
@@ -8293,7 +8287,7 @@
       "associations": [
         {
           "groupId": 74,
-          "noteId": 53,
+          "noteId": 52,
           "sourceLine": 1322
         }
       ]
