@@ -1,4 +1,4 @@
-import { assertPortableEntryName, assertDeviceEntryName, assertDevicePath, joinDevicePath, splitDevicePath, portableNameKey, validUnicode } from './portable-names.js'
+import { assertPortableEntryName, assertDeviceEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, splitDevicePath, portableNameKey, validUnicode } from './portable-names.js'
 
 export const UPLOAD_LIMITS = Object.freeze({ maxFileBytes: 2 * 1024 * 1024, maxExistingBytes: 8 * 1024 * 1024, maxEntries: 4096 })
 export class UploadError extends Error {
@@ -110,7 +110,7 @@ export function temporaryNames(parent, token) {
 export async function safeUpload({ path, file, replace = false, expected, readDirectory, readFile, writeFile, rename,
   remove, updateMetadata, getFreeBytes, assertSession, signal, onProgress, randomToken = randomHex,
   allowLegacyNames = false, metadata }) {
-  const { parent, name } = splitDevicePath(path)
+  const { parent, name } = splitDevicePath(assertWritableDevicePath(path))
   if (typeof allowLegacyNames !== 'boolean') fail('UPLOAD_API', 'Invalid legacy name option.')
   if (allowLegacyNames) {
     assertDeviceEntryName(name)

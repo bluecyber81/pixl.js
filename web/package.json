@@ -1,6 +1,6 @@
 {
   "name": "allmiibo-web",
-  "version": "3.48.1",
+  "version": "3.48.2",
   "description": "Allmiibo Bluetooth-Dateimanager mit ZIP-Sicherung und Übertragungsprüfung",
   "private": true,
   "type": "module",
@@ -20,11 +20,11 @@
     "bytebuffer": "5.0.1",
     "element-plus": "2.14.7",
     "vue": "3.5.44",
-    "vue-i18n": "11.4.17"
+    "vue-i18n": "11.4.19"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.10",
-    "vite": "8.3.5"
+    "vite": "8.3.8"
   },
   "engines": {
     "node": ">=22.12.0"

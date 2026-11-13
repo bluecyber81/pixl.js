@@ -1,0 +1,28 @@
+{
+  "version": "3.48.2",
+  "distribution": "public web and Windows",
+  "webSourceTree": "4ec0a2f37c3262ab971cabaf7111cc17807ffdb9",
+  "layouts": {
+    "root": {
+      "productionChecksPassed": 22
+    },
+    "pages": {
+      "productionChecksPassed": 22,
+      "files": 180,
+      "indexSha256": "e1dac6e35d2a18e22c8fe4e3c1bbe40aca1d85e4228d555b0e9c9a8ad2a2458c",
+      "releaseIndexSha256": "6a9ba6e37a4117953ef5fe1e24a1550f69b59dd953971653aaa06f48e5ae1779"
+    }
+  },
+  "browserDfuAndSyncChecksPerLayout": 33,
+  "firmware": {
+    "defaultStableCounter": 637,
+    "optionalTestCounter": 646,
+    "file": "Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip",
+    "sha256": "e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe",
+    "appOnly": true
+  },
+  "physicalDeviceTestOfThisWebBuild": false,
+  "firmwareEvidence": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646",
+  "earlierHostedChecks": "docs/validation/WEB3_48_2.json",
+  "scope": "Both production layouts and Chromium DFU/sync using controlled device responses. Physical Android transfer and NFC require a device."
+}

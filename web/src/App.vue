@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.48.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.48.2</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -296,7 +296,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.48.1</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.48.2</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -543,7 +543,8 @@ import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
-import { assertPortableEntryName, portableNameKey } from "./lib/portable-names.js"
+import { assertPortableEntryName, assertWritableDevicePath, portableNameKey } from "./lib/portable-names.js"
+import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
@@ -1633,7 +1634,7 @@ export default {
     sort_table_row_size(a, b) { return (a.sizeBytes || 0) - (b.sizeBytes || 0); },
     show_transfer_error(error) {
       if (error === 'cancel' || error === 'close') return;
-      const known = { SYNC_STALE:'syncStale', SYNC_LOCAL_CHANGED:'syncLocalChanged', SYNC_COLLISION:'syncCollision', NAME_PORTABLE:'namePortable', NAME_NORMALIZATION:'nameNormalization', NAME_LIMIT:'nameLimit', PATH_LIMIT:'pathLimit', UPLOAD_PARENT:'uploadParent', UPLOAD_READONLY:'READONLY', BACKUP_CHECKPOINT_IDENTITY:'checkpointIdentity', BACKUP_CHECKPOINT_BUSY:'checkpointBusy', ZIP_STALE:'zipStale', ZIP_CHANGED:'zipStale', ZIP_LIMIT:'zipLimit', ZIP_CRC:'zipIntegrity', ZIP_HASH:'zipIntegrity', ZIP_STRUCTURE:'zipIntegrity', ZIP_FORMAT:'zipIntegrity', ZIP_MANIFEST:'zipIntegrity', ZIP_PATH:'zipPath', ZIP_COLLISION:'zipPath' };
+      const known = { SYNC_STALE:'syncStale', SYNC_LOCAL_CHANGED:'syncLocalChanged', SYNC_COLLISION:'syncCollision', NAME_PORTABLE:'namePortable', NAME_NORMALIZATION:'nameNormalization', NAME_LIMIT:'nameLimit', PATH_LIMIT:'pathLimit', PATH_RESERVED:'pathReserved', UPLOAD_PARENT:'uploadParent', UPLOAD_READONLY:'READONLY', BACKUP_CHECKPOINT_IDENTITY:'checkpointIdentity', BACKUP_CHECKPOINT_BUSY:'checkpointBusy', ZIP_STALE:'zipStale', ZIP_CHANGED:'zipStale', ZIP_LIMIT:'zipLimit', ZIP_CRC:'zipIntegrity', ZIP_HASH:'zipIntegrity', ZIP_STRUCTURE:'zipIntegrity', ZIP_FORMAT:'zipIntegrity', ZIP_MANIFEST:'zipIntegrity', ZIP_PATH:'zipPath', ZIP_COLLISION:'zipPath' };
       const message = Object.hasOwn(known, error?.code) ? this.$t('workflow.' + known[error.code], error.details || {}) : error?.message || String(error);
       this.$message({ type: 'error', message });
     },
@@ -1889,6 +1890,7 @@ export default {
       const rows = this.table_selection.filter(row => row.type !== 'DRIVE').slice();
       if (!rows.length) return;
       try {
+        rows.forEach(row => assertWritableDevicePath(this.append_segment(dir, row.name)));
         await this.ask_dialog(() => this.$confirm(this.$t('del.message') + rows.map(row => row.name).join(', ') + this.$t('del.messageend'), this.$t('del.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
         await this.mutate(async () => {
@@ -2022,7 +2024,7 @@ export default {
     },
 
     on_upload_error(err, file, filelist) {
-      if (err?.code === 'NAME_LIMIT' || err?.code === 'PATH_LIMIT') return this.show_transfer_error(err);
+      if (err?.code === 'NAME_LIMIT' || err?.code === 'PATH_LIMIT' || err?.code === 'PATH_RESERVED') return this.show_transfer_error(err);
       this.$message({
         type: 'error',
         message: file.name + `${this.$t("upload.errupload")}` + err
@@ -2046,6 +2048,7 @@ export default {
     async on_row_btn_remove(index, row) {
       const path = this.append_segment(this.current_dir, row.name), generation = this.sessionGeneration;
       try {
+        assertWritableDevicePath(path);
         await this.ask_dialog(() => this.$confirm(this.$t('del.message') + row.name + this.$t('del.messageend'), this.$t('del.title'), this.confirm_options()));
         if (!this.session_current(generation)) return;
         await this.mutate(async () => {
@@ -2058,6 +2061,7 @@ export default {
     async on_row_btn_rename(index, row) {
       const dir = this.current_dir, path = this.append_segment(dir, row.name), generation = this.sessionGeneration;
       try {
+        assertWritableDevicePath(path);
         const { value } = await this.ask_dialog(() => this.$prompt(this.$t('rename.message'), this.$t('rename.title'), { ...this.confirm_options(), inputValue: row.name }));
         if (!value || value === row.name || !this.session_current(generation)) return;
         await this.mutate(async () => {
@@ -2120,8 +2124,27 @@ export default {
       if (!this.metadataNote.valid) { this.show_transfer_error(new Error(this.metadata_note_hint())); return; }
       const form = this.meta_form, meta = { notes: form.notes, flags: { ...form.flags }, amiibo: { ...form.amiibo } };
       return this.mutate(async generation => {
-        this.checked(await proto.vfs_update_meta(form.path, meta));
+        const path = assertWritableDevicePath(form.path);
+        const row = form.row;
+        const sameNotes = meta.notes === (row.notes || '');
+        const flagsChanged = !!meta.flags.hide !== !!row.flags.hide || !!meta.flags.readonly !== !!row.flags.readonly;
+        if (sameNotes && !flagsChanged) { this.meta_diag_visible = false; return; }
+        if (sameNotes && flagsChanged) {
+          const response = await proto.vfs_read_raw_meta(path);
+          this.assert_session(generation);
+          if (response?.status !== 255) {
+            const updated = editMetadataFlags(this.checked(response), row, meta.flags);
+            if (!updated) throw new Error(this.$t('workflow.metadataFlagsUnchanged'));
+            this.checked(await proto.vfs_write_raw_meta(path, updated.bytes));
+            meta.flags.raw = updated.raw;
+          } else {
+            this.checked(await proto.vfs_update_meta(path, meta));
+          }
+        } else {
+          this.checked(await proto.vfs_update_meta(path, meta));
+        }
         if (!this.session_current(generation)) return;
+        meta.flags.raw = (meta.flags.raw & ~5) | (meta.flags.hide ? 1 : 0) | (meta.flags.readonly ? 4 : 0);
         Object.assign(form.row, meta); this.meta_diag_visible = false;
       });
     },
@@ -2233,7 +2256,7 @@ export default {
         if (error.code === 'NAME_LIMIT') throw error;
         throw new Error(this.$t('info.portableName'));
       }
-      return this.append_segment(dir, name);
+      return assertWritableDevicePath(this.append_segment(dir, name));
     },
     async assert_new_entry_available(dir,name,generation,sourceName) {
       this.new_entry_path(dir,name);

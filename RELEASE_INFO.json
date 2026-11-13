@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.72",
   "counter": 645,
   "board": "LCD",
-  "web_version": "3.48.1",
+  "web_version": "3.48.2",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
@@ -50,7 +50,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.2",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
   "device_readback_passed": false,
@@ -66,7 +66,7 @@
     "installation_readback_observed": true,
     "qualification": "App644's connected diagnostic export reported this Z19 region digest and S112 7.3.0. App645 was verified with the Z19 public key and host transfer model. Its first device readback is pending."
   },
-  "web_host_test_scope": "1420 web tests with local, pinned historical firmware fixtures; both production layouts, Chrome DFU simulations, signed ZIP selection and installation guides.",
+  "web_host_test_scope": "See the public web build evidence for tests, production layouts and the direct downloads.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -83,7 +83,7 @@
     "evidence": "docs/validation/WEB3_47_0.json"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3480-und-lcd-testfirmware-de371t1",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3482",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -126,7 +126,8 @@
     "web_3_46_0": "Open each published LCD application package in Nordic DFU on Android. Compare two complete backup ZIPs offline.",
     "web_3_47_0": "Read the first main-menu selection and distinguish it from settings-session input.",
     "web_3_48_0": "Portable profiles, filtered ZIP comparisons, backup protection, PXMIv2 diagnostics and App644 capacity profile. Correct Windows background shutdown detection.",
-    "web_3_48_1": "App645 firmware selection, signed package identity and three installation paths. Local PFS1 capacity check accepts the exact version and counter."
+    "web_3_48_1": "App645 firmware selection, signed package identity and three installation paths. Local PFS1 capacity check accepts the exact version and counter.",
+    "web_3_48_2": "Preserve Raw128 metadata when changing read-only flags, preflight reserved paths, clarify backup states, bind App646 and the current public downloads."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -139,9 +140,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_48_1.json",
+  "web_evidence": "docs/validation/WEB3_48_2_PUBLIC.json",
   "device_readback_evidence": null,
-  "web_device_readback_pending_scope": "The release was tested with production web builds and the signed App645 ZIP. Connected App645 and Web 3.48.1 readback is pending.",
+  "web_device_readback_pending_scope": "The public web client was tested at the build and HTTP levels. A new Bluetooth device readback with these exact browser assets is pending.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
@@ -166,5 +167,15 @@
       "counter": 600,
       "evidence": "docs/validation/DE3_30_PREP_600.json"
     }
+  },
+  "additional_firmware_prerelease": {
+    "version": "2.22.0-DE3.73",
+    "counter": 646,
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646",
+    "source_commit": "2a143521730126f9ac5e59358780ac1e3b7b4bec",
+    "bin_sha256": "5d8937db3482c777cd9f768bf15ecedf909adff9dd094446809faa0a3a045ddb",
+    "app_only_zip_sha256": "e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe",
+    "combined_zip_sha256": "4e0734788ead1192db8182eaea20a16fe070b480618f39da952c5bacb54f1b11",
+    "stable_default_counter": 637
   }
 }

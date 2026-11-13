@@ -1,4 +1,4 @@
-import { assertPortableEntryName, assertDevicePath, joinDevicePath, portableNameKey } from './portable-names.js'
+import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, portableNameKey } from './portable-names.js'
 import { snapshotFile, sha256Bytes, asBytes, checkedDirectory, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
@@ -36,7 +36,7 @@ function sourcesOf(files, rootPath) {
     if (bytesTotal > SYNC_LIMITS.maxBytes) fail('SYNC_LIMIT', 'Selected file data exceeds 16 MiB.')
     let current = rootPath, relative = ''
     for (let index = 0; index < segments.length; ++index) {
-      current = joinDevicePath(current, segments[index]); relative += (relative ? '/' : '') + segments[index]
+      current = assertWritableDevicePath(joinDevicePath(current, segments[index])); relative += (relative ? '/' : '') + segments[index]
       const type = index === segments.length - 1 ? 'file' : 'directory', key = pathKey(current)
       const known = identities.get(key)
       if (known && (known.path !== current || known.type !== type || type === 'file')) {

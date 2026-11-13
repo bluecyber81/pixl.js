@@ -1,16 +1,22 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
-## DE3.72 / App645 und Dateimanager 3.48.1
+## DE3.73 / App646 und Dateimanager 3.48.2
 
-Die LCD-Testanwendung merkt sich bei der Rückkehr den gewählten Datenplatz und die im Detail zuletzt angezeigte Figur. Vier deutsche und englische Spielhinweise zu Mipha und Urbosa wurden korrigiert. Im Dateimanager ist App645 jetzt auch für die lokale Platzprüfung auswählbar. [Änderungen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
+DE3.73 ist eine optionale LCD-Testversion. Ein langer Druck auf „Zurück“ in der Slotliste lässt die Slots unberührt. Bei der Rückkehr aus den Figurendetails bleibt die Auswahl auch über Favoritenseiten hinweg erhalten. Der Dateimanager 3.48.2 prüft die lokale Belegung für App646 und erkennt reservierte Speicherpfade bereits vor dem Schreiben.
 
 | Ausgangslage beim LCD-Allmiibo | Passender Download |
 | --- | --- |
-| Packed LittleFS ist eingerichtet, Z19 und Nordic S112 7.3.0 sind vorhanden | [Nur die neue Gerätesoftware DE3.72](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_DE3_72_645_NUR_APP.zip) |
-| Passendes nRF52832-LCD mit bekanntem Flashlayout und funktionierendem, signaturkompatiblem Secure DFU. Bootloaderzähler unter 19, S112-FWID 0x0103 oder 0x0126 | [Komplettpaket mit S112 7.3.0, Z19 und DE3.72](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip). Am Android-Handy mit **nRF Device Firmware Update** beide Phasen abschließen. |
+| Packed LittleFS ist eingerichtet, Z19 und Nordic S112 7.3.0 sind vorhanden | [Nur die neue Gerätesoftware DE3.73](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip) |
+| Passendes nRF52832-LCD mit bekanntem Flashlayout und funktionierendem, signaturkompatiblem Secure DFU. Bootloaderzähler unter 19, S112-FWID 0x0103 oder 0x0126 | [Komplettpaket mit S112 7.3.0, Z19 und DE3.73](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). Am Android-Handy mit **nRF Device Firmware Update** beide Phasen abschließen. |
 | Altes SPIFFS-Laufwerk steht vor der Umstellung | [Vorbereitungsfirmware DE3.30-PREP / 600](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_SPIFFS_DE3_30_PREP_600.zip). Zuerst die Originaldateien sichern. Vor dem Systemwechsel die vollständige Raw128-Sicherung frisch vergleichen und die Platzprüfung bestehen. [Schritt für Schritt zu LittleFS](https://bluecyber81.github.io/pixl.js/guide/#littlefs) |
 
-Die Anleitung nennt die Geräte- und Zählervoraussetzungen. Die Einrichtung von LittleFS löscht das alte Laufwerk E:. Anschließend die bestätigte Sicherung wiederherstellen und vollständig am Ziel vergleichen. [Alle Installationswege](https://bluecyber81.github.io/pixl.js/guide/) · [Windows, Quellen und ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.1)
+Durch die Einrichtung von LittleFS wird das bisherige Laufwerk E: gelöscht. Spiele anschließend die geprüfte Sicherung zurück und vergleiche die wiederhergestellten Daten mit dem Gerät.
+
+[Stabile LCD-Firmware DE3.65 / 637](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/index.html) · [Windows-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Quellcode.zip) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
+
+## DE3.72 / App645 und Dateimanager 3.48.1
+
+Die LCD-Testanwendung merkt sich bei der Rückkehr den gewählten Datenplatz und die im Detail zuletzt angezeigte Figur. Vier deutsche und englische Spielhinweise zu Mipha und Urbosa wurden korrigiert. Im Dateimanager ist App645 jetzt auch für die lokale Platzprüfung auswählbar. [Änderungen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
 ## Dateimanager 3.48.0 und LCD-Testfirmware DE3.71t1
 

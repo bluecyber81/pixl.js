@@ -1,9 +1,15 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.48.2
+
+Die lokale Platzprüfung unterstützt App646. Beim Ändern des Schreibschutzes bleiben die vorhandenen Metadaten erhalten. Reservierte Namen im Stammordner werden bereits vor dem Schreiben erkannt. Die Sicherungsansicht erklärt, wann die ZIP im Browser gespeichert ist und wann sie heruntergeladen wurde. [Dateimanager und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.2) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
+
+### Frühere Veröffentlichungen
+
 Der Amiibo-Emulator sortiert die sichtbare Seite im Figurenordner einmal. Unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** zeigt der Dateimanager mit DE3.70 die erkannten Mitteltastenereignisse bis zur ersten Auswahl im Hauptmenü und die Dauer des App-Aufrufs. Die Daten bleiben bis zum Neustart im RAM. [LCD DE3.70 (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip) · [Web 3.47.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0)
 
 
-**Stand 9. November 2026.** Online läuft 3.47.0. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.70/642. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_47_0.json)
+**Stand am 9. November 2026.** Damals war 3.47.0 veröffentlicht. Der Updater bietet für LCD mit bestehendem PFS1 und S112 7.3.0 die stabile App DE3.65/637 und die neue Testversion DE3.70/642. [Online-Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Bedienung](DATEIMANAGER_WEB.md) · [Prüfprotokoll](validation/WEB3_47_0.json)
 
 ## Veröffentlichungen auf GitHub
 

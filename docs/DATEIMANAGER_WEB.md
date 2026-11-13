@@ -1,5 +1,11 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.48.2
+
+Die lokale Platzprüfung unterstützt App646. Beim Ändern des Schreibschutzes bleiben die vorhandenen Metadaten erhalten. Reservierte Namen im Stammordner werden bereits vor dem Schreiben erkannt. Die Sicherungsansicht erklärt, wann die ZIP im Browser gespeichert ist und wann sie heruntergeladen wurde. [Dateimanager und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.2) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
+
+Für LCD-Geräte mit Packed LittleFS ist DE3.65/App637 die stabile Vorauswahl. Die optionale DE3.73/App646 gibt es mit vorhandenem Z19 als [Nur-App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip). Für kompatible Geräte mit älterem Bootloader gibt es die [zweiphasige Android-Kombi](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). Die [Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/) beschreibt die Geräteprüfung und den separaten SPIFFS-Migrationsweg.
+
 ## DE3.72 / App645 und Dateimanager 3.48.1
 
 Die LCD-Testanwendung merkt sich bei der Rückkehr den gewählten Datenplatz und die im Detail zuletzt angezeigte Figur. Vier deutsche und englische Spielhinweise zu Mipha und Urbosa wurden korrigiert. Im Dateimanager ist App645 jetzt auch für die lokale Platzprüfung auswählbar. [Änderungen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)

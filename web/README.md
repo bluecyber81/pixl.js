@@ -1,4 +1,10 @@
-# Allmiibo Dateimanager 3.48.1
+# Allmiibo Dateimanager 3.48.2
+
+Beim Sichern unterscheidet der Dateimanager den Fortschritt im offenen Tab, die im Browser gespeicherte Sicherung und die heruntergeladene ZIP. Beim Schreiben erkennt er reservierte Pfade im Stammordner. Die lokale LittleFS-Platzprüfung unterstützt DE3.73/App646.
+
+[Im Browser öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Download](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.2/Allmiibo_Dateimanager_3_48_2_Quellcode.zip) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip) · [Windows-Start und Bedienung](LIESMICH_3_48_2.txt)
+
+## Allmiibo Dateimanager 3.48.1
 
 Unter **Sicherung** lassen sich zwei ZIPs nach Pfad und Änderungsart vergleichen und die Treffer als CSV oder JSON speichern. Die **Figurensammlung** übernimmt bei schneller Auswahl die zuletzt gewählte Figur. Favoriten und gespeicherte Filter lassen sich auf einen anderen Browser übertragen. Für LCD-Allmiibo mit Z19, S112 7.3.0 und PFS1 steht die optionale signierte Testanwendung DE3.72/645 bereit.
 
@@ -42,7 +48,7 @@ Seit 3.40.0 gibt es die direkte Figurenvorschau in der Gerätesuche, neun Ankün
 
 Der Dateimanager erklärt Namenskollisionen, für Windows ungeeignete Dateinamen und abweichende Unicode-Schreibweisen direkt beim Vergleich. Im Figurenkatalog gibt es alle 54 vorhandenen englischen Nutzungshinweise auch auf Deutsch. Auf der DFU-Seite kann der Browser während des Updates das Display wach halten.
 
-Unter **Update** und auf der DFU-Seite stehen für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die optionale Testversion DE3.68/640 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.45.0](LIESMICH_3_45_0.txt).
+In Version 3.45.0 standen unter **Update** und auf der DFU-Seite für LCD mit vorhandenem PFS1 und S112 7.3.0 die stabile DE3.65/637 und die damalige Testversion DE3.68/640 zur Auswahl. Der Versionsvergleich erkennt den passenden App-Zähler und Z19. [Startanleitung 3.45.0](LIESMICH_3_45_0.txt).
 
 Dateimanager 3.39.3 meldet nach einem bestätigten Firmwaretransfer ausdrücklich, wenn der Browser die Bluetooth-Trennung angefordert hat. Beim Hochladen, Synchronisieren oder Umbenennen nennt die Fehlermeldung jetzt den zu langen Namen oder Pfad, seine Größe in UTF-8-Bytes und die zulässige Länge. [Bedienung und Grenzen](../docs/RELEASE_WEB3_39_3.de.md).
 
@@ -146,7 +152,7 @@ keine kryptografische Prüfung oder Erkennung an der Konsole.
 
 Über **Gerät & Diagnose → Startzeiten lesen → Früheren Startbericht vergleichen** einen früheren Start- oder Gesamtdiagnosebericht auswählen. Für einen aussagekräftigen Vergleich Berichte desselben Geräts mit vergleichbarer Sammlung verwenden. Die Datei wird lokal gelesen. Für die Phasen Speicher und Anwendung bedeutet ein negativer Unterschied eine kürzere Zeit.
 
-Das aktuelle PFS1-Profil berücksichtigt die vierzehn Versions-/Zählerpaare von DE3.55/627 bis DE3.68/640. Die Speicherumstellung prüft das genaue Paar, die Geometrie und den Fingerabdruck der Speicher-Engine. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser prüft den SHA-256 der vollständigen Anwendung anhand der Init-Daten ihrer DAT-Datei. [DE3.65-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip).
+Das aktuelle PFS1-Profil für die lokale Platzprüfung umfasst 19 geprüfte Paare. Zugelassen sind DE3.55/627 bis DE3.70/642, DE3.71t1/644, DE3.72/645 und der lokale LCD-Teststand DE3.73/646. Für DE3.71/643 fehlt die Freigabe in diesem Profil. Die Speicherumstellung prüft das genaue Paar, die Geometrie und den Fingerabdruck der Speicher-Engine. Bei einem bereits passenden PFS1-Gerät genügt das Anwendungsupdate. Der Browser prüft den SHA-256 der vollständigen Anwendung anhand der Init-Daten ihrer DAT-Datei. [DE3.65-Anwendungsquellen](https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip).
 
 ## Bauen, testen und veröffentlichen
 

@@ -90,10 +90,11 @@ const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f707
   ...currentApplications.at(-1),
   // Exact T1 qualification: identical six-file engine manifest, constants,
   // final ELF/BIN layout and embedded identity, and unchanged capacity WASM.
-  // Evidence: candidate_build/source_binding/storage_qualification_final.json.
+  // Subsequent exact profile bindings: docs/validation/DE3_72_PFS.json and DE3_73_PFS.json.
   // The primary stable profile remains DE3.70; all archive/device gates remain.
   approvedApplications:[...currentApplications,{firmwareVersion:'2.22.0-DE3.71t1',applicationCounter:644},
-    {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645}],
+    {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645},
+    {firmwareVersion:'2.22.0-DE3.73',applicationCounter:646}],
   geometry:{...de354.geometry},layout:{...de354.layout,engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'}}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)

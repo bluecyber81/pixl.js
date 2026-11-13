@@ -1,5 +1,11 @@
 # LCD-Firmware, Bootloader und SoftDevice
 
+## DE3.73 / App646 · LCD-Testversion
+
+Der Slotdialog bestätigt die Slotnummer. Nach einem Wechsel zur nächsten Figur markiert die Liste beim Zurückgehen die zuletzt betrachtete Figur. Die signierten Pakete enthalten dieselbe App646. Bei installiertem Z19 genügt die [Nur-App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip). Für kompatible LCD-Geräte mit Bootloaderzähler unter 19 gibt es die [Android-Kombi mit Z19 und S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). DE3.65/App637 bleibt die stabile Vorauswahl. [Prüfbericht und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646)
+
+### Frühere Veröffentlichungen
+
 Der Amiibo-Emulator sortiert die sichtbare Seite im Figurenordner einmal. Unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** zeigt der Dateimanager mit DE3.70 die erkannten Mitteltastenereignisse bis zur ersten Auswahl im Hauptmenü und die Dauer des App-Aufrufs. Die Daten bleiben bis zum Neustart im RAM. [LCD DE3.70 (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip) · [Web 3.47.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0)
 
 

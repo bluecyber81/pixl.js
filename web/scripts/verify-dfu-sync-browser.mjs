@@ -49,13 +49,14 @@ try {
   assert.equal(await page.title(), 'Allmiibo Dateimanager ' + webVersion);
   await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
   const finalFile = 'Allmiibo_LCD_DE3_65_637_NUR_APP.zip';
-  const previewFile = 'Allmiibo_LCD_DE3_72_645_NUR_APP.zip';
+  const previewFile = 'Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip';
+  const earlierFile = 'Allmiibo_LCD_DE3_72_645_NUR_APP.zip';
   const update = page.locator('.firmware-packages');
-  for (const [file, version, counter] of [[finalFile, 'DE3.65', 637], [previewFile, 'DE3.72', 645]]) {
+  for (const [file, version, counter] of [[finalFile, 'DE3.65', 637], [previewFile, 'DE3.73', 646], [earlierFile, 'DE3.72', 645]]) {
     const row = update.locator('.package').filter({ has: page.locator('strong', { hasText: version }) });
     assert.equal(await row.locator('a[download]').getAttribute('href'), base + 'firmware/' + file);
     assert.ok((await row.innerText()).includes('Zähler ' + counter));
-    if (counter === 645) assert.match(await row.innerText(), /Testversion/);
+    if (counter !== 637) assert.match(await row.innerText(), /Testversion/);
     checks.push({ feature:'listed application available from Update', version, counter });
   }
   for (const lang of ['de_DE','en']) {
@@ -65,8 +66,13 @@ try {
       app.show_workspace('backup');
     }, lang);
     const hint = page.locator('.workspace-description:visible');
-    await hint.filter({hasText:lang === 'de_DE' ? 'Beim Schließen oder Neuladen' : 'Closing or reloading'}).waitFor();
-    checks.push({lang,feature:'backup checkpoint lifetime visible before a backup'});
+    const lifetime = lang === 'de_DE'
+      ? ['Mit der Option zur gespeicherten Fortsetzung', 'nach dem Schließen oder Neuladen', 'Ohne die Option geht der Zwischenstand verloren']
+      : ['If you enable saved backups', 'resume after closing or reloading', 'Otherwise the checkpoint is lost'];
+    await hint.filter({hasText:lifetime[0]}).waitFor();
+    const visibleHint = await hint.innerText();
+    for (const phrase of lifetime) assert.ok(visibleHint.includes(phrase), phrase);
+    checks.push({lang,feature:'persistent and tab-only backup lifetimes visible before a backup'});
     const observed = await page.evaluate(async () => {
       const {createBackup, createBackupCheckpoint} = await import('/parser/backup.js');
       const {memoryVfs} = await import('/fixtures/memory-vfs.mjs');
@@ -240,19 +246,20 @@ try {
     assert.equal(await page.locator('a[download][href$="' + file + '"]').getAttribute('href'), '../firmware/' + file);
   }
   assert.ok(await page.locator('#button').isDisabled());
-  assert.equal(await page.locator('#bundled option').count(), 3);
+  assert.equal(await page.locator('#bundled option').count(), 4);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65/);
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
+  assert.match(await page.locator('#bundled option[value="de3.73-lcd-app"]').innerText(), /DE3\.73.*Testversion/);
   checks.push({ feature:'stable and preview releases in local DFU chooser and idle device selector' });
   if (process.env.ALLMIIBO_CANDIDATE_OTA) {
     await page.locator('#file').setInputFiles(process.env.ALLMIIBO_CANDIDATE_OTA);
-    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previewFile ? 645 : 637;
+    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previewFile ? 646 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === earlierFile ? 645 : 637;
     await page.waitForFunction(counter => document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
     assert.match(await page.locator('#package-target').innerText(), /Hardwarefeld 52.*0x0126/);
     assert.equal(await page.evaluate(() => probe.requests), 0);
     checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.72-lcd-app', 645]]) {
+  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.72-lcd-app', 645], ['de3.73-lcd-app', 646]]) {
     await page.locator('#bundled').selectOption(id);
     await page.locator('#load-bundled').click();
     await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
