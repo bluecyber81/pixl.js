@@ -57,6 +57,36 @@ static void amiidb_scene_figure_info_back(amiibo_view_event_t event, amiibo_view
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
 }
 
+static void amiidb_scene_detail_back_to_list(app_amiidb_t *app) {
+    uint8_t parent = app->prev_scene_id;
+    mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, parent);
+    if (mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) != parent) return;
+
+    mui_list_view_t *list = app->p_list_view;
+    uint32_t count = mui_list_view_item_size(list);
+    if (parent == AMIIDB_SCENE_DATA_LIST) {
+        /* Each configured slot, including an empty one, has one row; Back is last. */
+        uint8_t slots = settings_get_data()->amiidb_data_slot_num;
+        if (count == (uint32_t)slots + 1 && app->cur_slot_index < slots &&
+            mui_list_view_get_focus(list) != app->cur_slot_index)
+            mui_list_view_set_focus(list, app->cur_slot_index);
+        return;
+    }
+    for (uint32_t i = 0; i < count; i++) {
+        const mui_list_item_t *row = mui_list_item_array_get(list->items, i);
+        if (row->icon != ICON_FILE || !row->user_data) continue;
+        if (parent == AMIIDB_SCENE_FAV_LIST) {
+            const amiidb_fav_t *fav = row->user_data;
+            if (fav->game_id != app->cur_fav.game_id || fav->amiibo_head != app->cur_fav.amiibo_head ||
+                fav->amiibo_tail != app->cur_fav.amiibo_tail) continue;
+        } else if (row->user_data != app->cur_amiibo) {
+            continue;
+        }
+        if (mui_list_view_get_focus(list) != i) mui_list_view_set_focus(list, i);
+        break;
+    }
+}
+
 static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                         mui_list_item_t *p_item) {
     app_amiidb_t *app = p_list_view->user_data;
@@ -71,7 +101,7 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_DETAIL);
         break;
     case AMIIDB_DETAIL_MENU_BACK_FILE_BROWSER:
-        mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, app->prev_scene_id);
+        amiidb_scene_detail_back_to_list(app);
         break;
     case AMIIDB_DETAIL_MENU_RAND_UID: {
         ret_code_t err_code;
