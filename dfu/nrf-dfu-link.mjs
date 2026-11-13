@@ -10,7 +10,8 @@ export function nrfDfuLink(entry) {
     const filename = testBuild
         ? `Allmiibo_DE3_${release[1]}_App${entry.counter}_NUR_APP_SIGNIERT.zip`
         : `Allmiibo_LCD_DE3_${release[1]}_${entry.counter}_NUR_APP.zip`;
-    if (entry.file !== filename) return null;
-    const published = 'https://bluecyber81.github.io/pixl.js/firmware/' + filename;
+    const reviewFile = `Allmiibo_LCD_DE3_${release[1]}_App${entry.counter}_TEST_DFU.zip`;
+    if (entry.file !== filename && !(entry.channel === 'prerelease' && !testBuild && entry.file === reviewFile)) return null;
+    const published = 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file;
     return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({file: published});
 }
