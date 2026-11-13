@@ -38,7 +38,7 @@ function harness(overrides = {}) {
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
-    ...require('../src/lib/device-nickname.js'), ...require('../src/lib/deployment-path.js'),
+    ...require('../src/lib/raw-metadata.js'), ...require('../src/lib/device-nickname.js'), ...require('../src/lib/deployment-path.js'),
     catalogueBaseline: JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/catalogue.json'),'utf8')),
     TextEncoder, Uint8Array, ArrayBuffer, Blob, AbortController, crypto: require('node:crypto').webcrypto,
     performance: require('node:perf_hooks').performance,
@@ -62,7 +62,7 @@ function harness(overrides = {}) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/language-preference.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/export /g, ''), context);
-  vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nObject.assign(globalThis, { assertPortableEntryName, portableNameKey, assertNameByteLimit, assertPathByteLimit }); }', context);
+  vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nObject.assign(globalThis, { assertPortableEntryName, assertWritableDevicePath, portableNameKey, assertNameByteLimit, assertPathByteLimit }); }', context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/browser-tools.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/folder-navigation.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/boot-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
@@ -391,7 +391,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.48.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.48.2'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -403,7 +403,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.48.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.48.2.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -490,7 +490,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.48.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.48.2.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -789,6 +789,66 @@ test('3.15 DFU timeout terminates old transport and late result cannot touch the
   assert.equal(app.connected, true); assert.equal(h.messages.length, 1); assert.equal(h.disconnects(), 1);
   h.timeouts[0].callback(); assert.equal(h.disconnects(), 1);
 });
+
+test('reserved root paths stop direct actions before a mutation and remain readable', async () => {
+  const calls = []
+  const forbidden = async (...args) => { calls.push(args); return {status: 0, data: []} }
+  const h = harness({vfs_read_folder: forbidden, vfs_create_folder: forbidden, vfs_rename: forbidden,
+    vfs_remove: forbidden, vfs_update_meta: forbidden, vfs_helper_write_file: forbidden})
+  const app = connected(h), name = '.pixl_txn_pending'
+  const row = {name, notes: '', flags: {}, amiibo: {}, type: 'REG'}
+  app.$prompt = async () => ({value: name})
+  for (const safe of [true, false]) {
+    app.safeUploads = safe
+    await assert.rejects(app.on_upload_request({file: {name, size: 1}}), {code: 'PATH_RESERVED'})
+  }
+  await app.on_btn_new_folder()
+  await app.on_row_btn_rename(0, {name: 'normal.bin'})
+  await app.on_row_btn_rename(0, row)
+  await app.on_row_btn_remove(0, row)
+  app.table_selection = [{...row, name: 'normal.bin'}, row]
+  await app.on_btn_remove()
+  app.on_row_btn_meta(0, row)
+  assert.equal(app.meta_form.path, 'E:/' + name)
+  app.meta_form.notes = 'note'
+  await app.on_diag_meta_close()
+  assert.ok(h.messages.some(message => message.message === 'workflow.pathReserved'))
+  assert.deepEqual(calls, [])
+})
+
+test('properties preserve unrelated Raw128 bytes on a flags-only edit', async () => {
+  const bytes = new Uint8Array(128).fill(0xa7)
+  bytes.set([7, 2, 0x90, 1, 3, 97, 98, 99])
+  const expected = bytes.slice(); expected[2] = 0x94
+  const writes = [], h = harness({
+    vfs_read_raw_meta: async () => ({status: 0, data: bytes}),
+    vfs_write_raw_meta: async (p, b) => { writes.push([p, b]); return {status: 0} },
+    vfs_update_meta: async () => { throw Error('unexpected legacy write') }
+  }), app = connected(h)
+  const row = {name:'A.bin', notes:'abc', flags:{raw:0x90, hide:false, readonly:false}, amiibo:{head:0,tail:0}}
+  app.on_row_btn_meta(0, row); app.meta_form.flags.readonly = true
+  await app.on_diag_meta_close()
+  assert.equal(app.meta_diag_visible, false)
+  assert.deepEqual(writes, [['E:/A.bin', expected]])
+  assert.equal(row.flags.raw, 0x94)
+  assert.equal(bytes[2], 0x90)
+})
+
+test('a flags-only edit falls back only on an explicit unsupported command', async () => {
+  const original = {name:'A.bin', notes:'', flags:{raw:64, hide:false, readonly:false}, amiibo:{head:0,tail:0}}
+  for (const response of [{status:255}, {status:1}, {status:0,data:Uint8Array.from([4,2,64,2,64,...new Array(123).fill(0)])},
+    {status:0,data:Uint8Array.from([1,42,...new Array(126).fill(0)])}, {status:0,data:Uint8Array.from([2,2,65,...new Array(125).fill(0)])}]) {
+    let legacyWrites=0,rawWrites=0
+    const h=harness({vfs_read_raw_meta:async()=>response,
+      vfs_update_meta:async()=>{++legacyWrites;return {status:0}},
+      vfs_write_raw_meta:async()=>{++rawWrites;return {status:0}}}),app=connected(h)
+    const row=structuredClone(original)
+    app.on_row_btn_meta(0,row);app.meta_form.flags.readonly=true;await app.on_diag_meta_close()
+    assert.equal(rawWrites,0);assert.equal(legacyWrites,response.status===255?1:0)
+    assert.equal(row.flags.readonly,response.status===255)
+    assert.equal(row.flags.raw,response.status===255 ? 68 : 64)
+  }
+})
 
 test('3.15 invalid new portable names cannot reach upload, rename or create but existing names stay addressable', async () => {
   for (const name of ['CON.bin', 'folder.', 'a:b.bin']) {
@@ -1522,10 +1582,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.48.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.48.2.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.48.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.48.2.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2347,7 +2407,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.48.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.48.2');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

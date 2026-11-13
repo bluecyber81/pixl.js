@@ -1,0 +1,17 @@
+Allmiibo Dateimanager 3.48.2 · Windows-Testversion
+
+1. Die ZIP vollständig in einen eigenen Ordner entpacken. Python 3.8 oder neuer
+   muss installiert sein. Zum Verbinden per Bluetooth Chrome oder Edge nutzen.
+2. Start-Dateimanager.cmd doppelklicken. Alternativ Start-Dateimanager-Direkt.cmd
+   öffnen und die im Fenster angezeigte Adresse im Browser aufrufen.
+3. Am Allmiibo „Bluetooth-Dateiübertragung“ öffnen und im Browser „Verbinden“
+   wählen. Zum Betrachten der Oberfläche genügt der Demo-Modus.
+4. Den Hintergrundstart mit Stop-Dateimanager.cmd beenden. Im Direktmodus das
+   Serverfenster auswählen und Strg+C drücken.
+
+Dieser Teststand prüft reservierte Wiederherstellungspfade schon bei der
+Planung von Schreibvorgängen. Beim Ändern von Dateiattributen bleiben
+unbekannte Metadaten erhalten. Der Build verwendet aktualisierte Sprach- und
+Entwicklungsbibliotheken. Die Downloadlinks im Dateimanager nennen separat
+die bereits auf GitHub veröffentlichte Version 3.48.1. Die Firmware im
+Updatebereich gehört zum dort ausgewiesenen öffentlichen Release.

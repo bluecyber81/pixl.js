@@ -4,6 +4,7 @@ No firmware/device access. Stubs replace only SDK, canvas and UI allocation.
 Negative controls selectively remove fixes and must fail the same behavior tests.
 """
 from pathlib import Path
+import hashlib
 import os
 import shlex
 import shutil
@@ -175,6 +176,39 @@ int main(int argc, char **argv) {
 
 
 class ViewTests(unittest.TestCase):
+    def test_lander_intro_display_stream(self):
+        lander = SRC / "app/game/port/tiny_lander"
+        with tempfile.TemporaryDirectory(prefix="pixl-lander-") as temporary:
+            directory = Path(temporary)
+            (directory / "game_view.h").write_text(
+                "enum {INPUT_KEY_LEFT, INPUT_KEY_RIGHT, INPUT_KEY_CENTER};\n"
+                "int game_view_key_pressed(int key);\n")
+            (directory / "nrf_delay.h").write_text("void nrf_delay_ms(unsigned delay);\n")
+            source = directory / "display.c"
+            source.write_text(r'''
+#include <assert.h>
+#include <stdio.h>
+#include "tiny_lander.c"
+static unsigned page, column;
+void JOY_OLED_data_start(uint8_t index) { assert(index == page && page < 8 && column == 0); }
+void JOY_OLED_send(uint8_t value) { assert(column < 128); column++; assert(putchar(value) != EOF); }
+void JOY_OLED_end(void) { assert(column == 128); page++; column = 0; }
+void JOY_sound(uint8_t freq,uint8_t duration) { assert(!"unexpected sound"); }
+int main(void) {
+    Tiny_Flip(1, NULL, NULL, NULL, NULL);
+    assert(page == 8 && column == 0);
+}
+''')
+            binary = directory / "display.exe"
+            subprocess.run([*self.cc, "-std=c11", "-Os", "-ffunction-sections", "-fdata-sections",
+                            "-I", str(directory), "-I", str(lander), str(source),
+                            "-Wl,--gc-sections", "-o", str(binary)], check=True)
+            frame = subprocess.check_output([str(binary)], timeout=10)
+            self.assertEqual(len(frame), 1024)
+            # Captured from the release's original, uncompressed 128x64 image.
+            self.assertEqual(hashlib.sha256(frame).hexdigest(),
+                             "06e08f2ece969725790bc7e19f9278ff9826f298f056af0a681b8338a2d4cc5f")
+
     @classmethod
     def setUpClass(cls):
         cc = os.environ.get("CC") or shutil.which("gcc")

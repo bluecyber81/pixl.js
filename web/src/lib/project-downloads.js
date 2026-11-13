@@ -1,5 +1,6 @@
 export function projectDownloads(buildVersion) {
-  const version = buildVersion.includes('-') ? '3.48.1' : buildVersion;
+  // The source and review assets on GitHub belong to this published release.
+  const version = '3.48.1';
   const directory = 'https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/';
   const fileVersion = version.replaceAll('.', '_');
   return {

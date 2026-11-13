@@ -478,6 +478,12 @@ void df_proto_handler_vfs_file_open(df_event_t *evt) {
         // The official web client sends u8; other clients send u32 little-endian.
         flags = 0;
         memcpy(&flags, buff_get_data_ptr_pos(&buff), atomic_meta ? 1 : flag_size);
+#ifdef VFS_PACKED_LFS_ENABLE
+        if (path[0] == 'E' && !vfs_packed_open_flags_valid(flags)) {
+            send_error(evt->df->cmd);
+            return;
+        }
+#endif
         /* This extension is advertised only for Packed E:. Reject it before
          * touching any old handle on other drives or incompatible flags. */
         if (atomic_meta && (path[0] != 'E' ||

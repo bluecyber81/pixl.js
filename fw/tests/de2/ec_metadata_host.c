@@ -19,7 +19,37 @@ static void invalid(uint8_t *data, uint8_t size) {
     assert(guarded.before == 0xa5a5a5a5 && guarded.after == 0xa5a5a5a5);
 }
 
+static void test_readonly_preserves_raw(void) {
+    uint8_t raw[128], original[128];
+    const uint8_t record[] = {5, 1, 1, 'x', 2, 0x81};
+    memset(raw, 0xa6, sizeof(raw));
+    memcpy(raw, record, sizeof(record));
+    memcpy(original, raw, sizeof(raw));
+    assert(vfs_meta_set_readonly(raw, sizeof(raw), true));
+    original[5] |= VFS_OBJ_FLAG_READONLY;
+    assert(!memcmp(raw, original, sizeof(raw)));
+    assert(vfs_meta_set_readonly(raw, sizeof(raw), false));
+    original[5] &= ~VFS_OBJ_FLAG_READONLY;
+    assert(!memcmp(raw, original, sizeof(raw)));
+
+    const uint8_t invalid[][7] = {{3,2,5,0x7e}, {4,2,1,2,0}, {2,1,9}, {0xff,0,0}};
+    for (size_t i = 0; i < sizeof(invalid)/sizeof(*invalid); ++i) {
+        memcpy(raw, invalid[i], sizeof(*invalid));
+        memcpy(original, raw, sizeof(raw));
+        assert(!vfs_meta_set_readonly(raw, sizeof(raw), false));
+        assert(!memcmp(raw, original, sizeof(raw)));
+    }
+    memset(raw, 0xff, sizeof(raw));
+    assert(vfs_meta_set_readonly(raw, sizeof(raw), true));
+    assert(raw[0] == 2 && raw[1] == VFS_META_TYPE_FLAGS && raw[2] == VFS_OBJ_FLAG_READONLY && raw[3] == 0xff);
+    uint8_t notes[] = {3,1,1,'x',0xad,0xbe,0xfa};
+    assert(!vfs_meta_set_readonly(notes, 4, true) && notes[0] == 3);
+    assert(vfs_meta_set_readonly(notes, sizeof(notes), true));
+    assert(!memcmp(notes, (uint8_t[]){5,1,1,'x',2,VFS_OBJ_FLAG_READONLY,0xfa}, sizeof(notes)));
+}
+
 int main(void) {
+    test_readonly_preserves_raw();
     vfs_meta_t input = {.has_notes=true, .notes="abc", .has_flags=true,
         .flags=VFS_OBJ_FLAG_HIDDEN | VFS_OBJ_FLAG_READONLY,
         .has_amiibo_id=true, .amiibo_head=0x11223344, .amiibo_tail=0x55667788};

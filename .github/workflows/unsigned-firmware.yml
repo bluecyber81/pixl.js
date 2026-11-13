@@ -1,14 +1,14 @@
 name: Unsigned LCD application and bootloader builds
 
-# Pull requests compile candidate bytes against the same measured budgets.
-# The release branch additionally requires the published application hash.
+# The reviewed App646 has its own fixed binary identity. Main verifies the published release.
 on:
   workflow_dispatch:
   workflow_call:
   pull_request:
     paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', '.github/workflows/unsigned-firmware.yml']
   push:
-    branches: [main]
+    branches: [main, fix/de372-review-nov13]
+    tags: [de3.73-test646]
     paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', '.github/workflows/unsigned-firmware.yml']
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.72 application
+    name: ${{ github.event_name == 'pull_request' && 'LCD application (pull request)' || ((github.ref == 'refs/heads/fix/de372-review-nov13' || github.ref == 'refs/tags/de3.73-test646') && 'DE3.73 App646 application' || 'DE3.72 application') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -31,10 +31,36 @@ jobs:
         run: docker pull "$SDK_IMAGE"
       - name: Exercise linker budget gates
         run: python3 fw/tests/de3/test_application_budget.py
+      - name: Select the build identity and evidence directory
+        id: identity
+        env:
+          APP646_REF: ${{ github.ref == 'refs/heads/fix/de372-review-nov13' || github.ref == 'refs/tags/de3.73-test646' || github.head_ref == 'fix/de372-review-nov13' || github.base_ref == 'fix/de372-review-nov13' }}
+        shell: bash
+        run: |
+          mode=release
+          dir=build/lcd-de372
+          if [[ "$APP646_REF" == true ]] || { [[ "$GITHUB_EVENT_NAME" == pull_request ]] && grep -Fxq '#define VERSION "2.22.0-DE3.73"' fw/application/src/version.inc.h; }; then
+            mode=development
+            dir=build/lcd-de373
+          elif [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            mode=candidate
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
       - name: Compile unsigned LCD and inspect actual flash and RAM reserves
         env:
-          BUILD_MODE: ${{ github.event_name == 'pull_request' && 'candidate' || 'release' }}
-        run: python3 tools/build_lcd.py --mode "$BUILD_MODE" --jobs 4
+          BUILD_MODE: ${{ steps.identity.outputs.mode }}
+          BUILD_DIR: ${{ steps.identity.outputs.dir }}
+        shell: bash
+        run: |
+          args=(--mode "$BUILD_MODE" --output "$BUILD_DIR" --jobs 4)
+          if [[ "$BUILD_MODE" == development ]]; then
+            args+=(--version 2.22.0-DE3.73 --counter 646 --stack-report)
+          fi
+          python3 tools/build_lcd.py "${args[@]}"
+          if [[ "$BUILD_MODE" == development ]]; then
+            echo "5d8937db3482c777cd9f768bf15ecedf909adff9dd094446809faa0a3a045ddb  $BUILD_DIR/pixljs.bin" | sha256sum --check --strict -
+          fi
       - name: Install the pinned Cortex-M4 emulator and SDK test inputs
         shell: bash
         run: |
@@ -47,25 +73,28 @@ jobs:
             tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
           ' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
       - name: Verify the packaged application against the release build and bound Z19 key
-        if: github.event_name != 'pull_request'
+        if: steps.identity.outputs.mode == 'release'
         run: /usr/bin/python3 tools/check_release_ota.py
       - name: Exercise every DE2 and DE3 host suite
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
+          BUILD_DIR: ${{ steps.identity.outputs.dir }}
         run: |
-          python3 -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-de372/FIRMWARE_TESTS.json
+          python3 -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report "$BUILD_DIR/FIRMWARE_TESTS.json"
       - name: Execute stack and PXDG checks on this build's Cortex-M4 ELF
+        env:
+          BUILD_DIR: ${{ steps.identity.outputs.dir }}
         shell: bash
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-de372/pixljs.out | tee build/lcd-de372/STACK_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py build/lcd-de372/pixljs.out build/lcd-de372/pixljs.bin | tee build/lcd-de372/FIRST_MENU_ELF.txt
-          cat build/lcd-de372/BUILD_RESULT.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py "$BUILD_DIR/pixljs.out" | tee "$BUILD_DIR/STACK_ELF.txt"
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py "$BUILD_DIR/pixljs.out" "$BUILD_DIR/pixljs.bin" | tee "$BUILD_DIR/FIRST_MENU_ELF.txt"
+          cat "$BUILD_DIR/BUILD_RESULT.json"
       - name: Archive the actual build and test results
-        if: success() || failure()
+        if: (success() || failure()) && steps.identity.outputs.dir != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lcd-firmware-evidence-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/lcd-de372/
+          path: ${{ steps.identity.outputs.dir }}/
           if-no-files-found: error
           retention-days: 30
 

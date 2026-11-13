@@ -53,6 +53,10 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
     mui_list_view_t *list = app->p_list_view;
     mui_list_view_clear_items(list);
     bool complete = true;
+    const char *target = app->focus_detail_file ? string_get_cstr(app->current_file) : NULL;
+    char predecessor[VFS_MAX_NAME_LEN] = {0};
+    uint16_t predecessor_icon = 0;
+    bool found = false;
     uint32_t eligible = 0, excluded = 0;
     mui_list_item_t *boundary = NULL;
     int32_t res = driver ? driver->open_dir(string_get_cstr(app->current_folder), &dir) : VFS_ERR_NODEV;
@@ -63,6 +67,15 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
             if (meta.has_flags && (meta.flags & VFS_OBJ_FLAG_HIDDEN)) continue;
             if (!memchr(obj.name, 0, sizeof(obj.name))) { res = VFS_ERR_CRPT; break; }
             uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
+            if (target) {
+                int cmp = icon == ICON_FILE ? strcmp(obj.name, target) : -1;
+                if (cmp == 0) found = true;
+                if (cmp < 0 && (icon > predecessor_icon ||
+                    (icon == predecessor_icon && strcmp(obj.name, predecessor) > 0))) {
+                    predecessor_icon = icon;
+                    memcpy(predecessor, obj.name, sizeof(predecessor));
+                }
+            }
             if (app->browser_direction) {
                 int cmp = icon != app->browser_anchor_icon ? (int)icon - app->browser_anchor_icon
                                                            : strcmp(obj.name, app->browser_anchor);
@@ -125,6 +138,24 @@ static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *app) {
     mui_list_view_sort(list, amiibo_scene_file_browser_list_item_cmp);
     mui_list_view_set_focus(list, 0);
     mui_list_view_set_scroll_offset(list, 0);
+    if (target && found && res == VFS_OK) {
+        size_t i, count = mui_list_item_array_size(list->items);
+        for (i = 0; i < count; i++) {
+            mui_list_item_t *row = mui_list_item_array_get(list->items, i);
+            if (row->icon == ICON_FILE && string_cmp_str(row->text, target) == 0) break;
+        }
+        if (i < count) {
+            app->current_focus_index = i;
+        } else {
+            /* Reopen at the real predecessor. This ordinary exclusive anchor
+             * remains valid when saving and restoring the browser state. */
+            memcpy(app->browser_anchor, predecessor, sizeof(predecessor));
+            app->browser_anchor_icon = predecessor_icon;
+            app->browser_direction = predecessor_icon ? 1 : 0;
+            amiibo_scene_file_browser_reload_folders(app);
+            return;
+        }
+    }
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_LIST);
 }
 

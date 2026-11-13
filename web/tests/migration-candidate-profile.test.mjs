@@ -37,3 +37,13 @@ test('DE3.72 is qualified only with its exact counter and verified settings',()=
  for(const patch of [{applicationCounter:644},{applicationCounter:646},{settingsCrcValid:false},{firmwareVersion:'2.22.0-DE3.71'}])
    assert.equal(migrationApplicationMatches({...current,...patch},target),false);
 });
+
+test('local App646 must report its exact version/counter, valid settings, and matching mounted layout',()=>{
+ const current={...identity,firmwareVersion:'2.22.0-DE3.73',applicationCounter:646};
+ assert.deepEqual(matchMigrationLayout(layout,current,target,{mounted:true}),layout);
+ for(const bad of [{applicationCounter:645},{firmwareVersion:'2.22.0-DE3.72'},{settingsCrcValid:false}])
+   assert.throws(()=>matchMigrationLayout(layout,{...current,...bad},target),{code:'MIGRATION_LAYOUT'});
+ for(const bad of [{mounted:false},{blockCount:511},{metadataBytes:64},{engineSha256:'0'.repeat(64)}])
+   assert.throws(()=>matchMigrationLayout({...layout,...bad},current,target,{mounted:true}),{code:'MIGRATION_LAYOUT'});
+ assert.equal(migrationApplicationMatches({...identity,firmwareVersion:'2.22.0-DE3.71',applicationCounter:643},target),false);
+});

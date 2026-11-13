@@ -3,7 +3,8 @@ name: Source checks
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, fix/de372-review-nov13]
+    tags: [de3.73-test646]
   workflow_dispatch:
 
 permissions:

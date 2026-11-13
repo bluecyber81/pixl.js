@@ -65,8 +65,13 @@ try {
       app.show_workspace('backup');
     }, lang);
     const hint = page.locator('.workspace-description:visible');
-    await hint.filter({hasText:lang === 'de_DE' ? 'Beim Schließen oder Neuladen' : 'Closing or reloading'}).waitFor();
-    checks.push({lang,feature:'backup checkpoint lifetime visible before a backup'});
+    const lifetime = lang === 'de_DE'
+      ? ['Mit der Option zur gespeicherten Fortsetzung', 'nach dem Schließen oder Neuladen', 'Ohne die Option geht der Zwischenstand verloren']
+      : ['If you enable saved backups', 'resume after closing or reloading', 'Otherwise the checkpoint is lost'];
+    await hint.filter({hasText:lifetime[0]}).waitFor();
+    const visibleHint = await hint.innerText();
+    for (const phrase of lifetime) assert.ok(visibleHint.includes(phrase), phrase);
+    checks.push({lang,feature:'persistent and tab-only backup lifetimes visible before a backup'});
     const observed = await page.evaluate(async () => {
       const {createBackup, createBackupCheckpoint} = await import('/parser/backup.js');
       const {memoryVfs} = await import('/fixtures/memory-vfs.mjs');

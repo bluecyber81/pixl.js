@@ -42,6 +42,9 @@ def main():
         if path.exists():
             parser.error('Preserve previous evidence; choose a new --report path.')
     report.parent.mkdir(parents=True, exist_ok=True)
+    minimum_suites = json.loads((root / 'RELEASE_INFO.json').read_bytes())['host_firmware_suites']
+    if type(minimum_suites) is not int or minimum_suites < 1:
+        parser.error('RELEASE_INFO.json must declare a positive host_firmware_suites count.')
     before = source_hashes(root / 'fw')
     with tempfile.TemporaryDirectory(prefix='allmiibo-host-') as tmp:
         folder = Path(tmp)
@@ -56,7 +59,7 @@ def main():
         env.update(NRF5_SDK_PATH=str(sdk), NRF52_SDK_ROOT=str(sdk), LANG='C.UTF-8', LC_ALL='C.UTF-8',
                    PYTHONDONTWRITEBYTECODE='1', PYTHONOPTIMIZE='0')
         command = [sys.executable, '-B', str(folder / 'fw/tests/de3/run_all.py'),
-                   '--minimum-suites', '149', '--profile', args.profile, '--report', str(report)]
+                   '--minimum-suites', str(minimum_suites), '--profile', args.profile, '--report', str(report)]
         with report.with_suffix('.log').open('w', encoding='utf-8') as log:
             child = subprocess.Popen(command, cwd=folder, env=env, text=True,
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -66,7 +69,7 @@ def main():
             status = child.wait()
     unchanged = before == source_hashes(root / 'fw')
     metadata = {'observedUTC': datetime.now(timezone.utc).isoformat(), 'python': sys.version,
-                'profile': args.profile, 'unicorn': unicorn_version, 'deviceAccess': False,
+                'profile': args.profile, 'minimumSuites': minimum_suites, 'unicorn': unicorn_version, 'deviceAccess': False,
                 'isolation': 'temporary Linux source and SDK copies',
                 'gcc': subprocess.check_output(['gcc', '--version'], text=True).splitlines()[0],
                 'armCompiler': (subprocess.check_output(['arm-linux-gnueabihf-gcc', '--version'], text=True).splitlines()[0]

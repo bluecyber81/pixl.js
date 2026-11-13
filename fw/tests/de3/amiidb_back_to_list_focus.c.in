@@ -13,6 +13,13 @@ enum { LIST_ITEM_HEIGHT = 12, VFS_OK = 0 };
 #define getLangString(x) ""
 #define mui_toast_view_show(t,m) ((void)0)
 typedef struct { unsigned game_id, amiibo_head, amiibo_tail; } amiidb_fav_t;
+enum { FAV_TYPE_FOLDER, FAV_TYPE_FAV };
+typedef struct {
+    unsigned fav_type;
+    union {char folder_name[48];amiidb_fav_t fav;} fav_data;
+} amiidb_fav_info_t;
+typedef void (*amiidb_fav_cb_t)(amiidb_fav_info_t *, void *);
+#define string_get_cstr(s) (s)
 typedef struct { unsigned icon; void *user_data; } mui_list_item_t;
 typedef struct { unsigned size; mui_list_item_t rows[8]; } items_t;
 typedef struct { items_t *items; unsigned focus_index, scroll_offset; } mui_list_view_t;
@@ -22,6 +29,10 @@ typedef struct {
     unsigned prev_scene_id, cur_slot_index, game_id_index, game_focus_path[8], game_scroll_path[8];
     void *cur_amiibo;
     amiidb_fav_t cur_fav;
+    amiidb_fav_info_t fav_page_anchor;
+    int8_t fav_page_direction;
+    uint8_t fav_page_focus;
+    char cur_fav_dir[48];
 } app_amiidb_t;
 static struct {uint8_t amiidb_data_slot_num;} settings;
 #define settings_get_data() (&settings)
@@ -42,6 +53,22 @@ static unsigned occupied;
 static bool list_error, skip_one, deny_transition;
 static int a, b;
 static amiidb_fav_t fav1 = {1,7,8}, fav2 = {2,7,8};
+static int32_t amiidb_api_fav_list_dir(const char *folder, amiidb_fav_cb_t callback, void *context) {
+    (void)folder;
+    amiidb_fav_info_t info = {.fav_type=FAV_TYPE_FAV};
+    info.fav_data.fav = fav2; callback(&info,context);
+    info.fav_data.fav = fav1; callback(&info,context);
+    return VFS_OK;
+}
+static void amiidb_fav_show_error(app_amiidb_t *app, int32_t result) {
+    (void)app; (void)result; assert(!"unexpected fixture directory error");
+}
+static void amiidb_fav_page_load(app_amiidb_t *app, bool folders_only) {
+    (void)app; (void)folders_only;
+    /* This narrow fixture has two visible favorites and one absent target.
+     * Needing an actual extra page here is a test failure; no fake page repair. */
+    assert(!"unexpected page load; use the coupled paging harness");
+}
 static void amiidb_scene_data_list_amiibo_slot_info_cb(unsigned slot, app_amiidb_t *app) {
     mui_list_view_add_item(app->p_list_view, occupied & (1u << slot) ? ICON_AMIIBO : ICON_FILE, "", NULL);
 }

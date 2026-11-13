@@ -96,6 +96,37 @@ static void parent_paths(void){
  }
  puts("PASS 8 actual-Cwalk parent/root/UTF8/retained trailing-separator paths and repeated back-to-home");
 }
+static void focus_after_detail(void) {
+    make(72, false);
+    app_amiibo_t *app = begin(true);
+    amiibo_scene_file_browser_on_enter(app);
+    unsigned targets[] = {3, 24, 49, 0};
+    for (size_t step = 0; step < sizeof(targets)/sizeof(targets[0]); step++) {
+        string_set_str(app->current_file, objects[targets[step]].name);
+        app->focus_detail_file = true;
+        amiibo_scene_file_browser_on_enter(app);
+        app->focus_detail_file = false;
+        unsigned focus = mui_list_view_get_focus(app->p_list_view);
+        mui_list_item_t *row = mui_list_item_array_get(app->p_list_view->items, focus);
+        assert(row->icon == ICON_FILE && string_cmp(row->text, app->current_file) == 0);
+        if (step == 0) assert(app->browser_direction == 0);
+    }
+    /* An external rename or hidden file leaves the restored browser row intact. */
+    for (unsigned hidden = 0; hidden < 2; hidden++) {
+        string_set_str(app->current_file, hidden ? objects[30].name : "gone.bin");
+        objects[30].meta[0] = VFS_OBJ_FLAG_HIDDEN;
+        app->current_focus_index = 4;
+        app->focus_detail_file = true;
+        amiibo_scene_file_browser_on_enter(app);
+        assert(mui_list_view_get_focus(app->p_list_view) == 4 && !oom && !errors);
+    }
+    /* A failed directory read only exposes the error/parent controls. */
+    fail_read = 2;
+    amiibo_scene_file_browser_on_enter(app);
+    assert(app->p_list_view->items->size == 2);
+    assert(mui_list_view_get_focus(app->p_list_view) == 0);
+    end(app);
+}
 static unsigned checkpage(app_amiibo_t*a,unsigned offset){assert(!oom&&!errors&&a->p_list_view->items->size<=27&&a->p_list_view->items->alloc<=32);unsigned n=0;for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];if(x->icon==ICON_FILE||x->icon==ICON_FOLDER){assert(!strcmp(string_get_cstr(x->text),expected[offset+n].name));assert(x->icon==(expected[offset+n].type==VFS_TYPE_DIR?ICON_FOLDER:ICON_FILE));n++;}}assert(n<=24);return n;}
 static void paging(unsigned n, enum directory_order order) {
     unsigned visible = make(n, true);
@@ -154,6 +185,6 @@ int main(void){
  for (unsigned order = NAMES_ASCENDING; order <= NAMES_SHUFFLED; order++)
      for (unsigned i = 0; i < sizeof(counts)/sizeof(counts[0]); i++)
          paging(counts[i], (enum directory_order)order);
- neighbors();retained();parent_paths();
+ neighbors();retained();parent_paths();focus_after_detail();
 #endif
  printf("PASS %u leak-free real-TLSF cases\n",cases);return 0;}

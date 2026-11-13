@@ -73,6 +73,17 @@ export function assertDevicePath(path) {
   return path
 }
 
+// Addressing stays read-capable for backups of internal journals. Only new
+// write targets use this check, matching the firmware's case-sensitive root
+// prefix. Identically named files inside ordinary folders remain user files.
+export function assertWritableDevicePath(path) {
+  assertDevicePath(path)
+  if (path.slice(2).startsWith('/.pixl_txn')) {
+    throw new NameError('PATH_RESERVED', 'This root path is reserved for internal recovery files.', { value: path })
+  }
+  return path
+}
+
 export function joinDevicePath(parent, name) {
   assertDeviceEntryName(name)
   const base = parent.length > 3 && parent.endsWith('/') ? parent.slice(0, -1) : parent

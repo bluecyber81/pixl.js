@@ -18,6 +18,7 @@
 #include "mini_app_registry.h"
 
 #include "amiidb_api_slot.h"
+#include "amiidb_fav_page.h"
 
 enum amiidb_detail_menu_t {
     AMIIDB_DETAIL_MENU_FIGURE_INFO,
@@ -72,16 +73,14 @@ static void amiidb_scene_detail_back_to_list(app_amiidb_t *app) {
             mui_list_view_set_focus(list, app->cur_slot_index);
         return;
     }
+    if (parent == AMIIDB_SCENE_FAV_LIST) {
+        (void)amiidb_fav_page_focus(app, &app->cur_fav);
+        return;
+    }
     for (uint32_t i = 0; i < count; i++) {
         const mui_list_item_t *row = mui_list_item_array_get(list->items, i);
         if (row->icon != ICON_FILE || !row->user_data) continue;
-        if (parent == AMIIDB_SCENE_FAV_LIST) {
-            const amiidb_fav_t *fav = row->user_data;
-            if (fav->game_id != app->cur_fav.game_id || fav->amiibo_head != app->cur_fav.amiibo_head ||
-                fav->amiibo_tail != app->cur_fav.amiibo_tail) continue;
-        } else if (row->user_data != app->cur_amiibo) {
-            continue;
-        }
+        if (row->user_data != app->cur_amiibo) continue;
         if (mui_list_view_get_focus(list) != i) mui_list_view_set_focus(list, i);
         break;
     }
@@ -136,6 +135,8 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
             app->ntag.read_only = !app->ntag.read_only;
             mui_list_view_item_set_sub_text(p_item,
                                             app->ntag.read_only ? getLangString(_L_ON_F) : getLangString(_L_OFF_F));
+        } else {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
         }
     } break;
 

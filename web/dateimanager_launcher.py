@@ -21,7 +21,7 @@ import time
 import webbrowser
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '3.48.1'
+VERSION = '3.48.2'
 HEALTH = '/.well-known/allmiibo-dateimanager'
 
 

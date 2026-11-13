@@ -35,6 +35,7 @@ typedef struct {
     uint16_t browser_anchor_icon;
     int8_t browser_direction; /* 0: first page, +1: after, -1: before anchor */
     bool reload_amiibo_files;
+    bool focus_detail_file;
 
 } app_amiibo_t;
 

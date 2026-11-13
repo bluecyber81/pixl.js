@@ -7,7 +7,7 @@ import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:642,version:'2.22.0-DE3.70',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:642,version:'2.22.0-DE3.70',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
  {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
  {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
   wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
@@ -56,7 +56,8 @@ for(const profile of profiles) {
     {firmwareVersion:'2.22.0-DE3.69',applicationCounter:641},
     {firmwareVersion:'2.22.0-DE3.70',applicationCounter:642},
     {firmwareVersion:'2.22.0-DE3.71t1',applicationCounter:644},
-    {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645}
+    {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645},
+    {firmwareVersion:'2.22.0-DE3.73',applicationCounter:646}
   ])
   assert.deepEqual(binding.defines,['LFS_NO_ASSERT','LFS_NO_DEBUG','LFS_NO_ERROR','LFS_NO_MALLOC','LFS_NO_WARN'])
   const module=new WebAssembly.Module(wasm)

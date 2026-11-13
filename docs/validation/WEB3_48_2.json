@@ -1,0 +1,98 @@
+{
+  "version": "3.48.2",
+  "status": "local test candidate",
+  "date": "2026-11-13",
+  "node": "26.13.1",
+  "npmCi": "11.19.1",
+  "dependencies": {
+    "vite": "8.3.8",
+    "rolldown": "1.2.18",
+    "vue": "3.5.44",
+    "vue-i18n": "11.4.19"
+  },
+  "host": {
+    "tests": 1429,
+    "pass": 1429,
+    "fail": 0,
+    "skipped": 0
+  },
+  "layouts": {
+    "dist": {
+      "assets": 179,
+      "indexSha256": "5b93a840b8bf31ba60c86022eb911346f3f5329b740343f4505a151890aa483a",
+      "distTests": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0
+      },
+      "browser": "157.0.8103.51",
+      "chromeUi": 79,
+      "chromeCollection": 338,
+      "chromeDfuSync": 31,
+      "english": 17,
+      "language": 6
+    },
+    "dist-pages": {
+      "assets": 179,
+      "indexSha256": "2ea8a17305c4d9db16d675d4c3a58789af4c4aa79439a1dd6ec4cdc8f2e0a936",
+      "distTests": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0
+      },
+      "browser": "157.0.8103.51",
+      "chromeUi": 79,
+      "chromeCollection": 338,
+      "chromeDfuSync": 31,
+      "english": 17,
+      "language": 6
+    }
+  },
+  "launcher": {
+    "windows": {
+      "passed": 22,
+      "posixOnlySkipped": 2
+    },
+    "linux": {
+      "passed": 24,
+      "skipped": 0
+    }
+  },
+  "storedBackupChromeChecks": 9,
+  "portable": {
+    "file": "Allmiibo_Dateimanager_3_48_2_Windows_Testversion.zip",
+    "bytes": 7348594,
+    "sha256": "3401890a63bd52fca0e518887f6e85063fb93db7b43ccb6b08d1bb6eda2dec39",
+    "zipMembers": 368,
+    "httpAssets": 179,
+    "nativeStartHealthStop": true,
+    "deviceAccess": false
+  },
+  "capacityProfileEvidence": "DE3_73_PFS.json",
+  "npmAudit": {
+    "all": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "production": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "scope": "Windows Chrome ran locally with synthetic device data. The Windows package was started and stopped from its extracted CMD files. The firmware downloads in this web build point to the previously published version.",
+  "hardwareTest": false,
+  "advisorySources": [
+    "https://github.com/vitejs/vite/security/advisories/GHSA-p4f5-76q4-ffq7",
+    "https://github.com/intlify/vue-i18n/security/advisories/GHSA-jrxq-gc2q-9357"
+  ]
+}

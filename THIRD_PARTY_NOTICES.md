@@ -32,15 +32,17 @@ The retained bdfconv executables are historical font-generation build tools cove
 
 ## Current web and SDK additions
 
-The current GitHub Pages website serves Dateimanager 3.33.1. Its matching web/WASM sources and notices are under `web/` and in the web3.33.1 release. The current `fw/` tree matches the DE3.55 application. Corresponding BL8 source and notices are under `bootloader-bl8/`; `bootloader-bl6/` is retained as history. No SoftDevice binary is republished in the standard bundle.
+The local Dateimanager 3.48.2 candidate has its dependency lock in
+[web/package-lock.json](web/package-lock.json). The public Web 3.48.1 archive
+remains available with its own notices. The firmware component notices are
+included in `fw/`, `bootloader-z19/` and `softdevice-s112/`.
 
-Dateimanager 3.33.1 contains its current pinned dependency notices and provenance in
-[web/third-party/npm/SOURCES.json](web/third-party/npm/SOURCES.json), original notices under
-`web/third-party/npm/licenses/`, and separate AmiiboAPI, QR generator, DFU, JSZip,
-CRC32 and packed-simulator notices in `web/third-party` and `web/public/dfu`.
-The older dependency table below is historical DE3.16 evidence, not the current inventory.
-Three current packages provide no standalone notice in their distributed package;
-the current SOURCES.json records their exact declarations instead of inventing a copyright statement.
+The web dependency inventory and original packaged notices are under
+[web/third-party/npm/SOURCES.json](web/third-party/npm/SOURCES.json) and
+`web/third-party/npm/licenses/`. The inventory includes available license
+declarations for packages that omit separate license files. The AmiiboAPI,
+QR generator, DFU, JSZip, CRC32 and packed-simulator notices are in
+`web/third-party/` and `web/public/dfu/`.
 
 `tools/sdk-overrides/nrf_nvic.h` retains the Nordic copyright/license header. It is the
 checked S112 compatibility correction used by the pinned SDK build; see the public build guide.
