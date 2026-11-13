@@ -1,0 +1,120 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+enum { ICON_FILE, ICON_AMIIBO, ICON_EXIT, ICON_FOLDER };
+enum { AMIIDB_SCENE_DATA_LIST, AMIIDB_SCENE_GAME_LIST, AMIIDB_SCENE_FAV_LIST,
+       AMIIDB_SCENE_AMIIBO_SEARCH, AMIIDB_SCENE_RECENT, AMIIDB_SCENE_AMIIBO_DETAIL_MENU };
+enum { LIST_ITEM_HEIGHT = 12, VFS_OK = 0 };
+#define _T(x) ""
+#define getLangString(x) ""
+#define mui_toast_view_show(t,m) ((void)0)
+typedef struct { unsigned game_id, amiibo_head, amiibo_tail; } amiidb_fav_t;
+typedef struct { unsigned icon; void *user_data; } mui_list_item_t;
+typedef struct { unsigned size; mui_list_item_t rows[8]; } items_t;
+typedef struct { items_t *items; unsigned focus_index, scroll_offset; } mui_list_view_t;
+typedef struct {
+    mui_list_view_t *p_list_view;
+    unsigned *p_scene_dispatcher;
+    unsigned prev_scene_id, cur_slot_index, game_id_index, game_focus_path[8], game_scroll_path[8];
+    void *cur_amiibo;
+    amiidb_fav_t cur_fav;
+} app_amiidb_t;
+static struct {uint8_t amiidb_data_slot_num;} settings;
+#define settings_get_data() (&settings)
+#define mui_list_item_array_size(items) ((items)->size)
+#define mui_list_view_item_size(list) ((list)->items->size)
+#define mui_list_item_array_get(items,i) (&(items)->rows[i])
+static void mui_list_view_set_focus(mui_list_view_t *, uint16_t);
+static void mui_list_view_set_scroll_offset(mui_list_view_t *list, unsigned y) { list->scroll_offset = y; }
+static void mui_list_view_clear_items(mui_list_view_t *list) {
+    list->items->size = 0;
+    mui_list_view_set_focus(list, 0);
+}
+static void mui_list_view_add_item(mui_list_view_t *list, unsigned icon, const char *name, void *data) {
+    assert(list->items->size < 8);
+    list->items->rows[list->items->size++] = (mui_list_item_t){icon, data};
+}
+static unsigned occupied;
+static bool list_error, skip_one, deny_transition;
+static int a, b;
+static amiidb_fav_t fav1 = {1,7,8}, fav2 = {2,7,8};
+static void amiidb_scene_data_list_amiibo_slot_info_cb(unsigned slot, app_amiidb_t *app) {
+    mui_list_view_add_item(app->p_list_view, occupied & (1u << slot) ? ICON_AMIIBO : ICON_FILE, "", NULL);
+}
+static int amiidb_api_slot_list(void (*cb)(unsigned, app_amiidb_t *), app_amiidb_t *app) {
+    if (list_error) return -1;
+    for (unsigned i=0; i<settings.amiidb_data_slot_num; i++) if (!skip_one || i != 1) cb(i,app);
+    return 0;
+}
+static void amiidb_scene_data_list_setup(app_amiidb_t *app) { (void)app; }
+static void amiidb_scene_game_list_reload(app_amiidb_t *app) {
+    mui_list_view_clear_items(app->p_list_view);
+    mui_list_view_add_item(app->p_list_view, ICON_FOLDER, "", &b);
+    mui_list_view_add_item(app->p_list_view, ICON_FILE, "", &a);
+    mui_list_view_add_item(app->p_list_view, ICON_FILE, "", &b);
+}
+static void mui_scene_dispatcher_next_scene(unsigned *scene, unsigned id);
+static unsigned mui_scene_dispatcher_current_scene(unsigned *scene) { return *scene; }
+/* PRODUCTION */
+static app_amiidb_t *active;
+static void mui_scene_dispatcher_next_scene(unsigned *scene, unsigned id) {
+    if (deny_transition) return;
+    *scene = id;
+    if (id == AMIIDB_SCENE_DATA_LIST) amiidb_scene_data_list_on_enter(active);
+    else if (id == AMIIDB_SCENE_GAME_LIST) amiidb_scene_game_list_on_enter(active);
+    else if (id == AMIIDB_SCENE_FAV_LIST) {
+        mui_list_view_clear_items(active->p_list_view);
+        mui_list_view_add_item(active->p_list_view, ICON_FILE, "", &fav1);
+        mui_list_view_add_item(active->p_list_view, ICON_FILE, "", &fav2);
+    }
+}
+static void expect_return(app_amiidb_t *app, unsigned parent, unsigned expected) {
+    app->prev_scene_id = parent;
+    *app->p_scene_dispatcher = AMIIDB_SCENE_AMIIBO_DETAIL_MENU;
+    back(app);
+    if (app->p_list_view->focus_index != expected) {
+        fprintf(stderr, "parent %u: got row %u, expected %u\n", parent, app->p_list_view->focus_index, expected);
+        exit(1);
+    }
+}
+int main(void) {
+    items_t items = {0};
+    mui_list_view_t list = {.items=&items};
+    unsigned scene;
+    app_amiidb_t app = {.p_list_view=&list, .p_scene_dispatcher=&scene};
+    active = &app;
+    settings.amiidb_data_slot_num = 4;
+    app.cur_slot_index = 2; occupied = 1u << 2;
+    expect_return(&app, AMIIDB_SCENE_DATA_LIST, 2);
+    occupied = 0;  /* File deleted: return to the same now-empty numbered slot. */
+    expect_return(&app, AMIIDB_SCENE_DATA_LIST, 2);
+    assert(items.rows[2].icon == ICON_FILE);
+    app.cur_slot_index = 4;
+    expect_return(&app, AMIIDB_SCENE_DATA_LIST, 0);  /* Back row isn't a slot. */
+    app.cur_slot_index = 2;
+    list_error = true;
+    expect_return(&app, AMIIDB_SCENE_DATA_LIST, 0);
+    assert(items.size == 1 && items.rows[0].icon == ICON_EXIT);
+    list_error = false; skip_one = true;
+    expect_return(&app, AMIIDB_SCENE_DATA_LIST, 0);
+    skip_one = false;
+    app.game_focus_path[0] = 1; app.game_scroll_path[0] = 5; app.cur_amiibo = &b;
+    expect_return(&app, AMIIDB_SCENE_GAME_LIST, 2); /* Opened A, browsed to B. */
+    app.cur_amiibo = &a;
+    expect_return(&app, AMIIDB_SCENE_GAME_LIST, 1); assert(list.scroll_offset == 5);
+    app.cur_amiibo = NULL;
+    expect_return(&app, AMIIDB_SCENE_GAME_LIST, 1);
+    app.cur_fav = fav2;
+    expect_return(&app, AMIIDB_SCENE_FAV_LIST, 1);  /* Same figure, different game. */
+    app.cur_fav.game_id = 99;
+    expect_return(&app, AMIIDB_SCENE_FAV_LIST, 0);
+    deny_transition = true; list.focus_index = 1;
+    expect_return(&app, AMIIDB_SCENE_DATA_LIST, 1);
+    assert(scene == AMIIDB_SCENE_AMIIBO_DETAIL_MENU);
+    puts("PASS");
+    return 0;
+}
