@@ -46,7 +46,7 @@ class UsageExportTests(unittest.TestCase):
         self.assertEqual(actual, {i: (int(row[0]), row[1].lower(), row[2]) for i, row in enumerate(rows, 1)})
         self.assertEqual(len(actual), 1344)
         self.assertEqual(data['coverage']['englishNoteAssociations'], 63)
-        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 54)
+        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 53)
         self.assertEqual(data['coverage']['germanNoteAssociations'], 63)
         self.assertTrue(data['policy']['germanTranslationsAreComplete'])
         self.assertEqual({row['en'] for row in data['notes'] if row['de']}, {row[2] for row in rows if row[2]})

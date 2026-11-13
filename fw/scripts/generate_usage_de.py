@@ -9,7 +9,7 @@ import re
 FW = Path(__file__).resolve().parents[1]
 INPUT = FW / "data/usage-translations.de.json"
 OUTPUT = FW / "application/src/app/amiidb/view/amiibo_usage_de.h"
-MAX_TEXTS = 54                    # Number of distinct English keys in this catalogue.
+MAX_TEXTS = 54                    # LCD translation table budget.
 MAX_UTF8 = 191                    # Upper bound on caller-owned decode space.
 MAX_TOKENS = 31                   # Spare control bytes; 0 terminates every C string.
 
