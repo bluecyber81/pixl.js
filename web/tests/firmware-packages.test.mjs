@@ -26,7 +26,7 @@ test('package presentation is explicit local scope and never claims unread stora
  assert.match(firmwarePackageText('de_DE').unread,/nicht ausgelesen.*keine Gerätekompatibilität/);
  assert.match(firmwarePackageText('en_US').unread,/not read.*does not confirm/);
  assert.deepEqual(packagePresentation(entry,null),packagePresentation(entry));
- assert.deepEqual(packagePresentation(entry),{newer:false,installed:null,downloadUrl:'/firmware/'+entry.file,dfuUrl:'/dfu/web.html?package=de3.53-lcd-app'});
+ assert.deepEqual(packagePresentation(entry),{newer:false,installed:null,releaseNotesUrl:'https://github.com/bluecyber81/pixl.js/releases/tag/de3.53',downloadUrl:'/firmware/'+entry.file,dfuUrl:'/dfu/web.html?package=de3.53-lcd-app'});
 });
 test('newer application version or CRC-verified counter suppresses downgrade links',()=>{
  for(const firmwareVersion of ['2.22.0-DE3.54','2.23.0-DE3.1','3.0.0-DE3.1','2.27.0','3.0.0'])assert.equal(packagePresentation(entry,{connected:true,firmwareVersion}).newer,true);
