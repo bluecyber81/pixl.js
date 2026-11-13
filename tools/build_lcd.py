@@ -19,9 +19,9 @@ from production_id import fingerprint, source_hashes
 
 
 IMAGE = "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16"
-RELEASE_VERSION = "2.22.0-DE3.71t1"
-RELEASE_COUNTER = 644
-RELEASE_BIN_SHA256 = "fbade80d03a44a3bb3bb7e76df422b24a879d2ff81b433e6bf4f6d6e1b955273"
+RELEASE_VERSION = "2.22.0-DE3.72"
+RELEASE_COUNTER = 645
+RELEASE_BIN_SHA256 = "000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88"
 SOURCE_DATE_EPOCH = 1793836800
 NVIC_BEFORE_SHA256 = "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210"
 NVIC_AFTER_SHA256 = "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
@@ -48,12 +48,12 @@ def build_identity(root, mode, version, counter):
     if mode in ("release", "candidate"):
         if version is not None or counter is not None:
             raise ValueError("Release identity is fixed; --version/--counter are for development mode.")
-        expected = {"GIT_COMMIT": '"unknown"', "GIT_BRANCH": '"experimental-app644"',
+        expected = {"GIT_COMMIT": '"unknown"', "GIT_BRANCH": '"release/de3.72-lcd"',
                     "GIT_BRANCH_NUM": '"n/a"', "VERSION": json.dumps(RELEASE_VERSION),
                     "BUILD_DIRTY": "1", "BUILD_DIRTY_KNOWN": "0",
-                    "BUILD_DATE": '"2026-11-12"', "TARGET": "0"}
+                    "BUILD_DATE": '"2026-11-13"', "TARGET": "0"}
         if values != expected:
-            raise ValueError("Release mode requires the archived DE3.71t1 version.inc.h metadata.")
+            raise ValueError("Release mode requires the archived DE3.72 version.inc.h metadata.")
         return RELEASE_VERSION, RELEASE_COUNTER, sha256(header)
     if not version or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}", version):
         raise ValueError("Development mode requires an explicit simple --version identifier.")
@@ -186,7 +186,7 @@ def main(argv=None):
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de371t1"))
+        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de372"))
         if destination.resolve() != destination:
             raise RuntimeError("Output must not resolve through a symlink or junction.")
         destination.mkdir(parents=True, exist_ok=True)
