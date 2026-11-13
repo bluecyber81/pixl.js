@@ -225,7 +225,9 @@ make -C fw/application -j\"$1\" pixljs BOARD=LCD RELEASE=1 APP_VERSION=\"$2\" AP
 cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw/_build/pixljs.out fw/_build/pixljs.map /output/
 """
             if args.stack_report:
-                script += 'mkdir /output/stack-usage\ncd fw/_build\nfind . -type f -name "*.su" -exec cp --parents -t /output/stack-usage -- {} +\n'
+                # Export a single file. Nested directories created by root inside a
+                # bind mount cannot be cleaned up by an unprivileged Linux runner.
+                script += 'cd fw/_build\nfind . -type f -name "*.su" -print0 | tar -cf /output/stack-usage.tar --null -T -\n'
             (temp / "build.sh").write_text(script, encoding="utf-8", newline="\n")
             command = ["docker", "run", "--rm", "--pull", "never", "--network", "none",
                        "--env", "MAKEFLAGS=--no-print-directory",
@@ -259,6 +261,9 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
             if args.mode == "release" and not matches:
                 raise RuntimeError("Release binary SHA-256 mismatch; no firmware artifacts exported. See build.log.")
             if args.stack_report:
+                if args.backend == "docker":
+                    with tarfile.open(export / "stack-usage.tar") as usage:
+                        usage.extractall(export / "stack-usage", filter="data")
                 stack = stack_report(export / "stack-usage")
                 stack_path = destination / "STACK_USAGE.json"
                 stack_path.write_text(json.dumps(stack, indent=2) + "\n", encoding="utf-8")
