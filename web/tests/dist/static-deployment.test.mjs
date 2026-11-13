@@ -105,7 +105,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     'Allmiibo_Dateimanager_' + fileVersion + '_Quellcode.zip',
     'Allmiibo_DE3_72_Z19_Web' + fileVersion + '_ChatGPT_Pruefpaket.zip'
   ]) {
-    assert.ok(index.includes('href="https://bluecyber81.github.io/pixl.js/downloads/web' + version + '/' + name + '" download'), name)
+    assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/' + name + '" download'), name)
   }
   assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'))
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
