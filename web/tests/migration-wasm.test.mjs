@@ -44,7 +44,7 @@ for(const profile of profiles) {
   assert.equal(target.layout.shardTarget,32768);assert.equal(target.layout.blockSize,4096);assert.equal(target.layout.blockCount,512)
   assert.equal(target.applicationCounter,profile.counter);assert.equal(target.firmwareVersion,profile.version)
   assert.deepEqual(target.approvedApplications.map(app=>app.applicationCounter),profile.approvedCounters)
-  if (profile.id === 'current') assert.deepEqual(target.approvedApplications.slice(-11), [
+  if (profile.id === 'current') assert.deepEqual(target.approvedApplications.filter(app=>app.applicationCounter >= 633), [
     {firmwareVersion:'2.22.0-DE3.61',applicationCounter:633},
     {firmwareVersion:'2.22.0-DE3.62',applicationCounter:634},
     {firmwareVersion:'2.22.0-DE3.63',applicationCounter:635},
