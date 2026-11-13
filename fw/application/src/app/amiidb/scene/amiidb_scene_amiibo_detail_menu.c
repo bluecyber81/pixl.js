@@ -160,6 +160,10 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
     app_amiidb_t *app = user_data;
 
+    /* The visible middle-button hint leads to Back as the first action. */
+    mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_APP_AMIIDB_DETAIL_BACK_LIST),
+                           (void *)AMIIDB_DETAIL_MENU_BACK_FILE_BROWSER);
+
     mui_list_view_add_item(app->p_list_view, 0xe0ae, _T(DE3_FIGURE_INFO),
                            (void *)AMIIDB_DETAIL_MENU_FIGURE_INFO);
     mui_list_view_add_item(app->p_list_view, 0xe0ae,
@@ -192,8 +196,6 @@ void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
                            (void *)AMIIDB_DETAIL_MENU_SAVE_AS);
     mui_list_view_add_item(app->p_list_view, 0xe068, getLangString(_L_APP_AMIIDB_DETAIL_BACK_DETAIL),
                            (void *)AMIIDB_DETAIL_MENU_BACK_AMIIBO_DETAIL);
-    mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_APP_AMIIDB_DETAIL_BACK_LIST),
-                           (void *)AMIIDB_DETAIL_MENU_BACK_FILE_BROWSER);
     mui_list_view_add_item(app->p_list_view, 0xe1c8, getLangString(_L_APP_AMIIDB_EXIT),
                            (void *)AMIIDB_DETAIL_MENU_BACK_MAIN_MENU);
 

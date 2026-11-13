@@ -72,3 +72,37 @@ test('comparison index neither keeps file bytes for extraction nor authorizes an
   assert.equal(isVerifiedBackupArchive(index), false)
   assert.throws(() => readBackupArchiveFile(index, 'E:/tags/tag.bin'), { code: 'ZIP_ARCHIVE' })
 })
+
+test('offline filters preserve exact paths and select every requested status without pagination loss',async()=>{
+  const {filterBackupComparison,backupComparisonReport}=await import('../src/lib/backup-comparison.js');
+  const a=memoryVfs(),b=memoryVfs();
+  for(let i=0;i<61;i++){a.put(`E:/tags/Ä ${i}.bin`,[1]);b.put(`E:/tags/Ä ${i}.bin`,[2]);}
+  a.put('E:/tags/Keep.bin',[7]);b.put('E:/tags/Keep.bin',[7]);b.put('E:/tags/=1+2.bin',[1]);
+  const result=await compare(await backup(a),await backup(b)),before=JSON.stringify(result);
+  assert.equal(filterBackupComparison(result).length,62);
+  assert.equal(filterBackupComparison(result,{showSame:true}).length,63);
+  assert.deepEqual(filterBackupComparison(result,{status:'same'}).map(r=>r.path),['Keep.bin']);
+  assert.equal(filterBackupComparison(result,{status:'content',path:'ä '}).length,61);
+  const report=backupComparisonReport(result,{status:'content',path:'ä '});
+  assert.equal(report.exportedEntries,61);assert.equal(report.totalEntries,63);
+  assert.equal(report.counts.content,61);assert.equal(report.rows[0].path,'Ä 0.bin');
+  assert.deepEqual(Object.keys(report.rows[0]),['path','status','type']);
+  assert.equal(JSON.stringify(result),before);
+  assert.throws(()=>filterBackupComparison(result,{status:'__proto__'}));
+  assert.throws(()=>filterBackupComparison(result,{path:'x'.repeat(257)}));
+});
+
+test('CSV exports use the shared spreadsheet-safe quoting and JSON preserves original names',async()=>{
+  const {backupComparisonCsv,backupComparisonReport}=await import('../src/lib/backup-comparison.js');
+  const a=memoryVfs(),b=memoryVfs();
+  for(const path of ['=2+2.bin','＠SUM(1).bin','a;"b.bin'])b.put('E:/tags/'+path,[1]);
+  const result=await compare(await backup(a),await backup(b));
+  const german=backupComparisonCsv(result,{},'de_DE'),english=backupComparisonCsv(result,{},'en');
+  assert.match(german,/^\uFEFF"Relativer Originalpfad";/);
+  assert.match(english,/^\uFEFF"Original relative path",/);
+  assert.match(german,/"'=2\+2.bin"/);assert.match(german,/"'＠SUM\(1\).bin"/);
+  assert.match(german,/"a;""b.bin"/);
+  const json=JSON.parse(JSON.stringify(backupComparisonReport(result,{})));
+  assert.deepEqual(json.rows.map(r=>r.path),result.rows.map(r=>r.path));
+  assert.equal(json.format,'allmiibo-backup-comparison');assert.equal(json.version,1);
+});

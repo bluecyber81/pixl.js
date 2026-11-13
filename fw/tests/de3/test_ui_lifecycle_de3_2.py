@@ -51,7 +51,7 @@ class Tests(unittest.TestCase):
             source.append(function((SRC/f'app/{name}/app_{name}.c').read_text(encoding='utf-8'),f'app_{name}_on_kill'))
         code=(HERE/'ui_retained_exit_host.c').read_text(encoding='utf-8').replace('/* ACTUAL_KILL_CALLBACKS */','\n'.join(source))
         code=code.replace('/* ACTUAL_AMIIBO_CACHE_DEFINITION */',cache+'\n'+magic)
-        self.compile_run(code,args=[(app,retain,scene,direction) for app in range(4) for retain in (0,1) for scene in (3,4,9) for direction in (-1,0,1)])
+        self.compile_run(code,args=[(app,retain,scene,direction) for app in range(4) for retain in (0,1) for scene in (3,4,5,6,9) for direction in (-1,0,1)] + [(app,retain,scene,1) for app in (4,5) for retain in (0,1) for scene in (3,4,5,6,9)])
 
     def test_real_bounded_event_queue_irq_lifecycle_fifo_and_coalescing(self):
         stubs={'mui_common.h':'''#pragma once

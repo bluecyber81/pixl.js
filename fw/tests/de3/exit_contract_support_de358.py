@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+from input_context_support import context_state, context_functions
 
 HERE = Path(__file__).resolve().parent
 FW = HERE.parents[1]
@@ -43,7 +44,8 @@ def launcher_fixture():
     fixture = fixture.replace("/* ACTUAL_LAUNCHER_TYPES */",
                               actual("core/mini_app_defines.h") + "\n" +
                               actual("core/mini_app_launcher.h"))
-    return fixture.replace("/* ACTUAL_LAUNCHER_MODULE */", actual("core/mini_app_launcher.c"))
+    context = context_state() + context_functions(("mui_input_context_changed",))
+    return fixture.replace("/* ACTUAL_LAUNCHER_MODULE */", context + actual("core/mini_app_launcher.c"))
 
 
 def compile_cases(testcase, source, cases, label):

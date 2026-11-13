@@ -14,7 +14,7 @@ class FigureInfoTests(unittest.TestCase):
             folder=Path(tmp)
             for name in ['amiibo_info_draw.c','amiibo_info_draw.h','mui_qrcode_helper.c','mui_qrcode_helper.h']:
                 shutil.copyfile(SRC/name,folder/name)
-            for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']:
+            for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','mui_event.h','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']:
                 shutil.copyfile(SRC/'mui'/name,folder/name)
             shutil.copyfile(SRC/'ntag/ntag_def.h',folder/'ntag_def.h')
             (folder/'mui_common.h').write_text('#include <stdbool.h>\n#include <stdint.h>\n#include <string.h>\n#include "u8g2.h"\n',encoding='utf-8')
@@ -24,7 +24,7 @@ class FigureInfoTests(unittest.TestCase):
             (folder/'db_header.h').write_text('#pragma once\n#include <stdint.h>\ntypedef struct {int placeholder;} db_amiibo_t;\nconst db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);\n',encoding='utf-8')
             (folder/'i18n').mkdir()
             shutil.copyfile(SRC/'i18n/string_id.h',folder/'i18n/string_id.h')
-            (folder/'i18n/language.h').write_text('#pragma once\n#include "string_id.h"\nconst char *getLangString(int);\n#define _T(name) getLangString(_L_ ## name)\n',encoding='utf-8')
+            (folder/'i18n/language.h').write_text('#pragma once\n#include "string_id.h"\nenum {LANGUAGE_DE_DE,LANGUAGE_EN_US};\nint getLanguage(void);\nconst char *getLangString(int);\n#define _T(name) getLangString(_L_ ## name)\n',encoding='utf-8')
             template=Path(__file__).with_name('amiibo_info_render.c.in').read_text(encoding='utf-8')
             replacements={
                 'ACTUAL_ENDIAN_FUNCTION':function((SRC/'amiibo_helper.c').read_text(encoding='utf-8'),'to_little_endian_int32'),

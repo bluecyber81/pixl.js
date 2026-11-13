@@ -43,7 +43,7 @@ export function copyNotices(mode) {
 <li><a href="${archives.testKit}" download>${label(`ChatGPT-Prüfpaket für ${archives.version} mit App- und Bootloader-Artefakten (ZIP)`, `ChatGPT test kit for ${archives.version} with application and bootloader build artifacts (ZIP)`)}</a></li>
 <li><a href="${sourceUrl}">${label('Exakter Quellstand der mitgelieferten Firmware DE3.65/637', 'Source code for the bundled DE3.65/637 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.70">${label('Quellstand der LCD-Testversion DE3.70/642 mit Diagnose der ersten Menüauswahl', 'Source code for the DE3.70/642 LCD test release with first menu selection diagnostics')}</a></li></ul>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.71t1">${label('Quellstand der LCD-Testversion DE3.71t1/644 mit App-Fortsetzung', 'Source code for the DE3.71t1/644 LCD test release with app resume')}</a></li></ul>
 <p>${label('Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.', 'The main branch can contain a different firmware revision. The DE3.65 application ZIP is the public download for Allmiibo LCD with PFS1 and S112 7.3.0.')}</p>
 <p>${label('Aktuelle Bibliotheken und Quellen', 'Current libraries and sources')} · <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>.
 ${label('Die Liste unten enthält auch historische Lizenzhinweise.', 'The list below also includes historical notices.')}

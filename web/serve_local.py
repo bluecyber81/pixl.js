@@ -9,8 +9,24 @@ import os
 from pathlib import Path
 import re
 import secrets
+import socket
+import sys
 import threading
 from urllib.parse import urlsplit
+
+
+class LocalHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        if os.name == 'nt':
+            # Windows SO_REUSEADDR permits overlapping binds. Claim loopback
+            # exclusively before bind, so an existing listener cannot be shared.
+            self.allow_reuse_address = False
+            self.allow_reuse_port = False
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
+            if hasattr(socket, 'SO_REUSEPORT'):
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 0)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
 
 class AppHandler(SimpleHTTPRequestHandler):
@@ -29,7 +45,7 @@ class AppHandler(SimpleHTTPRequestHandler):
             self.send_error(403, 'Unexpected Host')
             return None
         if urlsplit(original).path == '/.well-known/allmiibo-dateimanager':
-            body = json.dumps({'application': 'allmiibo-dateimanager', 'version': '3.47.0',
+            body = json.dumps({'application': 'allmiibo-dateimanager', 'version': '3.48.0',
                                'instance': hashlib.sha256(self.instance_token.encode('ascii')).hexdigest()}).encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -144,10 +160,19 @@ def main():
     token = args.instance_token or secrets.token_hex(16)
     if not re.fullmatch(r'[a-f0-9]{32}', token):
         parser.error('The instance token must contain exactly 32 lowercase hexadecimal characters')
-    with ThreadingHTTPServer(('127.0.0.1', args.port), partial(AppHandler, directory=str(directory), instance_token=token)) as server:
-        print(f'Allmiibo Dateimanager 3.47.0: http://127.0.0.1:{args.port}/', flush=True)
+    with LocalHTTPServer(('127.0.0.1', args.port), partial(AppHandler, directory=str(directory), instance_token=token)) as server:
+        print(f'Allmiibo Dateimanager 3.48.0: http://127.0.0.1:{args.port}/', flush=True)
         server.serve_forever()
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Der lokale Dateimanager wurde beendet.', flush=True)
+    except OSError as exc:
+        detail = re.sub(r'[a-fA-F0-9]{32,64}', '[Kennung ausgeblendet]', str(exc))
+        print('SERVERFEHLER: {} (errno={}, winerror={}): {}'.format(
+            type(exc).__name__, getattr(exc, 'errno', None),
+            getattr(exc, 'winerror', None), detail), file=sys.stderr, flush=True)
+        sys.exit(1)

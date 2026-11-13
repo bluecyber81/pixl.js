@@ -29,6 +29,7 @@ enum amiibo_detail_menu_t {
     AMIIBO_DETAIL_MENU_BACK_AMIIBO_DETAIL,
     AMIIBO_DETAIL_MENU_BACK_FILE_BROWSER,
     AMIIBO_DETAIL_MENU_BACK_MAIN_MENU,
+    AMIIBO_DETAIL_MENU_PERSONAL_NOTE,
 };
 
 static ret_code_t amiibo_scene_amiibo_detail_set_readonly(app_amiibo_t *app, bool readonly) {
@@ -228,7 +229,10 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 
     switch (selection) {
     case AMIIBO_DETAIL_MENU_FIGURE_INFO:
-        app->p_amiibo_detail_view->info_page = 1;
+    case AMIIBO_DETAIL_MENU_PERSONAL_NOTE:
+        app->p_amiibo_detail_view->info_page = selection == AMIIBO_DETAIL_MENU_PERSONAL_NOTE ? 3 : 1;
+        app->p_amiibo_detail_view->note_offset = 0;
+        app->p_amiibo_detail_view->note_total = 0;
         amiibo_detail_view_set_event_cb(app->p_amiibo_detail_view, amiibo_scene_figure_info_back);
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_DETAIL);
         break;
@@ -332,8 +336,15 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 void amiibo_scene_amiibo_detail_menu_on_enter(void *user_data) {
     app_amiibo_t *app = user_data;
 
+    /* The visible middle-button hint leads to Back as the first action. */
+    mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK_TO_FILE_LIST),
+                           (void *)AMIIBO_DETAIL_MENU_BACK_FILE_BROWSER);
+
     mui_list_view_add_item(app->p_list_view, 0xe0ae, _T(DE3_FIGURE_INFO),
                            (void *)AMIIBO_DETAIL_MENU_FIGURE_INFO);
+    mui_list_view_add_item(app->p_list_view, 0xe0ae,
+                           getLanguage() == LANGUAGE_DE_DE ? "Eigene Notiz" : "Personal note",
+                           (void *)AMIIBO_DETAIL_MENU_PERSONAL_NOTE);
 
     mui_list_view_add_item(app->p_list_view, 0xe1c5, getLangString(_L_RANDOM_GENERATION),
                            (void *)AMIIBO_DETAIL_MENU_RAND_UID);
@@ -354,8 +365,6 @@ void amiibo_scene_amiibo_detail_menu_on_enter(void *user_data) {
                            (void *)AMIIBO_DETAIL_MENU_REMOVE_AMIIBO);
     mui_list_view_add_item(app->p_list_view, 0xe068, getLangString(_L_BACK_TO_DETAILS),
                            (void *)AMIIBO_DETAIL_MENU_BACK_AMIIBO_DETAIL);
-    mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK_TO_FILE_LIST),
-                           (void *)AMIIBO_DETAIL_MENU_BACK_FILE_BROWSER);
     mui_list_view_add_item(app->p_list_view, 0xe1c8, getLangString(_L_BACK_TO_MAIN_MENU),
                            (void *)AMIIBO_DETAIL_MENU_BACK_MAIN_MENU);
 

@@ -47,7 +47,7 @@ typedef struct {void *user_data;} mui_view_t;
 typedef int amiibo_detail_view_event_t;
 enum {AMIIBO_DETAIL_VIEW_EVENT_UPDATE,AMIIBO_DETAIL_VIEW_EVENT_MENU};
 typedef struct amiibo_detail_view_s {
-    uint8_t info_page;uint16_t focus,max_ntags;int8_t navigate_direction;
+    uint8_t info_page;uint16_t focus,max_ntags,note_offset,note_total;int8_t navigate_direction;
     void *user_data;
     void (*event_cb)(amiibo_detail_view_event_t,struct amiibo_detail_view_s *);
 } amiibo_detail_view_t;
@@ -92,6 +92,12 @@ static void navigation_tests(void) {
     assert(view.info_page==0 && switched_view==AMIIDB_VIEW_ID_LIST && menu_events==2 && !scroll_calls);
     file.info_page=2;e.type=INPUT_TYPE_LONG;amiibo_detail_view_on_input(&f,&e);
     assert(file.info_page==0 && menu_events==3);
+    file.info_page=3;file.note_total=52;file.note_offset=0;
+    e.key=INPUT_KEY_RIGHT;e.type=INPUT_TYPE_SHORT;amiibo_detail_view_on_input(&f,&e);
+    assert(file.note_offset==13 && file.focus==5 && menu_events==3);
+    e.key=INPUT_KEY_CENTER;amiibo_detail_view_on_input(&f,&e);
+    assert(file.info_page==0 && switched_view==AMIIBO_VIEW_ID_LIST && menu_events==4);
+
 }
 
 int main(int argc,char **argv) {

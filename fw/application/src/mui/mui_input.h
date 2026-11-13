@@ -2,6 +2,7 @@
 #define MUI_INPUT_H
 
 #include "mui_common.h"
+#include "mui_event.h"
 #include "bsp.h"
 
 
@@ -29,6 +30,14 @@ typedef struct {
 
 void mui_input_init();
 void mui_input_deinit(void);
+
+/* INPUT events use arg_ptr as an opaque context token, never as an address.
+ * Advance only when a foreground owner is destroyed or a new one commits.
+ * A rejected prepare/save operation must retain its existing input context. */
+uint32_t mui_input_context_current(void);
+void mui_input_context_changed(void);
+void mui_input_tag_current_event(mui_event_t *event);
+bool mui_input_event_is_current(const mui_event_t *event);
 
 void mui_input_on_bsp_event(bsp_event_t evt);
 

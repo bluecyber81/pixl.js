@@ -101,7 +101,16 @@ static const char *description(ntag_t *tag) {
 static void expected_description(mui_canvas_t *c,ntag_t *tag,unsigned width,unsigned offset) {
     memset(c->fb->tile_buf_ptr,0,1024);mui_canvas_set_draw_color(c,1);
     mui_canvas_set_font(c,u8g2_font_wqy12_t_gb2312a);
-    mui_element_autowrap_text_box(c,0,23,width,c->height-23,c->height-23,offset,0,description(tag));
+    /* Full LCD: bottom nine rows are the persistent middle-button hint.
+     * The expected QR continues to be rendered independently at full size. */
+    unsigned height=c->height-23;
+#ifndef LEGACY_INLINE_NOTES
+    if(c->height>=64)height-=9;
+#endif
+    mui_element_autowrap_text_box(c,0,23,width,height,height,offset,0,description(tag));
+#ifndef LEGACY_INLINE_NOTES
+    amiibo_active_menu_hint(c,width);
+#endif
 }
 
 /* Independent row oracle uses the font metrics and explicit line boundaries. */
@@ -201,7 +210,7 @@ int main(int argc,char **argv) {
     unsigned newlines=(256+32-23-fh)/fh;CHECK(newlines<sizeof(tag.notes)-2);
     memset(tag.notes,'\n',newlines);tag.notes[newlines]='X';tag.notes[newlines+1]=0;
     amiibo_view_reset_desc_scroll(&v);draw(&canvas,&view);qr_matches(buffer,reference);
-    for(unsigned y=24;y<64;y++)for(unsigned x=0;x<80;x++)CHECK(!pixel(buffer,x,y));
+    for(unsigned y=24;y<55;y++)for(unsigned x=0;x<80;x++)CHECK(!pixel(buffer,x,y));
     unsigned baseline=23+fh+newlines*fh;CHECK(baseline>=256);
     v.desc_offset=baseline-40;draw(&canvas,&view);qr_matches(buffer,reference);
     unsigned dots=0;for(unsigned y=24;y<64;y++)for(unsigned x=0;x<80;x++)dots+=pixel(buffer,x,y);CHECK(dots>0);

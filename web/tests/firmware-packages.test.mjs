@@ -3,8 +3,22 @@ import assert from 'node:assert/strict';
 import { packagePresentation,firmwarePackageText } from '../src/lib/release-packages.js';
 import { parseBootDiagnostics } from '../src/lib/boot-diagnostics.js';
 import { nrfDfuLink } from '../public/dfu/nrf-dfu-link.mjs';
+import { readFileSync } from 'node:fs';
 import bootPacket from './boot-fixture.cjs';
 const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmiibo_LCD_DE3_53_625_TESTSTAND.zip'};
+
+test('the signed T1 package reaches Android and is compared when only the device version is available', () => {
+  const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
+  const candidate = packages.find(item => item.version === '2.22.0-DE3.71t1');
+  assert.equal(candidate.channel, 'prerelease');
+  const android = new URL(nrfDfuLink(candidate));
+  assert.equal(android.searchParams.get('file'), 'https://bluecyber81.github.io/pixl.js/firmware/' + candidate.file);
+  for (const changed of [{channel:'stable'}, {file:'../' + candidate.file}, {counter:643}]) {
+    assert.equal(nrfDfuLink({...candidate, ...changed}), null);
+  }
+  assert.equal(packagePresentation(packages[0], {connected:true, firmwareVersion:candidate.version}).newer, true);
+  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.72'}).newer, true);
+});
 test('package presentation is explicit local scope and never claims unread storage compatibility',()=>{
  for(const locale of ['de_DE','en_US']){const t=firmwarePackageText(locale);assert.ok(t.scope&&t.unread&&t.limits&&t.empty&&t.local);}
  assert.match(firmwarePackageText('de_DE').unread,/nicht ausgelesen.*keine Gerätekompatibilität/);
@@ -25,7 +39,7 @@ test('disconnect ignores the former device version and private session fields ar
 
 test('each card links its own catalogue ID and keeps the diagnostics fragment intact', () => {
  const diagnostic = '#read=100&app=637&bl=19&sd=294';
- for (const id of ['de3.65-lcd-app', 'de3.70-lcd-app']) {
+ for (const id of ['de3.65-lcd-app', 'de3.71t1-lcd-app']) {
    const item = {...entry, id};
    const url = new URL(packagePresentation(item, {dfuReference:diagnostic}).dfuUrl, 'https://example.test');
    assert.equal(url.pathname, '/dfu/web.html');

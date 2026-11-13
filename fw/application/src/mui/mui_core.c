@@ -7,6 +7,7 @@
 #include "app_error.h"
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
+#include "mui_nav_diag.h"
 #include "ntag_emu.h"
 #include "i18n/language.h"
 
@@ -143,6 +144,14 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
 }
 
 static void mui_process_input(mui_t *p_mui, mui_event_t *p_event) {
+    /* Queued keys and releases of a gesture begun in a previous app must not
+     * activate the new view or its save/memory-error dialog. */
+    if (!mui_input_event_is_current(p_event)) {
+#ifdef MUI_FIRST_MENU_DIAG
+        mui_menu_return_diag_stale(mui_input_context_current());
+#endif
+        return;
+    }
     /* An accepted reset/sleep request owns the saved buffers until commit or cancel. */
     if (mini_app_launcher_input_blocked(mini_app_launcher())) return;
     if (mui_nfc_save_input(p_mui, p_event)) return;

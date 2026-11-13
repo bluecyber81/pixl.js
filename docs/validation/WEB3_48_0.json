@@ -1,0 +1,148 @@
+{
+  "version": "3.48.0",
+  "date": "2026-11-13",
+  "scope": "Release sources and built files tested in desktop Chrome with synthetic Bluetooth and collection data. Earlier device observations are identified separately.",
+  "host": {
+    "tests": 1418,
+    "pass": 1418,
+    "fail": 0,
+    "skipped": 0
+  },
+  "dependencies": {
+    "vue": "3.5.44",
+    "elementPlus": "2.14.7",
+    "vue2FoundInLockfile": false,
+    "productionAudit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "scope": "npm audit --omit=dev on the day of this report. A Vue 2 advisory concerns a different major version; this lockfile resolves Vue 3. The audit covers known advisories in production dependencies."
+  },
+  "layouts": {
+    "/": {
+      "files": 177,
+      "indexSha256": "52716587c2f44a4c9b4ef3f64b3e0c4d440deaca4696916d752db3bb46b46d2f",
+      "entrySha256": "43a21c89473a259c01d79abf4d8fdef575895347a516b621c744e64e4ace2c2f",
+      "catalogueChunkSha256": "526a0a1886d08572d51b20c69557f16eca63eb16d3e1d89b6be7bfe14eb72f1a",
+      "allFilesSha256": "36e3658bfeaf4ec09db153184fc44125649a1d7e4cfa1a86de7ce667eb9c4080",
+      "postbuild": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0
+      },
+      "browserChecks": {
+        "browser": 79,
+        "collection-tools-browser": 338,
+        "screen-awake-browser": 133,
+        "dfu-sync-browser": 31,
+        "language-browser": 6,
+        "english-workspaces-browser": 17
+      }
+    },
+    "/pixl.js/": {
+      "files": 177,
+      "indexSha256": "6934573a38da8c05ab48c5222695e55634a921181004231a04d1c30d81e8eacf",
+      "entrySha256": "66343a562ec036aa85eb1c6f2601390cadbe22134182bc392521fc6594242b53",
+      "catalogueChunkSha256": "6cf81b5800f9ec4bfdff5e4dbca658f59c5a31fa0850f16e0e61e60076147f20",
+      "allFilesSha256": "8bbddb184432d71f0db7c113d332ac6c1f6fa4fa066946bda5f6bb290f3ab865",
+      "postbuild": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0
+      },
+      "browserChecks": {
+        "browser": 79,
+        "collection-tools-browser": 338,
+        "screen-awake-browser": 133,
+        "dfu-sync-browser": 31,
+        "language-browser": 6,
+        "english-workspaces-browser": 17
+      }
+    }
+  },
+  "windowsChrome": {
+    "chrome": "157.0.8103.51",
+    "locales": [
+      "de-DE",
+      "en-US"
+    ],
+    "viewportWidths": [
+      320,
+      390,
+      1280
+    ],
+    "demoEntries": 245,
+    "states": 48,
+    "nativeZoom200States": 8,
+    "keyboardModalRounds": 12,
+    "modalTabSteps": 120,
+    "overflow": 0,
+    "jsExceptions": 0,
+    "failedLocalRequests": 0,
+    "catalogueReleaseCases": 4,
+    "catalogueChampionGameNotes": 16,
+    "footerLinkMatches": 12,
+    "otaRetrievals": 4
+  },
+  "testOta": {
+    "name": "Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip",
+    "length": 249137,
+    "sha256": "e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb"
+  },
+  "windowsStarter": {
+    "revision": "R3",
+    "nativeTests": {
+      "passed": 22,
+      "posixOnlySkipped": 2
+    },
+    "linuxComplement": {
+      "passed": 24,
+      "skipped": 0
+    },
+    "nativeCmd": {
+      "platform": "Windows",
+      "build": "3.48.0",
+      "actual_cmd_start": true,
+      "health_and_production_html": true,
+      "repeated_start_retained_state": true,
+      "actual_cmd_stop_cleared_state": true,
+      "index_sha256": "52716587c2f44a4c9b4ef3f64b3e0c4d440deaca4696916d752db3bb46b46d2f"
+    }
+  },
+  "menuDiagnostics": {
+    "releaseTests": "PXMI v2 decode, v1 fallback on unsupported requests, session invalidation, report export and offline comparison use synthetic fixtures.",
+    "previousDeviceExports": [
+      {
+        "date": "2026-11-12",
+        "fileManager": "3.47.0",
+        "firmware": "2.22.0-DE3.71t1",
+        "savedExportSha256": "84f0c03bdeea020b34159a528e376f81375ad5a078e784573535c00149895246",
+        "menuSectionPresent": false
+      },
+      {
+        "date": "2026-11-13",
+        "fileManager": "3.47.0-T1",
+        "firmware": "2.22.0-DE3.71t1",
+        "savedExportSha256": "5c8b4a2e59bde2f60c1db0cadba5bc6322dcbc63c11e649ff938e57d73e3f790",
+        "menuSectionPresent": true,
+        "menuSchema": 2,
+        "targetAppId": 6,
+        "launchCallMilliseconds": 1,
+        "centerCounts": {
+          "press": 1,
+          "release": 1,
+          "short": 1
+        },
+        "lastAppReturn": null
+      }
+    ],
+    "open": "A 3.48.0 physical-device comparison including an observed app return remains open; the saved v2 export contains no completed return record."
+  },
+  "relatedFirmwareEvidence": "DE3_71T1.json"
+}

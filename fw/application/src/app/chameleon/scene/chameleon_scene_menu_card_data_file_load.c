@@ -98,18 +98,19 @@ static void chameleon_scene_menu_card_data_file_load_from_file(app_chameleon_t *
         mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_FAILED));
         return;
     }
-    memcpy(tag_buffer, loaded, tag_data_size);
-    mui_mem_free(loaded);
-
-    // update tag coll res
-    tag_helper_load_coll_res_from_block0();
-
-    // set nickname by filename
+    /* Metadata must accept the filename before the active RAM card changes.
+     * Keep the complete staged payload disposable on every failure path. */
     err = tag_helper_set_nickname(file_name);
     if (err != 0) {
+        mui_mem_free(loaded);
         mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_SET_NICK_FAILED));
         return;
     }
+    memcpy(tag_buffer, loaded, tag_data_size);
+    mui_mem_free(loaded);
+
+    // update tag coll res only after the active card was committed
+    tag_helper_load_coll_res_from_block0();
 
     NRF_LOG_INFO("load card data:%d", err);
     mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS));

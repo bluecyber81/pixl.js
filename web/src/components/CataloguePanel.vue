@@ -60,6 +60,63 @@
           <button type="button" :disabled="!selectedPreset" @click="changePreference({op:'remove',name:selectedFilterName})">{{ de ? 'Gespeicherten Filter löschen' : 'Delete saved filter' }}</button>
         </div>
       </template>
+      <details class="profile-transfer">
+        <summary>{{ de ? 'Favoriten und Filter übertragen' : 'Transfer favourites and filters' }}</summary>
+        <p>{{ de ? 'Speichere deine Webfavoriten und benannten Filter als JSON-Datei und übernimm sie in einem anderen Browser. Der Import ändert nur dieses lokale Katalogprofil.' : 'Save your web favourites and named filters as a JSON file and use them in another browser. Importing changes only this local catalogue profile.' }}</p>
+        <button type="button" :disabled="profileSaving" @click="downloadProfile">{{ de ? 'Profil als JSON speichern' : 'Save profile as JSON' }}</button>
+        <label class="profile-file">{{ de ? 'Profildatei für Vorschau auswählen' : 'Choose a profile file to preview' }}
+          <input type="file" accept=".json,application/json" :disabled="profileSaving" @change="loadProfileFile" />
+        </label>
+        <p v-if="profileLoading" role="status">{{ de ? 'Profildatei wird gelesen …' : 'Reading profile file …' }}</p>
+        <div v-if="profilePreview" class="profile-preview">
+          <h4>{{ de ? 'Profilvorschau' : 'Profile preview' }}</h4>
+          <p>{{ de ? 'In der Datei' : 'In this file' }}: {{ profilePreview.incoming.favorites }} {{ de ? 'Favoriten' : 'favourites' }}, {{ profilePreview.incoming.filters }} {{ de ? 'Filter' : 'filters' }}.</p>
+          <p>{{ de ? 'Bisher in diesem Browser' : 'Currently in this browser' }}: {{ profilePreview.current.favorites }} {{ de ? 'Favoriten' : 'favourites' }}, {{ profilePreview.current.filters }} {{ de ? 'Filter' : 'filters' }}.</p>
+          <details v-if="profilePreview.filters.length" class="profile-filter-details">
+            <summary>{{ de ? 'Filter und Namenskonflikte prüfen' : 'Review filters and name conflicts' }}</summary>
+            <ul>
+              <li v-for="row in profilePreview.filters" :key="row.name">
+                <strong>{{ row.name }}</strong> · {{ profileRowLabel(row.state) }}
+                <div v-if="row.state === 'changed'">{{ de ? 'Bisher' : 'Current' }}: {{ profileCriteriaLabel(row.previous) }}</div>
+                <div>{{ de ? 'Aus der Datei' : 'From file' }}: {{ profileCriteriaLabel(row.incoming) }}</div>
+              </li>
+            </ul>
+          </details>
+          <details v-if="profilePreview.favorites.length" class="profile-favorite-details">
+            <summary>{{ de ? 'Favoriten prüfen' : 'Review favourites' }}</summary>
+            <ol :start="profilePage * profilePageSize + 1">
+              <li v-for="row in profileFavoriteRows" :key="row.id"><code>{{ row.id }}</code> · {{ profileFigureName(row.id) }} · {{ profileRowLabel(row.state) }}</li>
+            </ol>
+            <div v-if="profilePreview.favorites.length > profilePageSize" class="preset-actions">
+              <button type="button" :disabled="profilePage === 0" @click="profilePage--">{{ de ? 'Vorherige Favoriten' : 'Previous favourites' }}</button>
+              <span>{{ profilePage + 1 }} / {{ Math.ceil(profilePreview.favorites.length / profilePageSize) }}</span>
+              <button type="button" :disabled="(profilePage + 1) * profilePageSize >= profilePreview.favorites.length" @click="profilePage++">{{ de ? 'Weitere Favoriten' : 'More favourites' }}</button>
+            </div>
+          </details>
+          <label class="profile-policy">{{ de ? 'Wie soll das Profil übernommen werden?' : 'How should this profile be applied?' }}
+            <select v-model="profileMode" :disabled="profileSaving">
+              <option value="">{{ de ? 'Bitte ausdrücklich auswählen' : 'Choose an option' }}</option>
+              <option value="merge">{{ de ? 'Zusammenführen · vorhandene Filter behalten' : 'Merge · keep existing filters' }}</option>
+              <option value="replace">{{ de ? 'Ersetzen · nur das Profil aus der Datei behalten' : 'Replace · keep only the profile from this file' }}</option>
+            </select>
+          </label>
+          <template v-if="profilePlan">
+            <p>{{ profileMode === 'merge'
+              ? (de ? 'Neue Favoriten und Filter werden ergänzt. Gleichnamige Filter behalten ihre bisherigen Einstellungen.' : 'New favourites and filters are added. Filters with an existing name keep their current settings.')
+              : (de ? 'Das lokale Favoriten- und Filterprofil wird vollständig durch die Datei ersetzt. Einträge, die in der Datei fehlen, werden entfernt.' : 'The file replaces the entire local favourites and filter profile. Entries missing from the file are removed.') }}</p>
+            <dl class="profile-counts">
+              <dt>{{ de ? 'Favoriten hinzufügen / entfernen' : 'Favourites to add / remove' }}</dt><dd>{{ profilePlan.favoritesAdded }} / {{ profilePlan.favoritesRemoved }}</dd>
+              <dt>{{ de ? 'Filter hinzufügen / ersetzen / entfernen' : 'Filters to add / replace / remove' }}</dt><dd>{{ profilePlan.filtersAdded }} / {{ profilePlan.filtersReplaced }} / {{ profilePlan.filtersRemoved }}</dd>
+              <dt>{{ de ? 'Abweichende gleichnamige Filter behalten' : 'Conflicting named filters to keep' }}</dt><dd>{{ profilePlan.conflictsKept }}</dd>
+              <dt>{{ de ? 'Ergebnis: Favoriten / Filter' : 'Result: favourites / filters' }}</dt><dd>{{ profilePlan.favoritesTotal }} / {{ profilePlan.filtersTotal }}</dd>
+            </dl>
+            <p v-if="!profilePlan.allowed" role="status">{{ de ? 'Das Ergebnis überschreitet 4.096 Favoriten oder 80 Filter. Wähle Ersetzen oder verkleinere das Profil.' : 'The result exceeds 4,096 favourites or 80 filters. Choose Replace or reduce the profile.' }}</p>
+          </template>
+          <button type="button" :disabled="profileSaving || !profilePlan?.allowed" @click="applyProfile">{{ profileSaving ? (de ? 'Profil wird übernommen …' : 'Applying profile …') : (de ? 'Profil jetzt übernehmen' : 'Apply profile now') }}</button>
+        </div>
+        <button v-if="profilePreview || profileLoading" type="button" :disabled="profileSaving" @click="cancelProfile">{{ de ? 'Profilimport abbrechen' : 'Cancel profile import' }}</button>
+        <p v-if="profileFeedback" class="profile-feedback" role="status">{{ profileFeedback[de ? 0 : 1] }}</p>
+      </details>
     </details>
     <p v-if="preferenceMessage" role="status">{{ preferenceMessage[de ? 0 : 1] }}</p>
     <button v-if="query || activeFilters" type="button" class="reset-filters" @click="resetFilters">{{ de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters' }}</button>
@@ -72,7 +129,7 @@
     <FigureLinkSettings :de="de" />
     <div ref="resultAnchor" tabindex="-1" class="result-bar"><p aria-live="polite"><strong>{{ result.total }}</strong> {{ announcements.length && !result.total ? (de ? 'Treffer mit Katalog-ID' : 'results with a catalogue ID') : (de ? 'Treffer' : 'results') }} <span v-if="result.total">· {{ de ? 'Seite' : 'Page' }} {{ result.page }}/{{ result.pages }}</span></p></div>
     <p v-if="!result.total" class="empty-result">{{ announcements.length
-      ? (de ? 'Treffer stehen oben in den Ankündigungen.' : 'See matching figures in the announcements above.')
+      ? (de ? 'Treffer stehen oben unter „Figuren und Erscheinungstermine“.' : 'See matching figures under “Figure release dates” above.')
       : (de ? 'Keine passenden Figuren. Versuche einen kürzeren Suchbegriff oder setze die Filter zurück.' : 'No matching figures. Try a shorter search or reset the filters.') }}</p>
     <ul class="entries">
       <li v-for="entry in result.entries" :key="entry.id" :class="['presence-' + presenceFor(entry.id).state, { selected: selectedId === entry.id }]" :data-presence="presenceFor(entry.id).state">
@@ -102,7 +159,7 @@
   </section>
 </template>
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import baseline from '../data/catalogue.json';
 import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '../lib/catalogue.js';
@@ -113,7 +170,8 @@ import { gameGuides } from '../data/game-guides.js';
 import GameGuide from './GameGuide.vue';
 import FigureDownload from './FigureDownload.vue';
 import FigureLinkSettings from './FigureLinkSettings.vue';
-import { CATALOGUE_PREFERENCES_KEY, FILTER_NAME_LIMIT, readCataloguePreferences, updateCataloguePreferences } from '../lib/catalogue-preferences.js';
+import { CATALOGUE_PREFERENCES_KEY, CATALOGUE_PROFILE_FILE_LIMIT, FILTER_NAME_LIMIT, readCataloguePreferences, updateCataloguePreferences, exportCatalogueProfile, previewCatalogueProfile, importCatalogueProfile } from '../lib/catalogue-preferences.js';
+import { saveBlob } from '../lib/browser-tools.js';
 import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
@@ -188,18 +246,23 @@ function reloadPreferences(event) {
     preferences.value = readCataloguePreferences();
     if (!selectedPreset.value) selectedFilterName.value = '';
   } catch { preferenceMessage.value = ['Favoriten und Filter konnten nicht gelesen werden.', 'Could not read favourites and filters.']; }
+  if (event && profilePreview.value) refreshProfilePreview();
 }
 onMounted(() => {
   if (!globalThis.window) return;
   reloadPreferences();
   window.addEventListener?.('storage', reloadPreferences);
 });
-onBeforeUnmount(() => globalThis.window?.removeEventListener?.('storage', reloadPreferences));
+onBeforeUnmount(() => {
+  globalThis.window?.removeEventListener?.('storage', reloadPreferences);
+  profileAlive = false; profileRequest++; profileController?.abort();
+});
 async function changePreference(change) {
   try {
     const write = () => updateCataloguePreferences(change);
     const locks = globalThis.window?.navigator?.locks;
     preferences.value = locks ? await locks.request(CATALOGUE_PREFERENCES_KEY, write) : write();
+    if (profilePreview.value) refreshProfilePreview();
     preferenceMessage.value = null;
     if (change.op === 'create') { selectedFilterName.value = change.name.trim().normalize('NFC'); newFilterName.value = ''; }
     if (change.op === 'remove') selectedFilterName.value = '';
@@ -213,6 +276,92 @@ async function changePreference(change) {
     };
     preferenceMessage.value = messages[error.code] || ['Der Browser konnte die Änderung nicht speichern.', 'The browser could not save the change.'];
   }
+}
+const profilePreview = shallowRef(null), profileMode = ref(''), profilePage = ref(0), profilePageSize = 20;
+const profileLoading = ref(false), profileSaving = ref(false), profileFeedback = ref(null);
+let profileTextValue = '', profileRequest = 0, profileAlive = true, profileController = null;
+const profilePlan = computed(() => profilePreview.value?.modes[profileMode.value] || null);
+const profileFavoriteRows = computed(() => profilePreview.value?.favorites.slice(profilePage.value * profilePageSize, (profilePage.value + 1) * profilePageSize) || []);
+const profileErrors = {
+  PREF_PROFILE_FORMAT: ['Die Datei ist unvollständig oder hat kein unterstütztes Profilformat.', 'The file is incomplete or has an unsupported profile format.'],
+  PREF_FORMAT: ['Das Profil enthält ungültige oder doppelte Favoriten oder Filter.', 'The profile contains invalid or duplicate favourites or filters.'],
+  PREF_NAME: ['Das Profil enthält einen ungültigen Filternamen.', 'The profile contains an invalid filter name.'],
+  PREF_PROFILE_LIMIT: ['Die Profildatei überschreitet 512 KiB.', 'The profile file exceeds 512 KiB.'],
+  PREF_LIMIT: ['Das Profil überschreitet 4.096 Favoriten oder 80 Filter.', 'The profile exceeds 4,096 favourites or 80 filters.'],
+  PREF_STORAGE: ['Der Browserspeicher ist gesperrt oder voll. Das Profil wurde nicht übernommen.', 'Browser storage is blocked or full. The profile was not applied.'],
+  PREF_STALE: ['Favoriten oder Filter haben sich geändert. Prüfe die neue Vorschau und wähle erneut aus.', 'Favourites or filters changed. Review the new preview and choose again.'],
+  PREF_CANCELLED: ['Profilimport abgebrochen.', 'Profile import cancelled.'],
+};
+const profileError = error => profileErrors[error?.code] || ['Das Profil konnte nicht verarbeitet werden.', 'The profile could not be processed.'];
+const profileRowLabel = state => ({ added:['Neu', 'New'], same:['Unverändert', 'Unchanged'], changed:['Gleicher Name, andere Einstellungen', 'Same name, different settings'] })[state]?.[de.value ? 0 : 1] || '';
+const profileFigureName = id => data.value.entries.find(entry => entry.id === id)?.name || (de.value ? 'ID nicht im aktuellen Katalog' : 'ID not in the current catalogue');
+function profileCriteriaLabel(value) {
+  const fields = [];
+  if (value.query) fields.push((de.value ? 'Suche: ' : 'Search: ') + value.query);
+  if (value.series) fields.push((de.value ? 'Serie: ' : 'Series: ') + value.series);
+  if (value.kind) fields.push((de.value ? 'Art: ' : 'Type: ') + value.kind);
+  if (value.game) fields.push((de.value ? 'Spiel: ' : 'Game: ') + (gameGuides.find(game => game.id === value.game)?.title || value.game));
+  if (value.presence) fields.push(({ observed:['Auf dem Gerät gefunden', 'Found on device'], present:['Vorhanden', 'Present'], missing:['Nicht gefunden', 'Not found'], attention:['Prüfhinweis', 'Needs inspection'], unconfirmed:['Unbestätigt / veraltet', 'Unconfirmed / outdated'] })[value.presence][de.value ? 0 : 1]);
+  if (value.knownOnly) fields.push(de.value ? 'IDs mit Firmware-Namen' : 'IDs with firmware names');
+  if (value.favoritesOnly) fields.push(de.value ? 'Nur Webfavoriten' : 'Web favourites only');
+  return fields.join(' · ') || (de.value ? 'Alle Einträge' : 'All entries');
+}
+function refreshProfilePreview() {
+  if (!profileTextValue) return;
+  profileMode.value = ''; profilePage.value = 0;
+  try { profilePreview.value = previewCatalogueProfile(profileTextValue); profileFeedback.value = profileErrors.PREF_STALE; }
+  catch (error) { profilePreview.value = null; profileFeedback.value = profileError(error); }
+}
+function downloadProfile() {
+  if (profileSaving.value) return;
+  try {
+    saveBlob(new Blob([exportCatalogueProfile()], { type:'application/json' }), de.value ? 'Allmiibo-Katalogprofil.json' : 'Allmiibo-Catalogue-Profile.json');
+    profileFeedback.value = ['Download der Profildatei angefordert.', 'Profile file download requested.'];
+  } catch (error) { profileFeedback.value = profileError(error); }
+}
+async function loadProfileFile(event) {
+  if (profileSaving.value) return;
+  const file = event.target.files?.[0]; event.target.value = '';
+  if (!file) return;
+  const request = ++profileRequest;
+  profilePreview.value = null; profileTextValue = ''; profileMode.value = ''; profilePage.value = 0;
+  profileFeedback.value = null; profileLoading.value = true;
+  try {
+    if (!Number.isFinite(file.size) || file.size < 0 || file.size > CATALOGUE_PROFILE_FILE_LIMIT) throw { code:'PREF_PROFILE_LIMIT' };
+    const bytes = await file.arrayBuffer();
+    if (!profileAlive || request !== profileRequest) return;
+    if (bytes.byteLength > CATALOGUE_PROFILE_FILE_LIMIT) throw { code:'PREF_PROFILE_LIMIT' };
+    let text;
+    try { text = new TextDecoder('utf-8', { fatal:true }).decode(bytes); }
+    catch { throw { code:'PREF_PROFILE_FORMAT' }; }
+    profilePreview.value = previewCatalogueProfile(text); profileTextValue = text;
+  } catch (error) {
+    if (profileAlive && request === profileRequest) profileFeedback.value = profileError(error);
+  } finally {
+    if (profileAlive && request === profileRequest) profileLoading.value = false;
+  }
+}
+function cancelProfile() {
+  if (profileSaving.value) return;
+  profileRequest++; profileLoading.value = false; profilePreview.value = null; profileTextValue = ''; profileMode.value = '';
+  profileFeedback.value = profileErrors.PREF_CANCELLED;
+}
+async function applyProfile() {
+  if (profileSaving.value || !profilePreview.value || !profilePlan.value?.allowed) return;
+  profileSaving.value = true; profileController = new AbortController();
+  try {
+    const result = await importCatalogueProfile(profilePreview.value, profileMode.value, { signal:profileController.signal });
+    if (!profileAlive) return;
+    preferences.value = result.preferences;
+    if (!selectedPreset.value) selectedFilterName.value = '';
+    profilePreview.value = null; profileTextValue = ''; profileMode.value = '';
+    preferenceMessage.value = null;
+    profileFeedback.value = result.changed ? ['Profil in diesem Browser übernommen.', 'Profile applied in this browser.'] : ['Dieses Profil ist bereits gespeichert.', 'This profile is already saved.'];
+  } catch (error) {
+    if (!profileAlive) return;
+    profileFeedback.value = profileError(error);
+    if (error.code === 'PREF_STALE') { reloadPreferences(); refreshProfilePreview(); }
+  } finally { profileSaving.value = false; profileController = null; }
 }
 async function toggleFavorite(id, event) {
   const trigger = event.currentTarget;
@@ -317,4 +466,13 @@ nav { display:flex; justify-content:center; align-items:center; gap:14px; font-s
 .preset-actions { display:flex; flex-wrap:wrap; gap:.35rem; margin-bottom:.55rem; }
 .entries button.web-favorite { align-self:flex-start; margin:0; min-height:44px; }
 .entries button.web-favorite[aria-pressed=true] { color:#5c3900; background:#fff1b9; border-color:#9c711f; }
+.profile-transfer { margin:.7rem 0; border-top:1px solid #d3dee8; overflow-wrap:anywhere; }
+.profile-transfer p, .profile-transfer li { font-size:.8rem; line-height:1.5; }
+.profile-transfer input[type=file] { width:100%; max-width:100%; min-width:0; box-sizing:border-box; }
+.profile-preview { margin:.7rem 0; padding:.8rem; border:1px solid #a9c6c4; border-radius:10px; min-width:0; }
+.profile-preview h4 { margin:0 0 .6rem; }
+.profile-preview li { margin:.5rem 0; }
+.profile-counts { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.3rem .7rem; }
+.profile-counts dt, .profile-counts dd { margin:0; font-size:.8rem; }
+.profile-feedback { padding:.5rem 0; }
 </style>

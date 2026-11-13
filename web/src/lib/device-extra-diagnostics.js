@@ -8,10 +8,10 @@ const u16 = value => uint(value, 65535);
 const booleanFields = (value, fields) => fields.every(name => typeof value[name] === 'boolean');
 const invalid = name => { throw new Error(`Invalid ${name} diagnostic response`); };
 
-function wire(buffer, length, magic) {
+function wire(buffer, length, magic, version = 1) {
   const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
   if (!(bytes instanceof Uint8Array) || bytes.byteLength !== length ||
-      [...magic].some((char, index) => bytes[index] !== char.charCodeAt(0)) || bytes[4] !== 1) invalid(magic);
+      [...magic].some((char, index) => bytes[index] !== char.charCodeAt(0)) || bytes[4] !== version) invalid(magic);
   return {bytes, view: new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)};
 }
 
@@ -92,12 +92,32 @@ export function parseUiDiagnostics(buffer) {
 }
 
 export function supportsMenuDiagnostics(version) {
-  const match = /^2\.22\.0-DE3\.(\d+)$/.exec(version || '');
+  // This exact candidate contains the reviewed read-only diagnostic handlers.
+  const known = version === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : version;
+  const match = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
   return !!match && Number(match[1]) >= 70;
 }
 
+function normalizeMenuReturn(value) {
+  if (value === null) return null;
+  const nullableApp = id => id === null || uint(id, 255) && id > 0;
+  if (!value || !word(value.sourceContext) || !value.sourceContext ||
+      !word(value.targetContext) || !value.targetContext || !u16(value.staleEventsDiscarded) ||
+      !uint(value.sourceAppId, 255) || !value.sourceAppId ||
+      !['targetAppId', 'firstLabelAppId', 'lastLabelAppId', 'firstIconAppId', 'lastIconAppId']
+        .every(key => nullableApp(value[key])) ||
+      (value.firstLabelAppId === null && [value.lastLabelAppId, value.firstIconAppId, value.lastIconAppId].some(id => id !== null)) ||
+      (value.firstLabelAppId !== null && value.lastLabelAppId === null)) return undefined;
+  return Object.freeze({sourceContext: value.sourceContext, targetContext: value.targetContext,
+    staleEventsDiscarded: value.staleEventsDiscarded, sourceAppId: value.sourceAppId, targetAppId: value.targetAppId,
+    firstLabelAppId: value.firstLabelAppId, lastLabelAppId: value.lastLabelAppId,
+    firstIconAppId: value.firstIconAppId, lastIconAppId: value.lastIconAppId});
+}
+
 export function normalizeMenuDiagnostics(value) {
-  if (!value || value.schemaVersion !== 1 || value.scope !== 'first-main-menu-since-restart' ||
+  const v2 = value?.schemaVersion === 2;
+  if (!value || ![1, 2].includes(value.schemaVersion) ||
+      value.scope !== (v2 ? 'first-menu-launch-and-last-app-return' : 'first-main-menu-since-restart') ||
       !booleanFields(value, ['menuEntered', 'selectionAttempted', 'launcherReturned', 'targetActive',
         'leftBeforeSelection', 'countsSaturated'])) return null;
   const counts = value.centerCounts;
@@ -109,21 +129,39 @@ export function normalizeMenuDiagnostics(value) {
       (targetActive && !launcherReturned) || (countsSaturated && Math.max(counts.press, counts.release, counts.short) !== 255) ||
       (selectionAttempted ? !uint(targetAppId, 255) || targetAppId === 0 : targetAppId !== null) ||
       (launcherReturned ? !word(launchCallMilliseconds) : launchCallMilliseconds !== null)) return null;
-  return Object.freeze({schemaVersion: 1, scope: value.scope, menuEntered, selectionAttempted, launcherReturned,
+  const lastAppReturn = v2 ? normalizeMenuReturn(value.lastAppReturn) : null;
+  if (v2 && lastAppReturn === undefined) return null;
+  return Object.freeze({schemaVersion: value.schemaVersion, scope: value.scope, menuEntered, selectionAttempted, launcherReturned,
     targetActive, leftBeforeSelection, countsSaturated, targetAppId, launchCallMilliseconds,
-    centerCounts: Object.freeze({press: counts.press, release: counts.release, short: counts.short})});
+    centerCounts: Object.freeze({press: counts.press, release: counts.release, short: counts.short}),
+    ...(v2 ? {lastAppReturn} : {})});
 }
 
 export function parseMenuDiagnostics(buffer) {
-  const {bytes, view} = wire(buffer, 16, 'PXMI');
+  const raw = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
+  if (!(raw instanceof Uint8Array) || ![1, 2].includes(raw[4])) invalid('menu');
+  const version = raw[4];
+  const {bytes, view} = wire(raw, version === 2 ? 32 : 16, 'PXMI', version);
   const flags = bytes[6], elapsed = view.getUint32(12, true);
   if (bytes[5] !== bytes.length || (flags & 0xc0) || bytes[11] ||
       (!(flags & 2) && bytes[7]) || (!(flags & 4) && elapsed)) invalid('menu');
-  const result = normalizeMenuDiagnostics({schemaVersion: 1, scope: 'first-main-menu-since-restart',
+  // PXMI v2 is the bound firmware contract: uint32 contexts at16/20,
+  // uint16 stale count at24, then source/target and first/last label/icon IDs.
+  // All-zero extension means no completed app return has been observed.
+  const lastAppReturn = version === 2 && bytes[26] ? {
+    sourceContext: view.getUint32(16, true), targetContext: view.getUint32(20, true),
+    staleEventsDiscarded: view.getUint16(24, true), sourceAppId: bytes[26], targetAppId: bytes[27] || null,
+    firstLabelAppId: bytes[28] || null, lastLabelAppId: bytes[29] || null,
+    firstIconAppId: bytes[30] || null, lastIconAppId: bytes[31] || null,
+  } : null;
+  if (version === 2 && !bytes[26] && bytes.subarray(16).some(value => value !== 0)) invalid('menu');
+  const result = normalizeMenuDiagnostics({schemaVersion: version,
+    scope: version === 2 ? 'first-menu-launch-and-last-app-return' : 'first-main-menu-since-restart',
     menuEntered: !!(flags & 1), selectionAttempted: !!(flags & 2), launcherReturned: !!(flags & 4),
     targetActive: !!(flags & 8), leftBeforeSelection: !!(flags & 16), countsSaturated: !!(flags & 32),
     targetAppId: flags & 2 ? bytes[7] : null, launchCallMilliseconds: flags & 4 ? elapsed : null,
-    centerCounts: {press: bytes[8], release: bytes[9], short: bytes[10]}});
+    centerCounts: {press: bytes[8], release: bytes[9], short: bytes[10]},
+    ...(version === 2 ? {lastAppReturn} : {})});
   if (!result) invalid('menu');
   return result;
 }

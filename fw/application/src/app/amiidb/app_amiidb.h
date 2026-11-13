@@ -85,15 +85,31 @@ typedef enum {
     AMIIDB_VIEW_ID_TOAST
 } amiidb_view_id_t;
 
+/* Version 1 is a pointer-free navigation snapshot, never an NFC tag dump.
+ * It is copied through an aligned local object because retain_data is unaligned.
+ * Older unversioned App3 snapshots are deliberately not accepted. */
+#define APP_AMIIDB_RESUME_MAGIC 0x31424441u
+#define APP_AMIIDB_RESUME_VERSION 1u
 typedef struct {
-    bool cached_enabled;
-    char search_str[16];
+    uint32_t magic;
+    uint16_t size;
+    uint8_t version;
+    uint8_t target_scene;
+    uint32_t selected_head, selected_tail;
+    amiidb_fav_t current_fav;
+    amiidb_fav_info_t fav_page_anchor;
+    amiidb_fav_t recent[AMIIDB_RECENT_LIMIT];
     uint16_t game_id_path[8];
-    uint8_t game_id_index;
-    uint8_t current_focus_index;
-    uint16_t cur_scroll_offset;
-    uint32_t prev_scene_id;
-    uint32_t current_scene_id;
+    uint16_t game_page_path[8];
+    uint16_t game_scroll_path[8];
+    uint16_t search_page, game_page, scroll_offset;
+    uint8_t game_focus_path[8];
+    uint8_t origin_scene, game_id_index, focus_index, search_game_id;
+    uint8_t slot_index, fav_page_focus, fav_page_mode, in_fav_folders;
+    uint8_t recent_count;
+    int8_t fav_page_direction;
+    char search_str[AMIIDB_SEARCH_MAX_BYTES + 1];
+    char fav_dir[VFS_MAX_NAME_LEN];
 } app_amiidb_cache_data_t;
 
 

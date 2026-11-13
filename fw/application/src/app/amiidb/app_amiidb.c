@@ -13,6 +13,7 @@
 #include "settings.h"
 
 #include "amiibo_helper.h"
+#include "app_amiidb_resume.h"
 
 static void app_amiidb_on_run(mini_app_inst_t *p_app_inst);
 static void app_amiidb_on_kill(mini_app_inst_t *p_app_inst);
@@ -97,23 +98,8 @@ void app_amiidb_on_run(mini_app_inst_t *p_app_inst) {
     extern const ntag_t default_ntag215;
     APP_ERROR_CHECK(ntag_emu_init(&default_ntag215));
 
-    if (p_app_inst->p_retain_data) {
-        app_amiidb_cache_data_t *p_cache_data = (app_amiidb_cache_data_t *)p_app_inst->p_retain_data;
-        if (p_cache_data->cached_enabled) {
-            //recover states from retain data
-            p_app_handle->game_id_index = p_cache_data->game_id_index;
-            memcpy(p_app_handle->game_id_path, p_cache_data->game_id_path, sizeof(p_app_handle->game_id_path));
-            p_app_handle->prev_scene_id = p_cache_data->prev_scene_id;
-            p_app_handle->cur_focus_index = p_cache_data->current_focus_index;
-            p_app_handle->cur_scroll_offset = p_cache_data->cur_scroll_offset;
-            mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, p_cache_data->current_scene_id);
-
-        } else {
-            mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIDB_SCENE_MAIN);
-        }
-    } else {
+    if (!app_amiidb_restore_cache(p_app_handle, p_app_inst->p_retain_data))
         mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIDB_SCENE_MAIN);
-    }
 
     return;
 
@@ -134,23 +120,16 @@ void app_amiidb_on_kill(mini_app_inst_t *p_app_inst) {
     app_amiidb_t *p_app_handle = p_app_inst->p_handle;
     if (!p_app_handle) return;
 
+    /* Complete pending NFC persistence before recording IDs or releasing UI. */
+    if (!ntag_emu_prepare_change()) return;
     uint32_t current_scene_id = mui_scene_dispatcher_current_scene(p_app_handle->p_scene_dispatcher);
-
-    if (p_app_inst->p_retain_data && app_amiidb_info.hibernate_enabled) {
-        app_amiidb_cache_data_t p_cache_data = {0};
-        p_cache_data.cached_enabled = true;
-        memcpy(p_cache_data.game_id_path, p_app_handle->game_id_path, sizeof(p_app_handle->game_id_path));
-        p_cache_data.game_id_index = p_app_handle->game_id_index;
-        p_cache_data.prev_scene_id = p_app_handle->prev_scene_id;
-        p_cache_data.current_scene_id = current_scene_id;
-        p_cache_data.current_focus_index = mui_list_view_get_focus(p_app_handle->p_list_view);
-        p_cache_data.cur_scroll_offset = mui_list_view_get_scroll_offset(p_app_handle->p_list_view);
-
-        memcpy(p_app_inst->p_retain_data, &p_cache_data, sizeof(app_amiidb_cache_data_t));
-    } else {
-        if (p_app_inst->p_retain_data) memset(p_app_inst->p_retain_data, 0, CACHEDATASIZE);
-        memset(&(cache_get_data()->ntag), 0, sizeof(ntag_t));
-    }
+    if (p_app_inst->p_retain_data && app_amiidb_info.hibernate_enabled)
+        app_amiidb_save_cache(p_app_handle, p_app_inst->p_retain_data, current_scene_id);
+    else if (p_app_inst->p_retain_data)
+        memset(p_app_inst->p_retain_data, 0, CACHEDATASIZE);
+    /* App3 reconstructs generated tags or reloads persisted slots. Never retain
+     * their plaintext contents in the common App2 tag cache. */
+    memset(&(cache_get_data()->ntag), 0, sizeof(ntag_t));
 
     /* Stop scene-owned timers/callbacks while all views and app data are alive. */
     mui_scene_dispatcher_exit(p_app_handle->p_scene_dispatcher);
@@ -184,7 +163,7 @@ const mini_app_t app_amiidb_info = {.id = MINI_APP_ID_AMIIDB,
                                     .icon = 0xe0ba,
                                     .sys = false,
                                     .deamon = false,
-                                    .hibernate_enabled = false,
+                                    .hibernate_enabled = true,
                                     .icon_32x32 = &app_amiibo_database_32x32,
                                     .run_cb = app_amiidb_on_run,
                                     .kill_cb = app_amiidb_on_kill,

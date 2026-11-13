@@ -4,7 +4,8 @@
       <h5>{{ de ? 'Kataloghinweise' : 'Catalogue notes' }}</h5>
       <p v-if="usageData.dataVersion" class="usage-version">{{ catalogueVersion }}</p>
     </div>
-    <p class="usage-limit">{{ de ? 'Zuordnungen und Hinweise aus dem mitgelieferten Katalog. Keine Bestätigung der Spielkompatibilität oder Belohnungen.' : 'Associations and notes from the bundled catalogue. Game compatibility and rewards have not been verified.' }}</p>
+    <p v-if="rows.some(row => row.guideUrl)" class="usage-limit">{{ de ? 'Die Hinweise zu Breath of the Wild und Tears of the Kingdom sind mit Nintendo abgeglichen. Die übrigen Zuordnungen stammen aus dem Firmwarekatalog.' : 'The Breath of the Wild and Tears of the Kingdom notes were checked against Nintendo’s guides. Other associations come from the firmware catalogue.' }}</p>
+    <p v-else class="usage-limit">{{ de ? 'Zuordnungen und Hinweise aus dem mitgelieferten Katalog. Keine Bestätigung der Spielkompatibilität oder Belohnungen.' : 'Associations and notes from the bundled catalogue. Game compatibility and rewards have not been verified.' }}</p>
     <p v-if="!rows.length" class="usage-empty">{{ de ? 'Für diese ID ist hier kein Kataloghinweis hinterlegt. Daraus lässt sich keine Aussage zur Spielunterstützung ableiten.' : 'No catalogue note is stored here for this ID. This does not establish whether a game supports it.' }}</p>
     <template v-else>
       <ul>
@@ -13,9 +14,9 @@
           <p v-if="row.text" :lang="row.language">{{ row.text }}</p>
           <p v-else class="usage-empty">{{ de ? 'Katalogzuordnung ohne deutschen oder englischen Nutzungshinweis.' : 'Catalogue association without a German or English usage note.' }}</p>
           <span v-if="row.translated" class="usage-language">{{ de ? 'Redaktionelle Übersetzung aus dem Englischen' : 'Editorial translation from English' }}</span>
-          <span v-else-if="row.text && de" class="usage-language">Englischer Quelltext · keine deutsche Übersetzung hinterlegt</span>
+          <span v-else-if="de && row.language === 'en'" class="usage-language">Englischer Quelltext · keine deutsche Übersetzung hinterlegt</span>
           <details v-if="row.original" class="usage-original"><summary>{{ de ? 'Englischen Quelltext anzeigen' : 'Show original English text' }}</summary><p lang="en">{{ row.original }}</p></details>
-          <a :href="row.sourceUrl" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">{{ de ? 'Quelle: Firmwarekatalog' : 'Source: firmware catalogue' }}</a>
+          <a :href="row.guideUrl || row.sourceUrl" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">{{ row.guideUrl ? (de ? 'Spielhinweis von Nintendo' : 'Nintendo game guide') : (de ? 'Quelle: Firmwarekatalog' : 'Source: firmware catalogue') }}</a>
         </li>
       </ul>
       <button v-if="compact && rows.length > 3" type="button" :aria-expanded="expanded" @click="expanded = !expanded">{{ expanded ? (de ? 'Weniger anzeigen' : 'Show fewer') : (de ? `Alle ${rows.length} Zuordnungen anzeigen` : `Show all ${rows.length} associations`) }}</button>

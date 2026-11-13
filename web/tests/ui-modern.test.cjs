@@ -71,6 +71,7 @@ function harness(overrides = {}) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/read-time-estimate.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/figure-info.js'), 'utf8').replace(/export /g, ''), context);
   for (const [file, names] of [
+    ['firmware-build-reference.js',['diagnosticBuildIdentity']],
     ['startup-diagnostics.js',['normalizeStartupDiagnostics']],
     ['device-extra-diagnostics.js',['normalizeMenuDiagnostics','normalizeMtuDiagnostics','normalizeUiDiagnostics','supportsMenuDiagnostics']],
     ['diagnostic-snapshot.js',['diagnosticSectionKeys','collectDiagnosticSnapshot','createCombinedDiagnosticReport']]
@@ -390,7 +391,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.47.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.48.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -402,7 +403,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.47.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.48.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -489,7 +490,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.47.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.48.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1521,10 +1522,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.47.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.48.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.47.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.48.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2010,7 +2011,8 @@ test('3.22 completed backup drops the resume byte cache but keeps its savable co
   assert.deepEqual({...app.backupReadSummary},{freshFiles:1,freshBytes:2,reusedFiles:0,reusedBytes:0});
   assert.equal(app._backupCheckpoint?.summary().files||0,0);assert.equal(app._backupCheckpoint?.summary().bytes||0,0);
   assert.equal(app.backupResumeInfo?.files||0,0);assert.equal(app.backupResumeInfo?.busy||false,false);
-  let prevented=0;app.on_before_unload({preventDefault(){prevented++;}});assert.equal(prevented,0);
+  let prevented=0;app.on_before_unload({preventDefault(){prevented++;}});assert.equal(prevented,1);
+  assert.equal(app.lastBackup.savedConfirmed,false);
 });
 
 test('ready ZIP panel renders fresh and reused counts and bytes in both languages for this session', async () => {
@@ -2026,7 +2028,7 @@ test('ready ZIP panel renders fresh and reused counts and bytes in both language
   await app.on_backup();
   const panel = async (locale, tools) => {
     const view = Vue.createSSRApp({ render, data: () => ({ lastBackup: app.lastBackup, backupReadSummary: app.backupReadSummary }),
-      methods: { format_size: app.format_size, save_last_backup() {} } });
+      methods: { format_size: app.format_size, save_last_backup() {}, confirm_backup_saved() {} } });
     view.use(createI18n({ legacy: false, locale, messages: { [locale]: { tools, info: { discard: '×' } } } }));
     return renderToString(view);
   };
@@ -2345,7 +2347,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.47.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.48.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -2518,4 +2520,46 @@ test('backup picker ignores stale failures and refuses new opens while disconnec
   assert.equal(calls,1);
   assert.equal(scans,0);
   assert.equal(app.current_dir,'I:/');
+});
+
+test('T1 completed ZIP keeps unload protection through anchor download until explicit save confirmation',async()=>{
+  const h=harness({createBackup:async()=>({blob:new Blob(['zip']),filename:'backup.zip',manifest:{files:1}})}),app=connected(h),browser=browserSave(h);
+  const prevented=()=>{let count=0;const event={preventDefault(){count++;}};app.on_before_unload(event);return {count,event};};
+  await app.on_backup();assert.equal(prevented().count,1);assert.equal(prevented().event.returnValue,'');
+  app.confirm_backup_saved();assert.equal(prevented().count,1,'confirmation before a download request cannot dismiss the guard');
+  await app.save_last_backup();assert.equal(browser.clicks.length,1);assert.equal(prevented().count,1);
+  assert.equal(app.lastBackup.downloadRequested,true);assert.equal(app.lastBackup.savedConfirmed,false);
+  app.on_ble_disconnected();assert.equal(prevented().count,1,'local ZIP protection survives Bluetooth disconnect');
+  app.confirm_backup_saved();assert.equal(app.lastBackup.savedConfirmed,true);assert.equal(prevented().count,0);
+  app.connected=true;app.current_dir='E:/';await app.on_backup();assert.equal(prevented().count,1,'a new archive must not inherit the old save confirmation');
+  app.lastBackup=null;assert.equal(prevented().count,0,'explicit discard releases the completed archive guard');
+});
+
+test('T1 ZIP picker confirms saving only after write and close; cancellation and write errors retain protection',async()=>{
+  for(const outcome of ['saved','cancelled','write','close']){
+    const h=harness(),app=h.instance,browser=browserSave(h),archive={blob:new Blob(['zip']),filename:'test.zip'};
+    app.lastBackup=archive;const operations=[];
+    h.window.showSaveFilePicker=async options=>{
+      operations.push(['picker',options.suggestedName]);
+      if(outcome==='cancelled')throw Object.assign(new Error('cancelled'),{name:'AbortError'});
+      return{async createWritable(){return{async write(blob){operations.push(['write',blob]);if(outcome==='write')throw new Error('write failed');},
+        async close(){operations.push(['close']);if(outcome==='close')throw new Error('close failed');},async abort(){operations.push(['abort']);}};}};
+    };
+    await app.save_last_backup();let protectedCount=0;app.on_before_unload({preventDefault(){protectedCount++;}});
+    assert.equal(browser.clicks.length,0,'picker never silently falls back to an anchor');assert.equal(app.lastBackup,archive);
+    assert.equal(archive.savedConfirmed===true,outcome==='saved');assert.equal(protectedCount,outcome==='saved'?0:1);
+    assert.equal(h.messages.length,['write','close'].includes(outcome)?1:0);
+    if(outcome==='saved')assert.deepEqual(operations.map(row=>row[0]),['picker','write','close']);
+    if(outcome==='cancelled')assert.equal(archive.saveStatus,'cancelled');
+  }
+});
+
+test('T1 a delayed picker belongs to its captured ZIP and cannot confirm a newer archive',async()=>{
+  const h=harness(),app=h.instance,gate=deferred(),old={blob:new Blob(['old']),filename:'old.zip'},fresh={blob:new Blob(['new']),filename:'new.zip'};
+  app.lastBackup=old;let opens=0;
+  h.window.showSaveFilePicker=async()=>{opens++;return{async createWritable(){return{async write(){await gate.promise;},async close(){}};}};};
+  const pending=app.save_last_backup();assert.equal(old.saving,true);await app.save_last_backup();assert.equal(opens,1);
+  app.lastBackup=fresh;gate.resolve();await pending;
+  assert.equal(old.savedConfirmed,true);assert.equal(app.lastBackup,fresh);assert.equal(fresh.savedConfirmed,undefined);
+  let prevented=0;app.on_before_unload({preventDefault(){prevented++;}});assert.equal(prevented,1);
 });

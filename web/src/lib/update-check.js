@@ -38,7 +38,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   ]);
   const applicationChecks = [compare('version', firmware, target.application.version),
     compare('applicationCounter', diagnostic?.settingsCrcValid ? diagnostic.applicationCounter : null, target.application.counter)];
-  const deVersion = value => value?.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(-PREP)?$/);
+  const deVersion = value => value?.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(-PREP)?(?:t[1-9]\d*)?$/);
   const previousDe = deVersion(firmware), targetDe = deVersion(target.application.version);
   const relation = previousDe && targetDe ? [1,2,3,4].map(i=>Number(previousDe[i])-Number(targetDe[i])).find(n=>n!==0)||0 : 0;
   row('application', applicationChecks, ['applicationScope',
@@ -117,7 +117,7 @@ const COPY = {
       applicationScope: 'Versionsmeldung und gespeicherter Zähler; kein Hashnachweis der laufenden Anwendung.',
       olderApplication: '',
       preparationApplication: 'Vorbereitungsfirmware: kein Nachweis einer abgeschlossenen LittleFS-Umstellung. Speicherbackend, vollständige Sicherung und Kapazität sind getrennt zu prüfen.',
-      knownLocalApplication: 'Die gelesene Version und der Zähler gehören zu einem bekannten LCD-Teststand. Der mitgelieferte öffentliche Download ist DE3.65/637.',
+      knownLocalApplication: 'Die gelesene Version und der Zähler gehören zu einem bekannten LCD-Teststand. Die stabile Referenz ist DE3.65/637.',
       localZ19: 'Bereichs-Hash und Zähler stimmen mit dem bekannten LCD-Bootloader Z19 überein.',
       newerApplication: 'Diese Anwendung ist neuer als der mitgelieferte Vergleichsstand. Das allein belegt weder einen Fehler noch Inkompatibilität. Kein Downgrade wird vorgeschlagen.',
       z16Recovery: 'Z16-Rückkehrpaket erkannt. Der Bootbereich enthält den Z13-Programmcode mit Zähler 16.',
@@ -144,7 +144,7 @@ const COPY = {
       applicationScope: 'Reported version and stored counter; not a hash verification of the running application.',
       olderApplication: '',
       preparationApplication: 'Preparation firmware: not evidence of a completed LittleFS migration. Check the storage backend, complete backup and physical capacity separately.',
-      knownLocalApplication: 'The reported version and counter belong to a known LCD test build. The bundled public download is DE3.65/637.',
+      knownLocalApplication: 'The reported version and counter belong to a known LCD test build. The stable reference is DE3.65/637.',
       localZ19: 'The region hash and counter match the known Z19 LCD bootloader.',
       newerApplication: 'This application is newer than the bundled comparison profile. That alone does not establish a fault or incompatibility. No downgrade is suggested.',
       z16Recovery: 'Z16 rollback package recognized. The boot region contains the Z13 code with counter 16.',

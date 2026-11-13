@@ -1,4 +1,5 @@
 import { createDiagnostics, normalizeDrives, normalizeRuntimeDiagnostics } from './device-info.js';
+import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { normalizePowerDiagnostics } from './power-diagnostics.js';
 import { normalizeStartupDiagnostics } from './startup-diagnostics.js';
@@ -145,7 +146,7 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
     runtime: normalized ? sectionData('runtime') : baseReport.runtime,
     boot: normalized ? sectionData('boot') : baseReport.boot,
     power: normalized ? sectionData('power') : baseReport.power });
-  return { ...report, startup: sectionData('startup'), diagnosticSnapshot: normalized,
+  return { ...report, buildIdentity: diagnosticBuildIdentity({firmwareVersion: report.firmwareVersion, boot: report.boot}), startup: sectionData('startup'), diagnosticSnapshot: normalized,
     limitations: [...report.limitations,
       ...(sectionData('mtu')?.effectiveAttMtu != null
         ? ['The firmware reported the effective ATT MTU for its connection in diagnosticSnapshot.sections.mtu.']
@@ -157,6 +158,8 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
         ? 'No settings session was recorded. The settings button counters contain no observations.'
         : 'Settings button counters describe the current or last settings session. Main menu input is outside their scope.'] : []),
       ...(sectionData('menu') ? ['The menu trace covers the first main menu after application restart. Launch timing ends when the launcher returns and does not measure physical display latency.'] : []),
+      ...(sectionData('menu')?.schemaVersion === 2 ? ['PXMI v2 separately records the latest completed app return and first/last drawing calls in its desktop input context. This is not a physical LCD pixel or latency measurement; a stale-event count of 65535 is a lower bound.'] : []),
       ...(sectionData('startup')?.schemaVersion === 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
-      'Storage cache sizes are configuration values, not measured cache usage.'] };
+      'Storage cache sizes are configuration values, not measured cache usage.',
+      'SourceID and application BIN SHA-256 in buildIdentity.packageReference describe the signed experimental application package, not a hash measured on the device. Version/counter matches do not establish byte identity. No unique physical device ID is exported.'] };
 }

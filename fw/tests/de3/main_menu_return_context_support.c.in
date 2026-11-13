@@ -1,0 +1,334 @@
+/* Source insertion happens in menu_return_integration.py; no production edits. */
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "m-array.h"
+#define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #expr); exit(71); } } while (0)
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_WARNING(...) ((void)0)
+#define NRF_LOG_ERROR(...) ((void)0)
+#define NRF_SUCCESS 0
+#define APP_ERROR_CHECK(code) CHECK((code) == 0)
+#define APP_TIMER_DEF(name) static int name
+#define APP_TIMER_MODE_REPEATED 1
+#define APP_TIMER_TICKS(ms) (ms)
+#define NRF_POWER_RESETREAS_NFC_MASK (1u << 16)
+#define APP_LEGLAMIIBO_ENABLE 1
+#define APP_PLAYER_ENABLE 1
+#define APP_GAME_ENABLE 1
+#define VFS_PACKED_LFS_ENABLE 1
+typedef int bsp_event_t;
+typedef int u8g2_t;
+typedef struct { const uint8_t *data; } xbm_t;
+typedef struct { uint8_t width, height; } mui_canvas_t;
+typedef struct { uint8_t hibernate_enabled, anim_enabled, chameleon_default_slot_index; uint32_t app_enable_bits; } settings_data_t;
+typedef struct { uint8_t enabled; uint32_t id; uint8_t retain_data[32]; } cache_data_t;
+static settings_data_t cfg;
+static cache_data_t cached;
+static bool deny_prepare, start_fails, recovery;
+static bool require_stable_return_frame;
+static unsigned outstanding, updates, menu_enters, menu_leaves, diag_returns;
+static settings_data_t *settings_get_data(void) { return &cfg; }
+static cache_data_t *cache_get_data(void) { return &cached; }
+static bool ntag_emu_prepare_change(void) { return !deny_prepare; }
+static void ntag_emu_cancel_change(void) {}
+static bool vfs_packed_recovery_required(void) { return recovery; }
+static bool tag_helper_valid_default_slot(void) { return true; }
+static void *mui_mem_malloc(size_t n) { void *p = malloc(n); CHECK(p); outstanding++; return p; }
+static void mui_mem_free(void *p) { if (p) { CHECK(outstanding > 0); outstanding--; free(p); } }
+static int app_timer_create(int *t, int mode, void (*cb)(void *)) { *t = 1; return 0; }
+static int app_timer_start(int t, unsigned ticks, void *arg) { return 0; }
+static int app_timer_stop(int t) { return 0; }
+@TYPES@
+@SYMBOLS@
+void mui_post(mui_t *m, mui_event_t *e);
+static void fixture_app_run(mini_app_inst_t *inst);
+static void fixture_app_kill(mini_app_inst_t *inst);
+static void fixture_app_event(mini_app_inst_t *inst, mini_app_event_t *event) {}
+static bool fixture_app_prepare(mini_app_inst_t *inst, mini_app_exit_reason_t reason) { return !deny_prepare; }
+static void fixture_app_cancel(mini_app_inst_t *inst) {}
+void mui_update(mui_t *m) { updates++; }
+void mui_show_memory_error(mui_t *m) { m->memory_error = true; }
+static bool mui_nfc_save_input(mui_t *m, mui_event_t *e) { return false; }
+static void mui_menu_diag_enter(void) { menu_enters++; }
+static void mui_menu_diag_leave(void) { menu_leaves++; }
+static bool mui_menu_diag_select(uint32_t app) { return diag_returns == 0; }
+static void mui_menu_diag_return(bool launched) { diag_returns++; }
+static const uint8_t u8g2_font_wqy12_t_gb2312a[1], u8g2_font_siji_t_6x10[1];
+static int draw_centered_id, draw_focus_id, draw_box_x;
+static char translated[32];
+static const char *getLangString(uint16_t key) { snprintf(translated, sizeof(translated), "key%u", key); return translated; }
+static void mui_canvas_set_font(mui_canvas_t *c, const uint8_t *font) {}
+static uint8_t mui_canvas_current_font_height(mui_canvas_t *c) { return 12; }
+static uint8_t mui_canvas_get_height(mui_canvas_t *c) { return c->height; }
+static uint8_t mui_canvas_get_width(mui_canvas_t *c) { return c->width; }
+static uint8_t mui_canvas_get_utf8_width(mui_canvas_t *c, const char *s) { return (uint8_t)strlen(s)*6; }
+static void mui_canvas_set_draw_color(mui_canvas_t *c, uint8_t color) {}
+static void mui_canvas_draw_xbm(mui_canvas_t *c, int16_t x, int16_t y, int16_t w, int16_t h, const uint8_t *data) {
+    if (x != (c->width - 32)/2) return;
+    for (uint32_t i=0; i<mini_app_registry_get_app_num(); i++) {
+        const mini_app_t *app=mini_app_registry_find_by_index(i);
+        if (app->icon_32x32 && app->icon_32x32->data == data) draw_centered_id=(int)app->id;
+    }
+}
+static void mui_canvas_draw_rbox(mui_canvas_t *c, int16_t x, int16_t y, int16_t w, int16_t h, int16_t r) { draw_box_x=x; }
+static void mui_canvas_draw_line(mui_canvas_t *c, int16_t x1, int16_t y1, int16_t x2, int16_t y2) {}
+static void mui_canvas_draw_glyph(mui_canvas_t *c, int16_t x, int16_t y, uint16_t glyph) {}
+static void mui_canvas_draw_utf8(mui_canvas_t *c, int16_t x, int16_t y, const char *str) {
+    for (uint32_t i=0; i<mini_app_registry_get_app_num(); i++) {
+        const mini_app_t *app=mini_app_registry_find_by_index(i);
+        char expected[32]; snprintf(expected,sizeof(expected),"key%u",app->name_i18n_key);
+        if (!app->sys && strcmp(str,expected)==0) draw_focus_id=(int)app->id;
+    }
+}
+@MODULES@
+@CORE_FUNCTIONS@
+void mui_post(mui_t *m, mui_event_t *e) {
+    if(e->id==MUI_EVENT_ID_ANIM) mui_anim_core_event(e);
+    else if(e->id==MUI_EVENT_ID_INPUT) mui_process_input(m,e);
+    else CHECK(e->id==MUI_EVENT_ID_REDRAW);
+}
+/* Fixture non-desktop app's menu UI: real dispatcher/viewport/view; its
+ * input callback calls the intact actual production Home callback below. */
+typedef enum { MUI_LIST_VIEW_EVENT_SELECTED, MUI_LIST_VIEW_EVENT_LONG_SELECTED } mui_list_view_event_t;
+typedef struct { uint16_t icon; char text[64]; void *user_data; } mui_list_item_t;
+typedef struct { void *user_data; mui_list_item_t *items[2]; } mui_list_view_t;
+typedef struct {
+    mui_view_dispatcher_t *p_view_dispatcher;
+    mui_view_t *p_view;
+    void *p_scene_dispatcher;
+    mui_list_view_t list;
+    mui_list_item_t home;
+    uint32_t id;
+    char current_file[64], current_folder[64], browser_anchor[64];
+    uint16_t browser_anchor_icon;
+    int8_t browser_direction;
+    unsigned current_focus_index;
+    bool reload_amiibo_files;
+} fixture_app_t;
+typedef fixture_app_t app_chameleon_t;
+typedef fixture_app_t app_amiibo_t;
+#define CHAMELEON_MENU_CARD_ID ((void *)UINTPTR_MAX)
+#define INVALID_SLOT_INDEX 255
+#define _T(key) #key
+#define VFS_MAX_PATH_LEN 64
+enum { CHAMELEON_SCENE_MENU_CARD_SLOT, CHAMELEON_SCENE_MENU_CARD_SLOT_SELECT,
+       CHAMELEON_SCENE_MENU_CARD_DATA, CHAMELEON_SCENE_MENU_CARD_ADVANCED,
+       CHAMELEON_SCENE_MENU_CARD_TYPE, CHAMELEON_SCENE_MENU_CARD_SET_NAME,
+       AMIIBO_SCENE_AMIIBO_DETAIL, AMIIBO_SCENE_FILE_BROWSER_MENU };
+static void offpath(const char *name) { fprintf(stderr,"Unexpected off-path service: %s\n",name); exit(72); }
+static bool app_chameleon_save(app_chameleon_t *a) { offpath(__func__); return false; }
+static void chameleon_scene_disney_profile_confirm(app_chameleon_t *a) { offpath(__func__); }
+static void mui_scene_dispatcher_previous_scene(void *d) { offpath(__func__); }
+static void mui_scene_dispatcher_next_scene(void *d, unsigned scene) { offpath(__func__); }
+static uint8_t tag_emulation_get_slot(void) { offpath(__func__); return 0; }
+static void mui_list_view_item_set_sub_text(mui_list_item_t *i, const char *s) { offpath(__func__); }
+static size_t mui_list_item_array_size(mui_list_item_t **items) { offpath(__func__); return 0; }
+static mui_list_item_t *mui_list_item_array_get(mui_list_item_t **items, size_t i) { offpath(__func__); return NULL; }
+static void amiibo_scene_file_browser_reload_folders(app_amiibo_t *a) { offpath(__func__); }
+static const char *string_get_cstr(const char *s) { return s; }
+static bool mui_string_try_set_str(char *to, const char *from) { CHECK(strlen(from)<64); strcpy(to,from); return true; }
+static int string_cmp_str(const char *a, const char *b) { return strcmp(a,b); }
+struct cwk_segment { const char *begin; };
+static void cwk_path_get_last_segment(const char *s, struct cwk_segment *seg) { offpath(__func__); }
+static void string_left(char *s, size_t n) { offpath(__func__); }
+static size_t string_size(const char *s) { return strlen(s); }
+static void string_cat_str(char *to, const char *from) { offpath(__func__); }
+static bool string_end_with_str_p(const char *s, const char *tail) { offpath(__func__); return false; }
+@HOMES@
+static void fixture_menu_input(mui_view_t *view, mui_input_event_t *event) {
+    fixture_app_t *a=view->user_data;
+    if(event->type!=INPUT_TYPE_SHORT || event->key!=INPUT_KEY_CENTER) return;
+    if(a->id==MINI_APP_ID_CHAMELEON) chameleon_scene_menu_on_event(MUI_LIST_VIEW_EVENT_SELECTED,&a->list,&a->home);
+    else if(a->id==MINI_APP_ID_AMIIBO) amiibo_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&a->list,&a->home);
+    else mini_app_launcher_exit(mini_app_launcher());
+    /* Deliberately no access to `a` or `view`: production callbacks may have
+     * destroyed both while unwinding the actual dispatch stack. */
+}
+static void fixture_app_run(mini_app_inst_t *inst) {
+    if(start_fails && !inst->p_app->sys) return;
+    fixture_app_t *a=mui_mem_malloc(sizeof(*a)); memset(a,0,sizeof(*a));
+    a->id=inst->p_app->id;
+    a->list.user_data=a;
+    a->home.icon=ICON_HOME;
+    strcpy(a->home.text,"Hauptmenue");
+    strcpy(a->current_folder,"/");
+    a->home.user_data=a->id==MINI_APP_ID_CHAMELEON ? (void *)(uintptr_t)CHAMELEON_MENU_HOME : (void *)(uintptr_t)FOLDER_LIST_PARENT;
+    inst->p_handle=a;
+    if(inst->p_app->deamon) return;
+    a->p_view_dispatcher=mui_view_dispatcher_create();
+    a->p_view=mui_view_create(); a->p_view->user_data=a; a->p_view->input_cb=fixture_menu_input;
+    mui_view_dispatcher_add_view(a->p_view_dispatcher,0,a->p_view);
+    mui_view_dispatcher_attach(a->p_view_dispatcher,MUI_LAYER_WINDOW);
+    mui_view_dispatcher_switch_to_view(a->p_view_dispatcher,0);
+}
+static void fixture_app_kill(mini_app_inst_t *inst) {
+    fixture_app_t *a=inst->p_handle;
+    if(a->p_view_dispatcher) {
+        mui_view_dispatcher_switch_to_view(a->p_view_dispatcher,VIEW_NONE);
+        mui_view_dispatcher_detach(a->p_view_dispatcher,MUI_LAYER_WINDOW);
+        mui_view_dispatcher_free(a->p_view_dispatcher);
+        mui_view_free(a->p_view);
+    }
+    mui_mem_free(a); inst->p_handle=NULL;
+}
+@REGISTRY@
+static app_list_view_t *desktop(void) {
+    mini_app_inst_t *inst=mini_app_launcher()->p_main_app_inst;
+    CHECK(inst && inst->p_app->id==MINI_APP_ID_DESKTOP && inst->p_handle);
+    return ((app_desktop_t *)inst->p_handle)->p_app_list_view;
+}
+static uint32_t focused_id(void) {
+    app_list_view_t *v=desktop(); CHECK(v->focus<v->item_count);
+    return app_list_view_get(v,app_list_view_get_focus(v))->id;
+}
+static void input(input_key_t key,input_type_t type) {
+    mui_event_t e={.id=MUI_EVENT_ID_INPUT,.arg_int=(uint32_t)key|((uint32_t)type<<8)};
+    mui_process_input(mui(),&e);
+}
+static void ticks(unsigned count) { for(unsigned i=0;i<count;i++) mui_anim_tick_tmr_cb(NULL); }
+static void draw(void) {
+    draw_centered_id=draw_focus_id=-1; draw_box_x=-1;
+    mui_canvas_t canvas={.width=128,.height=51};
+    mui_view_port_t *vp=mui_find_view_port_enabled(mui(),MUI_LAYER_WINDOW); CHECK(vp);
+    mui_view_port_draw(vp,&canvas);
+}
+static void check_settled(uint32_t id) {
+    CHECK(focused_id()==id); ticks(11); draw();
+    CHECK(focused_id()==id); CHECK(draw_focus_id==(int)id); CHECK(draw_centered_id==(int)id); CHECK(draw_box_x==48);
+    CHECK(desktop()->icon_anim_value==0); CHECK(desktop()->name_anim_value==0);
+    CHECK(mui_anim_ptr_array_size(m_anim_ptr_array)==0);
+    CHECK(!m_anim_tmr_started);
+}
+static void launch_from_menu(uint32_t id) {
+    unsigned attempts=0;
+    while(focused_id()!=id && attempts++<10) input(INPUT_KEY_RIGHT,INPUT_TYPE_SHORT);
+    CHECK(focused_id()==id);
+    input(INPUT_KEY_CENTER,INPUT_TYPE_PRESS);
+    input(INPUT_KEY_CENTER,INPUT_TYPE_RELEASE);
+    input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT);
+    CHECK(mini_app_launcher()->p_main_app_inst && mini_app_launcher()->p_main_app_inst->p_app->id==id);
+    CHECK(mini_app_launcher()->last_menu_app_id==id);
+    CHECK(mui_anim_ptr_array_size(m_anim_ptr_array)==0);
+}
+static void home(void) {
+    input(INPUT_KEY_CENTER,INPUT_TYPE_PRESS);
+    input(INPUT_KEY_CENTER,INPUT_TYPE_RELEASE);
+    input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT);
+    CHECK(mini_app_launcher()->p_main_app_inst->p_app->id==MINI_APP_ID_DESKTOP);
+    if(require_stable_return_frame && focused_id()==mini_app_launcher()->last_menu_app_id) {
+        draw(); CHECK(draw_centered_id==(int)focused_id()); CHECK(draw_focus_id==(int)focused_id());
+    }
+}
+static void dispose(void) {
+    mini_app_launcher_t *l=mini_app_launcher();
+    for(mini_app_inst_t *inst=l->instances,*next;inst;inst=next) {
+        next=inst->next;
+        if(inst->p_handle) inst->p_app->kill_cb(inst);
+        mui_mem_free(inst);
+    }
+    memset(l,0,sizeof(*l));
+    CHECK(!outstanding);
+    CHECK(mui_anim_ptr_array_size(m_anim_ptr_array)==0);
+    mui_anim_ptr_array_clear(m_anim_ptr_array);
+    mui_anim_ptr_array_init(m_anim_ptr_array); /* new static storage state for simulated cold reset */
+    for(unsigned i=0;i<MUI_LAYER_MAX;i++) CHECK(mui()->layer_counts[i]==0);
+}
+int main(int argc,char **argv) {
+    CHECK(argc==2); int c=atoi(argv[1]);
+    require_stable_return_frame=getenv("MENU_EXPECT_STABLE_RETURN") && strcmp(getenv("MENU_EXPECT_STABLE_RETURN"),"1")==0;
+    mui()->auto_update=true;
+    cfg.app_enable_bits=0x3ff; cfg.anim_enabled= c!=2;
+    mui_anim_core_init();
+    if(c==10) { cached.enabled=1; cached.id=MINI_APP_ID_CHAMELEON; cfg.hibernate_enabled=1; }
+    if(c==11) recovery=true;
+    mini_app_launcher_init(mini_app_launcher(), c==12 ? NRF_POWER_RESETREAS_NFC_MASK : 0);
+    if(c==0) {
+        CHECK(mini_app_launcher()->last_menu_app_id==0);
+        CHECK(desktop()->icon_anim_value==-35); /* preserve initial entry animation */
+        check_settled(MINI_APP_ID_AMIIBO);
+        puts("PASS cold start: first visible app, no remembered ID");
+    } else if(c==1 || c==2) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); home(); check_settled(MINI_APP_ID_CHAMELEON);
+        launch_from_menu(MINI_APP_ID_AMIIBO); home(); check_settled(MINI_APP_ID_AMIIBO);
+        launch_from_menu(MINI_APP_ID_SETTINGS); home(); check_settled(MINI_APP_ID_SETTINGS);
+        printf("PASS Chameleon actual Home -> Amiibo actual root Home -> second app; anim=%u\n",cfg.anim_enabled);
+    } else if(c==3) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); home();
+        draw(); CHECK(focused_id()==MINI_APP_ID_CHAMELEON); CHECK(draw_focus_id==MINI_APP_ID_CHAMELEON);
+        CHECK(draw_centered_id==(require_stable_return_frame ? MINI_APP_ID_CHAMELEON : MINI_APP_ID_AMIIBOLINK));
+        CHECK(desktop()->icon_anim_value==(require_stable_return_frame ? 0 : -35));
+        printf("OBSERVED return tick0: focus=8, label=8, centered_icon=%d, offset=%ld\n",draw_centered_id,(long)desktop()->icon_anim_value);
+        for(unsigned i=1;i<=10;i++) { ticks(1); draw(); printf("TRACE logical_ms=%u focus=%u label=%d centered_icon=%d offset=%ld\n",i*20,focused_id(),draw_focus_id,draw_centered_id,(long)desktop()->icon_anim_value); }
+        CHECK(draw_centered_id==MINI_APP_ID_CHAMELEON); check_settled(MINI_APP_ID_CHAMELEON);
+        puts(require_stable_return_frame ? "PASS restored icon is correct from first frame through settled animation" : "PASS return animation settles to correct icon; initial previous icon reproduced");
+    } else if(c==4) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON);
+        mini_app_launcher_run(mini_app_launcher(),MINI_APP_ID_STATUS_BAR);
+        CHECK(mini_app_launcher()->last_menu_app_id==MINI_APP_ID_CHAMELEON);
+        home(); check_settled(MINI_APP_ID_CHAMELEON);
+        mini_app_launcher_run(mini_app_launcher(),MINI_APP_ID_STATUS_BAR);
+        check_settled(MINI_APP_ID_CHAMELEON); puts("PASS background daemon preserves last foreground ID");
+    } else if(c==5) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); cfg.app_enable_bits&=~(1u<<MINI_APP_ID_CHAMELEON);
+        home(); CHECK(desktop()->icon_anim_value==-35); /* hidden-app fallback keeps entry animation */
+        check_settled(MINI_APP_ID_AMIIBO); CHECK(mini_app_launcher()->last_menu_app_id==MINI_APP_ID_CHAMELEON);
+        puts("PASS hidden last app falls back to first visible app");
+    } else if(c==6) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); cfg.app_enable_bits&=~((1u<<MINI_APP_ID_AMIIBO)|(1u<<MINI_APP_ID_AMIIDB));
+        home(); check_settled(MINI_APP_ID_CHAMELEON); CHECK(desktop()->focus==1);
+        puts("PASS hidden preceding apps: identity-based restoration adjusts visible index");
+    } else if(c==7) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); deny_prepare=true;
+        input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT);
+        CHECK(mini_app_launcher()->p_main_app_inst->p_app->id==MINI_APP_ID_CHAMELEON);
+        CHECK(mini_app_launcher()->last_menu_app_id==MINI_APP_ID_CHAMELEON);
+        deny_prepare=false; home(); check_settled(MINI_APP_ID_CHAMELEON);
+        puts("PASS denied exit retains app; later accepted exit restores it");
+    } else if(c==8) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); home(); check_settled(MINI_APP_ID_CHAMELEON);
+        start_fails=true; input(INPUT_KEY_RIGHT,INPUT_TYPE_SHORT); input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT);
+        CHECK(!mini_app_launcher()->p_main_app_inst); CHECK(mui()->memory_error);
+        CHECK(mini_app_launcher()->last_menu_app_id==MINI_APP_ID_CHAMELEON);
+        start_fails=false; input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT); check_settled(MINI_APP_ID_CHAMELEON);
+        puts("PASS failed second startup and memory fallback preserve previous successful app");
+    } else if(c==9) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); home();
+        for(int key=INPUT_KEY_LEFT;key<=INPUT_KEY_RIGHT;key++) {
+            input((input_key_t)key,INPUT_TYPE_LONG); input((input_key_t)key,INPUT_TYPE_REPEAT); input((input_key_t)key,INPUT_TYPE_RELEASE);
+            CHECK(focused_id()==MINI_APP_ID_CHAMELEON);
+        }
+        check_settled(MINI_APP_ID_CHAMELEON); puts("PASS trailing long/repeat/release events do not move return focus");
+    } else if(c==10 || c==12) {
+        CHECK(mini_app_launcher()->p_main_app_inst->p_app->id==MINI_APP_ID_CHAMELEON);
+        home(); check_settled(MINI_APP_ID_CHAMELEON);
+        puts(c==10 ? "PASS retained foreground app restores menu focus after exit" : "PASS NFC-default app restores menu focus after exit");
+    } else if(c==11) {
+        CHECK(mini_app_launcher()->p_main_app_inst->p_app->id==MINI_APP_ID_BLE);
+        input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT); CHECK(mini_app_launcher()->p_main_app_inst->p_app->id==MINI_APP_ID_BLE);
+        puts("PASS recovery intentionally routes desktop request back to BLE");
+    } else if(c==13) {
+        launch_from_menu(MINI_APP_ID_AMIIBO);
+        fixture_app_t *a=mini_app_launcher()->p_main_app_inst->p_handle;
+        a->home.user_data=(void *)(uintptr_t)123; /* alternate explicit ICON_HOME branch */
+        home(); check_settled(MINI_APP_ID_AMIIBO);
+        launch_from_menu(MINI_APP_ID_CHAMELEON); home(); check_settled(MINI_APP_ID_CHAMELEON);
+        dispose(); mini_app_launcher_init(mini_app_launcher(),0); check_settled(MINI_APP_ID_AMIIBO);
+        CHECK(mini_app_launcher()->last_menu_app_id==0);
+        puts("PASS alternate Amiibo Home and subsequent cold startup reset remembered selection");
+    } else if(c==14) {
+        launch_from_menu(MINI_APP_ID_CHAMELEON); home(); check_settled(MINI_APP_ID_CHAMELEON);
+        input(INPUT_KEY_RIGHT,INPUT_TYPE_SHORT); draw();
+        CHECK(focused_id()==MINI_APP_ID_PLAYER); CHECK(draw_centered_id==MINI_APP_ID_CHAMELEON);
+        CHECK(desktop()->icon_anim_value==-35); check_settled(MINI_APP_ID_PLAYER);
+        input(INPUT_KEY_LEFT,INPUT_TYPE_SHORT); draw();
+        CHECK(focused_id()==MINI_APP_ID_CHAMELEON); CHECK(draw_centered_id==MINI_APP_ID_PLAYER);
+        CHECK(desktop()->icon_anim_value==35); check_settled(MINI_APP_ID_CHAMELEON);
+        puts("PASS right/left navigation animation remains intact after restoring menu focus");
+    } else CHECK(false);
+    dispose(); return 0;
+}

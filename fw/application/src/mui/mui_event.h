@@ -9,7 +9,7 @@
 typedef struct {
     uint32_t id;
     uint32_t arg_int;
-    void*  arg_ptr;
+    void*  arg_ptr; /* INPUT: opaque generation token, never dereferenced. */
 } mui_event_t;
 
 

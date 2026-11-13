@@ -3,6 +3,7 @@
 #include "mini_app_registry.h"
 
 #include "mui_include.h"
+#include "mui_alloc.h"
 
 #include "amiibo_detail_view.h"
 
@@ -43,6 +44,35 @@ static void app_amiibo_save_browser_cache(const app_amiibo_t *app, app_amiibo_ca
     memcpy(cache->browser_anchor, app->browser_anchor, sizeof(cache->browser_anchor));
     cache->browser_anchor_icon = app->browser_anchor_icon;
     cache->browser_direction = app->browser_direction;
+}
+
+/* Retain data starts at an unaligned byte offset in cache_data_t.  Its
+ * serialized ABI is unchanged: validate a local aligned copy before any
+ * typed accesses or string allocation.  This ports the observed App643
+ * contract without claiming source or binary identity with that release. */
+static bool app_amiibo_restore_cache(app_amiibo_t *app, const uint8_t *retain) {
+    if (!retain || retain[0] != 1u) return false;
+    app_amiibo_cache_data_t snapshot;
+    memcpy(&snapshot, retain, sizeof(snapshot));
+    if (!vfs_drive_enabled(snapshot.current_drive) ||
+        (snapshot.current_scene_id != AMIIBO_SCENE_FILE_BROWSER &&
+         snapshot.current_scene_id != AMIIBO_SCENE_AMIIBO_DETAIL) ||
+        !memchr(snapshot.current_file, 0, VFS_MAX_NAME_LEN) ||
+        snapshot.current_folder[0] != '/' ||
+        !memchr(snapshot.current_folder, 0, VFS_MAX_PATH_LEN)) return false;
+
+    /* Do not commit the scalar fields until both bounded strings fit.  A
+     * failed second allocation may leave the folder changed; on_run then
+     * reuses it for the safe root fallback, as in the App643 caller. */
+    if (!mui_string_try_set_str(app->current_folder, snapshot.current_folder) ||
+        !mui_string_try_set_str(app->current_file, snapshot.current_file)) return false;
+    app->current_drive = snapshot.current_drive;
+    app->current_focus_index = snapshot.current_focus_index;
+    app_amiibo_restore_browser_cache(app, &snapshot);
+    memcpy(&app->ntag, &cache_get_data()->ntag, sizeof(ntag_t));
+    app->reload_amiibo_files = snapshot.current_scene_id == AMIIBO_SCENE_AMIIBO_DETAIL &&
+                              snapshot.current_file[0] != '\0';
+    return true;
 }
 
 static void app_amiibo_on_run(mini_app_inst_t *p_app_inst);
@@ -121,32 +151,12 @@ void app_amiibo_on_run(mini_app_inst_t *p_app_inst) {
 
     settings_data_t *p_settings = settings_get_data();
 
-    if (p_app_inst->p_retain_data) {
-        app_amiibo_cache_data_t *p_cache_data = (app_amiibo_cache_data_t *)p_app_inst->p_retain_data;
-        if (p_cache_data->cached_enabled) {
-            p_app_handle->current_drive = p_cache_data->current_drive;
-            string_set_str(p_app_handle->current_file, p_cache_data->current_file);
-            string_set_str(p_app_handle->current_folder, p_cache_data->current_folder);
-            p_app_handle->current_focus_index = p_cache_data->current_focus_index;
-            app_amiibo_restore_browser_cache(p_app_handle, p_cache_data);
-            memcpy(&(p_app_handle->ntag), &(cache_get_data()->ntag), sizeof(ntag_t));
-
-            if (p_app_handle->current_drive == VFS_DRIVE_EXT || p_app_handle->current_drive == VFS_DRIVE_INT) {
-                app_amiibo_try_mount_drive(p_app_handle);
-            }
-
-            if (p_cache_data->current_scene_id == AMIIBO_SCENE_AMIIBO_DETAIL) {
-                if (string_size(p_app_handle->current_file) > 0) {
-                    p_app_handle->reload_amiibo_files = true;
-                    mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIBO_SCENE_AMIIBO_DETAIL);
-                } else {
-                    mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
-                }
-            } else if (p_cache_data->current_scene_id == AMIIBO_SCENE_FILE_BROWSER) {
-                mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
-            }
-            return;
-        }
+    if (app_amiibo_restore_cache(p_app_handle, p_app_inst->p_retain_data)) {
+        if (p_app_handle->current_drive == VFS_DRIVE_EXT || p_app_handle->current_drive == VFS_DRIVE_INT)
+            app_amiibo_try_mount_drive(p_app_handle);
+        mui_scene_dispatcher_next_scene(p_app_handle->p_scene_dispatcher,
+            p_app_handle->reload_amiibo_files ? AMIIBO_SCENE_AMIIBO_DETAIL : AMIIBO_SCENE_FILE_BROWSER);
+        return;
     }
 
     p_app_handle->current_drive = vfs_get_default_drive();
@@ -178,14 +188,21 @@ void app_amiibo_on_kill(mini_app_inst_t *p_app_inst) {
     if (!ntag_emu_prepare_change()) return;
 
     uint32_t current_scene_id = mui_scene_dispatcher_current_scene(p_app_handle->p_scene_dispatcher);
+    /* Candidate comfort feature: resume a submenu at its stable parent view.
+     * The list object currently contains submenu rows, so its live focus is
+     * only authoritative while the file browser itself is the active scene.
+     * Persist only the existing scene IDs; the retained ABI stays unchanged. */
+    uint32_t resume_scene_id = current_scene_id;
+    if (current_scene_id == AMIIBO_SCENE_FILE_BROWSER_MENU) resume_scene_id = AMIIBO_SCENE_FILE_BROWSER;
+    else if (current_scene_id == AMIIBO_SCENE_AMIIBO_DETAIL_MENU) resume_scene_id = AMIIBO_SCENE_AMIIBO_DETAIL;
     if (p_app_inst->p_retain_data && app_amiibo_info.hibernate_enabled &&
-        (current_scene_id == AMIIBO_SCENE_AMIIBO_DETAIL || current_scene_id == AMIIBO_SCENE_FILE_BROWSER)) {
+        (resume_scene_id == AMIIBO_SCENE_AMIIBO_DETAIL || resume_scene_id == AMIIBO_SCENE_FILE_BROWSER)) {
         app_amiibo_cache_data_t p_cache_data = {0};
         p_cache_data.cached_enabled = true;
         strcpy(p_cache_data.current_file, string_get_cstr(p_app_handle->current_file));
         strcpy(p_cache_data.current_folder, string_get_cstr(p_app_handle->current_folder));
         p_cache_data.current_drive = p_app_handle->current_drive;
-        p_cache_data.current_scene_id = current_scene_id;
+        p_cache_data.current_scene_id = resume_scene_id;
         p_cache_data.current_focus_index = current_scene_id == AMIIBO_SCENE_FILE_BROWSER
                                             ? mui_list_view_get_focus(p_app_handle->p_list_view)
                                             : p_app_handle->current_focus_index;

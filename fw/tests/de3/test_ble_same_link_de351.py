@@ -5,6 +5,7 @@ guard exits; this does not model SoftDevice radio scheduling or browser timing.
 """
 import argparse,hashlib,json,os,re,subprocess,tempfile
 from pathlib import Path
+from input_context_support import context_state, context_functions, TOKEN_FUNCTIONS
 HERE=Path(__file__).resolve().parent
 FW=HERE.parents[1]
 BLE=FW/'application/src/mod/ble'
@@ -41,6 +42,7 @@ def main_code():
     return code+'\n'+tail
 def bridge_code():
     base=(HERE/'ble_remote_de347.c.in').read_text().split('int main(',1)[0]
+    base=base.replace('/* ACTUAL_INPUT_CONTEXT */',context_state()+context_functions((*TOKEN_FUNCTIONS,'mui_input_context_changed')))
     hook='''
 static bool inject_local_after_claim;
 void test_critical_exit(void) {
@@ -54,6 +56,7 @@ def run(report_path=None):
     arm=os.environ.get('PIXL_ARM32')=='1';san=os.environ.get('PIXL_SANITIZE')=='1' and not arm
     sources=[BLE/n for n in ('ble_main.c','ble_main.h','ble_work.c','ble_work.h','ble_remote.c','ble_remote_protocol.c','ble_remote_protocol.h')]+[SCENE,Path(__file__)]
     sources += [HERE/n for n in ('ble_same_link_main_de351.c.in','ble_same_link_remote_de351.c.in','ble_session_de326.c.in','test_ble_session_de326.py','ble_remote_de347.c.in')]
+    sources += [FW/'application/src/mui/mui_input.c',HERE/'input_context_support.py']
     hashes=lambda:{str(p.relative_to(FW)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
     report={'device_access':False,'runtime':'arm32' if arm else 'asan_ubsan' if san else 'native','source_sha256':hashes(),'runs':[]}
     with tempfile.TemporaryDirectory(prefix='ble-same-link-de351-') as tmp:

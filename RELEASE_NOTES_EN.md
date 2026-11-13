@@ -1,5 +1,11 @@
 # Allmiibo LCD release notes
 
+## File manager 3.48.0 and LCD test firmware DE3.71t1
+
+The file manager helps preserve completed backup ZIPs, exports filtered ZIP comparisons as CSV or JSON, and lets you move favourites and search filters between browsers. The Windows launcher now detects when its background server has stopped after an acknowledged shutdown.
+
+On an LCD Allmiibo running App644, the tester reached the selected figure after Back to List and after sleep/wake on the paths exercised in the file emulator and the amiibo database. This signed application update is for compatible LCD units using Packed LittleFS. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [File manager downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0) · [LCD test firmware](https://github.com/bluecyber81/pixl.js/releases/tag/de3.71t1)
+
 ## File manager 3.47.0
 
 The amiibo emulator sorts the displayed folder page once. With DE3.70, **Device & diagnostics → Read all diagnostic values** reports center-button events through the first main-menu selection and the duration of the app launch call. The record is held in RAM until restart. [LCD DE3.70 (ZIP)](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip) · [Web 3.47.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0)

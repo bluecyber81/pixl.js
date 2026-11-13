@@ -21,6 +21,11 @@ export function figureSourceUrl(input) {
   if (url.protocol !== 'https:' || url.username || url.password || url.hash || !url.hostname) {
     fail('FIGURE_URL', 'Use a direct HTTPS address without credentials or a fragment.');
   }
+  // One limit applies after URL/IDN/UTF-8 normalization, whether the address
+  // is used directly, persisted or imported from a link-list file.
+  if (url.href.length > FIGURE_DOWNLOAD_LIMITS.maxUrlLength) {
+    fail('FIGURE_URL', 'The normalized HTTPS address exceeds 4096 characters.');
+  }
   const host = url.hostname.toLowerCase().replace(/\.$/u, '');
   if (!host.includes('.') || /^\d+(?:\.\d+){3}$/u.test(host) || host.includes(':') ||
       host === 'localhost' || /\.(?:localhost|local|internal|test|invalid)$/u.test(host)) {

@@ -1,5 +1,5 @@
 import { figureId } from './figure-info.js';
-import { FIGURE_DOWNLOAD_LIMITS, FigureTransferError, figureSourceUrl } from './figure-transfer.js';
+import { FigureTransferError, figureSourceUrl } from './figure-transfer.js';
 
 export const FIGURE_DOWNLOAD_LINK_CHANGED = 'allmiibo-figure-download-link-changed';
 const PREFIX = 'allmiibo.figure-download.';
@@ -14,9 +14,7 @@ export function figureDownloadLinkKey(id) {
 }
 
 function normalizedUrl(value) {
-  const url = figureSourceUrl(value).href;
-  if (url.length > FIGURE_DOWNLOAD_LIMITS.maxUrlLength) fail('FIGURE_URL');
-  return url;
+  return figureSourceUrl(value).href;
 }
 
 function envelope(links) {

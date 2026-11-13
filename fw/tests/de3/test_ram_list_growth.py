@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 from root_host import FW, SRC, HostTests, function
+from input_context_support import context_state, context_functions
 
 
 class RamListGrowthTests(HostTests):
@@ -20,7 +21,7 @@ class RamListGrowthTests(HostTests):
 #include <stdio.h>
 #include <stdlib.h>
 typedef struct {bool memory_error,auto_update;} mui_t;
-typedef struct {uint32_t arg_int;} mui_event_t;
+typedef struct {uint32_t arg_int;void *arg_ptr;} mui_event_t;
 typedef struct {unsigned key,type;} mui_input_event_t;
 typedef struct viewport viewport_t;
 struct viewport {void(*input_cb)(viewport_t*,mui_input_event_t*);};
@@ -54,13 +55,14 @@ static void mui_list_view_set_selected_cb(void*v,void(*cb)(void)){(void)v;(void)
 static void mui_list_view_set_user_data(void*v,void*data){(void)v;assert(data==running);}
 static void mui_list_view_set_focus(void*v,unsigned f){(void)v;(void)f;assert(running && !entered);++focus_sets;}
 static void amiibo_scene_file_browser_reload_folders(app_amiibo_t*a){assert(a==running);core.memory_error=true;}
-''' + function(browser,'amiibo_scene_file_browser_on_enter') + '\n' + function(core,'mui_process_input') + r'''
+''' + context_state() + context_functions() + function(browser,'amiibo_scene_file_browser_on_enter') + '\n' + function(core,'mui_process_input') + r'''
 int main(void){
  for(unsigned i=0;i<100;i++){
   running=calloc(1,sizeof(*running));assert(running);entered=false;
   amiibo_scene_file_browser_on_enter(running);
   assert(running && focus_sets==i+1 && kills==i);entered=true;
   mui_event_t e={.arg_int=INPUT_KEY_CENTER|(INPUT_TYPE_LONG<<8)};
+  mui_input_tag_current_event(&e);
   mui_process_input(&core,&e);assert(running && core.memory_error && kills==i);
   e.arg_int=0|(INPUT_TYPE_SHORT<<8);mui_process_input(&core,&e);assert(running && core.memory_error);
   e.arg_int=INPUT_KEY_CENTER|(INPUT_TYPE_SHORT<<8);mui_process_input(&core,&e);

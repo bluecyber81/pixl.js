@@ -18,6 +18,7 @@ enum {MUI_EVENT_ID_INPUT=1,INPUT_TYPE_SHORT=2,INPUT_TYPE_LONG=3,INPUT_KEY_CENTER
 static struct {uint32_t FIELDPRESENT;} nfct;
 #define NRF_NFCT (&nfct)
 typedef struct {unsigned id,arg_int;void *arg_ptr;} mui_event_t;
+/* ACTUAL_INPUT_CONTEXT */
 typedef struct {mui_event_t *events;void *dispatcher;unsigned head,count;} mui_event_queue_t;
 typedef struct {bool initialized,memory_error;mui_event_queue_t event_queue;} mui_t;
 typedef struct {bool file,loop;} mini_app_launcher_t;
@@ -59,6 +60,7 @@ static uint32_t ble_remote_open_file_link(const uint8_t *data,size_t n,uint32_t 
 static void nrf_pwr_mgmt_feed(void){mock_feed++;}
 static void mui_event_dispatch_now(mui_event_queue_t *q,mui_event_t *e){
     assert(!critical_depth && q==&mock_ui.event_queue && e->id==MUI_EVENT_ID_INPUT);
+    assert(mui_input_event_is_current(e));
     mock_actions++;mock_input=e->arg_int;
     if(mock_action_effect==1)ble_remote_shutdown();
     if(mock_action_effect==2){mock_session++;mock_link+=2;mock_ready=true;}
@@ -72,6 +74,7 @@ static void clean(void){assert(!critical_depth);mock_cleanup=true;}
 static void connect(void){mock_session++;mock_link++;mock_connected=mock_ready=true;mock_cleanup=false;ble_work_connected();ble_work_process(clean);}
 static void disconnect(void){mock_connected=mock_ready=false;mock_session++;mock_link++;mock_cleanup=false;ble_work_disconnected();if(!mock_hold)mock_advertising=true;}
 static void reset(void){
+    mui_input_context_changed();
     ble_remote_shutdown();ble_work_disconnected();ble_work_set_handlers(ble_remote_receive,NULL);ble_work_process(clean);
     memset(&mock_ui,0,sizeof(mock_ui));memset(&mock_launcher,0,sizeof(mock_launcher));memset(&protocol,0,sizeof(protocol));
     memset(input_events,0,sizeof(input_events));mock_ui.initialized=true;mock_ui.event_queue.events=input_events;mock_ui.event_queue.dispatcher=&mock_ui;

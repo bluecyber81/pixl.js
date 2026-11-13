@@ -1,14 +1,14 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-09",
-  "version": "2.22.0-DE3.70",
-  "counter": 642,
+  "publication_date": "2026-11-13",
+  "version": "2.22.0-DE3.71t1",
+  "counter": 644,
   "board": "LCD",
-  "web_version": "3.47.0",
+  "web_version": "3.48.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "03c438a1e4b561a6ddf9ed8c787ce82a4899c2bd416eb08f588bff5111a4f080",
-  "application_sha256": "45aa511db37076bf9b0dce6d73c27522407b0234a6de9f38e2ec058aa4d01844",
+  "ota_sha256": "e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb",
+  "application_sha256": "fbade80d03a44a3bb3bb7e76df422b24a879d2ff81b433e6bf4f6d6e1b955273",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -34,11 +34,10 @@
     "fresh_vendor_download_comparison": "docs/validation/S112_7_3_0_VENDOR_READBACK.json"
   },
   "bootloader_and_softdevice_replaced_by_application_ota": false,
-  "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 149,
-  "evidence": "docs/validation/DE3_70.json",
+  "host_firmware_suites": 156,
+  "evidence": "docs/validation/DE3_71T1.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -51,13 +50,13 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0",
   "web_device_readback_pending": true,
-  "previous_web_device_readback_evidence": "docs/validation/DE3_66_LCD_READBACK.md",
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "Physical first menu press and launch readback on DE3.70.",
+  "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
+  "device_readback_passed": true,
+  "device_validation_pending_scope": "Load, Android persistence, NFC write cases and controlled recovery. A tester confirmed figure list return and sleep/wake in both apps.",
   "previous_device_readback_evidence": "docs/RELEASE_DE3_69.md",
-  "production_source_id_sha256": "d4ba1c82bf0d687b6b0d10bb9541bb06ef780d74158a4bf192d21f4d53b99d91",
+  "production_source_id_sha256": "3c62a24a8aecab7a81af6b73cb86642d4a248755d739c5e37b1fcdeea7451d02",
   "tested_bootloader": {
     "name": "Z19",
     "counter": 19,
@@ -65,7 +64,7 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "The Z19/S112 installation was last confirmed on hardware running App641. App642 is checked against the same Z19 signing key."
+    "qualification": "The connected App644 diagnostic export reported this Z19 region hash and S112 7.3.0."
   },
   "web_host_test_scope": "Local source suites and production Chrome checks for root and Pages. Historical physical LCD and backup observations are documented separately.",
   "previous_web_full_suite": {
@@ -79,12 +78,12 @@
   },
   "firmware_production_unchanged_since": null,
   "previous_web_validation": {
-    "version": "3.46.0",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.46.0",
-    "evidence": "docs/validation/WEB3_46_0.json"
+    "version": "3.47.0",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0",
+    "evidence": "docs/validation/WEB3_47_0.json"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3470",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md#dateimanager-3480-und-lcd-testfirmware-de371t1",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -104,10 +103,10 @@
     "firmware_downloads": {
       "bundled": [
         "DE3.65/637",
-        "DE3.70/642"
+        "DE3.71t1/644"
       ],
       "stable": "DE3.65/637",
-      "prerelease": "DE3.70/642"
+      "prerelease": "DE3.71t1/644"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -125,9 +124,10 @@
     "web_3_44_0": "When you open the file manager, it selects the first supported language in your browser’s preference list. Use the language menu to choose a fixed language or return to automatic selection.",
     "web_3_45_0": "Game compatibility filters, owned figures, dated announcements and a two-way folder comparison. Optional local device nicknames on supported Web Bluetooth sessions.",
     "web_3_46_0": "Open each published LCD application package in Nordic DFU on Android. Compare two complete backup ZIPs offline.",
-    "web_3_47_0": "Read the first main-menu selection and distinguish it from settings-session input."
+    "web_3_47_0": "Read the first main-menu selection and distinguish it from settings-session input.",
+    "web_3_48_0": "Portable profiles, filtered ZIP comparisons, backup protection, PXMIv2 diagnostics and App644 capacity profile. Correct Windows background shutdown detection."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_70_642_NUR_APP.zip",
+  "application_ota_path": "fw/releases/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -138,11 +138,8 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_47_0.json",
-  "device_readback_evidence": null,
-  "web_device_readback_pending_scope": "DE3.70 first main-menu selection and launch timing on a physical LCD Allmiibo after restart.",
-  "web_host_tests": 1350,
-  "web_root_production_tests": 22,
-  "web_pages_production_tests": 22,
-  "web_browser_checks_per_build": 601
+  "web_evidence": "docs/validation/WEB3_48_0.json",
+  "device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
+  "web_device_readback_pending_scope": "Device readback with the published 3.48.0. Existing connected readback used the 3.47.0-T1 candidate.",
+  "fresh_public_unsigned_rebuild_matches_signed_application": true
 }

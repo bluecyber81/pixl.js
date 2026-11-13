@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.47.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.48.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -127,9 +127,12 @@
           {{ $t('tools.backupFresh', { count: backupReadSummary.freshFiles, bytes: format_size(backupReadSummary.freshBytes) }, backupReadSummary.freshFiles) }}
           · {{ $t('tools.backupReused', { count: backupReadSummary.reusedFiles, bytes: format_size(backupReadSummary.reusedBytes) }, backupReadSummary.reusedFiles) }}
         </small>
+        <small>{{ $t(lastBackup.savedConfirmed ? 'tools.backupSaved' : lastBackup.downloadRequested ? 'tools.backupDownloadPending' : 'tools.backupUnsaved') }}</small>
+        <small v-if="lastBackup.saveStatus === 'cancelled'">{{ $t('tools.backupSaveCancelled') }}</small>
       </span>
-      <button type="button" @click="lastBackup = null">{{ $t('info.discard') }}</button>
-      <button type="button" @click="save_last_backup">{{ $t('tools.saveBackup') }}</button>
+      <button type="button" @click="lastBackup = null" :disabled="lastBackup.saving">{{ $t('info.discard') }}</button>
+      <button v-if="lastBackup.downloadRequested && !lastBackup.savedConfirmed" type="button" @click="confirm_backup_saved" :disabled="lastBackup.saving">{{ $t('tools.confirmBackupSaved') }}</button>
+      <button type="button" @click="save_last_backup" :disabled="lastBackup.saving">{{ $t(lastBackup.saving ? 'tools.savingBackup' : 'tools.saveBackup') }}</button>
     </section>
     <section v-if="lastDownload" class="backup-ready" role="status">
       <span>{{ $t('info.downloadReady') }} {{ lastDownload.filename }}</span>
@@ -288,11 +291,12 @@
         <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
       </form>
       <DiagnosticOverview :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
+      <MenuRunComparison :locale="language" />
       <DisplayPhoto :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.47.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.48.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -512,6 +516,7 @@
     </el-dialog>
 
   <footer class="source-footer">
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Prüfpaket für ChatGPT (ZIP)' : 'Test kit for ChatGPT (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -555,7 +560,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
@@ -1544,7 +1549,7 @@ export default {
           }
         });
         const result = persistent ? await (await import('./lib/stored-backup.js')).withStoredBackup(context, expected, run) : await run();
-        this.assert_session(generation); this.lastBackup = { ...result, sessionGeneration: generation };
+        this.assert_session(generation); this.lastBackup = { ...result, sessionGeneration: generation, savedConfirmed: false, downloadRequested: false, saving: false, saveStatus: '' };
         if (result.storedCompletionError) this.storedError = this.stored_backup_problem(result.storedCompletionError);
         this.remember_transfer('backup', 'success', result.manifest.bytes || 0);
         // Keep the archive in memory until the user's explicit Save click.
@@ -1565,10 +1570,29 @@ export default {
         if (generation === this.sessionGeneration) { this.backingUp = false; this.cancellingBackup = false; this.set_transfer(null); }
       }
     },
-    save_last_backup() {
-      if (!this.lastBackup) return;
-      try { saveBlob(this.lastBackup.blob, this.lastBackup.filename); }
-      catch (error) { this.show_transfer_error(error); }
+    async save_last_backup() {
+      const archive = this.lastBackup;
+      if (!archive || archive.saving) return;
+      archive.saving = true; archive.saveStatus = '';
+      try {
+        if (typeof globalThis.showSaveFilePicker === 'function') {
+          // The explicit click opens the picker before any asynchronous work.
+          const result = await saveBlobWithPicker(archive.blob, archive.filename,
+            { types: [{ description: this.$t('tools.backupZipFile'), accept: { 'application/zip': ['.zip'] } }] });
+          if (result?.status === 'saved') { archive.savedConfirmed = true; archive.saveStatus = 'saved'; }
+          else if (result?.status === 'cancelled') archive.saveStatus = 'cancelled';
+          // No hidden second download after a cancelled/unavailable picker.
+        } else {
+          saveBlob(archive.blob, archive.filename);
+          // An anchor click cannot tell whether the browser finished or the user
+          // cancelled the download. Keep unload protection until confirmation.
+          archive.downloadRequested = true;
+        }
+      } catch (error) { this.show_transfer_error(error); }
+      finally { archive.saving = false; }
+    },
+    confirm_backup_saved() {
+      if (this.lastBackup?.downloadRequested && !this.lastBackup.saving) this.lastBackup.savedConfirmed = true;
     },
     cancel_transfer() {
       if (this.zipBusy) { this.workflowCancelling=true; this.zipStatus=this.$t('info.finishingCommit'); this._zipController?.abort(); }
@@ -1583,7 +1607,7 @@ export default {
         pixl.disconnect({ immediate: true });
       }
     },
-    on_before_unload(event) { if (this.busy || this.backupResumeInfo?.files) { event.preventDefault(); event.returnValue = ''; } },
+    on_before_unload(event) { if (this.busy || this.backupResumeInfo?.files || (this.lastBackup && (!this.lastBackup.savedConfirmed || this.lastBackup.saving))) { event.preventDefault(); event.returnValue = ''; } },
     storage() { try { return window.localStorage; } catch (_) { return null; } },
     checked(response) {
       if (!response || response.status !== 0) throw new Error(this.$t('transfer.deviceerror') + ': ' + (response?.status ?? '?'));

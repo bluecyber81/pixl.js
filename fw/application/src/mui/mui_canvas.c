@@ -102,6 +102,30 @@ uint16_t mui_canvas_draw_utf8_truncate(mui_canvas_t* p_canvas, uint8_t x, uint8_
 
 uint16_t mui_canvas_get_utf8_width(mui_canvas_t *p_canvas, const char *s) { return u8g2_GetUTF8Width(p_canvas->fb, s); }
 
+/* Unlike visual string width, glyph advance includes the space before the
+ * next glyph. Use the same decoder and delta values as u8g2_DrawUTF8. */
+uint16_t mui_canvas_get_utf8_advance(mui_canvas_t *p_canvas, const char *text) {
+    if (!text) return 0;
+    u8x8_t *u8x8 = u8g2_GetU8x8(p_canvas->fb);
+    u8x8_utf8_init(u8x8);
+    uint32_t width = 0;
+    for (;;) {
+        uint16_t encoding = u8x8_utf8_next(u8x8, (uint8_t)*text++);
+        if (encoding == 0xffff) break;
+        if (encoding != 0xfffe) {
+            int8_t advance = u8g2_GetGlyphWidth(p_canvas->fb, encoding);
+            if (advance > 0) width += (uint8_t)advance;
+            if (width >= UINT16_MAX) return UINT16_MAX;
+        }
+    }
+    return width;
+}
+
+uint8_t mui_canvas_current_font_ascent(mui_canvas_t *p_canvas) {
+    /* Use the complete font box, including accented glyphs. */
+    return p_canvas->fb->font_info.max_char_height + p_canvas->fb->font_info.y_offset;
+}
+
 void mui_canvas_set_frame(mui_canvas_t *p_canvas, uint8_t offset_x, uint8_t offset_y, uint8_t width, uint8_t height) {
     p_canvas->offset_x = offset_x;
     p_canvas->offset_y = offset_y;

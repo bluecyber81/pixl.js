@@ -1,0 +1,179 @@
+#include "mui_canvas.h"
+#include "mui_element.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#define LV_MIN(a,b) ((a)<(b)?(a):(b))
+#define LV_MAX(a,b) ((a)>(b)?(a):(b))
+#define NEW_LAYOUT /*NEW_LAYOUT*/
+typedef struct { void *user_data; } mui_view_t;
+typedef struct { const char *message; unsigned is_visible; } mui_toast_view_t;
+#define string_get_cstr(s) (s)
+#define string_size(s) strlen(s)
+
+static const u8x8_display_info_t info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
+typedef struct { unsigned char before[32], data[1024], after[32]; } guarded_t;
+static void setup(u8g2_t *u, mui_canvas_t *c, guarded_t *b) {
+    memset(b,0xa5,sizeof(*b)); memset(b->data,0,1024); memset(u,0,sizeof(*u));
+    u->u8x8.display_info=&info;
+    u8g2_SetupBuffer(u,b->data,8,u8g2_ll_hvline_vertical_top_lsb,U8G2_R0);
+    c->fb=u; mui_canvas_set_frame(c,0,0,128,64);
+    mui_canvas_set_font(c,u8g2_font_wqy12_t_gb2312a);
+}
+static void guards(const guarded_t *b) {
+    for(unsigned i=0;i<32;i++) assert(b->before[i]==0xa5 && b->after[i]==0xa5);
+}
+static void save(const char *dir,const char *name,const guarded_t *b) {
+    char path[1024]; snprintf(path,sizeof(path),"%s/%s.pbm",dir,name);
+    FILE *f=fopen(path,"w"); assert(f); fputs("P1\n128 64\n",f);
+    for(unsigned y=0;y<64;y++) for(unsigned x=0;x<128;x++)
+        fprintf(f,"%u%c",!!(b->data[(y/8)*128+x]&(1u<<(y%8))),x==127?'\n':' ');
+    assert(!fclose(f));
+}
+static unsigned draws, first_y, last_y, frame_x, frame_y, frame_w, frame_h;
+static unsigned ink_left, ink_top, ink_right, ink_bottom, rightmost;
+static uint32_t draw_trace;
+static unsigned logged_draw(mui_canvas_t *c,uint8_t x,uint8_t y,const char *s) {
+    if(!draws) first_y=y;
+    ++draws; last_y=y;
+    draw_trace=(draw_trace^x)*16777619u;
+    draw_trace=(draw_trace^y)*16777619u;
+    for(const unsigned char *p=(const unsigned char *)s;*p;p++) draw_trace=(draw_trace^*p)*16777619u;
+    unsigned width=mui_canvas_get_utf8_width(c,s);
+    if(x+width>rightmost) rightmost=x+width;
+    /* Render every glyph independently with no text-box clip. This detects
+     * text hidden by an undersized box, rather than just checking clipped output. */
+    guarded_t b; u8g2_t u; mui_canvas_t probe; setup(&u,&probe,&b);
+    mui_canvas_set_font(&probe,u8g2_GetFont(c->fb));
+    mui_canvas_draw_utf8(&probe,x,y,s);
+    for(unsigned py=0;py<64;py++) for(unsigned px=0;px<128;px++)
+        if(b.data[(py/8)*128+px]&(1u<<(py%8))) {
+            ink_left=LV_MIN(ink_left,px); ink_top=LV_MIN(ink_top,py);
+            ink_right=LV_MAX(ink_right,px+1); ink_bottom=LV_MAX(ink_bottom,py+1);
+        }
+    guards(&b);
+    return mui_canvas_draw_utf8(c,x,y,s);
+}
+static void logged_frame(mui_canvas_t *c,uint8_t x,uint8_t y,uint8_t w,uint8_t h,uint8_t r) {
+    frame_x=x; frame_y=y; frame_w=w; frame_h=h;
+    mui_canvas_draw_rframe(c,x,y,w,h,r);
+}
+#define mui_canvas_draw_utf8 logged_draw
+#define mui_canvas_draw_rframe logged_frame
+/*PRODUCTION_FUNCTIONS*/
+#undef mui_canvas_draw_utf8
+#undef mui_canvas_draw_rframe
+static void reset_log(void) {
+    draws=first_y=last_y=frame_x=frame_y=frame_w=frame_h=rightmost=0;
+    ink_left=ink_top=UINT_MAX; ink_right=ink_bottom=0;
+    draw_trace=2166136261u;
+}
+static unsigned glyph_count(const char *text) {
+    unsigned n=0; while(*text) { if(*text!='\n') ++n; text+=mui_canvas_get_utf8_bytes(text); }
+    return n;
+}
+int main(int argc,char **argv) {
+    assert(argc==2); guarded_t b; u8g2_t u; mui_canvas_t c; setup(&u,&c,&b);
+    unsigned ft=mui_canvas_current_font_height(&c);
+    printf("FONT height=%u ascent=%d descent=%d\n",ft,u.font_info.max_char_height+u.font_info.y_offset,u.font_info.y_offset);
+    unsigned metrics=0;
+#if NEW_LAYOUT
+    for(unsigned ch=32;ch<127;ch++) {
+        char s[2]={(char)ch,0}; unsigned char before[1024]; memcpy(before,b.data,1024);
+        unsigned advance=mui_canvas_get_utf8_advance(&c,s);
+        assert(!memcmp(before,b.data,1024));
+        assert(advance==mui_canvas_draw_utf8(&c,0,20,s)); ++metrics;
+    }
+    const char *glyphs[]={"Ä","Ö","Ü","ä","ö","ü","ß","–","€","中","文","\xe2","\xf0\x9f"};
+    for(unsigned i=0;i<sizeof(glyphs)/sizeof(*glyphs);i++) {
+        assert(mui_canvas_get_utf8_advance(&c,glyphs[i])==mui_canvas_draw_utf8(&c,0,20,glyphs[i])); ++metrics;
+    }
+    printf("PASS %u measured advances equal actual u8g2 drawing; measurement leaves pixels unchanged\n",metrics);
+
+    unsigned layouts=0;
+    const char *texts[]={"Shadow mode: unchanged","Schattenmodus aktiv","iiiiiiiiii","WMWM WMWM",
+        "ÄÖÜ äöü ß – € 中文","one\ntwo","one\n\nthree","word with trailing space ","\xe2"};
+    for(unsigned i=0;i<sizeof(texts)/sizeof(*texts);i++) for(unsigned width=16;width<=128;width++) {
+        setup(&u,&c,&b); reset_log();
+        unsigned height=mui_element_text_height(&c,width,texts[i]);
+        mui_element_autowrap_text(&c,0,12,width,240,texts[i]);
+        assert(draws==glyph_count(texts[i]));
+        assert(height==last_y-first_y+ft);
+        assert(rightmost<=width);
+        guards(&b); ++layouts;
+    }
+    /* Widths immediately below, equal to and above the exact three-glyph ink
+     * extent. This oracle is one direct u8g2 render, not the layout routine. */
+    unsigned exact=mui_canvas_get_utf8_width(&c,"iii");
+    assert(mui_element_text_height(&c,exact-1,"iii")==2*ft);
+    assert(mui_element_text_height(&c,exact,"iii")==ft);
+    assert(mui_element_text_height(&c,exact+1,"iii")==ft);
+    assert(mui_element_text_height(&c,112,"one\ntwo\n")==3*ft);
+    assert(mui_element_text_height(&c,112,"\n")==2*ft);
+    assert(mui_element_text_height(&c,0,"x")==0);
+    assert(mui_element_text_height(&c,112,"")==0);
+    char huge[6001]; memset(huge,'\n',6000); huge[6000]=0;
+    assert(mui_element_text_height(&c,112,huge)==UINT16_MAX);
+    printf("PASS %u actual-font wrap cases, exact-edge boundaries, blank lines, empty/zero width, height saturation\n",layouts);
+#endif
+
+    /* Existing non-toast callers draw with these baseline/viewport patterns.
+     * Their actual C glyph traces can be compared with the original build. */
+    const struct { const char *text; unsigned x,y,w,h; } unchanged[]={
+        {"Upload key_retail.bin",0,26,128,51},
+        {"All data will be deleted.\nContinue?",0,26,128,51},
+        {"Mario - synthetic long amiibo filename",0,30,128,24},
+        {"Long note with several words and umlauts äöü",0,43,128,24},
+        {"Mario - synthetic long amiibo filename",5,30,128,24},
+        {"Example note\nNext line",5,45,128,24},
+        {"One\n\nThree",0,13,128,51},
+        {"ÄÖÜ ß 中文\xe2",0,15,128,24}
+    };
+    for(unsigned i=0;i<sizeof(unchanged)/sizeof(*unchanged);i++) {
+        setup(&u,&c,&b); reset_log();
+        mui_element_autowrap_text(&c,unchanged[i].x,unchanged[i].y,unchanged[i].w,unchanged[i].h,unchanged[i].text);
+        guards(&b); printf("CALLER %u glyphs=%u trace=%08x\n",i,draws,draw_trace);
+    }
+
+    const struct { const char *name,*message; unsigned all; } cases[]={
+        {"en_shadow_toast","Shadow mode: unchanged",1},
+        {"de_shadow_toast","Schattenmodus aktiv",1},
+        {"en_multiline_toast","First line\nSecond line",1},
+        {"utf8_toast","ÄÖÜ äöü ß – € 中文",1},
+        {"short_toast","OK",1},
+        {"long_toast","This deliberately long message must stay inside the display. It has enough text for more than four lines and must not wrap screen coordinates or overwrite the border.",0}
+    };
+    unsigned old_overflow=0;
+    for(unsigned i=0;i<sizeof(cases)/sizeof(*cases);i++) {
+        setup(&u,&c,&b); reset_log(); mui_rect_t before,after;
+        mui_canvas_get_clip_window(&c,&before);
+        mui_toast_view_t toast={cases[i].message,1}; mui_view_t view={&toast};
+        mui_toast_view_on_draw(&view,&c); mui_canvas_get_clip_window(&c,&after);
+        assert(!memcmp(&before,&after,sizeof(before))); guards(&b);
+        unsigned outside=ink_left<frame_x+1 || ink_top<frame_y+1 || ink_right>frame_x+frame_w-1 || ink_bottom>frame_y+frame_h-1;
+        printf("TOAST %s box=%u,%u,%u,%u ink=%u,%u,%u,%u glyphs=%u/%u overflow=%u\n",
+            cases[i].name,frame_x,frame_y,frame_w,frame_h,ink_left,ink_top,ink_right,ink_bottom,draws,glyph_count(cases[i].message),outside);
+#if NEW_LAYOUT
+        assert(!outside); assert(frame_x+frame_w<=128 && frame_y+frame_h<=64);
+        if(cases[i].all) assert(draws==glyph_count(cases[i].message));
+#else
+        if(i==0) old_overflow=outside;
+#endif
+        save(argv[1],cases[i].name,&b);
+    }
+#if NEW_LAYOUT
+    /* Nonzero canvas offset and a stricter caller clip survive the overlay. */
+    setup(&u,&c,&b); mui_canvas_set_frame(&c,4,13,120,51);
+    mui_rect_t clip={2,3,100,40},after; mui_canvas_set_clip_window(&c,&clip);
+    mui_toast_view_t toast={"Shadow mode: unchanged",1}; mui_view_t view={&toast};
+    mui_toast_view_on_draw(&view,&c); mui_canvas_get_clip_window(&c,&after);
+    assert(!memcmp(&clip,&after,sizeof(clip))); guards(&b);
+    for(unsigned y=0;y<16;y++) for(unsigned x=0;x<128;x++)
+        assert(!(b.data[(y/8)*128+x]&(1u<<(y%8))));
+    puts("PASS 6 toast pixel cases plus offset/clip restoration; no hardware timing or LCD claim");
+#else
+    assert(old_overflow); puts("PASS negative control reproduced original English Shadow toast overflow");
+#endif
+    return 0;
+}

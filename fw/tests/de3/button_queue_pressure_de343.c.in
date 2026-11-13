@@ -84,6 +84,10 @@ static void selected_cb(int type,mui_list_view_t*l,mui_list_item_t*i){assert(l==
  if(handoff)port.input_cb=dialog_input;
 }
 static void setup(void){if(ui.queue.events)mui_event_queue_deinit(&ui.queue);memset(&ui,0,sizeof(ui));memset(&list,0,sizeof(list));
+#ifdef TEST_HAS_INPUT_CONTEXT
+ /* A fresh test UI is a committed owner; no prior gesture may act in it. */
+ mui_input_context_changed();
+#endif
  selected=long_selected=redraws=animations=synthetic_stall_ticks=attempts=dialog_short=0;settings.swap_buttons=false;handoff=false;
  assert(mui_event_queue_init(&ui.queue));mui_event_set_callback(&ui.queue,consume,&ui);ui.auto_update=true;
  list.items[0].count=4;list.canvas_height=64;list.canvas_width=128;list.selected_cb=selected_cb;
@@ -164,6 +168,8 @@ int main(void){unsigned cases=0;
   * deliberately ignored to avoid repeatedly activating a menu selection. */
  setup();for(unsigned n=0;n<64;n++)tick();short_press(INPUT_KEY_CENTER);drain();assert(selected==1);
  raw(INPUT_KEY_CENTER,BSP_BTN_EVENT_REPEAT);drain();assert(selected==1);
+ /* A directional repeat belongs to an actual started physical gesture. */
+ raw(INPUT_KEY_RIGHT,BSP_BTN_EVENT_PRESSED);drain();
  raw(INPUT_KEY_RIGHT,BSP_BTN_EVENT_REPEAT);drain();assert(list.focus_index==1);cases++;
  /* One retained SHORT can change the active dialog, but is never replayed. */
  setup();for(unsigned n=0;n<64;n++)tick();handoff=true;short_press(INPUT_KEY_CENTER);drain();

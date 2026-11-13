@@ -70,8 +70,39 @@ class UsageExportTests(unittest.TestCase):
         for source in data['source']['files']:
             current = (ROOT / source['path']).read_bytes()
             self.assertEqual(hashlib.sha256(current).hexdigest(), source['sha256'])
-            self.assertEqual(hashlib.sha256(current).hexdigest(), source['referenceSha256'])
-            self.assertEqual(source['transformationsFromReference'], [])
+            if source['path'].endswith('amiidb_amiibo.csv'):
+                # Independently reconstruct the pinned reference bytes. The six
+                # reviewed name/whitespace corrections may change no IDs, rows or other fields.
+                reference = current
+                expected = [
+                    ('018b000002460502', 'Cyrrus', 'Cyrus'),
+                    ('04d0000101960502', '[AC] 339 - Fritta', '[AC] 339 - Frita'),
+                    ('033f0001008f0502', '[AC] 076 - Jeramiah', '[AC] 076 - Jeremiah'),
+                    ('0a02000103b30502', '412 - C.J. ', '412 - C.J.'),
+                    ('0a0c000103c30502', '428 - Audie ', '428 - Audie'),
+                    ('0a0e000103c50502', '430 - Judy ', '430 - Judy'),
+                ]
+                for aid, old, new in expected:
+                    corrected = f'{aid},{new},{new}'.encode()
+                    self.assertEqual(reference.count(corrected), 1)
+                    reference = reference.replace(corrected, f'{aid},{old},{old}'.encode())
+                self.assertEqual(hashlib.sha256(reference).hexdigest(), source['referenceSha256'])
+                self.assertEqual(source['transformationsFromReference'], [
+                    {'operation': 'trim-trailing-space' if old != old.rstrip() else 'correct-display-name',
+                     'id': aid, 'columns': ['name_en', 'name_cn'],
+                     'from': old, 'to': new} for aid, old, new in expected])
+            elif source['path'].endswith('amiidb_game.csv'):
+                corrected = b'49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale,'
+                self.assertEqual(current.count(corrected), 1)
+                reference = current.replace(corrected, b'49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ,')
+                self.assertEqual(hashlib.sha256(reference).hexdigest(), source['referenceSha256'])
+                self.assertEqual(source['transformationsFromReference'], [{
+                    'operation': 'trim-trailing-space', 'id': '49', 'columns': ['name_en'],
+                    'from': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ',
+                    'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}])
+            else:
+                self.assertEqual(hashlib.sha256(current).hexdigest(), source['referenceSha256'])
+                self.assertEqual(source['transformationsFromReference'], [])
             if source['path'].endswith('amiidb_link.csv'):
                 self.assertEqual(source['readNormalization'], [{
                     'operation': 'ignore-one-extra-empty-final-column-in-memory',

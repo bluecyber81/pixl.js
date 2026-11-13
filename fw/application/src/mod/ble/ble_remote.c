@@ -103,6 +103,7 @@ static uint8_t execute(void *context, uint8_t op, uint8_t arg, uint32_t input_ge
         mui_event_t event = {.id = MUI_EVENT_ID_INPUT,
             .arg_int = ((op == REMOTE_BACK ? INPUT_TYPE_LONG : INPUT_TYPE_SHORT) << 8) |
                        (op == REMOTE_BACK ? INPUT_KEY_CENTER : arg)};
+        mui_input_tag_current_event(&event);
         /* Synchronous, once, after physical queue dispatch, with IRQs enabled. */
         mui_event_dispatch_now(&mui()->event_queue, &event);
     }

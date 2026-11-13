@@ -9,10 +9,34 @@
 #define ICON_RIGHT 0xe1aa
 #define ICON_INFO 0xe0ae
 
+static void amiibo_detail_view_draw_notes(amiibo_detail_view_t *view, mui_canvas_t *canvas) {
+    const bool german = getLanguage() == LANGUAGE_DE_DE;
+    const char *text = (const char *)view->ntag->notes;
+    if (!*text) text = german ? "Keine eigene Notiz." : "No personal note.";
+    mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
+    mui_canvas_set_draw_color(canvas, 1);
+    mui_canvas_draw_box(canvas, 0, 0, mui_canvas_get_width(canvas), 12);
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_utf8(canvas, 2, 10, german ? "Eigene Notiz" : "Personal note");
+    mui_canvas_set_draw_color(canvas, 1);
+    view->note_total = mui_element_autowrap_text_box(canvas, 0, 12, mui_canvas_get_width(canvas),
+                                                    29, 26, view->note_offset, 0, text);
+    /* Preserve two full lines, including their descenders, above the controls. */
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_box(canvas, 0, 12, mui_canvas_get_width(canvas) - 4, 2);
+    mui_canvas_set_draw_color(canvas, 1);
+    mui_canvas_draw_utf8(canvas, 1, 52, german ? "L/R: blättern" : "L/R: scroll");
+    mui_canvas_draw_utf8(canvas, 1, 63, german ? "Mitte: zurück" : "Center: back");
+}
+
 static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     char buff[64];
     amiibo_detail_view_t *p_amiibo_detail_view = p_view->user_data;
     ntag_t *ntag = p_amiibo_detail_view->ntag;
+    if (p_amiibo_detail_view->info_page == 3) {
+        amiibo_detail_view_draw_notes(p_amiibo_detail_view, p_canvas);
+        return;
+    }
     if (p_amiibo_detail_view->info_page) {
         amiibo_info_draw(p_canvas, ntag, p_amiibo_detail_view->info_page);
         return;
@@ -45,6 +69,15 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
 
     y += 12;
+    mui_rect_t old_clip, text_clip;
+    mui_canvas_get_clip_window(p_canvas, &old_clip);
+    text_clip = old_clip;
+    if (mui_canvas_get_height(p_canvas) >= 64) {
+        uint8_t bottom = mui_canvas_get_height(p_canvas) - AMIIBO_ACTIVE_HINT_HEIGHT;
+        if ((uint16_t)text_clip.y + text_clip.h > bottom)
+            text_clip.h = bottom > text_clip.y ? bottom - text_clip.y : 0;
+        mui_canvas_set_clip_window(p_canvas, &text_clip);
+    }
 
     if (ntag->read_only) {
         mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
@@ -62,9 +95,13 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
     if (amd != NULL) {
         const char *name =
             isChineseLanguage() && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
-        mui_element_autowrap_text(p_canvas, 0, y += 15, mui_canvas_get_width(p_canvas), 24, name);
-        if (strlen(ntag->notes) > 0) {
-            mui_element_autowrap_text(p_canvas, 0, y += 13, mui_canvas_get_width(p_canvas), 24, ntag->notes);
+        y += 15;
+        mui_element_autowrap_text(p_canvas, 0, y, mui_canvas_get_width(p_canvas), 24, name);
+        /* A wrapped figure name occupies the second row. Never draw a note
+         * over that row; the underlying metadata remains unchanged. */
+        if (strlen(ntag->notes) > 0 &&
+            mui_element_text_height(p_canvas, mui_canvas_get_width(p_canvas), name) <= 13) {
+            mui_element_autowrap_text(p_canvas, 0, y + 13, mui_canvas_get_width(p_canvas), 13, ntag->notes);
         }
     } else if (head > 0 && tail > 0) {
         mui_canvas_draw_utf8(p_canvas, 0, y += 15, "Amiibo");
@@ -73,10 +110,32 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
     } else {
         mui_canvas_draw_utf8(p_canvas, 0, y += 13, getLangString(_L_BLANK_TAG));
     }
+    mui_canvas_set_clip_window(p_canvas, &old_clip);
+    amiibo_active_menu_hint(p_canvas, mui_canvas_get_width(p_canvas));
 }
 
 static void amiibo_detail_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     amiibo_detail_view_t *p_amiibo_detail_view = p_view->user_data;
+    if (p_amiibo_detail_view->info_page == 3) {
+        if (event->key == INPUT_KEY_CENTER &&
+            (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_LONG)) {
+            p_amiibo_detail_view->info_page = 0;
+            if (p_amiibo_detail_view->event_cb)
+                p_amiibo_detail_view->event_cb(AMIIBO_DETAIL_VIEW_EVENT_MENU, p_amiibo_detail_view);
+        } else if (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_LONG ||
+                   event->type == INPUT_TYPE_REPEAT) {
+            uint16_t maximum = p_amiibo_detail_view->note_total > 26 ?
+                ((p_amiibo_detail_view->note_total - 1) / 26) * 26 : 0;
+            if (event->key == INPUT_KEY_LEFT) {
+                p_amiibo_detail_view->note_offset = p_amiibo_detail_view->note_offset >= 13 ?
+                    p_amiibo_detail_view->note_offset - 13 : 0;
+            } else if (event->key == INPUT_KEY_RIGHT) {
+                uint16_t next = p_amiibo_detail_view->note_offset + 13;
+                p_amiibo_detail_view->note_offset = next < maximum ? next : maximum;
+            }
+        }
+        return;
+    }
     if (p_amiibo_detail_view->info_page) {
         if (amiibo_info_input(&p_amiibo_detail_view->info_page, event) && p_amiibo_detail_view->event_cb)
             p_amiibo_detail_view->event_cb(AMIIBO_DETAIL_VIEW_EVENT_MENU, p_amiibo_detail_view);

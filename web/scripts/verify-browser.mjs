@@ -171,12 +171,17 @@ try{
   check(kind+' completed ZIP shows fresh and verified reused files with the correct byte totals in English',
    englishSummary.includes('1 file read from the device (5 B)') &&
    englishSummary.includes('1 file reused after checksum verification (3 B)'));
+  // This fixture exercises the browser-download fallback. Systems with a native
+  // save picker use a separate, explicitly user-confirmed write path.
+  await page.evaluate(() => Object.defineProperty(window, 'showSaveFilePicker', {configurable:true, value:undefined}));
   const downloadPromise = page.waitForEvent('download');
   await readyZip.getByRole('button',{name:'Save backup ZIP',exact:true}).click();
   const download = await downloadPromise;
   check(kind+' save downloads the exact resumed two-file ZIP',
    download.suggestedFilename() === backupFixture.filename &&
    (await fs.readFile(await download.path())).equals(Buffer.from(backupFixture.bytes)));
+  await readyZip.getByRole('button',{name:'I have saved the ZIP',exact:true}).click();
+  check(kind+' downloaded ZIP confirmation visible', (await readyZip.innerText()).includes('ZIP saved or explicitly confirmed as saved.'));
   await readyZip.getByRole('button',{name:'Dismiss',exact:true}).click();
   check(kind+' discarding the ZIP clears its summary',await readyZip.count() === 0);
   await page.evaluate(()=>{window.__ui.language='de_DE';window.__ui.$i18n.locale='de_DE';});

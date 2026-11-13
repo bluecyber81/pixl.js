@@ -73,7 +73,22 @@ import { createMigrationBackup, loadMigrationArchive, verifyMigrationArchive, re
 import { getMigrationCapacityTarget } from '../lib/migration-capacity.js'
 import { saveBlob } from '../lib/browser-tools.js'
 const capacityProfileIds = ['current','de354','de350','de345','de344','previous','legacy']
-const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+)$/u, '$1')
+const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+(?:t[0-9]+)?)$/u, '$1')
+const applicationRanges = applications => {
+  const groups = []
+  for (const app of applications) {
+    const group = groups.at(-1), previous = group?.at(-1)
+    const currentStable = /^2\.22\.0-DE3\.(\d+)$/u.exec(app.firmwareVersion)
+    const previousStable = /^2\.22\.0-DE3\.(\d+)$/u.exec(previous?.firmwareVersion || '')
+    if (currentStable && previousStable && Number(currentStable[1]) === Number(previousStable[1]) + 1 && app.applicationCounter === previous.applicationCounter + 1) group.push(app)
+    else groups.push([app])
+  }
+  return groups.map(group => {
+    const first = group[0], last = group.at(-1)
+    return first === last ? shortVersion(first) + ' / ' + first.applicationCounter
+      : shortVersion(first) + '–' + shortVersion(last) + ' / ' + first.applicationCounter + '–' + last.applicationCounter
+  }).join(' + ')
+}
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,language:String,getSession:{type:Function,required:true},confirmRestore:{type:Function,required:true},confirmFormat:Function,confirmInitialize:Function,confirmRestart:Function},
   emits:['busy','restored'],
@@ -81,10 +96,8 @@ export default {
   computed:{de(){return this.language==='de_DE'},capacityApproved(){return getMigrationCapacityTarget(this.capacityProfile).approved},capacityOptions() {
       return capacityProfileIds.map(id => {
         const target = getMigrationCapacityTarget(id)
-        const first = target.approvedApplications[0]
-        const last = target.approvedApplications.at(-1)
         const reference = shortVersion(target) + ' / ' + target.applicationCounter
-        const range = first === last ? reference : shortVersion(first) + '–' + shortVersion(last) + ' / ' + first.applicationCounter + '–' + last.applicationCounter
+        const range = applicationRanges(target.approvedApplications)
         return {id, label:id === 'current' ? reference : range, range, reference}
       })
     },

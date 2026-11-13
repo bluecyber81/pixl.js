@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.47.0</title>
+  <title>Allmiibo DFU 3.48.0</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
 <main>
   <a data-en="← Back to the file manager" href="../" class="back-link">← Zurück zum Dateimanager</a>
-  <p class="eyebrow">ALLMIIBO · LCD · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.47.0</p>
+  <p class="eyebrow">ALLMIIBO · LCD · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.48.0</p>
   <h1 data-en="Update firmware">Firmware übertragen</h1>
   <p><a data-en="Guide to firmware, the bootloader and LittleFS" id="guide-link" href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
   <p class="notice"><strong data-en="Your collection stays on the device.">Deine Sammlung bleibt erhalten.</strong> <span data-en="The bundled update installs the application and preserves the bootloader, SoftDevice and existing Packed LittleFS file system.">Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</span></p>
@@ -26,7 +26,7 @@
     <label data-en="Your firmware ZIP" for="file">Eigene Firmware-ZIP</label>
     <input id="file" type="file" accept=".zip,application/zip">
     <p><a data-en="Download DE3.65 as a ZIP for your phone" href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>DE3.65 als ZIP für das Handy herunterladen</a></p>
-    <p><a data-en="Download DE3.70 for LCD as a test release" href="../firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip" download>DE3.70 für LCD als Testversion herunterladen</a> · <span data-en="The diagnostic snapshot records the first main-menu selection. See the release notes for the test results.">Die Gerätediagnose erfasst die erste Auswahl im Hauptmenü. Die Prüfergebnisse stehen in den Versionshinweisen.</span> <a data-en="Release notes and test results" href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.70" target="_blank" rel="noopener noreferrer">Versionshinweise und Prüfstand</a></p>
+    <p><a data-en="Download DE3.71t1 for LCD as a test release" href="../firmware/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip" download>DE3.71t1 für LCD als Testversion herunterladen</a> · <span data-en="This signed application update was tested with Z19 and S112 7.3.0 on an LCD Allmiibo with PFS1.">Dieses signierte Anwendungsupdate wurde auf einem LCD-Allmiibo mit Z19, S112 7.3.0 und PFS1 getestet.</span> <a data-en="Release notes and test results" href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.71t1" target="_blank" rel="noopener noreferrer">Versionshinweise und Prüfstand</a></p>
     <p id="package-target" role="status" aria-live="polite"></p>
     <details><summary data-en="Which packages can I use?">Welche Pakete passen?</summary><p data-en="Both bundled packages are LCD applications for PFS1 and S112 7.3.0. In the file manager you can check Z19 against its boot region hash and counter. Check the display variant on the device. This page accepts application updates only. It rejects combined archives and bootloader or SoftDevice packages.">Beide mitgelieferten Pakete sind LCD-Anwendungen für PFS1 und S112 7.3.0. Für Z19 steht im Dateimanager ein Vergleich anhand von Bereichs-Hash und Zähler bereit. Die Displayvariante wird nicht automatisch erkannt. Gesamtarchive und Bootloader-/SoftDevice-Pakete werden hier abgewiesen.</p><p data-en="For each package, this page checks the application length and SHA-256 against the Nordic init packet. For a bundled package it also checks the entire ZIP. The bootloader verifies the signature during transfer. Z15 and Z17 can also install an older, correctly signed application. If you recently read the device details, the browser warns you about a lower application counter. Transfer starts after you select a device in step 2.">Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen die Signatur. Z15 und Z17 können auch eine ältere, gültig signierte Anwendung installieren. Bei einer aktuellen Gerätediagnose warnt der Browser vor einem niedrigeren App-Zähler. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
   </section>

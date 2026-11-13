@@ -17,7 +17,7 @@ class DatabaseQrTests(unittest.TestCase):
             folder=Path(tmp)
             copies=['amiibo_info_draw.c','amiibo_info_draw.h','mui_qrcode_helper.c','mui_qrcode_helper.h']
             for name in copies:shutil.copyfile(SRC/name,folder/name)
-            for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','mui_element.h','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']:
+            for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','mui_event.h','mui_element.h','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c','u8g2_font_likeminecraft_te.c']:
                 shutil.copyfile(SRC/'mui'/name,folder/name)
             shutil.copyfile(SRC/'ntag/ntag_def.h',folder/'ntag_def.h')
             shutil.copyfile(SRC/'app/amiidb/view/amiibo_view.h',folder/'amiibo_view.h')
@@ -54,7 +54,7 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
                   'u8g2_bitmap.c','u8g2_circle.c','u8x8_setup.c','u8x8_display.c','u8x8_cad.c',
                   'u8x8_byte.c','u8x8_gpio.c','u8x8_capture.c','u8x8_u16toa.c','u8x8_u8toa.c']
             common=[folder/n for n in ['amiibo_info_draw.c','mui_qrcode_helper.c','mui_canvas.c',
-                                       'u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']]
+                                       'u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c','u8g2_font_likeminecraft_te.c']]
             common += [SRC/'i18n/de_DE.c',FW/'components/qrcode/c/qrcodegen.c']+[u8/n for n in libs]
             translations=json.loads((FW/'data/usage-translations.de.json').read_bytes())['texts']
             pairs=',\n'.join('    {%s, %s}' % (json.dumps(en,ensure_ascii=False), json.dumps(de,ensure_ascii=False))
@@ -76,7 +76,7 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
             renders.mkdir(parents=True,exist_ok=True)
             hashes={str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in
                     [view_path,wrapper_path,helper_path,*[SRC/n for n in copies],SRC/'mui/mui_canvas.c',
-                     SRC/'mui/u8g2_font_wqy12_t_gb2312a.c',SRC/'mui/u8g2_font_siji_t_6x10.c',
+                     SRC/'mui/u8g2_font_wqy12_t_gb2312a.c',SRC/'mui/u8g2_font_siji_t_6x10.c',SRC/'mui/u8g2_font_likeminecraft_te.c',
                      FW/'components/qrcode/c/qrcodegen.c',Path(__file__),Path(__file__).with_name('amiidb_qr_de325.c.in')]}
             results={'passed':False,'device_access':False,'sources_sha256':hashes,'runs':[],
                      'limits':['Real C rendering and deterministic animation/input callbacks; timer/peripheral integration mocked.',

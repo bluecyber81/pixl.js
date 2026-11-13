@@ -29,6 +29,8 @@ int32_t mui_canvas_draw_utf8_clip(mui_canvas_t *p_canvas, int32_t x, int32_t y, 
 uint8_t mui_canvas_draw_glyph(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, uint16_t encoding);
 uint16_t mui_canvas_draw_utf8_truncate(mui_canvas_t* p_canvas, uint8_t x, uint8_t y, uint8_t max_width, const char *str);
 uint16_t mui_canvas_get_utf8_width(mui_canvas_t *p_canvas, const char *s);
+uint16_t mui_canvas_get_utf8_advance(mui_canvas_t *p_canvas, const char *text);
+uint8_t mui_canvas_current_font_ascent(mui_canvas_t *p_canvas);
 
 void mui_canvas_set_frame(mui_canvas_t *p_canvas, uint8_t offset_x, uint8_t offset_y, uint8_t width, uint8_t height);
 void mui_canvas_get_clip_window(mui_canvas_t *p_canvas, mui_rect_t *p_rect);

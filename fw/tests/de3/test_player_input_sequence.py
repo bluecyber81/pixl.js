@@ -11,6 +11,7 @@ import re
 import subprocess
 import tempfile
 from root_host import function
+from input_context_support import context_state, context_functions, has_context_api, TOKEN_FUNCTIONS
 
 FW = Path(__file__).resolve().parents[2]
 
@@ -172,6 +173,11 @@ def build(fw, folder, name):
                  'app/player/view/player_view.h']:
         code += '\n' + header(path)
     code += STUBS
+    input_source = read('mui/mui_input.c')
+    context_names = (*TOKEN_FUNCTIONS, 'mui_input_context_changed') if has_context_api(input_source) else ()
+    if context_names:
+        code += '\n' + context_state(gestures=True, source_text=input_source)
+        code += context_functions(context_names, source_text=input_source)
     functions = {
         'mui/mui_view.c': ['mui_view_input', 'mui_view_enter', 'mui_view_exit'],
         'mui/mui_view_dispatcher.c': ['mui_view_dispatcher_set_curent_view', 'mui_view_dispatcher_on_input', 'mui_view_dispatcher_switch_to_view'],
@@ -190,6 +196,7 @@ def build(fw, folder, name):
             match = re.search(r'^(?:static\s+)?void\s+' + re.escape(symbol) + r'\(', source, re.M)
             assert match, symbol
             code += '\n' + function(source[match.start():], symbol)
+    functions['mui/mui_input.c'] = [*context_names, *functions['mui/mui_input.c']]
     code += MAIN
     cfile = folder / (name + '.c'); cfile.write_text(code, encoding='utf-8')
     exe = folder / (name + '.exe')

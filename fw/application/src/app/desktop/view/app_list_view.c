@@ -2,6 +2,7 @@
 #include "i18n/language.h"
 #include "nrf_log.h"
 #include "settings.h"
+#include "mui_nav_diag.h"
 
 #define ICON_WIDTH 32
 #define ICON_HEIGHT 32
@@ -42,6 +43,10 @@ static void app_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     uint8_t first_offset = (canvas_width - ICON_WIDTH) / 2;
     int16_t scroll_offset = focus * ICON_GROUP_WIDTH + p_list_view->icon_anim_value;
 
+#ifdef MUI_FIRST_MENU_DIAG
+    uint8_t centered_icon = 0;
+    int16_t center_x = canvas_width / 2;
+#endif
     // icon
     mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
     mui_canvas_set_draw_color(p_canvas, 1);
@@ -52,6 +57,10 @@ static void app_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         if (icon_x + ICON_GROUP_WIDTH > 0 && icon_x < canvas_width) {
             if (app->icon_32x32) {
                 mui_canvas_draw_xbm(p_canvas, icon_x, ICON_TOP_MARGIN, ICON_WIDTH, ICON_HEIGHT, app->icon_32x32->data);
+#ifdef MUI_FIRST_MENU_DIAG
+                if (icon_x <= center_x && icon_x + ICON_WIDTH - 1 >= center_x)
+                    centered_icon = (uint8_t)app->id;
+#endif
             }
         }
     }
@@ -90,6 +99,9 @@ static void app_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
     mui_canvas_draw_glyph(p_canvas, 0, canvas_height - 2, 0xe10b);
     mui_canvas_draw_glyph(p_canvas, canvas_width - 12, canvas_height - 2, 0xe10a);
+#ifdef MUI_FIRST_MENU_DIAG
+    mui_menu_return_diag_draw(mui_input_context_current(), (uint8_t)focus_app->id, centered_icon);
+#endif
 }
 
 static void app_list_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
@@ -146,6 +158,12 @@ static void app_list_view_on_input(mui_view_t *p_view, mui_input_event_t *event)
 
 static void app_list_view_on_enter(mui_view_t *p_view) {
     app_list_view_t *p_app_list_view = p_view->user_data;
+    if (p_app_list_view->focus_restored) {
+        /* Show the remembered app and its label together from the first frame. */
+        p_app_list_view->icon_anim_value = 0;
+        p_app_list_view->name_anim_value = 0;
+        return;
+    }
     if (mui_list_view_anim_enabled()) {
         mui_anim_set_values(&p_app_list_view->icon_anim, -ICON_GROUP_WIDTH, 0);
         mui_anim_start(&p_app_list_view->icon_anim);

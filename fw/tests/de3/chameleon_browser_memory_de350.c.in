@@ -15,7 +15,8 @@
 #define LIST_ITEM_HEIGHT 13
 #define CHELEMEON_DUMP_FOLDER "/chameleon/dump"
 static mui_t fake_mui;
-static unsigned oom,errors,scenes,reads,closes,cases;
+static unsigned oom,errors,scenes,reads,closes,cases,coll_updates;
+static int nickname_result;
 static const char *toast;
 mui_t *mui(void){return &fake_mui;}
 void mui_show_memory_error(mui_t*m){m->memory_error=true;oom++;}
@@ -38,14 +39,14 @@ vfs_driver_t*vfs_get_default_driver(void){return &driver;}
 static uint8_t tag_data[4096];
 static uint8_t *tag_helper_get_active_tag_memory_data(void){return tag_data;}
 static size_t tag_helper_get_active_tag_data_size(void){return sizeof(tag_data);}
-static void tag_helper_load_coll_res_from_block0(void){}
-static int tag_helper_set_nickname(const char*s){(void)s;return 0;}
+static void tag_helper_load_coll_res_from_block0(void){coll_updates++;}
+static int tag_helper_set_nickname(const char*s){(void)s;return nickname_result;}
 @LIST@
 @BROWSER@
 static void*fixed[32];static unsigned nf;
 static void reserve(size_t n){void*p=mui_mem_malloc(n);assert(p&&nf<32);memset(p,0,n);fixed[nf++]=p;}
 static app_chameleon_t *begin(bool pressure){
- mui_mem_init();oom=errors=reads=closes=scenes=0;fake_mui.memory_error=false;nf=0;fail_read=0;openfail=closefail=false;is_mounted=true;toast=NULL;
+ mui_mem_init();oom=errors=reads=closes=scenes=coll_updates=0;nickname_result=0;fake_mui.memory_error=false;nf=0;fail_read=0;openfail=closefail=false;is_mounted=true;toast=NULL;
  app_chameleon_t*a=mui_mem_malloc(sizeof(*a));assert(a);memset(a,0,sizeof(*a));
  a->p_list_view=mui_mem_malloc(sizeof(*a->p_list_view));assert(a->p_list_view);memset(a->p_list_view,0,sizeof(*a->p_list_view));mui_list_item_array_init(a->p_list_view->items);a->p_list_view->user_data=a;
  if(pressure){
@@ -80,10 +81,19 @@ static void import_buffer(void){
  make(1000,false);app_chameleon_t*a=begin(sizeof(void*)==4);chameleon_scene_menu_card_data_file_load_on_enter(a);
  memset(tag_data,0xa5,sizeof(tag_data));read_size=4095;click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==0&&!oom);
  for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0xa5);
- errors=0;read_size=4096;click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==2&&!oom);
+ assert(coll_updates==0);
+ /* Failed metadata reads/writes must not replace an already active card. */
+ const int nickname_errors[]={-9,-11};
+ for(unsigned e=0;e<2;e++){
+  errors=0;nickname_result=nickname_errors[e];read_size=4096;
+  click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==0&&!oom&&coll_updates==0);
+  assert(!strcmp(toast,_T(APP_CHAMELEON_CARD_SET_NICK_FAILED)));
+  for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0xa5);
+ }
+ nickname_result=0;errors=0;read_size=4096;click(a,CHAMELEON_MENU_FILE);assert(errors==1&&scenes==2&&!oom&&coll_updates==1);
  assert(!strcmp(toast,_T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS)));
  for(unsigned i=0;i<sizeof(tag_data);i++)assert(tag_data[i]==0x31);
- end(a);puts("PASS 4KiB card import from 1000-file page; short-read preservation and successful retry");
+ end(a);puts("PASS 4KiB card import from 1000-file page; short-read and nickname-failure preservation, then successful retry");
 }
 #endif
 int main(void){

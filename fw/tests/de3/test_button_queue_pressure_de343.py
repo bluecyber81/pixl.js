@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import unittest
 from root_host import function
+from input_context_support import context_state, context_functions, has_context_api, TOKEN_FUNCTIONS
 
 FW = Path(os.environ.get('PIXL_BUTTON_SOURCE', Path(__file__).resolve().parents[2]))
 SRC = FW/'application/src'
@@ -27,7 +28,13 @@ class ButtonQueuePressureTests(unittest.TestCase):
         snapshot = lambda:{p:hashlib.sha256((SRC/p).read_bytes()).hexdigest() for p in sorted(inputs)}
         before = snapshot()
         fixture = Path(__file__).with_name('button_queue_pressure_de343.c.in')
-        code = fixture.read_text().replace('@FUNCTIONS@','static void ble_remote_local_activity(void) {}\n'+'\n'.join(function((SRC/p).read_text(),n) for p,n in ORDER))
+        input_source = (SRC/'mui/mui_input.c').read_text()
+        context_code = ''
+        if has_context_api(input_source):
+            context_code = '#define TEST_HAS_INPUT_CONTEXT 1\n'
+            context_code += context_state(gestures=True, source_text=input_source)
+            context_code += context_functions((*TOKEN_FUNCTIONS, 'mui_input_context_changed'), source_text=input_source)
+        code = fixture.read_text().replace('@FUNCTIONS@','static void ble_remote_local_activity(void) {}\n'+context_code+'\n'.join(function((SRC/p).read_text(),n) for p,n in ORDER))
         arm = os.environ.get('PIXL_ARM32') == '1'
         sanitizer = os.environ.get('PIXL_SANITIZE') == '1' and not arm
         with tempfile.TemporaryDirectory(prefix='button-pressure-') as temporary:

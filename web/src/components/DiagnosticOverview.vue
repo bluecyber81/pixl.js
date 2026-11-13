@@ -16,6 +16,17 @@
         <span v-else>{{ t.estimating }}</span></p>
     </div>
     <p v-if="startedAt" class="snapshot-time">{{ t.started }}: <time :datetime="startedAt">{{ displayTime(startedAt) }}</time><template v-if="completedAt"> · {{ t.completed }}: <time :datetime="completedAt">{{ displayTime(completedAt) }}</time></template></p>
+    <details v-if="validSnapshot" class="build-reference">
+      <summary>{{ pick('Geräteangaben und Testpaket-Referenz', 'Device report and test package reference') }}</summary>
+      <dl class="detail-values">
+        <div><dt>{{ pick('Ausgelesene Version / Anwendungszähler', 'Reported version / application counter') }}</dt><dd>{{ buildIdentity.observed.firmwareVersion || '—' }} / {{ number(buildIdentity.observed.applicationCounter) }}</dd></div>
+        <div><dt>{{ pick('Paketreferenz', 'Package reference') }}</dt><dd>{{ buildIdentity.packageReference.firmwareVersion }} / {{ buildIdentity.packageReference.applicationCounter }} · {{ buildIdentity.packageReference.board }}</dd></div>
+        <div><dt>{{ pick('Vergleich der Angaben', 'Comparison of reported values') }}</dt><dd>{{ referenceRelation }}</dd></div>
+        <div><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
+        <div><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
+      </dl>
+      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus. Die Firmware liefert keinen SourceID- oder App-Hashmesswert. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. An initial device test was reported. Full functional testing is pending. Firmware provides no measured SourceID or application hash. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
+    </details>
     <div class="diagnostic-grid" :aria-busy="loading">
       <article v-for="card in cards" :key="card.id" class="diagnostic-card" :class="'state-' + card.state" :data-section="card.id">
         <header class="card-heading"><h4>{{ card.title }}</h4><span class="section-state">{{ t.states[card.state] }}</span></header>
@@ -43,6 +54,7 @@
 </template>
 <script setup>
 import { computed } from 'vue';
+import { diagnosticBuildIdentity } from '../lib/firmware-build-reference.js';
 import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/device-info.js';
 import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
@@ -89,6 +101,14 @@ const t = computed(() => ({
   source: pick('Quelle', 'Source'), buttons: pick('Tastenereignisse der Einstellungsdiagnose', 'Button events from settings diagnostics'),
   events: { press: pick('Drücken', 'Press'), release: pick('Loslassen', 'Release'), short: pick('Kurz', 'Short'), long: pick('Lang', 'Long'), repeat: pick('Wiederholt', 'Repeat') },
 }));
+const buildIdentity = computed(() => diagnosticBuildIdentity({firmwareVersion: props.firmwareVersion, boot: validSnapshot.value?.sections.boot?.data}));
+const referenceRelation = computed(() => ({
+  unknown: pick('Version nicht erfasst', 'Version not recorded'),
+  'different-version': pick('Andere gemeldete Version', 'Different reported version'),
+  'different-counter': pick('Gleiche Version, anderer Zähler', 'Same version, different counter'),
+  'version-only': pick('Nur Version stimmt überein; Zähler unbekannt', 'Version matches; counter unknown'),
+  'version-and-counter': pick('Version und Zähler stimmen überein; App-Hash nicht geprüft', 'Version and counter match; application hash not verified'),
+})[buildIdentity.value.referenceRelation]);
 const eventTypes = ['press', 'release', 'short', 'long', 'repeat'];
 const number = value => Number.isSafeInteger(value) && value >= 0 ? String(value) : '—';
 const signed = value => Number.isSafeInteger(value) ? String(value) : '—';
@@ -240,11 +260,14 @@ function firstMenu(data) {
   else if (!data.launcherReturned) state = pick('App-Auswahl erfasst, Rückkehr des Startaufrufs offen', 'App selection recorded, launcher has yet to return');
   else state = data.targetActive ? pick('Gewählte App ist beim Abschluss aktiv', 'Selected app active when launch finished')
     : pick('Beim Abschluss war die gewählte App nicht aktiv', 'Selected app was inactive when launch finished');
+  const names = {2: pick('Amiibo-Emulator', 'Amiibo Emulator'), 3: pick('Amiibo-Datenbank', 'Amiibo Database'), 4: 'AmiiboLink',
+    5: pick('Videoplayer', 'Video Player'), 6: pick('Bluetooth-Dateiübertragung', 'Bluetooth File Transfer'),
+    7: pick('Einstellungen', 'Settings'), 8: pick('Kartenemulator', 'Card Emulator'), 9: pick('Spiele', 'Games')};
+  const appName = id => id === null ? pick('Noch nicht erfasst', 'Not recorded yet') : names[id] ?? `App ${id}`;
+  const drawPair = (label, icon) => label === null ? pick('Noch kein Zeichenaufruf erfasst', 'No draw call recorded yet')
+    : `${appName(label)} / ${icon === null ? pick('Kein Symbol in der Mitte', 'No icon at center') : appName(icon)}`;
   const summary = [[pick('Erste Menüauswahl', 'First menu selection'), state]];
   if (data.selectionAttempted) {
-    const names = {2: pick('Amiibo-Emulator', 'Amiibo Emulator'), 3: pick('Amiibo-Datenbank', 'Amiibo Database'), 4: 'AmiiboLink',
-      5: pick('Videoplayer', 'Video Player'), 6: pick('Bluetooth-Dateiübertragung', 'Bluetooth File Transfer'),
-      7: pick('Einstellungen', 'Settings'), 8: pick('Kartenemulator', 'Card Emulator'), 9: pick('Spiele', 'Games')};
     summary.push([pick('Gewählte App', 'Selected app'), names[data.targetAppId] ?? `App ${data.targetAppId}`]);
   }
   if (data.launcherReturned) summary.push([pick('Dauer des App-Startaufrufs', 'Time in app launch call'), ms(data.launchCallMilliseconds)]);
@@ -253,8 +276,29 @@ function firstMenu(data) {
     summary.push([pick('Mitteltaste · Drücken / Loslassen / Kurz', 'Middle button · press / release / short'),
       ['press','release','short'].map(count).join(' / ')]);
   }
-  return {summary, note: pick('Erfasst die entprellte Gerätetaste beim ersten Hauptmenü seit dem Neustart bis zur App-Auswahl oder zum Verlassen des Menüs. Die Dauer endet bei der Rückkehr des Startaufrufs. Wann die App auf dem Display sichtbar wurde, bleibt offen.',
-    'Tracks the debounced device button in the first main menu since restart until selection or leaving that menu. Timing ends when the launcher returns. When the app appeared on the display is unknown.')};
+  const details = [];
+  if (data.schemaVersion === 2) {
+    const back = data.lastAppReturn;
+    summary.push([pick('Letzte Rückkehr aus einer App', 'Last return from an app'), back
+      ? `${appName(back.sourceAppId)} → ${pick('Hauptmenü', 'Main menu')}`
+      : pick('Seit Neustart noch keine Rückkehr erfasst', 'No app return recorded since restart')]);
+    if (back) {
+      summary.push([pick('Gewünschter Menüfokus bei Rückkehr', 'Requested menu focus on return'), appName(back.targetAppId)]);
+      summary.push([pick('Erster Zeichenaufruf · Name / Symbol', 'First draw call · label / icon'),
+        drawPair(back.firstLabelAppId, back.firstIconAppId)]);
+      summary.push([pick('Veraltete Eingaben verworfen', 'Stale input events discarded'),
+        back.staleEventsDiscarded === 65535 ? '≥65535' : number(back.staleEventsDiscarded)]);
+      details.push([pick('Letzter Zeichenaufruf · Name / Symbol', 'Last draw call · label / icon'),
+        drawPair(back.lastLabelAppId, back.lastIconAppId)]);
+      details.push([pick('Eingabekontext · App / Hauptmenü', 'Input context · app / main menu'),
+        `${number(back.sourceContext)} / ${number(back.targetContext)}`]);
+    }
+  } else {
+    summary.push([pick('Rückkehr aus einer App', 'Return from an app'),
+      pick('Firmware liefert nur die erste Menüauswahl (v1)', 'Firmware reports first menu selection only (v1)')]);
+  }
+  return {summary, details, note: pick('Die erste Menüauswahl und die letzte Rückkehr aus einer App sind getrennte Firmware-Beobachtungen. Die Dauer endet bei der Rückkehr des Startaufrufs. Zeichenaufrufe beweisen nicht, wann die Pixel auf dem Gerät sichtbar wurden.',
+    'First menu selection and the last return from an app are separate firmware observations. Timing ends when the launcher call returns. Draw calls do not establish when pixels became visible on the physical device.')};
 }
 const includeMenu = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'menu') : supportsMenuDiagnostics(props.firmwareVersion));
@@ -267,7 +311,7 @@ const cards = computed(() => [
   section('power', pick('Strom und Ruhezeit', 'Power and sleep'), normalizePowerDiagnostics, power),
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
-  ...(includeMenu.value ? [section('menu', pick('Erstes Hauptmenü nach Neustart', 'First main menu after restart'), normalizeMenuDiagnostics, firstMenu)] : []),
+  ...(includeMenu.value ? [section('menu', pick('Hauptmenü: erster Start und Rückkehr', 'Main menu: first launch and return'), normalizeMenuDiagnostics, firstMenu)] : []),
 ]);
 const activeProgress = computed(() => props.loading && props.connected ? props.progress : null);
 const timing = computed(() => readTimeEstimate(activeProgress.value, Math.max(props.readClock, activeProgress.value.updatedAt)));
@@ -298,5 +342,6 @@ button:disabled{opacity:.5;cursor:default}button:focus-visible,summary:focus-vis
 .key-values,.detail-values{display:grid;gap:11px;margin:14px 0}.key-values>div,.detail-values>div{display:grid;gap:4px}.key-values dt,.detail-values dt{font-size:.73rem;color:#5e7486}.key-values dd{font-weight:650;font-size:.9rem}.key-values dd,.detail-values dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.detail-values dd{font-size:.76rem}.technical-details{border-top:1px solid #e2eaf0;padding-top:9px}.technical-details>summary{cursor:pointer;font-size:.76rem;color:#2c668b;padding:4px 0}.scope-note,.section-message,.overall-limits{font-size:.71rem;color:#617588}.scope-note{margin-bottom:0}.overall-limits{margin-bottom:0}
 .event-table-wrap{overflow-x:auto;margin-top:12px}table{width:100%;border-collapse:collapse;font-size:.67rem}caption{text-align:left;padding:5px 0;font-weight:600}th,td{padding:7px 5px;text-align:left;border-bottom:1px solid #e2eaf0}tbody th{font-weight:400}td{font-variant-numeric:tabular-nums}
 @media(min-width:1200px){.diagnostic-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.diagnostic-overview{padding:12px}.diagnostic-grid{grid-template-columns:1fr}.overview-heading{flex-wrap:wrap}.overview-actions button{flex:1 1 230px}.card-heading{flex-wrap:wrap}}
+.build-reference{margin-top:1rem;padding:.8rem;border:1px solid #cbd8e0;border-radius:.5rem}.build-reference summary{cursor:pointer}.build-reference dd{overflow-wrap:anywhere}
 .sample-note{padding:10px 12px;border-left:3px solid #7596ac;background:#edf4f8;color:#294c64;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}
 </style>

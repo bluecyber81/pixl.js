@@ -272,12 +272,25 @@ export function get_ui_diagnostics() {
 export function get_menu_diagnostics(firmwareVersion) {
     if (!supportsMenuDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
-    return op_queue_push(0x04, b => b.writeUint8(1), b =>
-        parseMenuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16, optional_probe: true })
-        .then(response => {
-            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
-            return response.status === 1 || response.status === 255 ? null : checked_response(response);
-        });
+    const checkSession = () => {
+        if (generation !== transport_generation)
+            throw Object.assign(new Error('Bluetooth session changed'), {code: 'DISCONNECTED'});
+    };
+    const read = version => op_queue_push(0x04, b => b.writeUint8(version), b => {
+        const data = parseMenuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+        if (data.schemaVersion !== version) throw new Error('Invalid menu diagnostic version');
+        return data;
+    }, {max_bytes: version === 2 ? 32 : 16, optional_probe: true});
+    // One bounded v2 query; only an explicit unsupported form (ERR/UNKNOWN)
+    // permits one v1 fallback. Malformed success, timeout and session changes do not.
+    const finish = response => {
+        checkSession();
+        return response.status === 1 || response.status === 255 ? null : checked_response(response);
+    };
+    return read(2).then(response => {
+        checkSession();
+        return response.status === 1 || response.status === 255 ? read(1).then(finish) : finish(response);
+    });
 }
 
 export function get_display_photo(firmwareVersion) {
@@ -327,7 +340,8 @@ export function get_power_diagnostics() {
 // Explicit optional read, serialized by the same queue as all file operations.
 export function get_startup_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    const series = /^2\.22\.0-DE3\.(\d+)$/.exec(firmwareVersion || '');
+    const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
+    const series = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
     function read(detail) {
         return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b =>
             parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: [32,40,80][detail], optional_probe: detail > 0 })
@@ -481,7 +495,8 @@ export function vfs_import_state(drive, operation = 0, archiveSha256 = null) {
 export function vfs_backup_digest(path, size, firmwareVersion) {
     path_validation(path);
     if (!Number.isSafeInteger(size) || size < 0 || path.length <= 3) throw new Error('Invalid backup file.');
-    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
+    const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
+    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(known);
     if (file_digest_unsupported || !version || Number(version[1]) < 66 || size > 572 || !path.startsWith('E:/')) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x21, b => { write_string(b, path); b.writeUint16(size); }, b => {

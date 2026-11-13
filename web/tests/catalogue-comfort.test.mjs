@@ -9,6 +9,8 @@ import { parse, compileScript } from '@vue/compiler-sfc';
 import postcss from 'postcss';
 import { gameGuides } from '../src/data/game-guides.js';
 import { announcementGroups } from '../src/data/announced-figures.js';
+import de_DE from '../src/i18n/de_DE.js';
+import en_US from '../src/i18n/en_US.js';
 
 // Exercise the production SFC with Vue's renderer/reactivity. The host records
 // rendered image requests, button events and focus/scroll calls without network
@@ -85,7 +87,7 @@ async function mount(props = {}, locale = 'de_DE') {
   const Component = await component(fileURLToPath(new URL('../src/components/CataloguePanel.vue', import.meta.url)));
   const root = hostNode('root'), state = Vue.reactive({ catalogue: catalogue(), ...props });
   const app = renderer.createApp({ render: () => Vue.h(Component, state) });
-  app.use(VueI18n.createI18n({ legacy: false, locale, messages: { [locale]: {} } }));
+  app.use(VueI18n.createI18n({ legacy: false, locale, messages: { de_DE, en_US } }));
   app.mount(root); await Vue.nextTick(); return { root, state, app };
 }
 async function click(root, label) {
@@ -135,6 +137,7 @@ test('documented games select exact editions and intersect with device evidence 
       const announced = classNode(root, 'announcements');
       assert.equal(nodes(announced, 'li').length, 2);
       assert.equal(announced.props.open, true);
+      assert.match(text(classNode(announced, 'group-title')), de ? /Erschienen/ : /Released/);
       assert.match(text(announced), de ? /Figurenspieler/ : /Figure Players/);
       const checked = new Intl.DateTimeFormat(de ? 'de-DE' : 'en-GB', {dateStyle:'long', timeZone:'UTC'})
         .format(new Date(announcementGroups[0].sourceCheckedOn + 'T00:00:00Z'));
@@ -157,12 +160,12 @@ test('all documented game IDs resolve in the baseline and stay separate from ann
   }
 });
 
-test('nine announced figures have official links and do not enter catalogue counts or the missing filter', async () => {
+test('the nine regional releases and announcements have official links and stay outside inventory counts', async () => {
   const { root, app } = await mount({ collectionReport: report() });
   try {
     const section = classNode(root, 'announcements');
     assert.equal(section.props.open, false);
-    assert.match(text(nodes(section, 'summary')[0]), /Angekündigte Figuren \(9\)/);
+    assert.match(text(nodes(section, 'summary')[0]), /Figuren und Erscheinungstermine \(9\)/);
     const figures = nodes(section, 'li');
     assert.equal(figures.length, 9);
     for (const figure of figures) {
@@ -193,7 +196,7 @@ test('announcement search opens relevant results by either language or proposed 
       assert.match(text(section), /Unconfirmed community ID0100000004fd0902/);
       assert.match(text(section), /Other compatible Zelda figures give you items/);
       assert.equal(cards(root).length, 0);
-      assert.match(text(classNode(root, 'empty-result')), /announcements above/);
+      assert.match(text(classNode(root, 'empty-result')), /Figure release dates/);
     }
     search.props['onUpdate:modelValue']('01000000037c0002'); await Vue.nextTick();
     assert.equal(classNode(root, 'announcements'), undefined, 'the existing Smash edition has another ID');
@@ -218,10 +221,11 @@ test('series dropdown includes announcement-only series and keeps their counts s
       assert.equal(section.props.open, true);
       assert.deepEqual(nodes(section, 'strong').map(text), [name]);
       assert.equal(nodes(section, 'li').length, count);
-      assert.equal(text(nodes(section, 'summary')[0]), `Announced figures (${count})`);
+      assert.equal(text(nodes(section, 'summary')[0]), `Figure release dates (${count})`);
+      assert.match(text(classNode(section, 'group-title')), /Announced/);
       assert.equal(cards(root).length, 0);
       assert.match(text(classNode(root, 'result-bar')), /^0 results with a catalogue ID/);
-      assert.match(text(classNode(root, 'empty-result')), /announcements above/);
+      assert.match(text(classNode(root, 'empty-result')), /Figure release dates/);
       assert.equal(nodes(root, 'nav').length, 0);
     }
     const known = nodes(classNode(root, 'known'), 'input')[0];
@@ -394,7 +398,8 @@ test('catalogue local-file inspection receives the active catalogue through the 
   const { root, state, app } = await mount({ catalogue: cat });
   try {
     const bytes = new Uint8Array(540); bytes[0] = 4; bytes[3] = 0x88 ^ 4; bytes[91] = 1;
-    const picker = nodes(root, 'input').find(node => node.props.type === 'file');
+    const inspector = nodes(root).find(node => node.props.class === 'local-inspector');
+    const picker = nodes(inspector, 'input').find(node => node.props.type === 'file');
     await picker.props.onChange({ target: { files: [{ size: bytes.length, arrayBuffer: async () => bytes.buffer }], value: 'fixture.bin' } });
     await Vue.nextTick();
     assert.equal(text(nodes(root, 'h4')[0]), 'Active Catalogue Fixture');

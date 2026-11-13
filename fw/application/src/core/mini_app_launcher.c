@@ -1,6 +1,7 @@
 
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
+#include "mui_nav_diag.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "settings.h"
@@ -80,10 +81,16 @@ static mini_app_inst_t *mini_app_launcher_find(mini_app_launcher_t *launcher, ui
     return NULL;
 }
 static void mini_app_launcher_inst_kill(mini_app_launcher_t *launcher, mini_app_inst_t *inst) {
-    (void)launcher;
     if (!inst || !inst->p_handle || inst->state != APP_STATE_RUNNING) return;
     inst->p_app->kill_cb(inst);
     inst->state = APP_STATE_KILLED;
+    if (inst == launcher->p_main_app_inst) {
+#ifdef MUI_FIRST_MENU_DIAG
+        mui_menu_return_diag_begin(inst->p_app->sys ? 0u : (uint8_t)inst->p_app->id,
+                                   mui_input_context_current());
+#endif
+        mui_input_context_changed();
+    }
 }
 static mini_app_inst_t *mini_app_launcher_inst_run(mini_app_launcher_t *launcher, uint32_t id, uint8_t *retain) {
     const mini_app_t *app = mini_app_registry_find_by_id(id);
@@ -127,6 +134,13 @@ void mini_app_launcher_run_with_retain_data(mini_app_launcher_t *launcher, uint3
     if (!app->deamon) {
         launcher->p_main_app_inst = inst;
         if (inst && !app->sys) launcher->last_menu_app_id = app->id;
+        /* Also fence input produced during startup or an allocation failure.
+         * The old app was already destroyed, even when inst is NULL. */
+        mui_input_context_changed();
+#ifdef MUI_FIRST_MENU_DIAG
+        mui_menu_return_diag_commit(inst && id == MINI_APP_ID_DESKTOP,
+                                    (uint8_t)launcher->last_menu_app_id, mui_input_context_current());
+#endif
     }
     launcher->exit_busy = false;
     if (!inst) mui_show_memory_error(mui());
@@ -181,7 +195,16 @@ void mini_app_launcher_init(mini_app_launcher_t *p_launcher, uint32_t wakeup_rea
     if( (wakeup_reason & NRF_POWER_RESETREAS_NFC_MASK) && tag_helper_valid_default_slot()){
         mini_app_launcher_run_with_retain_data(p_launcher, MINI_APP_ID_CHAMELEON, NULL);
     }else if (p_cache->enabled == 1 && p_settings->hibernate_enabled == 1) {
-        mini_app_launcher_run_with_retain_data(p_launcher, p_cache->id, p_cache->retain_data);
+        const mini_app_t *saved_app = mini_app_registry_find_by_id(p_cache->id);
+        if (saved_app && !saved_app->deamon && saved_app->hibernate_enabled) {
+            mini_app_launcher_run_with_retain_data(p_launcher, p_cache->id, p_cache->retain_data);
+        } else {
+            /* A stale/unsupported retained ID must never leave only the
+             * background status bar running. Do not restore daemon state. */
+            p_cache->enabled = false;
+            memset(p_cache->retain_data, 0, sizeof(p_cache->retain_data));
+            mini_app_launcher_run_with_retain_data(p_launcher, MINI_APP_ID_DESKTOP, NULL);
+        }
     } else {
         mini_app_launcher_run_with_retain_data(p_launcher, MINI_APP_ID_DESKTOP, NULL);
     }

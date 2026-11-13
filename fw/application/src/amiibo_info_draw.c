@@ -5,6 +5,38 @@
 #include "mui_qrcode_helper.h"
 #include <stdio.h>
 
+void amiibo_active_menu_hint(mui_canvas_t *canvas, uint8_t width) {
+    if (!canvas || mui_canvas_get_height(canvas) < 64 || width < 76) return;
+    if (width > mui_canvas_get_width(canvas)) width = mui_canvas_get_width(canvas);
+    const uint8_t *font = u8g2_GetFont(canvas->fb);
+    const uint8_t color = mui_canvas_get_draw_color(canvas);
+    const uint8_t top = mui_canvas_get_height(canvas) - AMIIBO_ACTIVE_HINT_HEIGHT;
+    mui_rect_t old_clip, clip;
+    mui_canvas_get_clip_window(canvas, &old_clip);
+    clip = (mui_rect_t){0, top, width, AMIIBO_ACTIVE_HINT_HEIGHT};
+    /* Do not widen an enclosing view's clip or touch the adjacent QR box. */
+    uint16_t right = old_clip.x + old_clip.w;
+    uint16_t bottom = old_clip.y + old_clip.h;
+    if (clip.x < old_clip.x) clip.x = old_clip.x;
+    if (clip.y < old_clip.y) clip.y = old_clip.y;
+    if (right > width) right = width;
+    if (bottom > mui_canvas_get_height(canvas)) bottom = mui_canvas_get_height(canvas);
+    clip.w = right > clip.x ? right - clip.x : 0;
+    clip.h = bottom > clip.y ? bottom - clip.y : 0;
+    mui_canvas_set_clip_window(canvas, &clip);
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_box(canvas, 0, top, width, AMIIBO_ACTIVE_HINT_HEIGHT);
+    mui_canvas_set_draw_color(canvas, 1);
+    mui_canvas_draw_line(canvas, 0, top, width - 1, top);
+    /* The existing small font is ASCII-only; spell the German umlaut as UE. */
+    mui_canvas_set_font(canvas, u8g2_font_likeminecraft_te);
+    mui_canvas_draw_utf8(canvas, 1, mui_canvas_get_height(canvas) - 1,
+                         getLanguage() == LANGUAGE_DE_DE ? "MITTE: MENUE" : "CENTER: MENU");
+    mui_canvas_set_font(canvas, font);
+    mui_canvas_set_draw_color(canvas, color);
+    mui_canvas_set_clip_window(canvas, &old_clip);
+}
+
 bool amiibo_info_url(char *out, size_t capacity, const ntag_t *tag) {
     if (!out || !capacity) return false;
     out[0] = 0;

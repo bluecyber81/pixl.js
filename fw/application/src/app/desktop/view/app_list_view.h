@@ -18,6 +18,7 @@ typedef void (*app_list_view_event_cb)(app_list_view_event_t event, app_list_vie
     mui_view_t* p_view;
     app_list_view_event_cb event_cb;
     uint8_t focus;
+    bool focus_restored;
     const mini_app_t *items[10];
     uint8_t item_count;
     void* user_data;
@@ -40,7 +41,10 @@ static inline void app_list_view_set_event_cb(app_list_view_t* p_view, app_list_
 
 static inline void app_list_view_add_app(app_list_view_t *view, const mini_app_t *app, bool focused) {
     if (view->item_count >= sizeof(view->items) / sizeof(view->items[0])) return;
-    if (focused) view->focus = view->item_count;
+    if (focused) {
+        view->focus = view->item_count;
+        view->focus_restored = true;
+    }
     view->items[view->item_count++] = app;
 }
 

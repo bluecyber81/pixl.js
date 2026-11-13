@@ -15,8 +15,8 @@ export function dfuReference(boot, time = Date.now()) {
 export function packagePresentation(entry, session = {}, boot = null) {
   const active=session?.connected===true;
   const installed=active&&typeof session.firmwareVersion==='string'?session.firmwareVersion:null;
-  const match=installed?.match(/^(\d+)\.(\d+)\.(\d+)(?:-DE3\.(\d+)(-PREP)?)?$/);
-  const target=entry.version.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)$/);
+  const match=installed?.match(/^(\d+)\.(\d+)\.(\d+)(?:-DE3\.(\d+)(?:-PREP|t[1-9]\d*)?)?$/);
+  const target=entry.version.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(?:t[1-9]\d*)?$/);
   const diagnostic=active?normalizeBootDiagnostics(boot):null;
   const relation=match&&target?[1,2,3,...(match[4]?[4]:[])].map(i=>Number(match[i])-Number(target[i])).find(n=>n!==0)||0:0;
   const newer=relation>0||(diagnostic?.settingsCrcValid&&diagnostic.applicationCounter>entry.counter);
@@ -27,7 +27,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     source:'Quellcode der mitgelieferten Firmware DE3.65',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. BL8, Z13, Z15, Z17 und Z19 bezeichnen die bekannten Bootloader. Mit passendem BL8 kannst du die Anwendung direkt aktualisieren.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Für die Testversion DE3.71t1 ist Z19 geprüft.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15 und Z17 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -37,7 +37,7 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     source:'Source code for bundled firmware DE3.65',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. BL8, Z13, Z15, Z17 and Z19 identify known bootloaders. Devices with a matching BL8 can update the application directly.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. The DE3.71t1 test release was checked with Z19.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15 and Z17 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

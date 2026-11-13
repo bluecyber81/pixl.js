@@ -135,6 +135,39 @@ int main(void) {
 }
 ''', first_menu=True)
 
+    def test_pxmi_v2_actual_return_is_separate_bounded_and_read_only(self):
+        self.compile_run(r'''
+int main(void) {
+ uint8_t out[34], old[34], v1[16];memset(out,0xa5,sizeof(out));memcpy(old,out,sizeof(out));
+ for(unsigned n=0;n<32;n++){assert(!mui_menu_diag_snapshot_v2(out,n));assert(!memcmp(out,old,sizeof(out)));}
+ assert(!mui_menu_diag_snapshot_v2(NULL,32));
+ assert(mui_menu_diag_snapshot_v2(out,32));assert(!memcmp(out,"PXMI",4)&&out[4]==2&&out[5]==32);
+ for(unsigned n=16;n<32;n++)assert(out[n]==0);
+ mui_menu_diag_enter();mui_nav_diag_raw(1,0);mui_nav_diag_raw(1,1);mui_nav_diag_raw(1,2);
+ assert(mui_menu_diag_snapshot(v1,16));
+ mui_menu_return_diag_draw(11,8,8);mui_menu_return_diag_stale(11);
+ mui_menu_return_diag_commit(true,8,11);assert(mui_menu_diag_snapshot_v2(out,32));assert(!get32(out+20));
+ mui_menu_return_diag_begin(8,9);mui_menu_return_diag_commit(false,8,10);
+ mui_menu_return_diag_commit(true,8,11);assert(mui_menu_diag_snapshot_v2(out,32));assert(!get32(out+20));
+ mui_menu_return_diag_begin(8,0xfffffffdu);mui_menu_return_diag_commit(true,8,1);
+ mui_menu_return_diag_draw(0,5,5);mui_menu_return_diag_draw(2,5,5);mui_menu_return_diag_stale(2);
+ assert(mui_menu_diag_snapshot_v2(out,32));assert(get32(out+16)==0xfffffffdu && get32(out+20)==1);
+ assert(out[26]==8&&out[27]==8&&!out[28]&&!out[29]&&!out[30]&&!out[31]&&!get16(out+24));
+ mui_menu_return_diag_draw(1,8,8);mui_menu_return_diag_draw(1,5,0);
+ for(unsigned i=0;i<65539;i++)mui_menu_return_diag_stale(1);
+ assert(mui_menu_diag_snapshot_v2(out,32));assert(get16(out+24)==65535);
+ assert(out[28]==8&&out[29]==5&&out[30]==8&&out[31]==0&&out[32]==0xa5&&out[33]==0xa5);
+ assert(!memcmp(out,v1,4)&&!memcmp(out+6,v1+6,10));
+ memcpy(old,out,sizeof(out));assert(mui_menu_diag_snapshot_v2(out,32));assert(!memcmp(old,out,sizeof(out)));
+ mui_menu_return_diag_begin(0,2);mui_menu_return_diag_commit(true,8,3);
+ assert(mui_menu_diag_snapshot_v2(out,32));assert(!memcmp(old,out,sizeof(out)));
+ mui_menu_return_diag_begin(3,4);mui_menu_return_diag_commit(true,3,6);
+ assert(mui_menu_diag_snapshot_v2(out,32));assert(get32(out+16)==4&&get32(out+20)==6&&!get16(out+24));
+ assert(out[26]==3&&out[27]==3&&!out[28]&&!out[29]&&!out[30]&&!out[31]);
+ assert(!critical_depth);puts("PASS PXMI v2 bounds, stable v1 prefix, pending lifecycle, context filter, first/last IDs, read-only snapshot and saturation");
+}
+''', first_menu=True)
+
     def test_wire_bounds_lifecycle_separate_attempts_and_inactive_capture(self):
         self.compile_run(r'''
 int main(void) {

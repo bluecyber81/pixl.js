@@ -3,7 +3,8 @@ const height = 64;
 const pages = height / 8;
 
 export function supportsDisplayPhoto(firmwareVersion) {
-    const match = /^2\.22\.0-DE3\.(\d+)$/.exec(firmwareVersion || '');
+    const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
+    const match = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
     return !!match && Number(match[1]) >= 66;
 }
 

@@ -149,6 +149,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
             uid[2], uid[3], uid[4], uid[5], uid[6]);
 
     uint8_t y = 0;
+    uint8_t menu_width = mui_canvas_get_width(p_canvas);
     mui_canvas_draw_box(p_canvas, 0, y, mui_canvas_get_width(p_canvas), 12);
     mui_canvas_set_draw_color(p_canvas, 0);
 
@@ -201,6 +202,11 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
             if (amiibo_info_url(buff, sizeof(scratch.label), ntag))
                 text_width = amiibo_view_draw_qrcode(p_canvas, y, buff);
         }
+        menu_width = text_width;
+        /* The QR still uses the full original height. Only its neighboring
+         * description reserves the fixed menu hint at the bottom. */
+        if (mui_canvas_get_height(p_canvas) >= 64)
+            clip_win_cur.h -= AMIIBO_ACTIVE_HINT_HEIGHT;
         p_amiibo_view->desc_step = 8;
         p_amiibo_view->desc_page_size = clip_win_cur.h;
         p_amiibo_view->desc_total = 0;
@@ -224,7 +230,8 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         sprintf(buff, "[%08x:%08x]", head, tail);
         mui_canvas_draw_utf8(p_canvas, 0, y += 15, buff);
         if (settings_get_data()->qrcode_enabled) {
-            if (amiibo_info_url(buff, sizeof(scratch.label), ntag)) amiibo_view_draw_qrcode(p_canvas, 24, buff);
+            if (amiibo_info_url(buff, sizeof(scratch.label), ntag))
+                menu_width = amiibo_view_draw_qrcode(p_canvas, 24, buff);
         }
     } else {
         amiibo_view_stop_desc_anim(p_amiibo_view);
@@ -232,6 +239,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         p_amiibo_view->desc_page_size = 0;
         mui_canvas_draw_utf8(p_canvas, 0, y += 13, getLangString(_L_BLANK_TAG));
     }
+    amiibo_active_menu_hint(p_canvas, menu_width);
 }
 
 static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
@@ -253,6 +261,11 @@ static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
         /* Long/repeat left or right reuses text scrolling below, never slots. */
     } else if (p_amiibo_view->info_page) {
         if (amiibo_info_input(&p_amiibo_view->info_page, event) && p_amiibo_view->event_cb)
+            p_amiibo_view->event_cb(AMIIBO_VIEW_EVENT_MENU, p_amiibo_view);
+        return;
+    }
+    if (event->key == INPUT_KEY_CENTER && event->type == INPUT_TYPE_LONG) {
+        if (p_amiibo_view->event_cb)
             p_amiibo_view->event_cb(AMIIBO_VIEW_EVENT_MENU, p_amiibo_view);
         return;
     }

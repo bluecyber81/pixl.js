@@ -1,3 +1,4 @@
+import { quoteCsvCell } from './csv-export.js'
 import { metadataKey } from './safe-upload.js'
 import { loadBackupIndex } from './zip-import.js'
 
@@ -38,4 +39,39 @@ export async function compareBackupFiles(firstFile, secondFile, { JSZip, signal,
     return { path, status, type: (after ?? before).type }
   })
   return { rows, counts, roots: [first.rootPath, second.rootPath], exactMetadata: first.version === 2 && second.version === 2 }
+}
+
+// Filters affect this view/export only; original relative paths remain identities.
+export const backupComparisonStatuses = Object.freeze(['added', 'removed', 'content', 'metadata', 'type', 'unresolved', 'same'])
+function viewOptions({ status = 'all', path = '', showSame = false } = {}) {
+  if (!['all', ...backupComparisonStatuses].includes(status) || typeof path !== 'string' || path.length > 256 || typeof showSame !== 'boolean') {
+    throw new Error('Invalid backup comparison filter')
+  }
+  return { status, path: path.trim(), showSame }
+}
+export function filterBackupComparison(comparison, options) {
+  const { status, path, showSame } = viewOptions(options)
+  const query = path.toLocaleLowerCase('en-US')
+  return (comparison?.rows || []).filter(row =>
+    (status === 'all' ? showSame || row.status !== 'same' : row.status === status) &&
+    (!query || row.path.toLocaleLowerCase('en-US').includes(query)))
+}
+export function backupComparisonReport(comparison, options) {
+  if (!comparison || !Array.isArray(comparison.rows) || !Array.isArray(comparison.roots) || comparison.roots.length !== 2) {
+    throw new Error('No completed backup comparison')
+  }
+  const filters = viewOptions(options), rows = filterBackupComparison(comparison, filters)
+  const counts = Object.fromEntries(backupComparisonStatuses.map(status => [status, rows.filter(row => row.status === status).length]))
+  return { format: 'allmiibo-backup-comparison', version: 1, roots: [...comparison.roots],
+    exactMetadata: comparison.exactMetadata === true, filters, totalEntries: comparison.rows.length,
+    exportedEntries: rows.length, totalCounts: Object.fromEntries(backupComparisonStatuses.map(status => [status, comparison.counts[status]])),
+    counts, rows: rows.map(({ path, status, type }) => ({ path, status, type })) }
+}
+export function backupComparisonCsv(comparison, options, locale = 'en') {
+  const report = backupComparisonReport(comparison, options), de = locale.startsWith('de'), delimiter = de ? ';' : ','
+  const header = de ? ['Relativer Originalpfad', 'Art', 'Status', 'Sicherungsordner A', 'Sicherungsordner B']
+    : ['Original relative path', 'Type', 'Status', 'Backup folder A', 'Backup folder B']
+  // Stable status codes match the JSON report; the UI explains them in DE/EN.
+  const lines = [header, ...report.rows.map(row => [row.path, row.type, row.status, ...report.roots])]
+  return '\uFEFF' + lines.map(row => row.map(quoteCsvCell).join(delimiter)).join('\r\n') + '\r\n'
 }

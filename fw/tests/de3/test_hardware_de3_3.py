@@ -3,6 +3,7 @@ No device access. PIXL_SANITIZE=1 enables host ASan/UBSan.
 """
 from pathlib import Path
 import hashlib, json, os, re, subprocess, tempfile
+from input_context_support import context_state, context_functions, TOKEN_FUNCTIONS
 
 TESTS = Path(__file__).resolve().parent
 SRC = TESTS.parents[1]/'application/src'
@@ -31,7 +32,9 @@ def main():
             (folder/name).write_text('#pragma once\n',encoding='utf-8')
         code=(TESTS/'button_independent_host.c').read_text(encoding='utf-8')
         code=code.replace('/* ACTUAL_BUTTON_INCLUDE */','#include "'+(SRC/'mod/bsp_btn.c').as_posix()+'"')
-        code=code.replace('/* ACTUAL_INPUT_MAPPER */','static void ble_remote_local_activity(void) {}\n'+function((SRC/'mui/mui_input.c').read_text(encoding='utf-8'),'mui_input_on_bsp_btn_event'))
+        input_source=(SRC/'mui/mui_input.c').read_text(encoding='utf-8')
+        code=code.replace('/* ACTUAL_INPUT_CONTEXT */',context_state(gestures=True,source_text=input_source)+context_functions((*TOKEN_FUNCTIONS,'mui_input_context_changed'),source_text=input_source))
+        code=code.replace('/* ACTUAL_INPUT_MAPPER */','static void ble_remote_local_activity(void) {}\n'+function(input_source,'mui_input_post_event')+'\n'+function(input_source,'mui_input_on_bsp_btn_event'))
         code=code.replace('/* ACTUAL_GAME_INPUT */',function((SRC/'app/game/view/game_view.c').read_text(encoding='utf-8'),'game_view_on_input'))
         code=code.replace('/* ACTUAL_INPUT_DEINIT */',function((SRC/'mui/mui_input.c').read_text(encoding='utf-8'),'mui_input_deinit'))
         code=code.replace('/* ACTUAL_MUI_DEINIT */',function((SRC/'mui/mui_core.c').read_text(encoding='utf-8'),'mui_deinit'))

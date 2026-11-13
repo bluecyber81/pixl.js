@@ -6,6 +6,11 @@
 static const db_amiibo_t *recent_figures[AMIIDB_RECENT_LIMIT];
 static uint8_t recent_games[AMIIDB_RECENT_LIMIT];
 
+void amiidb_recent_clear(void) {
+    memset(recent_figures, 0, sizeof(recent_figures));
+    memset(recent_games, 0, sizeof(recent_games));
+}
+
 static unsigned recent_index(const db_amiibo_t *figure) {
     unsigned i = 0;
     while (i < AMIIDB_RECENT_LIMIT && recent_figures[i] && recent_figures[i] != figure) i++;

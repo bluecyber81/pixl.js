@@ -51,6 +51,8 @@ test('first main menu read is version gated, queued, and distinguishes missing, 
     const file = next(f), pending = f.api.get_menu_diagnostics(v);
     assert.equal(f.writes.length, 1);
     f.rx(0x14, [9]); await file; await flush();
+    assert.deepEqual(f.writes.at(-1), [4,0,0,0,2]);
+    f.rx(4, [], 0, 255); await flush();
     assert.deepEqual(f.writes.at(-1), [4,0,0,0,1]);
     const packet = Uint8Array.from([80,88,77,73,1,16,15,2,1,1,1,0,42,0,0,0]);
     f.rx(4, packet);
@@ -58,12 +60,87 @@ test('first main menu read is version gated, queued, and distinguishes missing, 
     assert.equal(data.launchCallMilliseconds, 42); assert.equal(data.targetAppId, 2);
     assert.deepEqual(plain(data.centerCounts), {press: 1, release: 1, short: 1});
     for (const status of [1,255]) {
-        const p = f.api.get_menu_diagnostics(v); f.rx(4, [], 0, status);
+        const p = f.api.get_menu_diagnostics(v); f.rx(4, [], 0, status); await flush();
+        assert.deepEqual(f.writes.at(-1), [4,0,0,0,1]); f.rx(4, [], 0, status);
         assert.equal(await p, null); assert.equal(f.api.get_transport_diagnostics().lastErrorCode, null);
     }
     const broken = f.api.get_menu_diagnostics(v), rejected = assert.rejects(broken);
     f.rx(4, packet.subarray(1)); await rejected;
     assert.equal(f.api.get_transport_diagnostics().lastErrorCode, 'RESPONSE_INVALID');
+});
+
+const menuV2Packet = () => Uint8Array.from(Buffer.from('50584d4902200f03010101002a00000078563412f0debc9affff080808080308','hex'));
+
+test('PXMI v2 uses one bounded read and reassembles each supported ATT fixture size', async () => {
+    for (const mtu of [23,185,250]) {
+        const f=fixture(), pending=f.api.get_menu_diagnostics('2.22.0-DE3.71t1');
+        assert.deepEqual(f.writes,[[4,0,0,0,2]]);
+        const bytes=menuV2Packet(), capacity=mtu-7;
+        for(let offset=0;offset<bytes.length;offset+=capacity)
+            f.rx(4,bytes.subarray(offset,offset+capacity),(offset/capacity)|(offset+capacity<bytes.length?0x8000:0));
+        const data=await pending;
+        assert.equal(data.schemaVersion,2); assert.equal(data.targetAppId,3);
+        assert.equal(data.lastAppReturn.sourceAppId,8); assert.equal(data.lastAppReturn.firstIconAppId,3);
+        assert.equal(data.lastAppReturn.staleEventsDiscarded,65535);
+        assert.equal(f.writes.length,1); assert.equal(f.disconnects,0); assert.equal(f.timers.size,0);
+    }
+});
+
+test('PXMI v2 falls back once on explicit unsupported status and keeps the first-launch-only meaning', async () => {
+    for(const status of [1,255]) {
+        const f=fixture(), pending=f.api.get_menu_diagnostics('2.22.0-DE3.71');
+        f.rx(4,[],0,status); await flush();
+        assert.deepEqual(f.writes,[[4,0,0,0,2],[4,0,0,0,1]]);
+        const old=menuV2Packet().slice(0,16);old[4]=1;old[5]=16;
+        f.rx(4,old);const data=await pending;
+        assert.equal(data.schemaVersion,1);assert.equal(data.lastAppReturn,undefined);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+        const following=next(f);f.rx(0x14,[9]);await following;
+    }
+});
+
+test('PXMI malformed success, wrong version, overlength, other errors and timeout never trigger v1 fallback', async () => {
+    const old=menuV2Packet().slice(0,16);old[4]=1;old[5]=16;
+    const corrupt=menuV2Packet();corrupt[6]=0x80;
+    for(const packet of [old,menuV2Packet().slice(0,31),new Uint8Array(33),corrupt]) {
+        const f=fixture(),pending=f.api.get_menu_diagnostics('2.22.0-DE3.71'),rejected=assert.rejects(pending);
+        f.rx(4,packet);await rejected;await flush();
+        assert.deepEqual(f.writes,[[4,0,0,0,2]]);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,packet.length>32?'RX_INVALID':'RESPONSE_INVALID');
+    }
+    const f=fixture(),pending=f.api.get_menu_diagnostics('2.22.0-DE3.71'),rejected=assert.rejects(pending);
+    f.rx(4,[],0,9);await rejected;assert.equal(f.writes.length,1);
+    const timeout=fixture(),waiting=timeout.api.get_menu_diagnostics('2.22.0-DE3.71'),failed=assert.rejects(waiting);
+    await flush();[...timeout.timers.values()][0]();await failed;
+    assert.equal(timeout.writes.length,1);assert.equal(timeout.disconnects,1);
+});
+
+test('PXMI session changes prevent fallback or successful delivery and ignore late fragments', async () => {
+    for(const status of [0,1,255]) {
+        const f=fixture(),pending=f.api.get_menu_diagnostics('2.22.0-DE3.71t1'),rejected=assert.rejects(pending);
+        await flush();f.rx(4,status?[]:menuV2Packet(),0,status);f.bus.emit('ble_disconnected');
+        await rejected;await flush();assert.deepEqual(f.writes,[[4,0,0,0,2]]);
+        f.rx(4,menuV2Packet());await flush();assert.equal(f.writes.length,1);
+    }
+    const f=fixture(),pending=f.api.get_menu_diagnostics('2.22.0-DE3.71'),rejected=assert.rejects(pending);
+    f.rx(4,[],0,255);await flush();assert.equal(f.writes.length,2);
+    f.bus.emit('ble_disconnected');await rejected;f.rx(4,menuV2Packet().slice(0,16));
+    await flush();assert.equal(f.writes.length,2);
+});
+
+test('the exact T1 identity retains existing read-only startup detail and small-file digest capabilities', async () => {
+    const startup=await import('../src/lib/startup-diagnostics.js'),f=fixture(startup);
+    const pending=f.api.get_startup_diagnostics('2.22.0-DE3.71t1');
+    assert.deepEqual(f.writes,[[9,0,0,0,2]]);
+    f.rx(9,[],0,255);await flush();assert.deepEqual(f.writes.at(-1),[9,0,0,0,1]);
+    f.rx(9,[],0,255);await flush();assert.deepEqual(f.writes.at(-1),[9,0,0,0]);
+    f.rx(9,[],0,255);assert.equal(await pending,null);
+    const digest=f.api.vfs_backup_digest('E:/tag.bin',540,'2.22.0-DE3.71t1');
+    assert.equal(f.writes.at(-1)[0],0x21);
+    f.rx(0x21,new Uint8Array(32).fill(0xab));assert.equal(await digest,'ab'.repeat(32));
+    const count=f.writes.length;
+    assert.equal(await f.api.vfs_backup_digest('E:/tag.bin',540,'2.22.0-DE3.71t2'),null);
+    assert.equal(f.writes.length,count);
 });
 
 test('LCD page reads negotiate old devices, MTU23 fragmentation, disconnect and queued file access', async () => {

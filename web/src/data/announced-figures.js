@@ -9,7 +9,8 @@ export const ocarinaUsage = 'https://en-americas-support.nintendo.com/app/answer
 
 export const announcementGroups = [
   {
-    series: 'Kirby Air Riders', game: 'kirby-air-riders', date: '2026-11-12', datePrecision: 'day', region: 'US', sourceCheckedOn,
+    series: 'Kirby Air Riders', game: 'kirby-air-riders', date: '2026-11-12', datePrecision: 'day', region: 'US',
+    released: true, sourceCheckedOn: '2026-11-13',
     usage: 'https://www.nintendo.com/us/store/products/amiibo-noir-dedede-hydra-kirby-air-riders-series-125233/',
     note: {
       de: 'Beide Fahrer lassen sich als Figurenspieler trainieren. Ihr Level bleibt erhalten, wenn du sie auf eine andere Maschine setzt.',

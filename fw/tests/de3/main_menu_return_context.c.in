@@ -1,0 +1,179 @@
+static unsigned desktop_frames;
+static bool isolation;
+static void event_consumer(void *context,mui_event_t *e) {
+    CHECK(context==mui());
+    if(e->id==MUI_EVENT_ID_INPUT) mui_process_input(mui(),e);
+    else if(e->id==MUI_EVENT_ID_ANIM) mui_anim_core_event(e);
+    else if(e->id==MUI_EVENT_ID_REDRAW && current_app_id()==MINI_APP_ID_DESKTOP) {
+        draw(); desktop_frames++;
+        printf("FRAME t=%u app=1 focused=%u centered=%d offset=%ld\n",now,focused_id(),draw_centered_id,(long)desktop()->icon_anim_value);
+    }
+}
+static void drain(void) {
+    unsigned passes=0;
+    while(mui()->event_queue.count) { CHECK(passes++<16); mui_event_dispatch(&mui()->event_queue); }
+}
+static void advance(unsigned milliseconds,bool dispatch) {
+    uint32_t target=now+milliseconds;
+    while(now<target) {
+        now++;
+        for(unsigned i=0;i<registered_count;i++) {
+            timer_t *t=registered[i];
+            if(t->running && t->deadline==now) {
+                if(t->repeated) t->deadline+=t->period; else t->running=false;
+                t->handler(t->context);
+            }
+        }
+        if(dispatch) drain();
+    }
+}
+static void pin(unsigned key,bool pressed) {
+    CHECK(key<3); unsigned gpio=5+key;
+    gpio_high[gpio]=!pressed;
+    if(gpio_enabled[gpio] && gpio_callbacks[gpio]) gpio_callbacks[gpio](gpio,0);
+}
+static void click(unsigned key,bool dispatch) {
+    pin(key,true); advance(60,dispatch); pin(key,false); advance(30,dispatch);
+}
+static void during_save(void) {
+    CHECK(current_app_id()==MINI_APP_ID_CHAMELEON);
+    CHECK(mini_app_launcher_input_blocked(mini_app_launcher()));
+    /* The main thread is synchronously inside prepare_exit; IRQ-level producers
+     * continue. The time is a deterministic model, not a measured save duration. */
+    click(INPUT_KEY_RIGHT,false);
+}
+static void during_save_veto(void) { during_save(); deny_prepare=true; }
+static void during_start(void) {
+    CHECK(mini_app_launcher_input_blocked(mini_app_launcher()));
+    CHECK(mini_app_launcher()->p_main_app_inst==NULL);
+    click(INPUT_KEY_RIGHT,false);
+}
+static void during_failed_start(void) {
+    CHECK(mini_app_launcher_input_blocked(mini_app_launcher()));
+    CHECK(mini_app_launcher()->p_main_app_inst==NULL);
+    click(INPUT_KEY_CENTER,false);
+}
+static void require_menu(uint32_t id) {
+    CHECK(current_app_id()==MINI_APP_ID_DESKTOP); CHECK(focused_id()==id);
+    advance(600,true); CHECK(focused_id()==id); draw();
+    CHECK(draw_focus_id==(int)id && draw_centered_id==(int)id);
+    printf("FINAL desktop focused=%u centered=%d remembered=%u\n",focused_id(),draw_centered_id,mini_app_launcher()->last_menu_app_id);
+}
+int main(int argc,char **argv) {
+    CHECK(argc==2); unsigned scenario=(unsigned)atoi(argv[1]);
+    isolation=getenv("MENU_EXPECT_INPUT_ISOLATION") && strcmp(getenv("MENU_EXPECT_INPUT_ISOLATION"),"1")==0;
+    memset(gpio_high,1,sizeof(gpio_high));
+    cfg.app_enable_bits=0x3ff; cfg.anim_enabled=true; mui()->auto_update=true;
+    cfg.swap_buttons=scenario>=10 && scenario<=14;
+    CHECK(mui_event_queue_init(&mui()->event_queue));
+    mui_event_set_callback(&mui()->event_queue,event_consumer,mui());
+    mui_anim_core_init(); mui_input_init();
+    mini_app_launcher_init(mini_app_launcher(),0);
+    mini_app_launcher_run(mini_app_launcher(),MINI_APP_ID_CHAMELEON);
+    drain(); CHECK(current_app_id()==MINI_APP_ID_CHAMELEON);
+    CHECK(mini_app_launcher()->last_menu_app_id==MINI_APP_ID_CHAMELEON);
+    if(scenario==0) {
+        click(INPUT_KEY_CENTER,true); require_menu(MINI_APP_ID_CHAMELEON);
+        CHECK(raw_counts[INPUT_KEY_CENTER][BSP_BTN_EVENT_SHORT]==1);
+        puts("PASS clean single Home click preserves remembered focus");
+    } else if(scenario==1) {
+        pin(INPUT_KEY_CENTER,true); advance(1300,true);
+        CHECK(current_app_id()==MINI_APP_ID_DESKTOP);
+        pin(INPUT_KEY_CENTER,false); advance(40,true); require_menu(MINI_APP_ID_CHAMELEON);
+        CHECK(raw_counts[INPUT_KEY_CENTER][BSP_BTN_EVENT_LONG]==1);
+        CHECK(raw_counts[INPUT_KEY_CENTER][BSP_BTN_EVENT_SHORT]==0);
+        puts("PASS long Home activation, held repeat and release generate no phantom SHORT");
+    } else if(scenario==2) {
+        pin(INPUT_KEY_RIGHT,true); advance(60,true); /* starts in old app, no SHORT yet */
+        click(INPUT_KEY_CENTER,true);
+        CHECK(current_app_id()==MINI_APP_ID_DESKTOP && focused_id()==MINI_APP_ID_CHAMELEON && desktop_frames);
+        pin(INPUT_KEY_RIGHT,false); advance(30,true); require_menu(isolation ? MINI_APP_ID_CHAMELEON : MINI_APP_ID_PLAYER);
+        puts(isolation ? "PASS old-app held RIGHT release is isolated" : "REPRO old-app RIGHT held across Home exit: its release moves desktop focus 8 -> 5");
+    } else if(scenario==3) {
+        click(INPUT_KEY_CENTER,false); click(INPUT_KEY_RIGHT,false);
+        CHECK(current_app_id()==MINI_APP_ID_CHAMELEON && desktop_frames==0);
+        drain(); require_menu(isolation ? MINI_APP_ID_CHAMELEON : MINI_APP_ID_PLAYER);
+        puts(isolation ? "PASS old-app queued RIGHT gesture is isolated" : "REPRO RIGHT SHORT already queued in old app: after Home dispatch desktop focus becomes 5");
+    } else if(scenario==4) {
+        click(INPUT_KEY_CENTER,false); click(INPUT_KEY_CENTER,false);
+        CHECK(current_app_id()==MINI_APP_ID_CHAMELEON && desktop_frames==0);
+        drain(); advance(250,true);
+        CHECK(current_app_id()==(isolation ? MINI_APP_ID_DESKTOP : MINI_APP_ID_CHAMELEON));
+        CHECK(menu_enters==2 && menu_leaves==(isolation ? 1u : 2u));
+        puts(isolation ? "PASS old queued second CENTER does not reopen app" : "REPRO second CENTER SHORT queued in old app reopens Chameleon immediately after Home");
+    } else if(scenario==5) {
+        click(INPUT_KEY_CENTER,true); require_menu(MINI_APP_ID_CHAMELEON);
+        CHECK(desktop_frames>0); click(INPUT_KEY_RIGHT,true); require_menu(MINI_APP_ID_PLAYER);
+        puts("CONTROL fresh RIGHT after visible settled desktop must still navigate normally");
+    } else if(scenario==6) {
+        save_hook=during_save; click(INPUT_KEY_CENTER,true); require_menu(isolation ? MINI_APP_ID_CHAMELEON : MINI_APP_ID_PLAYER);
+        puts(isolation ? "PASS IRQ gesture produced during successful exit reservation is isolated" : "REPRO RIGHT PRESS/RELEASE/SHORT produced inside old app's synchronous exit reservation reach new desktop");
+    } else if(scenario==7) {
+        save_hook=during_save_veto; click(INPUT_KEY_CENTER,true);
+        CHECK(current_app_id()==MINI_APP_ID_CHAMELEON && mini_app_launcher()->last_menu_app_id==MINI_APP_ID_CHAMELEON);
+        fixture_app_t *a=mini_app_launcher()->p_main_app_inst->p_handle;
+        CHECK(a->list.focus_index==0); /* RIGHT wraps Home10 -> row0 in retained app */
+        CHECK(m_bsp_btns[INPUT_KEY_CENTER].state==BTN_STATE_IDLE && m_bsp_btns[INPUT_KEY_RIGHT].state==BTN_STATE_IDLE);
+        puts("CONTROL denied exit keeps old app, processes queued RIGHT there and retains release state");
+    } else if(scenario==8) {
+        click(INPUT_KEY_RIGHT,false); click(INPUT_KEY_RIGHT,false); drain();
+        CHECK(current_app_id()==MINI_APP_ID_CHAMELEON);
+        CHECK(((fixture_app_t *)mini_app_launcher()->p_main_app_inst->p_handle)->list.focus_index==1);
+        puts("CONTROL two ordinary queued same-app clicks both execute; no duplicate-click debounce added");
+    } else if(scenario==9 || scenario==10) {
+        unsigned physical=scenario==9 ? INPUT_KEY_LEFT : INPUT_KEY_RIGHT;
+        click(INPUT_KEY_CENTER,false); click(physical,false); drain();
+        require_menu(isolation ? MINI_APP_ID_CHAMELEON : MINI_APP_ID_AMIIBOLINK);
+        puts(isolation ? "PASS old queued logical LEFT is isolated with physical/mirrored mapping" : "REPRO old queued logical LEFT moves desktop focus 8 -> 4");
+    } else if(scenario==11 || scenario==12) {
+        unsigned physical=scenario==11 ? INPUT_KEY_RIGHT : INPUT_KEY_LEFT;
+        unsigned moved=scenario==11 ? MINI_APP_ID_AMIIBOLINK : MINI_APP_ID_PLAYER;
+        pin(physical,true); advance(60,true); click(INPUT_KEY_CENTER,true);
+        pin(physical,false); advance(30,true); require_menu(isolation ? MINI_APP_ID_CHAMELEON : moved);
+        puts(isolation ? "PASS pre-exit held physical gesture remains old with swap_buttons" : "REPRO held physical gesture crosses exit with swap_buttons");
+    } else if(scenario==13) {
+        click(INPUT_KEY_CENTER,false); click(INPUT_KEY_CENTER,false); drain();
+        CHECK(current_app_id()==(isolation ? MINI_APP_ID_DESKTOP : MINI_APP_ID_CHAMELEON));
+        puts(isolation ? "PASS mirrored CENTER old double click cannot reopen app" : "REPRO mirrored CENTER old double click reopens app");
+    } else if(scenario==14) {
+        click(INPUT_KEY_CENTER,true); CHECK(desktop_frames>0);
+        click(INPUT_KEY_RIGHT,true); require_menu(MINI_APP_ID_AMIIBOLINK);
+        puts("CONTROL fresh mirrored RIGHT acts as LEFT immediately after visible return");
+    } else if(scenario==15 || scenario==18) {
+        if(scenario==15) click(INPUT_KEY_CENTER,false);
+        else run_hook=during_failed_start;
+        start_fails=true; mini_app_launcher_run(mini_app_launcher(),MINI_APP_ID_PLAYER);
+        CHECK(mini_app_launcher()->p_main_app_inst==NULL && mui()->memory_error);
+        drain();
+        CHECK(mui()->memory_error==isolation);
+        if(isolation) CHECK(mini_app_launcher()->p_main_app_inst==NULL);
+        else CHECK(current_app_id()==MINI_APP_ID_DESKTOP);
+        start_fails=false;
+        if(isolation) { click(INPUT_KEY_CENTER,true); require_menu(MINI_APP_ID_CHAMELEON); }
+        puts(isolation ? "PASS destroyed-app/startup gesture cannot acknowledge new OOM dialog; fresh click can" : "REPRO old/startup CENTER acknowledges newly created OOM dialog");
+    } else if(scenario==16) {
+        run_hook=during_start; mini_app_launcher_run(mini_app_launcher(),MINI_APP_ID_PLAYER); drain();
+        CHECK(current_app_id()==MINI_APP_ID_PLAYER);
+        CHECK(((fixture_app_t *)mini_app_launcher()->p_main_app_inst->p_handle)->list.focus_index==(isolation ? 10 : 0));
+        puts(isolation ? "PASS input produced during new app startup is isolated by commit fence" : "REPRO input produced during startup changes new app's list");
+    } else if(scenario==17) {
+        click(INPUT_KEY_RIGHT,false);
+        mini_app_launcher_run(mini_app_launcher(),MINI_APP_ID_STATUS_BAR);
+        mini_app_launcher_run(mini_app_launcher(),UINT32_MAX);
+        drain(); CHECK(current_app_id()==MINI_APP_ID_CHAMELEON);
+        CHECK(((fixture_app_t *)mini_app_launcher()->p_main_app_inst->p_handle)->list.focus_index==0);
+        puts("CONTROL daemon/invalid-ID calls preserve current gesture context and delivery");
+    } else if(scenario==19) {
+        click(INPUT_KEY_CENTER,true); CHECK(desktop_frames>0);
+        click(INPUT_KEY_CENTER,true); CHECK(current_app_id()==MINI_APP_ID_CHAMELEON);
+        puts("CONTROL fresh CENTER after visible return immediately opens remembered app");
+    } else if(scenario==20) {
+        click(INPUT_KEY_CENTER,true); CHECK(desktop_frames>0);
+        click(INPUT_KEY_RIGHT,true); require_menu(MINI_APP_ID_PLAYER);
+        puts("CONTROL fresh RIGHT within first 200ms of visible return navigates without delay");
+    } else CHECK(false);
+    mui_input_deinit(); drain();
+    mui_event_queue_deinit(&mui()->event_queue);
+    dispose(); CHECK(!outstanding);
+    return 0;
+}

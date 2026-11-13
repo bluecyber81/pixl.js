@@ -13,6 +13,46 @@ static struct {
     uint8_t flags, app_id, center[3];
 } first_menu;
 
+/* This 16-byte record matches the observed App643 PXMI v2 wire contract.
+ * It is independent of first_menu, which only records the first app launch. */
+static struct {
+    uint32_t source_context, target_context;
+    uint16_t stale_count;
+    uint8_t source_app, target_app, first_label, last_label, first_icon, last_icon;
+} menu_return;
+_Static_assert(sizeof(menu_return) == 16u, "Menu return diagnostic RAM budget changed");
+static uint8_t pending_return_app;
+static uint32_t pending_return_context;
+
+void mui_menu_return_diag_begin(uint8_t app_id, uint32_t context) {
+    pending_return_app = app_id;
+    pending_return_context = context;
+}
+void mui_menu_return_diag_commit(bool desktop, uint8_t target, uint32_t context) {
+    if (desktop && pending_return_app) {
+        memset(&menu_return, 0, sizeof(menu_return));
+        menu_return.source_context = pending_return_context;
+        menu_return.target_context = context;
+        menu_return.source_app = pending_return_app;
+        menu_return.target_app = target;
+    }
+    /* A failed startup/non-desktop transition must not bind a later return. */
+    pending_return_app = 0;
+}
+void mui_menu_return_diag_draw(uint32_t context, uint8_t label, uint8_t icon) {
+    if (!context || context != menu_return.target_context) return;
+    if (!menu_return.first_label) {
+        menu_return.first_label = label;
+        menu_return.first_icon = icon;
+    }
+    menu_return.last_label = label;
+    menu_return.last_icon = icon;
+}
+void mui_menu_return_diag_stale(uint32_t context) {
+    if (context && context == menu_return.target_context && menu_return.stale_count != UINT16_MAX)
+        ++menu_return.stale_count;
+}
+
 static bool menu_waiting_for_selection(void) {
     return (first_menu.flags & (MENU_ENTERED | MENU_SELECTED | MENU_LEFT)) == MENU_ENTERED;
 }
@@ -219,6 +259,22 @@ bool mui_menu_diag_snapshot(uint8_t *out, size_t capacity) {
     out[11] = 0;
     write32(out + 12, (first_menu.flags & MENU_RETURNED) ? first_menu.launch_time : 0);
     app_util_critical_region_exit(nested);
+    return true;
+}
+
+bool mui_menu_diag_snapshot_v2(uint8_t *out, size_t capacity) {
+    if (capacity < MUI_MENU_DIAG_V2_SIZE || !mui_menu_diag_snapshot(out, capacity)) return false;
+    out[4] = 2;
+    out[5] = MUI_MENU_DIAG_V2_SIZE;
+    write32(out + 16, menu_return.source_context);
+    write32(out + 20, menu_return.target_context);
+    write16(out + 24, menu_return.stale_count);
+    out[26] = menu_return.source_app;
+    out[27] = menu_return.target_app;
+    out[28] = menu_return.first_label;
+    out[29] = menu_return.last_label;
+    out[30] = menu_return.first_icon;
+    out[31] = menu_return.last_icon;
     return true;
 }
 #endif

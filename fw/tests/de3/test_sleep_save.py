@@ -1,6 +1,7 @@
 """Actual shutdown handler: journal save occurs awake; errors cannot trap sleep."""
 import unittest
 from root_host import HostTests, SRC, function
+from input_context_support import context_state, context_functions
 
 
 class SleepSaveTests(HostTests):
@@ -32,7 +33,7 @@ static void kill(mini_app_inst_t*app){
 enum { MINI_APP_EXIT_SLEEP, APP_STATE_RUNNING, APP_STATE_KILLED };
 static bool mini_app_launcher_prepare_exit(mini_app_launcher_t*l,int reason){(void)l;(void)reason;return true;}
 static void mini_app_launcher_clear_exit(mini_app_launcher_t*l){(void)l;}
-''' + function(source, 'mini_app_launcher_inst_kill') + function(source, 'mini_app_launcher_sleep') + r'''
+''' + context_state() + context_functions(("mui_input_context_changed",)) + function(source, 'mini_app_launcher_inst_kill') + function(source, 'mini_app_launcher_sleep') + r'''
 int main(void){
  mini_app_t type={.id=7,.kill_cb=kill};mini_app_inst_t app={.p_app=&type};
  mini_app_launcher_t launcher={.p_main_app_inst=&app};

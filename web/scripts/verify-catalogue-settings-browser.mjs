@@ -103,7 +103,7 @@ try {
     const favOnly=prefs.locator('input[type=checkbox]');
     await search.fill(id); await press(favorite);
     await page.waitForFunction(() => document.querySelector('.web-favorite')?.getAttribute('aria-pressed')==='true');
-    await press(prefs.locator('summary')); await favOnly.focus(); await favOnly.press('Space');
+    await press(prefs.locator(':scope > summary')); await favOnly.focus(); await favOnly.press('Space');
     await prefs.locator('input[type=text]').fill('Mario 01'); await press(prefs.locator('button[type=submit]'));
     await prefs.locator('select option[value="Mario 01"]').waitFor({state:'attached'});
     await press(cat.locator('.reset-filters'));
@@ -130,7 +130,7 @@ try {
     await selectLanguage(page,!en);
     assert.equal(await search.inputValue(),id); assert.ok(await favOnly.isChecked());
     await page.reload(); await openCatalogue(page);
-    await press(prefs.locator('summary')); await prefs.locator('select').selectOption('Mario 01');
+    await press(prefs.locator(':scope > summary')); await prefs.locator('select').selectOption('Mario 01');
     await press(prefs.getByRole('button',{name:/^Filter anwenden$|^Apply filter$/}));
     assert.equal(await search.inputValue(),id); assert.equal(await favorite.getAttribute('aria-pressed'),'true');
     await press(linkPanel.locator(':scope > summary')); await pick([{id,url:source+'b'}]);

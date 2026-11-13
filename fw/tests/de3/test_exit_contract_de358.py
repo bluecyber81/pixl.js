@@ -7,6 +7,7 @@ for existing startup/NFC/remote tests.
 import unittest
 from pathlib import Path
 from exit_contract_support_de358 import HERE, SRC, actual, function, launcher_fixture, compile_cases
+from input_context_support import context_functions
 
 LAUNCHER_CASES = (
     "save failure preserves old owner on switch",
@@ -116,7 +117,7 @@ int main(int argc,char **argv) {
     def test_real_input_guard_blocks_modal_and_view_dispatch_until_cancel(self):
         body = function((SRC / "mui/mui_core.c").read_text(encoding="utf-8"), "mui_process_input")
         tail = (HERE / "input_exit_contract_de358.c.in").read_text(encoding="utf-8")
-        source = launcher_fixture() + "\n" + tail.replace("/* ACTUAL_INPUT_HANDLER */", body)
+        source = launcher_fixture() + "\n" + tail.replace("/* ACTUAL_INPUT_HANDLER */", context_functions() + body)
         compile_cases(self, source, (
             "prepared RESET blocks first possible input handler",
             "prepared SLEEP blocks first possible input handler",

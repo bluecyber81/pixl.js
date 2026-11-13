@@ -7,6 +7,7 @@
 
 #define MUI_NAV_DIAG_SNAPSHOT_SIZE 104u
 #define MUI_MENU_DIAG_SIZE 16u
+#define MUI_MENU_DIAG_V2_SIZE 32u
 
 /* The first desktop lifetime in this boot. Freeze the debounced button counts
  * when a selection begins or the desktop leaves without one. A new entry
@@ -18,6 +19,14 @@ void mui_menu_diag_leave(void);
 bool mui_menu_diag_select(uint8_t app_id);
 void mui_menu_diag_return(bool selected_app_active);
 bool mui_menu_diag_snapshot(uint8_t *out, size_t capacity);
+/* PXMI v2 retains v1 fields and appends the most recent actual app return.
+ * These hooks are foreground-only and never change navigation or persistence.
+ * Zero app IDs/context mean no observed return or no icon covering the center. */
+void mui_menu_return_diag_begin(uint8_t app_id, uint32_t context);
+void mui_menu_return_diag_commit(bool desktop, uint8_t target, uint32_t context);
+void mui_menu_return_diag_draw(uint32_t context, uint8_t label, uint8_t icon);
+void mui_menu_return_diag_stale(uint32_t context);
+bool mui_menu_diag_snapshot_v2(uint8_t *out, size_t capacity);
 #else
 static inline void mui_menu_diag_enter(void) {}
 static inline void mui_menu_diag_leave(void) {}

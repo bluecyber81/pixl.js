@@ -97,7 +97,9 @@ int main(void) {
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 typedef struct { uint8_t width; } mui_canvas_t;
+typedef struct { uint16_t width, height; } mui_text_size_t;
 static unsigned drawn;
 static uint8_t mui_canvas_draw_utf8(mui_canvas_t *c, uint8_t x, uint8_t y, const char *s) {
     assert(strlen(s)>=1 && strlen(s)<=4); ++drawn; return 6;
@@ -105,9 +107,11 @@ static uint8_t mui_canvas_draw_utf8(mui_canvas_t *c, uint8_t x, uint8_t y, const
 static uint16_t mui_canvas_get_utf8_width(mui_canvas_t *c,const char *s) {
     assert(strlen(s)>=1 && strlen(s)<=4); return 6;
 }
+static uint16_t mui_canvas_get_utf8_advance(mui_canvas_t *c,const char *s) { return 6; }
 static uint8_t mui_canvas_current_font_height(mui_canvas_t *c) { return 8; }
 ''' + '\n'.join(function(source, name) for name in
                       ('mui_canvas_get_utf8_bytes', 'mui_canvas_draw_utf8_clip'))
+                         + function(element, 'mui_element_text_layout')
                          + function(element, 'mui_element_autowrap_text') + r'''
 static unsigned cases;
 static void check(const unsigned char *bytes, size_t len, unsigned expected) {

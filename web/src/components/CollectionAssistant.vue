@@ -115,7 +115,7 @@ export default {
     resultRows(){return this.filter==='issues'?this.issues:this.report?.[this.filter]||[];},
     shownRows(){return this.resultRows.slice((this.resultPage-1)*30,this.resultPage*30);}
   },
-  created(){this._serial=0;this._alive=true;},
+  created(){this._serial=0;this._alive=true;this._pendingFigureSelection=null;},
   mounted() {
     this._stopLinkUpdates = observeFigureDownloadLink(() => this.chosen?.id, this.refreshSourceUrl);
     this.$emit('import-ready');
@@ -123,6 +123,10 @@ export default {
   beforeUnmount(){this._stopLinkUpdates?.();this._alive=false;this.invalidate();},
   watch:{report(value){this.$emit('report',value);},stale(value){this.$emit('report-stale',value);},generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},revision(){if(this.report)this.stale=true;},
     selectedFigure: { immediate: true, handler(value) {
+      // A local read does not block the catalogue. Apply its latest selection
+      // after the current operation, without changing prepared bytes mid-flight.
+      if (this.running) { this._pendingFigureSelection = { value }; return; }
+      this._pendingFigureSelection = null;
       if (value && value.id === this.chosen?.id && value.id === this.prepared?.id) return;
       this.choose(value, false);
     } },
@@ -151,6 +155,7 @@ export default {
       this.stale = false;
       this.message = '';
       if (this._errorFromDevice) this.setError('');
+      this.applyPendingFigureSelection();
       this.$emit('busy', false);
       this.$emit('writing', false);
     },
@@ -161,6 +166,13 @@ export default {
       const saved = readFigureDownloadLink(this.chosen.id);
       if (this.sourceUrl === this._lastSavedSourceUrl) this.sourceUrl = saved;
       this._lastSavedSourceUrl = saved;
+    },
+    applyPendingFigureSelection() {
+      if (this.running || !this._pendingFigureSelection) return;
+      const { value } = this._pendingFigureSelection;
+      this._pendingFigureSelection = null;
+      if (!this._alive || value && value.id === this.chosen?.id && value.id === this.prepared?.id) return;
+      this.choose(value, false);
     },
     chooseById(id){this.choose(this.entryFor(id),false);},
     choose(entry, focus = true) {
@@ -199,7 +211,7 @@ export default {
           this.setError(message, device);
         }
       }
-      finally{if(current()){this.running='';this._controller=null;this.progress=null;if(device)this.$emit('busy',false);if(kind==='upload')this.$emit('writing',false);}}
+      finally{if(current()){this.running='';this._controller=null;this.progress=null;if(device)this.$emit('busy',false);if(kind==='upload')this.$emit('writing',false);this.applyPendingFigureSelection();}}
     },
     async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
     async scanContents(){if(!this.connected||this.blocked||this.running||this.scope==='folder'&&!this.directory)return;this.mode='full';await this.scan();},

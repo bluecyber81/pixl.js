@@ -1,0 +1,83 @@
+{
+  "version": "2.22.0-DE3.71t1",
+  "counter": 644,
+  "sourceId": "3c62a24a8aecab7a81af6b73cb86642d4a248755d739c5e37b1fcdeea7451d02",
+  "productionInputs": 700,
+  "freshBuild": {
+    "backend": "native",
+    "mode": "release",
+    "result": "passed",
+    "artifactsSha256": {
+      "pixljs.bin": "fbade80d03a44a3bb3bb7e76df422b24a879d2ff81b433e6bf4f6d6e1b955273",
+      "pixljs.hex": "8338331b1e2b80656e9af5209e0ef37641902d524a4da9bd958788e9b09ee980",
+      "pixljs.out": "cc4f11911952eaa6020e1b6166d7d799af209bdee8c03e8f579e5391ee3a5707",
+      "pixljs.map": "08353f10d4ca968ba60727c8aecaf236b678751f3531f180d77f65133be90f9f"
+    },
+    "binMatchesSignedOta": true,
+    "binAndHexMatchOriginalBuild": true,
+    "elfAndMapContainBuildPaths": true
+  },
+  "signingVerification": "tools/check_release_ota.py",
+  "host": {
+    "profile": "full",
+    "passed": true,
+    "passed_count": 156,
+    "executed_count": 156,
+    "available_count": 156,
+    "hardware_mocked": true,
+    "sources_unchanged_during_tests": true
+  },
+  "z19TransferModel": {
+    "payloadBytes": 363292,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18390,
+    "objectExecutes": 90,
+    "finalCrc32": 147348591,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "fbade80d03a44a3bb3bb7e76df422b24a879d2ff81b433e6bf4f6d6e1b955273",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "hardware": {
+    "source": "user-reported checks and saved connected file-manager export",
+    "fileManager": "3.47.0-T1",
+    "applicationCounter": 644,
+    "bootloaderCounter": 19,
+    "softDevice": "S112 7.3.0",
+    "fileSystemMounted": "Packed LittleFS PFS1",
+    "exportSectionsAvailable": 9,
+    "millisecondsFromStorageStartToFirstDispatch": 2385,
+    "millisecondsFromStorageStartUntilMountReady": 2194,
+    "backToListAndSleepWakeRestoredSelection": [
+      "file emulator",
+      "amiibo database"
+    ],
+    "profileSuiteIndividuallyCounted": false,
+    "confirmationScope": "Paths actually exercised by the tester on that device; individual data-slot and NFC scenarios were not recorded."
+  },
+  "limits": [
+    "Physical DFU interruption, repeated load and controlled power-loss recovery still need hardware evidence.",
+    "Retained navigation does not preserve a temporary generated UID."
+  ],
+  "knownListSelectionCases": {
+    "dataSlot3Back": "selection moved to slot 1 in the App644 host test",
+    "gameDetailNextThenBack": "row for the original figure kept focus in the App644 host test",
+    "deviceVerification": "pending for these paths"
+  }
+}

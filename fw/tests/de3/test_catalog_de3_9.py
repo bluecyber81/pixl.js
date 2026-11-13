@@ -37,8 +37,22 @@ class CatalogDE39Tests(unittest.TestCase):
             content = (FW / "data" / filename).read_bytes()
             lines = content.splitlines(keepends=True)
             self.assertEqual(len(lines), old_count + 2)
-            # Includes all existing translations, names and usage notes byte-for-byte.
-            self.assertEqual(sha256(b"".join(lines[:old_count])).hexdigest(), old_hash)
+            # Preserve the reviewed historical prefix byte-for-byte after
+            # reversing exactly the six later display-name corrections.
+            prefix = b"".join(lines[:old_count])
+            if filename == "amiidb_amiibo.csv":
+                for aid, old, new in [
+                    ("018b000002460502", "Cyrrus", "Cyrus"),
+                    ("04d0000101960502", "[AC] 339 - Fritta", "[AC] 339 - Frita"),
+                    ("033f0001008f0502", "[AC] 076 - Jeramiah", "[AC] 076 - Jeremiah"),
+                    ('0a02000103b30502', '412 - C.J. ', '412 - C.J.'),
+                    ('0a0c000103c30502', '428 - Audie ', '428 - Audie'),
+                    ('0a0e000103c50502', '430 - Judy ', '430 - Judy'),
+                ]:
+                    corrected = f"{aid},{new},{new}".encode()
+                    self.assertEqual(prefix.count(corrected), 1)
+                    prefix = prefix.replace(corrected, f"{aid},{old},{old}".encode())
+            self.assertEqual(sha256(prefix).hexdigest(), old_hash)
             rows[filename] = list(csv.reader(io.StringIO(content.decode("utf8"))))
         amiibos = rows["amiidb_amiibo.csv"]
         links = rows["amiidb_link.csv"]
@@ -47,7 +61,10 @@ class CatalogDE39Tests(unittest.TestCase):
         self.assertEqual(links[-2:], [["26", row[0], "", "", ""] for row in ADDITIONS])
         self.assertEqual(sum(row[0] == "26" for row in links), 37)
         games = (FW / "data/amiidb_game.csv").read_bytes()
-        self.assertEqual(sha256(games).hexdigest(),
+        corrected = b"49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale,"
+        self.assertEqual(games.count(corrected), 1)
+        reference_games = games.replace(corrected, b"49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ,")
+        self.assertEqual(sha256(reference_games).hexdigest(),
                          "659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47")
 
     def test_generated_metadata_compiles_and_all_links_resolve(self):

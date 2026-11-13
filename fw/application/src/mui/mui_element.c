@@ -42,36 +42,59 @@ void mui_element_multiline_text(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, co
     string_clear(str);
 }
 
-void mui_element_autowrap_text(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, uint8_t w, uint8_t h, const char *text) {
+/* Measurement and rendering must share both wrapping and glyph advance.
+ * GetUTF8Width measures ink, whereas DrawUTF8 advances to the next origin. */
+static mui_text_size_t mui_element_text_layout(mui_canvas_t *p_canvas, uint8_t x, uint8_t y,
+                                                uint8_t w, uint8_t h, const char *text, bool draw) {
+    mui_text_size_t size = {0, 0};
     uint8_t font_height = mui_canvas_current_font_height(p_canvas);
-    uint8_t xi = x;
-    uint8_t yi = y;
-
+    if (!text || !*text || !w || !font_height || (draw && !h)) return size;
+    uint16_t xi = 0;
+    uint32_t yi = 0;
     const char *p = text;
     char utf8[5];
+    size.height = font_height;
 
-    while (*p != 0 && yi < y + h) {
-
+    while (*p) {
         if (*p == '\n') {
-            xi = x;
+            xi = 0;
             yi += font_height;
-            p++;
-            continue;
+            ++p;
+        } else {
+            uint8_t bytes = mui_canvas_get_utf8_bytes(p);
+            memcpy(utf8, p, bytes);
+            utf8[bytes] = '\0';
+            uint16_t ink = mui_canvas_get_utf8_width(p_canvas, utf8);
+            uint16_t advance = mui_canvas_get_utf8_advance(p_canvas, utf8);
+            /* An overwide first glyph is clipped by the caller, without an
+             * empty leading line. Ordinary glyphs may exactly reach the edge. */
+            if (xi && xi + ink > w) {
+                xi = 0;
+                yi += font_height;
+            }
+            if (draw && (yi >= h || (uint16_t)y + yi > UINT8_MAX)) break;
+            if (draw && (uint16_t)x + xi <= UINT8_MAX)
+                mui_canvas_draw_utf8(p_canvas, x + xi, y + yi, utf8);
+            if (xi + ink > size.width) size.width = xi + ink;
+            xi += advance;
+            p += bytes;
         }
-
-        uint8_t utf8_size = mui_canvas_get_utf8_bytes(p);
-        memcpy(utf8, p, utf8_size);
-        utf8[utf8_size] = '\0';
-        uint8_t utf8_x = mui_canvas_get_utf8_width(p_canvas, utf8);
-        if (utf8_x + xi > x + w) {
-            xi = x;
-            yi += font_height;
-            if (yi >= y + h) break;
+        if (yi > (uint32_t)UINT16_MAX - font_height) {
+            size.height = UINT16_MAX;
+            break;
         }
-        uint8_t utf8_w = mui_canvas_draw_utf8(p_canvas, xi, yi, utf8);
-        xi += utf8_w;
-        p += utf8_size;
+        size.height = yi + font_height;
+        if (draw && yi >= h) break;
     }
+    return size;
+}
+
+mui_text_size_t mui_element_text_size(mui_canvas_t *p_canvas, uint8_t w, const char *text) {
+    return mui_element_text_layout(p_canvas, 0, 0, w, 0, text, false);
+}
+
+void mui_element_autowrap_text(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, uint8_t w, uint8_t h, const char *text) {
+    mui_element_text_layout(p_canvas, x, y, w, h, text, true);
 }
 
 /* Advance one complete character, including for malformed or truncated input. */
@@ -177,27 +200,7 @@ uint16_t mui_element_autowrap_text_box(mui_canvas_t *p_canvas, uint16_t x, uint1
 }
 
 uint16_t mui_element_text_height(mui_canvas_t *p_canvas, uint8_t w, const char *text) {
-    uint8_t font_height = mui_canvas_current_font_height(p_canvas);
-    uint8_t xi = 0;
-    uint16_t yi = 0;
-
-    const char *p = text;
-    char utf8[5];
-
-    while (*p != 0) {
-
-        uint8_t utf8_size = mui_canvas_get_utf8_bytes(p);
-        memcpy(utf8, p, utf8_size);
-        utf8[utf8_size] = '\0';
-        uint8_t utf8_x = mui_canvas_get_utf8_width(p_canvas, utf8);
-        if (utf8_x + xi > w) {
-            xi = 0;
-            yi += font_height;
-        }
-        xi += utf8_x;
-        p += utf8_size;
-    }
-    return yi + font_height;
+    return mui_element_text_size(p_canvas, w, text).height;
 }
 
 void mui_element_button(mui_canvas_t *p_canvas, uint8_t x, uint8_t y, const char *str, uint8_t selected) {

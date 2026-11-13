@@ -49,7 +49,7 @@ const db_game_t game_list[] = {
 {46, 0, "Super Mario Odyssey", "超级马力欧：奥德赛", 70, 22}, 
 {47, 0, "Super Smash Bros Ultimate", "任天堂明星大乱斗", 35, 97}, 
 {48, 0, "Yoshi's Crafted World", "耀西的手工世界", 50, 11}, 
-{49, 0, "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ", "游戏王：激斗大逃杀", 1, 7}, 
+{49, 0, "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale", "游戏王：激斗大逃杀", 1, 7}, 
 {50, 0, "Dark Souls Remastered", "黑暗之魂：重制版", 1, 1}, 
 {51, 0, "Super Mario Party", "超级马力欧派对", 84, 15}, 
 {52, 11, "Amiibo Cards", "Amiibo Cards", 0, 509}, 

@@ -2,6 +2,7 @@
 import re
 import unittest
 from test_app_startup_allocations import SRC, function, compile_run
+from input_context_support import context_state, context_functions
 
 
 def stripped(path):
@@ -46,7 +47,7 @@ static void mui_view_draw(mui_view_t*v,mui_canvas_t*c){if(v->draw_cb)v->draw_cb(
 static void mui_view_input(mui_view_t*v,mui_input_event_t*e){if(v->input_cb)v->input_cb(v,e);}
 static void mui_view_enter(mui_view_t*v){if(v->enter_cb)v->enter_cb(v);}
 static void mui_view_exit(mui_view_t*v){if(v->exit_cb)v->exit_cb(v);}
-'''
+''' + context_state() + context_functions(("mui_input_context_changed",))
 
 
 class BoundedStartupTests(unittest.TestCase):

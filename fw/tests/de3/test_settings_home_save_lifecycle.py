@@ -8,6 +8,7 @@ import tempfile
 import unittest
 
 import test_settings_save_ui as fixture_module
+from input_context_support import context_state, context_functions
 
 native = fixture_module.native
 
@@ -68,7 +69,7 @@ static int settings_save(void){
     replace('static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;toast_calls++;}',
             'static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;assert(active_view==SETTINGS_VIEW_ID_MAIN);toast_calls++;}')
     launcher_src = (SRC / 'core/mini_app_launcher.c').read_text(encoding='utf-8')
-    launcher_functions = '\n'.join(native.function(launcher_src, name) for name in
+    launcher_functions = context_state() + context_functions(("mui_input_context_changed",)) + '\n'.join(native.function(launcher_src, name) for name in
                                   ('mini_app_launcher_input_blocked', 'mini_app_launcher_clear_exit', 'mini_app_launcher_exit_prepared', 'mini_app_launcher_cancel_exit', 'mini_app_launcher_prepare_exit', 'mini_app_launcher_find', 'mini_app_launcher_inst_kill', 'mini_app_launcher_kill'))
     replace('static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_SETTINGS);kills++;}', launcher_functions)
     replace('static void *mini_app_launcher(void){return NULL;}',

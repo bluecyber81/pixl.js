@@ -1,0 +1,169 @@
+#include "mui_canvas.h"
+#include "mui_input.h"
+#include "mui_element.h"
+#include "ntag_def.h"
+#include "i18n/language.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define ICON_LEFT 0xe1ac
+#define ICON_RIGHT 0xe1aa
+#define ICON_INFO 0xe0ae
+#define AMIIBO_INFO_URL_CAPACITY 96
+#define AMIIBO_ACTIVE_HINT_HEIGHT 9
+#define AMIIBO_USAGE_DE_BUFFER_BYTES 512
+typedef struct { void *user_data; } mui_view_t;
+typedef struct amiibo_detail_view_s amiibo_detail_view_t;
+typedef struct amiibo_view_s amiibo_view_t;
+typedef enum { AMIIBO_DETAIL_VIEW_EVENT_UPDATE, AMIIBO_DETAIL_VIEW_EVENT_MENU } amiibo_detail_view_event_t;
+typedef enum { AMIIBO_VIEW_EVENT_UPDATE, AMIIBO_VIEW_EVENT_MENU, AMIIBO_VIEW_EVENT_DESC_UPDATE } amiibo_view_event_t;
+struct amiibo_detail_view_s { ntag_t *ntag; unsigned focus,max_ntags; uint8_t info_page; int navigate_direction;
+    uint16_t note_offset,note_total; const char *file_name; void (*event_cb)(amiibo_detail_view_event_t,amiibo_detail_view_t*); };
+struct amiibo_view_s { ntag_t *ntag; unsigned focus,max_ntags; uint8_t info_page;
+    unsigned desc_step,desc_page_size,desc_total,desc_offset; bool desc_auto_scroll_disabled;
+    void (*event_cb)(amiibo_view_event_t,amiibo_view_t*); };
+static unsigned menu_count, update_count;
+static void file_event(amiibo_detail_view_event_t e,amiibo_detail_view_t*v) {
+    if(e==AMIIBO_DETAIL_VIEW_EVENT_MENU)++menu_count;else ++update_count;
+}
+static void db_event(amiibo_view_event_t e,amiibo_view_t*v) {
+    if(e==AMIIBO_VIEW_EVENT_MENU)++menu_count;else ++update_count;
+}
+static bool amiibo_info_input(uint8_t *p,const mui_input_event_t*e) {assert(!"info input fixture reached");return false;}
+static void amiibo_view_reset_desc_scroll(amiibo_view_t*v){v->desc_offset=0;v->desc_auto_scroll_disabled=false;}
+typedef struct { const char *name_en,*name_cn; } db_amiibo_t;
+static db_amiibo_t fixture_entry={"Mario","Mario"};
+static const db_amiibo_t *get_amiibo_by_id(uint32_t head,uint32_t tail) { return head==0 && tail==2 ? &fixture_entry : NULL; }
+static struct { bool qrcode_enabled; } fixture_settings={false};
+#define settings_get_data() (&fixture_settings)
+#define string_get_cstr(s) (s)
+static void ntag_store_get_uuid(ntag_t *tag,uint8_t *uid) {
+    uid[0]=tag->data[0];uid[1]=tag->data[1];uid[2]=tag->data[2];
+    uid[3]=tag->data[4];uid[4]=tag->data[5];uid[5]=tag->data[6];uid[6]=tag->data[7];
+}
+static void amiibo_info_draw(mui_canvas_t *canvas,ntag_t *tag,unsigned page) { assert(!"info-page fixture reached"); }
+static void amiibo_view_draw_notes(amiibo_view_t *v,mui_canvas_t *c,char *s) { assert(!"notes-page fixture reached"); }
+static bool amiibo_info_url(char *out,size_t size,ntag_t *tag) { assert(!"QR fixture reached");return false; }
+static unsigned amiibo_view_draw_qrcode(mui_canvas_t *c,unsigned y,const char *url) { assert(!"QR draw fixture reached");return 0; }
+static const char *amiibo_view_usage(amiibo_view_t *v,char *s) { return ""; }
+static void amiibo_view_update_desc_anim(amiibo_view_t *v) { }
+static void amiibo_view_stop_desc_anim(amiibo_view_t *v) { }
+/*EXACT_SOURCE_FUNCTIONS*/
+
+static const u8x8_display_info_t display_info={.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
+typedef struct { uint8_t pre[32],pixels[1024],post[32]; } guarded_t;
+static void setup(mui_canvas_t *c,u8g2_t *u,guarded_t *b) {
+    memset(u,0,sizeof(*u));memset(b,0,sizeof(*b));memset(b->pre,0xa5,32);memset(b->post,0x5a,32);
+    u->u8x8.display_info=&display_info;
+    u8g2_SetupBuffer(u,b->pixels,8,u8g2_ll_hvline_vertical_top_lsb,&u8g2_cb_r0);
+    c->fb=u;mui_canvas_set_frame(c,0,0,128,64);
+    mui_canvas_set_font(c,u8g2_font_wqy12_t_gb2312a);mui_canvas_set_draw_color(c,1);
+}
+static void save(const char *dir,const char *name,guarded_t *b) {
+    for(unsigned i=0;i<32;i++){assert(b->pre[i]==0xa5);assert(b->post[i]==0x5a);}
+    char path[1024];snprintf(path,sizeof(path),"%s/%s.pbm",dir,name);
+    FILE *f=fopen(path,"wb");assert(f);fprintf(f,"P1\n128 64\n");
+    for(unsigned y=0;y<64;y++)for(unsigned x=0;x<128;x++)fprintf(f,"%u%c",!!(b->pixels[(y/8)*128+x]&(1u<<(y%8))),x==127?'\n':' ');
+    fclose(f);
+}
+static unsigned pixel(const uint8_t *b,unsigned x,unsigned y){return !!(b[(y/8)*128+x]&(1u<<(y%8)));}
+static void footer_oracle(mui_canvas_t *c,guarded_t *actual,unsigned width,unsigned lang) {
+    guarded_t reference;mui_canvas_t rc;u8g2_t ru;setup(&rc,&ru,&reference);
+    mui_canvas_set_font(&rc,u8g2_font_likeminecraft_te);
+    const char *text=lang ? "CENTER: MENU" : "MITTE: MENUE";
+    assert(mui_canvas_get_utf8_width(&rc,text)+2<=width);
+    for(const char*p=text;*p;++p)assert(u8g2_IsGlyph(&ru,(uint8_t)*p));
+    mui_canvas_draw_line(&rc,0,55,width-1,55);
+    mui_canvas_draw_utf8(&rc,1,63,text);
+    for(unsigned y=55;y<64;y++)for(unsigned x=0;x<width;x++)
+        assert(pixel(actual->pixels,x,y)==pixel(reference.pixels,x,y));
+}
+int main(int argc,char **argv) {
+    assert(argc==2);unsigned frames=0,inputs=0;
+    for(unsigned lang=0;lang<2;lang++)for(unsigned app=2;app<=3;app++)
+    for(unsigned scenario=0;scenario<6;scenario++)for(unsigned ro=0;ro<2;ro++)for(unsigned focus=0;focus<2;focus++) {
+        setLanguage(lang);ntag_t tag={0};tag.type=NTAG_215;tag.data[91]=2;tag.read_only=ro;
+        tag.data[0]=4;tag.data[1]=0x11;tag.data[2]=0x22;tag.data[4]=0x33;tag.data[5]=0x44;tag.data[6]=0x55;tag.data[7]=0x66;
+        fixture_entry.name_en=fixture_entry.name_cn=scenario==2 ? "A deliberately long Amiibo figure name with several words" : "Mario";
+        if(scenario==3 || scenario==2)strcpy((char*)tag.notes,"A personal note with descenders: gjpqy.");
+        if(scenario==4)tag.data[84]=0x41;
+        if(scenario==5)tag.data[91]=0;
+        guarded_t b;u8g2_t u;mui_canvas_t c;setup(&c,&u,&b);ntag_t before=tag;
+        amiibo_detail_view_t app2={.ntag=&tag,.focus=focus,.max_ntags=2,.file_name=scenario==1?"A very long filename with accented chars ÄÖÜäöüß.bin":"Mario.bin",.event_cb=file_event};
+        amiibo_view_t app3={.ntag=&tag,.focus=focus,.max_ntags=2,.event_cb=db_event};
+        mui_view_t view={.user_data=app==2?(void *)&app2:(void *)&app3};
+        mui_rect_t clip_before,clip_after;mui_canvas_get_clip_window(&c,&clip_before);
+        if(app==2)amiibo_detail_view_on_draw(&view,&c);else amiibo_view_on_draw(&view,&c);
+        mui_canvas_get_clip_window(&c,&clip_after);assert(!memcmp(&clip_before,&clip_after,sizeof(clip_before)));
+        assert(!memcmp(&before,&tag,sizeof(tag)));footer_oracle(&c,&b,128,lang);
+        char name[80];snprintf(name,sizeof(name),"%s_app%u_case%u_ro%u_focus%u",lang?"en":"de",app,scenario,ro,focus);
+        save(argv[1],name,&b);++frames;
+        const unsigned kinds[]={INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_TYPE_REPEAT};
+        for(unsigned k=0;k<3;k++) {
+            mui_input_event_t e={INPUT_KEY_CENTER,kinds[k]};menu_count=update_count=0;
+            if(app==2)amiibo_detail_view_on_input(&view,&e);else amiibo_view_on_input(&view,&e);
+            assert(menu_count==((app==2 || k<2)?1:0));assert(!update_count);
+            assert(app2.focus==focus && app3.focus==focus);assert(!memcmp(&before,&tag,sizeof(tag)));++inputs;
+        }
+    }
+    /* Dedicated notes keep full text reachable when a long name fills the
+     * active screen. Explicit line boundaries provide an independent oracle. */
+    for(unsigned lang=0;lang<2;lang++) {
+        setLanguage(lang);ntag_t tag={0};tag.type=NTAG_215;tag.data[91]=2;
+        strcpy((char*)tag.notes,"ÄÖÜäöüß gjpqy\nSecond gjpqy\nThird line\nLast gjpqy");
+        ntag_t before=tag;guarded_t b,reference;u8g2_t u,ru;mui_canvas_t c,rc;
+        setup(&c,&u,&b);setup(&rc,&ru,&reference);
+        amiibo_detail_view_t a={.ntag=&tag,.focus=1,.max_ntags=2,.info_page=3,.event_cb=file_event};
+        mui_view_t view={.user_data=&a};amiibo_detail_view_on_draw(&view,&c);
+        assert(a.note_total==52);menu_count=update_count=0;
+        mui_canvas_draw_utf8(&rc,0,25,"ÄÖÜäöüß gjpqy");
+        mui_canvas_draw_utf8(&rc,0,38,"Second gjpqy");
+        /* The wrapper deliberately uses one pixel between visual glyph boxes. */
+        memset(reference.pixels,0,1024);
+        const char *rows[]={"ÄÖÜäöüß gjpqy","Second gjpqy"};
+        for(unsigned row=0;row<2;row++) {
+            unsigned x=0;const char*p=rows[row];
+            while(*p) {char glyph[5]={0};unsigned n=mui_canvas_get_utf8_bytes(p);memcpy(glyph,p,n);p+=n;
+                mui_canvas_draw_utf8(&rc,x,25+13*row,glyph);x+=mui_canvas_get_utf8_width(&rc,glyph)+1;}
+        }
+        for(unsigned y=14;y<41;y++)for(unsigned x=0;x<124;x++)
+            assert(pixel(b.pixels,x,y)==pixel(reference.pixels,x,y));
+        char name[80];snprintf(name,sizeof(name),"%s_app2_personal_note_first",lang?"en":"de");save(argv[1],name,&b);
+        mui_input_event_t e={INPUT_KEY_RIGHT,INPUT_TYPE_SHORT};amiibo_detail_view_on_input(&view,&e);
+        assert(a.note_offset==13 && a.focus==1 && !menu_count && !update_count);
+        e.type=INPUT_TYPE_REPEAT;for(unsigned i=0;i<100;i++)amiibo_detail_view_on_input(&view,&e);
+        assert(a.note_offset==26);memset(b.pixels,0,1024);amiibo_detail_view_on_draw(&view,&c);
+        snprintf(name,sizeof(name),"%s_app2_personal_note_last",lang?"en":"de");save(argv[1],name,&b);
+        memset(reference.pixels,0,1024);rows[0]="Third line";rows[1]="Last gjpqy";
+        for(unsigned row=0;row<2;row++) {
+            unsigned x=0;const char*p=rows[row];
+            while(*p) {char glyph[5]={0};unsigned n=mui_canvas_get_utf8_bytes(p);memcpy(glyph,p,n);p+=n;
+                mui_canvas_draw_utf8(&rc,x,25+13*row,glyph);x+=mui_canvas_get_utf8_width(&rc,glyph)+1;}
+        }
+        for(unsigned y=14;y<41;y++)for(unsigned x=0;x<124;x++)
+            assert(pixel(b.pixels,x,y)==pixel(reference.pixels,x,y));
+        e.key=INPUT_KEY_LEFT;for(unsigned i=0;i<100;i++)amiibo_detail_view_on_input(&view,&e);
+        assert(!a.note_offset && a.focus==1);
+        e.key=INPUT_KEY_CENTER;amiibo_detail_view_on_input(&view,&e);assert(a.info_page==3 && !menu_count);
+        e.type=INPUT_TYPE_SHORT;amiibo_detail_view_on_input(&view,&e);assert(!a.info_page && menu_count==1);
+        a.info_page=3;e.type=INPUT_TYPE_LONG;amiibo_detail_view_on_input(&view,&e);assert(!a.info_page && menu_count==2);
+        assert(!memcmp(&tag,&before,sizeof(tag)) && !update_count);
+        tag.notes[0]=0;a.info_page=3;a.note_offset=0;memset(b.pixels,0,1024);amiibo_detail_view_on_draw(&view,&c);
+        assert(a.note_total>0 && a.note_total<=26);
+        snprintf(name,sizeof(name),"%s_app2_personal_note_empty",lang?"en":"de");save(argv[1],name,&b);
+    }
+    /* Helper must restore caller state and honor a narrower surrounding clip. */
+    guarded_t b;u8g2_t u;mui_canvas_t c;setup(&c,&u,&b);setLanguage(0);
+    mui_rect_t clip={3,57,80,6},after;mui_canvas_set_clip_window(&c,&clip);
+    mui_canvas_set_draw_color(&c,0);const uint8_t *font=u8g2_GetFont(&u);
+    amiibo_active_menu_hint(&c,85);mui_canvas_get_clip_window(&c,&after);
+    assert(!memcmp(&clip,&after,sizeof(clip)));assert(!mui_canvas_get_draw_color(&c));assert(u8g2_GetFont(&u)==font);
+    for(unsigned y=0;y<64;y++)for(unsigned x=0;x<128;x++)
+        if(x<3 || x>=83 || y<57 || y>=63)assert(!pixel(b.pixels,x,y));
+    setup(&c,&u,&b);mui_canvas_set_frame(&c,0,0,128,50);amiibo_active_menu_hint(&c,128);
+    for(unsigned i=0;i<1024;i++)assert(!b.pixels[i]);
+    printf("PASS active menu hint: %u actual-C frames, %u center-button checks; tag data, focus, clipping and fonts preserved.\n",frames,inputs);
+    return 0;
+}

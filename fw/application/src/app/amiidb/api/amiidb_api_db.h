@@ -10,7 +10,9 @@
 #define AMIIDB_RESULT_PAGE_SIZE 24
 #define AMIIDB_RECENT_LIMIT 5
 
-/* Figure pointers refer to immutable catalog entries. History lives until reset. */
+/* Figure pointers refer to immutable catalog entries. App3 Hibernate stores
+ * their IDs in its versioned snapshot and resolves them again after reset. */
+void amiidb_recent_clear(void);
 void amiidb_recent_note(const db_amiibo_t *figure, uint8_t game_id);
 uint8_t amiidb_recent_game(const db_amiibo_t *figure);
 uint8_t amiidb_recent_copy(const db_amiibo_t *items[AMIIDB_RECENT_LIMIT]);

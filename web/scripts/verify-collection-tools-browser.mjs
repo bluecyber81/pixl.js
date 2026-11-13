@@ -321,7 +321,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.47.0', (await page.locator('.version-context').innerText()).includes('3.47.0'));
+    check(kind + ' exact web version 3.48.0', (await page.locator('.version-context').innerText()).includes('3.48.0'));
     const starts = page.locator('.start-actions');
     await fits(page, kind + ' start actions', '.start-actions', zoom);
     await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();
@@ -381,7 +381,7 @@ try {
     await announced.locator('li').first().waitFor();
     check(kind + ' selected announcement-only series opens with its own title and count',
       await announced.evaluate(el => el.open) && await announced.locator('.group-title strong').innerText() === 'Metroid Ravenous' &&
-      await announced.locator('summary').innerText() === 'Angekündigte Figuren (3)');
+      await announced.locator('summary').innerText() === 'Figuren und Erscheinungstermine (3)');
     check(kind + ' three Metroid announcements remain separate from catalogue ID and device counts',
       await announced.locator('li > a').count() === 3 && await page.locator('.catalogue .entries > li').count() === 0 &&
       (await page.locator('.catalogue .result-bar').innerText()).includes('0 Treffer mit Katalog-ID'));

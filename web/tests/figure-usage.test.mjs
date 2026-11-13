@@ -39,17 +39,18 @@ test('German translations keep the original; missing translations fall back only
 });
 
 test('all exported rows keep a group path and pinned source line without external requests', () => {
-  let associations = 0, notes = 0, translated = 0;
+  let associations = 0, notes = 0, translated = 0, official = 0;
   for (const figure of data.figures) {
     for (const row of figureUsage(figure.id, data)) {
       associations++;
       if (row.text) notes++;
       if (row.translated) translated++;
+      if (row.guideUrl) official++;
       assert.ok(row.label);
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated }, { associations: 1344, notes: 63, translated: 63 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1344, notes: 63, translated: 59, official: 4 });
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.
@@ -113,6 +114,37 @@ test('actual component labels claims, translations, exact sources and unknown/em
     assert.match(text(root), /Daraus lässt sich keine Aussage zur Spielunterstützung ableiten/);
     assert.equal(nodes(root, 'a').length, 0);
     assert.equal(nodes(root, 'img').length, 0);
+  } finally { app.unmount(); }
+});
+
+test('only the four Mipha and Urbosa game notes show the corrected Nintendo evidence in both languages', async () => {
+  const examples = [
+    ['0106000003590902', 'Urbosa-1239434.html', 'Vah Naboris'],
+    ['01070000035a0902', 'Mipha-1239432.html', 'Vah Ruta'],
+  ];
+  const { root, state, app } = await mount({ id: examples[0][0], locale: 'de_DE' });
+  try {
+    for (const [id, page, beast] of examples) {
+      for (const locale of ['de_DE', 'en_US']) {
+        state.id = id; state.locale = locale; await Vue.nextTick();
+        const de = locale === 'de_DE';
+        const guideRows = nodes(root, 'li').filter(row => nodes(row, 'a').some(a => a.props.href.startsWith('https://www.nintendo.com/')));
+        assert.equal(guideRows.length, 2);
+        for (const row of guideRows) {
+          const link = nodes(row, 'a')[0];
+          assert.match(text(link), de ? /Spielhinweis von Nintendo/ : /Nintendo game guide/);
+          assert.equal(link.props.href, 'https://www.nintendo.com/' + (de ? 'de-de/Hardware/amiibo-/Details/' : 'en-gb/Hardware/amiibo-/amiibo-details/') + page);
+          assert.equal(nodes(row, 'details').length, 0);
+          const body = nodes(row, 'p')[0];
+          assert.equal(body.props.lang, de ? 'de' : 'en');
+          if (text(nodes(row, 'strong')[0]).endsWith('Breath of the Wild')) assert.ok(text(body).includes(beast));
+          else assert.match(text(body), de ? /Parasegel/ : /paraglider/);
+          assert.doesNotMatch(text(body), /Naydra|Ruto|Gurudo|Revali/);
+        }
+      }
+    }
+    state.id = german.id; await Vue.nextTick();
+    assert.doesNotMatch(text(root), /Nintendo game guide/);
   } finally { app.unmount(); }
 });
 

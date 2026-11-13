@@ -22,6 +22,8 @@ struct amiibo_detail_view_s {
     uint16_t max_ntags;
     int8_t navigate_direction;
     uint8_t info_page;
+    uint16_t note_offset;
+    uint16_t note_total;
     string_t file_name;
     amiibo_detail_view_event_cb event_cb;
 };

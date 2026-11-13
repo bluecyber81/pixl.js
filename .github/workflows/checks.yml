@@ -41,6 +41,27 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run build:pages
+      - name: Exercise portable launcher including POSIX shutdown
+        run: python3 -B tests/test_windows_launcher_r2.py
+
+  windows-launcher:
+    name: Windows portable launcher
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.13.0'
+      - name: Check Windows port ownership, restart and shutdown
+        run: python -B tests/test_windows_launcher_r2.py
+      - name: Exercise the Windows PowerShell launchers
+        run: node --test tests/launcher.test.cjs
 
   firmware-host:
     name: Portable firmware regression subset

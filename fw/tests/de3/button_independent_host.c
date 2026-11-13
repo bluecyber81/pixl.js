@@ -40,6 +40,9 @@ static void nrf_pwr_mgmt_feed(void){feeds++;}
 typedef enum {INPUT_KEY_LEFT,INPUT_KEY_CENTER,INPUT_KEY_RIGHT} input_key_t;
 typedef enum {INPUT_TYPE_PRESS,INPUT_TYPE_RELEASE,INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_TYPE_REPEAT} input_type_t;
 typedef struct {input_key_t key;input_type_t type;} mui_input_event_t;
+typedef struct {uint32_t id,arg_int;void *arg_ptr;} mui_event_t;
+typedef struct {int event_queue,u8g2;bool initialized;} mui_t;
+#define MUI_EVENT_ID_INPUT 1
 typedef struct {void*user_data;} mui_view_t;
 typedef struct {int unused;} game_view_t;
 static uint8_t key_state[3],key_repeat_cnt;
@@ -49,7 +52,15 @@ static struct {bool swap_buttons;} settings;
 static unsigned count,input_count;
 static struct {uint8_t key,event;uint32_t timestamp;} events[512];
 static mui_input_event_t inputs[512];
-static void mui_input_post_event(mui_input_event_t*event){assert(input_count<512);inputs[input_count++]=*event;mui_view_t view={0};game_view_on_input(&view,event);}
+/* ACTUAL_INPUT_CONTEXT */
+static mui_t input_ui;
+static mui_t *mui(void){return &input_ui;}
+static void mui_post(mui_t *m,mui_event_t *event){
+ assert(m==&input_ui&&event->id==MUI_EVENT_ID_INPUT&&mui_input_event_is_current(event));
+ assert(input_count<512);
+ mui_input_event_t decoded={.key=event->arg_int&0xff,.type=(event->arg_int>>8)&0xff};
+ inputs[input_count++]=decoded;mui_view_t view={0};game_view_on_input(&view,&decoded);
+}
 /* ACTUAL_INPUT_MAPPER */
 static bool deinit_on_long;
 static void capture(uint8_t key,bsp_btn_event_t event){assert(count<512);events[count].key=key;events[count].event=event;events[count++].timestamp=now;mui_input_on_bsp_btn_event(key,event);if(deinit_on_long&&event==BSP_BTN_EVENT_LONG)bsp_btn_deinit();}
@@ -58,7 +69,6 @@ static void advance(uint32_t target){for(now++;now<=target;now++){for(unsigned i
 static unsigned event_count(unsigned key,unsigned event){unsigned n=0;for(unsigned i=0;i<count;i++)if(events[i].key==key&&events[i].event==event)n++;return n;}
 static void key(unsigned index,bool press){assert(index<3);bsp_button_event_handler(5+index,press?APP_BUTTON_PUSH:APP_BUTTON_RELEASE);}
 static void all_stopped(void){for(unsigned i=0;i<6;i++)assert(!registered[i]->running);}
-typedef struct {int event_queue,u8g2;bool initialized;} mui_t;
 static unsigned teardown_step;
 static void mui_event_queue_deinit(int*q){(void)q;assert(!m_enabled&&!sdk_enabled&&!m_bsp_btn_event_cb);all_stopped();for(unsigned i=0;i<3;i++)assert(!gpio_owned[i]);assert(teardown_step==0);teardown_step=1;}
 static void mui_u8g2_deinit(int*d){(void)d;assert(teardown_step==1);teardown_step=2;}

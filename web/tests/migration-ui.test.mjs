@@ -275,3 +275,19 @@ test('3.26 active migration stays open and separate full target verification is 
   gate.resolve({blob:new Blob(['zip']),filename:'backup.zip'});await active;panel.open=false;panel.props.onToggle();assert.equal(panel.open,false);
  }finally{h.app.unmount()}
 })
+
+test('T1 storage qualification is listed separately without implying a continuous 643 approval',async()=>{
+ const h=mount({approved:true});try{
+  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644');
+  assert.match(text(h.root),/DE3\.71t1 \/ 644/);assert.doesNotMatch(h.vm.capacityProfileLabel,/627–644|DE3\.55–DE3\.71/);
+  h.props.language='en';await Vue.nextTick();assert.match(text(h.root),/DE3\.55–DE3\.70 \/ 627–642 \+ DE3\.71t1 \/ 644/);
+ }finally{h.app.unmount()}
+});
+
+test('reviewed application lists with version or counter gaps are never displayed as one continuous range',async()=>{
+ const applications=[{firmwareVersion:'2.22.0-DE3.55',applicationCounter:627},{firmwareVersion:'2.22.0-DE3.57',applicationCounter:629},
+  {firmwareVersion:'2.22.0-DE3.58',applicationCounter:631},{firmwareVersion:'2.22.0-DE3.59',applicationCounter:632}];
+ const h=mount({getCapacityTarget:()=>({approvedApplications:applications})});try{
+  assert.equal(h.vm.capacityProfileLabel,'DE3.55 / 627 + DE3.57 / 629 + DE3.58–DE3.59 / 631–632');
+ }finally{h.app.unmount()}
+});

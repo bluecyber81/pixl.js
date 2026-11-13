@@ -5,9 +5,9 @@ Die Tabelle führt die Downloads für das LCD-Allmiibo mit PFS1, den Dateimanage
 | Gesucht | Paket oder Quelle |
 | --- | --- |
 | Firmware für ein bereits passendes LCD-Allmiibo mit PFS1, Z19 und S112 7.3.0 | [DE3.65 / 637, gerätegeprüft](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65). Die ZIP aktualisiert die Anwendung. |
-| Neue LCD-Funktionen erproben | [DE3.70 / 642, Testversion](https://github.com/bluecyber81/pixl.js/releases/tag/de3.70) mit Hauptmenüdiagnose und optimierter Ordneranzeige. [App-ZIP fürs Handy](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip). |
+| Neue LCD-Funktionen erproben | [DE3.71t1 / 644, Testversion](https://github.com/bluecyber81/pixl.js/releases/tag/de3.71t1) mit verbesserter Rückkehr und Schlafmodus. [Signierte App-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip). |
 | Frühere LCD-Testversion DE3.67 / 639 | [Archivierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.67/Allmiibo_LCD_DE3_67_639_NUR_APP.zip) · [Versionshinweise und Geräteprüfung](RELEASE_DE3_67.md). |
-| Dateimanager oder Prüfpaket für die Entwicklung | [Web 3.47.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.47.0) enthält die portable Version, den Webquellcode und ein separates Prüfarchiv mit App- und Bootloader-Artefakten. |
+| Dateimanager oder Prüfpaket für die Entwicklung | [Web 3.48.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0) enthält die portable Version, den Webquellcode und ein separates Prüfarchiv mit App- und Bootloader-Artefakten. |
 | Z19 nachbauen oder den DFU-Wiederanlauf prüfen | [Z19-Quellen, Bauanleitung und Tests](../bootloader-z19/README.md). Die Diagnose kann den eingebauten Stand über den Zähler und die Prüfsumme des Bootbereichs zuordnen. |
 | Nordic S112 7.3.0 | [Referenzdistribution und Lizenz](../softdevice-s112/README.md). Das Nordic-Archiv enthält die HEX-Datei, die Programmierschnittstelle und die Herstellerhinweise. |
 

@@ -1,5 +1,5 @@
 typedef struct { bool memory_error, auto_update; } mui_t;
-typedef struct { uint32_t arg_int; } mui_event_t;
+typedef struct { uint32_t arg_int; void *arg_ptr; } mui_event_t;
 typedef struct { uint8_t key, type; } mui_input_event_t;
 typedef unsigned mui_layer_t;
 enum { MUI_LAYER_FULLSCREEN = 0, MUI_LAYER_WINDOW = 1, MUI_LAYER_DESKTOP = 2 };
@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     assert(argc == 2);
     unsigned scenario = (unsigned)strtoul(argv[1], NULL, 10);
     fixture_start(MINI_APP_ID_CHAMELEON);
+    mui_input_tag_current_event(&input_event);
     mini_app_inst_t *owner = test_launcher->p_main_app_inst;
     if (scenario == 0 || scenario == 3 || scenario == 4)
         assert(mini_app_launcher_prepare_exit(test_launcher, MINI_APP_EXIT_RESET));

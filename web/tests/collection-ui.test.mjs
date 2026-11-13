@@ -661,3 +661,68 @@ test('duplicate hashes remain a visibly stale snapshot after revision and export
     assert.equal(fixture.reads.length, 3);
   } finally { h.app.unmount(); }
 });
+
+test('catalogue selection during preparation reaches import after completion and the same-card retry stays consistent', async () => {
+  const gate = deferred(), h = mount({ props: { selectedFigure: baseline.entries[0] } });
+  const catalogue = await mountSfc('CataloguePanel', {
+    catalogue: { ...baseline, commit: 'a'.repeat(40), sourceUrl: 'https://example.com/catalogue' }, blocked: false,
+    onSelectEntry: entry => { h.props.selectedFigure = entry; },
+  });
+  try {
+    const active = h.vm.prepare({ file: { size: 540, arrayBuffer: () => gate.promise } });
+    await tick(); assert.equal(h.vm.running, 'prepare'); assert.deepEqual(h.events, []);
+    const details = flat(catalogue.root).find(n => n.type === 'button' && n.props['aria-label'] === `Details zu ${baseline.entries[1].name}`);
+    assert.ok(details); assert.equal(details.props.disabled, false);
+    await details.props.onClick({ currentTarget: node('button') }); await tick();
+    assert.equal(h.props.selectedFigure.id, B); assert.equal(h.vm.chosen.id, A);
+    gate.resolve(tag(A).buffer); await active; await tick();
+    assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null);
+    await details.props.onClick({ currentTarget: node('button') }); await tick();
+    assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null);
+    assert.deepEqual(h.events, [], 'selection and preparation do not acquire a device adapter or upload');
+  } finally { catalogue.app.unmount(); h.app.unmount(); }
+});
+
+test('only the latest catalogue selection during preparation is applied, including clearing the selection', async () => {
+  for (const latest of [baseline.entries[0], null]) {
+    const gate = deferred(), h = mount({ props: { selectedFigure: baseline.entries[0] } });
+    try {
+      const active = h.vm.prepare({ file: { size: 540, arrayBuffer: () => gate.promise } });
+      h.props.selectedFigure = baseline.entries[1]; await tick();
+      h.props.selectedFigure = latest; await tick();
+      gate.resolve(tag(A).buffer); await active; await tick();
+      assert.equal(h.vm.chosen?.id || null, latest?.id || null);
+      assert.equal(h.vm.prepared?.id || null, latest ? A : null);
+    } finally { h.app.unmount(); }
+  }
+});
+
+test('cancelled preparation still applies the newer catalogue choice and cannot publish the old bytes', async () => {
+  const gate = deferred(), h = mount({ props: { selectedFigure: baseline.entries[0] } });
+  try {
+    const active = h.vm.prepare({ file: { size: 540, arrayBuffer: () => gate.promise } });
+    h.props.selectedFigure = baseline.entries[1]; await tick(); h.vm.cancel();
+    gate.resolve(tag(A).buffer); await active; await tick();
+    assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null); assert.equal(h.vm.running, '');
+  } finally { h.app.unmount(); }
+});
+
+test('session invalidation applies the queued choice once and a late read cannot replace it', async () => {
+  const gate = deferred(), h = mount({ props: { selectedFigure: baseline.entries[0] } });
+  try {
+    const active = h.vm.prepare({ file: { size: 540, arrayBuffer: () => gate.promise } });
+    h.props.selectedFigure = baseline.entries[1]; await tick();
+    h.props.generation++; await tick();
+    assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null);
+    gate.resolve(tag(A).buffer); await active; await tick();
+    assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared, null);
+  } finally { h.app.unmount(); }
+});
+
+test('a local import selection is not overwritten by an unchanged older catalogue prop after preparation', async () => {
+  const h = mount({ props: { selectedFigure: baseline.entries[0] } });
+  try {
+    h.vm.choose(baseline.entries[1], false); await h.vm.prepare({ file: tag(B) }); await tick();
+    assert.equal(h.props.selectedFigure.id, A); assert.equal(h.vm.chosen.id, B); assert.equal(h.vm.prepared.id, B);
+  } finally { h.app.unmount(); }
+});

@@ -1,4 +1,8 @@
-# Allmiibo Dateimanager 3.47.0
+# Allmiibo Dateimanager 3.48.0
+
+Unter **Sicherung** lassen sich zwei ZIPs nach Pfad und Änderungsart vergleichen und die Treffer als CSV oder JSON speichern. Die **Figurensammlung** übernimmt bei schneller Auswahl die zuletzt gewählte Figur. Favoriten und gespeicherte Filter lassen sich auf einen anderen Browser übertragen. Für LCD-Allmiibo mit Z19, S112 7.3.0 und PFS1 steht die optionale signierte Testanwendung DE3.71t1/644 bereit.
+
+[Im Browser öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Download](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.0/Allmiibo_Dateimanager_3_48_0_Portable.zip) · [Windows-Start und Bedienung](LIESMICH_3_48_0.txt)
 
 ## Dateimanager 3.47.0
 
@@ -18,6 +22,7 @@ Die lokale LittleFS-Platzprüfung zeigt DE3.68 mit App-Zähler 640. Das vorausge
 
 Ordnersicherungen lassen sich nach einem Browserneustart fortsetzen. Der Figurenkatalog speichert Webfavoriten, benannte Filter und HTTPS-Linklisten. LCD-Displayfotos kannst du vor dem Speichern um 180° drehen. [Bedienung](../docs/DATEIMANAGER_WEB.md#dateimanager-3430)
 
+- **3.48.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.48.0/Allmiibo_Dateimanager_3_48_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.48.0/Allmiibo_DE3_71t1_Z19_Web3_48_0_ChatGPT_Pruefpaket.zip)
 - **3.47.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.47.0/Allmiibo_Dateimanager_3_47_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.47.0/Allmiibo_DE3_70_Z19_Web3_47_0_ChatGPT_Pruefpaket.zip)
 - **3.46.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.46.0/Allmiibo_Dateimanager_3_46_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.46.0/Allmiibo_DE3_69_Z19_Web3_46_0_ChatGPT_Pruefpaket.zip)
 - **3.45.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.45.0/Allmiibo_Dateimanager_3_45_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.45.0/Allmiibo_DE3_68_Z19_Web3_45_0_ChatGPT_Pruefpaket.zip)

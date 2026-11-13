@@ -98,6 +98,9 @@ static void df_proto_handler_info_ui_diagnostic(df_event_t *evt) {
         else if (evt->df->length == 1 && evt->df->data[0] == 1 &&
                  mui_menu_diag_snapshot(out.data, sizeof(out.data)))
             out.length = MUI_MENU_DIAG_SIZE;
+        else if (evt->df->length == 1 && evt->df->data[0] == 2 &&
+                 mui_menu_diag_snapshot_v2(out.data, sizeof(out.data)))
+            out.length = MUI_MENU_DIAG_V2_SIZE;
 #endif
         if (out.length) out.status = DF_STATUS_OK;
     }

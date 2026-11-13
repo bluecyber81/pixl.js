@@ -1,13 +1,15 @@
 <template>
   <details class="announcements" :open="expanded">
-    <summary>{{ de ? 'Angekündigte Figuren' : 'Announced figures' }} ({{ count }})</summary>
+    <summary>{{ de ? 'Figuren und Erscheinungstermine' : 'Figure release dates' }} ({{ count }})</summary>
     <p class="scope">{{ de
-      ? 'Diese Vorschau zählt separat vom Gerätebestand. Die Termine gelten für die angegebene Region.'
-      : 'These announcements are separate from your device inventory. Dates apply to the region shown.' }}
+      ? 'Die Termine gelten für die angegebene Region. Diese Figuren werden separat vom Gerätebestand aufgeführt.'
+      : 'Dates apply to the region shown. These figures are listed separately from your device inventory.' }}
       <template v-if="sharedCheckedOn">{{ de ? 'Quellen geprüft am' : 'Sources checked on' }} {{ dateLabel(sharedCheckedOn) }}.</template>
     </p>
     <section v-for="group in groups" :key="group.series" class="announcement-group">
-      <p class="group-title"><strong>{{ group.series }}</strong> · {{ dateLabel(group.date) }} ({{ group.region }})</p>
+      <p class="group-title"><strong>{{ group.series }}</strong> ·
+        <span>{{ group.released ? (de ? 'Erschienen' : 'Released') : (de ? 'Angekündigt' : 'Announced') }}</span> ·
+        {{ dateLabel(group.date) }} ({{ group.region }})</p>
       <p v-if="!sharedCheckedOn" class="scope">{{ de ? 'Quellen geprüft am' : 'Sources checked on' }} {{ dateLabel(group.sourceCheckedOn) }}.</p>
       <ul>
         <li v-for="figure in group.figures" :key="figure.en">

@@ -21,34 +21,42 @@ static void mui_toast_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     const char *msg = string_get_cstr(p_toast_view->message);
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     if (p_toast_view->is_visible && string_size(p_toast_view->message) > 0) {
-        uint8_t mw = mui_canvas_get_width(p_canvas) - 16;
-        uint8_t th = mui_element_text_height(p_canvas, mw, msg);
-        uint8_t tw = mui_canvas_get_utf8_width(p_canvas, msg);
+        const uint8_t padding = 3;
+        uint8_t cw = mui_canvas_get_width(p_canvas), ch = mui_canvas_get_height(p_canvas);
         uint8_t ft = mui_canvas_current_font_height(p_canvas);
-
-        uint8_t w = LV_MIN(mw, tw);
-        uint8_t h = th;
-        uint8_t x = 0;
-        uint8_t y = 0;
-
-        uint8_t mtw = LV_MIN(mw, tw); // min text width
-
-        // add padding
-        w += 6;
-        h += 6;
-
-        if (h < mui_canvas_get_height(p_canvas)) {
-            x = (mui_canvas_get_width(p_canvas) - w) / 2;
-            y = (mui_canvas_get_height(p_canvas) - h) / 2;
-        }
+        if (cw <= 2 * padding || ch <= 2 * padding || !ft) return;
+        uint8_t mw = cw > 16 ? cw - 16 : cw - 2 * padding;
+        mui_text_size_t text_size = mui_element_text_size(p_canvas, mw, msg);
+        uint8_t tw = LV_MIN(mw, text_size.width ? text_size.width : 1);
+        /* Remeasure at the actual inner width, then use that exact width to
+         * draw. Newlines and glyph spacing therefore affect both equally. */
+        text_size = mui_element_text_size(p_canvas, tw, msg);
+        uint8_t max_text_height = ((ch - 2 * padding) / ft) * ft;
+        if (!max_text_height) return;
+        uint8_t th = LV_MIN(max_text_height, text_size.height);
+        uint8_t w = tw + 2 * padding, h = th + 2 * padding;
+        uint8_t x = (cw - w) / 2, y = (ch - h) / 2;
 
         mui_canvas_set_draw_color(p_canvas, 0);
         mui_canvas_draw_box(p_canvas, x, y, w, h);
         mui_canvas_set_draw_color(p_canvas, 1);
         mui_canvas_draw_rframe(p_canvas, x, y, w, h, 3);
 
-        mui_element_autowrap_text(p_canvas, x + 3, y + ft, w, h,
-                                  string_get_cstr(p_toast_view->message));
+        mui_rect_t previous, inner;
+        mui_canvas_get_clip_window(p_canvas, &previous);
+        /* Preserve the caller's clip, including a reserved status area. */
+        uint16_t left = LV_MAX(previous.x, x + padding);
+        uint16_t top = LV_MAX(previous.y, y + padding);
+        uint16_t right = LV_MIN(previous.x + previous.w, x + padding + tw);
+        uint16_t bottom = LV_MIN(previous.y + previous.h, y + padding + th);
+        if (right > left && bottom > top) {
+            inner.x = left; inner.y = top;
+            inner.w = right - left; inner.h = bottom - top;
+            mui_canvas_set_clip_window(p_canvas, &inner);
+            mui_element_autowrap_text(p_canvas, x + padding,
+                                      y + padding + mui_canvas_current_font_ascent(p_canvas), tw, th, msg);
+            mui_canvas_set_clip_window(p_canvas, &previous);
+        }
     }
 }
 

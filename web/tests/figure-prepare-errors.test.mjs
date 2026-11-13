@@ -1,4 +1,4 @@
-// Scoped regression for WEB-05. Execute unchanged operation source method;
+// Scoped regression for WEB-05. Execute actual operation source method;
 // no Vue rendering or hardware claims. Choose original/patched component by env.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,8 +8,10 @@ import { prepareFigureTransfer } from '../src/lib/figure-transfer.js';
 const file = process.env.WEB_COLLECTION_SOURCE || new URL('../src/components/CollectionAssistant.vue', import.meta.url);
 const source = fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n');
 const fragment = source.match(/^    async operation\([^\n]*?\{[\s\S]*?^    },/m);
-assert.ok(fragment, 'current unchanged operation method found');
+assert.ok(fragment, 'current production operation method found');
 const operation = Function('return ({' + fragment[0] + '})')().operation;
+const pendingFragment = source.match(/^    applyPendingFigureSelection\([^\n]*?\{[\s\S]*?^    },/m);
+const applyPendingFigureSelection = pendingFragment ? Function('return ({' + pendingFragment[0] + '})')().applyPendingFigureSelection : undefined;
 const ID = '0000000000000002';
 const url = 'https://files.example.com/a.bin';
 function bytes(id = ID) {
@@ -17,6 +19,7 @@ function bytes(id = ID) {
 }
 function context(de = true) {
   return { de, running: '', _serial: 0, _alive: true, generation: 1, connected: true, error: '',
+    _pendingFigureSelection: null, applyPendingFigureSelection,
     setError(message) { this.error = message; }, $emit() {} };
 }
 const cases = [

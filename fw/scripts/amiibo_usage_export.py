@@ -13,14 +13,18 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE_COMMIT = '6e0004969cd1481a027c2eaa86838a4c3fa1553d'
 SOURCE_BASE = 'https://github.com/bluecyber81/pixl.js/blob/' + SOURCE_COMMIT + '/fw/data/'
 SOURCE_SHA256 = {
-    'amiidb_amiibo.csv': '82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01',
-    'amiidb_game.csv': '659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47',
+    'amiidb_amiibo.csv': '53d18d764266b9c7f7e10251c047cac34dd1b87db0dcb19cf75d346770282c0e',
+    'amiidb_game.csv': 'd240bada99ca8e4e9e74e3a24afd94536007f38b61aafb4f8582eb3359b6a042',
     'amiidb_link.csv': '13491f3b5aad3f22e52c72014f0fe273760af8f54cd6388f34f3d0d67fbad2b9',
 }
 SOURCE_REFERENCE_SHA256 = {
     **SOURCE_SHA256,
+    'amiidb_game.csv': '659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47',
+    'amiidb_amiibo.csv': '82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01',
     'amiidb_link.csv': '13491f3b5aad3f22e52c72014f0fe273760af8f54cd6388f34f3d0d67fbad2b9',
 }
+NAME_CORRECTIONS = [{'operation': 'correct-display-name', 'id': '018b000002460502', 'columns': ['name_en', 'name_cn'], 'from': 'Cyrrus', 'to': 'Cyrus'}, {'operation': 'correct-display-name', 'id': '04d0000101960502', 'columns': ['name_en', 'name_cn'], 'from': '[AC] 339 - Fritta', 'to': '[AC] 339 - Frita'}, {'operation': 'correct-display-name', 'id': '033f0001008f0502', 'columns': ['name_en', 'name_cn'], 'from': '[AC] 076 - Jeramiah', 'to': '[AC] 076 - Jeremiah'}, {'operation': 'trim-trailing-space', 'id': '0a02000103b30502', 'columns': ['name_en', 'name_cn'], 'from': '412 - C.J. ', 'to': '412 - C.J.'}, {'operation': 'trim-trailing-space', 'id': '0a0c000103c30502', 'columns': ['name_en', 'name_cn'], 'from': '428 - Audie ', 'to': '428 - Audie'}, {'operation': 'trim-trailing-space', 'id': '0a0e000103c50502', 'columns': ['name_en', 'name_cn'], 'from': '430 - Judy ', 'to': '430 - Judy'}]
+GROUP_CORRECTIONS = [{'operation': 'trim-trailing-space', 'id': '49', 'columns': ['name_en'], 'from': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ', 'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}]
 LINK_HYGIENE_LINES = (1332, 1333, 1334)
 
 
@@ -83,11 +87,11 @@ def export_usage(data_dir, translations_path):
                              'sha256': hashlib.sha256((data_dir / filename).read_bytes()).hexdigest(),
                              'referenceSha256': SOURCE_REFERENCE_SHA256[filename],
                              'referenceUrl': SOURCE_BASE + filename,
-                             'transformationsFromReference': [],
+                             'transformationsFromReference': NAME_CORRECTIONS if filename == 'amiidb_amiibo.csv' else GROUP_CORRECTIONS if filename == 'amiidb_game.csv' else [],
                              'readNormalization': normalization})
     return {
         'schemaVersion': 1,
-        'dataVersion': '2026-11-07.1',
+        'dataVersion': '2026-11-12.T1',
         'source': {'label': 'Bundled firmware catalogue', 'referenceCommit': SOURCE_COMMIT,
                    'files': source_files,
                    'hashPolicy': 'sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.'},

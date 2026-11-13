@@ -228,6 +228,32 @@ test('first menu displays the frozen launch call separately from settings and ha
  }finally{h.app.unmount();}
 });
 
+test('PXMI v2 shows actual return separately in both languages, including missing center icon and no-return state',async()=>{
+ const snapshot=diagnosticSnapshot(),h=await mount({snapshot});
+ const base={schemaVersion:2,scope:'first-menu-launch-and-last-app-return',menuEntered:true,selectionAttempted:true,
+   launcherReturned:true,targetActive:true,leftBeforeSelection:false,countsSaturated:false,targetAppId:3,
+   launchCallMilliseconds:42,centerCounts:{press:1,release:1,short:1},
+   lastAppReturn:{sourceContext:2,targetContext:3,staleEventsDiscarded:65535,sourceAppId:8,targetAppId:8,
+     firstLabelAppId:8,lastLabelAppId:8,firstIconAppId:null,lastIconAppId:8}};
+ try{
+  for(const locale of ['de_DE','en_US']) {
+   snapshot.sections.menu={state:'available',observedAt:snapshot.completedAt,data:structuredClone(base),errorCode:null};
+   await change(h,{snapshot:structuredClone(snapshot),locale});const menu=card(h.root,'menu');
+   assert.equal(row(menu,locale==='de_DE'?'Gewählte App':'Selected app'),locale==='de_DE'?'Amiibo-Datenbank':'Amiibo Database');
+   assert.match(row(menu,locale==='de_DE'?'Letzte Rückkehr aus einer App':'Last return from an app'),locale==='de_DE'?/Kartenemulator → Hauptmenü/:/Card Emulator → Main menu/);
+   assert.match(row(menu,locale==='de_DE'?'Erster Zeichenaufruf · Name / Symbol':'First draw call · label / icon'),locale==='de_DE'?/Kein Symbol in der Mitte/:/No icon at center/);
+   assert.equal(row(menu,locale==='de_DE'?'Veraltete Eingaben verworfen':'Stale input events discarded'),'≥65535');
+   assert.match(text(menu),locale==='de_DE'?/beweisen nicht/:/do not establish/);
+   snapshot.sections.menu.data.lastAppReturn=null;
+   await change(h,{snapshot:structuredClone(snapshot)});
+   assert.match(text(card(h.root,'menu')),locale==='de_DE'?/noch keine Rückkehr erfasst/:/No app return recorded/);
+   assert.doesNotMatch(text(card(h.root,'menu')),/65535|Card Emulator →|Kartenemulator →/);
+  }
+  await change(h,{snapshot:null,connected:false,firmwareVersion:''});
+  assert.equal(card(h.root,'menu'),undefined);
+ }finally{h.app.unmount();}
+});
+
 test('partial startup markers have no invented total or slowest complete-start conclusion',async()=>{
  const snapshot=diagnosticSnapshot();snapshot.sections.startup.data={...snapshot.sections.startup.data,phaseMask:3,elapsedMilliseconds:[0,2000,null,null,null,null]};
  snapshot.sections.power.data={schemaVersion:1,scope:'application-start-and-cached-battery',resetCaptured:false,resetReasonRaw:null,sampleCollected:false,voltageValid:false,batteryMillivolts:null,lipoMode:false,chargingActive:false,configuredSleepSeconds:0};
@@ -297,5 +323,21 @@ test('malformed section data fails closed in the rendered view and arbitrary pay
   assert.equal(nodes(card(h.root,'boot'),'time').length,0);
   assert.doesNotMatch(text(h.root),/PRIVATE|private/);assert.doesNotMatch(text(card(h.root,'mtu')),/10000/);
   assert.equal(nodes(card(h.root,'ui'),'table').length,0);
+ }finally{h.app.unmount();}
+});
+
+test('build reference separates reported version/counter from package SourceID and BIN hash in both languages',async()=>{
+ const snapshot=structuredClone(diagnosticSnapshot());snapshot.sections.boot.data.applicationCounter=644;
+ const h=await mount({snapshot,firmwareVersion:'2.22.0-DE3.71t1'});
+ try{
+  for(const locale of ['de_DE','en']){
+   await change(h,{locale});
+   assert.match(text(h.root),/3c62a24a8aecab7a81af6b73cb86642d4a248755d739c5e37b1fcdeea7451d02/);
+   assert.match(text(h.root),/fbade80d03a44a3bb3bb7e76df422b24a879d2ff81b433e6bf4f6d6e1b955273/);
+   assert.match(text(h.root),locale==='en'?/application hash not verified/:/App-Hash nicht geprüft/);
+   assert.match(text(h.root),locale==='en'?/Full functional testing is pending/:/vollständige Funktionsprüfung steht aus/);
+  }
+  await change(h,{firmwareVersion:'2.22.0-DE3.70'});assert.match(text(h.root),/Different reported version/);
+  await change(h,{snapshot:null});assert.doesNotMatch(text(h.root),/fbade80d03a44a3b/);
  }finally{h.app.unmount();}
 });

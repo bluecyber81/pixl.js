@@ -1,24 +1,95 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-07.1",
+  "dataVersion": "2026-11-12.T1",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
     "files": [
       {
         "path": "fw/data/amiidb_amiibo.csv",
-        "sha256": "82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01",
+        "sha256": "53d18d764266b9c7f7e10251c047cac34dd1b87db0dcb19cf75d346770282c0e",
         "referenceSha256": "82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/6e0004969cd1481a027c2eaa86838a4c3fa1553d/fw/data/amiidb_amiibo.csv",
-        "transformationsFromReference": [],
+        "transformationsFromReference": [
+          {
+            "operation": "correct-display-name",
+            "id": "018b000002460502",
+            "columns": [
+              "name_en",
+              "name_cn"
+            ],
+            "from": "Cyrrus",
+            "to": "Cyrus"
+          },
+          {
+            "operation": "correct-display-name",
+            "id": "04d0000101960502",
+            "columns": [
+              "name_en",
+              "name_cn"
+            ],
+            "from": "[AC] 339 - Fritta",
+            "to": "[AC] 339 - Frita"
+          },
+          {
+            "operation": "correct-display-name",
+            "id": "033f0001008f0502",
+            "columns": [
+              "name_en",
+              "name_cn"
+            ],
+            "from": "[AC] 076 - Jeramiah",
+            "to": "[AC] 076 - Jeremiah"
+          },
+          {
+            "operation": "trim-trailing-space",
+            "id": "0a02000103b30502",
+            "columns": [
+              "name_en",
+              "name_cn"
+            ],
+            "from": "412 - C.J. ",
+            "to": "412 - C.J."
+          },
+          {
+            "operation": "trim-trailing-space",
+            "id": "0a0c000103c30502",
+            "columns": [
+              "name_en",
+              "name_cn"
+            ],
+            "from": "428 - Audie ",
+            "to": "428 - Audie"
+          },
+          {
+            "operation": "trim-trailing-space",
+            "id": "0a0e000103c50502",
+            "columns": [
+              "name_en",
+              "name_cn"
+            ],
+            "from": "430 - Judy ",
+            "to": "430 - Judy"
+          }
+        ],
         "readNormalization": []
       },
       {
         "path": "fw/data/amiidb_game.csv",
-        "sha256": "659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47",
+        "sha256": "d240bada99ca8e4e9e74e3a24afd94536007f38b61aafb4f8582eb3359b6a042",
         "referenceSha256": "659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/6e0004969cd1481a027c2eaa86838a4c3fa1553d/fw/data/amiidb_game.csv",
-        "transformationsFromReference": [],
+        "transformationsFromReference": [
+          {
+            "operation": "trim-trailing-space",
+            "id": "49",
+            "columns": [
+              "name_en"
+            ],
+            "from": "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ",
+            "to": "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale"
+          }
+        ],
         "readNormalization": []
       },
       {
@@ -451,7 +522,7 @@
       "id": 49,
       "parentId": 0,
       "labelPath": [
-        "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale "
+        "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale"
       ],
       "sourceLine": 49
     },
