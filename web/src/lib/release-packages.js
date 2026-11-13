@@ -27,7 +27,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     source:'Quellcode der mitgelieferten Firmware DE3.65',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Für die Testversion DE3.71t1 ist Z19 geprüft.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Für die Testversion DE3.72 ist Z19 die geprüfte Build-Referenz. Der Gerätetest für diese Version steht aus.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15 und Z17 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -37,7 +37,7 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     source:'Source code for bundled firmware DE3.65',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. The DE3.71t1 test release was checked with Z19.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. The DE3.72 test release uses Z19 as its build reference. Its hardware test is pending.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15 and Z17 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

@@ -35,7 +35,7 @@ test('latest target and simulated profile show DE3.70 while an inspected DE3.65 
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
   assert.equal(options[0].props.value,'current')
-  assert.equal(text(options[0]),'DE3.70 / 642')
+  assert.equal(text(options[0]),'DE3.72 / 645')
   assert.match(text(h.root),/Dieses Prüfprofil passt zu DE3.55–DE3.70 \/ 627–642/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
@@ -278,7 +278,7 @@ test('3.26 active migration stays open and separate full target verification is 
 
 test('T1 storage qualification is listed separately without implying a continuous 643 approval',async()=>{
  const h=mount({approved:true});try{
-  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644');
+  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644 + DE3.72 / 645');
   assert.match(text(h.root),/DE3\.71t1 \/ 644/);assert.doesNotMatch(h.vm.capacityProfileLabel,/627–644|DE3\.55–DE3\.71/);
   h.props.language='en';await Vue.nextTick();assert.match(text(h.root),/DE3\.55–DE3\.70 \/ 627–642 \+ DE3\.71t1 \/ 644/);
  }finally{h.app.unmount()}
