@@ -14,7 +14,7 @@ Die Anleitung nennt die Geräte- und Zählervoraussetzungen. Die Einrichtung von
 
 ## Firmware nachbauen
 
-Vom Quellstand de3.72 mit dem im Projekt festgelegten Nordic SDK und ARM-Compiler python tools/build_lcd.py --mode release --stack-report ausführen. Die ELF-, MAP-, HEX- und BIN-Dateien liegen in uild/lcd-de372/. python tools/check_release_ota.py prüft die signierte Anwendung. Mit python tools/verify_lcd_combo.py --combo PFAD_ZUR_KOMPLETT_ZIP lassen sich die beiden Phasen des Komplettpakets prüfen.
+Vom Quellstand `de3.72` mit dem im Projekt festgelegten Nordic SDK und ARM-Compiler `python tools/build_lcd.py --mode release --stack-report` ausführen. Die ELF-, MAP-, HEX- und BIN-Dateien liegen in `build/lcd-de372/`. `python tools/check_release_ota.py` prüft die signierte Anwendung. Mit `python tools/verify_lcd_combo.py --combo PFAD_ZUR_KOMPLETT_ZIP` lassen sich die beiden Phasen des Komplettpakets prüfen.
 
 ## Was geprüft wurde
 
