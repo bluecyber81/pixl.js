@@ -1,0 +1,1 @@
+function e(e){let t=String(e??``);return/^[\s\u0000-\u001f]*[=+@-]|^[\t\r\n]/u.test(t.normalize(`NFKC`))&&(t=`'`+t),`"`+t.replaceAll(`"`,`""`)+`"`}export{e as t};

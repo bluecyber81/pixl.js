@@ -13,11 +13,15 @@
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
             need(item&&Object.keys(item).sort().join(',')===[...fields].sort().join(','),'Unvollständiger Firmware-Eintrag.', 'Incomplete firmware entry.');
-            const version=/^2\.22\.0-DE3\.([1-9][0-9]{0,3})$/.exec(item.version);
+            const version=/^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
             need(version&&item.id===`de3.${version[1]}-lcd-app`&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
-            need([`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`].includes(item.file),'Ungültiger Firmware-Dateiname.', 'Invalid firmware filename.');
+            const testBuild = version[1].includes('t');
+            const names = testBuild
+                ? [`Allmiibo_DE3_${version[1]}_App${item.counter}_NUR_APP_SIGNIERT.zip`]
+                : [`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`];
+            need(names.includes(item.file) && (!testBuild || item.channel === 'prerelease'),'Ungültiger Firmware-Dateiname.', 'Invalid firmware filename.');
             need(Number.isInteger(item.bytes)&&item.bytes>0&&item.bytes<=MAX_BYTES&&typeof item.sha256==='string'&&/^[a-f0-9]{64}$/.test(item.sha256)&&!/^0{64}$/.test(item.sha256),'Paketgröße oder SHA-256 fehlt.', 'The package size or SHA-256 is missing or invalid.');
-            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.', 'This package does not match the local LCD/PFS1 profile.');
+            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19','Z19'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.', 'This package does not match the local LCD/PFS1 profile.');
             seen.add(item.id);return Object.freeze({...item});
         });
         return Object.freeze({schema:1,packages:Object.freeze(packages)});
