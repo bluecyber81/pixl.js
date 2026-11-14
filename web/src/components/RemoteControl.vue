@@ -16,6 +16,7 @@
       <button v-else type="button" @click="disconnectRemote" :disabled="phase === 'disconnecting'">{{ text[phase === 'connecting' ? 'cancel' : 'disconnect'] }}</button>
       <span class="remote-state" :class="{online:phase === 'ready'}" role="status" aria-live="polite">{{ text[phase] }}</span>
     </div>
+    <button v-if="keypadActive" type="button" class="remote-check" :aria-disabled="!ready" @click="press('status')">{{ text.checkConnection }}</button>
     <p v-if="unavailable || error" class="remote-warning" role="alert">{{ text.errors[unavailable || error] || text.failed }}</p>
     <div class="remote-pad" role="group" :aria-label="text.title"
          :tabindex="keypadActive ? 0 : -1" :aria-describedby="keypadActive ? 'remote-keyboard-hint' : undefined"
@@ -30,7 +31,7 @@
     </p>
     <button type="button" class="remote-back" @click="press('back')" :disabled="!ready || !(capabilities & 2)">{{ text.back }}</button>
     <button type="button" class="remote-files" @click="press('files')" :disabled="!ready">{{ text.files }}</button>
-    <p v-if="notice" role="status" aria-live="polite">{{ text.receipts[notice] || text[notice] }}</p>
+    <p v-if="notice" role="status" aria-live="polite">{{ notice==='status' ? statusReceipt : text.receipts[notice] || text[notice] }}</p>
     <details class="remote-help" :open="setupOpen" @toggle="setupOpen = $event.target.open">
       <summary>{{ text.setupTitle }}</summary>
       <p>{{ text.introduction }}</p><p>{{ text.setup }}</p>
@@ -47,15 +48,24 @@ const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'
 export default {
   components:{PixLinkRemote},
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
-  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',setupOpen:false,unavailable:remoteAvailability()};},
+  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',checkedAt:null,setupOpen:false,unavailable:remoteAvailability()};},
   computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
-    keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');}},
+    keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');},
+    statusReceipt(){
+      if(this.checkedAt===null)return '';
+      const time=new Intl.DateTimeFormat(this.locale==='de_DE'?'de-DE':'en-US',{timeStyle:'medium'}).format(this.checkedAt);
+      return this.text.connectionConfirmed.replace('{time}',time);
+    }},
   created(){
     this._remoteMounted=true;
     this._remoteUiGeneration=0;
     this._remoteClient=createRemoteClient({onState:state=>{
       if(!this._remoteMounted)return;
       this.phase=state.phase;this.capabilities=state.capabilities||0;
+      if(state.phase==='disconnected' || state.phase==='handoff') {
+        this.checkedAt=null;
+        if(this.notice==='status')this.notice='';
+      }
       if(state.error){this.error=state.error;this.notice='';}
       this.$emit('active',state.phase!=='disconnected');
     }});
@@ -79,7 +89,7 @@ export default {
     async connectRemote(){
       if(this.blocked||this.phase!=='disconnected'||this.unavailable)return;
       const generation=++this._remoteUiGeneration;
-      this.error='';this.notice='';this.setupOpen=false;
+      this.error='';this.notice='';this.checkedAt=null;this.setupOpen=false;
       try{await this._remoteClient.connect();}catch(error){if(this._remoteMounted&&generation===this._remoteUiGeneration)this.error=error?.code||'REMOTE_UNSUPPORTED';}
     },
     async disconnectRemote(){
@@ -90,11 +100,13 @@ export default {
     async press(command){
       if(!this.ready)return;
       const generation=this._remoteUiGeneration;
-      this.error='';this.notice='';
+      this.error='';this.notice='';this.checkedAt=null;
       try{
         const reply=await this._remoteClient.command(command,{sameLink:typeof this.handoffFileConnection==='function'});
         if(!this._remoteMounted||generation!==this._remoteUiGeneration)return;
-        if(command==='files'){
+        if(command==='status'){
+          if(this.ready){this.checkedAt=Date.now();this.notice='status';}
+        }else if(command==='files'){
           if(reply.opcode===4){
             this._remoteClient.releaseFileConnection(this.handoffFileConnection);
             if(this._remoteMounted&&generation===this._remoteUiGeneration)this.notice='filesConnected';
@@ -103,7 +115,11 @@ export default {
             if(this._remoteMounted&&generation===this._remoteUiGeneration)this.notice='filesReady';
           }
         }else this.notice=command;
-      }catch(error){if(this._remoteMounted&&generation===this._remoteUiGeneration)this.error=error?.code||'REMOTE_REJECTED';}
+      }catch(error){
+        if(this._remoteMounted&&generation===this._remoteUiGeneration){
+          this.error=command==='status'&&error?.code==='REMOTE_TIMEOUT'?'REMOTE_STATUS_TIMEOUT':error?.code||'REMOTE_REJECTED';
+        }
+      }
     }
   }
 };

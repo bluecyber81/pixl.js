@@ -64,6 +64,17 @@ try {
       await disconnect.focus();
       await page.keyboard.press('ArrowRight'); // No global shortcut.
       await page.keyboard.press('Tab');
+      const status = section.getByRole('button',{name:locale==='de-DE'?'Verbindung prüfen':'Check connection'});
+      assert(await status.evaluate(el=>el===document.activeElement));
+      await page.evaluate(()=>{window.testRemote.delayReply=true;});
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(()=>!!window.testRemote.finish);
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('Enter'); // Pending status must not queue another command.
+      await page.evaluate(()=>{window.testRemote.delayReply=false;window.testRemote.finish();window.testRemote.finish=null;});
+      await section.getByText(locale==='de-DE'?/Die Fernbedienung hat um \d\d:\d\d:\d\d geantwortet/:/The remote responded at \d{1,2}:\d\d:\d\d/).waitFor();
+      assert(await status.evaluate(el=>el===document.activeElement));
+      await page.keyboard.press('Tab');
       assert(await pad.evaluate(el=>el===document.activeElement));
       await page.keyboard.down('ArrowRight');
       await page.keyboard.down('ArrowRight'); // Browser generates repeat=true.
@@ -90,9 +101,16 @@ try {
       await nav.focus();
       await page.keyboard.press('ArrowRight');
       assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts),[
-        [0,0],[2,2],[2,1],[3,0],[2,0],[2,0]
+        [0,0],[0,0],[2,2],[2,1],[3,0],[2,0],[2,0]
       ]);
-      console.log(locale+' passed: focus, named device acknowledgement, held key, busy state, native buttons, disconnect');
+      await section.getByRole('button',{name:locale==='de-DE'?'Fernbedienung verbinden':'Connect remote'}).click();
+      await page.evaluate(()=>{window.testRemote.delayReply=true;});
+      await status.click();
+      await section.getByRole('alert').filter({hasText:locale==='de-DE'?'nicht rechtzeitig auf die Verbindungsprüfung':'did not respond to the connection check'}).waitFor({timeout:10000});
+      assert.equal(await status.count(),0);
+      assert.equal(await section.getByText(/Die Fernbedienung hat um|The remote responded at/).count(),0);
+      assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts.slice(7)),[[0,0],[0,0]]);
+      console.log(locale+' passed: manual STATUS, local time and timeout, focus, named device acknowledgement, held key, busy state, native buttons, disconnect');
     } finally {await page.context().close();}
   }
 } finally {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {createRemoteClient,encodeRemoteRequest,parseRemoteReply,REMOTE_UUIDS,REMOTE_NAME,remoteAvailability} from '../src/lib/remote-control.js';
+import {claimGatt, ownsGatt} from '../src/lib/gatt-owner.js';
 const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return{promise,resolve,reject};};
 const turn=()=>new Promise(resolve=>setTimeout(resolve,0));
 class Events{listeners=new Map();addEventListener(name,fn){if(!this.listeners.has(name))this.listeners.set(name,new Set());this.listeners.get(name).add(fn);}removeEventListener(name,fn){this.listeners.get(name)?.delete(fn);}emit(name){for(const fn of [...this.listeners.get(name)||[]])fn({target:this});}}
@@ -165,8 +166,147 @@ test('cancelled picker completion never starts GATT and a fresh connection reset
 test('late GATT connection after timeout is cleaned instead of silently connecting',async()=>{
  const gate=defer();const f=fixture({connect:(device,server)=>gate.promise.then(()=>{device.gatt.connected=true;return server;}),client:{stepMs:8}});await assert.rejects(f.client.connect(),{code:'REMOTE_TIMEOUT'});gate.resolve();await turn();assert.equal(f.device.gatt.connected,false);assert.equal(f.packets.length,0);
 });
+test('an abandoned GATT open that rejects late is cleaned once without closing a replacement', async () => {
+ const began = defer(), gate = defer();
+ const f = fixture({connect() { began.resolve(); return gate.promise; }});
+ const cancelled = assert.rejects(f.client.connect(), {code:'REMOTE_CANCELLED'});
+ await began.promise;
+ await f.client.disconnect();
+ await cancelled;
+ const replacement = {};
+ claimGatt(f.device, replacement);
+ f.device.gatt.connected = true;
+ const disconnects = f.counts.disconnects;
+ gate.reject(new DOMException('Previous connection failed', 'NetworkError'));
+ await turn();
+ assert.equal(f.device.gatt.connected, true);
+ assert.equal(ownsGatt(f.device, replacement), true);
+ assert.equal(f.counts.disconnects, disconnects);
+ assert.equal(f.device.listeners.get('gattserverdisconnected').size, 0);
+ assert.deepEqual(f.packets, []);
+});
+test('manual connection check sends only STATUS and accepts only a fresh, corresponding reply', async () => {
+ const f = fixture();
+ await assert.rejects(f.client.command('status'), {code:'REMOTE_BUSY'});
+ await f.client.connect();
+ const response = await f.client.command('status');
+ assert.equal(response.opcode, 0);
+ assert.equal(response.sequence, 2);
+ assert.equal(response.state, 1);
+ assert.deepEqual(f.packets.map(packet => [...packet]), [[80,88,1,0,1,0,0,0], [80,88,1,0,2,0,0,0]]);
+ await f.client.disconnect();
+});
+test('a stale STATUS reply cannot confirm a manual check; timeout sends no repeat or key', async () => {
+ const f = fixture({write(request, notify, reply, count) {
+  notify(reply(request, {sequence:1}));
+ }});
+ await f.client.connect();
+ await assert.rejects(f.client.command('status'), {code:'REMOTE_TIMEOUT'});
+ assert.equal(f.client.snapshot().phase, 'disconnected');
+ assert.deepEqual(f.packets.map(packet => packet[3]), [0,0]);
+});
+test('a cancelled connection completing after a new file handoff leaves the new owner connected', async () => {
+ const oldOpen = defer(), opening = defer();
+ let attempts = 0;
+ const f = fixture({
+  async connect(device, server) {
+   if (++attempts === 1) { opening.resolve(); await oldOpen.promise; }
+   device.gatt.connected = true;
+   return server;
+  },
+  write(request, notify, reply) { notify(reply(request, {caps:31, state:request[3] === 4 ? 3 : 1})); }
+ });
+ const cancelled = assert.rejects(f.client.connect(), {code:'REMOTE_CANCELLED'});
+ await opening.promise;
+ await f.client.disconnect();
+ await cancelled;
+ await f.client.connect();
+ await f.client.command('files');
+ f.client.releaseFileConnection(() => true);
+ assert.equal(f.device.gatt.connected, true);
+ const disconnects = f.counts.disconnects;
+ oldOpen.resolve();
+ await turn();
+ assert.equal(f.device.gatt.connected, true);
+ assert.equal(f.counts.disconnects, disconnects);
+ assert.deepEqual(f.packets.map(packet => packet[3]), [0,4]);
+});
+test('handing a link to a receiver that claims it preserves its own session token', async () => {
+ const f = fixture({write(request, notify, reply) { notify(reply(request, {caps:31, state:request[3] === 4 ? 3 : 1})); }});
+ await f.client.connect();
+ await f.client.command('files');
+ const fileOwner = {};
+ f.client.releaseFileConnection(({device}) => {
+  claimGatt(device, fileOwner);
+  return true;
+ });
+ assert.equal(ownsGatt(f.device, fileOwner), true);
+ await f.client.disconnect();
+ assert.equal(f.device.gatt.connected, true);
+});
+test('finishing an old disconnect leaves another client’s notifications and connection intact', async () => {
+ const f = fixture();
+ await f.client.connect();
+ const closing = f.client.disconnect();
+ const newOwner = {};
+ claimGatt(f.device, newOwner);
+ await closing;
+ assert.equal(f.counts.stops, 0);
+ assert.equal(f.counts.disconnects, 0);
+ assert.equal(f.device.gatt.connected, true);
+ assert.equal(ownsGatt(f.device, newOwner), true);
+});
 test('disconnect event and observer failure still release pending state',async()=>{
  const f=fixture({client:{onState(){throw Error('observer');}}});await f.client.connect();f.device.gatt.connected=false;f.device.emit('gattserverdisconnected');assert.equal(f.client.snapshot().phase,'disconnected');await assert.rejects(f.client.command('left'));
+});
+test('a delayed disconnect notification for the previous connection cannot close a live reconnection', async () => {
+ const f=fixture();
+ await f.client.connect(); await f.client.disconnect(); await f.client.connect();
+ f.device.emit('gattserverdisconnected');
+ assert.equal(f.client.snapshot().phase,'ready');
+ assert.equal(f.device.gatt.connected,true);
+ await f.client.disconnect();
+});
+test('a queued disconnect while GATT is opening does not cancel a new DE session', async () => {
+ const began = defer(), gate = defer();
+ let attempts = 0;
+ const f = fixture({async connect(device, server) {
+  if (++attempts === 2) { began.resolve(); await gate.promise; }
+  device.gatt.connected = true;
+  return server;
+ }});
+ await f.client.connect();
+ await f.client.disconnect();
+ const reconnecting = f.client.connect();
+ await began.promise;
+ assert.equal(f.device.gatt.connected, false);
+ f.device.emit('gattserverdisconnected');
+ gate.resolve();
+ await reconnecting;
+ assert.equal(f.client.snapshot().phase, 'ready');
+ await f.client.command('status');
+ assert.deepEqual(f.packets.map(packet => packet[3]), [0,0,0]);
+ await f.client.disconnect();
+});
+test('a genuine GATT failure after a queued disconnect rejects and permits reconnect', async () => {
+ const began = defer(), gate = defer();
+ let attempts = 0;
+ const f = fixture({async connect(device, server) {
+  if (++attempts === 1) { began.resolve(); await gate.promise; }
+  device.gatt.connected = true;
+  return server;
+ }});
+ const failed = assert.rejects(f.client.connect(), {code:'REMOTE_UNSUPPORTED'});
+ await began.promise;
+ f.device.emit('gattserverdisconnected');
+ gate.reject(new DOMException('Could not connect', 'NetworkError'));
+ await failed;
+ assert.equal(f.client.snapshot().phase, 'disconnected');
+ assert.equal(f.device.listeners.get('gattserverdisconnected').size, 0);
+ assert.deepEqual(f.packets, []);
+ await f.client.connect();
+ assert.equal(f.client.snapshot().phase, 'ready');
+ await f.client.disconnect();
 });
 test('a notify-only legacy transport cannot bypass the required GATT write acknowledgement',async()=>{
  const f=fixture();f.tx.properties.write=false;await assert.rejects(f.client.connect(),{code:'REMOTE_UNSUPPORTED'});assert.equal(f.packets.length,0);

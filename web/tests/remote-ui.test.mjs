@@ -30,6 +30,37 @@ test('file connection or unsupported browser blocks both UI and connect method',
 test('manual connection alone enables buttons and emits an independent active lock',async()=>{
  const h=mount();try{await h.vm.connectRemote();await Vue.nextTick();assert.deepEqual(h.calls,['connect']);assert.deepEqual(h.active,[true,true]);assert.equal(h.button('Mitte').props.disabled,false);assert.match(text(h.root),/Fernbedienung bereit/);await h.vm.disconnectRemote();await Vue.nextTick();assert.equal(h.active.at(-1),false);assert(h.button('Mitte').props.disabled);}finally{h.app.unmount();}
 });
+test('manual STATUS shows a local time only on acknowledgement, and forgets it after disconnect', async () => {
+ const gate=defer(), h=mount({command:() => gate.promise});
+ try {
+  assert.equal(h.button('Verbindung prüfen'),undefined);
+  await h.vm.connectRemote(); await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null);
+  const request=h.button('Verbindung prüfen').props.onClick(); await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null);
+  assert.equal(h.button('Verbindung prüfen').props['aria-disabled'], true);
+  await h.vm.press('status'); await h.vm.press('center');
+  gate.resolve(); await request; await Vue.nextTick();
+  assert.deepEqual(h.calls,['connect','status']);
+  assert.match(text(h.root), /Die Fernbedienung hat um \d\d:\d\d:\d\d geantwortet/);
+  h.props.locale='en_US'; await Vue.nextTick();
+  assert.match(text(h.root), /The remote responded at \d{1,2}:\d\d:\d\d/);
+  h.emit('disconnected','REMOTE_DISCONNECTED');await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null); assert.doesNotMatch(text(h.root), /responded at/);
+  await h.vm.press('status'); assert.deepEqual(h.calls,['connect','status']);
+ }finally{h.app.unmount();}
+});
+test('an unanswered status check reports a timed out connection check and no key uncertainty', async () => {
+ const h=mount({command:()=>{throw Object.assign(Error('timeout'),{code:'REMOTE_TIMEOUT'});}});
+ try {
+  await h.vm.connectRemote(); await h.vm.press('status'); await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null);
+  assert.match(text(h.root), /nicht rechtzeitig auf die Verbindungsprüfung/);
+  h.props.locale='en_US'; await Vue.nextTick();
+  assert.match(text(h.root), /did not respond to the connection check in time/);
+  assert.deepEqual(h.calls,['connect','status']);
+ }finally{h.app.unmount();}
+});
 test('one user tap sends one command and pending acknowledgement disables all new input',async()=>{
  const gate=defer(),h=mount({command:()=>gate.promise});try{await h.vm.connectRemote();const p=h.vm.press('center');await Vue.nextTick();assert.equal(h.button('Mitte').props['aria-disabled'],true);await h.vm.press('left');assert.deepEqual(h.calls,['connect','center']);assert.match(text(h.root),/Warte auf Gerätebestätigung/);gate.resolve();await p;await Vue.nextTick();assert.match(text(h.root),/Tastendruck „Mitte“ bestätigt/);}finally{h.app.unmount();}
 });
