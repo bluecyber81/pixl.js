@@ -70,7 +70,7 @@ test('exact frame boundaries and byte-offset DataViews are validated',()=>{
  for(const n of [0,11,13,20])assert.throws(()=>parseRemoteReply(new Uint8Array(n)),{code:'REMOTE_PROTOCOL'});
 });
 test('no Bluetooth support or insecure context fails before picker',async()=>{
- for(const environment of [{},{isSecureContext:false,navigator:{bluetooth:{requestDevice(){throw Error('must not run');}}}}]){
+ for(const environment of [{},{navigator:{bluetooth:{requestDevice:true}}},{isSecureContext:false,navigator:{bluetooth:{requestDevice(){throw Error('must not run');}}}}]){
   assert.equal(remoteAvailability(environment),'REMOTE_UNAVAILABLE');await assert.rejects(createRemoteClient({environment}).connect(),{code:'REMOTE_UNAVAILABLE'});
  }
 });

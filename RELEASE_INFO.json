@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.72",
   "counter": 645,
   "board": "LCD",
-  "web_version": "3.48.4",
+  "web_version": "3.49.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
@@ -50,7 +50,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.4",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.49.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
   "device_readback_passed": false,
@@ -129,7 +129,8 @@
     "web_3_48_1": "App645 firmware selection, signed package identity and three installation paths. Local PFS1 capacity check accepts the exact version and counter.",
     "web_3_48_2": "Preserve Raw128 metadata when changing read-only flags, preflight reserved paths, clarify backup states, bind App646 and the current public downloads.",
     "web_3_48_3": "Ship 954 catalogue IDs, all seven Kirby Air Riders under the game filter, German name aliases, and Nintendo sources for both new riders. Firmware name flags still use the 952 App646 IDs.",
-    "web_3_48_4": "The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines."
+    "web_3_48_4": "The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines.",
+    "web_3_49_0": "On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -142,7 +143,7 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_48_4.json",
+  "web_evidence": "docs/validation/WEB3_49_0.json",
   "device_readback_evidence": null,
   "web_device_readback_pending_scope": "The catalogue, builds and Windows client were tested. A Bluetooth device readback with these exact browser assets is pending.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,

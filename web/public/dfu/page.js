@@ -1,6 +1,7 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
 import { nrfDfuLink } from './nrf-dfu-link.mjs';
+import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
 const progressBar = document.getElementById('progress'), capabilityText = document.getElementById('capability');
@@ -21,8 +22,20 @@ for (const element of document.querySelectorAll('[data-en]')) {
 }
 const defaultBundledInfoEnglish = bundledInfo.dataset.en;
 const choose = (de, en) => english ? en : de;
-const supported = globalThis.isSecureContext && !!navigator.bluetooth?.requestDevice;
-if (!supported) setText(capabilityText, 'Web Bluetooth ist hier nicht verfügbar. Für die spätere Geräteprüfung ist ein unterstützter Chrome-/Edge-Browser in einem sicheren Kontext nötig.', 'Web Bluetooth is unavailable here. To connect, open this page over HTTPS or localhost in a supported Chrome or Edge browser.');
+const appleGuide = document.getElementById('apple-guide');
+const capabilityMessages = {
+    insecure: ['Öffne die Seite über HTTPS oder localhost für den Bluetooth-Zugriff.', 'Open this page over HTTPS or localhost for Bluetooth access.'],
+    appleBluetooth: ['Hier kannst du die Firmware-ZIP prüfen. Für die Bluetooth-Übertragung auf dem iPhone oder iPad brauchst du einen Browser mit Web Bluetooth. Die Anleitung beschreibt die getesteten Updatewege.', 'You can check the firmware ZIP here. Bluetooth transfers on an iPhone or iPad require a browser with Web Bluetooth. The guide lists tested update options.'],
+    browserUnavailable: ['Hier kannst du die Firmware-ZIP prüfen. Zum Übertragen öffne diese Seite in Chrome auf Android oder in Chrome oder Edge auf einem Computer mit Bluetooth.', 'You can check the firmware ZIP here. To transfer it, open this page in Chrome on Android, or Chrome or Edge on a computer with Bluetooth.'],
+};
+let supported;
+function refreshCapability() {
+    const issue = bluetoothAccessIssue(globalThis);
+    supported = !issue;
+    appleGuide.hidden = issue !== 'appleBluetooth';
+    setText(capabilityText, ...(capabilityMessages[issue] || ['']));
+}
+refreshCapability();
 let bundled = null, latestState = { busy:false, loading:false, ready:false };
 const hexId = value => '0x' + value.toString(16).toUpperCase().padStart(4, '0');
 function recentBootReference() {
@@ -103,6 +116,7 @@ language.subscribe(({ locale }) => {
     document.documentElement.lang = english ? 'en' : 'de';
     for (const [element, [de, en]] of messages) element.textContent = english ? en : de;
     document.getElementById('guide-link').setAttribute('href', english ? '../guide/en.html' : '../guide/index.html');
+    appleGuide.setAttribute('href', english ? '../guide/en.html#iphone' : '../guide/index.html#iphone');
     document.getElementById('package-target').textContent = targetDescription(latestState.target);
 }, pageLocales);
 language.subscribe(({ locale }) => {
@@ -197,6 +211,7 @@ try {
     setText(bundledInfo, 'Mitgelieferte Pakete nicht verfügbar: '+error.message, 'Bundled packages unavailable: '+(error.english ?? error.message));
 }
 controls();
+window.addEventListener('focus', () => { refreshCapability(); controls(); });
 bundledSelect.addEventListener('change', () => {
     if (latestState.busy) return;
     fileInput.value = '';

@@ -32,7 +32,7 @@ The retained bdfconv executables are historical font-generation build tools cove
 
 ## Current web and SDK additions
 
-Dateimanager 3.48.4 has its dependency lock in
+Dateimanager 3.49.0 has its dependency lock in
 [web/package-lock.json](web/package-lock.json). The public Web 3.48.1 archive
 remains available with its own notices. The firmware component notices are
 included in `fw/`, `bootloader-z19/` and `softdevice-s112/`.

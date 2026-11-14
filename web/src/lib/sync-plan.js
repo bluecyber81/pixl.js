@@ -1,5 +1,6 @@
 import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, portableNameKey } from './portable-names.js'
 import { snapshotFile, sha256Bytes, asBytes, checkedDirectory, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
+import { commonVersion, folderBinding, isHistoryConflict } from './sync-history.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
 export class SyncError extends Error {
@@ -62,8 +63,9 @@ function writableDirectory(entry) {
 }
 /** Entirely read-only. It compares bytes, not timestamps or filename guesses.
  * Device-only entries are informational and NEVER deletion candidates. */
-export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, assertSession, signal, onProgress }) {
+export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, assertSession, signal, onProgress, history, localFolder }) {
   const root = rootPathOf(rootPath), identity = checkedDeviceKey(deviceKey)
+  if (history && history.binding !== await folderBinding(identity, root, localFolder)) fail('SYNC_HISTORY_BINDING', 'This reference belongs to a different comparison.')
   const sources = sourcesOf(files, root), remote = new Map(), remoteKeys = new Map()
   if (typeof readDirectory !== 'function' || typeof readFile !== 'function') fail('SYNC_API', 'Directory and file readers are required.')
   const check = () => checkpoint(assertSession, signal)
@@ -127,11 +129,34 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       if (blockedParents.some(directory => directory.pathConflict)) entry.comparison = 'blocked'
       entry.status = 'blocked'; entry.reason = 'PARENT_BLOCKED'
     }
+    if (history && entry.comparison !== 'blocked') {
+      const previous = history.files.get(entry.relativePath)
+      const state = !previous && entry.comparison === 'change' ? 'noCommonVersion' :
+        commonVersion(previous, hash, entry.expected?.sha256 ?? null)
+      if (state) entry.history = state
+      if (isHistoryConflict(state)) entry.comparison = 'conflict'
+    }
     entries.push(entry); ++filesDone; progress('compared', source.targetPath)
   }
   check()
   const selected = new Set(sources.files.keys())
   const deviceOnly = [...remote.entries()].filter(([path, entry]) => entry.type === 0 && !selected.has(path)).map(([path, entry]) => ({ path, size: entry.size }))
+  if (history) {
+    const prefix = root.endsWith('/') ? root : root + '/'
+    for (const row of deviceOnly) {
+      const previous = history.files.get(row.path.slice(prefix.length))
+      if (!previous) continue
+      check()
+      if (row.size !== previous.size) row.history = 'localDeletedDeviceChanged'
+      else {
+        progress('checking', row.path, 0, row.size)
+        const data = asBytes(await readFile(row.path, { maxBytes: row.size })); check()
+        if (data.byteLength !== row.size) fail('SYNC_CHANGED', 'A device file changed during comparison.')
+        row.history = commonVersion(previous, null, await sha256Bytes(data)); check()
+      }
+      if (isHistoryConflict(row.history)) row.comparison = 'conflict'
+    }
+  }
   const summary = { add: 0, change: 0, same: 0, blocked: 0, deviceOnly: deviceOnly.length }
   entries.forEach(entry => ++summary[entry.status])
   const plan = { schema: 1, deviceKey: identity, rootPath: root, entries, directories, deviceOnly, summary }
@@ -168,7 +193,8 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
   const localSelection = Array.from(files || [])
   const sources = sourcesOf(localSelection, plan.rootPath)
   if (selectedPaths !== undefined && (!Array.isArray(selectedPaths) || selectedPaths.some(path => typeof path !== 'string'))) { job.state = previousState; fail('SYNC_SELECTION', 'Invalid selected paths.') }
-  const selected = new Set(selectedPaths ?? plan.entries.filter(entry => ['add', 'change'].includes(entry.status)).map(entry => entry.targetPath))
+  const selected = new Set(selectedPaths ?? plan.entries.filter(entry => ['add', 'change'].includes(entry.status) &&
+    (!entry.history || entry.history === 'localChanged')).map(entry => entry.targetPath))
   if (selected.size === 0) { job.state = previousState; return { completed: 0, skipped: 0, total: 0, job } }
   const wanted = plan.entries.filter(entry => selected.has(entry.targetPath))
   if (wanted.length !== selected.size || wanted.some(entry => !['add', 'change'].includes(entry.status))) fail('SYNC_SELECTION', 'Only planned additions and changes can be selected.')
@@ -232,6 +258,7 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
       ++completed; check()
       observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length })
     }
+    job.equalPaths = fresh.entries.filter(entry => entry.comparison === 'same').map(entry => entry.targetPath)
     job.state = 'complete'
     return { completed, skipped, total: wanted.length, job }
   } catch (error) {

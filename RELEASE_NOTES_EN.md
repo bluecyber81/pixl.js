@@ -1,5 +1,9 @@
 # Allmiibo LCD release notes
 
+## File manager 3.49.0
+
+On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option. [Release and downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.49.0)
+
 ## File manager 3.48.4
 
 The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines. [Release and downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.4)

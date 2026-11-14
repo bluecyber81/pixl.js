@@ -12,6 +12,7 @@ function harness(supported=true,extra={}){
     context.window=context;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.createScreenAwake = require('../public/dfu/screen-awake.mjs').createScreenAwake;
+    context.bluetoothAccessIssue = require('../public/dfu/bluetooth-access.mjs').bluetoothAccessIssue;
     context.nrfDfuLink = require('../public/dfu/nrf-dfu-link.mjs').nrfDfuLink;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/dfu/phase-labels.js'),'utf8'),context);
     const page = fs.readFileSync(path.join(__dirname,'../public/dfu/page.js'),'utf8');
@@ -21,6 +22,26 @@ function harness(supported=true,extra={}){
 test('page binds one click to device selection and one file event to package load',()=>{
     const h=harness();h.nodes.get('file').files=['selected'];h.nodes.get('file').events.change();h.nodes.get('button').events.click();
     assert.deepEqual(h.calls,[['package',null],['package','selected'],['select']]);
+});
+test('iPad desktop mode keeps ZIP inspection available and updates the transfer action if Bluetooth appears', () => {
+    const navigator = {language:'de-DE',userAgent:'Mozilla/5.0 (Macintosh)',platform:'MacIntel',maxTouchPoints:5};
+    const h = harness(true, {navigator});
+    h.options.onState({busy:false, loading:false, ready:true});
+    const guide = h.nodes.get('apple-guide'), button = h.nodes.get('button');
+    assert.equal(button.disabled, true);
+    assert.equal(h.nodes.get('file').disabled, false);
+    assert.match(h.nodes.get('capability').textContent, /Firmware-ZIP prüfen/);
+    assert.equal(guide.hidden, false);
+    assert.equal(guide.href, '../guide/index.html#iphone');
+    h.context.AllmiiboLanguage.setMode('en');
+    assert.equal(guide.href, '../guide/en.html#iphone');
+    assert.match(h.nodes.get('capability').textContent, /check the firmware ZIP/);
+    navigator.bluetooth = {requestDevice() { throw new Error('Should only run after a user selection'); }};
+    h.windowEvents.focus();
+    assert.equal(guide.hidden, true);
+    assert.equal(h.nodes.get('capability').textContent, '');
+    assert.equal(button.disabled, false);
+    assert.deepEqual(h.calls, []);
 });
 test('wake lock starts only in DFU, releases late/failed sessions and honors the opt-out',async()=>{
     const tick=()=>new Promise(resolve=>setImmediate(resolve));
@@ -87,7 +108,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

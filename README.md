@@ -1,12 +1,14 @@
 # Allmiibo LCD firmware and file manager
 
-## DE3.73 / App646 and file manager 3.48.4
+## DE3.73 / App646 and file manager 3.49.0
+
+On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option.
 
 The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines.
 
 The offline catalogue contains 954 figure IDs. In **Figure catalogue → Game → Kirby Air Riders**, all seven riders appear, including Sword Kirby & Dragoon and Noir Dedede & Hydra. German names also find the matching cards. The firmware name filter covers the 952 IDs in the published App646.
 
-DE3.73 is an optional LCD test release. A long press on Back in the slot list now leaves the slots alone. Returning from figure details keeps the last selection, including across favourites pages. File manager 3.48.4 checks capacity for App646 and protects reserved paths before writing.
+DE3.73 is an optional LCD test release. A long press on Back in the slot list now leaves the slots alone. Returning from figure details keeps the last selection, including across favourites pages. File manager 3.49.0 checks capacity for App646 and protects reserved paths before writing.
 
 | Starting point on the LCD device | Download |
 | --- | --- |
@@ -16,7 +18,7 @@ DE3.73 is an optional LCD test release. A long press on Back in the slot list no
 
 Initializing LittleFS erases the old E: drive. After restoring the verified backup, run the final comparison against the device.
 
-[Stable LCD firmware DE3.65 / 637](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Installation guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Windows ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.4/Allmiibo_Dateimanager_3_48_4_Portable.zip) · [Source ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.4/Allmiibo_Dateimanager_3_48_4_Quellcode.zip) · [ChatGPT review kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
+[Stable LCD firmware DE3.65 / 637](https://github.com/bluecyber81/pixl.js/releases/download/de3.65/Allmiibo_LCD_DE3_65_637_NUR_APP.zip) · [Installation guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Windows ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.49.0/Allmiibo_Dateimanager_3_49_0_Portable.zip) · [Source ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.49.0/Allmiibo_Dateimanager_3_49_0_Quellcode.zip) · [ChatGPT review kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
 
 ## DE3.72 / App645 and file manager 3.48.1
 
