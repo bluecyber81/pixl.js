@@ -10,6 +10,13 @@
         <p>{{ de ? 'Vergleicht den mitgelieferten Katalog mit dem aktuellen AmiiboAPI-Repository auf GitHub.' : 'Compare the bundled catalogue with the current AmiiboAPI repository on GitHub.' }}</p>
         <button type="button" class="primary" :disabled="!!running" @click="checkUpdates">{{ running === 'catalogue' ? (de ? 'Wird geprüft …' : 'Checking …') : (de ? 'Nach neuen Figuren suchen' : 'Check for new figures') }}</button>
         <p v-if="updates" class="result-note" role="status"><strong>{{ updates.counts.added }} {{ de ? 'neu' : 'new' }}</strong> · {{ updates.counts.changed }} {{ de ? 'geänderte Einträge' : 'changed entries' }}<br>{{ de ? 'Geprüft' : 'Checked' }}: {{ localDate(updates.observedAt) }}<br><a :href="updates.source.url" target="_blank" rel="noopener noreferrer">GitHub · {{ updates.source.commit.slice(0, 8) }}</a></p>
+        <p v-if="updates?.gameUsage" class="result-note" role="status">
+          <template v-if="updates.gameUsage.status === 'loss'">{{ de ? 'Geänderte Online-Spieldaten: Folgende bisherige Angaben fehlen oder wurden ersetzt.' : 'Online game data has changed. These previous details are missing or have been replaced.' }}
+            {{ de ? 'Spielhinweise' : 'Game notes' }}: {{ updates.gameUsage.missingNotes }} · {{ de ? 'Schreibangaben' : 'Write flags' }}: {{ updates.gameUsage.missingWriteFlags }}.
+            {{ de ? 'Die geprüften Spielhinweise im Dateimanager bleiben erhalten.' : 'The file manager keeps its reviewed game notes.' }}</template>
+          <template v-else-if="updates.gameUsage.status === 'unavailable'">{{ de ? 'Die Online-Spielhinweise konnten nicht geprüft werden. Der Dateimanager verwendet weiterhin die mitgelieferten Hinweise.' : 'Online game notes could not be checked. The file manager continues to use its bundled notes.' }}</template>
+          <template v-else>{{ de ? 'Alle bisher geprüften Online-Spielhinweise und Schreibangaben sind im Quellstand vorhanden.' : 'The source retains all previously reviewed game notes and write flags.' }}</template>
+        </p>
         <p class="small">{{ de ? 'Nur auf Klick. Deine Sammlung wird nicht ins Internet übertragen. Neue Metadaten gelten für diese Sitzung; die Firmware wird nicht geändert.' : 'Only on click. Your collection is not sent to the internet. New metadata applies to this session; firmware is unchanged.' }}</p>
       </article>
       <article class="action-card">

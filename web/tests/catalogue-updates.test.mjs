@@ -5,6 +5,7 @@ import { webcrypto, createHash } from 'node:crypto';
 import { CATALOGUE_UPDATE_SOURCE as SOURCE, CATALOGUE_UPDATE_LIMITS as LIMITS,
   normalizeCatalogueSource, compareCatalogueEntries, mergeCatalogueEntries,
   checkCatalogueUpdates, CatalogueUpdateError } from '../src/lib/catalogue-updates.js';
+import reference from '../src/data/online-usage-reference.json' with { type: 'json' };
 
 const sha = 'a'.repeat(40);
 const ref = { ref: 'refs/heads/master', object: { type: 'commit', sha } };
@@ -111,9 +112,10 @@ test('an accumulated session catalogue may exceed one response, but the union re
 });
 test('fixed branch ref then exact commit raw URL; no cookies, redirects, referrer, writes or automatic polling', async () => {
   const fake = fakeFetch(); const result = await run(fake);
-  assert.equal(fake.calls.length, 2);
+  assert.equal(fake.calls.length, 3);
   assert.equal(fake.calls[0].url, SOURCE.refUrl);
   assert.equal(fake.calls[1].url, `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${sha}/database/amiibo.json`);
+  assert.equal(fake.calls[2].url, `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${sha}/database/games_info.json`);
   for (const { opts } of fake.calls) {
     assert.equal(opts.credentials, 'omit'); assert.equal(opts.redirect, 'error'); assert.equal(opts.cache, 'no-store');
     assert.equal(opts.mode, 'cors'); assert.equal(opts.referrerPolicy, 'no-referrer');
@@ -122,6 +124,54 @@ test('fixed branch ref then exact commit raw URL; no cookies, redirects, referre
   assert.equal(result.source.sha256, createHash('sha256').update(JSON.stringify(source())).digest('hex'));
   assert.equal(result.source.commit, sha); assert.equal(result.entries.length, 1);
   assert.ok(Number.isFinite(Date.parse(result.observedAt)));
+});
+
+test('pinned public source retains reviewed notes without downloading the same usage file again', async () => {
+  const fake = fakeFetch(source(), { ref: { ...ref, object: { type: 'commit', sha: reference.commit } } });
+  assert.deepEqual((await run(fake)).gameUsage, { status: 'reference' });
+  assert.equal(fake.calls.length, 2);
+});
+
+test('new source without usage counts triggers per-field warning without blocking figure metadata', async () => {
+  const figure = { gamesWiiU: [], games3DS: [], gamesSwitch: [], gamesSwitch2: [] };
+  const blank = { amiibos: { [reference.profiles[0].figures[0]]: figure } };
+  const data = source([entry(), entry('0101000000050002', 'Zelda')]);
+  const fetchImpl = async url => response(url === SOURCE.refUrl ? ref : url.endsWith('/games_info.json') ? blank : data);
+  const updated = await run({ fetchImpl });
+  assert.deepEqual(updated.gameUsage, { status: 'loss', missingNotes: 12513, missingWriteFlags: 1391 });
+  assert.equal(updated.counts.added, 1);
+});
+
+test('malformed, interrupted and oversized usage responses preserve independent figure metadata', async () => {
+  for (const makeResponse of [() => response({}), () => { throw new Error('offline'); },
+    () => new Response(null, { headers: { 'content-length': String(LIMITS.usageBytes + 1) } })]) {
+    const result = await run({ fetchImpl: async url => url === SOURCE.refUrl ? response(ref)
+      : url.endsWith('/games_info.json') ? makeResponse() : response(source()) });
+    assert.deepEqual(result.gameUsage, { status: 'unavailable' });
+    assert.equal(result.counts.source, 1);
+  }
+});
+
+test('external cancellation during the usage request never publishes a partial result', async () => {
+  const controller = new AbortController();
+  const fetchImpl = async url => {
+    if (url === SOURCE.refUrl) return response(ref);
+    if (url.endsWith('/amiibo.json')) return response(source());
+    controller.abort();
+    return new Promise(() => {});
+  };
+  await assert.rejects(run({ fetchImpl, signal: controller.signal }), { name: 'AbortError' });
+});
+
+test('timed-out usage request keeps metadata and reports that the game notes are unchecked', async () => {
+  const fetchImpl = async url => {
+    if (url === SOURCE.refUrl) return response(ref);
+    if (url.endsWith('/amiibo.json')) return response(source());
+    return new Promise(() => {});
+  };
+  const result = await run({ fetchImpl, timeoutMs: 150, cryptoImpl: { subtle:{ digest: () => new Uint8Array(32) } } });
+  assert.deepEqual(result.gameUsage, { status: 'unavailable' });
+  assert.equal(result.counts.source, 1);
 });
 for (const [name, value] of [
   ['bad sha', { ...ref, object: { type: 'commit', sha: '../main' } }],

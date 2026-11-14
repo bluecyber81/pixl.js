@@ -77,6 +77,37 @@ async function checkGames(page, en) {
   assert.deepEqual(await page.evaluate(() => window.testPeripheral.violations), []);
   assert.equal(await page.evaluate(() => window.testPeripheral.connections), 1);
 }
+
+async function checkOnlineNotes(page, en) {
+  const revision = 'a'.repeat(40), baselineCommit = '855a0ff4308278de756bed01de1eca89936f456b';
+  const names = await fs.readFile(new URL('../third-party/amiiboapi/amiibo.json', import.meta.url));
+  const refUrl = 'https://api.github.com/repos/8bitDream/AmiiboAPI/git/ref/heads/master';
+  const raw = 'https://raw.githubusercontent.com/8bitDream/AmiiboAPI/';
+  const gameUrl = raw + revision + '/database/games_info.json';
+  let sha = baselineCommit, fail = false, requests = 0;
+  await page.route(refUrl, route => route.fulfill({ json: { ref: 'refs/heads/master', object: {type:'commit', sha} } }));
+  await page.route(raw + '*/database/amiibo.json', route => route.fulfill({body:names, contentType:'application/json'}));
+  await page.route(gameUrl, route => {
+    requests++;
+    return fail ? route.fulfill({status:404,body:''}) : route.fulfill({json:{amiibos:{
+      '0x0000000000000002': { games3DS:[], gamesWiiU:[], gamesSwitch:[], gamesSwitch2:[] }
+    }}});
+  });
+  const panel = page.locator('.collection-assistant');
+  const button = panel.getByRole('button', {name: en ? 'Check for new figures' : 'Nach neuen Figuren suchen'});
+  await button.click();
+  await panel.getByRole('status').filter({hasText: en ? 'retains all previously reviewed' : 'Alle bisher geprüften'}).waitFor();
+  assert.equal(requests, 0);
+  sha = revision;
+  await button.click();
+  const warning = panel.getByRole('status').filter({hasText: en ? 'Online game data has changed' : 'Geänderte Online-Spieldaten'});
+  await warning.waitFor();
+  assert.match(await warning.innerText(), /12513\s+·.*1391/u);
+  fail = true;
+  await button.click();
+  await panel.getByRole('status').filter({hasText: en ? 'could not be checked' : 'konnten nicht geprüft werden'}).waitFor();
+  assert.equal(requests, 2);
+}
 try {
   for (const en of [false,true]) {
     const ctx = await browser.newContext({ viewport:{width:320,height:760}, locale:en ? 'en-GB' : 'de-DE', serviceWorkers:'block' });
@@ -140,8 +171,9 @@ try {
     assert.ok(geometry.document<=geometry.viewport+1,JSON.stringify(geometry));
     assert.ok(geometry.panels.every(([client,scroll])=>scroll<=client+1),JSON.stringify(geometry));
     await checkGames(page, en);
+    await checkOnlineNotes(page, en);
     assert.deepEqual(remote,[]);
-    console.log(JSON.stringify({language:en?'en':'de',viewport:320,textScale:2,keyboard:true,linkRoundTrip:true,favorites:true,filterRestore:true,gameFilters:true,syntheticDeviceScan:true,externalRequests:remote.length,geometry}));
+    console.log(JSON.stringify({language:en?'en':'de',viewport:320,textScale:2,keyboard:true,linkRoundTrip:true,favorites:true,filterRestore:true,gameFilters:true,onlineUsageGuard:true,syntheticDeviceScan:true,externalRequests:remote.length,geometry}));
     await ctx.close();
   }
 } finally { await browser.close(); }

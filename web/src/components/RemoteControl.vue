@@ -9,14 +9,20 @@
       <span class="remote-state" :class="{online:phase === 'ready'}" role="status" aria-live="polite">{{ text[phase] }}</span>
     </div>
     <p v-if="unavailable || error" class="remote-warning" role="alert">{{ text.errors[unavailable || error] || text.failed }}</p>
-    <div class="remote-pad" role="group" :aria-label="text.title">
-      <button type="button" @click="press('left')" :disabled="!ready" :aria-label="text.left"><span aria-hidden="true">←</span><strong>{{ text.left }}</strong></button>
-      <button type="button" @click="press('center')" :disabled="!ready" :aria-label="text.center"><span aria-hidden="true">●</span><strong>{{ text.center }}</strong></button>
-      <button type="button" @click="press('right')" :disabled="!ready" :aria-label="text.right"><span aria-hidden="true">→</span><strong>{{ text.right }}</strong></button>
+    <div class="remote-pad" role="group" :aria-label="text.title"
+         :tabindex="keypadActive ? 0 : -1" :aria-describedby="keypadActive ? 'remote-keyboard-hint' : undefined"
+         :aria-keyshortcuts="keypadActive ? (capabilities & 2 ? 'ArrowLeft ArrowRight Enter Escape' : 'ArrowLeft ArrowRight Enter') : undefined"
+         @keydown="onPadKeydown">
+      <button type="button" @click="press('left')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.left"><span aria-hidden="true">←</span><strong>{{ text.left }}</strong></button>
+      <button type="button" @click="press('center')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.center"><span aria-hidden="true">●</span><strong>{{ text.center }}</strong></button>
+      <button type="button" @click="press('right')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.right"><span aria-hidden="true">→</span><strong>{{ text.right }}</strong></button>
     </div>
+    <p v-if="keypadActive" id="remote-keyboard-hint" class="remote-limit">
+      {{ text.keyboard }}<template v-if="capabilities & 2"> {{ text.keyboardBack }}</template>
+    </p>
     <button type="button" class="remote-back" @click="press('back')" :disabled="!ready || !(capabilities & 2)">{{ text.back }}</button>
     <button type="button" class="remote-files" @click="press('files')" :disabled="!ready">{{ text.files }}</button>
-    <p v-if="notice" role="status" aria-live="polite">{{ text[notice] }}</p>
+    <p v-if="notice" role="status" aria-live="polite">{{ text.receipts[notice] || text[notice] }}</p>
     <details class="remote-help" :open="setupOpen" @toggle="setupOpen = $event.target.open">
       <summary>{{ text.setupTitle }}</summary>
       <p>{{ text.introduction }}</p><p>{{ text.setup }}</p>
@@ -27,24 +33,37 @@
 <script>
 import { createRemoteClient, remoteAvailability } from '../lib/remote-control.js';
 import { remoteText } from '../lib/remote-text.js';
+const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'center', Escape:'back'});
 export default {
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
   data(){return {phase:'disconnected',capabilities:0,error:'',notice:'',setupOpen:false,unavailable:remoteAvailability()};},
-  computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;}},
+  computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
+    keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');}},
   created(){
     this._remoteMounted=true;
     this._remoteUiGeneration=0;
     this._remoteClient=createRemoteClient({onState:state=>{
       if(!this._remoteMounted)return;
       this.phase=state.phase;this.capabilities=state.capabilities||0;
-      if(state.error)this.error=state.error;
+      if(state.error){this.error=state.error;this.notice='';}
       this.$emit('active',state.phase!=='disconnected');
     }});
   },
   beforeUnmount(){this._remoteMounted=false;++this._remoteUiGeneration;this._remoteClient.disconnect();this.$emit('active',false);},
   watch:{blocked(value){if(value&&this.phase!=='disconnected')this.disconnectRemote();}},
   methods:{
-    preventRepeat(event){if(event.repeat&&event.target?.tagName==='BUTTON')event.preventDefault();},
+    preventRepeat(event){
+      if(event.repeat && event.target?.tagName === 'BUTTON' && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+    },
+    onPadKeydown(event){
+      if(!this.keypadActive || event.defaultPrevented || event.isComposing || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+      // Enter on an individual button keeps its native click and activates that button.
+      if(event.key === 'Enter' && event.target !== event.currentTarget) return;
+      const command = padCommands[event.key];
+      if(!Object.hasOwn(padCommands, event.key) || (command === 'back' && !(this.capabilities & 2))) return;
+      event.preventDefault();
+      if(!event.repeat && this.ready) return this.press(command);
+    },
     async connectRemote(){
       if(this.blocked||this.phase!=='disconnected'||this.unavailable)return;
       const generation=++this._remoteUiGeneration;
@@ -71,7 +90,7 @@ export default {
             await this._remoteClient.disconnect();
             if(this._remoteMounted&&generation===this._remoteUiGeneration)this.notice='filesReady';
           }
-        }else this.notice='accepted';
+        }else this.notice=command;
       }catch(error){if(this._remoteMounted&&generation===this._remoteUiGeneration)this.error=error?.code||'REMOTE_REJECTED';}
     }
   }
@@ -83,7 +102,7 @@ h3{margin:0 0 12px;}p{font-size:.88rem;line-height:1.6;overflow-wrap:anywhere;}
 .remote-limit{font-size:.8rem;color:#506a73;}.remote-warning{padding:10px;border:1px solid #ddbd91;border-radius:8px;background:#fff8ec;color:#67451c;}
 .remote-connection{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0;}
 button{min-height:48px;padding:10px 14px;border:1px solid #8aafb7;border-radius:9px;background:#fff;color:#24434b;cursor:pointer;font:inherit;}
-button:disabled{opacity:.5;cursor:default;}button:focus-visible{outline:3px solid #388294;outline-offset:3px;}
+button:disabled,button[aria-disabled=true]{opacity:.5;cursor:default;}button:focus-visible,.remote-pad:focus-visible{outline:3px solid #388294;outline-offset:3px;}
 .remote-state{font-size:.82rem;}.remote-state.online{font-weight:700;color:#236351;}
 .remote-pad{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;margin-top:18px;}
 .remote-pad button{min-height:92px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;touch-action:manipulation;}

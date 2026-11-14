@@ -24,8 +24,8 @@
       </div>
     </dl>
     <p v-if="!entry" class="unknown-note">{{ resolvedId ? (de ? 'ID im Katalog unbekannt. Das allein bedeutet nicht, dass die Figurendatei ungültig ist.' : 'ID not found in the catalogue. This alone does not mean the figure file is invalid.') : (de ? 'Keine öffentliche Figuren-ID verfügbar. Bei Dateieigenschaften kann sie auch einfach fehlen.' : 'No public figure ID is available. File properties may simply omit it.') }}</p>
-    <p v-if="vehicles" class="brief-limit">{{ de ? 'Der Hinweis beruht auf Platinencodes untersuchter Fahrzeuge. Mehrere Modelle können denselben Code tragen.' : 'This hint uses board codes from examined vehicles. Multiple models can share a code.' }}
-      <a href="https://github.com/mahoudeau/allmiibo-sync/blob/c450790615c93d9795e0347417ad9fb86baa6c04/PROTOCOL.md#vehicle-identity-lives-outside-the-amiibo-id" target="_blank" rel="noopener noreferrer">{{ de ? 'Messungen ansehen' : 'View measurements' }}</a>
+    <p v-if="vehicles" class="brief-limit">{{ de ? 'Der Hinweis beruht auf Platinencodes aus untersuchten Fahrzeugdateien. Mehrere Modelle können denselben Code tragen.' : 'This hint uses board codes from examined vehicle files. Multiple models can share a code.' }}
+      <a :href="vehicles.includes('Dragoon') ? 'https://github.com/bluecyber81/pixl.js/blob/web3.48.4/docs/validation/WEB3_48_4.json' : 'https://github.com/mahoudeau/allmiibo-sync/blob/c450790615c93d9795e0347417ad9fb86baa6c04/PROTOCOL.md#vehicle-identity-lives-outside-the-amiibo-id'" target="_blank" rel="noopener noreferrer">{{ de ? 'Messungen ansehen' : 'View measurements' }}</a>
     </p>
     <p v-else-if="resolvedId?.endsWith('03')" class="brief-limit">{{ de ? 'Fahrer-ID; die Vollständigkeit einer Fahrzeugkombination ist damit nicht bestätigt.' : 'Rider ID; this does not confirm a complete vehicle combination.' }}</p>
 

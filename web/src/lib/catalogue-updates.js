@@ -1,6 +1,7 @@
 // Public metadata only. Neither a source commit nor a content hash proves
 // authenticity, ownership, device-file presence, NFC support, or release status.
 import { parseUniqueJson } from './unique-json.js';
+import { compareUsageQuality, USAGE_REFERENCE_COMMIT } from './catalogue-usage-quality.js';
 
 export const CATALOGUE_UPDATE_SOURCE = Object.freeze({
   repository: 'https://github.com/8bitDream/AmiiboAPI',
@@ -8,7 +9,7 @@ export const CATALOGUE_UPDATE_SOURCE = Object.freeze({
   refUrl: 'https://api.github.com/repos/8bitDream/AmiiboAPI/git/ref/heads/master',
 });
 export const CATALOGUE_UPDATE_LIMITS = Object.freeze({
-  bytes: 2 * 1024 * 1024, refBytes: 64 * 1024,
+  bytes: 2 * 1024 * 1024, refBytes: 64 * 1024, usageBytes: 5 * 1024 * 1024,
   entries: 4096, mergedEntries: 8192, textLength: 160,
   timeoutMs: 25000, chunks: 16384,
 });
@@ -202,6 +203,20 @@ function decode(bytes) {
   catch { invalid(); }
 }
 
+async function checkGameUsage(commit, fetchImpl, signal) {
+  // The bundled reference was generated from this exact, immutable commit.
+  // On phones there is no need to download the same 3 MB for every check.
+  if (commit === USAGE_REFERENCE_COMMIT) return { status: 'reference' };
+  const url = `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${commit}/database/games_info.json`;
+  try {
+    const bytes = await fetchBytes(url, CATALOGUE_UPDATE_LIMITS.usageBytes, fetchImpl, signal);
+    return compareUsageQuality(decode(bytes));
+  } catch (error) {
+    if (signal.aborted && signal.reason?.code !== 'timeout') throw signal.reason;
+    return { status: 'unavailable' };
+  }
+}
+
 /** User-triggered only. Fetches a branch ref, then immutable metadata at that
  * commit. No polling, storage, images, tag dumps, or Bluetooth operations. */
 export async function checkCatalogueUpdates({ baseline, signal, fetchImpl = globalThis.fetch,
@@ -233,6 +248,8 @@ export async function checkCatalogueUpdates({ baseline, signal, fetchImpl = glob
     const result = compareCatalogueEntries(before, remote);
     result.entries = mergeCatalogueEntries(before, remote);
     check(controller.signal);
+    result.gameUsage = await checkGameUsage(commit, fetchImpl, controller.signal);
+    if (signal?.aborted) throw abortError();
     return { ...result, observedAt: new Date().toISOString(),
       source: { ...CATALOGUE_UPDATE_SOURCE, commit, url, sha256 }, limits: { ...CATALOGUE_UPDATE_LIMITS } };
   } catch (error) {

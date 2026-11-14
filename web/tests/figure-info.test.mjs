@@ -89,7 +89,8 @@ test('vehicle hints use observed public board codes only on known 2K Air Riders 
   for (const [code, subtype, names] of [
     ['PB4W17', 2, ['Warp Star']], ['PB4W17', 4, ['Winged Star']],
     ['P45S63', 4, ['Winged Star']], ['PB5T42', 4, ['Shadow Star']],
-    ['PC6V28', 4, ['Tank Star', 'Hop Star']], ['UNSEEN', 4, []], ['PB4W17', 1, []],
+      ['PC6V28', 4, ['Tank Star', 'Hop Star']], ['PC6U55', 4, ['Dragoon', 'Hydra']],
+      ['PC6U55', 2, []], ['UNSEEN', 4, []], ['PB4W17', 1, []],
   ]) {
     const bytes = vehicle(rider, code, subtype);
     const original = bytes.slice();
@@ -102,6 +103,10 @@ test('vehicle hints use observed public board codes only on known 2K Air Riders 
   }
   const otherRider = vehicle('1f01000004c61e03', 'PB4W17', 2);
   assert.deepEqual(inspectTagStructure(otherRider).vehicleCandidates, ['Warp Star']);
+  for (const riderId of ['1f00010004c51e03', '1f02010004c81e03']) {
+    assert.deepEqual(inspectTagStructure(vehicle(riderId, 'PC6U55', 4)).vehicleCandidates, ['Dragoon', 'Hydra']);
+    assert.deepEqual(inspectTagStructure(vehicle(riderId, 'PB4W17', 2)).vehicleCandidates, ['Warp Star']);
+  }
   for (const offset of [960, 961, 985, 986, 987]) {
     const altered = otherRider.slice();
     altered[offset] ^= 1;

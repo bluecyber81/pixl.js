@@ -5,3 +5,7 @@ Machine entries are not standalone figures and are not merged into this catalogu
 Two reviewed rider additions: Sword Kirby (& Dragoon), Noir Dedede (& Hydra).
 No images, keys or tag dumps included.
 Firmware name flags use the 952 IDs from the published DE3.73/App646 baseline.
+
+Game note update checks use the same immutable commit's database/games_info.json
+(SHA-256 bd100324c3d62a02759f28fa7454af35b5699ec7a87642bdb0e7a92592a228ce).
+Recreate the indexed reference with node web/scripts/build-usage-reference.mjs <downloaded games_info.json>.

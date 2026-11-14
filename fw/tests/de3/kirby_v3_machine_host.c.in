@@ -1,0 +1,81 @@
+/* Hardware, display and file handling are emulated; the file loader, tag
+ * selection, UID mapping, NFC parser and transmit copy come from App646. */
+#include "vfs.h"
+#include "vfs_meta.h"
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+#define NRF_ERR_NOT_AMIIBO -1000
+#define NRF_ERR_READ_ERROR -1001
+#define CRITICAL_REGION_ENTER() ((void)0)
+#define CRITICAL_REGION_EXIT() ((void)0)
+#define NFC_T2T_PARAM_NFCID1 1
+static uint8_t fixture[2048], machine[64], other_machine[64], uid[7];
+static unsigned input_size, file_reads;
+
+static int32_t fake_stat(const char *path, vfs_obj_t *obj) {
+    memset(obj, 0, sizeof(*obj));
+    obj->type=VFS_TYPE_REG; obj->size=input_size;
+    return VFS_OK;
+}
+static int32_t fake_read(const char *path, void *out, size_t size) {
+    assert(size==input_size);
+    memcpy(out, fixture, size);
+    ++file_reads;
+    return (int32_t)size;
+}
+static int32_t vfs_persist_recover(vfs_driver_t *driver) {return VFS_OK;}
+void vfs_meta_decode(uint8_t *meta, uint8_t size, vfs_meta_t *out) {
+    memset(out,0,sizeof(*out));
+}
+static bool ntag_emu_prepare_change(void) {return true;}
+static void hal_nfc_parameter_set(int p,const uint8_t *v,size_t size) {
+    assert(p==NFC_T2T_PARAM_NFCID1 && size==sizeof(uid)); memcpy(uid,v,size);
+}
+/* REAL_LOAD */
+/* REAL_INSTALL */
+
+static void compare_response(const uint8_t *cmd,size_t cmd_size,const uint8_t *expected,size_t n) {
+    reset_io();
+    nfc_received_process(cmd,cmd_size,ntag_emu.ntag.data);
+    assert(ack==-1 && tx_calls==1 && registers.TXD.AMOUNT==n);
+    assert(memcmp((const void *)m_nfc_buffer,expected,n)==0);
+}
+
+int main(void) {
+#ifdef _WIN32
+    assert(_setmode(_fileno(stdin),_O_BINARY)!=-1);
+#endif
+    assert(fread(fixture,1,sizeof(fixture),stdin)==sizeof(fixture));
+    assert(fread(machine,1,sizeof(machine),stdin)==sizeof(machine));
+    assert(fread(other_machine,1,sizeof(other_machine),stdin)==sizeof(other_machine));
+    assert(fgetc(stdin)==EOF);
+    ntag_t tag;
+    vfs_driver_t vfs={.stat_file=fake_stat,.read_file_data=fake_read};
+    input_size=64;
+    assert(ntag_read(&vfs,"/machine.ext",&tag)==NRF_ERR_NOT_AMIIBO && file_reads==0);
+    input_size=sizeof(fixture);
+    assert(ntag_read(&vfs,"/figure.bin",&tag)==NRF_SUCCESS && file_reads==1);
+    assert(tag.type==NTAG_I2C_PLUS_2K && !memcmp(tag.data,fixture,sizeof(fixture)));
+    assert(ntag_emu_set_tag(&tag));
+    assert(!memcmp(uid,fixture,7));
+    assert(!memcmp(ntag_emu.ntag.data,fixture,sizeof(fixture)));
+    uint8_t id_pages[]={NFC_CMD_FAST_READ,0x15,0x16};
+    compare_response(id_pages,sizeof(id_pages),fixture+84,8);
+    uint8_t ready_fast[]={NFC_CMD_FAST_READ,0xED,0xED};
+    uint8_t expected[16]; memcpy(expected,fixture+0xED*4,4); expected[2]|=8;
+    compare_response(ready_fast,sizeof(ready_fast),expected,4);
+    uint8_t ready_read[]={NFC_CMD_READ,0xEC};
+    memcpy(expected,fixture+0xEC*4,16); expected[6]|=8;
+    compare_response(ready_read,sizeof(ready_read),expected,16);
+    uint8_t machine_fast[]={NFC_CMD_FAST_READ,0xF0,0xFF};
+    compare_response(machine_fast,sizeof(machine_fast),machine,64);
+    assert(memcmp((const void *)m_nfc_buffer,other_machine,64)!=0);
+    for (unsigned page_offset=0;page_offset<16;page_offset+=4) {
+        uint8_t read[]={NFC_CMD_READ,(uint8_t)(0xF0+page_offset)};
+        compare_response(read,sizeof(read),machine+page_offset*4,16);
+    }
+    puts("PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs.");
+    return 0;
+}

@@ -140,6 +140,65 @@ class UsageExportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'update the pinned provenance'):
             exporter.export_usage(data, self.translations)
 
+    def test_export_preserves_existing_associations_and_each_language_independent_of_numeric_note_ids(self):
+        bundled = json.loads(self.output.read_text(encoding='utf8'))
+        candidate = json.loads(json.dumps(bundled))
+        row = next(row for figure in candidate['figures'] for row in figure['associations'] if row['noteId'])
+        note = next(note for note in candidate['notes'] if note['id'] == row['noteId'])
+        candidate['notes'].append({**note, 'id': 10000})
+        row['noteId'] = 10000
+        exporter.protect_existing_usage(bundled, candidate)
+        for lang in ['de', 'en']:
+            changed = candidate['notes'][-1]
+            text = changed[lang]
+            changed[lang] = ' '
+            with self.assertRaisesRegex(ValueError, 'Existing %s game note' % lang):
+                exporter.protect_existing_usage(bundled, candidate)
+            changed[lang] = text
+        group = next(figure['associations'] for figure in candidate['figures'] if row in figure['associations'])
+        group.remove(row)
+        with self.assertRaisesRegex(ValueError, 'association would be removed'):
+            exporter.protect_existing_usage(bundled, candidate)
+
+    def test_failed_cli_export_preserves_previous_bytes(self):
+        output = self.root / 'existing.json'
+        data = json.loads(self.output.read_text(encoding='utf8'))
+        data['figures'][0]['associations'].append({'groupId': 100000, 'noteId': None})
+        saved = json.dumps(data).encode('utf8')
+        output.write_bytes(saved)
+        run = subprocess.run([sys.executable, str(ROOT / 'fw/scripts/amiibo_usage_export.py'), '--output', str(output)],
+                             capture_output=True, text=True)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn('association would be removed', run.stderr)
+        self.assertEqual(output.read_bytes(), saved)
+
+    def test_exact_editorial_approval_is_scoped_to_one_binding_language_and_wording(self):
+        old = {'schemaVersion': 1, 'notes': [{'id': 1, 'en': 'Gain a heart', 'de': 'Ein Herz'}],
+               'figures': [{'id': figure, 'associations': [{'groupId': 75, 'noteId': 1}]} for figure in ['a', 'b']]}
+        changed = json.loads(json.dumps(old))
+        changed['notes'][0]['en'] = 'Gain one heart'
+        edit = ('a', 75, 'en', 'Gain a heart', 'Gain one heart')
+        with self.assertRaisesRegex(ValueError, 'would be replaced: b'):
+            exporter.protect_existing_usage(old, changed, {edit})
+        reviewed = {edit, ('b', *edit[1:])}
+        exporter.protect_existing_usage(old, changed, reviewed)
+        changed['notes'][0]['en'] = ''
+        with self.assertRaisesRegex(ValueError, 'would be removed'):
+            exporter.protect_existing_usage(old, changed, reviewed)
+        changed['notes'][0]['en'] = 'Placeholder'
+        with self.assertRaisesRegex(ValueError, 'would be replaced'):
+            exporter.protect_existing_usage(old, changed, reviewed)
+
+    def test_ci_check_compares_to_independent_published_reference(self):
+        reference = self.root / 'reference.json'
+        data = json.loads(self.output.read_text(encoding='utf8'))
+        data['notes'][0]['de'] = 'Frühere Beschreibung'
+        reference.write_text(json.dumps(data), encoding='utf8')
+        run = subprocess.run([sys.executable, str(ROOT / 'fw/scripts/amiibo_usage_export.py'), '--check',
+                              '--reference', str(reference)], capture_output=True, text=True)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn('Existing de game note would be replaced', run.stderr)
+
     def test_translation_requires_exact_existing_source_and_nonempty_safe_text(self):
         good = json.loads(self.translations.read_text(encoding='utf8'))
         path = self.root / 'translations.json'
