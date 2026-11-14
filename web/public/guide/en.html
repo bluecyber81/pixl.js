@@ -28,6 +28,7 @@
         <a href="#flash">Update the device application</a>
         <a href="#littlefs">Move your collection to LittleFS</a>
         <a href="#bootloader">Full LCD package</a>
+        <a href="#figurenvorschau">Preview figures</a>
         <a href="#ordnervergleich">Compare folders</a>
         <a href="#iphone">iPhone and iPad</a>
         <a href="#programme">Programs and downloads</a>
@@ -67,6 +68,10 @@
             <li><h3>Check the starting firmware and backup</h3><p>This package requires a compatible <b>LCD Allmiibo with an nRF52832</b> and a working Nordic Secure DFU bootloader that accepts this project’s signing key. The checked layout has 512 KiB internal flash, 64 KiB RAM and the bootloader at 0x77000. Supported starting S112 firmware IDs are <b>0x0103</b> (7.2.0) and <b>0x0126</b> (7.3.0). The installed bootloader counter must be <b>below 19</b>. A bootloader with counter 19 or higher rejects this system update. OLED devices, unknown signing keys and devices without a working DFU bootloader need a separate installation procedure. The layout places the MBR parameter page at 0x7E000 and DFU settings at 0x7F000. Check the device information and back up your collection first. For SPIFFS, complete the <a href="#littlefs">Raw128 backup, source comparison and capacity check</a> before the update. The firmware ZIP does not set up file storage.</p></li>
             <li><h3>Transfer both stages with Android</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip">Download the full DE3.73 package (ZIP)</a>. Keep the ZIP intact. Disconnect the file manager and open <b>Settings → Firmware update</b> on the device. In <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">nRF Device Firmware Update</a>, select the ZIP and your <b>pixl dfu</b>. The app transfers S112 7.3.0 and bootloader Z19 first, then App646. Keep the Nordic app open through the intermediate restart until the second stage completes. The web updater supports the application-only ZIP.</p></li>
             <li><h3>Read back the installed versions</h3><p>Reconnect to <b>Pixl.js</b> in the file manager after the final restart. Check for <b>2.22.0-DE3.73 / 646</b>, bootloader counter <b>19</b> with the Z19 boot-region hash, and S112 7.3.0 with FWID <b>0x0126</b>. If storage migration is pending, continue with the <a href="#littlefs">migration assistant and your verified backup</a>.</p></li></ol>
+        </section>
+        <section id="figurenvorschau">
+          <h2>Preview figures while browsing a folder</h2>
+          <p>Open a folder under <b>Files</b> and select a figure. On a laptop, its picture stays visible in the <b>Selection</b> panel as you scroll through the list. Select another figure to see its details.</p>
         </section>
         <section id="ordnervergleich">
           <h2>Compare changes in two folders</h2>

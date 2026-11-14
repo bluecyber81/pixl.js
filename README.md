@@ -1,8 +1,10 @@
 # Allmiibo LCD firmware and file manager
 
-## File Manager 3.51.0 · Files and folder uploads
+## File Manager 3.51.1 · Keep the selected figure in view
 
-Folders appear first. Tap a figure file for its picture and details. On phones the type and size appear under the filename, with row actions on the right. If a local name cannot be used on the device, you can correct the destination name or skip that item before uploading. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.0)
+Select a figure under **Files**. On a laptop, the **Selection** panel keeps its picture and details in view as you scroll through a long folder. Select another figure to show its preview in the same place. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.1)
+
+Folders appear first. Tap a figure file for its picture and details. On phones the type and size appear under the filename, with row actions on the right. If a local name cannot be used on the device, you can correct the destination name or skip that item before uploading.
 
 ## Tested LCD release DE3.74 (App647) · File Manager 3.50.1
 

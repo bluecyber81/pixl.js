@@ -1,0 +1,96 @@
+{
+  "version": "3.51.1",
+  "date": "2026-11-14",
+  "firmware": "DE3.74/App647",
+  "applicationOrBootloaderModified": false,
+  "previousDirectoryListEvidence": "docs/validation/WEB3_51_0.json",
+  "previousPhysicalFirmwareEvidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
+  "browserTest": "web/scripts/verify-file-workspace-browser.mjs",
+  "verificationStatus": "browser-passed",
+  "productionLayouts": {
+    "local": 22,
+    "pages": 22
+  },
+  "browserProcedure": "node scripts/verify-file-workspace-browser.mjs dist-pages <output> --sticky",
+  "limits": [
+    "The scroll check uses a synthetic folder in Chrome. The DE3.74 device photo acceptance is recorded separately."
+  ],
+  "browser": "Chrome",
+  "cases": [
+    {
+      "locale": "de-DE",
+      "layout": "Laptop",
+      "widthCssPixels": 1440,
+      "entries": 80,
+      "documentScroll": 1505,
+      "pictureTop": 71.5,
+      "detailsScroll": 219,
+      "nextPicture": "Luigi",
+      "returnToList": true,
+      "deviceWrites": 0
+    },
+    {
+      "locale": "de-DE",
+      "layout": "Handy",
+      "widthCssPixels": 390,
+      "entries": 80,
+      "documentScroll": 1785,
+      "pictureTop": 511.203125,
+      "detailsScroll": 465,
+      "nextPicture": "Luigi",
+      "returnToList": true,
+      "deviceWrites": 0
+    },
+    {
+      "locale": "en-GB",
+      "layout": "Laptop",
+      "widthCssPixels": 1440,
+      "entries": 80,
+      "documentScroll": 1505,
+      "pictureTop": 71.5,
+      "detailsScroll": 184,
+      "nextPicture": "Luigi",
+      "returnToList": true,
+      "deviceWrites": 0
+    },
+    {
+      "locale": "en-GB",
+      "layout": "Handy",
+      "widthCssPixels": 390,
+      "entries": 80,
+      "documentScroll": 1785,
+      "pictureTop": 511.203125,
+      "detailsScroll": 411,
+      "nextPicture": "Luigi",
+      "returnToList": true,
+      "deviceWrites": 0
+    }
+  ],
+  "baseline": {
+    "version": "3.51.0",
+    "layout": "Laptop",
+    "folderEntries": 80,
+    "fileRows": [
+      30,
+      65
+    ],
+    "pictureTopCssPixels": [
+      -1408,
+      -2913
+    ],
+    "visibleAtEitherPosition": false
+  },
+  "localWebTests": {
+    "total": 1509,
+    "passed": 1508,
+    "failed": 0,
+    "skipped": 1,
+    "skippedCase": "The initial run did not set ALLMIIBO_DFU_FIXTURES.",
+    "fixtureRerun": {
+      "suite": "tests/dfu-package-ui.test.cjs",
+      "passed": 23,
+      "skipped": 0,
+      "verified": "Both archived OTA files were read and checked against their pinned SHA-256."
+    }
+  }
+}
