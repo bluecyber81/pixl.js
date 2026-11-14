@@ -3,19 +3,30 @@
 import { claimGatt, ownsGatt, releaseGatt } from './gatt-owner.js';
 export const REMOTE_UUIDS=Object.freeze({service:'6e400001-b5a3-f393-e0a9-e50e24dcca9e',write:'6e400002-b5a3-f393-e0a9-e50e24dcca9e',notify:'6e400003-b5a3-f393-e0a9-e50e24dcca9e'});
 export const REMOTE_NAME='Pixl.Remote';
+export const REMOTE_LCD_CAPABILITY=0x20;
+const lcdOpcode=5, lcdBytes=1024;
 const commands=Object.freeze({status:[0,0],files:[1,0],left:[2,0],center:[2,1],right:[2,2],back:[3,0]});
 const error=code=>Object.assign(new Error(code),{code});
 const remoteCode=(failure,fallback)=>typeof failure?.code==='string'&&/^REMOTE_[A-Z_]+$/.test(failure.code)?failure.code:fallback;
 const statusErrors={1:'REMOTE_BUSY',2:'REMOTE_PROTOCOL',3:'REMOTE_DISABLED',4:'REMOTE_UNSUPPORTED',5:'REMOTE_UNSAFE',6:'REMOTE_QUEUE',7:'REMOTE_PROTOCOL'};
 export function remoteAvailability(environment=globalThis){return environment.isSecureContext===false||typeof environment.navigator?.bluetooth?.requestDevice!=='function'?'REMOTE_UNAVAILABLE':'';}
 export function encodeRemoteRequest(opcode,sequence,arg=0){
-  if(!Number.isInteger(sequence)||sequence<1||sequence>65535||![0,1,2,3,4].includes(opcode)||!Number.isInteger(arg)||(opcode===2?![0,1,2].includes(arg):arg!==0))throw error('REMOTE_PROTOCOL');
+  if(!Number.isInteger(sequence)||sequence<1||sequence>65535||![0,1,2,3,4,lcdOpcode].includes(opcode)||!Number.isInteger(arg))throw error('REMOTE_PROTOCOL');
+  const maxArg=opcode===2?2:opcode===lcdOpcode?127:0;
+  if(arg<0||arg>maxArg)throw error('REMOTE_PROTOCOL');
   return Uint8Array.of(0x50,0x58,1,opcode,sequence&255,sequence>>>8,arg,0);
 }
 export function parseRemoteReply(value){
   const bytes=value instanceof DataView?new Uint8Array(value.buffer,value.byteOffset,value.byteLength):value;
-  if(!(bytes instanceof Uint8Array)||bytes.length!==12||bytes[0]!==0x50||bytes[1]!==0x58||bytes[2]!==1||![0x80,0x81,0x82,0x83,0x84].includes(bytes[3])||bytes[6]>8||bytes[7]>4||bytes[10]!==0||bytes[11]!==0)throw error('REMOTE_PROTOCOL');
-  return {opcode:bytes[3]&0x7f,sequence:bytes[4]|bytes[5]<<8,status:bytes[6],state:bytes[7],capabilities:bytes[8]|bytes[9]<<8};
+  if(!(bytes instanceof Uint8Array)||bytes.length<12||bytes[0]!==0x50||bytes[1]!==0x58||bytes[2]!==1||![0x80,0x81,0x82,0x83,0x84,0x85].includes(bytes[3])||bytes[6]>8||bytes[7]>4)throw error('REMOTE_PROTOCOL');
+  const reply={opcode:bytes[3]&0x7f,sequence:bytes[4]|bytes[5]<<8,status:bytes[6],state:bytes[7],capabilities:bytes[8]|bytes[9]<<8};
+  if(reply.opcode===lcdOpcode && reply.status===0){
+    const index=bytes[10],length=bytes[11];
+    if(index>127 || length<8 || length>128 || length%8 || index*8+length>lcdBytes || bytes.length!==12+length)throw error('REMOTE_PROTOCOL');
+    return {...reply,index,pixels:bytes.slice(12)};
+  }
+  if(bytes.length!==12||bytes[10]!==0||bytes[11]!==0)throw error('REMOTE_PROTOCOL');
+  return reply;
 }
 export function createRemoteClient(options={}){
   const environment=options.environment||globalThis,report=options.onState||(()=>{});
@@ -59,7 +70,13 @@ export function createRemoteClient(options={}){
     let reply;try{reply=parseRemoteReply(event.target.value);}catch{terminate(phase==='connecting'?'REMOTE_UNSUPPORTED':'REMOTE_PROTOCOL');return;}
     // Old duplicate receipts cannot acknowledge a newer operation.
     if(!pending||reply.sequence!==pending.sequence||reply.opcode!==pending.opcode)return;
-    if(pending.reply&&Object.keys(reply).some(key=>pending.reply[key]!==reply[key])){terminate('REMOTE_PROTOCOL');return;}
+    if(pending.reply){
+      const same=Object.keys(reply).every(key=>key==='pixels'
+        ? pending.reply.pixels?.length===reply.pixels.length && reply.pixels.every((byte,i)=>pending.reply.pixels[i]===byte)
+        : pending.reply[key]===reply[key]);
+      if(!same)terminate('REMOTE_PROTOCOL');
+      return;
+    }
     pending.reply=reply;finishPending();
   }
   function request(opcode,arg){
@@ -69,7 +86,7 @@ export function createRemoteClient(options={}){
     const payload=encodeRemoteRequest(opcode,sequence,arg);
     return new Promise((resolve,reject)=>{
       const item={sequence,opcode,resolve,reject,writeDone:false,reply:null,timer:null};pending=item;
-      item.timer=setTimeout(()=>terminate('REMOTE_TIMEOUT'),commandMs);
+      item.timer=setTimeout(()=>terminate(opcode===lcdOpcode?'REMOTE_PHOTO_TIMEOUT':'REMOTE_TIMEOUT'),commandMs);
       let write;
       try{
         if(tx.properties?.write&&typeof tx.writeValueWithResponse==='function')write=tx.writeValueWithResponse(payload);
@@ -127,6 +144,30 @@ export function createRemoteClient(options={}){
     catch(failure){if(current===generation&&['REMOTE_PROTOCOL','REMOTE_DISABLED','REMOTE_UNSUPPORTED'].includes(failure.code))terminate(failure.code);throw failure;}
     finally{if(current===generation)state(handoff?'handoff':'ready');}
   }
+  async function captureDisplay(){
+    if(phase!=='ready')throw error('REMOTE_BUSY');
+    if(!(caps&REMOTE_LCD_CAPABILITY))throw error('REMOTE_UNSUPPORTED');
+    const current=generation;
+    const pixels=new Uint8Array(lcdBytes);
+    state('command');
+    const deadline=setTimeout(()=>{if(current===generation)terminate('REMOTE_PHOTO_TIMEOUT');},options.photoMs??45000);
+    try{
+      // Offset zero freezes a fresh frame on the LCD device. Every chunk is
+      // requested once; an older device is never probed, even on timeout.
+      for(let offset=0;offset<pixels.length;){
+        const index=offset/8;
+        const reply=accept(await request(lcdOpcode,index),lcdOpcode);
+        if(current!==generation)throw error('REMOTE_DISCONNECTED');
+        if(reply.index!==index || !(reply.capabilities&REMOTE_LCD_CAPABILITY))throw error('REMOTE_PROTOCOL');
+        pixels.set(reply.pixels,offset);
+        offset+=reply.pixels.length;
+      }
+      return pixels;
+    }catch(failure){
+      if(current===generation&&['REMOTE_PROTOCOL','REMOTE_DISABLED','REMOTE_UNSUPPORTED'].includes(failure.code))terminate(failure.code);
+      throw failure;
+    }finally{clearTimeout(deadline);if(current===generation)state('ready');}
+  }
   // Synchronous ownership transfer: the new owner attaches its listeners before
   // any queued browser event can run. Keep notifications and GATT alive. The
   // receiver returns true only after taking ownership; failures close this link.
@@ -149,5 +190,5 @@ export function createRemoteClient(options={}){
       Promise.resolve().then(()=>{if(ownsGatt(old.device,old.owner))return old.rx?.stopNotifications?.();}).then(finish,finish);
     });closing=task;return task;
   }
-  return Object.freeze({connect,command,disconnect,releaseFileConnection,snapshot:()=>({phase,capabilities:caps})});
+  return Object.freeze({connect,command,disconnect,releaseFileConnection,captureDisplay,snapshot:()=>({phase,capabilities:caps})});
 }

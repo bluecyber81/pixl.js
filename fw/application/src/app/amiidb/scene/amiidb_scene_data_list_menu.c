@@ -17,9 +17,24 @@
 #include "i18n/language.h"
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
+#include <stdio.h>
+
+static void amiidb_slot_delete_confirmed(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_amiidb_t *app = box->user_data;
+    if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        if (app->cur_slot_index < settings_get_data()->amiidb_data_slot_num &&
+            amiidb_api_slot_remove(app->cur_slot_index) == VFS_OK) {
+            mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+            return;
+        }
+        mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
+    }
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
+}
 
 static void amiidb_scene_data_list_menu_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                     mui_list_item_t *p_item) {
+    if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
     app_amiidb_t *app = p_list_view->user_data;
     switch (p_item->icon) {
     case ICON_EXIT:
@@ -27,8 +42,14 @@ static void amiidb_scene_data_list_menu_on_selected(mui_list_view_event_t event,
         break;
 
     case ICON_DELETE: {
-        amiidb_api_slot_remove(app->cur_slot_index);
-        mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+        char target[16];
+        snprintf(target, sizeof(target), "Slot %02u?", (unsigned)app->cur_slot_index + 1);
+        mui_msg_box_set_header(app->p_msg_box, _T(APP_AMIIDB_SLOT_DELETE));
+        mui_msg_box_set_message(app->p_msg_box, target);
+        mui_msg_box_set_btn_text(app->p_msg_box, _T(CONFIRM), NULL, _T(CANCEL));
+        mui_msg_box_set_btn_focus(app->p_msg_box, MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+        mui_msg_box_set_event_cb(app->p_msg_box, amiidb_slot_delete_confirmed);
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_MSG_BOX);
     } break;
     }
 }

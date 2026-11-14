@@ -17,6 +17,17 @@ class InputSlotTests(native.NativeTests):
     test_real_ui_generation_never_emulates_failed_or_unsupported_tag = None
     test_real_large_category_navigation_matches_visible_100_items = None
 
+    def test_slot_menu_requires_a_visible_slot_and_explicit_confirmation(self):
+        from test_app_startup_allocations import compile_run, function
+        scenes = SRC / 'app/amiidb/scene'
+        slot_list = (scenes / 'amiidb_scene_data_list.c').read_text()
+        menu = (scenes / 'amiidb_scene_data_list_menu.c').read_text()
+        callbacks = [function(slot_list, 'amiidb_scene_data_list_list_view_on_selected'),
+                     function(menu, 'amiidb_slot_delete_confirmed'),
+                     function(menu, 'amiidb_scene_data_list_menu_on_selected')]
+        fixture = Path(__file__).with_name('amiidb_slot_delete_ui.c.in').read_text()
+        compile_run(fixture.replace('/* CALLBACKS */', '\n'.join(callbacks)))
+
     def test_real_keyboard_byte_limits_empty_delete_utf8_and_row_switch(self):
         source = (SRC / 'mui/view/mui_text_input.c').read_text()
         keyboard = source[source.index('#define LIST_ITEM_HEIGHT'):source.index('static void mui_text_input_on_draw')]
@@ -111,13 +122,17 @@ int main(void){app_amiidb_t app={0};mui_text_input_t input={&app,""};
 #include "vfs_persist.h"
 #include "settings.h"
 static int recovery_error,stat_error,short_read,write_error,read_calls,writes,stat_calls,metadata_calls;
+static int remove_error, removes;
+static int remove_file(const char *path) {
+ assert(strcmp(path,"/amiibo/data/09.bin")==0); removes++; return remove_error;
+}
 static size_t file_size=540;static vfs_meta_t fake_meta;
 static settings_data_t settings={.amiidb_data_slot_num=50};
 settings_data_t *settings_get_data(void){return &settings;}
 static int stat_file(const char*p,vfs_obj_t*o){assert(strncmp(p,"/amiibo/data/",13)==0);stat_calls++;o->type=VFS_TYPE_REG;o->size=file_size;memset(o->meta,0,128);return stat_error;}
 static int read_data(const char*p,void*b,size_t n){(void)p;assert(n==file_size && n<=2048);read_calls++;memset(b,0x61,n);return short_read?(int)n-1:(int)n;}
 static int update_meta(const char*p,void*b,size_t n){(void)p;(void)b;(void)n;metadata_calls++;return 0;}
-static vfs_driver_t driver={.stat_file=stat_file,.read_file_data=read_data,.update_file_meta=update_meta};
+static vfs_driver_t driver={.stat_file=stat_file,.read_file_data=read_data,.update_file_meta=update_meta,.remove_file=remove_file};
 vfs_driver_t *vfs_get_driver(vfs_drive_t d){assert(d==VFS_DRIVE_EXT);return &driver;}
 int32_t vfs_persist_recover(vfs_driver_t*d){assert(d==&driver);return recovery_error;}
 int32_t vfs_persist_write(vfs_driver_t*d,const char*p,const void*b,size_t n){
@@ -130,11 +145,18 @@ int32_t vfs_persist_write_meta(vfs_driver_t*d,const char*p,const void*b,size_t n
  writes++;return write_error?write_error:(int32_t)n;
 }
 void vfs_meta_decode(uint8_t*b,uint8_t n,vfs_meta_t*m){(void)b;assert(n==128);*m=fake_meta;}
+bool vfs_meta_set_readonly(uint8_t*b,uint8_t n,bool value){(void)b;(void)n;(void)value;return true;}
 void vfs_meta_encode(uint8_t*b,uint8_t n,vfs_meta_t*m){assert(n==128 && m->has_amiibo_id && m->has_flags);memset(b,0xa6,n);}
 bool is_valid_amiibo_v3(uint32_t h,uint32_t t){return h==1 && t==3;}
+#include "vfs_set_readonly.c"
 #include "amiidb_api_slot.c"
 int main(void){
  ntag_t tag;memset(&tag,0,sizeof(tag));
+ assert(amiidb_api_slot_remove(50)==VFS_ERR_FAIL && removes==0);
+ recovery_error=VFS_ERR_CRPT;assert(amiidb_api_slot_remove(9)==VFS_ERR_CRPT && removes==0);
+ recovery_error=VFS_OK;remove_error=VFS_ERR_FAIL;assert(amiidb_api_slot_remove(9)==VFS_ERR_FAIL && removes==1);
+ remove_error=VFS_ERR_NOOBJ;assert(amiidb_api_slot_remove(9)==VFS_OK && removes==2);
+ remove_error=VFS_OK;assert(amiidb_api_slot_remove(9)==VFS_OK && removes==3);
  recovery_error=VFS_ERR_CRPT;assert(amiidb_api_slot_read(0,&tag)==VFS_ERR_CRPT && stat_calls==0 && read_calls==0);
  assert(amiidb_api_slot_write(0,&tag)==VFS_ERR_CRPT && writes==0);recovery_error=0;
  stat_error=VFS_ERR_NOOBJ;assert(amiidb_api_slot_read(0,&tag)==VFS_ERR_NOOBJ && read_calls==0);

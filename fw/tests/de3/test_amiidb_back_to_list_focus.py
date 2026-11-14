@@ -26,6 +26,18 @@ class BackToListFocus(unittest.TestCase):
                      function(slots, "amiidb_scene_data_list_reload"),
                      function(slots, "amiidb_scene_data_list_on_enter"),
                      function(games, "amiidb_scene_game_list_on_enter")]
+        if "amiidb_fav_page_focus(" in menu:
+            favorites = (SRC / "app/amiidb/scene/amiidb_scene_fav_list.c").read_text(encoding="utf-8")
+            # Keep the real new dependency, including identity comparison and
+            # missing-target scan. Full paged loading is exercised separately
+            # by the coupled favorite-return C harness and paging regression.
+            functions.extend(function(favorites, name) for name in (
+                "fav_record_compare", "fav_key_compare", "fav_focus_visible"))
+            seek_type = re.search(r"typedef struct \{[^}]*\} fav_seek_context_t;", favorites)
+            self.assertIsNotNone(seek_type)
+            functions.append(seek_type[0])
+            functions.extend(function(favorites, name) for name in (
+                "fav_seek_read_cb", "amiidb_fav_page_reset", "amiidb_fav_page_focus"))
         if "amiidb_scene_detail_back_to_list(" in menu:
             functions.append(function(menu, "amiidb_scene_detail_back_to_list"))
         functions.append("static void back(app_amiidb_t *app) {" + action[1] + "}")

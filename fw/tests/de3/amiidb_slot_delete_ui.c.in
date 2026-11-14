@@ -1,0 +1,77 @@
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+enum { ICON_EXIT, ICON_FILE, ICON_AMIIBO, ICON_DELETE, MAX_SLOT_COUNT=50 };
+enum { MUI_LIST_VIEW_EVENT_SELECTED, MUI_LIST_VIEW_EVENT_LONG_SELECTED };
+enum { MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_RIGHT };
+enum { AMIIDB_SCENE_MAIN, AMIIDB_SCENE_DATA_LIST, AMIIDB_SCENE_DATA_LIST_MENU, AMIIDB_SCENE_AMIIBO_DETAIL };
+enum { AMIIDB_VIEW_ID_LIST, AMIIDB_VIEW_ID_MSG_BOX, VFS_OK=0 };
+typedef unsigned mui_list_view_event_t, mui_msg_box_event_t, db_amiibo_t;
+typedef struct { unsigned icon; void *user_data; } mui_list_item_t;
+typedef struct { unsigned focus; void *user_data; } mui_list_view_t;
+typedef struct { void *user_data; } mui_msg_box_t;
+typedef struct {
+    unsigned cur_slot_index, prev_scene_id;
+    const db_amiibo_t *cur_amiibo;
+    void *p_scene_dispatcher, *p_view_dispatcher, *p_toast_view;
+    mui_msg_box_t *p_msg_box;
+} app_amiidb_t;
+static struct {unsigned amiidb_data_slot_num;} settings;
+static unsigned next, previous, removes, deleted_slot, errors, view, focus;
+static int result;
+static char prompt[32];
+static void (*confirmed)(mui_msg_box_event_t, mui_msg_box_t *);
+#define settings_get_data() (&settings)
+#define mui_list_view_get_focus(list) ((list)->focus)
+#define mui_list_view_get_user_data(list) ((list)->user_data)
+#define _T(s) #s
+#define mui_scene_dispatcher_next_scene(d,id) (next=(id))
+#define mui_scene_dispatcher_previous_scene(d) (++previous)
+#define mui_view_dispatcher_switch_to_view(d,id) (view=(id))
+#define mui_toast_view_show(t,s) (++errors)
+#define mui_msg_box_set_header(b,h) ((void)0)
+#define mui_msg_box_set_btn_text(b,l,c,r) ((void)0)
+#define mui_msg_box_set_btn_focus(b,f) (focus=(f))
+#define mui_msg_box_set_event_cb(b,cb) (confirmed=(cb))
+#define mui_msg_box_set_message(b,s) snprintf(prompt,sizeof(prompt),"%s",(s))
+static int amiidb_api_slot_remove(unsigned slot) { removes++; deleted_slot=slot; return result; }
+/* CALLBACKS */
+
+int main(void) {
+    mui_msg_box_t box;
+    app_amiidb_t app={.p_msg_box=&box,.cur_slot_index=7};
+    box.user_data=&app;
+    mui_list_view_t list={.user_data=&app};
+    mui_list_item_t back={.icon=ICON_EXIT}, slot={.icon=ICON_FILE}, del={.icon=ICON_DELETE};
+    settings.amiidb_data_slot_num=10;
+    for (list.focus=0; list.focus<=10; list.focus+=10) {
+        amiidb_scene_data_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_LONG_SELECTED,&list,&back);
+        assert(next==0 && app.cur_slot_index==7);
+    }
+    list.focus=10;
+    amiidb_scene_data_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_LONG_SELECTED,&list,&slot);
+    assert(next==0 && app.cur_slot_index==7);
+    list.focus=9;
+    amiidb_scene_data_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_LONG_SELECTED,&list,&slot);
+    assert(next==AMIIDB_SCENE_DATA_LIST_MENU && app.cur_slot_index==9);
+    amiidb_scene_data_list_menu_on_selected(MUI_LIST_VIEW_EVENT_LONG_SELECTED,&list,&del);
+    assert(!confirmed && !removes);
+    amiidb_scene_data_list_menu_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&del);
+    assert(view==AMIIDB_VIEW_ID_MSG_BOX && confirmed && !strcmp(prompt,"Slot 10?"));
+    assert(focus==MUI_MSG_BOX_EVENT_SELECT_RIGHT && !removes);
+    confirmed(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+    assert(view==AMIIDB_VIEW_ID_LIST && !removes && !previous);
+    result=-1;
+    confirmed(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+    assert(removes==1 && deleted_slot==9 && errors==1 && !previous && view==AMIIDB_VIEW_ID_LIST);
+    settings.amiidb_data_slot_num=5;
+    confirmed(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+    assert(removes==1 && errors==2 && !previous);
+    settings.amiidb_data_slot_num=10;
+    result=VFS_OK;
+    confirmed(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+    assert(removes==2 && deleted_slot==9 && previous==1);
+    puts("PASS slot selection, confirmation, retry and navigation");
+}

@@ -231,6 +231,7 @@ SRC_FILES += \
   $(PROJ_DIR)/mod/cwalk2.c \
   $(PROJ_DIR)/mod/vfs/vfs.c \
   $(PROJ_DIR)/mod/vfs/vfs_persist.c \
+  $(PROJ_DIR)/mod/vfs/vfs_set_readonly.c \
   $(PROJ_DIR)/mod/vfs/vfs_meta.c \
   $(PROJ_DIR)/mod/vfs/vfs_driver_spiffs.c \
   $(PROJ_DIR)/mod/vfs/vfs_spiffs_diag.c \

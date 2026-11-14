@@ -40,6 +40,26 @@ static df_frame_t open_request(bool atomic,bool wide){
 }
 static unsigned exact_state(void);
 static void protocol(void){
+    /* Read modes and legal writer modifiers match the PackedFS adapter. */
+    for (uint32_t flags = 0; flags < 32; ++flags) {
+        bool expected = flags == 0 || flags == VFS_MODE_READONLY || (flags & VFS_MODE_WRITEONLY);
+        REQUIRE(vfs_packed_open_flags_valid(flags) == expected);
+    }
+    REQUIRE(!vfs_packed_open_flags_valid(1u << 16));
+    for (unsigned wide = 0; wide < 2; ++wide) {
+        reset_baseline();
+        df_frame_t first = open_request(false, false);
+        first.data[first.length - 1] = VFS_MODE_READONLY;
+        send_request(&first);
+        REQUIRE(answer.status == 0);
+        void *reader = file_chunk_state.vfs_fd.handle;
+        df_frame_t invalid = open_request(false, wide);
+        invalid.data[first.length - 1] = VFS_MODE_CREATE;
+        send_request(&invalid);
+        REQUIRE(answer.status == DF_STATUS_ERR && file_chunk_state.opened);
+        REQUIRE(file_chunk_state.vfs_fd.handle == reader);
+        df_proto_vfs_cleanup();
+    }
     for(unsigned variant=0;variant<3;variant++){
         reset_baseline();df_frame_t f=open_request(variant==2,variant==1);send_request(&f);REQUIRE(answer.status==0);
         df_frame_t write={.cmd=DF_PROTO_CMD_VFS_FILE_WRITE,.length=201};memcpy(write.data+1,new_data,200);send_request(&write);REQUIRE(answer.status==0);

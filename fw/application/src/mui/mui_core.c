@@ -116,8 +116,9 @@ static void mui_process_redraw(mui_t *p_mui, mui_event_t *p_event) {
         mui_canvas_set_frame(&p_mui->canvas, 0, 0, sw, sh);
         mui_canvas_set_draw_color(&p_mui->canvas, 1);
         mui_canvas_set_font(&p_mui->canvas, u8g2_font_wqy12_t_gb2312a);
-        mui_canvas_draw_utf8(&p_mui->canvas, 0, 18, "RAM voll");
-        mui_canvas_draw_utf8(&p_mui->canvas, 0, 36, "Mitte: Hauptmenue");
+        bool german = getLanguage() == LANGUAGE_DE_DE;
+        mui_canvas_draw_utf8(&p_mui->canvas, 0, 18, german ? "RAM voll" : "Out of RAM");
+        mui_canvas_draw_utf8(&p_mui->canvas, 0, 36, german ? "Mitte: Hauptmenue" : "Center: main menu");
         mui_canvas_flush(&p_mui->canvas);
         return;
     }

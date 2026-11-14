@@ -340,11 +340,7 @@ static int32_t packed_open_file(const char *path, vfs_file_t *fd,
   fd->handle = NULL;
   if (!pfs_mounted(store))
     return VFS_ERR_NODEV;
-  if (flags & ~(VFS_MODE_APPEND | VFS_MODE_TRUNC | VFS_MODE_CREATE |
-                VFS_MODE_READONLY | VFS_MODE_WRITEONLY))
-    return VFS_ERR_FAIL;
-  if ((flags & (VFS_MODE_APPEND | VFS_MODE_TRUNC | VFS_MODE_CREATE)) &&
-      !(flags & VFS_MODE_WRITEONLY))
+  if (!vfs_packed_open_flags_valid(flags))
     return VFS_ERR_FAIL;
   int access = flags & VFS_MODE_WRITEONLY
                    ? (flags & VFS_MODE_READONLY ? LFS_O_RDWR : LFS_O_WRONLY)

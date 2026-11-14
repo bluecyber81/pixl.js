@@ -1,0 +1,40 @@
+{
+  "version": "3.50.0",
+  "date": "2026-11-14",
+  "firmware": "2.22.0-DE3.74",
+  "applicationCounter": 647,
+  "scope": "DE remote LCD capture, both web deployments, compatibility and Android OTA package selection",
+  "builds": {
+    "rootChecksPassed": 22,
+    "pagesChecksPassed": 22
+  },
+  "webTests": {
+    "passed": 1500,
+    "skipped": 0
+  },
+  "remote": {
+    "image": "128 x 64 monochrome, one frozen 1024-byte frame on explicit request",
+    "protocol": "../../web/public/remote-lcd-v1.json",
+    "crossImplementationVectors": "../../web/tests/fixtures/remote-lcd-de374-vectors.txt",
+    "transcriptSha256": "d7a7b183cbdd2f1a258e93b46909c72ad2f5dbeb7e64b1852f182414760511aa",
+    "checks": [
+      "Firmware-generated replies consumed by production JS; reconstructed bytes match expected pixels",
+      "Minimum and negotiated GATT sizes, matching sequences, bounds, cancellation, disconnect and retries",
+      "Chrome DE and EN with simulated Bluetooth; preview, PNG download, rotation, failed refresh, new snapshot and keypad navigation",
+      "Legacy DE firmware can navigate without receiving a display command",
+      "Explicit status receipt and DE/PixLink file handoffs after cancelled connections"
+    ]
+  },
+  "dfu": {
+    "catalogueAndBrowserChecks": 36,
+    "stableDefault": "DE3.65 / 637",
+    "applicationOnly": true,
+    "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+    "firmwareEvidence": "DE3_74.json",
+    "storageEvidence": "DE3_74_PFS.json"
+  },
+  "limits": [
+    "Radio and physical LCD comparison on App647 are pending.",
+    "DFU transfer and interruption on a real Android phone have not been observed for this build."
+  ]
+}

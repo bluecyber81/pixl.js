@@ -72,7 +72,8 @@ class SlotPersistenceTests(unittest.TestCase):
         }
         bool is_valid_amiibo_v3(uint32_t h,uint32_t t){return h==1 && t==3;}
         #include "vfs_meta.c"
-        #include "amiidb_api_slot.c"
+        #include "vfs_set_readonly.c"
+#include "amiidb_api_slot.c"
         typedef enum {NTAG_EVENT_TYPE_WRITTEN,NTAG_EVENT_TYPE_READ} ntag_event_type_t;
         typedef struct {ntag_t ntag;} app_amiidb_t;
         static unsigned m_amiibo_gen_delay_timer,m_generate_generation;

@@ -10,12 +10,20 @@ import {REMOTE_UUIDS} from '../src/lib/remote-control.js';
 function installPeripheral(uuids) {
   const receipts = [], rx = new EventTarget(), tx = {properties:{write:true}};
   const device = new EventTarget();
-  window.testRemote = {receipts, delayReply:false, finish:null};
+  window.testRemote = {receipts, caps:15, photoStatus:0, delayReply:false, finish:null};
   rx.startNotifications = rx.stopNotifications = async () => rx;
   tx.writeValueWithResponse = async ([p,x,ver,op,lo,hi,arg]) => {
     receipts.push([op,arg]);
     const ack = () => {
-      rx.value = new DataView(Uint8Array.of(p,x,ver,128|op,lo,hi,0,1,15,0,0,0).buffer);
+      const photoStatus=op===5?window.testRemote.photoStatus:0;
+      const lcd=op===5 && !photoStatus, length=lcd?Math.min(128,1024-arg*8):0;
+      const bytes=new Uint8Array(12+length);
+      bytes.set([p,x,ver,128|op,lo,hi,photoStatus,1,window.testRemote.caps,0,lcd?arg:0,length]);
+      for(let i=0;i<length;i++){
+        const offset=arg*8+i;
+        bytes[12+i]=(offset*37+Math.floor(offset/128))&255; // Same synthetic test frame as the C wire vectors.
+      }
+      rx.value = new DataView(bytes.buffer);
       rx.dispatchEvent(new Event('characteristicvaluechanged'));
     };
     if (window.testRemote.delayReply) window.testRemote.finish = ack;
@@ -65,6 +73,8 @@ try {
       await page.keyboard.press('ArrowRight'); // No global shortcut.
       await page.keyboard.press('Tab');
       const status = section.getByRole('button',{name:locale==='de-DE'?'Verbindung prüfen':'Check connection'});
+      const photo=section.getByRole('button',{name:locale==='de-DE'?'Displaybild aktualisieren':'Refresh screen'});
+      assert.equal(await photo.count(),0);
       assert(await status.evaluate(el=>el===document.activeElement));
       await page.evaluate(()=>{window.testRemote.delayReply=true;});
       await page.keyboard.press('Enter');
@@ -110,7 +120,41 @@ try {
       assert.equal(await status.count(),0);
       assert.equal(await section.getByText(/Die Fernbedienung hat um|The remote responded at/).count(),0);
       assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts.slice(7)),[[0,0],[0,0]]);
-      console.log(locale+' passed: manual STATUS, local time and timeout, focus, named device acknowledgement, held key, busy state, native buttons, disconnect');
+      await page.evaluate(()=>{Object.assign(window.testRemote,{caps:63,delayReply:false,finish:null});});
+      await section.getByRole('button',{name:locale==='de-DE'?'Fernbedienung verbinden':'Connect remote'}).click();
+      const photoBox=section.locator('.display-photo');
+      await photo.click();
+      const image=photoBox.getByRole('img');
+      await image.waitFor();
+      const readCorners=()=>image.evaluate(async el=>{
+        await el.decode();
+        const canvas=document.createElement('canvas');canvas.width=128;canvas.height=64;
+        const ctx=canvas.getContext('2d');ctx.drawImage(el,0,0);
+        return [el.naturalWidth,el.naturalHeight,ctx.getImageData(0,0,1,1).data[0],ctx.getImageData(127,63,1,1).data[0]];
+      });
+      assert.deepEqual(await readCorners(),[128,64,255,0]);
+      await page.setViewportSize({width:375,height:800});
+      const photoBounds=await image.boundingBox(),sectionBounds=await section.boundingBox();
+      assert(photoBounds.x>=sectionBounds.x && photoBounds.x+photoBounds.width<=sectionBounds.x+sectionBounds.width+1);
+      assert((await photo.boundingBox()).height>=44);
+      if(locale==='de-DE' && process.env.REMOTE_SCREENSHOT_OUTPUT)await section.screenshot({path:process.env.REMOTE_SCREENSHOT_OUTPUT});
+      const rotate=photoBox.getByRole('button',{name:locale==='de-DE'?'Um 180° drehen':'Rotate 180°'});
+      await rotate.click();assert.deepEqual(await readCorners(),[128,64,0,255]);
+      const [download]=await Promise.all([page.waitForEvent('download'),photoBox.getByRole('link').click()]);
+      assert.equal(download.suggestedFilename(),'Allmiibo-LCD.png');
+      await pad.focus();await page.keyboard.press('ArrowRight');
+      assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts.slice(9)),[
+        [0,0],...[0,16,32,48,64,80,96,112].map(offset=>[5,offset]),[2,2]
+      ]);
+      await page.evaluate(()=>{window.testRemote.photoStatus=1;});
+      await photo.click();
+      await photoBox.getByRole('status').filter({hasText:locale==='de-DE'?'gerade kein Displayfoto':'could not provide a screenshot'}).waitFor();
+      assert.equal(await image.count(),0);assert.equal(await photoBox.locator('time').count(),0);
+      assert.equal(await photoBox.getByRole('link').count(),0);
+      await page.evaluate(()=>{window.testRemote.photoStatus=0;});
+      await photo.click();await image.waitFor();assert.deepEqual(await readCorners(),[128,64,255,0]);
+      await disconnect.click();assert.equal(await section.getByRole('img').count(),0);
+      console.log(locale+' passed: STATUS, timeout, keyboard, legacy fallback, on-demand remote LCD photo, pixel orientation, rotation, PNG download and disconnect');
     } finally {await page.context().close();}
   }
 } finally {

@@ -3,7 +3,9 @@
 static uint16_t sequence(const uint8_t *b) { return (uint16_t)b[4] | (uint16_t)b[5] << 8; }
 static void response(ble_remote_protocol_t *p, uint8_t status, uint8_t state) {
     const uint8_t bytes[REMOTE_REPLY_SIZE] = {80,88,1,(uint8_t)(128u|p->request[3]),
-        p->request[4],p->request[5],status,state,31,0,0,0};
+        p->request[4],p->request[5],status,state,REMOTE_CAPABILITIES,0,
+        (uint8_t)(p->request[3] == REMOTE_LCD_READ && status == REMOTE_DONE ? p->request[6] : 0),
+        (uint8_t)(p->request[3] == REMOTE_LCD_READ && status == REMOTE_DONE ? p->reply[11] : 0)};
     memcpy(p->reply, bytes, sizeof(bytes)); p->replying = true;
 }
 void ble_remote_protocol_session(ble_remote_protocol_t *p, uint32_t generation, bool active) {
@@ -40,9 +42,10 @@ void ble_remote_protocol_poll(ble_remote_protocol_t *p, uint32_t generation, uin
         uint8_t op = p->request[3], arg = p->request[6], result;
         bool consumes = seq && seq == p->next_sequence;
         if (!consumes) result = REMOTE_SEQUENCE;
-        else if (p->request[7] || (op != REMOTE_TAP && arg) || (op == REMOTE_TAP && arg > 2))
+        else if (p->request[7] || (op != REMOTE_TAP && op != REMOTE_LCD_READ && arg) ||
+                 (op == REMOTE_TAP && arg > 2) || (op == REMOTE_LCD_READ && arg > 127))
             result = REMOTE_INVALID;
-        else if (op > REMOTE_OPEN_FILE_LINK || (op != REMOTE_STATUS && !p->handshake)) result = REMOTE_UNSUPPORTED;
+        else if (op > REMOTE_LCD_READ || (op == REMOTE_LCD_READ && !(REMOTE_CAPABILITIES & 32u)) || (op != REMOTE_STATUS && !p->handshake)) result = REMOTE_UNSUPPORTED;
         else if (op != REMOTE_STATUS && p->local_generation != local_generation) result = REMOTE_BUSY;
         else result = execute(context, op, arg, p->local_generation);
         /* UI callbacks may shut down/reinitialize the session synchronously. */
@@ -59,7 +62,7 @@ void ble_remote_protocol_poll(ble_remote_protocol_t *p, uint32_t generation, uin
         }
     }
     if (p->replying) {
-        int result = send(context, p->reply, REMOTE_REPLY_SIZE);
+        int result = send(context, p->reply, REMOTE_REPLY_SIZE + p->reply[11]);
         if (result == 0) {
             p->replying = false;
             if (p->action_reply && sent) sent(context, p->request[3], p->reply[6]);

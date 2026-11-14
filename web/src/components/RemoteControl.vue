@@ -27,9 +27,10 @@
       <button type="button" @click="press('right')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.right"><span aria-hidden="true">→</span><strong>{{ text.right }}</strong></button>
     </div>
     <p v-if="keypadActive" id="remote-keyboard-hint" class="remote-limit">
-      {{ text.keyboard }}<template v-if="capabilities & 2"> {{ text.keyboardBack }}</template>
+      {{ text.keyboard }}{{ capabilities & 2 ? ' ' + text.keyboardBack : '' }}
     </p>
     <button type="button" class="remote-back" @click="press('back')" :disabled="!ready || !(capabilities & 2)">{{ text.back }}</button>
+    <DisplayPhoto v-if="keypadActive" class="remote-photo" remote :remote-supported="photoSupported" :connected="keypadActive" :blocked="!ready" :locale="locale" :read-photo="captureDisplay"/>
     <button type="button" class="remote-files" @click="press('files')" :disabled="!ready">{{ text.files }}</button>
     <p v-if="notice" role="status" aria-live="polite">{{ notice==='status' ? statusReceipt : text.receipts[notice] || text[notice] }}</p>
     <details class="remote-help" :open="setupOpen" @toggle="setupOpen = $event.target.open">
@@ -41,16 +42,18 @@
   </section>
 </template>
 <script>
-import { createRemoteClient, remoteAvailability } from '../lib/remote-control.js';
+import { createRemoteClient, remoteAvailability, REMOTE_LCD_CAPABILITY } from '../lib/remote-control.js';
 import PixLinkRemote from './PixLinkRemote.vue';
+import DisplayPhoto from './DisplayPhoto.vue';
 import { remoteText } from '../lib/remote-text.js';
 const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'center', Escape:'back'});
 export default {
-  components:{PixLinkRemote},
+  components:{PixLinkRemote,DisplayPhoto},
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
   data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',checkedAt:null,setupOpen:false,unavailable:remoteAvailability()};},
   computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
     keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');},
+    photoSupported(){return !!(this.capabilities & REMOTE_LCD_CAPABILITY);},
     statusReceipt(){
       if(this.checkedAt===null)return '';
       const time=new Intl.DateTimeFormat(this.locale==='de_DE'?'de-DE':'en-US',{timeStyle:'medium'}).format(this.checkedAt);
@@ -73,6 +76,10 @@ export default {
   beforeUnmount(){this._remoteMounted=false;++this._remoteUiGeneration;this._remoteClient.disconnect();this.$emit('active',false);},
   watch:{blocked(value){if(value&&this.phase!=='disconnected')this.disconnectRemote();}},
   methods:{
+    captureDisplay(){
+      this.error='';this.notice='';this.checkedAt=null;
+      return this._remoteClient.captureDisplay();
+    },
     pixLinkActive(value){this.pixActive=value;this.$emit('active',value);},
     preventRepeat(event){
       if(event.repeat && event.target?.tagName === 'BUTTON' && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
@@ -137,6 +144,11 @@ button:disabled,button[aria-disabled=true]{opacity:.5;cursor:default;}button:foc
 .remote-pad button{min-height:92px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;touch-action:manipulation;}
 .remote-pad span{font-size:1.8rem;line-height:1;}.remote-pad strong{font-size:.87rem;font-weight:600;}
 .remote-files{width:100%;margin-top:10px;}.remote-back{width:100%;margin-top:10px;}.remote-pad button:not(:disabled):active{background:#dcebee;}
+.remote-photo :deep(button),.remote-photo :deep(a){display:inline-flex;align-items:center;min-height:44px;padding:8px 12px;box-sizing:border-box;border-radius:8px;color:inherit;font:inherit;}
+.remote-photo :deep(button){border:1px solid #8aafb7;background:#fff;cursor:pointer;}
+.remote-photo :deep(button:disabled){opacity:.5;cursor:default;}
+.remote-photo :deep(button:focus-visible),.remote-photo :deep(a:focus-visible){outline:3px solid #388294;outline-offset:3px;}
+.remote-photo :deep(img){box-sizing:border-box;}
 .remote-help{margin-top:16px;border-top:1px solid #d6e4e7;padding-top:10px;}.remote-help summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-size:.85rem;font-weight:600;}.remote-help summary:focus-visible{outline:3px solid #388294;outline-offset:3px;}
 @media(max-width:480px){.remote-control{padding:12px;}.remote-pad{gap:7px;}.remote-pad button{padding:8px 5px;}.remote-pad strong{font-size:.76rem;}.remote-connection>button{width:100%;}}
 </style>

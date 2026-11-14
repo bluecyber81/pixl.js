@@ -19,7 +19,7 @@ typedef struct {list_array_t items[1];void *user_data;} mui_list_view_t;
 typedef struct {unsigned focus,max_ntags;} detail_t;
 typedef struct {string_t current_folder,current_file;char browser_anchor[48];uint16_t browser_anchor_icon;int8_t browser_direction;unsigned current_focus_index;
  vfs_drive_t current_drive;mui_list_view_t *p_list_view;detail_t *p_amiibo_detail_view;
- void *p_view_dispatcher,*p_scene_dispatcher,*p_toast_view;bool reload_amiibo_files;} app_amiibo_t;
+ void *p_view_dispatcher,*p_scene_dispatcher,*p_toast_view;bool reload_amiibo_files, focus_detail_file;} app_amiibo_t;
 typedef struct {void *user_data;} mui_msg_box_t;
 typedef int mui_msg_box_event_t;
 typedef int mui_list_view_event_t;

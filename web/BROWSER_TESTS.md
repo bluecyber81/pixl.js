@@ -1,5 +1,9 @@
 # Browserprüfung des Produktionsbuilds
 
+## LCD-Foto in der Fernbedienung ab 3.50.0
+
+Im Ordner `web` prüft `node scripts/verify-remote-keyboard-browser.mjs dist-pages /pixl.js/` den gebauten Dateimanager in Chrome auf Deutsch und Englisch. Die nachgebildete Gegenstelle liefert ein 128 × 64 Pixel großes Testbild. Geprüft werden Bildorientierung, zweite Aufnahme, PNG-Download, Tastatur und die Bedienung mit älterer Firmware. Für den Vergleich mit der tatsächlichen Geräteanzeige die BLE-Fernbedienung am wachen Gerät aktivieren, `Pixl.Remote` verbinden, einmal navigieren und „Displaybild aktualisieren“ wählen.
+
 ## Ordnervergleich, PixLink und iPhone ab 3.49.0
 
 Nach `npm run build:pages` lassen sich die folgenden Prüfungen im Ordner `web` wiederholen. Die ersten beiden verwenden Chrome mit einer nachgebildeten Bluetooth-Gegenstelle. Der letzte Befehl benötigt den zur Playwright-Version passenden WebKit-Browser und prüft den Katalog mit iPhone-Bildschirmgröße in Deutsch und Englisch.
