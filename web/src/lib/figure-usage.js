@@ -1,4 +1,7 @@
 import { figureId } from './figure-info.js';
+import { gameGuides } from '../data/game-guides.js';
+
+const airRidersGuide = gameGuides.find(guide => guide.id === 'kirby-air-riders');
 
 // Corrections for the four affected associations in the signed App644 catalogue.
 // The source export remains available byte-for-byte for firmware verification.
@@ -40,7 +43,9 @@ export function figureUsage(id, data, locale = 'de_DE') {
     const label = group.labelPath.join(' › ');
     const attribution = { groupId: group.id, label, sourceUrl: association.sourceUrl || `${linkSource.referenceUrl}#L${association.sourceLine}` };
     if (association.sourceUrl) {
-      return { ...attribution, officialAssociation: true, text: null, original: null, language: null, translated: false };
+      const guide = label === 'Kirby Air Riders' && airRidersGuide.ids.includes(normalized) ? airRidersGuide : null;
+      return { ...attribution, officialAssociation: true, text: guide?.[de ? 'de' : 'en'] ?? null,
+        original: null, language: guide ? (de ? 'de' : 'en') : null, translated: false };
     }
     const correction = nintendoUsage(normalized, label, de);
     if (correction) return {

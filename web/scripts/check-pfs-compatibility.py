@@ -57,7 +57,7 @@ for label,name in profiles.items():
     folder=WEB/'third-party'/name
     after_sources.update({name+'/'+n:sha(folder/n) for n in read(folder/'SOURCE_BINDING.json')['sourceFiles']})
 assert after_sources==sources
-report={'schema':1,'version':'3.48.3','passed':True,'deviceAccess':False,'syntheticDataOnly':True,
+report={'schema':1,'version':'3.48.4','passed':True,'deviceAccess':False,'syntheticDataOnly':True,
     'compiler':compiler,'format':'PFS1','layoutConstantsUnchanged':True,
     'engines':{k:v['engineSha256'] for k,v in identities.items()},'sourcesBefore':sources,'sourcesAfter':after_sources,
     'builds':builds,'cases':cases,'filesInitially':1131,'directoriesInitially':77,

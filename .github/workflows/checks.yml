@@ -38,6 +38,15 @@ jobs:
           python3 ../fw/scripts/amiibo_db_validate.py
           python3 ../fw/scripts/amiibo_usage_export.py --check
           python3 tests/test_figure_usage_export.py
+      - name: Compare game notes with their published wording
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          gh api --method GET -H 'Accept: application/vnd.github.raw+json' \
+            "repos/$GITHUB_REPOSITORY/contents/web/src/data/figure-usage.json" -f "ref=$BASE_SHA" > "$RUNNER_TEMP/published-game-notes.json"
+          python3 ../fw/scripts/amiibo_usage_export.py --check --reference "$RUNNER_TEMP/published-game-notes.json"
       - run: npm test
       - run: npm run build
       - run: npm run build:pages
@@ -95,6 +104,8 @@ jobs:
           python3 fw/tests/de3/test_packed_recovery_protocol.py
       - name: Bluetooth status lifecycle and LCD pixels
         run: python3 fw/tests/de3/test_ble_status_de357.py
+      - name: Kirby v3 rider and machine responses
+        run: python3 fw/tests/de3/test_kirby_v3_machines.py
       - name: Card slot storage failures, ordinary exits and controlled reset
         run: |
           python3 fw/tests/de3/test_chameleon_state_load.py

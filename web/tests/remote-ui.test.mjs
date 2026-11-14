@@ -31,13 +31,13 @@ test('manual connection alone enables buttons and emits an independent active lo
  const h=mount();try{await h.vm.connectRemote();await Vue.nextTick();assert.deepEqual(h.calls,['connect']);assert.deepEqual(h.active,[true,true]);assert.equal(h.button('Mitte').props.disabled,false);assert.match(text(h.root),/Fernbedienung bereit/);await h.vm.disconnectRemote();await Vue.nextTick();assert.equal(h.active.at(-1),false);assert(h.button('Mitte').props.disabled);}finally{h.app.unmount();}
 });
 test('one user tap sends one command and pending acknowledgement disables all new input',async()=>{
- const gate=defer(),h=mount({command:()=>gate.promise});try{await h.vm.connectRemote();const p=h.vm.press('center');await Vue.nextTick();assert(h.button('Mitte').props.disabled);await h.vm.press('left');assert.deepEqual(h.calls,['connect','center']);assert.match(text(h.root),/Warte auf Gerätebestätigung/);gate.resolve();await p;await Vue.nextTick();assert.match(text(h.root),/Befehl wurde vom Gerät bestätigt/);}finally{h.app.unmount();}
+ const gate=defer(),h=mount({command:()=>gate.promise});try{await h.vm.connectRemote();const p=h.vm.press('center');await Vue.nextTick();assert.equal(h.button('Mitte').props['aria-disabled'],true);await h.vm.press('left');assert.deepEqual(h.calls,['connect','center']);assert.match(text(h.root),/Warte auf Gerätebestätigung/);gate.resolve();await p;await Vue.nextTick();assert.match(text(h.root),/Tastendruck „Mitte“ bestätigt/);}finally{h.app.unmount();}
 });
 test('file handoff reports requested, disconnects remote, and requires a separate file-manager handshake',async()=>{
  const h=mount();try{await h.vm.connectRemote();await h.vm.press('files');await Vue.nextTick();assert.deepEqual(h.calls,['connect','files','disconnect']);assert.match(text(h.root),/Wechsel wurde angefordert/);assert.match(text(h.root),/erst nach dem Funkabbau/);assert.match(text(h.root),/Versionsabfrage bestätigt/);assert(h.button('Mitte').props.disabled);assert.equal(h.active.at(-1),false);}finally{h.app.unmount();}
 });
 test('timeout has explicit uncertainty and never reports success or retries',async()=>{
- const h=mount({command:async()=>{throw Object.assign(Error('timeout'),{code:'REMOTE_TIMEOUT'});}});try{await h.vm.connectRemote();await h.vm.press('center');await Vue.nextTick();assert.match(text(h.root),/kann bereits angekommen sein/);assert.doesNotMatch(text(h.root),/Befehl wurde vom Gerät bestätigt/);assert.deepEqual(h.calls,['connect','center']);}finally{h.app.unmount();}
+ const h=mount({command:async()=>{throw Object.assign(Error('timeout'),{code:'REMOTE_TIMEOUT'});}});try{await h.vm.connectRemote();await h.vm.press('center');await Vue.nextTick();assert.match(text(h.root),/kann bereits angekommen sein/);assert.doesNotMatch(text(h.root),/Tastendruck „Mitte“ bestätigt/);assert.deepEqual(h.calls,['connect','center']);}finally{h.app.unmount();}
 });
 test('a file-transfer lock arriving during remote use disconnects rather than sharing GATT',async()=>{
  const h=mount();try{await h.vm.connectRemote();h.props.blocked=true;await Vue.nextTick();assert.deepEqual(h.calls,['connect','disconnect']);assert(h.button('verbinden').props.disabled);}finally{h.app.unmount();}
@@ -60,7 +60,42 @@ test('the actual main file-connect method refuses a concurrent remote session',(
  assert.match(source,/:blocked="connected \|\| connecting \|\| disconnecting \|\| busy"/);
 });
 test('holding a keyboard button does not synthesize native repeat clicks',()=>{
- const h=mount();try{let prevented=0;h.vm.preventRepeat({repeat:true,target:{tagName:'BUTTON'},preventDefault:()=>prevented++});h.vm.preventRepeat({repeat:false,target:{tagName:'BUTTON'},preventDefault:()=>prevented++});h.vm.preventRepeat({repeat:true,target:{tagName:'INPUT'},preventDefault:()=>prevented++});assert.equal(prevented,1);}finally{h.app.unmount();}
+ const h=mount();try{
+  let prevented=0;
+  const keydown=(key,repeat,tagName)=>h.vm.preventRepeat({key,repeat,target:{tagName},preventDefault:()=>prevented++});
+  keydown('Enter',true,'BUTTON');keydown(' ',true,'BUTTON');keydown('Enter',false,'BUTTON');
+  keydown('Tab',true,'BUTTON');keydown('Enter',true,'INPUT');assert.equal(prevented,2);
+ }finally{h.app.unmount();}
+});
+
+test('focused pad maps shortcuts to acknowledged taps with no repeats or queued keys',async()=>{
+ const gate=defer(),h=mount({locale:'en_US',command:name=>name==='right'?gate.promise:undefined});
+ try{
+  const pad=flat(h.root).find(n=>n.props.class==='remote-pad');
+  const key=(key,options={})=>{const e={key,target:pad,currentTarget:pad,preventDefault(){this.defaultPrevented=true;},...options};return [pad.props.onKeydown(e),e];};
+  assert.equal(pad.props.tabindex,-1);assert(!key('ArrowRight')[1].defaultPrevented);
+  await h.vm.connectRemote();await Vue.nextTick();assert.equal(pad.props.tabindex,0);
+  const [right,e]=key('ArrowRight');assert(e.defaultPrevented);
+  assert(key('ArrowLeft')[1].defaultPrevented);gate.resolve();await right;await Vue.nextTick();
+  assert.match(text(h.root),/device acknowledged the Right press/);
+  assert(key('ArrowRight',{repeat:true})[1].defaultPrevented);
+  for(const options of [{ctrlKey:true},{altKey:true},{shiftKey:true},{metaKey:true},{isComposing:true},{defaultPrevented:true}]) key('ArrowLeft',options);
+  assert(!key('Enter',{target:h.button('Left')})[1].defaultPrevented);
+  assert(!key('Tab')[1].defaultPrevented);
+  await key('Enter')[0];await key('Escape')[0];assert.deepEqual(h.calls,['connect','right','center','back']);
+  assert.match(text(h.root),/device acknowledged Back/);
+  h.emit('disconnected','REMOTE_DISCONNECTED');await Vue.nextTick();assert.equal(pad.props.tabindex,-1);assert.equal(h.vm.notice,'');
+ }finally{h.app.unmount();}
+});
+
+test('pad offers Escape only for a remote with the long-back capability',async()=>{
+ const h=mount({caps:13});
+ try{await h.vm.connectRemote();await Vue.nextTick();
+  const pad=flat(h.root).find(n=>n.props.class==='remote-pad');
+  const e={key:'Escape',target:pad,currentTarget:pad,preventDefault(){throw Error('unsupported shortcut consumed');}};
+  pad.props.onKeydown(e);assert.deepEqual(h.calls,['connect']);assert.doesNotMatch(text(h.root),/Esc geht zurück/);
+  assert.doesNotMatch(pad.props['aria-keyshortcuts'],/Escape/);
+ }finally{h.app.unmount();}
 });
 
 test('setup help retains all limits but closes on connect and leaves controls before the help',async()=>{

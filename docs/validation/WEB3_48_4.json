@@ -1,0 +1,138 @@
+{
+  "version": "3.48.4",
+  "date": "2026-11-14",
+  "sourceBase": "89244b7d2f14430d0d6b3d82a935ce1459ff77a5",
+  "catalogueSourceChecks": {
+    "master": {
+      "sha": "855a0ff4308278de756bed01de1eca89936f456b",
+      "catalogue": 954,
+      "quality": {
+        "status": "reference"
+      },
+      "refReadWith": "GitHub CLI",
+      "directQuality": {
+        "status": "retained",
+        "missingNotes": 0,
+        "missingWriteFlags": 0
+      }
+    },
+    "dev": {
+      "sha": "4a1c04406553cf87202597219f8a1bde0660990c",
+      "directQuality": {
+        "status": "loss",
+        "missingNotes": 12513,
+        "missingWriteFlags": 1391
+      }
+    }
+  },
+  "webCoverage": {
+    "figures": 954,
+    "associations": 1346,
+    "firmwareCSV": 1344,
+    "additionalNintendoAssociations": 2,
+    "bundledFirmwareNamesApp646": 952
+  },
+  "browserTests": {
+    "browser": "157.0.8103.51",
+    "languages": [
+      "de-DE",
+      "en-GB"
+    ],
+    "catalogue": {
+      "ridersWithGameFilter": 7,
+      "twoRiderCardsAndImagesChecked": true,
+      "qualityMessagesAt320px": [
+        "unchanged",
+        "loss",
+        "unavailable"
+      ]
+    },
+    "remote": {
+      "transport": "simulated DE3.73 acknowledgement in Chrome",
+      "tested": [
+        "keyboard focus",
+        "held key",
+        "busy state",
+        "named acknowledgement",
+        "native button activation",
+        "disconnect"
+      ]
+    }
+  },
+  "storage": {
+    "protects": "Figure/game association and previous English/German notes, including exact wording against published baseline on PR and main push",
+    "writes": "atomic local export",
+    "onlineUpdates": "User-initiated metadata checks only; bundled game notes remain available"
+  },
+  "kirbyFileInspection": {
+    "evidence": "Comparison of the two complete November rider files with their corresponding separate machine records, in memory",
+    "dataSourceCommit": "https://github.com/strengthen/iNFCiAmiibo/commit/0bc557c90ee3540e50328933d9d6994a7579a4d7",
+    "boardHint": "PC6U55:4",
+    "candidates": [
+      "Dragoon",
+      "Hydra"
+    ],
+    "singleModelIdentifiedByBoardCode": false,
+    "firmwareHostTest": {
+      "source": "b072db4e6c3bdba83e269229201a62a7a8cc40d7",
+      "tag": "de3.73-test646",
+      "rf_and_console_test": false,
+      "cases": [
+        {
+          "sample": "synthetic",
+          "pair": "Dragoon",
+          "figure_id": "1f00010004c51e03",
+          "figure_length": 2048,
+          "ext_length": 64,
+          "contained_at": 960,
+          "test": "PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs."
+        },
+        {
+          "sample": "synthetic",
+          "pair": "Hydra",
+          "figure_id": "1f02010004c81e03",
+          "figure_length": 2048,
+          "ext_length": 64,
+          "contained_at": 960,
+          "test": "PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs."
+        },
+        {
+          "sample": "community_2026_11_14",
+          "pair": "Dragoon",
+          "figure_id": "1f00010004c51e03",
+          "figure_length": 2048,
+          "ext_length": 64,
+          "contained_at": 960,
+          "test": "PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs."
+        },
+        {
+          "sample": "community_2026_11_14",
+          "pair": "Hydra",
+          "figure_id": "1f02010004c81e03",
+          "figure_length": 2048,
+          "ext_length": 64,
+          "contained_at": 960,
+          "test": "PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs."
+        }
+      ],
+      "inputs": {
+        "fw/tests/de2/ec_nfc_host.c": "d5fa6a5d49f6de322a916702f1b0490a26ef0ca7fcaf5d9a533fda3fab60513c",
+        "fw/application/src/ntag/ntag_def.h": "bd6759a7b6c5a0425944ac8d2f7a2928e368e128f862ace4b781d1bfe610a7ce",
+        "fw/application/src/ntag/ntag_emu_v2.c": "e80890631d07770062dbf8a4d44f1873194f7e35521e0f29b547c2665c8dcaa9",
+        "fw/application/src/hal/hal_nfc_t2t.c": "7645969b05f1edb8d3d91eaea751872616d2fca41603a0a75bbc0da57f25a7a3",
+        "fw/application/src/mod/vfs/vfs.h": "5c0560c12b4db59c1150ba20cb41bad1209611fcb5bedacba52183882d265237",
+        "fw/application/src/mod/vfs/vfs_meta.h": "eab487ffbe70de6c202761ea1420994ec0c9a95337aaeae8e645fc8d4e7a4c1c",
+        "fw/application/src/app/amiibo/scene/amiibo_scene_amiibo_detail.c": "2dfc3675817ed1b618185268782f09e77cb4cfb5225e795aeb6bffb6631519b8"
+      },
+      "compiler": "gcc.EXE (GCC) 15.2.0"
+    },
+    "additionalSyntheticRuns": [
+      "Ubuntu ASan/UBSan",
+      "ARM32 user-mode emulation"
+    ],
+    "repeat": "python fw/tests/de3/test_kirby_v3_machines.py",
+    "physicalSwitch2Acceptance": "not verified by this host test"
+  },
+  "featureReference": "https://github.com/cylin577/pixl.js/releases/tag/v2.27.11",
+  "remoteProtocol": "Existing DE LCD remote protocol; controls operate after device acknowledgement. No foreign firmware required."
+}

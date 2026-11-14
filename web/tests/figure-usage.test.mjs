@@ -56,7 +56,7 @@ test('all exported rows keep a group path and pinned source line without externa
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1346, notes: 63, translated: 59, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1346, notes: 65, translated: 59, official: 4 });
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.
@@ -130,6 +130,7 @@ test('both Kirby riders link to the official game update in DE and EN', async ()
       for (const locale of ['de_DE', 'en_US']) {
         state.id = id; state.locale = locale; await Vue.nextTick();
         assert.match(text(root), /1\.3\.3/);
+        assert.match(text(root), locale === 'de_DE' ? /auf eine Maschine.*trainieren/ : /on a machine.*train a Figure Player/);
         const links = nodes(root, 'a');
         assert.equal(links.length, 1);
         assert.equal(text(links[0]), locale === 'de_DE' ? 'Quelle: Nintendo-Spielupdate' : 'Source: Nintendo game update');

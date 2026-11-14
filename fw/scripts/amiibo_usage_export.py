@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from amiibo_db_gen import read_catalog, text_field
 
@@ -31,6 +32,9 @@ LINK_HYGIENE_LINES = (1332, 1333, 1334)
 # Keep these web associations separate from the versioned firmware CSV rows.
 NINTENDO_KIRBY_UPDATE = 'https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html'
 WEB_RIDER_IDS = ('1f00010004c51e03', '1f02010004c81e03')
+# A reviewed wording change must name the exact figure, game, language and
+# before/after texts in the same change. Removing a note is never authorized here.
+REVIEWED_NOTE_EDITS = frozenset()
 
 
 def source_lines(path):
@@ -80,8 +84,12 @@ def export_usage(data_dir, translations_path):
         associations[link.amiibo_id.lower()].append({
             'groupId': int(link.game_id), 'noteId': note_ids.get(link.note_en), 'sourceLine': line,
         })
+    web_associations = 0
     for rider in WEB_RIDER_IDS:
-        associations[rider] = [{'groupId': 75, 'noteId': None, 'sourceUrl': NINTENDO_KIRBY_UPDATE}]
+        rows = associations.setdefault(rider, [])
+        if not any(row['groupId'] == 75 for row in rows):
+            rows.append({'groupId': 75, 'noteId': None, 'sourceUrl': NINTENDO_KIRBY_UPDATE})
+            web_associations += 1
     source_files = []
     for filename in ('amiidb_amiibo.csv', 'amiidb_game.csv', 'amiidb_link.csv'):
         normalization = []
@@ -107,8 +115,8 @@ def export_usage(data_dir, translations_path):
                    'notesAreComplete': False, 'germanTranslationsAreComplete': bool(english) and set(texts) == english,
                    'germanTranslationScope': 'existing English usage notes in this catalogue snapshot',
                    'translationPolicy': translations['translationPolicy']},
-        'coverage': {'figures': len(associations), 'groups': len(games), 'associations': len(links) + len(WEB_RIDER_IDS),
-                     'firmwareAssociations': len(links), 'nintendoWebAssociations': len(WEB_RIDER_IDS),
+        'coverage': {'figures': len(associations), 'groups': len(games), 'associations': len(links) + web_associations,
+                     'firmwareAssociations': len(links), 'nintendoWebAssociations': web_associations,
                      'legacyEmptyLinkColumns': sum(link.legacy_empty_column for link in links),
                      'englishNoteAssociations': sum(bool(link.note_en) for link in links),
                      'uniqueEnglishNotes': len(notes), 'uniqueGermanTranslations': len(texts),
@@ -124,23 +132,61 @@ def render_usage(data):
     return json.dumps(data, ensure_ascii=False, indent=2) + '\n'
 
 
+def association_notes(data):
+    if data.get('schemaVersion') != 1:
+        raise ValueError('Unsupported existing usage export; review it before replacing it')
+    notes = {note['id']: note for note in data['notes']}
+    result = {}
+    for figure in data['figures']:
+        for association in figure['associations']:
+            note_id = association['noteId']
+            note = {} if note_id is None else notes[note_id]
+            result[(figure['id'], association['groupId'])] = (note.get('en'), note.get('de'))
+    return result
+
+
+def protect_existing_usage(before, after, reviewed_edits=REVIEWED_NOTE_EDITS):
+    updated = association_notes(after)
+    for key, languages in association_notes(before).items():
+        if key not in updated:
+            raise ValueError('Existing figure/game association would be removed: %s / %s' % key)
+        for language, previous, candidate in zip(('en', 'de'), languages, updated[key]):
+            if previous and not (candidate or '').strip():
+                raise ValueError('Existing %s game note would be removed: %s / %s' % (language, *key))
+            if previous and previous != candidate and (*key, language, previous, candidate) not in reviewed_edits:
+                raise ValueError('Existing %s game note would be replaced: %s / %s; review the exact edit' %
+                                 (language, *key))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir', type=Path, default=ROOT / 'fw/data')
     parser.add_argument('--translations', type=Path, default=ROOT / 'web/src/data/usage-translations.de.json')
     parser.add_argument('--output', type=Path, default=ROOT / 'web/src/data/figure-usage.json')
     parser.add_argument('--check', action='store_true', help='Compare the existing JSON without modifying it.')
+    parser.add_argument('--reference', type=Path,
+                        help='Protect published associations and wording from this earlier export as well.')
     args = parser.parse_args()
     try:
         data = export_usage(args.data_dir, args.translations)
         rendered = render_usage(data).encode('utf8')
+        if args.reference:
+            protect_existing_usage(json.loads(args.reference.read_bytes()), data)
         if args.check:
             if args.output.read_bytes() != rendered:
                 raise ValueError('Usage JSON is stale; regenerate it with amiibo_usage_export.py')
         else:
+            if args.output.exists():
+                protect_existing_usage(json.loads(args.output.read_bytes()), data)
             args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_bytes(rendered)
-    except (OSError, ValueError) as error:
+            with NamedTemporaryFile(dir=args.output.parent, delete=False) as temporary:
+                tmp_path = Path(temporary.name)
+            try:
+                tmp_path.write_bytes(rendered)
+                tmp_path.replace(args.output)
+            finally:
+                tmp_path.unlink(missing_ok=True)
+    except (OSError, ValueError, KeyError, TypeError) as error:
         parser.exit(1, 'Usage export failed: %s\n' % error)
     print(json.dumps({'valid': True, 'bytes': len(rendered), **data['coverage']}, sort_keys=True))
 

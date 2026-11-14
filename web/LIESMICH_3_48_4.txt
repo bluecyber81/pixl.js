@@ -1,0 +1,17 @@
+Allmiibo Dateimanager 3.48.4 · Portable Ausgabe für Windows
+
+Bei der Online-Katalogprüfung zeigt der Dateimanager an, wenn Spielhinweise oder Schreibangaben in der Quelle fehlen. Die geprüften Spielhinweise bleiben verfügbar. Die Fernbedienung unterstützt die Tastatur und zeigt an, welchen Befehl das Gerät bestätigt hat. Für Dragoon und Hydra nennt die Dateiprüfung beide möglichen Maschinen, weil sie den gleichen Platinencode verwenden.
+
+1. Die ZIP vollständig in einen eigenen Ordner entpacken. Python 3.8 oder neuer
+   muss installiert sein. Zum Verbinden per Bluetooth Chrome oder Edge nutzen.
+2. Start-Dateimanager.cmd doppelklicken. Alternativ Start-Dateimanager-Direkt.cmd
+   öffnen und die im Fenster angezeigte Adresse im Browser aufrufen.
+3. Am Allmiibo „Bluetooth-Dateiübertragung“ öffnen und im Browser „Verbinden“
+   wählen. Zum Betrachten der Oberfläche genügt der Demo-Modus.
+4. Den Hintergrundstart mit Stop-Dateimanager.cmd beenden. Im Direktmodus das
+   Serverfenster auswählen und Strg+C drücken.
+
+Die lokale LittleFS-Platzprüfung unterstützt DE3.73/App646. Im Bereich Update steht DE3.65/App637 als stabile LCD-Firmware zur Wahl. Der Web-Updater überträgt die reine Geräte-App. Für ein kompatibles LCD mit älterem Bootloader gibt es die zwei Phasen des Komplettpakets in nRF Device Firmware Update auf Android. Die Geräte- und Speichervoraussetzungen erklärt die Anleitung.
+
+Deutsch: https://bluecyber81.github.io/pixl.js/guide/index.html
+English: https://bluecyber81.github.io/pixl.js/guide/en.html

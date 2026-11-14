@@ -9,10 +9,11 @@ const observedVehicles = {
   'P45S63:4': ['Winged Star'],
   'PB5T42:4': ['Shadow Star'],
   'PC6V28:4': ['Tank Star', 'Hop Star'],
+  'PC6U55:4': ['Dragoon', 'Hydra'],
 };
 
 // Board codes overlap between vehicles. Only suggest models seen with this
-// header in physical samples. Never return a per-copy identifier.
+// header in examined files. Never return a per-copy identifier.
 function vehicleCandidates(bytes) {
   if (bytes[960] !== 2 || bytes[961] !== 0 || bytes[985] !== 0x20 || bytes[986] !== 1 || bytes[987] !== 1) return [];
   const code = String.fromCharCode(...bytes.subarray(979, 985));

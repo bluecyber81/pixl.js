@@ -1,5 +1,9 @@
 # Allmiibo LCD release notes
 
+## File manager 3.48.4
+
+The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines. [Release and downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.4)
+
 ## File manager 3.48.3
 
 The offline catalogue contains 954 figure IDs. In **Figure catalogue → Game → Kirby Air Riders**, all seven riders appear, including Sword Kirby & Dragoon and Noir Dedede & Hydra. German names also find the matching cards. The firmware name filter covers the 952 IDs in the published App646. [Windows ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.3/Allmiibo_Dateimanager_3_48_3_Portable.zip) · [Source ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.3/Allmiibo_Dateimanager_3_48_3_Quellcode.zip)
