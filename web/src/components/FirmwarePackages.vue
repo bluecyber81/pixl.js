@@ -4,10 +4,11 @@
     <p v-if="!releases.packages.length" role="status">{{ text.empty }}</p>
     <template v-else>
       <p>{{ text.scope }}</p><p class="hint">{{ text.unread }}</p>
-      <div v-for="{entry, newer, downloadUrl, dfuUrl, androidUrl, releaseNotesUrl} in packages" :key="entry.id" class="package">
+      <div v-for="{entry, newer, profileMismatch, downloadUrl, dfuUrl, androidUrl, releaseNotesUrl} in packages" :key="entry.id" class="package">
         <strong>{{ entry.version }}</strong> <span>· {{ text.counter }} {{ entry.counter }} · {{ (entry.bytes / 1024).toFixed(1) }} KiB</span>
-        <p v-if="entry.channel === 'prerelease'">{{ text.prerelease }} · <a :href="releaseNotesUrl" target="_blank" rel="noopener noreferrer">{{ text.releaseNotes }}</a></p>
+        <p>{{ entry.channel === 'prerelease' ? text.prerelease : entry.counter === UPDATE_TARGET.application.counter ? text.stable : text.previous }} · {{ entry.bootloader }} · <a :href="releaseNotesUrl" target="_blank" rel="noopener noreferrer">{{ text.releaseNotes }}</a></p>
         <p v-if="newer" role="status">{{ text.newer }}</p>
+        <p v-else-if="profileMismatch" role="status">{{ text.profileMismatch }}</p>
         <div v-else class="actions">
           <a :href="downloadUrl" :download="entry.file">{{ text.download }}</a>
           <a :href="dfuUrl" target="_blank" rel="noopener">{{ text.dfu }}</a>
@@ -15,9 +16,9 @@
         </div>
         <details><summary>{{ text.details }}</summary><p>{{ entry.file }}</p><p>{{ text.hash }} (SHA-256): <code>{{ entry.sha256 }}</code></p></details>
       </div>
-      <p v-if="packages.some(item => item.androidUrl && !item.newer)" class="hint">{{ text.androidHint }}</p>
+      <p v-if="packages.some(item => item.androidUrl && !item.newer && !item.profileMismatch)" class="hint">{{ text.androidHint }}</p>
       <p class="hint">{{ text.limits }}</p>
-      <p><a href="https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
+      <p><a href="https://github.com/bluecyber81/pixl.js/tree/de3.74" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
     </template>
     <p class="hint">{{ text.local }}</p>
   </section>
@@ -26,6 +27,7 @@
 import { computed } from 'vue';
 import releases from '../data/firmware-releases.json';
 import { firmwarePackageText, packagePresentation } from '../lib/release-packages.js';
+import { UPDATE_TARGET } from '../lib/update-target.js';
 import { nrfDfuLink } from '../../public/dfu/nrf-dfu-link.mjs';
 const props=defineProps({session:{type:Object,default:()=>({})},boot:{type:Object,default:null},locale:{type:String,default:'de_DE'}});
 const text=computed(()=>firmwarePackageText(props.locale));

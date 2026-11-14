@@ -2,6 +2,8 @@
 
 ## DE3.74 / App647 and file manager 3.50.0
 
+**Final LCD release.** On 14 November 2026, the owner confirmed that display capture in the remote control worked on their Allmiibo LCD with DE3.74 and file manager 3.50.0. The diagnostic export identifies App647, bootloader Z19 and SoftDevice S112 7.3.0. [Firmware release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74)
+
 Under **Remote control**, refresh the display image to see the current device menu on your phone. Rotate the image, save it as a PNG, or take another photo after navigating. Enable the BLE remote in settings on the awake LCD and connect to **Pixl.Remote**. DE3.74 adds the photo capture command. On DE3.73 you can also check the connection and see when the device answered. Cancelling an earlier connection attempt preserves a later file session.
 
 [Signed Android DFU ZIP for LCD with PFS1, Z19 and S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.74/Allmiibo_LCD_DE3_74_647_NUR_APP.zip) · [File manager 3.50.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.0)

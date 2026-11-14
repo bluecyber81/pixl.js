@@ -73,7 +73,7 @@ test('selected ZIP is compared with a recent file-manager read, and clearing it 
     const text=h.nodes.get('package-target').textContent;
     assert.match(text,/Hardwarefeld 52/);assert.match(text,/0x0126/);
     assert.equal(text.includes('älter als'),recent);assert.equal(text.includes('steht nicht'),recent);
-      assert.equal(text.includes('Z15 kann sie bei gültiger Signatur installieren'),recent);
+      assert.equal(text.includes('Z15, Z17 und Z19 können sie bei gültiger Signatur installieren'),recent);
     h.options.onState({ready:false});assert.equal(h.nodes.get('package-target').textContent,'');
   }
 });
@@ -108,7 +108,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_74_647_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.74','https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_74_647_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.74','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.74','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -164,16 +164,18 @@ test('bundled loading disables manual/device controls while keeping cancellation
 
 test('only a unique bundled catalogue ID is preselected, with no load or transfer on navigation', () => {
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
-    const [stable, preview] = catalog.packages;
+    const stable = catalog.packages.find(entry => entry.counter === 637), preview = catalog.packages.find(entry => entry.counter === 645);
     const pages = 'https://bluecyber81.github.io/pixl.js/dfu/web.html';
     for (const [query, expected] of [
         ['?package=' + preview.id, preview], ['?package=' + stable.id, stable],
         ['', null], ['?package=https://example.org/file.zip', null],
         ['?package=' + stable.id + '&package=' + preview.id, null], ['?package=', null]
     ]) {
-        const recentBoot = '#read=' + Date.now() + '&app=638&bl=19&sd=294';
+        const recentBoot = '#read=' + Date.now() + '&app=636&bl=19&sd=294';
         const h = harness(true, {location:new URL(pages + query + recentBoot), AllmiiboFirmwareReleases:catalog});
         const select = h.nodes.get('bundled');
+        assert.match(select.children[1].textContent, /DE3\.74.*Stabile Ausgabe.*Z19/);
+        assert.match(select.children[2].textContent, /DE3\.65.*Frühere stabile Ausgabe/);
         assert.equal(select.value, expected?.id || '');
         assert.equal(h.nodes.get('load-bundled').disabled, !expected);
         assert.equal(h.nodes.get('button').disabled, true);
@@ -181,7 +183,25 @@ test('only a unique bundled catalogue ID is preselected, with no load or transfe
         if (expected) assert.ok(h.nodes.get('bundled-info').textContent.includes(expected.version));
         else if (query) assert.match(h.nodes.get('bundled-info').textContent, /Bitte ein Paket auswählen/);
         h.options.onState({ready:true,target:{counter:637,hardware:52,softDevices:[294]}});
-        assert.match(h.nodes.get('package-target').textContent, /App-Zähler 638/);
+        assert.match(h.nodes.get('package-target').textContent, /App-Zähler 636/);
+    }
+});
+
+test('bundled Web and Android actions honor fresh bootloader, SoftDevice and application counters', () => {
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
+    for (const [id, app, bl, sd, allowed] of [
+        ['de3.74-lcd-app', 646, 19, 294, true], ['de3.74-lcd-app', 647, 19, 294, true],
+        ['de3.74-lcd-app', 648, 19, 294, false], ['de3.74-lcd-app', 636, 15, 294, false],
+        ['de3.74-lcd-app', 645, 19, 259, false], ['de3.65-lcd-app', 636, 15, 294, true],
+        ['de3.65-lcd-app', 647, 19, 294, false],
+    ]) {
+        const location = new URL('https://example.test/dfu/web.html?package=' + id);
+        location.hash = new URLSearchParams({ read:Date.now(), app, bl, sd });
+        const h = harness(true, {location, AllmiiboFirmwareReleases:catalog});
+        assert.equal(h.nodes.get('load-bundled').disabled, !allowed, id + '/' + app + '/' + bl + '/' + sd);
+        assert.equal(h.nodes.get('android-handoff').hidden, !allowed);
+        if (!allowed) h.nodes.get('load-bundled').events.click();
+        assert.deepEqual(h.calls, []);
     }
 });
 
@@ -205,7 +225,7 @@ test('changing the selected package clears a previously ready image and a manual
 
 test('native DFU follows the selected release, omits device data and clears the link for incompatible states', async () => {
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
-    const [stable, preview] = catalog.packages;
+    const stable = catalog.packages.find(entry => entry.counter === 637), preview = catalog.packages.find(entry => entry.counter === 645);
     const location = new URL('https://example.test/dfu/web.html?package=' + preview.id);
     location.hash = new URLSearchParams({ read:Date.now(), app:preview.counter, bl:19, sd:294 });
     const h = harness(false, {location, AllmiiboFirmwareReleases:catalog});

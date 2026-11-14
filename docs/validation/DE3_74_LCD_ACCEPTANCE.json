@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-14",
+  "scope": "Remote display photo on one Allmiibo LCD",
+  "ownerReport": {
+    "installation": "The owner reported flashing DE3.74.",
+    "displayPhoto": "The owner confirmed that the display photo in the remote control works on their LCD Allmiibo."
+  },
+  "diagnosticExport": {
+    "fileManagerVersion": "3.50.0",
+    "firmwareVersion": "2.22.0-DE3.74",
+    "applicationCounter": 647,
+    "bootloaderCounter": 19,
+    "bootRegionSha256MatchesZ19Reference": true,
+    "softDevice": "S112 7.3.0 (0x0126)",
+    "settingsCrcValid": true,
+    "storageMounted": true,
+    "applicationHashReadFromDevice": false
+  },
+  "packageEvidence": "DE3_74.json",
+  "limits": [
+    "The visual result comes from the owner. The diagnostic export records the installed version and counter and contains no remote display image.",
+    "The source ID and application BIN hash in the export come from the package reference. The device reports neither value.",
+    "This test covers the display photo. A physical Android DFU interruption and recovery were outside its scope."
+  ]
+}

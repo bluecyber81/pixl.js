@@ -1,5 +1,11 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
+## Getestete LCD-Finalversion DE3.74 (App647) · Dateimanager 3.50.1
+
+Das Displayfoto der Fernbedienung wurde mit Dateimanager 3.50.0 am LCD-Allmiibo getestet. Version 3.50.1 führt DE3.74 als stabile App für LCD-Geräte mit Packed LittleFS, Bootloader Z19 und S112 7.3.0. Wer DE3.74 schon verwendet, kann sie weiter nutzen. [Gerätetest](docs/validation/DE3_74_LCD_ACCEPTANCE.json)
+
+[Signierte LCD-App](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.50.1/Allmiibo_Dateimanager_3_50_1_Portable.zip) · [Quellcode](https://github.com/bluecyber81/pixl.js/releases/download/web3.50.1/Allmiibo_Dateimanager_3_50_1_Quellcode.zip)
+
 ## DE3.74 / App647 und Dateimanager 3.50.0
 
 Unter **Fernbedienung → Displaybild aktualisieren** zeigt das Handy das aktuelle Gerätemenü. Du kannst das Bild drehen, als PNG speichern und nach dem nächsten Tastendruck erneut aufnehmen. Aktiviere dazu am wachen LCD-Allmiibo die BLE-Fernbedienung und verbinde **Pixl.Remote**. DE3.74 fügt die Fotoaufnahme hinzu. Auch auf DE3.73 kannst du mit **Verbindung prüfen** die Uhrzeit der letzten angeforderten Geräteantwort sehen. Ein abgebrochener Verbindungsversuch kann eine neu aufgebaute Dateiübertragung nicht mehr versehentlich trennen.

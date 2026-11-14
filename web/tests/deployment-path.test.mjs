@@ -58,5 +58,5 @@ test('production entry points use the common resolver and pass query/hash to the
   assert.doesNotMatch(read('index.html'), /jszip-3\.10\.2/)
   assert.match(read('public/dfu/web.html'), /src="vendor\/jszip-3\.10\.2\.min\.js"/)
   assert.match(read('src/main.js'), /search: window.location.search, hash: window.location.hash/)
-  for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /https:\/\/github.com\/bluecyber81\/pixl.js\/archive\/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9\.zip/)
+  for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /href="https:\/\/github\.com\/bluecyber81\/pixl\.js\/tree\/de3\.74"/)
 })

@@ -45,8 +45,8 @@ export function copyNotices(mode) {
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.72">${label('Quellstand der LCD-Testversion DE3.72/645 mit App-Fortsetzung', 'Source code for the DE3.72/645 LCD test release with app resume')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.73-test646">${label('Quellstand der LCD-Testversion DE3.73/646', 'Source code for the DE3.73/646 LCD test release')}</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.74">${label('Quellstand der LCD-Testversion DE3.74/647', 'Source code for the DE3.74/647 LCD test release')}</a></li></ul>
-<p>${label('Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Das Anwendungs-ZIP DE3.65 ist der öffentliche Download für Allmiibo LCD mit PFS1 und S112 7.3.0.', 'The main branch can contain a different firmware revision. The DE3.65 application ZIP is the public download for Allmiibo LCD with PFS1 and S112 7.3.0.')}</p>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.74">${label('Quellstand der stabilen LCD-Firmware DE3.74/647', 'Source code for the stable DE3.74/647 LCD release')}</a></li></ul>
+<p>${label('Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Die stabile App DE3.74 ist für Allmiibo LCD mit PFS1, Z19 und S112 7.3.0.', 'The main branch can contain a different firmware revision. The stable DE3.74 application is for Allmiibo LCD with PFS1, Z19 and S112 7.3.0.')}</p>
 <p>${label('Aktuelle Bibliotheken und Quellen', 'Current libraries and sources')} · <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>.
 ${label('Die Liste unten enthält auch historische Lizenzhinweise.', 'The list below also includes historical notices.')}
 <a href="../dfu/LICENSE.txt">${label('DFU-Lizenz', 'DFU license')}</a> · <a href="../dfu/vendor/SOURCES.json">${label('DFU-Bibliotheksnachweise', 'DFU library sources')}</a></p>

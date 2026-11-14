@@ -21,7 +21,8 @@ const app646 = Object.freeze({
 const app647 = Object.freeze({
   ...app646, firmwareVersion: '2.22.0-DE3.74', applicationCounter: 647,
   applicationBytes: 364460, applicationBinSha256: '71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead',
-  sourceId: 'b5793142353e600e8511ecc62a54ff9da5d568a650d5de680adeef5c1fb6654e', otaSha256: '58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6', hardwareAcceptance: 'pending',
+  sourceId: 'b5793142353e600e8511ecc62a54ff9da5d568a650d5de680adeef5c1fb6654e', otaSha256: '58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6',
+  artifactStatus: 'stable-signed-application', hardwareAcceptance: 'remote-display-photo-confirmed-on-one-lcd',
 });
 const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
