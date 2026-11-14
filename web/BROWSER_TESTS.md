@@ -1,5 +1,9 @@
 # Browserprüfung des Produktionsbuilds
 
+## Mitlaufende Auswahl ab 3.51.1
+
+Starte im Ordner `web` den Befehl `node scripts/verify-file-workspace-browser.mjs dist-pages <Ausgabeordner> --sticky`. Das Skript öffnet einen langen Beispielordner in Chrome, wählt eine Figur und scrollt die Liste. Am Laptop prüft es die Position des Bilds und das Scrollen in den Figurendetails. In der mobilen Ansicht prüft es das Öffnen und Schließen der Vorschau. Die Bluetooth-Gegenstelle ist nachgebildet. [Prüfstand](../docs/validation/WEB3_51_1.json)
+
 ## Dateiliste und Zielnamen ab 3.51.0
 
 Mit `node scripts/verify-file-workspace-browser.mjs dist-pages <Ausgabeordner>` lässt sich die veröffentlichungsfertige Oberfläche in Chrome mit Beispieldaten prüfen. Die Prüfung öffnet Mario über die Dateiliste, kontrolliert das geladene Bild und vergleicht die bearbeiteten Zielpfade im Ordnerupload. Für die Vorher-Bilder kann zusätzlich die archivierte Ausgabe 3.50.1 als erstes Argument mit `--before` verwendet werden. [Prüfstand](../docs/validation/WEB3_51_0.json)

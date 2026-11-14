@@ -1,5 +1,5 @@
 // Inspect the deployed UI with the real VFS protocol and a read-only synthetic peripheral.
-// node scripts/verify-file-workspace-browser.mjs <dist-pages> <evidence-folder> [--before]
+// node scripts/verify-file-workspace-browser.mjs <dist-pages> <evidence-folder> [--before | --sticky] [--version=x.y.z]
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -12,11 +12,15 @@ import { publicFigureImage } from '../src/lib/figure-info.js';
 const [buildDirectory, evidenceDirectory] = process.argv.slice(2);
 assert.ok(buildDirectory && evidenceDirectory, 'Supply both the distribution and the output directory.');
 const baseline = process.argv.includes('--before');
-const expectedVersion = baseline ? '3.50.1' : JSON.parse(await readFile(new URL('../package.json', import.meta.url))).version;
+const checkSticky = process.argv.includes('--sticky');
+assert.ok(!(baseline && checkSticky), 'The historical comparison predates the sticky selection.');
+const versionOverride = process.argv.find(arg=>arg.startsWith('--version='))?.slice('--version='.length);
+const expectedVersion = versionOverride || (baseline ? '3.50.1' : JSON.parse(await readFile(new URL('../package.json', import.meta.url))).version);
 const output = path.resolve(evidenceDirectory);
 await mkdir(output, {recursive:true});
 const catalogue = JSON.parse(await readFile(new URL('../src/data/catalogue.json', import.meta.url)));
 const imageUrl = publicFigureImage('0000000000000002', catalogue.commit);
+const luigiImageUrl = publicFigureImage('00010000000c0002', catalogue.commit);
 const api = process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright';
 const { chromium } = await import(api);
 const server = await preview({base:'/pixl.js/',build:{outDir:path.resolve(buildDirectory)},
@@ -37,6 +41,12 @@ const dirs = {
   ], 'E:/amiibo/Animal Crossing':[], 'E:/amiibo/The Legend of Zelda':[], 'E:/amiibo/Kirby':[]
 };
 const peripheral = {capacity:{total:2097152,free:1138688},files:{},directories:dirs,firmwareVersion:'2.22.0-DE3.74'};
+if (checkSticky) {
+  const entries = Array.from({length:80}, (_,i) => ['Figur '+String(i+1).padStart(2,'0')+'.bin',540,0]);
+  entries[0] = ['01 - Mario.bin',540,0,[3,0,0,0,0,2,0,0,0]];
+  entries[64] = ['Figur 65 - Luigi.bin',540,0,[3,0,0,1,0,2,0,12,0]];
+  dirs['E:/amiibo/Kirby'] = entries;
+}
 const results = [];
 try {
   await mkdir(path.join(local,longFolder), {recursive:true});
@@ -48,10 +58,10 @@ try {
       const context = await browser.newContext({locale,viewport:{width,height},serviceWorkers:'block'});
       try {
         await context.addInitScript(installReadOnlyPeripheral,peripheral);
-        // Allow only the selected public catalogue image out of this isolated context.
+        // Allow only the public images actually selected during this test.
         await context.route('**/*', route => {
           const url = route.request().url();
-          return (new URL(url).origin===origin || url===imageUrl) ? route.continue() : route.abort();
+          return (new URL(url).origin===origin || url===imageUrl || (checkSticky && url===luigiImageUrl)) ? route.continue() : route.abort();
         });
         const page = await context.newPage();
         const errors = [];
@@ -110,6 +120,7 @@ try {
           assert.equal(await panel.count(),0);
           assert.deepEqual(await rowNames(),actualNames);
         }
+        let stickySelection;
         if (!baseline) {
           const row=mario.locator('xpath=ancestor::tr[1]');
           if(format==='Laptop') await row.locator('.file-rename').click();
@@ -121,11 +132,12 @@ try {
           assert.equal(await prompt.getByRole('textbox').inputValue(),'Mario.bin');
           await prompt.getByRole('button',{name:de?'Abbrechen':'Cancel',exact:true}).click();
           await prompt.waitFor({state:'hidden'});
+          if (checkSticky) stickySelection = await verifyScrollingSelection(page,section,format,de);
           await checkNamePreflight(page,section,de);
         }
         assert.deepEqual(errors,[]);
         assert.deepEqual(await page.evaluate(()=>window.testPeripheral.violations),[]);
-        results.push({locale,format,width,files:actualNames,picture,renameDialog:!baseline,targetNamePreflight:!baseline,deviceWrites:0});
+        results.push({locale,format,width,files:actualNames,picture,renameDialog:!baseline,targetNamePreflight:!baseline,stickySelection,deviceWrites:0});
         console.log(expectedVersion,locale,format,'passed');
       } finally { await context.close(); }
     }
@@ -135,6 +147,70 @@ try {
   await browser.close();
   await server.close();
   await rm(tmp,{recursive:true,force:true});
+}
+
+async function verifyScrollingSelection(page, section, format, de) {
+  const file = name => section.locator('[data-file-name="'+name+'"]');
+  const panel = section.locator('.selection-context.has-selection');
+  await file('Kirby').click();
+  await file('01 - Mario.bin').click();
+  assert.equal(await section.locator('[data-file-name]').count(),80);
+  const mario = panel.getByRole('img',{name:'Mario',exact:true});
+  const luigi = panel.getByRole('img',{name:'Luigi',exact:true});
+  const positionRow = row => row.evaluate(el => {
+    // Leave the target clear of both the mobile navigation and the bottom sheet.
+    const sheet=document.querySelector('.selection-context.has-selection');
+    const bottomSheet=getComputedStyle(sheet).position==='fixed';
+    const upper=bottomSheet?document.querySelector('.workspace-nav').getBoundingClientRect().bottom:0;
+    const lower=bottomSheet?sheet.getBoundingClientRect().top:innerHeight;
+    const rect=el.getBoundingClientRect();
+    window.scrollBy({top:rect.top+rect.height/2-(upper+lower)/2,behavior:'instant'});
+  });
+  const imagePosition = image => image.evaluate(async el => {
+    await el.decode();
+    const box = el.getBoundingClientRect();
+    return {top:box.top, pageY:scrollY, visible:box.top>=0 && box.bottom<=innerHeight &&
+      document.elementFromPoint(box.left+box.width/2,box.top+box.height/2)===el};
+  });
+  await positionRow(file('Figur 30.bin'));
+  const first = await imagePosition(mario);
+  const next = file('Figur 65 - Luigi.bin');
+  await positionRow(next);
+  const second = await imagePosition(mario);
+  assert.ok(second.pageY-first.pageY>500,'The long listing must actually scroll');
+  assert.ok(first.visible && second.visible && Math.abs(second.top-first.top)<2,
+    'Selected picture must stay visible while scrolling: '+JSON.stringify({first,second}));
+  if (de) await page.screenshot({path:path.join(output,'Figur-beim-Scrollen-'+format+'.png'),animations:'disabled'});
+  // Read to the end of the selected figure, independently of the file listing.
+  const action = panel.locator('.preview-actions button').last();
+  const scrollRange = await action.evaluate(el => {
+    for (let parent=el.parentElement;parent && parent.closest('.selection-context');parent=parent.parentElement) {
+      if (!['auto','scroll'].includes(getComputedStyle(parent).overflowY) || parent.scrollHeight<=parent.clientHeight) continue;
+      parent.scrollTop=parent.scrollHeight;
+      return parent.scrollTop;
+    }
+    return 0;
+  });
+  assert.ok(scrollRange>0,'The long figure information must be independently scrollable.');
+  const actionVisible = await action.evaluate(el => {
+    const box=el.getBoundingClientRect();
+    return el.contains(document.elementFromPoint(box.left+box.width/2,box.top+box.height/2));
+  });
+  assert.ok(actionVisible,'The final action must be reachable in the panel.');
+  assert.equal(await page.evaluate(()=>scrollY),second.pageY);
+  await next.click();
+  await luigi.waitFor();
+  assert.equal(await luigi.getAttribute('src'),luigiImageUrl);
+  assert.ok((await imagePosition(luigi)).visible,'The new selection must show its picture immediately.');
+  if (format==='Handy') {
+    await panel.locator('.mobile-preview-close').click();
+    assert.equal(await panel.count(),0);
+    assert.equal(await page.evaluate(()=>scrollY),second.pageY);
+  }
+  await section.locator('.folder-breadcrumbs').getByRole('button',{name:'amiibo',exact:true}).click();
+  await file('Mario.bin').waitFor();
+  return {entries:80,documentScroll:second.pageY-first.pageY,pictureTop:first.top,detailsScroll:scrollRange,
+    nextPicture:'Luigi',returnToList:true};
 }
 
 async function checkNamePreflight(page,section,de) {

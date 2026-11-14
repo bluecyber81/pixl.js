@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.51.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.51.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -251,7 +251,11 @@
       </div>
     </div>
 
-      </div><aside class="selection-context" :class="{'has-selection': !!previewSelection}"><button v-if="previewSelection" type="button" class="mobile-preview-close" @click="close_preview_selection">{{ language === 'de_DE' ? 'Vorschau schließen' : 'Close preview' }} ×</button><SelectionPreview :selection="previewSelection" :locale="language" :catalogue="collectionCatalogue" :blocked="busy || !preview_selection_current()" @download="download_preview_selection" @properties="open_preview_properties" /></aside></div>
+      </div>
+      <aside :key="previewSelection?.path" class="selection-context" :class="{'has-selection': !!previewSelection}">
+        <button v-if="previewSelection" type="button" class="mobile-preview-close" @click="close_preview_selection">{{ language === 'de_DE' ? 'Vorschau schließen' : 'Close preview' }} ×</button>
+        <SelectionPreview :selection="previewSelection" :locale="language" :catalogue="collectionCatalogue" :blocked="busy || !preview_selection_current()" @download="download_preview_selection" @properties="open_preview_properties" />
+      </aside></div>
     </section>
     <details v-show="activeWorkspace === 'backup'" class="workspace-panel" ref="backupWorkspace" id="backup-workspace" @toggle="keep_migration_visible">
       <summary>{{ $t('workflow.backupTitle') }}<span>{{ $t('workflow.backupBrief') }}</span></summary>
@@ -316,7 +320,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.51.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.51.1</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>

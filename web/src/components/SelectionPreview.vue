@@ -1,5 +1,5 @@
 <template>
-  <section class="selection-preview" :aria-label="de ? 'Ausgewählte Figur' : 'Selected figure'">
+  <section class="selection-preview" :tabindex="selection ? 0 : undefined" :aria-label="de ? 'Ausgewählte Figur' : 'Selected figure'">
     <p class="preview-eyebrow">{{ de ? 'AUSWAHL' : 'SELECTION' }}</p>
     <template v-if="selection">
       <div class="preview-picture">

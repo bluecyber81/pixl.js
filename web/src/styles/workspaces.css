@@ -108,6 +108,18 @@
 .filemanager .el-table th.el-table__cell { color:#476356; --el-table-header-bg-color:#ebf3ea; }
 .filemanager .folder-path,.filemanager .device-search { background:#eff5ed; border-color:#cbdcce; }
 .filemanager .selection-context { background:#f6f8f2; border-color:var(--rule); }
+@media (width > 960px) {
+  /* Keep the rounded frame without turning it into the sticky panel's scroll container. */
+  .filemanager .files-workspace { overflow:clip; }
+  .filemanager .selection-context .selection-preview {
+    top:8px;
+    box-sizing:border-box;
+    max-height:calc(100vh - 16px);
+    max-height:calc(100dvh - 16px);
+    overflow-y:auto;
+  }
+}
+.filemanager .selection-preview:focus-visible { outline:2px solid var(--zone); outline-offset:-3px; }
 .filemanager .connection-guide { border-style:solid; background:#f0f6ee; }
 .filemanager .connection-guide-symbol { border-radius:8px; }
 .filemanager .connection-guide h3 { font-size:1rem; }
