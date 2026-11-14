@@ -52,7 +52,13 @@ int main(int argc, char **argv) { if (argc > 1) allocate(); return 0; }
         commands = [['gcc', '-O0', '-g', '-fsanitize=address,undefined', '-no-pie',
                      str(path/'control.c'), '-o', str(exe)], [str(exe)], [str(exe), 'intentional-leak']]
         for i, command in enumerate(commands):
-            result = subprocess.run(command, env=env, capture_output=True, text=True)
+            try:
+                result = subprocess.run(command, env=env, capture_output=True, text=True)
+            except FileNotFoundError as error:
+                reason = f'Sanitizer control could not start {command[0]}: {error}'
+                records.append(reason)
+                (output/'sanitizer-control.log').write_text('\n'.join(records), encoding='utf-8')
+                return reason
             records.append(f'control {i}, exit {result.returncode}\n{result.stdout}{result.stderr}')
             okay = result.returncode == 0
             if i == 2 and enable_leaks:
