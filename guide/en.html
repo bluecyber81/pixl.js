@@ -28,6 +28,8 @@
         <a href="#flash">Update the device application</a>
         <a href="#littlefs">Move your collection to LittleFS</a>
         <a href="#bootloader">Full LCD package</a>
+        <a href="#ordnervergleich">Compare folders</a>
+        <a href="#iphone">iPhone and iPad</a>
         <a href="#programme">Programs and downloads</a>
         <a href="#hilfe">If a step stops</a>
       </nav>
@@ -65,6 +67,16 @@
             <li><h3>Transfer both stages with Android</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip">Download the full DE3.73 package (ZIP)</a>. Keep the ZIP intact. Disconnect the file manager and open <b>Settings → Firmware update</b> on the device. In <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">nRF Device Firmware Update</a>, select the ZIP and your <b>pixl dfu</b>. The app transfers S112 7.3.0 and bootloader Z19 first, then App646. Keep the Nordic app open through the intermediate restart until the second stage completes. The web updater supports the application-only ZIP.</p></li>
             <li><h3>Read back the installed versions</h3><p>Reconnect to <b>Pixl.js</b> in the file manager after the final restart. Check for <b>2.22.0-DE3.73 / 646</b>, bootloader counter <b>19</b> with the Z19 boot-region hash, and S112 7.3.0 with FWID <b>0x0126</b>. If storage migration is pending, continue with the <a href="#littlefs">migration assistant and your verified backup</a>.</p></li></ol>
         </section>
+        <section id="ordnervergleich">
+          <h2>Compare changes in two folders</h2>
+          <p>Open the device folder under <b>Files</b>. Under <b>Backup → Compare local files</b>, choose the matching folder on your computer. After comparing, choose <b>Save comparison reference</b> and keep the small JSON file outside your collection. It contains paths and hashes. Use the ZIP backup to save the figure files themselves.</p>
+          <p>On your next comparison, use the same browser profile, device and folder pair, and select the saved JSON file. If both copies of a file have changed, you will see a conflict. Choose <b>Save device copy</b> to download its contents separately. Select the files you want to transfer to the device.</p>
+        </section>
+        <section id="pixlink">
+          <h2>Connect a device running cylin577 PixLink</h2>
+          <p>On a device running v2.27.11, choose the <b>Pixl.js</b> or <b>AmiLoop</b> Bluetooth mode. In the file manager, open <b>Remote control</b>, select <b>cylin577 · PixLink</b>, and connect. Choose <b>Take control</b> to send button presses. Check their effect on the device display.</p>
+          <p><b>Open file transfer</b> exits the running app and releases the device buttons. If the drive does not appear, open file transfer on the device and reconnect there. <a href="https://github.com/cylin577/pixl.js/releases/tag/v2.27.11">cylin577 firmware release notes</a></p>
+        </section>
         <section id="hilfe">
           <h2>If a step stops</h2>
           <ul class="steps"><li><h3>The backup button is grey</h3><p>Open <b>Files</b> and select the root <b>E:/</b> first. Connecting to a device alone does not select a folder.</p></li>
@@ -72,6 +84,10 @@
             <li><h3>An application transfer was interrupted</h3><p>When <b>pixl dfu</b> reappears, select the same device and the same application ZIP. The web updater reads the saved position and checksum. Depending on the device's confirmed state, it resumes or starts again. For an interrupted system update, use the recovery procedure for that package in its supported client.</p></li></ul>
         </section>
         <section id="programme"><h2>Programs and downloads</h2><p>Use Chrome on Android or a Web Bluetooth browser such as Chrome or Edge on a laptop. The file manager itself runs in your browser. Updating the website requires no firmware flash.</p>
+          <h3 id="iphone">iPhone and iPad</h3>
+          <p>You can browse the figure catalogue and read game notes in Safari or Chrome. To connect to your Allmiibo, you need a browser with Web Bluetooth. <a href="https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055">Bluefy on the App Store</a> provides this feature.</p>
+          <ol><li>Open the <a href="../">file manager</a> in Bluefy itself. Allow Bluetooth access if iOS prompts you.</li><li>Open Bluetooth file transfer on your Allmiibo. Tap Connect in the file manager, select “Pixl.js”, then open drive E:/ under Files to try reading it.</li></ol>
+          <p>Connecting, backing up and resuming in Bluefy still need a test on a physical iPhone or iPad. For firmware updates, see the tested options for <a href="#bootloader">Android</a> and the <a href="../dfu/web.html">web updater for application packages</a>.</p>
           <h3>System updates on a PC with a Nordic radio adapter</h3>
           <p>For a compatible signed system package, <b>nRF Util</b> supports transfers over Bluetooth LE on a PC with <code>nrfutil nrf5sdk-tools dfu ble</code>. This requires a separate Nordic radio adapter connected over USB, such as the <b>nRF52840 Dongle (PCA10059)</b> or a compatible Nordic development kit. The laptop’s built-in Bluetooth alone cannot run this procedure. For application updates you can use the web updater. For a compatible combined package on a phone, follow the <a href="#bootloader">Android steps</a>. <a href="https://docs.nordicsemi.com/r/bundle/nrfutil/page/nrfutil-nrf5sdk-tools/nrfutil-nrf5sdk-tools-dfu.html/dfu-over-bluetooth-low-energy">Nordic’s guide to DFU over Bluetooth LE on a PC</a>.</p>
           <ul class="downloads"><li><a href="../">Open file manager</a></li>

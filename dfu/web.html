@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.48.4</title>
+  <title>Allmiibo DFU 3.49.0</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
 <main>
   <a data-en="← Back to the file manager" href="../" class="back-link">← Zurück zum Dateimanager</a>
-  <p class="eyebrow">ALLMIIBO · LCD · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.48.4</p>
+  <p class="eyebrow">ALLMIIBO · LCD · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.49.0</p>
   <h1 data-en="Update firmware">Firmware übertragen</h1>
   <p><a data-en="Guide to firmware, the bootloader and LittleFS" id="guide-link" href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
   <p class="notice"><strong data-en="Your collection stays on the device.">Deine Sammlung bleibt erhalten.</strong> <span data-en="The bundled update installs the application and preserves the bootloader, SoftDevice and existing Packed LittleFS file system.">Das mitgelieferte Update erneuert die Anwendung. Bootloader, SoftDevice und das bestehende Packed-LittleFS-Dateisystem bleiben erhalten.</span></p>
@@ -36,6 +36,7 @@
     <p data-en="On your Allmiibo, open the firmware update option in Settings. Use the button below and select “pixl dfu”. The transfer then starts automatically.">Am Allmiibo unter „Einstellungen“ den Menüpunkt für das Firmware-Update öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>
     <button data-en="Select DFU device and transfer" id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
     <p id="capability"></p>
+    <a data-en="iPhone and iPad guide" id="apple-guide" href="../guide/index.html#iphone" hidden>Hilfe für iPhone und iPad</a>
     <div id="awake-panel" hidden>
       <label><input id="awake-choice" type="checkbox" checked> <span data-en="Keep the screen awake during the update">Display während des Updates wach halten</span></label>
       <span id="awake-status" role="status"></span>
