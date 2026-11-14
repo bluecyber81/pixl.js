@@ -75,13 +75,13 @@ Beim Öffnen wählt der Dateimanager die erste unterstützte Sprache aus der Spr
 
 Eine zuvor gespeicherte Sprache hat Vorrang. Mit „Automatisch (Browsersprache)“ folgt die Seite wieder deinem Browser. Gibt es für keine deiner bevorzugten Sprachen eine Übersetzung, erscheint die Seite auf Englisch.
 
-- **3.44.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
+- **3.44.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
 
 ## Dateimanager 3.43.1
 
 Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639 als neueste geprüfte Firmware. Das Speicherprofil gilt für DE3.55 bis DE3.67. Unter **Sicherung → LittleFS: Umstellung & Wiederherstellung** ist dieses Profil vorausgewählt. Es berechnet, ob eine gewählte Sicherung mit der vorgesehenen Reserve auf das Ziellaufwerk passt.
 
-- **3.43.1** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
+- **3.43.1** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
 
 ## Dateimanager 3.43.0
 
@@ -90,7 +90,7 @@ Die lokale LittleFS-Platzprüfung zeigt DE3.67 mit App-Zähler 639 als neueste g
 3. Unter **Downloadlinks sichern und übertragen** Links als JSON speichern oder eine Datei für die Vorschau wählen. „Nur neue Links ergänzen“ erhält vorhandene Werte. „Geänderte Links aus der Datei übernehmen“ ersetzt die angezeigten Abweichungen. Der Export enthält die vollständigen URLs einschließlich etwaiger privater Zugangsparameter.
 4. **Gerät & Diagnose → LCD-Displayfoto** aufnehmen. **Um 180° drehen** dreht Vorschau und gespeichertes PNG. Das funktioniert mit LCD-App DE3.66 oder neuer.
 
-- **3.43.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
+- **3.43.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
 
 ## Dateimanager 3.42.2
 
@@ -98,8 +98,8 @@ Für die aktuelle Version tippe unten im Dateimanager auf **Quellcode (ZIP)** od
 
 Die bebilderten Schaltflächen für Figurenimport und Firmwareupdate nehmen oben weniger Platz ein. Beide bleiben direkt antippbar. Am Handy kannst du für 3.42.2 und 3.42.1 jeweils den Web-Quellcode oder das ChatGPT-Prüfpaket herunterladen. Die Quellcode-ZIP ist für die Arbeit am Dateimanager gedacht. Wähle das Prüfpaket, wenn du ChatGPT die Quellen und Nachweise zu DE3.66, Z19 und dem jeweiligen Dateimanager übergeben möchtest.
 
-- **3.42.2** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
-- **3.42.1 (Vorgängerversion)** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
+- **3.42.2** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
+- **3.42.1 (Vorgängerversion)** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
 
 ## Dateimanager 3.42.1
 

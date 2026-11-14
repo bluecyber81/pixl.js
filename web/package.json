@@ -13,7 +13,7 @@
     "postbuild": "node scripts/copy-license-notices.mjs root && npm run test:dist",
     "build:pages": "vite build --base=/pixl.js/ --outDir=dist-pages",
     "test:dist:pages": "node scripts/test-production-build.mjs pages",
-    "postbuild:pages": "node scripts/copy-license-notices.mjs pages && npm run test:dist:pages"
+    "postbuild:pages": "node scripts/copy-license-notices.mjs pages && node scripts/legacy-downloads.mjs && npm run test:dist:pages"
   },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.2",

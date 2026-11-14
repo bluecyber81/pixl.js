@@ -26,4 +26,4 @@ Offline-Vergleiche von ZIPs liefern gefilterte CSV-/JSON-Listen. Die Vorschau be
 
 Der Webkatalog führt Sword Kirby & Dragoon und Noir Dedede & Hydra seit dem 12. November als in den USA erschienen. Die vier Zelda-Hinweise zu Urbosa und Mipha sind online korrigiert. Auf dem LCD gilt noch der Text von App644. [Nintendo-Quellen und Zuordnungen](CATALOG_CORRECTIONS.md)
 
-[Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0) · [Prüfpaket](https://bluecyber81.github.io/pixl.js/downloads/web3.48.0/Allmiibo_DE3_71t1_Z19_Web3_48_0_ChatGPT_Pruefpaket.zip)
+[Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.0/Allmiibo_DE3_71t1_Z19_Web3_48_0_ChatGPT_Pruefpaket.zip)
