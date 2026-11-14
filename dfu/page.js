@@ -56,21 +56,31 @@ function targetDescription(target) {
         const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
-        if (app > target.counter) lines.push(choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15 kann sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
+        if (app > target.counter) lines.push(choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15, Z17 und Z19 können sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15, Z17 and Z19 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
         if (!target.softDevices.includes(sd)) lines.push(choose('Die ausgelesene FWID steht nicht in der Anforderungsliste.', 'The reported FWID is absent from the list of accepted IDs.'));
         lines.push(choose('Prüfe, dass du dasselbe Gerät auswählst.', 'Make sure you select the same device.'));
     } else lines.push(choose('Für den Vergleich im Dateimanager die Bootdaten lesen und von dort die DFU-Seite öffnen.', 'To compare versions, read the boot details in the file manager and open the DFU page from there.'));
     lines.push(choose('Die Displayvariante ist aus dem Hardwarefeld nicht bestimmbar.', 'Check the display variant on the device. The hardware field cannot identify it.'));
     return lines.join(' ');
 }
+function selectedProfileMismatch(entry) {
+    const ref = recentBootReference();
+    if (!entry || !ref) return false;
+    const name = ref.bl === 11 ? 'BL8' : 'Z' + ref.bl;
+    return !entry.bootloader.split('/').includes(name) || ref.sd !== 0x0126;
+}
 function controls() {
     const loading = bundled?.loading === true;
     fileInput.disabled = latestState.busy || latestState.loading || loading;
     selectButton.disabled = !supported || !latestState.ready || loading;
     bundledSelect.disabled = latestState.busy || latestState.loading || loading || !bundled?.catalog.packages.length;
-    loadBundled.disabled = bundledSelect.disabled || !bundledSelect.value;
     const selected = bundled?.catalog.packages.find(entry => entry.id === bundledSelect.value);
-    const androidUrl = selected && !bundledSelect.disabled && !(recentBootReference()?.app > selected.counter) && nrfDfuLink(selected);
+    const mismatch = selectedProfileMismatch(selected);
+    const downgrade = selected && recentBootReference()?.app > selected.counter;
+    loadBundled.disabled = Boolean(bundledSelect.disabled || !selected || mismatch || downgrade);
+    if (downgrade) setText(bundledInfo, 'Die gelesene Anwendung hat einen höheren Zähler. Wähle eine gleich neue oder neuere Version.', 'The installed application has a higher counter. Choose the same or a newer version.');
+    if (mismatch) setText(bundledInfo, `Dieses Paket setzt ${selected.bootloader} und S112 7.3.0 voraus. Die zuletzt gelesenen Bootdaten weichen davon ab.`, `This package requires ${selected.bootloader} and S112 7.3.0. The most recent boot readings differ from this profile.`);
+    const androidUrl = selected && !loadBundled.disabled && nrfDfuLink(selected);
     if (androidUrl) androidLink.setAttribute('href', androidUrl);
     else androidLink.removeAttribute('href');
     androidHandoff.hidden = !androidUrl;
@@ -186,13 +196,14 @@ try {
         placeholder.value = '';
         setText(placeholder, 'Mitgeliefertes Paket wählen', 'Select a bundled package');
         bundledSelect.appendChild(placeholder);
+        const current = bundled.catalog.packages.find(entry => entry.channel !== 'prerelease');
         for (const entry of bundled.catalog.packages) {
             const option = document.createElement('option');
             option.value = entry.id;
             const size = (entry.bytes / 1024).toFixed(1) + ' KiB';
             const preview = entry.channel === 'prerelease';
-            setText(option, `${entry.version}${preview ? ' (Testversion)' : ''} · ${size}`,
-                `${entry.version}${preview ? ' (test release)' : ''} · ${size}`);
+            setText(option, `${entry.version} · ${preview ? 'Testversion' : entry === current ? 'Stabile Ausgabe' : 'Frühere stabile Ausgabe'} · ${entry.bootloader} · ${size}`,
+                `${entry.version} · ${preview ? 'test release' : entry === current ? 'stable release' : 'earlier stable release'} · ${entry.bootloader} · ${size}`);
             bundledSelect.appendChild(option);
         }
         const requested = new URLSearchParams(globalThis.location.search).getAll('package');
@@ -219,7 +230,7 @@ bundledSelect.addEventListener('change', () => {
     bundled?.invalidate();
     controls();
 });
-loadBundled.addEventListener('click', () => { if (!latestState.busy) { fileInput.value=''; return bundled?.load(bundledSelect.value); } });
+loadBundled.addEventListener('click', () => { if (!latestState.busy && !loadBundled.disabled) { fileInput.value=''; return bundled?.load(bundledSelect.value); } });
 cancelBundled.addEventListener('click', () => bundled?.cancel());
 fileInput.addEventListener('change', () => {
     if (latestState.busy) return;
