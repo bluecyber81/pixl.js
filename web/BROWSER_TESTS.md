@@ -1,5 +1,7 @@
 # Browserprüfung des Produktionsbuilds
 
+Der Besitzer hat das Displayfoto mit Dateimanager 3.50.0 und DE3.74/App647 auf seinem LCD-Allmiibo am 14. November 2026 bestätigt. [Gerätenachweis](../docs/validation/DE3_74_LCD_ACCEPTANCE.json)
+
 ## LCD-Foto in der Fernbedienung ab 3.50.0
 
 Im Ordner `web` prüft `node scripts/verify-remote-keyboard-browser.mjs dist-pages /pixl.js/` den gebauten Dateimanager in Chrome auf Deutsch und Englisch. Die nachgebildete Gegenstelle liefert ein 128 × 64 Pixel großes Testbild. Geprüft werden Bildorientierung, zweite Aufnahme, PNG-Download, Tastatur und die Bedienung mit älterer Firmware. Für den Vergleich mit der tatsächlichen Geräteanzeige die BLE-Fernbedienung am wachen Gerät aktivieren, `Pixl.Remote` verbinden, einmal navigieren und „Displaybild aktualisieren“ wählen.

@@ -1,5 +1,11 @@
 # Allmiibo LCD firmware and file manager
 
+## Tested LCD release DE3.74 (App647) · File Manager 3.50.1
+
+A user tested the remote display photo on their LCD Allmiibo with File Manager 3.50.0. Version 3.50.1 lists DE3.74 as the stable application for LCD devices with Packed LittleFS, bootloader Z19 and S112 7.3.0. If DE3.74 is already installed, you can keep using it. [Device test](docs/validation/DE3_74_LCD_ACCEPTANCE.json)
+
+[Signed LCD application](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74) · [Online file manager](https://bluecyber81.github.io/pixl.js/) · [Windows ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.50.1/Allmiibo_Dateimanager_3_50_1_Portable.zip) · [Source ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.50.1/Allmiibo_Dateimanager_3_50_1_Quellcode.zip)
+
 ## DE3.74 / App647 and file manager 3.50.0
 
 Under **Remote control**, refresh the display image to see the current device menu on your phone. Rotate the image, save it as a PNG, or take another photo after navigating. Enable the BLE remote in settings on the awake LCD and connect to **Pixl.Remote**. DE3.74 adds the photo capture command. On DE3.73 you can also check the connection and see when the device answered. Cancelling an earlier connection attempt preserves a later file session.

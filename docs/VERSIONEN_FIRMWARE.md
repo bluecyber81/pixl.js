@@ -2,13 +2,15 @@
 
 ## DE3.74 / App647 und Dateimanager 3.50.0
 
+**Finale LCD-Version.** Am 14. November 2026 bestätigte der Besitzer, dass das Displayfoto in der Fernbedienung auf seinem Allmiibo LCD mit DE3.74 und Dateimanager 3.50.0 funktioniert. Der Diagnoseexport weist App647, Bootloader Z19 und SoftDevice S112 7.3.0 aus. [Firmwarefreigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74)
+
 Unter **Fernbedienung → Displaybild aktualisieren** zeigt das Handy das aktuelle Gerätemenü. Du kannst das Bild drehen, als PNG speichern und nach dem nächsten Tastendruck erneut aufnehmen. Aktiviere dazu am wachen LCD-Allmiibo die BLE-Fernbedienung und verbinde **Pixl.Remote**. DE3.74 fügt die Fotoaufnahme hinzu. Auch auf DE3.73 kannst du mit **Verbindung prüfen** die Uhrzeit der letzten angeforderten Geräteantwort sehen. Ein abgebrochener Verbindungsversuch kann eine neu aufgebaute Dateiübertragung nicht mehr versehentlich trennen.
 
 [Signierte Android-DFU-ZIP für LCD mit PFS1, Z19 und S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.74/Allmiibo_LCD_DE3_74_647_NUR_APP.zip) · [Dateimanager 3.50.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.0)
 
 ## DE3.73 / App646 · LCD-Testversion
 
-Der Slotdialog bestätigt die Slotnummer. Nach einem Wechsel zur nächsten Figur markiert die Liste beim Zurückgehen die zuletzt betrachtete Figur. Die signierten Pakete enthalten dieselbe App646. Bei installiertem Z19 genügt die [Nur-App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip). Für kompatible LCD-Geräte mit Bootloaderzähler unter 19 gibt es die [Android-Kombi mit Z19 und S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). DE3.65/App637 bleibt die stabile Vorauswahl. [Prüfbericht und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646)
+Der Slotdialog bestätigt die Slotnummer. Nach einem Wechsel zur nächsten Figur markiert die Liste beim Zurückgehen die zuletzt betrachtete Figur. Die signierten Pakete enthalten dieselbe App646. Bei installiertem Z19 genügt die [Nur-App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip). Für kompatible LCD-Geräte mit Bootloaderzähler unter 19 gibt es die [Android-Kombi mit Z19 und S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). Zur Veröffentlichung von DE3.73 war DE3.65/App637 die stabile Vorauswahl. [Prüfbericht und Quellen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646)
 
 ### Frühere Veröffentlichungen
 

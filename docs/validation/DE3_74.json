@@ -137,13 +137,16 @@
     ]
   },
   "hardware": {
-    "deviceFlashed": false,
-    "displayPhotoPhysicallyCompared": false,
-    "androidTransferObserved": false
+    "deviceFlashed": true,
+    "displayPhotoPhysicallyCompared": true,
+    "androidTransferObserved": false,
+    "evidence": "DE3_74_LCD_ACCEPTANCE.json",
+    "attribution": "Owner-reported installation and display-photo result; device version and counter corroborated by file-manager diagnostics."
   },
   "limits": [
     "ARM runs execute production functions against modeled memory and peripherals.",
     "Host disconnect/resume begins again at the offset reported by the model.",
     "No device storage, SoftDevice or bootloader image in the application ZIP."
-  ]
+  ],
+  "releaseStatus": "final"
 }

@@ -161,5 +161,5 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
       ...(sectionData('menu')?.schemaVersion === 2 ? ['PXMI v2 separately records the latest completed app return and first/last drawing calls in its desktop input context. This is not a physical LCD pixel or latency measurement; a stale-event count of 65535 is a lower bound.'] : []),
       ...(sectionData('startup')?.schemaVersion === 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
       'Storage cache sizes are configuration values, not measured cache usage.',
-      'SourceID and application BIN SHA-256 in buildIdentity.packageReference describe the signed experimental application package, not a hash measured on the device. Version/counter matches do not establish byte identity. No unique physical device ID is exported.'] };
+      'SourceID and application BIN SHA-256 in buildIdentity.packageReference describe the referenced signed application package, not a hash measured on the device. Version/counter matches do not establish byte identity. No unique physical device ID is exported.'] };
 }

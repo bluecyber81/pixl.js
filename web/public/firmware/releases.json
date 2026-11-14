@@ -2,6 +2,20 @@
   "schema": 1,
   "packages": [
     {
+      "id": "de3.74-lcd-app",
+      "version": "2.22.0-DE3.74",
+      "counter": 647,
+      "file": "Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
+      "bytes": 250805,
+      "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z19",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false
+    },
+    {
       "id": "de3.65-lcd-app",
       "version": "2.22.0-DE3.65",
       "counter": 637,
@@ -14,21 +28,6 @@
       "softDevice": "S112 7.3.0",
       "applicationOnly": true,
       "migrationRequired": false
-    },
-    {
-      "id": "de3.74-lcd-app",
-      "version": "2.22.0-DE3.74",
-      "counter": 647,
-      "file": "Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
-      "bytes": 250805,
-      "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
-      "board": "LCD",
-      "storage": "PFS1",
-      "bootloader": "Z19",
-      "softDevice": "S112 7.3.0",
-      "applicationOnly": true,
-      "migrationRequired": false,
-      "channel": "prerelease"
     },
     {
       "id": "de3.73-lcd-app",

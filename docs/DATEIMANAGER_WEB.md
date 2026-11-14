@@ -2,6 +2,8 @@
 
 ## DE3.74 / App647 und Dateimanager 3.50.0
 
+**Finale LCD-Version.** Am 14. November 2026 bestätigte der Besitzer, dass das Displayfoto in der Fernbedienung auf seinem Allmiibo LCD mit DE3.74 und Dateimanager 3.50.0 funktioniert. Der Diagnoseexport weist App647, Bootloader Z19 und SoftDevice S112 7.3.0 aus. [Firmwarefreigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74)
+
 Unter **Fernbedienung → Displaybild aktualisieren** zeigt das Handy das aktuelle Gerätemenü. Du kannst das Bild drehen, als PNG speichern und nach dem nächsten Tastendruck erneut aufnehmen. Aktiviere dazu am wachen LCD-Allmiibo die BLE-Fernbedienung und verbinde **Pixl.Remote**. DE3.74 fügt die Fotoaufnahme hinzu. Auch auf DE3.73 kannst du mit **Verbindung prüfen** die Uhrzeit der letzten angeforderten Geräteantwort sehen. Ein abgebrochener Verbindungsversuch kann eine neu aufgebaute Dateiübertragung nicht mehr versehentlich trennen.
 
 [Signierte Android-DFU-ZIP für LCD mit PFS1, Z19 und S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.74/Allmiibo_LCD_DE3_74_647_NUR_APP.zip) · [Dateimanager 3.50.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.0)
@@ -22,7 +24,7 @@ Der Offline-Katalog umfasst 954 Figuren. Unter **Figurenkatalog → Spiel → Ki
 
 Die lokale Platzprüfung unterstützt App646. Beim Ändern des Schreibschutzes bleiben die vorhandenen Metadaten erhalten. Reservierte Namen im Stammordner werden bereits vor dem Schreiben erkannt. Die Sicherungsansicht erklärt, wann die ZIP im Browser gespeichert ist und wann sie heruntergeladen wurde. [Dateimanager und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.2) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_DE3_73_App646_Z19_Web3_48_2_ChatGPT_Pruefpaket.zip)
 
-Für LCD-Geräte mit Packed LittleFS ist DE3.65/App637 die stabile Vorauswahl. Die optionale DE3.73/App646 gibt es mit vorhandenem Z19 als [Nur-App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip). Für kompatible Geräte mit älterem Bootloader gibt es die [zweiphasige Android-Kombi](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). Die [Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/) beschreibt die Geräteprüfung und den separaten SPIFFS-Migrationsweg.
+In Version 3.48.2 war DE3.65/App637 für LCD-Geräte mit Packed LittleFS die stabile Vorauswahl. Die optionale DE3.73/App646 gibt es mit vorhandenem Z19 als [Nur-App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip). Für kompatible Geräte mit älterem Bootloader gibt es die [zweiphasige Android-Kombi](https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip). Die [Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/) beschreibt die Geräteprüfung und den separaten SPIFFS-Migrationsweg.
 
 ## DE3.72 / App645 und Dateimanager 3.48.1
 
@@ -186,7 +188,7 @@ Bricht die Verbindung ab, bevor der Bootloader den Abschluss bestätigt, zeigt d
 
 Im Dateimanager unter **Gerät & Diagnose → Alle Diagnosewerte auslesen** die Bootinformationen einlesen, wenn du sie beim Update zum Vergleich verwenden möchtest. Anschließend die Dateiverbindung trennen. Auf der DFU-Seite das Paket auswählen. Schritt 1 zeigt den Anwendungszähler, das Hardwarefeld und die erlaubten SoftDevice-FWIDs aus den Init-Daten der ZIP-Datei. Wenn eine höchstens zehn Minuten alte Bootdiagnose verfügbar ist, kommen die Vergleichswerte und eventuelle Hinweise hinzu. Vor dem Übertragen das gewünschte Gerät in den DFU-Modus versetzen und im Browser auswählen.
 
-Im Web-Updater ist DE3.65/637 die stabile LCD-App. DE3.67/639 ist als Testversion mit deutschen Spielhinweisen auswählbar. Beide Anwendungs-ZIPs setzen passendes LCD und vorhandenes PFS1 voraus. [Pakete und Voraussetzungen](INSTALLATION.md) · [Migration von anderen Speicherformaten](MIGRATION_PFS1.md) · [Nachbau der Testversion](BUILD_DE3_67.md)
+Für ein LCD-Allmiibo mit vorhandenem PFS1, Z19 und S112 7.3.0 ist DE3.74/App647 die finale Geräte-App. Wähle die signierte Nur-App-ZIP. [Pakete und Voraussetzungen](INSTALLATION.md) · [Migration von anderen Speicherformaten](MIGRATION_PFS1.md) · [Nachbau der Testversion](BUILD_DE3_67.md)
 
 
 ## Startzeiten vergleichen

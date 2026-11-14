@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.74",
   "counter": 647,
   "board": "LCD",
-  "web_version": "3.50.0",
+  "web_version": "3.50.1",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
@@ -46,15 +46,14 @@
     "Matching LCD hardware/layout only.",
     "Unsigned builds and host tests are not physical device proof.",
     "Public inherited signing key does not prove exclusive publisher identity.",
-    "The two-stage system package supports only the documented LCD layout, signing key, bootloader counter and S112 IDs. No hardware transfer of this new package was observed."
+    "The separate two-stage migration package contains App645. The App647 display-photo test covers the application update only."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
-  "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.0",
+  "device_validation_pending": false,
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.1",
   "web_device_readback_pending": true,
-  "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
-  "device_readback_passed": false,
-  "device_validation_pending_scope": "App647 remote LCD snapshot fidelity, operation on a physical radio and Android DFU have not been observed. Firmware and application behavior were exercised on the build host.",
+  "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
+  "device_readback_passed": true,
   "previous_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
   "production_source_id_sha256": "b5793142353e600e8511ecc62a54ff9da5d568a650d5de680adeef5c1fb6654e",
   "tested_bootloader": {
@@ -64,7 +63,7 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Z19 and S112 7.3.0 were reported by DE3.73 on the user device. The new App647 package verifies against the bound Z19 public key. App647 device readback is pending."
+    "qualification": "App647 diagnostics report the reference Z19 boot-region hash and Nordic S112 7.3.0 (FWID 0x0126). The host also verified the App647 package against the bound Z19 public key."
   },
   "web_host_test_scope": "See the public web build evidence for tests, production layouts and the direct downloads.",
   "previous_web_full_suite": {
@@ -107,8 +106,8 @@
         "DE3.73/646",
         "DE3.74/647"
       ],
-      "stable": "DE3.65/637",
-      "prerelease": "DE3.74/647"
+      "stable": "DE3.74/647",
+      "prerelease": "DE3.73/646"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -133,7 +132,8 @@
     "web_3_48_3": "Ship 954 catalogue IDs, all seven Kirby Air Riders under the game filter, German name aliases, and Nintendo sources for both new riders. Firmware name flags still use the 952 App646 IDs.",
     "web_3_48_4": "The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines.",
     "web_3_49_0": "On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option.",
-    "web_3_50_0": "On demand DE LCD display photo during navigation, PNG export, remote STATUS check and session-safe file handoff."
+    "web_3_50_0": "On demand DE LCD display photo during navigation, PNG export, remote STATUS check and session-safe file handoff.",
+    "web_3_50_1": "Select the hardware-tested DE3.74/App647 application as the stable default for compatible LCD devices."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -145,11 +145,11 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_50_0.json",
-  "device_readback_evidence": null,
-  "web_device_readback_pending_scope": "The catalogue, builds and Windows client were tested. A Bluetooth device readback with these exact browser assets is pending.",
-  "fresh_public_unsigned_rebuild_matches_signed_application": false,
+  "status": "final",
+  "web_evidence": "docs/validation/WEB3_50_1.json",
+  "device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
+  "web_device_readback_pending_scope": "The physical confirmation with App647 was obtained using file manager 3.50.0. Web 3.50.1 updates the firmware download selection.",
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
       "file": "Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
@@ -185,6 +185,8 @@
     "bin_sha256": "5d8937db3482c777cd9f768bf15ecedf909adff9dd094446809faa0a3a045ddb",
     "app_only_zip_sha256": "e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe",
     "combined_zip_sha256": "4e0734788ead1192db8182eaea20a16fe070b480618f39da952c5bacb54f1b11",
-    "stable_default_counter": 637
-  }
+    "stable_default_counter_at_publication": 637
+  },
+  "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/runs/43577921706",
+  "device_validation_scope": "Owner-reported DE3.74 installation and remote display photo on one LCD with file manager 3.50.0. The diagnostic export confirms the firmware version, App647, Z19 and S112. A physical interrupted DFU was outside the acceptance test."
 }

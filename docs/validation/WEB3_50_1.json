@@ -1,0 +1,52 @@
+{
+  "version": "3.50.1",
+  "date": "2026-11-14",
+  "scope": "Publish accepted LCD DE3.74/App647 as the stable default for PFS1/Z19/S112 7.3.0.",
+  "physicalRemoteDisplayPhoto": {
+    "firmware": "2.22.0-DE3.74",
+    "applicationCounter": 647,
+    "fileManagerVersion": "3.50.0",
+    "evidence": "DE3_74_LCD_ACCEPTANCE.json"
+  },
+  "signedApplication": {
+    "package": "Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
+    "bytes": 250805,
+    "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+    "buildEvidence": "DE3_74.json"
+  },
+  "webBuilds": {
+    "portableChecksPassed": 22,
+    "githubPagesChecksPassed": 22
+  },
+  "browser": {
+    "engine": "Chrome",
+    "radio": "simulated",
+    "languages": [
+      "de-DE",
+      "en-GB"
+    ],
+    "remoteChecks": [
+      "on-demand LCD photo",
+      "PNG download",
+      "rotation",
+      "keyboard",
+      "legacy navigation",
+      "disconnect"
+    ],
+    "dfuAndFileManagerChecksPassed": 36
+  },
+  "windowsLauncher": {
+    "passed": 22,
+    "platformSpecificSkipped": 2
+  },
+  "updateSelection": [
+    "App647 can be selected again for a matching Z19 device.",
+    "A known incompatible bootloader or SoftDevice disables the bundled package action.",
+    "A known higher application counter prevents selection of an older bundled package.",
+    "Without a recent device reading, manual selection shows the required profile."
+  ],
+  "limits": [
+    "The 3.50.1 web checks were performed on a computer. The owner tested the remote display photo with file manager 3.50.0.",
+    "A physical Android DFU interruption and recovery remain untested for App647."
+  ]
+}

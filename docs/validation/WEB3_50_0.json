@@ -23,18 +23,23 @@
       "Chrome DE and EN with simulated Bluetooth; preview, PNG download, rotation, failed refresh, new snapshot and keypad navigation",
       "Legacy DE firmware can navigate without receiving a display command",
       "Explicit status receipt and DE/PixLink file handoffs after cancelled connections"
-    ]
+    ],
+    "hardwareAcceptance": {
+      "evidence": "DE3_74_LCD_ACCEPTANCE.json",
+      "fileManagerVersion": "3.50.0",
+      "scope": "Owner confirmed the remote display photo on an LCD running DE3.74/App647."
+    }
   },
   "dfu": {
     "catalogueAndBrowserChecks": 36,
-    "stableDefault": "DE3.65 / 637",
     "applicationOnly": true,
     "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
     "firmwareEvidence": "DE3_74.json",
-    "storageEvidence": "DE3_74_PFS.json"
+    "storageEvidence": "DE3_74_PFS.json",
+    "stableDefaultAtInitialTest": "DE3.65 / 637"
   },
   "limits": [
-    "Radio and physical LCD comparison on App647 are pending.",
-    "DFU transfer and interruption on a real Android phone have not been observed for this build."
+    "The owner confirmed the physical remote display photo. PNG export, rotation and transport error cases above were exercised with simulated Bluetooth.",
+    "DFU transfer and interruption on a real Android phone have not been independently observed for this build."
   ]
 }

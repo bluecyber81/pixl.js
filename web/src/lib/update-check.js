@@ -63,6 +63,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     compare('paramsAddress', diagnostic?.paramsLayoutKnown ? diagnostic.effectiveParamsAddress : null, target.bootloader.paramsAddress),
     compare('settingsAddress', diagnostic?.geometryValid ? diagnostic.settingsAddress : null, target.bootloader.settingsAddress),
     compare('settingsVersion', diagnostic?.settingsLayoutSupported ? diagnostic.settingsVersion : null, target.bootloader.settingsVersion),
+    ...(firmware === target.application.version ? [compare('targetBootCounter', bootCounter, target.bootloaderZ19.counter)] : []),
     flag('bootVectors', diagnostic?.bootVectorsValid),
     flag('settingsCrc', diagnostic?.settingsCrcValid),
     compare('addressConflict', diagnostic ? diagnostic.addressConflict : null, false)
@@ -78,7 +79,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
 export function updateCheckText(locale = 'de_DE') {
   const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
-  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · BL8 / Z13 / Z15 / Z16 / Z17 / Z18 / Z19 · S112 7.3.0`,
+  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · Z19 · S112 7.3.0`,
     targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}`,
       bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'}) / Z17 (${UPDATE_TARGET.bootloaderZ17.counter}) / Z18 (${german ? 'Rückkehr zu Z15-Code' : 'rollback to Z15 code'}) / Z19 (${UPDATE_TARGET.bootloaderZ19.counter})` },
     reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
@@ -108,7 +109,7 @@ const COPY = {
     overall: { match: 'Alle gelesenen Angaben passen zum lokalen Ziel.', different: 'Mindestens eine gelesene Angabe weicht vom Ziel ab.', unknown: 'Für den vollständigen Abgleich fehlen noch bestätigte Angaben.' },
     names: { hardware: 'Hardware', application: 'Anwendung', bootloader: 'Bootloader', softDevice: 'Bluetooth-Stack' },
     targets: { hardware: 'nRF52832 AAE0 · 512 KiB Flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
-    fields: { chip: 'Chip', variant: 'Chipvariante (AAE0)', flash: 'Chip-Flash', ram: 'Chip-RAM', page: 'Flash-Seite', geometry: 'Speichergeometrie gültig', version: 'Laufende Version', applicationCounter: 'Anwendungszähler', bootHash: 'SHA-256 des Bootloader-Bereichs', bootCounter: 'Bootloader-Zähler', bootAddress: 'Bootloader-Start', bootBytes: 'Bereichsgröße', paramsAddress: 'MBR-Parameter', settingsAddress: 'Settings-Adresse', settingsVersion: 'Settings-Layout', bootVectors: 'Boot-Vektoren gültig', settingsCrc: 'Settings-CRC gültig', addressConflict: 'Adresskonflikt', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware-ID' },
+    fields: { chip: 'Chip', variant: 'Chipvariante (AAE0)', flash: 'Chip-Flash', ram: 'Chip-RAM', page: 'Flash-Seite', geometry: 'Speichergeometrie gültig', version: 'Laufende Version', applicationCounter: 'Anwendungszähler', bootHash: 'SHA-256 des Bootloader-Bereichs', bootCounter: 'Bootloader-Zähler', targetBootCounter: 'Bootloader-Zähler der aktuellen LCD-Freigabe', bootAddress: 'Bootloader-Start', bootBytes: 'Bereichsgröße', paramsAddress: 'MBR-Parameter', settingsAddress: 'Settings-Adresse', settingsVersion: 'Settings-Layout', bootVectors: 'Boot-Vektoren gültig', settingsCrc: 'Settings-CRC gültig', addressConflict: 'Adresskonflikt', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware-ID' },
     reasons: {
       disconnected: 'Nicht verbunden; frühere Werte werden hier nicht als aktuell bestätigt.',
       notRead: 'Bootloader- und SoftDevice-Angaben noch nicht gelesen. Die Leseabfrage unten ausführen.',
@@ -117,7 +118,7 @@ const COPY = {
       applicationScope: 'Versionsmeldung und gespeicherter Zähler; kein Hashnachweis der laufenden Anwendung.',
       olderApplication: '',
       preparationApplication: 'Vorbereitungsfirmware: kein Nachweis einer abgeschlossenen LittleFS-Umstellung. Speicherbackend, vollständige Sicherung und Kapazität sind getrennt zu prüfen.',
-      knownLocalApplication: 'Die gelesene Version und der Zähler gehören zu einem bekannten LCD-Teststand. Die stabile Referenz ist DE3.65/637.',
+      knownLocalApplication: 'Die gelesene Version und der Zähler gehören zu einer früheren LCD-Ausgabe.',
       localZ19: 'Bereichs-Hash und Zähler stimmen mit dem bekannten LCD-Bootloader Z19 überein.',
       newerApplication: 'Diese Anwendung ist neuer als der mitgelieferte Vergleichsstand. Das allein belegt weder einen Fehler noch Inkompatibilität. Kein Downgrade wird vorgeschlagen.',
       z16Recovery: 'Z16-Rückkehrpaket erkannt. Der Bootbereich enthält den Z13-Programmcode mit Zähler 16.',
@@ -135,7 +136,7 @@ const COPY = {
     overall: { match: 'All read values match the local target.', different: 'At least one read value differs from the target.', unknown: 'A complete comparison still needs confirmed values.' },
     names: { hardware: 'Hardware', application: 'Application', bootloader: 'Bootloader', softDevice: 'Bluetooth stack' },
     targets: { hardware: 'nRF52832 AAE0 · 512 KiB flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
-    fields: { chip: 'Chip', variant: 'Chip variant (AAE0)', flash: 'Chip flash', ram: 'Chip RAM', page: 'Flash page', geometry: 'Valid memory geometry', version: 'Running version', applicationCounter: 'Application counter', bootHash: 'Bootloader region SHA-256', bootCounter: 'Bootloader counter', bootAddress: 'Bootloader start', bootBytes: 'Region size', paramsAddress: 'MBR parameters', settingsAddress: 'Settings address', settingsVersion: 'Settings layout', bootVectors: 'Valid boot vectors', settingsCrc: 'Valid settings CRC', addressConflict: 'Address conflict', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware ID' },
+    fields: { chip: 'Chip', variant: 'Chip variant (AAE0)', flash: 'Chip flash', ram: 'Chip RAM', page: 'Flash page', geometry: 'Valid memory geometry', version: 'Running version', applicationCounter: 'Application counter', bootHash: 'Bootloader region SHA-256', bootCounter: 'Bootloader counter', targetBootCounter: 'Bootloader counter for the current LCD release', bootAddress: 'Bootloader start', bootBytes: 'Region size', paramsAddress: 'MBR parameters', settingsAddress: 'Settings address', settingsVersion: 'Settings layout', bootVectors: 'Valid boot vectors', settingsCrc: 'Valid settings CRC', addressConflict: 'Address conflict', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware ID' },
     reasons: {
       disconnected: 'Disconnected; previous values are not confirmed as current here.',
       notRead: 'Bootloader and SoftDevice values have not been read. Use the read action below.',
@@ -144,7 +145,7 @@ const COPY = {
       applicationScope: 'Reported version and stored counter; not a hash verification of the running application.',
       olderApplication: '',
       preparationApplication: 'Preparation firmware: not evidence of a completed LittleFS migration. Check the storage backend, complete backup and physical capacity separately.',
-      knownLocalApplication: 'The reported version and counter belong to a known LCD test build. The stable reference is DE3.65/637.',
+      knownLocalApplication: 'The reported version and counter belong to an earlier LCD release.',
       localZ19: 'The region hash and counter match the known Z19 LCD bootloader.',
       newerApplication: 'This application is newer than the bundled comparison profile. That alone does not establish a fault or incompatibility. No downgrade is suggested.',
       z16Recovery: 'Z16 rollback package recognized. The boot region contains the Z13 code with counter 16.',
