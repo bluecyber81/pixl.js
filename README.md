@@ -1,5 +1,9 @@
 # Allmiibo LCD firmware and file manager
 
+## File Manager 3.51.0 · Files and folder uploads
+
+Folders appear first. Tap a figure file for its picture and details. On phones the type and size appear under the filename, with row actions on the right. If a local name cannot be used on the device, you can correct the destination name or skip that item before uploading. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.0)
+
 ## Tested LCD release DE3.74 (App647) · File Manager 3.50.1
 
 A user tested the remote display photo on their LCD Allmiibo with File Manager 3.50.0. Version 3.50.1 lists DE3.74 as the stable application for LCD devices with Packed LittleFS, bootloader Z19 and S112 7.3.0. If DE3.74 is already installed, you can keep using it. [Device test](docs/validation/DE3_74_LCD_ACCEPTANCE.json)

@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.50.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.51.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -183,46 +183,64 @@
     <p v-if="(connected || demoMode) && !table_loading && !listingError && !filteredRows.length" class="backup-hint" role="status">{{ $t(tableData.length ? 'workflow.noMatches' : current_dir ? 'workflow.emptyFolder' : 'workflow.noDrives') }}</p>
     <p v-if="connected && current_dir" class="backup-hint">{{ $t('tools.backupHint') }}</p>
     <div>
-      <el-table ref="multipleTable" :data="pagedRows" tooltip-effect="dark" style="width: 100%" v-loading="table_loading"
-        :element-loading-text="$t('status.loading')"  cell-class-name="file-cell"
-        @selection-change="on_table_selection_change"
-        @sort-change="on_sort_change"
-        :default-sort="{ prop: 'name', order: 'ascending' }">
-        <el-table-column type="selection" width="42" :selectable="row => connected && row.type !== 'DRIVE' && !busy">
-        </el-table-column>
-        <el-table-column prop="name" :label="$t('labels.name')" sortable="custom" min-width="240">
-          <template #default="scope">
-            <span class="file-symbol" aria-hidden="true">{{ scope.row.type === "REG" ? "▤" : scope.row.type === "DIR" ? "▣" : "◫" }}</span>
-            <button type="button" class="file-name-action" :data-file-name="scope.row.name" :disabled="(!connected && !(demoMode && scope.row.demoFigure)) || (busy && !previewBusy)" @click="select_file_row(scope.$index, scope.row)" @dblclick="download_preview_selection">
-              {{ scope.row.name }}</button>
-          </template>
-        </el-table-column>
-        <el-table-column prop="size" :label="$t('labels.size')" sortable="custom" width="150">
-        </el-table-column>
-        <el-table-column prop="type" :label="$t('labels.type')" sortable="custom" width="80">
-        </el-table-column>
-        <el-table-column prop="notes" :label="$t('labels.remark')" sortable="custom">
-        </el-table-column>
-        <el-table-column label="" fixed="right" width="40">
-          <template #default="scope">
-            <el-dropdown trigger="click" :disabled="!connected || busy" @command="command => on_row_command(command, scope.row)">
-              <button type="button" class="row-menu" :aria-label="$t('contxmenu.prop') + ': ' + scope.row.name" :disabled="!connected || busy">
-                <span aria-hidden="true">▾</span>
+      <div class="file-list-frame" v-if="pagedRows.length || table_loading" v-loading="table_loading" :element-loading-text="$t('status.loading')">
+        <div class="file-list-mobile-sort" v-if="filteredRows.length > 1">
+          <label>{{ $t('fileList.sort') }}
+            <select :value="sortKey" @change="on_sort_change({ prop: $event.target.value, order: sortOrder })">
+              <option v-for="column in fileListColumns" :key="column.key" :value="column.key">{{ $t(column.label) }}</option>
+            </select>
+          </label>
+          <button type="button" :aria-label="$t(sortOrder === 'ascending' ? 'fileList.sortDescending' : 'fileList.sortAscending')" @click="toggle_file_sort(sortKey)">
+            <span aria-hidden="true">{{ sortOrder === 'ascending' ? '↑' : '↓' }}</span>
+          </button>
+        </div>
+        <table class="directory-list" :aria-label="$t('workflow.filesTitle')">
+          <thead><tr>
+            <th scope="col" class="file-list-check"><input type="checkbox" :aria-label="$t('fileList.selectPage')"
+              :checked="!!selectablePageRows.length && selectablePageRows.every(row => table_selection.includes(row))"
+              :indeterminate="table_selection.length > 0 && table_selection.length < selectablePageRows.length"
+              :disabled="!connected || busy || !selectablePageRows.length" @change="table_selection = $event.target.checked ? selectablePageRows.slice() : []"></th>
+            <th v-for="column in fileListColumns" :key="column.key" scope="col" :class="'file-list-' + column.key" :aria-sort="sortKey === column.key ? sortOrder : undefined">
+              <button type="button" class="file-sort" @click="toggle_file_sort(column.key)">{{ $t(column.label) }}<span v-if="sortKey === column.key" aria-hidden="true">{{ sortOrder === 'ascending' ? '↑' : '↓' }}</span></button>
+            </th>
+            <th scope="col" class="file-list-actions">{{ $t('fileList.actions') }}</th>
+          </tr></thead>
+          <tbody><tr v-for="(row, index) in pagedRows" :key="row.name" :class="{ 'file-is-selected': table_selection.includes(row) }">
+            <td class="file-list-check"><input type="checkbox" :checked="table_selection.includes(row)" @change="select_file_entry(row, $event.target.checked)" :aria-label="$t('fileList.select', { name: row.name })"
+              :disabled="!connected || busy || row.type === 'DRIVE'"></td>
+            <td class="file-list-name">
+              <button type="button" class="file-name-action" :data-file-name="row.name" :data-kind="row.type"
+                :disabled="(!connected && !(demoMode && row.demoFigure)) || (busy && !previewBusy)" @click="select_file_row(index, row)" @dblclick="download_preview_selection">
+                <span class="file-list-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+                  <g v-if="row.type === 'DIR'"><path d="M3 7V5h6l2 2h9v3H3z" fill="currentColor" opacity=".5"/><path d="M2.5 9h19l-2 10h-17z" fill="currentColor"/></g>
+                  <g v-else-if="row.type === 'DRIVE'"><path d="M5 5h14l2 10v4H3v-4zM3 14h18"/><path d="M16 16.5h2"/></g>
+                  <g v-else><path d="M5 3h9l5 5v13H5zM14 3v5h5M8 13h7m-7 3h5"/></g>
+                </svg></span>
+                <span class="file-name-copy"><span>{{ row.name }}</span><small class="file-mobile-detail">{{ file_type_label(row) }}<template v-if="row.type !== 'DIR' && row.size"> · {{ row.size }}</template></small></span>
               </button>
-              <template #dropdown><el-dropdown-menu>
-                <el-dropdown-item command="remove"
-                  v-if="scope.row.type != 'DRIVE'">{{ $t('contxmenu.del') }}</el-dropdown-item>
-                <el-dropdown-item command="rename"
-                  v-if="scope.row.type != 'DRIVE'">{{ $t('contxmenu.rename') }}</el-dropdown-item>
-                <el-dropdown-item command="meta" :disabled="scope.row.metadataValid === false"
-                  v-if="scope.row.type != 'DRIVE'">{{ $t('contxmenu.prop') }}</el-dropdown-item>
-                <el-dropdown-item command="format"
-                  v-if="scope.row.type == 'DRIVE'">{{ $t('contxmenu.format') }}</el-dropdown-item>
-              </el-dropdown-menu></template>
-            </el-dropdown>
-          </template>
-        </el-table-column>
-      </el-table>
+              <span v-if="row.notes" class="file-mobile-note">{{ row.notes }}</span>
+            </td>
+            <td class="file-list-size">{{ row.type === 'DIR' ? '—' : row.size }}</td>
+            <td class="file-list-type">{{ file_type_label(row) }}</td>
+            <td v-if="fileListHasNotes" class="file-list-notes">{{ row.notes }}</td>
+            <td class="file-list-actions"><div class="file-inline-actions">
+              <button type="button" v-if="row.type !== 'DRIVE'" class="file-rename" :aria-label="$t('fileList.rename', { name: row.name })" :title="$t('contxmenu.rename')"
+                :disabled="!connected || busy" @click="on_row_command('rename', row)">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16-1 5 5-1L20 8l-4-4zM13 7l4 4"/></svg>
+              </button>
+              <el-dropdown trigger="click" :disabled="!connected || busy" @command="command => on_row_command(command, row)">
+                <button type="button" class="row-menu" :aria-label="$t('fileList.more', { name: row.name })" :title="$t('fileList.actions')" :disabled="!connected || busy"><span aria-hidden="true">•••</span></button>
+                <template #dropdown><el-dropdown-menu>
+                  <el-dropdown-item command="rename" v-if="row.type !== 'DRIVE'">{{ $t('contxmenu.rename') }}</el-dropdown-item>
+                  <el-dropdown-item command="meta" v-if="row.type !== 'DRIVE'" :disabled="row.metadataValid === false">{{ $t('contxmenu.prop') }}</el-dropdown-item>
+                  <el-dropdown-item command="remove" v-if="row.type !== 'DRIVE'">{{ $t('contxmenu.del') }}</el-dropdown-item>
+                  <el-dropdown-item command="format" v-if="row.type === 'DRIVE'">{{ $t('contxmenu.format') }}</el-dropdown-item>
+                </el-dropdown-menu></template>
+              </el-dropdown>
+            </div></td>
+          </tr></tbody>
+        </table>
+      </div>
       <div class="table-footer" v-if="tableData.length">
         <label class="page-size">{{ $t('workflow.pageSize') }} <select :value="pageSize" @change="set_page_size($event.target.value)" :disabled="busy"><option v-for="size in [25,50,100]" :key="size" :value="size">{{ size }}</option></select></label>
       <nav class="pagination" :aria-label="$t('tools.pages')" v-if="pageCount > 1">
@@ -298,7 +316,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.50.1</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.51.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -456,13 +474,16 @@
       <p v-if="syncFolderName">{{ $t(syncFolderContents ? 'info.syncContentsHint' : 'info.syncUploadFolderHint', {folder: syncFolderName}) }}</p>
       <label class="sync-picker">{{ $t('info.syncFiles') }} <input type="file" multiple :disabled="busy" @change="on_sync_files"></label>
       <label class="sync-picker">{{ $t('info.syncFolder') }} <input type="file" webkitdirectory multiple :disabled="busy" @change="on_sync_files($event, true)"></label>
+      <UploadNameReview v-if="syncNames" ref="uploadNameReview" :key="syncNameSerial" :review="syncNames"
+        :locale="language" :busy="busy" @edit="edit_sync_name" />
+      <p v-if="syncFolderContents && syncNames?.adjusted">{{ language === 'de_DE' ? 'Für umbenannte oder übersprungene Einträge wird kein neuer Vergleichsstand gespeichert. Eine frühere Vergleichsdatei kann weiterhin die Zielpfade prüfen.' : 'Renaming or skipping entries disables saving a new comparison reference. An existing reference can still check the destination paths.' }}</p>
       <div v-if="syncFolderContents && syncFolderName">
         <label class="sync-picker">{{ $t('info.historyChoose') }} <input type="file" accept=".json" :disabled="busy" @change="on_sync_history"></label>
         <span v-if="syncHistoryName">{{ syncHistoryName }} <button type="button" :disabled="busy" @click="on_sync_history(null)">{{ $t('info.historyClear') }}</button></span>
         <p>{{ $t('info.historyHint') }}</p>
       </div>
       <p>{{ $t('info.syncSelectedFiles', { count: syncFileCount }) }}</p>
-      <el-button @click="build_sync_plan" :disabled="!connected || busy || !syncFileCount">{{ $t('info.syncCompare') }}</el-button>
+      <el-button @click="build_sync_plan" :disabled="!connected || busy || !syncFileCount || !!syncNames?.problems">{{ $t('info.syncCompare') }}</el-button>
       <section v-if="syncPlan" class="sync-plan">
         <div class="sync-filter" role="group" :aria-label="$t('info.syncShow')">
           <button v-for="(count, key) in syncCounts" :key="key" type="button" :aria-pressed="syncFilter === key"
@@ -477,6 +498,7 @@
             </label>
             <button v-if="entry.status === 'deviceOnly' || (entry.expected && ['change','conflict'].includes(entry.comparison))" type="button" :disabled="busy || !connected" @click="download_sync_entry(entry.targetPath)">{{ $t('info.syncSaveDevice') }}</button>
             <small v-if="entry.reason">{{ plan_reason(entry.reason) }}</small>
+            <button v-if="entry.status === 'blocked'" type="button" :disabled="busy" @click="$refs.uploadNameReview?.focusTarget(entry.targetPath)">{{ language === 'de_DE' ? 'Zielnamen bearbeiten' : 'Edit destination name' }}</button>
           </div>
           <p v-if="!syncPagedEntries.length">{{ $t('info.syncEmpty') }}</p>
         </div>
@@ -555,6 +577,7 @@ import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, assertWritableDevicePath, portableNameKey } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
+import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
 import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
@@ -572,7 +595,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
@@ -585,7 +608,7 @@ export default {
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
-      syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
+      syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0, syncNames: null, syncNameSerial: 0,
       syncHistoryName: '', syncHistoryReady: null,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
       collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
@@ -673,11 +696,30 @@ export default {
     syncPageCount() { return Math.max(1, Math.ceil(this.syncFilteredEntries.length / 100)); },
     syncPagedEntries() { return this.syncFilteredEntries.slice((this.syncPage - 1) * 100, this.syncPage * 100); },
     filteredRows() { return filterRows(this.tableData, this.searchQuery, this.typeFilter); },
+    fileListHasNotes() { return this.sortKey === 'notes' || this.tableData.some(row => row.notes); },
+    fileListColumns() {
+      const columns = [{key:'name', label:'labels.name'}, {key:'size', label:'labels.size'}, {key:'type', label:'labels.type'}];
+      if (this.fileListHasNotes) columns.push({key:'notes', label:'labels.remark'});
+      return columns;
+    },
+    selectablePageRows() { return this.pagedRows.filter(row => row.type !== 'DRIVE'); },
     nameCollator() { return new Intl.Collator(this.language.replace('_', '-'), { numeric: true, sensitivity: 'base' }); },
     sortedRows() {
       const direction = this.sortOrder === 'descending' ? -1 : 1;
-      return [...this.filteredRows].sort((a, b) => direction * (this.sortKey === 'size'
-        ? this.sort_table_row_size(a, b) : this.nameCollator.compare(a[this.sortKey] || '', b[this.sortKey] || '')));
+      const compare = this.nameCollator.compare;
+      const rows = [...this.filteredRows];
+      const typeLabels = this.sortKey === 'type'
+        ? new Map(rows.map(row => [row, this.file_type_label(row)]))
+        : null;
+      return rows.sort((a, b) => {
+        if (a.type === 'DIR' && b.type !== 'DIR') return -1;
+        if (b.type === 'DIR' && a.type !== 'DIR') return 1;
+        let order;
+        if (this.sortKey === 'size') order = a.type === 'DIR' ? 0 : this.sort_table_row_size(a, b);
+        else if (typeLabels) order = compare(typeLabels.get(a), typeLabels.get(b));
+        else order = compare(a[this.sortKey] || '', b[this.sortKey] || '');
+        return direction * (order || compare(a.name, b.name));
+      });
     },
     pageCount() { return Math.max(1, Math.ceil(this.filteredRows.length / this.pageSize)); },
     pagedRows() { const start = (Math.min(this.page, this.pageCount) - 1) * this.pageSize; return this.sortedRows.slice(start, start + this.pageSize); },
@@ -1127,12 +1169,29 @@ export default {
       this.invalidate_sync(); this.syncRoot = this.current_dir; this.syncDialog = true;
     },
     invalidate_sync() {
-      this.workflowCancelling = false; this._syncController?.abort(); this._syncController = null; this._syncFiles = [];
+      this.workflowCancelling = false; this._syncController?.abort(); this._syncController = null;
+      this.clear_sync_names();
       this._syncGeneration = null; this._syncDeviceKey = null;
       this._syncHistoryFile = null; this._syncHistory = null; this.syncHistoryName = ''; this.syncHistoryReady = null;
       this.syncDialog = false; this.syncing = false; this.syncFileCount = 0;
       this.syncFolderName = ''; this.syncFolderContents = false;
       this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
+    },
+    clear_sync_names() {
+      this._syncFiles = []; this._syncInputs = []; this._syncNameNodes = []; this._syncNameEdits = {};
+      this.syncNames = null; this.syncNameSerial++; this.syncFileCount = 0;
+    },
+    apply_sync_names() {
+      const review = reviewUploadNames(this.syncRoot, this._syncNameNodes, this._syncNameEdits, this._syncInputs);
+      this.syncNames = Object.freeze(review);
+      this._syncFiles = review.files; this.syncFileCount = review.included;
+      this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage = 1;
+      this._syncHistory = null; this.syncHistoryReady = null;
+    },
+    edit_sync_name(id, patch) {
+      if (!this.connected || !this.syncDialog || this.busy || !this._syncNameNodes[id]) return;
+      this._syncNameEdits[id] = { ...this._syncNameEdits[id], ...patch };
+      this.apply_sync_names();
     },
     on_sync_files(event, folderContents = false) {
       if (!this.connected || !this.syncDialog || this.busy) return;
@@ -1141,15 +1200,23 @@ export default {
       if (folderContents) files = files.filter(file => !/^Allmiibo-Ordnervergleich\.allmiibo-sync(?: \(\d+\))?\.json$/iu.test(file.name));
       this._syncHistoryFile = null; this._syncHistory = null; this.syncHistoryName = ''; this.syncHistoryReady = null;
       this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
-      this._syncFiles = []; this.syncFileCount = 0; this.syncFolderName = ''; this.syncFolderContents = false;
+      this.clear_sync_names(); this.syncFolderName = ''; this.syncFolderContents = false;
       if (files.length > 4096) { this.show_transfer_error(new Error(this.$t('info.syncTooMany'))); return; }
       // The folder picker includes its own name. The comparison pairs folder contents,
       // whereas the existing upload entry point intentionally transfers the whole folder.
-      this._syncFiles = folderContents ? files.map(file => {
+      this._syncInputs = folderContents ? files.map(file => {
         const path = file.webkitRelativePath || file.name;
         return {file, relativePath: path.slice(path.indexOf('/') + 1)};
       }) : files;
-      this.syncFileCount = files.length;
+      if (!files.length) return;
+      try {
+        this._syncNameNodes = uploadNameTree(this._syncInputs);
+        this.apply_sync_names();
+      } catch (error) {
+        this.clear_sync_names();
+        this.show_transfer_error(error.code === 'SYNC_LIMIT' ? new Error(this.$t('info.syncTooMany')) : error);
+        return;
+      }
       this.syncFolderName = files[0]?.webkitRelativePath?.split('/')[0] || '';
       this.syncFolderContents = folderContents;
     },
@@ -1166,7 +1233,7 @@ export default {
       catch(error) { this.show_transfer_error(error); }
     },
     async build_sync_plan() {
-      if (!this.connected || this.busy || !this.syncFileCount) return;
+      if (!this.connected || this.busy || !this.syncFileCount || this.syncNames?.problems) return;
       const generation = this.sessionGeneration, deviceKey = pixl.get_device_key?.();
       if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
@@ -1174,8 +1241,8 @@ export default {
       try {
         const adapters = this.transfer_adapters(generation);
         const localFolder = this.syncFolderContents && this.syncFolderName;
-        const binding = localFolder && await folderBinding(deviceKey, this.syncRoot, localFolder);
-        const history = this._syncHistoryFile && await readSyncHistory(this._syncHistoryFile, deviceKey, this.syncRoot, localFolder);
+        const binding = localFolder && !this.syncNames?.adjusted && await folderBinding(deviceKey, this.syncRoot, localFolder);
+        const history = localFolder && this._syncHistoryFile && await readSyncHistory(this._syncHistoryFile, deviceKey, this.syncRoot, localFolder);
         this.assert_session(generation);
         const plan = await createSyncPlan({rootPath:this.syncRoot, files:this._syncFiles, deviceKey, localFolder, history,
           ...adapters, signal:controller.signal, onProgress:progress => {
@@ -1458,7 +1525,15 @@ export default {
       }
       this.on_filter_change();
     },
-    on_filter_change() { this.page = 1; this.table_selection = []; this.$refs.multipleTable?.clearSelection(); },
+    on_filter_change() { this.page = 1; this.table_selection = []; },
+    select_file_entry(row, selected) {
+      if (!this.connected || this.busy || row.type === 'DRIVE') return;
+      if (selected && !this.table_selection.includes(row)) this.table_selection.push(row);
+      if (!selected) this.table_selection = this.table_selection.filter(entry => entry !== row);
+    },
+    toggle_file_sort(prop) {
+      this.on_sort_change({ prop, order: prop === this.sortKey && this.sortOrder === 'ascending' ? 'descending' : 'ascending' });
+    },
     reset_filters() { this.searchQuery=''; this.typeFilter='all'; this.on_filter_change(); },
     on_sort_change({ prop, order }) {
       this.sortKey = ['name', 'size', 'type', 'notes'].includes(prop) ? prop : 'name';
@@ -1973,31 +2048,70 @@ export default {
       if (!this.connected || !this.current_dir || this.searchBusy || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingDownloads || this.mutating) return Promise.reject(new Error(this.$t('conn.disconnected')));
       const dir = this.current_dir, generation = this.sessionGeneration, safe = this.safeUploads, verify = safe || this.verifyUploads, replace = this.replaceUploads;
       let controller;
-      let path;
-      try { path = this.new_entry_path(dir, options.file.name); }
-      catch (error) { return Promise.reject(error); }
+      let targetName = options.file.name;
       if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.fileSizeLimit')));
       ++this.pendingUploads;
       const checkPreflight = () => {
         this.assert_session(generation);
         if (this._cancelUploadGeneration === generation || controller?.signal.aborted) throw Object.assign(new Error(this.$t('info.uploadCancelled')), {name:'AbortError'});
       };
+      const correctName = async (error, entries = []) => {
+        const message = err => {
+          const key = { NAME_LIMIT: 'nameLimit', PATH_LIMIT: 'pathLimit', PATH_RESERVED: 'pathReserved' }[err.code];
+          return key ? this.$t('workflow.' + key, err.details) : err.message;
+        };
+        const validate = name => {
+          try {
+            this.new_entry_path(dir, name);
+            const key = portableNameKey(name);
+            if (entries.some(entry => portableNameKey(entry.name) === key)) return this.$t('info.portableCollision');
+            return true;
+          } catch (err) { return message(err); }
+        };
+        const { value } = await this.ask_dialog(() => this.$prompt(
+          this.$t('workflow.uploadTargetExplanation', { name: options.file.name, dir, reason: message(error) }),
+          this.$t('workflow.uploadTargetName'), {
+            ...this.confirm_options(), inputValue: targetName, inputValidator: validate,
+            cancelButtonText: this.$t('workflow.skipUploadFile')
+          }));
+        checkPreflight();
+        const result = validate(value);
+        if (result !== true) throw new Error(result);
+        return value;
+      };
       const run = async () => {
         checkPreflight();
+        let path;
+        try { path = this.new_entry_path(dir, targetName); }
+        catch (error) {
+          if (error.code === 'PATH_RESERVED') throw error;
+          targetName = await correctName(error);
+          path = this.new_entry_path(dir, targetName);
+        }
         if (safe) { controller = new AbortController(); this._uploadController = controller; }
         // Refresh the destination before OPEN('w'): uploads in this same batch
         // can have introduced a new conflict since the displayed listing.
-        const entries = this.checked(await proto.vfs_read_folder(dir));
-        checkPreflight();
-        const aliases = entries.filter(entry => portableNameKey(entry.name) === portableNameKey(options.file.name));
-        if (aliases.length > 1 || aliases.some(entry => entry.name !== options.file.name)) throw new Error(this.$t('info.portableCollision'));
+        const list = async () => {
+          const entries = this.checked(await proto.vfs_read_folder(dir));
+          checkPreflight();
+          return entries;
+        };
+        const aliasesFor = entries => entries.filter(entry => portableNameKey(entry.name) === portableNameKey(targetName));
+        const entries = await list();
+        let aliases = aliasesFor(entries);
+        if (aliases.length > 1 || aliases.some(entry => entry.name !== targetName)) {
+          targetName = await correctName(new Error(this.$t('info.portableCollision')), entries);
+          path = this.new_entry_path(dir, targetName);
+          aliases = aliasesFor(await list());
+          if (aliases.some(entry => entry.name !== targetName) || aliases.length > 1) throw new Error(this.$t('info.portableCollision'));
+        }
         const existing = aliases[0];
         if (existing) {
-          if (existing.type !== 0) throw new Error(this.$t('tools.conflictDirectory', { name: options.file.name }));
+          if (existing.type !== 0) throw new Error(this.$t('tools.conflictDirectory', { name: targetName }));
           if (existing.meta?.valid === false) throw new Error(this.$t('properties.invalidmeta'));
           if (existing.meta?.flags?.readonly || (existing.meta?.flags?.raw & 4)) throw new Error(this.$t('info.readonlyTarget'));
-          if (!replace) throw new Error(this.$t('tools.exists', { name: options.file.name }));
-          await this.ask_dialog(() => this.$confirm(this.$t(safe ? 'info.safeReplaceWarning' : 'tools.replaceWarning', { name: options.file.name }), this.$t('upload.title'), this.confirm_options()));
+          if (!replace) throw new Error(this.$t('tools.exists', { name: targetName }));
+          await this.ask_dialog(() => this.$confirm(this.$t(safe ? 'info.safeReplaceWarning' : 'tools.replaceWarning', { name: targetName }), this.$t('upload.title'), this.confirm_options()));
           checkPreflight();
         }
         const drives = await this.read_drive_info(generation);
@@ -2067,6 +2181,7 @@ export default {
     },
 
     on_upload_error(err, file, filelist) {
+      if (err === 'cancel' || err === 'close') return;
       if (err?.code === 'NAME_LIMIT' || err?.code === 'PATH_LIMIT' || err?.code === 'PATH_RESERVED') return this.show_transfer_error(err);
       this.$message({
         type: 'error',
@@ -2198,8 +2313,10 @@ export default {
         { max: note.maxBytes, actual: note.bytes });
     },
 
-    on_table_selection_change(selected) {
-      this.table_selection = selected;
+    file_type_label(row) {
+      if (row.type === 'DIR') return this.$t('fileList.folder');
+      if (row.type === 'DRIVE') return this.$t('fileList.drive');
+      return this.$t(/\.bin$/i.test(row.name) ? 'fileList.bin' : 'fileList.file');
     },
 
     sort_table_row_name(a, b) {
@@ -2314,6 +2431,7 @@ export default {
       for (var i = 0; i < this.tableData.length; i++) {
         if (this.tableData[i].name == name) {
           if (this.previewSelection?.row === this.tableData[i]) this.close_preview_selection();
+          this.table_selection = this.table_selection.filter(row => row.name !== name);
           this.tableData.splice(i, 1);
           this.page = Math.min(this.page, this.pageCount);
           return;
@@ -2754,3 +2872,4 @@ body,.filemanager { background:var(--shell-paper); }
 .status-links .guide-link { font-size:.8rem; }
 </style>
 <style src="./styles/workspaces.css"></style>
+<style src="./styles/directory-list.css"></style>

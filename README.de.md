@@ -1,5 +1,9 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
+## Dateimanager 3.51.0 · Dateien und Ordnerupload
+
+Ordner stehen oben. Tippe eine Figurendatei an, um ihr Bild und ihre Informationen zu öffnen. Am Handy stehen Dateityp und Größe unter dem Namen, die Aktionen findest du rechts. Ist ein lokaler Name für das Allmiibo ungeeignet, kannst du den Zielnamen vor dem Hochladen korrigieren oder den Eintrag überspringen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Downloads für Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.0)
+
 ## Getestete LCD-Finalversion DE3.74 (App647) · Dateimanager 3.50.1
 
 Das Displayfoto der Fernbedienung wurde mit Dateimanager 3.50.0 am LCD-Allmiibo getestet. Version 3.50.1 führt DE3.74 als stabile App für LCD-Geräte mit Packed LittleFS, Bootloader Z19 und S112 7.3.0. Wer DE3.74 schon verwendet, kann sie weiter nutzen. [Gerätetest](docs/validation/DE3_74_LCD_ACCEPTANCE.json)

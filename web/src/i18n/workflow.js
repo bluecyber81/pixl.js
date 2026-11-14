@@ -1,4 +1,6 @@
 export const workflowGerman = {
+  uploadTargetName: 'Zielnamen ändern', skipUploadFile: 'Datei überspringen',
+  uploadTargetExplanation: 'Wähle für „{name}“ einen Zielnamen in {dir}. {reason}',
   startActions: 'Schnelleinstieg',
   flashGuide: 'Anleitung für Firmware und Speicher', migrationGuide: 'LittleFS-Umstellung Schritt für Schritt',
   startFigure: 'Ich möchte eine Figur hinzufügen', startFigureHint: 'Figur auswählen und die passende BIN-Datei prüfen.',
@@ -87,6 +89,8 @@ export const workflowGerman = {
   zipPath: 'Das Archiv enthält ungültige oder mehrdeutige Namen. Die Einträge wurden nicht automatisch umbenannt.'
 }
 export const workflowEnglish = {
+  uploadTargetName: 'Change destination name', skipUploadFile: 'Skip file',
+  uploadTargetExplanation: 'Choose a destination name for “{name}” in {dir}. {reason}',
   startActions: 'Quick start',
   flashGuide: 'Firmware and storage guide', migrationGuide: 'LittleFS migration step by step',
   startFigure: 'I want to add a figure', startFigureHint: 'Choose a figure and check its BIN file.',

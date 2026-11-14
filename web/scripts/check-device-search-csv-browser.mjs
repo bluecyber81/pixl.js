@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 // Install only the browser peripheral boundary. The production BLE, protocol, VFS,
 // catalogue, download and Vue code run unchanged in an isolated browser context.
-export function installReadOnlyPeripheral({files, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
+export function installReadOnlyPeripheral({files, directories, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
   const encoder = new TextEncoder(), decoder = new TextDecoder();
   const commands = [], violations = [];
   window.testPeripheral = { commands, violations, connections: 0 };
@@ -12,7 +12,7 @@ export function installReadOnlyPeripheral({files, capacity, firmwareVersion = '2
   const word = n => [n & 255, (n >>> 8) & 255];
   const dword = n => [...word(n), ...word(n >>> 16)];
   const string = s => { const bytes = encoder.encode(s); return [...word(bytes.length), ...bytes]; };
-  const entry = (name, size, type) => [...string(name), ...dword(size), type, 0];
+  const entry = (name, size, type, metadata = []) => [...string(name), ...dword(size), type, metadata.length, ...metadata];
   let open;
   function payload(cmd, frame, record) {
     if (cmd === 3) return [80, 88, 68, 70, 1, 3, ...word(243), ...word(247)];
@@ -26,6 +26,7 @@ export function installReadOnlyPeripheral({files, capacity, firmwareVersion = '2
         return [1];
       }
       if (cmd === 0x16) {
+        if (directories && Object.hasOwn(directories, record.path)) return directories[record.path].flatMap(row => entry(...row));
         if (record.path === 'E:/') return [...entry('A', 0, 1), ...entry('B', 0, 1)];
         const file = files[record.path + '/Twin.bin'];
         if (file) return entry('Twin.bin', file.length, 0);
