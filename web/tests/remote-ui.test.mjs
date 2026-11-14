@@ -4,11 +4,12 @@ import fs from 'node:fs';
 import {parse,compileScript,compileTemplate} from '@vue/compiler-sfc';
 import * as Vue from 'vue';
 import {remoteText} from '../src/lib/remote-text.js';
+import {REMOTE_LCD_CAPABILITY} from '../src/lib/remote-control.js';
 const file=process.env.REMOTE_UI_COMPONENT_URL?new URL(process.env.REMOTE_UI_COMPONENT_URL):new URL('../src/components/RemoteControl.vue',import.meta.url);
 const {descriptor}=parse(fs.readFileSync(file,'utf8'),{filename:file.pathname});
 const script=compileScript(descriptor,{id:'remote-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const Component=');
 const template=compileTemplate({source:descriptor.template.content,id:'remote-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`).replace('export function render','function render');
-const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText','PixLinkRemote',script+'\n'+template+'\nComponent.render=render;return Component;');
+const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText','PixLinkRemote','DisplayPhoto','REMOTE_LCD_CAPABILITY',script+'\n'+template+'\nComponent.render=render;return Component;');
 const node=(type,text='')=>({type,text,props:{},children:[],parent:null});
 const renderer=Vue.createRenderer({createElement:t=>node(t),createText:t=>node('#text',t),createComment:t=>node('#comment',t),setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[];},patchProp:(n,k,o,v)=>n.props[k]=v,insert(n,p,a=null){if(n.parent)n.parent.children.splice(n.parent.children.indexOf(n),1);n.parent=p;const i=p.children.indexOf(a);i<0?p.children.push(n):p.children.splice(i,0,n);},remove(n){n.parent?.children.splice(n.parent.children.indexOf(n),1);n.parent=null;},parentNode:n=>n.parent,nextSibling:n=>n.parent?.children[n.parent.children.indexOf(n)+1]||null});
 const text=n=>n.text+n.children.map(text).join(''),flat=n=>[n,...n.children.flatMap(flat)];
@@ -16,7 +17,7 @@ const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;
 function mount(options={}){
  const calls=[],active=[],root=node('root');let notify;const emit=(phase,error='')=>notify({phase,error,capabilities:options.caps??15});
  const client={connect:async()=>{calls.push('connect');emit('connecting');if(options.connect)await options.connect(calls.filter(value=>value==='connect').length);emit('ready');},command:async name=>{calls.push(name);emit('command');try{if(options.command)await options.command(name);return {opcode:name==='files'&&options.sameLink?4:undefined,status:name==='files'?8:0,state:name==='files'?2:1};}finally{emit('ready');}},releaseFileConnection:accept=>{calls.push('handoff');try{assert.equal(accept({fixture:true}),true);}finally{emit('disconnected');}return true;},disconnect:async()=>{calls.push('disconnect');emit('disconnected');}};
- const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{});
+ const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{}, {render:()=>Vue.h('div')},REMOTE_LCD_CAPABILITY);
  const props=Vue.reactive({blocked:!!options.blocked,locale:options.locale||'de_DE',onActive:v=>active.push(v),handoffFileConnection:options.handoff});
  let vm;const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:v=>vm=v})});app.mount(root);
  return{root,app,props,calls,active,emit,get vm(){return vm;},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label))};
@@ -29,6 +30,37 @@ test('file connection or unsupported browser blocks both UI and connect method',
 });
 test('manual connection alone enables buttons and emits an independent active lock',async()=>{
  const h=mount();try{await h.vm.connectRemote();await Vue.nextTick();assert.deepEqual(h.calls,['connect']);assert.deepEqual(h.active,[true,true]);assert.equal(h.button('Mitte').props.disabled,false);assert.match(text(h.root),/Fernbedienung bereit/);await h.vm.disconnectRemote();await Vue.nextTick();assert.equal(h.active.at(-1),false);assert(h.button('Mitte').props.disabled);}finally{h.app.unmount();}
+});
+test('manual STATUS shows a local time only on acknowledgement, and forgets it after disconnect', async () => {
+ const gate=defer(), h=mount({command:() => gate.promise});
+ try {
+  assert.equal(h.button('Verbindung prüfen'),undefined);
+  await h.vm.connectRemote(); await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null);
+  const request=h.button('Verbindung prüfen').props.onClick(); await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null);
+  assert.equal(h.button('Verbindung prüfen').props['aria-disabled'], true);
+  await h.vm.press('status'); await h.vm.press('center');
+  gate.resolve(); await request; await Vue.nextTick();
+  assert.deepEqual(h.calls,['connect','status']);
+  assert.match(text(h.root), /Die Fernbedienung hat um \d\d:\d\d:\d\d geantwortet/);
+  h.props.locale='en_US'; await Vue.nextTick();
+  assert.match(text(h.root), /The remote responded at \d{1,2}:\d\d:\d\d/);
+  h.emit('disconnected','REMOTE_DISCONNECTED');await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null); assert.doesNotMatch(text(h.root), /responded at/);
+  await h.vm.press('status'); assert.deepEqual(h.calls,['connect','status']);
+ }finally{h.app.unmount();}
+});
+test('an unanswered status check reports a timed out connection check and no key uncertainty', async () => {
+ const h=mount({command:()=>{throw Object.assign(Error('timeout'),{code:'REMOTE_TIMEOUT'});}});
+ try {
+  await h.vm.connectRemote(); await h.vm.press('status'); await Vue.nextTick();
+  assert.equal(h.vm.checkedAt, null);
+  assert.match(text(h.root), /nicht rechtzeitig auf die Verbindungsprüfung/);
+  h.props.locale='en_US'; await Vue.nextTick();
+  assert.match(text(h.root), /did not respond to the connection check in time/);
+  assert.deepEqual(h.calls,['connect','status']);
+ }finally{h.app.unmount();}
 });
 test('one user tap sends one command and pending acknowledgement disables all new input',async()=>{
  const gate=defer(),h=mount({command:()=>gate.promise});try{await h.vm.connectRemote();const p=h.vm.press('center');await Vue.nextTick();assert.equal(h.button('Mitte').props['aria-disabled'],true);await h.vm.press('left');assert.deepEqual(h.calls,['connect','center']);assert.match(text(h.root),/Warte auf Gerätebestätigung/);gate.resolve();await p;await Vue.nextTick();assert.match(text(h.root),/Tastendruck „Mitte“ bestätigt/);}finally{h.app.unmount();}
@@ -105,7 +137,7 @@ test('setup help retains all limits but closes on connect and leaves controls be
   await h.vm.connectRemote();await Vue.nextTick();assert.equal(h.vm.setupOpen,false);assert.equal(help().props.open,false);
   const nodes=flat(h.root);assert(nodes.indexOf(h.button('Mitte'))<nodes.indexOf(help()));
   assert.match(text(help()),/Bluetooth-Reichweite/);assert.match(text(help()),/nicht aufwecken/);assert.match(text(help()),/echten Tasten bleiben/);
-  assert.match(text(help()),/kein Gerätebild/);assert.match(text(help()),/Nach Ausschalten oder Neustart ist sie wieder aus/);
+  assert.match(text(help()),/wie ein kurzer Tastendruck/);assert.match(text(help()),/Nach Ausschalten oder Neustart ist sie wieder aus/);
   assert(!nodes.some(n=>n.props.class==='remote-setup-short'));
  }finally{h.app.unmount();}
 });

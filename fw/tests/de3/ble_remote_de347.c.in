@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "ble_remote.h"
 #include "ble_remote_protocol.h"
@@ -20,7 +21,7 @@ static struct {uint32_t FIELDPRESENT;} nfct;
 typedef struct {unsigned id,arg_int;void *arg_ptr;} mui_event_t;
 /* ACTUAL_INPUT_CONTEXT */
 typedef struct {mui_event_t *events;void *dispatcher;unsigned head,count;} mui_event_queue_t;
-typedef struct {bool initialized,memory_error;mui_event_queue_t event_queue;} mui_t;
+typedef struct {bool initialized,memory_error;mui_event_queue_t event_queue;struct {uint8_t *pixels;unsigned width,height;} u8g2;} mui_t;
 typedef struct {bool file,loop;} mini_app_launcher_t;
 static mui_event_t input_events[64];
 static mui_t mock_ui;
@@ -30,7 +31,24 @@ static bool mock_hold,mock_advertising,mock_launch_fail;
 static unsigned mock_session,mock_link,mock_tick,mock_send_result,mock_actions,mock_launches,mock_feed,mock_sent,mock_aborts,mock_releases;
 static int mock_action_effect;
 static unsigned mock_input;
-static uint8_t mock_reply[12];
+static uint8_t mock_reply[REMOTE_MAX_REPLY_SIZE];
+static size_t mock_reply_length;
+#ifdef BOARD_LCD
+static size_t mock_capacity=247;
+static bool mock_no_memory;
+static unsigned mock_allocations;
+static uint8_t mock_pixels[1024];
+static size_t ble_nus_max_data_length(void){return mock_capacity;}
+static void *mui_mem_malloc(size_t size){
+    assert(!critical_depth && size==sizeof mock_pixels && !mock_allocations);
+    if(mock_no_memory)return NULL;
+    ++mock_allocations;return malloc(size);
+}
+static void mui_mem_free(void *block){assert(!critical_depth && mock_allocations==1);--mock_allocations;free(block);}
+#define u8g2_GetBufferTileHeight(p) ((p)->height)
+#define u8g2_GetBufferTileWidth(p) ((p)->width)
+#define u8g2_GetBufferPtr(p) ((p)->pixels)
+#endif
 static uint32_t app_timer_cnt_get(void){return mock_tick;}
 static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return a-b;}
 static mini_app_launcher_t *mini_app_launcher(void){return &mock_launcher;}
@@ -55,7 +73,7 @@ static void ble_device_mode_prepare(unsigned mode){assert(mode==3);mock_mode=tru
 static void ble_adv_start(void){mock_advertising=true;}
 static void ble_nus_set_handler(ble_work_rx_t rx,ble_work_notify_t tx){ble_work_set_handlers(rx,tx);}
 static void ble_nus_abort_transfer(void){mock_aborts++;ble_work_disconnected();}
-static uint32_t ble_nus_tx_data(void *data,size_t n){assert(critical_depth>0 && n==12);if(!mock_send_result){memcpy(mock_reply,data,12);mock_sent++;}return mock_send_result;}
+static uint32_t ble_nus_tx_data(void *data,size_t n){assert(critical_depth>0 && n>=12 && n<=sizeof mock_reply);if(!mock_send_result){memcpy(mock_reply,data,n);mock_reply_length=n;mock_sent++;}return mock_send_result;}
 static uint32_t ble_remote_open_file_link(const uint8_t *data,size_t n,uint32_t generation){assert(generation==mock_session);uint32_t r=ble_nus_tx_data((void *)data,n);if(!r){mock_mode=false;mock_session++;}return r;}
 static void nrf_pwr_mgmt_feed(void){mock_feed++;}
 static void mui_event_dispatch_now(mui_event_queue_t *q,mui_event_t *e){
@@ -84,8 +102,96 @@ static void reset(void){
 }
 static void enqueue(unsigned op,unsigned seq,unsigned arg){uint8_t b[8]={80,88,1,op,seq,seq>>8,arg,0};CHECK(ble_remote_receive_irq(b,8));}
 static void request(unsigned op,unsigned seq,unsigned arg){enqueue(op,seq,arg);ble_work_process(clean);ble_remote_poll();CHECK(!critical_depth);}
-static void handshake(void){request(0,1,0);CHECK(mock_reply[6]==0&&mock_reply[7]==1&&mock_reply[8]==31);}
-int main(void){
+static void handshake(void){request(0,1,0);CHECK(mock_reply[6]==0&&mock_reply[7]==1&&mock_reply[8]==REMOTE_CAPABILITIES);}
+#ifdef BOARD_LCD
+static void photo_start(size_t capacity){
+    reset();handshake();
+    mock_capacity=capacity;mock_no_memory=false;
+    mock_ui.u8g2.width=16;mock_ui.u8g2.height=8;mock_ui.u8g2.pixels=mock_pixels;
+    for(unsigned i=0;i<sizeof mock_pixels;i++)mock_pixels[i]=(uint8_t)(i*47u+(i>>8));
+}
+static void photo_tests(void){
+    /* Every GATT size, including non-aligned payload capacities. Change the UI
+     * after the first chunk to distinguish a frozen frame from page tearing. */
+    for(unsigned capacity=20;capacity<=247;capacity++){
+        photo_start(capacity);
+        uint8_t expected[sizeof mock_pixels];memcpy(expected,mock_pixels,sizeof expected);
+        unsigned seq=2,offset=0;
+        while(offset<sizeof expected){
+            unsigned index=offset/8u;request(REMOTE_LCD_READ,seq,index);
+            CHECK(mock_reply[3]==133 && mock_reply[4]==(seq&255) && mock_reply[5]==(seq>>8));
+            CHECK(mock_reply[6]==REMOTE_DONE && mock_reply[7]==REMOTE_ACTIVE && mock_reply[8]==63 && mock_reply[9]==0);
+            unsigned count=mock_reply[11];
+            CHECK(mock_reply[10]==index && count>=8 && count<=128 && !(count%8));
+            CHECK(mock_reply_length==12u+count && mock_reply_length<=capacity && offset+count<=sizeof expected);
+            CHECK(!memcmp(mock_reply+12,expected+offset,count));
+            memset(mock_pixels,(unsigned char)seq,sizeof mock_pixels);
+            /* A foreign sequence must not destroy the last valid LCD data. */
+            request(REMOTE_LCD_READ,seq+2,index);CHECK(mock_reply_length==12 && mock_reply[6]==REMOTE_SEQUENCE);
+            request(REMOTE_LCD_READ,seq,index);CHECK(mock_reply_length==12+count && !memcmp(mock_reply+12,expected+offset,count));
+            offset+=count;seq++;
+        }
+        CHECK(!mock_actions&&!mock_feed&&!mock_launches&&!mock_allocations);
+        request(REMOTE_LCD_READ,seq,1);CHECK(mock_reply_length==12&&mock_reply[6]==REMOTE_INVALID);
+    }
+    photo_start(247);mock_send_result=NRF_ERROR_RESOURCES;request(REMOTE_LCD_READ,2,0);
+    CHECK(mock_allocations==1 && protocol.replying);uint8_t original=mock_pixels[0];mock_pixels[0]^=255;
+    mock_send_result=NRF_SUCCESS;ble_remote_poll();CHECK(mock_reply[12]==original && mock_reply_length==140);
+    request(REMOTE_LCD_READ,3,0);CHECK(mock_reply[12]==mock_pixels[0] && mock_allocations==1);
+    request(REMOTE_LCD_READ,4,128);CHECK(mock_reply[6]==REMOTE_INVALID && mock_reply_length==12);
+    request(REMOTE_LCD_READ,5,1);CHECK(mock_reply[6]==REMOTE_INVALID && mock_reply_length==12);
+    mock_tick+=30000;ble_remote_poll();CHECK(!mock_allocations);
+    request(REMOTE_LCD_READ,6,16);CHECK(mock_reply[6]==REMOTE_INVALID);
+    for(unsigned end=0;end<5;end++){
+        photo_start(247);request(REMOTE_LCD_READ,2,0);CHECK(mock_allocations==1);
+        if(end==0){disconnect();connect();handshake();request(REMOTE_LCD_READ,2,16);CHECK(mock_reply[6]==REMOTE_INVALID);}
+        if(end==1){ble_remote_set_enabled(false);ble_remote_poll();}
+        if(end==2){ble_remote_shutdown();}
+        if(end==3){mock_ready=false;ble_remote_poll();}
+        if(end==4){request(REMOTE_OPEN_FILE_LINK,3,0);ble_remote_poll();}
+        CHECK(!mock_allocations);
+    }
+    photo_start(247);mock_no_memory=true;request(REMOTE_LCD_READ,2,0);
+    CHECK(mock_reply[6]==REMOTE_NO_MEMORY && mock_reply_length==12 && !mock_allocations);
+    mock_no_memory=false;mock_ui.u8g2.pixels=NULL;request(REMOTE_LCD_READ,3,0);
+    CHECK(mock_reply[6]==REMOTE_BUSY && !mock_allocations);
+    mock_ui.u8g2.pixels=mock_pixels;mock_ui.u8g2.height=1;request(REMOTE_LCD_READ,4,0);
+    CHECK(mock_reply[6]==REMOTE_BUSY && !mock_allocations);
+    photo_start(19);request(REMOTE_LCD_READ,2,0);CHECK(mock_reply[6]==REMOTE_UNSUPPORTED && !mock_allocations);
+    photo_start(20);nfct.FIELDPRESENT=1;request(REMOTE_LCD_READ,2,0);CHECK(mock_reply[6]==REMOTE_DONE && !mock_actions && !mock_feed);
+    ble_remote_local_activity();enqueue(REMOTE_LCD_READ,3,1);ble_remote_local_activity();
+    ble_work_process(clean);ble_remote_poll();CHECK(mock_reply[6]==REMOTE_BUSY && mock_reply_length==12);
+    ble_remote_shutdown();CHECK(!mock_allocations);
+}
+#endif
+#ifdef BOARD_LCD
+static void write_exchange(FILE *stream, unsigned opcode, unsigned seq, unsigned index){
+    uint8_t req[8]={80,88,1,opcode,seq,seq>>8,index,0};
+    for(size_t i=0;i<sizeof req;i++)fprintf(stream,"%02x",req[i]);
+    fputc(' ',stream);
+    for(size_t i=0;i<mock_reply_length;i++)fprintf(stream,"%02x",mock_reply[i]);
+    fputc('\n',stream);
+}
+static void write_vectors(const char *path){
+    FILE *stream=fopen(path,"wb");assert(stream);
+    photo_start(247);write_exchange(stream,REMOTE_STATUS,1,0);
+    for(unsigned i=0;i<sizeof mock_pixels;i++)mock_pixels[i]=(uint8_t)(i*37u+i/128u);
+    unsigned index=0,seq=2;
+    while(index < sizeof mock_pixels/8u){
+        request(REMOTE_LCD_READ,seq,index);CHECK(mock_reply[6]==REMOTE_DONE && mock_reply[11]);
+        write_exchange(stream,REMOTE_LCD_READ,seq,index);
+        index+=mock_reply[11]/8u;seq++;
+    }
+    assert(fclose(stream)==0);
+}
+#endif
+int main(int argc,char **argv){
+#ifdef BOARD_LCD
+    if(argc==3 && !strcmp(argv[1],"--lcd-vectors")){write_vectors(argv[2]);return 0;}
+    photo_tests();
+#else
+    reset();handshake();request(REMOTE_LCD_READ,2,0);CHECK(mock_reply_length==12 && mock_reply[6]==REMOTE_UNSUPPORTED && mock_reply[8]==31);
+#endif
     reset();request(2,1,0);CHECK(mock_reply[6]==REMOTE_UNSUPPORTED&&mock_actions==0);request(0,2,0);CHECK(protocol.handshake);
     for(unsigned key=0;key<3;key++){request(2,3+key,key);CHECK(mock_input==((2u<<8)|key));}
     CHECK(mock_actions==3);request(3,6,0);CHECK(mock_actions==4&&mock_input==((3u<<8)|1));

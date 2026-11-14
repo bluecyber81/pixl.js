@@ -18,7 +18,12 @@ const app646 = Object.freeze({
   applicationBytes: 364092, applicationBinSha256: '5d8937db3482c777cd9f768bf15ecedf909adff9dd094446809faa0a3a045ddb',
   sourceId: '53e1fb72f45fdd0b8ed8bef3c11752c90c4198ae15bf79fc5ca3d97071ea05d0', otaSha256: 'e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe',
 });
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646];
+const app647 = Object.freeze({
+  ...app646, firmwareVersion: '2.22.0-DE3.74', applicationCounter: 647,
+  applicationBytes: 364460, applicationBinSha256: '71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead',
+  sourceId: 'b5793142353e600e8511ecc62a54ff9da5d568a650d5de680adeef5c1fb6654e', otaSha256: '58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6', hardwareAcceptance: 'pending',
+});
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
@@ -30,7 +35,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
     sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = references.find(item => item.firmwareVersion === version) ?? app646;
+  const reference = references.find(item => item.firmwareVersion === version) ?? app647;
   const relation = version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
   return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,

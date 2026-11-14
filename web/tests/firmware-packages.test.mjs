@@ -9,7 +9,7 @@ const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmi
 
 test('the signed test package reaches Android and is compared when only the device version is available', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
-  const candidate = packages.find(item => item.version === '2.22.0-DE3.73');
+  const candidate = packages.find(item => item.version === '2.22.0-DE3.74');
   assert.equal(candidate.channel, 'prerelease');
   const android = new URL(nrfDfuLink(candidate));
   assert.equal(android.searchParams.get('file'), 'https://bluecyber81.github.io/pixl.js/firmware/' + candidate.file);
@@ -17,9 +17,9 @@ test('the signed test package reaches Android and is compared when only the devi
     assert.equal(nrfDfuLink({...candidate, ...changed}), null);
   }
   assert.equal(packagePresentation(packages[0], {connected:true, firmwareVersion:candidate.version}).newer, true);
-  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.74'}).newer, true);
-  assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.73-test646');
-  assert.deepEqual(packages.map(item=>item.counter),[637,646,645]);
+  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.75'}).newer, true);
+  assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.74');
+  assert.deepEqual(packages.map(item=>item.counter),[637,647,646,645]);
 });
 test('package presentation is explicit local scope and never claims unread storage compatibility',()=>{
  for(const locale of ['de_DE','en_US']){const t=firmwarePackageText(locale);assert.ok(t.scope&&t.unread&&t.limits&&t.empty&&t.local);}

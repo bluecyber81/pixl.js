@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPixLink,PIXLINK_UUIDS as cp} from '../src/lib/pixlink.js';
 import {REMOTE_UUIDS as nus} from '../src/lib/remote-control.js';
+import {claimGatt, ownsGatt, releaseGatt} from '../src/lib/gatt-owner.js';
 import {installPixLinkPeripheral} from '../scripts/pixlink-test-peripheral.mjs';
 
 function setup(settings={}) {
@@ -81,23 +82,98 @@ test('file handoff fails closed for missing NUS, missing mode reply, unreadable 
   }
 });
 
-test('a cancelled GATT open completing late cannot tear down a later file-manager handoff for the same device',async()=>{
-  const {client,sim}=setup();
+async function cancelPendingOpen(client, sim) {
   const server=sim.device.gatt;
   const connect=server.connect.bind(server);
-  let finishOld;
+  const started=Promise.withResolvers();
+  const pending=Promise.withResolvers();
   server.connect=async()=>{
     server.connect=connect;
-    await new Promise(resolve=>finishOld=resolve);
+    started.resolve();
+    await pending.promise;
     return connect();
   };
   const old=client.connect();
-  while(!finishOld)await new Promise(resolve=>setTimeout(resolve,0));
+  await started.promise;
   client.disconnect();
   await assert.rejects(old,{code:'cancelled'});
+  return async()=>{
+    pending.resolve();
+    await new Promise(resolve=>setImmediate(resolve));
+  };
+}
+
+test('a cancelled GATT open completing late cannot tear down a later file-manager handoff for the same device',async()=>{
+  const {client,sim}=setup();
+  const finishOld=await cancelPendingOpen(client,sim);
   await client.connect();
-  await client.openFiles(()=>true);
-  finishOld();
-  await new Promise(resolve=>setTimeout(resolve,0));
-  assert.equal(server.connected,true);
+  const fileOwner={};
+  await client.openFiles(({device})=>{claimGatt(device,fileOwner);return true;});
+  await finishOld();
+  assert.equal(sim.device.gatt.connected,true);
+  assert(ownsGatt(sim.device,fileOwner));
+});
+
+test('stale PixLink open leaves a directly connected file client alone; without a successor it cleans up',async()=>{
+  for (const useFileClient of [true,false]) {
+    const {client,sim}=setup();
+    const finishOld=await cancelPendingOpen(client,sim);
+    const fileOwner={};
+    if (useFileClient) {
+      claimGatt(sim.device,fileOwner);
+      await sim.device.gatt.connect();
+    }
+    await finishOld();
+    assert.equal(sim.device.gatt.connected,useFileClient);
+    assert.equal(sim.disconnects,useFileClient?0:1);
+    assert.equal(ownsGatt(sim.device,fileOwner),useFileClient);
+    releaseGatt(sim.device,fileOwner);
+  }
+});
+
+test('a separate PixLink client can use the same device after cancelling an older connection attempt',async()=>{
+  const {client,sim}=setup();
+  const finishOld=await cancelPendingOpen(client,sim);
+  const replacement=createPixLink({environment:sim.environment,timeoutMs:120});
+  await replacement.connect();
+  await finishOld();
+  await replacement.enableControl();
+  assert.deepEqual(sim.writes,[['cp',2,0,0,0]]);
+  replacement.disconnect();
+});
+
+test('a queued disconnect event does not close an already reconnected device',async()=>{
+  const {client,sim,states}=setup();
+  await client.connect();
+  client.disconnect();
+  await client.connect();
+  sim.device.dispatchEvent(new Event('gattserverdisconnected'));
+  assert.equal(states.at(-1).phase,'linked');
+  await client.enableControl();
+  sim.device.gatt.disconnect();
+  assert.equal(states.at(-1).phase,'disconnected');
+  assert.equal(states.at(-1).error,'lost');
+});
+
+test('an old disconnect event during a new GATT open defers to the bounded connection result',async()=>{
+  const {client,sim,states}=setup();
+  await client.connect();
+  client.disconnect();
+  const started=Promise.withResolvers(), opening=Promise.withResolvers();
+  const gatt=sim.device.gatt;
+  gatt.connect=async()=>{
+    started.resolve();
+    await opening.promise;
+    gatt.connected=true;
+    return gatt;
+  };
+  const replacement=client.connect();
+  await started.promise;
+  assert.equal(gatt.connected,false);
+  sim.device.dispatchEvent(new Event('gattserverdisconnected'));
+  assert.equal(states.at(-1).phase,'connecting');
+  opening.resolve();
+  await replacement;
+  assert.equal(states.at(-1).phase,'linked');
+  client.disconnect();
 });

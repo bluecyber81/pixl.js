@@ -16,6 +16,7 @@
       <button v-else type="button" @click="disconnectRemote" :disabled="phase === 'disconnecting'">{{ text[phase === 'connecting' ? 'cancel' : 'disconnect'] }}</button>
       <span class="remote-state" :class="{online:phase === 'ready'}" role="status" aria-live="polite">{{ text[phase] }}</span>
     </div>
+    <button v-if="keypadActive" type="button" class="remote-check" :aria-disabled="!ready" @click="press('status')">{{ text.checkConnection }}</button>
     <p v-if="unavailable || error" class="remote-warning" role="alert">{{ text.errors[unavailable || error] || text.failed }}</p>
     <div class="remote-pad" role="group" :aria-label="text.title"
          :tabindex="keypadActive ? 0 : -1" :aria-describedby="keypadActive ? 'remote-keyboard-hint' : undefined"
@@ -26,11 +27,12 @@
       <button type="button" @click="press('right')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.right"><span aria-hidden="true">→</span><strong>{{ text.right }}</strong></button>
     </div>
     <p v-if="keypadActive" id="remote-keyboard-hint" class="remote-limit">
-      {{ text.keyboard }}<template v-if="capabilities & 2"> {{ text.keyboardBack }}</template>
+      {{ text.keyboard }}{{ capabilities & 2 ? ' ' + text.keyboardBack : '' }}
     </p>
     <button type="button" class="remote-back" @click="press('back')" :disabled="!ready || !(capabilities & 2)">{{ text.back }}</button>
+    <DisplayPhoto v-if="keypadActive" class="remote-photo" remote :remote-supported="photoSupported" :connected="keypadActive" :blocked="!ready" :locale="locale" :read-photo="captureDisplay"/>
     <button type="button" class="remote-files" @click="press('files')" :disabled="!ready">{{ text.files }}</button>
-    <p v-if="notice" role="status" aria-live="polite">{{ text.receipts[notice] || text[notice] }}</p>
+    <p v-if="notice" role="status" aria-live="polite">{{ notice==='status' ? statusReceipt : text.receipts[notice] || text[notice] }}</p>
     <details class="remote-help" :open="setupOpen" @toggle="setupOpen = $event.target.open">
       <summary>{{ text.setupTitle }}</summary>
       <p>{{ text.introduction }}</p><p>{{ text.setup }}</p>
@@ -40,22 +42,33 @@
   </section>
 </template>
 <script>
-import { createRemoteClient, remoteAvailability } from '../lib/remote-control.js';
+import { createRemoteClient, remoteAvailability, REMOTE_LCD_CAPABILITY } from '../lib/remote-control.js';
 import PixLinkRemote from './PixLinkRemote.vue';
+import DisplayPhoto from './DisplayPhoto.vue';
 import { remoteText } from '../lib/remote-text.js';
 const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'center', Escape:'back'});
 export default {
-  components:{PixLinkRemote},
+  components:{PixLinkRemote,DisplayPhoto},
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
-  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',setupOpen:false,unavailable:remoteAvailability()};},
+  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',checkedAt:null,setupOpen:false,unavailable:remoteAvailability()};},
   computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
-    keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');}},
+    keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');},
+    photoSupported(){return !!(this.capabilities & REMOTE_LCD_CAPABILITY);},
+    statusReceipt(){
+      if(this.checkedAt===null)return '';
+      const time=new Intl.DateTimeFormat(this.locale==='de_DE'?'de-DE':'en-US',{timeStyle:'medium'}).format(this.checkedAt);
+      return this.text.connectionConfirmed.replace('{time}',time);
+    }},
   created(){
     this._remoteMounted=true;
     this._remoteUiGeneration=0;
     this._remoteClient=createRemoteClient({onState:state=>{
       if(!this._remoteMounted)return;
       this.phase=state.phase;this.capabilities=state.capabilities||0;
+      if(state.phase==='disconnected' || state.phase==='handoff') {
+        this.checkedAt=null;
+        if(this.notice==='status')this.notice='';
+      }
       if(state.error){this.error=state.error;this.notice='';}
       this.$emit('active',state.phase!=='disconnected');
     }});
@@ -63,6 +76,10 @@ export default {
   beforeUnmount(){this._remoteMounted=false;++this._remoteUiGeneration;this._remoteClient.disconnect();this.$emit('active',false);},
   watch:{blocked(value){if(value&&this.phase!=='disconnected')this.disconnectRemote();}},
   methods:{
+    captureDisplay(){
+      this.error='';this.notice='';this.checkedAt=null;
+      return this._remoteClient.captureDisplay();
+    },
     pixLinkActive(value){this.pixActive=value;this.$emit('active',value);},
     preventRepeat(event){
       if(event.repeat && event.target?.tagName === 'BUTTON' && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
@@ -79,7 +96,7 @@ export default {
     async connectRemote(){
       if(this.blocked||this.phase!=='disconnected'||this.unavailable)return;
       const generation=++this._remoteUiGeneration;
-      this.error='';this.notice='';this.setupOpen=false;
+      this.error='';this.notice='';this.checkedAt=null;this.setupOpen=false;
       try{await this._remoteClient.connect();}catch(error){if(this._remoteMounted&&generation===this._remoteUiGeneration)this.error=error?.code||'REMOTE_UNSUPPORTED';}
     },
     async disconnectRemote(){
@@ -90,11 +107,13 @@ export default {
     async press(command){
       if(!this.ready)return;
       const generation=this._remoteUiGeneration;
-      this.error='';this.notice='';
+      this.error='';this.notice='';this.checkedAt=null;
       try{
         const reply=await this._remoteClient.command(command,{sameLink:typeof this.handoffFileConnection==='function'});
         if(!this._remoteMounted||generation!==this._remoteUiGeneration)return;
-        if(command==='files'){
+        if(command==='status'){
+          if(this.ready){this.checkedAt=Date.now();this.notice='status';}
+        }else if(command==='files'){
           if(reply.opcode===4){
             this._remoteClient.releaseFileConnection(this.handoffFileConnection);
             if(this._remoteMounted&&generation===this._remoteUiGeneration)this.notice='filesConnected';
@@ -103,7 +122,11 @@ export default {
             if(this._remoteMounted&&generation===this._remoteUiGeneration)this.notice='filesReady';
           }
         }else this.notice=command;
-      }catch(error){if(this._remoteMounted&&generation===this._remoteUiGeneration)this.error=error?.code||'REMOTE_REJECTED';}
+      }catch(error){
+        if(this._remoteMounted&&generation===this._remoteUiGeneration){
+          this.error=command==='status'&&error?.code==='REMOTE_TIMEOUT'?'REMOTE_STATUS_TIMEOUT':error?.code||'REMOTE_REJECTED';
+        }
+      }
     }
   }
 };
@@ -121,6 +144,11 @@ button:disabled,button[aria-disabled=true]{opacity:.5;cursor:default;}button:foc
 .remote-pad button{min-height:92px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;touch-action:manipulation;}
 .remote-pad span{font-size:1.8rem;line-height:1;}.remote-pad strong{font-size:.87rem;font-weight:600;}
 .remote-files{width:100%;margin-top:10px;}.remote-back{width:100%;margin-top:10px;}.remote-pad button:not(:disabled):active{background:#dcebee;}
+.remote-photo :deep(button),.remote-photo :deep(a){display:inline-flex;align-items:center;min-height:44px;padding:8px 12px;box-sizing:border-box;border-radius:8px;color:inherit;font:inherit;}
+.remote-photo :deep(button){border:1px solid #8aafb7;background:#fff;cursor:pointer;}
+.remote-photo :deep(button:disabled){opacity:.5;cursor:default;}
+.remote-photo :deep(button:focus-visible),.remote-photo :deep(a:focus-visible){outline:3px solid #388294;outline-offset:3px;}
+.remote-photo :deep(img){box-sizing:border-box;}
 .remote-help{margin-top:16px;border-top:1px solid #d6e4e7;padding-top:10px;}.remote-help summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-size:.85rem;font-weight:600;}.remote-help summary:focus-visible{outline:3px solid #388294;outline-offset:3px;}
 @media(max-width:480px){.remote-control{padding:12px;}.remote-pad{gap:7px;}.remote-pad button{padding:8px 5px;}.remote-pad strong{font-size:.76rem;}.remote-connection>button{width:100%;}}
 </style>

@@ -67,6 +67,9 @@ typedef struct {
     int8_t fav_page_direction;
     uint8_t fav_page_focus;
     uint8_t fav_page_mode;
+    /* Destination selection must not overwrite the source list or resume page. */
+    amiidb_fav_info_t fav_select_anchor;
+    int8_t fav_select_direction;
     uint8_t in_fav_folders;
 
     /** data slot */

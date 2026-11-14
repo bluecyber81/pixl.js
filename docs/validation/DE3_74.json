@@ -1,0 +1,149 @@
+{
+  "version": "2.22.0-DE3.74",
+  "counter": 647,
+  "board": "LCD",
+  "sourceID": "b5793142353e600e8511ecc62a54ff9da5d568a650d5de680adeef5c1fb6654e",
+  "sourceInputs": 701,
+  "sourceBaseline": {
+    "tag": "de3.73-test646",
+    "productionSourceId": "53e1fb72f45fdd0b8ed8bef3c11752c90c4198ae15bf79fc5ca3d97071ea05d0",
+    "preChangeSourceInputs": 701
+  },
+  "build": {
+    "mode": "release",
+    "status": "passed",
+    "backend": "native",
+    "image": null,
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "compilerSha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "sdkArchiveSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "artifactsSha256": {
+      "pixljs.bin": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
+      "pixljs.hex": "07d22178b50b47c4c8a74022020ba791ed95cd0d2c40bff1bdecaef994fed7fc",
+      "pixljs.out": "17a353beba7de3993fff6a6ce1878c2cfd0b6f6e812b17dc9108368422ae35f9",
+      "pixljs.map": "9d1a07786274f449381f585ab65f359f9e63f20f6ef9fdc0c874c2c235274fc7"
+    },
+    "linkerBudget": {
+      "binary_bytes": 364460,
+      "linker_flash_used_bytes": 364460,
+      "observed": {
+        "flash_reserve_bytes": 8276,
+        "heap_stack_gap_bytes": 1648,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "independentlyBuiltCandidateAndReleaseBinHexIdentical": true,
+    "elfMapPathDependent": true
+  },
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
+    "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+    "bytes": 250805,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 647,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 364460,
+        "sha256": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 364460,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "host": {
+    "executed": 158,
+    "passed": 158,
+    "omitted": {},
+    "profile": "full",
+    "sourceUnchanged": true
+  },
+  "armDiagnosticElfTests": [
+    "PASS Cortex-M4 release ELF: 8192 reserved, initial test watermark 7664, then 1416/256/256/0. Caller and guards intact; unavailable sentinel verified.",
+    "PASS Cortex-M4 first-menu wire, local counts, app 2, RTC rollover 125 ms, frozen across re-entry",
+    "PASS Cortex-M4 PXMI v2: short buffer, empty return, context matching, first and last frame, stale input"
+  ],
+  "z19Admission": {
+    "passed": true,
+    "hardwareAccess": false,
+    "bootCounter": 19,
+    "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "appCounter": 647,
+    "previousAppCounter": 646,
+    "previousAppSha256": "5d8937db3482c777cd9f768bf15ecedf909adff9dd094446809faa0a3a045ddb",
+    "appPayloadSha256": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
+    "cases": [
+      {
+        "before": "App646 present",
+        "signedInitAccepted": true,
+        "imageHashAccepted": true,
+        "bootCrcAccepted": true,
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 364460,
+        "bank0Code": 0
+      },
+      {
+        "before": "App bank empty after bootloader update",
+        "signedInitAccepted": true,
+        "imageHashAccepted": true,
+        "bootCrcAccepted": true,
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 364460,
+        "bank0Code": 0
+      }
+    ],
+    "limits": "Actual ELF routines. Flash, radio and handover simulated."
+  },
+  "z19InterruptedTransfer": {
+    "payloadBytes": 364460,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18448,
+    "objectExecutes": 90,
+    "finalCrc32": 2023545771,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "hardware": {
+    "deviceFlashed": false,
+    "displayPhotoPhysicallyCompared": false,
+    "androidTransferObserved": false
+  },
+  "limits": [
+    "ARM runs execute production functions against modeled memory and peripherals.",
+    "Host disconnect/resume begins again at the offset reported by the model.",
+    "No device storage, SoftDevice or bootloader image in the application ZIP."
+  ]
+}

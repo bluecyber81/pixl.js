@@ -15,6 +15,7 @@ int32_t vfs_persist_write(vfs_driver_t *driver, const char *path, const void *da
  * existing metadata (or zero metadata for a new file). */
 int32_t vfs_persist_write_meta(vfs_driver_t *driver, const char *path, const void *data,
                                size_t size, const uint8_t *meta);
+int32_t vfs_set_readonly(vfs_drive_t drive, const char *path, bool readonly);
 bool vfs_persist_reserved(const char *path);
 /* Call BEFORE every external mutation (including writes on an already open
  * handle). Invalidating a matching pending transaction must succeed first.

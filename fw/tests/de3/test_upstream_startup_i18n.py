@@ -32,6 +32,44 @@ def hashes():
 
 
 class StartupAndLanguageTests(unittest.TestCase):
+    def test_memory_warning_uses_the_active_language(self):
+        from test_app_startup_allocations import compile_run, function
+        redraw = function((SRC / 'mui/mui_core.c').read_text(), 'mui_process_redraw')
+        compile_run(r'''
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+typedef struct { int canvas; uint8_t screen_width,screen_height; bool auto_update,memory_error; } mui_t;
+typedef int mui_event_t;
+enum { LANGUAGE_DE_DE, LANGUAGE_EN_US };
+static int language, count;
+static const char *lines[2];
+#define getLanguage() (language)
+#define mui_canvas_clear(canvas) ((void)0)
+#define mui_nfc_save_draw(m) false
+#define mui_canvas_set_frame(canvas,x,y,w,h) ((void)(w),(void)(h))
+#define mui_canvas_set_draw_color(canvas,color) ((void)0)
+#define mui_canvas_set_font(canvas,font) ((void)0)
+#define mui_canvas_draw_utf8(canvas,x,y,s) (assert(count<2),lines[count++]=(s))
+#define mui_canvas_flush(canvas) ((void)0)
+static bool draw_layer(void) { assert(!"emergency view must draw directly"); return false; }
+#define mui_draw_layer(...) draw_layer()
+#define mui_buffer_flush(m) ((void)0)
+''' + redraw + r'''
+int main(void) {
+    const char *expected[][2]={{"RAM voll","Mitte: Hauptmenue"},{"Out of RAM","Center: main menu"}};
+    mui_t ui={.screen_width=128,.screen_height=64,.auto_update=true,.memory_error=true};
+    for (language=LANGUAGE_DE_DE; language<=LANGUAGE_EN_US; language++) {
+        count=0;
+        mui_process_redraw(&ui,NULL);
+        assert(count==2 && !strcmp(lines[0],expected[language][0]) && !strcmp(lines[1],expected[language][1]));
+    }
+    puts("PASS emergency LCD language");
+}
+''')
+
     def generator(self, override=None, config=None, remove_config=False, remove_english=False):
         """Run the real script in a disposable firmware tree, never in the candidate."""
         with tempfile.TemporaryDirectory(prefix='pixl-i18n-') as temporary:

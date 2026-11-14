@@ -34,36 +34,12 @@ enum amiibo_detail_menu_t {
 
 static ret_code_t amiibo_scene_amiibo_detail_set_readonly(app_amiibo_t *app, bool readonly) {
     char path[VFS_MAX_PATH_LEN];
-    vfs_meta_t meta;
-    vfs_obj_t obj;
-    uint8_t meta_buf[VFS_MAX_META_LEN];
 
     if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), string_get_cstr(app->current_file))) {
         return NRF_ERROR_INVALID_PARAM;
     }
 
-    vfs_driver_t *p_vfs_driver = vfs_get_driver(VFS_DRIVE_EXT);
-    int32_t res = p_vfs_driver->stat_file(path, &obj);
-    if (res < 0) {
-        return -1;
-    }
-
-    memset(&meta, 0, sizeof(vfs_meta_t));
-    vfs_meta_decode(obj.meta, sizeof(obj.meta), &meta);
-
-    meta.has_flags = true;
-    if (readonly) {
-        meta.flags |= VFS_OBJ_FLAG_READONLY;
-    } else {
-        meta.flags &= ~VFS_OBJ_FLAG_READONLY;
-    }
-
-    vfs_meta_encode(meta_buf, sizeof(meta_buf), &meta);
-    if (p_vfs_driver->update_file_meta(path, meta_buf, sizeof(meta_buf)) == VFS_OK) {
-        return NRF_SUCCESS;
-    } else {
-        return -1;
-    }
+    return vfs_set_readonly(app->current_drive, path, readonly);
 }
 
 static void amiibo_scene_amiibo_detail_menu_msg_box_no_key_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
@@ -237,7 +213,9 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_DETAIL);
         break;
     case AMIIBO_DETAIL_MENU_BACK_FILE_BROWSER:
+        app->focus_detail_file = true;
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
+        app->focus_detail_file = false;
         break;
     case AMIIBO_DETAIL_MENU_RAND_UID: {
         ret_code_t err_code;
@@ -312,6 +290,8 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
             ntag_emu_set_tag(&app->ntag);
             mui_list_view_item_set_sub_text(p_item,
                                             app->ntag.read_only ? getLangString(_L_ON_F) : getLangString(_L_OFF_F));
+        } else {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
         }
     } break;
 

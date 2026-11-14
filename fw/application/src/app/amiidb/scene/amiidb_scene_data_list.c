@@ -35,7 +35,12 @@ static void amiidb_scene_data_list_list_view_on_selected(mui_list_view_event_t e
         } break;
         }
     } else if (event == MUI_LIST_VIEW_EVENT_LONG_SELECTED) {
-        app->cur_slot_index = mui_list_view_get_focus(p_list_view);
+        uint16_t focus = mui_list_view_get_focus(p_list_view);
+        /* Back and error-only rows are not slots, even at a valid slot index. */
+        if ((icon != ICON_AMIIBO && icon != ICON_FILE) ||
+            focus >= settings_get_data()->amiidb_data_slot_num || focus >= MAX_SLOT_COUNT)
+            return;
+        app->cur_slot_index = focus;
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIDB_SCENE_DATA_LIST_MENU);
     }
 }

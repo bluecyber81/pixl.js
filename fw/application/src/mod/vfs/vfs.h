@@ -40,6 +40,13 @@ enum vfs_mode_t {
     VFS_MODE_WRITEONLY = 1 << 4,
 };
 
+/* PackedFS open modes, shared by the driver and the BLE preflight. */
+static inline bool vfs_packed_open_flags_valid(uint32_t flags) {
+    const uint32_t modifiers = VFS_MODE_APPEND | VFS_MODE_TRUNC | VFS_MODE_CREATE;
+    return !(flags & ~(modifiers | VFS_MODE_READONLY | VFS_MODE_WRITEONLY)) &&
+           (!(flags & modifiers) || (flags & VFS_MODE_WRITEONLY));
+}
+
 typedef enum { VFS_DRIVE_INT, VFS_DRIVE_EXT, VFS_DRIVE_MAX } vfs_drive_t;
 
 typedef enum { VFS_TYPE_REG, VFS_TYPE_DIR } vfs_type_t;

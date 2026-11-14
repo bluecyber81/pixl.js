@@ -7,6 +7,7 @@
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
 #include "mui_core.h"
+#include "mui_mem.h"
 #include "ntag_emu.h"
 #include "nrf.h"
 #include "nrf_error.h"
@@ -19,6 +20,49 @@ static volatile uint32_t local_generation;
 static bool permission, dispatching, handoff_requested, handoff_armed, file_link_requested;
 static uint32_t handoff_local, handoff_tick, handoff_link;
 
+#ifdef BOARD_LCD
+/* A copy is only held while a user-requested photo is in progress. Both
+ * rendering and copying run on the foreground loop with radio IRQs enabled. */
+static uint8_t *lcd_frame;
+static uint16_t lcd_next;
+static uint32_t lcd_last_tick;
+static void lcd_release(void) {
+    if (lcd_frame) mui_mem_free(lcd_frame);
+    lcd_frame = NULL;
+    lcd_next = 0;
+}
+static uint8_t lcd_read(uint8_t index) {
+    const size_t frame_bytes = 1024u;
+    size_t offset = (size_t)index * 8u;
+    size_t capacity = ble_nus_max_data_length();
+    if (capacity < REMOTE_REPLY_SIZE + 8u) return REMOTE_UNSUPPORTED;
+    if (index == 0) {
+        mui_t *ui = mui();
+        if (!ui || !ui->initialized || ui->memory_error ||
+            u8g2_GetBufferTileHeight(&ui->u8g2) != 8 || u8g2_GetBufferTileWidth(&ui->u8g2) != 16) {
+            lcd_release();
+            return REMOTE_BUSY;
+        }
+        const uint8_t *pixels = u8g2_GetBufferPtr(&ui->u8g2);
+        if (!pixels) { lcd_release(); return REMOTE_BUSY; }
+        if (!lcd_frame) lcd_frame = mui_mem_malloc(frame_bytes);
+        if (!lcd_frame) return REMOTE_NO_MEMORY;
+        memcpy(lcd_frame, pixels, frame_bytes);
+    } else if (!lcd_frame || offset != lcd_next) {
+        return REMOTE_INVALID;
+    }
+    size_t count = (capacity - REMOTE_REPLY_SIZE) & ~(size_t)7u;
+    if (count > REMOTE_LCD_CHUNK_MAX) count = REMOTE_LCD_CHUNK_MAX;
+    if (count > frame_bytes - offset) count = frame_bytes - offset;
+    memcpy(protocol.reply + REMOTE_REPLY_SIZE, lcd_frame + offset, count);
+    protocol.reply[11] = (uint8_t)count;
+    lcd_next = (uint16_t)(offset + count);
+    lcd_last_tick = app_timer_cnt_get();
+    if (lcd_next == frame_bytes) lcd_release();
+    return REMOTE_DONE;
+}
+#endif
+
 bool ble_remote_enabled(void) { return permission; }
 bool ble_remote_dispatching(void) { return dispatching; }
 bool ble_remote_response_pending(void) { return protocol.pending || protocol.replying; }
@@ -27,12 +71,18 @@ void ble_remote_local_activity(void) { local_generation++; }
 bool ble_remote_set_enabled(bool enabled) {
     /* A synthetic key cannot grant itself permission, even through Settings. */
     if (dispatching) return false;
+#ifdef BOARD_LCD
+    lcd_release();
+#endif
     permission = enabled;
     handoff_requested = handoff_armed = file_link_requested = false;
     local_generation++;
     return true;
 }
 void ble_remote_shutdown(void) {
+#ifdef BOARD_LCD
+    lcd_release();
+#endif
     permission = false;
     handoff_requested = handoff_armed = file_link_requested = false;
     ble_remote_protocol_session(&protocol, ble_session_generation(), false);
@@ -77,6 +127,9 @@ static uint8_t execute(void *context, uint8_t op, uint8_t arg, uint32_t input_ge
     if (!ble_remote_transport_ready() || other_owner() || ble_mode_transition_pending()) return REMOTE_BUSY;
     if (op == REMOTE_STATUS) return REMOTE_DONE;
     if (handoff_requested || file_link_requested) return REMOTE_BUSY;
+#ifdef BOARD_LCD
+    if (op == REMOTE_LCD_READ) return lcd_read(arg);
+#endif
     if (vfs_packed_recovery_required() || !safe_nfc()) return REMOTE_UNSAFE;
     if (!ui_ready()) return REMOTE_BUSY;
     bool claimed = false;
@@ -177,12 +230,21 @@ void ble_remote_receive(const uint8_t *data, size_t length) {
     memcpy(&input_generation, data, sizeof(input_generation));
     uint32_t generation = ble_session_generation();
     bool active = permission && ble_remote_transport_ready();
-    if (!active || !protocol.active || protocol.generation != generation) file_link_requested = false;
+    if (!active || !protocol.active || protocol.generation != generation) {
+        file_link_requested = false;
+#ifdef BOARD_LCD
+        lcd_release();
+#endif
+    }
     ble_remote_protocol_session(&protocol, generation, active);
     if (!ble_remote_protocol_receive(&protocol, data + sizeof(input_generation), REMOTE_REQUEST_SIZE, input_generation))
         ble_nus_abort_transfer();
 }
 void ble_remote_poll(void) {
+#ifdef BOARD_LCD
+    if (lcd_frame && app_timer_cnt_diff_compute(app_timer_cnt_get(), lcd_last_tick) >= APP_TIMER_TICKS(30000))
+        lcd_release();
+#endif
     if (handoff_requested && (handoff_local != local_generation || !permission ||
         (ble_link_generation() != handoff_link && ble_link_generation() != handoff_link + 1u) ||
         app_timer_cnt_diff_compute(app_timer_cnt_get(), handoff_tick) >= APP_TIMER_TICKS(10000))) {
@@ -191,7 +253,12 @@ void ble_remote_poll(void) {
     }
     uint32_t generation = ble_session_generation();
     bool active = permission && ble_remote_transport_ready();
-    if (!active || !protocol.active || protocol.generation != generation) file_link_requested = false;
+    if (!active || !protocol.active || protocol.generation != generation) {
+        file_link_requested = false;
+#ifdef BOARD_LCD
+        lcd_release();
+#endif
+    }
     ble_remote_protocol_session(&protocol, generation, active);
     if (!permission) {
         if (ble_remote_mode_owned()) ble_disable();

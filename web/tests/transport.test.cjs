@@ -8,6 +8,7 @@ const vm = require('node:vm');
 const { pathToFileURL } = require('node:url');
 const { EventEmitter } = require('node:events');
 const ByteBuffer = require('bytebuffer');
+const gattOwnership = require(path.join(process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib'), 'gatt-owner.js'));
 
 function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib')) {
     const source = fs.readFileSync(path.join(sourceRoot, name), 'utf8');
@@ -39,7 +40,7 @@ function bleFixture(notificationPromise=Promise.resolve()) {
     const device=eventTarget({gatt});
     const navigator={bluetooth:{requestDevice:() => Promise.resolve(device)}};
     const timers=new Map();let timerId=0;
-    const api=load('pixl.ble.js',{navigator,sharedEventDispatcher:() => bus,
+    const api=load('pixl.ble.js',{...gattOwnership,navigator,sharedEventDispatcher:() => bus,
         setTimeout:cb=>{const id=++timerId;timers.set(id,cb);return id;},clearTimeout:id=>timers.delete(id)});
     return {api,bus,device,rx,tx,service,writes,navigator,timers};
 }
@@ -737,6 +738,49 @@ test('late timed-out connect cannot disconnect a newer attempt using the same de
     await f.api.connect();assert.equal(successes,1);gate.resolve();await flush();
     assert.equal(successes,1);assert.equal(f.device.gatt.connected,true);
     assert.equal(f.api.get_connection_state(),'connected');assert.equal(f.timers.size,0);f.api.disconnect();
+});
+test('late file connection cannot disconnect a remote session that claimed the same device',async()=>{
+    const f=bleFixture(), gate=deferred(), remoteOwner={};
+    f.device.gatt.connect=()=>gate.promise.then(()=>{f.device.gatt.connected=true;return f.device.gatt;});
+    const old=f.api.connect();await flush();
+    await f.api.disconnect();await old;
+    gattOwnership.claimGatt(f.device,remoteOwner);
+    f.device.gatt.connected=true;
+    gate.resolve();await flush();
+    assert.equal(f.device.gatt.connected,true);
+    assert.equal(f.api.get_connection_state(),'disconnected');
+    assert.equal(gattOwnership.ownsGatt(f.device,remoteOwner),true);
+});
+test('old file teardown cannot stop notifications or disconnect a new remote session',async()=>{
+    const f=bleFixture(), remoteOwner={};
+    let stops=0;f.rx.stopNotifications=async()=>{stops++;};
+    await f.api.connect();
+    const ending=f.api.disconnect();
+    gattOwnership.claimGatt(f.device,remoteOwner);
+    await ending;
+    assert.equal(stops,0);
+    assert.equal(f.device.gatt.connected,true);
+});
+test('a queued disconnect event cannot end a currently connected file session',async()=>{
+    const f=bleFixture();let ended=0;
+    f.bus.on('ble_disconnected',()=>ended++);
+    await f.api.connect();
+    f.device.events.emit('gattserverdisconnected',{target:f.device});
+    assert.equal(f.api.get_connection_state(),'connected');
+    assert.equal(ended,0);
+    f.device.gatt.connected=false;
+    f.device.events.emit('gattserverdisconnected',{target:f.device});
+    assert.equal(f.api.get_connection_state(),'disconnected');
+    assert.equal(ended,1);
+});
+test('a queued disconnect during a new GATT open leaves the new file session pending',async()=>{
+    const f=bleFixture(),gate=deferred();
+    f.device.gatt.connect=()=>gate.promise.then(()=>{f.device.gatt.connected=true;return f.device.gatt;});
+    const opening=f.api.connect();await flush();
+    f.device.events.emit('gattserverdisconnected',{target:f.device});
+    gate.resolve();await opening;
+    assert.equal(f.api.get_connection_state(),'connected');
+    await f.api.disconnect();
 });
 test('protocol init is idempotent and consecutive chunk streams have no old data',async()=>{
     const f=protocolFixture();f.api.init();assert.equal(f.bus.listenerCount('ble_rx_data'),1);

@@ -72,7 +72,7 @@ test('bounded imports reject nonreports, v1-only, malformed v2, missing sections
 
 export {report};
 
-for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646]]) test(`App${counter} is tied to its own signed package and never claims device acceptance`,()=>{
+for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.22.0-DE3.74',647]]) test(`App${counter} is tied to its own signed package and never claims device acceptance`,()=>{
  const {buildIdentity}=report(version,counter);
  assert.equal(buildIdentity.referenceRelation,'version-and-counter');
  assert.equal(buildIdentity.packageReference.applicationCounter,counter);

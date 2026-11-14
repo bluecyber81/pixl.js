@@ -1,4 +1,5 @@
 import { sharedEventDispatcher } from "./event";
+import { claimGatt, ownsGatt, releaseGatt } from './gatt-owner.js';
 
 const NUS_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
 const NUS_CHAR_TX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
@@ -10,6 +11,7 @@ var nus_char_rx;
 var nus_char_tx;
 
 var bluetoothDevice;
+var connectionOwner;
 var connectionPromise;
 var connectionGeneration = 0;
 var connected = false;
@@ -54,32 +56,36 @@ export function get_connection_state() {
 
 function detachConnection() {
     const device = bluetoothDevice;
+    const owner = connectionOwner;
     const rx = nus_char_rx;
     if (nus_char_rx) {
         nus_char_rx.removeEventListener('characteristicvaluechanged', onRxDataReceived);
     }
     if (device) device.removeEventListener('gattserverdisconnected', onDeviceDisconnected);
     bluetoothDevice = null;
+    connectionOwner = null;
     nus_service = null;
     nus_char_rx = null;
     nus_char_tx = null;
     connected = false;
-    return { device, rx };
+    return { device, rx, owner };
 }
 
-function disconnectGatt(device) {
+function disconnectGatt(device, owner) {
+    if (!ownsGatt(device, owner)) return;
     // Local teardown must finish even if a platform has already invalidated GATT.
-    try { device?.gatt.disconnect(); } catch (_) { /* Already unavailable. */ }
+    try { device.gatt.disconnect(); } catch (_) { /* Already unavailable. */ }
+    if (!owner.opening) releaseGatt(device, owner);
 }
 
 function clearConnection() {
-    const { device } = detachConnection();
+    const { device, owner } = detachConnection();
     // disconnect() also cancels a pending GATT connection while connected is
     // still false. Waiting for a late successful connect leaves that request live.
-    disconnectGatt(device);
+    disconnectGatt(device, owner);
 }
 
-function stopNotificationsAndDisconnect({ device, rx }) {
+function stopNotificationsAndDisconnect({ device, rx, owner }) {
     let complete;
     const pending = new Promise(resolve => { complete = resolve; });
     disconnectionPromise = pending;
@@ -89,18 +95,18 @@ function stopNotificationsAndDisconnect({ device, rx }) {
         finished = true;
         clearTimeout(timer);
         device.removeEventListener('gattserverdisconnected', disconnected);
-        disconnectGatt(device);
+        disconnectGatt(device, owner);
         if (disconnectionPromise === pending) disconnectionPromise = null;
         complete();
         sharedEventDispatcher().emit('ble_disconnect_complete');
     };
-    const disconnected = event => { if (event.target === device) finish(); };
+    const disconnected = event => { if (event.target === device && !device.gatt.connected) finish(); };
     const timer = setTimeout(finish, NOTIFICATION_STOP_TIMEOUT);
     device.addEventListener('gattserverdisconnected', disconnected);
     // Defer the radio operation until local consumers have cancelled their queues.
     // A resolved promise confirms local unsubscription, not a physical radio close.
     Promise.resolve().then(() => {
-        if (!finished) return rx.stopNotifications();
+        if (!finished && ownsGatt(device, owner)) return rx.stopNotifications();
     }).then(finish, finish);
     return pending;
 }
@@ -110,13 +116,10 @@ export function connect() {
     if (connected) return Promise.resolve();
     const previousDisconnect = disconnectionPromise;
     const generation = ++connectionGeneration;
+    const owner = { opening: false };
     let attemptedDevice;
     function checkCurrent() {
-        if (generation !== connectionGeneration) {
-            // A pending gatt.connect() may finish after the user cancelled it.
-            if (attemptedDevice && attemptedDevice !== bluetoothDevice && attemptedDevice.gatt.connected) {
-                attemptedDevice.gatt.disconnect();
-            }
+        if (generation !== connectionGeneration || (attemptedDevice && !ownsGatt(attemptedDevice, owner))) {
             throw new Error('Connection cancelled');
         }
     }
@@ -136,10 +139,25 @@ export function connect() {
             return Promise.resolve(previousDisconnect).then(() => {
                 checkCurrent();
                 attemptedDevice = device;
+                connectionOwner = owner;
+                claimGatt(device, owner);
                 bluetoothDevice = device;
                 console.log('Connecting to GATT Server...');
                 device.addEventListener('gattserverdisconnected', onDeviceDisconnected);
-                return waitForConnectionStep(device.gatt.connect(), checkCurrent);
+                owner.opening = true;
+                async function openGatt() {
+                    try {
+                        return await device.gatt.connect();
+                    } finally {
+                        owner.opening = false;
+                        // Even a cancelled connect may later open the link. Close it only if it still belongs to us.
+                        if (generation !== connectionGeneration && ownsGatt(device, owner)) {
+                            if (device.gatt.connected) disconnectGatt(device, owner);
+                            else releaseGatt(device, owner);
+                        }
+                    }
+                }
+                return waitForConnectionStep(openGatt(), checkCurrent);
             });
         })
         .then(server => {
@@ -207,7 +225,7 @@ export function disconnect(options = {}) {
     if (wasConnected && !options.immediate && snapshot.device?.gatt.connected &&
         typeof snapshot.rx?.stopNotifications === 'function') {
         pending = stopNotificationsAndDisconnect(snapshot);
-    } else disconnectGatt(snapshot.device);
+    } else disconnectGatt(snapshot.device, snapshot.owner);
     if (hadConnection) sharedEventDispatcher().emit("ble_disconnected");
     return pending || Promise.resolve();
 }
@@ -223,6 +241,8 @@ export function adopt_remote_connection(session) {
         throw new Error('Invalid remote file connection');
     }
     ++connectionGeneration;
+    connectionOwner = {};
+    claimGatt(device, connectionOwner);
     bluetoothDevice = device; nus_char_rx = rx; nus_char_tx = tx;
     try {
         device.addEventListener('gattserverdisconnected', onDeviceDisconnected);
@@ -258,7 +278,7 @@ function onRxDataReceived(event) {
 }
 
 function onDeviceDisconnected(event) {
-    if (event.target !== bluetoothDevice) return;
+    if (event.target !== bluetoothDevice || connectionOwner?.opening || bluetoothDevice.gatt.connected) return;
     ++connectionGeneration;
     cancelConnectionStep?.();
     connectionPromise = null;

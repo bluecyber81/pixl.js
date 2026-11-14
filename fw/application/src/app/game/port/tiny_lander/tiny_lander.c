@@ -482,7 +482,27 @@ uint8_t LivesDisplay(uint8_t x, uint8_t y, GAME * game)
   return 0x00;
 }
 
+static void draw_intro(void) {
+  const uint8_t *span = intro_spans;
+  for (uint8_t page = 0; page < 8; page++) {
+    JOY_OLED_data_start(page);
+    unsigned column = 0;
+    while (column < 128) {
+      unsigned zeros = *span++;
+      unsigned literals = *span++;
+      column += zeros + literals;
+      while (zeros--) JOY_OLED_send(0);
+      while (literals--) JOY_OLED_send(*span++);
+    }
+    JOY_OLED_end();
+  }
+}
+
 void Tiny_Flip(uint8_t mode, GAME * game, DIGITAL * score, DIGITAL * velX, DIGITAL * velY) {
+  if (mode == 1) {
+    draw_intro();
+    return;
+  }
   uint8_t y, x;
   for (y = 0; y < 8; y++)
   {
@@ -491,10 +511,7 @@ void Tiny_Flip(uint8_t mode, GAME * game, DIGITAL * score, DIGITAL * velX, DIGIT
     {
       if (mode == 0) {
         JOY_OLED_send(GameDisplay(x, y, game) | LivesDisplay(x, y, game) | DashboardDisplay(x, y, game) | ScoreDisplay(x, y, score) | VelocityDisplay(x, y, velX, 1) | VelocityDisplay(x, y, velY, 0) | FuelDisplay(x, y, game));
-      } else if (mode == 1) {
-        JOY_OLED_send((INTRO[x + (y * 128)]));
-      }
-      else if (mode == 2)
+      } else if (mode == 2)
       {
         JOY_OLED_send(StarsDisplay ( x, y, game) | LivesDisplay(x, y, game) | DashboardDisplay(x, y, game) | ScoreDisplay(x, y, score) | VelocityDisplay(x, y, velX, 1) | VelocityDisplay(x, y, velY, 0) | FuelDisplay(x, y, game));
       }

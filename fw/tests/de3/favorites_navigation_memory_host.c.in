@@ -98,6 +98,43 @@ static int cmpinfo(const void*pa,const void*pb){const amiidb_fav_info_t*a=pa,*b=
 static unsigned expected_count(bool select){unsigned n=0;for(unsigned i=0;i<info_count;i++)if(!select||infos[i].fav_type==FAV_TYPE_FOLDER)expected[n++]=infos[i];qsort(expected,n,sizeof(*expected),cmpinfo);return n;}
 static unsigned checkpage(app_amiidb_t*a,unsigned offset){bound(a);assert(a->p_list_view->items->size<=28);unsigned n=0;for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];if(x->icon==ICON_FOLDER){assert(expected[offset+n].fav_type==FAV_TYPE_FOLDER&&!strcmp(string_get_cstr(x->text),expected[offset+n].fav_data.folder_name));n++;}else if(x->icon==ICON_FILE){assert(expected[offset+n].fav_type==FAV_TYPE_FAV);amiidb_fav_t*f=x->user_data,*e=&expected[offset+n].fav_data.fav;assert(f&&f->game_id==e->game_id&&f->amiibo_head==e->amiibo_head&&f->amiibo_tail==e->amiibo_tail);n++;}}assert(n<=24);return n;}
 static void pages(unsigned n,unsigned mix,bool select){make(n,mix==1);if(mix==2)for(unsigned i=0;i<n;i+=5){infos[i].fav_type=FAV_TYPE_FOLDER;snprintf(infos[i].fav_data.folder_name,48,"%04u-abcdefghijklmnopqrstu",i);}unsigned total=expected_count(select);app_amiidb_t*a=begin(true);if(select)amiidb_scene_fav_select_on_enter(a);else amiidb_scene_fav_list_on_enter(a);unsigned seen=0,start=0;do{start=seen;seen+=checkpage(a,seen);if(!item(a,ICON_NEXT))break;click(a,ICON_NEXT);}while(1);assert(seen==total);while(item(a,ICON_PREV)){click(a,ICON_PREV);start-=24;checkpage(a,start);}assert(start==0);assert(!errors);end(a);cases++;}
+static void favorite_detail_and_folder_picker_return(void) {
+    make(70, false);
+    expected_count(false);
+    app_amiidb_t *app = begin(true);
+    amiidb_scene_fav_list_on_enter(app);
+
+    amiidb_fav_t target = expected[24].fav_data.fav;
+    assert(amiidb_fav_page_focus(app, &target));
+    checkpage(app, 24);
+    const mui_list_item_t *focused = &app->p_list_view->items->ptr[app->p_list_view->focus_index];
+    assert(focused->icon == ICON_FILE && fav_record_compare(focused->user_data, &target) == 0);
+
+    mui_list_view_set_focus(app->p_list_view, 6);
+    amiidb_scene_fav_list_on_exit(app);
+    amiidb_fav_info_t origin = app->fav_page_anchor;
+    int direction = app->fav_page_direction;
+    make(55, true);
+    amiidb_scene_fav_select_on_enter(app);
+    click(app, ICON_NEXT);
+    assert(app->fav_page_focus == 6 && app->fav_page_direction == direction);
+    assert(fav_key_compare(&app->fav_page_anchor, &origin) == 0);
+    click(app, ICON_EXIT);
+    amiidb_scene_fav_select_on_exit(app);
+
+    make(70, false);
+    expected_count(false);
+    amiidb_scene_fav_list_on_enter(app);
+    assert(app->p_list_view->focus_index == 6);
+    checkpage(app, 24);
+    target = expected[0].fav_data.fav;
+    assert(amiidb_fav_page_focus(app, &target));
+    checkpage(app, 0);
+    assert(app->p_list_view->focus_index == 0 && !errors);
+    end(app);
+    cases++;
+}
+
 static void errors_and_return(void){
  make(1,true);
  app_amiidb_t *context=begin(false);
@@ -131,5 +168,6 @@ int main(void){
  make(120,true);a=begin(true);amiidb_scene_fav_select_on_enter(a);assert(oom||errors);puts("REPRO favorite destination selector unbounded folders");end(a);cases++;
 #else
  unsigned sizes[]={0,1,24,25,100,1000};for(unsigned repeat=0;repeat<2;repeat++)for(unsigned i=0;i<6;i++){pages(sizes[i],0,false);pages(sizes[i],1,false);pages(sizes[i],1,true);pages(sizes[i],2,false);pages(sizes[i],2,true);}errors_and_return();
+ favorite_detail_and_folder_picker_return();
 #endif
  printf("PASS %u cases, zero remaining pool allocations\n",cases);return 0;}

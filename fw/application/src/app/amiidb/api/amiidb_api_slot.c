@@ -122,11 +122,8 @@ int32_t amiidb_api_slot_remove(uint8_t slot) {
     if (!p_vfs_driver) return VFS_ERR_NODEV;
     int32_t recovery = vfs_persist_recover(p_vfs_driver);
     if (recovery != VFS_OK) return recovery;
-    int32_t res = p_vfs_driver->remove_file(path);
-    if (res < 0) {
-        return -1;
-    }
-    return 0;
+    int32_t result = p_vfs_driver->remove_file(path);
+    return result == VFS_ERR_NOOBJ ? VFS_OK : result;
 }
 
 int32_t amiidb_api_slot_info(uint8_t slot, amiidb_slot_info_t *p_info) {
@@ -218,34 +215,7 @@ int32_t amiidb_api_slot_list(amiibo_slot_info_cb_t cb, void *ctx) {
 int32_t amiidb_api_slot_set_readonly(uint8_t slot, bool readonly) {
     if (slot >= MAX_SLOT_COUNT) return VFS_ERR_FAIL;
     char path[VFS_MAX_PATH_LEN];
-    vfs_meta_t meta;
-    vfs_obj_t obj;
-    uint8_t meta_buf[VFS_MAX_META_LEN];
 
     snprintf(path, sizeof(path), "/amiibo/data/%02u.bin", (unsigned)slot);
-    vfs_driver_t *p_vfs_driver = vfs_get_driver(VFS_DRIVE_EXT);
-    if (!p_vfs_driver) return VFS_ERR_NODEV;
-    int32_t recovery = vfs_persist_recover(p_vfs_driver);
-    if (recovery != VFS_OK) return recovery;
-    int32_t res = p_vfs_driver->stat_file(path, &obj);
-    if (res < 0) {
-        return -1;
-    }
-
-    memset(&meta, 0, sizeof(vfs_meta_t));
-    vfs_meta_decode((uint8_t *)obj.meta, sizeof(obj.meta), &meta);
-
-    meta.has_flags = true;
-    if (readonly) {
-        meta.flags |= VFS_OBJ_FLAG_READONLY;
-    } else {
-        meta.flags &= ~VFS_OBJ_FLAG_READONLY;
-    }
-
-    vfs_meta_encode(meta_buf, sizeof(meta_buf), &meta);
-    if (p_vfs_driver->update_file_meta(path, meta_buf, sizeof(meta_buf)) == VFS_OK) {
-        return NRF_SUCCESS;
-    } else {
-        return -1;
-    }
+    return vfs_set_readonly(VFS_DRIVE_EXT, path, readonly);
 }

@@ -1,14 +1,14 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-13",
-  "version": "2.22.0-DE3.72",
-  "counter": 645,
+  "publication_date": "2026-11-14",
+  "version": "2.22.0-DE3.74",
+  "counter": 647,
   "board": "LCD",
-  "web_version": "3.49.0",
+  "web_version": "3.50.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
-  "application_sha256": "000651a423e35821e529815a87930137f2d56277941b1b900fccb699d51ecb88",
+  "ota_sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+  "application_sha256": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0103",
@@ -36,8 +36,8 @@
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 157,
-  "evidence": "docs/validation/DE3_72.json",
+  "host_firmware_suites": 158,
+  "evidence": "docs/validation/DE3_74.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
@@ -50,13 +50,13 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.49.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
   "device_readback_passed": false,
-  "device_validation_pending_scope": "First device readback on App645, database slot 3 and next-figure list return, the four LCD game-note corrections, NFC and sleep/wake. Physical DFU interruption and power-loss recovery also remain open.",
+  "device_validation_pending_scope": "App647 remote LCD snapshot fidelity, operation on a physical radio and Android DFU have not been observed. Firmware and application behavior were exercised on the build host.",
   "previous_device_readback_evidence": "docs/RELEASE_DE3_71T1.md",
-  "production_source_id_sha256": "d1a80a8a13b9e0bd8f1513216e268bb0694e9a74ff52986aaa65a1ee7f893b6d",
+  "production_source_id_sha256": "b5793142353e600e8511ecc62a54ff9da5d568a650d5de680adeef5c1fb6654e",
   "tested_bootloader": {
     "name": "Z19",
     "counter": 19,
@@ -64,7 +64,7 @@
     "padded_region_sha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "App644's connected diagnostic export reported this Z19 region digest and S112 7.3.0. App645 was verified with the Z19 public key and host transfer model. Its first device readback is pending."
+    "qualification": "Z19 and S112 7.3.0 were reported by DE3.73 on the user device. The new App647 package verifies against the bound Z19 public key. App647 device readback is pending."
   },
   "web_host_test_scope": "See the public web build evidence for tests, production layouts and the direct downloads.",
   "previous_web_full_suite": {
@@ -83,7 +83,7 @@
     "evidence": "docs/validation/WEB3_47_0.json"
   },
   "web_release_status": "release",
-  "web_release_notes": "docs/DATEIMANAGER_WEB.md#figurenkatalog-ab-3483",
+  "web_release_notes": "docs/DATEIMANAGER_WEB.md",
   "web_personal_backup_status": "not-created-by-this-update",
   "web_changes": {
     "figure_usage": {
@@ -103,10 +103,12 @@
     "firmware_downloads": {
       "bundled": [
         "DE3.65/637",
-        "DE3.72/645"
+        "DE3.72/645",
+        "DE3.73/646",
+        "DE3.74/647"
       ],
       "stable": "DE3.65/637",
-      "prerelease": "DE3.72/645"
+      "prerelease": "DE3.74/647"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -130,9 +132,10 @@
     "web_3_48_2": "Preserve Raw128 metadata when changing read-only flags, preflight reserved paths, clarify backup states, bind App646 and the current public downloads.",
     "web_3_48_3": "Ship 954 catalogue IDs, all seven Kirby Air Riders under the game filter, German name aliases, and Nintendo sources for both new riders. Firmware name flags still use the 952 App646 IDs.",
     "web_3_48_4": "The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines.",
-    "web_3_49_0": "On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option."
+    "web_3_49_0": "On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option.",
+    "web_3_50_0": "On demand DE LCD display photo during navigation, PNG export, remote STATUS check and session-safe file handoff."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -143,15 +146,15 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "prerelease",
-  "web_evidence": "docs/validation/WEB3_49_0.json",
+  "web_evidence": "docs/validation/WEB3_50_0.json",
   "device_readback_evidence": null,
   "web_device_readback_pending_scope": "The catalogue, builds and Windows client were tested. A Bluetooth device readback with these exact browser assets is pending.",
-  "fresh_public_unsigned_rebuild_matches_signed_application": true,
+  "fresh_public_unsigned_rebuild_matches_signed_application": false,
   "firmware_downloads": {
     "application": {
-      "file": "Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
-      "sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
-      "counter": 645
+      "file": "Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
+      "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+      "counter": 647
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip",
@@ -162,7 +165,10 @@
         "0x0103",
         "0x0126"
       ],
-      "androidPhases": 2
+      "androidPhases": 2,
+      "applicationCounter": 645,
+      "applicationVersion": "2.22.0-DE3.72",
+      "role": "Earlier two-stage system installation for migration; follow with the separate App647 update."
     },
     "spiffs_preparation": {
       "file": "Allmiibo_LCD_SPIFFS_DE3_30_PREP_600.zip",

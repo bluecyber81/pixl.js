@@ -1,5 +1,6 @@
 // cylin577/pixl.js v2.27.11: mod/ble/ble_control_plane.c and mod/df/df_proto_{info,vfs}.c.
 import {REMOTE_UUIDS as NUS, remoteAvailability} from './remote-control.js';
+import {claimGatt, ownsGatt, releaseGatt} from './gatt-owner.js';
 
 export const PIXLINK_UUIDS = Object.freeze({
   service:'7e400001-b5a3-f393-e0a9-e50e24dcca9e',
@@ -102,7 +103,6 @@ function readFileReply(bytes) {
 // No picker, command or background scan runs until the caller explicitly asks for it.
 export function createPixLink({environment=globalThis,onState=()=>{},timeoutMs=8000}={}) {
   let session=null;
-  const owners=new WeakMap();
   function state(s, phase, error='') {
     s.phase=phase;
     onState({phase,error,name:s.device?.name || ''});
@@ -112,8 +112,11 @@ export function createPixLink({environment=globalThis,onState=()=>{},timeoutMs=8
     session=null;
     s.controller.abort();
     s.device?.removeEventListener('gattserverdisconnected',s.lost);
-    if (!keepLink && s.device?.gatt && owners.get(s.device)===s) s.device.gatt.disconnect();
-    if (keepLink) owners.delete(s.device);
+    if (s.device && ownsGatt(s.device,s.owner)) {
+      if (!keepLink) s.device.gatt.disconnect();
+      // While connect() is pending, its eventual success still needs cleanup.
+      if (!s.opening) releaseGatt(s.device,s.owner);
+    }
     state(s,'disconnected',error);
   }
   function failed(s, e, fallback) {
@@ -124,11 +127,13 @@ export function createPixLink({environment=globalThis,onState=()=>{},timeoutMs=8
   async function connect() {
     if (session) throw failure('busy');
     if (remoteAvailability(environment)) throw failure('unavailable');
-    const s={controller:new AbortController()};
-    s.check=()=>{if(session!==s)throw failure('cancelled');};
+    const s={controller:new AbortController(),owner:{},opening:false};
+    s.check=()=>{if(session!==s || (s.device && !ownsGatt(s.device,s.owner)))throw failure('cancelled');};
     s.wait=(p,ms=timeoutMs)=>bounded(p,s.controller.signal,ms).then(value=>{s.check();return value;});
     s.step=operation=>{s.check();return s.wait(operation());};
-    s.lost=()=>close(s,'lost');
+    // A queued disconnect from the previous connection can arrive while the
+    // new connect() is still pending; that operation has its own failure bound.
+    s.lost=()=>{if (!s.opening && !s.device?.gatt.connected) close(s,'lost');};
     session=s;
     state(s,'connecting');
     try {
@@ -136,12 +141,17 @@ export function createPixLink({environment=globalThis,onState=()=>{},timeoutMs=8
         filters:[{services:[PIXLINK_UUIDS.service]}],optionalServices:[NUS.service]
       });
       s.device=await s.wait(picker,0);
-      s.check();
-      owners.set(s.device,s);
+      if (session!==s) throw failure('cancelled');
+      claimGatt(s.device,s.owner);
       s.device.addEventListener('gattserverdisconnected',s.lost);
-      const opening=s.device.gatt.connect().then(server=>{
-        if (s.controller.signal.aborted && owners.get(s.device)===s && s.device.gatt.connected) s.device.gatt.disconnect();
-        return server;
+      const connecting=s.device.gatt.connect();
+      s.opening=true;
+      const opening=connecting.finally(()=>{
+        s.opening=false;
+        if (s.controller.signal.aborted && ownsGatt(s.device,s.owner)) {
+          if (s.device.gatt.connected) s.device.gatt.disconnect();
+          releaseGatt(s.device,s.owner);
+        }
       });
       s.server=await s.wait(opening);
       s.cp=await channels(s,PIXLINK_UUIDS);

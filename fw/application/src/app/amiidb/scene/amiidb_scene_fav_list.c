@@ -228,6 +228,87 @@ void amiidb_fav_page_load(app_amiidb_t *app, bool folders_only) {
     mui_list_view_set_focus(app->p_list_view, app->fav_page_focus);
 }
 
+/* Keep destination paging transient, including while a sleep snapshot is taken. */
+bool amiidb_fav_select_page_step(app_amiidb_t *app, uint16_t icon) {
+    amiidb_fav_info_t saved_anchor = app->fav_page_anchor;
+    int8_t saved_direction = app->fav_page_direction;
+    uint8_t saved_focus = app->fav_page_focus;
+    bool stepped = amiidb_fav_page_step(app, icon);
+    if (stepped) {
+        app->fav_select_anchor = app->fav_page_anchor;
+        app->fav_select_direction = app->fav_page_direction;
+    }
+    app->fav_page_anchor = saved_anchor;
+    app->fav_page_direction = saved_direction;
+    app->fav_page_focus = saved_focus;
+    return stepped;
+}
+
+void amiidb_fav_select_page_load(app_amiidb_t *app) {
+    amiidb_fav_info_t saved_anchor = app->fav_page_anchor;
+    int8_t saved_direction = app->fav_page_direction;
+    uint8_t saved_focus = app->fav_page_focus, saved_mode = app->fav_page_mode;
+    app->fav_page_anchor = app->fav_select_anchor;
+    app->fav_page_direction = app->fav_select_direction;
+    app->fav_page_focus = 0;
+    app->fav_page_mode = 1;
+    amiidb_fav_page_load(app, true);
+    app->fav_select_anchor = app->fav_page_anchor;
+    app->fav_select_direction = app->fav_page_direction;
+    app->fav_page_anchor = saved_anchor;
+    app->fav_page_direction = saved_direction;
+    app->fav_page_focus = saved_focus;
+    app->fav_page_mode = saved_mode;
+}
+
+static bool fav_focus_visible(app_amiidb_t *app, const amiidb_fav_t *favorite) {
+    mui_list_view_t *list = app->p_list_view;
+    for (uint32_t i = 0; i < mui_list_view_item_size(list); i++) {
+        const mui_list_item_t *row = mui_list_item_array_get(list->items, i);
+        if (row->icon != ICON_FILE || !row->user_data ||
+            fav_record_compare(row->user_data, favorite) != 0) continue;
+        if (mui_list_view_get_focus(list) != i) mui_list_view_set_focus(list, i);
+        app->fav_page_focus = i;
+        return true;
+    }
+    return false;
+}
+
+typedef struct {
+    amiidb_fav_info_t target, predecessor;
+    bool found, have_predecessor;
+} fav_seek_context_t;
+
+static void fav_seek_read_cb(amiidb_fav_info_t *info, void *context) {
+    fav_seek_context_t *seek = context;
+    int cmp = fav_key_compare(info, &seek->target);
+    if (cmp == 0) seek->found = true;
+    else if (cmp < 0 && (!seek->have_predecessor ||
+                        fav_key_compare(info, &seek->predecessor) > 0)) {
+        seek->predecessor = *info;
+        seek->have_predecessor = true;
+    }
+}
+
+bool amiidb_fav_page_focus(app_amiidb_t *app, const amiidb_fav_t *favorite) {
+    if (fav_focus_visible(app, favorite)) return true;
+    fav_seek_context_t seek = {.target = {.fav_type = FAV_TYPE_FAV}};
+    seek.target.fav_data.fav = *favorite;
+    int32_t result = amiidb_api_fav_list_dir(string_get_cstr(app->cur_fav_dir), fav_seek_read_cb, &seek);
+    if (result != VFS_OK) { amiidb_fav_show_error(app, result); return false; }
+    if (!seek.found) return false;
+    /* One bounded scan finds the actual predecessor, without synthetic ID
+     * arithmetic or loading every favorite into RAM. The new page contains
+     * the selected favorite first; already-visible selections keep their page. */
+    amiidb_fav_page_reset(app);
+    if (seek.have_predecessor) {
+        app->fav_page_anchor = seek.predecessor;
+        app->fav_page_direction = 1;
+    }
+    amiidb_fav_page_load(app, false);
+    return fav_focus_visible(app, favorite);
+}
+
 static void amiidb_scene_fav_list_reload(app_amiidb_t *app) {
     amiidb_fav_page_load(app, false);
     mui_list_view_set_selected_cb(app->p_list_view, amiidb_scene_fav_list_list_view_on_selected);

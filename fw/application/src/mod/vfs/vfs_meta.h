@@ -33,6 +33,7 @@ typedef struct {
 
 
 void vfs_meta_decode(uint8_t* p_meta, uint8_t size, vfs_meta_t* p_out);
+bool vfs_meta_set_readonly(uint8_t *raw, uint8_t size, bool readonly);
 void vfs_meta_encode(uint8_t* p_meta, uint8_t size, vfs_meta_t* p_in);
 
 
