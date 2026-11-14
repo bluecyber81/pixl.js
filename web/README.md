@@ -43,14 +43,15 @@ Die lokale LittleFS-Platzprüfung zeigt DE3.68 mit App-Zähler 640. Das vorausge
 Ordnersicherungen lassen sich nach einem Browserneustart fortsetzen. Der Figurenkatalog speichert Webfavoriten, benannte Filter und HTTPS-Linklisten. LCD-Displayfotos kannst du vor dem Speichern um 180° drehen. [Bedienung](../docs/DATEIMANAGER_WEB.md#dateimanager-3430)
 
 - **3.48.1** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.1/Allmiibo_Dateimanager_3_48_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.1/Allmiibo_DE3_72_Z19_Web3_48_1_ChatGPT_Pruefpaket.zip)
-- **3.47.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.47.0/Allmiibo_Dateimanager_3_47_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.47.0/Allmiibo_DE3_70_Z19_Web3_47_0_ChatGPT_Pruefpaket.zip)
-- **3.46.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.46.0/Allmiibo_Dateimanager_3_46_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.46.0/Allmiibo_DE3_69_Z19_Web3_46_0_ChatGPT_Pruefpaket.zip)
-- **3.45.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.45.0/Allmiibo_Dateimanager_3_45_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.45.0/Allmiibo_DE3_68_Z19_Web3_45_0_ChatGPT_Pruefpaket.zip)
-- **3.44.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
-- **3.43.1** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
-- **3.43.0** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
-- **3.42.2** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
-- **3.42.1** · [Web-Quellcode (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
+- **3.48.0** · [Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.0/Allmiibo_Dateimanager_3_48_0_Quellcode.zip) · [Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.48.0/Allmiibo_DE3_71t1_Z19_Web3_48_0_ChatGPT_Pruefpaket.zip)
+- **3.47.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.47.0/Allmiibo_Dateimanager_3_47_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.47.0/Allmiibo_DE3_70_Z19_Web3_47_0_ChatGPT_Pruefpaket.zip)
+- **3.46.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.46.0/Allmiibo_Dateimanager_3_46_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.46.0/Allmiibo_DE3_69_Z19_Web3_46_0_ChatGPT_Pruefpaket.zip)
+- **3.45.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.45.0/Allmiibo_Dateimanager_3_45_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.45.0/Allmiibo_DE3_68_Z19_Web3_45_0_ChatGPT_Pruefpaket.zip)
+- **3.44.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip)
+- **3.43.1** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip)
+- **3.43.0** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip)
+- **3.42.2** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip)
+- **3.42.1** · [Web-Quellcode (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip) · [ChatGPT-Prüfpaket (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip)
 
 Auf dem Handy führen die bebilderten Schaltflächen direkt zu Figurenimport und Firmwareupdate. Die sechs Bereiche haben eigene Farbakzente. „Dein Gerät“ zeigt den aktuellen Ordner und die Speicherbelegung mit einem breiten Verlaufsbalken. Der Figurenimport öffnet sich jetzt auch beim ersten Klick, wenn der Browser die Ansicht noch lädt. Die Anleitung beschreibt zusätzlich Nordics PC-Weg für Bluetooth-DFU mit einem passenden Adapter. [Bedienung](../docs/DATEIMANAGER_WEB.md#dateimanager-3421)
 
@@ -185,6 +186,13 @@ gebundenen Lizenztexte unter „Quellen & Lizenzen“. Für Pages nur den Inhalt
 `dist-pages/` veröffentlichen, keine Quellen, Serverzustände oder private Dateien.
 Eine andere Projektadresse benötigt einen passenden Basis-Build mit Tests.
 
+Die früheren Handy-Links im Verzeichnis `downloads/` öffnen weiterhin das
+jeweilige Archiv. Der Pages-Build erzeugt für diese Lesezeichen kleine
+Downloadseiten. Große Quellcode- und Prüf-ZIPs gehören in die GitHub-Releases.
+Für Skripte und „Link speichern unter“ die direkte Release-Adresse verwenden.
+Auf jeder Downloadseite gibt es zusätzlich einen Link zur bytegleichen Datei
+im archivierten Git-Stand.
+
 Der isolierte native Test
 `scripts/check-pfs-compatibility.py --output <neuer Ordner>` benötigt GCC und
 prüft einen synthetischen Datenträger mit beiden Kernständen: alt erstellen,
@@ -198,7 +206,7 @@ den unveränderten Speicherkern und werden nicht nur wegen DE3.59 umbenannt.
 Abhängigkeiten sind in `package-lock.json`, Quellen und Lizenzen in
 `third-party/npm/SOURCES.json` gebunden. Ältere nicht referenzierte Lizenzkopien
 sind historische Hinweise, keine zusätzlich installierten Bibliotheken.
-Das [Web-Quellpaket 3.44.0](https://bluecyber81.github.io/pixl.js/downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip)
+Das [Web-Quellpaket 3.44.0](https://github.com/bluecyber81/pixl.js/releases/download/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip)
 enthält Quellen und Tests, keine privaten Sicherungen oder Figurendateien.
 
 ## Verbindung und Grenzen
