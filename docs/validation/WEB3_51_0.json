@@ -1,0 +1,48 @@
+{
+  "version": "3.51.0",
+  "date": "2026-11-14",
+  "firmware": "DE3.74/App647",
+  "applicationOrBootloaderModified": false,
+  "physicalFirmwareEvidence": "DE3_74_LCD_ACCEPTANCE.json",
+  "productionLayouts": {
+    "local": 22,
+    "pages": 22
+  },
+  "fileWorkspace": {
+    "browser": "Chrome",
+    "languages": [
+      "de-DE",
+      "en-GB"
+    ],
+    "widthsCssPixels": [
+      390,
+      1440
+    ],
+    "radio": "read-only simulated peripheral",
+    "contents": [
+      "Seven identical example entries in both file manager versions",
+      "Selected Mario.bin by name and loaded its public catalogue image (288 x 359 pixels)",
+      "Handset detail can close and return to the list",
+      "Desktop rename control and mobile row actions",
+      "Corrected a long folder and file name, detected a name collision, skipped a second entry and compared the resulting device path"
+    ],
+    "deviceWrites": 0
+  },
+  "tests": [
+    "web/tests/upload-names.test.mjs",
+    "web/tests/ui-modern.test.cjs",
+    "web/scripts/verify-file-workspace-browser.mjs"
+  ],
+  "limits": [
+    "Browser layout and transfer planning tested with synthetic files. No owner collection or physical Bluetooth device used for these checks."
+  ],
+  "localWebTests": {
+    "passed": 1509,
+    "failed": 0,
+    "skipped": 0
+  },
+  "windowsLauncherTests": {
+    "passed": 22,
+    "otherPlatformSkipped": 2
+  }
+}

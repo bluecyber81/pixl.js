@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.51.0 · Dateien und Ordnerupload
+
+Ordner stehen oben. Tippe eine Figurendatei an, um ihr Bild und ihre Informationen zu öffnen. Am Handy stehen Dateityp und Größe unter dem Namen, die Aktionen findest du rechts. Ist ein lokaler Name für das Allmiibo ungeeignet, kannst du den Zielnamen vor dem Hochladen korrigieren oder den Eintrag überspringen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Downloads für Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.0)
+
 ## DE3.74 / App647 und Dateimanager 3.50.0
 
 **Finale LCD-Version.** Am 14. November 2026 bestätigte der Besitzer, dass das Displayfoto in der Fernbedienung auf seinem Allmiibo LCD mit DE3.74 und Dateimanager 3.50.0 funktioniert. Der Diagnoseexport weist App647, Bootloader Z19 und SoftDevice S112 7.3.0 aus. [Firmwarefreigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74)

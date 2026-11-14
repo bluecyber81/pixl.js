@@ -35,6 +35,7 @@ function harness(overrides = {}) {
     dispatchEvent: events.dispatchEvent.bind(events) };
   const timeouts = [];
   const context = vm.createContext({ module: { exports: {} }, proto, pixl, document, window, navigator,
+    ...require('../src/lib/upload-names.js'),
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
@@ -392,7 +393,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.50.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.51.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -404,7 +405,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.50.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.51.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -491,7 +492,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.50.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.51.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -856,7 +857,11 @@ test('3.15 invalid new portable names cannot reach upload, rename or create but 
     let writes=0, creates=0, renames=0;
     const h=harness({vfs_helper_write_file(_path,_file,_progress,success){++writes;success()},vfs_create_folder(){++creates},vfs_rename(){++renames}}), app=connected(h);
     app.verifyUploads=false;
-    await assert.rejects(app.on_upload_request({file:{name,size:0}}), /info.portableName/);
+    app.$prompt = async (_message, _title, options) => {
+      assert.equal(options.inputValidator(name), 'info.portableName');
+      throw 'cancel';
+    };
+    await assert.rejects(app.on_upload_request({file:{name,size:0}}), reason => reason === 'cancel');
     app.$prompt=async()=>({value:name}); await app.on_btn_new_folder();
     await app.on_row_btn_rename(0,{name:'valid.bin'});
     assert.equal(writes+creates+renames,0); assert.equal(app.append_segment('E:/',name),'E:/'+name);
@@ -1438,6 +1443,39 @@ test('existing upload targets are rejected before opening or writing by default'
   assert.equal(writes, 0); assert.equal(app.pendingUploads, 0);
 });
 
+test('single upload corrects only the destination, validates UTF-8 limits and reads back that path', async () => {
+  const source = uploadFile('L'.repeat(49) + '.bin');
+  const writes = [], reads = [];
+  const h = harness({
+    vfs_helper_write_file(path, file, _progress, yes) { writes.push([path, file]); yes(); },
+    vfs_helper_read_file(path, yes) { reads.push(path); yes(Uint8Array.of(1, 2, 3).buffer); }
+  });
+  const app = connected(h);
+  app.verifyUploads = true;
+  app.$prompt = async (_description, _title, options) => {
+    assert.equal(options.inputValue, source.name);
+    assert.notEqual(options.inputValidator('ü'.repeat(24)), true);
+    assert.equal(options.inputValidator('Mario.bin'), true);
+    return { value: 'Mario.bin' };
+  };
+  await app.on_upload_request({ file: source });
+  assert.deepEqual(writes, [['E:/Mario.bin', source]]);
+  assert.deepEqual(reads, ['E:/Mario.bin']);
+  assert.equal(source.name, 'L'.repeat(49) + '.bin');
+});
+
+test('skipping an invalid file leaves it unwritten and the next queued upload completes', async () => {
+  const written = [];
+  const h = harness({vfs_helper_write_file(path, _file, _progress, yes) { written.push(path); yes(); }});
+  const app = connected(h);
+  app.verifyUploads = false;
+  app.$prompt = async () => { throw 'cancel'; };
+  const skip = assert.rejects(app.on_upload_request({file:uploadFile('bad?.bin')}), error => error === 'cancel');
+  const next = app.on_upload_request({file:uploadFile('Peach.bin')});
+  await Promise.all([skip, next]);
+  assert.deepEqual(written, ['E:/Peach.bin']);
+});
+
 test('failed upload preflight, directory conflict and cancelled replace never truncate', async () => {
   let writes = 0;
   const h = harness({ vfs_read_folder: async () => ({ status: 255 }), vfs_helper_write_file() { ++writes; } }), app = connected(h);
@@ -1523,6 +1561,32 @@ test('large collections sort globally before pagination and filtered selections 
   assert.equal(app.pagedRows[0].sizeBytes, 304);
 });
 
+test('directory list sorts folders before files in both directions and keeps page selection consistent', () => {
+  const app = connected(harness());
+  const folder = { name: 'Zelda', type: 'DIR', sizeBytes: 0 };
+  const first = { name: '01.bin', type: 'REG', sizeBytes: 540 };
+  const second = { name: 'Zwei.txt', type: 'REG', sizeBytes: 12, notes: 'Hallo' };
+  app.tableData = [first, second, folder];
+  assert.deepEqual(Array.from(app.sortedRows), [folder, first, second]);
+  assert.equal(app.file_type_label(first), 'fileList.bin');
+  assert.equal(app.file_type_label(second), 'fileList.file');
+  assert.ok(app.fileListColumns.some(column => column.key === 'notes'));
+  app.select_file_entry(first, true);
+  app.select_file_entry(first, true);
+  assert.equal(app.table_selection.length, 1);
+  app.toggle_file_sort('name');
+  assert.deepEqual(Array.from(app.sortedRows), [folder, second, first]);
+  assert.equal(app.table_selection.length, 0);
+  app.select_file_entry(second, true);
+  app.delete_table_row_by_name(second.name);
+  assert.equal(app.table_selection.length, 0);
+  assert.equal(app.fileListHasNotes, false);
+  app.tableData = [{name:'E:', type:'DRIVE'}];
+  app.select_file_entry(app.tableData[0], true);
+  assert.equal(app.table_selection.length, 0);
+  assert.equal(app.selectablePageRows.length, 0);
+});
+
 test('backup wrapper is read-only, forwards bounds, and waits for an explicit save click', async () => {
   let observed, reads = 0;
   const h = harness({ vfs_helper_read_file(path, yes, no, done, options) { assert.equal(options.max_bytes, 3); ++reads; yes(new Uint8Array(3)); },
@@ -1583,10 +1647,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.50.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.51.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.50.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.51.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2125,7 +2189,11 @@ test323('direct upload rejects case or Unicode alias before device writes', asyn
   for(const [existing,incoming] of [['Mario.bin','mario.bin'],['A\u0308.bin','Ä.bin']]){
     let writes=0; const h=harness({vfs_read_folder:async()=>({status:0,data:[file(existing)]}),vfs_helper_write_file(path,data,progress,yes){writes++;yes();}}),app=connected(h);
     app.verifyUploads=false;app.replaceUploads=true;
-    await assert.rejects(app.on_upload_request({file:{name:incoming,size:1},onProgress(){}}));
+    app.$prompt=async(_message,_title,opts)=>{
+      assert.equal(opts.inputValidator(incoming),'info.portableCollision');
+      return {value:incoming};
+    };
+    await assert.rejects(app.on_upload_request({file:{name:incoming,size:1},onProgress(){}}),/info.portableCollision/);
     assert.equal(writes,0);assert.equal(app.pendingUploads,0);
   }
 });
@@ -2138,7 +2206,7 @@ test323('add-only selection shortcuts never select changes and respect busy lock
   for(const kind of ['zip','sync']){app[kind+'Plan']={entries};app.select_plan(kind,true);assert.deepEqual(Array.from(app[kind+'Selected']),['E:/new']);app.mutating=true;app.select_plan(kind,false);assert.equal(app[kind+'Selected'].length,1);app.mutating=false;app.select_plan(kind,false);assert.equal(app[kind+'Selected'].length,0);}
 });
 test323('sync local selection can be selected again and active close retains commit lock',()=>{
-  const h=harness(),app=connected(h);app.syncDialog=true;const event={target:{files:[{name:'same.bin'}],value:'selected'}};
+  const h=harness(),app=connected(h);app.open_sync();const event={target:{files:[{name:'same.bin'}],value:'selected'}};
   app.on_sync_files(event);assert.equal(event.target.value,'');assert.equal(app.syncFileCount,1);
   let aborts=0,closed=0;app.syncing=true;app._syncController={abort(){aborts++;}};app.close_sync(()=>closed++);
   assert.equal(aborts,1);assert.equal(closed,0);assert.equal(app.syncing,true);assert.equal(app.workflowCancelling,true);assert.equal(app._syncFiles.length,1);
@@ -2408,7 +2476,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.50.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.51.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.74",
   "counter": 647,
   "board": "LCD",
-  "web_version": "3.50.1",
+  "web_version": "3.51.0",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
@@ -50,7 +50,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.50.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -133,7 +133,8 @@
     "web_3_48_4": "The online catalogue check reports missing game notes and write support in the source. Reviewed notes remain available. The remote supports the keyboard and shows which command the device acknowledged. Dragoon and Hydra share a board code, so file inspection lists both possible machines.",
     "web_3_49_0": "On iPhone the file manager explains catalogue access and Bluetooth options. Comparing a folder again can identify files changed on both sides. Devices running cylin577 firmware have a dedicated PixLink connection option.",
     "web_3_50_0": "On demand DE LCD display photo during navigation, PNG export, remote STATUS check and session-safe file handoff.",
-    "web_3_50_1": "Select the hardware-tested DE3.74/App647 application as the stable default for compatible LCD devices."
+    "web_3_50_1": "Select the hardware-tested DE3.74/App647 application as the stable default for compatible LCD devices.",
+    "web_3_51_0": "Responsive directory listing with figure preview and destination-name editing for local uploads."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -146,9 +147,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_50_1.json",
+  "web_evidence": "docs/validation/WEB3_51_0.json",
   "device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
-  "web_device_readback_pending_scope": "The physical confirmation with App647 was obtained using file manager 3.50.0. Web 3.50.1 updates the firmware download selection.",
+  "web_device_readback_pending_scope": "The owner confirmed the App647 remote photo with file manager 3.50.0. The 3.51.0 file list and upload changes are browser features.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {

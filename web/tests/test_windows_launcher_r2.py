@@ -85,7 +85,7 @@ class LauncherTests(unittest.TestCase):
         class ForeignHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 calls.append('GET')
-                body = b'{"application":"allmiibo-dateimanager","version":"3.50.1","instance":"foreign"}'
+                body = b'{"application":"allmiibo-dateimanager","version":"3.51.0","instance":"foreign"}'
                 self.send_response(200)
                 self.send_header('Content-Length', str(len(body)))
                 self.end_headers()
@@ -230,12 +230,18 @@ class LauncherTests(unittest.TestCase):
                 raise TimeoutError(errno.ETIMEDOUT, 'simulated legacy 0.4-second probe failure')
             return original_connect(address, timeout, *args, **kwargs)
         # Real server/HTTP on Linux; only the old short probe failure is simulated.
-        with self.owned_children(), \
-                patch.object(self.module.socket, 'create_connection', side_effect=fail_only_old_probe), \
-                patch.object(self.module, 'listening', side_effect=AssertionError('No negative start probe')):
-            self.module.start(self.port, True)
-            state = json.loads(self.state_path.read_text())
-            self.assertTrue(self.module.matches(self.module.request(self.port), state))
+        with self.owned_children() as children:
+            try:
+                with patch.object(self.module.socket, 'create_connection', side_effect=fail_only_old_probe), \
+                        patch.object(self.module, 'listening', side_effect=AssertionError('No negative start probe')):
+                    self.module.start(self.port, True)
+                    state = json.loads(self.state_path.read_text())
+                    self.assertTrue(self.module.matches(self.module.request(self.port), state))
+            finally:
+                # Stop the actual HTTP server before reaping its launcher process on Windows.
+                self.module.stop(self.port)
+                for child in children:
+                    child.wait(timeout=5)
         self.assertTrue(calls)
         self.assertNotIn(0.4, calls)
 
@@ -354,7 +360,7 @@ class LauncherTests(unittest.TestCase):
                     break
                 time.sleep(0.05)
             self.assertIsNotNone(health, 'Direct server did not answer')
-            self.assertEqual(health['version'], '3.50.1')
+            self.assertEqual(health['version'], '3.51.0')
             self.assertEqual(self.state_path.read_bytes(), before)
             self.assertFalse((self.root / 'launcher-{}.lock'.format(self.port)).exists())
             self.assertFalse(self.module.error_log_path(self.port).exists())

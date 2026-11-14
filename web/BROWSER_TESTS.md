@@ -1,5 +1,9 @@
 # Browserprüfung des Produktionsbuilds
 
+## Dateiliste und Zielnamen ab 3.51.0
+
+Mit `node scripts/verify-file-workspace-browser.mjs dist-pages <Ausgabeordner>` lässt sich die veröffentlichungsfertige Oberfläche in Chrome mit Beispieldaten prüfen. Die Prüfung öffnet Mario über die Dateiliste, kontrolliert das geladene Bild und vergleicht die bearbeiteten Zielpfade im Ordnerupload. Für die Vorher-Bilder kann zusätzlich die archivierte Ausgabe 3.50.1 als erstes Argument mit `--before` verwendet werden. [Prüfstand](../docs/validation/WEB3_51_0.json)
+
 Der Besitzer hat das Displayfoto mit Dateimanager 3.50.0 und DE3.74/App647 auf seinem LCD-Allmiibo am 14. November 2026 bestätigt. [Gerätenachweis](../docs/validation/DE3_74_LCD_ACCEPTANCE.json)
 
 ## LCD-Foto in der Fernbedienung ab 3.50.0

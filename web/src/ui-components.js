@@ -1,7 +1,7 @@
 import {
   ElButton, ElButtonGroup, ElCheckbox, ElCol,
   ElConfigProvider, ElDialog, ElDropdown, ElDropdownItem, ElDropdownMenu,
-  ElForm, ElFormItem, ElInput, ElRow, ElTable, ElTableColumn, ElUpload,
+  ElForm, ElFormItem, ElInput, ElRow, ElUpload,
   ElLoading, ElMessage, ElMessageBox, ElNotification
 } from 'element-plus'
 
@@ -11,7 +11,7 @@ export function installUiComponents(app) {
   for (const component of [
     ElButton, ElButtonGroup, ElCheckbox, ElCol,
     ElConfigProvider, ElDialog, ElDropdown, ElDropdownItem, ElDropdownMenu,
-    ElForm, ElFormItem, ElInput, ElRow, ElTable, ElTableColumn, ElUpload
+    ElForm, ElFormItem, ElInput, ElRow, ElUpload
   ]) app.component(component.name, component)
   for (const service of [ElLoading, ElMessage, ElMessageBox, ElNotification]) app.use(service)
 }

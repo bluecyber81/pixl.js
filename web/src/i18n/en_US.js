@@ -1,4 +1,9 @@
 export default {
+  fileList: {
+    folder: 'Folder', drive: 'Drive', file: 'File', bin: 'BIN file', actions: 'Actions',
+    selectPage: 'Select all entries on this page', select: 'Select “{name}”', more: 'More actions for “{name}”', rename: 'Rename “{name}”',
+    sort: 'Sort by', sortDescending: 'Sort descending', sortAscending: 'Sort ascending'
+  },
   figureUsage: {
     catalogueVersion: 'Catalogue version: {version}'
   },
