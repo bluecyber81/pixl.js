@@ -1,0 +1,28 @@
+{
+  "extends": "remote-protocol-v1.json",
+  "application": "2.22.0-DE3.74",
+  "board": "LCD",
+  "capabilityBit": 32,
+  "opcode": 5,
+  "name": "LCD_READ",
+  "frame": {
+    "width": 128,
+    "height": 64,
+    "bytes": 1024,
+    "format": "Eight pages of 128 columns. Bit 0 is the top pixel of each eight-pixel column."
+  },
+  "request": {
+    "bytes": 8,
+    "byte6": "Offset in units of eight bytes, 0 through 127.",
+    "byte7": 0
+  },
+  "success": {
+    "headerBytes": 12,
+    "byte10": "Requested offset in units of eight bytes.",
+    "byte11": "Payload bytes, 8 to 128, multiple of eight, bounded by the effective GATT value capacity and the remaining frame.",
+    "byte12onward": "Pixels from the frozen frame."
+  },
+  "errors": "Standard 12-byte reply with zero bytes 10 and 11.",
+  "acquisition": "Start at offset zero to freeze the framebuffer. Request the next offset sequentially using a new sequence number. An exact repeat of the last request reuses its reply. Publish the image after exactly 1024 bytes. No input event or file transfer is required.",
+  "link": "Only a locally enabled DE remote session advertising the capability can supply an image."
+}
