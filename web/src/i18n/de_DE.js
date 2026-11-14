@@ -128,7 +128,7 @@ export default {
   },
   transfer: {
     busy: 'Dateiübertragung läuft. Zum Abbrechen den Upload-Dialog schließen.',
-    unsupported: 'Dieser Browser unterstützt kein Web Bluetooth. Bitte Chrome oder Edge verwenden.',
+    unsupported: 'Für die Geräteverbindung braucht der Browser Web Bluetooth. Den Figurenkatalog kannst du ohne Verbindung öffnen.',
     deviceerror: 'Gerätefehler',
     cancelled: 'Übertragung abgebrochen'
   }

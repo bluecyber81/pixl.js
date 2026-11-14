@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.48.4</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.49.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -57,7 +57,9 @@
         <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
       </div>
     </section>
-    <p v-if="browserIssue" class="notice error" role="alert">{{ $t(browserIssue) }}</p>
+    <p v-if="browserIssue" class="notice" role="status">{{ $t('tools.' + browserIssue) }}
+      <a v-if="browserIssue === 'appleBluetooth'" :href="guideUrl + '#iphone'">{{ $t('tools.appleBluetoothHelp') }}</a>
+    </p>
     <nav v-if="activeWorkspace === 'files'" class="start-actions" :aria-label="$t('workflow.startActions')">
       <button type="button" class="start-figure" aria-controls="catalogue-workspace" @click="show_figure_import">
         <img class="action-art" src="./assets/figure-import-pixel.png" alt="" width="72" height="54">
@@ -296,7 +298,7 @@
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.48.4</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.49.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -454,6 +456,11 @@
       <p v-if="syncFolderName">{{ $t(syncFolderContents ? 'info.syncContentsHint' : 'info.syncUploadFolderHint', {folder: syncFolderName}) }}</p>
       <label class="sync-picker">{{ $t('info.syncFiles') }} <input type="file" multiple :disabled="busy" @change="on_sync_files"></label>
       <label class="sync-picker">{{ $t('info.syncFolder') }} <input type="file" webkitdirectory multiple :disabled="busy" @change="on_sync_files($event, true)"></label>
+      <div v-if="syncFolderContents && syncFolderName">
+        <label class="sync-picker">{{ $t('info.historyChoose') }} <input type="file" accept=".json" :disabled="busy" @change="on_sync_history"></label>
+        <span v-if="syncHistoryName">{{ syncHistoryName }} <button type="button" :disabled="busy" @click="on_sync_history(null)">{{ $t('info.historyClear') }}</button></span>
+        <p>{{ $t('info.historyHint') }}</p>
+      </div>
       <p>{{ $t('info.syncSelectedFiles', { count: syncFileCount }) }}</p>
       <el-button @click="build_sync_plan" :disabled="!connected || busy || !syncFileCount">{{ $t('info.syncCompare') }}</el-button>
       <section v-if="syncPlan" class="sync-plan">
@@ -466,8 +473,9 @@
           <div v-for="entry in syncPagedEntries" :key="entry.targetPath" class="sync-entry">
             <label><input v-if="entry.status === 'add' || entry.status === 'change'" type="checkbox" :value="entry.targetPath" v-model="syncSelected" :disabled="busy">
               <span>{{ $t('info.compare_' + entry.comparison) }} · {{ entry.relativePath }}</span>
+              <small v-if="entry.history">{{ $t('info.history_' + entry.history) }}</small>
             </label>
-            <button v-if="entry.comparison === 'deviceOnly' || entry.comparison === 'change'" type="button" :disabled="busy || !connected" @click="download_sync_entry(entry.targetPath)">{{ $t('info.syncSaveDevice') }}</button>
+            <button v-if="entry.status === 'deviceOnly' || (entry.expected && ['change','conflict'].includes(entry.comparison))" type="button" :disabled="busy || !connected" @click="download_sync_entry(entry.targetPath)">{{ $t('info.syncSaveDevice') }}</button>
             <small v-if="entry.reason">{{ plan_reason(entry.reason) }}</small>
           </div>
           <p v-if="!syncPagedEntries.length">{{ $t('info.syncEmpty') }}</p>
@@ -479,6 +487,7 @@
       </section>
       <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
       <p v-if="syncStatus" role="status">{{ syncStatus }}</p>
+      <el-button v-if="syncHistoryReady" :disabled="busy" @click="save_sync_history">{{ $t('info.historySave') }}</el-button>
       <el-button v-if="syncing" :disabled="workflowCancelling" @click="cancel_sync">{{ $t('tools.cancel') }}</el-button>
     </el-dialog>
     <el-dialog :title="$t('upload.title')" v-model="upload_diag_visible" width="min(560px, 92vw)" :before-close="on_upload_diag_close">
@@ -547,12 +556,14 @@ import { assertPortableEntryName, assertWritableDevicePath, portableNameKey } fr
 import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
+import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
 import { loadBackupZip, previewZipImport, executeZipImport } from "./lib/zip-import.js"
 import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure-info.js"
 import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
 import { metadataNoteInfo } from "./lib/metadata-note.js"
 import { deploymentPath } from "./lib/deployment-path.js"
+import { bluetoothAccessIssue } from "../public/dfu/bluetooth-access.mjs"
 import { version as webVersion } from "../package.json"
 import { projectDownloads } from "./lib/project-downloads.js"
 import { dfuReference } from "./lib/release-packages.js"
@@ -575,6 +586,7 @@ export default {
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0,
+      syncHistoryName: '', syncHistoryReady: null,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
       collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
@@ -647,14 +659,14 @@ export default {
       if (!this.syncPlan) return [];
       const {entries, deviceOnly, rootPath} = this.syncPlan;
       const prefix = rootPath.endsWith('/') ? rootPath : rootPath + '/';
-      const remoteRows = deviceOnly.map(({path, size}) => ({
-        status: 'deviceOnly', comparison: 'deviceOnly', targetPath: path, relativePath: path.slice(prefix.length), size
+      const remoteRows = deviceOnly.map(({path, size, history, comparison}) => ({
+        status: 'deviceOnly', comparison: comparison || 'deviceOnly', targetPath: path, relativePath: path.slice(prefix.length), size, history
       }));
       return [...entries, ...remoteRows].sort((a,b) => a.relativePath.localeCompare(b.relativePath));
     },
     syncCounts() {
       const counts = {all:this.syncOverview.length, add:0, deviceOnly:0, change:0, same:0, blocked:0};
-      for (const entry of this.syncOverview) ++counts[entry.comparison];
+      for (const entry of this.syncOverview) counts[entry.comparison] = (counts[entry.comparison] || 0) + 1;
       return counts;
     },
     syncFilteredEntries() { return this.syncFilter === 'all' ? this.syncOverview : this.syncOverview.filter(entry => entry.comparison === this.syncFilter); },
@@ -870,7 +882,7 @@ export default {
       if (this.busy) return;
       const plan = kind === 'zip' ? this.zipPlan : kind === 'sync' ? this.syncPlan : null;
       if (!plan) return;
-      this[kind + 'Selected'] = additionsOnly ? plan.entries.filter(e => e.status === 'add').map(e => e.targetPath) : [];
+      this[kind + 'Selected'] = additionsOnly ? plan.entries.filter(e => e.status === 'add' && !e.history).map(e => e.targetPath) : [];
     },
     show_figure_import() {
       this.show_workspace('catalogue');
@@ -1117,13 +1129,17 @@ export default {
     invalidate_sync() {
       this.workflowCancelling = false; this._syncController?.abort(); this._syncController = null; this._syncFiles = [];
       this._syncGeneration = null; this._syncDeviceKey = null;
+      this._syncHistoryFile = null; this._syncHistory = null; this.syncHistoryName = ''; this.syncHistoryReady = null;
       this.syncDialog = false; this.syncing = false; this.syncFileCount = 0;
       this.syncFolderName = ''; this.syncFolderContents = false;
       this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
     },
     on_sync_files(event, folderContents = false) {
       if (!this.connected || !this.syncDialog || this.busy) return;
-      const files = Array.from(event.target.files || []); event.target.value = '';
+      let files = Array.from(event.target.files || []); event.target.value = '';
+      if (!files.length) return;
+      if (folderContents) files = files.filter(file => !/^Allmiibo-Ordnervergleich\.allmiibo-sync(?: \(\d+\))?\.json$/iu.test(file.name));
+      this._syncHistoryFile = null; this._syncHistory = null; this.syncHistoryName = ''; this.syncHistoryReady = null;
       this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncPage=1;
       this._syncFiles = []; this.syncFileCount = 0; this.syncFolderName = ''; this.syncFolderContents = false;
       if (files.length > 4096) { this.show_transfer_error(new Error(this.$t('info.syncTooMany'))); return; }
@@ -1137,26 +1153,46 @@ export default {
       this.syncFolderName = files[0]?.webkitRelativePath?.split('/')[0] || '';
       this.syncFolderContents = folderContents;
     },
+    on_sync_history(event) {
+      if (this.busy || !this.connected || !this.syncFolderContents || !this.syncFolderName) return;
+      const file = event?.target.files?.[0] || null;
+      if (event) { event.target.value = ''; if (!file) return; }
+      this._syncHistoryFile = file; this.syncHistoryName = file?.name || ''; this._syncHistory = null;
+      this.syncPlan = null; this.syncSelected = []; this.syncStatus = ''; this.syncHistoryReady = null;
+    },
+    save_sync_history() {
+      if (!this.syncHistoryReady || this.busy) return;
+      try { saveBlob(new Blob([JSON.stringify(this.syncHistoryReady)], {type:'application/json'}), HISTORY_FILENAME); }
+      catch(error) { this.show_transfer_error(error); }
+    },
     async build_sync_plan() {
       if (!this.connected || this.busy || !this.syncFileCount) return;
       const generation = this.sessionGeneration, deviceKey = pixl.get_device_key?.();
       if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
-      this.syncStatus = ''; this.syncPlan = null; this.syncSelected = [];
+      this.syncStatus = ''; this.syncPlan = null; this.syncSelected = []; this.syncHistoryReady = null; this._syncHistory = null;
       try {
         const adapters = this.transfer_adapters(generation);
-        const plan = await createSyncPlan({rootPath:this.syncRoot, files:this._syncFiles, deviceKey,
+        const localFolder = this.syncFolderContents && this.syncFolderName;
+        const binding = localFolder && await folderBinding(deviceKey, this.syncRoot, localFolder);
+        const history = this._syncHistoryFile && await readSyncHistory(this._syncHistoryFile, deviceKey, this.syncRoot, localFolder);
+        this.assert_session(generation);
+        const plan = await createSyncPlan({rootPath:this.syncRoot, files:this._syncFiles, deviceKey, localFolder, history,
           ...adapters, signal:controller.signal, onProgress:progress => {
             if (this.session_current(generation)) this.show_sync_progress(progress);
           }});
         this.assert_session(generation);
-        this._syncGeneration = generation; this._syncDeviceKey = deviceKey; this.syncPlan = plan;
-        this.syncPage=1; this.syncFilter='all'; this.syncSelected = plan.entries.filter(entry=>entry.status==='add').map(entry=>entry.targetPath);
+        if (controller.signal.aborted) return;
+        this._syncGeneration = generation; this._syncDeviceKey = deviceKey; this._syncHistory = history;
+        this.syncHistoryReady = binding ? createSyncHistory(plan, binding, history) : null;
+        this.syncPlan = plan;
+        this.syncPage=1; this.syncFilter='all'; this.syncSelected = plan.entries.filter(entry=>entry.status==='add' && !entry.history).map(entry=>entry.targetPath);
         this.syncStatus = this.$t('info.syncPlanReady');
       } catch(error) {
         if (this.session_current(generation)) {
-          this.syncStatus = this.$t(controller.signal.aborted ? 'info.syncCancelled' : 'info.syncFailed');
-          if (!controller.signal.aborted) this.show_transfer_error(error);
+          const historyError = ['SYNC_HISTORY_INVALID','SYNC_HISTORY_BINDING'].includes(error.code);
+          this.syncStatus = this.$t(historyError ? 'info.' + error.code : controller.signal.aborted ? 'info.syncCancelled' : 'info.syncFailed');
+          if (!controller.signal.aborted && !historyError) this.show_transfer_error(error);
         }
       } finally {
         if (this._syncController === controller) this._syncController = null;
@@ -1167,9 +1203,14 @@ export default {
       if (!this.connected || this.busy || !this.syncPlan || this._syncGeneration !== this.sessionGeneration ||
           this._syncDeviceKey !== pixl.get_device_key?.()) return;
       const entry = this.syncOverview.find(row => row.targetPath === targetPath);
-      if (!entry || (entry.comparison !== 'deviceOnly' && entry.comparison !== 'change')) return;
-      const size = entry.comparison === 'deviceOnly' ? entry.size : entry.expected.size;
-      return this.download_device_file(entry.targetPath, entry.relativePath.split('/').pop(), size, true);
+      if (!entry || (entry.status !== 'deviceOnly' && !(entry.expected && ['change','conflict'].includes(entry.comparison)))) return;
+      const size = entry.status === 'deviceOnly' ? entry.size : entry.expected.size;
+      let name = entry.relativePath.split('/').pop();
+      if (entry.comparison === 'conflict' && entry.expected) {
+        const dot = name.lastIndexOf('.');
+        name = dot > 0 ? name.slice(0, dot) + '-Allmiibo' + name.slice(dot) : name + '-Allmiibo';
+      }
+      return this.download_device_file(entry.targetPath, name, size, true);
     },
     async run_sync() {
       if (!this.connected || this.busy || !this.syncPlan || !this.syncSelected.length) return;
@@ -1182,7 +1223,8 @@ export default {
       catch(error) { this.show_transfer_error(error); return; }
       if (!this.session_current(generation) || plan !== this.syncPlan) return;
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
-      this.syncStatus = ''; const adapters = this.transfer_adapters(generation);
+      const binding = this.syncHistoryReady?.binding;
+      this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.transfer_adapters(generation);
       try {
         const job = createSyncJob(plan);
         const result = await executeSyncJob({job,plan,files:this._syncFiles,deviceKey,selectedPaths,
@@ -1197,6 +1239,7 @@ export default {
           onProgress:progress=>{if(this.session_current(generation))this.show_sync_progress(progress);}
         });
         this.assert_session(generation);
+        if (binding && !controller.signal.aborted) this.syncHistoryReady = createSyncHistory(plan, binding, this._syncHistory, result.job);
         this.syncStatus = this.$t('info.syncDone');
         const bytes=plan.entries.filter(entry=>selectedPaths.includes(entry.targetPath)).reduce((sum,entry)=>sum+entry.size,0);
         this.remember_transfer('sync','success',bytes,true); return result;
@@ -1342,7 +1385,7 @@ export default {
       if (this.diagnosticsBusy || this.fullDiagnosticBusy) return;
       this.refresh_local_metrics();
       const baseReport = createDiagnostics({ firmwareVersion: this.firmwareVersion, connected: this.connected,
-        browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator !== 'undefined' && !!navigator.bluetooth },
+        browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator.bluetooth?.requestDevice === 'function' },
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
@@ -2311,14 +2354,15 @@ export default {
     handle_set_language(mode) {
       if (!window.AllmiiboLanguage.setMode(mode)) return;
       this.$message({ message: this.$t('lang.changeok'), type: 'success' });
+    },
+    refresh_bluetooth_access() {
+      this.browserIssue = bluetoothAccessIssue(window);
     }
-
-
   }, mounted() {
     try { if (this.storage()?.getItem('allmiibo-folder-checkpoint-enabled') === '1') void this.toggle_stored_backup(true, false); } catch { /* storage disabled */ }
     this._metricsTimer = window.setInterval?.(() => this.refresh_local_metrics(), 500);
-    this.browserIssue = typeof navigator !== 'undefined' && !navigator.bluetooth ? 'tools.browserUnavailable' : '';
-    if (typeof window !== 'undefined' && window.isSecureContext === false) this.browserIssue = 'tools.insecure';
+    this.refresh_bluetooth_access();
+    window.addEventListener?.('focus', this.refresh_bluetooth_access);
     window.addEventListener?.('beforeunload', this.on_before_unload);
     var dispatcher = sharedEventDispatcher();
     dispatcher.addListener("ble_connected", this.on_ble_connected);
@@ -2339,6 +2383,7 @@ export default {
     if (this._metricsTimer != null) window.clearInterval?.(this._metricsTimer);
     this._backupController?.abort(); this.lastBackup = null; this.lastDownload = null;
     window.removeEventListener?.('beforeunload', this.on_before_unload);
+    window.removeEventListener?.('focus', this.refresh_bluetooth_access);
     ++this.sessionGeneration; ++this.listingGeneration;
     this.connected = false; this.connecting = false;
     const dispatcher = sharedEventDispatcher();

@@ -1,5 +1,6 @@
 // Verify the production UI with synthetic names, wake locks and DFU radio boundaries.
 import assert from 'node:assert/strict';
+import { checkSyncHistoryBrowser } from './check-sync-history-browser.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -10,7 +11,7 @@ assert.ok(dist && report && ['/', '/pixl.js/'].includes(base));
 const build = path.resolve(dist);
 const libraries = new URL('../src/lib/', import.meta.url);
 const webVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
-const helperNames = ['sync-plan.js', 'safe-upload.js', 'portable-names.js', 'backup.js', 'raw-metadata.js', 'zip-crc32.js'];
+const helperNames = ['sync-plan.js', 'sync-history.js', 'unique-json.js', 'safe-upload.js', 'portable-names.js', 'backup.js', 'raw-metadata.js', 'zip-crc32.js'];
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json' };
 const server = createServer(async (req, res) => {
   try {
@@ -37,7 +38,13 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(
 const browser = await chromium.launch({ executablePath: process.env.CHROME_EXECUTABLE, headless: true });
 const checks = [], errors = [];
 const origin = 'http://127.0.0.1:' + server.address().port;
-try {
+async function runChecks() {
+  checks.push(await checkSyncHistoryBrowser(browser, origin + base));
+  if (process.argv.includes('--history-only')) {
+    await writeFile(report, JSON.stringify({base,chrome:browser.version(),checks},null,2));
+    console.log('Folder comparison browser check passed');
+    return;
+  }
   const page = await browser.newPage({ viewport: { width: 360, height: 740 }, locale: 'de-DE' });
   page.on('pageerror', err => errors.push(err.message));
   await page.goto(origin + base);
@@ -288,7 +295,8 @@ try {
   assert.deepEqual(errors,[]);
   await writeFile(report,JSON.stringify({ base, chrome:browser.version(), checks, errors },null,2));
   console.log(checks.length,'browser checks passed');
-} finally {
+}
+try { await runChecks(); } finally {
   await browser.close();
   await new Promise(resolve=>server.close(resolve));
 }

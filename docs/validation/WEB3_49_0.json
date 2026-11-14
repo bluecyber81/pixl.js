@@ -1,0 +1,32 @@
+{
+  "version": "3.49.0",
+  "date": "2026-11-14",
+  "sourceBase": "fd6c70d52189d20547042ea3453281182c6409af",
+  "deviceApplication": "DE3.73/App646 (experimental)",
+  "scope": "File manager, both distributions and the bundled guides",
+  "builds": {"root": {"passed": 22}, "githubPages": {"passed": 22}},
+  "catalogueChecks": {"bundledFigures": 954, "gameAssociations": 1346, "kirbyAirRiders": 7},
+  "checks": {
+    "apple": {
+      "engines": ["Playwright WebKit 26.5 on Windows with iPhone 13 profile", "Chrome with simulated browser capabilities"],
+      "languages": ["de", "en"],
+      "verified": ["catalogue without Web Bluetooth", "Kirby Air Riders game filter and exact rider ID", "Apple help link in relevant browsers", "callable Bluetooth API detection", "localised guide", "DFU page and local package chooser availability"],
+      "hardwarePending": ["iPhone/iPad to physical Allmiibo using Bluefy", "backup, reconnect and resume in Bluefy"]
+    },
+    "folderComparison": {
+      "browser": "Chrome using a simulated peripheral and in-memory write adapter",
+      "verified": ["download and reload reference", "reject wrong browser device or folder binding", "two changed copies and changed/deleted conflicts", "new divergent files with no previous common version", "separate device copy downloaded and checked", "explicit upload selection", "stale metadata and cancellation prevent a new upload receipt", "confirmed upload advances reference"],
+      "referenceIdentity": "browser device identifier, device folder path, local folder name; local folders with identical names require the user to select the right reference",
+      "limits": ["reference tracks file content", "no device file removals from folder synchronisation", "directory picker must return at least one file", "the new conflict flow was not run against a physical device in this release"]
+    },
+    "pixLink": {
+      "source": "https://github.com/cylin577/pixl.js/tree/5ed3e8abab96f5e1e7bc2c94233b9df229695067",
+      "version": "v2.27.11",
+      "verified": ["opt-in service chooser", "cancellation and delayed connection cleanup", "wrong service and declined mode", "mode acknowledgements", "individual key press and release writes", "firmware version and available drive validation before same-link handoff", "second file-manager probe, folder open, byte-verified download in German and English"],
+      "testPeripheral": "simulated",
+      "hardwarePending": ["actual cylin577 PixLink hardware", "display reaction to individual keys"]
+    },
+    "regressions": ["DE remote keyboard and acknowledgements", "catalogue preferences", "DFU and folder workflows", "firmware catalogue export validation", "synthetic Dragoon and Hydra host tests"]
+  },
+  "howToRepeat": "../../web/BROWSER_TESTS.md"
+}

@@ -28,6 +28,8 @@
         <a href="#flash">Die Geräte-App aktualisieren</a>
         <a href="#littlefs">Die Sammlung auf LittleFS umziehen</a>
         <a href="#bootloader">Komplettpaket für LCD</a>
+        <a href="#ordnervergleich">Ordner vergleichen</a>
+        <a href="#iphone">iPhone und iPad</a>
         <a href="#programme">Programme und Downloads</a>
         <a href="#hilfe">Wenn ein Schritt anhält</a>
       </nav>
@@ -65,6 +67,16 @@
             <li><h3>Beide Phasen mit Android übertragen</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.73-test646/Allmiibo_LCD_S112_7_3_0_Z19_DE3_73_646_KOMPLETT_TEST.zip">Komplettpaket für DE3.73 herunterladen (ZIP)</a>. Lass die Datei unverändert. Trenne den Dateimanager und öffne am Gerät <b>Einstellungen → Firmware-Update</b>. Wähle in <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">nRF Device Firmware Update</a> die ZIP und dein <b>pixl dfu</b>. Die App überträgt zuerst S112 7.3.0 mit Bootloader Z19 und anschließend App646. Lass die Nordic-App nach dem Zwischenneustart weiterlaufen, bis auch die zweite Phase fertig ist. Der Web-Updater unterstützt die reine App-ZIP.</p></li>
             <li><h3>Installierte Versionen nachlesen</h3><p>Verbinde nach dem letzten Neustart <b>Pixl.js</b> im Dateimanager. Erwartet werden <b>2.22.0-DE3.73 / 646</b>, Bootloaderzähler <b>19</b> mit dem Z19-Bereichshash und S112 7.3.0 mit FWID <b>0x0126</b>. Steht die Speicherumstellung aus, fahre im <a href="#littlefs">Migrationsassistenten mit der geprüften Sicherung</a> fort.</p></li></ol>
         </section>
+        <section id="ordnervergleich">
+          <h2>Änderungen in zwei Ordnern vergleichen</h2>
+          <p>Öffne unter <b>Dateien</b> den Geräteordner. Wähle unter <b>Sicherung → Lokale Dateien vergleichen</b> den zugehörigen Ordner auf deinem Computer. Nach dem Vergleich speicherst du mit <b>Vergleichsstand speichern</b> eine kleine JSON-Datei außerhalb der Sammlung. Darin stehen Pfade und Prüfsummen. Die eigentlichen Figurendateien sicherst du über die ZIP-Sicherung.</p>
+          <p>Beim nächsten Vergleich wählst du im selben Browserprofil dasselbe Gerät, dieselben Ordner und die gespeicherte JSON-Datei. Wurden beide Fassungen einer Datei verändert, erscheint ein Konflikt. Mit <b>Geräteversion speichern</b> kannst du sie zuerst separat herunterladen. Für eine Übertragung auf das Gerät wählst du die gewünschten Dateien selbst aus.</p>
+        </section>
+        <section id="pixlink">
+          <h2>Geräte mit cylin577s PixLink verbinden</h2>
+          <p>Wähle am Gerät mit v2.27.11 den Bluetooth-Modus <b>Pixl.js</b> oder <b>AmiLoop</b>. Öffne im Dateimanager <b>Fernbedienung</b>, wähle <b>cylin577 · PixLink</b> und verbinde das Gerät. Mit <b>Steuerung übernehmen</b> kannst du die Tasten senden. Ihre Wirkung siehst du am Gerät.</p>
+          <p><b>Dateiübertragung öffnen</b> beendet die laufende App und gibt die Gerätetasten frei. Erscheint das Laufwerk danach nicht, öffne am Gerät die normale Dateiübertragung und verbinde dich dort erneut. <a href="https://github.com/cylin577/pixl.js/releases/tag/v2.27.11">Firmwarebeschreibung von cylin577</a></p>
+        </section>
         <section id="hilfe">
           <h2>Wenn ein Schritt anhält</h2>
           <ul class="steps"><li><h3>„Ordner sichern“ bleibt grau</h3><p>Öffne unter <b>Dateien</b> zuerst das Laufwerk <b>E:/</b>. Ein verbundener Dateimanager allein hat noch keinen Ordner ausgewählt.</p></li>
@@ -72,6 +84,10 @@
             <li><h3>Das App-Update wurde unterbrochen</h3><p>Ist <b>pixl dfu</b> wieder sichtbar, verwende dasselbe Gerät und dieselbe Anwendungs-ZIP. Der Web-Updater liest die gespeicherte Position und Prüfsumme. Abhängig vom bestätigten Stand setzt er dort fort oder beginnt erneut. Bei einer unterbrochenen Systemübertragung verwende die zum Systempaket gehörende Anleitung und denselben geeigneten Client.</p></li></ul>
         </section>
         <section id="programme"><h2>Programme und Downloads</h2><p>Für die Web-Anleitung und Dateiübertragung eignen sich Chrome auf Android oder ein Browser mit Web Bluetooth wie Chrome oder Edge auf dem Laptop. Der Dateimanager selbst läuft im Browser. Ein Update der Website erfordert keinen Flashvorgang.</p>
+          <h3 id="iphone">iPhone und iPad</h3>
+          <p>Den Figurenkatalog kannst du in Safari oder Chrome durchsuchen und dort die Spielhinweise lesen. Für den Zugriff auf dein Allmiibo braucht der Browser Web Bluetooth. <a href="https://apps.apple.com/de/app/bluefy-web-ble-browser/id1492822055">Bluefy im App Store</a> bietet diese Schnittstelle.</p>
+          <ol><li>Öffne den <a href="../">Dateimanager</a> direkt in Bluefy. Erlaube der App Bluetooth, falls iOS danach fragt.</li><li>Öffne am Allmiibo „Bluetooth-Dateiübertragung“. Tippe im Dateimanager auf „Verbinden“, wähle „Pixl.js“ und öffne unter „Dateien“ das Laufwerk E:/ zum ersten Lesetest.</li></ol>
+          <p>Die Geräteverbindung, Sicherung und Wiederaufnahme mit Bluefy warten noch auf einen Test am echten iPhone oder iPad. Für Firmwareupdates findest du hier die erprobten Wege für <a href="#bootloader">Android</a> und <a href="../dfu/web.html">den Web-Updater für App-Pakete</a>.</p>
           <h3>Systemupdate am PC mit Nordic-Funkadapter</h3>
           <p>Für ein passendes, signiertes Systempaket unterstützt <b>nRF Util</b> am PC die Übertragung per Bluetooth LE mit <code>nrfutil nrf5sdk-tools dfu ble</code>. Dafür brauchst du einen separaten Nordic-Funkadapter am USB-Anschluss, etwa den <b>nRF52840 Dongle (PCA10059)</b> oder ein kompatibles Nordic-Entwicklungsboard. Das eingebaute Laptop-Bluetooth allein reicht für dieses Werkzeug nicht. Für App-Updates kannst du den Web-Updater verwenden. Für ein kompatibles Kombipaket am Handy folge den <a href="#bootloader">Schritten für Android</a>. <a href="https://docs.nordicsemi.com/r/bundle/nrfutil/page/nrfutil-nrf5sdk-tools/nrfutil-nrf5sdk-tools-dfu.html/dfu-over-bluetooth-low-energy">Nordics Anleitung für DFU über Bluetooth LE am PC</a>.</p>
           <ul class="downloads"><li><a href="../">Dateimanager öffnen</a></li>

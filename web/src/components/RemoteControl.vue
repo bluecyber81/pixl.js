@@ -1,6 +1,14 @@
 <template>
   <section class="remote-control" :aria-busy="waiting" @keydown="preventRepeat">
     <h3>{{ text.title }}</h3>
+    <label class="protocol-picker">{{ locale==='de_DE' ? 'Gerätefirmware' : 'Device firmware' }}
+      <select :value="protocol" @change="protocol=$event.target.value" :disabled="phase!=='disconnected' || pixActive">
+        <option value="de">Allmiibo DE</option>
+        <option value="pixlink">cylin577 · PixLink</option>
+      </select>
+    </label>
+    <PixLinkRemote v-if="protocol==='pixlink'" :locale="locale" :blocked="blocked" :handoff-file-connection="handoffFileConnection" @active="pixLinkActive"/>
+    <template v-else>
     <p v-if="phase === 'disconnected'" class="remote-setup-short">{{ text.setupShort }}</p>
     <p v-if="blocked" class="remote-warning" role="status">{{ text.blocked }}</p>
     <div class="remote-connection">
@@ -28,15 +36,18 @@
       <p>{{ text.introduction }}</p><p>{{ text.setup }}</p>
       <p class="remote-limit">{{ text.sleep }}</p><p class="remote-limit">{{ text.commandHint }}</p>
     </details>
+    </template>
   </section>
 </template>
 <script>
 import { createRemoteClient, remoteAvailability } from '../lib/remote-control.js';
+import PixLinkRemote from './PixLinkRemote.vue';
 import { remoteText } from '../lib/remote-text.js';
 const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'center', Escape:'back'});
 export default {
+  components:{PixLinkRemote},
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
-  data(){return {phase:'disconnected',capabilities:0,error:'',notice:'',setupOpen:false,unavailable:remoteAvailability()};},
+  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',setupOpen:false,unavailable:remoteAvailability()};},
   computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
     keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');}},
   created(){
@@ -52,6 +63,7 @@ export default {
   beforeUnmount(){this._remoteMounted=false;++this._remoteUiGeneration;this._remoteClient.disconnect();this.$emit('active',false);},
   watch:{blocked(value){if(value&&this.phase!=='disconnected')this.disconnectRemote();}},
   methods:{
+    pixLinkActive(value){this.pixActive=value;this.$emit('active',value);},
     preventRepeat(event){
       if(event.repeat && event.target?.tagName === 'BUTTON' && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
     },
@@ -98,6 +110,7 @@ export default {
 </script>
 <style scoped>
 .remote-control{padding:16px;border:1px solid #c9dddf;border-radius:12px;background:#f6fafb;color:#24434b;max-width:750px;}
+.protocol-picker{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.88rem;}.protocol-picker select{min-height:44px;padding:6px 12px;border:1px solid #8aafb7;border-radius:8px;background:#fff;color:inherit;font:inherit;}
 h3{margin:0 0 12px;}p{font-size:.88rem;line-height:1.6;overflow-wrap:anywhere;}
 .remote-limit{font-size:.8rem;color:#506a73;}.remote-warning{padding:10px;border:1px solid #ddbd91;border-radius:8px;background:#fff8ec;color:#67451c;}
 .remote-connection{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0;}

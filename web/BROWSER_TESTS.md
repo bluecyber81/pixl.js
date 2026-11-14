@@ -1,5 +1,17 @@
 # Browserprüfung des Produktionsbuilds
 
+## Ordnervergleich, PixLink und iPhone ab 3.49.0
+
+Nach `npm run build:pages` lassen sich die folgenden Prüfungen im Ordner `web` wiederholen. Die ersten beiden verwenden Chrome mit einer nachgebildeten Bluetooth-Gegenstelle. Der letzte Befehl benötigt den zur Playwright-Version passenden WebKit-Browser und prüft den Katalog mit iPhone-Bildschirmgröße in Deutsch und Englisch.
+
+```powershell
+node scripts/verify-dfu-sync-browser.mjs dist-pages /pixl.js/ vergleich.json --history-only
+node scripts/verify-pixlink-browser.mjs dist-pages /pixl.js/
+node scripts/verify-webkit-catalogue.mjs dist-pages
+```
+
+`verify-apple-bluetooth-browser.mjs` prüft zusätzlich den Hinweis, die Verbindungsschaltfläche und die DFU-Seite mit fünf verschiedenen nachgebildeten Browserprofilen. Als Argument erwartet es die URL der bereitgestellten Seite. Die Bluetooth-Verbindung in Bluefy und die tatsächliche Tastenreaktion unter cylin577 v2.27.11 müssen direkt am jeweiligen Gerät geprüft werden.
+
 `scripts/verify-browser.mjs` lädt den fertigen `dist`-Ordner über einen kurzlebigen
 HTTP-Server auf `127.0.0.1` in einem isolierten Headless-Chrome-Profil. Es werden
 keine persönlichen Browserprofile geöffnet. Alle externen Netzabrufe werden

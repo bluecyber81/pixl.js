@@ -6,7 +6,7 @@ const commands=Object.freeze({status:[0,0],files:[1,0],left:[2,0],center:[2,1],r
 const error=code=>Object.assign(new Error(code),{code});
 const remoteCode=(failure,fallback)=>typeof failure?.code==='string'&&/^REMOTE_[A-Z_]+$/.test(failure.code)?failure.code:fallback;
 const statusErrors={1:'REMOTE_BUSY',2:'REMOTE_PROTOCOL',3:'REMOTE_DISABLED',4:'REMOTE_UNSUPPORTED',5:'REMOTE_UNSAFE',6:'REMOTE_QUEUE',7:'REMOTE_PROTOCOL'};
-export function remoteAvailability(environment=globalThis){return environment.isSecureContext===false||!environment.navigator?.bluetooth?.requestDevice?'REMOTE_UNAVAILABLE':'';}
+export function remoteAvailability(environment=globalThis){return environment.isSecureContext===false||typeof environment.navigator?.bluetooth?.requestDevice!=='function'?'REMOTE_UNAVAILABLE':'';}
 export function encodeRemoteRequest(opcode,sequence,arg=0){
   if(!Number.isInteger(sequence)||sequence<1||sequence>65535||![0,1,2,3,4].includes(opcode)||!Number.isInteger(arg)||(opcode===2?![0,1,2].includes(arg):arg!==0))throw error('REMOTE_PROTOCOL');
   return Uint8Array.of(0x50,0x58,1,opcode,sequence&255,sequence>>>8,arg,0);

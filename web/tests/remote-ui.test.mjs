@@ -8,7 +8,7 @@ const file=process.env.REMOTE_UI_COMPONENT_URL?new URL(process.env.REMOTE_UI_COM
 const {descriptor}=parse(fs.readFileSync(file,'utf8'),{filename:file.pathname});
 const script=compileScript(descriptor,{id:'remote-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const Component=');
 const template=compileTemplate({source:descriptor.template.content,id:'remote-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`).replace('export function render','function render');
-const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText',script+'\n'+template+'\nComponent.render=render;return Component;');
+const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText','PixLinkRemote',script+'\n'+template+'\nComponent.render=render;return Component;');
 const node=(type,text='')=>({type,text,props:{},children:[],parent:null});
 const renderer=Vue.createRenderer({createElement:t=>node(t),createText:t=>node('#text',t),createComment:t=>node('#comment',t),setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[];},patchProp:(n,k,o,v)=>n.props[k]=v,insert(n,p,a=null){if(n.parent)n.parent.children.splice(n.parent.children.indexOf(n),1);n.parent=p;const i=p.children.indexOf(a);i<0?p.children.push(n):p.children.splice(i,0,n);},remove(n){n.parent?.children.splice(n.parent.children.indexOf(n),1);n.parent=null;},parentNode:n=>n.parent,nextSibling:n=>n.parent?.children[n.parent.children.indexOf(n)+1]||null});
 const text=n=>n.text+n.children.map(text).join(''),flat=n=>[n,...n.children.flatMap(flat)];
@@ -16,7 +16,7 @@ const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;
 function mount(options={}){
  const calls=[],active=[],root=node('root');let notify;const emit=(phase,error='')=>notify({phase,error,capabilities:options.caps??15});
  const client={connect:async()=>{calls.push('connect');emit('connecting');if(options.connect)await options.connect(calls.filter(value=>value==='connect').length);emit('ready');},command:async name=>{calls.push(name);emit('command');try{if(options.command)await options.command(name);return {opcode:name==='files'&&options.sameLink?4:undefined,status:name==='files'?8:0,state:name==='files'?2:1};}finally{emit('ready');}},releaseFileConnection:accept=>{calls.push('handoff');try{assert.equal(accept({fixture:true}),true);}finally{emit('disconnected');}return true;},disconnect:async()=>{calls.push('disconnect');emit('disconnected');}};
- const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText);
+ const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{});
  const props=Vue.reactive({blocked:!!options.blocked,locale:options.locale||'de_DE',onActive:v=>active.push(v),handoffFileConnection:options.handoff});
  let vm;const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:v=>vm=v})});app.mount(root);
  return{root,app,props,calls,active,emit,get vm(){return vm;},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label))};
