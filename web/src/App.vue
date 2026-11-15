@@ -273,8 +273,9 @@
         <el-button v-if="!availableBackupDrives.length" :disabled="busy || disconnecting || upload_diag_visible"
           @click="on_btn_refresh">{{ $t('workflow.refreshDrives') }}</el-button>
       </div>
-      <div class="workspace-actions"><el-button size="small" type="primary" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible || (storeBackup && (storedBusy || !!storedHead || !!storedError))">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
+      <div class="workspace-actions"><el-button size="small" type="primary" @click="on_backup" :disabled="btn_disabled() || upload_diag_visible || backupReferenceLoading || (storeBackup && (storedBusy || !!storedHead || !!storedError))">{{ $t('tools.backup') }}</el-button><el-button size="small" @click="open_zip" :disabled="btn_disabled() || upload_diag_visible">{{ $t('workflow.zipTitle') }}</el-button><el-button size="small" @click="open_sync" :disabled="btn_disabled() || upload_diag_visible">{{ $t('info.syncOpen') }}</el-button></div>
       <label><input type="checkbox" :checked="storeBackup" :disabled="busy || storedBusy" @change="toggle_stored_backup($event.target.checked)"> {{ $t('workflow.storeOption') }}</label>
+      <BackupExportOptions v-if="visitedWorkspaces.has('backup')" :locale="language" :busy="busy || storedBusy" :root-path="current_dir" :result="lastBackup" @options="set_backup_export_options" @loading="backupReferenceLoading = $event" />
       <BackupComparison v-if="activeWorkspace === 'backup'" :locale="language" />
       <div v-if="storeBackup" class="backup-resume">
         <p>{{ $t('workflow.storeInfo') }}</p>
@@ -412,7 +413,9 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <CollectionAssistant v-if="visitedWorkspaces.has('catalogue')" ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <CollectionAssistant v-if="visitedWorkspaces.has('catalogue')" ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery">
+      <template #backup-audit><CollectionBackupAudit :locale="language" :catalogue="collectionCatalogue" /></template>
+    </CollectionAssistant>
     <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" :open-import="open_figure_import" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
@@ -465,6 +468,10 @@
       <p>{{ $t('workflow.zipHint') }}</p><p class="property-filename">{{ $t('workflow.destination') }} {{ zipRoot }}</p>
       <label class="sync-picker">{{ $t('workflow.chooseZip') }}<input type="file" accept=".zip,application/zip" :disabled="busy" @change="on_zip_file"></label>
       <p>{{ zipFilename }}</p>
+      <details v-if="zipPathAdvice?.count" class="zip-path-advice">
+        <summary>{{ $t('workflow.zipPathSpace', {count:zipPathAdvice.count}) }}</summary>
+        <ul><li v-for="item in zipPathAdvice.shortest" :key="item.path"><code>{{ item.path }}</code> · {{ $t(item.remaining < 0 ? 'workflow.pathExcess' : 'workflow.pathRemaining', {bytes:Math.abs(item.remaining)}) }}</li></ul>
+      </details>
       <el-button @click="preview_zip" :disabled="!connected || busy || !zipFilename">{{ $t('info.syncCompare') }}</el-button>
       <section v-if="zipPlan" class="sync-plan">
         <p class="property-filename">{{ $t('workflow.source') }} {{ zipPlan.sourceRoot }} → {{ $t('workflow.destination') }} {{ zipPlan.rootPath }}</p>
@@ -588,7 +595,7 @@ import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
-import { assertPortableEntryName, assertWritableDevicePath, portableNameKey } from "./lib/portable-names.js"
+import { assertPortableEntryName, assertWritableDevicePath, portableNameKey, devicePathSpace, backupPathSpace } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
@@ -610,11 +617,14 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { GuidedReportComparison: defineAsyncComponent(() => import('./components/GuidedReportComparison.vue')), GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: {
+    CollectionBackupAudit: defineAsyncComponent(() => import('./components/CollectionBackupAudit.vue')),
+    BackupExportOptions: defineAsyncComponent(() => import('./components/BackupExportOptions.vue')),
+    GuidedReportComparison: defineAsyncComponent(() => import('./components/GuidedReportComparison.vue')), GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
-      backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
+      zipPathAdvice: null, renameDraft: '', backupReferenceLoading: false, backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       renameNotice: null,
@@ -1075,7 +1085,7 @@ export default {
     migration_session() {
       const generation=this.sessionGeneration,deviceKey=pixl.get_device_key?.();this.assert_session(generation);
       if(!deviceKey)throw new Error(this.$t('info.syncIdentity'));
-      return {...this.transfer_adapters(generation),deviceKey,firmwareVersion:this.firmwareVersion,
+      return {...this.transfer_adapters(generation),deviceKey,firmwareVersion:this.firmwareVersion,exporterVersion:webVersion,
         readStorageInfo:async()=>{this.assert_session(generation);const response=await proto.vfs_storage_info_extended('E');this.assert_session(generation);if(response?.status===255)throw Object.assign(new Error('Raw128 storage capabilities were not confirmed.'),{code:'MIGRATION_PREPARATION_REQUIRED'});return this.checked(response);},
         readStorageLayout:async()=>{this.assert_session(generation);const value=this.checked(await proto.vfs_storage_layout('E'));this.assert_session(generation);return value;},
         readApplicationIdentity:async()=>{this.assert_session(generation);const version=this.checked(await proto.get_version());this.assert_session(generation);const boot=normalizeBootDiagnostics(await proto.get_boot_diagnostics());this.assert_session(generation);if(!boot)throw Object.assign(new Error('Current application counter is unavailable.'),{code:'MIGRATION_IDENTITY'});return {...boot,firmwareVersion:version.ver};},
@@ -1139,7 +1149,7 @@ export default {
       this.workflowCancelling = false; this._zipController?.abort(); this._zipController = null; this._zipArchive = null;
       this._zipGeneration = null; this._zipDeviceKey = null;
       this.zipDialog = false; this.zipBusy = false; this.zipPlan = null; this.zipSelected = [];
-      this.zipFilename = ''; this.zipStatus = ''; this.zipPage = 1;
+      this.zipFilename = ''; this.zipStatus = ''; this.zipPage = 1; this.zipPathAdvice = null;
     },
     close_zip(done) { if (!this.zipBusy) { this.invalidate_zip(); done?.(); } },
     show_zip_progress(progress) {
@@ -1153,13 +1163,14 @@ export default {
       const file = event.target.files?.[0]; event.target.value = '';
       if (!file) return;
       const generation=this.sessionGeneration, controller=new AbortController();
-      this.workflowCancelling=false; this._zipController=controller; this.zipBusy=true; this.zipPlan=null; this.zipSelected=[]; this._zipArchive=null; this.zipFilename='';
+      this.workflowCancelling=false; this._zipController=controller; this.zipBusy=true; this.zipPlan=null; this.zipSelected=[]; this._zipArchive=null; this.zipFilename=''; this.zipPathAdvice=null;
       this.zipStatus=this.$t('workflow.validating');
       try {
         const archive=await loadBackupZip(file,{signal:controller.signal,
           onProgress:progress=>{if(this.session_current(generation))this.show_zip_progress(progress);}});
         this.assert_session(generation);
         if (controller.signal.aborted) return;
+        this.zipPathAdvice=backupPathSpace(this.zipRoot,archive.entries);
         this._zipArchive=archive; this.zipFilename=file.name; this.zipStatus=this.$t('workflow.validated',{files:archive.fileCount,bytes:this.format_size(archive.byteCount)});
       } catch(error) { if(this.session_current(generation)) {this.zipStatus=this.$t(controller.signal.aborted?'info.syncCancelled':'workflow.invalidZip');if(!controller.signal.aborted)this.show_transfer_error(error);} }
       finally { if(this._zipController===controller)this._zipController=null;if(generation===this.sessionGeneration){this.workflowCancelling=false;this.zipBusy=false;this.workflowCancelling=false;} }
@@ -1663,7 +1674,9 @@ export default {
         await this.reload_drive();
       }
     },
+    set_backup_export_options(options) { this._backupExportOptions = options; },
     async on_backup(resume = false) {
+      if (this.backupReferenceLoading) return;
       if (!this.connected || this.busy || this.disconnecting || this.upload_diag_visible) return;
       const persistent = this.storeBackup && resume !== true;
       if (persistent && (this.storedBusy || (resume === 'stored' ? !this.storedBackupMatches : !!this.storedHead || !!this.storedError))) return;
@@ -1692,7 +1705,7 @@ export default {
       this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: null });
       try {
         const context = {rootPath, deviceKey, firmwareVersion:this.firmwareVersion, preserveLegacyNames:true};
-        const run = storedBackup => createBackup({ ...context, checkpointState, storedBackup, signal: controller.signal,
+        const run = storedBackup => createBackup({ ...context, ...this._backupExportOptions, exporterVersion: webVersion, progressIntervalMs: 100, readTransportStats: proto.get_transport_diagnostics, checkpointState, storedBackup, signal: controller.signal,
           readDirectory: async path => {
             this.assert_session(generation);
             const entries = this.checked(await proto.vfs_read_folder(path));
@@ -2297,7 +2310,24 @@ export default {
       const dir = this.current_dir, path = this.append_segment(dir, row.name), generation = this.sessionGeneration;
       try {
         assertWritableDevicePath(path);
-        const { value } = await this.ask_dialog(() => this.$prompt(this.$t('rename.message'), this.$t('rename.title'), { ...this.confirm_options(), inputValue: row.name }));
+        this.renameDraft = row.name;
+        const draftSpace = () => devicePathSpace(dir + (dir.endsWith('/') ? '' : '/') + this.renameDraft);
+        const message = () => {
+          const space = draftSpace();
+          return this.$t('rename.message') + ' ' + this.$t('workflow.renameSpace', {path:space.pathRemaining, name:space.nameRemaining});
+        };
+        const { value } = await this.ask_dialog(() => this.$prompt(message, this.$t('rename.title'), {
+          ...this.confirm_options(), inputValue: row.name,
+          inputValidator: draft => {
+            this.renameDraft = draft || '';
+            const space = draftSpace();
+            const remaining = Math.min(space.pathRemaining, space.nameRemaining);
+            if (remaining < 0) return this.$t('workflow.pathExcess', {bytes: -remaining});
+            try { this.new_entry_path(dir, this.renameDraft); }
+            catch { return this.$t('info.portableName'); }
+            return true;
+          },
+        }));
         if (!value || value === row.name || !this.session_current(generation)) return;
         await this.mutate(async () => {
           const entries = await this.assert_new_entry_available(dir,value,generation,row.name);

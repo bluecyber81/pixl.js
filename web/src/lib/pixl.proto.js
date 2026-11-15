@@ -31,7 +31,7 @@ var transport_probe = null
 var file_digest_unsupported = false
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
-var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0 }
+var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 }
 var transport_last_error = null
 
 // This is local observation plus the application's capability reply. It neither
@@ -63,7 +63,7 @@ export function get_transport_diagnostics() {
 }
 
 function reset_transport_stats() {
-    transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0 };
+    transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 };
 }
 
 function on_ble_connected() {
@@ -142,6 +142,7 @@ function finish_when_ready(op) {
 
 function finish_op(op, error, response) {
     if (active_op !== op) return;
+    if (op.tx_done && op.rx_done) ++transport_stats.completedCommands;
     clearTimeout(response_timer);
     response_timer = null;
     reset_rx();
@@ -527,7 +528,6 @@ export function vfs_write_raw_meta(path, value) {
 }
 
 export function vfs_read_folder(dir) {
-    console.log("vfs_read_dir", dir);
     return op_queue_push(0x16,
         b => { write_string(b, dir); },
         bb => {
@@ -566,7 +566,6 @@ export function vfs_remove(path) {
 }
 
 export function vfs_open_file(path, mode, rawMeta128) {
-    console.log("vfs_open_file", path, mode);
     const raw = rawMeta128 instanceof Uint8Array ? rawMeta128.slice() : rawMeta128 instanceof ArrayBuffer ? new Uint8Array(rawMeta128.slice(0)) : null;
     const storage = storage_info_cache.get('E');
     if (rawMeta128 !== undefined && (mode !== 'w' || typeof path !== 'string' || !path.startsWith('E:/') ||
@@ -597,7 +596,6 @@ export function vfs_open_file(path, mode, rawMeta128) {
 }
 
 export function vfs_close_file(file_id) {
-    console.log("vfs_close_file", file_id);
 
     return op_queue_push(0x13,
         b => { b.writeUint8(file_id) },

@@ -17,3 +17,12 @@ export function syntheticSlot(type = 1103, legacy = true, uid = [4, 0x12, 0x34, 
   bytes.set(legacy ? bytes.subarray(273, 280) : uid, 4);
   return bytes;
 }
+
+// A non-factory Mini fixture with an arbitrary identity and opaque card bytes.
+export function syntheticMini(uidLength = 7) {
+  const bytes = new Uint8Array(594);
+  bytes.set(uidLength === 7 ? [7, 0x44, 0, 9] : [uidLength, 4, 0, 8]);
+  for (let i = 0; i < uidLength; i++) bytes[4 + i] = i + 1;
+  bytes.set(bytes.subarray(4, 4 + uidLength), 274);
+  return bytes;
+}

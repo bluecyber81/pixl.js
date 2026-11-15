@@ -13,9 +13,33 @@ export class NameError extends Error {
 }
 const fail = (code, text) => { throw new NameError(code, text) }
 
+const nameLimit = 47
+const pathLimit = 63
+
+export function devicePathSpace(path) {
+  return {
+    pathRemaining: pathLimit - encoder.encode(path.slice(2)).length,
+    nameRemaining: nameLimit - encoder.encode(path.slice(path.lastIndexOf('/') + 1)).length,
+  }
+}
+
+// Report the tightest targets before a connected preview starts to read the device.
+export function backupPathSpace(root, entries) {
+  const prefix = root.endsWith('/') ? root : root + '/'
+  const tight = []
+  for (const entry of entries) {
+    const path = prefix + entry.relativePath
+    const {pathRemaining, nameRemaining} = devicePathSpace(path)
+    const remaining = Math.min(pathRemaining, nameRemaining)
+    if (remaining <= 4) tight.push({path, remaining})
+  }
+  tight.sort((a, b) => a.remaining - b.remaining || a.path.localeCompare(b.path))
+  return {count: tight.length, shortest: tight.slice(0, 8)}
+}
+
 export function assertNameByteLimit(name) {
   const bytes = encoder.encode(name).length
-  const limit = 47
+  const limit = nameLimit
   if (bytes > limit) {
     throw new NameError('NAME_LIMIT', `The name “${name}” uses ${bytes} UTF-8 bytes. The limit is ${limit}.`, { value: name, bytes, limit })
   }
@@ -24,7 +48,7 @@ export function assertNameByteLimit(name) {
 export function assertPathByteLimit(path) {
   // The device stores the leading slash, but not the drive label.
   const bytes = encoder.encode(path.slice(2)).length
-  const limit = 63
+  const limit = pathLimit
   if (bytes > limit) {
     throw new NameError('PATH_LIMIT', `The path “${path}” uses ${bytes} UTF-8 bytes on the device. The limit is ${limit}.`, { value: path, bytes, limit })
   }

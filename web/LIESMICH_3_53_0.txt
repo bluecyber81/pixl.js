@@ -1,0 +1,7 @@
+Allmiibo Dateimanager 3.53.0
+
+Start unter Windows: Start-Dateimanager.cmd öffnen. Für Geräteaktionen die Bluetooth-Dateiübertragung am Allmiibo öffnen.
+
+Eine frühere Sicherungs-ZIP beschleunigt Folgesicherungen auf kompatiblen Geräten. Jede übernommene Datei muss zur aktuellen Prüfsumme des Geräts passen. ZIP-Kompression, Zeitmessung und eine Offline-Prüfung im Bereich Figurensammlung sind verfügbar. Bei langen Namen werden die freien UTF-8-Bytes angezeigt. Der Kartenplatz-Inspektor unterstützt MIFARE Mini.
+
+Open Start-Dateimanager.cmd on Windows. A previous ZIP speeds up subsequent backups on compatible devices. Small file contents are reused only after checking the current device digest. Optional compression, timing information, offline figure checks, path budgets and read-only MIFARE Mini inspection are included.

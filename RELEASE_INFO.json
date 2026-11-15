@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.75",
   "counter": 648,
   "board": "LCD",
-  "web_version": "3.52.1",
+  "web_version": "3.53.0",
   "web_publication_date": "2026-11-15",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
@@ -51,7 +51,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.53.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -84,7 +84,7 @@
   },
   "web_release_status": "release",
   "web_release_notes": "docs/DATEIMANAGER_WEB.md",
-  "web_personal_backup_status": "not-created-by-this-update",
+  "web_personal_backup_status": "Hardware comparisons and export benchmarks are documented in the web evidence.",
   "web_changes": {
     "figure_usage": {
       "figures": 954,
@@ -139,7 +139,8 @@
     "web_3_51_0": "Responsive directory listing with figure preview and destination-name editing for local uploads.",
     "web_3_51_1": "Keep the selected figure in view while scrolling long folders in the desktop file manager.",
     "web_3_52_0": "Stable catalogue ordering and source comparisons, guided hardware observations, mount profile series and load-on-open workspaces.",
-    "web_3_52_1": "Resumable device checks, report imports and comparisons, concurrent draft protection, responsive layout and retryable tool loading."
+    "web_3_52_1": "Resumable device checks, report imports and comparisons, concurrent draft protection, responsive layout and retryable tool loading.",
+    "web_3_53_0": "Verified reuse of small backup files, optional ZIP compression, phase timings and command counts, local catalogue checks on backup ZIPs, MIFARE Mini slot inspection, UTF-8 name and destination path budgets."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -152,9 +153,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_52_1.json",
+  "web_evidence": "docs/validation/WEB3_53_0.json",
   "device_readback_evidence": "docs/validation/DE3_75_LCD_CHECK.json",
-  "web_device_readback_pending_scope": "Web 3.52.1 was tested in Chrome on Windows. Four owner-reported DE3.75 checks on one LCD cover list return and wake in the file emulator and database, in German with resume enabled.",
+  "web_device_readback_pending_scope": "Read-only DE3.75 hardware timings are recorded in the web evidence. Chrome mobile layouts were tested on Windows.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {

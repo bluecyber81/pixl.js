@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as Vue from 'vue';
 import { parse, compileScript } from '@vue/compiler-sfc';
-import { syntheticConfig, syntheticSlot } from './fixtures/chameleon-slot-synthetic.mjs';
+import { syntheticConfig, syntheticSlot, syntheticMini } from './fixtures/chameleon-slot-synthetic.mjs';
 
 // Run the actual SFC through Vue's renderer; browser downloads are observed
 // as local Blob/anchor operations. No private backup or device is involved.
@@ -95,11 +95,33 @@ test('unknown types, V3 config, invalid BCC and other mismatches do not offer re
   try {
     const v3 = syntheticConfig(); v3[0] = 3;
     await choose(nodes(h.root, 'input')[0], file(v3, 'config.bin')); assert.equal(nodes(h.root, 'select').length, 0);
-    await setupSlot(h, null, 1000); assert.equal(nodes(h.root, 'input').length, 1); assert.match(text(h.root), /Kartentyp wird hier nicht/);
+    await setupSlot(h, null, 1001); assert.equal(nodes(h.root, 'input').length, 1); assert.match(text(h.root), /Kartentyp wird hier nicht/);
     for (const bytes of [syntheticSlot(1103, false), (() => { const b = syntheticSlot(); b[281] ^= 1; return b; })(), (() => { const b = syntheticSlot(); b[4] ^= 1; return b; })()]) {
       await setupSlot(h, bytes); assert.equal(nodes(h.root, 'button').some(n => text(n) === 'Korrigierte Kopie herunterladen'), false);
     }
   } finally { h.app.unmount(); }
+});
+test('Mini inspection shows profile and factory comparison in both languages without offering an MF0 repair', async () => {
+  const h = await mount(), downloads = downloadHost();
+  try {
+    await setupSlot(h, syntheticMini(), 1000);
+    assert.match(text(h.root), /Dateistruktur passt zu MIFARE Mini/);
+    assert.match(text(h.root), /20 × 16 Byte.*UID-Länge: 7 Byte.*ATQA 0x0044.*SAK 0x09/);
+    assert.match(text(h.root), /Mini-Profilwerte: passend/);
+    assert.match(text(h.root), /Werksdaten von DE3.75 verglichen: abweichend/);
+    assert.doesNotMatch(text(h.root), /BCC0|Korrigierte Kopie|01.?02.?03.?04.?05.?06.?07/);
+    h.state.locale = 'en'; await Vue.nextTick();
+    assert.match(text(h.root), /layout matches MIFARE Mini/);
+    assert.match(text(h.root), /Mini profile values: match/);
+    assert.match(text(h.root), /compared with DE3.75 factory data: different/);
+    await setupSlot(h, syntheticMini(4), 1000);
+    assert.match(text(h.root), /other profile/); assert.match(text(h.root), /UID length: 4 bytes/);
+    let reads = 0;
+    await choose(nodes(h.root, 'input')[1], { name: 'raw', size: 320, arrayBuffer() { reads++; } });
+    assert.equal(reads, 0); assert.match(text(h.root), /594-byte slot file/);
+    assert.doesNotMatch(text(h.root), /compared with DE3.75 factory data/);
+    assert.equal(downloads.blobs.length, 0);
+  } finally { h.app.unmount(); downloads.restore(); }
 });
 test('blocked state is enforced by handlers and English labels update reactively', async () => {
   const downloads = downloadHost(), h = await mount(); let reads = 0;

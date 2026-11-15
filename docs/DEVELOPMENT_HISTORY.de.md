@@ -1,5 +1,9 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## Web 3.53.0 · 15.11.2026
+
+Ordnersicherungen lassen sich mit einer früheren ZIP beschleunigen. Der Dateimanager vergleicht kleine Dateien mit der aktuellen Prüfsumme vom Gerät. Du kannst die ZIP komprimieren, die Dauer je Sicherungsphase sehen und einen gesicherten Figurenordner offline prüfen. Beim Umbenennen und vor dem ZIP-Import wird die verbleibende Pfadlänge angezeigt. Unter Gerät & Diagnose lassen sich MIFARE-Mini-Slots lesend prüfen.
+
 ## Stabile LCD-App DE3.75 / 648 und Dateimanager 3.52.1
 
 Die LCD-App gibt den Puffer eines begonnenen Fernbedienungsfotos nach dem erfolgreichen Wechsel in die Dateiübertragung frei. Mit kompakteren AES-Tabellen und 954 Figurennamen ist die BIN insgesamt 6.156 Byte kleiner als App647. Der Dateimanager bewahrt gleichzeitige Prüfentwürfe getrennt auf und kann gespeicherte Berichte vergleichen. [Firmwareänderungen und Gerätetests](RELEASE_DE3_75.md) · [Dateimanager-Versionen](VERSIONEN_WEB.md)

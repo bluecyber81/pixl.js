@@ -7,7 +7,7 @@ import { loadZipReader } from './zip-reader.js'
 
 export const ZIP_IMPORT_LIMITS = Object.freeze({ zipBytes: 32 * 1024 * 1024, expandedBytes: 24 * 1024 * 1024,
   dataBytes: 16 * 1024 * 1024, fileBytes: 8 * 1024 * 1024, manifestBytes: 4 * 1024 * 1024, entries: 4096, depth: 32 })
-const archives = new WeakMap(), plans = new WeakMap(), activePlans = new WeakSet(), encoder = new TextEncoder()
+const archives = new WeakMap(), backupReferences = new WeakMap(), plans = new WeakMap(), activePlans = new WeakSet(), encoder = new TextEncoder()
 export class ZipImportError extends Error { constructor(code, message) { super(message); this.name = 'ZipImportError'; this.code = code } }
 const fail = (code, message) => { throw new ZipImportError(code, message) }
 const requireThat = (condition, code, message) => { if (!condition) fail(code, message) }
@@ -135,6 +135,12 @@ export function loadBackupIndex(input, options = {}) {
   return readVerifiedBackup(input, options, false)
 }
 
+// Validate every member, but keep only the small E:/ files that the current
+// digest command can revalidate. This reference cannot be used as an import.
+export function loadBackupReference(input, options = {}) {
+  return readVerifiedBackup(input, options, 'small-files')
+}
+
 async function readVerifiedBackup(input, { JSZip, signal, onProgress }, keepFileData) {
   check(signal)
   requireThat(uint(input?.size ?? input?.byteLength, ZIP_IMPORT_LIMITS.zipBytes) && (input.size ?? input.byteLength) >= 22, 'ZIP_LIMIT', 'ZIP file is empty or larger than 32 MiB.')
@@ -191,27 +197,33 @@ async function readVerifiedBackup(input, { JSZip, signal, onProgress }, keepFile
     if (record.type === 'file') {
       requireThat(checksums.get(record.archivePath) === record.sha256 && await sha256Bytes(contents) === record.sha256, 'ZIP_HASH', 'Backup file checksum does not match.')
       check(signal)
-      data?.set(record.sourcePath, contents); ++done
+      if (keepFileData === true || (keepFileData === 'small-files' && record.size <= 572 && record.sourcePath.startsWith('E:/'))) {
+        data.set(record.sourcePath, contents)
+      }
+      ++done
     }
     observe(onProgress, { phase: 'parsing', unit: 'files', path: record.sourcePath, done, total: fileCount })
   }
   check(signal)
-  const archiveSha256 = keepFileData ? await sha256Bytes(bytes) : undefined
+  const archiveSha256 = keepFileData === true ? await sha256Bytes(bytes) : undefined
   // Web Crypto cannot be interrupted. Honour cancellation after it settles,
   // before exposing the archive as verified or retaining its owned file bytes.
   check(signal)
   const archive = freeze({ format: 'allmiibo-folder-backup', version: manifest.version, rootPath, entries: records, fileCount, directoryCount, byteCount,
-    ...(keepFileData ? { archiveSha256 } : {}), firmwareVersion: typeof manifest.firmwareVersion === 'string' ? manifest.firmwareVersion.slice(0,128) : '' })
-  if (data) archives.set(archive, data)
+    ...(archiveSha256 ? { archiveSha256 } : {}), firmwareVersion: typeof manifest.firmwareVersion === 'string' ? manifest.firmwareVersion.slice(0,128) : '' })
+  if (keepFileData === true) archives.set(archive, data)
+  if (keepFileData === 'small-files') backupReferences.set(archive, data)
   return archive
 }
 
 // Only a validated in-memory archive can yield owned file bytes.
 export function readBackupArchiveFile(archive, sourcePath) {
-  requireThat(archives.has(archive) && archives.get(archive).has(sourcePath), 'ZIP_ARCHIVE', 'Validated file entry required.')
-  return new Uint8Array(archives.get(archive).get(sourcePath))
+  const data = archives.get(archive) ?? backupReferences.get(archive)
+  requireThat(data?.has(sourcePath), 'ZIP_ARCHIVE', 'Validated file entry required.')
+  return new Uint8Array(data.get(sourcePath))
 }
 export const isVerifiedBackupArchive = archive => archives.has(archive)
+export const isVerifiedBackupReference = archive => backupReferences.has(archive) || archives.has(archive)
 
 /** Explicit target-root remap. Original spelling and metadata are never normalized. */
 export async function previewZipImport({ archive, rootPath, deviceKey, readDirectory, readFile, assertSession, signal, onProgress }) {

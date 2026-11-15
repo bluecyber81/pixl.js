@@ -16,7 +16,7 @@ The table lists the independently versioned components as of **15 November 2026*
 | Earlier LCD test application | [2.22.0-DE3.68](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68) | Application-only DFU, counter 640. Returning to the main menu reselects the last opened app when visible. |
 | Earlier LCD test application | [2.22.0-DE3.67](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) | Application-only DFU, counter 639. German game hints and QR scanning were verified on an LCD. [Release and readback](RELEASE_DE3_67.md) |
 | Earlier LCD test application | [2.22.0-DE3.66](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) | Application-only DFU, counter 638, hardware field 52. Build and model tests passed. Installation, display capture and backup resume over Windows Bluetooth were verified on one LCD. [Device checks](validation/DE3_66_LCD_READBACK.md). [Evidence](validation/DE3_66.json) |
-| File manager | [3.52.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.1) | Runs in the browser. Compares saved device checks. [File manager changes](DATEIMANAGER_WEB.md) |
+| File manager | [3.53.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.53.0) | Runs in the browser. Compares saved device checks. [File manager changes](DATEIMANAGER_WEB.md) |
 | Current LCD bootloader | [Z19](../bootloader-z19/README.md) | Counter 19. The same 28 KiB boot region was read back with [App636](validation/Z19_APP636_BASELINE.json), [App637](validation/DE3_65_LCD_READBACK.json) and [App638](validation/DE3_66_LCD_READBACK.md). |
 | Previous bootloader | Z17 | Counter 17, observed in the device export for App634 |
 | Previously installed reference | Z15 | Counter 15; region SHA-256 below |

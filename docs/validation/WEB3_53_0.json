@@ -1,0 +1,288 @@
+{
+  "version": "3.53.0",
+  "date": "2026-11-15",
+  "firmware": "2.22.0-DE3.75 / App648",
+  "referenceExport": {
+    "files": 1081,
+    "directoriesBelowRoot": 55,
+    "payloadBytes": 658806,
+    "manifestIntervalSeconds": 941.238,
+    "scope": "Device export before final ZIP packing and manual download."
+  },
+  "physicalSample": {
+    "schema": 1,
+    "hardware": true,
+    "completed": true,
+    "start": "2026-11-15T18:12:41.617896+00:00",
+    "writesToStorage": 0,
+    "runs": [
+      {
+        "mode": "read",
+        "files": 24,
+        "sampleFileBytes": 540,
+        "milliseconds": 14375,
+        "commandCounts": {
+          "0x12": 24,
+          "0x14": 24,
+          "0x13": 24
+        },
+        "minFileMs": 157,
+        "maxFileMs": 985
+      },
+      {
+        "mode": "digest",
+        "files": 24,
+        "sampleFileBytes": 540,
+        "milliseconds": 3828,
+        "commandCounts": {
+          "0x21": 24
+        },
+        "minFileMs": 141,
+        "maxFileMs": 234
+      },
+      {
+        "mode": "digest",
+        "files": 24,
+        "sampleFileBytes": 540,
+        "milliseconds": 3750,
+        "commandCounts": {
+          "0x21": 24
+        },
+        "minFileMs": 141,
+        "maxFileMs": 219
+      },
+      {
+        "mode": "read",
+        "files": 24,
+        "sampleFileBytes": 540,
+        "milliseconds": 18750,
+        "commandCounts": {
+          "0x12": 24,
+          "0x14": 24,
+          "0x13": 24
+        },
+        "minFileMs": 734,
+        "maxFileMs": 906
+      }
+    ],
+    "firmware": "2.22.0-DE3.75",
+    "app": 648,
+    "bootloader": 19,
+    "attMtu": 250,
+    "disconnected": true,
+    "finished": "2026-11-15T18:13:25.071955+00:00",
+    "scope": "Complete read-only Windows BLE ABBA comparison on the owner LCD Allmiibo. The same 24 files of 540 bytes from 24 folders were used in each pass. Not an entire export.",
+    "digestChecks": {
+      "expected": 96,
+      "matches": 96
+    },
+    "meanReadMs": 16562.5,
+    "meanDigestMs": 3789.0,
+    "sampleReductionPercent": 77.1
+  },
+  "chromeSyntheticGATT": {
+    "browser": "157.0.8103.51",
+    "repeatBackupScenarios": [
+      {
+        "locale": "de-DE",
+        "width": 320,
+        "offlineDistinctIds": 1,
+        "offlineFiles": 3,
+        "variants": 2,
+        "slotReadOnly": true,
+        "repeatBackupDigests": 2,
+        "verifiedFilesReused": 1,
+        "changedFileRead": 1,
+        "deflateFiles": 2,
+        "initialNameAndPathRemaining": 1,
+        "remappedPathExcess": 14,
+        "deviceWrites": 0
+      },
+      {
+        "locale": "de-DE",
+        "width": 1280,
+        "offlineDistinctIds": 1,
+        "offlineFiles": 3,
+        "variants": 2,
+        "slotReadOnly": true,
+        "repeatBackupDigests": 2,
+        "verifiedFilesReused": 1,
+        "changedFileRead": 1,
+        "deflateFiles": 2,
+        "initialNameAndPathRemaining": 1,
+        "remappedPathExcess": 14,
+        "deviceWrites": 0
+      },
+      {
+        "locale": "en-GB",
+        "width": 320,
+        "offlineDistinctIds": 1,
+        "offlineFiles": 3,
+        "variants": 2,
+        "slotReadOnly": true,
+        "repeatBackupDigests": 2,
+        "verifiedFilesReused": 1,
+        "changedFileRead": 1,
+        "deflateFiles": 2,
+        "initialNameAndPathRemaining": 1,
+        "remappedPathExcess": 14,
+        "deviceWrites": 0
+      },
+      {
+        "locale": "en-GB",
+        "width": 1280,
+        "offlineDistinctIds": 1,
+        "offlineFiles": 3,
+        "variants": 2,
+        "slotReadOnly": true,
+        "repeatBackupDigests": 2,
+        "verifiedFilesReused": 1,
+        "changedFileRead": 1,
+        "deflateFiles": 2,
+        "initialNameAndPathRemaining": 1,
+        "remappedPathExcess": 14,
+        "deviceWrites": 0
+      }
+    ],
+    "fullScale": {
+      "files": 1081,
+      "directoriesBelowRoot": 55,
+      "payloadBytes": 658806,
+      "fresh": {
+        "commands": 3355,
+        "receivedFrames": 5930
+      },
+      "repeat": {
+        "commands": 1249,
+        "receivedFrames": 1735,
+        "verifiedReuse": 1053,
+        "freshReads": 28
+      },
+      "deviceWrites": 0
+    }
+  },
+  "exportRepackHost": {
+    "source": "Private backup locally replayed; no private payloads or individual identifiers distributed.",
+    "uncompressedBytes": 1600970,
+    "compressedBytes": 891924,
+    "files": 1081,
+    "payloadBytes": 658806,
+    "scope": "Measured on this dataset with native DEFLATE. ZIP size varies with file contents and metadata."
+  },
+  "miniSlots": {
+    "privateSlotsRead": 2,
+    "slotBytesEach": 594,
+    "cardDataBytesEach": 320,
+    "structureValid": true,
+    "cardDataMatchesFactoryTemplate": true,
+    "deviceWrites": 0,
+    "physicalCardScanTested": false
+  },
+  "uiTestScope": "Chrome on Windows, two viewport widths, two languages, simulated Web Bluetooth. The owner LCD comparison is recorded separately.",
+  "productionBuilds": {
+    "rootPassed": 22,
+    "pagesPassed": 22
+  },
+  "productionDependencyAudit": {
+    "reportedVulnerabilities": 0
+  },
+  "windowsLauncher": {
+    "passed": 22,
+    "platformSpecificSkipped": 2
+  },
+  "timingScopes": {
+    "manifest": "Listing, file read and SHA-256, directory verification, packing of payload members up to creation of the manifest.",
+    "ui": "ZIP packing and total elapsed time through Blob ready to save. Manual download is outside this timer."
+  },
+  "localWebTests": {
+    "passed": 1583,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Full suite before addition of the concurrent-change regression; see final release evidence for the release commit."
+  },
+  "physicalFullRepeatExport": {
+    "schema": 1,
+    "method": "production-createBackup-node-winrt",
+    "storageWrites": 0,
+    "localReferenceMs": 80,
+    "device": {
+      "firmware": "2.22.0-DE3.75",
+      "mtu": 250,
+      "app": 648,
+      "bootloader": 19
+    },
+    "bluetooth": {
+      "disconnected": true,
+      "commandCounts": {
+        "0x16": 112,
+        "0x21": 1053,
+        "0x12": 29,
+        "0x14": 29,
+        "0x13": 29
+      }
+    },
+    "validateMs": 96,
+    "profile": {
+      "schema": 1,
+      "phasesMs": {
+        "listing": 36131,
+        "reading": 246977,
+        "verifying": 36899,
+        "packingFileEntries": 553,
+        "packing": 593,
+        "total": 320600
+      },
+      "operations": {
+        "listingCalls": 56,
+        "fileReads": 29,
+        "digestReplies": 1053,
+        "rawMetadataReads": 0,
+        "verificationListingCalls": 56,
+        "previousZipFiles": 1052
+      },
+      "transport": null,
+      "compressionRequested": "deflate",
+      "compressionFallback": false,
+      "compressedFiles": 50
+    },
+    "files": 1081,
+    "folders": 55,
+    "userBytes": 658806,
+    "zipBytes": 891938,
+    "changes": {
+      "new": 0,
+      "removed": 0,
+      "content": 1,
+      "metadata": 0
+    },
+    "complete": true,
+    "referenceArchive": {
+      "schema": 1,
+      "firmware": "2.22.0-DE3.75",
+      "createdAt": "2026-11-15T13:04:55.502Z",
+      "finishedAt": "2026-11-15T13:20:36.740Z",
+      "manifestIntervalMs": 941238,
+      "userBytes": 658806,
+      "files": 1081,
+      "folders": 55,
+      "zipBytes": 1600468
+    },
+    "testScope": "Windows laptop. Actual running production web export, packing and import JS (Node runtime), with list, read and SHA-256 via real WinRT Bluetooth. Legacy whole-tree backup compared to new completed reference-assisted export. Times are not controlled phone/browser benchmarking.",
+    "validation": "Final ZIP re-opened in memory with the production reader; all CRCs, SHA256SUMS, payload hashes and manifest totals passed. Payloads and metadata then compared against the historical reference. A changed small file was freshly read, locally hashed and its exported bytes verified on re-opening. This run did not independently compare this fresh fallback hash to the earlier device digest. Only aggregate changes were recorded.",
+    "productionSourcesSha256": {
+      "src/lib/backup.js": "9840df2d680d02a83d8f453292c75a39d84df437f4a6c33714c4de0c07eb419e",
+      "src/lib/zip-import.js": "0e2871d167600c1f760c1d175f5287e6c3c694d3317bb06c62e5afe0bb2163d1"
+    },
+    "comparedToHistorical": {
+      "wallReductionPercent": 65.9,
+      "zipSizeReductionPercent": 44.3
+    },
+    "sourceCommit": "de75bb10c92258e26c86730e14984774ead447f6"
+  },
+  "postHardwareConsistencyCheck": {
+    "case": "When changed bytes are re-read after obtaining a device digest, the final code checks the fresh hash against that digest and stops on a same-size concurrent change.",
+    "extraBluetoothRequests": 0,
+    "regressionSuitesPassed": 121,
+    "physicalRetestOfConcurrentMutation": false
+  }
+}

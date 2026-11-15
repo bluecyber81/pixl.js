@@ -1,4 +1,8 @@
 export const workflowGerman = {
+  zipPathSpace: 'Knappe UTF-8-Platzreserve bei {count} Zielen (bis zu acht anzeigen)',
+  pathRemaining: '{bytes} Byte Reserve',
+  pathExcess: 'Um {bytes} Byte zu lang',
+  renameSpace: 'Verfügbare UTF-8-Bytes: Pfad {path}, Name {name}.',
   uploadTargetName: 'Zielnamen ändern', skipUploadFile: 'Datei überspringen',
   uploadTargetExplanation: 'Wähle für „{name}“ einen Zielnamen in {dir}. {reason}',
   startActions: 'Schnelleinstieg',
@@ -89,6 +93,10 @@ export const workflowGerman = {
   zipPath: 'Das Archiv enthält ungültige oder mehrdeutige Namen. Die Einträge wurden nicht automatisch umbenannt.'
 }
 export const workflowEnglish = {
+  zipPathSpace: 'Tight UTF-8 space on {count} destinations (show up to eight)',
+  pathRemaining: '{bytes} bytes remaining',
+  pathExcess: '{bytes} bytes over the limit',
+  renameSpace: 'UTF-8 bytes available: path {path}, name {name}.',
   uploadTargetName: 'Change destination name', skipUploadFile: 'Skip file',
   uploadTargetExplanation: 'Choose a destination name for “{name}” in {dir}. {reason}',
   startActions: 'Quick start',

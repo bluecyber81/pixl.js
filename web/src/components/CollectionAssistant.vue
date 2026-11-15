@@ -49,6 +49,7 @@
         <p class="small">{{ de ? 'Die Schnellübersicht liest die Ordnereinträge. Die Inhaltsprüfung liest danach jede passende BIN-Datei über Bluetooth. Bei großen Sammlungen kann das mehrere Minuten dauern.' : 'Quick overview reads the directory entries. The content check then reads each supported BIN file over Bluetooth. Large collections can take several minutes.' }}</p>
       </article>
     </div>
+    <slot name="backup-audit" />
     <div v-if="running" class="activity">
       <div><strong role="status">{{ runningLabel }}</strong>
         <div v-if="running === 'scan' && progress && !scanAborting" class="scan-progress">
