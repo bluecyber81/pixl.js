@@ -1,5 +1,11 @@
 # Allmiibo LCD firmware and file manager
 
+## File manager 3.52.1
+
+**DE3.75 / App648 is the stable LCD firmware** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android package for compatible older bootloaders](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Release notes and tests](docs/RELEASE_DE3_75.md) · [ChatGPT review kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip)
+
+Under **Device & diagnostics**, compare saved device checks and export their results as JSON. When editing in two tabs you can reopen both drafts. Check text wraps on narrow displays with enlarged text. You can also copy a figure ID directly. [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.1)
+
 ## File manager 3.52.0
 
 Under **Device & diagnostics**, record whether the file emulator or database returns to the expected figure after leaving or waking. The figure lists stay alphabetical after checking online. Backup, update and remote tools now load when first opened. [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.0)

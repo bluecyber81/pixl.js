@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-13.kirby",
+  "dataVersion": "2026-11-15.de375",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
     "files": [
       {
         "path": "fw/data/amiidb_amiibo.csv",
-        "sha256": "53d18d764266b9c7f7e10251c047cac34dd1b87db0dcb19cf75d346770282c0e",
+        "sha256": "2bbcc720b2153d68d135e48d7f21a98a06aa86863fc5b827c8a03fd9c7aa5f39",
         "referenceSha256": "82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/6e0004969cd1481a027c2eaa86838a4c3fa1553d/fw/data/amiidb_amiibo.csv",
         "transformationsFromReference": [
@@ -70,6 +70,14 @@
             ],
             "from": "430 - Judy ",
             "to": "430 - Judy"
+          },
+          {
+            "operation": "append-rider-row",
+            "id": "1f00010004c51e03"
+          },
+          {
+            "operation": "append-rider-row",
+            "id": "1f02010004c81e03"
           }
         ],
         "readNormalization": []
@@ -94,10 +102,19 @@
       },
       {
         "path": "fw/data/amiidb_link.csv",
-        "sha256": "2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38",
+        "sha256": "b8df1a4bd411459a58660f42bec2077f4639543c1d67a16b6617a60470fad068",
         "referenceSha256": "2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/494514c958ad5e0544467bfed59d3047a7468c40/fw/data/amiidb_link.csv",
-        "transformationsFromReference": [],
+        "transformationsFromReference": [
+          {
+            "operation": "append-rider-row",
+            "id": "1f00010004c51e03"
+          },
+          {
+            "operation": "append-rider-row",
+            "id": "1f02010004c81e03"
+          }
+        ],
         "readNormalization": [
           {
             "operation": "ignore-one-extra-empty-final-column-in-memory",
@@ -127,8 +144,8 @@
     "figures": 954,
     "groups": 82,
     "associations": 1346,
-    "firmwareAssociations": 1344,
-    "nintendoWebAssociations": 2,
+    "firmwareAssociations": 1346,
+    "nintendoWebAssociations": 0,
     "legacyEmptyLinkColumns": 3,
     "englishNoteAssociations": 63,
     "uniqueEnglishNotes": 53,
@@ -10400,6 +10417,7 @@
         {
           "groupId": 75,
           "noteId": null,
+          "sourceLine": 1345,
           "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
         }
       ]
@@ -10510,6 +10528,7 @@
         {
           "groupId": 75,
           "noteId": null,
+          "sourceLine": 1346,
           "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
         }
       ]

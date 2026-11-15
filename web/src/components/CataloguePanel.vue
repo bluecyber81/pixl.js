@@ -38,7 +38,7 @@
         <label>{{ de ? 'Serie' : 'Series' }}<select v-model="series"><option value="">{{ de ? 'Alle Serien' : 'All series' }}</option><option v-if="series && !seriesOptions.includes(series)" :value="series">{{ series }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in seriesOptions" :key="item">{{ item }}</option></select></label>
         <label>{{ de ? 'Art' : 'Type' }}<select v-model="kind"><option value="">{{ de ? 'Alle Arten' : 'All types' }}</option><option v-if="kind && !typeOptions.includes(kind)" :value="kind">{{ kind }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in typeOptions" :key="item">{{ item }}</option></select></label>
       </div>
-      <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur Namen der stabilen Firmware DE3.74' : 'Only names in stable firmware DE3.74' }}</label>
+      <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur Namen der stabilen Firmware DE3.75' : 'Only names in stable firmware DE3.75' }}</label>
     </details>
 
     <details class="filter-details saved-filters">
@@ -148,9 +148,9 @@
           <p v-for="reason in presenceFor(entry.id).reasons" :key="reason" role="listitem">{{ reasonText(reason) }}</p>
         </div>
         <small v-if="historical" class="observation-date">{{ observationDate }}</small>
-        <span class="entry-series">{{ entry.series }}</span><code>{{ entry.id }}</code>
+        <span class="entry-series">{{ entry.series }}</span><FigureIdCopy :id="entry.id" :de="de" />
         <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="releaseLabel(entry, today).state === 'upcoming'"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
-        <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in DE3.74 verfügbar' : 'Name available in DE3.74') : (de ? 'Kein Name in DE3.74' : 'No name in DE3.74') }}</small>
+        <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in DE3.75 verfügbar' : 'Name available in DE3.75') : (de ? 'Kein Name in DE3.75' : 'No name in DE3.75') }}</small>
         <button type="button" :aria-label="(de ? 'Details zu ' : 'Details for ') + entry.name" :disabled="blocked" :aria-expanded="selectedId === entry.id" @click="selectEntry(entry.id, $event)">{{ de ? 'Details und Bild' : 'Details and image' }}</button>
       </li>
     </ul>
@@ -174,6 +174,7 @@ import { CATALOGUE_PREFERENCES_KEY, CATALOGUE_PROFILE_FILE_LIMIT, FILTER_NAME_LI
 import { saveBlob } from '../lib/browser-tools.js';
 import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
+import FigureIdCopy from './FigureIdCopy.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
 const props = defineProps({ catalogue: Object, blocked: Boolean, openImport: Function, collectionReport: Object, collectionStale: Boolean, collectionHistorical: Boolean, collectionObservedAt: String });
 const emit = defineEmits(['select-entry']);

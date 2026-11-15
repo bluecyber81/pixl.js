@@ -27,7 +27,7 @@ const app647 = Object.freeze({
 const app648 = Object.freeze({...app647, firmwareVersion:'2.22.0-DE3.75', applicationCounter:648,
   applicationBytes:358304, applicationBinSha256:'3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867',
   sourceId:'9bc7578a46f27d54088ddd222198ce582f9cc3fdcf45a8e9a7da6d596b47c62c', otaSha256:'603d99133331fdb425647e27106b043f9f7f3347e889475153bfe7e828f1dafd',
-  artifactStatus:'experimental-signed-application', hardwareAcceptance:'pending',
+  artifactStatus:'stable-signed-application', hardwareAcceptance:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd',
 });
 const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
@@ -41,7 +41,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
     sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = references.find(item => item.firmwareVersion === version) ?? app647;
+  const reference = references.find(item => item.firmwareVersion === version) ?? app648;
   const relation = version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
   return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,

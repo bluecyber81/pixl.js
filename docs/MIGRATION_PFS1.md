@@ -6,10 +6,10 @@ Step-by-step in the file manager: [Deutsch: Speicher umstellen](https://bluecybe
 
 ## Identify the current layout first
 
-| Current device storage | LCD application update (DE3.65 stable or DE3.72 / 645) |
+| Current device storage | Stable LCD application update (DE3.75 / 648) |
 | --- | --- |
 | This fork's Packed LittleFS, identifier **PFS1**, migration completed | Application-only update on matching LCD hardware. Preserve existing files; do not format again. |
-| **SPIFFS**, including the old public DE3.16 | Separate migration required. Flashing either application alone is not a conversion and does not preserve accessibility of SPIFFS files. |
+| **SPIFFS**, including the old public DE3.16 | Separate migration required. Complete the verified Raw128 backup before converting the volume and restoring its contents. |
 | Ordinary upstream **LittleFS** | A different on-disk layout. Do not assume compatibility because both names contain LittleFS. No automatic cross-layout conversion is promised by this release. |
 | Unknown, failed query or failed mount | Resolve the identity/read error first. A query failure is not proof of an empty device and is not permission to format. |
 

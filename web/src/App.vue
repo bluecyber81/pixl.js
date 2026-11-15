@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.52.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>{{ browserVersionLabel }}</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -211,7 +211,7 @@
               :disabled="!connected || busy || row.type === 'DRIVE'"></td>
             <td class="file-list-name">
               <button type="button" class="file-name-action" :data-file-name="row.name" :data-kind="row.type"
-                :disabled="(!connected && !(demoMode && row.demoFigure)) || (busy && !previewBusy)" @click="select_file_row(index, row)" @dblclick="download_preview_selection">
+                :disabled="(!connected && !(demoMode && row.demoFigure)) || (busy && !previewBusy)" @click="select_file_row(index, row, $event)" @dblclick="download_preview_selection">
                 <span class="file-list-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
                   <g v-if="row.type === 'DIR'"><path d="M3 7V5h6l2 2h9v3H3z" fill="currentColor" opacity=".5"/><path d="M2.5 9h19l-2 10h-17z" fill="currentColor"/></g>
                   <g v-else-if="row.type === 'DRIVE'"><path d="M5 5h14l2 10v4H3v-4zM3 14h18"/><path d="M16 16.5h2"/></g>
@@ -226,7 +226,7 @@
             <td v-if="fileListHasNotes" class="file-list-notes">{{ row.notes }}</td>
             <td class="file-list-actions"><div class="file-inline-actions">
               <button type="button" v-if="row.type !== 'DRIVE'" class="file-rename" :aria-label="$t('fileList.rename', { name: row.name })" :title="$t('contxmenu.rename')"
-                :disabled="!connected || busy" @click="on_row_command('rename', row)">
+                :disabled="!connected || busy" @click="on_row_command('rename', row, $event.currentTarget)">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16-1 5 5-1L20 8l-4-4zM13 7l4 4"/></svg>
               </button>
               <el-dropdown trigger="click" :disabled="!connected || busy" @command="command => on_row_command(command, row)">
@@ -253,8 +253,8 @@
     </div>
 
       </div>
-      <aside :key="previewSelection?.path" class="selection-context" :class="{'has-selection': !!previewSelection}">
-        <button v-if="previewSelection" type="button" class="mobile-preview-close" @click="close_preview_selection">{{ language === 'de_DE' ? 'Vorschau schließen' : 'Close preview' }} ×</button>
+      <aside :key="previewSelection?.path" ref="selectionContext" tabindex="-1" :aria-label="language === 'de_DE' ? 'Dateivorschau' : 'File preview'" class="selection-context" :class="{'has-selection': !!previewSelection}" @keydown.esc="dismiss_file_preview">
+        <button v-if="previewSelection" type="button" class="mobile-preview-close" @click="dismiss_file_preview">{{ language === 'de_DE' ? 'Vorschau schließen' : 'Close preview' }} ×</button>
         <SelectionPreview :selection="previewSelection" :locale="language" :catalogue="collectionCatalogue" :blocked="busy || !preview_selection_current()" @download="download_preview_selection" @properties="open_preview_properties" />
       </aside></div>
     </section>
@@ -320,12 +320,16 @@
         <summary>{{ language === 'de_DE' ? 'Geräteprüfung: Rückkehr und Aufwachen' : 'Device check: list return and wake-up' }}</summary>
         <GuidedDeviceCheck v-if="guidedCheckOpened" :snapshot="fullDiagnosticSnapshot" :firmware-version="firmwareVersion" :connected="connected" :reading="fullDiagnosticBusy" :export-busy="diagnosticsBusy" :locale="language" @export="open_guided_report" />
       </details>
+      <details class="guided-check-panel guided-comparison" @toggle="guidedComparisonOpened ||= $event.target.open">
+        <summary>{{ language === 'de_DE' ? 'Gespeicherte Geräteprüfungen vergleichen' : 'Compare saved device checks' }}</summary>
+        <GuidedReportComparison v-if="guidedComparisonOpened" :locale="language" />
+      </details>
       <MenuRunComparison v-if="visitedWorkspaces.has('device')" :locale="language" />
       <DisplayPhoto v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <StartupDiagnostics v-if="visitedWorkspaces.has('device')" :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.52.0</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>{{ browserVersionLabel }}</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -429,7 +433,7 @@
       </div></template>
     </el-dialog>
 
-    <el-dialog :title="$t('properties.title')" v-model="meta_diag_visible" @close="reset_figure_info" width="min(640px, 94vw)" :close-on-click-modal="!mutating" :close-on-press-escape="!mutating" :show-close="!mutating">
+    <el-dialog :title="$t('properties.title')" v-model="meta_diag_visible" @close="reset_figure_info" @closed="restore_properties_trigger" width="min(640px, 94vw)" :close-on-click-modal="!mutating" :close-on-press-escape="!mutating" :show-close="!mutating">
       <p class="property-filename">{{ meta_form.name }}</p>
       <section v-if="figureInfoSupported" class="figure-file-read">
         <button type="button" :disabled="!connected || busy" @click="read_figure_info">{{ $t('info.figureRead') }}</button>
@@ -558,7 +562,7 @@
   <footer class="source-footer">
     <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'App646-Prüfpaket für ChatGPT (ZIP)' : 'App646 test kit for ChatGPT (ZIP)' }}</a>
+    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'App648-Prüfpaket für ChatGPT (ZIP)' : 'App648 test kit for ChatGPT (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
   </main></el-config-provider>
@@ -570,7 +574,7 @@
 import DeviceStorageCard from "./components/DeviceStorageCard.vue"
 import { deviceNicknameStorageKey, normalizeDeviceNickname } from "./lib/device-nickname.js"
 import { storageUsage, storageAmount } from "./lib/device-storage-display.js"
-import { defineAsyncComponent } from "vue"
+import { defineRecoverableAsyncComponent as defineAsyncComponent } from './lib/recoverable-async-component.js'
 import * as pixl from "./lib/pixl.ble"
 import { sharedEventDispatcher } from "./lib/event"
 import * as proto from "./lib/pixl.proto"
@@ -598,6 +602,7 @@ import { metadataNoteInfo } from "./lib/metadata-note.js"
 import { deploymentPath } from "./lib/deployment-path.js"
 import { bluetoothAccessIssue } from "../public/dfu/bluetooth-access.mjs"
 import { version as webVersion } from "../package.json"
+import { formatBuildVersion } from './lib/build-version.js'
 import { projectDownloads } from "./lib/project-downloads.js"
 import { dfuReference } from "./lib/release-packages.js"
 import catalogueBaseline from "./data/catalogue.json"
@@ -605,7 +610,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { GuidedReportComparison: defineAsyncComponent(() => import('./components/GuidedReportComparison.vue')), GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
@@ -613,7 +618,7 @@ export default {
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       renameNotice: null,
-      powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false,
+      powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
@@ -673,6 +678,7 @@ export default {
     dfuPageUrl() { return deploymentPath('dfu/web.html') + (this.lastDfuReference || ''); },
     licensesUrl() { return deploymentPath('licenses/index.html'); },
     archiveLinks() { return projectDownloads(webVersion); },
+    browserVersionLabel() { return formatBuildVersion(webVersion); },
     guideUrl() {
       if (this.languageMode === 'auto') return deploymentPath('guide') + '/';
       return deploymentPath(this.language === 'de_DE' ? 'guide/index.html' : 'guide/en.html');
@@ -770,7 +776,19 @@ export default {
   },
   methods: {
     memory_sample_key(count) { return memorySampleEvidenceKey(count); },
-    select_file_row(index, row) {
+    select_file_row(index, row, event) {
+      const work = this.preview_file_row(index, row);
+      if (event?.detail === 0 && this.previewSelection?.row === row) {
+        const opener = event.currentTarget;
+        this.$nextTick(() => {
+          if (this.previewSelection?.row === row && document.activeElement === opener) {
+            this.$refs.selectionContext?.focus({ preventScroll: true });
+          }
+        });
+      }
+      return work;
+    },
+    preview_file_row(index, row) {
       const demo=!this.connected&&this.demoMode&&row.demoFigure===true;
       if ((!this.connected&&!demo) || (this.busy && !this.previewBusy)) return;
       if (row.type !== 'REG') return this.handle_name_click(index,row);
@@ -804,6 +822,17 @@ export default {
       return pending;
     },
     close_preview_selection() { this.previewSelection=null;++this.previewSerial; },
+    async dismiss_file_preview() {
+      const selection = this.previewSelection;
+      if (!selection) return;
+      const origin = this.file_name_button(selection.row.name);
+      this.close_preview_selection();
+      const serial = this.previewSerial;
+      await this.$nextTick();
+      if (this.activeWorkspace !== 'files' || serial !== this.previewSerial) return;
+      const target = origin?.isConnected && !origin.disabled ? origin : this.$refs.fileWorkspace;
+      target?.focus({ preventScroll: true });
+    },
     preview_selection_current(selection = this.previewSelection) {
       if (!this.connected || !selection || !this.current_dir || selection.row?.type !== 'REG' ||
           this.previewSelection?.row !== selection.row || this.previewSelection.path !== selection.path ||
@@ -893,7 +922,7 @@ export default {
         this.page = Math.floor(index / this.pageSize) + 1;
         await this.$nextTick();
         if (!this.session_current(generation) || this.current_dir !== dir) return;
-        const button = Array.from(this.$refs.fileWorkspace?.querySelectorAll?.('[data-file-name]') || []).find(item => item.getAttribute('data-file-name') === result.name);
+        const button = this.file_name_button(result.name);
         button?.focus?.(); button?.scrollIntoView?.({ block:'nearest' });
       } else this.show_workspace('files');
     },
@@ -1759,9 +1788,29 @@ export default {
       catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
       finally { if (generation === this.sessionGeneration) this.mutating = false; }
     },
-    on_row_command(command, row) {
+    file_name_button(name) {
+      return Array.from(this.$refs.fileWorkspace?.querySelectorAll?.('[data-file-name]') || [])
+        .find(button => button.getAttribute('data-file-name') === name);
+    },
+    async on_row_command(command, row, trigger) {
       const handlers = { remove: this.on_row_btn_remove, rename: this.on_row_btn_rename, meta: this.on_row_btn_meta, format: this.on_row_btn_format };
-      if (handlers[command] && this.connected && !this.busy) return handlers[command](0, row);
+      if (!handlers[command] || !this.connected || this.busy) return;
+      const opener = trigger || this.file_name_button(row.name)?.closest('tr')?.querySelector('.row-menu');
+      const generation = this.sessionGeneration, directory = this.current_dir;
+      const restore = () => {
+        if (!this.session_current(generation) || this.current_dir !== directory || this.activeWorkspace !== 'files') return;
+        const focus = document.activeElement;
+        if (focus !== document.body && !focus?.closest('.el-overlay, [role=menu]')) return;
+        const target = opener?.isConnected && !opener.disabled ? opener : this.$refs.fileWorkspace;
+        target?.focus({ preventScroll: true });
+      };
+      await handlers[command](0, row);
+      if (command === 'meta' && this.meta_diag_visible) this._propertiesReturnFocus = restore;
+      else await this.$nextTick(restore);
+    },
+    restore_properties_trigger() {
+      this._propertiesReturnFocus?.();
+      this._propertiesReturnFocus = null;
     },
     before_upload_remove(file) {
       if (file.status !== 'uploading' && file.status !== 'ready') return true;
@@ -2572,7 +2621,7 @@ export default {
 
 <style>
 .guided-check-panel { margin:1rem 0; padding:1rem; border:1px solid var(--rule,#ccd8d3); border-radius:.7rem; }
-.guided-check-panel>summary { cursor:pointer; font-weight:600; }
+.guided-check-panel>summary { overflow-wrap:anywhere; cursor:pointer; font-weight:600; }
 .language-menu-popup { max-inline-size: min(18rem, calc(100vw - 1rem)); }
 .language-menu-popup .el-dropdown-menu__item { white-space: normal; overflow-wrap: anywhere; }
 /* A closing popup still uses its old position while a language or font change reflows its labels. */
@@ -2930,4 +2979,5 @@ body,.filemanager { background:var(--shell-paper); }
 .status-links .guide-link { font-size:.8rem; }
 </style>
 <style src="./styles/workspaces.css"></style>
+<style src="./styles/async-component.css"></style>
 <style src="./styles/directory-list.css"></style>

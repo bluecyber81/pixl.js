@@ -22,9 +22,14 @@ test('known figure IDs accept Windows CRLF and every generated flag matches the 
   assert.deepEqual([...parseKnownFigureIds(`${id}\r\n${other.toUpperCase()}\r\n`)], [id, other]);
   assert.deepEqual([...parseKnownFigureIds(`${id}\n\n${other}\n`)], [id, other]);
   assert.throws(() => parseKnownFigureIds(`${id}\nnot-an-id`));
-  const known = parseKnownFigureIds(fs.readFileSync(new URL('../third-party/amiiboapi/de317-known-ids.txt', import.meta.url), 'utf8'));
+  const known = parseKnownFigureIds(fs.readFileSync(new URL('../third-party/amiiboapi/de375-known-ids.txt', import.meta.url), 'utf8'));
+  const firmwareTable = new URL('../../fw/data/amiidb_amiibo.csv', import.meta.url);
+  if (fs.existsSync(firmwareTable)) {
+    const ids = fs.readFileSync(firmwareTable, 'utf8').trimEnd().split(/\r?\n/).map(line => line.split(',', 1)[0]);
+    assert.deepEqual(known, new Set(ids), 'Bundled IDs must match the released application CSV');
+  }
   for (const entry of data.entries) assert.equal(entry.firmwareIdKnown, known.has(entry.id), entry.id);
-  assert.equal(data.entries.filter(entry => entry.firmwareIdKnown).length, 952);
+  assert.equal(data.entries.filter(entry => entry.firmwareIdKnown).length, 954);
 });
 test('catalogue supports case, accent, multi-term, exact ID and series/type filtering', () => {
   assert.ok(filterCatalogue(data.entries, {query:'LINK zelda'}).length > 0);

@@ -31,12 +31,12 @@ BASELINE = {
 
 
 class CatalogDE39Tests(unittest.TestCase):
-    def test_only_two_reviewed_entries_and_links_are_added(self):
+    def test_only_reviewed_entries_and_links_are_added(self):
         rows = {}
         for filename, (old_count, old_hash) in BASELINE.items():
             content = (FW / "data" / filename).read_bytes()
             lines = content.splitlines(keepends=True)
-            self.assertEqual(len(lines), old_count + 2)
+            self.assertEqual(len(lines), old_count + 4)
             # Preserve the reviewed historical prefix byte-for-byte after
             # reversing only the later reviewed name and note corrections.
             prefix = b"".join(lines[:old_count])
@@ -67,9 +67,12 @@ class CatalogDE39Tests(unittest.TestCase):
             rows[filename] = list(csv.reader(io.StringIO(content.decode("utf8"))))
         amiibos = rows["amiidb_amiibo.csv"]
         links = rows["amiidb_link.csv"]
-        self.assertEqual(amiibos[-2:], ADDITIONS)
-        self.assertEqual(len({row[0] for row in amiibos}), 952)
-        self.assertEqual(links[-2:], [["26", row[0], "", "", ""] for row in ADDITIONS])
+        self.assertEqual(amiibos[-4:-2], ADDITIONS)
+        self.assertEqual(amiibos[-2:], [["1f00010004c51e03", "Sword Kirby (& Dragoon)", ""],
+                                        ["1f02010004c81e03", "Noir Dedede (& Hydra)", ""]])
+        self.assertEqual(links[-2:], [["75", row[0], "", "", ""] for row in amiibos[-2:]])
+        self.assertEqual(len({row[0] for row in amiibos}), 954)
+        self.assertEqual(links[-4:-2], [["26", row[0], "", "", ""] for row in ADDITIONS])
         self.assertEqual(sum(row[0] == "26" for row in links), 37)
         games = (FW / "data/amiidb_game.csv").read_bytes()
         corrected = b"49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale,"
@@ -98,7 +101,7 @@ class CatalogDE39Tests(unittest.TestCase):
                         patch.object(sys, "argv", [str(script), "--offline"]), redirect_stdout(stdout):
                     runpy.run_path(str(script), run_name="__main__")
                 request.assert_not_called()
-                self.assertIn("Found 952 amiibo records.", stdout.getvalue())
+                self.assertIn("Found 954 amiibo records.", stdout.getvalue())
                 self.assertNotIn("uncategorized", stdout.getvalue())
                 current = {path.name: path.read_bytes() for path in generated.glob("*.c")}
                 if previous is not None:
@@ -123,7 +126,7 @@ static unsigned count_links(uint8_t id) {
     return count;
 }
 int main(void) {
-    assert(amiibo_list_size == 952);
+    assert(amiibo_list_size == 954);
     for (size_t i = 0; i < amiibo_list_size; ++i) {
         const db_amiibo_t *amiibo = &amiibo_list[i];
         assert(get_amiibo_by_id(amiibo->head, amiibo->tail) == amiibo);
@@ -144,7 +147,9 @@ int main(void) {
         assert(matching_games == 1);
         ++links;
     }
-    assert(links == 1344 && count_links(26) == 37);
+    assert(links == 1346 && count_links(26) == 37 && count_links(75) == 7);
+    assert(get_link_by_id(75, 0x1f000100, 0x04c51e03));
+    assert(get_link_by_id(75, 0x1f020100, 0x04c81e03));
     for (const db_game_t *game = game_list; game->game_id; ++game)
         assert(game->link_cnt == count_links(game->game_id));
     const db_amiibo_t *mario = get_amiibo_by_id(0x00000004, 0x04431c02);
@@ -156,7 +161,7 @@ int main(void) {
     assert(get_link_by_id(26, toad->head, toad->tail));
     assert(!is_valid_amiibo_v3(mario->head, mario->tail));
     assert(!is_valid_amiibo_v3(toad->head, toad->tail));
-    puts("PASS: 952 unique sorted IDs, 1344 links, every category count and two My Mario lookups");
+    puts("PASS: 954 unique sorted IDs, 1346 links, every category count and two My Mario lookups");
     return 0;
 }
 ''', encoding="utf8")
@@ -168,7 +173,7 @@ int main(void) {
             self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
             result = subprocess.run([str(executable)], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("PASS: 952 unique sorted IDs, 1344 links", result.stdout)
+            self.assertIn("PASS: 954 unique sorted IDs, 1346 links", result.stdout)
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@ Read the illustrated file manager's step-by-step guide for the required apps, ba
 
 | Starting device | Package and procedure |
 | --- | --- |
-| Compatible nRF52832 LCD with mounted PFS1, Z19 and S112 7.3.0 (FWID 0x0126) | [DE3.72 / 645 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_DE3_72_645_NUR_APP.zip). Save a current backup of E: and select the ZIP in the web updater or nRF Device Firmware Update on Android. |
-| Compatible 512 KiB flash / 64 KiB RAM nRF52832 LCD with a bootloader at 0x77000 (MBR parameters 0x7E000, DFU settings 0x7F000), bootloader counter below 19, S112 FWID 0x0103 or 0x0126 and a working Nordic Secure DFU bootloader that trusts the project's key | [DE3.72 / 645 full system](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip). On Android keep the ZIP intact and use nRF Device Firmware Update. Complete the S112 + Z19 stage and the application stage. Reconnect and read back App645, bootloader 19 with the [Z19 region hash](../bootloader-z19/README.md), and S112 FWID 0x0126. |
+| Compatible nRF52832 LCD with mounted PFS1, Z19 and S112 7.3.0 (FWID 0x0126) | [Stable DE3.75 / 648 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip). Save a current backup of E: and select the ZIP in the web updater or nRF Device Firmware Update on Android. |
+| Compatible 512 KiB flash / 64 KiB RAM nRF52832 LCD with a bootloader at 0x77000 (MBR parameters 0x7E000, DFU settings 0x7F000), bootloader counter below 19, S112 FWID 0x0103 or 0x0126 and a working Nordic Secure DFU bootloader that trusts the project's key | [DE3.75 / 648 full system](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip). On Android keep the ZIP intact and use nRF Device Firmware Update. Complete the S112 + Z19 stage and the application stage. Reconnect and read back App648, bootloader 19 with the [Z19 region hash](../bootloader-z19/README.md), and S112 FWID 0x0126. |
 | Confirmed SPIFFS, compatible LCD/key, S112 FWID 0x0103 or 0x0126 and an installed application counter below 600 (or PREP600 already running) | [DE3.30-PREP / 600](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_SPIFFS_DE3_30_PREP_600.zip) exposes all 128 metadata bytes. First back up the readable collection outside the device. Follow the [migration procedure](MIGRATION_PFS1.md) before installing either target package. |
 
 Check the starting firmware before using any ZIP. On an OLED board, with an unknown signing key, or with a newer counter, establish a compatible board-specific path first. An open PFS1 import resumes with its original ZIP and browser receipt.
@@ -18,7 +18,9 @@ Keep a current backup. Choose the application for the release you intend to run.
 
 | LCD application | Release and intended use |
 | --- | --- |
-| **DE3.72 / 645** | [Current LCD release and device-test status](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72). Restores the correct figure and slot selection and corrects four Zelda game notes. |
+| **DE3.75 / 648** | [Stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75). One LCD owner checked list return and wake in both apps in German with resume enabled. The Switch recognized one known figure. [Release notes and checksums](RELEASE_DE3_75.md). |
+| **DE3.74 / 647** | [Previous stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74). The owner confirmed that the remote display photo worked. [Device check](validation/DE3_74_LCD_ACCEPTANCE.json). |
+| **DE3.72 / 645** | [Earlier LCD release and device-test status](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72). Restores the correct figure and slot selection and corrects four Zelda game notes. |
 | **DE3.65 / 637** | [Stable release and checksums](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65). Verified on an LCD with Z19 and Nordic S112 7.3.0, including Bluetooth readback, scrolling, NFC and wake. |
 | **DE3.70 / 642** | [LCD test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.70). Reduced sorting when browsing figures. First menu selection available in device diagnostics. |
 | **DE3.69 / 641** | [LCD test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.69). Open recent figures from the amiibo database. Android supports opening the package directly in nRF DFU. |
@@ -36,7 +38,7 @@ Do not treat this as the preceding path. Read [MIGRATION_PFS1.md](MIGRATION_PFS1
 
 ## Bootloader / SoftDevice
 
-See [COMPONENTS.md](COMPONENTS.md) and [Z19 source/build guide](../bootloader-z19/README.md). The web DFU page is for its supported application path. For the DE3.72 full package, use the Android procedure above. The second stage installs App645. Do not infer compatibility from the Allmiibo name or reuse a package built for another LCD/OLED revision. A freshly compiled unsigned BIN/HEX is a developer artifact, not a ready-to-flash OTA ZIP.
+Use the two-stage App648 package in nRF Device Firmware Update on Android. The first stage installs S112 7.3.0 and Z19, the second installs App648. The earlier App645 combination remains available in its original release. [Bootloader identity and prerequisites](COMPONENTS.md) · [Z19 source/build guide](../bootloader-z19/README.md) · [Archived App645 full package](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip)
 
 ## File manager only
 

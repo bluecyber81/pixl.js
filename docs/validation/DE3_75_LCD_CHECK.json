@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-15",
+  "hardware": "one owner-tested LCD",
+  "firmware": "2.22.0-DE3.75",
+  "applicationCounter": 648,
+  "bootloaderCounter": 19,
+  "fileManager": "3.52.0",
+  "reportSchema": 1,
+  "language": "de",
+  "resumeSetting": "on",
+  "animationSetting": null,
+  "manualObservations": [
+    {
+      "origin": "file-emulator",
+      "route": "return-to-list",
+      "observed": "source-list-same-figure",
+      "matchesExpectation": true
+    },
+    {
+      "origin": "file-emulator",
+      "route": "sleep-and-wake",
+      "observed": "same-active-figure",
+      "matchesExpectation": true
+    },
+    {
+      "origin": "amiibo-database",
+      "route": "return-to-list",
+      "observed": "source-list-same-figure",
+      "matchesExpectation": true
+    },
+    {
+      "origin": "amiibo-database",
+      "route": "sleep-and-wake",
+      "observed": "same-active-figure",
+      "matchesExpectation": true
+    }
+  ],
+  "baseCasesObserved": 4,
+  "fullySpecifiedConfigurationsObserved": 0,
+  "possibleConfigurations": 32,
+  "startupMilliseconds": 2197,
+  "mountScanMilliseconds": 2036,
+  "physicalReadErrors": 0,
+  "physicalReadAttempts": 3966,
+  "limits": [
+    "Archived owner observations and one startup sample. NFC endurance, DFU interruption and other device settings remain open."
+  ],
+  "ownerFollowUp": {
+    "firmware": "2.22.0-DE3.75",
+    "knownFigureRecognizedBySwitch": true,
+    "source": "direct owner confirmation",
+    "scope": "one known figure; no published tag file or sustained NFC test"
+  }
+}

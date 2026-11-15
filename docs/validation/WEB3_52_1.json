@@ -1,0 +1,166 @@
+{
+  "version": "3.52.1",
+  "date": "2026-11-15",
+  "stableFirmware": "DE3.75 / 648",
+  "reviewInput": {
+    "name": "Allmiibo_Dateimanager_3_52_0_Review1_Portable.zip",
+    "bytes": 7212881,
+    "sha256": "04ce14c6f58b6aec1ddb2674c285ecdaf77f2ba20d96b51f9c1e85998b4f73a9",
+    "fileCount": 426,
+    "crcVerified": true,
+    "sha256sumsEntries": 425,
+    "portableManifestEntries": 424,
+    "matchingSourceInputs": 16,
+    "matchingPatches": 2,
+    "stableLauncherFiles": 7,
+    "stableFirmwareAssetsBothLayouts": 24,
+    "sourceCommit": "be4c639d7db0c4009ed0fa399b0073e59987cb68"
+  },
+  "tests": {
+    "rootProductionPassed": 22,
+    "pagesProductionPassed": 22,
+    "windowsNativeLauncher": {
+      "standardEncoding": {
+        "passed": 22,
+        "posixOnlySkipped": 2
+      },
+      "parentUtf8": {
+        "passed": 22,
+        "posixOnlySkipped": 2
+      }
+    },
+    "npmAuditReported": 0,
+    "standaloneDfuBrowser": [
+      {
+        "base": "/",
+        "checks": 38
+      },
+      {
+        "base": "/pixl.js/",
+        "checks": 38
+      }
+    ]
+  },
+  "browser": {
+    "browser": "157.0.8103.51",
+    "results": [
+      {
+        "name": "concurrent drafts",
+        "locale": "en-GB",
+        "bothConcurrentEditsRecovered": true,
+        "discardPreservesOtherDraft": true,
+        "staleDiscardPreservesNewerEdit": true,
+        "languageSwitchPreservesDraft": true
+      },
+      {
+        "name": "quota and draft-file recovery",
+        "locale": "en-GB",
+        "quotaErrorDisplayed": true,
+        "downloadedDraftReimported": true
+      },
+      {
+        "name": "legacy import, HTTP 503 and large text",
+        "locale": "de-DE",
+        "failedChunkStatuses": [
+          503,
+          503,
+          503
+        ],
+        "recoveredChunkStatus": 200,
+        "schema1Rows": 4,
+        "fullySpecifiedCases": 0,
+        "widths": {
+          "viewport": 320,
+          "pageWidth": 320,
+          "panelWidth": 212,
+          "panelScrollWidth": 212,
+          "rootFont": "32px",
+          "overflowing": []
+        },
+        "focusVisible": true,
+        "comparison": {
+          "jsonDownloaded": true,
+          "mobileCards": {
+            "width": 212,
+            "scrollWidth": 212,
+            "documentWidth": 320
+          },
+          "desktopTable": true,
+          "invalidSelectionLabelsPriorResult": true
+        }
+      },
+      {
+        "name": "legacy import, HTTP 503 and large text",
+        "locale": "en-GB",
+        "failedChunkStatuses": [
+          503,
+          503,
+          503
+        ],
+        "recoveredChunkStatus": 200,
+        "schema1Rows": 4,
+        "fullySpecifiedCases": 0,
+        "widths": {
+          "viewport": 320,
+          "pageWidth": 320,
+          "panelWidth": 212,
+          "panelScrollWidth": 212,
+          "rootFont": "32px",
+          "overflowing": []
+        },
+        "focusVisible": true,
+        "comparison": {
+          "jsonDownloaded": true,
+          "mobileCards": {
+            "width": 212,
+            "scrollWidth": 212,
+            "documentWidth": 320
+          },
+          "desktopTable": true,
+          "invalidSelectionLabelsPriorResult": true
+        }
+      }
+    ],
+    "failures": []
+  },
+  "otherBrowserChecks": {
+    "fileWorkspace": [
+      "de desktop",
+      "de mobile",
+      "en desktop",
+      "en mobile"
+    ],
+    "figureIdClipboard": [
+      "success",
+      "permission denied",
+      "API missing"
+    ],
+    "focusReturn": [
+      "preview",
+      "rename",
+      "properties",
+      "upload"
+    ],
+    "hardwareAccessInBrowserTests": false
+  },
+  "upstream": {
+    "branchesChecked": 26,
+    "repositories": 8,
+    "allMatchedReview": true,
+    "publicCatalogue": {
+      "baseline": 954,
+      "source": 954,
+      "added": 0,
+      "changed": 0,
+      "absentFromSource": 0,
+      "merged": 954
+    },
+    "usageReference": "reference"
+  },
+  "deviceEvidence": "DE3_75_LCD_CHECK.json",
+  "limits": [
+    "An archived owner report is distinct from a new radio session. The hardware did not advertise in the additional scan.",
+    "The public catalogue and the switch read of one known figure do not verify every title or announced figure.",
+    "No physical Android interruption, AmiiboLink accessory endurance or cold-start time-series claim."
+  ]
+}

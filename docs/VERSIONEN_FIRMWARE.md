@@ -1,5 +1,9 @@
 # LCD-Firmware, Bootloader und SoftDevice
 
+## DE3.75 / App648 · stabile LCD-Firmware
+
+Auf einem LCD kehrten Datei-Emulator und Amiibo-Datenbank nach „Zurück zur Liste“ zur richtigen Figur zurück. Nach dem Aufwachen war in beiden Apps dieselbe Figur aktiv. Der Gerätebericht mit Dateimanager 3.52.0 erfasst Deutsch und eingeschaltetes „App fortsetzen“. Die Animationseinstellung blieb offen. Separat erkannte die Switch eine bekannte Figur. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Änderungen und Messwerte](RELEASE_DE3_75.md)
+
 ## DE3.74 / App647 und Dateimanager 3.50.0
 
 **Finale LCD-Version.** Am 14. November 2026 bestätigte der Besitzer, dass das Displayfoto in der Fernbedienung auf seinem Allmiibo LCD mit DE3.74 und Dateimanager 3.50.0 funktioniert. Der Diagnoseexport weist App647, Bootloader Z19 und SoftDevice S112 7.3.0 aus. [Firmwarefreigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74)

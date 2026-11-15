@@ -43,15 +43,15 @@ class UsageExportTests(unittest.TestCase):
                 note = notes.get(association['noteId'])
                 if 'sourceUrl' in association:
                     nintendo_web_rows.append(figure['id'])
-                    self.assertEqual(association, {'groupId': 75, 'noteId': None, 'sourceUrl': exporter.NINTENDO_KIRBY_UPDATE})
-                    continue
+                    self.assertEqual(association['sourceUrl'], exporter.NINTENDO_KIRBY_UPDATE)
+                    self.assertEqual((association['groupId'], association['noteId']), (75, None))
                 line = association['sourceLine']
                 self.assertNotIn(line, actual)
                 actual[line] = (association['groupId'], figure['id'], note['en'] if note else '')
         self.assertEqual(actual, {i: (int(row[0]), row[1].lower(), row[2]) for i, row in enumerate(rows, 1)})
-        self.assertEqual(len(actual), 1344)
+        self.assertEqual(len(actual), 1346)
         self.assertEqual(nintendo_web_rows, ['1f00010004c51e03', '1f02010004c81e03'])
-        self.assertEqual(data['coverage']['associations'], len(actual) + len(nintendo_web_rows))
+        self.assertEqual(data['coverage']['associations'], len(actual))
         self.assertEqual(data['coverage']['figures'], 954)
         self.assertEqual(data['coverage']['englishNoteAssociations'], 63)
         self.assertEqual(data['coverage']['uniqueGermanTranslations'], 53)
@@ -78,10 +78,12 @@ class UsageExportTests(unittest.TestCase):
         for source in data['source']['files']:
             current = (ROOT / source['path']).read_bytes()
             self.assertEqual(hashlib.sha256(current).hexdigest(), source['sha256'])
+            rider_ids = ['1f00010004c51e03', '1f02010004c81e03']
+            additions = [{'operation': 'append-rider-row', 'id': rid} for rid in rider_ids]
             if source['path'].endswith('amiidb_amiibo.csv'):
-                # Independently reconstruct the pinned reference bytes. The six
-                # reviewed name/whitespace corrections may change no IDs, rows or other fields.
-                reference = current
+                suffix = b'1f00010004c51e03,Sword Kirby (& Dragoon),\n1f02010004c81e03,Noir Dedede (& Hydra),\n'
+                self.assertTrue(current.endswith(suffix))
+                reference = current.removesuffix(suffix)
                 expected = [
                     ('018b000002460502', 'Cyrrus', 'Cyrus'),
                     ('04d0000101960502', '[AC] 339 - Fritta', '[AC] 339 - Frita'),
@@ -98,7 +100,7 @@ class UsageExportTests(unittest.TestCase):
                 self.assertEqual(source['transformationsFromReference'], [
                     {'operation': 'trim-trailing-space' if old != old.rstrip() else 'correct-display-name',
                      'id': aid, 'columns': ['name_en', 'name_cn'],
-                     'from': old, 'to': new} for aid, old, new in expected])
+                     'from': old, 'to': new} for aid, old, new in expected] + additions)
             elif source['path'].endswith('amiidb_game.csv'):
                 corrected = b'49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale,'
                 self.assertEqual(current.count(corrected), 1)
@@ -109,8 +111,10 @@ class UsageExportTests(unittest.TestCase):
                     'from': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ',
                     'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}])
             else:
-                self.assertEqual(hashlib.sha256(current).hexdigest(), source['referenceSha256'])
-                self.assertEqual(source['transformationsFromReference'], [])
+                suffix = ''.join(f'75,{rid},,,\n' for rid in rider_ids).encode()
+                self.assertTrue(current.endswith(suffix))
+                self.assertEqual(hashlib.sha256(current.removesuffix(suffix)).hexdigest(), source['referenceSha256'])
+                self.assertEqual(source['transformationsFromReference'], additions)
             if source['path'].endswith('amiidb_link.csv'):
                 self.assertEqual(source['readNormalization'], [{
                     'operation': 'ignore-one-extra-empty-final-column-in-memory',

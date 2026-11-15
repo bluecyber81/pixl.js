@@ -76,7 +76,7 @@ for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.
  const {buildIdentity}=report(version,counter);
  assert.equal(buildIdentity.referenceRelation,'version-and-counter');
  assert.equal(buildIdentity.packageReference.applicationCounter,counter);
- assert.equal(buildIdentity.packageReference.hardwareAcceptance, counter === 647 ? 'remote-display-photo-confirmed-on-one-lcd' : 'pending');
- assert.equal(buildIdentity.packageReference.artifactStatus, counter === 647 ? 'stable-signed-application' : 'experimental-signed-application');
+ assert.equal(buildIdentity.packageReference.hardwareAcceptance, ({647:'remote-display-photo-confirmed-on-one-lcd', 648:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd'})[counter] ?? 'pending');
+ assert.equal(buildIdentity.packageReference.artifactStatus, [647,648].includes(counter) ? 'stable-signed-application' : 'experimental-signed-application');
  assert.equal(buildIdentity.applicationHashVerified,false);
 });

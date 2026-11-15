@@ -1,0 +1,83 @@
+{
+  "combo": "Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip",
+  "bytes": 338815,
+  "sha256": "b52bd3511e4ab3ff3f4dddff6af029ff56f1124a1f2e28b3eff7748df125ad96",
+  "systemSource": "Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip",
+  "systemZ19Sha256": "5c3eca5391d40677d95d5c256bfcbeb5e0ffdb3e9368408a27e45100738590af",
+  "systemS112Sha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+  "systemBytesComparedToTwoExistingSignedPackages": true,
+  "systemCounter": 19,
+  "tarFwId": 294,
+  "bothSignaturesVerified": true,
+  "app": {
+    "type": "application",
+    "firmware_type": 0,
+    "counter": 648,
+    "sd_req": [
+      259,
+      294
+    ],
+    "bytes": 358304,
+    "sha256": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+    "signature_verified": true,
+    "sd_size": 0,
+    "bl_size": 0,
+    "app_size": 358304,
+    "boot_validation": "GENERATED_CRC",
+    "negative_controls_passed": 3
+  },
+  "componentHashes": {
+    "sd_bl.bin": "8c8ae9ab04612308787411aa62caa7343fff59be9ffeed0ecf7d6dea74b75fb0",
+    "sd_bl.dat": "b05d9e90a2e78046b6ac3ffcc8f93978eb3ff20474e54ab637a8c2ce07060c25",
+    "app_648.bin": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+    "app_648.dat": "3d09f2b9f491222555cfa21643f24f10722e77608be0e00bcf053ce0138bfcaa"
+  },
+  "armAdmission": {
+    "passed": true,
+    "hardwareAccess": false,
+    "bootCounter": 19,
+    "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "appCounter": 648,
+    "previousAppCounter": 647,
+    "previousAppSha256": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
+    "appPayloadSha256": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+    "cases": [
+      {
+        "before": "App647 present",
+        "signedInitAccepted": true,
+        "imageHashAccepted": true,
+        "bootCrcAccepted": true,
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 358304,
+        "bank0Code": 0
+      },
+      {
+        "before": "App bank empty after bootloader update",
+        "signedInitAccepted": true,
+        "imageHashAccepted": true,
+        "bootCrcAccepted": true,
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 358304,
+        "bank0Code": 0
+      }
+    ],
+    "limits": "Actual ELF routines. Flash, radio and handover simulated."
+  },
+  "physicalTwoPhaseAndroidTest": false,
+  "androidDfu": {
+    "implementation": "Nordic Android DFU 2.11.0 ArchiveInputStream on Linux JVM",
+    "aarSha256": "8065d517456fe6bbaead5dc19d58601174c00d6bd6f40214baf9a9dd8f7e593f",
+    "androidDevice": false,
+    "completeSystemAndApplicationRead": true,
+    "bothInitPacketsMatched": true,
+    "contentType": 7,
+    "phaseBytes": [
+      124840,
+      358304
+    ],
+    "chunkBytes": 243,
+    "platform": "Linux JVM with Android Log/Build stubs"
+  }
+}
