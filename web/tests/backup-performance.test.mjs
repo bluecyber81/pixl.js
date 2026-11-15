@@ -79,6 +79,33 @@ test('previous ZIP matches content only: current metadata, changed, added, delet
   await assert.rejects(createBackup({ ...options, readRawMetadata:async()=>new Uint8Array(128) }), { code:'BACKUP_API' })
 })
 
+test('fresh bytes must still match the device digest after a same-size change', async () => {
+  const vfs = memoryVfs()
+  const path = 'E:/tags/selection.bin'
+  vfs.put(path, [1, 2])
+  const first = await createBackup({ ...context, ...vfs.api })
+  const previousArchive = await loadBackupReference(first.blob, zipOptions)
+  vfs.put(path, [3, 4])
+  let queries = 0
+  const options = { ...context, ...vfs.api, previousArchive,
+    readFileDigest: async p => { ++queries; return sha(vfs.nodes.get(p).bytes) } }
+
+  const stable = await createBackup(options)
+  const archive = await loadBackupZip(stable.blob, zipOptions)
+  assert.deepEqual([...readBackupArchiveFile(archive, path)], [3, 4])
+  assert.equal(queries, 1)
+
+  const checkpointState = createBackupCheckpoint(context)
+  await assert.rejects(createBackup({ ...options, checkpointState,
+    readFile: (p, readOptions) => {
+      vfs.put(path, [5, 6])
+      return vfs.api.readFile(p, readOptions)
+    }
+  }), { code: 'BACKUP_CHANGED' })
+  assert.equal(queries, 2)
+  assert.equal(checkpointState.summary().files, 0)
+})
+
 test('ZIP reuse is checkpointed and an interrupted repeat can resume without the original ZIP', async () => {
   const vfs = memoryVfs()
   vfs.put('E:/tags/one',[1])

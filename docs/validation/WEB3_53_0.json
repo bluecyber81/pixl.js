@@ -197,6 +197,92 @@
   "localWebTests": {
     "passed": 1583,
     "failed": 0,
-    "skipped": 0
+    "skipped": 0,
+    "scope": "Full suite before addition of the concurrent-change regression; see final release evidence for the release commit."
+  },
+  "physicalFullRepeatExport": {
+    "schema": 1,
+    "method": "production-createBackup-node-winrt",
+    "storageWrites": 0,
+    "localReferenceMs": 80,
+    "device": {
+      "firmware": "2.22.0-DE3.75",
+      "mtu": 250,
+      "app": 648,
+      "bootloader": 19
+    },
+    "bluetooth": {
+      "disconnected": true,
+      "commandCounts": {
+        "0x16": 112,
+        "0x21": 1053,
+        "0x12": 29,
+        "0x14": 29,
+        "0x13": 29
+      }
+    },
+    "validateMs": 96,
+    "profile": {
+      "schema": 1,
+      "phasesMs": {
+        "listing": 36131,
+        "reading": 246977,
+        "verifying": 36899,
+        "packingFileEntries": 553,
+        "packing": 593,
+        "total": 320600
+      },
+      "operations": {
+        "listingCalls": 56,
+        "fileReads": 29,
+        "digestReplies": 1053,
+        "rawMetadataReads": 0,
+        "verificationListingCalls": 56,
+        "previousZipFiles": 1052
+      },
+      "transport": null,
+      "compressionRequested": "deflate",
+      "compressionFallback": false,
+      "compressedFiles": 50
+    },
+    "files": 1081,
+    "folders": 55,
+    "userBytes": 658806,
+    "zipBytes": 891938,
+    "changes": {
+      "new": 0,
+      "removed": 0,
+      "content": 1,
+      "metadata": 0
+    },
+    "complete": true,
+    "referenceArchive": {
+      "schema": 1,
+      "firmware": "2.22.0-DE3.75",
+      "createdAt": "2026-11-15T13:04:55.502Z",
+      "finishedAt": "2026-11-15T13:20:36.740Z",
+      "manifestIntervalMs": 941238,
+      "userBytes": 658806,
+      "files": 1081,
+      "folders": 55,
+      "zipBytes": 1600468
+    },
+    "testScope": "Windows laptop. Actual running production web export, packing and import JS (Node runtime), with list, read and SHA-256 via real WinRT Bluetooth. Legacy whole-tree backup compared to new completed reference-assisted export. Times are not controlled phone/browser benchmarking.",
+    "validation": "Final ZIP re-opened in memory with the production reader; all CRCs, SHA256SUMS, payload hashes and manifest totals passed. Payloads and metadata then compared against the historical reference. A changed small file was freshly read, locally hashed and its exported bytes verified on re-opening. This run did not independently compare this fresh fallback hash to the earlier device digest. Only aggregate changes were recorded.",
+    "productionSourcesSha256": {
+      "src/lib/backup.js": "9840df2d680d02a83d8f453292c75a39d84df437f4a6c33714c4de0c07eb419e",
+      "src/lib/zip-import.js": "0e2871d167600c1f760c1d175f5287e6c3c694d3317bb06c62e5afe0bb2163d1"
+    },
+    "comparedToHistorical": {
+      "wallReductionPercent": 65.9,
+      "zipSizeReductionPercent": 44.3
+    },
+    "sourceCommit": "de75bb10c92258e26c86730e14984774ead447f6"
+  },
+  "postHardwareConsistencyCheck": {
+    "case": "When changed bytes are re-read after obtaining a device digest, the final code checks the fresh hash against that digest and stops on a same-size concurrent change.",
+    "extraBluetoothRequests": 0,
+    "regressionSuitesPassed": 121,
+    "physicalRetestOfConcurrentMutation": false
   }
 }

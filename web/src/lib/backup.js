@@ -426,10 +426,11 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     let saveCheckpoint = false
     checkpoint()
     const previous = previousFiles?.get(record.sourcePath)
+    let digest = null
     if (cached || (previous && previous.size === record.size && readFileDigest)) {
       // Browser storage is mutable. Check its bytes as well as the current device.
       if (storedBackup && cached && await sha256(cached.bytes) !== cached.sha256) fail('STORED_BACKUP_CORRUPT', 'Stored backup bytes failed SHA-256 verification.')
-      const digest = readFileDigest ? await readFileDigest(record.sourcePath, record.size) : null
+      digest = readFileDigest ? await readFileDigest(record.sourcePath, record.size) : null
       checkpoint()
       if (digest !== null && (typeof digest !== 'string' || !/^[a-f0-9]{64}$/u.test(digest))) {
         fail('BACKUP_DIGEST', 'Invalid SHA-256 response while resuming a backup.')
@@ -467,6 +468,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       const bytes = new Uint8Array(source)
       const hash = await sha256(bytes)
       checkpoint()
+      if (digest !== null && hash !== digest) fail('BACKUP_CHANGED', 'File contents changed between device checksum and file read.')
       cached = { identity, bytes, sha256: hash }
       saveCheckpoint = true
     }
