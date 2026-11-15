@@ -1,5 +1,9 @@
 # Allmiibo LCD release notes
 
+## Web 3.53.0 · 15.11.2026
+
+Backups can reuse small files from a previous ZIP after checking their current digest on the device. Optional ZIP compression, backup phase timings and offline figure checks are available. Rename and ZIP import show the remaining path length. Device & diagnostics can inspect MIFARE Mini slots.
+
 ## DE3.75 / App648 · Web 3.52.1
 
 **DE3.75 / App648 is the stable LCD firmware** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android package for compatible older bootloaders](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Release notes and device checks](docs/RELEASE_DE3_75.md)

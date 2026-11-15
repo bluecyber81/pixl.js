@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## Web 3.53.0 · 15.11.2026
+
+Backups can reuse small files from a previous ZIP after checking their current digest on the device. Optional ZIP compression, backup phase timings and offline figure checks are available. Rename and ZIP import show the remaining path length. Device & diagnostics can inspect MIFARE Mini slots.
+
 ## Stable LCD app DE3.75 / 648 and file manager 3.52.1
 
 The LCD app releases the remote display-photo buffer after a successful switch to file transfer. Its smaller AES tables and updated 954-name catalogue fit in a BIN that is 6,156 bytes smaller than App647. File manager 3.52.1 keeps concurrent check drafts separate and compares saved reports. [Firmware changes and device checks](RELEASE_DE3_75.md) · [File manager versions](VERSIONEN_WEB.md)

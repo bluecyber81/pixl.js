@@ -3,7 +3,7 @@
  * Source proof (repository-relative):
  * fw/application/Makefile: -fshort-enums
  * fw/.../nfctag/tag_emulation.h: config version 8, 4 + 8 * slots, at most 50;
- * fw/.../nfctag/tag_base_type.h: MF0 type IDs 1103..1106.
+ * fw/.../nfctag/tag_base_type.h: Mini type 1000 and MF0 type IDs 1103..1106.
  * fw/.../hf/nfc_14a.h: one-byte UID length, ATQA[2], SAK[1], UID[10],
  *   ATS[255] + ATS length = 270 bytes. UID starts at offset 4.
  * fw/.../hf/nfc_mf0_ntag.h: three config bytes, then four-byte pages.
@@ -12,24 +12,30 @@
  * fw/application/src/app/chameleon/port/{fds_utils,tag_helper}.c:
  *   NN.bin contains that raw struct (no type/version header); the helper
  *   maps page 0 bytes 0..2 and page 1 bytes 0..3 into res_coll.uid.
+ * fw/.../hf/nfc_mf1.{h,c}: 4-byte config, Mini has 20 blocks of 16 bytes.
  *
  * A matching config.bin and explicit zero-based slot index are mandatory.
  * File pairing/provenance cannot be authenticated by this headerless format.
- * No MF Classic, old config migrations, V3 or raw tag dumps are inferred.
+ * Old config migrations, V3 and raw tag dumps are not inferred.
  */
+import { sha256 } from './browser-tools.js';
 export const CHAMELEON_SLOT_FORMAT = 'allmiibo-chameleon-v8-short-enums-mf0';
 export const CHAMELEON_CONFIG_MAX_BYTES = 404;
-export const CHAMELEON_SLOT_MAX_BYTES = 489;
+export const CHAMELEON_SLOT_MAX_BYTES = 594;
 export const CHAMELEON_UID_OFFSET = 4;
 export const CHAMELEON_MEMORY_OFFSET = 273;
 // Only the last four bytes differ in the historical contiguous-copy defect.
 export const CHAMELEON_REPAIR_OFFSETS = Object.freeze([7, 8, 9, 10]);
 const types = Object.freeze({
+  1000: Object.freeze({ name: 'MIFARE Mini', bytes: 594 }),
   1103: Object.freeze({ name: 'MF0ICU1 · MIFARE Ultralight', bytes: 337, pages: 16 }),
   1104: Object.freeze({ name: 'MF0ICU2 · MIFARE Ultralight C', bytes: 417, pages: 36 }),
   1105: Object.freeze({ name: 'MF0UL11 · MIFARE Ultralight EV1', bytes: 405, pages: 33 }),
   1106: Object.freeze({ name: 'MF0UL21 · MIFARE Ultralight EV1', bytes: 489, pages: 54 }),
 });
+const MINI_MEMORY_OFFSET = 274;
+// SHA-256 of the 20 factory blocks produced by DE3.75 nfc_tag_mf1_data_factory.
+const MINI_FACTORY_SHA256 = '175609cc6dd939dd307d091375ea506d0e076b4a569337465939f6d761b3101e';
 function asBytes(value) {
   if (value instanceof Uint8Array) return value;
   if (value instanceof ArrayBuffer) return new Uint8Array(value);
@@ -55,7 +61,7 @@ export function inspectChameleonConfig(input) {
     const typeId = u16(bytes, offset + 4), type = types[typeId];
     slots.push({ index, typeId, supported: !!type, type: type?.name ?? null, expectedBytes: type?.bytes ?? null });
   }
-  return { supported: true, version: 8, format: CHAMELEON_SLOT_FORMAT, slots };
+  return { supported: true, version: 8, format: 'allmiibo-chameleon-v8-short-enums', slots };
 }
 export function inspectChameleonSlot(input, { configBytes, slotIndex } = {}) {
   const bytes = asBytes(input), config = inspectChameleonConfig(configBytes);
@@ -66,6 +72,19 @@ export function inspectChameleonSlot(input, { configBytes, slotIndex } = {}) {
   const identified = { ...base, typeId: slot.typeId, type: slot.type, expectedBytes: slot.expectedBytes };
   if (!slot.supported) return { ...identified, reason: 'tag-type' };
   if (!bytes || bytes.length !== slot.expectedBytes) return { ...identified, reason: 'slot-size' };
+  if (slot.typeId === 1000) {
+    const uidLength = bytes[0], writeMode = bytes[270];
+    if (![4, 7, 10].includes(uidLength) || writeMode > 4) return { ...identified, reason: 'slot-layout' };
+    const atqa = u16(bytes, 1), sak = bytes[3];
+    // Only 4- and 7-byte block 0 layouts are handled by tag_helper.c.
+    const uidPrefixMatches = uidLength === 10 ? null : equal(bytes.subarray(4, 4 + uidLength),
+      bytes.subarray(MINI_MEMORY_OFFSET, MINI_MEMORY_OFFSET + uidLength));
+    // Only these fields participate in the firmware's explicit Mini profile.
+    // Its save routine retains unrelated options and reserved bytes from older slots.
+    const miniProfile = uidLength === 7 && atqa === 0x44 && sak === 0x09 && !(bytes[271] & 1) && uidPrefixMatches === true;
+    return { ...identified, supported: true, status: 'mini-layout', reason: null,
+      uidLength, atqa, sak, writeMode, miniProfile, uidPrefixMatches };
+  }
   // A known MF0 slot uses double-size UID, ATQA 0x0044, SAK 0. Reject
   // alternate identities and unknown config bits instead of reinterpreting.
   if (bytes[0] !== 7 || bytes[1] !== 0x44 || bytes[2] !== 0 || bytes[3] !== 0 ||
@@ -81,6 +100,16 @@ export function inspectChameleonSlot(input, { configBytes, slotIndex } = {}) {
   return { ...identified, supported: true, reason: null, format: CHAMELEON_SLOT_FORMAT,
     bcc0Valid, bcc1Valid, uidMatches, legacyCopyPattern, repairable,
     status: !bcc0Valid || !bcc1Valid ? 'invalid-bcc' : uidMatches ? 'consistent' : legacyCopyPattern ? 'legacy-uid-copy' : 'uid-mismatch' };
+}
+export async function inspectChameleonSlotFile(input, context) {
+  const result = inspectChameleonSlot(input, context);
+  if (result.status !== 'mini-layout') return result;
+  let factoryMemory = null;
+  if (globalThis.crypto?.subtle) {
+    try { factoryMemory = (await sha256(asBytes(input).subarray(MINI_MEMORY_OFFSET))) === MINI_FACTORY_SHA256; }
+    catch { /* Offline layout inspection remains available without a working digest provider. */ }
+  }
+  return { ...result, factoryMemory };
 }
 export function prepareChameleonUidRepair(input, context) {
   // Reinspect actual bytes; never trust a caller-provided diagnostic result.

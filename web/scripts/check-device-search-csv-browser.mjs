@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 // Install only the browser peripheral boundary. The production BLE, protocol, VFS,
 // catalogue, download and Vue code run unchanged in an isolated browser context.
-export function installReadOnlyPeripheral({files, directories, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
+export function installReadOnlyPeripheral({files, directories, digests = {}, capacity, firmwareVersion = '2.22.0-DE3.66'}) {
   const encoder = new TextEncoder(), decoder = new TextDecoder();
   const commands = [], violations = [];
   window.testPeripheral = { commands, violations, connections: 0 };
@@ -18,9 +18,11 @@ export function installReadOnlyPeripheral({files, directories, capacity, firmwar
     if (cmd === 3) return [80, 88, 68, 70, 1, 3, ...word(243), ...word(247)];
     if (cmd === 1) return string(firmwareVersion);
     if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(capacity.total), ...dword(capacity.free)];
-    if (cmd === 0x12 || cmd === 0x16) {
+    if (cmd === 0x12 || cmd === 0x16 || cmd === 0x21) {
       const length = frame[4] | frame[5] << 8;
       record.path = decoder.decode(frame.subarray(6, 6 + length));
+      if (cmd === 0x21 && digests[record.path] && frame.length === length + 8 &&
+          (frame[6 + length] | frame[7 + length] << 8) === files[record.path]?.length) return digests[record.path];
       if (cmd === 0x12 && frame[6 + length] === 8 && files[record.path] && !open) {
         open = record.path;
         return [1];

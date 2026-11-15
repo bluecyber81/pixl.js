@@ -1,5 +1,13 @@
 # Allmiibo-Dateimanager im Browser
 
+## Web 3.53.0 · 15.11.2026
+
+Ordnersicherungen lassen sich mit einer früheren ZIP beschleunigen. Der Dateimanager vergleicht kleine Dateien mit der aktuellen Prüfsumme vom Gerät. Du kannst die ZIP komprimieren, die Dauer je Sicherungsphase sehen und einen gesicherten Figurenordner offline prüfen. Beim Umbenennen und vor dem ZIP-Import wird die verbleibende Pfadlänge angezeigt. Unter Gerät & Diagnose lassen sich MIFARE-Mini-Slots lesend prüfen.
+
+Für die Folgesicherung öffnest du denselben Geräteordner wie beim letzten Mal. Unter **Sicherung → Sicherungsoptionen** wählst du die frühere ZIP und klickst auf **Ordner sichern (ZIP)**. Auf kompatibler DE-Firmware werden Dateien bis 572 Byte mit der aktuellen Geräteprüfsumme verglichen. Geänderte, neue und größere Dateien liest der Dateimanager vollständig. Die fertige ZIP lässt sich eigenständig wiederherstellen.
+
+Unter **Messwerte der letzten Sicherung** stehen Verzeichnisabfragen, Dateiübertragung, abschließende Ordnerprüfung und das Erstellen der ZIP. Die Gesamtzeit endet, sobald die ZIP zum Speichern bereitsteht. [Prüfergebnisse](validation/WEB3_53_0.json)
+
 ## Dateimanager 3.52.1
 
 **DE3.75 / App648 ist die stabile LCD-Firmware** für Geräte mit PFS1, Z19 und S112 7.3.0. Auf einem LCD gelangen die Rückkehr zur gewählten Figur und das Aufwachen in beiden Apps. Die Switch erkannte außerdem eine bekannte Figur. Wer die signierte App648 bereits geflasht hat, kann sie weiterverwenden. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Änderungen und Gerätetests](RELEASE_DE3_75.md)
@@ -163,7 +171,10 @@ Unter **Figurenkatalog → Angekündigte Figuren** sind neun Ankündigungen mit 
 
 **Figurensammlung → Prüfung: Dateiinhalte prüfen (empfohlen) → Sammlung prüfen → Anzeigen → Gleiche Figuren-ID / Dateiinhalte** zeigt getrennte SHA-256-Gruppen innerhalb einer Figuren-ID. Der Vergleich nutzt bereits gelesene Bytes, ohne weitere BLE-Dateilesen. Gleiche ID allein genügt nicht: UID, Spielstand und Varianten können abweichen. Die Schnellprüfung sagt ausdrücklich, dass Inhalte ungeprüft sind. Es wird nichts automatisch gelöscht. Nach Schreibvorgängen den veralteten Bericht erneut prüfen.
 
-**Gerät & Diagnose → Karten-Slot lokal prüfen** öffnen. Aus derselben eigenen Sicherung zuerst `chameleon/slots/config.bin` im Format v8 laden, dann den Slot auswählen und die dazu angezeigte `NN.bin` laden; Slot 1 verwendet `00.bin`. Unterstützt sind MF0ICU1, MF0ICU2, MF0UL11 und MF0UL21 mit passender Länge und passendem Layout. Nur beim bekannten alten UID-Kopiermuster und gültigen BCC0/BCC1 erscheint **Korrigierte Kopie herunterladen**. Die neue `NN.uid-corrected.bin` wird lokal nachgeprüft, ändert höchstens vier UID-Bytes und erhält alle übrigen Bytes. Die Quelle bleibt unverändert; kein Schreiben auf das Gerät. Dateiherkunft, Karteninhalt, Authentifizierung und Lesegerätfunktion sind damit nicht bestätigt.
+Unter **Gerät & Diagnose → Karten-Slot lokal prüfen** zuerst `chameleon/slots/config.bin` im Format v8 aus der eigenen Sicherung laden. Dann den Slot auswählen und die dazugehörige Datei `NN.bin` aus derselben Sicherung öffnen. Slot 1 verwendet `00.bin`. Die Prüfung läuft im Browser.
+
+- **MIFARE Mini** (ab Web 3.53.0) erkennt die 594-Byte-Slotdatei und zeigt UID-Länge, ATQA, SAK und Schreibmodus. Die gespeicherten Profilwerte werden mit dem Mini-Profil von DE3.75 verglichen, die 320 Byte Kartenspeicher mit dessen Werksvorlage. Weitere Profilwerte oder abweichende Kartendaten können beabsichtigt sein. Ein reines 320-Byte-Speicherabbild enthält keinen Slotkopf. Die Prüfung zeigt weder Schlüssel noch die UID an. Authentifizierung und Funktion am Lesegerät erfordern einen eigenen Gerätetest.
+- **MF0ICU1, MF0ICU2, MF0UL11 und MF0UL21** unterstützen die Prüfung von UID und BCC. Nur das bekannte alte UID-Kopiermuster bei gültigen BCC0/BCC1 bietet **Korrigierte Kopie herunterladen** an. Die geprüfte `NN.uid-corrected.bin` kann sich an bis zu vier UID-Bytes unterscheiden. Die Quelldatei bleibt erhalten.
 
 **Sicherung → ZIP importieren → Sicherungs-ZIP auswählen → Vergleichen:** Exakte inaktive Stamm-Journaldateien `.pixl_txn_old` und `.pixl_txn_new` bleiben in der Schema-1-Sicherung erhalten, werden aber als gesperrt angezeigt. Andere sichere Dateien bleiben auswählbar. Aktive oder unbekannte Stamm-Transaktionseinträge, darunter `.pixl_txn_pending` oder ein Ordner mit Journalnamen, sperren den gesamten Import. Quelle und Zielumleitung werden kontrolliert, der Zielzustand vor Schreiben erneut gelesen. Normale Unterordner mit gleichnamigen Dateien werden nicht pauschal ausgeschlossen. Schema 2 bleibt beim Migrationsassistenten. Keine automatische Journalbereinigung.
 

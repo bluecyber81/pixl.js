@@ -1,10 +1,10 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.52.1
+## Dateimanager 3.53.0
 
 **DE3.75 / App648 ist die stabile LCD-Firmware** für Geräte mit PFS1, Z19 und S112 7.3.0. Auf einem LCD gelangen die Rückkehr zur gewählten Figur und das Aufwachen in beiden Apps. Die Switch erkannte außerdem eine bekannte Figur. Wer die signierte App648 bereits geflasht hat, kann sie weiterverwenden. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android-Kombi für passende ältere Bootloader](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Änderungen und Gerätetests](../docs/RELEASE_DE3_75.md) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip)
 
-Unter **Gerät & Diagnose** kannst du mehrere gespeicherte Geräteprüfungen vergleichen und das Ergebnis als JSON speichern. Bei gleichzeitiger Bearbeitung in zwei Tabs kannst du beide Entwürfe wieder öffnen. Der Prüftext passt auch bei großer Schrift auf ein schmales Display. Die Figuren-ID lässt sich direkt kopieren. [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.1)
+Ordnersicherungen lassen sich mit einer früheren ZIP beschleunigen. Der Dateimanager vergleicht kleine Dateien mit der aktuellen Prüfsumme vom Gerät. Du kannst die ZIP komprimieren, die Dauer je Sicherungsphase sehen und einen gesicherten Figurenordner offline prüfen. Beim Umbenennen und vor dem ZIP-Import wird die verbleibende Pfadlänge angezeigt. Unter Gerät & Diagnose lassen sich MIFARE-Mini-Slots lesend prüfen. [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.53.0)
 
 ## Dateimanager 3.52.0
 

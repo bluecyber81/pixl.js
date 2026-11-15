@@ -1,4 +1,4 @@
-// Read-only folder export. No protocol globals, device writes or ZIP dependency.
+// Read-only folder export. Device access is supplied by the active session.
 // The caller must serialize this job with other UI operations on its session.
 import { rawMetadataHex, decodeRawMetadata } from './raw-metadata.js'
 import { updateZipCrc32 } from './zip-crc32.js'
@@ -208,38 +208,60 @@ async function crc32(bytes, checkpoint) {
   return (crc ^ 0xffffffff) >>> 0
 }
 
-async function zipStore(entries, date, checkpoint) {
+async function packZip(entries, date, checkpoint, signal, compression, makeControlEntries) {
   const parts = [], central = []
   let offset = 0, centralSize = 0
+  let deflateAvailable = compression === 'deflate'
+  let compressedFiles = 0
   const year = Math.max(1980, Math.min(2107, date.getUTCFullYear()))
   const dosDate = ((year - 1980) << 9) | ((date.getUTCMonth() + 1) << 5) | date.getUTCDate()
   const dosTime = (date.getUTCHours() << 11) | (date.getUTCMinutes() << 5) | (date.getUTCSeconds() >> 1)
-  for (let index = 0; index < entries.length; ++index) {
+  async function append(entry, index) {
     if (index % 32 === 0) { await yieldToBrowser(); checkpoint() }
-    const entry = entries[index]
     checkpoint()
     const name = encoder.encode(entry.path), data = entry.bytes
     const crc = await crc32(data, checkpoint)
+    let packed = data
+    if (deflateAvailable && data.length) {
+      try {
+        // Never buffer or compress several members concurrently on a phone.
+        const stream = new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw'), { signal })
+        const compressed = new Uint8Array(await new Response(stream).arrayBuffer())
+        if (compressed.length < data.length) { packed = compressed; ++compressedFiles }
+      } catch {
+        checkpoint()
+        // Unsupported browser codec or a local encoder failure: STORE the
+        // original owned bytes of this and subsequent members.
+        deflateAvailable = false
+      }
+      checkpoint()
+    }
+    const method = packed === data ? 0 : 8
     const local = new Uint8Array(30), l = new DataView(local.buffer)
     l.setUint32(0, 0x04034b50, true); l.setUint16(4, 20, true)
-    l.setUint16(6, 0x0800, true); l.setUint16(10, dosTime, true); l.setUint16(12, dosDate, true)
-    l.setUint32(14, crc, true); l.setUint32(18, data.length, true); l.setUint32(22, data.length, true)
+    l.setUint16(6, 0x0800, true); l.setUint16(8, method, true); l.setUint16(10, dosTime, true); l.setUint16(12, dosDate, true)
+    l.setUint32(14, crc, true); l.setUint32(18, packed.length, true); l.setUint32(22, data.length, true)
     l.setUint16(26, name.length, true)
     const header = new Uint8Array(46), c = new DataView(header.buffer)
     c.setUint32(0, 0x02014b50, true); c.setUint16(4, 0x0314, true); c.setUint16(6, 20, true)
-    c.setUint16(8, 0x0800, true); c.setUint16(12, dosTime, true); c.setUint16(14, dosDate, true)
-    c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true)
+    c.setUint16(8, 0x0800, true); c.setUint16(10, method, true); c.setUint16(12, dosTime, true); c.setUint16(14, dosDate, true)
+    c.setUint32(16, crc, true); c.setUint32(20, packed.length, true); c.setUint32(24, data.length, true)
     c.setUint16(28, name.length, true)
     c.setUint32(38, entry.directory ? ((0o40755 << 16) | 0x10) >>> 0 : (0o100644 << 16) >>> 0, true)
     c.setUint32(42, offset, true)
-    parts.push(local, name, data); central.push(header, name)
-    offset += local.length + name.length + data.length
+    parts.push(local, name, packed); central.push(header, name)
+    offset += local.length + name.length + packed.length
     centralSize += header.length + name.length
   }
+  for (const [index, entry] of entries.entries()) await append(entry, index)
+  const controls = await makeControlEntries()
+  for (const [index, entry] of controls.entries()) await append(entry, entries.length + index)
+  const memberCount = entries.length + controls.length
   const end = new Uint8Array(22), e = new DataView(end.buffer)
-  e.setUint32(0, 0x06054b50, true); e.setUint16(8, entries.length, true); e.setUint16(10, entries.length, true)
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, memberCount, true); e.setUint16(10, memberCount, true)
   e.setUint32(12, centralSize, true); e.setUint32(16, offset, true)
-  return new Blob([...parts, ...central, end], { type: 'application/zip' })
+  return { blob: new Blob([...parts, ...central, end], { type: 'application/zip' }),
+    compressionRequested: compression, compressedFiles, compressionFallback: compression === 'deflate' && !deflateAvailable }
 }
 
 /**
@@ -252,15 +274,28 @@ async function zipStore(entries, date, checkpoint) {
  * This is a checked sequential export, not an atomic filesystem snapshot or a
  * raw-metadata backup. Same-size content changes between reads are not detected.
  */
-export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState, storedBackup }) {
+export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal,
+  firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState, storedBackup, previousArchive,
+  compression = 'store', exporterVersion, readTransportStats, progressIntervalMs = 0 }) {
   if (typeof preserveLegacyNames !== 'boolean') fail('BACKUP_API', 'Invalid name preservation option.')
   const root = checkedRoot(rootPath, preserveLegacyNames)
   if (typeof readDirectory !== 'function' || typeof readFile !== 'function') {
     fail('BACKUP_API', 'Directory and file readers are required.')
   }
   checkedFirmwareVersion(firmwareVersion)
+  if (!['store', 'deflate'].includes(compression) || (exporterVersion != null && (typeof exporterVersion !== 'string' || !exporterVersion || exporterVersion.length > 128)) ||
+      (readTransportStats != null && typeof readTransportStats !== 'function') ||
+      !Number.isSafeInteger(progressIntervalMs) || progressIntervalMs < 0 || progressIntervalMs > 1000) fail('BACKUP_API', 'Invalid backup export options.')
   if (readFileDigest !== undefined && typeof readFileDigest !== 'function') fail('BACKUP_API', 'Invalid digest reader.')
-  if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null || storedBackup != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
+  if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null || storedBackup != null || previousArchive != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
+  let previousFiles = null, readPrevious = null
+  if (previousArchive != null) {
+    const { isVerifiedBackupReference, readBackupArchiveFile } = await import('./zip-import.js')
+    if (!isVerifiedBackupReference(previousArchive) || previousArchive.rootPath !== root) fail('BACKUP_BASELINE', 'Select a verified ZIP of the same device folder.')
+    previousFiles = new Map(previousArchive.entries.filter(entry => entry.type === 'file' && entry.size <= 572 && entry.sourcePath.startsWith('E:/'))
+      .map(entry => [entry.sourcePath, entry]))
+    readPrevious = path => readBackupArchiveFile(previousArchive, path)
+  }
   if (storedBackup != null && (checkpointState != null || !storedBackup.matches?.(backupContext({rootPath:root, deviceKey, firmwareVersion, preserveLegacyNames})))) {
     fail('BACKUP_CHECKPOINT_IDENTITY', 'The stored checkpoint does not match this folder backup.')
   }
@@ -276,7 +311,8 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
     resume.busy = true
   }
   try {
-    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup })
+    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
+      previousFiles, readPrevious, compression, exporterVersion, readTransportStats, progressIntervalMs })
     // A returned Blob owns its bytes. Keep no second resumable copy after success.
     if (resume) { resume.entries.clear(); resume.bytes = 0 }
     return result
@@ -285,13 +321,17 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
   }
 }
 
-async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup }) {
+async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
+  previousFiles, readPrevious, compression, exporterVersion, readTransportStats, progressIntervalMs }) {
   const started = new Date()
   const snapshots = [], records = [], zipEntries = [], checksums = []
   let filesTotal = 0, filesDone = 0, bytesTotal = 0, bytesDone = 0, observerError = null
   let reusedFiles = 0, reusedBytes = 0
   const jobStartedAt = performance.now()
+  const transportBefore = readTransportStats?.()
+  const operations = { listingCalls: 0, fileReads: 0, digestReplies: 0, rawMetadataReads: 0, verificationListingCalls: 0, previousZipFiles: 0 }
   let step = '', startedAt = jobStartedAt, updatedAt = jobStartedAt, previousDone = 0
+  let lastPublishedAt = -Infinity
   let verifiedFolders = 0
   function checkpoint() {
     if (signal?.aborted) { const e = new Error('Backup cancelled. No archive was created.'); e.name = 'AbortError'; throw e }
@@ -313,9 +353,13 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       }
       if (phase === 'verifying') { completed = verifiedFolders; total = snapshots.length }
       const now = performance.now()
-      if (step !== phase) { step = phase; startedAt = now; updatedAt = now }
+      const phaseChanged = step !== phase
+      if (phaseChanged) { step = phase; startedAt = now; updatedAt = now }
       if (completed !== previousDone) updatedAt = now
       previousDone = completed
+      // Always publish phase transitions; coalesce intra-phase browser renders.
+      if (!phaseChanged && now - lastPublishedAt < progressIntervalMs) return
+      lastPublishedAt = now
       const timing = { jobStartedAt, startedAt, updatedAt, completed, total }
       try { onProgress(Object.freeze({ phase, path, filesDone, filesTotal, bytesDone: bytesDone + activeBytes, bytesTotal, reusedFiles, reusedBytes, timing, foldersListed: snapshots.length })) }
       catch (error) { observerError = error }
@@ -325,6 +369,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     checkpoint()
     if (depth > BACKUP_LIMITS.maxDepth) fail('BACKUP_LIMIT', 'The folder tree is too deep for this backup.')
     progress('listing', path); checkpoint()
+    ++operations.listingCalls
     const list = checkedListing(await readDirectory(path), path, preserveLegacyNames, !!readRawMetadata)
     checkpoint()
     snapshots.push({ path, entries: list })
@@ -349,6 +394,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   checkpoint()
   if (!globalThis.crypto?.subtle) fail('BACKUP_CRYPTO', 'SHA-256 requires a secure browser context.')
   await listDirectory(root, '', 0)
+  const listedAt = performance.now()
   if (storedBackup) {
     checkpoint()
     await storedBackup.prune(new Map(records.filter(record => record.type === 'file').map(record => [record.sourcePath, fileIdentity(record)])))
@@ -366,6 +412,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   for (const record of records) {
     checkpoint()
     if (readRawMetadata) {
+      ++operations.rawMetadataReads
       record.rawMeta128Hex = rawMetadataHex(await readRawMetadata(record.sourcePath)); checkpoint()
       record.metadata = decodeRawMetadata(record.rawMeta128Hex)
     }
@@ -374,27 +421,36 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       continue
     }
     progress('reading', record.sourcePath); checkpoint()
-    const identity = fileIdentity(record)
+    const identity = storedBackup || resume ? fileIdentity(record) : null
     let cached = storedBackup ? await storedBackup.get(record.sourcePath, identity, record.size) : resume?.entries.get(record.sourcePath)
+    let saveCheckpoint = false
     checkpoint()
-    if (cached) {
+    const previous = previousFiles?.get(record.sourcePath)
+    if (cached || (previous && previous.size === record.size && readFileDigest)) {
       // Browser storage is mutable. Check its bytes as well as the current device.
-      if (storedBackup && await sha256(cached.bytes) !== cached.sha256) fail('STORED_BACKUP_CORRUPT', 'Stored backup bytes failed SHA-256 verification.')
+      if (storedBackup && cached && await sha256(cached.bytes) !== cached.sha256) fail('STORED_BACKUP_CORRUPT', 'Stored backup bytes failed SHA-256 verification.')
       const digest = readFileDigest ? await readFileDigest(record.sourcePath, record.size) : null
       checkpoint()
       if (digest !== null && (typeof digest !== 'string' || !/^[a-f0-9]{64}$/u.test(digest))) {
         fail('BACKUP_DIGEST', 'Invalid SHA-256 response while resuming a backup.')
       }
-      if (digest !== cached.sha256) {
+      if (digest !== null) ++operations.digestReplies
+      if (cached && digest !== cached.sha256) {
         // A changed file or a device without digest support needs current bytes.
         if (resume) { resume.entries.delete(record.sourcePath); resume.bytes -= cached.bytes.length }
         cached = undefined
+      }
+      if (!cached && digest && previous?.size === record.size && digest === previous.sha256) {
+        cached = { identity, bytes: readPrevious(record.sourcePath), sha256: digest }
+        saveCheckpoint = true
+        ++operations.previousZipFiles
       }
     }
     if (cached) {
       ++reusedFiles; reusedBytes += cached.bytes.length
     } else {
       let highWater = 0
+      ++operations.fileReads
       const result = await readFile(record.sourcePath, {
         maxBytes: record.size,
         onProgress: value => {
@@ -412,12 +468,15 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       const hash = await sha256(bytes)
       checkpoint()
       cached = { identity, bytes, sha256: hash }
+      saveCheckpoint = true
+    }
+    if (saveCheckpoint) {
       if (storedBackup) { await storedBackup.put(record.sourcePath, cached); checkpoint() }
       if (resume) {
-        if (resume.entries.size >= BACKUP_LIMITS.maxEntries || resume.bytes + bytes.length > BACKUP_LIMITS.maxBytes) {
+        if (resume.entries.size >= BACKUP_LIMITS.maxEntries || resume.bytes + cached.bytes.length > BACKUP_LIMITS.maxBytes) {
           fail('BACKUP_LIMIT', 'The backup checkpoint exceeds its memory limit.')
         }
-        resume.entries.set(record.sourcePath, cached); resume.bytes += bytes.length
+        resume.entries.set(record.sourcePath, cached); resume.bytes += cached.bytes.length
       }
     }
     record.sha256 = cached.sha256
@@ -426,8 +485,10 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     bytesDone += cached.bytes.length; ++filesDone
     progress('reading', record.sourcePath); checkpoint()
   }
+  const readAt = performance.now()
   for (const snapshot of snapshots) {
     checkpoint(); progress('verifying', snapshot.path); checkpoint()
+    ++operations.verificationListingCalls
     const current = checkedListing(await readDirectory(snapshot.path), snapshot.path, preserveLegacyNames, !!readRawMetadata)
     checkpoint()
     if (JSON.stringify(current) !== JSON.stringify(snapshot.entries)) {
@@ -437,13 +498,26 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   }
   if (readRawMetadata) for (const record of records) {
     checkpoint()
+    ++operations.rawMetadataReads
     if (rawMetadataHex(await readRawMetadata(record.sourcePath)) !== record.rawMeta128Hex) fail('BACKUP_CHANGED', 'Raw metadata changed during backup.')
     checkpoint()
   }
+  const verifiedAt = performance.now()
+  const transportAfter = readTransportStats?.()
+  let transport = null
+  if (transportBefore && transportAfter) {
+    const fields = ['completedCommands', 'txFrames', 'rxFrames', 'txBytes', 'rxBytes']
+    if (fields.every(key => Number.isSafeInteger(transportBefore[key]) && Number.isSafeInteger(transportAfter[key]) && transportAfter[key] >= transportBefore[key])) {
+      transport = Object.fromEntries(fields.map(key => [key, transportAfter[key] - transportBefore[key]]))
+    }
+  }
+  const phasesMs = { listing: Math.round(listedAt-jobStartedAt), reading: Math.round(readAt-listedAt), verifying: Math.round(verifiedAt-readAt) }
   const manifest = {
     format: 'allmiibo-folder-backup', version: readRawMetadata ? 2 : 1, completed: true,
     createdAt: started.toISOString(), finishedAt: new Date().toISOString(),
     rootPath: root, firmwareVersion,
+    ...(exporterVersion ? { exporter: { name: 'Allmiibo Dateimanager', version: exporterVersion } } : {}),
+    performance: { schema: 1, phasesMs, operations, transport, compressionRequested: compression },
     files: filesTotal, directories: snapshots.length - 1, bytes: bytesTotal,
     metadataEncoding: readRawMetadata ? 'Exact 128-byte VFS attributes in rawMeta128Hex; decoded metadata is informational, including unknown or malformed fields.' : 'Decoded protocol fields: notes, raw flags, hide/readonly and amiibo IDs; not raw metadata bytes.',
     nameMapping: preserveLegacyNames ? 'Unportable or colliding names have unique portable ZIP aliases. Each sourcePath is the exact original device identity; archivePath locates its unchanged data. Do not infer original names from ZIP aliases.' : 'Original names retained; unsafe or colliding names rejected.',
@@ -451,17 +525,24 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     resume: { reusedFiles, reusedBytes, retainedInBrowserMemoryOnly: !!resume, ...(storedBackup ? {checkpointStorage:'indexeddb'} : {}) },
     entries: records,
   }
-  const manifestBytes = encoder.encode(JSON.stringify(manifest, null, 2) + '\n')
-  if (manifestBytes.length > BACKUP_LIMITS.maxManifestBytes) fail('BACKUP_LIMIT', 'Backup metadata exceeds the memory limit.')
-  checksums.push(`${await sha256(manifestBytes)}  manifest.json\n`)
   checkpoint(); progress('archiving', root); checkpoint()
-  zipEntries.push({ path: 'manifest.json', bytes: manifestBytes },
-    { path: 'SHA256SUMS.txt', bytes: encoder.encode(checksums.join('')) })
-  const blob = await zipStore(zipEntries, started, checkpoint)
+  const packed = await packZip(zipEntries, started, checkpoint, signal, compression, async () => {
+    // The manifest can include time spent packing payloads, not the time spent
+    // compressing itself or writing the central directory. The UI measures both.
+    phasesMs.packingFileEntries = Math.round(performance.now()-verifiedAt)
+    const manifestBytes = encoder.encode(JSON.stringify(manifest, null, 2) + '\n')
+    if (manifestBytes.length > BACKUP_LIMITS.maxManifestBytes) fail('BACKUP_LIMIT', 'Backup metadata exceeds the memory limit.')
+    checksums.push(`${await sha256(manifestBytes)}  manifest.json\n`)
+    return [{ path: 'manifest.json', bytes: manifestBytes },
+      { path: 'SHA256SUMS.txt', bytes: encoder.encode(checksums.join('')) }]
+  })
   checkpoint()
+  const doneAt = performance.now()
+  const profile = { ...manifest.performance, phasesMs: { ...phasesMs, packing: Math.round(doneAt-verifiedAt), total: Math.round(doneAt-jobStartedAt) },
+    compressionFallback: packed.compressionFallback, compressedFiles: packed.compressedFiles }
   const label = root.length === 3 ? root[0] : root.split('/').at(-1)
   const safeLabel = label.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40) || 'folder'
   const filename = `allmiibo-backup-${safeLabel}-${started.toISOString().replace(/[:.]/g, '-')}.zip`
   progress('complete', root); checkpoint()
-  return { blob, filename, manifest }
+  return { blob: packed.blob, filename, manifest, profile }
 }
