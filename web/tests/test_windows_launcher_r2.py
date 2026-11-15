@@ -47,10 +47,10 @@ class LauncherTests(unittest.TestCase):
 
     def run_launcher(self, action, *extra):
         env = os.environ.copy()
-        env.update({'PYTHONDONTWRITEBYTECODE': '1', 'HTTP_PROXY': 'http://127.0.0.1:1', 'HTTPS_PROXY': 'http://127.0.0.1:1', 'NO_PROXY': ''})
+        env.update({'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONIOENCODING': 'utf-8', 'HTTP_PROXY': 'http://127.0.0.1:1', 'HTTPS_PROXY': 'http://127.0.0.1:1', 'NO_PROXY': ''})
         return subprocess.run([sys.executable, str(self.root / 'dateimanager_launcher.py'), action,
                                '-Port', str(self.port), '-NoBrowser', *extra],
-                              capture_output=True, text=True, timeout=12, env=env, cwd=self.root.parent)
+                              capture_output=True, encoding='utf-8', timeout=12, env=env, cwd=self.root.parent)
 
     def start(self):
         result = self.run_launcher('start')
@@ -85,7 +85,7 @@ class LauncherTests(unittest.TestCase):
         class ForeignHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 calls.append('GET')
-                body = b'{"application":"allmiibo-dateimanager","version":"3.52.0","instance":"foreign"}'
+                body = b'{"application":"allmiibo-dateimanager","version":"3.52.1","instance":"foreign"}'
                 self.send_response(200)
                 self.send_header('Content-Length', str(len(body)))
                 self.end_headers()
@@ -360,7 +360,7 @@ class LauncherTests(unittest.TestCase):
                     break
                 time.sleep(0.05)
             self.assertIsNotNone(health, 'Direct server did not answer')
-            self.assertEqual(health['version'], '3.52.0')
+            self.assertEqual(health['version'], '3.52.1')
             self.assertEqual(self.state_path.read_bytes(), before)
             self.assertFalse((self.root / 'launcher-{}.lock'.format(self.port)).exists())
             self.assertFalse(self.module.error_log_path(self.port).exists())

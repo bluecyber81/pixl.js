@@ -1,0 +1,21 @@
+Allmiibo Dateimanager 3.52.1 für Windows
+
+Unter Gerät & Diagnose kannst du mehrere gespeicherte Geräteprüfungen vergleichen und das Ergebnis als JSON speichern. Bei gleichzeitiger Bearbeitung in zwei Tabs kannst du beide Entwürfe wieder öffnen. Der Prüftext passt auch bei großer Schrift auf ein schmales Display. Die Figuren-ID lässt sich direkt kopieren.
+
+1. Die ZIP vollständig in einen eigenen Ordner entpacken. Python 3.8 oder neuer
+   muss installiert sein. Zum Verbinden per Bluetooth Chrome oder Edge nutzen.
+2. Start-Dateimanager.cmd doppelklicken. Alternativ Start-Dateimanager-Direkt.cmd
+   öffnen und die im Fenster angezeigte Adresse im Browser aufrufen.
+3. Am Allmiibo „Bluetooth-Dateiübertragung“ öffnen und im Browser „Verbinden“
+   wählen. Zum Betrachten der Oberfläche genügt der Demo-Modus.
+4. Den Hintergrundstart mit Stop-Dateimanager.cmd beenden. Im Direktmodus das
+   Serverfenster auswählen und Strg+C drücken.
+
+DE3.75 / App648 ist die stabile App für passende LCD-Geräte mit Packed LittleFS, Z19 und S112 7.3.0. Die lokale Platzprüfung unterstützt App647 und App648. Die bereits signierte App648-Testversion enthält dieselben App-Bytes. Wer sie bereits geflasht hat, kann sie weiterverwenden.
+
+Am LCD bestätigte der Besitzer die Rückkehr zur gewählten Figur und das Aufwachen im Datei-Emulator und in der Amiibo-Datenbank. Die vier Beobachtungen wurden mit Dateimanager 3.52.0 in Deutsch mit eingeschaltetem „App fortsetzen“ erfasst. Die Animationseinstellung ist unbekannt. Separat erkannte die Switch eine bekannte Figur.
+
+Der Web-Updater überträgt die reine Geräte-App. Für ein kompatibles LCD mit älterem Bootloader erklärt die Anleitung den getrennten Weg mit dem zweistufigen App648-Paket in nRF Device Firmware Update auf Android. Die erste Phase installiert S112 7.3.0 und Z19, die zweite App648.
+
+Deutsch: https://bluecyber81.github.io/pixl.js/guide/index.html
+English: https://bluecyber81.github.io/pixl.js/guide/en.html

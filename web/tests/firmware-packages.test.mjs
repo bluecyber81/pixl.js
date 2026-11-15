@@ -9,7 +9,7 @@ const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmi
 
 test('the final signed package reaches Android and is compared when only the device version is available', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
-  const candidate = packages.find(item => item.version === '2.22.0-DE3.74');
+  const candidate = packages.find(item => item.version === '2.22.0-DE3.75');
   assert.equal(candidate, packages[0]);
   assert.equal(candidate.channel, undefined);
   const android = new URL(nrfDfuLink(candidate));
@@ -18,9 +18,9 @@ test('the final signed package reaches Android and is compared when only the dev
     assert.equal(nrfDfuLink({...candidate, ...changed}), null);
   }
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
-  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.75'}).newer, true);
-  assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.74');
-  assert.deepEqual(packages.map(item=>item.counter),[647,637,646,645]);
+  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.76'}).newer, true);
+  assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.75');
+  assert.deepEqual(packages.map(item=>item.counter),[648,647,637,646,645]);
 });
 test('package presentation is explicit local scope and never claims unread storage compatibility',()=>{
  for(const locale of ['de_DE','en_US']){const t=firmwarePackageText(locale);assert.ok(t.scope&&t.unread&&t.limits&&t.empty&&t.local);}
@@ -37,7 +37,7 @@ test('newer application version or CRC-verified counter suppresses downgrade lin
 });
 test('the LCD final reports incompatible boot details while the older stable profile still works for Z15', () => {
  const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
- const current = packages.find(p=>p.counter === 647), legacy = packages.find(p=>p.counter === 637);
+ const current = packages.find(p=>p.counter === 648), legacy = packages.find(p=>p.counter === 637);
  const bytes = bootPacket(), view = new DataView(bytes.buffer);
  view.setUint32(64,15,true); view.setUint32(32,7003000,true); view.setUint16(36,294,true);
  bytes.set(Buffer.from('c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade','hex'),80);

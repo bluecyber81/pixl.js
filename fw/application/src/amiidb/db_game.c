@@ -75,7 +75,7 @@ const db_game_t game_list[] = {
 {72, 0, "Street Fighter 6", "街头霸王6", 5, 63}, 
 {73, 0, "Donkey Kong Bananza", "咚奇刚 蕉力全开", 5, 2}, 
 {74, 0, "Metroid Prime 4: Beyond", "密特罗德 究极4 超越未知", 10, 3}, 
-{75, 0, "Kirby Air Riders", "卡比的驭天飞行者", 1, 5}, 
+{75, 0, "Kirby Air Riders", "卡比的驭天飞行者", 1, 7}, 
 {77, 0, "PRAGMATA", "PRAGMATA", 1, 1}, 
 {78, 0, "Resident Evil Requiem", "生化危机9", 1, 2}, 
 {76, 0, "Super Mario Bros. Wonder", "超级马力欧兄弟Wonder", 5, 3}, 

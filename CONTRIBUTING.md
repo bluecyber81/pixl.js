@@ -9,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| LCD application | [DE3.71t1 / 644 prerelease source](fw/application/src/) and [unsigned build guide](docs/BUILD_DE3_71T1.md). To reproduce the device-tested DE3.65 / 637 release, check out [tag `de3.65`](https://github.com/bluecyber81/pixl.js/tree/de3.65) and follow its [build guide](https://github.com/bluecyber81/pixl.js/blob/de3.65/docs/BUILD_DE3_65.md). |
+| LCD application | [DE3.75 / App648 sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The archived version header retains the original build label `test/de3.75-lcd`. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). The [3.48.0 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0) includes portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). The [3.52.1 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.1) includes portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |
@@ -78,13 +78,15 @@ outputs are checked against independent oracles, and LittleFS wear behavior is
 compared with the previous predicate under simulated NOR and interrupted writes.
 The old variant is made only in a temporary directory.
 
-The [LCD build guide](docs/BUILD_DE3_71T1.md) describes how to run the full
-149-suite firmware matrix and test the linked Cortex-M4 executable. Each
-individual runner documents its dependencies. Publish hardware observations,
+The Linux/WSL helper `tools/run_firmware_tests.py` runs the current full
+158-suite firmware matrix from the hash-pinned SDK archive and sets both SDK
+path variables for its disposable test copy. Linked Cortex-M4 checks are
+separate runs described in the build guide. Each individual runner documents
+its dependencies. Publish hardware observations,
 such as NFC recognition or behavior during an interrupted radio transfer,
 separately from host test results.
 
-The Bluetooth indicator regression is `python3 fw/tests/de3/test_ble_status_de357.py`; `test_ui_comfort_de356.py` retains keyboard/scrollbar coverage. For `test_device_info.py`, set `NRF5_SDK_PATH` or `NRF52_SDK_ROOT` to a matching Nordic SDK 17.1.0 tree. It requires the hash-pinned S112 7.2.0 reference from that SDK as a test input; this does not downgrade the device from S112 7.3.0. Missing or mismatched SDK inputs fail explicitly. This test is not part of the small portable CI subset.
+The Bluetooth indicator regression is `python3 fw/tests/de3/test_ble_status_de357.py`; `test_ui_comfort_de356.py` retains keyboard/scrollbar coverage. For direct `test_device_info.py` and `test_mtu_diagnostic.py` runs, set `NRF5_SDK_PATH` or `NRF52_SDK_ROOT` to the same matching Nordic SDK 17.1.0 tree. The MTU runner also accepts an explicit `--sdk-root`, which takes precedence; if both environment variables are set, it preserves the existing `NRF52_SDK_ROOT` priority. The device-info test requires the hash-pinned S112 7.2.0 reference from that SDK as a test input; this does not downgrade the device from S112 7.3.0. The MTU runner checks the pinned Nordic GATT source. Missing or mismatched SDK inputs fail explicitly. These SDK-dependent tests are not part of the small portable CI subset.
 
 Changes to the storage core need particular care: retain PFS1 format, Raw128
 metadata and migration compatibility unless a deliberate migration is designed.

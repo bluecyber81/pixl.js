@@ -30,7 +30,7 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('latest target and simulated profile show DE3.70 while an inspected DE3.65 device keeps its own version',async()=>{
+test('latest target and simulated profile show DE3.75 while an inspected DE3.65 device keeps its own version',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
@@ -40,10 +40,10 @@ test('latest target and simulated profile show DE3.70 while an inspected DE3.65 
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.70 \/ 642/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.75 \/ 648/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE3.70 \/ 642/)
+  assert.match(text(h.root),/Simulated profile DE3.75 \/ 648/)
  }finally{h.app.unmount()}
 })
 

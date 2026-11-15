@@ -1,0 +1,135 @@
+{
+  "version": "2.22.0-DE3.75",
+  "counter": 648,
+  "board": "LCD",
+  "sourceID": "9bc7578a46f27d54088ddd222198ce582f9cc3fdcf45a8e9a7da6d596b47c62c",
+  "sourceInputs": 701,
+  "build": {
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "compilerSha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "sdkArchiveSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "artifactsSha256": {
+      "pixljs.bin": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+      "pixljs.hex": "8ce04d247c2dfb11c4320fd5d980e877612aca6f6637a4bd4d49c703a1caed21",
+      "pixljs.out": "bead342c5f30f52ce0922a60b60660e559cdd18052e1b3cabb769a53ef404eaf",
+      "pixljs.map": "2bd12b5be082d100fd63426961bb8e55b01051d58ea88f871ef74fe78e1a71e6"
+    },
+    "linkerBudget": {
+      "binary_bytes": 358304,
+      "linker_flash_used_bytes": 358304,
+      "observed": {
+        "flash_reserve_bytes": 14432,
+        "heap_stack_gap_bytes": 1648,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "twoWorkingDirectoriesMatchForBinAndHex": true,
+    "elfMapPathDependent": true,
+    "mode": "release",
+    "status": "passed",
+    "matchesSignedApplication": true
+  },
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
+    "sha256": "603d99133331fdb425647e27106b043f9f7f3347e889475153bfe7e828f1dafd",
+    "bytes": 246554,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 648,
+        "sd_req": [
+          259,
+          294
+        ],
+        "bytes": 358304,
+        "sha256": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 358304,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "z19Admission": {
+    "passed": true,
+    "hardwareAccess": false,
+    "bootCounter": 19,
+    "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "appCounter": 648,
+    "previousAppCounter": 647,
+    "previousAppSha256": "71d1771919c6db0589c37f6a0568bfb445ecb776e993e2034fc10be4c7b7eead",
+    "appPayloadSha256": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+    "cases": [
+      {
+        "before": "App647 present",
+        "signedInitAccepted": true,
+        "imageHashAccepted": true,
+        "bootCrcAccepted": true,
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 358304,
+        "bank0Code": 0
+      },
+      {
+        "before": "App bank empty after bootloader update",
+        "signedInitAccepted": true,
+        "imageHashAccepted": true,
+        "bootCrcAccepted": true,
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 358304,
+        "bank0Code": 0
+      }
+    ],
+    "limits": "Actual ELF routines. Flash, radio and handover simulated."
+  },
+  "dfuStream": {
+    "payloadBytes": 358304,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18140,
+    "objectExecutes": 89,
+    "finalCrc32": 592593895,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "deviceAcceptance": "DE3_75_LCD_CHECK.json",
+  "physicalApplicationHashMeasured": false,
+  "host": {
+    "passed": 158,
+    "failed": 0,
+    "profile": "full"
+  },
+  "elfCoverage": [
+    "AES Cortex-M4, 27 cases including tag packing/unpacking and AmiiboLink v2 messages",
+    "First main menu and stack watermark, release ELF"
+  ]
+}

@@ -201,6 +201,9 @@ static void sent(void *context, uint8_t op, uint8_t status) {
         file_link_requested = false;
         /* RX is already routed safely; main cannot dispatch queued file work
          * until this callback returns. Allocation failure closes that session. */
+#ifdef BOARD_LCD
+        lcd_release();
+#endif
         dispatching = true;
         mini_app_launcher_run(mini_app_launcher(), MINI_APP_ID_BLE);
         dispatching = false;

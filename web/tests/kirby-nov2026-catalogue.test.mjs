@@ -21,7 +21,7 @@ test('November riders retain the reviewed immutable IDs, exact source hash and m
   for(const [id,name] of reviewed){
     const rows=data.entries.filter(e=>e.id===id);assert.equal(rows.length,1);
     assert.equal(rows[0].name,name);assert.equal(rows[0].type,'Figure');
-    assert.equal(rows[0].series,'Kirby Air Riders');assert.equal(rows[0].firmwareIdKnown,false);
+    assert.equal(rows[0].series,'Kirby Air Riders');assert.equal(rows[0].firmwareIdKnown,true);
     assert.deepEqual(raw.amiibos['0x'+id].release,{au:'2026-11-12',na:'2026-11-12',eu:'2026-11-12',jp:'2026-11-12'});
   }
 });

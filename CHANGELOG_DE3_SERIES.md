@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## DE3.75 / App648 · Web 3.52.1
+
+**DE3.75 / App648 is the stable LCD firmware** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release notes and device checks](docs/RELEASE_DE3_75.md)
+
 ## DE3.72 / App645 and file manager 3.48.1
 
 The LCD test application restores the selected data slot and the figure last viewed in the detail screen. Four English and German game notes for Mipha and Urbosa have been corrected. File manager 3.48.1 adds App645 to the local capacity check. [Changes and validation](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72) · [Open the file manager](https://bluecyber81.github.io/pixl.js/)

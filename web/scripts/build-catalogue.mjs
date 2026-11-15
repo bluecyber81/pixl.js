@@ -8,7 +8,7 @@ const web=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const source=fs.readFileSync(path.join(web,'third-party/amiiboapi/amiibo.json'));
 const hash=crypto.createHash('sha256').update(source).digest('hex');
 if(hash!=='cacc7d31f935f43e601fa9f4f957f3f9b74956304206049c1cfadfa3b2e3278c')throw new Error('Pinned metadata hash changed');
-const input=JSON.parse(source),known=parseKnownFigureIds(fs.readFileSync(path.join(web,'third-party/amiiboapi/de317-known-ids.txt'),'utf8'));
+const input=JSON.parse(source),known=parseKnownFigureIds(fs.readFileSync(path.join(web,'third-party/amiiboapi/de375-known-ids.txt'),'utf8'));
 const entries=Object.entries(input.amiibos).map(([key,value])=>{
   const id=key.replace(/^0x/,'').toLowerCase();
   if(!/^[0-9a-f]{16}$/.test(id) || typeof value.name!=='string')throw new Error('Invalid metadata');

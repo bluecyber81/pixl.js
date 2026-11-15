@@ -1,5 +1,9 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## DE3.75 / App648 · Web 3.52.1
+
+**DE3.75 / App648 ist die stabile LCD-Firmware** für Geräte mit PFS1, Z19 und S112 7.3.0. Auf einem LCD gelangen die Rückkehr zur gewählten Figur und das Aufwachen in beiden Apps. Die Switch erkannte außerdem eine bekannte Figur. Wer die signierte App648 bereits geflasht hat, kann sie weiterverwenden. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android-Kombi für passende ältere Bootloader](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Änderungen und Gerätetests](docs/RELEASE_DE3_75.md)
+
 ## DE3.74 / App647 und Dateimanager 3.50.0
 
 **Finale LCD-Version.** Am 14. November 2026 bestätigte der Besitzer, dass das Displayfoto in der Fernbedienung auf seinem Allmiibo LCD mit DE3.74 und Dateimanager 3.50.0 funktioniert. Der Diagnoseexport weist App647, Bootloader Z19 und SoftDevice S112 7.3.0 aus. [Firmwarefreigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74)

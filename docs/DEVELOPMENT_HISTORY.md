@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## Stable LCD app DE3.75 / 648 and file manager 3.52.1
+
+The LCD app releases the remote display-photo buffer after a successful switch to file transfer. Its smaller AES tables and updated 954-name catalogue fit in a BIN that is 6,156 bytes smaller than App647. File manager 3.52.1 keeps concurrent check drafts separate and compares saved reports. [Firmware changes and device checks](RELEASE_DE3_75.md) · [File manager versions](VERSIONEN_WEB.md)
+
 ## File manager 3.48.0 and LCD test firmware DE3.71t1
 
 The file manager helps preserve completed backup ZIPs, exports filtered ZIP comparisons as CSV or JSON, and lets you move favourites and search filters between browsers. The Windows launcher now detects when its background server has stopped after an acknowledged shutdown.

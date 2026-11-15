@@ -16,12 +16,13 @@ SOURCE_COMMIT = '6e0004969cd1481a027c2eaa86838a4c3fa1553d'
 LINK_SOURCE_COMMIT = '494514c958ad5e0544467bfed59d3047a7468c40'
 SOURCE_BASE = 'https://github.com/bluecyber81/pixl.js/blob/'
 SOURCE_SHA256 = {
-    'amiidb_amiibo.csv': '53d18d764266b9c7f7e10251c047cac34dd1b87db0dcb19cf75d346770282c0e',
+    'amiidb_amiibo.csv': '2bbcc720b2153d68d135e48d7f21a98a06aa86863fc5b827c8a03fd9c7aa5f39',
     'amiidb_game.csv': 'd240bada99ca8e4e9e74e3a24afd94536007f38b61aafb4f8582eb3359b6a042',
-    'amiidb_link.csv': '2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38',
+    'amiidb_link.csv': 'b8df1a4bd411459a58660f42bec2077f4639543c1d67a16b6617a60470fad068',
 }
 SOURCE_REFERENCE_SHA256 = {
     **SOURCE_SHA256,
+    'amiidb_link.csv': '2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38',
     'amiidb_game.csv': '659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47',
     'amiidb_amiibo.csv': '82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01',
 }
@@ -29,9 +30,10 @@ NAME_CORRECTIONS = [{'operation': 'correct-display-name', 'id': '018b00000246050
 GROUP_CORRECTIONS = [{'operation': 'trim-trailing-space', 'id': '49', 'columns': ['name_en'], 'from': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ', 'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}]
 LINK_HYGIENE_LINES = (1332, 1333, 1334)
 # Nintendo documents support for these exact riders since Kirby Air Riders 1.3.3.
-# Keep these web associations separate from the versioned firmware CSV rows.
+# DE3.75 includes their game rows; retain the official guide alongside their source lines.
 NINTENDO_KIRBY_UPDATE = 'https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html'
-WEB_RIDER_IDS = ('1f00010004c51e03', '1f02010004c81e03')
+RIDER_IDS = ('1f00010004c51e03', '1f02010004c81e03')
+RIDER_ADDITIONS = [{'operation': 'append-rider-row', 'id': rider} for rider in RIDER_IDS]
 # A reviewed wording change must name the exact figure, game, language and
 # before/after texts in the same change. Removing a note is never authorized here.
 REVIEWED_NOTE_EDITS = frozenset()
@@ -81,15 +83,10 @@ def export_usage(data_dir, translations_path):
                           'translation': 'editorial-from-english' if link.note_en in texts else None})
     associations = {figure.id.lower(): [] for figure in figures}
     for line, link in zip(source_lines(data_dir / 'amiidb_link.csv'), links):
-        associations[link.amiibo_id.lower()].append({
-            'groupId': int(link.game_id), 'noteId': note_ids.get(link.note_en), 'sourceLine': line,
-        })
-    web_associations = 0
-    for rider in WEB_RIDER_IDS:
-        rows = associations.setdefault(rider, [])
-        if not any(row['groupId'] == 75 for row in rows):
-            rows.append({'groupId': 75, 'noteId': None, 'sourceUrl': NINTENDO_KIRBY_UPDATE})
-            web_associations += 1
+        row = {'groupId': int(link.game_id), 'noteId': note_ids.get(link.note_en), 'sourceLine': line}
+        if link.amiibo_id.lower() in RIDER_IDS and row['groupId'] == 75:
+            row['sourceUrl'] = NINTENDO_KIRBY_UPDATE
+        associations[link.amiibo_id.lower()].append(row)
     source_files = []
     for filename in ('amiidb_amiibo.csv', 'amiidb_game.csv', 'amiidb_link.csv'):
         normalization = []
@@ -103,11 +100,15 @@ def export_usage(data_dir, translations_path):
                              'sha256': hashlib.sha256((data_dir / filename).read_bytes()).hexdigest(),
                              'referenceSha256': SOURCE_REFERENCE_SHA256[filename],
                              'referenceUrl': SOURCE_BASE + reference_commit + '/fw/data/' + filename,
-                             'transformationsFromReference': NAME_CORRECTIONS if filename == 'amiidb_amiibo.csv' else GROUP_CORRECTIONS if filename == 'amiidb_game.csv' else [],
+                             'transformationsFromReference': {
+                                 'amiidb_amiibo.csv': NAME_CORRECTIONS + RIDER_ADDITIONS,
+                                 'amiidb_game.csv': GROUP_CORRECTIONS,
+                                 'amiidb_link.csv': RIDER_ADDITIONS,
+                             }[filename],
                              'readNormalization': normalization})
     return {
         'schemaVersion': 1,
-        'dataVersion': '2026-11-13.kirby',
+        'dataVersion': '2026-11-15.de375',
         'source': {'label': 'Bundled firmware catalogue', 'referenceCommit': SOURCE_COMMIT,
                    'files': source_files,
                    'hashPolicy': 'sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.'},
@@ -115,8 +116,8 @@ def export_usage(data_dir, translations_path):
                    'notesAreComplete': False, 'germanTranslationsAreComplete': bool(english) and set(texts) == english,
                    'germanTranslationScope': 'existing English usage notes in this catalogue snapshot',
                    'translationPolicy': translations['translationPolicy']},
-        'coverage': {'figures': len(associations), 'groups': len(games), 'associations': len(links) + web_associations,
-                     'firmwareAssociations': len(links), 'nintendoWebAssociations': web_associations,
+        'coverage': {'figures': len(associations), 'groups': len(games), 'associations': len(links),
+                     'firmwareAssociations': len(links), 'nintendoWebAssociations': 0,
                      'legacyEmptyLinkColumns': sum(link.legacy_empty_column for link in links),
                      'englishNoteAssociations': sum(bool(link.note_en) for link in links),
                      'uniqueEnglishNotes': len(notes), 'uniqueGermanTranslations': len(texts),

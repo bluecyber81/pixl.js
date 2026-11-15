@@ -75,8 +75,8 @@ int main(void) {{
             links = list(csv.reader(stream))
         linked = {int(row[1], 16) for row in links}
         links += [['255', row[0], '', '', ''] for row in figures if int(row[0], 16) not in linked]
-        self.assertEqual(len(figures), 952)
-        self.assertEqual(len(links), 1344)
+        self.assertEqual(len(figures), 954)
+        self.assertEqual(len(links), 1346)
         rows = []
         for row in links:
             game, identifier, english, chinese, italian = row[:5]
@@ -124,7 +124,7 @@ int main(void) {
   assert(get_link_by_id(game,0,0)==NULL);
   assert(get_link_by_id(game,UINT32_MAX,UINT32_MAX)==NULL);
  }
- puts("PASS: all 1344 links, 952 figures, three note languages, lookup and sentinel behavior");
+ puts("PASS: all 1346 links, 954 figures, three note languages, lookup and sentinel behavior");
  return 0;
 }
 '''

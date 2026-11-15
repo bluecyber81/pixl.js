@@ -1,5 +1,9 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## Stabile LCD-App DE3.75 / 648 und Dateimanager 3.52.1
+
+Die LCD-App gibt den Puffer eines begonnenen Fernbedienungsfotos nach dem erfolgreichen Wechsel in die Dateiübertragung frei. Mit kompakteren AES-Tabellen und 954 Figurennamen ist die BIN insgesamt 6.156 Byte kleiner als App647. Der Dateimanager bewahrt gleichzeitige Prüfentwürfe getrennt auf und kann gespeicherte Berichte vergleichen. [Firmwareänderungen und Gerätetests](RELEASE_DE3_75.md) · [Dateimanager-Versionen](VERSIONEN_WEB.md)
+
 ## Dateimanager 3.48.0 und LCD-Testfirmware DE3.71t1
 
 Der Dateimanager schützt fertige Sicherungs-ZIPs vor versehentlichem Schließen. ZIP-Vergleiche lassen sich filtern und als CSV oder JSON exportieren. Favoriten und Suchfilter können in einen anderen Browser übernommen werden. Unter Windows funktioniert jetzt auch das Beenden des Hintergrundservers nach einer bestätigten Stoppanforderung.

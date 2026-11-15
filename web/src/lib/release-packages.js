@@ -38,8 +38,8 @@ export function packagePresentation(entry, session = {}, boot = null) {
 
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
-    source:'Quellcode der LCD-Firmware DE3.74',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.74 ist die stabile Ausgabe für Z19. Das Displayfoto der Fernbedienung wurde auf einem Allmiibo LCD mit Dateimanager 3.50.0 bestätigt.',
+    source:'Quellcode der LCD-Firmware DE3.75',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.75 ist die stabile Ausgabe für Z19. Auf einem LCD sind die Rückkehr zur Figur nach dem Aufwachen und die Erkennung einer bekannten Figur auf der Switch bestätigt.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -49,8 +49,8 @@ export function firmwarePackageText(locale='de_DE') {
     newer:'Die gelesene Anwendung ist neuer als dieses Paket. Ein Downgrade wird nicht angeboten.',
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
-    source:'Source code for LCD firmware DE3.74',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.74 is the stable release for Z19. The remote display photo was confirmed on an Allmiibo LCD using file manager 3.50.0.',
+    source:'Source code for LCD firmware DE3.75',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.75 is the stable release for Z19. The owner confirmed returning to the figure after waking and scanning a known figure on the Switch with one LCD.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

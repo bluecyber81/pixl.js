@@ -1,6 +1,17 @@
 # Downloads für Firmware, Bootloader und Nordic S112
 
-## DE3.72 / App645 and file manager 3.48.1
+## Aktuelle Downloads
+
+| Gesucht | Download |
+| --- | --- |
+| Stabile Geräte-App für ein kompatibles LCD mit eingerichtetem PFS1, Z19 und S112 7.3.0 | [DE3.75 / App648 – App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) |
+| Dateimanager für Windows oder dessen Quellcode | [Dateimanager 3.52.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.1) |
+| Kompatibles LCD mit älterem Bootloader und erfüllten [Systemvoraussetzungen](INSTALLATION.md) | [Android-Kombipaket für S112 7.3.0, Z19 und DE3.75 / App648](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) |
+| Systempaket für ein kompatibles LCD mit älterem Bootloader oder Umstellung von SPIFFS | [Voraussetzungen und Paketauswahl](https://bluecyber81.github.io/pixl.js/guide/index.html#bootloader) · [Vorbereitung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
+| Geräteprüfung zu DE3.75 / App648 | [Prüfumfang und Prüfsummen](RELEASE_DE3_75.md) |
+| Gesamtübergabe für ChatGPT oder eigene Prüfung | [Prüfpaket für App648, Z19 und Dateimanager 3.52.1](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip) |
+
+## Archiv · DE3.72 / App645 and file manager 3.48.1
 
 The LCD test application restores the selected data slot and the figure last viewed in the detail screen. Four English and German game notes for Mipha and Urbosa have been corrected. File manager 3.48.1 adds App645 to the local capacity check. [Changes and validation](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72) · [Open the file manager](https://bluecyber81.github.io/pixl.js/)
 

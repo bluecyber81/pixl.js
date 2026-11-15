@@ -44,7 +44,10 @@ def build_source(sdk):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--sdk-root', type=Path, default=Path(os.environ.get('NRF52_SDK_ROOT', '/opt/nRF5_SDK_17.1.0_ddde560')))
+    parser.add_argument('--sdk-root', type=Path,
+                        default=Path(os.environ.get('NRF52_SDK_ROOT') or os.environ.get('NRF5_SDK_PATH') or
+                                     '/opt/nRF5_SDK_17.1.0_ddde560'),
+                        help='Pinned SDK root (NRF52_SDK_ROOT or NRF5_SDK_PATH; explicit argument takes precedence)')
     parser.add_argument('--sanitize', action='store_true')
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
