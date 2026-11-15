@@ -394,7 +394,7 @@ test('status filtering is applied before pagination and combines with text and s
   try {
     await filter(root, 'present'); assert.equal(cards(root).length, 40);
     assert.match(text(cards(root)[0]), /Figure 041/); assert.match(text(classNode(root, 'result-bar')), /41 results · Page 1\/2/);
-    await click(root, 'Next'); assert.equal(cards(root).length, 1); assert.match(text(cards(root)[0]), /Figure 081/);
+    await click(root, 'Next'); assert.equal(cards(root).length, 1); assert.match(text(cards(root)[0]), /Target FortyTwo/);
     const series = nodes(classNode(root, 'filters'), 'select')[0];
     series.props['onUpdate:modelValue']('Second series'); await Vue.nextTick();
     assert.equal(cards(root).length, 20); assert.ok(cards(root).every(card => text(card).includes('Second series')));

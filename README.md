@@ -1,5 +1,9 @@
 # Allmiibo LCD firmware and file manager
 
+## File manager 3.52.0
+
+Under **Device & diagnostics**, record whether the file emulator or database returns to the expected figure after leaving or waking. The figure lists stay alphabetical after checking online. Backup, update and remote tools now load when first opened. [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.0)
+
 ## File Manager 3.51.1 · Keep the selected figure in view
 
 Select a figure under **Files**. On a laptop, the **Selection** panel keeps its picture and details in view as you scroll through a long folder. Select another figure to show its preview in the same place. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.1)

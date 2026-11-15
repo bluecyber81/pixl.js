@@ -16,10 +16,18 @@ export function parseKnownFigureIds(text) {
   if (values.some(id => !/^[0-9a-f]{16}$/.test(id))) throw new Error('Invalid known figure ID');
   return new Set(values);
 }
+// The published snapshot uses case-insensitive name order. An online merge
+// uses ID order for reproducibility, so sort the filtered copy for display.
+export function compareFigureNames(a, b) {
+  const left = a.name.toLowerCase(), right = b.name.toLowerCase();
+  if (left !== right) return left < right ? -1 : 1;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
 export function filterCatalogue(entries, { query = '', series = '', kind = '', knownOnly = false } = {}) {
   const matches = catalogueMatcher(query);
   return entries.filter(entry => (!series || entry.series === series) && (!kind || entry.type === kind) &&
-    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type, ...(releasedFigureNames.get(entry.id) || [])));
+    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type, ...(releasedFigureNames.get(entry.id) || [])))
+    .sort(compareFigureNames);
 }
 
 export function cataloguePage(entries, page, size = 40) {

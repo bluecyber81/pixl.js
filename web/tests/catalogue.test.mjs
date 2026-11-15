@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { filterCatalogue, cataloguePage, releaseLabel, parseKnownFigureIds } from '../src/lib/catalogue.js';
+import { mergeCatalogueEntries } from '../src/lib/catalogue-updates.js';
 const data = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
 test('catalogue snapshot is pinned, attributed and uses unique exact identifiers', () => {
   const source = fs.readFileSync(new URL('../third-party/amiiboapi/amiibo.json', import.meta.url));
@@ -33,6 +34,22 @@ test('catalogue supports case, accent, multi-term, exact ID and series/type filt
   assert.equal(filterCatalogue(data.entries, {series:'does-not-exist'}).length, 0);
   assert.ok(filterCatalogue(data.entries, {kind:'Card'}).every(e=>e.type==='Card'));
   assert.equal(filterCatalogue([{name:'M',firmwareIdKnown:false}],{knownOnly:true}).length,0);
+});
+test('both the first 60 choices and every card page keep their order after a no-change merge', () => {
+  const merged = mergeCatalogueEntries(data.entries, data.entries);
+  const canon = merged.map(e => e.id);
+  const visible = filterCatalogue(merged), bundled = data.entries.map(e => e.id);
+  assert.deepEqual(canon, [...canon].sort());
+  assert.notDeepEqual(canon.slice(0,60), bundled.slice(0,60));
+  assert.deepEqual(visible.slice(0,60).map(e=>e.id), bundled.slice(0,60));
+  assert.deepEqual(visible.map(e=>e.id), bundled);
+  assert.deepEqual(merged.map(e=>e.id), canon);
+});
+test('same-name entries use their public ID as a stable tie break', () => {
+  const rows = [{id:'c',name:'zelda'}, {id:'b',name:'Mario'}, {id:'a',name:'mario'}];
+  for (const input of [rows, [...rows].reverse()]) {
+    assert.deepEqual(filterCatalogue(input).map(e=>e.id), ['a','b','c']);
+  }
 });
 test('catalogue pagination clamps invalid and empty selections without rendering the whole list', () => {
   for (const page of [-1,0,1,999,NaN]) {

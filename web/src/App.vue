@@ -46,7 +46,7 @@
               connBtnText
             }}</el-button></div>
     </header>
-    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.51.1</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
+    <div class="version-context"><span>{{ $t('info.browserVersion') }} <strong>3.52.0</strong></span><span>{{ $t('info.deviceFirmware') }} <strong>{{ firmwareVersion || $t('info.disconnected') }}</strong></span></div>
     <section class="quick-status" :aria-label="$t('workflow.quickStatus')">
       <div class="quick-status-main"><span class="connection-pill" :class="{online:connected}">{{ $t(connectionSummaryKey) }}<span v-if="connected && deviceNickname" class="connected-nickname"> · {{ deviceNickname }}</span></span>
       <span v-if="connected" class="quick-location">{{ current_dir || $t('workflow.chooseDrive') }}</span>
@@ -84,7 +84,7 @@
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
     <p v-if="collectionBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Sammlungsprüfung oder Figurenübertragung läuft …' : 'Collection check or figure transfer running …' }} <button type="button" @click="show_workspace('catalogue')">{{ language === 'de_DE' ? 'Vorgang anzeigen' : 'Show operation' }}</button></p>
     <p v-if="searchBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Gerätesuche läuft…' : 'Device search running…' }} <button type="button" @click="show_workspace('files')">{{ language === 'de_DE' ? 'Suche anzeigen' : 'Show search' }}</button></p>
-    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl :locale="language" :blocked="connected || connecting || disconnecting || busy" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
+    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl v-if="visitedWorkspaces.has('remote')" :locale="language" :blocked="connected || connecting || disconnecting || busy" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
     <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
       <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
       <strong>{{ $t('tools.' + transfer.phase) }}</strong>
@@ -149,6 +149,7 @@
     </section>
     <p v-if="enteringDfu" class="notice" role="status">{{ $t('info.enteringDfu') }}</p>
     <section v-show="activeWorkspace === 'files'" class="files-workspace" id="file-workspace" ref="fileWorkspace" tabindex="-1" :aria-label="$t('workflow.filesTitle')">
+      <p v-if="renameNotice" class="notice" role="status">{{ $t('rename.' + renameNotice.state, renameNotice) }}</p>
       <div class="collection-layout"><div class="collection-main">
       <div class="section-heading"><div><p class="section-eyebrow">{{ $t('workflow.collection') }}</p><h2>{{ $t('workflow.filesTitle') }}</h2></div><div v-show="connected || demoMode" class="file-navigation"><el-button size="small" @click="on_btn_up" :disabled="btn_disabled()">{{ $t('menu.up')  }}</el-button><el-button size="small" @click="on_btn_refresh" :disabled="!connected || busy">{{ $t('menu.refresh') }}</el-button></div></div>
       <div v-if="!connected && !connecting && !demoMode" class="connection-guide"><span class="connection-guide-symbol" aria-hidden="true">↔</span><div><h3>{{ $t('workflow.readyToConnect') }}</h3><p>{{ $t('workflow.connectGuide') }}</p></div></div>
@@ -288,7 +289,7 @@
         </template>
         <button type="button" @click="refresh_stored_backup()" :disabled="busy || storedBusy">{{ $t('workflow.storeRefresh') }}</button>
       </div>
-    <MigrationAssistant :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
+    <MigrationAssistant v-if="visitedWorkspaces.has('backup')" :connected="connected" :blocked="busy && !migrationBusy" :generation="sessionGeneration" :language="language" :get-session="migration_session" :confirm-restore="confirm_migration_restore" :confirm-format="confirm_migration_format" :confirm-initialize="confirm_migration_initialize" :confirm-restart="confirm_migration_restart" @busy="on_migration_busy" @restored="refresh_current" />
       </div>
     </details>
     <details v-show="activeWorkspace === 'update'" class="workspace-panel" ref="updateWorkspace" id="update-workspace">
@@ -299,7 +300,7 @@
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
               :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
       <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" :href="dfuPageUrl" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
-      <UpdateCheck :session="{ connected, firmwareVersion, bootState, dfuReference: lastDfuReference }" :boot="bootInfo" :locale="language" />
+      <UpdateCheck v-if="visitedWorkspaces.has('update')" :session="{ connected, firmwareVersion, bootState, dfuReference: lastDfuReference }" :boot="bootInfo" :locale="language" />
       <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
       </div>
     </details>
@@ -314,13 +315,17 @@
         <small id="device-nickname-hint">{{ $t('info.nicknameHint') }}</small>
         <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
       </form>
-      <DiagnosticOverview :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
-      <MenuRunComparison :locale="language" />
-      <DisplayPhoto :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
+      <DiagnosticOverview v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
+      <details class="guided-check-panel" @toggle="guidedCheckOpened ||= $event.target.open">
+        <summary>{{ language === 'de_DE' ? 'Geräteprüfung: Rückkehr und Aufwachen' : 'Device check: list return and wake-up' }}</summary>
+        <GuidedDeviceCheck v-if="guidedCheckOpened" :snapshot="fullDiagnosticSnapshot" :firmware-version="firmwareVersion" :connected="connected" :reading="fullDiagnosticBusy" :export-busy="diagnosticsBusy" :locale="language" @export="open_guided_report" />
+      </details>
+      <MenuRunComparison v-if="visitedWorkspaces.has('device')" :locale="language" />
+      <DisplayPhoto v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
-      <StartupDiagnostics :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
+      <StartupDiagnostics v-if="visitedWorkspaces.has('device')" :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
-        <div><dt>{{ $t('info.application') }}</dt><dd>3.51.1</dd></div>
+        <div><dt>{{ $t('info.application') }}</dt><dd>3.52.0</dd></div>
         <div><dt>{{ $t('info.firmware') }}</dt><dd>{{ firmwareVersion || $t('info.unknown') }}</dd></div>
         <div><dt>{{ $t('info.connection') }}</dt><dd>{{ $t(disconnecting ? 'info.disconnecting' : connected ? 'info.connected' : 'info.disconnected') }}</dd></div>
         <div><dt>{{ $t('info.mode') }}</dt><dd>{{ $t('info.' + (transportInfo?.chunkMode || 'not-negotiated')) }}</dd></div>
@@ -403,7 +408,7 @@
     </details>
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
-    <CollectionAssistant ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
+    <CollectionAssistant v-if="visitedWorkspaces.has('catalogue')" ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery" />
     <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" :open-import="open_figure_import" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
@@ -569,6 +574,7 @@ import { defineAsyncComponent } from "vue"
 import * as pixl from "./lib/pixl.ble"
 import { sharedEventDispatcher } from "./lib/event"
 import * as proto from "./lib/pixl.proto"
+import { classifyRenameListing } from './lib/rename-confirmation.js'
 import { getElementLocale } from "./i18n"
 import { filterRows, joinDevicePath, sha256, saveBlob, saveBlobWithPicker } from "./lib/browser-tools.js"
 import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
@@ -599,14 +605,15 @@ import catalogueBaseline from "./data/catalogue.json"
 
 
 export default {
-  components: { UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
+  components: { GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
-      activeWorkspace: 'files', figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
-      powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false,
+      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
+      renameNotice: null,
+      powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
@@ -905,6 +912,12 @@ export default {
       if (this.zipDialog) await this.on_zip_file(event);
     },
     read_display_photo(version) { return proto.get_display_photo(version); },
+    open_guided_report(report) {
+      if (this.diagnosticsBusy) return;
+      this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
+      this.diagnosticsFilename = 'Allmiibo-' + (this.language === 'de_DE' ? 'Geraetepruefung-' : 'Device-check-') + webVersion + '.json';
+      this.diagnosticsStatus = 'info.diagnosticReady'; this.diagnosticsDialog = true;
+    },
     read_startup_diagnostics() { this.fullDiagnosticSnapshot = null; return proto.get_startup_diagnostics(this.firmwareVersion); },
     open_startup_report(report) {
       if (this.diagnosticsBusy || !this.connected || this.startupBusy) return;
@@ -954,6 +967,7 @@ export default {
       const panel = Object.hasOwn(refs, name) ? this.$refs[refs[name]] : null;
       if (!panel || (this.migrationBusy && name !== 'backup')) return;
       this.figureImportFocusPending = false;
+      this.visitedWorkspaces.add(name);
       this.activeWorkspace = name;
       if (name === 'catalogue') this.catalogueOpen = true;
       if (!['files','catalogue'].includes(name)) panel.open = true;
@@ -1826,6 +1840,7 @@ export default {
       this.driveInfo = []; this.transferHistory = []; this.infoLoading = false;
       this.lastDfuReference = '';
       this.connected = true; this.connecting = false; this.connBtnType = 'success';
+      this.renameNotice = null;
       this.load_device_nickname();
       this.connBtnText = this.$t('conn.disconnect');
       this.$notify({ title: 'Allmiibo', type: 'success', message: this.$t('conn.consuccess'), duration: 5000 });
@@ -1836,9 +1851,18 @@ export default {
         this.version = this.$t('status.connected') + data.ver;
         if (data.ver.startsWith('2.0.0')) this.$alert(this.$t('oldfirm.message'), this.$t('oldfirm.title')).catch(() => {});
         await this.reload_drive();
+        const pending = this._renameReadback;
+        if (pending && pending.device === pixl.get_device_key() && this.session_current(generation) &&
+            !this.busy && !this.listingError && !this.current_dir) {
+          this.renameNotice = { dir: pending.dir, from: pending.from, to: pending.to, state: 'pending' };
+          this.current_dir = pending.dir;
+          await this.reload_folder();
+        }
       } catch (error) { if (this.session_current(generation)) this.show_transfer_error(error); }
     },
     on_ble_disconnected() {
+      this.renameNotice = this.renameNotice?.state === 'checking' || this.renameNotice?.state === 'pending'
+        ? { ...this.renameNotice, state: 'pending' } : null;
       this.clear_device_nickname();
       if(this.collectionStale || this.collectionWriting || this.mutating || this.pendingUploads>0 || this.syncing || this.zipBusy || this.migrationBusy)this.collectionObservation=null;
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
@@ -2227,9 +2251,30 @@ export default {
         const { value } = await this.ask_dialog(() => this.$prompt(this.$t('rename.message'), this.$t('rename.title'), { ...this.confirm_options(), inputValue: row.name }));
         if (!value || value === row.name || !this.session_current(generation)) return;
         await this.mutate(async () => {
-          await this.assert_new_entry_available(dir,value,generation,row.name);
-          this.checked(await proto.vfs_rename(path, this.new_entry_path(dir, value)));
-          if (this.session_current(generation)) await this.refresh_current();
+          const entries = await this.assert_new_entry_available(dir,value,generation,row.name);
+          const intent = { dir, from: row.name, to: value, type: row.type === 'DIR' ? 1 : 0 };
+          if (classifyRenameListing(entries, intent) !== 'original') {
+            this.renameNotice = { ...intent, state: 'unclear' };
+            return;
+          }
+          const device = pixl.get_device_key(), target = this.new_entry_path(dir, value);
+          this.renameNotice = null;
+          let state = 'checking';
+          try {
+            this.checked(await proto.vfs_rename(path, target));
+          } catch (error) {
+            if (error?.code !== 'TIMEOUT' && this.session_current(generation)) throw error;
+            state = 'pending';
+          }
+          if (device) this._renameReadback = { ...intent, device };
+          if (!this.connected || this.session_current(generation)) this.renameNotice = { ...intent, state };
+          if (this.session_current(generation) && this.current_dir === dir) {
+            const listing = await this.reload_folder();
+            if (this.session_current(generation) && this.current_dir === dir) {
+              if (!device && listing) this.renameNotice = { ...intent, state: classifyRenameListing(listing, intent) };
+              else if (!listing && this.renameNotice?.state === 'checking') this.renameNotice = { ...intent, state: 'pending' };
+            }
+          }
         });
       } catch (error) { this.show_transfer_error(error); }
     },
@@ -2393,6 +2438,12 @@ export default {
         // Filters remain usable while the listing is pending. Preserve the
         // user's current page decision, not the page captured before that edit.
         this.page = Math.min(Math.max(1, this.page), this.pageCount);
+        const pending = this._renameReadback;
+        if (pending && pending.dir === dir && pending.device === pixl.get_device_key()) {
+          this.renameNotice = { from: pending.from, to: pending.to, dir, state: classifyRenameListing(data, pending) };
+          this._renameReadback = null;
+        }
+        return data;
       } catch (error) { if (this.session_current(generation) && listing === this.listingGeneration) { this.listingError = true; this.show_transfer_error(error); } }
       finally { if (listing === this.listingGeneration) this.table_loading = false; }
     },
@@ -2429,6 +2480,7 @@ export default {
       if(entries.some(entry=>entry.name!==sourceName && portableNameKey(entry.name)===key)) {
         throw new Error(this.$t('info.portableCollision'));
       }
+      return entries;
     },
 
     delete_table_row_by_name(name) {
@@ -2519,6 +2571,8 @@ export default {
 </script>
 
 <style>
+.guided-check-panel { margin:1rem 0; padding:1rem; border:1px solid var(--rule,#ccd8d3); border-radius:.7rem; }
+.guided-check-panel>summary { cursor:pointer; font-weight:600; }
 .language-menu-popup { max-inline-size: min(18rem, calc(100vw - 1rem)); }
 .language-menu-popup .el-dropdown-menu__item { white-space: normal; overflow-wrap: anywhere; }
 /* A closing popup still uses its old position while a language or font change reflows its labels. */

@@ -148,7 +148,7 @@ export function compareStartup(report, current) {
 // marker sets (even if separate boots coincidentally produced the same values).
 export function startupSeries(reports) {
   if (!Array.isArray(reports) || reports.length < 3 || reports.length > 20) return null;
-  const seen = new Set(), storage = [], total = [], version = reports[0]?.firmwareVersion;
+  const seen = new Set(), storage = [], total = [], mounts = [], version = reports[0]?.firmwareVersion;
   if (typeof version !== 'string' || !/^\d+\.\d+\.\d+-DE\d+\.\d+$/.test(version)) return null;
   for (const report of reports) {
     const s = normalizeStartupDiagnostics(report?.startup);
@@ -156,12 +156,17 @@ export function startupSeries(reports) {
     const key = s.elapsedMilliseconds.join(',');
     if (seen.has(key)) return null;
     seen.add(key); storage.push(s.elapsedMilliseconds[1]); total.push(s.elapsedMilliseconds[5]);
+    if (s.mount?.result === 0 && s.mount.scanMilliseconds !== null && !(s.mount.flags & 8)) mounts.push(s.mount);
   }
   const stats = a => {
     a.sort((x,y) => x-y); const n=a.length;
     return {median:(a[Math.floor((n-1)/2)]+a[Math.floor(n/2)])/2,min:a[0],max:a[n-1]};
   };
-  return {version, count:reports.length, storage:stats(storage),total:stats(total)};
+  const mount = mounts.length === reports.length
+    ? Object.fromEntries(['scanMilliseconds','physicalReadAttempts','cacheHits','cacheMisses','bypassReads']
+      .map(key => [key, stats(mounts.map(profile => profile[key]))]))
+    : null;
+  return {version, count:reports.length, storage:stats(storage),total:stats(total),mount};
 }
 export function startupDiagnosticsText(locale = 'de_DE') {
   return locale.startsWith('de') ? {
