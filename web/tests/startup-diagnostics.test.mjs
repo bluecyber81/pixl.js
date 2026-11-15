@@ -233,3 +233,21 @@ test('cold starts: equal firmware, independent marker sets, protected median/ran
   for (const list of [[a,b],[a,b,{...a,observedAt:'later'}],[a,b,{...c,firmwareVersion:null}],
     [a,b,{...c,firmwareVersion:'2.22.0-DE3.58'}],[a,b,{...c,startup:null}]]) assert.equal(startupSeries(list),null);
 });
+
+test('cold-start series reports exact mount reads only when every profile supplies usable counters', () => {
+  function report(n, flags = 23, result = 0) {
+    const wire = mountPacket(flags, result);
+    const view = new DataView(wire.buffer);
+    view.setUint32(28, 101 + n, true);
+    view.setUint32(56, 200 + n, true);
+    return {firmwareVersion:'2.22.0-DE3.74', startup:parseStartupDiagnostics(wire)};
+  }
+  const a = report(1), b = report(4);
+  assert.deepEqual(startupSeries([a,b,report(2)]).mount.physicalReadAttempts,{min:201,median:202,max:204});
+  for (const third of [report(2,31), report(2,21,-5),
+    {firmwareVersion:a.firmwareVersion,startup:parseStartupDiagnostics(packet())}]) {
+    const series = startupSeries([a,b,third]);
+    assert.ok(series.total);
+    assert.equal(series.mount,null);
+  }
+});

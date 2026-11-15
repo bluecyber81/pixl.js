@@ -1,0 +1,17 @@
+Allmiibo Dateimanager 3.52.0 für Windows
+
+Unter Gerät & Diagnose dokumentierst du die Rückkehr zur letzten Figur und das Aufwachen. Die Figurenauswahl bleibt nach einer Onlineprüfung alphabetisch. Der Dateimanager lädt die Werkzeuge für Sicherung, Update und Fernbedienung beim ersten Öffnen.
+
+1. Die ZIP vollständig in einen eigenen Ordner entpacken. Python 3.8 oder neuer
+   muss installiert sein. Zum Verbinden per Bluetooth Chrome oder Edge nutzen.
+2. Start-Dateimanager.cmd doppelklicken. Alternativ Start-Dateimanager-Direkt.cmd
+   öffnen und die im Fenster angezeigte Adresse im Browser aufrufen.
+3. Am Allmiibo „Bluetooth-Dateiübertragung“ öffnen und im Browser „Verbinden“
+   wählen. Zum Betrachten der Oberfläche genügt der Demo-Modus.
+4. Den Hintergrundstart mit Stop-Dateimanager.cmd beenden. Im Direktmodus das
+   Serverfenster auswählen und Strg+C drücken.
+
+Die lokale LittleFS-Platzprüfung unterstützt DE3.74/App647 und die Testversion DE3.75/App648. Im Bereich Update ist DE3.74/App647 für LCD mit Packed LittleFS, Z19 und S112 7.3.0 die getestete Finalversion. Das Displayfoto in der Fernbedienung wurde mit Dateimanager 3.50.0 am Gerät bestätigt. Der Web-Updater überträgt die reine Geräte-App. Für ein kompatibles LCD mit älterem Bootloader gibt es die zwei Phasen des Komplettpakets in nRF Device Firmware Update auf Android. Die Geräte- und Speichervoraussetzungen erklärt die Anleitung.
+
+Deutsch: https://bluecyber81.github.io/pixl.js/guide/index.html
+English: https://bluecyber81.github.io/pixl.js/guide/en.html

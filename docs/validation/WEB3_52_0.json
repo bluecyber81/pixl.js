@@ -1,0 +1,274 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "fileManager": "3.52.0",
+  "stableLcdApplication": "2.22.0-DE3.74 / 647",
+  "tests": {
+    "fullWebWithOtaFixtures": {
+      "tests": 1530,
+      "pass": 1530,
+      "fail": 0,
+      "skipped": 0
+    },
+    "rootProduction": {
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pagesProduction": {
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0
+    },
+    "capacityAndPackageReference": {
+      "tests": 72,
+      "pass": 72,
+      "fail": 0,
+      "skipped": 0
+    },
+    "renameAndTransportSubset": {
+      "tests": 390,
+      "pass": 390,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "chromium": {
+    "version": "157.0.8103.51",
+    "catalogue": [
+      {
+        "language": "de",
+        "viewport": 320,
+        "textScale": 2,
+        "keyboard": true,
+        "linkRoundTrip": true,
+        "favorites": true,
+        "filterRestore": true,
+        "gameFilters": true,
+        "onlineUsageGuard": true,
+        "onlineSortAndSelection": true,
+        "metadataDiffAndSourceOmission": true,
+        "workspaceReturn": true,
+        "syntheticDeviceScan": true,
+        "externalRequests": 0,
+        "geometry": {
+          "viewport": 320,
+          "document": 320,
+          "panels": [
+            [
+              248,
+              248
+            ],
+            [
+              248,
+              248
+            ],
+            [
+              246,
+              246
+            ]
+          ]
+        }
+      },
+      {
+        "language": "en",
+        "viewport": 320,
+        "textScale": 2,
+        "keyboard": true,
+        "linkRoundTrip": true,
+        "favorites": true,
+        "filterRestore": true,
+        "gameFilters": true,
+        "onlineUsageGuard": true,
+        "onlineSortAndSelection": true,
+        "metadataDiffAndSourceOmission": true,
+        "workspaceReturn": true,
+        "syntheticDeviceScan": true,
+        "externalRequests": 0,
+        "geometry": {
+          "viewport": 320,
+          "document": 320,
+          "panels": [
+            [
+              248,
+              248
+            ],
+            [
+              248,
+              248
+            ],
+            [
+              246,
+              246
+            ]
+          ]
+        }
+      }
+    ],
+    "guidedReport": [
+      {
+        "locale": "de-DE",
+        "width": 1280,
+        "device": "simulated snapshots",
+        "reported": 2,
+        "untested": 2,
+        "actualJsonDownload": true,
+        "manualSourcePrefix": "invalid, differing and matching prefix checked",
+        "applicationHashVerified": false
+      },
+      {
+        "locale": "en-GB",
+        "width": 390,
+        "device": "simulated snapshots",
+        "reported": 2,
+        "untested": 2,
+        "actualJsonDownload": true,
+        "manualSourcePrefix": "invalid, differing and matching prefix checked",
+        "applicationHashVerified": false
+      }
+    ],
+    "longFolder": [
+      {
+        "locale": "de-DE",
+        "format": "Laptop",
+        "width": 1440,
+        "stickySelection": {
+          "entries": 80,
+          "documentScroll": 1505,
+          "pictureTop": 71.5,
+          "detailsScroll": 219,
+          "nextPicture": "Luigi",
+          "returnToList": true
+        },
+        "deviceWrites": 0
+      },
+      {
+        "locale": "de-DE",
+        "format": "Handy",
+        "width": 390,
+        "stickySelection": {
+          "entries": 80,
+          "documentScroll": 1785,
+          "pictureTop": 511.203125,
+          "detailsScroll": 465,
+          "nextPicture": "Luigi",
+          "returnToList": true
+        },
+        "deviceWrites": 0
+      },
+      {
+        "locale": "en-GB",
+        "format": "Laptop",
+        "width": 1440,
+        "stickySelection": {
+          "entries": 80,
+          "documentScroll": 1505,
+          "pictureTop": 71.5,
+          "detailsScroll": 184,
+          "nextPicture": "Luigi",
+          "returnToList": true
+        },
+        "deviceWrites": 0
+      },
+      {
+        "locale": "en-GB",
+        "format": "Handy",
+        "width": 390,
+        "stickySelection": {
+          "entries": 80,
+          "documentScroll": 1785,
+          "pictureTop": 511.203125,
+          "detailsScroll": 411,
+          "nextPicture": "Luigi",
+          "returnToList": true
+        },
+        "deviceWrites": 0
+      }
+    ]
+  },
+  "startupAssets": {
+    "setup": "Chrome; 390x844; 4x CPU; 40 ms; 10 Mbit/s; cold browser context; local build",
+    "before3.51.1": {
+      "coldContexts": 3,
+      "startupJavaScriptRequests": 18,
+      "rawJsBytes": 1481844,
+      "estimatedGzip9JsBytes": 413478,
+      "firstContentfulPaintMilliseconds": [
+        1184,
+        1164,
+        1088
+      ],
+      "medianFirstContentfulPaintMilliseconds": 1164
+    },
+    "after3.52.0": {
+      "coldContexts": 3,
+      "startupJavaScriptRequests": 8,
+      "rawJsBytes": 1180049,
+      "estimatedGzip9JsBytes": 315970,
+      "firstContentfulPaintMilliseconds": [
+        1168,
+        1056,
+        1072
+      ],
+      "medianFirstContentfulPaintMilliseconds": 1072
+    },
+    "limits": "Physical handset timing was not measured. Gzip sizes are local compressed asset estimates. Browser CPU and network are throttled for these samples."
+  },
+  "windowsLauncher": {
+    "python": {
+      "total": 24,
+      "passed": 22,
+      "skipped": 2,
+      "skips": [
+        "POSIX Ctrl+C signal integration",
+        "Linux/POSIX bind behavior"
+      ]
+    },
+    "nodeAndPowerShell": {
+      "total": 4,
+      "passed": 4,
+      "skipped": 0
+    },
+    "coverage": [
+      "two independent ports",
+      "handles occupied by another listener",
+      "restart own instance",
+      "wrong tokens and wrong identity",
+      "legacy-state isolation",
+      "injected state-save failure",
+      "shutdown only owned instance",
+      "real health and HTTP stop on loopback"
+    ]
+  },
+  "upstreamCatalogue": {
+    "source": {
+      "repository": "https://github.com/8bitDream/AmiiboAPI",
+      "branch": "master",
+      "refUrl": "https://api.github.com/repos/8bitDream/AmiiboAPI/git/ref/heads/master",
+      "commit": "855a0ff4308278de756bed01de1eca89936f456b",
+      "url": "https://raw.githubusercontent.com/8bitDream/AmiiboAPI/855a0ff4308278de756bed01de1eca89936f456b/database/amiibo.json",
+      "sha256": "cacc7d31f935f43e601fa9f4f957f3f9b74956304206049c1cfadfa3b2e3278c"
+    },
+    "counts": {
+      "baseline": 954,
+      "source": 954,
+      "added": 0,
+      "changed": 0,
+      "absentFromSource": 0,
+      "merged": 954
+    },
+    "gameUsage": {
+      "status": "reference"
+    }
+  },
+  "diagnostics": {
+    "fixtureDevice": true,
+    "physicalObservationStoredSeparately": true,
+    "manualSourceID": "12 hex digits, matched only to a known version and counter",
+    "deviceApplicationHashMeasured": false
+  },
+  "app648CapacityEvidence": "DE3_75_PFS.json",
+  "auditReportedVulnerabilities": 0
+}

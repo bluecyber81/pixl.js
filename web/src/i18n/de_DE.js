@@ -120,6 +120,11 @@ export default {
     newfoldererr: 'Ordner erstellen fehlgeschlagen!:'
   },
   rename: {
+    confirmed: 'Im Ordner {dir} als „{to}“ bestätigt.',
+    checking: 'Neuer Name angefordert. Ordner {dir} wird geprüft.',
+    original: 'Beim Nachlesen in {dir} heißt der Eintrag weiterhin „{from}“. Prüfe den Ordner erneut, bevor du das Umbenennen wiederholst.',
+    unclear: 'In {dir} lassen sich „{from}“ und „{to}“ nicht eindeutig zuordnen. Bitte beide Namen prüfen.',
+    pending: 'Bestätigung für „{from}“ → „{to}“ ausstehend. Öffne oder aktualisiere {dir} auf demselben Gerät. Verbinde es bei Bedarf erneut.',
     title: 'Umbenennen',
     message: 'Bitte geben Sie den neuen Dateinamen ein: ',
     errrename: 'Umbenennen fehlgeschlagen!: ',

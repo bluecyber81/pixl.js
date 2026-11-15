@@ -149,7 +149,8 @@ test('the production workspace toggle keeps CollectionAssistant mounted; full un
   const {descriptor:app}=parse(appSource,{filename:appFile});
   assert.match(app.template.content,/<section v-show="activeWorkspace === 'catalogue'"[\s\S]*?<CollectionAssistant\s/);
   const tag=app.template.content.match(/<CollectionAssistant\s[^>]*\/>/)[0];
-  assert.doesNotMatch(tag,/\bv-if=|\b:key=/);
+  assert.match(tag,/\bv-if="visitedWorkspaces\.has\('catalogue'\)"/);
+  assert.doesNotMatch(tag,/\b:key=/);
   const h=mount();const vm=h.vm;h.app.unmount();assert.equal(vm._alive,false);
 });
 

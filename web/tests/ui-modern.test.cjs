@@ -36,6 +36,7 @@ function harness(overrides = {}) {
   const timeouts = [];
   const context = vm.createContext({ module: { exports: {} }, proto, pixl, document, window, navigator,
     ...require('../src/lib/upload-names.js'),
+    ...require('../src/lib/rename-confirmation.js'),
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
@@ -393,7 +394,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.51.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.52.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -405,7 +406,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.51.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.52.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -492,7 +493,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.51.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.52.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1116,7 +1117,7 @@ test('3.26 files precede diagnostics and active restoration is never conditional
   const source=descriptor.template.content;
   assert(source.indexOf('id="file-workspace"')<source.indexOf('id="device-overview"'));
   assert.match(source,/<main class="filemanager">/);assert.match(source,/class="skip-link" href="#file-workspace"/);
-  assert.match(source,/<MigrationAssistant :connected=/);assert.doesNotMatch(source,/<MigrationAssistant[^>]*v-(if|show)=/);
+  assert.ok(source.includes(`<MigrationAssistant v-if="visitedWorkspaces.has('backup')"`));
   assert.match(source,/@busy="on_migration_busy"/);assert.match(source,/ref="backupWorkspace"[^>]*@toggle="keep_migration_visible"/);
   for(const id of ['file-workspace','backup-workspace','update-workspace'])assert.match(source,new RegExp('aria-controls="'+id+'"'));
 });
@@ -1647,10 +1648,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.51.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.52.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.51.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.52.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2415,7 +2416,12 @@ test('3.32 corrupt and truncated previews never assign an otherwise plausible fi
 test('3.32 all six workspaces remain mounted and navigation preserves table selection, jobs and preview',()=>{
  const h=harness(),app=connected(h);const selection={name:'keep'};app.table_selection=[selection];app.previewSelection={row:selection};app.transfer={phase:'reading',done:9};
  for(const [name,ref] of Object.entries({files:'fileWorkspace',backup:'backupWorkspace',update:'updateWorkspace',remote:'remoteWorkspace',device:'devicePanel',catalogue:'catalogueWorkspace'})){app.$refs[ref]={open:false,scrollIntoView(){},querySelector:()=>({focus(){}}),focus(){}};app.show_workspace(name);assert.equal(app.activeWorkspace,name);assert.equal(app.table_selection[0],selection);assert.equal(app.transfer.done,9);assert.equal(app.previewSelection.row,selection);assert.match(descriptor.template.content,new RegExp(`v-show="activeWorkspace === '${name}'"`));}
- assert.equal(app.catalogueOpen,true);assert.equal(h.disconnects(),0);assert.doesNotMatch(descriptor.template.content,/<(?:MigrationAssistant|RemoteControl|StartupDiagnostics)[^>]*v-if=/);
+ assert.equal(app.catalogueOpen,true);assert.equal(h.disconnects(),0);
+ app.show_workspace('files');
+ assert.deepEqual([...app.visitedWorkspaces].sort(),['backup','catalogue','device','files','remote','update']);
+ for(const [child,area] of [['MigrationAssistant','backup'],['RemoteControl','remote'],['StartupDiagnostics','device']]) {
+   assert.ok(descriptor.template.content.includes(`<${child} v-if="visitedWorkspaces.has('${area}')"`));
+ }
 });
 
 test('3.32 repeated click on selected file reuses pending preview; mobile dismissal ignores its result',async()=>{
@@ -2476,7 +2482,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.51.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.52.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

@@ -155,7 +155,7 @@ function finish_op(op, error, response) {
 function arm_response_timeout(op) {
     clearTimeout(response_timer);
     response_timer = setTimeout(() => {
-        if (active_op === op) abort_transport(new Error('Bluetooth response timed out'), 'TIMEOUT');
+        if (active_op === op) abort_transport(Object.assign(new Error('Bluetooth response timed out'), {code: 'TIMEOUT'}), 'TIMEOUT');
     }, RESPONSE_IDLE_TIMEOUT);
 }
 

@@ -1,5 +1,9 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
+## Dateimanager 3.52.0
+
+Unter **Gerät & Diagnose** dokumentierst du die Rückkehr zur letzten Figur und das Aufwachen. Die Figurenauswahl bleibt nach einer Onlineprüfung alphabetisch. Der Dateimanager lädt die Werkzeuge für Sicherung, Update und Fernbedienung beim ersten Öffnen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.52.0)
+
 ## Dateimanager 3.51.1 · Figurenbild beim Scrollen
 
 Wähle unter **Dateien** eine Figur aus. Am Laptop bleibt die **Auswahl** mit Bild und Figurendaten rechts sichtbar, während du durch einen langen Ordner scrollst. Klickst du eine andere Figur an, erscheint dort ihre Vorschau. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.51.1)

@@ -120,6 +120,11 @@ export default {
     newfoldererr: 'Could not create the folder: '
   },
   rename: {
+    confirmed: 'Confirmed as “{to}” in {dir}.',
+    checking: 'Name change requested. Checking folder {dir}.',
+    original: 'The entry was still named “{from}” when {dir} was read back. Check the folder again before repeating the rename.',
+    unclear: 'Could not distinguish “{from}” and “{to}” in {dir}. Check both names.',
+    pending: 'Awaiting confirmation for “{from}” → “{to}”. Open or refresh {dir} on the same device. Reconnect if needed.',
     title: 'Rename',
     message: 'Enter a new name',
     errrename: 'Could not rename this entry: ',

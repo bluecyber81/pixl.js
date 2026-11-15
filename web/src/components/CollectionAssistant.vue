@@ -9,7 +9,28 @@
         <span class="step">01</span><h3>{{ de ? 'Neue Figuren' : 'New figures' }}</h3>
         <p>{{ de ? 'Vergleicht den mitgelieferten Katalog mit dem aktuellen AmiiboAPI-Repository auf GitHub.' : 'Compare the bundled catalogue with the current AmiiboAPI repository on GitHub.' }}</p>
         <button type="button" class="primary" :disabled="!!running" @click="checkUpdates">{{ running === 'catalogue' ? (de ? 'Wird geprüft …' : 'Checking …') : (de ? 'Nach neuen Figuren suchen' : 'Check for new figures') }}</button>
-        <p v-if="updates" class="result-note" role="status"><strong>{{ updates.counts.added }} {{ de ? 'neu' : 'new' }}</strong> · {{ updates.counts.changed }} {{ de ? 'geänderte Einträge' : 'changed entries' }}<br>{{ de ? 'Geprüft' : 'Checked' }}: {{ localDate(updates.observedAt) }}<br><a :href="updates.source.url" target="_blank" rel="noopener noreferrer">GitHub · {{ updates.source.commit.slice(0, 8) }}</a></p>
+        <p v-if="updates" class="result-note" role="status"><strong>{{ updates.counts.added }} {{ de ? 'neu' : 'new' }}</strong> · {{ updates.counts.changed }} {{ de ? 'geänderte Einträge' : 'changed entries' }}<span v-if="updates.counts.absentFromSource"> · {{ updates.counts.absentFromSource }} {{ de ? 'nur im mitgelieferten Katalog' : 'only in the bundled catalogue' }}</span><br>{{ de ? 'Geprüft' : 'Checked' }}: {{ localDate(updates.observedAt) }}<br>
+          <a :href="bundledCatalogue.sourceUrl" target="_blank" rel="noopener noreferrer">{{ de ? 'Mitgeliefert' : 'Bundled' }} · {{ bundledCatalogue.commit.slice(0, 8) }}</a> ·
+          <a :href="updates.source.url" target="_blank" rel="noopener noreferrer">{{ de ? 'Onlinequelle' : 'Online source' }} · {{ updates.source.commit.slice(0, 8) }}</a>
+        </p>
+        <details v-if="reviewRows.length" class="catalogue-changes">
+          <summary>{{ de ? 'Änderungen im Vergleich ansehen' : 'Review catalogue changes' }}</summary>
+          <ul>
+            <li v-for="row in visibleReviewRows" :key="row.id">
+              <strong>{{ row.after?.name || row.name }}</strong> · <code>{{ row.id }}</code>
+              <dl v-if="row.fields">
+                <div v-for="field in row.fields" :key="field"><dt>{{ changeFieldLabel(field) }}</dt>
+                  <dd><del>{{ changeValue(row.before, field) }}</del> → <ins>{{ changeValue(row.after, field) }}</ins></dd></div>
+              </dl>
+              <p v-else>{{ de ? 'In der Onlinequelle fehlt diese ID. Der mitgelieferte Eintrag bleibt im Katalog.' : 'The online source omits this ID. The bundled entry stays in the catalogue.' }}</p>
+            </li>
+          </ul>
+          <nav v-if="reviewPages > 1" class="pagination" :aria-label="de ? 'Seiten der Katalogänderungen' : 'Catalogue change pages'">
+            <button type="button" :disabled="reviewPage === 1" @click="reviewPage--">{{ de ? 'Zurück' : 'Previous' }}</button>
+            <span>{{ reviewPage }} / {{ reviewPages }}</span>
+            <button type="button" :disabled="reviewPage === reviewPages" @click="reviewPage++">{{ de ? 'Weiter' : 'Next' }}</button>
+          </nav>
+        </details>
         <p v-if="updates?.gameUsage" class="result-note" role="status">
           <template v-if="updates.gameUsage.status === 'loss'">{{ de ? 'Geänderte Online-Spieldaten: Folgende bisherige Angaben fehlen oder wurden ersetzt.' : 'Online game data has changed. These previous details are missing or have been replaced.' }}
             {{ de ? 'Spielhinweise' : 'Game notes' }}: {{ updates.gameUsage.missingNotes }} · {{ de ? 'Schreibangaben' : 'Write flags' }}: {{ updates.gameUsage.missingWriteFlags }}.
@@ -95,12 +116,17 @@ import { observeFigureDownloadLink, readFigureDownloadLink } from '../lib/figure
 import { filterCatalogue, releaseLabel } from '../lib/catalogue.js';
 import { collectionCsv } from '../lib/collection-csv.js';
 import { saveBlob, saveBlobWithPicker } from '../lib/browser-tools.js';
+const reviewPageSize = 10;
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,revision:Number,directory:String,locale:{type:String,default:'de_DE'},getSession:Function,getTransferSession:Function,selectedFigure:Object,readClock:{type:Number,default:0}},
   emits:['busy','writing','catalogue','changed','recovery','report','report-stale','import-ready'],
-  data(){return {entries:baseline.entries,updates:null,running:'',progress:null,scanStartedAt:0,scanAborting:false,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
+  data(){return {entries:baseline.entries,updates:null,reviewPage:1,running:'',progress:null,scanStartedAt:0,scanAborting:false,error:'',message:'',scope:'device',mode:'full',report:null,reportTime:'',stale:false,filter:'missing',resultPage:1,figureQuery:'',chosen:null,sourceUrl:'',prepared:null,filename:'',destination:'E:/'};},
   computed:{
     de(){return this.locale.startsWith('de');},
+    bundledCatalogue(){return baseline;},
+    reviewRows(){return this.updates ? [...this.updates.changed, ...this.updates.absentFromSource] : [];},
+    reviewPages(){return Math.ceil(this.reviewRows.length/reviewPageSize);},
+    visibleReviewRows(){return this.reviewRows.slice((this.reviewPage-1)*reviewPageSize, this.reviewPage*reviewPageSize);},
     canExportCsv() {
       return this.connected && !this.running && !this.blocked && !this.stale &&
         this.report?.status === 'complete' && this.report.complete && this.report.scanComplete;
@@ -140,6 +166,15 @@ export default {
     canRefreshSourceUrl(ready) { if (ready) this.refreshSourceUrl(); }
   },
   methods:{
+    changeFieldLabel(field) {
+      if (field.startsWith('release.')) return (this.de ? 'Veröffentlichung' : 'Release') + ' · ' + field.slice(8).toUpperCase();
+      const labels = { name:['Name','Name'], series:['Serie','Series'], game:['Spielreihe','Game series'], type:['Art','Type'] };
+      return labels[field][this.de ? 0 : 1];
+    },
+    changeValue(entry, field) {
+      const value = field.startsWith('release.') ? entry.release[field.slice(8)] : entry[field];
+      return value ?? (this.de ? 'Keine Angabe' : 'Not listed');
+    },
     formatReadDuration,
     localDate(value){return value?new Date(value).toLocaleString(this.de?'de-DE':'en-GB'):'';},
     entryFor(id){return this.entries.find(e=>e.id===id);},
@@ -220,7 +255,7 @@ export default {
       }
       finally{if(current()){this.running='';this._controller=null;this.progress=null;if(device)this.$emit('busy',false);if(kind==='upload')this.$emit('writing',false);this.applyPendingFigureSelection();}}
     },
-    async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
+    async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.reviewPage=1;this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
     async scanContents(){if(!this.connected||this.blocked||this.running||this.scope==='folder'&&!this.directory)return;this.mode='full';await this.scan();},
     async scan(){
       if(!this.connected || this.blocked || this.running || this.scope === 'folder' && !this.directory)return;
@@ -293,6 +328,13 @@ export default {
 };
 </script>
 <style scoped>
+.catalogue-changes { margin:.8rem 0; border-top:1px solid #d4e1ea; }
+.catalogue-changes summary { padding:.65rem 0; cursor:pointer; font-weight:600; }
+.catalogue-changes ul { margin:0; padding:0; list-style:none; }
+.catalogue-changes li { padding:.5rem 0; border-bottom:1px solid #d4e1ea; overflow-wrap:anywhere; }
+.catalogue-changes dl { margin:.45rem 0; font-size:.85rem; }
+.catalogue-changes dt { color:#475f6c; }
+.catalogue-changes dd { margin:0 0 .4rem; }
 /* Keep enlarged text within the existing cards without changing normal layout. */
 .collection-assistant { min-width:0; overflow-wrap:anywhere; }
 .collection-assistant header { flex-wrap:wrap; }

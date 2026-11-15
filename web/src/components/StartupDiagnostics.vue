@@ -42,6 +42,13 @@
       <p v-if="series" role="status">{{ series.version }} · {{ series.count }} {{ de ? 'Starts' : 'boots' }} · Median (min–max):
         {{ text.storage }} {{ series.storage.median }} ms ({{ series.storage.min }}–{{ series.storage.max }}) ·
         {{ text.total }} {{ series.total.median }} ms ({{ series.total.min }}–{{ series.total.max }})</p>
+      <div v-if="series?.mount" class="table-wrap">
+        <table>
+          <caption>{{ de ? 'Letztes Einbinden von PackedFS je Bericht' : 'Last PackedFS mount in each report' }}</caption>
+          <thead><tr><th scope="col">{{ de ? 'Messwert' : 'Metric' }}</th><th scope="col">Median</th><th scope="col">Min–Max</th></tr></thead>
+          <tbody><tr v-for="[key, label] in mountSeriesLabels" :key="key"><th scope="row">{{ label }}</th><td>{{ series.mount[key].median }}</td><td>{{ series.mount[key].min }}–{{ series.mount[key].max }}</td></tr></tbody>
+        </table>
+      </div>
     </details>
     <p class="limits">{{ text.limits }}</p>
   </section>
@@ -55,6 +62,13 @@ const emit = defineEmits(['busy', 'export']);
 const state = ref('unknown'), info = ref(null), observedAt = ref(null);
 const text = computed(() => startupDiagnosticsText(props.locale));
 const de = computed(() => props.locale.startsWith('de'));
+const mountSeriesLabels = computed(() => [
+  ['scanMilliseconds', de.value ? 'Scanzeit (ms)' : 'Scan time (ms)'],
+  ['physicalReadAttempts', de.value ? 'Physische Leseversuche' : 'Physical read attempts'],
+  ['cacheHits', de.value ? 'Cachetreffer' : 'Cache hits'],
+  ['cacheMisses', de.value ? 'Cachefehlschläge' : 'Cache misses'],
+  ['bypassReads', de.value ? 'Zugriffe außerhalb des Caches' : 'Reads bypassing the cache'],
+]);
 const series = ref(null), seriesError = ref(false);
 let seriesRequest = 0;
 async function loadSeries(event) {
