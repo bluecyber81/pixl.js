@@ -13,6 +13,7 @@ import { collectionCsv } from '../src/lib/collection-csv.js';
 import { formatReadDuration, readTimeEstimate } from '../src/lib/read-time-estimate.js';
 import { prepareFigureTransfer, suggestedFigureFilename } from '../src/lib/figure-transfer.js';
 import { figureDownloadLinkKey, observeFigureDownloadLink, readFigureDownloadLink, writeFigureDownloadLink } from '../src/lib/figure-download-links.js';
+import { catalogueDisplayName } from '../src/data/announced-figures.js';
 import { filterCatalogue, releaseLabel } from '../src/lib/catalogue.js';
 
 const file = process.env.PIXL_COLLECTION_SOURCE ? pathToFileURL(path.resolve(process.env.PIXL_COLLECTION_SOURCE)) :
@@ -24,7 +25,7 @@ assert.deepEqual(compiled.errors, []);
 const template = compiled.code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,
   (_, names) => `const {${names.replace(/\s+as\s+/g, ':')}}=Vue;`).replace('export function render', 'function render');
 const make = new Function('Vue', 'baseline', 'checkCatalogueUpdates', 'auditCollection', 'prepareFigureTransfer',
-  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration','readFigureDownloadLink','observeFigureDownloadLink','collectionCsv',
+  'transferFigureToDevice', 'suggestedFigureFilename', 'filterCatalogue', 'releaseLabel', 'catalogueDisplayName', 'saveBlob', 'saveBlobWithPicker','readTimeEstimate','formatReadDuration','readFigureDownloadLink','observeFigureDownloadLink','collectionCsv',
   script + '\n' + template + '\ncomponent.render=render;return component;');
 const A = '0000000000000102', B = '0000000000000202';
 const baseline = { checkedDate: '2026-11-02', entries: [A, B].map(id => ({ id, name: `Synthetic ${id}`, series: 'Test', release: { eu: '2020-01-01' } })) };
@@ -47,7 +48,7 @@ function mount(overrides = {}) {
   const Component = make({ ...Vue, vModelText: {}, vModelSelect: {} }, baseline,
     overrides.catalogue || (async () => { throw Error('No network expected'); }), overrides.audit || auditCollection,
     overrides.prepare || prepareFigureTransfer, overrides.transfer || (async () => ({ committed: true })),
-    suggestedFigureFilename, filterCatalogue, releaseLabel, (...args) => saves.push(args),
+    suggestedFigureFilename, filterCatalogue, releaseLabel, catalogueDisplayName, (...args) => saves.push(args),
     async (...args) => { saves.push(args); return { status: overrides.pickerStatus || 'saved' }; },readTimeEstimate,formatReadDuration,overrides.readLink || readFigureDownloadLink,observeFigureDownloadLink,collectionCsv);
   const app = renderer.createApp({ render: () => Vue.h(Component, { ...props, ref: v => vm = v,
     onBusy: v => events.push(['busy', v]), onWriting: v => events.push(['writing', v]), onChanged: v => events.push(['changed', v]),

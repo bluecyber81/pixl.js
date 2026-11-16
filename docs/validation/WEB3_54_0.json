@@ -1,0 +1,53 @@
+{
+  "version": "3.54.0",
+  "date": "2026-11-16",
+  "firmwareCandidate": {
+    "version": "2.22.0-DE3.76",
+    "counter": 649,
+    "scope": "LCD / PFS1 / application only"
+  },
+  "figures": 956,
+  "groups": 83,
+  "gameAssociations": 1348,
+  "translatedAssociations": 72,
+  "distinctTranslatedNotes": 55,
+  "ocarinaOfTime": {
+    "platform": "Nintendo Switch 2",
+    "releaseYearFigures": 2027,
+    "youngLink": "0100000004fd0902",
+    "youngZelda": "0101000004ff0902",
+    "source": "https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/The-Legend-of-Zelda-Ocarina-of-Time-3115664.html"
+  },
+  "kirbyAirRiders": {
+    "retailPairs": 7,
+    "source": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
+  },
+  "browserChecks": {
+    "mobileWidthCssPx": 320,
+    "locales": [
+      "de",
+      "en"
+    ],
+    "covered": [
+      "localized name search",
+      "game filter",
+      "both Ocarina entries with photos and game notes",
+      "seven Kirby pairs",
+      "refresh from an older catalogue"
+    ],
+    "remotePicturesDecoded": 9,
+    "firmwareUpdaterChecks": 40
+  },
+  "physicalLcdApp649Test": false,
+  "switchScanVerifiedForTheseEditions": false,
+  "imageEvidence": "docs/validation/DE3_76_FIGURE_IMAGES.json",
+  "hostTestCounts": {
+    "webPassed": 1591,
+    "webSkipped": 0,
+    "productionChecksPerLayout": 22,
+    "layouts": [
+      "portable",
+      "GitHub Pages"
+    ]
+  }
+}

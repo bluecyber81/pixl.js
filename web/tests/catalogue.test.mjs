@@ -11,7 +11,10 @@ test('catalogue snapshot is pinned, attributed and uses unique exact identifiers
   assert.match(fs.readFileSync(new URL('../third-party/amiiboapi/LICENSE', import.meta.url), 'utf8'), /Nevin Vu/);
   assert.match(data.commit, /^[0-9a-f]{40}$/);
   assert.equal(new Set(data.entries.map(e => e.id)).size, data.entries.length);
-  assert.equal(data.entries.length, Object.keys(JSON.parse(source).amiibos).length);
+  const upstreamIds = Object.keys(JSON.parse(source).amiibos).map(key => key.slice(2));
+  assert.deepEqual(data.entries.filter(entry => !upstreamIds.includes(entry.id)).map(entry => entry.id).sort(),
+    ['0100000004fd0902','0101000004ff0902']);
+  assert.equal(data.entries.length, upstreamIds.length + 2);
   for (const e of data.entries) {
     assert.match(e.id, /^[a-f0-9]{16}$/); assert.ok(e.name); assert.ok(e.series);
     assert.equal(typeof e.firmwareIdKnown, 'boolean'); assert.equal(e.image, undefined);
@@ -26,7 +29,7 @@ test('known figure IDs accept Windows CRLF and every generated flag matches the 
   const firmwareTable = new URL('../../fw/data/amiidb_amiibo.csv', import.meta.url);
   if (fs.existsSync(firmwareTable)) {
     const ids = fs.readFileSync(firmwareTable, 'utf8').trimEnd().split(/\r?\n/).map(line => line.split(',', 1)[0]);
-    assert.deepEqual(known, new Set(ids), 'Bundled IDs must match the released application CSV');
+    assert.deepEqual(new Set([...known, '0100000004fd0902', '0101000004ff0902']), new Set(ids), 'Check current firmware additions against the DE3.75 snapshot');
   }
   for (const entry of data.entries) assert.equal(entry.firmwareIdKnown, known.has(entry.id), entry.id);
   assert.equal(data.entries.filter(entry => entry.firmwareIdKnown).length, 954);

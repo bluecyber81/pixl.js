@@ -7,7 +7,7 @@ import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:648,version:'2.22.0-DE3.75',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:648,version:'2.22.0-DE3.75',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
  {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
  {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
   wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
@@ -31,18 +31,24 @@ const sourceNames=['core/packed_fs.c','core/packed_fs.h','littlefs/lfs.c','littl
 const rows=[{path:'/Leer',kind:1,size:0},{path:'/Ordner',kind:1,size:0},{path:'/Ordner/Ümlaut',kind:0,size:540},{path:'/Null',kind:0,size:0},{path:'/large',kind:0,size:40976}]
  .map((row,index)=>({...row,rawMeta128Hex:Buffer.from(Array.from({length:128},(_,i)=>(i*11+index*7)&255)).toString('hex')}))
 
-test('App648 capacity binding matches the linked firmware and the qualified simulator', () => {
-  const evidence = JSON.parse(fs.readFileSync(new URL('../docs/validation/DE3_75_PFS.json', root)));
-  const profile = profiles.find(item => item.id === 'current');
-  assert.equal(evidence.firmware, '2.22.0-DE3.75');
-  assert.equal(evidence.counter, 648);
-  assert.equal(evidence.engine.engineSha256, profile.engineSha256);
-  assert.equal(evidence.wasmSha256, sha(profile.wasm));
-  assert.equal(evidence.buildArtifacts['pixljs.bin'], '3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867');
-  assert.equal(evidence.elfLoadBytesCompared, evidence.intelHex.flashBytesCompared);
-  assert.equal(evidence.elfLoadBytesCompared, 358304);
-  assert.deepEqual(evidence.armLayoutCases.map(row => row.result === 0), [true, true, false, false]);
-});
+for (const [version, counter, document, bytes, binSha256] of [
+  ['2.22.0-DE3.75', 648, 'DE3_75_PFS.json', 358304, '3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867'],
+  ['2.22.0-DE3.76', 649, 'DE3_76_PFS.json', 362188, '3e3899226d773b9f664400efdf536eb6bc1cea1fe61277218b63e730d29aed2a'],
+]) {
+  test(`App${counter} capacity binding matches the linked firmware and the qualified simulator`, () => {
+    const evidence = JSON.parse(fs.readFileSync(new URL('../docs/validation/' + document, root)));
+    const profile = profiles.find(item => item.id === 'current');
+    assert.equal(evidence.firmware, version);
+    assert.equal(evidence.counter, counter);
+    assert.equal(evidence.engine.engineSha256, profile.engineSha256);
+    assert.equal(evidence.wasmSha256, sha(profile.wasm));
+    assert.equal(evidence.buildArtifacts['pixljs.bin'], binSha256);
+    assert.equal(evidence.intelHex.flashBytesCompared, bytes);
+    assert.equal(evidence.elfLoadBytesCompared, bytes);
+    assert.deepEqual(evidence.armLayoutCases.map(row => row.result === 0), [true, true, false, false]);
+    assert.deepEqual(evidence.capacityCrossMount, {cases: 6, files: 1131, folders: 77, synthetic: true});
+  });
+}
 
 for(const profile of profiles) {
  test(`${profile.id}: shipped WASM and complete sources are bound to their exact engine, application and unchanged geometry`,()=>{
@@ -72,7 +78,8 @@ for(const profile of profiles) {
     {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645},
     {firmwareVersion:'2.22.0-DE3.73',applicationCounter:646},
     {firmwareVersion:'2.22.0-DE3.74',applicationCounter:647},
-    {firmwareVersion:'2.22.0-DE3.75',applicationCounter:648}
+    {firmwareVersion:'2.22.0-DE3.75',applicationCounter:648},
+    {firmwareVersion:'2.22.0-DE3.76',applicationCounter:649}
   ])
   assert.deepEqual(binding.defines,['LFS_NO_ASSERT','LFS_NO_DEBUG','LFS_NO_ERROR','LFS_NO_MALLOC','LFS_NO_WARN'])
   const module=new WebAssembly.Module(wasm)

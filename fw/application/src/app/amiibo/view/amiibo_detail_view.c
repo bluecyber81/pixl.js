@@ -93,8 +93,7 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
 
     const db_amiibo_t *amd = get_amiibo_by_id(head, tail);
     if (amd != NULL) {
-        const char *name =
-            isChineseLanguage() && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
+        const char *name = get_amiibo_display_name(amd);
         y += 15;
         mui_element_autowrap_text(p_canvas, 0, y, mui_canvas_get_width(p_canvas), 24, name);
         /* A wrapped figure name occupies the second row. Never draw a note

@@ -16,9 +16,9 @@ SOURCE_COMMIT = '6e0004969cd1481a027c2eaa86838a4c3fa1553d'
 LINK_SOURCE_COMMIT = '494514c958ad5e0544467bfed59d3047a7468c40'
 SOURCE_BASE = 'https://github.com/bluecyber81/pixl.js/blob/'
 SOURCE_SHA256 = {
-    'amiidb_amiibo.csv': '2bbcc720b2153d68d135e48d7f21a98a06aa86863fc5b827c8a03fd9c7aa5f39',
-    'amiidb_game.csv': 'd240bada99ca8e4e9e74e3a24afd94536007f38b61aafb4f8582eb3359b6a042',
-    'amiidb_link.csv': 'b8df1a4bd411459a58660f42bec2077f4639543c1d67a16b6617a60470fad068',
+    'amiidb_amiibo.csv': '1ba54e01b9c629d736ca5e1a86a58c44d8909253d943f63d56e339ed9ddf0a0b',
+    'amiidb_game.csv': '0b41f8c0fd8ee440a3fed2d4eb2d6c434d989a4b49f2b1be8a301f19d2981182',
+    'amiidb_link.csv': '94c87b9123b14a51ef22ab37a692d77addb9e6da7a93c9adf3bfb225192bc8fc',
 }
 SOURCE_REFERENCE_SHA256 = {
     **SOURCE_SHA256,
@@ -34,6 +34,21 @@ LINK_HYGIENE_LINES = (1332, 1333, 1334)
 NINTENDO_KIRBY_UPDATE = 'https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html'
 RIDER_IDS = ('1f00010004c51e03', '1f02010004c81e03')
 RIDER_ADDITIONS = [{'operation': 'append-rider-row', 'id': rider} for rider in RIDER_IDS]
+RIDER_NAMES = {
+    '1f00000004c41e03': ('Kirby', 'Kirby (& Warp Star)'),
+    '1f03010004c91e03': ('Bandana Waddle Dee', 'Bandana Waddle Dee (& Winged Star)'),
+    '1f01000004c61e03': ('Meta Knight', 'Meta Knight (& Shadow Star)'),
+}
+RIDER_NAME_CHANGES = [{'operation': 'complete-rider-machine-name', 'id': aid, 'from': old, 'to': new}
+                      for aid, (old, new) in RIDER_NAMES.items()]
+TRAINING_IDS = (*RIDER_NAMES, '1f02000004c71e03', '1f04000004ca1e03', *RIDER_IDS)
+NINTENDO_RIDER_GUIDE = 'https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/'
+RIDER_TRAINING = [{'operation': 'add-training-note', 'id': aid, 'groupId': 75} for aid in TRAINING_IDS]
+OCARINA_PRODUCTS = {
+    '0100000004fd0902': 'https://www.nintendo.com/us/amiibo/detail/young-link-the-legend-of-zelda-ocarina-of-time-series/',
+    '0101000004ff0902': 'https://www.nintendo.com/us/amiibo/detail/young-zelda-the-legend-of-zelda-ocarina-of-time-series/',
+}
+OCARINA_ADDITIONS = [{'operation': 'append-figure-row', 'id': identifier} for identifier in OCARINA_PRODUCTS]
 # A reviewed wording change must name the exact figure, game, language and
 # before/after texts in the same change. Removing a note is never authorized here.
 REVIEWED_NOTE_EDITS = frozenset()
@@ -84,8 +99,13 @@ def export_usage(data_dir, translations_path):
     associations = {figure.id.lower(): [] for figure in figures}
     for line, link in zip(source_lines(data_dir / 'amiidb_link.csv'), links):
         row = {'groupId': int(link.game_id), 'noteId': note_ids.get(link.note_en), 'sourceLine': line}
-        if link.amiibo_id.lower() in RIDER_IDS and row['groupId'] == 75:
-            row['sourceUrl'] = NINTENDO_KIRBY_UPDATE
+        if link.amiibo_id.lower() in TRAINING_IDS and row['groupId'] == 75:
+            row['sourceUrl'] = NINTENDO_RIDER_GUIDE
+            if link.amiibo_id.lower() in RIDER_IDS:
+                row['sourceUrl'] = NINTENDO_KIRBY_UPDATE
+                row['sinceGameVersion'] = '1.3.3'
+        if link.amiibo_id.lower() in OCARINA_PRODUCTS and row['groupId'] == 82:
+            row['sourceUrl'] = OCARINA_PRODUCTS[link.amiibo_id.lower()]
         associations[link.amiibo_id.lower()].append(row)
     source_files = []
     for filename in ('amiidb_amiibo.csv', 'amiidb_game.csv', 'amiidb_link.csv'):
@@ -101,14 +121,14 @@ def export_usage(data_dir, translations_path):
                              'referenceSha256': SOURCE_REFERENCE_SHA256[filename],
                              'referenceUrl': SOURCE_BASE + reference_commit + '/fw/data/' + filename,
                              'transformationsFromReference': {
-                                 'amiidb_amiibo.csv': NAME_CORRECTIONS + RIDER_ADDITIONS,
-                                 'amiidb_game.csv': GROUP_CORRECTIONS,
-                                 'amiidb_link.csv': RIDER_ADDITIONS,
+                                 'amiidb_amiibo.csv': NAME_CORRECTIONS + RIDER_NAME_CHANGES + RIDER_ADDITIONS + OCARINA_ADDITIONS,
+                                 'amiidb_game.csv': GROUP_CORRECTIONS + [{'operation': 'insert-game-row', 'id': '82'}],
+                                 'amiidb_link.csv': RIDER_ADDITIONS + RIDER_TRAINING + OCARINA_ADDITIONS,
                              }[filename],
                              'readNormalization': normalization})
     return {
         'schemaVersion': 1,
-        'dataVersion': '2026-11-15.de375',
+        'dataVersion': '2026-11-16.de376',
         'source': {'label': 'Bundled firmware catalogue', 'referenceCommit': SOURCE_COMMIT,
                    'files': source_files,
                    'hashPolicy': 'sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.'},

@@ -1,4 +1,5 @@
 #include "amiidb_api_db.h"
+#include "amiibo_model_details.h"
 #include <string.h>
 
 #define QUERY_MAX_IDS 2048
@@ -98,7 +99,8 @@ int32_t amiidb_api_db_search_window(const char *search, uint8_t game_id, uint32_
     for (size_t i = 0; i < amiibo_list_size; i++) {
         const db_amiibo_t *item = &amiibo_list[i];
         if (exact_id ? item->head != head || item->tail != tail :
-            !contains_text(item->name_en, search) && !contains_text(item->name_cn, search)) continue;
+            !contains_text(item->name_en, search) && !contains_text(item->name_cn, search) &&
+            !contains_text(amiibo_detail_german_name(item->head, item->tail), search)) continue;
         bool linked = game_id == 0;
         for (const db_link_t *link = link_list; !linked && link->game_id; link++) {
             if (link->amiibo_index == i && game_contains(game_id, link->game_id)) linked = true;

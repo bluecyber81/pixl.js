@@ -98,8 +98,7 @@ export default {
         const target = getMigrationCapacityTarget(id)
         const reference = shortVersion(target) + ' / ' + target.applicationCounter
         const range = applicationRanges(target.approvedApplications)
-        const latest = target.approvedApplications.at(-1)
-        return {id, label:id === 'current' ? shortVersion(latest) + ' / ' + latest.applicationCounter : range, range, reference}
+        return {id, label:id === 'current' ? reference : range, range, reference}
       })
     },
     selectedCapacityOption(){return this.capacityOptions.find(option => option.id === this.capacityProfile)},

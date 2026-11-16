@@ -3,6 +3,7 @@
 #include "mui_element.h"
 #include "mui_qrcode_helper.h"
 #include "db_header.h"
+#include "amiibo_model_details.h"
 #include "i18n/language.h"
 #include "amiibo_usage_de.h"
 #include "expected_notes.h"
@@ -29,11 +30,17 @@ static const db_notes_t *const db_usage_notes=&descriptions;
 extern const char *const lang_de_DE[];
 const char *getLangString(int id) { return lang_de_DE[id]; }
 static bool isChineseLanguage(void) { return chinese; }
+static const char *get_amiibo_display_name(const db_amiibo_t *item) {
+    const char *name = amiibo_detail_german_name(item->head, item->tail);
+    return german && name ? name : chinese && *item->name_cn ? item->name_cn : item->name_en;
+}
 const db_amiibo_t *get_amiibo_by_id(uint32_t h,uint32_t t) {
-    return (h==0 && t==2) || (h==4 && t==0x04431c02) || (h==0x000a0004 && t==0x04451c02) ? &entry : NULL;
+    return amiibo_detail_model(h,t)!=MODEL_DEFAULT || (h==0 && t==2) || (h==4 && t==0x04431c02) || (h==0x000a0004 && t==0x04451c02) ? &entry : NULL;
 }
 static const db_link_t *get_link_by_id(unsigned game,uint32_t h,uint32_t t) {
-    (void)game;return linked && get_amiibo_by_id(h,t) ? &link : NULL;
+    amiibo_detail_model_t model=amiibo_detail_model(h,t);
+    if (model!=MODEL_DEFAULT && game!=(model==OOT_YOUNG_LINK || model==OOT_YOUNG_ZELDA ? OOT_GAME_ID : AIR_RIDERS_GAME_ID)) return NULL;
+    return linked && get_amiibo_by_id(h,t) ? &link : NULL;
 }
 static void ntag_store_get_uuid(ntag_t *tag,uint8_t *uid) { (void)tag;memset(uid,0x12,7); }
 static void mui_anim_stop(mui_anim_t *a) { (void)a;animation_stops++; }
@@ -64,7 +71,10 @@ static void setup(mui_canvas_t *c,u8g2_t *u,uint8_t *buf,unsigned height) {
 }
 static unsigned pixel(const uint8_t *buf,unsigned x,unsigned y) { return !!(buf[(y/8)*128+x]&(1U<<(y%8))); }
 static void same_region(const uint8_t *a,const uint8_t *b,unsigned x0,unsigned y0,unsigned width,unsigned height) {
-    for(unsigned y=y0;y<y0+height;y++)for(unsigned x=x0;x<x0+width;x++)CHECK(pixel(a,x,y)==pixel(b,x,y));
+    for(unsigned y=y0;y<y0+height;y++)for(unsigned x=x0;x<x0+width;x++)if(pixel(a,x,y)!=pixel(b,x,y)){
+        fprintf(stderr,"region %u,%u %ux%u mismatch %u,%u values %u,%u\n",x0,y0,width,height,x,y,pixel(a,x,y),pixel(b,x,y));
+        CHECK(pixel(a,x,y)==pixel(b,x,y));
+    }
 }
 static void save_frame(const char *folder,const char *name,const uint8_t *buf) {
     char path[1024];snprintf(path,sizeof(path),"%s/%s.pbm",folder,name);
@@ -242,6 +252,54 @@ int main(int argc,char **argv) {
         }
         char name[40];snprintf(name,sizeof(name),"product_%u_scroll_qr",item);save_frame(argv[1],name,buffer);
     }
+    const uint8_t pictured[][8] = {
+        {0x01,0x00,0x00,0x00,0x04,0xfd,0x09,0x02},
+        {0x01,0x01,0x00,0x00,0x04,0xff,0x09,0x02},
+        {0x1f,0x00,0x00,0x00,0x04,0xc4,0x1e,0x03},
+        {0x1f,0x00,0x01,0x00,0x04,0xc5,0x1e,0x03},
+        {0x1f,0x01,0x00,0x00,0x04,0xc6,0x1e,0x03},
+        {0x1f,0x02,0x00,0x00,0x04,0xc7,0x1e,0x03},
+        {0x1f,0x02,0x01,0x00,0x04,0xc8,0x1e,0x03},
+        {0x1f,0x03,0x01,0x00,0x04,0xc9,0x1e,0x03},
+        {0x1f,0x04,0x00,0x00,0x04,0xca,0x1e,0x03},
+    };
+    settings.qrcode_enabled=false;
+    v.game_id=0;v.info_page=0;german=true;linked=true;chinese=false;tag.notes[0]=0;
+    for(unsigned i=0;i<sizeof(pictured)/sizeof(pictured[0]);i++) {
+        memcpy(tag.data+84,pictured[i],8);
+        const char *note_en=i<2?"Unlocks a special mask that Link can wear.":"Train the rider as a Figure Player.";
+        const char *note_de=i<2?"Schaltet eine besondere Maske frei, die Link tragen kann.":"Trainiere den Fahrer als Figurenspieler.";
+        descriptions.en=note_en;
+        char translated[AMIIBO_USAGE_DE_BUFFER_BYTES];
+        CHECK(!strcmp(amiibo_view_usage(&v,translated),note_de));
+        amiibo_view_reset_desc_scroll(&v);draw(&canvas,&view);
+        memset(reference,0,1024);
+        CHECK(amiibo_info_portrait(&rc,to_little_endian_int32(pictured[i]),to_little_endian_int32(pictured[i]+4),96,23));
+        same_region(buffer,reference,96,23,32,32);
+        char name[40];snprintf(name,sizeof(name),"figure_%u_active",i);save_frame(argv[1],name,buffer);
+#ifndef LEGACY_INLINE_NOTES
+        /* The group/search card works without generating a tag or entering emulation. */
+        entry.head=to_little_endian_int32(pictured[i]);entry.tail=to_little_endian_int32(pictured[i]+4);
+        v.catalog_entry=&entry;v.ntag=NULL;v.game_id=i<2?OOT_GAME_ID:AIR_RIDERS_GAME_ID;v.info_page=1;
+        amiibo_view_on_enter(&view);
+        memset(buffer,0,1024);amiibo_view_on_draw(&view,&canvas);frames++;
+        memset(reference,0,1024);CHECK(amiibo_info_portrait(&rc,entry.head,entry.tail,96,16));
+        same_region(buffer,reference,96,16,32,32);
+        memset(expected,0,1024);
+        mui_element_autowrap_text_box(&ec,0,12,94,41,39,0,0,amiibo_detail_german_name(entry.head,entry.tail));
+        same_region(buffer,expected,0,12,94,40); /* Footer glyphs start at row 52. */
+        snprintf(name,sizeof(name),"figure_%u_catalog",i);save_frame(argv[1],name,buffer);
+        event.key=INPUT_KEY_RIGHT;event.type=INPUT_TYPE_SHORT;amiibo_view_on_input(&view,&event);CHECK(v.info_page==2);
+        memset(buffer,0,1024);amiibo_view_on_draw(&view,&canvas);frames++;
+        memset(expected,0,1024);mui_element_autowrap_text_box(&ec,0,12,128,41,39,0,0,note_de);
+        same_region(buffer,expected,0,12,128,40);
+        snprintf(name,sizeof(name),"figure_%u_catalog_hint",i);save_frame(argv[1],name,buffer);
+        unsigned previous=menu_events;event.key=INPUT_KEY_CENTER;amiibo_view_on_input(&view,&event);
+        CHECK(menu_events==previous+1&&v.info_page==0);
+        amiibo_view_on_exit(&view);CHECK(v.catalog_entry==NULL);entry.head=entry.tail=0;v.ntag=&tag;v.game_id=0;
+#endif
+    }
+    settings.qrcode_enabled=true;
     /* DE3.63: personal notes and game hints stay independently reachable.
      * These are actual C view/input callbacks plus actual u8g2 glyphs/wrapping.
      * No callback may switch a slot while an information page is active. */

@@ -21,7 +21,7 @@ typedef enum { AMIIBO_DETAIL_VIEW_EVENT_UPDATE, AMIIBO_DETAIL_VIEW_EVENT_MENU } 
 typedef enum { AMIIBO_VIEW_EVENT_UPDATE, AMIIBO_VIEW_EVENT_MENU, AMIIBO_VIEW_EVENT_DESC_UPDATE } amiibo_view_event_t;
 struct amiibo_detail_view_s { ntag_t *ntag; unsigned focus,max_ntags; uint8_t info_page; int navigate_direction;
     uint16_t note_offset,note_total; const char *file_name; void (*event_cb)(amiibo_detail_view_event_t,amiibo_detail_view_t*); };
-struct amiibo_view_s { ntag_t *ntag; unsigned focus,max_ntags; uint8_t info_page;
+struct amiibo_view_s { ntag_t *ntag; const void *catalog_entry; unsigned focus,max_ntags; uint8_t info_page;
     unsigned desc_step,desc_page_size,desc_total,desc_offset; bool desc_auto_scroll_disabled;
     void (*event_cb)(amiibo_view_event_t,amiibo_view_t*); };
 static unsigned menu_count, update_count;
@@ -34,6 +34,8 @@ static void db_event(amiibo_view_event_t e,amiibo_view_t*v) {
 static bool amiibo_info_input(uint8_t *p,const mui_input_event_t*e) {assert(!"info input fixture reached");return false;}
 static void amiibo_view_reset_desc_scroll(amiibo_view_t*v){v->desc_offset=0;v->desc_auto_scroll_disabled=false;}
 typedef struct { const char *name_en,*name_cn; } db_amiibo_t;
+static const char *get_amiibo_display_name(const db_amiibo_t *item) { return item->name_en; }
+static bool amiibo_info_portrait(mui_canvas_t *c,uint32_t h,uint32_t t,uint8_t x,uint8_t y) { return false; }
 static db_amiibo_t fixture_entry={"Mario","Mario"};
 static const db_amiibo_t *get_amiibo_by_id(uint32_t head,uint32_t tail) { return head==0 && tail==2 ? &fixture_entry : NULL; }
 static struct { bool qrcode_enabled; } fixture_settings={false};
@@ -44,6 +46,9 @@ static void ntag_store_get_uuid(ntag_t *tag,uint8_t *uid) {
     uid[3]=tag->data[4];uid[4]=tag->data[5];uid[5]=tag->data[6];uid[6]=tag->data[7];
 }
 static void amiibo_info_draw(mui_canvas_t *canvas,ntag_t *tag,unsigned page) { assert(!"info-page fixture reached"); }
+static void amiibo_view_draw_catalog_card(amiibo_view_t *view,mui_canvas_t *canvas,char *translated) {
+    assert(!"active view unexpectedly rendered a catalog card");
+}
 static void amiibo_view_draw_notes(amiibo_view_t *v,mui_canvas_t *c,char *s) { assert(!"notes-page fixture reached"); }
 static bool amiibo_info_url(char *out,size_t size,ntag_t *tag) { assert(!"QR fixture reached");return false; }
 static unsigned amiibo_view_draw_qrcode(mui_canvas_t *c,unsigned y,const char *url) { assert(!"QR draw fixture reached");return 0; }

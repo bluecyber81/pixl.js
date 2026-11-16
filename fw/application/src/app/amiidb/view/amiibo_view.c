@@ -1,5 +1,6 @@
 #include "amiibo_view.h"
 #include "amiibo_helper.h"
+#include "amiibo_model_details.h"
 #include "amiibo_info_draw.h"
 #include "db_header.h"
 #include "i18n/language.h"
@@ -89,8 +90,15 @@ static void amiibo_view_update_desc_anim(amiibo_view_t *p_amiibo_view) {
  * scroll state; looking at a note must never select another slot or alter NFC. */
 static const char *amiibo_view_usage(const amiibo_view_t *view, char *translated) {
     const ntag_t *tag = view->ntag;
-    const db_link_t *link = get_link_by_id(view->game_id, to_little_endian_int32(&tag->data[84]),
-                                         to_little_endian_int32(&tag->data[88]));
+    uint32_t head = to_little_endian_int32(&tag->data[84]);
+    uint32_t tail = to_little_endian_int32(&tag->data[88]);
+    uint8_t game = view->game_id;
+    if (!game) {
+        amiibo_detail_model_t model = amiibo_detail_model(head, tail);
+        if (model == OOT_YOUNG_LINK || model == OOT_YOUNG_ZELDA) game = OOT_GAME_ID;
+        else if (model != MODEL_DEFAULT) game = AIR_RIDERS_GAME_ID;
+    }
+    const db_link_t *link = get_link_by_id(game, head, tail);
     if (!link) return "";
     const db_notes_t *notes = &db_usage_notes[link->note_index];
     if (isChineseLanguage()) return notes->cn;
@@ -127,11 +135,41 @@ static void amiibo_view_draw_notes(amiibo_view_t *view, mui_canvas_t *canvas, ch
     mui_canvas_draw_utf8(canvas, 1, 63, german ? "L/R halten: blättern" : "Hold L/R: scroll");
 }
 
+static void amiibo_view_draw_catalog_card(amiibo_view_t *view, mui_canvas_t *canvas, char *translated) {
+    const db_amiibo_t *entry = view->catalog_entry;
+    const bool hint = view->info_page == 2;
+    const bool german = getLanguage() == LANGUAGE_DE_DE;
+    const uint8_t width = mui_canvas_get_width(canvas);
+    mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
+    mui_canvas_set_draw_color(canvas, 1);
+    mui_canvas_draw_box(canvas, 0, 0, width, 12);
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_utf8(canvas, 2, 10, hint ? (german ? "Spielhinweis" : "Game hint") :
+                                                (german ? "Figurenkatalog" : "Figure catalog"));
+    mui_canvas_draw_utf8(canvas, 105, 10, hint ? "2/2" : "1/2");
+    mui_canvas_set_draw_color(canvas, 1);
+    const char *text = get_amiibo_display_name(entry);
+    uint8_t text_width = width;
+    if (hint) {
+        const db_link_t *link = get_link_by_id(view->game_id, entry->head, entry->tail);
+        const char *en = link ? db_usage_notes[link->note_index].en : "";
+        text = german ? amiibo_usage_de(en, translated, AMIIBO_USAGE_DE_BUFFER_BYTES) : en;
+    } else if (width >= 96 && amiibo_info_portrait(canvas, entry->head, entry->tail, width - 32, 16)) {
+        text_width = width - 34;
+    }
+    mui_element_autowrap_text_box(canvas, 0, 12, text_width, 41, 39, 0, 0, text);
+    mui_canvas_draw_utf8(canvas, 1, 63, german ? "L/R: Seite  M: zurück" : "L/R: page  M: back");
+}
+
 static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     /* The UID or QR text is consumed before drawing the translated note. */
     union { char label[AMIIBO_INFO_URL_CAPACITY]; char de[AMIIBO_USAGE_DE_BUFFER_BYTES]; } scratch;
     char *buff = scratch.label;
     amiibo_view_t *p_amiibo_view = p_view->user_data;
+    if (p_amiibo_view->catalog_entry) {
+        amiibo_view_draw_catalog_card(p_amiibo_view, p_canvas, scratch.de);
+        return;
+    }
     ntag_t *ntag = p_amiibo_view->ntag;
     if (p_amiibo_view->info_page >= 3) {
         amiibo_view_draw_notes(p_amiibo_view, p_canvas, scratch.de);
@@ -174,8 +212,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
     const db_amiibo_t *amd = get_amiibo_by_id(head, tail);
     if (amd != NULL) {
-        const char *name =
-            isChineseLanguage() && strlen(amd->name_cn) > 0 ? amd->name_cn : amd->name_en;
+        const char *name = get_amiibo_display_name(amd);
 
         if (ntag->read_only) {
             mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
@@ -201,6 +238,9 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         if (settings_get_data()->qrcode_enabled) {
             if (amiibo_info_url(buff, sizeof(scratch.label), ntag))
                 text_width = amiibo_view_draw_qrcode(p_canvas, y, buff);
+        } else if (clip_win_cur.w >= 96 && clip_win_cur.h >= 32 &&
+                   amiibo_info_portrait(p_canvas, head, tail, clip_win_cur.w - 32, y)) {
+            text_width = clip_win_cur.w - 34;
         }
         menu_width = text_width;
         /* The QR still uses the full original height. Only its neighboring
@@ -244,6 +284,11 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
 
 static void amiibo_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     amiibo_view_t *p_amiibo_view = p_view->user_data;
+    if (p_amiibo_view->catalog_entry) {
+        if (amiibo_info_input(&p_amiibo_view->info_page, event) && p_amiibo_view->event_cb)
+            p_amiibo_view->event_cb(AMIIBO_VIEW_EVENT_MENU, p_amiibo_view);
+        return;
+    }
     if (p_amiibo_view->info_page >= 3) {
         if (event->key == INPUT_KEY_CENTER &&
             (event->type == INPUT_TYPE_SHORT || event->type == INPUT_TYPE_LONG)) {
@@ -349,6 +394,10 @@ static void amiibo_view_on_enter(mui_view_t *p_view) {
 static void amiibo_view_on_exit(mui_view_t *p_view) {
     amiibo_view_t *p_amiibo_view = p_view->user_data;
     amiibo_view_stop_desc_anim(p_amiibo_view);
+    if (p_amiibo_view->catalog_entry) {
+        p_amiibo_view->catalog_entry = NULL;
+        p_amiibo_view->info_page = 0;
+    }
 }
 
 amiibo_view_t *amiibo_view_create() {

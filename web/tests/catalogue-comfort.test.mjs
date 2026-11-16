@@ -167,18 +167,17 @@ test('documented games select exact editions and intersect with device evidence 
       assert.equal(classNode(root, 'announcements'), undefined, 'released riders already appear as catalogue cards');
       await click(root, de ? 'Suche und Filter zurücksetzen' : 'Reset search and filters');
       assert.equal(classNode(root, 'game-guide'), undefined);
-      assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 7);
+      assert.equal(nodes(classNode(root, 'announcements'), 'li').length, 5);
     } finally { app.unmount(); }
   }
 });
 
-test('all documented game IDs resolve in the baseline and stay separate from announcement ID proposals', () => {
+test('all documented game IDs resolve uniquely in the baseline', () => {
   const { entries } = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
   const known = new Set(entries.map(entry => entry.id));
-  const proposed = new Set(announcementGroups.flatMap(group => group.figures.map(figure => figure.proposedId).filter(Boolean)));
   for (const game of gameGuides) {
     assert.equal(new Set(game.ids).size, game.ids.length, game.id);
-    assert.ok(game.ids.every(id => known.has(id) && !proposed.has(id)), game.id);
+    assert.ok(game.ids.every(id => known.has(id)), game.id);
     assert.ok(new URL(game.source).hostname.endsWith('.nintendo.com'), game.id);
   }
 });
@@ -206,7 +205,7 @@ test('the nine regional releases and announcements have official links and stay 
   } finally { app.unmount(); }
 });
 
-test('announcement search opens relevant results by either language or proposed ID and separates them from known IDs', async () => {
+test('announcement search opens relevant results by either language or observed ID when a supplied catalogue lacks it and separates them from known IDs', async () => {
   const { root, app } = await mount({}, 'en_US');
   try {
     const search = nodes(root, 'input').find(node => node.props.type === 'search');
@@ -216,7 +215,7 @@ test('announcement search opens relevant results by either language or proposed 
       assert.equal(section.props.open, true);
       assert.equal(nodes(section, 'li').length, 1);
       assert.match(text(section), /Young Link/);
-      assert.match(text(section), /Unconfirmed community ID0100000004fd0902/);
+      assert.match(text(section), /Figure ID \(community source\)0100000004fd0902/);
       assert.match(text(section), /Other compatible Zelda figures give you items/);
       assert.equal(cards(root).length, 0);
       assert.match(text(classNode(root, 'empty-result')), /Figure release dates/);

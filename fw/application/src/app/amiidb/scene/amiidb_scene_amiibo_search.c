@@ -23,8 +23,10 @@ static void search_input_cb(mui_text_input_event_t event, mui_text_input_t *inpu
 }
 
 static void search_selected(mui_list_view_event_t event, mui_list_view_t *view, mui_list_item_t *item) {
-    if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
     app_amiidb_t *app = mui_list_view_get_user_data(view);
+    if (!app->search_filter_select && item->icon == ICON_FILE &&
+        amiidb_show_catalog_card(app, item->user_data, event)) return;
+    if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
     if (app->search_filter_select) {
         if (item->icon == ICON_PREV || item->icon == ICON_NEXT) {
             if (item->icon == ICON_PREV && app->search_filter_page) app->search_filter_page--;

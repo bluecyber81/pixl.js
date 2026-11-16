@@ -1,5 +1,7 @@
 // Public metadata only. Neither a source commit nor a content hash proves
 // authenticity, ownership, device-file presence, NFC support, or release status.
+import { ocarinaFigureById } from '../data/announced-figures.js';
+import { reviewedOcarinaEntry } from './ocarina-catalogue.js';
 import { parseUniqueJson } from './unique-json.js';
 import { compareUsageQuality, USAGE_REFERENCE_COMMIT } from './catalogue-usage-quality.js';
 
@@ -23,6 +25,7 @@ export class CatalogueUpdateError extends Error {
   localizedMessage(locale) {
     if (String(locale).startsWith('de')) return this.message;
     const messages = {
+      'conflicting-edition': 'The online source assigns a different model or type to a reviewed figure ID.',
       'invalid-data': 'The online source returned invalid or unexpected catalogue data.',
       'source-redirect': 'The catalogue source redirected the request unexpectedly.',
       'rate-limit': 'GitHub is limiting requests. Please try again later.',
@@ -102,11 +105,16 @@ export function normalizeCatalogueSource(payload) {
     if (!/^0x[0-9a-f]{16}$/u.test(key)) invalid();
     record(entry);
     const id = key.slice(2);
-    return { id, name: text(entry.name),
+    const normalized = { id, name: text(entry.name),
       series: text(series.get(`0x${id.slice(12, 14)}`)),
       game: text(games.get(`0x${id.slice(0, 3)}`)),
       type: text(types.get(`0x${id.slice(6, 8)}`)),
       release: dates(entry.release), firmwareIdKnown: false };
+    const figure = ocarinaFigureById.get(id);
+    if (!figure) return normalized;
+    try { return reviewedOcarinaEntry(figure, normalized, false); }
+    catch { throw new CatalogueUpdateError('conflicting-edition',
+      `Die Onlinequelle ordnet der Figuren-ID ${id} ein anderes Modell oder einen anderen Typ zu.`); }
   }));
 }
 
@@ -125,10 +133,12 @@ export function compareCatalogueEntries(baseline, remote) {
     for (const region of REGIONS) if (previous.release[region] !== entry.release[region]) fields.push(`release.${region}`);
     if (fields.length) changed.push({ id: entry.id, before: previous, after: entry, fields });
   }
+  // Local Nintendo supplements never belonged to this upstream snapshot.
+  const absentFromSource = sortEntries(before.filter(entry => !current.has(entry.id) && !ocarinaFigureById.has(entry.id)));
   return { added: sortEntries(added), changed: sortEntries(changed),
-    absentFromSource: sortEntries(before.filter(entry => !current.has(entry.id))),
+    absentFromSource,
     counts: { baseline: before.length, source: after.length, added: added.length,
-      changed: changed.length, absentFromSource: before.filter(entry => !current.has(entry.id)).length,
+      changed: changed.length, absentFromSource: absentFromSource.length,
       merged: before.length + added.length } };
 }
 

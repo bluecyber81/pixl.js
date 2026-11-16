@@ -75,8 +75,8 @@ int main(void) {{
             links = list(csv.reader(stream))
         linked = {int(row[1], 16) for row in links}
         links += [['255', row[0], '', '', ''] for row in figures if int(row[0], 16) not in linked]
-        self.assertEqual(len(figures), 954)
-        self.assertEqual(len(links), 1346)
+        self.assertEqual(len(figures), 956)
+        self.assertEqual(len(links), 1348)
         rows = []
         for row in links:
             game, identifier, english, chinese, italian = row[:5]
@@ -88,12 +88,14 @@ int main(void) {{
 #include <string.h>
 #include "db_amiibo.c"
 #include "db_link.c"
+enum { LANGUAGE_DE_DE, LANGUAGE_EN_US };
+static int getLanguage(void) { return LANGUAGE_EN_US; }
 static bool isChineseLanguage(void) { return false; }
 typedef struct { unsigned game; uint32_t head,tail; const char *en,*cn,*it; } reference_t;
 static const reference_t expected[] = {
 ''' + ',\n'.join(rows) + '\n};\n'
         distinct_note_triples = len({tuple(row[2:5]) for row in links})
-        self.assertEqual(distinct_note_triples, 109)
+        self.assertEqual(distinct_note_triples, 111)
         code += f'#define EXPECTED_NOTE_TRIPLES {distinct_note_triples}\n'
         code += (SRC / 'amiidb/db_search.c').read_text().replace('#include "settings.h"', '')
         code += r'''
@@ -124,7 +126,7 @@ int main(void) {
   assert(get_link_by_id(game,0,0)==NULL);
   assert(get_link_by_id(game,UINT32_MAX,UINT32_MAX)==NULL);
  }
- puts("PASS: all 1346 links, 954 figures, three note languages, lookup and sentinel behavior");
+ puts("PASS: all 1348 links, 956 figures, three note languages, lookup and sentinel behavior");
  return 0;
 }
 '''

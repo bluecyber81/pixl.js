@@ -1,4 +1,5 @@
 #include "db_header.h"
+#include "amiibo_model_details.h"
 
 #include "settings.h"
 
@@ -40,5 +41,7 @@ bool is_valid_amiibo_v3(uint32_t head, uint32_t tail){
 }
 
 const char* get_amiibo_display_name(const db_amiibo_t *amiibo){
+    const char *german = amiibo_detail_german_name(amiibo->head, amiibo->tail);
+    if (german && getLanguage() == LANGUAGE_DE_DE) return german;
     return isChineseLanguage() && amiibo->name_cn[0] != '\0' ? amiibo->name_cn : amiibo->name_en;
 }

@@ -15,6 +15,7 @@ const { memoryVfs } = await import(at('tests/helpers/memory-vfs.mjs'));
 const { auditCollection } = await import(at('src/lib/collection-audit.js'));
 const { prepareFigureTransfer, transferFigureToDevice, suggestedFigureFilename } = await import(at('src/lib/figure-transfer.js'));
 const { observeFigureDownloadLink, readFigureDownloadLink } = await import(at('src/lib/figure-download-links.js'));
+const { catalogueDisplayName } = await import(at('src/data/announced-figures.js'));
 const { filterCatalogue, releaseLabel } = await import(at('src/lib/catalogue.js'));
 const { formatReadDuration, readTimeEstimate } = await import(at('src/lib/read-time-estimate.js'));
 const componentFile = process.env.PIXL_COLLECTION_SOURCE || path.join(root,'src/components/CollectionAssistant.vue');
@@ -33,7 +34,7 @@ assert.deepEqual(compiled.errors,[]);
 const template = compiled.code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,
   (_, names) => `const {${names.replace(/\s+as\s+/g, ':')}}=Vue;`).replace('export function render','function render');
 const make = new Function('Vue','baseline','checkCatalogueUpdates','auditCollection','prepareFigureTransfer',
-  'transferFigureToDevice','suggestedFigureFilename','filterCatalogue','releaseLabel','saveBlob','saveBlobWithPicker',
+  'transferFigureToDevice','suggestedFigureFilename','filterCatalogue','releaseLabel','catalogueDisplayName','saveBlob','saveBlobWithPicker',
   'readTimeEstimate','formatReadDuration','readFigureDownloadLink','observeFigureDownloadLink',script+'\n'+template+'\ncomponent.render=render;return component;');
 const A = '0000000000000102', baseline={entries:[{id:A,name:'Synthetic A',series:'Test',release:{eu:'2020-01-01'}}]};
 const tag = () => { const bytes=new Uint8Array(540);bytes[0]=4;bytes[3]=0x8c;bytes.set(A.match(/../g).map(x=>parseInt(x,16)),84);return bytes; };
@@ -57,7 +58,7 @@ function mount(transfer = transferFigureToDevice) {
   props.getTransferSession=()=>parent.collection_transfer_session();
   props.getSession=()=>parent.collection_transfer_session();
   const Component=make({...Vue,vModelText:{},vModelSelect:{}},baseline,()=>{throw Error('No network');},auditCollection,
-    prepareFigureTransfer,transfer,suggestedFigureFilename,filterCatalogue,releaseLabel,
+    prepareFigureTransfer,transfer,suggestedFigureFilename,filterCatalogue,releaseLabel,catalogueDisplayName,
     ()=>{throw Error('No download');},()=>{throw Error('No download');},readTimeEstimate,formatReadDuration,readFigureDownloadLink,observeFigureDownloadLink);
   const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:value=>vm=value,
     onBusy:value=>events.push({name:'busy',value}),onWriting:value=>events.push({name:'writing',value}),

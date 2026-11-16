@@ -4,8 +4,8 @@
   "version": "2.22.0-DE3.75",
   "counter": 648,
   "board": "LCD",
-  "web_version": "3.53.0",
-  "web_publication_date": "2026-11-15",
+  "web_version": "3.54.0",
+  "web_publication_date": "2026-11-16",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "603d99133331fdb425647e27106b043f9f7f3347e889475153bfe7e828f1dafd",
@@ -51,7 +51,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.53.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.54.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -87,10 +87,10 @@
   "web_personal_backup_status": "Hardware comparisons and export benchmarks are documented in the web evidence.",
   "web_changes": {
     "figure_usage": {
-      "figures": 954,
-      "associations": 1346,
-      "unique_german_translations": 53,
-      "german_note_associations": 63,
+      "figures": 956,
+      "associations": 1348,
+      "unique_german_translations": 55,
+      "german_note_associations": 72,
       "english_fallback": true,
       "game_testing_claimed": false
     },
@@ -106,10 +106,11 @@
         "DE3.72/645",
         "DE3.73/646",
         "DE3.74/647",
-        "DE3.75/648"
+        "DE3.75/648",
+        "DE3.76/649 (preview)"
       ],
       "stable": "DE3.75/648",
-      "prerelease": "DE3.73/646"
+      "prerelease": "DE3.76/649"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -153,9 +154,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_53_0.json",
+  "web_evidence": "docs/validation/WEB3_54_0.json",
   "device_readback_evidence": "docs/validation/DE3_75_LCD_CHECK.json",
-  "web_device_readback_pending_scope": "Read-only DE3.75 hardware timings are recorded in the web evidence. Chrome mobile layouts were tested on Windows.",
+  "web_device_readback_pending_scope": "The 3.54.0 catalogue has host and browser tests. Earlier hardware timing evidence is archived in WEB3_53_0.json.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
@@ -196,5 +197,16 @@
   },
   "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/workflows/unsigned-firmware.yml",
   "device_validation_scope": "One LCD running App648, with four owner-reported list-return and wake observations in German with resume on, plus confirmation that a known figure was recognized by the Switch. Animation was not recorded. Hardware DFU interruption and NFC endurance remain open.",
-  "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json"
+  "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
+  "firmware_preview": {
+    "version": "2.22.0-DE3.76",
+    "counter": 649,
+    "source_id": "3f52580f386f753be828ca86437b98adbba3c9b609954e8c04fa90194eb3b497",
+    "application_sha256": "3e3899226d773b9f664400efdf536eb6bc1cea1fe61277218b63e730d29aed2a",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_76_649_NUR_APP.zip",
+    "ota_sha256": "41d07d2b4d4ca6092432beb5573a5c43e801cfa69f26499aadbae284991bd585",
+    "hardware_acceptance": "pending",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.76",
+    "evidence": "docs/validation/DE3_76.json"
+  }
 }

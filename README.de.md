@@ -1,5 +1,13 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
+## Junger Link und Junge Zelda · Dateimanager 3.54.0
+
+Im Figurenkatalog findest du beide für 2027 angekündigten Figuren über ihren deutschen oder englischen Namen und über das Switch-2-Spiel *The Legend of Zelda: Ocarina of Time*. Jede Figur hat ein eigenes Bild und einen deutschen Spielhinweis. Nintendo nennt besondere Masken, die Link tragen kann. [Spielinformationen bei Nintendo](https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/The-Legend-of-Zelda-Ocarina-of-Time-3115664.html)
+
+Auch alle sieben Figuren aus *Kirby Air Riders* haben jetzt auf dem LCD ein eigenes Bild und deutsche Spielhinweise, darunter Kirby mit Schwert & Dragoon und Dedede Noir & Hydra. [Versionshinweise zu Kirby Air Riders](https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html)
+
+Für die eingebaute Datenbank auf dem **Allmiibo LCD** gibt es die signierte **DE3.76 / App649** als Testversion für PFS1 mit Z19 und S112 7.3.0. Im Dateimanager findest du die ZIP unter **Update**. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.76/Allmiibo_LCD_DE3_76_649_NUR_APP.zip) · [Stabile Firmware DE3.75](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
+
 ## Dateimanager 3.53.0
 
 **DE3.75 / App648 ist die stabile LCD-Firmware** für Geräte mit PFS1, Z19 und S112 7.3.0. Auf einem LCD gelangen die Rückkehr zur gewählten Figur und das Aufwachen in beiden Apps. Die Switch erkannte außerdem eine bekannte Figur. Wer die signierte App648 bereits geflasht hat, kann sie weiterverwenden. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android-Kombi für passende ältere Bootloader](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Änderungen und Gerätetests](docs/RELEASE_DE3_75.md) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip)

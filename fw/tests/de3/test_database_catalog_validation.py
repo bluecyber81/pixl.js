@@ -184,9 +184,9 @@ class CatalogValidationTests(unittest.TestCase):
 
     def test_current_catalog_and_read_only_cli(self):
         summary = generator.validate_catalog(*generator.read_catalog())
-        self.assertEqual(summary, {'figures': 954, 'games': 82, 'links': 1346,
+        self.assertEqual(summary, {'figures': 956, 'games': 83, 'links': 1348,
                                   'legacyEmptyLinkColumns': 3,
-                                  'uncategorizedFigures': 0, 'englishNoteLinks': 63, 'uniqueEnglishNotes': 53})
+                                  'uncategorizedFigures': 0, 'englishNoteLinks': 72, 'uniqueEnglishNotes': 55})
         cli = FW / 'scripts/amiibo_db_validate.py'
         result = subprocess.run([sys.executable, '-B', str(cli), '--data-dir', str(self.data)],
                                 capture_output=True, text=True, timeout=20)

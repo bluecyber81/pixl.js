@@ -1,0 +1,153 @@
+[
+  {
+    "id": "1f00000004c41e03",
+    "name": "kirby_warp_star",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/kirby-and-warp-star-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caaa/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/Kirby_and_Warp_Star_Kirby_Air_Riders_Figure",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        444,
+        400
+      ],
+      "sha": "501b5cb17b2812dd98a901f69705e6e0699139b9c21242482b50a2a038d695f6"
+    },
+    "xbmSha256": "ec4d38170822944b718cf304b0b7a01201f995051678da3c25c92b5c85304ec1"
+  },
+  {
+    "id": "1f03010004c91e03",
+    "name": "bandana_waddle_dee_winged_star",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/bandana-waddle-dee-and-winged-star-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caab/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/Bandana_Waddle_Dee_and_Winged_Star_Kirby_Air_Riders_figure",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        471,
+        400
+      ],
+      "sha": "ce99ba441cb05a92f921e815cd51d41d7784ee2824037b517fe54885d77a213d"
+    },
+    "xbmSha256": "ef95c8dbce9579dfd0313bd60bf2e250f61129b836dfa82e2427c17c28809cf3"
+  },
+  {
+    "id": "1f01000004c61e03",
+    "name": "meta_knight_shadow_star",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/meta-knight-and-shadow-star-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caac/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/meta-knight-and-shadow-star-kirby-air-riders-series-figure",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        496,
+        400
+      ],
+      "sha": "a6e47f31170a7e0e2416546a5bd169dd550ef771701d2ccb70c742d2b7332d95"
+    },
+    "xbmSha256": "5b222e5c86fec9b0563514f65ce9724e6f270ee5715f86a89bd2fa14caa46cd8"
+  },
+  {
+    "id": "1f02000004c71e03",
+    "name": "king_dedede_tank_star",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/king-dedede-and-tank-star-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caae/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/king-dedede-and-tank-star-figure",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        341,
+        400
+      ],
+      "sha": "b327445a598a62a00817c36202be0e39e5a3df37b4fb088cf8fdb788d5640e23"
+    },
+    "xbmSha256": "d41c6eac0eeeaf8ea17213383ec341620a0585ab5b17eb60c0827f90b110dbc2"
+  },
+  {
+    "id": "1f04000004ca1e03",
+    "name": "chef_kawasaki_hop_star",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/chef-kawasaki-and-hop-star-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caad/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/chef-kawasaki-and-hop-star-figure",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        364,
+        400
+      ],
+      "sha": "d82cee6fbb30562a623300f4c3d1120c04c999223d60750895a88734cf84b055"
+    },
+    "xbmSha256": "b1619b1f8a4b70d8479956d540497ea98451d454942cb9789870c14a6dbb01e5"
+  },
+  {
+    "id": "1f00010004c51e03",
+    "name": "sword_kirby_dragoon",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/sword-kirby-and-dragoon-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caaf/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/sword-kirby-and-dragoon-kirby-air-riders-series",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        590,
+        400
+      ],
+      "sha": "d516e7df600bb10e0eaa8b4872bf7afea600823d802ebb3bd0bc24c0e00115f8"
+    },
+    "xbmSha256": "a73f6f80335776a172786caf0ccf9b08dbbd735b3f01e9e6bda5d52187a28344"
+  },
+  {
+    "id": "1f02010004c81e03",
+    "name": "noir_dedede_hydra",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/noir-dedede-and-hydra-kirby-air-riders-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/caag/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/ar_16:9,b_auto:border,c_lpad/b_white/f_auto/q_auto/dpr_2.0/amiibo/Kirby%20Air%20RIders/noir-dedede-and-hydra-kirby-air-riders-series",
+    "webSource": "AmiiboAPI frozen revision 855a0ff4308278de756bed01de1eca89936f456b",
+    "webImage": {
+      "status": 200,
+      "size": [
+        511,
+        400
+      ],
+      "sha": "3d51dc2c1a9e3156bf6aeb108373e04e08f85f4eb1ecab31ba2184a5897005d6"
+    },
+    "xbmSha256": "53f14285bac881b16f41e79b1ae0c71aa941d89bf46a166a83deb7818be0aee3"
+  },
+  {
+    "id": "0100000004fd0902",
+    "name": "young_link_oot",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/young-link-the-legend-of-zelda-ocarina-of-time-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/akbf/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/c_limit,w_320,f_webp/amiibo/The%20Legend%20of%20Zelda%20Ocarina%20of%20Time/PNG_Derivative-NVL_AK_char28_1_R_ad-0",
+    "webImage": {
+      "status": 200,
+      "size": [
+        320,
+        320
+      ],
+      "sha": "97df96e875d271a417f997022e5624856b66f991b79edb7b416304b4031240eb"
+    },
+    "xbmSha256": "c29a6fadf79c98f712bc2e375d0eae01f54fc5ad98d97c8468841ca407ef76c5"
+  },
+  {
+    "id": "0101000004ff0902",
+    "name": "young_zelda_oot",
+    "nintendoPage": "https://www.nintendo.com/us/amiibo/detail/young-zelda-the-legend-of-zelda-ocarina-of-time-series/",
+    "nintendoLineup": "https://www.nintendo.com/sg/hardware/amiibo/lineup/akbg/index.html",
+    "nintendoImage": "https://assets.nintendo.com/image/upload/c_limit,w_320,f_webp/amiibo/The%20Legend%20of%20Zelda%20Ocarina%20of%20Time/PNG_Derivative-NVL_AK_char29_1_R_ad-0",
+    "webImage": {
+      "status": 200,
+      "size": [
+        320,
+        320
+      ],
+      "sha": "d469a646b5e65e535ba47aa9a70163ada080d97d4ba9783e67cf91b57dc499c1"
+    },
+    "xbmSha256": "adc1fed6085bcb6bc23096c524b5cb293dece645ef56c79ea73667d561073401"
+  }
+]

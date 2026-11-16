@@ -26,6 +26,17 @@ function adapter(tree = { 'E:/': [file('a.bin')] }, content = {}) {
 }
 const run = (options = {}) => auditCollection({ ...adapter().options, ...options });
 
+test('year-only Ocarina announcements can be found on a device and are never reported as missing before release', async () => {
+  const link = '0100000004fd0902', zelda = '0101000004ff0902', smash = '01000000037c0002';
+  const subset = COLLECTION_AUDIT_CATALOGUE.entries.filter(figure => [link, zelda, smash].includes(figure.id));
+  const scan = adapter({'E:/':[file('Figure.bin')]},{'E:/Figure.bin':tag(link)});
+  const report = await auditCollection({...scan.options, today:'2026-11-16', catalogue:subset});
+  assert.deepEqual(report.present.map(row => row.id), [link]);
+  assert.deepEqual(report.missing.map(row => row.id), [smash]);
+  assert.deepEqual(new Set(report.upcoming.map(row => row.id)), new Set([link,zelda]));
+  assert.ok(report.upcoming.every(row => row.releaseDate === null), 'No regional day was announced');
+});
+
 test('full scan reads all supported BIN contents despite valid but stale metadata', async () => {
   const a = adapter({ 'E:/': [file('a.BIN', 540, B), folder('sub')], 'E:/sub': [file('b.bin', 532, B)] },
     { 'E:/a.BIN': tag(A), 'E:/sub/b.bin': tag(B, 532) });

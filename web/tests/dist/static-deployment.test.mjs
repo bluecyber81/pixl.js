@@ -99,7 +99,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.ok(index.includes(`href="${file}"`), file)
   }
   for (const releaseFile of [
-    'web3.53.0/Allmiibo_Dateimanager_3_53_0_Quellcode.zip',
+    'web3.54.0/Allmiibo_Dateimanager_3_54_0_Quellcode.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
   ]) {
     assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/' + releaseFile + '" download'), releaseFile)

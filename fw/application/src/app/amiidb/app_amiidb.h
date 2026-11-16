@@ -80,6 +80,8 @@ typedef struct {
 
 } app_amiidb_t;
 
+bool amiidb_show_catalog_card(app_amiidb_t *app, const db_amiibo_t *entry, mui_list_view_event_t event);
+
 typedef enum {
     AMIIDB_VIEW_ID_LIST,
     AMIIDB_VIEW_ID_DETAIL,

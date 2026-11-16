@@ -4,6 +4,10 @@ The DE3.55 source snapshot, application-only firmware, optional BL8 source and D
 
 Original source notices remain in place. Additional copies, file hashes, provenance and exact web-package versions are collected in [LICENSES/INVENTORY.json](LICENSES/INVENTORY.json). Keep applicable notices with redistributed source and binary packages.
 
+## Figure illustrations
+
+Ocarina of Time characters and product artwork © Nintendo. Kirby Air Riders characters and product artwork © Nintendo / SORA and © Nintendo / HAL Laboratory, Inc. The LCD database uses nine 32 × 32 monochrome illustrations derived from the respective product pictures. The web catalogue can fetch full-colour pictures from external image providers. Each LCD artwork header identifies the original products. [Nintendo amiibo line-up](https://www.nintendo.com/us/amiibo/line-up/)
+
 ## Firmware and build tools
 
 | Component | Observed terms | Notice |
@@ -32,7 +36,7 @@ The retained bdfconv executables are historical font-generation build tools cove
 
 ## Current web and SDK additions
 
-Dateimanager 3.53.0 has its dependency lock in
+Dateimanager 3.54.0 has its dependency lock in
 [web/package-lock.json](web/package-lock.json). The public Web 3.48.1 archive
 remains available with its own notices. The firmware component notices are
 included in `fw/`, `bootloader-z19/` and `softdevice-s112/`.

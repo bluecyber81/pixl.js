@@ -1,3 +1,4 @@
+import { ocarinaFigureById } from '../data/announced-figures.js';
 import { sha256Bytes } from './safe-upload.js';
 import bundledCatalogue from '../data/catalogue.json' with { type: 'json' };
 import { assertDevicePath, joinDevicePath } from './portable-names.js';
@@ -27,8 +28,10 @@ function catalogueSnapshot(input, today) {
     if (!id || seen.has(id)) throw new TypeError('Invalid or duplicate catalogue ID');
     seen.add(id);
     const dates = Object.values(entry.release || {}).filter(day).sort();
+    const releaseState = dates.length ? (dates[0] > today ? 'upcoming' : 'listed')
+      : (ocarinaFigureById.has(id) ? 'upcoming' : 'unknown');
     return Object.freeze({ id, name: text(entry.name), series: text(entry.series),
-      releaseDate: dates[0] || null, releaseState: !dates.length ? 'unknown' : dates[0] > today ? 'upcoming' : 'listed' });
+      releaseDate: dates[0] || null, releaseState });
   });
   return freeze({ entries: rows, checkedDate: day(input?.checkedDate) ? input.checkedDate : null,
     commit: typeof input?.commit === 'string' && /^[a-f0-9]{40}$/.test(input.commit) ? input.commit : null });
@@ -206,7 +209,7 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
   const report = { schema: 1, mode, rootPath, today, status, complete, scanComplete, contentComplete,
     contentConfirmed: contentComplete, cancelled: status === 'cancelled', sessionChanged: status === 'session-changed',
     catalogue: { entries: snapshot.entries.length, checkedDate: snapshot.checkedDate, commit: snapshot.commit,
-      scope: 'provided-catalogue-snapshot', releaseRule: 'earliest-known-regional-date' },
+      scope: 'provided-catalogue-snapshot', releaseRule: 'earliest-known-regional-date-or-announcement' },
     stats: { ...stats, observedIds: observed.size, consistentIds: confirmed.size, presentIds: present.length },
     unknownIdFileCount: files.filter(row => !row.id).length,
     files, present, missing, unconfirmed, upcoming: snapshot.entries.filter(entry => entry.releaseState === 'upcoming').map(catalogueRow),

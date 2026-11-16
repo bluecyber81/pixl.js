@@ -47,16 +47,27 @@ test('all exported rows keep a group path and pinned source line without externa
       if (row.translated) translated++;
       if (row.guideUrl) official++;
       assert.ok(row.label);
+      if (row.officialAssociation && row.groupId === 82) {
+        assert.ok(['0100000004fd0902','0101000004ff0902'].includes(figure.id));
+        assert.match(row.sourceUrl, /^https:\/\/www\.nintendo\.com\/us\/amiibo\/detail\/young-(?:link|zelda)-/);
+        assert.match(row.text, /Maske/);
+        continue;
+      }
       if (row.officialAssociation) {
-        assert.ok(['1f00010004c51e03', '1f02010004c81e03'].includes(figure.id));
         assert.equal(row.groupId, 75);
+        assert.match(row.text, /Trainiere den Fahrer/);
+        if (!['1f00010004c51e03', '1f02010004c81e03'].includes(figure.id)) {
+          assert.equal(row.sourceUrl, 'https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/');
+          assert.equal(row.sinceGameVersion, undefined); continue;
+        }
+        assert.equal(row.sinceGameVersion, '1.3.3');
         assert.match(row.sourceUrl, /^https:\/\/www\.nintendo\.com\/de-de\/.*2967700\.html$/);
         continue;
       }
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1346, notes: 65, translated: 59, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1348, notes: 72, translated: 68, official: 4 });
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.
@@ -130,7 +141,7 @@ test('both Kirby riders link to the official game update in DE and EN', async ()
       for (const locale of ['de_DE', 'en_US']) {
         state.id = id; state.locale = locale; await Vue.nextTick();
         assert.match(text(root), /1\.3\.3/);
-        assert.match(text(root), locale === 'de_DE' ? /auf eine Maschine.*trainieren/ : /on a machine.*train a Figure Player/);
+        assert.match(text(root), locale === 'de_DE' ? /Trainiere den Fahrer als Figurenspieler/ : /Train the rider as a Figure Player/);
         const links = nodes(root, 'a');
         assert.equal(links.length, 1);
         assert.equal(text(links[0]), locale === 'de_DE' ? 'Quelle: Nintendo-Spielupdate' : 'Source: Nintendo game update');

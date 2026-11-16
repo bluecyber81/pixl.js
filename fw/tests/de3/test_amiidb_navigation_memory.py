@@ -23,7 +23,11 @@ def main():
    packed=packed_type_prefix((src/'mod/vfs/packed_fs.c').read_text())
    sources=[src/'app/amiidb/api/amiidb_api_db.c',src/'app/amiidb/api/amiidb_api_db.h',src/'app/amiidb/app_amiidb.h',src/'app/amiidb/scene/amiidb_scene_game_list.c',src/'app/amiidb/scene/amiidb_scene_amiibo_search.c',src/'mui/view/mui_list_view.c',src/'mui/mui_alloc.h',src/'mui/mui_mem.c',src/'mod/vfs/packed_fs.c',src/'amiidb/db_game.c',src/'amiidb/db_amiibo.c',src/'amiidb/db_link.c',fw/'components/tlsf/tlsf.c']
    source_hashes={str(x.relative_to(fw)):hashlib.sha256(x.read_bytes()).hexdigest() for x in sources}
-   code=(HERE/'amiidb_navigation_memory_host.c.in').read_text().replace('@LIST@',bodies).replace('@GAME@',re.sub(r'^#include[^\n]*\n','',game,flags=re.M)).replace('@SEARCH@',re.sub(r'^#include[^\n]*\n','',search,flags=re.M)).replace('@PACKED@',packed)
+   cards=''
+   if name=='candidate':
+    app=(src/'app/amiidb/app_amiidb.c').read_text()
+    cards='\n'.join(extract(app,f) for f in ('catalog_card_back','amiidb_show_catalog_card'))
+   code=(HERE/'amiidb_navigation_memory_host.c.in').read_text().replace('@LIST@',bodies).replace('@CARD@',cards).replace('@GAME@',re.sub(r'^#include[^\n]*\n','',game,flags=re.M)).replace('@SEARCH@',re.sub(r'^#include[^\n]*\n','',search,flags=re.M)).replace('@PACKED@',packed)
    path=td/(name+'.c');path.write_text(code,encoding='utf-8',newline='\n');exe=td/(name+'.exe')
    inc=[td,src,src/'mui',src/'mui/view',src/'core',src/'mod',src/'mod/vfs',src/'ntag',src/'app/amiidb',src/'app/amiidb/api',src/'app/amiidb/view',src/'app/amiidb/scene',src/'app/amiibo',src/'app/amiibo/view',src/'amiidb',src/'i18n',fw/'components/mlib',fw/'components/u8g2/csrc',fw/'components/tlsf',fw/'components/littlefs']
    cmd=['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-type-limits','-Wno-comment','-Wno-unused-value','-Wno-sign-compare','-Wno-missing-field-initializers','-Wno-pointer-to-int-cast','-DTEST_BASELINE='+str(int(name=='baseline'))]

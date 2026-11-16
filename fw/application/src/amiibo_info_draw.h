@@ -10,6 +10,7 @@
 /* page0 is the normal detail view,1 is public information,2 is its QR link.
  * The caller owns the existing view; this helper allocates nothing. */
 void amiibo_info_draw(mui_canvas_t *canvas, const ntag_t *tag, uint8_t page);
+bool amiibo_info_portrait(mui_canvas_t *canvas, uint32_t head, uint32_t tail, uint8_t x, uint8_t y);
 bool amiibo_info_input(uint8_t *page, const mui_input_event_t *event);
 bool amiibo_info_url(char *out, size_t capacity, const ntag_t *tag);
 

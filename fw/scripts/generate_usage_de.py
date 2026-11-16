@@ -53,7 +53,12 @@ def render(data):
     if not isinstance(data, dict) or data.get("schemaVersion") != 1 or not isinstance(data.get("texts"), dict):
         raise ValueError("Expected reviewed usage translation schema 1")
     texts = data["texts"]
-    if not 1 <= len(texts) <= MAX_TEXTS:
+    # Two historical catalog keys describe the same Boko reward. Preserve both
+    # exact lookups while storing their identical German text only once.
+    alias = "Dragonbone Boko related gear/Meat/Paraglider Skin Material"
+    canonical = "Dragon Bone Boko-related equipment/Meat/Paraglider Skin Material"
+    fold_alias = alias in texts and canonical in texts and texts[alias] == texts[canonical]
+    if not 1 <= len(texts) - int(fold_alias) <= MAX_TEXTS:
         raise ValueError(f"Expected 1..{MAX_TEXTS} LCD translations")
     for english, german in texts.items():
         for value in (english, german):
@@ -62,7 +67,10 @@ def render(data):
             value.encode("utf-8")
         if len(german.encode("utf-8")) > MAX_UTF8:
             raise ValueError("LCD translation exceeds the permitted scratch space")
-    keys = sorted(texts)  # UTF-8 byte ordering agrees with strcmp on valid UTF-8 strings.
+    keys = sorted(key for key in texts if not (fold_alias and key == alias))
+    redirect = (f"    if (strcmp(english, {literal(alias)}) == 0) english = {literal(canonical)};\n"
+                if fold_alias else "")
+    # UTF-8 byte ordering agrees with strcmp on valid UTF-8 strings.
     values = [texts[key] for key in keys]
     encoded, phrases = pack(values)
     rows = ",\n".join("    {%s, %s}" % (literal(en), literal(de)) for en, de in zip(keys, encoded))
@@ -88,7 +96,7 @@ static const struct {{ const char *en; const char *encoded; }} amiibo_usage_de_t
 static const char *amiibo_usage_de(const char *english, char *out, size_t capacity) {
     if (!english) return "";
     if (!out || capacity < AMIIBO_USAGE_DE_BUFFER_BYTES) return english;
-    size_t lo = 0, hi = sizeof(amiibo_usage_de_texts) / sizeof(amiibo_usage_de_texts[0]);
+''' + redirect + r'''    size_t lo = 0, hi = sizeof(amiibo_usage_de_texts) / sizeof(amiibo_usage_de_texts[0]);
     while (lo < hi) {
         const size_t mid = lo + (hi - lo) / 2;
         const int order = strcmp(english, amiibo_usage_de_texts[mid].en);

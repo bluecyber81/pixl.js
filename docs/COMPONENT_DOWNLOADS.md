@@ -5,7 +5,8 @@
 | Gesucht | Download |
 | --- | --- |
 | Stabile Geräte-App für ein kompatibles LCD mit eingerichtetem PFS1, Z19 und S112 7.3.0 | [DE3.75 / App648 – App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) |
-| Dateimanager für Windows oder dessen Quellcode | [Dateimanager 3.53.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.53.0) |
+| Neue LCD-Funktionen auf einem Gerät mit PFS1, Z19 und S112 7.3.0 erproben | [DE3.76 / App649 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.76/Allmiibo_LCD_DE3_76_649_NUR_APP.zip). Die Gerätedatenbank enthält die Figuren „Junger Link“ und „Junge Zelda“. Alle sieben Kirby-Air-Riders-Figuren haben ein LCD-Bild. [Prüfstand](validation/WEB3_54_0.json) |
+| Dateimanager für Windows oder dessen Quellcode | [Dateimanager 3.54.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.54.0) |
 | Kompatibles LCD mit älterem Bootloader und erfüllten [Systemvoraussetzungen](INSTALLATION.md) | [Android-Kombipaket für S112 7.3.0, Z19 und DE3.75 / App648](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) |
 | Systempaket für ein kompatibles LCD mit älterem Bootloader oder Umstellung von SPIFFS | [Voraussetzungen und Paketauswahl](https://bluecyber81.github.io/pixl.js/guide/index.html#bootloader) · [Vorbereitung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
 | Geräteprüfung zu DE3.75 / App648 | [Prüfumfang und Prüfsummen](RELEASE_DE3_75.md) |
@@ -23,12 +24,12 @@ The LCD test application restores the selected data slot and the figure last vie
 
 The guide lists board and counter requirements. Initializing LittleFS erases the old E: drive. Restore the verified backup and complete the final comparison against the device. [Installation guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Windows, sources and ChatGPT review kit](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.1)
 
-Die Tabelle führt die Downloads für das LCD-Allmiibo mit PFS1, den Dateimanager und die jeweiligen Komponentenquellen auf. Stand 9. November 2026.
+## Archiv · Komponentenstand vom 9. November 2026
 
 | Gesucht | Paket oder Quelle |
 | --- | --- |
 | Firmware für ein bereits passendes LCD-Allmiibo mit PFS1, Z19 und S112 7.3.0 | [DE3.65 / 637, gerätegeprüft](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65). Die ZIP aktualisiert die Anwendung. |
-| Neue LCD-Funktionen erproben | [DE3.71t1 / 644, Testversion](https://github.com/bluecyber81/pixl.js/releases/tag/de3.71t1) mit verbesserter Rückkehr und Schlafmodus. [Signierte App-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip). |
+| Damalige LCD-Testversion für die Rückkehr zur Figur | [DE3.71t1 / 644, Testversion](https://github.com/bluecyber81/pixl.js/releases/tag/de3.71t1) mit verbesserter Rückkehr und Schlafmodus. [Signierte App-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip). |
 | Frühere LCD-Testversion DE3.67 / 639 | [Archivierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.67/Allmiibo_LCD_DE3_67_639_NUR_APP.zip) · [Versionshinweise und Geräteprüfung](RELEASE_DE3_67.md). |
 | Dateimanager oder Prüfpaket für die Entwicklung | [Web 3.48.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.48.0) enthält die portable Version, den Webquellcode und ein separates Prüfarchiv mit App- und Bootloader-Artefakten. |
 | Z19 nachbauen oder den DFU-Wiederanlauf prüfen | [Z19-Quellen, Bauanleitung und Tests](../bootloader-z19/README.md). Die Diagnose kann den eingebauten Stand über den Zähler und die Prüfsumme des Bootbereichs zuordnen. |

@@ -2,6 +2,7 @@
 #define AMIIBO_DETAIL_VIEW2_H
 #include "mui_include.h"
 #include "ntag_def.h"
+#include "db_header.h"
 
 
 struct amiibo_view_s;
@@ -18,6 +19,7 @@ typedef void (*amiibo_view_event_cb)(amiibo_view_event_t event, amiibo_view_t *p
 struct amiibo_view_s {
     mui_view_t *p_view;
     ntag_t *ntag;
+    const db_amiibo_t *catalog_entry;
     void *user_data;
     uint8_t focus;
     uint8_t max_ntags;
