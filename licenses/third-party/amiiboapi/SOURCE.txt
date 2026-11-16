@@ -4,7 +4,7 @@ Retrieved 2026-11-13; upstream last-updated.json is stale and is not used as ret
 Machine entries are not standalone figures and are not merged into this catalogue.
 Two reviewed rider additions: Sword Kirby (& Dragoon), Noir Dedede (& Hydra).
 No images, keys or tag dumps included.
-Firmware name flags use the 954 IDs in fw/data/amiidb_amiibo.csv from LCD DE3.75/App648.
+Firmware name flags use the 956 IDs in fw/data/amiidb_amiibo.csv from LCD DE3.81/App654.
 
 Game note update checks use the same immutable commit's database/games_info.json
 (SHA-256 bd100324c3d62a02759f28fa7454af35b5699ec7a87642bdb0e7a92592a228ce).
