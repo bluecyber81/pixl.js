@@ -104,8 +104,10 @@ static cache_data_t cache;
 static ntag_t tag;
 /* This fixture checks the established normal shutdown GPIO path. Recovery
  * cache/NFC behavior is covered by the separate recovery integration tests. */
+#ifdef VFS_PACKED_LFS_ENABLE
 static const ntag_t default_ntag215 = {{0}};
 static bool vfs_packed_recovery_required(void) { return false; }
+#endif
 static int save_result;
 static void nrf_pwr_mgmt_cancel_shutdown(void) {}
 static bool ntag_emu_prepare_change(void) {return true;}

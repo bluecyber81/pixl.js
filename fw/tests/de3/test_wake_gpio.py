@@ -37,6 +37,7 @@ def function(source, name):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-root', type=Path, default=TESTS.parents[2])
+    parser.add_argument('--board', choices=('lcd', 'oled'), default='lcd')
     parser.add_argument('--report', type=Path)
     parser.add_argument('--sanitize', action='store_true')
     parser.add_argument('--cc', default=os.environ.get('CC', 'gcc'))
@@ -45,9 +46,10 @@ def main():
         raise SystemExit('Refusing to replace existing report')
     root = args.source_root.resolve()
     src = root / 'fw/application/src'
+    board_header = f'boards/board_{args.board}.h'
     sources = {name: (src / name).read_bytes() for name in (
         'main.c', 'mui/mui_core.c', 'mui/mui_input.c', 'mod/bsp_btn.c',
-        'mod/bsp_btn.h', 'boards/board_lcd.h')}
+        'mod/bsp_btn.h', board_header)}
     provenance = json.loads((FIXTURE / 'provenance.json').read_text(encoding='utf-8'))
     sdk = {}
     for name, info in provenance['files'].items():
@@ -69,7 +71,7 @@ def main():
             'nrfx_gpiote_in_event_disable', 'nrfx_gpiote_in_uninit')),
         'SDK_BSP_FUNCTIONS': '\n'.join(function(sdk['bsp.c'], name) for name in (
             'wakeup_button_cfg', 'bsp_wakeup_button_enable')),
-        'ACTUAL_BOARD_INCLUDE': sources['boards/board_lcd.h'].decode('utf-8'),
+        'ACTUAL_BOARD_INCLUDE': sources[board_header].decode('utf-8'),
         'ACTUAL_BUTTON_INCLUDE': '#include "' + (src / 'mod/bsp_btn.c').as_posix() + '"',
         'ACTUAL_INPUT_DEINIT': function(sources['mui/mui_input.c'].decode('utf-8'), 'mui_input_deinit'),
         'ACTUAL_MUI_DEINIT': function(sources['mui/mui_core.c'].decode('utf-8'), 'mui_deinit'),
@@ -82,7 +84,7 @@ def main():
             raise ValueError('Missing or repeated fixture marker: ' + marker)
         code = code.replace(marker, value)
     sanitize = args.sanitize or os.environ.get('PIXL_SANITIZE') == '1'
-    report = dict(source_root=str(root), device_access=False, hardware_mocked=True,
+    report = dict(source_root=str(root), board=args.board, device_access=False, hardware_mocked=True,
                   physical_wakeup_tested=False, sdk_provenance=provenance,
                   source_sha256={name: sha(data) for name, data in sources.items()},
                   generated_translation_unit_sha256=sha(code.encode()), sanitized=sanitize)

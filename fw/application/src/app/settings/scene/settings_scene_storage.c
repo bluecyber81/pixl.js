@@ -111,7 +111,9 @@ void settings_scene_storage_on_enter(void *user_data) {
     int32_t res = settings_storage_snapshot_read(&app->storage_snapshot, p_driver, &stat);
     char txt[64];
     if (res == VFS_OK) {
-#ifdef VFS_LFS_ENABLE
+#ifdef VFS_OLED_AUTO_ENABLE
+        const char *mount_str = getLangString(vfs_oled_backend() == 1 ? _L_MOUNTED_FFS : _L_MOUNTED_LFS);
+#elif defined(VFS_LFS_ENABLE)
 #define mount_str getLangString(_L_MOUNTED_LFS)
 #else
 #define mount_str getLangString(_L_MOUNTED_FFS)

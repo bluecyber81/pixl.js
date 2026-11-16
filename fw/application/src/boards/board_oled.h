@@ -52,7 +52,8 @@
 
 
 // VFS driver
-//#define VFS_LFS_ENABLE
+#define VFS_OLED_AUTO_ENABLE
+#define VFS_LFS_ENABLE
 #define VFS_SPIFFS_ENABLE
 
 

@@ -1,4 +1,4 @@
-"""Release gates derived from the linked Nordic LCD application map and binary."""
+"""Release gates derived from the linked Nordic application map and binary."""
 import re
 
 
@@ -18,7 +18,7 @@ def check_budget(map_text, binary_bytes):
 
     flash, ram = region("FLASH"), region("RAM")
     if flash != (0x19000, 0x5B000) or ram != (0x20003600, 0xCA00):
-        raise ValueError("Unexpected LCD application regions")
+        raise ValueError("Unexpected application regions")
     used = symbol("TotalFlashUsed")
     top, limit, heap = (symbol(key) for key in ("__StackTop", "__StackLimit", "__HeapLimit"))
     if not (0 < binary_bytes <= used <= flash[1] and ram[0] < heap <= limit < top == sum(ram)):
@@ -28,5 +28,5 @@ def check_budget(map_text, binary_bytes):
     minima = {"flash_reserve_bytes": 8192, "heap_stack_gap_bytes": 1536, "stack_reserved_bytes": 8192}
     for name, floor in minima.items():
         if margins[name] < floor:
-            raise ValueError(f"LCD budget {name}: {margins[name]} bytes, need at least {floor}")
+            raise ValueError(f"Application budget {name}: {margins[name]} bytes, need at least {floor}")
     return {"binary_bytes": binary_bytes, "linker_flash_used_bytes": used, "observed": margins, "minimum": minima}

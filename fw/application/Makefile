@@ -669,10 +669,10 @@ CFLAGS += -DS112
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DLV_LVGL_H_INCLUDE_SIMPLE 
 CFLAGS += -DBOARD_$(BOARD)
-ifeq ($(BOARD),LCD)
 # Mount and file buffers are explicitly owned by the bounded application pool.
 CFLAGS += -DLFS_NO_MALLOC
 CFLAGS += -DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN -DLFS_NO_ERROR
+ifeq ($(BOARD),LCD)
 ifeq ($(FILESYSTEM),SPIFFS_PREP)
 CFLAGS += -DPIXL_FS_SPIFFS_PREP
 endif
@@ -784,6 +784,14 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 OWN_C_SOURCES := $(sort $(filter $(PROJ_DIR)/%.c,$(SRC_FILES)))
 OWN_C_OBJECTS := $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(notdir $(OWN_C_SOURCES))))
 $(OWN_C_OBJECTS): CFLAGS += -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Werror=int-conversion
+
+ifeq ($(BOARD),OLED)
+# Only one filesystem is mounted at a time. Cross-file optimisation allows
+# both on-disk formats to fit while keeping the normal stack and flash reserve.
+OLED_FS_SOURCES := $(filter $(COMP_DIR)/spiffs/%.c $(COMP_DIR)/littlefs/%.c $(PROJ_DIR)/mod/vfs/%.c,$(SRC_FILES))
+OLED_FS_OBJECTS := $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(notdir $(OLED_FS_SOURCES))))
+$(OLED_FS_OBJECTS): CFLAGS += -flto
+endif
 
 .PHONY: flash flash_softdevice erase
 .PHONY: size_report size_report_files

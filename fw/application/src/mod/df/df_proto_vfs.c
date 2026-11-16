@@ -888,6 +888,10 @@ static void df_proto_handler_vfs_storage_info(df_event_t *evt) {
     /* Old clients validate the known flag mask strictly. The new capability
      * appears only after the explicit extended request [drive,1]. */
     out.data[4] = extended && evt->df->data[0] == 'E' ? 15 : 7;
+#elif defined(VFS_OLED_AUTO_ENABLE)
+    out.data[2] = vfs_oled_backend();
+    if (!out.data[2]) { send_vfs_error(evt->df->cmd, VFS_ERR_NODEV); return; }
+    out.data[4] = 7;
 #elif defined(VFS_LFS_ENABLE)
     out.data[2] = 2;
     out.data[4] = 7; /* raw read/write; mount never autoformats */

@@ -1,4 +1,5 @@
 """Compile the real settings.c with mocked storage; never accesses hardware."""
+import argparse
 import json
 from pathlib import Path
 import shutil
@@ -7,11 +8,17 @@ import tempfile
 
 FW = Path(__file__).resolve().parents[2]
 source = FW / 'application/src/mod/settings.c'
+board = 'lcd'
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--board', choices=('lcd', 'oled'), default=board)
+    board = parser.parse_args().board
+board_header = FW / f'application/src/boards/board_{board}.h'
 with tempfile.TemporaryDirectory(prefix='pixl-settings-') as temporary:
     root = Path(temporary)
     (root / 'i18n').mkdir()
     stubs = {
-        'boards.h': '', 'tag_helper.h': '',
+        'boards.h': f'#include "{board_header.as_posix()}"\n', 'tag_helper.h': '',
         'app_amiibolink.h': '#include "ble_amiibolink.h"\n',
         'i18n/language.h': 'typedef enum { LANGUAGE_DE_DE, LANGUAGE_EN_US, LANGUAGE_COUNT } Language;\n',
         'nrf_log.h': '#define NRF_LOG_INFO(...) ((void)0)\n#define NRF_LOG_WARNING(...) ((void)0)\n',
@@ -27,6 +34,9 @@ with tempfile.TemporaryDirectory(prefix='pixl-settings-') as temporary:
 #include "SOURCE_FILE"
 static unsigned startup_marks;
 static int recovery_result;
+#ifdef VFS_PACKED_LFS_ENABLE
+bool vfs_packed_recovery_required(void) { return false; }
+#endif
 void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
     startup_marks |= 1u << step;
 }
@@ -66,6 +76,9 @@ static void reset(void) {
         .write_file_data=write_mock,.update_file_meta=meta_mock,.remove_file=remove_mock};
 }
 int main(void) {
+#ifdef OLED_SCREEN
+    assert(def_settings_data.bat_mode && def_settings_data.oled_contrast == 80);
+#endif
     reset(); stored_size=24; stored[12]=3; stored[14]=5; stored[23]=0xff; stored[10]=30;
     assert(settings_init()==0); assert(m_settings_data.anim_enabled);
     assert(!m_settings_data.no_sleep_mode && !m_settings_data.flip_display && !m_settings_data.swap_buttons);
@@ -74,8 +87,11 @@ int main(void) {
     assert(settings_save()==0 && writes==1);
     puts("PASS legacy24 migration preserves brightness, normalizes animation, ignores padding");
 
-    reset(); stored[14]=1; stored[23]=1; stored[24]=1; stored[25]=1;
+    reset(); stored[1]=15; stored[8]=1; stored[11]=65; stored[14]=1;
+    stored[23]=1; stored[24]=1; stored[25]=1;
     assert(settings_init()==0 && m_settings_data.language==LANGUAGE_EN_US);
+    assert(m_settings_data.sleep_timeout_sec==15 && m_settings_data.hibernate_enabled);
+    assert(m_settings_data.oled_contrast==65);
     assert(m_settings_data.no_sleep_mode && m_settings_data.flip_display && m_settings_data.swap_buttons);
     assert(settings_save()==0 && writes==0);
     puts("PASS current26 preferences preserved and unchanged file not rewritten");
@@ -140,4 +156,4 @@ int main(void) {
                '-I', str(FW/'application/src/mod/ble'), str(cfile), '-o', str(exe)]
     subprocess.run(command, check=True, text=True)
     result = subprocess.run([str(exe)], check=True, capture_output=True, text=True)
-    print(json.dumps({'test': 'settings', 'groups': 8, 'result': result.stdout}, indent=2))
+    print(json.dumps({'test': 'settings', 'board': board, 'groups': 8, 'result': result.stdout}, indent=2))

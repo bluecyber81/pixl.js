@@ -18,9 +18,23 @@
 static lfs_t lfs;
 static struct lfs_config lfs_config;
 static bool mounted;
+#ifdef VFS_OLED_AUTO_ENABLE
+static struct {
+    uint8_t read[LFS_CACHE_SIZE], prog[LFS_CACHE_SIZE], lookahead[16];
+} *lfs_buffers;
+#define lfs_read_buf (lfs_buffers->read)
+#define lfs_prog_buf (lfs_buffers->prog)
+#define lfs_lookahead_buf (lfs_buffers->lookahead)
+static void release_buffers(void) {
+    if (lfs_buffers) mui_mem_free(lfs_buffers);
+    lfs_buffers = NULL;
+}
+#else
+#define release_buffers() ((void)0)
 static uint8_t lfs_read_buf[LFS_CACHE_SIZE];
 static uint8_t lfs_prog_buf[LFS_CACHE_SIZE];
 static uint8_t lfs_lookahead_buf[16];
+#endif
 static const vfs_driver_t persist_raw_driver;
 
 /* All file storage belongs to the checked application heap. opencfg avoids
@@ -76,6 +90,10 @@ static int32_t configure(void) {
     if (info.page_size != LFS_CACHE_SIZE || info.block_size != LFS_BLOCK_SIZE ||
         info.block_count < 2 || info.block_count > 0x1000000u / LFS_BLOCK_SIZE)
         return VFS_ERR_UNSUPT;
+#ifdef VFS_OLED_AUTO_ENABLE
+    lfs_buffers = mui_mem_malloc(sizeof(*lfs_buffers));
+    if (!lfs_buffers) return VFS_ERR_NOMEM;
+#endif
     memset(&lfs_config, 0, sizeof(lfs_config));
     lfs_config.read = block_device_read;
     lfs_config.prog = block_device_prog;
@@ -91,8 +109,12 @@ static int32_t configure(void) {
     lfs_config.read_buffer = lfs_read_buf;
     lfs_config.prog_buffer = lfs_prog_buf;
     lfs_config.lookahead_buffer = lfs_lookahead_buf;
+/* PixLink records the LittleFS default limits in the superblock. The VFS
+     * wrappers independently check their smaller name and metadata buffers. */
+#ifndef VFS_OLED_AUTO_ENABLE
     lfs_config.name_max = VFS_MAX_NAME_LEN - 1;
     lfs_config.attr_max = VFS_MAX_META_LEN;
+#endif
     return VFS_OK;
 }
 
@@ -103,7 +125,33 @@ int32_t vfs_lfs_mount(void) {
     result = lfs_mount(&lfs, &lfs_config);
     /* Never format/migrate on mount failure: existing SPIFFS or damaged data
      * must remain recoverable with the previous application and PC backup. */
-    if (result != LFS_ERR_OK) return vfs_lfs_map_error_code(result);
+    if (result != LFS_ERR_OK) {
+        release_buffers();
+        return vfs_lfs_map_error_code(result);
+    }
+#ifdef VFS_OLED_AUTO_ENABLE
+    /* PackedFS is a different logical filesystem in a LittleFS container.
+     * Reserve its internal root names instead of exposing or modifying them. */
+    lfs_dir_t root;
+    struct lfs_info entry;
+    result = lfs_dir_open(&lfs, &root, "/");
+    if (result == LFS_ERR_OK) {
+        while ((result = lfs_dir_read(&lfs, &root, &entry)) > 0) {
+            if (!strncmp(entry.name, ".pfs_", 5)) {
+                result = VFS_ERR_UNSUPT;
+                break;
+            }
+        }
+        int closed = lfs_dir_close(&lfs, &root);
+        if (result == 0) result = closed;
+    }
+    if (result != 0) {
+        lfs_unmount(&lfs);
+        release_buffers();
+        /* Only a failed superblock mount can be a candidate for SPIFFS. */
+        return result == VFS_ERR_UNSUPT ? result : VFS_ERR_FAIL;
+    }
+#endif
     mounted = true;
     vfs_persist_unmounted(&vfs_driver_fs);
     vfs_persist_bind(&vfs_driver_fs, &persist_raw_driver);
@@ -115,6 +163,7 @@ int32_t vfs_lfs_umount(void) {
     int32_t result = lfs_unmount(&lfs);
     if (result == LFS_ERR_OK) {
         mounted = false;
+        release_buffers();
         vfs_persist_unmounted(&vfs_driver_fs);
     }
     return vfs_lfs_map_error_code(result);
@@ -125,7 +174,9 @@ int32_t vfs_lfs_format(void) {
     if (result != VFS_OK) return result;
     result = configure();
     if (result != VFS_OK) return result;
-    return vfs_lfs_map_error_code(lfs_format(&lfs, &lfs_config));
+    result = lfs_format(&lfs, &lfs_config);
+    release_buffers();
+    return vfs_lfs_map_error_code(result);
 }
 bool vfs_lfs_mounted(void) { return mounted; }
 int32_t vfs_lfs_stat(vfs_stat_t *stat) {
@@ -356,6 +407,12 @@ int32_t vfs_lfs_update_file_meta(const char *path, void *meta, size_t size) {
     int32_t result = ready_path(path, false);
     if (result != VFS_OK) return result;
     if (size > VFS_MAX_META_LEN || (size && !meta)) return VFS_ERR_FAIL;
+#ifdef VFS_OLED_AUTO_ENABLE
+    uint8_t first_byte;
+    int32_t previous = lfs_getattr(&lfs, path, LFS_ATTR_META, &first_byte, sizeof(first_byte));
+    if (previous > VFS_MAX_META_LEN) return VFS_ERR_UNSUPT;
+    if (previous < 0 && previous != LFS_ERR_NOATTR) return vfs_lfs_map_error_code(previous);
+#endif
     uint8_t padded[VFS_MAX_META_LEN] = {0};
     if (size) memcpy(padded, meta, size);
     return vfs_lfs_map_error_code(lfs_setattr(&lfs, path, LFS_ATTR_META, padded, sizeof(padded)));
@@ -427,7 +484,11 @@ static int32_t guarded_rename_dir(const char *path, const char *target) {
     if (result == VFS_OK) result = vfs_persist_before_mutation(&vfs_driver_fs, target);
     return result == VFS_OK ? vfs_lfs_rename_dir(path, target) : result;
 }
+#ifdef VFS_OLED_AUTO_ENABLE
+const vfs_driver_t vfs_oled_lfs_driver = {
+#else
 const vfs_driver_t vfs_driver_fs = {
+#endif
     .mount = vfs_lfs_mount, .umount = vfs_lfs_umount, .format = vfs_lfs_format,
     .mounted = vfs_lfs_mounted, .stat = vfs_lfs_stat, .stat_file = vfs_lfs_stat_file,
     .open_dir = vfs_lfs_open_dir, .read_dir = vfs_lfs_read_dir, .close_dir = vfs_lfs_close_dir,

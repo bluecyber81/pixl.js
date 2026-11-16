@@ -13,6 +13,9 @@
 #include "cwalk.h"
 #include "cwalk2.h"
 #include "spiffs.h"
+#ifdef VFS_OLED_AUTO_ENABLE
+#include "spiffs_nucleus.h"
+#endif
 #if defined(BOARD_LCD)
 #include "vfs_spiffs_diag.h"
 #endif
@@ -38,9 +41,91 @@ static void reset_writer_tracking(void) {
     vfs_spiffs_diag_reset();
 #endif
 }
+#ifdef VFS_OLED_AUTO_ENABLE
+static struct {
+    u8_t work[LOG_PAGE_SIZE * 2], fds[32 * IFS_MAX_FD], cache[(LOG_PAGE_SIZE + 32) * 4];
+} *spiffs_buffers;
+static unsigned open_handles;
+#define spiffs_work_buf (spiffs_buffers->work)
+#define spiffs_fds (spiffs_buffers->fds)
+#define spiffs_cache_buf (spiffs_buffers->cache)
+static void release_buffers(void) {
+    if (spiffs_buffers) mui_mem_free(spiffs_buffers);
+    spiffs_buffers = NULL;
+}
+
+/* This legacy SPIFFS image has no magic. Check the block lookup padding and
+ * index pages against the same structures used by the original allocator.
+ * The wholly erased chip is ambiguous. A fully collected empty SPIFFS has
+ * per-block wear counters, unused lookup slots and erased data pages. */
+static int32_t probe_spiffs(const flash_info_t *info) {
+    enum { pages = LOG_BLOCK_SIZE / LOG_PAGE_SIZE, entries = pages - 1 };
+    uint8_t lookup[LOG_PAGE_SIZE];
+    bool seen_file = false, deleted_file = false, live_pages = false;
+    bool all_slots_free = true, all_counters_set = true;
+    for (uint32_t block = 0; block < info->block_count; ++block) {
+        uint32_t base = block * LOG_BLOCK_SIZE;
+        if (hal_spi_flash_read(base, lookup, sizeof(lookup)) != NRF_SUCCESS) return VFS_ERR_FAIL;
+        for (size_t j = entries * sizeof(spiffs_obj_id); j < sizeof(lookup) - 2; ++j)
+            if (lookup[j] != 0xff) return VFS_ERR_CRPT;
+        uint16_t wear;
+        memcpy(&wear, lookup + sizeof(lookup) - 2, sizeof(wear));
+        if (wear > 0x7fff && wear != 0xffff) return VFS_ERR_CRPT;
+        if (wear == 0xffff) all_counters_set = false;
+        for (unsigned slot = 0; slot < entries; ++slot) {
+            spiffs_obj_id id;
+            memcpy(&id, lookup + slot * sizeof(id), sizeof(id));
+            if (id == SPIFFS_OBJ_ID_FREE) continue;
+            all_slots_free = false;
+            /* Once a real index is found only live pages need validation. */
+            if (id == SPIFFS_OBJ_ID_DELETED && (seen_file || deleted_file)) continue;
+            uint32_t address = base + (slot + 1) * LOG_PAGE_SIZE;
+            spiffs_page_object_ix_header header;
+            if (hal_spi_flash_read(address, &header, offsetof(spiffs_page_object_ix_header, meta)) != NRF_SUCCESS)
+                return VFS_ERR_FAIL;
+            if (id == SPIFFS_OBJ_ID_DELETED) {
+                /* Removing the last file leaves its lookup slot zero and its
+                 * old index header marked deleted until garbage collection. */
+                uint8_t mask = SPIFFS_PH_FLAG_USED | SPIFFS_PH_FLAG_FINAL |
+                               SPIFFS_PH_FLAG_DELET | SPIFFS_PH_FLAG_INDEX;
+                deleted_file = (header.p_hdr.flags & mask) == 0 &&
+                    header.p_hdr.obj_id != SPIFFS_OBJ_ID_FREE &&
+                    (header.p_hdr.obj_id & SPIFFS_OBJ_ID_IX_FLAG) != 0 &&
+                    header.p_hdr.span_ix == 0 && header.type == SPIFFS_TYPE_FILE &&
+                    header.name[0] == '/' && memchr(header.name, 0, sizeof(header.name));
+                continue;
+            }
+            live_pages = true;
+            if (header.p_hdr.obj_id != id || (header.p_hdr.flags & SPIFFS_PH_FLAG_USED) ||
+                !(header.p_hdr.flags & SPIFFS_PH_FLAG_DELET) || (header.p_hdr.flags & SPIFFS_PH_FLAG_FINAL))
+                return VFS_ERR_CRPT;
+            bool index = (id & SPIFFS_OBJ_ID_IX_FLAG) != 0;
+            if (index == ((header.p_hdr.flags & SPIFFS_PH_FLAG_INDEX) != 0)) return VFS_ERR_CRPT;
+            if (index && header.p_hdr.span_ix == 0 && (header.p_hdr.flags & SPIFFS_PH_FLAG_IXDELE)) {
+                if (header.type != SPIFFS_TYPE_FILE || header.name[0] != '/' ||
+                    !memchr(header.name, 0, sizeof(header.name))) return VFS_ERR_CRPT;
+                seen_file = true;
+            }
+        }
+    }
+    if (seen_file || (deleted_file && !live_pages)) return VFS_OK;
+    if (!all_slots_free || !all_counters_set) return VFS_ERR_CRPT;
+    for (uint32_t block = 0; block < info->block_count; ++block) {
+        for (unsigned page = 1; page < pages; ++page) {
+            uint32_t offset = block * LOG_BLOCK_SIZE + page * LOG_PAGE_SIZE;
+            if (hal_spi_flash_read(offset, lookup, sizeof(lookup)) != NRF_SUCCESS) return VFS_ERR_FAIL;
+            for (size_t j = 0; j < sizeof(lookup); ++j)
+                if (lookup[j] != 0xff) return VFS_ERR_CRPT;
+        }
+    }
+    return VFS_OK;
+}
+#else
+#define release_buffers() ((void)0)
 static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
 static u8_t spiffs_fds[32 * IFS_MAX_FD];
 static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
+#endif
 
 typedef struct {
     spiffs_DIR d;
@@ -190,6 +275,12 @@ int32_t vfs_spiffs_mount() {
         return VFS_ERR_UNSUPT;
     }
 
+#ifdef VFS_OLED_AUTO_ENABLE
+    int32_t verified = probe_spiffs(&flash_info);
+    if (verified != VFS_OK) return verified;
+    spiffs_buffers = mui_mem_malloc(sizeof(*spiffs_buffers));
+    if (!spiffs_buffers) return VFS_ERR_NOMEM;
+#endif
     spiffs_config cfg;
     cfg.phys_size = flash_info.block_count * flash_info.block_size;
     cfg.phys_addr = 0;                            // start spiffs at start of spi flash
@@ -207,6 +298,8 @@ int32_t vfs_spiffs_mount() {
     if (res == SPIFFS_OK) {
         reset_writer_tracking();
         vfs_persist_bind(&vfs_driver_fs, &persist_raw_driver);
+    } else {
+        release_buffers();
     }
 
     // A failed mount may be an I/O error or damaged existing data. Only the
@@ -224,21 +317,29 @@ int32_t vfs_spiffs_mount() {
 }
 
 int32_t vfs_spiffs_umount() {
+#ifdef VFS_OLED_AUTO_ENABLE
+    if (open_handles) return VFS_ERR_FAIL;
+#endif
     if (vfs_persist_active(&vfs_driver_fs)) return VFS_ERR_FAIL;
     if (SPIFFS_mounted(&fs)) {
         SPIFFS_unmount(&fs);
         reset_writer_tracking();
+        release_buffers();
     }
     return VFS_OK;
 }
 
 int32_t vfs_spiffs_format() {
+#ifdef VFS_OLED_AUTO_ENABLE
+    if (open_handles) return VFS_ERR_FAIL;
+#endif
     if (vfs_persist_active(&vfs_driver_fs)) return VFS_ERR_FAIL;
     if (SPIFFS_mounted(&fs)) {
         SPIFFS_unmount(&fs);
     }
     reset_writer_tracking();
     int res = SPIFFS_format(&fs);
+    release_buffers();
     if (res == 0) {
         return VFS_OK;
     } else {
@@ -341,6 +442,9 @@ int32_t vfs_spiffs_open_dir(const char *dir, vfs_dir_t *fd) {
     vfs_spiffs_diag_list_begin(dir);
 #endif
 
+#ifdef VFS_OLED_AUTO_ENABLE
+    ++open_handles;
+#endif
     NRF_LOG_INFO("open dir %s\n", nrf_log_push((char *)dir));
 
     return VFS_OK;
@@ -455,6 +559,9 @@ int32_t vfs_spiffs_close_dir(vfs_dir_t *fd) {
     vfs_spiffs_diag_list_closed(p_dir->dir);
 #endif
     int res = SPIFFS_closedir(&p_dir->d);
+#ifdef VFS_OLED_AUTO_ENABLE
+    --open_handles;
+#endif
     mui_mem_free(fd->handle);
     fd->handle = NULL;
     return vfs_spiffs_map_error_code(res);
@@ -649,7 +756,9 @@ int32_t vfs_spiffs_open_file(const char *file, vfs_file_t *fd, uint32_t flags) {
     if (handle < 0) {
         return vfs_spiffs_map_error_code(handle);
     }
-
+#ifdef VFS_OLED_AUTO_ENABLE
+    ++open_handles;
+#endif
     return VFS_OK;
 }
 
@@ -666,6 +775,9 @@ int32_t vfs_spiffs_close_file(vfs_file_t *fd) {
     }
     int res = SPIFFS_close(&fs, (spiffs_file)(intptr_t)fd->handle);
     if (res == SPIFFS_OK) {
+#ifdef VFS_OLED_AUTO_ENABLE
+        --open_handles;
+#endif
         fd->handle = (void *)(intptr_t)-1;
     }
     return vfs_spiffs_map_error_code(res);
@@ -674,7 +786,12 @@ int32_t vfs_spiffs_close_file(vfs_file_t *fd) {
 int32_t vfs_spiffs_abort_file(vfs_file_t *fd) {
     if (!fd || (intptr_t)fd->handle < 0) return VFS_ERR_FAIL;
     int res = SPIFFS_abort(&fs, (spiffs_file)(intptr_t)fd->handle);
-    if (res == SPIFFS_OK) fd->handle = (void *)(intptr_t)-1;
+    if (res == SPIFFS_OK) {
+#ifdef VFS_OLED_AUTO_ENABLE
+        --open_handles;
+#endif
+        fd->handle = (void *)(intptr_t)-1;
+    }
     return vfs_spiffs_map_error_code(res);
 }
 
@@ -898,7 +1015,12 @@ static int32_t guarded_rename_dir(const char *path, const char *new_path) {
     return result == VFS_OK ? vfs_spiffs_rename_dir(path, new_path) : result;
 }
 
-const vfs_driver_t vfs_driver_fs = {.mount = vfs_spiffs_mount,
+#ifdef VFS_OLED_AUTO_ENABLE
+const vfs_driver_t vfs_oled_spiffs_driver = {
+#else
+const vfs_driver_t vfs_driver_fs = {
+#endif
+                                    .mount = vfs_spiffs_mount,
                                     .umount = vfs_spiffs_umount,
                                     .format = vfs_spiffs_format,
                                     .mounted = vfs_spiffs_mounted,

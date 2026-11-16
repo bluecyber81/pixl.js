@@ -117,6 +117,10 @@ static inline int32_t vfs_abort_file(const vfs_driver_t *driver, vfs_file_t *fd)
     return driver && driver->abort_file && fd ? driver->abort_file(fd) : VFS_ERR_UNSUPT;
 }
 
+#ifdef VFS_OLED_AUTO_ENABLE
+/* Storage-info backend codes: SPIFFS 1, native LittleFS 2. */
+uint8_t vfs_oled_backend(void);
+#endif
 bool vfs_drive_enabled(vfs_drive_t drive);
 vfs_driver_t *vfs_get_driver(vfs_drive_t drive);
 vfs_driver_t *vfs_get_default_driver();

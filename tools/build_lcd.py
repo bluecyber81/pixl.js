@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline unsigned LCD build, using pinned Docker or native Linux tools."""
+"""Offline unsigned LCD or OLED application build, using pinned Docker or native Linux tools."""
 
 import argparse
 import hashlib
@@ -41,11 +41,13 @@ def sha256(path):
     return digest.hexdigest()
 
 
-def build_identity(root, mode, version, counter):
+def build_identity(root, mode, version, counter, board="LCD"):
     header = root / "fw/application/src/version.inc.h"
     content = header.read_text(encoding="utf-8")
     values = dict(re.findall(r"^#define\s+(\w+)\s+([^\r\n]+)$", content, re.M))
     preview = json.loads((root / "RELEASE_INFO.json").read_bytes()).get("firmware_preview")
+    if board == "OLED" and mode != "development":
+        raise ValueError("OLED trials require explicit development version and counter.")
     if mode == "preview" or (mode == "candidate" and preview):
         if not preview:
             raise ValueError("No firmware preview is recorded in RELEASE_INFO.json.")
@@ -69,7 +71,12 @@ def build_identity(root, mode, version, counter):
         return RELEASE_VERSION, RELEASE_COUNTER, sha256(header)
     if not version or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}", version):
         raise ValueError("Development mode requires an explicit simple --version identifier.")
-    if version == RELEASE_VERSION or counter is None or not RELEASE_COUNTER < counter <= 0xFFFFFFFF:
+    if board == "OLED":
+        if not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+-OLEDt[0-9]+", version) or counter is None or not 0 < counter <= 0xFFFFFFFF:
+            raise ValueError("OLED trials require their own -OLEDt<number> version and a positive OLED DFU counter.")
+    elif "OLED" in version.upper():
+        raise ValueError("An OLED version cannot identify an LCD build. Use --board OLED.")
+    elif version == RELEASE_VERSION or counter is None or not RELEASE_COUNTER < counter <= 0xFFFFFFFF:
         raise ValueError("Use a new development version and explicit counter above the release counter.")
     if values.get("VERSION") != json.dumps(version):
         raise ValueError("First update VERSION in your development source version.inc.h to match --version.")
@@ -151,7 +158,7 @@ def native_build(temp, export, args, version, counter, record, log):
     env.update(NRF52_SDK_ROOT=str(sdk), SOURCE_DATE_EPOCH=str(SOURCE_DATE_EPOCH),
                MAKEFLAGS="--no-print-directory")
     command = ["make", "-C", str(work / "fw/application"), "-j" + str(args.jobs),
-               "pixljs", "BOARD=LCD", "RELEASE=1", "APP_VERSION=" + version,
+               "pixljs", "BOARD=" + args.board, "RELEASE=1", "APP_VERSION=" + version,
                "APP_VERSION_NUM=" + str(counter), "GNU_INSTALL_ROOT=" + str(tool_bin) + "/",
                "GNU_PREFIX=arm-none-eabi"]
     record["native_tools"] = {"compiler": compiler_version, "compiler_sha256": GCC_SHA256,
@@ -173,6 +180,7 @@ def native_build(temp, export, args, version, counter, record, log):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--board", choices=("LCD", "OLED"), default="LCD")
     parser.add_argument("--mode", choices=("release", "candidate", "development", "preview"),
                         help="Default: the preview recorded in RELEASE_INFO.json, otherwise the stable release")
     parser.add_argument("--version", help="New development VERSION already set in the source header")
@@ -192,7 +200,7 @@ def main(argv=None):
         if args.mode is None:
             args.mode = "preview" if release_info.get("firmware_preview") else "release"
         preview = release_info["firmware_preview"] if args.mode == "preview" else None
-        version, counter, header_hash = build_identity(root, args.mode, args.version, args.counter)
+        version, counter, header_hash = build_identity(root, args.mode, args.version, args.counter, args.board)
         if args.backend == "docker" and shutil.which("docker") is None:
             raise RuntimeError("Docker CLI is required. Install/configure it separately; this helper installs nothing.")
         # --pull never below prevents an implicit network download. Fetch this
@@ -204,6 +212,8 @@ def main(argv=None):
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
         default_build = "build/lcd-preview" if preview else "build/lcd-de375"
+        if args.board == "OLED":
+            default_build = "build/oled-trial"
         destination = Path(os.path.abspath(args.output if args.output else root / default_build))
         if destination.resolve() != destination:
             raise RuntimeError("Output must not resolve through a symlink or junction.")
@@ -211,7 +221,7 @@ def main(argv=None):
         if any(destination.iterdir()):
             raise RuntimeError("Output must be empty. Preserve or move its previous results before rebuilding.")
         record = {"status": "preparing", "mode": args.mode, "version": version,
-                  "counter": counter, "board": "LCD", "backend": args.backend,
+                  "counter": counter, "board": args.board, "backend": args.backend,
                   "sdk_image": IMAGE if args.backend == "docker" else None,
                   "network": "none" if args.backend == "docker" else "no downloads performed",
                   "signed": False, "device_access": False,
@@ -240,7 +250,7 @@ echo "$4  $nvic" | sha256sum -c -
 cp /input/nrf_nvic.h "$nvic"
 echo "$5  $nvic" | sha256sum -c -
 cd /work
-make -C fw/application -j\"$1\" pixljs BOARD=LCD RELEASE=1 APP_VERSION=\"$2\" APP_VERSION_NUM=\"$3\"
+make -C fw/application -j\"$1\" pixljs BOARD="$6" RELEASE=1 APP_VERSION=\"$2\" APP_VERSION_NUM=\"$3\"
 cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw/_build/pixljs.out fw/_build/pixljs.map /output/
 """
             if args.stack_report:
@@ -254,7 +264,7 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
                        "--mount", "type=bind,source=" + str(temp) + ",target=/input,readonly",
                        "--mount", "type=bind,source=" + str(export) + ",target=/output",
                        IMAGE, "bash", "/input/build.sh", str(args.jobs), version, str(counter),
-                       NVIC_BEFORE_SHA256, NVIC_AFTER_SHA256]
+                       NVIC_BEFORE_SHA256, NVIC_AFTER_SHA256, args.board]
             record["status"] = "compiling"
             with (destination / "build.log").open("wb") as log:
                 result = (native_build(temp, export, args, version, counter, record, log)

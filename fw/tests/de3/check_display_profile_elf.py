@@ -1,4 +1,4 @@
-"""Check the LCD profile and contrast commands in the final Cortex-M4 application."""
+"""Check the selected display profile and SPI commands in the final Cortex-M4 application."""
 
 import argparse
 from pathlib import Path
@@ -12,7 +12,7 @@ from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M4, UC_ARM_REG_LR, UC_ARM_REG_M
                                UC_ARM_REG_R2, UC_ARM_REG_R3)
 
 
-def verify(elf, binary):
+def verify(elf, binary, board='LCD'):
     rows = (line.split() for line in check_output([tool('nm'), '-n', elf], text=True).splitlines())
     symbols = {row[2]: int(row[0], 16) for row in rows if len(row) == 3}
     cpu = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
@@ -47,8 +47,7 @@ def verify(elf, binary):
     cpu.hook_del(hook)
     context, = contexts
 
-    # Stub only the byte/GPIO boundary. Setup, rotation, drawing and ST7567
-    # command encoding run from the application BIN without mapped peripherals.
+    # Setup, rotation, drawing and command encoding run from the linked BIN.
     commands = []
     def capture_byte(machine, address, size, data):
         if cpu.reg_read(UC_ARM_REG_R1) == 23:  # U8X8_MSG_BYTE_SEND
@@ -59,9 +58,20 @@ def verify(elf, binary):
     gpio_cb = symbols['u8g2_nrf_gpio_and_delay_spi_cb']
     cpu.hook_add(UC_HOOK_CODE, capture_byte, begin=byte_cb, end=byte_cb)
     cpu.hook_add(UC_HOOK_CODE, lambda *args: respond(), begin=gpio_cb, end=gpio_cb)
-    call('u8g2_Setup_st7567_enh_dg128064_f', context, symbols['u8g2_cb_r0'], byte_cb | 1, gpio_cb | 1)
-
-    info = cpu.mem_read(symbols['u8x8_st7567_enh_dg128064_display_info'], 24)
+    oled = board == 'OLED'
+    if oled:
+        assert 'u8g2_Setup_sh1106_128x64_noname_f' in symbols
+        assert 'u8g2_Setup_st7567_enh_dg128064_f' not in symbols
+        cpu.mem_map(0x50000000, 0x1000)  # GPIO pin configuration registers
+        attach = symbols['hal_spi_bus_attach']
+        cpu.hook_add(UC_HOOK_CODE, lambda *args: respond(), begin=attach, end=attach)
+        call('mui_u8g2_init', context)
+        assert 0xAE in commands and commands[-1] == 0xAF, commands
+        driver_info = 'u8x8_sh1106_128x64_noname_display_info'
+    else:
+        call('u8g2_Setup_st7567_enh_dg128064_f', context, symbols['u8g2_cb_r0'], byte_cb | 1, gpio_cb | 1)
+        driver_info = 'u8x8_st7567_enh_dg128064_display_info'
+    info = cpu.mem_read(symbols[driver_info], 24)
     assert tuple(info[16:18]) == (16, 8) and struct.unpack_from('<HH', info, 20) == (128, 64)
     height_ptr = symbols['__HeapBase']
     buffer = call('u8g2_m_16_8_f', height_ptr)
@@ -78,18 +88,39 @@ def verify(elf, binary):
     for percent in range(256):
         commands.clear()
         call('mui_u8g2_set_contrast_level', percent)
-        effective = min(100, max(60, percent))
-        expected = ((effective - 1) * 255 // 99) >> 2
+        effective = min(100, max(1 if oled else 60, percent))
+        expected = (effective - 1) * 255 // 99
+        if not oled:
+            expected >>= 2
         assert commands == [0x81, expected], (percent, commands, expected)
         levels.append(expected)
-    assert len(set(levels)) == 27
-    print('PASS linked LCD ST7567 128x64, 1024 framebuffer bytes, opposite corner at 180 degrees; '
-          '256 input values produced contrast command 0x81 and 27 levels (37..63).')
+    if oled:
+        assert len(set(levels)) == 100
+        assert bytes(info[18:20]) == bytes((2, 2))
+        commands.clear()
+        call('u8g2_SendBuffer', context)
+        # Each of the eight SH1106 pages starts at physical column two.
+        expected = []
+        pixels = bytes(cpu.mem_read(buffer, 1024))
+        for page in range(8):
+            expected.extend([0x40, 0x10, 0x02, 0xB0 + page])
+            expected.extend(pixels[128 * page:128 * (page + 1)])
+        assert commands == expected, (len(commands), commands[:10])
+        commands.clear()
+        call('mui_u8g2_deinit', context)
+        assert commands == [0xAE], commands
+        print('PASS linked OLED SH1106 init/on/off, 128x64, all eight framebuffer pages, '
+              'rotation and 256 contrast inputs (100 levels).')
+    else:
+        assert len(set(levels)) == 27
+        print('PASS linked LCD ST7567 128x64, 1024 framebuffer bytes, opposite corner at 180 degrees; '
+              '256 input values produced contrast command 0x81 and 27 levels (37..63).')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('elf', type=Path)
     parser.add_argument('binary', type=Path)
+    parser.add_argument('--board', choices=['LCD', 'OLED'], default='LCD')
     args = parser.parse_args()
-    verify(args.elf, args.binary)
+    verify(args.elf, args.binary, args.board)
