@@ -1,0 +1,36 @@
+{
+  "version": "3.54.1",
+  "date": "2026-11-16",
+  "firmwarePreview": "DE3.77 / App650",
+  "stableDefault": "DE3.75 / App648",
+  "changes": [
+    "Use the same locale-aware, millivolt-precision text for cached voltage in both device diagnostic views.",
+    "Offer the signed App650 preview in the updater and support its verified PFS1 profile."
+  ],
+  "firmwareEvidence": "docs/validation/DE3_77.json",
+  "filesystemEvidence": "docs/validation/DE3_77_PFS.json",
+  "hostTests": {
+    "webPassed": 1596,
+    "webSkipped": 0,
+    "portableProductionChecks": 22,
+    "pagesProductionChecks": 22,
+    "windowsLauncher": {
+      "passed": 22,
+      "skipped": 2
+    }
+  },
+  "browser": {
+    "version": "157.0.8103.51",
+    "updaterAndSyncChecks": 42,
+    "backupLayouts": 4,
+    "testedWidths": [
+      320,
+      1280
+    ],
+    "locales": [
+      "de",
+      "en"
+    ]
+  },
+  "physicalLcdApp650Test": false
+}

@@ -1,0 +1,91 @@
+{
+  "version": "2.22.0-DE3.77",
+  "counter": 650,
+  "date": "2026-11-16",
+  "board": "LCD",
+  "deviceAcceptance": "pending",
+  "sourceId": "f848da982334f0f8a8e634b85efa521388475e8801a6746617288546f2e26219",
+  "sourceInputs": 704,
+  "toolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+  "applicationBytes": 362588,
+  "applicationSha256": "e8ff7f50571c988f2ade44fad601b00edd7f0e6c90fd880711fed0cb7d9cf055",
+  "package": "Allmiibo_LCD_DE3_77_650_NUR_APP.zip",
+  "packageBytes": 249524,
+  "otaSha256": "72e30a092424e4414014b508c39f143f5896d11362719cd53ffb66c2b12f73f3",
+  "component": "application",
+  "verifiedSignatures": {
+    "independent": true,
+    "repository": true
+  },
+  "threeBuildsMatched": [
+    "pixljs.bin",
+    "pixljs.hex",
+    "production-inputs.json"
+  ],
+  "linker": {
+    "flash_reserve_bytes": 10148,
+    "heap_stack_gap_bytes": 1648,
+    "stack_reserved_bytes": 8192
+  },
+  "pfs": "docs/validation/DE3_77_PFS.json",
+  "framebuffer": {
+    "previousMismatch": 0,
+    "approvedNormalMismatch": 0,
+    "bareLcdPixels": 8192,
+    "remainingMenuPixelsChanged": 0,
+    "radioPixelsChanged": 0,
+    "levelsChecked": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "states": [
+      "normal",
+      "charging",
+      "low",
+      "not measured",
+      "English"
+    ],
+    "normalFrameSha256": "657b973a940ae6ff380a99d9225629e313d8c52f072ac2955d6e62751b80c540",
+    "actualRender": "Production status and launcher C drawing routines, 1-bit u8g2 pixels. Deterministic inputs from a simulated battery and advertising state; no physical display observation."
+  },
+  "dfuModel": {
+    "payloadBytes": 362588,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18354,
+    "objectExecutes": 90,
+    "finalCrc32": 852266080,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "e8ff7f50571c988f2ade44fad601b00edd7f0e6c90fd880711fed0cb7d9cf055",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "hostFirmwareTests": {
+    "available": 158,
+    "passed": 158,
+    "omitted": 0,
+    "deviceAccess": false
+  }
+}

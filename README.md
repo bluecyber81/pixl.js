@@ -1,5 +1,11 @@
 # Allmiibo LCD firmware and file manager
 
+## Battery display · LCD firmware DE3.77 and file manager 3.54.1
+
+The LCD shows larger voltage digits and an eight-segment battery. A bolt indicates charging, **Low** identifies a low battery, and a dash marks a missing reading. Both web diagnostic views show the voltage in volts, for example **3.870 V** in English.
+
+The signed App650 is a preview for Allmiibo LCD devices with PFS1, Z19 and S112 7.3.0. [Mobile app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.77/Allmiibo_LCD_DE3_77_650_NUR_APP.zip) · [Open file manager](https://bluecyber81.github.io/pixl.js/) · [Stable DE3.75 firmware](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
+
 ## Young Link and Young Zelda · File manager 3.54.0
 
 Find the two figures announced for 2027 by their English or German names, or under *The Legend of Zelda: Ocarina of Time* for Nintendo Switch 2. Each entry has its own picture and game notes. Nintendo describes wearable masks for Link. [Nintendo game information](https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/The-Legend-of-Zelda-Ocarina-of-Time-3115664.html)

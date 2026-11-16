@@ -1,5 +1,11 @@
 # Allmiibo-Dateimanager im Browser
 
+## Akkuanzeige · LCD-Firmware DE3.77 und Dateimanager 3.54.1
+
+Auf dem LCD erscheinen Spannung und achtstufiges Akkusymbol größer. Ein Blitz zeigt den Ladevorgang an. Bei niedrigem Stand erscheint „Niedrig“, bei fehlendem Messwert ein Strich. Der Dateimanager zeigt die Spannung in beiden Diagnoseansichten einheitlich in Volt, auf Deutsch zum Beispiel **3,870 V**.
+
+Die signierte App650 ist eine Testversion für das Allmiibo LCD mit PFS1, Z19 und S112 7.3.0. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.77/Allmiibo_LCD_DE3_77_650_NUR_APP.zip) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Stabile Firmware DE3.75](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
+
 ## Junger Link und Junge Zelda · Dateimanager 3.54.0
 
 Im Figurenkatalog findest du beide für 2027 angekündigten Figuren über ihren deutschen oder englischen Namen und über das Switch-2-Spiel *The Legend of Zelda: Ocarina of Time*. Jede Figur hat ein eigenes Bild und einen deutschen Spielhinweis. Nintendo nennt besondere Masken, die Link tragen kann. [Spielinformationen bei Nintendo](https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/The-Legend-of-Zelda-Ocarina-of-Time-3115664.html)

@@ -60,7 +60,7 @@ import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
 import { diagnosticSectionKeys, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
-import { normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
+import { formatBatteryVoltage, normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
 import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
 import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics, supportsMenuDiagnostics } from '../lib/device-extra-diagnostics.js';
 
@@ -189,7 +189,7 @@ function boot(data) {
   };
 }
 const power = data => ({
-  summary: [[pick('Gespeicherte Batteriespannung', 'Cached battery voltage'), data.voltageValid ? `${(data.batteryMillivolts / 1000).toFixed(3)} V` : t.value.absent],
+  summary: [[pick('Gespeicherte Batteriespannung', 'Cached battery voltage'), formatBatteryVoltage(data.batteryMillivolts, props.locale) ?? t.value.absent],
     [pick('Eingestellte Ruhezeit', 'Configured sleep time'), data.sampleCollected ? `${number(data.configuredSleepSeconds)} s` : t.value.absent]],
   details: [[pick('Resetregister beim Anwendungsstart', 'Reset register at application start'), hex(data.resetReasonRaw)],
     [pick('Batteriestichprobe vorhanden', 'Battery sample collected'), yesNo(data.sampleCollected)],

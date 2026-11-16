@@ -112,6 +112,9 @@ extern const uint8_t u8g2_font_likeminecraft_te[],u8g2_font_siji_t_6x10[];
 #define _L_DE3_BAT_LOW 1
 static unsigned voltage=4180, level=8, redraws, bitmap_draws;
 static bool valid=true, low, charging;
+enum { LANGUAGE_EN_US, LANGUAGE_DE_DE };
+static int language=LANGUAGE_DE_DE;
+static int getLanguage(void) { return language; }
 static const char *low_text="Niedrig";
 static bool get_stats(void) { return charging; }
 static uint8_t bat_get_level(void) { return level; }
@@ -123,7 +126,8 @@ static void *mui(void) { return &redraws; }
 static void mui_update(void *p) { CHECK(p==&redraws);redraws++; }
 void original_draw_xbm(mui_canvas_t *,uint8_t,uint8_t,uint8_t,uint8_t,const uint8_t*);
 void mui_canvas_draw_xbm(mui_canvas_t *c,uint8_t x,uint8_t y,uint8_t w,uint8_t h,const uint8_t *bits) {
-    CHECK(x==0 && y==0 && w==13 && h==11 && bits);bitmap_draws++;
+    CHECK(bits && (unsigned)x+w<=128 && (unsigned)y+h<=12);
+    if(x==0) { CHECK(y==0 && w==13 && h==11);bitmap_draws++; }
     original_draw_xbm(c,x,y,w,h,bits);
 }
 /*ACTUAL_ICONS*/
@@ -171,15 +175,27 @@ int main(int argc,char **argv) {
     // pixels identical. Exercise every battery level and translated low text.
     unsigned cases=0;
     for(unsigned battery=0;battery<=8;battery++)for(unsigned ch=0;ch<2;ch++)
-      for(unsigned warning=0;warning<4;warning++) {
+      for(unsigned lang=0;lang<2;lang++)for(unsigned warning=0;warning<4;warning++) {
+        language=lang;
         level=battery;charging=ch;low=warning>0;valid=warning!=3;
-        low_text=warning==2?"Batteriestand sehr niedrig, bitte laden":"Niedrig";
+        low_text=warning==2?"Batteriestand sehr niedrig, bitte laden":(lang==LANGUAGE_DE_DE?"Niedrig":"Low");
         voltage=warning?2182:4180;
         for(unsigned i=0;i<5;i++) {
             memset(buffer,0,sizeof(buffer));status.link_state=states[i];status_bar_view_on_draw(&view,&canvas);
             if(!i)memcpy(frames[0],buffer,1024);
             for(unsigned y=0;y<64;y++)for(unsigned x=14;x<128;x++)
                 CHECK(pixel(buffer,x,y)==pixel(frames[0],x,y));
+            for(unsigned n=0;n<8;n++) {
+                unsigned x=101+3*n;
+                CHECK(pixel(buffer,x,3)==(valid && n<battery) && pixel(buffer,x+1,8)==(valid && n<battery));
+                CHECK(!pixel(buffer,x+2,3));
+            }
+            CHECK(pixel(buffer,99,2) && pixel(buffer,125,9) && pixel(buffer,127,4));
+            CHECK(pixel(buffer,100,1) && pixel(buffer,124,10) && pixel(buffer,71,8));
+            CHECK(pixel(buffer,71,10)==(lang==LANGUAGE_DE_DE));
+            if(!valid)CHECK(pixel(buffer,109,5) && pixel(buffer,115,6) && !pixel(buffer,116,5));
+            // Even an overlong translation must leave the measured voltage field clear.
+            for(unsigned y=0;y<12;y++)for(unsigned x=56;x<64;x++)CHECK(!pixel(buffer,x,y));
             // No status pixels may escape the 12-high status layer.
             for(unsigned y=12;y<64;y++)for(unsigned x=0;x<128;x++)CHECK(!pixel(buffer,x,y));
             cases++;

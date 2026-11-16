@@ -5,8 +5,9 @@
 | Gesucht | Download |
 | --- | --- |
 | Stabile Geräte-App für ein kompatibles LCD mit eingerichtetem PFS1, Z19 und S112 7.3.0 | [DE3.75 / App648 – App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) |
+| Neue Akkuanzeige auf einem LCD mit PFS1, Z19 und S112 7.3.0 | [DE3.77 / App650 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.77/Allmiibo_LCD_DE3_77_650_NUR_APP.zip). Größere Ziffern, acht Akkusegmente und Ladeblitz. [Prüfstand](validation/DE3_77.json) |
 | Neue LCD-Funktionen auf einem Gerät mit PFS1, Z19 und S112 7.3.0 erproben | [DE3.76 / App649 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.76/Allmiibo_LCD_DE3_76_649_NUR_APP.zip). Die Gerätedatenbank enthält die Figuren „Junger Link“ und „Junge Zelda“. Alle sieben Kirby-Air-Riders-Figuren haben ein LCD-Bild. [Prüfstand](validation/WEB3_54_0.json) |
-| Dateimanager für Windows oder dessen Quellcode | [Dateimanager 3.54.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.54.0) |
+| Dateimanager für Windows oder dessen Quellcode | [Dateimanager 3.54.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.54.1) |
 | Kompatibles LCD mit älterem Bootloader und erfüllten [Systemvoraussetzungen](INSTALLATION.md) | [Android-Kombipaket für S112 7.3.0, Z19 und DE3.75 / App648](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) |
 | Systempaket für ein kompatibles LCD mit älterem Bootloader oder Umstellung von SPIFFS | [Voraussetzungen und Paketauswahl](https://bluecyber81.github.io/pixl.js/guide/index.html#bootloader) · [Vorbereitung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
 | Geräteprüfung zu DE3.75 / App648 | [Prüfumfang und Prüfsummen](RELEASE_DE3_75.md) |

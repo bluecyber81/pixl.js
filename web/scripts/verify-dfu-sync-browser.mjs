@@ -55,14 +55,17 @@ async function runChecks() {
   await page.locator('.version-context').waitFor();
   assert.equal(await page.title(), 'Allmiibo Dateimanager ' + webVersion);
   await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
-  const legacyFile = 'Allmiibo_LCD_DE3_65_637_NUR_APP.zip';
-  const finalFile = 'Allmiibo_LCD_DE3_75_648_NUR_APP.zip';
-  const ootFile = 'Allmiibo_LCD_DE3_76_649_NUR_APP.zip';
-  const previousFile = 'Allmiibo_LCD_DE3_74_647_NUR_APP.zip';
-  const app646File = 'Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip';
-  const earlierFile = 'Allmiibo_LCD_DE3_72_645_NUR_APP.zip';
+  const releases = [
+    ['Allmiibo_LCD_DE3_65_637_NUR_APP.zip', 'DE3.65', 637],
+    ['Allmiibo_LCD_DE3_72_645_NUR_APP.zip', 'DE3.72', 645],
+    ['Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip', 'DE3.73', 646],
+    ['Allmiibo_LCD_DE3_74_647_NUR_APP.zip', 'DE3.74', 647],
+    ['Allmiibo_LCD_DE3_75_648_NUR_APP.zip', 'DE3.75', 648],
+    ['Allmiibo_LCD_DE3_76_649_NUR_APP.zip', 'DE3.76', 649],
+    ['Allmiibo_LCD_DE3_77_650_NUR_APP.zip', 'DE3.77', 650],
+  ];
   const update = page.locator('.firmware-packages');
-  for (const [file, version, counter] of [[legacyFile, 'DE3.65', 637], [finalFile, 'DE3.75', 648], [ootFile, 'DE3.76', 649], [previousFile, 'DE3.74', 647], [app646File, 'DE3.73', 646], [earlierFile, 'DE3.72', 645]]) {
+  for (const [file, version, counter] of releases) {
     const row = update.locator('.package').filter({ has: page.locator('strong', { hasText: version }) });
     assert.equal(await row.locator('a[download]').getAttribute('href'), base + 'firmware/' + file);
     assert.ok((await row.innerText()).includes('Zähler ' + counter));
@@ -252,27 +255,33 @@ async function runChecks() {
     }}});
   });
   await page.goto(origin + base + 'dfu/web.html');
-  for (const file of [legacyFile, finalFile]) {
+  for (const [file] of releases.filter(([, , counter]) => [637, 648].includes(counter))) {
     assert.equal(await page.locator('a[download][href$="' + file + '"]').getAttribute('href'), '../firmware/' + file);
   }
   assert.ok(await page.locator('#button').isDisabled());
   assert.deepEqual(await page.locator('#bundled option').evaluateAll(options => options.map(option => option.value).sort()),
-    ['', 'de3.65-lcd-app', 'de3.72-lcd-app', 'de3.73-lcd-app', 'de3.74-lcd-app', 'de3.75-lcd-app', 'de3.76-lcd-app']);
+    ['', ...releases.map(([, version]) => version.toLowerCase() + '-lcd-app')].sort());
   assert.match(await page.locator('#bundled option[value="de3.74-lcd-app"]').innerText(), /DE3\.74.*Fr\u00fchere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65.*Frühere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
   assert.match(await page.locator('#bundled option[value="de3.75-lcd-app"]').innerText(), /DE3\.75.*Stabile Ausgabe.*Z19/);
   assert.match(await page.locator('#bundled option[value="de3.73-lcd-app"]').innerText(), /DE3\.73.*Testversion/);
+  for (const id of ['de3.76-lcd-app', 'de3.77-lcd-app']) {
+    assert.match(await page.locator('#bundled option[value="' + id + '"]').innerText(), /Testversion.*Z19/);
+  }
   checks.push({ feature:'stable and preview releases in local DFU chooser and idle device selector' });
   if (process.env.ALLMIIBO_CANDIDATE_OTA) {
     await page.locator('#file').setInputFiles(process.env.ALLMIIBO_CANDIDATE_OTA);
-    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === ootFile ? 649 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === finalFile ? 648 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previousFile ? 647 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === app646File ? 646 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === earlierFile ? 645 : 637;
+    const selected = releases.find(([file]) => file === path.basename(process.env.ALLMIIBO_CANDIDATE_OTA));
+    assert.ok(selected, 'selected ZIP must have an explicitly tested package counter');
+    const [, , counter] = selected;
     await page.waitForFunction(counter => document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
     assert.match(await page.locator('#package-target').innerText(), /Hardwarefeld 52.*0x0126/);
     assert.equal(await page.evaluate(() => probe.requests), 0);
     checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.72-lcd-app', 645], ['de3.73-lcd-app', 646], ['de3.74-lcd-app', 647], ['de3.75-lcd-app', 648], ['de3.76-lcd-app', 649]]) {
+  for (const [, version, counter] of releases) {
+    const id = version.toLowerCase() + '-lcd-app';
     await page.locator('#bundled').selectOption(id);
     await page.locator('#load-bundled').click();
     await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
