@@ -1,0 +1,5 @@
+Allmiibo Dateimanager 3.54.1
+
+Unter Windows Start-Dateimanager.cmd öffnen. Unter Update findest du DE3.77 mit der neuen Akkuanzeige für das Allmiibo LCD. Die Diagnose zeigt Spannungen in Volt mit drei Nachkommastellen.
+
+On Windows, open Start-Dateimanager.cmd. Under Update, DE3.77 is available with the new battery indicator for Allmiibo LCD. Diagnostics show voltage to the nearest millivolt.

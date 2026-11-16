@@ -402,7 +402,7 @@
         <p v-else-if="powerState === 'failed'" class="notice error" role="status">{{ $t('workflow.powerFailed') }}</p>
         <dl v-if="powerInfo" class="device-grid">
           <div><dt>{{ $t('workflow.powerReset') }}</dt><dd>{{ format_hex(powerInfo.resetReasonRaw) }}</dd></div>
-          <div><dt>{{ $t('workflow.powerVoltage') }}</dt><dd>{{ powerInfo.batteryMillivolts === null ? $t('info.unknown') : powerInfo.batteryMillivolts + ' mV' }}</dd></div>
+          <div><dt>{{ $t('workflow.powerVoltage') }}</dt><dd>{{ format_battery_voltage(powerInfo.batteryMillivolts) }}</dd></div>
           <div><dt>{{ $t('workflow.powerMode') }}</dt><dd>{{ $t(!powerInfo.sampleCollected ? 'info.unknown' : powerInfo.lipoMode ? 'workflow.powerLipo' : 'workflow.powerOther') }}</dd></div>
           <div><dt>{{ $t('workflow.powerCharging') }}</dt><dd>{{ $t(!powerInfo.voltageValid ? 'info.unknown' : powerInfo.chargingActive ? 'workflow.powerActive' : 'workflow.powerInactive') }}</dd></div>
           <div><dt>{{ $t('workflow.powerSleep') }}</dt><dd>{{ powerInfo.sampleCollected ? powerInfo.configuredSleepSeconds + ' s' : $t('info.unknown') }}</dd></div>
@@ -590,7 +590,7 @@ import { getElementLocale } from "./i18n"
 import { filterRows, joinDevicePath, sha256, saveBlob, saveBlobWithPicker } from "./lib/browser-tools.js"
 import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
 import { readTimeEstimate, formatReadDuration } from "./lib/read-time-estimate.js"
-import { normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
+import { formatBatteryVoltage, normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
@@ -1442,6 +1442,7 @@ export default {
       } finally { if(generation===this.sessionGeneration) this.infoLoading=false; }
     },
     format_hex(value) { return formatHexWord(value) ?? this.$t('info.unknown'); },
+    format_battery_voltage(value) { return formatBatteryVoltage(value, this.language) ?? this.$t('info.unknown'); },
     format_optional_size(value) { return value === null || value === undefined ? this.$t('info.unknown') : this.format_size(value); },
     async read_all_diagnostics() {
       if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;

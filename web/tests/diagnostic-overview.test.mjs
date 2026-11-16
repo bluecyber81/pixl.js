@@ -102,6 +102,8 @@ test('all real normalized sections render extra memory, startup, layout and firm
   assert.equal(row(card(h.root,'storage'),'Konfigurierte LittleFS-Cachegröße'),'256 B');
   assert.match(text(card(h.root,'storage')),/keine Messung der Cachebelegung/);
   assert.match(text(card(h.root,'boot')),/S112 7\.3\.0/);assert.doesNotMatch(text(card(h.root,'boot')),/BL11/);
+  assert.match(text(card(h.root,'power')),/4,123 V/);
+  await change(h,{locale:'en_US'});
   assert.match(text(card(h.root,'power')),/4\.123 V/);
   assert.equal(nodes(h.root,'img').length,0);assert.equal(nodes(h.root,'a').length,0);assert.equal(h.events.length,0);
  }finally{h.app.unmount();}

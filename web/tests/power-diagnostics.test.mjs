@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parsePowerDiagnostics,normalizePowerDiagnostics} from '../src/lib/power-diagnostics.js';
+import {formatBatteryVoltage,parsePowerDiagnostics,normalizePowerDiagnostics} from '../src/lib/power-diagnostics.js';
 import {createDiagnostics} from '../src/lib/device-info.js';
 const packet=()=>{const b=new Uint8Array([80,88,80,68,1,16,31,0,0,0,0,0,0,0,180,0]);const v=new DataView(b.buffer);v.setUint32(8,0x10004,true);v.setUint16(12,4012,true);return b;};
 test('power diagnostic parses exact16B, preserves unsigned raw bits and offset views',()=>{
@@ -27,4 +27,10 @@ test('power diagnostic JSON export is allowlisted and rejects inconsistent objec
  const unknown={...p,sampleCollected:false,voltageValid:false,batteryMillivolts:null,lipoMode:false,chargingActive:false,configuredSleepSeconds:0};assert(normalizePowerDiagnostics(unknown));
  for(const patch of [{configuredSleepSeconds:1},{lipoMode:true},{chargingActive:true}])assert.equal(normalizePowerDiagnostics({...unknown,...patch}),null);
  assert.equal(createDiagnostics({}).power,null);
+});
+
+test('voltage readouts preserve millivolts and use the interface language', () => {
+  assert.equal(formatBatteryVoltage(3870, 'de_DE'), '3,870 V');
+  assert.equal(formatBatteryVoltage(3871, 'en_US'), '3.871 V');
+  for (const empty of [null, undefined, 0, NaN]) assert.equal(formatBatteryVoltage(empty, 'de_DE'), null);
 });

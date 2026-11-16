@@ -38,11 +38,11 @@ test('DE3.72 is qualified only with its exact counter and verified settings',()=
    assert.equal(migrationApplicationMatches({...current,...patch},target),false);
 });
 
-for (const [version, counter] of [['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649]])
+for (const [version, counter] of [['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650]])
 test('local ' + version + ' must report its exact version/counter, valid settings, and matching mounted layout',()=>{
  const current={...identity,firmwareVersion:version,applicationCounter:counter};
  assert.deepEqual(matchMigrationLayout(layout,current,target,{mounted:true}),layout);
- for(const bad of [{applicationCounter:645},{firmwareVersion:'2.22.0-DE3.72'},{settingsCrcValid:false}])
+ for(const bad of [{applicationCounter:counter-1},{applicationCounter:counter+1},{firmwareVersion:'2.22.0-DE3.72'},{settingsCrcValid:false}])
    assert.throws(()=>matchMigrationLayout(layout,{...current,...bad},target),{code:'MIGRATION_LAYOUT'});
  for(const bad of [{mounted:false},{blockCount:511},{metadataBytes:64},{engineSha256:'0'.repeat(64)}])
    assert.throws(()=>matchMigrationLayout({...layout,...bad},current,target,{mounted:true}),{code:'MIGRATION_LAYOUT'});

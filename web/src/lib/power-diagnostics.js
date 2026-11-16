@@ -34,3 +34,9 @@ export function normalizePowerDiagnostics(value) {
     ...Object.fromEntries(bools.map(key => [key, value[key]])), resetReasonRaw: value.resetReasonRaw,
     batteryMillivolts: value.batteryMillivolts, configuredSleepSeconds: value.configuredSleepSeconds };
 }
+
+export function formatBatteryVoltage(millivolts, locale) {
+  if (!Number.isInteger(millivolts) || millivolts <= 0 || millivolts > 65535) return null;
+  const volts = (millivolts / 1000).toFixed(3);
+  return (String(locale).startsWith('de') ? volts.replace('.', ',') : volts) + ' V';
+}

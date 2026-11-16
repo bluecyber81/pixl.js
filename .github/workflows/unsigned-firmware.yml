@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.76 LCD application preview
+    name: DE3.77 LCD application preview
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
