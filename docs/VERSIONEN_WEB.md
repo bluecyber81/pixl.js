@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.55.2
+
+Beim Vergleich zweier Startberichte kommen die Scanzeit, die Lesezugriffe und die gelesenen Bytes hinzu. Startberichte behalten gültige PREP- und Testversionsbezeichnungen. Das Hardwareprofil behält die gemeldete Laufwerksgröße bei Einzelabfragen in derselben Verbindung. Beim Versionsvergleich wird DE3.80 als bekannte Vorschau eingeordnet. Für App653 dokumentiert die Paketreferenz die auf einem LCD bestätigten Versions- und Bootdaten. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [3.55.2 für Windows und als Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2)
+
 ## Dateimanager 3.55.1
 
 Der Firmwarekatalog enthält die App DE3.80. Die Diagnose erkennt die Z20-Bootregion an Zähler und Prüfsumme. Der Hardwarebericht erklärt, ob der Flash-Treiber den gelesenen Kapazitätscode kennt. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)

@@ -4,6 +4,9 @@ const SCOPE = 'application-storage-start-to-first-dispatch';
 const PHASES = ['storageBegin', 'storageDone', 'displayBegin', 'displayDone', 'launcherDone', 'dispatchDone'];
 const STORAGE_PHASES = ['mountDone', 'journalDone'];
 const MOUNT_COUNTERS = ['physicalReadAttempts', 'physicalReadBytes', 'cacheHits', 'cacheMisses', 'bypassReads', 'physicalReadErrors'];
+// Release versions, preparation builds and numbered test builds share this diagnostic format.
+const isStartupFirmware = value => typeof value === 'string' && value.length <= 64 &&
+  /^\d+\.\d+\.\d+-DE\d+\.\d+(?:-PREP|t[1-9]\d*)?$/.test(value);
 const uint32 = n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
 // Last actual mount, not the time of this read and not necessarily a cold boot.
 export function normalizeMountDiagnostics(value) {
@@ -125,7 +128,7 @@ export function createStartupDiagnosticReport(value, observedAt, firmwareVersion
     throw new Error('Invalid startup diagnostic report');
   }
   return { reportSchema: 1, observation: 'cached-startup-markers-read-in-current-session', observedAt,
-    ...(typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+-DE\d+\.\d+$/.test(firmwareVersion) ? {firmwareVersion} : {}),
+    ...(isStartupFirmware(firmwareVersion) ? {firmwareVersion} : {}),
     startup: info, phases: startupDiagnosticRows(info),
     limits: ['Excludes bootloader and early SDK startup.',
       'Software markers do not prove successful storage access or visible display output.',
@@ -142,6 +145,18 @@ export function compareStartup(report, current) {
     result.storageIntervals = startupStorageIntervals(after).flatMap(({id, milliseconds}, index) =>
       milliseconds === null || baseline[index].milliseconds === null ? [] : [{id, milliseconds: milliseconds - baseline[index].milliseconds}]);
   }
+  if (isStartupFirmware(report.firmwareVersion)) result.baselineVersion = report.firmwareVersion;
+  if (before.schemaVersion === 3 || after.schemaVersion === 3) {
+    const a = before.mount, b = after.mount;
+    result.mount = [];
+    if (a?.result === 0 && b?.result === 0) {
+      // Timing validity and counter saturation are independent firmware flags.
+      const fields = [];
+      if (a.scanMilliseconds !== null && b.scanMilliseconds !== null) fields.push('scanMilliseconds');
+      if (!((a.flags | b.flags) & 8)) fields.push('physicalReadAttempts', 'physicalReadBytes');
+      result.mount = fields.map(id => ({id, before: a[id], after: b[id], delta: b[id] - a[id]}));
+    }
+  }
   return result;
 }
 // Timings are cached for a whole boot. Conservatively reject identical complete
@@ -149,7 +164,7 @@ export function compareStartup(report, current) {
 export function startupSeries(reports) {
   if (!Array.isArray(reports) || reports.length < 3 || reports.length > 20) return null;
   const seen = new Set(), storage = [], total = [], mounts = [], version = reports[0]?.firmwareVersion;
-  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+-DE\d+\.\d+$/.test(version)) return null;
+  if (!isStartupFirmware(version)) return null;
   for (const report of reports) {
     const s = normalizeStartupDiagnostics(report?.startup);
     if (report?.firmwareVersion !== version || s?.phaseMask !== 63 || !s.elapsedMilliseconds[5]) return null;
@@ -173,7 +188,10 @@ export function startupDiagnosticsText(locale = 'de_DE') {
     title: 'Startzeiten der Anwendung', read: 'Startzeiten lesen', export: 'Startbericht speichern',
     storageIntervals: 'Zeitanteile der Speicherinitialisierung',
     intervals: {mountDone: 'Bis das Laufwerk eingebunden ist', journalDone: 'Prüfen und Wiederherstellen des Speicherjournals', storageRemaining: 'Übrige Speicherinitialisierung'},
-    baseline:'Früheren Startbericht vergleichen', baselineHint:'Wähle eine gespeicherte Start- oder Gesamtdiagnose desselben Geräts mit derselben Sammlung. Minus bedeutet schneller, Plus langsamer.',
+    baseline:'Früheren Startbericht vergleichen', baselineHint:'Wähle einen früheren Start- oder Gesamtbericht. Vergleiche für einen Geschwindigkeitstest mehrere Starts am selben Gerät mit derselben Sammlung. Die Differenz ist aktuell minus früher.',
+    mountComparison:'Letztes Einbinden von PackedFS', previous:'Früher', current:'Aktuell',
+    comparisonMetric:{scanMilliseconds:'Scanzeit',physicalReadAttempts:'Physische Leseversuche',physicalReadBytes:'Gelesene Bytes'},
+    mountLimits:'Für den Vergleich müssen beide Einbindungen erfolgreich sein. Die Scanzeit setzt zwei Zeitmessungen voraus, die Lesezahlen zwei ungesättigte Zählerstände.',
     difference:'Änderung gegenüber der gewählten Datei', storage:'Speicher', total:'Anwendungsstart', invalidBaseline:'Vollständige Startzeiten fehlen oder die JSON-Datei ist ungültig (maximal 1 MiB).',
     measuredTotal: 'Gemessener Anwendungsstart', longestInterval: 'Längster gemessener Abschnitt',
     scope: 'Gespeicherte Zeitmarken dieses Anwendungsstarts. Abruf nur per Klick; kein Neustart.',
@@ -190,7 +208,10 @@ export function startupDiagnosticsText(locale = 'de_DE') {
     title: 'Application startup times', read: 'Read startup times', export: 'Save startup report',
     storageIntervals: 'Time within storage initialization',
     intervals: {mountDone: 'Until the drive is mounted', journalDone: 'Storage journal check and recovery', storageRemaining: 'Remaining storage initialization'},
-    baseline:'Compare a previous startup report', baselineHint:'Choose a saved startup or full report from the same device and collection. Negative means faster, positive means slower.',
+    baseline:'Compare a previous startup report', baselineHint:'Choose a previous startup or full report. To compare speed, measure several starts on the same device with the same collection. The difference is current minus previous.',
+    mountComparison:'Last PackedFS mount', previous:'Previous', current:'Current',
+    comparisonMetric:{scanMilliseconds:'Scan time',physicalReadAttempts:'Physical read attempts',physicalReadBytes:'Bytes read'},
+    mountLimits:'Both mounts must succeed for comparison. Scan time needs two timing measurements. Read counts and bytes need two unsaturated counter readings.',
     difference:'Change since the selected file', storage:'Storage', total:'Application startup', invalidBaseline:'Missing complete startup markers or invalid JSON file (maximum 1 MiB).',
     measuredTotal: 'Measured application startup', longestInterval: 'Longest measured interval',
     scope: 'Cached markers from this application start. Read only on click; no restart.',

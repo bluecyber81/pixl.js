@@ -326,7 +326,7 @@
         <GuidedReportComparison v-if="guidedComparisonOpened" :locale="language" />
       </details>
       <MenuRunComparison v-if="visitedWorkspaces.has('device')" :locale="language" />
-      <HardwareProfile v-if="visitedWorkspaces.has('device')" :locale="language" :connected="connected" :blocked="busy || upload_diag_visible || diagnosticsBusy" :firmware-version="firmwareVersion" :boot="bootInfo" :storage-bytes="fullDiagnosticSnapshot?.sections.storage?.data?.layout?.flashBytes" :flash="flashInfo" :flash-state="flashState" :label-confirmed="batteryLabelConfirmed" :profile-ready="nicknameReady" :profile-error="hardwareProfileError" @read="read_flash_diagnostics" @associate="associate_battery_label" />
+      <HardwareProfile v-if="visitedWorkspaces.has('device')" :locale="language" :connected="connected" :blocked="busy || upload_diag_visible || diagnosticsBusy" :firmware-version="firmwareVersion" :boot="bootInfo" :storage-bytes="storageLayoutBytes" :flash="flashInfo" :flash-state="flashState" :label-confirmed="batteryLabelConfirmed" :profile-ready="nicknameReady" :profile-error="hardwareProfileError" @read="read_flash_diagnostics" @associate="associate_battery_label" />
       <DisplayPhoto v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <BatteryVoltageHistory v-if="visitedWorkspaces.has('device')" :key="sessionGeneration" :locale="language"
@@ -636,7 +636,7 @@ export default {
       activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       renameNotice: null,
       powerInfo: null, powerState: 'unknown', devicePanelOpen: false, startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
-      flashInfo:null, flashState:'unknown', batteryLabelConfirmed:false, hardwareProfileError:false,
+      flashInfo:null, flashState:'unknown', storageLayoutBytes:null, batteryLabelConfirmed:false, hardwareProfileError:false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
@@ -1482,6 +1482,7 @@ export default {
       if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;
       const generation=this.sessionGeneration;
       this.fullDiagnosticBusy = true;
+      this.storageLayoutBytes = null;
       this.fullDiagnosticSnapshot = null;
       this.fullDiagnosticInterrupted = false;
       const startedAt = performance.now();
@@ -1529,6 +1530,7 @@ export default {
           }
         });
         this.assert_session(generation); this.fullDiagnosticSnapshot=snapshot;
+        this.storageLayoutBytes = snapshot.sections.storage.data?.layout?.flashBytes ?? null;
         this.flashInfo = snapshot.sections.flash?.data || null;
         this.flashState = snapshot.sections.flash?.state || 'unavailable';
         for(const key of ['runtime','boot','power']) {
@@ -1948,6 +1950,7 @@ export default {
       this.backupDriveOpenError = false;
       this.collectionObservation=null;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
+      this.storageLayoutBytes = null;
       this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
       this.disconnecting = false;
       this.reset_figure_info(); this.meta_diag_visible = false;
@@ -1986,6 +1989,7 @@ export default {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
+      this.storageLayoutBytes = null;
       this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();
@@ -2032,6 +2036,7 @@ export default {
       this.previewSelection=null;this.previewBusy=false;++this.previewSerial;
       this.searchBusy=false;this.collectionBusy=false;this.collectionWriting=false;this.collectionReport=null;this.collectionStale=false;
       this.powerInfo=null; this.powerState='unknown';
+      this.storageLayoutBytes = null;
       this.fullDiagnosticSnapshot=null;this.fullDiagnosticBusy=false;this.fullDiagnosticProgress=null;this.fullDiagnosticInterrupted=false;
       this.disconnecting = pixl.get_connection_state?.() === 'disconnecting';
       this.reset_figure_info();

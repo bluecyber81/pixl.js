@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.75",
   "counter": 648,
   "board": "LCD",
-  "web_version": "3.55.1",
+  "web_version": "3.55.2",
   "web_publication_date": "2026-11-16",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
@@ -51,7 +51,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -147,7 +147,8 @@
     "web_3_53_0": "Verified reuse of small backup files, optional ZIP compression, phase timings and command counts, local catalogue checks on backup ZIPs, MIFARE Mini slot inspection, UTF-8 name and destination path budgets.",
     "battery_voltage": "The device power panel and diagnostic overview show the cached voltage in volts to three decimal places, with a German decimal comma and an English decimal point.",
     "web_3_55_0": "Read the cached three-byte flash ID, associate a confirmed battery label locally per device and record a voluntary battery voltage trace and inspect pixel-aligned LCD photos.",
-    "web_3_55_1": "Recognize the signed DE3.80 application on Z19 and Z20, and distinguish the flash driver capacity table from the mounted storage layout."
+    "web_3_55_1": "Recognize the signed DE3.80 application on Z19 and Z20, and distinguish the flash driver capacity table from the mounted storage layout.",
+    "web_3_55_2": "Compare startup scan time, flash reads and bytes read, retain valid PREP and test version labels, keep the observed layout size within the current connection and identify the device-observed DE3.80 LCD preview."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -160,9 +161,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_55_1.json",
+  "web_evidence": "docs/validation/WEB3_55_2.json",
   "device_readback_evidence": "docs/validation/DE3_75_LCD_CHECK.json",
-  "web_device_readback_pending_scope": "Physical verification of the flash ID, battery trace, LCD contrast and list scrolling is pending for DE3.79/App652. The owner supplied an LCD photo of the prior voltage display.",
+  "web_device_readback_pending_scope": "DE3.80/App653 was observed on one LCD in Web 3.55.1. The updated Web 3.55.2 startup comparison and hardware profile still need a real-device session.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
@@ -211,7 +212,8 @@
     "application_sha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
     "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
     "ota_sha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
-    "hardware_acceptance": "pending",
+    "hardware_acceptance": "startup-and-system-readback-on-one-lcd",
+    "readback_evidence": "docs/validation/DE3_80_LCD_READBACK.json",
     "evidence": "docs/validation/DE3_80.json",
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.80",
     "android_combined_package": {
@@ -230,6 +232,7 @@
     "source": "bootloader-z20",
     "region_sha256": "4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db",
     "payload_sha256": "64274549a10e77f602381f405cfbd59848928d87f45dc6f0c2fd10de773b3bac",
-    "hardware_acceptance": "pending"
+    "hardware_acceptance": "boot-region-readback-on-one-lcd",
+    "readback_evidence": "docs/validation/DE3_80_LCD_READBACK.json"
   }
 }

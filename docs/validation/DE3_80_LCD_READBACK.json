@@ -1,0 +1,29 @@
+{
+  "source": "Owner-reported Android combined-package flash and subsequent Allmiibo Dateimanager diagnostic export on one LCD",
+  "snapshotStartedAt": "2026-11-16T10:09:18.456Z",
+  "snapshotCompletedAt": "2026-11-16T10:09:19.849Z",
+  "fileManager": "3.55.1",
+  "firmwareVersion": "2.22.0-DE3.80",
+  "applicationCounter": 653,
+  "applicationIdentityBasis": "version-and-counter",
+  "applicationHashVerified": false,
+  "bootloaderCounter": 20,
+  "bootRegionBytes": 28672,
+  "bootRegionSha256": "4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db",
+  "bootRegionMatchesPackageReference": true,
+  "settingsCrcValid": true,
+  "softDevice": "S112 7.3.0",
+  "softDeviceFwid": 294,
+  "startup": {
+    "scope": "application-storage-start-to-first-dispatch",
+    "elapsedMilliseconds": 2156,
+    "mountScanMilliseconds": 1995,
+    "physicalReadAttempts": 3817,
+    "physicalReadBytes": 977152,
+    "physicalReadErrors": 0
+  },
+  "pending": [
+    "Controlled timing comparison against App652 with the same filesystem image",
+    "Resume after a physical Android DFU connection interruption"
+  ]
+}

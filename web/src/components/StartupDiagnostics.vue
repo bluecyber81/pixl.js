@@ -32,8 +32,31 @@
       <p>{{ text.baselineHint }}</p>
       <input type="file" accept=".json,application/json" :aria-label="text.baseline" @change="loadBaseline" />
       <p v-if="baselineError" role="status">{{ text.invalidBaseline }}</p>
-      <p v-if="difference" role="status">{{ text.difference }} · {{ text.storage }} {{ signed(difference.storage) }} ms · {{ text.total }} {{ signed(difference.total) }} ms
-        <span v-for="item in difference.storageIntervals" :key="item.id"> · {{ text.intervals[item.id] }} {{ signed(item.milliseconds) }} ms</span></p>
+      <div v-if="difference" role="status" class="comparison">
+        <h4>{{ text.difference }}</h4>
+        <p v-if="difference.baselineVersion && firmwareVersion" class="comparison-versions">
+          {{ text.previous }} {{ difference.baselineVersion }} · {{ text.current }} {{ firmwareVersion }}
+        </p>
+        <dl class="comparison-times">
+          <div><dt>{{ text.total }}</dt><dd>{{ signed(difference.total) }} ms</dd></div>
+          <div><dt>{{ text.storage }}</dt><dd>{{ signed(difference.storage) }} ms</dd></div>
+          <div v-for="row in difference.storageIntervals" :key="row.id">
+            <dt>{{ text.intervals[row.id] }}</dt><dd>{{ signed(row.milliseconds) }} ms</dd>
+          </div>
+        </dl>
+        <template v-if="difference.mount">
+          <h4>{{ text.mountComparison }}</h4>
+          <dl v-if="difference.mount.length" class="comparison-reads">
+            <div v-for="row in difference.mount" :key="row.id">
+              <dt>{{ text.comparisonMetric[row.id] }}</dt>
+              <dd><strong>{{ mountValue(row.id, row.delta, true) }}</strong>
+                <small>{{ text.previous }} {{ mountValue(row.id, row.before) }} · {{ text.current }} {{ mountValue(row.id, row.after) }}</small>
+              </dd>
+            </div>
+          </dl>
+          <p v-if="difference.mount.length < 3" class="limits">{{ text.mountLimits }}</p>
+        </template>
+      </div>
     </details>
     <details><summary>{{ de ? 'Mehrere Kaltstarts auswerten' : 'Compare multiple cold starts' }}</summary>
       <p>{{ de ? '3 bis 20 JSON-Berichte auswählen: je einer pro echtem Neustart, am selben Gerät mit derselben Firmware, Sammlung und ähnlicher Akkuspannung.' : 'Select 3 to 20 JSON reports: one per physical restart, from the same device, firmware and collection at a similar battery voltage.' }}</p>
@@ -102,7 +125,12 @@ const summary = computed(() => {
 });
 let request = 0, baselineRequest = 0, mounted = true;
 const difference = ref(null), baselineError = ref(false);
-const signed = value => value > 0 ? '+' + value : String(value);
+const numberFormat = computed(() => new Intl.NumberFormat(de.value ? 'de-DE' : 'en-US'));
+const signed = value => (value > 0 ? '+' : '') + numberFormat.value.format(value);
+function mountValue(id, value, showSign = false) {
+  const unit = {scanMilliseconds: ' ms', physicalReadBytes: ' B'}[id] || '';
+  return (showSign ? signed(value) : numberFormat.value.format(value)) + unit;
+}
 async function loadBaseline(event) {
   const file = event.target.files?.[0], id = ++baselineRequest;
   difference.value = null; baselineError.value = false;
@@ -163,4 +191,18 @@ th,td { padding:8px; border-bottom:1px solid #d7e2ec; text-align:left; } tbody t
 @media(max-width:480px) { .timing-summary { grid-template-columns:1fr; } }
 @media(max-width:600px) { .startup-diagnostics { padding:10px; } th,td { padding:6px; } }
 .mount-profile{padding:12px;margin:12px 0;border:1px solid #d7e2ec;border-radius:8px;background:#fff}.mount-profile summary{cursor:pointer;font-size:.86rem;font-weight:600}.mount-profile dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:.8rem}.mount-profile dt{color:#536b80}.mount-profile dd{margin:4px 0 0;font-variant-numeric:tabular-nums}
+.comparison { margin:12px 0; }
+.comparison h4 { margin:12px 0 5px; font-size:.9rem; }
+.comparison-versions,.comparison dd small { color:#435970; font-size:.78rem; }
+.comparison dl { margin:6px 0; font-variant-numeric:tabular-nums; }
+.comparison dd { margin:0; }
+.comparison-times>div { display:flex; justify-content:space-between; gap:12px; padding:5px 0; font-size:.82rem; border-bottom:1px solid #d7e2ec; }
+.comparison-times dd { flex-shrink:0; }
+.comparison-reads { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr)); gap:8px; }
+.comparison-reads>div { padding:10px; border:1px solid #c6d8e6; border-radius:8px; background:#fff; }
+.comparison-reads dt { font-size:.78rem; }
+.comparison-reads dd strong,.comparison-reads dd small { display:block; margin-top:4px; }
+@media(max-width:480px) {
+  .comparison-reads>div:last-child:nth-child(odd) { grid-column:1/-1; }
+}
 </style>

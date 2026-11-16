@@ -397,7 +397,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.55.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.55.2'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -409,7 +409,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.55.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.55.2.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -496,7 +496,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.55.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.55.2.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1677,10 +1677,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.55.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.55.2.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.55.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.55.2.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2577,7 +2577,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.55.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.55.2');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -2645,13 +2645,81 @@ test('3.35 failed fresh drive reads clear old space; primitive failure is export
  assert.equal(app.driveInfo.length,0);assert.equal(app.fullDiagnosticSnapshot,null);
 });
 
+const storageInfo={schema:1,drive:'E',backend:3,mounted:true,flags:15,metaLen:128,pathMax:64,nameMax:48};
+const storageLayout={schema:1,drive:'E',backend:3,mounted:true,magic:0x31534650,flags:7,flashBytes:2097152,blockSize:4096,blockCount:512,readSize:16,progSize:16,cacheSize:256,metadataBytes:128,shardTarget:4096,maxShards:16,pathCap:64,nameCap:48,maxHandles:4,engineSha256:'a'.repeat(64)};
+
 test('3.35 storage diagnostic uses only info and layout reads and never import/format operations',async()=>{
- const calls=[];const info={schema:1,drive:'E',backend:3,mounted:true,flags:15,metaLen:128,pathMax:64,nameMax:48};
- const layout={schema:1,drive:'E',backend:3,mounted:true,magic:0x31534650,flags:7,flashBytes:2097152,blockSize:4096,blockCount:512,readSize:16,progSize:16,cacheSize:256,metadataBytes:128,shardTarget:4096,maxShards:16,pathCap:64,nameCap:48,maxHandles:4,engineSha256:'a'.repeat(64)};
- const app=connected(harness({vfs_storage_info_extended:async drive=>{calls.push('info'+drive);return {status:0,data:info};},
-  vfs_storage_layout:async drive=>{calls.push('layout'+drive);return {status:0,data:layout};},
+ const calls=[];
+ const app=connected(harness({vfs_storage_info_extended:async drive=>{calls.push('info'+drive);return {status:0,data:storageInfo};},
+  vfs_storage_layout:async drive=>{calls.push('layout'+drive);return {status:0,data:storageLayout};},
   vfs_import_state:async()=>assert.fail('Must not import'),vfs_drive_format:async()=>assert.fail('Must not format')}));
  await app.read_all_diagnostics();assert.deepEqual(calls,['infoE','layoutE']);assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.layout.cacheSize,256);
+});
+
+function hardwareProfileHarness() {
+  return harness({
+    get_version: async () => ({status: 0, data: {ver: '2.22.0-DE3.80'}}),
+    get_flash_diagnostics: async () => ({schemaVersion: 1, scope: 'cached-flash-probe', jedecId: [235,96,21], geometrySupported: true}),
+    vfs_storage_info_extended: async () => ({status: 0, data: storageInfo}),
+    vfs_storage_layout: async () => ({status: 0, data: storageLayout})
+  });
+}
+
+test('hardware profile keeps measured capacity when a single flash read invalidates the combined report', async () => {
+  const h = hardwareProfileHarness();
+  const app = connected(h);
+  app.firmwareVersion = '2.22.0-DE3.80';
+  assert.match(descriptor.template.content, /<HardwareProfile\b[^>]*:storage-bytes="storageLayoutBytes"/);
+  await app.read_all_diagnostics();
+  assert.equal(app.storageLayoutBytes, storageLayout.flashBytes);
+  assert.equal(app.fullDiagnosticSnapshot.sections.storage.state, 'available');
+  await app.read_flash_diagnostics();
+  assert.equal(app.flashState, 'available');
+  assert.equal(app.storageLayoutBytes, storageLayout.flashBytes);
+  assert.equal(app.fullDiagnosticSnapshot, null);
+  app.save_diagnostics();
+  assert.equal(JSON.parse(app.diagnosticsJson).diagnosticSnapshot, undefined);
+
+  h.proto.get_flash_diagnostics = async () => { throw new Error('flash probe failed'); };
+  await app.read_flash_diagnostics();
+  assert.equal(app.flashState, 'failed');
+  assert.equal(app.storageLayoutBytes, storageLayout.flashBytes);
+  h.proto.vfs_storage_layout = async () => { throw new Error('layout read failed'); };
+  await app.read_all_diagnostics();
+  assert.equal(app.fullDiagnosticSnapshot.sections.storage.state, 'failed');
+  assert.equal(app.storageLayoutBytes, null);
+});
+
+test('hardware profile discards measured capacity on connection changes and ignores a late layout read', async () => {
+  const h = hardwareProfileHarness();
+  const app = connected(h);
+  app.firmwareVersion = '2.22.0-DE3.80';
+  await app.read_all_diagnostics();
+  assert.equal(app.storageLayoutBytes, storageLayout.flashBytes);
+  await app.on_ble_connected();
+  assert.equal(app.storageLayoutBytes, null);
+
+  await app.read_all_diagnostics();
+  assert.equal(app.storageLayoutBytes, storageLayout.flashBytes);
+  app.on_ble_disconnected();
+  assert.equal(app.storageLayoutBytes, null);
+  await app.on_ble_connected();
+  await app.read_all_diagnostics();
+  assert.equal(app.storageLayoutBytes, storageLayout.flashBytes);
+  app.on_ble_connect_error(new Error('connection error'));
+  assert.equal(app.storageLayoutBytes, null);
+
+  await app.on_ble_connected();
+  const readStarted = deferred(), oldLayout = deferred();
+  h.proto.vfs_storage_layout = async () => { readStarted.resolve(); return oldLayout.promise; };
+  const oldScan = app.read_all_diagnostics();
+  await readStarted.promise;
+  app.on_ble_disconnected();
+  await app.on_ble_connected();
+  oldLayout.resolve({status: 0, data: storageLayout});
+  await oldScan;
+  assert.equal(app.storageLayoutBytes, null);
+  assert.equal(app.fullDiagnosticSnapshot, null);
 });
 
 test('backup picker opens the available legacy E drive from Backup without starting a transfer', async () => {

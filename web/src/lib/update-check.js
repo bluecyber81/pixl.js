@@ -1,11 +1,13 @@
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
+import releases from '../data/firmware-releases.json' with { type: 'json' };
 
 import { UPDATE_TARGET } from './update-target.js';
 export { UPDATE_TARGET } from './update-target.js';
 
 const versionPattern = /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/;
 const aggregate = checks => checks.some(c => c.status === 'different') ? 'different'
-  : checks.every(c => c.status === 'match') ? 'match' : 'unknown';
+  : checks.some(c => c.status === 'unknown') ? 'unknown'
+  : checks.some(c => c.status === 'preview') ? 'preview' : 'match';
 const compare = (key, actual, expected) => ({ key, actual: actual ?? null, expected,
   status: actual == null ? 'unknown' : actual === expected ? 'match' : 'different' });
 const flag = (key, valid) => ({ key, actual: valid === true ? true : null, expected: true,
@@ -24,8 +26,9 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const bootReason = !active ? 'disconnected' : diagnostic ? null : boot != null ? 'invalid'
     : session?.bootState === 'failed' ? 'failed' : session?.bootState === 'unavailable' ? 'unavailable' : 'notRead';
   const rows = [];
-  function row(id, checks, reasons = []) {
-    rows.push({ id, status: aggregate(checks), checks,
+  function row(id, checks, reasons = [], matchedStatus = 'match') {
+    const status = aggregate(checks);
+    rows.push({ id, status: status === 'match' ? matchedStatus : status, checks,
       reasons: [...new Set([...reasons, ...(bootReason ? [bootReason] : [])])] });
   }
   row('hardware', [
@@ -36,16 +39,19 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     compare('page', diagnostic?.pageBytes, target.hardware.page),
     flag('geometry', diagnostic?.geometryValid)
   ]);
-  const applicationChecks = [compare('version', firmware, target.application.version),
-    compare('applicationCounter', diagnostic?.settingsCrcValid ? diagnostic.applicationCounter : null, target.application.counter)];
   const deVersion = value => value?.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(-PREP)?(?:t[1-9]\d*)?$/);
   const previousDe = deVersion(firmware), targetDe = deVersion(target.application.version);
   const relation = previousDe && targetDe ? [1,2,3,4].map(i=>Number(previousDe[i])-Number(targetDe[i])).find(n=>n!==0)||0 : 0;
+  const preview = relation > 0 && releases.packages.find(entry => entry.version === firmware &&
+    entry.channel === 'prerelease' && entry.board === 'LCD');
+  const application = preview || target.application;
+  const applicationChecks = [compare('version', firmware, application.version),
+    compare('applicationCounter', diagnostic?.settingsCrcValid ? diagnostic.applicationCounter : null, application.counter)];
   row('application', applicationChecks, ['applicationScope',
-    ...(Object.hasOwn(target.localApplications, firmware) && diagnostic?.settingsCrcValid &&
+    ...(relation < 0 && Object.hasOwn(target.localApplications, firmware) && diagnostic?.settingsCrcValid &&
       diagnostic.applicationCounter === target.localApplications[firmware] ? ['knownLocalApplication'] : []),
     ...(previousDe?.[5] ? ['preparationApplication'] : []),
-    ...(relation < 0 ? ['olderApplication'] : relation > 0 ? ['newerApplication'] : [])]);
+    ...(relation < 0 ? ['olderApplication'] : relation > 0 ? ['newerApplication'] : [])], preview ? 'preview' : 'match');
   const bootHash = diagnostic?.bootHashValid ? diagnostic.bootRegionSha256 : null;
   const bootCounter = diagnostic?.settingsCrcValid ? diagnostic.bootloaderCounter : null;
   // Match each firmware region to its own counter. Keep known BL8 rollback
@@ -55,6 +61,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const identity = exact ?? profiles.find(profile => profile.sha256 === bootHash)
     ?? profiles.find(profile => profile.counter === bootCounter)
     ?? target.bootloader;
+  const packageBoots = preview ? profiles.filter(profile => preview.bootloader.split('/').includes(profile.name)) : [];
   row('bootloader', [
     compare('bootHash', bootHash, identity.sha256),
     compare('bootCounter', bootCounter, identity.counter),
@@ -64,6 +71,8 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     compare('settingsAddress', diagnostic?.geometryValid ? diagnostic.settingsAddress : null, target.bootloader.settingsAddress),
     compare('settingsVersion', diagnostic?.settingsLayoutSupported ? diagnostic.settingsVersion : null, target.bootloader.settingsVersion),
     ...(firmware === target.application.version ? [compare('targetBootCounter', bootCounter, target.bootloaderZ19.counter)] : []),
+    ...(preview ? [{ key: 'previewBootCounter', actual: bootCounter, expected: packageBoots.map(profile => profile.counter).join(' / '),
+      status: bootCounter === null ? 'unknown' : packageBoots.some(profile => profile.counter === bootCounter) ? 'match' : 'different' }] : []),
     flag('bootVectors', diagnostic?.bootVectorsValid),
     flag('settingsCrc', diagnostic?.settingsCrcValid),
     compare('addressConflict', diagnostic ? diagnostic.addressConflict : null, false)
@@ -73,15 +82,17 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     compare('sdVersion', diagnostic?.softDeviceValid ? diagnostic.softDeviceVersion : null, target.softDevice.version),
     compare('sdFwid', diagnostic?.softDeviceValid ? diagnostic.softDeviceFwid : null, target.softDevice.fwid)
   ], ['softDeviceScope']);
-  return { targetId: target.id, status: aggregate(rows), active, rows };
+  return { targetId: target.id, status: aggregate(rows), active, rows,
+    preview: preview ? { version: preview.version, counter: preview.counter, bootloader: preview.bootloader } : null };
 }
 
-export function updateCheckText(locale = 'de_DE') {
+export function updateCheckText(locale = 'de_DE', preview = null) {
   const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
-  return { ...copy, target: `${german ? 'Lokaler Vergleichsstand' : 'Local comparison profile'}: ${short} · Z19 · S112 7.3.0`,
-    targets: { ...copy.targets, application: `${version} · ${german ? 'Zähler' : 'counter'} ${UPDATE_TARGET.application.counter}`,
-      bootloader: `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'}) / Z17 (${UPDATE_TARGET.bootloaderZ17.counter}) / Z18 (${german ? 'Rückkehr zu Z15-Code' : 'rollback to Z15 code'}) / Z19 (${UPDATE_TARGET.bootloaderZ19.counter}) / Z20 (${UPDATE_TARGET.bootloaderZ20.counter})` },
+  const application = preview || UPDATE_TARGET.application;
+  return { ...copy, target: `${german ? 'Stabile Ausgabe' : 'Stable release'} · ${short} · Z19 · S112 7.3.0`,
+    targets: { ...copy.targets, application: `${preview ? copy.previewProfile + ' · ' : ''}${application.version} · ${german ? 'Zähler' : 'counter'} ${application.counter}`,
+      bootloader: preview ? `${copy.previewProfile} · ${preview.bootloader}` : `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'}) / Z17 (${UPDATE_TARGET.bootloaderZ17.counter}) / Z18 (${german ? 'Rückkehr zu Z15-Code' : 'rollback to Z15 code'}) / Z19 (${UPDATE_TARGET.bootloaderZ19.counter}) / Z20 (${UPDATE_TARGET.bootloaderZ20.counter})` },
     reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
 }
 
@@ -104,12 +115,12 @@ const COPY = {
   de: {
     title: 'Geräteübersicht und Versionsabgleich', target: '',
     subtitle: 'Vergleicht die gelesenen Angaben mit diesem Paket. Abweichung bedeutet nicht automatisch Fehler oder Inkompatibilität. Keine automatische Aktualisierung.',
-    match: 'Passt zum Ziel', different: 'Abweichung', unknown: 'Noch nicht bestätigt', unknownValue: 'Nicht bestätigt',
+    match: 'Stimmt überein', preview: 'Bekannte Vorschau', previewProfile: 'Vorschauprofil', different: 'Abweichung', unknown: 'Noch nicht bestätigt', unknownValue: 'Nicht bestätigt',
     actual: 'Gelesen', expected: 'Erwartet', details: 'Prüfdetails anzeigen', yes: 'Ja', no: 'Nein',
-    overall: { match: 'Alle gelesenen Angaben passen zum lokalen Ziel.', different: 'Mindestens eine gelesene Angabe weicht vom Ziel ab.', unknown: 'Für den vollständigen Abgleich fehlen noch bestätigte Angaben.' },
+    overall: { match: 'Alle gelesenen Angaben passen zum lokalen Ziel.', preview: 'Anwendungszähler, Bootloader, Bluetooth-Stack und Chipdaten passen zur mitgelieferten Vorschau.', different: 'Mindestens eine gelesene Angabe weicht vom Vergleichsprofil ab.', unknown: 'Für den vollständigen Abgleich fehlen noch bestätigte Angaben.' },
     names: { hardware: 'Hardware', application: 'Anwendung', bootloader: 'Bootloader', softDevice: 'Bluetooth-Stack' },
     targets: { hardware: 'nRF52832 AAE0 · 512 KiB Flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
-    fields: { chip: 'Chip', variant: 'Chipvariante (AAE0)', flash: 'Chip-Flash', ram: 'Chip-RAM', page: 'Flash-Seite', geometry: 'Speichergeometrie gültig', version: 'Laufende Version', applicationCounter: 'Anwendungszähler', bootHash: 'SHA-256 des Bootloader-Bereichs', bootCounter: 'Bootloader-Zähler', targetBootCounter: 'Bootloader-Zähler der aktuellen LCD-Freigabe', bootAddress: 'Bootloader-Start', bootBytes: 'Bereichsgröße', paramsAddress: 'MBR-Parameter', settingsAddress: 'Settings-Adresse', settingsVersion: 'Settings-Layout', bootVectors: 'Boot-Vektoren gültig', settingsCrc: 'Settings-CRC gültig', addressConflict: 'Adresskonflikt', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware-ID' },
+    fields: { chip: 'Chip', variant: 'Chipvariante (AAE0)', flash: 'Chip-Flash', ram: 'Chip-RAM', page: 'Flash-Seite', geometry: 'Speichergeometrie gültig', version: 'Laufende Version', applicationCounter: 'Anwendungszähler', bootHash: 'SHA-256 des Bootloader-Bereichs', bootCounter: 'Bootloader-Zähler', targetBootCounter: 'Bootloader-Zähler der stabilen LCD-Ausgabe', previewBootCounter: 'Erlaubte Bootloader-Zähler der Vorschau', bootAddress: 'Bootloader-Start', bootBytes: 'Bereichsgröße', paramsAddress: 'MBR-Parameter', settingsAddress: 'Settings-Adresse', settingsVersion: 'Settings-Layout', bootVectors: 'Boot-Vektoren gültig', settingsCrc: 'Settings-CRC gültig', addressConflict: 'Adresskonflikt', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware-ID' },
     reasons: {
       disconnected: 'Nicht verbunden; frühere Werte werden hier nicht als aktuell bestätigt.',
       notRead: 'Bootloader- und SoftDevice-Angaben noch nicht gelesen. Die Leseabfrage unten ausführen.',
@@ -121,7 +132,7 @@ const COPY = {
       knownLocalApplication: 'Die gelesene Version und der Zähler gehören zu einer früheren LCD-Ausgabe.',
       localZ20: 'Bereichs-Hash und Zähler stimmen mit dem LCD-Testbootloader Z20 überein.',
       localZ19: 'Bereichs-Hash und Zähler stimmen mit dem bekannten LCD-Bootloader Z19 überein.',
-      newerApplication: 'Diese Anwendung ist neuer als der mitgelieferte Vergleichsstand. Das allein belegt weder einen Fehler noch Inkompatibilität. Kein Downgrade wird vorgeschlagen.',
+      newerApplication: 'Diese Anwendung ist neuer als die stabile LCD-Ausgabe. Das allein belegt weder einen Fehler noch Inkompatibilität. Kein Downgrade wird vorgeschlagen.',
       z16Recovery: 'Z16-Rückkehrpaket erkannt. Der Bootbereich enthält den Z13-Programmcode mit Zähler 16.',
       z18Recovery: 'Z18-Rückkehrpaket erkannt. Der Bootbereich enthält unveränderten Z15-Programmcode mit Zähler 18. Dies ist keine neue Bootloader-Implementierung.',
       bootScope: 'Der Zähler allein reicht nicht. Der Bereichs-Hash enthält auch Füllbytes; er prüft keine Signatur.',
@@ -132,12 +143,12 @@ const COPY = {
   en: {
     title: 'Device overview and version check', target: '',
     subtitle: 'Compares the read values with this package. A difference does not automatically mean a fault or incompatibility. No automatic update.',
-    match: 'Matches target', different: 'Difference', unknown: 'Not yet confirmed', unknownValue: 'Not confirmed',
+    match: 'Matches', preview: 'Known preview', previewProfile: 'Preview profile', different: 'Difference', unknown: 'Not yet confirmed', unknownValue: 'Not confirmed',
     actual: 'Read', expected: 'Expected', details: 'Show check details', yes: 'Yes', no: 'No',
-    overall: { match: 'All read values match the local target.', different: 'At least one read value differs from the target.', unknown: 'A complete comparison still needs confirmed values.' },
+    overall: { match: 'All read values match the local target.', preview: 'The application counter, bootloader, Bluetooth stack and chip details match the bundled preview profile.', different: 'At least one read value differs from the comparison profile.', unknown: 'A complete comparison still needs confirmed values.' },
     names: { hardware: 'Hardware', application: 'Application', bootloader: 'Bootloader', softDevice: 'Bluetooth stack' },
     targets: { hardware: 'nRF52832 AAE0 · 512 KiB flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
-    fields: { chip: 'Chip', variant: 'Chip variant (AAE0)', flash: 'Chip flash', ram: 'Chip RAM', page: 'Flash page', geometry: 'Valid memory geometry', version: 'Running version', applicationCounter: 'Application counter', bootHash: 'Bootloader region SHA-256', bootCounter: 'Bootloader counter', targetBootCounter: 'Bootloader counter for the current LCD release', bootAddress: 'Bootloader start', bootBytes: 'Region size', paramsAddress: 'MBR parameters', settingsAddress: 'Settings address', settingsVersion: 'Settings layout', bootVectors: 'Valid boot vectors', settingsCrc: 'Valid settings CRC', addressConflict: 'Address conflict', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware ID' },
+    fields: { chip: 'Chip', variant: 'Chip variant (AAE0)', flash: 'Chip flash', ram: 'Chip RAM', page: 'Flash page', geometry: 'Valid memory geometry', version: 'Running version', applicationCounter: 'Application counter', bootHash: 'Bootloader region SHA-256', bootCounter: 'Bootloader counter', targetBootCounter: 'Bootloader counter for the stable LCD release', previewBootCounter: 'Supported bootloader counters for the preview', bootAddress: 'Bootloader start', bootBytes: 'Region size', paramsAddress: 'MBR parameters', settingsAddress: 'Settings address', settingsVersion: 'Settings layout', bootVectors: 'Valid boot vectors', settingsCrc: 'Valid settings CRC', addressConflict: 'Address conflict', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware ID' },
     reasons: {
       disconnected: 'Disconnected; previous values are not confirmed as current here.',
       notRead: 'Bootloader and SoftDevice values have not been read. Use the read action below.',
@@ -149,7 +160,7 @@ const COPY = {
       knownLocalApplication: 'The reported version and counter belong to an earlier LCD release.',
       localZ20: 'The region hash and counter match the Z20 LCD test bootloader.',
       localZ19: 'The region hash and counter match the known Z19 LCD bootloader.',
-      newerApplication: 'This application is newer than the bundled comparison profile. That alone does not establish a fault or incompatibility. No downgrade is suggested.',
+      newerApplication: 'This application is newer than the stable LCD release. That alone does not establish a fault or incompatibility. No downgrade is suggested.',
       z16Recovery: 'Z16 rollback package recognized. The boot region contains the Z13 code with counter 16.',
       z18Recovery: 'Z18 rollback package recognized. The boot region contains unchanged Z15 code with counter 18. This is not a new bootloader implementation.',
       bootScope: 'The counter alone is insufficient. The region hash includes padding; it does not verify a signature.',
