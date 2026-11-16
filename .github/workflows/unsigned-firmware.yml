@@ -6,17 +6,17 @@ on:
   workflow_dispatch:
   workflow_call:
   pull_request:
-    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', '.github/workflows/unsigned-firmware.yml']
+    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', 'bootloader-z20/**', '.github/workflows/unsigned-firmware.yml']
   push:
     branches: [main]
-    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', '.github/workflows/unsigned-firmware.yml']
+    paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', 'bootloader-z20/**', '.github/workflows/unsigned-firmware.yml']
 
 permissions:
   contents: read
 
 jobs:
   application:
-    name: DE3.79 LCD application preview
+    name: DE3.80 LCD application preview
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -60,6 +60,8 @@ jobs:
       - name: Verify the packaged preview against the compiled application and bound Z19 key
         if: steps.application_mode.outputs.mode == 'preview'
         run: /usr/bin/python3 tools/check_release_ota.py --preview
+      - name: Verify both Android DFU phases against the release packages
+        run: /usr/bin/python3 tools/verify_lcd_combo.py --profile de3.80
       - name: Exercise every DE2 and DE3 host suite
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
@@ -151,5 +153,47 @@ jobs:
           path: |
             bootloader-${{ matrix.boot }}/_build/
             bootloader-${{ matrix.boot }}/_checks/
+          if-no-files-found: error
+          retention-days: 30
+
+  bootloader-checkpoints:
+    name: z20 source-bound build and DFU recovery tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Prepare the bound Z20 sources and reproduce the pinned LCD image
+        run: |
+          docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
+          python3 -B bootloader-z20/build.py --prepare "$RUNNER_TEMP/z20-source"
+          cd "$RUNNER_TEMP/z20-source"
+          python3 -B build.py --check
+          python3 -B build.py
+      - name: Run the native and ARM checks and resume the signed preview
+        run: |
+          python3 -m venv "$RUNNER_TEMP/boot-venv"
+          "$RUNNER_TEMP/boot-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r tools/ci-unicorn-linux-x64.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
+          ota="$(jq -er .firmware_preview.application_ota_path RELEASE_INFO.json)"
+          expected="$(jq -er .firmware_preview.application_sha256 RELEASE_INFO.json)"
+          name="$(unzip -p "$ota" manifest.json | jq -er .manifest.application.bin_file)"
+          unzip -p "$ota" "$name" > "$RUNNER_TEMP/z20-application.bin"
+          system="$(jq -er .firmware_preview.android_combined_package.path RELEASE_INFO.json)"
+          system_bin="$(unzip -p "$system" manifest.json | jq -er .manifest.softdevice_bootloader.bin_file)"
+          unzip -p "$system" "$system_bin" > "$RUNNER_TEMP/z20-system.bin"
+          cd "$RUNNER_TEMP/z20-source"
+          "$RUNNER_TEMP/boot-venv/bin/python" -B tests/run_offline.py --output _checks
+          python3 -B tests/check_resume.py "$RUNNER_TEMP/z20-application.bin" "$expected" _checks/checkpoint-resume.json
+          python3 -B tests/check_resume.py "$RUNNER_TEMP/z20-system.bin" 911ce97e583b9b3165e3be9edb33edf3ebc0b1a9e63aa139fa4ae331c1e80b2b _checks/system-checkpoint-resume.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: success() || failure()
+        with:
+          name: z20-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/z20-source/_build/
+            ${{ runner.temp }}/z20-source/_checks/
           if-no-files-found: error
           retention-days: 30

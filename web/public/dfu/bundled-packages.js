@@ -8,7 +8,7 @@
     const keys=['id','version','counter','file','bytes','sha256','board','storage','bootloader','softDevice','applicationOnly','migrationRequired'];
     const need=(ok,de,en)=>{if(!ok)throw new DfuValidationError(de,en);};
     function validateCatalog(input){
-        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=8,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
+        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=16,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
         const seen=new Set();
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
@@ -22,7 +22,7 @@
             if (item.channel === 'prerelease' && !testBuild) names.push(`Allmiibo_LCD_DE3_${version[1]}_App${item.counter}_TEST_DFU.zip`);
             need(names.includes(item.file) && (!testBuild || item.channel === 'prerelease'),'Ungültiger Firmware-Dateiname.', 'Invalid firmware filename.');
             need(Number.isInteger(item.bytes)&&item.bytes>0&&item.bytes<=MAX_BYTES&&typeof item.sha256==='string'&&/^[a-f0-9]{64}$/.test(item.sha256)&&!/^0{64}$/.test(item.sha256),'Paketgröße oder SHA-256 fehlt.', 'The package size or SHA-256 is missing or invalid.');
-            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19','Z19'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.', 'This package does not match the local LCD/PFS1 profile.');
+            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19','Z19','Z19/Z20'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.', 'This package does not match the local LCD/PFS1 profile.');
             seen.add(item.id);return Object.freeze({...item});
         });
         return Object.freeze({schema:1,packages:Object.freeze(packages)});

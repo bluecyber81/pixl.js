@@ -11,7 +11,7 @@
       <strong>{{ label('Externer SPI-Flash', 'External SPI flash') }}</strong>
       <p v-if="flash?.jedecId"><code>{{ flash.jedecId.map(hexByte).join(' ') }}</code>
         · {{ flashManufacturer(flash.jedecId) || label('Hersteller nicht zugeordnet', 'Unmapped manufacturer') }}
-        · {{ flash.geometrySupported ? label('Speichergeometrie unterstützt', 'Supported geometry') : label('Speichergeometrie unbekannt', 'Unknown geometry') }}</p>
+        · {{ flash.geometrySupported ? label('Kapazitätscode im Flash-Treiber bekannt', 'Capacity code recognized by the flash driver') : label('Kapazitätscode im Flash-Treiber unbekannt', 'Capacity code unknown to the flash driver') }}</p>
       <p v-else-if="!supported">{{ label('Die Flash-Kennung ist ab LCD-Firmware DE3.78 verfügbar.', 'Flash ID is available with LCD firmware DE3.78 or later.') }}</p>
       <p v-else-if="flashState === 'failed'">{{ label('Lesen der Kennung fehlgeschlagen.', 'Could not read the ID.') }}</p>
       <p v-else-if="flash || flashState === 'unavailable'">{{ label('Keine gültige Kennung verfügbar.', 'No valid ID available.') }}</p>

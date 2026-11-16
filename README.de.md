@@ -1,5 +1,9 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
+## LCD-Update fürs Android-Handy
+
+DE3.80 / App653 gibt es als signierte App oder als Kombi mit Bootloader Z20 und Nordic S112 7.3.0. Die Kombi in nRF Device Firmware Update auswählen und beide Übertragungen abschließen lassen. Diese Pakete sind für das LCD mit bereits eingerichtetem Packed LittleFS (PFS1). DE3.75 bleibt die am Gerät geprüfte stabile Ausgabe. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)
+
 ## Hardwarediagnose und Akkuverlauf · Dateimanager 3.55.0
 
 Unter **Gerät & Diagnose** kannst du den Akkuverlauf starten. Der Browser liest alle zehn Sekunden die zuletzt gemeldete Spannung und die Ladeanzeige aus. Die letzten 120 Einträge gelten für die aktuelle Verbindung. Während einer Dateiübertragung oder bei verborgenem Tab pausiert die Aufzeichnung. Steht „551520 · 180 mAh · 3,8 V · 0,684 Wh“ auf deinem Akku, kannst du das unter **Hardwareprofil → Akkuetikett diesem Gerät zuordnen** bestätigen. Der Diagnoseexport kennzeichnet diese Angabe als Akkuaufdruck.

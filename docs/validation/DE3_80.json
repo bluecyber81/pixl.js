@@ -1,0 +1,386 @@
+{
+  "version": "2.22.0-DE3.80",
+  "applicationCounter": 653,
+  "status": "signed-preview",
+  "hardwareAcceptance": "pending",
+  "applicationZip": {
+    "version": "2.22.0-DE3.80",
+    "appCounter": 653,
+    "firmwareStatus": "signed-test-candidate",
+    "deviceAcceptance": "pending",
+    "package": "Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
+    "packageBytes": 259943,
+    "otaSha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
+    "binSha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
+    "sourceId": "ca55c5555307609be7ab5e7e202b0af00a2609d69df7e7a1f6d5f35a2d46bf13",
+    "flashReserve": 10084,
+    "independentVerifier": {
+      "name": "Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
+      "sha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
+      "bytes": 259943,
+      "images": [
+        {
+          "type": "application",
+          "firmware_type": 0,
+          "counter": 653,
+          "sd_req": [
+            259,
+            294
+          ],
+          "bytes": 362652,
+          "sha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
+          "signature_verified": true,
+          "sd_size": 0,
+          "bl_size": 0,
+          "app_size": 362652,
+          "boot_validation": "GENERATED_CRC",
+          "negative_controls_passed": 3
+        }
+      ]
+    },
+    "repositoryVerifier": {
+      "name": "Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
+      "sha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
+      "bytes": 259943,
+      "images": [
+        {
+          "type": "application",
+          "firmware_type": 0,
+          "counter": 653,
+          "sd_req": [
+            259,
+            294
+          ],
+          "bytes": 362652,
+          "sha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
+          "signature_verified": true,
+          "sd_size": 0,
+          "bl_size": 0,
+          "app_size": 362652,
+          "boot_validation": "GENERATED_CRC",
+          "negative_controls_passed": 3
+        }
+      ]
+    }
+  },
+  "androidCombo": {
+    "filename": "Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip",
+    "bytes": 341464,
+    "sha256": "638ad4876af5a034059b786de9ca64b3c4846952f9af04e6317fffd857959ead",
+    "softDevice": "S112 7.3.0",
+    "softDeviceFwid": "0x0126",
+    "softDeviceSha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "vendorZipSha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "mbrIncluded": false,
+    "uicrIncluded": false,
+    "settingsIncluded": false,
+    "bootloaderBase": "0x77000",
+    "paramsBase": "0x7e000",
+    "appBase": "0x19000",
+    "bootPayloadSha256": "64274549a10e77f602381f405cfbd59848928d87f45dc6f0c2fd10de773b3bac",
+    "bootRegionSha256": "4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db",
+    "appOnlyOtaSha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
+    "appSourceId": "ca55c5555307609be7ab5e7e202b0af00a2609d69df7e7a1f6d5f35a2d46bf13",
+    "appAndDatIdenticalToReferenceAppOnly": true,
+    "bootElfSha256": "fdfdab9f991ad74215d5b3b0d8b1c89a481791515cc9676180d2771ad78f27f6",
+    "systemInit": {
+      "counter": 20,
+      "hardware": 52,
+      "type": 3,
+      "sdReq": [
+        259,
+        294
+      ],
+      "sizeFields": [
+        98068,
+        26916,
+        0
+      ],
+      "signatureVerified": true,
+      "payloadSha256": "911ce97e583b9b3165e3be9edb33edf3ebc0b1a9e63aa139fa4ae331c1e80b2b",
+      "signedDigestVerified": true,
+      "datSha256": "e69e632deea0b5a26627b4bee52dd623621d2f5dc7e440bf6e539146d8f3efa3",
+      "negativeControlsPassed": 2
+    },
+    "appInit": {
+      "counter": 653,
+      "hardware": 52,
+      "type": 0,
+      "sdReq": [
+        259,
+        294
+      ],
+      "sizeFields": [
+        0,
+        0,
+        362652
+      ],
+      "signatureVerified": true,
+      "payloadSha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
+      "signedDigestVerified": true,
+      "datSha256": "09a05251b85e304f59f4f13aa31ce595baa9aff969fe8b583d438e2569a84b93",
+      "negativeControlsPassed": 2
+    },
+    "physicalDeviceTest": false
+  },
+  "androidArchiveReader": {
+    "archiveSha256": "638ad4876af5a034059b786de9ca64b3c4846952f9af04e6317fffd857959ead",
+    "library": "Nordic Android DFU 2.11.0",
+    "aarSha256": "8065d517456fe6bbaead5dc19d58601174c00d6bd6f40214baf9a9dd8f7e593f",
+    "reader": "ArchiveInputStream, official classes.jar",
+    "environment": "Linux JVM, Android Log/Build stubs",
+    "contentType": 7,
+    "fullSystemAndAppRead": true,
+    "systemAndAppInitPacketsMatched": true,
+    "phaseBytes": [
+      124984,
+      362652
+    ],
+    "chunkBytes": 243,
+    "realHandset": false
+  },
+  "armComboValidation": {
+    "archiveSha256": "638ad4876af5a034059b786de9ca64b3c4846952f9af04e6317fffd857959ead",
+    "model": "production Z19 and Z20 Cortex-M ELF instructions, modeled flash/RAM/addresses",
+    "fromApplication": 652,
+    "toApplication": 653,
+    "toBootloader": 20,
+    "fromBootloader": 19,
+    "sdFwid": "0x0126",
+    "oldAppSha256": "d7d09513ae197c27ffce76707f8f764bf08568b1abd1372beaaa85e26d1eff0f",
+    "z20ElfSha256": "fdfdab9f991ad74215d5b3b0d8b1c89a481791515cc9676180d2771ad78f27f6",
+    "physicalRadioOrResetTest": false,
+    "cases": [
+      {
+        "case": "Z19/App652 admits S112 and Z20",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 124984,
+        "bank0Code": 0,
+        "wholeImageHashAccepted": true,
+        "corruptImageRejected": true
+      },
+      {
+        "case": "Z20 rejects repeat system install",
+        "code": 16,
+        "destination": 0,
+        "dataBytes": 0,
+        "bank0Code": 1
+      },
+      {
+        "case": "Z19 rejects unrelated FWID",
+        "code": 18,
+        "destination": 0,
+        "dataBytes": 0,
+        "bank0Code": 1
+      },
+      {
+        "case": "Z19 rejects corrupted system signature",
+        "code": 5,
+        "destination": 0,
+        "dataBytes": 0,
+        "bank0Code": 1
+      },
+      {
+        "case": "Z20 admits App653, empty after system phase",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 362652,
+        "bank0Code": 0,
+        "wholeImageHashAccepted": true,
+        "generatedBootCrcAccepted": true,
+        "corruptImageRejected": true
+      },
+      {
+        "case": "Z20 admits App653, existing App652",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 362652,
+        "bank0Code": 0,
+        "wholeImageHashAccepted": true,
+        "generatedBootCrcAccepted": true,
+        "corruptImageRejected": true
+      },
+      {
+        "case": "Z20 rejects corrupted app signature",
+        "code": 5,
+        "destination": 0,
+        "dataBytes": 0,
+        "bank0Code": 1
+      }
+    ]
+  },
+  "earlierBootloaderModel": {
+    "packageSha256": "638ad4876af5a034059b786de9ca64b3c4846952f9af04e6317fffd857959ead",
+    "scope": "First signed phase only. Production ARM ELF on simulated hardware, S112 FWID 0x0126, measured boot layout to model.",
+    "results": [
+      {
+        "case": "Z15 / App633 admits S112+Z20",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 124984,
+        "bank0Code": 0,
+        "wholeImageHashAccepted": true,
+        "corruptImageRejected": true,
+        "bootRegionSha256": "c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade",
+        "oldApplicationSha256": "b1a6eb4828ebc97f20cf72d22c44c50909ef4f8870232866880cc26eea95bbb7"
+      },
+      {
+        "case": "Z17 / App634 admits S112+Z20",
+        "code": 1,
+        "destination": 102400,
+        "dataBytes": 124984,
+        "bank0Code": 0,
+        "wholeImageHashAccepted": true,
+        "corruptImageRejected": true,
+        "bootRegionSha256": "5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584",
+        "oldApplicationSha256": "597d61e301d663f30abfd63512c5d44faba7cfe5345a2b216d715003704aa9ca"
+      }
+    ]
+  },
+  "appHostSuites": {
+    "available": 158,
+    "passed": 158,
+    "deviceAccess": false,
+    "inputReportSha256": "f4941c462fa06f3f7bbb3f87f3ab1660db0359a910c9ad321ed7bd0e9ce1bd27"
+  },
+  "linkedApp": {
+    "sourceInputs": 705,
+    "sourceId": "ca55c5555307609be7ab5e7e202b0af00a2609d69df7e7a1f6d5f35a2d46bf13",
+    "artifacts": {
+      "pixljs.bin": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
+      "pixljs.hex": "04897ca96599ad888afc4a88fb5519675c4dc52b88c33bed4f598c3b71205ad0",
+      "pixljs.out": "3c84335a359ec262b80a51c99ad019bb113777aa198521e962137ad906457eaf",
+      "pixljs.map": "09e9999beb3bee51985f55bf77c609ada131e8eff64fda35da4d82897bba09a4"
+    },
+    "linkerBudget": {
+      "flash_reserve_bytes": 10084,
+      "heap_stack_gap_bytes": 1616,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "storageComparison": {
+    "scope": "Synthetic NOR mount, all bytes and Raw128 verified for each synthetic file on every cached mount, three repetitions per workload, one extra /saved file. Counts are HAL reads of 256 bytes, not target boot time.",
+    "optimizedMode": "8 pages only when contiguous RAM plus 4096-byte margin is available; otherwise try 4 pages; on allocation failure continue validating uncached.",
+    "pressureCases": "8, 4 and 0 pages verified, bit-flipped live payload rejected and corrected image remounts; no write/erase; max representable page including all-ones tag, LRU eviction, failed IO propagation and retries",
+    "samples": [
+      {
+        "figures": 100,
+        "uncached": 398,
+        "app652": 342,
+        "app653": 311,
+        "percentFewer": 9.06,
+        "physicalBytesSaved": 7936,
+        "baselinePeakBytes": 4504,
+        "optimizedPeakBytes": 5538
+      },
+      {
+        "figures": 500,
+        "uncached": 1858,
+        "app652": 1603,
+        "app653": 1506,
+        "percentFewer": 6.05,
+        "physicalBytesSaved": 24832,
+        "baselinePeakBytes": 4504,
+        "optimizedPeakBytes": 5538
+      },
+      {
+        "figures": 952,
+        "uncached": 3864,
+        "app652": 3433,
+        "app653": 3257,
+        "percentFewer": 5.13,
+        "physicalBytesSaved": 45056,
+        "baselinePeakBytes": 4504,
+        "optimizedPeakBytes": 5538
+      }
+    ],
+    "comparedReports": {
+      "app652-comparison-qualified.json": "189fc4eab82491528ce88f37e2cc4d263309e5e83bec490f23b428cd8fa4f98a",
+      "app653-mount-qualified.json": "2f2a066573aa84cf0d521d58c0c5ece6922dbda91c417971aae3e127a0d67af2",
+      "app653-asan.json": "372f3f083ff211adec7f8abb7547c1365dc1a7fc058783aa6e6a8dec94b75dd3",
+      "app653-arm32.json": "f62732b759e273e4b156bbc6e96e715f6d2a354fd955a8aa44f1343074d7d34d",
+      "build-app653-strict/SIGNED_OTA.json": "b15e755a84a8df76719ef6f1924b0b846ebd9d6eedbda1187137e35353ca1cba",
+      "pfs-cross-653/PFS_CROSS_VERSION.json": "79ec42ecf05f17488de46b175ab40001b3b4420f1f5c47dad3f15ca10793e4dd"
+    }
+  },
+  "packedLayoutEvidence": "DE3_80_PFS.json",
+  "bootloader": {
+    "payloadBytes": 26916,
+    "flashReserveBytes": 1756,
+    "buildReproduced": true,
+    "emulatedAndNativeSuitesPassed": 10,
+    "regionSha256": "4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db",
+    "applicationResume": {
+      "payloadBytes": 362652,
+      "cutOffsets": [
+        40,
+        180264,
+        360488
+      ],
+      "resumeOffsets": [
+        0,
+        131072,
+        327680
+      ],
+      "checkpointCount": 5,
+      "additionalPageErases": 10,
+      "finalCrc32": 3015686437,
+      "passed": true,
+      "sha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
+      "cutKinds": [
+        "link",
+        "link",
+        "cold-restart"
+      ],
+      "duplicateExecuteExtraErases": 0,
+      "modeledLinkCutsDuringCheckpoint": 5,
+      "modeledCheckpointPowerCuts": 455,
+      "modeledAdmissionOrCompletionFailures": 8,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+    },
+    "systemStreamModelWithZ20Receiver": {
+      "payloadBytes": 124984,
+      "cutOffsets": [
+        40,
+        65576,
+        122920
+      ],
+      "resumeOffsets": [
+        0,
+        65536,
+        65536
+      ],
+      "checkpointCount": 1,
+      "additionalPageErases": 2,
+      "finalCrc32": 338526608,
+      "passed": true,
+      "sha256": "911ce97e583b9b3165e3be9edb33edf3ebc0b1a9e63aa139fa4ae331c1e80b2b",
+      "cutKinds": [
+        "link",
+        "link",
+        "cold-restart"
+      ],
+      "duplicateExecuteExtraErases": 0,
+      "modeledLinkCutsDuringCheckpoint": 5,
+      "modeledCheckpointPowerCuts": 455,
+      "modeledAdmissionOrCompletionFailures": 8,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+    }
+  },
+  "physicalChecksPending": [
+    "Android two-phase transfer to a compatible LCD, followed by App653, Z20 and S112 readback.",
+    "Startup markers on the device with the same collection and cache conditions.",
+    "Interrupted Android transfer with a Z20 receiver."
+  ]
+}

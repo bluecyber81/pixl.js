@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.55.1
+
+Zum Aktualisieren eines kompatiblen LCD mit Z19 oder Z20 und vorhandenem PFS1 steht die App DE3.80 im Firmwarebereich bereit. Der externe Flash-Kapazitätscode wird anhand der Tabelle des Treibers eingeordnet. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)
+
 ## Hardwarediagnose und Akkuverlauf · Dateimanager 3.55.0
 
 Unter **Gerät & Diagnose** kannst du den Akkuverlauf starten. Der Browser liest alle zehn Sekunden die zuletzt gemeldete Spannung und die Ladeanzeige aus. Die letzten 120 Einträge gelten für die aktuelle Verbindung. Während einer Dateiübertragung oder bei verborgenem Tab pausiert die Aufzeichnung. Steht „551520 · 180 mAh · 3,8 V · 0,684 Wh“ auf deinem Akku, kannst du das unter **Hardwareprofil → Akkuetikett diesem Gerät zuordnen** bestätigen. Der Diagnoseexport kennzeichnet diese Angabe als Akkuaufdruck.

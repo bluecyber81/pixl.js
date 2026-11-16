@@ -310,7 +310,7 @@ const includeFlash = computed(() => props.loading ? props.progress?.total === di
 function flashRows(data) {
   return {summary: [['JEDEC', data.jedecId?.map(hexByte).join(' ') || t.value.absent],
     [pick('Herstellerkennung', 'Manufacturer code'), flashManufacturer(data.jedecId) || '—']],
-    details: [[pick('Geometrie unterstützt', 'Supported geometry'), data.jedecId ? yesNo(data.geometrySupported) : '—']],
+    details: [[pick('Kapazitätscode im Flash-Treiber bekannt', 'Capacity code recognized by the flash driver'), data.jedecId ? yesNo(data.geometrySupported) : '—']],
     note: pick('Die Firmware hat diese Kennung bei der Speichererkennung gespeichert.', 'Firmware cached this ID during the storage probe.')};
 }
 const cards = computed(() => [
