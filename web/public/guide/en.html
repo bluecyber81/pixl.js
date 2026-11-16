@@ -63,6 +63,9 @@
             <li><h3>Transfer the app ZIP from your phone</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip">Download DE3.81 OLED Test 1 (ZIP)</a>. Disconnect the file manager and open <b>Settings → Firmware Update</b> on the device. Select the intact ZIP in <b>nRF Device Firmware Update</b> and connect to <b>pixl dfu</b>. This package contains only the OLED application.</p></li>
             <li><h3>Check the restart</h3><p>Expect <b>2.22.0-DE3.81-OLEDt1</b> and app counter 81. Try both English and German, check sleep and wake, open your files and scan a familiar figure on the console. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt">Test guide (English and German)</a>.</p></li>
           </ol>
+          <h3 id="oled-remote">Connect the remote control</h3>
+          <p>Leave file transfer and AmiiboLink on the awake device. Select <b>Settings → Remote → until off</b> and return to the main menu. In the file manager, open <b>Remote control</b>, choose <b>Allmiibo DE</b>, then select <b>Pixl.Remote</b> in the Bluetooth picker. Press <b>Right</b> once and check whether the selection moves on the device.</p>
+          <p>A user reported a problem connecting the OLED remote. The cause and a successful on-device button test remain unconfirmed.</p>
           <p>A user reports that the preview works on their OLED. Computer tests covered file preservation on both SPIFFS and native LittleFS. The tested device’s storage format and the result of an NFC scan on a console are still unknown.</p>
         </section>
         <section id="littlefs">

@@ -8,6 +8,13 @@ const lcdOpcode=5, lcdBytes=1024;
 const commands=Object.freeze({status:[0,0],files:[1,0],left:[2,0],center:[2,1],right:[2,2],back:[3,0]});
 const error=code=>Object.assign(new Error(code),{code});
 const remoteCode=(failure,fallback)=>typeof failure?.code==='string'&&/^REMOTE_[A-Z_]+$/.test(failure.code)?failure.code:fallback;
+function connectionErrorCode(failure, beforeSelection) {
+  const name = failure?.name;
+  if (beforeSelection && name === 'NotFoundError') return 'REMOTE_NO_SELECTION';
+  if (name === 'SecurityError' || name === 'NotAllowedError') return 'REMOTE_PERMISSION';
+  if (name === 'NetworkError' || name === 'InvalidStateError') return 'REMOTE_CONNECT_FAILED';
+  return remoteCode(failure,'REMOTE_UNSUPPORTED');
+}
 const statusErrors={1:'REMOTE_BUSY',2:'REMOTE_PROTOCOL',3:'REMOTE_DISABLED',4:'REMOTE_UNSUPPORTED',5:'REMOTE_UNSAFE',6:'REMOTE_QUEUE',7:'REMOTE_PROTOCOL'};
 export function remoteAvailability(environment=globalThis){return environment.isSecureContext===false||typeof environment.navigator?.bluetooth?.requestDevice!=='function'?'REMOTE_UNAVAILABLE':'';}
 export function encodeRemoteRequest(opcode,sequence,arg=0){
@@ -33,7 +40,7 @@ export function createRemoteClient(options={}){
   const stepMs=options.stepMs??20000,commandMs=options.commandMs??4000,stopMs=options.stopMs??1000;
   let generation=0,phase='disconnected',device=null,owner=null,tx=null,rx=null,pending=null,seq=1,caps=0,connectPromise=null,closing=null,handoffMode=null;
   const cancels=new Set();
-  const state=(next,code='')=>{phase=next;try{report({phase,error:code,capabilities:caps});}catch{/*Observers cannot control transport cleanup.*/}};
+  const state=(next,code='',commandUnconfirmed=false)=>{phase=next;try{report({phase,error:code,capabilities:caps,commandUnconfirmed});}catch{/*Observers cannot control transport cleanup.*/}};
   function disconnectGatt(target, token){
     if(!ownsGatt(target,token))return;
     try{if(token.opening||target.gatt.connected)target.gatt.disconnect();}catch{/*Already gone.*/}
@@ -43,12 +50,18 @@ export function createRemoteClient(options={}){
   function bounded(operation,ms,check){
     return new Promise((resolve,reject)=>{
       let done=false;const finish=(failure,value)=>{if(done)return;done=true;clearTimeout(timer);cancels.delete(cancel);failure?reject(failure):resolve(value);};
-      const cancel=()=>finish(error('REMOTE_CANCELLED'));cancels.add(cancel);
+      const cancel=(code='REMOTE_CANCELLED')=>finish(error(code));cancels.add(cancel);
       const timer=setTimeout(()=>finish(error('REMOTE_TIMEOUT')),ms);
       Promise.resolve(operation).then(value=>{try{check?.();finish(null,value);}catch(failure){finish(failure);}},failure=>finish(failure));
     });
   }
-  function failPending(failure){if(!pending)return;const item=pending;pending=null;clearTimeout(item.timer);item.reject(failure);}
+  function failPending(code){
+    if(!pending)return false;
+    const item=pending;pending=null;clearTimeout(item.timer);
+    const commandUnconfirmed=item.submitted && !item.reply && item.opcode>=1 && item.opcode<=4;
+    item.reject(Object.assign(error(code),{commandUnconfirmed}));
+    return commandUnconfirmed;
+  }
   function detach(){
     const snapshot={device,owner,rx,tx};
     rx?.removeEventListener('characteristicvaluechanged',notification);
@@ -56,8 +69,9 @@ export function createRemoteClient(options={}){
     device=null;owner=null;tx=null;rx=null;caps=0;handoffMode=null;return snapshot;
   }
   function terminate(code='REMOTE_DISCONNECTED'){
-    ++generation;for(const cancel of [...cancels])cancel();failPending(error(code));
-    const old=detach();connectPromise=null;disconnectGatt(old.device,old.owner);state('disconnected',code);
+    ++generation;for(const cancel of [...cancels])cancel(code);
+    const unconfirmed=failPending(code);
+    const old=detach();connectPromise=null;disconnectGatt(old.device,old.owner);state('disconnected',code,unconfirmed);
   }
   function disconnected(event){
     // A queued event from the previous session can arrive while reconnecting.
@@ -81,17 +95,18 @@ export function createRemoteClient(options={}){
   }
   function request(opcode,arg){
     if(pending) return Promise.reject(error('REMOTE_BUSY'));
-    if(!device?.gatt?.connected||!tx)return Promise.reject(error('REMOTE_DISCONNECTED'));
+    if(!device?.gatt?.connected||!tx){terminate('REMOTE_DISCONNECTED');return Promise.reject(error('REMOTE_DISCONNECTED'));}
     const sequence=seq;seq=seq===65535?1:seq+1;
     const payload=encodeRemoteRequest(opcode,sequence,arg);
     return new Promise((resolve,reject)=>{
-      const item={sequence,opcode,resolve,reject,writeDone:false,reply:null,timer:null};pending=item;
+      const item={sequence,opcode,resolve,reject,submitted:false,writeDone:false,reply:null,timer:null};pending=item;
       item.timer=setTimeout(()=>terminate(opcode===lcdOpcode?'REMOTE_PHOTO_TIMEOUT':'REMOTE_TIMEOUT'),commandMs);
       let write;
       try{
-        if(tx.properties?.write&&typeof tx.writeValueWithResponse==='function')write=tx.writeValueWithResponse(payload);
-        else throw error('REMOTE_UNSUPPORTED');
-      }catch(failure){terminate(remoteCode(failure,'REMOTE_DISCONNECTED'));return;}
+        if(!tx.properties?.write||typeof tx.writeValueWithResponse!=='function')throw error('REMOTE_UNSUPPORTED');
+        item.submitted=true;
+        write=tx.writeValueWithResponse(payload);
+      }catch(failure){item.submitted=false;terminate(remoteCode(failure,'REMOTE_DISCONNECTED'));return;}
       Promise.resolve(write).then(()=>{if(pending===item){item.writeDone=true;finishPending();}},()=>{if(pending===item)terminate('REMOTE_DISCONNECTED');});
     });
   }
@@ -110,7 +125,7 @@ export function createRemoteClient(options={}){
     const check=()=>{if(current!==generation || (selected && !ownsGatt(selected,token)))throw error('REMOTE_CANCELLED');};
     state('connecting');
     // Invoke the picker in the user's click stack; never bound its interaction time.
-    let picker;try{picker=environment.navigator.bluetooth.requestDevice({filters:[{name:REMOTE_NAME,services:[REMOTE_UUIDS.service]}],optionalServices:[REMOTE_UUIDS.service]});}catch(failure){state('disconnected');throw error(remoteCode(failure,failure.name==='NotFoundError'?'REMOTE_CANCELLED':'REMOTE_UNSUPPORTED'));}
+    let picker;try{picker=environment.navigator.bluetooth.requestDevice({filters:[{name:REMOTE_NAME,services:[REMOTE_UUIDS.service]}],optionalServices:[REMOTE_UUIDS.service]});}catch(failure){const code=connectionErrorCode(failure,true);state('disconnected',code);throw error(code);}
     const task=(async()=>{
       try{
         const chosen=await picker;check();selected=chosen;device=chosen;owner=token;claimGatt(device,token);seq=1;
@@ -128,7 +143,7 @@ export function createRemoteClient(options={}){
         await bounded(rx.startNotifications(),stepMs,check);check();
         const hello=accept(await request(0,0),0);check();caps=hello.capabilities;state('ready');
       }catch(failure){
-        const code=remoteCode(failure,failure.name==='NotFoundError'&&!selected?'REMOTE_CANCELLED':'REMOTE_UNSUPPORTED');
+        const code=connectionErrorCode(failure,!selected);
         if(current===generation)terminate(code);
         throw error(code);
       }finally{if(connectPromise===task)connectPromise=null;}
@@ -179,13 +194,14 @@ export function createRemoteClient(options={}){
   }
   function disconnect(){
     if(closing)return closing;
-    ++generation;for(const cancel of [...cancels])cancel();failPending(error('REMOTE_CANCELLED'));
+    ++generation;for(const cancel of [...cancels])cancel();
+    const unconfirmed=failPending('REMOTE_CANCELLED');
     const old=detach();connectPromise=null;
     if(!old.device){state('disconnected');return Promise.resolve();}
     state('disconnecting');
     const task=new Promise(resolve=>{
       let finished=false;
-      const finish=()=>{if(finished)return;finished=true;clearTimeout(timer);disconnectGatt(old.device,old.owner);closing=null;state('disconnected');resolve();};
+      const finish=()=>{if(finished)return;finished=true;clearTimeout(timer);disconnectGatt(old.device,old.owner);closing=null;state('disconnected',unconfirmed?'REMOTE_CANCELLED':'',unconfirmed);resolve();};
       const timer=setTimeout(finish,stopMs);
       Promise.resolve().then(()=>{if(ownsGatt(old.device,old.owner))return old.rx?.stopNotifications?.();}).then(finish,finish);
     });closing=task;return task;
