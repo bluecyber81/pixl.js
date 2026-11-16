@@ -1,0 +1,152 @@
+{
+  "version": "2.22.0-DE3.79",
+  "counter": 652,
+  "date": "2026-11-16",
+  "board": "LCD",
+  "deviceAcceptance": "pending",
+  "sourceId": "d2c476908399374779b2666bdf07e4907f19680f50d466bccc8080ecd73c2a94",
+  "sourceInputs": 705,
+  "toolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+  "applicationBytes": 362652,
+  "applicationSha256": "d7d09513ae197c27ffce76707f8f764bf08568b1abd1372beaaa85e26d1eff0f",
+  "package": "Allmiibo_LCD_DE3_79_652_NUR_APP.zip",
+  "packageBytes": 259921,
+  "otaSha256": "161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14",
+  "component": "application",
+  "verifiedSignatures": {
+    "independent": true,
+    "repository": true
+  },
+  "negativeSignatureChecksPerVerifier": 3,
+  "threeBuildsMatched": [
+    "pixljs.bin",
+    "pixljs.hex",
+    "production-inputs.json"
+  ],
+  "linker": {
+    "flash_reserve_bytes": 10084,
+    "heap_stack_gap_bytes": 1616,
+    "stack_reserved_bytes": 8192
+  },
+  "pfs": "docs/validation/DE3_79_PFS.json",
+  "hostFirmwareTests": {
+    "available": 158,
+    "passed": 158,
+    "omitted": 0,
+    "deviceAccess": false
+  },
+  "linkedFlashReply": {
+    "test": "fw/tests/de3/check_flash_jedec_elf.py",
+    "states": 3,
+    "malformedRequests": 3,
+    "ignoredEvents": 3,
+    "peripheralsMapped": false,
+    "scope": "Cortex-M4 handler and cache accessor from the final BIN. The cache was seeded and only the transport output boundary was intercepted."
+  },
+  "hostFlashRead": {
+    "test": "fw/tests/de3/flash_jedec_host.c.in",
+    "repeatedDiagnosticSpiTransfers": 0,
+    "scope": "Real driver and protocol C sources with simulated SPI, JEDEC replies, I/O failures and state transitions."
+  },
+  "dfuModel": {
+    "payloadBytes": 362652,
+    "linkCutOffset": 4136,
+    "reportedResumeOffset": 0,
+    "packetReceipts": 18358,
+    "objectExecutes": 90,
+    "finalCrc32": 1433556048,
+    "passed": true,
+    "status": "PASS",
+    "sanitizerControl": "PASS",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "appSha256": "d7d09513ae197c27ffce76707f8f764bf08568b1abd1372beaaa85e26d1eff0f",
+    "inputKind": "signed-reference",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+    "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+    "limitations": [
+      "Signature/activation validator, flash hardware and S112 are modeled here.",
+      "No physical reset, MBR boot copy, or actual radio connection."
+    ]
+  },
+  "webDfuModel": {
+    "mockInterruptOffset": 200,
+    "resumedAt": 200,
+    "remainingBytes": 362452,
+    "connections": 2,
+    "executes": 91,
+    "result": {
+      "resultSchema": 2,
+      "transferVerified": true,
+      "executeAcknowledged": true,
+      "disconnectObserved": true,
+      "localDisconnectRequested": false,
+      "rebootObserved": false
+    },
+    "scope": "Production package parser and SecureDfu controller with simulated Nordic GATT target. No radio or physical device."
+  },
+  "z19": {
+    "reproduced": true,
+    "signedPackageIncludesBootloader": false,
+    "bootRegionSha256": "51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd",
+    "nativeAndArmTests": 10,
+    "nativeAndArmTestNames": [
+      "source-binding",
+      "build-export-contract",
+      "reset-bind",
+      "reset-native-sanitizers",
+      "session-native-sanitizers",
+      "ingress-native-sanitizers",
+      "display-native-sanitizers",
+      "final-phases-native-sanitizers",
+      "display-buttons-arm",
+      "crypto-arm-69"
+    ],
+    "hardwareAccess": false
+  },
+  "hardwareChecksPending": [
+    "Flash and read back App652 on a physical LCD.",
+    "Compare the reported three-byte JEDEC ID and observed capacity on that LCD.",
+    "Collect a physical battery trace in a Web 3.55.0 session.",
+    "Check the 60–100% contrast selector, a long figure list and the two LCD orientations on the device."
+  ],
+  "lcdProfile": {
+    "test": "fw/tests/de3/check_display_profile_elf.py",
+    "linkedSetup": "u8g2_Setup_st7567_enh_dg128064_f",
+    "linkedDriver": "u8x8_d_st7567_enh_dg128064",
+    "widthPixels": 128,
+    "heightPixels": 64,
+    "monochromeBufferBytes": 1024,
+    "rotationsDegrees": [
+      0,
+      180
+    ],
+    "settingsRangePercent": [
+      60,
+      100
+    ],
+    "contrastByteInputsChecked": 256,
+    "st7567ContrastCommand": 129,
+    "firstAndLastRegisterLevels": [
+      37,
+      63
+    ],
+    "distinctRegisterLevels": 27,
+    "scope": "Emulated the final linked Cortex-M4 code up to the lowest LCD byte/GPIO callbacks. The descriptor, opposite corners and contrast command bytes were checked. Panel marking, physical LCD controller, luminance and optical response were not measured."
+  },
+  "lcdListComparison": {
+    "source": "fw/tests/de3/list_window_host.c.in",
+    "framesCompared": 4536,
+    "pixelsPerFrame": 8192,
+    "mismatchingFrames": 0,
+    "largeListEntries": 1081,
+    "maxVisitedRows": 6,
+    "measuredPhysicalFrameRate": null
+  }
+}

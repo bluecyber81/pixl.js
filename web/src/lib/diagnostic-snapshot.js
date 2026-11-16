@@ -2,12 +2,16 @@ import { createDiagnostics, normalizeDrives, normalizeRuntimeDiagnostics } from 
 import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { normalizePowerDiagnostics } from './power-diagnostics.js';
+import { normalizeFlashDiagnostics } from './flash-diagnostics.js';
 import { normalizeStartupDiagnostics } from './startup-diagnostics.js';
 import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics } from './device-extra-diagnostics.js';
 
 export const DIAGNOSTIC_SECTION_KEYS = Object.freeze(['runtime', 'boot', 'power', 'startup', 'drives', 'storage', 'mtu', 'ui']);
 const menuSectionKeys = Object.freeze([...DIAGNOSTIC_SECTION_KEYS, 'menu']);
-export const diagnosticSectionKeys = hasMenu => hasMenu ? menuSectionKeys : DIAGNOSTIC_SECTION_KEYS;
+export function diagnosticSectionKeys(hasMenu, hasFlash = false) {
+  const keys = hasMenu ? menuSectionKeys : DIAGNOSTIC_SECTION_KEYS;
+  return hasFlash ? [...keys, 'flash'] : keys;
+}
 const fatalCodes = new Set(['DISCONNECTED', 'CONNECT_FAILED', 'CONNECT_TIMEOUT', 'TX_FAILED', 'TIMEOUT', 'RX_INVALID']);
 const errorCodes = new Set([...fatalCodes, 'RESPONSE_INVALID', 'DEVICE_STATUS', 'REQUEST_INVALID', 'DIAGNOSTIC_INVALID_DATA', 'DIAGNOSTIC_FAILED']);
 const uint = (value, maximum = 0xffffffff) => Number.isInteger(value) && value >= 0 && value <= maximum;
@@ -54,6 +58,7 @@ export function normalizeDiagnosticSectionData(key, value) {
       case 'storage': return normalizeStorageDiagnostics(value);
       case 'mtu': return normalizeMtuDiagnostics(value);
       case 'ui': return normalizeUiDiagnostics(value);
+      case 'flash': return normalizeFlashDiagnostics(value);
       case 'menu': return normalizeMenuDiagnostics(value);
       case 'drives':
         return Array.isArray(value) ? normalizeDrives(value.map(drive => ({ label: drive?.label,
@@ -79,7 +84,7 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
   const time = () => { const value = now(); if (!timestamp(value)) throw fault('DIAGNOSTIC_INVALID_TIME'); return value; };
   check();
   const startedAt = time(), sections = {};
-  const keys = diagnosticSectionKeys(typeof readers.menu === 'function');
+  const keys = diagnosticSectionKeys(typeof readers.menu === 'function', typeof readers.flash === 'function');
   for (const [index, key] of keys.entries()) {
     check();
     let section;
@@ -114,7 +119,7 @@ export function normalizeDiagnosticSnapshot(value) {
   if (!value || value.schemaVersion !== 1 || !timestamp(value.startedAt) || !timestamp(value.completedAt) ||
       !value.sections || typeof value.sections !== 'object') return null;
   const sections = {};
-  for (const key of diagnosticSectionKeys(Object.hasOwn(value.sections, 'menu'))) {
+  for (const key of diagnosticSectionKeys(Object.hasOwn(value.sections, 'menu'), Object.hasOwn(value.sections, 'flash'))) {
     const section = value.sections[key];
     if (!section || !['available', 'unavailable', 'failed'].includes(section.state) ||
         (section.observedAt !== null && !timestamp(section.observedAt)) ||

@@ -25,7 +25,9 @@
         <div><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
         <div><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
       </dl>
-      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus. Die Firmware liefert keinen SourceID- oder App-Hashmesswert. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. An initial device test was reported. Full functional testing is pending. Firmware provides no measured SourceID or application hash. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
+      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
+      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
+      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Die Firmware liefert keinen SourceID- oder App-Hashmesswert. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. Firmware provides no measured SourceID or application hash. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
     </details>
     <div class="diagnostic-grid" :aria-busy="loading">
       <article v-for="card in cards" :key="card.id" class="diagnostic-card" :class="'state-' + card.state" :data-section="card.id">
@@ -59,6 +61,7 @@ import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/dev
 import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
 import { diagnosticSectionKeys, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
+import { normalizeFlashDiagnostics, flashManufacturer, hexByte, supportsFlashDiagnostics } from '../lib/flash-diagnostics.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { formatBatteryVoltage, normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
 import { normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
@@ -300,8 +303,16 @@ function firstMenu(data) {
   return {summary, details, note: pick('Die erste Menüauswahl und die letzte Rückkehr aus einer App sind getrennte Firmware-Beobachtungen. Die Dauer endet bei der Rückkehr des Startaufrufs. Zeichenaufrufe beweisen nicht, wann die Pixel auf dem Gerät sichtbar wurden.',
     'First menu selection and the last return from an app are separate firmware observations. Timing ends when the launcher call returns. Draw calls do not establish when pixels became visible on the physical device.')};
 }
-const includeMenu = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true).length
+const includeMenu = computed(() => props.loading ? props.progress?.total >= diagnosticSectionKeys(true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'menu') : supportsMenuDiagnostics(props.firmwareVersion));
+const includeFlash = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true, true).length
+  : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'flash') : supportsFlashDiagnostics(props.firmwareVersion));
+function flashRows(data) {
+  return {summary: [['JEDEC', data.jedecId?.map(hexByte).join(' ') || t.value.absent],
+    [pick('Herstellerkennung', 'Manufacturer code'), flashManufacturer(data.jedecId) || '—']],
+    details: [[pick('Geometrie unterstützt', 'Supported geometry'), data.jedecId ? yesNo(data.geometrySupported) : '—']],
+    note: pick('Die Firmware hat diese Kennung bei der Speichererkennung gespeichert.', 'Firmware cached this ID during the storage probe.')};
+}
 const cards = computed(() => [
   section('runtime', pick('RAM und Laufzeit', 'RAM and runtime'), normalizeRuntimeDiagnostics, runtime),
   section('startup', pick('Startzeiten', 'Startup timing'), normalizeStartupDiagnostics, startup),
@@ -311,13 +322,14 @@ const cards = computed(() => [
   section('power', pick('Strom und Ruhezeit', 'Power and sleep'), normalizePowerDiagnostics, power),
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
+  ...(includeFlash.value ? [section('flash', pick('SPI-Flash-Kennung', 'SPI flash ID'), normalizeFlashDiagnostics, flashRows)] : []),
   ...(includeMenu.value ? [section('menu', pick('Hauptmenü: erster Start und Rückkehr', 'Main menu: first launch and return'), normalizeMenuDiagnostics, firstMenu)] : []),
 ]);
 const activeProgress = computed(() => props.loading && props.connected ? props.progress : null);
 const timing = computed(() => readTimeEstimate(activeProgress.value, Math.max(props.readClock, activeProgress.value.updatedAt)));
 const progressLabel = computed(() => {
   const { completed, total } = activeProgress.value;
-  const key = diagnosticSectionKeys(includeMenu.value)[completed];
+  const key = diagnosticSectionKeys(includeMenu.value, includeFlash.value)[completed];
   const name = cards.value.find(card => card.id === key)?.title;
   return name ? pick(`Bereich ${completed + 1} von ${total} · ${name}`, `Section ${completed + 1} of ${total} · ${name}`)
     : pick('Abfrage wird abgeschlossen …', 'Finishing the read …');

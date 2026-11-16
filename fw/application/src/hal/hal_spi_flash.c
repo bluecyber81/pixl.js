@@ -45,8 +45,6 @@
 #define CMD_DP (0xB9)         /* Deep Power Down Mode */
 #define CMD_RDP (0xAB)        /* Release from Deep Power-Down */
 
-/* JEDEC Manufacturer¡¯s ID */
-#define MF_ID (0xEF)
 /* JEDEC Device ID: Memory type and Capacity */
 #define MTC_W25Q16_BV_CL_CV (0x4015) /* W25Q16BV W25Q16CL W25Q16CV  */
 #define MTC_W25Q16_DW (0x6015)       /* W25Q16DW  */
@@ -59,6 +57,9 @@
 #define MTC_MX25L25645_GM2I (0x2019) /* MX25L25645GM2I-10G */
 
 static spi_device_t m_dev;
+/* One aligned word publishes a coherent snapshot to readers, even across an
+ * interrupt. The low three bytes contain the RDID bytes in display order. */
+static volatile uint32_t m_cached_jedec;
 
 /* All program/erase calls are synchronous foreground VFS operations. No
  * external master or IRQ writer owns this flash. Once RDSR1 proves ready,
@@ -198,6 +199,7 @@ static ret_code_t hal_spi_flash_write_enable(void) {
 }
 
 ret_code_t hal_spi_flash_init() {
+    m_cached_jedec = 0;
     m_read_ready = false;
     m_dev.cs_pin = FLASH_CS_PIN;
     hal_spi_bus_attach(&m_dev);
@@ -207,13 +209,16 @@ ret_code_t hal_spi_flash_init() {
 
 ret_code_t hal_spi_flash_info(flash_info_t *info) {
     uint8_t rx[3] = {0};
-    uint8_t tx[1] = {0x9f};
+    uint8_t tx[1] = {CMD_JEDEC_ID};
     uint16_t memory_type_capacity;
 
     if (info == NULL) return NRF_ERROR_INVALID_PARAM;
     memset(info, 0, sizeof(*info));
     ret_code_t result = hal_spi_flash_write_read(tx, 1, rx, 3);
-    if (result != NRF_SUCCESS) return result;
+    if (result != NRF_SUCCESS) {
+        m_cached_jedec = 0;
+        return result;
+    }
     NRF_LOG_DEBUG("FLASH ID:");
     NRF_LOG_HEXDUMP_DEBUG(rx, 3);
 
@@ -226,43 +231,50 @@ ret_code_t hal_spi_flash_info(flash_info_t *info) {
 
     switch (memory_type_capacity) {
     case MTC_MX25L25645_GM2I:
-        NRF_LOG_INFO("MX25L25645GM2I-10G detection");
         info->block_count = 8192;
         break;
     case MTC_W25Q128_BV:
-        NRF_LOG_INFO("W25Q128BV detection");
         info->block_count = 4096;
         break;
     case MTC_W25Q64_BV_CV:
-        NRF_LOG_INFO("W25Q64BV or W25Q64CV detection");
-        info->block_count = 2048;
-        break;
     case MTC_W25Q64_DW:
-        NRF_LOG_INFO("W25Q64DW detection");
         info->block_count = 2048;
         break;
     case MTC_W25Q32_BV:
-        NRF_LOG_INFO("W25Q32BV detection");
-        info->block_count = 1024;
-        break;
     case MTC_W25Q32_DW:
-        NRF_LOG_INFO("W25Q32DW detection");
         info->block_count = 1024;
         break;
     case MTC_W25Q16_BV_CL_CV:
-        NRF_LOG_INFO("W25Q16BV or W25Q16CL or W25Q16CV detection");
-        info->block_count = 512;
-        break;
     case MTC_W25Q16_DW:
-        NRF_LOG_INFO("W25Q16DW detection");
         info->block_count = 512;
         break;
     default:
-        NRF_LOG_INFO("Memory Capacity error! %d", memory_type_capacity);
-        info->block_count = 0;
+        break;
+    }
+
+    /* The geometry table matches type and capacity across vendors. The raw ID
+     * does not establish a commercial model or individual part number. */
+    uint32_t sample = 0;
+    if (rx[0] != 0 && rx[0] != 0xff) {
+        uint8_t flags = info->block_count ? 3 : 1;
+        sample = ((uint32_t)flags << 24) | ((uint32_t)rx[0] << 16) | memory_type_capacity;
+    }
+    m_cached_jedec = sample;
+    if (!info->block_count) {
+        NRF_LOG_WARNING("Unsupported flash geometry: type/capacity 0x%04x", memory_type_capacity);
         return NRF_ERROR_INVALID_PARAM;
     }
+    NRF_LOG_INFO("Flash JEDEC %02x %02x %02x, %lu sectors", rx[0], rx[1], rx[2],
+                 (unsigned long)info->block_count);
     return NRF_SUCCESS;
+}
+
+uint8_t hal_spi_flash_cached_jedec(uint8_t id[3]) {
+    uint32_t sample = m_cached_jedec;
+    id[0] = (uint8_t)(sample >> 16);
+    id[1] = (uint8_t)(sample >> 8);
+    id[2] = (uint8_t)sample;
+    return (uint8_t)(sample >> 24);
 }
 
 ret_code_t hal_spi_flash_read(uint32_t address, void *buffer, size_t size) {

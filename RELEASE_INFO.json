@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.75",
   "counter": 648,
   "board": "LCD",
-  "web_version": "3.54.1",
+  "web_version": "3.55.0",
   "web_publication_date": "2026-11-16",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
@@ -51,7 +51,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.54.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.0",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -108,10 +108,11 @@
         "DE3.74/647",
         "DE3.75/648",
         "DE3.76/649 (preview)",
-        "DE3.77/650 (preview)"
+        "DE3.77/650 (preview)",
+        "DE3.79/652 (preview)"
       ],
       "stable": "DE3.75/648",
-      "prerelease": "DE3.77/650"
+      "prerelease": "DE3.79/652"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -143,7 +144,8 @@
     "web_3_52_0": "Stable catalogue ordering and source comparisons, guided hardware observations, mount profile series and load-on-open workspaces.",
     "web_3_52_1": "Resumable device checks, report imports and comparisons, concurrent draft protection, responsive layout and retryable tool loading.",
     "web_3_53_0": "Verified reuse of small backup files, optional ZIP compression, phase timings and command counts, local catalogue checks on backup ZIPs, MIFARE Mini slot inspection, UTF-8 name and destination path budgets.",
-    "battery_voltage": "The device power panel and diagnostic overview show the cached voltage in volts to three decimal places, with a German decimal comma and an English decimal point."
+    "battery_voltage": "The device power panel and diagnostic overview show the cached voltage in volts to three decimal places, with a German decimal comma and an English decimal point.",
+    "web_3_55_0": "Read the cached three-byte flash ID, associate a confirmed battery label locally per device and record a voluntary battery voltage trace and inspect pixel-aligned LCD photos."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -156,9 +158,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_54_1.json",
+  "web_evidence": "docs/validation/WEB3_55_0.json",
   "device_readback_evidence": "docs/validation/DE3_75_LCD_CHECK.json",
-  "web_device_readback_pending_scope": "Web 3.54.1 has host and browser checks. A physical LCD check of the App650 battery display is pending.",
+  "web_device_readback_pending_scope": "Physical verification of the flash ID, battery trace, LCD contrast and list scrolling is pending for DE3.79/App652. The owner supplied an LCD photo of the prior voltage display.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
@@ -201,14 +203,14 @@
   "device_validation_scope": "One LCD running App648, with four owner-reported list-return and wake observations in German with resume on, plus confirmation that a known figure was recognized by the Switch. Animation was not recorded. Hardware DFU interruption and NFC endurance remain open.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "firmware_preview": {
-    "version": "2.22.0-DE3.77",
-    "counter": 650,
-    "source_id": "f848da982334f0f8a8e634b85efa521388475e8801a6746617288546f2e26219",
-    "application_sha256": "e8ff7f50571c988f2ade44fad601b00edd7f0e6c90fd880711fed0cb7d9cf055",
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_77_650_NUR_APP.zip",
-    "ota_sha256": "72e30a092424e4414014b508c39f143f5896d11362719cd53ffb66c2b12f73f3",
+    "version": "2.22.0-DE3.79",
+    "counter": 652,
+    "source_id": "d2c476908399374779b2666bdf07e4907f19680f50d466bccc8080ecd73c2a94",
+    "application_sha256": "d7d09513ae197c27ffce76707f8f764bf08568b1abd1372beaaa85e26d1eff0f",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_79_652_NUR_APP.zip",
+    "ota_sha256": "161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14",
     "hardware_acceptance": "pending",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.77",
-    "evidence": "docs/validation/DE3_77.json"
+    "evidence": "docs/validation/DE3_79.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.79"
   }
 }

@@ -133,7 +133,28 @@ try {
         return [el.naturalWidth,el.naturalHeight,ctx.getImageData(0,0,1,1).data[0],ctx.getImageData(127,63,1,1).data[0]];
       });
       assert.deepEqual(await readCorners(),[128,64,255,0]);
+      const originalPng = await image.getAttribute('src');
+      const scales = photoBox.getByRole('group',{name:locale==='de-DE'?'Bildgröße':'Image scale'});
+      const scale = n => scales.getByRole('button',{name:n+'×',exact:true});
+      async function checkScale(n) {
+        await page.waitForFunction(({selector,width}) => {
+          const el = document.querySelector(selector);
+          return el?.getBoundingClientRect().width === width && el.getBoundingClientRect().height === width / 2;
+        }, {selector:'.remote-photo img',width:128*n});
+        assert.equal(await scale(n).getAttribute('aria-pressed'),'true');
+        assert.equal(await image.getAttribute('src'),originalPng);
+        assert.equal(await photoBox.getByRole('link').getAttribute('href'),originalPng);
+      }
+      await checkScale(3);
+      await scale(1).click(); await checkScale(1);
+      await scale(2).click(); await checkScale(2);
+      await scale(3).click();
       await page.setViewportSize({width:375,height:800});
+      await checkScale(2); assert.equal(await scale(3).isDisabled(),true);
+      await page.setViewportSize({width:1240,height:850});
+      await checkScale(3);
+      await page.setViewportSize({width:375,height:800});
+      await checkScale(2);
       const photoBounds=await image.boundingBox(),sectionBounds=await section.boundingBox();
       assert(photoBounds.x>=sectionBounds.x && photoBounds.x+photoBounds.width<=sectionBounds.x+sectionBounds.width+1);
       assert((await photo.boundingBox()).height>=44);
@@ -142,6 +163,9 @@ try {
       await rotate.click();assert.deepEqual(await readCorners(),[128,64,0,255]);
       const [download]=await Promise.all([page.waitForEvent('download'),photoBox.getByRole('link').click()]);
       assert.equal(download.suggestedFilename(),'Allmiibo-LCD.png');
+      const png = await fs.readFile(await download.path());
+      assert.equal(png.readUInt32BE(16),128); assert.equal(png.readUInt32BE(20),64);
+      assert.equal(png.toString('base64'),(await image.getAttribute('src')).split(',')[1]);
       await pad.focus();await page.keyboard.press('ArrowRight');
       assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts.slice(9)),[
         [0,0],...[0,16,32,48,64,80,96,112].map(offset=>[5,offset]),[2,2]

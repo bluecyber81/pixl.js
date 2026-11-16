@@ -8,15 +8,14 @@
 #include "version2.h"
 
 #include "mui_u8g2.h"
+#include "mui_contrast.h"
 #include "i18n/language.h"
 
 
 static void settings_scene_oled_contrast_event_cb(mui_progress_bar_event_t event, mui_progress_bar_t *p_progress_bar) {
     app_settings_t *app = p_progress_bar->user_data;
     settings_data_t *p_settings = settings_get_data();
-    int32_t value = mui_progress_bar_get_current_value(p_progress_bar);
-    if (value < 0) value = 0;
-    if (value > 100) value = 100;
+    uint8_t value = mui_contrast_percent(mui_progress_bar_get_current_value(p_progress_bar));
     mui_progress_bar_set_current_value(p_progress_bar, value);
     if (event == MUI_PROGRESS_BAR_EVENT_DECREMENT || event == MUI_PROGRESS_BAR_EVENT_INCREMENT) {
         mui_u8g2_set_contrast_level(value);
@@ -35,9 +34,9 @@ void settings_scene_oled_contrast_on_enter(void *user_data) {
 #else
     mui_progress_bar_set_header(app->p_progress_bar, getLangString(_L_APP_SET_OLED_CONTRAST_TITLE));
 #endif
-    mui_progress_bar_set_min_value(app->p_progress_bar, 0);
+    mui_progress_bar_set_min_value(app->p_progress_bar, MUI_CONTRAST_MIN_PERCENT);
     mui_progress_bar_set_max_value(app->p_progress_bar, 100);
-    mui_progress_bar_set_current_value(app->p_progress_bar, p_settings->oled_contrast);
+    mui_progress_bar_set_current_value(app->p_progress_bar, mui_contrast_percent(p_settings->oled_contrast));
     mui_progress_bar_set_event_cb(app->p_progress_bar, settings_scene_oled_contrast_event_cb);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_PROGRESS_BAR);
 }

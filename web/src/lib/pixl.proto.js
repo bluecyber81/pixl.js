@@ -2,6 +2,7 @@ import { sharedEventDispatcher } from "./event"
 import * as pixl from "./pixl.ble"
 import ByteBuffer from "bytebuffer"
 
+import { parseFlashDiagnostics, supportsFlashDiagnostics } from "./flash-diagnostics.js"
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
@@ -292,6 +293,16 @@ export function get_menu_diagnostics(firmwareVersion) {
         checkSession();
         return response.status === 1 || response.status === 255 ? read(1).then(finish) : finish(response);
     });
+}
+
+export function get_flash_diagnostics(firmwareVersion) {
+    if (!supportsFlashDiagnostics(firmwareVersion)) return Promise.resolve(null);
+    const generation = transport_generation;
+    return op_queue_push(0x0b, () => {}, b => parseFlashDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()),
+        {max_bytes: 12, optional_probe: true}).then(response => {
+            if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
+            return response.status === 255 || response.status === 1 ? null : checked_response(response);
+        });
 }
 
 export function get_display_photo(firmwareVersion) {
@@ -1064,7 +1075,7 @@ function on_rx_data(data) {
         }
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
-        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04) && op.optional_probe && (h.status===1 || h.status===255);
+        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x0b) && op.optional_probe && (h.status===1 || h.status===255);
         if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';

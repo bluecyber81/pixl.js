@@ -339,6 +339,8 @@ test('build reference separates reported version/counter from package SourceID a
    assert.match(text(h.root),locale==='en'?/application hash not verified/:/App-Hash nicht geprüft/);
    assert.match(text(h.root),locale==='en'?/Full functional testing is pending/:/vollständige Funktionsprüfung steht aus/);
   }
+  await change(h,{firmwareVersion:'2.22.0-DE3.79'});assert.match(text(h.root),/Hardware acceptance for this package reference is pending/);
+  assert.doesNotMatch(text(h.root),/An initial device test was reported/);
   await change(h,{firmwareVersion:'2.22.0-DE3.70'});assert.match(text(h.root),/Different reported version/);
   await change(h,{snapshot:null});assert.doesNotMatch(text(h.root),/fbade80d03a44a3b/);
  }finally{h.app.unmount();}

@@ -69,6 +69,7 @@ def main():
         texts['new']['game'] = texts['new']['game'].replace('VAR->TrackAngleOut / 100.00)', 'VAR->TrackAngleOut / 100.00f)')
     struct = re.search(r'typedef struct GROUPE\{.*?\}GROUPE;', texts['new']['header'], re.S).group()
     source = (HERE / 'math_precision_de335.c.in').read_text().replace('@STRUCT@', struct)
+    source = (FW / 'application/src/mui/mui_contrast.h').read_text().replace('#include "boards.h"', '') + source
     for label in ('old', 'new'):
         contrast = extract(texts[label]['contrast'], 'mui_u8g2_set_contrast_level').replace('mui_u8g2_set_contrast_level', label + '_contrast')
         bodies = [rename(extract(texts[label]['game'], name), label + '_') for name in NAMES]

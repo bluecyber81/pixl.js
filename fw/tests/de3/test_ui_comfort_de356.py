@@ -16,6 +16,7 @@ from test_text_input_render_de344 import LIBS
 
 HARNESS = r'''
 #include "mui_canvas.h"
+#include "version.inc.h"
 #include "mui_text_input.h"
 #include <ctype.h>
 #include <limits.h>
@@ -101,6 +102,7 @@ static void save_frame(const char *directory,const char *name,const uint8_t *buf
         fprintf(f,"%u%c",!!(buf[(y/8)*128+x] & (1U<<(y%8))),x==127?'\n':' ');
     fclose(f);
 }
+/*ACTUAL_LIST_WINDOW_TEST*/
 static unsigned confirmations, cancellations;
 static void dispose(mui_text_input_event_t event,mui_text_input_t *input) {
     CHECK(event==MUI_TEXT_INPUT_EVENT_CONFIRMED || event==MUI_TEXT_INPUT_EVENT_CANCELLED);
@@ -129,6 +131,7 @@ int main(int argc,char **argv) {
     canvas.fb=&u;mui_canvas_set_frame(&canvas,0,0,128,64);
     mui_canvas_set_font(&canvas,u8g2_font_wqy12_t_gb2312a);
     check_memory_overlay(&canvas,buffer);
+    compare_list_window(&canvas,buffer,argc>1?argv[1]:NULL);
     const char *values[]={"[AN]","[AUS]","[ON]","[OFF]"};
     const char *titles[]={"Fernbedienung (bis Aus)","Schnelles Aufwachen","漢字漢字漢字漢字漢字漢字"};
     for(unsigned t=0;t<3;t++)for(unsigned v=0;v<4;v++){
@@ -284,10 +287,15 @@ class ComfortRenderingTests(unittest.TestCase):
         rows = (SRC / 'mui/view/mui_list_view.c').read_text()
         code = code.replace('/*ACTUAL_ROW*/', '\n'.join(function(rows, name) for name in (
             'mui_list_view_value_x', 'mui_list_view_draw_row_text')))
+        window = Path(__file__).with_name('list_window_host.c.in').read_text()
+        window = window.replace('/*ACTUAL_LIST_FUNCTIONS*/', '\n'.join(function(rows, name) for name in (
+            'mui_list_view_update_canvas', 'mui_list_view_on_draw')))
+        code = code.replace('/*ACTUAL_LIST_WINDOW_TEST*/', window)
         code = code.replace('/*ACTUAL_MEMORY_OVERLAY*/',
                             function((SRC / 'mui/mui_core.c').read_text(), 'mui_draw_mem_mon'))
         with tempfile.TemporaryDirectory(prefix='pixl-ui-comfort-') as tmp:
             folder = Path(tmp)
+            shutil.copyfile(SRC / 'version.inc.h', folder / 'version.inc.h')
             fonts = ('u8g2_font_wqy12_t_gb2312a.c', 'u8g2_font_siji_t_6x10.c', 'u8g2_font_likeminecraft_te.c')
             for name in ('mui_canvas.h', *fonts):
                 shutil.copyfile(SRC / 'mui' / name, folder / name)

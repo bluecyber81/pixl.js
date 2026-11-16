@@ -13,6 +13,9 @@ typedef struct {
 
 ret_code_t hal_spi_flash_init();
 ret_code_t hal_spi_flash_info(flash_info_t *info);
+/* Copies manufacturer, type and capacity from the last geometry probe. Returns
+ * bit 0 for usable ID bytes and bit 1 for recognized type/capacity. No SPI I/O. */
+uint8_t hal_spi_flash_cached_jedec(uint8_t id[3]);
 ret_code_t hal_spi_flash_read(uint32_t address, void *buffer, size_t size);
 ret_code_t hal_spi_flash_prog(uint32_t address, const void *buffer, size_t size);
 ret_code_t hal_spi_flash_erase(uint32_t address);

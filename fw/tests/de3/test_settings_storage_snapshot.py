@@ -62,6 +62,7 @@ static void mui_list_view_add_item(void*p,int icon,const char*label,void*data){(
 '''
     main = (SRC / 'app/settings/scene/settings_scene_main.c').read_text()
     definition = main[main.rfind('\nstatic void settings_scene_main_reload('):]
+    code += (SRC / 'mui/mui_contrast.h').read_text().replace('#include "boards.h"', '')
     code += extras + fixture_module.native.function(definition, 'settings_scene_main_reload')
     return code + r'''
 int main(void){
