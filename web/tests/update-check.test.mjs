@@ -83,9 +83,11 @@ test('Z13 and BL8 identify the exact hash/counter pair; unknown images and BL8 r
   const z13='97b2751f1b041de8bcba131d875be725fe91294bfc72e4a7f7a3dc5526e88002';
   const z15='c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade';
   const z17='5fec8c8495978afcd340e6b42db7fc9ba4fa9f216aad2b2a597cc7282877d584';
+  const z20='4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db';
   const z19='51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd';
   for(const [counter,hash,expectedHash,expectedCounter] of [
     [13,z13,'match','match'],[11,z13,'match','different'],
+    [20,z20,'match','match'],[19,z20,'match','different'],[20,z19,'match','different'],
     [19,z19,'match','match'],[18,z19,'match','different'],[19,z17,'match','different'],
     [15,z15,'match','match'],[13,z15,'match','different'],[15,z13,'match','different'],
     [16,z13,'match','match'],[16,z15,'match','different'],[15,'00'.repeat(31)+'01','different','match'],
@@ -101,6 +103,7 @@ test('Z13 and BL8 identify the exact hash/counter pair; unknown images and BL8 r
     const boot=row(result(packet,{...session,firmwareVersion:'2.22.0-DE3.62'}),'bootloader');
     assert.equal(boot.reasons.includes('z16Recovery'),counter === 16 && hash === z13);
     assert.equal(boot.reasons.includes('z18Recovery'),counter === 18 && hash === z15);
+    assert.equal(boot.reasons.includes('localZ20'), counter === 20 && hash === z20);
     assert.equal(boot.reasons.includes('localZ19'), counter === 19 && hash === z19);
     assert.equal(boot.checks.find(c=>c.key==='bootHash').status,expectedHash);
     assert.equal(boot.checks.find(c=>c.key==='bootCounter').status,expectedCounter);
@@ -187,7 +190,7 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.55.0'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.55.1'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
   assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));

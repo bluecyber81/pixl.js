@@ -4,6 +4,12 @@
   "date": "2026-11-16",
   "board": "LCD",
   "deviceAcceptance": "pending",
+  "ownerObservation": {
+    "date": "2026-11-16",
+    "source": "device owner",
+    "observation": "General operation reported successful after the DE3.79 update.",
+    "scope": "First impression. A new diagnostic readback and individual function checks were not supplied with this report."
+  },
   "sourceId": "d2c476908399374779b2666bdf07e4907f19680f50d466bccc8080ecd73c2a94",
   "sourceInputs": 705,
   "toolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",

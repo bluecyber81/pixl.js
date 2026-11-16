@@ -278,7 +278,7 @@ test('3.26 active migration stays open and separate full target verification is 
 
 test('T1 storage qualification is listed separately without implying a continuous 643 approval',async()=>{
  const h=mount({approved:true});try{
-  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644 + DE3.72–DE3.77 / 645–650 + DE3.79 / 652');
+  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644 + DE3.72–DE3.77 / 645–650 + DE3.79–DE3.80 / 652–653');
   assert.match(text(h.root),/DE3\.71t1 \/ 644/);assert.doesNotMatch(h.vm.capacityProfileLabel,/627–644|DE3\.55–DE3\.71/);
   h.props.language='en';await Vue.nextTick();assert.match(text(h.root),/DE3\.55–DE3\.70 \/ 627–642 \+ DE3\.71t1 \/ 644/);
  }finally{h.app.unmount()}

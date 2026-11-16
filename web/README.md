@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.55.1
+
+Der Dateimanager bietet die App DE3.80 für Z19 und Z20 an und vergleicht bei gelesenen Bootdaten den gespeicherten Zähler und den Hash der Bootregion. Das Android-Kombipaket installiert auch Z20 und S112 7.3.0. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)
+
 ## Hardwarediagnose und Akkuverlauf · Dateimanager 3.55.0
 
 Unter **Gerät & Diagnose** kannst du den Akkuverlauf starten. Der Browser liest alle zehn Sekunden die zuletzt gemeldete Spannung und die Ladeanzeige aus. Die letzten 120 Einträge gelten für die aktuelle Verbindung. Während einer Dateiübertragung oder bei verborgenem Tab pausiert die Aufzeichnung. Steht „551520 · 180 mAh · 3,8 V · 0,684 Wh“ auf deinem Akku, kannst du das unter **Hardwareprofil → Akkuetikett diesem Gerät zuordnen** bestätigen. Der Diagnoseexport kennzeichnet diese Angabe als Akkuaufdruck.

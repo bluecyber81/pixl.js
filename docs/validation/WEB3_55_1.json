@@ -1,0 +1,36 @@
+{
+  "version": "3.55.1",
+  "appPreview": "2.22.0-DE3.80",
+  "counter": 653,
+  "stable": "2.22.0-DE3.75",
+  "webNodeTests": {
+    "passed": 1617,
+    "failed": 0,
+    "skipped": 0
+  },
+  "productionChecks": {
+    "root": 22,
+    "pages": 22
+  },
+  "windowsLauncher": {
+    "total": 24,
+    "succeeded": 22,
+    "skipped": 2
+  },
+  "browser": [
+    {
+      "base": "/pixl.js/",
+      "chrome": "157.0.8103.51",
+      "testedChecks": 47,
+      "errors": 0
+    },
+    {
+      "base": "/",
+      "chrome": "157.0.8103.51",
+      "testedChecks": 47,
+      "errors": 0
+    }
+  ],
+  "desktopSimulatorAndHardwareProfile": true,
+  "physicalWebBluetoothThisRelease": false
+}

@@ -1,5 +1,9 @@
 # Allmiibo LCD firmware and file manager
 
+## LCD update for Android
+
+DE3.80 / App653 is available as a signed application or with the Z20 bootloader and Nordic S112 7.3.0. Use the complete package in nRF Device Firmware Update on Android and let both transfers finish. These packages target the LCD with existing Packed LittleFS (PFS1). DE3.75 remains the hardware-qualified stable release. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)
+
 ## Hardware diagnostics and battery history · File manager 3.55.0
 
 Open **Device & diagnostics** to record the last reported voltage and charge indication every ten seconds. The most recent 120 entries stay in the current connection. Recording pauses during file transfers and while the tab is hidden. If your battery is marked “551520 · 180 mAh · 3.8 V · 0.684 Wh”, you can confirm this under **Hardware profile → Associate a battery label with this device**. The diagnostic export identifies it as information from the label.

@@ -38,7 +38,7 @@ test('DE3.72 is qualified only with its exact counter and verified settings',()=
    assert.equal(migrationApplicationMatches({...current,...patch},target),false);
 });
 
-for (const [version, counter] of [['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650],['2.22.0-DE3.79',652]])
+for (const [version, counter] of [['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650],['2.22.0-DE3.79',652],['2.22.0-DE3.80',653]])
 test('local ' + version + ' must report its exact version/counter, valid settings, and matching mounted layout',()=>{
  const current={...identity,firmwareVersion:version,applicationCounter:counter};
  assert.deepEqual(matchMigrationLayout(layout,current,target,{mounted:true}),layout);

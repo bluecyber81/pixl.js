@@ -20,9 +20,9 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.76'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.75');
-  assert.deepEqual(packages.map(item=>item.counter),[648,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[648,653,652,650,649,647,637,646,645]);
 });
-for (const [version, counter] of [['DE3.76', 649], ['DE3.77', 650], ['DE3.79', 652]]) {
+for (const [version, counter] of [['DE3.76', 649], ['DE3.77', 650], ['DE3.79', 652], ['DE3.80', 653]]) {
   test(version + ' preview offers its signed application ZIP on Android', () => {
     const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
     const preview = packages.find(item => item.counter === counter);
@@ -59,7 +59,14 @@ test('the LCD final reports incompatible boot details while the older stable pro
  assert.equal(show(current).profileMismatch,true);
  bytes.set(Buffer.from('51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd','hex'),80);
  assert.equal(show(current).profileMismatch,false);
- view.setUint16(36,259,true); assert.equal(show(current).profileMismatch,true);
+ const latest = packages.find(p => p.counter === 653);
+ assert.equal(show(latest).profileMismatch, false);
+ view.setUint32(64,20,true);
+ assert.equal(show(latest).profileMismatch, true);
+ bytes.set(Buffer.from('4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db','hex'),80);
+ assert.equal(show(latest).profileMismatch, false);
+ assert.equal(show(current).profileMismatch, true);
+ view.setUint16(36,259,true); assert.equal(show(latest).profileMismatch,true);
 });
 
 test('disconnect ignores the former device version and private session fields are not copied',()=>{

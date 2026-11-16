@@ -1,5 +1,9 @@
 # LCD-Firmware, Bootloader und SoftDevice
 
+## DE3.80 / App653 und Bootloader Z20 · LCD-Testversion
+
+Die App reduziert beim Einbinden eines großen Figurenspeichers die Zahl der Flash-Lesezugriffe. Mit 952 Modellfiguren wurden 3.257 statt 3.433 Zugriffe gemessen. Z20 speichert nach jeweils 64 KiB bestätigter DFU-Nutzdaten einen Zwischenstand. Beim ersten Update von Z19 empfängt Z19 die Systemphase. Z20 übernimmt die anschließende App-Phase. Die normale Startzeit und ein unterbrochener Bluetooth-Transfer auf dem Gerät stehen als Praxistests aus. [Android-Kombi und App](https://github.com/bluecyber81/pixl.js/releases/tag/de3.80) · [Prüfnachweis](validation/DE3_80.json)
+
 ## DE3.75 / App648 · stabile LCD-Firmware
 
 Auf einem LCD kehrten Datei-Emulator und Amiibo-Datenbank nach „Zurück zur Liste“ zur richtigen Figur zurück. Nach dem Aufwachen war in beiden Apps dieselbe Figur aktiv. Der Gerätebericht mit Dateimanager 3.52.0 erfasst Deutsch und eingeschaltetes „App fortsetzen“. Die Animationseinstellung blieb offen. Separat erkannte die Switch eine bekannte Figur. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Änderungen und Messwerte](RELEASE_DE3_75.md)

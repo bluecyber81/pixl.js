@@ -1,0 +1,8 @@
+Allmiibo Dateimanager 3.55.1
+
+Unter Windows Start-Dateimanager.cmd öffnen. Verbinde dein LCD-Allmiibo und öffne „Gerät & Diagnose“. Unter „Akkuverlauf“ startet die Aufzeichnung für diese Verbindung. Bei DE3.79 / App652 kannst du zusätzlich die JEDEC-Kennung des externen Flashs lesen. Den Akkuaufdruck vom Foto kannst du deiner Geräteauswahl in diesem Browser zuordnen. Die stabile Firmware für PFS1 mit Z19 und S112 7.3.0 ist DE3.75.
+
+On Windows, open Start-Dateimanager.cmd. Connect your LCD Allmiibo and open Device & diagnostics. Select Battery history to record this session. DE3.79 / App652 can also report the external flash JEDEC ID. You can associate the photographed battery label with a device selection in this browser. The stable release for PFS1 with Z19 and S112 7.3.0 is DE3.75.
+
+Android-Kombi für LCD mit PFS1 im GitHub-Release de3.80. In nRF Device Firmware Update die ZIP auswählen und beide Phasen abschließen lassen.
+Android users can find the LCD/PFS1 two-phase package under the de3.80 GitHub release. Select the ZIP in nRF Device Firmware Update and let both transfers complete.

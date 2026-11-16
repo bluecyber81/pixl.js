@@ -1,5 +1,9 @@
 # Bootloader und Nordic S112 beim LCD-Allmiibo
 
+## Z20 · Android-DFU mit Zwischenständen
+
+Z20 sichert den zuletzt bestätigten Datenstand alle 64 KiB. Für 362.652 App-Bytes benötigt der Bootloader fünf Zwischenstände und zehn zusätzliche Löschungen auf den zwei DFU-Einstellungsseiten. Im Test setzte die Übertragung nach einem simulierten Neustart bei 327.680 Byte fort. Die erste Systemphase eines Upgrades von Z19 nutzt noch Z19. Das Paket liefert den unveränderten Nordic S112 7.3.0 mit. [Z20-Quellen und Testablauf](../bootloader-z20/) · [Kombi fürs Handy](https://github.com/bluecyber81/pixl.js/releases/tag/de3.80)
+
 ## Z19, Z17 und frühere Stände
 
 | Stand | Änderung und Nutzen | Nachweis |

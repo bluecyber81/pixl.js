@@ -49,7 +49,7 @@ static inline uint32_t app_timer_cnt_get(void) { return 0; }
 static inline uint32_t app_timer_cnt_diff_compute(uint32_t a, uint32_t b) { return (a-b)&0xffffffu; }
 ''')
 
-            (folder/'mui_mem.h').write_text('#include <stddef.h>\nvoid *mui_mem_malloc(size_t);\nvoid mui_mem_free(void*);\n')
+            (folder / 'mui_mem.h').write_bytes((HERE / 'packed_test_mui_mem.h').read_bytes())
             (folder/'hal_spi_flash.h').write_text('''#pragma once
 #include <stdint.h>
 #include <stddef.h>

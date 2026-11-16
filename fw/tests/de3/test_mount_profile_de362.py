@@ -13,13 +13,7 @@ class MountProfileTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='mount-profile-de362-') as temporary:
             folder = Path(temporary)
             (folder / 'boards.h').write_text('#pragma once\n#define VFS_PACKED_LFS_ENABLE 1\n')
-            (folder / 'mui_mem.h').write_text('''#pragma once
-#include <stddef.h>
-#include <stdint.h>
-void *mui_mem_malloc(size_t);void mui_mem_free(void*);
-typedef struct { uint32_t total_size,free_size,free_biggest_size; } mui_mem_monitor_t;
-void mui_mem_monitor(mui_mem_monitor_t*);
-''')
+            (folder / 'mui_mem.h').write_bytes((HERE / 'packed_test_mui_mem.h').read_bytes())
             (folder / 'app_util_platform.h').write_text('#define CRITICAL_REGION_ENTER() do {\n#define CRITICAL_REGION_EXIT() } while(0)\n')
             (folder / 'app_timer.h').write_text('''#pragma once
 #include <stdint.h>
@@ -35,7 +29,6 @@ static inline uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return 
             contract = contract.replace('uint32_t hal_spi_flash_info(flash_info_t *out){', 'static bool bad_geometry;\nuint32_t hal_spi_flash_info(flash_info_t *out){if(bad_geometry)return 1;')
             source = contract + r'''
 uint32_t app_timer_cnt_get(void){return read_calls*32u;}
-void mui_mem_monitor(mui_mem_monitor_t*m){memset(m,0,sizeof(*m));}
 static uint32_t word(const uint8_t*p){return (uint32_t)p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24;}
 static void check_profile(bool cache){
  uint8_t p[80];REQUIRE(runtime_diag_startup_mount_snapshot(p,sizeof(p)));

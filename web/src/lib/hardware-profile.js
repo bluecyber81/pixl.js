@@ -19,6 +19,6 @@ export function batteryLabelReport() {
 
 // These LCD configurations are bound to inspected firmware sources. No controller ID is read over BLE.
 export function displayBuildReference(version) {
-  if (!['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79'].includes(version)) return null;
+  if (!['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80'].includes(version)) return null;
   return {source:'lcd-firmware-configuration', controllerDriver:'ST7567', width:128, height:64};
 }

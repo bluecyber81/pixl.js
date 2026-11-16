@@ -19,11 +19,13 @@ static bool geometry_valid;
 static const vfs_driver_t persist_raw_driver;
 /* Mount revisits CTZ links at block beginnings and directory metadata read
  * into the LittleFS global read buffer. Cache these pages only during this
- * read-only walk, so streaming record payloads do not evict them. Low two
- * tag bits store LRU rank (0 = most recent); the rest identify a flash page. */
+ * read-only walk, so streaming record payloads do not evict them. Tags are
+ * kept most-recent-first. Their low bits select the unchanged page buffer. */
+enum { MOUNT_SMALL_SLOTS = 4, MOUNT_SLOT_BITS = 3, MOUNT_SLOTS = 1 << MOUNT_SLOT_BITS };
 typedef struct {
-  uint16_t tag[4];
-  uint8_t page[4][PFS_CACHE_SIZE];
+  uint16_t tag[MOUNT_SLOTS];
+  uint8_t capacity, used;
+  uint8_t page[][PFS_CACHE_SIZE];
 } mount_pages_t;
 static mount_pages_t *mount_pages;
 typedef struct {
@@ -71,16 +73,27 @@ static bool range(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
          c->block_count == PFS_BLOCK_COUNT && b < c->block_count &&
          o <= c->block_size && n <= c->block_size - o;
 }
-enum { MOUNT_SLOTS = 4 };
-_Static_assert(PFS_BLOCK_COUNT * (PFS_BLOCK_SIZE / PFS_CACHE_SIZE) <= UINT16_MAX >> 2,
-               "page tag and LRU rank must fit");
-static void mount_touch(unsigned slot, uint16_t id) {
-  /* Empty slots are older than every valid entry. Only promote younger peers. */
-  unsigned limit = mount_pages->tag[slot] ? (mount_pages->tag[slot] & 3u) : MOUNT_SLOTS;
-  for (unsigned i = 0; i < MOUNT_SLOTS; ++i)
-    if (mount_pages->tag[i] && (mount_pages->tag[i] & 3u) < limit)
-      ++mount_pages->tag[i];
-  mount_pages->tag[slot] = (uint16_t)(id << 2);
+_Static_assert(PFS_BLOCK_COUNT * (PFS_BLOCK_SIZE / PFS_CACHE_SIZE) - 1u <=
+                   (UINT16_MAX >> MOUNT_SLOT_BITS), "page and slot must fit");
+static mount_pages_t *mount_cache_alloc(void) {
+  mui_mem_monitor_t memory;
+  mui_mem_monitor(&memory);
+  /* The largest per-shard validation index needs 3072 bytes. Reserve a full
+   * 4 KiB contiguous margin, including allocator overhead, before expanding. */
+  unsigned slots = memory.free_biggest_size >=
+      sizeof(mount_pages_t) + MOUNT_SLOTS * PFS_CACHE_SIZE + 4096u
+      ? MOUNT_SLOTS : MOUNT_SMALL_SLOTS;
+  mount_pages_t *cache = mui_mem_malloc(sizeof(*cache) + slots * PFS_CACHE_SIZE);
+  if (cache) {
+    cache->capacity = slots;
+    cache->used = 0;
+  }
+  return cache;
+}
+static void mount_promote(unsigned index, uint16_t tag) {
+  if (index)
+    memmove(mount_pages->tag + 1, mount_pages->tag, index * sizeof(tag));
+  mount_pages->tag[0] = tag;
 }
 static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
                       void *data, lfs_size_t n) {
@@ -89,18 +102,16 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
   bool eligible = n == PFS_CACHE_SIZE && o % PFS_CACHE_SIZE == 0 &&
                   (o == 0 || data == c->read_buffer);
   bool cacheable = mount_pages && eligible;
-  uint16_t page = (uint16_t)(b * (PFS_BLOCK_SIZE / PFS_CACHE_SIZE) + o / PFS_CACHE_SIZE + 1);
-  unsigned slot = 0;
+  uint16_t page = (uint16_t)(b * (PFS_BLOCK_SIZE / PFS_CACHE_SIZE) + o / PFS_CACHE_SIZE);
   if (cacheable) {
-    for (unsigned i = 0; i < MOUNT_SLOTS; ++i) {
+    for (unsigned i = 0; i < mount_pages->used; ++i) {
       uint16_t tag = mount_pages->tag[i];
-      if ((tag >> 2) == page) {
-        memcpy(data, mount_pages->page[i], n);
-        if (tag & 3u) mount_touch(i, page);
+      if ((tag >> MOUNT_SLOT_BITS) == page) {
+        memcpy(data, mount_pages->page[tag & (MOUNT_SLOTS - 1)], n);
+        if (i) mount_promote(i, tag);
         runtime_diag_mount_cache(true, true);
         return 0;
       }
-      if (!tag || (tag & 3u) == MOUNT_SLOTS - 1) slot = i;
     }
   }
   runtime_diag_mount_cache(false, eligible);
@@ -108,8 +119,15 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
   runtime_diag_mount_read(n, success);
   if (!success) return LFS_ERR_IO;
   if (cacheable) {
+    unsigned index, slot;
+    if (mount_pages->used < mount_pages->capacity) {
+      slot = index = mount_pages->used++;
+    } else {
+      index = mount_pages->capacity - 1;
+      slot = mount_pages->tag[index] & (MOUNT_SLOTS - 1);
+    }
     memcpy(mount_pages->page[slot], data, n);
-    mount_touch(slot, page);
+    mount_promote(index, (uint16_t)((page << MOUNT_SLOT_BITS) | slot));
   }
   return 0;
 }
@@ -194,8 +212,7 @@ static int32_t packed_mount(void) {
     runtime_diag_mount_complete(r, 0, false);
     return r;
   }
-  mount_pages_t *pages = mui_mem_malloc(sizeof(*pages));
-  if (pages) memset(pages->tag, 0, sizeof(pages->tag));
+  mount_pages_t *pages = mount_cache_alloc();
   mount_pages = pages;
   started = mount_tick();
   r = pfs_mount(store);

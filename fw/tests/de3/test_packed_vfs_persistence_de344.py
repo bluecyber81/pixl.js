@@ -34,7 +34,7 @@ class PackedVfsPersistenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='packed-vfs-de344-') as tmp:
             folder=Path(tmp)
             (folder/'boards.h').write_text('#pragma once\n#define VFS_PACKED_LFS_ENABLE 1\n')
-            (folder/'mui_mem.h').write_text('#include <stddef.h>\nvoid *mui_mem_malloc(size_t);\nvoid mui_mem_free(void*);\n')
+            (folder / 'mui_mem.h').write_bytes((HERE / 'packed_test_mui_mem.h').read_bytes())
             (folder/'hal_spi_flash.h').write_text('''#pragma once
 #include <stdint.h>
 #include <stddef.h>
