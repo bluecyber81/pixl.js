@@ -1,0 +1,50 @@
+{
+  "version": "3.55.2",
+  "firmwarePreview": "2.22.0-DE3.80",
+  "appCounter": 653,
+  "stableFirmware": "2.22.0-DE3.75",
+  "webTestsPassed": 1624,
+  "webTestsFailed": 0,
+  "webTestsSkipped": 0,
+  "productionBuildChecks": {
+    "root": 22,
+    "pages": 22
+  },
+  "windowsLauncher": {
+    "passed": 22,
+    "skipped": 2,
+    "failed": 0
+  },
+  "productionBrowser": [
+    {
+      "base": "/",
+      "chrome": "157.0.8103.51",
+      "checksPassed": 79,
+      "runtimeErrors": 0
+    },
+    {
+      "base": "/pixl.js/",
+      "chrome": "157.0.8103.51",
+      "checksPassed": 79,
+      "runtimeErrors": 0
+    }
+  ],
+  "startupComparisonBrowser": {
+    "localesAndWidths": [
+      [
+        "de_DE",
+        390
+      ],
+      [
+        "en_US",
+        1040
+      ]
+    ],
+    "overflowOrClippedCells": false,
+    "source": "Owner-supplied DE3.73 and DE3.80 startup observations, loaded into an isolated production build of the Vue component; no Bluetooth connection."
+  },
+  "batteryAndFlashBrowser": "Passed on both production bases in German at 390px and English at 1200px; simulated read-only peripheral and CSV export.",
+  "physicalDeviceReadback": "DE3_80_LCD_READBACK.json",
+  "newPhysicalWebBluetoothTest": false,
+  "previewProfileBrowser": "Chrome, German at 390px, production /pixl.js/ with an emulated BLE peripheral. A matching Z20 returned known preview. A single flipped bit in the reported boot region hash caused a bootloader and overall mismatch."
+}

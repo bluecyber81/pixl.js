@@ -125,12 +125,12 @@ try{
   check(kind+' mount profile rendered',await page.locator('[data-section="startup"]').innerText().then(s=>s.includes('128000 B')&&s.includes('kein Messzeitpunkt')));
   await shot(page,kind+'-mount-details',page.locator('[data-section="startup"]'));
   await page.locator('[data-section="startup"] .mount-profile > summary').click();
-  await page.evaluate(data=>{window.__ui.bootInfo={...data.sections.boot.data,chipVariantRaw:0x41414530,
-   applicationCounter:634,bootloaderCounter:18,bootRegionSha256:'c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade'};window.__ui.bootState='available';window.__ui.show_workspace('update');},snapshot);
+  await page.evaluate(({data,appCounter})=>{window.__ui.bootInfo={...data.sections.boot.data,chipVariantRaw:0x41414530,
+   applicationCounter:appCounter,bootloaderCounter:18,bootRegionSha256:'c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade'};window.__ui.bootState='available';window.__ui.show_workspace('update');},{data:snapshot,appCounter:releaseInfo.counter});
   const bootCard=page.locator('.update-check .check-grid > article').nth(2);
   await bootCard.waitFor({state:'visible'});
   await page.waitForFunction(()=>document.querySelector('.update-check .check-grid > article:nth-child(3)')?.textContent.includes('Z18-Rückkehrpaket erkannt'));
-  check(kind+' Z18 is explicitly matched as unchanged Z15 rollback code',await bootCard.evaluate(el=>el.classList.contains('match')&&el.textContent.includes('keine neue Bootloader-Implementierung')));
+  check(kind+' recognized Z18 rollback remains a mismatch for the stable Z19 application profile',await bootCard.evaluate(el=>el.classList.contains('different')&&el.textContent.includes('unveränderten Z15-Programmcode')));
   await noOverflow(page,kind+' Z18 profile');await shot(page,kind+'-z18-rollback',bootCard);
   await page.evaluate(()=>{window.__ui.bootInfo=null;window.__ui.bootState='unknown';window.__ui.show_workspace('device');});
   await page.evaluate(()=>{window.__ui.language='ja_JP';window.__ui.$i18n.locale='ja_JP';});

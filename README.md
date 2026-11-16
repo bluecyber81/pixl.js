@@ -1,5 +1,9 @@
 # Allmiibo LCD firmware and file manager
 
+## Startup comparison · File manager 3.55.2
+
+Under **Device & diagnostics**, compare the PackedFS scan time, flash reads and bytes read against an earlier startup report. Reading the JEDEC ID again keeps the drive size previously reported by the connected device. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [3.55.2 Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2)
+
 ## LCD update for Android
 
 DE3.80 / App653 is available as a signed application or with the Z20 bootloader and Nordic S112 7.3.0. Use the complete package in nRF Device Firmware Update on Android and let both transfers finish. These packages target the LCD with existing Packed LittleFS (PFS1). DE3.75 remains the hardware-qualified stable release. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)

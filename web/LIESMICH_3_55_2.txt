@@ -1,0 +1,11 @@
+Allmiibo Dateimanager 3.55.2
+
+Unter Windows Start-Dateimanager.cmd öffnen. Unter „Gerät & Diagnose“ die Startzeiten der Anwendung lesen und „Früheren Startbericht vergleichen“ öffnen. Für zwei vergleichbare Berichte werden die Unterschiede bei Scanzeit, Flash-Lesezugriffen und gelesenen Bytes angezeigt. Die DE3.80-Diagnose enthält die am LCD bestätigten Versions- und Bootdaten.
+
+On Windows, open Start-Dateimanager.cmd. In Device & diagnostics, read the application startup timings and select an earlier report to compare. When both reports contain the required measurements, the comparison shows differences in scan time, flash reads and bytes read. The DE3.80 reference includes version and boot data observed on an LCD.
+
+Firmware und Android-DFU / firmware and Android DFU
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.80
+
+Dateimanager im Browser / open the file manager
+https://bluecyber81.github.io/pixl.js/

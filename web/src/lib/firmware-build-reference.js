@@ -49,6 +49,7 @@ const app652 = Object.freeze({
 });
 const app653 = Object.freeze({
   ...app652, firmwareVersion: '2.22.0-DE3.80', applicationCounter: 653,
+  hardwareAcceptance: 'startup-and-system-readback-on-one-lcd',
   applicationBytes: 362652, applicationBinSha256: '34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8',
   sourceId: 'ca55c5555307609be7ab5e7e202b0af00a2609d69df7e7a1f6d5f35a2d46bf13', otaSha256: 'caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342',
 });

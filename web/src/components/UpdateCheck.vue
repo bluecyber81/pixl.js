@@ -28,7 +28,7 @@ import FirmwarePackages from './FirmwarePackages.vue';
 import { evaluateUpdateCheck, formatUpdateValue, updateCheckText } from '../lib/update-check.js';
 const props = defineProps({ session: { type: Object, default: () => ({}) }, boot: { type: Object, default: null }, locale: { type: String, default: 'de_DE' } });
 const result = computed(() => evaluateUpdateCheck({ session: props.session, boot: props.boot }));
-const text = computed(() => updateCheckText(props.locale));
+const text = computed(() => updateCheckText(props.locale, result.value.preview));
 function summary(row) {
   const keys = { hardware: ['chip', 'variant', 'flash', 'ram'], application: ['version', 'applicationCounter'], bootloader: ['bootCounter', 'bootHash'], softDevice: ['sdVariant', 'sdVersion', 'sdFwid'] }[row.id];
   return keys.map(key => {
@@ -44,6 +44,7 @@ header,.card-heading { display:flex; gap:12px; align-items:flex-start; justify-c
 .target { margin:6px 0 0; font-size:.84rem; color:#4d667e; } .subtitle,.overall { margin:10px 0; line-height:1.5; font-size:.86rem; } .overall { font-weight:600; }
 .status { display:inline-block; flex-shrink:0; padding:4px 8px; border-radius:20px; font-size:.72rem; font-weight:600; background:#e8eef4; color:#485c70; }
 .status.match { background:#dcefe5; color:#205a3e; } .status.different { background:#fff0d7; color:#785013; } .status.unknown { background:#e8eef4; color:#485c70; }
+.status.preview { background:#e4eefb; color:#25517f; } article.preview { border-color:#b8cee7; }
 .check-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:14px; }
 article { min-width:0; padding:14px; border:1px solid #d5e0e9; border-radius:10px; background:#fff; } article.match { border-color:#badac9; } article.different { border-color:#e0c99d; }
 .row-target,.read-value { font-size:.81rem; line-height:1.5; margin:10px 0; } .row-target { color:#4d667e; } .read-value { font-variant-numeric:tabular-nums; }

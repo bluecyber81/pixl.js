@@ -251,3 +251,64 @@ test('cold-start series reports exact mount reads only when every profile suppli
     assert.equal(series.mount,null);
   }
 });
+
+
+test('release, numbered test and PREP firmware identities round-trip through exports and per-version series', () => {
+  const report = (fw, n) => createStartupDiagnosticReport(
+    parseStartupDiagnostics(packet(63, [0,30+n,38+n,86+n,100+n,110+n])), '2026-11-16T10:09:18.952Z', fw);
+  for (const version of ['2.22.0-DE3.80', '2.22.0-DE3.71t1', '2.22.0-DE3.30-PREP']) {
+    assert.equal(report(version,0).firmwareVersion,version);
+    assert.equal(startupSeries([0,1,2].map(n => report(version,n))).version,version);
+  }
+  assert.equal(startupSeries([report('2.22.0-DE3.71',0), report('2.22.0-DE3.71t1',1), report('2.22.0-DE3.71',2)]),null);
+  for (const version of ['2.22.0-DE3.71t0','2.22.0-DE3.71t01','2.22.0-DE3.71-PREPt1','2.22.0-DE3.71x','a'.repeat(100),null]) {
+    assert.equal(report(version,0).firmwareVersion,undefined);
+    assert.equal(startupSeries([0,1,2].map(n => ({...report(version,n), firmwareVersion:version}))),null);
+  }
+});
+
+test('an individual comparison uses exact counters independently of scan timing and omits failed mounts', () => {
+  const before = parseStartupDiagnostics(mountPacket());
+  const after = {...before, mount: {...before.mount, scanMilliseconds:0, physicalReadAttempts:205, physicalReadBytes:52480}};
+  const values = (a,b) => compareStartup({startup:a},b).mount;
+  assert.deepEqual(values(before,after), [
+    {id:'scanMilliseconds',before:15,after:0,delta:-15},
+    {id:'physicalReadAttempts',before:200,after:205,delta:5},
+    {id:'physicalReadBytes',before:51200,after:52480,delta:1280},
+  ]);
+  for (const [wire, usable] of [[mountPacket(31),['scanMilliseconds']], [mountPacket(3),['physicalReadAttempts','physicalReadBytes']],
+    [mountPacket(11),[]], [mountPacket(17,-12),[]], [packet(),[]]]) {
+    const other=parseStartupDiagnostics(wire);
+    assert.deepEqual(values(before,other).map(r=>r.id),usable);
+    assert.deepEqual(values(other,before).map(r=>r.id),usable);
+  }
+  assert.deepEqual(values(before,{...after,mount:null}),[]);
+});
+
+test('saved and current hardware timings and read counts render in the active language and clear on disconnect', async () => {
+  const old = {...parseStartupDiagnostics(mountPacket()), elapsedMilliseconds:[0,2262,2289,2343,2344,2362],
+    storageElapsedMilliseconds:[2181,2239]};
+  Object.assign(old,{mount:{...old.mount,scanMilliseconds:2180,physicalReadAttempts:4345,physicalReadBytes:1112320}});
+  const current = {...old, elapsedMilliseconds:[0,2059,2083,2137,2138,2156], storageElapsedMilliseconds:[1996,2040],
+    mount:{...old.mount,scanMilliseconds:1995,physicalReadAttempts:3817,physicalReadBytes:977152}};
+  const f=await mount({firmwareVersion:'2.22.0-DE3.80',readDiagnostics:async()=>current});
+  try {
+    await readButton(f.root).props.onClick();await f.Vue.nextTick();
+    const file=nodes(f.root).find(n=>n.type==='input'&&n.props.type==='file'&&!('multiple' in n.props));
+    const load = async report => {
+      const json = JSON.stringify(report);
+      await file.props.onChange({target:{files:[{size:json.length,text:async()=>json}]}});
+      await f.Vue.nextTick();
+    };
+    await load({firmwareVersion:'2.22.0-DE3.73',startup:old});
+    const comparison = () => nodes(f.root).find(n=>n.props.class==='comparison');
+    const german=text(comparison());
+    assert.match(german,/Früher 2\.22\.0-DE3\.73/);assert.match(german,/Aktuell 2\.22\.0-DE3\.80/);
+    for (const value of ['-206 ms','-185 ms','-528','-135.168 B','1.112.320 B','977.152 B']) assert.ok(german.includes(value),value);
+    f.data.locale='en';await f.Vue.nextTick();assert.ok(text(comparison()).includes('Bytes read-135,168 B'));
+    await load({firmwareVersion:'2.22.0-DE3.79',startup:{...old,mount:{...old.mount,flags:31}}});
+    assert.ok(text(comparison()).includes('Scan time'));assert.ok(text(comparison()).includes('unsaturated'));
+    assert.ok(!text(comparison()).includes('Bytes read'));
+    f.data.connected=false;await f.Vue.nextTick();assert.equal(comparison(),undefined);
+  } finally { f.app.unmount(); }
+});

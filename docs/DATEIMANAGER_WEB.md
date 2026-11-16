@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.55.2
+
+Unter **Gerät & Diagnose → Startzeiten der Anwendung** lassen sich jetzt die Scanzeit von PackedFS, die Anzahl der Flash-Lesezugriffe und die gelesenen Bytes mit einem früheren Bericht vergleichen. Nach dem erneuten Lesen der JEDEC-Kennung bleibt die bereits ermittelte Laufwerksgröße in derselben Geräteverbindung sichtbar. Ein kontrollierter Vergleich setzt dasselbe Gerät und denselben Speicherbestand voraus. Die Diagnose kann auch Versionsbezeichnungen mit einem Testsuffix wie DE3.71t1 oder der Endung -PREP übernehmen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [3.55.2 für Windows und als Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2)
+
 ## Dateimanager 3.55.1
 
 Zum Aktualisieren eines kompatiblen LCD mit Z19 oder Z20 und vorhandenem PFS1 steht die App DE3.80 im Firmwarebereich bereit. Der externe Flash-Kapazitätscode wird anhand der Tabelle des Treibers eingeordnet. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)
