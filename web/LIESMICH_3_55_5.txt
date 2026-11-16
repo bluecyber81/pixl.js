@@ -1,0 +1,20 @@
+Allmiibo Dateimanager 3.55.5 · LCD und OLED / LCD and OLED
+
+Windows: Start-Dateimanager.cmd
+
+LCD DE3.81 / App654 · Bootloader Z21 · SoftDevice S112 7.3.0
+Für ein LCD mit PFS1, S112 7.3.0 und Z19/Z20/Z21 genügt App654. Die Android-Kombi aktualisiert kompatible LCD-Geräte mit älterem Bootloader in zwei Schritten. Vor der Auswahl bitte Voraussetzungen und Hinweise für SPIFFS in der Anleitung prüfen.
+https://bluecyber81.github.io/pixl.js/guide/index.html#flash
+
+An LCD with PFS1, S112 7.3.0 and Z19/Z20/Z21 can use the app by itself. The combined Android update installs in two stages on compatible LCD devices with an older bootloader. See the guide for board requirements and SPIFFS migration before choosing a ZIP.
+https://bluecyber81.github.io/pixl.js/guide/en.html#flash
+
+LCD – App654
+https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip
+
+LCD – Android, S112 7.3.0 + Z21 + App654
+https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip
+
+OLED · DE3.81 Test 1 / Android
+https://bluecyber81.github.io/pixl.js/guide/index.html#oled
+https://bluecyber81.github.io/pixl.js/guide/en.html#oled

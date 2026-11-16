@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-16",
+  "source": "Owner-supplied browser diagnostic; selected readings transcribed from the provided export.",
+  "applicationVersion": "3.55.3",
+  "firmwareVersion": "2.22.0-DE3.81",
+  "observedAt": "2026-11-16T14:52:16.904Z",
+  "boot": {
+    "chipPart": 337970,
+    "applicationCounter": 654,
+    "bootloaderCounter": 21,
+    "bootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "softDeviceVariant": 112,
+    "softDeviceVersion": 7003000,
+    "softDeviceFwid": 294,
+    "settingsCrcValid": true
+  },
+  "applicationHashVerified": false,
+  "samePhysicalDeviceVerified": false,
+  "pending": [
+    "Physical Android DFU interruption and resumption on Z21",
+    "DE3.81-specific NFC and sleep/wake results"
+  ]
+}

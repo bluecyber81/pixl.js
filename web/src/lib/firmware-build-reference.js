@@ -55,8 +55,8 @@ const app653 = Object.freeze({
 });
 
 const app654 = Object.freeze({
-  ...app653, firmwareVersion: '2.22.0-DE3.81', applicationCounter: 654,
-  hardwareAcceptance: 'owner-reported-flash-and-initial-operation',
+  ...app653, firmwareVersion: '2.22.0-DE3.81', applicationCounter: 654, artifactStatus: 'stable-signed-application',
+  hardwareAcceptance: 'startup-and-system-readback-on-one-lcd',
   applicationBytes: 362892, applicationBinSha256: '632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918',
   sourceId: '85f0947a00471b74b45c86ccdd7ade4f7ba8269fc75e56974481fd61fd6e109a', otaSha256: '6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719',
 });
@@ -81,7 +81,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
     sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = references.find(item => item.firmwareVersion === version) ?? app648;
+  const reference = references.find(item => item.firmwareVersion === version) ?? app654;
   const relation = version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
   return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,

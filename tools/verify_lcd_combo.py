@@ -119,7 +119,7 @@ def verify(repo, profile=None, combo_path=None, app_path=None):
         matches = [key for key, row in RELEASES.items() if row.combo_sha256 == digest]
         need(len(matches) == 1, 'Unknown combo ZIP')
         profile = matches[0]
-    release = RELEASES[profile or 'de3.72']
+    release = RELEASES[profile or 'de3.81']
     assets = repo / 'fw/releases'
     stem = f'{release.version}_{release.application}'
     if data is None:
@@ -160,7 +160,7 @@ def main():
     parser.add_argument('--combo', type=Path)
     parser.add_argument('--app-only', type=Path)
     parser.add_argument('--profile', type=str.lower, choices=RELEASES,
-                        help='Defaults to DE3.72; an explicit --combo is recognized by its SHA-256.')
+                        help='Defaults to DE3.81; an explicit --combo is recognized by its SHA-256.')
     args = parser.parse_args()
     print(json.dumps(verify(args.root, args.profile, args.combo, args.app_only)))
 

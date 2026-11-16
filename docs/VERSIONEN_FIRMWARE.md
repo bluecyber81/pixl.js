@@ -1,18 +1,18 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## DE3.81 / App654 und Z21 · aktuelle LCD-Firmware
+
+DE3.81 / App654 hält die markierte Figur bei einem abgelehnten Wechsel und ermöglicht einen neuen Versuch, wenn AmiiboLink keine Tagdaten erzeugen kann. Z21 zeigt beim Fortsetzen einer DFU-Übertragung wieder den Empfang an. Der Besitzer meldet erfolgreichen Betrieb. Sein [Diagnoseexport](validation/DE3_81_LCD_READBACK.json) belegt die gemeldete App654 mit Z21 und S112 7.3.0. Die Wiederaufnahme nach einem echten Funkabbruch ist offen. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android-Kombi mit S112 7.3.0 und Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Quellen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
+
 ## DE3.81 OLED Test 1 · App-Zähler 81
 
 Die signierte OLED-App für SH1106 (128 × 64) und S112 7.2.0 verwendet vorhandenes SPIFFS oder natives LittleFS. Die DE3.81-Menüs und 55 unterschiedlichen Spielhinweise wurden auf Deutsch und Englisch am Rechner geprüft. Ein Nutzer meldet, dass die Testversion auf einem OLED funktioniert. Angaben zum dort verwendeten Dateisystem und zu einzelnen Funktionen stehen aus. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Testanleitung auf Deutsch und Englisch](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt) · [OLED-Release und Quellstand](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1)
-
-## DE3.81 / App654 und Z21 · LCD-Vorschau
-
-DE3.81 / App654 hält die markierte Figur bei einem abgelehnten Wechsel und ermöglicht einen neuen Versuch, wenn AmiiboLink keine Tagdaten erzeugen kann. Z21 zeigt beim Fortsetzen einer DFU-Übertragung wieder den Empfang an. Auf einem LCD hat der Besitzer den Flash und die erste Funktion bestätigt. Die Wiederaufnahme nach einem echten Funkabbruch ist offen. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android-Kombi mit S112 7.3.0 und Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Quellen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
 
 ## DE3.80 / App653 und Bootloader Z20 · LCD-Testversion
 
 Die App reduziert beim Einbinden eines großen Figurenspeichers die Zahl der Flash-Lesezugriffe. Mit 952 Modellfiguren wurden 3.257 statt 3.433 Zugriffe gemessen. Z20 speichert nach jeweils 64 KiB bestätigter DFU-Nutzdaten einen Zwischenstand. Beim ersten Update von Z19 empfängt Z19 die Systemphase. Z20 übernimmt die anschließende App-Phase. Die normale Startzeit und ein unterbrochener Bluetooth-Transfer auf dem Gerät stehen als Praxistests aus. [Android-Kombi und App](https://github.com/bluecyber81/pixl.js/releases/tag/de3.80) · [Prüfnachweis](validation/DE3_80.json)
 
-## DE3.75 / App648 · stabile LCD-Firmware
+## DE3.75 / App648 · frühere LCD-Freigabe
 
 Auf einem LCD kehrten Datei-Emulator und Amiibo-Datenbank nach „Zurück zur Liste“ zur richtigen Figur zurück. Nach dem Aufwachen war in beiden Apps dieselbe Figur aktiv. Der Gerätebericht mit Dateimanager 3.52.0 erfasst Deutsch und eingeschaltetes „App fortsetzen“. Die Animationseinstellung blieb offen. Separat erkannte die Switch eine bekannte Figur. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Änderungen und Messwerte](RELEASE_DE3_75.md)
 

@@ -108,7 +108,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.75','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.75','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -174,7 +174,7 @@ test('only a unique bundled catalogue ID is preselected, with no load or transfe
         const recentBoot = '#read=' + Date.now() + '&app=636&bl=19&sd=294';
         const h = harness(true, {location:new URL(pages + query + recentBoot), AllmiiboFirmwareReleases:catalog});
         const select = h.nodes.get('bundled');
-        assert.match(select.children[1].textContent, /DE3\.75.*Stabile Ausgabe.*Z19/);
+        assert.match(select.children[1].textContent, /DE3\.81.*Stabile Ausgabe.*Z19\/Z20\/Z21/);
         assert.match(select.children.find(option => option.value === 'de3.76-lcd-app').textContent, /DE3\.76.*Testversion.*Z19/);
         assert.match(select.children.find(option => option.value === 'de3.77-lcd-app').textContent, /DE3\.77.*Testversion.*Z19/);
         assert.match(select.children.find(option => option.value === 'de3.80-lcd-app').textContent, /DE3\.80.*Testversion.*Z19\/Z20/);

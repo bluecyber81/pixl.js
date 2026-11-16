@@ -26,7 +26,8 @@ export function packagePresentation(entry, session = {}, boot = null) {
   const matchesBootloader = profile => profile &&
     (!diagnostic.settingsCrcValid || diagnostic.bootloaderCounter === profile.counter) &&
     (!diagnostic.bootHashValid || diagnostic.bootRegionSha256 === profile.sha256);
-  const profileMismatch = Boolean(diagnostic && supportedBootloaders && (
+  const profileMismatch = installed === '2.22.0-DE3.81-OLEDt1' || Boolean(diagnostic && supportedBootloaders && (
+    diagnostic.addressConflict || (diagnostic.bootAddressValid && diagnostic.bootAddress !== UPDATE_TARGET.bootloader.address) ||
     !supportedBootloaders.some(matchesBootloader) ||
     (diagnostic.softDeviceValid && (diagnostic.softDeviceFwid !== UPDATE_TARGET.softDevice.fwid ||
       diagnostic.softDeviceVersion !== UPDATE_TARGET.softDevice.version || diagnostic.softDeviceVariant !== UPDATE_TARGET.softDevice.variant))
@@ -36,11 +37,31 @@ export function packagePresentation(entry, session = {}, boot = null) {
     downloadUrl:deploymentPath(`firmware/${entry.file}`),dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
 }
 
+export function currentLcdDownloads(entry, session, boot) {
+  if (!session.connected) return { app:true, combo:true };
+  const info = normalizeBootDiagnostics(boot);
+  const offer = packagePresentation(entry, session, info);
+  const layout = UPDATE_TARGET.bootloader;
+  const system = UPDATE_TARGET.softDevice;
+  const currentOrOlder = !offer.newer && session.firmwareVersion !== '2.22.0-DE3.81-OLEDt1';
+  const knownLayout = info?.geometryValid && info.bootAddressValid && info.bootVectorsValid &&
+    info.settingsCrcValid && info.paramsLayoutKnown && !info.addressConflict &&
+    info.bootAddress === layout.address && info.effectiveParamsAddress === layout.paramsAddress &&
+    info.settingsAddress === layout.settingsAddress;
+  const s112 = info?.softDeviceValid && info.softDeviceVariant === system.variant;
+  const comboSoftDevice = s112 && ((info.softDeviceFwid === 0x0103 && info.softDeviceVersion === 7002000) ||
+    (info.softDeviceFwid === system.fwid && info.softDeviceVersion === system.version));
+  return {
+    app: Boolean(currentOrOlder && knownLayout && s112 && info.bootHashValid && !offer.profileMismatch),
+    combo: Boolean(currentOrOlder && knownLayout && comboSoftDevice && info.bootloaderCounter < UPDATE_TARGET.bootloaderZ21.counter)
+  };
+}
+
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     systemGuide:'Android-Komplettpaket mit Z21 und Anleitung',
-    source:'Quellcode der LCD-Firmware DE3.75',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.75 ist die stabile Ausgabe für Z19. Auf einem LCD sind die Rückkehr zur Figur nach dem Aufwachen und die Erkennung einer bekannten Figur auf der Switch bestätigt.',
+    source:'Quellcode der LCD-Firmware DE3.81',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.81 / App654 unterstützt Z19, Z20 und Z21. Auf einem LCD sind App654, Z21 und S112 7.3.0 in der Gerätediagnose bestätigt.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -51,8 +72,8 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     systemGuide:'Full Android package with Z21 and instructions',
-    source:'Source code for LCD firmware DE3.75',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.75 is the stable release for Z19. The owner confirmed returning to the figure after waking and scanning a known figure on the Switch with one LCD.',
+    source:'Source code for LCD firmware DE3.81',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.81 / App654 supports Z19, Z20 and Z21. Device diagnostics on one LCD confirmed App654, Z21 and S112 7.3.0.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

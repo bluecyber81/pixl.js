@@ -1,5 +1,9 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## DE3.81 / App654 · Z21 · Web 3.55.5 · 16.11.2026
+
+Aktuelle LCD-Firmware mit Nordic S112 7.3.0. Der Besitzerexport meldet App654 und Z21. Ein unterbrochenes Android-Update auf Z21 bleibt als Gerätetest offen. [Nur die App](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android-Komplettpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Gerätediagnose](validation/DE3_81_LCD_READBACK.json)
+
 ## Web 3.53.0 · 15.11.2026
 
 Ordnersicherungen lassen sich mit einer früheren ZIP beschleunigen. Der Dateimanager vergleicht kleine Dateien mit der aktuellen Prüfsumme vom Gerät. Du kannst die ZIP komprimieren, die Dauer je Sicherungsphase sehen und einen gesicherten Figurenordner offline prüfen. Beim Umbenennen und vor dem ZIP-Import wird die verbleibende Pfadlänge angezeigt. Unter Gerät & Diagnose lassen sich MIFARE-Mini-Slots lesend prüfen.

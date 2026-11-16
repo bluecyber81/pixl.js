@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { packagePresentation,firmwarePackageText } from '../src/lib/release-packages.js';
+import { packagePresentation,firmwarePackageText,currentLcdDownloads } from '../src/lib/release-packages.js';
 import { parseBootDiagnostics } from '../src/lib/boot-diagnostics.js';
 import { nrfDfuLink } from '../public/dfu/nrf-dfu-link.mjs';
 import { readFileSync } from 'node:fs';
@@ -9,7 +9,7 @@ const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmi
 
 test('the final signed package reaches Android and is compared when only the device version is available', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
-  const candidate = packages.find(item => item.version === '2.22.0-DE3.75');
+  const candidate = packages.find(item => item.version === '2.22.0-DE3.81');
   assert.equal(candidate, packages[0]);
   assert.equal(candidate.channel, undefined);
   const android = new URL(nrfDfuLink(candidate));
@@ -18,11 +18,11 @@ test('the final signed package reaches Android and is compared when only the dev
     assert.equal(nrfDfuLink({...candidate, ...changed}), null);
   }
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
-  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.76'}).newer, true);
-  assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.75');
-  assert.deepEqual(packages.map(item=>item.counter),[648,654,653,652,650,649,647,637,646,645]);
+  assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
+  assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
+  assert.deepEqual(packages.map(item=>item.counter),[654,648,653,652,650,649,647,637,646,645]);
 });
-for (const [version, counter] of [['DE3.76', 649], ['DE3.77', 650], ['DE3.79', 652], ['DE3.80', 653], ['DE3.81', 654]]) {
+for (const [version, counter] of [['DE3.76', 649], ['DE3.77', 650], ['DE3.79', 652], ['DE3.80', 653]]) {
   test(version + ' preview offers its signed application ZIP on Android', () => {
     const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
     const preview = packages.find(item => item.counter === counter);
@@ -101,4 +101,22 @@ test('only a named LCD app release can be handed to nRF DFU', () => {
    {...app, file:'https://example.com/firmware.zip'}, {...app, file:app.file + '?device=private'}]) {
    assert.equal(nrfDfuLink(changed),null);
  }
+});
+
+test('current LCD download choices respect the installed application, system profile and OLED variant', () => {
+ const current = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url))).packages[0];
+ const bytes = bootPacket(), view = new DataView(bytes.buffer);
+ view.setUint32(32,7003000,true); view.setUint16(36,294,true); view.setUint32(60,654,true);
+ view.setUint32(64,21,true); bytes.set(Buffer.from('d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb','hex'),80);
+ const choices = (firmwareVersion,boot = parseBootDiagnostics(bytes)) => currentLcdDownloads(current,{connected:true,firmwareVersion},boot);
+ assert.deepEqual(currentLcdDownloads(current,{connected:false},null),{app:true,combo:true});
+ assert.deepEqual(choices(current.version),{app:true,combo:false});
+ assert.deepEqual(choices('2.22.0-DE3.82'),{app:false,combo:false});
+ assert.deepEqual(choices('2.22.0-DE3.81-OLEDt1'),{app:false,combo:false});
+ assert.deepEqual(choices(current.version,null),{app:false,combo:false});
+ view.setUint32(64,15,true);view.setUint32(32,7002000,true);view.setUint16(36,0x0103,true);
+ bytes.set(Buffer.from('c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade','hex'),80);
+ assert.deepEqual(choices('2.22.0-DE3.60'),{app:false,combo:true});
+ view.setUint32(28,140,true);
+ assert.deepEqual(choices('2.22.0-DE3.60'),{app:false,combo:false});
 });

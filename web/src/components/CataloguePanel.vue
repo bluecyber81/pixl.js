@@ -38,7 +38,7 @@
         <label>{{ de ? 'Serie' : 'Series' }}<select v-model="series"><option value="">{{ de ? 'Alle Serien' : 'All series' }}</option><option v-if="series && !seriesOptions.includes(series)" :value="series">{{ series }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in seriesOptions" :key="item">{{ item }}</option></select></label>
         <label>{{ de ? 'Art' : 'Type' }}<select v-model="kind"><option value="">{{ de ? 'Alle Arten' : 'All types' }}</option><option v-if="kind && !typeOptions.includes(kind)" :value="kind">{{ kind }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in typeOptions" :key="item">{{ item }}</option></select></label>
       </div>
-      <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur Namen der stabilen Firmware DE3.75' : 'Only names in stable firmware DE3.75' }}</label>
+      <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur Figuren mit Namen in LCD DE3.81' : 'Only figures named in LCD DE3.81' }}</label>
     </details>
 
     <details class="filter-details saved-filters">
@@ -150,7 +150,7 @@
         <small v-if="historical" class="observation-date">{{ observationDate }}</small>
         <span class="entry-series">{{ entry.series }}</span><FigureIdCopy :id="entry.id" :de="de" />
         <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="['announced', 'upcoming'].includes(releaseLabel(entry, today).state)"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
-        <small class="firmware-name">{{ ocarinaFigureById.has(entry.id) ? (de ? 'Geräte-Datenbank ab DE3.76' : 'Device database from DE3.76') : entry.firmwareIdKnown ? (de ? 'Name in DE3.75 verfügbar' : 'Name available in DE3.75') : (de ? 'Kein Name in DE3.75' : 'No name in DE3.75') }}</small>
+        <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in LCD DE3.81 verfügbar' : 'Name available in LCD DE3.81') : (de ? 'Kein Name in LCD DE3.81' : 'No name in LCD DE3.81') }}</small>
         <button type="button" :aria-label="(de ? 'Details zu ' : 'Details for ') + catalogueDisplayName(entry, de)" :disabled="blocked" :aria-expanded="selectedId === entry.id" @click="selectEntry(entry.id, $event)">{{ de ? 'Details und Bild' : 'Details and image' }}</button>
       </li>
     </ul>
@@ -165,7 +165,7 @@ import baseline from '../data/catalogue.json';
 import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '../lib/catalogue.js';
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import { publicFigureImage } from '../lib/figure-info.js';
-import { announcementGroups, ocarinaFigureById, catalogueDisplayName } from '../data/announced-figures.js';
+import { announcementGroups, catalogueDisplayName } from '../data/announced-figures.js';
 import { gameGuides } from '../data/game-guides.js';
 import GameGuide from './GameGuide.vue';
 import FigureDownload from './FigureDownload.vue';
