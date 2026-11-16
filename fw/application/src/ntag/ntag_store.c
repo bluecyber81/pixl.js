@@ -120,10 +120,15 @@ ret_code_t ntag_store_uuid_rand(ntag_t *ntag) {
     return NRF_SUCCESS;
 }
 
-void ntag_store_new_rand(ntag_t *ntag) {
-    // always makes a 215
-    memcpy(ntag, &default_ntag215, sizeof(ntag_t));
-    ntag_store_uuid_rand(ntag);
+ret_code_t ntag_store_new_rand(ntag_t *ntag) {
+    /* Commit only after randomness succeeds. Keep the previous tag intact on
+     * error without another full-size tag on the shared application stack. */
+    uint8_t uuid[7] = {0x04};
+    ret_code_t err_code = utils_rand_bytes(uuid + 1, sizeof(uuid) - 1);
+    if (err_code != NRF_SUCCESS) return err_code;
+    memcpy(ntag, &default_ntag215, sizeof(*ntag));
+    ntag_store_set_uuid(ntag, uuid);
+    return NRF_SUCCESS;
 }
 
 #ifdef INTERNAL_ENABLE

@@ -14,6 +14,7 @@
 static bool ntag_emu_prepare_change(void){return true;}
 static unsigned listed = 950, generated, errors, stopped, detached;
 static bool m_tag_ready;
+static uint8_t m_active_focus;
 static unsigned m_amiibo_gen_delay_timer;
 static db_amiibo_t fake_figure;
 static int app_timer_stop(unsigned timer) { (void)timer; stopped++; return 0; }

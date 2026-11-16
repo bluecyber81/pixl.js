@@ -1,0 +1,11 @@
+Allmiibo Dateimanager 3.55.3
+
+Unter Windows Start-Dateimanager.cmd öffnen und „Gerät & Diagnose → Akkuverlauf“ auswählen. Der Akkuverlauf zeigt Messdauer, Spannweite und Pausengründe. Nach einer Pause markiert der erste neue Messwert die Fortsetzung. Die CSV enthält Zeit, Spannung, Ladezustand, Ereignis und Pausengrund.
+
+On Windows, open Start-Dateimanager.cmd and choose Device & diagnostics → Battery history. The battery history shows the measurement period, voltage range and pause reasons. The first new reading marks a resumed session. The CSV includes the time, voltage, charging status, event and pause reason.
+
+Firmware DE3.81 / App654 und Android-DFU
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.81
+
+Dateimanager im Browser / Open the file manager
+https://bluecyber81.github.io/pixl.js/

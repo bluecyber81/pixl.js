@@ -87,6 +87,16 @@ test('bundled preview uses its own application counter and its allowed bootloade
   assert.equal(row(previous,'bootloader').status,'different');
 });
 
+test('DE3.81 recognizes the Z21 region and rejects a mismatched region', () => {
+  const app654 = {...session, firmwareVersion:'2.22.0-DE3.81'};
+  const packet = change(60,654,previewPacket(21,UPDATE_TARGET.bootloaderZ21.sha256));
+  const report = result(packet,app654);
+  assert.equal(report.status,'preview');
+  assert.equal(row(report,'bootloader').status,'match');
+  assert.ok(row(report,'bootloader').reasons.includes('localZ21'));
+  assert.equal(row(result(change(60,654,previewPacket(21,z20Hash)),app654),'bootloader').status,'different');
+});
+
 test('known preview version cannot hide conflicting or missing device evidence', () => {
   for (const [id,packet] of [
     ['application',change(60,648,previewPacket())],
@@ -248,7 +258,7 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.55.2'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.55.3'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
   assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));
@@ -416,6 +426,30 @@ test('real bundled-package component explains manual scope and removes downgrade
     props.locale='en_US';await Vue.nextTick();assert.match(text(root),/No downgrade is offered/);
   }finally{app.unmount();}
 });
+test('a legacy LCD can open the Z21 guide while incompatible DE3.81 application transfers are hidden', async () => {
+  const Vue = await import('vue'), renderer = createRenderer(Vue), root = node('root');
+  const releases = JSON.parse(fs.readFileSync(new URL('../src/data/firmware-releases.json',import.meta.url),'utf8'));
+  const fixture = {schema:1,packages:releases.packages.filter(entry=>entry.counter===654)};
+  const filename=fileURLToPath(new URL('../src/components/FirmwarePackages.vue',import.meta.url));
+  const Component = await loadComponent(Vue,filename,fixture);
+  const props = Vue.reactive({session,boot:null,locale:'de_DE'});
+  const app = renderer.createApp({render:()=>Vue.h(Component,props)});app.mount(root);
+  try {
+    for (const [counter,profile] of [[15,UPDATE_TARGET.bootloaderZ15],[17,UPDATE_TARGET.bootloaderZ17]]) {
+      const bytes = change(64,counter), view = new DataView(bytes.buffer);
+      view.setUint32(32,7002000,true); view.setUint16(36,0x0103,true);
+      bytes.set(Buffer.from(profile.sha256,'hex'),80);
+      props.boot = parseBootDiagnostics(bytes);
+      for (const [locale,page] of [['de_DE','index.html'],['en_US','en.html']]) {
+        props.locale=locale; await Vue.nextTick();
+        const links=nodes(root).filter(item=>item.type==='a').map(item=>item.props.href);
+        assert.ok(links.includes('/guide/'+page+'#android-de381'));
+        assert.ok(!links.some(href=>href.startsWith('/firmware/') || href.includes('nordicsemi.com/dfu/') || href.includes('dfu/web.html')));
+      }
+    }
+  } finally {app.unmount();}
+});
+
 const text = item => item.text + item.children.map(text).join('');
 const nodes = item => [item, ...item.children.flatMap(nodes)];
 

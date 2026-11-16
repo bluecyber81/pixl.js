@@ -52,6 +52,23 @@ static void amiibolink_scene_amiibo_detail_no_key_msg(app_amiibolink_t *app) {
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBOLINK_VIEW_ID_MSG_BOX);
 }
 
+/* Generation failures have no pending write to retry. Keep RF paused and
+ * return through the menu, where a later entry can retry the selected mode. */
+static void ntag_reload_error_back(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_amiibolink_t *app = box->user_data;
+    if (event == MUI_MSG_BOX_EVENT_SELECT_CENTER)
+        mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBOLINK_SCENE_MENU);
+}
+
+static void ntag_reload_error(app_amiibolink_t *app) {
+    mui_msg_box_set_header(app->p_msg_box, getLangString(_L_ERR));
+    mui_msg_box_set_message(app->p_msg_box, getLangString(_L_FAILED));
+    mui_msg_box_set_btn_text(app->p_msg_box, NULL, getLangString(_L_BACK), NULL);
+    mui_msg_box_set_btn_focus(app->p_msg_box, 1);
+    mui_msg_box_set_event_cb(app->p_msg_box, ntag_reload_error_back);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBOLINK_VIEW_ID_MSG_BOX);
+}
+
 static void ntag_generate_cb(void* ctx) {
     app_amiibolink_t *app = ctx;
     if (!amiibo_helper_is_key_loaded()) {
@@ -79,18 +96,22 @@ static bool ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
     return err_code == NRF_SUCCESS;
 }
 
-static void ntag_reload(app_amiibolink_t *app, uint8_t index) {
+static bool ntag_reload(app_amiibolink_t *app, uint8_t index) {
     if (!ntag_emu_prepare_change()) {
         amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
-        return;
+        return false;
     }
     ntag_t ntag;
     ret_code_t err_code = ntag_store_read(index, &ntag);
-    if (err_code == NRF_SUCCESS) {
-        m_active_index = index;
-        m_active_mode = app->amiibolink_mode;
-        ntag_emu_set_tag(&ntag);
+    if (err_code != NRF_SUCCESS) {
+        amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
+        ntag_reload_error(app);
+        return false;
     }
+    if (!ntag_emu_set_tag(&ntag)) return false;
+    m_active_index = index;
+    m_active_mode = app->amiibolink_mode;
+    return true;
 }
 
 static void ntag_init() {}
@@ -105,10 +126,10 @@ static bool ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
     return err_code == NTAG_DATA_SIZE;
 }
 
-static void ntag_reload(app_amiibolink_t *app, uint8_t index) {
+static bool ntag_reload(app_amiibolink_t *app, uint8_t index) {
     if (!ntag_emu_prepare_change()) {
         amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
-        return;
+        return false;
     }
     ntag_t ntag = {0};
     char path[VFS_MAX_PATH_LEN] = {0};
@@ -118,15 +139,18 @@ static void ntag_reload(app_amiibolink_t *app, uint8_t index) {
     sprintf(path, "/amiibolink/%02d.bin", index);
     vfs_driver_t *p_driver = vfs_get_driver(VFS_DRIVE_EXT);
     int32_t err_code = p_driver->read_file_data(path, ntag.data, NTAG_DATA_SIZE);
+    if (err_code < NTAG_DATA_SIZE) {
+        NRF_LOG_INFO("ntag_reload: ntag_load_failed. index=%d, err_code=%d", index, err_code);
+        if (ntag_store_new_rand(&ntag) != NRF_SUCCESS) {
+            amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
+            ntag_reload_error(app);
+            return false;
+        }
+    }
+    if (!ntag_emu_set_tag(&ntag)) return false;
     m_active_index = index;
     m_active_mode = app->amiibolink_mode;
-    if (err_code >= NTAG_DATA_SIZE) {
-        ntag_emu_set_tag(&ntag);
-    } else {
-        NRF_LOG_INFO("ntag_reload: ntag_load_failed. index=%d, err_code=%d", index, err_code);
-        ntag_store_new_rand(&ntag);
-        ntag_emu_set_tag(&ntag);
-    }
+    return true;
 }
 
 static void ntag_init() {
@@ -160,29 +184,35 @@ static void amiibolink_scene_main_event_cb(amiibolink_view_event_t event, amiibo
     }
 }
 
-static void amiibolink_scene_switch_mode(app_amiibolink_t *app, ble_amiibolink_mode_t mode, uint8_t initial_index) {
-    if (!ntag_emu_prepare_change()) return;
+static bool amiibolink_scene_switch_mode(app_amiibolink_t *app, ble_amiibolink_mode_t mode, uint8_t initial_index) {
+    if (!ntag_emu_prepare_change()) return false;
     NRF_LOG_INFO("new mode: %d", mode);
+    ble_amiibolink_mode_t previous_mode = app->amiibolink_mode;
+    uint8_t previous_index = amiibolink_view_get_index(app->p_amiibolink_view);
     app->amiibolink_mode = mode;
+    bool loaded = false;
+    if (mode == BLE_AMIIBOLINK_MODE_NTAG) {
+        loaded = ntag_reload(app, DEFAULT_NTAG_INDEX);
+    } else if (mode == BLE_AMIIBOLINK_MODE_CYCLE) {
+        loaded = ntag_reload(app, initial_index);
+    } else if (mode == BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN || mode == BLE_AMIIBOLINK_MODE_RANDOM) {
+        loaded = ntag_emu_set_tag(ntag_emu_get_current_tag());
+        if (loaded) {
+            m_active_mode = mode;
+            m_active_index = initial_index;
+        }
+    }
+    if (!loaded) {
+        app->amiibolink_mode = previous_mode;
+        amiibolink_view_set_index(app->p_amiibolink_view, previous_index);
+        return false;
+    }
+    /* Publish UI/BLE mode only once the selected tag is ready. */
     amiibolink_view_set_amiibolink_mode(app->p_amiibolink_view, mode);
     amiibolink_view_set_index(app->p_amiibolink_view, initial_index);
     amiibolink_view_set_max_size(app->p_amiibolink_view, MAX_NTAG_INDEX);
-
     ble_amiibolink_set_mode(mode);
-
-    if (mode == BLE_AMIIBOLINK_MODE_NTAG) {
-        ntag_reload(app, DEFAULT_NTAG_INDEX);
-    } else if (mode == BLE_AMIIBOLINK_MODE_CYCLE) {
-        ntag_reload(app, initial_index);
-    } else if (mode == BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN) {
-        m_active_mode = mode;
-        m_active_index = initial_index;
-        ntag_emu_set_tag(ntag_emu_get_current_tag());
-    } else if (mode == BLE_AMIIBOLINK_MODE_RANDOM) {
-        m_active_mode = mode;
-        m_active_index = initial_index;
-        ntag_emu_set_tag(ntag_emu_get_current_tag());
-    }
+    return true;
 }
 
 static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_type_t event_type, uint8_t *data,
@@ -256,9 +286,9 @@ void amiibolink_scene_main_on_enter(void *user_data) {
     int32_t err_code = app_timer_create(&m_amiibo_gen_delay_timer, APP_TIMER_MODE_SINGLE_SHOT, ntag_generate_timer_request);
     APP_ERROR_CHECK(err_code);
 
-    amiibolink_scene_switch_mode(app, app->amiibolink_mode, amiibolink_view_get_index(app->p_amiibolink_view));
     amiibolink_view_set_event_cb(app->p_amiibolink_view, amiibolink_scene_main_event_cb);
-    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBOLINK_VIEW_ID_MAIN);
+    if (amiibolink_scene_switch_mode(app, app->amiibolink_mode, amiibolink_view_get_index(app->p_amiibolink_view)))
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBOLINK_VIEW_ID_MAIN);
 }
 
 void amiibolink_scene_main_on_exit(void *user_data) {

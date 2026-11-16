@@ -1,5 +1,11 @@
 # Allmiibo LCD application and file manager history
 
+## DE3.81 / App654 · Z21 · Web 3.55.3
+
+In **Device & diagnostics**, battery history shows the duration, voltage range and gaps between readings. The first fresh reading after a pause marks the resumption. CSV exports include the reason in a fifth column, `pause_reason`. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
+
+DE3.81 / App654 keeps the active figure selected when a switch is declined and lets AmiiboLink retry if tag creation fails. Z21 restores the receiving indicator when DFU resumes. An LCD owner confirmed flashing and initial operation. Recovery after an actual radio disconnect still needs a device test. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android package with S112 7.3.0 and Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Sources and test evidence](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
+
 ## DE3.75 / App648 · Web 3.52.1
 
 **DE3.75 / App648 is the stable LCD firmware** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release notes and device checks](docs/RELEASE_DE3_75.md)

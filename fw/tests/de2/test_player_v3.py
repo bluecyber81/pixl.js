@@ -266,7 +266,7 @@ int main(void) {
 typedef struct {uint32_t head,tail;} db_amiibo_t;
 typedef struct {uint8_t game_id;uint32_t head,tail;} db_link_t;
 typedef struct {unsigned max,focus,game;} view_t;
-typedef struct {uint16_t game_id_path[8];uint8_t game_id_index,search_game_id,prev_scene_id;const db_amiibo_t *cur_amiibo;view_t *p_amiibo_view;uint16_t result_count;const db_amiibo_t *result_items[100];} app_amiidb_t;\n#define AMIIDB_SCENE_AMIIBO_SEARCH 9\n#define _T(x) #x\nstatic int m_tag_ready;\nstatic void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *a,const char*m) {(void)a;(void)m;}
+typedef struct {uint16_t game_id_path[8];uint8_t game_id_index,search_game_id,prev_scene_id;const db_amiibo_t *cur_amiibo;view_t *p_amiibo_view;uint16_t result_count;const db_amiibo_t *result_items[100];} app_amiidb_t;\n#define AMIIDB_SCENE_AMIIBO_SEARCH 9\n#define _T(x) #x\nstatic int m_tag_ready;\nstatic uint8_t m_active_focus;\nstatic void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *a,const char*m) {(void)a;(void)m;}
 static db_link_t link_list[401];static db_amiibo_t tags[400];
 #define AMIIDB_SCENE_RECENT 10
 static uint8_t amiidb_recent_game(const db_amiibo_t *figure){return (uint8_t)figure->head;}

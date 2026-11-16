@@ -109,7 +109,7 @@ async function run(context, locale, width) {
   const targetProfile = migration.getByLabel(label('Ziel-Firmware für die lokale Platzprüfung','Target firmware for the local capacity check'));
   assert.equal(await targetProfile.inputValue(), 'current');
   assert.equal(await targetProfile.locator('option:checked').innerText(), 'DE3.75 / 648');
-  await migration.getByText(/DE3\.72–DE3\.77 \/ 645–650 \+ DE3\.79–DE3\.80 \/ 652–653/).waitFor();
+  await migration.getByText(/DE3\.72–DE3\.77 \/ 645–650 \+ DE3\.79–DE3\.81 \/ 652–654/).waitFor();
   await migration.locator(':scope > summary').click();
   const options=backup.locator('details.backup-export-options').first();
   await options.locator(':scope > summary').click();
@@ -189,7 +189,7 @@ async function run(context, locale, width) {
   await assertLayout(advice,page);
   assert.deepEqual(await page.evaluate(()=>window.testPeripheral.violations),[]);
   assert.deepEqual(errors,[]);
-  return {locale,width,capacityReference:648,capacityRangeEnd:653,offlineDistinctIds:1,offlineFiles:3,variants:2,slotReadOnly:true,repeatBackupDigests:2,verifiedFilesReused:1,changedFileRead:1,deflateFiles:2,initialNameAndPathRemaining:1,remappedPathExcess:14,deviceWrites:0};
+  return {locale,width,capacityReference:648,capacityRangeEnd:654,offlineDistinctIds:1,offlineFiles:3,variants:2,slotReadOnly:true,repeatBackupDigests:2,verifiedFilesReused:1,changedFileRead:1,deflateFiles:2,initialNameAndPathRemaining:1,remappedPathExcess:14,deviceWrites:0};
 }
 try {
   browser=await chromium.launch({headless:true,chromiumSandbox:true,executablePath:process.env.CHROME_EXECUTABLE});

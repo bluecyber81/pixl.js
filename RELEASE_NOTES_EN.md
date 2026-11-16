@@ -1,5 +1,11 @@
 # Allmiibo LCD release notes
 
+## DE3.81 / App654 · Z21 · Web 3.55.3
+
+In **Device & diagnostics**, battery history shows the duration, voltage range and gaps between readings. The first fresh reading after a pause marks the resumption. CSV exports include the reason in a fifth column, `pause_reason`. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
+
+DE3.81 / App654 keeps the active figure selected when a switch is declined and lets AmiiboLink retry if tag creation fails. Z21 restores the receiving indicator when DFU resumes. An LCD owner confirmed flashing and initial operation. Recovery after an actual radio disconnect still needs a device test. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android package with S112 7.3.0 and Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Sources and test evidence](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
+
 ## Web 3.53.0 · 15.11.2026
 
 Backups can reuse small files from a previous ZIP after checking their current digest on the device. Optional ZIP compression, backup phase timings and offline figure checks are available. Rename and ZIP import show the remaining path length. Device & diagnostics can inspect MIFARE Mini slots.

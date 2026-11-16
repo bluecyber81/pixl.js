@@ -1,4 +1,4 @@
-"""Verify known Allmiibo LCD two-phase packages (DE3.72 and DE3.80) using project sources and a public key.
+"""Verify known Allmiibo LCD two-phase packages (DE3.72, DE3.80 and DE3.81) using project sources and a public key.
 
 Place this script alongside tools/check_release_ota.py. Run python tools/verify_lcd_combo.py
 from an extracted matching source release. Requires Python and cryptography.
@@ -42,6 +42,12 @@ RELEASES = {
         app_zip_bytes=259943, app_zip_sha256='caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342',
         app_bytes=362652, app_sha256='34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8',
         boot_bytes=26916, boot_sha256='64274549a10e77f602381f405cfbd59848928d87f45dc6f0c2fd10de773b3bac'),
+    'de3.81': Release(
+        version='DE3_81', application=654, bootloader=21,
+        combo_bytes=342335, combo_sha256='4ba60821ea685f00ade27162c0df462aa9c382980a96e9967f9b0cc682a8de09',
+        app_zip_bytes=249923, app_zip_sha256='6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719',
+        app_bytes=362892, app_sha256='632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918',
+        boot_bytes=26932, boot_sha256='bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c'),
 }
 SD_BYTES = 98068
 SD_SHA256 = '176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2'
@@ -66,10 +72,10 @@ def read_bounded(archive, limits):
 def public_key(repo, counter=19):
     boot = repo / f'bootloader-z{counter}'
     key_file = 'fw/bootloader/src/dfu_public_key.c'
-    # Z20 shares the signing key source with its checked-in Z19 base. The
+    # Z20 and Z21 share the signing key source with the checked-in Z19 base. The
     # selected release binding authenticates either copy before use.
     path = boot / key_file
-    if counter == 20 and not path.exists():
+    if counter in (20, 21) and not path.exists():
         path = repo / 'bootloader-z19' / key_file
     source = path.read_bytes()
     binding = unique_json((boot / 'SOURCE_BINDING.json').read_bytes())
@@ -144,7 +150,8 @@ def verify(repo, profile=None, combo_path=None, app_path=None):
     verify_packet(combined[app_dat], image, params, key)
     verify_system(combined['sd_bl.dat'], combined['sd_bl.bin'], key, release)
     return {'verified': True, 'applicationCounter': release.application, 'bootloaderCounter': release.bootloader,
-            'softDevice': 'S112 7.3.0', 'systemAndAppSignatures': 2, 'comboSha256': release.combo_sha256}
+            'softDevice': 'S112 7.3.0', 'systemAndAppSignatures': 2, 'comboSha256': release.combo_sha256,
+            'comboFilename': combo_path.name, 'appSha256': release.app_sha256, 'systemSha256': sha(combined['sd_bl.bin'])}
 
 
 def main():

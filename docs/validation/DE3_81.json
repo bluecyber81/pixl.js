@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "firmware": "2.22.0-DE3.81",
+  "counter": 654,
+  "board": "LCD",
+  "status": "signed-preview",
+  "signedApplication": {
+    "sourceId": "85f0947a00471b74b45c86ccdd7ade4f7ba8269fc75e56974481fd61fd6e109a",
+    "productionInputs": 705,
+    "bytes": 362892,
+    "sha256": "632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918",
+    "ota": "Allmiibo_LCD_DE3_81_654_NUR_APP.zip",
+    "otaSha256": "6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719",
+    "threeIndependentArmBuildsAgreedOnBinAndHex": true,
+    "hostSuitesPassed": 162,
+    "hostSuitesExecuted": 162,
+    "flashReserveBytes": 9844
+  },
+  "bootloader": {
+    "counter": 21,
+    "payloadBytes": 26932,
+    "payloadSha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+    "regionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "flashReserveBytes": 1740,
+    "reproducibleBinAndHex": true,
+    "hostGroupsPassed": 12,
+    "armResumeDisplayChecks": {
+      "objectEvents": 101,
+      "redraws": 1
+    }
+  },
+  "androidCombo": {
+    "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip",
+    "bytes": 342335,
+    "sha256": "4ba60821ea685f00ade27162c0df462aa9c382980a96e9967f9b0cc682a8de09",
+    "softDevice": "Nordic S112 7.3.0",
+    "systemPayloadSha256": "aba8a0bedb8ad8cef3a00cdb865bdaaa8d7af0ed7daef4888c1ec6e4192694d0",
+    "phaseBytes": [
+      125000,
+      362892
+    ],
+    "signaturesVerified": 2,
+    "bothPhasesReadByNordicAndroidLibrary": "2.11.0 ArchiveInputStream on a JVM; no physical Android transfer observed by this check"
+  },
+  "dfuResumeModel": {
+    "system": {
+      "cutOffsets": [
+        40,
+        65576,
+        122920
+      ],
+      "resumeOffsets": [
+        0,
+        65536,
+        65536
+      ],
+      "payloadBytes": 125000,
+      "sha256": "aba8a0bedb8ad8cef3a00cdb865bdaaa8d7af0ed7daef4888c1ec6e4192694d0"
+    },
+    "application": {
+      "cutOffsets": [
+        40,
+        180264,
+        360488
+      ],
+      "resumeOffsets": [
+        0,
+        131072,
+        327680
+      ],
+      "payloadBytes": 362892,
+      "sha256": "632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918"
+    }
+  },
+  "hardware": {
+    "ownerConfirmed": [
+      "Firmware flashed; initial operation on one LCD reported."
+    ],
+    "unconfirmed": [
+      "Independent readback of the flashed app and bootloader",
+      "Physical Android DFU interruption and resumed Z21 display",
+      "DE3.81-specific NFC, sleep/wake and changed selection/error paths"
+    ]
+  },
+  "stableReference": "DE3.75/App648"
+}

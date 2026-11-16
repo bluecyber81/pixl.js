@@ -7,7 +7,7 @@ import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:648,version:'2.22.0-DE3.75',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:648,version:'2.22.0-DE3.75',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
  {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
  {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
   wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
@@ -33,6 +33,7 @@ const rows=[{path:'/Leer',kind:1,size:0},{path:'/Ordner',kind:1,size:0},{path:'/
 
 for (const [version, counter, document, bytes, binSha256] of [
   ['2.22.0-DE3.75', 648, 'DE3_75_PFS.json', 358304, '3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867'],
+  ['2.22.0-DE3.81', 654, 'DE3_81_PFS.json', 362892, '632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918'],
   ['2.22.0-DE3.80', 653, 'DE3_80_PFS.json', 362652, '34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8'],
   ['2.22.0-DE3.79', 652, 'DE3_79_PFS.json', 362652, 'd7d09513ae197c27ffce76707f8f764bf08568b1abd1372beaaa85e26d1eff0f'],
   ['2.22.0-DE3.77', 650, 'DE3_77_PFS.json', 362588, 'e8ff7f50571c988f2ade44fad601b00edd7f0e6c90fd880711fed0cb7d9cf055'],
@@ -85,7 +86,8 @@ for(const profile of profiles) {
     {firmwareVersion:'2.22.0-DE3.76',applicationCounter:649},
     {firmwareVersion:'2.22.0-DE3.77',applicationCounter:650},
     {firmwareVersion:'2.22.0-DE3.79',applicationCounter:652},
-    {firmwareVersion:'2.22.0-DE3.80',applicationCounter:653}
+    {firmwareVersion:'2.22.0-DE3.80',applicationCounter:653},
+    {firmwareVersion:'2.22.0-DE3.81',applicationCounter:654}
   ])
   assert.deepEqual(binding.defines,['LFS_NO_ASSERT','LFS_NO_DEBUG','LFS_NO_ERROR','LFS_NO_MALLOC','LFS_NO_WARN'])
   const module=new WebAssembly.Module(wasm)

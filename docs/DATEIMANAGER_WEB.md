@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.55.3
+
+Im Akkuverlauf unter **Gerät & Diagnose** siehst du Messdauer, Spannweite und Unterbrechungen. Der erste neue Messwert nach einer Pause markiert die Fortsetzung. Der CSV-Export enthält den Pausengrund in der fünften Spalte `pause_reason`. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
+
 ## Dateimanager 3.55.2
 
 Unter **Gerät & Diagnose → Startzeiten der Anwendung** lassen sich jetzt die Scanzeit von PackedFS, die Anzahl der Flash-Lesezugriffe und die gelesenen Bytes mit einem früheren Bericht vergleichen. Nach dem erneuten Lesen der JEDEC-Kennung bleibt die bereits ermittelte Laufwerksgröße in derselben Geräteverbindung sichtbar. Ein kontrollierter Vergleich setzt dasselbe Gerät und denselben Speicherbestand voraus. Die Diagnose kann auch Versionsbezeichnungen mit einem Testsuffix wie DE3.71t1 oder der Endung -PREP übernehmen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [3.55.2 für Windows und als Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2)

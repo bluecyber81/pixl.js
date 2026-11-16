@@ -1,5 +1,9 @@
 # Choose the correct installation path
 
+## LCD preview DE3.81 / App654
+
+For a compatible nRF52832 LCD with Packed LittleFS and a working project Secure DFU bootloader, use the application ZIP to update the app. To install Z21 as well, choose the combined ZIP in **nRF Device Firmware Update** on Android. The system upgrade requires the matching flash layout and signing key, an installed bootloader counter below 21 and S112 firmware ID 0x0103 or 0x0126. Let both phases finish. After reconnecting, check for DE3.81, app counter 654 and, after the combined update, bootloader counter 21 and S112 7.3.0. For a device still using SPIFFS, follow the migration guide first. [Application](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Combined ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Migration](MIGRATION_PFS1.md)
+
 Read the illustrated file manager's step-by-step guide for the required apps, backup, device update and storage migration. [English](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](https://bluecyber81.github.io/pixl.js/guide/index.html)
 
 ## Three downloads for the LCD Allmiibo

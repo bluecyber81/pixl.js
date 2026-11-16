@@ -12,9 +12,9 @@
         <div v-else class="actions">
           <a :href="downloadUrl" :download="entry.file">{{ text.download }}</a>
           <a :href="dfuUrl" target="_blank" rel="noopener">{{ text.dfu }}</a>
-          <a v-if="entry.id === 'de3.80-lcd-app'" :href="systemGuide">{{ text.systemGuide }}</a>
           <a v-if="androidUrl" :href="androidUrl" rel="noreferrer" :aria-label="text.android + ' · ' + entry.version">{{ text.android }}</a>
         </div>
+        <p v-if="entry.id === 'de3.81-lcd-app'"><a :href="systemGuide">{{ text.systemGuide }}</a></p>
         <details><summary>{{ text.details }}</summary><p>{{ entry.file }}</p><p>{{ text.hash }} (SHA-256): <code>{{ entry.sha256 }}</code></p></details>
       </div>
       <p v-if="packages.some(item => item.androidUrl && !item.newer && !item.profileMismatch)" class="hint">{{ text.androidHint }}</p>
@@ -33,7 +33,7 @@ import { UPDATE_TARGET } from '../lib/update-target.js';
 import { nrfDfuLink } from '../../public/dfu/nrf-dfu-link.mjs';
 const props=defineProps({session:{type:Object,default:()=>({})},boot:{type:Object,default:null},locale:{type:String,default:'de_DE'}});
 const text=computed(()=>firmwarePackageText(props.locale));
-const systemGuide = computed(() => deploymentPath(props.locale.startsWith('de') ? 'guide/index.html' : 'guide/en.html') + '#android-de380');
+const systemGuide = computed(() => deploymentPath(props.locale.startsWith('de') ? 'guide/index.html' : 'guide/en.html') + '#android-de381');
 const packages=computed(()=>releases.packages.map(entry=>({
   entry, ...packagePresentation(entry, props.session, props.boot), androidUrl:nrfDfuLink(entry)
 })));
