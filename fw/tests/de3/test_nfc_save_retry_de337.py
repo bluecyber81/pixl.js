@@ -47,6 +47,8 @@ static bool m_active_slot_persist=true,m_tag_ready=true;
 static void app_timer_stop(int timer){assert(timer==1);}
 static void app_timer_start(int timer,int ticks,void*ctx){(void)timer;(void)ticks;(void)ctx;}
 #define APP_TIMER_TICKS(n) (n)
+#define NRF_SUCCESS 0
+#define FAILED 3
 #define VFS_OK 0
 #define VFS_ERR_NOOBJ -1
 #define DE3_STORAGE_IO_ERROR 1
@@ -63,7 +65,7 @@ static int amiidb_api_slot_update(uint8_t slot,ntag_t*tag){
 static int amiidb_api_slot_read(uint8_t slot,ntag_t*tag){
  assert(slot==8);reads++;memset(tag,0,sizeof(*tag));tag->type=NTAG_215;tag->data[16]=0x88;return 0;
 }
-static void ntag_store_new_rand(ntag_t*tag){memset(tag,0,sizeof(*tag));tag->type=NTAG_215;}
+static int ntag_store_new_rand(ntag_t*tag){memset(tag,0,sizeof(*tag));tag->type=NTAG_215;return 0;}
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t*app,int text){(void)app;(void)text;errors++;}
 '''+function(scene,"ntag_update_cb")+function(scene,"amiidb_scene_amiibo_data_list_update")+r'''
 static void pump(void){for(unsigned i=0;i<1000;i++){nfc_callback(NULL,HAL_NFC_EVENT_FIELD_OFF,NULL,0);ntag_emu_process_pending();}}

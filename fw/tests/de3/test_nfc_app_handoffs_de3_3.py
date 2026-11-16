@@ -28,6 +28,8 @@ static uint32_t ntag_emu_get_generation(void){return 37;}
 static void app_timer_stop(int timer){assert(timer==1);stopped++;}
 static void app_timer_start(int timer,int ticks,void*ctx){assert(timer==1&&ticks==1000&&ctx);started++;}
 #define APP_TIMER_TICKS(n) (n)
+#define NRF_SUCCESS 0
+#define FAILED 3
 #define VFS_OK 0
 #define VFS_ERR_NOOBJ -1
 #define DE3_STORAGE_IO_ERROR 1
@@ -60,7 +62,7 @@ static app_amiidb_t *active_app;
 static ntag_t old_tag;
 static int amiidb_api_slot_update(uint8_t slot,ntag_t*tag){saves++;saved_index=slot;saved_value=tag->data[16];return VFS_OK;}
 static int amiidb_api_slot_read(uint8_t slot,ntag_t*tag){assert(saves==1&&saved_index==2);memset(tag,0,sizeof(*tag));tag->data[16]=slot;return read_result;}
-static void ntag_store_new_rand(ntag_t*tag){memset(tag,0,sizeof(*tag));}
+static int ntag_store_new_rand(ntag_t*tag){memset(tag,0,sizeof(*tag));return 0;}
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t*app,int text){(void)app;(void)text;errors++;}
 static bool ntag_emu_set_tag(const ntag_t*tag) {assert(m_active_slot==8&&m_active_slot_persist&&tag->data[16]==8);emulated++;return true;}
 static bool ntag_emu_prepare_change(void);

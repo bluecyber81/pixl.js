@@ -55,7 +55,8 @@ try {
       const download = await downloadEvent;
       assert.match(download.suggestedFilename(), /\.csv$/);
       const bytes = await readFile(await download.path(),'utf8');
-      assert.match(bytes,/;4187;true;reading\r\n/);
+      assert.match(bytes,/time_utc;battery_mV;charging_active;entry;pause_reason\r\n/);
+      assert.match(bytes,/;4187;true;reading;\r\n/);
       assert.equal((await area.boundingBox()).width <= width,true);
       assert.ok(await area.evaluate(el => el.scrollWidth <= el.clientWidth + 1));
       await capture(area, 'Akkuverlauf');

@@ -18,6 +18,7 @@ typedef struct {unsigned max_ntags,focus,game_id;}amiibo_view_t;
 typedef struct {char cur_fav_dir[64];amiidb_fav_t cur_fav;amiidb_fav_array_t fav_array;amiibo_view_t*p_amiibo_view;const db_amiibo_t*cur_amiibo;}app_amiidb_t;
 static unsigned errors,generated,listed=950,fail_generation;static int read_error;static db_amiibo_t db[950];
 static bool m_tag_ready=true;
+static uint8_t m_active_focus;
 static void amiibo_view_set_max_ntags(amiibo_view_t*v,unsigned n){v->max_ntags=n;}
 static void amiibo_view_set_focus(amiibo_view_t*v,unsigned n){v->focus=n;}
 static unsigned amiibo_view_get_focus(amiibo_view_t*v){return v->focus;}

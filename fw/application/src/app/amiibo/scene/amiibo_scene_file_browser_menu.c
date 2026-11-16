@@ -136,7 +136,11 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_event_cb(mui_text
                 amiibo_scene_file_browser_show_error(app, VFS_ERR_NOMEM);
                 return;
             }
-            ntag_store_new_rand(ntag);
+            if (ntag_store_new_rand(ntag) != NRF_SUCCESS) {
+                mui_mem_free(ntag);
+                amiibo_scene_file_browser_show_messege(app, _T(FAILED));
+                return;
+            }
             size_t tag_size = _ntag_data_size(ntag);
             res = vfs_persist_write(p_driver, path, ntag->data, tag_size);
             mui_mem_free(ntag);
@@ -190,7 +194,11 @@ bool amiibo_batch_step(void) {
          * specific target immediately before its atomic creation. */
         res = amiibo_scene_file_browser_new_path(driver, path);
         if (res == VFS_OK) {
-            ntag_store_new_rand(batch_tag);
+            if (ntag_store_new_rand(batch_tag) != NRF_SUCCESS) {
+                amiibo_batch_release();
+                amiibo_scene_file_browser_show_messege(app, _T(FAILED));
+                return false;
+            }
             size_t size = _ntag_data_size(batch_tag);
             res = vfs_persist_write(driver, path, batch_tag->data, size);
             if (res >= 0) res = res == (int32_t)size ? VFS_OK : VFS_ERR_FAIL;

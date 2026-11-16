@@ -83,10 +83,10 @@ void amiibo_helper_replace_password(uint8_t *buffer, const uint8_t uuid[]) {
 
 // 使用uuid生成amiibo数据
 // operates on internal data layout
-void amiibo_helper_set_defaults(uint8_t *buffer, const uint8_t uuid[], bool tag_v3) {
+static ret_code_t amiibo_helper_set_defaults(uint8_t *buffer, const uint8_t uuid[], bool tag_v3) {
     // set keygen salt
     ret_code_t err_code = utils_rand_bytes(buffer + 0x1E8, 32);
-    APP_ERROR_CHECK(err_code);
+    if (err_code != NRF_SUCCESS) return err_code;
 
     // ntag data 2
     memcpy(buffer, Internal_StaticLock, 8);
@@ -105,6 +105,7 @@ void amiibo_helper_set_defaults(uint8_t *buffer, const uint8_t uuid[], bool tag_
     // auth magic value
     buffer[0x218] = 0;
     buffer[0x219] = 0;
+    return NRF_SUCCESS;
 }
 
 ret_code_t amiibo_helper_load_keys(const uint8_t *data) {
@@ -133,7 +134,8 @@ ret_code_t amiibo_helper_sign_new_ntag(ntag_t *old_ntag, ntag_t *new_ntag) {
     // encrypt
     amiibo_helper_get_uuid(new_ntag, new_uuid);
     amiibo_helper_replace_uuid(modified, new_uuid, tag_v3);
-    amiibo_helper_set_defaults(modified, new_uuid, tag_v3);
+    ret_code_t err_code = amiibo_helper_set_defaults(modified, new_uuid, tag_v3);
+    if (err_code != NRF_SUCCESS) return err_code;
     nfc3d_amiibo_pack(&amiibo_keys, modified, new_ntag->data, tag_v3);
 
     return NRF_SUCCESS;
@@ -198,12 +200,11 @@ static ret_code_t amiibo_helper_generate_amiibo_ntag215(uint32_t head, uint32_t 
         return NRF_ERROR_INVALID_DATA;
     }
 
-    ntag->type = NTAG_215;
-    
-    // 随机uuid
-    uint8_t uuid[UUID_SIZE];
-    ntag_store_new_rand(ntag);
-    amiibo_helper_get_uuid(ntag, uuid);
+    /* Generate both random inputs before committing the output tag. A failed
+     * source must not fall back to the template UID or destroy the old tag. */
+    uint8_t uuid[UUID_SIZE] = {0x04};
+    ret_code_t err_code = utils_rand_bytes(uuid + 1, UUID_SIZE - 1);
+    if (err_code != NRF_SUCCESS) return err_code;
 
     uint8_t modified[NTAG215_SIZE];
     memset(modified, 0, NTAG215_SIZE);
@@ -213,9 +214,12 @@ static ret_code_t amiibo_helper_generate_amiibo_ntag215(uint32_t head, uint32_t 
     int32_to_bytes_le(head, modified + AMII_ID_OFFSET2);
     int32_to_bytes_le(tail, modified + AMII_ID_OFFSET2 + 4);
     // 填充特定数据
-    amiibo_helper_set_defaults(modified, uuid, false);
+    err_code = amiibo_helper_set_defaults(modified, uuid, false);
+    if (err_code != NRF_SUCCESS) return err_code;
 
     // encrypt
+    extern const ntag_t default_ntag215;
+    memcpy(ntag, &default_ntag215, sizeof(*ntag));
     nfc3d_amiibo_pack(&amiibo_keys, modified, ntag->data, false);
 
     // 最后20位字节，非常关键

@@ -20,6 +20,8 @@ APP_TIMER_DEF(m_amiibo_gen_delay_timer);
 static uint32_t m_generate_generation;
 static bool m_tag_ready;
 static uint8_t m_active_slot;
+/* Last successfully entered/updated detail; rejected input must not move it. */
+static uint8_t m_active_focus;
 static bool m_active_slot_persist;
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app, const char *message);
 
@@ -86,7 +88,10 @@ static void amiidb_scene_amiibo_game_list_init(app_amiidb_t *app) {
 }
 
 static void amiidb_scene_amiibo_game_list_update(app_amiidb_t *app) {
-    if (!ntag_emu_prepare_change()) return;
+    if (!ntag_emu_prepare_change()) {
+        amiibo_view_set_focus(app->p_amiibo_view, m_active_focus);
+        return;
+    }
     uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
     if (focus >= app->result_count || focus >= LIST_VIEW_ITEM_MAX_COUNT || !app->result_items[focus]) {
         m_tag_ready = false;
@@ -102,8 +107,13 @@ static void amiidb_scene_amiibo_game_list_update(app_amiidb_t *app) {
 static void amiidb_scene_amiibo_data_list_init(app_amiidb_t *app) {
     if (!ntag_emu_prepare_change()) return;
     int32_t result = amiidb_api_slot_read(app->cur_slot_index, &app->ntag);
-    if (result == VFS_ERR_NOOBJ) ntag_store_new_rand(&app->ntag);
-    else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
+    if (result == VFS_ERR_NOOBJ) {
+        if (ntag_store_new_rand(&app->ntag) != NRF_SUCCESS) {
+            m_tag_ready = false;
+            amiidb_scene_amiibo_detail_error_msg(app, _T(FAILED));
+            return;
+        }
+    } else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
     m_active_slot = app->cur_slot_index;
     m_active_slot_persist = true;
     ntag_emu_set_tag(&app->ntag);
@@ -121,8 +131,14 @@ static void amiidb_scene_amiibo_data_list_update(app_amiidb_t *app) {
     }
     uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
     int32_t result = amiidb_api_slot_read(focus, &app->ntag);
-    if (result == VFS_ERR_NOOBJ) ntag_store_new_rand(&app->ntag);
-    else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
+    if (result == VFS_ERR_NOOBJ) {
+        if (ntag_store_new_rand(&app->ntag) != NRF_SUCCESS) {
+            m_tag_ready = false;
+            amiibo_view_set_focus(app->p_amiibo_view, m_active_slot);
+            amiidb_scene_amiibo_detail_error_msg(app, _T(FAILED));
+            return;
+        }
+    } else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
     m_active_slot = focus;
     m_active_slot_persist = true;
     ntag_emu_set_tag(&app->ntag);
@@ -179,7 +195,10 @@ static void amiidb_scene_amiibo_fav_list_init(app_amiidb_t *app) {
 }
 
 static void amiidb_scene_amiibo_fav_list_update(app_amiidb_t *app) {
-    if (!ntag_emu_prepare_change()) return;
+    if (!ntag_emu_prepare_change()) {
+        amiibo_view_set_focus(app->p_amiibo_view, m_active_focus);
+        return;
+    }
     uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
     if (focus >= amiidb_fav_array_size(app->fav_array)) {
         m_tag_ready = false;
@@ -228,6 +247,7 @@ static void amiidb_scene_amiibo_view_on_event(amiibo_view_event_t event, amiibo_
         } else if (app->prev_scene_id == AMIIDB_SCENE_AMIIBO_SEARCH) {
             amiidb_scene_amiibo_search_update(app);
         }
+        if (m_tag_ready) m_active_focus = amiibo_view_get_focus(app->p_amiibo_view);
     }
 }
 static void amiidb_scene_amiibo_detail_menu_msg_box_no_key_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
@@ -287,6 +307,7 @@ void amiidb_scene_amiibo_detail_on_enter(void *user_data) {
 
     if (!m_tag_ready) return;
 
+    m_active_focus = amiibo_view_get_focus(app->p_amiibo_view);
     ntag_emu_set_update_cb(ntag_update_cb, app);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_DETAIL);
     int32_t err_code =

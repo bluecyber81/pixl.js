@@ -1,0 +1,22 @@
+{
+  "version": "3.55.3",
+  "firmwarePreview": "2.22.0-DE3.81",
+  "appCounter": 654,
+  "previewBootloader": "Z21",
+  "stableFirmware": "2.22.0-DE3.75",
+  "windowsWebTests": { "passed": 1650, "failed": 0, "skipped": 0 },
+  "productionBuildChecks": { "root": 22, "pages": 22 },
+  "batteryHistoryBrowser": {
+    "browser": "Chrome 157.0.8103.51",
+    "base": "/pixl.js/",
+    "device": "synthetic",
+    "observations": [
+      { "locale": "de-DE", "viewportWidth": 390, "csvDataRows": 7, "csvColumns": 5, "chartLinesAcrossGaps": 0 },
+      { "locale": "en-GB", "viewportWidth": 1200, "csvDataRows": 7, "csvColumns": 5, "chartLinesAcrossGaps": 0 }
+    ],
+    "covered": ["manual pause and resume", "hidden tab and resumed sampling", "actual browser CSV download"]
+  },
+  "firmwareEvidence": "DE3_81.json",
+  "storageProfileEvidence": "DE3_81_PFS.json",
+  "physicalScope": "An LCD owner reported flashing DE3.81 and initial operation. Browser tests used simulated readings. Physical DFU interruption and resumption on Z21 remain unconfirmed."
+}

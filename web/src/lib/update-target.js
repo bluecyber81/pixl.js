@@ -5,7 +5,7 @@ export const UPDATE_TARGET = Object.freeze({
   profileSchema: 1, profileRevision: '2026-11-15-de375-z19',
   id: 'allmiibo-lcd-de3.75-z19-s112-7.3.0',
   application: Object.freeze({ version: '2.22.0-DE3.75', counter: 648 }),
-  localApplications: Object.freeze({ '2.22.0-DE3.64': 636, '2.22.0-DE3.65': 637, '2.22.0-DE3.66': 638, '2.22.0-DE3.67': 639, '2.22.0-DE3.68': 640, '2.22.0-DE3.69': 641, '2.22.0-DE3.70': 642, '2.22.0-DE3.71': 643, '2.22.0-DE3.71t1': 644, '2.22.0-DE3.72': 645, '2.22.0-DE3.73': 646, '2.22.0-DE3.74': 647, '2.22.0-DE3.76': 649, '2.22.0-DE3.77': 650, '2.22.0-DE3.79': 652, '2.22.0-DE3.80': 653 }),
+  localApplications: Object.freeze({ '2.22.0-DE3.64': 636, '2.22.0-DE3.65': 637, '2.22.0-DE3.66': 638, '2.22.0-DE3.67': 639, '2.22.0-DE3.68': 640, '2.22.0-DE3.69': 641, '2.22.0-DE3.70': 642, '2.22.0-DE3.71': 643, '2.22.0-DE3.71t1': 644, '2.22.0-DE3.72': 645, '2.22.0-DE3.73': 646, '2.22.0-DE3.74': 647, '2.22.0-DE3.76': 649, '2.22.0-DE3.77': 650, '2.22.0-DE3.79': 652, '2.22.0-DE3.80': 653, '2.22.0-DE3.81': 654 }),
   bootloader: Object.freeze({ name: 'BL8', counter: 11, address: 0x77000, bytes: 28672,
     sha256: 'add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130',
     paramsAddress: 0x7e000, settingsAddress: 0x7f000, settingsVersion: 2 }),
@@ -22,6 +22,8 @@ export const UPDATE_TARGET = Object.freeze({
     sha256: '51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd' }),
   bootloaderZ20: Object.freeze({ name: 'Z20', counter: 20,
     sha256: '4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db' }),
+  bootloaderZ21: Object.freeze({ name: 'Z21', counter: 21,
+    sha256: 'd3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb' }),
   softDevice: Object.freeze({ variant: 112, version: 7003000, fwid: 0x126 }),
   hardware: Object.freeze({ chip: 0x52832, variant: 0x41414530, flash: 524288, ram: 65536, page: 4096 })
 });

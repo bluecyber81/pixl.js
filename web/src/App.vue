@@ -330,7 +330,7 @@
       <DisplayPhoto v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
       <BatteryVoltageHistory v-if="visitedWorkspaces.has('device')" :key="sessionGeneration" :locale="language"
-        :connected="connected" :blocked="batteryHistoryBlocked" :read-power="read_battery_history" />
+        :connected="connected" :blocked="batteryHistoryBlocked" :blocked-reason="!devicePanelOpen || activeWorkspace !== 'device' ? 'view' : 'busy'" :read-power="read_battery_history" />
       <StartupDiagnostics v-if="visitedWorkspaces.has('device')" :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
         <div><dt>{{ $t('info.application') }}</dt><dd>{{ browserVersionLabel }}</dd></div>
@@ -572,6 +572,7 @@
   <footer class="source-footer">
     <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'DE3.81 / Z21 · Prüfnachweise (ZIP)' : 'DE3.81 / Z21 · test evidence (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'App648-Prüfpaket für ChatGPT (ZIP)' : 'App648 test kit for ChatGPT (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>

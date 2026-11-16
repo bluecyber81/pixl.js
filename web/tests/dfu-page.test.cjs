@@ -195,6 +195,8 @@ test('only a unique bundled catalogue ID is preselected, with no load or transfe
 test('bundled Web and Android actions honor fresh bootloader, SoftDevice and application counters', () => {
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
     for (const [id, app, bl, sd, allowed] of [
+        ['de3.81-lcd-app', 653, 20, 294, true], ['de3.81-lcd-app', 654, 21, 294, true],
+        ['de3.81-lcd-app', 655, 21, 294, false], ['de3.81-lcd-app', 653, 20, 259, false],
         ['de3.80-lcd-app', 652, 19, 294, true], ['de3.80-lcd-app', 653, 20, 294, true],
         ['de3.80-lcd-app', 654, 20, 294, false], ['de3.80-lcd-app', 652, 15, 294, false],
         ['de3.80-lcd-app', 652, 20, 259, false],

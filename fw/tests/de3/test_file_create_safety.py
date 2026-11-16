@@ -35,6 +35,7 @@ HARNESS = r'''
 #include <string.h>
 #include "vfs.h"
 #include "ntag_def.h"
+#define NRF_SUCCESS 0
 #define CHECK(x) do { if(!(x)){fprintf(stderr,"CHECK line %d: %s\n",__LINE__,#x);exit(71);} } while(0)
 #define MUI_TEXT_INPUT_EVENT_CONFIRMED 1
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 1
@@ -93,7 +94,7 @@ static int32_t vfs_persist_write(vfs_driver_t*d,const char*p,const void*b,size_t
  if(writes==write_fail_at)return VFS_ERR_NOSPC;
  CHECK(n==sizeof(stored));memcpy(stored,b,n);return (int32_t)n;
 }
-static void ntag_store_new_rand(ntag_t*n){memset(n,0,sizeof(*n));memset(n->data,0x42,NTAG_DATA_SIZE);n->type=NTAG_215;}
+static int ntag_store_new_rand(ntag_t*n){memset(n,0,sizeof(*n));memset(n->data,0x42,NTAG_DATA_SIZE);n->type=NTAG_215;return 0;}
 static void amiibo_scene_file_browser_show_messege(app_amiibo_t*a,const char*m){
  (void)a;errors++;snprintf(last_error,sizeof(last_error),"%s",m);
 }

@@ -1,12 +1,12 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
-## Startvergleich · Dateimanager 3.55.2
+## Dateimanager 3.55.3
 
-Unter **Gerät & Diagnose → Startzeiten der Anwendung** lassen sich jetzt die Scanzeit von PackedFS, die Anzahl der Flash-Lesezugriffe und die gelesenen Bytes mit einem früheren Bericht vergleichen. Nach dem erneuten Lesen der JEDEC-Kennung bleibt die bereits ermittelte Laufwerksgröße in derselben Geräteverbindung sichtbar. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [3.55.2 für Windows und als Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2)
+Im Akkuverlauf unter **Gerät & Diagnose** siehst du Messdauer, Spannweite und Unterbrechungen. Der erste neue Messwert nach einer Pause markiert die Fortsetzung. Der CSV-Export enthält den Pausengrund in der fünften Spalte `pause_reason`. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
 
-## LCD-Update fürs Android-Handy
+## LCD-Vorschau fürs Android-Handy
 
-DE3.80 / App653 gibt es als signierte App oder als Kombi mit Bootloader Z20 und Nordic S112 7.3.0. Die Kombi in nRF Device Firmware Update auswählen und beide Übertragungen abschließen lassen. Diese Pakete sind für das LCD mit bereits eingerichtetem Packed LittleFS (PFS1). DE3.75 bleibt die am Gerät geprüfte stabile Ausgabe. [Android ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip) · [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_DE3_80_653_NUR_APP.zip) · [Web 3.55.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.1)
+DE3.81 / App654 hält die markierte Figur bei einem abgelehnten Wechsel und ermöglicht einen neuen Versuch, wenn AmiiboLink keine Tagdaten erzeugen kann. Z21 zeigt beim Fortsetzen einer DFU-Übertragung wieder den Empfang an. Auf einem LCD hat der Besitzer den Flash und die erste Funktion bestätigt. Die Wiederaufnahme nach einem echten Funkabbruch ist offen. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android-Kombi mit S112 7.3.0 und Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Quellen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip) Die vollständige ZIP lässt sich auf einem passenden LCD mit Packed LittleFS über nRF Device Firmware Update installieren. [Stabile DE3.75](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
 
 ## Hardwarediagnose und Akkuverlauf · Dateimanager 3.55.0
 

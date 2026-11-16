@@ -1,5 +1,9 @@
 # LCD-Firmware, Bootloader und SoftDevice
 
+## DE3.81 / App654 und Z21 · LCD-Vorschau
+
+DE3.81 / App654 hält die markierte Figur bei einem abgelehnten Wechsel und ermöglicht einen neuen Versuch, wenn AmiiboLink keine Tagdaten erzeugen kann. Z21 zeigt beim Fortsetzen einer DFU-Übertragung wieder den Empfang an. Auf einem LCD hat der Besitzer den Flash und die erste Funktion bestätigt. Die Wiederaufnahme nach einem echten Funkabbruch ist offen. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android-Kombi mit S112 7.3.0 und Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Quellen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
+
 ## DE3.80 / App653 und Bootloader Z20 · LCD-Testversion
 
 Die App reduziert beim Einbinden eines großen Figurenspeichers die Zahl der Flash-Lesezugriffe. Mit 952 Modellfiguren wurden 3.257 statt 3.433 Zugriffe gemessen. Z20 speichert nach jeweils 64 KiB bestätigter DFU-Nutzdaten einen Zwischenstand. Beim ersten Update von Z19 empfängt Z19 die Systemphase. Z20 übernimmt die anschließende App-Phase. Die normale Startzeit und ein unterbrochener Bluetooth-Transfer auf dem Gerät stehen als Praxistests aus. [Android-Kombi und App](https://github.com/bluecyber81/pixl.js/releases/tag/de3.80) · [Prüfnachweis](validation/DE3_80.json)

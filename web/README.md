@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Akkuverlauf im Dateimanager 3.55.3
+
+Der Akkuverlauf zeigt Messdauer, Spannweite und Pausengründe. Nach einer Pause markiert der erste neue Messwert die Fortsetzung. Die CSV enthält Zeit, Spannung, Ladezustand, Ereignis und Pausengrund. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
+
 ## Startvergleich im Dateimanager 3.55.2
 
 Unter **Gerät & Diagnose → Startzeiten der Anwendung** lassen sich jetzt die Scanzeit von PackedFS, die Anzahl der Flash-Lesezugriffe und die gelesenen Bytes mit einem früheren Bericht vergleichen. Nach dem erneuten Lesen der JEDEC-Kennung bleibt die bereits ermittelte Laufwerksgröße in derselben Geräteverbindung sichtbar. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [3.55.2 für Windows und als Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2)

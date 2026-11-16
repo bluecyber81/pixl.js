@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.75",
   "counter": 648,
   "board": "LCD",
-  "web_version": "3.55.2",
+  "web_version": "3.55.3",
   "web_publication_date": "2026-11-16",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
@@ -51,7 +51,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -110,10 +110,11 @@
         "DE3.76/649 (preview)",
         "DE3.77/650 (preview)",
         "DE3.79/652 (preview)",
-        "DE3.80/653 (preview)"
+        "DE3.80/653 (preview)",
+        "DE3.81/654 (preview)"
       ],
       "stable": "DE3.75/648",
-      "prerelease": "DE3.80/653"
+      "prerelease": "DE3.81/654"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
     "backup_resume": "Shows freshly read and revalidated reused file counts after a completed backup.",
@@ -148,7 +149,8 @@
     "battery_voltage": "The device power panel and diagnostic overview show the cached voltage in volts to three decimal places, with a German decimal comma and an English decimal point.",
     "web_3_55_0": "Read the cached three-byte flash ID, associate a confirmed battery label locally per device and record a voluntary battery voltage trace and inspect pixel-aligned LCD photos.",
     "web_3_55_1": "Recognize the signed DE3.80 application on Z19 and Z20, and distinguish the flash driver capacity table from the mounted storage layout.",
-    "web_3_55_2": "Compare startup scan time, flash reads and bytes read, retain valid PREP and test version labels, keep the observed layout size within the current connection and identify the device-observed DE3.80 LCD preview."
+    "web_3_55_2": "Compare startup scan time, flash reads and bytes read, retain valid PREP and test version labels, keep the observed layout size within the current connection and identify the device-observed DE3.80 LCD preview.",
+    "web_3_55_3": "Battery sampling records why it paused and marks resume after a fresh observation. Display the measured range and duration and export the fifth CSV field pause_reason. Offer signed App654 / Z21 with a separate app-only path."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -161,9 +163,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_55_2.json",
+  "web_evidence": "docs/validation/WEB3_55_3.json",
   "device_readback_evidence": "docs/validation/DE3_75_LCD_CHECK.json",
-  "web_device_readback_pending_scope": "DE3.80/App653 was observed on one LCD in Web 3.55.1. The updated Web 3.55.2 startup comparison and hardware profile still need a real-device session.",
+  "web_device_readback_pending_scope": "Web 3.55.3 battery history and its CSV export were qualified with synthetic readings and browser checks. Physical Web 3.55.3 telemetry and an interrupted Android DFU with Z21 remain open.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
@@ -206,33 +208,33 @@
   "device_validation_scope": "One LCD running App648, with four owner-reported list-return and wake observations in German with resume on, plus confirmation that a known figure was recognized by the Switch. Animation was not recorded. Hardware DFU interruption and NFC endurance remain open.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "firmware_preview": {
-    "version": "2.22.0-DE3.80",
-    "counter": 653,
-    "source_id": "ca55c5555307609be7ab5e7e202b0af00a2609d69df7e7a1f6d5f35a2d46bf13",
-    "application_sha256": "34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8",
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
-    "ota_sha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
-    "hardware_acceptance": "startup-and-system-readback-on-one-lcd",
-    "readback_evidence": "docs/validation/DE3_80_LCD_READBACK.json",
-    "evidence": "docs/validation/DE3_80.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.80",
+    "version": "2.22.0-DE3.81",
+    "counter": 654,
+    "source_id": "85f0947a00471b74b45c86ccdd7ade4f7ba8269fc75e56974481fd61fd6e109a",
+    "application_sha256": "632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_81_654_NUR_APP.zip",
+    "ota_sha256": "6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719",
+    "hardware_acceptance": "owner-reported-flash-and-initial-operation",
+    "evidence": "docs/validation/DE3_81.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.81",
     "android_combined_package": {
-      "path": "fw/releases/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip",
-      "sha256": "638ad4876af5a034059b786de9ca64b3c4846952f9af04e6317fffd857959ead",
-      "bytes": 341464,
+      "path": "fw/releases/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip",
+      "sha256": "4ba60821ea685f00ade27162c0df462aa9c382980a96e9967f9b0cc682a8de09",
+      "bytes": 342335,
       "softdevice": "S112 7.3.0",
-      "bootloader_counter": 20,
-      "application_counter": 653,
-      "release_url": "https://github.com/bluecyber81/pixl.js/releases/download/de3.80/Allmiibo_LCD_S112_7_3_0_Z20_DE3_80_653_KOMPLETT.zip"
-    }
+      "bootloader_counter": 21,
+      "application_counter": 654,
+      "release_url": "https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip"
+    },
+    "host_firmware_suites": 162
   },
   "bootloader_preview": {
-    "code_version": "Z20",
-    "counter": 20,
-    "source": "bootloader-z20",
-    "region_sha256": "4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db",
-    "payload_sha256": "64274549a10e77f602381f405cfbd59848928d87f45dc6f0c2fd10de773b3bac",
-    "hardware_acceptance": "boot-region-readback-on-one-lcd",
-    "readback_evidence": "docs/validation/DE3_80_LCD_READBACK.json"
+    "code_version": "Z21",
+    "counter": 21,
+    "source": "bootloader-z21",
+    "region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "payload_sha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+    "hardware_acceptance": "pending-independent-boot-readback",
+    "evidence": "docs/validation/DE3_81.json"
   }
 }

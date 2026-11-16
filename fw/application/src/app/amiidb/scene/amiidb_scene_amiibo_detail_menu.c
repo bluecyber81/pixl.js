@@ -120,10 +120,13 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
         }
 
         err_code = amiibo_helper_rand_amiibo_uuid(ntag_current);
-        APP_ERROR_CHECK(err_code);
         if (err_code == NRF_SUCCESS) {
             ntag_emu_set_tag(&app->ntag);
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+        } else {
+            /* Invalid imported tag data or a random-source failure is a
+             * recoverable action error. The helper preserves the old tag. */
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
         }
 
         break;

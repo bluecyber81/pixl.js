@@ -145,11 +145,8 @@ static void amiibo_detail_view_on_input(mui_view_t *p_view, mui_input_event_t *e
         case INPUT_KEY_LEFT:
             if (!p_amiibo_detail_view->max_ntags) break;
             p_amiibo_detail_view->navigate_direction = -1;
-            if (p_amiibo_detail_view->focus > 0) {
-                p_amiibo_detail_view->focus--;
-            } else {
-                p_amiibo_detail_view->focus = p_amiibo_detail_view->max_ntags - 1;
-            }
+            /* The scene commits focus only after the selected tag loads.
+             * A pending-save veto must keep the current position visible. */
 
             if (p_amiibo_detail_view->event_cb) {
                 p_amiibo_detail_view->event_cb(AMIIBO_DETAIL_VIEW_EVENT_UPDATE, p_amiibo_detail_view);
@@ -158,11 +155,6 @@ static void amiibo_detail_view_on_input(mui_view_t *p_view, mui_input_event_t *e
         case INPUT_KEY_RIGHT:
             if (!p_amiibo_detail_view->max_ntags) break;
             p_amiibo_detail_view->navigate_direction = 1;
-            if (p_amiibo_detail_view->focus < p_amiibo_detail_view->max_ntags - 1) {
-                p_amiibo_detail_view->focus++;
-            } else {
-                p_amiibo_detail_view->focus = 0;
-            }
 
             if (p_amiibo_detail_view->event_cb) {
                 p_amiibo_detail_view->event_cb(AMIIBO_DETAIL_VIEW_EVENT_UPDATE, p_amiibo_detail_view);
