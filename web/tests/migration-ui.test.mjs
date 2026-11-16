@@ -30,7 +30,7 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('latest target and simulated profile show DE3.75 while an inspected DE3.65 device keeps its own version',async()=>{
+test('the stable reference stays DE3.75 even with App649 approved and DE3.65 connected',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
@@ -278,7 +278,7 @@ test('3.26 active migration stays open and separate full target verification is 
 
 test('T1 storage qualification is listed separately without implying a continuous 643 approval',async()=>{
  const h=mount({approved:true});try{
-  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644 + DE3.72–DE3.75 / 645–648');
+  assert.equal(h.vm.capacityProfileLabel,'DE3.55–DE3.70 / 627–642 + DE3.71t1 / 644 + DE3.72–DE3.76 / 645–649');
   assert.match(text(h.root),/DE3\.71t1 \/ 644/);assert.doesNotMatch(h.vm.capacityProfileLabel,/627–644|DE3\.55–DE3\.71/);
   h.props.language='en';await Vue.nextTick();assert.match(text(h.root),/DE3\.55–DE3\.70 \/ 627–642 \+ DE3\.71t1 \/ 644/);
  }finally{h.app.unmount()}

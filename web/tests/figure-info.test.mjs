@@ -141,3 +141,15 @@ test('QR is local SVG for a fixed public URL and vendor source stays pinned', ()
   assert.equal(crypto.createHash('sha256').update(vendor).digest('hex'),'ea91d7118a5395289170da848b7c6758b996163bfbccf312591ab65a4911b7c0');
   assert.match(fs.readFileSync(new URL('../third-party/qrcode-generator/LICENSE',import.meta.url),'utf8'),/Permission is hereby granted/);
 });
+
+test('the two Ocarina products use distinct Nintendo figure photos and information links independently of the upstream revision', () => {
+  for (const [id, photo, slug] of [
+    ['0100000004fd0902', 'char28', 'young-link'], ['0101000004ff0902', 'char29', 'young-zelda'],
+  ]) {
+    const image = new URL(publicFigureImage(id.toUpperCase(), 'a'.repeat(40)));
+    assert.equal(image.origin, 'https://assets.nintendo.com');
+    assert.ok(image.pathname.endsWith('NVL_AK_' + photo + '_1_R_ad-0'));
+    assert.equal(publicFigureLink(id), 'https://www.nintendo.com/us/amiibo/detail/' + slug + '-the-legend-of-zelda-ocarina-of-time-series/');
+  }
+  assert.match(publicFigureImage('01000000037c0002'), /icon_01000000-037c0002\.png$/);
+});

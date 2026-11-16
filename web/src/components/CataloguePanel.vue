@@ -31,7 +31,7 @@
       <GameGuide :game="selectedGame" :de="de" />
       <p class="presence-scope">{{ de ? 'Die Auswahl enthält Katalog-IDs mit belegter Spielzuordnung. Mit dem Bestandsfilter kannst du die Treffer auf dein Gerät eingrenzen.' : 'This selection lists catalogue IDs with a documented game association. Use the collection filter to show matches from your device.' }}</p>
     </template>
-    <p class="gallery-note">{{ de ? 'Bilder sind optional und werden nur für die aktuelle Seite von GitHub geladen. Dabei werden die öffentliche Figuren-ID und deine IP-Adresse sichtbar; keine Gerätedaten.' : 'Images are optional and load from GitHub for the current page only. This exposes the public figure ID and your IP address, not device data.' }}</p>
+    <p class="gallery-note">{{ de ? 'Bilder kommen von GitHub oder Nintendo. Zum ersten Laden brauchst du Internet. Der Anbieter sieht das angefragte Bild und deine IP-Adresse.' : 'Images come from GitHub or Nintendo. The first load requires internet access. The provider sees the requested image and your IP address.' }}</p>
     <details class="filter-details">
       <summary>{{ de ? 'Filter' : 'Filters' }}<span v-if="activeFilters" class="filter-count">{{ activeFilters }}</span></summary>
       <div class="filters">
@@ -134,28 +134,28 @@
     <ul class="entries">
       <li v-for="entry in result.entries" :key="entry.id" :class="['presence-' + presenceFor(entry.id).state, { selected: selectedId === entry.id }]" :data-presence="presenceFor(entry.id).state">
         <div v-if="showImages" class="entry-picture">
-          <img v-if="!failedImages.has(imageFor(entry.id))" :key="imageFor(entry.id)" :src="imageFor(entry.id)" :alt="entry.name" width="160" height="140" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" @error="imageFailed(entry.id, $event)" />
+          <img v-if="!failedImages.has(imageFor(entry.id))" :key="imageFor(entry.id)" :src="imageFor(entry.id)" :alt="catalogueDisplayName(entry, de)" width="160" height="140" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" @error="imageFailed(entry.id, $event)" />
           <span v-else class="image-placeholder"><span aria-hidden="true">◇</span>{{ de ? 'Bild nicht verfügbar' : 'Image unavailable' }}</span>
         </div>
         <button type="button" class="web-favorite" :aria-pressed="favoriteSet.has(entry.id)"
-          :aria-label="(de ? 'Webfavorit · ' : 'Web favourite · ') + entry.name"
+          :aria-label="(de ? 'Webfavorit · ' : 'Web favourite · ') + catalogueDisplayName(entry, de)"
           @click="toggleFavorite(entry.id, $event)">
           <span aria-hidden="true">{{ favoriteSet.has(entry.id) ? '★' : '☆' }}</span> {{ de ? 'Webfavorit' : 'Web favourite' }}
         </button>
-        <FigureDownload :entry="entry" :de="de" :blocked="blocked" :open-import="openImport" />
+        <FigureDownload :entry="entry" :display-name="catalogueDisplayName(entry, de)" :de="de" :blocked="blocked" :open-import="openImport" />
         <span class="presence-label">{{ presenceLabel(presenceFor(entry.id)) }}</span>
         <div v-if="presenceFor(entry.id).state === 'attention'" class="warning-reasons" role="list">
           <p v-for="reason in presenceFor(entry.id).reasons" :key="reason" role="listitem">{{ reasonText(reason) }}</p>
         </div>
         <small v-if="historical" class="observation-date">{{ observationDate }}</small>
         <span class="entry-series">{{ entry.series }}</span><FigureIdCopy :id="entry.id" :de="de" />
-        <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="releaseLabel(entry, today).state === 'upcoming'"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
-        <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in DE3.75 verfügbar' : 'Name available in DE3.75') : (de ? 'Kein Name in DE3.75' : 'No name in DE3.75') }}</small>
-        <button type="button" :aria-label="(de ? 'Details zu ' : 'Details for ') + entry.name" :disabled="blocked" :aria-expanded="selectedId === entry.id" @click="selectEntry(entry.id, $event)">{{ de ? 'Details und Bild' : 'Details and image' }}</button>
+        <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="['announced', 'upcoming'].includes(releaseLabel(entry, today).state)"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
+        <small class="firmware-name">{{ ocarinaFigureById.has(entry.id) ? (de ? 'Geräte-Datenbank ab DE3.76' : 'Device database from DE3.76') : entry.firmwareIdKnown ? (de ? 'Name in DE3.75 verfügbar' : 'Name available in DE3.75') : (de ? 'Kein Name in DE3.75' : 'No name in DE3.75') }}</small>
+        <button type="button" :aria-label="(de ? 'Details zu ' : 'Details for ') + catalogueDisplayName(entry, de)" :disabled="blocked" :aria-expanded="selectedId === entry.id" @click="selectEntry(entry.id, $event)">{{ de ? 'Details und Bild' : 'Details and image' }}</button>
       </li>
     </ul>
     <nav v-if="result.total" :aria-label="de ? 'Katalogseiten' : 'Catalogue pages'"><button type="button" :disabled="result.page <= 1" @click="changePage(result.page - 1)">{{ de ? 'Zurück' : 'Previous' }}</button><span>{{ result.page }} / {{ result.pages }}</span><button type="button" :disabled="result.page >= result.pages" @click="changePage(result.page + 1)">{{ de ? 'Weiter' : 'Next' }}</button></nav>
-    <details class="source-details"><summary>{{ de ? 'Quelle und Datenstand' : 'Source and data snapshot' }}</summary><p class="source">{{ de ? 'Geprüfter Datenabruf' : 'Snapshot checked' }}: {{ data.checkedDate }} · <a :href="data.sourceUrl" target="_blank" rel="noopener noreferrer">AmiiboAPI · {{ data.commit.slice(0, 8) }}</a></p><p class="source">{{ de ? 'Stand der Quelle, keine Vollständigkeitsgarantie. Varianten können zusätzliche Daten erfordern. Die Vorschau verbindet sich nicht mit einem Allmiibo.' : 'Source snapshot, not guaranteed complete. Variants may require additional data. The preview does not connect to an Allmiibo.' }}</p></details>
+    <details class="source-details"><summary>{{ de ? 'Quelle und Datenstand' : 'Source and data snapshot' }}</summary><p class="source">{{ de ? 'Geprüfter Datenabruf' : 'Snapshot checked' }}: {{ data.checkedDate }} · <a :href="data.sourceUrl" target="_blank" rel="noopener noreferrer">AmiiboAPI · {{ data.commit.slice(0, 8) }}</a></p><p class="source">{{ de ? 'Der Katalog ergänzt AmiiboAPI um Junger Link und Junge Zelda aus Ocarina of Time. Ihre Nintendo-Quellen stehen bei der jeweiligen Figur. Die Vorschau verbindet sich nicht mit einem Allmiibo.' : 'The catalogue supplements AmiiboAPI with Young Link and Young Zelda from Ocarina of Time. Their Nintendo sources appear in each figure’s details. The preview does not connect to an Allmiibo.' }}</p></details>
   </section>
 </template>
 <script setup>
@@ -165,7 +165,7 @@ import baseline from '../data/catalogue.json';
 import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '../lib/catalogue.js';
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import { publicFigureImage } from '../lib/figure-info.js';
-import { announcementGroups } from '../data/announced-figures.js';
+import { announcementGroups, ocarinaFigureById, catalogueDisplayName } from '../data/announced-figures.js';
 import { gameGuides } from '../data/game-guides.js';
 import GameGuide from './GameGuide.vue';
 import FigureDownload from './FigureDownload.vue';
@@ -400,7 +400,7 @@ const announcements = computed(() => {
   return announcementGroups.filter(group => (!series.value || group.series === series.value) && (!gameId.value || group.game === gameId.value)).map(group => ({
     ...group,
     figures: group.figures.filter(figure => (!figure.catalogueId || !matchingCatalogueIds.has(figure.catalogueId)) &&
-      matches(figure.en, figure.de, group.series, figure.proposedId, figure.catalogueId)),
+      matches(figure.en, figure.de, group.series, figure.catalogueId)),
   })).filter(group => group.figures.length);
 });
 function resetFilters() { query.value = ''; series.value = ''; kind.value = ''; gameId.value = ''; knownOnly.value = false; presenceFilter.value = ''; favoritesOnly.value = false; selectedFilterName.value = ''; preferenceMessage.value = null; }

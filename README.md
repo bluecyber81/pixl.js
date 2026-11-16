@@ -1,5 +1,13 @@
 # Allmiibo LCD firmware and file manager
 
+## Young Link and Young Zelda · File manager 3.54.0
+
+Find the two figures announced for 2027 by their English or German names, or under *The Legend of Zelda: Ocarina of Time* for Nintendo Switch 2. Each entry has its own picture and game notes. Nintendo describes wearable masks for Link. [Nintendo game information](https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/The-Legend-of-Zelda-Ocarina-of-Time-3115664.html)
+
+The seven *Kirby Air Riders* figures now have individual pictures on the LCD and German game notes, including Sword Kirby & Dragoon and Noir Dedede & Hydra. [Kirby Air Riders update notes](https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html)
+
+The built-in **Allmiibo LCD** database gains both entries in the signed **DE3.76 / App649** preview for PFS1 with Z19 and S112 7.3.0. The file manager offers the app ZIP under **Update**. [Mobile app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.76/Allmiibo_LCD_DE3_76_649_NUR_APP.zip) · [Stable DE3.75 firmware](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
+
 ## File manager 3.53.0
 
 **DE3.75 / App648 is the stable LCD firmware** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android package for compatible older bootloaders](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Release notes and tests](docs/RELEASE_DE3_75.md) · [ChatGPT review kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip)

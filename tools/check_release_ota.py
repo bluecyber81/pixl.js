@@ -1,4 +1,5 @@
 """Verify the released LCD application against this build and the bound Z19 public key."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -156,11 +157,20 @@ def verify_zip(path, binary, release, key):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--preview', action='store_true', help='Verify the separate signed LCD preview')
+    parser.add_argument('--build-dir', type=Path, help='Fresh output from tools/build_lcd.py')
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    release = json.loads((root / 'RELEASE_INFO.json').read_bytes())
-    build = root / 'build/lcd-de375'
+    release = unique_json((root / 'RELEASE_INFO.json').read_bytes())
+    mode = 'preview' if args.preview else 'release'
+    if args.preview:
+        preview = release['firmware_preview']
+        need(type(preview['counter']) is int and preview['counter'] > release['counter'], 'Newer preview counter')
+        release = {**release, **preview, 'production_source_id_sha256': preview['source_id']}
+    build = args.build_dir or root / ('build/lcd-preview' if args.preview else 'build/lcd-de375')
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
-    need(result['mode'] == 'release' and result['status'] == 'passed', 'Fresh release build required')
+    need(result['mode'] == mode and result['status'] == 'passed', 'Fresh matching firmware build required')
     need((result['version'], result['counter'], result['source_id_sha256']) ==
          (release['version'], release['counter'], release['production_source_id_sha256']),
          'Release metadata must identify the freshly compiled application source')

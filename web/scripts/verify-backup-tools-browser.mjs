@@ -74,7 +74,7 @@ async function run(context, locale, width) {
   await picker.setInputFiles(inputZip);
   const area = offline.locator('section[aria-label]');
   await area.getByRole('status').getByText(label('Prüfung abgeschlossen','Check complete')).waitFor();
-  assert.match(await area.textContent(), /1 \/ 954/);
+  assert.match(await area.textContent(), /1 \/ 956/);
   assert.match(await area.textContent(), de ? /3 Figurendateien gelesen/ : /3 figure files read/);
   await area.locator('select').selectOption('duplicates');
   const duplicate = area.locator('li').first();

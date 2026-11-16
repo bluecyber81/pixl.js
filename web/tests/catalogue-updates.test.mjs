@@ -51,12 +51,16 @@ test('normalizes exactly public metadata, excluding machine records and remote U
   raw.download = 'https://untrusted.invalid/dumps';
   assert.deepEqual(normalizeCatalogueSource(raw), [{ ...entry(), firmwareIdKnown: false }]);
 });
-test('all 954 bundled entries roundtrip through the researched raw schema without metadata drift', async () => {
+test('the 954 pinned upstream entries roundtrip and the merge retains the two Nintendo additions', async () => {
   const bundled = JSON.parse(await readFile(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
-  const normalized = normalizeCatalogueSource(source(bundled.entries));
+  const upstream = JSON.parse(await readFile(new URL('../third-party/amiiboapi/amiibo.json', import.meta.url), 'utf8'));
+  const normalized = normalizeCatalogueSource(upstream);
   const diff = compareCatalogueEntries(bundled, normalized);
-  assert.equal(bundled.entries.length, 954);
-  assert.deepEqual([diff.added, diff.changed, diff.absentFromSource], [[], [], []]);
+  assert.equal(normalized.length, 954);
+  assert.equal(bundled.entries.length, 956);
+  assert.deepEqual([diff.added, diff.changed], [[], []]);
+  assert.deepEqual(diff.absentFromSource, [], 'The separate supplements were never upstream rows');
+  assert.deepEqual(mergeCatalogueEntries(bundled, normalized), [...bundled.entries].sort((a,b) => a.id.localeCompare(b.id)));
 });
 test('addition, metadata change and source absence are distinct; union never deletes baseline IDs', () => {
   const a = entry(), b = entry('0101000000050002', 'Zelda'), c = entry('0102000000060002', 'New');
@@ -270,4 +274,31 @@ test('cancellation during digest prevents stale publication while a separate req
 test('timeout cannot be disabled or enlarged by caller', async () => {
   for (const timeoutMs of [0, -1, Infinity, 25001, 0.5])
     await assert.rejects(run({ ...fakeFetch(), timeoutMs }), isCode('invalid-options'));
+});
+
+test('a later pinned Zelda row merges once, keeps regional dates and rejects a conflicting edition', async () => {
+  const { includeOcarinaFigures } = await import('../src/lib/ocarina-catalogue.js');
+  const { catalogueDisplayName } = await import('../src/data/announced-figures.js');
+  const { publicFigureImage } = await import('../src/lib/figure-info.js');
+  const id = '0100000004fd0902', other = '0101000004ff0902';
+  const upstream = {id, name:'Young Link (Ocarina of Time)', game:'The Legend of Zelda', series:'Legend Of Zelda', type:'Figure',
+    release:{au:null,na:'2027-04-09',eu:null,jp:'2027-04-08'}, firmwareIdKnown:false};
+  const unmodified = structuredClone(upstream);
+  const pinned = includeOcarinaFigures([upstream], new Set([id]));
+  assert.deepEqual(pinned.map(entry => entry.id).sort(), [id,other]);
+  const link = pinned.find(entry => entry.id === id);
+  assert.equal(link.name, 'Young Link'); assert.equal(catalogueDisplayName(link,true), 'Junger Link');
+  assert.match(publicFigureImage(link.id), /assets\.nintendo\.com.*char28/);
+  assert.equal(link.firmwareIdKnown,true); assert.deepEqual(link.release,upstream.release);
+  const zelda = pinned.find(entry => entry.id === other);
+  assert.equal(catalogueDisplayName(zelda,true), 'Junge Zelda'); assert.deepEqual(zelda.release,{au:null,na:null,eu:null,jp:null});
+  assert.deepEqual(includeOcarinaFigures(pinned, new Set([id])), pinned);
+  assert.deepEqual(upstream,unmodified);
+  const online = normalizeCatalogueSource(source([upstream]))[0];
+  assert.deepEqual(online, {...link,firmwareIdKnown:false});
+  for (const invalid of [{name:'Young Zelda'}, {name:'Young Link (Super Smash Bros.)'}, {type:'Card'}, {series:'Super Smash Bros.'}]) {
+    const wrong = {...upstream,...invalid};
+    assert.throws(() => includeOcarinaFigures([wrong],new Set()), /Catalogue conflict for 0100000004fd0902: expected Young Link/);
+    assert.throws(() => normalizeCatalogueSource(source([wrong])), isCode('conflicting-edition'));
+  }
 });

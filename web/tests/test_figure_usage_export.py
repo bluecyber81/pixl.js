@@ -43,19 +43,29 @@ class UsageExportTests(unittest.TestCase):
                 note = notes.get(association['noteId'])
                 if 'sourceUrl' in association:
                     nintendo_web_rows.append(figure['id'])
-                    self.assertEqual(association['sourceUrl'], exporter.NINTENDO_KIRBY_UPDATE)
-                    self.assertEqual((association['groupId'], association['noteId']), (75, None))
+                    if figure['id'] in exporter.OCARINA_PRODUCTS:
+                        self.assertEqual(association['sourceUrl'], exporter.OCARINA_PRODUCTS[figure['id']])
+                        self.assertEqual(association['groupId'], 82)
+                        self.assertEqual(note['de'], 'Schaltet eine besondere Maske frei, die Link tragen kann.')
+                    else:
+                        self.assertEqual(association['groupId'], 75)
+                        self.assertEqual(note['en'], 'Train the rider as a Figure Player.')
+                        if figure['id'] in exporter.RIDER_IDS:
+                            self.assertEqual(association['sourceUrl'], exporter.NINTENDO_KIRBY_UPDATE)
+                            self.assertEqual(association['sinceGameVersion'], '1.3.3')
+                        else:
+                            self.assertEqual(association['sourceUrl'], exporter.NINTENDO_RIDER_GUIDE)
                 line = association['sourceLine']
                 self.assertNotIn(line, actual)
                 actual[line] = (association['groupId'], figure['id'], note['en'] if note else '')
         self.assertEqual(actual, {i: (int(row[0]), row[1].lower(), row[2]) for i, row in enumerate(rows, 1)})
-        self.assertEqual(len(actual), 1346)
-        self.assertEqual(nintendo_web_rows, ['1f00010004c51e03', '1f02010004c81e03'])
+        self.assertEqual(len(actual), 1348)
+        self.assertEqual(nintendo_web_rows, sorted([*exporter.OCARINA_PRODUCTS, *exporter.TRAINING_IDS]))
         self.assertEqual(data['coverage']['associations'], len(actual))
-        self.assertEqual(data['coverage']['figures'], 954)
-        self.assertEqual(data['coverage']['englishNoteAssociations'], 63)
-        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 53)
-        self.assertEqual(data['coverage']['germanNoteAssociations'], 63)
+        self.assertEqual(data['coverage']['figures'], 956)
+        self.assertEqual(data['coverage']['englishNoteAssociations'], 72)
+        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 55)
+        self.assertEqual(data['coverage']['germanNoteAssociations'], 72)
         self.assertTrue(data['policy']['germanTranslationsAreComplete'])
         self.assertEqual({row['en'] for row in data['notes'] if row['de']}, {row[2] for row in rows if row[2]})
         self.assertFalse(data['policy']['verifiedInGame'])
@@ -82,8 +92,13 @@ class UsageExportTests(unittest.TestCase):
             additions = [{'operation': 'append-rider-row', 'id': rid} for rid in rider_ids]
             if source['path'].endswith('amiidb_amiibo.csv'):
                 suffix = b'1f00010004c51e03,Sword Kirby (& Dragoon),\n1f02010004c81e03,Noir Dedede (& Hydra),\n'
+                suffix += b'0100000004fd0902,Young Link (Ocarina of Time),\n0101000004ff0902,Young Zelda (Ocarina of Time),\n'
                 self.assertTrue(current.endswith(suffix))
                 reference = current.removesuffix(suffix)
+                for aid, (old, new) in exporter.RIDER_NAMES.items():
+                    revised = f'{aid},{new},'.encode()
+                    self.assertEqual(reference.count(revised), 1)
+                    reference = reference.replace(revised, f'{aid},{old},'.encode())
                 expected = [
                     ('018b000002460502', 'Cyrrus', 'Cyrus'),
                     ('04d0000101960502', '[AC] 339 - Fritta', '[AC] 339 - Frita'),
@@ -100,21 +115,29 @@ class UsageExportTests(unittest.TestCase):
                 self.assertEqual(source['transformationsFromReference'], [
                     {'operation': 'trim-trailing-space' if old != old.rstrip() else 'correct-display-name',
                      'id': aid, 'columns': ['name_en', 'name_cn'],
-                     'from': old, 'to': new} for aid, old, new in expected] + additions)
+                     'from': old, 'to': new} for aid, old, new in expected] + exporter.RIDER_NAME_CHANGES + additions + exporter.OCARINA_ADDITIONS)
             elif source['path'].endswith('amiidb_game.csv'):
                 corrected = b'49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale,'
                 self.assertEqual(current.count(corrected), 1)
-                reference = current.replace(corrected, b'49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ,')
+                added_group = b'82,0,The Legend of Zelda: Ocarina of Time,The Legend of Zelda: Ocarina of Time,5\n'
+                self.assertEqual(current.count(added_group), 1)
+                reference = current.replace(added_group, b'').replace(corrected, b'49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ,')
                 self.assertEqual(hashlib.sha256(reference).hexdigest(), source['referenceSha256'])
                 self.assertEqual(source['transformationsFromReference'], [{
                     'operation': 'trim-trailing-space', 'id': '49', 'columns': ['name_en'],
                     'from': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ',
-                    'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}])
+                    'to': 'Yu-Gi-Oh! Rush Duel Saikyo Battle Royale'}, {'operation': 'insert-game-row', 'id': '82'}])
             else:
                 suffix = ''.join(f'75,{rid},,,\n' for rid in rider_ids).encode()
-                self.assertTrue(current.endswith(suffix))
-                self.assertEqual(hashlib.sha256(current.removesuffix(suffix)).hexdigest(), source['referenceSha256'])
-                self.assertEqual(source['transformationsFromReference'], additions)
+                suffix += ''.join(f'82,{aid},Unlocks a special mask that Link can wear.,,\n' for aid in exporter.OCARINA_PRODUCTS).encode()
+                reference = current
+                for aid in exporter.TRAINING_IDS:
+                    revised = f'75,{aid},Train the rider as a Figure Player.,,\n'.encode()
+                    self.assertEqual(reference.count(revised), 1)
+                    reference = reference.replace(revised, f'75,{aid},,,\n'.encode())
+                self.assertTrue(reference.endswith(suffix))
+                self.assertEqual(hashlib.sha256(reference.removesuffix(suffix)).hexdigest(), source['referenceSha256'])
+                self.assertEqual(source['transformationsFromReference'], additions + exporter.RIDER_TRAINING + exporter.OCARINA_ADDITIONS)
             if source['path'].endswith('amiidb_link.csv'):
                 self.assertEqual(source['readNormalization'], [{
                     'operation': 'ignore-one-extra-empty-final-column-in-memory',

@@ -17,7 +17,7 @@ test('November riders retain the reviewed immutable IDs, exact source hash and m
   assert.equal(data.commit,'855a0ff4308278de756bed01de1eca89936f456b');
   assert.equal(data.sourceSha256,'cacc7d31f935f43e601fa9f4f957f3f9b74956304206049c1cfadfa3b2e3278c');
   assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),data.sourceSha256);
-  assert.equal(data.entries.length,954);
+  assert.equal(Object.keys(raw.amiibos).length,954);
   for(const [id,name] of reviewed){
     const rows=data.entries.filter(e=>e.id===id);assert.equal(rows.length,1);
     assert.equal(rows[0].name,name);assert.equal(rows[0].type,'Figure');
@@ -26,7 +26,7 @@ test('November riders retain the reviewed immutable IDs, exact source hash and m
   }
 });
 test('online merge exposes exactly two additions without claiming old firmware knows their IDs',()=>{
-  const before=data.entries.filter(e=>!addedIds.has(e.id));
+  const before=data.entries.filter(e=>raw.amiibos['0x'+e.id] && !addedIds.has(e.id));
   const remote=normalizeCatalogueSource(raw), diff=compareCatalogueEntries(before,remote);
   assert.deepEqual(diff.counts,{baseline:952,source:954,added:2,changed:0,absentFromSource:0,merged:954});
   assert.deepEqual(diff.added.map(e=>e.id),[...addedIds]);

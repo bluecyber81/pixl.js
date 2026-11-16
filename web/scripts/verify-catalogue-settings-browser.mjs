@@ -43,12 +43,45 @@ async function checkGames(page, en) {
   const cards = cat.locator('.entries > li');
   await game.selectOption('kirby-air-riders');
   assert.equal(await cards.count(), 7);
+  const expectedRiders = [
+    ['1f00000004c41e03','Warp-Stern'], ['1f03010004c91e03','Flügel-Stern'],
+    ['1f01000004c61e03','Schatten-Stern'], ['1f02000004c71e03','Panzer-Stern'],
+    ['1f04000004ca1e03','Hopp-Stern'], ['1f00010004c51e03','Dragoon'], ['1f02010004c81e03','Hydra'],
+  ];
+  for (const [id, machine] of expectedRiders) {
+    const card = cards.filter({hasText:id});
+    assert.equal(await card.count(),1);
+    if (!en) assert.ok((await card.locator('.entry-title').innerText()).includes(machine));
+  }
   assert.equal(await cat.locator('.announcements li').count(), 0);
   for (const id of ['1f00010004c51e03', '1f02010004c81e03']) {
     assert.equal(await cards.locator('code').filter({hasText: id}).count(), 1);
   }
   assert.equal(await cat.getByRole('link', {name:/Air Riders Stat Tracker/}).getAttribute('href'),
     'https://github.com/Bing-Bong-Bang/air-riders-amiibo-tracker/releases/tag/v0.1.0');
+  await game.selectOption('ocarina-of-time');
+  assert.equal(await cards.count(), 35);
+  const search = cat.locator('.search-field input');
+  for (const [id, name, alias, food] of [
+    ['0100000004fd0902','Young Link','Junger Link',en ? 'fish' : 'Fisch'],
+    ['0101000004ff0902','Young Zelda','Junge Zelda',en ? 'plants' : 'Pflanzen'],
+  ]) {
+    await search.fill(alias);
+    assert.equal(await cards.first().locator('code').innerText(), id);
+    assert.equal(await cards.locator('code').filter({hasText:id}).count(), 1);
+    await search.fill(id);
+    assert.equal(await cards.locator('.entry-title strong').innerText(), en ? name : alias);
+    assert.match(await cards.innerText(), /2027/);
+    assert.equal(await cat.locator('.announcements li').count(), 0);
+    await cards.getByRole('button',{name: /^Details (for|zu) /}).click();
+    const details = cat.locator('.figure-details');
+    assert.equal(await details.locator('h4').first().innerText(), en ? name : alias);
+    assert.ok((await details.innerText()).includes(food));
+    assert.match(await details.locator('.figure-usage').innerText(), en ? /special mask/ : /besondere Maske/);
+    assert.equal(await details.locator('.media-tile img').count(), 0);
+    await press(cat.locator('.selection-toolbar button'));
+  }
+  await search.fill('');
   await game.selectOption('fatal-fury-cotw');
   assert.equal(await cards.count(), 10);
   await inventory.selectOption('observed');

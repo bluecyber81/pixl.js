@@ -3,7 +3,7 @@
     <header class="figure-heading">
       <div>
         <p class="eyebrow">{{ source === 'metadata' ? (de ? 'Dateieigenschaften · Inhalt ungeprüft' : 'File properties · contents unchecked') : source === 'local' ? (de ? 'Aus Datei gelesen' : 'Read from file') : (de ? 'Figurenkatalog' : 'Figure catalogue') }}</p>
-        <h4>{{ entry?.name || (de ? 'Figureninformationen' : 'Figure information') }}</h4>
+        <h4>{{ catalogueDisplayName(entry, de) || (de ? 'Figureninformationen' : 'Figure information') }}</h4>
         <p v-if="entry" class="figure-subtitle">{{ entry.series }} <span aria-hidden="true">·</span> {{ entry.type }}</p>
       </div>
       <span v-if="resolvedId?.endsWith('03')" class="type-badge">V3</span>
@@ -36,13 +36,14 @@
     <div v-if="entry" class="image-action">
       <button v-if="!imageRequested" type="button" @click="imageRequested = true">{{ de ? 'Bild einmal laden' : 'Load image once' }}</button>
       <button v-else type="button" @click="hideImage">{{ de ? 'Bild ausblenden' : 'Hide image' }}</button>
-      <p>{{ de ? 'Externes Bild von GitHub: Abruf erst nach Klick, mit öffentlicher Figuren-ID und deiner IP-Adresse. Keine UID oder Datei.' : 'External GitHub image: requested only after a click, using the public figure ID and your IP address. No UID or file.' }}</p>
+      <p v-if="ocarinaFigure">{{ de ? 'Das Produktbild wird auf Wunsch von Nintendo geladen.' : 'The product image is loaded from Nintendo on request.' }}</p>
+      <p v-else>{{ de ? 'Externes Bild von GitHub: Abruf erst nach Klick, mit öffentlicher Figuren-ID und deiner IP-Adresse. Keine UID oder Datei.' : 'External GitHub image: requested only after a click, using the public figure ID and your IP address. No UID or file.' }}</p>
     </div>
 
     <div v-if="imageRequested || qr" class="media-grid">
       <figure v-if="imageRequested" class="media-tile">
         <figcaption>{{ de ? 'Figurenbild' : 'Figure image' }}</figcaption>
-        <img v-if="imageUrl && !imageFailed" :key="imageUrl" :src="imageUrl" :alt="entry.name" referrerpolicy="no-referrer" loading="lazy" @error="imageError" />
+        <img v-if="imageUrl && !imageFailed" :key="imageUrl" :src="imageUrl" :alt="catalogueDisplayName(entry, de)" referrerpolicy="no-referrer" loading="lazy" @error="imageError" />
         <p v-else role="status">{{ de ? 'Bild nicht verfügbar oder durch den Browser blockiert.' : 'Image unavailable or blocked by the browser.' }}</p>
       </figure>
       <figure v-if="qr" class="media-tile qr-tile">
@@ -53,9 +54,15 @@
     </div>
 
     <GameGuide v-for="game in matchingGames" :key="game.id" :game="game" :de="de" />
+    <div v-if="ocarinaFigure" class="game-guide">
+      <strong>The Legend of Zelda: Breath of the Wild</strong>
+      <p>{{ de ? ocarinaFigure.botw.de : ocarinaFigure.botw.en }}</p>
+      <a :href="ocarinaBotwGuide" target="_blank" rel="noopener noreferrer">{{ de ? 'Spielhinweis von Nintendo Japan' : 'Nintendo Japan game guide' }}</a>
+    </div>
     <FigureUsage :id="resolvedId" :locale="locale" />
     <details v-if="entry" class="extra-details">
       <summary>{{ de ? 'Regionale Veröffentlichungstermine' : 'Regional release dates' }}</summary>
+      <p v-if="ocarinaFigure">{{ de ? 'Nintendo kündigt diese Figur für 2027 an.' : 'Nintendo has announced this figure for 2027.' }}</p>
       <dl class="release-dates"><div v-for="region in regions" :key="region.id"><dt>{{ region.label }}</dt><dd>{{ entry.release?.[region.id] || (de ? 'Nicht gelistet' : 'Not listed') }}</dd></div></dl>
       <p class="notice">{{ de ? 'Gelistete Katalogtermine; kein Nachweis aktueller Verfügbarkeit.' : 'Dates listed in the catalogue; not proof of current availability.' }}</p>
     </details>
@@ -67,13 +74,15 @@
       <p class="notice">{{ de ? 'Besitzer-, Spitznamen- und Spieldaten werden hier nicht entschlüsselt. Fehlende optionale Daten allein machen eine Figur nicht ungültig. Die Erkennung im Spiel und kryptografische Gültigkeit sind damit nicht bestätigt.' : 'Owner, nickname and game data are not decrypted here. Missing optional data alone does not make a figure invalid. This does not verify game recognition or cryptographic validity.' }}</p>
       <p v-if="resolvedId?.endsWith('03')" class="notice">{{ de ? 'V3: Die Fahrer-ID allein bestätigt weder Fahrzeugdaten noch die Vollständigkeit einer Kombination.' : 'V3: The rider ID alone does not confirm vehicle data or a complete combination.' }}</p>
       <p v-if="resolvedId" class="notice">{{ de ? 'Der QR-Code enthält nur den öffentlichen Figurenlink und wird lokal im Browser erzeugt. Das Scannen öffnet die Infoseite; es überträgt keine NFC-Figur an eine Konsole.' : 'The QR code contains only the public figure link and is generated locally in the browser. Scanning opens the information page; it does not transfer an NFC figure to a console.' }}</p>
-      <p class="notice"><a :href="data.sourceUrl" target="_blank" rel="noopener noreferrer">{{ de ? 'Bild- und Metadatenquelle' : 'Image and metadata source' }} · AmiiboAPI</a></p>
+      <p v-if="ocarinaFigure" class="notice"><a :href="ocarinaFigure.source" target="_blank" rel="noopener noreferrer">Nintendo · {{ de ? 'Figur und Produktbild' : 'Figure and product image' }}</a> · <a :href="zeldaIdSource" target="_blank" rel="noopener noreferrer">{{ de ? 'Community-Quelle zur Figuren-ID' : 'Community source for the figure ID' }}</a></p>
+      <p v-else class="notice"><a :href="data.sourceUrl" target="_blank" rel="noopener noreferrer">{{ de ? 'Bild- und Metadatenquelle' : 'Image and metadata source' }} · AmiiboAPI</a></p>
     </details>
   </section>
 </template>
 <script setup>
 import FigureUsage from './FigureUsage.vue';
 import GameGuide from './GameGuide.vue';
+import { catalogueDisplayName, ocarinaFigureById, zeldaIdSource, ocarinaBotwGuide } from '../data/announced-figures.js';
 import { gameGuides } from '../data/game-guides.js';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -88,6 +97,7 @@ const matchingGames = computed(() => gameGuides.filter(game => game.ids.includes
 const vehicles = computed(() => props.inspection?.id === resolvedId.value ? props.inspection?.vehicleCandidates : undefined);
 const catalogueData = computed(() => Array.isArray(props.catalogue?.entries) ? props.catalogue : data);
 const entry = computed(() => resolvedId.value ? (props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : catalogueData.value.entries.find(item => item?.id === resolvedId.value)) : null);
+const ocarinaFigure = computed(() => ocarinaFigureById.get(resolvedId.value));
 const imageUrl = computed(() => entry.value ? publicFigureImage(resolvedId.value, props.imageCommit ?? catalogueData.value.commit) : null);
 const regions = computed(() => [{ id: 'eu', label: de.value ? 'Europa' : 'Europe' }, { id: 'na', label: de.value ? 'Nordamerika' : 'North America' }, { id: 'jp', label: 'Japan' }, { id: 'au', label: de.value ? 'Australien' : 'Australia' }]);
 const imageRequested = ref(false), imageFailed = ref(false), qrVisible = ref(false);

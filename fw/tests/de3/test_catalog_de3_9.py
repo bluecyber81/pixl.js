@@ -36,7 +36,7 @@ class CatalogDE39Tests(unittest.TestCase):
         for filename, (old_count, old_hash) in BASELINE.items():
             content = (FW / "data" / filename).read_bytes()
             lines = content.splitlines(keepends=True)
-            self.assertEqual(len(lines), old_count + 4)
+            self.assertEqual(len(lines), old_count + 6)
             # Preserve the reviewed historical prefix byte-for-byte after
             # reversing only the later reviewed name and note corrections.
             prefix = b"".join(lines[:old_count])
@@ -52,6 +52,14 @@ class CatalogDE39Tests(unittest.TestCase):
                     corrected = f"{aid},{new},{new}".encode()
                     self.assertEqual(prefix.count(corrected), 1)
                     prefix = prefix.replace(corrected, f"{aid},{old},{old}".encode())
+                for aid, old, new in [
+                    ("1f00000004c41e03", "Kirby", "Kirby (& Warp Star)"),
+                    ("1f03010004c91e03", "Bandana Waddle Dee", "Bandana Waddle Dee (& Winged Star)"),
+                    ("1f01000004c61e03", "Meta Knight", "Meta Knight (& Shadow Star)"),
+                ]:
+                    reviewed = f"{aid},{new},".encode()
+                    self.assertEqual(prefix.count(reviewed), 1)
+                    prefix = prefix.replace(reviewed, f"{aid},{old},".encode())
             else:
                 # Preserve the DE3.9 digest after reversing only the four later
                 # reward descriptions. The game/figure key on each line is fixed.
@@ -63,22 +71,34 @@ class CatalogDE39Tests(unittest.TestCase):
                     self.assertNotEqual(current, old_row)
                     lines[line_number - 1] = old_row
                 prefix = b"".join(lines[:old_count])
+                for aid in ("1f00000004c41e03", "1f03010004c91e03", "1f01000004c61e03",
+                            "1f02000004c71e03", "1f04000004ca1e03"):
+                    updated = f"75,{aid},Train the rider as a Figure Player.,,\n".encode()
+                    self.assertEqual(prefix.count(updated), 1)
+                    prefix = prefix.replace(updated, f"75,{aid},,,\n".encode())
             self.assertEqual(sha256(prefix).hexdigest(), old_hash)
             rows[filename] = list(csv.reader(io.StringIO(content.decode("utf8"))))
         amiibos = rows["amiidb_amiibo.csv"]
         links = rows["amiidb_link.csv"]
-        self.assertEqual(amiibos[-4:-2], ADDITIONS)
-        self.assertEqual(amiibos[-2:], [["1f00010004c51e03", "Sword Kirby (& Dragoon)", ""],
+        self.assertEqual(amiibos[-6:-4], ADDITIONS)
+        self.assertEqual(amiibos[-4:-2], [["1f00010004c51e03", "Sword Kirby (& Dragoon)", ""],
                                         ["1f02010004c81e03", "Noir Dedede (& Hydra)", ""]])
-        self.assertEqual(links[-2:], [["75", row[0], "", "", ""] for row in amiibos[-2:]])
-        self.assertEqual(len({row[0] for row in amiibos}), 954)
-        self.assertEqual(links[-4:-2], [["26", row[0], "", "", ""] for row in ADDITIONS])
+        self.assertEqual(links[-4:-2], [["75", row[0], "Train the rider as a Figure Player.", "", ""] for row in amiibos[-4:-2]])
+        self.assertEqual(len({row[0] for row in amiibos}), 956)
+        self.assertEqual(links[-6:-4], [["26", row[0], "", "", ""] for row in ADDITIONS])
         self.assertEqual(sum(row[0] == "26" for row in links), 37)
+        self.assertEqual(amiibos[-2:], [
+            ["0100000004fd0902", "Young Link (Ocarina of Time)", ""],
+            ["0101000004ff0902", "Young Zelda (Ocarina of Time)", ""]])
+        self.assertEqual(links[-2:], [["82", figure[0], "Unlocks a special mask that Link can wear.", "", ""]
+                                     for figure in amiibos[-2:]])
         games = (FW / "data/amiidb_game.csv").read_bytes()
         corrected = b"49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale,"
         self.assertEqual(games.count(corrected), 1)
         reference_games = games.replace(corrected, b"49,0,Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ,")
-        self.assertEqual(sha256(reference_games).hexdigest(),
+        new_game = b"82,0,The Legend of Zelda: Ocarina of Time,The Legend of Zelda: Ocarina of Time,5\n"
+        self.assertEqual(reference_games.count(new_game), 1)
+        self.assertEqual(sha256(reference_games.replace(new_game, b"")).hexdigest(),
                          "659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47")
 
     def test_generated_metadata_compiles_and_all_links_resolve(self):
@@ -101,22 +121,23 @@ class CatalogDE39Tests(unittest.TestCase):
                         patch.object(sys, "argv", [str(script), "--offline"]), redirect_stdout(stdout):
                     runpy.run_path(str(script), run_name="__main__")
                 request.assert_not_called()
-                self.assertIn("Found 954 amiibo records.", stdout.getvalue())
+                self.assertIn("Found 956 amiibo records.", stdout.getvalue())
                 self.assertNotIn("uncategorized", stdout.getvalue())
                 current = {path.name: path.read_bytes() for path in generated.glob("*.c")}
                 if previous is not None:
                     self.assertEqual(current, previous, "Offline code generation must be deterministic")
                 previous = current
-            for filename in ("db_header.h", "db_search.c"):
+            for filename in ("db_header.h", "db_search.c", "amiibo_model_details.h"):
                 shutil.copyfile(FW / "application/src/amiidb" / filename, generated / filename)
             (generated / "settings.h").write_text(
-                "static int isChineseLanguage(void) { return 1; }\n", encoding="utf8")
+                "enum { LANGUAGE_DE_DE, LANGUAGE_EN_US }; extern int catalog_language; static int getLanguage(void){return catalog_language;} static int isChineseLanguage(void) { return 1; }\n", encoding="utf8")
             main = generated / "test_catalog.c"
             main.write_text(r'''
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include "db_header.h"
+int catalog_language = 0;
 static unsigned count_links(uint8_t id) {
     unsigned count = 0;
     for (const db_link_t *link = link_list; link->game_id; ++link)
@@ -126,7 +147,7 @@ static unsigned count_links(uint8_t id) {
     return count;
 }
 int main(void) {
-    assert(amiibo_list_size == 954);
+    assert(amiibo_list_size == 956);
     for (size_t i = 0; i < amiibo_list_size; ++i) {
         const db_amiibo_t *amiibo = &amiibo_list[i];
         assert(get_amiibo_by_id(amiibo->head, amiibo->tail) == amiibo);
@@ -147,7 +168,15 @@ int main(void) {
         assert(matching_games == 1);
         ++links;
     }
-    assert(links == 1346 && count_links(26) == 37 && count_links(75) == 7);
+    const db_amiibo_t *young_link = get_amiibo_by_id(0x01000000, 0x04fd0902);
+    const db_amiibo_t *young_zelda = get_amiibo_by_id(0x01010000, 0x04ff0902);
+    assert(young_link && young_zelda && count_links(82) == 2);
+    assert(!strcmp(get_amiibo_display_name(young_link), "Junger Link (Ocarina of Time)"));
+    assert(!strcmp(get_amiibo_display_name(young_zelda), "Junge Zelda (Ocarina of Time)"));
+    catalog_language = 1;
+    assert(!strcmp(get_amiibo_display_name(young_link), "Young Link (Ocarina of Time)"));
+    assert(!strcmp(get_amiibo_display_name(young_zelda), "Young Zelda (Ocarina of Time)"));
+    assert(links == 1348 && count_links(26) == 37 && count_links(75) == 7);
     assert(get_link_by_id(75, 0x1f000100, 0x04c51e03));
     assert(get_link_by_id(75, 0x1f020100, 0x04c81e03));
     for (const db_game_t *game = game_list; game->game_id; ++game)
@@ -161,7 +190,7 @@ int main(void) {
     assert(get_link_by_id(26, toad->head, toad->tail));
     assert(!is_valid_amiibo_v3(mario->head, mario->tail));
     assert(!is_valid_amiibo_v3(toad->head, toad->tail));
-    puts("PASS: 954 unique sorted IDs, 1346 links, every category count and two My Mario lookups");
+    puts("PASS: 956 unique sorted IDs, 1348 links, every category count and two My Mario lookups");
     return 0;
 }
 ''', encoding="utf8")
@@ -173,7 +202,7 @@ int main(void) {
             self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
             result = subprocess.run([str(executable)], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("PASS: 954 unique sorted IDs, 1346 links", result.stdout)
+            self.assertIn("PASS: 956 unique sorted IDs, 1348 links", result.stdout)
 
 
 if __name__ == "__main__":

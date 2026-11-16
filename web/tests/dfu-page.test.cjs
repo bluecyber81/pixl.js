@@ -175,8 +175,9 @@ test('only a unique bundled catalogue ID is preselected, with no load or transfe
         const h = harness(true, {location:new URL(pages + query + recentBoot), AllmiiboFirmwareReleases:catalog});
         const select = h.nodes.get('bundled');
         assert.match(select.children[1].textContent, /DE3\.75.*Stabile Ausgabe.*Z19/);
-        assert.match(select.children[2].textContent, /DE3\.74.*Frühere stabile Ausgabe/);
-        assert.match(select.children[3].textContent, /DE3\.65.*Frühere stabile Ausgabe/);
+        assert.match(select.children.find(option => option.value === 'de3.76-lcd-app').textContent, /DE3\.76.*Testversion.*Z19/);
+        assert.match(select.children.find(option => option.value === 'de3.74-lcd-app').textContent, /DE3\.74.*Frühere stabile Ausgabe/);
+        assert.match(select.children.find(option => option.value === 'de3.65-lcd-app').textContent, /DE3\.65.*Frühere stabile Ausgabe/);
         assert.equal(select.value, expected?.id || '');
         assert.equal(h.nodes.get('load-bundled').disabled, !expected);
         assert.equal(h.nodes.get('button').disabled, true);
@@ -191,6 +192,8 @@ test('only a unique bundled catalogue ID is preselected, with no load or transfe
 test('bundled Web and Android actions honor fresh bootloader, SoftDevice and application counters', () => {
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
     for (const [id, app, bl, sd, allowed] of [
+        ['de3.76-lcd-app', 648, 19, 294, true], ['de3.76-lcd-app', 649, 19, 294, true],
+        ['de3.76-lcd-app', 650, 19, 294, false], ['de3.76-lcd-app', 648, 15, 294, false],
         ['de3.75-lcd-app', 647, 19, 294, true], ['de3.75-lcd-app', 648, 19, 294, true],
         ['de3.75-lcd-app', 649, 19, 294, false], ['de3.75-lcd-app', 647, 15, 294, false],
         ['de3.74-lcd-app', 646, 19, 294, true], ['de3.74-lcd-app', 647, 19, 294, true],

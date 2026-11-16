@@ -42,7 +42,7 @@ export function figureUsage(id, data, locale = 'de_DE') {
     const note = notes.get(association.noteId);
     const label = group.labelPath.join(' › ');
     const attribution = { groupId: group.id, label, sourceUrl: association.sourceUrl || `${linkSource.referenceUrl}#L${association.sourceLine}` };
-    if (association.sourceUrl) {
+    if (association.sourceUrl && !note) {
       const guide = label === 'Kirby Air Riders' && airRidersGuide.ids.includes(normalized) ? airRidersGuide : null;
       return { ...attribution, officialAssociation: true, text: guide?.[de ? 'de' : 'en'] ?? null,
         original: null, language: guide ? (de ? 'de' : 'en') : null, translated: false };
@@ -55,6 +55,8 @@ export function figureUsage(id, data, locale = 'de_DE') {
     const translated = de && typeof note?.de === 'string' && note.de.length > 0;
     return {
       ...attribution,
+      officialAssociation: Boolean(association.sourceUrl),
+      sinceGameVersion: association.sinceGameVersion,
       text: translated ? note.de : note?.en || null,
       original: translated ? note.en : null,
       language: translated ? 'de' : note?.en ? 'en' : null,

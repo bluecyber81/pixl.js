@@ -1,0 +1,7 @@
+Allmiibo Dateimanager 3.54.0
+
+Öffne unter Windows Start-Dateimanager.cmd. Suche im Figurenkatalog nach „Junger Link“ oder „Junge Zelda“. Zu beiden Ocarina-of-Time-Figuren gibt es ein Bild und einen deutschen Spielhinweis.
+
+On Windows, open Start-Dateimanager.cmd. Search the figure catalogue for Young Link or Young Zelda. Each Ocarina of Time entry includes artwork and a game usage note.
+
+Unter „Kirby Air Riders“ findest du alle sieben Fahrer mit ihren Maschinen. Die LCD-Testfirmware DE3.76 liegt unter „Update“.

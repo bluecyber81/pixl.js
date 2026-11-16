@@ -1,7 +1,7 @@
 name: Unsigned LCD application and bootloader builds
 
-# Pull requests compile candidate bytes against the same measured budgets.
-# The release branch additionally requires the published application hash.
+# Build the signed preview from its matching sources on every firmware change.
+# The Z19 job also verifies DFU resume for the stable application package.
 on:
   workflow_dispatch:
   workflow_call:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.75 application
+    name: DE3.76 LCD application preview
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -27,14 +27,25 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Determine the required application check
+        id: application_mode
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mode=preview
+          if [ -n "$BASE_SHA" ] && git diff --quiet "$BASE_SHA" HEAD -- RELEASE_INFO.json fw/releases web/public/firmware; then
+            mode=candidate
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
       - name: Fetch pinned external SDK and ARM toolchain
         run: docker pull "$SDK_IMAGE"
       - name: Exercise linker budget gates
         run: python3 fw/tests/de3/test_application_budget.py
       - name: Compile unsigned LCD and inspect actual flash and RAM reserves
         env:
-          BUILD_MODE: ${{ github.event_name == 'pull_request' && 'candidate' || 'release' }}
-        run: python3 tools/build_lcd.py --mode "$BUILD_MODE" --jobs 4
+          BUILD_MODE: ${{ steps.application_mode.outputs.mode }}
+        run: python3 tools/build_lcd.py --mode "$BUILD_MODE" --jobs 4 --output build/lcd-preview
       - name: Install the pinned Cortex-M4 emulator and SDK test inputs
         shell: bash
         run: |
@@ -46,27 +57,27 @@ jobs:
           docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec '
             tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
           ' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
-      - name: Verify the packaged application against the release build and bound Z19 key
-        if: github.event_name != 'pull_request'
-        run: /usr/bin/python3 tools/check_release_ota.py
+      - name: Verify the packaged preview against the compiled application and bound Z19 key
+        if: steps.application_mode.outputs.mode == 'preview'
+        run: /usr/bin/python3 tools/check_release_ota.py --preview
       - name: Exercise every DE2 and DE3 host suite
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-de375/FIRMWARE_TESTS.json
+          "$RUNNER_TEMP/stack-venv/bin/python" -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-preview/FIRMWARE_TESTS.json
       - name: Execute stack and PXDG checks on this build's Cortex-M4 ELF
         shell: bash
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-de375/pixljs.out | tee build/lcd-de375/STACK_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py build/lcd-de375/pixljs.out build/lcd-de375/pixljs.bin | tee build/lcd-de375/FIRST_MENU_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_aes_m4_elf.py build/lcd-de375/pixljs.out build/lcd-de375/pixljs.bin | tee build/lcd-de375/AES_ELF.txt
-          cat build/lcd-de375/BUILD_RESULT.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-preview/pixljs.out | tee build/lcd-preview/STACK_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/FIRST_MENU_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_aes_m4_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/AES_ELF.txt
+          cat build/lcd-preview/BUILD_RESULT.json
       - name: Archive the actual build and test results
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lcd-firmware-evidence-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/lcd-de375/
+          path: build/lcd-preview/
           if-no-files-found: error
           retention-days: 30
 
@@ -128,6 +139,8 @@ jobs:
           python3 -B tests/test_app_stream_modes.py
           ota="../$(jq -er .application_ota_path ../RELEASE_INFO.json)"
           python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$ota" --output _checks/application-resume.json
+          preview="../$(jq -er .firmware_preview.application_ota_path ../RELEASE_INFO.json)"
+          python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$preview" --output _checks/application-preview-resume.json
       - name: Archive bootloader evidence
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

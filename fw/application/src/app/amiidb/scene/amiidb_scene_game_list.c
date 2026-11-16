@@ -14,9 +14,10 @@ static void amiidb_scene_game_list_reload(app_amiidb_t *app);
 
 static void amiidb_scene_game_list_list_view_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                          mui_list_item_t *p_item) {
-    if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
     uint16_t icon = p_item->icon;
     app_amiidb_t *app = mui_list_view_get_user_data(p_list_view);
+    if (icon == ICON_FILE && amiidb_show_catalog_card(app, p_item->user_data, event)) return;
+    if (event != MUI_LIST_VIEW_EVENT_SELECTED) return;
     switch (icon) {
     case ICON_EXIT:
         if (app->game_id_index <= 0) {

@@ -1,4 +1,4 @@
-import { releasedFigureNames } from '../data/announced-figures.js';
+import { catalogueAliases, ocarinaFigureById, ocarinaYear } from '../data/announced-figures.js';
 
 // Metadata only. A catalogue entry does not establish file ownership, file
 // presence on a device, a release date in every region, or emulation support.
@@ -25,9 +25,15 @@ export function compareFigureNames(a, b) {
 }
 export function filterCatalogue(entries, { query = '', series = '', kind = '', knownOnly = false } = {}) {
   const matches = catalogueMatcher(query);
-  return entries.filter(entry => (!series || entry.series === series) && (!kind || entry.type === kind) &&
-    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type, ...(releasedFigureNames.get(entry.id) || [])))
+  const filtered = entries.filter(entry => (!series || entry.series === series) && (!kind || entry.type === kind) &&
+    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type, ...(catalogueAliases.get(entry.id) || [])))
     .sort(compareFigureNames);
+  const term = normalize(query).trim();
+  if (!term) return filtered;
+  // A full translated name outranks incidental words in the series title.
+  const exact = new Set(filtered.filter(entry => [entry.name, ...(catalogueAliases.get(entry.id) || [])]
+    .some(name => normalize(name) === term)).map(entry => entry.id));
+  return exact.size ? [...filtered.filter(entry => exact.has(entry.id)), ...filtered.filter(entry => !exact.has(entry.id))] : filtered;
 }
 
 export function cataloguePage(entries, page, size = 40) {
@@ -39,6 +45,7 @@ export function cataloguePage(entries, page, size = 40) {
 
 export function releaseLabel(entry, today) {
   const dates = Object.values(entry.release || {}).filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || '')).sort();
+  if (!dates.length && ocarinaFigureById.has(entry.id)) return { state: 'announced', date: ocarinaYear };
   if (!dates.length) return { state: 'unknown', date: null };
   return { state: dates[0] > today ? 'upcoming' : 'listed', date: dates[0] };
 }

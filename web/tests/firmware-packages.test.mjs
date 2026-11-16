@@ -20,8 +20,16 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.76'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.75');
-  assert.deepEqual(packages.map(item=>item.counter),[648,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[648,649,647,637,646,645]);
 });
+test('the Ocarina preview offers the signed app ZIP on Android', () => {
+  const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
+  const preview = packages.find(item => item.counter === 649);
+  assert.equal(preview.channel, 'prerelease');
+  assert.equal(packagePresentation(preview).releaseNotesUrl, 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.76');
+  assert.equal(new URL(nrfDfuLink(preview)).searchParams.get('file'), 'https://bluecyber81.github.io/pixl.js/firmware/' + preview.file);
+});
+
 test('package presentation is explicit local scope and never claims unread storage compatibility',()=>{
  for(const locale of ['de_DE','en_US']){const t=firmwarePackageText(locale);assert.ok(t.scope&&t.unread&&t.limits&&t.empty&&t.local);}
  assert.match(firmwarePackageText('de_DE').unread,/nicht ausgelesen.*keine Gerätekompatibilität/);

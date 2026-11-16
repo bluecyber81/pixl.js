@@ -57,11 +57,12 @@ async function runChecks() {
   await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
   const legacyFile = 'Allmiibo_LCD_DE3_65_637_NUR_APP.zip';
   const finalFile = 'Allmiibo_LCD_DE3_75_648_NUR_APP.zip';
+  const ootFile = 'Allmiibo_LCD_DE3_76_649_NUR_APP.zip';
   const previousFile = 'Allmiibo_LCD_DE3_74_647_NUR_APP.zip';
   const app646File = 'Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip';
   const earlierFile = 'Allmiibo_LCD_DE3_72_645_NUR_APP.zip';
   const update = page.locator('.firmware-packages');
-  for (const [file, version, counter] of [[legacyFile, 'DE3.65', 637], [finalFile, 'DE3.75', 648], [previousFile, 'DE3.74', 647], [app646File, 'DE3.73', 646], [earlierFile, 'DE3.72', 645]]) {
+  for (const [file, version, counter] of [[legacyFile, 'DE3.65', 637], [finalFile, 'DE3.75', 648], [ootFile, 'DE3.76', 649], [previousFile, 'DE3.74', 647], [app646File, 'DE3.73', 646], [earlierFile, 'DE3.72', 645]]) {
     const row = update.locator('.package').filter({ has: page.locator('strong', { hasText: version }) });
     assert.equal(await row.locator('a[download]').getAttribute('href'), base + 'firmware/' + file);
     assert.ok((await row.innerText()).includes('Zähler ' + counter));
@@ -256,7 +257,7 @@ async function runChecks() {
   }
   assert.ok(await page.locator('#button').isDisabled());
   assert.deepEqual(await page.locator('#bundled option').evaluateAll(options => options.map(option => option.value).sort()),
-    ['', 'de3.65-lcd-app', 'de3.72-lcd-app', 'de3.73-lcd-app', 'de3.74-lcd-app', 'de3.75-lcd-app']);
+    ['', 'de3.65-lcd-app', 'de3.72-lcd-app', 'de3.73-lcd-app', 'de3.74-lcd-app', 'de3.75-lcd-app', 'de3.76-lcd-app']);
   assert.match(await page.locator('#bundled option[value="de3.74-lcd-app"]').innerText(), /DE3\.74.*Fr\u00fchere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65.*Frühere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
@@ -265,13 +266,13 @@ async function runChecks() {
   checks.push({ feature:'stable and preview releases in local DFU chooser and idle device selector' });
   if (process.env.ALLMIIBO_CANDIDATE_OTA) {
     await page.locator('#file').setInputFiles(process.env.ALLMIIBO_CANDIDATE_OTA);
-    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === finalFile ? 648 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previousFile ? 647 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === app646File ? 646 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === earlierFile ? 645 : 637;
+    const counter = path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === ootFile ? 649 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === finalFile ? 648 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === previousFile ? 647 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === app646File ? 646 : path.basename(process.env.ALLMIIBO_CANDIDATE_OTA) === earlierFile ? 645 : 637;
     await page.waitForFunction(counter => document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);
     assert.match(await page.locator('#package-target').innerText(), /Hardwarefeld 52.*0x0126/);
     assert.equal(await page.evaluate(() => probe.requests), 0);
     checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.72-lcd-app', 645], ['de3.73-lcd-app', 646], ['de3.74-lcd-app', 647], ['de3.75-lcd-app', 648]]) {
+  for (const [id, counter] of [['de3.65-lcd-app', 637], ['de3.72-lcd-app', 645], ['de3.73-lcd-app', 646], ['de3.74-lcd-app', 647], ['de3.75-lcd-app', 648], ['de3.76-lcd-app', 649]]) {
     await page.locator('#bundled').selectOption(id);
     await page.locator('#load-bundled').click();
     await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);

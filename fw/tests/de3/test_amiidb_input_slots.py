@@ -209,6 +209,7 @@ typedef struct {unsigned icon;void *user_data;char text[128];} mui_list_item_t;
 typedef struct {void *user_data;unsigned count,focus,scroll;mui_list_item_t items[120];} mui_list_view_t;
 typedef struct input_s {void *user_data;size_t max;char text[100];void(*cb)(int,struct input_s*);} mui_text_input_t;
 typedef struct {mui_list_view_t *p_list_view;mui_text_input_t *p_text_input;void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher;string_t search_str;uint8_t search_game_id,prev_scene_id;uint16_t search_page,search_filter_page,result_count,result_total,cur_scroll_offset;uint8_t cur_focus_index;bool search_filter_select,search_restore_focus;const db_amiibo_t *cur_amiibo,*result_items[100];} app_amiidb_t;
+static bool amiidb_show_catalog_card(app_amiidb_t *app,const db_amiibo_t *entry,mui_list_view_event_t event){(void)app;(void)entry;(void)event;return false;}
 static unsigned scene,view,errors;
 static void *mui_list_view_get_user_data(mui_list_view_t*v){return v->user_data;}
 static void mui_list_view_set_user_data(mui_list_view_t*v,void*p){v->user_data=p;}

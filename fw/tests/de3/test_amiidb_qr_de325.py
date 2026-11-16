@@ -22,6 +22,12 @@ class DatabaseQrTests(unittest.TestCase):
             shutil.copyfile(SRC/'ntag/ntag_def.h',folder/'ntag_def.h')
             shutil.copyfile(SRC/'app/amiidb/view/amiibo_view.h',folder/'amiibo_view.h')
             shutil.copyfile(SRC/'app/amiidb/view/amiibo_usage_de.h',folder/'amiibo_usage_de.h')
+            shutil.copyfile(SRC/'amiidb/amiibo_model_details.h', folder/'amiibo_model_details.h')
+            portrait = Path('app/amiidb/view/amiibo_oot_art.h')
+            (folder/portrait).parent.mkdir(parents=True)
+            shutil.copyfile(SRC/portrait, folder/portrait)
+            riders = portrait.with_name('amiibo_air_riders_art.h')
+            shutil.copyfile(SRC/riders, folder/riders)
             (folder/'mui_common.h').write_text('#pragma once\n#include <stdbool.h>\n#include <stdint.h>\n#include <string.h>\n#include "u8g2.h"\n')
             (folder/'bsp.h').write_text('typedef int bsp_event_t;\n')
             (folder/'mui_u8g2.h').write_text('#include "u8g2.h"\n')
@@ -34,7 +40,7 @@ typedef struct {void *var;void (*exec_cb)(void *,int32_t);int32_t start_value,en
             (folder/'amiibo_helper.h').write_text('#include <stdint.h>\nuint32_t to_little_endian_int32(const uint8_t *);\n')
             (folder/'db_header.h').write_text('''#pragma once
 #include <stdint.h>
-typedef struct {const char *name_en,*name_cn;} db_amiibo_t;
+typedef struct {const char *name_en,*name_cn;uint32_t head,tail;} db_amiibo_t;
 typedef struct {const char *en,*cn;} db_notes_t;
 #ifdef LEGACY_INLINE_NOTES
 typedef db_notes_t db_link_t;
@@ -90,6 +96,8 @@ const db_amiibo_t *get_amiibo_by_id(uint32_t,uint32_t);
                     body=template
                     qr_names = ['amiibo_view_draw_qrcode'] if 'static uint16_t amiibo_view_draw_qrcode' in source else []
                     note_names = ['amiibo_view_usage', 'amiibo_view_draw_notes'] if 'static void amiibo_view_draw_notes' in source else []
+                    if 'static void amiibo_view_draw_catalog_card' in source:
+                        note_names.append('amiibo_view_draw_catalog_card')
                     # Helpers refer to the wrapper, but not the later renderer.
                     for key,value in {**replacements,'ACTUAL_DEFINES':'\n'.join(re.findall(r'^#define .*$',source,re.M)),
                                       'ACTUAL_VIEW_FUNCTIONS':'\n'.join(function(source,name) for name in qr_names + note_names + names)}.items():

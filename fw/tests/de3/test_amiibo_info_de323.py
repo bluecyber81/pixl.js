@@ -1,6 +1,7 @@
 """Actual info renderer, QR encoder, u8g2 font and input/return-path integration."""
 from pathlib import Path
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -17,6 +18,12 @@ class FigureInfoTests(unittest.TestCase):
             for name in ['mui_canvas.c','mui_canvas.h','mui_input.h','mui_event.h','u8g2_font_wqy12_t_gb2312a.c','u8g2_font_siji_t_6x10.c']:
                 shutil.copyfile(SRC/'mui'/name,folder/name)
             shutil.copyfile(SRC/'ntag/ntag_def.h',folder/'ntag_def.h')
+            shutil.copyfile(SRC/'amiidb/amiibo_model_details.h', folder/'amiibo_model_details.h')
+            portrait = Path('app/amiidb/view/amiibo_oot_art.h')
+            (folder/portrait).parent.mkdir(parents=True)
+            shutil.copyfile(SRC/portrait, folder/portrait)
+            riders = portrait.with_name('amiibo_air_riders_art.h')
+            shutil.copyfile(SRC/riders, folder/riders)
             (folder/'mui_common.h').write_text('#include <stdbool.h>\n#include <stdint.h>\n#include <string.h>\n#include "u8g2.h"\n',encoding='utf-8')
             (folder/'bsp.h').write_text('typedef int bsp_event_t;\n',encoding='utf-8')
             (folder/'mui_u8g2.h').write_text('#include "u8g2.h"\n',encoding='utf-8')
@@ -55,7 +62,27 @@ class FigureInfoTests(unittest.TestCase):
             ran=subprocess.run([str(binary),str(renders)],capture_output=True,text=True,timeout=30)
             self.assertEqual(ran.returncode,0,ran.stdout+ran.stderr)
             self.assertIn('PASS figure-info',ran.stdout)
-            self.assertEqual(len(list(renders.glob('*.pbm'))),14)
+            self.assertEqual(len(list(renders.glob('*.pbm'))),41)
+            # Every portrait must occupy exactly its unclipped 32x32 area in
+            # the real 128x64 u8g2 framebuffer, clear of the ID and QR footer.
+            art = (SRC/portrait).read_text() + (SRC/riders).read_text()
+            names = ['young_link_oot_xbm',
+                     'young_zelda_oot_xbm',
+                     'kirby_warp_star_xbm',
+                     'sword_kirby_dragoon_xbm',
+                     'meta_knight_shadow_star_xbm',
+                     'king_dedede_tank_star_xbm',
+                     'noir_dedede_hydra_xbm',
+                     'bandana_waddle_dee_winged_star_xbm',
+                     'chef_kawasaki_hop_star_xbm']
+            for index, name in enumerate(names, start=2):
+                initializer = re.search(rf'{name}\[128\]\s*=\s*\{{([^}}]+)\}}', art).group(1)
+                pixels = bytes(int(v, 16) for v in re.findall(r'0x([a-fA-F0-9]{2})', initializer))
+                self.assertEqual(len(pixels), 128)
+                pbm = (renders/f'figure_{index}_info.pbm').read_text().split()
+                self.assertEqual(pbm[:3], ['P1', '128', '64'])
+                self.assertEqual([int(pbm[3 + (y+17)*128 + x+96]) for y in range(32) for x in range(32)],
+                                 [(pixels[y*4+x//8] >> (x%8)) & 1 for y in range(32) for x in range(32)])
             print(ran.stdout.strip())
 
 

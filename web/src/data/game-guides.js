@@ -1,4 +1,4 @@
-import { ocarinaUsage } from './announced-figures.js';
+import { ocarinaUsage, ocarinaFigures } from './announced-figures.js';
 
 // Each ID identifies a reviewed catalogue edition. Matching an English name or
 // franchise alone could include another printing, card type or announced figure.
@@ -35,8 +35,8 @@ export const gameGuides = [
   {
     id: 'ocarina-of-time', title: 'The Legend of Zelda: Ocarina of Time', platform: 'Switch 2',
     source: ocarinaUsage,
-    de: 'Diese Zelda-Figuren rufen Gegenstände herbei. Die amiibo-Funktion wird nach dem ersten Besuch der Hylianischen Steppe verfügbar.',
-    en: 'These Zelda figures summon useful items. The amiibo option becomes available after you first reach Hyrule Field.',
+    de: 'Scannen kannst du nach dem ersten Besuch der Hylianischen Steppe. Junger Link und Junge Zelda aus der Ocarina-of-Time-Reihe schalten besondere Masken im Grafikstil des Originals frei. Die übrigen hier gelisteten Figuren geben Gegenstände.',
+    en: 'Scan after you first reach Hyrule Field. Young Link and Young Zelda from the Ocarina of Time series unlock special masks in the original game’s visual style. The other figures listed here summon items.',
     ids: [
       '01000000034f0902', '01410000035c0902', '0105000003580902', '01020100001b0002',
       '01020100041a0902', '0140000003550902', '0100000000040002', '0100000003530902',
@@ -46,7 +46,7 @@ export const gameGuides = [
       '0101010000170002', '010a000004a40902', '0100010000160002', '0100010003500902',
       '0101000003520902', '010b000004a50902', '0106000003590902', '01000000037c0002',
       '010c000004a60902', '01010000000e0002', '0101000003560902', '0101000004190902',
-      '0101030004140902',
+      '0101030004140902', ...ocarinaFigures.map(figure => figure.catalogueId),
     ],
   },
 ];

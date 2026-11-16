@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { announcementGroups } from '../src/data/announced-figures.js';
 
-test('regional announcements retain their original date precision and do not assert an NFC identity', () => {
+test('regional announcements retain their original date precision and reviewed IDs without asserting release', () => {
   const formats = { day: /^\d{4}-\d{2}-\d{2}$/, season: /^spring-\d{4}$/, year: /^\d{4}$/ };
   const figures = announcementGroups.flatMap(g => g.figures);
   const released = announcementGroups.filter(group => group.released);
@@ -10,7 +10,7 @@ test('regional announcements retain their original date precision and do not ass
   assert.deepEqual(released.flatMap(group => group.figures.map(figure => figure.en)),
     ['Sword Kirby & Dragoon', 'Noir Dedede & Hydra']);
   assert.equal(figures.length, 9);
-  assert.equal(figures.filter(f => f.proposedId).length, 2);
+  assert.equal(figures.filter(f => f.catalogueId).length, 4);
   assert.ok(figures.every(f => !Object.hasOwn(f, 'id')));
   for (const group of announcementGroups) {
     assert.match(group.date, formats[group.datePrecision]);

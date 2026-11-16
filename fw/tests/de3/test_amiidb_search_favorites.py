@@ -18,7 +18,7 @@ class SearchFavoritesTests(native.NativeTests):
     test_real_ui_generation_never_emulates_failed_or_unsupported_tag = None
     test_real_large_category_navigation_matches_visible_100_items = None
 
-    def test_actual_954_catalog_all_pages_id_case_and_game_filter(self):
+    def test_actual_956_catalog_all_pages_id_case_and_game_filter(self):
         self.compile_run(r'''
 #include <assert.h>
 #include <stdio.h>
@@ -41,25 +41,27 @@ static int ref_compare(const void *left,const void *right) {
 static unsigned callback_count;
 static void count_cb(const db_amiibo_t *a,void *ctx) {(void)ctx;assert(a==expected[callback_count++]);}
 int main(void) {
- assert(amiibo_list_size==954);
+ assert(amiibo_list_size==956);
  for(size_t i=0;i<amiibo_list_size;i++)expected[i]=&amiibo_list[i];
  qsort(expected,amiibo_list_size,sizeof(expected[0]),ref_compare);
  struct {uint64_t before;const db_amiibo_t *items[AMIIDB_RESULT_PAGE_SIZE];uint64_t after;} page={.before=0x12345678,.after=0x87654321};
  uint16_t total;unsigned visited=0;
- for(unsigned number=0;number<(954+AMIIDB_RESULT_PAGE_SIZE-1)/AMIIDB_RESULT_PAGE_SIZE;number++) {
+ for(unsigned number=0;number<(956+AMIIDB_RESULT_PAGE_SIZE-1)/AMIIDB_RESULT_PAGE_SIZE;number++) {
   int count=amiidb_api_db_search_page("",0,number,page.items,&total);
-  assert(total==954 && count==(number==954/AMIIDB_RESULT_PAGE_SIZE?954%AMIIDB_RESULT_PAGE_SIZE:AMIIDB_RESULT_PAGE_SIZE));
+  assert(total==956 && count==(number==956/AMIIDB_RESULT_PAGE_SIZE?956%AMIIDB_RESULT_PAGE_SIZE:AMIIDB_RESULT_PAGE_SIZE));
   for(int j=0;j<count;j++)assert(page.items[j]==expected[visited++]);
   assert(page.before==0x12345678 && page.after==0x87654321);
  }
- assert(visited==954);
- assert(amiidb_api_db_search_page("",0,65535,page.items,&total)==954%AMIIDB_RESULT_PAGE_SIZE && page.items[0]==expected[954/AMIIDB_RESULT_PAGE_SIZE*AMIIDB_RESULT_PAGE_SIZE]);
- assert(amiidb_api_db_search("",count_cb,NULL)==0 && callback_count==954);
+ assert(visited==956);
+ assert(amiidb_api_db_search_page("",0,65535,page.items,&total)==956%AMIIDB_RESULT_PAGE_SIZE && page.items[0]==expected[956/AMIIDB_RESULT_PAGE_SIZE*AMIIDB_RESULT_PAGE_SIZE]);
+ assert(amiidb_api_db_search("",count_cb,NULL)==0 && callback_count==956);
  char id[17];
- for(size_t i=0;i<954;i++) {
+ for(size_t i=0;i<956;i++) {
   snprintf(id,sizeof(id),"%08lX%08lX",(unsigned long)amiibo_list[i].head,(unsigned long)amiibo_list[i].tail);
   assert(amiidb_api_db_search_page(id,0,0,page.items,&total)==1 && total==1 && page.items[0]==&amiibo_list[i]);
  }
+ assert(amiidb_api_db_search_page("junGer Link",82,0,page.items,&total)==1 && page.items[0]->tail==0x04fd0902);
+ assert(amiidb_api_db_search_page("junge Zelda",82,0,page.items,&total)==1 && page.items[0]->tail==0x04ff0902);
  int mixed=amiidb_api_db_search_page("mArIo",0,0,page.items,&total);assert(mixed>1);
  assert(amiidb_api_db_search_page("Mario",0,0,page.items,&total)==mixed);
  assert(amiidb_api_db_search_page("zzzzzzzzzzzzzzzz",0,0,page.items,&total)==0 && total==0);
@@ -70,7 +72,7 @@ int main(void) {
   bool has_children=false;for(const db_game_t *child=game_list;child->game_id;child++)if(child->parent_game_id==game->game_id)has_children=true;
   if(has_children)continue;
   size_t n=0;
-  for(size_t i=0;i<954;i++)for(const db_link_t *link=link_list;link->game_id;link++)
+  for(size_t i=0;i<956;i++)for(const db_link_t *link=link_list;link->game_id;link++)
    if(link->game_id==game->game_id && link->amiibo_index==i){expected[n++]=&amiibo_list[i];break;}
   qsort(expected,n,sizeof(expected[0]),ref_compare);
   size_t seen=0;
@@ -80,7 +82,7 @@ int main(void) {
   }
   assert(seen==n);
  }
- puts("PASS: all 954 exact IDs, bounded sorted pages, bounds, case search and every leaf game");return 0;
+ puts("PASS: all 956 exact IDs, bounded sorted pages, bounds, case search and every leaf game");return 0;
 }
 ''', includes=[SRC / 'amiidb', SRC / 'app/amiidb/api'])
 

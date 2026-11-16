@@ -45,6 +45,18 @@ def build_identity(root, mode, version, counter):
     header = root / "fw/application/src/version.inc.h"
     content = header.read_text(encoding="utf-8")
     values = dict(re.findall(r"^#define\s+(\w+)\s+([^\r\n]+)$", content, re.M))
+    preview = json.loads((root / "RELEASE_INFO.json").read_bytes()).get("firmware_preview")
+    if mode == "preview" or (mode == "candidate" and preview):
+        if not preview:
+            raise ValueError("No firmware preview is recorded in RELEASE_INFO.json.")
+        if version is not None or counter is not None:
+            raise ValueError("Preview identity comes from RELEASE_INFO.json.")
+        version, counter = preview["version"], preview["counter"]
+        if (not isinstance(version, str) or not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+", version)
+                or type(counter) is not int or not RELEASE_COUNTER < counter <= 0xffffffff
+                or values.get("VERSION") != json.dumps(version)):
+            raise ValueError("Preview metadata must match the newer checked-in firmware header.")
+        return version, counter, sha256(header)
     if mode in ("release", "candidate"):
         if version is not None or counter is not None:
             raise ValueError("Release identity is fixed; --version/--counter are for development mode.")
@@ -161,7 +173,8 @@ def native_build(temp, export, args, version, counter, record, log):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("release", "candidate", "development"), default="release")
+    parser.add_argument("--mode", choices=("release", "candidate", "development", "preview"),
+                        help="Default: the preview recorded in RELEASE_INFO.json, otherwise the stable release")
     parser.add_argument("--version", help="New development VERSION already set in the source header")
     parser.add_argument("--counter", type=int, help="Explicit development DFU counter; no OTA is generated")
     parser.add_argument("--jobs", type=int, default=8)
@@ -175,6 +188,10 @@ def main(argv=None):
         parser.error("--jobs must be between 1 and 64")
     root = Path(__file__).resolve().parents[1]
     try:
+        release_info = json.loads((root / "RELEASE_INFO.json").read_bytes())
+        if args.mode is None:
+            args.mode = "preview" if release_info.get("firmware_preview") else "release"
+        preview = release_info["firmware_preview"] if args.mode == "preview" else None
         version, counter, header_hash = build_identity(root, args.mode, args.version, args.counter)
         if args.backend == "docker" and shutil.which("docker") is None:
             raise RuntimeError("Docker CLI is required. Install/configure it separately; this helper installs nothing.")
@@ -186,7 +203,8 @@ def main(argv=None):
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        destination = Path(os.path.abspath(args.output if args.output else root / "build/lcd-de375"))
+        default_build = "build/lcd-preview" if preview else "build/lcd-de375"
+        destination = Path(os.path.abspath(args.output if args.output else root / default_build))
         if destination.resolve() != destination:
             raise RuntimeError("Output must not resolve through a symlink or junction.")
         destination.mkdir(parents=True, exist_ok=True)
@@ -201,7 +219,8 @@ def main(argv=None):
                   "sdk_header_override": {"path": "components/softdevice/s112/headers/nrf_nvic.h",
                                           "before_sha256": NVIC_BEFORE_SHA256,
                                           "after_sha256": NVIC_AFTER_SHA256},
-                  "expected_bin_sha256": RELEASE_BIN_SHA256 if args.mode == "release" else None}
+                  "expected_bin_sha256": (preview["application_sha256"] if preview else
+                                          RELEASE_BIN_SHA256 if args.mode == "release" else None)}
         with tempfile.TemporaryDirectory(prefix="allmiibo-lcd-") as temp_name:
             temp = Path(temp_name)
             if "," in str(temp):
@@ -258,6 +277,8 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
             record["artifacts_sha256"] = hashes
             matches = hashes["pixljs.bin"] == RELEASE_BIN_SHA256
             record["matches_archived_release_binary"] = matches
+            if preview and (hashes["pixljs.bin"] != preview["application_sha256"] or source_id != preview["source_id"]):
+                raise RuntimeError("Preview binary SHA-256 or source ID differs from RELEASE_INFO.json.")
             if args.mode == "release" and not matches:
                 raise RuntimeError("Release binary SHA-256 mismatch; no firmware artifacts exported. See build.log.")
             if args.stack_report:
@@ -273,7 +294,7 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
                                          "frames": stack["frame_count"]}
             for name in (*ARTIFACTS, "production-inputs.json"):
                 shutil.copyfile(export / name, destination / name)
-            record["status"] = "passed" if args.mode == "release" else "unsigned_" + args.mode
+            record["status"] = "passed" if args.mode in ("release", "preview") else "unsigned_" + args.mode
         (destination / "BUILD_RESULT.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(record, indent=2))
         print("Unsigned application output: " + str(destination))

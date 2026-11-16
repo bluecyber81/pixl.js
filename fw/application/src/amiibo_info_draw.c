@@ -1,4 +1,7 @@
 #include "amiibo_info_draw.h"
+#include "amiibo_model_details.h"
+#include "app/amiidb/view/amiibo_oot_art.h"
+#include "app/amiidb/view/amiibo_air_riders_art.h"
 #include "amiibo_helper.h"
 #include "db_header.h"
 #include "i18n/language.h"
@@ -37,6 +40,24 @@ void amiibo_active_menu_hint(mui_canvas_t *canvas, uint8_t width) {
     mui_canvas_set_clip_window(canvas, &old_clip);
 }
 
+bool amiibo_info_portrait(mui_canvas_t *canvas, uint32_t head, uint32_t tail, uint8_t x, uint8_t y) {
+    const uint8_t *pixels;
+    switch (amiibo_detail_model(head, tail)) {
+    case OOT_YOUNG_LINK: pixels = young_link_oot_xbm; break;
+    case OOT_YOUNG_ZELDA: pixels = young_zelda_oot_xbm; break;
+    case KIRBY_WARP_STAR: pixels = kirby_warp_star_xbm; break;
+    case SWORD_KIRBY_DRAGOON: pixels = sword_kirby_dragoon_xbm; break;
+    case META_KNIGHT_SHADOW_STAR: pixels = meta_knight_shadow_star_xbm; break;
+    case KING_DEDEDE_TANK_STAR: pixels = king_dedede_tank_star_xbm; break;
+    case NOIR_DEDEDE_HYDRA: pixels = noir_dedede_hydra_xbm; break;
+    case BANDANA_WADDLE_DEE_WINGED_STAR: pixels = bandana_waddle_dee_winged_star_xbm; break;
+    case CHEF_KAWASAKI_HOP_STAR: pixels = chef_kawasaki_hop_star_xbm; break;
+    default: return false;
+    }
+    mui_canvas_draw_xbm(canvas, x, y, 32, 32, pixels);
+    return true;
+}
+
 bool amiibo_info_url(char *out, size_t capacity, const ntag_t *tag) {
     if (!out || !capacity) return false;
     out[0] = 0;
@@ -51,10 +72,28 @@ bool amiibo_info_url(char *out, size_t capacity, const ntag_t *tag) {
         product_url = "https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car";
     else if (head == 0x000a0004 && tail == 0x04451c02)
         product_url = "https://amiibo.life/amiibo/my-mario-wood-blocks/toad";
+    static const char nintendo_pages[][5] = {
+        [OOT_YOUNG_LINK] = "akbf",
+        [OOT_YOUNG_ZELDA] = "akbg",
+        [KIRBY_WARP_STAR] = "caaa",
+        [SWORD_KIRBY_DRAGOON] = "caaf",
+        [META_KNIGHT_SHADOW_STAR] = "caac",
+        [KING_DEDEDE_TANK_STAR] = "caae",
+        [NOIR_DEDEDE_HYDRA] = "caag",
+        [BANDANA_WADDLE_DEE_WINGED_STAR] = "caab",
+        [CHEF_KAWASAKI_HOP_STAR] = "caad",
+    };
     /* Public model identity only. Never include UID, filename, owner or save. */
-    int length = product_url ? snprintf(out, capacity, "%s", product_url) :
-        snprintf(out, capacity, "https://amiibo.life/nfc/%08lx-%08lx",
-                 (unsigned long)head, (unsigned long)tail);
+    amiibo_detail_model_t model = amiibo_detail_model(head, tail);
+    int length;
+    if (model != MODEL_DEFAULT)
+        length = snprintf(out, capacity, "https://www.nintendo.com/sg/hardware/amiibo/lineup/%s/index.html",
+                          nintendo_pages[model]);
+    else if (product_url)
+        length = snprintf(out, capacity, "%s", product_url);
+    else
+        length = snprintf(out, capacity, "https://amiibo.life/nfc/%08lx-%08lx",
+                          (unsigned long)head, (unsigned long)tail);
     if (length < 0 || (size_t)length >= capacity) { out[0] = 0; return false; }
     return true;
 }
@@ -104,6 +143,7 @@ void amiibo_info_draw(mui_canvas_t *canvas, const ntag_t *tag, uint8_t page) {
         snprintf(text, sizeof(text), "    %08lX", (unsigned long)tail);
         mui_canvas_draw_utf8(canvas, 2, 49, text);
         mui_canvas_draw_utf8(canvas, 2, 62, tag->type == NTAG_I2C_PLUS_2K ? "I2C 2K" : "NTAG215");
+        amiibo_info_portrait(canvas, head, tail, 96, 17);
         mui_canvas_draw_utf8(canvas, 92, 62, "QR >");
     }
     mui_canvas_set_draw_color(canvas, old_color);

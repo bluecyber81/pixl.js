@@ -14,9 +14,9 @@
       <ul>
         <li v-for="figure in group.figures" :key="figure.en">
           <a :href="figure.source" target="_blank" rel="noopener noreferrer">{{ de ? figure.de : figure.en }}</a>
-          <div v-if="figure.proposedId" class="proposed-id">
-            <a :href="zeldaIdProposal" target="_blank" rel="noopener noreferrer">{{ de ? 'Unbestätigte Community-ID' : 'Unconfirmed community ID' }}</a>
-            <code>{{ figure.proposedId }}</code>
+          <div v-if="ocarinaFigureById.has(figure.catalogueId)" class="proposed-id">
+            <a :href="zeldaIdSource" target="_blank" rel="noopener noreferrer">{{ de ? 'Figuren-ID (Community-Quelle)' : 'Figure ID (community source)' }}</a>
+            <code>{{ figure.catalogueId }}</code>
           </div>
         </li>
       </ul>
@@ -29,7 +29,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { zeldaIdProposal } from '../data/announced-figures.js';
+import { zeldaIdSource, ocarinaFigureById } from '../data/announced-figures.js';
 
 const props = defineProps({ groups: { type: Array, required: true }, de: Boolean, expanded: Boolean });
 const count = computed(() => props.groups.reduce((total, group) => total + group.figures.length, 0));

@@ -14,6 +14,30 @@
 
 #include "amiibo_helper.h"
 #include "app_amiidb_resume.h"
+#include "amiibo_model_details.h"
+
+static void catalog_card_back(amiibo_view_event_t event, amiibo_view_t *view) {
+    if (event != AMIIBO_VIEW_EVENT_MENU) return;
+    app_amiidb_t *app = view->user_data;
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
+}
+
+bool amiidb_show_catalog_card(app_amiidb_t *app, const db_amiibo_t *entry, mui_list_view_event_t event) {
+    if (!entry || (event != MUI_LIST_VIEW_EVENT_SELECTED && event != MUI_LIST_VIEW_EVENT_LONG_SELECTED))
+        return false;
+    amiibo_detail_model_t model = amiibo_detail_model(entry->head, entry->tail);
+    if (model == MODEL_DEFAULT || (event == MUI_LIST_VIEW_EVENT_SELECTED &&
+                                   !is_valid_amiibo_v3(entry->head, entry->tail))) return false;
+    /* Keep the current list scene and its focus. Metadata has no tag, slot or
+     * NFC session, so V3 catalog browsing cannot reach tag generation. */
+    amiibo_view_t *view = app->p_amiibo_view;
+    view->catalog_entry = entry;
+    view->info_page = 1;
+    view->game_id = model == OOT_YOUNG_LINK || model == OOT_YOUNG_ZELDA ? OOT_GAME_ID : AIR_RIDERS_GAME_ID;
+    amiibo_view_set_event_cb(view, catalog_card_back);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_DETAIL);
+    return true;
+}
 
 static void app_amiidb_on_run(mini_app_inst_t *p_app_inst);
 static void app_amiidb_on_kill(mini_app_inst_t *p_app_inst);

@@ -82,6 +82,7 @@ const db_game_t game_list[] = {
 {79, 0, "Monster Hunter Stories 3: Twisted Reflection", "", 5, 3}, 
 {80, 0, "Splatoon Raiders", "", 5, 3}, 
 {81, 0, "Super Mario Galaxy + Super Mario Galaxy 2", "", 5, 2}, 
+{82, 0, "The Legend of Zelda: Ocarina of Time", "The Legend of Zelda: Ocarina of Time", 5, 2}, 
 {255, 0, "Others", "未分类", 0, 0}, 
 {0, 0, 0, 0, 0}
 };

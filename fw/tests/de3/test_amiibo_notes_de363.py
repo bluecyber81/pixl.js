@@ -13,7 +13,13 @@ class NotesTests(HostTests):
     def test_generated_header_matches_reviewed_firmware_translation_source(self):
         data = json.loads(generator.INPUT.read_text(encoding="utf-8"))
         self.assertEqual(generator.OUTPUT.read_text(encoding="utf-8"), generator.render(data))
-        self.assertEqual(len(data["texts"]), 53)
+        self.assertEqual(len(data["texts"]), 55)
+        packed_rows = generator.render(data).split("amiibo_usage_de_texts[] = {", 1)[1].split("};", 1)[0]
+        self.assertEqual(packed_rows.count("    {"), generator.MAX_TEXTS)
+        split = dict(data["texts"])
+        split["Dragonbone Boko related gear/Meat/Paraglider Skin Material"] += "!"
+        with self.assertRaises(ValueError):
+            generator.render({**data, "texts": split})
         enc, dictionary = generator.pack(list(data["texts"].values()))
         self.assertEqual(len(enc), len(data["texts"]))
         for value, packed in zip(data["texts"].values(), enc):

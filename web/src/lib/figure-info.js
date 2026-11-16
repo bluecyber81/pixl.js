@@ -1,5 +1,6 @@
 // Public figure metadata and local structural checks only. No owner data, UID,
 // signatures, keys, file contents or paths are returned or sent to a service.
+import { ocarinaFigureById } from '../data/announced-figures.js';
 export const IMAGE_COMMIT = '855a0ff4308278de756bed01de1eca89936f456b';
 export const TAG_LENGTHS = Object.freeze([532, 540, 572, 2048]);
 const airRidersIds = new Set(['1f00000004c41e03', '1f03010004c91e03', '1f04000004ca1e03', '1f02000004c71e03', '1f01000004c61e03', '1f00010004c51e03', '1f02010004c81e03']);
@@ -34,6 +35,7 @@ export function metadataFigureId(metadata) {
 
 export function publicFigureLink(value) {
   const id = figureId(value);
+  if (ocarinaFigureById.has(id)) return ocarinaFigureById.get(id).source;
   // amiibo.life's NFC lookup still returns 404 for these two published figures
   // (verified 2026-11-01). Their public figure pages resolve directly.
   if (id === '0000000404431c02') return 'https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car';
@@ -43,6 +45,7 @@ export function publicFigureLink(value) {
 
 export function publicFigureImage(value, commit = IMAGE_COMMIT) {
   const id = figureId(value);
+  if (ocarinaFigureById.has(id)) return ocarinaFigureById.get(id).image;
   const revision = typeof commit === "string" && /^[a-f0-9]{40}$/.test(commit) ? commit : IMAGE_COMMIT;
   return id ? `https://raw.githubusercontent.com/8bitDream/AmiiboAPI/${revision}/images/icon_${id.slice(0, 8)}-${id.slice(8)}.png` : null;
 }

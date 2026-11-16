@@ -1,6 +1,7 @@
 #include "amiibo_info_draw.h"
 #include "mui_qrcode_helper.h"
 #include "db_header.h"
+#include "amiibo_model_details.h"
 #include "i18n/language.h"
 #include <assert.h>
 #include <stdio.h>
@@ -12,7 +13,7 @@ static bool english;
 const char *getLangString(int id) { return (english ? lang_en_US : lang_de_DE)[id]; }
 const db_amiibo_t *get_amiibo_by_id(uint32_t h,uint32_t t) {
     static const db_amiibo_t known = {0};
-    return (h==0 && t==2) || (h==0x1f030100 && t==0x04c91e03) ? &known : NULL;
+    return (h==0 && t==2) || amiibo_detail_model(h,t)!=MODEL_DEFAULT ? &known : NULL;
 }
 /*ACTUAL_ENDIAN_FUNCTION*/
 /*ACTUAL_DB_QR*/
@@ -60,6 +61,7 @@ void mui_view_dispatcher_switch_to_view(void *d,unsigned id){(void)d;switched_vi
 typedef int amiibo_view_event_t;
 enum {AMIIBO_VIEW_EVENT_UPDATE,AMIIBO_VIEW_EVENT_DESC_UPDATE,AMIIBO_VIEW_EVENT_MENU};
 typedef struct amiibo_view_s {
+    const void *catalog_entry;
     uint8_t info_page,focus,max_ntags,desc_step;
     uint16_t desc_offset;
     bool desc_auto_scroll_disabled;
@@ -110,7 +112,7 @@ int main(int argc,char **argv) {
     memcpy(v3.data+84,id,8);v3.type=NTAG_I2C_PLUS_2K;
     memset(unknown.data+84,0xab,8);unknown.type=NTAG_215;
     char a[AMIIBO_INFO_URL_CAPACITY],b[AMIIBO_INFO_URL_CAPACITY];assert(amiibo_info_url(a,sizeof(a),&v3));
-    assert(!strcmp(a,"https://amiibo.life/nfc/1f030100-04c91e03"));
+    assert(!strcmp(a,"https://www.nintendo.com/sg/hardware/amiibo/lineup/caab/index.html"));
     memset(v3.data,0x6a,84);memset(v3.data+92,0x6a,sizeof(v3.data)-92);memset(v3.notes,'X',sizeof(v3.notes));
     assert(amiibo_info_url(b,sizeof(b),&v3) && !strcmp(a,b));
     assert(!amiibo_info_url(b,5,&v3) && !b[0]);
@@ -128,6 +130,7 @@ int main(int argc,char **argv) {
         snprintf(name,sizeof(name),"%s_public_qr",english?"en":"de");image(&canvas,&v3,2,argv[1],name);
     }
     english=false;image(&canvas,&unknown,1,argv[1],"de_unknown_info");image(&canvas,&blank,2,argv[1],"de_blank_qr");
+    assert(amiibo_info_url(a,sizeof(a),&classic));
     memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,91,25,37,a));pbm(argv[1],"database_qr_edge",buffer);
     /* Four-module quiet zone must be white on every side, even over dirty RAM. */
     for(unsigned y=25;y<62;y++)for(unsigned x=91;x<128;x++)if(x<95||x>=124||y<29||y>=58)
@@ -137,10 +140,28 @@ int main(int argc,char **argv) {
     assert(!draw_qrcode(&canvas,0,28,37,a));assert(!memcmp(saved,buffer,1024));
     assert(!draw_qrcode(&canvas,0,0,28,a));assert(!memcmp(saved,buffer,1024));
     memset(buffer,0xff,sizeof(buffer));assert(draw_qrcode(&canvas,39,0,50,"https://bluecyber81.github.io/pixl.js/"));pbm(argv[1],"ble_qr_top_edge",buffer);
-    const uint8_t product_ids[2][8]={{0,0,0,4,4,0x43,0x1c,2},{0,0x0a,0,4,4,0x45,0x1c,2}};
-    const char *product_urls[2]={"https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car",
-                               "https://amiibo.life/amiibo/my-mario-wood-blocks/toad"};
-    for(unsigned item=0;item<2;item++) {
+    const uint8_t product_ids[][8]={{0,0,0,4,4,0x43,0x1c,2},{0,0x0a,0,4,4,0x45,0x1c,2},
+                                     {0x01,0x00,0x00,0x00,0x04,0xfd,0x09,0x02},
+                                     {0x01,0x01,0x00,0x00,0x04,0xff,0x09,0x02},
+                                     {0x1f,0x00,0x00,0x00,0x04,0xc4,0x1e,0x03},
+                                     {0x1f,0x00,0x01,0x00,0x04,0xc5,0x1e,0x03},
+                                     {0x1f,0x01,0x00,0x00,0x04,0xc6,0x1e,0x03},
+                                     {0x1f,0x02,0x00,0x00,0x04,0xc7,0x1e,0x03},
+                                     {0x1f,0x02,0x01,0x00,0x04,0xc8,0x1e,0x03},
+                                     {0x1f,0x03,0x01,0x00,0x04,0xc9,0x1e,0x03},
+                                     {0x1f,0x04,0x00,0x00,0x04,0xca,0x1e,0x03}};
+    const char *product_urls[]={"https://amiibo.life/amiibo/my-mario-wood-blocks/mario-melody-car",
+                               "https://amiibo.life/amiibo/my-mario-wood-blocks/toad",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/akbf/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/akbg/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caaa/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caaf/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caac/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caae/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caag/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caab/index.html",
+                               "https://www.nintendo.com/sg/hardware/amiibo/lineup/caad/index.html"};
+    for(unsigned item=0;item<sizeof(product_ids)/sizeof(product_ids[0]);item++) {
         ntag_t product={0};memcpy(product.data+84,product_ids[item],8);
         assert(amiibo_info_url(a,sizeof(a),&product) && !strcmp(a,product_urls[item]));
         for(size_t capacity=1;capacity<=strlen(product_urls[item]);capacity++) {
@@ -150,6 +171,10 @@ int main(int argc,char **argv) {
         assert(amiibo_info_url(b,strlen(a)+1,&product) && !strcmp(a,b));
         char name[40];snprintf(name,sizeof(name),"product_%u_info_qr",item);
         image(&canvas,&product,2,argv[1],name);
+        if (item >= 2) {
+            snprintf(name,sizeof(name),"figure_%u_info",item);
+            image(&canvas,&product,1,argv[1],name);
+        }
         memset(buffer,0xff,sizeof(buffer));
         /* Execute the real layout helper: long URLs must be fully visible,
          * preserve the name/header and leave room for scrolling text. */

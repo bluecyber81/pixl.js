@@ -1,10 +1,10 @@
 <template>
   <div class="entry-title">
     <button v-if="link" type="button" class="figure-name" :disabled="busy || saving"
-      :aria-label="de ? entry.name + ' herunterladen' : 'Download ' + entry.name" @click="download">
-      {{ entry.name }} <span aria-hidden="true">↓</span>
+      :aria-label="de ? name + ' herunterladen' : 'Download ' + name" @click="download">
+      {{ name }} <span aria-hidden="true">↓</span>
     </button>
-    <strong v-else>{{ entry.name }}</strong>
+    <strong v-else>{{ name }}</strong>
     <span class="entry-type">{{ entry.type }}</span>
   </div>
   <details ref="editor" class="figure-download-link" @toggle="toggleEditor">
@@ -36,12 +36,13 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { FIGURE_DOWNLOAD_LIMITS, prepareFigureTransfer, suggestedFigureFilename } from '../lib/figure-transfer.js';
 import { observeFigureDownloadLink, readFigureDownloadLink, writeFigureDownloadLink, withFigureLinkLock } from '../lib/figure-download-links.js';
 import { saveBlob } from '../lib/browser-tools.js';
 
-const props = defineProps({ entry: { type: Object, required: true }, de: Boolean, blocked: Boolean, openImport: Function });
+const props = defineProps({ entry: { type: Object, required: true }, displayName: String, de: Boolean, blocked: Boolean, openImport: Function });
+const name = computed(() => props.displayName || props.entry.name);
 const link = ref(readFigureDownloadLink(props.entry.id));
 const editor = ref(null), editing = ref(false), draft = ref('');
 const feedback = ref(null), feedbackError = ref(false), busy = ref(false);

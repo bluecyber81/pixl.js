@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-15.de375",
+  "dataVersion": "2026-11-16.de376",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
     "files": [
       {
         "path": "fw/data/amiidb_amiibo.csv",
-        "sha256": "2bbcc720b2153d68d135e48d7f21a98a06aa86863fc5b827c8a03fd9c7aa5f39",
+        "sha256": "1ba54e01b9c629d736ca5e1a86a58c44d8909253d943f63d56e339ed9ddf0a0b",
         "referenceSha256": "82b23957ac5c431175d9a8522a7c5552e2a46c9f640b4622c362368089f2cd01",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/6e0004969cd1481a027c2eaa86838a4c3fa1553d/fw/data/amiidb_amiibo.csv",
         "transformationsFromReference": [
@@ -72,19 +72,45 @@
             "to": "430 - Judy"
           },
           {
+            "operation": "complete-rider-machine-name",
+            "id": "1f00000004c41e03",
+            "from": "Kirby",
+            "to": "Kirby (& Warp Star)"
+          },
+          {
+            "operation": "complete-rider-machine-name",
+            "id": "1f03010004c91e03",
+            "from": "Bandana Waddle Dee",
+            "to": "Bandana Waddle Dee (& Winged Star)"
+          },
+          {
+            "operation": "complete-rider-machine-name",
+            "id": "1f01000004c61e03",
+            "from": "Meta Knight",
+            "to": "Meta Knight (& Shadow Star)"
+          },
+          {
             "operation": "append-rider-row",
             "id": "1f00010004c51e03"
           },
           {
             "operation": "append-rider-row",
             "id": "1f02010004c81e03"
+          },
+          {
+            "operation": "append-figure-row",
+            "id": "0100000004fd0902"
+          },
+          {
+            "operation": "append-figure-row",
+            "id": "0101000004ff0902"
           }
         ],
         "readNormalization": []
       },
       {
         "path": "fw/data/amiidb_game.csv",
-        "sha256": "d240bada99ca8e4e9e74e3a24afd94536007f38b61aafb4f8582eb3359b6a042",
+        "sha256": "0b41f8c0fd8ee440a3fed2d4eb2d6c434d989a4b49f2b1be8a301f19d2981182",
         "referenceSha256": "659d2b0703b0e059f9489dfaeab4341f3cc58d5eba19756664e2f39c58ceff47",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/6e0004969cd1481a027c2eaa86838a4c3fa1553d/fw/data/amiidb_game.csv",
         "transformationsFromReference": [
@@ -96,13 +122,17 @@
             ],
             "from": "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale ",
             "to": "Yu-Gi-Oh! Rush Duel Saikyo Battle Royale"
+          },
+          {
+            "operation": "insert-game-row",
+            "id": "82"
           }
         ],
         "readNormalization": []
       },
       {
         "path": "fw/data/amiidb_link.csv",
-        "sha256": "b8df1a4bd411459a58660f42bec2077f4639543c1d67a16b6617a60470fad068",
+        "sha256": "94c87b9123b14a51ef22ab37a692d77addb9e6da7a93c9adf3bfb225192bc8fc",
         "referenceSha256": "2bf41e4adec9640aae1e5afc803daf8d14260f07b4116ea3386c76a40e950c38",
         "referenceUrl": "https://github.com/bluecyber81/pixl.js/blob/494514c958ad5e0544467bfed59d3047a7468c40/fw/data/amiidb_link.csv",
         "transformationsFromReference": [
@@ -113,6 +143,49 @@
           {
             "operation": "append-rider-row",
             "id": "1f02010004c81e03"
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f00000004c41e03",
+            "groupId": 75
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f03010004c91e03",
+            "groupId": 75
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f01000004c61e03",
+            "groupId": 75
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f02000004c71e03",
+            "groupId": 75
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f04000004ca1e03",
+            "groupId": 75
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f00010004c51e03",
+            "groupId": 75
+          },
+          {
+            "operation": "add-training-note",
+            "id": "1f02010004c81e03",
+            "groupId": 75
+          },
+          {
+            "operation": "append-figure-row",
+            "id": "0100000004fd0902"
+          },
+          {
+            "operation": "append-figure-row",
+            "id": "0101000004ff0902"
           }
         ],
         "readNormalization": [
@@ -141,16 +214,16 @@
     "translationPolicy": "Redaktionelle Übersetzungen vorhandener englischer Katalognotizen. Keine unabhängige Spielprüfung; Eigennamen sind nicht als offizielle deutsche Spielbegriffe bestätigt."
   },
   "coverage": {
-    "figures": 954,
-    "groups": 82,
-    "associations": 1346,
-    "firmwareAssociations": 1346,
+    "figures": 956,
+    "groups": 83,
+    "associations": 1348,
+    "firmwareAssociations": 1348,
     "nintendoWebAssociations": 0,
     "legacyEmptyLinkColumns": 3,
-    "englishNoteAssociations": 63,
-    "uniqueEnglishNotes": 53,
-    "uniqueGermanTranslations": 53,
-    "germanNoteAssociations": 63
+    "englishNoteAssociations": 72,
+    "uniqueEnglishNotes": 55,
+    "uniqueGermanTranslations": 55,
+    "germanNoteAssociations": 72
   },
   "groups": [
     {
@@ -822,12 +895,20 @@
       "sourceLine": 81
     },
     {
+      "id": 82,
+      "parentId": 0,
+      "labelPath": [
+        "The Legend of Zelda: Ocarina of Time"
+      ],
+      "sourceLine": 82
+    },
+    {
       "id": 255,
       "parentId": 0,
       "labelPath": [
         "Others"
       ],
-      "sourceLine": 82
+      "sourceLine": 83
     }
   ],
   "notes": [
@@ -1145,8 +1226,20 @@
     },
     {
       "id": 53,
+      "en": "Train the rider as a Figure Player.",
+      "de": "Trainiere den Fahrer als Figurenspieler.",
+      "translation": "editorial-from-english"
+    },
+    {
+      "id": 54,
       "en": "Change decoration in Bellabel Park hub",
       "de": "Dekoration im zentralen Bereich des Bellabel-Parks ändern",
+      "translation": "editorial-from-english"
+    },
+    {
+      "id": 55,
+      "en": "Unlocks a special mask that Link can wear.",
+      "de": "Schaltet eine besondere Maske frei, die Link tragen kann.",
       "translation": "editorial-from-english"
     }
   ],
@@ -1341,7 +1434,7 @@
       "associations": [
         {
           "groupId": 76,
-          "noteId": 53,
+          "noteId": 54,
           "sourceLine": 1338
         }
       ]
@@ -2001,7 +2094,7 @@
       "associations": [
         {
           "groupId": 76,
-          "noteId": 53,
+          "noteId": 54,
           "sourceLine": 1340
         }
       ]
@@ -2171,7 +2264,7 @@
       "associations": [
         {
           "groupId": 76,
-          "noteId": 53,
+          "noteId": 54,
           "sourceLine": 1339
         }
       ]
@@ -2457,6 +2550,17 @@
       ]
     },
     {
+      "id": "0100000004fd0902",
+      "associations": [
+        {
+          "groupId": 82,
+          "noteId": 55,
+          "sourceLine": 1347,
+          "sourceUrl": "https://www.nintendo.com/us/amiibo/detail/young-link-the-legend-of-zelda-ocarina-of-time-series/"
+        }
+      ]
+    },
+    {
       "id": "0100010000160002",
       "associations": [
         {
@@ -2628,6 +2732,17 @@
           "groupId": 1,
           "noteId": 25,
           "sourceLine": 28
+        }
+      ]
+    },
+    {
+      "id": "0101000004ff0902",
+      "associations": [
+        {
+          "groupId": 82,
+          "noteId": 55,
+          "sourceLine": 1348,
+          "sourceUrl": "https://www.nintendo.com/us/amiibo/detail/young-zelda-the-legend-of-zelda-ocarina-of-time-series/"
         }
       ]
     },
@@ -10406,8 +10521,9 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
-          "sourceLine": 1323
+          "noteId": 53,
+          "sourceLine": 1323,
+          "sourceUrl": "https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/"
         }
       ]
     },
@@ -10416,9 +10532,10 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
+          "noteId": 53,
           "sourceLine": 1345,
-          "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
+          "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html",
+          "sinceGameVersion": "1.3.3"
         }
       ]
     },
@@ -10467,8 +10584,9 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
-          "sourceLine": 1335
+          "noteId": 53,
+          "sourceLine": 1335,
+          "sourceUrl": "https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/"
         }
       ]
     },
@@ -10517,8 +10635,9 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
-          "sourceLine": 1336
+          "noteId": 53,
+          "sourceLine": 1336,
+          "sourceUrl": "https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/"
         }
       ]
     },
@@ -10527,9 +10646,10 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
+          "noteId": 53,
           "sourceLine": 1346,
-          "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html"
+          "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html",
+          "sinceGameVersion": "1.3.3"
         }
       ]
     },
@@ -10563,8 +10683,9 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
-          "sourceLine": 1324
+          "noteId": 53,
+          "sourceLine": 1324,
+          "sourceUrl": "https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/"
         }
       ]
     },
@@ -10573,8 +10694,9 @@
       "associations": [
         {
           "groupId": 75,
-          "noteId": null,
-          "sourceLine": 1337
+          "noteId": 53,
+          "sourceLine": 1337,
+          "sourceUrl": "https://www.nintendo.com/us/gaming-systems/switch-2/featured-games/kirby-air-riders/connect/"
         }
       ]
     },

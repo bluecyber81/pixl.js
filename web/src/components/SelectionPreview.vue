@@ -3,10 +3,10 @@
     <p class="preview-eyebrow">{{ de ? 'AUSWAHL' : 'SELECTION' }}</p>
     <template v-if="selection">
       <div class="preview-picture">
-        <img v-if="imageUrl && !failed" :key="imageUrl" :src="imageUrl" :alt="entry.name" referrerpolicy="no-referrer" @error="imageError" />
+        <img v-if="imageUrl && !failed" :key="imageUrl" :src="imageUrl" :alt="catalogueDisplayName(entry, de)" referrerpolicy="no-referrer" @error="imageError" />
         <span v-else class="preview-placeholder" aria-hidden="true">◇</span>
       </div>
-      <h3>{{ entry?.name || selection.row.name }}</h3>
+      <h3>{{ catalogueDisplayName(entry, de) || selection.row.name }}</h3>
       <p v-if="entry" class="preview-series">{{ entry.series }}</p>
       <p v-if="selection.state === 'reading'" role="status">{{ de ? 'Figuren-ID wird gelesen…' : 'Reading figure ID…' }}</p>
       <p v-else-if="selection.state === 'invalid'" class="preview-warning" role="status">{{ de ? 'Die Dateistruktur ist auffällig. Keine sichere Bildzuordnung.' : 'The file structure looks unusual, so its image cannot be identified reliably.' }}</p>
@@ -18,12 +18,14 @@
       <FigureUsage :id="selection.id" :locale="locale" compact />
       <div class="preview-actions"><button type="button" :disabled="blocked" @click="$emit('properties')">{{ de ? 'Eigenschaften & QR' : 'Properties & QR' }}</button><button type="button" :disabled="blocked" @click="$emit('download')">{{ de ? 'Datei herunterladen' : 'Download file' }}</button></div>
       <p class="preview-caption">{{ selection.source === 'demo' ? (de ? 'Beispielfigur aus dem öffentlichen Katalog. Kein Gerät verbunden; keine Figurendatei gelesen oder erzeugt.' : 'Example figure from the public catalogue. No device connected; no tag file read or generated.') : selection.source === 'metadata' ? (de ? 'ID aus Dateieigenschaften; Dateiinhalt ungeprüft.' : 'ID from file properties; file contents unchecked.') : (de ? 'Nur die ausgewählte Datei wurde gelesen; keine Spiel- oder Signaturprüfung.' : 'Only the selected file was read; no game or signature check.') }}</p>
-      <p v-if="entry" class="preview-caption">{{ de ? 'Bild von GitHub über die öffentliche Figuren-ID. Keine UID, Dateinamen oder Dateiinhalte werden gesendet.' : 'GitHub image requested using the public figure ID. No UID, filenames or file contents are sent.' }}</p>
+      <p v-if="ocarinaFigureById.has(entry?.id)" class="preview-caption">{{ de ? 'Produktbild von Nintendo.' : 'Product image from Nintendo.' }}</p>
+      <p v-else-if="entry" class="preview-caption">{{ de ? 'Bild von GitHub über die öffentliche Figuren-ID. Keine UID, Dateinamen oder Dateiinhalte werden gesendet.' : 'GitHub image requested using the public figure ID. No UID, filenames or file contents are sent.' }}</p>
     </template>
     <div v-else class="preview-empty"><span aria-hidden="true">◇</span><h3>{{ de ? 'Deine Figur im Blick' : 'Your figure at a glance' }}</h3><p>{{ de ? 'Wähle eine Amiibo-Datei. Bild, Serie und Informationen erscheinen hier.' : 'Select an amiibo file. Its image, series and information appear here.' }}</p></div>
   </section>
 </template>
 <script setup>
+import { catalogueDisplayName, ocarinaFigureById } from '../data/announced-figures.js';
 import FigureIdCopy from './FigureIdCopy.vue';
 import FigureUsage from './FigureUsage.vue';
 import {computed,ref,watch} from 'vue';

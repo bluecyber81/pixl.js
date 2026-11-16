@@ -1,0 +1,26 @@
+{
+  "version": "2.22.0-DE3.76",
+  "counter": 649,
+  "date": "2026-11-16",
+  "deviceAcceptance": "pending",
+  "sourceId": "3f52580f386f753be828ca86437b98adbba3c9b609954e8c04fa90194eb3b497",
+  "sourceInputs": 704,
+  "applicationBytes": 362188,
+  "applicationSha256": "3e3899226d773b9f664400efdf536eb6bc1cea1fe61277218b63e730d29aed2a",
+  "package": "Allmiibo_LCD_DE3_76_649_NUR_APP.zip",
+  "packageBytes": 259536,
+  "otaSha256": "41d07d2b4d4ca6092432beb5573a5c43e801cfa69f26499aadbae284991bd585",
+  "verifiedSignatures": {
+    "independent": true,
+    "repository": true
+  },
+  "flashReserveBytes": 10548,
+  "twoBuildsMatched": [
+    "pixljs.bin",
+    "pixljs.hex"
+  ],
+  "modelCount": 9,
+  "physicalGameScan": false,
+  "pfs": "docs/validation/DE3_76_PFS.json",
+  "images": "docs/validation/DE3_76_FIGURE_IMAGES.json"
+}

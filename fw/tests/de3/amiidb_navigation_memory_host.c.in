@@ -18,7 +18,7 @@
 #undef assert
 #define assert(x) do{if(!(x)){fprintf(stderr,"FAIL line %u: %s\n",__LINE__,#x);exit(71);}}while(0)
 static mui_t fake_mui;
-static unsigned oom,scene_changes,last_scene,cases;
+static unsigned oom,scene_changes,last_scene,last_view,cases;
 static bool chinese;
 typedef struct {unsigned amiidb_sort_column;} settings_data_t;
 static settings_data_t config;
@@ -30,16 +30,20 @@ void mui_show_memory_error(mui_t*m){m->memory_error=true;oom++;}
 const char*getLangString(L_StringID id){return lang_de_DE[id];}
 bool isChineseLanguage(void){return chinese;}
 const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?a->name_cn:a->name_en;}
-bool is_valid_amiibo_v3(uint32_t a,uint32_t b){(void)a;(void)b;return false;}
+bool is_valid_amiibo_v3(uint32_t a,uint32_t b){(void)a;return (b&255)==3;}
 void mui_toast_view_show(mui_toast_view_t*v,const char*t){(void)v;(void)t;}
-void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,uint32_t id){(void)d;(void)id;}
+void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,uint32_t id){(void)d;last_view=id;}
 void mui_scene_dispatcher_next_scene(mui_scene_dispatcher_t*d,uint32_t id){(void)d;scene_changes++;last_scene=id;}
 void mui_text_input_set_max_length(mui_text_input_t*v,size_t n){v->max_length=n;}
 void mui_text_input_set_input_text(mui_text_input_t*v,const char*s){(void)v;(void)s;}
 const char*mui_text_input_get_input_text(mui_text_input_t*v){return string_get_cstr(v->input_text);}
 void mui_text_input_set_header(mui_text_input_t*v,const char*s){(void)v;(void)s;}
 void mui_text_input_set_event_cb(mui_text_input_t*v,mui_text_input_event_cb_t cb){v->event_cb=cb;}
+#if !TEST_BASELINE
+#include "amiibo_model_details.h"
+#endif
 @LIST@
+@CARD@
 @GAME@
 @SEARCH@
 
@@ -85,7 +89,7 @@ static void memory_case(void){
    do {for(size_t i=0;i<a->p_list_view->items->size;i++)if(a->p_list_view->items->ptr[i].icon==ICON_FOLDER)seen++;
        if(!item(a,ICON_NEXT)){break;}
  click(a,ICON_NEXT);bound(a);
-   }while(1);assert(seen==71);
+   }while(1);assert(seen==72);
    amiidb_scene_game_list_on_exit(a);amiidb_scene_amiibo_search_on_enter(a);bound(a);
    search_filter_reload(a);bound(a);
    printf("PASS bounded navigation/search/filter cycle %u: ptr=%u app=%u listitem=%u pfs=%u beforefree=%u largest=%u\n",repeat,(unsigned)sizeof(void*),(unsigned)sizeof(*a),(unsigned)sizeof(mui_list_item_t),(unsigned)sizeof(struct pfs),before.free_size,before.free_biggest_size);
@@ -110,6 +114,25 @@ static void check_group(uint8_t id){
  }while(1);assert(seen==ng+nf);end(a);cases++;
 }
 static void functional(bool quick){
+ app_amiidb_t *test=begin(false);amiibo_view_t card={.user_data=test};test->p_amiibo_view=&card;
+ unsigned routes=0;
+ for(size_t j=0;j<amiibo_list_size;j++){
+  const db_amiibo_t *figure=&amiibo_list[j];amiibo_detail_model_t model=amiibo_detail_model(figure->head,figure->tail);
+  if(model==MODEL_DEFAULT)continue;
+  bool v3=is_valid_amiibo_v3(figure->head,figure->tail);
+  mui_list_item_t row={.icon=ICON_FILE,.user_data=(void*)figure};
+  for(unsigned via=0;via<2;via++)for(unsigned long_press=v3?0:1;long_press<2;long_press++){
+   unsigned scenes=scene_changes;uint8_t expected=(v3?AIR_RIDERS_GAME_ID:OOT_GAME_ID);
+   mui_list_view_event_t event=long_press?MUI_LIST_VIEW_EVENT_LONG_SELECTED:MUI_LIST_VIEW_EVENT_SELECTED;
+   memset(&card,0,sizeof(card));card.user_data=test;
+   if(via)search_selected(event,test->p_list_view,&row);else amiidb_scene_game_list_list_view_on_selected(event,test->p_list_view,&row);
+   assert(last_view==AMIIDB_VIEW_ID_DETAIL&&scene_changes==scenes&&test->cur_amiibo==NULL&&card.ntag==NULL);
+   assert(card.catalog_entry==figure&&card.game_id==expected&&card.info_page==1&&card.event_cb!=NULL);
+   card.event_cb(AMIIBO_VIEW_EVENT_MENU,&card);assert(last_view==AMIIDB_VIEW_ID_LIST&&scene_changes==scenes);
+   routes++;
+  }
+ }
+ assert(routes==32);end(test);printf("PASS %u read-only catalog routes across games and search\n",routes);
  for(unsigned sort=0;sort<2;sort++){config.amiidb_sort_column=sort;check_group(0);if(!quick)for(const db_game_t*g=game_list;g->game_id;g++)check_group(g->game_id);}
  app_amiidb_t*a=begin(false);config.amiidb_sort_column=1;amiidb_scene_amiibo_search_on_enter(a);
  unsigned seen=0;for(size_t i=0;i<amiibo_list_size;i++)figures[i]=&amiibo_list[i];qsort(figures,amiibo_list_size,sizeof(*figures),cmp_fig);
@@ -117,14 +140,14 @@ static void functional(bool quick){
  click(a,ICON_NEXT);}while(1);assert(seen==amiibo_list_size);
  click(a,ICON_SETTINGS);unsigned ng=0;for(const db_game_t*g=game_list;g->game_id;g++)games[ng++]=g;qsort(games,ng,sizeof(*games),cmp_game);seen=0;
  do {bound(a);for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];if(x->icon==ICON_FOLDER&&x->user_data)assert(x->user_data==games[seen++]);}if(!item(a,ICON_NEXT)){break;}
- click(a,ICON_NEXT);}while(1);assert(seen==82);click(a,ICON_PREV);assert(a->search_filter_page==2);click(a,ICON_EXIT);assert(!a->search_filter_select);bound(a);
+ click(a,ICON_NEXT);}while(1);assert(seen==83 && seen==ng);click(a,ICON_PREV);assert(a->search_filter_page==2);click(a,ICON_EXIT);assert(!a->search_filter_select);bound(a);
  a->game_page=2;amiidb_scene_game_list_on_enter(a);mui_list_view_set_focus(a->p_list_view,5);mui_list_view_set_scroll_offset(a->p_list_view,37);mui_list_item_t*folder=&a->p_list_view->items->ptr[5];assert(folder->icon==ICON_FOLDER);uint8_t selected=((db_game_t*)folder->user_data)->game_id;
  amiidb_scene_game_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,a->p_list_view,folder);assert(a->game_id_index==1&&a->game_id_path[1]==selected&&a->game_page==0);click(a,ICON_EXIT);assert(!a->game_id_index&&a->game_page==2&&a->p_list_view->focus_index==5&&a->p_list_view->scroll_offset==37);
  a->game_id_path[0]=11;a->game_page=1;amiidb_scene_game_list_reload(a);mui_list_view_set_focus(a->p_list_view,7);mui_list_view_set_scroll_offset(a->p_list_view,52);mui_list_item_t*file=&a->p_list_view->items->ptr[7];assert(file->icon==ICON_FILE);const void*fig=file->user_data;
  amiidb_scene_game_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,a->p_list_view,file);assert(last_scene==AMIIDB_SCENE_AMIIBO_DETAIL&&a->cur_amiibo==fig);amiidb_scene_game_list_on_exit(a);amiidb_scene_game_list_on_enter(a);assert(a->game_page==1&&a->p_list_view->focus_index==7&&a->p_list_view->scroll_offset==52);
  a->search_page=3;amiidb_scene_amiibo_search_on_enter(a);mui_list_view_set_focus(a->p_list_view,9);mui_list_view_set_scroll_offset(a->p_list_view,63);file=&a->p_list_view->items->ptr[9];assert(file->icon==ICON_FILE);search_selected(MUI_LIST_VIEW_EVENT_SELECTED,a->p_list_view,file);amiidb_scene_amiibo_search_on_exit(a);amiidb_scene_amiibo_search_on_enter(a);assert(a->search_page==3&&a->p_list_view->focus_index==9&&a->p_list_view->scroll_offset==63);
  a->game_id_index=7;a->game_id_path[7]=0;a->game_page=0;amiidb_scene_game_list_reload(a);folder=item(a,ICON_FOLDER);unsigned changes=scene_changes;amiidb_scene_game_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,a->p_list_view,folder);assert(a->game_id_index==7&&scene_changes==changes);
- end(a);cases++;printf("PASS exhaustive navigation: 71 root/82 filters/%u figures; combined child pages, sorting, previous/next, folder and detail return focus, path-depth guard\n",(unsigned)amiibo_list_size);
+ end(a);cases++;printf("PASS exhaustive navigation: 72 root/83 filters/%u figures; combined child pages, sorting, previous/next, folder and detail return focus, path-depth guard\n",(unsigned)amiibo_list_size);
 }
 #endif
 int main(int argc,char**argv){(void)argv;printf("SIZES pointer=%u app_amiidb=%u app_amiibo=%u pfs=%u TLSFcontrol=%u\n",(unsigned)sizeof(void*),(unsigned)sizeof(app_amiidb_t),(unsigned)sizeof(app_amiibo_t),(unsigned)sizeof(struct pfs),(unsigned)tlsf_size());memory_case();
