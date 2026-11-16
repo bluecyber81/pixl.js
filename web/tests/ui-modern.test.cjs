@@ -397,7 +397,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.55.3'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.55.4'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -409,7 +409,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.55.3.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.55.4.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -496,7 +496,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.55.3.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.55.4.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1350,7 +1350,7 @@ test('download callbacks cannot display errors or save bytes from a previous con
   assert.equal(app.pendingDownloads, 0); assert.equal(h.messages.length, 0);
 });
 
-test('DFU webpage is an unconditional build-base link with no Bluetooth action', async () => {
+test('LCD update workspace links to the independent DFU page without a Bluetooth action', async () => {
   const ast = compiler.compileTemplate({ source: descriptor.template.content, filename: 'App.vue', id: 'dfu' }).ast;
   let found;
   function visit(node, parents = []) {
@@ -1371,7 +1371,8 @@ test('DFU webpage is an unconditional build-base link with no Bluetooth action',
   }
   assert.equal(attributes.target, '_blank'); assert.equal(attributes.rel, 'noopener noreferrer');
   assert.equal(found.node.props.some(prop => (prop.type === 7 && prop !== hrefBinding) || prop.name === 'disabled'), false);
-  assert.equal(found.parents.some(parent => parent.type === 9 || parent.type === 10), false, 'link is not conditional');
+  const boardSlot = found.parents.find(parent => parent.tag === 'template' && parent.props.some(p => p.name === 'slot'));
+  assert.equal(boardSlot?.props.find(p => p.name === 'slot')?.arg.content, 'lcd');
 });
 
 test('device DFU command remains disabled while disconnected or busy', async () => {
@@ -1677,10 +1678,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.55.3.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.55.4.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.55.3.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.55.4.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2577,7 +2578,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.55.3');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.55.4');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

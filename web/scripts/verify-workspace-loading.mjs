@@ -46,6 +46,11 @@ try {
       const migration = page.locator('.migration-panel');
       for(const [id,selector] of checks) {
         await page.locator('.workspace-nav [aria-controls="'+id+'"]').click();
+        if (id === 'update-workspace') {
+          await page.locator('#update-workspace .board-buttons, #update-workspace .update-check').first().waitFor();
+          const lcd = page.locator('#update-workspace .board-buttons').getByRole('button', {name:'LCD',exact:true});
+          if (await lcd.count()) await lcd.click();
+        }
         await page.locator('#'+id+' '+selector).first().waitFor();
         if(id==='backup-workspace') await migration.locator('summary').first().click();
       }

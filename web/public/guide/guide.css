@@ -34,7 +34,7 @@ h1, h2, h3 { line-height: 1.22; }
 h1 { margin: 0; font-size: clamp(2rem, 5.2vw, 3.65rem); letter-spacing: -.045em; text-wrap: balance; }
 .intro p { max-width: 59ch; margin: .72rem 0 0; font-size: clamp(1rem, 1.8vw, 1.18rem); color: var(--muted); }
 .choices h2, .contents h2 { font-size: 1.05rem; margin: 0 0 .72rem; }
-.choices ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; list-style: none; margin: 0; padding: 0; }
+.choices ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; list-style: none; margin: 0; padding: 0; }
 .choices a { position: relative; display: block; height: 100%; padding: 1.05rem 2rem 1.05rem 1.05rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--panel); box-shadow: var(--shadow); text-decoration: none; }
 .choices a::after { position: absolute; top: 1.58rem; right: .95rem; width: .44rem; height: .44rem; content: ""; border-block-start: 2px solid var(--accent); border-inline-end: 2px solid var(--accent); transform: rotate(45deg); }
 .choices a:hover, .choices a:focus-visible { border-color: var(--accent); background: var(--wash); }

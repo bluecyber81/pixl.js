@@ -1,0 +1,54 @@
+{
+  "version": "3.55.4",
+  "date": "2026-11-16",
+  "devices": {
+    "lcd": {
+      "stable": "2.22.0-DE3.75",
+      "preview": "2.22.0-DE3.81"
+    },
+    "oled": {
+      "preview": "2.22.0-DE3.81-OLEDt1",
+      "counter": 81,
+      "reported": "A user reports successful operation on one OLED device. Its storage format and the functions exercised were not specified."
+    }
+  },
+  "productionBuildChecks": {
+    "rootPassed": 22,
+    "pagesPassed": 22
+  },
+  "browserChecks": {
+    "browser": "Chrome",
+    "dfuSyncChecksPerBuild": 51,
+    "languageChecksPerBuild": 6,
+    "guideViewports": [
+      [
+        390,
+        844
+      ],
+      [
+        1366,
+        900
+      ]
+    ],
+    "guideLocales": [
+      "de",
+      "en"
+    ],
+    "verified": [
+      "separate LCD and OLED routes",
+      "model-specific firmware links and guide fragments",
+      "unknown and conflicting firmware profiles",
+      "language switching and mobile layout"
+    ]
+  },
+  "firmwareDownloads": {
+    "scope": "Anonymous HTTP downloads, application manifest and ZIP CRC checks",
+    "tested": [
+      "de3.75",
+      "de3.81",
+      "de3.81-oled-t1"
+    ],
+    "oledZipSha256": "2806b64ff5a8c0f1342abaf33ca1a79a1773b6101d410ccc97e498f1c9f37d33"
+  },
+  "hardwareScope": "The new web interface and downloads were tested without writing a device. The OLED application remains a test release; its physical NFC, sleep/wake and data-preservation checks for individual storage formats are not documented by the user report."
+}

@@ -1,8 +1,22 @@
-# Allmiibo LCD firmware and file manager
+# Firmware for Allmiibo LCD and Pixl.js OLED
+
+[Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
+
+## Choose your firmware
+
+- **LCD · DE3.75 stable.** For a compatible nRF52832 LCD with Packed LittleFS (PFS1), Z19 and S112 7.3.0. List return, wake and Switch recognition of a known figure were tested on one LCD. [Download LCD App648](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
+- **LCD · DE3.81 preview.** For a compatible LCD with PFS1, Z19, Z20 or Z21 and S112 7.3.0. An owner confirmed flashing and initial operation. The installation guide also covers the two-stage update for compatible older bootloaders. [Download LCD App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [LCD installation guide](docs/INSTALLATION.md#lcd-preview-de381--app654)
+- **OLED · DE3.81 Test 1.** For the nRF52832 Pixl.js with a 128 × 64 SH1106 OLED, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The app uses the existing SPIFFS or native LittleFS. Both storage formats and both menu languages were verified on a computer. A user reports that Test 1 works on one OLED. The device’s filesystem and the features tested remain unknown. [Download OLED Test 1](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Test guide in English and German](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
+
+Both DE3.81 applications include German and English menus, the 956-figure catalog, game hints, app resume and Bluetooth remote buttons. Display capture, startup and RAM diagnostics, and battery history in the file manager are available on LCD.
+
+## File manager 3.55.4
+
+Choose the firmware for your display and open its Android download and guide from the homepage. The OLED package contains only the device application. [Open the homepage](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
 
 ## File manager 3.55.3
 
-In **Device & diagnostics**, battery history shows the duration, voltage range and gaps between readings. The first fresh reading after a pause marks the resumption. CSV exports include the reason in a fifth column, `pause_reason`. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
+On a supported LCD, **Device & diagnostics → Battery history** shows the duration, voltage range and gaps between readings. The first fresh reading after a pause marks the resumption. CSV exports include the reason in a fifth column, `pause_reason`. [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
 
 ## LCD preview for Android
 

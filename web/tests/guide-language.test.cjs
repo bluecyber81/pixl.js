@@ -39,3 +39,17 @@ test('named guide pages remain addressable and manual switching retains the curr
     assert.equal(page.saved, 'de_DE');
     assert.equal(openGuide('index.html#littlefs', ['en']).next, undefined);
 });
+
+test('both guide languages link to a dedicated OLED chapter with the published phone package', () => {
+    for (const page of ['index.html', 'en.html']) {
+        const html = fs.readFileSync(path.join(__dirname, '../public/guide', page), 'utf8');
+        assert.match(html, /href="#oled"/);
+        const section = html.match(/<section id="oled">([\s\S]*?)<\/section>/)?.[1];
+        assert.ok(section);
+        assert.match(section, /de3\.81-oled-t1\/Allmiibo_OLED_DE3_81_Test1_APP\.zip"/);
+        assert.match(section, /de3\.81-oled-t1\/Allmiibo_OLED_Test1_Deutsch_English\.txt"/);
+        assert.doesNotMatch(section, /Allmiibo_LCD_/);
+        assert.match(section, page === 'en.html' ? /reports that the preview works on their OLED/ : /auf seinem OLED funktioniert/);
+    }
+    assert.equal(openGuide('#oled', ['en']).next, base + 'en.html#oled');
+});

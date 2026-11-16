@@ -1,4 +1,8 @@
-# LCD-Firmware, Bootloader und SoftDevice
+# LCD- und OLED-Firmware, Bootloader und SoftDevice
+
+## DE3.81 OLED Test 1 · App-Zähler 81
+
+Die signierte OLED-App für SH1106 (128 × 64) und S112 7.2.0 verwendet vorhandenes SPIFFS oder natives LittleFS. Die DE3.81-Menüs und 55 unterschiedlichen Spielhinweise wurden auf Deutsch und Englisch am Rechner geprüft. Ein Nutzer meldet, dass die Testversion auf einem OLED funktioniert. Angaben zum dort verwendeten Dateisystem und zu einzelnen Funktionen stehen aus. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Testanleitung auf Deutsch und Englisch](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt) · [OLED-Release und Quellstand](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1)
 
 ## DE3.81 / App654 und Z21 · LCD-Vorschau
 

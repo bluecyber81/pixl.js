@@ -4,7 +4,7 @@
     <a class="skip-link" href="#file-workspace" @click="show_workspace('files')">{{ $t('workflow.skipToFiles') }}</a>
     <header class="app-header">
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="4" y="6" width="24" height="20" rx="5"/><path d="M10 12h12M10 17h7M22 21h.01"/></svg></span>
-        <div><p class="app-eyebrow">ALLMIIBO · LCD</p><h1>{{ $t('workflow.appTitle') }}</h1><p class="app-subtitle">{{ $t('tools.subtitle') }}</p></div>
+        <div><p class="app-eyebrow">ALLMIIBO · LCD / OLED</p><h1>{{ $t('workflow.appTitle') }}</h1><p class="app-subtitle">{{ $t('tools.subtitle') }}</p></div>
       </div>
       <div class="header-tools">    <div class="header-language">
       <el-dropdown trigger="click" class="international" popper-class="language-menu-popup" @command="handle_set_language">
@@ -53,7 +53,8 @@
       <span v-else class="quick-location">{{ $t(demoMode ? 'workflow.previewShort' : 'workflow.connectHint') }}</span></div>
       <span v-if="quickFreeSpace" class="quick-storage">{{ statusDriveInfo.label }}: {{ $t('workflow.freeSpace',{bytes:quickFreeSpace}) }}</span>
       <div class="status-links">
-        <a class="guide-link" :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
+        <a class="guide-link" :href="guideUrl + '#flash'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.lcdGuide') }}</a>
+        <a class="guide-link" :href="guideUrl + '#oled'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.oledGuide') }}</a>
         <button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button>
       </div>
     </section>
@@ -78,7 +79,7 @@
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
       <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
-      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" @upload="on_btn_upload" />
+      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :firmware-version="firmwareVersion" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" @upload="on_btn_upload" />
     </nav>
     <div class="workspace-body">
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
@@ -295,14 +296,19 @@
     </details>
     <details v-show="activeWorkspace === 'update'" class="workspace-panel" ref="updateWorkspace" id="update-workspace">
       <summary>{{ $t('workflow.updateTitle') }}<span>{{ $t('workflow.updateBrief') }}</span></summary>
-      <div class="workspace-content"><p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
+      <div class="workspace-content">
       <p v-if="connected && deviceNickname" class="device-nickname-context"><strong>{{ $t('info.nicknameDevice', {name:deviceNickname}) }}</strong> {{ $t('info.nicknameDfu') }}</p>
-      <a class="guide-link" :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
+      <FirmwareBoardChoice v-if="visitedWorkspaces.has('update')" :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language">
+      <template #lcd>
+      <p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
+      <a class="guide-link" :href="guideUrl + '#flash'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
               :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button></div>
       <div><span aria-hidden="true">2</span><p>{{ $t('workflow.updateStepPage') }}</p><a class="dfu-page-link" :href="dfuPageUrl" target="_blank" rel="noopener noreferrer">{{ $t('menu.dfupage') }} <span aria-hidden="true">↗</span></a></div></div>
-      <UpdateCheck v-if="visitedWorkspaces.has('update')" :session="{ connected, firmwareVersion, bootState, dfuReference: lastDfuReference }" :boot="bootInfo" :locale="language" />
+      <UpdateCheck :session="{ connected, firmwareVersion, bootState, dfuReference: lastDfuReference }" :boot="bootInfo" :locale="language" />
       <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
+      </template>
+      </FirmwareBoardChoice>
       </div>
     </details>
     <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview" @toggle.self="devicePanelOpen = $event.currentTarget.open">
@@ -624,6 +630,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 export default {
   components: {
+    FirmwareBoardChoice: defineAsyncComponent(() => import('./components/FirmwareBoardChoice.vue')),
     BatteryVoltageHistory: defineAsyncComponent(() => import('./components/BatteryVoltageHistory.vue')),
     CollectionBackupAudit: defineAsyncComponent(() => import('./components/CollectionBackupAudit.vue')),
     BackupExportOptions: defineAsyncComponent(() => import('./components/BackupExportOptions.vue')),
