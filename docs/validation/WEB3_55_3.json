@@ -4,8 +4,9 @@
   "appCounter": 654,
   "previewBootloader": "Z21",
   "stableFirmware": "2.22.0-DE3.75",
-  "windowsWebTests": { "passed": 1650, "failed": 0, "skipped": 0 },
+  "windowsWebTests": { "passed": 1651, "failed": 0, "skipped": 0 },
   "productionBuildChecks": { "root": 22, "pages": 22 },
+  "updateAndGuideBrowserChecks": { "root": 49, "pages": 49 },
   "batteryHistoryBrowser": {
     "browser": "Chrome 157.0.8103.51",
     "base": "/pixl.js/",

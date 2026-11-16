@@ -426,6 +426,30 @@ test('real bundled-package component explains manual scope and removes downgrade
     props.locale='en_US';await Vue.nextTick();assert.match(text(root),/No downgrade is offered/);
   }finally{app.unmount();}
 });
+test('a legacy LCD can open the Z21 guide while incompatible DE3.81 application transfers are hidden', async () => {
+  const Vue = await import('vue'), renderer = createRenderer(Vue), root = node('root');
+  const releases = JSON.parse(fs.readFileSync(new URL('../src/data/firmware-releases.json',import.meta.url),'utf8'));
+  const fixture = {schema:1,packages:releases.packages.filter(entry=>entry.counter===654)};
+  const filename=fileURLToPath(new URL('../src/components/FirmwarePackages.vue',import.meta.url));
+  const Component = await loadComponent(Vue,filename,fixture);
+  const props = Vue.reactive({session,boot:null,locale:'de_DE'});
+  const app = renderer.createApp({render:()=>Vue.h(Component,props)});app.mount(root);
+  try {
+    for (const [counter,profile] of [[15,UPDATE_TARGET.bootloaderZ15],[17,UPDATE_TARGET.bootloaderZ17]]) {
+      const bytes = change(64,counter), view = new DataView(bytes.buffer);
+      view.setUint32(32,7002000,true); view.setUint16(36,0x0103,true);
+      bytes.set(Buffer.from(profile.sha256,'hex'),80);
+      props.boot = parseBootDiagnostics(bytes);
+      for (const [locale,page] of [['de_DE','index.html'],['en_US','en.html']]) {
+        props.locale=locale; await Vue.nextTick();
+        const links=nodes(root).filter(item=>item.type==='a').map(item=>item.props.href);
+        assert.ok(links.includes('/guide/'+page+'#android-de381'));
+        assert.ok(!links.some(href=>href.startsWith('/firmware/') || href.includes('nordicsemi.com/dfu/') || href.includes('dfu/web.html')));
+      }
+    }
+  } finally {app.unmount();}
+});
+
 const text = item => item.text + item.children.map(text).join('');
 const nodes = item => [item, ...item.children.flatMap(nodes)];
 

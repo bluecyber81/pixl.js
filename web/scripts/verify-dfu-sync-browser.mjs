@@ -97,7 +97,12 @@ async function runChecks() {
       const section = guidePage.locator('#bootloader');
       const systemLink = section.locator('a[href="' + comboAsset + '"]');
       assert.ok(await systemLink.isVisible());
-      assert.match(await systemLink.locator('..').innerText(), /Z19.*Z20.*Z21.*654/s);
+      const requirements = await systemLink.locator('..').innerText();
+      for (const value of ['Z21','Nordic Secure DFU','0x77000','0x7E000','0x7F000','0x0103','0x0126','Z15','Z17','App654']) {
+        assert.ok(requirements.includes(value), value);
+      }
+      assert.match(requirements, /unter 21|below 21/);
+      assert.equal(await guidePage.locator('#android-de380').count(), 1);
       const appLink = section.locator('a[download][href$="Allmiibo_LCD_DE3_81_654_NUR_APP.zip"]');
       assert.match(await appLink.locator('..').innerText(), /Z19.*Z20.*Z21.*654/s);
       assert.equal(await appLink.evaluate(a => new URL(a.href).pathname), base + 'firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip');

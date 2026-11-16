@@ -12,9 +12,9 @@
         <div v-else class="actions">
           <a :href="downloadUrl" :download="entry.file">{{ text.download }}</a>
           <a :href="dfuUrl" target="_blank" rel="noopener">{{ text.dfu }}</a>
-          <a v-if="entry.id === 'de3.81-lcd-app'" :href="systemGuide">{{ text.systemGuide }}</a>
           <a v-if="androidUrl" :href="androidUrl" rel="noreferrer" :aria-label="text.android + ' · ' + entry.version">{{ text.android }}</a>
         </div>
+        <p v-if="entry.id === 'de3.81-lcd-app'"><a :href="systemGuide">{{ text.systemGuide }}</a></p>
         <details><summary>{{ text.details }}</summary><p>{{ entry.file }}</p><p>{{ text.hash }} (SHA-256): <code>{{ entry.sha256 }}</code></p></details>
       </div>
       <p v-if="packages.some(item => item.androidUrl && !item.newer && !item.profileMismatch)" class="hint">{{ text.androidHint }}</p>
