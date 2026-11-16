@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## DE3.81 / App654 · Z21 · Web 3.55.5 · 16.11.2026
+
+Current LCD firmware with Nordic S112 7.3.0. The owner diagnostic reports App654 and Z21. Resuming an interrupted Android update on Z21 still needs a hardware test. [App-only ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Device readback](validation/DE3_81_LCD_READBACK.json)
+
 ## Web 3.53.0 · 15.11.2026
 
 Backups can reuse small files from a previous ZIP after checking their current digest on the device. Optional ZIP compression, backup phase timings and offline figure checks are available. Rename and ZIP import show the remaining path length. Device & diagnostics can inspect MIFARE Mini slots.

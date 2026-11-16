@@ -2,13 +2,27 @@
 
 [Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
-## Choose your firmware
+## Current LCD firmware · DE3.81 / App654
 
-- **LCD · DE3.75 stable.** For a compatible nRF52832 LCD with Packed LittleFS (PFS1), Z19 and S112 7.3.0. List return, wake and Switch recognition of a known figure were tested on one LCD. [Download LCD App648](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
-- **LCD · DE3.81 preview.** For a compatible LCD with PFS1, Z19, Z20 or Z21 and S112 7.3.0. An owner confirmed flashing and initial operation. The installation guide also covers the two-stage update for compatible older bootloaders. [Download LCD App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [LCD installation guide](docs/INSTALLATION.md#lcd-preview-de381--app654)
-- **OLED · DE3.81 Test 1.** For the nRF52832 Pixl.js with a 128 × 64 SH1106 OLED, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The app uses the existing SPIFFS or native LittleFS. Both storage formats and both menu languages were verified on a computer. A user reports that Test 1 works on one OLED. The device’s filesystem and the features tested remain unknown. An OLED remote connection problem has been reported. [Remote setup and button test](https://bluecyber81.github.io/pixl.js/guide/en.html#oled-remote) [Download OLED Test 1](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Test guide in English and German](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
+| What do you want to update? | Download and requirements |
+| --- | --- |
+| Application only | [Download DE3.81 / App654 (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). For LCD devices with Packed LittleFS (PFS1), Z19, Z20 or Z21, and S112 7.3.0. The installed bootloader and SoftDevice stay in place. |
+| Application, bootloader and SoftDevice | [Download the full Android package (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Includes DE3.81 / App654, bootloader Z21 and Nordic S112 7.3.0. Requires a compatible LCD, bootloader counter below 21, a matching key and layout, and S112 FWID 0x0103 or 0x0126. |
+
+Back up your files and keep the ZIP intact. Install a full update with **nRF Device Firmware Update** and wait for both stages. An LCD diagnostic records App654, Z21 and S112 7.3.0. Resuming a physically interrupted Android DFU on Z21 still needs a device test. [Flashing guide](https://bluecyber81.github.io/pixl.js/guide/en.html#flash) · [Migrating from SPIFFS](docs/MIGRATION_PFS1.md) · [Source and test evidence](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
+
+## OLED test firmware
+
+**OLED · DE3.81 Test 1.** For the nRF52832 Pixl.js with a 128 × 64 SH1106 OLED, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The app uses the existing SPIFFS or native LittleFS. Both storage formats and both menu languages were verified on a computer. A user reports that Test 1 works on one OLED. The device’s filesystem and the features tested remain unknown. An OLED remote connection problem has been reported. [Remote setup and button test](https://bluecyber81.github.io/pixl.js/guide/en.html#oled-remote) · [Download OLED Test 1](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Test guide in English and German](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
 
 Both DE3.81 applications include German and English menus, the 956-figure catalog, game hints, app resume and Bluetooth remote buttons. Display capture, startup and RAM diagnostics, and battery history in the file manager are available on LCD.
+
+## File manager 3.55.5
+
+The home page links to both LCD downloads and the separate OLED route. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5)
+
+<details>
+<summary>Previous releases and their original downloads</summary>
 
 ## File manager 3.55.4
 
@@ -144,8 +158,10 @@ Open a figure in the Amiibo database, press the centre button and choose **Note 
 
 On the tested Z19/S112 layout, select the application ZIP above in nRF Device Firmware Update for Android or select the bundled application in Web DFU. Existing DE3.65 installations can open the new file manager directly. Older SPIFFS devices have a separate migration procedure. [Application release and evidence](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Migration](docs/MIGRATION_PFS1.md)
 
+</details>
+
 ## Source and development
 
-The repository includes corresponding application, Z19 bootloader and web sources. Nordic supplies the S112 7.3.0 radio stack. In the existing 100-figure model the combined transaction reduced programming calls by 48.0% and erase calls by 42.7%. The four-page mount cache saved 431 reads in the 952-figure model. [Storage measurements](docs/validation/DE3_65_SPEICHER.md) · [Z19 source](bootloader-z19/) · [S112](softdevice-s112/) · [Contributing](CONTRIBUTING.md)
+The repository includes corresponding application, Z21 bootloader and web sources. Nordic supplies the S112 7.3.0 radio stack. In the existing 100-figure model the combined transaction reduced programming calls by 48.0% and erase calls by 42.7%. The four-page mount cache saved 431 reads in the 952-figure model. [Storage measurements](docs/validation/DE3_65_SPEICHER.md) · [Z21 source](bootloader-z21/) · [S112](softdevice-s112/) · [Contributing](CONTRIBUTING.md)
 
 Community continuation by bluecyber81, based on [solosky](https://github.com/solosky/pixl.js) and [cylin577](https://github.com/cylin577/pixl.js). [Components](docs/COMPONENTS.md) · [History](docs/DEVELOPMENT_HISTORY.md) · [License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

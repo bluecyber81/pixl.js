@@ -2,18 +2,24 @@
 
 ## Aktuelle Downloads
 
-| Gesucht | Download |
+| Paket | Download und Verwendung |
 | --- | --- |
+| DE3.81 / App654 für LCD | [Nur die App (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für PFS1, Z19/Z20/Z21 und S112 7.3.0. |
+| DE3.81 / App654, Z21 und S112 7.3.0 für LCD | [Komplettpaket für Android (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Für ein kompatibles Gerät mit Bootloader-Zähler unter 21. Schlüssel, Layout und Ausgangs-FWID 0x0103/0x0126 anhand der [Installationsanleitung](INSTALLATION.md) prüfen. |
 | OLED-Testversion für ein nRF52832-Pixl.js mit SH1106, passendem DFU-Bootloader, S112 7.2.0 (`0x0103`) und bestehendem SPIFFS oder nativem LittleFS | [DE3.81 OLED Test 1 · App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Anleitung (DE/EN)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt). Am Rechner geprüft. Ein Nutzer meldet erfolgreichen Betrieb auf einem OLED. |
+| Windows-Dateimanager und Quellcode | [Dateimanager 3.55.5](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5) |
+| Prüfpaket | [DE3.81, Z21 und Quellen (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip) · [Diagnose vom LCD](validation/DE3_81_LCD_READBACK.json) |
+| LCD auf PFS1 umstellen | [SPIFFS-Vorbereitung, geprüfte Sicherung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
+
+## Archiv · ältere LCD-Komponenten
+
+| Früheres Paket | Originaldownload |
+| --- | --- |
 | Stabile Geräte-App für ein kompatibles LCD mit eingerichtetem PFS1, Z19 und S112 7.3.0 | [DE3.75 / App648 – App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) |
-| Android-Vorschau für kompatible LCD-Geräte mit PFS1, passendem DFU-Schlüssel und Bootloader-Zähler unter 21 | [Komplette ZIP mit S112 7.3.0, Z21 und DE3.81 / App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). In nRF Device Firmware Update beide Phasen abschließen lassen. [Voraussetzungen](INSTALLATION.md) |
-| DE3.81 auf kompatiblem LCD mit PFS1, passendem Bootloader und S112 7.3.0 | [Nur App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Prüfpaket mit Quellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip) |
 | Flash-Kennung auf einem LCD mit PFS1, Z19 und S112 7.3.0 auslesen | [DE3.79 / App652 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.79/Allmiibo_LCD_DE3_79_652_NUR_APP.zip). Die Geräte-App liefert die beim Einrichten des Speichers gelesene JEDEC-Kennung. [Prüfstand](validation/DE3_79.json) |
 | Neue Akkuanzeige auf einem LCD mit PFS1, Z19 und S112 7.3.0 | [DE3.77 / App650 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.77/Allmiibo_LCD_DE3_77_650_NUR_APP.zip). Größere Ziffern, acht Akkusegmente und Ladeblitz. [Prüfstand](validation/DE3_77.json) |
 | Neue LCD-Funktionen auf einem Gerät mit PFS1, Z19 und S112 7.3.0 erproben | [DE3.76 / App649 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.76/Allmiibo_LCD_DE3_76_649_NUR_APP.zip). Die Gerätedatenbank enthält die Figuren „Junger Link“ und „Junge Zelda“. Alle sieben Kirby-Air-Riders-Figuren haben ein LCD-Bild. [Prüfstand](validation/WEB3_54_0.json) |
-| Dateimanager für Windows oder dessen Quellcode | [Dateimanager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4) |
 | Kompatibles LCD mit älterem Bootloader und erfüllten [Systemvoraussetzungen](INSTALLATION.md) | [Android-Kombipaket für S112 7.3.0, Z19 und DE3.75 / App648](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) |
-| Systempaket für ein kompatibles LCD mit älterem Bootloader oder Umstellung von SPIFFS | [Voraussetzungen und Paketauswahl](https://bluecyber81.github.io/pixl.js/guide/index.html#bootloader) · [Vorbereitung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
 | Geräteprüfung zu DE3.75 / App648 | [Prüfumfang und Prüfsummen](RELEASE_DE3_75.md) |
 | Gesamtübergabe für ChatGPT oder eigene Prüfung | [Prüfpaket für App648, Z19 und Dateimanager 3.52.1](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip) |
 
@@ -71,5 +77,9 @@ BL8 ist unsere Weiterentwicklung der Pixl.js-/Nordic-Bootloaderbasis. [Hier steh
 S112 ist das unveränderte Nordic-Original. Unsere Arbeit umfasst Integration, SDK-Workaround, Diagnose und Prüfungen. Die vollständigen Nordic-Bedingungen bleiben im Originalarchiv und im Komponentenpaket enthalten; sie sind zusätzlich unter [softdevice-s112](../softdevice-s112/README.md) dokumentiert.
 
 ## English
+
+Current LCD downloads: [DE3.81 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package with Z21 and S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Installation instructions](INSTALLATION.md).
+
+### Historical BL8 downloads
 
 These are **separate component/reference downloads**, not a universal system updater. The unchanged signed BL8-only package uses counter **9** and cannot upgrade devices already at 9/11. The original Nordic S112 ZIP contains vendor HEX/API/release notes/license and is **not a Secure DFU package**. BL8 source and SDK changes are published with reproducible-build evidence. The outer bundle is not flashable. Hardware, installed key/counters, SoftDevice transition and storage migration require individual qualification. No fresh signing, format, flash or device operation is performed by this publication.

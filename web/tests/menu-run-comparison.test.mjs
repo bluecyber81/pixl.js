@@ -92,7 +92,7 @@ for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.
  const {buildIdentity}=report(version,counter);
  assert.equal(buildIdentity.referenceRelation,'version-and-counter');
  assert.equal(buildIdentity.packageReference.applicationCounter,counter);
- assert.equal(buildIdentity.packageReference.hardwareAcceptance, ({647:'remote-display-photo-confirmed-on-one-lcd', 648:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd', 653:'startup-and-system-readback-on-one-lcd', 654:'owner-reported-flash-and-initial-operation'})[counter] ?? 'pending');
- assert.equal(buildIdentity.packageReference.artifactStatus, [647,648].includes(counter) ? 'stable-signed-application' : 'experimental-signed-application');
+ assert.equal(buildIdentity.packageReference.hardwareAcceptance, ({647:'remote-display-photo-confirmed-on-one-lcd', 648:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd', 653:'startup-and-system-readback-on-one-lcd', 654:'startup-and-system-readback-on-one-lcd'})[counter] ?? 'pending');
+ assert.equal(buildIdentity.packageReference.artifactStatus, [647,648,654].includes(counter) ? 'stable-signed-application' : 'experimental-signed-application');
  assert.equal(buildIdentity.applicationHashVerified,false);
 });

@@ -87,11 +87,11 @@ const currentApplications = [
   {firmwareVersion:'2.22.0-DE3.70',applicationCounter:642},
 ]
 const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',
-  firmwareVersion:'2.22.0-DE3.75', applicationCounter:648,
+  firmwareVersion:'2.22.0-DE3.81', applicationCounter:654,
   // Exact T1 qualification: identical six-file engine manifest, constants,
   // final ELF/BIN layout and embedded identity, and unchanged capacity WASM.
   // Subsequent exact profile bindings: docs/validation/DE3_72_PFS.json, DE3_73_PFS.json, DE3_74_PFS.json, DE3_75_PFS.json, DE3_76_PFS.json, DE3_77_PFS.json, DE3_79_PFS.json DE3_80_PFS.json and DE3_81_PFS.json.
-  // App648 is the default; saved simulations must still match an approved device and geometry.
+  // App654 is the default; saved simulations must still match an approved device and geometry.
   approvedApplications:[...currentApplications,{firmwareVersion:'2.22.0-DE3.71t1',applicationCounter:644},
     {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645},
     {firmwareVersion:'2.22.0-DE3.73',applicationCounter:646},

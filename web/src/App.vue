@@ -71,6 +71,7 @@
         <span class="action-copy"><strong>{{ $t('workflow.startFirmware') }}</strong><span>{{ $t('workflow.startFirmwareHint') }}</span></span>
       </button>
     </nav>
+    <CurrentLcdDownloads v-if="activeWorkspace === 'files' && !connected" :locale="language" />
     <div class="app-layout">
     <nav class="workspace-nav" :aria-label="$t('workflow.workspaces')">
       <button type="button" @click="show_workspace('files')" :aria-current="activeWorkspace === 'files' ? 'page' : undefined" aria-controls="file-workspace"><span class="workspace-icon" aria-hidden="true">▤</span><span><strong>{{ $t('workflow.filesTitle') }}</strong><small>{{ $t('workflow.filesBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
@@ -300,6 +301,7 @@
       <p v-if="connected && deviceNickname" class="device-nickname-context"><strong>{{ $t('info.nicknameDevice', {name:deviceNickname}) }}</strong> {{ $t('info.nicknameDfu') }}</p>
       <FirmwareBoardChoice v-if="visitedWorkspaces.has('update')" :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language">
       <template #lcd>
+      <CurrentLcdDownloads :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language" />
       <p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
       <a class="guide-link" :href="guideUrl + '#flash'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
@@ -578,8 +580,8 @@
   <footer class="source-footer">
     <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'DE3.81 / Z21 · Prüfnachweise (ZIP)' : 'DE3.81 / Z21 · test evidence (ZIP)' }}</a>
-    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'App648-Prüfpaket für ChatGPT (ZIP)' : 'App648 test kit for ChatGPT (ZIP)' }}</a>
+    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.81 / App654 / Z21 · Prüfnachweise (ZIP)' : 'LCD DE3.81 / App654 / Z21 · test evidence (ZIP)' }}</a>
+    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv · App648-Prüfpaket für ChatGPT (ZIP)' : 'Archive · App648 test kit for ChatGPT (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
   </main></el-config-provider>
@@ -630,6 +632,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 export default {
   components: {
+    CurrentLcdDownloads: defineAsyncComponent(() => import('./components/CurrentLcdDownloads.vue')),
     FirmwareBoardChoice: defineAsyncComponent(() => import('./components/FirmwareBoardChoice.vue')),
     BatteryVoltageHistory: defineAsyncComponent(() => import('./components/BatteryVoltageHistory.vue')),
     CollectionBackupAudit: defineAsyncComponent(() => import('./components/CollectionBackupAudit.vue')),

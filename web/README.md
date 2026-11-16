@@ -1,8 +1,12 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.55.4 · LCD und OLED
+## Dateimanager 3.55.5 · LCD-Firmware DE3.81
 
-Die Firmware-Auswahl und die Anleitung führen zum passenden Paket für das eigene Gerät. Für LCD stehen DE3.75 Final und die Vorschau DE3.81 zur Wahl. Das OLED-Testpaket DE3.81 für S112 7.2.0 wird am Handy als App-Update installiert. [LCD-Freigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) · [OLED-Testversion und Anleitung](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) · [Dateimanager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
+Für LCD ist DE3.81 / App654 die aktuelle Firmware. Mit eingerichtetem Packed LittleFS (PFS1), S112 7.3.0 und Z19, Z20 oder Z21 genügt die [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für ein kompatibles LCD mit älterem Bootloader enthält das [Android-Komplettpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) S112 7.3.0, Z21 und App654. [Installationsanleitung für LCD](https://bluecyber81.github.io/pixl.js/guide/index.html#flash) · [Separate OLED-Testversion](https://bluecyber81.github.io/pixl.js/guide/index.html#oled)
+
+## Archiv · Dateimanager 3.55.4
+
+Die Firmware-Auswahl und die Anleitung führen zum passenden Paket für das eigene Gerät. Bei Veröffentlichung von 3.55.4 standen DE3.75 Final und die Vorschau DE3.81 zur Wahl. Das OLED-Testpaket DE3.81 für S112 7.2.0 wird am Handy als App-Update installiert. [LCD-Freigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) · [OLED-Testversion und Anleitung](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) · [Dateimanager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
 
 ## Akkuverlauf im Dateimanager 3.55.3
 
@@ -40,7 +44,7 @@ Für die eingebaute Datenbank auf dem **Allmiibo LCD** gibt es die signierte **D
 
 ## Dateimanager 3.53.0
 
-**DE3.75 / App648 ist die stabile LCD-Firmware** für Geräte mit PFS1, Z19 und S112 7.3.0. Auf einem LCD gelangen die Rückkehr zur gewählten Figur und das Aufwachen in beiden Apps. Die Switch erkannte außerdem eine bekannte Figur. Wer die signierte App648 bereits geflasht hat, kann sie weiterverwenden. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android-Kombi für passende ältere Bootloader](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Änderungen und Gerätetests](../docs/RELEASE_DE3_75.md) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip)
+**DE3.75 / App648 war die damalige stabile LCD-Firmware** für Geräte mit PFS1, Z19 und S112 7.3.0. Auf einem LCD gelangen die Rückkehr zur gewählten Figur und das Aufwachen in beiden Apps. Die Switch erkannte außerdem eine bekannte Figur. Wer die signierte App648 bereits geflasht hat, kann sie weiterverwenden. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Android-Kombi für passende ältere Bootloader](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_S112_7_3_0_Z19_DE3_75_648_KOMPLETT.zip) · [Änderungen und Gerätetests](../docs/RELEASE_DE3_75.md) · [ChatGPT-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip)
 
 Ordnersicherungen lassen sich mit einer früheren ZIP beschleunigen. Der Dateimanager vergleicht kleine Dateien mit der aktuellen Prüfsumme vom Gerät. Du kannst die ZIP komprimieren, die Dauer je Sicherungsphase sehen und einen gesicherten Figurenordner offline prüfen. Beim Umbenennen und vor dem ZIP-Import wird die verbleibende Pfadlänge angezeigt. Unter Gerät & Diagnose lassen sich MIFARE-Mini-Slots lesend prüfen. [Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.53.0)
 

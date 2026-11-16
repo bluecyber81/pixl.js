@@ -1,8 +1,12 @@
 # Allmiibo LCD application and file manager history
 
-## File manager 3.55.4 · LCD and OLED
+## DE3.81 / App654 · Z21 · File manager 3.55.5
 
-The firmware selector and guide link to the packages for each board. LCD owners can choose stable DE3.75 or the DE3.81 preview. The DE3.81 OLED trial for S112 7.2.0 is an application-only phone update. [Stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) · [OLED trial and guide](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) · [File manager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
+The current LCD firmware is DE3.81 / App654. With Packed LittleFS (PFS1), S112 7.3.0 and Z19, Z20 or Z21, use the [application ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). For a compatible LCD with an older bootloader, the [Android system package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) installs S112 7.3.0, Z21 and App654. [LCD installation guide](https://bluecyber81.github.io/pixl.js/guide/en.html#flash) · [Separate OLED trial](https://bluecyber81.github.io/pixl.js/guide/en.html#oled)
+
+## Archive · File manager 3.55.4
+
+The firmware selector and guide link to the packages for each board. At the time of version 3.55.4, the LCD choices were stable DE3.75 and the DE3.81 preview. The DE3.81 OLED trial for S112 7.2.0 is an application-only phone update. [Stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) · [OLED trial and guide](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) · [File manager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
 
 ## DE3.81 / App654 · Z21 · Web 3.55.3
 
@@ -12,7 +16,7 @@ DE3.81 / App654 keeps the active figure selected when a switch is declined and l
 
 ## DE3.75 / App648 · Web 3.52.1
 
-**DE3.75 / App648 is the stable LCD firmware** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release notes and device checks](docs/RELEASE_DE3_75.md)
+**DE3.75 / App648 was the stable LCD firmware at the time** for devices with PFS1, Z19 and S112 7.3.0. On one LCD, the owner verified list return and wake in both apps. The Switch also recognized a known figure. If you already installed the signed App648, you can keep using it. [Download the app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release notes and device checks](docs/RELEASE_DE3_75.md)
 
 ## DE3.72 / App645 and file manager 3.48.1
 

@@ -6,7 +6,7 @@ const identity={firmwareVersion:'2.22.0-DE3.71t1',applicationCounter:644,setting
 const layout={...target.layout,mounted:true};
 
 test('only exact engine-qualified T1 version/counter joins the existing unchanged simulator profile',()=>{
- assert.equal(target.firmwareVersion,'2.22.0-DE3.75');assert.equal(target.applicationCounter,648);
+ assert.equal(target.firmwareVersion,'2.22.0-DE3.81');assert.equal(target.applicationCounter,654);
  assert.equal(target.layout.engineSha256,'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248');
  assert.equal(target.wasmSha256,'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9');
  assert.equal(migrationApplicationMatches(identity,target),true);

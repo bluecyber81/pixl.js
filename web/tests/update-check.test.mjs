@@ -12,11 +12,11 @@ import { firmwarePackageText } from '../src/lib/release-packages.js';
 function targetPacket() {
   const bytes = bootPacket(), view = new DataView(bytes.buffer);
   view.setUint32(12, 0x41414530, true); view.setUint32(32, 7003000, true);
-  view.setUint16(36, 0x126, true); view.setUint32(60, 648, true); view.setUint32(64, 19, true);
+  view.setUint16(36, 0x126, true); view.setUint32(60, 654, true); view.setUint32(64, 19, true);
   bytes.set(Buffer.from('51f47a2fae5739d4a59114f7d84e9da10a3ca140f1a558c44685fbe0d97811fd', 'hex'), 80);
   return bytes;
 }
-const session = { connected: true, firmwareVersion: '2.22.0-DE3.75', bootState: 'available' };
+const session = { connected: true, firmwareVersion: '2.22.0-DE3.81', bootState: 'available' };
 const result = (bytes = targetPacket(), current = session) => evaluateUpdateCheck({ session: current, boot: bytes == null ? null : parseBootDiagnostics(bytes) });
 const row = (value, id) => value.rows.find(item => item.id === id);
 const change = (offset, value, bytes = targetPacket()) => { new DataView(bytes.buffer).setUint32(offset, value, true); return bytes; };
@@ -36,17 +36,17 @@ test('2.22 base versions and PREP are recognized without claiming LittleFS insta
   assert.match(updateCheckText('de_DE').reasons.preparationApplication,/kein Nachweis/);
 });
 
-test('exact independent Z19 / S112 7.3 / DE3.75 synthetic observations match the pinned target', () => {
+test('exact independent Z19 / S112 7.3 / DE3.81 synthetic observations match the pinned target', () => {
   const report = result();
   assert.equal(report.status, 'match'); assert.equal(report.active, true);
   assert.deepEqual(report.rows.map(item => [item.id, item.status]), [['hardware', 'match'], ['application', 'match'], ['bootloader', 'match'], ['softDevice', 'match']]);
   assert.ok(report.rows.every(item => item.checks.every(check => check.status === 'match')));
-  assert.equal(UPDATE_TARGET.id, 'allmiibo-lcd-de3.75-z19-s112-7.3.0');
+  assert.equal(UPDATE_TARGET.id, 'allmiibo-lcd-de3.81-z21-s112-7.3.0');
   for (const value of [UPDATE_TARGET, UPDATE_TARGET.application, UPDATE_TARGET.bootloader, UPDATE_TARGET.softDevice, UPDATE_TARGET.hardware]) assert.equal(Object.isFrozen(value), true);
 });
 
 test('BL8 target keeps verified SoftDevice and memory geometry unchanged', () => {
-  assert.deepEqual(UPDATE_TARGET.application, { version: '2.22.0-DE3.75', counter: 648 });
+  assert.deepEqual(UPDATE_TARGET.application, { version: '2.22.0-DE3.81', counter: 654 });
   assert.deepEqual(UPDATE_TARGET.softDevice, { variant: 112, version: 7003000, fwid: 0x126 });
   assert.deepEqual(UPDATE_TARGET.hardware, { chip: 0x52832, variant: 0x41414530, flash: 524288, ram: 65536, page: 4096 });
   assert.equal(UPDATE_TARGET.bootloader.counter, 11);
@@ -57,28 +57,28 @@ test('BL8 target keeps verified SoftDevice and memory geometry unchanged', () =>
   assert.equal(UPDATE_TARGET.bootloader.sha256, 'add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130');
 });
 
-const previewSession = {...session, firmwareVersion:'2.22.0-DE3.80'};
+const currentSession = {...session, firmwareVersion:'2.22.0-DE3.81'};
 const z20Hash = '4340d5080aca4205b576c31e7d7b96d5061a4fd3e52a2467e9eb1dabe0c064db';
 function previewPacket(counter = 19, hash = null) {
-  const packet = change(64, counter, change(60, 653));
+  const packet = change(64, counter, change(60, 654));
   if (hash) packet.set(Buffer.from(hash, 'hex'), 80);
   return packet;
 }
 
-test('bundled preview uses its own application counter and its allowed bootloader hash/counter pairs', () => {
+test('current application supports verified Z19 and Z20 as well as Z21', () => {
   for (const packet of [previewPacket(), previewPacket(20,z20Hash)]) {
-    const report = result(packet, previewSession);
-    assert.equal(report.status, 'preview');
-    assert.equal(row(report,'application').status,'preview');
-    assert.equal(row(report,'application').checks.find(c=>c.key==='applicationCounter').expected,653);
+    const report = result(packet, currentSession);
+    assert.equal(report.status, 'match');
+    assert.equal(row(report,'application').status,'match');
+    assert.equal(row(report,'application').checks.find(c=>c.key==='applicationCounter').expected,654);
     assert.ok(!row(report,'application').reasons.includes('knownLocalApplication'));
     assert.equal(row(report,'bootloader').status,'match');
     assert.equal(report.targetId,UPDATE_TARGET.id);
     for (const locale of ['de_DE','en_US']) {
       const copy = updateCheckText(locale,report.preview);
-      assert.match(copy.target,/DE3\.75/);
-      assert.match(copy.targets.application,/DE3\.80.*653/);
-      assert.match(copy.targets.bootloader,/Z19\/Z20/);
+      assert.match(copy.target,/DE3\.81/);
+      assert.match(copy.targets.application,/DE3\.81.*654/);
+      assert.match(copy.targets.bootloader,/Z19.*Z20.*Z21/);
       assert.ok(copy.preview && copy.overall.preview && copy.fields.previewBootCounter);
     }
   }
@@ -91,7 +91,7 @@ test('DE3.81 recognizes the Z21 region and rejects a mismatched region', () => {
   const app654 = {...session, firmwareVersion:'2.22.0-DE3.81'};
   const packet = change(60,654,previewPacket(21,UPDATE_TARGET.bootloaderZ21.sha256));
   const report = result(packet,app654);
-  assert.equal(report.status,'preview');
+  assert.equal(report.status,'match');
   assert.equal(row(report,'bootloader').status,'match');
   assert.ok(row(report,'bootloader').reasons.includes('localZ21'));
   assert.equal(row(result(change(60,654,previewPacket(21,z20Hash)),app654),'bootloader').status,'different');
@@ -107,22 +107,22 @@ test('known preview version cannot hide conflicting or missing device evidence',
     ['bootloader',previewPacket(20,'11'.repeat(32))],
     ['bootloader',previewPacket(17,UPDATE_TARGET.bootloaderZ17.sha256)]
   ]) {
-    const report = result(packet,previewSession);
+    const report = result(packet,currentSession);
     assert.equal(report.status,'different');
     assert.equal(row(report,id).status,'different');
   }
   const noHash = previewPacket(20,z20Hash), view = new DataView(noHash.buffer);
   view.setUint16(6,0x19f,true); noHash.fill(0,76,112);
-  assert.equal(result(noHash,previewSession).status,'unknown');
+  assert.equal(result(noHash,currentSession).status,'unknown');
   const noCrc = previewPacket(), crcView = new DataView(noCrc.buffer);
   crcView.setUint16(6,0x1af,true); noCrc.fill(0,60,68);
   for (const packet of [noCrc,null]) {
-    const report = result(packet,previewSession);
+    const report = result(packet,currentSession);
     assert.equal(report.status,'unknown');
     assert.equal(row(report,'application').status,'unknown');
   }
-  assert.equal(result(previewPacket(),{...session,firmwareVersion:'2.22.0-DE3.81'}).status,'different');
-  assert.equal(result(previewPacket(),{...previewSession,connected:false}).preview,null);
+  assert.equal(result(change(60,653,previewPacket()),currentSession).status,'different');
+  assert.equal(result(previewPacket(),{...currentSession,connected:false}).preview,null);
 });
 
 test('local comparison explains the prior DE3.64 build only for their own validated counter', () => {
@@ -247,10 +247,10 @@ test('the previous BL5, BL6 and BL7 fingerprints stay different even with a new 
 test('both overview languages show the exact new target without changing evidence limits', () => {
   for (const locale of ['de_DE', 'en_US']) {
     const copy = updateCheckText(locale);
-    assert.match(copy.target, /DE3\.75.*Z19.*S112 7\.3\.0/);
-    assert.match(copy.targets.application, /DE3\.75.*648/);
+    assert.match(copy.target, /DE3\.81.*Z21.*S112 7\.3\.0/);
+    assert.match(copy.targets.application, /DE3\.81.*654/);
     assert.match(copy.targets.bootloader, /BL8.*11/);
-    assert.match(copy.reasons.olderApplication, /DE3\.75/);
+    assert.match(copy.reasons.olderApplication, /DE3\.81/);
     assert.doesNotMatch(copy.target + copy.targets.application + copy.targets.bootloader, /DE3\.25|BL5|588/);
   }
 });
@@ -258,7 +258,7 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.55.4'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.55.5'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
   assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));
@@ -305,7 +305,7 @@ test('an installed DE3.25 is shown as older and different without downgrading ma
     const wrongPair = row(result(change(60, counter - 1), { ...session, firmwareVersion }), 'application');
     assert.ok(!wrongPair.reasons.includes('knownLocalApplication'));
   }
-  assert.ok(row(result(change(60, 649), { ...session, firmwareVersion: '2.22.0-DE3.76' }), 'application').reasons.includes('newerApplication'));
+  assert.ok(row(result(change(60, 649), { ...session, firmwareVersion: '2.22.0-DE3.82' }), 'application').reasons.includes('newerApplication'));
   const oldBoot = change(64, 15);
   oldBoot.set(Buffer.from(UPDATE_TARGET.bootloaderZ15.sha256, 'hex'), 80);
   assert.equal(row(result(oldBoot), 'bootloader').status, 'different');
@@ -422,7 +422,7 @@ test('real bundled-package component explains manual scope and removes downgrade
     props.locale='de_DE';await Vue.nextTick();
     assert.equal(nodes(root).filter(n=>n.type==='button').length,0);
     const hrefs=nodes(root).filter(n=>n.type==='a').map(n=>n.props.href);assert(hrefs.includes('/dfu/web.html?package=' + fixture.packages[0].id));assert(hrefs.includes('/firmware/'+fixture.packages[0].file));
-    props.session.firmwareVersion='2.22.0-DE3.62';await Vue.nextTick();assert.equal(nodes(root).filter(n=>n.type==='a').length,2);assert.ok(nodes(root).some(n=>n.props.href==='https://github.com/bluecyber81/pixl.js/tree/de3.75'));assert.match(text(root),/Downgrade wird nicht angeboten/);
+    props.session.firmwareVersion='2.22.0-DE3.62';await Vue.nextTick();assert.equal(nodes(root).filter(n=>n.type==='a').length,2);assert.ok(nodes(root).some(n=>n.props.href==='https://github.com/bluecyber81/pixl.js/tree/de3.81'));assert.match(text(root),/Downgrade wird nicht angeboten/);
     props.locale='en_US';await Vue.nextTick();assert.match(text(root),/No downgrade is offered/);
   }finally{app.unmount();}
 });
@@ -466,12 +466,12 @@ test('real overview changes from unread to matching, then old application and di
     assert.ok(nodes(root).filter(item => item.type === 'details').every(item => !item.props.open));
     assert.equal(nodes(root).filter(item => ['button', 'img'].includes(item.type)).length, 0);
     assert.match(text(root), /Mitgelieferte Firmware/);
-    props.session.firmwareVersion = previewSession.firmwareVersion;
+    props.session.firmwareVersion = currentSession.firmwareVersion;
     props.boot = parseBootDiagnostics(previewPacket(20,z20Hash)); await Vue.nextTick();
-    assert.match(text(root), /Bekannte Vorschau/); assert.match(text(root), /Vorschauprofil · Z19\/Z20/);
+    assert.match(text(root), /Stimmt überein/); assert.match(text(root), /DE3\.81/);
     assert.doesNotMatch(text(root), /gehören zu einer früheren LCD-Ausgabe/);
     props.locale='en_US'; await Vue.nextTick();
-    assert.match(text(root), /Known preview/); assert.match(text(root), /Preview profile · 2.22.0-DE3.80 · counter 653/);
+    assert.match(text(root), /Matches/); assert.match(text(root), /2.22.0-DE3.81 · counter 654/);
     props.boot = parseBootDiagnostics(previewPacket(19,z20Hash)); await Vue.nextTick();
     assert.match(text(root), /At least one read value differs from the comparison profile/);
     props.locale='de_DE';

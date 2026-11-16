@@ -30,20 +30,20 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('the stable reference stays DE3.75 even with App649 and App650 approved and DE3.65 connected',async()=>{
+test('the stable reference stays DE3.81 even with App649 and App650 approved and DE3.65 connected',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
   assert.equal(options[0].props.value,'current')
-  assert.equal(text(options[0]),'DE3.75 / 648')
+  assert.equal(text(options[0]),'DE3.81 / 654')
   assert.match(text(h.root),/Dieses Prüfprofil passt zu DE3.55–DE3.70 \/ 627–642/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.75 \/ 648/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.81 \/ 654/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE3.75 \/ 648/)
+  assert.match(text(h.root),/Simulated profile DE3.81 \/ 654/)
  }finally{h.app.unmount()}
 })
 

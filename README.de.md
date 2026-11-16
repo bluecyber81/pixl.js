@@ -2,13 +2,27 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
-## Firmware für dein Gerät
+## Aktuelle LCD-Firmware · DE3.81 / App654
 
-- **LCD · DE3.75 stabil.** Für ein kompatibles nRF52832-LCD mit Packed LittleFS (PFS1), Z19 und S112 7.3.0. Die Rückkehr zur Figur, das Aufwachen und die Erkennung einer bekannten Figur an der Switch wurden auf einem LCD bestätigt. [LCD-App648 herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
-- **LCD · DE3.81 Vorschau.** Für ein kompatibles LCD mit PFS1, Z19, Z20 oder Z21 und S112 7.3.0. Der Besitzer hat das Flashen und die erste Funktion bestätigt. Die Anleitung erklärt auch die zweistufige Installation für passende ältere Bootloader. [LCD-App654 herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [LCD-Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/index.html)
-- **OLED · DE3.81 Test 1.** Für ein nRF52832-Pixl.js mit SH1106-OLED (128 × 64), passendem DFU-Bootloader und S112 7.2.0 (`0x0103`). Die App nutzt das vorhandene SPIFFS oder native LittleFS. Beide Speicherformate und beide Menüsprachen wurden am Rechner geprüft. Ein Nutzer berichtet, dass Test 1 auf einem OLED funktioniert. Welches Dateisystem er verwendet und welche Funktionen er geprüft hat, ist offen. Zur Fernbedienung liegt eine Fehlermeldung vor. [Einrichtung und Tastentest](https://bluecyber81.github.io/pixl.js/guide/index.html#oled-remote) [OLED-Testversion herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Testanleitung auf Deutsch und Englisch](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
+| Was möchtest du aktualisieren? | Download und Voraussetzungen |
+| --- | --- |
+| Nur die Geräte-App | [DE3.81 / App654 herunterladen (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für LCD mit Packed LittleFS (PFS1), Z19, Z20 oder Z21 und S112 7.3.0. Bootloader und SoftDevice bleiben installiert. |
+| App, Bootloader und SoftDevice | [Komplettpaket für Android herunterladen (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Enthält DE3.81 / App654, Bootloader Z21 und Nordic S112 7.3.0. Für passende LCD-Geräte mit Bootloader-Zähler unter 21, passendem Schlüssel und Speicherlayout sowie S112-FWID 0x0103 oder 0x0126. |
+
+Sichere deine Dateien und lass die ZIP gepackt. Übertrage das Komplettpaket in **nRF Device Firmware Update** und warte beide Phasen ab. Die Diagnose eines LCD meldet App654, Z21 und S112 7.3.0. Die Wiederaufnahme nach einem tatsächlichen Android-DFU-Abbruch auf Z21 steht als Einzeltest aus. [Flash-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#flash) · [Umstellung von SPIFFS](docs/MIGRATION_PFS1.md) · [Prüfpaket mit Quellen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
+
+## OLED-Testversion
+
+**OLED · DE3.81 Test 1.** Für ein nRF52832-Pixl.js mit SH1106-OLED (128 × 64), passendem DFU-Bootloader und S112 7.2.0 (`0x0103`). Die App nutzt das vorhandene SPIFFS oder native LittleFS. Beide Speicherformate und beide Menüsprachen wurden am Rechner geprüft. Ein Nutzer berichtet, dass Test 1 auf einem OLED funktioniert. Welches Dateisystem er verwendet und welche Funktionen er geprüft hat, ist offen. Zur Fernbedienung liegt eine Fehlermeldung vor. [Einrichtung und Tastentest](https://bluecyber81.github.io/pixl.js/guide/index.html#oled-remote) · [OLED-Testversion herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Testanleitung auf Deutsch und Englisch](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
 
 Beide DE3.81-Apps enthalten deutsche und englische Menüs, den Katalog mit 956 Figuren, Spielhinweise, „App fortsetzen“ und die Bluetooth-Fernbedienung für die Tasten. Displayfotos, Startzeit- und RAM-Diagnose sowie den Akkuverlauf im Dateimanager gibt es auf dem LCD.
+
+## Dateimanager 3.55.5
+
+Auf der Startseite findest du beide LCD-Downloads und den eigenen OLED-Einstieg. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5)
+
+<details>
+<summary>Frühere Veröffentlichungen und damalige Downloads</summary>
 
 ## Dateimanager 3.55.4
 
@@ -144,8 +158,10 @@ Unter **Amiibo-Datenbank → Figur öffnen → kurz Mitte → Notiz / Hinweise**
 
 Für ein Gerät mit passendem Z19 und S112 reicht die oben verlinkte App-ZIP. In der Android-App **nRF Device Firmware Update** die ZIP so auswählen, wie sie heruntergeladen wurde. Im Web-Updater unter **Update** die mitgelieferte LCD-Anwendung wählen. Wer schon DE3.65 mit Z19 verwendet, kann direkt den neuen Dateimanager öffnen. Für alte SPIFFS-Geräte gilt die gesonderte Migrationsanleitung. [App-Release und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.65) · [Migration](docs/MIGRATION_PFS1.md)
 
+</details>
+
 ## Quellen und Mitarbeit
 
-Die Geräteanwendung, der Z19-Bootloader mit seinen SDK-Anpassungen und der Dateimanager sind jeweils aus ihrem passenden Quellstand nachbaubar. Der Funkstack S112 7.3.0 stammt von Nordic. Im Speichervergleich waren bei 100 Modellimporten 48,0 % weniger Programmier- und 42,7 % weniger Löschvorgänge nötig. Der bestehende Mountcache sparte im 952-Figuren-Modell 431 physische Lesezugriffe. [Speichermessungen](docs/validation/DE3_65_SPEICHER.md) · [Z19-Quellen](bootloader-z19/) · [S112](softdevice-s112/) · [Mitmachen](CONTRIBUTING.md)
+Die Geräteanwendung, der Z21-Bootloader mit seinen SDK-Anpassungen und der Dateimanager sind jeweils aus ihrem passenden Quellstand nachbaubar. Der Funkstack S112 7.3.0 stammt von Nordic. Im Speichervergleich waren bei 100 Modellimporten 48,0 % weniger Programmier- und 42,7 % weniger Löschvorgänge nötig. Der bestehende Mountcache sparte im 952-Figuren-Modell 431 physische Lesezugriffe. [Speichermessungen](docs/validation/DE3_65_SPEICHER.md) · [Z21-Quellen](bootloader-z21/) · [S112](softdevice-s112/) · [Mitmachen](CONTRIBUTING.md)
 
 Community-Fortführung durch bluecyber81 auf Grundlage von [solosky](https://github.com/solosky/pixl.js) und [cylin577](https://github.com/cylin577/pixl.js). [Komponenten](docs/COMPONENTS.md) · [Entwicklungsgeschichte](docs/DEVELOPMENT_HISTORY.de.md) · [Lizenzen](THIRD_PARTY_NOTICES.md)
