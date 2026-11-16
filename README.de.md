@@ -1,5 +1,13 @@
 # Allmiibo LCD – Firmware und Dateimanager
 
+## Hardwarediagnose und Akkuverlauf · Dateimanager 3.55.0
+
+Unter **Gerät & Diagnose** kannst du den Akkuverlauf starten. Der Browser liest alle zehn Sekunden die zuletzt gemeldete Spannung und die Ladeanzeige aus. Die letzten 120 Einträge gelten für die aktuelle Verbindung. Während einer Dateiübertragung oder bei verborgenem Tab pausiert die Aufzeichnung. Steht „551520 · 180 mAh · 3,8 V · 0,684 Wh“ auf deinem Akku, kannst du das unter **Hardwareprofil → Akkuetikett diesem Gerät zuordnen** bestätigen. Der Diagnoseexport kennzeichnet diese Angabe als Akkuaufdruck.
+
+Am LCD zeigt der Kontrastregler den wirksamen Bereich von 60 bis 100 %. Bei langen Listen verarbeitet die Zeichnung nur die sichtbaren Zeilen einschließlich der angeschnittenen Ränder. Im Dateimanager kannst du das Displayfoto in Originalgröße, 2× oder 3× ansehen und als PNG mit 128 × 64 Pixeln speichern.
+
+Die LCD-Testfirmware **DE3.79 / App652** meldet die drei Kennbytes des externen Flashs. Der Dateimanager zeigt damit Herstellerkennung, Speichertyp und Kapazitätscode. Die Abfrage nutzt die beim Einrichten des Speichers gelesenen Bytes. Geräte mit älterer Firmware können die übrige Diagnose weiterhin nutzen. [App-ZIP fürs LCD mit PFS1, Z19 und S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.79/Allmiibo_LCD_DE3_79_652_NUR_APP.zip) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.0)
+
 ## Akkuanzeige · LCD-Firmware DE3.77 und Dateimanager 3.54.1
 
 Auf dem LCD erscheinen Spannung und achtstufiges Akkusymbol größer. Ein Blitz zeigt den Ladevorgang an. Bei niedrigem Stand erscheint „Niedrig“, bei fehlendem Messwert ein Strich. Der Dateimanager zeigt die Spannung in beiden Diagnoseansichten einheitlich in Volt, auf Deutsch zum Beispiel **3,870 V**.

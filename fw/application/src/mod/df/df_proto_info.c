@@ -8,6 +8,7 @@
 #include "../boot_diag.h"
 #include "boards.h"
 #ifdef LCD_SCREEN
+#include "hal_spi_flash.h"
 #include "mui_core.h"
 #include "mbedtls/sha256.h"
 #endif
@@ -187,6 +188,22 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
 }
 
 #ifdef LCD_SCREEN
+/* One cached result from the external flash geometry probe. Fits ATT MTU 23. */
+static void df_proto_handler_info_flash_jedec(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_FLASH_JEDEC, DF_STATUS_ERR);
+    if (!evt->df->length && !evt->df->status && !evt->df->chunk) {
+        memcpy(out.data, "PXJF", 4);
+        out.data[4] = 1;
+        out.data[5] = 12;
+        out.data[6] = hal_spi_flash_cached_jedec(out.data + 8);
+        out.length = 12;
+        out.status = DF_STATUS_OK;
+    }
+    df_core_send_frame(&out);
+}
+
 /* Rendering and DF commands both run in the foreground. Each reply binds its
  * page to the entire framebuffer as seen during this command. The client
  * can discard a changed frame without pinning or duplicating the LCD buffer. */
@@ -229,5 +246,6 @@ const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, df_proto_handler_info_startup_diagnostic},
 #ifdef LCD_SCREEN
     {DF_PROTO_CMD_INFO_DISPLAY_PAGE, df_proto_handler_info_display_page},
+    {DF_PROTO_CMD_INFO_FLASH_JEDEC, df_proto_handler_info_flash_jedec},
 #endif
     {0, NULL}};

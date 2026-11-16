@@ -63,6 +63,7 @@ async function runChecks() {
     ['Allmiibo_LCD_DE3_75_648_NUR_APP.zip', 'DE3.75', 648],
     ['Allmiibo_LCD_DE3_76_649_NUR_APP.zip', 'DE3.76', 649],
     ['Allmiibo_LCD_DE3_77_650_NUR_APP.zip', 'DE3.77', 650],
+    ['Allmiibo_LCD_DE3_79_652_NUR_APP.zip', 'DE3.79', 652],
   ];
   const update = page.locator('.firmware-packages');
   for (const [file, version, counter] of releases) {
@@ -266,7 +267,7 @@ async function runChecks() {
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
   assert.match(await page.locator('#bundled option[value="de3.75-lcd-app"]').innerText(), /DE3\.75.*Stabile Ausgabe.*Z19/);
   assert.match(await page.locator('#bundled option[value="de3.73-lcd-app"]').innerText(), /DE3\.73.*Testversion/);
-  for (const id of ['de3.76-lcd-app', 'de3.77-lcd-app']) {
+  for (const id of ['de3.76-lcd-app', 'de3.77-lcd-app', 'de3.79-lcd-app']) {
     assert.match(await page.locator('#bundled option[value="' + id + '"]').innerText(), /Testversion.*Z19/);
   }
   checks.push({ feature:'stable and preview releases in local DFU chooser and idle device selector' });

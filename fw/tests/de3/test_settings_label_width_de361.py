@@ -49,6 +49,8 @@ int main(void) {
                     settings_scene_main_reload(&app);
                     for (unsigned i = 0; i < list.items->size; ++i) {
                         mui_list_item_t *row = &list.items->row[i];
+                        if ((uintptr_t)row->user_data == SETTINGS_MAIN_MENU_OLED_CONTRAST)
+                            assert(!strcmp(row->subtext, on ? "100%" : "60%"));
                         unsigned title = u8g2_GetUTF8Width(&font, row->text);
                         unsigned value = u8g2_GetUTF8Width(&font, row->subtext);
                         unsigned column = mui_list_view_value_x(128, value);

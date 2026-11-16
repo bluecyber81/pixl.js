@@ -1,0 +1,57 @@
+{
+  "version": "3.55.0",
+  "date": "2026-11-16",
+  "firmwarePreview": "DE3.79 / App652",
+  "stableDefault": "DE3.75 / App648",
+  "firmwareEvidence": "docs/validation/DE3_79.json",
+  "filesystemEvidence": "docs/validation/DE3_79_PFS.json",
+  "hostTests": {
+    "webPassed": 1612,
+    "webSkipped": 0,
+    "portableProductionChecks": 22,
+    "pagesProductionChecks": 22,
+    "windowsLauncher": {
+      "passed": 22,
+      "platformSpecificSkipped": 2
+    }
+  },
+  "browser": {
+    "version": "157.0.8103.51",
+    "updaterAndSyncChecks": 44,
+    "backupLayouts": 4,
+    "batteryAndProfile": {
+      "runner": "web/scripts/verify-battery-history-browser.mjs",
+      "widths": [
+        390,
+        1200
+      ],
+      "locales": [
+        "de-DE",
+        "en-GB"
+      ],
+      "scenarios": [
+        "No automatic voltage probe before opt-in",
+        "Time, cached voltage, charging indication and CSV download",
+        "Read firmware-cached manufacturer/type/capacity bytes via a simulated peripheral",
+        "Opt-in label association and storage write/remove errors"
+      ],
+      "deviceAccess": "synthetic peripheral"
+    },
+    "lcdPhoto": {
+      "runner": "web/scripts/verify-remote-keyboard-browser.mjs",
+      "scales": [
+        1,
+        2,
+        3
+      ],
+      "pngPixels": [
+        128,
+        64
+      ],
+      "zoomUsesBluetooth": false,
+      "input": "synthetic framebuffer"
+    }
+  },
+  "physicalApp652Acceptance": "pending",
+  "physicalReadbackOfFlashId": null
+}

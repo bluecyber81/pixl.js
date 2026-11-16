@@ -19,6 +19,7 @@ static bool masked,selected,in_irq,inject_read,injected,wel,deny_wel,stuck,post_
 static unsigned command,transfers,fail_at,commits,erases,polls,busy_left,post_busy,enters,exits,wrdi;
 static uint32_t ticks,tick_step;
 static uint32_t wire_address;
+static uint8_t jedec_id[3]={0xef,0x40,0x17};
 static bool payload;
 /* The hardware RTC also advances with application IRQs masked. Bus completion
  * may inspect it inside CS; status-poll yielding is asserted separately. */
@@ -59,7 +60,7 @@ uint32_t nrfx_spim_xfer(const nrfx_spim_t*s,const nrfx_spim_xfer_desc_t*d,uint32
         if(command==CMD_RDSR1){polls++;ticks=(ticks+tick_step)&0xffffffu;value=wel?FLASH_STATUS_WEL:0;
             if(stuck||busy_left){value|=FLASH_STATUS_BUSY;if(busy_left)busy_left--;}}
         memset(d->p_rx_buffer,value,d->rx_length);
-        if(command==CMD_JEDEC_ID&&d->rx_length==3){d->p_rx_buffer[0]=0xef;d->p_rx_buffer[1]=0x40;d->p_rx_buffer[2]=0x17;}
+        if(command==CMD_JEDEC_ID&&d->rx_length==3)memcpy(d->p_rx_buffer,jedec_id,sizeof jedec_id);
     }
     s->p_reg->TXD.AMOUNT=d->tx_length;s->p_reg->RXD.AMOUNT=d->rx_length;
     s->p_reg->events[NRF_SPIM_EVENT_END]=true;
@@ -246,6 +247,11 @@ def main():
         for header in ['app_error.h','app_util_platform.h','app_timer.h','boards.h','nrfx_spim.h','nrf_delay.h','nrf_gpio.h','nrf_log.h','nrf_log_ctrl.h','nordic_common.h','nrf_drv_spi.h','nrf_error.h','nrfx.h']:
             (folder/header).write_text('#include "mock_sdk.h"\n',encoding='utf-8')
         flash='#include "mock_sdk.h"\n'+''.join('#include "'+str(SRC/'hal'/name).replace('\\','/')+'"\n' for name in ['hal_spi_bus.c','hal_spi_flash.c'])+FLASH_MODEL
+        df_protocol=(SRC/'mod/df/df_proto_info.c').read_text()
+        assert '{DF_PROTO_CMD_INFO_FLASH_JEDEC, df_proto_handler_info_flash_jedec}' in df_protocol
+        jedec_fixture=Path(__file__).with_name('flash_jedec_host.c.in').read_text()
+        jedec_fixture=jedec_fixture.replace('/* ACTUAL_HANDLER */',function(df_protocol,'df_proto_handler_info_flash_jedec'))
+        flash=flash.replace('int main(void){',jedec_fixture+'\nint main(void){\n    test_cached_jedec();')
         nfc_source=(SRC/'hal/hal_nfc_t2t.c').read_text(encoding='utf-8')
         nfc=NFC_MODEL.replace('/* ACTUAL_RX */',brace_block(nfc_source,'if (NRF_NFCT->EVENTS_RXFRAMEEND &&'))
         spiffs=(SRC/'mod/vfs/vfs_driver_spiffs.c').read_text(encoding='utf-8');lfs=(SRC/'mod/vfs/vfs_driver_lfs.c').read_text(encoding='utf-8')
@@ -253,7 +259,7 @@ def main():
         adapters=ADAPTER_MODEL.replace('/* ACTUAL_LFS_CONSTANTS */',constants).replace('/* ACTUAL_ADAPTERS */','\n'.join(function(spiffs,n) for n in ['spiffs_block_read','spiffs_block_write','spiffs_block_erase'])+'\n'+'\n'.join(function(lfs,n) for n in ['block_range','block_device_read','block_device_prog','block_device_erase']))
         for name,code in [('flash',flash),('nfc',nfc),('adapters',adapters)]:
             source=folder/(name+'.c');binary=folder/(name+('.exe' if os.name=='nt' else ''));source.write_text(code,encoding='utf-8')
-            cmd=[cc,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-I',str(folder)]
+            cmd=[cc,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-I',str(folder),'-I',str(SRC/'mod/df')]
             if os.environ.get('PIXL_SANITIZE')=='1':cmd+=['-fsanitize=address,undefined','-fno-omit-frame-pointer']
             subprocess.run(cmd+[str(source),'-o',str(binary)],check=True,timeout=60)
             subprocess.run([str(binary)],check=True,timeout=45)

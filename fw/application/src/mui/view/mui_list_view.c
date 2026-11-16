@@ -141,32 +141,24 @@ static void mui_list_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     mui_list_view_t *p_mui_list_view = p_view->user_data;
     mui_list_view_update_canvas(p_mui_list_view, p_canvas);
 
-    mui_list_item_array_it_t it;
-
-    mui_list_item_array_it(it, p_mui_list_view->items);
-
-    uint32_t offset_y = p_mui_list_view->scroll_offset;
+    int32_t offset_y = p_mui_list_view->scroll_offset;
     if (p_mui_list_view->anim_type == LIST_ANIM_SCROLL) {
         offset_y += p_mui_list_view->anim_value;
     }
-    uint32_t index = 0;
-    uint32_t focus_y = 0;
-
-    while (!mui_list_item_array_end_p(it)) {
-        mui_list_item_t *item = mui_list_item_array_ref(it);
-        int32_t y = index * LIST_ITEM_HEIGHT - offset_y;
+    /* Retain both partially visible edge rows, including a row starting
+     * exactly one height above the window during the gap animation. */
+    int32_t first = offset_y > 0 ? (offset_y - 1) / LIST_ITEM_HEIGHT : 0;
+    int32_t bottom = offset_y + mui_canvas_get_height(p_canvas);
+    size_t count = mui_list_item_array_size(p_mui_list_view->items);
+    for (int32_t index = first; (size_t)index < count && index * LIST_ITEM_HEIGHT <= bottom; ++index) {
+        mui_list_item_t *item = mui_list_item_array_get(p_mui_list_view->items, index);
+        int32_t actual_y = index * p_mui_list_view->item_gap - offset_y;
         int32_t text_offset = index == p_mui_list_view->focus_index ? p_mui_list_view->text_offset : 0;
-        if (y >= -LIST_ITEM_HEIGHT && y <= mui_canvas_get_height(p_canvas)) { // visible object
-            int32_t actual_y = (int32_t)(index * p_mui_list_view->item_gap - offset_y);
-            mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
-            mui_canvas_draw_glyph(p_canvas, 0, actual_y + 10, item->icon);
-            mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
-            mui_list_view_draw_row_text(p_canvas, actual_y, text_offset, string_get_cstr(item->text),
-                                        string_get_cstr(item->sub_text));
-        }
-
-        mui_list_item_array_next(it);
-        index++;
+        mui_canvas_set_font(p_canvas, u8g2_font_siji_t_6x10);
+        mui_canvas_draw_glyph(p_canvas, 0, actual_y + 10, item->icon);
+        mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
+        mui_list_view_draw_row_text(p_canvas, actual_y, text_offset, string_get_cstr(item->text),
+                                    string_get_cstr(item->sub_text));
     }
     int32_t focus_yi = p_mui_list_view->focus_index * LIST_ITEM_HEIGHT - offset_y;
     if (p_mui_list_view->anim_type == LIST_ANIM_FOCUS) {

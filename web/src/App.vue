@@ -305,7 +305,7 @@
       <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
       </div>
     </details>
-    <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview">
+    <details v-show="activeWorkspace === 'device'" class="device-panel" ref="devicePanel" id="device-overview" @toggle.self="devicePanelOpen = $event.currentTarget.open">
       <summary>{{ $t('info.title') }}</summary>
       <p>{{ $t('info.localBluetooth') }}</p>
       <form v-if="connected" class="device-nickname-form" @submit.prevent="save_device_nickname()">
@@ -326,8 +326,11 @@
         <GuidedReportComparison v-if="guidedComparisonOpened" :locale="language" />
       </details>
       <MenuRunComparison v-if="visitedWorkspaces.has('device')" :locale="language" />
+      <HardwareProfile v-if="visitedWorkspaces.has('device')" :locale="language" :connected="connected" :blocked="busy || upload_diag_visible || diagnosticsBusy" :firmware-version="firmwareVersion" :boot="bootInfo" :storage-bytes="fullDiagnosticSnapshot?.sections.storage?.data?.layout?.flashBytes" :flash="flashInfo" :flash-state="flashState" :label-confirmed="batteryLabelConfirmed" :profile-ready="nicknameReady" :profile-error="hardwareProfileError" @read="read_flash_diagnostics" @associate="associate_battery_label" />
       <DisplayPhoto v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :blocked="busy || upload_diag_visible || diagnosticsBusy" :locale="language" :read-photo="read_display_photo" @busy="displayPhotoBusy = $event" />
       <CardSlotInspection v-if="activeWorkspace === 'device'" :locale="language" :blocked="busy || upload_diag_visible" />
+      <BatteryVoltageHistory v-if="visitedWorkspaces.has('device')" :key="sessionGeneration" :locale="language"
+        :connected="connected" :blocked="batteryHistoryBlocked" :read-power="read_battery_history" />
       <StartupDiagnostics v-if="visitedWorkspaces.has('device')" :firmware-version="firmwareVersion" :connected="connected" :blocked="busy && !startupBusy || upload_diag_visible" :generation="sessionGeneration" :locale="language" :read-diagnostics="read_startup_diagnostics" @busy="startupBusy = $event" @export="open_startup_report" />
       <dl class="device-info-grid">
         <div><dt>{{ $t('info.application') }}</dt><dd>{{ browserVersionLabel }}</dd></div>
@@ -594,6 +597,8 @@ import { formatBatteryVoltage, normalizePowerDiagnostics } from "./lib/power-dia
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
+import { supportsFlashDiagnostics } from "./lib/flash-diagnostics.js"
+import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference } from "./lib/hardware-profile.js"
 import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, assertWritableDevicePath, portableNameKey, devicePathSpace, backupPathSpace } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
@@ -618,8 +623,10 @@ import catalogueBaseline from "./data/catalogue.json"
 
 export default {
   components: {
+    BatteryVoltageHistory: defineAsyncComponent(() => import('./components/BatteryVoltageHistory.vue')),
     CollectionBackupAudit: defineAsyncComponent(() => import('./components/CollectionBackupAudit.vue')),
     BackupExportOptions: defineAsyncComponent(() => import('./components/BackupExportOptions.vue')),
+    HardwareProfile: defineAsyncComponent(() => import('./components/HardwareProfile.vue')),
     GuidedReportComparison: defineAsyncComponent(() => import('./components/GuidedReportComparison.vue')), GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
@@ -628,7 +635,8 @@ export default {
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
       activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
       renameNotice: null,
-      powerInfo: null, powerState: 'unknown', startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
+      powerInfo: null, powerState: 'unknown', devicePanelOpen: false, startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
+      flashInfo:null, flashState:'unknown', batteryLabelConfirmed:false, hardwareProfileError:false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
@@ -696,6 +704,11 @@ export default {
     uploadHub() { return this.language.startsWith('de') ? { destination:'Zielordner:', folder:'Ordner auswählen', zip:'Sicherungs-ZIP auswählen', files:'Einzelne Dateien', planHint:'Ordner und ZIP öffnen zuerst eine Vorschau. Dort wählst du aus, was übertragen wird. Ordnernamen und Metadaten bleiben erhalten.', queued:'Dateien in der Warteschlange', idle:'Keine laufende Übertragung', close:'Schließen' } : { destination:'Destination folder:', folder:'Choose folder', zip:'Choose backup ZIP', files:'Individual files', planHint:'Folders and ZIPs first open a preview. Choose what to transfer there. Folder names and metadata are preserved.', queued:'Files in the queue', idle:'No transfer running', close:'Close' }; },
     metadataNote() { return metadataNoteInfo(this.meta_form.notes); },
     diagnosticsBusy() { return this.diagnosticsSaving || this.diagnosticsCopying; },
+    batteryHistoryBlocked() {
+      return !this.devicePanelOpen || this.activeWorkspace !== 'device' || this.busy || this.connecting ||
+        this.disconnecting || this.remoteActive || this.diagnosticsBusy || this.diagnosticsDialog ||
+        this.upload_diag_visible || this.meta_diag_visible || this.syncDialog || this.zipDialog;
+    },
     nativeDiagnosticSaveAvailable() { return typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function'; },
     elementLocale() { return getElementLocale(this.language) },
     breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
@@ -1426,6 +1439,15 @@ export default {
         if(this.session_current(generation)) { this.bootState='failed'; this.show_transfer_error(error); }
       } finally {if(generation===this.sessionGeneration)this.infoLoading=false;}
     },
+    async read_battery_history() {
+      if (!this.connected || this.batteryHistoryBlocked || document.hidden) return;
+      const transport = proto.get_transport_diagnostics();
+      if (transport.connectionState !== 'connected' || transport.activeCommand !== null || transport.queuedCommands ||
+          transport.fileTransferActive || transport.queuedFileTransfers) return;
+      const generation = this.sessionGeneration;
+      const data = await proto.get_power_diagnostics();
+      if (this.session_current(generation) && !this.batteryHistoryBlocked && !document.hidden) return data;
+    },
     async refresh_power_info() {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
       this.fullDiagnosticSnapshot=null;
@@ -1444,6 +1466,18 @@ export default {
     format_hex(value) { return formatHexWord(value) ?? this.$t('info.unknown'); },
     format_battery_voltage(value) { return formatBatteryVoltage(value, this.language) ?? this.$t('info.unknown'); },
     format_optional_size(value) { return value === null || value === undefined ? this.$t('info.unknown') : this.format_size(value); },
+    async read_flash_diagnostics() {
+      if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy || !supportsFlashDiagnostics(this.firmwareVersion)) return;
+      const generation = this.sessionGeneration;
+      this.flashInfo = null; this.flashState = 'loading'; this.fullDiagnosticSnapshot = null; this.infoLoading = true;
+      try {
+        const data = await proto.get_flash_diagnostics(this.firmwareVersion);
+        this.assert_session(generation);
+        this.flashInfo = data; this.flashState = data ? 'available' : 'unavailable';
+      } catch (error) {
+        if (this.session_current(generation)) { this.flashState = 'failed'; this.show_transfer_error(error); }
+      } finally { if (generation === this.sessionGeneration) this.infoLoading = false; }
+    },
     async read_all_diagnostics() {
       if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;
       const generation=this.sessionGeneration;
@@ -1453,7 +1487,9 @@ export default {
       const startedAt = performance.now();
       this.readClock = startedAt;
       const includeMenu = supportsMenuDiagnostics(this.firmwareVersion);
-      this.fullDiagnosticProgress = { completed: 0, total: diagnosticSectionKeys(includeMenu).length, startedAt, updatedAt: startedAt, sections: {} };
+      const includeFlash = supportsFlashDiagnostics(this.firmwareVersion);
+      this.flashInfo = null; this.flashState = 'unknown';
+      this.fullDiagnosticProgress = { completed: 0, total: diagnosticSectionKeys(includeMenu, includeFlash).length, startedAt, updatedAt: startedAt, sections: {} };
       this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
       this.powerInfo=null; this.powerState='loading'; this.driveInfo=[];
       const guard=()=>this.session_current(generation) && !this.disconnecting;
@@ -1483,6 +1519,7 @@ export default {
               return {info,layout};
             }),
             mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.()),
+            ...(includeFlash ? {flash:read(()=>proto.get_flash_diagnostics(this.firmwareVersion))} : {}),
             ...(includeMenu ? {menu:read(()=>proto.get_menu_diagnostics(this.firmwareVersion))} : {})
           },
           onProgress: ({ key, index, section }) => {
@@ -1492,6 +1529,8 @@ export default {
           }
         });
         this.assert_session(generation); this.fullDiagnosticSnapshot=snapshot;
+        this.flashInfo = snapshot.sections.flash?.data || null;
+        this.flashState = snapshot.sections.flash?.state || 'unavailable';
         for(const key of ['runtime','boot','power']) {
           this[key+'Info']=snapshot.sections[key].data; this[key+'State']=snapshot.sections[key].state;
         }
@@ -1514,6 +1553,10 @@ export default {
         browser: { secureContext: window.isSecureContext, webBluetooth: typeof navigator.bluetooth?.requestDevice === 'function' },
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
+      if (this.connected && this.flashInfo) report.flash = this.flashInfo;
+      if (this.connected && this.batteryLabelConfirmed) report.batteryLabel = batteryLabelReport();
+      const displayBuild = this.connected && displayBuildReference(this.firmwareVersion);
+      if (displayBuild) report.displayDriverReference = displayBuild;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
       this.diagnosticsFilename = this.report_filename(false);
       this.diagnosticsStatus = 'info.diagnosticReady';
@@ -1859,7 +1902,17 @@ export default {
         this.connecting = true; this.connBtnText = this.$t('conn.connecting'); pixl.connect();
       }
     },
+    associate_battery_label(enabled) {
+      const binding = this._nicknameBinding;
+      if (!binding || this.disconnecting || !this.session_current(binding.generation) || binding.id !== pixl.get_device_key?.()) return;
+      try {
+        setBatteryLabel(window.localStorage, binding.key, enabled);
+        this.batteryLabelConfirmed = enabled; this.hardwareProfileError = false;
+      } catch { this.hardwareProfileError = true; }
+    },
     clear_device_nickname() {
+      this.batteryLabelConfirmed = false; this.hardwareProfileError = false;
+      this.flashInfo = null; this.flashState = 'unknown';
       this._nicknameBinding = null; this.deviceNickname = ''; this.nicknameDraft = '';
       this.nicknameReady = false; this.nicknameStatus = '';
     },
@@ -1875,6 +1928,8 @@ export default {
         const name = normalizeDeviceNickname(window.localStorage.getItem(key)) || '';
         this._nicknameBinding = {generation, id, key}; this.deviceNickname = name;
         this.nicknameDraft = name; this.nicknameReady = true;
+        try { this.batteryLabelConfirmed = hasBatteryLabel(window.localStorage, key); }
+        catch { this.hardwareProfileError = true; }
       } catch { if (current()) this.nicknameStatus = 'nicknameUnavailable'; }
     },
     save_device_nickname(remove = false) {

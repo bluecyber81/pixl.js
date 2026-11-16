@@ -48,6 +48,7 @@ def harness(mutant=None):
         'settings_scene_sleep_timeout_on_enter', 'settings_scene_sleep_timeout_on_exit')]
     pieces += [function(language, name) for name in ('settings_scene_language_list_view_on_selected',
         'settings_scene_language_on_enter', 'settings_scene_language_on_exit')]
+    pieces.insert(0, (SRC / 'mui/mui_contrast.h').read_text().replace('#include "boards.h"', ''))
     template = Path(__file__).with_name('settings_return_focus_de340.c.in').read_text()
     return template.replace('@APP_STRUCT@', app).replace('@DISPATCH_TYPES@', dispatch_types).replace(
         '@PRODUCTION@', '\n'.join(pieces))

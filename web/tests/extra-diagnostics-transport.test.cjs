@@ -30,7 +30,7 @@ function fixture(extra = {}) {
         disconnect() { ++disconnects; bus.emit('ble_disconnected'); }
     };
     const parsers = load('device-extra-diagnostics.js');
-    const api = load('pixl.proto.js', {pixl, ...parsers, ...extra,
+    const api = load('pixl.proto.js', {pixl, ...parsers, ...load('flash-diagnostics.js'), ...extra,
         i18n: {global: {t: key => key}}, sharedEventDispatcher: () => bus,
         setTimeout: callback => {const id = ++timerId; timers.set(id, callback); return id;},
         clearTimeout: id => timers.delete(id)});
@@ -333,3 +333,22 @@ for (const probe of probes) {
         assert.equal(f.disconnects, 1);
     });
 }
+
+test('flash probe gates older versions, sends no arguments, and tolerates optional-command rejection', async () => {
+    const f = fixture(), version = '2.22.0-DE3.78';
+    for (const old of [null, '2.22.0-DE3.77', '2.22.0-DE3.78-OLED']) assert.equal(await f.api.get_flash_diagnostics(old), null);
+    assert.equal(f.writes.length, 0);
+    for (const status of [1, 255]) {
+        const pending = f.api.get_flash_diagnostics(version);
+        assert.deepEqual(f.writes.at(-1), [11, 0, 0, 0]);
+        f.rx(11, [], 0, status);
+        assert.equal(await pending, null);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode, null);
+    }
+    const pending = f.api.get_flash_diagnostics(version);
+    f.rx(11, [80,88,74,70,1,12,3,0,235,64,21,0]);
+    assert.deepEqual(plain((await pending).jedecId), [235,64,21]);
+    const broken = assert.rejects(f.api.get_flash_diagnostics(version));
+    f.rx(11, [0]); await broken;
+    assert.equal(f.api.get_transport_diagnostics().lastErrorCode, 'RESPONSE_INVALID');
+});

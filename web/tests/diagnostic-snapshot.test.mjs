@@ -224,3 +224,12 @@ test('snapshot normalization rejects incomplete/invalid records and never export
   assert.equal(createCombinedDiagnosticReport({ baseReport: { drives: [null], recentTransfers: [null] } }).diagnosticSnapshot, null);
   await assert.rejects(collectDiagnosticSnapshot({ now: () => 'bad time' }), { code: 'DIAGNOSTIC_INVALID_TIME' });
 });
+
+test('optional flash report survives JSON round trip without adding a section to historical captures', async () => {
+  const result = {schemaVersion:1, scope:'cached-flash-probe', jedecId:[235,64,21], geometrySupported:true};
+  const snapshot = await collectDiagnosticSnapshot({readers:{flash:() => ({...result, privateId:'never-export'})}});
+  const report = createCombinedDiagnosticReport({snapshot:JSON.parse(JSON.stringify(snapshot))});
+  assert.deepEqual(report.diagnosticSnapshot.sections.flash.data, result);
+  assert.equal(JSON.stringify(report).includes('never-export'), false);
+  assert.equal('flash' in (await collectDiagnosticSnapshot()).sections, false);
+});

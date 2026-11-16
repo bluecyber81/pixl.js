@@ -8,6 +8,7 @@
 #include "version2.h"
 #include "vfs.h"
 #include "mui_nav_diag.h"
+#include "mui_contrast.h"
 #include "ble_remote.h"
 
 enum settings_main_menu_t {
@@ -248,7 +249,7 @@ static void settings_scene_main_reload(void *user_data) {
     mui_list_view_add_item_ext(app->p_list_view, 0xe146, _T(APP_SET_STORAGE), storage_value,
                                (void *)SETTINGS_MAIN_MENU_STORAGE);
 
-    snprintf(txt, sizeof(txt), "%d%%", p_settings->oled_contrast);
+    snprintf(txt, sizeof(txt), "%d%%", mui_contrast_percent(p_settings->oled_contrast));
 #ifdef OLED_SCREEN
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_BRIGHTNESS), txt,
                                (void *)SETTINGS_MAIN_MENU_OLED_CONTRAST);

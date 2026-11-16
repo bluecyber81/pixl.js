@@ -76,13 +76,16 @@ static int app_pwm_channel_duty_set(void *p,int channel,unsigned duty) {
 }
 static unsigned app_pwm_channel_duty_get(void*p,unsigned ch){CHECK(p==&pwm1 && ch==0);return last_duty;}
 /* ACTUAL_DISPLAY_SETTERS */
-typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p_toast_view; } app_settings_t;
+typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p_toast_view,*p_view_dispatcher; } app_settings_t;
 static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;CHECK(false);}
 typedef struct { uint8_t lcd_backlight, oled_contrast; } settings_data_t;
 static settings_data_t settings;
 static settings_data_t *settings_get_data(void) { return &settings; }
 static unsigned previous_scenes;
 static void mui_scene_dispatcher_previous_scene(void *p) { (void)p; ++previous_scenes; }
+enum { _L_APP_SET_BRIGHTNESS, _L_APP_SET_OLED_CONTRAST_TITLE, SETTINGS_VIEW_ID_PROGRESS_BAR };
+static const char *getLangString(unsigned id) { return id==_L_APP_SET_BRIGHTNESS?"Brightness":"Contrast"; }
+static void mui_view_dispatcher_switch_to_view(void *p,unsigned view){(void)p;CHECK(view==SETTINGS_VIEW_ID_PROGRESS_BAR);}
 /* ACTUAL_SETTINGS_CALLBACKS */
 
 static unsigned callbacks;
@@ -144,7 +147,11 @@ static void callbacks_test(void) {
         bar->current_value=value;settings_scene_oled_contrast_event_cb(MUI_PROGRESS_BAR_EVENT_DECREMENT,bar);
         CHECK(last_contrast==expected_contrast(clamped) && settings.oled_contrast==71 && previous_scenes==previous+1);
         bar->current_value=value;settings_scene_oled_contrast_event_cb(MUI_PROGRESS_BAR_EVENT_CONFIRMED,bar);
-        CHECK(bar->current_value==clamped && settings.oled_contrast==clamped && previous_scenes==previous+2);
+        int32_t expected=clamped;
+#ifdef LCD_SCREEN
+        if(expected<60)expected=60;
+#endif
+        CHECK(bar->current_value==expected && settings.oled_contrast==expected && previous_scenes==previous+2);
     }
     unsigned previous=previous_scenes,b=backlight_calls,c=contrast_calls;
     settings_scene_lcd_backlight_event_cb((mui_progress_bar_event_t)99,bar);
@@ -152,6 +159,31 @@ static void callbacks_test(void) {
     CHECK(previous_scenes==previous && b==backlight_calls && c==contrast_calls);
     mui_progress_bar_free(bar);CHECK(live_allocations==0);
     puts("PASS actual brightness/contrast callbacks: signed clamp before uint8 conversion, preview without saving, confirmation persists bounded value");
+}
+static void contrast_dialog(void) {
+#ifdef LCD_SCREEN
+    const int min=60,step=2;
+#else
+    const int min=0,step=5;
+#endif
+    mui_progress_bar_t *bar=mui_progress_bar_create();CHECK(bar);
+    app_settings_t app={.p_progress_bar=bar};bar->user_data=&app;
+    for(int saved=0;saved<=255;++saved) {
+        settings.oled_contrast=saved;
+        settings_scene_oled_contrast_on_enter(&app);
+        int expected=saved<min?min:saved>100?100:saved;
+        CHECK(bar->min_value==min && bar->max_value==100 && bar->current_value==expected);
+        CHECK(bar->event_cb==settings_scene_oled_contrast_event_cb && settings.oled_contrast==saved);
+        bar->current_value=min;
+        input(bar,INPUT_TYPE_SHORT,INPUT_KEY_LEFT);CHECK(bar->current_value==100 && last_contrast==255);
+        input(bar,INPUT_TYPE_REPEAT,INPUT_KEY_RIGHT);CHECK(bar->current_value==min && last_contrast==expected_contrast(min));
+        input(bar,INPUT_TYPE_SHORT,INPUT_KEY_RIGHT);CHECK(bar->current_value==min+step);
+        input(bar,INPUT_TYPE_REPEAT,INPUT_KEY_LEFT);CHECK(bar->current_value==min);
+        CHECK(settings.oled_contrast==saved);
+        input(bar,INPUT_TYPE_SHORT,INPUT_KEY_CENTER);CHECK(settings.oled_contrast==min);
+    }
+    mui_progress_bar_free(bar);CHECK(live_allocations==0);
+    printf("PASS actual contrast dialog %d..100 step %d, 256 legacy values, end stops and explicit save\n",min,step);
 }
 static void setters_test(void) {
     for(unsigned value=0;value<=255;value++) {
@@ -193,5 +225,5 @@ static void draw_test(void) {
     puts("PASS actual renderer: bounded bar/text, nonzero minimum, zero/reversed range and int32 span");
 }
 int main(int argc,char **argv) {
-    CHECK(argc==2);switch(atoi(argv[1])) {case 0:slider();break;case 1:callbacks_test();break;case 2:setters_test();break;case 3:allocation_test();break;case 4:draw_test();break;default:CHECK(false);}return 0;
+    CHECK(argc==2);switch(atoi(argv[1])) {case 0:slider();break;case 1:callbacks_test();break;case 2:setters_test();break;case 3:allocation_test();break;case 4:draw_test();break;case 5:contrast_dialog();break;default:CHECK(false);}return 0;
 }

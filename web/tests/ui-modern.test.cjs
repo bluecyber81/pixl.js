@@ -41,7 +41,7 @@ function harness(overrides = {}) {
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
-    ...require('../src/lib/raw-metadata.js'), ...require('../src/lib/device-nickname.js'), ...require('../src/lib/deployment-path.js'),
+    ...require('../src/lib/flash-diagnostics.js'), ...require('../src/lib/hardware-profile.js'), ...require('../src/lib/raw-metadata.js'), ...require('../src/lib/device-nickname.js'), ...require('../src/lib/deployment-path.js'),
     bluetoothAccessIssue: require('../public/dfu/bluetooth-access.mjs').bluetoothAccessIssue,
     catalogueBaseline: JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/catalogue.json'),'utf8')),
     TextEncoder, Uint8Array, ArrayBuffer, Blob, AbortController, crypto: require('node:crypto').webcrypto,
@@ -397,7 +397,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.54.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.55.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -409,7 +409,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.54.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.55.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -496,7 +496,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.54.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.55.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -523,6 +523,31 @@ test('power diagnostic stale callbacks never publish or release a replacement se
  const run=app.refresh_power_info();assert.equal(app.infoLoading,true);app.on_ble_disconnected();app.connected=true;app.infoLoading=true;
  pending.resolve({});await run;assert.equal(app.powerInfo,null);assert.equal(app.powerState,'unknown');assert.equal(app.infoLoading,true);
 });
+test('battery trend yields to operations, transport queues and stale sessions without updating diagnostic snapshots',async()=>{
+  const idle = {connectionState:'connected',activeCommand:null,queuedCommands:0,fileTransferActive:false,queuedFileTransfers:0};
+  let transport = idle, reads = 0;
+  const result = deferred();
+  const h = harness({get_transport_diagnostics:()=>transport,get_power_diagnostics:()=>{reads++;return result.promise;}});
+  const app = connected(h);
+  app.devicePanelOpen = true; app.activeWorkspace = 'device';
+  for (const field of ['backingUp','pendingDownloads','enteringDfu','diagnosticsDialog','fullDiagnosticBusy','disconnecting']) {
+    app[field] = true; await app.read_battery_history(); app[field] = false;
+  }
+  for (const busy of [{activeCommand:0},{queuedCommands:1},{fileTransferActive:true},{queuedFileTransfers:1},{connectionState:'connecting'}]) {
+    transport = {...idle,...busy}; await app.read_battery_history();
+  }
+  transport = idle;
+  h.document.hidden = true; await app.read_battery_history(); h.document.hidden = false;
+  app.activeWorkspace = 'update'; await app.read_battery_history(); app.activeWorkspace = 'device';
+  assert.equal(reads, 0);
+  const stale = app.read_battery_history();
+  assert.equal(reads, 1);
+  app.sessionGeneration++; result.resolve({sample:true});
+  assert.equal(await stale, undefined);
+  assert.deepEqual(await app.read_battery_history(), {sample:true});
+  assert.equal(app.powerState,'unknown');
+});
+
 test('power diagnostic available, malformed and rejected responses have distinct states',async()=>{
  const {parsePowerDiagnostics}=await import('../src/lib/power-diagnostics.js');const value=parsePowerDiagnostics(Uint8Array.from([80,88,80,68,1,16,3,0,0,0,0,0,0,0,15,0]));
  const h=harness({get_power_diagnostics:async()=>value}),app=connected(h);await app.refresh_power_info();assert.equal(app.powerInfo.configuredSleepSeconds,15);assert.equal(app.powerState,'available');
@@ -1652,10 +1677,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.54.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.55.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.54.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.55.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2323,6 +2348,72 @@ test('3.32 unified folder picker stages original files for comparison and cannot
  app.on_upload_folder_choice({target:{files,value:'x'}});assert.equal(app.upload_diag_visible,false);assert.equal(app.syncDialog,true);assert.equal(app.syncFileCount,1);assert.equal(app._syncFiles[0],files[0]);assert.equal(app.syncRoot,'E:/');
  app.syncDialog=false;app.upload_diag_visible=true;app.pendingUploads=1;app.on_upload_folder_choice({target:{files,value:'x'}});assert.equal(app.syncDialog,false);assert.equal(app.upload_diag_visible,true);
 });
+test('DE3.78 all-diagnostics keeps per-device owner ratings and measured JEDEC separate across reconnects', async () => {
+  const flash = {schemaVersion:1,scope:'cached-flash-probe',jedecId:[235,64,21],geometrySupported:true};
+  let device = 'private-browser-A', flashReads = 0;
+  const h = harness({get_flash_diagnostics: async () => { ++flashReads; return flash; },
+    get_menu_diagnostics: async () => null, vfs_storage_info_extended: async () => ({status:255})});
+  const app = connected(h);
+  h.pixl.get_device_key = () => device;
+  const report = () => { app.save_diagnostics(); return JSON.parse(app.diagnosticsJson); };
+  const attach = async (id, version) => {
+    device = id; app.connected = true; app.firmwareVersion = version;
+    await app.load_device_nickname();
+  };
+  await attach('private-browser-A','2.22.0-DE3.78');
+  assert.equal(report().batteryLabel, undefined);
+  app.associate_battery_label(true);
+  await app.read_all_diagnostics();
+  const first = report();
+  assert.deepEqual(first.displayDriverReference, {source:'lcd-firmware-configuration',controllerDriver:'ST7567',width:128,height:64});
+  assert.deepEqual(first.batteryLabel, {source:'owner-confirmed-cell-label',marking:'551520',
+    nominalMillivolts:3800,ratedMilliampHours:180,ratedMilliwattHours:684});
+  assert.deepEqual(first.flash, flash);
+  assert.deepEqual(first.diagnosticSnapshot.sections.flash.data, flash);
+  assert.doesNotMatch(app.diagnosticsJson, /private-browser|allmiibo\.device-nickname/i);
+  assert.equal(flashReads,1);
+  app.on_ble_disconnected();
+  assert.equal(report().batteryLabel,undefined); assert.equal(report().flash,undefined);
+  await attach('private-browser-B','2.22.0-DE3.77');
+  assert.equal(app.batteryLabelConfirmed,false);
+  await app.read_all_diagnostics();
+  const second = report();
+  assert.equal(second.batteryLabel,undefined); assert.equal(second.flash,undefined);
+  assert.equal(second.diagnosticSnapshot.sections.flash,undefined); assert.equal(flashReads,1);
+  app.on_ble_disconnected();
+  await attach('private-browser-A','2.22.0-DE3.78');
+  assert.equal(app.batteryLabelConfirmed,true);
+  assert.equal(report().flash,undefined);
+  app.associate_battery_label(false);
+  assert.equal(report().batteryLabel,undefined); assert.equal(h.stored.size,0);
+});
+
+test('battery label storage errors keep the last confirmed value, mark the profile error and allow recovery', async () => {
+  const h = harness(), app = connected(h), storage = h.window.localStorage;
+  const {getItem,setItem,removeItem} = storage;
+  const fail = () => { throw Error('storage unavailable'); };
+  storage.getItem = key => key.endsWith('.battery-label.v1') ? fail() : getItem(key);
+  await app.load_device_nickname();
+  assert.equal(app.nicknameReady,true);
+  assert.equal(app.hardwareProfileError,true);
+  assert.equal(app.batteryLabelConfirmed,false);
+  storage.getItem = getItem;
+  await app.load_device_nickname();
+  assert.equal(app.hardwareProfileError,false);
+  storage.setItem = fail;
+  app.associate_battery_label(true);
+  assert.equal(app.hardwareProfileError,true); assert.equal(app.batteryLabelConfirmed,false);
+  storage.setItem = setItem;
+  app.associate_battery_label(true);
+  assert.equal(app.hardwareProfileError,false); assert.equal(app.batteryLabelConfirmed,true);
+  storage.removeItem = fail;
+  app.associate_battery_label(false);
+  assert.equal(app.hardwareProfileError,true); assert.equal(app.batteryLabelConfirmed,true);
+  storage.removeItem = removeItem;
+  app.associate_battery_label(false);
+  assert.equal(app.hardwareProfileError,false); assert.equal(app.batteryLabelConfirmed,false);
+});
+
 test('nicknames follow the exact application identity across disconnects and device switches', async () => {
  const h = harness(), app = connected(h);
  let deviceId = 'browser-permission-A';
@@ -2486,7 +2577,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.54.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.55.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

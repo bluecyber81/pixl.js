@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.77 LCD application preview
+    name: DE3.79 LCD application preview
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -65,12 +65,14 @@ jobs:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
         run: |
           "$RUNNER_TEMP/stack-venv/bin/python" -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er .host_firmware_suites RELEASE_INFO.json)" --report build/lcd-preview/FIRMWARE_TESTS.json
-      - name: Execute stack and PXDG checks on this build's Cortex-M4 ELF
+      - name: Exercise stack, menu, crypto, flash ID and LCD on the linked Cortex-M4 ELF
         shell: bash
         run: |
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-preview/pixljs.out | tee build/lcd-preview/STACK_ELF.txt
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/FIRST_MENU_ELF.txt
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_aes_m4_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/AES_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_flash_jedec_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/FLASH_JEDEC_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_display_profile_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/DISPLAY_PROFILE_ELF.txt
           cat build/lcd-preview/BUILD_RESULT.json
       - name: Archive the actual build and test results
         if: success() || failure()

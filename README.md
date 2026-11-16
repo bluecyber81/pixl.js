@@ -1,5 +1,13 @@
 # Allmiibo LCD firmware and file manager
 
+## Hardware diagnostics and battery history · File manager 3.55.0
+
+Open **Device & diagnostics** to record the last reported voltage and charge indication every ten seconds. The most recent 120 entries stay in the current connection. Recording pauses during file transfers and while the tab is hidden. If your battery is marked “551520 · 180 mAh · 3.8 V · 0.684 Wh”, you can confirm this under **Hardware profile → Associate a battery label with this device**. The diagnostic export identifies it as information from the label.
+
+On the LCD, the contrast control now spans the effective 60–100% range. Long lists draw only the visible rows, including both partially visible edges. The file manager can show a captured LCD image at 1×, 2× or 3× with a native 128 × 64 PNG download.
+
+The **DE3.79 / App652** LCD preview reports the three identification bytes that the external flash returned during storage setup. These give the manufacturer ID, memory type and capacity code. Other diagnostics remain available on older firmware. [Mobile app ZIP for PFS1, Z19 and S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.79/Allmiibo_LCD_DE3_79_652_NUR_APP.zip) · [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.0)
+
 ## Battery display · LCD firmware DE3.77 and file manager 3.54.1
 
 The LCD shows larger voltage digits and an eight-segment battery. A bolt indicates charging, **Low** identifies a low battery, and a dash marks a missing reading. Both web diagnostic views show the voltage in volts, for example **3.870 V** in English.

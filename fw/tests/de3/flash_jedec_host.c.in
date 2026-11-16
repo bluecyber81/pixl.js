@@ -1,0 +1,89 @@
+#include "df_proto_info.h"
+
+static df_frame_t reply;
+static unsigned sent;
+
+void df_core_send_frame(df_frame_t *frame) {
+    reply = *frame;
+    sent++;
+}
+
+/* ACTUAL_HANDLER */
+
+static void expect_id(uint8_t flags, uint8_t manufacturer, uint8_t type, uint8_t capacity) {
+    const uint8_t expected[] = {'P','X','J','F',1,12,flags,0,manufacturer,type,capacity,0};
+    df_frame_t request = {.cmd = 0x0b};
+    df_event_t event = {.type = DF_EVENT_DATA_RECEVIED, .df = &request};
+    unsigned initial_transfers = transfers;
+    for (unsigned i = 0; i < 2; i++) {
+        unsigned initial_sent = sent;
+        df_proto_handler_info_flash_jedec(&event);
+        assert(sent == initial_sent + 1 && reply.cmd == 0x0b);
+        assert(reply.status == DF_STATUS_OK && reply.chunk == 0);
+        assert(reply.length == sizeof(expected) && !memcmp(reply.data, expected, sizeof(expected)));
+    }
+    assert(transfers == initial_transfers);
+}
+
+static void test_cached_jedec(void) {
+    reset();
+    expect_id(0, 0, 0, 0);
+    const struct {
+        uint8_t manufacturer, type, capacity;
+        uint32_t sectors;
+    } probes[] = {
+        {0xef,0x40,0x15,512}, {0x85,0x60,0x15,512}, {0x85,0x40,0x15,512},
+        {0xc8,0x40,0x16,1024}, {0xc8,0x60,0x16,1024},
+        {0xef,0x40,0x17,2048}, {0xef,0x60,0x17,2048}, {0xef,0x40,0x18,4096},
+        {0xc2,0x20,0x19,8192}, {0x85,0x42,0x15,0}, {0x00,0x00,0x00,0}, {0xff,0xff,0xff,0}
+    };
+    flash_info_t geometry;
+    for (size_t i = 0; i < sizeof(probes)/sizeof(probes[0]); i++) {
+        jedec_id[0] = probes[i].manufacturer;
+        jedec_id[1] = probes[i].type;
+        jedec_id[2] = probes[i].capacity;
+        unsigned before = transfers;
+        ret_code_t expected = probes[i].sectors ? NRF_SUCCESS : NRF_ERROR_INVALID_PARAM;
+        assert(hal_spi_flash_info(&geometry) == expected);
+        assert(geometry.block_count == probes[i].sectors && geometry.block_size == 4096 && geometry.page_size == 256);
+        assert(transfers == before + 2); /* RDID + three received bytes, in the existing transaction. */
+        if (jedec_id[0] == 0 || jedec_id[0] == 0xff) expect_id(0, 0, 0, 0);
+        else expect_id(probes[i].sectors ? 3 : 1, jedec_id[0], jedec_id[1], jedec_id[2]);
+    }
+
+    jedec_id[0] = 0xef; jedec_id[1] = 0x40; jedec_id[2] = 0x17;
+    for (unsigned fault = 1; fault <= 2; fault++) {
+        assert(hal_spi_flash_info(&geometry) == NRF_SUCCESS);
+        fail_at = transfers + fault;
+        assert(hal_spi_flash_info(&geometry) == 77);
+        expect_id(0, 0, 0, 0);
+        fail_at = 0;
+    }
+    assert(hal_spi_flash_info(&geometry) == NRF_SUCCESS);
+    hal_spi_flash_sleep();
+    expect_id(3, 0xef, 0x40, 0x17); /* A BLE query cannot wake the NOR. */
+    assert(hal_spi_flash_init() == NRF_SUCCESS);
+    expect_id(0, 0, 0, 0);
+
+    df_frame_t request = {.cmd = 0x0b};
+    df_event_t event = {.type = DF_EVENT_DATA_RECEVIED, .df = &request};
+    unsigned initial_transfers = transfers;
+    for (unsigned fields = 1; fields < 8; fields++) {
+        request.status = fields & 1;
+        request.chunk = (fields >> 1) & 1;
+        request.length = (fields >> 2) & 1;
+        unsigned initial_sent = sent;
+        df_proto_handler_info_flash_jedec(&event);
+        assert(sent == initial_sent + 1 && reply.cmd == 0x0b && reply.status == DF_STATUS_ERR && !reply.length);
+    }
+    const df_event_type_t ignored[] = {DF_EVENT_LINK_CONNECTED,DF_EVENT_LINK_DISCONNECTED,DF_EVENT_DATA_TRANSMIT_READY};
+    unsigned initial_sent = sent;
+    for (size_t i = 0; i < sizeof(ignored)/sizeof(ignored[0]); i++) {
+        event.type = ignored[i];
+        event.df = NULL;
+        df_proto_handler_info_flash_jedec(&event);
+    }
+    assert(initial_sent == sent && transfers == initial_transfers);
+    clean();
+    puts("PASS cached PXJF from actual RDID, all driver geometries, unknown/empty IDs, both I/O failures, sleep, reset, malformed requests and zero additional SPI transfers");
+}

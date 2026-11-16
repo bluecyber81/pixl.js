@@ -87,5 +87,10 @@
     "passed": 158,
     "omitted": 0,
     "deviceAccess": false
+  },
+  "photoObservation": {
+    "reportedBy": "device owner",
+    "observed": "A photo of the physical LCD shows the AmiiboLink menu with 4,23 V and a segmented battery icon.",
+    "limits": "The photo contains no firmware version or application counter. The exact installed build, electrical accuracy and charging, low and unavailable display states were not established by this photo."
   }
 }

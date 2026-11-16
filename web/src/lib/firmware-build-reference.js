@@ -41,7 +41,13 @@ const app650 = Object.freeze({
   sourceId: 'f848da982334f0f8a8e634b85efa521388475e8801a6746617288546f2e26219', otaSha256: '72e30a092424e4414014b508c39f143f5896d11362719cd53ffb66c2b12f73f3',
   artifactStatus: 'experimental-signed-application', hardwareAcceptance: 'pending',
 });
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650];
+const app652 = Object.freeze({
+  ...app650, firmwareVersion: '2.22.0-DE3.79', applicationCounter: 652,
+  applicationBytes: 362652, applicationBinSha256: 'd7d09513ae197c27ffce76707f8f764bf08568b1abd1372beaaa85e26d1eff0f',
+  sourceId: 'd2c476908399374779b2666bdf07e4907f19680f50d466bccc8080ecd73c2a94', otaSha256: '161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14',
+  artifactStatus: 'experimental-signed-application', hardwareAcceptance: 'pending',
+});
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

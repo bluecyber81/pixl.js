@@ -46,6 +46,10 @@ def main():
     names = ['mui_u8g2_set_backlight_level', 'mui_u8g2_set_contrast_level']
     if 'backlight_pwm_duty_set' in u8g2:
         names = ['backlight_pwm_duty_set', 'mui_u8g2_get_backlight_level'] + names
+    contrast_source = (scenes / 'settings_scene_oled_contrast.c').read_text(encoding='utf-8')
+    callbacks += '\n' + function(contrast_source, 'settings_scene_oled_contrast_on_enter')
+    contrast_policy = (Path(__file__).resolve().parents[2] / 'application/src/mui/mui_contrast.h').read_text()
+    harness = contrast_policy.replace('#include "boards.h"', '') + harness
     harness = harness.replace('/* ACTUAL_DISPLAY_SETTERS */', '\n'.join(function(u8g2, name) for name in names))
     harness = harness.replace('/* ACTUAL_SETTINGS_CALLBACKS */', callbacks)
     with tempfile.TemporaryDirectory(prefix='pixl-slider-') as directory:
@@ -60,7 +64,10 @@ def main():
                 command += ['-fsanitize=address,undefined,float-cast-overflow', '-fno-sanitize-recover=all',
                             '-fno-omit-frame-pointer', '-fno-pie', '-no-pie']
             subprocess.run(command + [str(cfile), '-lm', '-o', str(binary)], check=True, timeout=60)
-            scenarios = (0, 1, 2, 4) if args.baseline_proof and board == 'LCD' else ((2,) if board == 'OLED' else range(5))
+            if args.baseline_proof:
+                scenarios = (0, 1, 2, 4) if board == 'LCD' else (2,)
+            else:
+                scenarios = range(6) if board == 'LCD' else (2, 5)
             for scenario in scenarios:
                 result = subprocess.run([str(binary), str(scenario)], capture_output=True, text=True, timeout=15)
                 if args.baseline_proof:

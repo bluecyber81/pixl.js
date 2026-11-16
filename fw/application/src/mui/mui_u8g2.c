@@ -1,4 +1,5 @@
 #include "mui_u8g2.h"
+#include "mui_contrast.h"
 
 /*
  * u8g2 Demo Application running on Nordic Semiconductors nRF52 DK with nRF SDK 17.02 and:
@@ -263,15 +264,8 @@ int8_t mui_u8g2_get_backlight_level(void) {
 
 void mui_u8g2_set_contrast_level(uint8_t value) {
     mui_t *p_mui = mui();
-    if (value > 100) value = 100;
+    value = mui_contrast_percent(value);
     if (value == 0) value = 1;
-
-// This is a guard to prevent the contrast too low to make the display invisible.
-#ifdef LCD_SCREEN
-    if (value < 60) {
-        value = 60;
-    }
-#endif
     /* Preserve truncation for all clamped inputs without software double math. */
     u8g2_SetContrast(&p_mui->u8g2, ((uint32_t)value - 1u) * 255u / 99u);
 }
