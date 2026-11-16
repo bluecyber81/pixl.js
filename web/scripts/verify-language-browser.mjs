@@ -66,7 +66,7 @@ try {
   assert.equal(await preference(german), 'en');
   checks.push('manual English selection persists after reload');
   await german.goto(site + 'dfu/web.html');
-  await screen(german, 'en', 'Update firmware');
+  await screen(german, 'en', 'Update LCD firmware');
   await german.goto(site + 'guide/#littlefs');
   await screen(german, 'en', 'Update your Allmiibo');
   assert.equal(new URL(german.url()).hash, '#littlefs');
@@ -86,7 +86,7 @@ try {
   const ordered = await open('fr-FR', ['fr-FR', 'es-MX', 'de-CH', 'en-GB']);
   await ordered.locator('html[lang="es"] .header-language button').getByText('Idioma / Language', { exact: true }).waitFor();
   await ordered.goto(site + 'dfu/web.html');
-  await screen(ordered, 'de', 'Firmware übertragen');
+  await screen(ordered, 'de', 'LCD-Firmware übertragen');
   await ordered.goto(site + 'guide/#diagnose');
   await screen(ordered, 'de', 'Allmiibo aktualisieren');
   assert.equal(new URL(ordered.url()).hash, '#diagnose');
@@ -96,7 +96,7 @@ try {
   const unsupported = await open('fr-FR');
   await screen(unsupported, 'en', 'File manager');
   await unsupported.goto(site + 'dfu/web.html');
-  await screen(unsupported, 'en', 'Update firmware');
+  await screen(unsupported, 'en', 'Update LCD firmware');
   await unsupported.goto(site + 'guide/');
   await screen(unsupported, 'en', 'Update your Allmiibo');
   checks.push('unsupported browser language falls back to English on all three surfaces');

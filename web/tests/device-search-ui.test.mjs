@@ -54,6 +54,21 @@ async function mount(name,props={}){
 }
 async function click(root,label){ const button=nodes(root,'button').find(node=>text(node)===label);assert.ok(button,label);button.props.onClick();await Vue.nextTick(); }
 
+test('device card identifies known OLED and LCD firmware and leaves an unknown board unlabelled', async () => {
+  const {root, state, app} = await mount('DeviceStorageCard', {connected:true, firmwareVersion:'2.22.0-DE3.81-OLEDt1'});
+  const label = name => text(nodes(root).find(node => node.props.class === name));
+  try {
+    assert.equal(label('device-name'), 'Allmiibo OLED');
+    state.nickname = 'Thomas'; await Vue.nextTick();
+    assert.equal(label('device-name'), 'Thomas');
+    assert.equal(label('device-model'), 'Allmiibo OLED');
+    state.firmwareVersion = '2.22.0-DE3.81'; await Vue.nextTick();
+    assert.equal(label('device-model'), 'Allmiibo LCD');
+    state.firmwareVersion = '2.21.0'; await Vue.nextTick();
+    assert.equal(label('device-model'), 'Allmiibo');
+  } finally { app.unmount(); }
+});
+
 test('device card renders a measured zero but hides an unavailable folder count or drive', async () => {
   const {root, state, app} = await mount('DeviceStorageCard', {connected:true, directory:'I:/', entries:null, drive:null, locale:'en'});
   const count = () => nodes(root, 'span').find(node => node.props.class === 'device-count');

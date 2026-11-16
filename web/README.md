@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.55.4 · LCD und OLED
+
+Die Firmware-Auswahl und die Anleitung führen zum passenden Paket für das eigene Gerät. Für LCD stehen DE3.75 Final und die Vorschau DE3.81 zur Wahl. Das OLED-Testpaket DE3.81 für S112 7.2.0 wird am Handy als App-Update installiert. [LCD-Freigabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) · [OLED-Testversion und Anleitung](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) · [Dateimanager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
+
 ## Akkuverlauf im Dateimanager 3.55.3
 
 Der Akkuverlauf zeigt Messdauer, Spannweite und Pausengründe. Nach einer Pause markiert der erste neue Messwert die Fortsetzung. Die CSV enthält Zeit, Spannung, Ladezustand, Ereignis und Pausengrund. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)

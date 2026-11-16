@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.75",
   "counter": 648,
   "board": "LCD",
-  "web_version": "3.55.3",
+  "web_version": "3.55.4",
   "web_publication_date": "2026-11-16",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
@@ -51,7 +51,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -150,7 +150,8 @@
     "web_3_55_0": "Read the cached three-byte flash ID, associate a confirmed battery label locally per device and record a voluntary battery voltage trace and inspect pixel-aligned LCD photos.",
     "web_3_55_1": "Recognize the signed DE3.80 application on Z19 and Z20, and distinguish the flash driver capacity table from the mounted storage layout.",
     "web_3_55_2": "Compare startup scan time, flash reads and bytes read, retain valid PREP and test version labels, keep the observed layout size within the current connection and identify the device-observed DE3.80 LCD preview.",
-    "web_3_55_3": "Battery sampling records why it paused and marks resume after a fresh observation. Display the measured range and duration and export the fifth CSV field pause_reason. Offer signed App654 / Z21 with a separate app-only path."
+    "web_3_55_3": "Battery sampling records why it paused and marks resume after a fresh observation. Display the measured range and duration and export the fifth CSV field pause_reason. Offer signed App654 / Z21 with a separate app-only path.",
+    "web_3_55_4": "Board-specific firmware links and guides for LCD and OLED, with a separate Android app-only route for the OLED trial."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -163,9 +164,9 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_55_3.json",
+  "web_evidence": "docs/validation/WEB3_55_4.json",
   "device_readback_evidence": "docs/validation/DE3_75_LCD_CHECK.json",
-  "web_device_readback_pending_scope": "Web 3.55.3 battery history and its CSV export were qualified with synthetic readings and browser checks. Physical Web 3.55.3 telemetry and an interrupted Android DFU with Z21 remain open.",
+  "web_device_readback_pending_scope": "Web 3.55.4 updates model selection and downloads. Successful operation was reported on one OLED. The storage format and individually tested features on that device were not reported.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {

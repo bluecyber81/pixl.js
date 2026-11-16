@@ -108,7 +108,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.75','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.75','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.75','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.75','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -293,6 +293,7 @@ test('DFU changes display language during a transfer without starting or resetti
     h.windowEvents.languagechange();
     assert.equal(h.context.document.documentElement.lang, 'en');
     assert.equal(h.nodes.get('guide-link').href, '../guide/en.html');
+    assert.equal(h.nodes.get('oled-guide').href, '../guide/en.html#oled');
     assert.equal(h.nodes.get('status').textContent, 'Connected');
     assert.match(h.nodes.get('transfer').textContent, /20 \/ 100 bytes acknowledged/);
     h.context.AllmiiboLanguage.setMode('en');

@@ -1,8 +1,22 @@
-# Allmiibo LCD – Firmware und Dateimanager
+# Firmware für Allmiibo LCD und Pixl.js OLED
+
+[English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
+
+## Firmware für dein Gerät
+
+- **LCD · DE3.75 stabil.** Für ein kompatibles nRF52832-LCD mit Packed LittleFS (PFS1), Z19 und S112 7.3.0. Die Rückkehr zur Figur, das Aufwachen und die Erkennung einer bekannten Figur an der Switch wurden auf einem LCD bestätigt. [LCD-App648 herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) · [Release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75)
+- **LCD · DE3.81 Vorschau.** Für ein kompatibles LCD mit PFS1, Z19, Z20 oder Z21 und S112 7.3.0. Der Besitzer hat das Flashen und die erste Funktion bestätigt. Die Anleitung erklärt auch die zweistufige Installation für passende ältere Bootloader. [LCD-App654 herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [LCD-Installationsanleitung](https://bluecyber81.github.io/pixl.js/guide/index.html)
+- **OLED · DE3.81 Test 1.** Für ein nRF52832-Pixl.js mit SH1106-OLED (128 × 64), passendem DFU-Bootloader und S112 7.2.0 (`0x0103`). Die App nutzt das vorhandene SPIFFS oder native LittleFS. Beide Speicherformate und beide Menüsprachen wurden am Rechner geprüft. Ein Nutzer berichtet, dass Test 1 auf einem OLED funktioniert. Welches Dateisystem er verwendet und welche Funktionen er geprüft hat, ist offen. Zur Fernbedienung liegt eine Fehlermeldung vor. [Einrichtung und Tastentest](https://bluecyber81.github.io/pixl.js/guide/index.html#oled-remote) [OLED-Testversion herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Testanleitung auf Deutsch und Englisch](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
+
+Beide DE3.81-Apps enthalten deutsche und englische Menüs, den Katalog mit 956 Figuren, Spielhinweise, „App fortsetzen“ und die Bluetooth-Fernbedienung für die Tasten. Displayfotos, Startzeit- und RAM-Diagnose sowie den Akkuverlauf im Dateimanager gibt es auf dem LCD.
+
+## Dateimanager 3.55.4
+
+Auf der Startseite findest du je nach Display den passenden Handy-Download und die Anleitung. Die OLED-ZIP enthält ausschließlich die Geräte-App. [Startseite öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
 
 ## Dateimanager 3.55.3
 
-Im Akkuverlauf unter **Gerät & Diagnose** siehst du Messdauer, Spannweite und Unterbrechungen. Der erste neue Messwert nach einer Pause markiert die Fortsetzung. Der CSV-Export enthält den Pausengrund in der fünften Spalte `pause_reason`. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
+Auf einem unterstützten LCD siehst du unter **Gerät & Diagnose → Akkuverlauf** Messdauer, Spannweite und Unterbrechungen. Der erste neue Messwert nach einer Pause markiert die Fortsetzung. Der CSV-Export enthält den Pausengrund in der fünften Spalte `pause_reason`. [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)
 
 ## LCD-Vorschau fürs Android-Handy
 

@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## File manager 3.55.4 · LCD and OLED
+
+The firmware selector and guide link to the packages for each board. LCD owners can choose stable DE3.75 or the DE3.81 preview. The DE3.81 OLED trial for S112 7.2.0 is an application-only phone update. [Stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) · [OLED trial and guide](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) · [File manager 3.55.4](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.4)
+
 ## DE3.81 / App654 · Z21 · Web 3.55.3
 
 In **Device & diagnostics**, battery history shows the duration, voltage range and gaps between readings. The first fresh reading after a pause marks the resumption. CSV exports include the reason in a fifth column, `pause_reason`. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows and source downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.3)

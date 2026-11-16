@@ -55,6 +55,7 @@ async function runChecks() {
   await page.locator('.version-context').waitFor();
   assert.equal(await page.title(), 'Allmiibo Dateimanager ' + webVersion);
   await page.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
+  await page.locator('.board-buttons').getByRole('button', { name:'LCD', exact:true }).click();
   const releases = [
     ['Allmiibo_LCD_DE3_65_637_NUR_APP.zip', 'DE3.65', 637],
     ['Allmiibo_LCD_DE3_72_645_NUR_APP.zip', 'DE3.72', 645],
@@ -86,6 +87,33 @@ async function runChecks() {
       await guidePage.goto(origin + base);
       await guidePage.locator('.version-context').waitFor();
       await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
+      const picker = guidePage.locator('.firmware-board-choice');
+      const lcd = picker.getByRole('button', {name:'LCD',exact:true});
+      const oled = picker.getByRole('button', {name:'OLED',exact:true});
+      await picker.waitFor();
+      assert.equal(await picker.locator('.dfu-page-link, .oled-trial, .firmware-packages').count(), 0);
+      await oled.click();
+      const trial = picker.locator('.oled-trial');
+      const oledZip = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip';
+      assert.equal(await trial.getByRole('link').first().getAttribute('href'), oledZip);
+      assert.equal(await trial.getByRole('link').nth(1).getAttribute('href'), base + 'guide/' + guide + '#oled');
+      assert.equal(await picker.locator('.dfu-page-link, .firmware-packages').count(), 0);
+      await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
+        connected:true, firmwareVersion:'2.27.11', bootInfo:null
+      }); });
+      await trial.waitFor({state:'detached'});
+      await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.firmwareVersion = '2.22.0-DE3.81-OLEDt1'; });
+      await trial.waitFor();
+      assert.ok(await lcd.isDisabled());
+      await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = { softDeviceValid:true, softDeviceVariant:112, softDeviceVersion:7003000, softDeviceFwid:0x0126 }; });
+      await trial.locator('[role=status]').waitFor();
+      assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
+      await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
+        firmwareVersion:'2.22.0-DE3.81', bootInfo:null
+      }); });
+      await trial.waitFor({state:'detached'});
+      assert.ok(await oled.isDisabled());
+      checks.push({locale,feature:'manual, unknown, OLED and LCD firmware choices; phone links, board changes and incompatible readback'});
       const applicationRow = guidePage.locator('.firmware-packages .package').filter({hasText:'2.22.0-DE3.81'});
       const guideLink = applicationRow.getByRole('link',{name:title});
       assert.equal(await guideLink.getAttribute('href'), base + 'guide/' + guide + '#android-de381');

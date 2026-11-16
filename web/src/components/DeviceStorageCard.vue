@@ -8,8 +8,8 @@
         </svg>
       </span>
       <div><p class="device-eyebrow">{{ de ? 'Dein Gerät' : 'Your device' }}</p>
-      <strong class="device-name">{{ connected ? (nickname || 'Allmiibo LCD') : $t('info.disconnected') }}</strong>
-      <small v-if="connected && nickname" class="device-model">Allmiibo LCD</small></div>
+      <strong class="device-name">{{ connected ? (nickname || model) : $t('info.disconnected') }}</strong>
+      <small v-if="connected && nickname" class="device-model">{{ model }}</small></div>
     </header>
     <template v-if="connected">
       <div v-if="directory" class="device-folder">
@@ -29,12 +29,14 @@
 </template>
 <script>
 import { storageUsage, storageAmount, occupiedPercent } from '../lib/device-storage-display.js';
+import { firmwareBoard } from '../lib/hardware-profile.js';
 export default {
   name:'DeviceStorageCard',
-  props:{ connected:Boolean, nickname:String, drive:Object, directory:String, entries:Number, locale:String, uploadDisabled:Boolean },
+  props:{ connected:Boolean, nickname:String, firmwareVersion:String, drive:Object, directory:String, entries:Number, locale:String, uploadDisabled:Boolean },
   emits:['upload'],
   computed:{
     de(){ return this.locale?.startsWith('de'); },
+    model(){ const board = firmwareBoard(this.firmwareVersion); return board ? 'Allmiibo ' + board : 'Allmiibo'; },
     usage(){ return this.connected ? storageUsage(this.drive) : null; },
     percentage(){ return this.usage ? occupiedPercent(this.usage,this.locale) : ''; },
     meterText(){ const u=this.usage; return u ? this.amount(u.used)+' '+(this.de?'belegt':'used')+' · '+this.amount(u.free)+' '+(this.de?'frei':'free') : ''; },

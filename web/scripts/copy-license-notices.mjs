@@ -37,7 +37,7 @@ export function copyNotices(mode) {
 <title data-en="Allmiibo ${escape(version)} – Sources and licenses">Allmiibo ${escape(version)} – Quellen und Lizenzen</title>
 <script defer src="../language-preference.js"></script><script defer src="language.js"></script></head><body>
 <main><a href="../">${label('Zurück zum Dateimanager', 'Back to the file manager')}</a><h1>${label('Quellen und Lizenzen', 'Sources and licenses')} · ${escape(version)}</h1>
-<p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">${label('Versionsgeschichte des Dateimanagers', 'File manager version history')}</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">${label('LCD-Firmware, Bootloader und SoftDevice', 'LCD firmware, bootloader and SoftDevice')}</a></p>
+<p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">${label('Versionsgeschichte des Dateimanagers', 'File manager version history')}</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">${label('LCD- und OLED-Firmware', 'LCD and OLED firmware')}</a></p>
 <p>${label('Der Dateimanager enthält die hier aufgeführten Bibliotheken und sieben Speicher-Simulatoren.', 'The file manager includes the libraries listed here and seven storage simulators.')}</p>
 <ul><li><a href="${archives.source}" download>${label(`Quellcode des Dateimanagers ${archives.version} mit Simulatorquellen und Build-Anleitungen (ZIP)`, `File manager ${archives.version} source code, simulator sources and build instructions (ZIP)`)}</a></li>
 <li><a href="${archives.previewTestKit}" download>${label('Öffentliche Prüfnachweise für DE3.81 / App654 und Z21 (ZIP)', 'Public test evidence for DE3.81 / App654 and Z21 (ZIP)')}</a></li>
@@ -46,6 +46,7 @@ export function copyNotices(mode) {
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.72">${label('Quellstand der LCD-Testversion DE3.72/645 mit App-Fortsetzung', 'Source code for the DE3.72/645 LCD test release with app resume')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.73-test646">${label('Quellstand der LCD-Testversion DE3.73/646', 'Source code for the DE3.73/646 LCD test release')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.81-oled-t1">${label('Quellstand der OLED-Testfirmware DE3.81 Test 1', 'Source code for the DE3.81 OLED Test 1 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.75">${label('Quellstand der stabilen LCD-Firmware DE3.75/648', 'Source code for the stable DE3.75/648 LCD release')}</a></li></ul>
 <p>${label('Der Firmware-Quellstand im Hauptzweig des Repositorys kann davon abweichen. Die stabile App DE3.75 ist für Allmiibo LCD mit PFS1, Z19 und S112 7.3.0.', 'The main branch can contain a different firmware revision. The stable DE3.75 application is for Allmiibo LCD with PFS1, Z19 and S112 7.3.0.')}</p>
 <p>${label('Aktuelle Bibliotheken und Quellen', 'Current libraries and sources')} · <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>.
