@@ -17,6 +17,21 @@ globalThis.AllmiiboFirmwareReleases = {
       "migrationRequired": false
     },
     {
+      "id": "de3.79-lcd-app",
+      "version": "2.22.0-DE3.79",
+      "counter": 652,
+      "file": "Allmiibo_LCD_DE3_79_652_NUR_APP.zip",
+      "bytes": 259921,
+      "sha256": "161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z19",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    },
+    {
       "id": "de3.77-lcd-app",
       "version": "2.22.0-DE3.77",
       "counter": 650,
