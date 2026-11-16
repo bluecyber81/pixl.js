@@ -1,4 +1,4 @@
-"""Verify the released LCD application against this build and the bound Z19 public key."""
+"""Verify the released LCD application against this build and its bootloader's bound public key."""
 import argparse
 import hashlib
 import json

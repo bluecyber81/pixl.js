@@ -45,10 +45,10 @@ Für die Übertragung aller App-Bytes durch den regulären Z19-Datenpfad, einsch
 
 ```sh
 python3 -B tests/test_app_stream_modes.py
-python3 -B tests/DFU_Stream/check_app_stream.py --app-only ../fw/releases/Allmiibo_LCD_DE3_67_639_NUR_APP.zip --output _checks/transfer639.json
+python3 -B tests/DFU_Stream/check_app_stream.py --app-only ../fw/releases/Allmiibo_LCD_DE3_81_654_NUR_APP.zip --output _checks/transfer654.json
 ```
 
-Der erste Aufruf prüft die Meldungen des Testwerkzeugs. Der zweite überträgt die Bytes des signierten Referenzpakets im C-Modell. Der Tester erkennt die signierten Pakete App636, App637, App638 und App639 an den fest hinterlegten ZIP- und Nutzdaten-Prüfsummen. Für andere Builds steht `--test-bin DATEI --expected-sha256 HASH` zur Verfügung. Bei App639 trennt das Modell nach 4.136 Bytes. Der Bootloader meldet den gespeicherten Offset 0. Der Test überträgt alle 364.116 Bytes erneut und vergleicht anschließend Inhalt und CRC mit der signierten Anwendungsdatei. Ein separater Fall prüft die Wiederaufnahme an einer bestätigten Objektgrenze. Funk, MBR-Kopie und Neustart auf realer Hardware erfordern zusätzliche Geräteversuche.
+Der erste Aufruf prüft unter anderem die Zuordnung der ZIP- und App-Prüfsummen zum aktuellen und zum vorherigen LCD-Release. Der zweite überträgt die App aus der signierten ZIP durch das C-Modell. Nach der simulierten Trennung fragt das Modell den gespeicherten Offset ab, überträgt die noch benötigten Bytes und vergleicht Inhalt und CRC mit der ausgelieferten App. GitHub Actions prüft so sowohl DE3.81/App654 als auch den früheren Stand DE3.75/App648. Für andere Builds steht `--test-bin DATEI --expected-sha256 HASH` zur Verfügung. Ein separater Fall prüft die Wiederaufnahme an einer bestätigten Objektgrenze. Funk, MBR-Kopie und Neustart auf realer Hardware erfordern zusätzliche Geräteversuche.
 
 Der Standardlauf bestätigt vorab mit einer Kontrollprobe, dass die Erkennung von Speicherlecks aktiv ist. Kann die Kontrolle nicht laufen, schreibt das Werkzeug `BLOCKED` und das Kontrollprotokoll in die Ergebnisdatei und beendet sich mit Exitcode 2. Für einen getrennten Lauf ohne Leakprüfung `--no-leak-check` und einen neuen Ausgabedateinamen angeben. ASan und UBSan bleiben eingeschaltet, `leakDetectionConfirmed` ist dann `false`. Beide Prüfstarter verlangen Python mit aktiven Prüfanweisungen. Ein Aufruf mit `-O` endet vor dem ersten Test.
 
