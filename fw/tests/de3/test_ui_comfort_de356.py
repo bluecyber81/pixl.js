@@ -16,6 +16,7 @@ from test_text_input_render_de344 import LIBS
 
 HARNESS = r'''
 #include "mui_canvas.h"
+#include "version.inc.h"
 #include "mui_text_input.h"
 #include <ctype.h>
 #include <limits.h>
@@ -294,6 +295,7 @@ class ComfortRenderingTests(unittest.TestCase):
                             function((SRC / 'mui/mui_core.c').read_text(), 'mui_draw_mem_mon'))
         with tempfile.TemporaryDirectory(prefix='pixl-ui-comfort-') as tmp:
             folder = Path(tmp)
+            shutil.copyfile(SRC / 'version.inc.h', folder / 'version.inc.h')
             fonts = ('u8g2_font_wqy12_t_gb2312a.c', 'u8g2_font_siji_t_6x10.c', 'u8g2_font_likeminecraft_te.c')
             for name in ('mui_canvas.h', *fonts):
                 shutil.copyfile(SRC / 'mui' / name, folder / name)
