@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "date": "2026-11-17",
+  "board": "LCD",
+  "firmware": "2.22.0-DE3.84",
+  "applicationCounter": 657,
+  "releaseTag": "de3.84-lcd-test1",
+  "releaseCommit": "55e3c42836452830421b559b6fc3659b826dc43b",
+  "evidenceType": "owner-report",
+  "result": "user-reported-passed",
+  "installedBootloaderReported": "Z21",
+  "scope": "One owner reported successful practical tests on their own LCD. The owner did not enumerate the individual cases.",
+  "freshDeviceReadback": false,
+  "physicalAndroidDfuInterruptionConfirmed": false,
+  "separateSoftwareBuildAndTests": "https://github.com/bluecyber81/pixl.js/actions/runs/44047724527"
+}

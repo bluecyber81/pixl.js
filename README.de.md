@@ -2,6 +2,16 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
+## LCD DE3.84 / App657 · am Gerät erprobte Testversion
+
+Die Spiele übernehmen die 180°-Drehung und haben eine deutsche und englische Bedienhilfe. Unter **Einstellungen** lassen sich das automatische Dimmen sowie der Display- und Tastentest aufrufen. Der Besitzer eines LCD meldete am 17. November 2026 erfolgreiche praktische Tests mit installiertem Z21. Welche Einzelfälle er getestet hat, ist offen. Die Wiederaufnahme nach einem echten Android-DFU-Abbruch ist gesondert zu prüfen.
+
+Für ein Allmiibo LCD mit ST7567, Packed LittleFS (PFS1), Z21 und S112 7.3.0 die ZIP gepackt in **nRF Device Firmware Update** auswählen. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket mit Quellen, ELF und Maps](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [GitHub-Prüflauf](https://github.com/bluecyber81/pixl.js/actions/runs/44047724527)
+
+## Dateimanager 3.55.6
+
+Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)
+
 ## Aktuelle LCD-Firmware · DE3.81 / App654
 
 | Was möchtest du aktualisieren? | Download und Voraussetzungen |
@@ -17,7 +27,7 @@ Sichere deine Dateien und lass die ZIP gepackt. Übertrage das Komplettpaket in 
 
 Beide DE3.81-Apps enthalten deutsche und englische Menüs, den Katalog mit 956 Figuren, Spielhinweise, „App fortsetzen“ und die Bluetooth-Fernbedienung für die Tasten. Displayfotos, Startzeit- und RAM-Diagnose sowie den Akkuverlauf im Dateimanager gibt es auf dem LCD.
 
-## Dateimanager 3.55.5
+## Dateimanager 3.55.5 · Archiv
 
 Auf der Startseite findest du beide LCD-Downloads und den eigenen OLED-Einstieg. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5)
 

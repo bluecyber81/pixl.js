@@ -2,6 +2,16 @@
 
 [Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
+## LCD DE3.84 / App657 · owner-tested preview
+
+All four games follow the 180° display setting and include German and English controls. Open **Settings** for automatic dimming and the display and key test. On 17 November 2026, one LCD owner reported successful practical testing with Z21 installed. The report does not list individual cases. Resuming a physically interrupted Android update remains open.
+
+For an Allmiibo LCD with ST7567, Packed LittleFS (PFS1), Z21 and S112 7.3.0, select the intact ZIP in **nRF Device Firmware Update**. [Mobile app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Sources, ELF files, maps and tests](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [GitHub build and tests](https://github.com/bluecyber81/pixl.js/actions/runs/44047724527)
+
+## File manager 3.55.6
+
+On App657, **Device & diagnostics** shows the running application's source ID, an available fault note from the previous boot, and cache pages used at the last mount. The German and English guided checks include 40 additional LCD cases. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)
+
 ## Current LCD firmware · DE3.81 / App654
 
 | What do you want to update? | Download and requirements |
@@ -17,7 +27,7 @@ Back up your files and keep the ZIP intact. Install a full update with **nRF Dev
 
 Both DE3.81 applications include German and English menus, the 956-figure catalog, game hints, app resume and Bluetooth remote buttons. Display capture, startup and RAM diagnostics, and battery history in the file manager are available on LCD.
 
-## File manager 3.55.5
+## File manager 3.55.5 · archive
 
 The home page links to both LCD downloads and the separate OLED route. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5)
 

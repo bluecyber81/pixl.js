@@ -8,6 +8,7 @@ of the actual current function bodies, so an archived suite is self-contained.
 """
 from pathlib import Path
 import argparse, hashlib, json, re, subprocess, tempfile
+import os
 
 FW = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
@@ -43,6 +44,7 @@ def main():
     parser.add_argument('--report', type=Path, help='Optional JSON evidence output; default prints results only')
     parser.add_argument('--probe-float', action='store_true')
     parser.add_argument('--arm-assembly', action='store_true')
+    parser.add_argument('--wsl-distribution', help='Optional WSL distribution for the Windows ARM assembly check')
     args = parser.parse_args()
     files = [Path(__file__), HERE / 'math_precision_de335.c.in']
     texts = {}
@@ -100,9 +102,11 @@ def main():
             assembly_source += extract(texts['new']['game'], 'WriteBallMove') + '\n'
             afile = temp / 'hardware_float.c'; afile.write_text(assembly_source)
             asm = temp / 'hardware_float.s'
-            cmd = ['wsl.exe', '--distribution', 'Ubuntu-24.04-Codex-New', '--user', 'bluec', '--exec',
-                   'arm-linux-gnueabihf-gcc', '-std=c11', '-Os', '-mcpu=cortex-m4', '-mthumb',
+            cmd = ['arm-linux-gnueabihf-gcc', '-std=c11', '-Os', '-mcpu=cortex-m4', '-mthumb',
                    '-mfpu=fpv4-sp-d16', '-mfloat-abi=hard', '-ffp-contract=off', '-S', path_arg(afile), '-o', path_arg(asm)]
+            if os.name == 'nt':
+                distro = ['--distribution', args.wsl_distribution] if args.wsl_distribution else []
+                cmd = ['wsl.exe', *distro, '--exec', *cmd]
             built = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
             assert built.returncode == 0, built.stdout + built.stderr
             assembly = asm.read_text()
