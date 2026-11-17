@@ -8,6 +8,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import struct
+import tempfile
 from subprocess import check_output
 
 from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_CODE, UC_HOOK_MEM_WRITE
@@ -153,8 +154,33 @@ def verify(build, expect_app655_bug):
         press(0, 0, 2 if swap else 0)
         call('game_view_on_exit', 0)
         assert not any(call('game_view_key_pressed', i) for i in range(3))
+        if 'game_view_take_start' in symbols:
+            call('game_view_wait_for_start')
+            press(1, 2, 1)  # stale SHORT
+            assert not call('game_view_take_start')
+            press(1, 0, 1)
+            assert not call('game_view_take_start')
+            press(1, 3, 1)  # LONG
+            for _ in range(11): press(1, 4, 1)
+            assert call('JOY_exit') and not call('game_view_take_start')
+            press(1, 1, 1)
+            press(1, 2, 1)
+            assert not call('JOY_exit') and not call('game_view_take_start')
+            press(1, 0, 1)
+            press(1, 1, 1)
+            press(1, 2, 1)
+            assert call('game_view_take_start') and not call('game_view_take_start')
 
     traces = {name: capture(PORT, name, False, raw=True) for name in CASES}
+    lifecycles = {}
+    if 'game_view_take_start' in symbols:
+        from test_game_lifecycle import execute
+        with tempfile.TemporaryDirectory() as scratch_dir:
+            for name in CASES:
+                for mode, (report, trace) in execute(name, scratch_dir).items():
+                    key = name + '_' + mode
+                    traces[key] = trace
+                    lifecycles[key] = report
     results = []
     # Second pass re-enters the hardware profile from the saved flip after sleep.
     for wake, rotation in ((False, 0), (False, 1), (True, 1), (True, 0)):
@@ -285,7 +311,7 @@ def verify(build, expect_app655_bug):
     return dict(binSha256=sha256(binary).hexdigest(), hardware=False,
                 panelInitHex=init.hex(), registersChangedByRuntimeRotation=False,
                 controls='both physical side keys and center / repeat / release; swap on and off; game enter and exit',
-                helpUsedPixels=help_widths, cases=results)
+                helpUsedPixels=help_widths, lifecycles=lifecycles, cases=results)
 
 
 if __name__ == '__main__':
