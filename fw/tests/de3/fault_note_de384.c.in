@@ -1,0 +1,53 @@
+static void trigger(unsigned kind, uint32_t id, uint32_t pc) {
+    int terminal = setjmp(escape);
+    if (!terminal) {
+        if (kind == FAULT_NOTE_SDK) app_error_fault_handler(id, pc, UINT32_MAX);
+        if (kind == FAULT_NOTE_HARD) HardFault_Handler();
+        if (kind == FAULT_NOTE_EXIT) _exit(-42);
+        assert(0);
+    }
+#ifdef DEBUG
+    assert(terminal == 2);
+#else
+    assert(terminal == 1);
+#endif
+}
+
+int main(void) {
+    memset((void *)&retained, 0xff, sizeof(retained));
+    fault_note_on_boot();
+    assert(fault_note_previous()->kind == 0 && retained.magic == 0);
+    for (unsigned kind=FAULT_NOTE_SDK; kind<=FAULT_NOTE_EXIT; ++kind) {
+        const uint32_t pcs[] = {0, 1, 0x7ffff, 0x80000, 0x20000000, UINT32_MAX};
+        for (unsigned i=0; i<sizeof(pcs)/sizeof(*pcs); ++i) {
+            m_cache_data.enabled = 1;
+            trigger(kind, UINT32_MAX-i, pcs[i]);
+            assert(retained.magic == FAULT_NOTE_V1 && m_cache_data.enabled == -1);
+            retained_fault_t good = retained;
+            /* Every one-bit corruption anywhere in the retained slot is rejected. */
+            for (unsigned b=0; b<8*sizeof(good); ++b) {
+                retained = good;
+                ((volatile unsigned char *)&retained)[b/8] ^= 1u<<(b%8);
+                fault_note_on_boot();
+                assert(!fault_note_previous()->kind && !retained.magic);
+            }
+            retained = good;
+            fault_note_on_boot();
+            const fault_note_t *view = fault_note_previous();
+            assert(!retained.magic && view == fault_note_previous() && view->kind == kind);
+            assert(view->sdk_id == (kind == FAULT_NOTE_SDK ? UINT32_MAX-i : 0));
+            assert(view->pc == (kind == FAULT_NOTE_SDK && pcs[i]<0x80000 ? pcs[i] : 0));
+            fault_note_on_boot();
+            assert(!view->kind && !view->sdk_id && !view->pc);
+        }
+    }
+    /* Self-consistent but nonsensical records are still rejected. */
+    const fault_note_t invalid[] = {{4,0,0}, {0,0,0}, {1,0,0x80000}, {2,1,0}, {3,0,0x1001}};
+    for (unsigned i=0; i<sizeof(invalid)/sizeof(*invalid); ++i) {
+        fault_note_t v = invalid[i];
+        retained = (retained_fault_t){FAULT_NOTE_V1,v.kind,v.sdk_id,v.pc,~v.kind,~v.sdk_id,~v.pc};
+        fault_note_on_boot(); assert(!fault_note_previous()->kind && !retained.magic);
+    }
+    assert(!io_calls && !crc_calls);
+    puts("PASS SDK/HardFault/exit, guarded PC, hostile metadata, single-boot retention, 4032 bit flips and invalid fields");
+}

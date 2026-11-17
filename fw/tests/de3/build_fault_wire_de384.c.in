@@ -1,0 +1,30 @@
+#ifdef TEST_CAPABLE_LCD
+static fault_note_t note;
+const fault_note_t *fault_note_previous(void) {return &note;}
+#endif
+int main(void) {
+    const unsigned mtus[] = {23, 185, 250};
+    for (unsigned i=0;i<3;++i) {
+        reset(mtus[i]); modern();
+#ifdef TEST_CAPABLE_LCD
+        for (unsigned kind=0;kind<=3;++kind) {
+            note=(fault_note_t){kind, kind==1 ? UINT32_C(0xfedcba98) : 0, kind==1 ? 0x7ff43u : 0};
+            for (unsigned again=0;again<2;++again) {
+                sends=0; request(12,NULL,0);finish_stream();
+                uint8_t out[80];
+                CHECK(merge(out,sizeof(out),12)==80 && sends==(i ? 1 : 5));
+                CHECK(!memcmp(out,"PXBI\1\120\1",7) && out[7]==kind);
+                CHECK(!memcmp(out+8,version_get_source_id(),64));
+                CHECK(!memcmp(out+72,kind==1 ? "\x98\xba\xdc\xfe\x43\xff\x07\0" : "\0\0\0\0\0\0\0\0",8));
+            }
+        }
+        uint8_t bad=1;
+        sends=0;request(12,&bad,1);finish_stream();
+        CHECK(sends==1&&replies[0].status==DF_STATUS_ERR&&!replies[0].length);
+#else
+        request(12,NULL,0);finish_stream();
+        CHECK(sends==1&&replies[0].cmd==12&&replies[0].status!=DF_STATUS_OK&&!replies[0].length);
+#endif
+    }
+    puts("PASS optional PXBI transport MTU23/185/250");
+}

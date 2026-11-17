@@ -145,4 +145,13 @@ SECTIONS
     KEEP(*(*.noinit*))
     PROVIDE(__stop_noinit = .);
   } > NOINIT
+  /* A dedicated fixed tail of the existing retained RAM. Cache CRC/layout
+   * and its whole-range clean end at __stop_noinit as before. */
+  .retained_fault ORIGIN(NOINIT) + LENGTH(NOINIT) - 32 (NOLOAD) :
+  {
+    KEEP(*(.pixl_fault))
+  } > NOINIT
 }
+ASSERT(SIZEOF(.retained_fault) == 0 ||
+       (__stop_noinit <= ADDR(.retained_fault) && SIZEOF(.retained_fault) <= 32),
+       "Fault note overlaps cache or exceeds dedicated retention")

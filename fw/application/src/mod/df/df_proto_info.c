@@ -8,6 +8,7 @@
 #include "../boot_diag.h"
 #include "boards.h"
 #ifdef LCD_SCREEN
+#include "../fault_note.h"
 #include "hal_spi_flash.h"
 #include "mui_core.h"
 #include "mbedtls/sha256.h"
@@ -196,6 +197,31 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
 }
 
 #ifdef LCD_SCREEN
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+/* Current compiled provenance plus the previous fault captured at this boot.
+ * This reads neither application flash contents for hashing nor a device ID. */
+static void df_proto_handler_info_build_fault(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t out = {0};
+    OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_BUILD_FAULT, DF_STATUS_ERR);
+    if (!evt->df->length && !evt->df->status && !evt->df->chunk) {
+        const fault_note_t *note = fault_note_previous();
+        memcpy(out.data, "PXBI", 4);
+        out.data[4] = 1;
+        out.data[5] = 80;
+        out.data[6] = 1; /* compiled LCD profile */
+        out.data[7] = (uint8_t)note->kind;
+        memcpy(out.data + 8, version_get_source_id(), 64);
+        for (unsigned i = 0; i < 4; ++i) {
+            out.data[72+i] = (uint8_t)(note->sdk_id >> (8*i));
+            out.data[76+i] = (uint8_t)(note->pc >> (8*i));
+        }
+        out.length = 80;
+        out.status = DF_STATUS_OK;
+    }
+    df_core_send_frame(&out);
+}
+#endif
 /* One cached result from the external flash geometry probe. Fits ATT MTU 23. */
 static void df_proto_handler_info_flash_jedec(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
@@ -255,5 +281,8 @@ const df_cmd_entry_t df_proto_handler_info_entries[] = {
 #ifdef LCD_SCREEN
     {DF_PROTO_CMD_INFO_DISPLAY_PAGE, df_proto_handler_info_display_page},
     {DF_PROTO_CMD_INFO_FLASH_JEDEC, df_proto_handler_info_flash_jedec},
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    {DF_PROTO_CMD_INFO_BUILD_FAULT, df_proto_handler_info_build_fault},
+#endif
 #endif
     {0, NULL}};

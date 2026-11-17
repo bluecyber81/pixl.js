@@ -76,6 +76,7 @@
 
 #include "bat.h"
 #include "mod/runtime_diag.h"
+#include "mod/fault_note.h"
 #include "ble_main.h"
 #include "ble_remote.h"
 
@@ -93,7 +94,6 @@
 #include "mini_app_registry.h"
 #include "mui_include.h"
 #include "mui_mem.h"
-#include "mui_u8g2.h"
 
 #include "hal_spi_bus.h"
 #include "hal_nfc_t2t.h"
@@ -327,6 +327,9 @@ void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
 int main(void) {
     runtime_diag_stack_init();
     runtime_diag_boot_capture(nrf_power_resetreas_get());
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    fault_note_on_boot();
+#endif
     ret_code_t err_code;
 
     log_init();
@@ -426,9 +429,6 @@ int main(void) {
 
         ntag_emu_process_pending();
         ble_process_pending();
-#ifdef LCD_SCREEN
-        mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window());
-#endif
         app_sched_execute();
         mui_tick(p_mui);
         ble_remote_poll();
