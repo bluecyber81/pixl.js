@@ -172,7 +172,7 @@ try {
       const rotate=photoBox.getByRole('button',{name:locale==='de-DE'?'Um 180° drehen':'Rotate 180°'});
       await rotate.click();assert.deepEqual(await readCorners(),[128,64,0,255]);
       const [download]=await Promise.all([page.waitForEvent('download'),photoBox.getByRole('link').click()]);
-      assert.equal(download.suggestedFilename(),'Allmiibo-LCD.png');
+      assert.equal(download.suggestedFilename(),'Allmiibo-Display.png');
       const png = await fs.readFile(await download.path());
       assert.equal(png.readUInt32BE(16),128); assert.equal(png.readUInt32BE(20),64);
       assert.equal(png.toString('base64'),(await image.getAttribute('src')).split(',')[1]);

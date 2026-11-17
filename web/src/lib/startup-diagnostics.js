@@ -6,7 +6,7 @@ const STORAGE_PHASES = ['mountDone', 'journalDone'];
 const MOUNT_COUNTERS = ['physicalReadAttempts', 'physicalReadBytes', 'cacheHits', 'cacheMisses', 'bypassReads', 'physicalReadErrors'];
 // Release versions, preparation builds and numbered test builds share this diagnostic format.
 const isStartupFirmware = value => typeof value === 'string' && value.length <= 64 &&
-  /^\d+\.\d+\.\d+-DE\d+\.\d+(?:-PREP|t[1-9]\d*)?$/.test(value);
+  /^\d+\.\d+\.\d+-DE\d+\.\d+(?:-PREP|(?:-OLED)?t[1-9]\d*)?$/.test(value);
 const uint32 = n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
 // Last actual mount, not the time of this read and not necessarily a cold boot.
 export function normalizeMountDiagnostics(value) {

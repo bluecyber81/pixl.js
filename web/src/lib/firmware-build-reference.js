@@ -1,3 +1,5 @@
+import { firmwareBoard } from './hardware-profile.js';
+
 // Reference for the signed T1 application package. This is not a
 // hash read from the connected device and does not qualify a storage layout.
 export const TEST_FIRMWARE_REFERENCE = Object.freeze({
@@ -69,7 +71,18 @@ const oledTest1 = Object.freeze({
   otaSha256: '2806b64ff5a8c0f1342abaf33ca1a79a1773b6101d410ccc97e498f1c9f37d33',
 });
 
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, oledTest1];
+const oledTest2 = Object.freeze({
+  ...oledTest1, firmwareVersion: '2.22.0-DE3.81-OLEDt2', applicationCounter: 82, hardwareAcceptance: 'pending',
+  applicationBinSha256: 'd4b4a7693beb9c98dfac406c46d2eaebf4fb3c31743b0d7ebedc8971c16decee',
+  sourceId: '3d03b5ef8b785f6e4550fd2d569c9cd77bd6b1108421e09888483a8a368b7a61', otaSha256: 'ab3278830f2896d4a51cbe3235bb78bfeb20cda16a83cbfac983d8f15bc29b8f',
+});
+const oledTest3 = Object.freeze({
+  ...oledTest2, firmwareVersion: '2.22.0-DE3.81-OLEDt3', applicationCounter: 83, applicationBytes: 357144,
+  applicationBinSha256: '7fdfb63158015b1b914679cb07644691926136a46bebd2882d7d0f177394cd0e',
+  sourceId: 'b283257873690dd40845d6ba4628a88f8066a7b45f682b6190cd0c152b295a22', otaSha256: 'fd0418d4d503d1ac168909af66912c0e97cf98aef8936d29542c95d396378820',
+});
+
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, oledTest1, oledTest2, oledTest3];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
@@ -81,8 +94,8 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
     sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = references.find(item => item.firmwareVersion === version) ?? app654;
-  const relation = version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
+  const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app654);
+  const relation = !reference ? 'no-package-reference' : version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
   return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,
     applicationHashVerified: false, samePhysicalDeviceVerified: false };

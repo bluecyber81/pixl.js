@@ -14,7 +14,7 @@ function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.j
     const source = fs.readFileSync(path.join(sourceRoot, name), 'utf8');
     const exports = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
     const code = source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
-    const context = { ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
+    const context = { ...require(path.join(sourceRoot,'hardware-profile.js')), ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
         // Production isolates consumer callback failures. Assertions inside a
         // mocked UI callback must nevertheless fail this regression harness.
         console: { log() {}, error(_message,error) { if(error?.code==='ERR_ASSERTION')throw error; } }, module: { exports: {} }, ...bindings };
@@ -112,10 +112,13 @@ test('startup extension is selected by firmware, retries only a rejected option 
    assert.deepEqual(f.writes[1],[9,0,0,0]);f.rx(9,startupPacket());assert.equal((await p).schemaVersion,1);
    assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
  }
- const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.61');
- const bytes=new Uint8Array(40);bytes.set(startupPacket());bytes.set([2,40,63,3],4);bytes[32]=12;bytes[36]=19;
- f.rx(9,bytes.subarray(0,16),0x8000);f.rx(9,bytes.subarray(16,32),0x8001);f.rx(9,bytes.subarray(32),2);
- assert.deepEqual(Array.from((await p).storageElapsedMilliseconds),[12,19]);assert.equal(f.writes.length,1);
+ for(const version of ['2.22.0-DE3.61','2.22.0-DE3.81-OLEDt3']){
+   const f=protocolFixture(),p=f.api.get_startup_diagnostics(version);
+   assert.deepEqual(f.writes,[[9,0,0,0,1]]);
+   const bytes=new Uint8Array(40);bytes.set(startupPacket());bytes.set([2,40,63,3],4);bytes[32]=12;bytes[36]=19;
+   f.rx(9,bytes.subarray(0,16),0x8000);f.rx(9,bytes.subarray(16,32),0x8001);f.rx(9,bytes.subarray(32),2);
+   assert.deepEqual(Array.from((await p).storageElapsedMilliseconds),[12,19]);assert.equal(f.writes.length,1);
+ }
 });
 test('optional startup request is explicit, serialized after earlier work and exact32B',async()=>{
  const f=protocolFixture();assert.equal(f.writes.length,0);

@@ -6,6 +6,7 @@ import { parseFlashDiagnostics, supportsFlashDiagnostics } from "./flash-diagnos
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
+import { lacksOledSystemDiagnostics, OLED_DIAGNOSTICS_TRIAL } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -313,11 +314,17 @@ export function get_display_photo(firmwareVersion) {
     };
     return captureDisplayPhoto(page => op_queue_push(0x0a,
         b => { b.writeUTF8String('LCD1'); b.writeUint8(page); },
-        b => parseDisplayPage(b.readBytes(b.remaining()).toArrayBuffer(), page), { max_bytes: 168 })
-        .then(response => response.status === 255 ? null : checked_response(response)), checkSession);
+        b => parseDisplayPage(b.readBytes(b.remaining()).toArrayBuffer(), page), { max_bytes: 168, optional_probe: firmwareVersion === OLED_DIAGNOSTICS_TRIAL })
+        .then(response => {
+            if (response.status === 255) return null;
+            if (response.status === 1 && firmwareVersion === OLED_DIAGNOSTICS_TRIAL)
+                throw Object.assign(new Error('Display capture unavailable'), {code:'DISPLAY_UNAVAILABLE'});
+            return checked_response(response);
+        }), checkSession);
 }
 
-export function get_runtime_diagnostics() {
+export function get_runtime_diagnostics(firmwareVersion) {
+    if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x06, () => {}, b =>
         parse_runtime_diagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 64 })
@@ -339,7 +346,8 @@ export function get_boot_diagnostics() {
         });
 }
 
-export function get_power_diagnostics() {
+export function get_power_diagnostics(firmwareVersion) {
+    if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x08, () => {}, b =>
         parsePowerDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16 })
@@ -351,6 +359,7 @@ export function get_power_diagnostics() {
 
 // Explicit optional read, serialized by the same queue as all file operations.
 export function get_startup_diagnostics(firmwareVersion) {
+    if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
     const series = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
@@ -363,6 +372,8 @@ export function get_startup_diagnostics(firmwareVersion) {
                 return response.status === 255 ? null : checked_response(response);
             });
     }
+    // OLED Test 3 records native VFS startup phases without a PackedFS mount profile.
+    if (known === OLED_DIAGNOSTICS_TRIAL) return read(1);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
 }

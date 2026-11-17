@@ -23,6 +23,20 @@ test('page binds one click to device selection and one file event to package loa
     const h=harness();h.nodes.get('file').files=['selected'];h.nodes.get('file').events.change();h.nodes.get('button').events.click();
     assert.deepEqual(h.calls,[['package',null],['package','selected'],['select']]);
 });
+test('an OLED handoff only offers the OLED guide, even with a bookmarked LCD package and no boot counters',async()=>{
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname,'../src/data/firmware-releases.json'),'utf8'));
+    const location = new URL('https://example.test/dfu/web.html?package=' + catalog.packages[0].id + '#board=OLED');
+    const h = harness(true,{AllmiiboFirmwareReleases:catalog,location});
+    assert.equal(h.nodes.get('lcd-updater').hidden,true);
+    assert.equal(h.nodes.get('oled-update-notice').hidden,false);
+    assert.equal(h.nodes.get('bundled').disabled,true);
+    assert.equal(h.nodes.get('android-handoff').hidden,true);
+    assert.equal(h.nodes.get('android-dfu-link').href,undefined);
+    await h.nodes.get('load-bundled').events.click();
+    await h.nodes.get('file').events.change();
+    h.nodes.get('button').events.click();
+    assert.deepEqual(h.calls,[]);
+});
 test('iPad desktop mode keeps ZIP inspection available and updates the transfer action if Bluetooth appears', () => {
     const navigator = {language:'de-DE',userAgent:'Mozilla/5.0 (Macintosh)',platform:'MacIntel',maxTouchPoints:5};
     const h = harness(true, {navigator});

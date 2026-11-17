@@ -122,6 +122,33 @@ async function runChecks() {
       await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = { softDeviceValid:true, softDeviceVariant:112, softDeviceVersion:7003000, softDeviceFwid:0x0126 }; });
       await trial.locator('[role=status]').waitFor();
       assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
+      for (const version of ['2.22.0-DE3.81-OLEDt2','2.22.0-DE3.81-OLEDt3','2.23.0-DE3.91-OLEDt10']) {
+        await guidePage.evaluate(version => Object.assign(document.querySelector('#app')._vnode.component.proxy, {firmwareVersion:version, bootInfo:null}) && true, version);
+        await trial.locator('[role=status]').waitFor();
+        assert.ok(await lcd.isDisabled());
+        assert.equal(await picker.locator('[href$=".zip"], .dfu-page-link, .firmware-packages').count(), 0);
+      }
+      await guidePage.evaluate(() => {
+        const app = document.querySelector('#app')._vnode.component.proxy;
+        app.show_workspace('device');
+        app.firmwareVersion = '2.22.0-DE3.81-OLEDt3';
+      });
+      for (const [voltageValid,lipoMode,chargingActive,label] of [
+        [true,false,false,'info.unknown'], [false,true,false,'info.unknown'],
+        [true,true,false,'workflow.powerInactive'], [true,true,true,'workflow.powerActive']
+      ]) {
+        const charging = await guidePage.evaluate(async ({voltageValid,lipoMode,chargingActive,label}) => {
+          const app = document.querySelector('#app')._vnode.component.proxy;
+          app.powerState = 'available';
+          app.powerInfo = {sampleCollected:true,batteryMillivolts:voltageValid ? 3790 : null,voltageValid,lipoMode,chargingActive};
+          await app.$nextTick();
+          const row = [...document.querySelectorAll('.power-diagnostics dt')].find(el => el.textContent === app.$t('workflow.powerCharging'));
+          return [row?.nextElementSibling?.textContent,app.$t(label)];
+        }, {voltageValid,lipoMode,chargingActive,label});
+        assert.equal(charging[0],charging[1]);
+      }
+      checks.push({locale,feature:'OLED charging display distinguishes unsupported mode, missing voltage, active and inactive'});
+      await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
         firmwareVersion:'2.22.0-DE3.81', bootInfo:null
       }); });

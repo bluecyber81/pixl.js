@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { packagePresentation,firmwarePackageText,currentLcdDownloads } from '../src/lib/release-packages.js';
+import { packagePresentation,firmwarePackageText,currentLcdDownloads,dfuReference } from '../src/lib/release-packages.js';
 import { parseBootDiagnostics } from '../src/lib/boot-diagnostics.js';
 import { nrfDfuLink } from '../public/dfu/nrf-dfu-link.mjs';
 import { readFileSync } from 'node:fs';
@@ -113,10 +113,16 @@ test('current LCD download choices respect the installed application, system pro
  assert.deepEqual(choices(current.version),{app:true,combo:false});
  assert.deepEqual(choices('2.22.0-DE3.82'),{app:false,combo:false});
  assert.deepEqual(choices('2.22.0-DE3.81-OLEDt1'),{app:false,combo:false});
+ for (const version of ['2.22.0-DE3.81-OLEDt2','2.23.0-DE3.91-OLEDt10']) {
+   assert.deepEqual(choices(version),{app:false,combo:false});
+   assert.equal(packagePresentation(current,{connected:true,firmwareVersion:version}).profileMismatch,true);
+   assert.equal(dfuReference(null, 123, version),'#board=OLED');
+ }
  assert.deepEqual(choices(current.version,null),{app:false,combo:false});
  view.setUint32(64,15,true);view.setUint32(32,7002000,true);view.setUint16(36,0x0103,true);
  bytes.set(Buffer.from('c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade','hex'),80);
  assert.deepEqual(choices('2.22.0-DE3.60'),{app:false,combo:true});
+ assert.deepEqual(choices('2.22.0-DE3.81-OLEDt2'),{app:false,combo:false});
  view.setUint32(28,140,true);
  assert.deepEqual(choices('2.22.0-DE3.60'),{app:false,combo:false});
 });

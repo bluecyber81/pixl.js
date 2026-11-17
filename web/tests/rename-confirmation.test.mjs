@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parse } from '@vue/compiler-sfc';
+import { dfuReference } from '../src/lib/release-packages.js';
 import { classifyRenameListing } from '../src/lib/rename-confirmation.js';
 import { assertWritableDevicePath, assertPortableEntryName, portableNameKey, joinDevicePath } from '../src/lib/portable-names.js';
 import de from '../src/i18n/de_DE.js';
@@ -28,7 +29,7 @@ function fixture({ type = 0, device = 'device-a', reply = 'ok', initial, after, 
     },
   };
   const bindings = {defineAsyncComponent: () => ({}), DeviceStorageCard:{}, catalogueBaseline:{},
-    proto, pixl, classifyRenameListing, assertWritableDevicePath, assertPortableEntryName, portableNameKey, joinDevicePath};
+    proto, pixl, dfuReference, classifyRenameListing, assertWritableDevicePath, assertPortableEntryName, portableNameKey, joinDevicePath};
   const { methods } = new Function(...Object.keys(bindings), app.script.content.replace(/^import .*$/gm, '').replace('export default', 'return'))(...Object.values(bindings));
   const vm = { ...methods, current_dir:path, connected:true, sessionGeneration:1, listingGeneration:0, page:1,
     pageCount:1, previewSerial:0, mutating:false, renameNotice:null,

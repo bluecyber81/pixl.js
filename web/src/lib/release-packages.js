@@ -1,10 +1,14 @@
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { UPDATE_TARGET } from './update-target.js';
 import { deploymentPath } from './deployment-path.js';
+import { firmwareBoard } from './hardware-profile.js';
 
 // Carry only firmware counters and FWID across the transition into DFU.
 // The URL fragment isn't sent to the server and contains no device identity.
-export function dfuReference(boot, time = Date.now()) {
+export function dfuReference(boot, time = Date.now(), firmwareVersion) {
+  // The standalone updater offers LCD packages. Keep the board restriction even if
+  // the OLED firmware has no boot snapshot to pass across the DFU transition.
+  if (firmwareBoard(firmwareVersion) === 'OLED') return '#board=OLED';
   if (!boot?.settingsCrcValid || !boot.softDeviceValid) return '';
   const values = [boot.applicationCounter, boot.bootloaderCounter, boot.softDeviceFwid];
   if (!values.every(n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff) || values[2] > 0xffff) return '';
@@ -26,7 +30,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
   const matchesBootloader = profile => profile &&
     (!diagnostic.settingsCrcValid || diagnostic.bootloaderCounter === profile.counter) &&
     (!diagnostic.bootHashValid || diagnostic.bootRegionSha256 === profile.sha256);
-  const profileMismatch = installed === '2.22.0-DE3.81-OLEDt1' || Boolean(diagnostic && supportedBootloaders && (
+  const profileMismatch = firmwareBoard(installed) === 'OLED' || Boolean(diagnostic && supportedBootloaders && (
     diagnostic.addressConflict || (diagnostic.bootAddressValid && diagnostic.bootAddress !== UPDATE_TARGET.bootloader.address) ||
     !supportedBootloaders.some(matchesBootloader) ||
     (diagnostic.softDeviceValid && (diagnostic.softDeviceFwid !== UPDATE_TARGET.softDevice.fwid ||
@@ -43,7 +47,7 @@ export function currentLcdDownloads(entry, session, boot) {
   const offer = packagePresentation(entry, session, info);
   const layout = UPDATE_TARGET.bootloader;
   const system = UPDATE_TARGET.softDevice;
-  const currentOrOlder = !offer.newer && session.firmwareVersion !== '2.22.0-DE3.81-OLEDt1';
+  const currentOrOlder = !offer.newer && firmwareBoard(offer.installed) !== 'OLED';
   const knownLayout = info?.geometryValid && info.bootAddressValid && info.bootVectorsValid &&
     info.settingsCrcValid && info.paramsLayoutKnown && !info.addressConflict &&
     info.bootAddress === layout.address && info.effectiveParamsAddress === layout.paramsAddress &&

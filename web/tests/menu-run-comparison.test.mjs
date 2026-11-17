@@ -29,6 +29,26 @@ test('OLED Test 1 matches its own signed package and SH1106 build profile',()=>{
  assert.equal(identity.applicationHashVerified,false);
 });
 
+test('OLED trials match their signed packages without giving unknown trials a reference',()=>{
+ for (const [version,counter] of [['2.22.0-DE3.81-OLEDt2',82],['2.22.0-DE3.81-OLEDt3',83]]) {
+  assert.equal(firmwareBoard(version),'OLED');
+  assert.equal(displayBuildReference(version).controllerDriver,'SH1106');
+  const identity=diagnosticBuildIdentity({firmwareVersion:version,boot:{settingsCrcValid:true,applicationCounter:counter}});
+  assert.equal(identity.packageReference.applicationCounter,counter);
+  assert.equal(identity.packageReference.board,'OLED');
+  assert.equal(identity.packageReference.hardwareAcceptance,'pending');
+  assert.equal(identity.referenceRelation,'version-and-counter');
+  assert.equal(identity.applicationHashVerified,false);
+ }
+ const unknown='2.23.0-DE3.91-OLEDt10';
+ assert.equal(firmwareBoard(unknown),'OLED');
+ assert.equal(displayBuildReference(unknown),null);
+ const identity=diagnosticBuildIdentity({firmwareVersion:unknown});
+ assert.equal(identity.packageReference,null);
+ assert.equal(identity.referenceRelation,'no-package-reference');
+ for (const version of ['2.22.0-DE3.81-OLEDt0','2.22.0-DE3.81-OLEDt2x','not-an-OLED','2.22.0-OLEDt1']) assert.equal(firmwareBoard(version),null);
+});
+
 test('package hash and SourceID are references, never silently promoted to observed device identity',()=>{
  const value=report(),identity=value.buildIdentity;
  assert.equal(identity.referenceRelation,'version-and-counter');assert.equal(identity.applicationHashVerified,false);

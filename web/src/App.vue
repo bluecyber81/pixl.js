@@ -415,7 +415,7 @@
           <div><dt>{{ $t('workflow.powerReset') }}</dt><dd>{{ format_hex(powerInfo.resetReasonRaw) }}</dd></div>
           <div><dt>{{ $t('workflow.powerVoltage') }}</dt><dd>{{ format_battery_voltage(powerInfo.batteryMillivolts) }}</dd></div>
           <div><dt>{{ $t('workflow.powerMode') }}</dt><dd>{{ $t(!powerInfo.sampleCollected ? 'info.unknown' : powerInfo.lipoMode ? 'workflow.powerLipo' : 'workflow.powerOther') }}</dd></div>
-          <div><dt>{{ $t('workflow.powerCharging') }}</dt><dd>{{ $t(!powerInfo.voltageValid ? 'info.unknown' : powerInfo.chargingActive ? 'workflow.powerActive' : 'workflow.powerInactive') }}</dd></div>
+          <div><dt>{{ $t('workflow.powerCharging') }}</dt><dd>{{ $t(!powerInfo.voltageValid || !powerInfo.lipoMode ? 'info.unknown' : powerInfo.chargingActive ? 'workflow.powerActive' : 'workflow.powerInactive') }}</dd></div>
           <div><dt>{{ $t('workflow.powerSleep') }}</dt><dd>{{ powerInfo.sampleCollected ? powerInfo.configuredSleepSeconds + ' s' : $t('info.unknown') }}</dd></div>
         </dl>
         <p class="backup-hint">{{ $t('workflow.powerLimits') }}</p>
@@ -607,7 +607,7 @@ import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { supportsFlashDiagnostics } from "./lib/flash-diagnostics.js"
-import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference } from "./lib/hardware-profile.js"
+import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference, firmwareBoard } from "./lib/hardware-profile.js"
 import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, assertWritableDevicePath, portableNameKey, devicePathSpace, backupPathSpace } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
@@ -1425,7 +1425,7 @@ export default {
       const generation=this.sessionGeneration; this.infoLoading=true;
       this.runtimeInfo=null; this.runtimeState='loading';
       try {
-        const data=await proto.get_runtime_diagnostics?.(); this.assert_session(generation);
+        const data=await proto.get_runtime_diagnostics?.(this.firmwareVersion); this.assert_session(generation);
         if (data == null) { this.runtimeState='unavailable'; return; }
         const normalized=normalizeRuntimeDiagnostics(data);
         if (!normalized) throw new Error(this.$t('info.runtimeFailed'));
@@ -1439,13 +1439,13 @@ export default {
       if (!this.connected || this.busy || this.upload_diag_visible) return;
       this.fullDiagnosticSnapshot=null;
       const generation=this.sessionGeneration; this.infoLoading=true;
-      this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
+      this.bootInfo=null; this.bootState='loading'; this.lastDfuReference=dfuReference(null, Date.now(), this.firmwareVersion);
       try {
         const data=await proto.get_boot_diagnostics?.(); this.assert_session(generation);
         if (data == null) { this.bootState='unavailable'; return; }
         const normalized=normalizeBootDiagnostics(data);
         if (!normalized) throw new Error(this.$t('info.bootFailed'));
-        this.bootInfo=normalized; this.bootState='available'; this.lastDfuReference=dfuReference(normalized);
+        this.bootInfo=normalized; this.bootState='available'; this.lastDfuReference=dfuReference(normalized, Date.now(), this.firmwareVersion);
       } catch(error) {
         if(this.session_current(generation)) { this.bootState='failed'; this.show_transfer_error(error); }
       } finally {if(generation===this.sessionGeneration)this.infoLoading=false;}
@@ -1456,7 +1456,7 @@ export default {
       if (transport.connectionState !== 'connected' || transport.activeCommand !== null || transport.queuedCommands ||
           transport.fileTransferActive || transport.queuedFileTransfers) return;
       const generation = this.sessionGeneration;
-      const data = await proto.get_power_diagnostics();
+      const data = await proto.get_power_diagnostics(this.firmwareVersion);
       if (this.session_current(generation) && !this.batteryHistoryBlocked && !document.hidden) return data;
     },
     async refresh_power_info() {
@@ -1465,7 +1465,7 @@ export default {
       const generation=this.sessionGeneration; this.infoLoading=true;
       this.powerInfo=null; this.powerState='loading';
       try {
-        const data=await proto.get_power_diagnostics?.(); this.assert_session(generation);
+        const data=await proto.get_power_diagnostics?.(this.firmwareVersion); this.assert_session(generation);
         if(data == null) { this.powerState='unavailable'; return; }
         const normalized=normalizePowerDiagnostics(data);
         if(!normalized) throw new Error(this.$t('workflow.powerFailed'));
@@ -1502,7 +1502,7 @@ export default {
       const includeFlash = supportsFlashDiagnostics(this.firmwareVersion);
       this.flashInfo = null; this.flashState = 'unknown';
       this.fullDiagnosticProgress = { completed: 0, total: diagnosticSectionKeys(includeMenu, includeFlash).length, startedAt, updatedAt: startedAt, sections: {} };
-      this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference='';
+      this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference=dfuReference(null, Date.now(), this.firmwareVersion);
       this.powerInfo=null; this.powerState='loading'; this.driveInfo=[];
       const guard=()=>this.session_current(generation) && !this.disconnecting;
       const read=fn=>async()=>{
@@ -1516,8 +1516,8 @@ export default {
       try {
         const snapshot=await collectDiagnosticSnapshot({isCurrent:guard,
           readers:{
-            runtime:read(()=>proto.get_runtime_diagnostics?.()), boot:read(()=>proto.get_boot_diagnostics?.()),
-            power:read(()=>proto.get_power_diagnostics?.()), startup:read(()=>proto.get_startup_diagnostics?.(this.firmwareVersion)),
+            runtime:read(()=>proto.get_runtime_diagnostics?.(this.firmwareVersion)), boot:read(()=>proto.get_boot_diagnostics?.()),
+            power:read(()=>proto.get_power_diagnostics?.(this.firmwareVersion)), startup:read(()=>proto.get_startup_diagnostics?.(this.firmwareVersion)),
             drives:read(async()=>normalizeDrives(this.checked(await proto.vfs_get_drive_list()))),
             storage:read(async()=>{
               const response=await proto.vfs_storage_info_extended('E'); this.assert_session(generation);
@@ -1547,7 +1547,7 @@ export default {
         for(const key of ['runtime','boot','power']) {
           this[key+'Info']=snapshot.sections[key].data; this[key+'State']=snapshot.sections[key].state;
         }
-        this.lastDfuReference=dfuReference(this.bootInfo);
+        this.lastDfuReference=dfuReference(this.bootInfo, Date.now(), this.firmwareVersion);
         this.driveInfo=snapshot.sections.drives.data || []; this.refresh_local_metrics();
       } catch(error) {
         if(guard()) {
@@ -1567,7 +1567,7 @@ export default {
         transport: this.transportInfo, drives: this.driveInfo, history: this.transferHistory, runtime:this.runtimeInfo, boot:this.bootInfo, power:this.powerInfo });
       const report=this.fullDiagnosticSnapshot ? createCombinedDiagnosticReport({baseReport,snapshot:this.fullDiagnosticSnapshot}) : baseReport;
       if (this.connected && this.flashInfo) report.flash = this.flashInfo;
-      if (this.connected && this.batteryLabelConfirmed) report.batteryLabel = batteryLabelReport();
+      if (this.connected && firmwareBoard(this.firmwareVersion) !== 'OLED' && this.batteryLabelConfirmed) report.batteryLabel = batteryLabelReport();
       const displayBuild = this.connected && displayBuildReference(this.firmwareVersion);
       if (displayBuild) report.displayDriverReference = displayBuild;
       this.diagnosticsJson = JSON.stringify(report, null, 2) + '\n';
@@ -1916,6 +1916,7 @@ export default {
       }
     },
     associate_battery_label(enabled) {
+      if (firmwareBoard(this.firmwareVersion) === 'OLED') return;
       const binding = this._nicknameBinding;
       if (!binding || this.disconnecting || !this.session_current(binding.generation) || binding.id !== pixl.get_device_key?.()) return;
       try {
@@ -1980,6 +1981,7 @@ export default {
         const data = this.checked(await proto.get_version());
         if (!this.session_current(generation)) return;
         this.firmwareVersion = data.ver;
+        this.lastDfuReference = dfuReference(null, Date.now(), data.ver);
         this.version = this.$t('status.connected') + data.ver;
         if (data.ver.startsWith('2.0.0')) this.$alert(this.$t('oldfirm.message'), this.$t('oldfirm.title')).catch(() => {});
         await this.reload_drive();

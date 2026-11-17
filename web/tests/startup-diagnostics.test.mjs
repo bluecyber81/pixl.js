@@ -256,11 +256,12 @@ test('cold-start series reports exact mount reads only when every profile suppli
 test('release, numbered test and PREP firmware identities round-trip through exports and per-version series', () => {
   const report = (fw, n) => createStartupDiagnosticReport(
     parseStartupDiagnostics(packet(63, [0,30+n,38+n,86+n,100+n,110+n])), '2026-11-16T10:09:18.952Z', fw);
-  for (const version of ['2.22.0-DE3.80', '2.22.0-DE3.71t1', '2.22.0-DE3.30-PREP']) {
+  for (const version of ['2.22.0-DE3.80', '2.22.0-DE3.71t1', '2.22.0-DE3.30-PREP', '2.22.0-DE3.81-OLEDt3']) {
     assert.equal(report(version,0).firmwareVersion,version);
     assert.equal(startupSeries([0,1,2].map(n => report(version,n))).version,version);
   }
   assert.equal(startupSeries([report('2.22.0-DE3.71',0), report('2.22.0-DE3.71t1',1), report('2.22.0-DE3.71',2)]),null);
+  assert.equal(startupSeries([report('2.22.0-DE3.81',0), report('2.22.0-DE3.81-OLEDt3',1), report('2.22.0-DE3.81',2)]),null);
   for (const version of ['2.22.0-DE3.71t0','2.22.0-DE3.71t01','2.22.0-DE3.71-PREPt1','2.22.0-DE3.71x','a'.repeat(100),null]) {
     assert.equal(report(version,0).firmwareVersion,undefined);
     assert.equal(startupSeries([0,1,2].map(n => ({...report(version,n), firmwareVersion:version}))),null);

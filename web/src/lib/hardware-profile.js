@@ -21,15 +21,19 @@ export function batteryLabelReport() {
 
 // The application version identifies a published build target. It is not a display-controller read.
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81'];
+export const OLED_DIAGNOSTICS_TRIAL = '2.22.0-DE3.81-OLEDt3';
+export function lacksOledSystemDiagnostics(version) {
+  return version === '2.22.0-DE3.81-OLEDt1' || version === '2.22.0-DE3.81-OLEDt2';
+}
 export function firmwareBoard(version) {
-  if (version === '2.22.0-DE3.81-OLEDt1') return 'OLED';
+  if (typeof version === 'string' && /^\d+\.\d+\.\d+-DE3\.\d+-OLEDt[1-9]\d*$/.test(version)) return 'OLED';
   if (version === UPDATE_TARGET.application.version || lcdDisplayBuilds.includes(version) ||
       Object.hasOwn(UPDATE_TARGET.localApplications, version)) return 'LCD';
   return null;
 }
 
 export function displayBuildReference(version) {
-  if (firmwareBoard(version) === 'OLED') return {source:'oled-firmware-configuration', controllerDriver:'SH1106', width:128, height:64};
+  if (lacksOledSystemDiagnostics(version) || version === OLED_DIAGNOSTICS_TRIAL) return {source:'oled-firmware-configuration', controllerDriver:'SH1106', width:128, height:64};
   if (!lcdDisplayBuilds.includes(version)) return null;
   return {source:'lcd-firmware-configuration', controllerDriver:'ST7567', width:128, height:64};
 }

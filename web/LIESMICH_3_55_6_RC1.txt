@@ -1,0 +1,29 @@
+Allmiibo Dateimanager 3.55.6-rc.1 · OLED Test 3 und LCD
+
+Deutsch
+1. ZIP am Windows-PC vollständig entpacken. Start-Dateimanager.cmd mit
+   installiertem Python ab 3.8 starten und Chrome oder Edge verwenden.
+2. Für Dateien und Diagnose am Gerät „Bluetooth-Dateiübertragung“ öffnen.
+   Die Fernbedienung verwendet eine separate Verbindung. Die Dateiübertragung
+   zuerst beenden, BLE-Fernbedienung am Gerät aktivieren und dann im Browser
+   „Fernbedienung“ öffnen.
+3. Mit DE3.81-OLEDt3 liest der Dateimanager auch die Startphasen des nativen
+   Dateisystems, die verfügbaren Akkuwerte und die erkannte Flash-Kennung.
+   Im gepufferten Menü kann ein Displayfoto aufgenommen werden. Bei einem
+   direkt zeichnenden Spiel das Spiel verlassen und erneut aufnehmen.
+4. Stop-Dateimanager.cmd beendet den lokalen Server. Die Handy-Firmware für
+   OLED Test 3 ist eine separate, signierte App-ZIP. Die Links für öffentliche
+   Veröffentlichungen führen weiterhin zum jeweils dort genannten Stand.
+
+English
+1. On Windows, extract the complete archive. With Python 3.8 or later
+   installed, run Start-Dateimanager.cmd and use Chrome or Edge.
+2. Open Bluetooth file transfer on the device for files and diagnostics.
+   For remote control, leave file transfer, enable BLE remote in the device
+   settings and open Remote control in the browser.
+3. DE3.81-OLEDt3 adds native filesystem startup phases, available battery
+   readings and the detected flash ID. Capture a screenshot from a buffered
+   menu. If a game draws directly to the display, leave the game and retry.
+4. Run Stop-Dateimanager.cmd to stop the local server. The signed OLED Test 3
+   phone firmware is a separate application ZIP. Links to public releases
+   still point to the versions named there.

@@ -342,6 +342,11 @@ test('build reference separates reported version/counter from package SourceID a
   await change(h,{firmwareVersion:'2.22.0-DE3.79'});assert.match(text(h.root),/Hardware acceptance for this package reference is pending/);
   assert.doesNotMatch(text(h.root),/An initial device test was reported/);
   await change(h,{firmwareVersion:'2.22.0-DE3.70'});assert.match(text(h.root),/Different reported version/);
+  await change(h,{firmwareVersion:'2.22.0-DE3.81-OLEDt3'});
+  assert.match(text(h.root),/7fdfb63158015b1b914679cb07644691926136a46bebd2882d7d0f177394cd0e/);
+  assert.match(text(h.root),/Hardware acceptance for this package reference is pending/);
+  await change(h,{firmwareVersion:'2.22.0-DE3.81-OLEDt4'});assert.match(text(h.root),/No package reference is available/);
+  assert.doesNotMatch(text(h.root),/632c29cb9408|5e556b10359a|One LCD confirmed/);
   await change(h,{snapshot:null});assert.doesNotMatch(text(h.root),/fbade80d03a44a3b/);
  }finally{h.app.unmount();}
 });

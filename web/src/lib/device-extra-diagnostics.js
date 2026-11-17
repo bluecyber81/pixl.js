@@ -1,4 +1,6 @@
-// Read-only INFO 0x04 / 0x05 snapshots already provided by the LCD firmware.
+import { OLED_DIAGNOSTICS_TRIAL } from './hardware-profile.js';
+
+// Read-only INFO 0x04 / 0x05 firmware snapshots.
 // These describe firmware observations, not physical key or radio measurements.
 const EVENTS = ['press', 'release', 'short', 'long', 'repeat'];
 const KEYS = ['left', 'center', 'right'];
@@ -92,6 +94,7 @@ export function parseUiDiagnostics(buffer) {
 }
 
 export function supportsMenuDiagnostics(version) {
+  if (version === OLED_DIAGNOSTICS_TRIAL) return true;
   // This exact candidate contains the reviewed read-only diagnostic handlers.
   const known = version === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : version;
   const match = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');

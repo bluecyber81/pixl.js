@@ -20,15 +20,15 @@
       <summary>{{ pick('Geräteangaben und Testpaket-Referenz', 'Device report and test package reference') }}</summary>
       <dl class="detail-values">
         <div><dt>{{ pick('Ausgelesene Version / Anwendungszähler', 'Reported version / application counter') }}</dt><dd>{{ buildIdentity.observed.firmwareVersion || '—' }} / {{ number(buildIdentity.observed.applicationCounter) }}</dd></div>
-        <div><dt>{{ pick('Paketreferenz', 'Package reference') }}</dt><dd>{{ buildIdentity.packageReference.firmwareVersion }} / {{ buildIdentity.packageReference.applicationCounter }} · {{ buildIdentity.packageReference.board }}</dd></div>
+        <div v-if="buildIdentity.packageReference"><dt>{{ pick('Paketreferenz', 'Package reference') }}</dt><dd>{{ buildIdentity.packageReference.firmwareVersion }} / {{ buildIdentity.packageReference.applicationCounter }} · {{ buildIdentity.packageReference.board }}</dd></div>
         <div><dt>{{ pick('Vergleich der Angaben', 'Comparison of reported values') }}</dt><dd>{{ referenceRelation }}</dd></div>
-        <div><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
-        <div><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
+        <div v-if="buildIdentity.packageReference"><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
+        <div v-if="buildIdentity.packageReference"><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
       </dl>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'startup-and-system-readback-on-one-lcd'">{{ pick('Auf einem LCD bestätigt: App-Start, Z20-Bootbereich und S112 7.3.0. Der Gerätetest zur Wiederaufnahme eines unterbrochenen Handy-Updates steht aus.', 'One LCD confirmed application startup, the Z20 boot region and S112 7.3.0. Recovery from an interrupted phone update still awaits an on-device test.') }}</p>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'owner-reported-flash-and-initial-operation'">{{ pick('Der Besitzer meldet, dass das geflashte LCD-Gerät läuft. Die Wiederaufnahme nach einem unterbrochenen Android-Update ist am Gerät noch offen.', 'The owner reports that the LCD device runs after flashing. Recovery after an interrupted Android update still awaits a device test.') }}</p>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'startup-and-system-readback-on-one-lcd'">{{ pick('Auf einem LCD bestätigt: App-Start, Bootbereich und S112 7.3.0. Der Gerätetest zur Wiederaufnahme eines unterbrochenen Handy-Updates steht aus.', 'One LCD confirmed application startup, the boot region and S112 7.3.0. Recovery from an interrupted phone update still awaits an on-device test.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'owner-reported-flash-and-initial-operation'">{{ pick('Der Besitzer meldet, dass das geflashte LCD-Gerät läuft. Die Wiederaufnahme nach einem unterbrochenen Android-Update ist am Gerät noch offen.', 'The owner reports that the LCD device runs after flashing. Recovery after an interrupted Android update still awaits a device test.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
       <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Die Firmware liefert keinen SourceID- oder App-Hashmesswert. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. Firmware provides no measured SourceID or application hash. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
     </details>
     <div class="diagnostic-grid" :aria-busy="loading">
@@ -108,6 +108,7 @@ const t = computed(() => ({
 }));
 const buildIdentity = computed(() => diagnosticBuildIdentity({firmwareVersion: props.firmwareVersion, boot: validSnapshot.value?.sections.boot?.data}));
 const referenceRelation = computed(() => ({
+  'no-package-reference': pick('Für diese OLED-Version ist keine Paketreferenz hinterlegt.', 'No package reference is available for this OLED version.'),
   unknown: pick('Version nicht erfasst', 'Version not recorded'),
   'different-version': pick('Andere gemeldete Version', 'Different reported version'),
   'different-counter': pick('Gleiche Version, anderer Zähler', 'Same version, different counter'),
@@ -198,7 +199,7 @@ const power = data => ({
     [pick('Eingestellte Ruhezeit', 'Configured sleep time'), data.sampleCollected ? `${number(data.configuredSleepSeconds)} s` : t.value.absent]],
   details: [[pick('Resetregister beim Anwendungsstart', 'Reset register at application start'), hex(data.resetReasonRaw)],
     [pick('Batteriestichprobe vorhanden', 'Battery sample collected'), yesNo(data.sampleCollected)],
-    [pick('LiPo-Modus / Ladeanzeige', 'LiPo mode / charge indication'), `${data.sampleCollected ? yesNo(data.lipoMode) : t.value.absent} / ${data.voltageValid ? yesNo(data.chargingActive) : t.value.absent}`]],
+    [pick('LiPo-Modus / Ladeanzeige', 'LiPo mode / charge indication'), `${data.sampleCollected ? yesNo(data.lipoMode) : t.value.absent} / ${data.voltageValid && data.lipoMode ? yesNo(data.chargingActive) : t.value.absent}`]],
   note: pick('Gespeicherte Register-/Batteriewerte, keine aktuelle USB-Erkennung und kein gesicherter Nachweis der Aufwachursache.', 'Cached register/battery values, not current USB detection or proven wake-cause diagnosis.'),
 });
 function drives(data) {
