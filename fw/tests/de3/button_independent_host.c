@@ -45,7 +45,6 @@ typedef struct {int event_queue,u8g2;bool initialized;} mui_t;
 #define MUI_EVENT_ID_INPUT 1
 typedef struct {void*user_data;} mui_view_t;
 typedef struct {int unused;} game_view_t;
-static uint8_t key_state[3],key_repeat_cnt;
 /* ACTUAL_GAME_INPUT */
 static struct {bool swap_buttons;} settings;
 #define settings_get_data() (&settings)
@@ -64,7 +63,7 @@ static void mui_post(mui_t *m,mui_event_t *event){
 /* ACTUAL_INPUT_MAPPER */
 static bool deinit_on_long;
 static void capture(uint8_t key,bsp_btn_event_t event){assert(count<512);events[count].key=key;events[count].event=event;events[count++].timestamp=now;mui_input_on_bsp_btn_event(key,event);if(deinit_on_long&&event==BSP_BTN_EVENT_LONG)bsp_btn_deinit();}
-static void reset(void){bsp_btn_init(capture);assert(app_init_calls>=1&&timer_create_calls==6);now=count=input_count=feeds=start_failures=stop_failures=0;settings.swap_buttons=false;deinit_on_long=false;memset(key_state,0,sizeof key_state);key_repeat_cnt=0;}
+static void reset(void){bsp_btn_init(capture);assert(app_init_calls>=1&&timer_create_calls==6);now=count=input_count=feeds=start_failures=stop_failures=0;settings.swap_buttons=false;deinit_on_long=false;game_view_reset_keys();}
 static void advance(uint32_t target){for(now++;now<=target;now++){for(unsigned i=0;i<6;i++){timer_t*t=registered[i];if(t->running&&t->deadline==now){if(t->repeated)t->deadline+=t->period;else t->running=false;t->handler(t->context);}}}now=target;}
 static unsigned event_count(unsigned key,unsigned event){unsigned n=0;for(unsigned i=0;i<count;i++)if(events[i].key==key&&events[i].event==event)n++;return n;}
 static void key(unsigned index,bool press){assert(index<3);bsp_button_event_handler(5+index,press?APP_BUTTON_PUSH:APP_BUTTON_RELEASE);}
@@ -104,4 +103,9 @@ static void test_edges(void){
 static void test_swap(void){for(unsigned swap=0;swap<2;swap++)for(unsigned i=0;i<3;i++){
  reset();settings.swap_buttons=swap;key(i,true);unsigned mapped=swap?2-i:i;assert(input_count==1&&inputs[0].key==mapped&&inputs[0].type==INPUT_TYPE_PRESS&&key_state[mapped]);advance(1200);assert(inputs[1].key==mapped&&inputs[1].type==INPUT_TYPE_LONG);assert(inputs[2].key==mapped&&inputs[2].type==INPUT_TYPE_REPEAT);assert(key_repeat_cnt==(mapped==1?1:0));key(i,false);assert(!key_state[mapped]&&key_repeat_cnt==0);
  }puts("PASS actual UI swap mapper and game input: all keys, long/repeat, center-key exit counter");}
-int main(void){test_single();test_overlap();test_lifecycle();test_edges();test_swap();puts("PASS DE3.3 actual-source button regression groups");}
+static void test_game_title_gesture(void){
+ reset();game_view_wait_for_start();key(1,true);advance(1100);key(1,false);
+ assert(!game_view_take_start());key(1,true);assert(!game_view_take_start());
+ key(1,false);assert(game_view_take_start());assert(!game_view_take_start());
+}
+int main(void){test_single();test_overlap();test_lifecycle();test_edges();test_swap();test_game_title_gesture();puts("PASS DE3.3 actual-source button regression groups");}

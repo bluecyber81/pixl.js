@@ -35,7 +35,11 @@ def main():
         input_source=(SRC/'mui/mui_input.c').read_text(encoding='utf-8')
         code=code.replace('/* ACTUAL_INPUT_CONTEXT */',context_state(gestures=True,source_text=input_source)+context_functions((*TOKEN_FUNCTIONS,'mui_input_context_changed'),source_text=input_source))
         code=code.replace('/* ACTUAL_INPUT_MAPPER */','static void ble_remote_local_activity(void) {}\n'+function(input_source,'mui_input_post_event')+'\n'+function(input_source,'mui_input_on_bsp_btn_event'))
-        code=code.replace('/* ACTUAL_GAME_INPUT */',function((SRC/'app/game/view/game_view.c').read_text(encoding='utf-8'),'game_view_on_input'))
+        game=(SRC/'app/game/view/game_view.c').read_text(encoding='utf-8')
+        game_state=game[game.index('static uint8_t key_state'):game.index('void game_view_wait_for_start')]
+        game_input='\n'.join(function(game,name) for name in
+                             ('game_view_reset_keys','game_view_wait_for_start','game_view_take_start','game_view_on_input'))
+        code=code.replace('/* ACTUAL_GAME_INPUT */',game_state+game_input)
         code=code.replace('/* ACTUAL_INPUT_DEINIT */',function((SRC/'mui/mui_input.c').read_text(encoding='utf-8'),'mui_input_deinit'))
         code=code.replace('/* ACTUAL_MUI_DEINIT */',function((SRC/'mui/mui_core.c').read_text(encoding='utf-8'),'mui_deinit'))
         command=[os.environ.get('CC','gcc'),'-std=c11','-O1','-g','-Wall','-Wextra','-Werror',
