@@ -56,8 +56,17 @@ static bool m_settings_save_allowed = false;
  * which a C compiler is required to preserve through a bool comparison. */
 _Static_assert(sizeof(bool) == 1, "settings bool ABI changed");
 _Static_assert(sizeof(settings_data_t) == 26, "settings file ABI changed");
+_Static_assert(offsetof(settings_data_t, backlight) == 0, "legacy dim preference moved");
 _Static_assert(offsetof(settings_data_t, no_sleep_mode) == 23, "legacy settings ABI changed");
 #define LEGACY_SETTINGS_SIZE 24
+/* Legacy firmware validated this unused byte as a boolean. Preserve the
+ * original file size and both legal old values. Only an explicit opt-in
+ * uses the new tag. Older firmware normalizes it to its legacy default. */
+#define LCD_DIM_BEFORE_SLEEP 0xd3u
+bool settings_get_lcd_dim(void) { return m_settings_data.backlight == LCD_DIM_BEFORE_SLEEP; }
+void settings_toggle_lcd_dim(void) {
+    m_settings_data.backlight = settings_get_lcd_dim() ? 0 : LCD_DIM_BEFORE_SLEEP;
+}
 
 #define BOOL_VALIDATE(expr, default_val)                                                                               \
     do {                                                                                                             \
@@ -88,7 +97,7 @@ static void validate_settings() {
     BOOL_VALIDATE(m_settings_data.bat_mode, 0);
     BOOL_VALIDATE(m_settings_data.auto_gen_amiibo, 0);
     BOOL_VALIDATE(m_settings_data.auto_gen_amiibolink, 0);
-    BOOL_VALIDATE(m_settings_data.backlight, 0);
+    if (m_settings_data.backlight > 1 && !settings_get_lcd_dim()) m_settings_data.backlight = 0;
     INT8_VALIDATE(m_settings_data.lcd_backlight, 0, 100, 0);
     INT8_VALIDATE(m_settings_data.oled_contrast, 0, 100, 80);
     /* Observed legacy value 03 was displayed as ON but could never toggle OFF.
@@ -163,6 +172,7 @@ int32_t settings_init() {
         /* Stock 2.16 has trailing padding at byte 23. It must not become the
          * newly introduced no-sleep flag. DE1/DE2 use the 26-byte layout. */
         memcpy(&m_settings_data, raw, offsetof(settings_data_t, no_sleep_mode));
+        if (m_settings_data.backlight > 1) m_settings_data.backlight = 0;
     } else {
         memcpy(&m_settings_data, raw, sizeof(settings_data_t));
     }

@@ -425,6 +425,9 @@ int main(void) {
 
         ntag_emu_process_pending();
         ble_process_pending();
+#ifdef LCD_SCREEN
+        mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window());
+#endif
         app_sched_execute();
         mui_tick(p_mui);
         ble_remote_poll();

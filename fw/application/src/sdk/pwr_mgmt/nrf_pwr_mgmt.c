@@ -230,9 +230,9 @@ static nrf_drv_wdt_channel_id m_channel_id;
     #define PWR_MGMT_STANDBY_TIMEOUT_CLEAR() pwr_mgmt_standby_timeout_clear()
     #define PWR_MGMT_STANDBY_TIMEOUT_CHECK() pwr_mgmt_standby_timeout_check()
 
-    static uint16_t m_standby_counter;     /**< Number of seconds from the last activity
+    static volatile uint16_t m_standby_counter;     /**< Number of seconds from the last activity
                                                 (@ref pwr_mgmt_feed). */
-    static uint16_t m_timeout_counter = NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_S;
+    static volatile uint16_t m_timeout_counter = NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_S;
 
     __STATIC_INLINE void pwr_mgmt_standby_timeout_clear(void)
     {
@@ -531,6 +531,13 @@ void nrf_pwr_mgmt_shutdown(nrf_pwr_mgmt_shutdown_t shutdown_type)
 void nrf_pwr_mgmt_set_timeout(uint16_t timeout)
 {
     m_timeout_counter = timeout;
+}
+
+bool nrf_pwr_mgmt_dim_window(void)
+{
+    /* Sample the same counter as automatic sleep. Any normal activity feed
+     * ends the dim window, including the press that selects a menu item. */
+    return m_timeout_counter > 5 && m_standby_counter >= m_timeout_counter - 5;
 }
 
 uint16_t nrf_pwr_mgmt_get_timeout()

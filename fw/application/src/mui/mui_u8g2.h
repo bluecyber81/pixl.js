@@ -16,6 +16,7 @@ uint8_t mui_u8g2_get_backlight();
 
 ret_code_t mui_u8g2_set_backlight_level(uint8_t bl);
 int8_t mui_u8g2_get_backlight_level(void);
+void mui_u8g2_poll_dim(bool before_sleep);
 void mui_u8g2_set_lcd_default_contrast_level(void);
 
 void mui_u8g2_set_contrast_level(uint8_t value);

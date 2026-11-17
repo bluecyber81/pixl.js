@@ -12,7 +12,7 @@
 #define AMIIDB_SORT_COLUMN_NAME 1
 
 typedef struct {
-    bool backlight; // deprecated, keep for capability issue
+    uint8_t backlight; // legacy 0/1 = no idle dimming; explicit LCD opt-in uses a distinct tag
     uint8_t sleep_timeout_sec;
     bool dirty;
     bool auto_gen_amiibo;
@@ -41,6 +41,8 @@ typedef struct {
 int32_t settings_init();
 int32_t settings_save();
 int32_t settings_reset();
+bool settings_get_lcd_dim(void);
+void settings_toggle_lcd_dim(void);
 settings_data_t *settings_get_data();
 
 #endif

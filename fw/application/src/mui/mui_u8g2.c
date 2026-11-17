@@ -78,6 +78,7 @@
 #include "u8x8.h"
 
 #include "app_pwm.h"
+#include "app_timer.h"
 
 #include "boards.h"
 
@@ -87,6 +88,8 @@ static spi_device_t m_dev;
 #ifdef LCD_SCREEN
 APP_PWM_INSTANCE(pwm1, 1); // Create the instance "PWM1" using TIMER1.
 static bool m_pwm_initialized;
+static bool m_dimmed;
+static bool m_dim_retry_pending;
 #define BACKLIGHT_PWM_MAX_ATTEMPTS 200u
 
 static ret_code_t backlight_pwm_duty_set(app_pwm_duty_t duty) {
@@ -227,6 +230,8 @@ void mui_u8g2_deinit(u8g2_t *p_u8g2) {
     u8g2_SetPowerSave(p_u8g2, 1);
 
 #ifdef LCD_SCREEN
+    m_dimmed = false;
+    m_dim_retry_pending = false;
     mui_u8g2_set_backlight_level(0);
     nrf_gpio_pin_clear(LCD_BL_PIN);
     nrf_gpio_cfg_default(LCD_BL_PIN);
@@ -254,6 +259,27 @@ ret_code_t mui_u8g2_set_backlight_level(uint8_t value) {
         return result;
     }
 }
+void mui_u8g2_poll_dim(bool before_sleep) {
+    static uint32_t failed_tick;
+    uint8_t brightness = settings_get_data()->lcd_backlight;
+    bool requested = before_sleep && settings_get_lcd_dim() && brightness > 1;
+    if (requested == m_dimmed) {
+        m_dim_retry_pending = false;
+        return;
+    }
+    uint32_t now = app_timer_cnt_get();
+    if (m_dim_retry_pending && app_timer_cnt_diff_compute(now, failed_tick) < APP_TIMER_TICKS(250)) return;
+    /* A quarter of the configured duty, rounded up. Zero stays off. */
+    uint8_t duty = requested ? (brightness + 3u) / 4u : brightness;
+    if (mui_u8g2_set_backlight_level(duty) == NRF_SUCCESS) {
+        m_dimmed = requested;
+        m_dim_retry_pending = false;
+    } else {
+        failed_tick = now;
+        m_dim_retry_pending = true;
+    }
+}
+
 int8_t mui_u8g2_get_backlight_level(void) {
     if (!m_pwm_initialized) return -1;
     if (pwm1.p_cb->state != NRFX_DRV_STATE_POWERED_ON) return 0;

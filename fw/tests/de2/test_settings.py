@@ -50,7 +50,12 @@ static int32_t read_mock(const char *name, void *data, size_t capacity) {
     memcpy(data, stored, n); return (int32_t)n;
 }
 static int32_t write_mock(const char *name, void *data, size_t length) {
-    (void)name; (void)data; (void)length; writes++; return write_result;
+    (void)name; writes++;
+    if (write_result == (int)length && length <= sizeof(stored)) {
+        memcpy(stored, data, length);
+        stored_size = (int)length;
+    }
+    return write_result;
 }
 static int32_t meta_mock(const char *n, void *d, size_t z) {
     (void)n; (void)d; (void)z; return metadata_result;
@@ -66,6 +71,22 @@ static void reset(void) {
         .write_file_data=write_mock,.update_file_meta=meta_mock,.remove_file=remove_mock};
 }
 int main(void) {
+    for (int legacy=0; legacy<=1; legacy++) {
+        reset(); stored[0]=(unsigned char)legacy;
+        assert(settings_init()==0 && !settings_get_lcd_dim());
+        assert(settings_save()==0 && writes==0 && stored[0]==legacy);
+        settings_toggle_lcd_dim();
+        assert(settings_get_lcd_dim() && writes==0 && settings_save()==0 && writes==1);
+        assert(settings_init()==0 && settings_get_lcd_dim() && settings_save()==0 && writes==1);
+        settings_toggle_lcd_dim();
+        assert(settings_save()==0 && writes==2 && stored[0]==0 && settings_init()==0 && !settings_get_lcd_dim());
+    }
+    reset(); stored[0]=0xfe;
+    assert(settings_init()==0 && !settings_get_lcd_dim() && !writes);
+    reset(); stored_size=24; stored[0]=0xd3;
+    assert(settings_init()==0 && !settings_get_lcd_dim() && !writes);
+    puts("PASS dim opt-in, valid legacy values, migration, persistence and no extra writes");
+
     reset(); stored_size=24; stored[12]=3; stored[14]=5; stored[23]=0xff; stored[10]=30;
     assert(settings_init()==0); assert(m_settings_data.anim_enabled);
     assert(!m_settings_data.no_sleep_mode && !m_settings_data.flip_display && !m_settings_data.swap_buttons);
