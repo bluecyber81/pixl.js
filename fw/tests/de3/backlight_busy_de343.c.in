@@ -54,6 +54,13 @@ static void mui_u8g2_set_contrast_level(unsigned n){(void)n;contrast_sets++;}
 static void mui_u8g2_set_flip_display(bool n){(void)n;flip_sets++;}
 static void nrf_pwr_mgmt_set_timeout(unsigned n){(void)n;sleep_sets++;}
 static void setLanguage(unsigned n){(void)n;language_sets++;}
+static bool m_dimmed, m_dim_retry_pending, opt_in;
+static uint16_t m_timeout_counter, m_standby_counter;
+static uint32_t rtc;
+#define APP_TIMER_TICKS(ms) (ms)
+static uint32_t app_timer_cnt_get(void) {return rtc;}
+static uint32_t app_timer_cnt_diff_compute(uint32_t now,uint32_t previous) {return (now-previous)&0xffffffu;}
+static bool settings_get_lcd_dim(void) {return opt_in;}
 @PRODUCTION@
 static void reset(bool initialized,bool powered){
  calls=delays=enables=disables=init_calls=get_calls=init_error=duty_error=busy_calls=0;
@@ -104,5 +111,31 @@ int main(void){unsigned cases=0;
  assert(toasts==1 && !strcmp(last_toast,"ERR") && contrast_sets==1 && flip_sets==1 && sleep_sets==1 && language_sets==1);cases++;
  reset(true,true);settings_reset_default(&app);
  assert(toasts==1 && !strcmp(last_toast,"APP_SET_RESET_DEFAULT_SUCCESS"));cases++;
+ reset(true,true);
+ m_timeout_counter=180;
+ m_standby_counter=174;assert(!nrf_pwr_mgmt_dim_window());
+ m_standby_counter=175;assert(nrf_pwr_mgmt_dim_window());
+ mui_u8g2_poll_dim(true);assert(!calls && duty==30);
+ opt_in=true;mui_u8g2_poll_dim(true);assert(calls==1 && duty==8);
+ mui_u8g2_poll_dim(true);assert(calls==1 && settings.lcd_backlight==30);
+ m_standby_counter=0;mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window());assert(calls==2 && duty==30);
+ for (unsigned level=0;level<=100;level++){
+   settings.lcd_backlight=level;unsigned previous=calls;
+   mui_u8g2_poll_dim(true);
+   if(level<2){assert(calls==previous);continue;}
+   assert(calls==previous+1 && duty==(level+3)/4);
+   opt_in=false;mui_u8g2_poll_dim(true);assert(duty==level && calls==previous+2);
+   opt_in=true;
+ }
+ m_timeout_counter=0;m_standby_counter=60000;assert(!nrf_pwr_mgmt_dim_window());
+ m_timeout_counter=5;assert(!nrf_pwr_mgmt_dim_window());
+ settings.lcd_backlight=30;rtc=0xfffff0;duty_error=NRF_ERROR_INVALID_STATE;
+ unsigned previous=calls;mui_u8g2_poll_dim(true);assert(calls==previous+1 && !m_dimmed);
+ rtc=(rtc+249)&0xffffff;mui_u8g2_poll_dim(true);assert(calls==previous+1);
+ rtc++;duty_error=0;mui_u8g2_poll_dim(true);assert(calls==previous+2 && duty==8);
+ duty_error=NRF_ERROR_INVALID_STATE;mui_u8g2_poll_dim(false);assert(calls==previous+3 && duty==8);
+ rtc+=249;mui_u8g2_poll_dim(false);assert(calls==previous+3);
+ rtc++;duty_error=0;mui_u8g2_poll_dim(false);assert(calls==previous+4 && duty==30);
+ puts("PASS last-five-second dim window, 101 brightness levels, activity restore, opt-out, off, PWM failure recovery and 24-bit RTC rollover");
  printf("PASS %u actual PWM/settings cases: bounded BUSY, immediate errors, init failure/retry, no uninitialized SDK access, old output/config preserved, no false confirmation, all256 values.\n",cases);
 }

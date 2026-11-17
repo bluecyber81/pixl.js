@@ -93,6 +93,7 @@
 #include "mini_app_registry.h"
 #include "mui_include.h"
 #include "mui_mem.h"
+#include "mui_u8g2.h"
 
 #include "hal_spi_bus.h"
 #include "hal_nfc_t2t.h"

@@ -149,7 +149,7 @@ int main(void) {
     reset(); assert(settings_init()==0); remove_result=-1; assert(settings_reset()!=0);
     remove_result=VFS_ERR_NOOBJ; assert(settings_reset()==0);
     puts("PASS missing storage and failed reset handled without null dereference");
-    puts("8 settings regression groups passed");
+    puts("9 settings regression groups passed");
     return 0;
 }
 '''.replace('SOURCE_FILE', source.as_posix())
@@ -161,4 +161,4 @@ int main(void) {
                '-I', str(FW/'application/src/mod/ble'), str(cfile), '-o', str(exe)]
     subprocess.run(command, check=True, text=True)
     result = subprocess.run([str(exe)], check=True, capture_output=True, text=True)
-    print(json.dumps({'test': 'settings', 'groups': 8, 'result': result.stdout}, indent=2))
+    print(json.dumps({'test': 'settings', 'groups': 9, 'result': result.stdout}, indent=2))
