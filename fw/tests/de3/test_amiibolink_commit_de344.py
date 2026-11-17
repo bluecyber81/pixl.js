@@ -44,6 +44,8 @@ def main():
     scene = paths[5].read_text()
     code = (HERE / 'nfc_lifecycle_host.c').read_text().split('/* ACTUAL_SOURCE */')[0]
     code += engine + paths[3].read_text() + paths[4].read_text()
+    if 'typedef bool (*ble_amiibolink_event_handler_t)' in paths[3].read_text():
+        code += '\n#define MODE_RESULT_CALLBACK 1\n'
     code += transport[transport.index('static ntag_t m_ntag'):transport.index('/* The buffer helpers')]
     code += r'''
 #define MAX_MTU_DAT_SIZE 247
@@ -93,7 +95,10 @@ static void ntag_reload(app_amiibolink_t *app,uint8_t slot){
  ntag_t next={.type=NTAG_215};next.data[16]=0x77;
  assert(ntag_emu_set_tag(&next));
 }
-static void amiibolink_scene_switch_mode(app_amiibolink_t *app,ble_amiibolink_mode_t mode,uint8_t slot){(void)app;(void)mode;(void)slot;}
+static bool allow_mode;
+static bool amiibolink_scene_switch_mode(app_amiibolink_t *app,ble_amiibolink_mode_t mode,uint8_t slot){
+ (void)slot;if(allow_mode)app->amiibolink_mode=mode;return allow_mode;
+}
 '''
     code += '\n'.join(function(scene, n) for n in (
         'ntag_save_error', 'ntag_update_cb', 'amiibolink_scene_ble_event_handler'))
@@ -102,12 +107,19 @@ static amiibolink_view_t view;
 static app_amiibolink_t app;
 static unsigned reenter;
 static void other_owner(ntag_event_type_t type,void *ctx,ntag_t *tag){(void)type;(void)ctx;(void)tag;}
+#ifdef MODE_RESULT_CALLBACK
+static bool event_cb(void *ctx,ble_amiibolink_event_type_t event,uint8_t *data,size_t length){
+#else
 static void event_cb(void *ctx,ble_amiibolink_event_type_t event,uint8_t *data,size_t length){
+#endif
  assert(!m_transfer_active&&!m_data_pos&&!index);++events;
  amiibolink_scene_ble_event_handler(ctx,event,data,length);
  if(reenter==1){link_begin_transfer();const uint8_t next=0x66;assert(link_append(&next,1));index=8;}
  if(reenter==2){assert(ntag_emu_set_update_cb(other_owner,(void*)8));ntag_t next={.type=NTAG_215};next.data[16]=0x88;assert(ntag_emu_set_tag(&next));}
  if(reenter==3){assert(!ntag_emu_set_update_cb(other_owner,(void*)8));assert(ntag_emu.cb_context==&app);}
+#ifdef MODE_RESULT_CALLBACK
+ return !ntag_emu_save_pending();
+#endif
 }
 static void seed(ble_amiibolink_mode_t mode,bool fail,unsigned behavior){
  memset(&ntag_emu,0,sizeof(ntag_emu));ble_amiibolink_reset_transfer();
@@ -134,6 +146,22 @@ static void final_link(void){
 #define CHECK(x) do{if(!(x)){fprintf(stderr,"CHECK failed line %d: %s\n",__LINE__,#x);return 71;}}while(0)
 int main(void){
  unsigned cases=0;
+#ifdef MODE_RESULT_CALLBACK
+ for(unsigned handler=0;handler<2;handler++)for(unsigned accept=0;accept<2;accept++){
+  seed(BLE_AMIIBOLINK_MODE_NTAG,false,0);
+  m_event_handler=handler?amiibolink_scene_ble_event_handler:NULL;allow_mode=accept;
+  const uint8_t link[]={0xa1,0xb1,2};
+  ble_amiibolink_received_data_v1(link,sizeof(link));
+  CHECK(cmd_tx_count==(handler && accept));if(cmd_tx_count)CHECK(last_cmd==0xa1b1);
+  const uint8_t loop[]={2,2,0x8a,1,0x89,3};
+  ble_amiloop_received_data(loop,sizeof(loop));
+  const uint8_t status=handler&&accept?0:1;
+  const uint8_t reply[]={2,1,status,1^status,3};
+  CHECK(ble_tx_count==1 && ble_tx_length==sizeof(reply) && !memcmp(ble_tx,reply,sizeof(reply)));
+  CHECK(app.amiibolink_mode==(handler&&accept?BLE_AMIIBOLINK_MODE_CYCLE:BLE_AMIIBOLINK_MODE_NTAG));
+  ++cases;
+ }
+#endif
  const ble_amiibolink_mode_t modes[]={BLE_AMIIBOLINK_MODE_CYCLE,BLE_AMIIBOLINK_MODE_NTAG};
  for(unsigned m=0;m<2;m++)for(unsigned failed=0;failed<2;failed++)for(unsigned wire=0;wire<3;wire++){
   seed(modes[m],failed,0);uint32_t generation=ntag_emu.generation;

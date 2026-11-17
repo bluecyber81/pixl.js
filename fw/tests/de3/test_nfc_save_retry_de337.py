@@ -133,7 +133,7 @@ static void mui_update(void*p){(void)p;}
 static void ntag_save_error(app_amiibolink_t*app){(void)app;errors++;ntag_emu_save_failed();}
 static bool ntag_update(app_amiibolink_t*app,uint8_t i,ntag_t*t){(void)app;assert(i==5);writes++;if(!fail)persisted=t->data[16];return !fail;}
 static void ntag_reload(app_amiibolink_t*a,uint8_t i){(void)a;(void)i;reloads++;}
-static void amiibolink_scene_switch_mode(app_amiibolink_t*a,int m,uint8_t i){(void)a;(void)m;(void)i;}
+static bool amiibolink_scene_switch_mode(app_amiibolink_t*a,int m,uint8_t i){(void)a;(void)m;(void)i;return true;}
 '''+function(link,"ntag_update_cb")+function(link,"amiibolink_scene_ble_event_handler")+r'''
 int main(void){
  amiibolink_view_t view={5,26};app_amiibolink_t app={&view,3};ntag_t tag={.type=NTAG_215};tag.data[16]=0x55;
@@ -162,11 +162,12 @@ static uint8_t persisted;
 static void cb(ntag_event_type_t t,void*ctx,ntag_t*tag){
  (void)ctx;if(t==NTAG_EVENT_TYPE_WRITTEN){++saves;if(save_fails)ntag_emu_save_failed();else persisted=tag->data[16];}
 }
-static void event_cb(void*ctx,ble_amiibolink_event_type_t type,uint8_t*data,size_t length){
+static bool event_cb(void*ctx,ble_amiibolink_event_type_t type,uint8_t*data,size_t length){
  assert(ctx==(void*)7&&type==BLE_AMIIBOLINK_EVENT_TAG_UPDATED&&length==sizeof(ntag_t));
  assert(!m_transfer_active&&m_data_pos==0&&index==0);
  assert(((ntag_t*)data)->data[0]==0x42&&ntag_emu.ntag.data[0]==0x42);++events;
  if(begin_from_event){link_begin_transfer();uint8_t next=0x43;assert(link_append(&next,1));index=1;}
+ return true;
 }
 static void seed(void){
  memset(&ntag_emu,0,sizeof(ntag_emu));ble_amiibolink_reset_transfer();

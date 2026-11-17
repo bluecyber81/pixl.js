@@ -65,9 +65,8 @@ static bool link_commit_transfer(void) {
     m_transfer_active = false;
     m_data_pos = 0;
     index = 0;
-    if (m_event_handler) {
-        m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, (uint8_t *)&m_ntag, sizeof(m_ntag));
-    }
+    if (m_event_handler &&
+        !m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_TAG_UPDATED, (uint8_t *)&m_ntag, sizeof(m_ntag))) return false;
     /* The slot callback may fail while saving the newly received tag. Its
      * bytes then belong to the NFC owner's pending-save state, not this
      * retired transport transaction. Do not ACK success or restore the old
@@ -260,9 +259,8 @@ void ble_amiibolink_process_cmd(buffer_t* buffer){
         if (mode < BLE_AMIIBOLINK_MODE_RANDOM || mode > BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN) {
             return;
         }
-        if (m_event_handler) {
-            m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_SET_MODE, &mode, sizeof(ble_amiibolink_mode_t));
-        }
+        if (!m_event_handler ||
+            !m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_SET_MODE, (uint8_t *)&mode, sizeof(mode))) return;
         ble_amiibolink_send_cmd(0xA1B1);
         break;
 
@@ -509,10 +507,9 @@ void ble_amiloop_received_data(const uint8_t *m_data, size_t length) {
             amiloop_send_data(&output);
             return;
         }
-        if (m_event_handler) {
-            m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_SET_MODE, &link_mode, sizeof(ble_amiibolink_mode_t));
-        }
-        buff_put_u8(&output, 0x00);
+        bool applied = m_event_handler &&
+            m_event_handler(m_event_ctx, BLE_AMIIBOLINK_EVENT_SET_MODE, (uint8_t *)&link_mode, sizeof(link_mode));
+        buff_put_u8(&output, applied ? 0x00 : 0x01);
         amiloop_send_data(&output);
         break;
     }

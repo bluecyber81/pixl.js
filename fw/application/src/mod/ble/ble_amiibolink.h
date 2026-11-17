@@ -2,6 +2,7 @@
 #define BLE_AMIIBOLINK_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum {
@@ -27,7 +28,7 @@ typedef struct {
 
 typedef enum { BLE_AMIIBOLINK_EVENT_TAG_UPDATED, BLE_AMIIBOLINK_EVENT_SET_MODE } ble_amiibolink_event_type_t;
 
-typedef void (*ble_amiibolink_event_handler_t)(void* ctx, ble_amiibolink_event_type_t, uint8_t *, size_t);
+typedef bool (*ble_amiibolink_event_handler_t)(void* ctx, ble_amiibolink_event_type_t, uint8_t *, size_t);
 
 void ble_amiibolink_init(void);
 /* Foreground session cleanup; never called from the SoftDevice IRQ. */
