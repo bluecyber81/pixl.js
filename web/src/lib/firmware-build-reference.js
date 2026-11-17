@@ -1,3 +1,4 @@
+import { LCD_BUILD_DIAGNOSTICS_VERSION, normalizeLcdBuildDiagnostics } from './lcd-build-diagnostics.js';
 import { firmwareBoard } from './hardware-profile.js';
 
 // Reference for the signed T1 application package. This is not a
@@ -76,6 +77,12 @@ const app656 = Object.freeze({
   sourceId: '7a51f763495dc22382b6b5f0f5714a5c36baf4d0d274917abc58ec7314d7a9e8', otaSha256: 'de436078c20dd402c7ffa821f31a74a14fdbd28d5c861cecac6cdc74892a1516',
 });
 
+const app657 = Object.freeze({
+  ...app656, firmwareVersion: '2.22.0-DE3.84', applicationCounter: 657,
+  applicationBytes: 356216, applicationBinSha256: 'b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323',
+  sourceId: 'f9bda1ff3428d344eb7cb5de2052158d40f5474e08c03f4597b67ba229e30221', otaSha256: '6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4',
+});
+
 const oledTest1 = Object.freeze({
   firmwareVersion: '2.22.0-DE3.81-OLEDt1', applicationCounter: 81, board: 'OLED', chipPart: 0x52832,
   applicationBytes: 363240, applicationBinSha256: '5e556b10359ad4815f150b22ac7f045412df99d3b0cd0cebfa8b114843314df8',
@@ -95,10 +102,11 @@ const oledTest3 = Object.freeze({
   sourceId: 'b283257873690dd40845d6ba4628a88f8066a7b45f682b6190cd0c152b295a22', otaSha256: 'fd0418d4d503d1ac168909af66912c0e97cf98aef8936d29542c95d396378820',
 });
 
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, oledTest1, oledTest2, oledTest3];
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
+export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
+  const reported = version === LCD_BUILD_DIAGNOSTICS_VERSION ? normalizeLcdBuildDiagnostics(build) : null;
   const observed = { firmwareVersion: version,
     applicationCounter: boot?.settingsCrcValid === true && word(boot.applicationCounter) ? boot.applicationCounter : null,
     chipPart: boot?.geometryValid === true && word(boot.chipPart) ? boot.chipPart : null,
@@ -106,10 +114,13 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     flashBytes: boot?.geometryValid === true && word(boot.flashBytes) ? boot.flashBytes : null,
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
-    sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
+    sourceId: reported?.sourceId ?? null, ...(reported ? {compiledBoard:reported.board} : {}), applicationBinSha256: null, uniqueDeviceId: null };
   const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app654);
   const relation = !reference ? 'no-package-reference' : version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
-  return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,
+  const sourceRelation = reported && reference?.firmwareVersion === version
+    ? reported.sourceId === reference.sourceId && reported.board === reference.board ? 'matches-package' : 'differs-from-package'
+    : null;
+  return { schemaVersion: 1, ...(reported ? {firmwareReportedSourceRelation:sourceRelation} : {}), observed, packageReference: reference, referenceRelation: relation,
     applicationHashVerified: false, samePhysicalDeviceVerified: false };
 }

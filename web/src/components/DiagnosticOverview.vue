@@ -29,7 +29,7 @@
       <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'startup-and-system-readback-on-one-lcd'">{{ pick('Auf einem LCD bestätigt: App-Start, Bootbereich und S112 7.3.0. Der Gerätetest zur Wiederaufnahme eines unterbrochenen Handy-Updates steht aus.', 'One LCD confirmed application startup, the boot region and S112 7.3.0. Recovery from an interrupted phone update still awaits an on-device test.') }}</p>
       <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'owner-reported-flash-and-initial-operation'">{{ pick('Der Besitzer meldet, dass das geflashte LCD-Gerät läuft. Die Wiederaufnahme nach einem unterbrochenen Android-Update ist am Gerät noch offen.', 'The owner reports that the LCD device runs after flashing. Recovery after an interrupted Android update still awaits a device test.') }}</p>
       <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
-      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Die Firmware liefert keinen SourceID- oder App-Hashmesswert. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. Firmware provides no measured SourceID or application hash. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
+      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Der Hash der laufenden App ist ungemessen. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. The hash of the running application is unmeasured. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
     </details>
     <div class="diagnostic-grid" :aria-busy="loading">
       <article v-for="card in cards" :key="card.id" class="diagnostic-card" :class="'state-' + card.state" :data-section="card.id">
@@ -63,6 +63,7 @@ import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/dev
 import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
 import { diagnosticSectionKeys, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
+import { normalizeLcdBuildDiagnostics, LCD_BUILD_DIAGNOSTICS_VERSION } from '../lib/lcd-build-diagnostics.js';
 import { normalizeFlashDiagnostics, flashManufacturer, hexByte, supportsFlashDiagnostics } from '../lib/flash-diagnostics.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { formatBatteryVoltage, normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
@@ -106,7 +107,7 @@ const t = computed(() => ({
   source: pick('Quelle', 'Source'), buttons: pick('Tastenereignisse der Einstellungsdiagnose', 'Button events from settings diagnostics'),
   events: { press: pick('Drücken', 'Press'), release: pick('Loslassen', 'Release'), short: pick('Kurz', 'Short'), long: pick('Lang', 'Long'), repeat: pick('Wiederholt', 'Repeat') },
 }));
-const buildIdentity = computed(() => diagnosticBuildIdentity({firmwareVersion: props.firmwareVersion, boot: validSnapshot.value?.sections.boot?.data}));
+const buildIdentity = computed(() => diagnosticBuildIdentity({firmwareVersion: props.firmwareVersion, boot: validSnapshot.value?.sections.boot?.data, build:validSnapshot.value?.sections.build?.data}));
 const referenceRelation = computed(() => ({
   'no-package-reference': pick('Für diese OLED-Version ist keine Paketreferenz hinterlegt.', 'No package reference is available for this OLED version.'),
   unknown: pick('Version nicht erfasst', 'Version not recorded'),
@@ -308,8 +309,24 @@ function firstMenu(data) {
 }
 const includeMenu = computed(() => props.loading ? props.progress?.total >= diagnosticSectionKeys(true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'menu') : supportsMenuDiagnostics(props.firmwareVersion));
-const includeFlash = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true, true).length
+const includeFlash = computed(() => props.loading ? props.progress?.total >= diagnosticSectionKeys(true, true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'flash') : supportsFlashDiagnostics(props.firmwareVersion));
+const includeBuild = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true,true,true).length
+  : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections,'build') : props.firmwareVersion === LCD_BUILD_DIAGNOSTICS_VERSION);
+function buildRows(data) {
+  const fault = data.previousFault;
+  const kinds = {'nordic-sdk':'Nordic SDK',hardfault:'HardFault','libc-exit':'libc _exit'};
+  const comparison = buildIdentity.value.firmwareReportedSourceRelation;
+  return {summary:[
+    [pick('Gemeldetes Buildprofil','Reported build profile'), data.board],
+    [pick('Fehlernotiz vom vorigen Lauf','Fault note from previous run'), fault ? kinds[fault.kind] : pick('Keine gültige Notiz','No valid note')]],
+    details:[[pick('Gemeldete SourceID','Reported SourceID'),data.sourceId],
+      [pick('SourceID und Board laut Paketreferenz','SourceID and board in reference package'),
+        comparison === 'matches-package' ? pick('Passend','Match') : comparison === 'differs-from-package' ? pick('Abweichung','Mismatch') : t.value.absent],
+      ...(fault?.kind === 'nordic-sdk' ? [['SDK ID',hex(fault.sdkId)],['PC',fault.pc === null ? t.value.absent : hex(fault.pc)]] : [])],
+    note:pick('SourceID und Boardprofil stammen aus der laufenden Firmware. Eine unabhängige Platinenerkennung fehlt. Die Fehlernotiz vom vorigen Lauf enthält keine eigene Buildkennung. Bei Stromverlust kann sie verloren gehen.',
+      'The SourceID and board profile come from the running firmware. Physical board identity is unverified. The previous fault note has no build identity of its own. Power loss can clear the note.')};
+}
 function flashRows(data) {
   return {summary: [['JEDEC', data.jedecId?.map(hexByte).join(' ') || t.value.absent],
     [pick('Herstellerkennung', 'Manufacturer code'), flashManufacturer(data.jedecId) || '—']],
@@ -325,6 +342,7 @@ const cards = computed(() => [
   section('power', pick('Strom und Ruhezeit', 'Power and sleep'), normalizePowerDiagnostics, power),
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
+  ...(includeBuild.value ? [section('build',pick('Firmwarekennung und Fehlernotiz','Firmware identity and fault note'),normalizeLcdBuildDiagnostics,buildRows)] : []),
   ...(includeFlash.value ? [section('flash', pick('SPI-Flash-Kennung', 'SPI flash ID'), normalizeFlashDiagnostics, flashRows)] : []),
   ...(includeMenu.value ? [section('menu', pick('Hauptmenü: erster Start und Rückkehr', 'Main menu: first launch and return'), normalizeMenuDiagnostics, firstMenu)] : []),
 ]);
@@ -332,7 +350,7 @@ const activeProgress = computed(() => props.loading && props.connected ? props.p
 const timing = computed(() => readTimeEstimate(activeProgress.value, Math.max(props.readClock, activeProgress.value.updatedAt)));
 const progressLabel = computed(() => {
   const { completed, total } = activeProgress.value;
-  const key = diagnosticSectionKeys(includeMenu.value, includeFlash.value)[completed];
+  const key = diagnosticSectionKeys(includeMenu.value, includeFlash.value,includeBuild.value)[completed];
   const name = cards.value.find(card => card.id === key)?.title;
   return name ? pick(`Bereich ${completed + 1} von ${total} · ${name}`, `Section ${completed + 1} of ${total} · ${name}`)
     : pick('Abfrage wird abgeschlossen …', 'Finishing the read …');

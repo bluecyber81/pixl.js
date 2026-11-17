@@ -1,3 +1,4 @@
+import { cleanLcdObservations, summarizeLcdObservations } from './guided-lcd-checks.js';
 import { normalizeDiagnosticSnapshot } from './diagnostic-snapshot.js';
 import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 
@@ -93,7 +94,7 @@ export function recordDeviceObservation({origin, route, outcome, deviceLanguage,
 export function captureDeviceEvidence(snapshot, version) {
   const data = normalizeDiagnosticSnapshot(snapshot);
   if (!data || data.completedAt < data.startedAt) return null;
-  return {snapshot:data, buildIdentity:diagnosticBuildIdentity({firmwareVersion:version, boot:data.sections.boot.data})};
+  return {snapshot:data, buildIdentity:diagnosticBuildIdentity({firmwareVersion:version, boot:data.sections.boot.data, build:data.sections.build?.data})};
 }
 
 export function canAttachAfter(before, candidate, lastObservationAt) {
@@ -167,7 +168,7 @@ function checkReadOrder(rows, before, after) {
 }
 
 function checkDocumentTime(state, documentTime) {
-  if (Object.values(state.observations).some(row => row.recordedAt > documentTime) ||
+  if ([...Object.values(state.observations), ...Object.values(state.lcdObservations)].some(row => row.recordedAt > documentTime) ||
       [state.before, state.after].some(read => read && read.snapshot.completedAt > documentTime)) throw invalid();
 }
 
@@ -204,7 +205,7 @@ function unfinishedPrefix(value) {
 
 function cleanImportedReport(value) {
   if (value === undefined || value === null) return null;
-  if (!plain(value) || ![1,2].includes(value.schemaVersion) || !timestamp(value.exportedAt) || !validVersion(value.fileManagerVersion)) throw invalid();
+  if (!plain(value) || ![1,2,3].includes(value.schemaVersion) || !timestamp(value.exportedAt) || !validVersion(value.fileManagerVersion)) throw invalid();
   return {schemaVersion:value.schemaVersion, exportedAt:value.exportedAt, fileManagerVersion:value.fileManagerVersion};
 }
 
@@ -212,32 +213,37 @@ function cleanState(value = {}, options = {}) {
   if (!plain(value)) throw invalid();
   const rows = cleanRows(value.observations, options);
   const before = cleanEvidence(value.before), after = cleanEvidence(value.after);
-  checkReadOrder(rows, before, after);
+  let lcdObservations;
+  try { lcdObservations = cleanLcdObservations(value.lcdObservations, {imported:options.importSource}); }
+  catch { throw invalid(); }
+  checkReadOrder([...rows,...Object.values(lcdObservations)], before, after);
   const observations = Object.fromEntries(rows.map(row => [observationKey(row), row]));
   const option = (item, allowed) => {
     if (item === undefined || item === null || item === '') return '';
     if (!allowed.includes(item)) throw invalid();
     return item;
   };
-  return {observations, before, after, sourcePrefix:options.draft ? unfinishedPrefix(value.sourcePrefix) : sourcePrefix(value.sourcePrefix),
+  return {observations, lcdObservations, before, after, sourcePrefix:options.draft ? unfinishedPrefix(value.sourcePrefix) : sourcePrefix(value.sourcePrefix),
     origin:option(value.origin, origins) || 'file-emulator', deviceLanguage:option(value.deviceLanguage, languageValues),
     resumeSetting:option(value.resumeSetting, settingValues), animationSetting:option(value.animationSetting, settingValues),
     importedReport:cleanImportedReport(value.importedReport)};
 }
 
-export function createGuidedReport({webVersion, locale, observations, before, after, sourcePrefix:prefix, importedReport} = {}) {
+export function createGuidedReport({webVersion, locale, observations, lcdObservations, before, after, sourcePrefix:prefix, importedReport} = {}) {
   if (!validVersion(webVersion) || typeof locale !== 'string') throw invalid();
-  const state = cleanState({observations, before, after, sourcePrefix:prefix, importedReport});
+  const state = cleanState({observations, lcdObservations, before, after, sourcePrefix:prefix, importedReport});
   const rows = Object.values(state.observations);
+  const reportHasLcd = Object.keys(state.lcdObservations).length > 0;
   const report = {
-    schemaVersion:2, reportType:'guided-device-check', exportedAt:new Date().toISOString(),
+    schemaVersion:reportHasLcd ? 3 : 2, reportType:'guided-device-check', exportedAt:new Date().toISOString(),
     fileManagerVersion:webVersion, reportLanguage:locale.startsWith('de') ? 'de' : 'en',
-    manualObservations:rows, coverage:coverage(rows), importedReport:state.importedReport,
+    manualObservations:rows, ...(Object.keys(state.lcdObservations).length ? {lcdObservations:Object.values(state.lcdObservations), lcdCoverage:summarizeLcdObservations(state.lcdObservations)} : {}), coverage:coverage(rows), importedReport:state.importedReport,
     manualSourceId:compareManualSourcePrefix(state.sourcePrefix, state.before, state.after),
     diagnosticReads:{before:state.before, after:state.after}, samePhysicalDeviceVerified:false,
     limitations:[
-      'Observations are manual user reports, including imported manual reports; missing configurations remain untested.',
+      'The 32 resume observations are manual user reports. Imported entries retain their provenance. Missing configurations remain untested.',
       'The 32 known configurations cover two apps, two routes, DE/EN, resume on/off, and animation on/off. Unknown settings do not complete this matrix.',
+      ...(reportHasLcd ? ['The 40 additional LCD checks distinguish manual hardware observations, host tests and device readbacks. Imported rows do not count toward fresh local evidence.'] : []),
       'Diagnostic timestamps describe sequential browser reads of firmware counters and cached values. Import does not perform a new device read.',
       'Package hashes describe reference files. The device does not report a measured application hash.',
     ],
@@ -249,11 +255,12 @@ export function createGuidedReport({webVersion, locale, observations, before, af
 
 export function parseGuidedReport(text) {
   const value = readJson(text);
-  if (![1,2].includes(value.schemaVersion) || value.reportType !== 'guided-device-check' || !timestamp(value.exportedAt) ||
+  if (![1,2,3].includes(value.schemaVersion) || value.reportType !== 'guided-device-check' || !timestamp(value.exportedAt) ||
       !validVersion(value.fileManagerVersion) || !['de','en'].includes(value.reportLanguage) || !Array.isArray(value.manualObservations) ||
       !plain(value.diagnosticReads) || !Object.hasOwn(value.diagnosticReads,'before') || !Object.hasOwn(value.diagnosticReads,'after')) throw invalid();
   if (value.manualSourceId !== null && value.manualSourceId !== undefined && !plain(value.manualSourceId)) throw invalid();
-  const state = cleanState({observations:value.manualObservations,
+  if (value.schemaVersion === 3 && !Array.isArray(value.lcdObservations)) throw invalid();
+  const state = cleanState({observations:value.manualObservations, lcdObservations:value.schemaVersion === 3 ? value.lcdObservations : {},
     before:value.diagnosticReads.before, after:value.diagnosticReads.after, sourcePrefix:value.manualSourceId?.prefix,
     importedReport:{schemaVersion:value.schemaVersion, exportedAt:value.exportedAt, fileManagerVersion:value.fileManagerVersion}},
   {legacy:value.schemaVersion === 1, importSource:true, strict:true});
@@ -268,13 +275,14 @@ export function serializeGuidedDraft(value = {}, savedAt = new Date().toISOStrin
   if (!timestamp(savedAt)) throw invalid();
   const state = cleanState(value, {draft:true});
   checkDocumentTime(state, savedAt);
-  return boundedJson({schemaVersion:2, draftType:'guided-device-check-draft', savedAt, ...state});
+  return boundedJson({schemaVersion:Object.keys(state.lcdObservations).length ? 3 : 2, draftType:'guided-device-check-draft', savedAt, ...state});
 }
 
 export function parseGuidedDraft(text) {
   const value = readJson(text);
-  if (value.schemaVersion !== 2 || value.draftType !== 'guided-device-check-draft' || !timestamp(value.savedAt)) throw invalid();
-  const state = cleanState(value, {strict:true, draft:true});
+  if (![2,3].includes(value.schemaVersion) || value.draftType !== 'guided-device-check-draft' || !timestamp(value.savedAt)) throw invalid();
+  if (value.schemaVersion === 3 && !plain(value.lcdObservations)) throw invalid();
+  const state = cleanState({...value,lcdObservations:value.schemaVersion === 3 ? value.lcdObservations : {}}, {strict:true, draft:true});
   checkDocumentTime(state, value.savedAt);
   return {...state, savedAt:value.savedAt};
 }

@@ -177,7 +177,7 @@ function mtuPacket() {
     return Uint8Array.from([77,84,85,68,1,7,250,0,250,0,250,0,247,0,0,0]);
 }
 
-for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83']) test(`LCD ${version} reports a temporarily unavailable display without recording a transport fault`, async () => {
+for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84']) test(`LCD ${version} reports a temporarily unavailable display without recording a transport fault`, async () => {
     const display = await import('../src/lib/display-photo.js');
     const f = fixture(display);
     const busy = assert.rejects(f.api.get_display_photo(version), {code:'DISPLAY_UNAVAILABLE'});
@@ -418,4 +418,29 @@ test('flash probe gates older versions, sends no arguments, and tolerates option
     const broken = assert.rejects(f.api.get_flash_diagnostics(version));
     f.rx(11, [0]); await broken;
     assert.equal(f.api.get_transport_diagnostics().lastErrorCode, 'RESPONSE_INVALID');
+});
+test('PXBI sends only one optional command on App657 and checks the assembled payload and connection generation', async () => {
+    const bindings=await import('../src/lib/lcd-build-diagnostics.js');
+    const version=bindings.LCD_BUILD_DIAGNOSTICS_VERSION, bytes=new Uint8Array(80);
+    bytes.set([80,88,66,73,1,80,1,0]);bytes.fill(97,8,72);
+    const f=fixture(bindings);
+    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.85','',null])
+        assert.equal(await f.api.get_lcd_build_diagnostics(v),null);
+    assert.deepEqual(f.writes,[]);
+    const reading=f.api.get_lcd_build_diagnostics(version);
+    assert.deepEqual(f.writes,[[12,0,0,0]]);
+    for(let offset=0;offset<80;offset+=16) f.rx(12,bytes.subarray(offset,offset+16),(offset/16)|(offset<64?0x8000:0));
+    assert.equal((await reading).sourceId,'a'.repeat(64));
+    for (const status of [1,255]) {
+        const pending=f.api.get_lcd_build_diagnostics(version);f.rx(12,[],0,status);
+        assert.equal(await pending,null);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+    }
+    const corrupt=f.api.get_lcd_build_diagnostics(version), rejected=assert.rejects(corrupt);
+    f.rx(12,bytes.subarray(0,79));await rejected;assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'RESPONSE_INVALID');
+    for (const event of ['timeout','disconnect']) {
+        const f=fixture(bindings), pending=f.api.get_lcd_build_diagnostics(version), rejected=assert.rejects(pending);
+        if (event==='disconnect') f.bus.emit('ble_disconnected');
+        else for(const cb of [...f.timers.values()]) cb();
+        await rejected; assert.deepEqual(f.writes,[[12,0,0,0]]);
+    }
 });

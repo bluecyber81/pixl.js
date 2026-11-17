@@ -189,8 +189,50 @@ try {
       await openPanel();
       assert.equal(await exportButton.isDisabled(), true);
       assert.equal(await panel.getByRole('progressbar').evaluate(element => element.value), 0);
+      // Supplementary LCD observations use a fresh offline draft with three independent sources.
+      const lcd = panel.locator('.lcd-checks');
+      await lcd.locator('summary').click();
+      const group = field('Prüfbereich','Check group');
+      const lcdCase = field('Prüffall','Test case');
+      const source = field('Quelle des Ergebnisses','Source of result');
+      const outcome = field('Beobachtetes Ergebnis','Observed outcome');
+      for (const [key,count] of [['controls',4],['games',16],['dim',8],['dfu',12]]) {
+        await group.selectOption(key);
+        assert.equal(await lcdCase.locator('option').count(),count);
+      }
+      await lcdCase.selectOption('dfu/system/disconnect/checkpoint');
+      for (const kind of ['manual-device','host-test','device-readback']) {
+        await source.selectOption(kind);
+        await outcome.selectOption('ok');
+        await lcd.getByRole('textbox').fill('offset=4096, crc=0x12345678 (fixture)');
+      }
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth+1));
+      const extended=await exportPreview();
+      assert.equal(extended.report.schemaVersion,3);
+      assert.deepEqual(extended.report.lcdCoverage,{totalCases:40,localDeviceCases:1,hostTests:1,readbacks:1,imported:0});
+      await closePreview();
+      await page.reload();
+      await openPanel();
+      const reopened=await exportPreview();
+      assert.deepEqual(reopened.report.lcdObservations,extended.report.lcdObservations);
+      await closePreview();
+      await importBody(extended.body);
+      await button('Bericht übernehmen','Use imported report').click();
+      const imported=await exportPreview();
+      assert.deepEqual(imported.report.lcdCoverage,{totalCases:40,localDeviceCases:0,hostTests:0,readbacks:0,imported:3});
+      assert.ok(imported.report.lcdObservations.every(row => row.imported && row.note.includes('fixture')));
+      await closePreview();
+      await lcd.locator('summary').click();
+      await group.selectOption('dfu');
+      await lcdCase.selectOption('dfu/system/disconnect/checkpoint');
+      await source.selectOption('manual-device');
+      await button('Erneut beobachtet','Observed again').click();
+      const renewed=await exportPreview();
+      assert.deepEqual(renewed.report.lcdCoverage,{totalCases:40,localDeviceCases:1,hostTests:0,readbacks:0,imported:2});
+      assert.equal(renewed.report.lcdObservations.find(r=>!r.imported).note,'');
+      await closePreview();
       assert.deepEqual(errors, []);
-      results.push({locale, width, device:'synthetic snapshots; no physical device', schemaVersion:2,
+      results.push({locale, width, device:'synthetic snapshots; no physical device', schemaVersion:2, supplementalSchema:3, lcdCases:40, lcdEvidenceSources:3, importsCountAsNewHardware:false,
         reported:2, knownConfigurations:2, untestedConfigurations:30, actualJsonDownload:true,
         localDraftSurvivedReload:true, invalidImportKeptDraft:true, importReplacementConfirmed:true,
         jsonImportExportRoundTrip:true, importedTimestampsPreserved:true, discardSurvivedReload:true,

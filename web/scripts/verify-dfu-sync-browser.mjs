@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import { checkSyncHistoryBrowser } from './check-sync-history-browser.mjs';
 import { parseStartupDiagnostics } from '../src/lib/startup-diagnostics.js';
+import {parseLcdBuildDiagnostics} from '../src/lib/lcd-build-diagnostics.js';
+import {diagnosticSnapshot} from '../tests/fixtures/diagnostic-overview-data.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -12,7 +14,7 @@ assert.ok(dist && report && ['/', '/pixl.js/'].includes(base));
 const build = path.resolve(dist);
 const libraries = new URL('../src/lib/', import.meta.url);
 const webVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
-const firmwareCache = JSON.parse(await readFile(new URL('../tests/fixtures/PXST_v4_App656.json', import.meta.url), 'utf8'));
+const firmwareCache = JSON.parse(await readFile(new URL('../tests/fixtures/PXST_v4_App657.json', import.meta.url), 'utf8'));
 const helperNames = ['sync-plan.js', 'sync-history.js', 'unique-json.js', 'safe-upload.js', 'portable-names.js', 'backup.js', 'raw-metadata.js', 'zip-crc32.js'];
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json' };
 const server = createServer(async (req, res) => {
@@ -164,7 +166,25 @@ async function runChecks() {
       const mountReadings = await mountProfile.innerText();
       for (const value of ['3 / 8','256 B','79 ms']) assert.ok(mountReadings.includes(value), value);
       assert.match(mountReadings,/50\s*%/);
-      checks.push({locale,feature:'LCD App656 displays linked ARM cache readings and eligible hit rate'});
+      checks.push({locale,feature:'LCD App657 displays linked ARM cache readings and eligible hit rate'});
+      const capture=JSON.parse(await readFile(new URL('../tests/fixtures/PXBI_App657.json',import.meta.url),'utf8'));
+      const sdk=capture.states.find(r=>r.scenario==='sdk');
+      const build=parseLcdBuildDiagnostics(Buffer.from(sdk.payloadHex,'hex'));
+      const snapshot=structuredClone(diagnosticSnapshot());
+      snapshot.sections.boot.data.applicationCounter=657;
+      snapshot.sections.build={state:'available',observedAt:snapshot.completedAt,data:build,errorCode:null};
+      await guidePage.evaluate(data=>{
+        const app=document.querySelector('#app')._vnode.component.proxy;
+        app.firmwareVersion='2.22.0-DE3.84';app.fullDiagnosticSnapshot=data;
+      },snapshot);
+      const card=guidePage.locator('article[data-section="build"]');
+      await card.waitFor();
+      await card.locator('details > summary').click();
+      const display=await card.innerText();
+      for (const value of ['Nordic SDK',capture.sourceId,'12345678','23457']) assert.ok(display.includes(value),value);
+      assert.match(display,/Passend|Match/);
+      checks.push({locale,feature:'App657 displays compiled SourceID, matching package profile and retained fault from real Cortex fixture'});
+
       await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
         firmwareVersion:'2.22.0-DE3.81', bootInfo:null

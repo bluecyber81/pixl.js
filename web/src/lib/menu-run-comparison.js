@@ -12,7 +12,7 @@ export function parseMenuRun(text) {
   if (!snapshot || menu?.state !== 'available' || menu.data.schemaVersion !== 2) throw bad();
   // Imported identity claims and reference hashes are not observations. Derive
   // only the allowlisted fields already validated by the snapshot decoder.
-  const identity=diagnosticBuildIdentity({firmwareVersion:data.firmwareVersion,boot:snapshot.sections.boot?.data});
+  const identity=diagnosticBuildIdentity({firmwareVersion:data.firmwareVersion,boot:snapshot.sections.boot?.data,build:snapshot.sections.build?.data});
   const run=Object.freeze({schemaVersion:1,startedAt:snapshot.startedAt,completedAt:snapshot.completedAt,
     observedAt:menu.observedAt,identity:Object.freeze(identity.observed),menu:menu.data});
   runs.add(run);return run;

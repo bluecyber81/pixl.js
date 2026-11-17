@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mountSfc, nodes, text} from './helpers/vue-component-host.mjs';
+import {loadSfc, mountSfc, nodes, text} from './helpers/vue-component-host.mjs';
 import {diagnosticSnapshot} from './fixtures/diagnostic-overview-data.mjs';
 import {GUIDED_MAX_BYTES, parseGuidedDraft, serializeGuidedDraft} from '../src/lib/guided-device-check.js';
 import {discardGuidedDraft, listGuidedDrafts, saveGuidedDraft} from '../src/lib/guided-draft-store.js';
@@ -53,7 +53,7 @@ async function mount(t, {locale = 'en', store = storage(), modules = {}, ...prop
   Object.defineProperty(globalThis, 'localStorage', {configurable:true, value:store});
   const exported = [];
   const h = await mountSfc(component, {locale, connected:false, reading:false, exportBusy:false,
-    onExport:report => exported.push(report), ...props}, {'../../package.json':{version:'3.52.0'}, ...modules});
+    onExport:report => exported.push(report), ...props}, {'../../package.json':{version:'3.52.0'}, './GuidedLcdChecks.vue':{default:await loadSfc(new URL('../src/components/GuidedLcdChecks.vue',import.meta.url))}, ...modules});
   // onMounted finishes its restore before autosaving begins.
   await h.tick();
   let disposed = false;

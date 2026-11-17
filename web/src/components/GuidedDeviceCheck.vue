@@ -49,7 +49,7 @@
     <section class="capture step">
       <h4><span class="step-number">1</span>{{ pick('Vorher · Diagnose festhalten', 'Before · Capture diagnostics') }}</h4>
       <p>{{ pick('Optional: Lies oben „Alle Diagnosewerte“ aus und übernimm die Aufnahme vor dem ersten Test.', 'Optional: Read all diagnostic values above and attach the snapshot before the first test.') }}</p>
-      <button type="button" :disabled="!candidate || !!before || count > 0" @click="before = candidate">{{ pick('Vorher-Aufnahme übernehmen', 'Attach before snapshot') }}</button>
+      <button type="button" :disabled="!candidate || !!before || !!lastObservationAt" @click="before = candidate">{{ pick('Vorher-Aufnahme übernehmen', 'Attach before snapshot') }}</button>
       <time v-if="before" :datetime="before.snapshot.completedAt">{{ dateLabel(before.snapshot.completedAt) }}</time>
     </section>
 
@@ -104,6 +104,8 @@
       </details>
     </section>
 
+    <GuidedLcdChecks :locale="locale" :observations="lcdObservations" @update="updateLcd" />
+
     <section class="capture step">
       <h4><span class="step-number">3</span>{{ pick('Nachher · Ergebnis sichern', 'After · Save the result') }}</h4>
       <p>{{ pick('Für den Vergleich verbinde dasselbe Gerät erneut. Lies die Diagnose nach den Tests nochmals aus und übernimm sie hier.', 'To compare, reconnect the same device. Read the diagnostics again after the tests and attach them here.') }}</p>
@@ -128,6 +130,7 @@
 </template>
 
 <script setup>
+import GuidedLcdChecks from './GuidedLcdChecks.vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { version as webVersion } from '../../package.json';
 import { canAttachAfter, captureDeviceEvidence, compareManualSourcePrefix, createGuidedReport, expectedReturn, observationKey, parseGuidedDraft, parseGuidedReport, recordDeviceObservation, routes, serializeGuidedDraft, summarizeGuidedObservations, GUIDED_MAX_BYTES } from '../lib/guided-device-check.js';
@@ -141,6 +144,7 @@ const dateLabel = date => new Date(date).toLocaleString(pick('de-DE', 'en-GB'));
 const candidate = computed(() => props.connected && !props.reading && props.snapshot ? captureDeviceEvidence(props.snapshot, props.firmwareVersion) : null);
 const before = shallowRef(null), after = shallowRef(null), importedReport = shallowRef(null);
 const origin = ref('file-emulator'), deviceLanguage = ref(''), resumeSetting = ref(''), animationSetting = ref('');
+const lcdObservations = ref({});
 const observations = ref({}), sourcePrefix = ref(''), confirmClear = ref(false);
 const reportInput = ref(null), pendingImport = shallowRef(null), importBusy = ref(false);
 const notice = ref(''), noticeKind = ref('info'), saveState = ref('empty');
@@ -154,11 +158,11 @@ const prefixInvalid = computed(() => !!sourcePrefix.value && !prefixComparison.v
 const count = computed(() => Object.keys(observations.value).length);
 const coverage = computed(() => summarizeGuidedObservations(observations.value));
 const history = computed(() => Object.values(observations.value).sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)));
-const lastObservationAt = computed(() => history.value[0]?.recordedAt);
+const lastObservationAt = computed(() => [history.value[0]?.recordedAt, ...Object.values(lcdObservations.value).map(row => row.recordedAt)].filter(Boolean).sort().at(-1));
 const canCaptureAfter = computed(() => canAttachAfter(before.value, candidate.value, lastObservationAt.value));
-const hasExport = computed(() => !!before.value || !!after.value || count.value > 0 || !!prefixComparison.value);
+const hasExport = computed(() => !!before.value || !!after.value || count.value > 0 || Object.keys(lcdObservations.value).length > 0 || !!prefixComparison.value);
 const hasDraft = computed(() => hasExport.value || !!sourcePrefix.value || !!deviceLanguage.value || !!resumeSetting.value || !!animationSetting.value || origin.value !== 'file-emulator');
-const draftState = () => ({observations:observations.value, before:before.value, after:after.value,
+const draftState = () => ({observations:observations.value, lcdObservations:lcdObservations.value, before:before.value, after:after.value,
   sourcePrefix:sourcePrefix.value, origin:origin.value, deviceLanguage:deviceLanguage.value,
   resumeSetting:resumeSetting.value, animationSetting:animationSetting.value, importedReport:importedReport.value});
 const state = () => ({...draftState(), webVersion, locale:props.locale || 'en'});
@@ -187,6 +191,10 @@ const prefixHint = computed(() => {
   return (comparison.comparison === 'prefix-match' ? pick('Die zwölf Zeichen passen zur Paketreferenz', 'The twelve characters match the package reference') : pick('Die zwölf Zeichen weichen von der Paketreferenz ab', 'The twelve characters differ from the package reference')) + ' (' + stage + ' · ' + comparison.expectedPrefix + '). ' + pick('Der vollständige App-Hash ist ungemessen.', 'The full application hash is unmeasured.');
 });
 
+function updateLcd(rows) {
+  lcdObservations.value = rows;
+  if (after.value && !canAttachAfter(before.value, after.value, lastObservationAt.value)) after.value = null;
+}
 function record(route, outcome) {
   const id = key(route), previous = observations.value[id];
   const row = recordDeviceObservation({...state(), route, outcome, note:previous?.note || ''});
@@ -216,7 +224,7 @@ function downloadDraft() {
   }
 }
 function restore(draft) {
-  before.value = draft.before; after.value = draft.after; observations.value = draft.observations;
+  before.value = draft.before; after.value = draft.after; observations.value = draft.observations; lcdObservations.value = draft.lcdObservations || {};
   sourcePrefix.value = draft.sourcePrefix; origin.value = draft.origin;
   deviceLanguage.value = draft.deviceLanguage; resumeSetting.value = draft.resumeSetting; animationSetting.value = draft.animationSetting;
   importedReport.value = draft.importedReport; confirmClear.value = false;
@@ -232,6 +240,7 @@ async function readReport(event) {
     try { draft = parseGuidedReport(raw); }
     catch {
       draft = parseGuidedDraft(raw);
+      for (const row of Object.values(draft.lcdObservations)) row.imported = true;
       for (const row of Object.values(draft.observations)) row.observationSource = 'imported-manual-report';
     }
     if (hasDraft.value) pendingImport.value = draft;
@@ -243,7 +252,7 @@ async function readReport(event) {
 function acceptImport() {
   if (!pendingImport.value) return;
   restore(pendingImport.value); pendingImport.value = null;
-  showNotice(pick('Bericht geöffnet. Die importierten Angaben bleiben als manuelle Beobachtungen gekennzeichnet.', 'Report opened. Imported entries remain labelled as manual observations.'));
+  showNotice(pick('Bericht geöffnet. Übernommene Ergebnisse sind als importiert gekennzeichnet.', 'Report opened. Results from the file are marked as imported.'));
 }
 function clear() {
   restore({before:null, after:null, observations:{}, sourcePrefix:'', origin:'file-emulator', deviceLanguage:'', resumeSetting:'', animationSetting:'', importedReport:null});
