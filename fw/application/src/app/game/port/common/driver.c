@@ -9,17 +9,26 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
-void JOY_OLED_clear() {
-    for (uint8_t y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
-        for (uint8_t x = 0; x < 128; x++) {
-            JOY_OLED_send(0);
-        }
-
-        JOY_OLED_end();
+/* Send a rendered page while the display owns the shared SPI bus. Pixel
+ * calculation happens before acquiring it, with application IRQs enabled. */
+#ifdef BOARD_LCD
+void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count) {
+    uint8_t address[] = {(uint8_t)(0xb0 | (page & 7)), 0x10, 0x00};
+    spi_transaction_t tx = {.p_tx_buffer = address, .tx_length = sizeof(address)};
+    spi_device_t *display = mui_u8g2_get_spi_device();
+    hal_spi_bus_aquire(display);
+    nrf_gpio_pin_write(LCD_DC_PIN, 0);
+    uint32_t result = hal_spi_bus_xfer(&tx);
+    if (result == NRF_SUCCESS && count) {
+        nrf_gpio_pin_write(LCD_DC_PIN, 1);
+        tx.p_tx_buffer = pixels;
+        tx.tx_length = count;
+        result = hal_spi_bus_xfer(&tx);
     }
+    hal_spi_bus_release(display);
+    APP_ERROR_CHECK(result);
 }
-
+#else
 void JOY_OLED_end() { hal_spi_bus_release(mui_u8g2_get_spi_device()); }
 
 void JOY_OLED_write_data(uint8_t is_data, uint8_t data) {
@@ -51,6 +60,20 @@ void JOY_OLED_data_start(uint8_t y) {
     hal_spi_bus_aquire(mui_u8g2_get_spi_device());
     JOY_OLED_set_pos(0, y);
 }
+void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count) {
+    JOY_OLED_data_start(page);
+    for (uint8_t x = 0; x < count; x++) JOY_OLED_send(pixels[x]);
+    JOY_OLED_end();
+}
+#endif
+
+void JOY_OLED_clear(void) {
+    uint8_t pixels[128] = {0};
+    for (uint8_t page = 0; page < 8; page++) {
+        JOY_OLED_write_page(page, pixels, sizeof(pixels));
+    }
+}
+
 void JOY_init() { JOY_OLED_clear(); }
 
 void JOY_idle() {

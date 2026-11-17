@@ -189,14 +189,15 @@ class ViewTests(unittest.TestCase):
 #include <assert.h>
 #include <stdio.h>
 #include "tiny_lander.c"
-static unsigned page, column;
-void JOY_OLED_data_start(uint8_t index) { assert(index == page && page < 8 && column == 0); }
-void JOY_OLED_send(uint8_t value) { assert(column < 128); column++; assert(putchar(value) != EOF); }
-void JOY_OLED_end(void) { assert(column == 128); page++; column = 0; }
+static unsigned page;
+void JOY_OLED_write_page(uint8_t index, uint8_t *pixels, uint8_t count) {
+    assert(index == page++ && index < 8 && count == 128);
+    assert(fwrite(pixels, 1, count, stdout) == count);
+}
 void JOY_sound(uint8_t freq,uint8_t duration) { assert(!"unexpected sound"); }
 int main(void) {
     Tiny_Flip(1, NULL, NULL, NULL, NULL);
-    assert(page == 8 && column == 0);
+    assert(page == 8);
 }
 ''')
             binary = directory / "display.exe"

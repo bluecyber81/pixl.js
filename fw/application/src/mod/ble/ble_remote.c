@@ -38,7 +38,7 @@ static uint8_t lcd_read(uint8_t index) {
     if (capacity < REMOTE_REPLY_SIZE + 8u) return REMOTE_UNSUPPORTED;
     if (index == 0) {
         mui_t *ui = mui();
-        if (!ui || !ui->initialized || ui->memory_error ||
+        if (!ui || !ui->initialized || ui->memory_error || !ui->auto_update ||
             u8g2_GetBufferTileHeight(&ui->u8g2) != 8 || u8g2_GetBufferTileWidth(&ui->u8g2) != 16) {
             lcd_release();
             return REMOTE_BUSY;

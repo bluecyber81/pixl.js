@@ -73,9 +73,7 @@ extern "C" {
 #define JOY_down_pressed()        false
 
 
-void JOY_OLED_data_start(uint8_t y);
-void JOY_OLED_send(uint8_t b);
-void JOY_OLED_end() ;
+void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count);
 
 // Delays
 #define JOY_DLY_ms    nrf_delay_ms

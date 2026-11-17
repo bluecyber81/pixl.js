@@ -106,7 +106,9 @@ static bool app_masked, pending_irq, in_irq, injected, radio_enabled=true;
 static unsigned selected, dual_cs, irq_count, critical_enters, critical_exits;
 static unsigned transfers, fail_transfer, error_count, lcd_chunks, lcd_chunks_seen_by_irq;
 static unsigned stage, busy_remaining, busy_responses, polls_seen_by_irq;
-static uint8_t flash_command;
+static uint8_t flash_command, game_page, game_width;
+static unsigned game_transfer;
+static bool game_trace, dc_data;
 static bool expect_error;
 static jmp_buf error_jump;
 uint32_t app_timer_cnt_get(void) { return transfers; }
@@ -150,7 +152,7 @@ void nrf_gpio_pin_set(uint32_t pin) {
     selected &= ~(1u<<pin);
     if(pin==LCD_CS_PIN) inject(4); /* after CS-high, before mask restore */
 }
-void nrf_gpio_pin_write(uint32_t pin,uint32_t value) {(void)pin;(void)value;}
+void nrf_gpio_pin_write(uint32_t pin,uint32_t value) {assert(pin==LCD_DC_PIN);dc_data=value!=0;}
 void u8x8_gpio_SetDC(u8x8_t *device,uint8_t value) {(void)device;(void)value;}
 uint32_t nrfx_spim_init(const nrfx_spim_t *spi,const nrfx_spim_config_t *config,nrfx_spim_evt_handler_t handler,void *context) {
     (void)spi;(void)config;(void)context; assert(GUARDED ? handler!=NULL : handler==NULL); return NRF_SUCCESS;
@@ -162,6 +164,17 @@ uint32_t nrfx_spim_xfer(const nrfx_spim_t *spi,const nrfx_spim_xfer_desc_t *desc
     if(fail_transfer && transfers==fail_transfer) return 77;
     if((selected&(1u<<LCD_CS_PIN)) && !in_irq) {
         lcd_chunks++;
+        if (game_trace) {
+            assert(app_masked && selected==(1u<<LCD_CS_PIN) && desc->rx_length==0);
+            const uint8_t *p=desc->p_tx_buffer;
+            if (game_transfer++ == 0) {
+                assert(!dc_data && desc->tx_length==3);
+                assert(p[0]==(0xb0|game_page) && p[1]==0x10 && p[2]==0);
+            } else {
+                assert(dc_data && desc->tx_length==game_width);
+                for(unsigned x=0;x<game_width;x++) assert(p[x]==(uint8_t)(x+game_page));
+            }
+        }
         if(desc->tx_length==128) inject(2); /* between DMA chunks */
     }
     if(selected&(1u<<FLASH_CS_PIN)) {
@@ -246,16 +259,34 @@ int main(int argc,char **argv) {
         uint8_t bytes[8]; hal_spi_flash_read(0x5678,bytes,sizeof(bytes));
         assert(irq_count==1 && polls_seen_by_irq==1 && busy_responses==3);
         assert(!app_masked && selected==0 && critical_enters==critical_exits);
-    } else if(scenario==11) {
+    } else if(scenario==11 || scenario==12 || scenario==13) {
+#if GUARDED
+        uint8_t pixels[128];
+        for(game_page=0;game_page<8;game_page++) {
+            game_width=game_page & 1 ? 82 : 128;
+            for(unsigned x=0;x<game_width;x++) pixels[x]=(uint8_t)(x+game_page);
+            game_transfer=0;game_trace=true;stage=1;
+            if (scenario==11) {
+                JOY_OLED_write_page(game_page,pixels,game_width);
+                assert(game_transfer==2 && !app_masked && selected==0);
+            } else {
+                expect_error=true;fail_transfer=scenario==12?1:2;
+                if (setjmp(error_jump)==0) {
+                    JOY_OLED_write_page(game_page,pixels,game_width);
+                    assert(!"expected LCD error");
+                }
+                assert(error_count==1 && !app_masked && selected==0);
+                break;
+            }
+        }
+        if(scenario==11) assert(irq_count==1 && lcd_chunks_seen_by_irq==2 && lcd_chunks==16 && dual_cs==0);
+#else
         stage=1; JOY_OLED_data_start(0);
         for(unsigned i=0;i<128;i++) JOY_OLED_send((uint8_t)i);
         assert(app_masked && irq_count==0 && pending_irq);
         JOY_OLED_end();
         assert(irq_count==1 && lcd_chunks_seen_by_irq==131 && dual_cs==0 && !app_masked);
-    } else if(scenario==12) {
-        expect_error=true; fail_transfer=1;
-        if(setjmp(error_jump)==0) {JOY_OLED_data_start(0); assert(!"expected game failure");}
-        assert(error_count==1 && critical_enters==critical_exits);
+#endif
     } else assert(!"unknown scenario");
     assert(radio_enabled && selected==0 && !app_masked && critical_enters==critical_exits);
     puts("PASS"); return 0;
@@ -286,8 +317,10 @@ class TransactionTests(unittest.TestCase):
             source+='static spi_device_t lcd_device;\n'
             source+='static spi_device_t *mui_u8g2_get_spi_device(void) {return &lcd_device;}\n'
             source+='#define m_dev lcd_device\n'+function(u8,'u8x8_HW_com_spi_nrf52832')+'#undef m_dev\n'
-            for name in ['JOY_OLED_end','JOY_OLED_write_data','JOY_OLED_write_cmd','JOY_OLED_set_pos',
-                         'JOY_OLED_send','JOY_OLED_data_start']:
+            names = ['JOY_OLED_write_page'] if guarded else [
+                'JOY_OLED_end','JOY_OLED_write_data','JOY_OLED_write_cmd',
+                'JOY_OLED_set_pos','JOY_OLED_send','JOY_OLED_data_start']
+            for name in names:
                 source+=function(game,name)
             source+=HARNESS
             path=cls.folder/('guarded.c' if guarded else 'baseline.c')
@@ -324,8 +357,9 @@ class TransactionTests(unittest.TestCase):
     def test_write_command_failure_releases_before_error_return(self): self.case(8)
     def test_write_payload_failure_releases_before_error_return(self): self.case(9)
     def test_busy_poll_yields_between_individual_status_transactions(self): self.case(10)
-    def test_game_row_131_transfers_is_atomic_without_duration_claim(self): self.case(11)
-    def test_game_transfer_failure_releases_before_error_handler(self): self.case(12)
+    def test_game_pages_use_two_guarded_transfers_and_preserve_partial_rows(self): self.case(11)
+    def test_game_command_failure_releases_before_error_handler(self): self.case(12)
+    def test_game_data_failure_releases_before_error_handler(self): self.case(13)
     def test_baseline_fixture_matches_frozen_DE3_source_hashes(self):
         pins=json.loads((HERE/'original_source_pins.json').read_text())
         original=HERE/'baseline'

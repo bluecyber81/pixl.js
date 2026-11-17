@@ -804,24 +804,25 @@ uint8_t RecupeLineY_TTRIS(uint8_t Valeur) { return (Valeur >> 3); }
 uint8_t RecupeDecalageY_TTRIS(uint8_t Valeur) { return (Valeur - ((Valeur >> 3) << 3)); }
 
 void Tiny_Flip_TTRIS(uint8_t HR_TTRIS) {
+    if (HR_TTRIS > 128) HR_TTRIS = 128;
     uint8_t y, x;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < HR_TTRIS; x++) {
-            JOY_OLED_send(Recupe_TTRIS(x, y));
+            pixels[x] = Recupe_TTRIS(x, y);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, HR_TTRIS);
     }
 }
 
 void Flip_intro_TTRIS(uint8_t *TIMER1) {
     uint8_t y, x;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < 128; x++) {
-            JOY_OLED_send(intro_TTRIS(x, y, TIMER1));
+            pixels[x] = intro_TTRIS(x, y, TIMER1);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, sizeof(pixels));
     }
 }
 

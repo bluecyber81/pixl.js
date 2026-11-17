@@ -372,19 +372,20 @@ void WriteBallMove(GROUPE *VAR) {
 }
 
 void Tiny_Flip(uint8_t render0_picture1, GROUPE *VAR) {
+    if (render0_picture1 > 2) return;
     uint8_t y, x;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < 128; x++) {
             if (render0_picture1 == 0)
-                JOY_OLED_send(Block(x, y, VAR) | Ball(x, y, VAR) | TrackBar(x, y, VAR) | background(x, y) |
-                              PannelLive(x, y, VAR) | PannelLevel(x, y, VAR));
+                pixels[x] = Block(x, y, VAR) | Ball(x, y, VAR) | TrackBar(x, y, VAR) | background(x, y) |
+                              PannelLive(x, y, VAR) | PannelLevel(x, y, VAR);
             else if (render0_picture1 == 1)
-                JOY_OLED_send((MAIN[x + (y * 128)]));
-            else if (render0_picture1 == 2)
-                JOY_OLED_send(background(x, y));
+                pixels[x] = (MAIN[x + (y * 128)]);
+            else
+                pixels[x] = background(x, y);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, sizeof(pixels));
     }
 }
 

@@ -6,7 +6,7 @@
 #include "u8g2.h"
 #include "mbedtls/sha256.h"
 
-typedef struct { bool initialized; u8g2_t u8g2; } mui_t;
+typedef struct { bool initialized, auto_update; u8g2_t u8g2; } mui_t;
 static mui_t ui;
 static u8x8_display_info_t display;
 static uint8_t pixels[1024];
@@ -31,6 +31,7 @@ static void expect_error(df_event_t *event) {
 
 int main(void) {
     ui.initialized = true;
+    ui.auto_update = true;
     ui.u8g2.tile_buf_ptr = pixels;
     ui.u8g2.tile_buf_height = 8;
     ui.u8g2.u8x8.display_info = &display;
@@ -59,6 +60,7 @@ int main(void) {
     request.length = 4; expect_error(&event); request.length = 6; expect_error(&event); request.length = 5;
     request.status = 1; expect_error(&event); request.status = 0;
     request.chunk = 1; expect_error(&event); request.chunk = 0;
+    ui.auto_update = false; expect_error(&event); ui.auto_update = true;
     idle = false; expect_error(&event); idle = true;
     ui.initialized = false; expect_error(&event); ui.initialized = true;
     display.tile_width = 15; expect_error(&event); display.tile_width = 16;
