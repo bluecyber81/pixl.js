@@ -19,7 +19,7 @@
     <div class="intro"><h1>Allmiibo aktualisieren</h1><p>Wähle die Firmware für dein LCD oder OLED. Hier findest du die App-ZIP fürs Handy und die Anleitung für dein Gerät.</p></div>
     <nav class="choices" aria-labelledby="choose"><h2 id="choose">Was möchtest du machen?</h2>
       <ul><li><a href="#flash"><b>LCD-App aktualisieren</b><span>DE3.81 / App654 mit vorhandenem Bootloader.</span></a></li>
-        <li><a href="#oled"><b>OLED-Testversion installieren</b><span>DE3.81-OLEDt1 für SH1106 und S112 7.2.0.</span></a></li>
+        <li><a href="#oled"><b>OLED-Testversion installieren</b><span>DE3.84-OLEDt4 für SH1106 und S112 7.2.0.</span></a></li>
         <li><a href="#littlefs"><b>LCD auf Packed LittleFS umstellen</b><span>Vorbereitung, Sicherung und Wiederherstellung für LCD.</span></a></li>
         <li><a href="#bootloader"><b>Komplettpaket für LCD prüfen</b><span>S112 7.3.0, Bootloader Z21 und DE3.81 / App654 zusammen installieren.</span></a></li></ul>
     </nav>
@@ -57,17 +57,18 @@
             <li><h3>Neustart bestätigen</h3><p>Warte auf das normale Menü. Öffne <b>BLE Dateitransfer</b>, verbinde im Dateimanager wieder <b>Pixl.js</b> und prüfe die Geräteversion <b>2.22.0-DE3.81</b> und den App-Zähler <b>654</b>. Öffne einen gewohnten Ordner und eine Figur. Das App-Paket aktualisiert nur die Gerätesoftware und erhält deine Sammlung auf PFS1.</p></li></ol>
         </section>
         <section id="oled">
-          <h2>OLED-Testversion DE3.81 installieren</h2>
+          <h2>OLED-Testversion DE3.84 installieren</h2>
           <p>Für Pixl.js OLED mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID <code>0x0103</code>). Referenzversionen sind cylin577 OLED v2.21.0 und v2.27.11. Die App verwendet dein vorhandenes SPIFFS oder natives LittleFS auf unterstützten Flashchips mit 2, 4, 8 oder 16 MiB.</p>
           <ol class="steps">
             <li><h3>Dateien sichern</h3><p>Sichere deine Sammlung, prüfe den Bestand und bewahre die bisherige OLED-App-ZIP auf.</p></li>
-            <li><h3>App-ZIP am Handy übertragen</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip">OLED-App DE3.81 Test 1 herunterladen (ZIP)</a>. Trenne den Dateimanager und öffne am Gerät <b>Einstellungen → Firmware-Update</b>. Wähle die gepackte ZIP in <b>nRF Device Firmware Update</b> und verbinde dich mit <b>pixl dfu</b>. Das Paket enthält ausschließlich die OLED-App.</p></li>
-            <li><h3>Nach dem Neustart prüfen</h3><p>Erwartet werden <b>2.22.0-DE3.81-OLEDt1</b> und App-Zähler 81. Probiere Deutsch und Englisch, Aufwachen, deine Dateien und eine bekannte Figur an der Konsole. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt">Testanleitung (Deutsch und Englisch)</a>.</p></li>
+            <li><h3>App-ZIP am Handy übertragen</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip">OLED-App DE3.84 Test 4 herunterladen (ZIP)</a>. Trenne den Dateimanager und öffne am Gerät <b>Einstellungen → Firmware-Update</b>. Wähle die gepackte ZIP in <b>nRF Device Firmware Update</b> und verbinde dich mit <b>pixl dfu</b>. Das Paket enthält ausschließlich die OLED-App.</p></li>
+            <li><h3>Nach dem Neustart prüfen</h3><p>Erwartet werden <b>2.22.0-DE3.84-OLEDt4</b> und App-Zähler 84. Probiere Deutsch und Englisch, Aufwachen, deine Dateien und eine bekannte Figur an der Konsole. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Testanleitung (Deutsch und Englisch)</a>.</p></li>
           </ol>
+          <p>Öffne <b>Gerät &amp; Diagnose</b> und lies die Diagnose. Unter Firmwarekennung sollte das Board <b>OLED</b> erscheinen. Prüfe beim Spielen beide Displayausrichtungen und die äußeren Pixelreihen. Melde für die Fernbedienung den genauen Schritt, an dem sie reagiert oder hängen bleibt.</p>
           <h3 id="oled-remote">Fernbedienung verbinden</h3>
           <p>Beende am wachen Gerät die Dateiübertragung und AmiiboLink. Aktiviere <b>Einstellungen → Fernsteuern → bis Aus</b> und kehre ins Hauptmenü zurück. Wähle im Dateimanager unter <b>Fernbedienung</b> das Profil <b>Allmiibo DE</b> und im Bluetooth-Fenster <b>Pixl.Remote</b>. Drücke einmal <b>Rechts</b> und prüfe, ob die Markierung am Gerät weiterwandert.</p>
           <p>Zur OLED-Fernbedienung liegt eine Fehlermeldung vor. Die Ursache und ein erfolgreicher Tastentest am Gerät sind offen.</p>
-          <p>Ein Nutzer bestätigt, dass die Testversion auf seinem OLED funktioniert. Dateierhalt auf SPIFFS und nativem LittleFS wurde am Rechner geprüft. Welches Speicherformat das getestete Gerät nutzt und ob der NFC-Scan an der Konsole gelang, ist noch offen.</p>
+          <p>Für Test 4 steht die Rückmeldung von einem echten OLED aus. Ein Nutzer meldete einen erfolgreichen Start von <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
         </section>
         <section id="littlefs">
           <h2>LCD von SPIFFS auf Packed LittleFS umstellen</h2>
@@ -129,7 +130,7 @@
             <li><a href="../dfu/web.html">Web-DFU für die App</a></li>
             <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip" download>LCD-App DE3.81 / App654 fürs Handy (ZIP)</a></li>
             <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip">LCD-Komplettpaket DE3.81 / App654, Z21 und S112 7.3.0 für Android (ZIP)</a> · <a href="#bootloader">Voraussetzungen prüfen</a></li>
-            <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip">OLED-App DE3.81 Test 1 / 81 (ZIP)</a></li>
+            <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip">OLED-App DE3.84 Test 4 / 84 (ZIP)</a></li>
             <li><a href="#littlefs">DE3.30-PREP / 600 · SPIFFS-Vorbereitung und Sicherung</a></li>
             <li><a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">Nordic DFU für Android</a></li>
             <li><a href="https://github.com/nordicsemi/Android-DFU-Library/#application">Nordics Anleitung zur App</a></li>
