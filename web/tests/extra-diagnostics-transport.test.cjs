@@ -177,6 +177,18 @@ function mtuPacket() {
     return Uint8Array.from([77,84,85,68,1,7,250,0,250,0,250,0,247,0,0,0]);
 }
 
+for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83']) test(`LCD ${version} reports a temporarily unavailable display without recording a transport fault`, async () => {
+    const display = await import('../src/lib/display-photo.js');
+    const f = fixture(display);
+    const busy = assert.rejects(f.api.get_display_photo(version), {code:'DISPLAY_UNAVAILABLE'});
+    f.rx(10, [], 0, 1);
+    await busy;
+    assert.equal(f.api.get_transport_diagnostics().lastErrorCode, null);
+    const missing = f.api.get_display_photo(version);
+    f.rx(10, [], 0, 255);
+    assert.equal(await missing, null);
+});
+
 test('OLED trials probe only their supported diagnostics and do not publish missing screens or JEDEC data', async () => {
     const display = await import('../src/lib/display-photo.js');
     const f = fixture(display);

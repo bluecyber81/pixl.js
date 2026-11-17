@@ -20,7 +20,11 @@ export function batteryLabelReport() {
 }
 
 // The application version identifies a published build target. It is not a display-controller read.
-const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81'];
+export const LCD_PREVIEW_COUNTERS = Object.freeze({
+  '2.22.0-DE3.82': 655,
+  '2.22.0-DE3.83': 656,
+});
+const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_PREVIEW_COUNTERS)];
 export const OLED_DIAGNOSTICS_TRIAL = '2.22.0-DE3.81-OLEDt3';
 export function lacksOledSystemDiagnostics(version) {
   return version === '2.22.0-DE3.81-OLEDt1' || version === '2.22.0-DE3.81-OLEDt2';

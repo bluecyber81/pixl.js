@@ -9,16 +9,25 @@ const isStartupFirmware = value => typeof value === 'string' && value.length <= 
   /^\d+\.\d+\.\d+-DE\d+\.\d+(?:-PREP|(?:-OLED)?t[1-9]\d*)?$/.test(value);
 const uint32 = n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
 // Last actual mount, not the time of this read and not necessarily a cold boot.
-export function normalizeMountDiagnostics(value) {
+export function normalizeMountDiagnostics(value, schemaVersion = 3) {
   if (!value || value.scope !== 'last-packedfs-mount' || !Number.isInteger(value.flags) ||
       value.flags < 1 || value.flags > 31 || !(value.flags & 1) ||
       !Number.isInteger(value.result) || value.result < -2147483648 || value.result > 2147483647 ||
       Boolean(value.flags & 2) !== (value.result === 0) || MOUNT_COUNTERS.some(key => !uint32(value[key]))) return null;
   const timingValid = !!(value.flags & 16);
   if (['configureMilliseconds','scanMilliseconds'].some(key => timingValid ? !uint32(value[key]) : value[key] !== null)) return null;
+  const detail = {};
+  if (schemaVersion === 4) {
+    const {cacheSlotsAllocated, cacheSlotsFilled, cachePageBytes} = value;
+    if (![cacheSlotsAllocated, cacheSlotsFilled].every(n => Number.isInteger(n) && n >= 0 && n <= 255) ||
+        !Number.isInteger(cachePageBytes) || cachePageBytes < 0 || cachePageBytes > 65535 ||
+        cacheSlotsFilled > cacheSlotsAllocated || !!cacheSlotsAllocated !== !!(value.flags & 4) ||
+        !!cacheSlotsAllocated !== !!cachePageBytes) return null;
+    Object.assign(detail, {cacheSlotsAllocated, cacheSlotsFilled, cachePageBytes});
+  }
   return Object.freeze({scope:'last-packedfs-mount', flags:value.flags, result:value.result,
     configureMilliseconds:value.configureMilliseconds, scanMilliseconds:value.scanMilliseconds,
-    ...Object.fromEntries(MOUNT_COUNTERS.map(key => [key,value[key]]))});
+    ...Object.fromEntries(MOUNT_COUNTERS.map(key => [key,value[key]])), ...detail});
 }
 function validSeries(mask, times) {
   if (!Number.isInteger(mask) || mask < 0 || mask > 63 || (mask & (mask + 1)) ||
@@ -31,7 +40,8 @@ export function parseStartupDiagnostics(buffer) {
   const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
   if (!(bytes instanceof Uint8Array) || bytes[5] !== bytes.byteLength ||
       bytes[0] !== 80 || bytes[1] !== 88 || bytes[2] !== 83 || bytes[3] !== 84 ||
-      !(bytes[4] === 1 && bytes.length === 32 && bytes[7] === 0 || bytes[4] === 2 && bytes.length === 40 || bytes[4] === 3 && bytes.length === 80)) {
+      !(bytes[4] === 1 && bytes.length === 32 && bytes[7] === 0 || bytes[4] === 2 && bytes.length === 40 ||
+        bytes[4] === 3 && bytes.length === 80 || bytes[4] === 4 && bytes.length === 84)) {
     throw new Error('Invalid startup diagnostic response');
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), mask = bytes[6];
@@ -48,7 +58,7 @@ export function parseStartupDiagnostics(buffer) {
       return null;
     });
   }
-  if (bytes[4] === 3) {
+  if (bytes[4] >= 3) {
     const flags = view.getUint32(40,true);
     if (!(flags & 1)) {
       if (bytes.subarray(40).some(byte => byte !== 0)) throw new Error('Inconsistent absent mount profile');
@@ -58,6 +68,9 @@ export function parseStartupDiagnostics(buffer) {
         configureMilliseconds:flags & 16 ? view.getUint32(48,true) : null,
         scanMilliseconds:flags & 16 ? view.getUint32(52,true) : null,
         ...Object.fromEntries(MOUNT_COUNTERS.map((key,index) => [key,view.getUint32(56+index*4,true)]))};
+      if (bytes[4] === 4) Object.assign(value.mount, {
+        cacheSlotsAllocated: bytes[80], cacheSlotsFilled: bytes[81], cachePageBytes: view.getUint16(82,true)
+      });
     }
   }
   const normalized = normalizeStartupDiagnostics(value);
@@ -65,7 +78,7 @@ export function parseStartupDiagnostics(buffer) {
   return normalized;
 }
 export function normalizeStartupDiagnostics(value) {
-  if (!value || ![1, 2, 3].includes(value.schemaVersion) || value.scope !== SCOPE ||
+  if (!value || ![1, 2, 3, 4].includes(value.schemaVersion) || value.scope !== SCOPE ||
       !validSeries(value.phaseMask, value.elapsedMilliseconds)) return null;
   const info = {schemaVersion: value.schemaVersion, scope: SCOPE, phaseMask: value.phaseMask,
     elapsedMilliseconds: Object.freeze([...value.elapsedMilliseconds])};
@@ -77,8 +90,8 @@ export function normalizeStartupDiagnostics(value) {
     info.storageDetailMask = mask;
     info.storageElapsedMilliseconds = Object.freeze([...times]);
   }
-  if (value.schemaVersion === 3) {
-    const mount = value.mount === null ? null : normalizeMountDiagnostics(value.mount);
+  if (value.schemaVersion >= 3) {
+    const mount = value.mount === null ? null : normalizeMountDiagnostics(value.mount, value.schemaVersion);
     if (value.mount !== null && !mount) return null;
     info.mount = mount;
   }
@@ -95,12 +108,16 @@ export function startupStorageIntervals(value) {
 }
 export function startupMountPresentation(value, locale = 'de_DE') {
   const info = normalizeStartupDiagnostics(value);
-  if (info?.schemaVersion !== 3) return null;
+  if (!info || info.schemaVersion < 3) return null;
   const de = locale.startsWith('de'), pick = (a,b) => de ? a : b, mount = info.mount;
   const title = pick('Laufwerk einbinden: Zeit und Lesezugriffe', 'Mounting the drive: timing and reads');
   if (!mount) return {title, rows:[], note:pick('Kein abgeschlossenes PackedFS-Mountprofil verfügbar. Fehlende Werte bedeuten nicht 0 ms oder 0 Zugriffe.', 'No completed PackedFS mount profile is available. Missing values do not mean 0 ms or 0 reads.')};
   const duration = n => n === null ? pick('Nicht gemessen','Not measured') : `${n} ms`;
   const counter = n => `${mount.flags & 8 ? '≥ ' : ''}${n}`;
+  const eligible = mount.cacheHits + mount.cacheMisses;
+  const hitRate = (mount.flags & 4) && !(mount.flags & 8) && eligible > 0
+    ? Intl.NumberFormat(de ? 'de-DE' : 'en-GB', {style:'percent', maximumFractionDigits:1}).format(mount.cacheHits / eligible)
+    : null;
   return {title, rows:[
     [pick('Mount-Ergebnis','Mount result'), mount.result === 0 ? pick('Erfolgreich','Successful') : pick('Fehlgeschlagen','Failed') + ` (${mount.result})`],
     [pick('Flash und Geometrie vorbereiten','Flash and geometry setup'), duration(mount.configureMilliseconds)],
@@ -112,8 +129,14 @@ export function startupMountPresentation(value, locale = 'de_DE') {
     [pick('Geeignete Zugriffe ohne Cachetreffer','Eligible reads without a cache hit'), counter(mount.cacheMisses)],
     [pick('Zugriffe außerhalb des Cachepfads','Reads bypassing the cache'), counter(mount.bypassReads)],
     [pick('Physische Lesefehler','Physical read errors'), counter(mount.physicalReadErrors)],
-  ], note:pick('Letzter tatsächlicher PackedFS-Mount; eine Wiederverwendung des eingebundenen Laufwerks erneuert diese Werte nicht. Die Abrufzeit ist kein Messzeitpunkt. Cachefehlschläge enthalten auch Zugriffe ohne verfügbaren Cache. Keine Verschleißmessung.', 'Last actual PackedFS mount; reusing an already mounted drive does not refresh these values. Read time is not measurement time. Cache misses include reads with no cache available. This is not a wear measurement.') +
-    (mount.flags & 8 ? pick(' Zähler gesättigt: Alle angezeigten Zähler sind nur Untergrenzen.', ' Counters saturated: all displayed counters are lower bounds only.') : '')};
+    ...(info.schemaVersion === 4 ? [
+      [pick('Seiten am Mount-Ende gefüllt / zugeteilt','Pages filled / allocated at end of mount'), `${mount.cacheSlotsFilled} / ${mount.cacheSlotsAllocated}`],
+      ...(mount.cacheSlotsAllocated ? [[pick('Bytes pro temporärer Cache-Seite','Bytes per temporary cache page'), `${mount.cachePageBytes} B`]] : [])
+    ] : []),
+    ...(hitRate === null ? [] : [[pick('Treffer bei cachegeeigneten Zugriffen','Hit rate for cache-eligible reads'), hitRate]]),
+  ], note:pick('Die Werte stammen vom letzten Einbinden von PackedFS. Die Abrufzeit ist kein Messzeitpunkt. Danach wird der temporäre Lesecache freigegeben. Die konfigurierte LittleFS-Cachegröße steht unter Speicher. Die Trefferquote berücksichtigt nur cachegeeignete Zugriffe.', 'Values come from the last PackedFS mount. Read time is not measurement time. The temporary read cache is released afterwards. See Storage for the configured LittleFS cache size. The hit rate covers cache-eligible reads only.') +
+    (info.schemaVersion === 3 ? pick(' Dieser Bericht enthält keine Anzahl zugeteilter Cache-Seiten.', ' This report omits the number of allocated cache pages.') : '') +
+    (mount.flags & 8 ? pick(' Gesättigte Zugriffszähler liefern nur Untergrenzen.', ' Saturated access counters supply lower bounds only.') : '')};
 }
 export function startupDiagnosticRows(value) {
   const info = normalizeStartupDiagnostics(value);
@@ -133,7 +156,7 @@ export function createStartupDiagnosticReport(value, observedAt, firmwareVersion
     limits: ['Excludes bootloader and early SDK startup.',
       'Software markers do not prove successful storage access or visible display output.',
       'A saved report is a dated observation, not a new device readback.',
-      ...(info.schemaVersion === 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : [])] };
+      ...(info.schemaVersion >= 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : [])] };
 }
 export function compareStartup(report, current) {
   const before = normalizeStartupDiagnostics(report?.startup), after = normalizeStartupDiagnostics(current);
@@ -146,7 +169,7 @@ export function compareStartup(report, current) {
       milliseconds === null || baseline[index].milliseconds === null ? [] : [{id, milliseconds: milliseconds - baseline[index].milliseconds}]);
   }
   if (isStartupFirmware(report.firmwareVersion)) result.baselineVersion = report.firmwareVersion;
-  if (before.schemaVersion === 3 || after.schemaVersion === 3) {
+  if (before.schemaVersion >= 3 || after.schemaVersion >= 3) {
     const a = before.mount, b = after.mount;
     result.mount = [];
     if (a?.result === 0 && b?.result === 0) {

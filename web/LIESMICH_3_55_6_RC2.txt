@@ -1,4 +1,4 @@
-Allmiibo Dateimanager 3.55.6-rc.1 · OLED Test 3 und LCD
+Allmiibo Dateimanager 3.55.6-rc.2 · LCD DE3.83 und OLED Test 3
 
 Deutsch
 1. ZIP am Windows-PC vollständig entpacken. Start-Dateimanager.cmd mit
@@ -11,7 +11,15 @@ Deutsch
    Dateisystems, die verfügbaren Akkuwerte und die erkannte Flash-Kennung.
    Im gepufferten Menü kann ein Displayfoto aufgenommen werden. Bei einem
    direkt zeichnenden Spiel das Spiel verlassen und erneut aufnehmen.
-4. Stop-Dateimanager.cmd beendet den lokalen Server. Die Handy-Firmware für
+4. LCD DE3.82 und DE3.83 melden beim letzten Einbinden von PackedFS die zugeteilten
+   und gefüllten Cache-Seiten. Der Dateimanager zeigt die Werte unter
+   Gerät und Diagnose → Startzeiten. Die Trefferquote berücksichtigt nur
+   cachegeeignete Zugriffe. Bei alten Startberichten bleiben die
+   tatsächlich verfügbaren Werte sichtbar. Die lokale Platzprüfung erkennt
+   DE3.82 / App655 und DE3.83 / App656 anhand von Version, Zähler und PFS1-Speicherprofil.
+   Für ein LCD-Foto ein Tiny-Spiel verlassen und das Menü aufnehmen. Während
+   eines Spiels kann die Fotofunktion belegt sein oder die Anfrage ablaufen.
+5. Stop-Dateimanager.cmd beendet den lokalen Server. Die Handy-Firmware für
    OLED Test 3 ist eine separate, signierte App-ZIP. Die Links für öffentliche
    Veröffentlichungen führen weiterhin zum jeweils dort genannten Stand.
 
@@ -24,6 +32,13 @@ English
 3. DE3.81-OLEDt3 adds native filesystem startup phases, available battery
    readings and the detected flash ID. Capture a screenshot from a buffered
    menu. If a game draws directly to the display, leave the game and retry.
-4. Run Stop-Dateimanager.cmd to stop the local server. The signed OLED Test 3
+4. LCD DE3.82 and DE3.83 report allocated and filled cache pages at the end of the
+   last PackedFS mount. Open Device and diagnostics → Startup times to
+   view the readings. The hit rate covers cache-eligible reads only.
+   Older startup reports still show the measurements they contain. The local
+   capacity check recognizes DE3.82 / App655 and DE3.83 / App656 by their exact version, counter
+   and PFS1 profile. To take an LCD screenshot, exit any Tiny game and capture
+   the menu. During a game the capture can be busy or time out.
+5. Run Stop-Dateimanager.cmd to stop the local server. The signed OLED Test 3
    phone firmware is a separate application ZIP. Links to public releases
    still point to the versions named there.

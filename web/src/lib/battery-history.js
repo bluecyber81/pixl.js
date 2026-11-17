@@ -50,7 +50,7 @@ export function batteryHistoryCsv(rows) {
 // missing reading, a long suspension, or a wall-clock adjustment.
 export function batteryHistoryChart(rows) {
   const valid = rows.filter(row => row.mv !== null);
-  if (!valid.length) return { points: [], lines: [], min: null, max: null };
+  if (!valid.length) return { points: [], lines: [], min: null, max: null, startAt: null, endAt: null };
   const min = Math.min(...valid.map(row => row.mv)), max = Math.max(...valid.map(row => row.mv));
   const first = Math.min(...rows.map(row => row.at)), last = Math.max(...rows.map(row => row.at));
   const points = [], lines = [];
@@ -67,5 +67,6 @@ export function batteryHistoryChart(rows) {
     line.push(`${x},${y}`);
     previous = row;
   }
-  return {points, lines: lines.filter(group => group.length > 1).map(group => group.join(' ')), min, max};
+  return {points, lines: lines.filter(group => group.length > 1).map(group => group.join(' ')), min, max,
+    startAt: first, endAt: last};
 }

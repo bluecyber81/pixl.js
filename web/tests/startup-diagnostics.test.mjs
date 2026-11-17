@@ -21,6 +21,58 @@ function mountPacket(flags=23,result=0) {
  view.setUint32(40,flags,true);view.setInt32(44,result,true);
  [5,15,200,51200,800,180,20,0].forEach((n,i)=>view.setUint32(48+i*4,n,true));return bytes;
 }
+for (const counter of [655,656]) test(`App${counter} linked ARM dispatcher replies decode with and without an allocated cache`, () => {
+  const capture = JSON.parse(fs.readFileSync(new URL(`./fixtures/PXST_v4_App${counter}.json`, import.meta.url), 'utf8'));
+  for (const row of capture.cases) {
+    const data = parseStartupDiagnostics(Uint8Array.from(Buffer.from(row.payloadHex, 'hex')));
+    assert.equal(data.schemaVersion, 4, row.label);
+    if (!row.expected.flags) {
+      assert.equal(data.mount, null);
+    } else {
+      assert.deepEqual([data.mount.cacheSlotsAllocated, data.mount.cacheSlotsFilled, data.mount.cachePageBytes,
+        data.mount.flags, data.mount.result], [row.expected.capacityPages, row.expected.filledPages,
+        row.expected.pageBytes, row.expected.flags, row.expected.result], row.label);
+    }
+  }
+});
+
+test('PXST v4 retains allocated and filled mount pages, validates missing caches and formats eligible hits', () => {
+  function frame(flags = 23, allocated = 8, filled = 5, pageBytes = 256, result = 0) {
+    const packet = new Uint8Array(84);
+    packet.set(mountPacket(flags, result));
+    packet.set([4,84],4);
+    packet.set([allocated,filled],80);
+    new DataView(packet.buffer).setUint16(82,pageBytes,true);
+    return packet;
+  }
+  const bytes = frame(), v4 = parseStartupDiagnostics(bytes);
+  const version = '2.22.0-DE3.82';
+  const report = createStartupDiagnosticReport(v4, '2026-11-17T08:00:00.000Z', version);
+  assert.deepEqual(report.startup.mount, v4.mount);
+  assert.equal(report.firmwareVersion, version);
+  assert.deepEqual([v4.mount.cacheSlotsAllocated, v4.mount.cacheSlotsFilled, v4.mount.cachePageBytes],[8,5,256]);
+  const shown = (packet, language = 'en') => Object.fromEntries(startupMountPresentation(parseStartupDiagnostics(packet),language).rows);
+  assert.equal(shown(bytes)['Pages filled / allocated at end of mount'],'5 / 8');
+  assert.equal(shown(bytes)['Bytes per temporary cache page'],'256 B');
+  assert.equal(shown(bytes)['Hit rate for cache-eligible reads'],'81.6%');
+  assert.match(shown(bytes,'de_DE')['Treffer bei cachegeeigneten Zugriffen'],/81,6/);
+  assert.equal(shown(frame(21,4,2,256,-12))['Pages filled / allocated at end of mount'],'2 / 4');
+  const noCache = frame(19,0,0,0);
+  assert.equal(shown(noCache)['Pages filled / allocated at end of mount'],'0 / 0');
+  assert.equal(shown(noCache)['Hit rate for cache-eligible reads'],undefined);
+  assert.equal(shown(frame(31))['Hit rate for cache-eligible reads'],undefined);
+  const zero = frame(); zero.fill(0,64,72);
+  assert.equal(shown(zero)['Hit rate for cache-eligible reads'],undefined);
+  assert.equal(shown(mountPacket())['Pages filled / allocated at end of mount'],undefined);
+  assert.deepEqual(compareStartup({startup:parseStartupDiagnostics(mountPacket())},v4).mount.map(m => m.delta),[0,0,0]);
+  const absent = frame(); absent.fill(0,40);
+  assert.equal(parseStartupDiagnostics(absent).mount,null);
+  absent[83] = 1;
+  for (const invalid of [absent,frame(23,8,9),frame(23,0,0,0),frame(19,8),frame(23,8,4,0)]) {
+    assert.throws(() => parseStartupDiagnostics(invalid));
+  }
+  assert.equal(normalizeStartupDiagnostics({...v4,mount:{...v4.mount,cacheSlotsFilled:undefined}}),null);
+});
 test('schema3 consumes the independently generated production C and DF-transport fixture',()=>{
  const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/startup-de362-wire.json',import.meta.url),'utf8'));
  const actual=parseStartupDiagnostics(Uint8Array.from(Buffer.from(fixture.wireHex,'hex'))),expected=fixture.expected;

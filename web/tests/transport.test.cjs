@@ -150,6 +150,27 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.62'),rejected=assert.rejects(p);
  f.bus.emit('ble_disconnected');await rejected;f.rx(9,packet);assert.equal(f.writes.length,1);
 });
+test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
+ const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
+ packet[40]=23;packet.set([8,6,0,1],80);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83']) {
+  const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
+  assert.deepEqual(f.writes,[[9,0,0,0,3]]);
+  for(let offset=0,index=0;offset<84;offset+=16,index++) f.rx(9,packet.subarray(offset,offset+16),offset+16<84?0x8000|index:index);
+  assert.equal((await p).mount.cacheSlotsFilled,6);
+ }
+ for(const status of [1,255]){
+  const f=protocolFixture(), p=f.api.get_startup_diagnostics('2.22.0-DE3.82');
+  f.rx(9,[],0,status);await flush();
+  assert.deepEqual(f.writes,[[9,0,0,0,3],[9,0,0,0,2]]);
+  const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);
+  assert.equal((await p).schemaVersion,3);
+ }
+ for(const version of ['2.22.0-DE3.81','2.22.0-DE3.84']){
+  const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
+  assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
+ }
+});
 test('unsupported startup is not a device fault, does not clear an earlier error and leaves queue usable',async()=>{
  const f=protocolFixture(),p=f.api.get_startup_diagnostics();f.rx(9,[],0,255);
  assert.equal(await p,null);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);assert.equal(f.disconnects,0);

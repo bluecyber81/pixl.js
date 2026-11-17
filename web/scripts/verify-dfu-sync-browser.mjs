@@ -1,6 +1,7 @@
 // Verify the production UI with synthetic names, wake locks and DFU radio boundaries.
 import assert from 'node:assert/strict';
 import { checkSyncHistoryBrowser } from './check-sync-history-browser.mjs';
+import { parseStartupDiagnostics } from '../src/lib/startup-diagnostics.js';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -11,6 +12,7 @@ assert.ok(dist && report && ['/', '/pixl.js/'].includes(base));
 const build = path.resolve(dist);
 const libraries = new URL('../src/lib/', import.meta.url);
 const webVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
+const firmwareCache = JSON.parse(await readFile(new URL('../tests/fixtures/PXST_v4_App656.json', import.meta.url), 'utf8'));
 const helperNames = ['sync-plan.js', 'sync-history.js', 'unique-json.js', 'safe-upload.js', 'portable-names.js', 'backup.js', 'raw-metadata.js', 'zip-crc32.js'];
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json' };
 const server = createServer(async (req, res) => {
@@ -148,6 +150,21 @@ async function runChecks() {
         assert.equal(charging[0],charging[1]);
       }
       checks.push({locale,feature:'OLED charging display distinguishes unsupported mode, missing voltage, active and inactive'});
+      const captured = firmwareCache.cases.find(row => row.label === 'mounted-with-room');
+      const capturedStartup = parseStartupDiagnostics(Uint8Array.from(Buffer.from(captured.payloadHex, 'hex')));
+      await guidePage.evaluate(({version, startup}) => {
+        const app = document.querySelector('#app')._vnode.component.proxy;
+        app.read_startup_diagnostics = async () => startup;
+        app.firmwareVersion = version;
+      }, {version:firmwareCache.firmware, startup:capturedStartup});
+      const startupPanel = guidePage.locator('.startup-diagnostics');
+      await startupPanel.locator('.actions button').first().click();
+      const mountProfile = startupPanel.locator('.mount-profile');
+      await mountProfile.waitFor();
+      const mountReadings = await mountProfile.innerText();
+      for (const value of ['3 / 8','256 B','79 ms']) assert.ok(mountReadings.includes(value), value);
+      assert.match(mountReadings,/50\s*%/);
+      checks.push({locale,feature:'LCD App656 displays linked ARM cache readings and eligible hit rate'});
       await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
         firmwareVersion:'2.22.0-DE3.81', bootInfo:null
