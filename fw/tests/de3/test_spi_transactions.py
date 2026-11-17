@@ -46,6 +46,7 @@ typedef void (*nrfx_spim_evt_handler_t)(nrfx_spim_evt_t const *,void *);
 typedef struct { unsigned sck_pin,mosi_pin,miso_pin,frequency,mode; bool ss_active_high; } nrfx_spim_config_t;
 typedef struct { const uint8_t *p_tx_buffer; uint8_t *p_rx_buffer; size_t tx_length,rx_length; } nrfx_spim_xfer_desc_t;
 typedef struct { int unused; } u8x8_t;
+#ifdef MOCK_GAME_ROTATION
 static struct { struct { unsigned cb; } u8g2; } mock_mui;
 #define mui() (&mock_mui)
 #define U8G2_R2 2u
@@ -54,6 +55,7 @@ static uint32_t __RBIT(uint32_t value) {
     for (unsigned i = 0; i < 32; ++i) reversed |= ((value >> i) & 1u) << (31 - i);
     return reversed;
 }
+#endif
 #define NRFX_SPIM_INSTANCE(n) {n,&mock_spim}
 #define NRFX_SPIM_FLAG_NO_XFER_EVT_HANDLER 4u
 #define NRFX_SPIM_DEFAULT_CONFIG {0}
@@ -327,7 +329,7 @@ class TransactionTests(unittest.TestCase):
             src=tree/'fw/application/src'
             u8=(src/'mui/mui_u8g2.c').read_text(encoding='utf-8')
             game=(src/'app/game/port/common/driver.c').read_text(encoding='utf-8')
-            source='#include "mock_sdk.h"\n'
+            source='#define MOCK_GAME_ROTATION 1\n#include "mock_sdk.h"\n'
             source+='#include "'+(src/'hal/hal_spi_bus.c').as_posix()+'"\n'
             source+='#include "'+(src/'hal/hal_spi_flash.c').as_posix()+'"\n'
             source+='static spi_device_t lcd_device;\n'

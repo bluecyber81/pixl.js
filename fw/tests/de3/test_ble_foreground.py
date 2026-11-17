@@ -116,7 +116,11 @@ class Foreground(unittest.TestCase):
     def test_foreground_integration(self):
         main = (FW/'application/src/main.c').read_text(encoding='utf-8')
         ble = (SRC/'ble_main.c').read_text(encoding='utf-8')
-        self.assertIn('ble_process_pending();\n        app_sched_execute();',main)
+        loop = main[main.rindex('while (1)'):]
+        # LCD dimming may run between BLE and the scheduler. All four services
+        # must still run once, in order, in the foreground loop.
+        calls = re.findall(r'\b(ntag_emu_process_pending|ble_process_pending|app_sched_execute|mui_tick)\([^;]*?\);', loop)
+        self.assertEqual(calls, ['ntag_emu_process_pending', 'ble_process_pending', 'app_sched_execute', 'mui_tick'])
         self.assertIn('ble_work_process(ble_on_disconnected);',ble)
         self.assertNotIn('        ble_on_disconnected();',ble)
         self.assertIn('ble_work_connected();',ble)
