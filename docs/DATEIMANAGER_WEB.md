@@ -1,5 +1,11 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.55.8 · OLED direkt im Browser aktualisieren
+
+Unter Update → OLED öffnet „OLED im Browser flashen“ das geprüfte App84-Paket. Die DFU-Seite zeigt das Zielgerät und verwendet die passende Paketliste. Der Browser lädt die signierte ZIP vom gleichen Seitenursprung und prüft Größe, Hash und App-Daten vor der Übertragung. Aktuelle Bootdaten werden zum Vergleich weitergereicht.
+
+Die Anleitung beschreibt den Computerablauf mit Chrome oder Edge auf Deutsch und Englisch. Für ein verbundenes OLED steht der vorhandene Befehl zum Wechsel in den DFU-Modus bereit. Der reale OLED-Gerätetest bleibt offen.
+
 ## Dateimanager 3.55.7 · OLED DE3.84 / App84
 
 App84 meldet über die Diagnose ihre OLED-Buildkennung und eine gegebenenfalls erhaltene Fehlernotiz. Displayfoto, Flashkennung und Startwerte erkennen den neuen Teststand. Die Geräteauswahl führt zum passenden [OLED-Download](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip) und zur [Handy-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled).

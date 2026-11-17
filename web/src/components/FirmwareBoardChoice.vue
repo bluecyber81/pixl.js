@@ -11,12 +11,14 @@
     <article v-if="selected === 'OLED'" class="oled-trial">
       <h4>DE3.84 OLED · Test 4</h4>
       <p>{{ de ? 'Für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID 0x0103). Der Gerätetest für App84 steht aus.' : 'For Pixl.js with nRF52832, SH1106 (128 × 64), a compatible DFU bootloader and S112 7.2.0 (FWID 0x0103). App84 awaits testing on a physical OLED.' }}</p>
-      <p>{{ de ? 'Die App nutzt dein vorhandenes SPIFFS oder natives LittleFS. Sichere deine Dateien und halte die bisherige OLED-App bereit. Öffne die gepackte ZIP am Handy in nRF Device Firmware Update.' : 'The app uses your existing SPIFFS or native LittleFS. Back up your files and keep your previous OLED app available. Open the intact ZIP on your phone in nRF Device Firmware Update.' }}</p>
+      <p>{{ de ? 'Die App nutzt dein vorhandenes SPIFFS oder natives LittleFS. Sichere deine Dateien und halte die bisherige OLED-App bereit. Du kannst das Update am Computer direkt im Browser starten oder die gepackte ZIP am Handy in nRF Device Firmware Update öffnen.' : 'The app uses your existing SPIFFS or native LittleFS. Back up your files and keep your previous OLED app available. Start the update directly in your computer browser, or open the intact ZIP on your phone in nRF Device Firmware Update.' }}</p>
       <p v-if="differentOledTrial" role="status">{{ de ? 'Für deine gemeldete OLED-Version ist der Updatepfad zu Test 4 ungeprüft.' : 'The update path from your reported OLED version to Test 4 is unverified.' }}</p>
       <p v-else-if="profileMismatch" role="status">{{ de ? 'Die gelesenen Gerätedaten passen nicht zu diesem OLED-Paket.' : 'The reported device details are incompatible with this OLED package.' }}</p>
+      <slot v-if="!differentOledTrial && !profileMismatch" name="oled-controls" />
       <div class="trial-links">
+        <a v-if="!differentOledTrial && !profileMismatch" class="dfu-page-link" :href="browserUpdate" target="_blank" rel="noopener noreferrer">{{ de ? 'OLED im Browser flashen' : 'Flash OLED in browser' }}</a>
         <a v-if="!differentOledTrial && !profileMismatch" :href="appDownload">{{ de ? 'OLED-App-ZIP herunterladen' : 'Download OLED app ZIP' }}</a>
-        <a :href="guide">{{ de ? 'OLED am Handy flashen' : 'Flash OLED from your phone' }}</a>
+        <a :href="guide">{{ de ? 'OLED-Anleitung' : 'OLED guide' }}</a>
       </div>
     </article>
   </section>
@@ -26,15 +28,19 @@
 import { computed, ref, watch } from 'vue';
 import { firmwareBoard, hasOledSystemDiagnostics, lacksOledSystemDiagnostics } from '../lib/hardware-profile.js';
 import { deploymentPath } from '../lib/deployment-path.js';
+import { dfuReference } from '../lib/release-packages.js';
 const props = defineProps({ connected: Boolean, version: String, boot: Object, locale: String });
 const de = computed(() => props.locale?.startsWith('de'));
 const guide = computed(() => deploymentPath(de.value ? 'guide/index.html' : 'guide/en.html') + '#oled');
 const appDownload = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip';
+const browserUpdate = computed(() => deploymentPath('dfu/web.html') + '?package=de3.84-oled-t4-app' +
+  dfuReference(props.connected ? props.boot : null, Date.now(), '2.22.0-DE3.84-OLEDt4'));
 const choice = ref(null);
 const detected = computed(() => props.connected ? firmwareBoard(props.version) : null);
 const selected = computed(() => detected.value || choice.value);
 const differentOledTrial = computed(() => detected.value === 'OLED' && !hasOledSystemDiagnostics(props.version) && !lacksOledSystemDiagnostics(props.version));
 const profileMismatch = computed(() => props.connected && props.boot && (
+  props.boot.addressConflict ||
   (props.boot.softDeviceValid && (props.boot.softDeviceFwid !== 0x0103 || props.boot.softDeviceVariant !== 112 || props.boot.softDeviceVersion !== 7002000)) ||
   (props.boot.geometryValid && props.boot.chipPart !== 0x52832) ||
   (props.boot.settingsCrcValid && props.boot.applicationCounter > 84)

@@ -1,5 +1,9 @@
 # Veröffentlichungen für das Allmiibo LCD
 
+## Dateimanager 3.55.8
+
+OLED DE3.84 Test4 / App84 lässt sich am Computer direkt im Browser flashen. Zielauswahl, vorausgewählte ZIP, Größen-/Hashprüfung und Übernahme aktueller Bootdaten sind integriert. Die Anleitung ist auf Deutsch und Englisch verfügbar.
+
 ## Dateimanager 3.55.6
 
 Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)

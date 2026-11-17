@@ -1,5 +1,0 @@
-Allmiibo Dateimanager 3.55.7 · LCD und OLED
-
-Am PC Start-Dateimanager-Direkt.cmd öffnen. Für den Bluetooth-Zugriff im Browser Bluetooth erlauben. Für das OLED in „Update“ OLED wählen. In „Gerät & Diagnose“ meldet App84 die laufende Buildkennung. Beide Anleitungen sind im Ordner guide der Webausgabe enthalten.
-
-On Windows, open Start-Dateimanager-Direkt.cmd. Allow Bluetooth in your browser. In Update, choose OLED for the OLED phone ZIP. Device & diagnostics displays the running build identity on App84. German and English instructions are included in the guide directory of the web build.

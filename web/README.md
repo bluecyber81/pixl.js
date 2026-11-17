@@ -1,6 +1,6 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.55.7 · OLED DE3.84 / App84
+## Dateimanager 3.55.8 · OLED DE3.84 / App84
 
 App84 meldet über die Diagnose ihre OLED-Buildkennung und eine gegebenenfalls erhaltene Fehlernotiz. Displayfoto, Flashkennung und Startwerte erkennen den neuen Teststand. Die Geräteauswahl führt zum passenden [OLED-Download](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip) und zur [Handy-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled).
 

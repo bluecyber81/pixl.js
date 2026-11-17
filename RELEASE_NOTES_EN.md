@@ -1,5 +1,9 @@
 # Allmiibo LCD release notes
 
+## File manager 3.55.8
+
+Flash OLED DE3.84 Test4 / App84 directly from a computer browser. The updater selects the matching target and verifies the bundled ZIP, carrying current boot observations into the transfer. German and English instructions are included.
+
 ## File manager 3.55.6
 
 On App657, **Device & diagnostics** shows the running application's source ID, an available fault note from the previous boot, and cache pages used at the last mount. The German and English guided checks include 40 additional LCD cases. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)

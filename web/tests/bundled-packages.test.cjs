@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const {Loader,validateCatalog,MAX_BYTES}=require('../public/dfu/bundled-packages.js');
+const {Loader,validateCatalog,validatePackage,MAX_BYTES}=require('../public/dfu/bundled-packages.js');
 const bytes=Uint8Array.from([1,2,3,4,5]);
 const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmiibo_LCD_DE3_53_625_TESTSTAND.zip',bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),board:'LCD',storage:'PFS1',bootloader:'BL8',softDevice:'S112 7.3.0',applicationOnly:true,migrationRequired:false};
 const catalog={schema:1,packages:[entry]},pageUrl='http://127.0.0.1:8768/dfu/web.html';
@@ -130,4 +130,47 @@ test('the firmware catalogue bounds the number of distinct packages before parsi
   id:'de3.'+(100+i)+'-lcd-app', file:'Allmiibo_LCD_DE3_'+(100+i)+'_'+(700+i)+'_NUR_APP.zip'}));
  assert.equal(validateCatalog({schema:1, packages:items.slice(0,16)}).packages.length,16);
  assert.throws(()=>validateCatalog({schema:1,packages:items}), /Katalog/);
+});
+
+test('OLED catalogue requires its native storage, S112 and OLED filename as one profile',()=>{
+ const all=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/data/firmware-releases.json'),'utf8'));
+ const oled=all.packages.find(item=>item.board==='OLED');
+ assert(oled);validateCatalog({schema:1,packages:[oled]});
+ for(const changes of [{board:'LCD'},{storage:'PFS1'},{softDevice:'S112 7.3.0'},{bootloader:'Z21'},
+  {channel:undefined},{file:'Allmiibo_LCD_DE3_84_App84_TEST_DFU.zip'},{id:'de3.84-lcd-app'}]) {
+  assert.throws(()=>validateCatalog({schema:1,packages:[{...oled,...changes}]}));
+ }
+});
+
+test('real signed OLED App84 is digest-bound to OLED and its init target before readiness, including manual ZIPs',async()=>{
+ const Package=require('../public/dfu/package.js'),Updater=require('../public/dfu/updater.js');
+ const all=validateCatalog(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/data/firmware-releases.json'),'utf8')));
+ const oled=all.packages.find(item=>item.id==='de3.84-oled-t4-app');
+ const data=fs.readFileSync(path.join(__dirname,'../public/firmware',oled.file));
+ const candidate=await new Package(data).load();
+ assert.equal(candidate.archiveBytes,248400);
+ assert.equal(candidate.archiveSha256,'8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7');
+ assert.deepEqual(candidate.image.target,{counter:84,hardware:52,softDevices:[259]});
+ assert.equal(validatePackage(candidate,'OLED',all).id,oled.id);
+ assert.throws(()=>validatePackage(candidate,'LCD',all),/anderen Display/);
+ assert.throws(()=>validatePackage({...candidate,archiveSha256:'f'.repeat(64)},'OLED',all),/veröffentlichte OLED/);
+ assert.throws(()=>validatePackage({...candidate,archiveBytes:248399},'OLED',all),/veröffentlichte OLED/);
+ for(const target of [{counter:85,hardware:52,softDevices:[259]},{counter:84,hardware:51,softDevices:[259]},
+  {counter:84,hardware:52,softDevices:[294]},{counter:84,hardware:52,softDevices:[259,294]}]) {
+  assert.throws(()=>validatePackage({...candidate,image:{target}},'OLED',all),/Startpaket/);
+ }
+ let board='OLED',created=0;
+ const updater=new Updater({Package,validatePackage:c=>validatePackage(c,board,all),createDfu(){created++;throw Error('No radio during package checks');}});
+ assert.equal(await updater.setPackage(data),true);
+ board='LCD';assert.equal(await updater.setPackage(data),false);assert.equal(updater.package,null);
+ assert.equal(await updater.selectDevice(),false);assert.equal(created,0);
+});
+
+test('changing profile while parsing cannot publish a stale ready package',async()=>{
+ const Updater=require('../public/dfu/updater.js'),gate=defer();let validates=0;
+ class SlowPackage{async load(){await gate.promise;}}
+ const updater=new Updater({Package:SlowPackage,validatePackage(){validates++;},createDfu(){throw Error('no device');}});
+ const pending=updater.setPackage({name:'OLED.zip'});
+ await updater.setPackage(null);gate.resolve();
+ assert.equal(await pending,false);assert.equal(validates,0);assert.equal(updater.package,null);assert.equal(updater.loading,false);
 });

@@ -1,0 +1,7 @@
+Allmiibo Dateimanager 3.55.8
+
+DE
+OLED DE3.84 Test4 / App84 kann über Update → OLED → OLED im Browser flashen direkt am Computer übertragen werden. Der Browser lädt die geprüfte App-ZIP vom gleichen Seitenursprung. Öffne den DFU-Modus am passenden OLED und wähle pixl dfu. Die Anleitung beschreibt Deutsch und Englisch. Der Teststand ist für nRF52832/SH1106, kompatiblen Secure DFU und S112 7.2.0 vorgesehen. Der echte OLED-Gerätetest steht aus.
+
+EN
+Use Update → OLED → Flash OLED in browser to transfer DE3.84 Test4 / App84 directly from a computer. The browser downloads the verified application ZIP from the same site. Enter DFU mode on the matching OLED and select pixl dfu. German and English instructions are included. This trial targets nRF52832/SH1106, compatible Secure DFU and S112 7.2.0. Physical OLED acceptance remains pending.

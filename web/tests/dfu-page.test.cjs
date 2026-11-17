@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const html=fs.readFileSync(path.join(__dirname,'../public/dfu/web.html'),'utf8');
 const Bundled=require('../public/dfu/bundled-packages.js'),crypto=require('node:crypto');
 function harness(supported=true,extra={}){
-    const node=()=>({disabled:false,hidden:false,textContent:'',value:'',children:[],dataset:{},events:{},setAttribute(n,v){this[n]=v;},removeAttribute(n){delete this[n];},addEventListener(n,fn){this.events[n]=fn;},appendChild(child){this.children.push(child);}});
+    const node=()=>({disabled:false,hidden:false,_text:'',get textContent(){return this._text;},set textContent(value){this._text=value;this.children=[];},value:'',children:[],dataset:{},events:{},setAttribute(n,v){this[n]=v;},removeAttribute(n){delete this[n];},addEventListener(n,fn){this.events[n]=fn;},appendChild(child){this.children.push(child);}});
     const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
     const windowEvents={},calls=[];let options,instance;
     class FakeUpdater{constructor(o){options=o;instance=this;this.busy=false;}setPackage(f){calls.push(['package',f]);options.onState({busy:this.busy,loading:false,ready:!!f});return Promise.resolve(!!f);}selectDevice(){calls.push(['select']);}}
@@ -23,19 +23,45 @@ test('page binds one click to device selection and one file event to package loa
     const h=harness();h.nodes.get('file').files=['selected'];h.nodes.get('file').events.change();h.nodes.get('button').events.click();
     assert.deepEqual(h.calls,[['package',null],['package','selected'],['select']]);
 });
-test('an OLED handoff only offers the OLED guide, even with a bookmarked LCD package and no boot counters',async()=>{
+test('an OLED handoff offers only OLED packages and never preselects a bookmarked LCD package',async()=>{
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname,'../src/data/firmware-releases.json'),'utf8'));
     const location = new URL('https://example.test/dfu/web.html?package=' + catalog.packages[0].id + '#board=OLED');
     const h = harness(true,{AllmiiboFirmwareReleases:catalog,location});
-    assert.equal(h.nodes.get('lcd-updater').hidden,true);
-    assert.equal(h.nodes.get('oled-update-notice').hidden,false);
-    assert.equal(h.nodes.get('bundled').disabled,true);
+    assert.equal(h.nodes.get('board-profile').value,'OLED');
+    assert.equal(h.nodes.get('lcd-downloads').hidden,true);
+    assert.equal(h.nodes.get('oled-downloads').hidden,false);
+    assert.equal(h.nodes.get('bundled').disabled,false);
+    assert.equal(h.nodes.get('bundled').value,'');
+    assert.deepEqual(h.nodes.get('bundled').children.slice(1).map(n=>n.value),catalog.packages.filter(e=>e.board==='OLED').map(e=>e.id));
     assert.equal(h.nodes.get('android-handoff').hidden,true);
     assert.equal(h.nodes.get('android-dfu-link').href,undefined);
     await h.nodes.get('load-bundled').events.click();
-    await h.nodes.get('file').events.change();
     h.nodes.get('button').events.click();
     assert.deepEqual(h.calls,[]);
+});
+
+test('the OLED package link preselects the profile without loading or requesting a device',()=>{
+    const catalog=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/data/firmware-releases.json'),'utf8'));
+    const oled=catalog.packages.find(e=>e.board==='OLED');
+    const h=harness(true,{AllmiiboFirmwareReleases:catalog,location:new URL('https://example.test/dfu/web.html?package='+oled.id)});
+    assert.equal(h.nodes.get('board-profile').value,'OLED');
+    assert.equal(h.nodes.get('bundled').value,oled.id);
+    assert.equal(h.nodes.get('load-bundled').disabled,false);
+    assert.equal(h.nodes.get('button').disabled,true);
+    assert.match(h.nodes.get('profile-description').textContent,/SH1106/);
+    assert.deepEqual(h.calls,[]);
+});
+
+test('changing display clears package readiness, and conflicting handoff blocks a new transfer',()=>{
+    for(const hash of ['', '#board=OLED', '#board=OLED&board=LCD']){
+        const h=harness(true,{location:new URL('https://example.test/dfu/web.html'+hash)});
+        h.options.onState({ready:true,target:{counter:84,hardware:52,softDevices:[259]}});
+        h.nodes.get('board-profile').value='LCD';h.nodes.get('board-profile').events.change();
+        assert.equal(h.nodes.get('button').disabled,true);
+        h.nodes.get('button').events.click();
+        assert.equal(h.calls.some(c=>c[0]==='select'),false);
+        assert.equal(h.nodes.get('file').disabled,!!hash);
+    }
 });
 test('iPad desktop mode keeps ZIP inspection available and updates the transfer action if Bluetooth appears', () => {
     const navigator = {language:'de-DE',userAgent:'Mozilla/5.0 (Macintosh)',platform:'MacIntel',maxTouchPoints:5};
@@ -116,13 +142,13 @@ test('DFU speed and remaining time count only bytes acknowledged in this attempt
 });
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
-    for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource)),resource);}
-    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js"'));
-    assert.ok(html.indexOf('src="secure-dfu.js"')<html.indexOf('src="page.js"'));
-    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js"'));
+    for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource.split('?')[0])),resource);}
+    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.55.8"'));
+    assert.ok(html.indexOf('src="secure-dfu.js?v=3.55.8"')<html.indexOf('src="page.js?v=3.55.8"'));
+    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.55.8"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_DE_EN.txt','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_OLED_DE3_84_Test4_APP.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_DE_EN.txt','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 

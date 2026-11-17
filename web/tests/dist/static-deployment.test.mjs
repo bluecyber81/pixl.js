@@ -28,7 +28,10 @@ test(`${base}: both setup guides have working anchors and bundled destinations`,
       assert.ok(target.pathname.startsWith(base), href)
       const rel = target.pathname.slice(base.length)
       const contents = fs.readFileSync(path.join(dist, rel.endsWith('/') || !rel ? rel + 'index.html' : rel))
-      if (target.hash) assert.ok(contents.includes(Buffer.from('id="' + target.hash.slice(1) + '"')), href)
+      if (target.pathname.endsWith('/dfu/web.html') && target.hash === '#board=OLED') {
+        const packages = JSON.parse(read('firmware/releases.json')).packages
+        assert.ok(packages.some(entry => entry.board === 'OLED' && entry.id === target.searchParams.get('package')), href)
+      } else if (target.hash) assert.ok(contents.includes(Buffer.from('id="' + target.hash.slice(1) + '"')), href)
     }
   }
 })
@@ -99,7 +102,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.ok(index.includes(`href="${file}"`), file)
   }
   for (const releaseFile of [
-    'web3.55.7/Allmiibo_Dateimanager_3_55_7_Quellcode.zip',
+    'web3.55.8/Allmiibo_Dateimanager_3_55_8_Quellcode.zip',
     'de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
   ]) {

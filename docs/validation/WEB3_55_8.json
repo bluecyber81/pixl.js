@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "webVersion": "3.55.8",
+  "date": "2026-11-17",
+  "change": "Direct OLED browser DFU from the Update page, with board-aware trusted-package selection and bilingual instructions.",
+  "firmwarePreview": "2.22.0-DE3.84-OLEDt4",
+  "applicationCounter": 84,
+  "firmwareChanged": false,
+  "oledArchiveBytes": 248400,
+  "oledArchiveSha256": "8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7",
+  "oledApplicationBytes": 359456,
+  "oledApplicationSha256": "2ae048eab497e1e0dda54192b054fd2afd2628367a886b73cb8e09a9711e83a6",
+  "fullNodeSuite": {"tests":1705,"passed":1705,"failed":0,"skipped":0},
+  "historicalDfuFixtures": "Existing hash-pinned DE3.17 and recovery575 archives were supplied to the full suite; no fixture-dependent tests were skipped.",
+  "targetedDfuSuite": {"tests":68,"passed":68,"failed":0,"skipped":0},
+  "productionRoot": {"tests":22,"passed":22,"failed":0},
+  "productionPages": {"tests":22,"passed":22,"failed":0},
+  "browserRoot": {"existingChecks":65,"oledDfuChecks":8,"failed":0,"browserErrors":0,"languages":["de-DE","en-GB"]},
+  "browserPages": {"existingChecks":65,"oledDfuChecks":8,"failed":0,"browserErrors":0,"languages":["de-DE","en-GB"]},
+  "browserDfu": {
+    "transport": "Production Nordic Secure DFU transport and package parser with synthetic GATT and asynchronous test-only scheduling",
+    "interruptedAtBytes": 4156,
+    "resumedAtBytes": 4156,
+    "completedBytes": 359456,
+    "finalExecuteAcknowledged": true,
+    "transferredApplicationSha256Matches": true,
+    "checked": ["OLED homepage handoff", "DE/EN package loading", "full archive hash", "BIN/init validation", "wrong board rejection", "incompatible SoftDevice rejection", "bundled downgrade rejection", "stale async load invalidation", "profile preservation after application disconnect", "legacy LCD DFU"]
+  },
+  "reproduction": ["npm test with ALLMIIBO_DFU_FIXTURES pointing to the existing historical test archives", "npm run build", "npm run build:pages", "web/scripts/verify-dfu-sync-browser.mjs for both distributions", "web/scripts/verify-oled-dfu-browser.mjs for both distributions"],
+  "limits": ["No physical OLED device was available for this change.", "Synthetic GATT tests do not establish radio reliability or real transfer duration.", "On-device OLED flashing and interrupted DFU recovery still need tester confirmation.", "The shared Bluetooth name and Nordic hardware field do not identify LCD versus OLED; the user selects the physical display profile.", "OLED uses its compatible S112 7.2.0 and existing SPIFFS or native LittleFS. This browser route is an application update."]
+}

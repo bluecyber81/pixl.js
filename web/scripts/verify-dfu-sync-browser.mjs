@@ -114,9 +114,10 @@ async function runChecks() {
       await oled.click();
       const trial = picker.locator('.oled-trial');
       const oledZip = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip';
-      assert.equal(await trial.getByRole('link').first().getAttribute('href'), oledZip);
-      assert.equal(await trial.getByRole('link').nth(1).getAttribute('href'), base + 'guide/' + guide + '#oled');
-      assert.equal(await picker.locator('.dfu-page-link, .firmware-packages').count(), 0);
+      assert.equal(await trial.locator('a[href$=".zip"]').getAttribute('href'), oledZip);
+      assert.equal(await trial.locator('a[href*="guide/"]').getAttribute('href'), base + 'guide/' + guide + '#oled');
+      assert.equal(await picker.locator('.dfu-page-link').getAttribute('href'), base + 'dfu/web.html?package=de3.84-oled-t4-app#board=OLED');
+      assert.equal(await picker.locator('.firmware-packages').count(), 0);
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
         connected:true, firmwareVersion:'2.27.11', bootInfo:null
       }); });
@@ -130,7 +131,7 @@ async function runChecks() {
       assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
       for (const version of ['2.22.0-DE3.81-OLEDt2','2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt4']) {
         await guidePage.evaluate(version => Object.assign(document.querySelector('#app')._vnode.component.proxy, {firmwareVersion:version, bootInfo:null}) && true, version);
-        assert.equal(await trial.getByRole('link').first().getAttribute('href'), oledZip);
+        assert.equal(await trial.locator('a[href$=".zip"]').getAttribute('href'), oledZip);
         assert.ok(await lcd.isDisabled());
       }
       await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = {settingsCrcValid:true, applicationCounter:85}; });

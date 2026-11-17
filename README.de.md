@@ -8,9 +8,9 @@ Die Spiele übernehmen die 180°-Drehung und haben eine deutsche und englische B
 
 Für ein Allmiibo LCD mit ST7567, Packed LittleFS (PFS1), Z21 und S112 7.3.0 die ZIP gepackt in **nRF Device Firmware Update** auswählen. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket mit Quellen, ELF und Maps](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [GitHub-Prüflauf](https://github.com/bluecyber81/pixl.js/actions/runs/44047724527)
 
-## Dateimanager 3.55.7
+## Dateimanager 3.55.8
 
-Version 3.55.7 erkennt das OLED-Profil von App84, zeigt die Firmwarekennung und führt zur passenden Handy-ZIP. Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.7)
+Version 3.55.8 überträgt OLED App84 direkt über den Browser-DFU. Unter Update → OLED startet „OLED im Browser flashen“ das passende Paket. Chrome oder Edge am Computer mit Bluetooth werden unterstützt. Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.8)
 
 ## Aktuelle LCD-Firmware · DE3.81 / App654
 

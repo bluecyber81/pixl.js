@@ -46,6 +46,12 @@ test('both guide languages link to a dedicated OLED chapter with the published p
         assert.match(html, /href="#oled"/);
         const section = html.match(/<section id="oled">([\s\S]*?)<\/section>/)?.[1];
         assert.ok(section);
+        const browserLink = section.match(/href="([^"\s]*dfu\/web\.html[^"\s]*)"/)?.[1];
+        assert.ok(browserLink, 'OLED chapter includes the browser updater');
+        const updater = new URL(browserLink, base);
+        assert.equal(updater.pathname, '/pixl.js/dfu/web.html');
+        assert.equal(updater.searchParams.get('package'), 'de3.84-oled-t4-app');
+        assert.equal(new URLSearchParams(updater.hash.slice(1)).get('board'), 'OLED');
         assert.match(section, /de3\.84-oled-t4\/Allmiibo_OLED_DE3_84_Test4_APP\.zip"/);
         assert.match(section, /releases\/tag\/de3\.84-oled-t4"/);
         assert.doesNotMatch(section, /Allmiibo_LCD_/);

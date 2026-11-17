@@ -34,7 +34,7 @@ import { nrfDfuLink } from '../../public/dfu/nrf-dfu-link.mjs';
 const props=defineProps({session:{type:Object,default:()=>({})},boot:{type:Object,default:null},locale:{type:String,default:'de_DE'}});
 const text=computed(()=>firmwarePackageText(props.locale));
 const systemGuide = computed(() => deploymentPath(props.locale.startsWith('de') ? 'guide/index.html' : 'guide/en.html') + '#android-de381');
-const packages=computed(()=>releases.packages.map(entry=>({
+const packages=computed(()=>releases.packages.filter(entry => entry.board === 'LCD').map(entry=>({
   entry, ...packagePresentation(entry, props.session, props.boot), androidUrl:nrfDfuLink(entry)
 })));
 </script>

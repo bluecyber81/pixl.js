@@ -310,6 +310,10 @@
       <UpdateCheck :session="{ connected, firmwareVersion, bootState, dfuReference: lastDfuReference }" :boot="bootInfo" :locale="language" />
       <div class="info-actions"><button type="button" @click="refresh_boot_info" :disabled="!connected || busy || upload_diag_visible">{{ $t('workflow.updateRead') }}</button><button type="button" @click="show_device_panel">{{ $t('workflow.deviceDetails') }}</button></div>
       </template>
+      <template #oled-controls>
+        <p>{{ $t('workflow.updateStepDevice') }}</p>
+        <el-button type="info" size="small" @click="on_btn_enter_dfu" :disabled="!connected || busy">{{ $t('menu.enterdfu') }}</el-button>
+      </template>
       </FirmwareBoardChoice>
       </div>
     </details>

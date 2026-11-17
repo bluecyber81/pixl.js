@@ -7,6 +7,25 @@ import { readFileSync } from 'node:fs';
 import bootPacket from './boot-fixture.cjs';
 const entry={id:'de3.53-lcd-app',version:'2.22.0-DE3.53',counter:625,file:'Allmiibo_LCD_DE3_53_625_TESTSTAND.zip'};
 
+test('DFU handoff preserves board and valid observed counters for OLED and LCD', () => {
+  const bytes = bootPacket(), view = new DataView(bytes.buffer);
+  view.setUint32(60, 83, true);
+  view.setUint32(32, 7002000, true);
+  view.setUint16(36, 0x0103, true);
+  const boot = parseBootDiagnostics(bytes);
+  for (const [version, board] of [['2.22.0-DE3.81-OLEDt3', 'OLED'], ['2.22.0-DE3.84', 'LCD']]) {
+    const values = new URLSearchParams(dfuReference(boot, 123456, version).slice(1));
+    assert.equal(values.get('board'), board);
+    assert.equal(values.get('read'), '123456');
+    assert.equal(values.get('app'), '83');
+    assert.equal(values.get('sd'), '259');
+    assert.equal(dfuReference(null, 123456, version), '#board=' + board);
+    assert.equal(dfuReference({...boot, settingsCrcValid:false}, 123456, version), '#board=' + board);
+    assert.equal(dfuReference({...boot, applicationCounter:-1}, 123456, version), '#board=' + board);
+  }
+  assert.equal(dfuReference(null, 123456), '');
+});
+
 test('the final signed package reaches Android and is compared when only the device version is available', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
   const candidate = packages.find(item => item.version === '2.22.0-DE3.81');
@@ -20,7 +39,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,657,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,657,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');

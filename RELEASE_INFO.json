@@ -4,7 +4,7 @@
   "version": "2.22.0-DE3.81",
   "counter": 654,
   "board": "LCD",
-  "web_version": "3.55.7",
+  "web_version": "3.55.8",
   "web_publication_date": "2026-11-17",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
@@ -52,7 +52,7 @@
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.7",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.8",
   "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_74_LCD_ACCEPTANCE.json",
   "device_readback_passed": true,
@@ -153,7 +153,8 @@
     "web_3_55_2": "Compare startup scan time, flash reads and bytes read, retain valid PREP and test version labels, keep the observed layout size within the current connection and identify the device-observed DE3.80 LCD preview.",
     "web_3_55_3": "Battery sampling records why it paused and marks resume after a fresh observation. Display the measured range and duration and export the fifth CSV field pause_reason. Offer signed App654 / Z21 with a separate app-only path.",
     "web_3_55_4": "Board-specific firmware links and guides for LCD and OLED, with a separate Android app-only route for the OLED trial.",
-    "web_3_55_5": "LCD DE3.81/App654 is the current download. The full Android update contains Z21 and S112 7.3.0; the app-only ZIP keeps a compatible installed system. The OLED Test 1 route is separate."
+    "web_3_55_5": "LCD DE3.81/App654 is the current download. The full Android update contains Z21 and S112 7.3.0; the app-only ZIP keeps a compatible installed system. The OLED Test 1 route is separate.",
+    "oled_browser_dfu": "Same-origin signed OLED App84 package, display-aware browser DFU, preserved readback context and DE/EN instructions."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_81_654_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -166,7 +167,7 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "final",
-  "web_evidence": "docs/validation/WEB3_55_7.json",
+  "web_evidence": "docs/validation/WEB3_55_8.json",
   "device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
   "web_device_readback_pending_scope": "New web diagnostics were exercised with firmware wire fixtures. The LCD firmware has a separate owner report. Android physical DFU interruption and the OLED remote field test are undocumented.",
   "fresh_public_unsigned_rebuild_matches_signed_application": true,

@@ -1,5 +1,5 @@
 export function projectDownloads(buildVersion) {
-  const version = '3.55.7';
+  const version = '3.55.8';
   const directory = 'https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/';
   const fileVersion = version.replaceAll('.', '_');
   return {

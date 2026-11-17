@@ -6,13 +6,15 @@ import { firmwareBoard } from './hardware-profile.js';
 // Carry only firmware counters and FWID across the transition into DFU.
 // The URL fragment isn't sent to the server and contains no device identity.
 export function dfuReference(boot, time = Date.now(), firmwareVersion) {
-  // The standalone updater offers LCD packages. Keep the board restriction even if
-  // the OLED firmware has no boot snapshot to pass across the DFU transition.
-  if (firmwareBoard(firmwareVersion) === 'OLED') return '#board=OLED';
-  if (!boot?.settingsCrcValid || !boot.softDeviceValid) return '';
+  const board = firmwareBoard(firmwareVersion);
+  const reference = new URLSearchParams(board ? { board } : {});
+  const fallback = reference.size ? '#' + reference : '';
+  if (!boot?.settingsCrcValid || !boot.softDeviceValid) return fallback;
   const values = [boot.applicationCounter, boot.bootloaderCounter, boot.softDeviceFwid];
-  if (!values.every(n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff) || values[2] > 0xffff) return '';
-  return '#' + new URLSearchParams({ read: time, app: values[0], bl: values[1], sd: values[2] });
+  if (!values.every(n => Number.isInteger(n) && n >= 0 && n <= 0xffffffff) || values[2] > 0xffff) return fallback;
+  Object.entries({ read: time, app: values[0], bl: values[1], sd: values[2] })
+    .forEach(([key, value]) => reference.set(key, value));
+  return '#' + reference;
 }
 
 // Rendering uses only the bundled JSON, never URL parameters or external feeds.
