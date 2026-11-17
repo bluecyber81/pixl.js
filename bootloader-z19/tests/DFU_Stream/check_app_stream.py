@@ -17,6 +17,8 @@ sys.path.insert(0, str(ROOT / 'tests'))
 from run_offline import verify_sanitizer_environment
 RELEASE_PAYLOADS = {
     # SHA-256 of the complete signed ZIP -> SHA-256 of its application payload.
+    '6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719':
+        '632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918',  # DE3.81 / 654 LCD
     'caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342':
         '34bb85efbf2fc1e5429ce09361aa2b39831d252f9fad80de425c6a992b78cfb8',  # DE3.80 / 653 preview
     '161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14':

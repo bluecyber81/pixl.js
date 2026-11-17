@@ -321,7 +321,7 @@ try {
     page.on('pageerror', error => errors.push({ kind, message: error.message }));
     await page.goto(origin + base);
     await page.locator('.version-context').waitFor();
-    check(kind + ' exact web version 3.55.3', (await page.locator('.version-context').innerText()).includes('3.55.3'));
+    check(kind + ' exact web version 3.55.5', (await page.locator('.version-context').innerText()).includes('3.55.5'));
     const starts = page.locator('.start-actions');
     await fits(page, kind + ' start actions', '.start-actions', zoom);
     await starts.getByRole('button', { name: /Ich möchte eine Figur hinzufügen/ }).click();
@@ -329,8 +329,9 @@ try {
     check(kind + ' figure shortcut goes directly to the import even offline', await page.locator('.figure-import input[type=search]').isVisible());
     await page.locator('.workspace-nav button[aria-controls="file-workspace"]').click();
     await starts.getByRole('button', { name: /Ich möchte die Firmware aktualisieren/ }).click();
-    check(kind + ' firmware shortcut opens the package overview and keeps DFU idle',
-      await page.locator('#update-workspace .firmware-packages').isVisible() && context.pages().length === 1 &&
+    await page.locator('#update-workspace .board-buttons').waitFor();
+    check(kind + ' firmware shortcut opens the board choice and keeps DFU idle',
+      await page.locator('#update-workspace .board-buttons').isVisible() && context.pages().length === 1 &&
       await page.evaluate(() => window.__testBleRequests === 0));
     const diagnosticNavigation = page.locator('.workspace-nav button[aria-controls="device-overview"]');
     await diagnosticNavigation.focus(); await page.keyboard.press('Enter');

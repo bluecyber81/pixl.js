@@ -1,7 +1,7 @@
 name: Unsigned LCD application and bootloader builds
 
-# Build the signed preview from its matching sources on every firmware change.
-# The Z19 job also verifies DFU resume for the stable application package.
+# Rebuild the released LCD application and test it against the signed bytes.
+# The Z19 model resumes both the current and the previous signed LCD app ZIP.
 on:
   workflow_dispatch:
   workflow_call:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.81 LCD application preview
+    name: DE3.81 LCD application
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -33,7 +33,8 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          mode=preview
+          mode=release
+          if jq -e '.firmware_preview' RELEASE_INFO.json >/dev/null; then mode=preview; fi
           if [ -n "$BASE_SHA" ] && git diff --quiet "$BASE_SHA" HEAD -- RELEASE_INFO.json fw/releases web/public/firmware; then
             mode=candidate
           fi
@@ -45,7 +46,7 @@ jobs:
       - name: Compile unsigned LCD and inspect actual flash and RAM reserves
         env:
           BUILD_MODE: ${{ steps.application_mode.outputs.mode }}
-        run: python3 tools/build_lcd.py --mode "$BUILD_MODE" --jobs 4 --output build/lcd-preview
+        run: python3 tools/build_lcd.py --mode "$BUILD_MODE" --jobs 4 --output build/lcd-application
       - name: Install the pinned Cortex-M4 emulator and SDK test inputs
         shell: bash
         run: |
@@ -57,31 +58,36 @@ jobs:
           docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec '
             tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
           ' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
-      - name: Verify the packaged preview against the compiled application and bound Z19 key
-        if: steps.application_mode.outputs.mode == 'preview'
-        run: /usr/bin/python3 tools/check_release_ota.py --preview
+      - name: Verify the signed package against the compiled application and bound bootloader key
+        if: steps.application_mode.outputs.mode != 'candidate'
+        env:
+          BUILD_MODE: ${{ steps.application_mode.outputs.mode }}
+        run: |
+          args=(--build-dir build/lcd-application)
+          if [ "$BUILD_MODE" = preview ]; then args+=(--preview); fi
+          /usr/bin/python3 tools/check_release_ota.py "${args[@]}"
       - name: Verify both Android DFU phases against the release packages
         run: /usr/bin/python3 tools/verify_lcd_combo.py --profile de3.81
       - name: Exercise every DE2 and DE3 host suite
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er '.firmware_preview.host_firmware_suites // .host_firmware_suites' RELEASE_INFO.json)" --report build/lcd-preview/FIRMWARE_TESTS.json
+          "$RUNNER_TEMP/stack-venv/bin/python" -B fw/tests/de3/run_all.py --minimum-suites "$(jq -er '.firmware_preview.host_firmware_suites // .host_firmware_suites' RELEASE_INFO.json)" --report build/lcd-application/FIRMWARE_TESTS.json
       - name: Exercise stack, menu, crypto, flash ID and LCD on the linked Cortex-M4 ELF
         shell: bash
         run: |
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-preview/pixljs.out | tee build/lcd-preview/STACK_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/FIRST_MENU_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_aes_m4_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/AES_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_flash_jedec_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/FLASH_JEDEC_ELF.txt
-          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_display_profile_elf.py build/lcd-preview/pixljs.out build/lcd-preview/pixljs.bin | tee build/lcd-preview/DISPLAY_PROFILE_ELF.txt
-          cat build/lcd-preview/BUILD_RESULT.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_stack_watermark_elf.py build/lcd-application/pixljs.out | tee build/lcd-application/STACK_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_first_menu_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/FIRST_MENU_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_aes_m4_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/AES_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_flash_jedec_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/FLASH_JEDEC_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_display_profile_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/DISPLAY_PROFILE_ELF.txt
+          cat build/lcd-application/BUILD_RESULT.json
       - name: Archive the actual build and test results
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lcd-firmware-evidence-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/lcd-preview/
+          path: build/lcd-application/
           if-no-files-found: error
           retention-days: 30
 
@@ -135,21 +141,16 @@ jobs:
           sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
       - name: Run source-bound reset, session, LCD and ARM crypto tests
         run: '"$RUNNER_TEMP/boot-venv/bin/python" tests/run_offline.py --output _checks'
-      - name: Check offline runner and resume the released application in the Z19 transfer model
+      - name: Check offline runner and resume current and previous signed LCD releases on the Z19 model
         if: matrix.boot == 'z19'
         shell: bash
         run: |
           python3 -B tests/test_runner_modes.py
           python3 -B tests/test_app_stream_modes.py
-          ota="../$(jq -er .application_ota_path ../RELEASE_INFO.json)"
-          python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$ota" --output _checks/application-resume.json
-          preview="../$(jq -er .firmware_preview.application_ota_path ../RELEASE_INFO.json)"
-          expected_zip="$(jq -er .firmware_preview.ota_sha256 ../RELEASE_INFO.json)"
-          echo "$expected_zip  $preview" | sha256sum --check --strict -
-          entry="$(unzip -p "$preview" manifest.json | jq -er .manifest.application.bin_file)"
-          unzip -p "$preview" "$entry" > "$RUNNER_TEMP/current-preview.bin"
-          expected_bin="$(jq -er .firmware_preview.application_sha256 ../RELEASE_INFO.json)"
-          python3 -B tests/DFU_Stream/check_app_stream.py --test-bin "$RUNNER_TEMP/current-preview.bin" --expected-sha256 "$expected_bin" --output _checks/application-preview-resume.json
+          current="../$(jq -er .application_ota_path ../RELEASE_INFO.json)"
+          previous="../$(jq -er .previous_lcd_release.application_ota_path ../RELEASE_INFO.json)"
+          python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$current" --output _checks/current-release-resume.json
+          python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$previous" --output _checks/application-resume.json
       - name: Archive bootloader evidence
         if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -187,7 +188,7 @@ jobs:
           cd "$RUNNER_TEMP/boot-source"
           python3 -B build.py --check
           python3 -B build.py
-      - name: Run the native and ARM checks and resume the signed preview
+      - name: Run the native and ARM checks and resume the signed package
         run: |
           python3 -m venv "$RUNNER_TEMP/boot-venv"
           "$RUNNER_TEMP/boot-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r tools/ci-unicorn-linux-x64.txt

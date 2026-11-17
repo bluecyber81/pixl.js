@@ -1,11 +1,11 @@
 <template>
   <section class="board-profile">
     <h3>{{ label('Hardwareprofil', 'Hardware profile') }}</h3>
-    <dl v-if="boot?.geometryValid || storageBytes || knownLcdBuild">
+    <dl v-if="boot?.geometryValid || storageBytes || displayBuild">
       <div v-if="boot?.geometryValid"><dt>{{ label('Chip · vom Gerät gelesen', 'Chip · reported by device') }}</dt>
         <dd>{{ boot.chipPart === 0x52832 ? 'nRF52832' : '0x' + boot.chipPart.toString(16).toUpperCase() }} · {{ boot.flashBytes / 1024 }} KiB Flash · {{ boot.ramBytes / 1024 }} KiB RAM</dd></div>
       <div v-if="storageBytes"><dt>{{ label('Externer Speicher · gemeldetes Layout', 'External storage · reported layout') }}</dt><dd>{{ storageBytes / 1024 }} KiB</dd></div>
-      <div v-if="knownLcdBuild"><dt>{{ label('Displaytreiber des Firmware-Builds', 'Display driver in the firmware build') }}</dt><dd>{{ knownLcdBuild.controllerDriver }} · {{ knownLcdBuild.width }} × {{ knownLcdBuild.height }}</dd></div>
+      <div v-if="displayBuild"><dt>{{ label('Displaytreiber des Firmware-Builds', 'Display driver in the firmware build') }}</dt><dd>{{ displayBuild.controllerDriver }} · {{ displayBuild.width }} × {{ displayBuild.height }}</dd></div>
     </dl>
     <div class="flash-status">
       <strong>{{ label('Externer SPI-Flash', 'External SPI flash') }}</strong>
@@ -23,7 +23,7 @@
       <p>{{ label('Stehen diese Angaben auf deinem Akku? Die Zuordnung gilt nur für dieses Gerät in diesem Browser und erscheint als Etikettangabe im Diagnoseexport.', 'Do these ratings appear on your battery? The association applies to this device in this browser and appears as a label reading in the diagnostic export.') }}</p>
       <label><input type="checkbox" :checked="labelConfirmed" :disabled="!connected || !profileReady" @change="associate"> LiPo 551520 · 180 mAh · {{ label('3,8 V · 0,684 Wh', '3.8 V · 0.684 Wh') }}</label>
       <p v-if="!profileReady || profileError" role="status">{{ label('Die lokale Gerätezuordnung ist nicht verfügbar.', 'Local device association is unavailable.') }}</p>
-      <p v-if="labelConfirmed">{{ label('Quelle: bestätigter Akkuaufdruck. Ladechip und genaue LCD-Teilenummer sind offen.', 'Source: confirmed battery label. The charge controller and exact LCD part number are unknown.') }}</p>
+      <p v-if="labelConfirmed">{{ label('Quelle ist der bestätigte Akkuaufdruck.', 'Source is the confirmed battery label.') }}</p>
     </details>
   </section>
 </template>
@@ -40,7 +40,7 @@ function associate(event) {
   emit('associate', requested);
 }
 const label = (de, en) => props.locale === 'de_DE' ? de : en;
-const knownLcdBuild = computed(() => props.connected && displayBuildReference(props.firmwareVersion));
+const displayBuild = computed(() => props.connected && displayBuildReference(props.firmwareVersion));
 const supported = computed(() => supportsFlashDiagnostics(props.firmwareVersion));
 </script>
 <style scoped>

@@ -187,12 +187,44 @@ test('native DOMException picker cancellation is normalized rather than exposing
  for(const synchronous of [false,true]){
   const failure=new DOMException('No device selected','NotFoundError');
   const f=fixture({picker:()=>{if(synchronous)throw failure;return Promise.reject(failure);}});
-  await assert.rejects(f.client.connect(),{code:'REMOTE_CANCELLED'});assert.equal(f.packets.length,0);assert.equal(f.client.snapshot().phase,'disconnected');
+  await assert.rejects(f.client.connect(),{code:'REMOTE_NO_SELECTION'});assert.equal(f.packets.length,0);assert.equal(f.client.snapshot().phase,'disconnected');
+  assert.equal(f.states.at(-1).error,'REMOTE_NO_SELECTION');assert.equal(f.states.at(-1).commandUnconfirmed,false);
  }
 });
 test('native DOMException write failure closes transport using a readable error code',async()=>{
  const f=fixture({write:(req,notify,reply,count)=>{if(count>1)throw new DOMException('Disconnected','InvalidStateError');notify(reply(req));}});
- await f.client.connect();await assert.rejects(f.client.command('center'),{code:'REMOTE_DISCONNECTED'});assert.equal(f.client.snapshot().phase,'disconnected');
+ await f.client.connect();await assert.rejects(f.client.command('center'),{code:'REMOTE_DISCONNECTED',commandUnconfirmed:false});assert.equal(f.client.snapshot().phase,'disconnected');
+});
+
+test('Bluetooth permission denial and failure to establish GATT have distinct results before any write', async()=>{
+ const denied=fixture({picker:()=>Promise.reject(new DOMException('blocked','SecurityError'))});
+ const failed=fixture({connect:()=>Promise.reject(new DOMException('could not connect','NetworkError'))});
+ for(const [f,code] of [[denied,'REMOTE_PERMISSION'],[failed,'REMOTE_CONNECT_FAILED']]){
+  await assert.rejects(f.client.connect(),{code});
+  assert.equal(f.packets.length,0);assert.equal(f.states.at(-1).commandUnconfirmed,false);
+ }
+});
+test('only a submitted device action awaiting its matching receipt is uncertain on link loss', async()=>{
+ for(const [operation,ack,expected] of [['center',false,true],['files',false,true],['center',true,false],['status',false,false]]){
+  const f=fixture({write(req,notify,reply,count){
+   if(count===1){notify(reply(req));return;}
+   if(ack)notify(reply(req));
+   return new Promise(()=>{});
+  }});
+  await f.client.connect();
+  const failed=assert.rejects(f.client.command(operation),{code:'REMOTE_DISCONNECTED',commandUnconfirmed:expected});
+  f.device.gatt.disconnect();await failed;
+  assert.equal(f.states.at(-1).commandUnconfirmed,expected);assert.equal(f.packets.length,2);
+ }
+ const idle=fixture();await idle.client.connect();idle.device.gatt.disconnect();
+ assert.equal(idle.states.at(-1).error,'REMOTE_DISCONNECTED');assert.equal(idle.states.at(-1).commandUnconfirmed,false);
+});
+test('intentional disconnect while a sent key awaits receipt preserves its uncertainty in state', async()=>{
+ const f=fixture({write(req,notify,reply,count){if(count===1)notify(reply(req));}});
+ await f.client.connect();
+ const cancelled=assert.rejects(f.client.command('left'),{code:'REMOTE_CANCELLED',commandUnconfirmed:true});
+ await f.client.disconnect();await cancelled;
+ assert.equal(f.states.at(-1).commandUnconfirmed,true);assert.equal(f.packets.length,2);
 });
 
 const contractBytes=fs.readFileSync(new URL('../public/remote-protocol-v1.json',import.meta.url));
@@ -385,7 +417,7 @@ test('a genuine GATT failure after a queued disconnect rejects and permits recon
   device.gatt.connected = true;
   return server;
  }});
- const failed = assert.rejects(f.client.connect(), {code:'REMOTE_UNSUPPORTED'});
+ const failed = assert.rejects(f.client.connect(), {code:'REMOTE_CONNECT_FAILED'});
  await began.promise;
  f.device.emit('gattserverdisconnected');
  gate.reject(new DOMException('Could not connect', 'NetworkError'));

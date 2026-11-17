@@ -9,18 +9,19 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| LCD application | [DE3.80 / App653 preview sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the stable App648 sources. |
+| LCD application | [DE3.81 / App654 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). The [3.55.2 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.2) includes portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). The [3.55.5 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5) includes portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
-| Current Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |
+| Current Z21 bootloader | [Build and test instructions](bootloader-z21/README.md) and [Z21 and App654 production evidence](docs/validation/DE3_81.json). |
+| Earlier Z19 bootloader | [Build and test instructions](bootloader-z19/README.md), including the DFU interruption and resume model. The device reports counter 19. |
 | Historical Z17 bootloader | `bootloader-z17/`; source-bound Docker/native build and host/ARM tests; [historical device readback](docs/COMPONENTS.md) |
 | Historical BL8 bootloader | [Source binding and separate unsigned build](bootloader-bl8/README.md) |
 | Historical releases | Git tags, release assets and dated documentation, including [DE3.37](docs/BUILD_DE3_37.md) |
 
 Release archives and Git tags preserve the source used for a particular build.
-The application, Z19, Z17 and BL8 each have their own build instructions.
+The application, Z21, Z20, Z19, Z17 and BL8 each have their own build instructions.
 The inherited `fw/bootloader/` and `bootloader-bl6/` trees document earlier
 implementations. The device diagnosis reports the installed bootloader counter
 and code-region hash. [Component identities and Nordic S112 integration](docs/COMPONENTS.md)
@@ -58,10 +59,16 @@ The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-Follow [the LCD build guide](docs/BUILD_DE3_71T1.md) to reproduce the unsigned LCD
-application. No signing key is required. The current release helper preserves
-generated resources and the version header. For an intentional change, use its
-development mode with a distinct version and explicit counter.
+The checked-in LCD sources reproduce the released DE3.81 application. From the repository root, use the pinned SDK image and the host Python package `cryptography` to verify the application and Android package:
+
+```sh
+docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
+python3 tools/build_lcd.py --mode release
+python3 tools/check_release_ota.py
+python3 tools/verify_lcd_combo.py --profile de3.81
+```
+
+The release builder writes to a new or empty `build/lcd-de381` directory and uses the stored version header and generated resources. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App654 source and checks](docs/validation/DE3_81.json) · [Z21 build instructions](bootloader-z21/README.md)
 
 For two quick storage checks from the portable CI subset, install Python
 **3.10+** and GCC on the host and run from the repository root:
@@ -113,6 +120,6 @@ portable firmware subsets with read-only repository permissions. The separate
 [unsigned firmware workflow](.github/workflows/unsigned-firmware.yml) compiles the
 LCD application and checks its linked flash and RAM reserves for changes to the
 build inputs. Pull requests build candidates. Pushes to main verify the release
-hash and signed application package. The same workflow builds Z17 and Z19,
+hash and signed application package. The same workflow builds Z17, Z19, Z20 and Z21,
 runs their host and ARM tests, and exercises interrupted application transfer
-with the Z19 model. Manual runs also rebuild historical BL8.
+with the Z19 model and both DFU stages in the Z20 and Z21 models. Manual runs also rebuild historical BL8.

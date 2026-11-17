@@ -69,7 +69,18 @@ test('file handoff reports requested, disconnects remote, and requires a separat
  const h=mount();try{await h.vm.connectRemote();await h.vm.press('files');await Vue.nextTick();assert.deepEqual(h.calls,['connect','files','disconnect']);assert.match(text(h.root),/Wechsel wurde angefordert/);assert.match(text(h.root),/erst nach dem Funkabbau/);assert.match(text(h.root),/Versionsabfrage bestätigt/);assert(h.button('Mitte').props.disabled);assert.equal(h.active.at(-1),false);}finally{h.app.unmount();}
 });
 test('timeout has explicit uncertainty and never reports success or retries',async()=>{
- const h=mount({command:async()=>{throw Object.assign(Error('timeout'),{code:'REMOTE_TIMEOUT'});}});try{await h.vm.connectRemote();await h.vm.press('center');await Vue.nextTick();assert.match(text(h.root),/kann bereits angekommen sein/);assert.doesNotMatch(text(h.root),/Tastendruck „Mitte“ bestätigt/);assert.deepEqual(h.calls,['connect','center']);}finally{h.app.unmount();}
+ const h=mount({command:async()=>{throw Object.assign(Error('timeout'),{code:'REMOTE_TIMEOUT',commandUnconfirmed:true});}});try{await h.vm.connectRemote();await h.vm.press('center');await Vue.nextTick();assert.match(text(h.root),/kann bereits angekommen sein/);assert.doesNotMatch(text(h.root),/Tastendruck „Mitte“ bestätigt/);assert.deepEqual(h.calls,['connect','center']);}finally{h.app.unmount();}
+});
+test('dismissing the picker explains how to select Pixl.Remote without implying a sent command',async()=>{
+ for(const [locale,selection,path] of [['de_DE',/Kein Gerät ausgewählt/,/Einstellungen → Fernsteuern → bis Aus/],['en',/No device selected/,/Settings → Remote → until off/]]){
+  const h=mount({locale,connect:()=>{throw Object.assign(Error('picker'),{code:'REMOTE_NO_SELECTION'});}});
+  try{
+   await h.vm.connectRemote();h.emit('disconnected','REMOTE_NO_SELECTION');await Vue.nextTick();
+   assert.match(text(h.root),selection);assert.match(text(h.root),path);assert.match(text(h.root),/Pixl\.Remote/);
+   assert.doesNotMatch(text(h.root),/angekommen|may already have arrived/);
+   assert.equal(flat(h.root).some(n=>n.props.role==='alert'),false);assert.deepEqual(h.calls,['connect']);
+  }finally{h.app.unmount();}
+ }
 });
 test('a file-transfer lock arriving during remote use disconnects rather than sharing GATT',async()=>{
  const h=mount();try{await h.vm.connectRemote();h.props.blocked=true;await Vue.nextTick();assert.deepEqual(h.calls,['connect','disconnect']);assert(h.button('verbinden').props.disabled);}finally{h.app.unmount();}

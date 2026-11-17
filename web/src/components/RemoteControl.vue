@@ -3,7 +3,7 @@
     <h3>{{ text.title }}</h3>
     <label class="protocol-picker">{{ locale==='de_DE' ? 'Gerätefirmware' : 'Device firmware' }}
       <select :value="protocol" @change="protocol=$event.target.value" :disabled="phase!=='disconnected' || pixActive">
-        <option value="de">Allmiibo DE</option>
+        <option value="de">Allmiibo DE (LCD / OLED)</option>
         <option value="pixlink">cylin577 · PixLink</option>
       </select>
     </label>
@@ -17,7 +17,7 @@
       <span class="remote-state" :class="{online:phase === 'ready'}" role="status" aria-live="polite">{{ text[phase] }}</span>
     </div>
     <button v-if="keypadActive" type="button" class="remote-check" :aria-disabled="!ready" @click="press('status')">{{ text.checkConnection }}</button>
-    <p v-if="unavailable || error" class="remote-warning" role="alert">{{ text.errors[unavailable || error] || text.failed }}</p>
+    <p v-if="unavailable || error" :class="error === 'REMOTE_NO_SELECTION' ? 'remote-limit' : 'remote-warning'" :role="error === 'REMOTE_NO_SELECTION' ? 'status' : 'alert'">{{ text.errors[unavailable || error] || text.failed }}<template v-if="commandUnconfirmed"> {{ text.unconfirmed }}</template></p>
     <div class="remote-pad" role="group" :aria-label="text.title"
          :tabindex="keypadActive ? 0 : -1" :aria-describedby="keypadActive ? 'remote-keyboard-hint' : undefined"
          :aria-keyshortcuts="keypadActive ? (capabilities & 2 ? 'ArrowLeft ArrowRight Enter Escape' : 'ArrowLeft ArrowRight Enter') : undefined"
@@ -50,7 +50,7 @@ const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'
 export default {
   components:{PixLinkRemote,DisplayPhoto},
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
-  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',notice:'',checkedAt:null,setupOpen:false,unavailable:remoteAvailability()};},
+  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',commandUnconfirmed:false,notice:'',checkedAt:null,setupOpen:false,unavailable:remoteAvailability()};},
   computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
     keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');},
     photoSupported(){return !!(this.capabilities & REMOTE_LCD_CAPABILITY);},
@@ -69,7 +69,7 @@ export default {
         this.checkedAt=null;
         if(this.notice==='status')this.notice='';
       }
-      if(state.error){this.error=state.error;this.notice='';}
+      if(state.error){this.error=state.error;this.commandUnconfirmed=!!state.commandUnconfirmed;this.notice='';}
       this.$emit('active',state.phase!=='disconnected');
     }});
   },
@@ -77,7 +77,7 @@ export default {
   watch:{blocked(value){if(value&&this.phase!=='disconnected')this.disconnectRemote();}},
   methods:{
     captureDisplay(){
-      this.error='';this.notice='';this.checkedAt=null;
+      this.error='';this.commandUnconfirmed=false;this.notice='';this.checkedAt=null;
       return this._remoteClient.captureDisplay();
     },
     pixLinkActive(value){this.pixActive=value;this.$emit('active',value);},
@@ -96,18 +96,18 @@ export default {
     async connectRemote(){
       if(this.blocked||this.phase!=='disconnected'||this.unavailable)return;
       const generation=++this._remoteUiGeneration;
-      this.error='';this.notice='';this.checkedAt=null;this.setupOpen=false;
+      this.error='';this.commandUnconfirmed=false;this.notice='';this.checkedAt=null;this.setupOpen=false;
       try{await this._remoteClient.connect();}catch(error){if(this._remoteMounted&&generation===this._remoteUiGeneration)this.error=error?.code||'REMOTE_UNSUPPORTED';}
     },
     async disconnectRemote(){
       ++this._remoteUiGeneration;
-      this.notice='';
+      this.error='';this.commandUnconfirmed=false;this.notice='';
       await this._remoteClient.disconnect();
     },
     async press(command){
       if(!this.ready)return;
       const generation=this._remoteUiGeneration;
-      this.error='';this.notice='';this.checkedAt=null;
+      this.error='';this.commandUnconfirmed=false;this.notice='';this.checkedAt=null;
       try{
         const reply=await this._remoteClient.command(command,{sameLink:typeof this.handoffFileConnection==='function'});
         if(!this._remoteMounted||generation!==this._remoteUiGeneration)return;
@@ -125,6 +125,7 @@ export default {
       }catch(error){
         if(this._remoteMounted&&generation===this._remoteUiGeneration){
           this.error=command==='status'&&error?.code==='REMOTE_TIMEOUT'?'REMOTE_STATUS_TIMEOUT':error?.code||'REMOTE_REJECTED';
+          this.commandUnconfirmed=!!error?.commandUnconfirmed;
         }
       }
     }

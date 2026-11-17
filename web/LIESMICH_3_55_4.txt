@@ -1,0 +1,12 @@
+Allmiibo Dateimanager 3.55.4 · LCD und OLED / LCD and OLED
+
+Windows: Start-Dateimanager.cmd
+
+Wähle beim Firmware-Download dein Displaymodell. Für LCD gibt es DE3.75 Final und die Vorschau DE3.81. Für OLED mit SH1106 und S112 7.2.0 ist DE3.81 Test 1 als App-ZIP für die Android-App nRF Device Firmware Update verfügbar.
+
+Choose your display model when downloading firmware. LCD owners can use stable DE3.75 or the DE3.81 preview. For OLED with SH1106 and S112 7.2.0, install the DE3.81 Test 1 application ZIP with nRF Device Firmware Update on Android.
+
+https://bluecyber81.github.io/pixl.js/
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.75
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.81
+https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1

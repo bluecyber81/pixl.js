@@ -4,6 +4,7 @@ import {parseMenuRun,compareMenuRuns,MENU_RUN_FILE_LIMIT} from '../src/lib/menu-
 import {parseMenuDiagnostics} from '../src/lib/device-extra-diagnostics.js';
 import {createCombinedDiagnosticReport} from '../src/lib/diagnostic-snapshot.js';
 import {TEST_FIRMWARE_REFERENCE,diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js';
+import {firmwareBoard,displayBuildReference} from '../src/lib/hardware-profile.js';
 import {diagnosticSnapshot} from './fixtures/diagnostic-overview-data.mjs';
 const hex='50584d49022001000101010000000000feffffffffffffff0200080808030803';
 function report(version='2.22.0-DE3.71t1',counter=644){
@@ -12,6 +13,21 @@ function report(version='2.22.0-DE3.71t1',counter=644){
  return createCombinedDiagnosticReport({baseReport:{firmwareVersion:version},snapshot});
 }
 const parsed=data=>parseMenuRun(JSON.stringify(data));
+
+test('OLED Test 1 matches its own signed package and SH1106 build profile',()=>{
+ const version='2.22.0-DE3.81-OLEDt1';
+ const identity=diagnosticBuildIdentity({firmwareVersion:version});
+ assert.equal(firmwareBoard(version),'OLED');
+ assert.equal(displayBuildReference(version).controllerDriver,'SH1106');
+ assert.equal(firmwareBoard('2.22.0-DE3.81'),'LCD');
+ assert.equal(firmwareBoard('2.27.11'),null);
+ assert.equal(identity.packageReference.board,'OLED');
+ assert.equal(identity.packageReference.applicationCounter,81);
+ assert.equal(identity.packageReference.hardwareAcceptance,'first-device-run-reported');
+ assert.equal(identity.referenceRelation,'version-only');
+ assert.equal(identity.observed.sourceId,null);
+ assert.equal(identity.applicationHashVerified,false);
+});
 
 test('package hash and SourceID are references, never silently promoted to observed device identity',()=>{
  const value=report(),identity=value.buildIdentity;
@@ -76,7 +92,7 @@ for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.
  const {buildIdentity}=report(version,counter);
  assert.equal(buildIdentity.referenceRelation,'version-and-counter');
  assert.equal(buildIdentity.packageReference.applicationCounter,counter);
- assert.equal(buildIdentity.packageReference.hardwareAcceptance, ({647:'remote-display-photo-confirmed-on-one-lcd', 648:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd', 653:'startup-and-system-readback-on-one-lcd', 654:'owner-reported-flash-and-initial-operation'})[counter] ?? 'pending');
- assert.equal(buildIdentity.packageReference.artifactStatus, [647,648].includes(counter) ? 'stable-signed-application' : 'experimental-signed-application');
+ assert.equal(buildIdentity.packageReference.hardwareAcceptance, ({647:'remote-display-photo-confirmed-on-one-lcd', 648:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd', 653:'startup-and-system-readback-on-one-lcd', 654:'startup-and-system-readback-on-one-lcd'})[counter] ?? 'pending');
+ assert.equal(buildIdentity.packageReference.artifactStatus, [647,648,654].includes(counter) ? 'stable-signed-application' : 'experimental-signed-application');
  assert.equal(buildIdentity.applicationHashVerified,false);
 });

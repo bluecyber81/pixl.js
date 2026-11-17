@@ -45,7 +45,10 @@ function installPeripheral(uuids) {
       device.dispatchEvent(new Event('gattserverdisconnected'));
     }
   };
-  Object.defineProperty(navigator,'bluetooth',{value:{requestDevice:async()=>device}});
+  Object.defineProperty(navigator,'bluetooth',{value:{requestDevice:async()=>{
+    if(window.testRemote.cancelPicker)throw new DOMException('No device selected','NotFoundError');
+    return device;
+  }}});
 }
 
 const dist = path.resolve(process.argv[2] || 'dist'), base = process.argv[3] || '/';
@@ -67,7 +70,14 @@ try {
       const nav = page.locator('.workspace-nav [aria-controls="remote-workspace"]');
       await nav.click();
       const section = page.locator('.remote-control'), pad = section.locator('.remote-pad');
-      await section.getByRole('button',{name:locale==='de-DE'?'Fernbedienung verbinden':'Connect remote'}).click();
+      const connect=section.getByRole('button',{name:locale==='de-DE'?'Fernbedienung verbinden':'Connect remote'});
+      await page.evaluate(()=>{window.testRemote.cancelPicker=true;});
+      await connect.click();
+      await section.getByRole('status').filter({hasText:locale==='de-DE'?'Kein Gerät ausgewählt':'No device selected'}).waitFor();
+      assert.equal(await section.getByRole('alert').count(),0);
+      assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts),[]);
+      await page.evaluate(()=>{window.testRemote.cancelPicker=false;});
+      await connect.click();
       const disconnect = section.locator('.remote-connection button');
       await disconnect.focus();
       await page.keyboard.press('ArrowRight'); // No global shortcut.

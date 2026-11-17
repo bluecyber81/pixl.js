@@ -126,6 +126,7 @@ language.subscribe(({ locale }) => {
     document.documentElement.lang = english ? 'en' : 'de';
     for (const [element, [de, en]] of messages) element.textContent = english ? en : de;
     document.getElementById('guide-link').setAttribute('href', english ? '../guide/en.html' : '../guide/index.html');
+    document.getElementById('oled-guide').setAttribute('href', english ? '../guide/en.html#oled' : '../guide/index.html#oled');
     appleGuide.setAttribute('href', english ? '../guide/en.html#iphone' : '../guide/index.html#iphone');
     document.getElementById('package-target').textContent = targetDescription(latestState.target);
 }, pageLocales);

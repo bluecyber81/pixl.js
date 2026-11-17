@@ -1,4 +1,4 @@
-"""Verify the released LCD application against this build and the bound Z19 public key."""
+"""Verify the released LCD application against this build and its bootloader's bound public key."""
 import argparse
 import hashlib
 import json
@@ -165,10 +165,11 @@ def main():
     release = unique_json((root / 'RELEASE_INFO.json').read_bytes())
     mode = 'preview' if args.preview else 'release'
     if args.preview:
-        preview = release['firmware_preview']
+        preview = release.get('firmware_preview')
+        need(preview is not None, 'No separate LCD preview is registered')
         need(type(preview['counter']) is int and preview['counter'] > release['counter'], 'Newer preview counter')
         release = {**release, **preview, 'production_source_id_sha256': preview['source_id']}
-    build = args.build_dir or root / ('build/lcd-preview' if args.preview else 'build/lcd-de375')
+    build = args.build_dir or root / ('build/lcd-preview' if args.preview else 'build/lcd-de381')
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
     need(result['mode'] == mode and result['status'] == 'passed', 'Fresh matching firmware build required')
     need((result['version'], result['counter'], result['source_id_sha256']) ==
@@ -180,17 +181,21 @@ def main():
     need(sha(ota.read_bytes()) == release['ota_sha256'], 'Reviewed OTA SHA-256')
     binary = (build / 'pixljs.bin').read_bytes()
     need(sha(binary) == release['application_sha256'], 'Released application SHA-256')
-    boot = root / 'bootloader-z19'
+    boot = root / release['tested_bootloader']['source']
     binding = unique_json((boot / 'SOURCE_BINDING.json').read_bytes())
     key_path = 'fw/bootloader/src/dfu_public_key.c'
-    key_bytes = (boot / key_path).read_bytes()
-    need(sha(key_bytes) == binding['files'][key_path], 'Z19 public key source binding')
+    key_source = boot / key_path
+    if not key_source.is_file():
+        # Z20 and Z21 inherit this exact file from the source-bound Z19 tree.
+        key_source = root / 'bootloader-z19' / key_path
+    key_bytes = key_source.read_bytes()
+    need(sha(key_bytes) == binding['files'][key_path], 'Bootloader public key source binding')
     need(binding['expectedPaddedBootloaderSha256'] == release['tested_bootloader']['padded_region_sha256'],
-         'Z19 boot region bound to this release')
+         'Bootloader region bound to this release')
     source = key_bytes.decode('utf-8')
     initializer = re.search(r'pk\[64\]\s*=\s*\{([^}]+)\}', source).group(1)
     public = bytes(int(n, 16) for n in re.findall(r'0x([0-9a-fA-F]{2})', initializer))
-    need(len(public) == 64, 'Z19 P-256 public key')
+    need(len(public) == 64, 'Bootloader P-256 public key')
     key = ec.EllipticCurvePublicNumbers(int.from_bytes(public[:32], 'little'),
                                          int.from_bytes(public[32:], 'little'), ec.SECP256R1()).public_key()
     evidence = verify_zip(ota, binary, release, key)
@@ -204,7 +209,7 @@ def main():
          'Web DFU offer matches the signed LCD application identity')
     need((web_dir / ota.name).read_bytes() == ota.read_bytes(), 'Web and release ZIP bytes differ')
     evidence['identicalWebPackage'] = 'web/public/firmware/' + ota.name
-    evidence['publicKeySource'] = 'bootloader-z19/' + key_path
+    evidence['publicKeySource'] = key_source.relative_to(root).as_posix()
     evidence['publicKeySourceSha256'] = sha(key_bytes)
     (build / 'SIGNED_OTA.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf8')
     print(f"Verified signature, payload and three negative controls for {ota.name}")

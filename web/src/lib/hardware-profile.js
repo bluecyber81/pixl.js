@@ -1,3 +1,5 @@
+import { UPDATE_TARGET } from './update-target.js';
+
 // A profile is opt-in. Only the browser's already hashed, per-device lookup key is used locally.
 const profileValue = 'lipo-551520-180mah-v1';
 const storageKey = binding => binding + '.battery-label.v1';
@@ -17,8 +19,17 @@ export function batteryLabelReport() {
     ratedMilliampHours: 180, ratedMilliwattHours: 684};
 }
 
-// These LCD configurations are bound to inspected firmware sources. No controller ID is read over BLE.
+// The application version identifies a published build target. It is not a display-controller read.
+const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81'];
+export function firmwareBoard(version) {
+  if (version === '2.22.0-DE3.81-OLEDt1') return 'OLED';
+  if (version === UPDATE_TARGET.application.version || lcdDisplayBuilds.includes(version) ||
+      Object.hasOwn(UPDATE_TARGET.localApplications, version)) return 'LCD';
+  return null;
+}
+
 export function displayBuildReference(version) {
-  if (!['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81'].includes(version)) return null;
+  if (firmwareBoard(version) === 'OLED') return {source:'oled-firmware-configuration', controllerDriver:'SH1106', width:128, height:64};
+  if (!lcdDisplayBuilds.includes(version)) return null;
   return {source:'lcd-firmware-configuration', controllerDriver:'ST7567', width:128, height:64};
 }
