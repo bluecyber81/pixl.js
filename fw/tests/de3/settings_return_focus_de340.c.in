@@ -58,7 +58,8 @@ static unsigned device_tests;
 static void settings_device_test_open(app_settings_t *app){assert(app);++device_tests;}
 static bool dim_before_sleep;
 static bool settings_get_lcd_dim(void){return dim_before_sleep;}
-static void settings_toggle_lcd_dim(void){dim_before_sleep=!dim_before_sleep;}
+static uint8_t settings_lcd_dim_idle_seconds(void){return dim_before_sleep ? 5 : 0;}
+static void settings_cycle_lcd_dim(void){dim_before_sleep=!dim_before_sleep;}
 typedef struct { bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,
                      flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight;
                  uint16_t sleep_timeout_sec; } settings_data_t;
@@ -159,7 +160,7 @@ int main(void){
  activate(&list,new_row);assert(device_tests==1&&d.scene_depth==1);
  new_row=find(&list,SETTINGS_MAIN_MENU_LCD_DIM);
  assert(!settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,_T(OFF)));
- activate(&list,new_row);assert(settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,_T(ON)));
+ activate(&list,new_row);assert(settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,"5 s"));
  activate(&list,new_row);assert(!settings_get_lcd_dim()&&!saves);
  const unsigned menus[]={SETTINGS_MAIN_MENU_VERSION,SETTINGS_MAIN_MENU_BACK_LIGHT,
   SETTINGS_MAIN_MENU_OLED_CONTRAST,SETTINGS_MAIN_MENU_LANGUAGE,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT,

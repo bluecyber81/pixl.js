@@ -92,7 +92,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     switch (selection) {
 #ifdef LCD_SCREEN
     case SETTINGS_MAIN_MENU_LCD_DIM:
-        settings_toggle_lcd_dim();
+        settings_cycle_lcd_dim();
         settings_scene_main_reload(app);
         break;
     case SETTINGS_MAIN_MENU_BACK_LIGHT:
@@ -277,9 +277,19 @@ static void settings_scene_main_reload(void *user_data) {
     }
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_LCD_BACKLIGHT), backlight_value,
                                (void *)SETTINGS_MAIN_MENU_BACK_LIGHT);
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c9,
-                               p_settings->language == LANGUAGE_DE_DE ? "Schlafdimmer" : "Dim before sleep",
-                               settings_get_lcd_dim() ? _T(ON) : _T(OFF), (void *)SETTINGS_MAIN_MENU_LCD_DIM);
+    bool de = p_settings->language == LANGUAGE_DE_DE;
+    const char *dim_value = _T(OFF);
+    if (settings_get_lcd_dim()) {
+        uint8_t delay = settings_lcd_dim_idle_seconds();
+        if (delay) {
+            snprintf(txt, sizeof(txt), "%u s", (unsigned)delay);
+            dim_value = txt;
+        } else {
+            dim_value = de ? "vor Schlaf" : "pre-sleep";
+        }
+    }
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c9, de ? "Dimmen" : "Auto dim",
+                               dim_value, (void *)SETTINGS_MAIN_MENU_LCD_DIM);
 #endif
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_FLIP_DISPLAY),

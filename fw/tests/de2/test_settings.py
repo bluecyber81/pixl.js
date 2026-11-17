@@ -75,10 +75,16 @@ int main(void) {
         reset(); stored[0]=(unsigned char)legacy;
         assert(settings_init()==0 && !settings_get_lcd_dim());
         assert(settings_save()==0 && writes==0 && stored[0]==legacy);
-        settings_toggle_lcd_dim();
+        settings_cycle_lcd_dim();
+        assert(settings_lcd_dim_idle_seconds()==5);
         assert(settings_get_lcd_dim() && writes==0 && settings_save()==0 && writes==1);
         assert(settings_init()==0 && settings_get_lcd_dim() && settings_save()==0 && writes==1);
-        settings_toggle_lcd_dim();
+        for (int mode=0;mode<3;mode++) {
+            const unsigned expected[3]={15,30,0};
+            settings_cycle_lcd_dim();
+            assert(settings_get_lcd_dim() && settings_lcd_dim_idle_seconds()==expected[mode]);
+        }
+        settings_cycle_lcd_dim();
         assert(settings_save()==0 && writes==2 && stored[0]==0 && settings_init()==0 && !settings_get_lcd_dim());
     }
     reset(); stored[0]=0xfe;

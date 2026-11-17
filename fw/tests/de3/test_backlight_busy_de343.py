@@ -23,7 +23,10 @@ class BacklightBusyTests(unittest.TestCase):
         parts += [function(display,name) for name in ('backlight_pwm_duty_set',
                     'mui_u8g2_set_backlight_level','mui_u8g2_get_backlight_level','pwm_init')]
         power=(SRC/'sdk/pwr_mgmt/nrf_pwr_mgmt.c').read_text()
-        parts.extend([function(power,'nrf_pwr_mgmt_dim_window'),
+        parts.extend([function(power,'pwr_mgmt_standby_timeout_clear'),
+                      function(power,'pwr_mgmt_standby_timeout_check'),
+                      function(power,'nrf_pwr_mgmt_input_activity'),
+                      function(power,'nrf_pwr_mgmt_dim_window'),
                       function(display,'mui_u8g2_poll_dim')])
         scene=(SRC/'app/settings/scene/settings_scene_lcd_backlight.c').read_text()
         reset=(SRC/'app/settings/scene/settings_scene_main.c').read_text()

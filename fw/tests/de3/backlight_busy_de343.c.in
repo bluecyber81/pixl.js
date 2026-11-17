@@ -56,6 +56,12 @@ static void nrf_pwr_mgmt_set_timeout(unsigned n){(void)n;sleep_sets++;}
 static void setLanguage(unsigned n){(void)n;language_sets++;}
 static bool m_dimmed, m_dim_retry_pending, opt_in;
 static uint16_t m_timeout_counter, m_standby_counter;
+static uint8_t m_input_idle_seconds;
+#define __STATIC_INLINE static inline
+#define NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF 1
+static bool m_shutdown_started;
+static unsigned shutdown_requests;
+static void nrf_pwr_mgmt_shutdown(unsigned kind){assert(kind==1);++shutdown_requests;}
 static uint32_t rtc;
 #define APP_TIMER_TICKS(ms) (ms)
 static uint32_t app_timer_cnt_get(void) {return rtc;}
@@ -112,13 +118,25 @@ int main(void){unsigned cases=0;
  reset(true,true);settings_reset_default(&app);
  assert(toasts==1 && !strcmp(last_toast,"APP_SET_RESET_DEFAULT_SUCCESS"));cases++;
  reset(true,true);
+ // Simulate a live NFC or BLE session feeding standby every second.
  m_timeout_counter=180;
- m_standby_counter=174;assert(!nrf_pwr_mgmt_dim_window());
- m_standby_counter=175;assert(nrf_pwr_mgmt_dim_window());
+ for(unsigned second=1;second<=300;++second){
+   pwr_mgmt_standby_timeout_check();
+   pwr_mgmt_standby_timeout_clear();
+   assert(!nrf_pwr_mgmt_dim_window(0) && nrf_pwr_mgmt_dim_window(5)==(second>=5));
+   assert(nrf_pwr_mgmt_dim_window(15)==(second>=15) && nrf_pwr_mgmt_dim_window(30)==(second>=30));
+ }
+ assert(m_input_idle_seconds==255 && !shutdown_requests);
+ nrf_pwr_mgmt_input_activity();assert(!nrf_pwr_mgmt_dim_window(5));
+ m_timeout_counter=0;for (unsigned i=0;i<30;i++)pwr_mgmt_standby_timeout_check();
+ assert(nrf_pwr_mgmt_dim_window(30) && !shutdown_requests);
+ m_timeout_counter=180;
+ m_standby_counter=174;assert(!nrf_pwr_mgmt_dim_window(0));
+ m_standby_counter=175;assert(nrf_pwr_mgmt_dim_window(0));
  mui_u8g2_poll_dim(true);assert(!calls && duty==30);
  opt_in=true;mui_u8g2_poll_dim(true);assert(calls==1 && duty==8);
  mui_u8g2_poll_dim(true);assert(calls==1 && settings.lcd_backlight==30);
- m_standby_counter=0;mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window());assert(calls==2 && duty==30);
+ m_standby_counter=0;mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window(0));assert(calls==2 && duty==30);
  for (unsigned level=0;level<=100;level++){
    settings.lcd_backlight=level;unsigned previous=calls;
    mui_u8g2_poll_dim(true);
@@ -127,8 +145,8 @@ int main(void){unsigned cases=0;
    opt_in=false;mui_u8g2_poll_dim(true);assert(duty==level && calls==previous+2);
    opt_in=true;
  }
- m_timeout_counter=0;m_standby_counter=60000;assert(!nrf_pwr_mgmt_dim_window());
- m_timeout_counter=5;assert(!nrf_pwr_mgmt_dim_window());
+ m_timeout_counter=0;m_standby_counter=60000;assert(!nrf_pwr_mgmt_dim_window(0));
+ m_timeout_counter=5;assert(!nrf_pwr_mgmt_dim_window(0));
  settings.lcd_backlight=30;rtc=0xfffff0;duty_error=NRF_ERROR_INVALID_STATE;
  unsigned previous=calls;mui_u8g2_poll_dim(true);assert(calls==previous+1 && !m_dimmed);
  rtc=(rtc+249)&0xffffff;mui_u8g2_poll_dim(true);assert(calls==previous+1);

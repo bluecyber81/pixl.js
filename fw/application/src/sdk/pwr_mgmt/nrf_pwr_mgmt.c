@@ -230,6 +230,8 @@ static nrf_drv_wdt_channel_id m_channel_id;
     #define PWR_MGMT_STANDBY_TIMEOUT_CLEAR() pwr_mgmt_standby_timeout_clear()
     #define PWR_MGMT_STANDBY_TIMEOUT_CHECK() pwr_mgmt_standby_timeout_check()
 
+    /* Saturates, so a long file transfer cannot wrap into an apparently fresh key. */
+    static volatile uint8_t m_input_idle_seconds;
     static volatile uint16_t m_standby_counter;     /**< Number of seconds from the last activity
                                                 (@ref pwr_mgmt_feed). */
     static volatile uint16_t m_timeout_counter = NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_S;
@@ -241,6 +243,7 @@ static nrf_drv_wdt_channel_id m_channel_id;
 
     __STATIC_INLINE void pwr_mgmt_standby_timeout_check(void)
     {
+        if (m_input_idle_seconds < UINT8_MAX) ++m_input_idle_seconds;
         if (m_timeout_counter == 0)
             return;
 
@@ -533,10 +536,16 @@ void nrf_pwr_mgmt_set_timeout(uint16_t timeout)
     m_timeout_counter = timeout;
 }
 
-bool nrf_pwr_mgmt_dim_window(void)
+void nrf_pwr_mgmt_input_activity(void)
+{
+    m_input_idle_seconds = 0;
+}
+
+bool nrf_pwr_mgmt_dim_window(uint8_t input_idle_delay)
 {
     /* Sample the same counter as automatic sleep. Any normal activity feed
      * ends the dim window, including the press that selects a menu item. */
+    if (input_idle_delay) return m_input_idle_seconds >= input_idle_delay;
     return m_timeout_counter > 5 && m_standby_counter >= m_timeout_counter - 5;
 }
 

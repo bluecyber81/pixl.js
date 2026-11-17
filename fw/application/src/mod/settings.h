@@ -42,7 +42,8 @@ int32_t settings_init();
 int32_t settings_save();
 int32_t settings_reset();
 bool settings_get_lcd_dim(void);
-void settings_toggle_lcd_dim(void);
+uint8_t settings_lcd_dim_idle_seconds(void);
+void settings_cycle_lcd_dim(void);
 settings_data_t *settings_get_data();
 
 #endif

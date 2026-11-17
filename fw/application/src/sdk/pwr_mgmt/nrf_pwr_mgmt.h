@@ -162,7 +162,8 @@ void nrf_pwr_mgmt_cancel_shutdown(void);
 void nrf_pwr_mgmt_set_timeout(uint16_t timeout);
 
 uint16_t nrf_pwr_mgmt_get_timeout();
-bool nrf_pwr_mgmt_dim_window(void);
+void nrf_pwr_mgmt_input_activity(void);
+bool nrf_pwr_mgmt_dim_window(uint8_t input_idle_delay);
 
 #ifdef __cplusplus
 }

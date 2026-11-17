@@ -2,6 +2,9 @@
 
 #include "mui_anim.h"
 #include "mui_u8g2.h"
+#ifdef BOARD_LCD
+#include "nrf_pwr_mgmt.h"
+#endif
 #include "nrf_log.h"
 #include "settings.h"
 #include "app_error.h"
@@ -155,6 +158,12 @@ static void mui_process_input(mui_t *p_mui, mui_event_t *p_event) {
     }
     /* An accepted reset/sleep request owns the saved buffers until commit or cancel. */
     if (mini_app_launcher_input_blocked(mini_app_launcher())) return;
+#ifdef BOARD_LCD
+    /* A real or accepted remote gesture restores light and keeps its normal
+     * single dispatch. Stale or blocked gestures never reach this point. */
+    nrf_pwr_mgmt_input_activity();
+    mui_u8g2_poll_dim(false);
+#endif
     if (mui_nfc_save_input(p_mui, p_event)) return;
     if (p_mui->memory_error) {
         uint32_t arg = p_event->arg_int;
@@ -254,7 +263,13 @@ void mui_deinit(mui_t *p_mui) {
 
 void mui_post(mui_t *p_mui, mui_event_t *p_event) { mui_event_post(&p_mui->event_queue, p_event); }
 
-void mui_tick(mui_t *p_mui) { mui_event_dispatch(&p_mui->event_queue); }
+void mui_tick(mui_t *p_mui) {
+    mui_event_dispatch(&p_mui->event_queue);
+#ifdef BOARD_LCD
+    /* Shared foreground path, including the Tiny game event pump. */
+    mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window(settings_lcd_dim_idle_seconds()));
+#endif
+}
 
 void mui_panic(mui_t *p_mui, char *err) {
     if (p_mui->initialized) {

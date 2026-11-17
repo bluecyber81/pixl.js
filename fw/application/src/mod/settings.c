@@ -63,9 +63,28 @@ _Static_assert(offsetof(settings_data_t, no_sleep_mode) == 23, "legacy settings 
  * original file size and both legal old values. Only an explicit opt-in
  * uses the new tag. Older firmware normalizes it to its legacy default. */
 #define LCD_DIM_BEFORE_SLEEP 0xd3u
-bool settings_get_lcd_dim(void) { return m_settings_data.backlight == LCD_DIM_BEFORE_SLEEP; }
-void settings_toggle_lcd_dim(void) {
-    m_settings_data.backlight = settings_get_lcd_dim() ? 0 : LCD_DIM_BEFORE_SLEEP;
+/* Only these four tags are valid. Physical and remote key events reset the
+ * independent idle timer. Background BLE/NFC traffic only feeds standby. */
+#define LCD_DIM_IDLE_5   0xd4u
+#define LCD_DIM_IDLE_15  0xd5u
+#define LCD_DIM_IDLE_30  0xd6u
+bool settings_get_lcd_dim(void) {
+    uint8_t mode = m_settings_data.backlight;
+    return mode >= LCD_DIM_BEFORE_SLEEP && mode <= LCD_DIM_IDLE_30;
+}
+uint8_t settings_lcd_dim_idle_seconds(void) {
+    switch (m_settings_data.backlight) {
+    case LCD_DIM_IDLE_5:  return 5;
+    case LCD_DIM_IDLE_15: return 15;
+    case LCD_DIM_IDLE_30: return 30;
+    default:              return 0;
+    }
+}
+void settings_cycle_lcd_dim(void) {
+    if (!settings_get_lcd_dim()) m_settings_data.backlight = LCD_DIM_IDLE_5;
+    else if (m_settings_data.backlight == LCD_DIM_BEFORE_SLEEP) m_settings_data.backlight = 0;
+    else if (m_settings_data.backlight == LCD_DIM_IDLE_30) m_settings_data.backlight = LCD_DIM_BEFORE_SLEEP;
+    else ++m_settings_data.backlight;
 }
 
 #define BOOL_VALIDATE(expr, default_val)                                                                               \
