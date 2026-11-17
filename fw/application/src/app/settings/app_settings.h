@@ -35,10 +35,20 @@ typedef struct {
     uint16_t main_scroll;
 
     settings_storage_snapshot_t storage_snapshot;
+#if defined(BOARD_OLED) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    mui_view_t device_test;
+    uint8_t tested_keys;
+    uint8_t held_keys;
+#endif
 
 } app_settings_t;
 
-typedef enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_PROGRESS_BAR, SETTINGS_VIEW_ID_MSG_BOX, SETTINGS_VIEW_ID_TOAST } settings_view_id_t;
+typedef enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_PROGRESS_BAR, SETTINGS_VIEW_ID_MSG_BOX, SETTINGS_VIEW_ID_TOAST,
+               SETTINGS_VIEW_ID_DEVICE_TEST } settings_view_id_t;
+
+#if defined(BOARD_OLED) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+void settings_device_test_open(app_settings_t *app);
+#endif
 
 extern mini_app_t app_settings_info;
 

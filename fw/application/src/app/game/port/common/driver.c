@@ -9,53 +9,46 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
-void JOY_OLED_clear() {
-    for (uint8_t y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
-        for (uint8_t x = 0; x < 128; x++) {
-            JOY_OLED_send(0);
+/* Send a rendered page while the display owns the shared SPI bus. Pixel
+ * calculation happens before acquiring it, with application IRQs enabled. */
+void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count) {
+    if (!pixels || count == 0 || count > 128 || page >= 8) return;
+    uint8_t column = u8g2_GetU8x8(&mui()->u8g2)->x_offset;
+    /* U8g2 rotates the menu in software. Keep the panel's own origin
+     * (SH1106: column 2) when drawing full or partial rotated rows. */
+    if (mui()->u8g2.cb == U8G2_R2) {
+        page = 7 - page;
+        column += 128 - count;
+        for (unsigned x = 0; x < (count + 1u) / 2; ++x) {
+            unsigned opposite = count - 1u - x;
+            uint8_t first = pixels[x];
+            pixels[x] = (uint8_t)(__RBIT(pixels[opposite]) >> 24);
+            pixels[opposite] = (uint8_t)(__RBIT(first) >> 24);
         }
+    }
+    uint8_t address[] = {(uint8_t)(0xb0 | page), (uint8_t)(0x10 | (column >> 4)), (uint8_t)(column & 0x0f)};
+    spi_transaction_t tx = {.p_tx_buffer = address, .tx_length = sizeof(address)};
+    spi_device_t *display = mui_u8g2_get_spi_device();
+    hal_spi_bus_aquire(display);
+    nrf_gpio_pin_write(LCD_DC_PIN, 0);
+    uint32_t result = hal_spi_bus_xfer(&tx);
+    if (result == NRF_SUCCESS) {
+        nrf_gpio_pin_write(LCD_DC_PIN, 1);
+        tx.p_tx_buffer = pixels;
+        tx.tx_length = count;
+        result = hal_spi_bus_xfer(&tx);
+    }
+    hal_spi_bus_release(display);
+    APP_ERROR_CHECK(result);
+}
 
-        JOY_OLED_end();
+void JOY_OLED_clear(void) {
+    uint8_t pixels[128] = {0};
+    for (uint8_t page = 0; page < 8; page++) {
+        JOY_OLED_write_page(page, pixels, sizeof(pixels));
     }
 }
 
-void JOY_OLED_end() { hal_spi_bus_release(mui_u8g2_get_spi_device()); }
-
-void JOY_OLED_write_data(uint8_t is_data, uint8_t data) {
-    spi_transaction_t trans = {
-        .p_tx_buffer = &data,
-        .tx_length = 1,
-        .p_rx_buffer = NULL,
-        .rx_length = 0,
-    };
-    nrf_gpio_pin_write(LCD_DC_PIN, is_data);
-    uint32_t err_code = hal_spi_bus_xfer(&trans);
-    if (err_code != NRF_SUCCESS) {
-        hal_spi_bus_release(mui_u8g2_get_spi_device());
-        APP_ERROR_CHECK(err_code);
-    }
-}
-
-void JOY_OLED_write_cmd(uint8_t cmd) { JOY_OLED_write_data(0, cmd); }
-
-void JOY_OLED_set_pos(uint8_t column, uint8_t page) {
-    JOY_OLED_write_cmd(0xb0 + (0x07 & page));
-    JOY_OLED_write_cmd(0x10 | column >> 4);
-    JOY_OLED_write_cmd(column & 0x0f);
-}
-
-void JOY_OLED_send(uint8_t b) { JOY_OLED_write_data(1, b); }
-
-void JOY_OLED_data_start(uint8_t y) {
-    uint8_t column = 0;
-#ifdef OLED_SCREEN
-    /* Draw into the same visible controller columns as the menu. */
-    column = u8g2_GetU8x8(&mui()->u8g2)->x_offset;
-#endif
-    hal_spi_bus_aquire(mui_u8g2_get_spi_device());
-    JOY_OLED_set_pos(column, y);
-}
 void JOY_init() { JOY_OLED_clear(); }
 
 void JOY_idle() {
@@ -66,6 +59,18 @@ void JOY_idle() {
 
 uint8_t JOY_exit() {
     return game_view_center_key_repeat_cnt() > 10; // about 3 sec
+}
+
+uint32_t JOY_clock_ticks(void) { return app_timer_cnt_get(); }
+
+/* Tris used the wall time of unbuffered SPI as its only gameplay clock.
+ * The physics runs twice per partial redraw. Subtract actual processing time,
+ * handle RTC rollover and never accumulate catch-up steps after a slow frame. */
+void JOY_pace_tris_step(uint32_t start) {
+    for (unsigned wait = 0; wait < 8; ++wait) {
+        if (app_timer_cnt_diff_compute(JOY_clock_ticks(), start) >= APP_TIMER_TICKS(8)) break;
+        DLY_ms(1);
+    }
 }
 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {

@@ -6,6 +6,17 @@
 
 static uint8_t key_state[3] = {0};
 static uint8_t key_repeat_cnt = 0;
+/* A held center exits the title. Only a complete new short gesture starts
+ * play, including when PRESS/RELEASE/SHORT all arrive in one scheduler tick. */
+static enum { START_IDLE, START_WAIT, START_PRESSED, START_TAPPED } start_state;
+
+void game_view_wait_for_start(void) { start_state = START_WAIT; }
+
+bool game_view_take_start(void) {
+    if (start_state != START_TAPPED) return false;
+    start_state = START_IDLE;
+    return true;
+}
 
 uint8_t game_view_key_pressed(input_key_t key) {
     return (unsigned int)key < sizeof(key_state) / sizeof(key_state[0]) ? key_state[key] : 0;
@@ -14,6 +25,7 @@ uint8_t game_view_key_pressed(input_key_t key) {
 static void game_view_reset_keys(void) {
     memset(key_state, 0, sizeof(key_state));
     key_repeat_cnt = 0;
+    start_state = START_IDLE;
 }
 
 uint8_t game_view_center_key_repeat_cnt(){
@@ -43,11 +55,17 @@ static void game_view_on_input(mui_view_t *p_view, mui_input_event_t *event) {
 
     if (event->type == INPUT_TYPE_PRESS) {
         key_state[event->key] = 1;
+        if (event->key == INPUT_KEY_CENTER && start_state == START_WAIT) start_state = START_PRESSED;
     } else if (event->type == INPUT_TYPE_RELEASE) {
         key_state[event->key] = 0;
         if (event->key == INPUT_KEY_CENTER) {
             key_repeat_cnt = 0;
         }
+    } else if (event->key == INPUT_KEY_CENTER && start_state == START_PRESSED &&
+               event->type == INPUT_TYPE_SHORT && !key_state[INPUT_KEY_CENTER]) {
+        start_state = START_TAPPED;
+    } else if (event->key == INPUT_KEY_CENTER && start_state == START_PRESSED && event->type == INPUT_TYPE_LONG) {
+        start_state = START_WAIT;
     } else if (event->type == INPUT_TYPE_REPEAT) {
         if (event->key == INPUT_KEY_CENTER && key_repeat_cnt < UINT8_MAX) {
             key_repeat_cnt++;

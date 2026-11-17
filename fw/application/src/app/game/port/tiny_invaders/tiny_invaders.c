@@ -92,11 +92,12 @@ int tiny_invaders_run(void) {
         SPACE space;
 
     NEWGAME:
+        game_view_wait_for_start();
         Live = 3;
         LEVELS = 0;
         Tiny_Flip(1, &space);
         while (1) {
-            if (JOY_act_pressed()) {
+            if (game_view_take_start()) {
                 JOY_sound(100, 125);
                 JOY_sound(50, 125);
                 goto BYPASS2;
@@ -273,22 +274,22 @@ void Tiny_Flip(uint8_t render0_picture1, SPACE *space) {
     uint8_t y, x;
     uint8_t MYSHIELD = 0x00;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < 128; x++) {
             if (render0_picture1 == 0) {
                 if (ShieldRemoved == 0)
                     MYSHIELD = MyShield(x, y, space);
                 else
                     MYSHIELD = 0x00;
-                JOY_OLED_send(background(x, y, space) | LivePrint(x, y) | Vesso(x, y, space) | UFOWrite(x, y, space) |
-                              Monster(x, y, space) | MyShoot(x, y, space) | MonsterShoot(x, y, space) | MYSHIELD);
+                pixels[x] = background(x, y, space) | LivePrint(x, y) | Vesso(x, y, space) | UFOWrite(x, y, space) |
+                              Monster(x, y, space) | MyShoot(x, y, space) | MonsterShoot(x, y, space) | MYSHIELD;
             } else
-                JOY_OLED_send(intro[x + (y * 128)]);
+                pixels[x] = intro[x + (y * 128)];
         }
         if (render0_picture1 == 0) {
             if (ShieldRemoved == 0) ShieldDestroy(0, space->MyShootBallxpos, space->MyShootBall, space);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, sizeof(pixels));
     }
     if (render0_picture1 == 0) {
         if (!(space->MonsterGroupeYpos < (2 + (4 - (space->MonsterFloorMax + 1))))) {

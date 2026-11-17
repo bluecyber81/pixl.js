@@ -73,9 +73,8 @@ extern "C" {
 #define JOY_down_pressed()        false
 
 
-void JOY_OLED_data_start(uint8_t y);
-void JOY_OLED_send(uint8_t b);
-void JOY_OLED_end() ;
+/* The display driver may rotate the caller's scratch page in place. */
+void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count);
 
 // Delays
 #define JOY_DLY_ms    nrf_delay_ms
@@ -90,6 +89,8 @@ uint16_t JOY_random(void);
 void JOY_init(void);
 void JOY_idle();
 uint8_t JOY_exit();
+uint32_t JOY_clock_ticks(void);
+void JOY_pace_tris_step(uint32_t start);
 long map(long x, long in_min, long in_max, long out_min, long out_max) ;
 
 #ifdef __cplusplus

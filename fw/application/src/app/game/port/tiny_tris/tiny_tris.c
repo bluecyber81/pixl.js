@@ -66,7 +66,7 @@ int8_t DEPLACEMENT_YY_TTRIS;
 void reset_Score_TTRIS(void);
 uint8_t PSEUDO_RND_TTRIS(void);
 void SND_TTRIS(uint8_t Snd_TTRIS);
-void INTRO_MANIFEST_TTRIS(void);
+bool INTRO_MANIFEST_TTRIS(void);
 void END_DROP_TTRIS(void);
 void SETUP_NEW_PREVIEW_PIECE_TTRIS(uint8_t *Rot_TTRIS);
 void CONTROLE_TTRIS(uint8_t *Rot_TTRIS);
@@ -135,13 +135,14 @@ int tiny_tris_run(void) {
         INIT_ALL_VAR_TTRIS();
         Game_Play_TTRIS();
         Ou_suis_Je_TTRIS(xx_TTRIS, yy_TTRIS);
-        INTRO_MANIFEST_TTRIS();
+        if (!INTRO_MANIFEST_TTRIS()) goto EXIT;
         SETUP_NEW_PREVIEW_PIECE_TTRIS(&Rot_TTRIS);
         Tiny_Flip_TTRIS(128);
         JOY_DLY_ms(1000);
         xx_TTRIS = 55;
         yy_TTRIS = 5;
         while (1) {
+            uint32_t step_start = JOY_clock_ticks();
             CONTROLE_TTRIS(&Rot_TTRIS);
             if (DROP_BREAK_TTRIS == 6) {
                 END_DROP_TTRIS();
@@ -179,6 +180,7 @@ int tiny_tris_run(void) {
             if (JOY_exit()) {
                 goto EXIT;
             }
+            JOY_pace_tris_step(step_start);
         }
     }
 
@@ -240,14 +242,15 @@ void SND_TTRIS(uint8_t Snd_TTRIS) {
     }
 }
 
-void INTRO_MANIFEST_TTRIS(void) {
+bool INTRO_MANIFEST_TTRIS(void) {
     uint8_t TIMER_1 = 0;
+    game_view_wait_for_start();
     recupe_HIGHSCORE_TTRIS();
     Convert_Nb_of_line_TTRIS();
     Flip_intro_TTRIS(&TIMER_1);
     while (1) {
         PIECEs_TTRIS = PSEUDO_RND_TTRIS();
-        if (JOY_act_pressed()) {
+        if (game_view_take_start()) {
             reset_Score_TTRIS();
             break;
         }
@@ -256,10 +259,11 @@ void INTRO_MANIFEST_TTRIS(void) {
         Flip_intro_TTRIS(&TIMER_1);
         JOY_idle();
         if (JOY_exit()) {
-            return;
+            return false;
         }
     }
     SND_TTRIS(4);
+    return true;
 }
 
 void END_DROP_TTRIS(void) {
@@ -804,24 +808,25 @@ uint8_t RecupeLineY_TTRIS(uint8_t Valeur) { return (Valeur >> 3); }
 uint8_t RecupeDecalageY_TTRIS(uint8_t Valeur) { return (Valeur - ((Valeur >> 3) << 3)); }
 
 void Tiny_Flip_TTRIS(uint8_t HR_TTRIS) {
+    if (HR_TTRIS > 128) HR_TTRIS = 128;
     uint8_t y, x;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < HR_TTRIS; x++) {
-            JOY_OLED_send(Recupe_TTRIS(x, y));
+            pixels[x] = Recupe_TTRIS(x, y);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, HR_TTRIS);
     }
 }
 
 void Flip_intro_TTRIS(uint8_t *TIMER1) {
     uint8_t y, x;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < 128; x++) {
-            JOY_OLED_send(intro_TTRIS(x, y, TIMER1));
+            pixels[x] = intro_TTRIS(x, y, TIMER1);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, sizeof(pixels));
     }
 }
 

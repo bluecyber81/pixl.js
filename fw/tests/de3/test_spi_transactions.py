@@ -46,6 +46,17 @@ typedef void (*nrfx_spim_evt_handler_t)(nrfx_spim_evt_t const *,void *);
 typedef struct { unsigned sck_pin,mosi_pin,miso_pin,frequency,mode; bool ss_active_high; } nrfx_spim_config_t;
 typedef struct { const uint8_t *p_tx_buffer; uint8_t *p_rx_buffer; size_t tx_length,rx_length; } nrfx_spim_xfer_desc_t;
 typedef struct { int unused; } u8x8_t;
+#ifdef MOCK_GAME_ROTATION
+static struct { struct { unsigned cb, x_offset; } u8g2; } mock_mui;
+#define u8g2_GetU8x8(p) (p)
+#define mui() (&mock_mui)
+#define U8G2_R2 2u
+static uint32_t __RBIT(uint32_t value) {
+    uint32_t reversed = 0;
+    for (unsigned i = 0; i < 32; ++i) reversed |= ((value >> i) & 1u) << (31 - i);
+    return reversed;
+}
+#endif
 #define NRFX_SPIM_INSTANCE(n) {n,&mock_spim}
 #define NRFX_SPIM_FLAG_NO_XFER_EVT_HANDLER 4u
 #define NRFX_SPIM_DEFAULT_CONFIG {0}
@@ -108,7 +119,9 @@ static bool app_masked, pending_irq, in_irq, injected, radio_enabled=true;
 static unsigned selected, dual_cs, irq_count, critical_enters, critical_exits;
 static unsigned transfers, fail_transfer, error_count, lcd_chunks, lcd_chunks_seen_by_irq;
 static unsigned stage, busy_remaining, busy_responses, polls_seen_by_irq;
-static uint8_t flash_command;
+static uint8_t flash_command, game_page, game_width;
+static unsigned game_transfer;
+static bool game_trace, dc_data;
 static bool expect_error;
 static jmp_buf error_jump;
 uint32_t app_timer_cnt_get(void) { return transfers; }
@@ -152,7 +165,7 @@ void nrf_gpio_pin_set(uint32_t pin) {
     selected &= ~(1u<<pin);
     if(pin==LCD_CS_PIN) inject(4); /* after CS-high, before mask restore */
 }
-void nrf_gpio_pin_write(uint32_t pin,uint32_t value) {(void)pin;(void)value;}
+void nrf_gpio_pin_write(uint32_t pin,uint32_t value) {assert(pin==LCD_DC_PIN);dc_data=value!=0;}
 void u8x8_gpio_SetDC(u8x8_t *device,uint8_t value) {(void)device;(void)value;}
 uint32_t nrfx_spim_init(const nrfx_spim_t *spi,const nrfx_spim_config_t *config,nrfx_spim_evt_handler_t handler,void *context) {
     (void)spi;(void)config;(void)context; assert(GUARDED ? handler!=NULL : handler==NULL); return NRF_SUCCESS;
@@ -164,6 +177,24 @@ uint32_t nrfx_spim_xfer(const nrfx_spim_t *spi,const nrfx_spim_xfer_desc_t *desc
     if(fail_transfer && transfers==fail_transfer) return 77;
     if((selected&(1u<<LCD_CS_PIN)) && !in_irq) {
         lcd_chunks++;
+        if (game_trace) {
+            assert(app_masked && selected==(1u<<LCD_CS_PIN) && desc->rx_length==0);
+            const uint8_t *p=desc->p_tx_buffer;
+            if (game_transfer++ == 0) {
+                assert(!dc_data && desc->tx_length==3);
+                unsigned col=2+(mock_mui.u8g2.cb ? 128-game_width : 0);
+                unsigned y=mock_mui.u8g2.cb ? 7-game_page : game_page;
+                assert(p[0]==(0xb0|y) && p[1]==(0x10|(col>>4)) && p[2]==(col&15));
+            } else {
+                assert(dc_data && desc->tx_length==game_width);
+                for(unsigned x=0;x<game_width;x++) {
+                    unsigned col=mock_mui.u8g2.cb ? game_width-1-x : x;
+                    uint8_t expected=(uint8_t)(col+game_page);
+                    for(unsigned bit=0;bit<8;bit++)
+                        assert(((p[x]>>bit)&1)==((expected>>(mock_mui.u8g2.cb?7-bit:bit))&1));
+                }
+            }
+        }
         if(desc->tx_length==128) inject(2); /* between DMA chunks */
     }
     if(selected&(1u<<FLASH_CS_PIN)) {
@@ -248,16 +279,36 @@ int main(int argc,char **argv) {
         uint8_t bytes[8]; hal_spi_flash_read(0x5678,bytes,sizeof(bytes));
         assert(irq_count==1 && polls_seen_by_irq==1 && busy_responses==3);
         assert(!app_masked && selected==0 && critical_enters==critical_exits);
-    } else if(scenario==11) {
+    } else if(scenario>=11 && scenario<=14) {
+#if GUARDED
+        uint8_t pixels[128];
+        mock_mui.u8g2.x_offset=2; /* SH1106 visible panel origin */
+        mock_mui.u8g2.cb=scenario==14 ? U8G2_R2 : 0;
+        for(game_page=0;game_page<8;game_page++) {
+            game_width=game_page & 1 ? 82 : 128;
+            for(unsigned x=0;x<game_width;x++) pixels[x]=(uint8_t)(x+game_page);
+            game_transfer=0;game_trace=true;stage=1;
+            if (scenario==11 || scenario==14) {
+                JOY_OLED_write_page(game_page,pixels,game_width);
+                assert(game_transfer==2 && !app_masked && selected==0);
+            } else {
+                expect_error=true;fail_transfer=scenario==12?1:2;
+                if (setjmp(error_jump)==0) {
+                    JOY_OLED_write_page(game_page,pixels,game_width);
+                    assert(!"expected LCD error");
+                }
+                assert(error_count==1 && !app_masked && selected==0);
+                break;
+            }
+        }
+        if(scenario==11 || scenario==14) assert(irq_count==1 && lcd_chunks_seen_by_irq==2 && lcd_chunks==16 && dual_cs==0);
+#else
         stage=1; JOY_OLED_data_start(0);
         for(unsigned i=0;i<128;i++) JOY_OLED_send((uint8_t)i);
         assert(app_masked && irq_count==0 && pending_irq);
         JOY_OLED_end();
         assert(irq_count==1 && lcd_chunks_seen_by_irq==131 && dual_cs==0 && !app_masked);
-    } else if(scenario==12) {
-        expect_error=true; fail_transfer=1;
-        if(setjmp(error_jump)==0) {JOY_OLED_data_start(0); assert(!"expected game failure");}
-        assert(error_count==1 && critical_enters==critical_exits);
+#endif
     } else assert(!"unknown scenario");
     assert(radio_enabled && selected==0 && !app_masked && critical_enters==critical_exits);
     puts("PASS"); return 0;
@@ -282,14 +333,16 @@ class TransactionTests(unittest.TestCase):
             src=tree/'fw/application/src'
             u8=(src/'mui/mui_u8g2.c').read_text(encoding='utf-8')
             game=(src/'app/game/port/common/driver.c').read_text(encoding='utf-8')
-            source='#include "mock_sdk.h"\n'
+            source='#define MOCK_GAME_ROTATION 1\n#include "mock_sdk.h"\n'
             source+='#include "'+(src/'hal/hal_spi_bus.c').as_posix()+'"\n'
             source+='#include "'+(src/'hal/hal_spi_flash.c').as_posix()+'"\n'
             source+='static spi_device_t lcd_device;\n'
             source+='static spi_device_t *mui_u8g2_get_spi_device(void) {return &lcd_device;}\n'
             source+='#define m_dev lcd_device\n'+function(u8,'u8x8_HW_com_spi_nrf52832')+'#undef m_dev\n'
-            for name in ['JOY_OLED_end','JOY_OLED_write_data','JOY_OLED_write_cmd','JOY_OLED_set_pos',
-                         'JOY_OLED_send','JOY_OLED_data_start']:
+            names = ['JOY_OLED_write_page'] if guarded else [
+                'JOY_OLED_end','JOY_OLED_write_data','JOY_OLED_write_cmd',
+                'JOY_OLED_set_pos','JOY_OLED_send','JOY_OLED_data_start']
+            for name in names:
                 source+=function(game,name)
             source+=HARNESS
             path=cls.folder/('guarded.c' if guarded else 'baseline.c')
@@ -326,8 +379,10 @@ class TransactionTests(unittest.TestCase):
     def test_write_command_failure_releases_before_error_return(self): self.case(8)
     def test_write_payload_failure_releases_before_error_return(self): self.case(9)
     def test_busy_poll_yields_between_individual_status_transactions(self): self.case(10)
-    def test_game_row_131_transfers_is_atomic_without_duration_claim(self): self.case(11)
-    def test_game_transfer_failure_releases_before_error_handler(self): self.case(12)
+    def test_game_pages_use_two_guarded_transfers_and_preserve_partial_rows(self): self.case(11)
+    def test_game_command_failure_releases_before_error_handler(self): self.case(12)
+    def test_game_data_failure_releases_before_error_handler(self): self.case(13)
+    def test_game_180_degree_partial_and_full_pages_preserve_guard(self): self.case(14)
     def test_baseline_fixture_matches_frozen_DE3_source_hashes(self):
         pins=json.loads((HERE/'original_source_pins.json').read_text())
         original=HERE/'baseline'

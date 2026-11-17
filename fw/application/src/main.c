@@ -76,6 +76,7 @@
 
 #include "bat.h"
 #include "mod/runtime_diag.h"
+#include "mod/fault_note.h"
 #include "ble_main.h"
 #include "ble_remote.h"
 
@@ -326,6 +327,9 @@ void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
 int main(void) {
     runtime_diag_stack_init();
     runtime_diag_boot_capture(nrf_power_resetreas_get());
+#if (defined(BOARD_LCD) || defined(BOARD_OLED)) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    fault_note_on_boot();
+#endif
     ret_code_t err_code;
 
     log_init();

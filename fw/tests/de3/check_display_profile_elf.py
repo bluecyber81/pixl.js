@@ -30,8 +30,8 @@ def check_game_pages(cpu, symbols, call, respond, column):
         nonlocal is_data
         desc = cpu.mem_read(cpu.reg_read(UC_ARM_REG_R0), 16)
         rx_ptr, rx_len, tx_ptr, tx_len = struct.unpack('<IIII', desc)
-        assert (rx_ptr, rx_len, tx_len) == (0, 0, 1) and is_data is not None
-        pages[-1].append((is_data, cpu.mem_read(tx_ptr, 1)[0]))
+        assert (rx_ptr, rx_len) == (0, 0) and 1 <= tx_len <= 128 and is_data is not None
+        pages[-1].append((is_data, bytes(cpu.mem_read(tx_ptr, tx_len))))
         is_data = None
         respond(0)  # NRF_SUCCESS
 
@@ -41,29 +41,69 @@ def check_game_pages(cpu, symbols, call, respond, column):
         addr = symbols[name]
         hooks.append(cpu.hook_add(UC_HOOK_CODE, handler, begin=addr, end=addr))
 
-    edge_pages = [bytes([0x80 | page]) + bytes(126) + bytes([0x40 | page]) for page in range(8)]
-    clear_pages = [bytes(128)] * 8
+    scratch = symbols['__HeapBase']
+    batched = 'JOY_OLED_write_page' in symbols
     for rotation in (0, 1):
         call('mui_u8g2_set_flip_display', rotation)
-        for clear, expected_pages in ((True, clear_pages), (False, edge_pages)):
+        for width in (0, 128, 82, 1, 127):
             pages.clear()
-            if clear:
-                call('JOY_OLED_clear')
+            logical = [bytes((x * 17 + row) & 255 for x in range(width)) for row in range(8)]
+            if width == 0:
+                call('JOY_init')
+                logical = [bytes(128)] * 8
             else:
-                for page, pixels in enumerate(expected_pages):
-                    call('JOY_OLED_data_start', page)
-                    for value in pixels:
-                        call('JOY_OLED_send', value)
-                    call('JOY_OLED_end')
+                for page, data in enumerate(logical):
+                    if batched:
+                        cpu.mem_write(scratch, data)
+                        call('JOY_OLED_write_page', page, scratch, width)
+                    else:
+                        call('JOY_OLED_data_start', page)
+                        for value in data:
+                            call('JOY_OLED_send', value)
+                        call('JOY_OLED_end')
             assert len(pages) == 8, len(pages)
-            for page, received in enumerate(pages):
-                address = [(False, 0xb0 | page), (False, 0x10), (False, column)]
-                assert received[:3] == address, (rotation, page, received[:3], address)
-                assert received[3:] == [(True, value) for value in expected_pages[page]], (rotation, page)
+            for page, (data, received) in enumerate(zip(logical, pages)):
+                rotated = batched and rotation
+                col = column + (128 - len(data) if rotated else 0)
+                target_page = 7 - page if rotated else page
+                command = bytes((0xb0 | target_page, 0x10 | (col >> 4), col & 15))
+                if rotated:
+                    data = bytes(int(f'{value:08b}'[::-1], 2) for value in reversed(data))
+                if batched:
+                    assert received == [(False, command), (True, data)], (rotation, width, page)
+                else:
+                    assert received == ([(False, bytes([b])) for b in command]
+                                        + [(True, bytes([b])) for b in data]), (rotation, width, page)
+    if batched:
+        from test_lcd_game_pixels import CASES, PORT, capture
+        for name in CASES:
+            trace = capture(PORT, name, False, raw=True)
+            for rotation in (0, 1):
+                call('mui_u8g2_set_flip_display', rotation)
+                pos = 0
+                while pos < len(trace):
+                    row, n = trace[pos:pos+2]
+                    pixels = trace[pos+2:pos+2+n]
+                    pos += n + 2
+                    cpu.mem_write(scratch, pixels)
+                    pages.clear()
+                    call('JOY_OLED_write_page', row, scratch, n)
+                    page_io, = pages
+                    (cd, cmd), (dd, raw) = page_io
+                    assert not cd and dd and len(raw) == n and len(cmd) == 3
+                    assert cmd[0] == 0xb0 | (7-row if rotation else row)
+                    start = column + (128-n if rotation else 0)
+                    assert cmd[1:] == bytes((0x10 | (start >> 4), start & 0xf))
+                    for x, byte in enumerate(pixels):
+                        expected = int(f'{byte:08b}'[::-1], 2) if rotation else byte
+                        assert raw[n-1-x if rotation else x] == expected, (name, rotation, row, x)
+        print('PASS 11 original game-renderer frames from four games mapped to panel RAM at R0 and R2.')
+    else:
+        print('Historical byte driver: game orientation stays at R0 when the menu is at R2.')
     for hook in hooks:
         cpu.hook_del(hook)
     print(f'PASS game clear and edge pixels across columns {column}..{column + 127}, '
-          'eight pages in both menu orientations.')
+          'all eight pages in both menu orientations, full and partial rows.')
 
 
 def verify(elf, binary, board='LCD'):

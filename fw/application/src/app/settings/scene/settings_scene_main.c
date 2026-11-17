@@ -32,7 +32,8 @@ enum settings_main_menu_t {
     SETTINGS_MAIN_MENU_ABOUT,
     SETTINGS_MAIN_MENU_APP_MANAGEMENT,
     SETTINGS_MAIN_MENU_EXIT,
-    SETTINGS_MAIN_MENU_REMOTE
+    SETTINGS_MAIN_MENU_REMOTE,
+    SETTINGS_MAIN_MENU_DEVICE_TEST
 };
 
 static void settings_scene_main_reload(void *user_data);
@@ -97,6 +98,12 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     case SETTINGS_MAIN_MENU_OLED_CONTRAST:
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, SETTINGS_SCENE_OLED_CONTRAST);
         break;
+
+#if defined(BOARD_OLED) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    case SETTINGS_MAIN_MENU_DEVICE_TEST:
+        settings_device_test_open(app);
+        break;
+#endif
 
     case SETTINGS_MAIN_MENU_VERSION:
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, SETTINGS_SCENE_VERSION);
@@ -312,6 +319,11 @@ static void settings_scene_main_reload(void *user_data) {
     mui_list_view_add_item(app->p_list_view, 0xe1ce, _T(APP_SET_RESET_DEFAULT),
                            (void *)SETTINGS_MAIN_MENU_RESET_DEFAULT);
 
+#if defined(BOARD_OLED) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    mui_list_view_add_item(app->p_list_view, 0xe1c7,
+                           p_settings->language == LANGUAGE_DE_DE ? "Gerätetest" : "Device test",
+                           (void *)SETTINGS_MAIN_MENU_DEVICE_TEST);
+#endif
     mui_list_view_add_item(app->p_list_view, 0xe1cf, _T(APP_SET_ABOUT), (void *)SETTINGS_MAIN_MENU_ABOUT);
     mui_list_view_add_item(app->p_list_view, 0xe069, _T(BACK_TO_MAIN_MENU), (void *)SETTINGS_MAIN_MENU_EXIT);
 

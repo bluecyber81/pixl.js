@@ -77,12 +77,13 @@ int tiny_lander_run(void) {
     GAME game;
 
   BEGIN:
+    game_view_wait_for_start();
     game.Level = 1;
     game.Score = 0;
     game.Lives = 4;
     while(1) {
       Tiny_Flip(1, &game, &score, &velX, &velY);
-      if (JOY_act_pressed()) {
+      if (game_view_take_start()) {
         if (JOY_up_pressed()){ 
           game.Level = 10;
           ALERTJOY_sound();
@@ -485,16 +486,16 @@ uint8_t LivesDisplay(uint8_t x, uint8_t y, GAME * game)
 static void draw_intro(void) {
   const uint8_t *span = intro_spans;
   for (uint8_t page = 0; page < 8; page++) {
-    JOY_OLED_data_start(page);
+    uint8_t pixels[128];
     unsigned column = 0;
     while (column < 128) {
       unsigned zeros = *span++;
       unsigned literals = *span++;
-      column += zeros + literals;
-      while (zeros--) JOY_OLED_send(0);
-      while (literals--) JOY_OLED_send(*span++);
+      if (zeros + literals > sizeof(pixels) - column || !(zeros + literals)) return;
+      while (zeros--) pixels[column++] = 0;
+      while (literals--) pixels[column++] = *span++;
     }
-    JOY_OLED_end();
+    JOY_OLED_write_page(page, pixels, sizeof(pixels));
   }
 }
 
@@ -503,20 +504,20 @@ void Tiny_Flip(uint8_t mode, GAME * game, DIGITAL * score, DIGITAL * velX, DIGIT
     draw_intro();
     return;
   }
+  if (mode > 2) return;
   uint8_t y, x;
   for (y = 0; y < 8; y++)
   {
-    JOY_OLED_data_start(y);
+    uint8_t pixels[128];
     for (x = 0; x < 128; x++)
     {
       if (mode == 0) {
-        JOY_OLED_send(GameDisplay(x, y, game) | LivesDisplay(x, y, game) | DashboardDisplay(x, y, game) | ScoreDisplay(x, y, score) | VelocityDisplay(x, y, velX, 1) | VelocityDisplay(x, y, velY, 0) | FuelDisplay(x, y, game));
-      } else if (mode == 2)
-      {
-        JOY_OLED_send(StarsDisplay ( x, y, game) | LivesDisplay(x, y, game) | DashboardDisplay(x, y, game) | ScoreDisplay(x, y, score) | VelocityDisplay(x, y, velX, 1) | VelocityDisplay(x, y, velY, 0) | FuelDisplay(x, y, game));
+        pixels[x] = GameDisplay(x, y, game) | LivesDisplay(x, y, game) | DashboardDisplay(x, y, game) | ScoreDisplay(x, y, score) | VelocityDisplay(x, y, velX, 1) | VelocityDisplay(x, y, velY, 0) | FuelDisplay(x, y, game);
+      } else {
+        pixels[x] = StarsDisplay ( x, y, game) | LivesDisplay(x, y, game) | DashboardDisplay(x, y, game) | ScoreDisplay(x, y, score) | VelocityDisplay(x, y, velX, 1) | VelocityDisplay(x, y, velY, 0) | FuelDisplay(x, y, game);
       }
     }
-    JOY_OLED_end();
+    JOY_OLED_write_page(y, pixels, sizeof(pixels));
   }
 }
 

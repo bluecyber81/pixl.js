@@ -71,8 +71,9 @@ int tiny_arkanoid_run(void) {
     while (1) {
         GROUPE VARIABLE;
     NEWGAME:
+        game_view_wait_for_start();
         Tiny_Flip(1, &VARIABLE);
-        while (!JOY_act_pressed()) {
+        while (!game_view_take_start()) {
             JOY_idle();
             // JOY_SLOWDOWN();
             if (JOY_exit()) {
@@ -168,6 +169,7 @@ EXIT:
 // Functions
 // ===================================================================================
 void RsVarNewGame(GROUPE *VAR) {
+    VAR->Frame = 0;
     VAR->LEVELSPEED = 16;
     VAR->LEVEL = 1;
     VAR->live = 3;
@@ -372,32 +374,27 @@ void WriteBallMove(GROUPE *VAR) {
 }
 
 void Tiny_Flip(uint8_t render0_picture1, GROUPE *VAR) {
+    if (render0_picture1 > 2) return;
     uint8_t y, x;
     for (y = 0; y < 8; y++) {
-        JOY_OLED_data_start(y);
+        uint8_t pixels[128];
         for (x = 0; x < 128; x++) {
             if (render0_picture1 == 0)
-                JOY_OLED_send(Block(x, y, VAR) | Ball(x, y, VAR) | TrackBar(x, y, VAR) | background(x, y) |
-                              PannelLive(x, y, VAR) | PannelLevel(x, y, VAR));
+                pixels[x] = Block(x, y, VAR) | Ball(x, y, VAR) | TrackBar(x, y, VAR) | background(x, y) |
+                              PannelLive(x, y, VAR) | PannelLevel(x, y, VAR);
             else if (render0_picture1 == 1)
-                JOY_OLED_send((MAIN[x + (y * 128)]));
-            else if (render0_picture1 == 2)
-                JOY_OLED_send(background(x, y));
+                pixels[x] = (MAIN[x + (y * 128)]);
+            else
+                pixels[x] = background(x, y);
         }
-        JOY_OLED_end();
+        JOY_OLED_write_page(y, pixels, sizeof(pixels));
     }
 }
 
 uint8_t PannelLevel(uint8_t X, uint8_t Y, GROUPE *VAR) {
     if ((Y < 5) || (Y > 6) || (X < 117) || (X > 123)) return 0x00;
-#define VAl10 (VAR->LEVEL / 10)
-#define VAl01 (VAR->LEVEL - (VAl10 * 10))
-    if (Y == 5) {
-        return ((DIGITAL[(X - 117) + (VAl10 * 7)]));
-    } else if (Y == 6) {
-        return ((DIGITAL[(X - 117) + (VAl01 * 7)]));
-    }
-    return 0x00;
+    uint8_t digit = (Y == 5 ? VAR->LEVEL / 10 : VAR->LEVEL) % 10;
+    return DIGITAL[digit * 7 + X - 117];
 }
 
 uint8_t Block(uint8_t X, uint8_t Y, GROUPE *VAR) {
