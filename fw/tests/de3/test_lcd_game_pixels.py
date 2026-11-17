@@ -60,18 +60,26 @@ DRIVER = """
 void JOY_sound(uint8_t f,uint8_t d) {(void)f;(void)d;}
 uint16_t JOY_random(void) {return 1;}
 long map(long x,long a,long b,long c,long d) {return (x-a)*(d-c)/(b-a)+c;}
+void JOY_init(void) {}
+void JOY_idle(void) {}
+uint8_t JOY_exit(void) {return 0;}
+int game_view_key_pressed(int key) {return 0;}
+void nrf_delay_ms(unsigned delay) {}
 """
 
-def capture(port, name, legacy):
+def capture(port, name, legacy, *, raw=False):
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         (folder / "game_view.h").write_text("enum {INPUT_KEY_LEFT,INPUT_KEY_RIGHT,INPUT_KEY_CENTER}; int game_view_key_pressed(int);")
         (folder / "nrf_delay.h").write_text("void nrf_delay_ms(unsigned);")
         src = folder / "trace.c"
         src.write_text("#include <stdint.h>\n#include <stdio.h>\n#include <assert.h>\n"
+                       "#ifdef _WIN32\n#include <io.h>\n#include <fcntl.h>\n"
+                       "#define BINARY_STDOUT() _setmode(_fileno(stdout),_O_BINARY)\n"
+                       "#else\n#define BINARY_STDOUT() ((void)0)\n#endif\n"
                        + f'#include "{name}.c"\nstatic unsigned pages;\n'
                        + STREAM + (OLD if legacy else NEW) + DRIVER
-                       + "\nint main(void) {" + CASES[name] + "return 0;}\n")
+                       + "\nint main(void) { BINARY_STDOUT();" + CASES[name] + "return 0;}\n")
         exe = folder / "game.exe"
         subprocess.run(["gcc", "-std=c11","-Os","-ffunction-sections","-fdata-sections","-fshort-enums",
                         "-I",str(folder),"-I",str(port/name),str(src),"-Wl,--gc-sections","-o",str(exe)], check=True)
@@ -85,7 +93,11 @@ def capture(port, name, legacy):
             pos += count + 2
         assert pos == len(trace) and len(widths) % 8 == 0
         assert set(widths) == ({128,82} if name=="tiny_tris" else {128})
-        return len(widths)//8,sha256(trace).hexdigest()
+        observed = len(widths)//8, sha256(trace).hexdigest()
+        if raw:
+            assert observed == REFERENCE[name], (name, observed)
+            return trace
+        return observed
 
 if __name__ == "__main__":
     parser=argparse.ArgumentParser(description=__doc__)

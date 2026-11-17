@@ -189,13 +189,24 @@ class ViewTests(unittest.TestCase):
 #include <assert.h>
 #include <stdio.h>
 #include "tiny_lander.c"
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 static unsigned page;
 void JOY_OLED_write_page(uint8_t index, uint8_t *pixels, uint8_t count) {
     assert(index == page++ && index < 8 && count == 128);
     assert(fwrite(pixels, 1, count, stdout) == count);
 }
 void JOY_sound(uint8_t freq,uint8_t duration) { assert(!"unexpected sound"); }
+int game_view_key_pressed(int key) { assert(!"unexpected game input"); return 0; }
+void JOY_init(void) { assert(!"unexpected game initialization"); }
+void JOY_idle(void) { assert(!"unexpected input poll"); }
+uint8_t JOY_exit(void) { assert(!"unexpected exit poll"); return 0; }
 int main(void) {
+#ifdef _WIN32
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
     Tiny_Flip(1, NULL, NULL, NULL, NULL);
     assert(page == 8);
 }
