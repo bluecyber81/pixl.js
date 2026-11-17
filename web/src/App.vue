@@ -606,7 +606,7 @@ import { formatBatteryVoltage, normalizePowerDiagnostics } from "./lib/power-dia
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
 import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, runtimeVfsDetailKey, uploadSpaceAvailable, createDiagnostics } from "./lib/device-info.js"
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
-import { LCD_BUILD_DIAGNOSTICS_VERSION } from "./lib/lcd-build-diagnostics.js"
+import { buildDiagnosticBoard } from "./lib/lcd-build-diagnostics.js"
 import { supportsFlashDiagnostics } from "./lib/flash-diagnostics.js"
 import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference, firmwareBoard } from "./lib/hardware-profile.js"
 import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
@@ -1501,7 +1501,7 @@ export default {
       this.readClock = startedAt;
       const includeMenu = supportsMenuDiagnostics(this.firmwareVersion);
       const includeFlash = supportsFlashDiagnostics(this.firmwareVersion);
-      const includeBuild = this.firmwareVersion === LCD_BUILD_DIAGNOSTICS_VERSION;
+      const includeBuild = Boolean(buildDiagnosticBoard(this.firmwareVersion));
       this.flashInfo = null; this.flashState = 'unknown';
       this.fullDiagnosticProgress = { completed: 0, total: diagnosticSectionKeys(includeMenu, includeFlash, includeBuild).length, startedAt, updatedAt: startedAt, sections: {} };
       this.runtimeInfo=null; this.runtimeState='loading'; this.bootInfo=null; this.bootState='loading'; this.lastDfuReference=dfuReference(null, Date.now(), this.firmwareVersion);

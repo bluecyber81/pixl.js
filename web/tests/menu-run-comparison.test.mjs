@@ -30,7 +30,7 @@ test('OLED Test 1 matches its own signed package and SH1106 build profile',()=>{
 });
 
 test('OLED trials match their signed packages without giving unknown trials a reference',()=>{
- for (const [version,counter] of [['2.22.0-DE3.81-OLEDt2',82],['2.22.0-DE3.81-OLEDt3',83]]) {
+ for (const [version,counter] of [['2.22.0-DE3.81-OLEDt2',82],['2.22.0-DE3.81-OLEDt3',83],['2.22.0-DE3.84-OLEDt4',84]]) {
   assert.equal(firmwareBoard(version),'OLED');
   assert.equal(displayBuildReference(version).controllerDriver,'SH1106');
   const identity=diagnosticBuildIdentity({firmwareVersion:version,boot:{settingsCrcValid:true,applicationCounter:counter}});

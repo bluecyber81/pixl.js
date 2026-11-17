@@ -8,9 +8,9 @@ All four games follow the 180° display setting and include German and English c
 
 For an Allmiibo LCD with ST7567, Packed LittleFS (PFS1), Z21 and S112 7.3.0, select the intact ZIP in **nRF Device Firmware Update**. [Mobile app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Sources, ELF files, maps and tests](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [GitHub build and tests](https://github.com/bluecyber81/pixl.js/actions/runs/44047724527)
 
-## File manager 3.55.6
+## File manager 3.55.7
 
-On App657, **Device & diagnostics** shows the running application's source ID, an available fault note from the previous boot, and cache pages used at the last mount. The German and English guided checks include 40 additional LCD cases. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)
+Version 3.55.7 recognizes the App84 OLED profile, displays its firmware identity and links to the matching phone ZIP. On App657, **Device & diagnostics** shows the running application's source ID, an available fault note from the previous boot, and cache pages used at the last mount. The German and English guided checks include 40 additional LCD cases. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.7)
 
 ## Current LCD firmware · DE3.81 / App654
 
@@ -23,7 +23,7 @@ Back up your files and keep the ZIP intact. Install a full update with **nRF Dev
 
 ## OLED test firmware
 
-**OLED · DE3.81 Test 1.** For the nRF52832 Pixl.js with a 128 × 64 SH1106 OLED, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The app uses the existing SPIFFS or native LittleFS. Both storage formats and both menu languages were verified on a computer. A user reports that Test 1 works on one OLED. The device’s filesystem and the features tested remain unknown. An OLED remote connection problem has been reported. [Remote setup and button test](https://bluecyber81.github.io/pixl.js/guide/en.html#oled-remote) · [Download OLED Test 1](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Test guide in English and German](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
+**OLED · DE3.84 Test 4 / App84.** This phone ZIP contains the app for the nRF52832 Pixl.js, 128 × 64 SH1106, compatible DFU bootloader and S112 7.2.0 (`0x0103`). It uses the existing SPIFFS or native LittleFS. Test 4 awaits on-device results. Earlier reports cover a successful Test 1 startup and an OLED remote connection issue. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip) · [OLED guide](https://bluecyber81.github.io/pixl.js/guide/en.html#oled)
 
 Both DE3.81 applications include German and English menus, the 956-figure catalog, game hints, app resume and Bluetooth remote buttons. Display capture, startup and RAM diagnostics, and battery history in the file manager are available on LCD.
 

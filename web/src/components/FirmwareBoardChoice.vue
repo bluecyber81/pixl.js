@@ -9,13 +9,13 @@
     </div>
     <slot v-if="selected === 'LCD'" name="lcd" />
     <article v-if="selected === 'OLED'" class="oled-trial">
-      <h4>DE3.81 OLED · Test 1</h4>
-      <p>{{ de ? 'Für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID 0x0103). Ein Nutzer meldet, dass die Testversion auf einem OLED funktioniert.' : 'For Pixl.js with nRF52832, SH1106 (128 × 64), a compatible DFU bootloader and S112 7.2.0 (FWID 0x0103). A user reports that the test build works on an OLED device.' }}</p>
+      <h4>DE3.84 OLED · Test 4</h4>
+      <p>{{ de ? 'Für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID 0x0103). Der Gerätetest für App84 steht aus.' : 'For Pixl.js with nRF52832, SH1106 (128 × 64), a compatible DFU bootloader and S112 7.2.0 (FWID 0x0103). App84 awaits testing on a physical OLED.' }}</p>
       <p>{{ de ? 'Die App nutzt dein vorhandenes SPIFFS oder natives LittleFS. Sichere deine Dateien und halte die bisherige OLED-App bereit. Öffne die gepackte ZIP am Handy in nRF Device Firmware Update.' : 'The app uses your existing SPIFFS or native LittleFS. Back up your files and keep your previous OLED app available. Open the intact ZIP on your phone in nRF Device Firmware Update.' }}</p>
-      <p v-if="differentOledTrial" role="status">{{ de ? 'Auf deinem Gerät läuft eine andere OLED-Testversion. Diesen Test-1-Download findest du weiterhin in der Anleitung.' : 'Your device is running a different OLED trial. The guide still lists the Test 1 download.' }}</p>
+      <p v-if="differentOledTrial" role="status">{{ de ? 'Für deine gemeldete OLED-Version ist der Updatepfad zu Test 4 ungeprüft.' : 'The update path from your reported OLED version to Test 4 is unverified.' }}</p>
       <p v-else-if="profileMismatch" role="status">{{ de ? 'Die gelesenen Gerätedaten passen nicht zu diesem OLED-Paket.' : 'The reported device details are incompatible with this OLED package.' }}</p>
       <div class="trial-links">
-        <a v-if="!differentOledTrial && !profileMismatch" :href="releaseDownload + 'Allmiibo_OLED_DE3_81_Test1_APP.zip'">{{ de ? 'OLED-App-ZIP herunterladen' : 'Download OLED app ZIP' }}</a>
+        <a v-if="!differentOledTrial && !profileMismatch" :href="appDownload">{{ de ? 'OLED-App-ZIP herunterladen' : 'Download OLED app ZIP' }}</a>
         <a :href="guide">{{ de ? 'OLED am Handy flashen' : 'Flash OLED from your phone' }}</a>
       </div>
     </article>
@@ -24,20 +24,20 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { firmwareBoard } from '../lib/hardware-profile.js';
+import { firmwareBoard, hasOledSystemDiagnostics, lacksOledSystemDiagnostics } from '../lib/hardware-profile.js';
 import { deploymentPath } from '../lib/deployment-path.js';
 const props = defineProps({ connected: Boolean, version: String, boot: Object, locale: String });
 const de = computed(() => props.locale?.startsWith('de'));
 const guide = computed(() => deploymentPath(de.value ? 'guide/index.html' : 'guide/en.html') + '#oled');
-const releaseDownload = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/';
+const appDownload = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip';
 const choice = ref(null);
 const detected = computed(() => props.connected ? firmwareBoard(props.version) : null);
 const selected = computed(() => detected.value || choice.value);
-const differentOledTrial = computed(() => detected.value === 'OLED' && props.version !== '2.22.0-DE3.81-OLEDt1');
+const differentOledTrial = computed(() => detected.value === 'OLED' && !hasOledSystemDiagnostics(props.version) && !lacksOledSystemDiagnostics(props.version));
 const profileMismatch = computed(() => props.connected && props.boot && (
   (props.boot.softDeviceValid && (props.boot.softDeviceFwid !== 0x0103 || props.boot.softDeviceVariant !== 112 || props.boot.softDeviceVersion !== 7002000)) ||
   (props.boot.geometryValid && props.boot.chipPart !== 0x52832) ||
-  (props.boot.settingsCrcValid && props.boot.applicationCounter > 81)
+  (props.boot.settingsCrcValid && props.boot.applicationCounter > 84)
 ));
 watch(() => [props.connected, props.version], ([connected], [wasConnected, version]) => {
   if (connected && !wasConnected) choice.value = null;

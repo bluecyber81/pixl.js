@@ -6,8 +6,8 @@ import { parseFlashDiagnostics, supportsFlashDiagnostics } from "./flash-diagnos
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
-import { LCD_BUILD_DIAGNOSTICS_VERSION, parseLcdBuildDiagnostics } from "./lcd-build-diagnostics.js"
-import { lacksOledSystemDiagnostics, OLED_DIAGNOSTICS_TRIAL, LCD_PREVIEW_COUNTERS } from "./hardware-profile.js"
+import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
+import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_PREVIEW_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -298,9 +298,10 @@ export function get_menu_diagnostics(firmwareVersion) {
 }
 
 export function get_lcd_build_diagnostics(firmwareVersion) {
-    if (firmwareVersion !== LCD_BUILD_DIAGNOSTICS_VERSION) return Promise.resolve(null);
+    const board = buildDiagnosticBoard(firmwareVersion);
+    if (!board) return Promise.resolve(null);
     const generation = transport_generation;
-    return op_queue_push(0x0c, () => {}, b => parseLcdBuildDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()),
+    return op_queue_push(0x0c, () => {}, b => parseBuildDiagnostics(b.readBytes(b.remaining()).toArrayBuffer(), board),
         {max_bytes:80, optional_probe:true}).then(response => {
             if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
             return response.status === 255 || response.status === 1 ? null : checked_response(response);
@@ -319,7 +320,7 @@ export function get_flash_diagnostics(firmwareVersion) {
 
 export function get_display_photo(firmwareVersion) {
     if (!supportsDisplayPhoto(firmwareVersion)) return Promise.resolve(null);
-    const reportsBusy = firmwareVersion === OLED_DIAGNOSTICS_TRIAL || Object.hasOwn(LCD_PREVIEW_COUNTERS, firmwareVersion);
+    const reportsBusy = hasOledSystemDiagnostics(firmwareVersion) || Object.hasOwn(LCD_PREVIEW_COUNTERS, firmwareVersion);
     const generation = transport_generation;
     const checkSession = () => {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
@@ -384,8 +385,8 @@ export function get_startup_diagnostics(firmwareVersion) {
                 return response.status === 255 ? null : checked_response(response);
             });
     }
-    // OLED Test 3 records native VFS startup phases without a PackedFS mount profile.
-    if (known === OLED_DIAGNOSTICS_TRIAL) return read(1);
+    // Supported OLED trials record native VFS startup phases without a PackedFS mount profile.
+    if (hasOledSystemDiagnostics(known)) return read(1);
     if (Object.hasOwn(LCD_PREVIEW_COUNTERS, known)) return read(3);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);

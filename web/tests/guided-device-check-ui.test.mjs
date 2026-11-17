@@ -8,6 +8,14 @@ import {discardGuidedDraft, listGuidedDrafts, saveGuidedDraft} from '../src/lib/
 // Compile and render the actual SFC with Vue's real reactivity and event handlers.
 // This is deliberately an in-memory host test, not a browser/layout/device test.
 const component = new URL('../src/components/GuidedDeviceCheck.vue', import.meta.url);
+
+for (const locale of ['de_DE','en']) test(`OLED shows its specific test guide while keeping the common checks in ${locale}`,async t=>{
+  const h=await mount(t,{locale,firmwareVersion:'2.22.0-DE3.84-OLEDt4'});
+  const guide=nodes(h.root,'a').find(node=>node.props.href==='https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4');
+  assert.ok(guide);
+  assert.equal(text(guide),locale==='en'?'OLED test guide':'OLED-Testanleitung');
+  assert.ok(routeControl(h,'sleep-and-wake'));
+});
 const DRAFT_KEY = 'allmiibo.guided-device-check.draft.v2';
 const savedText = store => [...store.entries.values()][0];
 const now = Date.parse('2026-11-15T09:00:00.000Z');

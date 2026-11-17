@@ -1,4 +1,4 @@
-import { LCD_BUILD_DIAGNOSTICS_VERSION, normalizeLcdBuildDiagnostics } from './lcd-build-diagnostics.js';
+import { buildDiagnosticBoard, normalizeBuildDiagnostics } from './lcd-build-diagnostics.js';
 import { firmwareBoard } from './hardware-profile.js';
 
 // Reference for the signed T1 application package. This is not a
@@ -105,11 +105,20 @@ const oledTest3 = Object.freeze({
   sourceId: 'b283257873690dd40845d6ba4628a88f8066a7b45f682b6190cd0c152b295a22', otaSha256: 'fd0418d4d503d1ac168909af66912c0e97cf98aef8936d29542c95d396378820',
 });
 
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3];
+const oledTest4 = Object.freeze({
+  ...oledTest3, firmwareVersion: '2.22.0-DE3.84-OLEDt4', applicationCounter: 84, applicationBytes: 359456,
+  releaseTag: 'de3.84-oled-t4', sourceCommit: 'cb784c14f96570f6c677b6a6edff2dd66990403c',
+  applicationBinSha256: '2ae048eab497e1e0dda54192b054fd2afd2628367a886b73cb8e09a9711e83a6',
+  sourceId: '611c8702693cdb276036f5b1e15403dd64b8cdfeb9ce05f5b57e6ad28392b359',
+  otaSha256: '8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7',
+});
+
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
-  const reported = version === LCD_BUILD_DIAGNOSTICS_VERSION ? normalizeLcdBuildDiagnostics(build) : null;
+  const board = buildDiagnosticBoard(version);
+  const reported = board ? normalizeBuildDiagnostics(build, board) : null;
   const observed = { firmwareVersion: version,
     applicationCounter: boot?.settingsCrcValid === true && word(boot.applicationCounter) ? boot.applicationCounter : null,
     chipPart: boot?.geometryValid === true && word(boot.chipPart) ? boot.chipPart : null,

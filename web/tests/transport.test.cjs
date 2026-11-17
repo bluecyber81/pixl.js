@@ -112,7 +112,7 @@ test('startup extension is selected by firmware, retries only a rejected option 
    assert.deepEqual(f.writes[1],[9,0,0,0]);f.rx(9,startupPacket());assert.equal((await p).schemaVersion,1);
    assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
  }
- for(const version of ['2.22.0-DE3.61','2.22.0-DE3.81-OLEDt3']){
+ for(const version of ['2.22.0-DE3.61','2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt4']){
    const f=protocolFixture(),p=f.api.get_startup_diagnostics(version);
    assert.deepEqual(f.writes,[[9,0,0,0,1]]);
    const bytes=new Uint8Array(40);bytes.set(startupPacket());bytes.set([2,40,63,3],4);bytes[32]=12;bytes[36]=19;

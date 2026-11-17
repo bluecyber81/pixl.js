@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "webVersion": "3.55.7",
+  "date": "2026-11-17",
+  "firmwarePreview": "2.22.0-DE3.84-OLEDt4",
+  "applicationCounter": 84,
+  "hardwareAcceptance": "pending",
+  "fullNodeSuite": {"tests":1699,"passed":1698,"failed":0,"skipped":1},
+  "skippedNodeCase": "Historical DE3.17 and recovery575 OTA files were absent from the checkout. The 23-case DFU suite was rerun with the existing hash-pinned files and passed without skips.",
+  "legacyDfuRerun": {"tests":23,"passed":23,"failed":0,"skipped":0},
+  "productionRoot": {"tests":22,"passed":22,"failed":0},
+  "productionPages": {"tests":22,"passed":22,"failed":0},
+  "browserRoot": {"checks":65,"failed":0,"languages":["de_DE","en"]},
+  "browserPages": {"checks":65,"failed":0,"languages":["de_DE","en"]},
+  "remoteControl": {"layouts":["root","pages"],"languages":["de_DE","en-GB"],"result":"passed","radio":"synthetic peripheral"},
+  "nativeWindowsLauncher": {"tests":24,"passed":22,"failed":0,"skipped":2,"skips":"POSIX Ctrl-C and socket behavior"},
+  "linuxLauncher": {"tests":24,"passed":24,"failed":0,"skipped":0},
+  "firmwareWireFixture": "web/tests/fixtures/PXBI_OLED_App84.json",
+  "firmwareWireEvidence": "Five 80-byte PXBI replies from the linked Cortex-M4 OLED App84 exercise SourceID, board and prior fault parsing. The browser displays and copies the SourceID in both languages.",
+  "deviceTests": "An OLED device was unavailable. On-device flashing, NFC, screen, buttons, storage, sleep, remote and interrupted DFU remain to be checked by an OLED tester."
+}

@@ -104,7 +104,8 @@
       </details>
     </section>
 
-    <GuidedLcdChecks :locale="locale" :observations="lcdObservations" @update="updateLcd" />
+    <GuidedLcdChecks v-if="firmwareBoard(firmwareVersion) !== 'OLED'" :locale="locale" :observations="lcdObservations" @update="updateLcd" />
+    <p v-else>{{ pick('Für Display, Spiele und Fernbedienung am OLED gibt es ergänzende Prüfschritte in der Testanleitung.', 'The OLED test guide includes additional checks for the display, games and remote control.') }} <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">{{ pick('OLED-Testanleitung', 'OLED test guide') }}</a></p>
 
     <section class="capture step">
       <h4><span class="step-number">3</span>{{ pick('Nachher · Ergebnis sichern', 'After · Save the result') }}</h4>
@@ -137,6 +138,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } fr
 import { version as webVersion } from '../../package.json';
 import { canAttachAfter, captureDeviceEvidence, compareManualSourcePrefix, createGuidedReport, expectedReturn, observationKey, parseGuidedDraft, parseGuidedReport, recordDeviceObservation, routes, serializeGuidedDraft, summarizeGuidedObservations, GUIDED_MAX_BYTES } from '../lib/guided-device-check.js';
 import {saveBlob} from '../lib/browser-tools.js';
+import {firmwareBoard} from '../lib/hardware-profile.js';
 import {discardGuidedDraft, isGuidedDraftKey, listGuidedDrafts, saveGuidedDraft} from '../lib/guided-draft-store.js';
 
 const props = defineProps({ locale:String, firmwareVersion:String, snapshot:Object, connected:Boolean, reading:Boolean, exportBusy:Boolean });

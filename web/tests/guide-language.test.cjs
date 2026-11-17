@@ -46,10 +46,11 @@ test('both guide languages link to a dedicated OLED chapter with the published p
         assert.match(html, /href="#oled"/);
         const section = html.match(/<section id="oled">([\s\S]*?)<\/section>/)?.[1];
         assert.ok(section);
-        assert.match(section, /de3\.81-oled-t1\/Allmiibo_OLED_DE3_81_Test1_APP\.zip"/);
-        assert.match(section, /de3\.81-oled-t1\/Allmiibo_OLED_Test1_Deutsch_English\.txt"/);
+        assert.match(section, /de3\.84-oled-t4\/Allmiibo_OLED_DE3_84_Test4_APP\.zip"/);
+        assert.match(section, /releases\/tag\/de3\.84-oled-t4"/);
         assert.doesNotMatch(section, /Allmiibo_LCD_/);
-        assert.match(section, page === 'en.html' ? /reports that the preview works on their OLED/ : /auf seinem OLED funktioniert/);
+        assert.match(section, page === 'en.html' ? /Test 4 awaits a report from a physical OLED/ : /Für Test 4 steht die Rückmeldung von einem echten OLED aus/);
+        assert.match(section, /releases\/tag\/de3\.81-oled-t1"/);
     }
     assert.equal(openGuide('#oled', ['en']).next, base + 'en.html#oled');
 });

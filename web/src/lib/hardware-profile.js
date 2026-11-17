@@ -26,7 +26,10 @@ export const LCD_PREVIEW_COUNTERS = Object.freeze({
   '2.22.0-DE3.84': 657,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_PREVIEW_COUNTERS)];
-export const OLED_DIAGNOSTICS_TRIAL = '2.22.0-DE3.81-OLEDt3';
+export const OLED_PARITY_VERSION = '2.22.0-DE3.84-OLEDt4';
+export function hasOledSystemDiagnostics(version) {
+  return version === '2.22.0-DE3.81-OLEDt3' || version === OLED_PARITY_VERSION;
+}
 export function lacksOledSystemDiagnostics(version) {
   return version === '2.22.0-DE3.81-OLEDt1' || version === '2.22.0-DE3.81-OLEDt2';
 }
@@ -38,7 +41,7 @@ export function firmwareBoard(version) {
 }
 
 export function displayBuildReference(version) {
-  if (lacksOledSystemDiagnostics(version) || version === OLED_DIAGNOSTICS_TRIAL) return {source:'oled-firmware-configuration', controllerDriver:'SH1106', width:128, height:64};
+  if (lacksOledSystemDiagnostics(version) || hasOledSystemDiagnostics(version)) return {source:'oled-firmware-configuration', controllerDriver:'SH1106', width:128, height:64};
   if (!lcdDisplayBuilds.includes(version)) return null;
   return {source:'lcd-firmware-configuration', controllerDriver:'ST7567', width:128, height:64};
 }

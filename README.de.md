@@ -8,9 +8,9 @@ Die Spiele übernehmen die 180°-Drehung und haben eine deutsche und englische B
 
 Für ein Allmiibo LCD mit ST7567, Packed LittleFS (PFS1), Z21 und S112 7.3.0 die ZIP gepackt in **nRF Device Firmware Update** auswählen. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket mit Quellen, ELF und Maps](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [GitHub-Prüflauf](https://github.com/bluecyber81/pixl.js/actions/runs/44047724527)
 
-## Dateimanager 3.55.6
+## Dateimanager 3.55.7
 
-Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)
+Version 3.55.7 erkennt das OLED-Profil von App84, zeigt die Firmwarekennung und führt zur passenden Handy-ZIP. Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.7)
 
 ## Aktuelle LCD-Firmware · DE3.81 / App654
 
@@ -23,7 +23,7 @@ Sichere deine Dateien und lass die ZIP gepackt. Übertrage das Komplettpaket in 
 
 ## OLED-Testversion
 
-**OLED · DE3.81 Test 1.** Für ein nRF52832-Pixl.js mit SH1106-OLED (128 × 64), passendem DFU-Bootloader und S112 7.2.0 (`0x0103`). Die App nutzt das vorhandene SPIFFS oder native LittleFS. Beide Speicherformate und beide Menüsprachen wurden am Rechner geprüft. Ein Nutzer berichtet, dass Test 1 auf einem OLED funktioniert. Welches Dateisystem er verwendet und welche Funktionen er geprüft hat, ist offen. Zur Fernbedienung liegt eine Fehlermeldung vor. [Einrichtung und Tastentest](https://bluecyber81.github.io/pixl.js/guide/index.html#oled-remote) · [OLED-Testversion herunterladen](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Testanleitung auf Deutsch und Englisch](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt)
+**OLED · DE3.84 Test 4 / App84.** Die Handy-ZIP enthält die App für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (`0x0103`). Die App nutzt das vorhandene SPIFFS oder native LittleFS. Der Praxistest für Test 4 steht aus. Ein Nutzer hatte den Start von Test 1 bestätigt und ein weiterer Bericht wies auf Schwierigkeiten mit der Fernbedienung hin. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip) · [OLED-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled)
 
 Beide DE3.81-Apps enthalten deutsche und englische Menüs, den Katalog mit 956 Figuren, Spielhinweise, „App fortsetzen“ und die Bluetooth-Fernbedienung für die Tasten. Displayfotos, Startzeit- und RAM-Diagnose sowie den Akkuverlauf im Dateimanager gibt es auf dem LCD.
 

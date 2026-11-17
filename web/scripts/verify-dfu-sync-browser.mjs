@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { checkSyncHistoryBrowser } from './check-sync-history-browser.mjs';
 import { parseStartupDiagnostics } from '../src/lib/startup-diagnostics.js';
-import {parseLcdBuildDiagnostics} from '../src/lib/lcd-build-diagnostics.js';
+import {parseBuildDiagnostics} from '../src/lib/lcd-build-diagnostics.js';
 import {diagnosticSnapshot} from '../tests/fixtures/diagnostic-overview-data.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -113,7 +113,7 @@ async function runChecks() {
       assert.equal(await picker.locator('.dfu-page-link, .oled-trial, .firmware-packages').count(), 0);
       await oled.click();
       const trial = picker.locator('.oled-trial');
-      const oledZip = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip';
+      const oledZip = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip';
       assert.equal(await trial.getByRole('link').first().getAttribute('href'), oledZip);
       assert.equal(await trial.getByRole('link').nth(1).getAttribute('href'), base + 'guide/' + guide + '#oled');
       assert.equal(await picker.locator('.dfu-page-link, .firmware-packages').count(), 0);
@@ -128,7 +128,15 @@ async function runChecks() {
       await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = { softDeviceValid:true, softDeviceVariant:112, softDeviceVersion:7003000, softDeviceFwid:0x0126 }; });
       await trial.locator('[role=status]').waitFor();
       assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
-      for (const version of ['2.22.0-DE3.81-OLEDt2','2.22.0-DE3.81-OLEDt3','2.23.0-DE3.91-OLEDt10']) {
+      for (const version of ['2.22.0-DE3.81-OLEDt2','2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt4']) {
+        await guidePage.evaluate(version => Object.assign(document.querySelector('#app')._vnode.component.proxy, {firmwareVersion:version, bootInfo:null}) && true, version);
+        assert.equal(await trial.getByRole('link').first().getAttribute('href'), oledZip);
+        assert.ok(await lcd.isDisabled());
+      }
+      await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = {settingsCrcValid:true, applicationCounter:85}; });
+      await trial.locator('[role=status]').waitFor();
+      assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
+      for (const version of ['2.23.0-DE3.91-OLEDt10']) {
         await guidePage.evaluate(version => Object.assign(document.querySelector('#app')._vnode.component.proxy, {firmwareVersion:version, bootInfo:null}) && true, version);
         await trial.locator('[role=status]').waitFor();
         assert.ok(await lcd.isDisabled());
@@ -171,7 +179,7 @@ async function runChecks() {
       checks.push({locale,feature:'LCD App657 displays linked ARM cache readings and eligible hit rate'});
       const capture=JSON.parse(await readFile(new URL('../tests/fixtures/PXBI_App657.json',import.meta.url),'utf8'));
       const sdk=capture.states.find(r=>r.scenario==='sdk');
-      const build=parseLcdBuildDiagnostics(Buffer.from(sdk.payloadHex,'hex'));
+      const build=parseBuildDiagnostics(Buffer.from(sdk.payloadHex,'hex'));
       const snapshot=structuredClone(diagnosticSnapshot());
       snapshot.sections.boot.data.applicationCounter=657;
       snapshot.sections.build={state:'available',observedAt:snapshot.completedAt,data:build,errorCode:null};
@@ -194,6 +202,23 @@ async function runChecks() {
       assert.match(await guidePage.locator('.build-reference').innerText(), /17\.11\.2026|17 November 2026/);
       checks.push({locale,feature:'copy the running firmware SourceID and display the dated LCD owner report'});
       checks.push({locale,feature:'App657 displays compiled SourceID, matching package profile and retained fault from real Cortex fixture'});
+
+      const oledCapture=JSON.parse(await readFile(new URL('../tests/fixtures/PXBI_OLED_App84.json',import.meta.url),'utf8'));
+      const oledBuild=parseBuildDiagnostics(Buffer.from(oledCapture.states.find(r=>r.scenario==='sdk').payloadHex,'hex'),'OLED');
+      snapshot.sections.boot.data.applicationCounter=84;
+      snapshot.sections.build.data=oledBuild;
+      await guidePage.evaluate(data=>{
+        const app=document.querySelector('#app')._vnode.component.proxy;
+        app.firmwareVersion='2.22.0-DE3.84-OLEDt4';app.fullDiagnosticSnapshot=data;
+      },snapshot);
+      const oledDisplay=await card.innerText();
+      for (const value of ['OLED','Nordic SDK',oledCapture.sourceId]) assert.ok(oledDisplay.includes(value),value);
+      assert.match(oledDisplay,/Passend|Match/);
+      assert.match(await guidePage.locator('.build-reference').innerText(),/Hardwareprüfung.*aus|Hardware acceptance.*pending/);
+      assert.doesNotMatch(await guidePage.locator('.build-reference').innerText(),/17 November 2026|17\.11\.2026/);
+      await card.getByRole('button',{name:/SourceID/}).click();
+      assert.equal(await guidePage.evaluate(()=>window.copiedSourceId),oledCapture.sourceId);
+      checks.push({locale,feature:'OLED App84 displays and copies firmware declaration and fault from linked Cortex fixture with matching package reference'});
 
       await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {

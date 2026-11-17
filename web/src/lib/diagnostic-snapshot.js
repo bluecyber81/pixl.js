@@ -2,7 +2,7 @@ import { createDiagnostics, normalizeDrives, normalizeRuntimeDiagnostics } from 
 import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { normalizePowerDiagnostics } from './power-diagnostics.js';
-import { normalizeLcdBuildDiagnostics } from './lcd-build-diagnostics.js';
+import { normalizeBuildDiagnostics } from './lcd-build-diagnostics.js';
 import { normalizeFlashDiagnostics } from './flash-diagnostics.js';
 import { normalizeStartupDiagnostics } from './startup-diagnostics.js';
 import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics } from './device-extra-diagnostics.js';
@@ -59,7 +59,7 @@ export function normalizeDiagnosticSectionData(key, value) {
       case 'storage': return normalizeStorageDiagnostics(value);
       case 'mtu': return normalizeMtuDiagnostics(value);
       case 'ui': return normalizeUiDiagnostics(value);
-      case 'build': return normalizeLcdBuildDiagnostics(value);
+      case 'build': return normalizeBuildDiagnostics(value);
       case 'flash': return normalizeFlashDiagnostics(value);
       case 'menu': return normalizeMenuDiagnostics(value);
       case 'drives':

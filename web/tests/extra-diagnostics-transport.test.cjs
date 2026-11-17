@@ -189,10 +189,9 @@ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84']) test(`L
     assert.equal(await missing, null);
 });
 
-test('OLED trials probe only their supported diagnostics and do not publish missing screens or JEDEC data', async () => {
+for (const t3 of ['2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt4']) test(`OLED ${t3} probes supported diagnostics and handles missing screens and JEDEC data`, async () => {
     const display = await import('../src/lib/display-photo.js');
     const f = fixture(display);
-    const t3 = '2.22.0-DE3.81-OLEDt3';
     for (const version of ['2.22.0-DE3.81-OLEDt1', '2.22.0-DE3.81-OLEDt2']) {
         for (const read of ['get_runtime_diagnostics', 'get_power_diagnostics', 'get_startup_diagnostics',
                             'get_menu_diagnostics', 'get_flash_diagnostics', 'get_display_photo']) {

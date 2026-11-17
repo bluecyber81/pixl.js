@@ -66,7 +66,7 @@ import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/dev
 import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
 import { diagnosticSectionKeys, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
-import { normalizeLcdBuildDiagnostics, LCD_BUILD_DIAGNOSTICS_VERSION } from '../lib/lcd-build-diagnostics.js';
+import { normalizeBuildDiagnostics, buildDiagnosticBoard } from '../lib/lcd-build-diagnostics.js';
 import { normalizeFlashDiagnostics, flashManufacturer, hexByte, supportsFlashDiagnostics } from '../lib/flash-diagnostics.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { formatBatteryVoltage, normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
@@ -315,7 +315,7 @@ const includeMenu = computed(() => props.loading ? props.progress?.total >= diag
 const includeFlash = computed(() => props.loading ? props.progress?.total >= diagnosticSectionKeys(true, true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'flash') : supportsFlashDiagnostics(props.firmwareVersion));
 const includeBuild = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true,true,true).length
-  : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections,'build') : props.firmwareVersion === LCD_BUILD_DIAGNOSTICS_VERSION);
+  : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections,'build') : Boolean(buildDiagnosticBoard(props.firmwareVersion)));
 function buildRows(data) {
   const fault = data.previousFault;
   const kinds = {'nordic-sdk':'Nordic SDK',hardfault:'HardFault','libc-exit':'libc _exit'};
@@ -345,7 +345,7 @@ const cards = computed(() => [
   section('power', pick('Strom und Ruhezeit', 'Power and sleep'), normalizePowerDiagnostics, power),
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
-  ...(includeBuild.value ? [section('build',pick('Firmwarekennung und Fehlernotiz','Firmware identity and fault note'),normalizeLcdBuildDiagnostics,buildRows)] : []),
+  ...(includeBuild.value ? [section('build',pick('Firmwarekennung und Fehlernotiz','Firmware identity and fault note'),normalizeBuildDiagnostics,buildRows)] : []),
   ...(includeFlash.value ? [section('flash', pick('SPI-Flash-Kennung', 'SPI flash ID'), normalizeFlashDiagnostics, flashRows)] : []),
   ...(includeMenu.value ? [section('menu', pick('Hauptmenü: erster Start und Rückkehr', 'Main menu: first launch and return'), normalizeMenuDiagnostics, firstMenu)] : []),
 ]);

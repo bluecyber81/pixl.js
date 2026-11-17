@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.55.7 · OLED DE3.84 / App84
+
+App84 meldet über die Diagnose ihre OLED-Buildkennung und eine gegebenenfalls erhaltene Fehlernotiz. Displayfoto, Flashkennung und Startwerte erkennen den neuen Teststand. Die Geräteauswahl führt zum passenden [OLED-Download](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip) und zur [Handy-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled).
+
 ## Dateimanager 3.55.6
 
 Die Diagnose für LCD DE3.84 zeigt die SourceID der laufenden App, eine verfügbare Fehlernotiz vom vorherigen Start und die Cachebelegung beim letzten Einbinden des Speichers. Der Prüfassistent bietet 40 zusätzliche LCD-Fälle auf Deutsch und Englisch. Der Besitzer bestätigte am 17.11.2026 den praktischen Betrieb von App657 mit Z21. [LCD-Testversion für Android](https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1) · [Dateimanager für Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)

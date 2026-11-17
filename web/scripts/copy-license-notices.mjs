@@ -47,7 +47,7 @@ export function copyNotices(mode) {
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.72">${label('Quellstand der LCD-Testversion DE3.72/645 mit App-Fortsetzung', 'Source code for the DE3.72/645 LCD test release with app resume')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.73-test646">${label('Quellstand der LCD-Testversion DE3.73/646', 'Source code for the DE3.73/646 LCD test release')}</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.81-oled-t1">${label('Quellstand der OLED-Testfirmware DE3.81 Test 1', 'Source code for the DE3.81 OLED Test 1 firmware')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.84-oled-t4">${label('Quellstand der OLED-Testfirmware DE3.84 Test 4', 'Source code for the DE3.84 OLED Test 4 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.75">${label('Archivierter Quellstand der LCD-Firmware DE3.75/648', 'Archived source code for LCD release DE3.75/648')}</a></li></ul>
 <p>${label('Die LCD-App DE3.81 setzt PFS1, Z19, Z20 oder Z21 und S112 7.3.0 voraus. Das Android-Komplettpaket enthält DE3.81, Z21 und S112 7.3.0.', 'The DE3.81 LCD app requires PFS1, Z19, Z20 or Z21, and S112 7.3.0. The Android full package contains DE3.81, Z21 and S112 7.3.0.')}</p>
 <p>${label('Aktuelle Bibliotheken und Quellen', 'Current libraries and sources')} · <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>.
