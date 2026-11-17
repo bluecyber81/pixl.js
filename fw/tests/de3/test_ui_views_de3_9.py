@@ -182,7 +182,7 @@ class ViewTests(unittest.TestCase):
             directory = Path(temporary)
             (directory / "game_view.h").write_text(
                 "enum {INPUT_KEY_LEFT, INPUT_KEY_RIGHT, INPUT_KEY_CENTER};\n"
-                "int game_view_key_pressed(int key);\n")
+                "#include <stdbool.h>\nint game_view_key_pressed(int key); void game_view_wait_for_start(void); bool game_view_take_start(void);\n")
             (directory / "nrf_delay.h").write_text("void nrf_delay_ms(unsigned delay);\n")
             source = directory / "display.c"
             source.write_text(r'''
@@ -200,6 +200,8 @@ void JOY_OLED_write_page(uint8_t index, uint8_t *pixels, uint8_t count) {
 }
 void JOY_sound(uint8_t freq,uint8_t duration) { assert(!"unexpected sound"); }
 int game_view_key_pressed(int key) { assert(!"unexpected game input"); return 0; }
+void game_view_wait_for_start(void) { assert(!"unexpected title"); }
+bool game_view_take_start(void) { assert(!"unexpected input poll"); return false; }
 void JOY_init(void) { assert(!"unexpected game initialization"); }
 void JOY_idle(void) { assert(!"unexpected input poll"); }
 uint8_t JOY_exit(void) { assert(!"unexpected exit poll"); return 0; }

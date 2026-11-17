@@ -77,12 +77,13 @@ int tiny_lander_run(void) {
     GAME game;
 
   BEGIN:
+    game_view_wait_for_start();
     game.Level = 1;
     game.Score = 0;
     game.Lives = 4;
     while(1) {
       Tiny_Flip(1, &game, &score, &velX, &velY);
-      if (JOY_act_pressed()) {
+      if (game_view_take_start()) {
         if (JOY_up_pressed()){ 
           game.Level = 10;
           ALERTJOY_sound();

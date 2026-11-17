@@ -64,13 +64,17 @@ void JOY_init(void) {}
 void JOY_idle(void) {}
 uint8_t JOY_exit(void) {return 0;}
 int game_view_key_pressed(int key) {return 0;}
+void game_view_wait_for_start(void) {}
+bool game_view_take_start(void) {return false;}
+uint32_t JOY_clock_ticks(void) {return 0;}
+void JOY_pace_tris_step(uint32_t ticks) {}
 void nrf_delay_ms(unsigned delay) {}
 """
 
 def capture(port, name, legacy, *, raw=False):
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
-        (folder / "game_view.h").write_text("enum {INPUT_KEY_LEFT,INPUT_KEY_RIGHT,INPUT_KEY_CENTER}; int game_view_key_pressed(int);")
+        (folder / "game_view.h").write_text("#include <stdbool.h>\nenum {INPUT_KEY_LEFT,INPUT_KEY_RIGHT,INPUT_KEY_CENTER}; int game_view_key_pressed(int); void game_view_wait_for_start(void); bool game_view_take_start(void);")
         (folder / "nrf_delay.h").write_text("void nrf_delay_ms(unsigned);")
         src = folder / "trace.c"
         src.write_text("#include <stdint.h>\n#include <stdio.h>\n#include <assert.h>\n"

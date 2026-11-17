@@ -92,11 +92,12 @@ int tiny_invaders_run(void) {
         SPACE space;
 
     NEWGAME:
+        game_view_wait_for_start();
         Live = 3;
         LEVELS = 0;
         Tiny_Flip(1, &space);
         while (1) {
-            if (JOY_act_pressed()) {
+            if (game_view_take_start()) {
                 JOY_sound(100, 125);
                 JOY_sound(50, 125);
                 goto BYPASS2;

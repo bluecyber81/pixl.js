@@ -50,11 +50,12 @@ static int game_scene_game_list_list_item_cmp(const mui_list_item_t *p_item_a, c
 static void game_scene_game_list_reload_folders(app_game_t *app) {
     mui_list_view_clear_items(app->p_list_view);
     mui_list_view_add_item(app->p_list_view, ICON_HOME, _T(MAIN_MENU), (void *)-1);
+    mui_list_view_add_item(app->p_list_view, ICON_HELP, getLanguage() == LANGUAGE_DE_DE ?
+                           "Mitte halten: zurück" : "Hold center: back", NULL);
     mui_list_view_add_item(app->p_list_view, ICON_FILE, _T(APP_GAME_TINY_LANDER), tiny_lander_run);
     mui_list_view_add_item(app->p_list_view, ICON_FILE, _T(APP_GAME_TINY_INVADERS) , tiny_invaders_run);
     mui_list_view_add_item(app->p_list_view, ICON_FILE, _T(APP_GAME_TINY_ARKANOID), tiny_arkanoid_run);
     mui_list_view_add_item(app->p_list_view, ICON_FILE, _T(APP_GAME_TINY_TRIS), tiny_tris_run);
-    mui_list_view_add_item(app->p_list_view, ICON_HELP, getLanguage() == LANGUAGE_DE_DE ? "Spielsteuerung" : "Game controls", NULL);
 }
 
 void game_scene_game_list_on_enter(void *user_data) {

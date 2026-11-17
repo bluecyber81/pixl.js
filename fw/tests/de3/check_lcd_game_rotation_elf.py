@@ -257,10 +257,15 @@ def verify(build, expect_app655_bug):
             return bytes(cpu.mem_read(address, 64)).split(b'\0', 1)[0].decode()
         for lang, title, back, actions in [(0, 'Spielsteuerung', 'Zurück', ('Schub', 'Feuern', 'Ball starten', 'Drehen')),
                                           (1, 'Game controls', 'Back', ('Thrust', 'Fire', 'Launch ball', 'Rotate'))]:
+            help_index = -1
+            if 'game_view_take_start' in symbols:
+                help_index = 1
+                title = 'Hold center: back' if lang else 'Mitte halten: zurück'
             call('setLanguage', lang)
             call('mui_scene_dispatcher_next_scene', dispatcher, 0)
-            icon, address, _ = items[-1]
+            icon, address, _ = items[help_index]
             assert len(items) == 6 and string(address) == title
+            assert call('u8g2_GetUTF8Width', context, address) <= 115
             cpu.mem_write(fake_item, struct.pack('<H', icon))
             call(callbacks[-1], 0, list_addr, fake_item)
             assert call('mui_scene_dispatcher_current_scene', dispatcher) == 2 and len(items) == 8
@@ -276,7 +281,7 @@ def verify(build, expect_app655_bug):
             help_widths[title] = widths
             call(callbacks[-1], 0, list_addr, fake_item)
             assert call('mui_scene_dispatcher_current_scene', dispatcher) == 0
-            assert len(items) == 6 and string(items[-1][1]) == title
+            assert len(items) == 6 and string(items[help_index][1]) == title
     return dict(binSha256=sha256(binary).hexdigest(), hardware=False,
                 panelInitHex=init.hex(), registersChangedByRuntimeRotation=False,
                 controls='both physical side keys and center / repeat / release; swap on and off; game enter and exit',

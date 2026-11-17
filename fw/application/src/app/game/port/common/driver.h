@@ -89,6 +89,8 @@ uint16_t JOY_random(void);
 void JOY_init(void);
 void JOY_idle();
 uint8_t JOY_exit();
+uint32_t JOY_clock_ticks(void);
+void JOY_pace_tris_step(uint32_t start);
 long map(long x, long in_min, long in_max, long out_min, long out_max) ;
 
 #ifdef __cplusplus

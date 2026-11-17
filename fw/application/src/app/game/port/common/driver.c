@@ -100,6 +100,18 @@ uint8_t JOY_exit() {
     return game_view_center_key_repeat_cnt() > 10; // about 3 sec
 }
 
+uint32_t JOY_clock_ticks(void) { return app_timer_cnt_get(); }
+
+/* Tris used the wall time of unbuffered SPI as its only gameplay clock.
+ * The physics runs twice per partial redraw. Subtract actual processing time,
+ * handle RTC rollover and never accumulate catch-up steps after a slow frame. */
+void JOY_pace_tris_step(uint32_t start) {
+    for (unsigned wait = 0; wait < 8; ++wait) {
+        if (app_timer_cnt_diff_compute(JOY_clock_ticks(), start) >= APP_TIMER_TICKS(8)) break;
+        DLY_ms(1);
+    }
+}
+
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

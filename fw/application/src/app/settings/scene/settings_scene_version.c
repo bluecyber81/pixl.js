@@ -15,10 +15,27 @@ static void device_test_draw(mui_view_t *view, mui_canvas_t *canvas) {
 
     mui_canvas_set_font(canvas, MUI_FONT_NORMAL);
     mui_canvas_draw_rframe(canvas, 0, 0, 128, 64, 0);
+    /* Distinct inner-corner marks, clockwise from top left: a horizontal
+     * line, a vertical line, a square and a single pixel. */
+    mui_canvas_draw_box(canvas, 1, 1, 3, 1);
+    mui_canvas_draw_box(canvas, 126, 1, 1, 3);
+    mui_canvas_draw_box(canvas, 125, 61, 2, 2);
+    mui_canvas_draw_dot(canvas, 1, 62);
     mui_canvas_draw_utf8(canvas, 4, 11, version_get_version(NULL));
-    /* Alternating one-pixel bars also reveal a shifted or clipped display. */
-    for (uint8_t x = 101; x < 125; x += 2)
+    for (uint8_t x = 101; x < 106; x += 2)
         mui_canvas_draw_box(canvas, x, 4, 1, 7);
+    for (uint8_t y = 0; y < 8; ++y)
+        for (uint8_t x = y & 1; x < 8; x += 2)
+            mui_canvas_draw_dot(canvas, 107 + x, 4 + y);
+    /* A T on clear and solid backgrounds checks both pixel polarities. */
+    mui_canvas_draw_box(canvas, 116, 5, 3, 1);
+    mui_canvas_draw_box(canvas, 117, 6, 1, 4);
+    mui_canvas_draw_box(canvas, 120, 4, 5, 7);
+    uint8_t color = mui_canvas_get_draw_color(canvas);
+    mui_canvas_set_draw_color(canvas, 0);
+    mui_canvas_draw_box(canvas, 121, 5, 3, 1);
+    mui_canvas_draw_box(canvas, 122, 6, 1, 4);
+    mui_canvas_set_draw_color(canvas, color);
     snprintf(text, sizeof(text), "ID %.12s", version_get_source_id());
     mui_canvas_draw_utf8(canvas, 4, 23, text);
     int32_t error = runtime_diag_last_vfs_error();
