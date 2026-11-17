@@ -1,26 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import {fileURLToPath, pathToFileURL} from 'node:url';
 import * as Vue from 'vue';
-import {parse, compileScript} from '@vue/compiler-sfc';
+import {loadSfc} from './helpers/vue-component-host.mjs';
 import {diagnosticSnapshot} from './fixtures/diagnostic-overview-data.mjs';
 import {normalizeDiagnosticSnapshot} from '../src/lib/diagnostic-snapshot.js';
 
 // The actual SFC template and script run through Vue's real renderer/reactivity.
 // No browser, Bluetooth or arbitrary network requests are made by this host.
 async function component() {
-  const filename=fileURLToPath(new URL('../src/components/DiagnosticOverview.vue',import.meta.url));
-  const {descriptor}=parse(fs.readFileSync(filename,'utf8'),{filename});
-  let source=compileScript(descriptor,{id:filename,inlineTemplate:true}).content;
-  const imports=[];
-  source=source.replace(/import\s+(.+?)\s+from\s+['"]([^'"]+)['"];?/g,(_,binding,spec)=>{imports.push({binding,spec});return '';});
-  const modules=[];
-  for(const {spec} of imports) modules.push(spec==='vue'?Vue:await import(pathToFileURL(path.resolve(path.dirname(filename),spec))));
-  const bindings=imports.map(({binding},index)=>binding.startsWith('{')
-    ?`const ${binding.replace(/\s+as\s+/g,':')}=modules[${index}];`:`const ${binding}=modules[${index}].default;`).join('\n');
-  return new Function('modules',bindings+'\n'+source.replace('export default','return'))(modules);
+  const child = await loadSfc(new URL('../src/components/IdentifierCopy.vue',import.meta.url));
+  return loadSfc(new URL('../src/components/DiagnosticOverview.vue',import.meta.url), {'./IdentifierCopy.vue': {default:child}});
 }
 function hostNode(type,text=''){return{type,text,props:{},children:[],parent:null};}
 const renderer=Vue.createRenderer({

@@ -59,8 +59,8 @@ test('device card identifies known OLED and LCD firmware and leaves an unknown b
   const label = name => text(nodes(root).find(node => node.props.class === name));
   try {
     assert.equal(label('device-name'), 'Allmiibo OLED');
-    state.nickname = 'Thomas'; await Vue.nextTick();
-    assert.equal(label('device-name'), 'Thomas');
+    state.nickname = 'Testgerät'; await Vue.nextTick();
+    assert.equal(label('device-name'), 'Testgerät');
     assert.equal(label('device-model'), 'Allmiibo OLED');
     state.firmwareVersion = '2.22.0-DE3.81'; await Vue.nextTick();
     assert.equal(label('device-model'), 'Allmiibo LCD');

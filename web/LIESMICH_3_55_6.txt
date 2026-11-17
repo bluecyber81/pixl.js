@@ -1,6 +1,8 @@
-Allmiibo Dateimanager 3.55.6-rc.3 · LCD DE3.84 und OLED Test 3
+Allmiibo Dateimanager 3.55.6 · LCD DE3.84 und OLED Test 3
 
 Deutsch
+LCD-Testrelease für das Handy: https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip
+Ein Besitzer hat am 17.11.2026 den praktischen Betrieb von DE3.84/App657 mit Z21 bestätigt. Eine gezielt unterbrochene Android-Übertragung wurde nicht einzeln dokumentiert.
 1. ZIP am Windows-PC vollständig entpacken. Start-Dateimanager.cmd mit
    installiertem Python ab 3.8 starten und Chrome oder Edge verwenden.
 2. Für Dateien und Diagnose am Gerät „Bluetooth-Dateiübertragung“ öffnen.
@@ -31,6 +33,8 @@ Deutsch
    Veröffentlichungen führen weiterhin zum jeweils dort genannten Stand.
 
 English
+LCD test release for your phone: https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip
+An owner reported successful practical use of DE3.84/App657 with Z21 on 17 November 2026. An intentionally interrupted Android update was not separately documented.
 1. On Windows, extract the complete archive. With Python 3.8 or later
    installed, run Start-Dateimanager.cmd and use Chrome or Edge.
 2. Open Bluetooth file transfer on the device for files and diagnostics.

@@ -20,7 +20,13 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,657,648,653,652,650,649,647,637,646,645]);
+  const test657 = packages.find(item => item.counter === 657);
+  assert.equal(test657.channel, 'prerelease');
+  assert.equal(test657.bootloader, 'Z21');
+  assert.equal(packagePresentation(test657).releaseNotesUrl, 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1');
+  assert.equal(new URL(nrfDfuLink(test657)).searchParams.get('file'), 'https://bluecyber81.github.io/pixl.js/firmware/' + test657.file);
+  assert.equal(nrfDfuLink({...test657, counter:654}), null);
 });
 for (const [version, counter] of [['DE3.76', 649], ['DE3.77', 650], ['DE3.79', 652], ['DE3.80', 653]]) {
   test(version + ' preview offers its signed application ZIP on Android', () => {

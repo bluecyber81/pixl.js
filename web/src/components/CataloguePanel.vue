@@ -174,7 +174,7 @@ import { CATALOGUE_PREFERENCES_KEY, CATALOGUE_PROFILE_FILE_LIMIT, FILTER_NAME_LI
 import { saveBlob } from '../lib/browser-tools.js';
 import FigureAnnouncements from './FigureAnnouncements.vue';
 import FigureDetails from './FigureDetails.vue';
-import FigureIdCopy from './FigureIdCopy.vue';
+import FigureIdCopy from './IdentifierCopy.vue';
 import LocalTagInspector from './LocalTagInspector.vue';
 const props = defineProps({ catalogue: Object, blocked: Boolean, openImport: Function, collectionReport: Object, collectionStale: Boolean, collectionHistorical: Boolean, collectionObservedAt: String });
 const emit = defineEmits(['select-entry']);

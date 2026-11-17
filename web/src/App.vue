@@ -580,7 +580,7 @@
   <footer class="source-footer">
     <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.81 / App654 / Z21 · Prüfnachweise (ZIP)' : 'LCD DE3.81 / App654 / Z21 · test evidence (ZIP)' }}</a>
+    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.84 / App657 / Z21 · Prüfpaket (ZIP)' : 'LCD DE3.84 / App657 / Z21 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv · App648-Prüfpaket für ChatGPT (ZIP)' : 'Archive · App648 test kit for ChatGPT (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>

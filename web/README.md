@@ -1,6 +1,12 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.55.5 · LCD-Firmware DE3.81
+## Dateimanager 3.55.6
+
+Die Diagnose für LCD DE3.84 zeigt die SourceID der laufenden App, eine verfügbare Fehlernotiz vom vorherigen Start und die Cachebelegung beim letzten Einbinden des Speichers. Der Prüfassistent bietet 40 zusätzliche LCD-Fälle auf Deutsch und Englisch. Der Besitzer bestätigte am 17.11.2026 den praktischen Betrieb von App657 mit Z21. [LCD-Testversion für Android](https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1) · [Dateimanager für Windows und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)
+
+LCD DE3.84 diagnostics show the running app’s SourceID, an available previous-boot fault note and cache use at the last mount. Guided checks add 40 LCD cases in English and German. An owner reported successful practical use of App657 with Z21 on 17 November 2026. [Open the file manager](https://bluecyber81.github.io/pixl.js/)
+
+## Archiv · Dateimanager 3.55.5 und LCD-Firmware DE3.81
 
 Für LCD ist DE3.81 / App654 die aktuelle Firmware. Mit eingerichtetem Packed LittleFS (PFS1), S112 7.3.0 und Z19, Z20 oder Z21 genügt die [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für ein kompatibles LCD mit älterem Bootloader enthält das [Android-Komplettpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) S112 7.3.0, Z21 und App654. [Installationsanleitung für LCD](https://bluecyber81.github.io/pixl.js/guide/index.html#flash) · [Separate OLED-Testversion](https://bluecyber81.github.io/pixl.js/guide/index.html#oled)
 

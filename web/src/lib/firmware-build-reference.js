@@ -79,6 +79,9 @@ const app656 = Object.freeze({
 
 const app657 = Object.freeze({
   ...app656, firmwareVersion: '2.22.0-DE3.84', applicationCounter: 657,
+  releaseTag: 'de3.84-lcd-test1', sourceCommit: '55e3c42836452830421b559b6fc3659b826dc43b',
+  ownerReport: Object.freeze({ date: '2026-11-17', result: 'user-reported-passed', reportedBootloaderCounter: 21,
+    scope: 'general-practical-use-on-one-lcd', interruptedDfuResume: 'not-individually-reported' }),
   applicationBytes: 356216, applicationBinSha256: 'b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323',
   sourceId: 'f9bda1ff3428d344eb7cb5de2052158d40f5474e08c03f4597b67ba229e30221', otaSha256: '6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4',
 });

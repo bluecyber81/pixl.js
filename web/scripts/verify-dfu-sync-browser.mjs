@@ -69,6 +69,7 @@ async function runChecks() {
     ['Allmiibo_LCD_DE3_76_649_NUR_APP.zip', 'DE3.76', 649],
     ['Allmiibo_LCD_DE3_77_650_NUR_APP.zip', 'DE3.77', 650],
     ['Allmiibo_LCD_DE3_81_654_NUR_APP.zip', 'DE3.81', 654],
+    ['Allmiibo_LCD_DE3_84_657_NUR_APP.zip', 'DE3.84', 657, 'de3.84-lcd-test1-app'],
     ['Allmiibo_LCD_DE3_80_653_NUR_APP.zip', 'DE3.80', 653],
     ['Allmiibo_LCD_DE3_79_652_NUR_APP.zip', 'DE3.79', 652],
   ];
@@ -97,6 +98,7 @@ async function runChecks() {
         await guidePage.setViewportSize({width, height:840});
         assert.ok(await home.getByRole('link', {name:/App654/}).isVisible());
         assert.equal(await home.getByRole('link', {name:/App654/}).getAttribute('href'), appAsset);
+        assert.equal(await home.getByRole('link', {name:/App657/}).getAttribute('href'), 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip');
         assert.ok(await home.getByRole('link', {name:/Android/}).isVisible());
         assert.equal(await home.getByRole('link', {name:/Android/}).getAttribute('href'), comboAsset);
         assert.ok(await home.evaluate(el => el.scrollWidth <= el.clientWidth));
@@ -183,6 +185,14 @@ async function runChecks() {
       const display=await card.innerText();
       for (const value of ['Nordic SDK',capture.sourceId,'12345678','23457']) assert.ok(display.includes(value),value);
       assert.match(display,/Passend|Match/);
+      await guidePage.evaluate(() => Object.defineProperty(navigator, 'clipboard', {
+        configurable:true, value:{writeText: async value => { window.copiedSourceId = value; }}
+      }));
+      await card.getByRole('button', {name:/SourceID/}).click();
+      assert.equal(await guidePage.evaluate(() => window.copiedSourceId), capture.sourceId);
+      await guidePage.locator('.build-reference > summary').click();
+      assert.match(await guidePage.locator('.build-reference').innerText(), /17\.11\.2026|17 November 2026/);
+      checks.push({locale,feature:'copy the running firmware SourceID and display the dated LCD owner report'});
       checks.push({locale,feature:'App657 displays compiled SourceID, matching package profile and retained fault from real Cortex fixture'});
 
       await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
@@ -405,7 +415,7 @@ async function runChecks() {
   }
   assert.ok(await page.locator('#button').isDisabled());
   assert.deepEqual(await page.locator('#bundled option').evaluateAll(options => options.map(option => option.value).sort()),
-    ['', ...releases.map(([, version]) => version.toLowerCase() + '-lcd-app')].sort());
+    ['', ...releases.map(([, version, , id]) => id || version.toLowerCase() + '-lcd-app')].sort());
   assert.match(await page.locator('#bundled option[value="de3.74-lcd-app"]').innerText(), /DE3\.74.*Fr\u00fchere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65.*Frühere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
@@ -425,8 +435,8 @@ async function runChecks() {
     assert.equal(await page.evaluate(() => probe.requests), 0);
     checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  for (const [, version, counter] of releases) {
-    const id = version.toLowerCase() + '-lcd-app';
+  for (const [, version, counter, packageId] of releases) {
+    const id = packageId || version.toLowerCase() + '-lcd-app';
     await page.locator('#bundled').selectOption(id);
     await page.locator('#load-bundled').click();
     await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);

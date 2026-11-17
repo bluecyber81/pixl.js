@@ -26,7 +26,7 @@
 </template>
 <script setup>
 import { catalogueDisplayName, ocarinaFigureById } from '../data/announced-figures.js';
-import FigureIdCopy from './FigureIdCopy.vue';
+import FigureIdCopy from './IdentifierCopy.vue';
 import FigureUsage from './FigureUsage.vue';
 import {computed,ref,watch} from 'vue';
 import catalogueBaseline from '../data/catalogue.json';

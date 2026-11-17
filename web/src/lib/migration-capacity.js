@@ -91,7 +91,7 @@ const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f707
   // Exact T1 qualification: identical six-file engine manifest, constants,
   // final ELF/BIN layout and embedded identity, and unchanged capacity WASM.
   // Subsequent exact profile bindings: docs/validation/DE3_72_PFS.json, DE3_73_PFS.json, DE3_74_PFS.json, DE3_75_PFS.json, DE3_76_PFS.json, DE3_77_PFS.json, DE3_79_PFS.json, DE3_80_PFS.json, DE3_81_PFS.json, DE3_82_PFS.json, DE3_83_PFS.json and DE3_84_PFS.json.
-  // App657 is the local preview default; saved simulations must still match an approved device and geometry.
+  // The simulator defaults to App657. Saved results must match an approved application and geometry.
   approvedApplications:[...currentApplications,{firmwareVersion:'2.22.0-DE3.71t1',applicationCounter:644},
     {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645},
     {firmwareVersion:'2.22.0-DE3.73',applicationCounter:646},

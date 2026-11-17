@@ -1,9 +1,9 @@
 <template>
   <section v-if="entry" class="lcd-downloads" :aria-label="de ? 'Aktuelle LCD-Firmware' : 'Current LCD firmware'">
-    <h3>Allmiibo LCD · DE3.81 / App654</h3>
+    <h3>Allmiibo LCD</h3>
     <div class="lcd-options">
       <div>
-        <a v-if="choices.app" :href="release + entry.file">{{ de ? 'Nur App654 herunterladen (ZIP)' : 'Download App654 only (ZIP)' }}</a>
+        <a v-if="choices.app" :href="release + entry.file">{{ de ? 'Stabil · DE3.81 / App654 herunterladen (ZIP)' : 'Stable · Download DE3.81 / App654 (ZIP)' }}</a>
         <strong v-else>{{ de ? 'Nur App654' : 'App654 only' }}</strong>
         <p>{{ de ? 'Für LCD mit Packed LittleFS (PFS1), Z19, Z20 oder Z21 und S112 7.3.0.' : 'For LCD with Packed LittleFS (PFS1), Z19, Z20 or Z21 and S112 7.3.0.' }}</p>
       </div>
@@ -11,6 +11,11 @@
         <a v-if="choices.combo" :href="release + combo">{{ de ? 'Komplettpaket für Android (ZIP)' : 'Full package for Android (ZIP)' }}</a>
         <strong v-else>{{ de ? 'Komplettpaket für Android' : 'Full package for Android' }}</strong>
         <p>{{ de ? 'S112 7.3.0, Bootloader Z21 und App654 für passende LCD mit Bootloader-Zähler unter 21. Installation mit nRF Device Firmware Update.' : 'S112 7.3.0, Z21 bootloader and App654 for compatible LCD devices with bootloader counter below 21. Install with nRF Device Firmware Update.' }}</p>
+      </div>
+      <div v-if="testEntry">
+        <a v-if="testAvailable" :href="testRelease + testEntry.file">{{ de ? 'Testversion · DE3.84 / App657 herunterladen (ZIP)' : 'Test release · Download DE3.84 / App657 (ZIP)' }}</a>
+        <strong v-else>{{ de ? 'LCD-Testversion DE3.84 / App657' : 'LCD test release DE3.84 / App657' }}</strong>
+        <p>{{ de ? 'Nur App für LCD mit PFS1, Z21 und S112 7.3.0. Der Besitzer hat den praktischen Betrieb auf einem LCD bestätigt.' : 'App only for LCD with PFS1, Z21 and S112 7.3.0. An owner reported successful practical use on one LCD.' }}</p>
       </div>
     </div>
     <a class="instructions" :href="guide">{{ de ? 'Voraussetzungen und Installationsanleitung' : 'Requirements and installation guide' }}</a>
@@ -25,11 +30,14 @@ import releases from '../data/firmware-releases.json';
 
 const props = defineProps({ connected: Boolean, version: String, boot: Object, locale: String });
 const entry = releases.packages.find(item => item.id === 'de3.81-lcd-app');
+const testEntry = releases.packages.find(item => item.id === 'de3.84-lcd-test1-app');
+const testRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/';
 const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81/';
 const combo = 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip';
 const de = computed(() => props.locale?.startsWith('de'));
 const guide = computed(() => deploymentPath(de.value ? 'guide/index.html' : 'guide/en.html') + '#android-de381');
 const choices = computed(() => currentLcdDownloads(entry, { connected:props.connected, firmwareVersion:props.version }, props.boot));
+const testAvailable = computed(() => testEntry && currentLcdDownloads(testEntry, {connected:props.connected, firmwareVersion:props.version}, props.boot).app);
 </script>
 
 <style scoped>

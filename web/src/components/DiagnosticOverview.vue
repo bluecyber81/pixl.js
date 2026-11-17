@@ -25,7 +25,8 @@
         <div v-if="buildIdentity.packageReference"><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
         <div v-if="buildIdentity.packageReference"><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
       </dl>
-      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
+      <p v-if="buildIdentity.packageReference?.ownerReport">{{ pick('Am 17.11.2026 bestätigte ein Besitzer, dass DE3.84 / App657 auf seinem LCD mit Z21 im praktischen Einsatz funktioniert. Die Wiederaufnahme eines unterbrochenen Handy-Updates wurde nicht einzeln dokumentiert.', 'On 17 November 2026 an owner reported successful practical use of DE3.84 / App657 on their LCD with Z21. Resuming an interrupted phone update was not documented separately.') }} <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1">{{ pick('Testrelease', 'Test release') }}</a></p>
+      <p v-else-if="buildIdentity.packageReference?.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
       <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'startup-and-system-readback-on-one-lcd'">{{ pick('Auf einem LCD bestätigt: App-Start, Bootbereich und S112 7.3.0. Der Gerätetest zur Wiederaufnahme eines unterbrochenen Handy-Updates steht aus.', 'One LCD confirmed application startup, the boot region and S112 7.3.0. Recovery from an interrupted phone update still awaits an on-device test.') }}</p>
       <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'owner-reported-flash-and-initial-operation'">{{ pick('Der Besitzer meldet, dass das geflashte LCD-Gerät läuft. Die Wiederaufnahme nach einem unterbrochenen Android-Update ist am Gerät noch offen.', 'The owner reports that the LCD device runs after flashing. Recovery after an interrupted Android update still awaits a device test.') }}</p>
       <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
@@ -37,6 +38,7 @@
         <p class="section-time">{{ t.observed }}: <time v-if="card.observedAt" :datetime="card.observedAt">{{ displayTime(card.observedAt) }}</time><span v-else>—</span></p>
         <template v-if="card.state === 'available'">
           <dl class="key-values"><div v-for="row in card.summary" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
+          <IdentifierCopy v-if="card.id === 'build' && buildIdentity.observed.sourceId" source :id="buildIdentity.observed.sourceId" :de="de" />
           <p v-if="card.sampleNote" class="sample-note">{{ card.sampleNote }}</p>
           <details v-if="card.mount" class="technical-details mount-profile"><summary>{{ card.mount.title }}</summary>
             <dl class="detail-values"><div v-for="row in card.mount.rows" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
@@ -58,6 +60,7 @@
 </template>
 <script setup>
 import { computed } from 'vue';
+import IdentifierCopy from './IdentifierCopy.vue';
 import { diagnosticBuildIdentity } from '../lib/firmware-build-reference.js';
 import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/device-info.js';
 import { infoEnglish, infoGerman } from '../i18n/info.js';
