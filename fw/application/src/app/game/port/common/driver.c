@@ -48,8 +48,13 @@ void JOY_OLED_set_pos(uint8_t column, uint8_t page) {
 void JOY_OLED_send(uint8_t b) { JOY_OLED_write_data(1, b); }
 
 void JOY_OLED_data_start(uint8_t y) {
+    uint8_t column = 0;
+#ifdef OLED_SCREEN
+    /* Draw into the same visible controller columns as the menu. */
+    column = u8g2_GetU8x8(&mui()->u8g2)->x_offset;
+#endif
     hal_spi_bus_aquire(mui_u8g2_get_spi_device());
-    JOY_OLED_set_pos(0, y);
+    JOY_OLED_set_pos(column, y);
 }
 void JOY_init() { JOY_OLED_clear(); }
 

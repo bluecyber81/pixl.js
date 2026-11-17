@@ -1,4 +1,4 @@
-"""Verify the signed DE3.81 OLEDt1 App ZIP against the source and repeat build."""
+"""Verify a signed DE3.81 OLED trial against its sources and repeat build."""
 
 import argparse
 import hashlib
@@ -22,12 +22,15 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def check(primary, repeat, ota):
-    version = "2.22.0-DE3.81-OLEDt1"
+TRIALS = {1: ("2.22.0-DE3.81-OLEDt1", 81), 2: ("2.22.0-DE3.81-OLEDt2", 82)}
+
+
+def check(primary, repeat, ota, trial=1):
+    version, counter = TRIALS[trial]
     for build in (primary, repeat):
         record = unique_json((build / "BUILD_RESULT.json").read_bytes())
         need((record["board"], record["mode"], record["status"], record["version"], record["counter"]) ==
-             ("OLED", "development", "unsigned_development", version, 81), "Unexpected build identity")
+             ("OLED", "development", "unsigned_development", version, counter), "Unexpected build identity")
         for artifact in ("pixljs.bin", "pixljs.hex", "pixljs.map", "pixljs.out"):
             need(digest((build / artifact).read_bytes()) == record["artifacts_sha256"][artifact],
                  "Changed build output: " + artifact)
@@ -53,7 +56,7 @@ def check(primary, repeat, ota):
          "Unexpected bootloader public key")
     key = ec.EllipticCurvePublicNumbers(int.from_bytes(public[:32], "little"),
                                         int.from_bytes(public[32:], "little"), ec.SECP256R1()).public_key()
-    release = {"counter": 81, "hardware_version": 52, "softdevice_requirements": ["0x0103"]}
+    release = {"counter": counter, "hardware_version": 52, "softdevice_requirements": ["0x0103"]}
     result = verify_zip(ota, binary, release, key)
     return {"version": version, "board": "OLED SH1106 128x64", "source_id": source_id,
             "repeat_bin_hex_match": True, "memory": record["linker_budget"], "ota": result}
@@ -64,5 +67,6 @@ if __name__ == "__main__":
     parser.add_argument("primary_build", type=Path)
     parser.add_argument("repeat_build", type=Path)
     parser.add_argument("ota", type=Path)
+    parser.add_argument("--trial", type=int, choices=TRIALS, default=1)
     args = parser.parse_args()
-    print(json.dumps(check(args.primary_build, args.repeat_build, args.ota), indent=2))
+    print(json.dumps(check(args.primary_build, args.repeat_build, args.ota, args.trial), indent=2))
