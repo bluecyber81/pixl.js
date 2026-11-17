@@ -80,7 +80,7 @@ void hal_spi_bus_init() {
     spi_oled_config.sck_pin = NRFX_SPIM_SCK_PIN;
     spi_oled_config.mosi_pin = NRFX_SPIM_MOSI_PIN;
     spi_oled_config.miso_pin = NRFX_SPIM_MISO_PIN;
-    spi_oled_config.frequency = NRF_SPIM_FREQ_8M; // The SSD1326 can go up to 10 MHz clock
+    spi_oled_config.frequency = NRF_SPIM_FREQ_8M;
     spi_oled_config.mode = NRF_SPIM_MODE_0;
     spi_oled_config.ss_active_high = false;
 
@@ -100,6 +100,12 @@ void hal_spi_bus_attach(spi_device_t *p_dev) {
  * devices. Flash busy polling is deliberately outside these transactions. */
 void hal_spi_bus_aquire(spi_device_t *p_dev) {
     app_util_critical_region_enter(&p_dev->critical_region_nested);
+#if defined(OLED_SH1106)
+    /* The SH1106 four-wire clock period is at least 500 ns over its full
+     * logic-supply range. Set the clock before selecting this target. */
+    nrf_spim_frequency_set(m_spi.p_reg, p_dev->cs_pin == LCD_CS_PIN ?
+                           NRF_SPIM_FREQ_2M : NRF_SPIM_FREQ_8M);
+#endif
     m_active_device = p_dev;
     nrf_gpio_pin_clear(p_dev->cs_pin);
 }

@@ -45,6 +45,7 @@ static spim_control_block_t m_cb[1];
 enum {NORMAL,RX_SHORT,TX_SHORT,NO_END,END_WITHOUT_STOP,FATAL_DMA,START_ERROR};
 static unsigned mode,starts,stops,end_checks,stop_checks,clears,callbacks;
 static unsigned enters,exits,selected,fatals,case_id;
+static unsigned frequency, frequency_writes;
 static uint32_t ticks,tick_step=1;
 static bool masked,dma_active,stop_requested,irq_enabled;
 static bool fatal_expected;
@@ -66,7 +67,7 @@ static void complete(void) {
     mock_spim.events[NRF_SPIM_EVENT_END]=true;dma_active=false;
 }
 bool nrf_spim_event_check(NRF_SPIM_Type*r,nrf_spim_event_t event) {
-    assert(masked && selected==FLASH_CS_PIN);
+    assert(masked && (selected==FLASH_CS_PIN || selected==LCD_CS_PIN));
     if(event==NRF_SPIM_EVENT_END){
         end_checks++;
         if(dma_active && mode<=TX_SHORT && end_checks%3==0)complete();
@@ -81,7 +82,7 @@ bool nrf_spim_event_check(NRF_SPIM_Type*r,nrf_spim_event_t event) {
 }
 void nrf_spim_event_clear(NRF_SPIM_Type*r,nrf_spim_event_t e) {r->events[e]=false;if(e==NRF_SPIM_EVENT_STOPPED)clears++;}
 void nrf_spim_task_trigger(NRF_SPIM_Type*r,unsigned t) {
-    assert(masked && selected==FLASH_CS_PIN);
+    assert(masked && (selected==FLASH_CS_PIN || selected==LCD_CS_PIN));
     if(t==NRF_SPIM_TASK_START){
         assert(!dma_active);assert(!r->events[NRF_SPIM_EVENT_STOPPED]);
         dma_active=true;stop_requested=false;starts++;
@@ -95,12 +96,31 @@ uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return(a-b)&0xffffffu
 void app_util_critical_region_enter(uint8_t*n){*n=masked;masked=true;enters++;}
 void app_util_critical_region_exit(uint8_t n){assert(masked&&!selected&&!dma_active);masked=n;exits++;}
 void nrf_gpio_cfg_output(uint32_t p){(void)p;}
-void nrf_gpio_pin_clear(uint32_t p){assert(masked&&!selected);selected=p;}
-void nrf_gpio_pin_set(uint32_t p){assert(p==FLASH_CS_PIN);selected=0;}
+void nrf_spim_frequency_set(NRF_SPIM_Type *reg, unsigned value) {
+    assert(reg==&mock_spim && masked && !dma_active && !selected);
+    frequency=value;
+    frequency_writes++;
+}
+void nrf_gpio_pin_clear(uint32_t p) {
+    assert(masked && !selected && !dma_active);
+    assert(p==LCD_CS_PIN || p==FLASH_CS_PIN);
+#ifdef OLED_SH1106
+    assert(frequency==(p==LCD_CS_PIN ? NRF_SPIM_FREQ_2M : NRF_SPIM_FREQ_8M));
+#else
+    assert(frequency==NRF_SPIM_FREQ_8M);
+#endif
+    selected=p;
+}
+void nrf_gpio_pin_set(uint32_t p) {
+    assert(p==FLASH_CS_PIN || p==LCD_CS_PIN);
+    assert(!selected || selected==p);
+    assert(!dma_active || (fatal_expected && m_bus_faulted));
+    selected=0;
+}
 void nrf_gpio_pin_write(uint32_t p,uint32_t v){(void)p;(void)v;}
 void u8x8_gpio_SetDC(u8x8_t*d,uint8_t v){(void)d;(void)v;}
 uint32_t nrfx_spim_init(const nrfx_spim_t*s,const nrfx_spim_config_t*c,nrfx_spim_evt_handler_t h,void*x){
-    (void)s;assert(h&&x==NULL&&c->frequency==NRF_SPIM_FREQ_8M);
+    (void)s;assert(h&&x==NULL&&c->frequency==NRF_SPIM_FREQ_8M);frequency=c->frequency;
     m_cb[0].handler=h;m_cb[0].state=1;m_cb[0].ss_pin=NRFX_SPIM_PIN_NOT_USED;return 0;
 }
 void mock_error(uint32_t e){
@@ -110,15 +130,16 @@ void mock_error(uint32_t e){
     longjmp(fatal_jump,1); /* Models a reset boundary, never a safe DMA return. */
 }
 /* ACTUAL_SDK */
-static uint32_t transaction(unsigned tx,unsigned rx){
+static uint32_t transfer_on(spi_device_t *dev,unsigned tx,unsigned rx){
     uint8_t bytes[542],send[540];memset(bytes,0xa5,sizeof bytes);memset(send,0x55,sizeof send);
     spi_transaction_t tr={.p_tx_buffer=tx?send:NULL,.tx_length=tx,.p_rx_buffer=rx?bytes+1:NULL,.rx_length=rx};
-    hal_spi_bus_aquire(&device);uint32_t result=hal_spi_bus_xfer(&tr);hal_spi_bus_release(&device);
+    hal_spi_bus_aquire(dev);uint32_t result=hal_spi_bus_xfer(&tr);hal_spi_bus_release(dev);
     assert(!dma_active&&!masked&&!selected&&enters==exits&&!m_cb[0].transfer_in_progress&&!irq_enabled);
     assert(bytes[0]==0xa5&&bytes[rx+1]==0xa5);
     if(!result)for(unsigned i=1;i<=rx;i++)assert(bytes[i]==0x33);
     return result;
 }
+static uint32_t transaction(unsigned tx,unsigned rx){return transfer_on(&device,tx,rx);}
 static void followup(void){
     unsigned before=starts;mode=NORMAL;assert(transaction(4,16)==NRF_SUCCESS);assert(starts==before+1);
 }
@@ -156,6 +177,24 @@ int main(int argc,char**argv){
         uint8_t a=0;spi_transaction_t tr={.p_tx_buffer=&a,.tx_length=1};
         hal_spi_bus_aquire(&device);assert(hal_spi_bus_xfer(&tr)==NRFX_ERROR_BUSY);hal_spi_bus_release(&device);
         assert(!starts&&!stops&&!fatals);m_cb[0].transfer_in_progress=false;followup();
+    }else if(case_id==12){
+        spi_device_t display={.cs_pin=LCD_CS_PIN};
+        hal_spi_bus_attach(&display);
+        hal_spi_bus_attach(&device);
+        assert(transfer_on(&display,255,0)==NRF_SUCCESS);  /* two completed DMA chunks */
+        assert(transaction(4,129)==NRF_SUCCESS);
+        mode=NO_END;
+        assert(transfer_on(&display,16,0)==NRF_ERROR_TIMEOUT);
+        assert(stops==1 && stop_checks==4);
+        mode=NORMAL;
+        assert(transaction(4,16)==NRF_SUCCESS);           /* after STOPPED, CS-high */
+        assert(transfer_on(&display,1,0)==NRF_SUCCESS);
+        assert(starts==7 && !dma_active && !selected);
+#ifdef OLED_SH1106
+        assert(frequency_writes==5);
+#else
+        assert(frequency_writes==0);
+#endif
     }else assert(!"unknown case");
     assert(!callbacks);printf("PASS case %u, starts=%u stops=%u fatal=%u\n",case_id,starts,stops,fatals);
 }
@@ -191,15 +230,16 @@ def main():
                    '-I', str(directory)]
         if os.environ.get('PIXL_SANITIZE') == '1':
             command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-no-pie']
-        subprocess.run(command + [str(source), '-o', str(binary)], check=True, timeout=60)
-        for case in range(11):
-            subprocess.run([str(binary), str(case)], check=True, timeout=15)
-        # A deliberately returning fatal handler must still hit SystemReset.
-        # The host-only reset stub uses _Exit(86), avoiding CRT abort dialogs.
-        result = subprocess.run([str(binary), '11'], capture_output=True, timeout=15)
-        assert result.returncode == 86, result.returncode
-        assert b'PASS' not in result.stdout
-        print('PASS returning fatal handler terminates at SystemReset stub, exit=' + str(result.returncode))
+        for board_flags in ([], ['-DOLED_SH1106']):
+            subprocess.run(command + board_flags + [str(source), '-o', str(binary)], check=True, timeout=60)
+            for case in (*range(11), 12):
+                subprocess.run([str(binary), str(case)], check=True, timeout=15)
+            # A deliberately returning fatal handler must still reach the reset stub.
+            result = subprocess.run([str(binary), '11'], capture_output=True, timeout=15)
+            assert result.returncode == 86, result.returncode
+            assert b'PASS' not in result.stdout
+            board = 'OLED (2 MHz display / 8 MHz flash)' if board_flags else 'LCD (8 MHz)'
+            print(f'PASS {board}: alternating targets, CS, DMA END/STOPPED and reset handling')
     print('PASS actual HAL + pinned SDK completion/error/RTC/CS regression suite')
 
 

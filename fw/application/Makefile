@@ -734,8 +734,13 @@ LDFLAGS += --specs=nano.specs
 
 pixljs: CFLAGS += -D__HEAP_SIZE=512
 pixljs: CFLAGS += -D__STACK_SIZE=8192
-ifeq ($(BOARD),LCD)
+ifneq ($(filter LCD OLED,$(BOARD)),)
 pixljs: CFLAGS += -DPIXL_RUNTIME_DIAGNOSTICS=1
+endif
+ifeq ($(BOARD)/$(RELEASE),OLED/1)
+# Keep warnings and errors in release RTT logs. Leave room for the live
+# diagnostics without taking space from filesystem caches, heap or stack.
+pixljs: CFLAGS += -DNRF_LOG_DEFAULT_LEVEL=2 -DNRF_LOG_BUFSIZE=512
 endif
 pixljs: ASMFLAGS += -D__HEAP_SIZE=512
 pixljs: ASMFLAGS += -D__STACK_SIZE=8192

@@ -12,7 +12,7 @@
 /* The first desktop lifetime in this boot. Freeze the debounced button counts
  * when a selection begins or the desktop leaves without one. A new entry
  * never resets the record. Only the synchronous launcher call is timed. */
-#if defined(PIXL_RUNTIME_DIAGNOSTICS) && defined(BOARD_LCD)
+#if defined(PIXL_RUNTIME_DIAGNOSTICS) && (defined(BOARD_LCD) || defined(BOARD_OLED))
 #define MUI_FIRST_MENU_DIAG
 void mui_menu_diag_enter(void);
 void mui_menu_diag_leave(void);

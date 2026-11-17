@@ -20,15 +20,16 @@ def main():
         source = temp / "lcd.c"
         source.write_text(harness)
         exe = temp / "lcd.exe"
-        subprocess.run(["gcc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-O1",
-                        '-DMBEDTLS_CONFIG_FILE="mbedtls_test.h"', "-I", str(temp), "-I", str(SDK),
-                        "-I", str(DF), "-I", str(FW / "components/u8g2/csrc"), str(source),
-                        str(SDK / "sha256.c"), "-o", str(exe)], check=True, timeout=60)
-        result = subprocess.run([str(exe)], check=True, timeout=15, capture_output=True)
         pixels = bytes((i // 128 + 17 * i) % 256 for i in range(1024))
         digest = hashlib.sha256(pixels).hexdigest()
-        assert result.stdout.decode().strip() == digest
-        print("PASS all eight LCD pages, full SHA-256, repaint, busy, geometry, malformed requests and event isolation")
+        for board in ('LCD', 'OLED'):
+            subprocess.run(["gcc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-O1",
+                            f"-D{board}_SCREEN", '-DMBEDTLS_CONFIG_FILE="mbedtls_test.h"', "-I", str(temp), "-I", str(SDK),
+                            "-I", str(DF), "-I", str(FW / "components/u8g2/csrc"), str(source),
+                            str(SDK / "sha256.c"), "-o", str(exe)], check=True, timeout=60)
+            result = subprocess.run([str(exe)], check=True, timeout=15, capture_output=True)
+            assert result.stdout.decode().strip() == digest
+            print(f"PASS all eight {board} pages, full SHA-256, repaint, busy, geometry and malformed requests")
 
 
 if __name__ == "__main__":

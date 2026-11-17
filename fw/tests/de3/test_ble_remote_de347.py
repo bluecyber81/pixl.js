@@ -4,6 +4,7 @@ import argparse,os,re,subprocess,tempfile
 from input_context_support import context_state, context_functions, TOKEN_FUNCTIONS
 parser=argparse.ArgumentParser()
 parser.add_argument('--lcd-vectors', type=Path, help='write real LCD handshake and capture frames for cross-client verification')
+parser.add_argument('--oled-vectors', type=Path, help='write OLED handshake and capture frames for cross-client verification')
 args=parser.parse_args()
 HERE=Path(__file__).resolve().parent
 FW=HERE.parents[1]
@@ -18,17 +19,19 @@ with tempfile.TemporaryDirectory(prefix='ble-remote-de347-') as tmp:
     cmd=['arm-linux-gnueabihf-gcc' if arm else 'gcc','-std=c11','-O1','-g','-fshort-enums','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-misleading-indentation','-I',str(p),'-I',str(SRC),str(c),str(SRC/'ble_remote_protocol.c'),str(SRC/'ble_work.c'),'-o',str(exe)]
     if arm:cmd+=['-static']
     if san:cmd+=['-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer','-fno-pie','-no-pie']
-    for board_args in ([], ['-DBOARD_LCD']):
+    for board_args in ([], ['-DBOARD_LCD'], ['-DBOARD_OLED']):
         subprocess.run(cmd+board_args,check=True,timeout=60)
         runner=(['qemu-arm'] if arm else [])+[str(exe)]
         subprocess.run(runner,check=True,timeout=45)
-        if board_args:
+        if '-DBOARD_LCD' in board_args:
             golden=FW.parent/'web/tests/fixtures/remote-lcd-de374-vectors.txt'
             vectors=args.lcd_vectors.resolve() if args.lcd_vectors else p/'remote-lcd-vectors.txt'
             subprocess.run(runner+['--lcd-vectors',str(vectors)],check=True,timeout=45)
             if golden.is_file():
                 assert golden.read_bytes()==vectors.read_bytes(),'C LCD transcript differs from the web contract'
                 print('PASS real firmware wire transcript matches the DE3.74 web contract')
+        if '-DBOARD_OLED' in board_args and args.oled_vectors:
+            subprocess.run(runner+['--lcd-vectors',str(args.oled_vectors.resolve())],check=True,timeout=45)
 main=(FW/'application/src/main.c').read_text(encoding='utf-8')
 assert main.index('mui_tick(p_mui);')<main.index('ble_remote_poll();')
 assert 'ble_remote_shutdown();\n        ble_disable();' in main

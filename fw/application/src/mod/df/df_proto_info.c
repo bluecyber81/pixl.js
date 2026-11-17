@@ -7,7 +7,7 @@
 #include "../runtime_diag.h"
 #include "../boot_diag.h"
 #include "boards.h"
-#ifdef LCD_SCREEN
+#if defined(LCD_SCREEN) || defined(OLED_SCREEN)
 #include "hal_spi_flash.h"
 #include "mui_core.h"
 #include "mbedtls/sha256.h"
@@ -187,7 +187,7 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
     df_core_send_frame(&out);
 }
 
-#ifdef LCD_SCREEN
+#if defined(LCD_SCREEN) || defined(OLED_SCREEN)
 /* One cached result from the external flash geometry probe. Fits ATT MTU 23. */
 static void df_proto_handler_info_flash_jedec(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
@@ -215,7 +215,11 @@ static void df_proto_handler_info_display_page(df_event_t *evt) {
     if (!request->status && !request->chunk && request->length == 5 &&
         memcmp(request->data, "LCD1", 4) == 0 && request->data[4] < 8 && df_proto_vfs_is_idle()) {
         mui_t *ui = mui();
-        if (ui && ui->initialized && u8g2_GetBufferTileHeight(&ui->u8g2) == 8 &&
+        if (ui && ui->initialized &&
+#ifdef OLED_SCREEN
+            ui->auto_update &&  /* Direct game output does not populate the menu framebuffer. */
+#endif
+            u8g2_GetBufferTileHeight(&ui->u8g2) == 8 &&
             u8g2_GetBufferTileWidth(&ui->u8g2) == 16) {
             const uint8_t *pixels = u8g2_GetBufferPtr(&ui->u8g2);
             if (pixels && mbedtls_sha256_ret(pixels, 1024, out.data + 8, 0) == 0) {
@@ -244,7 +248,7 @@ const df_cmd_entry_t df_proto_handler_info_entries[] = {
     {DF_PROTO_CMD_INFO_BOOT_DIAGNOSTIC, df_proto_handler_info_boot_diagnostic},
     {DF_PROTO_CMD_INFO_POWER_DIAGNOSTIC, df_proto_handler_info_power_diagnostic},
     {DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, df_proto_handler_info_startup_diagnostic},
-#ifdef LCD_SCREEN
+#if defined(LCD_SCREEN) || defined(OLED_SCREEN)
     {DF_PROTO_CMD_INFO_DISPLAY_PAGE, df_proto_handler_info_display_page},
     {DF_PROTO_CMD_INFO_FLASH_JEDEC, df_proto_handler_info_flash_jedec},
 #endif

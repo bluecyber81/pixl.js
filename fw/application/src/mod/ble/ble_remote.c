@@ -20,7 +20,7 @@ static volatile uint32_t local_generation;
 static bool permission, dispatching, handoff_requested, handoff_armed, file_link_requested;
 static uint32_t handoff_local, handoff_tick, handoff_link;
 
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
 /* A copy is only held while a user-requested photo is in progress. Both
  * rendering and copying run on the foreground loop with radio IRQs enabled. */
 static uint8_t *lcd_frame;
@@ -39,6 +39,9 @@ static uint8_t lcd_read(uint8_t index) {
     if (index == 0) {
         mui_t *ui = mui();
         if (!ui || !ui->initialized || ui->memory_error ||
+#ifdef BOARD_OLED
+            !ui->auto_update ||  /* Games draw directly to the OLED controller. */
+#endif
             u8g2_GetBufferTileHeight(&ui->u8g2) != 8 || u8g2_GetBufferTileWidth(&ui->u8g2) != 16) {
             lcd_release();
             return REMOTE_BUSY;
@@ -71,7 +74,7 @@ void ble_remote_local_activity(void) { local_generation++; }
 bool ble_remote_set_enabled(bool enabled) {
     /* A synthetic key cannot grant itself permission, even through Settings. */
     if (dispatching) return false;
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
     lcd_release();
 #endif
     permission = enabled;
@@ -80,7 +83,7 @@ bool ble_remote_set_enabled(bool enabled) {
     return true;
 }
 void ble_remote_shutdown(void) {
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
     lcd_release();
 #endif
     permission = false;
@@ -127,7 +130,7 @@ static uint8_t execute(void *context, uint8_t op, uint8_t arg, uint32_t input_ge
     if (!ble_remote_transport_ready() || other_owner() || ble_mode_transition_pending()) return REMOTE_BUSY;
     if (op == REMOTE_STATUS) return REMOTE_DONE;
     if (handoff_requested || file_link_requested) return REMOTE_BUSY;
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
     if (op == REMOTE_LCD_READ) return lcd_read(arg);
 #endif
     if (vfs_packed_recovery_required() || !safe_nfc()) return REMOTE_UNSAFE;
@@ -201,7 +204,7 @@ static void sent(void *context, uint8_t op, uint8_t status) {
         file_link_requested = false;
         /* RX is already routed safely; main cannot dispatch queued file work
          * until this callback returns. Allocation failure closes that session. */
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
         lcd_release();
 #endif
         dispatching = true;
@@ -235,7 +238,7 @@ void ble_remote_receive(const uint8_t *data, size_t length) {
     bool active = permission && ble_remote_transport_ready();
     if (!active || !protocol.active || protocol.generation != generation) {
         file_link_requested = false;
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
         lcd_release();
 #endif
     }
@@ -244,7 +247,7 @@ void ble_remote_receive(const uint8_t *data, size_t length) {
         ble_nus_abort_transfer();
 }
 void ble_remote_poll(void) {
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
     if (lcd_frame && app_timer_cnt_diff_compute(app_timer_cnt_get(), lcd_last_tick) >= APP_TIMER_TICKS(30000))
         lcd_release();
 #endif
@@ -258,7 +261,7 @@ void ble_remote_poll(void) {
     bool active = permission && ble_remote_transport_ready();
     if (!active || !protocol.active || protocol.generation != generation) {
         file_link_requested = false;
-#ifdef BOARD_LCD
+#if REMOTE_LCD_CHUNK_MAX
         lcd_release();
 #endif
     }

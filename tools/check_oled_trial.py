@@ -22,7 +22,11 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-TRIALS = {1: ("2.22.0-DE3.81-OLEDt1", 81), 2: ("2.22.0-DE3.81-OLEDt2", 82)}
+TRIALS = {
+    1: ("2.22.0-DE3.81-OLEDt1", 81),
+    2: ("2.22.0-DE3.81-OLEDt2", 82),
+    3: ("2.22.0-DE3.81-OLEDt3", 83),
+}
 
 
 def check(primary, repeat, ota, trial=1):

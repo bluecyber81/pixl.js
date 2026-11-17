@@ -5,14 +5,20 @@
 #include <stdint.h>
 #define REMOTE_REQUEST_SIZE 8u
 #define REMOTE_REPLY_SIZE 12u
-#define REMOTE_LCD_CHUNK_MAX 128u
 #ifdef BOARD_LCD
+#define REMOTE_LCD_CHUNK_MAX 128u
+#elif defined(BOARD_OLED)
+/* Keep the photo reply and its replay bytes small on the OLED RAM budget. */
+#define REMOTE_LCD_CHUNK_MAX 32u
+#else
+#define REMOTE_LCD_CHUNK_MAX 0u
+#endif
+#if REMOTE_LCD_CHUNK_MAX
 #define REMOTE_CAPABILITIES 63u
-#define REMOTE_MAX_REPLY_SIZE (REMOTE_REPLY_SIZE + REMOTE_LCD_CHUNK_MAX)
 #else
 #define REMOTE_CAPABILITIES 31u
-#define REMOTE_MAX_REPLY_SIZE REMOTE_REPLY_SIZE
 #endif
+#define REMOTE_MAX_REPLY_SIZE (REMOTE_REPLY_SIZE + REMOTE_LCD_CHUNK_MAX)
 enum { REMOTE_STATUS, REMOTE_OPEN_FILE, REMOTE_TAP, REMOTE_BACK, REMOTE_OPEN_FILE_LINK,
        REMOTE_LCD_READ };
 enum { REMOTE_DONE, REMOTE_BUSY, REMOTE_INVALID, REMOTE_DISABLED, REMOTE_UNSUPPORTED,
@@ -24,8 +30,8 @@ typedef struct {
     uint32_t generation, local_generation;
     uint16_t next_sequence;
     uint8_t request[REMOTE_REQUEST_SIZE], last_request[REMOTE_REQUEST_SIZE];
-    /* Only an accepted, new LCD read can overwrite the payload. Keep its
-     * 128 bytes once; an invalid sequence or replay only changes the header. */
+    /* Only an accepted, new display read can overwrite the payload. An
+     * invalid sequence or replay only changes the header. */
     uint8_t reply[REMOTE_MAX_REPLY_SIZE], last_reply[REMOTE_REPLY_SIZE];
     bool active, pending, replying, have_last, handshake, action_reply;
 } ble_remote_protocol_t;

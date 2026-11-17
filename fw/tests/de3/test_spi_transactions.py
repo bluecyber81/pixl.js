@@ -52,6 +52,7 @@ typedef struct { int unused; } u8x8_t;
 #define NRFX_SPIM_SCK_PIN 1
 #define NRFX_SPIM_MOSI_PIN 2
 #define NRFX_SPIM_MISO_PIN 3
+#define NRF_SPIM_FREQ_2M 2000000
 #define NRF_SPIM_FREQ_8M 8000000
 #define NRF_SPIM_MODE_0 0
 #define NRF_SUCCESS 0
@@ -89,6 +90,7 @@ void nrf_spim_task_trigger(NRF_SPIM_Type*,unsigned);
 #endif
 uint32_t nrfx_spim_init(const nrfx_spim_t*,const nrfx_spim_config_t*,nrfx_spim_evt_handler_t,void*);
 uint32_t nrfx_spim_xfer(const nrfx_spim_t*,const nrfx_spim_xfer_desc_t*,uint32_t);
+void nrf_spim_frequency_set(NRF_SPIM_Type*,unsigned);
 void app_util_critical_region_enter(uint8_t*);
 void app_util_critical_region_exit(uint8_t);
 void nrf_gpio_cfg_output(uint32_t);
