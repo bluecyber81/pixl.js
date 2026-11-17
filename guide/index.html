@@ -59,11 +59,17 @@
         <section id="oled">
           <h2>OLED-Testversion DE3.84 installieren</h2>
           <p>Für Pixl.js OLED mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID <code>0x0103</code>). Referenzversionen sind cylin577 OLED v2.21.0 und v2.27.11. Die App verwendet dein vorhandenes SPIFFS oder natives LittleFS auf unterstützten Flashchips mit 2, 4, 8 oder 16 MiB.</p>
+          <p>Sichere deine Sammlung, prüfe den Bestand und bewahre die bisherige OLED-App-ZIP auf.</p>
+          <h3 id="oled-webdfu">Am Computer im Browser flashen</h3>
           <ol class="steps">
-            <li><h3>Dateien sichern</h3><p>Sichere deine Sammlung, prüfe den Bestand und bewahre die bisherige OLED-App-ZIP auf.</p></li>
-            <li><h3>App-ZIP am Handy übertragen</h3><p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip">OLED-App DE3.84 Test 4 herunterladen (ZIP)</a>. Trenne den Dateimanager und öffne am Gerät <b>Einstellungen → Firmware-Update</b>. Wähle die gepackte ZIP in <b>nRF Device Firmware Update</b> und verbinde dich mit <b>pixl dfu</b>. Das Paket enthält ausschließlich die OLED-App.</p></li>
-            <li><h3>Nach dem Neustart prüfen</h3><p>Erwartet werden <b>2.22.0-DE3.84-OLEDt4</b> und App-Zähler 84. Probiere Deutsch und Englisch, Aufwachen, deine Dateien und eine bekannte Figur an der Konsole. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Testanleitung (Deutsch und Englisch)</a>.</p></li>
+            <li><h3>OLED-Paket öffnen und prüfen</h3><p>Öffne die <a href="../dfu/web.html?package=de3.84-oled-t4-app#board=OLED">OLED-Web-DFU-Seite</a> in Chrome oder Edge auf einem Computer mit Bluetooth und Web-Bluetooth-Unterstützung. Unter <b>Display deines Geräts</b> muss <b>OLED</b> stehen. Prüfe <b>DE3.84 OLED Test 4 / App84</b> und die oben genannten Geräte- und S112-Angaben. Wähle <b>Paket laden und prüfen</b>.</p></li>
+            <li><h3>DFU-Gerät auswählen und übertragen</h3><p>Trenne die Dateiübertragung und andere Apps, die mit dem OLED verbunden sind. Öffne am Gerät <b>Einstellungen → Firmware-Update</b>. Klicke auf <b>DFU-Gerät auswählen und übertragen</b> und wähle <b>pixl dfu</b>. LCD- und OLED-Geräte können denselben DFU-Namen verwenden. Wähle deshalb das zuvor am Gerät geprüfte OLED. Halte es in Reichweite und lasse den Browser bis zum Abschluss geöffnet.</p></li>
+            <li><h3>Neustart abwarten</h3><p>Warte nach der Übertragung, bis das OLED wieder sein Menü zeigt. Verbinde die Bluetooth-Dateiübertragung erneut und prüfe die Version wie unten beschrieben.</p></li>
           </ol>
+          <h3>Am Handy flashen</h3>
+          <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip">OLED-App DE3.84 Test 4 herunterladen (ZIP)</a>. Trenne den Dateimanager und öffne am Gerät <b>Einstellungen → Firmware-Update</b>. Wähle die gepackte ZIP in <b>nRF Device Firmware Update</b> und verbinde dich mit <b>pixl dfu</b>. Das Paket enthält die OLED-App.</p>
+          <h3>Nach dem Neustart prüfen</h3>
+          <p>Erwartet werden <b>2.22.0-DE3.84-OLEDt4</b> und App-Zähler 84. Probiere Deutsch und Englisch, Aufwachen, deine Dateien und eine bekannte Figur an der Konsole. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Testanleitung (Deutsch und Englisch)</a>.</p>
           <p>Öffne <b>Gerät &amp; Diagnose</b> und lies die Diagnose. Unter Firmwarekennung sollte das Board <b>OLED</b> erscheinen. Prüfe beim Spielen beide Displayausrichtungen und die äußeren Pixelreihen. Melde für die Fernbedienung den genauen Schritt, an dem sie reagiert oder hängen bleibt.</p>
           <h3 id="oled-remote">Fernbedienung verbinden</h3>
           <p>Beende am wachen Gerät die Dateiübertragung und AmiiboLink. Aktiviere <b>Einstellungen → Fernsteuern → bis Aus</b> und kehre ins Hauptmenü zurück. Wähle im Dateimanager unter <b>Fernbedienung</b> das Profil <b>Allmiibo DE</b> und im Bluetooth-Fenster <b>Pixl.Remote</b>. Drücke einmal <b>Rechts</b> und prüfe, ob die Markierung am Gerät weiterwandert.</p>

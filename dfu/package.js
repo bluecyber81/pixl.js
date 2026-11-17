@@ -143,9 +143,9 @@
         });
     }
     class Package {
-        constructor(buffer) { this.buffer = buffer; this.image = null; }
+        constructor(buffer) { this.buffer = buffer; this.image = null; this.archiveSha256 = null; this.archiveBytes = 0; }
         async load() {
-            this.image = null;
+            this.image = null; this.archiveSha256 = null; this.archiveBytes = 0;
             const bytes = await asBytes(this.buffer), entries = inspect(bytes);
             const manifestEntry = entries.get('manifest.json');
             requireThat(manifestEntry?.name === 'manifest.json' && manifestEntry.size > 0 && manifestEntry.size <= 4096, 'manifest.json fehlt oder ist zu groß.', 'The ZIP must contain a nonempty manifest.json within the size limit.');
@@ -166,6 +166,9 @@
             const initData = await readEntry(zip, init), imageData = await readEntry(zip, app);
             requireThat(initData.byteLength === init.size && imageData.byteLength === app.size, 'Entpackte Größen stimmen nicht.', 'The uncompressed sizes do not match.');
             const target = await requirements(initData, imageData);
+            const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+            this.archiveSha256 = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+            this.archiveBytes = bytes.byteLength;
             this.image = Object.freeze({ type: 'application', initFile: init.name, imageFile: app.name, initData, imageData, target });
             return this;
         }

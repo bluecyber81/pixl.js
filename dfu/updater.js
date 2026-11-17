@@ -5,8 +5,8 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (DfuValidationError) {
     'use strict';
     return class Updater {
-        constructor({ Package, createDfu, onStatus = () => {}, onProgress = () => {}, onState = () => {}, onPhase = () => {} }) {
-            Object.assign(this, { Package, createDfu, onStatus, onProgress, onState, onPhase });
+        constructor({ Package, createDfu, validatePackage = () => {}, onStatus = () => {}, onProgress = () => {}, onState = () => {}, onPhase = () => {} }) {
+            Object.assign(this, { Package, createDfu, validatePackage, onStatus, onProgress, onState, onPhase });
             this.package = null; this.busy = false; this.loading = false; this.sequence = 0; this.lastResult = null;
         }
         state() { this.onState({ busy: this.busy, loading: this.loading, ready: !!this.package && !this.loading && !this.busy, target: this.package?.image?.target }); }
@@ -19,6 +19,7 @@
             try {
                 const candidate = new this.Package(file); await candidate.load();
                 if (sequence !== this.sequence) return false;
+                this.validatePackage(candidate);
                 this.package = candidate; this.onStatus('Paket geprüft: ' + (file.name || 'Anwendungs-OTA'), 'Package checked: ' + (file.name || 'application update'));
                 return true;
             } catch (error) {

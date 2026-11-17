@@ -31,6 +31,21 @@
       "channel": "prerelease"
     },
     {
+      "id": "de3.84-oled-t4-app",
+      "version": "2.22.0-DE3.84-OLEDt4",
+      "counter": 84,
+      "file": "Allmiibo_OLED_DE3_84_Test4_APP.zip",
+      "bytes": 248400,
+      "sha256": "8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7",
+      "board": "OLED",
+      "storage": "SPIFFS/LittleFS",
+      "bootloader": "OLED Secure DFU",
+      "softDevice": "S112 7.2.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    },
+    {
       "id": "de3.75-lcd-app",
       "version": "2.22.0-DE3.75",
       "counter": 648,

@@ -13,21 +13,45 @@
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
             need(item&&Object.keys(item).sort().join(',')===[...fields].sort().join(','),'Unvollständiger Firmware-Eintrag.', 'Incomplete firmware entry.');
-            const version=/^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
+            const oled = item.board === 'OLED';
+            const version = oled
+                ? /^2\.22\.0-DE3\.([1-9][0-9]{0,3})-OLEDt([1-9][0-9]{0,2})$/.exec(item.version)
+                : /^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
             const test657 = version?.[1] === '84' && item.channel === 'prerelease' && item.counter === 657 && item.bootloader === 'Z21';
-            const expectedId = test657 ? 'de3.84-lcd-test1-app' : version && `de3.${version[1]}-lcd-app`;
+            const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
+                : test657 ? 'de3.84-lcd-test1-app' : version && `de3.${version[1]}-lcd-app`;
             need(version&&item.id===expectedId&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
             const testBuild = version[1].includes('t');
-            const names = testBuild
+            const names = oled ? [`Allmiibo_OLED_DE3_${version[1]}_Test${version[2]}_APP.zip`] : testBuild
                 ? [`Allmiibo_DE3_${version[1]}_App${item.counter}_NUR_APP_SIGNIERT.zip`]
                 : [`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`];
-            if (item.channel === 'prerelease' && !testBuild) names.push(`Allmiibo_LCD_DE3_${version[1]}_App${item.counter}_TEST_DFU.zip`);
+            if (!oled && item.channel === 'prerelease' && !testBuild) names.push(`Allmiibo_LCD_DE3_${version[1]}_App${item.counter}_TEST_DFU.zip`);
             need(names.includes(item.file) && (!testBuild || item.channel === 'prerelease'),'Ungültiger Firmware-Dateiname.', 'Invalid firmware filename.');
             need(Number.isInteger(item.bytes)&&item.bytes>0&&item.bytes<=MAX_BYTES&&typeof item.sha256==='string'&&/^[a-f0-9]{64}$/.test(item.sha256)&&!/^0{64}$/.test(item.sha256),'Paketgröße oder SHA-256 fehlt.', 'The package size or SHA-256 is missing or invalid.');
-            need(item.board==='LCD'&&item.storage==='PFS1'&&['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19','Z19','Z19/Z20','Z19/Z20/Z21','Z21'].includes(item.bootloader)&&item.softDevice==='S112 7.3.0'&&item.applicationOnly===true&&item.migrationRequired===false,'Dieses Paket gehört nicht zum lokalen LCD/PFS1-Profil.', 'This package does not match the local LCD/PFS1 profile.');
+            const profile = oled
+                ? item.storage === 'SPIFFS/LittleFS' && item.bootloader === 'OLED Secure DFU' && item.softDevice === 'S112 7.2.0' && item.channel === 'prerelease'
+                : item.board === 'LCD' && item.storage === 'PFS1' && ['BL8','BL8/Z13','BL8/Z13/Z15','BL8/Z13/Z15/Z17','BL8/Z13/Z15/Z17/Z19','Z19','Z19/Z20','Z19/Z20/Z21','Z21'].includes(item.bootloader) && item.softDevice === 'S112 7.3.0';
+            need(profile && item.applicationOnly === true && item.migrationRequired === false,
+                'Dieses Paket gehört nicht zum lokalen Display-/Speicherprofil.', 'This package does not match a local display/storage profile.');
             seen.add(item.id);return Object.freeze({...item});
         });
         return Object.freeze({schema:1,packages:Object.freeze(packages)});
+    }
+    function validatePackage(candidate, board, catalog) {
+        need(board === 'LCD' || board === 'OLED', 'Wähle das Display deines Geräts.', 'Choose your device display.');
+        const entry = catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
+        need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
+            'This ZIP targets the other display. Select the matching device and package.');
+        need(board !== 'OLED' || entry, 'Für OLED bitte die veröffentlichte OLED-App-ZIP wählen.',
+            'For OLED, choose the published OLED application ZIP.');
+        if (entry) {
+            const target = candidate.image?.target;
+            const fwid = entry.board === 'OLED' ? 0x0103 : 0x0126;
+            need(target?.counter === entry.counter && target.hardware === 52 && target.softDevices.includes(fwid) &&
+                (entry.board !== 'OLED' || target.softDevices.length === 1),
+                'Startpaket und Katalogprofil widersprechen sich.', 'The init packet conflicts with its catalogue profile.');
+        }
+        return entry;
     }
     function packageUrl(entry,pageUrl){
         const page=new URL(pageUrl);
@@ -99,5 +123,5 @@
             }
         }
     }
-    return Object.freeze({validateCatalog,packageUrl,Loader,MAX_BYTES});
+    return Object.freeze({validateCatalog,validatePackage,packageUrl,Loader,MAX_BYTES});
 }));

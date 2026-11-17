@@ -1,6 +1,6 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.55.8';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -9,10 +9,11 @@ const bundledSelect = document.getElementById('bundled'), loadBundled = document
 const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = document.getElementById('bundled-info');
 const androidHandoff = document.getElementById('android-handoff'), androidLink = document.getElementById('android-dfu-link');
 const defaultBundledInfo = bundledInfo.textContent;
-// DFU advertising does not identify the display. This hint only restricts the LCD updater.
-const oledHandoff = new URLSearchParams(globalThis.location.hash?.slice(1)).getAll('board').includes('OLED');
-document.getElementById('lcd-updater').hidden = oledHandoff;
-document.getElementById('oled-update-notice').hidden = !oledHandoff;
+const boardSelect = document.getElementById('board-profile');
+// A file-manager handoff is a comparison hint. Nordic DFU does not identify the display.
+const boardHints = new URLSearchParams(globalThis.location.hash?.slice(1)).getAll('board');
+const handoffBoard = boardHints.length === 1 && ['LCD', 'OLED'].includes(boardHints[0]) ? boardHints[0] : null;
+boardSelect.value = handoffBoard || 'LCD';
 const language = globalThis.AllmiiboLanguage;
 const pageLocales = ['de_DE', 'en'];
 let english = language.getLocale(pageLocales) === 'en';
@@ -60,7 +61,9 @@ function targetDescription(target) {
         const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
-        if (app > target.counter) lines.push(choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15, Z17 und Z19 können sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15, Z17 and Z19 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
+        if (app > target.counter) lines.push(boardSelect.value === 'OLED'
+            ? choose('Die ausgewählte OLED-Anwendung ist älter als der ausgelesene Stand. Wähle ein aktuelleres OLED-Paket.', 'The selected OLED application is older than the version read from the device. Choose a newer OLED package.')
+            : choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15, Z17 und Z19 können sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15, Z17 and Z19 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
         if (!target.softDevices.includes(sd)) lines.push(choose('Die ausgelesene FWID steht nicht in der Anforderungsliste.', 'The reported FWID is absent from the list of accepted IDs.'));
         lines.push(choose('Prüfe, dass du dasselbe Gerät auswählst.', 'Make sure you select the same device.'));
     } else lines.push(choose('Für den Vergleich im Dateimanager die Bootdaten lesen und von dort die DFU-Seite öffnen.', 'To compare versions, read the boot details in the file manager and open the DFU page from there.'));
@@ -70,20 +73,29 @@ function targetDescription(target) {
 function selectedProfileMismatch(entry) {
     const ref = recentBootReference();
     if (!entry || !ref) return false;
+    if (entry.board === 'OLED') return ref.sd !== 0x0103;
     const name = ref.bl === 11 ? 'BL8' : 'Z' + ref.bl;
     return !entry.bootloader.split('/').includes(name) || ref.sd !== 0x0126;
 }
 function controls() {
     const loading = bundled?.loading === true;
-    fileInput.disabled = oledHandoff || latestState.busy || latestState.loading || loading;
-    selectButton.disabled = oledHandoff || !supported || !latestState.ready || loading;
+    const boardConflict = boardHints.length > 1 || handoffBoard && handoffBoard !== boardSelect.value;
+    const ref = recentBootReference();
+    const target = latestState.target;
+    const targetConflict = target && ref && (!target.softDevices.includes(ref.sd) ||
+        boardSelect.value === 'OLED' && ref.app > target.counter);
+    boardSelect.disabled = latestState.busy || latestState.loading || loading;
+    fileInput.disabled = boardConflict || latestState.busy || latestState.loading || loading;
+    selectButton.disabled = Boolean(boardConflict || targetConflict || !supported || !latestState.ready || loading);
     bundledSelect.disabled = latestState.busy || latestState.loading || loading || !bundled?.catalog.packages.length;
     const selected = bundled?.catalog.packages.find(entry => entry.id === bundledSelect.value);
     const mismatch = selectedProfileMismatch(selected);
     const downgrade = selected && recentBootReference()?.app > selected.counter;
-    loadBundled.disabled = Boolean(bundledSelect.disabled || !selected || mismatch || downgrade);
+    loadBundled.disabled = Boolean(boardConflict || bundledSelect.disabled || !selected || selected.board !== boardSelect.value || mismatch || downgrade);
     if (downgrade) setText(bundledInfo, 'Die gelesene Anwendung hat einen höheren Zähler. Wähle eine gleich neue oder neuere Version.', 'The installed application has a higher counter. Choose the same or a newer version.');
-    if (mismatch) setText(bundledInfo, `Dieses Paket setzt ${selected.bootloader} und S112 7.3.0 voraus. Die zuletzt gelesenen Bootdaten weichen davon ab.`, `This package requires ${selected.bootloader} and S112 7.3.0. The most recent boot readings differ from this profile.`);
+    if (mismatch) setText(bundledInfo, `Dieses Paket setzt ${selected.bootloader} und ${selected.softDevice} voraus. Die zuletzt gelesenen Bootdaten weichen davon ab.`, `This package requires ${selected.bootloader} and ${selected.softDevice}. The most recent boot readings differ from this profile.`);
+    if (boardConflict) setText(bundledInfo, 'Die Displayauswahl widerspricht dem Gerätelink. Öffne die DFU-Seite vom passenden Gerät erneut.',
+        'The selected display conflicts with the device link. Open DFU again from the matching device.');
     const androidUrl = selected && !loadBundled.disabled && nrfDfuLink(selected);
     if (androidUrl) androidLink.setAttribute('href', androidUrl);
     else androidLink.removeAttribute('href');
@@ -177,6 +189,7 @@ function transferEstimate(state, now) {
 }
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
+    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}),
     createDfu: () => new SecureDfu(CRC32.buf),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
@@ -192,58 +205,94 @@ const updater = new AllmiiboDfuUpdater({
         if (valid) progressBar.value = Math.min(100, Math.max(0, 100 * state.currentBytes / state.totalBytes));
     }
 });
+function profileInfo() {
+    const oled = boardSelect.value === 'OLED';
+    document.getElementById('lcd-downloads').hidden = oled;
+    document.getElementById('oled-downloads').hidden = !oled;
+    const sourceLink = document.getElementById('profile-source');
+    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.84-oled-t4' : 'de3.81'));
+    setText(sourceLink, oled ? 'Quellcode OLED DE3.84 Test 4' : 'Quellcode LCD DE3.81',
+        oled ? 'OLED DE3.84 Test 4 source code' : 'LCD DE3.81 source code');
+    setText(document.getElementById('profile-title'),
+        oled ? 'OLED-Firmware übertragen' : 'LCD-Firmware übertragen',
+        oled ? 'Update OLED firmware' : 'Update LCD firmware');
+    setText(document.getElementById('profile-description'),
+        oled ? 'OLED SH1106 · S112 7.2.0 · vorhandenes SPIFFS oder natives LittleFS. Test 4 benötigt noch einen Praxistest auf einem OLED.'
+            : 'LCD · PFS1 · S112 7.3.0. Wähle eine App für deinen Bootloader.',
+        oled ? 'OLED SH1106 · S112 7.2.0 · existing SPIFFS or native LittleFS. Test 4 still requires a physical OLED trial.'
+            : 'LCD · PFS1 · S112 7.3.0. Choose an application for your bootloader.');
+    setText(bundledInfo,
+        oled ? 'Veröffentlichte OLED-App für SH1106 und S112 7.2.0 wählen.' : defaultBundledInfo,
+        oled ? 'Choose the published OLED application for SH1106 and S112 7.2.0.' : defaultBundledInfoEnglish);
+}
+function populateCatalog(id) {
+    profileInfo();
+    bundledSelect.textContent = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    setText(placeholder, 'Mitgeliefertes Paket wählen', 'Select a bundled package');
+    bundledSelect.appendChild(placeholder);
+    bundledSelect.value = '';
+    const entries = bundled?.catalog.packages.filter(entry => entry.board === boardSelect.value) || [];
+    const current = entries.find(entry => entry.channel !== 'prerelease');
+    for (const entry of entries) {
+        const option = document.createElement('option');
+        option.value = entry.id;
+        const size = (entry.bytes / 1024).toFixed(1) + ' KiB';
+        const preview = entry.channel === 'prerelease';
+        setText(option, `${entry.version} · ${preview ? 'Testversion' : entry === current ? 'Stabile Ausgabe' : 'Frühere stabile Ausgabe'} · ${entry.bootloader} · ${size}`,
+            `${entry.version} · ${preview ? 'test release' : entry === current ? 'stable release' : 'earlier stable release'} · ${entry.bootloader} · ${size}`);
+        bundledSelect.appendChild(option);
+    }
+    const selected = entries.find(entry => entry.id === id);
+    if (selected) {
+        bundledSelect.value = selected.id;
+        setText(bundledInfo, `${selected.version} ist vorausgewählt. Tippe auf „Paket laden und prüfen“.`,
+            `${selected.version} is preselected. Choose “Load and check package”.`);
+    } else if (id !== undefined) {
+        setText(bundledInfo, 'Der Link gehört zu keinem eindeutigen Paket für dieses Display. Bitte ein Paket auswählen.',
+            'This link does not identify a single package for this display. Please choose one.');
+    } else if (!entries.length) {
+        setText(bundledInfo, 'Kein mitgeliefertes Paket in diesem Dateimanager. Eine eigene passende Anwendungs-ZIP kann unten ausgewählt werden.',
+            'There are no bundled packages in this file manager. Select your application ZIP below.');
+    }
+}
 try {
-    if (!oledHandoff) bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
+    bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
         pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
-    if (bundled?.catalog.packages.length) {
-        bundledSelect.textContent = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        setText(placeholder, 'Mitgeliefertes Paket wählen', 'Select a bundled package');
-        bundledSelect.appendChild(placeholder);
-        const current = bundled.catalog.packages.find(entry => entry.channel !== 'prerelease');
-        for (const entry of bundled.catalog.packages) {
-            const option = document.createElement('option');
-            option.value = entry.id;
-            const size = (entry.bytes / 1024).toFixed(1) + ' KiB';
-            const preview = entry.channel === 'prerelease';
-            setText(option, `${entry.version} · ${preview ? 'Testversion' : entry === current ? 'Stabile Ausgabe' : 'Frühere stabile Ausgabe'} · ${entry.bootloader} · ${size}`,
-                `${entry.version} · ${preview ? 'test release' : entry === current ? 'stable release' : 'earlier stable release'} · ${entry.bootloader} · ${size}`);
-            bundledSelect.appendChild(option);
-        }
-        const requested = new URLSearchParams(globalThis.location.search).getAll('package');
-        if (requested.length) {
-            const selected = requested.length === 1 && bundled.catalog.packages.find(entry => entry.id === requested[0]);
-            if (selected) {
-                bundledSelect.value = selected.id;
-                setText(bundledInfo, `${selected.version} ist vorausgewählt. Tippe auf „Paket laden und prüfen“.`,
-                    `${selected.version} is preselected. Choose “Load and check package”.`);
-            } else {
-                setText(bundledInfo, 'Der Link gehört zu keinem eindeutigen mitgelieferten Paket. Bitte ein Paket auswählen.', 'This link does not identify a single bundled package. Please choose one.');
-            }
-        }
-    } else setText(bundledInfo, 'Kein mitgeliefertes Paket in diesem Dateimanager. Eine eigene passende Anwendungs-ZIP kann unten ausgewählt werden.', 'There are no bundled packages in this file manager. Select your application ZIP below.');
+    const requested = new URLSearchParams(globalThis.location.search).getAll('package');
+    const selected = requested.length === 1 && bundled.catalog.packages.find(entry => entry.id === requested[0]);
+    if (!handoffBoard && selected) boardSelect.value = selected.board;
+    populateCatalog(requested.length ? requested.length === 1 ? requested[0] : '' : undefined);
 } catch(error) {
+    profileInfo();
     setText(bundledInfo, 'Mitgelieferte Pakete nicht verfügbar: '+error.message, 'Bundled packages unavailable: '+(error.english ?? error.message));
 }
+boardSelect.addEventListener('change', () => {
+    if (latestState.busy) return;
+    fileInput.value = '';
+    bundled?.invalidate();
+    populateCatalog();
+    controls();
+});
 controls();
 window.addEventListener('focus', () => { refreshCapability(); controls(); });
 bundledSelect.addEventListener('change', () => {
-    if (oledHandoff || latestState.busy) return;
+    if (latestState.busy) return;
     fileInput.value = '';
-    setText(bundledInfo, defaultBundledInfo, defaultBundledInfoEnglish);
+    profileInfo();
     bundled?.invalidate();
     controls();
 });
 loadBundled.addEventListener('click', () => { if (!latestState.busy && !loadBundled.disabled) { fileInput.value=''; return bundled?.load(bundledSelect.value); } });
 cancelBundled.addEventListener('click', () => bundled?.cancel());
 fileInput.addEventListener('change', () => {
-    if (oledHandoff || latestState.busy) return;
+    if (latestState.busy) return;
     if (bundled?.catalog.packages.length) {
         bundledSelect.value = '';
-        setText(bundledInfo, defaultBundledInfo, defaultBundledInfoEnglish);
+        profileInfo();
     }
     return bundled ? bundled.manual(fileInput.files?.[0]) : updater.setPackage(fileInput.files?.[0]);
 });
-selectButton.addEventListener('click', () => { if (!oledHandoff && !bundled?.loading) updater.selectDevice(); });
+selectButton.addEventListener('click', () => { controls(); if (!selectButton.disabled && !bundled?.loading) return updater.selectDevice(); });
 window.addEventListener('beforeunload', event => { if (updater.busy) { event.preventDefault(); event.returnValue = ''; } });
