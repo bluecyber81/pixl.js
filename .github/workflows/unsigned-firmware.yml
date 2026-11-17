@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   application:
-    name: DE3.81 LCD application
+    name: LCD application build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -81,6 +81,8 @@ jobs:
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_aes_m4_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/AES_ELF.txt
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_flash_jedec_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/FLASH_JEDEC_ELF.txt
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_display_profile_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/DISPLAY_PROFILE_ELF.txt
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_lcd_game_rotation_elf.py build/lcd-application --out build/lcd-application/GAME_ROTATION.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_build_fault_elf.py build/lcd-application --json build/lcd-application/BUILD_FAULT.json
           cat build/lcd-application/BUILD_RESULT.json
       - name: Archive the actual build and test results
         if: success() || failure()

@@ -1,0 +1,44 @@
+{
+  "target": "Allmiibo LCD / ST7567 / PFS1",
+  "version": "2.22.0-DE3.84",
+  "counter": 657,
+  "bootloaderReference": "Z21",
+  "softDeviceReference": "S112 7.3.0 (0x0126)",
+  "artifact": "signed application only",
+  "candidateBase": "09201bc8641ac631dd5c5c58b0617299319e0669",
+  "sourceId": "f9bda1ff3428d344eb7cb5de2052158d40f5474e08c03f4597b67ba229e30221",
+  "applicationBytes": 356216,
+  "applicationSha256": "b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323",
+  "otaBytes": 246116,
+  "otaSha256": "6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4",
+  "matchingBinAndHexBuilds": 3,
+  "productionInputs": 706,
+  "flashHeadroomBytes": 16520,
+  "previousFlashHeadroomBytes": 9844,
+  "hostRegressionScriptsPassed": 166,
+  "armPanelSimulation": {
+    "builds": 2,
+    "correctFramesPerBuild": 428,
+    "fullFrameSpiCalls": [
+      1048,
+      16
+    ],
+    "partialFrameSpiCalls": [
+      680,
+      16
+    ],
+    "fullFrameSpiBytes": 1048,
+    "partialFrameSpiBytes": 680
+  },
+  "z21Model": {
+    "appCounter": 657,
+    "powerCutPositions": 455
+  },
+  "physicalAcceptance": "pending",
+  "physicalTestsOutstanding": [
+    "LCD rotation and controls on hardware",
+    "brightness and physical key timing",
+    "repeated cold starts",
+    "Android interrupted DFU resume"
+  ]
+}

@@ -230,5 +230,20 @@
     "board": "OLED",
     "softdevice": "S112 7.2.0",
     "application_only": true
+  },
+  "firmware_preview": {
+    "version": "2.22.0-DE3.84",
+    "counter": 657,
+    "source_id": "f9bda1ff3428d344eb7cb5de2052158d40f5474e08c03f4597b67ba229e30221",
+    "application_sha256": "b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_84_657_NUR_APP.zip",
+    "ota_sha256": "6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4",
+    "hardware_acceptance": "pending",
+    "evidence": "docs/validation/DE3_84_LCD_TEST1.json",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1",
+    "softdevice_requirements": [
+      "0x0126"
+    ],
+    "host_firmware_suites": 166
   }
 }
