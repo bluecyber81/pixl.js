@@ -4,11 +4,12 @@
 
 | Paket | Download und Verwendung |
 | --- | --- |
-| DE3.81 / App654 für LCD | [Nur die App (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für PFS1, Z19/Z20/Z21 und S112 7.3.0. |
-| DE3.81 / App654, Z21 und S112 7.3.0 für LCD | [Komplettpaket für Android (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Für ein kompatibles Gerät mit Bootloader-Zähler unter 21. Schlüssel, Layout und Ausgangs-FWID 0x0103/0x0126 anhand der [Installationsanleitung](INSTALLATION.md) prüfen. |
+| LCD-Testversion DE3.84 / App657 für ST7567, PFS1, Z21 und S112 7.3.0 | [Nur die Test-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket mit Quellen und Testberichten](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip). Der Besitzer bestätigt Betrieb auf einem LCD mit Z21. |
+| Reguläre DE3.81 / App654 für LCD | [Nur die App (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für PFS1, Z19/Z20/Z21 und S112 7.3.0. |
+| Reguläres LCD-Komplettpaket DE3.81 / App654, Z21 und S112 7.3.0 | [Komplettpaket für Android (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Für ein kompatibles Gerät mit Bootloader-Zähler unter 21. Schlüssel, Layout und Ausgangs-FWID 0x0103/0x0126 anhand der [Installationsanleitung](INSTALLATION.md) prüfen. |
 | OLED-Testversion für ein nRF52832-Pixl.js mit SH1106, passendem DFU-Bootloader, S112 7.2.0 (`0x0103`) und bestehendem SPIFFS oder nativem LittleFS | [DE3.81 OLED Test 1 · App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip) · [Anleitung (DE/EN)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt). Am Rechner geprüft. Ein Nutzer meldet erfolgreichen Betrieb auf einem OLED. |
-| Windows-Dateimanager und Quellcode | [Dateimanager 3.55.5](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5) |
-| Prüfpaket | [DE3.81, Z21 und Quellen (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip) · [Diagnose vom LCD](validation/DE3_81_LCD_READBACK.json) |
+| Windows-Dateimanager und Quellcode | [Dateimanager 3.55.6](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6) |
+| Prüfpaket der regulären Firmware | [DE3.81, Z21 und Quellen (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip) · [Diagnose vom LCD](validation/DE3_81_LCD_READBACK.json) |
 | LCD auf PFS1 umstellen | [SPIFFS-Vorbereitung, geprüfte Sicherung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
 
 ## Archiv · ältere LCD-Komponenten
@@ -78,7 +79,9 @@ S112 ist das unveränderte Nordic-Original. Unsere Arbeit umfasst Integration, S
 
 ## English
 
-Current LCD downloads: [DE3.81 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package with Z21 and S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Installation instructions](INSTALLATION.md).
+On an LCD with PFS1, Z21 and S112 7.3.0, the latest test build is App657. [DE3.84 Android app](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Owner report](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)
+
+Regular LCD release: [DE3.81 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package with Z21 and S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Installation instructions](INSTALLATION.md).
 
 ### Historical BL8 downloads
 

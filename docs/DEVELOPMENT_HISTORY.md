@@ -1,8 +1,14 @@
 # Improvements and fixed bugs in the DE series
 
+## LCD test firmware DE3.84 / App657 and file manager 3.55.6 · 17 November 2026
+
+All four games follow display rotation. Tris uses a timer for its steps. The LCD settings include automatic dimming and a display and button test. The owner confirmed operation on one LCD with Z21. Interrupted Android DFU was exercised in a model and has no individual hardware confirmation. [App657 for Android](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Owner report](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)
+
+The file manager reads the running application's source ID, a retained previous-boot fault and observed cache usage during the last mount. The regular LCD system package contains DE3.81/App654, Z21 and S112 7.3.0. [File manager 3.55.6](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6) · [Regular full package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip)
+
 ## DE3.81 / App654 · Z21 · Web 3.55.5 · 16.11.2026
 
-Current LCD firmware with Nordic S112 7.3.0. The owner diagnostic reports App654 and Z21. Resuming an interrupted Android update on Z21 still needs a hardware test. [App-only ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Device readback](validation/DE3_81_LCD_READBACK.json)
+Regular LCD release with Nordic S112 7.3.0. The owner diagnostic reports App654 and Z21. Resuming an interrupted Android update on Z21 still needs a hardware test. [App-only ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Device readback](validation/DE3_81_LCD_READBACK.json)
 
 ## Web 3.53.0 · 15.11.2026
 

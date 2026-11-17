@@ -1,6 +1,10 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
-## DE3.81 / App654 und Z21 · aktuelle LCD-Firmware
+## DE3.84 / App657 · neueste LCD-Testversion
+
+Für LCD-Geräte mit ST7567, PFS1, Z21 und S112 7.3.0 gibt es ein signiertes App-Update. Es ergänzt Spielrotation, Display-/Tastentest, einstellbares Dimmen und die Gerätediagnose für Dateimanager 3.55.6. Der Besitzer meldet erfolgreichen Betrieb auf einem LCD mit Z21. Die Android-DFU-Wiederaufnahme bleibt ein eigener Gerätetest. [App657 fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Öffentliches Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Besitzermeldung](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)
+
+## DE3.81 / App654 und Z21 · reguläre LCD-Firmware und Komplettpaket
 
 DE3.81 / App654 hält die markierte Figur bei einem abgelehnten Wechsel und ermöglicht einen neuen Versuch, wenn AmiiboLink keine Tagdaten erzeugen kann. Z21 zeigt beim Fortsetzen einer DFU-Übertragung wieder den Empfang an. Der Besitzer meldet erfolgreichen Betrieb. Sein [Diagnoseexport](validation/DE3_81_LCD_READBACK.json) belegt die gemeldete App654 mit Z21 und S112 7.3.0. Die Wiederaufnahme nach einem echten Funkabbruch ist offen. [App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Android-Kombi mit S112 7.3.0 und Z21](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Quellen und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
 

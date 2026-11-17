@@ -1,8 +1,14 @@
 # Allmiibo-Dateimanager im Browser
 
-## Dateimanager 3.55.5 · LCD-Firmware DE3.81
+## Dateimanager 3.55.6 · Diagnose für LCD DE3.84 / App657
 
-Für LCD ist DE3.81 / App654 die aktuelle Firmware. Mit eingerichtetem Packed LittleFS (PFS1), S112 7.3.0 und Z19, Z20 oder Z21 genügt die [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für ein kompatibles LCD mit älterem Bootloader enthält das [Android-Komplettpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) S112 7.3.0, Z21 und App654. [Installationsanleitung für LCD](https://bluecyber81.github.io/pixl.js/guide/index.html#flash) · [Separate OLED-Testversion](https://bluecyber81.github.io/pixl.js/guide/index.html#oled)
+Unter **Gerät & Diagnose** meldet App657 ihre vollständige SourceID, das kompilierte Boardprofil und eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start. Der Startbericht zeigt die tatsächlich belegten Cache-Seiten beim letzten Einbinden des Dateisystems. Die Paketreferenz und der SHA-256-Wert der ausgelieferten App werden separat angezeigt. Der Prüfassistent enthält zusätzliche Fälle für Spiele, Drehung, Tasten, Dimmen und DFU. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Version und Webquellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)
+
+Das LCD-Testupdate setzt Z21, S112 7.3.0 und PFS1 voraus. Erfolgreicher Betrieb wurde auf einem LCD mit Z21 gemeldet. [DE3.84 nur App](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Reguläres Android-Komplettpaket DE3.81](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip)
+
+## Archiv · Dateimanager 3.55.5 und LCD-Firmware DE3.81
+
+DE3.81 / App654 ist die reguläre LCD-Firmware. Mit eingerichtetem Packed LittleFS (PFS1), S112 7.3.0 und Z19, Z20 oder Z21 genügt die [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für ein kompatibles LCD mit älterem Bootloader enthält das [Android-Komplettpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) S112 7.3.0, Z21 und App654. [Installationsanleitung für LCD](https://bluecyber81.github.io/pixl.js/guide/index.html#flash) · [Separate OLED-Testversion](https://bluecyber81.github.io/pixl.js/guide/index.html#oled)
 
 ## Archiv · Dateimanager 3.55.4
 

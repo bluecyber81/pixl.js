@@ -1,12 +1,13 @@
 # Component identity and update boundaries
 
-The table lists the independently versioned components as of **16 November 2026**.
+The table lists the independently versioned components as of **17 November 2026**.
 
 **[Installation](INSTALLATION.md) · [Bootloader and SoftDevice history](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Current LCD application | [DE3.81 / App654](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81) | Keeps figure selection after a declined switch. Signed Android package includes Z21 and S112 7.3.0. [Evidence](validation/DE3_81.json) |
+| Latest LCD test application | [DE3.84 / App657](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) | Application-only DFU for ST7567, PFS1, Z21 and S112 7.3.0. The owner reported successful operation on one LCD with Z21. Interrupted Android DFU remains unconfirmed. [Owner report](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json) · [Review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) |
+| Regular LCD release | [DE3.81 / App654](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81) | Keeps figure selection after a declined switch. Signed Android package includes Z21 and S112 7.3.0. [Evidence](validation/DE3_81.json) |
 | Archived LCD release | [2.22.0-DE3.75](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) | Application-only DFU, counter 648. One owner confirmed list return and wake in both apps, and Switch recognition of a known figure. [Release notes](RELEASE_DE3_75.md) |
 | OLED test application | [DE3.81 OLED Test 1](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) | App-only DFU, counter 81, for a compatible SH1106 OLED with S112 7.2.0 (FWID `0x0103`). The SPIFFS and native LittleFS drivers passed host tests. A user reports successful operation on one OLED. Its filesystem and the features tested remain unknown. [Installation](INSTALLATION.md#oled-de381-test-1) |
 | Earlier LCD preview | [DE3.80 / App653](https://github.com/bluecyber81/pixl.js/releases/tag/de3.80) | Temporary eight-page mount cache with a four-page fallback. The Android package also installs Z20 and Nordic S112 7.3.0. [Build and test evidence](validation/DE3_80.json) |
@@ -22,7 +23,7 @@ The table lists the independently versioned components as of **16 November 2026*
 | Earlier LCD test application | [2.22.0-DE3.68](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68) | Application-only DFU, counter 640. Returning to the main menu reselects the last opened app when visible. |
 | Earlier LCD test application | [2.22.0-DE3.67](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) | Application-only DFU, counter 639. German game hints and QR scanning were verified on an LCD. [Release and readback](RELEASE_DE3_67.md) |
 | Earlier LCD test application | [2.22.0-DE3.66](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) | Application-only DFU, counter 638, hardware field 52. Build and model tests passed. Installation, display capture and backup resume over Windows Bluetooth were verified on one LCD. [Device checks](validation/DE3_66_LCD_READBACK.md). [Evidence](validation/DE3_66.json) |
-| File manager | [3.55.5](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5) | LCD and OLED firmware downloads and guides. Supported LCD builds also report battery history. [File manager changes](DATEIMANAGER_WEB.md) |
+| File manager | [3.55.6](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6) | Reads the running App657 source ID, previous-boot fault and observed mount cache usage. [File manager changes](DATEIMANAGER_WEB.md) |
 | Current LCD bootloader | [Z21](../bootloader-z21/) | Shows reception when an interrupted DFU session resumes. [Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) |
 | Historical LCD bootloader | [Z19](../bootloader-z19/README.md) | Counter 19. The same 28 KiB boot region was read back with [App636](validation/Z19_APP636_BASELINE.json), [App637](validation/DE3_65_LCD_READBACK.json) and [App638](validation/DE3_66_LCD_READBACK.md). |
 | Previous bootloader | Z17 | Counter 17, observed in the device export for App634 |
@@ -33,7 +34,7 @@ The table lists the independently versioned components as of **16 November 2026*
 | LCD filesystem | Packed LittleFS (PFS1) | Uses the same packed layout as previous LCD PFS1 releases. |
 | OLED filesystem | SPIFFS or native LittleFS | OLED Test 1 opens the existing supported filesystem. |
 
-The owner-supplied LCD diagnostic records App654, Z21 and S112 7.3.0 (FWID 0x0126). [Readback](validation/DE3_81_LCD_READBACK.json) · [Current App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full system ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip)
+The owner-supplied LCD diagnostic records App654, Z21 and S112 7.3.0 (FWID 0x0126). [Readback](validation/DE3_81_LCD_READBACK.json) · [Regular App654 ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full system ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip)
 
 On 7 November 2026 the LCD device reported App637, Z19 and S112 7.3.0. The Z19 boot region matched the rebuilt reference, and the boot settings CRC matched. [Device readback](validation/DE3_65_LCD_READBACK.json)
 
@@ -49,7 +50,7 @@ The historical BL8 corresponding source, SDK overrides, public verification key,
 
 Nordic supplies [S112 downloads and release notes](https://www.nordicsemi.com/Products/Development-software/S112/Download). S112 is a separate vendor binary with its own license and hardware restrictions. The corrected `nrf_nvic.h` SDK header used by this project is a host compilation input; changing it is not a replacement SoftDevice binary. No new Nordic version or elimination of every Nordic known issue is claimed.
 
-The firmware releases distribute signed application ZIPs. The file manager release provides the portable version and web source. The App648 review archive contains the archived DE3.75 LCD firmware, Z19 and date-specific evidence. LCD devices moving to PFS1 have a separate migration procedure. A system update requires a match for the board, installed bootloader key and counter, SoftDevice and flash layout. [File manager release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5) · [App648 review archive](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip) · [LCD migration guide](MIGRATION_PFS1.md)
+The firmware releases distribute signed application ZIPs. The file manager release provides the portable version and web source. The App648 review archive contains the archived DE3.75 LCD firmware, Z19 and date-specific evidence. LCD devices moving to PFS1 have a separate migration procedure. A system update requires a match for the board, installed bootloader key and counter, SoftDevice and flash layout. [File manager release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6) · [App648 review archive](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip) · [LCD migration guide](MIGRATION_PFS1.md)
 
 On the owner's matching device, the 2026-11-02 read-only diagnostic matched DE3.55, the BL8 region hash and S112 7.3.0. This is dated evidence for that device only; no second device is inferred compatible from its product name or photograph.
 
