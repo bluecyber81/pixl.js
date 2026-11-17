@@ -85,7 +85,7 @@ try {
       assert.equal(await label.isChecked(),false);
       await storageFailure('setItem',false);
       await label.check();
-      await hardware.getByText(de ? /Quelle: bestätigter Akkuaufdruck/ : /Source: confirmed battery label/).waitFor();
+      await hardware.getByText(de ? /Quelle ist der bestätigte Akkuaufdruck/ : /Source is the confirmed battery label/).waitFor();
       await storageFailure('removeItem',true);
       await label.click();
       await hardware.getByRole('status').waitFor();

@@ -124,5 +124,8 @@ test('moving the browser clock backwards hides duration without replacing valid 
   assert.equal(valuesOnScreen['Minimum – maximum'], '4.198 V – 4.200 V');
   assert.equal(valuesOnScreen['Span including pauses'], '—');
   assert.match(text(h.root), /browser clock moved backwards/);
+  const axis = nodes(h.root, 'div').find(node => node.props.class === 'time-axis');
+  assert.deepEqual(nodes(axis, 'time').map(node => node.props.datetime),
+    [new Date(epoch).toISOString(), new Date(epoch + 10000).toISOString()]);
   assert.doesNotMatch(text(h.root), /NaN|Infinity|0\.000 V/);
 });

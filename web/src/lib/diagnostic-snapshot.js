@@ -2,15 +2,16 @@ import { createDiagnostics, normalizeDrives, normalizeRuntimeDiagnostics } from 
 import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { normalizePowerDiagnostics } from './power-diagnostics.js';
+import { normalizeLcdBuildDiagnostics } from './lcd-build-diagnostics.js';
 import { normalizeFlashDiagnostics } from './flash-diagnostics.js';
 import { normalizeStartupDiagnostics } from './startup-diagnostics.js';
 import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics } from './device-extra-diagnostics.js';
 
 export const DIAGNOSTIC_SECTION_KEYS = Object.freeze(['runtime', 'boot', 'power', 'startup', 'drives', 'storage', 'mtu', 'ui']);
 const menuSectionKeys = Object.freeze([...DIAGNOSTIC_SECTION_KEYS, 'menu']);
-export function diagnosticSectionKeys(hasMenu, hasFlash = false) {
+export function diagnosticSectionKeys(hasMenu, hasFlash = false, hasBuild = false) {
   const keys = hasMenu ? menuSectionKeys : DIAGNOSTIC_SECTION_KEYS;
-  return hasFlash ? [...keys, 'flash'] : keys;
+  return [...keys, ...(hasFlash ? ['flash'] : []), ...(hasBuild ? ['build'] : [])];
 }
 const fatalCodes = new Set(['DISCONNECTED', 'CONNECT_FAILED', 'CONNECT_TIMEOUT', 'TX_FAILED', 'TIMEOUT', 'RX_INVALID']);
 const errorCodes = new Set([...fatalCodes, 'RESPONSE_INVALID', 'DEVICE_STATUS', 'REQUEST_INVALID', 'DIAGNOSTIC_INVALID_DATA', 'DIAGNOSTIC_FAILED']);
@@ -58,6 +59,7 @@ export function normalizeDiagnosticSectionData(key, value) {
       case 'storage': return normalizeStorageDiagnostics(value);
       case 'mtu': return normalizeMtuDiagnostics(value);
       case 'ui': return normalizeUiDiagnostics(value);
+      case 'build': return normalizeLcdBuildDiagnostics(value);
       case 'flash': return normalizeFlashDiagnostics(value);
       case 'menu': return normalizeMenuDiagnostics(value);
       case 'drives':
@@ -84,7 +86,7 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
   const time = () => { const value = now(); if (!timestamp(value)) throw fault('DIAGNOSTIC_INVALID_TIME'); return value; };
   check();
   const startedAt = time(), sections = {};
-  const keys = diagnosticSectionKeys(typeof readers.menu === 'function', typeof readers.flash === 'function');
+  const keys = diagnosticSectionKeys(typeof readers.menu === 'function', typeof readers.flash === 'function', typeof readers.build === 'function');
   for (const [index, key] of keys.entries()) {
     check();
     let section;
@@ -98,7 +100,7 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
       const observedAt = time();
       if (didFail) {
         const code = errorCodes.has(failed?.code) ? failed.code : 'DIAGNOSTIC_FAILED';
-        if (fatalCodes.has(code)) throw fault(code);
+        if (fatalCodes.has(code) && !(key === 'build' && code === 'TIMEOUT')) throw fault(code);
         section = { state: 'failed', observedAt, data: null, errorCode: code };
       } else if (raw === null || raw === undefined) {
         section = { state: 'unavailable', observedAt, data: null, errorCode: null };
@@ -115,11 +117,17 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
   return freeze({ schemaVersion: 1, startedAt, completedAt: time(), sections });
 }
 
+// Importers use the browser receipt times to associate sections with one read.
+export function snapshotTimesInRange({startedAt, completedAt, sections}) {
+  return startedAt <= completedAt && Object.values(sections).every(({observedAt}) =>
+    observedAt === null || (observedAt >= startedAt && observedAt <= completedAt));
+}
+
 export function normalizeDiagnosticSnapshot(value) {
   if (!value || value.schemaVersion !== 1 || !timestamp(value.startedAt) || !timestamp(value.completedAt) ||
       !value.sections || typeof value.sections !== 'object') return null;
   const sections = {};
-  for (const key of diagnosticSectionKeys(Object.hasOwn(value.sections, 'menu'), Object.hasOwn(value.sections, 'flash'))) {
+  for (const key of diagnosticSectionKeys(Object.hasOwn(value.sections, 'menu'), Object.hasOwn(value.sections, 'flash'), Object.hasOwn(value.sections, 'build'))) {
     const section = value.sections[key];
     if (!section || !['available', 'unavailable', 'failed'].includes(section.state) ||
         (section.observedAt !== null && !timestamp(section.observedAt)) ||
@@ -151,11 +159,12 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
     runtime: normalized ? sectionData('runtime') : baseReport.runtime,
     boot: normalized ? sectionData('boot') : baseReport.boot,
     power: normalized ? sectionData('power') : baseReport.power });
-  return { ...report, buildIdentity: diagnosticBuildIdentity({firmwareVersion: report.firmwareVersion, boot: report.boot}), startup: sectionData('startup'), diagnosticSnapshot: normalized,
+  return { ...report, buildIdentity: diagnosticBuildIdentity({firmwareVersion: report.firmwareVersion, boot: report.boot, build:sectionData('build')}), startup: sectionData('startup'), diagnosticSnapshot: normalized,
     limitations: [...report.limitations,
       ...(sectionData('mtu')?.effectiveAttMtu != null
         ? ['The firmware reported the effective ATT MTU for its connection in diagnosticSnapshot.sections.mtu.']
         : ['This report contains no firmware reading of the effective ATT MTU.']),
+      ...(sectionData('build') ? ['PXBI reports the current firmware’s compiled SourceID and board. A prior fault carries no build identity of its own. It can survive one application restart in retained RAM. Power loss can clear it.'] : []),
       'Sections were read sequentially; this is not an atomic device snapshot.',
       'Read timestamps describe browser receipt, not the age of cached firmware samples.',
       'Startup markers exclude bootloader and early SDK startup.',
@@ -164,7 +173,9 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
         : 'Settings button counters describe the current or last settings session. Main menu input is outside their scope.'] : []),
       ...(sectionData('menu') ? ['The menu trace covers the first main menu after application restart. Launch timing ends when the launcher returns and does not measure physical display latency.'] : []),
       ...(sectionData('menu')?.schemaVersion === 2 ? ['PXMI v2 separately records the latest completed app return and first/last drawing calls in its desktop input context. This is not a physical LCD pixel or latency measurement; a stale-event count of 65535 is a lower bound.'] : []),
-      ...(sectionData('startup')?.schemaVersion === 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
-      'Storage cache sizes are configuration values, not measured cache usage.',
+      ...(sectionData('startup')?.schemaVersion >= 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
+      sectionData('startup')?.schemaVersion === 4 ?
+        'storage.layout.cacheSize configures LittleFS. startup.mount records the separate temporary cache pages allocated and filled at the end of the last PackedFS mount.' :
+        'Storage cache sizes are configuration values, not measured cache usage.',
       'SourceID and application BIN SHA-256 in buildIdentity.packageReference describe the referenced signed application package, not a hash measured on the device. Version/counter matches do not establish byte identity. No unique physical device ID is exported.'] };
 }

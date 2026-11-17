@@ -2,6 +2,7 @@ import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import releases from '../data/firmware-releases.json' with { type: 'json' };
 
 import { UPDATE_TARGET } from './update-target.js';
+import { LCD_PREVIEW_COUNTERS } from './hardware-profile.js';
 export { UPDATE_TARGET } from './update-target.js';
 
 const versionPattern = /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/;
@@ -42,8 +43,10 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const deVersion = value => value?.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(-PREP)?(?:t[1-9]\d*)?$/);
   const previousDe = deVersion(firmware), targetDe = deVersion(target.application.version);
   const relation = previousDe && targetDe ? [1,2,3,4].map(i=>Number(previousDe[i])-Number(targetDe[i])).find(n=>n!==0)||0 : 0;
-  const preview = relation > 0 && releases.packages.find(entry => entry.version === firmware &&
-    entry.channel === 'prerelease' && entry.board === 'LCD');
+  const packageEntry = releases.packages.find(entry => entry.version === firmware);
+  const preview = Object.hasOwn(LCD_PREVIEW_COUNTERS, firmware)
+    ? {version:firmware, counter:LCD_PREVIEW_COUNTERS[firmware], bootloader:'Z21'}
+    : relation > 0 && packageEntry?.channel === 'prerelease' && packageEntry.board === 'LCD' && packageEntry;
   const application = preview || target.application;
   const applicationChecks = [compare('version', firmware, application.version),
     compare('applicationCounter', diagnostic?.settingsCrcValid ? diagnostic.applicationCounter : null, application.counter)];
@@ -61,8 +64,8 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const identity = exact ?? profiles.find(profile => profile.sha256 === bootHash)
     ?? profiles.find(profile => profile.counter === bootCounter)
     ?? target.bootloader;
-  const packageEntry = releases.packages.find(entry => entry.version === firmware);
-  const packageBoots = packageEntry ? profiles.filter(profile => packageEntry.bootloader.split('/').includes(profile.name)) : [];
+  const bootProfile = preview || packageEntry;
+  const packageBoots = bootProfile ? profiles.filter(profile => bootProfile.bootloader.split('/').includes(profile.name)) : [];
   row('bootloader', [
     compare('bootHash', bootHash, identity.sha256),
     compare('bootCounter', bootCounter, identity.counter),
@@ -71,7 +74,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     compare('paramsAddress', diagnostic?.paramsLayoutKnown ? diagnostic.effectiveParamsAddress : null, target.bootloader.paramsAddress),
     compare('settingsAddress', diagnostic?.geometryValid ? diagnostic.settingsAddress : null, target.bootloader.settingsAddress),
     compare('settingsVersion', diagnostic?.settingsLayoutSupported ? diagnostic.settingsVersion : null, target.bootloader.settingsVersion),
-    ...(packageEntry ? [{ key: preview ? 'previewBootCounter' : 'targetBootCounter', actual: bootCounter, expected: packageBoots.map(profile => profile.counter).join(' / '),
+    ...(bootProfile ? [{ key: preview ? 'previewBootCounter' : 'targetBootCounter', actual: bootCounter, expected: packageBoots.map(profile => profile.counter).join(' / '),
       status: bootCounter === null ? 'unknown' : packageBoots.some(profile => profile.counter === bootCounter) ? 'match' : 'different' }] : []),
     flag('bootVectors', diagnostic?.bootVectorsValid),
     flag('settingsCrc', diagnostic?.settingsCrcValid),
@@ -117,7 +120,7 @@ const COPY = {
     subtitle: 'Vergleicht die gelesenen Angaben mit diesem Paket. Abweichung bedeutet nicht automatisch Fehler oder Inkompatibilität. Keine automatische Aktualisierung.',
     match: 'Stimmt überein', preview: 'Bekannte Vorschau', previewProfile: 'Vorschauprofil', different: 'Abweichung', unknown: 'Noch nicht bestätigt', unknownValue: 'Nicht bestätigt',
     actual: 'Gelesen', expected: 'Erwartet', details: 'Prüfdetails anzeigen', yes: 'Ja', no: 'Nein',
-    overall: { match: 'Alle gelesenen Angaben passen zum lokalen Ziel.', preview: 'Anwendungszähler, Bootloader, Bluetooth-Stack und Chipdaten passen zur mitgelieferten Vorschau.', different: 'Mindestens eine gelesene Angabe weicht vom Vergleichsprofil ab.', unknown: 'Für den vollständigen Abgleich fehlen noch bestätigte Angaben.' },
+    overall: { match: 'Alle gelesenen Angaben passen zum lokalen Ziel.', preview: 'Anwendungszähler, Bootloader, Bluetooth-Stack und Chipdaten passen zum Vorschauprofil.', different: 'Mindestens eine gelesene Angabe weicht vom Vergleichsprofil ab.', unknown: 'Für den vollständigen Abgleich fehlen noch bestätigte Angaben.' },
     names: { hardware: 'Hardware', application: 'Anwendung', bootloader: 'Bootloader', softDevice: 'Bluetooth-Stack' },
     targets: { hardware: 'nRF52832 AAE0 · 512 KiB Flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
     fields: { chip: 'Chip', variant: 'Chipvariante (AAE0)', flash: 'Chip-Flash', ram: 'Chip-RAM', page: 'Flash-Seite', geometry: 'Speichergeometrie gültig', version: 'Laufende Version', applicationCounter: 'Anwendungszähler', bootHash: 'SHA-256 des Bootloader-Bereichs', bootCounter: 'Bootloader-Zähler', targetBootCounter: 'Unterstützte Bootloader-Zähler der LCD-App', previewBootCounter: 'Erlaubte Bootloader-Zähler der Vorschau', bootAddress: 'Bootloader-Start', bootBytes: 'Bereichsgröße', paramsAddress: 'MBR-Parameter', settingsAddress: 'Settings-Adresse', settingsVersion: 'Settings-Layout', bootVectors: 'Boot-Vektoren gültig', settingsCrc: 'Settings-CRC gültig', addressConflict: 'Adresskonflikt', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware-ID' },
@@ -146,7 +149,7 @@ const COPY = {
     subtitle: 'Compares the read values with this package. A difference does not automatically mean a fault or incompatibility. No automatic update.',
     match: 'Matches', preview: 'Known preview', previewProfile: 'Preview profile', different: 'Difference', unknown: 'Not yet confirmed', unknownValue: 'Not confirmed',
     actual: 'Read', expected: 'Expected', details: 'Show check details', yes: 'Yes', no: 'No',
-    overall: { match: 'All read values match the local target.', preview: 'The application counter, bootloader, Bluetooth stack and chip details match the bundled preview profile.', different: 'At least one read value differs from the comparison profile.', unknown: 'A complete comparison still needs confirmed values.' },
+    overall: { match: 'All read values match the local target.', preview: 'The application counter, bootloader, Bluetooth stack and chip details match the preview profile.', different: 'At least one read value differs from the comparison profile.', unknown: 'A complete comparison still needs confirmed values.' },
     names: { hardware: 'Hardware', application: 'Application', bootloader: 'Bootloader', softDevice: 'Bluetooth stack' },
     targets: { hardware: 'nRF52832 AAE0 · 512 KiB flash · 64 KiB RAM', application: '', bootloader: '', softDevice: 'S112 7.3.0 · FWID 0x126' },
     fields: { chip: 'Chip', variant: 'Chip variant (AAE0)', flash: 'Chip flash', ram: 'Chip RAM', page: 'Flash page', geometry: 'Valid memory geometry', version: 'Running version', applicationCounter: 'Application counter', bootHash: 'Bootloader region SHA-256', bootCounter: 'Bootloader counter', targetBootCounter: 'Supported bootloader counters for the LCD app', previewBootCounter: 'Supported bootloader counters for the preview', bootAddress: 'Bootloader start', bootBytes: 'Region size', paramsAddress: 'MBR parameters', settingsAddress: 'Settings address', settingsVersion: 'Settings layout', bootVectors: 'Valid boot vectors', settingsCrc: 'Valid settings CRC', addressConflict: 'Address conflict', sdVariant: 'SoftDevice', sdVersion: 'Version', sdFwid: 'Firmware ID' },

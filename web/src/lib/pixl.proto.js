@@ -6,6 +6,8 @@ import { parseFlashDiagnostics, supportsFlashDiagnostics } from "./flash-diagnos
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
+import { LCD_BUILD_DIAGNOSTICS_VERSION, parseLcdBuildDiagnostics } from "./lcd-build-diagnostics.js"
+import { lacksOledSystemDiagnostics, OLED_DIAGNOSTICS_TRIAL, LCD_PREVIEW_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -295,6 +297,16 @@ export function get_menu_diagnostics(firmwareVersion) {
     });
 }
 
+export function get_lcd_build_diagnostics(firmwareVersion) {
+    if (firmwareVersion !== LCD_BUILD_DIAGNOSTICS_VERSION) return Promise.resolve(null);
+    const generation = transport_generation;
+    return op_queue_push(0x0c, () => {}, b => parseLcdBuildDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()),
+        {max_bytes:80, optional_probe:true}).then(response => {
+            if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
+            return response.status === 255 || response.status === 1 ? null : checked_response(response);
+        });
+}
+
 export function get_flash_diagnostics(firmwareVersion) {
     if (!supportsFlashDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
@@ -307,17 +319,24 @@ export function get_flash_diagnostics(firmwareVersion) {
 
 export function get_display_photo(firmwareVersion) {
     if (!supportsDisplayPhoto(firmwareVersion)) return Promise.resolve(null);
+    const reportsBusy = firmwareVersion === OLED_DIAGNOSTICS_TRIAL || Object.hasOwn(LCD_PREVIEW_COUNTERS, firmwareVersion);
     const generation = transport_generation;
     const checkSession = () => {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
     };
     return captureDisplayPhoto(page => op_queue_push(0x0a,
         b => { b.writeUTF8String('LCD1'); b.writeUint8(page); },
-        b => parseDisplayPage(b.readBytes(b.remaining()).toArrayBuffer(), page), { max_bytes: 168 })
-        .then(response => response.status === 255 ? null : checked_response(response)), checkSession);
+        b => parseDisplayPage(b.readBytes(b.remaining()).toArrayBuffer(), page), { max_bytes: 168, optional_probe: reportsBusy })
+        .then(response => {
+            if (response.status === 255) return null;
+            if (response.status === 1 && reportsBusy)
+                throw Object.assign(new Error('Display capture unavailable'), {code:'DISPLAY_UNAVAILABLE'});
+            return checked_response(response);
+        }), checkSession);
 }
 
-export function get_runtime_diagnostics() {
+export function get_runtime_diagnostics(firmwareVersion) {
+    if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x06, () => {}, b =>
         parse_runtime_diagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 64 })
@@ -339,7 +358,8 @@ export function get_boot_diagnostics() {
         });
 }
 
-export function get_power_diagnostics() {
+export function get_power_diagnostics(firmwareVersion) {
+    if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x08, () => {}, b =>
         parsePowerDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16 })
@@ -351,18 +371,22 @@ export function get_power_diagnostics() {
 
 // Explicit optional read, serialized by the same queue as all file operations.
 export function get_startup_diagnostics(firmwareVersion) {
+    if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
     const series = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
     function read(detail) {
         return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b =>
-            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: [32,40,80][detail], optional_probe: detail > 0 })
+            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: [32,40,80,84][detail], optional_probe: detail > 0 })
             .then(response => {
                 if (generation !== transport_generation) throw new Error('Bluetooth session changed');
                 if (detail && (response.status === 1 || response.status === 255)) return read(detail - 1);
                 return response.status === 255 ? null : checked_response(response);
             });
     }
+    // OLED Test 3 records native VFS startup phases without a PackedFS mount profile.
+    if (known === OLED_DIAGNOSTICS_TRIAL) return read(1);
+    if (Object.hasOwn(LCD_PREVIEW_COUNTERS, known)) return read(3);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
 }
@@ -1075,7 +1099,7 @@ function on_rx_data(data) {
         }
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
-        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x0b) && op.optional_probe && (h.status===1 || h.status===255);
+        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
         if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';

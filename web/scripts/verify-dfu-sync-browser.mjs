@@ -1,6 +1,9 @@
 // Verify the production UI with synthetic names, wake locks and DFU radio boundaries.
 import assert from 'node:assert/strict';
 import { checkSyncHistoryBrowser } from './check-sync-history-browser.mjs';
+import { parseStartupDiagnostics } from '../src/lib/startup-diagnostics.js';
+import {parseLcdBuildDiagnostics} from '../src/lib/lcd-build-diagnostics.js';
+import {diagnosticSnapshot} from '../tests/fixtures/diagnostic-overview-data.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -11,6 +14,7 @@ assert.ok(dist && report && ['/', '/pixl.js/'].includes(base));
 const build = path.resolve(dist);
 const libraries = new URL('../src/lib/', import.meta.url);
 const webVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
+const firmwareCache = JSON.parse(await readFile(new URL('../tests/fixtures/PXST_v4_App657.json', import.meta.url), 'utf8'));
 const helperNames = ['sync-plan.js', 'sync-history.js', 'unique-json.js', 'safe-upload.js', 'portable-names.js', 'backup.js', 'raw-metadata.js', 'zip-crc32.js'];
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json' };
 const server = createServer(async (req, res) => {
@@ -65,6 +69,7 @@ async function runChecks() {
     ['Allmiibo_LCD_DE3_76_649_NUR_APP.zip', 'DE3.76', 649],
     ['Allmiibo_LCD_DE3_77_650_NUR_APP.zip', 'DE3.77', 650],
     ['Allmiibo_LCD_DE3_81_654_NUR_APP.zip', 'DE3.81', 654],
+    ['Allmiibo_LCD_DE3_84_657_NUR_APP.zip', 'DE3.84', 657, 'de3.84-lcd-test1-app'],
     ['Allmiibo_LCD_DE3_80_653_NUR_APP.zip', 'DE3.80', 653],
     ['Allmiibo_LCD_DE3_79_652_NUR_APP.zip', 'DE3.79', 652],
   ];
@@ -93,6 +98,7 @@ async function runChecks() {
         await guidePage.setViewportSize({width, height:840});
         assert.ok(await home.getByRole('link', {name:/App654/}).isVisible());
         assert.equal(await home.getByRole('link', {name:/App654/}).getAttribute('href'), appAsset);
+        assert.equal(await home.getByRole('link', {name:/App657/}).getAttribute('href'), 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip');
         assert.ok(await home.getByRole('link', {name:/Android/}).isVisible());
         assert.equal(await home.getByRole('link', {name:/Android/}).getAttribute('href'), comboAsset);
         assert.ok(await home.evaluate(el => el.scrollWidth <= el.clientWidth));
@@ -122,6 +128,74 @@ async function runChecks() {
       await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = { softDeviceValid:true, softDeviceVariant:112, softDeviceVersion:7003000, softDeviceFwid:0x0126 }; });
       await trial.locator('[role=status]').waitFor();
       assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
+      for (const version of ['2.22.0-DE3.81-OLEDt2','2.22.0-DE3.81-OLEDt3','2.23.0-DE3.91-OLEDt10']) {
+        await guidePage.evaluate(version => Object.assign(document.querySelector('#app')._vnode.component.proxy, {firmwareVersion:version, bootInfo:null}) && true, version);
+        await trial.locator('[role=status]').waitFor();
+        assert.ok(await lcd.isDisabled());
+        assert.equal(await picker.locator('[href$=".zip"], .dfu-page-link, .firmware-packages').count(), 0);
+      }
+      await guidePage.evaluate(() => {
+        const app = document.querySelector('#app')._vnode.component.proxy;
+        app.show_workspace('device');
+        app.firmwareVersion = '2.22.0-DE3.81-OLEDt3';
+      });
+      for (const [voltageValid,lipoMode,chargingActive,label] of [
+        [true,false,false,'info.unknown'], [false,true,false,'info.unknown'],
+        [true,true,false,'workflow.powerInactive'], [true,true,true,'workflow.powerActive']
+      ]) {
+        const charging = await guidePage.evaluate(async ({voltageValid,lipoMode,chargingActive,label}) => {
+          const app = document.querySelector('#app')._vnode.component.proxy;
+          app.powerState = 'available';
+          app.powerInfo = {sampleCollected:true,batteryMillivolts:voltageValid ? 3790 : null,voltageValid,lipoMode,chargingActive};
+          await app.$nextTick();
+          const row = [...document.querySelectorAll('.power-diagnostics dt')].find(el => el.textContent === app.$t('workflow.powerCharging'));
+          return [row?.nextElementSibling?.textContent,app.$t(label)];
+        }, {voltageValid,lipoMode,chargingActive,label});
+        assert.equal(charging[0],charging[1]);
+      }
+      checks.push({locale,feature:'OLED charging display distinguishes unsupported mode, missing voltage, active and inactive'});
+      const captured = firmwareCache.cases.find(row => row.label === 'mounted-with-room');
+      const capturedStartup = parseStartupDiagnostics(Uint8Array.from(Buffer.from(captured.payloadHex, 'hex')));
+      await guidePage.evaluate(({version, startup}) => {
+        const app = document.querySelector('#app')._vnode.component.proxy;
+        app.read_startup_diagnostics = async () => startup;
+        app.firmwareVersion = version;
+      }, {version:firmwareCache.firmware, startup:capturedStartup});
+      const startupPanel = guidePage.locator('.startup-diagnostics');
+      await startupPanel.locator('.actions button').first().click();
+      const mountProfile = startupPanel.locator('.mount-profile');
+      await mountProfile.waitFor();
+      const mountReadings = await mountProfile.innerText();
+      for (const value of ['3 / 8','256 B','79 ms']) assert.ok(mountReadings.includes(value), value);
+      assert.match(mountReadings,/50\s*%/);
+      checks.push({locale,feature:'LCD App657 displays linked ARM cache readings and eligible hit rate'});
+      const capture=JSON.parse(await readFile(new URL('../tests/fixtures/PXBI_App657.json',import.meta.url),'utf8'));
+      const sdk=capture.states.find(r=>r.scenario==='sdk');
+      const build=parseLcdBuildDiagnostics(Buffer.from(sdk.payloadHex,'hex'));
+      const snapshot=structuredClone(diagnosticSnapshot());
+      snapshot.sections.boot.data.applicationCounter=657;
+      snapshot.sections.build={state:'available',observedAt:snapshot.completedAt,data:build,errorCode:null};
+      await guidePage.evaluate(data=>{
+        const app=document.querySelector('#app')._vnode.component.proxy;
+        app.firmwareVersion='2.22.0-DE3.84';app.fullDiagnosticSnapshot=data;
+      },snapshot);
+      const card=guidePage.locator('article[data-section="build"]');
+      await card.waitFor();
+      await card.locator('details > summary').click();
+      const display=await card.innerText();
+      for (const value of ['Nordic SDK',capture.sourceId,'12345678','23457']) assert.ok(display.includes(value),value);
+      assert.match(display,/Passend|Match/);
+      await guidePage.evaluate(() => Object.defineProperty(navigator, 'clipboard', {
+        configurable:true, value:{writeText: async value => { window.copiedSourceId = value; }}
+      }));
+      await card.getByRole('button', {name:/SourceID/}).click();
+      assert.equal(await guidePage.evaluate(() => window.copiedSourceId), capture.sourceId);
+      await guidePage.locator('.build-reference > summary').click();
+      assert.match(await guidePage.locator('.build-reference').innerText(), /17\.11\.2026|17 November 2026/);
+      checks.push({locale,feature:'copy the running firmware SourceID and display the dated LCD owner report'});
+      checks.push({locale,feature:'App657 displays compiled SourceID, matching package profile and retained fault from real Cortex fixture'});
+
+      await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
         firmwareVersion:'2.22.0-DE3.81', bootInfo:null
       }); });
@@ -341,7 +415,7 @@ async function runChecks() {
   }
   assert.ok(await page.locator('#button').isDisabled());
   assert.deepEqual(await page.locator('#bundled option').evaluateAll(options => options.map(option => option.value).sort()),
-    ['', ...releases.map(([, version]) => version.toLowerCase() + '-lcd-app')].sort());
+    ['', ...releases.map(([, version, , id]) => id || version.toLowerCase() + '-lcd-app')].sort());
   assert.match(await page.locator('#bundled option[value="de3.74-lcd-app"]').innerText(), /DE3\.74.*Fr\u00fchere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65.*Frühere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
@@ -361,8 +435,8 @@ async function runChecks() {
     assert.equal(await page.evaluate(() => probe.requests), 0);
     checks.push({ feature:'production parser accepted explicit ZIP without device selection', counter });
   }
-  for (const [, version, counter] of releases) {
-    const id = version.toLowerCase() + '-lcd-app';
+  for (const [, version, counter, packageId] of releases) {
+    const id = packageId || version.toLowerCase() + '-lcd-app';
     await page.locator('#bundled').selectOption(id);
     await page.locator('#load-bundled').click();
     await page.waitForFunction(counter => !document.querySelector('#button').disabled && document.querySelector('#package-target').textContent.includes('Zähler ' + counter), counter);

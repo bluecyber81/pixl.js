@@ -12,9 +12,10 @@
       <h4>DE3.81 OLED · Test 1</h4>
       <p>{{ de ? 'Für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID 0x0103). Ein Nutzer meldet, dass die Testversion auf einem OLED funktioniert.' : 'For Pixl.js with nRF52832, SH1106 (128 × 64), a compatible DFU bootloader and S112 7.2.0 (FWID 0x0103). A user reports that the test build works on an OLED device.' }}</p>
       <p>{{ de ? 'Die App nutzt dein vorhandenes SPIFFS oder natives LittleFS. Sichere deine Dateien und halte die bisherige OLED-App bereit. Öffne die gepackte ZIP am Handy in nRF Device Firmware Update.' : 'The app uses your existing SPIFFS or native LittleFS. Back up your files and keep your previous OLED app available. Open the intact ZIP on your phone in nRF Device Firmware Update.' }}</p>
-      <p v-if="profileMismatch" role="status">{{ de ? 'Die gelesenen Gerätedaten passen nicht zu diesem OLED-Paket.' : 'The reported device details are incompatible with this OLED package.' }}</p>
+      <p v-if="differentOledTrial" role="status">{{ de ? 'Auf deinem Gerät läuft eine andere OLED-Testversion. Diesen Test-1-Download findest du weiterhin in der Anleitung.' : 'Your device is running a different OLED trial. The guide still lists the Test 1 download.' }}</p>
+      <p v-else-if="profileMismatch" role="status">{{ de ? 'Die gelesenen Gerätedaten passen nicht zu diesem OLED-Paket.' : 'The reported device details are incompatible with this OLED package.' }}</p>
       <div class="trial-links">
-        <a v-if="!profileMismatch" :href="releaseDownload + 'Allmiibo_OLED_DE3_81_Test1_APP.zip'">{{ de ? 'OLED-App-ZIP herunterladen' : 'Download OLED app ZIP' }}</a>
+        <a v-if="!differentOledTrial && !profileMismatch" :href="releaseDownload + 'Allmiibo_OLED_DE3_81_Test1_APP.zip'">{{ de ? 'OLED-App-ZIP herunterladen' : 'Download OLED app ZIP' }}</a>
         <a :href="guide">{{ de ? 'OLED am Handy flashen' : 'Flash OLED from your phone' }}</a>
       </div>
     </article>
@@ -32,6 +33,7 @@ const releaseDownload = 'https://github.com/bluecyber81/pixl.js/releases/downloa
 const choice = ref(null);
 const detected = computed(() => props.connected ? firmwareBoard(props.version) : null);
 const selected = computed(() => detected.value || choice.value);
+const differentOledTrial = computed(() => detected.value === 'OLED' && props.version !== '2.22.0-DE3.81-OLEDt1');
 const profileMismatch = computed(() => props.connected && props.boot && (
   (props.boot.softDeviceValid && (props.boot.softDeviceFwid !== 0x0103 || props.boot.softDeviceVariant !== 112 || props.boot.softDeviceVersion !== 7002000)) ||
   (props.boot.geometryValid && props.boot.chipPart !== 0x52832) ||

@@ -1,5 +1,6 @@
 // Production UI, read-only synthetic Bluetooth peripheral, generated ZIP, no device access.
 import assert from 'node:assert/strict';
+import { MIGRATION_CAPACITY_TARGET } from '../src/lib/migration-capacity.js';
 import {createHash} from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -108,8 +109,12 @@ async function run(context, locale, width) {
   await migration.locator(':scope > summary').click();
   const targetProfile = migration.getByLabel(label('Ziel-Firmware für die lokale Platzprüfung','Target firmware for the local capacity check'));
   assert.equal(await targetProfile.inputValue(), 'current');
-  assert.equal(await targetProfile.locator('option:checked').innerText(), 'DE3.75 / 648');
-  await migration.getByText(/DE3\.72–DE3\.77 \/ 645–650 \+ DE3\.79–DE3\.81 \/ 652–654/).waitFor();
+  const capacityReference = MIGRATION_CAPACITY_TARGET.applicationCounter;
+  const capacityRangeEnd = MIGRATION_CAPACITY_TARGET.approvedApplications.at(-1).applicationCounter;
+  const referenceVersion = MIGRATION_CAPACITY_TARGET.firmwareVersion.split('-').at(-1);
+  assert.equal(await targetProfile.locator('option:checked').innerText(), referenceVersion + ' / ' + capacityReference);
+  const lastVersion = MIGRATION_CAPACITY_TARGET.approvedApplications.at(-1).firmwareVersion.split('-').at(-1);
+  await migration.getByText('DE3.79–' + lastVersion + ' / 652–' + capacityRangeEnd, {exact:false}).waitFor();
   await migration.locator(':scope > summary').click();
   const options=backup.locator('details.backup-export-options').first();
   await options.locator(':scope > summary').click();
@@ -189,7 +194,7 @@ async function run(context, locale, width) {
   await assertLayout(advice,page);
   assert.deepEqual(await page.evaluate(()=>window.testPeripheral.violations),[]);
   assert.deepEqual(errors,[]);
-  return {locale,width,capacityReference:648,capacityRangeEnd:654,offlineDistinctIds:1,offlineFiles:3,variants:2,slotReadOnly:true,repeatBackupDigests:2,verifiedFilesReused:1,changedFileRead:1,deflateFiles:2,initialNameAndPathRemaining:1,remappedPathExcess:14,deviceWrites:0};
+  return {locale,width,capacityReference,capacityRangeEnd,offlineDistinctIds:1,offlineFiles:3,variants:2,slotReadOnly:true,repeatBackupDigests:2,verifiedFilesReused:1,changedFileRead:1,deflateFiles:2,initialNameAndPathRemaining:1,remappedPathExcess:14,deviceWrites:0};
 }
 try {
   browser=await chromium.launch({headless:true,chromiumSandbox:true,executablePath:process.env.CHROME_EXECUTABLE});

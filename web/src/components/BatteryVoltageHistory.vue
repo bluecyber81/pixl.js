@@ -32,8 +32,8 @@
           <circle v-for="(point, index) in chart.points" :key="index" :cx="point.x" :cy="point.y" r="2" fill="currentColor" />
         </svg>
       </div>
-      <div class="time-axis"><time :datetime="iso(rows[0].at)">{{ time(rows[0].at) }}</time><time :datetime="iso(rows.at(-1).at)">{{ time(rows.at(-1).at) }}</time></div>
-      <p class="chart-note">{{ de ? 'Die Höhenachse folgt dem sichtbaren Spannungsbereich. Lücken bleiben offen. Der Zeitraum reicht vom ersten bis zum letzten gültigen Wert; Uhrzeiten zeigen den Empfang im Browser.' : 'The vertical axis follows the visible voltage range. Gaps stay open. The span runs from the first to the last valid reading; times show receipt in the browser.' }}</p>
+      <div class="time-axis"><time :datetime="iso(chart.startAt)">{{ time(chart.startAt) }}</time><time :datetime="iso(chart.endAt)">{{ time(chart.endAt) }}</time></div>
+      <p class="chart-note">{{ de ? 'Die Höhenachse folgt dem sichtbaren Spannungsbereich. Lücken bleiben offen. Die Zeitachse zeigt die Uhrzeiten aller Einträge im Browser. Die Dauer oben reicht vom ersten bis zum letzten gültigen Messwert.' : 'The vertical axis follows the visible voltage range. Gaps stay open. The time axis shows when the browser received each entry. The duration above runs from the first to the last valid reading.' }}</p>
       <p v-if="historySummary.clockAdjusted" class="chart-note">{{ de ? 'Die Browseruhr wurde zurückgestellt. Der Zeitraum wird deshalb nicht berechnet.' : 'The browser clock moved backwards, so the time span is unavailable.' }}</p>
     </figure>
     <p v-else class="history-empty">{{ de ? 'Noch kein gültiger Spannungswert in dieser Aufzeichnung.' : 'No valid voltage reading in this recording yet.' }}</p>

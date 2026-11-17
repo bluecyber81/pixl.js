@@ -1,7 +1,7 @@
 <template>
   <span v-if="publicId" class="figure-id-copy">
-    <code>{{ publicId }}</code>
-    <button type="button" @click="copyId">{{ de ? 'ID kopieren' : 'Copy ID' }}</button>
+    <code>{{ source && result !== 'failed' ? publicId.slice(0, 12) + '…' : publicId }}</code>
+    <button type="button" @click="copyId">{{ source ? (de ? 'SourceID kopieren' : 'Copy SourceID') : (de ? 'ID kopieren' : 'Copy ID') }}</button>
     <span role="status">{{ message }}</span>
   </span>
 </template>
@@ -10,8 +10,8 @@
 import { computed, ref, watch } from 'vue';
 import { figureId } from '../lib/figure-info.js';
 
-const props = defineProps({ id: String, de: Boolean });
-const publicId = computed(() => figureId(props.id));
+const props = defineProps({ id: String, de: Boolean, source: Boolean });
+const publicId = computed(() => props.source ? (/^[a-f0-9]{64}$/.test(props.id) ? props.id : null) : figureId(props.id));
 const result = ref('');
 const message = computed(() => {
   if (result.value === 'copied') return props.de ? 'ID kopiert.' : 'ID copied.';

@@ -115,6 +115,10 @@ test('history drops oldest entries and the chart leaves gaps across clock or sam
   assert.equal(chart.points.length, 5);
   assert.equal(chart.lines.length, 2);
   assert.ok(chart.points.every(p => Number.isFinite(p.x) && p.y === 38));
+  const adjusted = batteryHistoryChart([30, 40, 10, 20].map(sec => ({at: sec * 1000, mv: 4200})));
+  assert.deepEqual([adjusted.startAt, adjusted.endAt], [10000, 40000]);
+  assert.equal(adjusted.points[2].x, 3);
+  assert.equal(adjusted.points[1].x, 317);
 });
 
 async function csvRows(h, downloads) {

@@ -1,0 +1,95 @@
+{
+  "firmware": "2.22.0-DE3.83",
+  "counter": 656,
+  "scope": "App656 signed-package candidate, linked LCD layout and synthetic cross-mount verification of the identical storage engine",
+  "engine": {
+    "manifest": {
+      "schema": 1,
+      "format": "PFS1",
+      "constants": {
+        "FORMAT_VERSION": 1,
+        "BLOCK_SIZE": 4096,
+        "BLOCK_COUNT": 512,
+        "CACHE_SIZE": 256,
+        "SHARD_TARGET": 32768,
+        "MAX_SHARDS": 64,
+        "MAX_HANDLES": 8,
+        "PATH_MAX": 64,
+        "NAME_MAX": 48,
+        "META_SIZE": 128
+      },
+      "defines": [
+        "LFS_NO_ASSERT",
+        "LFS_NO_DEBUG",
+        "LFS_NO_ERROR",
+        "LFS_NO_MALLOC",
+        "LFS_NO_WARN"
+      ],
+      "files": {
+        "packed_fs.c": "9f50e5c9cc1096a52ab3238b06cd7890c07ce2cc750bba6df13b538a10042771",
+        "packed_fs.h": "a77473937da52cf3106d4af3a03e14e7b5e7ec79f5a5f60dcabc930befb5be4c",
+        "lfs.c": "1377c9f3b89731cb87a8a09e197fc440d2635ae4fc4469677bf2110c513b601c",
+        "lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+        "lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+        "lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+      }
+    },
+    "engineSha256": "2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248"
+  },
+  "wasmSha256": "652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9",
+  "sourceId": "7a51f763495dc22382b6b5f0f5714a5c36baf4d0d274917abc58ec7314d7a9e8",
+  "sourceFiles": 705,
+  "buildArtifacts": {
+    "pixljs.bin": "dc4a1440b20a0ddff202ee6739490ca5faf3bf1f6dcb245039b6d773b0665183",
+    "pixljs.hex": "16f0492e294137ffa32ac2c96cf85ecdc6450b993b8cbf6b9a71bab2cae4935f",
+    "pixljs.out": "35b0b8f80e2fd9c95ab76110396c2e4f67b9016e445b18297b7eb49dc2dce013",
+    "pixljs.map": "d0cc80f84613ec88aed4eb8a6dc37daa5098b5430aaa9caa30b189933cd63cdd"
+  },
+  "elfLoadBytesCompared": 355312,
+  "intelHex": {
+    "dataRecords": 22211,
+    "flashBytesCompared": 355312,
+    "fromAddress": 102400,
+    "endAddressExclusive": 457712,
+    "entrypoint": 103177
+  },
+  "capacityCrossMount": {
+    "cases": 6,
+    "files": 1131,
+    "folders": 77,
+    "synthetic": true
+  },
+  "armLayoutCases": [
+    {
+      "drive": "E",
+      "geometry": true,
+      "mounted": true,
+      "result": 0,
+      "layout72Hex": "014503015046533100002000001000000002000000010001000180000080000040403008070000002b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248"
+    },
+    {
+      "drive": "E",
+      "geometry": true,
+      "mounted": false,
+      "result": 0,
+      "layout72Hex": "014503005046533100002000001000000002000000010001000180000080000040403008070000002b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248"
+    },
+    {
+      "drive": "I",
+      "geometry": true,
+      "mounted": true,
+      "result": 4294967290
+    },
+    {
+      "drive": "E",
+      "geometry": false,
+      "mounted": true,
+      "result": 4294967290
+    }
+  ],
+  "limits": [
+    "Mounted state and flash geometry are modeled. The final linked firmware supplies the layout reply.",
+    "A valid live settings CRC, exact version/counter and layout, matching archive hash and fresh fit proof are still required.",
+    "Host tests do not establish physical free space or device acceptance."
+  ]
+}

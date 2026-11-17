@@ -97,6 +97,17 @@ test('DE3.81 recognizes the Z21 region and rejects a mismatched region', () => {
   assert.equal(row(result(change(60,654,previewPacket(21,z20Hash)),app654),'bootloader').status,'different');
 });
 
+for (const [version,counter] of [['2.22.0-DE3.82',655],['2.22.0-DE3.83',656],['2.22.0-DE3.84',657]]) test(`App${counter} preview uses its checked Z21/S112 profile separately from the bundled target`, () => {
+  const app = {...session, firmwareVersion:version};
+  const packet = change(60,counter,previewPacket(21,UPDATE_TARGET.bootloaderZ21.sha256));
+  const r = result(packet,app);
+  assert.equal(r.status, 'preview');
+  assert.deepEqual(r.preview,{version:app.firmwareVersion,counter,bootloader:'Z21'});
+  assert.equal(UPDATE_TARGET.application.counter,654);
+  assert.equal(row(result(change(60,654,packet.slice()),app),'application').status,'different');
+  assert.equal(row(result(change(60,counter,previewPacket(20,z20Hash)),app),'bootloader').status,'different');
+  assert.equal(row(result(change(32,7002000,packet.slice()),app),'softDevice').status,'different');
+});
 test('known preview version cannot hide conflicting or missing device evidence', () => {
   for (const [id,packet] of [
     ['application',change(60,648,previewPacket())],
@@ -258,7 +269,7 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.55.5'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.55.6'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
   assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mountSfc, nodes, text} from './helpers/vue-component-host.mjs';
+import {loadSfc, mountSfc, nodes, text} from './helpers/vue-component-host.mjs';
 import {diagnosticSnapshot} from './fixtures/diagnostic-overview-data.mjs';
 import {GUIDED_MAX_BYTES, parseGuidedDraft, serializeGuidedDraft} from '../src/lib/guided-device-check.js';
 import {discardGuidedDraft, listGuidedDrafts, saveGuidedDraft} from '../src/lib/guided-draft-store.js';
@@ -53,7 +53,9 @@ async function mount(t, {locale = 'en', store = storage(), modules = {}, ...prop
   Object.defineProperty(globalThis, 'localStorage', {configurable:true, value:store});
   const exported = [];
   const h = await mountSfc(component, {locale, connected:false, reading:false, exportBusy:false,
-    onExport:report => exported.push(report), ...props}, {'../../package.json':{version:'3.52.0'}, ...modules});
+    onExport:report => exported.push(report), ...props}, {'../../package.json':{version:'3.52.0'},
+      './GuidedLcdChecks.vue':{default:await loadSfc(new URL('../src/components/GuidedLcdChecks.vue',import.meta.url))},
+      './GuidedSnapshotComparison.vue':{default:await loadSfc(new URL('../src/components/GuidedSnapshotComparison.vue',import.meta.url))}, ...modules});
   // onMounted finishes its restore before autosaving begins.
   await h.tick();
   let disposed = false;
@@ -270,7 +272,9 @@ test('Actual UI attaches only a fresh after snapshot and does not turn a prefix 
   t.mock.timers.enable({apis:['Date'], now});
   const before = snapshotAt('2026-11-15T08:58:00.000Z', '2026-11-15T08:58:01.000Z');
   const h = await mount(t, {connected:true, firmwareVersion:'2.22.0-DE3.75', snapshot:before});
+  const hasStorageComparison = () => nodes(h.root,'caption').some(n=>/Speicher vor und nach|Storage before and after/.test(text(n)));
   await click(h, 'Vorher-Aufnahme übernehmen', 'Attach before snapshot');
+  assert.equal(hasStorageComparison(),false);
   await choose(h, routeControl(h, 'return-to-list'), 'source-list-same-figure');
   assert.equal(button(h, 'Nachher-Aufnahme übernehmen', 'Attach after snapshot').props.disabled, true);
   h.state.connected = false; await h.tick(); h.state.connected = true; await h.tick();
@@ -278,6 +282,7 @@ test('Actual UI attaches only a fresh after snapshot and does not turn a prefix 
   const after = snapshotAt('2026-11-15T09:01:00.000Z', '2026-11-15T09:01:01.000Z');
   t.mock.timers.tick(120_000); h.state.snapshot = after; await h.tick();
   await click(h, 'Nachher-Aufnahme übernehmen', 'Attach after snapshot');
+  assert.equal(hasStorageComparison(),true);
   await input(h, prefixControl(h), '9BC7578A46F2');
   await input(h, noteControl(h, 'return-to-list'), 'Written after reading counters');
   const report = await exportReport(h);
@@ -290,6 +295,7 @@ test('Actual UI attaches only a fresh after snapshot and does not turn a prefix 
   assert.equal(report.samePhysicalDeviceVerified, false);
   await choose(h, routeControl(h, 'return-to-list'), 'no-response');
   assert.equal((await exportReport(h)).diagnosticReads.after, null, 'A later physical observation invalidates the older after snapshot');
+  assert.equal(hasStorageComparison(),false);
   assert.equal(button(h, 'Nachher-Aufnahme übernehmen', 'Attach after snapshot').props.disabled, true);
 });
 

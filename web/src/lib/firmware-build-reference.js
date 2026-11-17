@@ -1,3 +1,6 @@
+import { LCD_BUILD_DIAGNOSTICS_VERSION, normalizeLcdBuildDiagnostics } from './lcd-build-diagnostics.js';
+import { firmwareBoard } from './hardware-profile.js';
+
 // Reference for the signed T1 application package. This is not a
 // hash read from the connected device and does not qualify a storage layout.
 export const TEST_FIRMWARE_REFERENCE = Object.freeze({
@@ -61,6 +64,28 @@ const app654 = Object.freeze({
   sourceId: '85f0947a00471b74b45c86ccdd7ade4f7ba8269fc75e56974481fd61fd6e109a', otaSha256: '6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719',
 });
 
+const app655 = Object.freeze({
+  ...app654, firmwareVersion: '2.22.0-DE3.82', applicationCounter: 655,
+  applicationBytes: 362904, applicationBinSha256: 'e08ec6c3f343750bde9689f0ba70f0d679a734a69dc8a426dd354183ea5c163e',
+  sourceId: '15ad6fabb547dec243cc4e5cbc6079bbfc7ba178ca9746203068b113da8042da', otaSha256: '8694f0b45298b8c8b8dbb1f3b3a713753e91d12507eab759fb120f1bee030c51',
+  artifactStatus: 'experimental-signed-application', hardwareAcceptance: 'pending',
+});
+
+const app656 = Object.freeze({
+  ...app655, firmwareVersion: '2.22.0-DE3.83', applicationCounter: 656,
+  applicationBytes: 355312, applicationBinSha256: 'dc4a1440b20a0ddff202ee6739490ca5faf3bf1f6dcb245039b6d773b0665183',
+  sourceId: '7a51f763495dc22382b6b5f0f5714a5c36baf4d0d274917abc58ec7314d7a9e8', otaSha256: 'de436078c20dd402c7ffa821f31a74a14fdbd28d5c861cecac6cdc74892a1516',
+});
+
+const app657 = Object.freeze({
+  ...app656, firmwareVersion: '2.22.0-DE3.84', applicationCounter: 657,
+  releaseTag: 'de3.84-lcd-test1', sourceCommit: '55e3c42836452830421b559b6fc3659b826dc43b',
+  ownerReport: Object.freeze({ date: '2026-11-17', result: 'user-reported-passed', reportedBootloaderCounter: 21,
+    scope: 'general-practical-use-on-one-lcd', interruptedDfuResume: 'not-individually-reported' }),
+  applicationBytes: 356216, applicationBinSha256: 'b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323',
+  sourceId: 'f9bda1ff3428d344eb7cb5de2052158d40f5474e08c03f4597b67ba229e30221', otaSha256: '6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4',
+});
+
 const oledTest1 = Object.freeze({
   firmwareVersion: '2.22.0-DE3.81-OLEDt1', applicationCounter: 81, board: 'OLED', chipPart: 0x52832,
   applicationBytes: 363240, applicationBinSha256: '5e556b10359ad4815f150b22ac7f045412df99d3b0cd0cebfa8b114843314df8',
@@ -69,10 +94,22 @@ const oledTest1 = Object.freeze({
   otaSha256: '2806b64ff5a8c0f1342abaf33ca1a79a1773b6101d410ccc97e498f1c9f37d33',
 });
 
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, oledTest1];
+const oledTest2 = Object.freeze({
+  ...oledTest1, firmwareVersion: '2.22.0-DE3.81-OLEDt2', applicationCounter: 82, hardwareAcceptance: 'pending',
+  applicationBinSha256: 'd4b4a7693beb9c98dfac406c46d2eaebf4fb3c31743b0d7ebedc8971c16decee',
+  sourceId: '3d03b5ef8b785f6e4550fd2d569c9cd77bd6b1108421e09888483a8a368b7a61', otaSha256: 'ab3278830f2896d4a51cbe3235bb78bfeb20cda16a83cbfac983d8f15bc29b8f',
+});
+const oledTest3 = Object.freeze({
+  ...oledTest2, firmwareVersion: '2.22.0-DE3.81-OLEDt3', applicationCounter: 83, applicationBytes: 357144,
+  applicationBinSha256: '7fdfb63158015b1b914679cb07644691926136a46bebd2882d7d0f177394cd0e',
+  sourceId: 'b283257873690dd40845d6ba4628a88f8066a7b45f682b6190cd0c152b295a22', otaSha256: 'fd0418d4d503d1ac168909af66912c0e97cf98aef8936d29542c95d396378820',
+});
+
+const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
+export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
+  const reported = version === LCD_BUILD_DIAGNOSTICS_VERSION ? normalizeLcdBuildDiagnostics(build) : null;
   const observed = { firmwareVersion: version,
     applicationCounter: boot?.settingsCrcValid === true && word(boot.applicationCounter) ? boot.applicationCounter : null,
     chipPart: boot?.geometryValid === true && word(boot.chipPart) ? boot.chipPart : null,
@@ -80,10 +117,13 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot } = {}) {
     flashBytes: boot?.geometryValid === true && word(boot.flashBytes) ? boot.flashBytes : null,
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
-    sourceId: null, applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = references.find(item => item.firmwareVersion === version) ?? app654;
-  const relation = version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
+    sourceId: reported?.sourceId ?? null, ...(reported ? {compiledBoard:reported.board} : {}), applicationBinSha256: null, uniqueDeviceId: null };
+  const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app654);
+  const relation = !reference ? 'no-package-reference' : version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
-  return { schemaVersion: 1, observed, packageReference: reference, referenceRelation: relation,
+  const sourceRelation = reported && reference?.firmwareVersion === version
+    ? reported.sourceId === reference.sourceId && reported.board === reference.board ? 'matches-package' : 'differs-from-package'
+    : null;
+  return { schemaVersion: 1, ...(reported ? {firmwareReportedSourceRelation:sourceRelation} : {}), observed, packageReference: reference, referenceRelation: relation,
     applicationHashVerified: false, samePhysicalDeviceVerified: false };
 }

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as Vue from 'vue';
+import { dfuReference } from '../src/lib/release-packages.js';
 import * as VueI18n from 'vue-i18n';
 import { renderToString } from '@vue/server-renderer';
 import { parse, compileScript } from '@vue/compiler-sfc';
@@ -21,9 +22,9 @@ const renderer=Vue.createRenderer({createElement:node,createText:node,createComm
   insert(n,p){n.parent=p;p.children.push(n);},remove(){},parentNode:n=>n.parent,nextSibling:()=>null});
 function mountApp(){
   let connects=0;
-  const options=new Function('defineAsyncComponent','DeviceStorageCard','catalogueBaseline','proto','pixl','window',
+  const options=new Function('dfuReference','defineAsyncComponent','DeviceStorageCard','catalogueBaseline','proto','pixl','window',
     appDescriptor.script.content.replace(/^import .*$/gm,'').replace('export default','return'))(
-      loader=>({loader}),{name:'DeviceStorageCard'},baseline,{get_version:async()=>({status:0,data:{ver:'2.22.0-DE3.55'}})},
+      dfuReference,loader=>({loader}),{name:'DeviceStorageCard'},baseline,{get_version:async()=>({status:0,data:{ver:'2.22.0-DE3.55'}})},
       {get_connection_state:()=> 'disconnected',connect(){connects++;},disconnect(){}},
       { AllmiiboLanguage: { getMode: () => 'auto' } });
   const quiet={};

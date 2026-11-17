@@ -29,6 +29,26 @@ test('OLED Test 1 matches its own signed package and SH1106 build profile',()=>{
  assert.equal(identity.applicationHashVerified,false);
 });
 
+test('OLED trials match their signed packages without giving unknown trials a reference',()=>{
+ for (const [version,counter] of [['2.22.0-DE3.81-OLEDt2',82],['2.22.0-DE3.81-OLEDt3',83]]) {
+  assert.equal(firmwareBoard(version),'OLED');
+  assert.equal(displayBuildReference(version).controllerDriver,'SH1106');
+  const identity=diagnosticBuildIdentity({firmwareVersion:version,boot:{settingsCrcValid:true,applicationCounter:counter}});
+  assert.equal(identity.packageReference.applicationCounter,counter);
+  assert.equal(identity.packageReference.board,'OLED');
+  assert.equal(identity.packageReference.hardwareAcceptance,'pending');
+  assert.equal(identity.referenceRelation,'version-and-counter');
+  assert.equal(identity.applicationHashVerified,false);
+ }
+ const unknown='2.23.0-DE3.91-OLEDt10';
+ assert.equal(firmwareBoard(unknown),'OLED');
+ assert.equal(displayBuildReference(unknown),null);
+ const identity=diagnosticBuildIdentity({firmwareVersion:unknown});
+ assert.equal(identity.packageReference,null);
+ assert.equal(identity.referenceRelation,'no-package-reference');
+ for (const version of ['2.22.0-DE3.81-OLEDt0','2.22.0-DE3.81-OLEDt2x','not-an-OLED','2.22.0-OLEDt1']) assert.equal(firmwareBoard(version),null);
+});
+
 test('package hash and SourceID are references, never silently promoted to observed device identity',()=>{
  const value=report(),identity=value.buildIdentity;
  assert.equal(identity.referenceRelation,'version-and-counter');assert.equal(identity.applicationHashVerified,false);
@@ -78,6 +98,9 @@ test('unknown boot identity is explicitly noncomparable and reference claims fro
 test('bounded imports reject nonreports, v1-only, malformed v2, missing sections and oversized Unicode JSON',()=>{
  for(const value of ['', 'null','{}','not json',' '.repeat(MENU_RUN_FILE_LIMIT+1)])assert.throws(()=>parseMenuRun(value),{code:'MENU_RUN_INVALID'});
  for(const mutate of [data=>data.schema=2,data=>data.application='Unknown',data=>data.firmwareVersion='<script>',
+   data=>data.diagnosticSnapshot.completedAt='1999-01-01T00:00:00.000Z',
+   data=>data.diagnosticSnapshot.sections.menu.observedAt='2199-01-01T00:00:00.000Z',
+   data=>data.diagnosticSnapshot.sections.boot.observedAt='1999-01-01T00:00:00.000Z',
    data=>delete data.diagnosticSnapshot.sections.boot,data=>data.diagnosticSnapshot.sections.menu.data.schemaVersion=1,
    data=>data.diagnosticSnapshot.sections.menu.data.lastAppReturn.targetContext=-1]){
    const data=JSON.parse(JSON.stringify(report()));mutate(data);assert.throws(()=>parsed(data),{code:'MENU_RUN_INVALID'});
@@ -88,7 +111,7 @@ test('bounded imports reject nonreports, v1-only, malformed v2, missing sections
 
 export {report};
 
-for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650],['2.22.0-DE3.79',652],['2.22.0-DE3.80',653],['2.22.0-DE3.81',654]]) test(`App${counter} has package-specific acceptance and no on-device binary hash`,()=>{
+for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650],['2.22.0-DE3.79',652],['2.22.0-DE3.80',653],['2.22.0-DE3.81',654],['2.22.0-DE3.82',655],['2.22.0-DE3.83',656],['2.22.0-DE3.84',657]]) test(`App${counter} has package-specific acceptance and no on-device binary hash`,()=>{
  const {buildIdentity}=report(version,counter);
  assert.equal(buildIdentity.referenceRelation,'version-and-counter');
  assert.equal(buildIdentity.packageReference.applicationCounter,counter);

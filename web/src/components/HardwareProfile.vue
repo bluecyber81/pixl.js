@@ -12,13 +12,13 @@
       <p v-if="flash?.jedecId"><code>{{ flash.jedecId.map(hexByte).join(' ') }}</code>
         · {{ flashManufacturer(flash.jedecId) || label('Hersteller nicht zugeordnet', 'Unmapped manufacturer') }}
         · {{ flash.geometrySupported ? label('Kapazitätscode im Flash-Treiber bekannt', 'Capacity code recognized by the flash driver') : label('Kapazitätscode im Flash-Treiber unbekannt', 'Capacity code unknown to the flash driver') }}</p>
-      <p v-else-if="!supported">{{ label('Die Flash-Kennung ist ab LCD-Firmware DE3.78 verfügbar.', 'Flash ID is available with LCD firmware DE3.78 or later.') }}</p>
+      <p v-else-if="!supported">{{ label('Für diese Firmware ist keine Flash-ID-Abfrage hinterlegt.', 'No flash ID query is defined for this firmware.') }}</p>
       <p v-else-if="flashState === 'failed'">{{ label('Lesen der Kennung fehlgeschlagen.', 'Could not read the ID.') }}</p>
       <p v-else-if="flash || flashState === 'unavailable'">{{ label('Keine gültige Kennung verfügbar.', 'No valid ID available.') }}</p>
       <p v-else>{{ label('Die Kennung stammt aus der Speichererkennung beim Gerätestart.', 'The ID comes from the storage probe at device startup.') }}</p>
       <button v-if="supported" type="button" :disabled="!connected || blocked" @click="$emit('read')">{{ label('Flash-Kennung auslesen', 'Read flash ID') }}</button>
     </div>
-    <details>
+    <details v-if="firmwareBoard(firmwareVersion) !== 'OLED'">
       <summary>{{ label('Akkuetikett diesem Gerät zuordnen', 'Associate a battery label with this device') }}</summary>
       <p>{{ label('Stehen diese Angaben auf deinem Akku? Die Zuordnung gilt nur für dieses Gerät in diesem Browser und erscheint als Etikettangabe im Diagnoseexport.', 'Do these ratings appear on your battery? The association applies to this device in this browser and appears as a label reading in the diagnostic export.') }}</p>
       <label><input type="checkbox" :checked="labelConfirmed" :disabled="!connected || !profileReady" @change="associate"> LiPo 551520 · 180 mAh · {{ label('3,8 V · 0,684 Wh', '3.8 V · 0.684 Wh') }}</label>
@@ -30,7 +30,7 @@
 <script setup>
 import { flashManufacturer, hexByte, supportsFlashDiagnostics } from '../lib/flash-diagnostics.js';
 import { computed } from 'vue';
-import { displayBuildReference } from '../lib/hardware-profile.js';
+import { displayBuildReference, firmwareBoard } from '../lib/hardware-profile.js';
 const props = defineProps({locale:String, connected:Boolean, blocked:Boolean, firmwareVersion:String,
   boot:Object, storageBytes:Number, flash:Object, flashState:String, labelConfirmed:Boolean, profileReady:Boolean, profileError:Boolean});
 const emit = defineEmits(['read','associate']);

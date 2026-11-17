@@ -9,6 +9,10 @@ const bundledSelect = document.getElementById('bundled'), loadBundled = document
 const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = document.getElementById('bundled-info');
 const androidHandoff = document.getElementById('android-handoff'), androidLink = document.getElementById('android-dfu-link');
 const defaultBundledInfo = bundledInfo.textContent;
+// DFU advertising does not identify the display. This hint only restricts the LCD updater.
+const oledHandoff = new URLSearchParams(globalThis.location.hash?.slice(1)).getAll('board').includes('OLED');
+document.getElementById('lcd-updater').hidden = oledHandoff;
+document.getElementById('oled-update-notice').hidden = !oledHandoff;
 const language = globalThis.AllmiiboLanguage;
 const pageLocales = ['de_DE', 'en'];
 let english = language.getLocale(pageLocales) === 'en';
@@ -71,8 +75,8 @@ function selectedProfileMismatch(entry) {
 }
 function controls() {
     const loading = bundled?.loading === true;
-    fileInput.disabled = latestState.busy || latestState.loading || loading;
-    selectButton.disabled = !supported || !latestState.ready || loading;
+    fileInput.disabled = oledHandoff || latestState.busy || latestState.loading || loading;
+    selectButton.disabled = oledHandoff || !supported || !latestState.ready || loading;
     bundledSelect.disabled = latestState.busy || latestState.loading || loading || !bundled?.catalog.packages.length;
     const selected = bundled?.catalog.packages.find(entry => entry.id === bundledSelect.value);
     const mismatch = selectedProfileMismatch(selected);
@@ -189,9 +193,9 @@ const updater = new AllmiiboDfuUpdater({
     }
 });
 try {
-    bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
+    if (!oledHandoff) bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
         pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
-    if (bundled.catalog.packages.length) {
+    if (bundled?.catalog.packages.length) {
         bundledSelect.textContent = '';
         const placeholder = document.createElement('option');
         placeholder.value = '';
@@ -225,7 +229,7 @@ try {
 controls();
 window.addEventListener('focus', () => { refreshCapability(); controls(); });
 bundledSelect.addEventListener('change', () => {
-    if (latestState.busy) return;
+    if (oledHandoff || latestState.busy) return;
     fileInput.value = '';
     setText(bundledInfo, defaultBundledInfo, defaultBundledInfoEnglish);
     bundled?.invalidate();
@@ -234,12 +238,12 @@ bundledSelect.addEventListener('change', () => {
 loadBundled.addEventListener('click', () => { if (!latestState.busy && !loadBundled.disabled) { fileInput.value=''; return bundled?.load(bundledSelect.value); } });
 cancelBundled.addEventListener('click', () => bundled?.cancel());
 fileInput.addEventListener('change', () => {
-    if (latestState.busy) return;
+    if (oledHandoff || latestState.busy) return;
     if (bundled?.catalog.packages.length) {
         bundledSelect.value = '';
         setText(bundledInfo, defaultBundledInfo, defaultBundledInfoEnglish);
     }
     return bundled ? bundled.manual(fileInput.files?.[0]) : updater.setPackage(fileInput.files?.[0]);
 });
-selectButton.addEventListener('click', () => { if (!bundled?.loading) updater.selectDevice(); });
+selectButton.addEventListener('click', () => { if (!oledHandoff && !bundled?.loading) updater.selectDevice(); });
 window.addEventListener('beforeunload', event => { if (updater.busy) { event.preventDefault(); event.returnValue = ''; } });

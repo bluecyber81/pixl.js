@@ -1,6 +1,6 @@
 <template>
   <section class="display-photo" :aria-busy="loading">
-    <h3>{{ text.title }}</h3>
+    <h3>{{ displayBoard ? displayBoard + ' · ' : '' }}{{ text.title }}</h3>
     <p>{{ connected && !supported ? (remote ? text.remoteUnavailable : text.unavailable) : (remote ? text.remoteHint : text.hint) }}</p>
     <button v-if="!remote || supported" type="button" :disabled="!connected || !supported || blocked || loading" @click="capture">
       {{ loading ? text.loading : (remote ? text.refresh : text.capture) }}
@@ -19,7 +19,7 @@
         </div>
         <div class="photo-actions">
           <button type="button" :aria-pressed="rotated" @click="rotate">{{ text.rotate }}</button>
-          <a :href="photo" download="Allmiibo-LCD.png">{{ text.save }}</a>
+          <a :href="photo" :download="downloadName">{{ text.save }}</a>
         </div>
       </figcaption>
     </figure>
@@ -28,27 +28,30 @@
 
 <script>
 import { renderDisplayPhoto, supportsDisplayPhoto } from '../lib/display-photo.js';
+import { firmwareBoard } from '../lib/hardware-profile.js';
 const words = {
   de: {
-    title: 'LCD-Displayfoto', hint: 'Lies die aktuelle Anzeige der Bluetooth-Dateiübertragung direkt vom Gerät.',
-    remoteHint: 'Das Foto zeigt das Gerätemenü zum Zeitpunkt der Aufnahme. Tippe nach dem Navigieren auf „Displaybild aktualisieren“.',
-    remoteUnavailable: 'Für Displayfotos in der Fernbedienung benötigt das LCD-Allmiibo DE3.74 oder neuer.',
+    title: 'Displayfoto', hint: 'Lies die aktuelle Anzeige der Bluetooth-Dateiübertragung direkt vom Gerät.',
+    remoteHint: 'Tippe nach dem Navigieren auf „Displaybild aktualisieren“. Spiele können direkt auf das Display zeichnen. Währenddessen ist die Aufnahme eventuell nicht verfügbar.',
+    remoteUnavailable: 'Das Gerät meldet für diese Fernbedienungssitzung keine Displayfoto-Funktion.',
     refresh: 'Displaybild aktualisieren', captured: 'Aufnahme vom', scale: 'Bildgröße',
-    remoteBusy: 'Das Gerät kann gerade kein Displayfoto liefern. Du kannst die Aufnahme erneut anfordern.',
-    unavailable: 'Das Displayfoto ist auf LCD-Geräten ab DE3.66 verfügbar.', capture: 'Displayfoto aufnehmen',
-    loading: 'Bild wird gelesen …', save: 'PNG speichern', rotate: 'Um 180° drehen', preview: 'Aufnahme der LCD-Anzeige',
+    remoteBusy: 'Das Gerät kann gerade kein Displayfoto liefern. Falls ein Tiny-Spiel läuft, kehre am Gerät ins Menü zurück und fordere die Aufnahme erneut an.',
+    temporarilyUnavailable: 'Bild gerade nicht verfügbar. Beende gegebenenfalls das Spiel oder eine laufende Dateiübertragung und versuche es erneut.',
+    unavailable: 'Für diese Firmware ist im Dateimanager keine Displayfoto-Funktion hinterlegt.', unsupported: 'Das Gerät unterstützt diese Displayfoto-Abfrage nicht.', capture: 'Displayfoto aufnehmen',
+    loading: 'Bild wird gelesen …', save: 'PNG speichern', rotate: 'Um 180° drehen', preview: 'Aufnahme der Geräteanzeige',
     changed: 'Die Anzeige hat sich beim Lesen geändert. Sobald sie ruhig ist, kannst du erneut aufnehmen.',
     failed: 'Das Bild konnte nicht gelesen werden. Prüfe die Verbindung und versuche es erneut.',
     renderFailed: 'Der Browser konnte das PNG nicht erstellen. Versuche es erneut.'
   },
   en: {
-    title: 'LCD screenshot', hint: 'Read the current Bluetooth file transfer screen directly from the device.',
-    remoteHint: 'The picture shows the device menu at the time of capture. After navigating, click “Refresh screen”.',
-    remoteUnavailable: 'Remote screenshots require DE3.74 or later on the LCD Allmiibo.',
+    title: 'Screenshot', hint: 'Read the current Bluetooth file transfer screen directly from the device.',
+    remoteHint: 'After navigating, click “Refresh screen”. Games can draw directly to the display. A screenshot may be unavailable while they do.',
+    remoteUnavailable: 'The device did not advertise screenshots for this remote session.',
     refresh: 'Refresh screen', captured: 'Captured on', scale: 'Image scale',
-    remoteBusy: 'The device is busy and could not provide a screenshot. You can request a new picture.',
-    unavailable: 'Screenshots are available on LCD devices running DE3.66 or later.', capture: 'Capture screen',
-    loading: 'Reading screen …', save: 'Save PNG', rotate: 'Rotate 180°', preview: 'Captured LCD screen',
+    remoteBusy: 'The device is busy and could not provide a screenshot. If a Tiny game is running, return to the menu on the device and request a new picture.',
+    temporarilyUnavailable: 'The screen is temporarily unavailable. Close the game or finish any active file transfer and try again.',
+    unavailable: 'The file manager has no known screenshot support for this firmware.', unsupported: 'The device does not support this screenshot request.', capture: 'Capture screen',
+    loading: 'Reading screen …', save: 'Save PNG', rotate: 'Rotate 180°', preview: 'Captured device screen',
     changed: 'The screen changed during capture. Try again once it settles.',
     failed: 'Could not read the screen. Check the connection and try again.',
     renderFailed: 'The browser could not create the PNG. Please try again.'
@@ -60,6 +63,8 @@ export default {
   data() { return { pixels: null, photo: '', rotated: false, capturedAt: '', capturedFirmware: '', status: '', loading: false, serial: 0, preferredZoom: 3, maxZoom: 1 }; },
   computed: {
     text() { return this.locale?.startsWith('de') ? words.de : words.en; },
+    displayBoard() { return this.remote ? null : firmwareBoard(this.firmwareVersion); },
+    downloadName() { return 'Allmiibo-' + (this.displayBoard || 'Display') + '.png'; },
     supported() { return this.remote ? this.remoteSupported : supportsDisplayPhoto(this.firmwareVersion); },
     zoom() { return Math.min(this.preferredZoom, this.maxZoom); },
     captureLabel() {
@@ -123,7 +128,7 @@ export default {
       try {
         const pixels = await this.readPhoto(this.firmwareVersion);
         if (serial !== this.serial || !this.connected) return;
-        if (pixels === null) this.status = 'unavailable';
+        if (pixels === null) this.status = 'unsupported';
         else if (this.draw(pixels, false)) {
           this.capturedAt = new Date().toISOString();
           this.capturedFirmware = this.firmwareVersion;
@@ -132,6 +137,7 @@ export default {
       } catch (error) {
         if (serial === this.serial) {
           if (error?.code === 'LCD_CHANGED') this.status = 'changed';
+          else if (error?.code === 'DISPLAY_UNAVAILABLE') this.status = 'temporarilyUnavailable';
           else if (this.remote && ['REMOTE_BUSY','REMOTE_UNSAFE'].includes(error?.code)) this.status = 'remoteBusy';
           else this.status = 'failed';
         }

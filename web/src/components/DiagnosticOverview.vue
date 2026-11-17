@@ -20,16 +20,17 @@
       <summary>{{ pick('Geräteangaben und Testpaket-Referenz', 'Device report and test package reference') }}</summary>
       <dl class="detail-values">
         <div><dt>{{ pick('Ausgelesene Version / Anwendungszähler', 'Reported version / application counter') }}</dt><dd>{{ buildIdentity.observed.firmwareVersion || '—' }} / {{ number(buildIdentity.observed.applicationCounter) }}</dd></div>
-        <div><dt>{{ pick('Paketreferenz', 'Package reference') }}</dt><dd>{{ buildIdentity.packageReference.firmwareVersion }} / {{ buildIdentity.packageReference.applicationCounter }} · {{ buildIdentity.packageReference.board }}</dd></div>
+        <div v-if="buildIdentity.packageReference"><dt>{{ pick('Paketreferenz', 'Package reference') }}</dt><dd>{{ buildIdentity.packageReference.firmwareVersion }} / {{ buildIdentity.packageReference.applicationCounter }} · {{ buildIdentity.packageReference.board }}</dd></div>
         <div><dt>{{ pick('Vergleich der Angaben', 'Comparison of reported values') }}</dt><dd>{{ referenceRelation }}</dd></div>
-        <div><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
-        <div><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
+        <div v-if="buildIdentity.packageReference"><dt>SourceID · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.sourceId }}</dd></div>
+        <div v-if="buildIdentity.packageReference"><dt>App-BIN SHA-256 · {{ pick('Paketreferenz', 'package reference') }}</dt><dd>{{ buildIdentity.packageReference.applicationBinSha256 }}</dd></div>
       </dl>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'startup-and-system-readback-on-one-lcd'">{{ pick('Auf einem LCD bestätigt: App-Start, Z20-Bootbereich und S112 7.3.0. Der Gerätetest zur Wiederaufnahme eines unterbrochenen Handy-Updates steht aus.', 'One LCD confirmed application startup, the Z20 boot region and S112 7.3.0. Recovery from an interrupted phone update still awaits an on-device test.') }}</p>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'owner-reported-flash-and-initial-operation'">{{ pick('Der Besitzer meldet, dass das geflashte LCD-Gerät läuft. Die Wiederaufnahme nach einem unterbrochenen Android-Update ist am Gerät noch offen.', 'The owner reports that the LCD device runs after flashing. Recovery after an interrupted Android update still awaits a device test.') }}</p>
-      <p v-if="buildIdentity.packageReference.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
-      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Die Firmware liefert keinen SourceID- oder App-Hashmesswert. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. Firmware provides no measured SourceID or application hash. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
+      <p v-if="buildIdentity.packageReference?.ownerReport">{{ pick('Am 17.11.2026 bestätigte ein Besitzer, dass DE3.84 / App657 auf seinem LCD mit Z21 im praktischen Einsatz funktioniert. Die Wiederaufnahme eines unterbrochenen Handy-Updates wurde nicht einzeln dokumentiert.', 'On 17 November 2026 an owner reported successful practical use of DE3.84 / App657 on their LCD with Z21. Resuming an interrupted phone update was not documented separately.') }} <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1">{{ pick('Testrelease', 'Test release') }}</a></p>
+      <p v-else-if="buildIdentity.packageReference?.hardwareAcceptance === 'pending'">{{ pick('Die Hardwareprüfung dieser Paketreferenz steht aus.', 'Hardware acceptance for this package reference is pending.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'startup-and-system-readback-on-one-lcd'">{{ pick('Auf einem LCD bestätigt: App-Start, Bootbereich und S112 7.3.0. Der Gerätetest zur Wiederaufnahme eines unterbrochenen Handy-Updates steht aus.', 'One LCD confirmed application startup, the boot region and S112 7.3.0. Recovery from an interrupted phone update still awaits an on-device test.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'owner-reported-flash-and-initial-operation'">{{ pick('Der Besitzer meldet, dass das geflashte LCD-Gerät läuft. Die Wiederaufnahme nach einem unterbrochenen Android-Update ist am Gerät noch offen.', 'The owner reports that the LCD device runs after flashing. Recovery after an interrupted Android update still awaits a device test.') }}</p>
+      <p v-if="buildIdentity.packageReference?.hardwareAcceptance === 'first-device-run-reported'">{{ pick('Ein erster Gerätelauf ist bestätigt. Die vollständige Funktionsprüfung steht aus.', 'An initial device test was reported. Full functional testing is pending.') }}</p>
+      <p class="scope-note">{{ pick('Signiertes Anwendungsupdate. Der Hash der laufenden App ist ungemessen. Gleiche Version und gleicher Zähler beweisen keine identischen Programmbytes. Keine eindeutige Gerätekennung im Export.', 'Signed application update. The hash of the running application is unmeasured. Matching version and counter do not prove identical application bytes. No unique device identifier is exported.') }}</p>
     </details>
     <div class="diagnostic-grid" :aria-busy="loading">
       <article v-for="card in cards" :key="card.id" class="diagnostic-card" :class="'state-' + card.state" :data-section="card.id">
@@ -37,6 +38,7 @@
         <p class="section-time">{{ t.observed }}: <time v-if="card.observedAt" :datetime="card.observedAt">{{ displayTime(card.observedAt) }}</time><span v-else>—</span></p>
         <template v-if="card.state === 'available'">
           <dl class="key-values"><div v-for="row in card.summary" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
+          <IdentifierCopy v-if="card.id === 'build' && buildIdentity.observed.sourceId" source :id="buildIdentity.observed.sourceId" :de="de" />
           <p v-if="card.sampleNote" class="sample-note">{{ card.sampleNote }}</p>
           <details v-if="card.mount" class="technical-details mount-profile"><summary>{{ card.mount.title }}</summary>
             <dl class="detail-values"><div v-for="row in card.mount.rows" :key="row[0]"><dt>{{ row[0] }}</dt><dd>{{ row[1] }}</dd></div></dl>
@@ -58,11 +60,13 @@
 </template>
 <script setup>
 import { computed } from 'vue';
+import IdentifierCopy from './IdentifierCopy.vue';
 import { diagnosticBuildIdentity } from '../lib/firmware-build-reference.js';
 import { normalizeRuntimeDiagnostics, memorySampleEvidenceKey } from '../lib/device-info.js';
 import { infoEnglish, infoGerman } from '../i18n/info.js';
 import { readTimeEstimate, formatReadDuration } from '../lib/read-time-estimate.js';
 import { diagnosticSectionKeys, normalizeDiagnosticSectionData, normalizeStorageDiagnostics } from '../lib/diagnostic-snapshot.js';
+import { normalizeLcdBuildDiagnostics, LCD_BUILD_DIAGNOSTICS_VERSION } from '../lib/lcd-build-diagnostics.js';
 import { normalizeFlashDiagnostics, flashManufacturer, hexByte, supportsFlashDiagnostics } from '../lib/flash-diagnostics.js';
 import { normalizeBootDiagnostics, formatHexWord } from '../lib/boot-diagnostics.js';
 import { formatBatteryVoltage, normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
@@ -106,8 +110,9 @@ const t = computed(() => ({
   source: pick('Quelle', 'Source'), buttons: pick('Tastenereignisse der Einstellungsdiagnose', 'Button events from settings diagnostics'),
   events: { press: pick('Drücken', 'Press'), release: pick('Loslassen', 'Release'), short: pick('Kurz', 'Short'), long: pick('Lang', 'Long'), repeat: pick('Wiederholt', 'Repeat') },
 }));
-const buildIdentity = computed(() => diagnosticBuildIdentity({firmwareVersion: props.firmwareVersion, boot: validSnapshot.value?.sections.boot?.data}));
+const buildIdentity = computed(() => diagnosticBuildIdentity({firmwareVersion: props.firmwareVersion, boot: validSnapshot.value?.sections.boot?.data, build:validSnapshot.value?.sections.build?.data}));
 const referenceRelation = computed(() => ({
+  'no-package-reference': pick('Für diese OLED-Version ist keine Paketreferenz hinterlegt.', 'No package reference is available for this OLED version.'),
   unknown: pick('Version nicht erfasst', 'Version not recorded'),
   'different-version': pick('Andere gemeldete Version', 'Different reported version'),
   'different-counter': pick('Gleiche Version, anderer Zähler', 'Same version, different counter'),
@@ -198,7 +203,7 @@ const power = data => ({
     [pick('Eingestellte Ruhezeit', 'Configured sleep time'), data.sampleCollected ? `${number(data.configuredSleepSeconds)} s` : t.value.absent]],
   details: [[pick('Resetregister beim Anwendungsstart', 'Reset register at application start'), hex(data.resetReasonRaw)],
     [pick('Batteriestichprobe vorhanden', 'Battery sample collected'), yesNo(data.sampleCollected)],
-    [pick('LiPo-Modus / Ladeanzeige', 'LiPo mode / charge indication'), `${data.sampleCollected ? yesNo(data.lipoMode) : t.value.absent} / ${data.voltageValid ? yesNo(data.chargingActive) : t.value.absent}`]],
+    [pick('LiPo-Modus / Ladeanzeige', 'LiPo mode / charge indication'), `${data.sampleCollected ? yesNo(data.lipoMode) : t.value.absent} / ${data.voltageValid && data.lipoMode ? yesNo(data.chargingActive) : t.value.absent}`]],
   note: pick('Gespeicherte Register-/Batteriewerte, keine aktuelle USB-Erkennung und kein gesicherter Nachweis der Aufwachursache.', 'Cached register/battery values, not current USB detection or proven wake-cause diagnosis.'),
 });
 function drives(data) {
@@ -307,8 +312,24 @@ function firstMenu(data) {
 }
 const includeMenu = computed(() => props.loading ? props.progress?.total >= diagnosticSectionKeys(true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'menu') : supportsMenuDiagnostics(props.firmwareVersion));
-const includeFlash = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true, true).length
+const includeFlash = computed(() => props.loading ? props.progress?.total >= diagnosticSectionKeys(true, true).length
   : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections, 'flash') : supportsFlashDiagnostics(props.firmwareVersion));
+const includeBuild = computed(() => props.loading ? props.progress?.total === diagnosticSectionKeys(true,true,true).length
+  : validSnapshot.value ? Object.hasOwn(validSnapshot.value.sections,'build') : props.firmwareVersion === LCD_BUILD_DIAGNOSTICS_VERSION);
+function buildRows(data) {
+  const fault = data.previousFault;
+  const kinds = {'nordic-sdk':'Nordic SDK',hardfault:'HardFault','libc-exit':'libc _exit'};
+  const comparison = buildIdentity.value.firmwareReportedSourceRelation;
+  return {summary:[
+    [pick('Gemeldetes Buildprofil','Reported build profile'), data.board],
+    [pick('Fehlernotiz vom vorigen Lauf','Fault note from previous run'), fault ? kinds[fault.kind] : pick('Keine gültige Notiz','No valid note')]],
+    details:[[pick('Gemeldete SourceID','Reported SourceID'),data.sourceId],
+      [pick('SourceID und Board laut Paketreferenz','SourceID and board in reference package'),
+        comparison === 'matches-package' ? pick('Passend','Match') : comparison === 'differs-from-package' ? pick('Abweichung','Mismatch') : t.value.absent],
+      ...(fault?.kind === 'nordic-sdk' ? [['SDK ID',hex(fault.sdkId)],['PC',fault.pc === null ? t.value.absent : hex(fault.pc)]] : [])],
+    note:pick('SourceID und Boardprofil stammen aus der laufenden Firmware. Eine unabhängige Platinenerkennung fehlt. Die Fehlernotiz vom vorigen Lauf enthält keine eigene Buildkennung. Bei Stromverlust kann sie verloren gehen.',
+      'The SourceID and board profile come from the running firmware. Physical board identity is unverified. The previous fault note has no build identity of its own. Power loss can clear the note.')};
+}
 function flashRows(data) {
   return {summary: [['JEDEC', data.jedecId?.map(hexByte).join(' ') || t.value.absent],
     [pick('Herstellerkennung', 'Manufacturer code'), flashManufacturer(data.jedecId) || '—']],
@@ -324,6 +345,7 @@ const cards = computed(() => [
   section('power', pick('Strom und Ruhezeit', 'Power and sleep'), normalizePowerDiagnostics, power),
   section('boot', pick('Chip, Bootloader und SoftDevice', 'Chip, bootloader and SoftDevice'), normalizeBootDiagnostics, boot),
   section('ui', pick('Tasten in den Einstellungen', 'Buttons in settings'), normalizeUiDiagnostics, ui),
+  ...(includeBuild.value ? [section('build',pick('Firmwarekennung und Fehlernotiz','Firmware identity and fault note'),normalizeLcdBuildDiagnostics,buildRows)] : []),
   ...(includeFlash.value ? [section('flash', pick('SPI-Flash-Kennung', 'SPI flash ID'), normalizeFlashDiagnostics, flashRows)] : []),
   ...(includeMenu.value ? [section('menu', pick('Hauptmenü: erster Start und Rückkehr', 'Main menu: first launch and return'), normalizeMenuDiagnostics, firstMenu)] : []),
 ]);
@@ -331,7 +353,7 @@ const activeProgress = computed(() => props.loading && props.connected ? props.p
 const timing = computed(() => readTimeEstimate(activeProgress.value, Math.max(props.readClock, activeProgress.value.updatedAt)));
 const progressLabel = computed(() => {
   const { completed, total } = activeProgress.value;
-  const key = diagnosticSectionKeys(includeMenu.value, includeFlash.value)[completed];
+  const key = diagnosticSectionKeys(includeMenu.value, includeFlash.value,includeBuild.value)[completed];
   const name = cards.value.find(card => card.id === key)?.title;
   return name ? pick(`Bereich ${completed + 1} von ${total} · ${name}`, `Section ${completed + 1} of ${total} · ${name}`)
     : pick('Abfrage wird abgeschlossen …', 'Finishing the read …');

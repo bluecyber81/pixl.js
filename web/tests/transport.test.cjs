@@ -14,7 +14,7 @@ function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.j
     const source = fs.readFileSync(path.join(sourceRoot, name), 'utf8');
     const exports = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
     const code = source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
-    const context = { ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
+    const context = { ...require(path.join(sourceRoot,'hardware-profile.js')), ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
         // Production isolates consumer callback failures. Assertions inside a
         // mocked UI callback must nevertheless fail this regression harness.
         console: { log() {}, error(_message,error) { if(error?.code==='ERR_ASSERTION')throw error; } }, module: { exports: {} }, ...bindings };
@@ -112,10 +112,13 @@ test('startup extension is selected by firmware, retries only a rejected option 
    assert.deepEqual(f.writes[1],[9,0,0,0]);f.rx(9,startupPacket());assert.equal((await p).schemaVersion,1);
    assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
  }
- const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.61');
- const bytes=new Uint8Array(40);bytes.set(startupPacket());bytes.set([2,40,63,3],4);bytes[32]=12;bytes[36]=19;
- f.rx(9,bytes.subarray(0,16),0x8000);f.rx(9,bytes.subarray(16,32),0x8001);f.rx(9,bytes.subarray(32),2);
- assert.deepEqual(Array.from((await p).storageElapsedMilliseconds),[12,19]);assert.equal(f.writes.length,1);
+ for(const version of ['2.22.0-DE3.61','2.22.0-DE3.81-OLEDt3']){
+   const f=protocolFixture(),p=f.api.get_startup_diagnostics(version);
+   assert.deepEqual(f.writes,[[9,0,0,0,1]]);
+   const bytes=new Uint8Array(40);bytes.set(startupPacket());bytes.set([2,40,63,3],4);bytes[32]=12;bytes[36]=19;
+   f.rx(9,bytes.subarray(0,16),0x8000);f.rx(9,bytes.subarray(16,32),0x8001);f.rx(9,bytes.subarray(32),2);
+   assert.deepEqual(Array.from((await p).storageElapsedMilliseconds),[12,19]);assert.equal(f.writes.length,1);
+ }
 });
 test('optional startup request is explicit, serialized after earlier work and exact32B',async()=>{
  const f=protocolFixture();assert.equal(f.writes.length,0);
@@ -146,6 +149,32 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
  }
  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.62'),rejected=assert.rejects(p);
  f.bus.emit('ble_disconnected');await rejected;f.rx(9,packet);assert.equal(f.writes.length,1);
+});
+test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
+ const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
+ packet[40]=23;packet.set([8,6,0,1],80);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84']) {
+  const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
+  assert.deepEqual(f.writes,[[9,0,0,0,3]]);
+  for(let offset=0,index=0;offset<84;offset+=16,index++) f.rx(9,packet.subarray(offset,offset+16),offset+16<84?0x8000|index:index);
+  assert.equal((await p).mount.cacheSlotsFilled,6);
+ }
+ for(const status of [1,255]){
+  const f=protocolFixture(), p=f.api.get_startup_diagnostics('2.22.0-DE3.82');
+  f.rx(9,[],0,status);await flush();
+  assert.deepEqual(f.writes,[[9,0,0,0,3],[9,0,0,0,2]]);
+  const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);
+  assert.equal((await p).schemaVersion,3);
+ }
+ for(const version of ['2.22.0-DE3.81','2.22.0-DE3.85']){
+  const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
+  assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
+ }
+ for(const length of [0,79,80,83,85]){
+  const f=protocolFixture(),rejected=assert.rejects(f.api.get_startup_diagnostics('2.22.0-DE3.84'));
+  const malformed=new Uint8Array(length);malformed.set(packet.subarray(0,length));f.rx(9,malformed);
+  await rejected;assert.deepEqual(f.writes,[[9,0,0,0,3]]);
+ }
 });
 test('unsupported startup is not a device fault, does not clear an earlier error and leaves queue usable',async()=>{
  const f=protocolFixture(),p=f.api.get_startup_diagnostics();f.rx(9,[],0,255);
