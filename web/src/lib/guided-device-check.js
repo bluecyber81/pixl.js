@@ -1,5 +1,5 @@
 import { cleanLcdObservations, summarizeLcdObservations } from './guided-lcd-checks.js';
-import { normalizeDiagnosticSnapshot } from './diagnostic-snapshot.js';
+import { normalizeDiagnosticSnapshot, snapshotTimesInRange } from './diagnostic-snapshot.js';
 import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 
 export const GUIDED_MAX_BYTES = 1024 * 1024;
@@ -127,11 +127,7 @@ function cleanEvidence(value) {
   const version = value.buildIdentity.observed.firmwareVersion;
   if (!firmwareVersion(version)) throw invalid();
   const result = captureDeviceEvidence(value.snapshot, version);
-  if (!result || !sameKnownValue(result.snapshot,value.snapshot)) throw invalid();
-  // Section receipt times must belong to this read; no future/older read is spliced in.
-  for (const section of Object.values(result.snapshot.sections)) {
-    if (section.observedAt !== null && (section.observedAt < result.snapshot.startedAt || section.observedAt > result.snapshot.completedAt)) throw invalid();
-  }
+  if (!result || !sameKnownValue(result.snapshot,value.snapshot) || !snapshotTimesInRange(result.snapshot)) throw invalid();
   return result;
 }
 

@@ -170,6 +170,11 @@ test('qualified LCD versions request cache-slot detail; rejected optional select
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
  }
+ for(const length of [0,79,80,83,85]){
+  const f=protocolFixture(),rejected=assert.rejects(f.api.get_startup_diagnostics('2.22.0-DE3.84'));
+  const malformed=new Uint8Array(length);malformed.set(packet.subarray(0,length));f.rx(9,malformed);
+  await rejected;assert.deepEqual(f.writes,[[9,0,0,0,3]]);
+ }
 });
 test('unsupported startup is not a device fault, does not clear an earlier error and leaves queue usable',async()=>{
  const f=protocolFixture(),p=f.api.get_startup_diagnostics();f.rx(9,[],0,255);

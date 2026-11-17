@@ -117,6 +117,12 @@ export async function collectDiagnosticSnapshot({ readers = {}, isCurrent = () =
   return freeze({ schemaVersion: 1, startedAt, completedAt: time(), sections });
 }
 
+// Importers use the browser receipt times to associate sections with one read.
+export function snapshotTimesInRange({startedAt, completedAt, sections}) {
+  return startedAt <= completedAt && Object.values(sections).every(({observedAt}) =>
+    observedAt === null || (observedAt >= startedAt && observedAt <= completedAt));
+}
+
 export function normalizeDiagnosticSnapshot(value) {
   if (!value || value.schemaVersion !== 1 || !timestamp(value.startedAt) || !timestamp(value.completedAt) ||
       !value.sections || typeof value.sections !== 'object') return null;

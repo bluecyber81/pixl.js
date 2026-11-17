@@ -1,4 +1,4 @@
-import { normalizeDiagnosticSnapshot } from './diagnostic-snapshot.js';
+import { normalizeDiagnosticSnapshot, snapshotTimesInRange } from './diagnostic-snapshot.js';
 import { diagnosticBuildIdentity } from './firmware-build-reference.js';
 export const MENU_RUN_FILE_LIMIT = 256 * 1024;
 const bad = () => Object.assign(new Error('Choose a complete Allmiibo diagnostic JSON containing PXMI v2.'), {code:'MENU_RUN_INVALID'});
@@ -9,7 +9,7 @@ export function parseMenuRun(text) {
   let data;try{data=JSON.parse(text);}catch{throw bad();}
   if (!data || data.schema !== 1 || data.application !== 'Allmiibo Dateimanager' || (data.firmwareVersion !== null && !version(data.firmwareVersion))) throw bad();
   const snapshot=normalizeDiagnosticSnapshot(data.diagnosticSnapshot), menu=snapshot?.sections.menu;
-  if (!snapshot || menu?.state !== 'available' || menu.data.schemaVersion !== 2) throw bad();
+  if (!snapshot || menu?.state !== 'available' || menu.data.schemaVersion !== 2 || !snapshotTimesInRange(snapshot)) throw bad();
   // Imported identity claims and reference hashes are not observations. Derive
   // only the allowlisted fields already validated by the snapshot decoder.
   const identity=diagnosticBuildIdentity({firmwareVersion:data.firmwareVersion,boot:snapshot.sections.boot?.data,build:snapshot.sections.build?.data});

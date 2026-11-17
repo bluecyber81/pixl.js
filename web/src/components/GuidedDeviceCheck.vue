@@ -111,6 +111,7 @@
       <p>{{ pick('Für den Vergleich verbinde dasselbe Gerät erneut. Lies die Diagnose nach den Tests nochmals aus und übernimm sie hier.', 'To compare, reconnect the same device. Read the diagnostics again after the tests and attach them here.') }}</p>
       <button type="button" :disabled="!canCaptureAfter" @click="after = candidate">{{ pick('Nachher-Aufnahme übernehmen', 'Attach after snapshot') }}</button>
       <time v-if="after" :datetime="after.snapshot.completedAt">{{ dateLabel(after.snapshot.completedAt) }}</time>
+      <GuidedSnapshotComparison v-if="before && after" :locale="locale" :before="before" :after="after" />
       <p v-if="!before && count">{{ pick('Du kannst deine Beobachtungen auch ohne Diagnoseaufnahmen speichern.', 'You can save your observations without diagnostic snapshots.') }}</p>
       <label class="source-prefix">{{ pick('Source-ID vom Display (optional)', 'Source ID from the display (optional)') }}
         <span>{{ pick('Unter Einstellungen → Version stehen zwölf Hexzeichen. Übertrage sie ohne Klammern.', 'Settings → Version shows twelve hexadecimal characters. Enter them without brackets.') }}</span>
@@ -131,6 +132,7 @@
 
 <script setup>
 import GuidedLcdChecks from './GuidedLcdChecks.vue';
+import GuidedSnapshotComparison from './GuidedSnapshotComparison.vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { version as webVersion } from '../../package.json';
 import { canAttachAfter, captureDeviceEvidence, compareManualSourcePrefix, createGuidedReport, expectedReturn, observationKey, parseGuidedDraft, parseGuidedReport, recordDeviceObservation, routes, serializeGuidedDraft, summarizeGuidedObservations, GUIDED_MAX_BYTES } from '../lib/guided-device-check.js';

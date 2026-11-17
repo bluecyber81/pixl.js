@@ -98,6 +98,9 @@ test('unknown boot identity is explicitly noncomparable and reference claims fro
 test('bounded imports reject nonreports, v1-only, malformed v2, missing sections and oversized Unicode JSON',()=>{
  for(const value of ['', 'null','{}','not json',' '.repeat(MENU_RUN_FILE_LIMIT+1)])assert.throws(()=>parseMenuRun(value),{code:'MENU_RUN_INVALID'});
  for(const mutate of [data=>data.schema=2,data=>data.application='Unknown',data=>data.firmwareVersion='<script>',
+   data=>data.diagnosticSnapshot.completedAt='1999-01-01T00:00:00.000Z',
+   data=>data.diagnosticSnapshot.sections.menu.observedAt='2199-01-01T00:00:00.000Z',
+   data=>data.diagnosticSnapshot.sections.boot.observedAt='1999-01-01T00:00:00.000Z',
    data=>delete data.diagnosticSnapshot.sections.boot,data=>data.diagnosticSnapshot.sections.menu.data.schemaVersion=1,
    data=>data.diagnosticSnapshot.sections.menu.data.lastAppReturn.targetContext=-1]){
    const data=JSON.parse(JSON.stringify(report()));mutate(data);assert.throws(()=>parsed(data),{code:'MENU_RUN_INVALID'});

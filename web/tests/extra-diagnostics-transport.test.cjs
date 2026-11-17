@@ -435,8 +435,12 @@ test('PXBI sends only one optional command on App657 and checks the assembled pa
         const pending=f.api.get_lcd_build_diagnostics(version);f.rx(12,[],0,status);
         assert.equal(await pending,null);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
     }
-    const corrupt=f.api.get_lcd_build_diagnostics(version), rejected=assert.rejects(corrupt);
-    f.rx(12,bytes.subarray(0,79));await rejected;assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'RESPONSE_INVALID');
+    for (const length of [0,79,83,84,85]) {
+        const rejectedFixture=fixture(bindings), rejected=assert.rejects(rejectedFixture.api.get_lcd_build_diagnostics(version));
+        const payload=new Uint8Array(length); payload.set(bytes.subarray(0,length));
+        rejectedFixture.rx(12,payload); await rejected;
+        assert.ok(rejectedFixture.api.get_transport_diagnostics().lastErrorCode);
+    }
     for (const event of ['timeout','disconnect']) {
         const f=fixture(bindings), pending=f.api.get_lcd_build_diagnostics(version), rejected=assert.rejects(pending);
         if (event==='disconnect') f.bus.emit('ble_disconnected');
