@@ -164,15 +164,17 @@ void runtime_diag_heap_sample(uint32_t total, uint32_t free, uint32_t largest) {
     increment32(&state.samples);
     CRITICAL_REGION_EXIT();
 }
-/* Ten 32-bit words, serialized explicitly. Bit31 is internal/in-progress and
+/* Cached mount outcome and cache dimensions, serialized explicitly. Bit31 is internal/in-progress and
  * is never transmitted. Collection is synchronous foreground work, as is the
  * query; interrupts neither update nor consume these counters. */
 static struct {
     uint32_t flags;
     int32_t result;
     uint32_t configure_ms, scan_ms, reads, bytes, hits, misses, bypass, errors;
+    uint8_t slots, filled;
+    uint16_t page_bytes;
 } mount_state;
-_Static_assert(sizeof(mount_state) == 40, "bounded mount diagnostics");
+_Static_assert(sizeof(mount_state) == 44, "bounded mount diagnostics");
 #define MOUNT_RECORDING (UINT32_C(1) << 31)
 static void mount_add(uint32_t *value, uint32_t amount) {
     if (UINT32_MAX - *value < amount) {
@@ -188,12 +190,16 @@ void runtime_diag_mount_configured(uint32_t milliseconds) {
     if (!(mount_state.flags & MOUNT_RECORDING)) return;
     mount_state.configure_ms = milliseconds;
 }
-void runtime_diag_mount_complete(int32_t result, uint32_t scan_ms, bool cache) {
+void runtime_diag_mount_complete(int32_t result, uint32_t scan_ms, uint8_t slots,
+                                 uint8_t filled, uint16_t page_bytes) {
     if (!(mount_state.flags & MOUNT_RECORDING)) return;
     mount_state.result = result;
     mount_state.scan_ms = scan_ms;
+    mount_state.slots = slots;
+    mount_state.filled = filled;
+    mount_state.page_bytes = page_bytes;
     mount_state.flags = (mount_state.flags & 8u) | 1u | 16u |
-                        (result == 0 ? 2u : 0u) | (cache ? 4u : 0u);
+                        (result == 0 ? 2u : 0u) | (slots ? 4u : 0u);
 }
 void runtime_diag_mount_cache(bool hit, bool eligible) {
     if (!(mount_state.flags & MOUNT_RECORDING)) return;
@@ -247,6 +253,16 @@ bool runtime_diag_startup_mount_snapshot(uint8_t *out, size_t capacity) {
     put32(out + 68, mount_state.misses);
     put32(out + 72, mount_state.bypass);
     put32(out + 76, mount_state.errors);
+    return true;
+}
+bool runtime_diag_startup_cache_snapshot(uint8_t *out, size_t capacity) {
+    if (capacity < STARTUP_CACHE_DIAG_SIZE || !runtime_diag_startup_mount_snapshot(out, capacity))
+        return false;
+    out[4] = 4;
+    out[5] = STARTUP_CACHE_DIAG_SIZE;
+    out[80] = mount_state.slots;
+    out[81] = mount_state.filled;
+    put16(out + 82, mount_state.page_bytes);
     return true;
 }
 bool runtime_diag_power_snapshot(uint8_t *out, size_t capacity) {

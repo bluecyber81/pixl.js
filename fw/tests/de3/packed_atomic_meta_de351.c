@@ -8,7 +8,9 @@ void runtime_diag_vfs_error(uint8_t command,int32_t error){(void)command;(void)e
 /* Diagnostics are outside this old atomic-data test's scope. */
 void runtime_diag_mount_begin(void){}
 void runtime_diag_mount_configured(uint32_t ms){(void)ms;}
-void runtime_diag_mount_complete(int32_t result,uint32_t ms,bool cache){(void)result;(void)ms;(void)cache;}
+void runtime_diag_mount_complete(int32_t result,uint32_t ms,uint8_t slots,uint8_t used,uint16_t bytes){
+    (void)result;(void)ms;(void)slots;(void)used;(void)bytes;
+}
 void runtime_diag_mount_cache(bool hit,bool eligible){(void)hit;(void)eligible;}
 void runtime_diag_mount_read(uint32_t bytes,bool success){(void)bytes;(void)success;}
 

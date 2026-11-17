@@ -48,7 +48,7 @@ int main(void) {
  assert(!runtime_diag_startup_mount_snapshot(NULL,0));
  runtime_diag_mount_begin(); runtime_diag_mount_configured(1);
  runtime_diag_mount_cache(true,true); runtime_diag_mount_read(256,true);
- runtime_diag_mount_complete(0,2,true);
+ runtime_diag_mount_complete(0,2,8,4,256);
  puts("PASS");return 0;
 }
 ''')

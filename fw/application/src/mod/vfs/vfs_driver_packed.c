@@ -209,14 +209,16 @@ static int32_t packed_mount(void) {
   int32_t r = configure();
   runtime_diag_mount_configured(mount_elapsed_ms(started));
   if (r) {
-    runtime_diag_mount_complete(r, 0, false);
+    runtime_diag_mount_complete(r, 0, 0, 0, 0);
     return r;
   }
   mount_pages_t *pages = mount_cache_alloc();
   mount_pages = pages;
   started = mount_tick();
   r = pfs_mount(store);
-  runtime_diag_mount_complete(map_error(r), mount_elapsed_ms(started), pages != NULL);
+  runtime_diag_mount_complete(map_error(r), mount_elapsed_ms(started),
+                              pages ? pages->capacity : 0, pages ? pages->used : 0,
+                              pages ? sizeof(pages->page[0]) : 0);
   mount_pages = NULL;
   if (pages) mui_mem_free(pages);
   if (r)

@@ -11,6 +11,7 @@
 #define STARTUP_DIAG_SIZE 32u
 #define STARTUP_STORAGE_DIAG_SIZE 40u
 #define STARTUP_MOUNT_DIAG_SIZE 80u
+#define STARTUP_CACHE_DIAG_SIZE 84u
 enum startup_storage_checkpoint { STARTUP_MOUNT_READY, STARTUP_JOURNAL_READY };
 
 /* Milliseconds since the application starts storage initialization. This does
@@ -44,10 +45,12 @@ void runtime_diag_storage_mark(enum startup_storage_checkpoint step, uint32_t el
 /* Foreground-only latest actual mount; no file contents or persistent writes. */
 void runtime_diag_mount_begin(void);
 void runtime_diag_mount_configured(uint32_t milliseconds);
-void runtime_diag_mount_complete(int32_t result, uint32_t scan_ms, bool cache);
+void runtime_diag_mount_complete(int32_t result, uint32_t scan_ms, uint8_t slots,
+                                 uint8_t filled, uint16_t page_bytes);
 void runtime_diag_mount_cache(bool hit, bool eligible);
 void runtime_diag_mount_read(uint32_t bytes, bool success);
 bool runtime_diag_startup_mount_snapshot(uint8_t *out, size_t capacity);
+bool runtime_diag_startup_cache_snapshot(uint8_t *out, size_t capacity);
 void runtime_diag_boot_capture(uint32_t reset_reason);
 void runtime_diag_startup_mark(unsigned phase, uint32_t elapsed_ms);
 bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity, bool detail);
@@ -65,10 +68,15 @@ static inline void runtime_diag_stack_init(void) {}
 static inline void startup_storage_checkpoint(enum startup_storage_checkpoint step) { (void)step; }
 static inline void runtime_diag_mount_begin(void) {}
 static inline void runtime_diag_mount_configured(uint32_t ms) { (void)ms; }
-static inline void runtime_diag_mount_complete(int32_t r, uint32_t ms, bool cache) { (void)r; (void)ms; (void)cache; }
+static inline void runtime_diag_mount_complete(int32_t r, uint32_t ms, uint8_t slots, uint8_t filled, uint16_t bytes) {
+    (void)r; (void)ms; (void)slots; (void)filled; (void)bytes;
+}
 static inline void runtime_diag_mount_cache(bool hit, bool eligible) { (void)hit; (void)eligible; }
 static inline void runtime_diag_mount_read(uint32_t bytes, bool success) { (void)bytes; (void)success; }
 static inline bool runtime_diag_startup_mount_snapshot(uint8_t *out, size_t capacity) {
+    (void)out; (void)capacity; return false;
+}
+static inline bool runtime_diag_startup_cache_snapshot(uint8_t *out, size_t capacity) {
     (void)out; (void)capacity; return false;
 }
 static inline void runtime_diag_boot_capture(uint32_t reason) { (void)reason; }

@@ -176,13 +176,21 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     df_frame_t out = {0};
     OUT_FRAME_NO_DATA(out, DF_PROTO_CMD_INFO_STARTUP_DIAGNOSTIC, DF_STATUS_ERR);
-    bool detail = evt->df->length == 1 && evt->df->data[0] == 1;
-    bool mount = evt->df->length == 1 && evt->df->data[0] == 2;
-    if ((!evt->df->length || detail || mount) && !evt->df->status && !evt->df->chunk &&
-        (mount ? runtime_diag_startup_mount_snapshot(out.data, sizeof(out.data))
-               : runtime_diag_startup_snapshot(out.data, sizeof(out.data), detail))) {
-        out.status = DF_STATUS_OK;
-        out.length = mount ? STARTUP_MOUNT_DIAG_SIZE : detail ? STARTUP_STORAGE_DIAG_SIZE : STARTUP_DIAG_SIZE;
+    if (!evt->df->status && !evt->df->chunk) {
+        bool ready = false;
+        if (!evt->df->length)
+            ready = runtime_diag_startup_snapshot(out.data, sizeof(out.data), false);
+        else if (evt->df->length == 1) {
+            switch (evt->df->data[0]) {
+                case 1: ready = runtime_diag_startup_snapshot(out.data, sizeof(out.data), true); break;
+                case 2: ready = runtime_diag_startup_mount_snapshot(out.data, sizeof(out.data)); break;
+                case 3: ready = runtime_diag_startup_cache_snapshot(out.data, sizeof(out.data)); break;
+            }
+        }
+        if (ready) {
+            out.status = DF_STATUS_OK;
+            out.length = out.data[5];
+        }
     }
     df_core_send_frame(&out);
 }
@@ -215,7 +223,7 @@ static void df_proto_handler_info_display_page(df_event_t *evt) {
     if (!request->status && !request->chunk && request->length == 5 &&
         memcmp(request->data, "LCD1", 4) == 0 && request->data[4] < 8 && df_proto_vfs_is_idle()) {
         mui_t *ui = mui();
-        if (ui && ui->initialized && u8g2_GetBufferTileHeight(&ui->u8g2) == 8 &&
+        if (ui && ui->initialized && ui->auto_update && u8g2_GetBufferTileHeight(&ui->u8g2) == 8 &&
             u8g2_GetBufferTileWidth(&ui->u8g2) == 16) {
             const uint8_t *pixels = u8g2_GetBufferPtr(&ui->u8g2);
             if (pixels && mbedtls_sha256_ret(pixels, 1024, out.data + 8, 0) == 0) {

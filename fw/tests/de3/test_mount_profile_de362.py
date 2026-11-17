@@ -37,6 +37,10 @@ static void check_profile(bool cache){
  REQUIRE(word(p+68)+word(p+72)==word(p+56) && !word(p+76));
  REQUIRE(word(p+48)==0 && word(p+52)==read_calls*32000u/16384u);
  if(!cache)REQUIRE(!word(p+64));
+ uint8_t ext[84]; REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)));
+ REQUIRE(ext[4]==4 && ext[5]==84 && !memcmp(p+6, ext+6, 74));
+ REQUIRE(ext[80]==(cache?8:0) && ext[81]<=ext[80] && (ext[81]>0)==cache);
+ REQUIRE(ext[82]==0 && ext[83]==(cache?1:0));
 }
 int main(void){
  uint8_t before[80],after[80];
@@ -48,6 +52,15 @@ int main(void){
  REQUIRE(runtime_diag_startup_mount_snapshot(before,80));
  REQUIRE(state()==0 && driver()->mount()==0);
  REQUIRE(runtime_diag_startup_mount_snapshot(after,80) && !memcmp(before,after,80));
+ /* Hold enough heap to exercise the actual small-cache allocation decision. */
+ drop(); REQUIRE(configure()==0);
+ size_t remaining=18432-live; REQUIRE(remaining>5900);
+ void *pressure=mui_mem_malloc(remaining-5900); REQUIRE(pressure);
+ nor_reset_observation(&media); read_calls=0;
+ REQUIRE(driver()->mount()==0); uint8_t ext[84];
+ REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)));
+ REQUIRE(ext[80]==4 && ext[81]>0 && ext[81]<=4 && ext[82]==0 && ext[83]==1);
+ mui_mem_free(pressure);
  for(unsigned fault=1;fault<=2;fault++){
   drop();REQUIRE(configure()==0);alloc_calls=0;fail_at=fault;read_calls=0;nor_reset_observation(&media);
   REQUIRE(driver()->mount()==0);check_profile(fault!=1);fail_at=0;REQUIRE(state()==0);
@@ -56,11 +69,13 @@ int main(void){
  REQUIRE(driver()->mount()<0 && !mount_pages);
  REQUIRE(runtime_diag_startup_mount_snapshot(after,80));
  REQUIRE(word(after+40)==21 && (int32_t)word(after+44)<0 && word(after+56)==1 && word(after+76)==1 && !word(after+60));
+ REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)) && ext[80]==8 && ext[81]==0);
  read_calls=read_fail_at=0;nor_reset_observation(&media);REQUIRE(driver()->mount()==0);check_profile(true);
  drop();bad_geometry=true;read_calls=0;REQUIRE(driver()->mount()==VFS_ERR_NODEV);
  REQUIRE(runtime_diag_startup_mount_snapshot(after,80));
  REQUIRE(word(after+40)==17 && (int32_t)word(after+44)==VFS_ERR_NODEV);
  for(unsigned i=48;i<80;i++)REQUIRE(after[i]==0);
+ REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)) && !word(ext+80));
  REQUIRE(!live && !media.stats.programs && !media.stats.erases);
  puts("PASS mount profile: physical counts/bytes, OOM cache/index, I/O/configure failure, retry, warm/read stability and no leaks");
  return 0;
