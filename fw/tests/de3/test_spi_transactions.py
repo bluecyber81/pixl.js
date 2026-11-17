@@ -46,6 +46,14 @@ typedef void (*nrfx_spim_evt_handler_t)(nrfx_spim_evt_t const *,void *);
 typedef struct { unsigned sck_pin,mosi_pin,miso_pin,frequency,mode; bool ss_active_high; } nrfx_spim_config_t;
 typedef struct { const uint8_t *p_tx_buffer; uint8_t *p_rx_buffer; size_t tx_length,rx_length; } nrfx_spim_xfer_desc_t;
 typedef struct { int unused; } u8x8_t;
+static struct { struct { unsigned cb; } u8g2; } mock_mui;
+#define mui() (&mock_mui)
+#define U8G2_R2 2u
+static uint32_t __RBIT(uint32_t value) {
+    uint32_t reversed = 0;
+    for (unsigned i = 0; i < 32; ++i) reversed |= ((value >> i) & 1u) << (31 - i);
+    return reversed;
+}
 #define NRFX_SPIM_INSTANCE(n) {n,&mock_spim}
 #define NRFX_SPIM_FLAG_NO_XFER_EVT_HANDLER 4u
 #define NRFX_SPIM_DEFAULT_CONFIG {0}
@@ -169,10 +177,17 @@ uint32_t nrfx_spim_xfer(const nrfx_spim_t *spi,const nrfx_spim_xfer_desc_t *desc
             const uint8_t *p=desc->p_tx_buffer;
             if (game_transfer++ == 0) {
                 assert(!dc_data && desc->tx_length==3);
-                assert(p[0]==(0xb0|game_page) && p[1]==0x10 && p[2]==0);
+                unsigned col=mock_mui.u8g2.cb ? 128-game_width : 0;
+                unsigned y=mock_mui.u8g2.cb ? 7-game_page : game_page;
+                assert(p[0]==(0xb0|y) && p[1]==(0x10|(col>>4)) && p[2]==(col&15));
             } else {
                 assert(dc_data && desc->tx_length==game_width);
-                for(unsigned x=0;x<game_width;x++) assert(p[x]==(uint8_t)(x+game_page));
+                for(unsigned x=0;x<game_width;x++) {
+                    unsigned col=mock_mui.u8g2.cb ? game_width-1-x : x;
+                    uint8_t expected=(uint8_t)(col+game_page);
+                    for(unsigned bit=0;bit<8;bit++)
+                        assert(((p[x]>>bit)&1)==((expected>>(mock_mui.u8g2.cb?7-bit:bit))&1));
+                }
             }
         }
         if(desc->tx_length==128) inject(2); /* between DMA chunks */
@@ -259,14 +274,15 @@ int main(int argc,char **argv) {
         uint8_t bytes[8]; hal_spi_flash_read(0x5678,bytes,sizeof(bytes));
         assert(irq_count==1 && polls_seen_by_irq==1 && busy_responses==3);
         assert(!app_masked && selected==0 && critical_enters==critical_exits);
-    } else if(scenario==11 || scenario==12 || scenario==13) {
+    } else if(scenario>=11 && scenario<=14) {
 #if GUARDED
         uint8_t pixels[128];
+        mock_mui.u8g2.cb=scenario==14 ? U8G2_R2 : 0;
         for(game_page=0;game_page<8;game_page++) {
             game_width=game_page & 1 ? 82 : 128;
             for(unsigned x=0;x<game_width;x++) pixels[x]=(uint8_t)(x+game_page);
             game_transfer=0;game_trace=true;stage=1;
-            if (scenario==11) {
+            if (scenario==11 || scenario==14) {
                 JOY_OLED_write_page(game_page,pixels,game_width);
                 assert(game_transfer==2 && !app_masked && selected==0);
             } else {
@@ -279,7 +295,7 @@ int main(int argc,char **argv) {
                 break;
             }
         }
-        if(scenario==11) assert(irq_count==1 && lcd_chunks_seen_by_irq==2 && lcd_chunks==16 && dual_cs==0);
+        if(scenario==11 || scenario==14) assert(irq_count==1 && lcd_chunks_seen_by_irq==2 && lcd_chunks==16 && dual_cs==0);
 #else
         stage=1; JOY_OLED_data_start(0);
         for(unsigned i=0;i<128;i++) JOY_OLED_send((uint8_t)i);
@@ -360,6 +376,7 @@ class TransactionTests(unittest.TestCase):
     def test_game_pages_use_two_guarded_transfers_and_preserve_partial_rows(self): self.case(11)
     def test_game_command_failure_releases_before_error_handler(self): self.case(12)
     def test_game_data_failure_releases_before_error_handler(self): self.case(13)
+    def test_game_180_degree_partial_and_full_pages_preserve_guard(self): self.case(14)
     def test_baseline_fixture_matches_frozen_DE3_source_hashes(self):
         pins=json.loads((HERE/'original_source_pins.json').read_text())
         original=HERE/'baseline'

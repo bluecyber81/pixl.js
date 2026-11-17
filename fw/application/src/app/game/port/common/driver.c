@@ -13,13 +13,27 @@
  * calculation happens before acquiring it, with application IRQs enabled. */
 #ifdef BOARD_LCD
 void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count) {
-    uint8_t address[] = {(uint8_t)(0xb0 | (page & 7)), 0x10, 0x00};
+    if (!pixels || count == 0 || count > 128 || page >= 8) return;
+    uint8_t column = 0;
+    /* U8g2 rotates in software. The ST7567 retains the same COM/SEG mapping
+     * when a game takes over, including immediately after a settings change. */
+    if (mui()->u8g2.cb == U8G2_R2) {
+        page = 7 - page;
+        column = 128 - count;
+        for (unsigned x = 0; x < (count + 1u) / 2; ++x) {
+            unsigned opposite = count - 1u - x;
+            uint8_t first = pixels[x];
+            pixels[x] = (uint8_t)(__RBIT(pixels[opposite]) >> 24);
+            pixels[opposite] = (uint8_t)(__RBIT(first) >> 24);
+        }
+    }
+    uint8_t address[] = {(uint8_t)(0xb0 | page), (uint8_t)(0x10 | (column >> 4)), (uint8_t)(column & 0x0f)};
     spi_transaction_t tx = {.p_tx_buffer = address, .tx_length = sizeof(address)};
     spi_device_t *display = mui_u8g2_get_spi_device();
     hal_spi_bus_aquire(display);
     nrf_gpio_pin_write(LCD_DC_PIN, 0);
     uint32_t result = hal_spi_bus_xfer(&tx);
-    if (result == NRF_SUCCESS && count) {
+    if (result == NRF_SUCCESS) {
         nrf_gpio_pin_write(LCD_DC_PIN, 1);
         tx.p_tx_buffer = pixels;
         tx.tx_length = count;

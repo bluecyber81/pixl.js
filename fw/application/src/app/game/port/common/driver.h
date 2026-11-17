@@ -73,6 +73,7 @@ extern "C" {
 #define JOY_down_pressed()        false
 
 
+/* The LCD driver may rotate the caller's scratch page in place. */
 void JOY_OLED_write_page(uint8_t page, uint8_t *pixels, uint8_t count);
 
 // Delays
