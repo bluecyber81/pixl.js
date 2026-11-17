@@ -137,6 +137,14 @@ void runtime_diag_vfs_error(uint8_t command, int32_t error) {
     CRITICAL_REGION_EXIT();
 }
 
+int32_t runtime_diag_last_vfs_error(void) {
+    int32_t error;
+    CRITICAL_REGION_ENTER();
+    error = state.vfs_error;
+    CRITICAL_REGION_EXIT();
+    return error;
+}
+
 /* TLSF block payload sizes, not requested sizes or whole-system RAM usage.
  * This is O(1); walking every allocation would make the UI slower. */
 void runtime_diag_heap_change(size_t old_size, size_t new_size, bool failed) {

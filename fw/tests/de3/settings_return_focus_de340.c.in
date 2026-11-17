@@ -8,10 +8,13 @@
 #undef assert
 #define assert(x) do { if (!(x)) { fprintf(stderr,"Assertion failed: %s at line %d\n",#x,__LINE__); exit(77); } } while(0)
 #define LCD_SCREEN 1
+#define BOARD_LCD 1
+#define PIXL_RUNTIME_DIAGNOSTICS 1
 #define NRF_SUCCESS 0
 #define VFS_OK 0
 #define LIST_ITEM_HEIGHT 13
 #define LANGUAGE_COUNT 2
+#define LANGUAGE_DE_DE 0
 #define NULL_USER_DATA ((void *)-1)
 #define MUI_LIST_VIEW_EVENT_SELECTED 0
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
@@ -47,9 +50,15 @@ struct mui_list_view_s { void *user_data; list_items_t items[1]; uint16_t focus_
                         uint8_t canvas_height; selected_cb_t selected_cb; };
 typedef struct {void *user_data;} mui_msg_box_t;
 typedef void mui_progress_bar_t, mui_toast_view_t, mui_view_dispatcher_t;
+typedef struct { void *user_data; } mui_view_t;
 @DISPATCH_TYPES@
 typedef struct {bool valid;} settings_storage_snapshot_t;
 @APP_STRUCT@
+static unsigned device_tests;
+static void settings_device_test_open(app_settings_t *app){assert(app);++device_tests;}
+static bool dim_before_sleep;
+static bool settings_get_lcd_dim(void){return dim_before_sleep;}
+static void settings_toggle_lcd_dim(void){dim_before_sleep=!dim_before_sleep;}
 typedef struct { bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,
                      flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight;
                  uint16_t sleep_timeout_sec; } settings_data_t;
@@ -145,6 +154,13 @@ int main(void){
  app_settings_t app;mui_list_view_t list;mui_scene_dispatcher_t d;
  data=(settings_data_t){.language=0,.sleep_timeout_sec=180,.lcd_backlight=50};
  settings_data_t before=data;fresh(&app,&list,&d);assert(!memcmp(&data,&before,sizeof(data)));
+ assert(SETTINGS_MAIN_MENU_EXIT==19&&SETTINGS_MAIN_MENU_REMOTE==20);
+ unsigned new_row=find(&list,SETTINGS_MAIN_MENU_DEVICE_TEST);
+ activate(&list,new_row);assert(device_tests==1&&d.scene_depth==1);
+ new_row=find(&list,SETTINGS_MAIN_MENU_LCD_DIM);
+ assert(!settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,_T(OFF)));
+ activate(&list,new_row);assert(settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,_T(ON)));
+ activate(&list,new_row);assert(!settings_get_lcd_dim()&&!saves);
  const unsigned menus[]={SETTINGS_MAIN_MENU_VERSION,SETTINGS_MAIN_MENU_BACK_LIGHT,
   SETTINGS_MAIN_MENU_OLED_CONTRAST,SETTINGS_MAIN_MENU_LANGUAGE,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT,
   SETTINGS_MAIN_MENU_STORAGE,SETTINGS_MAIN_MENU_ABOUT,SETTINGS_MAIN_MENU_APP_MANAGEMENT};

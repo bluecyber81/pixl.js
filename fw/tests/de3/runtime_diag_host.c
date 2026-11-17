@@ -8,6 +8,7 @@ static void diagnostic(uint8_t *out) {
     finish_stream();
     CHECK(merge(out,64,6)==64 && !memcmp(out,"PXDG",4) && out[4]==1 && out[5]==64);
     CHECK(out[10]==0 && out[11]==0 && !(out[6]&8) && get32(out+52)==UINT32_MAX);
+    CHECK(runtime_diag_last_vfs_error()==(int32_t)get32(out+20));
 }
 static int32_t operation_error;
 static int32_t failing_noargs(void) { return operation_error; }

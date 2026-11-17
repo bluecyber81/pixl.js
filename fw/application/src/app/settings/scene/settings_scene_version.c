@@ -5,6 +5,62 @@
 #include "settings_device_info.h"
 #include "utils2.h"
 #include "version2.h"
+#include "runtime_diag.h"
+
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+static void device_test_draw(mui_view_t *view, mui_canvas_t *canvas) {
+    app_settings_t *app = view->user_data;
+    bool de = getLanguage() == LANGUAGE_DE_DE;
+    char text[28];
+
+    mui_canvas_set_font(canvas, MUI_FONT_NORMAL);
+    mui_canvas_draw_rframe(canvas, 0, 0, 128, 64, 0);
+    mui_canvas_draw_utf8(canvas, 4, 11, version_get_version(NULL));
+    /* Alternating one-pixel bars also reveal a shifted or clipped display. */
+    for (uint8_t x = 101; x < 125; x += 2)
+        mui_canvas_draw_box(canvas, x, 4, 1, 7);
+    snprintf(text, sizeof(text), "ID %.12s", version_get_source_id());
+    mui_canvas_draw_utf8(canvas, 4, 23, text);
+    int32_t error = runtime_diag_last_vfs_error();
+    const char *status = de ? "VFS: kein Fehler" : "VFS: no error";
+    if (error) {
+        snprintf(text, sizeof(text), "VFS: %ld", (long)error);
+        status = text;
+    }
+    mui_canvas_draw_utf8(canvas, 4, 35, status);
+
+    const char *labels[] = {de ? "Links" : "Left", de ? "Mitte" : "Center", de ? "Rechts" : "Right"};
+    for (uint8_t k = INPUT_KEY_LEFT; k <= INPUT_KEY_RIGHT; ++k) {
+        uint8_t x = 4 + 41 * k;
+        mui_canvas_draw_utf8(canvas, x, 47, labels[k]);
+        if (app->tested_keys & (1u << k))
+            mui_canvas_draw_box(canvas, x, 49, 32, app->held_keys & (1u << k) ? 3 : 1);
+    }
+    mui_canvas_draw_utf8(canvas, 4, 60, de ? "Mitte halten: zurück" : "Hold center: back");
+}
+
+static void device_test_input(mui_view_t *view, mui_input_event_t *event) {
+    app_settings_t *app = view->user_data;
+    if ((unsigned)event->key > INPUT_KEY_RIGHT) return;
+    uint8_t bit = 1u << event->key;
+    if (event->type == INPUT_TYPE_PRESS) {
+        app->tested_keys |= bit;
+        app->held_keys |= bit;
+    } else if (event->type == INPUT_TYPE_RELEASE) {
+        app->held_keys &= ~bit;
+    } else if (event->key == INPUT_KEY_CENTER && event->type == INPUT_TYPE_LONG) {
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
+    }
+}
+
+void settings_device_test_open(app_settings_t *app) {
+    app->tested_keys = app->held_keys = 0;
+    app->device_test = (mui_view_t){.user_data = app, .draw_cb = device_test_draw,
+                                    .input_cb = device_test_input};
+    mui_view_dispatcher_add_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_DEVICE_TEST, &app->device_test);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_DEVICE_TEST);
+}
+#endif
 
 static void settings_scene_version_list_view_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                          mui_list_item_t *p_item) {

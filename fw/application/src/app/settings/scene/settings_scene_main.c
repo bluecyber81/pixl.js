@@ -32,7 +32,9 @@ enum settings_main_menu_t {
     SETTINGS_MAIN_MENU_ABOUT,
     SETTINGS_MAIN_MENU_APP_MANAGEMENT,
     SETTINGS_MAIN_MENU_EXIT,
-    SETTINGS_MAIN_MENU_REMOTE
+    SETTINGS_MAIN_MENU_REMOTE,
+    SETTINGS_MAIN_MENU_DEVICE_TEST,
+    SETTINGS_MAIN_MENU_LCD_DIM
 };
 
 static void settings_scene_main_reload(void *user_data);
@@ -89,8 +91,17 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     mui_nav_diag_settings(diag_type, selection);
     switch (selection) {
 #ifdef LCD_SCREEN
+    case SETTINGS_MAIN_MENU_LCD_DIM:
+        settings_toggle_lcd_dim();
+        settings_scene_main_reload(app);
+        break;
     case SETTINGS_MAIN_MENU_BACK_LIGHT:
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, SETTINGS_SCENE_LCD_BACKLIGHT);
+        break;
+#endif
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    case SETTINGS_MAIN_MENU_DEVICE_TEST:
+        settings_device_test_open(app);
         break;
 #endif
 
@@ -266,6 +277,9 @@ static void settings_scene_main_reload(void *user_data) {
     }
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_LCD_BACKLIGHT), backlight_value,
                                (void *)SETTINGS_MAIN_MENU_BACK_LIGHT);
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c9,
+                               p_settings->language == LANGUAGE_DE_DE ? "Schlafdimmer" : "Dim before sleep",
+                               settings_get_lcd_dim() ? _T(ON) : _T(OFF), (void *)SETTINGS_MAIN_MENU_LCD_DIM);
 #endif
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_FLIP_DISPLAY),
@@ -313,6 +327,11 @@ static void settings_scene_main_reload(void *user_data) {
                            (void *)SETTINGS_MAIN_MENU_RESET_DEFAULT);
 
     mui_list_view_add_item(app->p_list_view, 0xe1cf, _T(APP_SET_ABOUT), (void *)SETTINGS_MAIN_MENU_ABOUT);
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    mui_list_view_add_item(app->p_list_view, 0xe1c7,
+                           p_settings->language == LANGUAGE_DE_DE ? "Gerätetest" : "Device test",
+                           (void *)SETTINGS_MAIN_MENU_DEVICE_TEST);
+#endif
     mui_list_view_add_item(app->p_list_view, 0xe069, _T(BACK_TO_MAIN_MENU), (void *)SETTINGS_MAIN_MENU_EXIT);
 
     mui_list_view_set_focus(app->p_list_view, foucs_index);

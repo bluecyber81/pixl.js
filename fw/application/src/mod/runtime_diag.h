@@ -59,6 +59,8 @@ bool runtime_diag_power_snapshot(uint8_t *out, size_t capacity);
 void runtime_diag_ble_abort(uint8_t cause);
 void runtime_diag_ble_disconnected(uint8_t hci_reason);
 void runtime_diag_vfs_error(uint8_t command, int32_t error);
+/* Most recent recorded VFS command failure since boot. Zero means none recorded. */
+int32_t runtime_diag_last_vfs_error(void);
 void runtime_diag_heap_change(size_t old_size, size_t new_size, bool failed);
 void runtime_diag_heap_reset(void);
 void runtime_diag_heap_sample(uint32_t total, uint32_t free, uint32_t largest);
