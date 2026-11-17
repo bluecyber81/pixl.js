@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "webVersion": "3.55.6",
+  "date": "2026-11-17",
+  "webSourceCommit": "97f1f0cc2f95c35959b9a4be152c359dcb1779d7",
+  "firmwareTestTag": "de3.84-lcd-test1",
+  "firmwareReleaseCommit": "55e3c42836452830421b559b6fc3659b826dc43b",
+  "sourceChecks": {
+    "webTestsPassed": 1694,
+    "webTestsSkipped": 0,
+    "productionBundleChecksPerBase": 22,
+    "browserChecksPerBase": 64,
+    "basePaths": [
+      "/",
+      "/pixl.js/"
+    ],
+    "languages": [
+      "de",
+      "en"
+    ],
+    "windowsLauncherPassed": 22,
+    "windowsPosixOnlySkipped": 2,
+    "linuxLauncherPassed": 24
+  },
+  "coverage": [
+    "LCD firmware build and previous-boot fault responses (PXBI)",
+    "Last mount allocation and use (PXST v4)",
+    "App657 package selection and Android handoff",
+    "Guided startup/heap comparisons and out-of-window import rejection",
+    "Home page and update guide for both display profiles"
+  ],
+  "deviceScope": "App657 general operation with Z21 was confirmed by an owner. The integration tests used firmware replies, host models and browsers.",
+  "lcdOwnerReport": "DE3_84_OWNER_REPORT.json"
+}
