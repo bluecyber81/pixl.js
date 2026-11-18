@@ -12,10 +12,12 @@ export function nrfDfuLink(entry) {
         });
     }
     const release = /^2\.22\.0-DE3\.([1-9]\d{0,3}(?:t[1-9]\d{0,2})?)$/.exec(entry?.version);
-    const test657 = release?.[1] === '84' && entry.channel === 'prerelease' && entry.counter === 657 && entry.bootloader === 'Z21';
-    const test658 = release?.[1] === '85' && entry.channel === 'prerelease' && entry.counter === 658 && entry.bootloader === 'Z21';
-    const expectedId = test657 ? 'de3.84-lcd-test1-app' : test658 ? 'de3.85-lcd-test1-app' : release && `de3.${release[1]}-lcd-app`;
-    if (!release || entry.board !== 'LCD' || entry.applicationOnly !== true ||
+    if (!release || release[1] === '86') return null; // App659 has no public Android offering.
+    const trialCounter = { '84': 657, '85': 658, '87': 660 }[release[1]];
+    const expectedId = trialCounter ? `de3.${release[1]}-lcd-test1-app` : `de3.${release[1]}-lcd-app`;
+    if (trialCounter && (entry.channel !== 'prerelease' || entry.counter !== trialCounter ||
+        entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0')) return null;
+    if (entry.board !== 'LCD' || entry.applicationOnly !== true ||
         entry.id !== expectedId ||
         !Number.isSafeInteger(entry.counter) || entry.counter < 1 || entry.counter > 0xffffffff) return null;
 
@@ -25,7 +27,7 @@ export function nrfDfuLink(entry) {
         ? `Allmiibo_DE3_${release[1]}_App${entry.counter}_NUR_APP_SIGNIERT.zip`
         : `Allmiibo_LCD_DE3_${release[1]}_${entry.counter}_NUR_APP.zip`;
     const reviewFile = `Allmiibo_LCD_DE3_${release[1]}_App${entry.counter}_TEST_DFU.zip`;
-    if (entry.file !== filename && !(entry.channel === 'prerelease' && !testBuild && entry.file === reviewFile)) return null;
+    if (entry.file !== filename && !(entry.channel === 'prerelease' && !trialCounter && !testBuild && entry.file === reviewFile)) return null;
     const published = 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file;
     return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({file: published});
 }
