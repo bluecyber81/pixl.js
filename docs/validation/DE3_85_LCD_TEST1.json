@@ -1,0 +1,60 @@
+{
+  "target": "Allmiibo LCD / ST7567 / PFS1",
+  "version": "2.22.0-DE3.85",
+  "counter": 658,
+  "date": "2026-11-18",
+  "bootloaderReference": "Z21 unchanged",
+  "softDeviceReference": "S112 7.3.0 (0x0126) unchanged",
+  "artifact": "signed application only",
+  "sourceCommit": "083e024864cf7099f31e964c0d25d4819b0c440d",
+  "sourceId": "eff9ff254509ccacef1650fbbf51d595f82df1d094c912dbf2655d76e5bee08f",
+  "applicationBytes": 358160,
+  "applicationSha256": "46ea9df4be00107f967d751ceffe0679bd74fa7315caf46cc566938cf868a9bb",
+  "otaBytes": 247377,
+  "otaSha256": "a7f8b4aa6e01469c88433e40437618f199a47421e6a602e92c72eac0862fb411",
+  "matchingBinAndHexBuilds": 2,
+  "productionInputs": 706,
+  "memory": {
+    "binary_bytes": 358160,
+    "linker_flash_used_bytes": 358160,
+    "observed": {
+      "flash_reserve_bytes": 14576,
+      "heap_stack_gap_bytes": 2064,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "hostRegressionScriptsPassed": 168,
+  "hostSourcesUnchanged": true,
+  "armDeviceTest": "DE/EN, two orientations, actual linked ST7567 SPI and PWM peripheral simulation; no physical device",
+  "mountCache": {
+    "temporaryPages": [
+      16,
+      8,
+      4,
+      0
+    ],
+    "allocationPolicy": "Largest contiguous free block leaves 4096 bytes for the 16/8-page choice; allocation failures fall back",
+    "synthetic1081FilesReadsBefore": 3687,
+    "synthetic1081FilesReadsAfter": 3336,
+    "physicalStartupTimeMeasured": false
+  },
+  "z21Model": {
+    "appCounter": 658,
+    "powerCutPositions": 455,
+    "physicalInterruptedDfu": false
+  },
+  "physicalAcceptance": "pending",
+  "physicalTestsOutstanding": [
+    "LCD remote discovery and separate advertising address",
+    "Physical 5/100 percent backlight and restoration",
+    "Remote navigation with automatic display photo",
+    "Repeated cold-start comparisons with the same collection",
+    "NFC and resume regression on the device"
+  ],
+  "reviewFix": "A successful normal brightness change supersedes a pending test-preview restoration; failed changes retain recovery"
+}
