@@ -119,7 +119,13 @@ int main(void) {
                        '-o', str(binary)]
             for board in ('LCD', 'OLED'):
                 fixture = harness().replace('#define LCD_SCREEN 1', '#define '+board+'_SCREEN 1')
-                source = prefix + fixture + FONT.split('int main(void)')[0] + layout + cases
+                board_defines = ''
+                if board == 'OLED':
+                    board_defines = ('#define BOARD_OLED 1\n#define PIXL_RUNTIME_DIAGNOSTICS 1\n'
+                                     '#define LANGUAGE_DE_DE 0\n'
+                                     'typedef struct { void *user_data; } mui_view_t;\n'
+                                     '#define settings_device_test_open(...) ((void)0)\n')
+                source = prefix + board_defines + fixture + FONT.split('int main(void)')[0] + layout + cases
                 (folder / 'test.c').write_text(source, encoding='utf-8')
                 subprocess.run(command, check=True, timeout=60)
                 subprocess.run([binary], check=True, timeout=10)
