@@ -74,6 +74,7 @@ typedef struct {
 
     /** data slot */
     uint8_t cur_slot_index;
+    uint8_t pending_save_slot;
 
     uint8_t cur_focus_index;
     uint16_t cur_scroll_offset;

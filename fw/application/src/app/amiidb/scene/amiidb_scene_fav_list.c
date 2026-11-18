@@ -101,13 +101,6 @@ static void amiidb_scene_fav_list_list_view_on_selected(mui_list_view_event_t ev
     }
 }
 
-/* Keep this shared comparator out of line: saves flash in both callers. */
-static __attribute__((noinline)) int fav_record_compare(const amiidb_fav_t *a, const amiidb_fav_t *b) {
-    if (a->amiibo_head != b->amiibo_head) return a->amiibo_head < b->amiibo_head ? -1 : 1;
-    if (a->amiibo_tail != b->amiibo_tail) return a->amiibo_tail < b->amiibo_tail ? -1 : 1;
-    return (int)a->game_id - (int)b->game_id;
-}
-
 static int amiidb_scene_fav_list_list_view_sort_cb(const mui_list_item_t *p_item_a, const mui_list_item_t *p_item_b) {
     /* This sorter runs before controls are appended: only folders and files. */
     if (p_item_a->icon != p_item_b->icon) return (int)p_item_a->icon - (int)p_item_b->icon;
@@ -165,9 +158,15 @@ static void amiidb_scene_fav_list_read_cb(amiidb_fav_info_t *info, void *ctx) {
     if (app->fav_page_direction && (app->fav_page_direction > 0 ? comparison <= 0 : comparison >= 0)) {
         page->excluded++; return;
     }
-    page->eligible++;
     mui_list_item_t *replace = NULL;
     size_t count = mui_list_view_item_size(app->p_list_view);
+    if (info->fav_type == FAV_TYPE_FAV) {
+        for (size_t i = 0; i < count; i++) {
+            const mui_list_item_t *row = mui_list_item_array_get(app->p_list_view->items, i);
+            if (row->icon == ICON_FILE && !fav_record_compare(row->user_data, &info->fav_data.fav)) return;
+        }
+    }
+    page->eligible++;
     if (count == FAV_PAGE_SIZE) {
         replace = mui_list_item_array_get(app->p_list_view->items, app->fav_page_direction < 0 ? 0 : count - 1);
         amiidb_fav_info_t worst;

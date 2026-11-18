@@ -53,12 +53,14 @@ void amiidb_scene_data_list_amiibo_slot_info_cb(amiidb_slot_info_t *p_info, void
         snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, getLangString(_L_APP_AMIIDB_EMPTY_TAG));
         mui_list_view_add_item(app->p_list_view, ICON_FILE, txt, (void *)0);
     } else {
-        const db_amiibo_t *p_amiibo = get_amiibo_by_id(p_info->amiibo_head, p_info->amiibo_tail);
+        const db_amiibo_t *p_amiibo = p_info->has_amiibo_id ? get_amiibo_by_id(p_info->amiibo_head, p_info->amiibo_tail) : NULL;
         if (p_amiibo != NULL) {
             const char *name = get_amiibo_display_name(p_amiibo);
             snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, name);
-        } else {
+        } else if (p_info->has_amiibo_id) {
             snprintf(txt, sizeof(txt), "Amiibo[%08x:%08x]", p_info->amiibo_head, p_info->amiibo_tail);
+        } else {
+            snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, getLangString(_L_APP_SET_STORAGE_USED));
         }
 
         mui_list_view_add_item(app->p_list_view, ICON_AMIIBO, txt, (void *)0);

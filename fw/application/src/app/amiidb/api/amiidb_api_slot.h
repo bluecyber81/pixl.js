@@ -15,6 +15,7 @@ typedef struct {
     uint8_t slot;
     uint8_t is_empty;
     uint8_t is_readonly;
+    bool has_amiibo_id;
     uint32_t amiibo_head;
     uint32_t amiibo_tail;
 } amiidb_slot_info_t;

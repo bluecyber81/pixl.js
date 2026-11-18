@@ -257,6 +257,7 @@ typedef enum {
     _L_DE361_UNTIL_OFF,
     _L_AMIIDB_RECENT,
     _L_AMIIDB_RECENT_EMPTY,
+    _L_APP_AMIIDB_REPLACE_SLOT,
     _L_COUNT,
 } L_StringID;
 #endif

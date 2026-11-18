@@ -2,6 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Keep this shared comparator out of line: saves flash in both callers. */
+int fav_record_compare(const amiidb_fav_t *a, const amiidb_fav_t *b) {
+    if (a->amiibo_head != b->amiibo_head) return a->amiibo_head < b->amiibo_head ? -1 : 1;
+    if (a->amiibo_tail != b->amiibo_tail) return a->amiibo_tail < b->amiibo_tail ? -1 : 1;
+    return (int)a->game_id - (int)b->game_id;
+}
+
 static bool valid_component(const char *name, bool empty_allowed) {
     if (!name) return false;
     size_t n = 0;
@@ -51,7 +58,9 @@ bool amiidb_api_fav_parse_filename(const char *name, amiidb_fav_t *fav) {
         }
         if (word == 0 && name[pos++] != '_') return false;
     }
-    if (strcmp(name + pos, ".fav") != 0) return false;
+    if (name[pos] != '.' || (name[pos+1] != 'f' && name[pos+1] != 'F') ||
+        (name[pos+2] != 'a' && name[pos+2] != 'A') || (name[pos+3] != 'v' && name[pos+3] != 'V') ||
+        name[pos+4] != 0) return false;
     amiidb_fav_t result = {.game_id = game, .amiibo_head = words[0], .amiibo_tail = words[1]};
     *fav = result;
     return true;
@@ -123,12 +132,40 @@ int32_t amiidb_api_fav_empty_dir(const char *folder) {
     return finish_directory(driver, &dir, result);
 }
 
+/* Locate the stored spelling on case-sensitive volumes. Close the directory
+ * before removing a match because a mutation can invalidate its iterator. */
+static int32_t find_favorite(vfs_driver_t *driver, char path[VFS_MAX_PATH_LEN], size_t folder_len,
+                             const amiidb_fav_t *fav, bool *found) {
+    *found = false;
+    char saved = path[folder_len];
+    path[folder_len] = 0;
+    vfs_dir_t dir;
+    int32_t result = driver->open_dir(path, &dir);
+    path[folder_len] = saved;
+    if (result != VFS_OK) return result;
+    vfs_obj_t obj;
+    while ((result = driver->read_dir(&dir, &obj)) == VFS_OK) {
+        amiidb_fav_t entry;
+        if (obj.type != VFS_TYPE_REG || !amiidb_api_fav_parse_filename(obj.name, &entry) ||
+            fav_record_compare(&entry, fav)) continue;
+        size_t length = strlen(obj.name) + 1;
+        if (folder_len + 1 + length > VFS_MAX_PATH_LEN) { result = VFS_ERR_MAXNM; break; }
+        memcpy(path + folder_len + 1, obj.name, length);
+        *found = true;
+        break;
+    }
+    return finish_directory(driver, &dir, result);
+}
+
 int32_t amiidb_api_fav_add(const char *folder, const amiidb_fav_t *fav) {
     char path[VFS_MAX_PATH_LEN];
     int32_t result = format_filename(path, folder, fav);
     if (result != VFS_OK) return result;
     vfs_driver_t *driver = vfs_get_driver(VFS_DRIVE_EXT);
     if (!driver) return VFS_ERR_NODEV;
+    bool found;
+    result = find_favorite(driver, path, strrchr(path, '/') - path, fav, &found);
+    if (result != VFS_OK || found) return result;
     result = driver->write_file_data(path, NULL, 0);
     return result == 0 ? VFS_OK : result < 0 ? result : VFS_ERR_FAIL;
 }
@@ -138,5 +175,16 @@ int32_t amiidb_api_fav_remove(const char *folder, const amiidb_fav_t *fav) {
     int32_t result = format_filename(path, folder, fav);
     if (result != VFS_OK) return result;
     vfs_driver_t *driver = vfs_get_driver(VFS_DRIVE_EXT);
-    return driver ? driver->remove_file(path) : VFS_ERR_NODEV;
+    if (!driver) return VFS_ERR_NODEV;
+    size_t folder_len = strrchr(path, '/') - path;
+    bool removed = false;
+    for (;;) {
+        bool found;
+        result = find_favorite(driver, path, folder_len, fav, &found);
+        if (result != VFS_OK) return result;
+        if (!found) return removed ? VFS_OK : VFS_ERR_NOOBJ;
+        result = driver->remove_file(path);
+        if (result != VFS_OK) return result;
+        removed = true;
+    }
 }

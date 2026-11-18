@@ -256,4 +256,5 @@ const char * const lang_de_DE[_L_COUNT] = {
     [_L_DE361_UNTIL_OFF] = "bis Aus",
     [_L_AMIIDB_RECENT] = "Zuletzt geöffnet",
     [_L_AMIIDB_RECENT_EMPTY] = "Noch keine Figur",
+    [_L_APP_AMIIDB_REPLACE_SLOT] = "Slot ersetzen?",
 };

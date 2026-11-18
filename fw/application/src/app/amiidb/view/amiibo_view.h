@@ -21,6 +21,7 @@ struct amiibo_view_s {
     ntag_t *ntag;
     const db_amiibo_t *catalog_entry;
     void *user_data;
+    bool windowed_favorites;
     uint8_t focus;
     uint8_t max_ntags;
     uint8_t info_page;

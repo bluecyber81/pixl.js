@@ -17,6 +17,8 @@ typedef struct {
     uint32_t amiibo_tail;
 } amiidb_fav_t;
 
+int fav_record_compare(const amiidb_fav_t *a, const amiidb_fav_t *b);
+
 #define FAV_TYPE_FOLDER 0
 #define FAV_TYPE_FAV 1
 /* Leaves room for /amiibo/fav/<folder>/255_XXXXXXXX_XXXXXXXX.fav plus NUL. */
