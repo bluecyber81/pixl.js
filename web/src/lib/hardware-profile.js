@@ -30,8 +30,10 @@ export const LCD_PREVIEW_COUNTERS = Object.freeze({
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_PREVIEW_COUNTERS)];
 export const OLED_PARITY_VERSION = '2.22.0-DE3.84-OLEDt4';
+export const OLED_TEST5_VERSION = '2.22.0-DE3.85-OLEDt5';
+export const OLED_TEST6_VERSION = '2.22.0-DE3.87-OLEDt6';
 export function hasOledSystemDiagnostics(version) {
-  return version === '2.22.0-DE3.81-OLEDt3' || version === OLED_PARITY_VERSION;
+  return version === '2.22.0-DE3.81-OLEDt3' || version === OLED_PARITY_VERSION || version === OLED_TEST5_VERSION || version === OLED_TEST6_VERSION;
 }
 export function lacksOledSystemDiagnostics(version) {
   return version === '2.22.0-DE3.81-OLEDt1' || version === '2.22.0-DE3.81-OLEDt2';

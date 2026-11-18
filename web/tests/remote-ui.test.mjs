@@ -88,6 +88,13 @@ test('dismissing the picker explains how to select Pixl.Remote without implying 
   }finally{h.app.unmount();}
  }
 });
+test('a wrong device selection shows an actionable message in German and English',async()=>{
+ for(const [locale,hint] of [['de_DE',/andere Geräte/],['en',/other Bluetooth serial devices/]]){
+  const h=mount({locale,connect:async()=>{throw Object.assign(Error('name mismatch'),{code:'REMOTE_WRONG_DEVICE'});}});
+  try{await h.vm.connectRemote();await Vue.nextTick();assert.match(text(h.root),hint);assert.match(text(h.root),/Pixl\.Remote/);assert.deepEqual(h.calls,['connect']);}
+  finally{h.app.unmount();}
+ }
+});
 test('a file-transfer lock arriving during remote use disconnects rather than sharing GATT',async()=>{
  const h=mount();try{await h.vm.connectRemote();h.props.blocked=true;await Vue.nextTick();assert.deepEqual(h.calls,['connect','disconnect']);assert(h.button('verbinden').props.disabled);}finally{h.app.unmount();}
 });

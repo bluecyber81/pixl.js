@@ -1,6 +1,6 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.0';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.1';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -210,16 +210,16 @@ function profileInfo() {
     document.getElementById('lcd-downloads').hidden = oled;
     document.getElementById('oled-downloads').hidden = !oled;
     const sourceLink = document.getElementById('profile-source');
-    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.84-oled-t4' : 'de3.81'));
-    setText(sourceLink, oled ? 'Quellcode OLED DE3.84 Test 4' : 'Quellcode LCD DE3.81',
-        oled ? 'OLED DE3.84 Test 4 source code' : 'LCD DE3.81 source code');
+    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.87-oled-t6' : 'de3.81'));
+    setText(sourceLink, oled ? 'Quellcode OLED DE3.87 Test 6' : 'Quellcode LCD DE3.81',
+        oled ? 'OLED DE3.87 Test 6 source code' : 'LCD DE3.81 source code');
     setText(document.getElementById('profile-title'),
         oled ? 'OLED-Firmware übertragen' : 'LCD-Firmware übertragen',
         oled ? 'Update OLED firmware' : 'Update LCD firmware');
     setText(document.getElementById('profile-description'),
-        oled ? 'OLED SH1106 · S112 7.2.0 · vorhandenes SPIFFS oder natives LittleFS. Test 4 benötigt noch einen Praxistest auf einem OLED.'
+        oled ? 'OLED SH1106 · S112 7.2.0 · vorhandenes SPIFFS oder natives LittleFS. Test 6 benötigt noch einen Praxistest auf einem OLED.'
             : 'LCD · PFS1 · S112 7.3.0. Wähle eine App für deinen Bootloader.',
-        oled ? 'OLED SH1106 · S112 7.2.0 · existing SPIFFS or native LittleFS. Test 4 still requires a physical OLED trial.'
+        oled ? 'OLED SH1106 · S112 7.2.0 · existing SPIFFS or native LittleFS. Test 6 still requires a physical OLED trial.'
             : 'LCD · PFS1 · S112 7.3.0. Choose an application for your bootloader.');
     setText(bundledInfo,
         oled ? 'Veröffentlichte OLED-App für SH1106 und S112 7.2.0 wählen.' : defaultBundledInfo,

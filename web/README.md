@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.58.1 und OLED DE3.87 Test 6 / App86
+
+Die OLED-Auswahl führt zur signierten Handy-ZIP und zur Prüfung für Browser-DFU. Für die Fernbedienung werden Pixl.Remote und Pixl.Rem erkannt. Ein bestätigter PX-Status gibt die Tasten frei. [Version 3.58.1 bedienen und installieren](LIESMICH_3_58_1.txt) / [OLED-Release mit DE/EN-Anleitung](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6)
+
 ## Dateimanager 3.58.0 und LCD DE3.87 / App660
 
 Kompakte Handy-Fernbedienung, Sammelauswahl für Spielordner und übersichtlichere Slots und Favoritenseiten am LCD. Die Prüfung an einem physischen LCD steht noch aus. [Bedienung und Installation](LIESMICH_3_58_0.txt) · [Downloads für Web 3.58.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) · [LCD-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip)

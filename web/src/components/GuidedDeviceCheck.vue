@@ -105,7 +105,7 @@
     </section>
 
     <GuidedLcdChecks v-if="firmwareBoard(firmwareVersion) !== 'OLED'" :locale="locale" :observations="lcdObservations" @update="updateLcd" />
-    <p v-else>{{ pick('Für Display, Spiele und Fernbedienung am OLED gibt es ergänzende Prüfschritte in der Testanleitung.', 'The OLED test guide includes additional checks for the display, games and remote control.') }} <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">{{ pick('OLED-Testanleitung', 'OLED test guide') }}</a></p>
+    <p v-else>{{ pick('Für Display, Spiele und Fernbedienung am OLED gibt es ergänzende Prüfschritte in der Testanleitung.', 'The OLED test guide includes additional checks for the display, games and remote control.') }} <a :href="firmwareVersion === '2.22.0-DE3.87-OLEDt6' ? 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6' : firmwareVersion === '2.22.0-DE3.85-OLEDt5' ? 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.85-oled-t5' : 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4'">{{ pick('OLED-Testanleitung', 'OLED test guide') }}</a></p>
 
     <section class="capture step">
       <h4><span class="step-number">3</span>{{ pick('Nachher · Ergebnis sichern', 'After · Save the result') }}</h4>

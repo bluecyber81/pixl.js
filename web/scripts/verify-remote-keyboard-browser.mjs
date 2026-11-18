@@ -10,7 +10,7 @@ import {REMOTE_UUIDS} from '../src/lib/remote-control.js';
 function installPeripheral(uuids) {
   const receipts = [], rx = new EventTarget(), tx = {properties:{write:true}};
   const device = new EventTarget();
-  window.testRemote = {receipts, caps:15, photoStatus:0, delayReply:false, finish:null};
+  window.testRemote = {receipts, name:'Pixl.Remote', caps:15, photoStatus:0, delayReply:false, finish:null};
   rx.startNotifications = rx.stopNotifications = async () => rx;
   tx.writeValueWithResponse = async ([p,x,ver,op,lo,hi,arg]) => {
     receipts.push([op,arg]);
@@ -47,6 +47,7 @@ function installPeripheral(uuids) {
   };
   Object.defineProperty(navigator,'bluetooth',{value:{requestDevice:async()=>{
     if(window.testRemote.cancelPicker)throw new DOMException('No device selected','NotFoundError');
+    device.name=window.testRemote.name;
     return device;
   }}});
 }
@@ -70,12 +71,12 @@ try {
       const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)':'LCD DE3.87 / App660 / Z21 · test kit (ZIP)'});
       assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip');
       const footer = page.locator('footer.source-footer');
-      const archives = locale === 'de-DE' ? ['Dateimanager für Windows (ZIP)', 'Quellcode (ZIP)', 'Web 3.58.0 / App660 · Prüfpaket für ChatGPT (ZIP)'] :
-        ['File manager for Windows (ZIP)', 'Source code (ZIP)', 'Web 3.58.0 / App660 · test kit for ChatGPT (ZIP)'];
-      const files = ['Allmiibo_Dateimanager_3_58_0_Portable.zip', 'Allmiibo_Dateimanager_3_58_0_Quellcode.zip', 'Allmiibo_DE3_87_App660_Z21_Web3_58_0_ChatGPT_Pruefpaket.zip'];
+      const archives = locale === 'de-DE' ? ['Dateimanager für Windows (ZIP)', 'Quellcode (ZIP)', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)'] :
+        ['File manager for Windows (ZIP)', 'Source code (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)'];
+      const files = ['Allmiibo_Dateimanager_3_58_1_Portable.zip', 'Allmiibo_Dateimanager_3_58_1_Quellcode.zip', 'Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip'];
       for (const [i, name] of archives.entries()) {
         assert.equal(await footer.getByRole('link', { name, exact:true }).getAttribute('href'),
-          'https://github.com/bluecyber81/pixl.js/releases/download/web3.58.0/' + files[i]);
+          'https://github.com/bluecyber81/pixl.js/releases/download/' + (i===2?'de3.87-oled-t6':'web3.58.1') + '/' + files[i]);
       }
       const nav = page.locator('.workspace-nav [aria-controls="remote-workspace"]');
       await nav.click();
@@ -86,7 +87,11 @@ try {
       await section.getByRole('status').filter({hasText:locale==='de-DE'?'Kein Gerät ausgewählt':'No device selected'}).waitFor();
       assert.equal(await section.getByRole('alert').count(),0);
       assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts),[]);
-      await page.evaluate(()=>{window.testRemote.cancelPicker=false;});
+      await page.evaluate(()=>{window.testRemote.cancelPicker=false;window.testRemote.name='Other UART';});
+      await connect.click();
+      await section.getByRole('alert').filter({hasText:locale==='de-DE'?'Bluetooth-Seriendienst':'Bluetooth serial devices'}).waitFor();
+      assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts),[]);
+      await page.evaluate(name=>{window.testRemote.name=name;},locale==='de-DE'?'Pixl.Remote':'Pixl.Rem');
       await connect.click();
       const disconnect = section.locator('.remote-connection button');
       await disconnect.focus();
@@ -160,6 +165,11 @@ try {
       const scales = photoBox.getByRole('group',{name:locale==='de-DE'?'Bildgröße':'Image scale'});
       const scale = n => scales.getByRole('button',{name:n+'×',exact:true});
       async function checkScale(n) {
+        await page.waitForFunction(()=>document.querySelector('.remote-control')?.classList.contains('remote-compact')===window.matchMedia('(max-width: 600px)').matches);
+        const options = photoBox.locator('details.photo-options');
+        if (await options.count() && !await options.evaluate(el => el.open)) {
+          await options.locator('summary').click();
+        }
         await page.waitForFunction(({selector,width}) => {
           const el = document.querySelector(selector);
           return el?.getBoundingClientRect().width === width && el.getBoundingClientRect().height === width / 2;
@@ -173,6 +183,16 @@ try {
       await scale(2).click(); await checkScale(2);
       await scale(3).click();
       await page.setViewportSize({width:375,height:800});
+      await photoBox.locator('details.photo-options').waitFor();
+      assert.equal(await photoBox.locator('details.photo-options').evaluate(el => el.open), false);
+      assert.equal(await pad.getByRole('button').count(),4);
+      const mobileButtons=await pad.getByRole('button').evaluateAll(buttons=>buttons.map(el=>{
+        const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};
+      }));
+      assert(mobileButtons.every(r=>r.width>=44 && r.height>=44));
+      assert(mobileButtons.every(r=>Math.abs(r.y-mobileButtons[0].y)<1));
+      assert((await image.boundingBox()).y < (await pad.boundingBox()).y);
+      if(process.env.REMOTE_MOBILE_SCREENSHOT_DIR) await section.screenshot({path:path.join(process.env.REMOTE_MOBILE_SCREENSHOT_DIR,locale+'-mobile.png')});
       await checkScale(2); assert.equal(await scale(3).isDisabled(),true);
       await page.setViewportSize({width:1240,height:850});
       await checkScale(3);
@@ -193,18 +213,24 @@ try {
       assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts.slice(9)),[
         [0,0],...[0,16,32,48,64,80,96,112].map(offset=>[5,offset]),[2,2]
       ]);
+      const retainedPhoto=await image.getAttribute('src');
+      const retainedTime=await photoBox.locator('time').getAttribute('datetime');
       await page.evaluate(()=>{window.testRemote.photoStatus=1;});
       await photo.click();
       await photoBox.getByRole('status').filter({hasText:locale==='de-DE'?'gerade kein Displayfoto':'could not provide a screenshot'}).waitFor();
-      assert.equal(await image.count(),0);assert.equal(await photoBox.locator('time').count(),0);
-      assert.equal(await photoBox.getByRole('link').count(),0);
+      assert.equal(await image.getAttribute('src'),retainedPhoto);
+      assert.equal(await photoBox.locator('time').getAttribute('datetime'),retainedTime);
+      assert.equal(await photoBox.getByRole('link').getAttribute('href'),retainedPhoto);
       await page.evaluate(()=>{window.testRemote.photoStatus=0;});
-      await photo.click();await image.waitFor();assert.deepEqual(await readCorners(),[128,64,255,0]);
+      await photo.click();
+      await page.waitForFunction(()=>document.querySelector('.remote-photo')?.getAttribute('aria-busy')==='false');
+      await image.waitFor();assert.deepEqual(await readCorners(),[128,64,0,255]);
+      await rotate.click();assert.deepEqual(await readCorners(),[128,64,255,0]);
       // Automatic mode only starts after an acknowledged navigation key.
       await autoPhoto.check();
       const beforeAuto=await page.evaluate(()=>window.testRemote.receipts.length);
       await page.evaluate(()=>{window.testRemote.delayReply=true;});
-      await pad.getByRole('button').last().click();
+      await pad.getByRole('button',{name:locale==='de-DE'?'Rechts':'Right',exact:true}).click();
       await page.waitForFunction(()=>!!window.testRemote.finish);
       await page.waitForTimeout(350);
       assert.deepEqual(await page.evaluate(n=>window.testRemote.receipts.slice(n),beforeAuto),[[2,2]]);

@@ -113,10 +113,10 @@ async function runChecks() {
       assert.equal(await picker.locator('.dfu-page-link, .oled-trial, .firmware-packages').count(), 0);
       await oled.click();
       const trial = picker.locator('.oled-trial');
-      const oledZip = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip';
+      const oledZip = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip';
       assert.equal(await trial.locator('a[href$=".zip"]').getAttribute('href'), oledZip);
       assert.equal(await trial.locator('a[href*="guide/"]').getAttribute('href'), base + 'guide/' + guide + '#oled');
-      assert.equal(await picker.locator('.dfu-page-link').getAttribute('href'), base + 'dfu/web.html?package=de3.84-oled-t4-app#board=OLED');
+      assert.equal(await picker.locator('.dfu-page-link').getAttribute('href'), base + 'dfu/web.html?package=de3.87-oled-t6-app#board=OLED');
       assert.equal(await picker.locator('.firmware-packages').count(), 0);
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
         connected:true, firmwareVersion:'2.27.11', bootInfo:null

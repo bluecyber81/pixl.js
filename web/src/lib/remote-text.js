@@ -1,6 +1,6 @@
 const de = {
   title:'Fernbedienung', compactLayout:'Kompakte Ansicht', compactCenter:'Mitte', compactBack:'Zurück', brief:'Menü am Gerät bedienen',
-  setupShort:'Verlasse am Gerät den Dateitransfer oder AmiiboLink. Wähle Einstellungen → Fernsteuern → bis Aus. Tippe hier auf „Fernbedienung verbinden“ und wähle Pixl.Remote.',
+  setupShort:'Verlasse am Gerät den Dateitransfer oder AmiiboLink. Wähle Einstellungen → Fernsteuern → bis Aus. Tippe hier auf „Fernbedienung verbinden“. Wähle Pixl.Remote oder den OLED-Kurznamen Pixl.Rem.',
   setupTitle:'Einrichtung, Reichweite und Ruhezustand',
   introduction:'Links, Mitte und Rechts wirken wie ein kurzer Tastendruck am Allmiibo.',
   setup:'Mit „bis Aus“ bleibt die Fernbedienung für diese Sitzung aktiv. Lass das Gerät wach. Nach Ausschalten oder Neustart ist sie wieder aus. Die echten Tasten bleiben nutzbar. Solange sie aktiv ist, kann ein Client in Bluetooth-Reichweite das Gerät bedienen.',
@@ -22,7 +22,8 @@ const de = {
   failed:'Die Fernbedienung konnte den Befehl nicht sicher bestätigen. Es wurde nichts automatisch erneut gesendet.',
   unconfirmed:'Der gesendete Befehl kann bereits angekommen sein. Prüfe das Menü am Gerät, bevor du ihn erneut sendest.',
   errors:{REMOTE_UNSUPPORTED:'Dieses Gerät bietet die benötigte Fernbedienung mit Bestätigung nicht an. Die normale Dateiübertragung bleibt verwendbar.',
-    REMOTE_NO_SELECTION:'Kein Gerät ausgewählt. Wähle beim nächsten Verbinden Pixl.Remote.',
+    REMOTE_NO_SELECTION:'Kein Gerät ausgewählt. Lass die Fernbedienung am Gerät eingeschaltet. Ab OLED Test 5 zeigt Einstellungen → Gerätetest „BLE: Pixl.Remote“, sobald die Firmware den Werbezustand meldet. Öffne dann die Geräteauswahl erneut.',
+    REMOTE_WRONG_DEVICE:'Wähle Pixl.Remote oder den OLED-Kurznamen Pixl.Rem. Die Suche zeigt auch andere Geräte mit Bluetooth-Seriendienst. Bei fehlendem Namen die Suche erneut öffnen und auf den Gerätenamen warten.',
     REMOTE_PERMISSION:'Der Browser hat den Bluetooth-Zugriff verweigert. Prüfe die Bluetooth-Berechtigung für diese Seite.',
     REMOTE_CONNECT_FAILED:'Die Bluetooth-Verbindung zum ausgewählten Gerät ist fehlgeschlagen. Prüfe, ob Pixl.Remote noch sichtbar ist.',
     REMOTE_STATUS_TIMEOUT:'Die Fernbedienung hat nicht rechtzeitig auf die Verbindungsprüfung geantwortet. Bitte erneut verbinden.',
@@ -37,7 +38,7 @@ const de = {
 };
 const en = {
   title:'Remote control', compactLayout:'Compact view', compactCenter:'Center', compactBack:'Back', brief:'Operate the device menu',
-  setupShort:'Exit file transfer or AmiiboLink on the device. Enable BLE remote under Settings → Remote → until off. Choose “Connect remote” here and select Pixl.Remote.',
+  setupShort:'Exit file transfer or AmiiboLink on the device. Enable BLE remote under Settings → Remote → until off. Choose “Connect remote”, then select Pixl.Remote or the short OLED name Pixl.Rem.',
   setupTitle:'Setup, range and sleep mode',
   introduction:'Left, Center and Right act like short button presses on the Allmiibo.',
   setup:'“Until off” enables remote control for this session. Keep the device awake. It is off again after power-off or restart. Physical buttons remain available. While enabled, a client in Bluetooth range can control the device.',
@@ -59,7 +60,8 @@ const en = {
   failed:'The command could not be confirmed safely. It was not automatically sent again.',
   unconfirmed:'The command you sent may already have arrived. Check the device menu before sending it again.',
   errors:{REMOTE_UNSUPPORTED:'This device does not offer the required acknowledged remote protocol. Normal file transfer remains available.',
-    REMOTE_NO_SELECTION:'No device selected. Choose Pixl.Remote the next time you connect.',
+    REMOTE_NO_SELECTION:'No device selected. Keep Remote enabled on the device. From OLED Test 5 onward, Settings → Device test shows “BLE: Pixl.Remote” when the firmware reports it is advertising. Then reopen the picker.',
+    REMOTE_WRONG_DEVICE:'Choose Pixl.Remote or the short OLED name Pixl.Rem. The picker can also show other Bluetooth serial devices. If the name is missing, reopen the picker and wait for the device name.',
     REMOTE_PERMISSION:'The browser denied Bluetooth access. Check Bluetooth permission for this site.',
     REMOTE_CONNECT_FAILED:'Could not connect to the selected device. Check whether Pixl.Remote is still visible.',
     REMOTE_STATUS_TIMEOUT:'The remote did not respond to the connection check in time. Please reconnect.',

@@ -79,6 +79,7 @@ test('a first command waiting for the wire codec never reaches a replacement BLE
 test('same-link ownership executes real remote handshake then real file version query without reconnect',async()=>{
  const {createRemoteClient}=await import(pathToFileURL(path.join(process.env.PIXL_SOURCE_DIR||path.join(__dirname,'../src/lib'),'remote-control.js')));
  const f=bleFixture();let picks=0,connects=0,starts=0,stops=0,disconnects=0,ready=0;const writes=[];
+ f.device.name='Pixl.Remote';
  f.navigator.bluetooth.requestDevice=async()=>{picks++;return f.device;};
  f.device.gatt.connect=async()=>{connects++;f.device.gatt.connected=true;return f.device.gatt;};
  f.device.gatt.disconnect=()=>{disconnects++;f.device.gatt.connected=false;f.device.events.emit('gattserverdisconnected',{target:f.device});};
@@ -187,7 +188,7 @@ test('qualified LCD versions request cache-slot detail; rejected optional select
   assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
  }
  {
-  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.85-OLEDt5');
+  const f=protocolFixture(),p=f.api.get_startup_diagnostics('2.22.0-DE3.88-OLEDt7');
   assert.deepEqual(f.writes,[[9,0,0,0]],'unknown OLED never inherits the LCD PackedFS selector');
   f.rx(9,[],0,255);assert.equal(await p,null);
  }

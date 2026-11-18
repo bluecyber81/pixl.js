@@ -190,7 +190,7 @@ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84']) test(`L
     assert.equal(await missing, null);
 });
 
-for (const t3 of ['2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt4']) test(`OLED ${t3} probes supported diagnostics and handles missing screens and JEDEC data`, async () => {
+for (const t3 of ['2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt4','2.22.0-DE3.85-OLEDt5']) test(`OLED ${t3} probes supported diagnostics and handles missing screens and JEDEC data`, async () => {
     const display = await import('../src/lib/display-photo.js');
     const f = fixture(display);
     for (const version of ['2.22.0-DE3.81-OLEDt1', '2.22.0-DE3.81-OLEDt2']) {
@@ -425,7 +425,7 @@ test(`PXBI sends only one optional command on App${counter} and checks the assem
     const bytes=new Uint8Array(80);
     bytes.set([80,88,66,73,1,80,1,0]);bytes.fill(97,8,72);
     const f=fixture(bindings);
-    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.85-OLEDt5','2.22.0-DE3.88','2.22.0-DE3.85t1','',null])
+    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.86-OLEDt6','2.22.0-DE3.88','2.22.0-DE3.85t1','',null])
         assert.equal(await f.api.get_lcd_build_diagnostics(v),null);
     assert.deepEqual(f.writes,[]);
     const reading=f.api.get_lcd_build_diagnostics(version);

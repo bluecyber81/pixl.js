@@ -113,6 +113,23 @@ const oledTest4 = Object.freeze({
   otaSha256: '8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7',
 });
 
+const oledTest5 = Object.freeze({
+  ...oledTest4, firmwareVersion: '2.22.0-DE3.85-OLEDt5', applicationCounter: 85, applicationBytes: 360652,
+  releaseTag: 'de3.85-oled-t5', sourceCommit: '605aa6c6cb2eb0a61dbd8385004181f2aeae75e7',
+  applicationBinSha256: 'e403e5afe50e9dc47e27ef2c1292144f905481f20f2ddfbab639b38707a1c050',
+  sourceId: 'fe3647d69c2c418da2eec528bd09812916fbd3a6d0157be27a515941b6962a13',
+  otaSha256: '16e019fde2cd5283a462bba31fe4ee65fafc7dcddaa7c4bccd200f334af26a1f',
+});
+
+const oledTest6 = Object.freeze({
+  firmwareVersion: '2.22.0-DE3.87-OLEDt6', applicationCounter: 86, board: 'OLED', chipPart: 0x52832,
+  artifactStatus: 'experimental-signed-application', hardwareAcceptance: 'pending',
+  releaseTag: 'de3.87-oled-t6', applicationBytes: 363412, sourceCommit: 'ca383d3474893c13abc607d5a59084c7e8769e99',
+  applicationBinSha256: '0db0ac96e8b58170f630b1ecbede44fed5b750db19eaee195ac49cbfc2227c3a',
+  sourceId: '8003b29ac91fdf213ace90b5fc74274ce04cf84661d7d3c5f53bb0ed9a8115f0',
+  otaSha256: 'eaf4e645a04521268d4e39f03f5448048d43c7b66a5a5b9f48bcee91db2abaa8',
+});
+
 const app658 = Object.freeze({
   "firmwareVersion": "2.22.0-DE3.85",
   "applicationCounter": 658,
@@ -157,7 +174,7 @@ const app660 = Object.freeze({
   "sourceCommit": "bda84eedd040d81b7362bf0cb5df19d14dbcd05b"
 });
 
-const references = [app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
+const references = [app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

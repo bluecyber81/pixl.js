@@ -3,6 +3,7 @@
 import { claimGatt, ownsGatt, releaseGatt } from './gatt-owner.js';
 export const REMOTE_UUIDS=Object.freeze({service:'6e400001-b5a3-f393-e0a9-e50e24dcca9e',write:'6e400002-b5a3-f393-e0a9-e50e24dcca9e',notify:'6e400003-b5a3-f393-e0a9-e50e24dcca9e'});
 export const REMOTE_NAME='Pixl.Remote';
+const remoteShortName='Pixl.Rem';
 export const REMOTE_LCD_CAPABILITY=0x20;
 const lcdOpcode=5, lcdBytes=1024;
 const commands=Object.freeze({status:[0,0],files:[1,0],left:[2,0],center:[2,1],right:[2,2],back:[3,0]});
@@ -125,10 +126,22 @@ export function createRemoteClient(options={}){
     const check=()=>{if(current!==generation || (selected && !ownsGatt(selected,token)))throw error('REMOTE_CANCELLED');};
     state('connecting');
     // Invoke the picker in the user's click stack; never bound its interaction time.
-    let picker;try{picker=environment.navigator.bluetooth.requestDevice({filters:[{name:REMOTE_NAME,services:[REMOTE_UUIDS.service]}],optionalServices:[REMOTE_UUIDS.service]});}catch(failure){const code=connectionErrorCode(failure,true);state('disconnected',code);throw error(code);}
+    let picker;
+    try {
+      // The name and NUS UUID occupy different advertising packets on T4/T5.
+      picker=environment.navigator.bluetooth.requestDevice({
+        filters:[{name:REMOTE_NAME},{services:[REMOTE_UUIDS.service]}],
+        optionalServices:[REMOTE_UUIDS.service]
+      });
+    } catch(failure) {
+      const code=connectionErrorCode(failure,true);state('disconnected',code);throw error(code);
+    }
     const task=(async()=>{
       try{
-        const chosen=await picker;check();selected=chosen;device=chosen;owner=token;claimGatt(device,token);seq=1;
+        const chosen=await picker;check();
+        // NUS is shared by unrelated devices. Reject them before claiming GATT or probing PX.
+        if(chosen.name!==REMOTE_NAME && chosen.name!==remoteShortName)throw error('REMOTE_WRONG_DEVICE');
+        selected=chosen;device=chosen;owner=token;claimGatt(device,token);seq=1;
         device.addEventListener('gattserverdisconnected',disconnected);
         async function openGatt(){
           token.opening=true;

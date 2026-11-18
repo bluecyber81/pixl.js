@@ -41,13 +41,15 @@ export function copyNotices(mode) {
 <p>${label('Der Dateimanager enthält die hier aufgeführten Bibliotheken und sieben Speicher-Simulatoren.', 'The file manager includes the libraries listed here and seven storage simulators.')}</p>
 <ul><li><a href="${archives.source}" download>${label(`Quellcode des Dateimanagers ${archives.version} mit Simulatorquellen und Build-Anleitungen (ZIP)`, `File manager ${archives.version} source code, simulator sources and build instructions (ZIP)`)}</a></li>
 <li><a href="${archives.previewTestKit}" download>${label('Prüfpaket mit Quellen für DE3.87 / App660 und Z21 (ZIP)', 'Source and test kit for DE3.87 / App660 and Z21 (ZIP)')}</a></li>
-<li><a href="${archives.testKit}" download>${label('ChatGPT-Prüfpaket für Web 3.58.0, App660 und Z21 (ZIP)', 'ChatGPT test kit for Web 3.58.0, App660 and Z21 (ZIP)')}</a></li>
+<li><a href="${archives.testKit}" download>${label('Prüfpaket für OLED DE3.87 Test 6 / App86 (ZIP)', 'OLED DE3.87 Test 6 / App86 test kit (ZIP)')}</a></li>
 <li><a href="${archives.archivedTestKit}" download>${label('Archiviertes ChatGPT-Prüfpaket für DE3.75 / App648, Z19 und Web 3.52.1 (ZIP)', 'Archived ChatGPT test kit for DE3.75 / App648, Z19 and Web 3.52.1 (ZIP)')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.81">${label('Quellstand der aktuellen LCD-Firmware DE3.81 / App654 und des Bootloaders Z21', 'Source code for the current DE3.81 / App654 LCD firmware and Z21 bootloader')}</a></li>
 <li><a href="${sourceUrl}">${label('Exakter Quellstand der mitgelieferten Firmware DE3.65/637', 'Source code for the bundled DE3.65/637 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.72">${label('Quellstand der LCD-Testversion DE3.72/645 mit App-Fortsetzung', 'Source code for the DE3.72/645 LCD test release with app resume')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.73-test646">${label('Quellstand der LCD-Testversion DE3.73/646', 'Source code for the DE3.73/646 LCD test release')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.87-oled-t6">${label('Quellcode der OLED-Testversion 6', 'OLED Test 6 source')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.85-oled-t5">OLED Test 5</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.84-oled-t4">${label('Quellstand der OLED-Testfirmware DE3.84 Test 4', 'Source code for the DE3.84 OLED Test 4 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.75">${label('Archivierter Quellstand der LCD-Firmware DE3.75/648', 'Archived source code for LCD release DE3.75/648')}</a></li></ul>
 <p>${label('Die LCD-App DE3.81 setzt PFS1, Z19, Z20 oder Z21 und S112 7.3.0 voraus. Das Android-Komplettpaket enthält DE3.81, Z21 und S112 7.3.0.', 'The DE3.81 LCD app requires PFS1, Z19, Z20 or Z21, and S112 7.3.0. The Android full package contains DE3.81, Z21 and S112 7.3.0.')}</p>

@@ -1,10 +1,11 @@
-// Exercise the published OLED ZIP with the production DFU parser and transport.
+// Exercise the selected, bundled OLED ZIP with the production DFU parser and transport.
 // The Nordic GATT endpoint and zero-delay yield scheduler are test doubles.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js';
 
 const [dist,base,report] = process.argv.slice(2);
 assert.ok(dist && report && ['/', '/pixl.js/'].includes(base));
@@ -25,12 +26,16 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin = 'http://127.0.0.1:'+server.address().port;
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright');
 const browser = await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE});
-const packageId = 'de3.84-oled-t4-app';
-const zip = 'Allmiibo_OLED_DE3_84_Test4_APP.zip';
-const sha = '2ae048eab497e1e0dda54192b054fd2afd2628367a886b73cb8e09a9711e83a6';
+const catalog = JSON.parse(await readFile(path.join(root,'firmware/releases.json'),'utf8'));
+const packageId = process.env.OLED_BROWSER_PACKAGE || 'de3.87-oled-t6-app';
+const entry = catalog.packages.find(item=>item.board==='OLED' && item.id===packageId);
+assert(entry);
+const zip=entry.file;
+const expected=diagnosticBuildIdentity({firmwareVersion:entry.version}).packageReference;
+const sha=expected.applicationBinSha256;
 const checks = [], errors = [];
 
-function installNordicMock() {
+function installNordicMock(expectedBytes) {
     class Events {
         constructor() {this.listeners=new Map();}
         addEventListener(name,fn) {
@@ -111,7 +116,7 @@ function installNordicMock() {
         }
         if(op===3) {receipt();return;}
         if(op===4) {
-            const complete=state.selected===2 && data.bytes.length===359456;
+            const complete=state.selected===2 && data.bytes.length===expectedBytes;
             reply(op);
             if(complete) {state.executeAck=true;device.gatt.disconnect();}
             return;
@@ -164,7 +169,7 @@ function installNordicMock() {
 try {
     for(const [locale,de] of [['de-DE',true],['en-GB',false]]) {
         const context=await browser.newContext({locale,viewport:{width:390,height:840}});
-        await context.addInitScript(installNordicMock);
+        await context.addInitScript(installNordicMock,expected.applicationBytes);
         const page=await context.newPage();
         page.on('pageerror',error=>errors.push(error.message));
         await page.goto(origin+base);
@@ -172,11 +177,11 @@ try {
         await page.evaluate(()=>document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
         const picker=page.locator('.firmware-board-choice');
         await picker.getByRole('button',{name:'OLED',exact:true}).click();
-        const link=picker.locator('.oled-trial .dfu-page-link');
+        const link=picker.locator('a[href*="?package='+packageId+'"]');
         await link.waitFor();
         const href=await link.getAttribute('href');
         assert.equal(href,base+'dfu/web.html?package='+packageId+'#board=OLED');
-        assert.match(await link.innerText(),de?/OLED im Browser flashen/:/Flash OLED in browser/);
+        assert.match(await link.innerText(),de?/im Browser flashen/:/Flash .*browser/);
         for(const width of [390,1280]) {
             await page.setViewportSize({width,height:840});
             assert.ok(await link.isVisible());
@@ -212,22 +217,22 @@ try {
         await page.locator('#bundled').selectOption(packageId);
         await page.locator('#load-bundled').click();
         await page.waitForFunction(()=>!document.querySelector('#button').disabled);
-        assert.match(await page.locator('#package-target').innerText(),/84/);
+        assert.match(await page.locator('#package-target').innerText(),new RegExp('\\b'+entry.counter+'\\b'));
         assert.match(await page.locator('#package-target').innerText(),/0x0103/);
         assert.equal(await page.evaluate(()=>oledDfuProbe.requests),0);
-        assert.deepEqual(await page.locator('#bundled option').evaluateAll(options=>options.map(option=>option.value).filter(Boolean)),[packageId]);
+        assert.deepEqual(await page.locator('#bundled option').evaluateAll(options=>options.map(option=>option.value).filter(Boolean)),catalog.packages.filter(item=>item.board==='OLED').map(item=>item.id));
         await page.evaluate(()=>{oledDfuProbe.failOnce=true;});
         await page.locator('#button').click();
         await page.waitForFunction(()=>oledDfuProbe.failed && !document.querySelector('#button').disabled);
         assert.match(await page.locator('#status').innerText(),de?/nicht bestätigt/:/not confirmed/);
         const partial=await page.evaluate(()=>oledDfuProbe.result());
         assert.equal(partial.executeAck,false);
-        assert.ok(partial.bytes>=4140 && partial.bytes<359456);
+        assert.ok(partial.bytes>=4140 && partial.bytes<expected.applicationBytes);
         await page.locator('#button').click();
         await page.waitForFunction(()=>oledDfuProbe.executeAck && !document.querySelector('#button').disabled,null,{timeout:120000});
         assert.match(await page.locator('#status').innerText(),de?/Übertragung bestätigt/:/Transfer confirmed/);
         const result=await page.evaluate(()=>oledDfuProbe.result());
-        assert.equal(result.bytes,359456);
+        assert.equal(result.bytes,expected.applicationBytes);
         assert.equal(result.sha256,sha);
         assert.deepEqual(result.starts,[0,partial.bytes]);
         assert.deepEqual(result.activeUserGesture,[true,true]);
@@ -249,7 +254,7 @@ try {
         assert.ok(await page.locator('#button').isDisabled());
         assert.equal(await page.evaluate(()=>oledDfuProbe.requests),0);
         checks.push({locale,feature:'Switching board clears readiness and rejects OLED ZIP under LCD'});
-        for(const [app,sd] of [[83,294],[85,259]]) {
+        for(const [app,sd] of [[83,294],[entry.counter+1,259]]) {
             await page.goto(origin+base+'dfu/web.html?package='+packageId+'#board=OLED&read='+Date.now()+'&app='+app+'&bl=1&sd='+sd);
             await page.locator('#board-profile').waitFor();
             assert.ok(await page.locator('#load-bundled').isDisabled());

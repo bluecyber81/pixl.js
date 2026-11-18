@@ -9,6 +9,7 @@ const turn=()=>new Promise(resolve=>setTimeout(resolve,0));
 class Events{listeners=new Map();addEventListener(name,fn){if(!this.listeners.has(name))this.listeners.set(name,new Set());this.listeners.get(name).add(fn);}removeEventListener(name,fn){this.listeners.get(name)?.delete(fn);}emit(name){for(const fn of [...this.listeners.get(name)||[]])fn({target:this});}}
 function fixture(options={}){
   const states=[],packets=[],pickers=[];const device=new Events(),rx=new Events(),tx={properties:{write:true,writeWithoutResponse:true}};
+  device.name=REMOTE_NAME;
   let disconnects=0,stops=0,starts=0;
   const reply=(request,{status=0,state=1,caps=15,sequence=request[4]|request[5]<<8,opcode=request[3]}={})=>Uint8Array.of(0x50,0x58,1,0x80|opcode,sequence&255,sequence>>>8,status,state,caps&255,caps>>>8,0,0);
   const notify=bytes=>{rx.value=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);rx.emit('characteristicvaluechanged');};
@@ -19,14 +20,37 @@ function fixture(options={}){
   const service={getCharacteristic:async uuid=>{assert([REMOTE_UUIDS.write,REMOTE_UUIDS.notify].includes(uuid));return uuid===REMOTE_UUIDS.write?tx:rx;}};
   const server={getPrimaryService:async uuid=>{assert.equal(uuid,REMOTE_UUIDS.service);if(options.service)return options.service();return service;}};
   device.gatt={connected:false,connect:()=>{if(options.connect)return options.connect(device,server);device.gatt.connected=true;return Promise.resolve(server);},disconnect:()=>{disconnects++;device.gatt.connected=false;device.emit('gattserverdisconnected');}};
-  const environment={isSecureContext:true,navigator:{bluetooth:{requestDevice:request=>{pickers.push(request);return options.picker?options.picker():Promise.resolve(device);}}}};
+  const environment={isSecureContext:true,navigator:{bluetooth:{requestDevice:request=>{pickers.push(request);return options.picker?options.picker(request):Promise.resolve(device);}}}};
   const client=createRemoteClient({environment,onState:s=>states.push(s),stepMs:40,commandMs:40,stopMs:5,...options.client});
   return{client,device,rx,tx,states,packets,pickers,notify,reply,get counts(){return{disconnects,stops,starts};}};
 }
-test('remote is inert until explicit connect and filters exact name plus NUS',async()=>{
+test('remote is inert until explicit connect and can discover the exact name or NUS',async()=>{
  const f=fixture();assert.equal(f.pickers.length,0);assert.equal(f.packets.length,0);await f.client.connect();
- assert.deepEqual(f.pickers,[{filters:[{name:REMOTE_NAME,services:[REMOTE_UUIDS.service]}],optionalServices:[REMOTE_UUIDS.service]}]);
+ assert.deepEqual(f.pickers,[{filters:[{name:REMOTE_NAME},{services:[REMOTE_UUIDS.service]}],optionalServices:[REMOTE_UUIDS.service]}]);
  assert.deepEqual([...f.packets[0]],[80,88,1,0,1,0,0,0]);assert.equal(f.client.snapshot().phase,'ready');await f.client.disconnect();
+});
+test('either discovery field can reach a named remote and only a valid PX status enables controls',async()=>{
+ for(const ad of [{name:REMOTE_NAME,services:[]},{services:[REMOTE_UUIDS.service]},{name:'Pixl.Rem',services:[REMOTE_UUIDS.service]}]){
+  const f=fixture({picker:({filters})=>{
+   const visible=filters.some(filter=>(!filter.name||filter.name===ad.name)
+     &&(filter.services||[]).every(uuid=>ad.services.includes(uuid)));
+   return visible?Promise.resolve(f.device):Promise.reject(new DOMException('empty picker','NotFoundError'));
+  }});
+  f.device.name=ad.name??REMOTE_NAME;
+  await f.client.connect();assert.deepEqual(f.packets.map(p=>p[3]),[0]);assert.equal(f.client.snapshot().phase,'ready');
+  await f.client.disconnect();
+ }
+});
+test('an unnamed or unrelated UART device gets no GATT connection, notification or probe; selection can be retried',async()=>{
+ let connects=0;
+ const f=fixture({connect:(device,server)=>{connects++;device.gatt.connected=true;return Promise.resolve(server);}});
+ for(const name of [undefined,null,'','Pixl','Pixl.Re','Pixl.Rem2','Pixl.Remote 2','Other UART']){
+  f.device.name=name;
+  await assert.rejects(f.client.connect(),{code:'REMOTE_WRONG_DEVICE'});
+  assert.equal(f.client.snapshot().phase,'disconnected');assert.equal(f.states.at(-1).error,'REMOTE_WRONG_DEVICE');
+  assert.equal(connects,0);assert.equal(f.counts.starts,0);assert.equal(f.counts.disconnects,0);assert.equal(f.packets.length,0);
+ }
+ f.device.name=REMOTE_NAME;await f.client.connect();assert.equal(connects,1);await f.client.disconnect();
 });
 test('same-link handoff requires capability and transfers sole ownership without stopping notifications',async()=>{
  const f=fixture({write:(req,notify,reply)=>notify(reply(req,{caps:31,...(req[3]===4?{state:3}:{})}))});
