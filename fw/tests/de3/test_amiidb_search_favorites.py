@@ -158,8 +158,8 @@ static int remove_file(const char*p){
 static vfs_driver_t driver={.open_dir=open_dir,.read_dir=read_dir,.close_dir=close_dir,.create_dir=action,.remove_dir=action,.remove_file=remove_file,.write_file_data=write_data};
 vfs_driver_t *vfs_get_driver(vfs_drive_t d){assert(d==VFS_DRIVE_EXT);return driver_absent?NULL:&driver;}
 #include "amiidb_api_fav.c"
-static int favorites,folders;
-static void cb(amiidb_fav_info_t*i,void*c){(void)c;if(i->fav_type==FAV_TYPE_FAV)favorites++;else folders++;}
+static int favorites,folders,aliases;
+static void cb(amiidb_fav_info_t*i,void*c){(void)c;if(i->fav_type==FAV_TYPE_FAV){favorites++;aliases+=i->name_alias;}else folders++;}
 int main(void) {
  struct {unsigned a;amiidb_fav_t fav;unsigned b;} guarded={.a=123,.b=456};
  assert(amiidb_api_fav_parse_filename("255_1234aBcD_89abcdef.fav",&guarded.fav));
@@ -190,6 +190,8 @@ int main(void) {
  strcpy(entries[2].name,"2_1234abcd_89abcdef.fav");entries[2].type=VFS_TYPE_REG;
  strcpy(entries[3].name,"01_1234abcd_89abcdef.fav");entries[3].type=VFS_TYPE_DIR;
  entry_count=4;int old_writes=writes;
+ favorites=folders=aliases=0;
+ assert(amiidb_api_fav_list_dir("valid",cb,NULL)==0 && favorites==3 && folders==1 && aliases==2);
  assert(amiidb_api_fav_add("valid",&before)==VFS_OK && writes==old_writes && entry_count==4);
  close_error=VFS_ERR_FAIL;assert(amiidb_api_fav_remove("valid",&before)==VFS_ERR_FAIL && !removes);close_error=0;
  assert(amiidb_api_fav_remove("valid",&before)==VFS_OK && removes==2 && entry_count==2);

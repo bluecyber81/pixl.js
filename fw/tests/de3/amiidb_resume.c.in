@@ -46,6 +46,7 @@ typedef struct {
  amiidb_fav_t cur_fav;
  amiidb_fav_info_t fav_page_anchor;
  int8_t fav_page_direction;
+ uint16_t fav_page_number;
  uint8_t fav_page_focus,fav_page_mode,in_fav_folders,cur_slot_index,cur_focus_index;
  uint16_t cur_scroll_offset;
  uint8_t tag_canary[512];
@@ -126,14 +127,14 @@ static app_amiidb_cache_data_t valid_snapshot(unsigned scene,unsigned origin){
  app.cur_slot_index=2;view.focus=3;
  app.cur_fav=(amiidb_fav_t){.game_id=2,.amiibo_head=22,.amiibo_tail=202};
  app.fav_page_anchor.fav_type=FAV_TYPE_FOLDER;strcpy(app.fav_page_anchor.fav_data.folder_name,"previous-folder");
- app.fav_page_direction=1;app.fav_page_mode=3;app.fav_page_focus=7;
+ app.fav_page_direction=1;app.fav_page_number=42;app.fav_page_mode=3;app.fav_page_focus=7;
  list.count=8;list.focus=5;list.scroll=26;
  struct{uint8_t before[8],data[CACHEDATASIZE],after[8];} bytes;memset(&bytes,0xcd,sizeof(bytes));
  app_amiidb_save_cache(&app,bytes.data,scene);
  for(unsigned i=0;i<8;i++)assert(bytes.before[i]==0xcd && bytes.after[i]==0xcd);
  app_amiidb_cache_data_t result;memcpy(&result,bytes.data,sizeof(result));
  for(unsigned i=sizeof(result);i<CACHEDATASIZE;i++)assert(bytes.data[i]==0);
- assert(result.magic==APP_AMIIDB_RESUME_MAGIC && result.version==1 && result.size==sizeof(result));
+ assert(result.magic==APP_AMIIDB_RESUME_MAGIC && result.version==2 && result.fav_page_number==42 && result.size==sizeof(result));
  finish(&app);return result;
 }
 static unsigned restore_case(const app_amiidb_cache_data_t *data,unsigned alignment,bool ok,unsigned expected){
@@ -144,6 +145,7 @@ static unsigned restore_case(const app_amiidb_cache_data_t *data,unsigned alignm
  bool result=app_amiidb_restore_cache(&app,input+alignment);
  assert(result==ok && !memcmp(before,input,sizeof(input)));
  if(result){
+  assert(app.fav_page_number==(data->version==1?0:data->fav_page_number));
   unsigned actual=mui_scene_dispatcher_current_scene(&dispatcher);
   if(actual!=expected){fprintf(stderr,"scene mismatch: expected %u actual %u target %u origin %u\n",expected,actual,data->target_scene,data->origin_scene);abort();}
   assert(!strcmp(string_get_cstr(app.search_str),data->search_str));
@@ -168,6 +170,9 @@ int main(void){
   assert(data.target_scene==targets[scene]);
   for(unsigned alignment=0;alignment<4;alignment++)restore_case(&data,alignment,true,targets[scene]);
  }
+ app_amiidb_cache_data_t legacy=valid_snapshot(AMIIDB_SCENE_FAV_LIST,AMIIDB_SCENE_FAV_LIST);
+ assert(sizeof(legacy)==296);legacy.version=1;legacy.fav_page_number=0xf1f2;
+ restore_case(&legacy,0,true,AMIIDB_SCENE_FAV_LIST);
  app_amiidb_cache_data_t base=valid_snapshot(AMIIDB_SCENE_AMIIBO_DETAIL_MENU,AMIIDB_SCENE_AMIIBO_SEARCH);
  assert(base.recent_count==5);
  const db_amiibo_t *recent[AMIIDB_RECENT_LIMIT];assert(amiidb_recent_copy(recent)==5);
@@ -177,7 +182,7 @@ int main(void){
   switch(kind){
    case 0:bad.magic=1;break;
    case 1:bad.version=0;break;
-   case 2:bad.version=2;break;
+   case 2:bad.version=3;break;
    case 3:bad.size--;break;
    case 4:bad.target_scene=AMIIDB_SCENE_MAX;break;
    case 5:bad.target_scene=AMIIDB_SCENE_AMIIBO_DETAIL_MENU;break;

@@ -33,7 +33,7 @@ bool isChineseLanguage(void){return chinese;}
 const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?a->name_cn:a->name_en;}
 bool is_valid_amiibo_v3(uint32_t a,uint32_t b){(void)a;(void)b;return false;}
 void mui_toast_view_show(mui_toast_view_t *view,const char *text) {
-    if(strstr(text," · ")){
+    if(strstr(text," · ") || !strcmp(text,"Zelda")){
         assert(view==&test_toast && strlen(text)<sizeof(page_hint));
         strcpy(page_hint,text);view->is_visible=true;hint_count++;
     }else errors++;
@@ -65,6 +65,19 @@ int32_t amiidb_api_fav_add(const char*p,const amiidb_fav_t*f){(void)p;saved_fav=
 @DETAIL@
 
 
+static unsigned indexed_stats;
+static int32_t stat_failure;
+int32_t amiidb_api_fav_has_canonical(const char *folder,const amiidb_fav_t *fav,bool *present) {
+    (void)folder;indexed_stats++;*present=false;
+    if(stat_failure)return stat_failure;
+    for(unsigned i=0;i<info_count;i++){
+        const amiidb_fav_info_t *info=&infos[i];
+        if(info->fav_type==FAV_TYPE_FAV && !info->name_alias && !fav_record_compare(&info->fav_data.fav,fav)){
+            *present=true;break;
+        }
+    }
+    return VFS_OK;
+}
 static void*fixed[32];static unsigned fixed_count;
 static void reserve(size_t n){void*p=mui_mem_malloc(n);assert(p&&fixed_count<32);memset(p,0,n);fixed[fixed_count++]=p;}
 static app_amiidb_t *begin(bool pressure){
@@ -154,6 +167,49 @@ static void favorite_folder_hint(void) {
     }
     english=false;
 }
+static void favorite_alias_rank(void) {
+    make(25,false);assert(expected_count(false)==25);
+    for(unsigned i=0;i<24;i++){infos[info_count]=expected[i];infos[info_count++].name_alias=true;}
+    app_amiidb_t *app=begin(false);string_set_str(app->cur_fav_dir,"Zelda");
+    amiidb_scene_fav_list_on_enter(app);click(app,ICON_NEXT);expect_hint("Zelda",2);
+    assert(data_count(app)==1 && indexed_stats==0 && close_count==2);
+    amiidb_scene_fav_list_on_exit(app);amiidb_scene_fav_list_on_enter(app);
+    expect_hint("Zelda",2);assert(close_count==3 && !indexed_stats);
+    /* A retained v1 anchor has no ordinal. The only extra pass collects the
+     * noncanonical IDs, and checks each via an indexed canonical lookup. */
+    app->fav_page_number=0;amiidb_scene_fav_list_reload(app);expect_hint("Zelda",2);
+    assert(close_count==5 && indexed_stats==24 && data_count(app)==1);
+    click(app,ICON_PREV);
+    assert(amiidb_fav_page_focus(app,&expected[24].fav_data.fav));expect_hint("Zelda",2);
+    /* All alias spellings for the same ID still count only once if the
+     * canonical spelling is absent (e.g. two independently imported names). */
+    for(unsigned i=0;i<24;i++)infos[i].name_alias=true;
+    app->fav_page_number=0;amiidb_scene_fav_list_reload(app);expect_hint("Zelda",2);
+    infos[0].name_alias=false;stat_failure=VFS_ERR_FAIL;
+    app->fav_page_number=0;amiidb_scene_fav_list_reload(app);
+    assert(!strcmp(page_hint,"Zelda") && data_count(app)==1 && !app->fav_page_number);
+    stat_failure=0;
+    mui_mem_monitor_t monitor;
+    for(;;){
+        mui_mem_monitor(&monitor);
+        if(monitor.free_biggest_size<128)break;
+        reserve(monitor.free_biggest_size-32);
+    }
+    uint32_t before=123;assert(!fav_alias_rank("Zelda",&expected[24].fav_data.fav,48,&before));
+    assert(before==123 && data_count(app)==1 && app->p_list_view->selected_cb);
+    end(app);
+    /* Many noncanonical-only markers, permuted physical order. Keep scratch
+     * bounded, and count actual complete enumerations separately from lookups. */
+    make(950,false);assert(expected_count(false)==950);
+    for(unsigned i=0;i<info_count;i++)infos[i].name_alias=true;
+    for(unsigned i=0;i<40;i++){infos[info_count]=expected[i];infos[info_count++].name_alias=true;}
+    app=begin(false);string_set_str(app->cur_fav_dir,"Zelda");
+    amiidb_scene_fav_list_on_enter(app);indexed_stats=0;unsigned from=close_count;
+    assert(amiidb_fav_page_focus(app,&expected[949].fav_data.fav));expect_hint("Zelda",40);
+    assert(!indexed_stats && close_count-from<=18);
+    printf("PASS 950 unique alias-only markers, 40 extra spellings, nonlocal detail return in %u complete enumerations; retained and ordinary page steps each use one.\n",close_count-from);
+    end(app);cases++;
+}
 static void favorite_alias_page(void) {
     for(unsigned size=24;size<=25;size++) {
         make(size,false);
@@ -237,6 +293,7 @@ int main(void){
 #else
  unsigned sizes[]={0,1,24,25,100,1000};for(unsigned repeat=0;repeat<2;repeat++)for(unsigned i=0;i<6;i++){pages(sizes[i],0,false);pages(sizes[i],1,false);pages(sizes[i],1,true);pages(sizes[i],2,false);pages(sizes[i],2,true);}errors_and_return();
  favorite_folder_hint();
+ favorite_alias_rank();
  favorite_alias_page();
  favorite_detail_and_folder_picker_return();
 #endif
