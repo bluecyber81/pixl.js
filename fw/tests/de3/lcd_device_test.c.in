@@ -6,10 +6,59 @@
 
 enum { LANGUAGE_DE_DE, LANGUAGE_EN_US };
 enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_DEVICE_TEST };
-typedef struct { void *p_view_dispatcher; mui_view_t device_test; uint8_t tested_keys, held_keys; } app_settings_t;
+#define BOARD_LCD 1
+#define PIXL_RUNTIME_DIAGNOSTICS 1
+typedef struct {
+ void *p_view_dispatcher,*p_view_dispatcher_toast,*p_scene_dispatcher;
+ void *p_list_view,*p_progress_bar,*p_msg_box,*p_toast_view;
+ bool exit_saved;
+ mui_view_t device_test;
+ uint8_t tested_keys,held_keys,released_keys,device_test_page,backlight_target;
+ uint32_t backlight_error;
+} app_settings_t;
+typedef struct {app_settings_t *p_handle;} mini_app_inst_t;
+static unsigned saved_backlight=65, actual_backlight=65, preview_calls, restores, cleanup_calls, save_calls, pwm_error;
+static bool preview_active;
+static unsigned mui_u8g2_backlight_preview(uint8_t value) {
+ preview_calls++;
+ if(pwm_error) return pwm_error;
+ actual_backlight=value;preview_active=true;return 0;
+}
+static unsigned mui_u8g2_backlight_restore(void) {
+ if(preview_active){actual_backlight=saved_backlight;preview_active=false;restores++;}return 0;
+}
+static int8_t mui_u8g2_get_backlight_level(void){return actual_backlight;}
+static void cleanup(void *p){(void)p;assert(actual_backlight==saved_backlight);cleanup_calls++;}
+#define mui_scene_dispatcher_free cleanup
+#define mui_view_dispatcher_free cleanup
+#define mui_list_view_free cleanup
+#define mui_progress_bar_free cleanup
+#define mui_msg_box_free cleanup
+#define mui_toast_view_free cleanup
+#define mui_mem_free cleanup
+#define MUI_LAYER_FULLSCREEN 0
+#define MUI_LAYER_TOAST 1
+#define NRF_SUCCESS 0
+#define NRF_LOG_WARNING(...) ((void)0)
+static void mui_nav_diag_end(void){}
+static int32_t settings_save(void){assert(actual_backlight==saved_backlight);save_calls++;return 0;}
+static void mui_view_dispatcher_detach(void *p,unsigned layer){(void)layer;cleanup(p);}
+enum {BLE_LINK_INACTIVE,BLE_LINK_ADVERTISING,BLE_LINK_CONNECTED,BLE_LINK_HOST_CONNECTED,BLE_LINK_DISCONNECTING};
+enum {BLE_REMOTE_INIT_IDLE,BLE_REMOTE_INIT_WAIT,BLE_REMOTE_INIT_ADDRESS,BLE_REMOTE_INIT_NAME,
+ BLE_REMOTE_INIT_MTU,BLE_REMOTE_INIT_ADVDATA,BLE_REMOTE_INIT_START,BLE_REMOTE_INIT_READY};
+static bool permission,remote_mode,transitioning;
+static unsigned link_state;
+static uint8_t init_phase;
+static uint32_t init_result;
+static uint8_t ble_remote_init_phase(void){return init_phase;}
+static uint32_t ble_remote_init_result(void){return init_result;}
+static bool ble_remote_enabled(void){return permission;}
+static bool ble_remote_mode_active(void){return remote_mode;}
+static bool ble_mode_transition_pending(void){return transitioning;}
+static unsigned ble_status_state_get(void){return link_state;}
 static unsigned language, active, lines;
 static int32_t error_code;
-static const char *status, *hint;
+static const char *status, *hint, *remote_status;
 static mui_view_t *registered;
 static int getLanguage(void) { return language; }
 static const char *version_get_version(void *unused) { (void)unused; return VERSION; }
@@ -18,14 +67,30 @@ static int32_t runtime_diag_last_vfs_error(void) { return error_code; }
 static void mui_view_dispatcher_add_view(void *d, unsigned id, mui_view_t *v) {
     assert(d && id == SETTINGS_VIEW_ID_DEVICE_TEST); registered = v;
 }
-static void mui_view_dispatcher_switch_to_view(void *d, unsigned id) { assert(d); active = id; }
+static void mui_view_dispatcher_switch_to_view(void *d, unsigned id) {
+ assert(d);
+ if(active==SETTINGS_VIEW_ID_DEVICE_TEST && registered->exit_cb)registered->exit_cb(registered);
+ active=id;
+}
 
 static uint8_t checked_text(mui_canvas_t *c, uint8_t x, uint8_t y, const char *text) {
     const char *expected[] = {VERSION, "ID abcdef012345", status, language ? "Left" : "Links",
                               language ? "Center" : "Mitte", language ? "Right" : "Rechts", hint};
-    assert(lines < sizeof(expected)/sizeof(*expected));
-    assert(!strcmp(text, expected[lines++]));
-    unsigned end = y == 11 ? 101 : y == 47 ? x+39 : 127;
+    app_settings_t *app=registered->user_data;
+    char target[32],error[32];
+    snprintf(target,sizeof(target),"%s %u%% / %s %u%%",language?"Set":"Soll",app->backlight_target,
+             language?"PWM":"Ist",actual_backlight);
+    snprintf(error,sizeof(error),"PWM %08lX",(unsigned long)app->backlight_error);
+    const char *light[]={language?"Backlight test":"Lichttest",target,
+      app->backlight_error?error:(language?"L: Dim  R: Bright":"L: Dunkel  R: Hell"),hint};
+    const char *remote[]={language?"Remote control":"Fernbedienung",remote_status,
+      language?"Settings > Remote":"Einstellungen > Remote",hint};
+    const char **chosen=app->device_test_page==2?light:app->device_test_page==1?remote:expected;
+    assert(lines < (app->device_test_page?4:7));
+    if(strcmp(text,chosen[lines]))fprintf(stderr,"line %u got [%s] expected [%s]\n",lines,text,chosen[lines]);
+    assert(!strcmp(text, chosen[lines++]));
+    unsigned end = !app->device_test_page && y == 11 ? 101 : y == 47 ? x+39 : 127;
+    if(x+mui_canvas_get_utf8_width(c,text)>=end)fprintf(stderr,"overflow [%s] at %u width %u\n",text,x,mui_canvas_get_utf8_width(c,text));
     assert(x > 0 && x+mui_canvas_get_utf8_width(c, text) < end);
     return mui_canvas_draw_utf8(c, x, y, text);
 }
@@ -43,9 +108,11 @@ static void draw(mui_canvas_t *c) {
     memset(pixels, 0, sizeof(pixels)); lines = 0;
     assert(active == SETTINGS_VIEW_ID_DEVICE_TEST);
     registered->draw_cb(registered, c);
-    assert(lines == 7);
+    unsigned page=((app_settings_t*)registered->user_data)->device_test_page;
+    assert(lines == (page?4:7));
     for (unsigned x=0; x<128; ++x) assert(pixel(x,0) && pixel(x,63));
     for (unsigned y=0; y<64; ++y) assert(pixel(0,y) && pixel(127,y));
+    if(page)return;
     for (unsigned x=101; x<107; ++x) assert(pixel(x,6) == (x%2));
     for (unsigned y=0; y<8; ++y)
         for (unsigned x=0; x<8; ++x)
@@ -68,6 +135,7 @@ static void draw(mui_canvas_t *c) {
 static void input(input_key_t key, input_type_t type) {
     mui_input_event_t event = {.key=key, .type=type}; registered->input_cb(registered, &event);
 }
+static void click(input_key_t key){input(key,INPUT_TYPE_PRESS);input(key,INPUT_TYPE_RELEASE);input(key,INPUT_TYPE_SHORT);}
 
 int main(void) {
     static const u8x8_display_info_t display = {.tile_width=16,.tile_height=8,.pixel_width=128,.pixel_height=64};
@@ -78,10 +146,12 @@ int main(void) {
     for (rotated=0; rotated<2; ++rotated) for (language=0; language<2; ++language) {
         u8g2_SetDisplayRotation(&u,rotated ? U8G2_R2 : U8G2_R0);
         status = language ? "VFS: no error" : "VFS: kein Fehler"; error_code = 0;
-        hint = language ? "Hold center: back" : "Mitte halten: zurück";
+        hint = language ? "Center:next; hold:back" : "Mitte:weiter; lang:Ende";
+        permission=remote_mode=transitioning=false; init_result=init_phase=0;
+        remote_status=language?"Remote: off":"Remote: aus";
         settings_device_test_open(&app); draw(&c);
         assert(registered == &app.device_test && !app.held_keys && !app.tested_keys);
-        assert(u8g2_IsGlyph(&u,0xfc));
+        mui_canvas_set_font(&c,MUI_FONT_NORMAL);assert(u8g2_IsGlyph(&u,0xfc));
         input(INPUT_KEY_CENTER, INPUT_TYPE_RELEASE);
         input(INPUT_KEY_CENTER, INPUT_TYPE_SHORT);
         assert(!app.held_keys && !app.tested_keys);
@@ -89,14 +159,48 @@ int main(void) {
             unsigned x = 4+41*k;
             assert(!pixel(x,49)); input(k, INPUT_TYPE_PRESS); draw(&c);
             assert(pixel(x,49) && pixel(x+31,51) && !pixel(x+32,51));
-            input(k, INPUT_TYPE_RELEASE); input(k, INPUT_TYPE_SHORT); draw(&c);
+            input(k, INPUT_TYPE_RELEASE); draw(&c);
             assert(pixel(x,49) && !pixel(x,51));
         }
         input(INPUT_KEY_LEFT, INPUT_TYPE_LONG); input(INPUT_KEY_RIGHT, INPUT_TYPE_REPEAT);
         assert(app.tested_keys == 7 && !app.held_keys && active == SETTINGS_VIEW_ID_DEVICE_TEST);
         error_code = INT32_MIN; status = "VFS: -2147483648"; draw(&c);
+        click(INPUT_KEY_CENTER);assert(app.device_test_page==1);draw(&c);
+        input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT);assert(app.device_test_page==1);
+        permission=true;remote_status=language?"Remote: waiting":"Remote: wartet";draw(&c);
+        remote_mode=transitioning=true;draw(&c);transitioning=false;
+        const char *de_states[]={"Remote: inaktiv","BLE: Pixl.Remote","Remote: verbunden","Remote: nur Link","Remote: trennt"};
+        const char *en_states[]={"Remote: idle","BLE: Pixl.Remote","Remote: connected","Remote: link only","Remote: closing"};
+        for(link_state=0;link_state<=BLE_LINK_DISCONNECTING;link_state++){
+          remote_status=language?en_states[link_state]:de_states[link_state];draw(&c);
+        }
+        init_phase=BLE_REMOTE_INIT_NAME;init_result=17;remote_status="BLE 3/00000011";draw(&c);
+        init_phase=BLE_REMOTE_INIT_START;init_result=0xffffffff;remote_status="BLE 6/FFFFFFFF";draw(&c);
+        init_phase=BLE_REMOTE_INIT_READY;init_result=0;link_state=BLE_LINK_ADVERTISING;remote_status="BLE: Pixl.Remote";
+        click(INPUT_KEY_CENTER);assert(app.device_test_page==2 && actual_backlight==5);draw(&c);
+        uint8_t dim[1024];memcpy(dim,pixels,sizeof(dim));
+        unsigned calls=preview_calls;input(INPUT_KEY_CENTER,INPUT_TYPE_SHORT);
+        input(INPUT_KEY_RIGHT,INPUT_TYPE_SHORT);assert(preview_calls==calls && app.device_test_page==2);
+        click(INPUT_KEY_RIGHT);assert(actual_backlight==100);draw(&c);
+        for(unsigned y=28;y<42;y++)for(unsigned x=8;x<120;x++){
+          unsigned sx=rotated?127-x:x,sy=rotated?63-y:y;
+          assert(pixel(x,y)==((dim[(sy/8)*128+sx]>>(sy%8))&1));
+        }
+        pwm_error=8;click(INPUT_KEY_LEFT);assert(actual_backlight==100 && app.backlight_error==8);draw(&c);
+        pwm_error=0;click(INPUT_KEY_LEFT);assert(actual_backlight==5 && !app.backlight_error);draw(&c);
+        click(INPUT_KEY_CENTER);assert(app.device_test_page==0 && actual_backlight==65);draw(&c);
+        click(INPUT_KEY_CENTER);click(INPUT_KEY_CENTER);click(INPUT_KEY_RIGHT);
         input(INPUT_KEY_CENTER, INPUT_TYPE_PRESS); input(INPUT_KEY_CENTER, INPUT_TYPE_LONG);
-        assert(active == SETTINGS_VIEW_ID_MAIN);
+        assert(active == SETTINGS_VIEW_ID_MAIN && actual_backlight==65 && app.device_test_page==0);
+        settings_device_test_open(&app);click(INPUT_KEY_CENTER);click(INPUT_KEY_CENTER);click(INPUT_KEY_RIGHT);
+        mui_view_dispatcher_switch_to_view(app.p_view_dispatcher,SETTINGS_VIEW_ID_MAIN);
+        assert(actual_backlight==65 && !app.device_test_page);
+        settings_device_test_open(&app);click(INPUT_KEY_CENTER);click(INPUT_KEY_CENTER);click(INPUT_KEY_RIGHT);
+        mini_app_inst_t instance={&app};unsigned saves=save_calls,frees=cleanup_calls;
+        app_settings_on_kill(&instance);
+        assert(!instance.p_handle && actual_backlight==65 && save_calls==saves+1 && cleanup_calls>frees);
+        settings_device_test_restore(&app);settings_device_test_restore(NULL);
+        assert(saved_backlight==65);active=SETTINGS_VIEW_ID_MAIN;
     }
-    puts("PASS LCD device test: both languages, source ID, VFS status, 128x64 edges, stripe pattern, three keys and return");
+    puts("PASS LCD device test: DE/EN R0/R2, source ID, VFS, BLE init states, fixed PWM patterns, stale-input guard, errors, all exit/kill restore paths");
 }
