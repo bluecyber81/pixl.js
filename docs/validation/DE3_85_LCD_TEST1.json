@@ -56,5 +56,18 @@
     "Repeated cold-start comparisons with the same collection",
     "NFC and resume regression on the device"
   ],
-  "reviewFix": "A successful normal brightness change supersedes a pending test-preview restoration; failed changes retain recovery"
+  "reviewFix": "A successful normal brightness change supersedes a pending test-preview restoration; failed changes retain recovery",
+  "validationCommit": "654fc0d9d9d60c1ef6898dea407a2b2968da0c84",
+  "hostReport": "HOST-final4.json",
+  "armTestModel": {
+    "unicornVersion": "2.1.4",
+    "modelSha256": "b28f0cd16678f849d58aece28c98314684d0695fc0eec2ebbf3d1ca3308caeb8",
+    "interface": "native mmio_map; shadow hardware registers; explicit callback error propagation",
+    "instructionLimitPerCall": 1500000,
+    "negativeControls": [
+      "ineffective PWM update",
+      "incorrect MOSI pin"
+    ],
+    "firmwareChangedByModelFix": false
+  }
 }

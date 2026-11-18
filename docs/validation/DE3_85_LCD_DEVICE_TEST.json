@@ -1,6 +1,19 @@
 {
   "passed": true,
   "binarySha256": "46ea9df4be00107f967d751ceffe0679bd74fa7315caf46cc566938cf868a9bb",
+  "elfSha256": "a8056f24554f0f40f0ab02303a4925132fb97dbf1523fdcf3c048297c75243b5",
+  "unicornVersion": "2.1.4",
+  "modelSha256": "b28f0cd16678f849d58aece28c98314684d0695fc0eec2ebbf3d1ca3308caeb8",
+  "validationScriptSha256": "3f54f31df7a7c068bb3183c277f26e0871d709eebad6be9b3b25f57dac2a7c2f",
+  "peripheralModel": {
+    "interface": "native Unicorn mmio_map with shadow register banks",
+    "ranges": [
+      "0x40000000..0x400fffff",
+      "0x50000000..0x50000fff"
+    ],
+    "memoryAccessHooks": false,
+    "instructionLimitPerCall": 1500000
+  },
   "elfMatchesBin": true,
   "cases": [
     {
@@ -153,6 +166,10 @@
     "display shutdown/wake"
   ],
   "negativeControlRejected": "no-op app_pwm_channel_duty_set",
+  "negativeControlsRejected": [
+    "no-op app_pwm_channel_duty_set",
+    "incorrect SPIM MOSI register"
+  ],
   "boundary": "linked UI, ST7567/HAL/Nordic SPIM DMA and actual PWM SDK/TIMER1/PPI/GPIOTE registers",
   "notTested": [
     "physical LCD brightness",
