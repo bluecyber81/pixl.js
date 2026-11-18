@@ -1,0 +1,367 @@
+{
+  "date": "2026-11-18",
+  "version": "2.22.0-DE3.89",
+  "counter": 662,
+  "target": "Allmiibo LCD / ST7567 / PFS1",
+  "releaseClass": "prerelease",
+  "sourceCommit": "fecc8b750288f1028f109067dad9694c9f2c3628",
+  "sourceId": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7",
+  "sourceFilesComparedWithGitCommit": 709,
+  "applicationBytes": 363752,
+  "applicationSha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+  "applicationHexSha256": "a5ba61418304de1b37cb8db417b29e1b3d9bdcb1d685772fa4f02fc89aa58492",
+  "productionManifestSha256": "9901b676dfc535d0c0cece8a4537840454b13c0b52ec2b8c402b7c9f29f07318",
+  "matchingBinAndHexBuilds": 3,
+  "buildToolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+  "nordicSdkSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+    "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+    "bytes": 252544,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 662,
+        "sd_req": [
+          294
+        ],
+        "bytes": 363752,
+        "sha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 363752,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "signedOtaVerification": {
+    "previewMode": "preview",
+    "matchesExpectedBinary": true,
+    "previewReportSha256": "d8877650aa2e1ce5668ba2e2b4df2541c6e3dd7341263d8a1c6362105e92da26",
+    "independentInitPacketAndRepositoryChecksPassed": true,
+    "embeddedApplicationMatchesBuild": true
+  },
+  "reviewPackage": {
+    "name": "Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip",
+    "sha256": "c5383a84e8d0af1bf20bbea36bebbec610841fc5b0c7adb00bbbf2ed5c6f2d89",
+    "bytes": 1080175,
+    "entries": 77,
+    "verifiedZipCrcAndFileManifest": true,
+    "containsSignedOtaAndMatchingBinAndHex": true
+  },
+  "systemPrerequisites": {
+    "bootloaderProfile": "Z21",
+    "softDevice": "S112 7.3.0",
+    "requiredFwid": "0x0126",
+    "bootloaderRegionReferenceSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "referenceEvidence": "docs/validation/DE3_87_LCD_TEST1.json",
+    "imagesIncluded": [
+      "application"
+    ]
+  },
+  "memory": {
+    "binary_bytes": 363752,
+    "linker_flash_used_bytes": 363752,
+    "observed": {
+      "flash_reserve_bytes": 8984,
+      "heap_stack_gap_bytes": 2000,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "linkedArmTests": {
+    "previewElfSha256": "9a59be1dddf8db72c3fe812e548d7bc3a1bdf02d1d8dd0355bba61f8902fac9d",
+    "testsPassed": [
+      "check_stack_watermark_elf",
+      "check_first_menu_elf",
+      "check_aes_m4_elf",
+      "check_flash_jedec_elf",
+      "check_display_profile_elf",
+      "check_lcd_game_rotation_elf",
+      "check_build_fault_elf"
+    ],
+    "lcdDeviceTest": {
+      "passed": true,
+      "binarySha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+      "testedElfSha256": "9a59be1dddf8db72c3fe812e548d7bc3a1bdf02d1d8dd0355bba61f8902fac9d",
+      "elfMatchesBin": true,
+      "languageRotationCombinations": 4,
+      "languages": [
+        "de",
+        "en"
+      ],
+      "rotationsDegrees": [
+        0,
+        180
+      ],
+      "negativeControlsRejected": [
+        "no-op app_pwm_channel_duty_set",
+        "incorrect SPIM MOSI register"
+      ],
+      "scope": "linked UI, ST7567/HAL/Nordic SPIM DMA and actual PWM SDK/TIMER1/PPI/GPIOTE registers",
+      "fullReportSha256": "4b6fbd70b557ca10f591a076dab464263d4be3b129c5163c9552afb3febfe023",
+      "notTested": [
+        "physical LCD brightness",
+        "electrical timing",
+        "real hardware sleep",
+        "settings filesystem writes"
+      ],
+      "capturedRawFrames": 16
+    },
+    "hardwareModeled": true
+  },
+  "z21Resume": {
+    "passed": true,
+    "testsAppBinaryFromSignedOta": true,
+    "payloadBytes": 363752,
+    "applicationSha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+    "cutOffsets": [
+      40,
+      180264,
+      360488
+    ],
+    "cutKinds": [
+      "link",
+      "link",
+      "cold-restart"
+    ],
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "modeledCheckpointPowerCuts": 455,
+    "modeledLinkCutsDuringCheckpoint": 5,
+    "modeledAdmissionOrCompletionFailures": 8,
+    "duplicateExecuteExtraErases": 0,
+    "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access.",
+    "fullReportSha256": "c5a629d220f9cdaf2d8c0f93d7fafb0f33ff3a9133ff25855e1c468ca1b49303"
+  },
+  "hostTests": {
+    "profile": "full",
+    "available": 170,
+    "run": 170,
+    "passed": 170,
+    "omitted": 0,
+    "sourcesUnchangedDuringTests": true,
+    "fullReportSha256": "1b3891bc2b45bb29fbd329f24a0da6af5384214479ceb5dea39b19cda8fa0ffb"
+  },
+  "smallFileProtocol": {
+    "maxFileBytes": 572,
+    "ordinary540ByteFileRequestsAtAttMtu250": 3,
+    "checks": [
+      "incoming SHA-256",
+      "exclusive create",
+      "persistent length and SHA-256 readback",
+      "revision-conditional folder publication"
+    ],
+    "fixtures": {
+      "host": {
+        "fullReportSha256": "84769104ab2455ce9e93c68ea8fc37bce6670660bceaead8fb526c2c085bc2f5",
+        "smallCreateCutCases": 60,
+        "conditionalPublishCutCases": 63,
+        "injectedReadFailures": 468,
+        "injectedAllocationFailures": 4,
+        "reservedSpaceRefusals": 1,
+        "remainingAllocationBytes": 0
+      },
+      "sanitize": {
+        "fullReportSha256": "70bda80d9ad984dfc5918fc69bdf999f88ae9937bb9b7ea2bd852fb092d2ca6e",
+        "smallCreateCutCases": 60,
+        "conditionalPublishCutCases": 63,
+        "injectedReadFailures": 468,
+        "injectedAllocationFailures": 4,
+        "reservedSpaceRefusals": 1,
+        "remainingAllocationBytes": 0
+      },
+      "arm32": {
+        "fullReportSha256": "a776097b5637775215e3e4a29838dd8674efafe568b53124f93b623dfc0babeb",
+        "smallCreateCutCases": 60,
+        "conditionalPublishCutCases": 63,
+        "injectedReadFailures": 468,
+        "injectedAllocationFailures": 4,
+        "reservedSpaceRefusals": 1,
+        "remainingAllocationBytes": 0
+      }
+    },
+    "scope": "Actual firmware C, PackedFS and LittleFS with modeled NOR and connection events."
+  },
+  "physicalComparisonOnPreviousFirmware": {
+    "firmware": "2.22.0-DE3.87 LCD",
+    "fixture": {
+      "files": 128,
+      "bytesPerFile": 540,
+      "payloadBytes": 69120,
+      "physicalDisconnectOnFileNumber": 33,
+      "attMtu": 250,
+      "sameLcdAndDestinationDepth": true
+    },
+    "interval": "First upload confirmation to success, including disconnection and continuation. Independent final verification and cleanup followed.",
+    "mochi": {
+      "sourceCommit": "3b0e2ab76aa18a3ad3428d92922229d1ad65ec69",
+      "elapsedMs": 336207,
+      "verifiedFiles": 128,
+      "unexpectedEntries": 0
+    },
+    "allmiiboFileManager": {
+      "testedBrowserEntrySha256": "08faa40a9018ff8b5d4226e9cefd9f045e941b666ff4bc52b65fb5f9f8b3617b",
+      "elapsedMs": 505175,
+      "verifiedFiles": 128,
+      "unexpectedEntries": 0,
+      "completeFilesBeforeResume": 32,
+      "finalFolderVisibleBeforeResume": false
+    },
+    "fullReportSha256": "ca35e3f8cac27ff339883069610cf39c9c080131258ded05c68bc85193a9a69c"
+  },
+  "physicalAcceptance": "pending",
+  "nextPhysicalChecks": [
+    "Install the application-only ZIP on a compatible LCD and read back counter 662, compiled LCD board and SourceID.",
+    "Repeat the 128-file transfer with a physical disconnection during file 33. Time the complete upload and independently check every SHA-256 and the final directory.",
+    "Run a backup on the LCD, compare restored or exported file contents with the source, and check larger-file and older-firmware fallbacks separately.",
+    "Verify physical phone DFU interruption and recovery separately."
+  ],
+  "storageEngineQualification": {
+    "document": "docs/validation/DE3_89_PFS.json",
+    "documentSha256": "70ff6ece46496e1006a8b00cecb35bc3d02aebfdae9a006e8e84cc228730fc0e",
+    "firmwareEngineSha256": "b0ae389e7fac3c7ce5f28607de7cd1cadad5465ab2ad4c1e2dc853fbfa2533da",
+    "wasmSha256": "e62f5857d60acea148edc365b85aaa22756fba8bd7f566d03d2f70ef605cad5c",
+    "syntheticCrossMountCases": 6,
+    "initialFileCount": 1131,
+    "initialDirectoryCount": 77,
+    "legacyReaderAppCounter": 661,
+    "directNewFilesReadByLegacyEngine": 128,
+    "existingRawMetadataVerified": true
+  },
+  "modeledStorageIO": {
+    "scope": "Synthetic 2 MiB NOR model; original App661 vs direct-RAM implementation used in App662. No physical speed or duration inferred.",
+    "fixture": {
+      "files": 128,
+      "bytesEach": 540,
+      "modeledDisconnectFile": 33,
+      "recheckedAfterReconnect": 32
+    },
+    "profiles": {
+      "light": {
+        "seedFiles": 0,
+        "initialFreeBytes": 2080768,
+        "baselineTotal": {
+          "readCalls": 151356,
+          "readBytes": 38747136,
+          "programCalls": 10484,
+          "programBytes": 2683904,
+          "erases": 847,
+          "syncs": 0
+        },
+        "candidateTotal": {
+          "readCalls": 122115,
+          "readBytes": 31261440,
+          "programCalls": 9687,
+          "programBytes": 2479872,
+          "erases": 677,
+          "syncs": 0
+        },
+        "reductionPercent": {
+          "readCalls": 19.319,
+          "programCalls": 7.602,
+          "erases": 20.071
+        },
+        "commitAndHashOnly": {
+          "baseline": {
+            "readCalls": 146552,
+            "readBytes": 37517312,
+            "programCalls": 10097,
+            "programBytes": 2584832,
+            "erases": 823,
+            "syncs": 0
+          },
+          "candidate": {
+            "readCalls": 116501,
+            "readBytes": 29824256,
+            "programCalls": 9299,
+            "programBytes": 2380544,
+            "erases": 651,
+            "syncs": 0
+          }
+        }
+      },
+      "seeded": {
+        "seedFiles": 1024,
+        "initialFreeBytes": 1302528,
+        "baselineTotal": {
+          "readCalls": 544523,
+          "readBytes": 139397888,
+          "programCalls": 10601,
+          "programBytes": 2713856,
+          "erases": 854,
+          "syncs": 0
+        },
+        "candidateTotal": {
+          "readCalls": 427775,
+          "readBytes": 109510400,
+          "programCalls": 9719,
+          "programBytes": 2488064,
+          "erases": 672,
+          "syncs": 0
+        },
+        "reductionPercent": {
+          "readCalls": 21.44,
+          "programCalls": 8.32,
+          "erases": 21.311
+        },
+        "commitAndHashOnly": {
+          "baseline": {
+            "readCalls": 529199,
+            "readBytes": 135474944,
+            "programCalls": 10113,
+            "programBytes": 2588928,
+            "erases": 823,
+            "syncs": 0
+          },
+          "candidate": {
+            "readCalls": 412010,
+            "readBytes": 105474560,
+            "programCalls": 9232,
+            "programBytes": 2363392,
+            "erases": 641,
+            "syncs": 0
+          }
+        }
+      }
+    },
+    "originalFirmwareCanReadNewFiles": true
+  },
+  "physicalTransferOnApp661": [
+    {
+      "firmware": "2.22.0-DE3.88",
+      "applicationCounter": 661,
+      "webEntrySha256": "1e7ef5ee7eb97bef2d7660a7c131dfd9a1878cbb88236dc61369976852c9d9df",
+      "uploadWithDisconnectionMs": 338910,
+      "confirmedFileCount": 128,
+      "unexpectedEntries": 0,
+      "backupMs": 66154,
+      "verifiedBackupBytes": 69120,
+      "verifiedBackupFiles": 128
+    },
+    {
+      "firmware": "2.22.0-DE3.88",
+      "applicationCounter": 661,
+      "webEntrySha256": "71af3171522b7e994ef2d41906f957598e34fb509d93cf5a8ad3a4feb2e48366",
+      "uploadWithDisconnectionMs": 339187,
+      "confirmedFileCount": 128,
+      "unexpectedEntries": 0,
+      "backupMs": 64665,
+      "verifiedBackupBytes": 69120,
+      "verifiedBackupFiles": 128
+    }
+  ]
+}
