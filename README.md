@@ -1,10 +1,10 @@
 # Firmware for Allmiibo LCD and Pixl.js OLED
 
-## LCD DE3.87 / App660 · local test build
+## LCD DE3.87 / App660 · prerelease
 
-For Allmiibo LCD with ST7567, PFS1, Z21 and S112 7.3.0. The ZIP updates the LCD application. File manager 3.58.0 adds a compact remote and bulk selection for game folders. On-device acceptance is pending. [LCD app for phones](fw/releases/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) · [Setup and operation](web/LIESMICH_3_58_0.txt) · [Test report](docs/validation/DE3_87_LCD_TEST1.json)
+For Allmiibo LCD with ST7567, PFS1, Z21 and S112 7.3.0. The ZIP updates the LCD application. File manager 3.58.0 adds a compact remote and bulk selection for game folders. On-device acceptance is pending. [LCD app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) · [LCD sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip) · [File manager 3.58.0 and web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) · [Setup and operation](web/LIESMICH_3_58_0.txt) · [Test report](docs/validation/DE3_87_LCD_TEST1.json)
 
-## LCD DE3.85 / App658 · published test release
+## LCD DE3.85 / App658 · earlier test release
 
 For **LCD/ST7567 with Packed LittleFS (PFS1), Z21 and S112 7.3.0**. [App-only ZIP for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Sources and proof package](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). This update keeps the bootloader, SoftDevice and collection. On 18 November 2026 the owner reported successful LCD testing. Their diagnostic identifies App658, Z21 and S112 7.3.0. A physical Android DFU interruption and resumption remains an open test. DE3.81 / App654 remains the regular LCD release.
 

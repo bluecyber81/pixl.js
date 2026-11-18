@@ -1,5 +1,9 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE3.87 / App660 · Vorabversion
+
+Auf dem LCD zeigen die Slots Nummer und Schreibschutz. Beim Ersetzen stehen die Nummer und der bisherige Inhalt im Dialog. In Favoritenordnern erscheint beim Blättern die aktuelle Seite. Das App-Update setzt ST7567, PFS1, Z21 und S112 7.3.0 voraus. Die Gerätetests für App660 stehen aus. DE3.81 / App654 ist die reguläre LCD-Ausgabe. [App und Prüfunterlagen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-lcd-test1)
+
 ## DE3.85 / App658 · LCD-Teststand vom 18.11.2026
 
 Nur-App-Update für **LCD/ST7567, PFS1, Z21 und S112 7.3.0**. Bootloader, SoftDevice und Sammlung werden nicht ersetzt. [Flashbare Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Quellen, BIN/HEX/ELF und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). **Neue Hardwareabnahme offen**; die frühere Besitzermeldung zu DE3.84/App657 wird nicht übernommen. DE3.81/App654 bleibt die reguläre LCD-Firmware.

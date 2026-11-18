@@ -102,11 +102,12 @@ test('guides separate the pending local App659 from the owner-tested App658 and 
     assert.equal(openGuide('#lcd-de385', ['en']).next, base + 'en.html#lcd-de385');
 });
 
-test('the local App660 device guide links only its signed LCD application', () => {
+test('the App660 device guide links the signed LCD application and its published source kit', () => {
     for (const file of ['index.html','en.html']) {
         const guide = fs.readFileSync(path.join(__dirname,'../public/guide',file),'utf8');
         const section = guide.split('<h3 id="lcd-de387">')[1].split('<h3 id="lcd-de386">')[0];
         assert.match(section,/Allmiibo_LCD_DE3_87_660_NUR_APP\.zip/);
+        assert.ok(section.includes('https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip'));
         assert.match(section,/LCD\/ST7567.*PFS1.*Z21.*S112 7\.3\.0/);
         assert.doesNotMatch(section,/KOMPLETT|Allmiibo_OLED_/);
     }

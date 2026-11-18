@@ -345,7 +345,7 @@ test('DFU changes display language during a transfer without starting or resetti
 });
 
 
-test('local App660 test link and historical App658 source kit are visibly distinct',()=>{
+test('App660 download and source kit identify the same pending LCD trial',()=>{
  const row=html.match(/<p><a data-en="LCD test release [\s\S]*?<\/p>/)?.[0];
  assert.ok(row);
  assert.match(row,/LCD test release DE3\.87 \/ App660/);
@@ -357,7 +357,7 @@ test('local App660 test link and historical App658 source kit are visibly distin
  assert.doesNotMatch(row,/App657|successful practical use|praktischen Betrieb bestätigt/);
  const app=fs.readFileSync(path.join(__dirname,'../src/App.vue'),'utf8');
  const label=app.match(/<a :href="archiveLinks\.previewTestKit"[\s\S]*?<\/a>/)?.[0];
- assert.match(label,/LCD DE3\.85 \/ App658 \/ Z21 · Prüfpaket/);
- assert.match(label,/LCD DE3\.85 \/ App658 \/ Z21 · test kit/);
- assert.doesNotMatch(label,/App657/);
+ assert.match(label,/LCD DE3\.87 \/ App660 \/ Z21 · Prüfpaket/);
+ assert.match(label,/LCD DE3\.87 \/ App660 \/ Z21 · test kit/);
+ assert.doesNotMatch(label,/App65[78]/);
 });

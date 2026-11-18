@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.58.0 · kompakte Fernbedienung und Spielordner
+
+Unter **Fernbedienung → Allmiibo DE** zeigt die Kompaktansicht am Handy Displayfoto und Tasten gemeinsam. Im Spielkatalog lassen sich alle Suchtreffer gemeinsam markieren. Vor dem Schreiben zeigt die Vorschau neue, vorhandene und konfliktbehaftete Figuren. DE3.87 / App660 ist die LCD-Vorabversion für ST7567, PFS1, Z21 und S112 7.3.0. Die Geräteabnahme steht aus. [Dateimanager und Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) · [LCD-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip)
+
 ## Dateimanager 3.56.0 · Displayfoto nach bestätigten Tasten
 
 Unter **Fernbedienung → Allmiibo DE** ist **Displayfoto nach Tastendruck automatisch aktualisieren** optional und anfangs ausgeschaltet. Nach bestätigtem Links/Mitte/Rechts/Zurück wird ein Bild gelesen; schnelle Folgen werden zusammengefasst. Es gibt keine Dauerabfrage oder Wiederholung von Tasten. Trennen, Dateiübergabe und Blockierung verwerfen wartende Aufnahmen. Alte Firmware ohne Foto-Funktion wird nicht abgefragt; manuelle Fotos bleiben möglich.

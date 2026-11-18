@@ -1,5 +1,5 @@
 LCD DE3.87 / App660 · Dateimanager 3.58.0
-Lokale Testausgabe / Local test build
+Vorabversion / Prerelease
 
 LCD/ST7567 · PFS1 · Z21 · S112 7.3.0 (FWID 0x0126).
 

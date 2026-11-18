@@ -192,13 +192,20 @@ test('App659 is available locally with the verified signature package and no unp
   assert.equal(trial.sha256, 'af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58');
 });
 
-test('local App660 uses its shipped signed LCD ZIP and its own guide', () => {
+test('App660 uses its signed LCD ZIP, release notes and exact published Android target', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../public/firmware/releases.json', import.meta.url)));
   const entry = packages.find(item => item.counter === 660);
   const offer = packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.86' });
   assert.equal(offer.downloadUrl, '/firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip');
-  assert.equal(offer.releaseNotesUrl, '/guide/LCD-DE3.87.txt');
+  assert.equal(offer.releaseNotesUrl, 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-lcd-test1');
   assert.equal(offer.newer, false);
-  assert.equal(nrfDfuLink(entry), null);
+  const link = new URL(nrfDfuLink(entry));
+  assert.equal(link.origin + link.pathname, 'https://www.nordicsemi.com/dfu/');
+  assert.equal(link.searchParams.get('file'), 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file);
+  for (const patch of [{ counter:659 }, { version:'2.22.0-DE3.86' }, { id:'de3.87-lcd-app' }, { board:'OLED' },
+    { bootloader:'Z19' }, { softDevice:'S112 7.2.0' }, { applicationOnly:false }, { channel:'stable' },
+    { file:'Allmiibo_LCD_DE3_87_App660_TEST_DFU.zip' }, { file:'Allmiibo_LCD_DE3_86_659_NUR_APP.zip' }]) {
+    assert.equal(nrfDfuLink({ ...entry, ...patch }), null, JSON.stringify(patch));
+  }
   assert.equal(packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.85-OLEDt5' }).profileMismatch, true);
 });

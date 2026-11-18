@@ -67,8 +67,16 @@ try {
       await page.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
       await page.addInitScript(installPeripheral,REMOTE_UUIDS);
       await page.goto(origin+base);
-      const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.85 / App658 / Z21 · Prüfpaket (ZIP)':'LCD DE3.85 / App658 / Z21 · test kit (ZIP)'});
-      assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip');
+      const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)':'LCD DE3.87 / App660 / Z21 · test kit (ZIP)'});
+      assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip');
+      const footer = page.locator('footer.source-footer');
+      const archives = locale === 'de-DE' ? ['Dateimanager für Windows (ZIP)', 'Quellcode (ZIP)', 'Web 3.58.0 / App660 · Prüfpaket für ChatGPT (ZIP)'] :
+        ['File manager for Windows (ZIP)', 'Source code (ZIP)', 'Web 3.58.0 / App660 · test kit for ChatGPT (ZIP)'];
+      const files = ['Allmiibo_Dateimanager_3_58_0_Portable.zip', 'Allmiibo_Dateimanager_3_58_0_Quellcode.zip', 'Allmiibo_DE3_87_App660_Z21_Web3_58_0_ChatGPT_Pruefpaket.zip'];
+      for (const [i, name] of archives.entries()) {
+        assert.equal(await footer.getByRole('link', { name, exact:true }).getAttribute('href'),
+          'https://github.com/bluecyber81/pixl.js/releases/download/web3.58.0/' + files[i]);
+      }
       const nav = page.locator('.workspace-nav [aria-controls="remote-workspace"]');
       await nav.click();
       const section = page.locator('.remote-control'), pad = section.locator('.remote-pad');

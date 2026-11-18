@@ -2,7 +2,7 @@
 
 ## Dateimanager 3.58.0 und LCD DE3.87 / App660
 
-Kompakte Handy-Fernbedienung, Sammelauswahl für Spielordner und übersichtlichere Slots und Favoritenseiten am LCD. [Bedienung und Installation](LIESMICH_3_58_0.txt)
+Kompakte Handy-Fernbedienung, Sammelauswahl für Spielordner und übersichtlichere Slots und Favoritenseiten am LCD. Die Prüfung an einem physischen LCD steht noch aus. [Bedienung und Installation](LIESMICH_3_58_0.txt) · [Downloads für Web 3.58.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) · [LCD-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip)
 
 ## Dateimanager 3.57.0 und LCD DE3.86 / App659
 
