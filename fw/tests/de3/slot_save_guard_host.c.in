@@ -1,0 +1,173 @@
+#include "vfs_meta.h"
+#include "db_header.h"
+#include "amiidb_api_slot.h"
+
+#include "settings.h"
+#include "string_id.h"
+#include "amiidb_slot_label.h"
+extern const char * const lang_de_DE[_L_COUNT];
+static const char *getLangString(L_StringID id){return lang_de_DE[id];}
+int getLanguage(void){return LANGUAGE_DE_DE;}
+int isChineseLanguage(void){return 0;}
+typedef struct { int icon; } mui_list_item_t;
+typedef struct { void *user_data; unsigned focus, count; mui_list_item_t items[MAX_SLOT_COUNT+1]; } mui_list_view_t;
+typedef struct {void *user_data;} mui_msg_box_t;
+typedef int mui_msg_box_event_t;
+typedef struct {
+    mui_list_view_t *p_list_view;
+    mui_msg_box_t *p_msg_box;
+    void *p_scene_dispatcher, *p_toast_view, *p_view_dispatcher;
+    amiidb_slot_info_t pending_save_target;
+    ntag_t ntag;
+} app_amiidb_t;
+enum { MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_RIGHT,
+       AMIIDB_VIEW_ID_LIST, AMIIDB_VIEW_ID_MSG_BOX };
+#define _T(key) getLangString(_L_##key)
+static int view, default_button;
+static void (*selected)(mui_msg_box_event_t, mui_msg_box_t *);
+static char header[48], message[64];
+static void mui_msg_box_set_header(mui_msg_box_t *box, const char *s){(void)box;snprintf(header,sizeof(header),"%s",s);}
+static void mui_msg_box_set_message(mui_msg_box_t *box, const char *s){(void)box;snprintf(message,sizeof(message),"%s",s);}
+static void mui_msg_box_set_btn_text(mui_msg_box_t *box,const char *l,const char *c,const char *r){(void)box;(void)c; REQUIRE(l && r);}
+static void mui_msg_box_set_btn_focus(mui_msg_box_t *box,int button){(void)box; default_button=button;}
+static void mui_msg_box_set_event_cb(mui_msg_box_t *box,void (*cb)(mui_msg_box_event_t,mui_msg_box_t *)){(void)box;selected=cb;}
+static void mui_view_dispatcher_switch_to_view(void *d,int id){(void)d;view=id;}
+typedef int mui_list_view_event_t;
+enum {ICON_AMIIBO=1,ICON_FILE=2,ICON_EXIT=3,AMIIDB_SCENE_AMIIBO_DETAIL=4,MUI_LIST_VIEW_EVENT_SELECTED=5,ICON_READ_ONLY=6};
+static char visible[64],toast[64]; static int visible_icon,next_scene;
+static void mui_list_view_add_item(mui_list_view_t *list,int icon,const char *text,void *unused){REQUIRE(list->count < MAX_SLOT_COUNT+1);list->items[list->count++].icon=icon;(void)unused;snprintf(visible,sizeof(visible),"%s",text); visible_icon=icon;}
+static app_amiidb_t *mui_list_view_get_user_data(mui_list_view_t *list){return list->user_data;}
+static unsigned mui_list_view_get_focus(mui_list_view_t *list){return list->focus;}
+static void mui_toast_view_show(void *unused,const char *message){(void)unused;snprintf(toast,sizeof(toast),"%s",message);}
+static void mui_scene_dispatcher_previous_scene(void *unused){(void)unused;}
+static void mui_scene_dispatcher_next_scene(void *unused,int scene){(void)unused;next_scene=scene;}
+static void mui_list_view_clear_items(mui_list_view_t *list){list->count=0;list->focus=0;}
+static unsigned mui_list_view_item_size(mui_list_view_t *list){return list->count;}
+static void mui_list_view_set_focus(mui_list_view_t *list, unsigned row){REQUIRE(row<list->count);list->focus=row;}
+static mui_list_item_t *mui_list_item_array_get(mui_list_item_t *rows,unsigned i){return &rows[i];}
+static void amiidb_scene_data_select_setup(app_amiidb_t *app){(void)app;}
+UI_FUNCTIONS
+static settings_data_t prefs={.amiidb_data_slot_num=6};
+settings_data_t *settings_get_data(void){return &prefs;}
+vfs_driver_t *vfs_get_driver(vfs_drive_t d){REQUIRE(d==VFS_DRIVE_EXT);return driver();}
+static unsigned slot_count;
+static amiidb_slot_info_t slots[6];
+static void get_slot(amiidb_slot_info_t *info,void *context){(void)context; REQUIRE(slot_count<6);slots[slot_count++]=*info;}
+int main(void) {
+    nor_init(&media); REQUIRE(driver()->format()==VFS_OK);
+    uint8_t identity[32]={1}; REQUIRE(vfs_packed_bind_import(identity)==VFS_OK);
+    REQUIRE(vfs_packed_finish_import()==VFS_OK);
+    REQUIRE(driver()->create_dir("/amiibo")==0);
+    REQUIRE(driver()->create_dir("/amiibo/data")==0);
+    uint8_t data[540]={0}; data[89]=0x3c;data[90]=1;data[91]=2;data[100]=0x5a;
+    REQUIRE(vfs_persist_write(driver(),"/amiibo/data/00.bin",data,sizeof(data))==540);
+    vfs_meta_t m={.has_amiibo_id=true,.amiibo_tail=0x003c0102};
+    uint8_t raw[VFS_MAX_META_LEN];
+    vfs_meta_encode(raw,sizeof(raw),&m);
+    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/01.bin",data,sizeof(data),raw)==540);
+    /* Also compare invalid length, incomplete metadata and a colliding directory name. */
+    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/03.bin",data,11,raw)==11);
+    uint8_t inconsistent[128]={0}; inconsistent[0]=3; inconsistent[1]=0; inconsistent[2]=20;
+    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/04.bin",data,540,inconsistent)==540);
+    REQUIRE(driver()->create_dir("/amiibo/data/05.bin")==0);
+    REQUIRE(amiidb_api_slot_list(get_slot,NULL)==0 && slot_count==6);
+    mui_list_view_t list={0}; mui_msg_box_t box={0};
+    app_amiidb_t app={.p_list_view=&list,.p_msg_box=&box}; list.user_data=&app; box.user_data=&app;
+    for(unsigned slot=0;slot<6;slot++){
+        amiidb_slot_info_t info; ntag_t tag;
+        REQUIRE(amiidb_api_slot_info(slot,&info)==0);
+        int r=amiidb_api_slot_read(slot,&tag);
+        if(slot<2 || slot==4) REQUIRE(r==0 && !memcmp(tag.data,data,sizeof(data)));
+        else if(slot==2) REQUIRE(r==VFS_ERR_NOOBJ);
+        else REQUIRE(r==VFS_ERR_CRPT);
+        amiidb_scene_data_list_amiibo_slot_info_cb(&slots[slot],&app);
+      
+        const int unknown_occupied=slot==0 || slot==3 || slot==4 || slot==5;
+        REQUIRE(slots[slot].is_empty == (slot==2));
+        REQUIRE(info.is_empty == (slot==2));
+        char prefix[6]; snprintf(prefix,sizeof(prefix),"%02u ",slot+1);
+        REQUIRE(strncmp(visible,prefix,3)==0);
+        if(slots[slot].is_empty) REQUIRE(!strcmp(visible,"03 Frei"));
+        else if (unknown_occupied) REQUIRE(strstr(visible,"Belegt"));
+        else REQUIRE(strstr(visible,"Mario"));
+        printf("Slot %u %s: LCD='%s', info.empty=%d, read=%s\n",slot+1,(const char*[]){"valid file without metadata ID","valid file with metadata ID","absent file","11-byte file with ID","valid file with incomplete metadata","directory named like slot file"}[slot],visible,info.is_empty,r==0?"540 bytes match":r==VFS_ERR_NOOBJ?"file absent":"invalid slot");
+    }
+    /* Unknown catalog ID still exposes a stable slot and the full ID in the scrolling row. */
+    amiidb_slot_info_t imported={.slot=12,.has_amiibo_id=true,.is_readonly=true,.amiibo_head=0xC0FFEE,.amiibo_tail=0x501};
+    amiidb_scene_data_list_amiibo_slot_info_cb(&imported,&app);
+    REQUIRE(!strcmp(visible,"13 Belegt 00C0FFEE:00000501") && visible_icon==ICON_READ_ONLY);
+    /* Save As preselects an empty slot; entering the scene must not create a file. */
+    amiidb_scene_data_select_on_enter(&app);
+    ntag_t probe;
+    REQUIRE(list.focus==2 && list.count==7 && amiidb_api_slot_read(2,&probe)==VFS_ERR_NOOBJ);
+    list.focus=0;
+    /* Real target selection in Save As. No physical buttons or source dumps are used. */
+    mui_list_item_t first_row={0};
+    amiidb_scene_data_list_amiibo_slot_info_cb(&slots[0],&app);first_row.icon=visible_icon;
+    REQUIRE(amiidb_api_slot_read(0,&app.ntag)==0 && app.ntag.data[100]==0x5a);
+    app.ntag.data[100]=0x69;
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&first_row);
+    REQUIRE(view==AMIIDB_VIEW_ID_MSG_BOX && default_button==MUI_MSG_BOX_EVENT_SELECT_RIGHT && !next_scene);
+    REQUIRE(!strcmp(header,"Slot 01 ersetzen?") && !strcmp(message,"Belegt"));
+    ntag_t reread;
+    selected(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+    REQUIRE(view==AMIIDB_VIEW_ID_LIST && !next_scene && amiidb_api_slot_read(0,&reread)==0 && reread.data[100]==0x5a);
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&first_row);
+    list.focus=2;  /* Confirmation must keep the original target even if list focus changes. */
+    selected(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+    REQUIRE(next_scene==AMIIDB_SCENE_AMIIBO_DETAIL && amiidb_api_slot_read(0,&reread)==0 && reread.data[100]==0x69);
+    REQUIRE(amiidb_api_slot_read(2,&reread)==VFS_ERR_NOOBJ);
+    next_scene=0;
+    mui_list_item_t empty={.icon=ICON_FILE};
+    amiidb_scene_data_select_list_view_on_selected(99,&list,&empty);
+    REQUIRE(!next_scene && amiidb_api_slot_read(2,&reread)==VFS_ERR_NOOBJ);
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&empty);
+    REQUIRE(next_scene==AMIIDB_SCENE_AMIIBO_DETAIL && amiidb_api_slot_read(2,&reread)==0 && reread.data[100]==0x69);
+    list.focus=0;next_scene=0;
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&first_row);
+    m.has_flags=true;m.flags=VFS_OBJ_FLAG_READONLY;
+    vfs_meta_encode(raw,sizeof(raw),&m);
+    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/00.bin",data,sizeof(data),raw)==540);
+    selected(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+    REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_READ_ONLY)));
+    REQUIRE(amiidb_api_slot_read(0,&reread)==0 && reread.data[100]==0x5a);
+    /* Selecting a visibly protected entry immediately explains the lock. */
+    amiidb_api_slot_info(0,&imported);
+    amiidb_scene_data_list_amiibo_slot_info_cb(&imported,&app);
+    REQUIRE(visible_icon==ICON_READ_ONLY);
+    mui_list_item_t locked={.icon=visible_icon};
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&locked);
+    REQUIRE(view==AMIIDB_VIEW_ID_LIST && !next_scene && !strcmp(toast,getLangString(_L_READ_ONLY)));
+
+    /* A different figure inserted into the same writable slot after the question must survive. */
+    mui_list_item_t occupied={.icon=ICON_AMIIBO};
+    list.focus=1;
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&occupied);
+    REQUIRE(!strcmp(header,"Slot 02 ersetzen?") && !strcmp(message,"Mario - Gold Edition"));
+    printf("Rendered prompt inputs |%s|%s|\n",header,message);
+    m.flags=0;m.amiibo_head=0x01000000;m.amiibo_tail=0x034d0902;
+    vfs_meta_encode(raw,sizeof(raw),&m);
+    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/01.bin",data,sizeof(data),raw)==540);
+    selected(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
+    REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_APP_AMIIDB_SLOT_CHANGED)));
+    REQUIRE(amiidb_api_slot_info(1,&imported)==0 && imported.amiibo_tail==0x034d0902);
+    list.focus=1;
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&occupied);
+    const char *name=get_amiibo_display_name(get_amiibo_by_id(m.amiibo_head,m.amiibo_tail));
+    REQUIRE(!strcmp(header,"Slot 02 ersetzen?") && strlen(name)>20);
+    REQUIRE(strlen(message)<=20 && !strncmp(message,name,strlen(message)-3) && !strcmp(message+strlen(message)-3,"..."));
+    selected(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+    char shortened[8];
+    amiidb_slot_caption(shortened,sizeof(shortened),"abcÄbcdef");
+    REQUIRE(!strcmp(shortened,"abc..."));
+    puts("PASS free-slot preselection; numbered unknown ID; read-only icon and guard; target change rejected; named dialog and UTF-8 ellipsis.");
+    list.focus=6;
+    amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&empty);
+    REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_DE3_STORAGE_IO_ERROR)));
+    REQUIRE(vfs_packed_handles_idle()); REQUIRE(driver()->umount()==0);
+    slot_count=0; REQUIRE(amiidb_api_slot_list(get_slot,NULL)<0 && slot_count==0);
+    puts("Unmounted drive: error, no empty slots emitted");
+    REQUIRE(pfs_destroy(store)==0); REQUIRE(live==0);
+    puts("PASS observations; external device access: none.");
+    return 0;
+}

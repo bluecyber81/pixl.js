@@ -39,7 +39,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,658,657,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,660,659,658,657,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');
@@ -175,4 +175,37 @@ test('App658 stays a separate app-only Z21/S112 7.3 test package with exact mobi
  view.setUint32(64,19,true);assert.equal(show().profileMismatch,true);
  view.setUint32(64,21,true);view.setUint16(36,259,true);assert.equal(show().profileMismatch,true);
  view.setUint16(36,294,true);view.setUint32(60,659,true);assert.equal(show().newer,true);
+});
+
+test('App659 is available locally with the verified signature package and no unpublished Android URL', () => {
+  const { packages } = JSON.parse(readFileSync(new URL('../public/firmware/releases.json', import.meta.url)));
+  const trial = packages.find(entry => entry.counter === 659);
+  assert.equal(trial.id, 'de3.86-lcd-test1-app');
+  const view = packagePresentation(trial, { connected: true, firmwareVersion: '2.22.0-DE3.85' });
+  assert.equal(view.newer, false);
+  assert.equal(view.downloadUrl, '/firmware/' + trial.file);
+  assert.equal(view.releaseNotesUrl, '/guide/LCD-DE3.86.txt');
+  assert.equal(nrfDfuLink(trial), null);
+  assert.equal(packagePresentation(trial, { connected: true, firmwareVersion: '2.22.0-DE3.84-OLEDt4' }).profileMismatch, true);
+  const data = readFileSync(new URL('../public/firmware/' + trial.file, import.meta.url));
+  assert.equal(data.length, trial.bytes);
+  assert.equal(trial.sha256, 'af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58');
+});
+
+test('App660 uses its signed LCD ZIP, release notes and exact published Android target', () => {
+  const { packages } = JSON.parse(readFileSync(new URL('../public/firmware/releases.json', import.meta.url)));
+  const entry = packages.find(item => item.counter === 660);
+  const offer = packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.86' });
+  assert.equal(offer.downloadUrl, '/firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip');
+  assert.equal(offer.releaseNotesUrl, 'https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-lcd-test1');
+  assert.equal(offer.newer, false);
+  const link = new URL(nrfDfuLink(entry));
+  assert.equal(link.origin + link.pathname, 'https://www.nordicsemi.com/dfu/');
+  assert.equal(link.searchParams.get('file'), 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file);
+  for (const patch of [{ counter:659 }, { version:'2.22.0-DE3.86' }, { id:'de3.87-lcd-app' }, { board:'OLED' },
+    { bootloader:'Z19' }, { softDevice:'S112 7.2.0' }, { applicationOnly:false }, { channel:'stable' },
+    { file:'Allmiibo_LCD_DE3_87_App660_TEST_DFU.zip' }, { file:'Allmiibo_LCD_DE3_86_659_NUR_APP.zip' }]) {
+    assert.equal(nrfDfuLink({ ...entry, ...patch }), null, JSON.stringify(patch));
+  }
+  assert.equal(packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.85-OLEDt5' }).profileMismatch, true);
 });

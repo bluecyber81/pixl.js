@@ -1,6 +1,6 @@
 import { sharedEventDispatcher } from "./event"
 import * as pixl from "./pixl.ble"
-import ByteBuffer from "bytebuffer"
+import { ByteBuffer, loadFileCodec } from "./file-codec.js"
 
 import { parseFlashDiagnostics, supportsFlashDiagnostics } from "./flash-diagnostics.js"
 import { parseBootDiagnostics } from "./boot-diagnostics.js"
@@ -77,6 +77,13 @@ function on_ble_connected() {
 }
 
 export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
+    if (!ByteBuffer) {
+        const generation = transport_generation;
+        return loadFileCodec().then(() => {
+            if (generation !== transport_generation) throw new Error('Bluetooth disconnected');
+            return op_queue_push(cmd, tx_data_cb, rx_data_cb, options);
+        });
+    }
     return new Promise((resolve, reject) => {
         const max_response_bytes = options.max_bytes ?? MAX_RESPONSE_BYTES;
         if (!Number.isSafeInteger(max_response_bytes) || max_response_bytes < 0 || max_response_bytes > MAX_RESPONSE_BYTES) {
@@ -181,7 +188,6 @@ export function init() {
         transport_last_error = 'CONNECT_FAILED';
         on_ble_disconnected(reason);
     });
-    ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 }
 
 export function get_version() {
@@ -620,6 +626,8 @@ export function vfs_open_file(path, mode, rawMeta128) {
                 b.writeUint8(0x8); //readonly
             } else if (mode == 'w') {
                 b.writeUint8(0x16); //truc, create, write
+            } else if (mode === 'create-preserving') {
+                b.writeUint8(0x14); // create + write, preserve existing bytes and metadata
             }
             if (raw) for (const value of raw) b.writeUint8(value);
 
@@ -791,7 +799,7 @@ function vfs_process_file_write(entry) {
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }
-    read_file_as_bytebuffer(entry.file).then(buffer => {
+    read_file_as_bytebuffer(entry.file, checkCurrent).then(buffer => {
         checkCurrent();
         return vfs_open_file(entry.path, "w", entry.rawMeta128).then(checked_response).then(opened => {
             checkCurrent();
@@ -848,7 +856,11 @@ function path_validation(path) {
 }
 
 
-function read_file_as_bytebuffer(file) {
+function read_file_as_bytebuffer(file, checkCurrent) {
+    if (!ByteBuffer) return loadFileCodec().then(() => {
+        checkCurrent();
+        return read_file_as_bytebuffer(file, checkCurrent);
+    });
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function () {
@@ -1045,11 +1057,11 @@ async function tx_data_frame(cmd, status, chunk, data) {
 
 
 
-var rx_bytebuffer = new ByteBuffer();
+var rx_bytebuffer = null;
 var rx_next_chunk = 0;
 
 function reset_rx() {
-    rx_bytebuffer = new ByteBuffer();
+    rx_bytebuffer = ByteBuffer ? new ByteBuffer() : null;
     rx_next_chunk = 0;
 }
 

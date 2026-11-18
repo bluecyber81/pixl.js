@@ -277,6 +277,9 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
             record["artifacts_sha256"] = hashes
             matches = hashes["pixljs.bin"] == RELEASE_BIN_SHA256
             record["matches_archived_release_binary"] = matches
+            record["archived_release_version"] = RELEASE_VERSION
+            expected = record["expected_bin_sha256"]
+            record["matches_expected_binary"] = hashes["pixljs.bin"] == expected if expected else None
             if preview and (hashes["pixljs.bin"] != preview["application_sha256"] or source_id != preview["source_id"]):
                 raise RuntimeError("Preview binary SHA-256 or source ID differs from RELEASE_INFO.json.")
             if args.mode == "release" and not matches:

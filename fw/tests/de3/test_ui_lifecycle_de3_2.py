@@ -74,8 +74,10 @@ void mui_mem_free(void*);
 
     def test_actual_favorite_callbacks_selected_after100_and_menu_return(self):
         text=(SRC/'app/amiidb/scene/amiidb_scene_amiibo_detail.c').read_text(encoding='utf-8')
-        names=('amiidb_scene_amiibo_detail_fav_list_read_cb','amiidb_scene_amiibo_fav_list_init','amiidb_scene_amiibo_fav_list_update')
-        code=(HERE/'ui_favorite_detail_host.c').read_text(encoding='utf-8').replace('/* ACTUAL_FAVORITE_CALLBACKS */','\n'.join(function(text,n) for n in names))
+        api = (SRC/'app/amiidb/api/amiidb_api_fav.c').read_text()
+        body = text[text.index('#define FAV_DETAIL_WINDOW'):text.index('static void amiidb_scene_amiibo_search_list_init')]
+        code = (HERE/'ui_favorite_detail_host.c').read_text().replace(
+            '/* ACTUAL_FAVORITE_CALLBACKS */', function(api,'fav_record_compare') + '\n' + body)
         self.compile_run(code)
 
     def test_actual_scene_exits_stop_timers_and_clear_callbacks(self):

@@ -203,14 +203,23 @@ static void mount_io(void) {
     mui_mem_free(reserve);
     REQUIRE(!media.stats.programs && !media.stats.erases);
     drop();
+    REQUIRE(configure() == 0);
+    reserve = mui_mem_malloc(18432 - live - 9500);
+    REQUIRE(reserve);
+    nor_reset_observation(&media);
+    REQUIRE(driver()->mount() == 0);
+    uint64_t sixteen_pages = media.stats.reads;
+    mui_mem_free(reserve);
+    REQUIRE(!media.stats.programs && !media.stats.erases);
+    drop();
     nor_reset_observation(&media);
     REQUIRE(driver()->mount() == 0);
     REQUIRE(!media.stats.programs && !media.stats.erases && !mount_pages);
     unsigned mount_reads = (unsigned)media.stats.reads;
-    REQUIRE(media.stats.reads < eight_pages && eight_pages < four_pages && four_pages < uncached);
-    printf("BENCH same 100-figure cold mount: %llu uncached / %llu four-page / %llu eight-page / %llu sixteen-page physical reads of 256 bytes\n",
+    REQUIRE(media.stats.reads <= sixteen_pages && sixteen_pages < eight_pages && eight_pages < four_pages && four_pages < uncached);
+    printf("BENCH same 100-figure cold mount: %llu uncached / %llu four-page / %llu eight-page / %llu sixteen-page / %llu twenty-six-page physical reads of 256 bytes\n",
            (unsigned long long)uncached, (unsigned long long)four_pages,
-           (unsigned long long)eight_pages, (unsigned long long)media.stats.reads);
+           (unsigned long long)eight_pages, (unsigned long long)sixteen_pages, (unsigned long long)media.stats.reads);
     for (unsigned i = 0; i < 100; ++i) {
         snprintf(path, sizeof(path), "/figure%03u.bin", i);
         vfs_obj_t obj;
@@ -237,6 +246,36 @@ static void mount_io(void) {
     }
     free(unchanged_media);
     printf("PASS cached cold mount I/O failure at all %u physical reads; clean retry, unchanged NOR and no retained cache\n", mount_reads);
+
+    /* Extend the same medium; all four mounts see identical flash contents. */
+    for (unsigned i = 100; i < 1081; ++i) {
+        snprintf(path, sizeof(path), "/figure%03u.bin", i);
+        REQUIRE(pfs_replace(store, path, new_data, 540, meta) == 540);
+    }
+    uint64_t prior_reads[2] = {0};
+    for (unsigned run = 0; run < 4; ++run) {
+        unsigned tier = run % 2; /* alternate 16 and 26 */
+        drop();
+        REQUIRE(configure() == 0);
+        reserve = tier ? NULL : mui_mem_malloc(18432 - live - 9500);
+        REQUIRE(tier || reserve);
+        nor_reset_observation(&media);
+        REQUIRE(driver()->mount() == 0 && !mount_pages);
+        REQUIRE(!media.stats.erases && !media.stats.programs);
+        REQUIRE(media.stats.read_bytes == media.stats.reads * NOR_UNIT);
+        if (run >= 2) REQUIRE(prior_reads[tier] == media.stats.reads);
+        prior_reads[tier] = media.stats.reads;
+        if (reserve) mui_mem_free(reserve);
+    }
+    REQUIRE(prior_reads[1] < prior_reads[0]);
+    for (unsigned i = 0; i < 1081; ++i) {
+        snprintf(path, sizeof(path), "/figure%03u.bin", i);
+        vfs_obj_t obj;
+        REQUIRE(driver()->stat_file(path, &obj) == 0 && !memcmp(obj.meta, meta, sizeof(meta)));
+        REQUIRE(driver()->read_file_data(path, check, sizeof(check)) == 540 && !memcmp(check, new_data, 540));
+    }
+    printf("BENCH same 1081-figure cold mount: %llu sixteen-page / %llu twenty-six-page physical reads of 256 bytes, two runs each, all payloads and metadata verified\n",
+           (unsigned long long)prior_reads[0], (unsigned long long)prior_reads[1]);
 }
 
 /* Create a genuine old journal record on the synthetic NOR. The canonical
@@ -343,10 +382,11 @@ static void mount_metadata_cache(void) {
 }
 
 static void mount_cache_allocation_boundaries(void) {
-    const size_t large = sizeof(mount_pages_t) + 16u * PFS_CACHE_SIZE + 4096u;
-    const size_t medium = sizeof(mount_pages_t) + 8u * PFS_CACHE_SIZE + 4096u;
-    const size_t available[] = {large, large - 1, medium, medium - 1};
-    const unsigned expected[] = {16, 8, 8, 4};
+    const size_t largest = 4u + 26u * (PFS_CACHE_SIZE + sizeof(uint32_t)) + 4096u;
+    const size_t large = 4u + 16u * (PFS_CACHE_SIZE + sizeof(uint32_t)) + 4096u;
+    const size_t medium = 4u + 8u * (PFS_CACHE_SIZE + sizeof(uint32_t)) + 4096u;
+    const size_t available[] = {largest, largest - 1, large, large - 1, medium, medium - 1};
+    const unsigned expected[] = {26, 16, 16, 8, 8, 4};
     REQUIRE(!live);
     for (unsigned i = 0; i < sizeof(expected) / sizeof(expected[0]); ++i) {
         void *held = mui_mem_malloc(18432 - available[i]);
@@ -368,11 +408,11 @@ static void mount_cache_allocation_boundaries(void) {
 }
 
 
-/* Exercise the real last page (tag 0x1ffff in slot fifteen), eviction, and
+/* Exercise the real last page in the highest slot of each tier, eviction, and
  * all memory-pressure tiers on a genuine payload CRC mismatch. */
 static void mount_cache_limits(void) {
-    const size_t headroom[] = {10000, 8192, 4096, 64};
-    const unsigned slots[] = {16, 8, 4, 0};
+    const size_t headroom[] = {12000, 10000, 8192, 4096, 64};
+    const unsigned slots[] = {26, 16, 8, 4, 0};
     reset_baseline();
     pfs_file_t *file = NULL;
     uint8_t value;
@@ -391,20 +431,20 @@ static void mount_cache_limits(void) {
         REQUIRE((mount_pages ? mount_pages->capacity : 0) == slots[i]);
         if (mount_pages) {
             unsigned capacity = mount_pages->capacity;
-            unsigned last = NOR_BLOCK / NOR_UNIT - 1;
+            unsigned last = NOR_BLOCKS * (NOR_BLOCK / NOR_UNIT) - 1;
             unsigned first = last + 1 - capacity;
             uint8_t *buffer = media.config.read_buffer;
             read_calls = 0;
             for (unsigned pass = 0; pass < 2; ++pass) {
                 for (unsigned page = first; page <= last; ++page) {
-                    REQUIRE(flash_read(&media.config, NOR_BLOCKS - 1, page * NOR_UNIT, buffer, NOR_UNIT) == 0);
-                    REQUIRE(!memcmp(buffer, media.disk + (NOR_BLOCKS - 1) * NOR_BLOCK + page * NOR_UNIT, NOR_UNIT));
+                    REQUIRE(flash_read(&media.config, page / (NOR_BLOCK / NOR_UNIT), (page * NOR_UNIT) % NOR_BLOCK, buffer, NOR_UNIT) == 0);
+                    REQUIRE(!memcmp(buffer, media.disk + page * NOR_UNIT, NOR_UNIT));
                 }
                 REQUIRE(read_calls == capacity);
             }
             REQUIRE(flash_read(&media.config, 0, 0, buffer, NOR_UNIT) == 0);
             REQUIRE(read_calls == capacity + 1);
-            REQUIRE(flash_read(&media.config, NOR_BLOCKS - 1, first * NOR_UNIT, buffer, NOR_UNIT) == 0);
+            REQUIRE(flash_read(&media.config, first / (NOR_BLOCK / NOR_UNIT), (first * NOR_UNIT) % NOR_BLOCK, buffer, NOR_UNIT) == 0);
             REQUIRE(read_calls == capacity + 2);
             mui_mem_free(mount_pages);
             mount_pages = NULL;
@@ -420,7 +460,7 @@ static void mount_cache_limits(void) {
         REQUIRE(state() == 0);
         drop();
     }
-    puts("PASS last physical page, LRU eviction, 16/8/4/0 pages; corrupt payload rejected and clean media remounted without any writes");
+    puts("PASS last physical page, LRU eviction, 26/16/8/4/0 pages; corrupt payload rejected and clean media remounted without any writes");
 }
 
 int main(void){

@@ -1,7 +1,11 @@
 <template>
-  <section class="remote-control" :aria-busy="waiting" @keydown="preventRepeat">
-    <h3>{{ text.title }}</h3>
-    <label class="protocol-picker">{{ locale==='de_DE' ? 'Gerätefirmware' : 'Device firmware' }}
+  <section class="remote-control" :class="{'remote-compact': compactLayout}" :aria-busy="waiting" @keydown="preventRepeat">
+    <div class="remote-heading">
+      <h3>{{ text.title }}</h3>
+      <button v-if="protocol === 'de' && keypadActive" type="button" class="layout-toggle"
+              :aria-pressed="compactLayout" @click="compactPreference = !compactLayout">{{ text.compactLayout }}</button>
+    </div>
+    <label v-if="!compactLayout" class="protocol-picker">{{ locale==='de_DE' ? 'Gerätefirmware' : 'Device firmware' }}
       <select :value="protocol" @change="protocol=$event.target.value" :disabled="phase!=='disconnected' || pixActive">
         <option value="de">Allmiibo DE (LCD / OLED)</option>
         <option value="pixlink">cylin577 · PixLink</option>
@@ -11,30 +15,39 @@
     <template v-else>
     <p v-if="phase === 'disconnected'" class="remote-setup-short">{{ text.setupShort }}</p>
     <p v-if="blocked" class="remote-warning" role="status">{{ text.blocked }}</p>
-    <div class="remote-connection">
-      <button v-if="phase === 'disconnected'" type="button" @click="connectRemote" :disabled="blocked || !!unavailable">{{ text.connect }}</button>
-      <button v-else type="button" @click="disconnectRemote" :disabled="phase === 'disconnecting'">{{ text[phase === 'connecting' ? 'cancel' : 'disconnect'] }}</button>
-      <span class="remote-state" :class="{online:phase === 'ready'}" role="status" aria-live="polite">{{ text[phase] }}</span>
-    </div>
-    <button v-if="keypadActive" type="button" class="remote-check" :aria-disabled="!ready" @click="press('status')">{{ text.checkConnection }}</button>
-    <p v-if="unavailable || error" :class="error === 'REMOTE_NO_SELECTION' ? 'remote-limit' : 'remote-warning'" :role="error === 'REMOTE_NO_SELECTION' ? 'status' : 'alert'">{{ text.errors[unavailable || error] || text.failed }}<template v-if="commandUnconfirmed"> {{ text.unconfirmed }}</template></p>
-    <div class="remote-pad" role="group" :aria-label="text.title"
-         :tabindex="keypadActive ? 0 : -1" :aria-describedby="keypadActive ? 'remote-keyboard-hint' : undefined"
-         :aria-keyshortcuts="keypadActive ? (capabilities & 2 ? 'ArrowLeft ArrowRight Enter Escape' : 'ArrowLeft ArrowRight Enter') : undefined"
-         @keydown="onPadKeydown">
-      <button type="button" @click="press('left')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.left"><span aria-hidden="true">←</span><strong>{{ text.left }}</strong></button>
-      <button type="button" @click="press('center')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.center"><span aria-hidden="true">●</span><strong>{{ text.center }}</strong></button>
-      <button type="button" @click="press('right')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.right"><span aria-hidden="true">→</span><strong>{{ text.right }}</strong></button>
-    </div>
-    <p v-if="keypadActive" id="remote-keyboard-hint" class="remote-limit">
-      {{ text.keyboard }}{{ capabilities & 2 ? ' ' + text.keyboardBack : '' }}
-    </p>
-    <button type="button" class="remote-back" @click="press('back')" :disabled="!ready || !(capabilities & 2)">{{ text.back }}</button>
-    <label v-if="keypadActive && photoSupported" class="remote-auto-photo">
-      <input :checked="autoPhoto" type="checkbox" @change="autoPhoto = $event.target.checked" /> <span>{{ text.autoPhoto }}</span>
-    </label>
-    <p v-if="keypadActive && photoSupported && autoPhoto" class="remote-limit">{{ text.autoPhotoHint }}</p>
-    <DisplayPhoto ref="remotePhoto" v-if="keypadActive" class="remote-photo" remote :remote-supported="photoSupported" :connected="keypadActive" :blocked="!ready" :locale="locale" :read-photo="captureDisplay"/>
+    <template v-for="area in controlAreas" :key="area">
+      <template v-if="area === 'connection'">
+        <div class="remote-connection">
+          <button v-if="phase === 'disconnected'" type="button" @click="connectRemote" :disabled="blocked || !!unavailable">{{ text.connect }}</button>
+          <button v-else type="button" @click="disconnectRemote" :disabled="phase === 'disconnecting'">{{ text[phase === 'connecting' ? 'cancel' : 'disconnect'] }}</button>
+          <span class="remote-state" :class="{online:phase === 'ready'}" role="status" aria-live="polite">{{ text[phase] }}</span>
+        </div>
+        <button v-if="keypadActive" type="button" class="remote-check" :aria-disabled="!ready" @click="press('status')">{{ text.checkConnection }}</button>
+        <p v-if="unavailable || error" :class="error === 'REMOTE_NO_SELECTION' ? 'remote-limit' : 'remote-warning'" :role="error === 'REMOTE_NO_SELECTION' ? 'status' : 'alert'">{{ text.errors[unavailable || error] || text.failed }}<template v-if="commandUnconfirmed"> {{ text.unconfirmed }}</template></p>
+      </template>
+      <template v-else-if="area === 'keys'">
+        <div class="remote-pad" role="group" :aria-label="text.title"
+             :tabindex="keypadActive ? 0 : -1" :aria-describedby="keypadActive ? 'remote-keyboard-hint' : undefined"
+             :aria-keyshortcuts="keypadActive ? (capabilities & 2 ? 'ArrowLeft ArrowRight Enter Escape' : 'ArrowLeft ArrowRight Enter') : undefined"
+             @keydown="onPadKeydown">
+          <button type="button" @click="press('left')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.left"><span aria-hidden="true">←</span><strong>{{ text.left }}</strong></button>
+          <button type="button" @click="press('center')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.center"><span aria-hidden="true">●</span><strong>{{ compactLayout ? text.compactCenter : text.center }}</strong></button>
+          <button type="button" @click="press('right')" :disabled="!keypadActive" :aria-disabled="!ready" :aria-label="text.right"><span aria-hidden="true">→</span><strong>{{ text.right }}</strong></button>
+          <button v-if="compactLayout" type="button" @click="press('back')" :disabled="!ready || !(capabilities & 2)" :aria-label="text.back"><span aria-hidden="true">↶</span><strong>{{ text.compactBack }}</strong></button>
+        </div>
+        <p v-if="keypadActive" id="remote-keyboard-hint" class="remote-limit" :class="{'keyboard-hint-compact': compactLayout}">
+          {{ text.keyboard }}{{ capabilities & 2 ? ' ' + text.keyboardBack : '' }}
+        </p>
+        <button v-if="!compactLayout" type="button" class="remote-back" @click="press('back')" :disabled="!ready || !(capabilities & 2)">{{ text.back }}</button>
+      </template>
+      <template v-else-if="area === 'automatic'">
+        <label v-if="keypadActive && photoSupported" class="remote-auto-photo">
+          <input :checked="autoPhoto" type="checkbox" @change="autoPhoto = $event.target.checked" /> <span>{{ text.autoPhoto }}</span>
+        </label>
+        <p v-if="keypadActive && photoSupported && autoPhoto" class="remote-limit">{{ text.autoPhotoHint }}</p>
+      </template>
+      <DisplayPhoto :ref="setRemotePhoto" v-else-if="area === 'photo' && keypadActive" :compact="compactLayout" class="remote-photo" remote :remote-supported="photoSupported" :connected="keypadActive" :blocked="!ready" :locale="locale" :read-photo="captureDisplay"/>
+    </template>
     <button type="button" class="remote-files" @click="press('files')" :disabled="!ready">{{ text.files }}</button>
     <p v-if="notice" role="status" aria-live="polite">{{ notice==='status' ? statusReceipt : text.receipts[notice] || text[notice] }}</p>
     <details class="remote-help" :open="setupOpen" @toggle="setupOpen = $event.target.open">
@@ -55,8 +68,10 @@ const padCommands = Object.freeze({ArrowLeft:'left', ArrowRight:'right', Enter:'
 export default {
   components:{PixLinkRemote,DisplayPhoto},
   props:{blocked:Boolean,locale:{type:String,default:'de_DE'},handoffFileConnection:Function},emits:['active'],
-  data(){return {protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',commandUnconfirmed:false,notice:'',checkedAt:null,setupOpen:false,autoPhoto:false,unavailable:remoteAvailability()};},
+  data(){return {compactPreference:null,narrowScreen:false,protocol:'de',pixActive:false,phase:'disconnected',capabilities:0,error:'',commandUnconfirmed:false,notice:'',checkedAt:null,setupOpen:false,autoPhoto:false,unavailable:remoteAvailability()};},
   computed:{text(){return remoteText(this.locale);},waiting(){return ['connecting','command','handoff','disconnecting'].includes(this.phase);},ready(){return this.phase==='ready'&&!this.blocked;},
+    compactLayout(){return this.protocol === 'de' && this.keypadActive && (this.compactPreference ?? this.narrowScreen);},
+    controlAreas(){return this.compactLayout ? ['photo','keys','automatic','connection'] : ['connection','keys','automatic','photo'];},
     keypadActive(){return !this.blocked && (this.phase === 'ready' || this.phase === 'command');},
     photoSupported(){return !!(this.capabilities & REMOTE_LCD_CAPABILITY);},
     statusReceipt(){
@@ -68,8 +83,8 @@ export default {
     this._remoteMounted=true;
     this._remoteUiGeneration=0;
     this._autoDisplayPhoto=createAutoDisplayPhoto({
-      canCapture:()=>this._remoteMounted && this.autoPhoto && this.protocol==='de' && this.ready && this.photoSupported && !!this.$refs.remotePhoto,
-      capture:()=>this.$refs.remotePhoto.capture()
+      canCapture:()=>this._remoteMounted && this.autoPhoto && this.protocol==='de' && this.ready && this.photoSupported && !!this._remotePhoto,
+      capture:()=>this._remotePhoto.capture()
     });
     this._remoteClient=createRemoteClient({onState:state=>{
       if(!this._remoteMounted)return;
@@ -84,11 +99,20 @@ export default {
       this.$emit('active',state.phase!=='disconnected');
     }});
   },
-  beforeUnmount(){this._autoDisplayPhoto.dispose();this._remoteMounted=false;++this._remoteUiGeneration;this._remoteClient.disconnect();this.$emit('active',false);},
+  mounted(){
+    this._screenQuery=globalThis.matchMedia?.('(max-width: 600px)');
+    if(this._screenQuery){
+      this.narrowScreen=this._screenQuery.matches;
+      this._screenQuery.addEventListener('change',this.onScreenChange);
+    }
+  },
+  beforeUnmount(){this._screenQuery?.removeEventListener('change',this.onScreenChange);this._autoDisplayPhoto.dispose();this._remoteMounted=false;++this._remoteUiGeneration;this._remoteClient.disconnect();this.$emit('active',false);},
   watch:{blocked(value){if(value){this._autoDisplayPhoto.cancel();if(this.phase!=='disconnected')this.disconnectRemote();}},
     autoPhoto(value){if(!value)this._autoDisplayPhoto.cancel();},
     protocol(){this._autoDisplayPhoto.cancel();this.autoPhoto=false;}},
   methods:{
+    onScreenChange(event){this.narrowScreen=event.matches;},
+    setRemotePhoto(component){this._remotePhoto=component;},
     captureDisplay(){
       this._autoDisplayPhoto.cancel();
       this.error='';this.commandUnconfirmed=false;this.notice='';this.checkedAt=null;
@@ -174,4 +198,13 @@ button:disabled,button[aria-disabled=true]{opacity:.5;cursor:default;}button:foc
 .remote-photo :deep(img){box-sizing:border-box;}
 .remote-help{margin-top:16px;border-top:1px solid #d6e4e7;padding-top:10px;}.remote-help summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-size:.85rem;font-weight:600;}.remote-help summary:focus-visible{outline:3px solid #388294;outline-offset:3px;}
 @media(max-width:480px){.remote-control{padding:12px;}.remote-pad{gap:7px;}.remote-pad button{padding:8px 5px;}.remote-pad strong{font-size:.76rem;}.remote-connection>button{width:100%;}}
+.remote-heading{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;}
+.remote-heading h3{margin:0;}
+.layout-toggle{min-height:44px;padding:6px 10px;font-size:.85rem;}
+.layout-toggle[aria-pressed=true]{border:2px solid #236351;background:#e9f5ef;color:#174c40;}
+.remote-compact .remote-pad{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:6px 0;}
+.remote-compact .remote-pad button{min-width:0;min-height:48px;padding:5px 2px;}
+.remote-compact .remote-pad strong{overflow-wrap:anywhere;}
+.keyboard-hint-compact:not(:focus-within){position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+.remote-compact .remote-pad:focus-visible + .keyboard-hint-compact{position:static;width:auto;height:auto;overflow:visible;clip-path:none;}
 </style>

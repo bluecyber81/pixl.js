@@ -48,6 +48,7 @@ function harness(overrides = {}) {
     performance: require('node:perf_hooks').performance,
     setTimeout(callback, delay) { timeouts.push({ callback, delay }); return timeouts.length; },
     clearTimeout(id) { if (timeouts[id - 1]) timeouts[id - 1].cancelled = true; },
+    loadBackupTools: overrides.loadBackupTools || (() => ({ createBackup: context.createBackup, createBackupCheckpoint: context.createBackupCheckpoint })),
     createBackup: options => overrides.createBackup(options),
     createBackupCheckpoint: options => overrides.createBackupCheckpoint ? overrides.createBackupCheckpoint(options) : ({
       summary: () => ({ ...options, files: 0, bytes: 0, busy: false }), clear() {}
@@ -414,7 +415,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.56.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.58.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -426,7 +427,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.56.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.58.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -513,7 +514,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.56.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.58.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1695,17 +1696,17 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.56.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.58.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.56.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.58.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
 test('3.25 active backup exposes actual aggregate percent/file counts and never presents its cache as interrupted',async()=>{
   const gate=deferred(),state={rootPath:'E:/',files:119,bytes:63652,busy:true};let progress;
   const h=harness({createBackupCheckpoint:()=>({summary:()=>({...state}),clear(){}}),createBackup:async options=>{progress=options.onProgress;await gate.promise;state.busy=false;throw Error('interrupted')}}),app=connected(h);
-  const pending=app.on_backup();progress({phase:'reading',path:'E:/tags/one',bytesDone:63652,bytesTotal:687555,filesDone:119,filesTotal:1131});
+  const pending=app.on_backup();await Promise.resolve();progress({phase:'reading',path:'E:/tags/one',bytesDone:63652,bytesTotal:687555,filesDone:119,filesTotal:1131});
   assert.equal(app.transferPercent,9);assert.equal(app.transfer.filesDone,119);assert.equal(app.transfer.filesTotal,1131);assert.equal(app.backupCanResume,false);
   progress({phase:'reading',path:'E:/tags/two',bytesDone:63653,bytesTotal:687555,filesDone:119,filesTotal:1131});assert.equal(app.transferPercent,9);
   gate.resolve();await pending;assert.equal(app.backupCanResume,true);assert.equal(app.backupResumeInfo.files,119);
@@ -1718,6 +1719,7 @@ test('ZIP backup countdown ticks across filenames and clears on interruption', a
   const app=connected(h);
   const job=app.on_backup();
   assert.equal(app.transfer.total,null);
+  await Promise.resolve();
   emit({phase:'reading',path:'E:/third',bytesDone:1080,bytesTotal:5400,filesDone:2,filesTotal:10,
     timing:{jobStartedAt:0,startedAt:1000,updatedAt:5000,completed:2,total:10}});
   app.readClock=5000;
@@ -1737,12 +1739,29 @@ test('cancelled backup cannot replace the prior complete backup or strand the UI
   const app = connected(h); app.lastBackup = { filename: 'prior.zip', sessionGeneration: app.sessionGeneration,
     manifest: { files: 1, bytes: 2, resume: { reusedFiles: 0, reusedBytes: 0 } } };
   assert.equal(app.backupReadSummary.freshFiles, 1);
-  const pending = app.on_backup(); assert.equal(app.busy, true); app.cancel_transfer();
+  const pending = app.on_backup(); assert.equal(app.busy, true); await Promise.resolve(); app.cancel_transfer();
   assert.equal(app.backupReadSummary, null);
   assert.equal(signal.aborted, true); assert.equal(app.cancellingBackup, true);
   read.resolve(); await pending;
   assert.equal(app.lastBackup.filename, 'prior.zip'); assert.equal(app.backupReadSummary, null);
   assert.equal(app.busy, false); assert.equal(h.messages.length, 0);
+});
+
+test('cancelling or switching devices while backup code loads preserves the previous checkpoint', async () => {
+  for (const action of ['cancel_transfer', 'on_ble_disconnected']) {
+    const gate = deferred();
+    const h = harness({ loadBackupTools: () => gate.promise });
+    const app = connected(h);
+    const previous = { summary: () => ({ files: 0, busy: false }), clear() { assert.fail('Discarded checkpoint'); } };
+    app._backupCheckpoint = previous;
+    const pending = app.on_backup();
+    assert.equal(app.backingUp, true);
+    app[action]();
+    gate.resolve({ createBackupCheckpoint() { assert.fail('Started backup'); } });
+    await pending;
+    assert.equal(app._backupCheckpoint, previous);
+    assert.equal(app.backingUp, false);
+  }
 });
 
 test('old upload-close confirmation never disconnects a new connection', async () => {
@@ -2120,7 +2139,7 @@ test('3.22 backup checkpoint survives disconnect, prevents resume while busy, an
   const state={files:2,bytes:1080,busy:false,rootPath:'E:/',firmwareVersion:'2.21.0-DE3.24'};
   const checkpoint={summary:()=>({...state}),clear(){state.files=0;state.bytes=0;}};
   const h=harness({createBackupCheckpoint:()=>{created++;return checkpoint;},createBackup:async options=>{calls++;lastOptions=options;if(calls===1){state.busy=true;options.onProgress({phase:'reading',bytesDone:1080,bytesTotal:2160});await gate.promise;state.busy=false;throw Error('interrupted');}return{blob:new Blob(['zip']),filename:'resumed.zip',manifest:{files:2,bytes:1080}};}}),app=connected(h);
-  app.firmwareVersion=state.firmwareVersion;const pending=app.on_backup();assert.equal(app.backupResumeInfo.files,2);
+  app.firmwareVersion=state.firmwareVersion;const pending=app.on_backup();await Promise.resolve();assert.equal(app.backupResumeInfo.files,2);
   app.on_ble_disconnected();assert.equal(lastOptions.signal.aborted,true);assert.equal(app._backupCheckpoint,checkpoint);assert.equal(app.backupResumeInfo.busy,true);
   app.connected=true;app.current_dir='';app.firmwareVersion=state.firmwareVersion;
   await app.on_backup(true);assert.equal(calls,1);app.discard_backup_checkpoint();assert.equal(app._backupCheckpoint,checkpoint);
@@ -2595,7 +2614,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.56.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.58.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

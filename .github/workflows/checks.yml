@@ -38,6 +38,8 @@ jobs:
           python3 ../fw/scripts/amiibo_db_validate.py
           python3 ../fw/scripts/amiibo_usage_export.py --check
           python3 tests/test_figure_usage_export.py
+      - name: Check matching published downloads in both READMEs
+        run: python3 ../tools/check_readme_downloads.py
       - name: Compare game notes with their published wording
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000')
         env:

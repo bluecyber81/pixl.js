@@ -1,0 +1,50 @@
+Allmiibo Dateimanager 3.58.0 · LCD DE3.87 / App660
+18. November 2026
+
+Dateimanager starten
+Die Portable-ZIP vollständig entpacken. Auf Windows im entpackten
+Ordner Start-Dateimanager.cmd öffnen (Python 3 erforderlich).
+Stop-Dateimanager.cmd beendet den lokalen Dienst.
+
+Slots auf deinem LCD
+Jede Slotzeile beginnt mit der Nummer. Ein Schloss markiert schreibgeschützte
+Plätze. Bei „Speichern unter“ ist der erste freie Slot vorgewählt, sofern
+vorhanden. Bei belegten Plätzen nennt der Dialog die Slotnummer und den
+bisherigen Figurennamen oder „Belegt“. Lange Namen werden gekürzt.
+Die Vorauswahl im Bestätigungsdialog steht auf „Abbrechen“.
+
+Favoritenordner
+Beim Öffnen mehrseitiger Favoritenordner sowie beim Seitenwechsel zeigt
+das LCD kurz den Ordnernamen und die aktuelle Seite. Der Hinweis belegt
+keine zusätzliche Listenzeile.
+
+Fernbedienung am Handy
+In der verbundenen Allmiibo-DE-Fernbedienung steht die Kompaktansicht
+auf schmalen Bildschirmen bereit. Das zuletzt gelesene Bild und die Tasten
+liegen beieinander. Unter „Bildoptionen“ findest du Zoom, Drehen und PNG.
+Die Aufnahmezeit zeigt, wann das Bild zuletzt erfolgreich gelesen wurde.
+Mit der vorhandenen Automatik kannst du nach einem bestätigten Tastendruck
+ein frisches Foto aufnehmen lassen.
+
+Spielordner zusammenstellen
+Im Webkatalog ein Spiel wählen und den vorgeschlagenen Zielnamen übernehmen
+oder ändern. Nach Figuren suchen und „Alle Treffer markieren“ wählen.
+Vorher markierte Figuren bleiben bei einer neuen Suche ausgewählt.
+„Auswahl leeren“ entfernt alle Markierungen. Die Gerätevorschau zählt
+neue und bereits vorhandene Figuren und zeigt mögliche Namenskonflikte.
+Erst die anschließende Bestätigung überträgt die Favoritenmarker.
+
+Handy-Update für das LCD
+Voraussetzung: Allmiibo LCD (ST7567), PFS1, Z21 und S112 7.3.0, FWID 0x0126.
+Sammlung sichern und Allmiibo_LCD_DE3_87_660_NUR_APP.zip auf Android speichern.
+Am LCD Einstellungen → Firmware-Update öffnen. In nRF Device Firmware Update
+die gepackte App-ZIP wählen, das Gerät „pixl dfu“ verbinden und übertragen.
+Nach dem Neustart im Dateimanager auf DE3.87, App660 und Board LCD prüfen.
+
+English
+Extract the portable ZIP, then launch Start-Dateimanager.cmd on Windows.
+The compact remote places the last capture and controls together on phones.
+Use the game filter, select all matches, check the suggested folder and
+review counts before writing. The LCD identifies locked slots and displays
+folder/page cues. Use the intact App660 ZIP for the LCD profile above.
+Physical acceptance on the user's LCD is pending.

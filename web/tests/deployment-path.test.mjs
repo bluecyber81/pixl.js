@@ -60,3 +60,31 @@ test('production entry points use the common resolver and pass query/hash to the
   assert.match(read('src/main.js'), /search: window.location.search, hash: window.location.hash/)
   for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /href="https:\/\/github\.com\/bluecyber81\/pixl\.js\/tree\/de3\.81"/)
 })
+
+test('the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages', async () => {
+  const { createSSRApp } = await import('vue')
+  const { renderToString } = await import('vue/server-renderer')
+  const { projectDownloads } = await import('../src/lib/project-downloads.js')
+  const read = file => fs.readFileSync(new URL('../' + file, import.meta.url), 'utf8')
+  const version = JSON.parse(read('package.json')).version
+  const footer = read('src/App.vue').match(/<footer class="source-footer">[\s\S]*?<\/footer>/)[0]
+  const expected = [
+    ['web3.58.0/Allmiibo_Dateimanager_3_58_0_Portable.zip', 'Dateimanager für Windows (ZIP)', 'File manager for Windows (ZIP)'],
+    ['web3.58.0/Allmiibo_Dateimanager_3_58_0_Quellcode.zip', 'Quellcode (ZIP)', 'Source code (ZIP)'],
+    ['de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip', 'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)', 'LCD DE3.87 / App660 / Z21 · test kit (ZIP)'],
+    ['web3.58.0/Allmiibo_DE3_87_App660_Z21_Web3_58_0_ChatGPT_Pruefpaket.zip', 'Web 3.58.0 / App660 · Prüfpaket für ChatGPT (ZIP)', 'Web 3.58.0 / App660 · test kit for ChatGPT (ZIP)']
+  ]
+  for (const language of ['de_DE', 'en']) {
+    for (const base of ['/', '/pixl.js/']) {
+      const app = createSSRApp({ template:footer, setup:() => ({
+        language, archiveLinks:projectDownloads(version), licensesUrl:deploymentPath('licenses/index.html', base)
+      }) })
+      const html = await renderToString(app)
+      const links = [...html.matchAll(/<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].map(match => match.slice(1))
+      assert.deepEqual(links.slice(0, 4), expected.map(([file, de, en]) => [
+        'https://github.com/bluecyber81/pixl.js/releases/download/' + file, language === 'en' ? en : de
+      ]))
+      assert.equal(links[4][0], base + 'licenses/index.html')
+    }
+  }
+})

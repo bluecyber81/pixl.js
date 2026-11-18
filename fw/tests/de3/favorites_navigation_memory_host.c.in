@@ -17,7 +17,10 @@
 #define assert(x) do{if(!(x)){fprintf(stderr,"FAIL line %u: %s\n",__LINE__,#x);exit(71);}}while(0)
 static mui_t fake_mui;
 static unsigned oom,scene_changes,last_scene,cases,errors;
-static bool chinese;
+static bool chinese, english;
+static mui_toast_view_t test_toast;
+static char page_hint[100];
+static unsigned hint_count;
 typedef struct {unsigned amiidb_sort_column;} settings_data_t;
 static settings_data_t config;
 #define AMIIDB_SORT_COLUMN_NAME 1
@@ -25,11 +28,16 @@ static settings_data_t config;
 #define LIST_ITEM_HEIGHT 13
 mui_t *mui(void){return &fake_mui;}
 void mui_show_memory_error(mui_t*m){m->memory_error=true;oom++;}
-const char*getLangString(L_StringID id){return lang_de_DE[id];}
+const char*getLangString(L_StringID id){return english ? lang_en_US[id] : lang_de_DE[id];}
 bool isChineseLanguage(void){return chinese;}
 const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?a->name_cn:a->name_en;}
 bool is_valid_amiibo_v3(uint32_t a,uint32_t b){(void)a;(void)b;return false;}
-void mui_toast_view_show(mui_toast_view_t*v,const char*t){(void)v;(void)t;errors++;}
+void mui_toast_view_show(mui_toast_view_t *view,const char *text) {
+    if(strstr(text," · ") || !strcmp(text,"Zelda")){
+        assert(view==&test_toast && strlen(text)<sizeof(page_hint));
+        strcpy(page_hint,text);view->is_visible=true;hint_count++;
+    }else errors++;
+}
 void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,uint32_t id){(void)d;(void)id;}
 void mui_scene_dispatcher_next_scene(mui_scene_dispatcher_t*d,uint32_t id){(void)d;scene_changes++;last_scene=id;}
 void mui_text_input_set_max_length(mui_text_input_t*v,size_t n){v->max_length=n;}
@@ -57,11 +65,25 @@ int32_t amiidb_api_fav_add(const char*p,const amiidb_fav_t*f){(void)p;saved_fav=
 @DETAIL@
 
 
+static unsigned indexed_stats;
+static int32_t stat_failure;
+int32_t amiidb_api_fav_has_canonical(const char *folder,const amiidb_fav_t *fav,bool *present) {
+    (void)folder;indexed_stats++;*present=false;
+    if(stat_failure)return stat_failure;
+    for(unsigned i=0;i<info_count;i++){
+        const amiidb_fav_info_t *info=&infos[i];
+        if(info->fav_type==FAV_TYPE_FAV && !info->name_alias && !fav_record_compare(&info->fav_data.fav,fav)){
+            *present=true;break;
+        }
+    }
+    return VFS_OK;
+}
 static void*fixed[32];static unsigned fixed_count;
 static void reserve(size_t n){void*p=mui_mem_malloc(n);assert(p&&fixed_count<32);memset(p,0,n);fixed[fixed_count++]=p;}
 static app_amiidb_t *begin(bool pressure){
  mui_mem_init();oom=errors=0;read_count=close_count=0;read_failure=0;fail_after=0;fake_mui.memory_error=false;fixed_count=0;
  app_amiidb_t*a=mui_mem_malloc(sizeof(*a));assert(a);memset(a,0,sizeof(*a));
+ a->p_toast_view=&test_toast;test_toast.is_visible=false;hint_count=0;page_hint[0]=0;
  a->p_list_view=mui_mem_malloc(sizeof(*a->p_list_view));assert(a->p_list_view);memset(a->p_list_view,0,sizeof(*a->p_list_view));
  mui_list_item_array_init(a->p_list_view->items);a->p_list_view->user_data=a;
  string_init(a->search_str);string_init(a->cur_fav_dir);
@@ -98,6 +120,108 @@ static int cmpinfo(const void*pa,const void*pb){const amiidb_fav_info_t*a=pa,*b=
 static unsigned expected_count(bool select){unsigned n=0;for(unsigned i=0;i<info_count;i++)if(!select||infos[i].fav_type==FAV_TYPE_FOLDER)expected[n++]=infos[i];qsort(expected,n,sizeof(*expected),cmpinfo);return n;}
 static unsigned checkpage(app_amiidb_t*a,unsigned offset){bound(a);assert(a->p_list_view->items->size<=28);unsigned n=0;for(size_t i=0;i<a->p_list_view->items->size;i++){mui_list_item_t*x=&a->p_list_view->items->ptr[i];if(x->icon==ICON_FOLDER){assert(expected[offset+n].fav_type==FAV_TYPE_FOLDER&&!strcmp(string_get_cstr(x->text),expected[offset+n].fav_data.folder_name));n++;}else if(x->icon==ICON_FILE){assert(expected[offset+n].fav_type==FAV_TYPE_FAV);amiidb_fav_t*f=x->user_data,*e=&expected[offset+n].fav_data.fav;assert(f&&f->game_id==e->game_id&&f->amiibo_head==e->amiibo_head&&f->amiibo_tail==e->amiibo_tail);n++;}}assert(n<=24);return n;}
 static void pages(unsigned n,unsigned mix,bool select){make(n,mix==1);if(mix==2)for(unsigned i=0;i<n;i+=5){infos[i].fav_type=FAV_TYPE_FOLDER;snprintf(infos[i].fav_data.folder_name,48,"%04u-abcdefghijklmnopqrstu",i);}unsigned total=expected_count(select);app_amiidb_t*a=begin(true);if(select)amiidb_scene_fav_select_on_enter(a);else amiidb_scene_fav_list_on_enter(a);unsigned seen=0,start=0;do{start=seen;seen+=checkpage(a,seen);if(!item(a,ICON_NEXT))break;click(a,ICON_NEXT);}while(1);assert(seen==total);while(item(a,ICON_PREV)){click(a,ICON_PREV);start-=24;checkpage(a,start);}assert(start==0);assert(!errors);end(a);cases++;}
+static void expect_hint(const char *folder,unsigned page) {
+    char expected_hint[100];
+    snprintf(expected_hint,sizeof(expected_hint),english?"%s · Page %u":"%s · Seite %u",folder,page);
+    assert(test_toast.is_visible && !strcmp(expected_hint,page_hint));
+}
+static void favorite_folder_hint(void) {
+    const char *folder="Zélda ÄÖ – 森";
+    for(unsigned lang=0;lang<2;lang++){
+        english=lang;
+        make(24,false);
+        app_amiidb_t *app=begin(false);string_set_str(app->cur_fav_dir,folder);
+        amiidb_scene_fav_list_on_enter(app);
+        assert(close_count==1 && !hint_count && !test_toast.is_visible && data_count(app)==24);
+        make(25,false);amiidb_scene_fav_list_reload(app);
+        expect_hint(folder,1);assert(close_count==2 && data_count(app)==24);
+        click(app,ICON_NEXT);expect_hint(folder,2);assert(close_count==3 && data_count(app)==1);
+        amiidb_scene_fav_list_on_exit(app);assert(!test_toast.is_visible);
+        amiidb_scene_fav_list_on_enter(app);expect_hint(folder,2);assert(close_count==4);
+        click(app,ICON_PREV);expect_hint(folder,1);assert(close_count==5);
+        click(app,ICON_EXIT);assert(!test_toast.is_visible);
+        const char *long_name="12345678901234567890森森森森森森森森";
+        string_set_str(app->cur_fav_dir,long_name);amiidb_fav_page_reset(app);
+        amiidb_scene_fav_list_reload(app);expect_hint("12345678901234567890...",1);
+        assert(!strcmp(string_get_cstr(app->cur_fav_dir),long_name));
+        click(app,ICON_EXIT);assert(!test_toast.is_visible);
+        make(950,false);string_set_str(app->cur_fav_dir,"Zelda");amiidb_fav_page_reset(app);
+        amiidb_scene_fav_list_reload(app);
+        unsigned opens=close_count;expect_hint("Zelda",1);
+        for(unsigned page=2;page<=40;page++){
+            click(app,ICON_NEXT);expect_hint("Zelda",page);
+            assert(close_count==++opens && data_count(app)==(page==40?14:24));
+        }
+        for(unsigned page=39;page>0;page--){
+            click(app,ICON_PREV);expect_hint("Zelda",page);
+            assert(close_count==++opens);
+        }
+        /* Reposition after detail navigation, then reconstruct a retained anchor. */
+        assert(expected_count(false)==950);
+        amiidb_fav_t target=expected[949].fav_data.fav;
+        assert(amiidb_fav_page_focus(app,&target));expect_hint("Zelda",40);
+        assert(close_count==opens+2);
+        app->fav_page_number=0;amiidb_scene_fav_list_reload(app);
+        expect_hint("Zelda",40);assert(close_count==opens+3);
+        amiidb_scene_fav_list_on_exit(app);assert(!test_toast.is_visible);end(app);cases++;
+    }
+    english=false;
+}
+static void favorite_alias_rank(void) {
+    make(25,false);assert(expected_count(false)==25);
+    for(unsigned i=0;i<24;i++){infos[info_count]=expected[i];infos[info_count++].name_alias=true;}
+    app_amiidb_t *app=begin(false);string_set_str(app->cur_fav_dir,"Zelda");
+    amiidb_scene_fav_list_on_enter(app);click(app,ICON_NEXT);expect_hint("Zelda",2);
+    assert(data_count(app)==1 && indexed_stats==0 && close_count==2);
+    amiidb_scene_fav_list_on_exit(app);amiidb_scene_fav_list_on_enter(app);
+    expect_hint("Zelda",2);assert(close_count==3 && !indexed_stats);
+    /* A retained v1 anchor has no ordinal. The only extra pass collects the
+     * noncanonical IDs, and checks each via an indexed canonical lookup. */
+    app->fav_page_number=0;amiidb_scene_fav_list_reload(app);expect_hint("Zelda",2);
+    assert(close_count==5 && indexed_stats==24 && data_count(app)==1);
+    click(app,ICON_PREV);
+    assert(amiidb_fav_page_focus(app,&expected[24].fav_data.fav));expect_hint("Zelda",2);
+    /* All alias spellings for the same ID still count only once if the
+     * canonical spelling is absent (e.g. two independently imported names). */
+    for(unsigned i=0;i<24;i++)infos[i].name_alias=true;
+    app->fav_page_number=0;amiidb_scene_fav_list_reload(app);expect_hint("Zelda",2);
+    infos[0].name_alias=false;stat_failure=VFS_ERR_FAIL;
+    app->fav_page_number=0;amiidb_scene_fav_list_reload(app);
+    assert(!strcmp(page_hint,"Zelda") && data_count(app)==1 && !app->fav_page_number);
+    stat_failure=0;
+    mui_mem_monitor_t monitor;
+    for(;;){
+        mui_mem_monitor(&monitor);
+        if(monitor.free_biggest_size<128)break;
+        reserve(monitor.free_biggest_size-32);
+    }
+    uint32_t before=123;assert(!fav_alias_rank("Zelda",&expected[24].fav_data.fav,48,&before));
+    assert(before==123 && data_count(app)==1 && app->p_list_view->selected_cb);
+    end(app);
+    /* Many noncanonical-only markers, permuted physical order. Keep scratch
+     * bounded, and count actual complete enumerations separately from lookups. */
+    make(950,false);assert(expected_count(false)==950);
+    for(unsigned i=0;i<info_count;i++)infos[i].name_alias=true;
+    for(unsigned i=0;i<40;i++){infos[info_count]=expected[i];infos[info_count++].name_alias=true;}
+    app=begin(false);string_set_str(app->cur_fav_dir,"Zelda");
+    amiidb_scene_fav_list_on_enter(app);indexed_stats=0;unsigned from=close_count;
+    assert(amiidb_fav_page_focus(app,&expected[949].fav_data.fav));expect_hint("Zelda",40);
+    assert(!indexed_stats && close_count-from<=18);
+    printf("PASS 950 unique alias-only markers, 40 extra spellings, nonlocal detail return in %u complete enumerations; retained and ordinary page steps each use one.\n",close_count-from);
+    end(app);cases++;
+}
+static void favorite_alias_page(void) {
+    for(unsigned size=24;size<=25;size++) {
+        make(size,false);
+        unsigned total=expected_count(false);
+        infos[info_count++]=infos[0];infos[info_count++]=infos[size-1];
+        app_amiidb_t *app=begin(true);amiidb_scene_fav_list_on_enter(app);
+        assert(checkpage(app,0)==24);
+        assert((item(app,ICON_NEXT)!=NULL)==(total>24));
+        if(total>24){click(app,ICON_NEXT);assert(checkpage(app,24)==1 && !item(app,ICON_NEXT));}
+        end(app);cases++;
+    }
+}
 static void favorite_detail_and_folder_picker_return(void) {
     make(70, false);
     expected_count(false);
@@ -168,6 +292,9 @@ int main(void){
  make(120,true);a=begin(true);amiidb_scene_fav_select_on_enter(a);assert(oom||errors);puts("REPRO favorite destination selector unbounded folders");end(a);cases++;
 #else
  unsigned sizes[]={0,1,24,25,100,1000};for(unsigned repeat=0;repeat<2;repeat++)for(unsigned i=0;i<6;i++){pages(sizes[i],0,false);pages(sizes[i],1,false);pages(sizes[i],1,true);pages(sizes[i],2,false);pages(sizes[i],2,true);}errors_and_return();
+ favorite_folder_hint();
+ favorite_alias_rank();
+ favorite_alias_page();
  favorite_detail_and_folder_picker_return();
 #endif
  printf("PASS %u cases, zero remaining pool allocations\n",cases);return 0;}

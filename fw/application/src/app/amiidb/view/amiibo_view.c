@@ -183,7 +183,9 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     mui_canvas_set_font(p_canvas, u8g2_font_wqy12_t_gb2312a);
     uint8_t uid[7];
     ntag_store_get_uuid(ntag, uid);
-    sprintf(buff, "%02d %02x:%02x:%02x:%02x:%02x:%02x:%02x", p_amiibo_view->focus + 1, uid[0], uid[1],
+    char *uid_text = buff;
+    if (!p_amiibo_view->windowed_favorites) uid_text += sprintf(buff, "%02d ", p_amiibo_view->focus + 1);
+    sprintf(uid_text, "%02x:%02x:%02x:%02x:%02x:%02x:%02x", uid[0], uid[1],
             uid[2], uid[3], uid[4], uid[5], uid[6]);
 
     uint8_t y = 0;

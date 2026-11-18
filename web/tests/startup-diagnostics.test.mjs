@@ -1,4 +1,4 @@
-import { startupSeries, startupStorageIntervals, startupMountPresentation } from '../src/lib/startup-diagnostics.js';
+import { startupSeries, startupSeriesComparison, startupStorageIntervals, startupMountPresentation } from '../src/lib/startup-diagnostics.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -58,6 +58,9 @@ test('PXST v4 retains allocated and filled mount pages, validates missing caches
   assert.match(shown(bytes,'de_DE')['Treffer bei cachegeeigneten Zugriffen'],/81,6/);
   assert.equal(shown(frame(21,4,2,256,-12))['Pages filled / allocated at end of mount'],'2 / 4');
   assert.equal(shown(frame(23,16,16,256))['Pages filled / allocated at end of mount'],'16 / 16');
+  const app659 = frame(23,26,26,256);
+  assert.equal(shown(app659)['Pages filled / allocated at end of mount'],'26 / 26');
+  assert.equal(shown(app659,'de_DE')['Seiten am Mount-Ende gefüllt / zugeteilt'],'26 / 26');
   const noCache = frame(19,0,0,0);
   assert.equal(shown(noCache)['Pages filled / allocated at end of mount'],'0 / 0');
   assert.equal(shown(noCache)['Hit rate for cache-eligible reads'],undefined);
@@ -364,5 +367,91 @@ test('saved and current hardware timings and read counts render in the active la
     assert.ok(text(comparison()).includes('Scan time'));assert.ok(text(comparison()).includes('unsaturated'));
     assert.ok(!text(comparison()).includes('Bytes read'));
     f.data.connected=false;await f.Vue.nextTick();assert.equal(comparison(),undefined);
+  } finally { f.app.unmount(); }
+});
+
+function seriesReport(version, time, options = {}) {
+  const startup = parseStartupDiagnostics(packet(63, [0,time,time+6,time+48,time+52,time+56]));
+  const {board='LCD', source='a', reset=4, free=1150000} = options;
+  const power = {resetCaptured:true, resetReasonRaw:reset};
+  const drives = [{label:'E',status:0,totalBytes:2097152,freeBytes:free}];
+  const build = {board,sourceId:source.repeat(64)};
+  if (options.nested) return {firmwareVersion:version, diagnosticSnapshot:{sections:Object.fromEntries(
+    Object.entries({startup, power, drives, build}).map(([key,data]) => [key,{state:'available',data}]))}};
+  if (options.legacy) return {firmwareVersion:version,startup};
+  return {firmwareVersion:version,startup,power,drives,buildIdentity:{observed:{compiledBoard:board,sourceId:build.sourceId}}};
+}
+
+test('A/B medians compare unequal sample counts and versions; observed context survives both report formats', () => {
+  const a = startupSeries([90,100,140,120].map(t => seriesReport('2.22.0-DE3.84', t)));
+  const b = startupSeries([83,85,81].map(t => seriesReport('2.22.0-DE3.85', t,{nested:true,source:'b'})));
+  const result = startupSeriesComparison(a,b);
+  assert.deepEqual(result.metrics.find(row => row.key === 'storage'),{
+    key:'storage',before:{min:90,max:140,median:110},after:{min:81,max:85,median:83},delta:-27});
+  assert.deepEqual(result.notices,[{kind:'differentBuild',key:'source'}]);
+  assert.deepEqual(startupSeriesComparison(a,null).metrics.map(r => r.delta),[null,null]);
+});
+
+test('A/B shows cache allocation and occupancy of the last mount, with unknown slots on schema 3', () => {
+  function group(slots) {
+    return startupSeries([0,1,2].map((n) => {
+      const packet = new Uint8Array(slots ? 84 : 80);
+      packet.set(mountPacket());
+      packet[28] += n;
+      if (slots) {
+        packet.set([4,84],4);
+        packet.set([slots[n],slots[n]-1,0,1],80);
+      }
+      return {firmwareVersion:'2.22.0-DE3.86',startup:parseStartupDiagnostics(packet)};
+    }));
+  }
+  const before = group([16,16,16]), after = group([26,16,26]);
+  const rows = startupSeriesComparison(before,after).metrics;
+  assert.deepEqual(rows.find(row => row.key === 'cacheSlotsAllocated'), {
+    key:'cacheSlotsAllocated',before:{min:16,max:16,median:16},after:{min:16,max:26,median:26},delta:10});
+  assert.equal(rows.find(row => row.key === 'cacheSlotsFilled').after.median,25);
+  const legacy = startupSeriesComparison(group(null),after).metrics.find(row => row.key === 'cacheSlotsAllocated');
+  assert.equal(legacy.before,null);assert.equal(legacy.delta,null);
+});
+
+test('A/B warns about mixed or missing observed context, same-version build changes and overlapping boot observations', () => {
+  const v = '2.22.0-DE3.85';
+  const a = startupSeries([100,101,102].map(t => seriesReport(v,t)));
+  const dirty = seriesReport(v,103,{board:'OLED',source:'b',free:1000000,reset:0});
+  const old = seriesReport(v,104,{legacy:true});
+  old.buildIdentity = {packageReference:{board:'LCD',sourceId:'a'.repeat(64)}};
+  const b = startupSeries([seriesReport(v,102),dirty,old]);
+  const {notices} = startupSeriesComparison(a,b);
+  for (const key of ['board','source','space','reset']) {
+    assert.ok(notices.some(n => n.kind === 'mixed' && n.group === 'B' && n.key === key));
+    assert.ok(notices.some(n => n.kind === 'different' && n.key === key));
+  }
+  assert.deepEqual(b.context.reset,{values:[4,0],missing:1});
+  assert.deepEqual(b.context.source,{values:['a'.repeat(64),'b'.repeat(64)],missing:1});
+  assert.deepEqual(notices.find(n => n.kind === 'missing').keys.sort(),['board','reset','source','space']);
+  assert.ok(notices.some(n => n.kind === 'overlap'));
+});
+
+test('offline A/B form imports independent series, localizes median deltas and does not replace newer uploads', async () => {
+  const f = await mount({connected:false,readDiagnostics:()=>assert.fail('Offline comparison requested BLE')});
+  const file = doc => ({size:512,text:async()=>JSON.stringify(doc)});
+  const files = (version, times) => times.map(t => file(seriesReport(version,t,{legacy:true})));
+  const select = (index, files) => nodes(f.root).filter(n=>n.type==='input' && n.props.multiple !== undefined)[index]
+    .props.onChange({target:{files}});
+  try {
+    const slow = deferred();
+    const pending = select(1,[{size:4,text:()=>slow.promise},...files('2.22.0-DE3.85',[107,105])]);
+    await select(0,files('2.22.0-DE3.84',[98,100,102]));
+    await select(1,files('2.22.0-DE3.85',[80,81,82,83]));
+    slow.reject(new Error('late'));await pending;await f.Vue.nextTick();
+    assert.match(text(f.root),/81,5 \(80–83\)/);
+    assert.match(text(f.root),/-18,5/);
+    assert.match(text(f.root),/In mindestens einem Bericht fehlen/);
+    assert.doesNotMatch(text(f.root),/Ungültige Reihe/);
+    f.data.locale='en_US';await f.Vue.nextTick();
+    assert.match(text(f.root),/81.5 \(80–83\)/);assert.match(text(f.root),/At least one report lacks/);
+    await select(1,[{size:1024*1024+1},...files('2.22.0-DE3.85',[107,108])]);await f.Vue.nextTick();
+    assert.match(text(f.root),/Invalid series/);assert.match(text(f.root),/2.22.0-DE3.84/);
+    assert.doesNotMatch(text(f.root),/Δ B − A/);
   } finally { f.app.unmount(); }
 });

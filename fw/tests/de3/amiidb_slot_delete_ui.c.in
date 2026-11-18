@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-enum { ICON_EXIT, ICON_FILE, ICON_AMIIBO, ICON_DELETE, MAX_SLOT_COUNT=50 };
+enum { ICON_EXIT, ICON_FILE, ICON_AMIIBO, ICON_READ_ONLY, ICON_DELETE, MAX_SLOT_COUNT=50 };
 enum { MUI_LIST_VIEW_EVENT_SELECTED, MUI_LIST_VIEW_EVENT_LONG_SELECTED };
 enum { MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_RIGHT };
 enum { AMIIDB_SCENE_MAIN, AMIIDB_SCENE_DATA_LIST, AMIIDB_SCENE_DATA_LIST_MENU, AMIIDB_SCENE_AMIIBO_DETAIL };
@@ -73,5 +73,10 @@ int main(void) {
     result=VFS_OK;
     confirmed(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
     assert(removes==2 && deleted_slot==9 && previous==1);
+    const db_amiibo_t known=42;
+    mui_list_item_t protected={.icon=ICON_READ_ONLY,.user_data=(void*)&known};
+    list.focus=3;
+    amiidb_scene_data_list_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&protected);
+    assert(next==AMIIDB_SCENE_AMIIBO_DETAIL && app.cur_slot_index==3 && app.cur_amiibo==&known);
     puts("PASS slot selection, confirmation, retry and navigation");
 }

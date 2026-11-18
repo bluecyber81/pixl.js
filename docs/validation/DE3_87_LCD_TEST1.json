@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-18",
+  "version": "2.22.0-DE3.87",
+  "counter": 660,
+  "target": "Allmiibo LCD / ST7567 / PFS1",
+  "sourceCommit": "bda84eedd040d81b7362bf0cb5df19d14dbcd05b",
+  "sourceId": "0c497705163e238ac7dce5fb1ff299daa10cacf223ced3e9f19a1d0a7c2ae0ac",
+  "sourceFilesComparedWithGitCommit": 707,
+  "applicationBytes": 360728,
+  "applicationSha256": "2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e",
+  "applicationHexSha256": "dd931771c906ad25f1cf07cf6dd85205984d643c01bfba17a043c89a1b844fb7",
+  "productionManifestSha256": "95a7a25131e561542e46d588841674db203ef1e60c3803d9978f3d4a75533099",
+  "matchingBinAndHexBuilds": 2,
+  "buildToolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+  "nordicSdkSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+  "packagingTool": "Nordic nrfutil 6.1.7",
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_87_660_NUR_APP.zip",
+    "sha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0",
+    "bytes": 249952,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 660,
+        "sd_req": [
+          294
+        ],
+        "bytes": 360728,
+        "sha256": "2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 360728,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "otaPublicKeyBinding": {
+    "bootloader": "Z21",
+    "regionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "hwVersion": 52,
+    "debug": false,
+    "upstreamProject": "solosky/pixl.js",
+    "upstreamCommit": "5521e315b62afe25289ce656e536202f7df8f89a"
+  },
+  "softDeviceReference": {
+    "family": "S112",
+    "version": "7.3.0",
+    "fwid": "0x0126",
+    "freshVendorArchiveSha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "vendorS112ProgramBytesVerifiedAgainstSignedZ21System": 98068
+  },
+  "memory": {
+    "binary_bytes": 360728,
+    "linker_flash_used_bytes": 360728,
+    "observed": {
+      "flash_reserve_bytes": 12008,
+      "heap_stack_gap_bytes": 2064,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "linkedArmTests": {
+    "elfSha256": "0e6af46b8a3bf0c47c19aa88eeee76ea4649ad1a6e1c3e9d852a023aee4cb4bc",
+    "testsPassed": [
+      "check_stack_watermark_elf",
+      "check_first_menu_elf",
+      "check_aes_m4_elf",
+      "check_flash_jedec_elf",
+      "check_display_profile_elf",
+      "check_lcd_game_rotation_elf",
+      "check_lcd_device_test_elf",
+      "check_build_fault_elf"
+    ],
+    "hardwareModeled": true
+  },
+  "z21OfflineTests": {
+    "passedCount": 12,
+    "armCryptoCases": 69,
+    "fullBootloaderBuiltAgainstPinnedSdk": true,
+    "ownerReportedBootHashMatches": true
+  },
+  "z21Resume": {
+    "evidence": "docs/validation/DE3_87_Z21_RESUME.json",
+    "modeledCheckpointPowerCuts": 455,
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "testsAppBinaryFromSignedOta": true,
+    "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+  },
+  "physicalAcceptance": "pending",
+  "nextPhysicalChecks": [
+    "Install the application-only ZIP on the LCD already running Z21 and S112 7.3.0. Read back App660 and the expected SourceID.",
+    "Check the current slot number, lock icon, existing figure name and replacement confirmation on a real display.",
+    "Traverse large folders containing legacy .fav/.FAV marker aliases, suspend and wake on a later page, then check the restored page and selection.",
+    "Use the mobile remote and bulk-add a collection selection to a game folder.",
+    "Check physical Android DFU interruption and recovery separately."
+  ],
+  "hostTests": {
+    "profile": "full",
+    "available": 169,
+    "run": 169,
+    "passed": 169,
+    "omitted": 0,
+    "fullReportSha256": "9a2c6093d3567077742ba8e8bc55703101a2005777e1a5b24142d9c4d73d792f",
+    "sourcesUnchangedDuringTests": true
+  }
+}

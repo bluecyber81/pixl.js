@@ -79,9 +79,14 @@ test('both guides offer the current LCD app, full package and aligned storage ta
 });
 
 
-test('App658 guide is a separate pending LCD test with app-only downloads and reversible PWM instructions', () => {
+test('guides separate the pending local App659 from the owner-tested App658 and its reversible PWM instructions', () => {
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
+        const candidate = html.split('<h3 id="lcd-de386">')[1].split('<h3 id="lcd-de385">')[0];
+        assert.match(candidate, /href="\.\.\/firmware\/Allmiibo_LCD_DE3_86_659_NUR_APP\.zip" download/);
+        assert.match(candidate, /LCD\/ST7567.*PFS1.*Z21.*S112 7\.3\.0/);
+        assert.match(candidate, file === 'en.html' ? /first physical check of this build is pending/ : /erste Prüfung dieser Version am Gerät steht aus/);
+        assert.doesNotMatch(candidate, /_KOMPLETT|Allmiibo_OLED_|658_NUR_APP/);
         const trial = html.split('<h3 id="lcd-de385">')[1].split('<p><b>' + (file === 'en.html' ? 'Earlier' : 'Frühere'))[0];
         assert.ok(trial);
         assert.match(trial, /de3\.85-lcd-test1\/Allmiibo_LCD_DE3_85_658_NUR_APP\.zip/);
@@ -89,9 +94,21 @@ test('App658 guide is a separate pending LCD test with app-only downloads and re
         assert.match(trial, /ST7567/); assert.match(trial, /PFS1/); assert.match(trial, /Z21/); assert.match(trial, /S112 7\.3\.0/);
         assert.doesNotMatch(trial, /_KOMPLETT|Allmiibo_OLED_/);
         assert.match(trial, /5% PWM/); assert.match(trial, /100%/);
-        assert.match(trial, file === 'en.html' ? /Fresh hardware acceptance is pending/ : /Neue Hardwareabnahme offen/);
+        assert.match(trial, file === 'en.html' ? /owner reported successful use of App658 with file manager 3\.56\.0 on one LCD/ : /Besitzer meldete den erfolgreichen Praxistest von App658 mit Dateimanager 3\.56\.0 auf einem LCD/);
         assert.match(trial, file === 'en.html' ? /not measured physical brightness/ : /keine optisch gemessene Helligkeit/);
         assert.match(trial, file === 'en.html' ? /optional and starts off/ : /optional und anfangs aus/);
     }
+    assert.equal(openGuide('#lcd-de386', ['en']).next, base + 'en.html#lcd-de386');
     assert.equal(openGuide('#lcd-de385', ['en']).next, base + 'en.html#lcd-de385');
+});
+
+test('the App660 device guide links the signed LCD application and its published source kit', () => {
+    for (const file of ['index.html','en.html']) {
+        const guide = fs.readFileSync(path.join(__dirname,'../public/guide',file),'utf8');
+        const section = guide.split('<h3 id="lcd-de387">')[1].split('<h3 id="lcd-de386">')[0];
+        assert.match(section,/Allmiibo_LCD_DE3_87_660_NUR_APP\.zip/);
+        assert.ok(section.includes('https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip'));
+        assert.match(section,/LCD\/ST7567.*PFS1.*Z21.*S112 7\.3\.0/);
+        assert.doesNotMatch(section,/KOMPLETT|Allmiibo_OLED_/);
+    }
 });

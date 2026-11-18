@@ -13,10 +13,12 @@ def run(fw, arm=False, sanitize=False, case='all'):
     source=text.read_text()
     functions='\n'.join(extract(source,n) for n in ['mui_text_input_on_input',
         'mui_text_input_set_input_text','mui_text_input_set_max_length','mui_text_input_set_focus_key'])
-    favorite='\n'.join(extract(detail.read_text(),n) for n in [
-        'amiidb_scene_amiibo_detail_fav_list_read_cb','amiidb_scene_amiibo_fav_list_init',
-        'amiidb_scene_amiibo_fav_list_update','amiidb_scene_amiibo_detail_on_exit'])
-    tracked=[text,detail,src/'mui/view/mui_text_input.h',src/'app/amiidb/app_amiidb.h',
+    detail_body=detail.read_text()
+    api=src/'app/amiidb/api/amiidb_api_fav.c'
+    favorite='\n'.join([extract(api.read_text(),'fav_record_compare'),
+        detail_body[detail_body.index('#define FAV_DETAIL_WINDOW'):detail_body.index('static void amiidb_scene_amiibo_search_list_init')],
+        extract(detail_body,'amiidb_scene_amiibo_detail_on_exit')])
+    tracked=[text,detail,api,src/'mui/view/mui_text_input.h',src/'app/amiidb/app_amiidb.h',
         src/'app/amiidb/api/amiidb_api_fav.h',src/'app/amiidb/view/amiibo_view.h',
         src/'mui/mui_mem.c',src/'mui/mui_conf.h',fw/'components/tlsf/tlsf.c',
         fw/'components/mlib/m-string.h',fw/'components/mlib/m-array.h']

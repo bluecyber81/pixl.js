@@ -8,7 +8,7 @@ import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:658,version:'2.22.0-DE3.85',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654,655,656,657,658],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:660,version:'2.22.0-DE3.87',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654,655,656,657,658,659,660],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
  {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
  {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
   wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
@@ -34,6 +34,8 @@ const rows=[{path:'/Leer',kind:1,size:0},{path:'/Ordner',kind:1,size:0},{path:'/
 
 for (const [version, counter, document, bytes, binSha256] of [
   ['2.22.0-DE3.75', 648, 'DE3_75_PFS.json', 358304, '3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867'],
+  ['2.22.0-DE3.87', 660, 'DE3_87_PFS.json', 360728, '2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e'],
+  ['2.22.0-DE3.86', 659, 'DE3_86_PFS.json', 359336, '431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65'],
   ['2.22.0-DE3.84', 657, 'DE3_84_PFS.json', 356216, 'b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323'],
   ['2.22.0-DE3.83', 656, 'DE3_83_PFS.json', 355312, 'dc4a1440b20a0ddff202ee6739490ca5faf3bf1f6dcb245039b6d773b0665183'],
   ['2.22.0-DE3.82', 655, 'DE3_82_PFS.json', 362904, 'e08ec6c3f343750bde9689f0ba70f0d679a734a69dc8a426dd354183ea5c163e'],
@@ -95,7 +97,9 @@ for(const profile of profiles) {
     {firmwareVersion:'2.22.0-DE3.82',applicationCounter:655},
     {firmwareVersion:'2.22.0-DE3.83',applicationCounter:656},
     {firmwareVersion:'2.22.0-DE3.84',applicationCounter:657},
-    {firmwareVersion:'2.22.0-DE3.85',applicationCounter:658}
+    {firmwareVersion:'2.22.0-DE3.85',applicationCounter:658},
+    {firmwareVersion:'2.22.0-DE3.86',applicationCounter:659},
+    {firmwareVersion:'2.22.0-DE3.87',applicationCounter:660}
   ])
   assert.deepEqual(binding.defines,['LFS_NO_ASSERT','LFS_NO_DEBUG','LFS_NO_ERROR','LFS_NO_MALLOC','LFS_NO_WARN'])
   const module=new WebAssembly.Module(wasm)
@@ -145,11 +149,17 @@ test('profile registry defaults only an omitted ID and rejects every unknown or 
 })
 
 
-test('App658 capacity evidence binds the actual candidate BIN, source ID and unchanged simulator without claiming device acceptance',()=>{
- const evidence=JSON.parse(fs.readFileSync(new URL('../docs/validation/DE3_85_PFS.json',root)));
- const {packageReference:reference}=diagnosticBuildIdentity({firmwareVersion:'2.22.0-DE3.85'});
+for (const [release, counter, acceptance] of [
+  ['85', 658, 'owner-reported-on-one-lcd'],
+  ['86', 659, 'pending'],
+  ['87', 660, 'pending'],
+]) {
+ test(`App${counter} capacity evidence binds the candidate BIN, SourceID and engine to its stated hardware status`, () => {
+ const version = '2.22.0-DE3.' + release;
+ const evidence=JSON.parse(fs.readFileSync(new URL(`../docs/validation/DE3_${release}_PFS.json`,root)));
+ const {packageReference:reference}=diagnosticBuildIdentity({firmwareVersion:version});
  const profile=profiles.find(item=>item.id==='current');
- assert.equal(evidence.firmware,'2.22.0-DE3.85');assert.equal(evidence.counter,658);
+ assert.equal(evidence.firmware,version);assert.equal(evidence.counter,counter);
  assert.equal(evidence.sourceId,reference.sourceId);
  assert.equal(evidence.engine.engineSha256,profile.engineSha256);
  assert.equal(evidence.wasmSha256,sha(profile.wasm));
@@ -158,5 +168,6 @@ test('App658 capacity evidence binds the actual candidate BIN, source ID and unc
  assert.equal(evidence.elfLoadBytesCompared,reference.applicationBytes);
  assert.deepEqual(evidence.armLayoutCases.map(row=>row.result===0),[true,true,false,false]);
  assert.deepEqual(evidence.capacityCrossMount,{cases:6,files:1131,folders:77,synthetic:true});
- assert.equal(reference.hardwareAcceptance,'pending');
+ assert.equal(reference.hardwareAcceptance,acceptance);
 });
+}

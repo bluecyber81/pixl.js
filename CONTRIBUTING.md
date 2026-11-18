@@ -11,7 +11,7 @@ host-test contribution; say clearly which checks were performed on a real device
 | --- | --- |
 | LCD application | [DE3.81 / App654 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). The [3.55.5 release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5) includes portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.58.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) provides portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z21 bootloader | [Build and test instructions](bootloader-z21/README.md) and [Z21 and App654 production evidence](docs/validation/DE3_81.json). |
@@ -47,13 +47,13 @@ the finished bundles. The development server binds to `127.0.0.1:8010`. Normal
 tests use synthetic fixtures, mocked Bluetooth and local WASM, not a device.
 Windows-specific launcher tests are skipped on other operating systems.
 
-Publish the contents of `dist-pages/` to the Pages branch. For mobile downloads,
-copy the two published release ZIPs (source and ChatGPT test kit) into
-`downloads/web<VERSION>/` on that branch, keeping their original filenames.
-The application footer and license page use these versioned URLs. Before linking
-them in the release notes, download each URL without signing in and compare its
-SHA-256 with the corresponding GitHub release asset. Keep older linked versions
-available. The portable bundle does not need to include the download archives.
+Upload the portable, source and ChatGPT test ZIPs to the `web3.58.0` release.
+Upload the signed LCD application and LCD test kit to the `de3.87-lcd-test1` prerelease.
+The footer and license page link to those release assets. Verify their sizes and SHA-256
+after upload. Publish the contents of `dist-pages/` at the root of the `gh-pages`
+branch, including the generated historical download redirects. Compare the published
+`firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip` with the signed release asset before
+using the Android handoff.
 Do not publish a source checkout, `node_modules/`, server state or private files.
 The CI below tests builds; it does not deploy Pages or create releases.
 

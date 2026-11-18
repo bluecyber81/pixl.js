@@ -58,57 +58,91 @@
         </template>
       </div>
     </details>
-    <details><summary>{{ de ? 'Mehrere Kaltstarts auswerten' : 'Compare multiple cold starts' }}</summary>
-      <p>{{ de ? '3 bis 20 JSON-Berichte auswählen: je einer pro echtem Neustart, am selben Gerät mit derselben Firmware, Sammlung und ähnlicher Akkuspannung.' : 'Select 3 to 20 JSON reports: one per physical restart, from the same device, firmware and collection at a similar battery voltage.' }}</p>
-      <input type="file" multiple accept=".json,application/json" :aria-label="de ? 'Kaltstartberichte' : 'Cold-start reports'" @change="loadSeries"/>
-      <p v-if="seriesError" role="status">{{ de ? 'Keine vergleichbare Reihe: Version fehlt oder weicht ab, Zeitmarken fehlen oder wiederholen sich, oder Anzahl bzw. Dateigröße ist zu groß.' : 'No comparable series: missing or different versions, missing or duplicate markers, or invalid file count or size.' }}</p>
-      <p v-if="series" role="status">{{ series.version }} · {{ series.count }} {{ de ? 'Starts' : 'boots' }} · Median (min–max):
-        {{ text.storage }} {{ series.storage.median }} ms ({{ series.storage.min }}–{{ series.storage.max }}) ·
-        {{ text.total }} {{ series.total.median }} ms ({{ series.total.min }}–{{ series.total.max }})</p>
-      <div v-if="series?.mount" class="table-wrap">
-        <table>
-          <caption>{{ de ? 'Letztes Einbinden von PackedFS je Bericht' : 'Last PackedFS mount in each report' }}</caption>
-          <thead><tr><th scope="col">{{ de ? 'Messwert' : 'Metric' }}</th><th scope="col">Median</th><th scope="col">Min–Max</th></tr></thead>
-          <tbody><tr v-for="[key, label] in mountSeriesLabels" :key="key"><th scope="row">{{ label }}</th><td>{{ series.mount[key].median }}</td><td>{{ series.mount[key].min }}–{{ series.mount[key].max }}</td></tr></tbody>
-        </table>
+    <details class="cold-start"><summary>{{ de ? 'Kaltstartreihen vergleichen' : 'Compare cold-start series' }}</summary>
+      <p>{{ de ? 'Pro Reihe 3 bis 20 Start- oder Gesamtberichte derselben Firmware auswählen, je einen pro Neustart. Für A und B dasselbe Gerät, dieselbe Sammlung und eine ähnliche Akkuspannung verwenden. Gesamtberichte enthalten zusätzliche Vergleichsdaten.' : 'Select 3 to 20 startup or full reports per series, one per restart on the same firmware. Use the same device and collection at a similar battery voltage for A and B. Full reports provide additional context.' }}</p>
+      <div v-for="group in ['A','B']" :key="group" class="series-input">
+        <label>{{ group === 'A' ? (de ? 'A · Ausgangsversion' : 'A · Baseline') : (de ? 'B · Vergleichsversion (optional)' : 'B · Candidate (optional)') }}
+          <input type="file" multiple accept=".json,application/json" @change="loadSeries($event, group)" />
+        </label>
+        <span v-if="series[group]" role="status">{{ series[group].version }} · {{ series[group].count }} {{ de ? 'Starts' : 'boots' }}</span>
+        <span v-else-if="seriesError[group]" role="status">{{ de ? 'Ungültige Reihe. Prüfe Anzahl, Dateigröße (max. 1 MiB je Bericht), Firmwareversion und vollständige, unterschiedliche Zeitmarken.' : 'Invalid series. Check file count and size (1 MiB per report), firmware version, and complete, distinct timing markers.' }}</span>
       </div>
+      <div v-if="comparison.metrics.length" class="table-wrap">
+        <table>
+          <caption>{{ de ? 'Median und Spannweite (Min–Max)' : 'Median and range (min–max)' }}</caption>
+          <thead><tr><th scope="col">{{ de ? 'Messwert' : 'Metric' }}</th>
+            <th v-if="series.A" scope="col">A</th><th v-if="series.B" scope="col">B</th>
+            <th v-if="series.A && series.B" scope="col">Δ B − A</th></tr></thead>
+          <tbody><tr v-for="row in comparison.metrics" :key="row.key"><th scope="row">{{ seriesLabels[row.key] }}</th>
+            <td v-if="series.A">{{ formatStats(row.before) }}</td><td v-if="series.B">{{ formatStats(row.after) }}</td>
+            <td v-if="series.A && series.B">{{ row.delta === null ? '—' : signed(row.delta) }}</td></tr></tbody>
+        </table>
+        <p v-if="series.A && series.B" class="limits">{{ de ? 'Δ ist der Median von B minus dem Median von A. Negative Zeitwerte bedeuten einen kürzeren gemessenen Abschnitt in B.' : 'Δ is the median of B minus the median of A. Negative timing differences mean a shorter measured interval in B.' }}</p>
+      </div>
+      <ul v-if="comparison.notices.length" class="limits"><li v-for="(notice, i) in comparison.notices" :key="i">{{ describeNotice(notice) }}</li></ul>
     </details>
     <p class="limits">{{ text.limits }}</p>
   </section>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { startupSeries, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
+import { startupSeriesSample, summarizeStartupSamples, startupSeriesComparison, compareStartup, createStartupDiagnosticReport, normalizeStartupDiagnostics, startupDiagnosticRows, startupDiagnosticsText, startupStorageIntervals, startupMountPresentation } from '../lib/startup-diagnostics.js';
 const props = defineProps({ firmwareVersion: String, connected: Boolean, blocked: Boolean, generation: { type: Number, default: 0 },
   locale: { type: String, default: 'de_DE' }, readDiagnostics: { type: Function, default: null } });
 const emit = defineEmits(['busy', 'export']);
 const state = ref('unknown'), info = ref(null), observedAt = ref(null);
 const text = computed(() => startupDiagnosticsText(props.locale));
 const de = computed(() => props.locale.startsWith('de'));
-const mountSeriesLabels = computed(() => [
-  ['scanMilliseconds', de.value ? 'Scanzeit (ms)' : 'Scan time (ms)'],
-  ['physicalReadAttempts', de.value ? 'Physische Leseversuche' : 'Physical read attempts'],
-  ['cacheHits', de.value ? 'Cachetreffer' : 'Cache hits'],
-  ['cacheMisses', de.value ? 'Cachefehlschläge' : 'Cache misses'],
-  ['bypassReads', de.value ? 'Zugriffe außerhalb des Caches' : 'Reads bypassing the cache'],
-]);
-const series = ref(null), seriesError = ref(false);
-let seriesRequest = 0;
-async function loadSeries(event) {
-  const id = ++seriesRequest, files = Array.from(event.target.files || []);
-  series.value = null; seriesError.value = false;
+const seriesLabels = computed(() => ({
+  total: text.value.total + ' (ms)', storage: text.value.storage + ' (ms)',
+  scanMilliseconds: de.value ? 'Letzter PackedFS-Scan (ms)' : 'Last PackedFS scan (ms)',
+  physicalReadAttempts: text.value.comparisonMetric.physicalReadAttempts,
+  physicalReadBytes: text.value.comparisonMetric.physicalReadBytes + ' (B)',
+  cacheHits: de.value ? 'Cachetreffer' : 'Cache hits',
+  cacheMisses: de.value ? 'Cachefehlschläge' : 'Cache misses',
+  bypassReads: de.value ? 'Zugriffe außerhalb des Caches' : 'Reads bypassing the cache',
+  cacheSlotsAllocated: de.value ? 'Zugeteilte Cache-Seiten beim Einbinden' : 'Mount cache pages allocated',
+  cacheSlotsFilled: de.value ? 'Gefüllte Cache-Seiten beim Einbinden' : 'Mount cache pages filled'
+}));
+const series = ref({A:null, B:null}), seriesError = ref({A:false, B:false});
+const seriesRequest = {A:0, B:0};
+const comparison = computed(() => startupSeriesComparison(series.value.A, series.value.B));
+function formatStats(stats) {
+  if (!stats) return '—';
+  const format = numberFormat.value.format;
+  return `${format(stats.median)} (${format(stats.min)}–${format(stats.max)})`;
+}
+function describeNotice({kind, group, key, keys}) {
+  const german = de.value;
+  const names = german ? {board:'Board', source:'SourceID', reset:'Resetursache', space:'Speicher frei/gesamt'}
+    : {board:'Board', source:'SourceID', reset:'Reset reason', space:'Storage free/total'};
+  if (kind === 'missing') return german ? `${group} · In mindestens einem Bericht fehlen Angaben zu ${keys.map(k => names[k]).join(', ')}.`
+    : `${group} · At least one report lacks data for ${keys.map(k => names[k]).join(', ')}.`;
+  if (kind === 'overlap') return german ? 'A und B enthalten identische Zeitmarken derselben Firmware. Prüfe, ob derselbe Start zweimal ausgewählt wurde.'
+    : 'A and B contain identical timing markers on the same firmware. Check whether the same boot was selected twice.';
+  if (kind === 'differentBuild') return german ? 'A und B melden unterschiedliche SourceIDs für die beiden Firmwareversionen.'
+    : 'A and B report different SourceIDs for the two firmware versions.';
+  const values = g => series.value[g].context[key].values.map(v => key === 'reset' ? '0x' + v.toString(16) : key === 'space' ? v + ' B' : v).join(', ');
+  if (kind === 'mixed') return german ? `${group} · ${names[key]} weicht innerhalb der Reihe ab (${values(group)}).`
+    : `${group} · ${names[key]} varies within the series (${values(group)}).`;
+  return german ? `${names[key]} unterscheidet sich zwischen A (${values('A')}) und B (${values('B')}).`
+    : `${names[key]} differs between A (${values('A')}) and B (${values('B')}).`;
+}
+async function loadSeries(event, group) {
+  const id = ++seriesRequest[group], files = Array.from(event.target.files || []);
+  series.value[group] = null; seriesError.value[group] = false;
   if (!files.length) return;
   try {
     if (files.length < 3 || files.length > 20 || files.some(f => f.size > 1024*1024)) throw new Error();
-    const reports = [];
+    const samples = [];
     for (const file of files) {
-      if (id !== seriesRequest) return;
       const doc = JSON.parse(await file.text());
-      reports.push({firmwareVersion:doc?.firmwareVersion, startup:doc?.startup});
+      if (id !== seriesRequest[group]) return;
+      samples.push(startupSeriesSample(doc));
     }
-    if (id !== seriesRequest) return;
-    series.value = startupSeries(reports); seriesError.value = !series.value;
-  } catch { if (id === seriesRequest) seriesError.value = true; }
+    series.value[group] = summarizeStartupSamples(samples);
+    seriesError.value[group] = !series.value[group];
+  } catch { if (id === seriesRequest[group]) seriesError.value[group] = true; }
 }
 const loading = computed(() => state.value === 'loading');
 const rows = computed(() => startupDiagnosticRows(info.value));
@@ -151,7 +185,7 @@ function clear() {
   if (wasLoading) emit('busy', false);
 }
 watch(() => [props.connected, props.generation], clear, { flush: 'sync' });
-onBeforeUnmount(() => { mounted = false; ++seriesRequest; clear(); });
+onBeforeUnmount(() => { mounted = false; ++seriesRequest.A; ++seriesRequest.B; clear(); });
 async function read() {
   if (!props.connected || props.blocked || loading.value || !props.readDiagnostics) return;
   clear();
@@ -176,6 +210,8 @@ function exportReport() {
 <style scoped>
 .startup-diagnostics { margin:16px 0; padding:16px; border:1px solid #c6d8e6; border-radius:12px; background:#f7fafc; color:#20364b; }
 .startup-diagnostics input[type="file"] { min-width:0; max-width:100%; }
+.series-input { margin:10px 0; font-size:.85rem; }
+.series-input label,.series-input input,.series-input span { display:block; margin:4px 0; }
 h3 { margin:0 0 10px; } p { font-size:.86rem; line-height:1.5; } .actions { display:flex; flex-wrap:wrap; gap:10px; }
 button { min-height:44px; padding:8px 12px; border:1px solid #9eb8cb; border-radius:7px; background:#fff; color:#244f71; cursor:pointer; }
 button:disabled { opacity:.55; cursor:default; } button:focus-visible { outline:3px solid #4e94c9; outline-offset:2px; }

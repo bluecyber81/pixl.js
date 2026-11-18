@@ -431,6 +431,12 @@
     <CollectionAssistant v-if="visitedWorkspaces.has('catalogue')" ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery">
       <template #backup-audit><CollectionBackupAudit :locale="language" :catalogue="collectionCatalogue" /></template>
     </CollectionAssistant>
+    <details class="extra-tools" @toggle="gameFolderOpened = gameFolderOpened || $event.currentTarget.open">
+      <summary>{{ language === 'de_DE' ? 'Spielordner auf dem LCD anlegen' : 'Create a game folder on the LCD' }}</summary>
+      <GameFolder v-if="gameFolderOpened" :catalogue="collectionCatalogue" :locale="language" :connected="connected"
+        :supported="lcdGameFolderSupported" :blocked="busy || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive"
+        :generation="sessionGeneration" :with-session="with_game_folder_session" />
+    </details>
     <div id="figure-catalogue"><CataloguePanel v-if="catalogueOpen" :catalogue="collectionCatalogue" :collection-report="cataloguePresenceReport" :collection-stale="collectionStale" :collection-historical="catalogueObservationHistorical" :collection-observed-at="catalogueObservationAt" :blocked="collectionBusy" :open-import="open_figure_import" @select-entry="collectionSelected = $event" /></div>
     </section>
     </div></div>
@@ -584,8 +590,8 @@
   <footer class="source-footer">
     <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.85 / App658 / Z21 · Prüfpaket (ZIP)' : 'LCD DE3.85 / App658 / Z21 · test kit (ZIP)' }}</a>
-    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv · App648-Prüfpaket für ChatGPT (ZIP)' : 'Archive · App648 test kit for ChatGPT (ZIP)' }}</a>
+    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)' : 'LCD DE3.87 / App660 / Z21 · test kit (ZIP)' }}</a>
+    <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Web 3.58.0 / App660 · Prüfpaket für ChatGPT (ZIP)' : 'Web 3.58.0 / App660 · test kit for ChatGPT (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
   </main></el-config-provider>
@@ -604,7 +610,7 @@ import * as proto from "./lib/pixl.proto"
 import { classifyRenameListing } from './lib/rename-confirmation.js'
 import { getElementLocale } from "./i18n"
 import { filterRows, joinDevicePath, sha256, saveBlob, saveBlobWithPicker } from "./lib/browser-tools.js"
-import { createBackup, createBackupCheckpoint } from "./lib/backup.js"
+import { loadBackupTools, loadBackupZip, previewZipImport, executeZipImport } from "./lib/file-workflows.js"
 import { readTimeEstimate, formatReadDuration } from "./lib/read-time-estimate.js"
 import { formatBatteryVoltage, normalizePowerDiagnostics } from "./lib/power-diagnostics.js"
 import { normalizeBootDiagnostics, formatHexWord } from "./lib/boot-diagnostics.js"
@@ -621,7 +627,6 @@ import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
 import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
-import { loadBackupZip, previewZipImport, executeZipImport } from "./lib/zip-import.js"
 import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure-info.js"
 import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
 import { metadataNoteInfo } from "./lib/metadata-note.js"
@@ -643,6 +648,7 @@ export default {
     CollectionBackupAudit: defineAsyncComponent(() => import('./components/CollectionBackupAudit.vue')),
     BackupExportOptions: defineAsyncComponent(() => import('./components/BackupExportOptions.vue')),
     HardwareProfile: defineAsyncComponent(() => import('./components/HardwareProfile.vue')),
+    GameFolder: defineAsyncComponent(() => import('./components/GameFolder.vue')),
     GuidedReportComparison: defineAsyncComponent(() => import('./components/GuidedReportComparison.vue')), GuidedDeviceCheck: defineAsyncComponent(() => import('./components/GuidedDeviceCheck.vue')), UploadNameReview: defineAsyncComponent(() => import('./components/UploadNameReview.vue')), MenuRunComparison: defineAsyncComponent(() => import('./components/MenuRunComparison.vue')), BackupComparison: defineAsyncComponent(() => import('./components/BackupComparison.vue')), DeviceStorageCard, DisplayPhoto: defineAsyncComponent(() => import('./components/DisplayPhoto.vue')), ScreenAwake: defineAsyncComponent(() => import('./components/ScreenAwake.vue')), CardSlotInspection: defineAsyncComponent(() => import('./components/CardSlotInspection.vue')), DiagnosticOverview: defineAsyncComponent(() => import('./components/DiagnosticOverview.vue')), CollectionAssistant: defineAsyncComponent(() => import('./components/CollectionAssistant.vue')), SelectionPreview: defineAsyncComponent(() => import('./components/SelectionPreview.vue')), DeviceSearch: defineAsyncComponent(() => import('./components/DeviceSearch.vue')), RemoteControl: defineAsyncComponent(() => import('./components/RemoteControl.vue')), StartupDiagnostics: defineAsyncComponent(() => import('./components/StartupDiagnostics.vue')), MigrationAssistant: defineAsyncComponent(() => import('./components/MigrationAssistant.vue')), TransferStatus: defineAsyncComponent(() => import('./components/TransferStatus.vue')), UpdateCheck: defineAsyncComponent(() => import('./components/UpdateCheck.vue')), CataloguePanel: defineAsyncComponent(() => import('./components/CataloguePanel.vue')), FigureDetails: defineAsyncComponent(() => import('./components/FigureDetails.vue')) },
   data() {
     return {
@@ -657,6 +663,7 @@ export default {
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
+      gameFolderOpened:false,
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0, syncNames: null, syncNameSerial: 0,
       syncHistoryName: '', syncHistoryReady: null,
@@ -705,6 +712,7 @@ export default {
     collectionWriting(value){if(value)++this.collectionRevision;}
   },
   computed: {
+    lcdGameFolderSupported() { return buildDiagnosticBoard(this.firmwareVersion) === 'LCD'; },
     screenAwakeActive() { return this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
     catalogueObservationHistorical() { return !this.connected && !this.connecting && !this.collectionStale && !!this.collectionObservation; },
     cataloguePresenceReport() { return this.catalogueObservationHistorical ? this.collectionObservation.report : this.collectionReport; },
@@ -891,6 +899,32 @@ export default {
     open_preview_properties() {
       const selection=this.previewSelection;
       if(!this.busy&&this.preview_selection_current(selection))return this.on_row_btn_meta(0,selection.row);
+    },
+    async with_game_folder_session(writing, action) {
+      const generation = this.sessionGeneration;
+      this.assert_session(generation);
+      if (this.busy || this.upload_diag_visible || this.syncDialog || this.zipDialog || this.meta_diag_visible || this.remoteActive)
+        throw new Error('Device busy');
+      const lock = writing ? 'mutating' : 'infoLoading';
+      this[lock] = true;
+      try {
+        const build = await proto.get_lcd_build_diagnostics(this.firmwareVersion);
+        this.assert_session(generation);
+        if (build?.board !== 'LCD') throw Object.assign(new Error('LCD board required'), {code:'FAV_BOARD'});
+        const session = this.transfer_adapters(generation);
+        await action({...session, touchFile:async path => {
+          session.assertSession();
+          const file = this.checked(await proto.vfs_open_file(path, 'create-preserving'));
+          session.assertSession();
+          this.checked(await proto.vfs_close_file(file.file_id));
+          session.assertSession();
+        }});
+      } finally {
+        if (this.session_current(generation)) {
+          this[lock] = false;
+          if (writing && this.current_dir?.startsWith('E:/amiibo')) await this.refresh_current();
+        }
+      }
     },
     collection_transfer_session() {
       const generation=this.sessionGeneration;this.assert_session(generation);
@@ -1751,16 +1785,13 @@ export default {
       if (this.backupResumeInfo?.busy) return;
       const deviceKey = pixl.get_device_key?.();
       if (!deviceKey) { this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return; }
-      if (!persistent && resume !== true) {
-        if (this.backupResumeInfo?.files) {
-          try { await this.ask_dialog(() => this.$confirm(this.$t('workflow.discardConfirm'), this.$t('tools.backup'), this.confirm_options())); }
-          catch(error) { this.show_transfer_error(error); return; }
-          if (!this.session_current(generation)) return;
-        }
-        this.discard_backup_checkpoint();
-        this._backupCheckpoint = createBackupCheckpoint({rootPath,deviceKey,firmwareVersion:this.firmwareVersion,preserveLegacyNames:true});
-      } else if (!persistent && !this._backupCheckpoint) return;
-      const checkpointState = persistent ? undefined : this._backupCheckpoint;
+      if (!persistent && resume === true && !this._backupCheckpoint) return;
+      if (!persistent && resume !== true && this.backupResumeInfo?.files) {
+        try { await this.ask_dialog(() => this.$confirm(this.$t('workflow.discardConfirm'), this.$t('tools.backup'), this.confirm_options())); }
+        catch(error) { this.show_transfer_error(error); return; }
+        if (!this.session_current(generation) || this.busy) return;
+      }
+      let checkpointState = persistent ? undefined : this._backupCheckpoint;
       if (persistent) this.storedError = '';
       // A previous ZIP remains downloadable if this attempt is interrupted.
       if (this.lastBackup) this.lastBackup.sessionGeneration = null;
@@ -1768,7 +1799,16 @@ export default {
       const controller = new AbortController(); this._backupController = controller;
       this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: null });
       try {
+        const { createBackup, createBackupCheckpoint } = await loadBackupTools();
+        this.assert_session(generation);
+        if (controller.signal.aborted) return;
         const context = {rootPath, deviceKey, firmwareVersion:this.firmwareVersion, preserveLegacyNames:true};
+        if (!persistent && resume !== true) {
+          const freshCheckpoint = createBackupCheckpoint(context);
+          this._backupCheckpoint?.clear();
+          this.backupResumeInfo = null;
+          checkpointState = this._backupCheckpoint = freshCheckpoint;
+        }
         const run = storedBackup => createBackup({ ...context, ...this._backupExportOptions, exporterVersion: webVersion, progressIntervalMs: 100, readTransportStats: proto.get_transport_diagnostics, checkpointState, storedBackup, signal: controller.signal,
           readDirectory: async path => {
             this.assert_session(generation);

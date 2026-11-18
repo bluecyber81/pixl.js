@@ -1,0 +1,116 @@
+{
+  "date": "2026-11-18",
+  "target": "Allmiibo LCD / ST7567 / PFS1",
+  "version": "2.22.0-DE3.86",
+  "counter": 659,
+  "sourceCommit": "4111937e432ecec6adc989c9a51fa0fd37e960bf",
+  "sourceId": "2ed6d92c59935cafa916843b579743fabd501a3ef8dcb929e47cd2692abf9f52",
+  "sourceFilesComparedWithGitCommit": 706,
+  "applicationBytes": 359336,
+  "applicationSha256": "431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65",
+  "applicationHexSha256": "6fe41a914244959e4baeaa857063e784a853c3c9c55e0560b82c4f1375b01312",
+  "productionManifestSha256": "0b5094f80824e8ce8d644a15419aab6a59fc21921219eedfeb42a49d0c149119",
+  "matchingBinAndHexBuilds": 2,
+  "buildToolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+  "nordicSdkSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+  "nordicPackagingTool": "nrfutil 6.1.7, official v6.1.7 Linux release",
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_86_659_NUR_APP.zip",
+    "sha256": "af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58",
+    "bytes": 248604,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 659,
+        "sd_req": [
+          294
+        ],
+        "bytes": 359336,
+        "sha256": "431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 359336,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_86_659_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "otaPublicKeyBinding": {
+    "bootloader": "Z21",
+    "source": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "sourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3",
+    "regionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "upstreamProject": "solosky/pixl.js",
+    "upstreamCommit": "5521e315b62afe25289ce656e536202f7df8f89a",
+    "signedInit": "ECDSA_P256_SHA256",
+    "hwVersion": 52,
+    "debug": false
+  },
+  "memory": {
+    "binary_bytes": 359336,
+    "linker_flash_used_bytes": 359336,
+    "observed": {
+      "flash_reserve_bytes": 13400,
+      "heap_stack_gap_bytes": 2064,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "linkedArmTests": {
+    "elfSha256": "a59eae29767dc298ae42bbb6b28bcff037531d9e357c9ba91a517abd715fecac",
+    "testsPassed": [
+      "check_stack_watermark_elf",
+      "check_first_menu_elf",
+      "check_aes_m4_elf",
+      "check_flash_jedec_elf",
+      "check_display_profile_elf",
+      "check_lcd_game_rotation_elf",
+      "check_lcd_device_test_elf",
+      "check_build_fault_elf"
+    ],
+    "modeledDisplayAndBacklight": true,
+    "physicalTestsPerformed": false
+  },
+  "z21Resume": {
+    "evidence": "docs/validation/DE3_86_Z21_RESUME.json",
+    "checkpointPowerCuts": 455,
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+  },
+  "hardwareAcceptance": "pending",
+  "physicalTestsOutstanding": [
+    "Install this signed application-only OTA on an LCD already using Z21/S112 7.3.0 and PFS1. Read back App659, the new SourceID and the Z21 boot hash.",
+    "Check remote reconnect and automatic screen photos after reconnect.",
+    "Measure repeated cold starts with the same collection before and after.",
+    "Check favorites, NFC save/card switching, collection folder and file transfer on the device.",
+    "Observe actual Android DFU resumption after an interrupted connection."
+  ],
+  "hostTests": {
+    "profile": "full",
+    "available": 169,
+    "run": 169,
+    "passed": 169,
+    "omitted": 0,
+    "sourceId": "2ed6d92c59935cafa916843b579743fabd501a3ef8dcb929e47cd2692abf9f52",
+    "sourcesUnchangedDuringTests": true,
+    "fullReportSha256": "1426a0b810b51ab9e17b530e735c9b537e820b0cb4e85ce4fc7a57844c671d5f"
+  },
+  "softDeviceReference": {
+    "family": "S112",
+    "version": "7.3.0",
+    "fwid": "0x0126"
+  }
+}

@@ -21,12 +21,13 @@ static const vfs_driver_t persist_raw_driver;
  * into the LittleFS global read buffer. Cache these pages only during this
  * read-only walk, so streaming record payloads do not evict them. Tags are
  * kept most-recent-first. Their low bits select the unchanged page buffer. */
-enum { MOUNT_SMALL_SLOTS = 4, MOUNT_MEDIUM_SLOTS = 8,
-       MOUNT_SLOT_BITS = 4, MOUNT_SLOTS = 1 << MOUNT_SLOT_BITS };
+enum { MOUNT_SLOTS = 26, MOUNT_SLOT_BITS = 5,
+       MOUNT_SLOT_MASK = (1u << MOUNT_SLOT_BITS) - 1u };
+_Static_assert(MOUNT_SLOTS <= MOUNT_SLOT_MASK + 1, "cache slot tag is too small");
 typedef struct {
-  uint32_t tag[MOUNT_SLOTS];
   uint8_t capacity, used;
-  uint8_t page[][PFS_CACHE_SIZE];
+  /* capacity tags, followed by capacity flash pages in the same allocation. */
+  uint32_t tag[];
 } mount_pages_t;
 static mount_pages_t *mount_pages;
 typedef struct {
@@ -76,19 +77,27 @@ static bool range(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
 }
 _Static_assert(PFS_BLOCK_COUNT * (PFS_BLOCK_SIZE / PFS_CACHE_SIZE) - 1u <=
                    (UINT32_MAX >> MOUNT_SLOT_BITS), "page and slot must fit");
+static size_t mount_cache_bytes(unsigned slots) {
+  return sizeof(mount_pages_t) + slots * (sizeof(uint32_t) + PFS_CACHE_SIZE);
+}
+static uint8_t *mount_page_data(mount_pages_t *pages, unsigned slot) {
+  return (uint8_t *)pages + sizeof(*pages) + pages->capacity * sizeof(uint32_t) +
+         slot * PFS_CACHE_SIZE;
+}
 static mount_pages_t *mount_cache_alloc(void) {
   mui_mem_monitor_t memory;
   mui_mem_monitor(&memory);
-  /* Larger shard directories can cycle through more than eight metadata
-   * pages. Grow only for this read-only mount, preserving a full 4 KiB
-   * contiguous margin for the largest 3072-byte validation index and allocator
-   * overhead. Under pressure retain the existing eight/four-page tiers. */
-  unsigned slots = memory.free_biggest_size >=
-      sizeof(mount_pages_t) + MOUNT_SLOTS * PFS_CACHE_SIZE + 4096u
-      ? MOUNT_SLOTS : memory.free_biggest_size >=
-      sizeof(mount_pages_t) + MOUNT_MEDIUM_SLOTS * PFS_CACHE_SIZE + 4096u
-      ? MOUNT_MEDIUM_SLOTS : MOUNT_SMALL_SLOTS;
-  mount_pages_t *cache = mui_mem_malloc(sizeof(*cache) + slots * PFS_CACHE_SIZE);
+  /* For 1081 synthetic entries 26 pages reach the same read count as 32.
+   * Select a larger tier only if the largest free block leaves room for the
+   * 3072-byte validation index and allocator overhead. If even the small
+   * cache cannot be allocated, mount continues with direct reads. */
+  const unsigned tiers[] = {MOUNT_SLOTS, 16, 8, 4};
+  unsigned i = 0;
+  while (i + 1 < sizeof(tiers) / sizeof(tiers[0]) &&
+         memory.free_biggest_size < mount_cache_bytes(tiers[i]) + 4096u)
+    ++i;
+  unsigned slots = tiers[i];
+  mount_pages_t *cache = mui_mem_malloc(mount_cache_bytes(slots));
   if (cache) {
     cache->capacity = slots;
     cache->used = 0;
@@ -112,7 +121,7 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
     for (unsigned i = 0; i < mount_pages->used; ++i) {
       uint32_t tag = mount_pages->tag[i];
       if ((tag >> MOUNT_SLOT_BITS) == page) {
-        memcpy(data, mount_pages->page[tag & (MOUNT_SLOTS - 1)], n);
+        memcpy(data, mount_page_data(mount_pages, tag & MOUNT_SLOT_MASK), n);
         if (i) mount_promote(i, tag);
         runtime_diag_mount_cache(true, true);
         return 0;
@@ -129,9 +138,9 @@ static int flash_read(const struct lfs_config *c, lfs_block_t b, lfs_off_t o,
       slot = index = mount_pages->used++;
     } else {
       index = mount_pages->capacity - 1;
-      slot = mount_pages->tag[index] & (MOUNT_SLOTS - 1);
+      slot = mount_pages->tag[index] & MOUNT_SLOT_MASK;
     }
-    memcpy(mount_pages->page[slot], data, n);
+    memcpy(mount_page_data(mount_pages, slot), data, n);
     mount_promote(index, (uint32_t)((page << MOUNT_SLOT_BITS) | slot));
   }
   return 0;
@@ -223,7 +232,7 @@ static int32_t packed_mount(void) {
   r = pfs_mount(store);
   runtime_diag_mount_complete(map_error(r), mount_elapsed_ms(started),
                               pages ? pages->capacity : 0, pages ? pages->used : 0,
-                              pages ? sizeof(pages->page[0]) : 0);
+                              pages ? PFS_CACHE_SIZE : 0);
   mount_pages = NULL;
   if (pages) mui_mem_free(pages);
   if (r)

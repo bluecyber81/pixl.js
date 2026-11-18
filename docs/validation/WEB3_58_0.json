@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "webVersion": "3.58.0",
+  "date": "2026-11-18",
+  "publication": "prepared-for-publication",
+  "firmwarePreview": "2.22.0-DE3.87",
+  "applicationCounter": 660,
+  "regularLcdApplicationCounter": 654,
+  "firmwareEvidence": "docs/validation/DE3_87_LCD_TEST1.json",
+  "otaSha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0",
+  "fullNodeSuite": {
+    "tests": 1760,
+    "passed": 1757,
+    "failed": 0,
+    "skipped": 3,
+    "skipReasons": [
+      "Two Windows-only launcher tests on Linux.",
+      "Optional historical DE3.17 / recovery575 release ZIP fixture pair unavailable."
+    ]
+  },
+  "productionRoot": {
+    "tests": 22,
+    "passed": 22,
+    "failed": 0
+  },
+  "productionPages": {
+    "tests": 22,
+    "passed": 22,
+    "failed": 0
+  },
+  "downloadChecks": [
+    "The Vue footer rendered the four release-asset links in German and English on the root and Pages paths.",
+    "The static license notices matched the source, LCD test and ChatGPT ZIP targets.",
+    "The Android link for the App660 prerelease uses the signed LCD ZIP on Pages. Negative cases rejected mismatched metadata and names. App659 has no Android handoff.",
+    "German and English README links matched."
+  ],
+  "playwrightRemoteKeyboard": "Chromium launch was blocked by the host Unix-socket restriction on both layouts. No result from that test run.",
+  "physicalAcceptance": "pending",
+  "liveReleaseDownloads": "pending-publication"
+}

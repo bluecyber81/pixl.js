@@ -197,7 +197,8 @@ int main(void) {
 
     def test_real_favorite_sort_null_folder_data_and_antisymmetry(self):
         source = (SRC / "app/amiidb/scene/amiidb_scene_fav_list.c").read_text(encoding="utf-8")
-        compare = function(source, "fav_record_compare") + "\n" + function(source, "amiidb_scene_fav_list_list_view_sort_cb")
+        api = (SRC / "app/amiidb/api/amiidb_api_fav.c").read_text(encoding="utf-8")
+        compare = function(api, "fav_record_compare") + "\n" + function(source, "amiidb_scene_fav_list_list_view_sort_cb")
         self.compile_run('''#include <stdint.h>\n#include <assert.h>\n#include <stdio.h>\n#include <string.h>
 #define ICON_FOLDER 1
 #define ICON_FILE 2

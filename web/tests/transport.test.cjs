@@ -8,6 +8,7 @@ const vm = require('node:vm');
 const { pathToFileURL } = require('node:url');
 const { EventEmitter } = require('node:events');
 const ByteBuffer = require('bytebuffer');
+ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 const gattOwnership = require(path.join(process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib'), 'gatt-owner.js'));
 
 function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib')) {
@@ -44,7 +45,7 @@ function bleFixture(notificationPromise=Promise.resolve()) {
         setTimeout:cb=>{const id=++timerId;timers.set(id,cb);return id;},clearTimeout:id=>timers.delete(id)});
     return {api,bus,device,rx,tx,service,writes,navigator,timers};
 }
-function protocolFixture(i18n={global:{t:key=>key}}) {
+function protocolFixture(i18n={global:{t:key=>key}}, codec={}) {
     const bus=load('event.js',{}).sharedEventDispatcher(), writes=[], timers=new Map(), readers=[];
     let timerId=0, disconnects=0, writeImpl=() => Promise.resolve();
     const pixl={get_connection_state:()=> 'connected',tx_data(data){writes.push(Array.from(new Uint8Array(data)));return writeImpl(data);},
@@ -54,7 +55,7 @@ function protocolFixture(i18n={global:{t:key=>key}}) {
         readAsArrayBuffer(file){this.file=file;if(file.error){this.error=new Error('FileReader failed');this.onerror();}
             else if(!file.pending){this.result=Uint8Array.from(file.bytes || []).buffer;this.onload();}}
     }
-    const api=load('pixl.proto.js',{pixl,FileReader,i18n,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
+    const api=load('pixl.proto.js',{pixl,FileReader,i18n,...codec,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
         setTimeout:cb=>{const id=++timerId;timers.set(id,cb);return id;},clearTimeout:id=>timers.delete(id)});
     api.init();
     return {api,bus,writes,timers,readers,get disconnects(){return disconnects;},setWrite:fn=>{writeImpl=fn;},
@@ -63,6 +64,17 @@ function protocolFixture(i18n={global:{t:key=>key}}) {
 const bytes = value => Array.from(new Uint8Array(value));
 const command = (f,cmd=0x14) => f.api.op_queue_push(cmd,()=>{},b=>b.readBytes(b.remaining()).toArrayBuffer());
 const bootPacket = require('./boot-fixture.cjs');
+
+test('a first command waiting for the wire codec never reaches a replacement BLE session', async () => {
+    const gate = deferred();
+    const f = protocolFixture(undefined, {ByteBuffer:null, loadFileCodec:() => gate.promise});
+    const queued = command(f);
+    f.bus.emit('ble_disconnected');
+    f.bus.emit('ble_connected');
+    gate.resolve();
+    await assert.rejects(queued, /Bluetooth disconnected/);
+    assert.deepEqual(f.writes, []);
+});
 
 test('same-link ownership executes real remote handshake then real file version query without reconnect',async()=>{
  const {createRemoteClient}=await import(pathToFileURL(path.join(process.env.PIXL_SOURCE_DIR||path.join(__dirname,'../src/lib'),'remote-control.js')));
@@ -153,11 +165,15 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
 test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
  const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
  packet[40]=23;packet.set([8,6,0,1],80);
- for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85']) {
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87']) {
+  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87'].includes(version);
+  packet.set(expandedCache ? [26,26,0,1] : [8,6,0,1],80);
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,3]]);
   for(let offset=0,index=0;offset<84;offset+=16,index++) f.rx(9,packet.subarray(offset,offset+16),offset+16<84?0x8000|index:index);
-  assert.equal((await p).mount.cacheSlotsFilled,6);
+  const mount = (await p).mount;
+  assert.equal(mount.cacheSlotsFilled,expandedCache ? 26 : 6);
+  assert.equal(mount.cacheSlotsAllocated,expandedCache ? 26 : 8);
  }
  for(const status of [1,255]){
   const f=protocolFixture(), p=f.api.get_startup_diagnostics('2.22.0-DE3.82');
@@ -166,7 +182,7 @@ test('qualified LCD versions request cache-slot detail; rejected optional select
   const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);
   assert.equal((await p).schemaVersion,3);
  }
- for(const version of ['2.22.0-DE3.81','2.22.0-DE3.86']){
+ for(const version of ['2.22.0-DE3.81','2.22.0-DE3.88']){
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
  }
@@ -1450,4 +1466,20 @@ test('DE3.14 connection state is accurate inside success, failure and disconnect
     f.navigator.bluetooth.requestDevice=()=>Promise.reject(new Error('chooser cancelled'));
     f.bus.on('ble_connect_error',()=>states.push(f.api.get_connection_state()));
     await f.api.connect();assert.equal(states.at(-1),'disconnected');
+});
+
+test('favourite marker open never sets truncate and sends no data before close', async () => {
+    const f = protocolFixture();
+    const open = f.api.vfs_open_file('E:/amiibo/fav/Zelda/1_01000000_034F0902.fav', 'create-preserving');
+    await flush();
+    assert.equal(f.writes.at(-1)[0], 0x12);
+    assert.equal(f.writes.at(-1).at(-1), 0x14);
+    f.rx(0x12, [0]);
+    const file = (await open).data;
+    const close = f.api.vfs_close_file(file.file_id);
+    await flush();
+    assert.deepEqual(f.writes.at(-1), [0x13, 0, 0, 0, 0]);
+    f.rx(0x13, []);
+    await close;
+    assert.equal(f.writes.length, 2);
 });

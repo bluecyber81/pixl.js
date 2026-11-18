@@ -7,10 +7,15 @@ import {createAutoDisplayPhoto} from '../src/lib/auto-display-photo.js';
 import {remoteText} from '../src/lib/remote-text.js';
 import {REMOTE_LCD_CAPABILITY} from '../src/lib/remote-control.js';
 const file=process.env.REMOTE_UI_COMPONENT_URL?new URL(process.env.REMOTE_UI_COMPONENT_URL):new URL('../src/components/RemoteControl.vue',import.meta.url);
-const {descriptor}=parse(fs.readFileSync(file,'utf8'),{filename:file.pathname});
-const script=compileScript(descriptor,{id:'remote-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const Component=');
-const template=compileTemplate({source:descriptor.template.content,id:'remote-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`).replace('export function render','function render');
-const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText','PixLinkRemote','DisplayPhoto','REMOTE_LCD_CAPABILITY','createAutoDisplayPhoto',script+'\n'+template+'\nComponent.render=render;return Component;');
+function componentFactory(file, bindings) {
+  const {descriptor}=parse(fs.readFileSync(file,'utf8'),{filename:file.pathname});
+  const script=compileScript(descriptor,{id:'remote-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const Component=');
+  const template=compileTemplate({source:descriptor.template.content,id:'remote-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`).replace('export function render','function render');
+  return new Function('Vue', ...bindings, script+'\n'+template+'\nComponent.render=render;return Component;');
+}
+const factory=componentFactory(file,['createRemoteClient','remoteAvailability','remoteText','PixLinkRemote','DisplayPhoto','REMOTE_LCD_CAPABILITY','createAutoDisplayPhoto']);
+const photoFactory=componentFactory(new URL('../src/components/DisplayPhoto.vue',import.meta.url),
+  ['renderDisplayPhoto','supportsDisplayPhoto','firmwareBoard','ResizeObserver','document']);
 const node=(type,text='')=>({type,text,props:{},children:[],parent:null});
 const renderer=Vue.createRenderer({createElement:t=>node(t),createText:t=>node('#text',t),createComment:t=>node('#comment',t),setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[];},patchProp:(n,k,o,v)=>n.props[k]=v,insert(n,p,a=null){if(n.parent)n.parent.children.splice(n.parent.children.indexOf(n),1);n.parent=p;const i=p.children.indexOf(a);i<0?p.children.push(n):p.children.splice(i,0,n);},remove(n){n.parent?.children.splice(n.parent.children.indexOf(n),1);n.parent=null;},parentNode:n=>n.parent,nextSibling:n=>n.parent?.children[n.parent.children.indexOf(n)+1]||null});
 const text=n=>n.text+n.children.map(text).join(''),flat=n=>[n,...n.children.flatMap(flat)];
@@ -18,7 +23,7 @@ const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;
 function mount(options={}){
  const calls=[],active=[],root=node('root');let notify;const emit=(phase,error='')=>notify({phase,error,capabilities:options.caps??15});
  const client={captureDisplay:async()=>{calls.push('photo');emit('command');try{return options.photo?await options.photo():new Uint8Array(1024);}finally{emit('ready');}},connect:async()=>{calls.push('connect');emit('connecting');if(options.connect)await options.connect(calls.filter(value=>value==='connect').length);emit('ready');},command:async name=>{calls.push(name);emit('command');try{if(options.command)await options.command(name);return {opcode:name==='files'&&options.sameLink?4:undefined,status:name==='files'?8:0,state:name==='files'?2:1};}finally{emit('ready');}},releaseFileConnection:accept=>{calls.push('handoff');try{assert.equal(accept({fixture:true}),true);}finally{emit('disconnected');}return true;},disconnect:async()=>{calls.push('disconnect');emit('disconnected');}};
- const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{render:()=>Vue.h('div')}, {props:['readPhoto'],methods:{capture(){return this.readPhoto();}},render:()=>Vue.h('div')},REMOTE_LCD_CAPABILITY,config=>createAutoDisplayPhoto({...config,...options.clock}));
+ const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{render:()=>Vue.h('div')}, options.photoComponent || {props:['readPhoto'],methods:{capture(){return this.readPhoto();}},render:()=>Vue.h('div')},REMOTE_LCD_CAPABILITY,config=>createAutoDisplayPhoto({...config,...options.clock}));
  const props=Vue.reactive({blocked:!!options.blocked,locale:options.locale||'de_DE',onActive:v=>active.push(v),handoffFileConnection:options.handoff});
  let vm;const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:v=>vm=v})});app.mount(root);
  return{root,app,props,calls,active,emit,get vm(){return vm;},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label))};
@@ -271,4 +276,73 @@ test('manual photo replaces queued auto photo, captures serialize and disconnect
   await h.vm.disconnectRemote();gate.resolve(new Uint8Array(1024));await manual;await clock.advance(5000);
   assert.deepEqual(h.calls,['connect','back','photo','disconnect']);assert.equal(h.vm.autoPhoto,false);
  }finally{h.app.unmount();}
+});
+
+test('phone view keeps one photo above four adjacent controls, preserves errors and orientation across layout changes',async()=>{
+  const frame = new Uint8Array(1024);
+  let rejectPhoto=false;
+  const Photo=photoFactory(Vue,(_pixels,_canvas,rotated)=>rotated?'data:rotated':'data:first',()=>true,()=>null,
+    class {observe(){} disconnect(){}}, {createElement:()=>({})});
+  const h=mount({caps:63,photoComponent:Photo, photo:()=>{if(rejectPhoto)throw {code:'REMOTE_BUSY'};return frame;}});
+  try {
+    h.vm.onScreenChange({matches:true});
+    await h.vm.connectRemote(); await Vue.nextTick();
+    const nodes=()=>flat(h.root);
+    const pad=()=>nodes().find(n=>n.props.class==='remote-pad');
+    const picture=()=>nodes().find(n=>n.type==='img');
+    const time=()=>nodes().find(n=>n.type==='time');
+    const options=()=>nodes().find(n=>n.type==='details'&&text(n).includes('Bildoptionen'));
+    const mode=()=>h.button('Kompakte Ansicht');
+    assert.equal(mode().props['aria-pressed'],true);
+    assert.deepEqual(h.calls,['connect']);
+    assert.deepEqual(pad().children.filter(n=>n.type==='button').map(n=>text(n.children.find(c=>c.type==='strong'))),['Links','Mitte','Rechts','Zurück']);
+    await h.button('Displaybild aktualisieren').props.onClick(); await Vue.nextTick();
+    assert.ok(nodes().indexOf(picture())<nodes().indexOf(pad()));
+    assert.equal(pad().parent.children.filter(n=>n.type==='section'||n.type==='div').indexOf(pad()),
+      pad().parent.children.filter(n=>n.type==='section'||n.type==='div').indexOf(picture().parent.parent.parent)+1);
+    assert.equal(options().props.open,undefined);
+    assert.ok(text(options()).includes('PNG speichern'));
+    assert.ok(text(options()).includes('Bildgröße'));
+    const timestamp=time().props.datetime;
+    await h.button('Um 180° drehen').props.onClick(); await Vue.nextTick();
+    assert.equal(picture().props.src,'data:rotated');
+    rejectPhoto=true;
+    await h.button('Displaybild aktualisieren').props.onClick(); await Vue.nextTick();
+    assert.equal(time().props.datetime,timestamp);
+    assert.match(text(h.root),/Letzte erfolgreiche Aufnahme|Das Gerät kann gerade kein Displayfoto liefern/);
+    const oldPicture=picture();
+    await mode().props.onClick(); await Vue.nextTick();
+    assert.equal(mode().props['aria-pressed'],false);
+    assert.equal(picture(),oldPicture);
+    assert.ok(nodes().indexOf(pad())<nodes().indexOf(picture()));
+    assert.equal(pad().children.filter(n=>n.type==='button').length,3);
+    assert.equal(options(),undefined);
+    assert.equal(time().props.datetime,timestamp);
+    await mode().props.onClick(); await Vue.nextTick();
+    assert.equal(picture().props.src,'data:rotated');
+    assert.equal(options().props.open,undefined);
+    await h.button('Zurück').props.onClick(); await Vue.nextTick();
+    assert.equal(h.calls.at(-1),'back');
+    await h.vm.disconnectRemote(); await Vue.nextTick();
+    assert.equal(picture(),undefined);
+  } finally {h.app.unmount();}
+});
+
+test('compact display follows the viewport until explicitly changed and respects old remote and PixLink capabilities', async()=>{
+  const h=mount({caps:13,locale:'en'});
+  try {
+    await h.vm.connectRemote(); await Vue.nextTick();
+    const mode=()=>h.button('Compact view');
+    assert.equal(mode().props['aria-pressed'],false);
+    h.vm.onScreenChange({matches:true}); await Vue.nextTick();
+    assert.equal(mode().props['aria-pressed'],true);
+    assert.equal(h.button('Back').props.disabled,true);
+    assert.equal(h.button('Refresh screen'),undefined);
+    await mode().props.onClick(); await Vue.nextTick();
+    h.vm.onScreenChange({matches:false});h.vm.onScreenChange({matches:true});await Vue.nextTick();
+    assert.equal(mode().props['aria-pressed'],false);
+    await h.vm.disconnectRemote();await Vue.nextTick();
+    h.vm.protocol='pixlink';await Vue.nextTick();
+    assert.equal(mode(),undefined);
+  } finally {h.app.unmount();}
 });

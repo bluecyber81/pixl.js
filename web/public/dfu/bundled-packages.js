@@ -19,8 +19,10 @@
                 : /^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
             const test657 = version?.[1] === '84' && item.channel === 'prerelease' && item.counter === 657 && item.bootloader === 'Z21';
             const test658 = version?.[1] === '85' && item.channel === 'prerelease' && item.counter === 658 && item.bootloader === 'Z21';
+            const test659 = version?.[1] === '86' && item.channel === 'prerelease' && item.counter === 659 && item.bootloader === 'Z21';
+            const test660 = version?.[1] === '87' && item.channel === 'prerelease' && item.counter === 660 && item.bootloader === 'Z21';
             const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
-                : test657 ? 'de3.84-lcd-test1-app' : test658 ? 'de3.85-lcd-test1-app' : version && `de3.${version[1]}-lcd-app`;
+                : test660 ? 'de3.87-lcd-test1-app' : test659 ? 'de3.86-lcd-test1-app' : test657 ? 'de3.84-lcd-test1-app' : test658 ? 'de3.85-lcd-test1-app' : version && `de3.${version[1]}-lcd-app`;
             need(version&&item.id===expectedId&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
             const testBuild = version[1].includes('t');
             const names = oled ? [`Allmiibo_OLED_DE3_${version[1]}_Test${version[2]}_APP.zip`] : testBuild

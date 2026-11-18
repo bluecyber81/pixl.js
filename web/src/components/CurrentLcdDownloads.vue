@@ -13,9 +13,9 @@
         <p>{{ de ? 'S112 7.3.0, Bootloader Z21 und App654 für passende LCD mit Bootloader-Zähler unter 21. Installation mit nRF Device Firmware Update.' : 'S112 7.3.0, Z21 bootloader and App654 for compatible LCD devices with bootloader counter below 21. Install with nRF Device Firmware Update.' }}</p>
       </div>
       <div v-if="testEntry">
-        <a v-if="testAvailable" :href="testRelease + testEntry.file">{{ de ? 'Testversion · DE3.85 / App658 herunterladen (ZIP)' : 'Test release · Download DE3.85 / App658 (ZIP)' }}</a>
-        <strong v-else>{{ de ? 'LCD-Testversion DE3.85 / App658' : 'LCD test release DE3.85 / App658' }}</strong>
-        <p>{{ de ? 'Nur App für LCD mit PFS1, Z21 und S112 7.3.0. Neue Fernbedienungsdiagnose, Lichttest und Mount-Cache. Die Prüfung am Gerät steht noch aus.' : 'App only for LCD with PFS1, Z21 and S112 7.3.0. New remote diagnostics, backlight test and mount cache. Physical device testing is still pending.' }}</p>
+        <a v-if="testAvailable" :href="deploymentPath('firmware/' + testEntry.file)">{{ de ? 'Testversion · DE3.87 / App660 herunterladen (ZIP)' : 'Test release · Download DE3.87 / App660 (ZIP)' }}</a>
+        <strong v-else>{{ de ? 'LCD-Testversion DE3.87 / App660' : 'LCD test release DE3.87 / App660' }}</strong>
+        <p>{{ de ? 'Nur App für LCD mit PFS1, Z21 und S112 7.3.0. Slotnummern, sichtbarer Schreibschutz und Seitenanzeige in Favoritenordnern. Die Prüfung am Gerät steht noch aus.' : 'App only for LCD with PFS1, Z21 and S112 7.3.0. Slot numbers, a visible write-protection indicator and page cues in favorites folders. Physical device testing is still pending.' }}</p>
       </div>
     </div>
     <a class="instructions" :href="guide">{{ de ? 'Voraussetzungen und Installationsanleitung' : 'Requirements and installation guide' }}</a>
@@ -30,8 +30,7 @@ import releases from '../data/firmware-releases.json';
 
 const props = defineProps({ connected: Boolean, version: String, boot: Object, locale: String });
 const entry = releases.packages.find(item => item.id === 'de3.81-lcd-app');
-const testEntry = releases.packages.find(item => item.id === 'de3.85-lcd-test1-app');
-const testRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/';
+const testEntry = releases.packages.find(item => item.id === 'de3.87-lcd-test1-app');
 const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81/';
 const combo = 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip';
 const de = computed(() => props.locale?.startsWith('de'));

@@ -17,6 +17,8 @@ typedef struct {
     uint32_t amiibo_tail;
 } amiidb_fav_t;
 
+int fav_record_compare(const amiidb_fav_t *a, const amiidb_fav_t *b);
+
 #define FAV_TYPE_FOLDER 0
 #define FAV_TYPE_FAV 1
 /* Leaves room for /amiibo/fav/<folder>/255_XXXXXXXX_XXXXXXXX.fav plus NUL. */
@@ -24,6 +26,7 @@ typedef struct {
 
 typedef struct {
     uint8_t fav_type; // 0: dir, 1: fav
+    bool name_alias; /* Set by the directory reader for noncanonical marker spellings. */
     union {
         char folder_name[VFS_MAX_NAME_LEN];
         amiidb_fav_t fav;
@@ -36,6 +39,7 @@ int32_t amiidb_api_fav_list_dir(const char *folder, amiidb_fav_cb_t cb, void* ct
 bool amiidb_api_fav_parse_filename(const char *name, amiidb_fav_t *fav);
 int32_t amiidb_api_fav_remove_dir(const char *folder);
 int32_t amiidb_api_fav_empty_dir(const char *folder);
+int32_t amiidb_api_fav_has_canonical(const char *folder, const amiidb_fav_t *fav, bool *present);
 int32_t amiidb_api_fav_create_dir(const char *folder);
 int32_t amiidb_api_fav_add(const char *folder, const amiidb_fav_t *fav);
 int32_t amiidb_api_fav_remove(const char *folder, const amiidb_fav_t *fav);

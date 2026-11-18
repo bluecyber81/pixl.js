@@ -123,20 +123,21 @@ static unsigned favorite_cases(void) {
         mui_mem_monitor(&before);
         app->cur_fav.amiibo_tail=selections[i]; errors=0; generated=0;
         amiidb_scene_amiibo_fav_list_init(app);
-        assert(!errors && generated==1 && m_tag_ready && amiidb_fav_array_size(app->fav_array)==100);
-        assert(amiidb_fav_array_get(app->fav_array,view->focus)->amiibo_tail==selections[i]);
+        assert(!errors && generated==1 && m_tag_ready && amiidb_fav_array_size(app->fav_array)==24);
+        assert(amiidb_fav_array_get(app->fav_array,0)->amiibo_tail==selections[i]);
         size_t allocated=tlsf_block_size(app->fav_array->ptr);
         mui_mem_monitor(&filled); assert(before.free_size > filled.free_size);
+        unsigned neighbor=selections[i]==1 ? 950 : selections[i]-1;
         view->focus=0; amiidb_scene_amiibo_fav_list_update(app);
-        assert(app->cur_fav.amiibo_tail==1 && m_tag_ready);
+        assert(app->cur_fav.amiibo_tail==neighbor && m_tag_ready);
         unsigned old_stopped=stopped, old_detached=detached;
         amiidb_scene_amiibo_detail_on_exit(app);
         assert(stopped==old_stopped+1 && detached==old_detached+1);
         assert(app->fav_array->size==0 && app->fav_array->alloc==0 && app->fav_array->ptr==NULL);
-        assert(app->cur_fav.amiibo_tail==1);
+        assert(app->cur_fav.amiibo_tail==neighbor);
         mui_mem_monitor(&after); assert(after.free_size==before.free_size && after.used_cnt==before.used_cnt);
         /* Simulate returning from the menu: same selected value, freshly owned window. */
-        amiidb_scene_amiibo_fav_list_init(app); assert(view->focus==0 && app->cur_fav.amiibo_tail==1);
+        amiidb_scene_amiibo_fav_list_init(app); assert(view->focus==1 && app->cur_fav.amiibo_tail==neighbor);
         amiidb_scene_amiibo_detail_on_exit(app); mui_mem_monitor(&after);
         assert(after.free_size==before.free_size && after.used_cnt==before.used_cnt);
         reported=allocated; count+=2;

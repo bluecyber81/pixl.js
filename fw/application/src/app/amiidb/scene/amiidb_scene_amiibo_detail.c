@@ -144,54 +144,85 @@ static void amiidb_scene_amiibo_data_list_update(app_amiidb_t *app) {
     ntag_emu_set_tag(&app->ntag);
 }
 
-static void amiidb_scene_amiibo_detail_fav_list_read_cb(amiidb_fav_info_t *p_info, void *ctx) {
-    app_amiidb_t *app = ctx;
-    if (p_info->fav_type != FAV_TYPE_FAV || !m_tag_ready) return;
-    amiidb_fav_t *p_fav;
-    if (amiidb_fav_array_size(app->fav_array) < LIST_VIEW_ITEM_MAX_COUNT) {
-        p_fav = amiidb_fav_array_push_new(app->fav_array);
-        if (!p_fav) { m_tag_ready = false; return; }
-    } else if (p_info->fav_data.fav.game_id == app->cur_fav.game_id &&
-               p_info->fav_data.fav.amiibo_head == app->cur_fav.amiibo_head &&
-               p_info->fav_data.fav.amiibo_tail == app->cur_fav.amiibo_tail) {
-        /* Keep a bounded navigation window, but always include the chosen entry. */
-        p_fav = amiidb_fav_array_get(app->fav_array, LIST_VIEW_ITEM_MAX_COUNT - 1);
-    } else {
-        return;
-    }
-    memcpy(p_fav, &p_info->fav_data.fav, sizeof(amiidb_fav_t));
+/* The cache starts at cur_fav and follows the same key order as the list.
+ * Keys on the other side of the anchor follow after wraparound. */
+#define FAV_DETAIL_WINDOW 24u
+static int8_t m_fav_direction;
+static uint8_t m_fav_cursor, m_fav_first;
+static bool m_fav_overflow;
+
+static int fav_window_compare(const amiidb_fav_t *a, const amiidb_fav_t *b, const amiidb_fav_t *anchor) {
+    bool a_wrapped = fav_record_compare(a, anchor) * m_fav_direction < 0;
+    bool b_wrapped = fav_record_compare(b, anchor) * m_fav_direction < 0;
+    if (a_wrapped != b_wrapped) return a_wrapped ? 1 : -1;
+    return fav_record_compare(a, b) * m_fav_direction;
 }
 
-static void amiidb_scene_amiibo_fav_list_init(app_amiidb_t *app) {
+static void amiidb_scene_amiibo_detail_fav_list_read_cb(amiidb_fav_info_t *info, void *ctx) {
+    app_amiidb_t *app = ctx;
+    if (info->fav_type != FAV_TYPE_FAV || !m_tag_ready) return;
+    const amiidb_fav_t *entry = &info->fav_data.fav;
+    size_t count = amiidb_fav_array_size(app->fav_array);
+    size_t low = 0, high = count;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2;
+        int order = fav_window_compare(entry, amiidb_fav_array_get(app->fav_array, mid), &app->cur_fav);
+        if (!order) return;
+        if (order < 0) high = mid;
+        else low = mid + 1;
+    }
+    if (count == FAV_DETAIL_WINDOW) {
+        m_fav_overflow = true;
+        if (low == count) return;
+    } else {
+        if (!amiidb_fav_array_push_new(app->fav_array)) { m_tag_ready = false; return; }
+        count++;
+    }
+    amiidb_fav_t *rows = amiidb_fav_array_get(app->fav_array, 0);
+    memmove(rows + low + 1, rows + low, (count - low - 1) * sizeof(*rows));
+    rows[low] = *entry;
+}
+
+static bool fav_window_load(app_amiidb_t *app, int direction) {
     amiidb_fav_array_reset(app->fav_array);
+    m_fav_direction = direction;
+    m_fav_cursor = 0;
+    m_fav_overflow = false;
     m_tag_ready = true;
-    int32_t result = amiidb_api_fav_list_dir(string_get_cstr(app->cur_fav_dir), amiidb_scene_amiibo_detail_fav_list_read_cb, app);
+    int32_t result = amiidb_api_fav_list_dir(string_get_cstr(app->cur_fav_dir),
+                                             amiidb_scene_amiibo_detail_fav_list_read_cb, app);
     if (result != VFS_OK || !m_tag_ready) {
         m_tag_ready = false;
         amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR));
-        return;
+        return false;
     }
-    amiibo_view_set_max_ntags(app->p_amiibo_view, amiidb_fav_array_size(app->fav_array));
-    amiibo_view_set_focus(app->p_amiibo_view, 0);
+    if (amiidb_fav_array_size(app->fav_array) &&
+        !fav_record_compare(&app->cur_fav, amiidb_fav_array_get(app->fav_array, 0))) return true;
+    m_tag_ready = false;
+    amiidb_scene_amiibo_detail_error_msg(app, _T(FAILED));
+    return false;
+}
 
-    // A deleted/missing favorite must not reuse the previously emulated tag.
-    bool found = false;
-    for (uint8_t i = 0; i < amiidb_fav_array_size(app->fav_array); i++) {
-        amiidb_fav_t *p_fav = amiidb_fav_array_get(app->fav_array, i);
-        if (p_fav->amiibo_head == app->cur_fav.amiibo_head && p_fav->amiibo_tail == app->cur_fav.amiibo_tail &&
-            p_fav->game_id == app->cur_fav.game_id) {
-            app->cur_amiibo = get_amiibo_by_id(p_fav->amiibo_head, p_fav->amiibo_tail);
-            amiibo_view_set_game_id(app->p_amiibo_view, p_fav->game_id); // no game id
-            amiidb_scene_amiibo_game_list_generate(app);
-            amiibo_view_set_focus(app->p_amiibo_view, i);
-            found = true;
-            break;
-        }
+static void amiidb_scene_amiibo_fav_list_init(app_amiidb_t *app) {
+    if (!fav_window_load(app, 1)) return;
+    unsigned count = amiidb_fav_array_size(app->fav_array);
+    app->p_amiibo_view->windowed_favorites = m_fav_overflow;
+    if (m_fav_overflow) {
+        /* Left and right request a step from the centre; no false absolute rank. */
+        amiibo_view_set_max_ntags(app->p_amiibo_view, 3);
+        amiibo_view_set_focus(app->p_amiibo_view, 1);
+    } else {
+        m_fav_first = 0;
+        while (m_fav_first + 1u < count &&
+               fav_record_compare(amiidb_fav_array_get(app->fav_array, m_fav_first + 1), &app->cur_fav) > 0)
+            m_fav_first++;
+        m_fav_first = (m_fav_first + 1u) % count;
+        amiibo_view_set_max_ntags(app->p_amiibo_view, count);
+        amiibo_view_set_focus(app->p_amiibo_view, (count - m_fav_first) % count);
     }
-    if (!found) {
-        m_tag_ready = false;
-        amiidb_scene_amiibo_detail_error_msg(app, _T(FAILED));
-    }
+    app->cur_amiibo = get_amiibo_by_id(app->cur_fav.amiibo_head, app->cur_fav.amiibo_tail);
+    amiibo_view_set_game_id(app->p_amiibo_view, app->cur_fav.game_id);
+    amiidb_scene_amiibo_game_list_generate(app);
 }
 
 static void amiidb_scene_amiibo_fav_list_update(app_amiidb_t *app) {
@@ -199,17 +230,33 @@ static void amiidb_scene_amiibo_fav_list_update(app_amiidb_t *app) {
         amiibo_view_set_focus(app->p_amiibo_view, m_active_focus);
         return;
     }
-    uint8_t focus = amiibo_view_get_focus(app->p_amiibo_view);
-    if (focus >= amiidb_fav_array_size(app->fav_array)) {
-        m_tag_ready = false;
-        amiidb_scene_amiibo_detail_error_msg(app, _T(FAILED));
-        return;
+    int focus = amiibo_view_get_focus(app->p_amiibo_view);
+    int count = amiidb_fav_array_size(app->fav_array);
+    int next;
+    if (app->p_amiibo_view->windowed_favorites) {
+        int direction = focus == 0 ? -1 : 1;
+        amiibo_view_set_focus(app->p_amiibo_view, 1);
+        next = m_fav_cursor + direction * m_fav_direction;
+        if (next < 0 || next >= count) {
+            if (!fav_window_load(app, direction)) return;
+            next = amiidb_fav_array_size(app->fav_array) > 1 ? 1 : 0;
+        }
+    } else {
+        if (focus >= count) {
+            m_tag_ready = false;
+            amiidb_scene_amiibo_detail_error_msg(app, _T(FAILED));
+            return;
+        }
+        next = (m_fav_first + focus) % count;
     }
-    amiidb_fav_t *p_fav = amiidb_fav_array_get(app->fav_array, focus);
-    app->cur_amiibo = get_amiibo_by_id(p_fav->amiibo_head, p_fav->amiibo_tail);
-    amiibo_view_set_game_id(app->p_amiibo_view, p_fav->game_id); // no game id
+    amiidb_fav_t *fav = amiidb_fav_array_get(app->fav_array, next);
+    app->cur_amiibo = get_amiibo_by_id(fav->amiibo_head, fav->amiibo_tail);
+    amiibo_view_set_game_id(app->p_amiibo_view, fav->game_id);
     amiidb_scene_amiibo_game_list_generate(app);
-    if (m_tag_ready) app->cur_fav = *p_fav;
+    if (m_tag_ready) {
+        app->cur_fav = *fav;
+        m_fav_cursor = next;
+    }
 }
 
 static void amiidb_scene_amiibo_search_list_init(app_amiidb_t *app) {
@@ -279,6 +326,7 @@ static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app, const char *
 void amiidb_scene_amiibo_detail_on_enter(void *user_data) {
     app_amiidb_t *app = user_data;
     m_tag_ready = true;
+    app->p_amiibo_view->windowed_favorites = false;
     amiibo_view_set_ntag(app->p_amiibo_view, &app->ntag);
     amiibo_view_set_event_cb(app->p_amiibo_view, amiidb_scene_amiibo_view_on_event);
 
