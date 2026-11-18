@@ -32,6 +32,7 @@ typedef struct {
     amiidb_fav_info_t fav_page_anchor;
     int8_t fav_page_direction;
     uint8_t fav_page_focus;
+    uint16_t fav_page_number;
     char cur_fav_dir[48];
 } app_amiidb_t;
 static struct {uint8_t amiidb_data_slot_num;} settings;

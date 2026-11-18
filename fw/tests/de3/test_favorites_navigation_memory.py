@@ -26,7 +26,7 @@ def run(fw,baseline=False,arm=False,sanitize=False):
   cmd=['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-unused-variable','-Wno-type-limits','-Wno-comment','-Wno-unused-value','-Wno-sign-compare','-Wno-missing-field-initializers','-Wno-pointer-to-int-cast','-Wno-pointer-sign','-DTEST_BASELINE='+str(int(baseline))]
   if sanitize:cmd+=['-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer','-fno-pie','-no-pie']
   for d in inc:cmd+=['-I',str(d)]
-  cmd += [str(c),str(fw/'components/tlsf/tlsf.c'),str(src/'i18n/de_DE.c'),'-o',str(exe)]
+  cmd += [str(c),str(fw/'components/tlsf/tlsf.c'),str(src/'i18n/de_DE.c'),str(src/'i18n/en_US.c'),'-o',str(exe)]
   def lp(v):v=str(v).replace('\\','/');return '/mnt/'+v[0].lower()+v[2:] if len(v)>2 and v[1]==':' else v
   if arm:cmd=['wsl','-d','Ubuntu-24.04-Codex-New','--','arm-linux-gnueabihf-gcc']+[lp(v) for v in cmd[1:]]
   r=subprocess.run(cmd,capture_output=True,text=True,timeout=120);assert r.returncode==0,r.stdout+r.stderr

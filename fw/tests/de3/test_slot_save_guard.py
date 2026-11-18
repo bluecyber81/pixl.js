@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix="lcd-slot-guard-") as tdir:
     (work/'amiibo_helper.h').write_text('#pragma once\n#include <stdint.h>\nstatic inline uint32_t to_little_endian_int32(const uint8_t *p){return ((uint32_t)p[0]<<24)|((uint32_t)p[1]<<16)|((uint32_t)p[2]<<8)|p[3];}\n')
     def extract_function(path,name):
         text=path.read_text()
-        part=re.search(r"(?m)^(?:static )?void "+re.escape(name)+r"\(",text).start()
+        part=re.search(r"(?m)^(?:static )?void "+re.escape(name)+r"\([^;{}]*\)\s*\{",text).start()
         opening=text.index("{",part)
         level=1
         for i in range(opening+1,len(text)):
@@ -35,10 +35,14 @@ with tempfile.TemporaryDirectory(prefix="lcd-slot-guard-") as tdir:
     scene=src/'app/amiidb/scene'
     scene_source=(scene/'amiidb_scene_data_select.c').read_text()
     save_handlers=scene_source[scene_source.index('static void save_to_slot'):scene_source.index('static void amiidb_scene_data_select_setup')]
-    generated=harness.replace('UI_FUNCTIONS',extract_function(scene/'amiidb_scene_data_list.c','amiidb_scene_data_list_amiibo_slot_info_cb')+'\n'+save_handlers)
+    list_source = scene / 'amiidb_scene_data_list.c'
+    handlers = [extract_function(list_source, 'amiidb_scene_data_list_amiibo_slot_info_cb'),
+                extract_function(list_source, 'amiidb_scene_data_list_reload'), save_handlers,
+                extract_function(scene/'amiidb_scene_data_select.c','amiidb_scene_data_select_on_enter')]
+    generated = harness.replace('UI_FUNCTIONS', '\n'.join(handlers))
     (work/'cases.c').write_text((tests/'packed_vfs_persistence_de344.c').read_text().split('static void drop(void)')[0]+generated)
     cmd=['arm-linux-gnueabihf-gcc' if arm32 else 'gcc','-std=c11','-O1','-g','-ffunction-sections','-fdata-sections','-Wl,--gc-sections','-DLFS_NO_MALLOC','-DLFS_NO_DEBUG','-DLFS_NO_WARN','-DLFS_NO_ERROR','-DVFS_PACKED_LFS_ENABLE',f'-DSTORE_CORE="{vfs/"packed_fs.c"}"',f'-DSTORE_ADAPTER="{vfs/"vfs_driver_packed.c"}"']
-    for path in [work,src/'amiidb',src/'ntag',src/'i18n',src/'mod/df',src/'app/amiidb/api',vfs,lfs,tests]:
+    for path in [work,scene,src/'amiidb',src/'ntag',src/'i18n',src/'mod/df',src/'app/amiidb/api',vfs,lfs,tests]:
         cmd.extend(['-I',str(path)])
     cmd.extend(map(str,[work/'cases.c',tests/'packed_vfs_nor_de344.c',src/'app/amiidb/api/amiidb_api_slot.c',vfs/'vfs_meta.c',vfs/'vfs_persist.c',src/'i18n/de_DE.c',src/'amiidb/db_search.c',src/'amiidb/db_amiibo.c',lfs/'lfs.c',lfs/'lfs_util.c']))
     if arm32: cmd+=['-static']
