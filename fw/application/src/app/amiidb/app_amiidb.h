@@ -12,6 +12,7 @@
 #include "mui_toast_view.h"
 
 #include "amiidb_api_fav.h"
+#include "amiidb_api_slot.h"
 #include "amiidb_api_db.h"
 
 #include "mlib_common.h"
@@ -67,6 +68,8 @@ typedef struct {
     int8_t fav_page_direction;
     uint8_t fav_page_focus;
     uint8_t fav_page_mode;
+    uint16_t fav_page_number; /* zero when a restored/relocated anchor needs a rank */
+    bool fav_page_hint_visible;
     /* Destination selection must not overwrite the source list or resume page. */
     amiidb_fav_info_t fav_select_anchor;
     int8_t fav_select_direction;
@@ -74,7 +77,7 @@ typedef struct {
 
     /** data slot */
     uint8_t cur_slot_index;
-    uint8_t pending_save_slot;
+    amiidb_slot_info_t pending_save_target;
 
     uint8_t cur_focus_index;
     uint16_t cur_scroll_offset;

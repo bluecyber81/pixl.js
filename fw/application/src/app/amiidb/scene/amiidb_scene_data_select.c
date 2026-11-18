@@ -5,6 +5,8 @@
 #include "i18n/language.h"
 #include "mui_icons.h"
 #include "settings.h"
+#include "amiidb_slot_label.h"
+#include "db_header.h"
 #include <stdio.h>
 
 void amiidb_scene_data_list_reload(app_amiidb_t *app);
@@ -33,12 +35,20 @@ static bool writable_slot(app_amiidb_t *app, uint16_t slot, amiidb_slot_info_t *
 
 static void confirm_slot_replacement(mui_msg_box_event_t event, mui_msg_box_t *box) {
     app_amiidb_t *app = box->user_data;
-    uint8_t slot = app->pending_save_slot;
-    app->pending_save_slot = MAX_SLOT_COUNT;
+    amiidb_slot_info_t expected = app->pending_save_target;
+    uint8_t slot = expected.slot;
+    app->pending_save_target.slot = MAX_SLOT_COUNT;
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
         amiidb_slot_info_t info;
-        if (writable_slot(app, slot, &info)) save_to_slot(app, slot);
+        if (!writable_slot(app, slot, &info)) return;
+        if (info.is_empty || info.has_amiibo_id != expected.has_amiibo_id ||
+            info.amiibo_head != expected.amiibo_head || info.amiibo_tail != expected.amiibo_tail) {
+            amiidb_scene_data_list_reload(app);
+            mui_toast_view_show(app->p_toast_view, _T(APP_AMIIDB_SLOT_CHANGED));
+            return;
+        }
+        save_to_slot(app, slot);
     }
 }
 
@@ -50,7 +60,7 @@ static void amiidb_scene_data_select_list_view_on_selected(mui_list_view_event_t
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
         return;
     }
-    if (p_item->icon != ICON_AMIIBO && p_item->icon != ICON_FILE) return;
+    if (p_item->icon != ICON_AMIIBO && p_item->icon != ICON_FILE && p_item->icon != ICON_READ_ONLY) return;
     uint16_t slot = mui_list_view_get_focus(p_list_view);
     amiidb_slot_info_t info;
     if (!writable_slot(app, slot, &info)) return;
@@ -59,11 +69,13 @@ static void amiidb_scene_data_select_list_view_on_selected(mui_list_view_event_t
         return;
     }
 
-    app->pending_save_slot = slot;
-    char target[16];
-    snprintf(target, sizeof(target), "Slot %02u", (unsigned)slot + 1);
-    mui_msg_box_set_header(app->p_msg_box, _T(APP_AMIIDB_REPLACE_SLOT));
-    mui_msg_box_set_message(app->p_msg_box, target);
+    app->pending_save_target = info;
+    char header[32], caption[21];
+    snprintf(header, sizeof(header), _T(APP_AMIIDB_SLOT_REPLACE_N), (unsigned)slot + 1);
+    const db_amiibo_t *figure = info.has_amiibo_id ? get_amiibo_by_id(info.amiibo_head, info.amiibo_tail) : NULL;
+    amiidb_slot_caption(caption, sizeof(caption), figure ? get_amiibo_display_name(figure) : _T(APP_SET_STORAGE_USED));
+    mui_msg_box_set_header(app->p_msg_box, header);
+    mui_msg_box_set_message(app->p_msg_box, caption);
     mui_msg_box_set_btn_text(app->p_msg_box, _T(CONFIRM), NULL, _T(CANCEL));
     mui_msg_box_set_btn_focus(app->p_msg_box, MUI_MSG_BOX_EVENT_SELECT_RIGHT);
     mui_msg_box_set_event_cb(app->p_msg_box, confirm_slot_replacement);
@@ -78,8 +90,15 @@ static void amiidb_scene_data_select_setup(app_amiidb_t *app) {
 
 void amiidb_scene_data_select_on_enter(void *user_data) {
     app_amiidb_t *app = (app_amiidb_t *)user_data;
-    app->pending_save_slot = MAX_SLOT_COUNT;
+    app->pending_save_target.slot = MAX_SLOT_COUNT;
     amiidb_scene_data_list_reload(app);
+    mui_list_view_t *list = app->p_list_view;
+    for (uint16_t i = 0; i < mui_list_view_item_size(list); i++) {
+        if (mui_list_item_array_get(list->items, i)->icon == ICON_FILE) {
+            mui_list_view_set_focus(list, i);
+            break;
+        }
+    }
     amiidb_scene_data_select_setup(app);
 }
 

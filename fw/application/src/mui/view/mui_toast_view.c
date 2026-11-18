@@ -4,6 +4,7 @@
 
 #include "mui_toast_view.h"
 #include "app_timer.h"
+#include "mui_alloc.h"
 
 #define MUI_TOAST_DISPLAY_TIME 2000
 
@@ -109,7 +110,7 @@ void mui_toast_view_free(mui_toast_view_t *p_view) {
 mui_view_t *mui_toast_view_get_view(mui_toast_view_t *p_view) { return p_view->p_view; }
 
 void mui_toast_view_show(mui_toast_view_t *p_view, const char *message) {
-    string_set_str(p_view->message, message);
+    if (!mui_string_try_set_str(p_view->message, message)) return;
     p_view->is_visible = true;
     ret_code_t err_code = app_timer_stop(m_toast_timer_id);
     APP_ERROR_CHECK(err_code);
