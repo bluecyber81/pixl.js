@@ -249,7 +249,7 @@ void mui_u8g2_set_backlight(uint8_t bl) { nrf_gpio_pin_write(LCD_BL_PIN, bl); }
 
 uint8_t mui_u8g2_get_backlight() { return nrf_gpio_pin_out_read(LCD_BL_PIN); }
 
-ret_code_t mui_u8g2_set_backlight_level(uint8_t value) {
+static ret_code_t backlight_level_apply(uint8_t value) {
     if (!m_pwm_initialized) return NRF_ERROR_INVALID_STATE;
     if (value > 100) value = 100;
     if (value == 0) {
@@ -265,11 +265,25 @@ ret_code_t mui_u8g2_set_backlight_level(uint8_t value) {
         return result;
     }
 }
+
+ret_code_t mui_u8g2_set_backlight_level(uint8_t value) {
+    ret_code_t result = backlight_level_apply(value);
+    if (result == NRF_SUCCESS) {
+        /* A new normal setting owns the output. A delayed preview restore or
+         * dim transition must not overwrite it; failed requests retain both. */
+        m_backlight_preview_active = false;
+        m_backlight_restore_pending = false;
+        m_dimmed = false;
+        m_dim_retry_pending = false;
+    }
+    return result;
+}
+
 ret_code_t mui_u8g2_backlight_preview(uint8_t level) {
     if (m_backlight_restore_pending) return NRF_ERROR_BUSY;
     int8_t actual = mui_u8g2_get_backlight_level();
     if (actual < 0) return NRF_ERROR_INVALID_STATE;
-    ret_code_t result = mui_u8g2_set_backlight_level(level);
+    ret_code_t result = backlight_level_apply(level);
     if (result == NRF_SUCCESS) {
         if (!m_backlight_preview_active) m_backlight_saved = (uint8_t)actual;
         m_backlight_preview_active = true;
@@ -281,7 +295,7 @@ ret_code_t mui_u8g2_backlight_preview(uint8_t level) {
 ret_code_t mui_u8g2_backlight_restore(void) {
     if (!m_backlight_preview_active && !m_backlight_restore_pending) return NRF_SUCCESS;
     m_backlight_preview_active = false;
-    ret_code_t result = mui_u8g2_set_backlight_level(m_backlight_saved);
+    ret_code_t result = backlight_level_apply(m_backlight_saved);
     m_backlight_restore_pending = result != NRF_SUCCESS;
     if (m_backlight_restore_pending) m_backlight_retry_tick = app_timer_cnt_get();
     return result;
@@ -304,7 +318,7 @@ void mui_u8g2_poll_dim(bool before_sleep) {
     if (m_dim_retry_pending && app_timer_cnt_diff_compute(now, failed_tick) < APP_TIMER_TICKS(250)) return;
     /* A quarter of the configured duty, rounded up. Zero stays off. */
     uint8_t duty = requested ? (brightness + 3u) / 4u : brightness;
-    if (mui_u8g2_set_backlight_level(duty) == NRF_SUCCESS) {
+    if (backlight_level_apply(duty) == NRF_SUCCESS) {
         m_dimmed = requested;
         m_dim_retry_pending = false;
     } else {
