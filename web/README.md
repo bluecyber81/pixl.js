@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.58.0 und LCD DE3.87 / App660
+
+Kompakte Handy-Fernbedienung, Sammelauswahl für Spielordner und übersichtlichere Slots und Favoritenseiten am LCD. [Bedienung und Installation](LIESMICH_3_58_0.txt)
+
 ## Dateimanager 3.57.0 und LCD DE3.86 / App659
 
 Die lokale Ausgabe enthält Spielordner, robuste Displayfotos und den Vergleich zweier Startreihen. Die LCD-App schützt belegte Slots und verbessert die Navigation in großen Favoritenordnern. [Bedienung und Installation](LIESMICH_3_57_0.txt)

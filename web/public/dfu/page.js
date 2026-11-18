@@ -1,6 +1,6 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.57.0';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.0';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');

@@ -1,28 +1,31 @@
 <template>
-  <section class="display-photo" :aria-busy="loading">
+  <section class="display-photo" :class="{'photo-compact': compact}" :aria-busy="loading">
     <h3>{{ displayBoard ? displayBoard + ' · ' : '' }}{{ text.title }}</h3>
-    <p>{{ connected && !supported ? (remote ? text.remoteUnavailable : text.unavailable) : (remote ? text.remoteHint : text.hint) }}</p>
-    <button v-if="!remote || supported" type="button" :disabled="!connected || !supported || blocked || loading" @click="capture">
+    <p v-if="!compact || !supported" class="photo-hint">{{ connected && !supported ? (remote ? text.remoteUnavailable : text.unavailable) : (remote ? text.remoteHint : text.hint) }}</p>
+    <button v-if="!remote || supported" class="photo-capture" type="button" :disabled="!connected || !supported || blocked || loading" @click="capture">
       {{ loading ? text.loading : (remote ? text.refresh : text.capture) }}
     </button>
-    <p v-if="status" role="status">{{ text[status] }}</p>
+    <p v-if="status" class="photo-status" role="status">{{ text[status] }}</p>
     <figure v-if="photo">
       <div class="photo-surface">
         <img :src="photo" :width="128 * zoom" :height="64 * zoom" :alt="text.preview" />
       </div>
       <figcaption>
         {{ status ? text.lastCaptured : text.captured }} <time :datetime="capturedAt">{{ captureLabel }}</time><template v-if="capturedFirmware"> · {{ capturedFirmware }}</template>
-        <div class="photo-scale" role="group" :aria-label="text.scale">
-          <span>{{ text.scale }}</span>
-          <button v-for="factor in [1, 2, 3]" :key="factor" type="button" :disabled="factor > maxZoom"
-            :aria-pressed="zoom === factor" @click="preferredZoom = factor">{{ factor }}×</button>
-        </div>
-        <div class="photo-actions">
-          <button type="button" :disabled="loading" :aria-pressed="rotated" @click="rotate">{{ text.rotate }}</button>
-          <a :href="photo" :download="downloadName">{{ text.save }}</a>
-        </div>
       </figcaption>
     </figure>
+    <component v-if="photo" :is="compact ? 'details' : 'div'" class="photo-options">
+      <summary v-if="compact">{{ text.options }}</summary>
+      <div class="photo-scale" role="group" :aria-label="text.scale">
+        <span>{{ text.scale }}</span>
+        <button v-for="factor in [1, 2, 3]" :key="factor" type="button" :disabled="factor > maxZoom"
+          :aria-pressed="zoom === factor" @click="preferredZoom = factor">{{ factor }}×</button>
+      </div>
+      <div class="photo-actions">
+        <button type="button" :disabled="loading" :aria-pressed="rotated" @click="rotate">{{ text.rotate }}</button>
+        <a :href="photo" :download="downloadName">{{ text.save }}</a>
+      </div>
+    </component>
   </section>
 </template>
 
@@ -31,7 +34,7 @@ import { renderDisplayPhoto, supportsDisplayPhoto } from '../lib/display-photo.j
 import { firmwareBoard } from '../lib/hardware-profile.js';
 const words = {
   de: {
-    title: 'Displayfoto', hint: 'Lies die aktuelle Anzeige der Bluetooth-Dateiübertragung direkt vom Gerät.',
+    title: 'Displayfoto', options: 'Bildoptionen', hint: 'Lies die aktuelle Anzeige der Bluetooth-Dateiübertragung direkt vom Gerät.',
     remoteHint: 'Mit „Displaybild aktualisieren“ kannst du ein Bild manuell anfordern. Spiele können direkt auf das Display zeichnen. Währenddessen ist die Aufnahme eventuell nicht verfügbar.',
     remoteUnavailable: 'Das Gerät meldet für diese Fernbedienungssitzung keine Displayfoto-Funktion.',
     refresh: 'Displaybild aktualisieren', captured: 'Aufnahme vom', lastCaptured: 'Letzte erfolgreiche Aufnahme vom', scale: 'Bildgröße',
@@ -44,7 +47,7 @@ const words = {
     renderFailed: 'Der Browser konnte das PNG nicht erstellen. Versuche es erneut.'
   },
   en: {
-    title: 'Screenshot', hint: 'Read the current Bluetooth file transfer screen directly from the device.',
+    title: 'Screenshot', options: 'Image options', hint: 'Read the current Bluetooth file transfer screen directly from the device.',
     remoteHint: 'Use “Refresh screen” to request a picture manually. Games can draw directly to the display. A screenshot may be unavailable while they do.',
     remoteUnavailable: 'The device did not advertise screenshots for this remote session.',
     refresh: 'Refresh screen', captured: 'Captured on', lastCaptured: 'Last successful capture on', scale: 'Image scale',
@@ -58,7 +61,7 @@ const words = {
   }
 };
 export default {
-  props: { connected: Boolean, blocked: Boolean, generation: Number, firmwareVersion: String, locale: String, readPhoto: Function, remote: Boolean, remoteSupported: Boolean },
+  props: { compact: Boolean, connected: Boolean, blocked: Boolean, generation: Number, firmwareVersion: String, locale: String, readPhoto: Function, remote: Boolean, remoteSupported: Boolean },
   emits: ['busy'],
   data() { return { pixels: null, photo: '', rotated: false, capturedAt: '', capturedFirmware: '', status: '', loading: false, serial: 0, preferredZoom: 3, maxZoom: 1 }; },
   computed: {
@@ -154,4 +157,15 @@ figcaption { margin-top: .5rem; }
 .photo-scale button[aria-pressed="true"] { outline:2px solid currentColor; outline-offset:-3px; font-weight:bold; }
 .photo-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1rem; margin-top:.4rem; }
 .photo-actions button { min-height:44px; }
+.photo-compact{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.25rem .5rem;margin:.4rem 0;min-width:0;}
+.photo-compact h3{grid-column:1/-1;margin:0;}
+.photo-compact .photo-capture{grid-column:1;grid-row:2;min-height:44px;}
+.photo-compact .photo-options{grid-column:2;grid-row:2;min-width:0;}
+.photo-compact .photo-options[open]{grid-column:1/-1;grid-row:3;}
+.photo-options summary{min-height:44px;align-content:center;cursor:pointer;}
+.photo-options summary:focus-visible{outline:3px solid #388294;outline-offset:2px;}
+.photo-compact figure{grid-column:1/-1;grid-row:4;min-width:0;margin:0;}
+.photo-compact .photo-surface img{margin-inline:auto;}
+.photo-compact figcaption{font-size:.8rem;margin-top:.15rem;}
+.photo-compact .photo-status,.photo-compact .photo-hint{grid-column:1/-1;margin:.2rem 0;}
 </style>

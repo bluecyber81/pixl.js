@@ -143,7 +143,21 @@ const app659 = Object.freeze({
   "sourceCommit": "4111937e432ecec6adc989c9a51fa0fd37e960bf"
 });
 
-const references = [app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
+const app660 = Object.freeze({
+  "firmwareVersion": "2.22.0-DE3.87",
+  "applicationCounter": 660,
+  "board": "LCD",
+  "chipPart": 337970,
+  "applicationBytes": 360008,
+  "applicationBinSha256": "dbd23d0abc14267d7ceeab947d44b22cfda2ee72e1d22d0be2355f97bea51185",
+  "sourceId": "1d0b42515f9f1e55790ff82b094e05acd9fb56e1b05805fda017239bcbc2a993",
+  "artifactStatus": "experimental-signed-application",
+  "hardwareAcceptance": "pending",
+  "otaSha256": "3cef18e6c50480ac1506f82782b00dcf0082a6cb0de1fbfd361ad6ebbf71a530",
+  "sourceCommit": "51ded10bfc9b6379c59881ea4dc975ad46a3e4a7"
+});
+
+const references = [app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

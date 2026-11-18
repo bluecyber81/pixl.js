@@ -39,7 +39,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,659,658,657,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,660,659,658,657,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');
@@ -190,4 +190,15 @@ test('App659 is available locally with the verified signature package and no unp
   const data = readFileSync(new URL('../public/firmware/' + trial.file, import.meta.url));
   assert.equal(data.length, trial.bytes);
   assert.equal(trial.sha256, 'af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58');
+});
+
+test('local App660 uses its shipped signed LCD ZIP and its own guide', () => {
+  const { packages } = JSON.parse(readFileSync(new URL('../public/firmware/releases.json', import.meta.url)));
+  const entry = packages.find(item => item.counter === 660);
+  const offer = packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.86' });
+  assert.equal(offer.downloadUrl, '/firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip');
+  assert.equal(offer.releaseNotesUrl, '/guide/LCD-DE3.87.txt');
+  assert.equal(offer.newer, false);
+  assert.equal(nrfDfuLink(entry), null);
+  assert.equal(packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.85-OLEDt5' }).profileMismatch, true);
 });

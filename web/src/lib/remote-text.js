@@ -1,5 +1,5 @@
 const de = {
-  title:'Fernbedienung', brief:'Menü am Gerät bedienen',
+  title:'Fernbedienung', compactLayout:'Kompakte Ansicht', compactCenter:'Mitte', compactBack:'Zurück', brief:'Menü am Gerät bedienen',
   setupShort:'Verlasse am Gerät den Dateitransfer oder AmiiboLink. Wähle Einstellungen → Fernsteuern → bis Aus. Tippe hier auf „Fernbedienung verbinden“ und wähle Pixl.Remote.',
   setupTitle:'Einrichtung, Reichweite und Ruhezustand',
   introduction:'Links, Mitte und Rechts wirken wie ein kurzer Tastendruck am Allmiibo.',
@@ -36,7 +36,7 @@ const de = {
     REMOTE_UNSAFE:'In diesem Gerätezustand ist der Befehl nicht möglich.', REMOTE_REJECTED:'Das Gerät hat diesen Befehl abgelehnt.'}
 };
 const en = {
-  title:'Remote control', brief:'Operate the device menu',
+  title:'Remote control', compactLayout:'Compact view', compactCenter:'Center', compactBack:'Back', brief:'Operate the device menu',
   setupShort:'Exit file transfer or AmiiboLink on the device. Enable BLE remote under Settings → Remote → until off. Choose “Connect remote” here and select Pixl.Remote.',
   setupTitle:'Setup, range and sleep mode',
   introduction:'Left, Center and Right act like short button presses on the Allmiibo.',

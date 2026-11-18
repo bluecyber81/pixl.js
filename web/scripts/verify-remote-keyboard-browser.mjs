@@ -221,13 +221,13 @@ try {
       assert.equal(await section.getByRole('img').count(),0);
       assert.deepEqual(await page.evaluate(n=>window.testRemote.receipts.slice(n),beforeDisconnect),[[2,1]]);
       await page.goto(origin+base+'dfu/web.html');
-      const trial=page.locator('#lcd-downloads p').filter({hasText:locale==='de-DE'?'LCD-Testversion DE3.86 / App659':'LCD test release DE3.86 / App659'});
+      const trial=page.locator('#lcd-downloads p').filter({hasText:locale==='de-DE'?'LCD-Testversion DE3.87 / App660':'LCD test release DE3.87 / App660'});
       assert.equal(await trial.count(),1);
       assert.match(await trial.innerText(),locale==='de-DE'?/Praxistest für diesen neuen Build ist noch offen/:/Physical testing of this new build is still pending/);
       assert.doesNotMatch(await trial.innerText(),/App657|successful practical use|praktischen Betrieb bestätigt/);
       await trial.getByRole('link',{name:locale==='de-DE'?'Installation und Prüfung':'Installation and testing'}).click();
-      await page.waitForURL(origin+base+(locale==='de-DE'?'guide/#lcd-de386':'guide/en.html#lcd-de386'));
-      assert.equal(await page.locator('#lcd-de386').count(),1);
+      await page.waitForURL(origin+base+(locale==='de-DE'?'guide/#lcd-de387':'guide/en.html#lcd-de387'));
+      assert.equal(await page.locator('#lcd-de387').count(),1);
       console.log(locale+' passed: STATUS, timeout, keyboard, legacy fallback, on-demand remote LCD photo, pixel orientation, rotation, PNG download, optional acknowledged-key auto photo, cancellation and disconnect');
     } finally {await page.context().close();}
   }

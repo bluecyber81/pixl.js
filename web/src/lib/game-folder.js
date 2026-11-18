@@ -18,9 +18,31 @@ export function deviceGames(usage, catalogue) {
 
 function fail(code) { throw Object.assign(new Error(code), {code}); }
 
+const encoder = new TextEncoder();
+const folderByteLimit = 25;
+
+export function suggestedGameFolder(group) {
+  // For long game titles the subtitle usually distinguishes releases in the same series.
+  const leaf = group.label.split(' › ').at(-1);
+  const title = encoder.encode(leaf).length > folderByteLimit ? leaf.split(': ').at(-1) : leaf;
+  const clean = title.normalize('NFC').replace(/[\u0000-\u001f\u007f<>:"/\\|?*]+/gu, ' ').replace(/\s+/gu, ' ').trim();
+  let name = '';
+  let bytes = 0;
+  for (const char of clean) {
+    bytes += encoder.encode(char).length;
+    if (bytes > folderByteLimit) break;
+    name += char;
+  }
+  try {
+    return assertPortableEntryName(name.replace(/[. ]+$/u, ''));
+  } catch {
+    return String(group.id);
+  }
+}
+
 export function deviceFolderSpec(group, folder, ids) {
   try { assertPortableEntryName(folder); } catch { fail('FAV_FOLDER_NAME'); }
-  if (new TextEncoder().encode(folder).length > 25) fail('FAV_FOLDER_NAME');
+  if (encoder.encode(folder).length > folderByteLimit) fail('FAV_FOLDER_NAME');
   if (!group || !Number.isInteger(group.id) || group.id < 1 || group.id > 254 || !ids.length) fail('FAV_SELECTION');
   const path = joinDevicePath('E:/amiibo/fav', folder);
   const rows = [...new Set(ids)].map(id => {

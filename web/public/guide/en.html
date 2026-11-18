@@ -18,7 +18,7 @@
   <main>
     <div class="intro"><h1>Update your Allmiibo</h1><p>Choose firmware for your LCD or OLED. Find the app ZIP for your phone and the update steps for your device.</p></div>
     <nav class="choices" aria-labelledby="choose"><h2 id="choose">What would you like to do?</h2>
-      <ul><li><a href="#flash"><b>Update the LCD app</b><span>Regular DE3.81 / App654; local trial DE3.86 / App659.</span></a></li>
+      <ul><li><a href="#flash"><b>Update the LCD app</b><span>Regular DE3.81 / App654; local trial DE3.87 / App660.</span></a></li>
         <li><a href="#oled"><b>Install the OLED preview</b><span>DE3.84-OLEDt4 for SH1106 and S112 7.2.0.</span></a></li>
         <li><a href="#littlefs"><b>Migrate an LCD to Packed LittleFS</b><span>Preparation, backup and restoration for LCD.</span></a></li>
         <li><a href="#bootloader"><b>Check the full LCD package</b><span>Install S112 7.3.0, bootloader Z21 and DE3.81 / App654 together.</span></a></li></ul>
@@ -27,6 +27,7 @@
       <nav class="contents" aria-labelledby="contents"><h2 id="contents">On this page</h2>
         <a href="#diagnose">Read the device information first</a>
         <a href="#flash">Update the LCD app</a>
+        <a href="#lcd-de387">Test LCD DE3.87</a>
         <a href="#lcd-de386">Test LCD DE3.86</a>
         <a href="#lcd-de385">Test LCD DE3.85</a>
         <a href="#oled">Install the OLED preview</a>
@@ -49,6 +50,9 @@
         </section>
         <section id="flash">
           <h2>Update the LCD app over Bluetooth</h2>
+          <h3 id="lcd-de387">LCD DE3.87 / App660</h3>
+          <p>For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. Save the <a href="../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip" download>local App660 ZIP</a> on Android. Open Settings → Firmware Update on the device and select the intact ZIP in nRF Device Firmware Update. Check App660 in the file manager after reconnecting. The first physical check of this build is pending.</p>
+          <p>The slot list shows the number, contents and write protection. A short page cue helps you navigate favorites folders.</p>
           <h3 id="lcd-de386">LCD DE3.86 / App659</h3>
           <p>For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. Save the <a href="../firmware/Allmiibo_LCD_DE3_86_659_NUR_APP.zip" download>local App659 ZIP</a> on Android. Open Settings → Firmware Update on the device and select the intact ZIP in nRF Device Firmware Update. Check App659 in the file manager after reconnecting. The first physical check of this build is pending.</p>
           <h3 id="lcd-de385">Previous version DE3.85 / App658</h3>

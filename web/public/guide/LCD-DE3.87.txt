@@ -1,0 +1,18 @@
+LCD DE3.87 / App660 · Dateimanager 3.58.0
+Lokale Testausgabe / Local test build
+
+LCD/ST7567 · PFS1 · Z21 · S112 7.3.0 (FWID 0x0126).
+
+In der Slotliste steht die Nummer vor dem Inhalt. Ein Schloss kennzeichnet
+schreibgeschützte Plätze. Der Dialog zum Ersetzen zeigt das gewählte Ziel
+und den bisherigen Namen oder „Belegt“. In großen Favoritenordnern
+erscheinen der Ordnername und die aktuelle Seite kurz beim Blättern.
+Der Dateimanager ergänzt die kompakte Handy-Fernbedienung und Sammelauswahl
+mit Namensvorschlag und einer gezählten Vorschau für Spielordner.
+
+The LCD shows slot numbers, write protection, the existing figure when
+confirming a replacement, and brief folder/page cues. The file manager
+adds a compact mobile remote and bulk selection with named game folders.
+
+Der erste Test am physischen LCD steht noch aus.
+Physical acceptance on the owner's LCD is pending.
