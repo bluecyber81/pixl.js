@@ -194,7 +194,7 @@ def verify(elf, binary, board='LCD'):
         levels.append(expected)
     if oled:
         assert len(set(levels)) == 91 and levels == sorted(levels)
-        assert (levels[0], levels[5], levels[50], levels[100], levels[255]) == (0, 1, 64, 255, 255)
+        assert (levels[0], levels[5], levels[50], levels[70], levels[100], levels[255]) == (0, 1, 64, 125, 255, 255)
         assert bytes(info[18:20]) == bytes((2, 2))
         commands.clear()
         call('u8g2_SendBuffer', context)
