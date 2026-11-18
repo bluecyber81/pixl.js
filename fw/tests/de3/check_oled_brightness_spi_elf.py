@@ -127,7 +127,7 @@ class Model:
         self.pin_events.clear()
 
     def expect_contrast(self, percent):
-        expected = (max(1, min(100, percent)) - 1) * 255 // 99
+        expected = round(255 * (min(100, max(0, percent)) / 100) ** 2)
         assert [(x['data'], x['hex']) for x in self.transfers] == [(False, '81'), (False, f'{expected:02x}')], (percent, self.transfers)
         assert not self.masked and self.gpio & (1 << 27)
         return expected
@@ -152,7 +152,7 @@ def verify(directory):
     model.cpu.mem_write(settings + 11, bytes([80]))
     model.call('mui_u8g2_init', display)
     init_bytes = ''.join(x['hex'] for x in model.transfers)
-    assert init_bytes.startswith('ae') and init_bytes.endswith('81cbaf'), init_bytes
+    assert init_bytes.startswith('ae') and init_bytes.endswith('81a3af'), init_bytes
     assert all(not x['data'] for x in model.transfers)
 
     levels = []
@@ -160,7 +160,9 @@ def verify(directory):
         model.clear()
         model.call('mui_u8g2_set_contrast_level', value)
         levels.append(model.expect_contrast(value))
-    assert len(set(levels)) == 100
+    assert levels == sorted(levels)
+    assert len(set(levels[:101:5])) == 21
+    assert [levels[i] for i in (0, 5, 25, 50, 70, 100, 255)] == [0, 1, 16, 64, 125, 255, 255]
 
     # Synthetic object storage only; the linked view event handler, real scene
     # callback and complete driver/SDK chain execute. Layout is the ARM ABI of
@@ -202,7 +204,7 @@ def verify(directory):
     assert [(x['data'], x['hex']) for x in model.transfers] == [(False, 'ae')]
     model.clear()
     model.call('mui_u8g2_init', display)
-    assert ''.join(x['hex'] for x in model.transfers).endswith('810aaf'), 'wake failed to reapply saved 5 percent'
+    assert ''.join(x['hex'] for x in model.transfers).endswith('8101af'), 'wake failed to reapply saved 5 percent'
     # Ordinary UI and game redraws must not overwrite the requested contrast.
     model.clear()
     model.call('u8g2_SendBuffer', display)
@@ -246,7 +248,7 @@ def verify(directory):
     model.cpu.hook_del(hook)
     assert len(rejected) == 2
     return {'binarySha256': sha256(binary.read_bytes()).hexdigest(), 'elfSha256': sha256(elf.read_bytes()).hexdigest(),
-            'initCommandBytes': init_bytes, 'contrastInputs': 256, 'distinctRegisterLevels': 100,
+            'initCommandBytes': init_bytes, 'contrastInputs': 256, 'distinctRegisterLevels': len(set(levels)),
             'elfMatchesBin': True, 'uiLeftRightCases': ui_cases, 'centerConfirmation': 'passed', 'wakeSavedValue': 'passed',
             'ignoredInputCases': 9, 'redraw': '1024-byte menu buffer and six rotated/partial game pages',
             'negativeControlsRejected': rejected,

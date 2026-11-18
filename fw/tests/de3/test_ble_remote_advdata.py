@@ -83,14 +83,15 @@ static bool has(const uint8_t *bytes,unsigned size,unsigned type,const void *val
 }
 static void remote_ok(void){
     assert(advertising_init(true)==NRF_SUCCESS);
-    assert(encoded.adv_data.len==21&&encoded.scan_rsp_data.len==13);
+    assert(encoded.adv_data.len==31&&encoded.scan_rsp_data.len==13);
     const uint8_t flags=6;
-    assert(has(adv,21,1,&flags,1));
-    assert(has(adv,21,7,nus_uuid,16));
+    assert(has(adv,31,1,&flags,1));
+    assert(has(adv,31,7,nus_uuid,16));
+    assert(has(adv,31,8,"Pixl.Rem",8));
     assert(has(scan,13,9,"Pixl.Remote",11));
-    assert(!ble_advdata_name_find(adv,21,"Pixl.Remote"));
+    assert(!ble_advdata_name_find(adv,31,"Pixl.Remote"));
     assert(ble_advdata_name_find(scan,13,"Pixl.Remote"));
-    assert(ble_advdata_uuid_find(adv,21,m_adv_uuids));
+    assert(ble_advdata_uuid_find(adv,31,m_adv_uuids));
 }
 int main(void){
     remote_ok();
@@ -107,7 +108,7 @@ int main(void){
     name_result=NRF_ERROR_BUSY;assert(advertising_init(true)==NRF_ERROR_BUSY);name_result=0;
     uuid_result=NRF_ERROR_INVALID_STATE;assert(advertising_init(true)==NRF_ERROR_INVALID_STATE);uuid_result=0;
     remote_ok();
-    puts("PASS real Nordic advertising bytes: primary21 NUS+flags, scan13 full remote name, unchanged file layout, 31-byte limits, suffix-corruption regression, SDK errors");
+    puts("PASS Nordic encoder: primary31 flags + NUS + Pixl.Rem, scan13 Pixl.Remote, file layout, packet limits, service patch and SDK errors");
 }
 '''
 

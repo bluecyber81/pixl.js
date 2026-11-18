@@ -89,7 +89,8 @@ static void reset(void){
     m_advertising.p_adv_data=NULL;m_advertising.adv_mode_current=0;
     permission=dispatching=handoff_requested=handoff_armed=file_link_requested=recovery=false;
     stack_inits=gap_inits=gatt_inits=service_inits=conn_inits=df_inits=0;
-    sdk_addr_result=sdk_name_result=sdk_adv_result=sdk_mtu_result=0;
+    sdk_addr_result=sdk_name_result=sdk_adv_result=sdk_mtu_result=sdk_start_result=0;
+    m_remote_start_retries=0;
     advertised=addr_calls=clock_tick=0;last_name=NULL;
 }
 int main(void){
@@ -127,8 +128,17 @@ int main(void){
         *slot=NRF_ERROR_BUSY;tick();assert(m_mode_pending&&!advertised&&!m_sessions_enabled);
         *slot=0;tick();assert(!m_mode_pending&&advertised==1&&m_sessions_enabled);
     }
+    reset();ble_remote_set_enabled(true);tick();sdk_start_result=NRF_ERROR_BUSY;tick();
+    assert(ble_remote_init_phase()==BLE_REMOTE_INIT_START && !m_advertising_active);
+    sdk_start_result=0;clock_tick=499;tick();assert(!m_advertising_active);
+    clock_tick=500;tick();assert(m_advertising_active && ble_remote_init_phase()==BLE_REMOTE_INIT_READY);
+
+    reset();ble_remote_set_enabled(true);tick();sdk_start_result=NRF_ERROR_INVALID_STATE;tick();
+    for(unsigned n=1;n<=3;n++){clock_tick=500*n;tick();assert(!m_advertising_active);}
+    sdk_start_result=0;clock_tick=5000;tick();assert(!m_advertising_active && !m_remote_start_retries);
+    ble_remote_set_enabled(false);tick();ble_remote_set_enabled(true);tick();tick();assert(m_advertising_active);
     assert(!critical_depth);
-    puts("PASS 11 integrated remote startup scenarios: cold enable, no reinit, reenable, both owners, recovery, retained GAP, pending cancel, four SDK deferrals");
+    puts("PASS integrated remote startup, both owners, disconnect, SDK deferrals, bounded advertising retries and re-enable");
 }
 '''
 

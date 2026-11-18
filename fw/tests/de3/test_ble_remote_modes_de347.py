@@ -39,6 +39,7 @@ static unsigned critical_depth;
 #define APP_BLE_CONN_CFG_TAG 1
 #define BLE_ADVDATA_FULL_NAME 1
 #define BLE_ADVDATA_NO_NAME 0
+#define BLE_ADVDATA_SHORT_NAME 2
 #define BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE 5
 #define BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE 6
 #define DEVICE_NAME_REMOTE "Pixl.Remote"
@@ -59,7 +60,7 @@ static uint8_t m_remote_init_phase;
 static uint32_t m_remote_init_result;
 static uint8_t m_file_link_handoff;
 static ble_gap_addr_t m_default_gap_addr={{0x70,1,2,3,4,5}};
-typedef struct {unsigned name_type,flags;bool include_appearance;struct {unsigned uuid_cnt;void *p_uuids;}uuids_complete;}ble_advdata_t;
+typedef struct {unsigned name_type,short_name_len,flags;bool include_appearance;struct {unsigned uuid_cnt;void *p_uuids;}uuids_complete;}ble_advdata_t;
 typedef struct {ble_advdata_t advdata,srdata;
  struct {bool ble_adv_fast_enabled,ble_adv_on_disconnect_disabled;unsigned ble_adv_fast_interval,ble_adv_fast_timeout;}config;
  void(*evt_handler)(void);}ble_advertising_init_t;
@@ -67,7 +68,7 @@ static uint16_t m_adv_uuids[1];
 static unsigned configured_timeout,configured_flags;
 static void on_adv_evt(void){}
 static unsigned ble_advertising_init(void *adv,const ble_advertising_init_t *init){(void)adv;assert(init->config.ble_adv_on_disconnect_disabled);configured_timeout=init->config.ble_adv_fast_timeout;configured_flags=init->advdata.flags;adv_config_calls++;
- if(init->advdata.flags==6){assert(init->advdata.name_type==0&&init->srdata.name_type==1&&init->advdata.uuids_complete.uuid_cnt==1&&!init->srdata.uuids_complete.uuid_cnt);}
+ if(init->advdata.flags==6){assert(init->advdata.name_type==BLE_ADVDATA_SHORT_NAME&&init->advdata.short_name_len==8&&init->srdata.name_type==1&&init->advdata.uuids_complete.uuid_cnt==1&&!init->srdata.uuids_complete.uuid_cnt);}
  else {assert(init->advdata.name_type==1&&init->srdata.name_type==0&&!init->advdata.uuids_complete.uuid_cnt&&init->srdata.uuids_complete.uuid_cnt==1);}
  return sdk_adv_result;}
 static void ble_advertising_conn_cfg_tag_set(void *a,unsigned tag){(void)a;assert(tag==1);}
@@ -75,6 +76,8 @@ static unsigned last_addr;static uint8_t last_full_addr[6];static const char *la
 static int m_gatt;
 static bool m_mode_pending,m_mode_adv_requested,m_mode_handlers_ready,m_mode_stop_requested,m_mode_wait_reply;
 static uint32_t m_mode_wait_tick;
+static uint8_t m_remote_start_retries;
+static uint32_t m_remote_start_tick;
 static ble_device_mode_t m_pending_mode;
 static nus_rx_data_handler_t m_pending_rx,installed_rx;
 static nus_tx_ready_handler_t m_pending_tx;

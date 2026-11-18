@@ -184,6 +184,8 @@ static ble_uuid_t m_adv_uuids[] = /**< Universally unique service identifier. */
 static ble_gap_addr_t m_default_gap_addr = {0};
 static uint8_t m_remote_init_phase;
 static uint32_t m_remote_init_result;
+static uint8_t m_remote_start_retries;
+static uint32_t m_remote_start_tick;
 
 uint8_t ble_remote_init_phase(void) { return m_remote_init_phase; }
 uint32_t ble_remote_init_result(void) { return m_remote_init_result; }
@@ -652,15 +654,14 @@ static ret_code_t advertising_init(bool remote) {
 
     memset(&init, 0, sizeof(init));
 
-    init.advdata.name_type = remote ? BLE_ADVDATA_NO_NAME : BLE_ADVDATA_FULL_NAME;
+    init.advdata.name_type = remote ? BLE_ADVDATA_SHORT_NAME : BLE_ADVDATA_FULL_NAME;
+    if (remote) init.advdata.short_name_len = 8;  /* Pixl.Rem */
     init.advdata.include_appearance = false;
     init.advdata.flags = remote ? BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE :
                                 BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
 
-    /* Primary: flags (3) + complete 128-bit NUS UUID (18) = 21 bytes.
-     * Scan response: complete Pixl.Remote name (13 bytes). Both fit legacy
-     * 31-byte packets; service-filtered discovery sees NUS before scanning.
-     * Existing file/AmiiboLink advertising retains its established layout. */
+    /* Flags, complete NUS UUID and shortened name use 3 + 18 + 10 bytes.
+     * A passive scan sees the remote role even before the full name arrives. */
     ble_advdata_t *services = remote ? &init.advdata : &init.srdata;
     services->uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     services->uuids_complete.p_uuids = m_adv_uuids;
@@ -684,8 +685,11 @@ static ret_code_t advertising_init(bool remote) {
 static void advertising_start(void) {
     m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = false;
     uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-    if (m_remote_mode)
+    if (m_remote_mode) {
         remote_init_step(err_code == NRF_SUCCESS ? BLE_REMOTE_INIT_READY : BLE_REMOTE_INIT_START, err_code);
+        m_remote_start_tick = app_timer_cnt_get();
+        return;
+    }
     APP_ERROR_CHECK(err_code);
 }
 
@@ -896,7 +900,20 @@ void ble_device_mode_prepare(ble_device_mode_t mode) {
     if (!m_mode_wait_reply) { ble_stop_transport(); m_mode_stop_requested = true; }
 }
 static void ble_pending_mode_poll(void) {
-    if (!m_mode_pending) return;
+    if (!m_mode_pending) {
+        /* A busy SoftDevice may refuse the first advertising start. Retain
+         * its status for the device test and retry only while the role is idle. */
+        if (m_remote_mode && m_sessions_enabled && m_remote_start_retries &&
+            m_remote_init_phase == BLE_REMOTE_INIT_START &&
+            (m_remote_init_result == NRF_ERROR_BUSY || m_remote_init_result == NRF_ERROR_INVALID_STATE) &&
+            m_conn_handle == BLE_CONN_HANDLE_INVALID && !m_advertising_active &&
+            !m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled &&
+            app_timer_cnt_diff_compute(app_timer_cnt_get(), m_remote_start_tick) >= APP_TIMER_TICKS(500)) {
+            --m_remote_start_retries;
+            advertising_start();
+        }
+        return;
+    }
     if (!m_mode_stop_requested) {
         if (m_mode_wait_reply && ble_is_connected() && ble_remote_response_pending() &&
             app_timer_cnt_diff_compute(app_timer_cnt_get(), m_mode_wait_tick) < APP_TIMER_TICKS(2000)) return;
@@ -916,6 +933,7 @@ static void ble_pending_mode_poll(void) {
     if (result == NRF_ERROR_BUSY || result == NRF_ERROR_INVALID_STATE) return;
     APP_ERROR_CHECK(result);
     m_mode_pending = m_mode_wait_reply = false;
+    m_remote_start_retries = mode == BLE_DEVICE_MODE_REMOTE && advertise ? 3 : 0;
     if (advertise) ble_adv_start();
 }
 uint32_t ble_session_generation(void) { return m_session_generation; }
