@@ -39,6 +39,10 @@ typedef struct {
     mui_view_t device_test;
     uint8_t tested_keys;
     uint8_t held_keys;
+    uint8_t released_keys;
+    uint8_t device_test_page;
+    uint8_t backlight_target;
+    uint32_t backlight_error;
 #endif
 
 } app_settings_t;
@@ -48,6 +52,7 @@ typedef enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_PROGRESS_BAR, SETTINGS_VI
 
 #if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
 void settings_device_test_open(app_settings_t *app);
+void settings_device_test_restore(app_settings_t *app);
 #endif
 
 extern mini_app_t app_settings_info;

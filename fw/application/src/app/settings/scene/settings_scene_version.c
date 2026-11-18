@@ -6,14 +6,87 @@
 #include "utils2.h"
 #include "version2.h"
 #include "runtime_diag.h"
+#include "ble_main.h"
+#include "ble_remote.h"
 
 #if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+static const char *device_test_remote_status(bool de) {
+    if (!ble_remote_enabled()) return de ? "Remote: aus" : "Remote: off";
+    uint8_t phase = ble_remote_init_phase();
+    uint32_t result = ble_remote_init_result();
+    if (result && phase != BLE_REMOTE_INIT_IDLE && phase != BLE_REMOTE_INIT_READY) {
+        static char text[28];
+        snprintf(text, sizeof(text), "BLE %u/%08lX", (unsigned)phase, (unsigned long)result);
+        return text;
+    }
+    if (!ble_remote_mode_active() || ble_mode_transition_pending())
+        return de ? "Remote: wartet" : "Remote: waiting";
+    switch (ble_status_state_get()) {
+    case BLE_LINK_ADVERTISING: return "BLE: Pixl.Remote";
+    case BLE_LINK_CONNECTED: return de ? "Remote: verbunden" : "Remote: connected";
+    case BLE_LINK_HOST_CONNECTED: return de ? "Remote: nur Link" : "Remote: link only";
+    case BLE_LINK_DISCONNECTING: return de ? "Remote: trennt" : "Remote: closing";
+    default: return de ? "Remote: inaktiv" : "Remote: idle";
+    }
+}
+
+void settings_device_test_restore(app_settings_t *app) {
+    if (app && app->device_test_page == 2) {
+        app->backlight_error = mui_u8g2_backlight_restore();
+        app->device_test_page = 0;
+    }
+}
+
+static void device_test_exit(mui_view_t *view) {
+    settings_device_test_restore(view->user_data);
+}
+
+static void device_test_footer(mui_canvas_t *canvas, bool de) {
+    mui_canvas_set_font(canvas, MUI_FONT_SMALL);
+    mui_canvas_draw_utf8(canvas, 4, 61, de ? "Mitte:weiter; lang:Ende" : "Center:next; hold:back");
+    mui_canvas_draw_rframe(canvas, 0, 0, 128, 64, 0);
+}
+
+static void device_test_light_draw(app_settings_t *app, mui_canvas_t *canvas, bool de) {
+    char text[32];
+    mui_canvas_set_font(canvas, MUI_FONT_NORMAL);
+    mui_canvas_draw_utf8(canvas, 4, 11, de ? "Lichttest" : "Backlight test");
+    int8_t actual = mui_u8g2_get_backlight_level();
+    if (actual < 0) snprintf(text, sizeof(text), "PWM: --");
+    else snprintf(text, sizeof(text), "%s %u%% / %s %u%%", de ? "Soll" : "Set",
+                  (unsigned)app->backlight_target, de ? "Ist" : "PWM", (unsigned)actual);
+    mui_canvas_draw_utf8(canvas, 4, 23, text);
+    /* Same physical pixels for both PWM levels; LCD contrast stays unchanged. */
+    for (uint8_t y = 28; y < 42; ++y)
+        for (uint8_t x = 8 + (y & 1); x < 32; x += 2) mui_canvas_draw_dot(canvas, x, y);
+    mui_canvas_draw_box(canvas, 40, 28, 24, 14);
+    for (uint8_t x = 72; x < 96; x += 2) mui_canvas_draw_box(canvas, x, 28, 1, 14);
+    mui_canvas_draw_rframe(canvas, 104, 28, 16, 14, 0);
+    if (app->backlight_error) {
+        snprintf(text, sizeof(text), "PWM %08lX", (unsigned long)app->backlight_error);
+        mui_canvas_draw_utf8(canvas, 4, 53, text);
+    } else mui_canvas_draw_utf8(canvas, 4, 53, de ? "L: Dunkel  R: Hell" : "L: Dim  R: Bright");
+    device_test_footer(canvas, de);
+}
+
 static void device_test_draw(mui_view_t *view, mui_canvas_t *canvas) {
     app_settings_t *app = view->user_data;
     bool de = getLanguage() == LANGUAGE_DE_DE;
     char text[28];
 
+    if (app->device_test_page == 2) {
+        device_test_light_draw(app, canvas, de);
+        return;
+    }
     mui_canvas_set_font(canvas, MUI_FONT_NORMAL);
+    if (app->device_test_page == 1) {
+        mui_canvas_draw_utf8(canvas, 4, 11, de ? "Fernbedienung" : "Remote control");
+        mui_canvas_draw_utf8(canvas, 4, 29, device_test_remote_status(de));
+        mui_canvas_set_font(canvas, MUI_FONT_SMALL);
+        mui_canvas_draw_utf8(canvas, 4, 45, de ? "Einstellungen > Remote" : "Settings > Remote");
+        device_test_footer(canvas, de);
+        return;
+    }
     mui_canvas_draw_rframe(canvas, 0, 0, 128, 64, 0);
     /* Distinct inner-corner marks, clockwise from top left: a horizontal
      * line, a vertical line, a square and a single pixel. */
@@ -53,7 +126,7 @@ static void device_test_draw(mui_view_t *view, mui_canvas_t *canvas) {
         if (app->tested_keys & (1u << k))
             mui_canvas_draw_box(canvas, x, 49, 32, app->held_keys & (1u << k) ? 3 : 1);
     }
-    mui_canvas_draw_utf8(canvas, 4, 60, de ? "Mitte halten: zurück" : "Hold center: back");
+    device_test_footer(canvas, de);
 }
 
 static void device_test_input(mui_view_t *view, mui_input_event_t *event) {
@@ -63,17 +136,35 @@ static void device_test_input(mui_view_t *view, mui_input_event_t *event) {
     if (event->type == INPUT_TYPE_PRESS) {
         app->tested_keys |= bit;
         app->held_keys |= bit;
+        app->released_keys &= ~bit;
     } else if (event->type == INPUT_TYPE_RELEASE) {
+        if (app->held_keys & bit) app->released_keys |= bit;
         app->held_keys &= ~bit;
     } else if (event->key == INPUT_KEY_CENTER && event->type == INPUT_TYPE_LONG) {
+        app->released_keys = 0;
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
+    } else if (event->type == INPUT_TYPE_SHORT && (app->released_keys & bit)) {
+        app->released_keys &= ~bit;
+        if (event->key == INPUT_KEY_CENTER) {
+            app->released_keys = 0; /* A new page needs a new complete gesture. */
+            if (app->device_test_page == 2) settings_device_test_restore(app);
+            else if (++app->device_test_page == 2) {
+                app->backlight_target = 5;
+                app->backlight_error = mui_u8g2_backlight_preview(5);
+            }
+        } else if (app->device_test_page == 2) {
+            app->backlight_target = event->key == INPUT_KEY_LEFT ? 5 : 100;
+            app->backlight_error = mui_u8g2_backlight_preview(app->backlight_target);
+        }
     }
 }
 
 void settings_device_test_open(app_settings_t *app) {
-    app->tested_keys = app->held_keys = 0;
+    settings_device_test_restore(app);
+    app->tested_keys = app->held_keys = app->released_keys = app->device_test_page = 0;
+    app->backlight_error = 0;
     app->device_test = (mui_view_t){.user_data = app, .draw_cb = device_test_draw,
-                                    .input_cb = device_test_input};
+                                    .input_cb = device_test_input, .exit_cb = device_test_exit};
     mui_view_dispatcher_add_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_DEVICE_TEST, &app->device_test);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_DEVICE_TEST);
 }
