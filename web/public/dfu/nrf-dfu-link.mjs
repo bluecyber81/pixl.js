@@ -13,7 +13,8 @@ export function nrfDfuLink(entry) {
     }
     const release = /^2\.22\.0-DE3\.([1-9]\d{0,3}(?:t[1-9]\d{0,2})?)$/.exec(entry?.version);
     const test657 = release?.[1] === '84' && entry.channel === 'prerelease' && entry.counter === 657 && entry.bootloader === 'Z21';
-    const expectedId = test657 ? 'de3.84-lcd-test1-app' : release && `de3.${release[1]}-lcd-app`;
+    const test658 = release?.[1] === '85' && entry.channel === 'prerelease' && entry.counter === 658 && entry.bootloader === 'Z21';
+    const expectedId = test657 ? 'de3.84-lcd-test1-app' : test658 ? 'de3.85-lcd-test1-app' : release && `de3.${release[1]}-lcd-app`;
     if (!release || entry.board !== 'LCD' || entry.applicationOnly !== true ||
         entry.id !== expectedId ||
         !Number.isSafeInteger(entry.counter) || entry.counter < 1 || entry.counter > 0xffffffff) return null;

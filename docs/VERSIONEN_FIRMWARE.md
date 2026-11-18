@@ -1,6 +1,14 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
-## DE3.84 / App657 · neueste LCD-Testversion
+## DE3.85 / App658 · LCD-Teststand vom 18.11.2026
+
+Nur-App-Update für **LCD/ST7567, PFS1, Z21 und S112 7.3.0**. Bootloader, SoftDevice und Sammlung werden nicht ersetzt. [Flashbare Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Quellen, BIN/HEX/ELF und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). **Neue Hardwareabnahme offen**; die frühere Besitzermeldung zu DE3.84/App657 wird nicht übernommen. DE3.81/App654 bleibt die reguläre LCD-Firmware.
+
+Der Gerätetest hat drei Seiten: Pixel/Tasten, Fernbedienungsstatus, Lichttest. Mitte kurz schaltet weiter. Im Lichttest wählt links 5% PWM und rechts 100%; Mitte kurz kehrt zur Info zurück, Mitte lang beendet. Beim Verlassen und Schlafen wird die vorherige Beleuchtung wiederhergestellt. Der Test speichert keine neue Einstellung und setzt Auto-Dimmen während der Vorschau aus. Soll-/SDK-Rücklesewerte sind keine optischen Helligkeitsmessungen.
+
+Die Fernbedienung verwendet eine eigene Adresse mit NUS-Dienstkennung im primären Werbepaket und vollem Namen in der Scanantwort. Nach lokaler Freigabe bis zum Ausschalten **Pixl.Remote** im Dateimanager frisch wählen. Web3.56.0 kann nach bestätigten Tasten optional ein Displayfoto aufnehmen. Die größere temporäre Mount-Cache-Konfiguration ist eine Teständerung; ein Geschwindigkeitsgewinn auf dem echten LCD ist noch nicht nachgewiesen. [DE/EN-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#lcd-de385).
+
+## DE3.84 / App657 · frühere LCD-Testversion
 
 Für LCD-Geräte mit ST7567, PFS1, Z21 und S112 7.3.0 gibt es ein signiertes App-Update. Es ergänzt Spielrotation, Display-/Tastentest, einstellbares Dimmen und die Gerätediagnose für Dateimanager 3.55.6. Der Besitzer meldet erfolgreichen Betrieb auf einem LCD mit Z21. Die Android-DFU-Wiederaufnahme bleibt ein eigener Gerätetest. [App657 fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Öffentliches Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Besitzermeldung](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)
 

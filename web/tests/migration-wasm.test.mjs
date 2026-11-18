@@ -3,11 +3,12 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
 import {MIGRATION_CAPACITY_TARGET, DE354_MIGRATION_CAPACITY_TARGET, DE350_MIGRATION_CAPACITY_TARGET, DE345_MIGRATION_CAPACITY_TARGET, DE344_MIGRATION_CAPACITY_TARGET, PREVIOUS_MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
+import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js'
 import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:657,version:'2.22.0-DE3.84',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654,655,656,657],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:658,version:'2.22.0-DE3.85',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654,655,656,657,658],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
  {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
  {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
   wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
@@ -93,7 +94,8 @@ for(const profile of profiles) {
     {firmwareVersion:'2.22.0-DE3.81',applicationCounter:654},
     {firmwareVersion:'2.22.0-DE3.82',applicationCounter:655},
     {firmwareVersion:'2.22.0-DE3.83',applicationCounter:656},
-    {firmwareVersion:'2.22.0-DE3.84',applicationCounter:657}
+    {firmwareVersion:'2.22.0-DE3.84',applicationCounter:657},
+    {firmwareVersion:'2.22.0-DE3.85',applicationCounter:658}
   ])
   assert.deepEqual(binding.defines,['LFS_NO_ASSERT','LFS_NO_DEBUG','LFS_NO_ERROR','LFS_NO_MALLOC','LFS_NO_WARN'])
   const module=new WebAssembly.Module(wasm)
@@ -141,3 +143,20 @@ test('profile registry defaults only an omitted ID and rejects every unknown or 
  assert.notEqual(MIGRATION_CAPACITY_TARGET.layout.engineSha256,LEGACY_MIGRATION_CAPACITY_TARGET.layout.engineSha256)
  assert.deepEqual(MIGRATION_CAPACITY_TARGET.geometry,LEGACY_MIGRATION_CAPACITY_TARGET.geometry)
 })
+
+
+test('App658 capacity evidence binds the actual candidate BIN, source ID and unchanged simulator without claiming device acceptance',()=>{
+ const evidence=JSON.parse(fs.readFileSync(new URL('../docs/validation/DE3_85_PFS.json',root)));
+ const {packageReference:reference}=diagnosticBuildIdentity({firmwareVersion:'2.22.0-DE3.85'});
+ const profile=profiles.find(item=>item.id==='current');
+ assert.equal(evidence.firmware,'2.22.0-DE3.85');assert.equal(evidence.counter,658);
+ assert.equal(evidence.sourceId,reference.sourceId);
+ assert.equal(evidence.engine.engineSha256,profile.engineSha256);
+ assert.equal(evidence.wasmSha256,sha(profile.wasm));
+ assert.equal(evidence.buildArtifacts['pixljs.bin'],reference.applicationBinSha256);
+ assert.equal(evidence.intelHex.flashBytesCompared,reference.applicationBytes);
+ assert.equal(evidence.elfLoadBytesCompared,reference.applicationBytes);
+ assert.deepEqual(evidence.armLayoutCases.map(row=>row.result===0),[true,true,false,false]);
+ assert.deepEqual(evidence.capacityCrossMount,{cases:6,files:1131,folders:77,synthetic:true});
+ assert.equal(reference.hardwareAcceptance,'pending');
+});

@@ -111,11 +111,29 @@ test('bounded imports reject nonreports, v1-only, malformed v2, missing sections
 
 export {report};
 
-for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650],['2.22.0-DE3.79',652],['2.22.0-DE3.80',653],['2.22.0-DE3.81',654],['2.22.0-DE3.82',655],['2.22.0-DE3.83',656],['2.22.0-DE3.84',657]]) test(`App${counter} has package-specific acceptance and no on-device binary hash`,()=>{
+for(const [version,counter] of [['2.22.0-DE3.72',645],['2.22.0-DE3.73',646],['2.22.0-DE3.74',647],['2.22.0-DE3.75',648],['2.22.0-DE3.76',649],['2.22.0-DE3.77',650],['2.22.0-DE3.79',652],['2.22.0-DE3.80',653],['2.22.0-DE3.81',654],['2.22.0-DE3.82',655],['2.22.0-DE3.83',656],['2.22.0-DE3.84',657],['2.22.0-DE3.85',658]]) test(`App${counter} has package-specific acceptance and no on-device binary hash`,()=>{
  const {buildIdentity}=report(version,counter);
  assert.equal(buildIdentity.referenceRelation,'version-and-counter');
  assert.equal(buildIdentity.packageReference.applicationCounter,counter);
  assert.equal(buildIdentity.packageReference.hardwareAcceptance, ({647:'remote-display-photo-confirmed-on-one-lcd', 648:'list-return-wake-and-known-figure-on-switch-confirmed-on-one-lcd', 653:'startup-and-system-readback-on-one-lcd', 654:'startup-and-system-readback-on-one-lcd'})[counter] ?? 'pending');
  assert.equal(buildIdentity.packageReference.artifactStatus, [647,648,654].includes(counter) ? 'stable-signed-application' : 'experimental-signed-application');
  assert.equal(buildIdentity.applicationHashVerified,false);
+});
+
+
+test('new LCD App658 does not inherit the older App657 owner report or claim a device binary hash',()=>{
+ const current=report('2.22.0-DE3.85',658).buildIdentity;
+ const previous=report('2.22.0-DE3.84',657).buildIdentity;
+ assert.equal(previous.packageReference.ownerReport.result,'user-reported-passed');
+ assert.equal(Object.hasOwn(current.packageReference,'ownerReport'),false);
+ assert.equal(current.packageReference.board,'LCD');
+ assert.equal(current.packageReference.releaseTag,'de3.85-lcd-test1');
+ assert.equal(current.packageReference.hardwareAcceptance,'pending');
+ assert.equal(current.packageReference.artifactStatus,'experimental-signed-application');
+ assert.match(current.packageReference.applicationBinSha256,/^[a-f0-9]{64}$/);
+ assert.match(current.packageReference.sourceId,/^[a-f0-9]{64}$/);
+ assert.notEqual(current.packageReference.sourceId,previous.packageReference.sourceId);
+ assert.equal(current.observed.applicationBinSha256,null);
+ assert.equal(current.applicationHashVerified,false);
+ assert.equal(current.samePhysicalDeviceVerified,false);
 });

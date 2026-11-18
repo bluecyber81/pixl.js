@@ -194,24 +194,49 @@ static void mount_io(void) {
     mui_mem_free(reserve);
     REQUIRE(!media.stats.programs && !media.stats.erases);
     drop();
+    REQUIRE(configure() == 0);
+    reserve = mui_mem_malloc(18432 - live - 7000);
+    REQUIRE(reserve);
+    nor_reset_observation(&media);
+    REQUIRE(driver()->mount() == 0);
+    uint64_t eight_pages = media.stats.reads;
+    mui_mem_free(reserve);
+    REQUIRE(!media.stats.programs && !media.stats.erases);
+    drop();
     nor_reset_observation(&media);
     REQUIRE(driver()->mount() == 0);
     REQUIRE(!media.stats.programs && !media.stats.erases && !mount_pages);
-    REQUIRE(media.stats.reads < four_pages && four_pages < uncached);
-    printf("BENCH same 100-figure cold mount: %llu uncached / %llu four-page / %llu eight-page physical reads of 256 bytes\n",
-           (unsigned long long)uncached, (unsigned long long)four_pages, (unsigned long long)media.stats.reads);
+    unsigned mount_reads = (unsigned)media.stats.reads;
+    REQUIRE(media.stats.reads < eight_pages && eight_pages < four_pages && four_pages < uncached);
+    printf("BENCH same 100-figure cold mount: %llu uncached / %llu four-page / %llu eight-page / %llu sixteen-page physical reads of 256 bytes\n",
+           (unsigned long long)uncached, (unsigned long long)four_pages,
+           (unsigned long long)eight_pages, (unsigned long long)media.stats.reads);
     for (unsigned i = 0; i < 100; ++i) {
         snprintf(path, sizeof(path), "/figure%03u.bin", i);
         vfs_obj_t obj;
         REQUIRE(driver()->stat_file(path, &obj) == 0 && !memcmp(obj.meta, meta, sizeof(meta)));
         REQUIRE(driver()->read_file_data(path, check, sizeof(check)) == 540 && !memcmp(check, new_data, 540));
     }
-    drop();
-    read_calls = 0;
-    read_fail_at = 1;
-    REQUIRE(driver()->mount() != 0 && !mount_pages);
-    read_fail_at = 0;
-    REQUIRE(driver()->mount() == 0 && !mount_pages);
+    /* Host-only saved medium proves the complete cached-mount failure sweep
+     * never alters flash. Each physical read fails once, then a clean retry
+     * must validate the same collection again without retained cache data. */
+    uint8_t *unchanged_media = malloc(NOR_BYTES);
+    REQUIRE(unchanged_media);
+    memcpy(unchanged_media, media.disk, NOR_BYTES);
+    for (unsigned fault = 1; fault <= mount_reads; ++fault) {
+        drop();
+        read_calls = 0;
+        read_fail_at = fault;
+        nor_reset_observation(&media);
+        REQUIRE(driver()->mount() != 0 && !pfs_mounted(store) && !mount_pages);
+        REQUIRE(read_calls == fault);
+        read_fail_at = 0;
+        REQUIRE(driver()->mount() == 0 && !mount_pages);
+        REQUIRE(!media.stats.programs && !media.stats.erases);
+        REQUIRE(!memcmp(unchanged_media, media.disk, NOR_BYTES));
+    }
+    free(unchanged_media);
+    printf("PASS cached cold mount I/O failure at all %u physical reads; clean retry, unchanged NOR and no retained cache\n", mount_reads);
 }
 
 /* Create a genuine old journal record on the synthetic NOR. The canonical
@@ -317,12 +342,37 @@ static void mount_metadata_cache(void) {
     read_fail_at = read_calls = 0;
 }
 
+static void mount_cache_allocation_boundaries(void) {
+    const size_t large = sizeof(mount_pages_t) + 16u * PFS_CACHE_SIZE + 4096u;
+    const size_t medium = sizeof(mount_pages_t) + 8u * PFS_CACHE_SIZE + 4096u;
+    const size_t available[] = {large, large - 1, medium, medium - 1};
+    const unsigned expected[] = {16, 8, 8, 4};
+    REQUIRE(!live);
+    for (unsigned i = 0; i < sizeof(expected) / sizeof(expected[0]); ++i) {
+        void *held = mui_mem_malloc(18432 - available[i]);
+        REQUIRE(held);
+        size_t prior = live;
+        mount_pages_t *cache = mount_cache_alloc();
+        REQUIRE(cache && cache->capacity == expected[i] && cache->used == 0);
+        if (expected[i] >= 8) REQUIRE(18432 - live >= 4096);
+        mui_mem_free(cache);
+        REQUIRE(live == prior);
+        alloc_calls = 0;
+        fail_at = 1;
+        REQUIRE(mount_cache_alloc() == NULL && live == prior);
+        fail_at = 0;
+        mui_mem_free(held);
+        REQUIRE(!live);
+    }
+    puts("PASS exact largest-block tier thresholds, 4KiB reserve and cache allocation failures without leaks");
+}
 
-/* Exercise the real last page (tag 0xffff in slot seven), eviction, and the
- * two memory-pressure fallbacks on a genuine payload CRC mismatch. */
+
+/* Exercise the real last page (tag 0x1ffff in slot fifteen), eviction, and
+ * all memory-pressure tiers on a genuine payload CRC mismatch. */
 static void mount_cache_limits(void) {
-    const size_t headroom[] = {8192, 4096, 64};
-    const unsigned slots[] = {8, 4, 0};
+    const size_t headroom[] = {10000, 8192, 4096, 64};
+    const unsigned slots[] = {16, 8, 4, 0};
     reset_baseline();
     pfs_file_t *file = NULL;
     uint8_t value;
@@ -332,7 +382,7 @@ static void mount_cache_limits(void) {
     size_t location = file->io.f.block * NOR_BLOCK + file->io.f.off - 1;
     REQUIRE(media.disk[location] == value && pfs_close(file) == 0);
     drop();
-    for (unsigned i = 0; i < 3; ++i) {
+    for (unsigned i = 0; i < sizeof(slots) / sizeof(slots[0]); ++i) {
         REQUIRE(configure() == 0 && live + headroom[i] < 18432);
         void *reserve = mui_mem_malloc(18432 - live - headroom[i]);
         REQUIRE(reserve);
@@ -370,11 +420,12 @@ static void mount_cache_limits(void) {
         REQUIRE(state() == 0);
         drop();
     }
-    puts("PASS last physical page, LRU eviction, 8/4/0 pages; corrupt payload rejected and clean media remounted without any writes");
+    puts("PASS last physical page, LRU eviction, 16/8/4/0 pages; corrupt payload rejected and clean media remounted without any writes");
 }
 
 int main(void){
     mount_metadata_cache();
+    mount_cache_allocation_boundaries();
     for(unsigned i=0;i<2048;i++){old_data[i]=(uint8_t)(i*7+3);new_data[i]=(uint8_t)(i*13+5);}
     for(unsigned i=0;i<128;i++)meta[i]=(uint8_t)(i*9+17);
     baseline();mount_cache_limits();boundary_api();handles();oom();fault_io();fault_read();mount_oom();mount_io();repeated_saves();recovery_before_compare();drop();

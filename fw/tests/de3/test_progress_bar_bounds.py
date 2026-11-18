@@ -46,6 +46,11 @@ def main():
     names = ['mui_u8g2_set_backlight_level', 'mui_u8g2_set_contrast_level']
     if 'backlight_pwm_duty_set' in u8g2:
         names = ['backlight_pwm_duty_set', 'mui_u8g2_get_backlight_level'] + names
+    backlight_state = ''
+    if 'backlight_level_apply' in u8g2:
+        names.insert(1, 'backlight_level_apply')
+        backlight_state = 'static bool m_backlight_preview_active, m_backlight_restore_pending, m_dimmed, m_dim_retry_pending;'
+    harness = harness.replace('/* ACTUAL_BACKLIGHT_STATE */', backlight_state)
     contrast_source = (scenes / 'settings_scene_oled_contrast.c').read_text(encoding='utf-8')
     callbacks += '\n' + function(contrast_source, 'settings_scene_oled_contrast_on_enter')
     contrast_policy = (Path(__file__).resolve().parents[2] / 'application/src/mui/mui_contrast.h').read_text()

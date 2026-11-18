@@ -55,6 +55,9 @@ static void mui_u8g2_set_flip_display(bool n){(void)n;flip_sets++;}
 static void nrf_pwr_mgmt_set_timeout(unsigned n){(void)n;sleep_sets++;}
 static void setLanguage(unsigned n){(void)n;language_sets++;}
 static bool m_dimmed, m_dim_retry_pending, opt_in;
+static bool m_backlight_preview_active,m_backlight_restore_pending;
+static uint8_t m_backlight_saved;
+static uint32_t m_backlight_retry_tick;
 static uint16_t m_timeout_counter, m_standby_counter;
 static uint8_t m_input_idle_seconds;
 #define __STATIC_INLINE static inline
@@ -73,6 +76,8 @@ static void reset(bool initialized,bool powered){
  left_scenes=toasts=contrast_sets=flip_sets=sleep_sets=language_sets=0;last_toast=NULL;
  m_pwm_initialized=initialized;control.state=powered?2:initialized?1:0;duty=powered?30:0;
  settings=(settings_data_t){.lcd_backlight=30};
+ m_dimmed=m_dim_retry_pending=m_backlight_preview_active=m_backlight_restore_pending=false;
+ m_backlight_saved=0;m_backlight_retry_tick=0;
 }
 int main(void){unsigned cases=0;
  reset(false,false);init_error=NRF_ERROR_INVALID_STATE;
@@ -154,6 +159,84 @@ int main(void){unsigned cases=0;
  duty_error=NRF_ERROR_INVALID_STATE;mui_u8g2_poll_dim(false);assert(calls==previous+3 && duty==8);
  rtc+=249;mui_u8g2_poll_dim(false);assert(calls==previous+3);
  rtc++;duty_error=0;mui_u8g2_poll_dim(false);assert(calls==previous+4 && duty==30);
+ // Preview must survive auto-dim polling, preserve configured brightness,
+ // restore a genuinely off output, and retain no reference to an app object.
+ for(unsigned original=0;original<=100;original++){
+   reset(true,true);opt_in=true;settings.lcd_backlight=original;
+   assert(mui_u8g2_set_backlight_level(original)==0);
+   assert(mui_u8g2_backlight_preview(5)==0 && m_backlight_preview_active && duty==5);
+   for(unsigned i=0;i<300;i++){rtc++;mui_u8g2_poll_dim(true);assert(duty==5);}
+   assert(mui_u8g2_backlight_preview(100)==0 && duty==100);
+   assert(mui_u8g2_backlight_restore()==0 && duty==original && !m_backlight_preview_active);
+   assert(settings.lcd_backlight==original && !m_backlight_restore_pending);
+   assert(mui_u8g2_backlight_restore()==0 && duty==original);
+ }
+ reset(false,false);assert(mui_u8g2_backlight_preview(5)==NRF_ERROR_INVALID_STATE);
+ assert(!m_backlight_preview_active && !calls);
+ reset(true,true);duty_error=8;assert(mui_u8g2_backlight_preview(5)==8);
+ assert(!m_backlight_preview_active && duty==30);duty_error=0;
+ assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+ assert(mui_u8g2_backlight_preview(100)==8 && duty==5 && m_backlight_saved==30);
+ rtc=0xfffff0;assert(mui_u8g2_backlight_restore()==8 && m_backlight_restore_pending);
+ assert(mui_u8g2_backlight_preview(100)==NRF_ERROR_BUSY && duty==5);
+ previous=calls;rtc=(rtc+249)&0xffffff;mui_u8g2_poll_dim(false);assert(calls==previous);
+ rtc=(rtc+1)&0xffffff;mui_u8g2_poll_dim(false);assert(calls==previous+1 && duty==5);
+ rtc+=250;duty_error=0;mui_u8g2_poll_dim(false);
+ assert(duty==30 && !m_backlight_restore_pending && !m_backlight_preview_active);
+ reset(true,true);opt_in=true;mui_u8g2_poll_dim(true);assert(duty==8 && m_dimmed);
+ assert(mui_u8g2_backlight_preview(100)==0 && m_backlight_saved==8);
+ assert(mui_u8g2_backlight_restore()==0 && duty==8);
+ mui_u8g2_poll_dim(false);assert(duty==30 && !m_dimmed);
+ // A later successful user setting owns the output. It supersedes either
+ // an active preview or a failed restore, including when preview began dimmed.
+ unsigned superseded=0;
+ for(unsigned chosen=0;chosen<=80;chosen+=80)for(unsigned pending=0;pending<2;pending++)
+ for(unsigned dimmed=0;dimmed<2;dimmed++)for(unsigned path=0;path<3;path++){
+   reset(true,true);opt_in=dimmed;rtc=0;
+   if(dimmed){mui_u8g2_poll_dim(true);assert(duty==8 && m_dimmed);}
+   assert(mui_u8g2_backlight_preview(5)==0);
+   if(pending){duty_error=8;assert(mui_u8g2_backlight_restore()==8);assert(m_backlight_restore_pending);}
+   duty_error=0;rtc=50;bar.current=chosen;
+   if(path==0)assert(mui_u8g2_set_backlight_level(chosen)==0);
+   else settings_scene_lcd_backlight_event_cb(path==1?MUI_PROGRESS_BAR_EVENT_INCREMENT:MUI_PROGRESS_BAR_EVENT_CONFIRMED,&bar);
+   assert(mui_u8g2_get_backlight_level()==(int)chosen);
+   assert(!m_backlight_preview_active && !m_backlight_restore_pending && !m_dimmed && !m_dim_retry_pending);
+   assert(settings.lcd_backlight==(path==2?chosen:30));
+   unsigned done_calls=calls;rtc=250;mui_u8g2_poll_dim(false);
+   rtc=500;mui_u8g2_poll_dim(false);
+   assert(mui_u8g2_backlight_restore()==0);
+   assert(calls==done_calls && mui_u8g2_get_backlight_level()==(int)chosen);
+   // The next preview saves the newer output, never the superseded 8/30.
+   assert(mui_u8g2_backlight_preview(5)==0 && m_backlight_saved==chosen);
+   assert(mui_u8g2_backlight_restore()==0 && mui_u8g2_get_backlight_level()==(int)chosen);
+   superseded++;
+ }
+ // Failures are not a new setting: retain the old restore target and retry it.
+ for(unsigned timeout=0;timeout<2;timeout++)for(unsigned path=0;path<2;path++){
+   reset(true,true);opt_in=false;rtc=0;
+   assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+   assert(mui_u8g2_backlight_restore()==8 && m_backlight_restore_pending);
+   if(timeout){duty_error=0;busy_calls=calls+200;}
+   if(path==0)assert(mui_u8g2_set_backlight_level(80)==(timeout?NRF_ERROR_TIMEOUT:8));
+   else {bar.current=80;settings_scene_lcd_backlight_event_cb(MUI_PROGRESS_BAR_EVENT_CONFIRMED,&bar);assert(toasts==1 && !left_scenes && bar.current==5);}
+   assert(m_backlight_restore_pending && m_backlight_saved==30 && duty==5 && settings.lcd_backlight==30);
+   duty_error=0;busy_calls=0;rtc=249;unsigned done_calls=calls;
+   mui_u8g2_poll_dim(false);assert(calls==done_calls && duty==5);
+   rtc=250;mui_u8g2_poll_dim(false);assert(duty==30 && !m_backlight_restore_pending);
+ }
+ reset(true,true);opt_in=false;rtc=0;
+ assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+ assert(mui_u8g2_backlight_restore()==8);m_pwm_initialized=false;
+ assert(mui_u8g2_set_backlight_level(0)==NRF_ERROR_INVALID_STATE && m_backlight_restore_pending);
+ m_pwm_initialized=true;duty_error=0;rtc=250;mui_u8g2_poll_dim(false);assert(duty==30);
+ // A failed user request also leaves an active preview owned by its test.
+ reset(true,true);opt_in=true;
+ assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+ assert(mui_u8g2_set_backlight_level(80)==8 && m_backlight_preview_active);
+ mui_u8g2_poll_dim(true);assert(duty==5);
+ duty_error=0;assert(mui_u8g2_backlight_restore()==0 && duty==30);
+ printf("PASS %u newer user settings supersede preview/restore through direct and real settings callbacks; failed requests retain restore ownership.\n",superseded);
+ puts("PASS LCD preview: all101 saved levels, auto-dim suppression, restore failures/retry/RTC wrap, off/dimmed return and settings unchanged");
  puts("PASS last-five-second dim window, 101 brightness levels, activity restore, opt-out, off, PWM failure recovery and 24-bit RTC rollover");
  printf("PASS %u actual PWM/settings cases: bounded BUSY, immediate errors, init failure/retry, no uninitialized SDK access, old output/config preserved, no false confirmation, all256 values.\n",cases);
 }

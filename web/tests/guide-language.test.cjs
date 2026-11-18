@@ -77,3 +77,21 @@ test('both guides offer the current LCD app, full package and aligned storage ta
         assert.deepEqual(lcdDownloads, [app, combo]);
     }
 });
+
+
+test('App658 guide is a separate pending LCD test with app-only downloads and reversible PWM instructions', () => {
+    for (const file of ['index.html', 'en.html']) {
+        const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
+        const trial = html.split('<h3 id="lcd-de385">')[1].split('<p><b>' + (file === 'en.html' ? 'Earlier' : 'Frühere'))[0];
+        assert.ok(trial);
+        assert.match(trial, /de3\.85-lcd-test1\/Allmiibo_LCD_DE3_85_658_NUR_APP\.zip/);
+        assert.match(trial, /de3\.85-lcd-test1\/Allmiibo_LCD_DE3_85_App658_Pruefpaket\.zip/);
+        assert.match(trial, /ST7567/); assert.match(trial, /PFS1/); assert.match(trial, /Z21/); assert.match(trial, /S112 7\.3\.0/);
+        assert.doesNotMatch(trial, /_KOMPLETT|Allmiibo_OLED_/);
+        assert.match(trial, /5% PWM/); assert.match(trial, /100%/);
+        assert.match(trial, file === 'en.html' ? /Fresh hardware acceptance is pending/ : /Neue Hardwareabnahme offen/);
+        assert.match(trial, file === 'en.html' ? /not measured physical brightness/ : /keine optisch gemessene Helligkeit/);
+        assert.match(trial, file === 'en.html' ? /optional and starts off/ : /optional und anfangs aus/);
+    }
+    assert.equal(openGuide('#lcd-de385', ['en']).next, base + 'en.html#lcd-de385');
+});

@@ -45,6 +45,7 @@ typedef struct {int event_queue,u8g2;bool initialized;} mui_t;
 #define MUI_EVENT_ID_INPUT 1
 typedef struct {void*user_data;} mui_view_t;
 typedef struct {int unused;} game_view_t;
+/* ACTUAL_GAME_STATE */
 /* ACTUAL_GAME_INPUT */
 static struct {bool swap_buttons;} settings;
 #define settings_get_data() (&settings)
@@ -103,9 +104,20 @@ static void test_edges(void){
 static void test_swap(void){for(unsigned swap=0;swap<2;swap++)for(unsigned i=0;i<3;i++){
  reset();settings.swap_buttons=swap;key(i,true);unsigned mapped=swap?2-i:i;assert(input_count==1&&inputs[0].key==mapped&&inputs[0].type==INPUT_TYPE_PRESS&&key_state[mapped]);advance(1200);assert(inputs[1].key==mapped&&inputs[1].type==INPUT_TYPE_LONG);assert(inputs[2].key==mapped&&inputs[2].type==INPUT_TYPE_REPEAT);assert(key_repeat_cnt==(mapped==1?1:0));key(i,false);assert(!key_state[mapped]&&key_repeat_cnt==0);
  }puts("PASS actual UI swap mapper and game input: all keys, long/repeat, center-key exit counter");}
-static void test_game_title_gesture(void){
- reset();game_view_wait_for_start();key(1,true);advance(1100);key(1,false);
- assert(!game_view_take_start());key(1,true);assert(!game_view_take_start());
- key(1,false);assert(game_view_take_start());assert(!game_view_take_start());
+static void test_game_start(void){
+ reset();game_view_wait_for_start();assert(!game_view_take_start());
+ key(1,true);assert(start_state==START_PRESSED);key(1,false);
+ assert(game_view_take_start()&&!game_view_take_start()&&start_state==START_IDLE);
+ reset();game_view_wait_for_start();key(1,true);advance(1000);
+ assert(start_state==START_WAIT&&!game_view_take_start());key(1,false);
+ assert(!game_view_take_start());key(1,true);key(1,false);assert(game_view_take_start());
+ /* Opening the help while center is already held must require a new tap. */
+ reset();key(1,true);game_view_wait_for_start();key(1,false);
+ assert(start_state==START_WAIT&&!game_view_take_start());
+ key(0,true);key(0,false);key(2,true);key(2,false);assert(!game_view_take_start());
+ key(1,true);key(1,false);assert(game_view_take_start());
+ game_view_wait_for_start();key(1,true);game_view_reset_keys();key(1,false);
+ assert(start_state==START_IDLE&&!game_view_take_start()&&!key_state[1]);all_stopped();
+ puts("PASS actual game-help start state: fresh tap, one-tick sequence, held-center cancellation, entry release, non-center keys and reset");
 }
-int main(void){test_single();test_overlap();test_lifecycle();test_edges();test_swap();test_game_title_gesture();puts("PASS DE3.3 actual-source button regression groups");}
+int main(void){test_single();test_overlap();test_lifecycle();test_edges();test_swap();test_game_start();puts("PASS DE3.3 actual-source button regression groups");}

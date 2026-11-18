@@ -39,7 +39,7 @@ static void check_profile(bool cache){
  if(!cache)REQUIRE(!word(p+64));
  uint8_t ext[84]; REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)));
  REQUIRE(ext[4]==4 && ext[5]==84 && !memcmp(p+6, ext+6, 74));
- REQUIRE(ext[80]==(cache?8:0) && ext[81]<=ext[80] && (ext[81]>0)==cache);
+ REQUIRE(ext[80]==(cache?16:0) && ext[81]<=ext[80] && (ext[81]>0)==cache);
  REQUIRE(ext[82]==0 && ext[83]==(cache?1:0));
 }
 int main(void){
@@ -61,6 +61,14 @@ int main(void){
  REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)));
  REQUIRE(ext[80]==4 && ext[81]>0 && ext[81]<=4 && ext[82]==0 && ext[83]==1);
  mui_mem_free(pressure);
+ drop(); REQUIRE(configure()==0);
+ remaining=18432-live; REQUIRE(remaining>7000);
+ pressure=mui_mem_malloc(remaining-7000); REQUIRE(pressure);
+ nor_reset_observation(&media); read_calls=0;
+ REQUIRE(driver()->mount()==0);
+ REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)));
+ REQUIRE(ext[80]==8 && ext[81]>0 && ext[81]<=8 && ext[82]==0 && ext[83]==1);
+ mui_mem_free(pressure);
  for(unsigned fault=1;fault<=2;fault++){
   drop();REQUIRE(configure()==0);alloc_calls=0;fail_at=fault;read_calls=0;nor_reset_observation(&media);
   REQUIRE(driver()->mount()==0);check_profile(fault!=1);fail_at=0;REQUIRE(state()==0);
@@ -69,7 +77,7 @@ int main(void){
  REQUIRE(driver()->mount()<0 && !mount_pages);
  REQUIRE(runtime_diag_startup_mount_snapshot(after,80));
  REQUIRE(word(after+40)==21 && (int32_t)word(after+44)<0 && word(after+56)==1 && word(after+76)==1 && !word(after+60));
- REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)) && ext[80]==8 && ext[81]==0);
+ REQUIRE(runtime_diag_startup_cache_snapshot(ext,sizeof(ext)) && ext[80]==16 && ext[81]==0);
  read_calls=read_fail_at=0;nor_reset_observation(&media);REQUIRE(driver()->mount()==0);check_profile(true);
  drop();bad_geometry=true;read_calls=0;REQUIRE(driver()->mount()==VFS_ERR_NODEV);
  REQUIRE(runtime_diag_startup_mount_snapshot(after,80));

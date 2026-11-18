@@ -113,7 +113,22 @@ const oledTest4 = Object.freeze({
   otaSha256: '8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7',
 });
 
-const references = [TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
+const app658 = Object.freeze({
+  "firmwareVersion": "2.22.0-DE3.85",
+  "applicationCounter": 658,
+  "board": "LCD",
+  "chipPart": 337970,
+  "applicationBytes": 358160,
+  "applicationBinSha256": "46ea9df4be00107f967d751ceffe0679bd74fa7315caf46cc566938cf868a9bb",
+  "sourceId": "eff9ff254509ccacef1650fbbf51d595f82df1d094c912dbf2655d76e5bee08f",
+  "artifactStatus": "experimental-signed-application",
+  "hardwareAcceptance": "pending",
+  "otaSha256": "a7f8b4aa6e01469c88433e40437618f199a47421e6a602e92c72eac0862fb411",
+  "releaseTag": "de3.85-lcd-test1",
+  "sourceCommit": "083e024864cf7099f31e964c0d25d4819b0c440d"
+});
+
+const references = [app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

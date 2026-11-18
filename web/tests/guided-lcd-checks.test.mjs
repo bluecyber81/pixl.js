@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {lcdCheckCases,cleanLcdObservations,summarizeLcdObservations} from '../src/lib/guided-lcd-checks.js';
 import {createGuidedReport,parseGuidedReport,serializeGuidedDraft,parseGuidedDraft} from '../src/lib/guided-device-check.js';
 
-const at='2026-01-01T00:00:00.000Z', options={webVersion:'3.55.8',locale:'en'};
+const at='2026-01-01T00:00:00.000Z', options={webVersion:'3.56.0',locale:'en'};
 function row(caseId,source='manual-device'){return {caseId,source,outcome:'ok',note:'recorded',recordedAt:at,imported:false};}
 test('LCD matrix has unique bilingual rows for orientation/input, four games, dim and both DFU stages',()=>{
   assert.deepEqual(['controls','games','dim','dfu'].map(group=>lcdCheckCases.filter(r=>r.module===group).length),[4,16,8,12]);

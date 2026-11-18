@@ -21,7 +21,7 @@ function mountPacket(flags=23,result=0) {
  view.setUint32(40,flags,true);view.setInt32(44,result,true);
  [5,15,200,51200,800,180,20,0].forEach((n,i)=>view.setUint32(48+i*4,n,true));return bytes;
 }
-for (const counter of [655,656,657]) test(`App${counter} linked ARM dispatcher replies decode with and without an allocated cache`, () => {
+for (const counter of [655,656,657,658]) test(`App${counter} linked ARM dispatcher replies decode with and without an allocated cache`, () => {
   const capture = JSON.parse(fs.readFileSync(new URL(`./fixtures/PXST_v4_App${counter}.json`, import.meta.url), 'utf8'));
   for (const row of capture.cases) {
     const data = parseStartupDiagnostics(Uint8Array.from(Buffer.from(row.payloadHex, 'hex')));
@@ -57,6 +57,7 @@ test('PXST v4 retains allocated and filled mount pages, validates missing caches
   assert.equal(shown(bytes)['Hit rate for cache-eligible reads'],'81.6%');
   assert.match(shown(bytes,'de_DE')['Treffer bei cachegeeigneten Zugriffen'],/81,6/);
   assert.equal(shown(frame(21,4,2,256,-12))['Pages filled / allocated at end of mount'],'2 / 4');
+  assert.equal(shown(frame(23,16,16,256))['Pages filled / allocated at end of mount'],'16 / 16');
   const noCache = frame(19,0,0,0);
   assert.equal(shown(noCache)['Pages filled / allocated at end of mount'],'0 / 0');
   assert.equal(shown(noCache)['Hit rate for cache-eligible reads'],undefined);

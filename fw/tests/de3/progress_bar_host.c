@@ -75,6 +75,7 @@ static int app_pwm_channel_duty_set(void *p,int channel,unsigned duty) {
     CHECK(p==&pwm1 && channel==0 && duty<=100); last_duty=duty; ++backlight_calls; return 0;
 }
 static unsigned app_pwm_channel_duty_get(void*p,unsigned ch){CHECK(p==&pwm1 && ch==0);return last_duty;}
+/* ACTUAL_BACKLIGHT_STATE */
 /* ACTUAL_DISPLAY_SETTERS */
 typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p_toast_view,*p_view_dispatcher; } app_settings_t;
 static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;CHECK(false);}

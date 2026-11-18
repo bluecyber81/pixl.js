@@ -1,0 +1,39 @@
+Allmiibo Dateimanager 3.56.0
+
+DE – Neu
+Fernbedienung → Allmiibo DE: „Displayfoto nach Tastendruck automatisch
+aktualisieren“ ist optional und zunächst aus. Nach bestätigtem Links,
+Mitte, Rechts oder Zurück wird einmal aufgenommen; schnelle Tastenfolgen
+werden zusammengefasst. Keine Dauerabfrage, keine automatisch wiederholten
+Tasten. Beim Trennen oder Wechsel zu Dateien verfallen wartende Aufnahmen.
+
+LCD DE3.85 / App658 ist ein neuer Teststand für ST7567, PFS1, Z21 und
+S112 7.3.0. Gerätetest: Info/Pixel/Tasten → Fernbedienung → Lichttest.
+Mitte kurz schaltet weiter, Mitte lang beendet. Im Lichttest links 5% PWM,
+rechts 100%. Der vorige Wert wird beim Verlassen/Schlafen wiederhergestellt;
+Soll/PWM sind keine optisch gemessenen Helligkeiten. Pixl.Remote wegen der
+neuen Remote-Adresse frisch auswählen. Bootloader/SoftDevice bleiben.
+Neue Hardwareabnahme offen; DE3.81/App654 bleibt regulär.
+App: https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip
+Prüfpaket: https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip
+
+EN – New
+Remote control → Allmiibo DE: optional automatic screen refresh starts off.
+It captures once after an acknowledged Left/Center/Right/Back, combines
+quick sequences and discards pending work on disconnect or file handoff.
+No continuous polling or repeated key commands.
+
+LCD DE3.85 / App658 is a new trial for ST7567, PFS1, Z21 and S112 7.3.0.
+Device test pages: info/pixels/buttons → remote → backlight. Short Center
+advances, long Center exits. On the light page Left sets 5% PWM, Right 100%.
+Leaving/sleep restores the previous value. These are PWM target/readback
+values, not measured luminance. Select Pixl.Remote again after enabling it
+locally. Bootloader/SoftDevice stay installed. Fresh hardware acceptance is
+pending; DE3.81/App654 remains the regular release.
+
+Existing OLED computer DFU route / bisheriger OLED-Computerweg
+DE
+OLED DE3.84 Test4 / App84 kann über Update → OLED → OLED im Browser flashen direkt am Computer übertragen werden. Der Browser lädt die geprüfte App-ZIP vom gleichen Seitenursprung. Öffne den DFU-Modus am passenden OLED und wähle pixl dfu. Die Anleitung beschreibt Deutsch und Englisch. Der Teststand ist für nRF52832/SH1106, kompatiblen Secure DFU und S112 7.2.0 vorgesehen. Der echte OLED-Gerätetest steht aus.
+
+EN
+Use Update → OLED → Flash OLED in browser to transfer DE3.84 Test4 / App84 directly from a computer. The browser downloads the verified application ZIP from the same site. Enter DFU mode on the matching OLED and select pixl dfu. German and English instructions are included. This trial targets nRF52832/SH1106, compatible Secure DFU and S112 7.2.0. Physical OLED acceptance remains pending.

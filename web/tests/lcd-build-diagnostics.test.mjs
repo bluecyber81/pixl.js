@@ -56,7 +56,9 @@ test('OLED PXBI validates both board identities and gates exact supported firmwa
   assert.equal(normalizeBuildDiagnostics(oled,'LCD'),null);
   assert.equal(buildDiagnosticBoard('2.22.0-DE3.84-OLEDt4'),'OLED');
   assert.equal(buildDiagnosticBoard('2.22.0-DE3.84'),'LCD');
-  for(const version of ['2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt5','2.22.0-DE3.83',null]) {
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.85'),'LCD');
+  for(const version of ['2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt5','2.22.0-DE3.85-OLEDt5',
+    '2.22.0-DE3.83','2.22.0-DE3.86','2.22.0-DE3.85t1',null]) {
     assert.equal(buildDiagnosticBoard(version),null);
   }
   const identity=diagnosticBuildIdentity({firmwareVersion:'2.22.0-DE3.84-OLEDt4',build:oled});
@@ -67,6 +69,7 @@ test('OLED PXBI validates both board identities and gates exact supported firmwa
 
 for (const [fixture,version,counter,board] of [
   ['PXBI_App657.json','2.22.0-DE3.84',657,'LCD'],
+  ['PXBI_App658.json','2.22.0-DE3.85',658,'LCD'],
   ['PXBI_OLED_App84.json','2.22.0-DE3.84-OLEDt4',84,'OLED']
 ]) test(`five PXBI replies from linked Cortex-M4 ${board} App${counter} agree with the firmware declarations`,()=>{
   const capture=JSON.parse(readFileSync(new URL('./fixtures/'+fixture,import.meta.url),'utf8'));

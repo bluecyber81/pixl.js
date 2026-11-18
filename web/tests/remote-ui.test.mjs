@@ -3,21 +3,22 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {parse,compileScript,compileTemplate} from '@vue/compiler-sfc';
 import * as Vue from 'vue';
+import {createAutoDisplayPhoto} from '../src/lib/auto-display-photo.js';
 import {remoteText} from '../src/lib/remote-text.js';
 import {REMOTE_LCD_CAPABILITY} from '../src/lib/remote-control.js';
 const file=process.env.REMOTE_UI_COMPONENT_URL?new URL(process.env.REMOTE_UI_COMPONENT_URL):new URL('../src/components/RemoteControl.vue',import.meta.url);
 const {descriptor}=parse(fs.readFileSync(file,'utf8'),{filename:file.pathname});
 const script=compileScript(descriptor,{id:'remote-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const Component=');
 const template=compileTemplate({source:descriptor.template.content,id:'remote-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`).replace('export function render','function render');
-const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText','PixLinkRemote','DisplayPhoto','REMOTE_LCD_CAPABILITY',script+'\n'+template+'\nComponent.render=render;return Component;');
+const factory=new Function('Vue','createRemoteClient','remoteAvailability','remoteText','PixLinkRemote','DisplayPhoto','REMOTE_LCD_CAPABILITY','createAutoDisplayPhoto',script+'\n'+template+'\nComponent.render=render;return Component;');
 const node=(type,text='')=>({type,text,props:{},children:[],parent:null});
 const renderer=Vue.createRenderer({createElement:t=>node(t),createText:t=>node('#text',t),createComment:t=>node('#comment',t),setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[];},patchProp:(n,k,o,v)=>n.props[k]=v,insert(n,p,a=null){if(n.parent)n.parent.children.splice(n.parent.children.indexOf(n),1);n.parent=p;const i=p.children.indexOf(a);i<0?p.children.push(n):p.children.splice(i,0,n);},remove(n){n.parent?.children.splice(n.parent.children.indexOf(n),1);n.parent=null;},parentNode:n=>n.parent,nextSibling:n=>n.parent?.children[n.parent.children.indexOf(n)+1]||null});
 const text=n=>n.text+n.children.map(text).join(''),flat=n=>[n,...n.children.flatMap(flat)];
 const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return{promise,resolve,reject};};
 function mount(options={}){
  const calls=[],active=[],root=node('root');let notify;const emit=(phase,error='')=>notify({phase,error,capabilities:options.caps??15});
- const client={connect:async()=>{calls.push('connect');emit('connecting');if(options.connect)await options.connect(calls.filter(value=>value==='connect').length);emit('ready');},command:async name=>{calls.push(name);emit('command');try{if(options.command)await options.command(name);return {opcode:name==='files'&&options.sameLink?4:undefined,status:name==='files'?8:0,state:name==='files'?2:1};}finally{emit('ready');}},releaseFileConnection:accept=>{calls.push('handoff');try{assert.equal(accept({fixture:true}),true);}finally{emit('disconnected');}return true;},disconnect:async()=>{calls.push('disconnect');emit('disconnected');}};
- const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{}, {render:()=>Vue.h('div')},REMOTE_LCD_CAPABILITY);
+ const client={captureDisplay:async()=>{calls.push('photo');emit('command');try{return options.photo?await options.photo():new Uint8Array(1024);}finally{emit('ready');}},connect:async()=>{calls.push('connect');emit('connecting');if(options.connect)await options.connect(calls.filter(value=>value==='connect').length);emit('ready');},command:async name=>{calls.push(name);emit('command');try{if(options.command)await options.command(name);return {opcode:name==='files'&&options.sameLink?4:undefined,status:name==='files'?8:0,state:name==='files'?2:1};}finally{emit('ready');}},releaseFileConnection:accept=>{calls.push('handoff');try{assert.equal(accept({fixture:true}),true);}finally{emit('disconnected');}return true;},disconnect:async()=>{calls.push('disconnect');emit('disconnected');}};
+ const Component=factory(Vue,({onState})=>{notify=onState;return client;},()=>options.unavailable||'',remoteText,{render:()=>Vue.h('div')}, {props:['readPhoto'],methods:{capture(){return this.readPhoto();}},render:()=>Vue.h('div')},REMOTE_LCD_CAPABILITY,config=>createAutoDisplayPhoto({...config,...options.clock}));
  const props=Vue.reactive({blocked:!!options.blocked,locale:options.locale||'de_DE',onActive:v=>active.push(v),handoffFileConnection:options.handoff});
  let vm;const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:v=>vm=v})});app.mount(root);
  return{root,app,props,calls,active,emit,get vm(){return vm;},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label))};
@@ -217,4 +218,57 @@ test('same-link receiver failure does not claim successful transfer or retry',as
  const h=mount({sameLink:true,caps:31,handoff:()=>{throw Object.assign(Error('busy'),{code:'REMOTE_BUSY'})}})
  try{await h.vm.connectRemote();await h.vm.press('files');await Vue.nextTick();assert.equal(h.vm.error,'REMOTE_BUSY');assert.equal(h.vm.notice,'');assert.deepEqual(h.calls,['connect','files','handoff']);}
  finally{h.app.unmount();}
+});
+
+function photoClock() {
+ let time=0,id=0;const timers=new Map();
+ return {now:()=>time,schedule:(fn,delay)=>{timers.set(++id,{fn,at:time+delay});return id;},unschedule:id=>timers.delete(id),
+  async advance(ms){const end=time+ms;for(;;){const first=[...timers].filter(([,v])=>v.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!first)break;time=first[1].at;timers.delete(first[0]);first[1].fn();await Promise.resolve();await Vue.nextTick();}time=end;await Promise.resolve();await Vue.nextTick();}};
+}
+test('optional auto photo defaults off, never probes legacy firmware and only follows acknowledged navigation',async()=>{
+ for(const caps of [15,63]){
+  const clock=photoClock(),h=mount({caps,clock});
+  try{await h.vm.connectRemote();await Vue.nextTick();assert.equal(h.vm.autoPhoto,false);
+   await h.vm.press('left');await clock.advance(2000);assert(!h.calls.includes('photo'));
+   h.vm.autoPhoto=true;await Vue.nextTick();await h.vm.press('status');await clock.advance(2000);assert(!h.calls.includes('photo'));
+   await h.vm.press('right');await clock.advance(199);assert(!h.calls.includes('photo'));
+   await clock.advance(1);assert.equal(h.calls.filter(x=>x==='photo').length,caps===63?1:0);
+   if(caps===63)assert.match(text(h.root),/Displayfoto nach Tastendruck automatisch/);
+  }finally{h.app.unmount();}
+ }
+});
+test('auto photo waits for receipt, coalesces quick keys and never resends a rejected key',async()=>{
+ const clock=photoClock(),gate=defer(),h=mount({caps:63,clock,command:name=>name==='right'?gate.promise:undefined});
+ try{await h.vm.connectRemote();await Vue.nextTick();h.vm.autoPhoto=true;await Vue.nextTick();
+  const pending=h.vm.press('right');await clock.advance(5000);assert(!h.calls.includes('photo'));
+  gate.resolve();await pending;await clock.advance(100);await h.vm.press('left');await clock.advance(199);assert(!h.calls.includes('photo'));
+  await clock.advance(1);assert.deepEqual(h.calls,['connect','right','left','photo']);
+  await clock.advance(5000);assert.equal(h.calls.filter(x=>x==='photo').length,1);
+ }finally{h.app.unmount();}
+ const failed=mount({caps:63,clock,command:()=>Promise.reject({code:'REMOTE_BUSY'})});
+ try{await failed.vm.connectRemote();await Vue.nextTick();failed.vm.autoPhoto=true;await Vue.nextTick();await failed.vm.press('center');await clock.advance(5000);assert.deepEqual(failed.calls,['connect','center']);}
+ finally{failed.app.unmount();}
+});
+test('auto photo pending work is cancelled by off, disconnect, handoff, blocked, protocol change and unmount',async()=>{
+ for(const action of ['off','disconnect','handoff','blocked','protocol','unmount']){
+  const clock=photoClock(),h=mount({caps:63,clock,sameLink:true,handoff:()=>true});
+  try{await h.vm.connectRemote();await Vue.nextTick();h.vm.autoPhoto=true;await Vue.nextTick();await h.vm.press('center');
+   if(action==='off')h.vm.autoPhoto=false;
+   if(action==='disconnect')await h.vm.disconnectRemote();
+   if(action==='handoff')await h.vm.press('files');
+   if(action==='blocked')h.props.blocked=true;
+   if(action==='protocol')h.vm.protocol='pixlink';
+   if(action==='unmount')h.app.unmount();
+   await Vue.nextTick();await clock.advance(5000);assert(!h.calls.includes('photo'),action);
+  }finally{if(action!=='unmount')h.app.unmount();}
+ }
+});
+test('manual photo replaces queued auto photo, captures serialize and disconnect cancels active photo ownership',async()=>{
+ const clock=photoClock(),gate=defer(),h=mount({caps:63,clock,photo:()=>gate.promise});
+ try{await h.vm.connectRemote();await Vue.nextTick();h.vm.autoPhoto=true;await Vue.nextTick();await h.vm.press('back');
+  const manual=h.vm.captureDisplay();await clock.advance(5000);await h.vm.press('left');
+  assert.deepEqual(h.calls,['connect','back','photo']);
+  await h.vm.disconnectRemote();gate.resolve(new Uint8Array(1024));await manual;await clock.advance(5000);
+  assert.deepEqual(h.calls,['connect','back','photo','disconnect']);assert.equal(h.vm.autoPhoto,false);
+ }finally{h.app.unmount();}
 });

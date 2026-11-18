@@ -32,7 +32,7 @@ import { firmwareBoard } from '../lib/hardware-profile.js';
 const words = {
   de: {
     title: 'Displayfoto', hint: 'Lies die aktuelle Anzeige der Bluetooth-Dateiübertragung direkt vom Gerät.',
-    remoteHint: 'Tippe nach dem Navigieren auf „Displaybild aktualisieren“. Spiele können direkt auf das Display zeichnen. Währenddessen ist die Aufnahme eventuell nicht verfügbar.',
+    remoteHint: 'Mit „Displaybild aktualisieren“ kannst du ein Bild manuell anfordern. Spiele können direkt auf das Display zeichnen. Währenddessen ist die Aufnahme eventuell nicht verfügbar.',
     remoteUnavailable: 'Das Gerät meldet für diese Fernbedienungssitzung keine Displayfoto-Funktion.',
     refresh: 'Displaybild aktualisieren', captured: 'Aufnahme vom', scale: 'Bildgröße',
     remoteBusy: 'Das Gerät kann gerade kein Displayfoto liefern. Falls ein Tiny-Spiel läuft, kehre am Gerät ins Menü zurück und fordere die Aufnahme erneut an.',
@@ -45,7 +45,7 @@ const words = {
   },
   en: {
     title: 'Screenshot', hint: 'Read the current Bluetooth file transfer screen directly from the device.',
-    remoteHint: 'After navigating, click “Refresh screen”. Games can draw directly to the display. A screenshot may be unavailable while they do.',
+    remoteHint: 'Use “Refresh screen” to request a picture manually. Games can draw directly to the display. A screenshot may be unavailable while they do.',
     remoteUnavailable: 'The device did not advertise screenshots for this remote session.',
     refresh: 'Refresh screen', captured: 'Captured on', scale: 'Image scale',
     remoteBusy: 'The device is busy and could not provide a screenshot. If a Tiny game is running, return to the menu on the device and request a new picture.',

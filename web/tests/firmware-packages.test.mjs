@@ -39,7 +39,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,657,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,658,657,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');
@@ -150,4 +150,29 @@ test('current LCD download choices respect the installed application, system pro
  assert.deepEqual(choices('2.22.0-DE3.81-OLEDt2'),{app:false,combo:false});
  view.setUint32(28,140,true);
  assert.deepEqual(choices('2.22.0-DE3.60'),{app:false,combo:false});
+});
+
+
+test('App658 stays a separate app-only Z21/S112 7.3 test package with exact mobile routing', () => {
+ const {packages}=JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json',import.meta.url)));
+ const candidate=packages.find(item=>item.counter===658);
+ assert.equal(candidate.id,'de3.85-lcd-test1-app');
+ assert.equal(candidate.version,'2.22.0-DE3.85');
+ assert.equal(candidate.channel,'prerelease');
+ assert.equal(candidate.board,'LCD');
+ assert.equal(candidate.applicationOnly,true);
+ assert.equal(candidate.bootloader,'Z21');
+ assert.equal(candidate.file,'Allmiibo_LCD_DE3_85_658_NUR_APP.zip');
+ assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.85-lcd-test1');
+ assert.equal(new URL(nrfDfuLink(candidate)).searchParams.get('file'),'https://bluecyber81.github.io/pixl.js/firmware/'+candidate.file);
+ for(const patch of [{counter:657},{version:'2.22.0-DE3.84'},{board:'OLED'},{bootloader:'Z19'},{channel:'stable'},{applicationOnly:false},{id:'de3.85-lcd-app'},{file:'Allmiibo_LCD_DE3_84_657_NUR_APP.zip'}])
+  assert.equal(nrfDfuLink({...candidate,...patch}),null,JSON.stringify(patch));
+ const bytes=bootPacket(),view=new DataView(bytes.buffer);
+ view.setUint32(32,7003000,true);view.setUint16(36,294,true);view.setUint32(60,657,true);view.setUint32(64,21,true);
+ bytes.set(Buffer.from('d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb','hex'),80);
+ const show=()=>packagePresentation(candidate,{connected:true,firmwareVersion:'2.22.0-DE3.84'},parseBootDiagnostics(bytes));
+ assert.equal(show().profileMismatch,false);assert.equal(show().newer,false);
+ view.setUint32(64,19,true);assert.equal(show().profileMismatch,true);
+ view.setUint32(64,21,true);view.setUint16(36,259,true);assert.equal(show().profileMismatch,true);
+ view.setUint16(36,294,true);view.setUint32(60,659,true);assert.equal(show().newer,true);
 });
