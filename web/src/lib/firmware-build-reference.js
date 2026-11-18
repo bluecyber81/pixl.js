@@ -122,13 +122,28 @@ const app658 = Object.freeze({
   "applicationBinSha256": "46ea9df4be00107f967d751ceffe0679bd74fa7315caf46cc566938cf868a9bb",
   "sourceId": "eff9ff254509ccacef1650fbbf51d595f82df1d094c912dbf2655d76e5bee08f",
   "artifactStatus": "experimental-signed-application",
-  "hardwareAcceptance": "pending",
+  "hardwareAcceptance": "owner-reported-on-one-lcd",
+  ownerReport: Object.freeze({ date: "2026-11-18", result: "user-reported-passed", reportedBootloaderCounter: 21, scope: "general-practical-use-on-one-lcd" }),
   "otaSha256": "a7f8b4aa6e01469c88433e40437618f199a47421e6a602e92c72eac0862fb411",
   "releaseTag": "de3.85-lcd-test1",
   "sourceCommit": "083e024864cf7099f31e964c0d25d4819b0c440d"
 });
 
-const references = [app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
+const app659 = Object.freeze({
+  "firmwareVersion": "2.22.0-DE3.86",
+  "applicationCounter": 659,
+  "board": "LCD",
+  "chipPart": 337970,
+  "applicationBytes": 359336,
+  "applicationBinSha256": "431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65",
+  "sourceId": "2ed6d92c59935cafa916843b579743fabd501a3ef8dcb929e47cd2692abf9f52",
+  "artifactStatus": "experimental-signed-application",
+  "hardwareAcceptance": "pending",
+  "otaSha256": "af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58",
+  "sourceCommit": "4111937e432ecec6adc989c9a51fa0fd37e960bf"
+});
+
+const references = [app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

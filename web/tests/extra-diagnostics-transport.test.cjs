@@ -7,6 +7,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const {EventEmitter} = require('node:events');
 const ByteBuffer = require('bytebuffer');
+ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 
 function load(name, bindings = {}) {
     const root = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib');
@@ -418,13 +419,13 @@ test('flash probe gates older versions, sends no arguments, and tolerates option
     f.rx(11, [0]); await broken;
     assert.equal(f.api.get_transport_diagnostics().lastErrorCode, 'RESPONSE_INVALID');
 });
-for (const [version,counter] of [['2.22.0-DE3.84',657],['2.22.0-DE3.85',658]])
+for (const [version,counter] of [['2.22.0-DE3.84',657],['2.22.0-DE3.85',658],['2.22.0-DE3.86',659]])
 test(`PXBI sends only one optional command on App${counter} and checks the assembled payload and connection generation`, async () => {
     const bindings=await import('../src/lib/lcd-build-diagnostics.js');
     const bytes=new Uint8Array(80);
     bytes.set([80,88,66,73,1,80,1,0]);bytes.fill(97,8,72);
     const f=fixture(bindings);
-    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.85-OLEDt5','2.22.0-DE3.86','2.22.0-DE3.85t1','',null])
+    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.85-OLEDt5','2.22.0-DE3.87','2.22.0-DE3.85t1','',null])
         assert.equal(await f.api.get_lcd_build_diagnostics(v),null);
     assert.deepEqual(f.writes,[]);
     const reading=f.api.get_lcd_build_diagnostics(version);

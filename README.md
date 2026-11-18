@@ -1,8 +1,8 @@
 # Firmware for Allmiibo LCD and Pixl.js OLED
 
-## LCD DE3.85 / App658 · new test release
+## LCD DE3.85 / App658 · published test release
 
-For **LCD/ST7567 with Packed LittleFS (PFS1), Z21 and S112 7.3.0**. [App-only ZIP for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Sources and proof package](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). This update keeps the bootloader, SoftDevice and collection. **Fresh on-device acceptance is pending**; the App657 owner's report below does not certify App658. DE3.81 / App654 remains the regular LCD release.
+For **LCD/ST7567 with Packed LittleFS (PFS1), Z21 and S112 7.3.0**. [App-only ZIP for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Sources and proof package](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). This update keeps the bootloader, SoftDevice and collection. On 18 November 2026 the owner reported successful LCD testing. Their diagnostic identifies App658, Z21 and S112 7.3.0. A physical Android DFU interruption and resumption remains an open test. DE3.81 / App654 remains the regular LCD release.
 
 **Settings → Device test** now cycles through pixel/button information, remote status and the backlight test. Short Center advances; on the light page, Left sets 5% PWM and Right 100%. Short Center returns to the information page; long Center exits. Leaving or sleep restores the previous backlight setting. PWM target/readback values are not measured physical brightness. The larger temporary mount-cache configuration is an experiment, with no claimed real-device speedup yet.
 

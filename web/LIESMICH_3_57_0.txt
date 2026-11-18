@@ -1,0 +1,38 @@
+Allmiibo Dateimanager 3.57.0 · LCD DE3.86 / App659
+18. November 2026
+
+Start unter Windows
+ZIP vollständig entpacken. Im entpackten Verzeichnis Start-Dateimanager.cmd
+öffnen. Der mitgelieferte Launcher braucht Python 3 und öffnet den lokalen
+Dateimanager im Browser. Zum Beenden Stop-Dateimanager.cmd verwenden.
+
+LCD aktualisieren
+Für dein ST7567-LCD mit PFS1, Z21 und Nordic S112 7.3.0 (FWID 0x0126).
+Sammlung sichern. Die Datei Allmiibo_LCD_DE3_86_659_NUR_APP.zip auf das
+Android-Handy laden. Am LCD unter Einstellungen das Firmware-Update öffnen.
+In nRF Device Firmware Update die ZIP direkt auswählen, das Gerät „pixl dfu“
+verbinden und übertragen. Nach dem Neustart im Dateimanager prüfen, ob
+2.22.0-DE3.86, Board LCD, App659, Z21 und S112 7.3.0 gemeldet werden.
+
+Neu in dieser Ausgabe
+• Belegte Slots ohne Katalogkennung werden als belegt angezeigt. Ersetzen
+  verlangt eine Bestätigung. „Abbrechen“ ist vorausgewählt.
+• Große Favoritenordner lassen sich in beiden Richtungen durchblättern.
+  Favoritendateien mit anderer Groß-/Kleinschreibung werden berücksichtigt.
+• Im Web-Katalog einen Spielordner wählen, Figuren markieren und vor dem
+  Übertragen die Vorschau aufrufen. Auf dem LCD unter Amiibo-Datenbank →
+  Favoriten öffnen. Die Auswahl erzeugt Favoritenmarker für Katalogeinträge.
+• Automatische Displayfotos nach einer Fernbedienungstaste behalten die
+  Drehung. Schlägt ein neues Foto fehl, bleiben das letzte Foto und seine
+  Aufnahmezeit sichtbar. Eine neue Geräteverbindung beginnt mit leerem Bild.
+• Die Startdiagnose vergleicht zwei Reihen von jeweils 3–20 Berichten.
+  Für einen Gerätevergleich dieselbe Sammlung und dieselben Bedingungen
+  verwenden. Bei ausreichendem Arbeitsspeicher liest die LCD-App beim
+  Start mit einem temporären Cache von bis zu 26 Seiten.
+• Bluetooth-Binärcodec und Sicherungsfunktionen werden bei Bedarf geladen.
+
+English
+Extract the portable ZIP and launch Start-Dateimanager.cmd on Windows
+with Python 3 installed. For the supported LCD profile, transfer the intact
+App659 ZIP using nRF Device Firmware Update. Firmware notes are available
+in the browser guide. First physical testing of App659 is pending.

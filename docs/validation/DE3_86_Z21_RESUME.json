@@ -1,0 +1,33 @@
+{
+  "payloadBytes": 359336,
+  "cutOffsets": [
+    40,
+    176168,
+    356392
+  ],
+  "resumeOffsets": [
+    0,
+    131072,
+    327680
+  ],
+  "checkpointCount": 5,
+  "additionalPageErases": 10,
+  "finalCrc32": 1233543879,
+  "passed": true,
+  "sha256": "431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65",
+  "cutKinds": [
+    "link",
+    "link",
+    "cold-restart"
+  ],
+  "duplicateExecuteExtraErases": 0,
+  "modeledLinkCutsDuringCheckpoint": 5,
+  "modeledCheckpointPowerCuts": 455,
+  "modeledAdmissionOrCompletionFailures": 8,
+  "sanitizers": [
+    "ASan",
+    "UBSan",
+    "LSan disabled locally under process tracing"
+  ],
+  "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+}

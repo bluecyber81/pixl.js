@@ -182,14 +182,47 @@ export function compareStartup(report, current) {
   }
   return result;
 }
+// Keep only observed device values. A package's reference SourceID describes the
+// download, and cannot fill a gap in an older device report.
+function section(report, name) {
+  const entry = report?.diagnosticSnapshot?.sections?.[name];
+  return entry?.state === 'available' ? entry.data : null;
+}
+export function startupSeriesSample(report) {
+  const power = report?.power ?? section(report, 'power');
+  const drives = report?.drives ?? section(report, 'drives');
+  const drive = Array.isArray(drives) ? drives.find(d => d?.label === 'E' && d.status === 0) : null;
+  const build = section(report, 'build');
+  const observed = report?.buildIdentity?.observed;
+  const board = build?.board ?? observed?.compiledBoard;
+  const source = build?.sourceId ?? observed?.sourceId;
+  const sizeKnown = uint32(drive?.totalBytes) && drive.totalBytes > 0 &&
+    uint32(drive.freeBytes) && drive.freeBytes <= drive.totalBytes;
+  return {
+    firmwareVersion: report?.firmwareVersion,
+    startup: normalizeStartupDiagnostics(report?.startup ?? section(report, 'startup')),
+    context: {
+      board: ['LCD', 'OLED'].includes(board) ? board : null,
+      source: typeof source === 'string' && /^[0-9a-f]{64}$/i.test(source) ? source.toLowerCase() : null,
+      reset: power?.resetCaptured === true && uint32(power.resetReasonRaw) ? power.resetReasonRaw : null,
+      // Compare both capacity and free space. Equal occupancy does not establish equal files.
+      space: sizeKnown ? `${drive.freeBytes}/${drive.totalBytes}` : null
+    }
+  };
+}
+
 // Timings are cached for a whole boot. Conservatively reject identical complete
 // marker sets (even if separate boots coincidentally produced the same values).
 export function startupSeries(reports) {
   if (!Array.isArray(reports) || reports.length < 3 || reports.length > 20) return null;
+  return summarizeStartupSamples(reports.map(startupSeriesSample));
+}
+export function summarizeStartupSamples(reports) {
+  if (!Array.isArray(reports) || reports.length < 3 || reports.length > 20) return null;
   const seen = new Set(), storage = [], total = [], mounts = [], version = reports[0]?.firmwareVersion;
   if (!isStartupFirmware(version)) return null;
   for (const report of reports) {
-    const s = normalizeStartupDiagnostics(report?.startup);
+    const s = report.startup;
     if (report?.firmwareVersion !== version || s?.phaseMask !== 63 || !s.elapsedMilliseconds[5]) return null;
     const key = s.elapsedMilliseconds.join(',');
     if (seen.has(key)) return null;
@@ -201,10 +234,52 @@ export function startupSeries(reports) {
     return {median:(a[Math.floor((n-1)/2)]+a[Math.floor(n/2)])/2,min:a[0],max:a[n-1]};
   };
   const mount = mounts.length === reports.length
-    ? Object.fromEntries(['scanMilliseconds','physicalReadAttempts','cacheHits','cacheMisses','bypassReads']
+    ? Object.fromEntries(['scanMilliseconds','physicalReadAttempts','physicalReadBytes','cacheHits','cacheMisses','bypassReads']
       .map(key => [key, stats(mounts.map(profile => profile[key]))]))
     : null;
-  return {version, count:reports.length, storage:stats(storage),total:stats(total),mount};
+  if (mount && mounts.every(profile => uint32(profile.cacheSlotsAllocated))) {
+    for (const key of ['cacheSlotsAllocated','cacheSlotsFilled']) {
+      mount[key] = stats(mounts.map(profile => profile[key]));
+    }
+  }
+  const context = {};
+  for (const key of ['board', 'source', 'reset', 'space']) {
+    const known = reports.map(report => report.context[key]).filter(value => value !== null);
+    context[key] = {values: [...new Set(known)], missing: reports.length - known.length};
+  }
+  return {version, count:reports.length, storage:stats(storage), total:stats(total), mount,
+    context, markers:[...seen]};
+}
+export function startupSeriesComparison(a, b) {
+  const metrics = ['total','storage','scanMilliseconds','physicalReadAttempts','physicalReadBytes',
+    'cacheHits','cacheMisses','bypassReads','cacheSlotsAllocated','cacheSlotsFilled'].flatMap(key => {
+    const before = a?.[key] ?? a?.mount?.[key] ?? null;
+    const after = b?.[key] ?? b?.mount?.[key] ?? null;
+    if (!before && !after) return [];
+    return [{key, before, after, delta:before && after ? after.median - before.median : null}];
+  });
+  const notices = [];
+  for (const key of ['board','source','reset','space']) {
+    for (const [group, series] of [['A',a], ['B',b]]) {
+      if (!series) continue;
+      const field = series.context[key];
+      if (field.values.length > 1) notices.push({kind:'mixed', group, key});
+    }
+    const left = a?.context[key].values ?? [], right = b?.context[key].values ?? [];
+    if (left.length && right.length && (left.length !== right.length || left.some(value => !right.includes(value)))) {
+      const expected = key === 'source' && a.version !== b.version && left.length === 1 && right.length === 1;
+      notices.push({kind:expected ? 'differentBuild' : 'different', key});
+    }
+  }
+  for (const [group, series] of [['A',a], ['B',b]]) {
+    if (!series) continue;
+    const keys = Object.keys(series.context).filter(key => series.context[key].missing > 0);
+    if (keys.length) notices.push({kind:'missing', group, keys});
+  }
+  if (a && b && a.version === b.version && a.markers.some(marker => b.markers.includes(marker))) {
+    notices.push({kind:'overlap'});
+  }
+  return {metrics, notices};
 }
 export function startupDiagnosticsText(locale = 'de_DE') {
   return locale.startsWith('de') ? {

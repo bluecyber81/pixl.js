@@ -234,6 +234,24 @@
     "application_only": true
   },
   "firmware_preview": {
+    "version": "2.22.0-DE3.86",
+    "counter": 659,
+    "source_commit": "4111937e432ecec6adc989c9a51fa0fd37e960bf",
+    "source_id": "2ed6d92c59935cafa916843b579743fabd501a3ef8dcb929e47cd2692abf9f52",
+    "application_sha256": "431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65",
+    "application_bytes": 359336,
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_86_659_NUR_APP.zip",
+    "ota_sha256": "af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58",
+    "ota_bytes": 248604,
+    "softdevice_requirements": [
+      "0x0126"
+    ],
+    "hardware_acceptance": "pending",
+    "evidence": "docs/validation/DE3_86_LCD_TEST1.json",
+    "distribution": "local-signed-application",
+    "host_firmware_suites": 169
+  },
+  "previous_firmware_preview": {
     "version": "2.22.0-DE3.85",
     "counter": 658,
     "source_id": "eff9ff254509ccacef1650fbbf51d595f82df1d094c912dbf2655d76e5bee08f",
@@ -247,23 +265,21 @@
       "0x0126"
     ],
     "host_firmware_suites": 168,
-    "public_review_package": "https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip"
+    "public_review_package": "https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip",
+    "arm_display_test_evidence": "docs/validation/DE3_85_LCD_DEVICE_TEST.json",
+    "owner_test_report": "Owner reported successful LCD testing on 2026-11-18; interrupted Android DFU remains open."
   },
-  "previous_firmware_preview": {
-    "version": "2.22.0-DE3.84",
-    "counter": 657,
-    "source_id": "f9bda1ff3428d344eb7cb5de2052158d40f5474e08c03f4597b67ba229e30221",
-    "application_sha256": "b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323",
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_84_657_NUR_APP.zip",
-    "ota_sha256": "6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4",
-    "hardware_acceptance": "pending",
-    "evidence": "docs/validation/DE3_84_LCD_TEST1.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-lcd-test1",
-    "softdevice_requirements": [
-      "0x0126"
-    ],
-    "host_firmware_suites": 166,
-    "owner_report": "docs/validation/DE3_84_OWNER_REPORT.json",
-    "public_review_package": "https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip"
+  "local_web_candidate": {
+    "version": "3.57.0",
+    "publication": "local-test-build",
+    "firmware": "2.22.0-DE3.86",
+    "firmwareCounter": 659,
+    "releaseNotes": "web/LIESMICH_3_57_0.txt",
+    "hardwareAcceptance": "pending",
+    "previousTest": {
+      "web": "3.56.0",
+      "firmware": "2.22.0-DE3.85",
+      "scope": "Owner reported successful use on one LCD on 2026-11-18."
+    }
   }
 }

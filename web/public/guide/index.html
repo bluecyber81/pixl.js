@@ -18,7 +18,7 @@
   <main>
     <div class="intro"><h1>Allmiibo aktualisieren</h1><p>Wähle die Firmware für dein LCD oder OLED. Hier findest du die App-ZIP fürs Handy und die Anleitung für dein Gerät.</p></div>
     <nav class="choices" aria-labelledby="choose"><h2 id="choose">Was möchtest du machen?</h2>
-      <ul><li><a href="#flash"><b>LCD-App aktualisieren</b><span>Regulär DE3.81 / App654; neuer Test DE3.85 / App658.</span></a></li>
+      <ul><li><a href="#flash"><b>LCD-App aktualisieren</b><span>Regulär DE3.81 / App654; lokale Testversion DE3.86 / App659.</span></a></li>
         <li><a href="#oled"><b>OLED-Testversion installieren</b><span>DE3.84-OLEDt4 für SH1106 und S112 7.2.0.</span></a></li>
         <li><a href="#littlefs"><b>LCD auf Packed LittleFS umstellen</b><span>Vorbereitung, Sicherung und Wiederherstellung für LCD.</span></a></li>
         <li><a href="#bootloader"><b>Komplettpaket für LCD prüfen</b><span>S112 7.3.0, Bootloader Z21 und DE3.81 / App654 zusammen installieren.</span></a></li></ul>
@@ -27,6 +27,7 @@
       <nav class="contents" aria-labelledby="contents"><h2 id="contents">Direkt zu</h2>
         <a href="#diagnose">Zuerst den Gerätestand lesen</a>
         <a href="#flash">LCD-App aktualisieren</a>
+        <a href="#lcd-de386">LCD DE3.86 testen</a>
         <a href="#lcd-de385">LCD DE3.85 testen</a>
         <a href="#oled">OLED-Testversion installieren</a>
         <a href="#littlefs">Die Sammlung auf LittleFS umziehen</a>
@@ -48,13 +49,15 @@
         </section>
         <section id="flash">
           <h2>LCD-App per Bluetooth aktualisieren</h2>
-          <h3 id="lcd-de385">Neu: LCD DE3.85 / App658 testen</h3>
+          <h3 id="lcd-de386">LCD DE3.86 / App659</h3>
+          <p>Für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Die <a href="../firmware/Allmiibo_LCD_DE3_86_659_NUR_APP.zip" download>lokale App659-ZIP</a> auf Android speichern. Am LCD Einstellungen → Firmware-Update öffnen und in nRF Device Firmware Update die ungeöffnete ZIP wählen. Nach dem Verbinden im Dateimanager App659 prüfen. Die erste Prüfung dieser Version am Gerät steht aus.</p>
+          <h3 id="lcd-de385">Vorgänger DE3.85 / App658</h3>
           <p>Für <b>LCD/ST7567 mit eingerichtetem PFS1, Z21 und S112 7.3.0</b>. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip" download>App658-ZIP fürs Handy</a> · <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip">Quellen und Prüfpaket</a>. Sichere die Sammlung, öffne am Gerät <b>Einstellungen → Firmware-Update</b> und übertrage die unveränderte ZIP mit <b>nRF Device Firmware Update → pixl dfu</b>. Danach müssen <b>2.22.0-DE3.85</b> und App-Zähler <b>658</b> erscheinen. Bootloader, SoftDevice und PFS1 bleiben erhalten.</p>
-          <p><b>Neue Hardwareabnahme offen.</b> Die erfolgreiche ältere Besitzermeldung zu App657 gilt nicht automatisch für App658. DE3.81 / App654 bleibt die reguläre LCD-Firmware. Für die größere temporäre Mount-Cache-Konfiguration wird noch kein Geschwindigkeitsgewinn am echten Gerät behauptet.</p>
+          <p>Der Besitzer meldete den erfolgreichen Praxistest von App658 mit Dateimanager 3.56.0 auf einem LCD.</p>
           <h4>Den neuen Gerätetest bedienen</h4>
           <ol><li><b>Einstellungen → Gerätetest</b>: zuerst Pixel-/Tasteninformationen, mit Mitte kurz weiter zu <b>Fernbedienung</b> mit Status und gegebenenfalls SDK-Fehler.</li><li>Noch einmal Mitte kurz öffnet <b>Lichttest</b> bei 5% PWM. Links setzt 5%, rechts 100%; das Pixelmuster bleibt gleich. <b>Soll</b> und <b>Ist</b> zeigen PWM-Vorgabe bzw. SDK-Rücklesewert, keine optisch gemessene Helligkeit.</li><li>Mitte kurz kehrt zur Infoseite zurück; Mitte lang beendet von jeder Seite. Der vorherige Beleuchtungswert wird beim Verlassen oder Schlafen wiederhergestellt. Der Test speichert keine neue Einstellung; Auto-Dimmen pausiert während des Lichttests.</li></ol>
           <h4>Fernbedienung und automatisches Foto</h4>
-          <p>Dateiübertragung/AmiiboLink verlassen. Am wachen LCD <b>Einstellungen → Fernsteuern → bis Aus</b> wählen. In Dateimanager <b>3.56.0 → Fernbedienung → Allmiibo DE</b> verbinden und <b>Pixl.Remote frisch auswählen</b>: die neue Firmware verwendet eine eigene Remote-Adresse. Die Freigabe endet beim Ausschalten/Neustart.</p>
+          <p>Dateiübertragung/AmiiboLink verlassen. Am wachen LCD <b>Einstellungen → Fernsteuern → bis Aus</b> wählen. In Dateimanager <b>3.57.0 → Fernbedienung → Allmiibo DE</b> verbinden und <b>Pixl.Remote frisch auswählen</b>: die neue Firmware verwendet eine eigene Remote-Adresse. Die Freigabe endet beim Ausschalten/Neustart.</p>
           <p><b>Displayfoto nach Tastendruck automatisch aktualisieren</b> ist optional und anfangs aus. Nach bestätigtem Links/Mitte/Rechts/Zurück wird ein Bild gelesen; schnelle Folgen werden zusammengefasst. Während der Aufnahme kurz warten. Keine Dauerabfrage, kein wiederholter Tastendruck. Trennen oder Dateiübergabe verwerfen wartende Aufnahmen; Firmware ohne Fotofunktion wird nicht abgefragt. Spiele können eine Aufnahme verhindern. Manuelles Aktualisieren bleibt möglich.</p>
           <p>Am Gerät noch prüfen: alle drei Testseiten, sichtbarer Lichtunterschied und Wiederherstellung, Remote-Erkennung/Tasten/Foto, Dateien, NFC sowie Schlafen/Aufwachen. Rechnerprüfungen ersetzen diese Geräteabnahme nicht.</p>
           <p><b>Frühere LCD-Testversion DE3.84 / App657.</b> Für ein LCD mit eingerichtetem PFS1, Z21 und S112 7.3.0. Der Besitzer meldete am 17.11.2026 erfolgreichen praktischen Betrieb. Lade die <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip" download>signierte App657-ZIP fürs Handy</a> herunter und wähle sie gepackt in nRF Device Firmware Update. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_DE_EN.txt">Anleitung und Prüffälle auf Deutsch und Englisch</a>.</p>

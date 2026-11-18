@@ -2,13 +2,25 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
-## LCD DE3.84 / App657 · am Gerät erprobte Testversion
+## LCD DE3.85 / App658 · veröffentlichte Testversion
+
+Für **LCD/ST7567 mit Packed LittleFS (PFS1), Z21 und S112 7.3.0**. Die vollständige App-ZIP lässt sich am Handy in nRF Device Firmware Update öffnen. Der Besitzer meldete am 18. November 2026 erfolgreiche Tests. Seine Diagnose weist App658, Z21 und S112 7.3.0 aus. Die Wiederaufnahme eines tatsächlich unterbrochenen Android-Updates steht als Einzeltest aus. DE3.81 / App654 ist die reguläre LCD-Version. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip)
+
+Unter **Einstellungen → Gerätetest** wechselt ein kurzer Druck auf Mitte zwischen Pixel-/Tasteninformationen, Fernbedienungsstatus und Lichttest. Links stellt beim Lichttest 5 % PWM ein, rechts 100 %. Beim Verlassen oder Einschlafen gilt wieder die vorherige Helligkeitseinstellung. Der Dateimanager meldet in der Besitzerdiagnose 2.049 ms für den Speicherscan bei 2.237 ms gemessener App-Startzeit.
+
+## Dateimanager 3.56.0 · automatisches Displayfoto
+
+Unter **Fernbedienung → Allmiibo DE** kannst du das automatische Displayfoto nach Tastendrücken einschalten. Die Funktion ist anfangs aus. Nach mehreren schnell bestätigten Tastendrücken ruft sie ein gemeinsames Bildschirmbild ab. Beim Trennen oder beim Wechsel zur Dateiübertragung verwirft sie ausstehende Aufnahmen. Die manuelle Aufnahme bleibt verfügbar.
+
+DE3.85 verwendet für die Fernbedienung eine eigene Bluetooth-Adresse. Beende Dateiübertragung oder AmiiboLink, aktiviere am LCD die Fernbedienung und wähle im Browser **Pixl.Remote** neu aus. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Deutsche Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#lcd-de385) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.56.0)
+
+## LCD DE3.84 / App657 · frühere Testversion
 
 Die Spiele übernehmen die 180°-Drehung und haben eine deutsche und englische Bedienhilfe. Unter **Einstellungen** lassen sich das automatische Dimmen sowie der Display- und Tastentest aufrufen. Der Besitzer eines LCD meldete am 17. November 2026 erfolgreiche praktische Tests mit installiertem Z21. Welche Einzelfälle er getestet hat, ist offen. Die Wiederaufnahme nach einem echten Android-DFU-Abbruch ist gesondert zu prüfen.
 
 Für ein Allmiibo LCD mit ST7567, Packed LittleFS (PFS1), Z21 und S112 7.3.0 die ZIP gepackt in **nRF Device Firmware Update** auswählen. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket mit Quellen, ELF und Maps](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [GitHub-Prüflauf](https://github.com/bluecyber81/pixl.js/actions/runs/44047724527)
 
-## Dateimanager 3.55.8
+## Dateimanager 3.55.8 · Archiv
 
 Version 3.55.8 überträgt OLED App84 direkt über den Browser-DFU. Unter Update → OLED startet „OLED im Browser flashen“ das passende Paket. Chrome oder Edge am Computer mit Bluetooth werden unterstützt. Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.8)
 

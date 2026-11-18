@@ -143,12 +143,12 @@ test('DFU speed and remaining time count only bytes acknowledged in this attempt
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
     for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource.split('?')[0])),resource);}
-    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.56.0"'));
-    assert.ok(html.indexOf('src="secure-dfu.js?v=3.56.0"')<html.indexOf('src="page.js?v=3.56.0"'));
-    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.56.0"'));
+    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.57.0"'));
+    assert.ok(html.indexOf('src="secure-dfu.js?v=3.57.0"')<html.indexOf('src="page.js?v=3.57.0"'));
+    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.57.0"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_OLED_DE3_84_Test4_APP.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip','../guide/#lcd-de385','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_OLED_DE3_84_Test4_APP.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_86_659_NUR_APP.zip','../guide/#lcd-de386','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -345,15 +345,15 @@ test('DFU changes display language during a transfer without starting or resetti
 });
 
 
-test('current LCD test link and footer identify App658 without inheriting App657 owner acceptance',()=>{
+test('local App659 test link and historical App658 source kit are visibly distinct',()=>{
  const row=html.match(/<p><a data-en="LCD test release [\s\S]*?<\/p>/)?.[0];
  assert.ok(row);
- assert.match(row,/LCD test release DE3\.85 \/ App658/);
- assert.match(row,/LCD-Testversion DE3\.85 \/ App658/);
- assert.match(row,/de3\.85-lcd-test1\/Allmiibo_LCD_DE3_85_658_NUR_APP\.zip/);
+ assert.match(row,/LCD test release DE3\.86 \/ App659/);
+ assert.match(row,/LCD-Testversion DE3\.86 \/ App659/);
+ assert.match(row,/\.\.\/firmware\/Allmiibo_LCD_DE3_86_659_NUR_APP\.zip/);
  assert.match(row,/Physical testing of this new build is still pending/);
  assert.match(row,/Praxistest für diesen neuen Build ist noch offen/);
- assert.match(row,/href="\.\.\/guide\/#lcd-de385"/);
+ assert.match(row,/href="\.\.\/guide\/#lcd-de386"/);
  assert.doesNotMatch(row,/App657|successful practical use|praktischen Betrieb bestätigt/);
  const app=fs.readFileSync(path.join(__dirname,'../src/App.vue'),'utf8');
  const label=app.match(/<a :href="archiveLinks\.previewTestKit"[\s\S]*?<\/a>/)?.[0];

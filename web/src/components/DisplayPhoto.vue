@@ -11,14 +11,14 @@
         <img :src="photo" :width="128 * zoom" :height="64 * zoom" :alt="text.preview" />
       </div>
       <figcaption>
-        {{ text.captured }} <time :datetime="capturedAt">{{ captureLabel }}</time><template v-if="capturedFirmware"> · {{ capturedFirmware }}</template>
+        {{ status ? text.lastCaptured : text.captured }} <time :datetime="capturedAt">{{ captureLabel }}</time><template v-if="capturedFirmware"> · {{ capturedFirmware }}</template>
         <div class="photo-scale" role="group" :aria-label="text.scale">
           <span>{{ text.scale }}</span>
           <button v-for="factor in [1, 2, 3]" :key="factor" type="button" :disabled="factor > maxZoom"
             :aria-pressed="zoom === factor" @click="preferredZoom = factor">{{ factor }}×</button>
         </div>
         <div class="photo-actions">
-          <button type="button" :aria-pressed="rotated" @click="rotate">{{ text.rotate }}</button>
+          <button type="button" :disabled="loading" :aria-pressed="rotated" @click="rotate">{{ text.rotate }}</button>
           <a :href="photo" :download="downloadName">{{ text.save }}</a>
         </div>
       </figcaption>
@@ -34,7 +34,7 @@ const words = {
     title: 'Displayfoto', hint: 'Lies die aktuelle Anzeige der Bluetooth-Dateiübertragung direkt vom Gerät.',
     remoteHint: 'Mit „Displaybild aktualisieren“ kannst du ein Bild manuell anfordern. Spiele können direkt auf das Display zeichnen. Währenddessen ist die Aufnahme eventuell nicht verfügbar.',
     remoteUnavailable: 'Das Gerät meldet für diese Fernbedienungssitzung keine Displayfoto-Funktion.',
-    refresh: 'Displaybild aktualisieren', captured: 'Aufnahme vom', scale: 'Bildgröße',
+    refresh: 'Displaybild aktualisieren', captured: 'Aufnahme vom', lastCaptured: 'Letzte erfolgreiche Aufnahme vom', scale: 'Bildgröße',
     remoteBusy: 'Das Gerät kann gerade kein Displayfoto liefern. Falls ein Tiny-Spiel läuft, kehre am Gerät ins Menü zurück und fordere die Aufnahme erneut an.',
     temporarilyUnavailable: 'Bild gerade nicht verfügbar. Beende gegebenenfalls das Spiel oder eine laufende Dateiübertragung und versuche es erneut.',
     unavailable: 'Für diese Firmware ist im Dateimanager keine Displayfoto-Funktion hinterlegt.', unsupported: 'Das Gerät unterstützt diese Displayfoto-Abfrage nicht.', capture: 'Displayfoto aufnehmen',
@@ -47,7 +47,7 @@ const words = {
     title: 'Screenshot', hint: 'Read the current Bluetooth file transfer screen directly from the device.',
     remoteHint: 'Use “Refresh screen” to request a picture manually. Games can draw directly to the display. A screenshot may be unavailable while they do.',
     remoteUnavailable: 'The device did not advertise screenshots for this remote session.',
-    refresh: 'Refresh screen', captured: 'Captured on', scale: 'Image scale',
+    refresh: 'Refresh screen', captured: 'Captured on', lastCaptured: 'Last successful capture on', scale: 'Image scale',
     remoteBusy: 'The device is busy and could not provide a screenshot. If a Tiny game is running, return to the menu on the device and request a new picture.',
     temporarilyUnavailable: 'The screen is temporarily unavailable. Close the game or finish any active file transfer and try again.',
     unavailable: 'The file manager has no known screenshot support for this firmware.', unsupported: 'The device does not support this screenshot request.', capture: 'Capture screen',
@@ -104,7 +104,6 @@ export default {
         const png = renderDisplayPhoto(pixels, document.createElement('canvas'), rotated);
         this.photo = png;
         this.rotated = rotated;
-        this.status = '';
         return true;
       } catch {
         this.status = 'renderFailed';
@@ -117,11 +116,6 @@ export default {
     async capture() {
       if (!this.connected || !this.supported || this.blocked || this.loading) return;
       const serial = ++this.serial;
-      this.photo = '';
-      this.pixels = null;
-      this.rotated = false;
-      this.capturedAt = '';
-      this.capturedFirmware = '';
       this.status = '';
       this.loading = true;
       this.$emit('busy', true);
@@ -129,7 +123,7 @@ export default {
         const pixels = await this.readPhoto(this.firmwareVersion);
         if (serial !== this.serial || !this.connected) return;
         if (pixels === null) this.status = 'unsupported';
-        else if (this.draw(pixels, false)) {
+        else if (this.draw(pixels, this.rotated)) {
           this.capturedAt = new Date().toISOString();
           this.capturedFirmware = this.firmwareVersion;
           this.pixels = pixels;

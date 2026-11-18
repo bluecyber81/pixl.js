@@ -25,6 +25,7 @@ export const LCD_PREVIEW_COUNTERS = Object.freeze({
   '2.22.0-DE3.83': 656,
   '2.22.0-DE3.84': 657,
   '2.22.0-DE3.85': 658,
+  '2.22.0-DE3.86': 659,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_PREVIEW_COUNTERS)];
 export const OLED_PARITY_VERSION = '2.22.0-DE3.84-OLEDt4';
