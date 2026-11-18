@@ -126,9 +126,11 @@ int main(void) {
     assert(vfs_spiffs_stat_file("/test",&obj)==VFS_ERR_FAIL && stat_file_calls==1);
     stat_file_error=SPIFFS_ERR_NOT_FOUND;
     assert(vfs_spiffs_stat_file("/test",&obj)==VFS_ERR_NOOBJ && stat_file_calls==3);
-    char longest[64];memset(longest,'x',63);longest[0]='/';longest[30]='/';longest[63]=0;
+    char longest[65];memset(longest,'x',64);longest[0]='/';longest[30]='/';longest[63]=0;
+    assert(vfs_spiffs_stat_file(longest,&obj)==VFS_ERR_NOOBJ && stat_file_calls==4);
+    longest[63]='x';longest[64]=0;
     assert(vfs_spiffs_stat_file(longest,&obj)==VFS_ERR_MAXNM && stat_file_calls==4);
-    puts("PASS stat preserves I/O error and rejects overflowing folder fallback");
+    puts("PASS stat preserves I/O error, valid file miss and overlong caller path");
 
     reset(); uint8_t b[26]={0}; close_error=-10099;
     assert(vfs_spiffs_write_file_data("/settings.bin",b,sizeof(b))<0 && close_calls==1);

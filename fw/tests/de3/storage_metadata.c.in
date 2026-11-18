@@ -44,8 +44,9 @@ int main(int argc, char **argv) {
     else if (!strcmp(scenario, "short")) strcpy(path, "/demo");
     else if (!strcmp(scenario, "max_trailing")) sized_path(path, 56, true);
     else if (!strcmp(scenario, "max_plain")) sized_path(path, 55, false);
-    else if (!strcmp(scenario, "too_long_trailing")) { sized_path(path, 57, true); expected = VFS_ERR_MAXNM; }
-    else if (!strcmp(scenario, "too_long_plain")) { sized_path(path, 56, false); expected = VFS_ERR_MAXNM; }
+    /* Only the internal marker is too long. The valid caller path is absent. */
+    else if (!strcmp(scenario, "too_long_trailing")) { sized_path(path, 57, true); expected = VFS_ERR_NOOBJ; }
+    else if (!strcmp(scenario, "too_long_plain")) { sized_path(path, 56, false); expected = VFS_ERR_NOOBJ; }
     else if (!strcmp(scenario, "file_max_path")) {
         strcpy(path, "/abcdefghij/abcd/"); memset(path + 17, 'x', 46); path[63] = 0; regular = true;
     } else if (!strcmp(scenario, "path_limit")) { sized_path(path, 64, false); expected = VFS_ERR_MAXNM; }
