@@ -15,7 +15,8 @@ class LCDDeviceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="allmiibo-lcd-test-") as temporary:
             folder = Path(temporary)
             for name in ("mui_canvas.c", "mui_canvas.h", "mui_event.h", "mui_input.h",
-                         "mui_view.h", "mui_defines.h", "mui_conf.h", "u8g2_font_wqy12_t_gb2312a.c"):
+                         "mui_view.h", "mui_defines.h", "mui_conf.h", "u8g2_font_wqy12_t_gb2312a.c",
+                         "u8g2_font_likeminecraft_te.c"):
                 shutil.copyfile(SRC / "mui" / name, folder / name)
             (folder / "bsp.h").write_text("typedef int bsp_event_t;\n")
             (folder / "mui_u8g2.h").write_text('#include "u8g2.h"\n')
@@ -24,14 +25,19 @@ class LCDDeviceTest(unittest.TestCase):
                 '#include "u8g2.h"\n#include "mui_conf.h"\n')
             production = (SRC / "app/settings/scene/settings_scene_version.c").read_text(encoding="utf-8")
             callbacks = "\n".join(function(production, name) for name in
-                                  ("device_test_draw", "device_test_input", "settings_device_test_open"))
+                                  ("device_test_remote_status", "settings_device_test_restore", "device_test_exit",
+                                   "device_test_footer", "device_test_light_draw", "device_test_draw",
+                                   "device_test_input", "settings_device_test_open"))
+            application = (SRC / "app/settings/app_settings.c").read_text(encoding="utf-8")
+            callbacks += '\n' + function(application[application.index('\nvoid app_settings_on_kill('):], 'app_settings_on_kill')
             fixture = Path(__file__).with_name("lcd_device_test.c.in").read_text(encoding="utf-8")
             (folder / "view.c").write_text(fixture.replace("/* PRODUCTION */", callbacks), encoding="utf-8")
             u8 = FW / "components/u8g2/csrc"
             binary = folder / "test.exe"
             command = ["gcc", "-std=c11", "-O1", "-ffunction-sections", "-fdata-sections", "-I", str(folder),
                        "-I", str(u8), "-I", str(SRC), str(folder / "view.c"), str(folder / "mui_canvas.c"),
-                       str(folder / "u8g2_font_wqy12_t_gb2312a.c"), *(str(u8 / name) for name in LIBS),
+                       str(folder / "u8g2_font_wqy12_t_gb2312a.c"), str(folder / "u8g2_font_likeminecraft_te.c"),
+                       *(str(u8 / name) for name in LIBS),
                        "-Wl,--gc-sections", "-o", str(binary)]
             if os.environ.get("PIXL_SANITIZE") == "1":
                 command[1:1] = ["-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer", "-no-pie"]

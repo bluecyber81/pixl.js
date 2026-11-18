@@ -35,6 +35,8 @@ static volatile bool m_file_mode=true,m_sessions_enabled,m_file_join_pending,m_r
 #define APP_ERROR_CHECK(x) CHECK((x)==0)
 #define VERIFY_PARAM_NOT_NULL(x) do { if (!(x)) return NRF_ERROR_NULL; } while (0)
 static uint32_t m_session_generation;
+static uint8_t m_remote_init_phase;
+static uint32_t m_remote_init_result;
 static unsigned critical_depth;
 #define CRITICAL_REGION_ENTER() do { ++critical_depth;
 #define CRITICAL_REGION_EXIT() --critical_depth; } while (0)

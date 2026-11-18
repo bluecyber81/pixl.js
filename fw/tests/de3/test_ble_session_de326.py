@@ -26,7 +26,8 @@ CASES = ('discovery', 'duplicate_start', 'stopped_cleanup', 'stop_during_rx', 'r
 GLOBALS = ('m_conn_handle', 'm_nus_session_handle', 'm_release_handle', 'm_link_generation',
            'm_release_attempted', 'm_file_mode', 'm_sessions_enabled', 'm_advertising_active',
            'm_reported_link_state', 'm_link_state_handler', 'm_reported_status_state', 'm_status_state_handler', 'm_ble_initialized',
-           'm_file_join_pending', 'm_file_join_tick', 'm_remote_mode', 'm_session_generation', 'm_timeout_overridden', 'm_file_link_handoff')
+           'm_file_join_pending', 'm_file_join_tick', 'm_remote_mode', 'm_session_generation', 'm_timeout_overridden', 'm_file_link_handoff',
+           'm_remote_init_phase', 'm_remote_init_result')
 
 
 def function(source, name):
@@ -55,7 +56,7 @@ def execute(sanitize=False, report_dir=None):
     code = (HERE / 'ble_session_de326.c.in').read_text().replace('/* GLOBALS */', declarations)
     code = code.replace('/* ACTUAL_JOIN_TIMEOUT */', re.search(r'^#define BLE_FILE_JOIN_TIMEOUT_TICKS[^\n]*', ble, re.M)[0])
     code = code.replace('/* ACTUAL_WORK */', work)
-    names = ('nus_data_handler', 'ble_file_join_poll', 'ble_release_stopped_session',
+    names = ('remote_init_step', 'nus_data_handler', 'ble_file_join_poll', 'ble_release_stopped_session',
              'ble_process_pending', 'ble_link_state_get', 'ble_status_state_get', 'ble_stop_transport', 'ble_disable')
     code = code.replace('/* ACTUAL_BLE */', '\n'.join(function(ble, n) for n in names))
     connect = ble.split('case BLE_GAP_EVT_CONNECTED:', 1)[1].split('case BLE_GAP_EVT_DISCONNECTED:', 1)[0]
