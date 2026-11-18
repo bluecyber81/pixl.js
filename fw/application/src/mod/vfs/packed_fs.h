@@ -53,6 +53,7 @@ int pfs_finish_import(pfs_t *fs);
 int pfs_space(pfs_t *fs, uint32_t *total, uint32_t *free_bytes);
 int pfs_gc(pfs_t *fs); /* only unreferenced, unpinned owned physical objects */
 int pfs_stat(pfs_t *fs, const char *path, pfs_info_t *info);
+int pfs_create_small(pfs_t *fs, const char *path, const uint8_t *data, size_t size);
 int pfs_mkdir(pfs_t *fs, const char *path);
 int pfs_setattr(pfs_t *fs, const char *path, const uint8_t meta[PFS_META_SIZE]);
 int pfs_rename(pfs_t *fs, const char *path, const char *target);

@@ -243,14 +243,7 @@ int32_t vfs_packed_create_small(char *path, uint64_t expected, const uint8_t *da
     result = VFS_ERR_FAIL;
   }
   if (result == VFS_OK) {
-    pfs_file_t *file = NULL;
-    int r = pfs_open(store, path, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL, &file);
-    if (!r) {
-      lfs_ssize_t written = pfs_write(file, data, size);
-      r = written < 0 ? written : (size_t)written != size ? LFS_ERR_IO : pfs_close(file);
-      if (r) pfs_abort(file);
-    }
-    result = map_error(r);
+    result = map_error(pfs_create_small(store, path, data, size));
   }
   vfs_persist_writer_end(&vfs_driver_fs);
   return result;

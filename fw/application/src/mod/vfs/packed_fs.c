@@ -85,6 +85,7 @@ typedef struct {
   const char *path, *target;
   pfs_info_t info;
   pfs_file_t *stage;
+  const uint8_t *memory; /* Borrowed only during a synchronous create-only PUT. */
   bool subtree, exists;
 } change_t;
 
@@ -1026,7 +1027,7 @@ static int transform(const change_t *c, pfs_info_t *info, bool *keep) {
 }
 static int write_record(pfs_t *fs, io_t *output, const pfs_info_t *info,
                         io_t *input, uint32_t input_offset,
-                        uint32_t *body_crc) {
+                        const uint8_t *memory, uint32_t *body_crc) {
   uint8_t h[RH] = {0};
   put32(h, R_MAGIC);
   put32(h + 4, info->size);
@@ -1041,7 +1042,9 @@ static int write_record(pfs_t *fs, io_t *output, const pfs_info_t *info,
     r = emit(fs, output, info->path, (uint32_t)len, &sum, body_crc);
   if (!r)
     r = emit(fs, output, info->meta, PFS_META_SIZE, &sum, body_crc);
-  for (uint32_t off = 0; !r && off < info->size;) {
+  if (!r && memory && info->size)
+    r = emit(fs, output, memory, info->size, &sum, body_crc);
+  for (uint32_t off = 0; !memory && !r && off < info->size;) {
     uint32_t n = info->size - off;
     if (n > PFS_CACHE_SIZE)
       n = PFS_CACHE_SIZE;
@@ -1105,7 +1108,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
       }
       if (!r && keep)
         r = write_record(fs, &output, &info, replaced ? &c->stage->io : &input,
-                         replaced ? 0 : loc.data, &sum);
+                         replaced ? 0 : loc.data, NULL, &sum);
       offset += loc.size;
     }
   }
@@ -1115,7 +1118,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
   }
   if (!r && add)
     r = write_record(fs, &output, &c->info, c->stage ? &c->stage->io : NULL, 0,
-                     &sum);
+                     c->memory, &sum);
   r = io_close(fs, &input, r);
   if (!r && (indexed != count || output_offset != SH + body))
     r = LFS_ERR_CORRUPT;
@@ -1284,13 +1287,15 @@ static int transact(pfs_t *fs, const change_t *c) {
   fs->transaction = false;
   return io_error(fs, r);
 }
-int pfs_mkdir(pfs_t *fs, const char *path) {
+static int create_leaf(pfs_t *fs, const char *path, const uint8_t *memory, size_t size) {
   int r = ready(fs, true);
   if (!r)
     r = valid_path(path, false);
   if (r)
     return r;
-  if (fs->writer)
+  if (memory && fs->current.pending && !fs->current.bound)
+    return LFS_ERR_INVAL;
+  if (fs->writer || (memory && fs->handle_count >= PFS_MAX_HANDLES))
     return BUSY;
   pfs_info_t info;
   location_t loc;
@@ -1303,10 +1308,20 @@ int pfs_mkdir(pfs_t *fs, const char *path) {
   change_t c = {0};
   c.op = PUT;
   c.path = path;
-  c.info.type = PFS_DIR;
+  c.info.type = memory ? PFS_FILE : PFS_DIR;
+  c.info.size = size;
+  c.memory = memory;
   memset(c.info.meta, 0xff, PFS_META_SIZE);
   memcpy(c.info.path, path, strlen(path) + 1);
   return transact(fs, &c);
+}
+int pfs_mkdir(pfs_t *fs, const char *path) {
+  return create_leaf(fs,path,NULL,0);
+}
+int pfs_create_small(pfs_t *fs, const char *path, const uint8_t *data, size_t size) {
+  if (!data || size > 572u)
+    return LFS_ERR_INVAL;
+  return create_leaf(fs,path,data,size);
 }
 int pfs_setattr(pfs_t *fs, const char *path,
                 const uint8_t meta[PFS_META_SIZE]) {
