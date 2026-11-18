@@ -2,6 +2,10 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
+## LCD DE3.87 / App660 · lokale Testausgabe
+
+Für Allmiibo LCD mit ST7567, PFS1, Z21 und S112 7.3.0. Die ZIP enthält die LCD-Anwendung. Der Dateimanager 3.58.0 ergänzt die kompakte Fernbedienung und die Sammelauswahl für Spielordner. Die Abnahme am Gerät steht aus. [LCD-App fürs Handy](fw/releases/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) · [Bedienung und Installation](web/LIESMICH_3_58_0.txt) · [Prüfbericht](docs/validation/DE3_87_LCD_TEST1.json)
+
 ## LCD DE3.85 / App658 · veröffentlichte Testversion
 
 Für **LCD/ST7567 mit Packed LittleFS (PFS1), Z21 und S112 7.3.0**. Die vollständige App-ZIP lässt sich am Handy in nRF Device Firmware Update öffnen. Der Besitzer meldete am 18. November 2026 erfolgreiche Tests. Seine Diagnose weist App658, Z21 und S112 7.3.0 aus. Die Wiederaufnahme eines tatsächlich unterbrochenen Android-Updates steht als Einzeltest aus. DE3.81 / App654 ist die reguläre LCD-Version. [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip)
