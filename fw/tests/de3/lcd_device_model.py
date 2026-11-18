@@ -13,21 +13,32 @@ from subprocess import check_output, run
 from tempfile import TemporaryDirectory
 
 from check_stack_watermark_elf import tool
-from unicorn import Uc, UC_ARCH_ARM, UC_HOOK_CODE, UC_HOOK_MEM_WRITE, UC_MODE_MCLASS, UC_MODE_THUMB
+from unicorn import Uc, UC_ARCH_ARM, UC_HOOK_CODE, UC_MODE_MCLASS, UC_MODE_THUMB
 from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M4, UC_ARM_REG_LR, UC_ARM_REG_MSP,
                                UC_ARM_REG_PC, UC_ARM_REG_R0, UC_ARM_REG_R1,
                                UC_ARM_REG_R2, UC_ARM_REG_R3)
 
 
 class Model:
+    instruction_limit = 1500000
+
     def __init__(self, elf, binary):
         rows = (line.split() for line in check_output([tool('nm'), '-n', elf], text=True).splitlines())
         self.symbols = {row[2]: int(row[0], 16) for row in rows if len(row) == 3}
         self.cpu = cpu = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
         cpu.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M4)
         for address, size in ((0, 0x80000), (0x20000000, 0x10000),
-                              (0x10000000, 0x1000), (0xf0000000, 0x1000), (0x40000000, 0x100000), (0x50000000, 0x1000), (0xe000e000, 0x2000)):
+                              (0x10000000, 0x1000), (0xf0000000, 0x1000), (0xe000e000, 0x2000)):
             cpu.mem_map(address, size)
+        # Use the peripheral MMIO API rather than instrumenting memory stores.
+        # Unicorn 2.1.4 MEM_WRITE instrumentation can corrupt Thumb IT state,
+        # including the real nrfx_gpiote_init conditional RAM-store loop. Even
+        # an MMIO-only MEM_WRITE hook affects nrfx_spim_init's IT blocks.
+        # The register banks below leave all application/SDK instructions intact.
+        self.mmio = {0x40000000: bytearray(0x100000), 0x50000000: bytearray(0x1000)}
+        self.callback_error = None
+        for address, bank in self.mmio.items():
+            cpu.mmio_map(address, len(bank), self.mmio_read, address, self.mmio_write, address)
         cpu.mem_write(self.symbols['__isr_vector'], binary.read_bytes())
         count = self.symbols['__data_end__'] - self.symbols['__data_start__']
         cpu.mem_write(self.symbols['__data_start__'], bytes(cpu.mem_read(self.symbols['__etext'], count)))
@@ -49,7 +60,28 @@ class Model:
         # Only the waiting delay messages are intercepted. D/C/reset messages
         # execute the actual GPIO callback and writes, including U8g2 init.
         self.hook('u8g2_nrf_gpio_and_delay_spi_cb', self.delay)
-        cpu.hook_add(UC_HOOK_MEM_WRITE, self.memory_write)
+
+    def mmio_read(self, cpu, offset, size, base):
+        try:
+            return int.from_bytes(self.mmio[base][offset:offset + size], 'little')
+        except Exception as error:
+            self.mmio_failed(error)
+            return 0
+
+    def mmio_write(self, cpu, offset, size, value, base):
+        try:
+            self.mmio[base][offset:offset + size] = value.to_bytes(size, 'little')
+            self.memory_write(cpu, None, base + offset, size, value, None)
+        except Exception as error:
+            self.mmio_failed(error)
+
+    def mmio_failed(self, error):
+        # Unicorn 2.0.1 otherwise prints and discards ctypes MMIO exceptions.
+        # Stop at the failed peripheral boundary and re-raise in call() on both
+        # emulator versions so failed pin/timing assertions cannot be ignored.
+        if self.callback_error is None:
+            self.callback_error = error
+        self.cpu.emu_stop()
 
     def hook(self, name, fn):
         addr = self.symbols[name]
@@ -58,9 +90,16 @@ class Model:
         return self.cpu.hook_add(UC_HOOK_CODE, handler, begin=addr, end=addr)
 
     def u32(self, address):
+        for base, bank in self.mmio.items():
+            if base <= address <= base + len(bank) - 4:
+                return int.from_bytes(bank[address-base:address-base+4], 'little')
         return struct.unpack('<I', self.cpu.mem_read(address, 4))[0]
 
     def write32(self, address, value):
+        for base, bank in self.mmio.items():
+            if base <= address <= base + len(bank) - 4:
+                bank[address-base:address-base+4] = struct.pack('<I', value)
+                return
         self.cpu.mem_write(address, struct.pack('<I', value))
 
     def respond(self, value=0):
@@ -104,7 +143,7 @@ class Model:
             assert 0 < tx_len <= 128 and rx_len == 0
             frequency = self.u32(0x40003524)
             assert frequency == 0x80000000, ('LCD must use 8 MHz', hex(frequency))
-            assert self.u32(0x40003508) == 26 and self.u32(0x4000350c) == 25
+            assert self.u32(0x40003508) == 26 and self.u32(0x4000350c) == 25, 'LCD SPI pins must be SCK 26 and MOSI 25'
             assert self.u32(0x40003554) == 0, 'SPI mode 0 and MSB-first required'
             payload = bytes(cpu.mem_read(tx, tx_len))
             self.transfers.append({'data': bool(self.gpio & (1 << 28)), 'hex': payload.hex(),
@@ -118,8 +157,11 @@ class Model:
             self.cpu.reg_write(reg, value)
         self.cpu.reg_write(UC_ARM_REG_MSP, self.top)
         self.cpu.reg_write(UC_ARM_REG_LR, 0x101)
+        self.callback_error = None
         try:
-            self.cpu.emu_start(self.symbols[name] | 1, 0x100, count=1500000)
+            self.cpu.emu_start(self.symbols[name] | 1, 0x100, count=self.instruction_limit)
+            if self.callback_error is not None:
+                raise self.callback_error
         except Exception as error:
             raise AssertionError(f'{name} at PC {self.cpu.reg_read(UC_ARM_REG_PC):08x}: {error}') from error
         assert self.cpu.reg_read(UC_ARM_REG_PC) == 0x100, (name, hex(self.cpu.reg_read(UC_ARM_REG_PC)))
