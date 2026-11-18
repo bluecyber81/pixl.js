@@ -67,6 +67,8 @@ try {
       await page.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
       await page.addInitScript(installPeripheral,REMOTE_UUIDS);
       await page.goto(origin+base);
+      const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.85 / App658 / Z21 · Prüfpaket (ZIP)':'LCD DE3.85 / App658 / Z21 · test kit (ZIP)'});
+      assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip');
       const nav = page.locator('.workspace-nav [aria-controls="remote-workspace"]');
       await nav.click();
       const section = page.locator('.remote-control'), pad = section.locator('.remote-pad');
@@ -85,6 +87,7 @@ try {
       const status = section.getByRole('button',{name:locale==='de-DE'?'Verbindung prüfen':'Check connection'});
       const photo=section.getByRole('button',{name:locale==='de-DE'?'Displaybild aktualisieren':'Refresh screen'});
       assert.equal(await photo.count(),0);
+      assert.equal(await section.getByRole('checkbox').count(),0);
       assert(await status.evaluate(el=>el===document.activeElement));
       await page.evaluate(()=>{window.testRemote.delayReply=true;});
       await page.keyboard.press('Enter');
@@ -132,6 +135,8 @@ try {
       assert.deepEqual(await page.evaluate(()=>window.testRemote.receipts.slice(7)),[[0,0],[0,0]]);
       await page.evaluate(()=>{Object.assign(window.testRemote,{caps:63,delayReply:false,finish:null});});
       await section.getByRole('button',{name:locale==='de-DE'?'Fernbedienung verbinden':'Connect remote'}).click();
+      const autoPhoto=section.getByRole('checkbox',{name:locale==='de-DE'?'Displayfoto nach Tastendruck automatisch aktualisieren':'Refresh screen automatically after button presses'});
+      assert.equal(await autoPhoto.isChecked(),false);
       const photoBox=section.locator('.display-photo');
       await photo.click();
       const image=photoBox.getByRole('img');
@@ -187,8 +192,43 @@ try {
       assert.equal(await photoBox.getByRole('link').count(),0);
       await page.evaluate(()=>{window.testRemote.photoStatus=0;});
       await photo.click();await image.waitFor();assert.deepEqual(await readCorners(),[128,64,255,0]);
-      await disconnect.click();assert.equal(await section.getByRole('img').count(),0);
-      console.log(locale+' passed: STATUS, timeout, keyboard, legacy fallback, on-demand remote LCD photo, pixel orientation, rotation, PNG download and disconnect');
+      // Automatic mode only starts after an acknowledged navigation key.
+      await autoPhoto.check();
+      const beforeAuto=await page.evaluate(()=>window.testRemote.receipts.length);
+      await page.evaluate(()=>{window.testRemote.delayReply=true;});
+      await pad.getByRole('button').last().click();
+      await page.waitForFunction(()=>!!window.testRemote.finish);
+      await page.waitForTimeout(350);
+      assert.deepEqual(await page.evaluate(n=>window.testRemote.receipts.slice(n),beforeAuto),[[2,2]]);
+      await page.evaluate(()=>{window.testRemote.delayReply=false;window.testRemote.finish();window.testRemote.finish=null;});
+      await page.waitForFunction(n=>window.testRemote.receipts.length===n+9,beforeAuto);
+      await image.waitFor();assert.deepEqual(await readCorners(),[128,64,255,0]);
+      await page.waitForTimeout(1100); // No idle loop or retry after the one complete frame.
+      assert.deepEqual(await page.evaluate(n=>window.testRemote.receipts.slice(n),beforeAuto),[
+        [2,2],...[0,16,32,48,64,80,96,112].map(offset=>[5,offset])
+      ]);
+      if(locale==='de-DE' && process.env.REMOTE_AUTO_SCREENSHOT_OUTPUT)await section.screenshot({path:process.env.REMOTE_AUTO_SCREENSHOT_OUTPUT});
+      // Turning the option off cancels its one pending picture, not the key.
+      const beforeOff=await page.evaluate(()=>window.testRemote.receipts.length);
+      await pad.getByRole('button').first().click();
+      await autoPhoto.uncheck();await page.waitForTimeout(1100);
+      assert.deepEqual(await page.evaluate(n=>window.testRemote.receipts.slice(n),beforeOff),[[2,0]]);
+      // Session teardown also discards a queued capture and removes old pixels.
+      await autoPhoto.check();
+      const beforeDisconnect=await page.evaluate(()=>window.testRemote.receipts.length);
+      await pad.getByRole('button').nth(1).click();
+      await disconnect.click();await page.waitForTimeout(1100);
+      assert.equal(await section.getByRole('img').count(),0);
+      assert.deepEqual(await page.evaluate(n=>window.testRemote.receipts.slice(n),beforeDisconnect),[[2,1]]);
+      await page.goto(origin+base+'dfu/web.html');
+      const trial=page.locator('#lcd-downloads p').filter({hasText:locale==='de-DE'?'LCD-Testversion DE3.85 / App658':'LCD test release DE3.85 / App658'});
+      assert.equal(await trial.count(),1);
+      assert.match(await trial.innerText(),locale==='de-DE'?/Praxistest für diesen neuen Build ist noch offen/:/Physical testing of this new build is still pending/);
+      assert.doesNotMatch(await trial.innerText(),/App657|successful practical use|praktischen Betrieb bestätigt/);
+      await trial.getByRole('link',{name:locale==='de-DE'?'Installation und Prüfung':'Installation and testing'}).click();
+      await page.waitForURL(origin+base+(locale==='de-DE'?'guide/#lcd-de385':'guide/en.html#lcd-de385'));
+      assert.equal(await page.locator('#lcd-de385').count(),1);
+      console.log(locale+' passed: STATUS, timeout, keyboard, legacy fallback, on-demand remote LCD photo, pixel orientation, rotation, PNG download, optional acknowledged-key auto photo, cancellation and disconnect');
     } finally {await page.context().close();}
   }
 } finally {

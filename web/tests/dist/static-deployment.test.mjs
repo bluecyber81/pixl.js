@@ -102,8 +102,8 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.ok(index.includes(`href="${file}"`), file)
   }
   for (const releaseFile of [
-    'web3.55.8/Allmiibo_Dateimanager_3_55_8_Quellcode.zip',
-    'de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip',
+    'web3.56.0/Allmiibo_Dateimanager_3_56_0_Quellcode.zip',
+    'de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
   ]) {
     assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/' + releaseFile + '" download'), releaseFile)

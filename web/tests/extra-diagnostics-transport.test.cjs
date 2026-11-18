@@ -418,12 +418,13 @@ test('flash probe gates older versions, sends no arguments, and tolerates option
     f.rx(11, [0]); await broken;
     assert.equal(f.api.get_transport_diagnostics().lastErrorCode, 'RESPONSE_INVALID');
 });
-test('PXBI sends only one optional command on App657 and checks the assembled payload and connection generation', async () => {
+for (const [version,counter] of [['2.22.0-DE3.84',657],['2.22.0-DE3.85',658]])
+test(`PXBI sends only one optional command on App${counter} and checks the assembled payload and connection generation`, async () => {
     const bindings=await import('../src/lib/lcd-build-diagnostics.js');
-    const version=bindings.LCD_BUILD_DIAGNOSTICS_VERSION, bytes=new Uint8Array(80);
+    const bytes=new Uint8Array(80);
     bytes.set([80,88,66,73,1,80,1,0]);bytes.fill(97,8,72);
     const f=fixture(bindings);
-    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.85','',null])
+    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.85-OLEDt5','2.22.0-DE3.86','2.22.0-DE3.85t1','',null])
         assert.equal(await f.api.get_lcd_build_diagnostics(v),null);
     assert.deepEqual(f.writes,[]);
     const reading=f.api.get_lcd_build_diagnostics(version);
@@ -445,5 +446,25 @@ test('PXBI sends only one optional command on App657 and checks the assembled pa
         if (event==='disconnect') f.bus.emit('ble_disconnected');
         else for(const cb of [...f.timers.values()]) cb();
         await rejected; assert.deepEqual(f.writes,[[12,0,0,0]]);
+    }
+});
+
+test('actual App658 ARM PXBI replies survive queued file traffic and MTU23/185/250 fragmentation', async () => {
+    const bindings=await import('../src/lib/lcd-build-diagnostics.js');
+    const capture=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/PXBI_App658.json'),'utf8'));
+    for(const mtu of [23,185,250])for(const {scenario,payloadHex} of capture.states){
+        const f=fixture(bindings), prior=next(f), pending=f.api.get_lcd_build_diagnostics('2.22.0-DE3.85');
+        assert.deepEqual(f.writes,[[20,0,0,0]],scenario);
+        f.rx(20,[9]);await prior;await flush();
+        assert.deepEqual(f.writes,[[20,0,0,0],[12,0,0,0]],scenario);
+        const bytes=Uint8Array.from(Buffer.from(payloadHex,'hex')),capacity=mtu-7;
+        for(let offset=0;offset<bytes.length;offset+=capacity)
+            f.rx(12,bytes.subarray(offset,offset+capacity),(offset/capacity)|(offset+capacity<bytes.length?0x8000:0));
+        const result=await pending;
+        assert.equal(result.sourceId,capture.sourceId);
+        assert.equal(result.board,'LCD');
+        assert.deepEqual(plain(result),plain(bindings.parseBuildDiagnostics(bytes,'LCD')));
+        assert.equal(f.disconnects,0);assert.equal(f.timers.size,0);assert.equal(f.writes.length,2);
+        const following=next(f);f.rx(20,[8]);await following;
     }
 });

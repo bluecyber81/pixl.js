@@ -1,5 +1,13 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.56.0 · Displayfoto nach bestätigten Tasten
+
+Unter **Fernbedienung → Allmiibo DE** ist **Displayfoto nach Tastendruck automatisch aktualisieren** optional und anfangs ausgeschaltet. Nach bestätigtem Links/Mitte/Rechts/Zurück wird ein Bild gelesen; schnelle Folgen werden zusammengefasst. Es gibt keine Dauerabfrage oder Wiederholung von Tasten. Trennen, Dateiübergabe und Blockierung verwerfen wartende Aufnahmen. Alte Firmware ohne Foto-Funktion wird nicht abgefragt; manuelle Fotos bleiben möglich.
+
+Die neue **LCD-Testversion DE3.85 / App658** ist für ST7567, PFS1, Z21 und S112 7.3.0 vorgesehen. Sie erweitert den Gerätetest um Fernbedienungsstatus und einen 5-/100-PWM-Lichttest mit Wiederherstellung. Wegen der eigenen Remote-Adresse **Pixl.Remote** frisch auswählen. Bootloader und SoftDevice bleiben installiert. Ein frischer Gerätetest steht aus; frühere Bestätigungen zu App657 gelten nicht automatisch für App658. [Handy-App](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip) · [Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#lcd-de385). **DE3.81 / App654 bleibt die reguläre LCD-Firmware.**
+
+English: File manager 3.56.0 offers opt-in screenshots after acknowledged navigation keys, with coalescing and cancellation. LCD DE3.85 / App658 adds remote diagnostics and a reversible backlight PWM test; new hardware acceptance is pending. [English instructions](https://bluecyber81.github.io/pixl.js/guide/en.html#lcd-de385).
+
 ## Dateimanager 3.55.8 · OLED direkt im Browser aktualisieren
 
 Unter Update → OLED öffnet „OLED im Browser flashen“ das geprüfte App84-Paket. Die DFU-Seite zeigt das Zielgerät und verwendet die passende Paketliste. Der Browser lädt die signierte ZIP vom gleichen Seitenursprung und prüft Größe, Hash und App-Daten vor der Übertragung. Aktuelle Bootdaten werden zum Vergleich weitergereicht.

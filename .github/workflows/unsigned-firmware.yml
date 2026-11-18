@@ -56,7 +56,12 @@ jobs:
           "$RUNNER_TEMP/stack-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r tools/ci-unicorn-linux-x64.txt
           mkdir -p "$RUNNER_TEMP/sdk-test"
           docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec '
-            tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
+            tar -C "$NRF52_SDK_ROOT" -cf - \
+              components/ble/nrf_ble_gatt/nrf_ble_gatt.c \
+              components/ble/common/ble_advdata.c \
+              components/ble/common/ble_advdata.h \
+              components/softdevice/s112/headers \
+              components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
           ' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
       - name: Verify the signed package against the compiled application and bound bootloader key
         if: steps.application_mode.outputs.mode != 'candidate'
@@ -82,6 +87,7 @@ jobs:
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_flash_jedec_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/FLASH_JEDEC_ELF.txt
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_display_profile_elf.py build/lcd-application/pixljs.out build/lcd-application/pixljs.bin | tee build/lcd-application/DISPLAY_PROFILE_ELF.txt
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_lcd_game_rotation_elf.py build/lcd-application --out build/lcd-application/GAME_ROTATION.json
+          "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_lcd_device_test_elf.py build/lcd-application --out build/lcd-application/LCD_DEVICE_TEST.json --frames build/lcd-application/device-test-frames
           "$RUNNER_TEMP/stack-venv/bin/python" fw/tests/de3/check_build_fault_elf.py build/lcd-application --json build/lcd-application/BUILD_FAULT.json
           cat build/lcd-application/BUILD_RESULT.json
       - name: Archive the actual build and test results

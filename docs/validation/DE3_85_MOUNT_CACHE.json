@@ -1,0 +1,117 @@
+{
+  "passed": true,
+  "scope": "Actual PackedFS/LittleFS/VFS on synthetic 2MiB NOR",
+  "physical_device_access": false,
+  "physical_startup_timing_measured": false,
+  "source_files_sha256": {
+    "fw/application/src/mod/vfs/vfs_driver_packed.c": "3bd466b537776ed4ac16c773ac8a3df5d7d7201eab25362843f0f93a6492c693",
+    "fw/application/src/mod/vfs/packed_fs.c": "9f50e5c9cc1096a52ab3238b06cd7890c07ce2cc750bba6df13b538a10042771",
+    "fw/application/src/mod/vfs/packed_fs.h": "a77473937da52cf3106d4af3a03e14e7b5e7ec79f5a5f60dcabc930befb5be4c",
+    "fw/tests/de3/packed_vfs_persistence_de344.c": "db13c5b0248ed1771f5d862807e92bb465a1456460febf28641c9d7badca6200",
+    "fw/tests/de3/test_mount_profile_de362.py": "a530605dd3386cc133599f258ba6fbfa8bce999dbe28fe1b9149d75a0f477360"
+  },
+  "rows": [
+    {
+      "figures": 100,
+      "repeats": 3,
+      "baseline_reads": 311,
+      "candidate_reads": 297,
+      "baseline_bytes": 79616,
+      "candidate_bytes": 76032,
+      "saved_reads": 14,
+      "reduction_percent": 4.502,
+      "payload_bypass_reads_unchanged": 271,
+      "model_host_heap_peak_before": 5538,
+      "model_host_heap_peak_after": 7636
+    },
+    {
+      "figures": 500,
+      "repeats": 3,
+      "baseline_reads": 1506,
+      "candidate_reads": 1418,
+      "baseline_bytes": 385536,
+      "candidate_bytes": 363008,
+      "saved_reads": 88,
+      "reduction_percent": 5.843,
+      "payload_bypass_reads_unchanged": 1320,
+      "model_host_heap_peak_before": 5538,
+      "model_host_heap_peak_after": 7636
+    },
+    {
+      "figures": 952,
+      "repeats": 3,
+      "baseline_reads": 3257,
+      "candidate_reads": 2939,
+      "baseline_bytes": 833792,
+      "candidate_bytes": 752384,
+      "saved_reads": 318,
+      "reduction_percent": 9.764,
+      "payload_bypass_reads_unchanged": 2506,
+      "model_host_heap_peak_before": 5538,
+      "model_host_heap_peak_after": 7636
+    },
+    {
+      "figures": 1081,
+      "repeats": 3,
+      "baseline_reads": 3687,
+      "candidate_reads": 3336,
+      "baseline_bytes": 943872,
+      "candidate_bytes": 854016,
+      "saved_reads": 351,
+      "reduction_percent": 9.52,
+      "payload_bypass_reads_unchanged": 2844,
+      "model_host_heap_peak_before": 5538,
+      "model_host_heap_peak_after": 7636
+    },
+    {
+      "figures": 1208,
+      "repeats": 3,
+      "baseline_reads": 3917,
+      "candidate_reads": 3617,
+      "baseline_bytes": 1002752,
+      "candidate_bytes": 925952,
+      "saved_reads": 300,
+      "reduction_percent": 7.659,
+      "payload_bypass_reads_unchanged": 3176,
+      "model_host_heap_peak_before": 5538,
+      "model_host_heap_peak_after": 7636
+    }
+  ],
+  "mount_programs": 0,
+  "mount_erases": 0,
+  "payload_and_raw128_verified_after_every_mount": true,
+  "engine_and_disk_format_changed": false,
+  "adaptive_cache_slots": [
+    16,
+    8,
+    4,
+    0
+  ],
+  "minimum_contiguous_margin_for_expansion_bytes": 4096,
+  "requested_cache_bytes_increase_from_8_to_16": 2098,
+  "retained_cache_after_mount": false,
+  "tests": {
+    "host_asan_ubsan_persistence": "passed",
+    "arm32_qemu_persistence": "passed",
+    "mount_read_fault_positions": 297,
+    "persistence_read_fault_positions": 425,
+    "persistence_program_erase_fault_positions": 26,
+    "atomic_metadata_interrupted_cases": 78,
+    "largest_block_thresholds_and_cache_oom": "passed",
+    "mount_telemetry_16_8_4_0_and_error_retry": "passed"
+  },
+  "last_user_device_observation": {
+    "firmware": "DE3.84",
+    "startup_ms": 2145,
+    "mount_ms": 1989,
+    "physical_reads": 3774,
+    "physical_read_bytes": 966144,
+    "source": "user-provided diagnostic snapshot, not reread by this agent"
+  },
+  "limits": [
+    "Host allocation model is not a target RAM watermark.",
+    "Reduced physical read callbacks are not measured device milliseconds.",
+    "Synthetic figure sets differ from the user collection.",
+    "Real candidate cold-start comparison still needed."
+  ]
+}
