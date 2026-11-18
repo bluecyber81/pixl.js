@@ -34,7 +34,7 @@ const rows=[{path:'/Leer',kind:1,size:0},{path:'/Ordner',kind:1,size:0},{path:'/
 
 for (const [version, counter, document, bytes, binSha256] of [
   ['2.22.0-DE3.75', 648, 'DE3_75_PFS.json', 358304, '3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867'],
-  ['2.22.0-DE3.87', 660, 'DE3_87_PFS.json', 360008, 'dbd23d0abc14267d7ceeab947d44b22cfda2ee72e1d22d0be2355f97bea51185'],
+  ['2.22.0-DE3.87', 660, 'DE3_87_PFS.json', 360728, '2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e'],
   ['2.22.0-DE3.86', 659, 'DE3_86_PFS.json', 359336, '431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65'],
   ['2.22.0-DE3.84', 657, 'DE3_84_PFS.json', 356216, 'b98eb45868a5bb80e6b770569a8402678d4a326b927820341ab728cf78e8f323'],
   ['2.22.0-DE3.83', 656, 'DE3_83_PFS.json', 355312, 'dc4a1440b20a0ddff202ee6739490ca5faf3bf1f6dcb245039b6d773b0665183'],

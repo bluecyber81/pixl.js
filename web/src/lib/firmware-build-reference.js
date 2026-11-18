@@ -148,13 +148,13 @@ const app660 = Object.freeze({
   "applicationCounter": 660,
   "board": "LCD",
   "chipPart": 337970,
-  "applicationBytes": 360008,
-  "applicationBinSha256": "dbd23d0abc14267d7ceeab947d44b22cfda2ee72e1d22d0be2355f97bea51185",
-  "sourceId": "1d0b42515f9f1e55790ff82b094e05acd9fb56e1b05805fda017239bcbc2a993",
+  "applicationBytes": 360728,
+  "applicationBinSha256": "2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e",
+  "sourceId": "0c497705163e238ac7dce5fb1ff299daa10cacf223ced3e9f19a1d0a7c2ae0ac",
   "artifactStatus": "experimental-signed-application",
   "hardwareAcceptance": "pending",
-  "otaSha256": "3cef18e6c50480ac1506f82782b00dcf0082a6cb0de1fbfd361ad6ebbf71a530",
-  "sourceCommit": "51ded10bfc9b6379c59881ea4dc975ad46a3e4a7"
+  "otaSha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0",
+  "sourceCommit": "bda84eedd040d81b7362bf0cb5df19d14dbcd05b"
 });
 
 const references = [app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4];
