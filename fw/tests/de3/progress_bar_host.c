@@ -128,12 +128,15 @@ static void slider(void) {
     puts("PASS all101 values x SHORT/REPEAT x LEFT/RIGHT/CENTER: clamp before callback; endpoint wrap; generic ranges and int32 boundaries");
 }
 static unsigned expected_contrast(int32_t value) {
-    if(value>100)value=100;
-    if(value<1)value=1;
+    if (value > 100) value = 100;
 #ifdef LCD_SCREEN
-    if(value<60)value=60;
+    if (value < 60) value = 60;
+    return (uint8_t)((value - 1) * (255.0 / 99.0));
+#else
+    if (value <= 0) return 0;
+    double fraction = value / 100.0;
+    return (unsigned)lround(fraction * fraction * 255.0);
 #endif
-    return (uint8_t)((value-1)*(255.0/99.0));
 }
 static void callbacks_test(void) {
     mui_progress_bar_t *bar=mui_progress_bar_create(); app_settings_t app={.p_progress_bar=bar}; bar->user_data=&app;
@@ -194,6 +197,8 @@ static void setters_test(void) {
 #ifdef LCD_SCREEN
     puts("PASS LCD setters: all256 uint8 inputs, PWM0..100, contrast low-visibility guard and0..255 output");
 #else
+    CHECK(expected_contrast(0) == 0 && expected_contrast(5) == 1 &&
+          expected_contrast(50) == 64 && expected_contrast(100) == 255);
     puts("PASS OLED setter: all256 uint8 inputs including zero, no negative float-to-byte conversion");
 #endif
 }
