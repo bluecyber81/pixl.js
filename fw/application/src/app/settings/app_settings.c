@@ -93,6 +93,10 @@ void app_settings_on_kill(mini_app_inst_t *p_app_inst) {
     mui_nav_diag_end();
 
     app_settings_t *p_app_handle = p_app_inst->p_handle;
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    /* Dispatcher destruction does not invoke view exit callbacks. */
+    settings_device_test_restore(p_app_handle);
+#endif
     if (!p_app_handle || !p_app_handle->exit_saved) {
         int32_t result = settings_save();
         if (result != NRF_SUCCESS) NRF_LOG_WARNING("Settings could not be saved on app exit: %d", result);

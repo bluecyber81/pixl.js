@@ -47,6 +47,15 @@ bool ble_remote_mode_owned(void);
 bool ble_remote_transport_ready(void);
 bool ble_transport_idle(void);
 bool ble_mode_transition_pending(void);
+/* Cached foreground startup diagnosis; no radio query or permission change.
+ * A retryable failure retains its stage/code until the next setup attempt. */
+typedef enum {
+    BLE_REMOTE_INIT_IDLE, BLE_REMOTE_INIT_WAIT, BLE_REMOTE_INIT_ADDRESS,
+    BLE_REMOTE_INIT_NAME, BLE_REMOTE_INIT_MTU, BLE_REMOTE_INIT_ADVDATA,
+    BLE_REMOTE_INIT_START, BLE_REMOTE_INIT_READY
+} ble_remote_init_phase_t;
+uint8_t ble_remote_init_phase(void);
+uint32_t ble_remote_init_result(void);
 void ble_hold_advertising_after_disconnect(void);
 void ble_release_advertising_hold(void);
 /* Foreground remote handoff: submit the final ACK and switch NUS ownership

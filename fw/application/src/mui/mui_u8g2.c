@@ -90,6 +90,10 @@ APP_PWM_INSTANCE(pwm1, 1); // Create the instance "PWM1" using TIMER1.
 static bool m_pwm_initialized;
 static bool m_dimmed;
 static bool m_dim_retry_pending;
+static bool m_backlight_preview_active;
+static bool m_backlight_restore_pending;
+static uint8_t m_backlight_saved;
+static uint32_t m_backlight_retry_tick;
 #define BACKLIGHT_PWM_MAX_ATTEMPTS 200u
 
 static ret_code_t backlight_pwm_duty_set(app_pwm_duty_t duty) {
@@ -232,6 +236,8 @@ void mui_u8g2_deinit(u8g2_t *p_u8g2) {
 #ifdef LCD_SCREEN
     m_dimmed = false;
     m_dim_retry_pending = false;
+    m_backlight_preview_active = false;
+    m_backlight_restore_pending = false;
     mui_u8g2_set_backlight_level(0);
     nrf_gpio_pin_clear(LCD_BL_PIN);
     nrf_gpio_cfg_default(LCD_BL_PIN);
@@ -259,8 +265,35 @@ ret_code_t mui_u8g2_set_backlight_level(uint8_t value) {
         return result;
     }
 }
+ret_code_t mui_u8g2_backlight_preview(uint8_t level) {
+    if (m_backlight_restore_pending) return NRF_ERROR_BUSY;
+    int8_t actual = mui_u8g2_get_backlight_level();
+    if (actual < 0) return NRF_ERROR_INVALID_STATE;
+    ret_code_t result = mui_u8g2_set_backlight_level(level);
+    if (result == NRF_SUCCESS) {
+        if (!m_backlight_preview_active) m_backlight_saved = (uint8_t)actual;
+        m_backlight_preview_active = true;
+        m_dim_retry_pending = false;
+    }
+    return result;
+}
+
+ret_code_t mui_u8g2_backlight_restore(void) {
+    if (!m_backlight_preview_active && !m_backlight_restore_pending) return NRF_SUCCESS;
+    m_backlight_preview_active = false;
+    ret_code_t result = mui_u8g2_set_backlight_level(m_backlight_saved);
+    m_backlight_restore_pending = result != NRF_SUCCESS;
+    if (m_backlight_restore_pending) m_backlight_retry_tick = app_timer_cnt_get();
+    return result;
+}
+
 void mui_u8g2_poll_dim(bool before_sleep) {
     static uint32_t failed_tick;
+    if (m_backlight_preview_active) return;
+    if (m_backlight_restore_pending) {
+        if (app_timer_cnt_diff_compute(app_timer_cnt_get(), m_backlight_retry_tick) < APP_TIMER_TICKS(250)) return;
+        if (mui_u8g2_backlight_restore() != NRF_SUCCESS) return;
+    }
     uint8_t brightness = settings_get_data()->lcd_backlight;
     bool requested = before_sleep && settings_get_lcd_dim() && brightness > 1;
     if (requested == m_dimmed) {

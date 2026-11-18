@@ -182,6 +182,16 @@ static ble_uuid_t m_adv_uuids[] = /**< Universally unique service identifier. */
 #define DEVICE_NAME DEVICE_NAME_PIXLJS
 
 static ble_gap_addr_t m_default_gap_addr = {0};
+static uint8_t m_remote_init_phase;
+static uint32_t m_remote_init_result;
+
+uint8_t ble_remote_init_phase(void) { return m_remote_init_phase; }
+uint32_t ble_remote_init_result(void) { return m_remote_init_result; }
+static ret_code_t remote_init_step(uint8_t phase, ret_code_t result) {
+    m_remote_init_phase = phase;
+    m_remote_init_result = result;
+    return result;
+}
 
 static uint8_t m_ble_initialized = false;
 /* Advertising mode can remain FAST after a link opens. Track actual SDK
@@ -642,13 +652,19 @@ static ret_code_t advertising_init(bool remote) {
 
     memset(&init, 0, sizeof(init));
 
-    init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
+    init.advdata.name_type = remote ? BLE_ADVDATA_NO_NAME : BLE_ADVDATA_FULL_NAME;
     init.advdata.include_appearance = false;
     init.advdata.flags = remote ? BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE :
                                 BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
 
-    init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
-    init.srdata.uuids_complete.p_uuids = m_adv_uuids;
+    /* Primary: flags (3) + complete 128-bit NUS UUID (18) = 21 bytes.
+     * Scan response: complete Pixl.Remote name (13 bytes). Both fit legacy
+     * 31-byte packets; service-filtered discovery sees NUS before scanning.
+     * Existing file/AmiiboLink advertising retains its established layout. */
+    ble_advdata_t *services = remote ? &init.advdata : &init.srdata;
+    services->uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    services->uuids_complete.p_uuids = m_adv_uuids;
+    if (remote) init.srdata.name_type = BLE_ADVDATA_FULL_NAME;
 
     init.config.ble_adv_fast_enabled = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
@@ -668,6 +684,8 @@ static ret_code_t advertising_init(bool remote) {
 static void advertising_start(void) {
     m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = false;
     uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+    if (m_remote_mode)
+        remote_init_step(err_code == NRF_SUCCESS ? BLE_REMOTE_INIT_READY : BLE_REMOTE_INIT_START, err_code);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -695,7 +713,29 @@ static ret_code_t ble_set_device_name(const char *device_name) {
 }
 static ret_code_t ble_addr_set(uint8_t offset) {
     ble_gap_addr_t addr = m_default_gap_addr;
-    addr.addr[0] += offset;
+    if (offset == 0x30) {
+        /* Remote gets a separate stable random-static identity. Carry across
+         * its 46 random bits, preserving the upper address-type bits. Keep
+         * the established file/+0x10/+0x20 identities unchanged. DFU uses +1. */
+        uint8_t type_bits = addr.addr[5] & 0xC0u;
+        uint16_t carry = offset;
+        for (unsigned i = 0; i < sizeof(addr.addr); ++i) {
+            carry += addr.addr[i];
+            addr.addr[i] = (uint8_t)carry;
+            carry >>= 8;
+        }
+        addr.addr[5] = (addr.addr[5] & 0x3Fu) | type_bits;
+        /* Static random addresses may not have all-zero/all-one random bits. */
+        bool zeros = (addr.addr[5] & 0x3Fu) == 0;
+        bool ones = (addr.addr[5] & 0x3Fu) == 0x3Fu;
+        for (unsigned i = 0; i < 5; ++i) {
+            zeros = zeros && addr.addr[i] == 0;
+            ones = ones && addr.addr[i] == 0xFFu;
+        }
+        if (zeros || ones) addr.addr[0] ^= 2u;
+    } else {
+        addr.addr[0] += offset;
+    }
     return sd_ble_gap_addr_set(&addr);
 }
 
@@ -709,7 +749,7 @@ void ble_service_id_set(uint32_t suffix) {
 }
 
 static ret_code_t ble_apply_device_mode(ble_device_mode_t mode) {
-    uint8_t offset = 0;
+    uint8_t offset = mode == BLE_DEVICE_MODE_REMOTE ? 0x30 : 0;
     const char *name = mode == BLE_DEVICE_MODE_REMOTE ? DEVICE_NAME_REMOTE : DEVICE_NAME_PIXLJS;
     if (mode == BLE_DEVICE_MODE_AMIIBOLINK || mode == BLE_DEVICE_MODE_AMIIBOLINK_V2) {
         name = DEVICE_NAME_AMIIBOLINK; offset = 0x10;
@@ -719,14 +759,21 @@ static ret_code_t ble_apply_device_mode(ble_device_mode_t mode) {
     /* BUSY means the stack still has events to deliver. Publish no new owner
      * until every configuration step succeeded; retry from foreground. */
     ret_code_t result = ble_addr_set(offset);
+    if (mode == BLE_DEVICE_MODE_REMOTE) remote_init_step(BLE_REMOTE_INIT_ADDRESS, result);
     if (result != NRF_SUCCESS) return result;
     result = ble_set_device_name(name);
+    if (mode == BLE_DEVICE_MODE_REMOTE) remote_init_step(BLE_REMOTE_INIT_NAME, result);
     if (result != NRF_SUCCESS) return result;
     result = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
+    if (mode == BLE_DEVICE_MODE_REMOTE) remote_init_step(BLE_REMOTE_INIT_MTU, result);
     if (result != NRF_SUCCESS) return result;
     result = advertising_init(mode == BLE_DEVICE_MODE_REMOTE);
+    if (mode == BLE_DEVICE_MODE_REMOTE) remote_init_step(BLE_REMOTE_INIT_ADVDATA, result);
     if (result != NRF_SUCCESS) return result;
-    ble_service_id_set(mode == BLE_DEVICE_MODE_AMIIBOLINK_V2 ? 0x0000180F : 0x6e400001);
+    /* Remote's service was encoded in the primary payload; its scan response
+     * now ends in the name and must not be patched as a UUID byte array. */
+    if (mode != BLE_DEVICE_MODE_REMOTE)
+        ble_service_id_set(mode == BLE_DEVICE_MODE_AMIIBOLINK_V2 ? 0x0000180F : 0x6e400001);
     m_file_join_pending = false;
     m_file_mode = mode == BLE_DEVICE_MODE_PIXLJS;
     m_remote_mode = mode == BLE_DEVICE_MODE_REMOTE;
@@ -797,6 +844,8 @@ bool ble_restart_advertising(void) {
     if (m_ble_initialized && m_conn_handle == BLE_CONN_HANDLE_INVALID && !m_advertising_active) {
         m_advertising.adv_modes_config.ble_adv_on_disconnect_disabled = false;
         result = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+        if (m_remote_mode)
+            remote_init_step(result == NRF_SUCCESS ? BLE_REMOTE_INIT_READY : BLE_REMOTE_INIT_START, result);
     }
     CRITICAL_REGION_EXIT();
     /* SoftDevice may establish a link before its application IRQ is handled.
@@ -831,12 +880,14 @@ static void ble_stop_transport(void) {
 
 void ble_disable(void) {
     m_mode_pending = m_mode_adv_requested = m_mode_handlers_ready = m_mode_wait_reply = false;
+    remote_init_step(BLE_REMOTE_INIT_IDLE, NRF_SUCCESS);
     ble_stop_transport();
 }
 void ble_device_mode_prepare(ble_device_mode_t mode) {
     /* New owners register their handlers before the next foreground poll.
      * Never reconfigure the GAP address beneath an existing connection. */
     m_pending_mode = mode;
+    remote_init_step(mode == BLE_DEVICE_MODE_REMOTE ? BLE_REMOTE_INIT_WAIT : BLE_REMOTE_INIT_IDLE, NRF_SUCCESS);
     m_mode_pending = true;
     m_mode_adv_requested = m_mode_handlers_ready = m_mode_stop_requested = false;
     m_pending_rx = NULL; m_pending_tx = NULL;
