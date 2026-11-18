@@ -234,6 +234,24 @@
     "application_only": true
   },
   "firmware_preview": {
+    "version": "2.22.0-DE3.87",
+    "counter": 660,
+    "source_commit": "bda84eedd040d81b7362bf0cb5df19d14dbcd05b",
+    "source_id": "0c497705163e238ac7dce5fb1ff299daa10cacf223ced3e9f19a1d0a7c2ae0ac",
+    "application_sha256": "2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e",
+    "application_bytes": 360728,
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_87_660_NUR_APP.zip",
+    "ota_sha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0",
+    "ota_bytes": 249952,
+    "softdevice_requirements": [
+      "0x0126"
+    ],
+    "hardware_acceptance": "pending",
+    "evidence": "docs/validation/DE3_87_LCD_TEST1.json",
+    "distribution": "local-signed-application",
+    "host_firmware_suites": 169
+  },
+  "previous_firmware_preview": {
     "version": "2.22.0-DE3.86",
     "counter": 659,
     "source_commit": "4111937e432ecec6adc989c9a51fa0fd37e960bf",
@@ -251,30 +269,12 @@
     "distribution": "local-signed-application",
     "host_firmware_suites": 169
   },
-  "previous_firmware_preview": {
-    "version": "2.22.0-DE3.85",
-    "counter": 658,
-    "source_id": "eff9ff254509ccacef1650fbbf51d595f82df1d094c912dbf2655d76e5bee08f",
-    "application_sha256": "46ea9df4be00107f967d751ceffe0679bd74fa7315caf46cc566938cf868a9bb",
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_85_658_NUR_APP.zip",
-    "ota_sha256": "a7f8b4aa6e01469c88433e40437618f199a47421e6a602e92c72eac0862fb411",
-    "hardware_acceptance": "pending",
-    "evidence": "docs/validation/DE3_85_LCD_TEST1.json",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.85-lcd-test1",
-    "softdevice_requirements": [
-      "0x0126"
-    ],
-    "host_firmware_suites": 168,
-    "public_review_package": "https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip",
-    "arm_display_test_evidence": "docs/validation/DE3_85_LCD_DEVICE_TEST.json",
-    "owner_test_report": "Owner reported successful LCD testing on 2026-11-18; interrupted Android DFU remains open."
-  },
   "local_web_candidate": {
-    "version": "3.57.0",
+    "version": "3.58.0",
     "publication": "local-test-build",
-    "firmware": "2.22.0-DE3.86",
-    "firmwareCounter": 659,
-    "releaseNotes": "web/LIESMICH_3_57_0.txt",
+    "firmware": "2.22.0-DE3.87",
+    "firmwareCounter": 660,
+    "releaseNotes": "web/LIESMICH_3_58_0.txt",
     "hardwareAcceptance": "pending",
     "previousTest": {
       "web": "3.56.0",
