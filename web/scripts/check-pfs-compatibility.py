@@ -8,6 +8,7 @@ read = lambda p: json.loads(p.read_text(encoding='utf-8-sig'))
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--gcc', default='gcc')
+parser.add_argument('--profile', choices=['de355','de389'], default='de355')
 args = parser.parse_args()
 out = args.output.resolve()
 out.mkdir(parents=True, exist_ok=False)
@@ -18,7 +19,8 @@ rows.sort(key=lambda r: (-r['kind'],len(r['path'].split('/')),r['path']))
 assert all(not any(x in r['path'] for x in '\t\r\n') and len(r['path'].encode('utf8'))<64 for r in rows)
 (out/'synthetic-rows.tsv').write_text(''.join(f"{r['kind']} {r['size']}\t{r['path']}\t{r['rawMeta128Hex']}\n" for r in rows), encoding='utf8', newline='\n')
 compiler = subprocess.check_output([args.gcc,'--version'],text=True)
-profiles = {'old':'packed-simulator-current','new':'packed-simulator-de355'}
+profiles = {'old':'packed-simulator-current' if args.profile=='de355' else 'packed-simulator-de355',
+            'new':'packed-simulator-'+args.profile}
 sources = {'harness':sha(WEB/'tests/fixtures/pfs-compat-host.c'),'fixture':sha(fixture)}
 identities, builds = {}, []
 for label, name in profiles.items():
@@ -57,7 +59,7 @@ for label,name in profiles.items():
     folder=WEB/'third-party'/name
     after_sources.update({name+'/'+n:sha(folder/n) for n in read(folder/'SOURCE_BINDING.json')['sourceFiles']})
 assert after_sources==sources
-report={'schema':1,'version':'3.58.1','passed':True,'deviceAccess':False,'syntheticDataOnly':True,
+report={'schema':1,'profile':args.profile,'passed':True,'deviceAccess':False,'syntheticDataOnly':True,
     'compiler':compiler,'format':'PFS1','layoutConstantsUnchanged':True,
     'engines':{k:v['engineSha256'] for k,v in identities.items()},'sourcesBefore':sources,'sourcesAfter':after_sources,
     'builds':builds,'cases':cases,'filesInitially':1131,'directoriesInitially':77,
@@ -65,5 +67,6 @@ report={'schema':1,'version':'3.58.1','passed':True,'deviceAccess':False,'synthe
     'mutations':['replace existing content and raw128','rename existing file','remove existing file','add8193-byte file','add empty file','old-engine replacement after new-engine writes'],
     'limits':['Host synthetic flash only. Not a device readback, timing benchmark or proof against every power interruption.',
               'Read-only stages perform no flash programming/erase. Writable phases exercise normal APIs and GC, not injected flash failures.']}
+if args.profile == 'de355': report['version'] = '3.58.1'
 (out/'PFS_CROSS_VERSION.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf8')
 print(json.dumps({'passed':True,'cases':len(cases),'report':str(out/'PFS_CROSS_VERSION.json')}))

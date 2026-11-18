@@ -9,6 +9,14 @@
 #include "hal_spi_flash.h"
 #include "mui_mem.h"
 
+#ifdef SMALL_CREATE_FAULT_TEST
+static bool report_full_media;
+static lfs_ssize_t available_space_fault(lfs_t *fs) {
+    return report_full_media ? (lfs_ssize_t)NOR_BLOCKS : lfs_fs_size(fs);
+}
+#define lfs_fs_size available_space_fault
+#endif
+
 static nor_fixture_t media;
 static uint8_t saved[NOR_BYTES];
 static void *owners[128];

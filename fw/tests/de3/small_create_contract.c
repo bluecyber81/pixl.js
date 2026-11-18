@@ -75,6 +75,49 @@ static df_frame_t small_prepare_commit(void) {
     f=small_cont(167,236);send_request(&f);partial(403);
     return small_cont(403,137);
 }
+/* A read or allocation may fail after the durable manifest was committed.
+ * A success must always be durable; a lost/error receipt permits old-or-whole. */
+static void small_resource_faults(void) {
+    enum fault { ALLOCATION, SPI_READ, NO_SPACE };
+    df_frame_t last = small_prepare_commit();
+    unsigned initial_allocs = alloc_calls, initial_reads = read_calls;
+    send_request(&last);
+    REQUIRE(answer.status == 0);
+    const unsigned counts[] = {alloc_calls - initial_allocs, read_calls - initial_reads, 1};
+    REQUIRE(counts[ALLOCATION] && counts[SPI_READ]);
+    for (enum fault fault = ALLOCATION; fault <= NO_SPACE; ++fault) {
+        for (unsigned nth = 1; nth <= counts[fault]; ++nth) {
+            last = small_prepare_commit();
+            if (fault == ALLOCATION) fail_at = alloc_calls + nth;
+            if (fault == SPI_READ) read_fail_at = read_calls + nth;
+            report_full_media = fault == NO_SPACE;
+            send_request(&last);
+            if (fault == ALLOCATION) REQUIRE(alloc_calls >= fail_at);
+            if (fault == SPI_READ) REQUIRE(read_calls >= read_fail_at);
+            bool acknowledged = answer.status == 0;
+            if (fault == NO_SPACE) REQUIRE(!acknowledged);
+            fail_at = read_fail_at = 0;
+            report_full_media = false;
+            df_small_create_cancel();
+            crash_ram();
+            REQUIRE(driver()->mount() == 0);
+            vfs_obj_t obj;
+            int present = driver()->stat_file(file_path+2, &obj);
+            REQUIRE(present == 0 || present == VFS_ERR_NOOBJ);
+            if (acknowledged) REQUIRE(present == 0);
+            if (fault == NO_SPACE) REQUIRE(present == VFS_ERR_NOOBJ);
+            if (present == 0) {
+                REQUIRE(obj.size == 540 && driver()->read_file_data(file_path+2, check, 541) == 540);
+                REQUIRE(!memcmp(check, new_data, 540));
+                for (unsigned k = 0; k < 128; ++k) REQUIRE((uint8_t)obj.meta[k] == 255);
+            }
+            REQUIRE(driver()->read_file_data("/saved", check, sizeof(check)) == 2048);
+            REQUIRE(!memcmp(check, old_data, 2048));
+        }
+    }
+    printf("Small commit fault coverage: %u allocations, %u reads, 1 space refusal\n",
+           counts[ALLOCATION], counts[SPI_READ]);
+}
 static unsigned small_fault_sweep(bool publishing) {
     df_frame_t last=small_prepare_commit();
     if(publishing){send_request(&last); REQUIRE(answer.status==0);}
@@ -210,6 +253,7 @@ static void small_create_contract(void) {
     REQUIRE(driver()->read_file_data("/Visible/a.bin",check,4)==3 && !memcmp(check,new_data,3));
     unsigned create_cuts=small_fault_sweep(false);
     unsigned publish_cuts=small_fault_sweep(true);
+    small_resource_faults();
     printf("Small protocol synthetic NOR fault cases: %u create, %u publish\n",create_cuts,publish_cuts);
     puts("PASS verified small create and conditional publish: framed 0..572, exact persisted SHA, metadata, exclusive name, stale revision, readonly and timeout/disconnect");
 }

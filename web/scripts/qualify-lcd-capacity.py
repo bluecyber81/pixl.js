@@ -107,6 +107,7 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--profile', choices=['de355', 'de389'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
@@ -117,11 +118,11 @@ def main():
     assert artifacts == record['artifacts_sha256']
     manifest, engine = identity(fw/'application/src/mod/vfs', fw/'components/littlefs')
     engine_record = dict(manifest=manifest, engineSha256=engine)
-    simulator = ROOT/'web/third-party/packed-simulator-de355'
+    simulator = ROOT/'web/third-party'/('packed-simulator-'+args.profile)
     assert engine_record == read(simulator/'ENGINE_IDENTITY.json')
     binding = read(simulator/'SOURCE_BINDING.json')
     assert all(digest(simulator/name) == sha for name,sha in binding['sourceFiles'].items())
-    wasm_sha = digest(ROOT/'web/public/lfs-capacity-de355.wasm')
+    wasm_sha = digest(ROOT/'web/public'/('lfs-capacity-'+args.profile+'.wasm'))
     assert wasm_sha == binding['wasmSha256']
     cross = read(args.cross/'PFS_CROSS_VERSION.json')
     assert cross['passed'] and cross['syntheticDataOnly'] and cross['engines']['new'] == engine

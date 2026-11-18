@@ -1,4 +1,5 @@
 /* Exact PackedFS + VFS adapter on synthetic NOR, including interrupted writes. */
+#define SMALL_CREATE_FAULT_TEST
 #define main original_contract_main
 #include CONTRACT
 #undef main

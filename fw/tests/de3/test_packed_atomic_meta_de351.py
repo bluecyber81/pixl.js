@@ -91,7 +91,7 @@ uint32_t hal_spi_flash_erase(uint32_t);
                                     '-fno-omit-frame-pointer','-fno-pie','-no-pie']
             built=subprocess.run(command,capture_output=True,text=True,timeout=60)
             self.assertEqual(built.returncode,0,built.stdout+built.stderr)
-            ran=subprocess.run((['qemu-arm'] if arm else [])+[str(exe),str(folder/'compat.img')],capture_output=True,text=True,timeout=60)
+            ran=subprocess.run((['qemu-arm'] if arm else [])+[str(exe),str(folder/'compat.img')],capture_output=True,text=True,timeout=180)
             self.assertEqual(ran.returncode,0,ran.stdout+ran.stderr)
             self.assertIn('PASS',ran.stdout)
             self.assertIn('PASS verified small create and conditional publish',ran.stdout)
@@ -100,6 +100,11 @@ uint32_t hal_spi_flash_erase(uint32_t);
             create_faults,publish_faults=map(int,small_faults.groups())
             self.assertGreater(create_faults,10)
             self.assertGreater(publish_faults,10)
+            resources=re.search(r'Small commit fault coverage: (\d+) allocations, (\d+) reads, 1 space refusal',ran.stdout)
+            self.assertIsNotNone(resources)
+            alloc_faults,read_faults=map(int,resources.groups())
+            self.assertGreater(alloc_faults,0)
+            self.assertGreater(read_faults,0)
             # Exact old core remains a test fixture, never linked into firmware.
             old=HERE/'packed_de350_fixture'
             self.assertEqual(sha(old/'packed_fs.c'),'e7f6992c0ba3814ebac6f29ea25a510f79f223e50ea072e59488e1e9eaaf4f20')
@@ -128,6 +133,7 @@ uint32_t hal_spi_flash_erase(uint32_t);
                 report=dict(passed=True,deviceAccess=False,arm32=arm,sanitize=sanitize,
                             sourceHashes=before,sourcesUnchanged=True,observations=observations,
                             smallCreateFaultCases=create_faults,conditionalPublishFaultCases=publish_faults,
+                            smallCommitAllocFaults=alloc_faults,smallCommitReadFaults=read_faults,smallCommitSpaceFaults=1,
                             limitations=['Synthetic NOR and malloc; no physical SPI, BLE/NFC or power test.',
                               'Requested allocations bounded to18KiB; not real TLSF overhead or a whole-firmware RAM watermark.',
                               'Reserve-space pressure is injected at lfs_fs_size; not a physical-full-flash test.',
