@@ -12,7 +12,7 @@
 #include "mui_icons.h"
 #include "settings.h"
 #include "vfs.h"
-#include <math.h>
+#include <stdlib.h>
 
 static void amiidb_scene_fav_list_reload(app_amiidb_t *app);
 void amiidb_scene_fav_list_item_clear_cb(mui_list_item_t *p_item);
@@ -101,13 +101,6 @@ static void amiidb_scene_fav_list_list_view_on_selected(mui_list_view_event_t ev
     }
 }
 
-/* Keep this shared comparator out of line: saves flash in both callers. */
-static __attribute__((noinline)) int fav_record_compare(const amiidb_fav_t *a, const amiidb_fav_t *b) {
-    if (a->amiibo_head != b->amiibo_head) return a->amiibo_head < b->amiibo_head ? -1 : 1;
-    if (a->amiibo_tail != b->amiibo_tail) return a->amiibo_tail < b->amiibo_tail ? -1 : 1;
-    return (int)a->game_id - (int)b->game_id;
-}
-
 static int amiidb_scene_fav_list_list_view_sort_cb(const mui_list_item_t *p_item_a, const mui_list_item_t *p_item_b) {
     /* This sorter runs before controls are appended: only folders and files. */
     if (p_item_a->icon != p_item_b->icon) return (int)p_item_a->icon - (int)p_item_b->icon;
@@ -119,7 +112,7 @@ static int amiidb_scene_fav_list_list_view_sort_cb(const mui_list_item_t *p_item
 #define FAV_PAGE_SIZE 24u
 typedef struct {
     app_amiidb_t *app;
-    uint32_t eligible, excluded;
+    uint32_t eligible, excluded, aliases;
     int32_t result;
     bool folders_only;
 } fav_page_context_t;
@@ -140,6 +133,7 @@ static int fav_key_compare(const amiidb_fav_info_t *a, const amiidb_fav_info_t *
 void amiidb_fav_page_reset(app_amiidb_t *app) {
     app->fav_page_direction = 0;
     app->fav_page_focus = 0;
+    app->fav_page_number = 0;
 }
 
 bool amiidb_fav_page_step(app_amiidb_t *app, uint16_t icon) {
@@ -151,6 +145,10 @@ bool amiidb_fav_page_step(app_amiidb_t *app, uint16_t icon) {
         if (icon == ICON_PREV) break;
     }
     if (!anchor) return false;
+    if (app->fav_page_number) {
+        if (icon == ICON_NEXT) app->fav_page_number++;
+        else if (app->fav_page_number > 1) app->fav_page_number--;
+    }
     fav_item_key(anchor, &app->fav_page_anchor);
     app->fav_page_direction = icon == ICON_PREV ? -1 : 1;
     app->fav_page_focus = 0;
@@ -161,13 +159,20 @@ static void amiidb_scene_fav_list_read_cb(amiidb_fav_info_t *info, void *ctx) {
     fav_page_context_t *page = ctx;
     app_amiidb_t *app = page->app;
     if (page->result != VFS_OK || (page->folders_only && info->fav_type != FAV_TYPE_FOLDER)) return;
+    if (info->fav_type == FAV_TYPE_FAV && info->name_alias) page->aliases++;
     int comparison = fav_key_compare(info, &app->fav_page_anchor);
     if (app->fav_page_direction && (app->fav_page_direction > 0 ? comparison <= 0 : comparison >= 0)) {
         page->excluded++; return;
     }
-    page->eligible++;
     mui_list_item_t *replace = NULL;
     size_t count = mui_list_view_item_size(app->p_list_view);
+    if (info->fav_type == FAV_TYPE_FAV) {
+        for (size_t i = 0; i < count; i++) {
+            const mui_list_item_t *row = mui_list_item_array_get(app->p_list_view->items, i);
+            if (row->icon == ICON_FILE && !fav_record_compare(row->user_data, &info->fav_data.fav)) return;
+        }
+    }
+    page->eligible++;
     if (count == FAV_PAGE_SIZE) {
         replace = mui_list_item_array_get(app->p_list_view->items, app->fav_page_direction < 0 ? 0 : count - 1);
         amiidb_fav_info_t worst;
@@ -199,7 +204,96 @@ static void amiidb_scene_fav_list_read_cb(amiidb_fav_info_t *info, void *ctx) {
     mui_list_view_sort(app->p_list_view, amiidb_scene_fav_list_list_view_sort_cb);
 }
 
+/* Rank reconstruction is needed only after a non-local detail jump or a v1
+ * resume. Canonical directories use the existing page scan. With aliases, count
+ * canonical markers/folders once and each additional logical ID once. */
+typedef struct {
+    const amiidb_fav_t *first;
+    amiidb_fav_t *keys;
+    amiidb_fav_t after;
+    uint32_t ordinary;
+    size_t used, batch;
+    bool resumed, more;
+} fav_rank_t;
+
+static int fav_rank_compare(const void *a, const void *b) { return fav_record_compare(a, b); }
+
+static void fav_rank_compact(fav_rank_t *rank) {
+    qsort(rank->keys, rank->used, sizeof(*rank->keys), fav_rank_compare);
+    size_t distinct = 0;
+    for (size_t i = 0; i < rank->used; i++) {
+        if (distinct && !fav_record_compare(&rank->keys[i], &rank->keys[distinct - 1])) continue;
+        if (distinct == rank->batch) { rank->more = true; break; }
+        rank->keys[distinct++] = rank->keys[i];
+    }
+    rank->used = distinct;
+}
+
+static void fav_rank_read(amiidb_fav_info_t *info, void *context) {
+    fav_rank_t *rank = context;
+    if (info->fav_type == FAV_TYPE_FOLDER) {
+        if (!rank->resumed) rank->ordinary++;
+        return;
+    }
+    const amiidb_fav_t *fav = &info->fav_data.fav;
+    if (fav_record_compare(fav, rank->first) >= 0) return;
+    if (!info->name_alias) {
+        if (!rank->resumed) rank->ordinary++;
+    } else if (!rank->resumed || fav_record_compare(fav, &rank->after) > 0) {
+        rank->keys[rank->used++] = *fav;
+        if (rank->used == 2 * rank->batch) fav_rank_compact(rank);
+    }
+}
+
+static bool fav_alias_rank(const char *folder, const amiidb_fav_t *first, uint32_t aliases, uint32_t *before) {
+    /* A batch at least ceil(sqrt(alias count)) bounds the number of complete
+     * scans. Common-sized folders use up to 64 IDs per batch when RAM permits. */
+    size_t minimum = 1;
+    while (minimum < (aliases - 1) / minimum + 1) minimum++;
+    size_t batch = minimum < 64 ? 64 : minimum;
+    if (batch > aliases) batch = aliases;
+    fav_rank_t rank = {.first = first, .batch = batch};
+    rank.keys = mui_mem_malloc(2 * rank.batch * sizeof(*rank.keys));
+    if (!rank.keys && batch != minimum) {
+        rank.batch = minimum;
+        rank.keys = mui_mem_malloc(2 * rank.batch * sizeof(*rank.keys));
+    }
+    if (!rank.keys) return false;
+    bool success = false;
+    uint32_t additional = 0;
+    for (;;) {
+        rank.more = false;
+        rank.used = 0;
+        if (amiidb_api_fav_list_dir(folder, fav_rank_read, &rank) != VFS_OK) break;
+        fav_rank_compact(&rank);
+        for (size_t i = 0; i < rank.used; i++) {
+            bool canonical = false;
+            if (rank.ordinary && amiidb_api_fav_has_canonical(folder, &rank.keys[i], &canonical) != VFS_OK)
+                goto done;
+            if (!canonical) additional++;
+        }
+        if (!rank.more) {
+            *before = rank.ordinary + additional;
+            success = true;
+            break;
+        }
+        rank.after = rank.keys[rank.used - 1];
+        rank.resumed = true;
+    }
+done:
+    mui_mem_free(rank.keys);
+    return success;
+}
+
+static void fav_hide_page_hint(app_amiidb_t *app) {
+    if (app->fav_page_hint_visible) {
+        app->p_toast_view->is_visible = false;
+        app->fav_page_hint_visible = false;
+    }
+}
+
 void amiidb_fav_page_load(app_amiidb_t *app, bool folders_only) {
+    if (!folders_only) fav_hide_page_hint(app);
     uint8_t mode = folders_only ? 1 : string_empty_p(app->cur_fav_dir) ? 2 : 3;
     if (mode != app->fav_page_mode) { amiidb_fav_page_reset(app); app->fav_page_mode = mode; }
     mui_list_view_clear_items_with_cb(app->p_list_view, amiidb_scene_fav_list_item_clear_cb);
@@ -221,6 +315,37 @@ void amiidb_fav_page_load(app_amiidb_t *app, bool folders_only) {
             mui_list_view_add_item(app->p_list_view, ICON_NEW, _T(APP_AMIIDB_NEW), NULL);
         bool previous = app->fav_page_direction < 0 ? page.eligible > FAV_PAGE_SIZE : page.excluded > 0;
         bool next = app->fav_page_direction < 0 ? page.excluded > 0 : page.eligible > FAV_PAGE_SIZE;
+        if (mode == 3 && (previous || next)) {
+            if (!previous) app->fav_page_number = 1;
+            else if (!app->fav_page_number) {
+                /* A restored or relocated anchor has no live page counter.
+                 * Reuse this traversal to locate its first displayed row. */
+                uint32_t before = app->fav_page_direction < 0
+                    ? page.eligible - mui_list_view_item_size(app->p_list_view) : page.excluded;
+                const mui_list_item_t *first = mui_list_item_array_get(app->p_list_view->items, 0);
+                if (!page.aliases || first->icon == ICON_FOLDER ||
+                    fav_alias_rank(string_get_cstr(app->cur_fav_dir), first->user_data, page.aliases, &before))
+                    app->fav_page_number = 1 + before / FAV_PAGE_SIZE;
+            }
+            const char *folder = string_get_cstr(app->cur_fav_dir);
+            /* Leave room for the page suffix even with the widest LCD glyphs.
+             * Copy complete UTF-8 characters and keep the stored name intact. */
+            char shortened[26];
+            if (strlen(folder) > sizeof(shortened) - 4) {
+                size_t cut = sizeof(shortened) - 4;
+                while (cut && ((uint8_t)folder[cut] & 0xC0) == 0x80) cut--;
+                memcpy(shortened, folder, cut);
+                memcpy(shortened + cut, "...", 4);
+                folder = shortened;
+            }
+            char hint[sizeof(shortened) + 24];
+            if (app->fav_page_number)
+                snprintf(hint, sizeof(hint), _T(DE3_FAVORITE_FOLDER_PAGE), folder, (unsigned)app->fav_page_number);
+            else
+                snprintf(hint, sizeof(hint), "%s", folder); /* Optional rank scratch/I/O unavailable. */
+            mui_toast_view_show(app->p_toast_view, hint);
+            app->fav_page_hint_visible = true;
+        }
         if (previous) mui_list_view_add_item(app->p_list_view, ICON_PREV, _T(DE3_PREVIOUS_PAGE), NULL);
         if (next) mui_list_view_add_item(app->p_list_view, ICON_NEXT, _T(DE3_NEXT_PAGE), NULL);
     }
@@ -233,6 +358,7 @@ bool amiidb_fav_select_page_step(app_amiidb_t *app, uint16_t icon) {
     amiidb_fav_info_t saved_anchor = app->fav_page_anchor;
     int8_t saved_direction = app->fav_page_direction;
     uint8_t saved_focus = app->fav_page_focus;
+    uint16_t saved_number = app->fav_page_number;
     bool stepped = amiidb_fav_page_step(app, icon);
     if (stepped) {
         app->fav_select_anchor = app->fav_page_anchor;
@@ -241,6 +367,7 @@ bool amiidb_fav_select_page_step(app_amiidb_t *app, uint16_t icon) {
     app->fav_page_anchor = saved_anchor;
     app->fav_page_direction = saved_direction;
     app->fav_page_focus = saved_focus;
+    app->fav_page_number = saved_number;
     return stepped;
 }
 
@@ -248,6 +375,7 @@ void amiidb_fav_select_page_load(app_amiidb_t *app) {
     amiidb_fav_info_t saved_anchor = app->fav_page_anchor;
     int8_t saved_direction = app->fav_page_direction;
     uint8_t saved_focus = app->fav_page_focus, saved_mode = app->fav_page_mode;
+    uint16_t saved_number = app->fav_page_number;
     app->fav_page_anchor = app->fav_select_anchor;
     app->fav_page_direction = app->fav_select_direction;
     app->fav_page_focus = 0;
@@ -259,6 +387,7 @@ void amiidb_fav_select_page_load(app_amiidb_t *app) {
     app->fav_page_direction = saved_direction;
     app->fav_page_focus = saved_focus;
     app->fav_page_mode = saved_mode;
+    app->fav_page_number = saved_number;
 }
 
 static bool fav_focus_visible(app_amiidb_t *app, const amiidb_fav_t *favorite) {
@@ -330,6 +459,7 @@ void amiidb_scene_fav_list_on_enter(void *user_data) {
 
 void amiidb_scene_fav_list_on_exit(void *user_data) {
     app_amiidb_t *app = (app_amiidb_t *)user_data;
+    fav_hide_page_hint(app);
     app->fav_page_focus = mui_list_view_get_focus(app->p_list_view);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);
     mui_list_view_clear_items_with_cb(app->p_list_view, amiidb_scene_fav_list_item_clear_cb);

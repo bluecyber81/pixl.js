@@ -126,11 +126,23 @@ int32_t amiidb_api_slot_remove(uint8_t slot) {
     return result == VFS_ERR_NOOBJ ? VFS_OK : result;
 }
 
+/* Existence and a recognized figure are separate. A file copied without
+ * metadata still occupies its slot and must not be offered as empty. */
+static void describe_occupied_slot(amiidb_slot_info_t *info, uint8_t number, vfs_obj_t *obj) {
+    vfs_meta_t meta;
+    vfs_meta_decode((uint8_t *)obj->meta, sizeof(obj->meta), &meta);
+    info->slot = number;
+    info->is_empty = false;
+    info->is_readonly = meta.has_flags && (meta.flags & VFS_OBJ_FLAG_READONLY);
+    info->has_amiibo_id = obj->type == VFS_TYPE_REG && is_valid_amiibo_ntag_by_size(obj->size) && meta.has_amiibo_id;
+    info->amiibo_head = info->has_amiibo_id ? meta.amiibo_head : 0;
+    info->amiibo_tail = info->has_amiibo_id ? meta.amiibo_tail : 0;
+}
+
 int32_t amiidb_api_slot_info(uint8_t slot, amiidb_slot_info_t *p_info) {
     if (!p_info || slot >= MAX_SLOT_COUNT) return VFS_ERR_FAIL;
     memset(p_info, 0, sizeof(*p_info));
     char path[VFS_MAX_PATH_LEN];
-    vfs_meta_t meta;
     vfs_obj_t obj;
 
     snprintf(path, sizeof(path), "/amiibo/data/%02u.bin", (unsigned)slot);
@@ -146,14 +158,7 @@ int32_t amiidb_api_slot_info(uint8_t slot, amiidb_slot_info_t *p_info) {
         return 0;
     }
 
-    memset(&meta, 0, sizeof(vfs_meta_t));
-    vfs_meta_decode((uint8_t *)obj.meta, sizeof(obj.meta), &meta);
-
-    p_info->slot = slot;
-    p_info->is_empty = false;
-    p_info->is_readonly = meta.has_flags && meta.flags & VFS_OBJ_FLAG_READONLY;
-    p_info->amiibo_head = meta.amiibo_head;
-    p_info->amiibo_tail = meta.amiibo_tail;
+    describe_occupied_slot(p_info, slot, &obj);
 
     return 0;
 }
@@ -161,18 +166,14 @@ int32_t amiidb_api_slot_info(uint8_t slot, amiidb_slot_info_t *p_info) {
 int32_t amiidb_api_slot_list(amiibo_slot_info_cb_t cb, void *ctx) {
     vfs_dir_t dir;
     vfs_obj_t obj;
-    vfs_meta_t meta;
 
     uint8_t max_slot_num = settings_get_data()->amiidb_data_slot_num;
     if (!cb || max_slot_num > MAX_SLOT_COUNT) return VFS_ERR_FAIL;
 
-    amiidb_slot_info_t slots[MAX_SLOT_COUNT];
+    amiidb_slot_info_t slots[MAX_SLOT_COUNT] = {0};
     for (uint8_t i = 0; i < MAX_SLOT_COUNT; i++) {
         slots[i].slot = i;
         slots[i].is_empty = true;
-        slots[i].is_readonly = false;
-        slots[i].amiibo_head = 0;
-        slots[i].amiibo_tail = 0;
     }
 
     vfs_driver_t *p_vfs_driver = vfs_get_driver(VFS_DRIVE_EXT);
@@ -184,22 +185,10 @@ int32_t amiidb_api_slot_list(amiibo_slot_info_cb_t cb, void *ctx) {
         return -1;
     }
     while ((res = p_vfs_driver->read_dir(&dir, &obj)) == VFS_OK) {
-        if (obj.type == VFS_TYPE_REG) {
-            int32_t index = 0;
-            if (obj.name[0] >= '0' && obj.name[0] <= '9' && obj.name[1] >= '0' && obj.name[1] <= '9' &&
-                memcmp(obj.name + 2, ".bin", 5) == 0 && (index = (obj.name[0] - '0') * 10 + obj.name[1] - '0') < max_slot_num) {
-                memset(&meta, 0, sizeof(vfs_meta_t));
-                vfs_meta_decode((uint8_t *)obj.meta, sizeof(obj.meta), &meta);
-                if (meta.has_amiibo_id) {
-                    slots[index].is_empty = false;
-                    slots[index].amiibo_head = meta.amiibo_head;
-                    slots[index].amiibo_tail = meta.amiibo_tail;
-                }
-                if (meta.has_flags && (meta.flags & VFS_OBJ_FLAG_READONLY)) {
-                    slots[index].is_readonly = true;
-                }
-            }
-        }
+        if (obj.name[0] < '0' || obj.name[0] > '9' || obj.name[1] < '0' || obj.name[1] > '9' ||
+            memcmp(obj.name + 2, ".bin", 5) != 0) continue;
+        uint8_t index = (obj.name[0] - '0') * 10 + obj.name[1] - '0';
+        if (index < max_slot_num) describe_occupied_slot(&slots[index], index, &obj);
     }
     int32_t close_result = p_vfs_driver->close_dir(&dir);
     if (res != VFS_ERR_EOF) return res;

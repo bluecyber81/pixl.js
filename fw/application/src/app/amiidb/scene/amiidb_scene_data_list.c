@@ -11,7 +11,7 @@
 #include "vfs.h"
 #include "vfs_meta.h"
 #include "i18n/language.h"
-#include <math.h>
+#include "amiidb_slot_label.h"
 
 void amiidb_scene_data_list_reload(app_amiidb_t *app);
 
@@ -25,6 +25,7 @@ static void amiidb_scene_data_list_list_view_on_selected(mui_list_view_event_t e
             mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIDB_SCENE_MAIN);
         } break;
 
+        case ICON_READ_ONLY:
         case ICON_AMIIBO:
         case ICON_FILE: {
             const db_amiibo_t *p_amiibo = p_item->user_data;
@@ -37,7 +38,7 @@ static void amiidb_scene_data_list_list_view_on_selected(mui_list_view_event_t e
     } else if (event == MUI_LIST_VIEW_EVENT_LONG_SELECTED) {
         uint16_t focus = mui_list_view_get_focus(p_list_view);
         /* Back and error-only rows are not slots, even at a valid slot index. */
-        if ((icon != ICON_AMIIBO && icon != ICON_FILE) ||
+        if ((icon != ICON_AMIIBO && icon != ICON_FILE && icon != ICON_READ_ONLY) ||
             focus >= settings_get_data()->amiidb_data_slot_num || focus >= MAX_SLOT_COUNT)
             return;
         app->cur_slot_index = focus;
@@ -48,28 +49,29 @@ static void amiidb_scene_data_list_list_view_on_selected(mui_list_view_event_t e
 void amiidb_scene_data_list_amiibo_slot_info_cb(amiidb_slot_info_t *p_info, void *ctx) {
     char txt[64];
     app_amiidb_t *app = ctx;
-    settings_data_t *p_settings_data = settings_get_data();
-    if (p_info->is_empty) {
-        snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, getLangString(_L_APP_AMIIDB_EMPTY_TAG));
-        mui_list_view_add_item(app->p_list_view, ICON_FILE, txt, (void *)0);
+    const db_amiibo_t *figure = p_info->has_amiibo_id ? get_amiibo_by_id(p_info->amiibo_head, p_info->amiibo_tail) : NULL;
+    uint16_t icon = p_info->is_empty ? ICON_FILE : p_info->is_readonly ? ICON_READ_ONLY : ICON_AMIIBO;
+    int prefix = snprintf(txt, sizeof(txt), "%02u ", (unsigned)p_info->slot + 1);
+    if (p_info->has_amiibo_id && !figure) {
+        snprintf(txt + prefix, sizeof(txt) - prefix, "%s %08lX:%08lX", _T(APP_SET_STORAGE_USED),
+                 (unsigned long)p_info->amiibo_head, (unsigned long)p_info->amiibo_tail);
     } else {
-        const db_amiibo_t *p_amiibo = get_amiibo_by_id(p_info->amiibo_head, p_info->amiibo_tail);
-        if (p_amiibo != NULL) {
-            const char *name = get_amiibo_display_name(p_amiibo);
-            snprintf(txt, sizeof(txt), "%02d %s", p_info->slot + 1, name);
-        } else {
-            snprintf(txt, sizeof(txt), "Amiibo[%08x:%08x]", p_info->amiibo_head, p_info->amiibo_tail);
-        }
-
-        mui_list_view_add_item(app->p_list_view, ICON_AMIIBO, txt, (void *)0);
+        const char *label = figure ? get_amiibo_display_name(figure) :
+                            p_info->is_empty ? _T(APP_AMIIDB_SLOT_FREE) : _T(APP_SET_STORAGE_USED);
+        amiidb_slot_caption(txt + prefix, sizeof(txt) - prefix, label);
     }
+    mui_list_view_add_item(app->p_list_view, icon, txt, (void *)figure);
 }
 
 void amiidb_scene_data_list_reload(app_amiidb_t *app) {
     // clear list view
     mui_list_view_clear_items(app->p_list_view);
-    if (amiidb_api_slot_list(amiidb_scene_data_list_amiibo_slot_info_cb, app) != VFS_OK)
+    if (amiidb_api_slot_list(amiidb_scene_data_list_amiibo_slot_info_cb, app) != VFS_OK ||
+        mui_list_view_item_size(app->p_list_view) != settings_get_data()->amiidb_data_slot_num) {
+        /* A dropped row would make its following focus indexes point at a different slot. */
+        mui_list_view_clear_items(app->p_list_view);
         mui_toast_view_show(app->p_toast_view, _T(DE3_STORAGE_IO_ERROR));
+    }
     mui_list_view_add_item(app->p_list_view, ICON_EXIT, getLangString(_L_APP_AMIIDB_BACK), (void *)0);
 }
 

@@ -256,4 +256,9 @@ const char * const lang_en_US[_L_COUNT] = {
     [_L_DE361_UNTIL_OFF] = "until off",
     [_L_AMIIDB_RECENT] = "Recently opened",
     [_L_AMIIDB_RECENT_EMPTY] = "None opened yet",
+    [_L_APP_AMIIDB_REPLACE_SLOT] = "Replace slot?",
+    [_L_APP_AMIIDB_SLOT_FREE] = "Free",
+    [_L_APP_AMIIDB_SLOT_REPLACE_N] = "Replace slot %02u?",
+    [_L_APP_AMIIDB_SLOT_CHANGED] = "Slot changed",
+    [_L_DE3_FAVORITE_FOLDER_PAGE] = "%s · Page %u",
 };

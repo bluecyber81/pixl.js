@@ -23,12 +23,15 @@ class SettingsSlotLimitTests(unittest.TestCase):
         hashes={p.relative_to(FW).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
         script=inherited.read_text()
         script=script.replace('FW = Path(__file__).resolve().parents[2]','FW = Path('+repr(str(FW))+')')
+        slot_source = api.read_text()
+        slot_functions = '\n'.join(function(slot_source, name) for name in (
+            'describe_occupied_slot', 'amiidb_api_slot_list'))
         extra='''
 #include "amiidb_api_slot.h"
 vfs_driver_t *vfs_get_driver(vfs_drive_t which){(void)which;return &driver;}
 void vfs_meta_decode(uint8_t*a,uint8_t n,vfs_meta_t*m){(void)a;(void)n;memset(m,0,sizeof(*m));}
 static void callback(amiidb_slot_info_t*i,void*c){(void)i;(void)c;assert(0);}
-'''+function(api.read_text(),'amiidb_api_slot_list')+'\n'
+'''+slot_functions+'\n'
         check=r'''
     assert(MAX_SLOT_COUNT==50);
     for(unsigned value=0;value<256;value++){

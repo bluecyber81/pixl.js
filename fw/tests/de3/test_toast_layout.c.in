@@ -142,6 +142,10 @@ int main(int argc,char **argv) {
         {"en_multiline_toast","First line\nSecond line",1},
         {"utf8_toast","ÄÖÜ äöü ß – € 中文",1},
         {"short_toast","OK",1},
+        {"favorite_de","Zélda ÄÖ – 森 · Seite 40",1},
+        {"favorite_zelda","Zelda · Seite 2",1},
+        {"favorite_en","Zelda · Page 2",1},
+        {"favorite_long","WWWWWWWWWWWWWWWWWWWWWW... · Seite 2731",1},
         {"long_toast","This deliberately long message must stay inside the display. It has enough text for more than four lines and must not wrap screen coordinates or overwrite the border.",0}
     };
     unsigned old_overflow=0;
@@ -171,7 +175,7 @@ int main(int argc,char **argv) {
     assert(!memcmp(&clip,&after,sizeof(clip))); guards(&b);
     for(unsigned y=0;y<16;y++) for(unsigned x=0;x<128;x++)
         assert(!(b.data[(y/8)*128+x]&(1u<<(y%8))));
-    puts("PASS 6 toast pixel cases plus offset/clip restoration; no hardware timing or LCD claim");
+    puts("PASS 10 toast pixel cases plus offset/clip restoration; no hardware timing or LCD claim");
 #else
     assert(old_overflow); puts("PASS negative control reproduced original English Shadow toast overflow");
 #endif

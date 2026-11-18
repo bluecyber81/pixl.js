@@ -14,6 +14,7 @@
 #define ICON_ERROR          0xe1bb
 #define ICON_HOME           0xe1f0
 
+#define ICON_READ_ONLY      0xe029  /* Closed padlock, Siji 6x10. */
 #define ICON_AMIIBO         0xe1e2
 
 #define ICON_NEXT           0xe09d
