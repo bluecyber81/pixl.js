@@ -18,7 +18,7 @@
   <main>
     <div class="intro"><h1>Allmiibo aktualisieren</h1><p>Wähle die Firmware für dein LCD oder OLED. Hier findest du die App-ZIP fürs Handy und die Anleitung für dein Gerät.</p></div>
     <nav class="choices" aria-labelledby="choose"><h2 id="choose">Was möchtest du machen?</h2>
-      <ul><li><a href="#flash"><b>LCD-App aktualisieren</b><span>Regulär DE3.81 / App654; Testversion DE3.87 / App660.</span></a></li>
+      <ul><li><a href="#flash"><b>LCD-App aktualisieren</b><span>Regulär DE3.81 / App654. Neue Testversion DE3.88 / App661.</span></a></li>
         <li><a href="#oled"><b>OLED-Testversion installieren</b><span>DE3.87-OLEDt6 für SH1106 und S112 7.2.0.</span></a></li>
         <li><a href="#littlefs"><b>LCD auf Packed LittleFS umstellen</b><span>Vorbereitung, Sicherung und Wiederherstellung für LCD.</span></a></li>
         <li><a href="#bootloader"><b>Komplettpaket für LCD prüfen</b><span>S112 7.3.0, Bootloader Z21 und DE3.81 / App654 zusammen installieren.</span></a></li></ul>
@@ -27,7 +27,8 @@
       <nav class="contents" aria-labelledby="contents"><h2 id="contents">Direkt zu</h2>
         <a href="#diagnose">Zuerst den Gerätestand lesen</a>
         <a href="#flash">LCD-App aktualisieren</a>
-        <a href="#lcd-de387">LCD DE3.87 testen</a>
+        <a href="#lcd-de388">LCD DE3.88 testen</a>
+        <a href="#lcd-de387">Frühere LCD-Testversion DE3.87</a>
         <a href="#lcd-de386">LCD DE3.86 testen</a>
         <a href="#lcd-de385">LCD DE3.85 testen</a>
         <a href="#oled">OLED-Testversion installieren</a>
@@ -50,6 +51,9 @@
         </section>
         <section id="flash">
           <h2>LCD-App per Bluetooth aktualisieren</h2>
+          <h3 id="lcd-de388">LCD DE3.88 / App661 · Test 1</h3>
+          <p>Für LCD mit Packed LittleFS (PFS1), Bootloader Z21 und S112 7.3.0. Sichere deine Sammlung. Lade die <a href="../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip" download>signierte App661-ZIP fürs Handy</a> herunter, öffne am Allmiibo <b>Einstellungen → Firmware-Update</b> und wähle die ungeöffnete ZIP in nRF Device Firmware Update. Am Computer kannst du den <a href="../dfu/web.html?package=de3.88-lcd-test1-app#board=LCD">LCD-Updater mit App661</a> verwenden. Nach dem Neustart zeigt der Dateimanager <b>DE3.88</b> und den App-Zähler <b>661</b>.</p>
+          <p>Nutze den Dateimanager <b>3.58.1 · App661 Test 1</b>, um einen neuen Ordner mit kleinen Dateien hochzuladen. Unterbrich die Verbindung und verbinde dasselbe Gerät wieder. Wähle <b>Fortsetzen</b> und prüfe den fertigen Ordner. Der Testdateimanager nutzt auch einen neuen Lesebefehl bei der Sicherung kleiner Dateien. Die Funklaufzeit auf einem echten LCD ist noch offen. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip">App661-Prüfpaket mit BIN, HEX und Prüfnachweisen</a>.</p>
           <h3 id="lcd-de387">LCD DE3.87 / App660</h3>
           <p>Für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Die <a href="../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip" download>signierte App660-ZIP</a> auf Android speichern. Am LCD Einstellungen → Firmware-Update öffnen und in nRF Device Firmware Update die ungeöffnete ZIP wählen. Nach dem Verbinden im Dateimanager App660 prüfen. Die erste Prüfung dieser Version am Gerät steht aus. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip">LCD-Quellen und Prüfpaket</a>.</p>
           <p>In der Slotliste stehen Nummer, Inhalt und Schreibschutz. Beim Blättern in Favoritenordnern hilft der kurze Seitenhinweis.</p>

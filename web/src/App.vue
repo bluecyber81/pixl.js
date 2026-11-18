@@ -596,9 +596,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Dateimanager für Windows (ZIP)' : 'File manager for Windows (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode (ZIP)' : 'Source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)' : 'LCD DE3.87 / App660 / Z21 · test kit (ZIP)' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows-Basisversion 3.58.1 (ZIP)' : 'Windows base release 3.58.1 (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode der Basisversion 3.58.1 (ZIP)' : 'Base release 3.58.1 source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.88 / App661 · Prüfpaket (ZIP)' : 'LCD DE3.88 / App661 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
@@ -1433,12 +1433,18 @@ export default {
       return this.execute_folder_upload(request, generation);
     },
     folder_upload_adapters(generation) {
-      return {...this.transfer_adapters(generation), readFileDigest: async (path, size) => {
+      const current = async read => {
         this.assert_session(generation);
-        const hash = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
+        const result = await read();
         this.assert_session(generation);
-        return hash;
-      }};
+        return result;
+      };
+      return {...this.transfer_adapters(generation),
+        readFileDigest:(path,size) => current(() => proto.vfs_backup_digest(path,size,this.firmwareVersion)),
+        readCreateRevision:() => current(() => proto.vfs_small_create_revision(this.firmwareVersion)),
+        createSmall:(path,bytes,sha,revision) => current(() => proto.vfs_small_create(path,bytes,sha,revision)),
+        publishSmallFolder:(stage,target,revision) => current(() => proto.vfs_publish_staged_folder(stage,target,revision))
+      };
     },
     async supports_folder_publish(generation) {
       // RAW128 OPEN carries two length bytes, a mode byte, the path (up to 65 bytes) and 128 bytes of metadata.
@@ -1898,6 +1904,11 @@ export default {
           checkpointState = this._backupCheckpoint = freshCheckpoint;
         }
         const run = storedBackup => createBackup({ ...context, ...this._backupExportOptions, exporterVersion: webVersion, progressIntervalMs: 100, readTransportStats: proto.get_transport_diagnostics, checkpointState, storedBackup, signal: controller.signal,
+          readStorageRevision: async () => {
+            this.assert_session(generation);
+            const revision = await proto.vfs_small_create_revision(this.firmwareVersion);
+            this.assert_session(generation); return revision;
+          },
           readDirectory: async path => {
             this.assert_session(generation);
             const entries = this.checked(await proto.vfs_read_folder(path));
@@ -1910,7 +1921,7 @@ export default {
           },
           readFile: async (path, options) => {
             this.assert_session(generation);
-            const bytes = await this.read_device_file(path, { max_bytes: options.maxBytes, progress_cb: options.onProgress });
+            const bytes = await this.read_device_file(path, { max_bytes: options.maxBytes, exact_size: options.maxBytes, firmware_version: this.firmwareVersion, progress_cb: options.onProgress });
             this.assert_session(generation); return bytes;
           },
           onProgress: progress => {
@@ -2689,7 +2700,7 @@ export default {
         if (saveOnRead) this.save_last_download();
       }, error => { if (this.session_current(generation)) { this.remember_transfer('download', 'failed'); this.show_transfer_error(error); } }, () => {
         if (generation === this.sessionGeneration) { --this.pendingDownloads; if (!this.pendingDownloads) this.set_transfer(null); }
-      }, { ...(Number.isSafeInteger(size) ? { max_bytes: size } : {}), progress_cb: progress => {
+      }, { ...(Number.isSafeInteger(size) ? { max_bytes: size, exact_size: size, firmware_version: this.firmwareVersion } : {}), progress_cb: progress => {
         if (this.session_current(generation)) this.set_transfer({ phase: 'download', path, done: progress.received_bytes, total: size || 0 });
       } });
     },

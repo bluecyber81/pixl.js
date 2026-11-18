@@ -11,6 +11,48 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex')
 const zipOptions = { JSZip }
 const context = { rootPath: 'E:/', deviceKey: 'test', firmwareVersion: '2.22.0-DE3.75', exporterVersion: '3.53.0' }
 
+test('a stable PackedFS revision verifies 56 backup directories in two round trips', async () => {
+  const vfs = memoryVfs()
+  vfs.nodes.delete('E:/tags')
+  for (let n = 0; n < 55; n++) {
+    const path = 'E:/d' + n
+    vfs.nodes.set(path, { type: 1, meta: metadata() })
+    vfs.put(path + '/figure.bin', [n])
+  }
+  let queries = 0
+  const result = await createBackup({ ...context, ...vfs.api, readStorageRevision: async () => {
+    queries++
+    return '0000000100000005'
+  } })
+  assert.equal(queries, 2)
+  assert.equal(result.profile.operations.listingCalls, 56)
+  assert.equal(result.profile.operations.verificationListingCalls, 0)
+  const archive = await loadBackupZip(result.blob, zipOptions)
+  for (let n = 0; n < 55; n++) {
+    assert.deepEqual([...readBackupArchiveFile(archive, 'E:/d' + n + '/figure.bin')], [n])
+  }
+  const legacy = await createBackup({ ...context, ...vfs.api, readStorageRevision: async () => null })
+  assert.equal(legacy.profile.operations.verificationListingCalls, 56)
+})
+
+test('a changed mount, changed generation, missing final reply or malformed token blocks the ZIP', async () => {
+  for (const final of ['0000000200000005', '0000000100000006', null]) {
+    const vfs = memoryVfs()
+    vfs.put('E:/tags/a.bin', [1, 2])
+    const revisions = ['0000000100000005', final]
+    await assert.rejects(createBackup({ ...context, ...vfs.api,
+      readFile: async (...args) => {
+        const bytes = await vfs.api.readFile(...args)
+        vfs.put('E:/tags/a.bin', [3, 4])
+        return bytes
+      }, readStorageRevision: async () => revisions.shift()
+    }), {code:'BACKUP_CHANGED'})
+  }
+  for (const invalid of [undefined, '0000000000000000', 'not-a-revision']) {
+    await assert.rejects(createBackup({ ...context, ...memoryVfs().api, readStorageRevision: async () => invalid }), {code:'BACKUP_CHANGED'})
+  }
+})
+
 test('repeat a 1081-file, 55-folder backup with the same size distribution using only current hashes for small files', async () => {
   const vfs = memoryVfs()
   vfs.nodes.delete('E:/tags')

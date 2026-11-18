@@ -28,9 +28,10 @@ test(`${base}: both setup guides have working anchors and bundled destinations`,
       assert.ok(target.pathname.startsWith(base), href)
       const rel = target.pathname.slice(base.length)
       const contents = fs.readFileSync(path.join(dist, rel.endsWith('/') || !rel ? rel + 'index.html' : rel))
-      if (target.pathname.endsWith('/dfu/web.html') && target.hash === '#board=OLED') {
+      if (target.pathname.endsWith('/dfu/web.html') && ['#board=LCD','#board=OLED'].includes(target.hash)) {
         const packages = JSON.parse(read('firmware/releases.json')).packages
-        assert.ok(packages.some(entry => entry.board === 'OLED' && entry.id === target.searchParams.get('package')), href)
+        assert.deepEqual([...target.searchParams.keys()], ['package'], href)
+        assert.ok(packages.some(entry => '#board=' + entry.board === target.hash && entry.id === target.searchParams.get('package')), href)
       } else if (target.hash) assert.ok(contents.includes(Buffer.from('id="' + target.hash.slice(1) + '"')), href)
     }
   }
@@ -103,13 +104,15 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   }
   for (const releaseFile of [
     'web3.58.1/Allmiibo_Dateimanager_3_58_1_Quellcode.zip',
-    'de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip',
+    'de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
   ]) {
     assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/' + releaseFile + '" download'), releaseFile)
   }
   assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'))
+  assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.88-lcd-test1.zip'))
+  assert.ok(index.includes('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.88 / App661'))
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
   localFile(new URL('../dfu/vendor/SOURCES.json', origin + base + 'licenses/index.html'))
   assert.match(index, /historische/)

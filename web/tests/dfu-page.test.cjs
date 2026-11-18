@@ -148,7 +148,7 @@ test('all scripts/styles are bundled locally and order includes CRC before bound
     assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.58.1"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.81','https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip','../guide/#lcd-de388','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.81','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -345,19 +345,19 @@ test('DFU changes display language during a transfer without starting or resetti
 });
 
 
-test('App660 download and source kit identify the same pending LCD trial',()=>{
+test('App661 download and source kit identify the same pending LCD trial',()=>{
  const row=html.match(/<p><a data-en="LCD test release [\s\S]*?<\/p>/)?.[0];
  assert.ok(row);
- assert.match(row,/LCD test release DE3\.87 \/ App660/);
- assert.match(row,/LCD-Testversion DE3\.87 \/ App660/);
- assert.match(row,/\.\.\/firmware\/Allmiibo_LCD_DE3_87_660_NUR_APP\.zip/);
+ assert.match(row,/LCD test release DE3\.88 \/ App661/);
+ assert.match(row,/LCD-Testversion DE3\.88 \/ App661/);
+ assert.match(row,/\.\.\/firmware\/Allmiibo_LCD_DE3_88_661_NUR_APP\.zip/);
  assert.match(row,/Physical testing of this new build is still pending/);
  assert.match(row,/Praxistest für diesen neuen Build ist noch offen/);
- assert.match(row,/href="\.\.\/guide\/#lcd-de387"/);
+ assert.match(row,/href="\.\.\/guide\/#lcd-de388"/);
  assert.doesNotMatch(row,/App657|successful practical use|praktischen Betrieb bestätigt/);
  const app=fs.readFileSync(path.join(__dirname,'../src/App.vue'),'utf8');
  const label=app.match(/<a :href="archiveLinks\.previewTestKit"[\s\S]*?<\/a>/)?.[0];
- assert.match(label,/LCD DE3\.87 \/ App660 \/ Z21 · Prüfpaket/);
- assert.match(label,/LCD DE3\.87 \/ App660 \/ Z21 · test kit/);
+ assert.match(label,/LCD DE3\.88 \/ App661 · Prüfpaket/);
+ assert.match(label,/LCD DE3\.88 \/ App661 · test kit/);
  assert.doesNotMatch(label,/App65[78]/);
 });

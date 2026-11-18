@@ -21,7 +21,7 @@ function harness(overrides = {}) {
     addListener(name, fn) { listeners.set(name, fn); },
     removeListener(name, fn) { if (listeners.get(name) === fn) listeners.delete(name); }
   };
-  const proto = { init() {}, vfs_backup_digest: async () => null, vfs_read_folder: async () => ({ status: 0, data: [] }),
+  const proto = { init() {}, vfs_small_create_revision: async () => null, vfs_backup_digest: async () => null, vfs_read_folder: async () => ({ status: 0, data: [] }),
     vfs_get_drive_list: async () => ({ status: 0, data: [
       { label: 'E', name: 'External', status: 0, total_size: 2 * 1024 * 1024, free_size: 2 * 1024 * 1024 }
     ] }), ...overrides };

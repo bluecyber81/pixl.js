@@ -1,9 +1,9 @@
 import { OLED_PARITY_VERSION, OLED_TEST5_VERSION, OLED_TEST6_VERSION } from './hardware-profile.js';
 
 // PXBI is a firmware declaration; it does not hash the running application.
-export const LCD_BUILD_DIAGNOSTICS_VERSION = '2.22.0-DE3.87';
+export const LCD_BUILD_DIAGNOSTICS_VERSION = '2.22.0-DE3.88';
 export function buildDiagnosticBoard(version) {
-  if (version === LCD_BUILD_DIAGNOSTICS_VERSION || version === '2.22.0-DE3.86' || version === '2.22.0-DE3.85' || version === '2.22.0-DE3.84') return 'LCD';
+  if (version === LCD_BUILD_DIAGNOSTICS_VERSION || version === '2.22.0-DE3.87' || version === '2.22.0-DE3.86' || version === '2.22.0-DE3.85' || version === '2.22.0-DE3.84') return 'LCD';
   if (version === OLED_PARITY_VERSION || version === OLED_TEST5_VERSION || version === OLED_TEST6_VERSION) return 'OLED';
   return null;
 }

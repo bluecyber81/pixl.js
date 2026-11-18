@@ -10,6 +10,26 @@ const execute = (vfs, plan, files, options = {}) => executeSyncJob({ ...vfs.api,
   uploadFile: input => safeUpload({ ...vfs.api, ...input }), ...options })
 const isMutation = entry => ['write', 'rename', 'remove', 'mkdir', 'meta'].includes(entry.op)
 
+test('comparison includes device-only trees and resuming an upload only revisits branches with local targets', async () => {
+  const vfs = memoryVfs(), files = [localFile('hero.bin')]
+  for (let i = 0; i < 55; i++) {
+    const path = 'E:/tags/library' + i
+    vfs.nodes.set(path, {type:1, meta:metadata()})
+    vfs.put(path + '/existing.bin', [i])
+  }
+  const plan = await compare(vfs, files)
+  assert.equal(plan.deviceOnly.length, 55)
+  const revisited = []
+  const result = await execute(vfs, plan, files, { readDirectory: async path => {
+    revisited.push(path)
+    return vfs.api.readDirectory(path)
+  } })
+  assert.equal(result.completed, 1)
+  assert.ok(revisited.includes('E:/tags'))
+  assert.ok(!revisited.some(path => path.startsWith('E:/tags/library')))
+  assert.deepEqual(vfs.bytes('E:/tags/library54/existing.bin'), [54])
+})
+
 test('small-file digests verify staged, committed and previously completed data; fallback rereads bytes', async () => {
   const {sha256Bytes} = await import('../src/lib/safe-upload.js')
   const vfs = memoryVfs(), files = [localFile('a.bin'), localFile('b.bin')]

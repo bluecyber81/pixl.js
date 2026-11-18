@@ -9,6 +9,9 @@ const stale = () => { throw new SyncError('SYNC_STALE', 'The destination or work
 const localChanged = () => { throw new SyncError('SYNC_LOCAL_CHANGED', 'Local files changed since the comparison.') }
 const randomHex = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), n => n.toString(16).padStart(2, '0')).join('')
 const isNeutral = entry => metadataKey(entry.meta) === emptyKey
+const validRevision = value => typeof value === 'string' && /^[0-9a-f]{16}$/.test(value) && value !== '0000000000000000'
+const singleCommit = (before, after) => before.slice(0,8) === after.slice(0,8) &&
+  parseInt(before.slice(8),16) + 1 === parseInt(after.slice(8),16)
 
 // The random sibling replaces the first component. Allow enough room for every
 // selected descendant, including when the user's top directory is a single letter.
@@ -31,7 +34,8 @@ export function newFolderUploadRoot(plan, selectedPaths) {
  * PackedFS writer may supply RAW128 writes with disconnect-abort semantics.
  * job.completed tracks acknowledged writes. Publication requires full hashes. */
 export async function executeNewFolderUpload({ plan, job, files, selectedPaths, deviceKey, assertSession, signal, onProgress,
-  createDirectory, writeFile, readDirectory, readFile, readFileDigest, rename, getFreeBytes, randomToken = randomHex }) {
+  createDirectory, writeFile, readDirectory, readFile, readFileDigest, readCreateRevision, createSmall, publishSmallFolder,
+  rename, getFreeBytes, randomToken = randomHex }) {
   const check = () => {
     assertSession()
     if (signal?.aborted) throw new SyncError('SYNC_CANCELLED', 'Folder upload cancelled.')
@@ -132,10 +136,38 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       state.phase = 'complete'; job.state = 'complete'
       return {completed:wanted.length - fromCheckpoint, skipped:fromCheckpoint, total:wanted.length, uploadedBytes, job}
     }
-    async function published(entries) {
+    function isPublished(entries) {
       const final = targetEntry(entries, targetName)
-      if (!final || final.type !== 1 || !isNeutral(final) || targetEntry(entries, stageName())) return false
-      await inventory(targetPath)
+      return !!final && final.type === 1 && isNeutral(final) && !targetEntry(entries, stageName())
+    }
+    // A revision binds the directory names, permissions and hashes to the same
+    // PackedFS state. Proofs are local to this call and never survive reconnect.
+    const revision = async () => {
+      check()
+      const value = await readCreateRevision()
+      check()
+      if (!validRevision(value)) stale()
+      return value
+    }
+    async function audit(base, partial, proof = null) {
+      const before = await revision()
+      const entries = await ownerListing()
+      if (base === targetPath) { if (!isPublished(entries)) stale() }
+      else checkWorkingFolder(entries)
+      const found = await inventory(base, partial, proof !== before)
+      if (await revision() !== before) stale()
+      return {found, revision:before}
+    }
+    let proof = null
+    const candidate = !/^~u[a-f0-9]{8,12}$/.test(targetName) &&
+      typeof createSmall === 'function' && typeof readCreateRevision === 'function' && typeof publishSmallFolder === 'function' &&
+      wanted.every(entry => entry.size <= 572) ? await readCreateRevision() : null
+    check()
+    if (candidate !== null && !validRevision(candidate) || state?.nativeReceipts && !candidate) stale()
+    async function published(entries) {
+      if (!isPublished(entries)) return false
+      if (candidate) await audit(targetPath, false)
+      else await inventory(targetPath)
       return true
     }
     job.state = 'running'
@@ -152,7 +184,9 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     if (targetEntry(initial, targetName)) stale()
     if (state) {
       checkWorkingFolder(initial)
-      const found = await inventory(state.stagePath, true)
+      const checkedStage = candidate ? await audit(state.stagePath, true) : null
+      const found = checkedStage ? checkedStage.found : await inventory(state.stagePath, true)
+      proof = checkedStage?.revision ?? null
       if (state.inFlight && found.has(state.inFlight) && !completed.has(state.inFlight)) {
         completed.add(state.inFlight); job.completed.push(state.inFlight)
       }
@@ -182,16 +216,35 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       checkWorkingFolder(await ownerListing())
     }
     state.phase = 'staging'
+    if (candidate) state.nativeReceipts = true
     for (const dir of dirs) {
       if (state.dirs.includes(dir)) continue
       const stageDir = staged(state.stagePath, dir), parts = splitDevicePath(stageDir)
       if (targetEntry(await list(parts.parent), parts.name)) stale()
       await createDirectory(stageDir); state.dirs.push(dir); check()
+      proof = null
     }
+    if (candidate && !proof) proof = (await audit(state.stagePath, true)).revision
     for (const entry of wanted) {
       if (completed.has(entry.targetPath)) continue
       const path = staged(state.stagePath, entry.targetPath), parts = splitDevicePath(path)
-      await writeFile(path, payloads.get(entry.targetPath), {
+      let consecutive = true
+      if (candidate) {
+        state.inFlight = entry.targetPath
+        let next
+        try {
+          next = await createSmall(path, payloads.get(entry.targetPath), entry.sha256, proof)
+        } catch (error) {
+          if (error.cmd === 0x23 && error.status === 1) {
+            state.inFlight = null
+            await audit(state.stagePath, true)
+          }
+          throw error
+        }
+        if (!validRevision(next) || next === proof) stale()
+        consecutive = singleCommit(proof,next)
+        proof = next
+      } else await writeFile(path, payloads.get(entry.targetPath), {
         rawMeta128:emptyMetadata.slice(),
         beforeWrite:async () => {
           if (targetEntry(await list(parts.parent), parts.name)) stale()
@@ -199,23 +252,37 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
         }
       })
       completed.add(entry.targetPath); job.completed.push(entry.targetPath); state.inFlight = null
+      if (!consecutive) proof = (await audit(state.stagePath, true)).revision
       uploadedBytes += entry.size
       check(); progress('syncing', completed.size)
     }
     state.phase = 'verifying'
     progress('checking', completed.size)
-    await inventory(state.stagePath)
-    // Hashing the tree can take time. Recheck all names and metadata before publishing.
-    await inventory(state.stagePath, false, false)
-    checkWorkingFolder(await ownerListing())
+    if (candidate) proof = (await audit(state.stagePath, false, proof)).revision
+    else {
+      await inventory(state.stagePath)
+      // Hashing the tree can take time. Recheck all names and metadata before publishing.
+      await inventory(state.stagePath, false, false)
+      checkWorkingFolder(await ownerListing())
+    }
     state.phase = 'publishing'
+    let publishedRevision
     try {
-      await rename(state.stagePath, targetPath)
+      if (candidate) publishedRevision = await publishSmallFolder(state.stagePath, targetPath, proof)
+      else await rename(state.stagePath, targetPath)
       check()
     } catch (error) {
       check()
+      if (candidate && error.cmd === 0x23 && error.status === 1) {
+        state.phase = 'verifying'
+        throw error
+      }
       if (!await published(await ownerListing())) throw error
+      return finish()
     }
+    // Rename itself advances the revision. An interleaved mutation invalidates
+    // every receipt, including changes of the same byte length.
+    if (candidate && (!validRevision(publishedRevision) || !singleCommit(proof, publishedRevision))) await audit(targetPath, false)
     return finish()
   } catch (error) {
     job.state = signal?.aborted ? 'paused' : 'failed'

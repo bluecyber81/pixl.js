@@ -68,7 +68,8 @@ async function run(firmwareVersion, width) {
     const manifest = JSON.parse(await parsed.file('manifest.json').async('string'));
     assert.equal(manifest.exporter.version,version);
     assert.equal(manifest.firmwareVersion,firmwareVersion);
-    const supported = firmwareVersion === '2.22.0-DE3.75';
+    const native = firmwareVersion === '2.22.0-DE3.88';
+    const supported = native || firmwareVersion === '2.22.0-DE3.75';
     const expectedFull = supported ? 2 : 3, expectedReuse = supported ? 1 : 0;
     assert.equal(manifest.performance.operations.fileReads,expectedFull);
     assert.equal(manifest.performance.operations.previousZipFiles,expectedReuse);
@@ -76,8 +77,10 @@ async function run(firmwareVersion, width) {
     assert.equal(manifest.performance.compressionRequested,'deflate');
     const trace = await page.evaluate(start => window.testPeripheral.commands.slice(start), start);
     assert.deepEqual(trace.filter(r=>r.cmd===0x12).map(r=>r.path).sort(),
-      Object.keys(files).filter(p=>!(supported && p==='E:/common.bin')).sort());
-    assert.equal(trace.filter(r=>r.cmd===0x16).length,2);
+      Object.keys(files).filter(p=>!(supported && p==='E:/common.bin') && !(native && p==='E:/changed.bin')).sort());
+    assert.deepEqual(trace.filter(r=>r.cmd===0x24).map(r=>r.path),native ? ['E:/changed.bin'] : []);
+    assert.equal(trace.filter(r=>r.cmd===0x16).length,native ? 1 : 2);
+    assert.equal(trace.filter(r=>r.cmd===0x22).length,native ? 2 : 0);
     assert.equal(trace.filter(r=>r.cmd===0x21).length,supported ? 2 : 0);
     assert.equal(trace.length,manifest.performance.transport.completedCommands);
     assert.equal(trace.length,manifest.performance.transport.txFrames);
@@ -97,7 +100,7 @@ async function run(firmwareVersion, width) {
 }
 try {
   browser = await chromium.launch({headless:true,chromiumSandbox:true,executablePath:process.env.CHROME_EXECUTABLE});
-  const results = [await run('2.22.0-DE3.75',390), await run('2.22.0-DE3.65',1280)];
+  const results = [await run('2.22.0-DE3.88',390), await run('2.22.0-DE3.75',390), await run('2.22.0-DE3.65',1280)];
   const report = {browser:browser.version(),results};
   await fs.writeFile(path.join(output,'backup-export-browser.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify(report));

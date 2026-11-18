@@ -271,10 +271,11 @@ async function packZip(entries, date, checkpoint, signal, compression, makeContr
  * MUST enforce maxBytes before growing its response buffer, and settle only
  * after its read transaction has closed. Cancellation never abandons a live
  * file handle: it waits for the current callback and then stops further I/O.
- * This is a checked sequential export, not an atomic filesystem snapshot or a
- * raw-metadata backup. Same-size content changes between reads are not detected.
+ * On PackedFS a caller can supply a session-bound mount and generation token.
+ * An equal token before and after reading covers contents and metadata for E:.
+ * Other backends use a second directory listing.
  */
-export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal,
+export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, readStorageRevision, onProgress, signal,
   firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState, storedBackup, previousArchive,
   compression = 'store', exporterVersion, readTransportStats, progressIntervalMs = 0 }) {
   if (typeof preserveLegacyNames !== 'boolean') fail('BACKUP_API', 'Invalid name preservation option.')
@@ -287,6 +288,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
       (readTransportStats != null && typeof readTransportStats !== 'function') ||
       !Number.isSafeInteger(progressIntervalMs) || progressIntervalMs < 0 || progressIntervalMs > 1000) fail('BACKUP_API', 'Invalid backup export options.')
   if (readFileDigest !== undefined && typeof readFileDigest !== 'function') fail('BACKUP_API', 'Invalid digest reader.')
+  if (readStorageRevision !== undefined && typeof readStorageRevision !== 'function') fail('BACKUP_API', 'Invalid storage revision reader.')
   if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null || storedBackup != null || previousArchive != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
   let previousFiles = null, readPrevious = null
   if (previousArchive != null) {
@@ -311,7 +313,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
     resume.busy = true
   }
   try {
-    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
+    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, readStorageRevision, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
       previousFiles, readPrevious, compression, exporterVersion, readTransportStats, progressIntervalMs })
     // A returned Blob owns its bytes. Keep no second resumable copy after success.
     if (resume) { resume.entries.clear(); resume.bytes = 0 }
@@ -321,7 +323,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
   }
 }
 
-async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
+async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, readStorageRevision, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
   previousFiles, readPrevious, compression, exporterVersion, readTransportStats, progressIntervalMs }) {
   const started = new Date()
   const snapshots = [], records = [], zipEntries = [], checksums = []
@@ -393,6 +395,15 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   }
   checkpoint()
   if (!globalThis.crypto?.subtle) fail('BACKUP_CRYPTO', 'SHA-256 requires a secure browser context.')
+  let initialRevision = null
+  if (readStorageRevision && root.startsWith('E:/') && !readRawMetadata) {
+    initialRevision = await readStorageRevision()
+    checkpoint()
+    if (initialRevision !== null && (typeof initialRevision !== 'string' ||
+        !/^[0-9a-f]{16}$/u.test(initialRevision) || initialRevision === '0000000000000000')) {
+      fail('BACKUP_CHANGED', 'The device returned an invalid storage revision.')
+    }
+  }
   await listDirectory(root, '', 0)
   const listedAt = performance.now()
   if (storedBackup) {
@@ -488,15 +499,23 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     progress('reading', record.sourcePath); checkpoint()
   }
   const readAt = performance.now()
-  for (const snapshot of snapshots) {
-    checkpoint(); progress('verifying', snapshot.path); checkpoint()
-    ++operations.verificationListingCalls
-    const current = checkedListing(await readDirectory(snapshot.path), snapshot.path, preserveLegacyNames, !!readRawMetadata)
+  if (initialRevision !== null) {
+    checkpoint(); progress('verifying', root); checkpoint()
+    if (await readStorageRevision() !== initialRevision) fail('BACKUP_CHANGED', 'Storage changed while the backup was being read.')
     checkpoint()
-    if (JSON.stringify(current) !== JSON.stringify(snapshot.entries)) {
-      fail('BACKUP_CHANGED', 'Directory contents, sizes or metadata changed during the backup.')
+    operations.storageRevisionReplies = 2
+    verifiedFolders = snapshots.length
+  } else {
+    for (const snapshot of snapshots) {
+      checkpoint(); progress('verifying', snapshot.path); checkpoint()
+      ++operations.verificationListingCalls
+      const current = checkedListing(await readDirectory(snapshot.path), snapshot.path, preserveLegacyNames, !!readRawMetadata)
+      checkpoint()
+      if (JSON.stringify(current) !== JSON.stringify(snapshot.entries)) {
+        fail('BACKUP_CHANGED', 'Directory contents, sizes or metadata changed during the backup.')
+      }
+      ++verifiedFolders
     }
-    ++verifiedFolders
   }
   if (readRawMetadata) for (const record of records) {
     checkpoint()
@@ -523,7 +542,9 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
     files: filesTotal, directories: snapshots.length - 1, bytes: bytesTotal,
     metadataEncoding: readRawMetadata ? 'Exact 128-byte VFS attributes in rawMeta128Hex; decoded metadata is informational, including unknown or malformed fields.' : 'Decoded protocol fields: notes, raw flags, hide/readonly and amiibo IDs; not raw metadata bytes.',
     nameMapping: preserveLegacyNames ? 'Unportable or colliding names have unique portable ZIP aliases. Each sourcePath is the exact original device identity; archivePath locates its unchanged data. Do not infer original names from ZIP aliases.' : 'Original names retained; unsafe or colliding names rejected.',
-    consistency: 'Serial reads; exact listed sizes; directory name/type/size/decoded-metadata snapshots compared before and after. Cached bytes are reused only after their current device SHA-256 matches. Not an atomic snapshot: files may change after their individual read or digest.',
+    consistency: initialRevision !== null
+      ? 'The same PackedFS mount and generation were observed before listing and after all file reads in one connection. Cached bytes were reused only after checking the current device SHA-256.'
+      : 'Serial reads; exact listed sizes; directory name/type/size/decoded-metadata snapshots compared before and after. Cached bytes are reused only after their current device SHA-256 matches. Not an atomic snapshot: files may change after their individual read or digest.',
     resume: { reusedFiles, reusedBytes, retainedInBrowserMemoryOnly: !!resume, ...(storedBackup ? {checkpointStorage:'indexeddb'} : {}) },
     entries: records,
   }

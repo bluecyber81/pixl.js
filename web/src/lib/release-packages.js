@@ -38,7 +38,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
     (diagnostic.softDeviceValid && (diagnostic.softDeviceFwid !== UPDATE_TARGET.softDevice.fwid ||
       diagnostic.softDeviceVersion !== UPDATE_TARGET.softDevice.version || diagnostic.softDeviceVariant !== UPDATE_TARGET.softDevice.variant))
   ));
-  const specialTags = { 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1' };
+  const specialTags = { 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
   return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:entry.id === 'de3.86-lcd-test1-app'
     ? deploymentPath('guide/LCD-' + entry.version.split('-')[1] + '.txt') : 'https://github.com/bluecyber81/pixl.js/releases/tag/' + releaseTag,
@@ -73,7 +73,7 @@ export function firmwarePackageText(locale='de_DE') {
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
-    android:'In nRF DFU öffnen (Android)',androidHint:'Die installierte nRF-DFU-App lädt die gewählte ZIP von GitHub Pages. In der App wählst du dein Gerät und startest die Übertragung.',
+    android:'In nRF DFU öffnen (Android)',androidHint:'Die installierte nRF-DFU-App lädt die gewählte ZIP vom Projekt. In der App wählst du dein Gerät und startest die Übertragung.',
     stable:'Stabile Ausgabe',previous:'Frühere stabile Ausgabe',profileMismatch:'Die ausgelesenen Bootdaten passen nicht zum Bootloader- oder S112-Profil dieses Pakets.',
     prerelease:'Testversion für LCD',releaseNotes:'Versionshinweise und Prüfstand',
     newer:'Die gelesene Anwendung ist neuer als dieses Paket. Ein Downgrade wird nicht angeboten.',
@@ -85,7 +85,7 @@ export function firmwarePackageText(locale='de_DE') {
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',
-    android:'Open in nRF DFU (Android)',androidHint:'The installed nRF DFU app downloads the selected ZIP from GitHub Pages. Choose your device in the app and start the transfer there.',
+    android:'Open in nRF DFU (Android)',androidHint:'The installed nRF DFU app downloads the selected ZIP from the project. Choose your device in the app and start the transfer there.',
     stable:'Stable release',previous:'Earlier stable release',profileMismatch:'The reported boot details differ from the bootloader or S112 profile of this package.',
     prerelease:'LCD test release',releaseNotes:'Release notes and test status',
     newer:'The read application is newer than this package. No downgrade is offered.',

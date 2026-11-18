@@ -65,6 +65,84 @@ const bytes = value => Array.from(new Uint8Array(value));
 const command = (f,cmd=0x14) => f.api.op_queue_push(cmd,()=>{},b=>b.readBytes(b.remaining()).toArrayBuffer());
 const bootPacket = require('./boot-fixture.cjs');
 
+const nativeVersion = '2.22.0-DE3.88';
+const nativeCap = [80,88,83,67,1,3,60,2,1,0,0,0,7,0,0,0];
+const nativePath = 'E:/other/~u0123456789ab/ä.bin';
+const nativeHash = require('node:crypto').createHash('sha256').update(Buffer.alloc(540,3)).digest();
+async function enableNative(f) {
+    const p = f.api.vfs_small_create_revision(nativeVersion);
+    f.rx(0x22,nativeCap);
+    return p;
+}
+test('small-file capability requires an LCD generation and a strictly valid positive reply on the current link', async () => {
+    const f = protocolFixture();
+    for (const fw of ['2.22.0-DE3.87','2.22.0-DE3.999','2.22.0-DE3.88-OLED','other']) assert.equal(await f.api.vfs_small_create_revision(fw),null);
+    assert.equal(f.writes.length,0);
+    const legacy = f.api.vfs_small_create_revision(nativeVersion);
+    f.rx(0x22,[],0,255);assert.equal(await legacy,null);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+    for (const index of [0,4,5,6,8]) {
+        const data = nativeCap.slice(); if(index===8) data.fill(0,8); else data[index]++;
+        const query = f.api.vfs_small_create_revision(nativeVersion), rejected = assert.rejects(query);
+        f.rx(0x22,data); await rejected;
+    }
+    assert.equal(await enableNative(f),'0000000700000001');
+    f.bus.emit('ble_disconnected');
+    assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
+});
+test('small-file wire sends the exact local bytes and checks every offset, persistent hash and revision',async()=>{
+    const f=protocolFixture(), rev=await enableNative(f);
+    const p=f.api.vfs_small_create(nativePath,new Uint8Array(540).fill(3),nativeHash.toString('hex'),rev);
+    let b=Buffer.from(f.writes.at(-1)).subarray(4);
+    const tx=b.readUInt32LE(1), name=Buffer.from(nativePath);
+    assert.notEqual(tx,0);assert.equal(b[0],0);assert.equal(b.readBigUInt64LE(5),0x700000001n);
+    assert.equal(b.readUInt16LE(13),540);assert.deepEqual(b.subarray(15,47),nativeHash);
+    assert.equal(b.readUInt16LE(47),name.length);assert.deepEqual(b.subarray(49,49+name.length),name);
+    let all=b.subarray(49+name.length);
+    while(all.length<540){
+        f.rx(0x23,[0,all.length&255,all.length>>8]);await flush();
+        b=Buffer.from(f.writes.at(-1)).subarray(4);
+        assert.equal(b[0],1);assert.equal(b.readUInt32LE(1),tx);assert.equal(b.readUInt16LE(5),all.length);
+        all=Buffer.concat([all,b.subarray(7)]);
+    }
+    assert.deepEqual(all,Buffer.alloc(540,3));
+    f.rx(0x23,[1,28,2,2,0,0,0,7,0,0,0,...nativeHash]);assert.equal(await p,'0000000700000002');
+    assert.equal(f.writes.filter(frame=>frame[0]===0x23).length,3);
+});
+test('an invalid offset, digest, revision or device failure aborts only its own transaction',async()=>{
+    for(const mode of ['offset','digest','revision','status']){
+        const f=protocolFixture(), rev=await enableNative(f);
+        const bytes=new Uint8Array(mode==='offset'?540:0);
+        const failure=assert.rejects(f.api.vfs_small_create(nativePath,bytes,'00'.repeat(32),rev));
+        const tx=f.writes.at(-1).slice(5,9);
+        if(mode==='offset') f.rx(0x23,[0,0,0]);
+        else if(mode==='status') f.rx(0x23,[],0,1);
+        else f.rx(0x23,[1,0,0,mode==='revision'?1:2,0,0,0,7,0,0,0,...new Array(32).fill(mode==='digest'?255:0)]);
+        await flush();
+        assert.deepEqual(f.writes.at(-1).slice(4),[2,...tx]);f.rx(0x23,[]);
+        await failure;
+    }
+});
+test('guarded folder commit requires a workspace sibling and transmits the complete expected revision and names',async()=>{
+    const f=protocolFixture(), rev=await enableNative(f), from='E:/~uabcdef012345', to='E:/Junges Ä';
+    for (const other of ['E:/anderes/Ziel','E:/~u12345678']) assert.throws(()=>f.api.vfs_publish_staged_folder(from,other,rev));
+    const result=f.api.vfs_publish_staged_folder(from,to,rev);
+    const body=Buffer.from(f.writes.at(-1)).subarray(4);
+    assert.equal(body[0],3);assert.equal(body.readBigUInt64LE(1),0x700000001n);
+    const count=Buffer.byteLength(from);
+    assert.equal(body.readUInt16LE(9),count);assert.equal(body.subarray(11,11+count).toString(),from);
+    assert.equal(body.readUInt16LE(11+count),Buffer.byteLength(to));assert.equal(body.subarray(13+count).toString(),to);
+    f.rx(0x23,[3,2,0,0,0,7,0,0,0]);assert.equal(await result,'0000000700000002');
+});
+test('advertised small-file reads are probed once per session and never inferred from create support',async()=>{
+    const f=protocolFixture();
+    const one=f.api.vfs_probe_small_read(nativeVersion), two=f.api.vfs_probe_small_read(nativeVersion);
+    assert.equal(f.writes.filter(x=>x[0]===0x22).length,1);
+    const withRead=nativeCap.slice();withRead[5]=7;f.rx(0x22,withRead);
+    assert.equal(await one,true);assert.equal(await two,true);assert.equal(await f.api.vfs_probe_small_read(nativeVersion),true);
+    f.bus.emit('ble_disconnected');assert.equal(f.api.vfs_small_read_capable(),false);
+    const next=f.api.vfs_probe_small_read(nativeVersion);f.rx(0x22,nativeCap);assert.equal(await next,false);
+});
+
 test('a first command waiting for the wire codec never reaches a replacement BLE session', async () => {
     const gate = deferred();
     const f = protocolFixture(undefined, {ByteBuffer:null, loadFileCodec:() => gate.promise});
@@ -166,8 +244,8 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
 test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
  const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
  packet[40]=23;packet.set([8,6,0,1],80);
- for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87']) {
-  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87'].includes(version);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88']) {
+  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88'].includes(version);
   packet.set(expandedCache ? [26,26,0,1] : [8,6,0,1],80);
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,3]]);
@@ -183,7 +261,7 @@ test('qualified LCD versions request cache-slot detail; rejected optional select
   const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);
   assert.equal((await p).schemaVersion,3);
  }
- for(const version of ['2.22.0-DE3.81','2.22.0-DE3.88']){
+ for(const version of ['2.22.0-DE3.81','2.22.0-DE3.89']){
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
  }
@@ -1561,4 +1639,37 @@ test('favourite marker open never sets truncate and sends no data before close',
     f.rx(0x13, []);
     await close;
     assert.equal(f.writes.length, 2);
+});
+
+test('small snapshot download uses 0x24 for the exact size only and owns chunked bytes', async () => {
+    const f=protocolFixture(), data=Uint8Array.from({length:540},(_,i)=>i%251), seen=[];
+    let result,failed;
+    const p=f.api.vfs_helper_read_file('E:/dir/a.bin',v=>{result=bytes(v);},e=>{failed=e;},null,
+        {exact_size:540,max_bytes:540,firmware_version:nativeVersion,progress_cb:x=>seen.push(x.received_bytes)});
+    await flush();
+    assert.equal(f.writes.at(-1)[0],0x22);
+    const cap=nativeCap.slice();cap[5]=7;f.rx(0x22,cap);await flush();
+    assert.deepEqual(f.writes.at(-1),[0x24,0,0,0,12,0,...Buffer.from('E:/dir/a.bin'),28,2]);
+    f.rx(0x24,data.slice(0,243),0x8000); f.rx(0x24,data.slice(243,486),0x8001); f.rx(0x24,data.slice(486),2);
+    await p;assert.equal(failed,undefined);assert.deepEqual(result,[...data]);assert.equal(seen.at(-1),540);
+    for(const [expected,returned] of [[0,[]],[2,[4]],[1,[4,5]]]){
+        let value,err;
+        const done=f.api.vfs_helper_read_file('E:/a.bin',v=>{value=bytes(v);},e=>{err=e;},null,
+            {exact_size:expected,max_bytes:expected,firmware_version:nativeVersion});
+        await flush();assert.equal(f.writes.at(-1)[0],0x24);
+        f.rx(0x24,returned);await done;
+        if(expected===0){assert.deepEqual(value,[]);assert.equal(err,undefined);}
+        else {assert.notEqual(err,undefined);assert.equal(value,undefined);}
+        if(expected===1)break;
+    }
+});
+test('known LCD660 and OLED small downloads keep legacy OPEN/READ/CLOSE without capability probes',async()=>{
+    for(const version of ['2.22.0-DE3.87','2.22.0-DE3.88-OLED']){
+        const f=protocolFixture();let value;
+        const p=f.api.vfs_helper_read_file('E:/a.bin',v=>{value=bytes(v);},e=>assert.fail(e),null,
+            {exact_size:2,max_bytes:2,firmware_version:version});
+        await flush();assert.equal(f.writes.at(-1)[0],0x12);
+        f.rx(0x12,[0]);await flush();f.rx(0x14,[7,0]);await flush();f.rx(0x13);await p;
+        assert.deepEqual(value,[7,0]);assert.deepEqual(f.writes.map(x=>x[0]),[0x12,0x14,0x13]);
+    }
 });

@@ -39,7 +39,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');
@@ -208,4 +208,16 @@ test('App660 uses its signed LCD ZIP, release notes and exact published Android 
     assert.equal(nrfDfuLink({ ...entry, ...patch }), null, JSON.stringify(patch));
   }
   assert.equal(packagePresentation(entry, { connected:true, firmwareVersion:'2.22.0-DE3.85-OLEDt5' }).profileMismatch, true);
+});
+
+test('the App661 test offers the local ZIP for the updater and the matching release asset for Android', () => {
+  const {packages} = JSON.parse(readFileSync(new URL('../public/firmware/releases.json',import.meta.url)));
+  const entry = packages.find(item=>item.id === 'de3.88-lcd-test1-app');
+  assert.equal(entry.counter,661);
+  assert.equal(entry.channel,'prerelease');
+  const offer=packagePresentation(entry,{connected:true,firmwareVersion:'2.22.0-DE3.87'});
+  assert.equal(offer.downloadUrl,'/firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip');
+  assert.equal(offer.releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1');
+  assert.equal(new URL(nrfDfuLink(entry)).searchParams.get('file'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.88-lcd-test1/'+entry.file);
+  for(const wrong of [{bootloader:'Z20'},{board:'OLED'},{counter:660},{channel:'stable'}]) assert.equal(nrfDfuLink({...entry,...wrong}),null);
 });

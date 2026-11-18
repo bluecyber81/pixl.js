@@ -64,7 +64,7 @@ function writableDirectory(entry) {
 }
 /** Entirely read-only. It compares bytes, not timestamps or filename guesses.
  * Device-only entries are informational and NEVER deletion candidates. */
-export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, history, localFolder }) {
+export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, history, localFolder, includeDeviceOnly = true }) {
   const root = rootPathOf(rootPath), identity = checkedDeviceKey(deviceKey)
   if (history && history.binding !== await folderBinding(identity, root, localFolder)) fail('SYNC_HISTORY_BINDING', 'This reference belongs to a different comparison.')
   const sources = sourcesOf(files, root), remote = new Map(), remoteKeys = new Map()
@@ -84,7 +84,9 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       remote.set(child, entry)
       const aliases = remoteKeys.get(pathKey(child)) || []
       aliases.push(child); remoteKeys.set(pathKey(child), aliases)
-      if (entry.type === 1) await walk(child, depth + 1)
+      if (entry.type === 1 && (includeDeviceOnly || history || sources.directories.has(child))) {
+        await walk(child, depth + 1)
+      }
     }
   }
   const rootAccess = await directoryPathAccess(root, readDirectory, check)
@@ -140,7 +142,9 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
   }
   check()
   const selected = new Set(sources.files.keys())
-  const deviceOnly = [...remote.entries()].filter(([path, entry]) => entry.type === 0 && !selected.has(path)).map(([path, entry]) => ({ path, size: entry.size }))
+  const deviceOnly = includeDeviceOnly || history
+    ? [...remote.entries()].filter(([path, entry]) => entry.type === 0 && !selected.has(path)).map(([path, entry]) => ({ path, size: entry.size }))
+    : []
   if (history) {
     const prefix = root.endsWith('/') ? root : root + '/'
     for (const row of deviceOnly) {
@@ -205,7 +209,9 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
   try {
     // This second read-only pass catches stale plans and validates completed
     // entries too. No mkdir/upload happens before this entire pass succeeds.
-    const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress })
+    // Every local target and ancestor is rechecked. Device-only subtrees were
+    // reported in the preview and cannot be read or changed by this upload.
+    const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, includeDeviceOnly:false })
     const currentByPath = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
     for (const entry of plan.entries) {
       const current = currentByPath.get(entry.targetPath)

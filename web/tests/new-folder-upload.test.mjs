@@ -90,6 +90,37 @@ function packedVfs() {
   return {api,nodes,actions,setHook(fn){hook=fn},disconnect(){alive=false},reconnect(){alive=true}}
 }
 const mutation = action => ['mkdir','write','rename'].includes(action.kind)
+function nativeApi(s, hook = () => {}) {
+  let generation = 17
+  const rev = () => '00000001' + generation.toString(16).padStart(8,'0')
+  const denied = () => Object.assign(new Error('Device rejected guarded operation'), {cmd:0x23,status:1})
+  const bump = () => { ++generation }
+  const actions = []
+  return {
+    actions, bump,
+    readCreateRevision:async () => {s.api.assertSession(); return rev()},
+    createDirectory:async p => {await s.api.createDirectory(p); bump()},
+    createSmall:async (p,bytes,sha,expected) => {
+      await hook('start',p,bump)
+      if (expected !== rev() || s.nodes.has(p)) throw denied()
+      assert.equal(await sha256Bytes(bytes),sha)
+      actions.push(p)
+      s.nodes.set(p,{type:0,bytes:bytes.slice(),meta:newMetadata()}); bump()
+      assert.equal(await sha256Bytes(s.nodes.get(p).bytes),sha)
+      const atCommit = rev()
+      await hook('commit',p,bump)
+      s.api.assertSession()
+      return atCommit
+    },
+    publishSmallFolder:async (from,to,expected) => {
+      await hook('publish',from,bump)
+      if (expected !== rev()) throw denied()
+      await s.api.rename(from,to); bump()
+      await hook('published',to,bump); s.api.assertSession()
+      return rev()
+    }
+  }
+}
 async function setup(selected = [0,1,2]) {
   const vfs = packedVfs(), files = fixtureFiles()
   const plan = await createSyncPlan({...vfs.api,rootPath:root,deviceKey:identity,files})
@@ -263,4 +294,68 @@ test('a final-name collision at publication preserves the independent folder and
   assert.deepEqual(s.nodes.get(target+'/original.bin').bytes,bytesOf(9))
   assert.equal(s.nodes.has(target+'/f000.bin'),false)
   assert(s.nodes.has(s.job.newFolderUpload.stagePath+'/f000.bin'))
+})
+
+test('persistent per-file receipts and a stable revision verify a closed small-file tree without redundant SHA requests', async () => {
+  const s = await setup(), native = nativeApi(s)
+  const receipt = await s.run(native)
+  assert.equal(receipt.uploadedBytes,1620); assert.equal(receipt.total,3)
+  assert.equal(native.actions.length,3)
+  assert.equal(s.actions.filter(a=>a.kind==='hash' || a.kind==='open').length,0)
+  for (let i=0;i<3;i++) assert.deepEqual(s.nodes.get(root+'/'+s.files[i].relativePath).bytes,bytesOf(i))
+})
+
+test('a native file create refuses stale inventory and preserves an exact or case-equivalent foreign name', async () => {
+  for(const name of ['f000.bin','F000.bin']) {
+    const s=await setup(), native=nativeApi(s,(when,p,bump)=>{
+      if(when!=='start') return
+      s.nodes.set(parentOf(p)+'/'+name,{type:0,meta:newMetadata(),bytes:bytesOf(99)});bump()
+    })
+    await assert.rejects(s.run(native))
+    assert.equal(native.actions.length,0)
+    assert.equal(s.nodes.has(target),false)
+    assert.deepEqual(s.nodes.get(s.job.newFolderUpload.stagePath+'/'+name).bytes,bytesOf(99))
+  }
+})
+
+test('a modification of the same length before final inventory or after it prevents publication', async () => {
+  for(const point of ['last receipt','before publish']) {
+    const s=await setup()
+    const native=nativeApi(s,(when,p,bump)=>{
+      if (!(point==='before publish' && when==='publish' || point==='last receipt' && when==='commit' && p.endsWith('/f002.bin'))) return
+      s.nodes.get(s.job.newFolderUpload.stagePath+'/f000.bin').bytes[0]^=1
+      bump()
+    })
+    await assert.rejects(s.run(native))
+    assert.equal(s.nodes.has(target),false)
+    assert.equal(s.nodes.has(s.job.newFolderUpload.stagePath),true)
+    assert.equal(s.nodes.get(s.job.newFolderUpload.stagePath+'/f000.bin').bytes[0],1)
+    assert.equal(s.actions.some(a=>a.kind==='rename'),false)
+  }
+})
+
+test('native reconnect rechecks every retained byte, including a lost create or publication reply', async () => {
+  for (const point of ['after create','after rename','same size change','lost capability']) {
+    const s=await setup()
+    let cut=false
+    const native=nativeApi(s,(when,p)=>{
+      const trigger=point==='after rename' ? when==='published' : when==='commit' && p.endsWith('/f001.bin')
+      if (!cut && trigger) {cut=true;s.disconnect()}
+    })
+    await assert.rejects(s.run(native))
+    assert(cut);s.reconnect()
+    const prior=native.actions.length
+    if (point==='same size change') {
+      s.nodes.get(s.job.newFolderUpload.stagePath+'/f000.bin').bytes[1]^=1;native.bump()
+      await assert.rejects(s.run(native))
+      assert.equal(s.nodes.has(target),false);assert.equal(native.actions.length,prior)
+    } else if (point==='lost capability') {
+      await assert.rejects(s.run({...native,readCreateRevision:async()=>null}))
+      assert.equal(native.actions.length,prior);assert.equal(s.nodes.has(target),false)
+    } else {
+      const done=await s.run(native)
+      assert.equal(native.actions.length,3);assert.equal(done.skipped,point==='after rename'?3:2)
+      assert(s.actions.filter(e=>e.kind==='hash').length>=done.skipped)
+    }
+  }
 })

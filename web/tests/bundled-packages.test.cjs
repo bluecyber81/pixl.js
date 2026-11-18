@@ -126,9 +126,9 @@ test('a rejected bundled package shows the check that failed in both languages',
 });
 
 test('the firmware catalogue bounds the number of distinct packages before parsing entries', () => {
- const items = Array.from({length:18}, (_, i) => ({...entry, counter:700+i, version:'2.22.0-DE3.'+(100+i),
+ const items = Array.from({length:33}, (_, i) => ({...entry, counter:700+i, version:'2.22.0-DE3.'+(100+i),
   id:'de3.'+(100+i)+'-lcd-app', file:'Allmiibo_LCD_DE3_'+(100+i)+'_'+(700+i)+'_NUR_APP.zip'}));
- assert.equal(validateCatalog({schema:1, packages:items.slice(0,17)}).packages.length,17);
+ assert.equal(validateCatalog({schema:1, packages:items.slice(0,32)}).packages.length,32);
  assert.throws(()=>validateCatalog({schema:1,packages:items}), /Katalog/);
 });
 

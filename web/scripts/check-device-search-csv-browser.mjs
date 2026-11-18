@@ -20,9 +20,14 @@ export function installReadOnlyPeripheral({files, directories, digests = {}, cap
     if (cmd === 0x08 && powerDiagnostics && frame.length === 4) return powerDiagnostics;
     if (cmd === 0x0b && flashDiagnostics && frame.length === 4) return flashDiagnostics;
     if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(capacity.total), ...dword(capacity.free)];
-    if (cmd === 0x12 || cmd === 0x16 || cmd === 0x21) {
+    if (cmd === 0x22 && firmwareVersion === '2.22.0-DE3.88' && frame.length === 4)
+      return [80,88,83,67,1,7,...word(572),...dword(42),...dword(3)];
+    if (cmd === 0x12 || cmd === 0x16 || cmd === 0x21 || cmd === 0x24) {
       const length = frame[4] | frame[5] << 8;
       record.path = decoder.decode(frame.subarray(6, 6 + length));
+      if (cmd === 0x24 && firmwareVersion === '2.22.0-DE3.88' && frame.length === length+8 && !open &&
+          (frame[6+length] | frame[7+length]<<8) === files[record.path]?.length && files[record.path].length <= 572)
+        return files[record.path];
       if (cmd === 0x21 && digests[record.path] && frame.length === length + 8 &&
           (frame[6 + length] | frame[7 + length] << 8) === files[record.path]?.length) return digests[record.path];
       if (cmd === 0x12 && frame[6 + length] === 8 && files[record.path] && !open) {

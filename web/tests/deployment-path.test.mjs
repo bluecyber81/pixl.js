@@ -69,9 +69,9 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
   const version = JSON.parse(read('package.json')).version
   const footer = read('src/App.vue').match(/<footer class="source-footer">[\s\S]*?<\/footer>/)[0]
   const expected = [
-    ['web3.58.1/Allmiibo_Dateimanager_3_58_1_Portable.zip', 'Dateimanager für Windows (ZIP)', 'File manager for Windows (ZIP)'],
-    ['web3.58.1/Allmiibo_Dateimanager_3_58_1_Quellcode.zip', 'Quellcode (ZIP)', 'Source code (ZIP)'],
-    ['de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip', 'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)', 'LCD DE3.87 / App660 / Z21 · test kit (ZIP)'],
+    ['web3.58.1/Allmiibo_Dateimanager_3_58_1_Portable.zip', 'Windows-Basisversion 3.58.1 (ZIP)', 'Windows base release 3.58.1 (ZIP)'],
+    ['web3.58.1/Allmiibo_Dateimanager_3_58_1_Quellcode.zip', 'Quellcode der Basisversion 3.58.1 (ZIP)', 'Base release 3.58.1 source code (ZIP)'],
+    ['de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip', 'LCD DE3.88 / App661 · Prüfpaket (ZIP)', 'LCD DE3.88 / App661 · test kit (ZIP)'],
     ['de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)']
   ]
   for (const language of ['de_DE', 'en']) {

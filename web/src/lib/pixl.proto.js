@@ -32,6 +32,10 @@ var transport_generation = 0
 var transport_capabilities = null
 var transport_probe = null
 var file_digest_unsupported = false
+var small_create_generation = -1
+var small_read_supported = false
+var small_read_probe = null
+var small_create_tx = 0
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
 var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 }
@@ -556,6 +560,134 @@ export function vfs_backup_digest(path, size, firmwareVersion) {
         return checked_response(response);
     });
 }
+function read_revision(b) {
+    const lo = b.readUint32(), hi = b.readUint32();
+    if (!lo && !hi) throw new Error('Invalid storage revision.');
+    return hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0');
+}
+
+export function vfs_small_create_revision(firmwareVersion) {
+    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
+    if (!version || Number(version[1]) < 88 || !Object.hasOwn(LCD_PREVIEW_COUNTERS, firmwareVersion)) return Promise.resolve(null);
+    const generation = transport_generation;
+    small_create_generation = -1;
+    return op_queue_push(0x22, () => {}, b => {
+        if (b.remaining() !== 16 || b.readUint32() !== 0x43535850 || b.readUint8() !== 1)
+            throw new Error('Invalid small-file capability.');
+        const flags = b.readUint8();
+        if (![3,7].includes(flags) || b.readUint16() !== 572) throw new Error('Invalid small-file capability.');
+        small_read_supported = !!(flags & 4);
+        return read_revision(b);
+    }, {max_bytes:16}).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        if (response.status === 255) return null;
+        const revision = checked_response(response);
+        small_create_generation = generation;
+        return revision;
+    });
+}
+
+export function vfs_small_read_capable() {
+    return small_create_generation === transport_generation && small_read_supported;
+}
+
+export function vfs_probe_small_read(firmwareVersion) {
+    if (small_create_generation === transport_generation) return Promise.resolve(vfs_small_read_capable());
+    if (!small_read_probe || small_read_probe.generation !== transport_generation || small_read_probe.version !== firmwareVersion) {
+        const generation = transport_generation;
+        const promise = vfs_small_create_revision(firmwareVersion).then(() => {
+            if (transport_generation !== generation) throw new Error('Bluetooth session changed');
+            return vfs_small_read_capable();
+        });
+        small_read_probe = {generation, version:firmwareVersion, promise};
+    }
+    return small_read_probe.promise;
+}
+
+// Each fragment waits for the application acknowledgement, including when a
+// single GATT frame uses Write Without Response. Only the final reply proves
+// that the new, exclusively created file was hashed again from storage.
+export function vfs_small_create(path, bytes, sha256, revision) {
+    path_validation(path);
+    const parts = path.split('/');
+    if (small_create_generation !== transport_generation ||
+        parts[0] !== 'E:' || !parts.slice(1,-1).some(part => /^~u[a-f0-9]{8,12}$/u.test(part)) ||
+        parts.slice(1).some(part => !part || part === '.' || part === '..') ||
+        !(bytes instanceof Uint8Array) || bytes.length > 572 || !/^[a-f0-9]{64}$/u.test(sha256) ||
+        !/^[a-f0-9]{16}$/u.test(revision) || revision === '0000000000000000') {
+        throw new Error('Invalid small-file create request.');
+    }
+    const generation = transport_generation;
+    const check = () => { if (generation !== transport_generation) throw new Error('Bluetooth session changed'); };
+    const tx = small_create_tx = (small_create_tx + 1) >>> 0 || 1;
+    const pathBytes = new TextEncoder().encode(path);
+    const limit = transport_capabilities?.maxRequestPayload ?? DF_MAX_DATA_SIZE;
+    const firstSpace = limit - 49 - pathBytes.length;
+    if (firstSpace < 0) throw new Error('Small-file header exceeds the connection limit.');
+    async function transmit() {
+        let start = true, offset = 0;
+        do {
+            check();
+            const end = Math.min(bytes.length, offset + (start ? firstSpace : limit - 7));
+            const response = await op_queue_push(0x23, b => {
+                b.writeUint8(start ? 0 : 1); b.writeUint32(tx);
+                if (start) {
+                    b.writeUint32(parseInt(revision.slice(8), 16)); b.writeUint32(parseInt(revision.slice(0, 8), 16));
+                    b.writeUint16(bytes.length);
+                    for (const pair of sha256.match(/../g)) b.writeUint8(parseInt(pair,16));
+                    b.writeUint16(pathBytes.length); write_bytes(b,pathBytes);
+                } else b.writeUint16(offset);
+                write_bytes(b,bytes.subarray(offset,end));
+            }, b => {
+                const done = end === bytes.length;
+                if (b.remaining() !== (done ? 43 : 3) || b.readUint8() !== (done ? 1 : 0) ||
+                    b.readUint16() !== end) throw new Error('Invalid small-file acknowledgement.');
+                if (!done) return null;
+                const next = read_revision(b);
+                const hash = read_bytes_array(b,32).map(n => n.toString(16).padStart(2,'0')).join('');
+                if (hash !== sha256 || next === revision) throw new Error('Invalid stored-file receipt.');
+                return next;
+            }, {max_bytes:43});
+            check();
+            const next = checked_response(response);
+            if (next !== null) return next;
+            start = false; offset = end;
+        } while (offset < bytes.length);
+        throw new Error('Missing stored-file receipt.');
+    }
+    return transmit().catch(async error => {
+        if (generation === transport_generation) {
+            try {
+                checked_response(await op_queue_push(0x23, b => { b.writeUint8(2); b.writeUint32(tx); },
+                    () => null, {max_bytes:0}));
+            } catch { /* The failed transfer remains unconfirmed. */ }
+        }
+        throw error;
+    });
+}
+
+export function vfs_publish_staged_folder(stage, target, revision) {
+    path_validation(stage); path_validation(target);
+    const pos = stage.lastIndexOf('/'), to = target.lastIndexOf('/');
+    if (small_create_generation !== transport_generation || !stage.startsWith('E:/') ||
+        stage.slice(0,pos) !== target.slice(0,to) || !/^~u[a-f0-9]{8,12}$/u.test(stage.slice(pos+1)) ||
+        !target.slice(to+1) || /^~u[a-f0-9]{8,12}$/u.test(target.slice(to+1)) || !/^[a-f0-9]{16}$/u.test(revision) ||
+        revision === '0000000000000000') throw new Error('Invalid guarded folder publication.');
+    const generation = transport_generation;
+    return op_queue_push(0x23, b => {
+        b.writeUint8(3); b.writeUint32(parseInt(revision.slice(8),16)); b.writeUint32(parseInt(revision.slice(0,8),16));
+        write_string(b,stage); write_string(b,target);
+    }, b => {
+        if (b.remaining() !== 9 || b.readUint8() !== 3) throw new Error('Invalid guarded publication receipt.');
+        const next = read_revision(b);
+        if (next === revision) throw new Error('Unchanged publication revision.');
+        return next;
+    }, {max_bytes:9}).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        return checked_response(response);
+    });
+}
+
 export function vfs_read_raw_meta(path) {
     path_validation(path);
     if (path.length <= 3) return Promise.reject(new Error('Root metadata is unsupported.'));
@@ -656,6 +788,25 @@ export function vfs_read_file(file_id, options) {
         b => { return b.readBytes(b.remaining()).toArrayBuffer() }, options);
 }
 
+export function vfs_read_small_file(path, size, options = {}) {
+    if (!vfs_small_read_capable() || typeof path !== 'string' || !path.startsWith('E:/') ||
+        !Number.isInteger(size) || size < 0 || size > 572 ||
+        (options.max_bytes !== undefined && (!Number.isSafeInteger(options.max_bytes) || options.max_bytes < size || options.max_bytes > MAX_RESPONSE_BYTES)))
+        return Promise.reject(new Error('Small-file reading is unavailable.'));
+    const generation = transport_generation;
+    return op_queue_push(0x24, b => {
+        path_validation(path);
+        write_string(b, path);
+        b.writeUint16(size);
+    }, b => {
+        if (b.remaining() !== size) throw new Error('File size changed.');
+        return b.readBytes(size).toArrayBuffer();
+    }, { ...options, max_bytes: size }).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        return checked_response(response);
+    });
+}
+
 export function vfs_write_file(file_id, data) {
     return op_queue_push(0x15,
         b => {
@@ -723,7 +874,7 @@ function vfs_process_file_read(entry) {
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }
-    return vfs_open_file(entry.path, "r").then(checked_response).then(opened => {
+    const readWithHandle = () => vfs_open_file(entry.path, "r").then(checked_response).then(opened => {
         checkCurrent();
         return vfs_read_file(opened.file_id, options).then(checked_response).then(data => {
             checkCurrent();
@@ -732,7 +883,15 @@ function vfs_process_file_read(entry) {
             if (generation !== file_write_generation) throw error;
             return vfs_close_file(opened.file_id).then(() => { throw error; }, () => { throw error; });
         });
-    }).then(data => entry.finish(null, data), error => entry.finish(error));
+    });
+    const size = options.exact_size;
+    const candidate = entry.path.startsWith('E:/') && Number.isInteger(size) && size >= 0 && size <= 572 &&
+        (options.max_bytes === undefined || size <= options.max_bytes) && !!options.firmware_version;
+    const transfer = candidate ? vfs_probe_small_read(options.firmware_version).then(capable => {
+        checkCurrent();
+        return capable ? vfs_read_small_file(entry.path, size, options) : readWithHandle();
+    }) : readWithHandle();
+    return transfer.then(data => { checkCurrent(); return data; }).then(data => entry.finish(null, data), error => entry.finish(error));
 }
 
 // The device has one global file handle. Queue entire read AND write
@@ -1055,7 +1214,8 @@ async function tx_data_frame(cmd, status, chunk, data) {
         const wire = frame.toArrayBuffer();
         // A single negotiated WRITE frame already receives a file-protocol reply.
         // Wait for both that reply and the browser send before advancing the offset.
-        await pixl.tx_data(wire, cmd === 0x15 && chunked && payload.length <= capacity);
+        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1;
+        await pixl.tx_data(wire, acknowledgedWrite && chunked && payload.length <= capacity);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
         ++transport_stats.txFrames;
@@ -1127,7 +1287,7 @@ function on_rx_data(data) {
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
         const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;

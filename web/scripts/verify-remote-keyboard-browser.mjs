@@ -68,11 +68,11 @@ try {
       await page.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
       await page.addInitScript(installPeripheral,REMOTE_UUIDS);
       await page.goto(origin+base);
-      const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.87 / App660 / Z21 · Prüfpaket (ZIP)':'LCD DE3.87 / App660 / Z21 · test kit (ZIP)'});
-      assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip');
+      const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.88 / App661 · Prüfpaket (ZIP)':'LCD DE3.88 / App661 · test kit (ZIP)'});
+      assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip');
       const footer = page.locator('footer.source-footer');
-      const archives = locale === 'de-DE' ? ['Dateimanager für Windows (ZIP)', 'Quellcode (ZIP)', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)'] :
-        ['File manager for Windows (ZIP)', 'Source code (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)'];
+      const archives = locale === 'de-DE' ? ['Windows-Basisversion 3.58.1 (ZIP)', 'Quellcode der Basisversion 3.58.1 (ZIP)', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)'] :
+        ['Windows base release 3.58.1 (ZIP)', 'Base release 3.58.1 source code (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)'];
       const files = ['Allmiibo_Dateimanager_3_58_1_Portable.zip', 'Allmiibo_Dateimanager_3_58_1_Quellcode.zip', 'Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip'];
       for (const [i, name] of archives.entries()) {
         assert.equal(await footer.getByRole('link', { name, exact:true }).getAttribute('href'),
