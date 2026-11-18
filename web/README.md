@@ -1,5 +1,9 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.58.2 für LCD DE3.89 / App662 · Test 1
+
+Die Testausgabe unterstützt die verifizierte Ordnerübertragung mit App661 und App662. Für App662 ist ein eigener Speicherbedarfssimulator enthalten. [Anleitung auf Deutsch und Englisch](LIESMICH_3_58_2_TEST1.txt) · [LCD-Testrelease](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1)
+
 ## Dateimanager 3.58.1 und OLED DE3.87 Test 6 / App86
 
 Die OLED-Auswahl führt zur signierten Handy-ZIP und zur Prüfung für Browser-DFU. Für die Fernbedienung werden Pixl.Remote und Pixl.Rem erkannt. Ein bestätigter PX-Status gibt die Tasten frei. [Version 3.58.1 bedienen und installieren](LIESMICH_3_58_1.txt) / [OLED-Release mit DE/EN-Anleitung](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6)

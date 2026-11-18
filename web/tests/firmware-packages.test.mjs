@@ -39,7 +39,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, true);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.81');
-  assert.deepEqual(packages.map(item=>item.counter),[654,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[654,662,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');
@@ -220,4 +220,20 @@ test('the App661 test offers the local ZIP for the updater and the matching rele
   assert.equal(offer.releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1');
   assert.equal(new URL(nrfDfuLink(entry)).searchParams.get('file'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.88-lcd-test1/'+entry.file);
   for(const wrong of [{bootloader:'Z20'},{board:'OLED'},{counter:660},{channel:'stable'}]) assert.equal(nrfDfuLink({...entry,...wrong}),null);
+});
+
+test('the App662 phone download and LCD checks use the signed candidate and its own storage engine', async () => {
+  const {supportsFolderPublication} = await import('../src/lib/hardware-profile.js');
+  const {getMigrationCapacityTarget} = await import('../src/lib/migration-capacity.js');
+  const previous=getMigrationCapacityTarget().layout.engineSha256, current=getMigrationCapacityTarget('de389').layout.engineSha256;
+  const {packages}=JSON.parse(readFileSync(new URL('../public/firmware/releases.json', import.meta.url)));
+  const entry=packages.find(row => row.id === 'de3.89-lcd-test1-app'), version=entry.version;
+  assert.equal(entry.counter,662); assert.equal(entry.channel,'prerelease');
+  assert.equal(entry.sha256,'366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab');
+  const offer=packagePresentation(entry,{connected:true,firmwareVersion:'2.22.0-DE3.88'});
+  assert.equal(offer.releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1');
+  assert.equal(new URL(nrfDfuLink(entry)).searchParams.get('file'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.89-lcd-test1/'+entry.file);
+  assert(supportsFolderPublication(version,current)); assert(supportsFolderPublication('2.22.0-DE3.88',previous));
+  for(const [v,id] of [[version,previous],['2.22.0-DE3.88',current],['2.22.0-DE3.87-OLEDt6',current],[version,''],['2.22.0-DE3.90',current]]) assert.equal(supportsFolderPublication(v,id),false);
+  for(const wrong of [{bootloader:'Z20'},{board:'OLED'},{counter:661},{channel:'stable'}]) assert.equal(nrfDfuLink({...entry,...wrong}),null);
 });

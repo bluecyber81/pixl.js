@@ -13,9 +13,9 @@
         <p>{{ de ? 'S112 7.3.0, Bootloader Z21 und App654 für passende LCD mit Bootloader-Zähler unter 21. Installation mit nRF Device Firmware Update.' : 'S112 7.3.0, Z21 bootloader and App654 for compatible LCD devices with bootloader counter below 21. Install with nRF Device Firmware Update.' }}</p>
       </div>
       <div v-if="testEntry">
-        <a v-if="testAvailable" :href="deploymentPath('firmware/' + testEntry.file)">{{ de ? 'Testversion · DE3.88 / App661 herunterladen (ZIP)' : 'Test release · Download DE3.88 / App661 (ZIP)' }}</a>
-        <strong v-else>{{ de ? 'LCD-Testversion DE3.88 / App661' : 'LCD test release DE3.88 / App661' }}</strong>
-        <p>{{ de ? 'Nur App für LCD mit PFS1, Z21 und S112 7.3.0. Kleine Dateien schneller sichern und neue Ordner nach einer Unterbrechung geprüft fortsetzen. Die Prüfung am Gerät steht noch aus.' : 'App only for LCD with PFS1, Z21 and S112 7.3.0. Back up small files faster and resume a new folder after a connection loss with content verification. Physical device testing is still pending.' }}</p>
+        <a v-if="testAvailable" :href="deploymentPath('firmware/' + testEntry.file)">{{ de ? 'Testversion · DE3.89 / App662 herunterladen (ZIP)' : 'Test release · Download DE3.89 / App662 (ZIP)' }}</a>
+        <strong v-else>{{ de ? 'LCD-Testversion DE3.89 / App662' : 'LCD test release DE3.89 / App662' }}</strong>
+        <p>{{ de ? 'Nur App für LCD mit PFS1, Z21 und S112 7.3.0. Kleine neue Dateien werden gesammelt im Arbeitsspeicher und nach dem Schreiben im Flash geprüft. Ein unterbrochener Ordner lässt sich auf demselben Gerät fortsetzen. Die Prüfung am Gerät steht noch aus.' : 'App only for LCD with PFS1, Z21 and S112 7.3.0. Small new files are buffered in RAM and verified after writing to flash. Resume an interrupted folder on the same device. Physical device testing is still pending.' }}</p>
       </div>
     </div>
     <a class="instructions" :href="guide">{{ de ? 'Voraussetzungen und Installationsanleitung' : 'Requirements and installation guide' }}</a>
@@ -30,7 +30,7 @@ import releases from '../data/firmware-releases.json';
 
 const props = defineProps({ connected: Boolean, version: String, boot: Object, locale: String });
 const entry = releases.packages.find(item => item.id === 'de3.81-lcd-app');
-const testEntry = releases.packages.find(item => item.id === 'de3.88-lcd-test1-app');
+const testEntry = releases.packages.find(item => item.id === 'de3.89-lcd-test1-app');
 const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81/';
 const combo = 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip';
 const de = computed(() => props.locale?.startsWith('de'));

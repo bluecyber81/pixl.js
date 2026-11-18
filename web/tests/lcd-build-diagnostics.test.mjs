@@ -61,7 +61,7 @@ test('OLED PXBI validates both board identities and gates exact supported firmwa
   assert.equal(buildDiagnosticBoard('2.22.0-DE3.87'),'LCD');
   assert.equal(buildDiagnosticBoard('2.22.0-DE3.88'),'LCD');
   for(const version of ['2.22.0-DE3.81-OLEDt3','2.22.0-DE3.84-OLEDt5','2.22.0-DE3.86-OLEDt6',
-    '2.22.0-DE3.83','2.22.0-DE3.89','2.22.0-DE3.85t1',null]) {
+    '2.22.0-DE3.83','2.22.0-DE3.90','2.22.0-DE3.85t1',null]) {
     assert.equal(buildDiagnosticBoard(version),null);
   }
   const identity=diagnosticBuildIdentity({firmwareVersion:'2.22.0-DE3.84-OLEDt4',build:oled});

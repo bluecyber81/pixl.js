@@ -19,7 +19,7 @@ export function conservativeTransactionBlocks(rows,{blockSize,shardTarget=32768}
     basis:'8 metadata blocks + two conservatively bounded shard copies + largest staged file; added to observed API-boundary peak.'}
 }
 export async function simulateCapacity(rows,target,{signal,fetchImpl=globalThis.fetch,instantiate=WebAssembly.instantiate,onProgress,archiveSha256}={}){
-  requireValue(target?.approved===true && /^[a-f0-9]{64}$/u.test(target.wasmSha256||'') && ['/lfs-capacity-de355.wasm','/lfs-capacity.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-current.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm','/lfs-capacity-de350.wasm'].includes(target.url) &&
+  requireValue(target?.approved===true && /^[a-f0-9]{64}$/u.test(target.wasmSha256||'') && ['/lfs-capacity-de389.wasm','/lfs-capacity-de355.wasm','/lfs-capacity.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-current.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm','/lfs-capacity-de350.wasm'].includes(target.url) &&
     target.minimumReservePercent===20 && target.geometry?.metadataBytes===128 && target.geometry?.includesRestoreStaging===true &&
     typeof target.firmwareVersion==='string'&&/^[a-f0-9]{64}$/u.test(target.layout?.engineSha256||'')&&/^[a-f0-9]{64}$/u.test(archiveSha256||'')&&!/^0{64}$/u.test(archiveSha256),'No approved exact-geometry simulator is available.')
   requireValue(Array.isArray(rows)&&rows.length<=4096,'Invalid capacity input size.')
@@ -34,7 +34,7 @@ export async function simulateCapacity(rows,target,{signal,fetchImpl=globalThis.
     return {...row,bytes}
   }).sort((a,b)=>b.kind-a.kind || a.path.split('/').length-b.path.split('/').length || (a.path<b.path?-1:1))
   checkpoint(signal)
-  // target.url is still one of the seven exact release-pinned identities above.
+  // target.url is still one of the exact release-pinned identities above.
   // Resolve its location only after validation; profile and proof hashes stay unchanged.
   const response=await fetchImpl(deploymentPath(target.url.slice(1)),{signal,cache:'no-store',credentials:'same-origin'})
   requireValue(response?.ok,'Capacity simulator could not be loaded.')

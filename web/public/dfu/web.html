@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.58.1</title>
+  <title>Allmiibo DFU 3.58.2</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <a data-en="← Back to the file manager" href="../" class="back-link">← Zurück zum Dateimanager</a>
   <p><a data-en="OLED installation and test guide" id="oled-guide" href="../guide/index.html#oled">OLED-Anleitung für Installation und Prüfung</a></p>
   <div id="lcd-updater">
-  <p class="eyebrow">ALLMIIBO · LCD / OLED · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.58.1</p>
+  <p class="eyebrow">ALLMIIBO · LCD / OLED · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.58.2</p>
   <h1 id="profile-title" data-en="Update LCD firmware">LCD-Firmware übertragen</h1>
   <p><a data-en="Guide to firmware, the bootloader and LittleFS" id="guide-link" href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
   <p class="notice" id="profile-description" data-en="LCD · PFS1 · S112 7.3.0. Choose an application for your bootloader.">LCD · PFS1 · S112 7.3.0. Wähle eine App für deinen Bootloader.</p>
@@ -36,7 +36,8 @@
     <div id="lcd-downloads">
     <p><a data-en="Download DE3.81 / App654 for LCD (app only)" href="../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip" download>DE3.81 / App654 für LCD herunterladen (nur App)</a> · <span data-en="For an LCD with Packed LittleFS, Z19, Z20 or Z21 and S112 7.3.0.">Für LCD mit Packed LittleFS, Z19, Z20 oder Z21 und S112 7.3.0.</span> <a data-en="Release notes and test results" href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81" target="_blank" rel="noopener noreferrer">Versionshinweise und Prüfstand</a></p>
     <p><a data-en="Full LCD package with S112 7.3.0, Z21 and App654 (Android ZIP)" href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip">LCD-Komplettpaket mit S112 7.3.0, Z21 und App654 (Android-ZIP)</a> · <span data-en="For compatible LCD devices with a bootloader counter below 21. Follow the installation guide and use nRF Device Firmware Update on Android.">Für passende LCD mit Bootloader-Zähler unter 21. Beachte die Installationsanleitung und verwende nRF Device Firmware Update auf Android.</span></p>
-    <p><a data-en="LCD test release DE3.88 / App661 (app-only ZIP)" href="../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip" download>LCD-Testversion DE3.88 / App661 (App-ZIP)</a> · <span data-en="For LCD with PFS1, Z21 and S112 7.3.0. Physical testing of this new build is still pending.">Für LCD mit PFS1, Z21 und S112 7.3.0. Der Praxistest für diesen neuen Build ist noch offen.</span> <a data-en="Installation and testing" href="../guide/#lcd-de388">Installation und Prüfung</a></p>
+    <p><a data-en="LCD test release DE3.89 / App662 (app-only ZIP)" href="../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip" download>LCD-Testversion DE3.89 / App662 (App-ZIP)</a> · <span data-en="For LCD with PFS1, Z21 and S112 7.3.0. Physical testing of this new build is still pending.">Für LCD mit PFS1, Z21 und S112 7.3.0. Der Praxistest für diesen neuen Build ist noch offen.</span> <a data-en="Installation and testing" href="../guide/#lcd-de389">Installation und Prüfung</a></p>
+    <p><a data-en="LCD test release DE3.88 / App661 (app-only ZIP)" href="../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip" download>LCD-Testversion DE3.88 / App661 (App-ZIP)</a> · <span data-en="For LCD with PFS1, Z21 and S112 7.3.0. Folder transfer and resumption have been tested on one LCD.">Für LCD mit PFS1, Z21 und S112 7.3.0. Ordnerübertragung und Wiederaufnahme wurden an einem LCD geprüft.</span> <a data-en="Installation and testing" href="../guide/#lcd-de388">Installation und Prüfung</a></p>
     <p><a data-en="LCD test release DE3.87 / App660 (app-only ZIP)" href="../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip" download>LCD-Testversion DE3.87 / App660 (App-ZIP)</a> · <span data-en="For LCD with PFS1, Z21 and S112 7.3.0. Physical testing of this new build is still pending.">Für LCD mit PFS1, Z21 und S112 7.3.0. Der Praxistest für diesen neuen Build ist noch offen.</span> <a data-en="Installation and testing" href="../guide/#lcd-de387">Installation und Prüfung</a></p>
     <details><summary data-en="Earlier LCD downloads">Frühere LCD-Downloads</summary><p><a data-en="DE3.75 / App648 (ZIP)" href="../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip" download>DE3.75 / App648 (ZIP)</a></p>
     <p><a data-en="Download earlier stable DE3.65 (BL8/Z13/Z15/Z17/Z19)" href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>Frühere stabile DE3.65 herunterladen (BL8/Z13/Z15/Z17/Z19)</a></p></details>
@@ -77,14 +78,14 @@
 </main>
 <script src="vendor/crc32.js"></script>
 <script src="vendor/jszip-3.10.2.min.js"></script>
-<script src="secure-dfu.js?v=3.58.1"></script>
-<script src="validation-error.js?v=3.58.1"></script>
-<script src="package.js?v=3.58.1"></script>
-<script src="updater.js?v=3.58.1"></script>
-<script src="../firmware/releases.js?v=3.58.1"></script>
-<script src="bundled-packages.js?v=3.58.1"></script>
-<script src="../language-preference.js?v=3.58.1"></script>
-<script src="phase-labels.js?v=3.58.1"></script>
-<script type="module" src="page.js?v=3.58.1"></script>
+<script src="secure-dfu.js?v=3.58.2"></script>
+<script src="validation-error.js?v=3.58.2"></script>
+<script src="package.js?v=3.58.2"></script>
+<script src="updater.js?v=3.58.2"></script>
+<script src="../firmware/releases.js?v=3.58.2"></script>
+<script src="bundled-packages.js?v=3.58.2"></script>
+<script src="../language-preference.js?v=3.58.2"></script>
+<script src="phase-labels.js?v=3.58.2"></script>
+<script type="module" src="page.js?v=3.58.2"></script>
 </body>
 </html>

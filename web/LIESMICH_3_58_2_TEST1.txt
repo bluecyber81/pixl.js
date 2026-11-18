@@ -1,0 +1,21 @@
+Allmiibo Dateimanager 3.58.2 · LCD App662 Test 1
+
+Deutsch
+
+Diese Testausgabe ist für die signierte LCD-App DE3.89 / App662 mit Packed LittleFS (PFS1), Bootloader Z21 und S112 7.3.0 vorgesehen. Im Dateimanager stehen weiterhin die bisherigen Geräteprofile und getrennte OLED-Pakete zur Auswahl.
+
+Für ein Handy-Update zuerst die Sammlung sichern. Die Datei Allmiibo_LCD_DE3_89_662_NUR_APP.zip ungeöffnet mit nRF Device Firmware Update an das LCD übertragen. Sie enthält nur die Anwendung. Am Computer kann der mitgelieferte LCD-Updater dieselbe Datei öffnen.
+
+Nach dem Neustart unter „Gerät & Diagnose“ die Firmware DE3.89 und den App-Zähler 662 prüfen. Zum Übertragungstest einen neuen Ordner mit kleinen Dateien hochladen. Die Bluetooth-Verbindung kurz unterbrechen, im selben Browserfenster dasselbe Gerät verbinden und „Fortsetzen“ wählen. Der Dateimanager gleicht gespeicherte Inhalte ab, bevor er den vollständigen Ordner unter seinem endgültigen Namen freigibt. Zum Gegenprüfen eine Sicherung herunterladen und die Dateien mit den Originalen vergleichen.
+
+Die Speicherbedarfsprüfung führt App662 mit einer eigenen, aus dieser Speicherimplementierung gebauten Simulation. Vorhandene Prüfprofile bleiben einzeln auswählbar.
+
+English
+
+This test release supports the signed LCD application DE3.89 / App662 with Packed LittleFS (PFS1), bootloader Z21 and S112 7.3.0. Earlier device profiles and separate OLED packages remain available.
+
+Back up your collection before updating. On a phone, select the intact Allmiibo_LCD_DE3_89_662_NUR_APP.zip in nRF Device Firmware Update. It contains only the application. On a computer the bundled LCD updater accepts the same file.
+
+After restarting, check Device & diagnostics for DE3.89 and application counter 662. Upload a new folder of small files, briefly disconnect Bluetooth, reconnect the same device in the same browser tab and choose Continue. The file manager checks retained contents before publishing the complete folder under its final name. To check the round trip, download a backup and compare the files with the originals.
+
+The storage capacity check offers a separate simulator built from the App662 storage engine. Earlier verified profiles are available individually.

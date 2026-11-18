@@ -425,7 +425,7 @@ test(`PXBI sends only one optional command on App${counter} and checks the assem
     const bytes=new Uint8Array(80);
     bytes.set([80,88,66,73,1,80,1,0]);bytes.fill(97,8,72);
     const f=fixture(bindings);
-    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.86-OLEDt6','2.22.0-DE3.89','2.22.0-DE3.85t1','',null])
+    for(const v of ['2.22.0-DE3.83','2.22.0-DE3.84-OLEDt1','2.22.0-DE3.86-OLEDt6','2.22.0-DE3.90','2.22.0-DE3.85t1','',null])
         assert.equal(await f.api.get_lcd_build_diagnostics(v),null);
     assert.deepEqual(f.writes,[]);
     const reading=f.api.get_lcd_build_diagnostics(version);

@@ -27,7 +27,7 @@
       <nav class="contents" aria-labelledby="contents"><h2 id="contents">On this page</h2>
         <a href="#diagnose">Read the device information first</a>
         <a href="#flash">Update the LCD app</a>
-        <a href="#lcd-de388">Test LCD DE3.88</a>
+        <a href="#lcd-de389">Test LCD DE3.89</a>
         <a href="#lcd-de387">Earlier LCD test release DE3.87</a>
         <a href="#lcd-de386">Test LCD DE3.86</a>
         <a href="#lcd-de385">Test LCD DE3.85</a>
@@ -51,9 +51,12 @@
         </section>
         <section id="flash">
           <h2>Update the LCD app over Bluetooth</h2>
+          <h3 id="lcd-de389">LCD DE3.89 / App662 · Test 1</h3>
+          <p>Requires LCD, Packed LittleFS (PFS1), Z21 and S112 7.3.0. Back up your collection. Download the <a href="../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip" download>App662 ZIP for your phone</a>. On the Allmiibo open <b>Settings → Firmware update</b> and select the intact ZIP in nRF Device Firmware Update. On a computer you can use the <a href="../dfu/web.html?package=de3.89-lcd-test1-app#board=LCD">LCD updater with App662</a>.</p>
+          <p>After restarting, check for <b>DE3.89 / App662</b> in file manager 3.58.2 under Device &amp; diagnostics. Upload a new folder of small files. Disconnect, reconnect the same device and choose <b>Continue</b>. The file manager verifies retained files and reports completion once the entire folder is published. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.89-lcd-test1/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip">App662 test kit with BIN, HEX and test results</a>.</p>
           <h3 id="lcd-de388">LCD DE3.88 / App661 · Test 1</h3>
           <p>For LCD with Packed LittleFS (PFS1), bootloader Z21 and S112 7.3.0. Back up your collection. Download the <a href="../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip" download>signed App661 ZIP for your phone</a>, open <b>Settings → Firmware Update</b> on the Allmiibo, then select the intact ZIP in nRF Device Firmware Update. On a computer, use the <a href="../dfu/web.html?package=de3.88-lcd-test1-app#board=LCD">LCD updater with App661 selected</a>. After restarting, the file manager shows <b>DE3.88</b> and application counter <b>661</b>.</p>
-          <p>With file manager <b>3.58.1 · App661 Test 1</b>, upload a new folder containing small files. Disconnect, reconnect the same device, choose <b>Continue</b> and check the finished folder. Backups also use a new command to read small files. Physical LCD transfer times still need measurement. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip">App661 test kit with BIN, HEX and test results</a>.</p>
+          <p>With file manager <b>3.58.1 · App661 Test 1</b>, upload a new folder containing small files. Disconnect, reconnect the same device, choose <b>Continue</b> and check the finished folder. Backups also use a new command to read small files. A folder upload with a disconnect was tested on one physical LCD running App661. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip">App661 test kit with BIN, HEX and test results</a>.</p>
           <h3 id="lcd-de387">LCD DE3.87 / App660</h3>
           <p>For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. Save the <a href="../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip" download>signed App660 ZIP</a> on Android. Open Settings → Firmware Update on the device and select the intact ZIP in nRF Device Firmware Update. Check App660 in the file manager after reconnecting. The first physical check of this build is pending. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip">LCD sources and test kit</a>.</p>
           <p>The slot list shows the number, contents and write protection. A short page cue helps you navigate favorites folders.</p>

@@ -2,13 +2,14 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
-import {MIGRATION_CAPACITY_TARGET, DE354_MIGRATION_CAPACITY_TARGET, DE350_MIGRATION_CAPACITY_TARGET, DE345_MIGRATION_CAPACITY_TARGET, DE344_MIGRATION_CAPACITY_TARGET, PREVIOUS_MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
+import {DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET, DE354_MIGRATION_CAPACITY_TARGET, DE350_MIGRATION_CAPACITY_TARGET, DE345_MIGRATION_CAPACITY_TARGET, DE344_MIGRATION_CAPACITY_TARGET, PREVIOUS_MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
 import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js'
 import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
- {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:660,version:'2.22.0-DE3.87',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654,655,656,657,658,659,660],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
+ {id:'de389',folder:'packed-simulator-de389',target:DE389_MIGRATION_CAPACITY_TARGET,counter:662,version:'2.22.0-DE3.89',approvedCounters:[662],wasmSha256:'e62f5857d60acea148edc365b85aaa22756fba8bd7f566d03d2f70ef605cad5c',engineSha256:'b0ae389e7fac3c7ce5f28607de7cd1cadad5465ab2ad4c1e2dc853fbfa2533da'},
+ {id:'current',folder:'packed-simulator-de355',target:MIGRATION_CAPACITY_TARGET,counter:660,version:'2.22.0-DE3.87',approvedCounters:[627,628,629,630,631,632,633,634,635,636,637,638,639,640,641,642,644,645,646,647,648,649,650,652,653,654,655,656,657,658,659,660,661],wasmSha256:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'},
  {id:'de354',folder:'packed-simulator-current',target:DE354_MIGRATION_CAPACITY_TARGET,counter:626,version:'2.22.0-DE3.54',approvedCounters:[623,624,625,626],wasmSha256:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engineSha256:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d'},
  {id:'de350',folder:'packed-simulator-de350',target:DE350_MIGRATION_CAPACITY_TARGET,counter:622,version:'2.22.0-DE3.50',approvedCounters:[618,619,620,621,622],
   wasmSha256:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engineSha256:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059'},
@@ -33,6 +34,8 @@ const rows=[{path:'/Leer',kind:1,size:0},{path:'/Ordner',kind:1,size:0},{path:'/
  .map((row,index)=>({...row,rawMeta128Hex:Buffer.from(Array.from({length:128},(_,i)=>(i*11+index*7)&255)).toString('hex')}))
 
 for (const [version, counter, document, bytes, binSha256] of [
+  ['2.22.0-DE3.88', 661, 'DE3_88_PFS.json', 363608, '65ad4ae6946b2b9b1bb7ce025d4f8c6b035ec58016a05870bb1bf7639cfc7f47'],
+  ['2.22.0-DE3.89', 662, 'DE3_89_PFS.json', 363752, '401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec'],
   ['2.22.0-DE3.75', 648, 'DE3_75_PFS.json', 358304, '3593cfc6e2dfc517a14e76f1802adf580148818cb41ba86a5739fc3c9ca41867'],
   ['2.22.0-DE3.87', 660, 'DE3_87_PFS.json', 360728, '2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e'],
   ['2.22.0-DE3.86', 659, 'DE3_86_PFS.json', 359336, '431f211ff87825fb6df6bc5f6d2ae4a23f3ad275126d91d579b16fc717d17a65'],
@@ -47,7 +50,7 @@ for (const [version, counter, document, bytes, binSha256] of [
 ]) {
   test(`App${counter} capacity binding matches the linked firmware and the qualified simulator`, () => {
     const evidence = JSON.parse(fs.readFileSync(new URL('../docs/validation/' + document, root)));
-    const profile = profiles.find(item => item.id === 'current');
+    const profile = profiles.find(item => item.target.approvedApplications.some(app => app.firmwareVersion === version && app.applicationCounter === counter));
     assert.equal(evidence.firmware, version);
     assert.equal(evidence.counter, counter);
     assert.equal(evidence.engine.engineSha256, profile.engineSha256);
@@ -99,7 +102,8 @@ for(const profile of profiles) {
     {firmwareVersion:'2.22.0-DE3.84',applicationCounter:657},
     {firmwareVersion:'2.22.0-DE3.85',applicationCounter:658},
     {firmwareVersion:'2.22.0-DE3.86',applicationCounter:659},
-    {firmwareVersion:'2.22.0-DE3.87',applicationCounter:660}
+    {firmwareVersion:'2.22.0-DE3.87',applicationCounter:660},
+    {firmwareVersion:'2.22.0-DE3.88',applicationCounter:661}
   ])
   assert.deepEqual(binding.defines,['LFS_NO_ASSERT','LFS_NO_DEBUG','LFS_NO_ERROR','LFS_NO_MALLOC','LFS_NO_WARN'])
   const module=new WebAssembly.Module(wasm)
@@ -153,12 +157,14 @@ for (const [release, counter, acceptance] of [
   ['85', 658, 'owner-reported-on-one-lcd'],
   ['86', 659, 'pending'],
   ['87', 660, 'pending'],
+  ['88', 661, 'folder-transfer-and-resume-on-one-lcd'],
+  ['89', 662, 'pending'],
 ]) {
  test(`App${counter} capacity evidence binds the candidate BIN, SourceID and engine to its stated hardware status`, () => {
  const version = '2.22.0-DE3.' + release;
  const evidence=JSON.parse(fs.readFileSync(new URL(`../docs/validation/DE3_${release}_PFS.json`,root)));
  const {packageReference:reference}=diagnosticBuildIdentity({firmwareVersion:version});
- const profile=profiles.find(item=>item.id==='current');
+ const profile=profiles.find(item=>item.target.approvedApplications.some(app=>app.firmwareVersion===version && app.applicationCounter===counter));
  assert.equal(evidence.firmware,version);assert.equal(evidence.counter,counter);
  assert.equal(evidence.sourceId,reference.sourceId);
  assert.equal(evidence.engine.engineSha256,profile.engineSha256);

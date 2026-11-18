@@ -90,7 +90,7 @@ const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f707
   firmwareVersion:'2.22.0-DE3.87', applicationCounter:660,
   // Exact T1 qualification: identical six-file engine manifest, constants,
   // final ELF/BIN layout and embedded identity, and unchanged capacity WASM.
-  // Subsequent exact profile bindings: docs/validation/DE3_72_PFS.json, DE3_73_PFS.json, DE3_74_PFS.json, DE3_75_PFS.json, DE3_76_PFS.json, DE3_77_PFS.json, DE3_79_PFS.json, DE3_80_PFS.json, DE3_81_PFS.json, DE3_82_PFS.json, DE3_83_PFS.json, DE3_84_PFS.json, DE3_85_PFS.json, DE3_86_PFS.json and DE3_87_PFS.json.
+  // Subsequent exact profile bindings: docs/validation/DE3_72_PFS.json, DE3_73_PFS.json, DE3_74_PFS.json, DE3_75_PFS.json, DE3_76_PFS.json, DE3_77_PFS.json, DE3_79_PFS.json, DE3_80_PFS.json, DE3_81_PFS.json, DE3_82_PFS.json, DE3_83_PFS.json, DE3_84_PFS.json, DE3_85_PFS.json, DE3_86_PFS.json, DE3_87_PFS.json and DE3_88_PFS.json.
   // The simulator defaults to App660. Saved results must match an approved application and geometry.
   approvedApplications:[...currentApplications,{firmwareVersion:'2.22.0-DE3.71t1',applicationCounter:644},
     {firmwareVersion:'2.22.0-DE3.72',applicationCounter:645},
@@ -107,8 +107,13 @@ const current={...de354,url:'/lfs-capacity-de355.wasm',wasmSha256:'652dfaab0f707
     {firmwareVersion:'2.22.0-DE3.84',applicationCounter:657},
     {firmwareVersion:'2.22.0-DE3.85',applicationCounter:658},
     {firmwareVersion:'2.22.0-DE3.86',applicationCounter:659},
-    {firmwareVersion:'2.22.0-DE3.87',applicationCounter:660}],
+    {firmwareVersion:'2.22.0-DE3.87',applicationCounter:660},
+    {firmwareVersion:'2.22.0-DE3.88',applicationCounter:661}],
   geometry:{...de354.geometry},layout:{...de354.layout,engineSha256:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248'}}
+const de389={...current,url:'/lfs-capacity-de389.wasm',wasmSha256:'e62f5857d60acea148edc365b85aaa22756fba8bd7f566d03d2f70ef605cad5c',
+  firmwareVersion:'2.22.0-DE3.89',applicationCounter:662,
+  approvedApplications:[{firmwareVersion:'2.22.0-DE3.89',applicationCounter:662}],
+  geometry:{...current.geometry},layout:{...current.layout,engineSha256:'b0ae389e7fac3c7ce5f28607de7cd1cadad5465ab2ad4c1e2dc853fbfa2533da'}}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -121,8 +126,10 @@ export const DE345_MIGRATION_CAPACITY_TARGET=freezeTarget(de345)
 export const DE350_MIGRATION_CAPACITY_TARGET=freezeTarget(de350)
 export const DE354_MIGRATION_CAPACITY_TARGET=freezeTarget(de354)
 export const MIGRATION_CAPACITY_TARGET=freezeTarget(current)
+export const DE389_MIGRATION_CAPACITY_TARGET=freezeTarget(de389)
 export function getMigrationCapacityTarget(profile='current'){
   if(profile==='current')return MIGRATION_CAPACITY_TARGET
+  if(profile==='de389')return DE389_MIGRATION_CAPACITY_TARGET
   if(profile==='de354')return DE354_MIGRATION_CAPACITY_TARGET
   if(profile==='de350')return DE350_MIGRATION_CAPACITY_TARGET
   if(profile==='de345')return DE345_MIGRATION_CAPACITY_TARGET

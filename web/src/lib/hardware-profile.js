@@ -1,4 +1,5 @@
 import { UPDATE_TARGET } from './update-target.js';
+import { DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
 
 // A profile is opt-in. Only the browser's already hashed, per-device lookup key is used locally.
 const profileValue = 'lipo-551520-180mah-v1';
@@ -28,8 +29,14 @@ export const LCD_PREVIEW_COUNTERS = Object.freeze({
   '2.22.0-DE3.86': 659,
   '2.22.0-DE3.87': 660,
   '2.22.0-DE3.88': 661,
+  '2.22.0-DE3.89': 662,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_PREVIEW_COUNTERS)];
+export function supportsFolderPublication(version, engine) {
+  if (firmwareBoard(version) !== 'LCD') return false;
+  const profile = version === DE389_MIGRATION_CAPACITY_TARGET.firmwareVersion ? DE389_MIGRATION_CAPACITY_TARGET : MIGRATION_CAPACITY_TARGET;
+  return profile.layout.engineSha256 === engine;
+}
 export const OLED_PARITY_VERSION = '2.22.0-DE3.84-OLEDt4';
 export const OLED_TEST5_VERSION = '2.22.0-DE3.85-OLEDt5';
 export const OLED_TEST6_VERSION = '2.22.0-DE3.87-OLEDt6';

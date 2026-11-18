@@ -17,7 +17,7 @@
             const version = oled
                 ? /^2\.22\.0-DE3\.([1-9][0-9]{0,3})-OLEDt([1-9][0-9]{0,2})$/.exec(item.version)
                 : /^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
-            const previewCounters = {84:657,85:658,86:659,87:660,88:661};
+            const previewCounters = {84:657,85:658,86:659,87:660,88:661,89:662};
             const lcdPreview = !oled && version && Object.hasOwn(previewCounters,version[1]) &&
                 item.channel === 'prerelease' && item.counter === previewCounters[version[1]] && item.bootloader === 'Z21';
             const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`

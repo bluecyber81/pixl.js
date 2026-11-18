@@ -247,6 +247,25 @@
     "source_id": "8003b29ac91fdf213ace90b5fc74274ce04cf84661d7d3c5f53bb0ed9a8115f0"
   },
   "firmware_preview": {
+    "version": "2.22.0-DE3.89",
+    "counter": 662,
+    "source_commit": "fecc8b750288f1028f109067dad9694c9f2c3628",
+    "source_id": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7",
+    "application_sha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+    "application_bytes": 363752,
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+    "ota_sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+    "ota_bytes": 252544,
+    "softdevice_requirements": [
+      "0x0126"
+    ],
+    "hardware_acceptance": "pending",
+    "evidence": "docs/validation/DE3_89_LCD_TEST1.json",
+    "distribution": "signed-application-prerelease",
+    "host_firmware_suites": 170,
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1"
+  },
+  "previous_firmware_preview": {
     "version": "2.22.0-DE3.88",
     "counter": 661,
     "source_commit": "2729ec3929fd12b4477bf6bd4e3b50f8eb30f315",
@@ -259,37 +278,18 @@
     "softdevice_requirements": [
       "0x0126"
     ],
-    "hardware_acceptance": "pending",
+    "hardware_acceptance": "folder-transfer-and-resume-on-one-lcd",
     "evidence": "docs/validation/DE3_88_LCD_TEST1.json",
     "distribution": "signed-application-prerelease",
     "host_firmware_suites": 169,
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1"
   },
-  "previous_firmware_preview": {
-    "version": "2.22.0-DE3.87",
-    "counter": 660,
-    "source_commit": "bda84eedd040d81b7362bf0cb5df19d14dbcd05b",
-    "source_id": "0c497705163e238ac7dce5fb1ff299daa10cacf223ced3e9f19a1d0a7c2ae0ac",
-    "application_sha256": "2d9f35be88f6d5c258743a9c832c4993476bbdd6095d2c9fb4f741e20ec1290e",
-    "application_bytes": 360728,
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_87_660_NUR_APP.zip",
-    "ota_sha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0",
-    "ota_bytes": 249952,
-    "softdevice_requirements": [
-      "0x0126"
-    ],
-    "hardware_acceptance": "pending",
-    "evidence": "docs/validation/DE3_87_LCD_TEST1.json",
-    "distribution": "prepared-signed-application-prerelease",
-    "host_firmware_suites": 169,
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-lcd-test1"
-  },
   "web_release_candidate": {
-    "version": "3.58.1",
-    "publication": "release",
-    "firmware": "2.22.0-DE3.87",
-    "firmwareCounter": 660,
-    "releaseNotes": "web/LIESMICH_3_58_1.txt",
+    "version": "3.58.2",
+    "publication": "prerelease",
+    "firmware": "2.22.0-DE3.89",
+    "firmwareCounter": 662,
+    "releaseNotes": "web/LIESMICH_3_58_2_TEST1.txt",
     "hardwareAcceptance": "pending",
     "previousTest": {
       "web": "3.56.0",

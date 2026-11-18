@@ -38,10 +38,11 @@ export function copyNotices(mode) {
 <script defer src="../language-preference.js"></script><script defer src="language.js"></script></head><body>
 <main><a href="../">${label('Zurück zum Dateimanager', 'Back to the file manager')}</a><h1>${label('Quellen und Lizenzen', 'Sources and licenses')} · ${escape(version)}</h1>
 <p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">${label('Versionsgeschichte des Dateimanagers', 'File manager version history')}</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">${label('LCD- und OLED-Firmware', 'LCD and OLED firmware')}</a></p>
-<p>${label('Der Dateimanager enthält die hier aufgeführten Bibliotheken und sieben Speicher-Simulatoren.', 'The file manager includes the libraries listed here and seven storage simulators.')}</p>
+<p>${label('Der Dateimanager enthält die hier aufgeführten Bibliotheken und acht Speicher-Simulatoren.', 'The file manager includes the libraries listed here and eight storage simulators.')}</p>
 <ul><li><a href="${archives.source}" download>${label(`Quellcode der Basisversion ${archives.version} mit Simulatorquellen und Build-Anleitungen (ZIP)`, `Base release ${archives.version} source code, simulator sources and build instructions (ZIP)`)}</a></li>
+<li><a href="${archives.candidateSource}" download>${label('Quellcode des Dateimanagers 3.58.2 für App662 Test 1', 'File manager 3.58.2 source for App662 Test 1')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.88-lcd-test1.zip" download>${label('Quellcode des Dateimanagers für App661 Test 1 (GitHub-Tag, ZIP)', 'App661 Test 1 file manager source (GitHub tag, ZIP)')}</a></li>
-<li><a href="${archives.previewTestKit}" download>${label('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.88 / App661 (ZIP)', 'DE3.88 / App661 test kit with BIN, HEX and test results (ZIP)')}</a></li>
+<li><a href="${archives.previewTestKit}" download>${label('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.89 / App662 (ZIP)', 'DE3.89 / App662 test kit with BIN, HEX and test results (ZIP)')}</a></li>
 <li><a href="${archives.testKit}" download>${label('Prüfpaket für OLED DE3.87 Test 6 / App86 (ZIP)', 'OLED DE3.87 Test 6 / App86 test kit (ZIP)')}</a></li>
 <li><a href="${archives.archivedTestKit}" download>${label('Archiviertes ChatGPT-Prüfpaket für DE3.75 / App648, Z19 und Web 3.52.1 (ZIP)', 'Archived ChatGPT test kit for DE3.75 / App648, Z19 and Web 3.52.1 (ZIP)')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.81">${label('Quellstand der aktuellen LCD-Firmware DE3.81 / App654 und des Bootloaders Z21', 'Source code for the current DE3.81 / App654 LCD firmware and Z21 bootloader')}</a></li>

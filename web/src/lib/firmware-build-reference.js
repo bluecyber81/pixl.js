@@ -183,13 +183,29 @@ const app661 = Object.freeze({
   "applicationBinSha256": "65ad4ae6946b2b9b1bb7ce025d4f8c6b035ec58016a05870bb1bf7639cfc7f47",
   "sourceId": "109484b3d03f25b4578010b0b9e22b3829287d3edc6aacfbcac2aa0f1ebdf6d8",
   "artifactStatus": "experimental-signed-application",
-  "hardwareAcceptance": "pending",
+  "hardwareAcceptance": "folder-transfer-and-resume-on-one-lcd",
+  "hardwareEvidence": {"files":128,"zipContentsByteVerified":true},
   "otaSha256": "75543dc92ca18d55a81f8070a5ac72f58195419510bba893d7540b343b8fe2c0",
   "sourceCommit": "2729ec3929fd12b4477bf6bd4e3b50f8eb30f315",
   "releaseTag": "de3.88-lcd-test1"
 });
 
-const references = [app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
+const app662 = Object.freeze({
+  "firmwareVersion": "2.22.0-DE3.89",
+  "applicationCounter": 662,
+  "board": "LCD",
+  "chipPart": 337970,
+  "applicationBytes": 363752,
+  "applicationBinSha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+  "sourceId": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7",
+  "artifactStatus": "experimental-signed-application",
+  "hardwareAcceptance": "pending",
+  "otaSha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+  "sourceCommit": "fecc8b750288f1028f109067dad9694c9f2c3628",
+  "releaseTag": "de3.89-lcd-test1"
+});
+
+const references = [app662, app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

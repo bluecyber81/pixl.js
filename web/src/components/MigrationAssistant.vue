@@ -72,7 +72,7 @@
 import { createMigrationBackup, loadMigrationArchive, verifyMigrationArchive, restoreMigrationArchive, checkMigrationCapacity, retainMigrationSource, inspectMigrationTarget, formatMigrationTarget, initializeMigrationImport, finishMigrationImport, restartAfterMigration } from '../lib/migration.js'
 import { getMigrationCapacityTarget } from '../lib/migration-capacity.js'
 import { saveBlob } from '../lib/browser-tools.js'
-const capacityProfileIds = ['current','de354','de350','de345','de344','previous','legacy']
+const capacityProfileIds = ['current','de389','de354','de350','de345','de344','previous','legacy']
 const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+(?:t[0-9]+)?)$/u, '$1')
 const applicationRanges = applications => {
   const groups = []

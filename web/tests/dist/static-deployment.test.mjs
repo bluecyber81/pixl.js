@@ -104,7 +104,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   }
   for (const releaseFile of [
     'web3.58.1/Allmiibo_Dateimanager_3_58_1_Quellcode.zip',
-    'de3.88-lcd-test1/Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip',
+    'de3.89-lcd-test1/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
   ]) {
@@ -112,7 +112,8 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   }
   assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'))
   assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.88-lcd-test1.zip'))
-  assert.ok(index.includes('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.88 / App661'))
+  assert.ok(index.includes('https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.89-lcd-test1.zip'))
+  assert.ok(index.includes('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.89 / App662'))
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
   localFile(new URL('../dfu/vendor/SOURCES.json', origin + base + 'licenses/index.html'))
   assert.match(index, /historische/)

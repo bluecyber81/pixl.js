@@ -596,9 +596,10 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows-Basisversion 3.58.1 (ZIP)' : 'Windows base release 3.58.1 (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode der Basisversion 3.58.1 (ZIP)' : 'Base release 3.58.1 source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.88 / App661 · Prüfpaket (ZIP)' : 'LCD DE3.88 / App661 · test kit (ZIP)' }}</a>
+    <a :href="archiveLinks.candidatePortable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows-Testversion 3.58.2 (ZIP)' : 'Windows test release 3.58.2 (ZIP)' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows-Basisversion 3.58.1 (ZIP)' : 'Windows base release 3.58.1 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode der Basisversion 3.58.1 (ZIP)' : 'Base release 3.58.1 source code (ZIP)' }}</a>
+    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
@@ -626,7 +627,7 @@ import { normalizeDrives, normalizeRuntimeDiagnostics, memorySampleEvidenceKey, 
 import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnosticReport } from "./lib/diagnostic-snapshot.js"
 import { buildDiagnosticBoard } from "./lib/lcd-build-diagnostics.js"
 import { supportsFlashDiagnostics } from "./lib/flash-diagnostics.js"
-import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference, firmwareBoard } from "./lib/hardware-profile.js"
+import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference, firmwareBoard, supportsFolderPublication } from "./lib/hardware-profile.js"
 import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, assertWritableDevicePath, portableNameKey, devicePathSpace, backupPathSpace } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
@@ -867,7 +868,7 @@ export default {
       const pending=(this._previewTail||Promise.resolve()).then(async()=>{
         if(!current())return;
         try{
-          const bytes=await this.read_device_file(path,{max_bytes:row.sizeBytes});
+          const bytes=await this.read_device_file(path,{max_bytes:row.sizeBytes,exact_size:row.sizeBytes,firmware_version:this.firmwareVersion});
           if(!current())return;
           if(bytes.byteLength!==row.sizeBytes)throw new Error('File size changed');
           const inspection=inspectTagStructure(new Uint8Array(bytes));
@@ -975,14 +976,20 @@ export default {
     device_search_session() {
       const generation = this.sessionGeneration;
       this.assert_session(generation);
-      return { assertSession: () => this.assert_session(generation), readDirectory: async path => {
+      return { assertSession: () => this.assert_session(generation),
+        readRevision: async () => {
+          this.assert_session(generation);
+          const revision = await proto.vfs_small_create_revision(this.firmwareVersion);
+          this.assert_session(generation);
+          return revision;
+        }, readDirectory: async path => {
         this.assert_session(generation);
         const entries = this.checked(await proto.vfs_read_folder(path));
         this.assert_session(generation);
         return entries;
-      }, readFile: async (path, { maxBytes }) => {
+      }, readFile: async (path, { maxBytes, exactBytes }) => {
         this.assert_session(generation);
-        const bytes = await this.read_device_file(path, { max_bytes: maxBytes });
+        const bytes = await this.read_device_file(path, { max_bytes: maxBytes, exact_size: exactBytes, firmware_version: this.firmwareVersion });
         this.assert_session(generation); return bytes;
       } };
     },
@@ -1111,11 +1118,15 @@ export default {
       if (this.transfer && this._transferMeter) this.transferStats = this._transferMeter.snapshot();
     },
     set_transfer(value) {
+      const previous = this.transfer;
       this.transfer = value;
       this._transferMeter ||= createTransferMeter();
       this.transferStats = value ? this._transferMeter.update(value) : null;
       if (!value) this._transferMeter.reset();
-      this.refresh_local_metrics();
+      // The half-second timer refreshes adapter statistics during a transfer.
+      // Keep every confirmed byte for the progress display and interruption receipt.
+      if (!value || !previous || value.phase !== previous.phase || value.path !== previous.path ||
+          value.complete || value.done === value.total) this.refresh_local_metrics();
     },
     remember_transfer(kind, status, bytes = 0, verified = false) {
       this.transferHistory.push({ kind, status, bytes, verified });
@@ -1193,7 +1204,7 @@ export default {
       return {
         assertSession: () => this.assert_session(generation),
         readDirectory: async path => { this.assert_session(generation); const data = this.checked(await proto.vfs_read_folder(path)); this.assert_session(generation); return data; },
-        readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
+        readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, exact_size:options.exactBytes, firmware_version:this.firmwareVersion, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
         writeFile: (path, bytes, options = {}) => new Promise((resolve, reject) => {
           try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject, {rawMeta128:options.rawMeta128, beforeWrite:options.beforeWrite}); }
           catch(error) { reject(error); }
@@ -1460,7 +1471,7 @@ export default {
       if ([1, 255].includes(response.status)) return false;
       const layout = this.checked(response);
       // This PackedFS engine refuses an occupied rename target and publishes a whole subtree in one transaction.
-      return layout.mounted && layout.engineSha256 === '2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248';
+      return layout.mounted && supportsFolderPublication(this.firmwareVersion, layout.engineSha256);
     },
     forget_sync() {
       const stage = this.syncResume?.job.newFolderUpload?.stagePath;
@@ -2462,7 +2473,7 @@ export default {
         this.assert_session(generation);
         if (verify) {
           this.set_transfer({ phase: 'verifying', path, done: 0, total: options.file.size });
-          const bytes = await this.read_device_file(path, { max_bytes: options.file.size, progress_cb: progress => {
+          const bytes = await this.read_device_file(path, { max_bytes: options.file.size, exact_size: options.file.size, firmware_version: this.firmwareVersion, progress_cb: progress => {
             if (this.session_current(generation)) this.set_transfer({ phase: 'verifying', path, done: progress.received_bytes, total: options.file.size });
           } });
           this.assert_session(generation);
@@ -2605,9 +2616,9 @@ export default {
       ++this.pendingDownloads;
       this.set_transfer({ phase: 'download', path: form.name, done: 0, total: size });
       try {
-        // Uses the existing serialized read/open/close transaction, bounded to
+        // Uses a serialized, size-checked read, bounded to
         // at most 2048 bytes. It creates no Blob, download or metadata write.
-        const data = await this.read_device_file(path, { max_bytes: size, progress_cb: progress => {
+        const data = await this.read_device_file(path, { max_bytes: size, exact_size: size, firmware_version: this.firmwareVersion, progress_cb: progress => {
           if (current()) this.set_transfer({ phase: 'download', path: form.name, done: progress.received_bytes, total: size });
         } });
         if (!current()) return;
