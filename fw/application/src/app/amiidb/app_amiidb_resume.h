@@ -63,6 +63,7 @@ static void app_amiidb_save_cache(app_amiidb_t *app, uint8_t *retain, uint32_t s
     data.slot_index = app->cur_slot_index;
     data.fav_page_focus = app->fav_page_focus;
     data.fav_page_mode = app->fav_page_mode;
+    data.fav_page_number = app->fav_page_number;
     data.in_fav_folders = app->in_fav_folders;
     data.fav_page_direction = app->fav_page_direction;
     if (scene == data.target_scene && scene != AMIIDB_SCENE_AMIIBO_DETAIL) {
@@ -104,7 +105,7 @@ static bool app_amiidb_restore_cache(app_amiidb_t *app, const uint8_t *retain) {
     if (!retain) return false;
     app_amiidb_cache_data_t data;
     memcpy(&data, retain, sizeof(data));
-    if (data.magic != APP_AMIIDB_RESUME_MAGIC || data.version != APP_AMIIDB_RESUME_VERSION ||
+    if (data.magic != APP_AMIIDB_RESUME_MAGIC || (data.version != 1 && data.version != APP_AMIIDB_RESUME_VERSION) ||
         data.size != sizeof(data) || data.target_scene >= AMIIDB_SCENE_MAX ||
         app_amiidb_resume_target(data.target_scene) != data.target_scene ||
         (data.target_scene == AMIIDB_SCENE_AMIIBO_DETAIL && !app_amiidb_resume_origin(data.origin_scene)) ||
@@ -140,6 +141,7 @@ static bool app_amiidb_restore_cache(app_amiidb_t *app, const uint8_t *retain) {
     app->fav_page_direction = data.fav_page_direction;
     app->fav_page_focus = data.fav_page_focus;
     app->fav_page_mode = data.fav_page_mode;
+    app->fav_page_number = data.version >= 2 ? data.fav_page_number : 0;
     app->in_fav_folders = data.in_fav_folders;
     app->prev_scene_id = data.origin_scene;
     amiidb_recent_clear();

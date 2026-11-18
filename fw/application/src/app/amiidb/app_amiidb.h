@@ -94,11 +94,11 @@ typedef enum {
     AMIIDB_VIEW_ID_TOAST
 } amiidb_view_id_t;
 
-/* Version 1 is a pointer-free navigation snapshot, never an NFC tag dump.
+/* Pointer-free navigation snapshot. Version 2 also retains the favorite page.
  * It is copied through an aligned local object because retain_data is unaligned.
  * Older unversioned App3 snapshots are deliberately not accepted. */
 #define APP_AMIIDB_RESUME_MAGIC 0x31424441u
-#define APP_AMIIDB_RESUME_VERSION 1u
+#define APP_AMIIDB_RESUME_VERSION 2u
 typedef struct {
     uint32_t magic;
     uint16_t size;
@@ -119,6 +119,7 @@ typedef struct {
     int8_t fav_page_direction;
     char search_str[AMIIDB_SEARCH_MAX_BYTES + 1];
     char fav_dir[VFS_MAX_NAME_LEN];
+    uint16_t fav_page_number; /* Occupies tail padding of version 1. */
 } app_amiidb_cache_data_t;
 
 

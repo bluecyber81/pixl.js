@@ -89,11 +89,28 @@ int32_t amiidb_api_fav_list_dir(const char *folder, amiidb_fav_cb_t cb, void *ct
             memcpy(info.fav_data.folder_name, obj.name, strlen(obj.name) + 1);
             cb(&info, ctx);
         } else if (obj.type == VFS_TYPE_REG && amiidb_api_fav_parse_filename(obj.name, &info.fav_data.fav)) {
+            const char *suffix = strrchr(obj.name, '.');
+            info.name_alias = (obj.name[0] == '0' && obj.name[1] != '_') || strcmp(suffix, ".fav");
+            for (const char *p = obj.name; !info.name_alias && p < suffix; p++)
+                if (*p >= 'a' && *p <= 'f') info.name_alias = true;
             info.fav_type = FAV_TYPE_FAV;
             cb(&info, ctx);
         }
     }
     return finish_directory(driver, &dir, result);
+}
+
+/* A PackedFS stat is an indexed path lookup, not a directory traversal. */
+int32_t amiidb_api_fav_has_canonical(const char *folder, const amiidb_fav_t *fav, bool *present) {
+    char path[VFS_MAX_PATH_LEN];
+    int32_t result = format_filename(path, folder, fav);
+    if (result != VFS_OK) return result;
+    vfs_driver_t *driver = vfs_get_driver(VFS_DRIVE_EXT);
+    if (!driver) return VFS_ERR_NODEV;
+    vfs_obj_t obj;
+    result = driver->stat_file(path, &obj);
+    *present = result == VFS_OK && obj.type == VFS_TYPE_REG;
+    return result == VFS_ERR_NOOBJ ? VFS_OK : result;
 }
 
 int32_t amiidb_api_fav_create_dir(const char *folder) {
