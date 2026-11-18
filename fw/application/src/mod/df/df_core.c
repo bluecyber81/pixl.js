@@ -5,6 +5,9 @@
 #include "df_driver.h"
 
 #include "df_proto_info.h"
+#ifdef PIXL_SMALL_CREATE_ENABLE
+#include "boards.h"
+#endif
 #include "df_proto_vfs.h"
 #include "../runtime_diag.h"
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
