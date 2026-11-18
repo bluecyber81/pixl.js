@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-18",
+  "board": "Allmiibo LCD",
+  "transport": "Chrome 157 file-manager UI with a Windows BLE bridge and a physical peripheral",
+  "testFolder": {
+    "files": 128,
+    "bytesPerFile": 540,
+    "payloadBytes": 69120,
+    "bytePattern": "(fileIndex + byteOffset) % 256"
+  },
+  "upload": {
+    "method": "One run per configuration on the same LCD, at the same folder depth. Elapsed time from confirming the upload to completion. Disconnect during file 33 after a peripheral reply, before the browser receives it. Includes reconnect and resume. Independent verification is separate.",
+    "runs": [
+      {
+        "client": "Mochi",
+        "app": 660,
+        "ms": 336207
+      },
+      {
+        "client": "Allmiibo",
+        "app": 660,
+        "ms": 505175
+      },
+      {
+        "client": "Allmiibo App661 Test 1",
+        "app": 661,
+        "ms": 338910
+      },
+      {
+        "client": "Allmiibo App661 browser Test 2",
+        "app": 661,
+        "ms": 339187,
+        "webEntrySha256": "71af3171522b7e994ef2d41906f957598e34fb509d93cf5a8ad3a4feb2e48366",
+        "dataFilesAfterDisconnect": 32,
+        "interruptedFileVisible": false,
+        "finalFileReceiptsTotalMs": 277242
+      }
+    ],
+    "verifiedFileHashesPerRun": 128
+  },
+  "backup": {
+    "app": 661,
+    "scope": "Two fresh ZIP backups of the same unchanged physical folder after Test 2. Compared every file against original bytes and against the other ZIP. Independent ZIP CRC checks passed.",
+    "legacyMs": 104288,
+    "compactMs": 64665,
+    "legacyFileCommandsPerFile": 3,
+    "compactFileCommandsPerFile": 1,
+    "filesVerifiedPerArchive": 128,
+    "payloadBytesPerArchive": 69120
+  },
+  "limitations": [
+    "Measurements cover this synthetic folder on one LCD. The 1081-file owner collection was not timed in these trials.",
+    "The physical browser Test 2 predates the final browser cancellation guard and the 3.58.2 build.",
+    "DE3.89/App662 is a new signed test firmware. Hardware throughput for App662, Android DFU and browser DFU was not measured."
+  ]
+}
