@@ -23,15 +23,24 @@ typedef enum {
     DF_PROTO_CMD_VFS_RAW_META_WRITE = 0x1e,
     DF_PROTO_CMD_VFS_PACKED_LAYOUT = 0x1f,
     DF_PROTO_CMD_VFS_IMPORT_STATE = 0x20,
-    DF_PROTO_CMD_VFS_FILE_SHA256 = 0x21
+    DF_PROTO_CMD_VFS_FILE_SHA256 = 0x21,
+    DF_PROTO_CMD_VFS_SMALL_CAP = 0x22,
+    DF_PROTO_CMD_VFS_SMALL_CREATE = 0x23,
+    DF_PROTO_CMD_VFS_SMALL_READ = 0x24
 } df_proto_cmd_vfs_t;
 
 extern const df_cmd_entry_t df_proto_handler_vfs_entries[];
 void df_proto_vfs_cleanup(void);
 void df_proto_vfs_cancel_restart(void);
+#if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
+void df_proto_vfs_cancel_small_read(void);
+#endif
 /* False also for an abandoned descriptor whose cleanup has not succeeded. */
 bool df_proto_vfs_file_transfer_closed(void);
 /* Includes unfinished directory reads and failed/abandoned file ownership. */
 bool df_proto_vfs_is_idle(void);
+#if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
+void df_proto_vfs_expire_small(void);
+#endif
 
 #endif

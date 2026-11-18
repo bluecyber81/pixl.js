@@ -215,6 +215,65 @@ static void mounted_revision(void) {
   /* Saturation disables caching instead of ever reusing an old token. */
   if (mount_epoch != UINT32_MAX) mount_epoch++;
 }
+#ifdef PIXL_SMALL_CREATE_ENABLE
+#include "vfs_meta.h"
+static bool writable_directory(const char *path) {
+  pfs_info_t info;
+  if (pfs_stat(store, path, &info) || info.type != PFS_DIR) return false;
+  return vfs_meta_is_writable(info.meta, sizeof(info.meta));
+}
+
+static bool writable_parents(char *path) {
+  for (char *slash = strchr(path + 1, '/'); slash; slash = strchr(slash + 1, '/')) {
+    *slash = 0;
+    bool allowed = writable_directory(path);
+    *slash = '/';
+    if (!allowed) return false;
+  }
+  return true;
+}
+/* The caller owns this validated private path buffer throughout the call. */
+int32_t vfs_packed_create_small(char *path, uint64_t expected, const uint8_t *data, size_t size) {
+  if (!path || !data || size > VFS_SMALL_CREATE_MAX || !expected ||
+      !pfs_mounted(store) || vfs_packed_import_pending() || !vfs_packed_handles_idle())
+    return VFS_ERR_FAIL;
+  int32_t result = vfs_persist_writer_begin(&vfs_driver_fs, path);
+  if (result != VFS_OK) return result;
+  if (vfs_packed_revision() != expected || !writable_parents(path)) {
+    result = VFS_ERR_FAIL;
+  }
+  if (result == VFS_OK) {
+    pfs_file_t *file = NULL;
+    int r = pfs_open(store, path, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL, &file);
+    if (!r) {
+      lfs_ssize_t written = pfs_write(file, data, size);
+      r = written < 0 ? written : (size_t)written != size ? LFS_ERR_IO : pfs_close(file);
+      if (r) pfs_abort(file);
+    }
+    result = map_error(r);
+  }
+  vfs_persist_writer_end(&vfs_driver_fs);
+  return result;
+}
+
+int32_t vfs_packed_publish_small(char *stage, const char *target, uint64_t expected) {
+  if (!stage || !target || !expected || !pfs_mounted(store) ||
+      vfs_packed_import_pending() || !vfs_packed_handles_idle()) return VFS_ERR_FAIL;
+  int32_t result = vfs_persist_writer_begin(&vfs_driver_fs, stage);
+  if (result != VFS_OK) return result;
+  result = vfs_persist_before_mutation(&vfs_driver_fs, target);
+  if (result == VFS_OK) {
+    /* The browser's audited tree is bound to this CAS. PackedFS rename
+     * independently rejects an occupied destination and publishes one manifest. */
+    if (vfs_packed_revision() != expected || !writable_directory(stage) || !writable_parents(stage))
+      result = VFS_ERR_FAIL;
+    else
+      result = map_error(pfs_rename(store, stage, target));
+  }
+  vfs_persist_writer_end(&vfs_driver_fs);
+  return result;
+}
+#endif
 static int32_t packed_mount(void) {
   if (pfs_mounted(store))
     return pfs_poisoned(store) ? VFS_ERR_CRPT : VFS_OK;

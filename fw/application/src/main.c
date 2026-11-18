@@ -50,6 +50,9 @@
 #include "app_error.h"
 #include "app_scheduler.h"
 #include "boards.h"
+#if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
+#include "df_proto_vfs.h"
+#endif
 #include "nfc_ndef_msg.h"
 #include "nfc_t4t_lib.h"
 #include "nordic_common.h"
@@ -430,6 +433,9 @@ int main(void) {
         ntag_emu_process_pending();
         ble_process_pending();
         app_sched_execute();
+#if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
+        df_proto_vfs_expire_small();
+#endif
         mui_tick(p_mui);
         ble_remote_poll();
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)

@@ -242,6 +242,7 @@ SRC_FILES += \
   $(PROJ_DIR)/mod/df/df_core.c \
   $(PROJ_DIR)/mod/df/df_proto_info.c \
   $(PROJ_DIR)/mod/df/df_proto_vfs.c \
+  $(PROJ_DIR)/mod/df/df_small_create.c \
   $(PROJ_DIR)/mod/df/df_core.c \
   $(PROJ_DIR)/mui/mui_view.c \
   $(PROJ_DIR)/mui/mui_view_port.c \
@@ -672,6 +673,7 @@ CFLAGS += -DBOARD_$(BOARD)
 ifeq ($(BOARD),LCD)
 # Mount and file buffers are explicitly owned by the bounded application pool.
 CFLAGS += -DLFS_NO_MALLOC
+CFLAGS += -DPIXL_SMALL_CREATE_ENABLE=1
 CFLAGS += -DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN -DLFS_NO_ERROR
 ifeq ($(FILESYSTEM),SPIFFS_PREP)
 CFLAGS += -DPIXL_FS_SPIFFS_PREP

@@ -11,6 +11,11 @@
 #include "vfs.h"
 /* Cache identity changes after mutation and successful remount/format. */
 uint64_t vfs_packed_revision(void);
+#ifdef PIXL_SMALL_CREATE_ENABLE
+#define VFS_SMALL_CREATE_MAX 572u
+int32_t vfs_packed_create_small(char *path, uint64_t expected, const uint8_t *data, size_t size);
+int32_t vfs_packed_publish_small(char *stage, const char *target, uint64_t expected);
+#endif
 /* Only a guarded external writer may attach raw128 to its private stage. */
 int32_t vfs_packed_stage_meta(vfs_file_t *fd, const uint8_t meta[128]);
 /* Adapter functions: physical geometry was checked before publishing it. */

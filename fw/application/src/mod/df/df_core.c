@@ -58,6 +58,10 @@ static void df_core_on_event(df_event_t *evt) {
         df_proto_vfs_cleanup();
         m_df_ctx.cmd = NULL;
     } else if (evt->type == DF_EVENT_DATA_RECEVIED) {
+#if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
+        if (m_df_ctx.cmd && m_df_ctx.cmd->cmd == DF_PROTO_CMD_VFS_SMALL_READ)
+            df_proto_vfs_cancel_small_read();
+#endif
         /* Any replacement command invalidates an older reset reservation. */
         df_proto_info_cancel_pending();
         df_proto_vfs_cancel_restart();

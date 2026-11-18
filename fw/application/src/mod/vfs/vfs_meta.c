@@ -58,6 +58,12 @@ void vfs_meta_decode(uint8_t *p_meta, uint8_t size, vfs_meta_t *p_out) {
         memset(p_out, 0, sizeof(*p_out));
 }
 
+bool vfs_meta_is_writable(uint8_t *raw, uint8_t size) {
+    uint8_t offset = 0;
+    vfs_meta_t decoded = {0};
+    return parse_fields(raw, size, &decoded, &offset) && !(decoded.flags & VFS_OBJ_FLAG_READONLY);
+}
+
 /* Preserve unrecognized records and all padding outside the one edited field.
  * An absent FLAGS field is appended only after the full record validates. */
 bool vfs_meta_set_readonly(uint8_t *raw, uint8_t size, bool readonly) {
