@@ -187,6 +187,55 @@ int main(void){unsigned cases=0;
  assert(mui_u8g2_backlight_preview(100)==0 && m_backlight_saved==8);
  assert(mui_u8g2_backlight_restore()==0 && duty==8);
  mui_u8g2_poll_dim(false);assert(duty==30 && !m_dimmed);
+ // A later successful user setting owns the output. It supersedes either
+ // an active preview or a failed restore, including when preview began dimmed.
+ unsigned superseded=0;
+ for(unsigned chosen=0;chosen<=80;chosen+=80)for(unsigned pending=0;pending<2;pending++)
+ for(unsigned dimmed=0;dimmed<2;dimmed++)for(unsigned path=0;path<3;path++){
+   reset(true,true);opt_in=dimmed;rtc=0;
+   if(dimmed){mui_u8g2_poll_dim(true);assert(duty==8 && m_dimmed);}
+   assert(mui_u8g2_backlight_preview(5)==0);
+   if(pending){duty_error=8;assert(mui_u8g2_backlight_restore()==8);assert(m_backlight_restore_pending);}
+   duty_error=0;rtc=50;bar.current=chosen;
+   if(path==0)assert(mui_u8g2_set_backlight_level(chosen)==0);
+   else settings_scene_lcd_backlight_event_cb(path==1?MUI_PROGRESS_BAR_EVENT_INCREMENT:MUI_PROGRESS_BAR_EVENT_CONFIRMED,&bar);
+   assert(mui_u8g2_get_backlight_level()==(int)chosen);
+   assert(!m_backlight_preview_active && !m_backlight_restore_pending && !m_dimmed && !m_dim_retry_pending);
+   assert(settings.lcd_backlight==(path==2?chosen:30));
+   unsigned done_calls=calls;rtc=250;mui_u8g2_poll_dim(false);
+   rtc=500;mui_u8g2_poll_dim(false);
+   assert(mui_u8g2_backlight_restore()==0);
+   assert(calls==done_calls && mui_u8g2_get_backlight_level()==(int)chosen);
+   // The next preview saves the newer output, never the superseded 8/30.
+   assert(mui_u8g2_backlight_preview(5)==0 && m_backlight_saved==chosen);
+   assert(mui_u8g2_backlight_restore()==0 && mui_u8g2_get_backlight_level()==(int)chosen);
+   superseded++;
+ }
+ // Failures are not a new setting: retain the old restore target and retry it.
+ for(unsigned timeout=0;timeout<2;timeout++)for(unsigned path=0;path<2;path++){
+   reset(true,true);opt_in=false;rtc=0;
+   assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+   assert(mui_u8g2_backlight_restore()==8 && m_backlight_restore_pending);
+   if(timeout){duty_error=0;busy_calls=calls+200;}
+   if(path==0)assert(mui_u8g2_set_backlight_level(80)==(timeout?NRF_ERROR_TIMEOUT:8));
+   else {bar.current=80;settings_scene_lcd_backlight_event_cb(MUI_PROGRESS_BAR_EVENT_CONFIRMED,&bar);assert(toasts==1 && !left_scenes && bar.current==5);}
+   assert(m_backlight_restore_pending && m_backlight_saved==30 && duty==5 && settings.lcd_backlight==30);
+   duty_error=0;busy_calls=0;rtc=249;unsigned done_calls=calls;
+   mui_u8g2_poll_dim(false);assert(calls==done_calls && duty==5);
+   rtc=250;mui_u8g2_poll_dim(false);assert(duty==30 && !m_backlight_restore_pending);
+ }
+ reset(true,true);opt_in=false;rtc=0;
+ assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+ assert(mui_u8g2_backlight_restore()==8);m_pwm_initialized=false;
+ assert(mui_u8g2_set_backlight_level(0)==NRF_ERROR_INVALID_STATE && m_backlight_restore_pending);
+ m_pwm_initialized=true;duty_error=0;rtc=250;mui_u8g2_poll_dim(false);assert(duty==30);
+ // A failed user request also leaves an active preview owned by its test.
+ reset(true,true);opt_in=true;
+ assert(mui_u8g2_backlight_preview(5)==0);duty_error=8;
+ assert(mui_u8g2_set_backlight_level(80)==8 && m_backlight_preview_active);
+ mui_u8g2_poll_dim(true);assert(duty==5);
+ duty_error=0;assert(mui_u8g2_backlight_restore()==0 && duty==30);
+ printf("PASS %u newer user settings supersede preview/restore through direct and real settings callbacks; failed requests retain restore ownership.\n",superseded);
  puts("PASS LCD preview: all101 saved levels, auto-dim suppression, restore failures/retry/RTC wrap, off/dimmed return and settings unchanged");
  puts("PASS last-five-second dim window, 101 brightness levels, activity restore, opt-out, off, PWM failure recovery and 24-bit RTC rollover");
  printf("PASS %u actual PWM/settings cases: bounded BUSY, immediate errors, init failure/retry, no uninitialized SDK access, old output/config preserved, no false confirmation, all256 values.\n",cases);

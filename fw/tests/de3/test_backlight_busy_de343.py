@@ -20,7 +20,7 @@ class BacklightBusyTests(unittest.TestCase):
         self.assertIn('ret_code_t mui_u8g2_set_backlight_level',header)
         limit=re.search(r'^#define BACKLIGHT_PWM_MAX_ATTEMPTS \d+u$',display,re.M).group(0)
         parts=[limit]
-        parts += [function(display,name) for name in ('backlight_pwm_duty_set',
+        parts += [function(display,name) for name in ('backlight_pwm_duty_set','backlight_level_apply',
                     'mui_u8g2_set_backlight_level','mui_u8g2_get_backlight_level','pwm_init',
                     'mui_u8g2_backlight_preview','mui_u8g2_backlight_restore')]
         power=(SRC/'sdk/pwr_mgmt/nrf_pwr_mgmt.c').read_text()

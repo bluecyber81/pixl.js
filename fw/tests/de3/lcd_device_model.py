@@ -39,9 +39,10 @@ class Model:
         self.pin_events = []
         self.pwm_events = []
         self.scene_returns = 0
+        self.rtc = 0
         self.hook('app_util_critical_region_enter', self.enter)
         self.hook('app_util_critical_region_exit', self.leave)
-        self.hook('app_timer_cnt_get', lambda: self.respond(0))
+        self.hook('app_timer_cnt_get', lambda: self.respond(self.rtc))
         self.hook('mui_scene_dispatcher_previous_scene', self.previous)
         for name in ('app_error_handler_bare', 'app_error_fault_handler'):
             self.hook(name, lambda: (_ for _ in ()).throw(AssertionError('firmware fatal error')))
