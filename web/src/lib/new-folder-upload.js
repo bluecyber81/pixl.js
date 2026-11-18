@@ -149,16 +149,20 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       if (!validRevision(value)) stale()
       return value
     }
-    async function audit(base, partial, proof = null) {
+    async function audit(base, partial) {
       const before = await revision()
       const entries = await ownerListing()
       if (base === targetPath) { if (!isPublished(entries)) stale() }
       else checkWorkingFolder(entries)
-      const found = await inventory(base, partial, proof !== before)
+      const found = await inventory(base, partial)
       if (await revision() !== before) stale()
       return {found, revision:before}
     }
     let proof = null
+    // Only observations made during this call are eligible for the final CAS.
+    // A resumed checkpoint must earn its proof again from names, metadata and SHA.
+    let verifiedPaths = new Set()
+    let continuousReceipts = true
     const candidate = !/^~u[a-f0-9]{8,12}$/.test(targetName) &&
       typeof createSmall === 'function' && typeof readCreateRevision === 'function' && typeof publishSmallFolder === 'function' &&
       wanted.every(entry => entry.size <= 572) ? await readCreateRevision() : null
@@ -187,6 +191,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       const checkedStage = candidate ? await audit(state.stagePath, true) : null
       const found = checkedStage ? checkedStage.found : await inventory(state.stagePath, true)
       proof = checkedStage?.revision ?? null
+      if (checkedStage) verifiedPaths = checkedStage.found
       if (state.inFlight && found.has(state.inFlight) && !completed.has(state.inFlight)) {
         completed.add(state.inFlight); job.completed.push(state.inFlight)
       }
@@ -224,7 +229,11 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       await createDirectory(stageDir); state.dirs.push(dir); check()
       proof = null
     }
-    if (candidate && !proof) proof = (await audit(state.stagePath, true)).revision
+    if (candidate && !proof) {
+      const anchor = await audit(state.stagePath, true)
+      proof = anchor.revision
+      verifiedPaths = anchor.found
+    }
     for (const entry of wanted) {
       if (completed.has(entry.targetPath)) continue
       const path = staged(state.stagePath, entry.targetPath), parts = splitDevicePath(path)
@@ -243,6 +252,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
         }
         if (!validRevision(next) || next === proof) stale()
         consecutive = singleCommit(proof,next)
+        if (consecutive) verifiedPaths.add(entry.targetPath)
         proof = next
       } else await writeFile(path, payloads.get(entry.targetPath), {
         rawMeta128:emptyMetadata.slice(),
@@ -252,19 +262,30 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
         }
       })
       completed.add(entry.targetPath); job.completed.push(entry.targetPath); state.inFlight = null
-      if (!consecutive) proof = (await audit(state.stagePath, true)).revision
+      if (!consecutive) {
+        continuousReceipts = false
+        proof = (await audit(state.stagePath, true)).revision
+      }
       uploadedBytes += entry.size
       check(); progress('syncing', completed.size)
     }
     state.phase = 'verifying'
     progress('checking', completed.size)
-    if (candidate) proof = (await audit(state.stagePath, false, proof)).revision
-    else {
+    if (candidate) {
+      // The anchor included every selected directory and ruled out foreign
+      // entries. Each single-commit receipt validates the stored file's SHA.
+      // The firmware checks this exact revision and the no-clobber rename
+      // under the same writer lock. Any intervening mutation rejects publication.
+      if (!continuousReceipts || !ordered.every(path => verifiedPaths.has(path))) {
+        proof = (await audit(state.stagePath, false)).revision
+      }
+    } else {
       await inventory(state.stagePath)
       // Hashing the tree can take time. Recheck all names and metadata before publishing.
       await inventory(state.stagePath, false, false)
       checkWorkingFolder(await ownerListing())
     }
+    check()
     state.phase = 'publishing'
     let publishedRevision
     try {

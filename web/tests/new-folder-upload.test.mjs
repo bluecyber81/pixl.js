@@ -297,12 +297,59 @@ test('a final-name collision at publication preserves the independent folder and
 })
 
 test('persistent per-file receipts and a stable revision verify a closed small-file tree without redundant SHA requests', async () => {
-  const s = await setup(), native = nativeApi(s)
+  const s = await setup()
+  let afterLastReceipt, atPublish
+  const native = nativeApi(s, (phase,path) => {
+    if (phase === 'commit' && path.endsWith('/f002.bin')) afterLastReceipt = s.actions.length
+    if (phase === 'publish') atPublish = s.actions.length
+  })
   const receipt = await s.run(native)
   assert.equal(receipt.uploadedBytes,1620); assert.equal(receipt.total,3)
   assert.equal(native.actions.length,3)
   assert.equal(s.actions.filter(a=>a.kind==='hash' || a.kind==='open').length,0)
+  assert.equal(atPublish, afterLastReceipt, 'the guarded publish directly consumes the final receipt')
   for (let i=0;i<3;i++) assert.deepEqual(s.nodes.get(root+'/'+s.files[i].relativePath).bytes,bytesOf(i))
+})
+
+test('a gap in the receipt sequence requires fresh full hashes before conditional publication', async () => {
+  const s = await setup(), native = nativeApi(s)
+  const create = native.createSmall
+  native.createSmall = async (...args) => {
+    const next = await create(...args)
+    if (!args[0].endsWith('/f001.bin')) return next
+    native.bump()
+    return native.readCreateRevision()
+  }
+  const done = await s.run(native)
+  assert.equal(done.total, 3)
+  const verified = s.actions.filter(action => action.kind === 'hash').map(action => action.path)
+  for (const file of s.files) assert(verified.includes(s.job.newFolderUpload.stagePath + '/' + file.relativePath.split('/').slice(1).join('/')))
+})
+
+test('cancelling at the final progress update leaves the verified stage unpublished', async () => {
+  const s = await setup(), native = nativeApi(s), controller = new AbortController()
+  await assert.rejects(s.run({...native, signal:controller.signal, onProgress:progress => {
+    if (progress.phase === 'checking') controller.abort()
+  }}), error => error.code === 'SYNC_CANCELLED')
+  assert.equal(s.nodes.has(target),false)
+  assert.equal(s.nodes.has(s.job.newFolderUpload.stagePath),true)
+  assert.equal(s.actions.some(action => action.kind === 'rename'),false)
+})
+
+test('an extra entry after the last receipt leaves the working directory intact and cannot be published on retry', async () => {
+  const s = await setup()
+  let inserted = false
+  const native = nativeApi(s, (phase, path, bump) => {
+    if (inserted || phase !== 'publish') return
+    inserted = true
+    s.nodes.set(path+'/unselected.bin',{type:0,meta:newMetadata(),bytes:bytesOf(57)})
+    bump()
+  })
+  await assert.rejects(s.run(native), error => error.cmd === 0x23 && error.status === 1)
+  await assert.rejects(s.run(native), error => error.code === 'SYNC_STALE')
+  assert.equal(s.nodes.has(target),false)
+  assert.deepEqual(s.nodes.get(s.job.newFolderUpload.stagePath+'/unselected.bin').bytes,bytesOf(57))
+  assert.equal(native.actions.length,3)
 })
 
 test('a native file create refuses stale inventory and preserves an exact or case-equivalent foreign name', async () => {
