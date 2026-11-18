@@ -39,9 +39,10 @@ jobs:
       - name: Prepare the pinned emulator and complete SDK test inputs
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-linux-gnueabihf python3-venv
-          /usr/bin/python3 -m venv "$RUNNER_TEMP/oled-venv"
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-linux-gnueabihf python3-venv python3-cryptography
+          /usr/bin/python3 -m venv --system-site-packages "$RUNNER_TEMP/oled-venv"
           "$RUNNER_TEMP/oled-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r tools/ci-unicorn-linux-x64.txt
+          "$RUNNER_TEMP/oled-venv/bin/python" -c "import unicorn; from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes"
           mkdir -p "$RUNNER_TEMP/sdk-test"
           docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec 'tar -C "$NRF52_SDK_ROOT" -cf - .' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
       - name: Check image layout and optional release BIN identity

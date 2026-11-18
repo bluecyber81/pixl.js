@@ -238,7 +238,16 @@ static void settings_scene_main_reload(void *user_data) {
 
     mui_list_view_clear_items(app->p_list_view);
 
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c7, _T(APP_SET_VERSION), version_get_version(version_get()),
+    const char *display_version = version_get_version(version_get());
+#ifdef OLED_SCREEN
+    /* Keep the OLED trial suffix visible even with text animation disabled.
+     * Only omit the known upstream prefix; full build/diagnostic IDs stay intact. */
+    const char prefix[] = "2.22.0-DE";
+    if (display_version && strncmp(display_version, prefix, sizeof(prefix) - 1) == 0 &&
+        display_version[sizeof(prefix) - 1] >= '0' && display_version[sizeof(prefix) - 1] <= '9')
+        display_version += sizeof("2.22.0-") - 1;
+#endif
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c7, _T(APP_SET_VERSION), display_version,
                                (void *)SETTINGS_MAIN_MENU_VERSION);
 
     mui_list_view_add_item_ext(app->p_list_view, 0xe26d, _T(APP_SET_LANGUAGE), getLangDesc(p_settings->language),

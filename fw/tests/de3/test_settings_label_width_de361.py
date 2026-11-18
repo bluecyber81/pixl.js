@@ -1,5 +1,7 @@
-"""Check complete DE/EN settings rows at offset zero on the 128-pixel LCD."""
+"""Check DE/EN LCD and OLED settings rows at rest, with board-correct versions."""
 from pathlib import Path
+import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -29,7 +31,11 @@ static const char *const *strings;
 int main(void) {
     u8g2_t font = {0};
     u8g2_SetFont(&font, u8g2_font_wqy12_t_gb2312a);
+#ifdef OLED_SCREEN
     fixture_version = VERSION;
+#else
+    fixture_version = LCD_FIXTURE_VERSION;
+#endif
     mui_list_view_t list = {0};
     app_settings_t app = {.p_list_view = &list};
     unsigned rows = 0;
@@ -50,7 +56,11 @@ int main(void) {
                     for (unsigned i = 0; i < list.items->size; ++i) {
                         mui_list_item_t *row = &list.items->row[i];
                         if ((uintptr_t)row->user_data == SETTINGS_MAIN_MENU_OLED_CONTRAST)
+#ifdef OLED_SCREEN
+                            assert(!strcmp(row->subtext, on ? "100%" : "0%"));
+#else
                             assert(!strcmp(row->subtext, on ? "100%" : "60%"));
+#endif
                         unsigned title = u8g2_GetUTF8Width(&font, row->text);
                         unsigned value = u8g2_GetUTF8Width(&font, row->subtext);
                         unsigned column = mui_list_view_value_x(128, value);
@@ -68,6 +78,25 @@ int main(void) {
             }
         }
     }
+    /* A display-only label must never rewrite the full version used by BLE.
+     * Unknown, incomplete and NULL versions keep the existing safe fallback. */
+    strings = lang_en_US;
+    data.language = 1;
+    const char *unusual[] = {NULL, "", "DE3.85-OLEDt5", "2.22.0-", "2.22.0-DE",
+                            "2.22.0-DEBUG", "2.23.0-DE3.85-OLEDt5", "other-build"};
+    for (unsigned i=0;i<sizeof(unusual)/sizeof(*unusual);++i) {
+        fixture_version = unusual[i]; settings_scene_main_reload(&app);
+        assert(!strcmp(list.items->row[0].subtext, unusual[i] ? unusual[i] : ""));
+        assert(version_get_version(NULL) == unusual[i]);
+    }
+    fixture_version = "2.22.0-DE3.85-OLEDt5";
+    settings_scene_main_reload(&app);
+#ifdef OLED_SCREEN
+    assert(!strcmp(list.items->row[0].subtext, "DE3.85-OLEDt5"));
+#else
+    assert(!strcmp(list.items->row[0].subtext, fixture_version));
+#endif
+    assert(!strcmp(version_get_version(NULL), "2.22.0-DE3.85-OLEDt5"));
     printf("PASS %u settings rows, both locales, full labels and values at rest\n", rows);
 }
 '''
@@ -76,8 +105,10 @@ int main(void) {
             font_src = 'u8g2_font_wqy12_t_gb2312a.c'
             shutil.copyfile(SRC / 'mui' / font_src, folder / font_src)
             (folder / 'mui_u8g2.h').write_text('#include "u8g2.h"\n')
-            source = prefix + harness() + FONT.split('int main(void)')[0] + layout + cases
-            (folder / 'test.c').write_text(source, encoding='utf-8')
+            full_version = re.search(r'^#define VERSION "([^"]+)"',
+                                     (SRC / 'version.inc.h').read_text(), re.M).group(1)
+            lcd_version = re.sub(r'-OLEDt\d+$', '', full_version)
+            prefix += '#define LCD_FIXTURE_VERSION ' + json.dumps(lcd_version) + '\n'
             u8g2 = FW / 'components/u8g2/csrc'
             binary = folder / 'test.exe'
             command = ['gcc', '-std=c11', '-O1', '-ffunction-sections', '-fdata-sections',
@@ -86,8 +117,12 @@ int main(void) {
                        str(folder / font_src), str(SRC / 'i18n/de_DE.c'), str(SRC / 'i18n/en_US.c'),
                        *(str(u8g2 / f) for f in ('u8g2_font.c', 'u8x8_8x8.c', 'u8g2_kerning.c')),
                        '-o', str(binary)]
-            subprocess.run(command, check=True, timeout=60)
-            subprocess.run([binary], check=True, timeout=10)
+            for board in ('LCD', 'OLED'):
+                fixture = harness().replace('#define LCD_SCREEN 1', '#define '+board+'_SCREEN 1')
+                source = prefix + fixture + FONT.split('int main(void)')[0] + layout + cases
+                (folder / 'test.c').write_text(source, encoding='utf-8')
+                subprocess.run(command, check=True, timeout=60)
+                subprocess.run([binary], check=True, timeout=10)
 
 
 if __name__ == '__main__':
