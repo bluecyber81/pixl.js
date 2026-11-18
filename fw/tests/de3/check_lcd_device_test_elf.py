@@ -112,6 +112,26 @@ def verify(directory, frames=None):
     assert m.call('mui_u8g2_get_backlight_level')==0
     m.call('mui_u8g2_init',fb);m.clear();pwm(65)
     assert m.call('mui_u8g2_backlight_restore')==0;pwm(65)
+    # The real public setter must supersede a pending failed preview restore.
+    # Only the failed SDK calls are injected; success uses the actual PWM SDK.
+    for chosen in (0,80):
+        assert m.call('mui_u8g2_set_backlight_level',30)==0;pwm(30)
+        assert m.call('mui_u8g2_backlight_preview',5)==0;pwm(5)
+        fail=m.hook('app_pwm_channel_duty_set',lambda:m.respond(8))
+        assert m.call('mui_u8g2_backlight_restore')==8
+        assert m.call('mui_u8g2_set_backlight_level',80)==8;pwm(5)
+        m.cpu.hook_del(fail)
+        assert m.call('mui_u8g2_set_backlight_level',chosen)==0;pwm(chosen)
+        m.rtc+=32768;m.call('mui_u8g2_poll_dim',0);pwm(chosen)
+        assert m.call('mui_u8g2_backlight_restore')==0;pwm(chosen)
+    assert m.call('mui_u8g2_set_backlight_level',30)==0
+    assert m.call('mui_u8g2_backlight_preview',5)==0
+    fail=m.hook('app_pwm_channel_duty_set',lambda:m.respond(8))
+    assert m.call('mui_u8g2_backlight_restore')==8
+    assert m.call('mui_u8g2_set_backlight_level',80)==8
+    m.cpu.hook_del(fail);m.rtc+=32768
+    m.call('mui_u8g2_poll_dim',0);pwm(30)
+    assert m.call('mui_u8g2_set_backlight_level',65)==0;pwm(65)
     # Negative control must catch a silently successful but inert PWM SDK call.
     hook=m.hook('app_pwm_channel_duty_set',lambda:m.respond(0))
     m.call('mui_u8g2_backlight_preview',5)
@@ -123,6 +143,8 @@ def verify(directory, frames=None):
     return {'passed':True,'binarySha256':sha256(binary.read_bytes()).hexdigest(),
             'elfMatchesBin':True,'cases':results,'fixedPatternPixels':1568,
             'savedPwmUnchanged':65,'savedContrastUnchanged':80,'pwmPeriodTicks':3200,
+            'newerPwmWinsOverFailedRestore':[0,80],
+            'failedNewPwmKeepsRestoreTarget':30,
             'restoration':['short center','long center','forced view change','actual settings destructor','display shutdown/wake'],
             'negativeControlRejected':'no-op app_pwm_channel_duty_set',
             'boundary':'linked UI, ST7567/HAL/Nordic SPIM DMA and actual PWM SDK/TIMER1/PPI/GPIOTE registers',
