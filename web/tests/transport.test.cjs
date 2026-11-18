@@ -362,9 +362,44 @@ test('backup checksum uses one read-only logical request with a little-endian si
     const name=[...Buffer.from(path)];assert.deepEqual(f.writes.flatMap(frame=>frame.slice(4)),[name.length,0,...name,28,2]);
     fragmentedReply(f,0x21,expected);assert.equal(await request,Buffer.from(expected).toString('hex'));
 });
+test('the longest valid digest path crosses several small GATT writes', async () => {
+    const f = protocolFixture();
+    await modernProtocol(f);
+    const path = 'E:/' + 'a'.repeat(30) + '/' + 'ä'.repeat(15) + 'x';
+    const bytes = [...Buffer.from(path)];
+    assert.equal(bytes.length, 65);
+    const request = f.api.vfs_backup_digest(path, 572, '2.22.0-DE3.87');
+    await flush();
+    assert.equal(f.writes.length, 5);
+    assert.deepEqual(f.writes.flatMap(frame => frame.slice(4)), [65, 0, ...bytes, 60, 2]);
+    fragmentedReply(f, 0x21, new Array(32).fill(0xab));
+    assert.equal(await request, 'ab'.repeat(32));
+});
+test('a digest that exceeds the logical request limit leaves the connection available for a normal read', async () => {
+    const f = protocolFixture();
+    const negotiation = f.api.negotiate_transport();
+    f.rx(3, [80, 88, 68, 70, 1, 3, 16, 0, 20, 0]);
+    await negotiation;
+    f.writes.length = 0;
+    const path = 'E:/ä12345678'; // 13 UTF-8 bytes: 16 bytes for OPEN, 17 for SHA-256.
+    assert.equal(await f.api.vfs_backup_digest(path, 540, '2.22.0-DE3.87'), null);
+    assert.equal(f.writes.length, 0);
+    const open = f.api.vfs_open_file(path, 'r');
+    assert.equal(f.writes[0][0], 0x12);
+    f.rx(0x12, [3]);
+    assert.equal((await open).data.file_id, 3);
+    const close = f.api.vfs_close_file(3);
+    f.rx(0x13);
+    await close;
+    const short = f.api.vfs_backup_digest('E:/ä1234567', 540, '2.22.0-DE3.87');
+    fragmentedReply(f, 0x21, new Array(32).fill(0xab));
+    assert.equal(await short, 'ab'.repeat(32));
+    assert.equal(f.disconnects, 0);
+});
 test('backup checksum falls back on older devices, internal drives and large files, and remembers unsupported only in its connection', async()=>{
     const f=protocolFixture(), version='2.22.0-DE3.66';
-    for(const [path,size,fw] of [['E:/x',540,'2.22.0-DE3.65'],['E:/x',573,version],['I:/x',10,version],['E:/x',5,'2.21.0-DE3.8']]){
+    for(const [path,size,fw] of [['E:/x',540,'2.22.0-DE3.65'],['E:/x',573,version],['I:/x',10,version],['E:/x',5,'2.21.0-DE3.8'],
+        ['E:/x',540,'2.22.0-DE3.87-OLEDt6'],['E:/x',540,'2.22.0-DE3.87-unknown']]){
         assert.equal(await f.api.vfs_backup_digest(path,size,fw),null);
     }
     assert.equal(f.writes.length,0);

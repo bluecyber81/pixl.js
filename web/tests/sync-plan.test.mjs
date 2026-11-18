@@ -10,6 +10,36 @@ const execute = (vfs, plan, files, options = {}) => executeSyncJob({ ...vfs.api,
   uploadFile: input => safeUpload({ ...vfs.api, ...input }), ...options })
 const isMutation = entry => ['write', 'rename', 'remove', 'mkdir', 'meta'].includes(entry.op)
 
+test('small-file digests verify staged, committed and previously completed data; fallback rereads bytes', async () => {
+  const {sha256Bytes} = await import('../src/lib/safe-upload.js')
+  const vfs = memoryVfs(), files = [localFile('a.bin'), localFile('b.bin')]
+  const plan = await compare(vfs, files), job = createSyncJob(plan), digests = []
+  const readFileDigest = async (path, size) => {
+    const data = Uint8Array.from(vfs.bytes(path))
+    assert.equal(data.length, size)
+    digests.push(path)
+    return sha256Bytes(data)
+  }
+  let calls = 0
+  await assert.rejects(execute(vfs, plan, files, {job, readFileDigest, uploadFile: input => {
+    if (++calls === 2) throw Error('link lost')
+    return safeUpload({...vfs.api, ...input, readFileDigest})
+  }}), /link lost/)
+  assert.deepEqual(job.completed, ['E:/tags/a.bin'])
+  assert.equal(digests.length, 2)
+  assert.equal(digests[1], 'E:/tags/a.bin')
+  assert.equal(vfs.log.filter(x => x.op === 'read').length, 0)
+
+  vfs.put('E:/tags/a.bin', [9, 9, 9])
+  const writes = vfs.log.filter(isMutation).length
+  await assert.rejects(execute(vfs, plan, files, {job, readFileDigest}), {code:'SYNC_STALE'})
+  assert.equal(vfs.log.filter(isMutation).length, writes)
+  await assert.rejects(compare(vfs, files, {readFileDigest: async () => ''}), {code:'UPLOAD_VERIFY'})
+  const changed = await compare(vfs, files, {readFileDigest:async () => null})
+  assert.equal(changed.entries[0].status, 'change')
+  assert.ok(vfs.log.some(x => x.op === 'read' && x.args[0] === 'E:/tags/a.bin'))
+})
+
 test('sync blocks readonly or malformed ancestor metadata before any child upload', async () => {
   for (const meta of [metadata(4), {...metadata(),valid:false}]) {
     const vfs=memoryVfs();vfs.nodes.set('E:/tags/locked',{type:1,meta});
@@ -166,7 +196,8 @@ test('resume re-reads completed contents and skips only exactly matching files',
   await assert.rejects(execute(vfs, plan, files, { job, uploadFile: async input => { if (++count === 2) throw new Error('Transient failure'); return safeUpload({ ...vfs.api, ...input }) } }))
   assert.deepEqual(job.completed, ['E:/tags/a.bin']); assert.equal(job.state, 'failed')
   const before = vfs.log.filter(entry => entry.op === 'write').length, result = await execute(vfs, plan, files, { job })
-  assert.equal(result.skipped, 1); assert.equal(result.completed, 1); assert.equal(vfs.log.filter(entry => entry.op === 'write').length, before + 1); assert.equal(job.state, 'complete')
+  assert.equal(result.skipped, 1); assert.equal(result.completed, 1); assert.equal(result.uploadedBytes, 1)
+  assert.equal(vfs.log.filter(entry => entry.op === 'write').length, before + 1); assert.equal(job.state, 'complete')
 })
 test('resume refuses changed completed contents instead of trusting the journal', async () => {
   const vfs = memoryVfs(), files = [localFile('a.bin', [1])], plan = await compare(vfs, files), job = createSyncJob(plan)

@@ -28,7 +28,9 @@ export async function checkSyncHistoryBrowser(browser, url) {
       vfs.nodes.set('E:/A',{type:1,meta:metadata()})
       vfs.put('E:/A/Twin.bin',[1])
       const app=document.querySelector('#app')._vnode.component.proxy
-      app.transfer_adapters=()=>vfs.api
+      // Comparison, verification and writing must all see the mutable fixture.
+      // The explicit "save device copy" action still uses the BLE peripheral.
+      app.folder_upload_adapters=()=>vfs.api
       app.current_dir='E:/A'
       app.open_sync()
     })
@@ -56,6 +58,7 @@ export async function checkSyncHistoryBrowser(browser, url) {
     const [deviceDownload]=await Promise.all([page.waitForEvent('download'),row.getByRole('button',{name:'Geräteversion speichern'}).click()])
     assert.equal(deviceDownload.suggestedFilename(),'Twin-Allmiibo.bin')
     assert.deepEqual([...await readFile(await deviceDownload.path())],[3])
+    assert.deepEqual(await page.evaluate(()=>window.testPeripheral.commands.filter(entry=>entry.cmd===0x12).map(entry=>entry.path)),['E:/A/Twin.bin'])
     assert.deepEqual([...await readFile(filename)],[2])
     await selection.check()
     // Loading a reference must invalidate every checkbox from the previous plan.

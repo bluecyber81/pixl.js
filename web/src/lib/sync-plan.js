@@ -1,5 +1,5 @@
 import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, portableNameKey } from './portable-names.js'
-import { snapshotFile, sha256Bytes, asBytes, checkedDirectory, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
+import { snapshotFile, sha256Bytes, deviceFileSha256, checkedDirectory, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
 import { commonVersion, folderBinding, isHistoryConflict } from './sync-history.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
@@ -63,7 +63,7 @@ function writableDirectory(entry) {
 }
 /** Entirely read-only. It compares bytes, not timestamps or filename guesses.
  * Device-only entries are informational and NEVER deletion candidates. */
-export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, assertSession, signal, onProgress, history, localFolder }) {
+export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, history, localFolder }) {
   const root = rootPathOf(rootPath), identity = checkedDeviceKey(deviceKey)
   if (history && history.binding !== await folderBinding(identity, root, localFolder)) fail('SYNC_HISTORY_BINDING', 'This reference belongs to a different comparison.')
   const sources = sourcesOf(files, root), remote = new Map(), remoteKeys = new Map()
@@ -111,9 +111,8 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       else {
         try {
           const metadata = copyMetadata(actual.meta)
-          const data = asBytes(await readFile(source.targetPath, { maxBytes: actual.size, onProgress: value => progress('checking', source.targetPath, value.received_bytes ?? value.done ?? 0, actual.size) })); check()
-          if (data.byteLength !== actual.size) fail('SYNC_CHANGED', 'A device file changed while creating the comparison.')
-          const sha256 = await sha256Bytes(data); check()
+          const sha256 = await deviceFileSha256(source.targetPath, actual.size, {readFile, readFileDigest, check, sizeError:'SYNC_CHANGED',
+            onProgress: value => progress('checking', source.targetPath, value.received_bytes ?? value.done ?? 0, actual.size)})
           entry.expected = { size: actual.size, sha256, metadata }
           entry.status = actual.size === source.size && sha256 === hash ? 'same' : metadata.flags.readonly ? 'blocked' : 'change'
           if (entry.status === 'blocked') entry.reason = 'READONLY'
@@ -150,9 +149,8 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       if (row.size !== previous.size) row.history = 'localDeletedDeviceChanged'
       else {
         progress('checking', row.path, 0, row.size)
-        const data = asBytes(await readFile(row.path, { maxBytes: row.size })); check()
-        if (data.byteLength !== row.size) fail('SYNC_CHANGED', 'A device file changed during comparison.')
-        row.history = commonVersion(previous, null, await sha256Bytes(data)); check()
+        const hash = await deviceFileSha256(row.path, row.size, {readFile, readFileDigest, check, sizeError:'SYNC_CHANGED'})
+        row.history = commonVersion(previous, null, hash)
       }
       if (isHistoryConflict(row.history)) row.comparison = 'conflict'
     }
@@ -175,7 +173,7 @@ const desiredPresent = (original, current) => current?.expected?.size === origin
 /** Job data stays in RAM. Every invocation verifies the device identity, plan,
  * local bytes and actual destination bytes afresh. No blind offset resume and
  * no deletes. The caller keeps the same file selection and serializes the job. */
-export async function executeSyncJob({ job, plan, deviceKey, files, selectedPaths, readDirectory, readFile, createDirectory, uploadFile, assertSession, signal, onProgress }) {
+export async function executeSyncJob({ job, plan, deviceKey, files, selectedPaths, readDirectory, readFile, readFileDigest, createDirectory, uploadFile, assertSession, signal, onProgress }) {
   const check = () => checkpoint(assertSession, signal)
   check()
   if (job?.schema !== 1 || ['running', 'validating'].includes(job.state) || job.deviceKey !== checkedDeviceKey(deviceKey) || plan?.deviceKey !== deviceKey ||
@@ -195,18 +193,18 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
   if (selectedPaths !== undefined && (!Array.isArray(selectedPaths) || selectedPaths.some(path => typeof path !== 'string'))) { job.state = previousState; fail('SYNC_SELECTION', 'Invalid selected paths.') }
   const selected = new Set(selectedPaths ?? plan.entries.filter(entry => ['add', 'change'].includes(entry.status) &&
     (!entry.history || entry.history === 'localChanged')).map(entry => entry.targetPath))
-  if (selected.size === 0) { job.state = previousState; return { completed: 0, skipped: 0, total: 0, job } }
+  if (selected.size === 0) { job.state = previousState; return { completed: 0, skipped: 0, uploadedBytes: 0, total: 0, job } }
   const wanted = plan.entries.filter(entry => selected.has(entry.targetPath))
   if (wanted.length !== selected.size || wanted.some(entry => !['add', 'change'].includes(entry.status))) fail('SYNC_SELECTION', 'Only planned additions and changes can be selected.')
   const expectedLocal = new Map(plan.entries.map(entry => [entry.targetPath, entry]))
   if (sources.files.size !== expectedLocal.size || [...sources.files.keys()].some(path => !expectedLocal.has(path))) fail('SYNC_LOCAL_CHANGED', 'The local file selection changed; compare again.')
   if (!Array.isArray(job.completed) || job.completed.some(path => !expectedLocal.has(path)) || new Set(job.completed).size !== job.completed.length) fail('SYNC_JOB', 'Invalid completion checkpoint.')
   job.state = 'running'
-  let completed = 0, skipped = 0
+  let completed = 0, skipped = 0, uploadedBytes = 0
   try {
     // This second read-only pass catches stale plans and validates completed
     // entries too. No mkdir/upload happens before this entire pass succeeds.
-    const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, assertSession, signal, onProgress })
+    const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress })
     const currentByPath = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
     for (const entry of plan.entries) {
       const current = currentByPath.get(entry.targetPath)
@@ -215,7 +213,7 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
       if (job.completed.includes(entry.targetPath)) {
         if (!desiredPresent(entry, current)) fail('SYNC_STALE', 'A previously completed file changed on the device; compare again.')
       } else if (current.status === 'blocked' || !desiredPresent(entry, current) && !sameExpectation(entry.expected, current.expected)) {
-        fail('SYNC_STALE', 'A destination changed after comparison; compare again.')
+        throw new SyncError('SYNC_STALE', 'A destination changed after comparison; compare again.', { preflightTarget: entry.targetPath })
       }
     }
     for (const entry of wanted) {
@@ -255,12 +253,12 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
         throw error
       }
       if (!job.completed.includes(entry.targetPath)) job.completed.push(entry.targetPath)
-      ++completed; check()
+      ++completed; uploadedBytes += entry.size; check()
       observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length })
     }
     job.equalPaths = fresh.entries.filter(entry => entry.comparison === 'same').map(entry => entry.targetPath)
     job.state = 'complete'
-    return { completed, skipped, total: wanted.length, job }
+    return { completed, skipped, uploadedBytes, total: wanted.length, job }
   } catch (error) {
     job.state = signal?.aborted ? 'paused' : 'failed'
     error.syncJob = job

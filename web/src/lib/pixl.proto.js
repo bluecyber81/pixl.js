@@ -539,8 +539,12 @@ export function vfs_backup_digest(path, size, firmwareVersion) {
     path_validation(path);
     if (!Number.isSafeInteger(size) || size < 0 || path.length <= 3) throw new Error('Invalid backup file.');
     const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
+    // OLED Test 6 supports SPIFFS and LittleFS; only PackedFS builds register 0x21.
     const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(known);
     if (file_digest_unsupported || !version || Number(version[1]) < 66 || size > 572 || !path.startsWith('E:/')) return Promise.resolve(null);
+    // Both the UTF-8 path length and the expected file length are uint16.
+    // A regular OPEN requires one less byte and may still fit this connection.
+    if (get_utf8_byte_size(path) + 4 > (transport_capabilities?.maxRequestPayload ?? DF_MAX_DATA_SIZE)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x21, b => { write_string(b, path); b.writeUint16(size); }, b => {
         if (b.remaining() !== 32) throw new Error('Invalid backup digest length.');

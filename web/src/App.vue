@@ -116,6 +116,13 @@
       <span v-if="cancellingBackup">{{ $t('tools.cancelling') }}</span>
       <span v-if="cancellingUploads">{{ $t('info.finishingCommit') }}</span>
     </section>
+    <section v-if="syncResume" class="backup-resume sync-resume" aria-live="polite">
+      <strong>{{ $t('info.uploadPaused') }}</strong>
+      <p><template v-if="syncResume.folderName">{{ syncResume.folderName }} · </template>{{ syncResume.plan.rootPath }} · {{ $t('info.uploadCheckpoint', { done: syncResume.job.completed.length, total: syncResume.selectedPaths.length }) }}</p>
+      <p>{{ $t('info.uploadResumeHint') }}</p>
+      <button type="button" class="sync-resume-continue" @click="resume_sync" :disabled="!syncResumeMatches || busy || disconnecting || upload_diag_visible || syncDialog || zipDialog">{{ $t('info.uploadContinue') }}</button>
+      <button type="button" :disabled="busy" @click="syncResume = null">{{ $t('info.uploadForget') }}</button>
+    </section>
     <section v-if="backupCanResume" class="backup-resume">
       <strong>{{ $t('workflow.resumeTitle') }}</strong>
       <p>{{ backupResumeInfo.rootPath }} · {{ $t('workflow.cached', {count:backupResumeInfo.files,bytes:format_size(backupResumeInfo.bytes)}) }}</p>
@@ -666,7 +673,7 @@ export default {
       gameFolderOpened:false,
       safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0, syncNames: null, syncNameSerial: 0,
-      syncHistoryName: '', syncHistoryReady: null,
+      syncHistoryName: '', syncHistoryReady: null, syncResume: null,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
       collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
@@ -813,6 +820,10 @@ export default {
       return { freshFiles: files - reusedFiles, freshBytes: bytes - reusedBytes, reusedFiles, reusedBytes };
     },
     backupCanResume() { return !!this.backupResumeInfo?.files && !this.backingUp && !this.backupResumeInfo.busy; },
+    syncResumeMatches() {
+      return !!(this.syncResume && this.connected && this.firmwareVersion &&
+        this.firmwareVersion === this.syncResume.firmwareVersion && pixl.get_device_key?.() === this.syncResume.plan.deviceKey);
+    },
     storedBackupMatches() {
       const context = this.storedHead?.context;
       const root = this.current_dir?.length > 3 ? this.current_dir.replace(/\/$/u, '') : this.current_dir;
@@ -1360,7 +1371,7 @@ export default {
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
       this.syncStatus = ''; this.syncPlan = null; this.syncSelected = []; this.syncHistoryReady = null; this._syncHistory = null;
       try {
-        const adapters = this.transfer_adapters(generation);
+        const adapters = this.folder_upload_adapters(generation);
         const localFolder = this.syncFolderContents && this.syncFolderName;
         const binding = localFolder && !this.syncNames?.adjusted && await folderBinding(deviceKey, this.syncRoot, localFolder);
         const history = localFolder && this._syncHistoryFile && await readSyncHistory(this._syncHistoryFile, deviceKey, this.syncRoot, localFolder);
@@ -1407,37 +1418,83 @@ export default {
         this.invalidate_sync(); this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return;
       }
       const plan = this.syncPlan, selectedPaths = this.syncSelected.slice();
-      try { await this.ask_dialog(()=>this.$confirm(this.$t('info.syncConfirm',{count:selectedPaths.length}),this.$t('info.syncOpen'),this.confirm_options())); }
+      const confirm = this.$t('info.syncConfirm',{count:selectedPaths.length}) +
+        (this.syncResume ? ' ' + this.$t('info.uploadReplaceCheckpoint') : '');
+      try { await this.ask_dialog(()=>this.$confirm(confirm,this.$t('info.syncOpen'),this.confirm_options())); }
       catch(error) { this.show_transfer_error(error); return; }
       if (!this.session_current(generation) || plan !== this.syncPlan) return;
+      const request = Object.freeze({plan, selectedPaths, job:createSyncJob(plan), firmwareVersion:this.firmwareVersion,
+        files:this._syncFiles, inputs:this._syncInputs, nameEdits:this._syncNameEdits, folderName:this.syncFolderName,
+        folderContents:this.syncFolderContents, binding:this.syncHistoryReady?.binding, history:this._syncHistory,
+        historyFile:this._syncHistoryFile, historyName:this.syncHistoryName});
+      return this.execute_folder_upload(request, generation);
+    },
+    folder_upload_adapters(generation) {
+      return {...this.transfer_adapters(generation), readFileDigest: async (path, size) => {
+        this.assert_session(generation);
+        const hash = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
+        this.assert_session(generation);
+        return hash;
+      }};
+    },
+    resume_sync() {
+      if (!this.syncResumeMatches || this.busy || this.disconnecting || this.syncDialog || this.zipDialog || this.upload_diag_visible) return;
+      const request = this.syncResume;
+      this.syncRoot = request.plan.rootPath;
+      this._syncInputs = request.inputs;
+      this._syncNameNodes = uploadNameTree(request.inputs);
+      this._syncNameEdits = request.nameEdits;
+      this.apply_sync_names();
+      this.syncFolderName = request.folderName; this.syncFolderContents = request.folderContents;
+      this._syncHistoryFile = request.historyFile; this.syncHistoryName = request.historyName;
+      this._syncHistory = request.history; this.syncDialog = true;
+      return this.execute_folder_upload(request, this.sessionGeneration);
+    },
+    async execute_folder_upload(request, generation) {
+      const {job, plan, selectedPaths, files, binding, history} = request;
+      let interruptedReplacement = request.interruptedReplacement;
+      this.syncResume = null;
+      this._activeFolderUpload = request;
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
-      const binding = this.syncHistoryReady?.binding;
-      this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.transfer_adapters(generation);
+      this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.folder_upload_adapters(generation);
       try {
-        const job = createSyncJob(plan);
-        const result = await executeSyncJob({job,plan,files:this._syncFiles,deviceKey,selectedPaths,
+        const result = await executeSyncJob({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
           ...adapters, signal:controller.signal,
           uploadFile: async options => {
+            interruptedReplacement = null;
             try {
               const receipt = await safeUpload({...options,...adapters,signal:controller.signal,
                 getFreeBytes:()=>adapters.getFreeBytes(options.path)});
               this.remember_recovery(receipt); return receipt;
-            } catch(error) { this.remember_recovery(error); throw error; }
+            } catch(error) {
+              this.remember_recovery(error);
+              const receipt = error.recovery;
+              if (options.replace && receipt?.committed === null && receipt.backupPath && receipt.stagePath) {
+                interruptedReplacement = {target:options.path, backup:receipt.backupPath, stage:receipt.stagePath};
+              }
+              throw error;
+            }
           },
           onProgress:progress=>{if(this.session_current(generation))this.show_sync_progress(progress);}
         });
         this.assert_session(generation);
-        if (binding && !controller.signal.aborted) this.syncHistoryReady = createSyncHistory(plan, binding, this._syncHistory, result.job);
-        this.syncStatus = this.$t('info.syncDone');
-        const bytes=plan.entries.filter(entry=>selectedPaths.includes(entry.targetPath)).reduce((sum,entry)=>sum+entry.size,0);
-        this.remember_transfer('sync','success',bytes,true); return result;
+        if (binding && !controller.signal.aborted) this.syncHistoryReady = createSyncHistory(plan, binding, history, result.job);
+        this.syncStatus = result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
+        this.remember_transfer('sync','success',result.uploadedBytes,true); return result;
       } catch(error) {
+        if (this._activeFolderUpload === request && (!this.session_current(generation) || error.code === 'DISCONNECTED')) {
+          this.syncResume = Object.freeze({...request, interruptedReplacement});
+        }
         if (this.session_current(generation)) {
-          this.syncStatus=this.$t(controller.signal.aborted?'info.syncCancelled':'info.syncFailed');
+          const checkReplacement = !controller.signal.aborted && error.code === 'SYNC_STALE' && request.interruptedReplacement &&
+            error.details?.preflightTarget === request.interruptedReplacement.target;
+          this.syncStatus = checkReplacement ? this.$t('info.syncInspectReplacement', request.interruptedReplacement) :
+            this.$t(controller.signal.aborted ? 'info.syncCancelled' : 'info.syncFailed');
           this.remember_transfer('sync',controller.signal.aborted?'cancelled':'failed',this.transfer?.done||0);
-          if (!controller.signal.aborted) this.show_transfer_error(error);
+          if (!controller.signal.aborted && !checkReplacement) this.show_transfer_error(error);
         }
       } finally {
+        if(this._activeFolderUpload===request)this._activeFolderUpload=null;
         if(this._syncController===controller)this._syncController=null;
         if(generation===this.sessionGeneration){this.workflowCancelling=false;this.syncing=false;this.syncPlan=null;this.syncSelected=[];this.set_transfer(null);await this.refresh_current();}
       }
@@ -1890,7 +1947,7 @@ export default {
         pixl.disconnect({ immediate: true });
       }
     },
-    on_before_unload(event) { if (this.busy || this.backupResumeInfo?.files || (this.lastBackup && (!this.lastBackup.savedConfirmed || this.lastBackup.saving))) { event.preventDefault(); event.returnValue = ''; } },
+    on_before_unload(event) { if (this.busy || this.syncResume || this.backupResumeInfo?.files || (this.lastBackup && (!this.lastBackup.savedConfirmed || this.lastBackup.saving))) { event.preventDefault(); event.returnValue = ''; } },
     storage() { try { return window.localStorage; } catch (_) { return null; } },
     checked(response) {
       if (!response || response.status !== 0) throw new Error(this.$t('transfer.deviceerror') + ': ' + (response?.status ?? '?'));
@@ -2749,6 +2806,7 @@ export default {
     this._unsubscribeLanguage = window.AllmiiboLanguage.subscribe(this.apply_language);
   },
   beforeUnmount() {
+    this._activeFolderUpload = null; this.syncResume = null;
     this.clear_device_nickname();
     this._unsubscribeLanguage?.();
     this.reset_figure_info();

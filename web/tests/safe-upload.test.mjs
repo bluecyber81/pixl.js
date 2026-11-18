@@ -31,6 +31,50 @@ test('a new file is also staged and read back, with no backup removal', async ()
   const vfs = memoryVfs(); const result = await run(vfs, { replace: false })
   assert.equal(result.replaced, false); assert.deepEqual(vfs.bytes(target), [7, 8, 9]); assert(!vfs.log.some(entry => entry.op === 'remove'))
 })
+test('a new file checks ancestry and one fresh destination listing between verifying the stage and renaming it', async () => {
+  const vfs = memoryVfs()
+  await run(vfs, { replace: false, metadata: metadata(0, 'new file') })
+  const stageRead = vfs.log.findIndex(item => item.op === 'read' && item.args[0] === stage)
+  const rename = vfs.log.findIndex(item => item.op === 'rename')
+  assert(stageRead >= 0 && stageRead < rename)
+  assert.deepEqual(vfs.log.slice(stageRead + 1, rename).map(item => [item.op, item.args[0]]), [
+    ['meta', stage], ['list', 'E:/'], ['list', 'E:/tags']
+  ])
+  assert(vfs.log.slice(rename + 1).some(item => item.op === 'read' && item.args[0] === target))
+})
+test('a new destination that appears during the last ancestor check blocks rename, including folders and aliases', async () => {
+  const path = 'E:/tags/café.bin'
+  for (const [name, type, code] of [
+    ['café.bin', 0, 'UPLOAD_STALE'], ['café.bin', 1, 'UPLOAD_STALE'],
+    ['CAFÉ.bin', 0, 'UPLOAD_COLLISION'], ['cafe\u0301.bin', 1, 'UPLOAD_COLLISION']
+  ]) {
+    const vfs = memoryVfs(), collision = 'E:/tags/' + name
+    let stagedMetadataWritten = false
+    vfs.setHook(({ when, op, args }) => {
+      if (when !== 'after') return
+      if (op === 'meta' && args[0] === stage) stagedMetadataWritten = true
+      if (stagedMetadataWritten && op === 'list' && args[0] === 'E:/') {
+        if (type === 0) vfs.put(collision, [42])
+        else vfs.nodes.set(collision, { type: 1, meta: metadata() })
+        stagedMetadataWritten = false
+      }
+    })
+    await assert.rejects(run(vfs, { path, replace: false, metadata: metadata() }), { code })
+    assert.equal(vfs.nodes.get(collision).type, type)
+    if (type === 0) assert.deepEqual(vfs.bytes(collision), [42])
+    assert(!vfs.nodes.has(stage))
+    assert(!vfs.log.some(item => item.op === 'rename'))
+  }
+})
+test('a parent becoming read-only after verifying a new file prevents its rename', async () => {
+  const vfs = memoryVfs()
+  vfs.setHook(({ when, op, args }) => {
+    if (when === 'after' && op === 'read' && args[0] === stage) vfs.nodes.get('E:/tags').meta = metadata(4)
+  })
+  await assert.rejects(run(vfs, { replace: false }), { code: 'UPLOAD_PARENT' })
+  assert(!vfs.nodes.has(target)); assert(!vfs.nodes.has(stage))
+  assert(!vfs.log.some(item => item.op === 'rename'))
+})
 test('read-only, uncertain metadata, no overwrite approval and case aliases cannot mutate anything', async () => {
   for (const [vfs, options, code] of [[setup(metadata(4)), {}, 'UPLOAD_READONLY'], [setup({ valid: false }), {}, 'UPLOAD_METADATA'], [setup(), { replace: false }, 'UPLOAD_EXISTS']]) {
     await assert.rejects(run(vfs, options), { code }); assert.equal(mutations(vfs).length, 0)

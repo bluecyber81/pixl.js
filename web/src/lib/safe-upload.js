@@ -13,6 +13,25 @@ export async function sha256Bytes(data) {
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
   return Array.from(new Uint8Array(digest), n => n.toString(16).padStart(2, '0')).join('')
 }
+// The DE small-file command checks the exact length and hashes the stored bytes.
+// Older firmware returns null so the same checks run on a full read in the browser.
+export async function deviceFileSha256(path, size, { readFileDigest, readFile, check, onProgress, sizeError = 'UPLOAD_CHANGED' }) {
+  check()
+  if (readFileDigest) {
+    const digest = await readFileDigest(path, size)
+    check()
+    if (digest !== null) {
+      if (typeof digest !== 'string' || !/^[a-f0-9]{64}$/u.test(digest)) fail('UPLOAD_VERIFY', 'Invalid device SHA-256 reply.')
+      return digest
+    }
+  }
+  const bytes = asBytes(await readFile(path, { maxBytes: size, onProgress }))
+  check()
+  if (bytes.byteLength !== size) fail(sizeError, 'The device file size changed during the read.')
+  const hash = await sha256Bytes(bytes)
+  check()
+  return hash
+}
 export function asBytes(data) {
   if (data instanceof Uint8Array) return data
   if (data instanceof ArrayBuffer) return new Uint8Array(data)
@@ -107,7 +126,7 @@ export function temporaryNames(parent, token) {
  * Cancellation before commit preserves the old destination. Once commit starts
  * it is finished (or reconciled) while the same BLE session is alive.
  */
-export async function safeUpload({ path, file, replace = false, expected, readDirectory, readFile, writeFile, rename,
+export async function safeUpload({ path, file, replace = false, expected, readDirectory, readFile, readFileDigest, writeFile, rename,
   remove, updateMetadata, getFreeBytes, assertSession, signal, onProgress, randomToken = randomHex,
   allowLegacyNames = false, metadata }) {
   const { parent, name } = splitDevicePath(assertWritableDevicePath(path))
@@ -137,11 +156,8 @@ export async function safeUpload({ path, file, replace = false, expected, readDi
     if (!await writableDirectoryPath(parent, readDirectory, check)) fail('UPLOAD_PARENT', 'The destination folder or an ancestor is read-only, missing or has invalid metadata.')
   }
   async function digestAt(target, size, ignoreAbort = false, phase = 'verifying') {
-    check(ignoreAbort)
-    const bytes = asBytes(await readFile(target, { maxBytes: size, onProgress: value => progress(phase, value.received_bytes ?? value.done ?? 0, size) }))
-    check(ignoreAbort)
-    if (bytes.byteLength !== size) fail('UPLOAD_CHANGED', 'The device file size changed during the read.')
-    const hash = await sha256Bytes(bytes); check(ignoreAbort); return hash
+    return deviceFileSha256(target, size, {readFile, readFileDigest, check: () => check(ignoreAbort),
+      onProgress: value => progress(phase, value.received_bytes ?? value.done ?? 0, size)})
   }
   async function snapshot(entry, ignoreAbort = false) {
     if (!entry) return null
@@ -218,22 +234,28 @@ export async function safeUpload({ path, file, replace = false, expected, readDi
     check(); progress('verifying')
     if (await digestAt(receipt.stagePath, sourceBytes.byteLength) !== sourceHash) fail('UPLOAD_VERIFY', 'The staged file failed SHA-256 verification.')
     if (desiredMetadata) { check(); await updateMetadata(receipt.stagePath, copyMetadata(desiredMetadata)); check() }
+    // For a new file the last directory read can check both names just before rename.
+    if (!original) await checkWritableParent()
     entries = await list()
     const staged = entries.find(entry => joinDevicePath(parent, entry.name) === receipt.stagePath)
     if (!staged || staged.type !== 0 || staged.size !== sourceBytes.byteLength ||
         desiredMetadata && metadataKey(staged.meta) !== metadataKey(desiredMetadata)) fail('UPLOAD_METADATA', 'Staged file or preserved metadata changed.')
-    if (!sameExpected(await snapshot(targetEntry(entries, name)), original)) fail('UPLOAD_STALE', 'The destination changed before commit.')
-    // The old-content read can take time. Check names and metadata once more,
-    // especially the backup destination (some backends overwrite on rename).
-    entries = await list()
-    const latest = targetEntry(entries, name)
-    if (!!latest !== !!original || latest && (latest.type !== 0 || latest.size !== original.size || metadataKey(latest.meta) !== metadataKey(original.metadata))) {
-      fail('UPLOAD_STALE', 'The destination changed before commit.')
+    const target = targetEntry(entries, name)
+    if (original) {
+      if (!sameExpected(await snapshot(target), original)) fail('UPLOAD_STALE', 'The destination changed before commit.')
+      // Hashing the old content can take time. Refresh the destination and backup names.
+      entries = await list()
+      const latest = targetEntry(entries, name)
+      if (!latest || latest.type !== 0 || latest.size !== original.size || metadataKey(latest.meta) !== metadataKey(original.metadata)) {
+        fail('UPLOAD_STALE', 'The destination changed before commit.')
+      }
+      if (entries.some(entry => portableNameKey(entry.name) === portableNameKey(receipt.backupPath.slice(receipt.backupPath.lastIndexOf('/') + 1)))) {
+        fail('UPLOAD_COLLISION', 'The backup name is already in use.')
+      }
+      await checkWritableParent()
+    } else if (target) {
+      fail('UPLOAD_STALE', 'The destination appeared before commit.')
     }
-    if (receipt.backupPath && entries.some(entry => portableNameKey(entry.name) === portableNameKey(receipt.backupPath.slice(receipt.backupPath.lastIndexOf('/') + 1)))) {
-      fail('UPLOAD_COLLISION', 'The backup name is already in use.')
-    }
-    await checkWritableParent()
     check(); progress('committing'); check(); commitStarted = true
     if (original) { check(true); await rename(path, receipt.backupPath); check(true) }
     await rename(receipt.stagePath, path); check(true)

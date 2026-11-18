@@ -21,7 +21,7 @@ function harness(overrides = {}) {
     addListener(name, fn) { listeners.set(name, fn); },
     removeListener(name, fn) { if (listeners.get(name) === fn) listeners.delete(name); }
   };
-  const proto = { init() {}, vfs_read_folder: async () => ({ status: 0, data: [] }),
+  const proto = { init() {}, vfs_backup_digest: async () => null, vfs_read_folder: async () => ({ status: 0, data: [] }),
     vfs_get_drive_list: async () => ({ status: 0, data: [
       { label: 'E', name: 'External', status: 0, total_size: 2 * 1024 * 1024, free_size: 2 * 1024 * 1024 }
     ] }), ...overrides };
@@ -342,6 +342,79 @@ function readyCurrentSync(app) {
   app.syncPlan={rootPath:'E:/',deviceKey:'private-test-device',entries:[{targetPath:'E:/New.bin',status:'add',size:3}]};
   app.syncSelected=['E:/New.bin']; app._syncFiles=[{name:'New.bin',size:3}];
 }
+
+test('a dropped folder upload resumes in the same tab only on the original device and firmware', async () => {
+  const first = deferred(), requests = [];
+  const h = harness({createSyncJob:()=>({completed:[]}), executeSyncJob: async request => {
+    requests.push(request);
+    if (requests.length === 1) return first.promise;
+    return {completed:1, skipped:1, job:request.job};
+  }});
+  const app = connected(h);
+  const makeFile = name => new File([Uint8Array.of(1)],name);
+  const picked = [makeFile('a.bin'), makeFile('b.bin')];
+  readyCurrentSync(app);
+  app.firmwareVersion = '2.22.0-DE3.87';
+  app.on_sync_files({target:{files:picked,value:''}});
+  const plan = {rootPath:'E:/',deviceKey:'private-test-device', entries:picked.map(f=>({targetPath:'E:/'+f.name,status:'add',size:1}))};
+  app.syncPlan = plan; app.syncSelected = ['E:/b.bin'];
+  const pending = app.run_sync(); await new Promise(setImmediate);
+  app.on_ble_disconnected(); first.reject(Error('link lost')); await pending;
+  assert.ok(app.syncResume); assert.equal(app.syncResumeMatches,false);
+  app.connected = true; app.firmwareVersion = 'another firmware';
+  await app.resume_sync(); assert.equal(requests.length,1);
+  app.firmwareVersion = '2.22.0-DE3.87'; h.pixl.get_device_key = ()=>'other-device';
+  await app.resume_sync(); assert.equal(requests.length,1);
+  h.pixl.get_device_key = ()=>'private-test-device';
+  assert.equal(app.syncResumeMatches,true);
+  await app.resume_sync();
+  assert.equal(requests.length,2);
+  assert.equal(requests[1].job,requests[0].job);
+  assert.equal(requests[1].plan,plan);
+  assert.equal(requests[1].files,requests[0].files);
+  assert.deepEqual(Array.from(requests[1].selectedPaths),['E:/b.bin']);
+  assert.equal(app.syncResume,null); assert.equal(app.lastTransfer.status,'success');
+});
+
+test('an interrupted replacement keeps its own recovery paths when resume stops at that destination', async () => {
+  const sync = await import('../src/lib/sync-plan.js');
+  const { safeUpload } = await import('../src/lib/safe-upload.js');
+  const { memoryVfs, localFile } = await import('./helpers/memory-vfs.mjs');
+  const { infoGerman, infoEnglish } = await import('../src/i18n/info.js');
+  for (const scenario of [infoGerman, infoEnglish, 'another target changed']) {
+    const vfs = memoryVfs();
+    const app = connected(harness({...sync, safeUpload}));
+    app.transfer_adapters = () => vfs.api;
+    app.firmwareVersion = '2.22.0-DE3.87';
+    app.open_sync();
+    app.on_sync_files({ target:{ files:[localFile('a.bin'), localFile('b.bin')] } });
+    vfs.put('E:/a.bin', [1]);
+    vfs.put('E:/b.bin', [2]);
+    await app.build_sync_plan();
+    app.syncSelected = ['E:/a.bin', 'E:/b.bin'];
+    vfs.setHook(({op, when, args}) => {
+      if (op === 'rename' && when === 'after' && args[0] === 'E:/b.bin') {
+        vfs.disconnect();
+        app.on_ble_disconnected();
+      }
+    });
+    await app.run_sync();
+    assert.equal(app.syncResume.job.completed.length, 1);
+    const { target, backup, stage } = app.syncResume.interruptedReplacement;
+    assert.equal(target, 'E:/b.bin');
+    assert.deepEqual(vfs.bytes(backup), [2]);
+    assert.deepEqual(vfs.bytes(stage), [7, 8, 9]);
+    app.recoveryNotes = [];
+    vfs.reconnect(); app.connected = true; app.firmwareVersion = '2.22.0-DE3.87';
+    if (scenario === 'another target changed') vfs.put('E:/a.bin', [0]);
+    else app.$t = (key, values = {}) => (scenario[key.slice(5)] || key).replace(/\{(\w+)\}/g, (_, name) => values[name]);
+    const resumeStart = vfs.log.length;
+    await app.resume_sync();
+    assert(vfs.log.slice(resumeStart).every(row => ['list', 'read'].includes(row.op)));
+    if (scenario === 'another target changed') assert.equal(app.syncStatus, 'info.syncFailed');
+    else for (const path of [target, backup, stage]) assert(app.syncStatus.includes(path), app.syncStatus);
+  }
+});
 
 test('3.30.1 local sync refreshes committed entries after success, partial failure or cancellation', async () => {
   for (const outcome of ['success','partial-failure','cancelled']) {
