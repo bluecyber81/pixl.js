@@ -83,13 +83,18 @@ COMMON = r'''
 #include <stdlib.h>
 #include "vfs.h"
 #include "vfs_meta.h"
+#define NRF_LOG_WARNING(...) ((void)0)
 #define CHECK(x) do{if(!(x)){fprintf(stderr,"CHECK %d: %s\n",__LINE__,#x);return 71;}}while(0)
 #define _T(x) #x
 static int errors, current_view, current_scene;
 static int read_result=NTAG_DATA_SIZE,stat_result=VFS_ERR_NOOBJ,write_result=NTAG_DATA_SIZE;
 static unsigned file_reads,file_writes;
+static bool copied_partial;
 static int32_t fake_read(const char*path,void*out,size_t n){
- (void)path;++file_reads;if(read_result>0)memset(out,0x66,(size_t)read_result<n?(size_t)read_result:n);return read_result;
+ (void)path;++file_reads;
+ if(copied_partial && n >= 16)memset(out,0x71,16);
+ if(read_result>0){size_t copied=(size_t)read_result<n?(size_t)read_result:n;memset(out,0x66,copied);return (int32_t)copied;}
+ return read_result;
 }
 static int32_t fake_write(const char*path,void*data,size_t n){(void)path;(void)data;(void)n;++file_writes;return write_result;}
 static int32_t fake_stat(const char*path,vfs_obj_t*obj){(void)path;obj->type=VFS_TYPE_REG;obj->size=NTAG_DATA_SIZE;return stat_result;}
@@ -230,6 +235,21 @@ int main(int argc,char**argv){
  ntag_t old=default_ntag215;old.data[16]=0x44;
  CHECK(ntag_emu_set_tag(&old)&&ntag_emu_set_update_cb(ntag_update_cb,&app));
  uint32_t generation=ntag_emu.generation;current_view=1;
+#ifdef SLOT_RESULT_CHECKS
+ if(scenario >= 11){
+  const int file_results[]={0,1,NTAG_DATA_SIZE-1,NTAG_DATA_SIZE+1,572,2048,VFS_ERR_FAIL,VFS_ERR_CRPT,VFS_ERR_NODEV,VFS_ERR_NOMEM};
+  CHECK((unsigned)(scenario-11)<sizeof(file_results)/sizeof(file_results[0]));
+  read_result=file_results[scenario-11];copied_partial=read_result<0;view.index=6;
+  CHECK(!ntag_reload(&app,6));
+  CHECK(file_reads==1 && !file_writes && !rng_calls && errors==1);
+  CHECK(!memcmp(&ntag_emu.ntag,&old,sizeof(old)) && ntag_emu.paused && ntag_emu.generation==generation);
+  CHECK(view.index==4 && m_active_index==4 && m_active_mode==BLE_AMIIBOLINK_MODE_CYCLE);
+  read_result=NTAG_DATA_SIZE;copied_partial=false;
+  CHECK(ntag_reload(&app,6) && m_active_index==6 && !ntag_emu.paused && ntag_emu.ntag.data[16]==0x66);
+  CHECK(!rng_calls && !file_writes);
+  return 0;
+ }
+#endif
  bool failed=scenario==0||scenario==1||scenario==2||scenario==3||scenario==8||scenario==9;
  bool guard=scenario==10;
  if(failed){rng_fail_at=1;read_result=VFS_ERR_NOOBJ;}
@@ -275,7 +295,8 @@ def link_code(src, internal=False):
     pieces += [actual(branch, name) for name in ['ntag_update', 'ntag_reload', 'ntag_init']]
     pieces += [actual(source, name) for name in ['ntag_save_error', 'ntag_update_cb', 'amiibolink_scene_main_event_cb',
                'amiibolink_scene_switch_mode', 'amiibolink_scene_ble_event_handler', 'amiibolink_scene_main_on_enter']]
-    return nfc_code(src) + '\n' + (src / 'mod/ble/ble_amiibolink.h').read_text() + LINK.replace('/*ACTUAL_LINK*/', '\n'.join(pieces))
+    tag_result_checks = '#define SLOT_RESULT_CHECKS 1\n' if not internal and 'static bool ntag_reload(' in branch else ''
+    return nfc_code(src) + '\n' + (src / 'mod/ble/ble_amiibolink.h').read_text() + tag_result_checks + LINK.replace('/*ACTUAL_LINK*/', '\n'.join(pieces))
 
 
 def main():
@@ -294,7 +315,7 @@ def main():
     for name, code, scenarios, negatives in [
         ('file', file_code(src), range(5), {0,2,3}),
         ('slot', slot_code(src), range(6), {0,1}),
-        ('link_external', link_code(src), range(11), {0,1,2,3,8,9}),
+        ('link_external', link_code(src), range(11 if args.expect_original_failures else 21), {0,1,2,3,8,9}),
         ('link_internal', link_code(src, True), [0,1,2,3,4,6,7,8,9,10], {0,1,2,3,8,9}),
     ]:
         cfile=args.out/(name+'.c');cfile.write_text(code)

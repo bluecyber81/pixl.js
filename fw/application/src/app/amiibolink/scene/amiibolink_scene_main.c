@@ -134,18 +134,18 @@ static bool ntag_reload(app_amiibolink_t *app, uint8_t index) {
     ntag_t ntag = {0};
     char path[VFS_MAX_PATH_LEN] = {0};
 
-    memset(&ntag, 0, sizeof(ntag_t));
-    memset(path, 0, sizeof(path));
     sprintf(path, "/amiibolink/%02d.bin", index);
     vfs_driver_t *p_driver = vfs_get_driver(VFS_DRIVE_EXT);
-    int32_t err_code = p_driver->read_file_data(path, ntag.data, NTAG_DATA_SIZE);
-    if (err_code < NTAG_DATA_SIZE) {
-        NRF_LOG_INFO("ntag_reload: ntag_load_failed. index=%d, err_code=%d", index, err_code);
-        if (ntag_store_new_rand(&ntag) != NRF_SUCCESS) {
-            amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
-            ntag_reload_error(app);
-            return false;
-        }
+    /* Native slot files hold exactly one NTAG215. The local buffer can hold a
+     * larger tag, so one extra byte detects an oversized file in the same read. */
+    int32_t bytes = p_driver->read_file_data(path, ntag.data, NTAG_DATA_SIZE + 1);
+    bool ready = bytes == NTAG_DATA_SIZE;
+    if (bytes == VFS_ERR_NOOBJ) ready = ntag_store_new_rand(&ntag) == NRF_SUCCESS;
+    if (!ready) {
+        NRF_LOG_WARNING("ntag_reload: slot unavailable. index=%d, read=%d", index, bytes);
+        amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
+        ntag_reload_error(app);
+        return false;
     }
     if (!ntag_emu_set_tag(&ntag)) return false;
     m_active_index = index;
@@ -215,7 +215,7 @@ static bool amiibolink_scene_switch_mode(app_amiibolink_t *app, ble_amiibolink_m
     return true;
 }
 
-static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_type_t event_type, uint8_t *data,
+static bool amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_type_t event_type, uint8_t *data,
                                                size_t size) {
     app_amiibolink_t *app = ctx;
     amiibolink_view_t *p_view = app->p_amiibolink_view;
@@ -225,7 +225,7 @@ static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_t
             // save ntag
             if (!ntag_update(app, p_view->index, (ntag_t *)data)) {
                 ntag_save_error(app);
-                return;
+                return false;
             }
             if (p_view->index < p_view->max_size - 1) {
                 p_view->index++;
@@ -234,10 +234,14 @@ static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_t
             }
             ntag_reload(app, p_view->index);
         } else if (app->amiibolink_mode == BLE_AMIIBOLINK_MODE_NTAG) {
-            if (!ntag_update(app, DEFAULT_NTAG_INDEX, (ntag_t *)data)) ntag_save_error(app);
+            if (!ntag_update(app, DEFAULT_NTAG_INDEX, (ntag_t *)data)) {
+                ntag_save_error(app);
+                return false;
+            }
         }
 
         mui_update(mui());
+        return true;
     } else if (event_type == BLE_AMIIBOLINK_EVENT_SET_MODE) {
         ble_amiibolink_mode_t mode = *((ble_amiibolink_mode_t *)data);
         settings_data_t *p_settings = settings_get_data();
@@ -249,9 +253,11 @@ static void amiibolink_scene_ble_event_handler(void *ctx, ble_amiibolink_event_t
             mode = p_settings->amiibolink_mode;
         }
         
-        amiibolink_scene_switch_mode(app, mode, 0);
+        bool applied = amiibolink_scene_switch_mode(app, mode, 0);
         mui_update(mui());
+        return applied;
     }
+    return false;
 }
 
 void amiibolink_scene_main_on_enter(void *user_data) {
