@@ -1,5 +1,9 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## DE3.87 OLED Test 6 / App86 · Vorabversion
+
+App86 enthält die deutsche und englische Anwendung für dreitastige OLED-Geräte mit SH1106, S112 7.2.0 und kompatiblem DFU-Bootloader. Der OLED-Gerätetest steht aus. [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
+
 ## LCD DE3.87 / App660 · Vorabversion
 
 Auf dem LCD zeigen die Slots Nummer und Schreibschutz. Beim Ersetzen stehen die Nummer und der bisherige Inhalt im Dialog. In Favoritenordnern erscheint beim Blättern die aktuelle Seite. Das App-Update setzt ST7567, PFS1, Z21 und S112 7.3.0 voraus. Die Gerätetests für App660 stehen aus. DE3.81 / App654 ist die reguläre LCD-Ausgabe. [App und Prüfunterlagen](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-lcd-test1)

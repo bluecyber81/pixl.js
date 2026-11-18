@@ -8,13 +8,13 @@ For a compatible nRF52832 LCD with Packed LittleFS and a working project Secure 
 
 Read the illustrated file manager's step-by-step guide for the required apps, backup, device update and storage migration. [English](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](https://bluecyber81.github.io/pixl.js/guide/index.html)
 
-## OLED DE3.81 Test 1
+## OLED DE3.87 Test 6 / App86
 
-This signed application targets the nRF52832 Pixl.js OLED with a 128 × 64 SH1106, a compatible Pixl.js DFU bootloader and Nordic S112 7.2.0 (FWID `0x0103`). The reference releases are cylin577 OLED v2.21.0 and v2.27.11. Supported external flash chips have a recognized ID and a capacity of 2, 4, 8 or 16 MiB. Use an intact SPIFFS volume or a native LittleFS volume whose files you have checked.
+Use the signed application on a compatible three-button nRF52832 OLED with SH1106, Secure DFU and Nordic S112 7.2.0 (FWID `0x0103`). Back up your files. The app uses the existing SPIFFS or native LittleFS volume.
 
-1. Save the previous OLED application ZIP and download the new ZIP to the phone. [OLED Test 1 app ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_DE3_81_Test1_APP.zip)
-2. On the OLED, select **Settings → Firmware Update**. In **nRF Device Firmware Update**, select the intact ZIP and connect to **pixl dfu**. This package updates only the application and uses the existing storage format.
-3. After the restart, check for `2.22.0-DE3.81-OLEDt1` (app counter 81). Try both options under **Settings → Language**, check the file list, and test a known figure and sleep/wake. One user reports that Test 1 works on an OLED. The device’s filesystem and results for the individual checks remain unknown. [Test guide in English and German](https://github.com/bluecyber81/pixl.js/releases/download/de3.81-oled-t1/Allmiibo_OLED_Test1_Deutsch_English.txt) · [OLED release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1)
+1. On the OLED, select **Settings → Firmware Update**. On your phone, open **nRF Device Firmware Update**, choose **pixl dfu** and select the intact app ZIP. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip)
+2. For computer DFU, open file manager 3.58.1 in Chrome or Edge with Bluetooth enabled. Choose **Update → OLED**, select Test 6 and connect to **pixl dfu**. [Browser DFU guide](https://bluecyber81.github.io/pixl.js/guide/en.html#oled-webdfu)
+3. Wait for completion and restart. In the version details, check for `2.22.0-DE3.87-OLEDt6`. Try an existing file, the remote, the 5%/100% panel contrast test and your usual NFC workflow. Physical validation of this prerelease is pending. [English test guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Deutsche Testanleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt)
 
 ## Three downloads for the LCD Allmiibo
 
@@ -32,6 +32,7 @@ Keep a current backup. Choose the application for the release you intend to run.
 
 | LCD application | Release and intended use |
 | --- | --- |
+| **DE3.87 / 660** | [LCD prerelease](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip). App-only update for ST7567, PFS1, Z21 and S112 7.3.0. Physical acceptance is pending. |
 | **DE3.81 / 654** | [Current LCD app](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Observed App654, Z21 and S112 7.3.0](validation/DE3_81_LCD_READBACK.json). |
 | **DE3.75 / 648** | [Archived LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75). One LCD owner checked list return and wake in both apps in German with resume enabled. The Switch recognized one known figure. [Release notes and checksums](RELEASE_DE3_75.md). |
 | **DE3.74 / 647** | [Previous stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74). The owner confirmed that the remote display photo worked. [Device check](validation/DE3_74_LCD_ACCEPTANCE.json). |

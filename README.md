@@ -1,8 +1,20 @@
 # Firmware for Allmiibo LCD and Pixl.js OLED
 
+[Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
+
+## File manager 3.58.1
+
+Open **Update → OLED** to flash Test 6 from Chrome or Edge on a computer or download the signed ZIP for your phone. **Remote control** guides you through selecting the Bluetooth device. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and web source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)
+
+## OLED DE3.87 Test 6 / App86 · prerelease
+
+For the three-button Pixl.js OLED with nRF52832, 128 × 64 SH1106, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The signed ZIP contains only the OLED application. It supports English and German and uses the existing SPIFFS or native LittleFS volume. Physical OLED testing is pending. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English test guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
+
+Test 6 advertises the remote service in the first Bluetooth advertising packet. The device test lets you compare the 5% and 100% contrast settings on the panel. The database identifies occupied and read-only slots before saving and lets you page through large favorites folders. [Browser flashing and remote setup](https://bluecyber81.github.io/pixl.js/guide/en.html#oled)
+
 ## LCD DE3.87 / App660 · prerelease
 
-For Allmiibo LCD with ST7567, PFS1, Z21 and S112 7.3.0. The ZIP updates the LCD application. File manager 3.58.0 adds a compact remote and bulk selection for game folders. On-device acceptance is pending. [LCD app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) · [LCD sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip) · [File manager 3.58.0 and web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) · [Setup and operation](web/LIESMICH_3_58_0.txt) · [Test report](docs/validation/DE3_87_LCD_TEST1.json)
+For Allmiibo LCD with ST7567, PFS1, Z21 and S112 7.3.0. The ZIP updates the LCD application. On-device acceptance is pending. [LCD app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) · [LCD sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip) · [Setup and operation](https://bluecyber81.github.io/pixl.js/guide/en.html#flash) · [Test report](docs/validation/DE3_87_LCD_TEST1.json)
 
 ## LCD DE3.85 / App658 · earlier test release
 
@@ -15,8 +27,6 @@ For **LCD/ST7567 with Packed LittleFS (PFS1), Z21 and S112 7.3.0**. [App-only ZI
 In **Remote control → Allmiibo DE**, enable **Refresh screen automatically after button presses** if wanted. It starts off, reads one image after acknowledged Left/Center/Right/Back, combines quick sequences and never polls continuously. It stops pending captures on disconnect or file handoff. Unsupported firmware is not probed. Manual capture remains available.
 
 DE3.85 gives Remote its own advertising address. Exit file transfer/AmiiboLink, enable **Settings → Remote → until off**, and select **Pixl.Remote** afresh in the browser. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [DE/EN guide](https://bluecyber81.github.io/pixl.js/guide/en.html#lcd-de385) · [Web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.56.0)
-
-[Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
 ## LCD DE3.84 / App657 · earlier owner-tested preview
 
@@ -36,12 +46,6 @@ Version 3.55.8 recognizes the App84 OLED profile, displays its firmware identity
 | Application, bootloader and SoftDevice | [Download the full Android package (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Includes DE3.81 / App654, bootloader Z21 and Nordic S112 7.3.0. Requires a compatible LCD, bootloader counter below 21, a matching key and layout, and S112 FWID 0x0103 or 0x0126. |
 
 Back up your files and keep the ZIP intact. Install a full update with **nRF Device Firmware Update** and wait for both stages. An LCD diagnostic records App654, Z21 and S112 7.3.0. Resuming a physically interrupted Android DFU on Z21 still needs a device test. [Flashing guide](https://bluecyber81.github.io/pixl.js/guide/en.html#flash) · [Migrating from SPIFFS](docs/MIGRATION_PFS1.md) · [Source and test evidence](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip)
-
-## OLED test firmware
-
-**OLED · DE3.84 Test 4 / App84.** Use Update → OLED → Flash OLED in browser for direct computer DFU in Chrome or Edge. This phone ZIP contains the app for the nRF52832 Pixl.js, 128 × 64 SH1106, compatible DFU bootloader and S112 7.2.0 (`0x0103`). It uses the existing SPIFFS or native LittleFS. Test 4 awaits on-device results. Earlier reports cover a successful Test 1 startup and an OLED remote connection issue. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip) · [OLED guide](https://bluecyber81.github.io/pixl.js/guide/en.html#oled)
-
-Both DE3.81 applications include German and English menus, the 956-figure catalog, game hints, app resume and Bluetooth remote buttons. Display capture, startup and RAM diagnostics, and battery history in the file manager are available on LCD.
 
 ## File manager 3.55.5 · archive
 

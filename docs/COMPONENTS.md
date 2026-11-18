@@ -1,15 +1,15 @@
 # Component identity and update boundaries
 
-The table lists the independently versioned components as of **17 November 2026**.
+The table lists the independently versioned components as of **18 November 2026**.
 
 **[Installation](INSTALLATION.md) · [Bootloader and SoftDevice history](BOOTLOADER_SOFTDEVICE_CHANGES.md) · [Separate component downloads](COMPONENT_DOWNLOADS.md) · [S112 reference distribution](../softdevice-s112/README.md)**
 
 | Layer | Current project baseline | Identity |
 | --- | --- | --- |
-| Latest LCD test application | [DE3.84 / App657](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) | Application-only DFU for ST7567, PFS1, Z21 and S112 7.3.0. The owner reported successful operation on one LCD with Z21. Interrupted Android DFU remains unconfirmed. [Owner report](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json) · [Review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) |
+| Latest LCD test application | [DE3.87 / App660](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) | App-only prerelease for ST7567, PFS1, Z21 and S112 7.3.0. On-device validation is pending. [Test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip) |
 | Regular LCD release | [DE3.81 / App654](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81) | Keeps figure selection after a declined switch. Signed Android package includes Z21 and S112 7.3.0. [Evidence](validation/DE3_81.json) |
 | Archived LCD release | [2.22.0-DE3.75](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75) | Application-only DFU, counter 648. One owner confirmed list return and wake in both apps, and Switch recognition of a known figure. [Release notes](RELEASE_DE3_75.md) |
-| OLED test application | [DE3.81 OLED Test 1](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1) | App-only DFU, counter 81, for a compatible SH1106 OLED with S112 7.2.0 (FWID `0x0103`). The SPIFFS and native LittleFS drivers passed host tests. A user reports successful operation on one OLED. Its filesystem and the features tested remain unknown. [Installation](INSTALLATION.md#oled-de381-test-1) |
+| OLED test application | [DE3.87 Test 6 / App86](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6) | App-only prerelease for three-button SH1106 devices with S112 7.2.0 (FWID `0x0103`) and existing SPIFFS or native LittleFS. On-device validation is pending. [App ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) |
 | Earlier LCD preview | [DE3.80 / App653](https://github.com/bluecyber81/pixl.js/releases/tag/de3.80) | Temporary eight-page mount cache with a four-page fallback. The Android package also installs Z20 and Nordic S112 7.3.0. [Build and test evidence](validation/DE3_80.json) |
 | Earlier LCD preview | [DE3.79 / App652 application ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.79/Allmiibo_LCD_DE3_79_652_NUR_APP.zip) | Cached external flash JEDEC diagnosis. Physical readback on DE3.79 is pending. [Build and host checks](validation/DE3_79.json) |
 | Earlier LCD preview | [DE3.77 / App650 application ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.77/Allmiibo_LCD_DE3_77_650_NUR_APP.zip) | Larger voltage digits, an eight-segment battery and a charging indicator. Physical LCD acceptance is pending. [Build and display checks](validation/DE3_77.json) |
@@ -23,7 +23,7 @@ The table lists the independently versioned components as of **17 November 2026*
 | Earlier LCD test application | [2.22.0-DE3.68](https://github.com/bluecyber81/pixl.js/releases/tag/de3.68) | Application-only DFU, counter 640. Returning to the main menu reselects the last opened app when visible. |
 | Earlier LCD test application | [2.22.0-DE3.67](https://github.com/bluecyber81/pixl.js/releases/tag/de3.67) | Application-only DFU, counter 639. German game hints and QR scanning were verified on an LCD. [Release and readback](RELEASE_DE3_67.md) |
 | Earlier LCD test application | [2.22.0-DE3.66](https://github.com/bluecyber81/pixl.js/releases/tag/de3.66) | Application-only DFU, counter 638, hardware field 52. Build and model tests passed. Installation, display capture and backup resume over Windows Bluetooth were verified on one LCD. [Device checks](validation/DE3_66_LCD_READBACK.md). [Evidence](validation/DE3_66.json) |
-| File manager | [3.55.6](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6) | Reads the running App657 source ID, previous-boot fault and observed mount cache usage. [File manager changes](DATEIMANAGER_WEB.md) |
+| File manager | [3.58.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1) | Select the board on the Update page for computer DFU and phone downloads. [Open the file manager](https://bluecyber81.github.io/pixl.js/) |
 | Current LCD bootloader | [Z21](../bootloader-z21/) | Shows reception when an interrupted DFU session resumes. [Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) |
 | Historical LCD bootloader | [Z19](../bootloader-z19/README.md) | Counter 19. The same 28 KiB boot region was read back with [App636](validation/Z19_APP636_BASELINE.json), [App637](validation/DE3_65_LCD_READBACK.json) and [App638](validation/DE3_66_LCD_READBACK.md). |
 | Previous bootloader | Z17 | Counter 17, observed in the device export for App634 |
@@ -40,7 +40,7 @@ On 7 November 2026 the LCD device reported App637, Z19 and S112 7.3.0. The Z19 b
 
 The earlier DE3.60 readback after the Z15 update reported counter 15. Its full 28 KiB region hashed to `c3200211a846a2912a57c7e4f194d05185e08735df342bd549a201739286bade`. [DE3.61 validation](validation/DE3_61.json) records admission of the signed 633 application by the Z15 ARM code and rejection of an invalid signature or incompatible SoftDevice. Z15 also permits an older correctly signed application.
 
-Use the SoftDevice version specified for the board and release. The OLED Test 1 package declares only `0x0103`. An application-only ZIP contains the device application. The LCD combined ZIP also includes a bootloader and SoftDevice.
+Use the SoftDevice version specified for the board and release. The OLED Test 6 package declares only `0x0103`. An application-only ZIP contains the device application. The LCD combined ZIP also includes a bootloader and SoftDevice.
 
 BL8 code has been packaged with more than one monotonic bootloader counter (including 9 and 11). These counters are not the BL8 source version. The expected padded 28 KiB region SHA-256 is:
 

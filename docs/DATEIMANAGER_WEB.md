@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.58.1 · OLED Test 6
+
+Unter **Update → OLED** findest du App86 für das Handy und für die Übertragung mit Chrome oder Edge am Computer. Öffne am dreitastigen OLED für die Fernbedienung **Einstellungen → Fernsteuern → bis Aus**, lass es wach und wähle im Browser **Pixl.Remote**. Dateitransfer und AmiiboLink vorher verlassen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [OLED-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)
+
 ## Dateimanager 3.58.0 · kompakte Fernbedienung und Spielordner
 
 Unter **Fernbedienung → Allmiibo DE** zeigt die Kompaktansicht am Handy Displayfoto und Tasten gemeinsam. Im Spielkatalog lassen sich alle Suchtreffer gemeinsam markieren. Vor dem Schreiben zeigt die Vorschau neue, vorhandene und konfliktbehaftete Figuren. DE3.87 / App660 ist die LCD-Vorabversion für ST7567, PFS1, Z21 und S112 7.3.0. Die Geräteabnahme steht aus. [Dateimanager und Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) · [LCD-Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip)
