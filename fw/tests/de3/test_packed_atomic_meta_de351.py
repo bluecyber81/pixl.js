@@ -6,6 +6,7 @@ ARM/QEMU. Neither mode touches a physical device or a user's backup.
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -26,6 +27,11 @@ class PackedAtomicMetaTests(unittest.TestCase):
                 'vfs_persist.c','vfs_persist.h','vfs.h']]
         source += list((HERE/'packed_de350_fixture').glob('*'))+[HERE/'packed_compat_de351.c']
         source += [FW/'application/src/mod/df/df_proto_vfs.c']
+        df=FW/'application/src/mod/df'
+        vendor=HERE/'boot_diag_fixture'
+        source += [df/'df_small_create.c',df/'df_small_create.h',df/'df_proto_vfs.h',
+                   core/'vfs_packed_runtime.h',core/'vfs_meta.c',core/'vfs_meta.h',HERE/'small_create_contract.c',
+                   HERE/'small_read_contract.c',vendor/'sha256.c',vendor/'mbedtls/sha256.h']
         source += [lfs/name for name in ['lfs.c','lfs.h','lfs_util.c','lfs_util.h']]
         source += [HERE/name for name in ['packed_vfs_persistence_de344.c',
                    'packed_vfs_nor_de344.c','packed_vfs_nor_de344.h','packed_atomic_meta_de351.c']]
@@ -45,6 +51,13 @@ class PackedAtomicMetaTests(unittest.TestCase):
 #include <stdint.h>
 #define APP_TIMER_CONFIG_RTC_FREQUENCY 1u
 #define APP_TIMER_CLOCK_FREQ 32768u
+#define APP_TIMER_TICKS(x) (x)
+#define APP_TIMER_MODE_SINGLE_SHOT 0
+#define APP_TIMER_DEF(id) static unsigned id
+int app_timer_create(unsigned *, unsigned, void (*)(void *));
+int app_timer_start(unsigned, unsigned, void *);
+int app_timer_stop(unsigned);
+#define NRF_SUCCESS 0
 static inline uint32_t app_timer_cnt_get(void) { return 0; }
 static inline uint32_t app_timer_cnt_diff_compute(uint32_t a, uint32_t b) { return (a-b)&0xffffffu; }
 ''')
@@ -60,14 +73,18 @@ uint32_t hal_spi_flash_read(uint32_t,void*,size_t);uint32_t hal_spi_flash_prog(u
 uint32_t hal_spi_flash_erase(uint32_t);
 ''')
             exe=folder/'contract.exe'
+            (folder/'hash_config.h').write_text('#define MBEDTLS_SHA256_C\n')
             command=[compiler,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror',
                      '-Wno-misleading-indentation','-Wno-sign-compare',
                      '-DLFS_NO_MALLOC','-DLFS_NO_DEBUG','-DLFS_NO_WARN','-DLFS_NO_ERROR',
                      '-DPIXL_RUNTIME_DIAGNOSTICS=1','-DVFS_PACKED_LFS_ENABLE','-DPROTOCOL="'+(FW/'application/src/mod/df/df_proto_vfs.c').as_posix()+'"','-DSTORE_CORE="'+(core/'packed_fs.c').as_posix()+'"',
                      '-DSTORE_ADAPTER="'+(core/'vfs_driver_packed.c').as_posix()+'"',
                      '-DCONTRACT="'+(HERE/'packed_vfs_persistence_de344.c').as_posix()+'"']
-            for path in [folder,core,lfs,HERE,FW/'application/src/mod/df']:command += ['-I',str(path)]
+            command += ['-DPIXL_SMALL_CREATE_ENABLE=1','-DPIXL_FILE_DIGEST_ENABLE=1',
+                        '-DMBEDTLS_CONFIG_FILE="hash_config.h"']
+            for path in [folder,core,lfs,HERE,df,vendor]:command += ['-I',str(path)]
             command += [str(HERE/'packed_atomic_meta_de351.c'),str(HERE/'packed_vfs_nor_de344.c'),
+                        str(df/'df_small_create.c'),str(core/'vfs_meta.c'),str(vendor/'sha256.c'),
                         str(core/'vfs_persist.c'),str(lfs/'lfs.c'),str(lfs/'lfs_util.c'),'-o',str(exe)]
             if arm:command+=['-static']
             elif sanitize:command+=['-fsanitize=address,undefined','-fno-sanitize-recover=all',
@@ -77,6 +94,12 @@ uint32_t hal_spi_flash_erase(uint32_t);
             ran=subprocess.run((['qemu-arm'] if arm else [])+[str(exe),str(folder/'compat.img')],capture_output=True,text=True,timeout=60)
             self.assertEqual(ran.returncode,0,ran.stdout+ran.stderr)
             self.assertIn('PASS',ran.stdout)
+            self.assertIn('PASS verified small create and conditional publish',ran.stdout)
+            small_faults=re.search(r'Small protocol synthetic NOR fault cases: (\d+) create, (\d+) publish',ran.stdout)
+            self.assertIsNotNone(small_faults)
+            create_faults,publish_faults=map(int,small_faults.groups())
+            self.assertGreater(create_faults,10)
+            self.assertGreater(publish_faults,10)
             # Exact old core remains a test fixture, never linked into firmware.
             old=HERE/'packed_de350_fixture'
             self.assertEqual(sha(old/'packed_fs.c'),'e7f6992c0ba3814ebac6f29ea25a510f79f223e50ea072e59488e1e9eaaf4f20')
@@ -104,6 +127,7 @@ uint32_t hal_spi_flash_erase(uint32_t);
             if destination:
                 report=dict(passed=True,deviceAccess=False,arm32=arm,sanitize=sanitize,
                             sourceHashes=before,sourcesUnchanged=True,observations=observations,
+                            smallCreateFaultCases=create_faults,conditionalPublishFaultCases=publish_faults,
                             limitations=['Synthetic NOR and malloc; no physical SPI, BLE/NFC or power test.',
                               'Requested allocations bounded to18KiB; not real TLSF overhead or a whole-firmware RAM watermark.',
                               'Reserve-space pressure is injected at lfs_fs_size; not a physical-full-flash test.',

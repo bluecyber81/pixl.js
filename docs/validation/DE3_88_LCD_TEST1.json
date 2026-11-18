@@ -1,0 +1,223 @@
+{
+  "date": "2026-11-18",
+  "version": "2.22.0-DE3.88",
+  "counter": 661,
+  "target": "Allmiibo LCD / ST7567 / PFS1",
+  "releaseClass": "prerelease",
+  "sourceCommit": "2729ec3929fd12b4477bf6bd4e3b50f8eb30f315",
+  "sourceId": "109484b3d03f25b4578010b0b9e22b3829287d3edc6aacfbcac2aa0f1ebdf6d8",
+  "sourceFilesComparedWithGitCommit": 709,
+  "applicationBytes": 363608,
+  "applicationSha256": "65ad4ae6946b2b9b1bb7ce025d4f8c6b035ec58016a05870bb1bf7639cfc7f47",
+  "applicationHexSha256": "b74b95e0a4851df41f87fd18c81c9ae202abee889f09c27883b9bb32869bc777",
+  "productionManifestSha256": "7f9e36cd9e04ff31cf5d5f6a5705a13acf0843e01f77457a06c1e2207ca857ed",
+  "matchingBinAndHexBuilds": 3,
+  "buildToolchain": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+  "nordicSdkSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+  "ota": {
+    "name": "Allmiibo_LCD_DE3_88_661_NUR_APP.zip",
+    "sha256": "75543dc92ca18d55a81f8070a5ac72f58195419510bba893d7540b343b8fe2c0",
+    "bytes": 252473,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 661,
+        "sd_req": [
+          294
+        ],
+        "bytes": 363608,
+        "sha256": "65ad4ae6946b2b9b1bb7ce025d4f8c6b035ec58016a05870bb1bf7639cfc7f47",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 363608,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "signedOtaVerification": {
+    "previewMode": "preview",
+    "matchesExpectedBinary": true,
+    "previewReportSha256": "1367400d0492fcb297873813ff2b68fae26d600a12678e3a12f9e50cf8ae860f",
+    "independentInitPacketAndRepositoryChecksPassed": true,
+    "embeddedApplicationMatchesBuild": true
+  },
+  "reviewPackage": {
+    "name": "Allmiibo_LCD_DE3_88_App661_Pruefpaket.zip",
+    "sha256": "e064be7bacee7cd87efb5f73d956bf17194e3fec436af7084a29d3698b95a11a",
+    "bytes": 1039151,
+    "entries": 51,
+    "verifiedZipCrcAndFileManifest": true,
+    "containsSignedOtaAndMatchingBinAndHex": true
+  },
+  "systemPrerequisites": {
+    "bootloaderProfile": "Z21",
+    "softDevice": "S112 7.3.0",
+    "requiredFwid": "0x0126",
+    "bootloaderRegionReferenceSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "referenceEvidence": "docs/validation/DE3_87_LCD_TEST1.json",
+    "imagesIncluded": [
+      "application"
+    ]
+  },
+  "memory": {
+    "binary_bytes": 363608,
+    "linker_flash_used_bytes": 363608,
+    "observed": {
+      "flash_reserve_bytes": 9128,
+      "heap_stack_gap_bytes": 2000,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "linkedArmTests": {
+    "previewElfSha256": "6f44322ff3f9bec641cba43d5c6081d9568c91cebd739e556867ba81715e7e1b",
+    "testsPassed": [
+      "check_stack_watermark_elf",
+      "check_first_menu_elf",
+      "check_aes_m4_elf",
+      "check_flash_jedec_elf",
+      "check_display_profile_elf",
+      "check_lcd_game_rotation_elf",
+      "check_build_fault_elf"
+    ],
+    "lcdDeviceTest": {
+      "passed": true,
+      "binarySha256": "65ad4ae6946b2b9b1bb7ce025d4f8c6b035ec58016a05870bb1bf7639cfc7f47",
+      "testedElfSha256": "92cc28addededb372711086b4ff12609dca4a608ea5d5541ca0c08c1f0627ffe",
+      "elfMatchesBin": true,
+      "languageRotationCombinations": 4,
+      "languages": [
+        "de",
+        "en"
+      ],
+      "rotationsDegrees": [
+        0,
+        180
+      ],
+      "negativeControlsRejected": [
+        "no-op app_pwm_channel_duty_set",
+        "incorrect SPIM MOSI register"
+      ],
+      "scope": "linked UI, ST7567/HAL/Nordic SPIM DMA and actual PWM SDK/TIMER1/PPI/GPIOTE registers",
+      "fullReportSha256": "bd63cbe34e575c4949f34ed67aa825d24974ebf9161439dd7006e09b3061c9a6",
+      "notTested": [
+        "physical LCD brightness",
+        "electrical timing",
+        "real hardware sleep",
+        "settings filesystem writes"
+      ]
+    },
+    "hardwareModeled": true
+  },
+  "z21Resume": {
+    "passed": true,
+    "testsAppBinaryFromSignedOta": true,
+    "payloadBytes": 363608,
+    "applicationSha256": "65ad4ae6946b2b9b1bb7ce025d4f8c6b035ec58016a05870bb1bf7639cfc7f47",
+    "cutOffsets": [
+      40,
+      180264,
+      360488
+    ],
+    "cutKinds": [
+      "link",
+      "link",
+      "cold-restart"
+    ],
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "modeledCheckpointPowerCuts": 455,
+    "modeledLinkCutsDuringCheckpoint": 5,
+    "modeledAdmissionOrCompletionFailures": 8,
+    "duplicateExecuteExtraErases": 0,
+    "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access.",
+    "fullReportSha256": "951470eece6e933faf51a9232dcf083a46fcfcde7e3411c6221824da2cebaa78"
+  },
+  "hostTests": {
+    "profile": "full",
+    "available": 169,
+    "run": 169,
+    "passed": 169,
+    "omitted": 0,
+    "sourcesUnchangedDuringTests": true,
+    "fullReportSha256": "3d61b2346786ae795af9cd5f0c859fa309055851b5ae114688268fbfd11f01dd"
+  },
+  "smallFileProtocol": {
+    "maxFileBytes": 572,
+    "ordinary540ByteFileRequestsAtAttMtu250": 3,
+    "checks": [
+      "incoming SHA-256",
+      "exclusive create",
+      "persistent length and SHA-256 readback",
+      "revision-conditional folder publication"
+    ],
+    "fixtures": {
+      "host": {
+        "fullReportSha256": "ae677e1a91fe8ca8a25784f3327f342fb955764346dc7e0fcf3f82e4b295a849",
+        "smallCreateCutCases": 78,
+        "conditionalPublishCutCases": 66,
+        "remainingAllocationBytes": 0
+      },
+      "sanitize": {
+        "fullReportSha256": "ad702b57c3d99ee292bcc0ace7c21552b76c77e74addabc338cee9cbf4ad9c13",
+        "smallCreateCutCases": 78,
+        "conditionalPublishCutCases": 66,
+        "remainingAllocationBytes": 0
+      },
+      "arm32": {
+        "fullReportSha256": "ba62a52fb197fbf2adf0e432e609844218227dedb22f41ef2c951295bf06292d",
+        "smallCreateCutCases": 78,
+        "conditionalPublishCutCases": 66,
+        "remainingAllocationBytes": 0
+      }
+    },
+    "scope": "Actual firmware C, PackedFS and LittleFS with modeled NOR and connection events."
+  },
+  "physicalComparisonOnPreviousFirmware": {
+    "firmware": "2.22.0-DE3.87 LCD",
+    "fixture": {
+      "files": 128,
+      "bytesPerFile": 540,
+      "payloadBytes": 69120,
+      "physicalDisconnectOnFileNumber": 33,
+      "attMtu": 250,
+      "sameLcdAndDestinationDepth": true
+    },
+    "interval": "First upload confirmation to success, including disconnection and continuation. Independent final verification and cleanup followed.",
+    "mochi": {
+      "sourceCommit": "3b0e2ab76aa18a3ad3428d92922229d1ad65ec69",
+      "elapsedMs": 336207,
+      "verifiedFiles": 128,
+      "unexpectedEntries": 0
+    },
+    "allmiiboFileManager": {
+      "testedBrowserEntrySha256": "08faa40a9018ff8b5d4226e9cefd9f045e941b666ff4bc52b65fb5f9f8b3617b",
+      "elapsedMs": 505175,
+      "verifiedFiles": 128,
+      "unexpectedEntries": 0,
+      "completeFilesBeforeResume": 32,
+      "finalFolderVisibleBeforeResume": false
+    },
+    "fullReportSha256": "ca35e3f8cac27ff339883069610cf39c9c080131258ded05c68bc85193a9a69c"
+  },
+  "physicalAcceptance": "pending",
+  "nextPhysicalChecks": [
+    "Install the application-only ZIP on a compatible LCD and read back counter 661, compiled LCD board and SourceID.",
+    "Repeat the 128-file transfer with a physical disconnection during file 33. Time the complete upload and independently check every SHA-256 and the final directory.",
+    "Run a backup on the LCD, compare restored or exported file contents with the source, and check larger-file and older-firmware fallbacks separately.",
+    "Verify physical phone DFU interruption and recovery separately."
+  ]
+}

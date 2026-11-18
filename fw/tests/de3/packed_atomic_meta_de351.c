@@ -17,7 +17,10 @@ void runtime_diag_mount_read(uint32_t bytes,bool success){(void)bytes;(void)succ
 void df_core_send_frame(df_frame_t *frame){answer=*frame;}
 size_t df_core_max_payload(void){return DF_PAYLOAD_LEN;}
 bool vfs_drive_enabled(vfs_drive_t drive){return drive==VFS_DRIVE_EXT;}
-vfs_driver_t *vfs_get_driver(vfs_drive_t drive){REQUIRE(drive==VFS_DRIVE_EXT);return driver();}
+static vfs_driver_t *readback_injection;
+vfs_driver_t *vfs_get_driver(vfs_drive_t drive){
+    REQUIRE(drive==VFS_DRIVE_EXT);return readback_injection ? readback_injection : driver();
+}
 void ble_disable(void){}
 static bool reset_reserved;
 bool system_prepare_reset(void){reset_reserved=true;return true;}
@@ -169,10 +172,12 @@ static nor_stats_t imported(bool combined) {
     }
     return stats;
 }
+#include "small_create_contract.c"
+#include "small_read_contract.c"
 int main(int argc,char **argv) {
     for(unsigned i=0;i<2048;i++){old_data[i]=(uint8_t)(i*7+3);new_data[i]=(uint8_t)(i*13+5);}
     for(unsigned i=0;i<128;i++){meta[i]=(uint8_t)(i*9+17);replacement_meta[i]=(uint8_t)(i*11+19);}
-    baseline();lifecycle();protocol();faults();nor_stats_t before=imported(false),after=imported(true);
+    baseline();small_create_contract();small_read_contract();lifecycle();protocol();faults();nor_stats_t before=imported(false),after=imported(true);
     if(argc==2){FILE *f=fopen(argv[1],"wb");REQUIRE(f);REQUIRE(fwrite(media.disk,1,NOR_BYTES,f)==NOR_BYTES);REQUIRE(fclose(f)==0);}
     drop();
     REQUIRE(after.programs<before.programs);REQUIRE(after.erases<before.erases);REQUIRE(live==0);
