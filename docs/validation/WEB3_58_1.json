@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "webVersion": "3.58.1",
+  "date": "2026-11-18",
+  "webSourceTree": "4df4e9b9ed8b7c37e36ef124a3dbb84ef023f2d1",
+  "firmware": {
+    "board": "OLED",
+    "release": "de3.87-oled-t6",
+    "version": "2.22.0-DE3.87-OLEDt6",
+    "applicationCounter": 86,
+    "requiredSoftDevice": "S112 7.2.0 / FWID 0x0103",
+    "scope": "application-only",
+    "sha256": "eaf4e645a04521268d4e39f03f5448048d43c7b66a5a5b9f48bcee91db2abaa8",
+    "locales": [
+      "de",
+      "en"
+    ],
+    "channel": "prerelease"
+  },
+  "lcdPrerelease": {
+    "release": "de3.87-lcd-test1",
+    "applicationCounter": 660
+  },
+  "webTests": {
+    "tests": 1779,
+    "pass": 1779,
+    "fail": 0,
+    "skipped": 0
+  },
+  "productionOutputs": {
+    "root": {
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pages": {
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "browser": {
+    "chrome": "159.0.8154.6",
+    "locales": [
+      "de-DE",
+      "en-GB"
+    ],
+    "remoteLayouts": [
+      "root",
+      "pages"
+    ],
+    "remoteCases": [
+      "remote selection and protocol validation",
+      "navigation",
+      "display capture and PNG download"
+    ],
+    "oledDfu": [
+      {
+        "locale": "de-DE",
+        "feature": "OLED selection survives the application disconnect and carries only valid boot-reference fields"
+      },
+      {
+        "locale": "de-DE",
+        "feature": "Home OLED route, trusted package preflight, interrupted real protocol and resume",
+        "partialBytes": 4156,
+        "bytes": 363412,
+        "sha256": "0db0ac96e8b58170f630b1ecbede44fed5b750db19eaee195ac49cbfc2227c3a",
+        "executeAck": true
+      },
+      {
+        "locale": "de-DE",
+        "feature": "Switching board clears readiness and rejects OLED ZIP under LCD"
+      },
+      {
+        "locale": "de-DE",
+        "feature": "Current SoftDevice mismatch and older OLED counter blocked before radio"
+      },
+      {
+        "locale": "en-GB",
+        "feature": "OLED selection survives the application disconnect and carries only valid boot-reference fields"
+      },
+      {
+        "locale": "en-GB",
+        "feature": "Home OLED route, trusted package preflight, interrupted real protocol and resume",
+        "partialBytes": 4156,
+        "bytes": 363412,
+        "sha256": "0db0ac96e8b58170f630b1ecbede44fed5b750db19eaee195ac49cbfc2227c3a",
+        "executeAck": true
+      },
+      {
+        "locale": "en-GB",
+        "feature": "Switching board clears readiness and rejects OLED ZIP under LCD"
+      },
+      {
+        "locale": "en-GB",
+        "feature": "Current SoftDevice mismatch and older OLED counter blocked before radio"
+      }
+    ],
+    "scope": "Browser/parser/transport with synthetic Nordic GATT and async test scheduler; no physical radio or device"
+  },
+  "physicalOledAcceptance": "pending"
+}
