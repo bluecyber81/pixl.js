@@ -147,11 +147,16 @@ test('profile registry defaults only an omitted ID and rejects every unknown or 
 })
 
 
-test('App658 capacity evidence binds the actual candidate BIN, source ID and unchanged simulator without claiming device acceptance',()=>{
- const evidence=JSON.parse(fs.readFileSync(new URL('../docs/validation/DE3_85_PFS.json',root)));
- const {packageReference:reference}=diagnosticBuildIdentity({firmwareVersion:'2.22.0-DE3.85'});
+for (const [release, counter, acceptance] of [
+  ['85', 658, 'owner-reported-on-one-lcd'],
+  ['86', 659, 'pending'],
+]) {
+ test(`App${counter} capacity evidence binds the candidate BIN, SourceID and engine to its stated hardware status`, () => {
+ const version = '2.22.0-DE3.' + release;
+ const evidence=JSON.parse(fs.readFileSync(new URL(`../docs/validation/DE3_${release}_PFS.json`,root)));
+ const {packageReference:reference}=diagnosticBuildIdentity({firmwareVersion:version});
  const profile=profiles.find(item=>item.id==='current');
- assert.equal(evidence.firmware,'2.22.0-DE3.85');assert.equal(evidence.counter,658);
+ assert.equal(evidence.firmware,version);assert.equal(evidence.counter,counter);
  assert.equal(evidence.sourceId,reference.sourceId);
  assert.equal(evidence.engine.engineSha256,profile.engineSha256);
  assert.equal(evidence.wasmSha256,sha(profile.wasm));
@@ -160,5 +165,6 @@ test('App658 capacity evidence binds the actual candidate BIN, source ID and unc
  assert.equal(evidence.elfLoadBytesCompared,reference.applicationBytes);
  assert.deepEqual(evidence.armLayoutCases.map(row=>row.result===0),[true,true,false,false]);
  assert.deepEqual(evidence.capacityCrossMount,{cases:6,files:1131,folders:77,synthetic:true});
- assert.equal(reference.hardwareAcceptance,'pending');
+ assert.equal(reference.hardwareAcceptance,acceptance);
 });
+}
