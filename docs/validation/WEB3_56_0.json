@@ -64,5 +64,6 @@
     "Automatic photo requires supported firmware and explicit opt-in; this is not a live video stream.",
     "Firmware source identity is reported by firmware, not a measured device BIN hash.",
     "Radio discovery, brightness and actual response times require a device test."
-  ]
+  ],
+  "ciTestModelCorrection": "The LCD linked-ELF test now uses native MMIO callbacks, preserving hardware assertions and their error propagation under the pinned Unicorn2.1.4. Production firmware and web runtime bytes are unchanged."
 }
