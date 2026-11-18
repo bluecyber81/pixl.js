@@ -52,7 +52,7 @@ typedef struct {uint8_t game_id;uint32_t amiibo_head,amiibo_tail;} amiidb_fav_t;
 typedef struct {uint8_t fav_type;union {amiidb_fav_t fav;char folder[48];} fav_data;} amiidb_fav_info_t;
 typedef struct {amiidb_fav_t items[24];unsigned count;} fav_array_t;
 typedef struct amiibo_view_s {
-    uint8_t focus,max_ntags,info_page,game_id;
+    bool windowed_favorites; uint8_t focus,max_ntags,info_page,game_id;
     uint16_t desc_offset,desc_total,desc_page_size;
     uint8_t desc_step;
     bool desc_auto_scroll_disabled;
@@ -119,7 +119,8 @@ static ret_code_t ntag_store_new_rand(ntag_t*n){memset(n,0x57,sizeof(*n));n->typ
 #define amiidb_fav_array_reset(a) ((a).count=0)
 #define amiidb_fav_array_size(a) ((a).count)
 #define amiidb_fav_array_get(a,i) (&(a).items[(i)])
-#define amiidb_fav_array_push_new(a) ((a).count<24?&(a).items[(a).count++]:NULL)
+static amiidb_fav_t *push_fav(fav_array_t *array) { return array->count < 24 ? &array->items[array->count++] : NULL; }
+#define amiidb_fav_array_push_new(a) push_fav(&(a))
 static int32_t amiidb_api_fav_list_dir(const char*d,void(*cb)(amiidb_fav_info_t*,void*),void*ctx){
     (void)d;
     for(unsigned i=0;i<favorite_count;i++){amiidb_fav_info_t info={.fav_type=FAV_TYPE_FAV,.fav_data.fav=favorites[i]};cb(&info,ctx);}
@@ -238,7 +239,11 @@ def run(args):
               'amiidb_scene_amiibo_fav_list_init', 'amiidb_scene_amiibo_fav_list_update',
               'amiidb_scene_amiibo_search_list_init', 'amiidb_scene_amiibo_search_update',
               'amiidb_scene_amiibo_view_on_event', 'amiidb_scene_amiibo_detail_on_enter']
-    actual = '\n'.join(function(scene, name) for name in chosen)
+    api = (src / 'app/amiidb/api/amiidb_api_fav.c').read_text()
+    globals_ += '\n' + scene[scene.index('#define FAV_DETAIL_WINDOW'):scene.index('static int fav_window_compare')]
+    chosen.insert(chosen.index('amiidb_scene_amiibo_detail_fav_list_read_cb'), 'fav_window_compare')
+    chosen.insert(chosen.index('amiidb_scene_amiibo_fav_list_init'), 'fav_window_load')
+    actual = function(api,'fav_record_compare') + '\n' + '\n'.join(function(scene, name) for name in chosen)
     actual += '\n' + function(view, 'amiibo_view_on_input')
     generated = HARNESS.replace('/* ACTUAL_GLOBALS */', globals_).replace('/* ACTUAL_FUNCTIONS */', actual)
     cfile, binary = args.out / 'database_focus.c', args.out / 'database_focus'

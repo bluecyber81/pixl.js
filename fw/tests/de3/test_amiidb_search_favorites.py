@@ -146,8 +146,16 @@ static int open_dir(const char*p,vfs_dir_t*d){(void)d;path(p);read_index=0;retur
 static int read_dir(vfs_dir_t*d,vfs_obj_t*o){(void)d;if(read_index<entry_count){*o=entries[read_index++];return 0;}return read_error;}
 static int close_dir(vfs_dir_t*d){(void)d;closed++;return close_error;}
 static int action(const char*p){path(p);return action_error;}
-static int write_data(const char*p,void*b,size_t n){assert(b==NULL && n==0);return action(p);}
-static vfs_driver_t driver={.open_dir=open_dir,.read_dir=read_dir,.close_dir=close_dir,.create_dir=action,.remove_dir=action,.remove_file=action,.write_file_data=write_data};
+static int writes,removes;
+static int write_data(const char*p,void*b,size_t n){writes++;assert(b==NULL && n==0);return action(p);}
+static int remove_file(const char*p){
+ int result=action(p);if(result)return result;
+ for(int i=0;i<entry_count;i++)if(!strcmp(strrchr(p,'/')+1,entries[i].name) && entries[i].type==VFS_TYPE_REG){
+  entries[i]=entries[--entry_count];removes++;return VFS_OK;
+ }
+ return VFS_ERR_NOOBJ;
+}
+static vfs_driver_t driver={.open_dir=open_dir,.read_dir=read_dir,.close_dir=close_dir,.create_dir=action,.remove_dir=action,.remove_file=remove_file,.write_file_data=write_data};
 vfs_driver_t *vfs_get_driver(vfs_drive_t d){assert(d==VFS_DRIVE_EXT);return driver_absent?NULL:&driver;}
 #include "amiidb_api_fav.c"
 static int favorites,folders;
@@ -171,11 +179,23 @@ int main(void) {
  strcpy(entries[0].name,"Folder");entries[0].type=VFS_TYPE_DIR;
  strcpy(entries[1].name,"255_1234ABCD_89ABCDEF.fav");entries[1].type=VFS_TYPE_REG;
  strcpy(entries[2].name,"256_1234ABCD_89ABCDEF.fav");entries[2].type=VFS_TYPE_REG;
- entry_count=3;assert(amiidb_api_fav_list_dir("",cb,NULL)==0 && favorites==1 && folders==1 && closed==1);
+ closed=0;entry_count=3;assert(amiidb_api_fav_list_dir("",cb,NULL)==0 && favorites==1 && folders==1 && closed==1);
  read_error=VFS_ERR_CRPT;assert(amiidb_api_fav_list_dir("",cb,NULL)==VFS_ERR_CRPT && closed==2);
  read_error=VFS_ERR_EOF;close_error=VFS_ERR_FAIL;assert(amiidb_api_fav_list_dir("",cb,NULL)==VFS_ERR_FAIL && closed==3);close_error=0;
  action_error=VFS_ERR_NOSPC;assert(amiidb_api_fav_empty_dir("valid")==VFS_ERR_NOSPC && closed==4 && read_index==1);action_error=0;
  strcpy(entries[0].name,"../escape");assert(amiidb_api_fav_empty_dir("valid")==VFS_ERR_CRPT && closed==5);
+ /* Mixed-case imported names and decimal aliases. Remove by stored spelling, keep unrelated entries. */
+ strcpy(entries[0].name,"001_1234aBcD_89AbCdEf.FaV");entries[0].type=VFS_TYPE_REG;
+ strcpy(entries[1].name,"1_1234ABCD_89ABCDEF.fav");entries[1].type=VFS_TYPE_REG;
+ strcpy(entries[2].name,"2_1234abcd_89abcdef.fav");entries[2].type=VFS_TYPE_REG;
+ strcpy(entries[3].name,"01_1234abcd_89abcdef.fav");entries[3].type=VFS_TYPE_DIR;
+ entry_count=4;int old_writes=writes;
+ assert(amiidb_api_fav_add("valid",&before)==VFS_OK && writes==old_writes && entry_count==4);
+ close_error=VFS_ERR_FAIL;assert(amiidb_api_fav_remove("valid",&before)==VFS_ERR_FAIL && !removes);close_error=0;
+ assert(amiidb_api_fav_remove("valid",&before)==VFS_OK && removes==2 && entry_count==2);
+ assert(amiidb_api_fav_remove("valid",&before)==VFS_ERR_NOOBJ);
+ read_error=VFS_ERR_CRPT;assert(amiidb_api_fav_add("valid",&before)==VFS_ERR_CRPT && writes==old_writes);
+ read_error=VFS_ERR_EOF;assert(amiidb_api_fav_add("valid",&before)==VFS_OK && writes==old_writes+1);
  driver_absent=1;assert(amiidb_api_fav_list_dir("",cb,NULL)==VFS_ERR_NODEV);assert(amiidb_api_fav_add("valid",&before)==VFS_ERR_NODEV);
  puts("PASS: bounded parser, untouched failure output, exact 64-byte path boundary and propagated I/O errors");return 0;
 }

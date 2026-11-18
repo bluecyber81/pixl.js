@@ -31,8 +31,9 @@ class BackToListFocus(unittest.TestCase):
             # Keep the real new dependency, including identity comparison and
             # missing-target scan. Full paged loading is exercised separately
             # by the coupled favorite-return C harness and paging regression.
-            functions.extend(function(favorites, name) for name in (
-                "fav_record_compare", "fav_key_compare", "fav_focus_visible"))
+            api = (SRC / "app/amiidb/api/amiidb_api_fav.c").read_text(encoding="utf-8")
+            functions.append(function(api, "fav_record_compare"))
+            functions.extend(function(favorites, name) for name in ("fav_key_compare", "fav_focus_visible"))
             seek_type = re.search(r"typedef struct \{[^}]*\} fav_seek_context_t;", favorites)
             self.assertIsNotNone(seek_type)
             functions.append(seek_type[0])
