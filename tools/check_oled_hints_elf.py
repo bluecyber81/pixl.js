@@ -41,7 +41,7 @@ def verify(directory, fw):
     def uint(p):
         return int.from_bytes(cpu.mem_read(p,4),"little")
     # Synthetic view and tag in otherwise unused model RAM. ARM layout from
-    # the linked amiibo_view_usage: view->ntag @4, game_id @19, tag ID @84.
+    # the linked amiibo_view_usage: view->ntag @4, game_id @20 (after windowed_favorites), tag ID @84.
     view,tag,buf=0x20000800,0x20000900,0x20000c00
     cpu.mem_write(view+4,struct.pack("<I",tag))
     german=json.loads((fw/"data/usage-translations.de.json").read_bytes())["texts"]
@@ -73,7 +73,7 @@ def verify(directory, fw):
         en_expected=string(uint(sym["db_usage_notes"]+12*note))
         de_expected=german.get(en_expected,en_expected)
         cpu.mem_write(tag+84,struct.pack(">II",head,tail))
-        cpu.mem_write(view+19,bytes([game]))
+        cpu.mem_write(view+20,bytes([game]))
         names,output=[],[]
         for lang,expected in zip(lang_ids,(de_expected,en_expected)):
             call("setLanguage",lang)
