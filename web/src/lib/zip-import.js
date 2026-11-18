@@ -265,7 +265,7 @@ export async function previewZipImport({ archive, rootPath, deviceKey, readDirec
           if (record.type === 'file') {
             if (existing.size > UPLOAD_LIMITS.maxExistingBytes) { entry.status = 'blocked'; entry.reason = 'EXISTING_SIZE_LIMIT' }
             else {
-              const bytes = asBytes(await readFile(record.targetPath, { maxBytes: existing.size })); checkpoint()
+              const bytes = asBytes(await readFile(record.targetPath, { maxBytes: existing.size, exactBytes: existing.size })); checkpoint()
               requireThat(bytes.length === existing.size, 'ZIP_CHANGED', 'A destination changed while being read.')
               entry.expected = { size: existing.size, sha256: await sha256Bytes(bytes), metadata }; checkpoint()
               entry.status = existing.size === record.size && entry.expected.sha256 === record.sha256 && metadataKey(metadata) === metadataKey(record.metadata) ? 'same' : 'change'

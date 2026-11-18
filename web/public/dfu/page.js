@@ -1,6 +1,6 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.1';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.2';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -190,7 +190,7 @@ function transferEstimate(state, now) {
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}),
-    createDfu: () => new SecureDfu(CRC32.buf),
+    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf }),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },

@@ -158,7 +158,23 @@ function bootloader(image, options={}) {
   };
   return {device,control,packet,state};
 }
-function client() { return new SecureDfu(crc,{},0,{timeouts:{operation:120,gatt:120,reboot:5}}); }
+const vendorCrc = require('../public/dfu/vendor/crc32.js').buf;
+function client() { return new SecureDfu(crc,{},0,{extendCrc32:vendorCrc,timeouts:{operation:120,gatt:120,reboot:5}}); }
+
+test('each application byte is hashed once across object checks, including a resumed prefix',()=>{
+  const image=bytes(363752), other=image.slice();
+  let hashed=0;
+  function hash(part,seed){hashed+=part.length;return vendorCrc(part,seed);}
+  const d=new SecureDfu(hash,{},0,{extendCrc32:hash});
+  for(const end of [77,4096,8192,image.length])assert.equal(d._prefixCrc(image,end),crc(image.subarray(0,end)));
+  assert.equal(hashed,image.length);
+  other[0]^=1;
+  assert.equal(d._prefixCrc(other,123),crc(other.subarray(0,123)));
+  assert.equal(d._prefixCrc(other,12),crc(other.subarray(0,12)));
+  assert.equal(hashed,image.length+135);
+  d._cleanup();
+  assert.equal(d._prefix,null);
+});
 function clean(p,d) {
   assert.equal(p.device.count()+p.control.count(),0,'listeners must be removed');
   assert.equal(d._pending,null,'no response waiter may survive completion');

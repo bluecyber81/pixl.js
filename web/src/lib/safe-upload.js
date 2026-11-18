@@ -25,7 +25,7 @@ export async function deviceFileSha256(path, size, { readFileDigest, readFile, c
       return digest
     }
   }
-  const bytes = asBytes(await readFile(path, { maxBytes: size, onProgress }))
+  const bytes = asBytes(await readFile(path, { maxBytes: size, onProgress, exactBytes: size }))
   check()
   if (bytes.byteLength !== size) fail(sizeError, 'The device file size changed during the read.')
   const hash = await sha256Bytes(bytes)

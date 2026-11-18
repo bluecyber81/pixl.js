@@ -40,7 +40,7 @@
   </details>
 </template>
 <script>
-import { searchDevice } from '../lib/device-search.js';
+import { createDeviceSearch } from '../lib/device-search.js';
 import { inspectTagStructure, publicFigureImage, TAG_LENGTHS } from '../lib/figure-info.js';
 import catalogueBaseline from '../data/catalogue.json';
 const copy = {
@@ -78,11 +78,11 @@ export default {
     previewEntry(){return this.preview?.id && this.catalogueData.entries.find(item=>item.id===this.preview.id);},
     previewImage(){return this.previewEntry ? publicFigureImage(this.previewEntry.id,this.catalogueData.commit) : null;}
   },
-  created(){this._serial=0;this._alive=true;},
+  created(){this._serial=0;this._alive=true;this._search=createDeviceSearch();},
   beforeUnmount(){this._alive=false;this.invalidate();},
   watch:{generation(){this.invalidate();},connected(value){if(!value)this.invalidate();},directory(){if(this.scope==='folder')this.invalidate();},catalogue(){this._controller?.abort();this.preview=null;this.results=[];this.stats=null;this.status=this.running?'catalogueChanged':'';}},
   methods:{
-    invalidate(){++this._serial;this._controller?.abort();this._controller=null;this.running=false;this.readingPreview=false;this.preview=null;this.status='';this.stats=null;this.results=[];this.$emit('busy',false);},
+    invalidate(){++this._serial;this._controller?.abort();this._controller=null;this._search=createDeviceSearch();this.running=false;this.readingPreview=false;this.preview=null;this.status='';this.stats=null;this.results=[];this.$emit('busy',false);},
     onImageError(event){if(event.target?.getAttribute('src')===this.previewImage)this.imageFailed=true;},
     async showPreview(result){
       if(!this.connected || this.blocked || this.running || this.readingPreview || !this.results.includes(result))return;
@@ -100,7 +100,7 @@ export default {
       this.preview={path,state:'reading'};this.readingPreview=true;this.$emit('busy',true);
       try{
         const session=this.getSession();
-        const bytes=await session.readFile(path,{maxBytes:result.size});
+        const bytes=await session.readFile(path,{maxBytes:result.size,exactBytes:result.size});
         session.assertSession?.();
         if(serial!==this._serial || generation!==this.generation || !this.results.includes(result))return;
         if(bytes?.byteLength!==result.size)throw new Error('File size changed');
@@ -129,12 +129,17 @@ export default {
       this._controller=controller;this.running=true;this.status='searching';this.results=[];this.stats=null;this.$emit('busy',true);
       try{
         const session=this.getSession();
-        const result=await searchDevice({rootPath:this.scope==='device'?'E:/':this.directory,recursive:this.scope==='device',query:this.query,
+        const result=await this._search({rootPath:this.scope==='device'?'E:/':this.directory,recursive:this.scope==='device',query:this.query,readRevision:session.readRevision,
           readDirectory:session.readDirectory,readFile:session.readFile,inspectMissingIds:this.inspectMissingIds,
           assertSession:session.assertSession,catalogue:catalogue.entries,signal:controller.signal,
           onProgress:(stats,results)=>{if(current()&&sameCatalogue()){this.stats=stats;this.results=results;}}});
         if(current()&&sameCatalogue()){this.results=result.results;this.stats=result;this.status='done';}
-      }catch(error){if(current())this.status=!sameCatalogue()?'catalogueChanged':controller.signal.aborted?'cancelled':'failed';}
+      }catch(error){
+        if(current()){
+          this.status=!sameCatalogue()?'catalogueChanged':controller.signal.aborted?'cancelled':'failed';
+          if(this.status!=='cancelled'){this.results=[];this.stats=null;}
+        }
+      }
       finally{if(current()){this._controller=null;this.running=false;this.$emit('busy',false);}}
     }
   }

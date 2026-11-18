@@ -1,7 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { searchDevice, SEARCH_LIMITS } from '../src/lib/device-search.js';
+import { createDeviceSearch, searchDevice, SEARCH_LIMITS } from '../src/lib/device-search.js';
 const file=(name,meta={})=>({name,type:0,size:540,meta});
+
+test('separate searches share directory metadata only for a verified storage revision',async()=>{
+  const run=createDeviceSearch(), reads=[];
+  let revision='0000000000000001';
+  const tree={'E:/':[folder('Games')],'E:/Games':[file('Mario'),file('Link')]};
+  const options={rootPath:'E:/',recursive:true,readRevision:async()=>revision,
+    readDirectory:async path=>{reads.push(path);return tree[path];}};
+  assert.equal((await run({...options,query:'Mario'})).results[0].name,'Mario');
+  assert.equal((await run({...options,query:'Link'})).results[0].name,'Link');
+  assert.deepEqual(reads,['E:/','E:/Games']);
+  revision='0000000000000002';tree['E:/Games']=[file('Zelda')];
+  assert.equal((await run({...options,query:'Link'})).matches,0);
+  assert.equal((await createDeviceSearch()({...options,query:'Zelda'})).matches,1);
+  assert.equal(reads.length,6);
+});
+
+test('a change during a cached search rereads the device and never returns the previous figure',async()=>{
+  const run=createDeviceSearch();let files=[file('Link')],rev=1,probes=0,reads=0;
+  const options={rootPath:'E:/',recursive:true,query:'Link',
+    readDirectory:async()=>{++reads;return files;},
+    readRevision:async()=>{if(++probes===4){files=[file('Zelda')];++rev;}return String(rev).padStart(16,'0');}};
+  assert.equal((await run(options)).matches,1);
+  assert.equal((await run(options)).matches,0);
+  assert.equal(reads,2);
+});
+
+test('unsupported storage, incomplete results and cancelled searches do not populate the cache',async()=>{
+  const run=createDeviceSearch(),controller=new AbortController();let reads=0;
+  const options={rootPath:'E:/',recursive:true,query:'test',
+    readDirectory:async()=>{++reads;return [file('test1'),file('test2')];},
+    readRevision:async()=>'0000000000000001'};
+  for(let i=0;i<2;i++)await run({...options,readRevision:async()=>null});
+  for(let i=0;i<2;i++)await run({...options,limits:{results:1}});
+  await assert.rejects(run({...options,signal:controller.signal,onProgress:()=>controller.abort()}),{name:'AbortError'});
+  assert.equal((await run(options)).matches,2);
+  assert.equal(reads,6);
+});
 const folder=name=>({name,type:1,meta:{}});
 const catalogue=[{id:'0000000000000002',name:'Mario',series:'Super Smash Bros.',game:'Super Mario'}];
 function setup(tree, extra={}){const reads=[];return {reads,run:options=>searchDevice({rootPath:'E:/',query:'mario',catalogue,readDirectory:async path=>{reads.push(path);assert.ok(Object.hasOwn(tree,path),path);return tree[path];},...extra,...options})};}
@@ -59,7 +96,7 @@ test('missing-ID lookup is strictly opt-in and never downloads metadata-resolved
   {readFile:async(path,options)=>{reads.push([path,options]);return tagBytes();}});
  assert.equal((await h.run()).matches,2);assert.deepEqual(reads,[]);
  const result=await h.run({inspectMissingIds:true});assert.equal(result.matches,3);
- assert.deepEqual(reads,[['E:/hidden.bin',{maxBytes:540}]]);assert.equal(result.filesRead,1);assert.equal(result.bytesRead,540);
+ assert.deepEqual(reads,[['E:/hidden.bin',{maxBytes:540,exactBytes:540}]]);assert.equal(result.filesRead,1);assert.equal(result.bytesRead,540);
  assert.equal(result.results.find(item=>item.name==='hidden.bin').figureName,'Mario');
  assert.equal(JSON.stringify(result).includes('Uint8Array'),false);
 });

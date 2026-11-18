@@ -143,6 +143,17 @@ test('advertised small-file reads are probed once per session and never inferred
     const next=f.api.vfs_probe_small_read(nativeVersion);f.rx(0x22,nativeCap);assert.equal(await next,false);
 });
 
+test('a failed read capability probe can be retried before a later download',async()=>{
+    const f=protocolFixture();
+    const first=f.api.vfs_probe_small_read(nativeVersion);
+    f.rx(0x22,[0]);
+    await assert.rejects(first);
+    const second=f.api.vfs_probe_small_read(nativeVersion);
+    const withRead=nativeCap.slice();withRead[5]=7;f.rx(0x22,withRead);
+    assert.equal(await second,true);
+    assert.equal(f.writes.filter(x=>x[0]===0x22).length,2);
+});
+
 test('a first command waiting for the wire codec never reaches a replacement BLE session', async () => {
     const gate = deferred();
     const f = protocolFixture(undefined, {ByteBuffer:null, loadFileCodec:() => gate.promise});
@@ -261,7 +272,7 @@ test('qualified LCD versions request cache-slot detail; rejected optional select
   const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);
   assert.equal((await p).schemaVersion,3);
  }
- for(const version of ['2.22.0-DE3.81','2.22.0-DE3.89']){
+ for(const version of ['2.22.0-DE3.81','2.22.0-DE3.90']){
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,2]]);const old=packet.slice(0,80);old.set([3,80],4);f.rx(9,old);await p;
  }

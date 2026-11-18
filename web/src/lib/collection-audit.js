@@ -149,7 +149,7 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
       const { path, size, metadataId } = row;
       check(); ++stats.readAttempts; stats.bytesReserved += size;
       try {
-        const data = await readFile(path, { maxBytes: size });
+        const data = await readFile(path, { maxBytes: size, exactBytes: size });
         check();
         const bytes = data instanceof Uint8Array ? data : data instanceof ArrayBuffer ? new Uint8Array(data) : null;
         if (!bytes || bytes.byteLength !== size) {

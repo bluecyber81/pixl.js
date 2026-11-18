@@ -42,6 +42,8 @@
     constructor(crc32, bluetooth, delay = 0, options = {}) {
       if (typeof crc32 !== 'function') throw new Error('A CRC32 implementation is required');
       this.crc32 = crc32;
+      this.extendCrc32 = options.extendCrc32;
+      this._prefix = null;
       this.bluetooth = bluetooth || globalThis.navigator?.bluetooth;
       this.delay = Math.max(0,Number(delay)||0);
       this.timeouts = {operation:10000,gatt:15000,reboot:3000,...options.timeouts};
@@ -69,7 +71,7 @@
     }
     _rejectPending(error){if(this._pending){const pending=this._pending;this._pending=null;clearTimeout(pending.timer);pending.reject(error);}}
     _finishPending(){const pending=this._pending;if(pending?.ackData&&pending.writeSettled){this._pending=null;clearTimeout(pending.timer);pending.resolve(pending.ackData);}}
-    _cleanup(){this._active=false;if(this._ownerToken)this._ownerToken.active=false;this._rejectPending(new Error('DFU session ended'));for(const remove of this._listeners.splice(0))remove();this.controlChar=null;this.packetChar=null;this._finishDisconnectWait=null;}
+    _cleanup(){this._prefix=null;this._active=false;if(this._ownerToken)this._ownerToken.active=false;this._rejectPending(new Error('DFU session ended'));for(const remove of this._listeners.splice(0))remove();this.controlChar=null;this.packetChar=null;this._finishDisconnectWait=null;}
     _bounded(promise,ms,label){
       const epoch=this._epoch;
       return new Promise((resolve,reject)=>{
@@ -159,6 +161,16 @@
     }
     async sendControl(operation,buffer){const result=await this.sendOperation(this.controlChar,operation,buffer);if(this.delay)await new Promise(resolve=>setTimeout(resolve,this.delay));return result;}
     _crc(bytes){return this.crc32(bytes)>>>0;}
+    _prefixCrc(bytes,end){
+      if(typeof this.extendCrc32!=='function')return this._crc(bytes.subarray(0,end));
+      // transferInit and transferFirmware each own an immutable copy.
+      const prior=this._prefix;
+      const crc=prior?.bytes===bytes && prior.end<=end
+        ? this.extendCrc32(bytes.subarray(prior.end,end),prior.crc)>>>0
+        : this._crc(bytes.subarray(0,end));
+      this._prefix={bytes,end,crc};
+      return crc;
+    }
     async _select(type,total){
       const v=await this.sendControl([6,type]);if(v.byteLength!==12)throw new Error('Invalid DFU SELECT response length');
       const state={maxSize:v.getUint32(0,true),offset:v.getUint32(4,true),crc:v.getUint32(8,true)};
@@ -179,7 +191,7 @@
     }
     async _checksum(bytes,expectedOffset){
       const v=await this.sendControl([3]);this._checkOffset(v,expectedOffset);
-      if(v.getUint32(4,true)!==this._crc(bytes.subarray(0,expectedOffset)))throw new Error('DFU CRC32 mismatch');
+      if(v.getUint32(4,true)!==this._prefixCrc(bytes,expectedOffset))throw new Error('DFU CRC32 mismatch');
     }
     async _stream(bytes,start,end,type){
       for(let pos=start;pos<end;pos+=20){
@@ -187,10 +199,13 @@
         // A resolved Write Without Response only describes the host write.
         // PRN=1 makes the bootloader confirm acceptance before another packet.
         // Arm the waiter before writing: the receipt can precede write settlement.
-        const receipt=await this._sendAndWait(this.packetChar,bytes.slice(pos,next),3);
+        const pending=this._sendAndWait(this.packetChar,bytes.subarray(pos,next),3);
+        // Give the browser time to handle input while the bootloader confirms.
+        // An explicitly configured delay still starts after the receipt.
+        const turn=this.delay===0 ? new Promise(resolve=>setTimeout(resolve,0)) : null;
+        const receipt=await pending;
         this._checkOffset(receipt,next,type);
-        // Yield even for delay=0, as the original browser flasher does.
-        await new Promise(resolve=>setTimeout(resolve,this.delay));this._assertActive();
+        await (turn || new Promise(resolve=>setTimeout(resolve,this.delay)));this._assertActive();
         this.progress(type,bytes.length,next);
       }
       // Check the cumulative CRC once per object, rather than rehashing the
@@ -207,7 +222,7 @@
       if(bytes.length>state.maxSize)throw new Error('Init packet exceeds bootloader object size');
       let offset=state.offset;
       if(offset>bytes.length)this.log('Ein längeres Init-Paket eines früheren DFU-Versuchs wird neu angelegt. Die Firmwaredaten werden anschließend weiter mit CRC geprüft.', 'Replacing the longer init packet from an earlier update. The firmware transfer will continue with CRC verification.');
-      if(!offset||offset>bytes.length||state.crc!==this._crc(bytes.subarray(0,offset))){await this._create(1,bytes.length);offset=0;}
+      if(!offset||offset>bytes.length||state.crc!==this._prefixCrc(bytes,offset)){await this._create(1,bytes.length);offset=0;}
       this.progress('init',bytes.length,offset);
       if(offset<bytes.length)await this._stream(bytes,offset,bytes.length,'init');
       // A complete matching init packet still requires Execute; SELECT alone
@@ -217,7 +232,7 @@
     async transferFirmware(input){
       const bytes=asBytes(input),state=await this._select(2,bytes.length);let offset=state.offset;
       if(offset===bytes.length)this.dispatchEvent('phase','verify');
-      if(offset&&state.crc!==this._crc(bytes.subarray(0,offset)))throw new Error('Resume CRC32 differs; existing partial data does not match this package. No firmware data was overwritten. A previous interrupted transfer may be the cause.');
+      if(offset&&state.crc!==this._prefixCrc(bytes,offset))throw new Error('Resume CRC32 differs; existing partial data does not match this package. No firmware data was overwritten. A previous interrupted transfer may be the cause.');
       this.progress('firmware',bytes.length,offset);
       if(offset){
         const remainder=offset%state.maxSize;

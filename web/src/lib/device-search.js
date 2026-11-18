@@ -6,6 +6,49 @@ export const SEARCH_CONTENT_LIMITS = Object.freeze({ files: 128, bytes: 256 * 10
 const fold = value => String(value || '').normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
 const aborted = () => Object.assign(new Error('Search cancelled'), { name: 'AbortError' });
 
+// One component owns this cache for one live connection. Only directory
+// metadata is retained. A new query still evaluates its own catalogue/filter.
+export function createDeviceSearch() {
+  let saved;
+  return async function run(options) {
+    if (!options.recursive || !options.rootPath.startsWith('E:/') || !options.readRevision) return searchDevice(options);
+    const current = () => {
+      if (options.signal?.aborted) throw aborted();
+      options.assertSession?.();
+    };
+    current();
+    const revision = await options.readRevision();
+    current();
+    if (revision == null) { saved = undefined; return searchDevice(options); }
+    if (typeof revision !== 'string' || !/^[0-9a-f]{16}$/.test(revision) || revision === '0000000000000000') throw new Error('Invalid storage revision');
+    if (saved && (saved.revision !== revision || saved.rootPath !== options.rootPath)) saved = undefined;
+    const previous = saved?.listings;
+    const listings = new Map();
+    let entries = 0;
+    const readDirectory = async path => {
+      current();
+      const list = previous?.get(path) ?? await options.readDirectory(path);
+      current();
+      if (Array.isArray(list)) {
+        entries += list.length;
+        if (entries <= SEARCH_LIMITS.entries && listings.size < SEARCH_LIMITS.folders) listings.set(path, list);
+      }
+      return list;
+    };
+    const result = await searchDevice({...options, readDirectory,
+      onProgress: previous ? stats => options.onProgress?.(stats, []) : options.onProgress });
+    current();
+    const after = await options.readRevision();
+    current();
+    if (after !== revision) {
+      saved = undefined;
+      return searchDevice(options);
+    }
+    if (!result.limited && entries <= SEARCH_LIMITS.entries) saved = {revision, rootPath:options.rootPath, listings};
+    return result;
+  };
+}
+
 // Metadata is the default. An explicit opt-in can resolve missing IDs from a
 // bounded number of small BINs. Reads are serial; file bytes are never cached
 // in progress, results or a device-independent catalogue.
@@ -65,7 +108,7 @@ export async function searchDevice({ rootPath, query, recursive = true, readDire
           stats.contentLimited = true; stats.limited = true;
         } else {
           check();
-          const data = await readFile(path, { maxBytes: entry.size });
+          const data = await readFile(path, { maxBytes: entry.size, exactBytes: entry.size });
           check();
           const bytes = data instanceof Uint8Array ? data : data instanceof ArrayBuffer ? new Uint8Array(data) : null;
           if (!bytes || bytes.byteLength !== entry.size) throw new Error('Search file size changed');

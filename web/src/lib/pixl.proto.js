@@ -600,6 +600,9 @@ export function vfs_probe_small_read(firmwareVersion) {
             return vfs_small_read_capable();
         });
         small_read_probe = {generation, version:firmwareVersion, promise};
+        promise.catch(() => {
+            if (small_read_probe?.promise === promise) small_read_probe = null;
+        });
     }
     return small_read_probe.promise;
 }
