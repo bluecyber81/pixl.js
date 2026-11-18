@@ -10,6 +10,8 @@ from pathlib import Path
 import struct
 from subprocess import run
 from tempfile import TemporaryDirectory
+import unicorn
+import lcd_device_model
 from check_stack_watermark_elf import tool
 from lcd_device_model import Model
 from unicorn.arm_const import UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3
@@ -140,13 +142,29 @@ def verify(directory, frames=None):
     except AssertionError:rejected=True
     m.cpu.hook_del(hook);assert rejected
     m.call('mui_u8g2_backlight_restore');pwm(65)
+    # Changing only the modeled register must still be caught at the actual
+    # SPIM TASKS_START boundary. This guards the native-MMIO model against
+    # accidentally treating a normal store as an accepted display transfer.
+    m.write32(0x4000350c,24)
+    rejected=False
+    try:m.call('u8g2_SendBuffer',fb)
+    except AssertionError as error:rejected='LCD SPI pins' in str(error)
+    assert rejected,'incorrect MOSI register was not rejected'
     return {'passed':True,'binarySha256':sha256(binary.read_bytes()).hexdigest(),
+            'elfSha256':sha256(elf.read_bytes()).hexdigest(),
+            'unicornVersion':unicorn.__version__,
+            'modelSha256':sha256(Path(lcd_device_model.__file__).read_bytes()).hexdigest(),
+            'validationScriptSha256':sha256(Path(__file__).read_bytes()).hexdigest(),
+            'peripheralModel':{'interface':'native Unicorn mmio_map with shadow register banks',
+                               'ranges':['0x40000000..0x400fffff','0x50000000..0x50000fff'],
+                               'memoryAccessHooks':False,'instructionLimitPerCall':m.instruction_limit},
             'elfMatchesBin':True,'cases':results,'fixedPatternPixels':1568,
             'savedPwmUnchanged':65,'savedContrastUnchanged':80,'pwmPeriodTicks':3200,
             'newerPwmWinsOverFailedRestore':[0,80],
             'failedNewPwmKeepsRestoreTarget':30,
             'restoration':['short center','long center','forced view change','actual settings destructor','display shutdown/wake'],
             'negativeControlRejected':'no-op app_pwm_channel_duty_set',
+            'negativeControlsRejected':['no-op app_pwm_channel_duty_set','incorrect SPIM MOSI register'],
             'boundary':'linked UI, ST7567/HAL/Nordic SPIM DMA and actual PWM SDK/TIMER1/PPI/GPIOTE registers',
             'notTested':['physical LCD brightness','electrical timing','real hardware sleep','settings filesystem writes']}
 
