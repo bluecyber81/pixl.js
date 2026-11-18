@@ -112,6 +112,90 @@ int main(int argc, char **argv) {
     return 0;
 }
 #else
+#include "amiidb_api_fav.h"
+#include "amiidb_api_slot.h"
+void check_slot_save_guard(vfs_driver_t *);
+void check_slots_unmounted(void);
+
+typedef struct {
+    amiidb_fav_t key;
+    unsigned canonical, aliases;
+} favorite_counts_t;
+
+static void count_marker(amiidb_fav_info_t *entry, void *context) {
+    favorite_counts_t *counts = context;
+    assert(entry->fav_type == FAV_TYPE_FAV);
+    assert(fav_record_compare(&counts->key, &entry->fav_data.fav) == 0);
+    if (entry->name_alias) counts->aliases++;
+    else counts->canonical++;
+}
+
+static void check_favorites(void) {
+    const char *alias = "/amiibo/fav/Stars/007_0012abcd_face1234.FAV";
+    const char *canonical = "/amiibo/fav/Stars/7_0012ABCD_FACE1234.fav";
+    const char *unrelated = "/amiibo/fav/Stars/notes.txt";
+    favorite_counts_t counts = {.key = {.game_id = 7, .amiibo_head = 0x12abcd, .amiibo_tail = 0xface1234}};
+    bool present = true;
+    assert(driver->create_dir("/amiibo/fav") == VFS_OK);
+    assert(amiidb_api_fav_create_dir("Stars") == VFS_OK);
+    assert(driver->write_file_data(unrelated, figure, 5) == 5);
+    assert(driver->write_file_data(alias, NULL, 0) == 0);
+    assert(amiidb_api_fav_add("Stars", &counts.key) == VFS_OK);
+    assert(amiidb_api_fav_has_canonical("Stars", &counts.key, &present) == VFS_OK && !present);
+    assert(amiidb_api_fav_list_dir("Stars", count_marker, &counts) == VFS_OK);
+    assert(counts.aliases == 1 && counts.canonical == 0);
+    assert(driver->write_file_data(canonical, NULL, 0) == 0);
+    counts.aliases = counts.canonical = 0;
+    assert(amiidb_api_fav_list_dir("Stars", count_marker, &counts) == VFS_OK);
+    assert(counts.aliases == 1 && counts.canonical == 1);
+    assert(amiidb_api_fav_remove("Stars", &counts.key) == VFS_OK);
+    assert(amiidb_api_fav_remove("Stars", &counts.key) == VFS_ERR_NOOBJ);
+    assert(amiidb_api_fav_add("Stars", &counts.key) == VFS_OK);
+    assert(amiidb_api_fav_add("Stars", &counts.key) == VFS_OK);
+    assert(amiidb_api_fav_has_canonical("Stars", &counts.key, &present) == VFS_OK && present);
+    counts.aliases = counts.canonical = 0;
+    assert(amiidb_api_fav_list_dir("Stars", count_marker, &counts) == VFS_OK);
+    assert(counts.aliases == 0 && counts.canonical == 1);
+    uint8_t saved[5];
+    assert(driver->read_file_data(unrelated, saved, sizeof(saved)) == sizeof(saved));
+    assert(!memcmp(figure, saved, sizeof(saved)));
+
+    /* A valid 63-byte marker path leaves no space for a SPIFFS directory
+     * sentinel. Checking an absent marker must still succeed. */
+    const char longest_folder[] = "1234567890123456789012345";
+    amiidb_fav_t last = {.game_id = 255, .amiibo_head = 0xab, .amiibo_tail = 0xcd};
+    assert(sizeof(longest_folder) - 1 == AMIIDB_FAV_NEW_FOLDER_MAX_BYTES);
+    assert(amiidb_api_fav_create_dir(longest_folder) == VFS_OK);
+    assert(amiidb_api_fav_has_canonical(longest_folder, &last, &present) == VFS_OK && !present);
+    assert(amiidb_api_fav_add(longest_folder, &last) == VFS_OK);
+    assert(amiidb_api_fav_has_canonical(longest_folder, &last, &present) == VFS_OK && present);
+    assert(amiidb_api_fav_remove(longest_folder, &last) == VFS_OK);
+}
+
+static void check_spiffs_stat_bounds(void) {
+    vfs_obj_t obj;
+    char path[VFS_MAX_PATH_LEN + 1] = "/amiibo/fav/";
+    size_t prefix = strlen(path);
+    const size_t longest_dir = VFS_MAX_PATH_LEN - sizeof("/.folder");
+    memset(path + prefix, 'd', longest_dir - prefix);
+    assert(driver->stat_file(path, &obj) == VFS_ERR_NOOBJ);
+    assert(driver->create_dir(path) == VFS_OK);
+    assert(driver->stat_file(path, &obj) == VFS_OK && obj.type == VFS_TYPE_DIR);
+    assert(strcmp(obj.name, path + prefix) == 0);
+    path[longest_dir] = '/';
+    assert(driver->stat_file(path, &obj) == VFS_OK && obj.type == VFS_TYPE_DIR);
+    assert(strlen(obj.name) == longest_dir - prefix && !strncmp(obj.name, path + prefix, strlen(obj.name)));
+    path[longest_dir] = 'e';
+    assert(driver->stat_file(path, &obj) == VFS_ERR_NOOBJ);
+    assert(driver->create_dir(path) == VFS_ERR_MAXNM);
+    /* The actual requested path exceeds 63 bytes, with valid components. */
+    path[longest_dir + 1] = '/';
+    memset(path + longest_dir + 2, 'z', VFS_MAX_PATH_LEN - longest_dir - 2);
+    assert(strlen(path) == VFS_MAX_PATH_LEN && driver->stat_file(path, &obj) == VFS_ERR_MAXNM);
+    /* SPIFFS supports root directory iteration but stat expects a named object. */
+    assert(driver->stat_file("/", &obj) == VFS_ERR_MAXNM);
+}
+
 static void snapshot(void) { memcpy(original,disk,SIZE); programs=erases=0; }
 static void unchanged(void) { assert(!memcmp(original,disk,SIZE)); assert(programs==0 && erases==0); }
 static void stop(void) { assert(!driver->umount()); assert(!vfs_oled_backend() && !allocations); }
@@ -149,6 +233,25 @@ static void check_volume(unsigned type) {
     assert(!driver->remove_file("/moved")); stop();
     printf("storage model %s: mounted cache %zu B; peak requested heap during roundtrip %zu B\n",
            type==1 ? "SPIFFS" : "LittleFS", mounted_bytes, peak);
+    assert(driver->mount() == VFS_OK && vfs_oled_backend() == type);
+    check_slot_save_guard(driver);
+    check_favorites();
+    if (type == 1) check_spiffs_stat_bounds();
+    stop();
+    check_slots_unmounted();
+    assert(driver->mount() == VFS_OK && vfs_oled_backend() == type);
+    amiidb_slot_info_t info;
+    assert(amiidb_api_slot_info(0, &info) == VFS_OK && info.is_readonly);
+    ntag_t tag;
+    assert(amiidb_api_slot_read(0, &tag) == VFS_OK && tag.read_only && tag.data[100] == 0x5a);
+    assert(amiidb_api_slot_set_readonly(0, false) == VFS_OK);
+    assert(amiidb_api_slot_read(0, &tag) == VFS_OK && !tag.read_only && tag.data[100] == 0x5a);
+    favorite_counts_t saved = {.key = {.game_id = 7, .amiibo_head = 0x12abcd, .amiibo_tail = 0xface1234}};
+    assert(amiidb_api_fav_list_dir("Stars", count_marker, &saved) == VFS_OK);
+    assert(saved.canonical == 1 && saved.aliases == 0);
+    stop();
+    printf("PASS %s Save As, slot protection and favorites canonical/alias roundtrip\n",
+           type == 1 ? "SPIFFS" : "LittleFS");
 }
 int main(int argc, char **argv) {
     fill_payloads();

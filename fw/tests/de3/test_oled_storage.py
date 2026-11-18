@@ -5,6 +5,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import tempfile
+from slot_scene_fixture import render_slot_scene
 
 FW = Path(__file__).resolve().parents[2]
 APP = FW / "application/src"
@@ -50,10 +51,23 @@ def run(sanitize, reference_engines=None, blocks=512):
             subprocess.run(seed_cc + list(map(str, seed_sources)) + ["-o", str(seed)], check=True, timeout=120)
             references = [str(out / "spiffs.img"), str(out / "littlefs.img")]
             subprocess.run([str(seed), *references], check=True, timeout=45)
-        for directory in (out, VFS, MOD, SPIFFS, LFS, FW / "components/cwalk/include"):
+        # The simulator calls the actual Save As scene and the same assertions
+        # used for PackedFS, then exercises favorites on this mounted driver.
+        slot_cases = out / "slots.c"
+        slot_cases.write_text(
+            '#include <assert.h>\n#include <stdio.h>\n#include <string.h>\n'
+            '#include "vfs_persist.h"\n#define REQUIRE(x) assert(x)\n' +
+            render_slot_scene(out, Path(__file__).parent, APP), encoding="utf-8")
+        cc += ["-ffunction-sections", "-fdata-sections", "-Wl,--gc-sections"]
+        for directory in (out, VFS, MOD, SPIFFS, LFS, FW / "components/cwalk/include",
+                          APP, APP / "app/amiidb/api", APP / "app/amiidb/scene",
+                          APP / "amiidb", APP / "ntag", MOD / "df", APP / "i18n"):
             cc += ["-I", str(directory)]
         sources = [Path(__file__).with_name("oled_storage_host.c"), MOD / "cwalk2.c", FW / "components/cwalk/src/cwalk.c",
                    VFS / "vfs.c", VFS / "vfs_driver_lfs.c", VFS / "vfs_driver_spiffs.c", VFS / "vfs_persist.c",
+                   slot_cases, APP / "app/amiidb/api/amiidb_api_slot.c", APP / "app/amiidb/api/amiidb_api_fav.c",
+                   VFS / "vfs_meta.c", VFS / "vfs_set_readonly.c", APP / "amiidb/db_search.c",
+                   APP / "amiidb/db_amiibo.c", APP / "amiidb/db_link.c", APP / "i18n/de_DE.c",
                    LFS / "lfs.c", LFS / "lfs_util.c", *sorted(SPIFFS.glob("*.c"))]
         binary = out / ("probe.exe" if os.name == "nt" else "probe")
         subprocess.run(cc + list(map(str, sources)) + ["-o", str(binary)], check=True, timeout=150)

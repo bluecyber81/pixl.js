@@ -49,27 +49,24 @@ static void amiidb_scene_data_select_setup(app_amiidb_t *app){(void)app;}
 UI_FUNCTIONS
 static settings_data_t prefs={.amiidb_data_slot_num=6};
 settings_data_t *settings_get_data(void){return &prefs;}
-vfs_driver_t *vfs_get_driver(vfs_drive_t d){REQUIRE(d==VFS_DRIVE_EXT);return driver();}
 static unsigned slot_count;
 static amiidb_slot_info_t slots[6];
 static void get_slot(amiidb_slot_info_t *info,void *context){(void)context; REQUIRE(slot_count<6);slots[slot_count++]=*info;}
-int main(void) {
-    nor_init(&media); REQUIRE(driver()->format()==VFS_OK);
-    uint8_t identity[32]={1}; REQUIRE(vfs_packed_bind_import(identity)==VFS_OK);
-    REQUIRE(vfs_packed_finish_import()==VFS_OK);
-    REQUIRE(driver()->create_dir("/amiibo")==0);
-    REQUIRE(driver()->create_dir("/amiibo/data")==0);
+void check_slot_save_guard(vfs_driver_t *volume) {
+    slot_count = 0; next_scene = 0;
+    REQUIRE(volume->create_dir("/amiibo")==0);
+    REQUIRE(volume->create_dir("/amiibo/data")==0);
     uint8_t data[540]={0}; data[89]=0x3c;data[90]=1;data[91]=2;data[100]=0x5a;
-    REQUIRE(vfs_persist_write(driver(),"/amiibo/data/00.bin",data,sizeof(data))==540);
+    REQUIRE(vfs_persist_write(volume,"/amiibo/data/00.bin",data,sizeof(data))==540);
     vfs_meta_t m={.has_amiibo_id=true,.amiibo_tail=0x003c0102};
     uint8_t raw[VFS_MAX_META_LEN];
     vfs_meta_encode(raw,sizeof(raw),&m);
-    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/01.bin",data,sizeof(data),raw)==540);
+    REQUIRE(vfs_persist_write_meta(volume,"/amiibo/data/01.bin",data,sizeof(data),raw)==540);
     /* Also compare invalid length, incomplete metadata and a colliding directory name. */
-    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/03.bin",data,11,raw)==11);
+    REQUIRE(vfs_persist_write_meta(volume,"/amiibo/data/03.bin",data,11,raw)==11);
     uint8_t inconsistent[128]={0}; inconsistent[0]=3; inconsistent[1]=0; inconsistent[2]=20;
-    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/04.bin",data,540,inconsistent)==540);
-    REQUIRE(driver()->create_dir("/amiibo/data/05.bin")==0);
+    REQUIRE(vfs_persist_write_meta(volume,"/amiibo/data/04.bin",data,540,inconsistent)==540);
+    REQUIRE(volume->create_dir("/amiibo/data/05.bin")==0);
     REQUIRE(amiidb_api_slot_list(get_slot,NULL)==0 && slot_count==6);
     mui_list_view_t list={0}; mui_msg_box_t box={0};
     app_amiidb_t app={.p_list_view=&list,.p_msg_box=&box}; list.user_data=&app; box.user_data=&app;
@@ -90,7 +87,7 @@ int main(void) {
         if(slots[slot].is_empty) REQUIRE(!strcmp(visible,"03 Frei"));
         else if (unknown_occupied) REQUIRE(strstr(visible,"Belegt"));
         else REQUIRE(strstr(visible,"Mario"));
-        printf("Slot %u %s: LCD='%s', info.empty=%d, read=%s\n",slot+1,(const char*[]){"valid file without metadata ID","valid file with metadata ID","absent file","11-byte file with ID","valid file with incomplete metadata","directory named like slot file"}[slot],visible,info.is_empty,r==0?"540 bytes match":r==VFS_ERR_NOOBJ?"file absent":"invalid slot");
+        printf("Slot %u %s: label='%s', info.empty=%d, read=%s\n",slot+1,(const char*[]){"valid file without metadata ID","valid file with metadata ID","absent file","11-byte file with ID","valid file with incomplete metadata","directory named like slot file"}[slot],visible,info.is_empty,r==0?"540 bytes match":r==VFS_ERR_NOOBJ?"file absent":"invalid slot");
     }
     /* Unknown catalog ID still exposes a stable slot and the full ID in the scrolling row. */
     amiidb_slot_info_t imported={.slot=12,.has_amiibo_id=true,.is_readonly=true,.amiibo_head=0xC0FFEE,.amiibo_tail=0x501};
@@ -127,7 +124,7 @@ int main(void) {
     amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&first_row);
     m.has_flags=true;m.flags=VFS_OBJ_FLAG_READONLY;
     vfs_meta_encode(raw,sizeof(raw),&m);
-    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/00.bin",data,sizeof(data),raw)==540);
+    REQUIRE(vfs_persist_write_meta(volume,"/amiibo/data/00.bin",data,sizeof(data),raw)==540);
     selected(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
     REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_READ_ONLY)));
     REQUIRE(amiidb_api_slot_read(0,&reread)==0 && reread.data[100]==0x5a);
@@ -147,7 +144,7 @@ int main(void) {
     printf("Rendered prompt inputs |%s|%s|\n",header,message);
     m.flags=0;m.amiibo_head=0x01000000;m.amiibo_tail=0x034d0902;
     vfs_meta_encode(raw,sizeof(raw),&m);
-    REQUIRE(vfs_persist_write_meta(driver(),"/amiibo/data/01.bin",data,sizeof(data),raw)==540);
+    REQUIRE(vfs_persist_write_meta(volume,"/amiibo/data/01.bin",data,sizeof(data),raw)==540);
     selected(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
     REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_APP_AMIIDB_SLOT_CHANGED)));
     REQUIRE(amiidb_api_slot_info(1,&imported)==0 && imported.amiibo_tail==0x034d0902);
@@ -164,10 +161,9 @@ int main(void) {
     list.focus=6;
     amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&empty);
     REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_DE3_STORAGE_IO_ERROR)));
-    REQUIRE(vfs_packed_handles_idle()); REQUIRE(driver()->umount()==0);
+}
+
+void check_slots_unmounted(void) {
     slot_count=0; REQUIRE(amiidb_api_slot_list(get_slot,NULL)<0 && slot_count==0);
     puts("Unmounted drive: error, no empty slots emitted");
-    REQUIRE(pfs_destroy(store)==0); REQUIRE(live==0);
-    puts("PASS observations; external device access: none.");
-    return 0;
 }
