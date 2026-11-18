@@ -19,7 +19,7 @@
     <div class="intro"><h1>Update your Allmiibo</h1><p>Choose firmware for your LCD or OLED. Find the app ZIP for your phone and the update steps for your device.</p></div>
     <nav class="choices" aria-labelledby="choose"><h2 id="choose">What would you like to do?</h2>
       <ul><li><a href="#flash"><b>Update the LCD app</b><span>Regular DE3.81 / App654; prerelease DE3.87 / App660.</span></a></li>
-        <li><a href="#oled"><b>Install the OLED preview</b><span>DE3.84-OLEDt4 for SH1106 and S112 7.2.0.</span></a></li>
+        <li><a href="#oled"><b>Install the OLED preview</b><span>DE3.87-OLEDt6 for SH1106 and S112 7.2.0.</span></a></li>
         <li><a href="#littlefs"><b>Migrate an LCD to Packed LittleFS</b><span>Preparation, backup and restoration for LCD.</span></a></li>
         <li><a href="#bootloader"><b>Check the full LCD package</b><span>Install S112 7.3.0, bootloader Z21 and DE3.81 / App654 together.</span></a></li></ul>
     </nav>
@@ -75,24 +75,25 @@
             <li><h3>Check the restart</h3><p>Wait for the normal menu. Open <b>BLE file transfer</b>, reconnect to <b>Pixl.js</b> in the file manager and check for device version <b>2.22.0-DE3.81</b> and application counter <b>654</b>. Open a familiar folder and figure. This package updates the application and retains your existing PFS1 collection.</p></li></ol>
         </section>
         <section id="oled">
-          <h2>Install the DE3.84 OLED preview</h2>
+          <h2>Install the DE3.87 OLED preview</h2>
           <p>For the nRF52832 Pixl.js OLED with a 128 × 64 SH1106, a compatible DFU bootloader and S112 7.2.0 (FWID <code>0x0103</code>). Reference releases are cylin577 OLED v2.21.0 and v2.27.11. The app uses your existing SPIFFS or native LittleFS on supported 2, 4, 8 or 16 MiB flash chips.</p>
           <p>Save a backup, check your collection and keep the previous OLED application ZIP.</p>
           <h3 id="oled-webdfu">Flash from your computer's browser</h3>
           <ol class="steps">
-            <li><h3>Open and check the OLED package</h3><p>Open the <a href="../dfu/web.html?package=de3.84-oled-t4-app#board=OLED">OLED web DFU page</a> in Chrome or Edge on a computer with Bluetooth and Web Bluetooth support. Check that <b>Your device display</b> shows <b>OLED</b>. Check <b>DE3.84 OLED Test 4 / App84</b> and the device and S112 requirements above. Choose <b>Load and check package</b>.</p></li>
+            <li><h3>Open and check the OLED package</h3><p>Open the <a href="../dfu/web.html?package=de3.87-oled-t6-app#board=OLED">OLED web DFU page</a> in Chrome or Edge on a computer with Bluetooth and Web Bluetooth support. Check that <b>Your device display</b> shows <b>OLED</b>. Check <b>DE3.87 OLED Test 6 / App86</b> and the device and S112 requirements above. Choose <b>Load and check package</b>.</p></li>
             <li><h3>Select the DFU device and transfer</h3><p>Disconnect file transfer and other apps connected to the OLED. Open <b>Settings → Firmware Update</b> on the device. Click <b>Select DFU device and transfer</b>, then choose <b>pixl dfu</b>. LCD and OLED devices can share this DFU name, so select the OLED whose model you checked on the device. Keep it in range and leave the browser open until completion.</p></li>
             <li><h3>Wait for the restart</h3><p>After the transfer, wait for the OLED menu to appear. Reconnect Bluetooth file transfer and check the version as described below.</p></li>
           </ol>
           <h3>Flash from your phone</h3>
-          <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip">Download DE3.84 OLED Test 4 (ZIP)</a>. Disconnect the file manager and open <b>Settings → Firmware Update</b> on the device. Select the intact ZIP in <b>nRF Device Firmware Update</b> and connect to <b>pixl dfu</b>. This package contains the OLED application.</p>
+          <p><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip">Download DE3.87 OLED Test 6 (ZIP)</a>. Disconnect the file manager and open <b>Settings → Firmware Update</b> on the device. Select the intact ZIP in <b>nRF Device Firmware Update</b> and connect to <b>pixl dfu</b>. This package contains the OLED application.</p>
           <h3>Check the restart</h3>
-          <p>Expect <b>2.22.0-DE3.84-OLEDt4</b> and app counter 84. Try both English and German, check sleep and wake, open your files and scan a familiar figure on the console. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Test guide (English and German)</a>.</p>
+          <p>Expect <b>2.22.0-DE3.87-OLEDt6</b> and app counter 86. Try both English and German, check sleep and wake, open your files and scan a familiar figure on the console. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6">Test guide (English and German)</a>.</p>
           <p>Open <b>Device &amp; diagnostics</b> and read the diagnostics. Firmware identity should report the <b>OLED</b> board. Play a game in both screen orientations and check the outer rows and columns. For the remote, report exactly which step succeeds or fails.</p>
           <h3 id="oled-remote">Connect the remote control</h3>
           <p>Leave file transfer and AmiiboLink on the awake device. Select <b>Settings → Remote → until off</b> and return to the main menu. In the file manager, open <b>Remote control</b>, choose <b>Allmiibo DE</b>, then select <b>Pixl.Remote</b> in the Bluetooth picker. Press <b>Right</b> once and check whether the selection moves on the device.</p>
           <p>A user reported a problem connecting the OLED remote. The cause and a successful on-device button test remain unconfirmed.</p>
-          <p>Test 4 awaits a report from a physical OLED. A user reported a successful start of <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
+          <p>Test 6 awaits a report from a physical OLED. A user reported a successful start of <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
+        <p>For the remote, choose <b>Pixl.Remote</b> or <b>Pixl.Rem</b>. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt">English Test 6 guide</a>. Earlier trials: <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.85-oled-t5">Test 5</a> · <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Test 4</a>.</p>
         </section>
         <section id="littlefs">
           <h2>Migrate an LCD from SPIFFS to Packed LittleFS</h2>
@@ -154,7 +155,7 @@
             <li><a href="../dfu/web.html">Web DFU for the application</a></li>
             <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip" download>DE3.81 / App654 LCD app for your phone (ZIP)</a></li>
             <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip">DE3.81 / App654 LCD full package with Z21 and S112 7.3.0 for Android (ZIP)</a> · <a href="#bootloader">Check requirements</a></li>
-            <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.84-oled-t4/Allmiibo_OLED_DE3_84_Test4_APP.zip">OLED preview DE3.84 Test 4 / 84 (ZIP)</a></li>
+            <li><a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip">OLED preview DE3.87 Test 6 / 86 (ZIP)</a></li>
             <li><a href="#littlefs">DE3.30-PREP / 600 · SPIFFS preparation and backup</a></li>
             <li><a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">Nordic DFU for Android</a></li>
             <li><a href="https://github.com/nordicsemi/Android-DFU-Library/#application">Nordic's app documentation</a></li>

@@ -8,7 +8,7 @@ export function nrfDfuLink(entry) {
             entry.softDevice !== 'S112 7.2.0' || !Number.isSafeInteger(entry.counter) ||
             entry.counter < 1 || entry.counter > 0xffffffff) return null;
         return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
-            file: 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file
+            file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
     const release = /^2\.22\.0-DE3\.([1-9]\d{0,3}(?:t[1-9]\d{0,2})?)$/.exec(entry?.version);

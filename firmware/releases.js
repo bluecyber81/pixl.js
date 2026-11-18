@@ -77,6 +77,36 @@ globalThis.AllmiiboFirmwareReleases = {
       "channel": "prerelease"
     },
     {
+      "id": "de3.87-oled-t6-app",
+      "version": "2.22.0-DE3.87-OLEDt6",
+      "counter": 86,
+      "file": "Allmiibo_OLED_DE3_87_Test6_APP.zip",
+      "bytes": 251986,
+      "sha256": "eaf4e645a04521268d4e39f03f5448048d43c7b66a5a5b9f48bcee91db2abaa8",
+      "board": "OLED",
+      "storage": "SPIFFS/LittleFS",
+      "bootloader": "OLED Secure DFU",
+      "softDevice": "S112 7.2.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    },
+    {
+      "id": "de3.85-oled-t5-app",
+      "version": "2.22.0-DE3.85-OLEDt5",
+      "counter": 85,
+      "file": "Allmiibo_OLED_DE3_85_Test5_APP.zip",
+      "bytes": 249461,
+      "sha256": "16e019fde2cd5283a462bba31fe4ee65fafc7dcddaa7c4bccd200f334af26a1f",
+      "board": "OLED",
+      "storage": "SPIFFS/LittleFS",
+      "bootloader": "OLED Secure DFU",
+      "softDevice": "S112 7.2.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    },
+    {
       "id": "de3.84-oled-t4-app",
       "version": "2.22.0-DE3.84-OLEDt4",
       "counter": 84,
