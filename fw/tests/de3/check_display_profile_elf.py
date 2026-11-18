@@ -184,14 +184,17 @@ def verify(elf, binary, board='LCD'):
     for percent in range(256):
         commands.clear()
         call('mui_u8g2_set_contrast_level', percent)
-        effective = min(100, max(1 if oled else 60, percent))
-        expected = (effective - 1) * 255 // 99
-        if not oled:
-            expected >>= 2
+        if oled:
+            fraction = min(100, percent) / 100.0
+            expected = int(255 * fraction ** 2 + 0.5)
+        else:
+            effective = min(100, max(60, percent))
+            expected = ((effective - 1) * 255 // 99) >> 2
         assert commands == [0x81, expected], (percent, commands, expected)
         levels.append(expected)
     if oled:
-        assert len(set(levels)) == 100
+        assert len(set(levels)) == 91 and levels == sorted(levels)
+        assert (levels[0], levels[5], levels[50], levels[100], levels[255]) == (0, 1, 64, 255, 255)
         assert bytes(info[18:20]) == bytes((2, 2))
         commands.clear()
         call('u8g2_SendBuffer', context)
@@ -206,7 +209,7 @@ def verify(elf, binary, board='LCD'):
         call('mui_u8g2_deinit', context)
         assert commands == [0xAE], commands
         print('PASS linked OLED SH1106 init/on/off, 128x64, all eight framebuffer pages, '
-              'rotation and 256 contrast inputs (100 levels).')
+              'rotation and 256 contrast inputs (91 register levels).')
     else:
         assert len(set(levels)) == 27
         print('PASS linked LCD ST7567 128x64, 1024 framebuffer bytes, opposite corner at 180 degrees; '
