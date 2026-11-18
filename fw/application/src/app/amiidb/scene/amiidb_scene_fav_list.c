@@ -242,9 +242,20 @@ void amiidb_fav_page_load(app_amiidb_t *app, bool folders_only) {
                     ? page.eligible - mui_list_view_item_size(app->p_list_view) : page.excluded;
                 app->fav_page_number = 1 + before / FAV_PAGE_SIZE;
             }
-            char hint[VFS_MAX_NAME_LEN + 24];
+            const char *folder = string_get_cstr(app->cur_fav_dir);
+            /* Leave room for the page suffix even with the widest LCD glyphs.
+             * Copy complete UTF-8 characters and keep the stored name intact. */
+            char shortened[26];
+            if (strlen(folder) > sizeof(shortened) - 4) {
+                size_t cut = sizeof(shortened) - 4;
+                while (cut && ((uint8_t)folder[cut] & 0xC0) == 0x80) cut--;
+                memcpy(shortened, folder, cut);
+                memcpy(shortened + cut, "...", 4);
+                folder = shortened;
+            }
+            char hint[sizeof(shortened) + 24];
             snprintf(hint, sizeof(hint), _T(DE3_FAVORITE_FOLDER_PAGE),
-                     string_get_cstr(app->cur_fav_dir), (unsigned)app->fav_page_number);
+                     folder, (unsigned)app->fav_page_number);
             mui_toast_view_show(app->p_toast_view, hint);
             app->fav_page_hint_visible = true;
         }
