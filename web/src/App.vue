@@ -120,8 +120,9 @@
       <strong>{{ $t('info.uploadPaused') }}</strong>
       <p><template v-if="syncResume.folderName">{{ syncResume.folderName }} · </template>{{ syncResume.plan.rootPath }} · {{ $t('info.uploadCheckpoint', { done: syncResume.job.completed.length, total: syncResume.selectedPaths.length }) }}</p>
       <p>{{ $t('info.uploadResumeHint') }}</p>
+      <p v-if="syncResume.job.newFolderUpload?.stagePath">{{ $t('info.folderStage', {path:syncResume.job.newFolderUpload.stagePath}) }}</p>
       <button type="button" class="sync-resume-continue" @click="resume_sync" :disabled="!syncResumeMatches || busy || disconnecting || upload_diag_visible || syncDialog || zipDialog">{{ $t('info.uploadContinue') }}</button>
-      <button type="button" :disabled="busy" @click="syncResume = null">{{ $t('info.uploadForget') }}</button>
+      <button type="button" :disabled="busy" @click="forget_sync">{{ $t('info.uploadForget') }}</button>
     </section>
     <section v-if="backupCanResume" class="backup-resume">
       <strong>{{ $t('workflow.resumeTitle') }}</strong>
@@ -632,6 +633,7 @@ import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
+import { newFolderUploadRoot, executeNewFolderUpload } from "./lib/new-folder-upload.js"
 import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
 import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure-info.js"
@@ -1193,7 +1195,7 @@ export default {
         readDirectory: async path => { this.assert_session(generation); const data = this.checked(await proto.vfs_read_folder(path)); this.assert_session(generation); return data; },
         readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
         writeFile: (path, bytes, options = {}) => new Promise((resolve, reject) => {
-          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject, {rawMeta128:options.rawMeta128}); }
+          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject, {rawMeta128:options.rawMeta128, beforeWrite:options.beforeWrite}); }
           catch(error) { reject(error); }
         }),
         rename: async (from, to) => { this.assert_session(generation); this.checked(await proto.vfs_rename(from,to)); this.assert_session(generation); },
@@ -1423,6 +1425,7 @@ export default {
       try { await this.ask_dialog(()=>this.$confirm(confirm,this.$t('info.syncOpen'),this.confirm_options())); }
       catch(error) { this.show_transfer_error(error); return; }
       if (!this.session_current(generation) || plan !== this.syncPlan) return;
+      if (this.syncResume) this.forget_sync();
       const request = Object.freeze({plan, selectedPaths, job:createSyncJob(plan), firmwareVersion:this.firmwareVersion,
         files:this._syncFiles, inputs:this._syncInputs, nameEdits:this._syncNameEdits, folderName:this.syncFolderName,
         folderContents:this.syncFolderContents, binding:this.syncHistoryReady?.binding, history:this._syncHistory,
@@ -1436,6 +1439,30 @@ export default {
         this.assert_session(generation);
         return hash;
       }};
+    },
+    async supports_folder_publish(generation) {
+      // RAW128 OPEN carries two length bytes, a mode byte, the path (up to 65 bytes) and 128 bytes of metadata.
+      if (firmwareBoard(this.firmwareVersion) !== 'LCD' || (proto.get_transport_diagnostics()?.maxRequestPayload ?? 0) < 196) return false;
+      this.assert_session(generation);
+      const info = await proto.vfs_storage_info_extended('E');
+      this.assert_session(generation);
+      if ([1, 255].includes(info.status)) return false;
+      const storage = this.checked(info);
+      if (storage.backend !== 3 || !storage.mounted || !(storage.flags & 8)) return false;
+      const response = await proto.vfs_storage_layout('E');
+      this.assert_session(generation);
+      if ([1, 255].includes(response.status)) return false;
+      const layout = this.checked(response);
+      // This PackedFS engine refuses an occupied rename target and publishes a whole subtree in one transaction.
+      return layout.mounted && layout.engineSha256 === '2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248';
+    },
+    forget_sync() {
+      const stage = this.syncResume?.job.newFolderUpload?.stagePath;
+      if (stage) {
+        this.remember_recovery({recovery:{targetPath:this.syncResume.plan.rootPath, committed:null, phase:'folder-upload',
+          recoveryFiles:[{path:stage,role:'stage',state:'possible'}]}});
+      }
+      this.syncResume = null;
     },
     resume_sync() {
       if (!this.syncResumeMatches || this.busy || this.disconnecting || this.syncDialog || this.zipDialog || this.upload_diag_visible) return;
@@ -1458,7 +1485,11 @@ export default {
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
       this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.folder_upload_adapters(generation);
       try {
-        const result = await executeSyncJob({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
+        const eligible = job.newFolderUpload || (!request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths));
+        const publishFolder = eligible && await this.supports_folder_publish(generation);
+        if (job.newFolderUpload && !publishFolder) throw new Error(this.$t('info.folderCapabilityChanged'));
+        const execute = publishFolder ? executeNewFolderUpload : executeSyncJob;
+        const result = await execute({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
           ...adapters, signal:controller.signal,
           uploadFile: async options => {
             interruptedReplacement = null;
@@ -1482,7 +1513,7 @@ export default {
         this.syncStatus = result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
         this.remember_transfer('sync','success',result.uploadedBytes,true); return result;
       } catch(error) {
-        if (this._activeFolderUpload === request && (!this.session_current(generation) || error.code === 'DISCONNECTED')) {
+        if (this._activeFolderUpload === request && (job.newFolderUpload?.stagePath || !this.session_current(generation) || error.code === 'DISCONNECTED')) {
           this.syncResume = Object.freeze({...request, interruptedReplacement});
         }
         if (this.session_current(generation)) {

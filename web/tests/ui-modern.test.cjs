@@ -59,6 +59,8 @@ function harness(overrides = {}) {
     safeUpload: options => overrides.safeUpload(options),
     writableDirectoryPath: (...args) => import('../src/lib/safe-upload.js').then(module => module.writableDirectoryPath(...args)),
     createSyncPlan: options => overrides.createSyncPlan(options), createSyncJob: plan => overrides.createSyncJob(plan),
+    newFolderUploadRoot: (...args) => require('../src/lib/new-folder-upload.js').newFolderUploadRoot(...args),
+    executeNewFolderUpload: options => overrides.executeNewFolderUpload(options),
     executeSyncJob: options => overrides.executeSyncJob(options) });
   // In browsers the Window picker is also a global. Keep that real contract
   // while the VM isolates the browser fakes from the Node test process.
@@ -342,6 +344,30 @@ function readyCurrentSync(app) {
   app.syncPlan={rootPath:'E:/',deviceKey:'private-test-device',entries:[{targetPath:'E:/New.bin',status:'add',size:3}]};
   app.syncSelected=['E:/New.bin']; app._syncFiles=[{name:'New.bin',size:3}];
 }
+
+test('folder publication requires the actual atomic PackedFS profile in the current connection', async () => {
+  const engine = require('../src/lib/migration-capacity.js').MIGRATION_CAPACITY_TARGET.layout.engineSha256;
+  let budget = 243, flags = 15, responseHash = engine, probes = 0;
+  const h = harness({get_transport_diagnostics:()=>({maxRequestPayload:budget}),
+    vfs_storage_info_extended:async drive=>{++probes; assert.equal(drive, 'E'); return {status:0, data:{backend:3, mounted:true, flags}};},
+    vfs_storage_layout:async()=>({status:0, data:{mounted:true, engineSha256:responseHash}})});
+  const app = connected(h), generation = app.sessionGeneration;
+  app.firmwareVersion = '2.22.0-DE3.87-OLEDt6';
+  assert.equal(await app.supports_folder_publish(generation), false);
+  app.firmwareVersion = '2.22.0-DE3.87'; budget = 195;
+  assert.equal(await app.supports_folder_publish(generation), false);
+  assert.equal(probes, 0);
+  budget = 196; flags = 7;
+  assert.equal(await app.supports_folder_publish(generation), false);
+  flags = 15; responseHash = 'a'.repeat(64);
+  assert.equal(await app.supports_folder_publish(generation), false);
+  responseHash = engine;
+  assert.equal(await app.supports_folder_publish(generation), true);
+  const waiting = deferred(); h.proto.vfs_storage_info_extended = () => waiting.promise;
+  const probe = app.supports_folder_publish(generation);
+  app.on_ble_disconnected(); waiting.resolve({status:0,data:{backend:3,mounted:true,flags}});
+  await assert.rejects(probe);
+});
 
 test('a dropped folder upload resumes in the same tab only on the original device and firmware', async () => {
   const first = deferred(), requests = [];

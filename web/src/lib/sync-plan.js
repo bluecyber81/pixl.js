@@ -56,6 +56,7 @@ function coreOf(plan) {
   return { schema: 1, deviceKey: plan.deviceKey, rootPath: plan.rootPath, entries: plan.entries, directories: plan.directories, deviceOnly: plan.deviceOnly }
 }
 async function fingerprint(plan) { return sha256Bytes(new TextEncoder().encode(JSON.stringify(coreOf(plan)))) }
+export { sourcesOf as syncSourcesOf, fingerprint as syncPlanFingerprint }
 function writableDirectory(entry) {
   if (entry?.type !== 1) return false
   try { return !copyMetadata(entry.meta).flags.readonly }

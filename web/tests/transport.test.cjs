@@ -317,10 +317,36 @@ test('atomic helper error aborts the link instead of closing and committing part
  assert.equal(f.disconnects,1);assert.equal(events.length,1);assert.notEqual(events[0],'ok');assert(!f.writes.some(p=>p[0]===0x13));
  assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'ATOMIC_WRITE_FAILED');
 });
+test('atomic upload lists under the open writer lock before WRITE and CLOSE, even with zero source bytes', async () => {
+  for (const scenario of ['clear', 'collision', 'list-error', 'empty-collision']) {
+    const f = protocolFixture(), info = f.api.vfs_storage_info_extended('E');
+    f.rx(0x1c, [1,69,3,1,15,128,64,48]); await info; f.writes.length = 0;
+    const events = [], bytes = scenario === 'empty-collision' ? [] : [7];
+    const guard = async () => {
+      const listing = await f.api.vfs_read_folder('E:/');
+      if (listing.status !== 0 || listing.data.length) throw Error('Occupied or unavailable folder');
+    };
+    f.api.vfs_helper_write_file('E:/a', {bytes}, () => {}, () => events.push('ok'), e => events.push(e.message),
+      {rawMeta128:new Uint8Array(128).fill(255), beforeWrite:guard});
+    await flush(); assert.deepEqual(f.writes.map(p => p[0]), [0x12]);
+    f.rx(0x12, [0]); await flush(); assert.deepEqual(f.writes.map(p => p[0]), [0x12,0x16]);
+    const hasCollision = scenario.includes('collision');
+    f.rx(0x16, hasCollision ? [1,0,97,1,0,0,0,0,0] : [], 0, scenario === 'list-error' ? 1 : 0);
+    await flush();
+    if (scenario === 'clear') {
+      assert.deepEqual(f.writes.map(p => p[0]), [0x12,0x16,0x15]); f.rx(0x15); await flush();
+      assert.equal(f.writes.at(-1)[0],0x13); f.rx(0x13); await flush();
+      assert.deepEqual(events,['ok']); assert.equal(f.disconnects,0);
+    } else {
+      assert.deepEqual(f.writes.map(p => p[0]), [0x12,0x16]);
+      assert.equal(f.disconnects,1); assert.equal(events.length,1); assert.notEqual(events[0],'ok');
+    }
+  }
+});
 test('atomic helper rejects invalid metadata or options before OPEN and legacy writes keep their old frame',async()=>{
  const f=protocolFixture(),events=[];
- for(const options of [null,{rawMeta128:new Uint8Array(127)},{rawMeta128:'x'}])f.api.vfs_helper_write_file('E:/a',{bytes:[]},()=>{},()=>events.push('ok'),e=>events.push(e.message),options);
- await flush();assert.equal(events.length,3);assert(!events.includes('ok'));assert.equal(f.writes.length,0);
+ for(const options of [null,{rawMeta128:new Uint8Array(127)},{rawMeta128:'x'},{beforeWrite(){}},{rawMeta128:new Uint8Array(128),beforeWrite:false}])f.api.vfs_helper_write_file('E:/a',{bytes:[]},()=>{},()=>events.push('ok'),e=>events.push(e.message),options);
+ await flush();assert.equal(events.length,5);assert(!events.includes('ok'));assert.equal(f.writes.length,0);
  const p=f.api.vfs_open_file('E:/a','w');assert.deepEqual(f.writes.at(-1),[18,0,0,0,4,0,69,58,47,97,22]);f.rx(0x12,[0]);await p;
 });
 function packedLayoutPacket() {
@@ -1303,6 +1329,23 @@ test('DE3.13 acknowledged GATT writes prefer the current API with legacy fallbac
     assert.deepEqual([modern,legacy,unacknowledged],[1,0,0]);
     delete f.tx.writeValueWithResponse;await f.api.tx_data(Uint8Array.of(2).buffer);
     assert.deepEqual([modern,legacy,unacknowledged],[1,1,0]);f.api.disconnect();
+});
+
+test('single-frame writes can rely on the file protocol acknowledgement only when the characteristic offers it', async () => {
+    const f = bleFixture(); let requests = 0, commands = 0;
+    f.tx.writeValueWithResponse = async () => { ++requests; };
+    f.tx.writeValueWithoutResponse = async () => { ++commands; };
+    await f.api.connect();
+    await f.api.tx_data(Uint8Array.of(21), true);
+    assert.deepEqual([requests, commands], [1, 0]);
+    f.tx.properties.writeWithoutResponse = true;
+    await f.api.tx_data(Uint8Array.of(21), true);
+    await f.api.tx_data(Uint8Array.of(18));
+    assert.deepEqual([requests, commands], [2, 1]);
+    f.tx.writeValueWithoutResponse = async () => { throw Error('send failed'); };
+    await assert.rejects(f.api.tx_data(Uint8Array.of(21), true), /send failed/);
+    assert.equal(requests, 2);
+    await f.api.disconnect();
 });
 
 test('DE3.13 metadata flag edits retain a leading BOM in the stored note',async()=>{

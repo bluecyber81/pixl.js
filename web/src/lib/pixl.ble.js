@@ -258,9 +258,12 @@ export function adopt_remote_connection(session) {
 }
 
 
-export function tx_data(buff) {
+export function tx_data(buff, fileProtocolAcknowledges = false) {
     if (!connected || !nus_char_tx || !bluetoothDevice || !bluetoothDevice.gatt.connected) {
         return Promise.reject(new Error('Bluetooth is not connected'));
+    }
+    if (fileProtocolAcknowledges && nus_char_tx.properties.writeWithoutResponse && typeof nus_char_tx.writeValueWithoutResponse === 'function') {
+        return nus_char_tx.writeValueWithoutResponse(buff);
     }
     if (nus_char_tx.properties.write && typeof nus_char_tx.writeValueWithResponse === 'function') {
         return nus_char_tx.writeValueWithResponse(buff);

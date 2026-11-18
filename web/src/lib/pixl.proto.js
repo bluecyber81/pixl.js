@@ -767,13 +767,18 @@ export function vfs_helper_write_file(path, file, progress_cb, success_cb, error
         rawMeta128 = value instanceof Uint8Array ? value.slice() : value instanceof ArrayBuffer ? new Uint8Array(value.slice(0)) : null;
         if (rawMeta128?.length !== 128) { file_callback(error_cb, new Error('Exactly 128 raw metadata bytes are required.'), file); return; }
     }
+    const beforeWrite = options.beforeWrite;
+    if (beforeWrite !== undefined && (!rawMeta128 || typeof beforeWrite !== 'function')) {
+        file_callback(error_cb, new Error('A write guard requires an atomic metadata upload.'), file); return;
+    }
     file_write_queue.push({
         path: path,
         file: file,
         progress_cb: progress_cb,
         success_cb: success_cb,
         error_cb: error_cb,
-        rawMeta128
+        rawMeta128,
+        beforeWrite
     });
     vfs_process_file_write_queue();
 }
@@ -822,7 +827,10 @@ function vfs_process_file_write(entry) {
                     return writeNext();
                 });
             }
-            return Promise.resolve().then(writeNext).then(() => {
+            // PackedFS exposes the previous directory snapshot while the
+            // atomic OPEN owns the writer lock. A rejected guard aborts the
+            // link below, so even a zero-byte upload cannot commit on failure.
+            return Promise.resolve().then(() => { checkCurrent(); return entry.beforeWrite?.(); }).then(writeNext).then(() => {
                 checkCurrent();
                 const closing = file_id;
                 file_id = null;
@@ -1045,7 +1053,9 @@ async function tx_data_frame(cmd, status, chunk, data) {
         // Await every GATT write; no concurrent writes and no fragments from
         // an earlier connection can leak into a replacement session.
         const wire = frame.toArrayBuffer();
-        await pixl.tx_data(wire);
+        // A single negotiated WRITE frame already receives a file-protocol reply.
+        // Wait for both that reply and the browser send before advancing the offset.
+        await pixl.tx_data(wire, cmd === 0x15 && chunked && payload.length <= capacity);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
         ++transport_stats.txFrames;
