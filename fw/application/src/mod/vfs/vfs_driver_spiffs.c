@@ -390,15 +390,16 @@ int32_t vfs_spiffs_stat_file(const char *file, vfs_obj_t *obj) {
 
         return VFS_OK;
     } else if (res == SPIFFS_ERR_NOT_FOUND) {
-        // The fallback needs room for '/.folder' and its terminator.
+        /* The caller's file path is valid and absent. A directory at this
+         * path would require a representable marker in the flat namespace. */
         if (snprintf(path, sizeof(path), "%s%s%s", file, file[strlen(file) - 1] == '/' ? "" : "/",
                      VFS_SPIFFS_FOLDER_NAME) >= sizeof(path)) {
-            return VFS_ERR_MAXNM;
+            return VFS_ERR_NOOBJ;
         }
         NRF_LOG_INFO("stat file: %s", nrf_log_push(path));
         res = SPIFFS_stat(&fs, path, &s);
         if (res == SPIFFS_OK) {
-            cwk_path_get_basename(s.name, &basename, &length);
+            cwk_path_get_basename(file, &basename, &length);
             if (length >= sizeof(obj->name)) {
                 return VFS_ERR_MAXNM;
             }
