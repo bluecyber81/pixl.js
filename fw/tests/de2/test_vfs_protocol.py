@@ -23,6 +23,16 @@ def function(source, signature):
     raise ValueError(signature)
 
 
+def static_spiffs_helpers(source):
+    """Keep the real static-buffer branch used by the legacy host fixtures.
+
+    The separate OLED automatic-backend tests compile the whole driver and
+    exercise its dynamically allocated buffer cleanup instead.
+    """
+    return next(line for line in source.splitlines()
+                if line.startswith('#define release_buffers(')) + '\n'
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cc", default=os.environ.get("CC", "gcc"))
@@ -42,7 +52,8 @@ def main():
         ("mod/df/df_proto_vfs.c", "mod/df/df_core.c", "mod/ble/ble_df_driver.c"))
     suites = {
         "protocol": (tests / "vfs_protocol_host.c").read_text().replace("/* ACTUAL_PROTOCOL_INCLUDES */",includes),
-        "spiffs": (tests / "vfs_spiffs_host.c").read_text().replace("/* ACTUAL_SPIFFS_FUNCTIONS */", "\n\n".join(function(driver,n) for n in names)),
+        "spiffs": (tests / "vfs_spiffs_host.c").read_text().replace("/* ACTUAL_SPIFFS_FUNCTIONS */",
+            static_spiffs_helpers(driver) + "\n\n".join(function(driver,n) for n in names)),
     }
     with tempfile.TemporaryDirectory(prefix="pixl-vfs-de2-") as tmp:
         temp = Path(tmp)

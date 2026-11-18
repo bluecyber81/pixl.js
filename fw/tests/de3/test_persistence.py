@@ -16,13 +16,15 @@ def main():
     src = here.parents[1] / 'application/src/mod/vfs'
     sys.path.insert(0, str(here.parent/'de2'))
     from test_player_v3 import function
+    from test_vfs_protocol import static_spiffs_helpers
     code = (here / 'persistence_host.c').read_text().replace('PERSIST_SOURCE', (src/'vfs_persist.c').as_posix())
     code = code.replace('SETTINGS_SOURCE',(src.parent/'settings.c').as_posix())
     spiffs = (src/'vfs_driver_spiffs.c').read_text()
     names = ('vfs_spiffs_update_file_meta','reset_writer_tracking','vfs_spiffs_umount','vfs_spiffs_format','guarded_open',
              'guarded_close','guarded_write_data','guarded_meta','guarded_remove','guarded_remove_dir',
              'guarded_create_dir','guarded_rename','guarded_rename_dir')
-    code = code.replace('/* ACTUAL_GUARD_FUNCTIONS */','\n'.join(function(spiffs,n) for n in names))
+    code = code.replace('/* ACTUAL_GUARD_FUNCTIONS */',
+                        static_spiffs_helpers(spiffs) + '\n'.join(function(spiffs,n) for n in names))
     with tempfile.TemporaryDirectory(prefix='pixl-persist-de3-') as td:
         tmp = Path(td)
         (tmp/'i18n').mkdir()
