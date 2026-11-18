@@ -17,4 +17,11 @@ static inline uint8_t mui_contrast_percent(int32_t value) {
     return (uint8_t)value;
 }
 
+/* Controller register target, not a measured percentage of emitted light. */
+static inline uint8_t mui_contrast_raw(int32_t value) {
+    uint8_t percent = mui_contrast_percent(value);
+    if (!percent) percent = 1;
+    return ((uint32_t)percent - 1u) * 255u / 99u;
+}
+
 #endif

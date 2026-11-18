@@ -58,10 +58,22 @@ def main():
     if not args.baseline:
         # Pin just the deliberately changed arithmetic, keeping this ordinary
         # regression test independent of sibling checkouts and private files.
-        assert texts['new']['contrast'].count(INTEGER_CONTRAST) == 1
+        delegated = 'mui_contrast_raw(value)' in texts['new']['contrast']
+        if delegated:
+            policy = FW / 'application/src/mui/mui_contrast.h'
+            files.append(policy)
+            assert '((uint32_t)percent - 1u) * 255u / 99u' in policy.read_text()
+        else:
+            assert texts['new']['contrast'].count(INTEGER_CONTRAST) == 1
         assert texts['new']['game'].count(FLOAT_CORRECTION) == 1
         texts['old'] = dict(texts['new'])
-        texts['old']['contrast'] = texts['old']['contrast'].replace(INTEGER_CONTRAST, LEGACY_CONTRAST)
+        if delegated:
+            texts['old']['contrast'] = texts['old']['contrast'].replace(
+                'u8g2_SetContrast(&p_mui->u8g2, mui_contrast_raw(value));',
+                'value = mui_contrast_percent(value); if (!value) value = 1;\n'
+                '    u8g2_SetContrast(&p_mui->u8g2, ' + LEGACY_CONTRAST + ');')
+        else:
+            texts['old']['contrast'] = texts['old']['contrast'].replace(INTEGER_CONTRAST, LEGACY_CONTRAST)
         texts['old']['game'] = texts['old']['game'].replace(FLOAT_CORRECTION, LEGACY_CORRECTION)
     hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
     if args.probe_float:

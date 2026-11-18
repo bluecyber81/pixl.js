@@ -1,4 +1,4 @@
-"""Exercise both linked OLED storage drivers against a 2 MiB NOR model."""
+"""Exercise both OLED storage drivers against a selectable NOR capacity model."""
 import argparse
 import os
 from pathlib import Path
@@ -13,7 +13,7 @@ VFS = MOD / "vfs"
 SPIFFS = FW / "components/spiffs/src"
 LFS = FW / "components/littlefs"
 
-def run(sanitize, reference_engines=None):
+def run(sanitize, reference_engines=None, blocks=512):
     with tempfile.TemporaryDirectory(prefix="pixl-oled-fs-") as temp:
         out = Path(temp)
         headers = {
@@ -27,7 +27,7 @@ def run(sanitize, reference_engines=None):
         for name, text in headers.items():
             (out / name).write_text(text)
         cc = shlex.split(os.environ.get("CC", "gcc"))
-        cc += ["-std=c11", "-O1", "-g", "-include", "stdint.h", "-DLFS_NO_DEBUG", "-DLFS_NO_WARN", "-DLFS_NO_ERROR", "-DLFS_NO_MALLOC"]
+        cc += ["-std=c11", "-O1", "-g", "-include", "stdint.h", "-DLFS_NO_DEBUG", "-DLFS_NO_WARN", "-DLFS_NO_ERROR", "-DLFS_NO_MALLOC", f"-DBLOCKS={blocks}u"]
         if sanitize:
             cc += ["-fsanitize=address,undefined", "-fno-sanitize-recover=all", "-fno-omit-frame-pointer", "-fno-pie", "-no-pie"]
         references = []
@@ -42,7 +42,7 @@ def run(sanitize, reference_engines=None):
             # reader/writer and its libraries with the full flag set below.
             seed_cc = shlex.split(os.environ.get("CC", "gcc")) + [
                 "-std=c11", "-O1", "-g", "-include", "stdint.h", "-DLFS_NO_MALLOC",
-                "-DLFS_NO_DEBUG", "-DLFS_NO_WARN", "-DLFS_NO_ERROR", "-DOLED_REFERENCE_GENERATOR"]
+                "-DLFS_NO_DEBUG", "-DLFS_NO_WARN", "-DLFS_NO_ERROR", "-DOLED_REFERENCE_GENERATOR", f"-DBLOCKS={blocks}u"]
             for directory in (out, ref_spiffs, ref_lfs, VFS):
                 seed_cc += ["-I", str(directory)]
             seed_sources = [Path(__file__).with_name("oled_storage_host.c"), ref_lfs / "lfs.c", ref_lfs / "lfs_util.c",
@@ -63,5 +63,7 @@ if __name__ == "__main__":
     options = argparse.ArgumentParser(description=__doc__)
     options.add_argument("--sanitize", action="store_true")
     options.add_argument("--reference-engines", type=Path)
+    options.add_argument("--blocks", type=int, choices=(512, 1024, 2048, 4096), default=512,
+                         help="Number of 4096-byte blocks: 2, 4, 8 or 16 MiB")
     args = options.parse_args()
-    run(args.sanitize, args.reference_engines)
+    run(args.sanitize, args.reference_engines, args.blocks)

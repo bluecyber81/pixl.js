@@ -1,4 +1,4 @@
-"""Verify a signed DE3.81 OLED trial against its sources and repeat build."""
+"""Verify a signed OLED trial against its sources and repeat build."""
 
 import argparse
 import hashlib
@@ -27,6 +27,7 @@ TRIALS = {
     2: ("2.22.0-DE3.81-OLEDt2", 82),
     3: ("2.22.0-DE3.81-OLEDt3", 83),
     4: ("2.22.0-DE3.84-OLEDt4", 84),
+    5: ("2.22.0-DE3.85-OLEDt5", 85),
 }
 
 

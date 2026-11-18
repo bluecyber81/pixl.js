@@ -55,7 +55,7 @@ jobs:
           "$RUNNER_TEMP/stack-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r tools/ci-unicorn-linux-x64.txt
           mkdir -p "$RUNNER_TEMP/sdk-test"
           docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec '
-            tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
+            tar -C "$NRF52_SDK_ROOT" -cf - components/ble/nrf_ble_gatt/nrf_ble_gatt.c components/ble/common/ble_advdata.c components/ble/common/ble_advdata.h components/softdevice/s112/headers components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex
           ' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
       - name: Verify the packaged preview against the compiled application and bound Z19 key
         if: steps.application_mode.outputs.mode == 'preview'

@@ -1,0 +1,94 @@
+name: OLED DE3.85 Test5 application
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_bin_sha256:
+        description: Optional SHA-256 of the signed Test5 application BIN
+        required: false
+        type: string
+  push:
+    branches: [test/de3.85-oled-5]
+    paths: ['fw/**', 'tools/**', '.github/workflows/oled-test.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  oled:
+    name: App85 build and OLED regression checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONOPTIMIZE: '0'
+      PYTHONDONTWRITEBYTECODE: '1'
+      SDK_IMAGE: solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
+      EXPECTED_BIN_SHA256: ${{ inputs.expected_bin_sha256 || '' }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Fetch the pinned SDK and build unsigned OLED App85
+        run: |
+          docker pull "$SDK_IMAGE"
+          python3 fw/tests/de3/test_application_budget.py
+          python3 tools/build_lcd.py --board OLED --mode development --version 2.22.0-DE3.85-OLEDt5 --counter 85 --jobs 4 --output build/oled-test5
+      - name: Prepare the pinned emulator and complete SDK test inputs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-linux-gnueabihf python3-venv
+          /usr/bin/python3 -m venv "$RUNNER_TEMP/oled-venv"
+          "$RUNNER_TEMP/oled-venv/bin/pip" install --only-binary=:all: --no-deps --require-hashes -r tools/ci-unicorn-linux-x64.txt
+          mkdir -p "$RUNNER_TEMP/sdk-test"
+          docker run --rm --network none --entrypoint sh "$SDK_IMAGE" -ec 'tar -C "$NRF52_SDK_ROOT" -cf - .' | tar -C "$RUNNER_TEMP/sdk-test" -xf -
+      - name: Check image layout and optional release BIN identity
+        run: |
+          python3 tools/check_oled_trial_image.py build/oled-test5 --version 2.22.0-DE3.85-OLEDt5 --counter 85 | tee build/oled-test5/IMAGE_CHECK.json
+          python3 - <<'PY'
+          import hashlib, json, os, re
+          from pathlib import Path
+          expected = os.environ['EXPECTED_BIN_SHA256'].strip().lower()
+          if expected and not re.fullmatch(r'[0-9a-f]{64}', expected):
+              raise SystemExit('expected_bin_sha256 must be exactly 64 hexadecimal characters')
+          actual = hashlib.sha256(Path('build/oled-test5/pixljs.bin').read_bytes()).hexdigest()
+          result = {'actualBinSha256': actual, 'expectedBinSha256': expected or None,
+                    'comparison': 'matched' if expected == actual else 'mismatched' if expected else 'not-requested'}
+          Path('build/oled-test5/BIN_REFERENCE.json').write_text(json.dumps(result, indent=2) + '\n')
+          print(json.dumps(result, indent=2))
+          if expected and actual != expected:
+              raise SystemExit('Compiled OLED BIN differs from the supplied release reference')
+          PY
+      - name: Exercise actual SDK advertising encoding and OLED host regressions
+        env:
+          NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
+        run: |
+          for test in test_ble_remote_advdata test_ble_remote_advertising_start test_oled_device_test test_sleep_save test_amiidb_resume test_retained_app_fallback; do
+            "$RUNNER_TEMP/oled-venv/bin/python" "fw/tests/de3/$test.py" 2>&1 | tee "build/oled-test5/$test.txt"
+          done
+          for blocks in 512 1024 2048 4096; do
+            "$RUNNER_TEMP/oled-venv/bin/python" fw/tests/de3/test_oled_storage.py --sanitize --blocks "$blocks" 2>&1 | tee "build/oled-test5/storage-$blocks.txt"
+          done
+      - name: Exercise the linked OLED ARM image
+        run: |
+          py="$RUNNER_TEMP/oled-venv/bin/python"
+          elf=build/oled-test5/pixljs.out
+          bin=build/oled-test5/pixljs.bin
+          "$py" fw/tests/de3/check_stack_watermark_elf.py "$elf" | tee build/oled-test5/STACK_ELF.txt
+          "$py" fw/tests/de3/check_display_profile_elf.py "$elf" "$bin" --board OLED | tee build/oled-test5/DISPLAY_ELF.txt
+          for test in check_oled_diagnostics_elf check_oled_languages_elf check_oled_capture_elf check_flash_jedec_elf check_aes_m4_elf; do
+            "$py" "fw/tests/de3/$test.py" "$elf" "$bin" | tee "build/oled-test5/$test.txt"
+          done
+          "$py" fw/tests/de3/check_oled_brightness_spi_elf.py build/oled-test5 --out build/oled-test5/BRIGHTNESS_SPI.json
+          "$py" fw/tests/de3/check_oled_device_test_elf.py build/oled-test5 --out build/oled-test5/DEVICE_TEST_ELF.json
+          "$py" tools/check_oled_hints_elf.py build/oled-test5 fw | tee build/oled-test5/HINTS_DE_EN.json
+      - name: Archive the unsigned image and actual check results
+        if: success() || failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: oled-test5-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/oled-test5/
+          if-no-files-found: error
+          retention-days: 30

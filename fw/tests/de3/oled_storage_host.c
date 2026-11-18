@@ -11,7 +11,9 @@
 #include "lfs.h"
 #include "spiffs.h"
 
+#ifndef BLOCKS
 #define BLOCKS 512u
+#endif
 #define SIZE (BLOCKS * 4096u)
 static uint8_t disk[SIZE], original[SIZE], figure[540], meta[128];
 static unsigned programs, erases, reads, allocations, alloc_calls, fail_alloc, fail_read;
@@ -150,6 +152,7 @@ static void check_volume(unsigned type) {
 }
 int main(int argc, char **argv) {
     fill_payloads();
+    printf("NOR model: %u blocks / %u bytes\n", (unsigned)BLOCKS, (unsigned)SIZE);
     driver=vfs_get_default_driver(); assert(driver && !driver->mounted());
     if (argc == 3) {
         for (int type=1; type<=2; ++type) {

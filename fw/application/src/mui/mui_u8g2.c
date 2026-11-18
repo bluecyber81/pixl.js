@@ -264,10 +264,8 @@ int8_t mui_u8g2_get_backlight_level(void) {
 
 void mui_u8g2_set_contrast_level(uint8_t value) {
     mui_t *p_mui = mui();
-    value = mui_contrast_percent(value);
-    if (value == 0) value = 1;
     /* Preserve truncation for all clamped inputs without software double math. */
-    u8g2_SetContrast(&p_mui->u8g2, ((uint32_t)value - 1u) * 255u / 99u);
+    u8g2_SetContrast(&p_mui->u8g2, mui_contrast_raw(value));
 }
 
 void mui_u8g2_set_flip_display(bool flip) {
