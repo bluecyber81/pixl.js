@@ -29,7 +29,7 @@ test('known figure IDs accept Windows CRLF and every generated flag matches the 
   const firmwareTable = new URL('../../fw/data/amiidb_amiibo.csv', import.meta.url);
   if (fs.existsSync(firmwareTable)) {
     const ids = fs.readFileSync(firmwareTable, 'utf8').trimEnd().split(/\r?\n/).map(line => line.split(',', 1)[0]);
-    assert.deepEqual(known, new Set(ids), 'The bundled ID list matches the LCD DE3.81 firmware table');
+    assert.deepEqual(known, new Set(ids), 'The bundled ID list matches the LCD DE3.89 firmware table');
   }
   for (const entry of data.entries) assert.equal(entry.firmwareIdKnown, known.has(entry.id), entry.id);
   assert.equal(data.entries.filter(entry => entry.firmwareIdKnown).length, 956);

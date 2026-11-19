@@ -2,7 +2,7 @@ import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import releases from '../data/firmware-releases.json' with { type: 'json' };
 
 import { UPDATE_TARGET } from './update-target.js';
-import { LCD_PREVIEW_COUNTERS } from './hardware-profile.js';
+import { LCD_Z21_COUNTERS } from './hardware-profile.js';
 export { UPDATE_TARGET } from './update-target.js';
 
 const versionPattern = /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/;
@@ -44,8 +44,8 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   const previousDe = deVersion(firmware), targetDe = deVersion(target.application.version);
   const relation = previousDe && targetDe ? [1,2,3,4].map(i=>Number(previousDe[i])-Number(targetDe[i])).find(n=>n!==0)||0 : 0;
   const packageEntry = releases.packages.find(entry => entry.version === firmware);
-  const preview = Object.hasOwn(LCD_PREVIEW_COUNTERS, firmware)
-    ? {version:firmware, counter:LCD_PREVIEW_COUNTERS[firmware], bootloader:'Z21'}
+  const preview = firmware !== target.application.version && Object.hasOwn(LCD_Z21_COUNTERS, firmware)
+    ? {version:firmware, counter:LCD_Z21_COUNTERS[firmware], bootloader:'Z21'}
     : relation > 0 && packageEntry?.channel === 'prerelease' && packageEntry.board === 'LCD' && packageEntry;
   const application = preview || target.application;
   const applicationChecks = [compare('version', firmware, application.version),

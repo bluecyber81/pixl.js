@@ -7,7 +7,7 @@ import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
-import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_PREVIEW_COUNTERS } from "./hardware-profile.js"
+import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -330,7 +330,7 @@ export function get_flash_diagnostics(firmwareVersion) {
 
 export function get_display_photo(firmwareVersion) {
     if (!supportsDisplayPhoto(firmwareVersion)) return Promise.resolve(null);
-    const reportsBusy = hasOledSystemDiagnostics(firmwareVersion) || Object.hasOwn(LCD_PREVIEW_COUNTERS, firmwareVersion);
+    const reportsBusy = hasOledSystemDiagnostics(firmwareVersion) || Object.hasOwn(LCD_Z21_COUNTERS, firmwareVersion);
     const generation = transport_generation;
     const checkSession = () => {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
@@ -397,7 +397,7 @@ export function get_startup_diagnostics(firmwareVersion) {
     }
     // Supported OLED trials record native VFS startup phases without a PackedFS mount profile.
     if (hasOledSystemDiagnostics(known)) return read(1);
-    if (Object.hasOwn(LCD_PREVIEW_COUNTERS, known)) return read(3);
+    if (Object.hasOwn(LCD_Z21_COUNTERS, known)) return read(3);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
 }
@@ -568,7 +568,7 @@ function read_revision(b) {
 
 export function vfs_small_create_revision(firmwareVersion) {
     const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
-    if (!version || Number(version[1]) < 88 || !Object.hasOwn(LCD_PREVIEW_COUNTERS, firmwareVersion)) return Promise.resolve(null);
+    if (!version || Number(version[1]) < 88 || !Object.hasOwn(LCD_Z21_COUNTERS, firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     small_create_generation = -1;
     return op_queue_push(0x22, () => {}, b => {

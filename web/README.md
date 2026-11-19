@@ -1,8 +1,8 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.58.2 für LCD DE3.89 / App662 · Test 1
+## Dateimanager 3.58.2 und LCD DE3.89 / App662
 
-Die Testausgabe unterstützt die verifizierte Ordnerübertragung mit App661 und App662. Für App662 ist ein eigener Speicherbedarfssimulator enthalten. [Anleitung auf Deutsch und Englisch](LIESMICH_3_58_2_TEST1.txt) · [LCD-Testrelease](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1)
+Die stabile Ausgabe unterstützt die verifizierte Ordnerübertragung mit App661 und App662. Für App662 ist ein eigener Speicherbedarfssimulator enthalten. [Anleitung auf Deutsch und Englisch](LIESMICH_3_58_2.txt) · [Dateimanager und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [LCD-App, Komplettpaket und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Frühere Testausgabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1)
 
 ## Dateimanager 3.58.1 und OLED DE3.87 Test 6 / App86
 

@@ -62,17 +62,17 @@ test('both guide languages link to a dedicated OLED chapter with the published p
 });
 
 test('both guides offer the current LCD app, full package and aligned storage target', () => {
-    const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81/';
-    const app = release + 'Allmiibo_LCD_DE3_81_654_NUR_APP.zip';
-    const combo = release + 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip';
+    const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
+    const app = release + 'Allmiibo_LCD_DE3_89_662_NUR_APP.zip';
+    const combo = release + 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
         const section = id => html.split('<section id="' + id + '">')[1].split('</section>')[0];
         assert.ok(section('flash').includes(app));
-        assert.match(section('flash'), /Z19, Z20 (?:oder|or) Z21/);
+        assert.match(section('flash'), /Z21/);
         assert.ok(section('bootloader').includes(combo));
         assert.match(section('bootloader'), /(?:unter|below) 21/);
-        assert.match(section('littlefs'), /DE3\.81 \/ 654/);
+        assert.match(section('littlefs'), /DE3\.89 \/ 662/);
         const lcdDownloads = [...section('programme').matchAll(/href="([^"]*Allmiibo_LCD_[^"]*\.zip)"/g)].map(match => match[1]);
         assert.deepEqual(lcdDownloads, [app, combo]);
     }

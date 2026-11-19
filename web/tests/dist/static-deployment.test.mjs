@@ -103,8 +103,8 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.ok(index.includes(`href="${file}"`), file)
   }
   for (const releaseFile of [
-    'web3.58.1/Allmiibo_Dateimanager_3_58_1_Quellcode.zip',
-    'de3.89-lcd-test1/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
+    'web3.58.2/Allmiibo_Dateimanager_3_58_2_Quellcode.zip',
+    'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
   ]) {

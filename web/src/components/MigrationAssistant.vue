@@ -72,7 +72,7 @@
 import { createMigrationBackup, loadMigrationArchive, verifyMigrationArchive, restoreMigrationArchive, checkMigrationCapacity, retainMigrationSource, inspectMigrationTarget, formatMigrationTarget, initializeMigrationImport, finishMigrationImport, restartAfterMigration } from '../lib/migration.js'
 import { getMigrationCapacityTarget } from '../lib/migration-capacity.js'
 import { saveBlob } from '../lib/browser-tools.js'
-const capacityProfileIds = ['current','de389','de354','de350','de345','de344','previous','legacy']
+const capacityProfileIds = ['de389','current','de354','de350','de345','de344','previous','legacy']
 const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+(?:t[0-9]+)?)$/u, '$1')
 const applicationRanges = applications => {
   const groups = []
@@ -92,13 +92,13 @@ const applicationRanges = applications => {
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,language:String,getSession:{type:Function,required:true},confirmRestore:{type:Function,required:true},confirmFormat:Function,confirmInitialize:Function,confirmRestart:Function},
   emits:['busy','restored'],
-  data:()=>({capacityProfile:'current',storageSnapshot:null,busy:false,cancelling:false,backup:null,archive:null,filename:'',report:null,status:'',progress:null,capacityProof:null,target:null,sourceRetained:null,repairVerification:null,actionError:null,completion:null}),
+  data:()=>({capacityProfile:'de389',storageSnapshot:null,busy:false,cancelling:false,backup:null,archive:null,filename:'',report:null,status:'',progress:null,capacityProof:null,target:null,sourceRetained:null,repairVerification:null,actionError:null,completion:null}),
   computed:{de(){return this.language==='de_DE'},capacityApproved(){return getMigrationCapacityTarget(this.capacityProfile).approved},capacityOptions() {
       return capacityProfileIds.map(id => {
         const target = getMigrationCapacityTarget(id)
         const reference = shortVersion(target) + ' / ' + target.applicationCounter
         const range = applicationRanges(target.approvedApplications)
-        return {id, label:id === 'current' ? reference : range, range, reference}
+        return {id, label:id === 'de389' ? reference : range, range, reference}
       })
     },
     selectedCapacityOption(){return this.capacityOptions.find(option => option.id === this.capacityProfile)},

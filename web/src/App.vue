@@ -596,10 +596,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.candidatePortable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows-Testversion 3.58.2 (ZIP)' : 'Windows test release 3.58.2 (ZIP)' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows-Basisversion 3.58.1 (ZIP)' : 'Windows base release 3.58.1 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode der Basisversion 3.58.1 (ZIP)' : 'Base release 3.58.1 source code (ZIP)' }}</a>
-    <a :href="archiveLinks.previewTestKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.58.2 (ZIP)' : 'Windows 3.58.2 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.58.2 (ZIP)' : '3.58.2 source code (ZIP)' }}</a>
+    <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>

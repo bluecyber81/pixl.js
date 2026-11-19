@@ -69,6 +69,7 @@ async function runChecks() {
     ['Allmiibo_LCD_DE3_76_649_NUR_APP.zip', 'DE3.76', 649],
     ['Allmiibo_LCD_DE3_77_650_NUR_APP.zip', 'DE3.77', 650],
     ['Allmiibo_LCD_DE3_81_654_NUR_APP.zip', 'DE3.81', 654],
+    ['Allmiibo_LCD_DE3_89_662_NUR_APP.zip', 'DE3.89', 662],
     ['Allmiibo_LCD_DE3_84_657_NUR_APP.zip', 'DE3.84', 657, 'de3.84-lcd-test1-app'],
     ['Allmiibo_LCD_DE3_80_653_NUR_APP.zip', 'DE3.80', 653],
     ['Allmiibo_LCD_DE3_79_652_NUR_APP.zip', 'DE3.79', 652],
@@ -78,10 +79,10 @@ async function runChecks() {
     const row = update.locator('.package').filter({ has: page.locator('strong', { hasText: version }) });
     assert.equal(await row.locator('a[download]').getAttribute('href'), base + 'firmware/' + file);
     assert.ok((await row.innerText()).includes('Zähler ' + counter));
-    assert.match(await row.innerText(), counter === 654 ? /Stabile Ausgabe · Z19\/Z20\/Z21/ : [637,647,648].includes(counter) ? /Frühere stabile Ausgabe/ : /Testversion/);
+    assert.match(await row.innerText(), counter === 662 ? /Stabile Ausgabe · Z21/ : [637,647,648,654].includes(counter) ? /Frühere stabile Ausgabe/ : /Testversion/);
     checks.push({ feature:'listed application available from Update', version, counter });
   }
-  const comboAsset = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip';
+  const comboAsset = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
   for (const [locale, guide, title] of [
     ['de-DE','index.html','Android-Komplettpaket mit Z21 und Anleitung'],
     ['en-GB','en.html','Full Android package with Z21 and instructions'],
@@ -93,12 +94,11 @@ async function runChecks() {
       await guidePage.locator('.version-context').waitFor();
       const home = guidePage.locator('.lcd-downloads');
       await home.waitFor();
-      const appAsset = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip';
+      const appAsset = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip';
       for (const width of [390, 1280]) {
         await guidePage.setViewportSize({width, height:840});
-        assert.ok(await home.getByRole('link', {name:/App654/}).isVisible());
-        assert.equal(await home.getByRole('link', {name:/App654/}).getAttribute('href'), appAsset);
-        assert.equal(await home.getByRole('link', {name:/App657/}).getAttribute('href'), 'https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip');
+        assert.ok(await home.getByRole('link', {name:/App662/}).isVisible());
+        assert.equal(await home.getByRole('link', {name:/App662/}).getAttribute('href'), appAsset);
         assert.ok(await home.getByRole('link', {name:/Android/}).isVisible());
         assert.equal(await home.getByRole('link', {name:/Android/}).getAttribute('href'), comboAsset);
         assert.ok(await home.evaluate(el => el.scrollWidth <= el.clientWidth));
@@ -223,32 +223,32 @@ async function runChecks() {
 
       await guidePage.evaluate(() => document.querySelector('#app')._vnode.component.proxy.show_workspace('update'));
       await guidePage.evaluate(() => { Object.assign(document.querySelector('#app')._vnode.component.proxy, {
-        firmwareVersion:'2.22.0-DE3.81', bootInfo:null
+        firmwareVersion:'2.22.0-DE3.89', bootInfo:null
       }); });
       await trial.waitFor({state:'detached'});
       assert.ok(await oled.isDisabled());
       checks.push({locale,feature:'manual, unknown, OLED and LCD firmware choices; phone links, board changes and incompatible readback'});
-      const applicationRow = guidePage.locator('.firmware-packages .package').filter({hasText:'2.22.0-DE3.81'});
+      const applicationRow = guidePage.locator('.firmware-packages .package').filter({hasText:'2.22.0-DE3.89'});
       const guideLink = applicationRow.getByRole('link',{name:title});
-      assert.equal(await guideLink.getAttribute('href'), base + 'guide/' + guide + '#android-de381');
+      assert.equal(await guideLink.getAttribute('href'), base + 'guide/' + guide + '#android-de389');
       await guideLink.click();
-      await guidePage.waitForURL(origin + base + 'guide/' + guide + '#android-de381');
-      const heading = guidePage.locator('#android-de381');
+      await guidePage.waitForURL(origin + base + 'guide/' + guide + '#android-de389');
+      const heading = guidePage.locator('#android-de389');
       await heading.waitFor();
-      assert.match(await heading.innerText(), /DE3\.81.*Z21/);
+      assert.match(await heading.innerText(), /DE3\.89.*Z21/);
       const section = guidePage.locator('#bootloader');
       const systemLink = section.locator('a[href="' + comboAsset + '"]');
       assert.ok(await systemLink.isVisible());
       const requirements = await systemLink.locator('..').innerText();
-      for (const value of ['Z21','Nordic Secure DFU','0x77000','0x7E000','0x7F000','0x0103','0x0126','Z15','Z17','App654']) {
+      for (const value of ['Z21','Nordic Secure DFU','0x77000','0x7E000','0x7F000','0x0103','0x0126','Z15','Z17','App662']) {
         assert.ok(requirements.includes(value), value);
       }
       assert.match(requirements, /unter 21|below 21/);
       assert.equal(await guidePage.locator('#android-de380').count(), 1);
-      const appLink = section.locator('a[download][href$="Allmiibo_LCD_DE3_81_654_NUR_APP.zip"]');
-      assert.match(await appLink.locator('..').innerText(), /Z19.*Z20.*Z21.*654/s);
-      assert.equal(await appLink.evaluate(a => new URL(a.href).pathname), base + 'firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip');
-      checks.push({locale,feature:'Android Z21 combo guide and DE3.81 application-only choice', guide, externalAssetUrl:comboAsset});
+      const appLink = section.locator('a[download][href$="Allmiibo_LCD_DE3_89_662_NUR_APP.zip"]');
+      assert.match(await appLink.locator('..').innerText(), /Z21.*662/s);
+      assert.equal(await appLink.evaluate(a => new URL(a.href).pathname), base + 'firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip');
+      checks.push({locale,feature:'Android Z21 combo guide and DE3.89 application-only choice', guide, externalAssetUrl:comboAsset});
     } finally {
       await guideContext.close();
     }
@@ -436,7 +436,7 @@ async function runChecks() {
     }}});
   });
   await page.goto(origin + base + 'dfu/web.html');
-  for (const [file] of releases.filter(([, , counter]) => [637, 648, 654].includes(counter))) {
+  for (const [file] of releases.filter(([, , counter]) => [637, 648, 654, 662].includes(counter))) {
     assert.equal(await page.locator('a[download][href$="' + file + '"]').getAttribute('href'), '../firmware/' + file);
   }
   assert.ok(await page.locator('#button').isDisabled());
@@ -445,7 +445,7 @@ async function runChecks() {
   assert.match(await page.locator('#bundled option[value="de3.74-lcd-app"]').innerText(), /DE3\.74.*Fr\u00fchere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.65-lcd-app"]').innerText(), /DE3\.65.*Frühere stabile Ausgabe/);
   assert.match(await page.locator('#bundled option[value="de3.72-lcd-app"]').innerText(), /DE3\.72.*Testversion/);
-  assert.match(await page.locator('#bundled option[value="de3.81-lcd-app"]').innerText(), /DE3\.81.*Stabile Ausgabe.*Z19\/Z20\/Z21/);
+  assert.match(await page.locator('#bundled option[value="de3.89-lcd-app"]').innerText(), /DE3\.89.*Stabile Ausgabe.*Z21/);
   assert.match(await page.locator('#bundled option[value="de3.73-lcd-app"]').innerText(), /DE3\.73.*Testversion/);
   for (const id of ['de3.76-lcd-app', 'de3.77-lcd-app', 'de3.79-lcd-app', 'de3.80-lcd-app']) {
     assert.match(await page.locator('#bundled option[value="' + id + '"]').innerText(), /Testversion.*Z19/);

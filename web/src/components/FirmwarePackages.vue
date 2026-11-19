@@ -14,12 +14,12 @@
           <a :href="dfuUrl" target="_blank" rel="noopener">{{ text.dfu }}</a>
           <a v-if="androidUrl" :href="androidUrl" rel="noreferrer" :aria-label="text.android + ' · ' + entry.version">{{ text.android }}</a>
         </div>
-        <p v-if="entry.id === 'de3.81-lcd-app'"><a :href="systemGuide">{{ text.systemGuide }}</a></p>
+        <p v-if="entry.id === 'de3.89-lcd-app'"><a :href="systemGuide">{{ text.systemGuide }}</a></p>
         <details><summary>{{ text.details }}</summary><p>{{ entry.file }}</p><p>{{ text.hash }} (SHA-256): <code>{{ entry.sha256 }}</code></p></details>
       </div>
       <p v-if="packages.some(item => item.androidUrl && !item.newer && !item.profileMismatch)" class="hint">{{ text.androidHint }}</p>
       <p class="hint">{{ text.limits }}</p>
-      <p><a href="https://github.com/bluecyber81/pixl.js/tree/de3.81" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
+      <p><a href="https://github.com/bluecyber81/pixl.js/tree/de3.89" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
     </template>
     <p class="hint">{{ text.local }}</p>
   </section>
@@ -33,7 +33,7 @@ import { UPDATE_TARGET } from '../lib/update-target.js';
 import { nrfDfuLink } from '../../public/dfu/nrf-dfu-link.mjs';
 const props=defineProps({session:{type:Object,default:()=>({})},boot:{type:Object,default:null},locale:{type:String,default:'de_DE'}});
 const text=computed(()=>firmwarePackageText(props.locale));
-const systemGuide = computed(() => deploymentPath(props.locale.startsWith('de') ? 'guide/index.html' : 'guide/en.html') + '#android-de381');
+const systemGuide = computed(() => deploymentPath(props.locale.startsWith('de') ? 'guide/index.html' : 'guide/en.html') + '#android-de389');
 const packages=computed(()=>releases.packages.filter(entry => entry.board === 'LCD').map(entry=>({
   entry, ...packagePresentation(entry, props.session, props.boot), androidUrl:nrfDfuLink(entry)
 })));

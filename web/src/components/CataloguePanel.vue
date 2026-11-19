@@ -38,7 +38,7 @@
         <label>{{ de ? 'Serie' : 'Series' }}<select v-model="series"><option value="">{{ de ? 'Alle Serien' : 'All series' }}</option><option v-if="series && !seriesOptions.includes(series)" :value="series">{{ series }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in seriesOptions" :key="item">{{ item }}</option></select></label>
         <label>{{ de ? 'Art' : 'Type' }}<select v-model="kind"><option value="">{{ de ? 'Alle Arten' : 'All types' }}</option><option v-if="kind && !typeOptions.includes(kind)" :value="kind">{{ kind }} · {{ de ? 'nicht im Katalog' : 'not in catalogue' }}</option><option v-for="item in typeOptions" :key="item">{{ item }}</option></select></label>
       </div>
-      <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur Figuren mit Namen in LCD DE3.81' : 'Only figures named in LCD DE3.81' }}</label>
+      <label class="known"><input v-model="knownOnly" type="checkbox" />{{ de ? 'Nur Figuren mit Namen in LCD DE3.89' : 'Only figures named in LCD DE3.89' }}</label>
     </details>
 
     <details class="filter-details saved-filters">
@@ -150,7 +150,7 @@
         <small v-if="historical" class="observation-date">{{ observationDate }}</small>
         <span class="entry-series">{{ entry.series }}</span><FigureIdCopy :id="entry.id" :de="de" />
         <small>{{ de ? 'Erster regional gelisteter Termin' : 'First regionally listed date' }}: {{ releaseLabel(entry, today).date || '—' }}<template v-if="['announced', 'upcoming'].includes(releaseLabel(entry, today).state)"> · {{ de ? 'angekündigt' : 'upcoming' }}</template></small>
-        <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in LCD DE3.81 verfügbar' : 'Name available in LCD DE3.81') : (de ? 'Kein Name in LCD DE3.81' : 'No name in LCD DE3.81') }}</small>
+        <small class="firmware-name">{{ entry.firmwareIdKnown ? (de ? 'Name in LCD DE3.89 verfügbar' : 'Name available in LCD DE3.89') : (de ? 'Kein Name in LCD DE3.89' : 'No name in LCD DE3.89') }}</small>
         <button type="button" :aria-label="(de ? 'Details zu ' : 'Details for ') + catalogueDisplayName(entry, de)" :disabled="blocked" :aria-expanded="selectedId === entry.id" @click="selectEntry(entry.id, $event)">{{ de ? 'Details und Bild' : 'Details and image' }}</button>
       </li>
     </ul>

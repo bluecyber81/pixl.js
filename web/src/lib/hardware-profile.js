@@ -21,7 +21,7 @@ export function batteryLabelReport() {
 }
 
 // The application version identifies a published build target. It is not a display-controller read.
-export const LCD_PREVIEW_COUNTERS = Object.freeze({
+export const LCD_Z21_COUNTERS = Object.freeze({
   '2.22.0-DE3.82': 655,
   '2.22.0-DE3.83': 656,
   '2.22.0-DE3.84': 657,
@@ -31,7 +31,7 @@ export const LCD_PREVIEW_COUNTERS = Object.freeze({
   '2.22.0-DE3.88': 661,
   '2.22.0-DE3.89': 662,
 });
-const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_PREVIEW_COUNTERS)];
+const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_Z21_COUNTERS)];
 export function supportsFolderPublication(version, engine) {
   if (firmwareBoard(version) !== 'LCD') return false;
   const profile = version === DE389_MIGRATION_CAPACITY_TARGET.firmwareVersion ? DE389_MIGRATION_CAPACITY_TARGET : MIGRATION_CAPACITY_TARGET;

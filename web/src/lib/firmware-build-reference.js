@@ -198,11 +198,11 @@ const app662 = Object.freeze({
   "applicationBytes": 363752,
   "applicationBinSha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
   "sourceId": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7",
-  "artifactStatus": "experimental-signed-application",
-  "hardwareAcceptance": "pending",
+  "artifactStatus": "stable-signed-application",
+  "hardwareAcceptance": "owner-reported-general-use-and-system-readback-on-one-lcd",
   "otaSha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
   "sourceCommit": "fecc8b750288f1028f109067dad9694c9f2c3628",
-  "releaseTag": "de3.89-lcd-test1"
+  "releaseTag": "de3.89"
 });
 
 const references = [app662, app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
@@ -219,7 +219,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
     ramBytes: boot?.geometryValid === true && word(boot.ramBytes) ? boot.ramBytes : null,
     bootRegionSha256: boot?.bootHashValid === true && /^[a-f0-9]{64}$/.test(boot.bootRegionSha256 || '') ? boot.bootRegionSha256 : null,
     sourceId: reported?.sourceId ?? null, ...(reported ? {compiledBoard:reported.board} : {}), applicationBinSha256: null, uniqueDeviceId: null };
-  const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app654);
+  const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app662);
   const relation = !reference ? 'no-package-reference' : version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
   const sourceRelation = reported && reference?.firmwareVersion === version

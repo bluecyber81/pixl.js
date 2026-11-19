@@ -55,21 +55,25 @@ export function currentLcdDownloads(entry, session, boot) {
   const knownLayout = info?.geometryValid && info.bootAddressValid && info.bootVectorsValid &&
     info.settingsCrcValid && info.paramsLayoutKnown && !info.addressConflict &&
     info.bootAddress === layout.address && info.effectiveParamsAddress === layout.paramsAddress &&
-    info.settingsAddress === layout.settingsAddress;
+    info.settingsAddress === layout.settingsAddress && info.settingsLayoutSupported &&
+    info.settingsVersion === layout.settingsVersion && info.chipPart === UPDATE_TARGET.hardware.chip &&
+    info.flashBytes === UPDATE_TARGET.hardware.flash && info.ramBytes === UPDATE_TARGET.hardware.ram && info.pageBytes === UPDATE_TARGET.hardware.page;
+  const knownPriorBoot = info?.bootHashValid && Object.values(UPDATE_TARGET).some(profile =>
+    profile?.counter < UPDATE_TARGET.bootloaderZ21.counter && profile.counter === info.bootloaderCounter && profile.sha256 === info.bootRegionSha256);
   const s112 = info?.softDeviceValid && info.softDeviceVariant === system.variant;
   const comboSoftDevice = s112 && ((info.softDeviceFwid === 0x0103 && info.softDeviceVersion === 7002000) ||
     (info.softDeviceFwid === system.fwid && info.softDeviceVersion === system.version));
   return {
     app: Boolean(currentOrOlder && knownLayout && s112 && info.bootHashValid && !offer.profileMismatch),
-    combo: Boolean(currentOrOlder && knownLayout && comboSoftDevice && info.bootloaderCounter < UPDATE_TARGET.bootloaderZ21.counter)
+    combo: Boolean(currentOrOlder && knownLayout && comboSoftDevice && knownPriorBoot)
   };
 }
 
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     systemGuide:'Android-Komplettpaket mit Z21 und Anleitung',
-    source:'Quellcode der LCD-Firmware DE3.81',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.81 / App654 unterstützt Z19, Z20 und Z21. Auf einem LCD sind App654, Z21 und S112 7.3.0 in der Gerätediagnose bestätigt.',
+    source:'Quellcode der LCD-Firmware DE3.89',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.89 / App662 erfordert Z21. Der Besitzer bestätigte den Betrieb auf einem LCD. Die Gerätediagnose meldete die passende SourceID.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -80,8 +84,8 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     systemGuide:'Full Android package with Z21 and instructions',
-    source:'Source code for LCD firmware DE3.81',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.81 / App654 supports Z19, Z20 and Z21. Device diagnostics on one LCD confirmed App654, Z21 and S112 7.3.0.',
+    source:'Source code for LCD firmware DE3.89',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.89 / App662 requires Z21. The owner confirmed operation on one LCD. The device reported the expected SourceID.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

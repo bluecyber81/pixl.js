@@ -39,13 +39,13 @@ export function copyNotices(mode) {
 <main><a href="../">${label('Zurück zum Dateimanager', 'Back to the file manager')}</a><h1>${label('Quellen und Lizenzen', 'Sources and licenses')} · ${escape(version)}</h1>
 <p><a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_WEB.md">${label('Versionsgeschichte des Dateimanagers', 'File manager version history')}</a> · <a href="https://github.com/bluecyber81/pixl.js/blob/main/docs/VERSIONEN_FIRMWARE.md">${label('LCD- und OLED-Firmware', 'LCD and OLED firmware')}</a></p>
 <p>${label('Der Dateimanager enthält die hier aufgeführten Bibliotheken und acht Speicher-Simulatoren.', 'The file manager includes the libraries listed here and eight storage simulators.')}</p>
-<ul><li><a href="${archives.source}" download>${label(`Quellcode der Basisversion ${archives.version} mit Simulatorquellen und Build-Anleitungen (ZIP)`, `Base release ${archives.version} source code, simulator sources and build instructions (ZIP)`)}</a></li>
+<ul><li><a href="${archives.source}" download>${label(`Quellcode der Version ${archives.version} mit Simulatorquellen und Build-Anleitungen (ZIP)`, `Release ${archives.version} source code, simulator sources and build instructions (ZIP)`)}</a></li>
 <li><a href="${archives.candidateSource}" download>${label('Quellcode des Dateimanagers 3.58.2 für App662 Test 1', 'File manager 3.58.2 source for App662 Test 1')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.88-lcd-test1.zip" download>${label('Quellcode des Dateimanagers für App661 Test 1 (GitHub-Tag, ZIP)', 'App661 Test 1 file manager source (GitHub tag, ZIP)')}</a></li>
-<li><a href="${archives.previewTestKit}" download>${label('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.89 / App662 (ZIP)', 'DE3.89 / App662 test kit with BIN, HEX and test results (ZIP)')}</a></li>
+<li><a href="${archives.lcdKit}" download>${label('Prüfpaket mit BIN, HEX und Prüfnachweisen für DE3.89 / App662 (ZIP)', 'DE3.89 / App662 test kit with BIN, HEX and test results (ZIP)')}</a></li>
 <li><a href="${archives.testKit}" download>${label('Prüfpaket für OLED DE3.87 Test 6 / App86 (ZIP)', 'OLED DE3.87 Test 6 / App86 test kit (ZIP)')}</a></li>
 <li><a href="${archives.archivedTestKit}" download>${label('Archiviertes ChatGPT-Prüfpaket für DE3.75 / App648, Z19 und Web 3.52.1 (ZIP)', 'Archived ChatGPT test kit for DE3.75 / App648, Z19 and Web 3.52.1 (ZIP)')}</a></li>
-<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.81">${label('Quellstand der aktuellen LCD-Firmware DE3.81 / App654 und des Bootloaders Z21', 'Source code for the current DE3.81 / App654 LCD firmware and Z21 bootloader')}</a></li>
+<li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.89">${label('Quellstand der aktuellen LCD-Firmware DE3.89 / App662 und des Bootloaders Z21', 'Source code for the current DE3.89 / App662 LCD firmware and Z21 bootloader')}</a></li>
 <li><a href="${sourceUrl}">${label('Exakter Quellstand der mitgelieferten Firmware DE3.65/637', 'Source code for the bundled DE3.65/637 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.66">${label('Quellstand der früheren LCD-Testversion DE3.66/638', 'Source code for the earlier DE3.66/638 LCD test release')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.72">${label('Quellstand der LCD-Testversion DE3.72/645 mit App-Fortsetzung', 'Source code for the DE3.72/645 LCD test release with app resume')}</a></li>
@@ -54,7 +54,7 @@ export function copyNotices(mode) {
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.85-oled-t5">OLED Test 5</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.84-oled-t4">${label('Quellstand der OLED-Testfirmware DE3.84 Test 4', 'Source code for the DE3.84 OLED Test 4 firmware')}</a></li>
 <li><a href="https://github.com/bluecyber81/pixl.js/tree/de3.75">${label('Archivierter Quellstand der LCD-Firmware DE3.75/648', 'Archived source code for LCD release DE3.75/648')}</a></li></ul>
-<p>${label('Die LCD-App DE3.81 setzt PFS1, Z19, Z20 oder Z21 und S112 7.3.0 voraus. Das Android-Komplettpaket enthält DE3.81, Z21 und S112 7.3.0.', 'The DE3.81 LCD app requires PFS1, Z19, Z20 or Z21, and S112 7.3.0. The Android full package contains DE3.81, Z21 and S112 7.3.0.')}</p>
+<p>${label('Die LCD-App DE3.89 setzt PFS1, Z21 und S112 7.3.0 voraus. Das Android-Komplettpaket enthält DE3.89, Z21 und S112 7.3.0.', 'The DE3.89 LCD app requires PFS1, Z21, and S112 7.3.0. The Android full package contains DE3.89, Z21 and S112 7.3.0.')}</p>
 <p>${label('Aktuelle Bibliotheken und Quellen', 'Current libraries and sources')} · <a href="third-party/npm/SOURCES.json">npm/SOURCES.json</a>.
 ${label('Die Liste unten enthält auch historische Lizenzhinweise.', 'The list below also includes historical notices.')}
 <a href="../dfu/LICENSE.txt">${label('DFU-Lizenz', 'DFU license')}</a> · <a href="../dfu/vendor/SOURCES.json">${label('DFU-Bibliotheksnachweise', 'DFU library sources')}</a></p>

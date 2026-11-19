@@ -158,7 +158,7 @@ for (const [release, counter, acceptance] of [
   ['86', 659, 'pending'],
   ['87', 660, 'pending'],
   ['88', 661, 'folder-transfer-and-resume-on-one-lcd'],
-  ['89', 662, 'pending'],
+  ['89', 662, 'owner-reported-general-use-and-system-readback-on-one-lcd'],
 ]) {
  test(`App${counter} capacity evidence binds the candidate BIN, SourceID and engine to its stated hardware status`, () => {
  const version = '2.22.0-DE3.' + release;
