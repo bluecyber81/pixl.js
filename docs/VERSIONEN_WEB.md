@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.58.2 · Ordnerübertragung mit DE3.89
+
+Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
+
 ## Dateimanager 3.58.1 · OLED Test 6
 
 Unter **Update → OLED** findest du App86 für das Handy und für die Übertragung mit Chrome oder Edge am Computer. Öffne am dreitastigen OLED für die Fernbedienung **Einstellungen → Fernsteuern → bis Aus**, lass es wach und wähle im Browser **Pixl.Remote**. Dateitransfer und AmiiboLink vorher verlassen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [OLED-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)

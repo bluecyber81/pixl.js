@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.58.2 · kleine Dateien sichern und Ordner fortsetzen
+
+Unter **Dateien** kannst du einen lokalen Ordner vergleichen und die gewählten Dateien übertragen. Bei einem Bluetooth-Abbruch den Tab offen lassen, dasselbe Gerät erneut verbinden und den angehaltenen Auftrag fortsetzen. App662 überprüft geschriebene Daten durch Zurücklesen. Für eine Sicherung kann der Dateimanager kleine Dateien in einer Leseanfrage abrufen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json)
+
 ## Dateimanager 3.58.1 · OLED Test 6
 
 Unter **Update → OLED** findest du App86 für das Handy und für die Übertragung mit Chrome oder Edge am Computer. Öffne am dreitastigen OLED für die Fernbedienung **Einstellungen → Fernsteuern → bis Aus**, lass es wach und wähle im Browser **Pixl.Remote**. Dateitransfer und AmiiboLink vorher verlassen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [OLED-Anleitung](https://bluecyber81.github.io/pixl.js/guide/index.html#oled) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)

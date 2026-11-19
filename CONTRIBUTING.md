@@ -9,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| LCD application | [DE3.81 / App654 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
+| LCD application | [DE3.89 / App662 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.58.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.0) provides portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) provides portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z21 bootloader | [Build and test instructions](bootloader-z21/README.md) and [Z21 and App654 production evidence](docs/validation/DE3_81.json). |
@@ -47,28 +47,28 @@ the finished bundles. The development server binds to `127.0.0.1:8010`. Normal
 tests use synthetic fixtures, mocked Bluetooth and local WASM, not a device.
 Windows-specific launcher tests are skipped on other operating systems.
 
-Upload the portable, source and ChatGPT test ZIPs to the `web3.58.0` release.
-Upload the signed LCD application and LCD test kit to the `de3.87-lcd-test1` prerelease.
+Upload the portable and source ZIPs to the `web3.58.2` release.
+Upload the signed LCD application, two-stage Android package and review kit to the `de3.89` release.
 The footer and license page link to those release assets. Verify their sizes and SHA-256
 after upload. Publish the contents of `dist-pages/` at the root of the `gh-pages`
-branch, including the generated historical download redirects. Compare the published
-`firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip` with the signed release asset before
+branch, preserving the test previews, firmware ZIPs and historical download URLs. Compare the published
+`firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip` with the signed release asset before
 using the Android handoff.
 Do not publish a source checkout, `node_modules/`, server state or private files.
 The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-The checked-in LCD sources reproduce the released DE3.81 application. From the repository root, use the pinned SDK image and the host Python package `cryptography` to verify the application and Android package:
+The checked-in LCD sources build DE3.89 / App662. Use the pinned SDK image from the repository root to reproduce the application.
 
 ```sh
 docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
-python3 tools/build_lcd.py --mode release
-python3 tools/check_release_ota.py
-python3 tools/verify_lcd_combo.py --profile de3.81
+python3 tools/build_lcd.py --mode release --output build/lcd-de389
+python3 tools/check_release_ota.py --build-dir build/lcd-de389
+python3 tools/verify_lcd_combo.py --profile de3.89
 ```
 
-The release builder writes to a new or empty `build/lcd-de381` directory and uses the stored version header and generated resources. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App654 source and checks](docs/validation/DE3_81.json) · [Z21 build instructions](bootloader-z21/README.md)
+Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App662 build evidence](docs/validation/DE3_89_LCD_TEST1.json) · [Device readback](docs/validation/DE3_89_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
 
 For two quick storage checks from the portable CI subset, install Python
 **3.10+** and GCC on the host and run from the repository root:

@@ -4,18 +4,19 @@
 
 | Paket | Download und Verwendung |
 | --- | --- |
-| LCD-Vorabversion DE3.87 / App660 für ST7567, PFS1, Z21 und S112 7.3.0 | [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_App660_Pruefpaket.zip). Die Abnahme am Gerät steht aus. |
-| Reguläre DE3.81 / App654 für LCD | [Nur die App (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Für PFS1, Z19/Z20/Z21 und S112 7.3.0. |
-| Reguläres LCD-Komplettpaket DE3.81 / App654, Z21 und S112 7.3.0 | [Komplettpaket für Android (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). Für ein kompatibles Gerät mit Bootloader-Zähler unter 21. Schlüssel, Layout und Ausgangs-FWID 0x0103/0x0126 anhand der [Installationsanleitung](INSTALLATION.md) prüfen. |
+| Aktuelle LCD-App DE3.89 / App662 für ST7567, PFS1, Z21 und S112 7.3.0 | [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Geräteprüfung am LCD](validation/DE3_89_LCD_READBACK.json) |
+| Frühere LCD-Freigabe DE3.81 / App654 | [App654 im Archiv](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81). Für PFS1, Z19/Z20/Z21 und S112 7.3.0. |
+| LCD-Komplettpaket mit DE3.89 / App662, Z21 und S112 7.3.0 | Für ein kompatibles LCD mit Bootloader-Zähler unter 21. Schlüssel, Layout und Ausgangs-FWID 0x0103/0x0126 vorab prüfen. [Komplettpaket für Android](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Voraussetzungen](INSTALLATION.md) |
 | OLED-Vorabversion DE3.87 Test 6 / App86 für das dreitastige nRF52832-Modell mit SH1106, kompatiblem DFU-Bootloader, S112 7.2.0 (`0x0103`) und vorhandenem SPIFFS oder nativem LittleFS | [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Deutsch](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [English](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt). Der Test am physischen OLED steht aus. |
-| Windows-Dateimanager und Quellcode | [Dateimanager 3.58.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1) |
-| Prüfpaket der regulären Firmware | [DE3.81, Z21 und Quellen (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_Z21_Pruefnachweise.zip) · [Diagnose vom LCD](validation/DE3_81_LCD_READBACK.json) |
+| Windows-Dateimanager und Quellcode | [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) |
+| Prüfpaket der regulären Firmware | [App662 einschließlich BIN und HEX](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip) · [Build-Prüfung](validation/DE3_89_LCD_TEST1.json) |
 | LCD auf PFS1 umstellen | [SPIFFS-Vorbereitung, geprüfte Sicherung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
 
 ## Archiv · ältere LCD-Komponenten
 
 | Früheres Paket | Originaldownload |
 | --- | --- |
+| Historische LCD-Teststände DE3.87 / App660 und DE3.88 / App661 | [App660](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-lcd-test1) · [App661](https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1) |
 | Stabile Geräte-App für ein kompatibles LCD mit eingerichtetem PFS1, Z19 und S112 7.3.0 | [DE3.75 / App648 – App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.75/Allmiibo_LCD_DE3_75_648_NUR_APP.zip) |
 | Flash-Kennung auf einem LCD mit PFS1, Z19 und S112 7.3.0 auslesen | [DE3.79 / App652 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.79/Allmiibo_LCD_DE3_79_652_NUR_APP.zip). Die Geräte-App liefert die beim Einrichten des Speichers gelesene JEDEC-Kennung. [Prüfstand](validation/DE3_79.json) |
 | Neue Akkuanzeige auf einem LCD mit PFS1, Z19 und S112 7.3.0 | [DE3.77 / App650 – signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.77/Allmiibo_LCD_DE3_77_650_NUR_APP.zip). Größere Ziffern, acht Akkusegmente und Ladeblitz. [Prüfstand](validation/DE3_77.json) |
@@ -79,9 +80,9 @@ S112 ist das unveränderte Nordic-Original. Unsere Arbeit umfasst Integration, S
 
 ## English
 
-On an LCD with PFS1, Z21 and S112 7.3.0, the latest test build is App657. [DE3.84 Android app](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Owner report](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)
+For an ST7567 LCD already running PFS1, Z21 and S112 7.3.0, use the signed App662 ZIP. The two-stage Android package is for eligible devices with a bootloader counter below 21. [App662 for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Installation requirements](INSTALLATION.md)
 
-Regular LCD release: [DE3.81 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Full Android package with Z21 and S112 7.3.0](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Installation instructions](INSTALLATION.md).
+The DE3.89 release includes the computer review bundle. App654 is available from its original release. [App662 review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip) · [App654 release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81)
 
 ### Historical BL8 downloads
 

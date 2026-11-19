@@ -1,5 +1,9 @@
 # Bootloader und Nordic S112 beim LCD-Allmiibo
 
+## LCD DE3.89 / App662 mit Z21 und S112 7.3.0
+
+Das LCD meldet beim Gerätetest mit App662 den Bootloader-Zähler 21 und den S112-Firmwarecode 0x0126. Wer diese Systemstände bereits hat, verwendet die reine App. Für kompatible ältere Bootloader unter Z21 enthält das Android-Komplettpaket die bekannte signierte Systemstufe und App662. [Gerätebeleg](validation/DE3_89_LCD_READBACK.json) · [Paket](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Voraussetzungen](INSTALLATION.md)
+
 ## Z21 · Empfangsanzeige bei DFU-Wiederaufnahme
 
 Nach einer Wiederverbindung wechselt das LCD beim ersten empfangenen Datenobjekt auf „Receiving...“. Die Systemphase eines Upgrades von Z20 wird noch von Z20 empfangen. Nach ihrer Aktivierung übernimmt Z21 die App-Phase. Zwei ARM-Builds ergaben identische BIN- und HEX-Dateien. Im Modell wurde die vollständige App nach Unterbrechungen bei 0, 131.072 und 327.680 Byte fortgesetzt. [Z21-Quellen](../bootloader-z21/) · [Signierte Android-Kombi](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip)

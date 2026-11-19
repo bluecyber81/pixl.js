@@ -1,5 +1,9 @@
 # Improvements and fixed bugs in the DE series
 
+## LCD DE3.89 / App662 and file manager 3.58.2 · 19 November 2026
+
+The LCD application buffers each new file up to 572 bytes in RAM and verifies the contents from flash after writing. The file manager can continue an interrupted folder upload on the same device in the open browser tab. [LCD device checks](validation/DE3_89_LCD_READBACK.json) · [DE3.89 release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [File manager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
+
 ## LCD test firmware DE3.84 / App657 and file manager 3.55.6 · 17 November 2026
 
 All four games follow display rotation. Tris uses a timer for its steps. The LCD settings include automatic dimming and a display and button test. The owner confirmed operation on one LCD with Z21. Interrupted Android DFU was exercised in a model and has no individual hardware confirmation. [App657 for Android](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Review bundle](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Owner report](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)

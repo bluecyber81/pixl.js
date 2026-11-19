@@ -1,5 +1,9 @@
 # Entwicklung der DE-Firmware und des Dateimanagers
 
+## LCD DE3.89 / App662 und Dateimanager 3.58.2 · 19.11.2026
+
+Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
+
 ## LCD-Testversion DE3.84 / App657 und Dateimanager 3.55.6 · 17.11.2026
 
 Alle vier Spiele folgen der Displaydrehung. Weitere Änderungen sind die zeitgesteuerte Tris-Ausgabe, automatisches Dimmen und der Display-/Tastentest. Der Besitzer bestätigt den Betrieb auf einem LCD mit Z21. Die Wiederaufnahme einer am Handy unterbrochenen DFU wurde im Modell geprüft und am Gerät noch nicht einzeln bestätigt. [App657 fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_657_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/Allmiibo_LCD_DE3_84_App657_Pruefpaket.zip) · [Besitzermeldung](https://github.com/bluecyber81/pixl.js/releases/download/de3.84-lcd-test1/DE3_84_OWNER_REPORT.json)

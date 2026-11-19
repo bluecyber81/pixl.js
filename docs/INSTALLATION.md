@@ -2,9 +2,9 @@
 
 Check the display model, current storage format and SoftDevice before choosing a package. Back up the device's files first.
 
-## Current LCD firmware DE3.81 / App654
+## Current LCD firmware DE3.89 / App662
 
-For a compatible nRF52832 LCD with Packed LittleFS and a working project Secure DFU bootloader, use the application ZIP to update the app. To install Z21 as well, choose the combined ZIP in **nRF Device Firmware Update** on Android. The system upgrade requires the matching flash layout and signing key, an installed bootloader counter below 21 and S112 firmware ID 0x0103 or 0x0126. Let both phases finish. After reconnecting, check for DE3.81, app counter 654 and, after the combined update, bootloader counter 21 and S112 7.3.0. For a device still using SPIFFS, follow the migration guide first. [Application](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Combined ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) · [Migration](MIGRATION_PFS1.md)
+On an ST7567 LCD with Packed LittleFS (PFS1), Z21 and Nordic S112 7.3.0 (FWID 0x0126), choose the application ZIP. On Android, keep the ZIP intact and open it in **nRF Device Firmware Update**. After restarting, open **Device & diagnostics** and check for DE3.89, application counter 662, bootloader counter 21 and S112 7.3.0. [Phone application](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Owner’s LCD readback](validation/DE3_89_LCD_READBACK.json)
 
 Read the illustrated file manager's step-by-step guide for the required apps, backup, device update and storage migration. [English](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](https://bluecyber81.github.io/pixl.js/guide/index.html)
 
@@ -13,15 +13,15 @@ Read the illustrated file manager's step-by-step guide for the required apps, ba
 Use the signed application on a compatible three-button nRF52832 OLED with SH1106, Secure DFU and Nordic S112 7.2.0 (FWID `0x0103`). Back up your files. The app uses the existing SPIFFS or native LittleFS volume.
 
 1. On the OLED, select **Settings → Firmware Update**. On your phone, open **nRF Device Firmware Update**, choose **pixl dfu** and select the intact app ZIP. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip)
-2. For computer DFU, open file manager 3.58.1 in Chrome or Edge with Bluetooth enabled. Choose **Update → OLED**, select Test 6 and connect to **pixl dfu**. [Browser DFU guide](https://bluecyber81.github.io/pixl.js/guide/en.html#oled-webdfu)
+2. For computer DFU, open file manager 3.58.2 in Chrome or Edge with Bluetooth enabled. Choose **Update → OLED**, select Test 6 and connect to **pixl dfu**. [Browser DFU guide](https://bluecyber81.github.io/pixl.js/guide/en.html#oled-webdfu)
 3. Wait for completion and restart. In the version details, check for `2.22.0-DE3.87-OLEDt6`. Try an existing file, the remote, the 5%/100% panel contrast test and your usual NFC workflow. Physical validation of this prerelease is pending. [English test guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Deutsche Testanleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt)
 
 ## Three downloads for the LCD Allmiibo
 
 | Starting device | Package and procedure |
 | --- | --- |
-| Compatible nRF52832 LCD with mounted PFS1, Z19, Z20 or Z21 and S112 7.3.0 (FWID 0x0126) | [Current DE3.81 / 654 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip). Save a current backup of E: and select the ZIP in the web updater or nRF Device Firmware Update on Android. |
-| Compatible 512 KiB flash / 64 KiB RAM nRF52832 LCD with a bootloader at 0x77000 (MBR parameters 0x7E000, DFU settings 0x7F000), bootloader counter below 21, S112 FWID 0x0103 or 0x0126 and a working Nordic Secure DFU bootloader that trusts the project's key | [DE3.81 / 654 full system](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip). On Android keep the ZIP intact and use nRF Device Firmware Update. Complete the S112 + Z21 stage and the application stage. Reconnect and read back App654, bootloader 21 with the [Z21 region hash](../bootloader-z21/SOURCE_BINDING.json), and S112 FWID 0x0126. |
+| Compatible nRF52832 LCD with mounted PFS1, Z21 and S112 7.3.0 (FWID 0x0126) | Save a current backup of E: and select the signed App662 ZIP in the web updater or nRF Device Firmware Update. [DE3.89 / 662 application only](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) |
+| Compatible 512 KiB flash / 64 KiB RAM nRF52832 LCD with bootloader at 0x77000, MBR parameters at 0x7E000, DFU settings at 0x7F000, bootloader counter below 21, S112 FWID 0x0103 or 0x0126 and a working Secure DFU bootloader that trusts the project key | Use nRF Device Firmware Update on Android. Complete both stages in order, S112 7.3.0 plus Z21, then App662. Reconnect to check App662, Z21 and FWID 0x0126. [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Z21 region hash](../bootloader-z21/SOURCE_BINDING.json) |
 | Confirmed SPIFFS, compatible LCD/key, S112 FWID 0x0103 or 0x0126 and an installed application counter below 600 (or PREP600 already running) | [DE3.30-PREP / 600](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_SPIFFS_DE3_30_PREP_600.zip) exposes all 128 metadata bytes. First back up the readable collection outside the device. Follow the [migration procedure](MIGRATION_PFS1.md) before installing either target package. |
 
 Check the starting LCD firmware and bootloader before using a package from this table. An unknown signing key or a newer application counter requires a separate compatibility check. An open PFS1 import resumes with its original ZIP and browser receipt.
@@ -32,8 +32,9 @@ Keep a current backup. Choose the application for the release you intend to run.
 
 | LCD application | Release and intended use |
 | --- | --- |
+| **DE3.89 / 662** | Current ST7567 LCD release with PFS1, Z21 and S112 7.3.0. [Application](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Device readback](validation/DE3_89_LCD_READBACK.json) |
 | **DE3.87 / 660** | [LCD prerelease](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip). App-only update for ST7567, PFS1, Z21 and S112 7.3.0. Physical acceptance is pending. |
-| **DE3.81 / 654** | [Current LCD app](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Observed App654, Z21 and S112 7.3.0](validation/DE3_81_LCD_READBACK.json). |
+| **DE3.81 / 654** | [Archived App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Observed App654, Z21 and S112 7.3.0](validation/DE3_81_LCD_READBACK.json). |
 | **DE3.75 / 648** | [Archived LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.75). One LCD owner checked list return and wake in both apps in German with resume enabled. The Switch recognized one known figure. [Release notes and checksums](RELEASE_DE3_75.md). |
 | **DE3.74 / 647** | [Previous stable LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.74). The owner confirmed that the remote display photo worked. [Device check](validation/DE3_74_LCD_ACCEPTANCE.json). |
 | **DE3.72 / 645** | [Earlier LCD release and device-test status](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72). Restores the correct figure and slot selection and corrects four Zelda game notes. |
@@ -54,7 +55,7 @@ For an LCD moving to PFS1, establish the board, storage and component identity, 
 
 ## Bootloader / SoftDevice
 
-The combined system packages are for compatible LCD boards. For current DE3.81, use the [two-stage App654 package](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip) in nRF Device Firmware Update on Android. The first stage installs S112 7.3.0 and Z21, the second installs App654. The earlier App645 combination remains available in its original release. [Bootloader identity and prerequisites](COMPONENTS.md) · [Z21 source/build guide](../bootloader-z21/README.md) · [Archived App645 full package](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_S112_7_3_0_Z19_DE3_72_645_KOMPLETT.zip)
+The two-stage DE3.89 Android ZIP contains the signed Z21 and Nordic S112 7.3.0 system image and the signed App662 image. Both signed stages were verified on a computer. [Package verification](validation/DE3_89_COMBO.json). The LCD readback documents an application update on a device already running Z21. The earlier App654 and App645 combinations are available in their original releases. [App662 full system](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Installation requirements](COMPONENTS.md) · [Historical App654](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81) · [Historical App645](https://github.com/bluecyber81/pixl.js/releases/tag/de3.72)
 
 ## File manager only
 

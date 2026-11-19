@@ -1,5 +1,11 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE3.89 / App662 · Freigabe vom 19.11.2026
+
+Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
+
+Auf einem ST7567-LCD mit PFS1, Z21 und S112 7.3.0 genügt die App-ZIP. Das Android-Komplettpaket enthält beide DFU-Stufen für ein kompatibles LCD mit Bootloader-Zähler unter 21. [Nur App](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Komplettpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Installation](INSTALLATION.md)
+
 ## DE3.87 OLED Test 6 / App86 · Vorabversion
 
 App86 enthält die deutsche und englische Anwendung für dreitastige OLED-Geräte mit SH1106, S112 7.2.0 und kompatiblem DFU-Bootloader. Der OLED-Gerätetest steht aus. [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
