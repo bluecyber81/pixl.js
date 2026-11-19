@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## 2026-11-19 · LCD DE3.89 / App662 and file manager 3.58.2
+
+The signed LCD application from Test 1 is now the stable release. A general owner test and a build-matched diagnostic on one LCD are recorded. The public file manager promotes the same application and supports revision-checked small-file transfers. [LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [Device readback](docs/validation/DE3_89_LCD_READBACK.json)
+
 ## File manager 3.55.6
 
 On App657, **Device & diagnostics** shows the running application's source ID, an available fault note from the previous boot, and cache pages used at the last mount. The German and English guided checks include 40 additional LCD cases. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.6)

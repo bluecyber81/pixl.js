@@ -2,15 +2,34 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
-## Dateimanager 3.58.1
+## LCD DE3.89 / App662 · stabile Firmware
 
-Unter **Update → OLED** kannst du Test 6 am Computer mit Chrome oder Edge übertragen oder die signierte ZIP fürs Handy herunterladen. Unter **Fernbedienung** führt der Dateimanager durch die Auswahl des Bluetooth-Geräts. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Webquellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)
+| Dein LCD-Gerät | Passender Download |
+| --- | --- |
+| Packed LittleFS (PFS1), Z21 und S112 7.3.0 sind installiert | [Nur die App fürs Handy (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) |
+| Ein kompatibles LCD braucht Z21 und S112 7.3.0 | [Zweistufiges Android-Komplettpaket mit App662 (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip). Voraussetzung sind ein Bootloader-Zähler unter 21, der passende Schlüssel und das passende Speicherlayout. |
+| Du möchtest die Firmware prüfen | [Prüfpaket mit BIN, HEX und Nachweisen](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip) |
+
+Sichere deine Dateien und wähle die gepackte ZIP in **nRF Device Firmware Update** aus. Für Geräte mit SPIFFS oder unbekanntem Dateisystem folge zuerst der [Migrationsanleitung](docs/MIGRATION_PFS1.md). [Flashanleitung](https://bluecyber81.github.io/pixl.js/guide/#flash)
+
+Am 19. November 2026 bestätigte der Besitzer den erfolgreichen Praxistest auf seinem LCD. Der Dateimanager 3.58.2 las App662, die passende LCD-Buildkennung, Z21 und S112 7.3.0 aus. Der Zeitvergleich mit Mochi auf App662 und die Wiederaufnahme eines unterbrochenen Android-Firmwareupdates sind noch offen. [Gerätenachweis](docs/validation/DE3_89_LCD_READBACK.json)
+
+## Dateimanager 3.58.2
+
+Vorschau, Prüfung und Sicherung kleiner Dateien können diese mit einer einzigen Anfrage auslesen. Bei einer erneuten Suche prüft der Browser, ob sich der Speicher seit der letzten Suche geändert hat. Einen unterbrochenen Ordnerupload kannst du im selben Tab nach dem Wiederverbinden fortsetzen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
 
 ## OLED DE3.87 Test 6 / App86 · Vorabversion
 
 Für das dreitastige Pixl.js OLED mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (`0x0103`). Die signierte ZIP enthält nur die OLED-App. Sie unterstützt Deutsch und Englisch sowie vorhandenes SPIFFS oder natives LittleFS. Der Test am physischen OLED steht aus. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Deutsche Testanleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
 Test 6 sendet die Bluetooth-Dienstkennung der Fernbedienung bereits im ersten Werbepaket. Der Gerätetest bietet einen direkten Kontrastvergleich zwischen 5 und 100 Prozent. Beim Speichern zeigt die Datenbank belegte und schreibgeschützte Slots an, und größere Favoritenordner lassen sich seitenweise durchblättern. [Im Browser flashen und Fernbedienung einrichten](https://bluecyber81.github.io/pixl.js/guide/index.html#oled)
+
+<details>
+<summary>Frühere Veröffentlichungen und damalige Downloads</summary>
+
+## Dateimanager 3.58.1
+
+Unter **Update → OLED** kannst du Test 6 am Computer mit Chrome oder Edge übertragen oder die signierte ZIP fürs Handy herunterladen. Unter **Fernbedienung** führt der Dateimanager durch die Auswahl des Bluetooth-Geräts. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Webquellen](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)
 
 ## LCD DE3.87 / App660 · Vorabversion
 
@@ -38,7 +57,7 @@ Für ein Allmiibo LCD mit ST7567, Packed LittleFS (PFS1), Z21 und S112 7.3.0 die
 
 Version 3.55.8 überträgt OLED App84 direkt über den Browser-DFU. Unter Update → OLED startet „OLED im Browser flashen“ das passende Paket. Chrome oder Edge am Computer mit Bluetooth werden unterstützt. Unter **Gerät & Diagnose** kann der Dateimanager bei App657 die Buildkennung der laufenden App, eine gegebenenfalls erhaltene Fehlernotiz vom vorigen Start und die beim letzten Mount belegten Cache-Seiten anzeigen. Der zweisprachige Prüfassistent bietet 40 zusätzliche LCD-Prüffälle. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.8)
 
-## Aktuelle LCD-Firmware · DE3.81 / App654
+## LCD-Firmware vom 16. November · DE3.81 / App654
 
 | Was möchtest du aktualisieren? | Download und Voraussetzungen |
 | --- | --- |
@@ -51,8 +70,6 @@ Sichere deine Dateien und lass die ZIP gepackt. Übertrage das Komplettpaket in 
 
 Auf der Startseite findest du beide LCD-Downloads und den eigenen OLED-Einstieg. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5)
 
-<details>
-<summary>Frühere Veröffentlichungen und damalige Downloads</summary>
 
 ## Dateimanager 3.55.4
 

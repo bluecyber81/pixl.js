@@ -2,15 +2,34 @@
 
 [Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
-## File manager 3.58.1
+## LCD DE3.89 / App662 · stable firmware
 
-Open **Update → OLED** to flash Test 6 from Chrome or Edge on a computer or download the signed ZIP for your phone. **Remote control** guides you through selecting the Bluetooth device. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and web source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)
+| Your LCD device | Download |
+| --- | --- |
+| Packed LittleFS (PFS1), Z21 and S112 7.3.0 are installed | [Application only for phones (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) |
+| A compatible LCD needs Z21 and S112 7.3.0 | [Two-stage Android package including App662 (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip). Requires a bootloader counter below 21, the matching signing key and the correct flash layout. |
+| You want to inspect the firmware | [Review kit with BIN, HEX and verification results](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip) |
+
+Back up your files and select the intact ZIP in **nRF Device Firmware Update**. For SPIFFS or an unidentified filesystem, start with the [migration guide](docs/MIGRATION_PFS1.md). [Flashing instructions](https://bluecyber81.github.io/pixl.js/guide/en.html#flash)
+
+On 19 November 2026 the owner confirmed successful practical testing on one LCD. File manager 3.58.2 reported App662, the matching LCD source ID, Z21 and S112 7.3.0. Timing against Mochi on App662 and resuming an interrupted Android firmware update still need separate device tests. [Device readback](docs/validation/DE3_89_LCD_READBACK.json)
+
+## File manager 3.58.2
+
+Preview, verification and backup can read a small file with a single request. A repeated search checks whether storage has changed before reusing the directory listings. Reconnect in the same browser tab to resume an interrupted folder upload. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
 
 ## OLED DE3.87 Test 6 / App86 · prerelease
 
 For the three-button Pixl.js OLED with nRF52832, 128 × 64 SH1106, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The signed ZIP contains only the OLED application. It supports English and German and uses the existing SPIFFS or native LittleFS volume. Physical OLED testing is pending. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English test guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
 Test 6 advertises the remote service in the first Bluetooth advertising packet. The device test lets you compare the 5% and 100% contrast settings on the panel. The database identifies occupied and read-only slots before saving and lets you page through large favorites folders. [Browser flashing and remote setup](https://bluecyber81.github.io/pixl.js/guide/en.html#oled)
+
+<details>
+<summary>Previous releases and their original downloads</summary>
+
+## File manager 3.58.1
+
+Open **Update → OLED** to flash Test 6 from Chrome or Edge on a computer or download the signed ZIP for your phone. **Remote control** guides you through selecting the Bluetooth device. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and web source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1)
 
 ## LCD DE3.87 / App660 · prerelease
 
@@ -38,7 +57,7 @@ For an Allmiibo LCD with ST7567, Packed LittleFS (PFS1), Z21 and S112 7.3.0, sel
 
 Version 3.55.8 recognizes the App84 OLED profile, displays its firmware identity and links to the matching phone ZIP. On App657, **Device & diagnostics** shows the running application's source ID, an available fault note from the previous boot, and cache pages used at the last mount. The German and English guided checks include 40 additional LCD cases. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.8)
 
-## Current LCD firmware · DE3.81 / App654
+## LCD firmware released on 16 November · DE3.81 / App654
 
 | What do you want to update? | Download and requirements |
 | --- | --- |
@@ -51,8 +70,6 @@ Back up your files and keep the ZIP intact. Install a full update with **nRF Dev
 
 The home page links to both LCD downloads and the separate OLED route. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.55.5)
 
-<details>
-<summary>Previous releases and their original downloads</summary>
 
 ## File manager 3.55.4
 

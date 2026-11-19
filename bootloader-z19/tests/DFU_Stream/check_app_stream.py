@@ -16,6 +16,8 @@ FIXTURE = ROOT / 'tests/Sitzungswechsel'
 sys.path.insert(0, str(ROOT / 'tests'))
 from run_offline import verify_sanitizer_environment
 RELEASE_PAYLOADS = {
+    '366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab':
+        '401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec',  # DE3.89 / 662 LCD
     # SHA-256 of the complete signed ZIP -> SHA-256 of its application payload.
     '6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719':
         '632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918',  # DE3.81 / 654 LCD

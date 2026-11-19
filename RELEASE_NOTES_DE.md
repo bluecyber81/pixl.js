@@ -1,10 +1,26 @@
 # Veröffentlichungen für Allmiibo LCD und Pixl.js OLED
 
+## LCD DE3.89 / App662 · stabile Firmware
+
+| Dein LCD-Gerät | Passender Download |
+| --- | --- |
+| Packed LittleFS (PFS1), Z21 und S112 7.3.0 sind installiert | [Nur die App fürs Handy (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) |
+| Ein kompatibles LCD braucht Z21 und S112 7.3.0 | [Zweistufiges Android-Komplettpaket mit App662 (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip). Voraussetzung sind ein Bootloader-Zähler unter 21, der passende Schlüssel und das passende Speicherlayout. |
+| Du möchtest die Firmware prüfen | [Prüfpaket mit BIN, HEX und Nachweisen](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip) |
+
+Sichere deine Dateien und wähle die gepackte ZIP in **nRF Device Firmware Update** aus. Für Geräte mit SPIFFS oder unbekanntem Dateisystem folge zuerst der [Migrationsanleitung](docs/MIGRATION_PFS1.md). [Flashanleitung](https://bluecyber81.github.io/pixl.js/guide/#flash)
+
+Am 19. November 2026 bestätigte der Besitzer den erfolgreichen Praxistest auf seinem LCD. Der Dateimanager 3.58.2 las App662, die passende LCD-Buildkennung, Z21 und S112 7.3.0 aus. Der Zeitvergleich mit Mochi auf App662 und die Wiederaufnahme eines unterbrochenen Android-Firmwareupdates sind noch offen. [Gerätenachweis](docs/validation/DE3_89_LCD_READBACK.json)
+
+## Dateimanager 3.58.2
+
+Vorschau, Prüfung und Sicherung kleiner Dateien können diese mit einer einzigen Anfrage auslesen. Bei einer erneuten Suche prüft der Browser, ob sich der Speicher seit der letzten Suche geändert hat. Einen unterbrochenen Ordnerupload kannst du im selben Tab nach dem Wiederverbinden fortsetzen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
+
 ## OLED DE3.87 Test 6 und Dateimanager 3.58.1
 
 Die OLED-Vorabversion verbessert die Auffindbarkeit der Fernbedienung, die Abstufung des SH1106-Kontrasts und das Speichern in der Figurendatenbank. Nach einem Lesefehler behält AmiiboLink den aktiven Slot. SPIFFS und natives LittleFS wurden auf simuliertem Flash geprüft. Der Gerätetest für App86 steht aus. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Deutsche Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
-Im Dateimanager lässt sich die signierte OLED-App über den Computer übertragen. Für das LCD mit PFS1, Z21 und S112 7.3.0 ist DE3.87/App660 als Vorabversion verfügbar. Die reguläre LCD-Firmware ist DE3.81/App654. [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1) · [Firmwarewahl](docs/COMPONENT_DOWNLOADS.md)
+Im Dateimanager lässt sich die signierte OLED-App über den Computer übertragen. Für das LCD mit PFS1, Z21 und S112 7.3.0 ist DE3.87/App660 als Vorabversion verfügbar. Bei Erscheinen dieser Version war DE3.81/App654 die reguläre LCD-Firmware. [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1) · [Firmwarewahl](docs/COMPONENT_DOWNLOADS.md)
 
 ## Dateimanager 3.55.8
 

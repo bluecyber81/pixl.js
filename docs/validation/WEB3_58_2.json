@@ -1,0 +1,18 @@
+{
+  "version": "3.58.2",
+  "date": "2026-11-19",
+  "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2",
+  "pages": "https://bluecyber81.github.io/pixl.js/",
+  "lcd": {
+    "firmware": "2.22.0-DE3.89",
+    "applicationCounter": 662,
+    "diagnosticReadback": "docs/validation/DE3_89_LCD_READBACK.json"
+  },
+  "oled": {
+    "version": "2.22.0-DE3.87-OLEDt6",
+    "status": "separate-prerelease"
+  },
+  "sourceChecks": "GitHub Actions checks.yml on the web3.58.2 tag commit",
+  "previousPhysicalBenchmarks": "docs/validation/APP661_FOLDER_BENCHMARK.json",
+  "app662TimedTransfer": "pending"
+}

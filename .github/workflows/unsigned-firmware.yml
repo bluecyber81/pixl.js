@@ -71,8 +71,8 @@ jobs:
           args=(--build-dir build/lcd-application)
           if [ "$BUILD_MODE" = preview ]; then args+=(--preview); fi
           /usr/bin/python3 tools/check_release_ota.py "${args[@]}"
-      - name: Resume the verified signed LCD preview on the bound Z21 data path
-        if: steps.application_mode.outputs.mode == 'preview'
+      - name: Resume the verified signed LCD application on the bound Z21 data path
+        if: steps.application_mode.outputs.mode != 'candidate'
         run: |
           build="$GITHUB_WORKSPACE/build/lcd-application"
           jq -e '(.firmware_preview.tested_bootloader // .tested_bootloader).source == "bootloader-z21"' RELEASE_INFO.json >/dev/null
@@ -80,7 +80,7 @@ jobs:
           python3 -B bootloader-z21/build.py --prepare "$RUNNER_TEMP/z21-preview"
           python3 -B "$RUNNER_TEMP/z21-preview/tests/check_resume.py" "$build/pixljs.bin" "$sha" "$build/Z21_PREVIEW_RESUME.json"
       - name: Verify both Android DFU phases against the release packages
-        run: /usr/bin/python3 tools/verify_lcd_combo.py --profile de3.81
+        run: /usr/bin/python3 tools/verify_lcd_combo.py --profile de3.89
       - name: Exercise every DE2 and DE3 host suite
         env:
           NRF52_SDK_ROOT: ${{ runner.temp }}/sdk-test
@@ -187,7 +187,7 @@ jobs:
           - boot: z20
             profile: de3.80
           - boot: z21
-            profile: de3.81
+            profile: de3.89
     env:
       BOOT: ${{ matrix.boot }}
       PROFILE: ${{ matrix.profile }}

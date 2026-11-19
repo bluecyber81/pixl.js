@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-19",
+  "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
+  "status": "stable",
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.89",
+  "applicationCounter": 662,
+  "productionSourceCommit": "fecc8b750288f1028f109067dad9694c9f2c3628",
+  "sourceId": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7",
+  "applicationBytes": 363752,
+  "applicationSha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+  "applicationOnly": {
+    "file": "Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+    "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+    "counter": 662,
+    "url": "https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip"
+  },
+  "systemAndApplication": {
+    "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
+    "sha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+    "evidence": "docs/validation/DE3_89_COMBO.json",
+    "requiredBootloaderCounterBelow": 21,
+    "startingSoftDeviceFwids": [
+      "0x0103",
+      "0x0126"
+    ],
+    "androidPhases": 2,
+    "applicationCounter": 662,
+    "applicationVersion": "2.22.0-DE3.89",
+    "role": "Two-stage Android update for compatible LCD devices requiring S112 7.3.0 and Z21 before the App662 application. Follow the storage migration guide for SPIFFS.",
+    "url": "https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip"
+  },
+  "releaseQualification": {
+    "ownerConfirmation": "owner-reported-general-use-and-system-readback-on-one-lcd",
+    "readback": "docs/validation/DE3_89_LCD_READBACK.json",
+    "originalSignedBuildAndHostTests": "docs/validation/DE3_89_LCD_TEST1.json",
+    "storageQualification": "docs/validation/DE3_89_PFS.json",
+    "originalTestTag": "de3.89-lcd-test1",
+    "sameSignedApplicationZip": true
+  },
+  "openMeasurements": [
+    "Timed App662 upload with interruption and resume compared to Mochi",
+    "App662 timing for the full 1081-file collection",
+    "Physical Android DFU interruption and resumption"
+  ]
+}
