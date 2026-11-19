@@ -3,6 +3,20 @@ globalThis.AllmiiboFirmwareReleases = {
   "schema": 1,
   "packages": [
     {
+      "id": "de3.89-lcd-app",
+      "version": "2.22.0-DE3.89",
+      "counter": 662,
+      "file": "Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+      "bytes": 252544,
+      "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z21",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false
+    },
+    {
       "id": "de3.81-lcd-app",
       "version": "2.22.0-DE3.81",
       "counter": 654,
@@ -15,6 +29,21 @@ globalThis.AllmiiboFirmwareReleases = {
       "softDevice": "S112 7.3.0",
       "applicationOnly": true,
       "migrationRequired": false
+    },
+    {
+      "id": "de3.88-lcd-test1-app",
+      "version": "2.22.0-DE3.88",
+      "counter": 661,
+      "file": "Allmiibo_LCD_DE3_88_661_NUR_APP.zip",
+      "bytes": 252473,
+      "sha256": "75543dc92ca18d55a81f8070a5ac72f58195419510bba893d7540b343b8fe2c0",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z21",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
     },
     {
       "id": "de3.87-lcd-test1-app",

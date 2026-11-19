@@ -13,7 +13,8 @@ export function nrfDfuLink(entry) {
     }
     const release = /^2\.22\.0-DE3\.([1-9]\d{0,3}(?:t[1-9]\d{0,2})?)$/.exec(entry?.version);
     if (!release || release[1] === '86') return null; // App659 has no public Android offering.
-    const trialCounter = { '84': 657, '85': 658, '87': 660 }[release[1]];
+    const trialCounter = { '84': 657, '85': 658, '87': 660, '88': 661 }[release[1]];
+    if (release[1] === '89' && (entry.channel || entry.counter !== 662 || entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0')) return null;
     const expectedId = trialCounter ? `de3.${release[1]}-lcd-test1-app` : `de3.${release[1]}-lcd-app`;
     if (trialCounter && (entry.channel !== 'prerelease' || entry.counter !== trialCounter ||
         entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0')) return null;
@@ -28,6 +29,8 @@ export function nrfDfuLink(entry) {
         : `Allmiibo_LCD_DE3_${release[1]}_${entry.counter}_NUR_APP.zip`;
     const reviewFile = `Allmiibo_LCD_DE3_${release[1]}_App${entry.counter}_TEST_DFU.zip`;
     if (entry.file !== filename && !(entry.channel === 'prerelease' && !trialCounter && !testBuild && entry.file === reviewFile)) return null;
-    const published = 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file;
+    const published = (release[1] === '89' ? 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/' : release[1] === '88'
+        ? 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + release[1] + '-lcd-test1/'
+        : 'https://bluecyber81.github.io/pixl.js/firmware/') + entry.file;
     return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({file: published});
 }

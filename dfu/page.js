@@ -1,6 +1,6 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.1';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.2';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -190,7 +190,7 @@ function transferEstimate(state, now) {
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}),
-    createDfu: () => new SecureDfu(CRC32.buf),
+    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf }),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },
@@ -210,9 +210,9 @@ function profileInfo() {
     document.getElementById('lcd-downloads').hidden = oled;
     document.getElementById('oled-downloads').hidden = !oled;
     const sourceLink = document.getElementById('profile-source');
-    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.87-oled-t6' : 'de3.81'));
-    setText(sourceLink, oled ? 'Quellcode OLED DE3.87 Test 6' : 'Quellcode LCD DE3.81',
-        oled ? 'OLED DE3.87 Test 6 source code' : 'LCD DE3.81 source code');
+    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.87-oled-t6' : 'de3.89'));
+    setText(sourceLink, oled ? 'Quellcode OLED DE3.87 Test 6' : 'Quellcode LCD DE3.89',
+        oled ? 'OLED DE3.87 Test 6 source code' : 'LCD DE3.89 source code');
     setText(document.getElementById('profile-title'),
         oled ? 'OLED-Firmware übertragen' : 'LCD-Firmware übertragen',
         oled ? 'Update OLED firmware' : 'Update LCD firmware');
@@ -261,6 +261,8 @@ try {
     bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
         pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
     const requested = new URLSearchParams(globalThis.location.search).getAll('package');
+    // Historical Test 1 links point to the same signed App662 archive.
+    if (requested.length === 1 && requested[0] === 'de3.89-lcd-test1-app') requested[0] = 'de3.89-lcd-app';
     const selected = requested.length === 1 && bundled.catalog.packages.find(entry => entry.id === requested[0]);
     if (!handoffBoard && selected) boardSelect.value = selected.board;
     populateCatalog(requested.length ? requested.length === 1 ? requested[0] : '' : undefined);

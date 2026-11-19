@@ -8,7 +8,7 @@
     const keys=['id','version','counter','file','bytes','sha256','board','storage','bootloader','softDevice','applicationOnly','migrationRequired'];
     const need=(ok,de,en)=>{if(!ok)throw new DfuValidationError(de,en);};
     function validateCatalog(input){
-        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=17,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
+        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=32,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
         const seen=new Set();
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
@@ -17,13 +17,13 @@
             const version = oled
                 ? /^2\.22\.0-DE3\.([1-9][0-9]{0,3})-OLEDt([1-9][0-9]{0,2})$/.exec(item.version)
                 : /^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
-            const test657 = version?.[1] === '84' && item.channel === 'prerelease' && item.counter === 657 && item.bootloader === 'Z21';
-            const test658 = version?.[1] === '85' && item.channel === 'prerelease' && item.counter === 658 && item.bootloader === 'Z21';
-            const test659 = version?.[1] === '86' && item.channel === 'prerelease' && item.counter === 659 && item.bootloader === 'Z21';
-            const test660 = version?.[1] === '87' && item.channel === 'prerelease' && item.counter === 660 && item.bootloader === 'Z21';
+            const previewCounters = {84:657,85:658,86:659,87:660,88:661};
+            const lcdPreview = !oled && version && Object.hasOwn(previewCounters,version[1]) &&
+                item.channel === 'prerelease' && item.counter === previewCounters[version[1]] && item.bootloader === 'Z21';
             const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
-                : test660 ? 'de3.87-lcd-test1-app' : test659 ? 'de3.86-lcd-test1-app' : test657 ? 'de3.84-lcd-test1-app' : test658 ? 'de3.85-lcd-test1-app' : version && `de3.${version[1]}-lcd-app`;
+                : lcdPreview ? `de3.${version[1]}-lcd-test1-app` : version && `de3.${version[1]}-lcd-app`;
             need(version&&item.id===expectedId&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
+            if (!oled && version[1] === '89') need(!item.channel && item.counter === 662 && item.bootloader === 'Z21' && item.file === 'Allmiibo_LCD_DE3_89_662_NUR_APP.zip', 'Unpassendes LCD-App662-Profil.', 'Incorrect LCD App662 profile.');
             const testBuild = version[1].includes('t');
             const names = oled ? [`Allmiibo_OLED_DE3_${version[1]}_Test${version[2]}_APP.zip`] : testBuild
                 ? [`Allmiibo_DE3_${version[1]}_App${item.counter}_NUR_APP_SIGNIERT.zip`]
