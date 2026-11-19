@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-11-19",
+  "target": "LCD / nRF52832 / ST7567 / PFS1",
+  "applicationFirmware": "2.22.0-DE3.89",
+  "combo": {
+    "name": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
+    "bytes": 343768,
+    "sha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+    "zipCrc": "passed"
+  },
+  "appOnly": {
+    "name": "Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+    "bytes": 252544,
+    "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+    "zipCrc": "passed"
+  },
+  "systemPhaseSource": {
+    "tag": "de3.81",
+    "name": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_81_654_KOMPLETT.zip",
+    "sha256": "4ba60821ea685f00ade27162c0df462aa9c382980a96e9967f9b0cc682a8de09"
+  },
+  "applicationPhaseSource": {
+    "tag": "de3.89-lcd-test1",
+    "name": "Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+    "sourceCommit": "fecc8b750288f1028f109067dad9694c9f2c3628",
+    "sourceId": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7"
+  },
+  "hardwareVersion": 52,
+  "systemPhase": {
+    "bootloaderCounter": 21,
+    "softDevice": "S112 7.3.0",
+    "acceptedPreviousSoftDeviceFwids": [
+      "0x0103",
+      "0x0126"
+    ],
+    "softDeviceBytes": 98068,
+    "softDeviceSha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "bootloaderBytes": 26932,
+    "bootloaderSha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c"
+  },
+  "applicationPhase": {
+    "applicationCounter": 662,
+    "acceptedSoftDeviceFwids": [
+      "0x0126"
+    ]
+  },
+  "components": {
+    "sd_bl.bin": {
+      "bytes": 125000,
+      "sha256": "aba8a0bedb8ad8cef3a00cdb865bdaaa8d7af0ed7daef4888c1ec6e4192694d0",
+      "byteIdenticalToSource": true
+    },
+    "sd_bl.dat": {
+      "bytes": 151,
+      "sha256": "d7132f1236d7600cfd96ce617a15a91f6699a64e15bfbd1117f563dba5d4f2c1",
+      "byteIdenticalToSource": true
+    },
+    "app_662.bin": {
+      "bytes": 363752,
+      "sha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+      "byteIdenticalToSource": true
+    },
+    "app_662.dat": {
+      "bytes": 142,
+      "sha256": "e9d45d01d38d98e4bd0380e7d8fe7b56cb91f72baca079d7d11328fc6aefa43c",
+      "byteIdenticalToSource": true
+    }
+  },
+  "checks": {
+    "deviceAccess": false,
+    "signaturesVerified": 2,
+    "signatureAlgorithm": "ECDSA P-256 / SHA-256",
+    "alteredSignedInitAndAlteredImageControls": "rejected",
+    "appOnlyMatchesCombinedApplication": true,
+    "priorSystemMatchesCombinedSystem": true,
+    "verifiedWith": "tools/verify_lcd_combo.py",
+    "verifiedProfiles": [
+      "de3.80",
+      "de3.81",
+      "de3.89"
+    ]
+  },
+  "installation": {
+    "appOnly": "On a compatible LCD already running Z21, S112 7.3.0 and PFS1 the signed application-only ZIP is the normal update. Device firmware counters and profile checks apply.",
+    "combo": "Android nRF Device Firmware Update. Both phases require a compatible LCD, matching Secure DFU key and flash layout, and an installed bootloader counter below 21. Existing S112 FWID 0x0103 or 0x0126 can receive the system phase. Old filesystems need the separately documented migration first.",
+    "separateDeviceCoverage": "See DE3_89_LCD_READBACK.json for the owner LCD results. A hardware trial of this exact two-phase archive is outstanding."
+  }
+}

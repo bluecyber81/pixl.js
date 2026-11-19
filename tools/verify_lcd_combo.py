@@ -1,4 +1,4 @@
-"""Verify known Allmiibo LCD two-phase packages (DE3.72, DE3.80 and DE3.81) using project sources and a public key.
+"""Verify known Allmiibo LCD two-phase packages (DE3.72, DE3.80, DE3.81 and DE3.89) using project sources and a public key.
 
 Place this script alongside tools/check_release_ota.py. Run python tools/verify_lcd_combo.py
 from an extracted matching source release. Requires Python and cryptography.
@@ -27,6 +27,7 @@ class Release:
     app_sha256: str
     boot_bytes: int
     boot_sha256: str
+    app_fwids: tuple = ('0x103', '0x126')
 
 
 RELEASES = {
@@ -47,6 +48,12 @@ RELEASES = {
         combo_bytes=342335, combo_sha256='4ba60821ea685f00ade27162c0df462aa9c382980a96e9967f9b0cc682a8de09',
         app_zip_bytes=249923, app_zip_sha256='6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719',
         app_bytes=362892, app_sha256='632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918',
+        boot_bytes=26932, boot_sha256='bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c'),
+    'de3.89': Release(
+        version='DE3_89', application=662, bootloader=21, app_fwids=('0x126',),
+        combo_bytes=343768, combo_sha256='2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13',
+        app_zip_bytes=252544, app_zip_sha256='366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab',
+        app_bytes=363752, app_sha256='401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec',
         boot_bytes=26932, boot_sha256='bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c'),
 }
 SD_BYTES = 98068
@@ -119,7 +126,7 @@ def verify(repo, profile=None, combo_path=None, app_path=None):
         matches = [key for key, row in RELEASES.items() if row.combo_sha256 == digest]
         need(len(matches) == 1, 'Unknown combo ZIP')
         profile = matches[0]
-    release = RELEASES[profile or 'de3.81']
+    release = RELEASES[profile or 'de3.89']
     assets = repo / 'fw/releases'
     stem = f'{release.version}_{release.application}'
     if data is None:
@@ -146,7 +153,7 @@ def verify(repo, profile=None, combo_path=None, app_path=None):
     key = public_key(repo, release.bootloader)
     image = combined[app_bin]
     need(len(image) == release.app_bytes and sha(image) == release.app_sha256, 'Wrong release image')
-    params = {'counter': release.application, 'hardware_version': 52, 'softdevice_requirements': ['0x103', '0x126']}
+    params = {'counter': release.application, 'hardware_version': 52, 'softdevice_requirements': release.app_fwids}
     verify_packet(combined[app_dat], image, params, key)
     verify_system(combined['sd_bl.dat'], combined['sd_bl.bin'], key, release)
     return {'verified': True, 'applicationCounter': release.application, 'bootloaderCounter': release.bootloader,
@@ -160,7 +167,7 @@ def main():
     parser.add_argument('--combo', type=Path)
     parser.add_argument('--app-only', type=Path)
     parser.add_argument('--profile', type=str.lower, choices=RELEASES,
-                        help='Defaults to DE3.81; an explicit --combo is recognized by its SHA-256.')
+                        help='Defaults to DE3.89; an explicit --combo is recognized by its SHA-256.')
     args = parser.parse_args()
     print(json.dumps(verify(args.root, args.profile, args.combo, args.app_only)))
 
