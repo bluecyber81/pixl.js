@@ -1,14 +1,15 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.4';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.5';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews } from './lcd-private-reference.mjs?v=3.58.4';
+import { lcdPreviews, lcdPreviewPackage } from './lcd-private-reference.mjs?v=3.58.5';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
 const progressBar = document.getElementById('progress'), capabilityText = document.getElementById('capability');
 const bundledSelect = document.getElementById('bundled'), loadBundled = document.getElementById('load-bundled');
 const cancelBundled = document.getElementById('cancel-bundled'), bundledInfo = document.getElementById('bundled-info');
+const loadPreview = document.getElementById('load-lcd-preview');
 const androidHandoff = document.getElementById('android-handoff'), androidLink = document.getElementById('android-dfu-link');
 const defaultBundledInfo = bundledInfo.textContent;
 const boardSelect = document.getElementById('board-profile');
@@ -92,11 +93,15 @@ function controls() {
     boardSelect.disabled = latestState.busy || latestState.loading || loading;
     fileInput.disabled = boardConflict || latestState.busy || latestState.loading || loading;
     selectButton.disabled = Boolean(boardConflict || targetConflict || !supported || !latestState.ready || loading);
-    bundledSelect.disabled = latestState.busy || latestState.loading || loading || !bundled?.catalog.packages.length;
+    bundledSelect.disabled = latestState.busy || latestState.loading || loading ||
+        !bundled?.catalog.packages.some(entry => entry.board === boardSelect.value);
     const selected = bundled?.catalog.packages.find(entry => entry.id === bundledSelect.value);
     const mismatch = selectedProfileMismatch(selected);
     const downgrade = selected && recentBootReference()?.app > selected.counter;
-    loadBundled.disabled = Boolean(boardConflict || bundledSelect.disabled || !selected || selected.board !== boardSelect.value || mismatch || downgrade);
+    const packageBlocked = entry => Boolean(boardConflict || bundledSelect.disabled || !entry ||
+        entry.board !== boardSelect.value || selectedProfileMismatch(entry) || ref && ref.app > entry.counter);
+    loadBundled.disabled = packageBlocked(selected);
+    loadPreview.disabled = packageBlocked(bundled?.catalog.packages.find(entry => entry.id === lcdPreviewPackage.id));
     if (downgrade) setText(bundledInfo, 'Die gelesene Anwendung hat einen höheren Zähler. Wähle eine gleich neue oder neuere Version.', 'The installed application has a higher counter. Choose the same or a newer version.');
     if (mismatch) setText(bundledInfo, `Dieses Paket setzt ${selected.bootloader} und ${selected.softDevice} voraus. Die zuletzt gelesenen Bootdaten weichen davon ab.`, `This package requires ${selected.bootloader} and ${selected.softDevice}. The most recent boot readings differ from this profile.`);
     if (boardConflict) setText(bundledInfo, 'Die Displayauswahl widerspricht dem Gerätelink. Öffne die DFU-Seite vom passenden Gerät erneut.',
@@ -263,7 +268,9 @@ function populateCatalog(id) {
     }
 }
 try {
-    bundled = new AllmiiboBundledPackages.Loader({catalog:AllmiiboFirmwareReleases,updater,
+    const runtimeCatalog = {...AllmiiboFirmwareReleases,
+        packages:[...AllmiiboFirmwareReleases.packages, lcdPreviewPackage]};
+    bundled = new AllmiiboBundledPackages.Loader({catalog:runtimeCatalog,updater,
         pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
     const requested = new URLSearchParams(globalThis.location.search).getAll('package');
     // Historical Test 1 links point to the same signed App662 archive.
@@ -291,7 +298,18 @@ bundledSelect.addEventListener('change', () => {
     bundled?.invalidate();
     controls();
 });
-loadBundled.addEventListener('click', () => { if (!latestState.busy && !loadBundled.disabled) { fileInput.value=''; return bundled?.load(bundledSelect.value); } });
+function loadSelectedPackage() {
+    controls();
+    if (!loadBundled.disabled) { fileInput.value=''; return bundled?.load(bundledSelect.value); }
+}
+loadBundled.addEventListener('click', loadSelectedPackage);
+loadPreview.addEventListener('click', () => {
+    controls();
+    if (loadPreview.disabled) return;
+    bundledSelect.value = lcdPreviewPackage.id;
+    profileInfo();
+    return loadSelectedPackage();
+});
 cancelBundled.addEventListener('click', () => bundled?.cancel());
 fileInput.addEventListener('change', () => {
     if (latestState.busy) return;

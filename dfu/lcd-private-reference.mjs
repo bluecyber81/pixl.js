@@ -45,4 +45,20 @@ export const lcdPreview = Object.freeze({
   "artifactStatus": "experimental-signed-application",
   "hardwareAcceptance": "pending"
 });
+// Runtime-only choice for the private updater; the stable release catalogue stays unchanged.
+export const lcdPreviewPackage = Object.freeze({
+  id: 'de3.94-lcd-app',
+  version: lcdPreview.firmwareVersion,
+  counter: lcdPreview.applicationCounter,
+  file: 'Allmiibo_LCD_DE3_94_667_NUR_APP.zip',
+  bytes: lcdPreview.otaBytes,
+  sha256: lcdPreview.otaSha256,
+  board: lcdPreview.board,
+  storage: 'PFS1',
+  bootloader: 'Z21',
+  softDevice: 'S112 7.3.0',
+  applicationOnly: true,
+  migrationRequired: false,
+  channel: 'prerelease'
+});
 export const lcdPreviews = Object.freeze([lcdPreview, lcdPreview665, lcdPreviousPreview]);
