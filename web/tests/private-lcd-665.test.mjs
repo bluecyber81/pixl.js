@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import DfuPackage from '../public/dfu/package.js';
 import Bundled from '../public/dfu/bundled-packages.js';
 import Updater from '../public/dfu/updater.js';
-import {lcdPreview, lcdPreviews} from '../public/dfu/lcd-private-reference.mjs';
+import {lcdPreview665 as lcdPreview, lcdPreviews} from '../public/dfu/lcd-private-reference.mjs';
 import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {buildDiagnosticBoard} from '../src/lib/lcd-build-diagnostics.js';

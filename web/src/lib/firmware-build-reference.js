@@ -223,7 +223,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app662);
   const relation = !reference ? 'no-package-reference' : version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
-  const sourceRelation = reported && reference?.firmwareVersion === version
+  const sourceRelation = reported && reference?.firmwareVersion === version && /^[a-f0-9]{64}$/.test(reference.sourceId || '')
     ? reported.sourceId === reference.sourceId && reported.board === reference.board ? 'matches-package' : 'differs-from-package'
     : null;
   return { schemaVersion: 1, ...(reported ? {firmwareReportedSourceRelation:sourceRelation} : {}), observed, packageReference: reference, referenceRelation: relation,

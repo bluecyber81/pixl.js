@@ -107,22 +107,25 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
     prod = read(args.build/'production-inputs.json')
     assert record['exit_code'] == 0 and record['board'] == 'LCD'
+    if args.profile == 'de394':
+        assert record['version'] == '2.22.0-DE3.94' and record['counter'] == 667
     assert source_hashes(fw) == prod and fingerprint(prod) == record['source_id_sha256']
     artifacts = {name:digest(args.build/name) for name in ('pixljs.bin','pixljs.hex','pixljs.out','pixljs.map')}
     assert artifacts == record['artifacts_sha256']
     manifest, engine = identity(fw/'application/src/mod/vfs', fw/'components/littlefs')
     engine_record = dict(manifest=manifest, engineSha256=engine)
-    simulator = ROOT/'web/third-party'/('packed-simulator-'+args.profile)
+    simulator_profile = 'de393' if args.profile == 'de394' else args.profile
+    simulator = ROOT/'web/third-party'/('packed-simulator-'+simulator_profile)
     assert engine_record == read(simulator/'ENGINE_IDENTITY.json')
     binding = read(simulator/'SOURCE_BINDING.json')
     assert all(digest(simulator/name) == sha for name,sha in binding['sourceFiles'].items())
-    wasm_sha = digest(ROOT/'web/public'/('lfs-capacity-'+args.profile+'.wasm'))
+    wasm_sha = digest(ROOT/'web/public'/('lfs-capacity-'+simulator_profile+'.wasm'))
     assert wasm_sha == binding['wasmSha256']
     cross = read(args.cross/'PFS_CROSS_VERSION.json')
     assert cross['passed'] and cross['syntheticDataOnly'] and cross['engines']['new'] == engine
@@ -136,8 +139,8 @@ def main():
         assert extracted.read_bytes() == binary
     rows = (line.split() for line in subprocess.check_output([tool('nm'), '-n', elf], text=True).splitlines())
     symbols = {row[2]:int(row[0],16) for row in rows if len(row) == 3}
-    report = dict(firmware=record['version'], counter=record['counter'], scope='Linked LCD layout and synthetic cross-mount verification of the identical storage engine',
-        engine=engine_record, wasmSha256=wasm_sha, sourceId=fingerprint(prod), sourceFiles=len(prod), buildArtifacts=artifacts,
+    report = dict(firmware=record['version'], counter=record['counter'], capacityProfile=args.profile, simulatorProfile=simulator_profile, scope='Linked LCD layout and synthetic cross-mount verification of the identical storage engine',
+        engine=engine_record, wasmSha256=wasm_sha, crossMountReportSha256=digest(args.cross/'PFS_CROSS_VERSION.json'), sourceId=fingerprint(prod), sourceFiles=len(prod), buildArtifacts=artifacts,
         adapterSha256=prod['fw/application/src/mod/vfs/vfs_driver_packed.c'], elfLoadBytesCompared=len(binary),
         intelHex=check_hex(args.build/'pixljs.hex',symbols['__isr_vector'],binary),
         capacityCrossMount=dict(cases=len(cross['cases']),files=cross['filesInitially'],folders=cross['directoriesInitially'],synthetic=True),

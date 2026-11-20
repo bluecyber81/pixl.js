@@ -97,7 +97,7 @@ test('DE3.89 recognizes the Z21 region and rejects a mismatched region', () => {
   assert.equal(row(result(change(60,662,previewPacket(21,z20Hash)),app662),'bootloader').status,'different');
 });
 
-for (const [version,counter] of [['2.22.0-DE3.82',655],['2.22.0-DE3.83',656],['2.22.0-DE3.84',657],['2.22.0-DE3.85',658],['2.22.0-DE3.91',664],['2.22.0-DE3.92',665]]) test(`App${counter} preview uses its checked Z21/S112 profile separately from the bundled target`, () => {
+for (const [version,counter] of [['2.22.0-DE3.82',655],['2.22.0-DE3.83',656],['2.22.0-DE3.84',657],['2.22.0-DE3.85',658],['2.22.0-DE3.91',664],['2.22.0-DE3.92',665],['2.22.0-DE3.93',666],['2.22.0-DE3.94',667]]) test(`App${counter} preview uses its checked Z21/S112 profile separately from the bundled target`, () => {
   const app = {...session, firmwareVersion:version};
   const packet = change(60,counter,previewPacket(21,UPDATE_TARGET.bootloaderZ21.sha256));
   const r = result(packet,app);
@@ -269,7 +269,7 @@ test('both overview languages show the exact new target without changing evidenc
 test('browser, diagnostic, launcher and lockfile carry one patch-version identity', () => {
   const read = relative => fs.readFileSync(new URL(relative, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('../package.json')), lock = JSON.parse(read('../package-lock.json'));
-  assert.equal(pkg.version, '3.58.3'); assert.equal(lock.version, pkg.version);
+  assert.equal(pkg.version, '3.58.4'); assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[''].version, pkg.version);
   assert.equal(JSON.parse(read('../public/dfu/package.json')).version, pkg.version);
   assert.ok(read('../src/lib/device-info.js').includes("applicationVersion: '" + pkg.version + "'"));

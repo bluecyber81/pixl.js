@@ -89,6 +89,16 @@ test('small-file capability requires an LCD generation and a strictly valid posi
     f.bus.emit('ble_disconnected');
     assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
 });
+test('App667 explicitly probes the existing small-file capability without allowing future or OLED versions', async () => {
+    const f = protocolFixture();
+    for (const version of ['2.22.0-DE3.95','2.22.0-DE3.94-OLEDt7'])
+        assert.equal(await f.api.vfs_small_create_revision(version),null);
+    assert.equal(f.writes.length,0);
+    const query = f.api.vfs_small_create_revision('2.22.0-DE3.94');
+    assert.deepEqual(f.writes,[[0x22,0,0,0]]);
+    f.rx(0x22,nativeCap);
+    assert.equal(await query,'0000000700000001');
+});
 test('small-file wire sends the exact local bytes and checks every offset, persistent hash and revision',async()=>{
     const f=protocolFixture(), rev=await enableNative(f);
     const p=f.api.vfs_small_create(nativePath,new Uint8Array(540).fill(3),nativeHash.toString('hex'),rev);
@@ -255,8 +265,8 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
 test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
  const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
  packet[40]=23;packet.set([8,6,0,1],80);
- for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92']) {
-  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92'].includes(version);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94']) {
+  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94'].includes(version);
   packet.set(expandedCache ? [26,26,0,1] : [8,6,0,1],80);
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,3]]);

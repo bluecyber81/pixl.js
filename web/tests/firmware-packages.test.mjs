@@ -136,7 +136,7 @@ test('current LCD download choices respect the installed application, system pro
  const choices = (firmwareVersion,boot = parseBootDiagnostics(bytes)) => currentLcdDownloads(current,{connected:true,firmwareVersion},boot);
  assert.deepEqual(currentLcdDownloads(current,{connected:false},null),{app:true,combo:true});
  assert.deepEqual(choices(current.version),{app:true,combo:false});
- for (const version of ['2.22.0-DE3.90','2.22.0-DE3.91','2.22.0-DE3.92']) assert.deepEqual(choices(version),{app:false,combo:false});
+ for (const version of ['2.22.0-DE3.90','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94']) assert.deepEqual(choices(version),{app:false,combo:false});
  assert.deepEqual(choices('2.22.0-DE3.81-OLEDt1'),{app:false,combo:false});
  for (const version of ['2.22.0-DE3.81-OLEDt2','2.23.0-DE3.91-OLEDt10']) {
    assert.deepEqual(choices(version),{app:false,combo:false});

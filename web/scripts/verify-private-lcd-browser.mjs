@@ -7,16 +7,27 @@ import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {preview} from 'vite';
 import {diagnosticSnapshot} from '../tests/fixtures/diagnostic-overview-data.mjs';
-import {lcdPreview, lcdPreviousPreview} from '../public/dfu/lcd-private-reference.mjs';
+import {lcdPreview, lcdPreviews} from '../public/dfu/lcd-private-reference.mjs';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 
 const [dist, output] = process.argv.slice(2);
 assert.ok(dist && output, 'Usage: node scripts/verify-private-lcd-browser.mjs <dist> <evidence-directory>');
 await fs.access(path.join(dist, 'index.html'));
 await fs.mkdir(output, {recursive:true});
+const webVersion = JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+const base = path.basename(path.resolve(dist)) === 'dist-pages' ? '/pixl.js/' : '/';
+assert.equal(lcdPreview.artifactStatus,'experimental-signed-application','App667 final package is still pending');
+assert.equal(getMigrationCapacityTarget('de394').approved,true,'App667 linked capacity binding is still pending');
+const privatePackages = lcdPreviews.map(reference => {
+  const profile = {667:'de394',665:'de392',664:'de391'}[reference.applicationCounter];
+  const match = /^2\.22\.0-DE3\.(\d+)$/u.exec(reference.firmwareVersion);
+  assert.ok(profile && match, 'Every private package has an explicit capacity profile');
+  return {reference,profile,name:`Allmiibo_LCD_DE3_${match[1]}_${reference.applicationCounter}_NUR_APP.zip`};
+});
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright');
-const server = await preview({base:'/',build:{outDir:path.resolve(dist)},preview:{host:'127.0.0.1',port:0,open:false},logLevel:'error'});
+const server = await preview({base,build:{outDir:path.resolve(dist)},preview:{host:'127.0.0.1',port:0,open:false},logLevel:'error'});
 const origin = 'http://127.0.0.1:' + server.httpServer.address().port;
+const startUrl = origin + base;
 let browser;
 const results=[], shots=[];
 async function screenshot(page, name) {
@@ -39,13 +50,15 @@ try {
         Object.defineProperty(navigator,'bluetooth',{configurable:true,value:{requestDevice:async()=>{window.__bleCalls++;throw Error('Synthetic test forbids hardware');}}});
       });
       const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
-      await page.goto(origin);await page.locator('.version-context').waitFor();
-      assert.match(await page.locator('.version-context').innerText(),/3\.58\.2.*App665/s);
-      for (const reference of [lcdPreview,lcdPreviousPreview]) {
+      await page.goto(startUrl);await page.locator('.version-context').waitFor();
+      const versionContext = await page.locator('.version-context').innerText();
+      assert.ok(versionContext.includes(webVersion));
+      assert.match(versionContext,/LCD DE3\.94 \/ App667/);
+      for (const {reference,profile} of privatePackages) {
         const snapshot=diagnosticSnapshot();
         snapshot.sections.boot.data.applicationCounter=reference.applicationCounter;
         snapshot.sections.build={state:'available',observedAt:snapshot.completedAt,errorCode:null,data:{schemaVersion:1,board:'LCD',sourceId:reference.sourceId,previousFault:null}};
-        Object.assign(snapshot.sections.storage.data.layout,getMigrationCapacityTarget(reference.applicationCounter===665?'de392':'de391').layout,{mounted:true});
+        Object.assign(snapshot.sections.storage.data.layout,getMigrationCapacityTarget(profile).layout,{mounted:true});
         await page.evaluate(({reference,snapshot})=>{
           const app=document.querySelector('#app')._vnode.component.proxy;window.__ui=app;
           Object.assign(app,{connected:true,firmwareVersion:reference.firmwareVersion,fullDiagnosticSnapshot:snapshot,language:'de_DE'});
@@ -68,17 +81,22 @@ try {
       const migration=page.locator('.migration-panel');await migration.waitFor();
       if(!await migration.evaluate(el=>el.open))await migration.locator(':scope > summary').click();
       const selector=migration.locator('select');
-      assert.equal(await selector.inputValue(),'de392');
-      assert.deepEqual(await selector.locator('option').evaluateAll(items=>items.slice(0,2).map(el=>({value:el.value,text:el.textContent}))),[{value:'de392',text:'DE3.92 / 665'},{value:'de391',text:'DE3.91 / 664'}]);
+      assert.equal(await selector.inputValue(),'de394');
+      assert.deepEqual(await selector.locator('option').evaluateAll(items=>items.slice(0,3).map(el=>({value:el.value,text:el.textContent}))),[{value:'de394',text:'DE3.94 / 667'},{value:'de392',text:'DE3.92 / 665'},{value:'de391',text:'DE3.91 / 664'}]);
       await selector.selectOption('de391');assert.equal(await selector.inputValue(),'de391');
-      await selector.selectOption('de392');
-      await fits(page);await screenshot(page,`app665-capacity-${width}`);
+      await selector.selectOption('de392');assert.equal(await selector.inputValue(),'de392');
+      await selector.selectOption('de394');
+      await fits(page);await screenshot(page,`app667-capacity-${width}`);
       assert.equal(await page.evaluate(()=>window.__bleCalls),0);
-      await page.goto(origin+'/dfu/web.html');
+      await page.goto(new URL('dfu/web.html',startUrl).href);
       await page.locator('#file').waitFor();
       await page.waitForFunction(()=>!document.querySelector('#file').disabled);
-      assert.match(await page.locator('.eyebrow').innerText(),/App665/);
-      for(const [reference,name] of [[lcdPreview,'Allmiibo_LCD_DE3_92_665_NUR_APP.zip'],[lcdPreviousPreview,'Allmiibo_LCD_DE3_91_664_NUR_APP.zip']]){
+      assert.match(await page.locator('.eyebrow').innerText(),/App667/);
+      const download = await page.locator('#lcd-preview-download a').getAttribute('href');
+      const response = await page.request.get(new URL(download,page.url()).href);
+      assert.equal(response.status(),200);
+      assert.equal(createHash('sha256').update(await response.body()).digest('hex'),lcdPreview.otaSha256);
+      for(const {reference,name} of privatePackages){
         await page.locator('#file').setInputFiles(path.join(dist,'firmware',name));
         await page.waitForFunction(version=>document.querySelector('#status')?.textContent.includes('Privates LCD-Prüfpaket')&&document.querySelector('#status')?.textContent.includes(version),reference.firmwareVersion);
         assert.match(await page.locator('#package-target').innerText(),new RegExp(String(reference.applicationCounter)));
@@ -86,15 +104,24 @@ try {
         await fits(page);await screenshot(page,`app${reference.applicationCounter}-dfu-${width}`);
       }
       await page.locator('#board-profile').selectOption('OLED');
-      await page.locator('#file').setInputFiles(path.join(dist,'firmware','Allmiibo_LCD_DE3_92_665_NUR_APP.zip'));
+      await page.locator('#file').setInputFiles(path.join(dist,'firmware','Allmiibo_LCD_DE3_94_667_NUR_APP.zip'));
       await page.waitForFunction(()=>document.querySelector('#status')?.textContent.includes('anderen Display'));
       assert.equal(await page.locator('#button').isEnabled(),false);
       assert.equal(await page.evaluate(()=>window.__bleCalls),0);
+      await page.goto(new URL('licenses/index.html',startUrl).href);
+      const sourceName = 'LCD_DE3_94_App667_Simulatorquellen.zip';
+      const sourceLink = page.locator('a[href="../sources/' + sourceName + '"]');
+      assert.equal(await sourceLink.count(),1);
+      assert.match(await sourceLink.innerText(),/DE3\.94 \/ App667/);
+      const sourceResponse = await page.request.get(new URL(await sourceLink.getAttribute('href'),page.url()).href);
+      assert.equal(sourceResponse.status(),200);
+      assert.equal(createHash('sha256').update(await sourceResponse.body()).digest('hex'),
+        createHash('sha256').update(await fs.readFile(new URL('../public/sources/' + sourceName,import.meta.url))).digest('hex'));
       assert.deepEqual(errors,[]);
-      results.push({width,app665BuildReference:true,app664Retained:true,privatePackageRecognition:true,oledRejected:true,capacityProfilesSeparate:true,noHorizontalOverflow:true,bluetoothRequests:0});
+      results.push({width,app667BuildReference:true,app665Retained:true,app664Retained:true,privatePackageRecognition:true,downloadHashVerified:true,sourceDownloadHashVerified:true,oledRejected:true,capacityProfilesSeparate:true,noHorizontalOverflow:true,bluetoothRequests:0});
     } finally {await context.close();}
   }
-  const report={passed:true,browser:browser.version(),deviceAccess:false,fixture:'synthetic rendered observations and actual signed local OTA files',results,screenshots:shots};
+  const report={passed:true,webVersion,deploymentBase:base,browser:browser.version(),deviceAccess:false,fixture:'synthetic rendered observations and actual signed local OTA files',results,screenshots:shots};
   await fs.writeFile(path.join(output,'PRIVATE_LCD_BROWSER.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify(report));
 } finally {

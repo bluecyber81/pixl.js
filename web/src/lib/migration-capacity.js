@@ -135,6 +135,29 @@ const de392 = {
   geometry: {...de391.geometry},
   layout: {...de391.layout, engineSha256: '605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1'},
 }
+// App666 keeps the PFS1 layout and has its own exact collection engine.
+const de393 = {
+  ...de392,
+  approved: true,
+  url: '/lfs-capacity-de393.wasm',
+  wasmSha256: 'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',
+  firmwareVersion: '2.22.0-DE3.93',
+  applicationCounter: 666,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.93', applicationCounter: 666}],
+  geometry: {...de392.geometry},
+  layout: {...de392.layout, engineSha256: '7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e'},
+}
+// App667 reuses the exact DE393 engine/WASM with its own linked ARM qualification
+// in docs/validation/DE3_94_PFS.json. Approval is specific to the new application.
+const de394 = {
+  ...de393,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.94',
+  applicationCounter: 667,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.94', applicationCounter: 667}],
+  geometry: {...de393.geometry},
+  layout: {...de393.layout},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -150,7 +173,11 @@ export const MIGRATION_CAPACITY_TARGET=freezeTarget(current)
 export const DE389_MIGRATION_CAPACITY_TARGET=freezeTarget(de389)
 export const DE391_MIGRATION_CAPACITY_TARGET=freezeTarget(de391)
 export const DE392_MIGRATION_CAPACITY_TARGET=freezeTarget(de392)
+export const DE393_MIGRATION_CAPACITY_TARGET=freezeTarget(de393)
+export const DE394_MIGRATION_CAPACITY_TARGET=freezeTarget(de394)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de394')return DE394_MIGRATION_CAPACITY_TARGET
+  if(profile==='de393')return DE393_MIGRATION_CAPACITY_TARGET
   if(profile==='de392')return DE392_MIGRATION_CAPACITY_TARGET
   if(profile==='de391')return DE391_MIGRATION_CAPACITY_TARGET
   if(profile==='current')return MIGRATION_CAPACITY_TARGET

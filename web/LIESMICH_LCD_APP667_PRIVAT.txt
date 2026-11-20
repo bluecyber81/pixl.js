@@ -1,0 +1,73 @@
+Allmiibo Dateimanager 3.58.4 – LCD DE3.94 / App667
+=================================================
+
+Enthaltene private Firmware
+---------------------------
+Board: LCD / ST7567
+Version: 2.22.0-DE3.94
+App-Zähler: 667
+Voraussetzungen: PackedFS/PFS1, Bootloader Z21, S112 7.3.0
+Paket: public/firmware/Allmiibo_LCD_DE3_94_667_NUR_APP.zip
+Paketgröße: 361633 Byte
+OTA-SHA-256:
+f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4
+Anwendungsgröße: 361032 Byte
+BIN-SHA-256:
+99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f
+Firmware-SourceID:
+1f5864e1279b7378d3cc685b73d80a3257aad8f6a29db27d1c880800b30c4e90
+
+Öffentlicher Quellstand:
+https://github.com/bluecyber81/pixl.js/tree/22d5c92cc566fb7da9d43a538f2818d28bfb72a6
+
+Bedienung am Handy
+------------------
+Auf der DFU-Seite LCD wählen, das private Prüfpaket DE3.94 / App667
+herunterladen und unter „Eigene Firmware-ZIP“ auswählen. Die Seite prüft
+ZIP, Zielzähler, Boardzuordnung und Paketidentität vor der Geräteauswahl.
+Die Signatur und die Installationsvoraussetzungen prüft der Bootloader.
+Nach dem Update im Dateimanager die Diagnose neu lesen und Version,
+App-Zähler sowie gemeldete SourceID mit der Referenz vergleichen.
+Ein passender SourceID-String ist kein ausgelesener Hash des gesamten
+Geräte-BINs und identifiziert auch kein eindeutiges physisches Gerät.
+
+Die frühere private App665 und App664 bleiben erkennbar. Die öffentliche
+stabile LCD-Auswahl bleibt App662. OLED behält seine eigenen Pakete.
+Web 3.58.4 enthält die bereits veröffentlichten Übertragungskorrekturen
+von 3.58.3 und die neue Paket-/Diagnose-/Kapazitätszuordnung für App667.
+
+Speicherbedarfssimulator und Quellen
+------------------------------------
+Das eigene freigegebene Profil de394 gilt genau für DE3.94 / App667.
+Es verwendet die bytegleiche de393-Engine mit folgender Identität:
+Engine SHA-256:
+7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e
+WASM SHA-256:
+f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96
+Datei: public/lfs-capacity-de393.wasm
+Quellen: third-party/packed-simulator-de393
+Builder: scripts/build-capacity-de393.py
+
+Der tatsächliche App667-Build ist separat in
+../docs/validation/DE3_94_PFS.json qualifiziert. Vier Fälle führen den
+wirklich gelinkten ARM-Code für das Speicherlayout aus. Die unveränderten
+Engine-Dateien, zwölf Simulatorquellen, ELF/BIN/HEX und 709 Produktions-
+eingaben wurden abgeglichen. Der bestehende Crossmount-Nachweis wird
+wegen der identischen Engine über seine gespeicherten Hashes verwendet.
+
+Quellenpaket: public/sources/LCD_DE3_94_App667_Simulatorquellen.zip
+Es enthält vollständige Simulatorquellen, beide Lizenzen, Compilerpins,
+Builder, Referenz-WASM, den neuen ARM-Nachweis und APP667_BINDING.json.
+SOURCE.txt im gemeinsamen Engine-Snapshot bleibt ein historischer
+App666-Nachweis; die zusätzliche App667-Bindung nennt die neue SourceID,
+den wirklichen Produktionscommit und die zugehörige BIN-Identität.
+Der Download befindet sich auf der Seite „Quellen und Lizenzen“.
+
+Prüfgrenzen und offene Geräteprüfung
+------------------------------------
+Die Build-/Signatur-/ARM-/WASM-Nachweise bestätigen keine physische
+Geräteabnahme. Zu prüfen bleiben Verwerfen/Verlassen bei Speicherfehler,
+mindestens zwei Minuten BLE-Verbindung, typische Dateiübertragungen,
+Abbruch/Wiederaufnahme sowie frisch gelesener freier Speicher.
+Funktempo und tatsächlich sofort freier Speicher erfordern Messungen
+am Gerät. Die Software meldet die Hardwareabnahme weiterhin als offen.

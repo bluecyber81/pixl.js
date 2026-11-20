@@ -1,5 +1,5 @@
 import { UPDATE_TARGET } from './update-target.js';
-import { DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
+import { DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
 
 // A profile is opt-in. Only the browser's already hashed, per-device lookup key is used locally.
 const profileValue = 'lipo-551520-180mah-v1';
@@ -32,12 +32,14 @@ export const LCD_Z21_COUNTERS = Object.freeze({
   '2.22.0-DE3.89': 662,
   '2.22.0-DE3.91': 664,
   '2.22.0-DE3.92': 665,
+  '2.22.0-DE3.93': 666,
+  '2.22.0-DE3.94': 667,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_Z21_COUNTERS)];
 export function supportsFolderPublication(version, engine) {
   if (firmwareBoard(version) !== 'LCD') return false;
-  const profile = [DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET].find(target => target.firmwareVersion === version) ?? MIGRATION_CAPACITY_TARGET;
-  return profile.layout.engineSha256 === engine;
+  const profile = [DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET].find(target => target.firmwareVersion === version) ?? MIGRATION_CAPACITY_TARGET;
+  return profile.approved === true && profile.layout.engineSha256 === engine;
 }
 export const OLED_PARITY_VERSION = '2.22.0-DE3.84-OLEDt4';
 export const OLED_TEST5_VERSION = '2.22.0-DE3.85-OLEDt5';

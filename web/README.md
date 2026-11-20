@@ -1,5 +1,11 @@
 # Allmiibo Dateimanager
 
+## Dateimanager 3.58.4 – LCD DE3.94 / App667
+
+Diese Ausgabe enthält das signierte private LCD-Prüfpaket DE3.94 / App667, die dazu passende Diagnose und ein für diesen tatsächlichen Firmwarebuild qualifiziertes Speicherbedarfsprofil. Die Übertragungskorrekturen aus Web 3.58.3 sind enthalten. App665 und App664 bleiben als frühere private Pakete erkennbar; die stabile LCD-Auswahl bleibt App662, OLED behält seine eigenen Profile. [Bedienung, Paketidentitäten und Prüfgrenzen](LIESMICH_LCD_APP667_PRIVAT.txt).
+
+Das Profil `de394` verwendet die bytegleichen [DE393-Enginequellen](third-party/packed-simulator-de393/SOURCE.txt) und `lfs-capacity-de393.wasm`. Der neue [ARM-/ELF-Nachweis](../docs/validation/DE3_94_PFS.json) bindet diese Engine an die tatsächliche App667-SourceID und deren BIN/HEX. Das [App667-Simulatorquellenpaket](public/sources/LCD_DE3_94_App667_Simulatorquellen.zip) enthält sämtliche bisherigen Simulatorquellen und eine separate `APP667_BINDING.json` mit der neuen Firmwarebindung. Die physische Geräteabnahme steht aus.
+
 ## Private Ausgabe 3.58.2 für LCD DE3.92 / App665
 
 Diese lokale Ausgabe ergänzt die App665-Diagnose, die signierte App-ZIP und einen separat qualifizierten Speicherbedarfssimulator. Die vorherige private App664 und alle öffentlichen Profile bleiben enthalten. [Bedienung und Prüfgrenzen](LIESMICH_LCD_APP665_PRIVAT.txt) · [Exakte Simulatorquellen und neuer Toolchain-Pin](third-party/packed-simulator-de392/SOURCE.txt). Der Gerätetest von App665 steht noch aus.

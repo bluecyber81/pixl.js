@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { noticeFiles, webRoot } from '../../scripts/copy-license-notices.mjs'
+import { lcdPreview } from '../../public/dfu/lcd-private-reference.mjs'
 
 const dist = path.resolve(process.env.ALLMIIBO_DIST_DIR || fileURLToPath(new URL('../../dist', import.meta.url)))
 const base = process.env.ALLMIIBO_TEST_BASE_PATH || '/'
@@ -117,6 +118,32 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
   localFile(new URL('../dfu/vendor/SOURCES.json', origin + base + 'licenses/index.html'))
   assert.match(index, /historische/)
+})
+
+test(`${base}: the App667 source download resolves to the complete archive with its current firmware binding`, async () => {
+  const name = 'LCD_DE3_94_App667_Simulatorquellen.zip'
+  const index = read('licenses/index.html')
+  const links = [...index.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(match => match[1].endsWith(name))
+  assert.equal(links.length, 1)
+  assert.match(links[0][0], /\bdownload\b/)
+  const file = localFile(new URL(links[0][1], origin + base + 'licenses/index.html'))
+  const bytes = fs.readFileSync(file)
+  assert.deepEqual(bytes, fs.readFileSync(path.join(webRoot, 'public/sources', name)))
+  assert.deepEqual(fs.readFileSync(path.join(dist, 'dfu/lcd-private-reference.mjs')),
+    fs.readFileSync(path.join(webRoot, 'public/dfu/lcd-private-reference.mjs')))
+  const require = createRequire(import.meta.url)
+  const JSZip = require(path.join(dist, 'dfu/vendor/jszip-3.10.2.min.js'))
+  const archive = await JSZip.loadAsync(bytes, {checkCRC32:true})
+  const binding = JSON.parse(await archive.file('APP667_BINDING.json').async('string'))
+  assert.equal(binding.sourceId, lcdPreview.sourceId)
+  assert.equal(binding.applicationCounter, lcdPreview.applicationCounter)
+  assert.equal(binding.applicationBinSha256, lcdPreview.applicationBinSha256)
+  assert.equal(binding.applicationBytes, lcdPreview.applicationBytes)
+  assert.equal(binding.capacityProfile, 'de394')
+  const qualification = await archive.file(binding.qualification.path).async('uint8array')
+  assert.equal(sha(qualification), binding.qualification.sha256)
+  assert.equal(JSON.parse(new TextDecoder().decode(qualification)).sourceId, lcdPreview.sourceId)
+  assert.equal(sha(fs.readFileSync(path.join(dist, binding.wasm.path.slice('web/public/'.length)))), binding.wasm.sha256)
 })
 
 test(`${base}: static build contains no local server, state, test, dependency tree or collection backup`, () => {
