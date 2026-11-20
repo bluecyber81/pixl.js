@@ -14,7 +14,7 @@ export const lcdPreviousPreview = Object.freeze({
   "artifactStatus": "experimental-signed-application",
   "hardwareAcceptance": "pending"
 });
-export const lcdPreview = Object.freeze({
+export const lcdPreview665 = Object.freeze({
   "board": "LCD",
   "firmwareVersion": "2.22.0-DE3.92",
   "applicationCounter": 665,
@@ -29,4 +29,20 @@ export const lcdPreview = Object.freeze({
   "artifactStatus": "experimental-signed-application",
   "hardwareAcceptance": "pending"
 });
-export const lcdPreviews = Object.freeze([lcdPreview, lcdPreviousPreview]);
+// Signed LCD App667 test package; hardware acceptance remains pending.
+export const lcdPreview = Object.freeze({
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.94",
+  "applicationCounter": 667,
+  "chipPart": 337970,
+  "sourceId": "1f5864e1279b7378d3cc685b73d80a3257aad8f6a29db27d1c880800b30c4e90",
+  "sourceCommit": "22d5c92cc566fb7da9d43a538f2818d28bfb72a6",
+  "validationCommit": "6f7b9c720f640f8487fe009509bb65cb56b5a79a",
+  "otaSha256": "f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4",
+  "otaBytes": 361633,
+  "applicationBytes": 361032,
+  "applicationBinSha256": "99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f",
+  "artifactStatus": "experimental-signed-application",
+  "hardwareAcceptance": "pending"
+});
+export const lcdPreviews = Object.freeze([lcdPreview, lcdPreview665, lcdPreviousPreview]);
