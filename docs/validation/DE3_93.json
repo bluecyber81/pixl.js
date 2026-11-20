@@ -1,0 +1,239 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "status": "signed-preview-on-test-branch",
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.93",
+  "applicationCounter": 666,
+  "sourceBranch": "test/lcd-de393-app666",
+  "sourceParentCommit": "e7989003be3679316c475fca307735ed1438e70d",
+  "sourceId": "415e85895e35e4f06cede89d6efbbe7e905290205723f0b31e9ddda9f05ac12a",
+  "productionInputs": 709,
+  "applicationBytes": 357964,
+  "applicationSha256": "bc08b79455d525667c03a1c03193bfb8d11a2e0416331dcc0d8ed90381550652",
+  "engineSha256": "7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e",
+  "applicationOnly": {
+    "file": "fw/releases/Allmiibo_LCD_DE3_93_666_NUR_APP.zip",
+    "sha256": "b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e",
+    "bytes": 358565,
+    "hardwareVersion": 52,
+    "softDeviceRequirements": [
+      "0x0126"
+    ],
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "containsBootloader": false,
+    "containsSoftDevice": false
+  },
+  "stableReleaseUnchanged": {
+    "version": "2.22.0-DE3.89",
+    "counter": 662
+  },
+  "reproducibility": {
+    "passed": true,
+    "identicalApplicationBinAndHex": true,
+    "identicalProductionManifests": true,
+    "productionInputs": 709,
+    "allProductionInputsStillMatch": true,
+    "sourceId": "415e85895e35e4f06cede89d6efbbe7e905290205723f0b31e9ddda9f05ac12a",
+    "applicationBinSha256": "bc08b79455d525667c03a1c03193bfb8d11a2e0416331dcc0d8ed90381550652",
+    "applicationBytes": 357964,
+    "applicationBytesSavedComparedToApp665": 6560,
+    "linkerBudget": {
+      "binary_bytes": 357964,
+      "linker_flash_used_bytes": 357984,
+      "observed": {
+        "flash_reserve_bytes": 14752,
+        "heap_stack_gap_bytes": 1816,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "firstBuildElfSha256": "11cfd8f76c526fcc92ca2b8f3fad1583fc51f2ddbef1c54cb622c14602d871ab",
+    "secondBuildElfSha256": "1f5738785071832f042cd651dd7ea4c8be141f7fa3df59661af802cd4e0e9790",
+    "elfDifferenceScope": "Independent build debug paths differ; delivered BIN and HEX are byte-identical.",
+    "physicalDeviceAccess": false
+  },
+  "validation": {
+    "fullFirmwareSuites": {
+      "passed": 177,
+      "executed": 177,
+      "omitted": 0,
+      "sourceId": "415e85895e35e4f06cede89d6efbbe7e905290205723f0b31e9ddda9f05ac12a",
+      "reportSha256": "a68acc2fdb23eac7a5bc958d7e8045da0e2507bdd117f4b5090e47a5abe8a7f6"
+    },
+    "linkedApplicationChecks": [
+      {
+        "test": "stack_watermark",
+        "exitCode": 0
+      },
+      {
+        "test": "first_menu",
+        "exitCode": 0
+      },
+      {
+        "test": "aes_m4",
+        "exitCode": 0
+      },
+      {
+        "test": "flash_jedec",
+        "exitCode": 0
+      },
+      {
+        "test": "display_profile",
+        "exitCode": 0
+      },
+      {
+        "test": "lcd_game_rotation",
+        "exitCode": 0
+      },
+      {
+        "test": "lcd_device_test",
+        "exitCode": 0
+      },
+      {
+        "test": "build_fault",
+        "exitCode": 0
+      },
+      {
+        "test": "chameleon_save_screen",
+        "exitCode": 0
+      }
+    ],
+    "sha256Hmac": {
+      "sha256Cases": 32,
+      "hmacSha256Cases": 16,
+      "hmacShortBufferAndRetryCases": 8,
+      "hardware": false,
+      "applicationBinSha256": "bc08b79455d525667c03a1c03193bfb8d11a2e0416331dcc0d8ed90381550652",
+      "passed": true
+    },
+    "z21": {
+      "paddedBootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+      "actualArmCryptoCases": [
+        {
+          "name": "signed init",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed signature",
+          "passed": true,
+          "returnValue": 5
+        },
+        {
+          "name": "changed init",
+          "passed": true,
+          "returnValue": 5
+        },
+        {
+          "name": "full BIN hash",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed BIN hash",
+          "passed": true,
+          "returnValue": 0
+        },
+        {
+          "name": "boot CRC",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed BIN boot CRC",
+          "passed": true,
+          "returnValue": 0
+        }
+      ],
+      "actualArmInitCases": [
+        {
+          "before": "App665 present",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 357964,
+          "bank0Code": 0
+        },
+        {
+          "before": "empty application bank",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 357964,
+          "bank0Code": 0
+        }
+      ],
+      "physicalDeviceAccess": false
+    },
+    "packedCleanup": {
+      "lifecycleCases": 36,
+      "readOnlyCases": 4,
+      "maintenanceFailureCases": 2,
+      "norFaultCases": 243,
+      "postcommitNorFaultCases": 18,
+      "physicalReadFaultCases": 1306,
+      "metadataSplitGarbageGroups": [
+        160,
+        400
+      ],
+      "midScanFailureCases": 2,
+      "asanUbsan": true,
+      "leakSanitizer": false,
+      "explicitAllocationBalanceAtEnd": 0
+    }
+  },
+  "hostStorageReadComparisons": [
+    {
+      "operation": "rename",
+      "before": 48884,
+      "after": 47255,
+      "reductionPercent": 3.3324
+    },
+    {
+      "operation": "rename_roundtrip",
+      "before": 48529,
+      "after": 46879,
+      "reductionPercent": 3.4
+    },
+    {
+      "operation": "rename_pinned",
+      "before": 40810,
+      "after": 40810,
+      "reductionPercent": 0.0
+    },
+    {
+      "operation": "close_last_snapshot",
+      "before": 9110,
+      "after": 7481,
+      "reductionPercent": 17.8814
+    },
+    {
+      "operation": "20_small_rewrites",
+      "before": 90967,
+      "after": 81398,
+      "reductionPercent": 10.5192
+    }
+  ],
+  "hardwareAcceptance": "pending",
+  "physicalDeviceAccess": false,
+  "openDeviceTests": [
+    "Same-handset verified BLE transfer duration and disconnect behavior",
+    "Free space immediately after deleting an expendable test set and closing its final reader",
+    "Settings retry and persistence after restart",
+    "Chameleon nickname retry, NFC and sleep/wake",
+    "Physical Android DFU interruption and resumption"
+  ],
+  "limits": [
+    "Synthetic NOR and linked ARM emulation are not physical device tests.",
+    "Host read-count reductions are not measured BLE throughput or device latency.",
+    "Independent debug ELF paths differ; delivered BIN and HEX are byte-identical.",
+    "LeakSanitizer cannot run under the host ptrace environment; ASan/UBSan and explicit allocation accounting passed.",
+    "No private signing keys, personal backups or figure payloads are included."
+  ]
+}

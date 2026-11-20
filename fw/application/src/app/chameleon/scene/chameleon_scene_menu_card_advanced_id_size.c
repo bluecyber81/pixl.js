@@ -35,12 +35,13 @@ void chameleon_scene_menu_card_advanced_id_size_on_enter(void *user_data) {
     app_chameleon_t *app = user_data;
     char buff[32];
     
-    sprintf(buff, "%d %s", NFC_TAG_14A_UID_SINGLE_SIZE, _T(BYTES));
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, buff, NULL, (void*)NFC_TAG_14A_UID_SINGLE_SIZE);
-    sprintf(buff, "%d %s", NFC_TAG_14A_UID_DOUBLE_SIZE, _T(BYTES));
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, buff, NULL, (void*)NFC_TAG_14A_UID_DOUBLE_SIZE);
-    sprintf(buff, "%d %s", NFC_TAG_14A_UID_TRIPLE_SIZE, _T(BYTES));
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, buff, NULL, (void*)NFC_TAG_14A_UID_TRIPLE_SIZE);
+    static const uint8_t sizes[] = {
+        NFC_TAG_14A_UID_SINGLE_SIZE, NFC_TAG_14A_UID_DOUBLE_SIZE, NFC_TAG_14A_UID_TRIPLE_SIZE,
+    };
+    for (size_t i = 0; i < ARRAY_SIZE(sizes); ++i) {
+        snprintf(buff, sizeof(buff), "%d %s", sizes[i], _T(BYTES));
+        mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, buff, NULL, (void *)(uintptr_t)sizes[i]);
+    }
     mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), NULL_USER_DATA);
 
     mui_list_view_set_selected_cb(app->p_list_view, chameleon_scene_menu_card_advanced_id_size_on_event);

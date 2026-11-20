@@ -10,6 +10,8 @@
 #include "mui_nav_diag.h"
 #include "mui_contrast.h"
 #include "ble_remote.h"
+#include <stddef.h>
+#include "ble_main.h"
 
 enum settings_main_menu_t {
     SETTINGS_MAIN_MENU_VERSION,
@@ -47,7 +49,7 @@ static void settings_reset_default(void *user_data) {
 #ifdef LCD_SCREEN
     backlight_result = mui_u8g2_set_backlight_level(p_settings->lcd_backlight);
 #endif
-    nrf_pwr_mgmt_set_timeout(p_settings->sleep_timeout_sec);
+    ble_set_standby_timeout(p_settings->sleep_timeout_sec);
     setLanguage(p_settings->language);
 
     mui_toast_view_show(app->p_toast_view,
@@ -57,6 +59,7 @@ static void settings_reset_default(void *user_data) {
 static void settings_scene_main_close_error(mui_msg_box_event_t event, mui_msg_box_t *box) {
     (void)event; /* The dialog offers only the centre button. */
     app_settings_t *app = box->user_data;
+    settings_scene_main_reload(app);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);
 }
 
@@ -139,22 +142,22 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
         break;
 
     case SETTINGS_MAIN_MENU_LI_MODE:
-        p_settings->bat_mode = !p_settings->bat_mode;
+        SETTINGS_TOGGLE(bat_mode);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_SHOW_MEM_USAGE:
-        p_settings->show_mem_usage = !p_settings->show_mem_usage;
+        SETTINGS_TOGGLE(show_mem_usage);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_ENABLE_HIBERNATE:
-        p_settings->hibernate_enabled = !p_settings->hibernate_enabled;
+        SETTINGS_TOGGLE(hibernate_enabled);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_ANIM_ENABLED:
-        p_settings->anim_enabled = !p_settings->anim_enabled;
+        SETTINGS_TOGGLE(anim_enabled);
         settings_scene_main_reload(app);
         break;
 
@@ -165,18 +168,18 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
         break;
 
     case SETTINGS_MAIN_MENU_NO_SLEEP:
-        p_settings->no_sleep_mode = !p_settings->no_sleep_mode;
+        SETTINGS_TOGGLE(no_sleep_mode);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_FLIP_DISPLAY:
-        p_settings->flip_display = !p_settings->flip_display;
+        SETTINGS_TOGGLE(flip_display);
         mui_u8g2_set_flip_display(p_settings->flip_display);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_SWAP_BUTTONS:
-        p_settings->swap_buttons = !p_settings->swap_buttons;
+        SETTINGS_TOGGLE(swap_buttons);
         settings_scene_main_reload(app);
         break;
 
@@ -292,28 +295,25 @@ static void settings_scene_main_reload(void *user_data) {
                                dim_value, (void *)SETTINGS_MAIN_MENU_LCD_DIM);
 #endif
 
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_FLIP_DISPLAY),
-                               p_settings->flip_display ? _T(ON) : _T(OFF),
-                               (void *)SETTINGS_MAIN_MENU_FLIP_DISPLAY);
-
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1c8, _T(APP_SET_SWAP_BUTTONS),
-                               p_settings->swap_buttons ? _T(ON) : _T(OFF),
-                               (void *)SETTINGS_MAIN_MENU_SWAP_BUTTONS);
-
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1dc, _T(APP_SET_ANIM),
-                               p_settings->anim_enabled ? _T(ON) : _T(OFF),
-                               (void *)SETTINGS_MAIN_MENU_ANIM_ENABLED);
-
-    mui_list_view_add_item_ext(app->p_list_view, 0xe08f, _T(APP_SET_LIPO_BAT),
-                               p_settings->bat_mode ? _T(ON) : _T(OFF), (void *)SETTINGS_MAIN_MENU_LI_MODE);
-
-    mui_list_view_add_item_ext(app->p_list_view, 0xe1f3, _T(APP_SET_SHOW_MEM_USAGE),
-                               p_settings->show_mem_usage ? _T(ON) : _T(OFF),
-                               (void *)SETTINGS_MAIN_MENU_SHOW_MEM_USAGE);
-
-    mui_list_view_add_item_ext(app->p_list_view, 0xe232, _T(APP_SET_HIBERNATE),
-                               p_settings->hibernate_enabled ? _T(ON) : _T(OFF),
-                               (void *)SETTINGS_MAIN_MENU_ENABLE_HIBERNATE);
+    static const struct {
+        uint16_t icon;
+        L_StringID title;
+        enum settings_main_menu_t action;
+        uint8_t field;
+    } flags[] = {
+        {0xe1c8, _L_APP_SET_FLIP_DISPLAY, SETTINGS_MAIN_MENU_FLIP_DISPLAY, offsetof(settings_data_t, flip_display)},
+        {0xe1c8, _L_APP_SET_SWAP_BUTTONS, SETTINGS_MAIN_MENU_SWAP_BUTTONS, offsetof(settings_data_t, swap_buttons)},
+        {0xe1dc, _L_APP_SET_ANIM, SETTINGS_MAIN_MENU_ANIM_ENABLED, offsetof(settings_data_t, anim_enabled)},
+        {0xe08f, _L_APP_SET_LIPO_BAT, SETTINGS_MAIN_MENU_LI_MODE, offsetof(settings_data_t, bat_mode)},
+        {0xe1f3, _L_APP_SET_SHOW_MEM_USAGE, SETTINGS_MAIN_MENU_SHOW_MEM_USAGE, offsetof(settings_data_t, show_mem_usage)},
+        {0xe232, _L_APP_SET_HIBERNATE, SETTINGS_MAIN_MENU_ENABLE_HIBERNATE, offsetof(settings_data_t, hibernate_enabled)},
+    };
+    for (size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); i++) {
+        const uint8_t *values = (const uint8_t *)p_settings;
+        mui_list_view_add_item_ext(app->p_list_view, flags[i].icon, getLangString(flags[i].title),
+                                   values[flags[i].field] ? _T(ON) : _T(OFF),
+                                   (void *)(uintptr_t)flags[i].action);
+    }
 
     uint16_t seconds = nrf_pwr_mgmt_get_timeout();
     const char *timeout_value = _T(OFF);
@@ -329,14 +329,22 @@ static void settings_scene_main_reload(void *user_data) {
     mui_list_view_add_item_ext(app->p_list_view, 0xe1d0, _T(DE3_REMOTE_SESSION),
                                ble_remote_enabled() ? _T(DE361_UNTIL_OFF) : _T(OFF),
                                (void *)SETTINGS_MAIN_MENU_REMOTE);
-    mui_list_view_add_item(app->p_list_view, 0xe1d0, _T(APP_SET_APP_MGMT), (void *)SETTINGS_MAIN_MENU_APP_MANAGEMENT);
-    mui_list_view_add_item(app->p_list_view, 0xe1c9, _T(APP_SET_GO_SLEEP), (void *)SETTINGS_MAIN_MENU_GO_SLEEP);
-    mui_list_view_add_item(app->p_list_view, 0xe1ca, _T(APP_SET_DFU), (void *)SETTINGS_MAIN_MENU_DFU);
-    mui_list_view_add_item(app->p_list_view, 0xe1cb, _T(APP_SET_REBOOT), (void *)SETTINGS_MAIN_MENU_REBOOT);
-    mui_list_view_add_item(app->p_list_view, 0xe1ce, _T(APP_SET_RESET_DEFAULT),
-                           (void *)SETTINGS_MAIN_MENU_RESET_DEFAULT);
-
-    mui_list_view_add_item(app->p_list_view, 0xe1cf, _T(APP_SET_ABOUT), (void *)SETTINGS_MAIN_MENU_ABOUT);
+    static const struct {
+        uint16_t icon;
+        L_StringID title;
+        enum settings_main_menu_t action;
+    } actions[] = {
+        {0xe1d0, _L_APP_SET_APP_MGMT, SETTINGS_MAIN_MENU_APP_MANAGEMENT},
+        {0xe1c9, _L_APP_SET_GO_SLEEP, SETTINGS_MAIN_MENU_GO_SLEEP},
+        {0xe1ca, _L_APP_SET_DFU, SETTINGS_MAIN_MENU_DFU},
+        {0xe1cb, _L_APP_SET_REBOOT, SETTINGS_MAIN_MENU_REBOOT},
+        {0xe1ce, _L_APP_SET_RESET_DEFAULT, SETTINGS_MAIN_MENU_RESET_DEFAULT},
+        {0xe1cf, _L_APP_SET_ABOUT, SETTINGS_MAIN_MENU_ABOUT},
+    };
+    for (size_t i = 0; i < sizeof(actions) / sizeof(actions[0]); i++) {
+        mui_list_view_add_item(app->p_list_view, actions[i].icon, getLangString(actions[i].title),
+                               (void *)(uintptr_t)actions[i].action);
+    }
 #if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
     mui_list_view_add_item(app->p_list_view, 0xe1c7,
                            p_settings->language == LANGUAGE_DE_DE ? "Gerätetest" : "Device test",

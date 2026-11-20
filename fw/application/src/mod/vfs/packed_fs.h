@@ -51,6 +51,11 @@ bool pfs_get_import_identity(const pfs_t *fs, uint8_t out[32]);
 int pfs_bind_import(pfs_t *fs, const uint8_t digest[32]);
 int pfs_finish_import(pfs_t *fs);
 int pfs_space(pfs_t *fs, uint32_t *total, uint32_t *free_bytes);
+/* Mutations also reclaim obsolete objects after publication; open snapshots
+ * defer their objects until the final retaining handle closes. Maintenance
+ * failure never changes a durable mutation's success, but I/O uncertainty
+ * still poisons subsequent writes until remount. Mount and ordinary reads on
+ * a volume without a local mutation remain strictly read-only. */
 int pfs_gc(pfs_t *fs); /* only unreferenced, unpinned owned physical objects */
 int pfs_stat(pfs_t *fs, const char *path, pfs_info_t *info);
 int pfs_create_small(pfs_t *fs, const char *path, const uint8_t *data, size_t size);

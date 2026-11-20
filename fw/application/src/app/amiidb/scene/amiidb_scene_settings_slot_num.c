@@ -21,8 +21,7 @@ static void amiidb_scene_settings_slot_num_on_selected(mui_list_view_event_t eve
         break;
 
     case ICON_FILE: {
-        settings_data_t *p_settings = settings_get_data();
-        p_settings->amiidb_data_slot_num = ((mui_list_view_get_focus(p_list_view) + 1) * 10);
+        SETTINGS_SET(amiidb_data_slot_num, ((mui_list_view_get_focus(p_list_view) + 1) * 10));
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     } break;
     }

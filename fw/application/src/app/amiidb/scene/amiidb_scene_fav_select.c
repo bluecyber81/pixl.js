@@ -17,7 +17,7 @@ static void amiidb_scene_fav_select_text_input_event_cb(mui_text_input_event_t e
     }
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(text) > 0) {
+        if (text[0] != '\0') {
             int32_t res = amiidb_api_fav_create_dir(text);
             if (res == VFS_OK) {
                 amiidb_scene_fav_select_reload(app);

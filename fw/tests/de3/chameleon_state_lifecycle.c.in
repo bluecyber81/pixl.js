@@ -8,7 +8,7 @@ typedef struct{void*p_handle,*p_retain_data;}mini_app_inst_t;
 typedef struct{void *user_data;void (*draw_cb)(void*,void*);void (*input_cb)(void*,void*);}mui_view_t;
 static void app_chameleon_save_error_draw(void*a,void*b){assert(!"unused in failed-init test");}
 static void app_chameleon_save_error_input(void*a,void*b){assert(!"unused in failed-init test");}
-typedef struct{void*p_view_dispatcher,*p_chameleon_view,*p_scene_dispatcher,*p_list_view,*p_msg_box,*p_toast_view,*p_text_input,*p_view_dispatcher_toast;bool initialized;mui_view_t save_error_view;}app_chameleon_t;
+typedef struct{void*p_view_dispatcher,*p_chameleon_view,*p_scene_dispatcher,*p_list_view,*p_msg_box,*p_toast_view,*p_text_input,*p_view_dispatcher_toast;bool initialized,exit_prepared;unsigned discard_state;mui_view_t save_error_view;}app_chameleon_t;
 typedef struct{uint8_t cycle_mode_index;}app_chameleon_retain_data_t;
 typedef void mui_msg_box_t;typedef unsigned mui_msg_box_event_t;
 typedef struct{unsigned chameleon_default_slot_index;}settings_data_t;
@@ -20,6 +20,9 @@ static unsigned sense_stops,irq_stops;
 static void(*dialog_cb)(mui_msg_box_event_t,mui_msg_box_t*);
 static mini_app_inst_t *current;
 static void app_chameleon_on_kill(mini_app_inst_t*);
+#define CHAMELEON_DISCARD_EXIT 3
+static void settings_discard_chameleon_changes(void){assert(!"unexpected discard");}
+static void tag_emulation_discard(void){assert(!"unexpected discard");}
 static void*mui_mem_malloc(size_t n){void*p=malloc(n);assert(p);live++;return p;}
 static void mui_mem_free(void*p){if(p){assert(live);live--;free(p);}}
 #define OBJ(name) static void*name##_create(void){return mui_mem_malloc(1);} static void name##_free(void*p){mui_mem_free(p);}

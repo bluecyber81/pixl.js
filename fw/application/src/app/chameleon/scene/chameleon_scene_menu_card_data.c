@@ -52,11 +52,13 @@ void chameleon_scene_menu_card_data_on_event(mui_list_view_event_t event, mui_li
 void chameleon_scene_menu_card_data_on_enter(void *user_data) {
     app_chameleon_t *app = user_data;
 
-    mui_list_view_add_item(app->p_list_view, ICON_VIEW, _T(APP_CHAMELEON_CARD_DATA_LOAD), (void *)CHAMELEON_MENU_LOAD_DATA);
-    mui_list_view_add_item(app->p_list_view, ICON_FAVORITE, _T(APP_CHAMELEON_CARD_DATA_SAVE), (void *)CHAMELEON_MENU_SAVE_DATA);
-    mui_list_view_add_item(app->p_list_view, ICON_DATA, _T(APP_CHAMELEON_CARD_DATA_FACTORY), (void *)CHAMELEON_MENU_FACTORY);
-    mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), (void *)CHAMELEON_MENU_BACK);
-
+    static const chameleon_menu_row_t rows[] = {
+        {ICON_VIEW, _L_APP_CHAMELEON_CARD_DATA_LOAD, CHAMELEON_MENU_LOAD_DATA},
+        {ICON_FAVORITE, _L_APP_CHAMELEON_CARD_DATA_SAVE, CHAMELEON_MENU_SAVE_DATA},
+        {ICON_DATA, _L_APP_CHAMELEON_CARD_DATA_FACTORY, CHAMELEON_MENU_FACTORY},
+        {ICON_BACK, _L_MAIN_RETURN, CHAMELEON_MENU_BACK},
+    };
+    chameleon_add_menu_rows(app->p_list_view, rows, ARRAY_SIZE(rows));
     mui_list_view_set_selected_cb(app->p_list_view, chameleon_scene_menu_card_data_on_event);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_LIST);
 }

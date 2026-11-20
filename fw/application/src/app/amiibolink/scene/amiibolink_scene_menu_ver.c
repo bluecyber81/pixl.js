@@ -15,8 +15,7 @@ void amiibolink_scene_menu_ver_on_event(mui_list_view_event_t event, mui_list_vi
     app_amiibolink_t *app = p_list_view->user_data;
     if (event == MUI_LIST_VIEW_EVENT_SELECTED) {
         if (p_item->icon == ICON_MODE) {
-            settings_data_t *p_settings = settings_get_data();
-            p_settings->amiibo_link_ver = (ble_amiibolink_ver_t) p_item->user_data;
+            SETTINGS_SET(amiibo_link_ver, (ble_amiibolink_ver_t) p_item->user_data);
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
         } else if (p_item->icon == ICON_BACK) {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);

@@ -40,6 +40,7 @@ typedef void (*nus_tx_ready_handler_t)(void);
 
 
 /* Session snapshots; foreground policy never treats a disconnect request as completion. */
+void ble_set_standby_timeout(uint16_t seconds);
 uint32_t ble_session_generation(void);
 uint32_t ble_link_generation(void);
 bool ble_remote_mode_active(void);

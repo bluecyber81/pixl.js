@@ -68,6 +68,7 @@ static bool ble_remote_set_enabled(bool enabled){fixture_remote_enabled=enabled;
 static int result,save_calls,reset_calls,toast_calls,kills,reboots,resets,reloads,logs,cleanup_calls,dfus;
 static int settings_save(void){save_calls++;return result;}
 static int settings_reset(void){reset_calls++;return result;}
+#define SETTINGS_TOGGLE(field) (settings_get_data()->field = !settings_get_data()->field)
 static settings_data_t *settings_get_data(void){return &data;}
 static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;toast_calls++;}
 static void settings_reset_default(void*p){(void)p;resets++;}
@@ -97,6 +98,7 @@ static void cleanup(void*p){(void)p;cleanup_calls++;}
 #define mui_scene_dispatcher_free cleanup
 #define mui_view_dispatcher_free cleanup
 #define mui_list_view_free cleanup
+#define mui_u8g2_settings_slider(active) ((void)(active))
 #define mui_progress_bar_free cleanup
 #define mui_msg_box_free cleanup
 #define mui_toast_view_free cleanup
@@ -117,13 +119,13 @@ int main(void){
   ack(1,&box);assert(visible==SETTINGS_VIEW_ID_MAIN);
   item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_DFU;
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(dfus==0);
-  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==0 && reloads==0 && visible==SETTINGS_VIEW_ID_MSG_BOX);
+  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==0 && reloads==(int)i+1 && visible==SETTINGS_VIEW_ID_MSG_BOX);
  }
  assert(save_calls==6 && reset_calls==2 && errors==8 && toast_calls==0);
  result=0;item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_REBOOT;settings_scene_main_list_view_on_selected(0,&list,&item);assert(reboots==1);
  item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_EXIT;settings_scene_main_list_view_on_selected(0,&list,&item);assert(kills==1);
  item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_DFU;settings_scene_main_list_view_on_selected(0,&list,&item);assert(dfus==1);
- settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==1 && reloads==1);
+ settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==1 && reloads==3);
  settings_scene_main_msg_box_reset_settings_cb(2,&box);assert(reset_calls==3);
  result=-91;settings_scene_app_management_on_exit(&app);assert(toast_calls==1);
  app.exit_saved=false;mini_app_inst_t instance={&app};app_settings_on_kill(&instance);assert(logs==1 && cleanup_calls>0 && instance.p_handle==NULL);

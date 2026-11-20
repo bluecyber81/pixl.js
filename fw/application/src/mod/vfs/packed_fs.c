@@ -21,6 +21,8 @@
 #define BUSY LFS_ERR_BADF
 #define DISK (PFS_BLOCK_COUNT * PFS_BLOCK_SIZE)
 
+enum { GC_CLEAN, GC_PENDING, GC_UNKNOWN };
+
 typedef struct {
   uint32_t generation, next_id, count, objects, pending, bound;
   uint8_t archive[32];
@@ -63,6 +65,7 @@ struct pfs {
   bool mounted, poisoned, transaction;
   uint8_t read_cache[PFS_CACHE_SIZE], prog_cache[PFS_CACHE_SIZE], lookahead[64],
       copy[PFS_CACHE_SIZE];
+  uint8_t gc_state;
 };
 struct pfs_file {
   handle_t h;
@@ -653,6 +656,7 @@ static int publish(pfs_t *fs, const manifest_t *m) {
   uint32_t n = MH + 4 * m->count;
   put32(b + n, ~crc(~0u, b, n));
   io_t io;
+  fs->gc_state = GC_PENDING;
   int r = io_open(fs, &io, NEXT, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL);
   if (r)
     return io_error(fs, r);
@@ -670,59 +674,91 @@ static int publish(pfs_t *fs, const manifest_t *m) {
   fs->current = *m;
   return 0;
 }
-static bool referenced(pfs_t *fs, uint32_t id) {
-  for (unsigned i = 0; i < fs->current.count; i++)
-    if (fs->current.ids[i] == id)
+static bool manifest_has(const manifest_t *m, uint32_t id) {
+  for (unsigned i = 0; i < m->count; i++)
+    if (m->ids[i] == id)
       return true;
+  return false;
+}
+static bool referenced(pfs_t *fs, uint32_t id, const handle_t *except) {
+  if (manifest_has(&fs->current, id))
+    return true;
   for (handle_t *h = fs->handles; h; h = h->next) {
+    if (h == except)
+      continue;
     if (h->kind == 1) {
       pfs_file_t *f = (pfs_file_t *)h;
       if (!f->writing && f->loc.shard == id)
         return true;
-    } else {
-      pfs_dir_t *d = (pfs_dir_t *)h;
-      for (unsigned i = 0; i < d->snapshot.count; i++)
-        if (d->snapshot.ids[i] == id)
-          return true;
+    } else if (manifest_has(&((pfs_dir_t *)h)->snapshot, id)) {
+      return true;
     }
   }
   return false;
 }
 static int collect(pfs_t *fs) {
-  /* Restart iteration after removal: littlefs directory positions may shift. */
-  for (;;) {
-    lfs_dir_t dir;
-    int r = lfs_dir_open(&fs->lfs, &dir, "/");
-    if (r)
-      return io_error(fs, r);
-    struct lfs_info info;
-    bool found = false;
-    char path[48];
-    while ((r = lfs_dir_read(&fs->lfs, &dir, &info)) > 0) {
-      uint32_t id;
-      bool stale = shard_id(info.name, &id) && !referenced(fs, id);
-      stale |= !strcmp(info.name, NEXT + 1);
-      stale |= !fs->writer && !strcmp(info.name, STAGE + 1);
-      if (stale) {
-        if (info.type != LFS_TYPE_REG) {
-          r = LFS_ERR_CORRUPT;
-          break;
-        }
-        path[0] = '/';
-        memcpy(path + 1, info.name, strlen(info.name) + 1);
-        found = true;
+  /* Keep the request on error, and while a reader pins an obsolete group.
+   * A mounted volume starts UNKNOWN: ordinary reads must never initiate GC. */
+  fs->gc_state = GC_PENDING;
+  bool pinned = false;
+  /* Embedded littlefs 2.8 adjusts registered directory iterators after delete,
+   * including id/position and metadata-pair split/drop/relocation. Keep this
+   * iterator registered until completion instead of rescanning after each file. */
+  lfs_dir_t dir;
+  int r = lfs_dir_open(&fs->lfs, &dir, "/");
+  if (r)
+    return io_error(fs, r);
+  struct lfs_info info;
+  while ((r = lfs_dir_read(&fs->lfs, &dir, &info)) > 0) {
+    uint32_t id;
+    bool shard = shard_id(info.name, &id);
+    bool held = shard && referenced(fs, id, NULL);
+    if (held && !manifest_has(&fs->current, id))
+      pinned = true;
+    bool stale = shard && !held;
+    stale |= !strcmp(info.name, NEXT + 1);
+    stale |= !fs->writer && !strcmp(info.name, STAGE + 1);
+    if (stale) {
+      if (info.type != LFS_TYPE_REG) {
+        r = LFS_ERR_CORRUPT;
         break;
       }
+      char path[48];
+      path[0] = '/';
+      memcpy(path + 1, info.name, strlen(info.name) + 1);
+      r = lfs_remove(&fs->lfs, path);
+      if (r)
+        break;
     }
-    int closed = lfs_dir_close(&fs->lfs, &dir);
-    if (r < 0 || closed < 0)
-      return io_error(fs, r < 0 ? r : closed);
-    if (!found)
-      return 0;
-    r = lfs_remove(&fs->lfs, path);
-    if (r)
-      return io_error(fs, r);
   }
+  int closed = lfs_dir_close(&fs->lfs, &dir);
+  if (r < 0 || closed < 0)
+    return io_error(fs, r < 0 ? r : closed);
+  fs->gc_state = pinned || fs->writer ? GC_PENDING : GC_CLEAN;
+  return 0;
+}
+/* Maintenance is best effort after publication. An I/O failure still poisons
+ * subsequent writes, but cannot turn a durable commit into a retryable failure. */
+static void maintain(pfs_t *fs) {
+  if (fs->gc_state == GC_PENDING && fs->mounted && !fs->poisoned &&
+      !fs->transaction && !fs->writer)
+    (void)collect(fs);
+}
+/* Skip a close-triggered scan unless this handle releases the last reference
+ * to at least one obsolete group. New metadata readers and overlapping directory
+ * snapshots cannot repeatedly scan the medium while another reader pins it. */
+static bool releases_obsolete(pfs_t *fs, const handle_t *h) {
+  if (fs->gc_state != GC_PENDING)
+    return false;
+  if (h->kind == 1) {
+    const pfs_file_t *file = (const pfs_file_t *)h;
+    return !file->writing && !referenced(fs, file->loc.shard, h);
+  }
+  const pfs_dir_t *dir = (const pfs_dir_t *)h;
+  for (unsigned i = 0; i < dir->snapshot.count; i++)
+    if (!referenced(fs, dir->snapshot.ids[i], h))
+      return true;
+  return false;
 }
 int pfs_gc(pfs_t *fs) {
   int r = ready(fs, true);
@@ -793,6 +829,7 @@ int pfs_unmount(pfs_t *fs) {
   if (!r) {
     fs->mounted = false;
     fs->poisoned = false;
+    fs->gc_state = GC_UNKNOWN;
   }
   return r;
 }
@@ -900,6 +937,7 @@ int pfs_mount(pfs_t *fs) {
   }
   fs->mounted = true;
   fs->poisoned = false;
+  fs->gc_state = GC_UNKNOWN;
   return 0;
 }
 int pfs_format(pfs_t *fs) {
@@ -916,12 +954,14 @@ int pfs_format(pfs_t *fs) {
     return r;
   fs->mounted = true;
   fs->poisoned = false;
+  fs->gc_state = GC_CLEAN;
   memset(fs->catalog, 0, sizeof(fs->catalog));
   manifest_t m = {0};
   m.generation = m.next_id = m.pending = 1;
   r = publish(fs, &m);
   if (r)
     fs->poisoned = true;
+  maintain(fs);
   return r;
 }
 int pfs_bind_import(pfs_t *fs, const uint8_t digest[32]) {
@@ -945,7 +985,9 @@ int pfs_bind_import(pfs_t *fs, const uint8_t digest[32]) {
   m.bound = 1;
   memcpy(m.archive, digest, 32);
   m.generation++;
-  return publish(fs, &m);
+  r = publish(fs, &m);
+  maintain(fs);
+  return r;
 }
 int pfs_finish_import(pfs_t *fs) {
   if (!fs || !fs->mounted || !fs->current.bound)
@@ -962,7 +1004,9 @@ int pfs_finish_import(pfs_t *fs) {
   manifest_t m = fs->current;
   m.pending = 0;
   m.generation++;
-  return publish(fs, &m);
+  r = publish(fs, &m);
+  maintain(fs);
+  return r;
 }
 int pfs_space(pfs_t *fs, uint32_t *total, uint32_t *free_bytes) {
   if (!total || !free_bytes)
@@ -1153,7 +1197,7 @@ static int transact(pfs_t *fs, const change_t *c) {
    * only if the reserved transaction space actually needs them. A retry after
    * an earlier commit attempt must also collect its unpublished outputs. */
   bool staged = fs->writer && fs->writer == c->stage;
-  if (!staged || c->stage->commit_started) {
+  if (fs->gc_state != GC_CLEAN && (!staged || c->stage->commit_started)) {
     r = collect(fs);
     if (r)
       return r;
@@ -1265,6 +1309,7 @@ static int transact(pfs_t *fs, const change_t *c) {
   if (staged)
     c->stage->commit_started = true;
   fs->transaction = true;
+  fs->gc_state = GC_PENDING;
   for (unsigned i = 0; !r && i < slots; i++) {
     if (!affected[i]) {
       m.ids[m.count++] = fs->current.ids[i];
@@ -1285,7 +1330,10 @@ static int transact(pfs_t *fs, const change_t *c) {
   if (!r)
     r = publish(fs, &m);
   fs->transaction = false;
-  return io_error(fs, r);
+  r = io_error(fs, r);
+  /* A staged writer owns its scratch file until close/abort. */
+  maintain(fs);
+  return r;
 }
 static int create_leaf(pfs_t *fs, const char *path, const uint8_t *memory, size_t size) {
   int r = ready(fs, true);
@@ -1422,8 +1470,10 @@ static void attach(pfs_t *fs, handle_t *h, unsigned kind) {
   fs->handles = h;
   fs->handle_count++;
 }
-static void detach(handle_t *h) {
+static void detach(handle_t *h, bool cleanup) {
   pfs_t *fs = h->fs;
+  cleanup = cleanup && ((h->kind == 1 && ((pfs_file_t *)h)->writing) ||
+                        releases_obsolete(fs, h));
   handle_t **p = &fs->handles;
   while (*p && *p != h)
     p = &(*p)->next;
@@ -1432,6 +1482,8 @@ static void detach(handle_t *h) {
     fs->handle_count--;
   }
   fs->release(h);
+  if (cleanup)
+    maintain(fs);
 }
 int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   if (!output)
@@ -1484,11 +1536,13 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   file->flags = flags;
   file->writing = writing;
   if (writing) {
-    r = collect(fs);
+    r = fs->gc_state != GC_CLEAN ? collect(fs) : 0;
     if (!r)
       r = reserve(fs, 8 + blocks_for(flags & LFS_O_TRUNC ? 0 : info.size));
-    if (!r)
+    if (!r) {
+      fs->gc_state = GC_PENDING;
       r = io_open(fs, &file->io, STAGE, LFS_O_RDWR | LFS_O_CREAT | LFS_O_EXCL);
+    }
     if (!r && exists && !(flags & LFS_O_TRUNC)) {
       char name[16];
       shard_name(loc.shard, name);
@@ -1524,7 +1578,11 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   if (r) {
     io_close(fs, &file->io, r);
     fs->release(file);
-    return writing ? io_error(fs, r) : r;
+    if (writing) {
+      r = io_error(fs, r);
+      maintain(fs);
+    }
+    return r;
   }
   attach(fs, &file->h, 1);
   if (writing)
@@ -1603,7 +1661,7 @@ int pfs_abort(pfs_file_t *file) {
   (void)r;
   if (fs->writer == file)
     fs->writer = NULL;
-  detach(&file->h);
+  detach(&file->h, true);
   return 0;
 }
 int pfs_close(pfs_file_t *file) {
@@ -1612,7 +1670,7 @@ int pfs_close(pfs_file_t *file) {
   pfs_t *fs = file->h.fs;
   if (!file->writing) {
     int r = io_close(fs, &file->io, 0);
-    detach(&file->h);
+    detach(&file->h, !r);
     return r;
   }
   if (fs->poisoned)
@@ -1633,12 +1691,12 @@ int pfs_close(pfs_file_t *file) {
   r = transact(fs, &c);
   if (r)
     return r;
-  /* Publication is durable. Cleanup is deferred to GC; no postcommit retry. */
+  /* Publication is durable: maintenance must never request a commit retry. */
   r = io_close(fs, &file->io, 0);
   if (r)
     fs->poisoned = true;
   fs->writer = NULL;
-  detach(&file->h);
+  detach(&file->h, true);
   return 0;
 }
 /* The existing PUT transaction publishes content and raw128 together. */
@@ -1712,6 +1770,6 @@ int pfs_closedir(pfs_dir_t *dir) {
   if (!dir)
     return LFS_ERR_BADF;
   int r = cursor_close(dir->h.fs, &dir->cursor, 0);
-  detach(&dir->h);
+  detach(&dir->h, !r);
   return r;
 }

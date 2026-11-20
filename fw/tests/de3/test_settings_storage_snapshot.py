@@ -46,8 +46,7 @@ vfs_driver_t *vfs_get_default_driver(void){return active_driver;}
 static void *version_get(void){return NULL;}
 static const char*version_get_version(void*p){(void)p;return "test";}
 static const char*getLangDesc(unsigned n){(void)n;return "Deutsch";}
-static const char*getLangString(const char*s){return s;}
-#define _L_OFF_F "Off"
+static const char*getLangString(int id){(void)id;return "label";}
 static int nrf_pwr_mgmt_get_timeout(void){return 180;}
 static unsigned mui_list_view_get_focus(void*p){(void)p;return 1;}
 static unsigned mui_list_view_get_scroll_offset(void*p){(void)p;return 0;}
@@ -63,7 +62,7 @@ static void mui_list_view_add_item(void*p,int icon,const char*label,void*data){(
     main = (SRC / 'app/settings/scene/settings_scene_main.c').read_text()
     definition = main[main.rfind('\nstatic void settings_scene_main_reload('):]
     code += (SRC / 'mui/mui_contrast.h').read_text().replace('#include "boards.h"', '')
-    code += extras + fixture_module.native.function(definition, 'settings_scene_main_reload')
+    code += (SRC / "i18n/string_id.h").read_text() + extras + fixture_module.native.function(definition, 'settings_scene_main_reload')
     return code + r'''
 int main(void){
  app_settings_t app={0};mui_list_view_t list={&app};mui_msg_box_t box={&app};mui_list_item_t item={0};

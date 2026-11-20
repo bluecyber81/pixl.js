@@ -1,6 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -38,9 +39,23 @@ typedef struct {
     bool swap_buttons;  // swap left/right buttons (to match a flipped/rotated device)
 } settings_data_t;
 
+/* User edits are remembered in RAM until a verified settings record is available.
+ * These fields all have a one-byte on-disk representation. */
+void settings_set_byte(uint8_t offset, uint8_t value);
+void settings_toggle_byte(uint8_t offset);
+void settings_toggle_app(uint32_t app_id);
+#define SETTINGS_SET(field, value) settings_set_byte(offsetof(settings_data_t, field), (value))
+#define SETTINGS_TOGGLE(field) settings_toggle_byte(offsetof(settings_data_t, field))
+
 int32_t settings_init();
+/* Resolve a temporarily unavailable settings record before using its slot count. */
+int32_t settings_retry_load(void);
+/* Called once for a verified, late record, after pending choices are merged. */
+void settings_on_recovered(void (*apply)(const settings_data_t *previous));
 int32_t settings_save();
 int32_t settings_reset();
+/* Restore only the Chameleon fields from the last accepted settings. No I/O. */
+void settings_discard_chameleon_changes(void);
 bool settings_get_lcd_dim(void);
 uint8_t settings_lcd_dim_idle_seconds(void);
 void settings_cycle_lcd_dim(void);

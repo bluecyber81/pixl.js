@@ -37,7 +37,7 @@ static void chameleon_scene_menu_card_data_file_save_text_input_event_cb(mui_tex
     app_chameleon_t *app = p_text_input->user_data;
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(text) > 0) {
+        if (text[0] != '\0') {
             char path[VFS_MAX_PATH_LEN];
             vfs_driver_t *p_driver = vfs_get_default_driver();
             uint8_t *tag_buffer = tag_helper_get_active_tag_memory_data();

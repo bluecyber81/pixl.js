@@ -37,7 +37,9 @@ typedef unsigned mui_msg_box_event_t;
 #define SETTINGS_VIEW_ID_MAIN 3
 #define _T(x) "message"
 static settings_data_t m_settings_data,def_settings_data;
-static bool m_settings_save_allowed,display_flipped;
+static void settings_clear_edits(void) {}
+static bool m_settings_save_allowed,m_settings_file_absent,display_flipped;
+static void settings_remember_chameleon(void){}
 static unsigned reloads,view_switches;
 typedef struct {bool(*mounted)(void);int(*remove_file)(const char*);} vfs_driver_t;
 static bool mounted(void){return true;}
@@ -48,6 +50,7 @@ static settings_data_t*settings_get_data(void){return &m_settings_data;}
 static void mui_u8g2_set_contrast_level(unsigned x){(void)x;}
 static unsigned mui_u8g2_set_backlight_level(unsigned x){(void)x;return NRF_SUCCESS;}
 static void mui_u8g2_set_flip_display(bool x){display_flipped=x;}
+#define ble_set_standby_timeout nrf_pwr_mgmt_set_timeout
 static void nrf_pwr_mgmt_set_timeout(unsigned x){(void)x;}
 static void setLanguage(unsigned x){(void)x;}
 static void mui_toast_view_show(void*a,const char*b){(void)a;(void)b;}

@@ -363,7 +363,7 @@ class StatusTests(unittest.TestCase):
     def test_exact_font_fits_lcd_and_locales_fallback(self):
         for key in KEYS[1:]:
             self.assertTrue(STRINGS[key]["en_US"] and STRINGS[key]["de_DE"])
-        self.assertIn("return string && strlen(string) > 0 ? string : lang_en_US[stringID]",
+        self.assertIn("return string && string[0] != '\\0' ? string : lang_en_US[stringID]",
                       (SRC / "i18n/language.c").read_text(encoding="utf-8"))
         labels, offsets = [], []
         for language in ("en_US", "de_DE"):

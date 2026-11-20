@@ -1,4 +1,5 @@
 #include "app_settings.h"
+#include "mui_u8g2.h"
 #include "settings_scene.h"
 #include "settings.h"
 #include "nrf_log.h"
@@ -101,6 +102,7 @@ void app_settings_on_kill(mini_app_inst_t *p_app_inst) {
         int32_t result = settings_save();
         if (result != NRF_SUCCESS) NRF_LOG_WARNING("Settings could not be saved on app exit: %d", result);
     }
+    mui_u8g2_settings_slider(false);
     if (!p_app_handle) return;
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);

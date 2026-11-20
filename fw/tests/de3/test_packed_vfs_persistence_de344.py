@@ -16,6 +16,47 @@ HERE=Path(__file__).resolve().parent
 FW=HERE.parents[1]
 
 
+def run_packed_harness(test, folder, harness, *, sources=(), include_dirs=(), flags=(), headers=None):
+    core=FW/'application/src/mod/vfs'
+    lfs=FW/'components/littlefs'
+    arm=os.environ.get('PIXL_ARM32')=='1'
+    sanitize=os.environ.get('PIXL_SANITIZE')=='1' and not arm
+    headers=headers or {}
+    compiler=shutil.which('arm-linux-gnueabihf-gcc' if arm else 'gcc')
+    test.assertIsNotNone(compiler)
+    (folder/'boards.h').write_text('#pragma once\n#define VFS_PACKED_LFS_ENABLE 1\n')
+    (folder / 'mui_mem.h').write_bytes((HERE / 'packed_test_mui_mem.h').read_bytes())
+    (folder/'hal_spi_flash.h').write_text('''#pragma once
+#include <stdint.h>
+#include <stddef.h>
+#define NRF_SUCCESS 0
+typedef struct { uint32_t block_size,block_count,page_size; } flash_info_t;
+uint32_t hal_spi_flash_init(void);uint32_t hal_spi_flash_info(flash_info_t*);
+uint32_t hal_spi_flash_read(uint32_t,void*,size_t);uint32_t hal_spi_flash_prog(uint32_t,const void*,size_t);
+uint32_t hal_spi_flash_erase(uint32_t);
+''')
+    exe=folder/'contract.exe'
+    command=[compiler,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror',
+             '-Wno-misleading-indentation','-Wno-sign-compare',
+             '-DLFS_NO_MALLOC','-DLFS_NO_DEBUG','-DLFS_NO_WARN','-DLFS_NO_ERROR',
+             '-DVFS_PACKED_LFS_ENABLE','-DSTORE_CORE="'+(core/'packed_fs.c').as_posix()+'"',
+             '-DSTORE_ADAPTER="'+(core/'vfs_driver_packed.c').as_posix()+'"']
+    for name, contents in headers.items():
+        (folder/name).write_text(contents)
+    command.extend(flags)
+    for path in [folder,core,lfs,HERE,*include_dirs]:command += ['-I',str(path)]
+    command += [str(harness),str(HERE/'packed_vfs_nor_de344.c'),
+                str(core/'vfs_persist.c'),str(lfs/'lfs.c'),str(lfs/'lfs_util.c'),*map(str,sources),'-o',str(exe)]
+    if arm:command+=['-static']
+    elif sanitize:command+=['-fsanitize=address,undefined','-fno-sanitize-recover=all',
+                            '-fno-omit-frame-pointer','-fno-pie','-no-pie']
+    built=subprocess.run(command,capture_output=True,text=True,timeout=60)
+    test.assertEqual(built.returncode,0,built.stdout+built.stderr)
+    ran=subprocess.run((['qemu-arm'] if arm else [])+[str(exe)],capture_output=True,text=True,timeout=60)
+    test.assertEqual(ran.returncode,0,ran.stdout+ran.stderr)
+    return ran
+
+
 class PackedVfsPersistenceTests(unittest.TestCase):
     def test_error_returns_ownership_oom_and_atomic_persistence(self):
         core=FW/'application/src/mod/vfs'
@@ -29,37 +70,8 @@ class PackedVfsPersistenceTests(unittest.TestCase):
                    'packed_vfs_nor_de344.c','packed_vfs_nor_de344.h']]
         sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
         before={p.relative_to(FW).as_posix():sha(p) for p in source}
-        compiler=shutil.which('arm-linux-gnueabihf-gcc' if arm else 'gcc')
-        self.assertIsNotNone(compiler)
         with tempfile.TemporaryDirectory(prefix='packed-vfs-de344-') as tmp:
-            folder=Path(tmp)
-            (folder/'boards.h').write_text('#pragma once\n#define VFS_PACKED_LFS_ENABLE 1\n')
-            (folder / 'mui_mem.h').write_bytes((HERE / 'packed_test_mui_mem.h').read_bytes())
-            (folder/'hal_spi_flash.h').write_text('''#pragma once
-#include <stdint.h>
-#include <stddef.h>
-#define NRF_SUCCESS 0
-typedef struct { uint32_t block_size,block_count,page_size; } flash_info_t;
-uint32_t hal_spi_flash_init(void);uint32_t hal_spi_flash_info(flash_info_t*);
-uint32_t hal_spi_flash_read(uint32_t,void*,size_t);uint32_t hal_spi_flash_prog(uint32_t,const void*,size_t);
-uint32_t hal_spi_flash_erase(uint32_t);
-''')
-            exe=folder/'contract.exe'
-            command=[compiler,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror',
-                     '-Wno-misleading-indentation','-Wno-sign-compare',
-                     '-DLFS_NO_MALLOC','-DLFS_NO_DEBUG','-DLFS_NO_WARN','-DLFS_NO_ERROR',
-                     '-DVFS_PACKED_LFS_ENABLE','-DSTORE_CORE="'+(core/'packed_fs.c').as_posix()+'"',
-                     '-DSTORE_ADAPTER="'+(core/'vfs_driver_packed.c').as_posix()+'"']
-            for path in [folder,core,lfs,HERE]:command += ['-I',str(path)]
-            command += [str(HERE/'packed_vfs_persistence_de344.c'),str(HERE/'packed_vfs_nor_de344.c'),
-                        str(core/'vfs_persist.c'),str(lfs/'lfs.c'),str(lfs/'lfs_util.c'),'-o',str(exe)]
-            if arm:command+=['-static']
-            elif sanitize:command+=['-fsanitize=address,undefined','-fno-sanitize-recover=all',
-                                    '-fno-omit-frame-pointer','-fno-pie','-no-pie']
-            built=subprocess.run(command,capture_output=True,text=True,timeout=60)
-            self.assertEqual(built.returncode,0,built.stdout+built.stderr)
-            ran=subprocess.run((['qemu-arm'] if arm else [])+[str(exe)],capture_output=True,text=True,timeout=60)
-            self.assertEqual(ran.returncode,0,ran.stdout+ran.stderr)
+            ran=run_packed_harness(self,Path(tmp),HERE/'packed_vfs_persistence_de344.c')
             self.assertIn('PASS',ran.stdout)
             observations=[json.loads(line) for line in ran.stdout.splitlines() if line.startswith('{')]
             self.assertEqual(len(observations),1)

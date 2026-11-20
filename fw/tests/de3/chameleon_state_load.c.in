@@ -18,6 +18,7 @@ static bool m_tag_data_loaded;
 /* Existing format tests allow all 50 slots; count reductions have their own regression. */
 typedef struct { uint8_t chameleon_slot_num; } settings_data_t;
 static settings_data_t settings = {TAG_MAX_SLOT_NUM};
+static int32_t settings_retry_load(void) {return 0;}
 static settings_data_t *settings_get_data(void) { return &settings; }
 #define FDS_EMULATION_CONFIG_FILE_ID 1
 #define FDS_EMULATION_CONFIG_RECORD_KEY 2
@@ -42,6 +43,7 @@ static vfs_driver_t driver={mounted,stat_file,read_file};
 static vfs_driver_t*vfs_get_default_driver(void){return available?&driver:NULL;}
 @fds_read_config@
 @tag_emulation_decode_config@
+@tag_emulation_discard@
 @tag_emulation_load_config@
 static bool fds_is_exists(unsigned a,unsigned b){return stat_result!=VFS_ERR_NOOBJ;}
 void tag_emulation_load_data(void){assert(slotConfig.active_slot<TAG_MAX_SLOT_NUM);loads++;m_tag_data_loaded=true;}
@@ -99,6 +101,10 @@ int main(void){
  fixture();v8(8,0);object_type=2;check(false);
  fixture();v8(8,0);available=false;check(false);
  fixture();v8(8,0);mounted_ok=false;check(false);
- fixture();stat_result=VFS_ERR_NOOBJ;check(true); /* factory path only for a missing file */
+ fixture();slotConfig.active_slot=1;memset(slotConfig.slots,0,sizeof(slotConfig.slots));
+ stat_result=VFS_ERR_NOOBJ;check(true); /* a missing file uses cold-start defaults */
+ assert(slotConfig.active_slot==0 && slotConfig.slots[0].tag_hf==TAG_TYPE_MIFARE_1024 &&
+        slotConfig.slots[1].tag_hf==TAG_TYPE_MF0ICU1 && slotConfig.slots[2].tag_lf==TAG_TYPE_EM410X);
+ assert(!m_tag_data_loaded && !m_slot_config_crc);
  printf("PASS %u config cases: real 404B/short-enum ABI, v8 8/20/50, legacy0-7, length/type/index errors, file/RAM preservation\n",cases);
 }

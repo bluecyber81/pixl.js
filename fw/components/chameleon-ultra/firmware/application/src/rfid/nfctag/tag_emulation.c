@@ -65,69 +65,24 @@ static uint16_t m_tag_data_hf_crc;
 static bool m_tag_data_loaded;
 static tag_data_buffer_t m_tag_data_hf = {sizeof(m_tag_data_buffer_hf), m_tag_data_buffer_hf, &m_tag_data_hf_crc};
 
-/**
- * Eight card slots, each card slot has its own unique configuration
- */
-static tag_slot_config_t slotConfig ALIGN_U32 = {
-    // Configure activated card slot, default activation of the 0th card slot (the first card)
-    .version = TAG_SLOT_CONFIG_CURRENT_VERSION,
-    .active_slot = 0,
-    // Configuration card slots
-    // See tag_emulation_factory_init for actual tag content
-    .slots =
-        {
-            {
-                .enabled_hf = true,
-                .enabled_lf = true,
-                .tag_hf = TAG_TYPE_MIFARE_1024,
-                .tag_lf = TAG_TYPE_EM410X,
-            }, // 1
-            {
-                .enabled_hf = true,
-                .enabled_lf = false,
-                .tag_hf = TAG_TYPE_MF0ICU1,
-                .tag_lf = TAG_TYPE_UNDEFINED,
-            }, // 2
-            {
-                .enabled_hf = false,
-                .enabled_lf = true,
-                .tag_hf = TAG_TYPE_UNDEFINED,
-                .tag_lf = TAG_TYPE_EM410X,
-            }, // 3
-            {
-                .enabled_hf = false,
-                .enabled_lf = false,
-                .tag_hf = TAG_TYPE_UNDEFINED,
-                .tag_lf = TAG_TYPE_UNDEFINED,
-            }, // 4
-            {
-                .enabled_hf = false,
-                .enabled_lf = false,
-                .tag_hf = TAG_TYPE_UNDEFINED,
-                .tag_lf = TAG_TYPE_UNDEFINED,
-            }, // 5
-            {
-                .enabled_hf = false,
-                .enabled_lf = false,
-                .tag_hf = TAG_TYPE_UNDEFINED,
-                .tag_lf = TAG_TYPE_UNDEFINED,
-            }, // 6
-            {
-                .enabled_hf = false,
-                .enabled_lf = false,
-                .tag_hf = TAG_TYPE_UNDEFINED,
-                .tag_lf = TAG_TYPE_UNDEFINED,
-            }, // 7
-            {
-                .enabled_hf = false,
-                .enabled_lf = false,
-                .tag_hf = TAG_TYPE_UNDEFINED,
-                .tag_lf = TAG_TYPE_UNDEFINED,
-            }, // 8
-        },
-};
-// The card slot configuration unique CRC, once the slot configuration changes, can be checked by CRC
+static tag_slot_config_t slotConfig ALIGN_U32;
 static uint16_t m_slot_config_crc;
+
+/* Restore the cold-start slot layout in RAM. The next init reads the saved
+ * layout/card or uses these defaults for a new filesystem. No I/O here. */
+void tag_emulation_discard(void) {
+    m_tag_data_loaded = false;
+    m_slot_config_crc = 0;
+    memset(&slotConfig, 0, sizeof(slotConfig));
+    slotConfig.version = TAG_SLOT_CONFIG_CURRENT_VERSION;
+    slotConfig.slots[0].enabled_hf = slotConfig.slots[0].enabled_lf = true;
+    slotConfig.slots[0].tag_hf = TAG_TYPE_MIFARE_1024;
+    slotConfig.slots[0].tag_lf = TAG_TYPE_EM410X;
+    slotConfig.slots[1].enabled_hf = true;
+    slotConfig.slots[1].tag_hf = TAG_TYPE_MF0ICU1;
+    slotConfig.slots[2].enabled_lf = true;
+    slotConfig.slots[2].tag_lf = TAG_TYPE_EM410X;
+}
 
 // ********************** Specific parameter ends **********************
 
@@ -582,9 +537,14 @@ static bool tag_emulation_decode_config(tag_slot_config_t *candidate, uint16_t l
 }
 
 static int32_t tag_emulation_load_config(void) {
+    /* The fallback count of eight must not truncate a larger saved configuration. */
+    if (settings_retry_load() != 0) return -1;
     tag_slot_config_t candidate = {0};
     int32_t length = fds_read_config((uint8_t *)&candidate, sizeof(candidate));
-    if (length == 0) return 0; /* New device: existing factory path. */
+    if (length == 0) {
+        tag_emulation_discard();
+        return 0;
+    }
     if (length < 0) return -1;
     uint16_t stored_crc;
     calc_14a_crc_lut((uint8_t *)&candidate, sizeof(candidate), (uint8_t *)&stored_crc);

@@ -27,7 +27,7 @@ typedef struct {uint8_t cycle_mode_index;} app_chameleon_retain_data_t;
 typedef struct {
  void *p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_text_input,*p_msg_box,*p_scene_dispatcher;
  void *p_amiibo_detail_view,*p_amiibo_view,*p_toast_view,*p_amiibolink_view,*p_chameleon_view;
- int amiibolink_mode,current_drive;uint16_t game_id_path[8];uint8_t game_id_index,prev_scene_id; bool initialized;
+ int amiibolink_mode,current_drive;uint16_t game_id_path[8];uint8_t game_id_index,prev_scene_id; bool initialized, exit_prepared; unsigned discard_state;
  char current_file[64],current_folder[128],cur_fav_dir[64],search_str[33]; int fav_array,amiibo_files;
  uint32_t current_focus_index;
  char browser_anchor[VFS_MAX_NAME_LEN];uint16_t browser_anchor_icon;int8_t browser_direction;
@@ -68,6 +68,9 @@ static unsigned chameleon_view_get_index(void*p){(void)p;return 6;}
 /* Chameleon persistence and NFC quiescence belong to prepare_exit, covered by
  * test_chameleon_exit_guard.py. This fixture exercises cleanup/retention only. */
 static void mui_view_dispatcher_detach(void*p,int l){(void)p;(void)l;}
+#define CHAMELEON_DISCARD_EXIT 3
+static void settings_discard_chameleon_changes(void){assert(!"unexpected discard");}
+static void tag_emulation_discard(void){assert(!"unexpected discard");}
 static void noop(void*p){(void)p;assert(exited==1 && freed==0);}
 static void scene_exit(void*p){(void)p;assert(exited==0 && freed==0);exited++;}
 #define mui_view_dispatcher_free noop

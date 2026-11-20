@@ -66,6 +66,7 @@ static void mui_view_dispatcher_detach(void *p, int layer) {
 }
 static void mui_view_dispatcher_free(void *p) { (void)p; }
 static void mui_list_view_free(void *p) { (void)p; }
+#define mui_u8g2_settings_slider(active) ((void)(active))
 static void mui_progress_bar_free(void *p) { (void)p; }
 static void mui_msg_box_free(void *p) { (void)p; }
 static void mui_toast_view_free(void *p) { (void)p; }

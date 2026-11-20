@@ -92,9 +92,9 @@ void chameleon_scene_menu_on_event(mui_list_view_event_t event, mui_list_view_t 
         settings_data_t *settings = settings_get_data();
         uint8_t slot = tag_emulation_get_slot();
         if (settings->chameleon_default_slot_index == slot) {
-            settings->chameleon_default_slot_index = INVALID_SLOT_INDEX;
+            SETTINGS_SET(chameleon_default_slot_index, INVALID_SLOT_INDEX);
         } else {
-            settings->chameleon_default_slot_index = slot;
+            SETTINGS_SET(chameleon_default_slot_index, slot);
         }
 
         mui_list_view_item_set_sub_text(p_item, slot == settings->chameleon_default_slot_index ? _T(ON_F) : _T(OFF_F));
@@ -154,17 +154,15 @@ void chameleon_scene_menu_on_enter(void *user_data) {
                                settings->chameleon_default_slot_index == slot ? _T(ON_F) : _T(OFF_F),
                                (void *)CHAMELEON_MENU_DEFAULT_CARD);
 
-    mui_list_view_add_item(app->p_list_view, ICON_FILE, _T(APP_CHAMELEON_CARD_DATA), (void *)CHAMELEON_MENU_CARD_DATA);
-    mui_list_view_add_item(app->p_list_view, ICON_PAGE, _T(APP_CHAMELEON_CARD_ADVANCED),
-                           (void *)CHAMELEON_MENU_CARD_ADVANCED);
-    mui_list_view_add_item(app->p_list_view, ICON_PAGE, _T(APP_CHAMELEON_DISNEY_PROFILE),
-                           (void *)CHAMELEON_MENU_DISNEY_PROFILE);
-    mui_list_view_add_item(app->p_list_view, ICON_SLOT, _T(APP_CHAMELEON_CARD_SLOT_SETTINGS),
-                           (void *)CHAMELEON_MENU_SLOT);
-
-    mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(TAG_DETAILS), (void *)CHAMELEON_MENU_BACK);
-    mui_list_view_add_item(app->p_list_view, ICON_HOME, _T(MAIN_MENU), (void *)CHAMELEON_MENU_HOME);
-
+    static const chameleon_menu_row_t rows[] = {
+        {ICON_FILE, _L_APP_CHAMELEON_CARD_DATA, CHAMELEON_MENU_CARD_DATA},
+        {ICON_PAGE, _L_APP_CHAMELEON_CARD_ADVANCED, CHAMELEON_MENU_CARD_ADVANCED},
+        {ICON_PAGE, _L_APP_CHAMELEON_DISNEY_PROFILE, CHAMELEON_MENU_DISNEY_PROFILE},
+        {ICON_SLOT, _L_APP_CHAMELEON_CARD_SLOT_SETTINGS, CHAMELEON_MENU_SLOT},
+        {ICON_BACK, _L_TAG_DETAILS, CHAMELEON_MENU_BACK},
+        {ICON_HOME, _L_MAIN_MENU, CHAMELEON_MENU_HOME},
+    };
+    chameleon_add_menu_rows(app->p_list_view, rows, ARRAY_SIZE(rows));
     mui_list_view_set_selected_cb(app->p_list_view, chameleon_scene_menu_on_event);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_LIST);
 }

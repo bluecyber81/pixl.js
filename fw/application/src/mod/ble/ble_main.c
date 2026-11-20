@@ -203,7 +203,15 @@ static uint8_t m_reported_status_state;
 static ble_link_state_handler_t m_status_state_handler;
 
 #define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180 /**< Sleep timeout when ble connection established. */
-uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
+static volatile uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
+
+/* A connected file session owns the active timer until its disconnect IRQ. */
+void ble_set_standby_timeout(uint16_t seconds) {
+    CRITICAL_REGION_ENTER();
+    if (m_timeout_overridden) m_previous_pwr_mgmt_sleep_timeout = seconds;
+    else nrf_pwr_mgmt_set_timeout(seconds);
+    CRITICAL_REGION_EXIT();
+}
 
 /**@brief Function for assert macro callback.
  *
@@ -395,26 +403,6 @@ static void services_init(void) {
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Function for handling an event from the Connection Parameters Module.
- *
- * @details This function will be called for all events in the Connection Parameters Module
- *          which are passed to the application.
- *
- * @note All this function does is to disconnect. This could have been done by simply setting
- *       the disconnect_on_fail config parameter, but instead we use the event handler
- *       mechanism to demonstrate its use.
- *
- * @param[in] p_evt  Event received from the Connection Parameters Module.
- */
-static void on_conn_params_evt(ble_conn_params_evt_t *p_evt) {
-    uint32_t err_code;
-
-    if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED) {
-        err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
-        APP_ERROR_CHECK(err_code);
-    }
-}
-
 /**@brief Function for handling errors from the Connection Parameters module.
  *
  * @param[in] nrf_error  Error code containing information about what went wrong.
@@ -434,8 +422,9 @@ static void conn_params_init(void) {
     cp_init.next_conn_params_update_delay = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count = MAX_CONN_PARAMS_UPDATE_COUNT;
     cp_init.start_on_notify_cccd_handle = BLE_GATT_HANDLE_INVALID;
+    /* These are preferred parameters. Keep a valid link if the central
+     * retains different parameters, including a faster connection interval. */
     cp_init.disconnect_on_fail = false;
-    cp_init.evt_handler = on_conn_params_evt;
     cp_init.error_handler = conn_params_error_handler;
 
     err_code = ble_conn_params_init(&cp_init);

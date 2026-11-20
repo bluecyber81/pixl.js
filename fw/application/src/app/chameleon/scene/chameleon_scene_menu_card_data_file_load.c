@@ -41,17 +41,33 @@ static void chameleon_browser_cache_free(app_chameleon_t *app) {
     app->browser_cache = NULL;
 }
 
+static unsigned chameleon_browser_rank(uintptr_t kind) {
+    static const uint8_t ranks[] = {
+        [CHAMELEON_MENU_BACK] = 4, [CHAMELEON_MENU_FILE] = 2, [CHAMELEON_MENU_FOLDER] = 2,
+        [CHAMELEON_MENU_PARENT_DIR] = 0, [CHAMELEON_MENU_PREVIOUS_PAGE] = 1, [CHAMELEON_MENU_NEXT_PAGE] = 3,
+    };
+    return kind < sizeof(ranks) ? ranks[kind] : 2;
+}
+
 static int chameleon_scene_menu_card_data_list_item_cmp(const mui_list_item_t *a, const mui_list_item_t *b) {
-    uintptr_t ak = (uintptr_t)a->user_data, bk = (uintptr_t)b->user_data;
-    int ar = ak == CHAMELEON_MENU_PARENT_DIR ? 0 : ak == CHAMELEON_MENU_PREVIOUS_PAGE ? 1 :
-             ak == CHAMELEON_MENU_NEXT_PAGE ? 3 : ak == CHAMELEON_MENU_BACK ? 4 : 2;
-    int br = bk == CHAMELEON_MENU_PARENT_DIR ? 0 : bk == CHAMELEON_MENU_PREVIOUS_PAGE ? 1 :
-             bk == CHAMELEON_MENU_NEXT_PAGE ? 3 : bk == CHAMELEON_MENU_BACK ? 4 : 2;
+    int ar = chameleon_browser_rank((uintptr_t)a->user_data);
+    int br = chameleon_browser_rank((uintptr_t)b->user_data);
     if (ar != br) return ar - br;
     if (ar != 2) return 0;
     return a->icon != b->icon ? (int)a->icon - b->icon : string_cmp(a->text, b->text);
 }
 
+
+static bool chameleon_browser_navigation(mui_list_view_t *list, bool previous, bool next) {
+    if (!mui_list_view_try_add_item_ext(list, ICON_BACK, _T(MAIN_RETURN), NULL,
+                                       (void *)(uintptr_t)CHAMELEON_MENU_BACK)) return false;
+    if (current_dir[0] && !mui_list_view_try_add_item_ext(list, ICON_HOME, "..", NULL,
+                                       (void *)(uintptr_t)CHAMELEON_MENU_PARENT_DIR)) return false;
+    if (previous && !mui_list_view_try_add_item_ext(list, ICON_PREVIOUS_PAGE, _T(DE3_PREVIOUS_PAGE), NULL,
+                                       (void *)(uintptr_t)CHAMELEON_MENU_PREVIOUS_PAGE)) return false;
+    return !next || mui_list_view_try_add_item_ext(list, ICON_NEXT_PAGE, _T(DE3_NEXT_PAGE), NULL,
+                                       (void *)(uintptr_t)CHAMELEON_MENU_NEXT_PAGE);
+}
 
 static void chameleon_scene_menu_card_data_file_load_from_file(app_chameleon_t *app, const char *file_name) {
     char path[VFS_MAX_PATH_LEN];
@@ -117,6 +133,28 @@ static void chameleon_scene_menu_card_data_file_load_from_file(app_chameleon_t *
     mui_scene_dispatcher_back_scene(app->p_scene_dispatcher, 2);
 }
 
+/* A page scan accepts only regular files/directories on the requested side of
+ * the anchor. Both bounded storage strategies must see the same names/errors. */
+static int32_t chameleon_browser_read_entry(const app_chameleon_t *app, const vfs_driver_t *driver, vfs_dir_t *dir,
+                                            vfs_obj_t *object, uint16_t *icon, uint32_t *excluded) {
+    int32_t result;
+    while ((result = driver->read_dir(dir, object)) == VFS_OK) {
+        if (object->type != VFS_TYPE_DIR && object->type != VFS_TYPE_REG) continue;
+        if (!memchr(object->name, 0, sizeof(object->name))) return VFS_ERR_CRPT;
+        *icon = object->type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
+        if (app->browser_direction) {
+            int cmp = *icon != app->browser_anchor_icon ? (int)*icon - app->browser_anchor_icon :
+                                                          strcmp(object->name, app->browser_anchor);
+            if (app->browser_direction > 0 ? cmp <= 0 : cmp >= 0) {
+                ++*excluded;
+                continue;
+            }
+        }
+        return VFS_OK;
+    }
+    return result;
+}
+
 static void chameleon_scene_menu_card_data_file_load_uncached(app_chameleon_t *app) {
     vfs_dir_t dir;
     vfs_obj_t obj;
@@ -128,16 +166,8 @@ static void chameleon_scene_menu_card_data_file_load_uncached(app_chameleon_t *a
     bool complete = true;
     int32_t res = driver && driver->mounted() ? driver->open_dir(browse_dir, &dir) : VFS_ERR_NODEV;
     if (res == VFS_OK) {
-        while ((res = driver->read_dir(&dir, &obj)) == VFS_OK) {
-            if (obj.type != VFS_TYPE_DIR && obj.type != VFS_TYPE_REG) continue;
-            if (!memchr(obj.name, 0, sizeof(obj.name))) { res = VFS_ERR_CRPT; break; }
-            uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
-            int cmp = icon != app->browser_anchor_icon ? (int)icon - app->browser_anchor_icon :
-                                                        strcmp(obj.name, app->browser_anchor);
-            if (app->browser_direction && (app->browser_direction > 0 ? cmp <= 0 : cmp >= 0)) {
-                excluded++;
-                continue;
-            }
+        uint16_t icon;
+        while ((res = chameleon_browser_read_entry(app, driver, &dir, &obj, &icon, &excluded)) == VFS_OK) {
             eligible++;
             size_t count = mui_list_item_array_size(list->items);
             if (count < CHAMELEON_BROWSER_PAGE_SIZE) {
@@ -149,7 +179,7 @@ static void chameleon_scene_menu_card_data_file_load_uncached(app_chameleon_t *a
             } else {
                 mui_list_item_t *worst = mui_list_item_array_get(list->items,
                                          app->browser_direction < 0 ? 0 : count - 1);
-                cmp = icon != worst->icon ? (int)icon - worst->icon : strcmp(obj.name, string_get_cstr(worst->text));
+                int cmp = icon != worst->icon ? (int)icon - worst->icon : strcmp(obj.name, string_get_cstr(worst->text));
                 if (app->browser_direction < 0 ? cmp <= 0 : cmp >= 0) continue;
                 if (!mui_string_try_set_str(worst->text, obj.name)) { complete = false; break; }
                 worst->icon = icon;
@@ -170,18 +200,9 @@ static void chameleon_scene_menu_card_data_file_load_uncached(app_chameleon_t *a
         return;
     }
     if (res != VFS_OK) mui_list_view_clear_items(list);
-    complete = complete && mui_list_view_try_add_item_ext(list, ICON_BACK, _T(MAIN_RETURN), NULL,
-                                                          (void *)(uintptr_t)CHAMELEON_MENU_BACK);
-    if (complete && current_dir[0])
-        complete = mui_list_view_try_add_item_ext(list, ICON_HOME, "..", NULL, (void *)(uintptr_t)CHAMELEON_MENU_PARENT_DIR);
-    if (complete && res == VFS_OK) {
-        bool previous = app->browser_direction < 0 ? eligible > CHAMELEON_BROWSER_PAGE_SIZE : excluded > 0;
-        bool next = app->browser_direction < 0 ? excluded > 0 : eligible > CHAMELEON_BROWSER_PAGE_SIZE;
-        if (previous) complete = mui_list_view_try_add_item_ext(list, ICON_PREVIOUS_PAGE, _T(DE3_PREVIOUS_PAGE), NULL,
-                                                               (void *)(uintptr_t)CHAMELEON_MENU_PREVIOUS_PAGE);
-        if (complete && next) complete = mui_list_view_try_add_item_ext(list, ICON_NEXT_PAGE, _T(DE3_NEXT_PAGE), NULL,
-                                                                       (void *)(uintptr_t)CHAMELEON_MENU_NEXT_PAGE);
-    }
+    bool previous = app->browser_direction < 0 ? eligible > CHAMELEON_BROWSER_PAGE_SIZE : excluded > 0;
+    bool next = app->browser_direction < 0 ? excluded > 0 : eligible > CHAMELEON_BROWSER_PAGE_SIZE;
+    complete = complete && chameleon_browser_navigation(list, res == VFS_OK && previous, res == VFS_OK && next);
     if (!complete) {
         mui_list_view_clear_items(list);
         mui_show_memory_error(mui());
@@ -223,14 +244,8 @@ static bool chameleon_browser_cache_show(app_chameleon_t *app) {
         if (!mui_list_view_try_add_item_ext(list, entry->icon, entry->name, NULL,
                 (void *)(uintptr_t)(entry->icon == ICON_FOLDER ? CHAMELEON_MENU_FOLDER : CHAMELEON_MENU_FILE))) return false;
     }
-    if (!mui_list_view_try_add_item_ext(list, ICON_BACK, _T(MAIN_RETURN), NULL,
-            (void *)(uintptr_t)CHAMELEON_MENU_BACK)) return false;
-    if (current_dir[0] && !mui_list_view_try_add_item_ext(list, ICON_HOME, "..", NULL,
-            (void *)(uintptr_t)CHAMELEON_MENU_PARENT_DIR)) return false;
-    if ((cache->offset || cache->previous) && !mui_list_view_try_add_item_ext(list, ICON_PREVIOUS_PAGE,
-            _T(DE3_PREVIOUS_PAGE), NULL, (void *)(uintptr_t)CHAMELEON_MENU_PREVIOUS_PAGE)) return false;
-    if ((end < cache->count || cache->next) && !mui_list_view_try_add_item_ext(list, ICON_NEXT_PAGE,
-            _T(DE3_NEXT_PAGE), NULL, (void *)(uintptr_t)CHAMELEON_MENU_NEXT_PAGE)) return false;
+    if (!chameleon_browser_navigation(list, cache->offset || cache->previous, end < cache->count || cache->next))
+        return false;
     mui_list_view_sort(list, chameleon_scene_menu_card_data_list_item_cmp);
     mui_list_view_set_focus(list, 0);
     mui_list_view_set_scroll_offset(list, 0);
@@ -249,18 +264,13 @@ static int32_t chameleon_browser_cache_scan(app_chameleon_t *app, const vfs_driv
     int32_t res = driver->open_dir(current_dir[0] ? current_dir : CHELEMEON_DUMP_FOLDER, &dir);
     if (res != VFS_OK) { current_dir[0] = 0; app->browser_direction = 0; return res; }
     uint32_t eligible = 0, excluded = 0;
-    while ((res = driver->read_dir(&dir, &obj)) == VFS_OK) {
-        if (obj.type != VFS_TYPE_DIR && obj.type != VFS_TYPE_REG) continue;
-        if (!memchr(obj.name, 0, sizeof(obj.name))) { res = VFS_ERR_CRPT; break; }
-        uint16_t icon = obj.type == VFS_TYPE_DIR ? ICON_FOLDER : ICON_FILE;
-        int cmp = icon != app->browser_anchor_icon ? (int)icon - app->browser_anchor_icon :
-                                                   strcmp(obj.name, app->browser_anchor);
-        if (app->browser_direction && (app->browser_direction > 0 ? cmp <= 0 : cmp >= 0)) { excluded++; continue; }
+    uint16_t icon;
+    while ((res = chameleon_browser_read_entry(app, driver, &dir, &obj, &icon, &excluded)) == VFS_OK) {
         eligible++;
         unsigned at = 0;
         while (at < cache->count) {
             chameleon_browser_entry_t *entry = &cache->entries[at];
-            cmp = icon != entry->icon ? (int)icon - entry->icon : strcmp(obj.name, entry->name);
+            int cmp = icon != entry->icon ? (int)icon - entry->icon : strcmp(obj.name, entry->name);
             if (cmp < 0) break;
             at++;
         }
@@ -340,10 +350,7 @@ static void chameleon_scene_menu_card_data_file_load_reload(app_chameleon_t *app
             chameleon_browser_cache_free(app);
             if (res != VFS_OK) {
                 mui_list_view_clear_items(app->p_list_view);
-                bool complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), NULL,
-                        (void *)(uintptr_t)CHAMELEON_MENU_BACK);
-                if (complete && current_dir[0]) complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_HOME,
-                        "..", NULL, (void *)(uintptr_t)CHAMELEON_MENU_PARENT_DIR);
+                bool complete = chameleon_browser_navigation(app->p_list_view, false, false);
                 if (!complete) { mui_list_view_clear_items(app->p_list_view); mui_show_memory_error(mui()); }
                 else {
                     mui_toast_view_show(app->p_toast_view, _T(OPEN_FOLDER_FAILED));
@@ -365,7 +372,7 @@ void update_current_directory_to_parent(void) {
     char *last_slash = strrchr(current_dir, '/');
     if (last_slash) {
         *last_slash = '\0';
-        if (strlen(current_dir) == 0 || strcmp(current_dir, CHELEMEON_DUMP_FOLDER) == 0) {
+        if (current_dir[0] == '\0' || strcmp(current_dir, CHELEMEON_DUMP_FOLDER) == 0) {
             current_dir[0] = '\0';
         }
     } else {

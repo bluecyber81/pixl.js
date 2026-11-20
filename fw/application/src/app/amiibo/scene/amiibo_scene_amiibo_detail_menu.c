@@ -32,6 +32,26 @@ enum amiibo_detail_menu_t {
     AMIIBO_DETAIL_MENU_PERSONAL_NOTE,
 };
 
+static void amiibo_scene_settings_save_retry(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_amiibo_t *app = box->user_data;
+    if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        if (settings_save() != NRF_SUCCESS) return;
+    } else if (event != MUI_MSG_BOX_EVENT_SELECT_RIGHT) {
+        return;
+    }
+    /* Dismissing the error keeps the selected RAM value; retry never toggles it. */
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_LIST);
+}
+
+static void amiibo_scene_settings_save_error(app_amiibo_t *app) {
+    mui_msg_box_set_header(app->p_msg_box, _T(DE3_SAVE_FAILED));
+    mui_msg_box_set_message(app->p_msg_box, _T(DE3_SAVE_RAM_ONLY));
+    mui_msg_box_set_btn_text(app->p_msg_box, _T(APP_CHAMELEON_CARD_DATA_SAVE), NULL, _T(BACK));
+    mui_msg_box_set_btn_focus(app->p_msg_box, 0);
+    mui_msg_box_set_event_cb(app->p_msg_box, amiibo_scene_settings_save_retry);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_MSG_BOX);
+}
+
 static ret_code_t amiibo_scene_amiibo_detail_set_readonly(app_amiibo_t *app, bool readonly) {
     char path[VFS_MAX_PATH_LEN];
 
@@ -122,7 +142,7 @@ static void amiibo_scene_amiibo_detail_menu_text_input_set_id_event_cb(mui_text_
                                                                        mui_text_input_t *p_text_input) {
     app_amiibo_t *app = p_text_input->user_data;
     const char *input_text = mui_text_input_get_input_text(p_text_input);
-    if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED && strlen(input_text) > 0) {
+    if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED && input_text[0] != '\0') {
 
         uint8_t uid[7];
         ret_code_t err_code;
@@ -258,11 +278,11 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
             return;
         }
         settings_data_t *p_settings = settings_get_data();
-        p_settings->auto_gen_amiibo = !p_settings->auto_gen_amiibo;
-        settings_save();
+        SETTINGS_TOGGLE(auto_gen_amiibo);
 
         mui_list_view_item_set_sub_text(
             p_item, (p_settings->auto_gen_amiibo ? getLangString(_L_ON_F) : getLangString(_L_OFF_F)));
+        if (settings_save() != NRF_SUCCESS) amiibo_scene_settings_save_error(app);
     } break;
 
     case AMIIBO_DETAIL_MENU_SET_CUSTOM_UID: {

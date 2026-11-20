@@ -128,7 +128,7 @@ static void boot(void) {
     memset(handles,0,sizeof(handles));busy=false;external_writers=0;
     stop_at=fail_at=short_at=0;reset_armed=false;fail_read_path=NULL;
     close_keep_on_error=false;memset(writer_used,0,sizeof(writer_used));fs=true;
-    driver=(vfs_driver_t){.mounted=mounted_fake,.mount=mount_fake,.read_file_data=read_data,
+    driver=(vfs_driver_t){.mounted=mounted_fake,.mount=mount_fake,.stat_file=stat_fake,.read_file_data=read_data,
         .write_file_data=guarded_write_data,.remove_file=guarded_remove,.update_file_meta=guarded_meta};
     vfs_persist_bind(&driver,&raw);
 }
@@ -278,6 +278,17 @@ int main(void) {
     assert(vfs_persist_write(&driver,"/settings.bin",updated,26)==VFS_ERR_CRPT&&equals(original,26));
     assert(files[1].size==10&&!memcmp(files[1].bytes,"user bytes",10));
     puts("PASS actual SPIFFS metadata padding bounds and pre-existing reserved-name collision protection");
+
+    setup(26);settings_data_t owner_settings=def_settings_data;
+    owner_settings.lcd_backlight=67;owner_settings.chameleon_slot_num=40;
+    memcpy(files[0].bytes,&owner_settings,sizeof(owner_settings));
+    fail_read_path="/settings.bin";assert(settings_init()!=0);
+    m_settings_data.chameleon_default_slot_index=5;
+    assert(settings_save()!=0 && equals(&owner_settings,sizeof(owner_settings)));
+    fail_read_path=NULL;assert(settings_save()==0);
+    owner_settings.chameleon_default_slot_index=5;
+    assert(equals(&owner_settings,sizeof(owner_settings)) && settings_init()==0);
+    puts("PASS recovered settings retain user preferences across failed boot read, RAM edit, commit and restart");
 
     setup(24);assert(settings_init()==0 && equals(original,24));
     assert(settings_save()==0);uint8_t expected_settings[26];memcpy(expected_settings,&m_settings_data,26);

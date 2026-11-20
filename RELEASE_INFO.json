@@ -269,5 +269,27 @@
   "firmware_source_commit": "fecc8b750288f1028f109067dad9694c9f2c3628",
   "hardware_acceptance": "owner-reported-general-use-and-system-readback-on-one-lcd",
   "web_device_readback_scope": "Owner-supplied public 3.58.2 diagnostic with App662 on one LCD. No transfer was recorded.",
-  "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1"
+  "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1",
+  "firmware_preview": {
+    "version": "2.22.0-DE3.93",
+    "counter": 666,
+    "board": "LCD",
+    "status": "experimental-signed-application",
+    "hardware_acceptance": "pending",
+    "publication_date": "2026-11-20",
+    "source_branch": "test/lcd-de393-app666",
+    "source_id": "415e85895e35e4f06cede89d6efbbe7e905290205723f0b31e9ddda9f05ac12a",
+    "application_sha256": "bc08b79455d525667c03a1c03193bfb8d11a2e0416331dcc0d8ed90381550652",
+    "application_bytes": 357964,
+    "ota_file": "fw/releases/Allmiibo_LCD_DE3_93_666_NUR_APP.zip",
+    "ota_sha256": "b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e",
+    "ota_bytes": 358565,
+    "application_only": true,
+    "storage_engine_sha256": "7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e",
+    "host_firmware_suites": 177,
+    "evidence": "docs/validation/DE3_93.json",
+    "notes": "docs/validation/DE3_93_FIRMWARE.md",
+    "bootloader_and_softdevice_replaced": false,
+    "migration_required_for_existing_pfs1": false
+  }
 }

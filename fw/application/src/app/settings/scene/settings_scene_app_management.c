@@ -14,7 +14,6 @@ static void settings_scene_app_management_reload(void *user_data);
 static void settings_scene_app_management_list_view_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                       mui_list_item_t *p_item) {
     app_settings_t *app = p_list_view->user_data;
-    settings_data_t *p_settings = settings_get_data();
 
     // Check if the item is the back button (icon ICON_BACK)
     if (p_item->icon == ICON_BACK) {
@@ -23,7 +22,7 @@ static void settings_scene_app_management_list_view_on_selected(mui_list_view_ev
         uint32_t app_id = (uint32_t)p_item->user_data;
         // Settings app cannot be disabled
         if (app_id != MINI_APP_ID_SETTINGS) {
-            p_settings->app_enable_bits ^= (1 << app_id);
+            settings_toggle_app(app_id);
         }
         settings_scene_app_management_reload(app);
     }

@@ -22,7 +22,7 @@ const char *getLangString(L_StringID stringID) {
         return lang_en_US[stringID];
     }
     const char *string = languageData[currentLanguage].strings[stringID];
-    return string && strlen(string) > 0 ? string : lang_en_US[stringID];
+    return string && string[0] != '\0' ? string : lang_en_US[stringID];
 }
 
 void setLanguage(Language lang) { currentLanguage = lang; }

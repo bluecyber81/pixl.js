@@ -78,6 +78,7 @@ STATIC_ASSERT(sizeof(tag_slot_config_t) == TAG_SLOT_CONFIG_CURRENT_SIZE);
 // The most basic simulation card initialization program
 bool tag_emulation_init(void);
 bool tag_emulation_active_data_ready(void);
+void tag_emulation_discard(void);
 bool tag_emulation_prepare_slot_count(uint8_t count);
 //Some of the data stored in RAM can be saved to Flash through this interface
 bool tag_emulation_save_data(void);

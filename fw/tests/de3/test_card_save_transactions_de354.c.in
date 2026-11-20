@@ -58,6 +58,7 @@ static int32_t mock_write(const char *path,void *in,size_t n){
 }
 static vfs_driver_t driver={.mounted=mounted,.stat_file=mock_stat,.open_file=mock_open,.read_file=mock_read,.close_file=mock_close,.abort_file=mock_abort,.write_file_data=mock_write};
 vfs_driver_t *vfs_get_default_driver(void){return driver_present?&driver:NULL;}
+static int32_t fds_save_failure(uint16_t id, bool writing, int32_t code) { (void)id; (void)writing; (void)code; return -1; }
 @MAP@
 @COMPARE@
 @WRITE@

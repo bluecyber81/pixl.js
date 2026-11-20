@@ -81,12 +81,14 @@ typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p
 static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;CHECK(false);}
 typedef struct { uint8_t lcd_backlight, oled_contrast; } settings_data_t;
 static settings_data_t settings;
+#define SETTINGS_SET(field, value) (settings_get_data()->field = (value))
 static settings_data_t *settings_get_data(void) { return &settings; }
 static unsigned previous_scenes;
 static void mui_scene_dispatcher_previous_scene(void *p) { (void)p; ++previous_scenes; }
 enum { _L_APP_SET_BRIGHTNESS, _L_APP_SET_OLED_CONTRAST_TITLE, SETTINGS_VIEW_ID_PROGRESS_BAR };
 static const char *getLangString(unsigned id) { return id==_L_APP_SET_BRIGHTNESS?"Brightness":"Contrast"; }
 static void mui_view_dispatcher_switch_to_view(void *p,unsigned view){(void)p;CHECK(view==SETTINGS_VIEW_ID_PROGRESS_BAR);}
+static void mui_u8g2_settings_slider(bool active) { (void)active; }
 /* ACTUAL_SETTINGS_CALLBACKS */
 
 static unsigned callbacks;

@@ -66,7 +66,12 @@ static uint8_t lcd_read(uint8_t index) {
 bool ble_remote_enabled(void) { return permission; }
 bool ble_remote_dispatching(void) { return dispatching; }
 bool ble_remote_response_pending(void) { return protocol.pending || protocol.replying; }
-void ble_remote_local_activity(void) { local_generation++; }
+void ble_remote_local_activity(void) {
+    /* Called from button IRQs and when foreground modal frames commit. */
+    CRITICAL_REGION_ENTER();
+    local_generation++;
+    CRITICAL_REGION_EXIT();
+}
 
 bool ble_remote_set_enabled(bool enabled) {
     /* A synthetic key cannot grant itself permission, even through Settings. */

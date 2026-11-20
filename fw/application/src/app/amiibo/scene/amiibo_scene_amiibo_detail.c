@@ -196,7 +196,7 @@ static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *app, const char
     char path[VFS_MAX_PATH_LEN];
     char selected_name[VFS_MAX_NAME_LEN];
 
-    if (strlen(file_name) == 0 || strlen(file_name) >= sizeof(selected_name)) {
+    if (file_name[0] == '\0' || strlen(file_name) >= sizeof(selected_name)) {
         return false;
     }
     /* Saving a newly written tag can rename it and rebuild the file list. */

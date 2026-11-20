@@ -1,0 +1,214 @@
+/* Host boundary for actual Nordic connection-parameter functions. */
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define CHECK(condition) do { \
+    if (!(condition)) { fprintf(stderr, "check failed at %d: %s\n", __LINE__, #condition); abort(); } \
+} while (0)
+#define NRF_SUCCESS 0u
+#define NRF_ERROR_NO_MEM 4u
+#define NRF_ERROR_INVALID_STATE 8u
+#define NRF_ERROR_NULL 14u
+#define NRF_ERROR_BUSY 17u
+#define NRF_ERROR_INTERNAL 3u
+#define BLE_CONN_HANDLE_INVALID 0xffffu
+#define BLE_GATT_HANDLE_INVALID 0u
+#define BLE_HCI_CONN_INTERVAL_UNACCEPTABLE 0x3bu
+#define BLE_GAP_ROLE_PERIPH 1u
+#define BLE_CONN_PARAMS_EVT_FAILED 0u
+#define BLE_CONN_PARAMS_EVT_SUCCEEDED 1u
+#define NRF_BLE_CONN_PARAMS_INSTANCE_COUNT 1u
+#define NRF_BLE_CONN_PARAMS_MAX_SLAVE_LATENCY_DEVIATION 499u
+#define NRF_BLE_CONN_PARAMS_MAX_SUPERVISION_TIMEOUT_DEVIATION 65535u
+#define APP_TIMER_MODE_SINGLE_SHOT 0u
+#define UNIT_1_25_MS 1250u
+#define UNIT_10_MS 10000u
+#define MSEC_TO_UNITS(ms, unit) (((ms) * 1000u) / (unit))
+#define APP_TIMER_TICKS(ms) (ms)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define __INLINE inline
+#define VERIFY_PARAM_NOT_NULL(p) do { if ((p) == NULL) return NRF_ERROR_NULL; } while (0)
+/* ACTUAL_CONSTANTS */
+
+typedef uint32_t ret_code_t;
+typedef struct {
+    uint16_t min_conn_interval, max_conn_interval, slave_latency, conn_sup_timeout;
+} ble_gap_conn_params_t;
+typedef struct { unsigned evt_type; uint16_t conn_handle; } ble_conn_params_evt_t;
+typedef struct {
+    void (*handler)(void *);
+    void *context;
+    uint32_t delay;
+    bool pending;
+} app_timer_t;
+typedef app_timer_t *app_timer_id_t;
+typedef struct {
+    uint16_t conn_handle;
+    app_timer_id_t timer_id;
+    uint8_t update_count, params_ok;
+    ble_gap_conn_params_t preferred_conn_params;
+} ble_conn_params_instance_t;
+typedef struct {
+    ble_gap_conn_params_t *p_conn_params;
+    uint32_t first_conn_params_update_delay, next_conn_params_update_delay;
+    uint8_t max_conn_params_update_count;
+    uint16_t start_on_notify_cccd_handle;
+    bool disconnect_on_fail;
+    void (*evt_handler)(ble_conn_params_evt_t *);
+    void (*error_handler)(uint32_t);
+} ble_conn_params_init_t;
+typedef struct {
+    struct {
+        struct {
+            uint16_t conn_handle;
+            struct {
+                struct { uint8_t role; ble_gap_conn_params_t conn_params; } connected;
+                struct { ble_gap_conn_params_t conn_params; } conn_param_update;
+            } params;
+        } gap_evt;
+    } evt;
+} ble_evt_t;
+
+static app_timer_t m_timer_data[NRF_BLE_CONN_PARAMS_INSTANCE_COUNT];
+static ble_conn_params_instance_t m_conn_params_instances[NRF_BLE_CONN_PARAMS_INSTANCE_COUNT];
+static ble_conn_params_init_t m_conn_params_config;
+static ble_gap_conn_params_t m_preferred_conn_params;
+static uint16_t m_conn_handle = 4;
+static unsigned disconnect_calls, fatal_calls, update_calls, stop_calls, disconnect_result;
+static unsigned failed_cases, case_count;
+#define APP_ERROR_CHECK(code) do { if ((code) != NRF_SUCCESS) ++fatal_calls; } while (0)
+#define APP_ERROR_HANDLER(code) do { (void)(code); ++fatal_calls; } while (0)
+
+static ret_code_t sd_ble_gap_disconnect(uint16_t handle, unsigned reason) {
+    CHECK(handle == m_conn_handle && reason == BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+    ++disconnect_calls;
+    return disconnect_result;
+}
+static ret_code_t sd_ble_gap_conn_param_update(uint16_t handle, ble_gap_conn_params_t *params) {
+    CHECK(handle == m_conn_handle);
+    CHECK(params->min_conn_interval == MIN_CONN_INTERVAL && params->max_conn_interval == MAX_CONN_INTERVAL);
+    ++update_calls;
+    return NRF_SUCCESS;
+}
+static ret_code_t sd_ble_gap_ppcp_get(ble_gap_conn_params_t *params) {
+    *params = (ble_gap_conn_params_t){MIN_CONN_INTERVAL, MAX_CONN_INTERVAL, SLAVE_LATENCY, CONN_SUP_TIMEOUT};
+    return NRF_SUCCESS;
+}
+static ret_code_t sd_ble_gap_ppcp_set(ble_gap_conn_params_t *params) {
+    (void)params;
+    CHECK(false); /* The application obtains its previously configured GAP preferences. */
+    return NRF_SUCCESS;
+}
+static ret_code_t app_timer_create(app_timer_id_t *timer, unsigned mode, void (*handler)(void *)) {
+    CHECK(timer != NULL && *timer != NULL && mode == APP_TIMER_MODE_SINGLE_SHOT);
+    **timer = (app_timer_t){.handler = handler};
+    return NRF_SUCCESS;
+}
+static ret_code_t app_timer_start(app_timer_id_t timer, uint32_t delay, void *context) {
+    CHECK(timer != NULL && timer->handler != NULL && !timer->pending);
+    timer->pending = true;
+    timer->delay = delay;
+    timer->context = context;
+    return NRF_SUCCESS;
+}
+static ret_code_t app_timer_stop(app_timer_id_t timer) {
+    CHECK(timer != NULL);
+    timer->pending = false;
+    ++stop_calls;
+    return NRF_SUCCESS;
+}
+
+/* ACTUAL_FUNCTIONS */
+
+static ble_evt_t begin_case(unsigned interval, unsigned result, bool sdk_disconnect_control) {
+    disconnect_calls = fatal_calls = update_calls = stop_calls = 0;
+    disconnect_result = result;
+    conn_params_init();
+    CHECK(fatal_calls == 0);
+    CHECK(m_conn_params_config.max_conn_params_update_count == 3);
+    CHECK(m_preferred_conn_params.min_conn_interval == 16 && m_preferred_conn_params.max_conn_interval == 60);
+    if (sdk_disconnect_control) {
+        /* Verify that the radio mock observes a real disconnect, and that the
+         * SDK itself accepts INVALID_STATE when teardown is already pending. */
+        m_conn_params_config.disconnect_on_fail = true;
+        m_conn_params_config.evt_handler = NULL;
+    }
+    ble_evt_t event = {0};
+    event.evt.gap_evt.conn_handle = m_conn_handle;
+    event.evt.gap_evt.params.connected.role = BLE_GAP_ROLE_PERIPH;
+    event.evt.gap_evt.params.connected.conn_params =
+        (ble_gap_conn_params_t){interval, interval, SLAVE_LATENCY, CONN_SUP_TIMEOUT};
+    event.evt.gap_evt.params.conn_param_update.conn_params = event.evt.gap_evt.params.connected.conn_params;
+    on_connect(&event);
+    CHECK(instance_get(m_conn_handle) != NULL);
+    return event;
+}
+
+static void fire_timer(void) {
+    app_timer_t *timer = &m_timer_data[0];
+    CHECK(timer->pending);
+    timer->pending = false;
+    timer->handler(timer->context);
+}
+
+static void preference_case(unsigned interval, unsigned result, bool sdk_disconnect_control) {
+    ble_evt_t event = begin_case(interval, result, sdk_disconnect_control);
+    bool preferred = m_conn_params_instances[0].params_ok;
+    if (!preferred) {
+        CHECK(m_timer_data[0].delay == FIRST_CONN_PARAMS_UPDATE_DELAY);
+        for (unsigned attempt = 0; attempt < MAX_CONN_PARAMS_UPDATE_COUNT; ++attempt) {
+            fire_timer();
+            CHECK(update_calls == attempt + 1);
+            CHECK(disconnect_calls == 0 && fatal_calls == 0);
+            /* Central retains the established legal interval after the request. */
+            on_conn_params_update(&event);
+            CHECK(m_timer_data[0].delay == NEXT_CONN_PARAMS_UPDATE_DELAY);
+        }
+        fire_timer();
+    }
+    bool passed = disconnect_calls == (unsigned)(sdk_disconnect_control && !preferred) &&
+                  fatal_calls == 0 && !m_timer_data[0].pending &&
+                  update_calls == (preferred ? 0 : MAX_CONN_PARAMS_UPDATE_COUNT) &&
+                  m_conn_params_instances[0].update_count == 0;
+    ++case_count;
+    failed_cases += !passed;
+    printf("{\"case\":\"%s\",\"intervalMs\":%.2f,\"preferred\":%s,"
+           "\"disconnectResult\":%u,\"requests\":%u,\"disconnectCalls\":%u,"
+           "\"fatalChecks\":%u,\"passed\":%s}\n",
+           sdk_disconnect_control ? "sdk_disconnect_control" : "retain_valid_link",
+           interval * 1.25, preferred ? "true" : "false", result, update_calls,
+           disconnect_calls, fatal_calls, passed ? "true" : "false");
+}
+
+static void stale_timer_case(void) {
+    ble_evt_t event = begin_case(12, NRF_SUCCESS, false);
+    void (*handler)(void *) = m_timer_data[0].handler;
+    void *context = m_timer_data[0].context;
+    on_disconnect(&event);
+    handler(context); /* An already dispatched timer must find no live instance. */
+    bool passed = instance_get(m_conn_handle) == NULL && stop_calls == 1 &&
+                  !m_timer_data[0].pending && disconnect_calls == 0 &&
+                  update_calls == 0 && fatal_calls == 0;
+    ++case_count;
+    failed_cases += !passed;
+    printf("{\"case\":\"stale_timer_after_disconnect\",\"passed\":%s}\n", passed ? "true" : "false");
+}
+
+int main(void) {
+    const unsigned intervals[] = {6, 12, 16, 60, 80}; /* 7.5, 15, 20, 75 and 100 ms. */
+    const unsigned results[] = {NRF_SUCCESS, NRF_ERROR_INVALID_STATE};
+    for (unsigned i = 0; i < sizeof(intervals) / sizeof(intervals[0]); ++i)
+        for (unsigned j = 0; j < sizeof(results) / sizeof(results[0]); ++j)
+            preference_case(intervals[i], results[j], false);
+    for (unsigned j = 0; j < sizeof(results) / sizeof(results[0]); ++j) {
+        preference_case(12, results[j], true);
+        preference_case(80, results[j], true);
+    }
+    stale_timer_case();
+    printf("BLE preference regression: %u/%u cases passed (mocked radio and timers).\n",
+           case_count - failed_cases, case_count);
+    return failed_cases ? 1 : 0;
+}

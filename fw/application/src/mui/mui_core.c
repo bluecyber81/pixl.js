@@ -88,10 +88,19 @@ static void mui_draw_mem_mon(mui_canvas_t *p_canvas) {
     }
 }
 
+/* Raised by the first draw of a new modal state. A key may arrive from an IRQ
+ * while the frame is being transferred. Fence only once that transfer returns. */
+static bool fence_input_after_frame;
+void mui_fence_input_after_frame(void) { fence_input_after_frame = true; }
+
 static void mui_buffer_flush(mui_t *p_mui) {
     mui_canvas_set_frame(&p_mui->canvas, 0, 0, p_mui->screen_width, p_mui->screen_height);
     mui_draw_mem_mon(&p_mui->canvas);
     mui_canvas_flush(&p_mui->canvas);
+    if (fence_input_after_frame) {
+        fence_input_after_frame = false;
+        mui_input_modal_boundary();
+    }
 }
 
 static bool mui_draw_layer(mui_t *p_mui, mui_layer_t layer, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {

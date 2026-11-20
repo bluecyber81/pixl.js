@@ -1,6 +1,6 @@
 #include "app_settings.h"
 #include "mini_app_launcher.h"
-#include "nrf_pwr_mgmt.h"
+#include "ble_main.h"
 #include "settings.h"
 #include "settings_scene.h"
 #include "utils2.h"
@@ -8,56 +8,25 @@
 #include "i18n/language.h"
 
 enum settings_sleep_timeout_menu_t {
+    SETTINGS_SLEEP_TIMEOUT_MENU_OFF,
     SETTINGS_SLEEP_TIMEOUT_MENU_15S,
     SETTINGS_SLEEP_TIMEOUT_MENU_30S,
     SETTINGS_SLEEP_TIMEOUT_MENU_45S,
     SETTINGS_SLEEP_TIMEOUT_MENU_1MIN,
     SETTINGS_SLEEP_TIMEOUT_MENU_2MIN,
     SETTINGS_SLEEP_TIMEOUT_MENU_3MIN,
-    SETTINGS_SLEEP_TIMEOUT_MENU_OFF,
     SETTINGS_SLEEP_TIMEOUT_MENU_EXIT
 };
+
+static const uint8_t timeout_seconds[] = {0, 15, 30, 45, 60, 120, 180};
 
 static void settings_scene_sleep_timeout_list_view_on_selected(mui_list_view_event_t event,
                                                                mui_list_view_t *p_list_view, mui_list_item_t *p_item) {
     app_settings_t *app = p_list_view->user_data;
     uint32_t selection = (uint32_t)p_item->user_data;
-    settings_data_t *p_settings = settings_get_data();
-    switch (selection) {
-    case SETTINGS_SLEEP_TIMEOUT_MENU_15S:
-        nrf_pwr_mgmt_set_timeout(15);
-        p_settings->sleep_timeout_sec = 15;
-        break;
-
-    case SETTINGS_SLEEP_TIMEOUT_MENU_30S:
-        nrf_pwr_mgmt_set_timeout(30);
-        p_settings->sleep_timeout_sec = 30;
-        break;
-
-    case SETTINGS_SLEEP_TIMEOUT_MENU_45S:
-        p_settings->sleep_timeout_sec = 45;
-        nrf_pwr_mgmt_set_timeout(45);
-        break;
-
-    case SETTINGS_SLEEP_TIMEOUT_MENU_1MIN:
-        p_settings->sleep_timeout_sec = 60;
-        nrf_pwr_mgmt_set_timeout(60);
-        break;
-
-    case SETTINGS_SLEEP_TIMEOUT_MENU_2MIN:
-        p_settings->sleep_timeout_sec = 120;
-        nrf_pwr_mgmt_set_timeout(120);
-        break;
-
-    case SETTINGS_SLEEP_TIMEOUT_MENU_3MIN:
-        p_settings->sleep_timeout_sec = 180;
-        nrf_pwr_mgmt_set_timeout(180);
-        break;
-
-    case SETTINGS_SLEEP_TIMEOUT_MENU_OFF:
-        p_settings->sleep_timeout_sec = 0;
-        nrf_pwr_mgmt_set_timeout(0);
-        break;
+    if (selection < sizeof(timeout_seconds)) {
+        SETTINGS_SET(sleep_timeout_sec, timeout_seconds[selection]);
+        ble_set_standby_timeout(timeout_seconds[selection]);
     }
     mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
 }
@@ -65,25 +34,14 @@ static void settings_scene_sleep_timeout_list_view_on_selected(mui_list_view_eve
 void settings_scene_sleep_timeout_on_enter(void *user_data) {
 
     app_settings_t *app = user_data;
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_OFF), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_OFF);
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_15S), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_15S);
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_30S), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_30S);
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_45S), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_45S);
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_1MIN), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_1MIN);
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_2MIN), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_2MIN);
-    mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(_L_3MIN), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_3MIN);
-    mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_EXIT);
-
+    static const uint16_t labels[] = {_L_OFF, _L_15S, _L_30S, _L_45S, _L_1MIN, _L_2MIN, _L_3MIN};
+    uint8_t current = settings_get_data()->sleep_timeout_sec;
     uint16_t focus = 0;
-    switch (settings_get_data()->sleep_timeout_sec) {
-    case 15: focus = 1; break;
-    case 30: focus = 2; break;
-    case 45: focus = 3; break;
-    case 60: focus = 4; break;
-    case 120: focus = 5; break;
-    case 180: focus = 6; break;
-    default: break;
+    for (uint8_t row = 0; row < SETTINGS_SLEEP_TIMEOUT_MENU_EXIT; row++) {
+        mui_list_view_add_item(app->p_list_view, 0xe105, getLangString(labels[row]), (void *)(uintptr_t)row);
+        if (current == timeout_seconds[row]) focus = row;
     }
+    mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK), (void *)SETTINGS_SLEEP_TIMEOUT_MENU_EXIT);
     mui_list_view_set_focus(app->p_list_view, focus);
     mui_list_view_set_selected_cb(app->p_list_view, settings_scene_sleep_timeout_list_view_on_selected);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MAIN);

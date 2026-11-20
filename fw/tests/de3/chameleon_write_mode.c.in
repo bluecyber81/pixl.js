@@ -44,6 +44,7 @@ static void mui_list_view_clear_items(mui_list_view_t *view){view->count=0;clear
 static bool tag_emulation_active_data_ready(void){return !load_fail;}
 static void app_chameleon_show_save_error(app_chameleon_t *app){save_errors++;}
 static void app_chameleon_show_load_error(app_chameleon_t *app){load_errors++;}
+static void chameleon_save_begin(void) {}
 @ACTUAL_FUNCTIONS@
 
 static void setup(unsigned slot,mui_list_view_t *view,app_chameleon_t *app){

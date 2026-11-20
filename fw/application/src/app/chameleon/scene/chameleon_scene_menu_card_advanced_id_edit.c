@@ -51,43 +51,27 @@ static void format_id_edit_text(app_chameleon_id_edit_type_t id_edit_type, char 
         return;
     }
     switch (id_edit_type) {
-    case APP_CHAMELEON_ID_EDIT_TYPE_UID:
-        nfc_tag_14a_uid_size uid_size = *(coll_res->size);
-        if (uid_size == NFC_TAG_14A_UID_SINGLE_SIZE) {
-            sprintf(text, "%02x.%02x.%02x.%02x", coll_res->uid[0], coll_res->uid[1], coll_res->uid[2],
-                    coll_res->uid[3]);
-        } else if (uid_size == NFC_TAG_14A_UID_DOUBLE_SIZE) {
-            sprintf(text, "%02x.%02x.%02x.%02x.%02x.%02x.%02x", coll_res->uid[0], coll_res->uid[1], coll_res->uid[2],
-                    coll_res->uid[3], coll_res->uid[4], coll_res->uid[5], coll_res->uid[6]);
-        } else if (uid_size == NFC_TAG_14A_UID_TRIPLE_SIZE) {
-            sprintf(text, "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x", coll_res->uid[0], coll_res->uid[1],
-                    coll_res->uid[2], coll_res->uid[3], coll_res->uid[4], coll_res->uid[5], coll_res->uid[6],
-                    coll_res->uid[7], coll_res->uid[8], coll_res->uid[9]);
-        }
-        return;
-
+    case APP_CHAMELEON_ID_EDIT_TYPE_UID: {
+        nfc_tag_14a_uid_size length = *coll_res->size;
+        if (length == NFC_TAG_14A_UID_SINGLE_SIZE || length == NFC_TAG_14A_UID_DOUBLE_SIZE ||
+            length == NFC_TAG_14A_UID_TRIPLE_SIZE) tag_helper_format_hex(text, coll_res->uid, length, '.');
+        break;
+    }
     case APP_CHAMELEON_ID_EDIT_TYPE_SAK:
-        sprintf(text, "%02x", coll_res->sak[0]);
-        return;
-
-    case APP_CHAMELEON_ID_EDIT_TYPE_ATQA:
-        sprintf(text, "%02x.%02x", coll_res->atqa[1], coll_res->atqa[0]);
-        return;
-
-    case APP_CHAMELEON_ID_EDIT_TYPE_ATS:
-        if (coll_res->ats->length > 0) {
-            uint8_t len = coll_res->ats->length;
-            if (len > ATS_MAX_LENGTH) len = ATS_MAX_LENGTH;
-            char *p = text;
-            for (uint8_t i = 0; i < len; i++) {
-                if (i > 0) *p++ = '.';
-                sprintf(p, "%02x", coll_res->ats->data[i]);
-                p += 2;
-            }
-        } else {
-            text[0] = '\0';
-        }
-        return;
+        tag_helper_format_hex(text, coll_res->sak, 1, '.');
+        break;
+    case APP_CHAMELEON_ID_EDIT_TYPE_ATQA: {
+        const uint8_t reversed[] = {coll_res->atqa[1], coll_res->atqa[0]};
+        tag_helper_format_hex(text, reversed, sizeof(reversed), '.');
+        break;
+    }
+    case APP_CHAMELEON_ID_EDIT_TYPE_ATS: {
+        uint8_t length = coll_res->ats->length;
+        tag_helper_format_hex(text, coll_res->ats->data, length > ATS_MAX_LENGTH ? ATS_MAX_LENGTH : length, '.');
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -167,7 +151,7 @@ static void text_input_event_cb(mui_text_input_event_t event, mui_text_input_t *
     app_chameleon_t *app = p_text_input->user_data;
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(text) > 0 || app->id_edit_type == APP_CHAMELEON_ID_EDIT_TYPE_ATS) {
+        if (text[0] != '\0' || app->id_edit_type == APP_CHAMELEON_ID_EDIT_TYPE_ATS) {
             if (handle_id_edit_cb(app, text)) {
                 mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
             } else {

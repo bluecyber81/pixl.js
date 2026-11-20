@@ -29,7 +29,7 @@ class CardSaveTransactionTests(unittest.TestCase):
             'crc-only-data':('int32_t equal = fds_compare_sync(map_info.id, map_info.key, data_byte_length, buffer->buffer);', 'int32_t equal = 1;'),
             'crc-only-config':('changed = equal == 0;', 'changed = false;'),
             'compare-error-success':('return equal > 0;', 'return true;'),
-            'close-error-success':('vfs_abort_file(driver, &file);\n        result = -1;', 'vfs_abort_file(driver, &file);'),
+            'close-error-success':('if (result >= 0) result = fds_save_failure(id, false, closed);', '(void)closed;'),
             'config-full-length':('length = stored_length;', '(void)stored_length;'),
             'always-write':('if (equal != 0) {', 'if (equal < 0) {'),
         }

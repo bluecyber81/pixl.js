@@ -1,0 +1,220 @@
+@STORE@
+#include "mui/mui_contrast.h"
+#define __STATIC_INLINE static inline
+#define NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF 1
+static volatile uint8_t m_input_idle_seconds;
+static volatile uint16_t m_standby_counter, m_timeout_counter;
+static bool m_shutdown_started;
+static unsigned shutdowns;
+static void nrf_pwr_mgmt_shutdown(unsigned kind) { assert(kind == NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF); shutdowns++; }
+@POWER@
+#define CRITICAL_REGION_ENTER() do {
+#define CRITICAL_REGION_EXIT() } while (0)
+#define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180
+static bool m_timeout_overridden;
+static uint16_t m_previous_pwr_mgmt_sleep_timeout;
+@BLE@
+static void file_connected(void) { @CONNECT@ }
+static void file_disconnected(void) { @DISCONNECT@ }
+
+typedef struct { bool initialized; unsigned u8g2; } mui_t;
+static mui_t screen;
+static mui_t *mui(void) { return &screen; }
+static unsigned drawn, rotation, contrast, level, hardware_calls, ticks;
+static int pwm_error;
+static void mui_update(mui_t *m) { assert(m->initialized); drawn++; }
+#define U8G2_R2 2
+#define U8G2_R0 0
+static void u8g2_SetContrast(unsigned *d, unsigned v) { assert(screen.initialized); hardware_calls++; contrast = v; }
+static void u8g2_SetDisplayRotation(unsigned *d, unsigned v) { assert(screen.initialized); hardware_calls++; rotation = v; }
+typedef int ret_code_t;
+#define NRF_ERROR_BUSY 8
+#define APP_TIMER_TICKS(x) (x)
+static bool m_settings_slider, m_levels_deferred, m_backlight_preview_active, m_backlight_restore_pending;
+static bool m_dimmed, m_dim_retry_pending;
+static uint8_t m_backlight_saved;
+static uint32_t m_backlight_retry_tick;
+static uint32_t app_timer_cnt_get(void) { return ticks; }
+static uint32_t app_timer_cnt_diff_compute(unsigned now, unsigned then) { return now - then; }
+static int8_t mui_u8g2_get_backlight_level(void) { return level; }
+static ret_code_t backlight_level_apply(uint8_t v) {
+    assert(screen.initialized);
+    hardware_calls++;
+    if (pwm_error) return pwm_error;
+    level = v;
+    return NRF_SUCCESS;
+}
+@DISPLAY@
+@APPLICATION@
+@MENU_ENUM@
+typedef struct { char label[48], value[48]; } menu_row_t;
+typedef struct { uint16_t focus, scroll; menu_row_t rows[SETTINGS_MAIN_MENU_LCD_DIM + 1]; } list_t;
+typedef struct { void *user_data; } mui_msg_box_t;
+typedef int mui_msg_box_event_t;
+typedef struct {
+    list_t *p_list_view;
+    mui_msg_box_t *p_msg_box;
+    void *p_view_dispatcher;
+    bool exit_saved, storage_snapshot;
+} app_settings_t;
+enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_MSG_BOX };
+static list_t list;
+static mui_msg_box_t dialog;
+static app_settings_t menu = {.p_list_view = &list, .p_msg_box = &dialog};
+static unsigned visible_view, kills;
+static const char *message;
+static void (*acknowledge)(mui_msg_box_event_t, mui_msg_box_t *);
+#define mui_list_view_get_scroll_offset(v) ((v)->scroll)
+#define mui_list_view_get_focus(v) ((v)->focus)
+#define mui_list_view_set_scroll_offset(v,n) ((v)->scroll = (n))
+#define mui_list_view_set_focus(v,n) ((v)->focus = (n))
+#define mui_list_view_clear_items(v) memset((v),0,sizeof(*(v)))
+#define version_get_version(v) "test"
+#define settings_storage_snapshot_read(snapshot,driver,stat) VFS_ERR_FAIL
+#define settings_storage_snapshot_invalidate(snapshot) ((void)0)
+#define ble_remote_enabled() false
+static void mui_list_view_add_item_ext(list_t *v,unsigned icon,const char *label,const char *value,void *id) {
+    assert((uintptr_t)id < sizeof(v->rows) / sizeof(v->rows[0]));
+    menu_row_t *row = &v->rows[(uintptr_t)id];
+    snprintf(row->label,sizeof(row->label),"%s",label);
+    snprintf(row->value,sizeof(row->value),"%s",value ? value : "");
+}
+#define mui_list_view_add_item(v,icon,label,id) mui_list_view_add_item_ext(v,icon,label,NULL,id)
+static void mui_view_dispatcher_switch_to_view(void *views,unsigned active) {visible_view=active;}
+static void mui_msg_box_set_error(mui_msg_box_t *box,const char *text,void (*cb)(mui_msg_box_event_t,mui_msg_box_t *)) {
+    message = text; acknowledge = cb;
+}
+#define mini_app_launcher_kill(launcher,id) (++kills)
+#define mui_update_now(ui) ((void)0)
+#define mui_msg_box_set_event_cb(box,cb) ((void)0)
+#define mui_msg_box_set_header(box,s) ((void)0)
+#define mui_msg_box_set_message(box,s) ((void)0)
+#define mui_msg_box_set_btn_text(box,l,m,r) ((void)0)
+#define mui_nav_diag_save_begin(t) ((void)0)
+#define mui_nav_diag_save_result(t,r) ((void)0)
+#define mui_nav_diag_exit_returned(t) ((void)0)
+@MENU@
+static void select_save_and_exit(app_settings_t *app) {
+    switch (SETTINGS_MAIN_MENU_EXIT) {
+        @SAVE_AND_EXIT@
+    }
+}
+static void start_runtime(void) {
+    settings_data_t *current = settings_get_data();
+    nrf_pwr_mgmt_set_timeout(current->sleep_timeout_sec);
+    setLanguage(current->language);
+    screen.initialized = true;
+    mui_u8g2_set_flip_display(current->flip_display);
+    mui_u8g2_set_contrast_level(current->oled_contrast);
+    level = current->lcd_backlight;
+    settings_on_recovered(mui_settings_recovered);
+}
+static void failed_start(unsigned timeout) {
+    reset();
+    settings_on_recovered(NULL);
+    settings_data_t saved = def_settings_data;
+    saved.sleep_timeout_sec = timeout; saved.language = LANGUAGE_EN_US; saved.flip_display = true;
+    saved.lcd_backlight = 75; saved.oled_contrast = 65;
+    memcpy(stored, &saved, sizeof(saved));
+    m_timeout_overridden = screen.initialized = m_settings_slider = m_levels_deferred = false;
+    m_backlight_preview_active = m_backlight_restore_pending = m_dimmed = m_dim_retry_pending = false;
+    drawn = hardware_calls = shutdowns = ticks = m_standby_counter = m_input_idle_seconds = 0;
+    pwm_error = 0;
+    read_error = VFS_ERR_FAIL;
+    assert(settings_init() != NRF_SUCCESS && hardware_calls == 0);
+}
+static void expect_recovered(void) {
+    settings_scene_main_reload(&menu);
+    menu_row_t language = list.rows[SETTINGS_MAIN_MENU_LANGUAGE];
+    assert(getLanguage() == LANGUAGE_EN_US && !strcmp(language.label, "Language") && !strcmp(language.value, "English"));
+    assert(!strcmp(_T(BACK), "Back") && nrf_pwr_mgmt_get_timeout() == 180);
+    assert(rotation == 2 && level == 75 && contrast == (65 - 1) * 255 / 99);
+    for (unsigned i = 0; i < 180; i++) pwr_mgmt_standby_timeout_check();
+    assert(!shutdowns);
+    pwr_mgmt_standby_timeout_check();
+    assert(shutdowns == 1);
+}
+int main(void) {
+    for (unsigned via_save = 0; via_save < 2; via_save++) {
+        failed_start(180); start_runtime();
+        assert(getLanguage() == LANGUAGE_DE_DE && nrf_pwr_mgmt_get_timeout() == 30);
+        unsigned initial_calls = hardware_calls;
+        assert(settings_retry_load() != 0 && settings_save() != 0 && hardware_calls == initial_calls && drawn == 0);
+        read_error = 0;
+        assert((via_save ? settings_save() : settings_retry_load()) == 0 && drawn == 1);
+        expect_recovered();
+        assert(settings_retry_load() == 0 && settings_save() == 0 && drawn == 1 && writes == 0);
+    }
+    failed_start(180); read_error = 0;
+    assert(settings_retry_load() == 0 && !hardware_calls && !drawn);
+    start_runtime(); expect_recovered();
+
+    /* Simulate the already-filled Settings list: it owns copies of its text.
+     * Use the actual Home save action, failure callback and list renderer. */
+    failed_start(180); start_runtime(); dialog.user_data = &menu;
+    settings_scene_main_reload(&menu);
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].label, "Sprache"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_SLEEP_TIMEOUT].value, "30s"));
+    settings_get_data()->anim_enabled = true;
+    read_error = 0; write_result = VFS_ERR_NOSPC;
+    list.focus = 17; list.scroll = 156;
+    select_save_and_exit(&menu);
+    assert(visible_view == SETTINGS_VIEW_ID_MSG_BOX && acknowledge && !kills && !menu.exit_saved);
+    assert(!strcmp(message, "Storage operation failed") && getLanguage() == LANGUAGE_EN_US);
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].label, "Sprache"));
+    acknowledge(1, &dialog);
+    assert(visible_view == SETTINGS_VIEW_ID_MAIN && list.focus == 17 && list.scroll == 156);
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].label, "Language"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].value, "English"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_SLEEP_TIMEOUT].label, "Sleep Timeout"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_SLEEP_TIMEOUT].value, "3m"));
+    assert(writes == 1);
+    write_result = sizeof(settings_data_t);
+    select_save_and_exit(&menu);
+    assert(kills == 1 && menu.exit_saved && writes == 2);
+
+    /* Adoption and persistence are distinct. On a later failed write the
+     * validated record is live and the local edit is still available to retry. */
+    failed_start(180); start_runtime();
+    settings_get_data()->anim_enabled = true;
+    read_error = 0; write_result = VFS_ERR_NOSPC;
+    assert(settings_save() == VFS_ERR_NOSPC && drawn == 1 && writes == 1);
+    expect_recovered();
+    write_result = sizeof(settings_data_t);
+    assert(settings_save() == 0 && drawn == 1 && writes == 2 && settings_get_data()->anim_enabled);
+
+    failed_start(180); start_runtime();
+    unsigned calls_before_shutdown = hardware_calls;
+    screen.initialized = false;
+    read_error = 0; assert(settings_retry_load() == 0);
+    assert(hardware_calls == calls_before_shutdown && drawn == 0);
+
+    failed_start(60); start_runtime(); file_connected();
+    assert(nrf_pwr_mgmt_get_timeout() == 180 && m_previous_pwr_mgmt_sleep_timeout == 30);
+    assert(mui_u8g2_backlight_preview(5) == 0);
+    read_error = 0;
+    assert(settings_save() == 0 && nrf_pwr_mgmt_get_timeout() == 180 && m_previous_pwr_mgmt_sleep_timeout == 60);
+    assert(m_backlight_preview_active && level == 5);
+    file_disconnected(); assert(nrf_pwr_mgmt_get_timeout() == 60);
+    pwm_error = 8; assert(mui_u8g2_backlight_restore() == 8 && level == 5);
+    pwm_error = 0; ticks += 250; mui_u8g2_poll_dim(false); assert(level == 75);
+
+    failed_start(60); start_runtime();
+    stored[offsetof(settings_data_t, backlight)] = LCD_DIM_IDLE_5;
+    m_input_idle_seconds = 6;
+    assert(mui_u8g2_backlight_preview(100) == 0);
+    read_error = 0; assert(settings_retry_load() == 0 && level == 100);
+    assert(mui_u8g2_backlight_restore() == 0 && level == 19);
+    m_input_idle_seconds = 0;
+    mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window(settings_lcd_dim_idle_seconds()));
+    assert(level == 75);
+
+    failed_start(60); start_runtime(); mui_u8g2_settings_slider(true);
+    mui_u8g2_set_contrast_level(95); level = 42;
+    read_error = 0; assert(settings_retry_load() == 0);
+    assert(rotation == 2 && contrast == (95 - 1) * 255 / 99 && level == 42 && getLanguage() == LANGUAGE_EN_US);
+    mui_u8g2_settings_slider(false);
+    assert(contrast == (65 - 1) * 255 / 99 && level == 75);
+    puts("PASS settings retry/save, early and failed reads, EN menu, 181st standby check, failed write/error dismissal refreshes cached Settings list, BLE override, LCD profile, slider, device preview and PWM retry");
+    return 0;
+}

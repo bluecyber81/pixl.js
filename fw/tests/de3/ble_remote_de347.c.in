@@ -90,6 +90,7 @@ static void mui_event_dispatch_now(mui_event_queue_t *q,mui_event_t *e){
     if(mock_action_effect==4){mock_pending=true;mock_launcher.loop=true;}
 }
 /* ACTUAL_REMOTE_SOURCE */
+/* ACTUAL_MODAL_BOUNDARY */
 static unsigned cases;
 #define CHECK(x) do{assert(x);cases++;}while(0)
 static void clean(void){assert(!critical_depth);mock_cleanup=true;}
@@ -224,6 +225,17 @@ int main(int argc,char **argv){
     reset();handshake();enqueue(2,2,0);ble_remote_local_activity();ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0&&mock_reply[6]==REMOTE_BUSY);
     request(2,3,0);CHECK(mock_actions==1);
     reset();handshake();enqueue(2,2,0);ble_work_process(clean);ble_remote_local_activity();ble_remote_poll();CHECK(mock_actions==0&&mock_reply[6]==REMOTE_BUSY);
+    /* A tap from before the modal's display transfer may already be in either
+     * the IRQ work queue or the command slot when the new choice is shown. */
+    for(unsigned before_poll=0;before_poll<2;before_poll++){
+        reset();handshake();enqueue(REMOTE_TAP,2,1);
+        if(before_poll)ble_work_process(clean);
+        mui_input_modal_boundary();
+        ble_work_process(clean);ble_remote_poll();
+        CHECK(!mock_actions && mock_reply[6]==REMOTE_BUSY);
+        request(REMOTE_TAP,3,1);
+        CHECK(mock_actions==1 && mock_reply[6]==REMOTE_DONE);
+    }
     reset();handshake();enqueue(2,2,0);disconnect();connect();ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0);handshake();request(2,2,0);CHECK(mock_actions==1);
     reset();handshake();mock_session++;CHECK(execute(NULL,REMOTE_TAP,1,local_generation)==REMOTE_BUSY&&!mock_actions);
     reset();handshake();mock_action_effect=1;request(2,2,1);CHECK(mock_actions==1&&mock_sent==1&&!ble_remote_enabled());

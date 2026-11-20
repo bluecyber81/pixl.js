@@ -97,6 +97,7 @@
 #include "mini_app_registry.h"
 #include "mui_include.h"
 #include "mui_mem.h"
+#include "mui_u8g2.h"
 
 #include "hal_spi_bus.h"
 #include "hal_nfc_t2t.h"
@@ -327,6 +328,20 @@ void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
 }
 #endif
 
+static void mui_settings_recovered(const settings_data_t *previous) {
+    mui_t *ui = mui();
+    if (!ui->initialized) return;
+    settings_data_t *current = settings_get_data();
+    setLanguage(current->language);
+    ble_set_standby_timeout(current->sleep_timeout_sec);
+    if (previous->flip_display != current->flip_display)
+        mui_u8g2_set_flip_display(current->flip_display);
+    if (previous->oled_contrast != current->oled_contrast ||
+        previous->lcd_backlight != current->lcd_backlight || previous->backlight != current->backlight)
+        mui_u8g2_recover_levels();
+    mui_update(ui);
+}
+
 int main(void) {
     runtime_diag_stack_init();
     runtime_diag_boot_capture(nrf_power_resetreas_get());
@@ -415,6 +430,7 @@ int main(void) {
     runtime_diag_startup_mark(STARTUP_DISPLAY_BEGIN, startup_elapsed_ms(startup_started));
 #endif
     mui_init(p_mui);
+    settings_on_recovered(mui_settings_recovered);
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
     runtime_diag_startup_mark(STARTUP_DISPLAY_DONE, startup_elapsed_ms(startup_started));
 #endif

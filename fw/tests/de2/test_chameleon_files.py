@@ -24,6 +24,7 @@ menu_enum = menu_source[menu_source.index('typedef enum {'):menu_source.index('}
 
 functions = menu_enum + '\n' + '\n'.join([
     function('chameleon_scene_menu_card_data_file_load.c', 'static void chameleon_browser_cache_free('),
+    function('chameleon_scene_menu_card_data_file_load.c', 'static unsigned chameleon_browser_rank('),
     function('chameleon_scene_menu_card_data_file_load.c', 'static int chameleon_scene_menu_card_data_list_item_cmp('),
     function('chameleon_scene_menu_card_data_file_load.c', 'static void chameleon_scene_menu_card_data_file_load_from_file('),
     function('chameleon_scene_menu_card_data_file_load.c', 'bool update_current_directory('),
@@ -55,6 +56,7 @@ typedef struct {uint16_t icon;const char *text;void *user_data;} mui_list_item_t
 typedef struct {uint8_t chameleon_slot_num;} settings_data_t;
 static settings_data_t settings={8};
 static settings_data_t *settings_get_data(void) {return &settings;}
+static int32_t fds_save_failure(uint16_t id, bool writing, int32_t code) { (void)id; (void)writing; (void)code; return -1; }
 static void fds_map_file_name(uint16_t id,uint16_t key,char *p) {(void)id;(void)key;strcpy(p,"/slot.bin");}
 typedef int mui_text_input_event_t;
 typedef struct {void *user_data;} mui_text_input_t;

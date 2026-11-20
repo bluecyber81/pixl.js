@@ -36,7 +36,7 @@ class ChameleonStateTests(unittest.TestCase):
         tag=(TAG_DIR/'tag_emulation.c').read_text(encoding='utf-8')
         port=(SRC/'app/chameleon/port/fds_utils.c').read_text(encoding='utf-8')
         code=Path(__file__).with_name('chameleon_state_load.c.in').read_text(encoding='utf-8')
-        for name,result in [('tag_emulation_decode_config','bool'),('tag_emulation_load_config','int32_t'),
+        for name,result in [('tag_emulation_discard','void'),('tag_emulation_decode_config','bool'),('tag_emulation_load_config','int32_t'),
                             ('tag_emulation_init','bool')]:
             code=code.replace('@'+name+'@',definition(tag,name,result))
         code=code.replace('@fds_read_config@',definition(port,'fds_read_config','int32_t'))
@@ -171,6 +171,7 @@ static unsigned saves, navigations;
 static bool storage_ok;
 static bool app_chameleon_save(app_chameleon_t *a){saves++;return storage_ok;}
 static settings_data_t persisted;
+#define SETTINGS_SET(field, value) (settings_get_data()->field = (value))
 #define settings_get_data() (&persisted)
 #define tag_emulation_get_slot() 0
 #define INVALID_SLOT_INDEX 255

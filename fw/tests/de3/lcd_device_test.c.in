@@ -32,6 +32,7 @@ static void cleanup(void *p){(void)p;assert(actual_backlight==saved_backlight);c
 #define mui_scene_dispatcher_free cleanup
 #define mui_view_dispatcher_free cleanup
 #define mui_list_view_free cleanup
+#define mui_u8g2_settings_slider(active) ((void)(active))
 #define mui_progress_bar_free cleanup
 #define mui_msg_box_free cleanup
 #define mui_toast_view_free cleanup

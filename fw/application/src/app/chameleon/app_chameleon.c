@@ -10,6 +10,7 @@
 #include "settings.h"
 #include "tag_helper.h"
 #include "hal_nfc_t2t.h"
+#include <stdio.h>
 
 static void app_chameleon_on_run(mini_app_inst_t *p_app_inst);
 static void app_chameleon_on_kill(mini_app_inst_t *p_app_inst);
@@ -30,11 +31,13 @@ static void app_chameleon_pause(app_chameleon_t *app) {
 
 static void app_chameleon_resume(app_chameleon_t *app) {
     app->exit_prepared = false;
+    app->discard_state = CHAMELEON_SAVE_ERROR;
     if (!app->exit_paused) return;
     app->exit_paused = false;
     app->retry_slot_count = false;
     if (app->p_view_dispatcher->p_active_view == &app->save_error_view) {
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, app->exit_view_id);
+        mui_input_modal_boundary();
     }
     if (app->exit_resume_nfc && tag_emulation_active_data_ready()) {
         hal_nfc_set_nrfx_irq_enable(true);
@@ -45,16 +48,20 @@ static void app_chameleon_resume(app_chameleon_t *app) {
 
 void app_chameleon_show_save_error(app_chameleon_t *app) {
     app_chameleon_pause(app);
+    app->save_error_drawn = false;
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
+    /* A full event queue can evict a requested redraw to make room for keys. */
+    mui_update_now(mui());
 }
 
 bool app_chameleon_save(app_chameleon_t *app) {
     if (!app || app->exit_prepared) return false;
     if (!app->initialized) return true;
     app_chameleon_pause(app);
+    chameleon_save_begin();
     bool saved = app->retry_slot_count ? tag_emulation_save_config() : tag_emulation_save();
-    if (!saved || settings_save() != NRF_SUCCESS) {
-        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
+    if (!saved || !chameleon_save_settings()) {
+        app_chameleon_show_save_error(app);
         return false;
     }
     app_chameleon_resume(app);
@@ -62,32 +69,107 @@ bool app_chameleon_save(app_chameleon_t *app) {
 }
 
 static void app_chameleon_save_error_draw(mui_view_t *view, mui_canvas_t *canvas) {
+    static const L_StringID failure[] = {
+        _L_DE3_SAVE_FAILED, _L_DE3_CARD_CHECK, _L_DE3_SAVE_RETRY, _L_DE3_BLE_BACK, _L_DE3_SAVE_DISCARD
+    };
+    static const L_StringID confirm[] = {
+        _L_MAIN_MENU, _L_DE3_SAVE_DISCARD_ASK, _L_DE3_SAVE_NO_SELECTED, _L_DE3_SAVE_CONFIRM
+    };
+    static const L_StringID stages[] = {
+        [CHAMELEON_SAVE_CARD] = _L_DE3_CARD_CHECK, [CHAMELEON_READ_CARD] = _L_DE3_CARD_READ,
+        [CHAMELEON_WRITE_CARD] = _L_DE3_CARD_WRITE, [CHAMELEON_READ_CONFIG] = _L_DE3_CONFIG_READ,
+        [CHAMELEON_WRITE_CONFIG] = _L_DE3_CONFIG_WRITE, [CHAMELEON_SAVE_SETTINGS] = _L_APP_SET
+    };
     app_chameleon_t *app = view->user_data;
-    const char *detail = app->retry_slot_count ? _T(DE3_SLOT_COUNT_PENDING) : _T(DE3_SAVE_RAM_ONLY);
-    const char *lines[] = {_T(DE3_SAVE_FAILED), detail, _T(DE3_SAVE_RETRY), _T(DE3_BLE_BACK)};
+    bool confirming = app->discard_state != CHAMELEON_SAVE_ERROR;
+    const L_StringID *lines = confirming ? confirm : failure;
+    const uint8_t spacing = confirming ? 16 : 12;
+    const chameleon_save_issue_t *issue = chameleon_last_save_issue();
     mui_canvas_set_font(canvas, u8g2_font_wqy12_t_gb2312a);
     mui_canvas_set_draw_color(canvas, 1);
-    for (uint8_t i = 0; i < 4; i++) mui_canvas_draw_utf8(canvas, 0, 12 + 15 * i, lines[i]);
+    for (uint8_t row = 0; row < (confirming ? 4 : 5); row++) {
+        L_StringID id = lines[row];
+        int32_t code = 0;
+        if (id == _L_DE3_CARD_CHECK && (unsigned)issue->stage < sizeof(stages) / sizeof(stages[0])) {
+            id = stages[issue->stage];
+            if (id != _L_DE3_CARD_CHECK) code = issue->code;
+        } else if (id == _L_DE3_SAVE_NO_SELECTED && app->discard_state == CHAMELEON_DISCARD_YES) {
+            id = _L_DE3_SAVE_YES_SELECTED;
+        }
+        const char *text = getLangString(id);
+        char message[40];
+        if (code) {
+            snprintf(message, sizeof(message), "%s %ld", text, (long)code);
+            text = message;
+        }
+        mui_canvas_draw_utf8(canvas, 0, 12 + spacing * row, text);
+    }
+    if (!app->save_error_drawn) {
+        app->save_error_drawn = true;
+        mui_fence_input_after_frame();
+    }
 }
 
 static void app_chameleon_save_error_input(mui_view_t *view, mui_input_event_t *event) {
     app_chameleon_t *app = view->user_data;
-    if (app->exit_prepared || event->key != INPUT_KEY_CENTER) return;
-    if (event->type == INPUT_TYPE_SHORT) (void)app_chameleon_save(app);
-    else if (event->type == INPUT_TYPE_LONG) app_chameleon_resume(app);
+    if (app->exit_prepared || !app->save_error_drawn) return;
+    if (event->type == INPUT_TYPE_LONG && event->key == INPUT_KEY_CENTER) {
+        if (app->discard_state == CHAMELEON_SAVE_ERROR) {
+            app_chameleon_resume(app);
+            return;
+        }
+        app->discard_state = CHAMELEON_SAVE_ERROR;
+    } else if (event->type != INPUT_TYPE_SHORT) {
+        return;
+    } else if (event->key == INPUT_KEY_RIGHT) {
+        app->discard_state = app->discard_state == CHAMELEON_SAVE_ERROR ? CHAMELEON_DISCARD_NO : CHAMELEON_DISCARD_YES;
+    } else if (event->key == INPUT_KEY_LEFT && app->discard_state != CHAMELEON_SAVE_ERROR) {
+        app->discard_state = CHAMELEON_DISCARD_NO;
+    } else if (event->key == INPUT_KEY_CENTER) {
+        switch (app->discard_state) {
+        case CHAMELEON_SAVE_ERROR:
+            (void)app_chameleon_save(app);
+            return;
+        case CHAMELEON_DISCARD_NO:
+            app->discard_state = CHAMELEON_SAVE_ERROR;
+            break;
+        case CHAMELEON_DISCARD_YES:
+            /* Only this synchronous launcher request may discard. A veto by
+             * another owner cancels the authorization and keeps our RAM intact. */
+            app->discard_state = CHAMELEON_DISCARD_EXIT;
+            mini_app_launcher_exit(mini_app_launcher());
+            app = mini_app_launcher_get_app_handle(mini_app_launcher(), MINI_APP_ID_CHAMELEON);
+            if (!app) return;
+            app->discard_state = CHAMELEON_SAVE_ERROR;
+            break;
+        default:
+            return;
+        }
+    } else {
+        return;
+    }
+    app->save_error_drawn = false;
+    mui_update_now(mui());
 }
 
 static bool app_chameleon_prepare_exit(mini_app_inst_t *inst, mini_app_exit_reason_t reason) {
-    (void)reason;
     app_chameleon_t *app = inst->p_handle;
     if (!app || !app->initialized || app->exit_prepared) return true;
+    if (reason == MINI_APP_EXIT_SWITCH && app->exit_paused &&
+        app->discard_state == CHAMELEON_DISCARD_EXIT &&
+        app->p_view_dispatcher->p_active_view == &app->save_error_view) {
+        app->exit_prepared = true;
+        return true;
+    }
+    app->discard_state = CHAMELEON_SAVE_ERROR;
     app_chameleon_pause(app);
     settings_data_t *settings = settings_get_data();
     uint8_t default_slot = settings->chameleon_default_slot_index;
+    chameleon_save_begin();
     if (!tag_emulation_save_for_exit(&settings->chameleon_default_slot_index) ||
-        settings_save() != NRF_SUCCESS) {
+        !chameleon_save_settings()) {
         settings->chameleon_default_slot_index = default_slot;
-        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_SAVE_ERROR);
+        app_chameleon_show_save_error(app);
         return false;
     }
     /* Launcher blocks all UI input while its exit reservation is held.
@@ -221,6 +303,10 @@ void app_chameleon_on_kill(mini_app_inst_t *p_app_inst) {
 
     /* Persistence and NFC quiescence belong to prepare_exit_cb. No writes
      * may be hidden in cleanup after the launcher has accepted the exit. */
+    if (p_app_handle->exit_prepared && p_app_handle->discard_state == CHAMELEON_DISCARD_EXIT) {
+        settings_discard_chameleon_changes();
+        tag_emulation_discard();
+    }
     mui_scene_dispatcher_exit(p_app_handle->p_scene_dispatcher);
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
 

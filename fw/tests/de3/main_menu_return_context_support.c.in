@@ -32,6 +32,7 @@ static cache_data_t cached;
 static bool deny_prepare, start_fails, recovery;
 static bool require_stable_return_frame;
 static unsigned outstanding, updates, menu_enters, menu_leaves, diag_returns;
+#define SETTINGS_SET(field, value) (settings_get_data()->field = (value))
 static settings_data_t *settings_get_data(void) { return &cfg; }
 static cache_data_t *cache_get_data(void) { return &cached; }
 static bool ntag_emu_prepare_change(void) { return !deny_prepare; }

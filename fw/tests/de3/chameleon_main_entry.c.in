@@ -20,6 +20,7 @@ static void hal_nfc_set_nrfx_irq_enable(bool on){assert(on);irq++;}
 static void tag_emulation_sense_run(void){sense++;}
 static void mui_view_dispatcher_switch_to_view(void*p,unsigned s){assert(s==CHAMELEON_VIEW_ID_MAIN);view++;}
 static void chameleon_view_set_event_cb(void*p,void(*cb)(chameleon_view_event_t,chameleon_view_t*)){}
+static void chameleon_save_begin(void) {}
 @chameleon_scene_main_event_cb@
 @chameleon_scene_main_on_enter@
 int main(void){app_chameleon_t app={0};chameleon_view_t v={&app};
