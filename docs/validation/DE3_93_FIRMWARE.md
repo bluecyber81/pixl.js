@@ -1,5 +1,10 @@
 # Allmiibo LCD DE3.93 / App666
 
+> **Nachtrag vom 20.11.2026: Zwischenstand zurückgestellt – derzeit nicht zur Installation empfohlen.**
+> Beim nachfolgenden Bestandsabgleich wurde eine neue Blockade der AmiiboDB-Sortierung bei dauerhaftem Speicherfehler erkannt: Die neue Save-Prüfung verhindert den normalen Ausgang, ein bestätigter Verwerfen-Pfad fehlt noch. Auch der allgemeine Verwerfen-Ausgang der Haupt-Einstellungen ist weiterhin offen. Der alte NFC-/Chameleon-Verwerfen-Fix ist erhalten. Die unten dokumentierten 177/177 Tests und Signaturprüfungen bleiben Nachweise des unveränderten Pakets, deckten den fehlenden dauerhaften Fehler→Verwerfen→Exit-Ablauf aber nicht ab.
+>
+> [Vollständiger Bestandsabgleich: eingebaut, getestet und noch offen](IMPLEMENTED_STATUS_2026_11_20.md). Das zuletzt diagnostizierte Gerät bleibt App665, der Online-Dateimanager bleibt 3.58.3. Keine abgeschlossene App667 oder Web3.58.4-Veröffentlichung.
+
 Stand: 20. November 2026. Diese signierte Anwendung liegt als **Vorschau auf
 `test/lcd-de393-app666`** vor. Die bisherige stabile LCD-Freigabe bleibt
 DE3.89 / App662. Geräteabnahme und physische Durchsatzmessungen für App666

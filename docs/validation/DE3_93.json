@@ -235,5 +235,32 @@
     "Independent debug ELF paths differ; delivered BIN and HEX are byte-identical.",
     "LeakSanitizer cannot run under the host ptrace environment; ASan/UBSan and explicit allocation accounting passed.",
     "No private signing keys, personal backups or figure payloads are included."
-  ]
+  ],
+  "subsequentReview": {
+    "date": "2026-11-20",
+    "status": "held-after-menu-exit-audit",
+    "installationRecommendation": "not-recommended-currently",
+    "firmwareArtifactUnchanged": true,
+    "auditDocument": "docs/validation/IMPLEMENTED_STATUS_2026_11_20.md",
+    "blockers": [
+      {
+        "area": "AmiiboDB sorting",
+        "introducedInApp": 666,
+        "state": "not-fixed",
+        "finding": "Persistent settings_save failure blocks the new normal exit path without a confirmed discard exit."
+      },
+      {
+        "area": "Main settings",
+        "introducedInApp": null,
+        "state": "not-fixed",
+        "finding": "Historical missing confirmed discard-to-home path, reproduced in App662 and current callbacks."
+      }
+    ],
+    "preservedExistingFeatures": [
+      "Central NFC confirmed discard present in App662",
+      "Chameleon confirmed discard added in App663 and preserved in App665/App666"
+    ],
+    "correctedSuccessorBuilt": false,
+    "web3584Published": false
+  }
 }
