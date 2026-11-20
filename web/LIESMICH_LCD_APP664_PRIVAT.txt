@@ -1,0 +1,28 @@
+Allmiibo Dateimanager 3.58.2 – private Vorschau für LCD DE3.91 / App664
+
+Den vollständigen Ordner entpacken. Unter Windows Start-Dateimanager.cmd
+öffnen. Alternativ mit Python 3 im entpackten Ordner starten:
+  python3 serve_local.py --port 8765 --directory dist
+  http://127.0.0.1:8765/
+
+Im DFU-Updater LCD und „Eigene Firmware-ZIP“ wählen. Die erwartete Datei ist
+Allmiibo_LCD_DE3_91_664_NUR_APP.zip. Sie ist im Updater auch als privates
+LCD-Prüfpaket lokal verlinkt. Nach der Prüfung erscheint
+„Privates LCD-Prüfpaket · 2.22.0-DE3.91“ mit Anwendungszähler 664.
+Die Geräteauswahl und Übertragung sind ein eigener Schritt.
+
+Die öffentlichen Stable-Downloads zeigen weiterhin LCD DE3.89 / App662.
+Die private Vorschau erkennt App664 anhand der vollständigen ZIP und ihrer
+Größe. Sie gleicht im Startpaket Zähler, Hardwarefeld und SoftDevice-Anforderung
+ab. Das passende LCD meldet Z21 und S112 7.3.0 (FWID 0x0126).
+Für OLED gilt weiter der eigene Paketkatalog.
+
+Im Migrationsassistenten steht ein separates Kapazitätsprofil DE3.91 / 664 zur
+Auswahl. Es simuliert die Sammlung im Arbeitsspeicher mit der neuen
+PackedFS- und LittleFS-Engine. Für Geräteaktionen gelten die Versions-,
+Zähler-, Layout- und Backup-Prüfungen des Assistenten.
+
+Quelle der Webbasis: Git-Tag web3.58.2 im Projekt bluecyber81/pixl.js.
+Firmware-Produktionsquellen: 6c2167e0444b887b6dcc5d391160dc93e0ba9dc2.
+Abschließender Firmware- und Teststand: faaff684ef54578db6ddb47e089a6fc3375149cb.
+Diese Ausgabe ist privat. Der physische LCD-/DFU-Test von App664 steht aus.

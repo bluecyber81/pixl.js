@@ -1,4 +1,5 @@
 import { buildDiagnosticBoard, normalizeBuildDiagnostics } from './lcd-build-diagnostics.js';
+import { lcdPreviews } from '../../public/dfu/lcd-private-reference.mjs';
 import { firmwareBoard } from './hardware-profile.js';
 
 // Reference for the signed T1 application package. This is not a
@@ -205,7 +206,7 @@ const app662 = Object.freeze({
   "releaseTag": "de3.89"
 });
 
-const references = [app662, app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
+const references = [...lcdPreviews, app662, app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;

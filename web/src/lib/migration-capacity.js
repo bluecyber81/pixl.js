@@ -114,6 +114,27 @@ const de389={...current,url:'/lfs-capacity-de389.wasm',wasmSha256:'e62f5857d60ac
   firmwareVersion:'2.22.0-DE3.89',applicationCounter:662,
   approvedApplications:[{firmwareVersion:'2.22.0-DE3.89',applicationCounter:662}],
   geometry:{...current.geometry},layout:{...current.layout,engineSha256:'b0ae389e7fac3c7ce5f28607de7cd1cadad5465ab2ad4c1e2dc853fbfa2533da'}}
+const de391 = {
+  ...de389,
+  url: '/lfs-capacity-de391.wasm',
+  wasmSha256: '91ca3ef469ea6ecfca1dc18c80ad39d60977fc591b823274324c516bb7024548',
+  firmwareVersion: '2.22.0-DE3.91',
+  applicationCounter: 664,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.91', applicationCounter: 664}],
+  geometry: {...de389.geometry},
+  layout: {...de389.layout, engineSha256: 'a0d15c28160774dd83ba80a71e8aad61fb41cd7ae0209eeec5486be7ea00d7a2'},
+}
+// Private App665 has its own exact GC engine and separately pinned WASI toolchain.
+const de392 = {
+  ...de391,
+  url: '/lfs-capacity-de392.wasm',
+  wasmSha256: '08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16',
+  firmwareVersion: '2.22.0-DE3.92',
+  applicationCounter: 665,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.92', applicationCounter: 665}],
+  geometry: {...de391.geometry},
+  layout: {...de391.layout, engineSha256: '605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1'},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -127,7 +148,11 @@ export const DE350_MIGRATION_CAPACITY_TARGET=freezeTarget(de350)
 export const DE354_MIGRATION_CAPACITY_TARGET=freezeTarget(de354)
 export const MIGRATION_CAPACITY_TARGET=freezeTarget(current)
 export const DE389_MIGRATION_CAPACITY_TARGET=freezeTarget(de389)
+export const DE391_MIGRATION_CAPACITY_TARGET=freezeTarget(de391)
+export const DE392_MIGRATION_CAPACITY_TARGET=freezeTarget(de392)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de392')return DE392_MIGRATION_CAPACITY_TARGET
+  if(profile==='de391')return DE391_MIGRATION_CAPACITY_TARGET
   if(profile==='current')return MIGRATION_CAPACITY_TARGET
   if(profile==='de389')return DE389_MIGRATION_CAPACITY_TARGET
   if(profile==='de354')return DE354_MIGRATION_CAPACITY_TARGET

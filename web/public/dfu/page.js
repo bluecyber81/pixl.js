@@ -2,6 +2,8 @@
 import { createScreenAwake } from './screen-awake.mjs';
 import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.2';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
+import { lcdPreviews } from './lcd-private-reference.mjs';
+
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
 const progressBar = document.getElementById('progress'), capabilityText = document.getElementById('capability');
@@ -56,6 +58,7 @@ function targetDescription(target) {
     if (!target) return '';
     const lines = [choose(`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`,
         `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
+    if (latestState.previewVersion) lines.unshift(choose('Privates LCD-Prüfpaket', 'Private LCD test package') + ' · ' + latestState.previewVersion);
     const ref = recentBootReference();
     if (ref) {
         const {app, bl, sd} = ref;
@@ -78,6 +81,8 @@ function selectedProfileMismatch(entry) {
     return !entry.bootloader.split('/').includes(name) || ref.sd !== 0x0126;
 }
 function controls() {
+    const previewDownload = document.getElementById('lcd-preview-download');
+    if (previewDownload) previewDownload.hidden = boardSelect.value !== 'LCD';
     const loading = bundled?.loading === true;
     const boardConflict = boardHints.length > 1 || handoffBoard && handoffBoard !== boardSelect.value;
     const ref = recentBootReference();
@@ -189,7 +194,7 @@ function transferEstimate(state, now) {
 }
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
-    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}),
+    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, lcdPreviews),
     createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf }),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,

@@ -40,9 +40,13 @@
         });
         return Object.freeze({schema:1,packages:Object.freeze(packages)});
     }
-    function validatePackage(candidate, board, catalog) {
+    function validatePackage(candidate, board, catalog, preview) {
         need(board === 'LCD' || board === 'OLED', 'Wähle das Display deines Geräts.', 'Choose your device display.');
-        const entry = catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
+        const previews = Array.isArray(preview) ? preview : [preview];
+        preview = previews.find(item => item && typeof item.otaSha256 === 'string' && candidate.archiveSha256 === item.otaSha256 && candidate.archiveBytes === item.otaBytes);
+        const isPreview = Boolean(preview);
+        const entry = isPreview ? {board: preview.board, counter: preview.applicationCounter, version: preview.firmwareVersion, privatePreview: true}
+            : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
         need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
             'This ZIP targets the other display. Select the matching device and package.');
         need(board !== 'OLED' || entry, 'Für OLED bitte die veröffentlichte OLED-App-ZIP wählen.',

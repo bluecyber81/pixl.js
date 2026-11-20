@@ -65,6 +65,7 @@ function harness(overrides = {}) {
   // In browsers the Window picker is also a global. Keep that real contract
   // while the VM isolates the browser fakes from the Node test process.
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
+  context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/power-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/language-preference.js'), 'utf8'), context);

@@ -9,7 +9,7 @@
             Object.assign(this, { Package, createDfu, validatePackage, onStatus, onProgress, onState, onPhase });
             this.package = null; this.busy = false; this.loading = false; this.sequence = 0; this.lastResult = null;
         }
-        state() { this.onState({ busy: this.busy, loading: this.loading, ready: !!this.package && !this.loading && !this.busy, target: this.package?.image?.target }); }
+        state() { this.onState({ busy: this.busy, loading: this.loading, ready: !!this.package && !this.loading && !this.busy, target: this.package?.image?.target, previewVersion: this.package?.previewVersion }); }
         async setPackage(file) {
             if (this.busy) return false;
             const sequence = ++this.sequence;
@@ -19,7 +19,8 @@
             try {
                 const candidate = new this.Package(file); await candidate.load();
                 if (sequence !== this.sequence) return false;
-                this.validatePackage(candidate);
+                const reference = this.validatePackage(candidate);
+                if (reference?.privatePreview) candidate.previewVersion = reference.version;
                 this.package = candidate; this.onStatus('Paket geprüft: ' + (file.name || 'Anwendungs-OTA'), 'Package checked: ' + (file.name || 'application update'));
                 return true;
             } catch (error) {

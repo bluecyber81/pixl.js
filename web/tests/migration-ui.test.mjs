@@ -30,20 +30,22 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('the local App662 default remains visible alongside the connected DE3.65 identity',async()=>{
+test('the local App665 default remains visible alongside the connected DE3.65 identity',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
-  assert.equal(options[0].props.value,'de389')
-  assert.equal(text(options[0]),'DE3.89 / 662')
-  assert.match(text(h.root),/DE3.89 \/ 662/)
+  assert.equal(options[0].props.value,'de392')
+  assert.equal(text(options[0]),'DE3.92 / 665')
+  assert.equal(options[1].props.value,'de391')
+  assert.equal(text(options[1]),'DE3.91 / 664')
+  assert.match(text(h.root),/DE3.92 \/ 665/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.89 \/ 662/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.92 \/ 665/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE3.89 \/ 662/)
+  assert.match(text(h.root),/Simulated profile DE3.92 \/ 665/)
  }finally{h.app.unmount()}
 })
 
@@ -246,7 +248,7 @@ test('3.26 already-Packed notice requires a fresh explicit storage response, nev
 
 test('3.26 capacity profile is explicit and changes invalidate prior proof without modifying a bound import',async()=>{
  let observed;const h=mount({approved:true,capacity:async(a,o)=>{observed=o.capacityProfile;return{passed:true}}});try{
-  await load(h);assert.equal(h.vm.capacityProfile,'de389');await h.vm.checkCapacity();assert.equal(observed,'de389');
+  await load(h);assert.equal(h.vm.capacityProfile,'de392');await h.vm.checkCapacity();assert.equal(observed,'de392');
   h.vm.target={identity:{},state:{mounted:false}};h.vm.changeCapacityProfile('legacy');assert.equal(h.vm.capacityProfile,'legacy');assert.equal(h.vm.capacityProof,null);assert.equal(h.vm.target,null);
   await h.vm.checkCapacity();assert.equal(observed,'legacy');h.vm.target={identity:{},state:{pending:true,bound:true}};
   h.vm.changeCapacityProfile('current');assert.equal(h.vm.capacityProfile,'legacy');assert(h.vm.capacityProof);

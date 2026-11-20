@@ -1,5 +1,11 @@
 # Allmiibo Dateimanager
 
+## Private Ausgabe 3.58.2 für LCD DE3.92 / App665
+
+Diese lokale Ausgabe ergänzt die App665-Diagnose, die signierte App-ZIP und einen separat qualifizierten Speicherbedarfssimulator. Die vorherige private App664 und alle öffentlichen Profile bleiben enthalten. [Bedienung und Prüfgrenzen](LIESMICH_LCD_APP665_PRIVAT.txt) · [Exakte Simulatorquellen und neuer Toolchain-Pin](third-party/packed-simulator-de392/SOURCE.txt). Der Gerätetest von App665 steht noch aus.
+
+Der App664-Ausgangspunkt wurde aus dem Übergabepatch mit identischem Tree `c750b905e2639fd96bca315a6ad56b2d7a9fb333` neu lokal committed; der frühere Commit `1cc7701484de6a32a247fa3958dc600632c20344` wurde nicht rekonstruiert.
+
 ## Dateimanager 3.58.2 und LCD DE3.89 / App662
 
 Die stabile Ausgabe unterstützt die verifizierte Ordnerübertragung mit App661 und App662. Für App662 ist ein eigener Speicherbedarfssimulator enthalten. [Anleitung auf Deutsch und Englisch](LIESMICH_3_58_2.txt) · [Dateimanager und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [LCD-App, Komplettpaket und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Frühere Testausgabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1)

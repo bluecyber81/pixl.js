@@ -107,7 +107,7 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')

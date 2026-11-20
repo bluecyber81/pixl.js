@@ -255,8 +255,8 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
 test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
  const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
  packet[40]=23;packet.set([8,6,0,1],80);
- for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88']) {
-  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88'].includes(version);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92']) {
+  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92'].includes(version);
   packet.set(expandedCache ? [26,26,0,1] : [8,6,0,1],80);
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,3]]);
