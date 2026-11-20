@@ -32,8 +32,8 @@ def harness():
     app_type = re.search(r'typedef struct \{.*?\} app_settings_t;', header, re.S).group()
     replace('#include <stdio.h>', '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>')
     replace('toast_calls,kills,reboots', 'toast_calls,reboots')
-    replace('typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved;settings_storage_snapshot_t storage_snapshot;} app_settings_t;',
-            'typedef void mui_progress_bar_t, mui_view_dispatcher_t, mui_scene_dispatcher_t, mui_toast_view_t;\n' + app_type)
+    replace(re.search(r'typedef struct \{void \*p_toast_view[^\n]+app_settings_t;', code).group(),
+            'typedef void mui_progress_bar_t, mui_view_dispatcher_t, mui_scene_dispatcher_t, mui_toast_view_t;\ntypedef int settings_checkpoint_t;\n' + app_type)
     inst_header = (SRC / 'core/mini_app_defines.h').read_text(encoding='utf-8')
     inst_types = inst_header[inst_header.index('struct mini_app_inst_s;'):inst_header.rindex('#endif')]
     replace('typedef struct {void *p_handle;} mini_app_inst_t;', 'typedef int xbm_t;\n' + inst_types + r'''
@@ -43,6 +43,7 @@ static mini_app_launcher_t launcher;
 static mini_app_inst_t instance;
 static unsigned desktop_runs, frees, active_view, frames, frames_at_save;
 static unsigned header_sets, message_sets, button_clears, callback_clears;
+static unsigned header_before,message_before,buttons_before,callbacks_before;
 static bool ntag_emu_prepare_change(void){return true;}
 static void ntag_emu_cancel_change(void){}
 static bool home_save;
@@ -60,7 +61,7 @@ static int settings_save(void){
  if(home_save){
   assert(active_view==SETTINGS_VIEW_ID_MSG_BOX && frames==frames_at_save+1);
   assert(!strcmp(header_text,"APP_SET") && !strcmp(message_text,"DE3_STORAGE_WORKING"));
-  assert(header_sets==frames && message_sets==frames && button_clears==frames && callback_clears==frames);
+  assert(header_sets==header_before+1 && message_sets==message_before+1 && button_clears==buttons_before+1 && callback_clears==callbacks_before+1);
   assert(instance.p_handle && !((app_settings_t*)instance.p_handle)->exit_saved);
  }
  return result;
@@ -72,6 +73,7 @@ static int settings_save(void){
     launcher_functions = context_state() + context_functions(("mui_input_context_changed",)) + '\n'.join(native.function(launcher_src, name) for name in
                                   ('mini_app_launcher_input_blocked', 'mini_app_launcher_clear_exit', 'mini_app_launcher_exit_prepared', 'mini_app_launcher_cancel_exit', 'mini_app_launcher_prepare_exit', 'mini_app_launcher_find', 'mini_app_launcher_inst_kill', 'mini_app_launcher_kill'))
     replace('static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_SETTINGS);kills++;}', launcher_functions)
+    replace('static void *mini_app_launcher_get_app_handle(void*p,unsigned id){(void)p;(void)id;return NULL;}', native.function(launcher_src, 'mini_app_launcher_get_app_handle'))
     replace('static void *mini_app_launcher(void){return NULL;}',
             'static mini_app_launcher_t *mini_app_launcher(void){return &launcher;}')
     replace('static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;visible=n;}',
@@ -93,12 +95,18 @@ static mui_t core={.event_queue={redraw_only,&launcher,2}};
 static mui_t *mui(void){return &core;}
 ''' + native.function(event_src, 'mui_event_dispatch_now') + '\n' + native.function(core_src, 'mui_update_now'))
     for name, replacement in {
-        'header': 'static void mui_msg_box_set_header(void*p,const char*s){assert(p&&s);snprintf(header_text,sizeof(header_text),"%s",s);header_sets++;}',
+        'header': 'static void mui_msg_box_set_header(void*p,const char*s){assert(p&&s);snprintf(header_text,sizeof(header_text),"%s",s);header_sets++;if(!strcmp(s,"DE3_SAVE_FAILED"))errors++;}',
         'message': 'static void mui_msg_box_set_message(void*p,const char*s){assert(p&&s);snprintf(message_text,sizeof(message_text),"%s",s);message_sets++;}',
-        'btn_text': 'static void mui_msg_box_set_btn_text(void*p,const char*l,const char*c,const char*r){assert(p&&!l&&!c&&!r);button_clears++;}',
-        'event_cb': 'static void mui_msg_box_set_event_cb(void*p,void(*cb)(mui_msg_box_event_t,mui_msg_box_t*)){assert(p&&!cb);callback_clears++;}',
+        'btn_text': 'static void mui_msg_box_set_btn_text(void*p,const char*l,const char*c,const char*r){assert(p);if(!l&&!c&&!r)button_clears++;}',
+        'event_cb': 'static void mui_msg_box_set_event_cb(void*p,void(*cb)(mui_msg_box_event_t,mui_msg_box_t*)){assert(p);ack=cb;if(!cb)callback_clears++;}',
     }.items():
-        replace(f'#define mui_msg_box_set_{name}(...) ((void)0)', replacement)
+        if name == 'header':
+            old = 'static void mui_msg_box_set_header(void*p,const char*s){(void)p;if(!strcmp(s,"DE3_SAVE_FAILED"))errors++;}'
+        elif name == 'event_cb':
+            old = '#define mui_msg_box_set_event_cb(box,cb) (ack=(cb))'
+        else:
+            old = f'#define mui_msg_box_set_{name}(...) ((void)0)'
+        replace(old, replacement)
     replace('static void cleanup(void*p){(void)p;cleanup_calls++;}',
             'static void cleanup(void*p){if(p){frees++;free(p);}cleanup_calls++;}')
     return code + r'''
@@ -118,6 +126,7 @@ static void select_home(int event){
  app_settings_t *app=instance.p_handle;assert(app);
  mui_list_item_t item={.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_EXIT};
  home_save=true;frames_at_save=frames;
+ header_before=header_sets;message_before=message_sets;buttons_before=button_clears;callbacks_before=callback_clears;
  settings_scene_main_list_view_on_selected(event,app->p_list_view,&item);
  home_save=false;
  /* Real immediate REDRAW must not drain the two pending input events. */
@@ -130,7 +139,7 @@ int main(void){
   result=failures[i];select_home(0);
   assert(save_calls==s+1&&errors==e+1&&toast_calls==t&&desktop_runs==d&&frees==f);
   assert(instance.p_handle&&instance.state==APP_STATE_RUNNING&&active_view==SETTINGS_VIEW_ID_MSG_BOX);
-  app_settings_t *app=instance.p_handle;assert(ack);ack(1,app->p_msg_box);assert(active_view==SETTINGS_VIEW_ID_MAIN);
+  app_settings_t *app=instance.p_handle;assert(ack);ack(MUI_MSG_BOX_EVENT_SELECT_RIGHT,app->p_msg_box);assert(active_view==SETTINGS_VIEW_ID_MAIN);
   assert(!((app_settings_t*)instance.p_handle)->exit_saved);
   /* Same app can retry, and its successful kill must not save a second time. */
   result=0;select_home(0);

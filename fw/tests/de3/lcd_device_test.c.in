@@ -8,10 +8,16 @@ enum { LANGUAGE_DE_DE, LANGUAGE_EN_US };
 enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_DEVICE_TEST };
 #define BOARD_LCD 1
 #define PIXL_RUNTIME_DIAGNOSTICS 1
+/* Opaque ABI-sized scope: this fixture checks device-test restoration; the
+ * actual settings checkpoint/rollback is exercised in the runtime fixture. */
+typedef struct { uint32_t opaque[9]; } settings_checkpoint_t;
 typedef struct {
  void *p_view_dispatcher,*p_view_dispatcher_toast,*p_scene_dispatcher;
  void *p_list_view,*p_progress_bar,*p_msg_box,*p_toast_view;
- bool exit_saved;
+ bool exit_saved,exit_discard;
+ uint32_t changed_fields;
+ uint16_t changed_apps;
+ settings_checkpoint_t entry_settings;
  mui_view_t device_test;
  uint8_t tested_keys,held_keys,released_keys,device_test_page,backlight_target;
  uint32_t backlight_error;
@@ -43,6 +49,10 @@ static void cleanup(void *p){(void)p;assert(actual_backlight==saved_backlight);c
 #define NRF_LOG_WARNING(...) ((void)0)
 static void mui_nav_diag_end(void){}
 static int32_t settings_save(void){assert(actual_backlight==saved_backlight);save_calls++;return 0;}
+static void settings_discard_fields(uint32_t fields,uint16_t apps,const settings_checkpoint_t *checkpoint) {
+ (void)fields;(void)apps;(void)checkpoint;
+ assert(false && "Device-view cases do not authorize settings discard");
+}
 static void mui_view_dispatcher_detach(void *p,unsigned layer){(void)layer;cleanup(p);}
 enum {BLE_LINK_INACTIVE,BLE_LINK_ADVERTISING,BLE_LINK_CONNECTED,BLE_LINK_HOST_CONNECTED,BLE_LINK_DISCONNECTING};
 enum {BLE_REMOTE_INIT_IDLE,BLE_REMOTE_INIT_WAIT,BLE_REMOTE_INIT_ADDRESS,BLE_REMOTE_INIT_NAME,

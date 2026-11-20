@@ -18,6 +18,8 @@
 #define NULL_USER_DATA ((void *)-1)
 #define MUI_LIST_VIEW_EVENT_SELECTED 0
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
+#define MUI_MSG_BOX_EVENT_SELECT_CENTER 1
+#define MUI_MSG_BOX_EVENT_SELECT_RIGHT 2
 #define INPUT_TYPE_SHORT 2
 #define INPUT_TYPE_LONG 3
 #define MINI_APP_ID_SETTINGS 3
@@ -51,6 +53,7 @@ typedef void mui_progress_bar_t, mui_toast_view_t, mui_view_dispatcher_t;
 typedef struct { void *user_data; } mui_view_t;
 @DISPATCH_TYPES@
 typedef struct {bool valid;} settings_storage_snapshot_t;
+typedef int settings_checkpoint_t;
 @APP_STRUCT@
 static unsigned device_tests;
 static void settings_device_test_open(app_settings_t *app){assert(app);++device_tests;}
@@ -59,7 +62,7 @@ static bool settings_get_lcd_dim(void){return dim_before_sleep;}
 static uint8_t settings_lcd_dim_idle_seconds(void){return dim_before_sleep ? 5 : 0;}
 static void settings_cycle_lcd_dim(void){dim_before_sleep=!dim_before_sleep;}
 typedef struct { bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,
-                     flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight;
+                     flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight,backlight;
                  uint16_t sleep_timeout_sec; } settings_data_t;
 typedef struct {bool avaliable;uint32_t total_bytes,free_bytes;} vfs_stat_t;
 typedef struct {int unused;} vfs_driver_t;
@@ -74,6 +77,7 @@ static uint16_t edited_app_bits;
 static void settings_toggle_app(uint8_t id){app_edits++;edited_app_bits |= (uint16_t)(1u << id);}
 static void settings_scene_app_management_reload(void *app){(void)app;}
 
+#define APP_SETTINGS_CHANGED(app,field) ((app)->changed_fields |= UINT32_C(1)<<offsetof(settings_data_t,field))
 #define SETTINGS_SET(field, value) (explicit_edits++, settings_get_data()->field = (value))
 #define SETTINGS_TOGGLE(field) SETTINGS_SET(field, !settings_get_data()->field)
 static settings_data_t *settings_get_data(void){return &data;}
@@ -108,6 +112,8 @@ static void *mui(void){return NULL;}
 static void mui_update_now(void*p){(void)p;}
 static void mui_show_memory_error(void*p){(void)p;assert(0);}
 static void *mini_app_launcher(void){return NULL;}
+static void *mini_app_launcher_get_app_handle(void*p,unsigned id){(void)p;(void)id;return NULL;}
+static void settings_scene_main_exit_choice(mui_msg_box_event_t event,mui_msg_box_t *box);
 static void mini_app_launcher_kill(void*p,unsigned id){(void)p;(void)id;assert(0);}
 static bool system_reboot(void){assert(0);return false;}
 static void go_sleep(void){assert(0);}

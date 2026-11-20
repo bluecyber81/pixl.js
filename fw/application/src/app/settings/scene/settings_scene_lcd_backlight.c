@@ -31,6 +31,7 @@ static void settings_scene_lcd_backlight_event_cb(mui_progress_bar_event_t event
     }
     if (event == MUI_PROGRESS_BAR_EVENT_CONFIRMED) {
         SETTINGS_SET(lcd_backlight, value);
+        APP_SETTINGS_CHANGED(app, lcd_backlight);
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     }
 }

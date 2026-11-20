@@ -23,7 +23,8 @@ static settings_data_t m_settings_data;
 static const settings_data_t def_settings_data = {8};
 static void settings_clear_edits(void) {}
 static bool m_settings_save_allowed,m_settings_file_absent;
-static void settings_remember_chameleon(void){}
+static void settings_remember(void){}
+static unsigned save_generation;
 static bool m_tag_data_loaded;
 static int32_t retry_result;
 static int32_t settings_retry_load(void) { return retry_result; }

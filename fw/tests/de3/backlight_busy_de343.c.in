@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,6 +22,7 @@ static app_pwm_t pwm1={&control};
 static bool m_pwm_initialized;
 typedef struct {uint8_t lcd_backlight;unsigned oled_contrast,sleep_timeout_sec,language;bool flip_display;} settings_data_t;
 static settings_data_t settings;
+#define APP_SETTINGS_CHANGED(app,field) ((app)->changed_fields |= UINT32_C(1)<<offsetof(settings_data_t,field))
 #define SETTINGS_SET(field, value) (settings_get_data()->field = (value))
 static settings_data_t*settings_get_data(void){return &settings;}
 static unsigned calls,delays,enables,disables,init_calls,get_calls,init_error,duty_error,busy_calls,duty;
@@ -41,7 +43,7 @@ static app_pwm_duty_t app_pwm_channel_duty_get(app_pwm_t*p,unsigned ch){
  assert(p==&pwm1 && ch==0 && m_pwm_initialized && control.state==2);get_calls++;return duty;
 }
 static void nrf_delay_us(unsigned us){assert(us==10);delays++;}
-typedef struct {void*p_scene_dispatcher,*p_toast_view;} app_settings_t;
+typedef struct {void*p_scene_dispatcher,*p_toast_view;uint32_t changed_fields;} app_settings_t;
 typedef struct {void*user_data;int32_t current;} mui_progress_bar_t;
 typedef unsigned mui_progress_bar_event_t;
 enum {MUI_PROGRESS_BAR_EVENT_DECREMENT,MUI_PROGRESS_BAR_EVENT_INCREMENT,MUI_PROGRESS_BAR_EVENT_CONFIRMED};

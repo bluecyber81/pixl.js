@@ -267,6 +267,10 @@ typedef enum {
     _L_DE3_CONFIG_READ,
     _L_DE3_CONFIG_WRITE,
     _L_DE3_CARD_CHECK,
+    _L_DE3_SAVE_RETRY_ACTION,
+    _L_DE3_SAVE_DISCARD_ACTION,
+    _L_DE3_SAVE_YES_SHORT,
+    _L_DE3_SAVE_NO_SHORT,
     _L_COUNT,
 } L_StringID;
 #endif

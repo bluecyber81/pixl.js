@@ -22,6 +22,7 @@ struct mui_msg_box_s {
     string_t btn_center_text;
     string_t btn_right_text;
     uint8_t focus;
+    bool awaiting_frame;
     mui_msg_box_event_cb_t event_cb;
     void *user_data;
 };

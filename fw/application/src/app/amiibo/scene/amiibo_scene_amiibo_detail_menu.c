@@ -32,10 +32,42 @@ enum amiibo_detail_menu_t {
     AMIIBO_DETAIL_MENU_PERSONAL_NOTE,
 };
 
+static settings_byte_checkpoint_t auto_uid_checkpoint;
+static bool auto_uid_pending;
+static mui_list_item_t *auto_uid_item;
+
+static void amiibo_scene_settings_save_error(app_amiibo_t *app);
+
+static void amiibo_scene_settings_discard(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_amiibo_t *app = box->user_data;
+    if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        if (auto_uid_pending) {
+            SETTINGS_DISCARD(auto_gen_amiibo, &auto_uid_checkpoint);
+            auto_uid_pending = false;
+            if (auto_uid_item)
+                mui_list_view_item_set_sub_text(auto_uid_item, settings_get_data()->auto_gen_amiibo
+                    ? getLangString(_L_ON_F) : getLangString(_L_OFF_F));
+        }
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_LIST);
+        mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+    } else if (event == MUI_MSG_BOX_EVENT_SELECT_RIGHT) {
+        amiibo_scene_settings_save_error(app);
+    }
+}
+
 static void amiibo_scene_settings_save_retry(mui_msg_box_event_t event, mui_msg_box_t *box) {
     app_amiibo_t *app = box->user_data;
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
         if (settings_save() != NRF_SUCCESS) return;
+        auto_uid_pending = false;
+    } else if (event == MUI_MSG_BOX_EVENT_SELECT_CENTER) {
+        mui_msg_box_set_header(box, _T(DE3_SAVE_FAILED));
+        mui_msg_box_set_message(box, _T(DE3_SAVE_DISCARD_ASK));
+        mui_msg_box_set_btn_text(box, _T(DE3_SAVE_YES_SHORT), NULL, _T(DE3_SAVE_NO_SHORT));
+        mui_msg_box_set_btn_focus(box, 2);
+        mui_msg_box_set_event_cb(box, amiibo_scene_settings_discard);
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_MSG_BOX);
+        return;
     } else if (event != MUI_MSG_BOX_EVENT_SELECT_RIGHT) {
         return;
     }
@@ -46,8 +78,8 @@ static void amiibo_scene_settings_save_retry(mui_msg_box_event_t event, mui_msg_
 static void amiibo_scene_settings_save_error(app_amiibo_t *app) {
     mui_msg_box_set_header(app->p_msg_box, _T(DE3_SAVE_FAILED));
     mui_msg_box_set_message(app->p_msg_box, _T(DE3_SAVE_RAM_ONLY));
-    mui_msg_box_set_btn_text(app->p_msg_box, _T(APP_CHAMELEON_CARD_DATA_SAVE), NULL, _T(BACK));
-    mui_msg_box_set_btn_focus(app->p_msg_box, 0);
+    mui_msg_box_set_btn_text(app->p_msg_box, _T(DE3_SAVE_RETRY_ACTION), _T(DE3_SAVE_DISCARD_ACTION), _T(BACK));
+    mui_msg_box_set_btn_focus(app->p_msg_box, 2);
     mui_msg_box_set_event_cb(app->p_msg_box, amiibo_scene_settings_save_retry);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIBO_VIEW_ID_MSG_BOX);
 }
@@ -278,11 +310,17 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
             return;
         }
         settings_data_t *p_settings = settings_get_data();
+        if (!auto_uid_pending) {
+            SETTINGS_CHECKPOINT(auto_gen_amiibo, &auto_uid_checkpoint);
+            auto_uid_pending = true;
+        }
+        auto_uid_item = p_item;
         SETTINGS_TOGGLE(auto_gen_amiibo);
 
         mui_list_view_item_set_sub_text(
             p_item, (p_settings->auto_gen_amiibo ? getLangString(_L_ON_F) : getLangString(_L_OFF_F)));
         if (settings_save() != NRF_SUCCESS) amiibo_scene_settings_save_error(app);
+        else auto_uid_pending = false;
     } break;
 
     case AMIIBO_DETAIL_MENU_SET_CUSTOM_UID: {
@@ -338,6 +376,8 @@ static void amiibo_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 
 void amiibo_scene_amiibo_detail_menu_on_enter(void *user_data) {
     app_amiibo_t *app = user_data;
+    auto_uid_pending = false;
+    auto_uid_item = NULL;
 
     /* The visible middle-button hint leads to Back as the first action. */
     mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_BACK_TO_FILE_LIST),
@@ -379,6 +419,8 @@ void amiibo_scene_amiibo_detail_menu_on_enter(void *user_data) {
 
 void amiibo_scene_amiibo_detail_menu_on_exit(void *user_data) {
     app_amiibo_t *app = user_data;
+    auto_uid_pending = false;
+    auto_uid_item = NULL;
     app->p_amiibo_detail_view->info_page = 0;
     amiibo_detail_view_set_event_cb(app->p_amiibo_detail_view, NULL);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);

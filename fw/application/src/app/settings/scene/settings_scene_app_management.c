@@ -23,6 +23,7 @@ static void settings_scene_app_management_list_view_on_selected(mui_list_view_ev
         // Settings app cannot be disabled
         if (app_id != MINI_APP_ID_SETTINGS) {
             settings_toggle_app(app_id);
+            if (app_id < 16) app->changed_apps |= (uint16_t)(1u << app_id);
         }
         settings_scene_app_management_reload(app);
     }

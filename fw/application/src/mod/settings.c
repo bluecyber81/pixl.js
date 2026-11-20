@@ -57,7 +57,10 @@ static void (*m_recovered)(const settings_data_t *previous);
 void settings_on_recovered(void (*apply)(const settings_data_t *previous)) {
     m_recovered = apply;
 }
-static uint8_t saved_chameleon_count, saved_chameleon_default;
+/* Defaults are only the initial RAM fallback. A verified record replaces this
+ * base before pending choices are merged; failed writes never replace it. */
+static settings_data_t discard_base;
+static uint32_t save_generation;
 static uint32_t edited_fields;
 static uint16_t edited_apps;
 
@@ -84,16 +87,75 @@ void settings_toggle_app(uint32_t app_id) {
     m_settings_data.app_enable_bits ^= bit;
 }
 
-static void settings_remember_chameleon(void) {
-    saved_chameleon_count = m_settings_data.chameleon_slot_num;
-    saved_chameleon_default = m_settings_data.chameleon_default_slot_index;
+static void settings_remember(void) {
+    discard_base = m_settings_data;
+}
+
+static bool settings_byte_edited(uint8_t offset) {
+    return (edited_fields & (UINT32_C(1) << offset)) ||
+           ((uint8_t *)&m_settings_data)[offset] != ((uint8_t *)&discard_base)[offset];
+}
+
+void settings_checkpoint_byte(uint8_t offset, settings_byte_checkpoint_t *checkpoint) {
+    if (!checkpoint || offset >= sizeof(m_settings_data)) return;
+    *checkpoint = (settings_byte_checkpoint_t){save_generation,
+        ((uint8_t *)&m_settings_data)[offset], settings_byte_edited(offset)};
+}
+
+void settings_checkpoint(settings_checkpoint_t *checkpoint) {
+    if (!checkpoint) return;
+    checkpoint->save_generation = save_generation;
+    checkpoint->values = m_settings_data;
+    checkpoint->edited_fields = 0;
+    for (uint8_t i = 0; i < sizeof(m_settings_data); ++i)
+        if (settings_byte_edited(i)) checkpoint->edited_fields |= UINT32_C(1) << i;
+    checkpoint->edited_apps = edited_apps |
+        (m_settings_data.app_enable_bits ^ discard_base.app_enable_bits);
+}
+
+static void settings_restore_byte(uint8_t offset, bool keep_pending, uint8_t value) {
+    uint32_t bit = UINT32_C(1) << offset;
+    ((uint8_t *)&m_settings_data)[offset] = keep_pending ? value : ((uint8_t *)&discard_base)[offset];
+    edited_fields = (edited_fields & ~bit) | (keep_pending ? bit : 0);
+}
+
+static void settings_discard_notify(const settings_data_t *previous) {
+    if (m_recovered && memcmp(previous, &m_settings_data, sizeof(*previous))) m_recovered(previous);
+}
+
+void settings_discard_byte(uint8_t offset, const settings_byte_checkpoint_t *checkpoint) {
+    if (offset >= sizeof(m_settings_data)) return;
+    settings_data_t previous = m_settings_data;
+    bool keep = checkpoint && checkpoint->save_generation == save_generation && checkpoint->edited;
+    settings_restore_byte(offset, keep, keep ? checkpoint->value : 0);
+    settings_discard_notify(&previous);
+}
+
+void settings_discard_fields(uint32_t fields, uint16_t apps, const settings_checkpoint_t *checkpoint) {
+    settings_data_t previous = m_settings_data;
+    bool current = checkpoint && checkpoint->save_generation == save_generation;
+    /* App enables have bit-level ownership; never restore their padding/bytes. */
+    fields &= ~(SETTINGS_FIELD_MASK(app_enable_bits) | (SETTINGS_FIELD_MASK(app_enable_bits) << 1));
+    for (uint8_t i = 0; i < sizeof(m_settings_data); ++i) {
+        uint32_t bit = UINT32_C(1) << i;
+        if (fields & bit) {
+            bool keep = current && (checkpoint->edited_fields & bit);
+            settings_restore_byte(i, keep, keep ? ((const uint8_t *)&checkpoint->values)[i] : 0);
+        }
+    }
+    uint16_t keep = current ? checkpoint->edited_apps & apps : 0;
+    uint16_t restored = (discard_base.app_enable_bits & ~keep) |
+                        (keep ? checkpoint->values.app_enable_bits & keep : 0);
+    m_settings_data.app_enable_bits = (m_settings_data.app_enable_bits & ~apps) | (restored & apps);
+    edited_apps = (edited_apps & ~apps) | keep;
+    settings_discard_notify(&previous);
 }
 
 void settings_discard_chameleon_changes(void) {
-    edited_fields &= ~((UINT32_C(1) << offsetof(settings_data_t, chameleon_default_slot_index)) |
-                       (UINT32_C(1) << offsetof(settings_data_t, chameleon_slot_num)));
-    m_settings_data.chameleon_slot_num = saved_chameleon_count;
-    m_settings_data.chameleon_default_slot_index = saved_chameleon_default;
+    /* Existing Chameleon exit semantics: restore its two accepted fields only.
+     * No UI recovery callback is needed for these non-runtime preferences. */
+    settings_restore_byte(offsetof(settings_data_t, chameleon_slot_num), false, 0);
+    settings_restore_byte(offsetof(settings_data_t, chameleon_default_slot_index), false, 0);
 }
 
 /* The persisted ABI uses short enums and one-byte bools. Read bytes before
@@ -208,7 +270,7 @@ static void settings_apply_record(const unsigned char *raw, size_t length) {
     }
 
     validate_settings();
-    settings_remember_chameleon();
+    settings_remember();
 }
 
 /* Explicit choices override the recovered file even when equal to a default.
@@ -269,12 +331,13 @@ int32_t settings_retry_load(void) {
 }
 
 int32_t settings_init() {
+    ++save_generation;
     settings_clear_edits();
     m_settings_init_attempted = true;
     m_settings_file_absent = false;
     m_settings_save_allowed = false;
     memcpy(&m_settings_data, &def_settings_data, sizeof(settings_data_t));
-    settings_remember_chameleon();
+    settings_remember();
     vfs_driver_t *p_driver = vfs_get_default_driver();
     if (p_driver == NULL) {
         return NRF_ERROR_NOT_SUPPORTED;
@@ -378,7 +441,9 @@ int32_t settings_save() {
     }
 
     m_settings_file_absent = false;
-    settings_remember_chameleon();
+    settings_remember();
+    ++save_generation;
+    settings_clear_edits();
     return NRF_SUCCESS;
 }
 
@@ -395,7 +460,8 @@ int32_t settings_reset() {
     }
     settings_clear_edits();
     memcpy(&m_settings_data, &def_settings_data, sizeof(settings_data_t));
-    settings_remember_chameleon();
+    settings_remember();
+    ++save_generation;
     m_settings_file_absent = true;
     m_settings_save_allowed = true;
     return NRF_SUCCESS;

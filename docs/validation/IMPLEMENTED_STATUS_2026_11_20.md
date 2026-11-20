@@ -1,5 +1,13 @@
 # Allmiibo LCD: Was eingebaut ist und was noch fehlt
 
+## Nachtrag vom 20. November 2026: DE3.94 / App667
+
+Die ursprüngliche Bestandsaufnahme unten dokumentiert den historischen Stand **vor** der inzwischen abgeschlossenen Korrektur. In **DE3.94 / App667** sind der bestätigte Verwerfen-Ausgang der Haupt-Einstellungen und die fünf betroffenen Optionswege einschließlich des blockierenden AmiiboDB-Sortierausgangs korrigiert. Dauerfehler, Retry, Nein/Ja, fremde Exit-Vetos, Rücknahme ohne erneuten Kill-Save und spät geladene Settings wurden gezielt geprüft; die abschließende Firmware-Suite besteht mit **178/178** Skripten. Zwei unabhängige Builds, die signierte Anwendungsdatei und die Z21-ARM-Prüfungen sind ebenfalls bestanden. Die physische Geräteabnahme für App667 bleibt offen.
+
+Der aktuelle Korrekturstand und seine genaue Paketidentität stehen in [DE3.94 / App667](DE3_94.md) und [DE3_94.json](DE3_94.json). App666 bleibt als unveränderter, zurückgestellter Zwischenstand erhalten. Die Aussagen unten über noch fehlende App667-Korrekturen gelten für den damaligen Auditstand; sie beschreiben nicht die korrigierte Firmware dieses Testzweigs. Der ursprüngliche Auditcommit `acc045575cac6a1e81a22bf2626f73194dd35034` bleibt unverändert. Dieser Nachtrag trifft keine neue Aussage über die Veröffentlichung des getrennten Web-Dateimanagers.
+
+## Ursprüngliche Bestandsaufnahme vor der App667-Korrektur
+
 Stand: 20. November 2026. Projekt `pixel.js`, Repository `bluecyber81/pixl.js`.
 
 ## Ergebnis

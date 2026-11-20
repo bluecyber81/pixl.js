@@ -266,4 +266,8 @@ const char * const lang_de_DE[_L_COUNT] = {
     [_L_DE3_CONFIG_READ] = "Slotkonf. lesen",
     [_L_DE3_CONFIG_WRITE] = "Slotkonf. schr.",
     [_L_DE3_CARD_CHECK] = "Karte/Slot prüfen",
+    [_L_DE3_SAVE_RETRY_ACTION] = "Erneut",
+    [_L_DE3_SAVE_DISCARD_ACTION] = "Verwerfen",
+    [_L_DE3_SAVE_YES_SHORT] = "Ja",
+    [_L_DE3_SAVE_NO_SHORT] = "Nein",
 };

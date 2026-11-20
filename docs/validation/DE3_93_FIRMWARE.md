@@ -1,5 +1,8 @@
 # Allmiibo LCD DE3.93 / App666
 
+> **Weiterer Nachtrag vom 20.11.2026: Korrigierter Nachfolger DE3.94 / App667.**
+> Die im folgenden historischen Hold-Hinweis beschriebenen Lücken sind im getrennten [App667-Teststand](DE3_94.md) behoben und mit 178/178 Firmware-Skripten sowie den zugehörigen Build-, Signatur- und Z21-ARM-Gates geprüft. App667 besitzt ein eigenes signiertes Paket und eigene [Nachweise](DE3_94.json); seine physische Geräteabnahme steht noch aus. **Das unveränderte App666-Paket bleibt zurückgestellt.** Der folgende Hinweis und die übrigen App666-Nachweise dokumentieren weiterhin genau diesen älteren Zwischenstand.
+
 > **Nachtrag vom 20.11.2026: Zwischenstand zurückgestellt – derzeit nicht zur Installation empfohlen.**
 > Beim nachfolgenden Bestandsabgleich wurde eine neue Blockade der AmiiboDB-Sortierung bei dauerhaftem Speicherfehler erkannt: Die neue Save-Prüfung verhindert den normalen Ausgang, ein bestätigter Verwerfen-Pfad fehlt noch. Auch der allgemeine Verwerfen-Ausgang der Haupt-Einstellungen ist weiterhin offen. Der alte NFC-/Chameleon-Verwerfen-Fix ist erhalten. Die unten dokumentierten 177/177 Tests und Signaturprüfungen bleiben Nachweise des unveränderten Pakets, deckten den fehlenden dauerhaften Fehler→Verwerfen→Exit-Ablauf aber nicht ab.
 >

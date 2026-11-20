@@ -18,6 +18,8 @@ class LateSettingsRuntime(unittest.TestCase):
         storage = (FW / 'tests/de2/test_settings.py').read_text()
         fixture = storage.split("    program = r'''", 1)[1].split('int main(void) {', 1)[0]
         fixture = fixture.replace('SOURCE_FILE', str(SRC / 'mod/settings.c'))
+        fixture = fixture.replace('static unsigned char stored[64];', 'static unsigned char stored[64];\nstatic unsigned read_calls;')
+        fixture = fixture.replace('    (void)name;\n    if (read_error)', '    (void)name; read_calls++;\n    if (read_error)')
         power = (SRC / 'sdk/pwr_mgmt/nrf_pwr_mgmt.c').read_text()
         display = (SRC / 'mui/mui_u8g2.c').read_text()
         main = (SRC / 'main.c').read_text()
@@ -41,7 +43,18 @@ class LateSettingsRuntime(unittest.TestCase):
         menu_enum = re.search(r'enum settings_main_menu_t \{[^}]+\};', scene)
         code = code.replace('@MENU_ENUM@', menu_enum[0])
         code = code.replace('@MENU@', '\n'.join(function(scene, name) for name in (
-            'settings_scene_main_reload', 'settings_scene_main_close_error', 'settings_scene_main_save_error')))
+            'settings_scene_main_reload', 'settings_scene_main_close_error', 'settings_scene_main_save_error',
+            'settings_scene_main_exit_error', 'settings_scene_main_request_exit', 'settings_scene_main_try_exit',
+            'settings_scene_main_exit_choice')))
+        app = (SRC / 'app/settings/app_settings.c').read_text()
+        code = code.replace('@KILL@', function(app, 'app_settings_on_kill'))
+        launcher = (SRC / 'core/mini_app_launcher.c').read_text()
+        code = code.replace('@LAUNCHER@', '\n'.join(function(launcher, name) for name in (
+            'mini_app_launcher', 'mini_app_launcher_input_blocked', 'mini_app_launcher_clear_exit',
+            'mini_app_launcher_exit_prepared', 'mini_app_launcher_prepare_exit', 'mini_app_launcher_find',
+            'mini_app_launcher_inst_kill', 'mini_app_launcher_kill', 'mini_app_launcher_get_app_handle')))
+        dispatcher = (SRC / 'mui/mui_view_dispatcher.c').read_text()
+        code = code.replace('@DISPATCH@', function(dispatcher, 'mui_view_dispatcher_on_input'))
         leave = scene[scene.index('    case SETTINGS_MAIN_MENU_EXIT:'):scene.index('    case SETTINGS_MAIN_MENU_REBOOT:')]
         code = code.replace('@SAVE_AND_EXIT@', leave)
         with tempfile.TemporaryDirectory() as temp:

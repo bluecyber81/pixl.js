@@ -39,7 +39,8 @@ typedef unsigned mui_msg_box_event_t;
 static settings_data_t m_settings_data,def_settings_data;
 static void settings_clear_edits(void) {}
 static bool m_settings_save_allowed,m_settings_file_absent,display_flipped;
-static void settings_remember_chameleon(void){}
+static void settings_remember(void){}
+static unsigned save_generation;
 static unsigned reloads,view_switches;
 typedef struct {bool(*mounted)(void);int(*remove_file)(const char*);} vfs_driver_t;
 static bool mounted(void){return true;}

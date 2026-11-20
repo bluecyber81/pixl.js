@@ -34,29 +34,69 @@ enum amiidb_detail_menu_t {
     AMIIDB_DETAIL_MENU_BACK_MAIN_MENU,
 };
 
+static settings_byte_checkpoint_t detail_uid_checkpoint, detail_qr_checkpoint;
+static bool detail_uid_pending, detail_qr_pending, detail_pending_qr;
+static mui_list_item_t *detail_pending_item;
+
+static void amiidb_scene_detail_settings_save_error(app_amiidb_t *app);
+
+static void amiidb_scene_detail_settings_discard(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_amiidb_t *app = box->user_data;
+    if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        if (detail_pending_qr) {
+            if (detail_qr_pending) SETTINGS_DISCARD(qrcode_enabled, &detail_qr_checkpoint);
+            detail_qr_pending = false;
+        } else {
+            if (detail_uid_pending) SETTINGS_DISCARD(auto_gen_amiibo, &detail_uid_checkpoint);
+            detail_uid_pending = false;
+        }
+        bool enabled = detail_pending_qr ? settings_get_data()->qrcode_enabled : settings_get_data()->auto_gen_amiibo;
+        if (detail_pending_item)
+            mui_list_view_item_set_sub_text(detail_pending_item, enabled ? getLangString(_L_ON_F) : getLangString(_L_OFF_F));
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
+        mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+    } else if (event == MUI_MSG_BOX_EVENT_SELECT_RIGHT) {
+        amiidb_scene_detail_settings_save_error(app);
+    }
+}
+
 static void amiidb_scene_detail_settings_save_retry(mui_msg_box_event_t event, mui_msg_box_t *box) {
     app_amiidb_t *app = box->user_data;
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
         if (settings_save() != NRF_SUCCESS) return;
+        detail_uid_pending = detail_qr_pending = false;
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
+    } else if (event == MUI_MSG_BOX_EVENT_SELECT_CENTER) {
+        mui_msg_box_set_header(box, _T(DE3_SAVE_FAILED));
+        mui_msg_box_set_message(box, _T(DE3_SAVE_DISCARD_ASK));
+        mui_msg_box_set_btn_text(box, _T(DE3_SAVE_YES_SHORT), NULL, _T(DE3_SAVE_NO_SHORT));
+        mui_msg_box_set_btn_focus(box, 2);
+        mui_msg_box_set_event_cb(box, amiidb_scene_detail_settings_discard);
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_MSG_BOX);
     } else if (event == MUI_MSG_BOX_EVENT_SELECT_RIGHT) {
         mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
     }
 }
 
+static void amiidb_scene_detail_settings_save_error(app_amiidb_t *app) {
+    mui_msg_box_set_header(app->p_msg_box, _T(DE3_SAVE_FAILED));
+    mui_msg_box_set_message(app->p_msg_box, _T(DE3_SAVE_RAM_ONLY));
+    mui_msg_box_set_btn_text(app->p_msg_box, _T(DE3_SAVE_RETRY_ACTION), _T(DE3_SAVE_DISCARD_ACTION), _T(BACK));
+    mui_msg_box_set_btn_focus(app->p_msg_box, 2);
+    mui_msg_box_set_event_cb(app->p_msg_box, amiidb_scene_detail_settings_save_retry);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_MSG_BOX);
+}
+
 static void amiidb_scene_detail_settings_save(app_amiidb_t *app, mui_list_item_t *item, bool enabled) {
+    detail_pending_item = item;
     mui_list_view_item_set_sub_text(item, enabled ? getLangString(_L_ON_F) : getLangString(_L_OFF_F));
     if (settings_save() == NRF_SUCCESS) {
+        detail_uid_pending = detail_qr_pending = false;
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
         return;
     }
     /* Keep the changed value and the detail menu alive for a real save retry. */
-    mui_msg_box_set_header(app->p_msg_box, _T(DE3_SAVE_FAILED));
-    mui_msg_box_set_message(app->p_msg_box, _T(DE3_SAVE_RAM_ONLY));
-    mui_msg_box_set_btn_text(app->p_msg_box, _T(APP_CHAMELEON_CARD_DATA_SAVE), NULL, _T(BACK));
-    mui_msg_box_set_btn_focus(app->p_msg_box, 0);
-    mui_msg_box_set_event_cb(app->p_msg_box, amiidb_scene_detail_settings_save_retry);
-    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_MSG_BOX);
+    amiidb_scene_detail_settings_save_error(app);
 }
 
 static void amiidb_scene_amiibo_detail_menu_msg_box_no_key_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
@@ -179,12 +219,22 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
             return;
         }
         settings_data_t *p_settings = settings_get_data();
+        if (!detail_uid_pending) {
+            SETTINGS_CHECKPOINT(auto_gen_amiibo, &detail_uid_checkpoint);
+            detail_uid_pending = true;
+        }
+        detail_pending_qr = false;
         SETTINGS_TOGGLE(auto_gen_amiibo);
         amiidb_scene_detail_settings_save(app, p_item, p_settings->auto_gen_amiibo);
     } break;
 
     case AMIIDB_DETAIL_MENU_SHOW_QRCODE: {
         settings_data_t *p_settings = settings_get_data();
+        if (!detail_qr_pending) {
+            SETTINGS_CHECKPOINT(qrcode_enabled, &detail_qr_checkpoint);
+            detail_qr_pending = true;
+        }
+        detail_pending_qr = true;
         SETTINGS_TOGGLE(qrcode_enabled);
         amiidb_scene_detail_settings_save(app, p_item, p_settings->qrcode_enabled);
     } break;
@@ -205,6 +255,8 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 
 void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
     app_amiidb_t *app = user_data;
+    detail_uid_pending = detail_qr_pending = false;
+    detail_pending_item = NULL;
 
     /* The visible middle-button hint leads to Back as the first action. */
     mui_list_view_add_item(app->p_list_view, 0xe069, getLangString(_L_APP_AMIIDB_DETAIL_BACK_LIST),
@@ -253,6 +305,8 @@ void amiidb_scene_amiibo_detail_menu_on_enter(void *user_data) {
 
 void amiidb_scene_amiibo_detail_menu_on_exit(void *user_data) {
     app_amiidb_t *app = user_data;
+    detail_uid_pending = detail_qr_pending = false;
+    detail_pending_item = NULL;
     app->p_amiibo_view->info_page = 0;
     amiibo_view_set_event_cb(app->p_amiibo_view, NULL);
     mui_list_view_set_selected_cb(app->p_list_view, NULL);

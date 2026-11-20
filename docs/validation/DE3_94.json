@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "status": "signed-preview-qualified",
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.94",
+  "applicationCounter": 667,
+  "sourceBranch": "test/lcd-de394-app667",
+  "sourceCommit": null,
+  "sourceParentCommit": "acc045575cac6a1e81a22bf2626f73194dd35034",
+  "productionSourceCommit": "1d606c9faeedbb1fe31fb2c4547ad47818c04b75",
+  "validationSourceCommit": "6f7b9c720f640f8487fe009509bb65cb56b5a79a",
+  "sourceId": "1f5864e1279b7378d3cc685b73d80a3257aad8f6a29db27d1c880800b30c4e90",
+  "productionInputs": 709,
+  "applicationBytes": 361032,
+  "applicationSha256": "99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f",
+  "engineSha256": "7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e",
+  "storageEngineUnchangedFromApp666": true,
+  "applicationOnly": {
+    "file": "fw/releases/Allmiibo_LCD_DE3_94_667_NUR_APP.zip",
+    "state": "verified",
+    "sha256": "f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4",
+    "bytes": 361633,
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "containsBootloader": false,
+    "containsSoftDevice": false,
+    "hardwareVersion": 52,
+    "softDeviceRequirements": [
+      "0x0126"
+    ]
+  },
+  "stableReleaseUnchanged": {
+    "version": "2.22.0-DE3.89",
+    "counter": 662
+  },
+  "previousPreview": {
+    "version": "2.22.0-DE3.93",
+    "counter": 666,
+    "status": "historical-preview-on-hold",
+    "sourceCommit": "73415809be417f1242c9ca409f77ad61ab07d876",
+    "auditCommit": "acc045575cac6a1e81a22bf2626f73194dd35034",
+    "otaSha256": "b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e",
+    "evidence": "docs/validation/DE3_93.json",
+    "audit": "docs/validation/IMPLEMENTED_STATUS_2026_11_20.md",
+    "installationRecommended": false
+  },
+  "reproducibility": {
+    "sourceCommit": "1d606c9faeedbb1fe31fb2c4547ad47818c04b75",
+    "sourceId": "1f5864e1279b7378d3cc685b73d80a3257aad8f6a29db27d1c880800b30c4e90",
+    "productionInputCount": 709,
+    "allCurrentInputsMatch": true,
+    "binaryAndHexIdentical": true,
+    "binaryBytes": 361032,
+    "sha256": {
+      "pixljs.bin": "99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f",
+      "pixljs.hex": "ce927303612f551539ab21062b947091363b64bdfa2c23dbe624a18c6b799a43"
+    },
+    "linkerBudget": {
+      "binary_bytes": 361032,
+      "linker_flash_used_bytes": 361052,
+      "observed": {
+        "flash_reserve_bytes": 11684,
+        "heap_stack_gap_bytes": 1720,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "elfDebugPathsMayDiffer": true
+  },
+  "validation": {
+    "fullFirmwareSuites": {
+      "state": "passed",
+      "passed": 178,
+      "executed": 178,
+      "omitted": 0,
+      "sourceId": "1f5864e1279b7378d3cc685b73d80a3257aad8f6a29db27d1c880800b30c4e90",
+      "sourcesUnchangedDuringTests": true,
+      "reportSha256": "78b075fd83427fb38be2432d5425a704dc53e419b4dfedea67a5b0826003c8c7"
+    },
+    "linkedApplicationChecks": [
+      {
+        "test": "stack_watermark",
+        "exitCode": 0
+      },
+      {
+        "test": "first_menu",
+        "exitCode": 0
+      },
+      {
+        "test": "aes_m4",
+        "exitCode": 0
+      },
+      {
+        "test": "flash_jedec",
+        "exitCode": 0
+      },
+      {
+        "test": "display_profile",
+        "exitCode": 0
+      },
+      {
+        "test": "lcd_game_rotation",
+        "exitCode": 0
+      },
+      {
+        "test": "lcd_device_test",
+        "exitCode": 0
+      },
+      {
+        "test": "build_fault",
+        "exitCode": 0
+      },
+      {
+        "test": "chameleon_save_screen",
+        "exitCode": 0
+      }
+    ],
+    "linkedApplicationChecksHardware": false,
+    "sha256Hmac": {
+      "sha256Cases": 32,
+      "hmacSha256Cases": 16,
+      "hmacShortBufferAndRetryCases": 8,
+      "hardware": false,
+      "applicationBinSha256": "99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f",
+      "passed": true
+    },
+    "nativeOtaVerification": {
+      "state": "passed",
+      "signatureVerified": true,
+      "negativeControlsPassed": 3,
+      "applicationBinSha256": "99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f",
+      "reportSha256": "b7eb70ef04b26f087b0f07a3ef3c4d2d6500e7b8c931ff02cfb87e5ea5c3cbe8"
+    },
+    "z21": {
+      "state": "passed",
+      "signedZipSha256": "f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4",
+      "paddedBootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+      "bootloaderElfSha256": "e5aa75636ef1987474b249f1a63e25d801dac5ffe3722f65822d113c8c11da1b",
+      "actualArmCryptoCases": [
+        {
+          "name": "signed init",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed signature",
+          "passed": true,
+          "returnValue": 5
+        },
+        {
+          "name": "changed init",
+          "passed": true,
+          "returnValue": 5
+        },
+        {
+          "name": "full BIN hash",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed BIN hash",
+          "passed": true,
+          "returnValue": 0
+        },
+        {
+          "name": "boot CRC",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed BIN boot CRC",
+          "passed": true,
+          "returnValue": 0
+        }
+      ],
+      "actualArmInitAcceptanceCases": [
+        {
+          "before": "App665 present",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361032,
+          "bank0Code": 0
+        },
+        {
+          "before": "empty application bank",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361032,
+          "bank0Code": 0
+        }
+      ],
+      "physicalDeviceAccess": false,
+      "limits": "Actual ELF init-execute and bank selection; flash, radio and handover simulated.",
+      "cryptoReportSha256": "7ee228228b85c5404d561f28cdc73a3f9cdabb2eac1293b080f84aa672c6b526",
+      "initReportSha256": "7eb820a3d4d72a19982764370d011431f246ba60c4ba1a7b68464ba4f2b59ec3"
+    }
+  },
+  "changes": [
+    "Confirmed discard exit in general Settings after save failure; rollback only after all launcher/NFC guards accept the exit; no extra save in the accepted discard kill.",
+    "AmiiboDB sorting can leave after confirmed discard even under a permanent save error; its scene exit does not immediately retry the discarded save.",
+    "Amiibo AutoUID, AmiiboDB AutoUID/QR and AmiiboLink mode expose consistent Retry/Discard/Back and a separate Yes/No confirmation.",
+    "Field-scoped checkpoints retain older pending edits, use verified late settings records for previously clean fields, and follow newer successful saves.",
+    "Message boxes keep all actions and confirmation choices readable on the tested 128-pixel layouts, with input accepted only after the fresh frame fence."
+  ],
+  "existingFeaturesRetained": [
+    "Automatic obsolete-group reclamation after durable commit and last-reader release was already implemented in App665.",
+    "App666 single-pass collection and its unchanged PackedFS engine remain included; this release adds no new filesystem format or migration.",
+    "Existing Chameleon/NFC confirmed discard guards remain in place.",
+    "Temporary adaptive mount cache and runtime/boot/power/MTU/UI/menu/build/fault diagnostics already existed in the bound App662 sources.",
+    "The App666 fix retaining a valid BLE link after rejected preferred parameters remains included; physical throughput improvement is not measured."
+  ],
+  "hardwareAcceptance": "pending",
+  "physicalDeviceAccess": false,
+  "publication": {
+    "scope": "separate-source-test-branch",
+    "targetBranch": "test/lcd-de394-app667",
+    "parentCommit": "acc045575cac6a1e81a22bf2626f73194dd35034",
+    "stableOrMainModified": false
+  },
+  "openDeviceChecks": [
+    "Confirm permanent-error Retry/Back/No/Yes flows and restored settings on LCD with a safeguarded test corpus.",
+    "Verify no delayed replay of discarded preferences after leaving, reopening, reconnecting and restarting.",
+    "Measure same-corpus file transfer and resume throughput on the actual handset; host reads and MTU do not establish throughput.",
+    "Observe automatic free-space reclamation after commit and final-reader release, and compare file content after restart.",
+    "Physical Android DFU interruption/resumption remains open."
+  ],
+  "limitations": [
+    "Host/source/linked-ARM checks are not physical LCD/BLE/NFC/flash acceptance.",
+    "Discard restores scoped RAM choices and edit ownership without storage I/O; it does not claim rollback of an already committed part of an uncertain flash write.",
+    "The 3492-byte reduction compared with App665 is internal program flash, not extra external drive E capacity.",
+    "No private backup corpus, unique physical device identity, signing key or secret material is included."
+  ],
+  "buildPairReportSha256": "411f67fb8fa77047facc460bcfd1ff2182c0b268b83dc0921bff1f497062609c",
+  "linkedReportSha256": "26c0a1c82b41e48a5f6060d5ca9bc953e4d3503c370b1f16fa5dfeea45d96bc9",
+  "cryptoReportSha256": "50c701cd507627b1b7a9c4658c02734a7be31f11bedbe3f4b8bfae4fcf6fb8c1",
+  "firmwareQualificationPassed": true
+}

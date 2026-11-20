@@ -1,9 +1,10 @@
-/* Host dependencies for actual app callbacks. Settings persistence and visual
- * containers are mocked; the selected callbacks and their save/retry code are
- * copied unchanged from production by test_app_settings_save_ui.py. */
+/* Host dependencies for actual app callbacks, scene dispatcher and byte-level
+ * settings checkpoints. Persistence outcomes and visual containers are modeled;
+ * production callback/dispatcher/checkpoint functions are copied unchanged. */
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
@@ -36,12 +37,21 @@ static const char *fixture_language(const char *name) {
 #define AMIIDB_SCENE_FAV_SELECT 41
 #define AMIIDB_SCENE_DATA_SELECT 42
 #define AMIIDB_SCENE_SETTINGS_SLOT_NUM 2
+#define AMIIDB_SCENE_DATA_LIST 3
+#define BLE_AMIIBOLINK_MODE_RANDOM 1
+#define BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN 2
+#define BLE_AMIIBOLINK_MODE_CYCLE 3
+#define BLE_AMIIBOLINK_MODE_NTAG 4
+#define LANGUAGE_DE_DE 0
+#define getLanguage() LANGUAGE_DE_DE
 #define MINI_APP_ID_AMIIBO 50
 #define AMIIDB_SORT_COLUMN_DEFAULT 0
 #define ICON_EXIT 1
 #define ICON_SLOT 2
 #define ICON_SETTINGS 3
 #define ICON_KEY 4
+#define ICON_FAVORITE 5
+#define ICON_DATA 6
 #define ICON_MODE 0xe1ed
 #define ICON_BACK 0xe069
 
@@ -79,7 +89,7 @@ typedef struct {
     amiibo_view_t *p_amiibo_view;
     ntag_t ntag;
     bool focus_detail_file;
-    unsigned cur_slot_index;
+    unsigned cur_slot_index, prev_scene_id;
     const char *current_file;
     int amiibolink_mode;
 } test_app_t;
@@ -88,15 +98,30 @@ typedef test_app_t app_amiidb_t;
 typedef test_app_t app_amiibolink_t;
 typedef struct {
     bool auto_gen_amiibo, qrcode_enabled;
-    int amiibolink_mode, amiidb_sort_column, amiidb_data_slot_num;
+    uint8_t amiibolink_mode, amiidb_sort_column, amiidb_data_slot_num;
+    uint8_t unrelated;
 } settings_data_t;
-static settings_data_t ram, disk;
+/* SETTINGS_CHECKPOINT_TYPES */
+static settings_data_t ram, disk, discard_base;
+#define m_settings_data ram
+static uint32_t save_generation, edited_fields;
+static void (*m_recovered)(const settings_data_t *previous);
+/* SETTINGS_CHECKPOINT_FUNCTIONS */
 static int save_result, saves, previous, next_scene, shown, toasts, warnings, saved_logs, clears, no_key;
-static bool key_loaded = true;
+static bool key_loaded = true, commit_before_error;
+static amiibo_detail_view_t detail_view;
 static settings_data_t *settings_get_data(void) { return &ram; }
-#define SETTINGS_TOGGLE(field) (ram.field = !ram.field)
-#define SETTINGS_SET(field, value) (ram.field = (value))
-static int settings_save(void) { saves++; if (!save_result) disk = ram; return save_result; }
+#define SETTINGS_FIELD_MASK(field) (UINT32_C(1) << offsetof(settings_data_t, field))
+#define SETTINGS_TOGGLE(field) settings_toggle_byte(offsetof(settings_data_t, field))
+#define SETTINGS_SET(field, value) settings_set_byte(offsetof(settings_data_t, field), (value))
+#define SETTINGS_CHECKPOINT(field, checkpoint) settings_checkpoint_byte(offsetof(settings_data_t, field), (checkpoint))
+#define SETTINGS_DISCARD(field, checkpoint) settings_discard_byte(offsetof(settings_data_t, field), (checkpoint))
+static int settings_save(void) {
+    saves++;
+    if (!save_result || commit_before_error) disk = ram;
+    if (!save_result) { discard_base = ram; save_generation++; edited_fields = 0; }
+    return save_result;
+}
 #define NRF_LOG_INFO(...) ((void)saved_logs++)
 #define NRF_LOG_WARNING(...) ((void)warnings++)
 static void mui_msg_box_set_header(mui_msg_box_t *box, const char *s) { box->header = s; }
@@ -139,15 +164,27 @@ static void *mui(void) { return NULL; }
 static void mui_show_memory_error(void *p) { (void)p; assert(false); }
 
 static void reset_fixture(test_app_t *app, mui_list_view_t *list, mui_msg_box_t *box, unsigned view) {
-    memset(&ram, 0, sizeof(ram)); disk = ram;
+    memset(&ram, 0, sizeof(ram)); disk = discard_base = ram;
+    save_generation = edited_fields = 0; m_recovered = NULL; commit_before_error = false;
+    memset(&detail_view, 0, sizeof(detail_view));
     saves = previous = next_scene = toasts = warnings = saved_logs = clears = no_key = 0;
     save_result = 0; key_loaded = true; shown = view;
     memset(app, 0, sizeof(*app)); memset(list, 0, sizeof(*list)); memset(box, 0, sizeof(*box));
     list->user_data = app; list->rows = 8; box->user_data = app;
     app->p_list_view = list; app->p_msg_box = box;
+    app->p_amiibo_detail_view = app->p_amiibo_view = &detail_view;
 }
 static void check_save_error(mui_msg_box_t *box, unsigned view) {
     assert(shown == (int)view && previous == 0 && box->event_cb);
     assert(!strcmp(box->header, "DE3_SAVE_FAILED") && !strcmp(box->message, "DE3_SAVE_RAM_ONLY"));
-    assert(box->left && !box->center && box->right && box->focus == 0);
+    assert(!strcmp(box->left, "DE3_SAVE_RETRY_ACTION"));
+    assert(!strcmp(box->center, "DE3_SAVE_DISCARD_ACTION"));
+    assert(!strcmp(box->right, "BACK") && box->focus == MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+}
+
+static void check_discard_question(mui_msg_box_t *box, unsigned view) {
+    assert(shown == (int)view && box->event_cb);
+    assert(!strcmp(box->message, "DE3_SAVE_DISCARD_ASK"));
+    assert(!strcmp(box->left, "DE3_SAVE_YES_SHORT") && !box->center);
+    assert(!strcmp(box->right, "DE3_SAVE_NO_SHORT") && box->focus == MUI_MSG_BOX_EVENT_SELECT_RIGHT);
 }

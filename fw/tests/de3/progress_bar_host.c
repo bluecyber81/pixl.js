@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -77,10 +78,11 @@ static int app_pwm_channel_duty_set(void *p,int channel,unsigned duty) {
 static unsigned app_pwm_channel_duty_get(void*p,unsigned ch){CHECK(p==&pwm1 && ch==0);return last_duty;}
 /* ACTUAL_BACKLIGHT_STATE */
 /* ACTUAL_DISPLAY_SETTERS */
-typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p_toast_view,*p_view_dispatcher; } app_settings_t;
+typedef struct { mui_progress_bar_t *p_progress_bar; void *p_scene_dispatcher,*p_toast_view,*p_view_dispatcher; uint32_t changed_fields; } app_settings_t;
 static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;CHECK(false);}
 typedef struct { uint8_t lcd_backlight, oled_contrast; } settings_data_t;
 static settings_data_t settings;
+#define APP_SETTINGS_CHANGED(app,field) ((app)->changed_fields |= UINT32_C(1)<<offsetof(settings_data_t,field))
 #define SETTINGS_SET(field, value) (settings_get_data()->field = (value))
 static settings_data_t *settings_get_data(void) { return &settings; }
 static unsigned previous_scenes;

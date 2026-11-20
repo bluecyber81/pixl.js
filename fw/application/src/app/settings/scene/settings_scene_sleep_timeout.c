@@ -26,6 +26,7 @@ static void settings_scene_sleep_timeout_list_view_on_selected(mui_list_view_eve
     uint32_t selection = (uint32_t)p_item->user_data;
     if (selection < sizeof(timeout_seconds)) {
         SETTINGS_SET(sleep_timeout_sec, timeout_seconds[selection]);
+        APP_SETTINGS_CHANGED(app, sleep_timeout_sec);
         ble_set_standby_timeout(timeout_seconds[selection]);
     }
     mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);

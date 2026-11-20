@@ -1,5 +1,6 @@
 #include "mui_msg_box.h"
 #include "i18n/language.h"
+#include "mui_core.h"
 
 static uint8_t mui_msg_box_get_button_num(mui_msg_box_t *p_mui_msg_box) {
     return (string_size(p_mui_msg_box->btn_left_text) > 0) + (string_size(p_mui_msg_box->btn_center_text) > 0) +
@@ -14,36 +15,60 @@ static void mui_msg_box_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     uint8_t canvas_width = mui_canvas_get_width(p_canvas);
     uint8_t canvas_height = mui_canvas_get_height(p_canvas);
 
+    uint16_t left_width = string_size(p_mui_msg_box->btn_left_text)
+        ? mui_canvas_get_utf8_width(p_canvas, string_get_cstr(p_mui_msg_box->btn_left_text)) + 4u : 0;
+    uint16_t center_width = string_size(p_mui_msg_box->btn_center_text)
+        ? mui_canvas_get_utf8_width(p_canvas, string_get_cstr(p_mui_msg_box->btn_center_text)) + 4u : 0;
+    uint16_t right_width = string_size(p_mui_msg_box->btn_right_text)
+        ? mui_canvas_get_utf8_width(p_canvas, string_get_cstr(p_mui_msg_box->btn_right_text)) + 4u : 0;
+    uint8_t center_x = center_width < canvas_width ? (canvas_width - center_width) / 2 : 0;
+    uint8_t right_x = right_width < canvas_width ? canvas_width - right_width : 0;
+    uint8_t button_y = canvas_height > font_height + 4 ? canvas_height - font_height - 4 : 0;
+    uint8_t center_y = button_y;
+    /* Keep full action labels readable on the 128px LCD. When three buttons
+     * collide, the middle action gets its own row; focus/key order is unchanged. */
+    if (left_width && center_width && right_width &&
+        (left_width + 2 > center_x || center_x + center_width + 2 > right_x) &&
+        button_y >= font_height + 3) {
+        center_y -= font_height + 3;
+    }
+    uint8_t text_end = (left_width || center_width || right_width) ? center_y : canvas_height;
+    uint8_t text_height = text_end > font_height * 2 ? text_end - font_height * 2 : 0;
+
     mui_canvas_set_draw_color(p_canvas, 1);
     mui_canvas_draw_box(p_canvas, 0, 0, canvas_width, font_height + 1);
     mui_canvas_set_draw_color(p_canvas, 0);
     mui_canvas_draw_utf8(p_canvas, 2, font_height - 2, string_get_cstr(p_mui_msg_box->header));
     mui_canvas_set_draw_color(p_canvas, 1);
 
-    mui_element_autowrap_text(p_canvas, 0, font_height * 2, canvas_width, canvas_height - font_height,
+    mui_element_autowrap_text(p_canvas, 0, font_height * 2, canvas_width, text_height,
                               string_get_cstr(p_mui_msg_box->message));
 
     // Draw buttons
     if (string_size(p_mui_msg_box->btn_left_text) > 0) {
-        mui_element_button(p_canvas, 0, canvas_height - font_height - 2, string_get_cstr(p_mui_msg_box->btn_left_text),
+        mui_element_button(p_canvas, 0, button_y, string_get_cstr(p_mui_msg_box->btn_left_text),
                            p_mui_msg_box->focus == 0);
     }
 
     if (string_size(p_mui_msg_box->btn_center_text) > 0) {
         const char *text = string_get_cstr(p_mui_msg_box->btn_center_text);
-        mui_element_button(p_canvas, (canvas_width - mui_canvas_get_utf8_width(p_canvas, text)) / 2,
-                           canvas_height - font_height - 2, text, p_mui_msg_box->focus == 1);
+        mui_element_button(p_canvas, center_x, center_y, text, p_mui_msg_box->focus == 1);
     }
 
     if (string_size(p_mui_msg_box->btn_right_text) > 0) {
         const char *text = string_get_cstr(p_mui_msg_box->btn_right_text);
-        mui_element_button(p_canvas, canvas_width - mui_canvas_get_utf8_width(p_canvas, text) - 4,
-                           canvas_height - font_height - 2, text, p_mui_msg_box->focus == 2);
+        mui_element_button(p_canvas, right_x, button_y, text, p_mui_msg_box->focus == 2);
+    }
+    if (p_mui_msg_box->awaiting_frame) {
+        p_mui_msg_box->awaiting_frame = false;
+        mui_fence_input_after_frame();
     }
 }
 
 static void mui_msg_box_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     mui_msg_box_t *p_mui_msg_box = p_view->user_data;
+    /* A callback may replace this dialog without changing the active view. */
+    if (p_mui_msg_box->awaiting_frame) return;
     if (event->type == INPUT_TYPE_SHORT) {
         switch (event->key) {
         case INPUT_KEY_LEFT:
@@ -89,7 +114,9 @@ static void mui_msg_box_on_input(mui_view_t *p_view, mui_input_event_t *event) {
     }
 }
 
-static void mui_msg_box_on_enter(mui_view_t *p_view) {}
+static void mui_msg_box_on_enter(mui_view_t *p_view) {
+    ((mui_msg_box_t *)p_view->user_data)->awaiting_frame = true;
+}
 
 static void mui_msg_box_on_exit(mui_view_t *p_view) {}
 
@@ -139,11 +166,24 @@ void mui_msg_box_set_user_data(mui_msg_box_t *p_view, void *user_data) { p_view-
 void *mui_msg_box_get_user_data(mui_msg_box_t *p_view) { return p_view->user_data; }
 
 //// view functions //
-void mui_msg_box_set_event_cb(mui_msg_box_t *p_view, mui_msg_box_event_cb_t event_cb) { p_view->event_cb = event_cb; }
-void mui_msg_box_set_header(mui_msg_box_t *p_view, const char *header) { string_set_str(p_view->header, header); }
-void mui_msg_box_set_message(mui_msg_box_t *p_view, const char *message) { string_set_str(p_view->message, message); }
-void mui_msg_box_set_btn_focus(mui_msg_box_t *p_view, uint8_t focus) { p_view->focus = focus; }
+void mui_msg_box_set_event_cb(mui_msg_box_t *p_view, mui_msg_box_event_cb_t event_cb) {
+    p_view->event_cb = event_cb;
+    p_view->awaiting_frame = true;
+}
+void mui_msg_box_set_header(mui_msg_box_t *p_view, const char *header) {
+    string_set_str(p_view->header, header);
+}
+void mui_msg_box_set_message(mui_msg_box_t *p_view, const char *message) {
+    /* Progress captions keep the current actions and any held Cancel gesture.
+     * A new decision is armed by its buttons/callback or by entering the view. */
+    string_set_str(p_view->message, message);
+}
+void mui_msg_box_set_btn_focus(mui_msg_box_t *p_view, uint8_t focus) {
+    p_view->focus = focus;
+    p_view->awaiting_frame = true;
+}
 void mui_msg_box_set_btn_text(mui_msg_box_t *p_view, const char *left, const char *center, const char *right) {
+    p_view->awaiting_frame = true;
     if (left != NULL) {
         string_set_str(p_view->btn_left_text, left);
     } else {
@@ -170,6 +210,7 @@ void mui_msg_box_set_error(mui_msg_box_t *box, const char *message, mui_msg_box_
 }
 
 void mui_msg_box_reset(mui_msg_box_t *p_view) {
+    p_view->awaiting_frame = true;
     string_reset(p_view->header);
     string_reset(p_view->message);
     string_reset(p_view->btn_center_text);

@@ -21,6 +21,7 @@ static void settings_scene_oled_contrast_event_cb(mui_progress_bar_event_t event
     } else if (event == MUI_PROGRESS_BAR_EVENT_CONFIRMED) {
         mui_u8g2_set_contrast_level(value);
         SETTINGS_SET(oled_contrast, value);
+        APP_SETTINGS_CHANGED(app, oled_contrast);
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     }
 }

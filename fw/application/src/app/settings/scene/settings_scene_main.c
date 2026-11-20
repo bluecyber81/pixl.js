@@ -68,6 +68,73 @@ static void settings_scene_main_save_error(app_settings_t *app) {
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MSG_BOX);
 }
 
+/* Only the Home/Exit save failure offers a confirmed discard. A failed reset,
+ * reboot or DFU request must not turn into an implicit destructive action. */
+static void settings_scene_main_exit_choice(mui_msg_box_event_t event, mui_msg_box_t *box);
+static void settings_scene_main_exit_error(app_settings_t *app) {
+    app->confirm_discard = false;
+    mui_msg_box_set_header(app->p_msg_box, _T(DE3_SAVE_FAILED));
+    mui_msg_box_set_message(app->p_msg_box, _T(DE3_STORAGE_IO_ERROR));
+    mui_msg_box_set_btn_text(app->p_msg_box, _T(DE3_SAVE_RETRY_ACTION),
+                             _T(DE3_SAVE_DISCARD_ACTION), _T(BACK));
+    mui_msg_box_set_btn_focus(app->p_msg_box, MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+    mui_msg_box_set_event_cb(app->p_msg_box, settings_scene_main_exit_choice);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MSG_BOX);
+}
+
+static void settings_scene_main_request_exit(app_settings_t *app, bool discard) {
+    app->exit_discard = discard;
+    app->exit_saved = !discard;
+    mini_app_launcher_kill(mini_app_launcher(), MINI_APP_ID_SETTINGS);
+    /* The handle may already have been freed. A veto cancels this request,
+     * including its authorization to skip a future save. */
+    app = mini_app_launcher_get_app_handle(mini_app_launcher(), MINI_APP_ID_SETTINGS);
+    if (!app) return;
+    app->exit_discard = false;
+    app->exit_saved = false;
+    if (discard) settings_scene_main_exit_error(app);
+    else settings_scene_main_close_error(MUI_MSG_BOX_EVENT_SELECT_RIGHT, app->p_msg_box);
+}
+
+static void settings_scene_main_try_exit(app_settings_t *app, uint8_t diag_type) {
+    mui_msg_box_set_event_cb(app->p_msg_box, NULL);
+    mui_msg_box_set_header(app->p_msg_box, _T(APP_SET));
+    mui_msg_box_set_message(app->p_msg_box, _T(DE3_STORAGE_WORKING));
+    mui_msg_box_set_btn_text(app->p_msg_box, NULL, NULL, NULL);
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MSG_BOX);
+    mui_update_now(mui());
+    mui_nav_diag_save_begin(diag_type);
+    settings_storage_snapshot_invalidate(&app->storage_snapshot);
+    int32_t save_result = settings_save();
+    mui_nav_diag_save_result(diag_type, save_result);
+    if (save_result != NRF_SUCCESS) {
+        settings_scene_main_exit_error(app);
+        return;
+    }
+    settings_scene_main_request_exit(app, false);
+    mui_nav_diag_exit_returned(diag_type);
+}
+
+static void settings_scene_main_exit_choice(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_settings_t *app = box->user_data;
+    if (app->confirm_discard) {
+        app->confirm_discard = false;
+        if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) settings_scene_main_request_exit(app, true);
+        else settings_scene_main_exit_error(app);
+    } else if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
+        settings_scene_main_try_exit(app, INPUT_TYPE_SHORT);
+    } else if (event == MUI_MSG_BOX_EVENT_SELECT_CENTER) {
+        app->confirm_discard = true;
+        mui_msg_box_set_header(box, _T(MAIN_MENU));
+        mui_msg_box_set_message(box, _T(DE3_SAVE_DISCARD_ASK));
+        mui_msg_box_set_btn_text(box, _T(DE3_SAVE_YES_SHORT), NULL, _T(DE3_SAVE_NO_SHORT));
+        mui_msg_box_set_btn_focus(box, MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+        mui_msg_box_set_event_cb(box, settings_scene_main_exit_choice);
+    } else {
+        settings_scene_main_close_error(event, box);
+    }
+}
+
 static void settings_scene_main_msg_box_reset_settings_cb(mui_msg_box_event_t event, mui_msg_box_t *p_msg_box) {
     app_settings_t *app = p_msg_box->user_data;
     if (event == MUI_MSG_BOX_EVENT_SELECT_LEFT) {
@@ -96,6 +163,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
 #ifdef LCD_SCREEN
     case SETTINGS_MAIN_MENU_LCD_DIM:
         settings_cycle_lcd_dim();
+        APP_SETTINGS_CHANGED(app, backlight);
         settings_scene_main_reload(app);
         break;
     case SETTINGS_MAIN_MENU_BACK_LIGHT:
@@ -143,21 +211,25 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
 
     case SETTINGS_MAIN_MENU_LI_MODE:
         SETTINGS_TOGGLE(bat_mode);
+        APP_SETTINGS_CHANGED(app, bat_mode);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_SHOW_MEM_USAGE:
         SETTINGS_TOGGLE(show_mem_usage);
+        APP_SETTINGS_CHANGED(app, show_mem_usage);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_ENABLE_HIBERNATE:
         SETTINGS_TOGGLE(hibernate_enabled);
+        APP_SETTINGS_CHANGED(app, hibernate_enabled);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_ANIM_ENABLED:
         SETTINGS_TOGGLE(anim_enabled);
+        APP_SETTINGS_CHANGED(app, anim_enabled);
         settings_scene_main_reload(app);
         break;
 
@@ -169,17 +241,20 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
 
     case SETTINGS_MAIN_MENU_NO_SLEEP:
         SETTINGS_TOGGLE(no_sleep_mode);
+        APP_SETTINGS_CHANGED(app, no_sleep_mode);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_FLIP_DISPLAY:
         SETTINGS_TOGGLE(flip_display);
+        APP_SETTINGS_CHANGED(app, flip_display);
         mui_u8g2_set_flip_display(p_settings->flip_display);
         settings_scene_main_reload(app);
         break;
 
     case SETTINGS_MAIN_MENU_SWAP_BUTTONS:
         SETTINGS_TOGGLE(swap_buttons);
+        APP_SETTINGS_CHANGED(app, swap_buttons);
         settings_scene_main_reload(app);
         break;
 
@@ -187,27 +262,9 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, SETTINGS_SCENE_APP_MANAGEMENT);
         break;
 
-    case SETTINGS_MAIN_MENU_EXIT: {
-        /* Draw before the synchronous journal write without dispatching queued input. */
-        mui_msg_box_set_event_cb(app->p_msg_box, NULL);
-        mui_msg_box_set_header(app->p_msg_box, _T(APP_SET));
-        mui_msg_box_set_message(app->p_msg_box, _T(DE3_STORAGE_WORKING));
-        mui_msg_box_set_btn_text(app->p_msg_box, NULL, NULL, NULL);
-        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SETTINGS_VIEW_ID_MSG_BOX);
-        mui_update_now(mui());
-        mui_nav_diag_save_begin(diag_type);
-        settings_storage_snapshot_invalidate(&app->storage_snapshot);
-        int32_t save_result = settings_save();
-        mui_nav_diag_save_result(diag_type, save_result);
-        if (save_result != NRF_SUCCESS) {
-            settings_scene_main_save_error(app);
-            break;
-        }
-        app->exit_saved = true;
-        mini_app_launcher_kill(mini_app_launcher(), MINI_APP_ID_SETTINGS);
-        mui_nav_diag_exit_returned(diag_type);
+    case SETTINGS_MAIN_MENU_EXIT:
+        settings_scene_main_try_exit(app, diag_type);
         break;
-    }
 
     case SETTINGS_MAIN_MENU_REBOOT:
         settings_storage_snapshot_invalidate(&app->storage_snapshot);

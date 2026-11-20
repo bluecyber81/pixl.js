@@ -16,6 +16,7 @@
 #include "mui_msg_box.h"
 #include "mui_toast_view.h"
 #include "settings_storage_snapshot.h"
+#include "settings.h"
 
 typedef struct {
     mui_list_view_t *p_list_view;
@@ -27,8 +28,13 @@ typedef struct {
     mui_toast_view_t *p_toast_view;
     mui_view_dispatcher_t *p_view_dispatcher_toast;
 
-    /* Only the successful, immediately following Home exit may skip its second save. */
+    /* Exit authorizations apply only to the synchronous launcher request. */
     bool exit_saved;
+    bool exit_discard;
+    bool confirm_discard;
+    settings_checkpoint_t entry_settings;
+    uint32_t changed_fields;
+    uint16_t changed_apps;
 
     /* Session-only position of the parent menu, independent of submenu lists. */
     uint16_t main_focus;
@@ -54,6 +60,8 @@ typedef enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_PROGRESS_BAR, SETTINGS_VI
 void settings_device_test_open(app_settings_t *app);
 void settings_device_test_restore(app_settings_t *app);
 #endif
+
+#define APP_SETTINGS_CHANGED(app, field) ((app)->changed_fields |= SETTINGS_FIELD_MASK(field))
 
 extern mini_app_t app_settings_info;
 
