@@ -12,6 +12,7 @@ function harness(supported=true,extra={}){
     context.window=context;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
+    context.lcdPreviewPackage = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage;
     context.createScreenAwake = require('../public/dfu/screen-awake.mjs').createScreenAwake;
     context.bluetoothAccessIssue = require('../public/dfu/bluetooth-access.mjs').bluetoothAccessIssue;
     context.nrfDfuLink = require('../public/dfu/nrf-dfu-link.mjs').nrfDfuLink;
@@ -144,9 +145,9 @@ test('DFU speed and remaining time count only bytes acknowledged in this attempt
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
     for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource.split('?')[0])),resource);}
-    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.58.4"'));
-    assert.ok(html.indexOf('src="secure-dfu.js?v=3.58.4"')<html.indexOf('src="page.js?v=3.58.4"'));
-    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.58.4"'));
+    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.58.5"'));
+    assert.ok(html.indexOf('src="secure-dfu.js?v=3.58.5"')<html.indexOf('src="page.js?v=3.58.5"'));
+    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.58.5"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
     assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_94_667_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.89','https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','../guide/#android-de381','../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip','../guide/#lcd-de388','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.89','../guide/index.html#iphone','../','../licenses/index.html']);
@@ -185,8 +186,8 @@ test('DFU step labels follow all saved file-manager languages and tolerate block
     assert.equal(harness(true,{localStorage:{getItem(){throw Error('blocked');}}}).nodes.get('phases').lang,'de');
 });
 
-test('empty bundled catalogue does not claim availability or request a device',()=>{
- const h=harness();assert.match(h.nodes.get('bundled-info').textContent,/Kein mitgeliefertes Paket/);
+test('empty OLED catalogue does not claim availability or offer the private LCD package',()=>{
+ const h=harness(true,{location:new URL('https://example.test/dfu/web.html#board=OLED')});assert.match(h.nodes.get('bundled-info').textContent,/Kein mitgeliefertes Paket/);
  assert.equal(h.nodes.get('bundled').disabled,true);assert.equal(h.nodes.get('load-bundled').disabled,true);assert.equal(h.calls.length,0);
 });
 
@@ -358,4 +359,135 @@ test('the stable LCD application, requirements and test kit identify App662',()=
  assert.match(label,/LCD DE3\.89 \/ App662 · Prüfpaket/);
  assert.match(label,/LCD DE3\.89 \/ App662 · test kit/);
  assert.doesNotMatch(label,/App65[78]/);
+});
+
+
+test('App667 runtime choice and deep link retain the stable catalogue and never auto-load or select Bluetooth', () => {
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
+    const original = JSON.stringify(catalog), preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage;
+    const location = new URL('https://bluecyber81.github.io/pixl.js/dfu/web.html?package=' + preview.id);
+    location.hash = new URLSearchParams({board:'LCD', read:Date.now(), app:665, bl:21, sd:294});
+    const h = harness(true, {location, AllmiiboFirmwareReleases:catalog});
+    assert.equal(JSON.stringify(catalog), original);
+    assert.equal(catalog.packages[0].counter, 662);
+    assert.equal(catalog.packages.some(entry => entry.counter === 667), false);
+    assert.equal(h.nodes.get('bundled').value, preview.id);
+    assert.equal(h.nodes.get('bundled').children.filter(option => option.value === preview.id).length, 1);
+    assert.match(h.nodes.get('bundled').children.find(option => option.value === preview.id).textContent, /DE3\.94.*Testversion.*Z21/);
+    assert.equal(h.nodes.get('load-lcd-preview').disabled, false);
+    assert.equal(h.nodes.get('lcd-preview-download').hidden, false);
+    assert.equal(h.nodes.get('button').disabled, true);
+    assert.deepEqual(h.calls, []);
+    const native = new URL(h.nodes.get('android-dfu-link').href);
+    assert.deepEqual([...native.searchParams], [['file', 'https://bluecyber81.github.io/pixl.js/firmware/' + preview.file]]);
+    assert.equal(native.hash, '');
+    assert.equal(h.nodes.get('android-handoff').hidden, false);
+});
+
+test('App667 direct click uses the single bounded loader and keeps device selection a separate action', async () => {
+    const preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage;
+    const data = new Uint8Array(fs.readFileSync(path.join(__dirname, '../public/firmware', preview.file)));
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
+    let resolve, loaders = 0, fetches = 0, fetchedUrl, fetchOptions;
+    const response = new Promise(done => { resolve = done; });
+    class CheckedLoader extends Bundled.Loader {
+        constructor(options) {
+            loaders++;
+            super({...options, cryptoImpl:crypto.webcrypto, fetchImpl:(url, options) => {
+                fetches++; fetchedUrl = url; fetchOptions = options; return response;
+            }});
+        }
+    }
+    const location = new URL('https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.89-lcd-app');
+    location.hash = new URLSearchParams({board:'LCD', read:Date.now(), app:665, bl:21, sd:294});
+    const h = harness(true, {location, AllmiiboFirmwareReleases:catalog, AllmiiboBundledPackages:{Loader:CheckedLoader}});
+    assert.equal(loaders, 1);
+    assert.equal(h.nodes.get('load-bundled').disabled, true); // The selected stable App662 is older.
+    assert.equal(h.nodes.get('load-lcd-preview').disabled, false);
+    assert.equal(fetches, 0);
+    h.nodes.get('file').value = 'previous.zip';
+    const loading = h.nodes.get('load-lcd-preview').events.click();
+    assert.equal(h.nodes.get('file').value, '');
+    assert.equal(h.nodes.get('bundled').value, preview.id);
+    assert.equal(fetches, 1);
+    assert.equal(fetchedUrl, 'https://bluecyber81.github.io/pixl.js/firmware/' + preview.file);
+    assert.equal(fetchOptions.redirect, 'error');
+    assert.equal(fetchOptions.cache, 'no-store');
+    assert.equal(h.nodes.get('load-lcd-preview').disabled, true);
+    assert.equal(h.nodes.get('button').disabled, true);
+    assert.equal(h.nodes.get('cancel-bundled').hidden, false);
+    h.nodes.get('load-lcd-preview').events.click();
+    h.nodes.get('button').events.click();
+    assert.equal(fetches, 1);
+    let read = false;
+    resolve({ok:true, redirected:false, url:fetchedUrl, headers:{get:() => String(data.length)},
+        body:{getReader:() => ({read:async() => read ? {done:true} : (read=true,{done:false,value:data}), cancel:async()=>{},releaseLock(){}})}});
+    assert.equal(await loading, true);
+    assert.equal(h.nodes.get('load-lcd-preview').disabled, false);
+    assert.equal(h.nodes.get('button').disabled, false);
+    assert.equal(h.nodes.get('cancel-bundled').hidden, true);
+    assert.equal(h.calls.filter(([kind]) => kind === 'select').length, 0);
+    const loaded = h.calls.filter(([kind, file]) => kind === 'package' && file);
+    assert.equal(loaded.length, 1);
+    assert.equal(loaded[0][1].name, preview.file);
+    assert.deepEqual(new Uint8Array(await loaded[0][1].arrayBuffer()), data);
+    h.nodes.get('button').events.click();
+    assert.equal(h.calls.filter(([kind]) => kind === 'select').length, 1);
+});
+
+test('App667 direct and catalogue handlers share board, recent boot, downgrade, busy and loading guards', () => {
+    const preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage;
+    for (const sample of [
+        {app:665, bl:21, sd:294, allowed:true}, {app:667, bl:21, sd:294, allowed:true},
+        {app:668, bl:21, sd:294}, {app:665, bl:20, sd:294}, {app:665, bl:21, sd:259},
+        {app:665, bl:21, sd:294, board:'OLED'}, {app:665, bl:21, sd:294, duplicateBoard:true},
+        {app:665, bl:21, sd:294, state:{busy:true}}, {app:665, bl:21, sd:294, state:{loading:true}}
+    ]) {
+        const location = new URL('https://example.test/pixl.js/dfu/web.html?package=' + preview.id);
+        location.hash = new URLSearchParams({board:sample.board || 'LCD', read:Date.now(), app:sample.app, bl:sample.bl, sd:sample.sd});
+        if (sample.duplicateBoard) location.hash += '&board=OLED';
+        const h = harness(true, {location});
+        if (sample.state) h.options.onState(sample.state);
+        assert.equal(h.nodes.get('load-lcd-preview').disabled, !sample.allowed, JSON.stringify(sample));
+        assert.equal(h.nodes.get('load-bundled').disabled, !sample.allowed, JSON.stringify(sample));
+        assert.equal(h.nodes.get('android-handoff').hidden, !sample.allowed, JSON.stringify(sample));
+        if (!sample.allowed) {
+            h.nodes.get('load-lcd-preview').events.click();
+            h.nodes.get('load-bundled').events.click();
+        }
+        assert.deepEqual(h.calls, []);
+        assert.equal(h.nodes.get('lcd-preview-download').hidden, sample.board === 'OLED');
+    }
+});
+
+test('changing board invalidates a pending direct App667 download even if its response arrives later', async () => {
+    let resolve, signal;
+    const response = new Promise(done => { resolve = done; });
+    class DelayedLoader extends Bundled.Loader {
+        constructor(options) { super({...options, cryptoImpl:crypto.webcrypto, fetchImpl:(_url, options) => {
+            signal = options.signal; return response;
+        }}); }
+    }
+    const h = harness(true, {AllmiiboBundledPackages:{Loader:DelayedLoader}});
+    const loading = h.nodes.get('load-lcd-preview').events.click();
+    assert.equal(h.nodes.get('button').disabled, true);
+    h.nodes.get('board-profile').value = 'OLED';
+    h.nodes.get('board-profile').events.change();
+    assert.equal(signal.aborted, true);
+    resolve({});
+    assert.equal(await loading, false);
+    assert.equal(h.nodes.get('load-lcd-preview').disabled, true);
+    assert.equal(h.nodes.get('lcd-preview-download').hidden, true);
+    assert.equal(h.nodes.get('button').disabled, true);
+    assert.equal(h.calls.some(([kind, file]) => kind === 'select' || kind === 'package' && file), false);
+});
+
+test('firmware file picker advertises common ZIP and generic binary MIME types without promising native picker behavior', () => {
+    const input = html.match(/<input id="file"[^>]*>/)[0];
+    assert.match(input, /accept="\.zip,application\/zip,application\/x-zip-compressed,application\/octet-stream"/);
+    assert.match(input, /aria-describedby="firmware-file-help"/);
+    assert.match(html, /Firmware-ZIP, nicht das große Übergabearchiv/);
+    assert.match(html, /App667 direkt laden und prüfen/);
+    assert.match(html, /Load and check App667 directly/);
+    assert(html.indexOf('id="load-lcd-preview"') < html.indexOf('for="file"'), 'Direct App667 action precedes the manual file picker');
 });

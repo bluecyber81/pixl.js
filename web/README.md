@@ -1,6 +1,8 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.58.4 – LCD DE3.94 / App667
+## Dateimanager 3.58.5 – LCD DE3.94 / App667
+
+Ab 3.58.5 lässt sich das private LCD-Paket über **„App667 direkt laden und prüfen“** auf der DFU-Seite laden. Der Umweg über die lokale Dateiauswahl am Handy entfällt. Die vollständige ZIP wird vor der getrennten Bluetooth-Auswahl mit Größe, SHA-256, Inhalt und Zielprofil geprüft. Der Dateifilter berücksichtigt zusätzlich übliche ZIP- und Binär-MIME-Typen. [Direkt zur vorbereiteten App667-Auswahl](https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.5&package=de3.94-lcd-app).
 
 Diese Ausgabe enthält das signierte private LCD-Prüfpaket DE3.94 / App667, die dazu passende Diagnose und ein für diesen tatsächlichen Firmwarebuild qualifiziertes Speicherbedarfsprofil. Die Übertragungskorrekturen aus Web 3.58.3 sind enthalten. App665 und App664 bleiben als frühere private Pakete erkennbar; die stabile LCD-Auswahl bleibt App662, OLED behält seine eigenen Profile. [Bedienung, Paketidentitäten und Prüfgrenzen](LIESMICH_LCD_APP667_PRIVAT.txt).
 

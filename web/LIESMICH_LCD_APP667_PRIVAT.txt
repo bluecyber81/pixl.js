@@ -1,4 +1,4 @@
-Allmiibo Dateimanager 3.58.4 – LCD DE3.94 / App667
+Allmiibo Dateimanager 3.58.5 – LCD DE3.94 / App667
 =================================================
 
 Enthaltene private Firmware
@@ -22,9 +22,21 @@ https://github.com/bluecyber81/pixl.js/tree/22d5c92cc566fb7da9d43a538f2818d28bfb
 
 Bedienung am Handy
 ------------------
-Auf der DFU-Seite LCD wählen, das private Prüfpaket DE3.94 / App667
-herunterladen und unter „Eigene Firmware-ZIP“ auswählen. Die Seite prüft
-ZIP, Zielzähler, Boardzuordnung und Paketidentität vor der Geräteauswahl.
+Diese Seite im Bluetooth-fähigen Browser öffnen:
+https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.5&package=de3.94-lcd-app
+
+Auf der DFU-Seite LCD wählen und „App667 direkt laden und prüfen“ antippen.
+Ein vorheriger Download oder eine lokale Dateiauswahl ist dafür nicht nötig.
+Nach erfolgreicher Prüfung das Allmiibo in den Update-/DFU-Modus bringen
+und „DFU-Gerät auswählen und übertragen“ antippen. Bluetooth startet erst
+durch diese zweite Aktion. Die Seite prüft Größe, SHA-256, ZIP, Zielzähler,
+Boardzuordnung und Paketidentität vor der Geräteauswahl.
+
+Alternativ ist der unveränderte Download unter „Eigene Firmware-ZIP“
+auswählbar. Die Firmware-ZIP hat 361633 Byte, also rund 362 kB; das große
+Übergabearchiv ist kein direkt installierbares Firmwarepaket. Für Android
+steht bei der App667-Auswahl auch „In nRF DFU öffnen“ bereit; die Annahme
+dieses Links durch eine installierte Handy-App muss am Handy geprüft werden.
 Die Signatur und die Installationsvoraussetzungen prüft der Bootloader.
 Nach dem Update im Dateimanager die Diagnose neu lesen und Version,
 App-Zähler sowie gemeldete SourceID mit der Referenz vergleichen.
@@ -33,8 +45,9 @@ Geräte-BINs und identifiziert auch kein eindeutiges physisches Gerät.
 
 Die frühere private App665 und App664 bleiben erkennbar. Die öffentliche
 stabile LCD-Auswahl bleibt App662. OLED behält seine eigenen Pakete.
-Web 3.58.4 enthält die bereits veröffentlichten Übertragungskorrekturen
-von 3.58.3 und die neue Paket-/Diagnose-/Kapazitätszuordnung für App667.
+Web 3.58.5 ergänzt den direkten Paketladeweg und die Dateifilterkorrektur.
+Es enthält die Übertragungskorrekturen von 3.58.3 sowie die Paket-/Diagnose-/
+Kapazitätszuordnung für App667 aus 3.58.4. Das Firmwarepaket ist bytegleich.
 
 Speicherbedarfssimulator und Quellen
 ------------------------------------
