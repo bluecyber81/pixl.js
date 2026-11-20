@@ -1224,6 +1224,62 @@ test('two downloads serialize full open/read/close transactions, never replace t
     f.rx(0x12,[0]);await flush();f.rx(0x14,[2]);await flush();f.rx(0x13);await second;
     assert.deepEqual(downloads,[[1],[2]]);
 });
+// Invalid caller paths must finish through callbacks without stranding the
+// shared file queue, even when the small-read capability path would apply.
+for (const [label, invalidPath] of [
+    ['null', null], ['undefined', undefined], ['number', 7], ['object', {}],
+    ['relative', 'relative.bin'], ['embedded NUL', 'E:/bad\0name.bin'],
+    ['long filename', 'E:/' + 'a'.repeat(48)],
+    ['long path', 'E:/' + 'a'.repeat(31) + '/' + 'b'.repeat(31)]
+]) for (const [mode, options] of [
+    ['legacy', {}],
+    ['small-read candidate', {exact_size:1,max_bytes:1,firmware_version:nativeVersion}]
+]) test(`invalid download path ${label} (${mode}) finishes once and permits the next download`, async () => {
+    const f=protocolFixture();let failed=0,done=0,settled=0,rejected=0,received;
+    const invalid=f.api.vfs_helper_read_file(invalidPath,()=>assert.fail('invalid path succeeded'),
+        error=>{assert(error instanceof Error);failed++;},()=>done++,options)
+        .then(()=>settled++,()=>rejected++);
+    await flush();
+    assert.deepEqual([failed,done,settled,rejected],[1,1,1,0]);
+    assert.deepEqual(f.writes,[],'invalid paths must not probe, open or close a device handle');
+    assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,0);
+    assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+    const next=f.api.vfs_helper_read_file('E:/next.bin',data=>{received=bytes(data);},error=>assert.fail(error));
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12]);
+    f.rx(0x12,[7]);await flush();f.rx(0x14,[42]);await flush();f.rx(0x13);await next;await invalid;
+    assert.deepEqual(received,[42]);
+    assert.deepEqual([failed,done,settled,rejected],[1,1,1,0]);
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12,0x14,0x13]);
+    assert.deepEqual(f.writes.at(-1).slice(4),[7]);
+    assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+    assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+});
+
+test('an invalid queued download cannot close another download handle or block the following file',async()=>{
+    const f=protocolFixture(),received=[];let errors=0,done=0;
+    const first=f.api.vfs_helper_read_file('E:/first.bin',data=>received.push(bytes(data)),error=>assert.fail(error));
+    f.rx(0x12,[5]);await flush();
+    const invalid=f.api.vfs_helper_read_file(null,()=>assert.fail('invalid path succeeded'),()=>errors++,()=>done++);
+    const next=f.api.vfs_helper_read_file('E:/next.bin',data=>received.push(bytes(data)),error=>assert.fail(error));
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12,0x14]);
+    assert.deepEqual([errors,done],[0,0]);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,2);
+    f.rx(0x14,[1]);await flush();
+    assert.deepEqual(f.writes.at(-1),[0x13,0,0,0,5]);
+    assert.deepEqual([errors,done],[0,0]);
+    f.rx(0x13);await first;await flush();
+    assert.deepEqual([errors,done],[1,1]);
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12,0x14,0x13,0x12]);
+    f.rx(0x12,[9]);await flush();f.rx(0x14,[2]);await flush();f.rx(0x13);
+    await Promise.all([invalid,next]);
+    assert.deepEqual(received,[[1],[2]]);assert.deepEqual([errors,done],[1,1]);
+    assert.deepEqual(f.writes.filter(frame=>frame[0]===0x13).map(frame=>frame[4]),[5,9]);
+    assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,0);
+    assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+});
+
 test('download and upload share one complete file-transaction queue',async()=>{
     const f=protocolFixture();let uploaded=0;
     const read=f.api.vfs_helper_read_file('E:/one.bin',()=>{},e=>assert.fail(e),()=>{});

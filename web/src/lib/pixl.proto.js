@@ -874,6 +874,10 @@ function vfs_process_file_read(entry) {
         entry.finish(new Error('Invalid download options'));
         return;
     }
+    // Validate before inspecting the path or probing/opening a device handle.
+    // Synchronous caller errors must still release the shared file queue.
+    try { path_validation(entry.path); }
+    catch (error) { entry.finish(error); return; }
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }

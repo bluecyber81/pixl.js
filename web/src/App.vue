@@ -1204,6 +1204,11 @@ export default {
         assertSession: () => this.assert_session(generation),
         readDirectory: async path => { this.assert_session(generation); const data = this.checked(await proto.vfs_read_folder(path)); this.assert_session(generation); return data; },
         readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, exact_size:options.exactBytes, firmware_version:this.firmwareVersion, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
+        readFileDigest: async (path, size) => {
+          this.assert_session(generation);
+          const digest = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
+          this.assert_session(generation); return digest;
+        },
         writeFile: (path, bytes, options = {}) => new Promise((resolve, reject) => {
           try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject, {rawMeta128:options.rawMeta128, beforeWrite:options.beforeWrite}); }
           catch(error) { reject(error); }

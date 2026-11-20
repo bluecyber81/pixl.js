@@ -1,6 +1,6 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.2';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.3';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
 import { lcdPreviews } from './lcd-private-reference.mjs';
 

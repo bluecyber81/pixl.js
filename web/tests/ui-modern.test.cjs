@@ -109,6 +109,168 @@ function harness(overrides = {}) {
 }
 const connected = h => { h.instance.connected = true; h.instance.current_dir = 'E:/'; return h.instance; };
 
+// Exercise the real upload entry point, its adapters, safeUpload and the real
+// protocol's digest/read queues. Only device storage and GATT are simulated.
+async function digestUploadHarness({ firmwareVersion = '2.22.0-DE3.92', size = 540,
+  replace = false, omitDigest = false, digestReply } = {}) {
+  const { safeUpload } = await import('../src/lib/safe-upload.js');
+  const { memoryVfs, metadata, localFile } = await import('./helpers/memory-vfs.mjs');
+  const { readDigestWire } = require('./helpers/read-digest-wire.cjs');
+  const vfs = memoryVfs(), target = 'E:/tags/a.bin', source = new Uint8Array(size).fill(3);
+  const oldMetadata = metadata(0x80, 'Preserve this note');
+  if (replace) vfs.put(target, new Uint8Array(size).fill(1), oldMetadata);
+  const wire = await readDigestWire(vfs, { digestReply }), digestCalls = [], progress = [];
+  const h = harness({ safeUploads: true,
+    safeUpload: options => safeUpload({ ...options, randomToken: () => 'abcdef012345' }),
+    vfs_read_folder: async path => ({ status: 0, data: await vfs.api.readDirectory(path) }),
+    vfs_helper_read_file: (...args) => wire.api.vfs_helper_read_file(...args),
+    vfs_backup_digest: (path, size, version) => {
+      digestCalls.push({ path, size, version });
+      vfs.log.push({ op: 'digest', args: [path, size] });
+      return wire.api.vfs_backup_digest(path, size, version);
+    },
+    vfs_helper_write_file(path, blob, onProgress, success, error) {
+      blob.arrayBuffer().then(buffer => vfs.api.writeFile(path, new Uint8Array(buffer), { onProgress }))
+        .then(() => success(), error);
+    },
+    vfs_rename: async (from, to) => { await vfs.api.rename(from, to); return { status: 0 }; },
+    vfs_remove: async path => { await vfs.api.remove(path); return { status: 0 }; },
+    vfs_update_meta: async (path, meta) => { await vfs.api.updateMetadata(path, meta); return { status: 0 }; },
+  });
+  const app = connected(h);
+  wire.bus.on('ble_disconnected', () => app.on_ble_disconnected());
+  app.current_dir = 'E:/tags'; app.firmwareVersion = firmwareVersion; app.replaceUploads = replace;
+  if (omitDigest) {
+    // Reproduce the published adapter wiring before this change; the same
+    // production read helper still selects 0x24 for this App665 connection.
+    const adapters = app.transfer_adapters;
+    app.transfer_adapters = generation => { const result = adapters(generation); delete result.readFileDigest; return result; };
+  }
+  return { app, vfs, wire, digestCalls, progress, source, target, oldMetadata,
+    run: () => app.on_upload_request({ file: localFile('a.bin', source), onProgress: value => progress.push(value.percent) }) };
+}
+function verificationNotifications(fixture) {
+  const packets = fixture.wire.replies.filter(frame => [0x14, 0x21, 0x24].includes(frame[0]) && frame[1] === 0);
+  return { frames: packets.length, payloadBytes: packets.reduce((sum, frame) => sum + frame.length - 4, 0),
+    wireBytes: packets.reduce((sum, frame) => sum + frame.length, 0) };
+}
+const digestMutations = fixture => fixture.vfs.log.filter(entry => ['write', 'rename', 'remove', 'meta'].includes(entry.op));
+
+test('small upload digest uses the real App665 SHA path for both stage and target with fewer verification notifications', async t => {
+  const before = await digestUploadHarness({ omitDigest: true }), after = await digestUploadHarness();
+  await before.run(); await after.run();
+  assert.deepEqual(before.wire.requests.map(frame => frame[0]), [0x22, 0x24, 0x24]);
+  assert.deepEqual(after.wire.requests.map(frame => frame[0]), [0x21, 0x21]);
+  assert.deepEqual(verificationNotifications(before), { frames: 6, payloadBytes: 1080, wireBytes: 1104 });
+  assert.deepEqual(verificationNotifications(after), { frames: 2, payloadBytes: 64, wireBytes: 72 });
+  assert.deepEqual(after.digestCalls, [
+    { path: 'E:/tags/~uabcdef012345', size: 540, version: '2.22.0-DE3.92' },
+    { path: after.target, size: 540, version: '2.22.0-DE3.92' },
+  ]);
+  assert.deepEqual(digestMutations(after), digestMutations(before));
+  assert.deepEqual(after.vfs.bytes(after.target), Array.from(after.source));
+  assert.equal(after.app.transferHistory.at(-1).verified, true);
+  assert.equal(after.app.pendingUploads, 0);
+  assert.deepEqual(after.wire.errors, []);
+  t.diagnostic('Deterministic GATT247 mock, not measured phone speed: two 540-byte checks use 6 -> 2 data notifications, 1080 -> 64 content bytes, 1104 -> 72 NUS bytes. The previous fresh-session path additionally issued one 0x22 capability probe (20 response bytes).');
+});
+
+test('small upload digest preserves replacement metadata and checks the original twice plus stage and final target', async () => {
+  const f = await digestUploadHarness({ replace: true });
+  await f.run();
+  assert.deepEqual(f.wire.requests.map(frame => frame[0]), [0x21, 0x21, 0x21, 0x21]);
+  assert.deepEqual(f.digestCalls.map(call => call.path), [f.target, 'E:/tags/~uabcdef012345', f.target, f.target]);
+  assert.deepEqual(f.vfs.nodes.get(f.target).meta, f.oldMetadata);
+  assert.deepEqual(f.vfs.bytes(f.target), Array.from(f.source));
+  const log = f.vfs.log, firstRename = log.findIndex(entry => entry.op === 'rename');
+  assert.equal(log.slice(0, firstRename).filter(entry => entry.op === 'digest').length, 3);
+  const finalDigest = log.findLastIndex(entry => entry.op === 'digest');
+  assert(log.findIndex(entry => entry.op === 'remove') > finalDigest);
+  assert.equal(f.vfs.nodes.has('E:/tags/~babcdef012345'), false);
+  assert.equal(f.app.transferHistory.at(-1).verified, true);
+});
+
+for (const variant of [
+  { name: 'older LCD', firmwareVersion: '2.22.0-DE3.65', size: 540, commands: [0x12, 0x14, 0x13, 0x12, 0x14, 0x13] },
+  { name: 'OLED', firmwareVersion: '2.22.0-DE3.87-OLEDt6', size: 540, commands: [0x12, 0x14, 0x13, 0x12, 0x14, 0x13] },
+  { name: 'larger than 572 bytes', firmwareVersion: '2.22.0-DE3.92', size: 573, commands: [0x12, 0x14, 0x13, 0x12, 0x14, 0x13] },
+  { name: 'explicitly unsupported SHA command', firmwareVersion: '2.22.0-DE3.92', size: 540,
+    digestReply: () => ({ status: 255, payload: [] }), commands: [0x21, 0x22, 0x24, 0x24] },
+]) {
+  test('small upload digest retains exact full-read verification for ' + variant.name, async () => {
+    const f = await digestUploadHarness(variant);
+    await f.run();
+    assert.deepEqual(f.wire.requests.map(frame => frame[0]), variant.commands);
+    assert(f.digestCalls.every(call => call.version === variant.firmwareVersion && call.size === variant.size));
+    assert.equal(verificationNotifications(f).payloadBytes, variant.size * 2);
+    assert.deepEqual(f.vfs.bytes(f.target), Array.from(f.source));
+    assert.equal(f.app.transferHistory.at(-1).verified, true);
+    assert.deepEqual(f.wire.errors, []);
+  });
+}
+
+for (const failure of [
+  { name: 'device ERR', reply: { status: 1, payload: [] }, matches: error => error.cmd === 0x21 && error.status === 1 },
+  { name: '31-byte reply', reply: { payload: new Uint8Array(31) }, matches: /Invalid backup digest length/ },
+  { name: '33-byte reply', reply: { payload: new Uint8Array(33) }, matches: /response exceeds the byte limit/, disconnected: true },
+  { name: 'SHA mismatch', reply: { payload: new Uint8Array(32) }, matches: { code: 'UPLOAD_VERIFY' } },
+]) {
+  test('small upload digest fails before publication without a full-read fallback on ' + failure.name, async () => {
+    const f = await digestUploadHarness({ digestReply: () => failure.reply });
+    await assert.rejects(f.run(), failure.matches);
+    assert.deepEqual(f.wire.requests.map(frame => frame[0]), [0x21]);
+    assert.equal(f.vfs.nodes.has(f.target), false);
+    assert.equal(f.vfs.nodes.has('E:/tags/~uabcdef012345'), !!failure.disconnected);
+    assert.equal(f.vfs.log.some(entry => entry.op === 'rename'), false);
+    assert.equal(f.app.transferHistory.at(-1).status, failure.disconnected ? 'interrupted' : 'failed');
+    assert.equal(f.app.pendingUploads, 0);
+    assert.equal(f.progress.includes(100), false);
+  });
+}
+
+test('small upload digest never reports verified success when the final target SHA fails', async () => {
+  const f = await digestUploadHarness({ digestReply: ({ path, hashBytes }) =>
+    path === 'E:/tags/a.bin' ? { status: 1, payload: [] } : { payload: hashBytes } });
+  await assert.rejects(f.run(), error => error.cmd === 0x21 && error.status === 1);
+  assert(f.wire.requests.every(frame => frame[0] === 0x21));
+  assert.deepEqual(f.vfs.bytes(f.target), Array.from(f.source));
+  assert.equal(f.app.transferHistory.at(-1).status, 'failed');
+  assert.equal(f.app.transferHistory.some(entry => entry.verified), false);
+  assert.equal(f.progress.includes(100), false);
+});
+
+test('small upload digest adapter rejects both an already stale session and a valid SHA from a replaced session', async () => {
+  const early = await digestUploadHarness({ replace: true });
+  const stale = early.app.transfer_adapters(early.app.sessionGeneration);
+  ++early.app.sessionGeneration;
+  await assert.rejects(stale.readFileDigest(early.target, 540), /sessionChanged/);
+  assert.equal(early.digestCalls.length, 0); assert.equal(early.wire.requests.length, 0);
+
+  const gate = deferred(), entered = deferred();
+  const late = await digestUploadHarness({ replace: true, digestReply: input => { entered.resolve(input); return gate.promise; } });
+  const current = late.app.transfer_adapters(late.app.sessionGeneration);
+  const pending = current.readFileDigest(late.target, 540);
+  const { hashBytes } = await entered.promise;
+  ++late.app.sessionGeneration;
+  gate.resolve({ payload: hashBytes });
+  await assert.rejects(pending, /sessionChanged/);
+  assert.deepEqual(late.wire.requests.map(frame => frame[0]), [0x21]);
+});
+
+test('small upload digest cannot publish a staged file after a connection changes during its SHA read', async () => {
+  const gate = deferred(), entered = deferred();
+  const f = await digestUploadHarness({ digestReply: input => { entered.resolve(input); return gate.promise; } });
+  const pending = f.run(), input = await entered.promise;
+  f.app.on_ble_disconnected();
+  gate.resolve({ payload: input.hashBytes });
+  await assert.rejects(pending, /sessionChanged/);
+  assert.deepEqual(f.wire.requests.map(frame => frame[0]), [0x21]);
+  assert.equal(f.vfs.log.some(entry => entry.op === 'rename'), false);
+  assert.equal(f.vfs.nodes.has(f.target), false);
+  assert.equal(f.vfs.nodes.has('E:/tags/~uabcdef012345'), true);
+  assert.equal(f.progress.includes(100), false);
+});
+
 test('an OLED connection keeps its updater board hint through a missing boot read and disconnect', async () => {
   let version = '2.22.0-DE3.81-OLEDt3';
   const h = harness({get_version: async () => ({status:0, data:{ver:version}})});
@@ -515,7 +677,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.58.2'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.58.3'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -527,7 +689,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.58.2.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.58.3.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -614,7 +776,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.58.2.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.58.3.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1796,10 +1958,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.58.2.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.58.3.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.58.2.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.58.3.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2714,7 +2876,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.58.2');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.58.3');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
