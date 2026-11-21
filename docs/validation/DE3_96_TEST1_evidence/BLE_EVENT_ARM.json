@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "device_access": false,
+  "sourceId": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+  "binSha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+  "cases": [
+    "linked_initial_data_baseline_off_unknown_result",
+    "bounds_and_uninitialized_do_not_write_or_call_sdk",
+    "registered_v3_and_guarded_direct_query_preserve_v2_prefix",
+    "explicit_enable_disable_with_actual_option_abi_and_critical_region",
+    "sdk_rejection_preserves_both_prior_states_and_reports_exact_error",
+    "linked_vfs_idle_gate_blocks_mutation_but_not_query",
+    "session_mode_release_wrong_handle_and_work_gates",
+    "malformed_requests_and_nonrequest_events_do_not_call_sdk",
+    "v1_v2_unchanged_after_test_mutation",
+    "profile_and_handle_changes_preserve_global_sdk_setting"
+  ],
+  "testStateFieldBytes": 5,
+  "sdkBoundaryCalls": 14,
+  "sdkBoundary": "sd_ble_opt_set; S112 SVC 0x67, option ID 2",
+  "scope": "Linked Cortex-M4 application code; seeded RAM and modeled option API return values. No physical SoftDevice acceptance, radio timing, throughput, reboot or installation test."
+}

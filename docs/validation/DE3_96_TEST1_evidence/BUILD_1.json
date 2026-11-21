@@ -1,0 +1,60 @@
+{
+  "status": "unsigned_development",
+  "mode": "development",
+  "version": "2.22.0-DE3.96",
+  "counter": 669,
+  "board": "LCD",
+  "backend": "native",
+  "sdk_image": null,
+  "network": "no downloads performed",
+  "signed": false,
+  "device_access": false,
+  "version_header_sha256": "0cade6487928979404c677ff9b439c30b38484498901d09de33923cb76ff8f94",
+  "sdk_header_override": {
+    "path": "components/softdevice/s112/headers/nrf_nvic.h",
+    "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+    "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+  },
+  "expected_bin_sha256": null,
+  "source_tar_sha256": "94a0b7b1250d1ae708f725f63f544d70be3ffc070f651fa40550871aba38e242",
+  "native_tools": {
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "compiler_sha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "make": "GNU Make 4.4.1",
+    "sdk_archive_sha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "sdk_copy_patched": true,
+    "input_sdk_modified": false,
+    "environment_policy": "PATH/HOME/TMPDIR only; fixed locale and build variables"
+  },
+  "exit_code": 0,
+  "source_id_sha256": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+  "source_input_count": 709,
+  "linker_budget": {
+    "binary_bytes": 363312,
+    "linker_flash_used_bytes": 363324,
+    "observed": {
+      "flash_reserve_bytes": 9412,
+      "heap_stack_gap_bytes": 1688,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "artifacts_sha256": {
+    "pixljs.bin": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+    "pixljs.hex": "c33de6298f9a8b0226bf57603555e4e61218482b65e1b8cf0695ae6f60966ec8",
+    "pixljs.out": "6a12d271d580a62d859e829f16c18e4ea6bbb9b83e7336e3a702cbf85c33cb2a",
+    "pixljs.map": "7f14cecc8e75b60e3475aee5ef8ee718a474fd4eda3bf20b5f6a1f3c5d257ed7"
+  },
+  "matches_archived_release_binary": false,
+  "archived_release_version": "2.22.0-DE3.89",
+  "matches_expected_binary": null,
+  "stack_usage": {
+    "report_sha256": "aa91920719cc0c08cb6d05c095591e22c6fc8c331d6ddb1c50c2cca04393e2fc",
+    "files": 372,
+    "frames": 4253
+  }
+}
