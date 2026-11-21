@@ -1,0 +1,31 @@
+Exact App666 / LCD DE3.93 simulator source binding
+=================================================
+Firmware SourceID: 415e85895e35e4f06cede89d6efbbe7e905290205723f0b31e9ddda9f05ac12a
+Engine SHA256: 7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e
+WASM SHA256: f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96
+
+The six core/LittleFS files are byte-identical to the frozen LCD App666 build.
+Its signed application package is a separate artifact; this WASM never updates
+a device. The RAM-only simulation harness and freestanding helpers are retained
+from the private App665 profile. Source hashes cover the full 12-file source set.
+The App665 profile, stable release, OLED profiles and prior pins are unchanged.
+
+This profile uses the same pinned WASI SDK 34.0 Linux x86_64 toolchain as App665:
+Clang 23.1.0-wasi-sdk / LLVM commit 895aa2c896ada719451be2e3673c83da8ddf1141.
+https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34
+https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz
+Archive SHA256: b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4
+Compiler/linker binary hashes and exact versions: SOURCE_BINDING.json.
+The compiler is not included. Verify the archive hash before extracting it.
+
+Reproduce from the root of the extracted source archive:
+  python3 web/scripts/build-capacity-de393.py --sdk /path/to/wasi-sdk-34.0-x86_64-linux --output /path/to/new-evidence-directory
+The dedicated builder checks compiler/linker binary hashes and versions,
+all source hashes, the engine identity, and exact output bytes. It disables
+SDK default config explicitly and compares against the shipped WASM.
+
+Fresh App665/App666 cross-mount and actual linked ARM layout qualification
+are recorded in docs/validation/DE3_93_PFS.json.
+The simulator executes no device operations. Its capacity estimate does
+not establish physical free space, device speed, power-cut safety or hardware
+acceptance. License notices are included as GPL-2.0-LICENSE and LITTLEFS-LICENSE.md.
