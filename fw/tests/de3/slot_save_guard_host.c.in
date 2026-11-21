@@ -19,6 +19,7 @@ typedef struct {
     void *p_scene_dispatcher, *p_toast_view, *p_view_dispatcher;
     amiidb_slot_info_t pending_save_target;
     ntag_t ntag;
+    bool temporary_tag_changed;
 } app_amiidb_t;
 enum { MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_RIGHT,
        AMIIDB_VIEW_ID_LIST, AMIIDB_VIEW_ID_MSG_BOX };
@@ -105,17 +106,19 @@ int main(void) {
     mui_list_item_t first_row={0};
     amiidb_scene_data_list_amiibo_slot_info_cb(&slots[0],&app);first_row.icon=visible_icon;
     REQUIRE(amiidb_api_slot_read(0,&app.ntag)==0 && app.ntag.data[100]==0x5a);
-    app.ntag.data[100]=0x69;
+    app.ntag.data[100]=0x69;app.temporary_tag_changed=true;
     amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&first_row);
     REQUIRE(view==AMIIDB_VIEW_ID_MSG_BOX && default_button==MUI_MSG_BOX_EVENT_SELECT_RIGHT && !next_scene);
     REQUIRE(!strcmp(header,"Slot 01 ersetzen?") && !strcmp(message,"Belegt"));
     ntag_t reread;
     selected(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
     REQUIRE(view==AMIIDB_VIEW_ID_LIST && !next_scene && amiidb_api_slot_read(0,&reread)==0 && reread.data[100]==0x5a);
+    REQUIRE(app.temporary_tag_changed);
     amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&first_row);
     list.focus=2;  /* Confirmation must keep the original target even if list focus changes. */
     selected(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);
     REQUIRE(next_scene==AMIIDB_SCENE_AMIIBO_DETAIL && amiidb_api_slot_read(0,&reread)==0 && reread.data[100]==0x69);
+    REQUIRE(!app.temporary_tag_changed);
     REQUIRE(amiidb_api_slot_read(2,&reread)==VFS_ERR_NOOBJ);
     next_scene=0;
     mui_list_item_t empty={.icon=ICON_FILE};
@@ -161,9 +164,10 @@ int main(void) {
     amiidb_slot_caption(shortened,sizeof(shortened),"abcÄbcdef");
     REQUIRE(!strcmp(shortened,"abc..."));
     puts("PASS free-slot preselection; numbered unknown ID; read-only icon and guard; target change rejected; named dialog and UTF-8 ellipsis.");
-    list.focus=6;
+    list.focus=6;app.temporary_tag_changed=true;
     amiidb_scene_data_select_list_view_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&empty);
     REQUIRE(!next_scene && !strcmp(toast,getLangString(_L_DE3_STORAGE_IO_ERROR)));
+    REQUIRE(app.temporary_tag_changed);
     REQUIRE(vfs_packed_handles_idle()); REQUIRE(driver()->umount()==0);
     slot_count=0; REQUIRE(amiidb_api_slot_list(get_slot,NULL)<0 && slot_count==0);
     puts("Unmounted drive: error, no empty slots emitted");

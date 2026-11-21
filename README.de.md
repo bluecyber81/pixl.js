@@ -2,7 +2,21 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
-## LCD DE3.89 / App662 · stabile Firmware
+## LCD DE3.98 / App671 · normale Firmware
+
+Für **Allmiibo LCD/ST7567 mit vorhandenem Packed LittleFS (PFS1), Z21 und S112 7.3.0**: [signierte App-ZIP herunterladen](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip) oder [Web-Updater mit App671 öffnen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app#board=LCD). Wähle die ungeöffnete ZIP in nRF Device Firmware Update aus. Das Paket aktualisiert die Anwendung und enthält keinen Bootloader oder SoftDevice.
+
+App671 übernimmt die bereits in App670 vorhandenen Verbesserungen für Sammellesen, Prüfsummen, CRC und sicheres Speichern. Neu sind weniger überlappende Stackbelegung, der Erhalt ungespeicherter temporärer NFC-Änderungen bei Navigation und Aufwachen, ergänzte Import-/Rückkehrabläufe sowie die Speicherfreigabediagnose im normalen Build. Die experimentelle Funkverlängerung und das zusätzliche Mount-Profiling sind im normalen Build nicht enthalten. [Änderungsbeschreibung](docs/DE3_98_RELEASE.md) · [Paket- und Softwareprüfungen](docs/validation/DE3_98.json)
+
+Zwei unabhängige lokale Builds liefern identische BIN- und HEX-Dateien. Das signierte Paket hat die Firmware-Suiten, Prüfungen am verknüpften ARM-Programm und die tatsächlichen Z21-Prüffunktionen in Simulation bestanden. Der erste praktische Durchlauf der neuen App671 steht noch aus; frühere App670-Beobachtungen bleiben gesondert zugeordnet.
+
+## Dateimanager 3.61.0 · normale Website
+
+[Normalen Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Webquellen und Prüfungen](https://github.com/bluecyber81/pixl.js/tree/web-app671/web)
+
+Die normale Website wählt App671 aus, prüft die tatsächlichen signierten Paketbytes und enthält den passenden Kapazitätssimulator. Die vorhandenen Sammel-/Prüfsummenabfragen für Sicherungen bleiben erhalten. Ältere LCD-Testpfade und OLED-Downloads bleiben getrennt. Die Webquellen liegen auf `web-app671`; der Webordner dieses Firmwarebranches ist nicht der veröffentlichte Webstand.
+
+## Archiv: LCD DE3.89 / App662
 
 | Dein LCD-Gerät | Passender Download |
 | --- | --- |
@@ -14,7 +28,7 @@ Sichere deine Dateien und wähle die gepackte ZIP in **nRF Device Firmware Updat
 
 Am 19. November 2026 bestätigte der Besitzer den erfolgreichen Praxistest auf seinem LCD. Der Dateimanager 3.58.2 las App662, die passende LCD-Buildkennung, Z21 und S112 7.3.0 aus. Der Zeitvergleich mit Mochi auf App662 und die Wiederaufnahme eines unterbrochenen Android-Firmwareupdates sind noch offen. [Gerätenachweis](docs/validation/DE3_89_LCD_READBACK.json)
 
-## Dateimanager 3.58.2
+## Archiv: Dateimanager 3.58.2
 
 Vorschau, Prüfung und Sicherung kleiner Dateien können diese mit einer einzigen Anfrage auslesen. Bei einer erneuten Suche prüft der Browser, ob sich der Speicher seit der letzten Suche geändert hat. Einen unterbrochenen Ordnerupload kannst du im selben Tab nach dem Wiederverbinden fortsetzen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
 

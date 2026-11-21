@@ -42,7 +42,7 @@ enum {INPUT_KEY_LEFT,INPUT_KEY_CENTER,INPUT_KEY_RIGHT};
 enum {INPUT_TYPE_PRESS,INPUT_TYPE_RELEASE,INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_TYPE_REPEAT};
 enum {AMIIBO_VIEW_EVENT_UPDATE,AMIIBO_VIEW_EVENT_DESC_UPDATE,AMIIBO_VIEW_EVENT_MENU};
 enum {AMIIDB_SCENE_GAME_LIST,AMIIDB_SCENE_FAV_LIST,AMIIDB_SCENE_AMIIBO_SEARCH,
-      AMIIDB_SCENE_RECENT,AMIIDB_SCENE_DATA_LIST,AMIIDB_SCENE_AMIIBO_DETAIL_MENU};
+      AMIIDB_SCENE_RECENT,AMIIDB_SCENE_DATA_LIST,AMIIDB_SCENE_AMIIBO_DETAIL_MENU,AMIIDB_SCENE_AMIIBO_DETAIL};
 enum {AMIIDB_VIEW_ID_DETAIL,FAV_TYPE_FAV=1};
 typedef unsigned ret_code_t,amiibo_view_event_t,ntag_event_type_t;
 typedef struct {unsigned type,key;} mui_input_event_t;
@@ -66,6 +66,7 @@ typedef struct {
     void *p_scene_dispatcher,*p_view_dispatcher;
     ntag_t ntag;
     unsigned prev_scene_id,result_count;
+    bool resume_tag,temporary_tag_changed;
     const db_amiibo_t *result_items[24],*cur_amiibo;
     uint8_t cur_slot_index,game_id_index,search_game_id;
     uint8_t game_id_path[8];
@@ -73,8 +74,8 @@ typedef struct {
     fav_array_t fav_array;
     char cur_fav_dir[64];
 } app_amiidb_t;
-typedef struct {uint8_t amiidb_data_slot_num;} settings_data_t;
-static settings_data_t settings={10};
+typedef struct {uint8_t amiidb_data_slot_num;bool auto_gen_amiibo;} settings_data_t;
+static settings_data_t settings={.amiidb_data_slot_num=10};
 static db_amiibo_t figures[24];
 static amiidb_fav_t favorites[24];
 static unsigned favorite_count;
@@ -93,6 +94,12 @@ static void amiibo_view_set_ntag(amiibo_view_t*v,ntag_t*n){v->ntag=n;}
 static void amiibo_view_set_event_cb(amiibo_view_t*v,void(*cb)(amiibo_view_event_t,amiibo_view_t*)){v->event_cb=cb;}
 static settings_data_t *settings_get_data(void){return &settings;}
 static bool ntag_emu_prepare_change(void){prepares++;return allow;}
+static bool ntag_emu_session_used(void){return false;}
+static void ntag_emu_cancel_change(void){}
+static const ntag_t *ntag_emu_get_current_tag(void){return &rf_tag;}
+static uint32_t to_little_endian_int32(const uint8_t*p){return (uint32_t)p[0]<<24|(uint32_t)p[1]<<16|(uint32_t)p[2]<<8|p[3];}
+static unsigned mui_scene_dispatcher_current_scene(void*d){(void)d;return AMIIDB_SCENE_AMIIBO_DETAIL;}
+static void amiidb_scene_detail_back_to_list(app_amiidb_t*a){(void)a;abort();}
 static bool ntag_emu_set_tag(ntag_t*n){rf_sets++;rf_tag=*n;return true;}
 static void ntag_emu_set_update_cb(void(*cb)(ntag_event_type_t,void*,ntag_t*),void*app){(void)cb;(void)app;}
 static void ntag_update_cb(ntag_event_type_t t,void*c,ntag_t*n){(void)t;(void)c;(void)n;}
@@ -132,9 +139,10 @@ static void reset_counts(void){prepares=reads=generates=rf_sets=recent_notes=err
 int main(int argc,char**argv){
     (void)m_generate_generation;
     CHECK(argc==2);unsigned id=(unsigned)atoi(argv[1]);
-    bool scroll=id>=120;
-    unsigned route=scroll?(id-120)/4:id/24;
-    unsigned mode=scroll?0:id%4;
+    bool menu_reentry=id>=140;
+    bool scroll=id>=120&&!menu_reentry;
+    unsigned route=menu_reentry?(id-140)/4:scroll?(id-120)/4:id/24;
+    unsigned mode=menu_reentry?(id-140)%4:scroll?0:id%4;
     unsigned direction=scroll?((id-120)%4)/2:(id/4)%2;
     unsigned position=scroll?1:(id/8)%3;
     CHECK(route<5);
@@ -152,6 +160,18 @@ int main(int argc,char**argv){
     CHECK(m_tag_ready&&detail.focus==active&&detail.max_ntags==count&&views==1&&rf_sets==1&&!errors);
     CHECK(detail.event_cb==amiidb_scene_amiibo_view_on_event);
     reset_counts();
+    if(menu_reentry){
+        app.temporary_tag_changed=true;app.ntag.data[16]=0x55;
+        if(mode==1)memset(app.ntag.data+84,0x77,8);
+        rf_tag=app.ntag;ntag_t retained=app.ntag;
+        if(mode==2)rf_tag.data[16]^=1;
+        if(mode==3)allow=false;
+        amiidb_scene_amiibo_detail_on_enter(&app);
+        if(mode<2){CHECK(m_tag_ready&&app.temporary_tag_changed&&!generates&&rf_sets==1&&!errors);CHECK(!memcmp(&retained,&app.ntag,sizeof(retained))&&!memcmp(&retained,&rf_tag,sizeof(retained)));}
+        else if(mode==2){CHECK(m_tag_ready&&!app.temporary_tag_changed&&generates==1&&rf_sets==1);CHECK(!memcmp(&app.ntag,&rf_tag,sizeof(rf_tag)));}
+        else {CHECK(!m_tag_ready&&app.temporary_tag_changed&&!generates&&!rf_sets);CHECK(!memcmp(&retained,&app.ntag,sizeof(retained)));}
+        printf("PASS retained temporary menu reentry origin=%u mode=%u\n",route,mode);return 0;
+    }
     mui_view_t view={.user_data=&detail};
     mui_input_event_t input={.type=INPUT_TYPE_SHORT,.key=direction?INPUT_KEY_RIGHT:INPUT_KEY_LEFT};
     unsigned expected=(active+count+(direction?1:-1))%count;
@@ -258,7 +278,7 @@ def run(args):
     if built.returncode:
         raise RuntimeError(built.stdout + built.stderr)
     cases = []
-    for case in range(140):
+    for case in range(156):
         negative = case < 96 and case % 4 in (0, 2)
         expected = 71 if args.original_negative_control and negative else 0
         env = dict(os.environ, ASAN_OPTIONS='detect_leaks=0')

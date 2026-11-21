@@ -125,7 +125,7 @@ UID = r'''
 #define AMIIDB_DETAIL_MENU_RAND_UID 1
 typedef unsigned ret_code_t;
 typedef struct {int placeholder;} db_amiibo_t;
-typedef struct {ntag_t ntag;void*p_toast_view,*p_scene_dispatcher;} app_amiibo_t;
+typedef struct {ntag_t ntag;bool temporary_tag_changed;void*p_toast_view,*p_scene_dispatcher;} app_amiibo_t;
 typedef app_amiibo_t app_amiidb_t;
 static bool keys=true,known=true,crypto_ok=true;
 static unsigned rng_error,fatal_errors,toasts,back,rf_sets,no_keys;
@@ -139,7 +139,7 @@ static void amiibo_helper_get_uuid(ntag_t*n,uint8_t*out){memcpy(out,n->data,7);}
 static void amiibo_helper_replace_uuid(uint8_t*out,const uint8_t*uuid,bool v3){(void)v3;out[1]=uuid[1];}
 static ret_code_t amiibo_helper_set_defaults(uint8_t*out,const uint8_t*uuid,bool v3){(void)out;(void)uuid;(void)v3;return NRF_SUCCESS;}
 static void mui_toast_view_show(void*v,const char*s){(void)v;(void)s;toasts++;}
-static void ntag_emu_set_tag(ntag_t*n){(void)n;rf_sets++;}
+static bool ntag_emu_set_tag(ntag_t*n){(void)n;rf_sets++;return true;}
 static void mui_scene_dispatcher_previous_scene(void*v){(void)v;back++;}
 static void amiibo_scene_amiibo_detail_no_key_msg(app_amiibo_t*a){(void)a;no_keys++;}
 static void amiidb_scene_amiibo_detail_no_key_msg(app_amiidb_t*a){(void)a;no_keys++;}
@@ -148,7 +148,7 @@ static void file_menu(app_amiibo_t*app){switch(1){/*ACTUAL_FILE_CASE*/}}
 static void db_menu(app_amiidb_t*app){switch(1){/*ACTUAL_DB_CASE*/}}
 int main(int argc,char**argv){
     CHECK(argc==2);unsigned id=(unsigned)atoi(argv[1]),menu=id/6,mode=id%6;
-    app_amiibo_t app={0};app.ntag.type=NTAG_215;app.ntag.data[0]=4;app.ntag.data[1]=0x22;
+    app_amiibo_t app={.temporary_tag_changed=true};app.ntag.type=NTAG_215;app.ntag.data[0]=4;app.ntag.data[1]=0x22;
     app.ntag.data[84]=0x10;app.ntag.data[88]=0x20;strcpy((char*)app.ntag.notes,"keep this note");
     if(mode==0)crypto_ok=false;
     if(mode==1)rng_error=18;
@@ -158,6 +158,7 @@ int main(int argc,char**argv){
     ntag_t before=app.ntag;
     if(menu)db_menu(&app);else file_menu(&app);
     CHECK(!fatal_errors);
+    if(menu)CHECK(app.temporary_tag_changed==(mode!=5));
     if(mode<3){CHECK(toasts==1&&!back&&!rf_sets&&!no_keys);CHECK(!memcmp(&before,&app.ntag,sizeof(before)));}
     else if(mode==3){CHECK(no_keys==1&&!toasts&&!back&&!rf_sets);CHECK(!memcmp(&before,&app.ntag,sizeof(before)));}
     else if(mode==4){CHECK(!no_keys&&!toasts&&!back&&!rf_sets);CHECK(!memcmp(&before,&app.ntag,sizeof(before)));}

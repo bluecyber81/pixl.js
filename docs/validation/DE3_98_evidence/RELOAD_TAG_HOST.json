@@ -1,0 +1,421 @@
+{
+  "passed": true,
+  "negative_control": false,
+  "cases": [
+    {
+      "test": "file",
+      "scenario": 0,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual file creation RNG case 0, completed files=0\n",
+      "stderr": ""
+    },
+    {
+      "test": "file",
+      "scenario": 1,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual file creation RNG case 1, completed files=1\n",
+      "stderr": ""
+    },
+    {
+      "test": "file",
+      "scenario": 2,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual file creation RNG case 2, completed files=0\n",
+      "stderr": ""
+    },
+    {
+      "test": "file",
+      "scenario": 3,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual file creation RNG case 3, completed files=1\n",
+      "stderr": ""
+    },
+    {
+      "test": "file",
+      "scenario": 4,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual file creation RNG case 4, completed files=3\n",
+      "stderr": ""
+    },
+    {
+      "test": "slot",
+      "scenario": 0,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual slot API + NFC engine RNG case 0\n",
+      "stderr": ""
+    },
+    {
+      "test": "slot",
+      "scenario": 1,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual slot API + NFC engine RNG case 1\n",
+      "stderr": ""
+    },
+    {
+      "test": "slot",
+      "scenario": 2,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual slot API + NFC engine RNG case 2\n",
+      "stderr": ""
+    },
+    {
+      "test": "slot",
+      "scenario": 3,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual slot API + NFC engine RNG case 3\n",
+      "stderr": ""
+    },
+    {
+      "test": "slot",
+      "scenario": 4,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual slot API + NFC engine RNG case 4\n",
+      "stderr": ""
+    },
+    {
+      "test": "slot",
+      "scenario": 5,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual slot API + NFC engine RNG case 5\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 0,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 0\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 1,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 1\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 2,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 2\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 3,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 3\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 4,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 4\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 5,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 5\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 6,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 6\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 7,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 7\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 8,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 8\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 9,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 9\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 10,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 10\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 11,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 12,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 13,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 14,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 15,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 16,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 17,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 18,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 19,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 20,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 21,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS direct reload pending-save/owner case 21\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 22,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS direct reload pending-save/owner case 22\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_external",
+      "scenario": 23,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS direct reload pending-save/owner case 23\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 0,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 0\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 1,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 1\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 2,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 2\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 3,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 3\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 4,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 4\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 6,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 6\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 7,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 7\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 8,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 8\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 9,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 9\n",
+      "stderr": ""
+    },
+    {
+      "test": "link_internal",
+      "scenario": 10,
+      "expected": 0,
+      "returncode": 0,
+      "passed": true,
+      "stdout": "PASS actual AmiiboLink scene + NFC engine case 10\n",
+      "stderr": ""
+    }
+  ],
+  "device_access": false,
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "leak_sanitizer": false,
+  "limits": [
+    "Actual source callbacks and NFC engine; RNG, storage and radio HAL are injected.",
+    "No physical NFC, device UI, latency or ARM build/stack measurement."
+  ]
+}

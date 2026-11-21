@@ -1,0 +1,9 @@
+test_amiibo_auto_uid_retry_and_confirmed_discard_exit (__main__.AppSettingsSaveUiTests.test_amiibo_auto_uid_retry_and_confirmed_discard_exit) ... ok
+test_amiibolink_mode_failure_retry_back_and_discard_exit (__main__.AppSettingsSaveUiTests.test_amiibolink_mode_failure_retry_back_and_discard_exit) ... ok
+test_amiidb_auto_uid_and_qr_discard_only_selected_option (__main__.AppSettingsSaveUiTests.test_amiidb_auto_uid_and_qr_discard_only_selected_option) ... ok
+test_amiidb_sort_discard_exits_without_hidden_save_after_guard (__main__.AppSettingsSaveUiTests.test_amiidb_sort_discard_exits_without_hidden_save_after_guard) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.358s
+
+OK

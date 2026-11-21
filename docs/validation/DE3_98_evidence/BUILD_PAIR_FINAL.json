@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "passed": true,
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.98",
+  "applicationCounter": 671,
+  "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "engineSha256": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d",
+  "binarySha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "binaryBytes": 364180,
+  "intelHexSha256": "4a6c84a457cd220c9b3cb953dbbc6793af4664a2cdd38be4583f9deac7e5d072",
+  "productionInputCount": 709,
+  "productionInputsSha256": "a274361b051853e464264bf1a630027b88633aa07a5ad87f713b6b6e3f0e0ae1",
+  "builds": [
+    {
+      "folder": "builds/app671-release1",
+      "buildRecordSha256": "c053acc4a8381a17d5292a0e4857817ea19ffd32e938b384a2dce8c5a6bebe52",
+      "status": "unsigned_candidate",
+      "artifacts": {
+        "pixljs.bin": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+        "pixljs.hex": "4a6c84a457cd220c9b3cb953dbbc6793af4664a2cdd38be4583f9deac7e5d072",
+        "pixljs.out": "d08f4c054459447c460139e0708e9b9c7f5181044e665f48c6781f48bbeb4c94",
+        "pixljs.map": "276685709257eb2fb93ccd2c4b28331bfdba34b83900ac7cbb18e2d89e5afaa9"
+      }
+    },
+    {
+      "folder": "builds/app671-release2",
+      "buildRecordSha256": "b957831e8aee50d4f0832dadc3cae0eea05bdf0ac68d537d1f312bc30c52eb68",
+      "status": "passed",
+      "artifacts": {
+        "pixljs.bin": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+        "pixljs.hex": "4a6c84a457cd220c9b3cb953dbbc6793af4664a2cdd38be4583f9deac7e5d072",
+        "pixljs.out": "e41de83ea2303a92ef2f8b7834c3f10c7cea45619ad89373a4685b7c699b7ff4",
+        "pixljs.map": "04754269b4fd6b4dd63f5945b745c8e82bfc46b2358d905015ded46d3f40e2fd"
+      }
+    }
+  ],
+  "identical": [
+    "pixljs.bin",
+    "pixljs.hex",
+    "production-inputs.json"
+  ],
+  "linkerBudget": {
+    "binary_bytes": 364180,
+    "linker_flash_used_bytes": 364200,
+    "observed": {
+      "flash_reserve_bytes": 8536,
+      "heap_stack_gap_bytes": 1720,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "physicalDeviceAccess": false,
+  "supersedes": "first_normal_phase/BUILD_PAIR_FINAL.json (before the final temporary-write retention guard)",
+  "productionCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "localProductionCommit": "465a4b0572f8c0d22e899b2110fb88ff8c6015a4",
+  "productionTree": "23ff354cd04e387a0af4e2b0b43823074515a0a9"
+}

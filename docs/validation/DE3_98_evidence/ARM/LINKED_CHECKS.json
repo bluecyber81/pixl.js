@@ -1,0 +1,326 @@
+{
+  "applicationBinSHA256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "elfSHA256": "d08f4c054459447c460139e0708e9b9c7f5181044e665f48c6781f48bbeb4c94",
+  "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "deviceAccess": false,
+  "checks": [
+    {
+      "name": "STACK_WATERMARK",
+      "script": "check_stack_watermark_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_stack_watermark_elf.py",
+        "builds/app671-release1/pixljs.out"
+      ],
+      "exitCode": 0,
+      "log": "STACK_WATERMARK.log",
+      "elapsedSeconds": 0.116,
+      "checkerSHA256": "8714ee998a76b77f9a60b1d039d4e6f63bf37b15b1ccf63332a420d05accc3e5",
+      "logSHA256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953",
+      "sourceLogSHA256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953"
+    },
+    {
+      "name": "AES_M4",
+      "script": "check_aes_m4_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_aes_m4_elf.py",
+        "builds/app671-release1/pixljs.out",
+        "builds/app671-release1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "AES_M4.log",
+      "elapsedSeconds": 0.167,
+      "checkerSHA256": "30472daebb64b69e2f10e1d80be939fbf66dbb51d98808216fae0aa61172a7c8",
+      "logSHA256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1",
+      "sourceLogSHA256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1"
+    },
+    {
+      "name": "SHA256_HMAC",
+      "script": "check_sha256_hmac_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_sha256_hmac_elf.py",
+        "builds/app671-release1/pixljs.out",
+        "builds/app671-release1/pixljs.bin",
+        "--json",
+        "qualification-work/ARM_RELEASE/SHA256_HMAC.json"
+      ],
+      "exitCode": 0,
+      "log": "SHA256_HMAC.log",
+      "elapsedSeconds": 0.171,
+      "checkerSHA256": "be980d7fc7c850d9f71e1f9b0a0535793915ddb49324b9ccf2ccb1e256ae131a",
+      "logSHA256": "67be4d951f6c23acf105d4149b7918c91735f2fe8d77ed189d7f400628914b98",
+      "reports": [
+        {
+          "file": "SHA256_HMAC.json",
+          "sha256": "8205e0626a70f595ad1c796143cafda11569dd5e15fb5164d3431f65439162a3",
+          "bytes": 219,
+          "sourceReportSha256": "8205e0626a70f595ad1c796143cafda11569dd5e15fb5164d3431f65439162a3"
+        }
+      ],
+      "sourceLogSHA256": "67be4d951f6c23acf105d4149b7918c91735f2fe8d77ed189d7f400628914b98"
+    },
+    {
+      "name": "BUILD_FAULT",
+      "script": "check_build_fault_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_build_fault_elf.py",
+        "builds/app671-release1",
+        "--json",
+        "qualification-work/ARM_RELEASE/BUILD_FAULT.json"
+      ],
+      "exitCode": 0,
+      "log": "BUILD_FAULT.log",
+      "elapsedSeconds": 0.114,
+      "checkerSHA256": "74d36cf4ba76e96cde7664ee6a5aa2d4eb026fd4c6a6e39f96b52f4e2b51827e",
+      "logSHA256": "1b690664da2bb990ee700d57fed8e1b972ae487f9376773adde4a365f7a98043",
+      "reports": [
+        {
+          "file": "BUILD_FAULT.json",
+          "sha256": "b9710862573bfbc3dd168693a0b44543566959a55c70a0d05df530247f089ffd",
+          "bytes": 1534,
+          "sourceReportSha256": "b9710862573bfbc3dd168693a0b44543566959a55c70a0d05df530247f089ffd"
+        }
+      ],
+      "sourceLogSHA256": "1b690664da2bb990ee700d57fed8e1b972ae487f9376773adde4a365f7a98043"
+    },
+    {
+      "name": "LCD_DEVICE_TEST",
+      "script": "check_lcd_device_test_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_lcd_device_test_elf.py",
+        "builds/app671-release1",
+        "--out",
+        "qualification-work/ARM_RELEASE/LCD_DEVICE_TEST.json"
+      ],
+      "exitCode": 0,
+      "log": "LCD_DEVICE_TEST.log",
+      "elapsedSeconds": 0.419,
+      "checkerSHA256": "3f54f31df7a7c068bb3183c277f26e0871d709eebad6be9b3b25f57dac2a7c2f",
+      "logSHA256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5",
+      "reports": [
+        {
+          "file": "LCD_DEVICE_TEST.json",
+          "sha256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5",
+          "bytes": 4885,
+          "sourceReportSha256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5"
+        }
+      ],
+      "sourceLogSHA256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5"
+    },
+    {
+      "name": "LCD_GAME_ROTATION",
+      "script": "check_lcd_game_rotation_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_lcd_game_rotation_elf.py",
+        "builds/app671-release1",
+        "--out",
+        "qualification-work/ARM_RELEASE/LCD_GAME_ROTATION.json"
+      ],
+      "exitCode": 0,
+      "log": "LCD_GAME_ROTATION.log",
+      "elapsedSeconds": 2.68,
+      "checkerSHA256": "da56f3198d14f0148c1d540b12d6e3c6b277d432e35eddbf440ca2c69381643c",
+      "logSHA256": "7aee50cd2d9dc5ba04aa9b093647a701ed03efcab683755702b55f2fd3c7178c",
+      "reports": [
+        {
+          "file": "LCD_GAME_ROTATION.json",
+          "sha256": "27935ee0416f9aaea7f55731602d004e911ed0e0e4a4ad7c4b19dcd131ee85de",
+          "bytes": 13267,
+          "sourceReportSha256": "4fe0ff6cac06843078ef2072ab3a22fc6f2a855e5fe11a51829f80ee1d78373f"
+        }
+      ],
+      "sourceLogSHA256": "7aee50cd2d9dc5ba04aa9b093647a701ed03efcab683755702b55f2fd3c7178c"
+    },
+    {
+      "name": "FLASH_JEDEC",
+      "script": "check_flash_jedec_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_flash_jedec_elf.py",
+        "builds/app671-release1/pixljs.out",
+        "builds/app671-release1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "FLASH_JEDEC.log",
+      "elapsedSeconds": 0.067,
+      "checkerSHA256": "95078d1bed7353feac3c4ec1cafbf406c9a6e3d239a478ecf0da287b93b46577",
+      "logSHA256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca",
+      "sourceLogSHA256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca"
+    },
+    {
+      "name": "DISPLAY_PROFILE",
+      "script": "check_display_profile_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_display_profile_elf.py",
+        "builds/app671-release1/pixljs.out",
+        "builds/app671-release1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "DISPLAY_PROFILE.log",
+      "elapsedSeconds": 0.115,
+      "checkerSHA256": "5f6ff1a3d8c965a4b2d1eb4818cc3259c4932f2864fdace8342fd2c56fd9cbf8",
+      "logSHA256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86",
+      "sourceLogSHA256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86"
+    },
+    {
+      "name": "CHAMELEON_SAVE_SCREEN",
+      "script": "check_chameleon_save_screen_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_chameleon_save_screen_elf.py",
+        "builds/app671-release1",
+        "--out",
+        "qualification-work/ARM_RELEASE/CHAMELEON_SAVE_SCREEN.json"
+      ],
+      "exitCode": 0,
+      "log": "CHAMELEON_SAVE_SCREEN.log",
+      "elapsedSeconds": 0.621,
+      "checkerSHA256": "35efccc373cd12dbcafd3397a505c01f43dc8154a109c47b9b90e0d0e090031e",
+      "logSHA256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2",
+      "reports": [
+        {
+          "file": "CHAMELEON_SAVE_SCREEN.json",
+          "sha256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2",
+          "bytes": 5216,
+          "sourceReportSha256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2"
+        }
+      ],
+      "sourceLogSHA256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2"
+    },
+    {
+      "name": "FIRST_MENU",
+      "script": "check_first_menu_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_first_menu_elf.py",
+        "builds/app671-release1/pixljs.out",
+        "builds/app671-release1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "FIRST_MENU.log",
+      "elapsedSeconds": 0.115,
+      "checkerSHA256": "b53bced2a786c8d6e20b8dff37b547293c05ec860ea6424d2c41231bd8cdab34",
+      "logSHA256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9",
+      "sourceLogSHA256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9"
+    },
+    {
+      "name": "BLE_LINK",
+      "script": "check_ble_link_elf.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_ble_link_elf.py",
+        "builds/app671-release1",
+        "--json",
+        "qualification-work/ARM_RELEASE/BLE_LINK.json"
+      ],
+      "exitCode": 0,
+      "log": "BLE_LINK.log",
+      "elapsedSeconds": 0.114,
+      "checkerSHA256": "fd13bc488697aff09291bf5ab4d5a15f84d9b29725216eb8dd51c5cc911d16a2",
+      "logSHA256": "0041f32af6418f4514594f380cbcb670057b7ba81a809606adf68db26300e675",
+      "reports": [
+        {
+          "file": "BLE_LINK.json",
+          "sha256": "596b06bce9ccf6fc9f9d13cf83b8d6e44d8a57f0ff1461495dc2e0e3aa62482d",
+          "bytes": 743,
+          "sourceReportSha256": "596b06bce9ccf6fc9f9d13cf83b8d6e44d8a57f0ff1461495dc2e0e3aa62482d"
+        }
+      ],
+      "sourceLogSHA256": "0041f32af6418f4514594f380cbcb670057b7ba81a809606adf68db26300e675"
+    },
+    {
+      "name": "BATCH_READ",
+      "script": "check_batch_read_elf_de397.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_batch_read_elf_de397.py",
+        "builds/app671-release1",
+        "--expected-counter",
+        "671",
+        "--json",
+        "qualification-work/ARM_RELEASE/BATCH_READ.json"
+      ],
+      "exitCode": 0,
+      "log": "BATCH_READ.log",
+      "elapsedSeconds": 4.25,
+      "checkerSHA256": "b549be1c369b3ba85ae3e776435bdaba9a7391d1f9bfa12bd6d84690ab331acb",
+      "logSHA256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa",
+      "reports": [
+        {
+          "file": "BATCH_READ.json",
+          "sha256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa",
+          "bytes": 1116,
+          "sourceReportSha256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa"
+        }
+      ],
+      "sourceLogSHA256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa"
+    },
+    {
+      "name": "NORMAL_RELEASE",
+      "script": "check_normal_lcd_release_elf_de398.py",
+      "command": [
+        "toolchains/test_venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_normal_lcd_release_elf_de398.py",
+        "builds/app671-release1",
+        "--json",
+        "qualification-work/ARM_RELEASE/NORMAL_RELEASE.json"
+      ],
+      "exitCode": 0,
+      "log": "NORMAL_RELEASE.log",
+      "elapsedSeconds": 0.217,
+      "checkerSHA256": "1d369729be9be6b7d462d71435894797f41807a2f81965e60d689f9b524d4714",
+      "logSHA256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+      "reports": [
+        {
+          "file": "NORMAL_RELEASE.json",
+          "sha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+          "bytes": 2814,
+          "sourceReportSha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822"
+        }
+      ],
+      "sourceLogSHA256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822"
+    }
+  ],
+  "inputsUnchanged": true,
+  "inputHashes": {
+    "builds/app671-release1/BUILD_RESULT.json": "c053acc4a8381a17d5292a0e4857817ea19ffd32e938b384a2dce8c5a6bebe52",
+    "builds/app671-release1/pixljs.out": "d08f4c054459447c460139e0708e9b9c7f5181044e665f48c6781f48bbeb4c94",
+    "builds/app671-release1/pixljs.bin": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+    "./fw/tests/de3/check_stack_watermark_elf.py": "8714ee998a76b77f9a60b1d039d4e6f63bf37b15b1ccf63332a420d05accc3e5",
+    "./fw/tests/de3/check_aes_m4_elf.py": "30472daebb64b69e2f10e1d80be939fbf66dbb51d98808216fae0aa61172a7c8",
+    "./fw/tests/de3/check_sha256_hmac_elf.py": "be980d7fc7c850d9f71e1f9b0a0535793915ddb49324b9ccf2ccb1e256ae131a",
+    "./fw/tests/de3/check_build_fault_elf.py": "74d36cf4ba76e96cde7664ee6a5aa2d4eb026fd4c6a6e39f96b52f4e2b51827e",
+    "./fw/tests/de3/check_lcd_device_test_elf.py": "3f54f31df7a7c068bb3183c277f26e0871d709eebad6be9b3b25f57dac2a7c2f",
+    "./fw/tests/de3/check_lcd_game_rotation_elf.py": "da56f3198d14f0148c1d540b12d6e3c6b277d432e35eddbf440ca2c69381643c",
+    "./fw/tests/de3/check_flash_jedec_elf.py": "95078d1bed7353feac3c4ec1cafbf406c9a6e3d239a478ecf0da287b93b46577",
+    "./fw/tests/de3/check_display_profile_elf.py": "5f6ff1a3d8c965a4b2d1eb4818cc3259c4932f2864fdace8342fd2c56fd9cbf8",
+    "./fw/tests/de3/check_chameleon_save_screen_elf.py": "35efccc373cd12dbcafd3397a505c01f43dc8154a109c47b9b90e0d0e090031e",
+    "./fw/tests/de3/check_first_menu_elf.py": "b53bced2a786c8d6e20b8dff37b547293c05ec860ea6424d2c41231bd8cdab34",
+    "./fw/tests/de3/check_ble_link_elf.py": "fd13bc488697aff09291bf5ab4d5a15f84d9b29725216eb8dd51c5cc911d16a2",
+    "./fw/tests/de3/check_batch_read_elf_de397.py": "b549be1c369b3ba85ae3e776435bdaba9a7391d1f9bfa12bd6d84690ab331acb",
+    "./fw/tests/de3/check_normal_lcd_release_elf_de398.py": "1d369729be9be6b7d462d71435894797f41807a2f81965e60d689f9b524d4714",
+    "./fw/tests/de3/lcd_device_model.py": "b28f0cd16678f849d58aece28c98314684d0695fc0eec2ebbf3d1ca3308caeb8"
+  },
+  "passed": true,
+  "elapsedSeconds": 5.074,
+  "limitations": "Linked Cortex-M4 emulation with modeled peripherals, storage/transport and SoftDevice boundaries as stated by each checker. No physical radio, display, power, installation or timing acceptance."
+}

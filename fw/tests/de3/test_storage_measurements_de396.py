@@ -19,13 +19,13 @@ CORE = SRC / 'mod/vfs'
 LFS = FW / 'components/littlefs'
 
 
-def compile_run(folder, source, *, files=(), includes=(), defines=()):
+def compile_run(folder, source, *, files=(), includes=(), defines=(), test_diagnostics=True):
     (folder / 'contract.c').write_text(source)
     output = folder / 'contract'
     command = ['gcc', '-std=c11', '-O1', '-g', '-Wall', '-Wextra', '-Werror',
                '-Wno-unused-function', '-Wno-unused-variable',
-               '-Wno-misleading-indentation', '-Wno-sign-compare',
-               '-DPIXL_TEST_DIAGNOSTICS=1', '-DBOARD_LCD=1']
+               '-Wno-misleading-indentation', '-Wno-sign-compare', '-DBOARD_LCD=1']
+    command += ['-DPIXL_TEST_DIAGNOSTICS=1' if test_diagnostics else '-DPIXL_RUNTIME_DIAGNOSTICS=1']
     command += ['-D' + value for value in defines]
     for path in (folder, *includes):
         command += ['-I', str(path)]
@@ -44,8 +44,22 @@ def compile_run(folder, source, *, files=(), includes=(), defines=()):
 
 class StorageMeasurementTests(unittest.TestCase):
     def test_gc_actual_store_lifecycle_errors_and_no_io(self):
+        self.run_gc_actual_store_lifecycle_errors_and_no_io(test_diagnostics=True)
+
+    def test_normal_release_gc_lifecycle_and_wire_without_test_instrumentation(self):
+        self.run_gc_actual_store_lifecycle_errors_and_no_io(test_diagnostics=False)
+
+    def run_gc_actual_store_lifecycle_errors_and_no_io(self, *, test_diagnostics):
         with tempfile.TemporaryDirectory(prefix='gc-diagnostic-de396-') as temp:
             folder = Path(temp)
+            (folder / 'app_util_platform.h').write_text('#define CRITICAL_REGION_ENTER() do {\n#define CRITICAL_REGION_EXIT() } while(0)\n')
+            (folder / 'app_timer.h').write_text('''#pragma once
+#include <stdint.h>
+#define APP_TIMER_CONFIG_RTC_FREQUENCY 1u
+#define APP_TIMER_CLOCK_FREQ 32768u
+static inline uint32_t app_timer_cnt_get(void){return 0;}
+static inline uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return(a-b)&0xffffffu;}
+''')
             (folder / 'boards.h').write_text('#pragma once\n#define VFS_PACKED_LFS_ENABLE 1\n')
             (folder / 'nrf_log.h').write_text('#define NRF_LOG_INFO(...) ((void)0)\n')
             (folder / 'ble_main.h').write_text('void ble_disable(void);\n')
@@ -205,9 +219,12 @@ int main(void) {
     return 0;
 }
 '''
-            output = compile_run(folder, source,
-                files=(HERE/'packed_vfs_nor_de344.c', CORE/'vfs_persist.c', LFS/'lfs.c', LFS/'lfs_util.c'),
-                includes=(CORE,LFS,HERE,SRC/'mod/df'), defines=('LFS_NO_MALLOC','LFS_NO_DEBUG','LFS_NO_WARN','LFS_NO_ERROR',
+            files = (HERE/'packed_vfs_nor_de344.c', CORE/'vfs_persist.c', LFS/'lfs.c', LFS/'lfs_util.c')
+            if not test_diagnostics:
+                files += (SRC/'mod/runtime_diag.c',)
+            output = compile_run(folder, source, test_diagnostics=test_diagnostics,
+                files=files,
+                includes=(CORE,LFS,HERE,SRC/'mod/df',SRC/'mod'), defines=('LFS_NO_MALLOC','LFS_NO_DEBUG','LFS_NO_WARN','LFS_NO_ERROR',
                     'VFS_PACKED_LFS_ENABLE','STORE_CORE="'+str(CORE/'packed_fs.c')+'"',
                     'PROTOCOL="'+str(SRC/'mod/df/df_proto_vfs.c')+'"',
                     'STORE_ADAPTER="'+str(CORE/'vfs_driver_packed.c')+'"'))

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "app_chameleon.h"
+#include "app/chameleon/scene/chameleon_scene.h"
 #include "mui_mem.c"
 #include "mui_alloc.h"
 #include "mui_icons.h"
@@ -24,6 +25,9 @@ const char*getLangString(L_StringID id){return lang_de_DE[id];}
 void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,uint32_t id){(void)d;(void)id;}
 void mui_scene_dispatcher_previous_scene(mui_scene_dispatcher_t*d){(void)d;scenes++;}
 void mui_scene_dispatcher_back_scene(mui_scene_dispatcher_t*d,uint32_t n){(void)d;scenes+=n;}
+void mui_scene_dispatcher_next_scene(mui_scene_dispatcher_t*d,uint32_t n){(void)d;assert(n==CHAMELEON_SCENE_MAIN);scenes+=2;}
+static bool save_ok=true;static unsigned save_calls;
+bool app_chameleon_save(app_chameleon_t*a){(void)a;save_calls++;return save_ok;}
 void mui_toast_view_show(mui_toast_view_t*v,const char*t){(void)v;toast=t;errors++;}
 static vfs_obj_t objects[1000],expected[1000];
 static unsigned count,iter,fail_read,read_size;

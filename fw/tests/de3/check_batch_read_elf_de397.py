@@ -20,9 +20,10 @@ from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M4, UC_ARM_REG_LR, UC_ARM_REG_M
                                UC_ARM_REG_R1, UC_ARM_REG_R2)
 
 
-def verify(folder):
+def verify(folder, expected_counter=670):
     metadata, s, image, _ = firmware(folder)
-    assert metadata["counter"] == 670
+    assert isinstance(expected_counter, int) and 0 < expected_counter <= 0xffffffff
+    assert metadata["counter"] == expected_counter, (metadata["counter"], expected_counter)
     sizes = {r[3]: int(r[1], 16) for line in check_output(
         [tool("nm"), "-S", folder / "pixljs.out"], text=True).splitlines()
         if len(r := line.split()) == 4}
@@ -254,6 +255,7 @@ def verify(folder):
 
     return dict(passed=True, deviceAccess=False, sourceId=metadata["source_id_sha256"],
                 binSha256=metadata["artifacts_sha256"]["pixljs.bin"], cases=cases,
+                expectedCounter=expected_counter, firmwareCounter=metadata["counter"],
                 smallReadStaticBytes=sizes["small_read"], initialTlsfFree=initial_free,
                 maxResponseTlsfFreeDelta=peak_tlsf_delta, finalTlsfFree=free_space()[0],
                 linkedCallMaxObservedStack=s["__StackTop"] - minimum_sp,
@@ -266,8 +268,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("build", type=Path)
     parser.add_argument("--json", type=Path)
+    parser.add_argument("--expected-counter", type=int, default=670,
+                        help="Exact expected application counter; default retains the App670 guard")
     args = parser.parse_args()
-    result = verify(args.build)
+    result = verify(args.build, args.expected_counter)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
         args.json.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

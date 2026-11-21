@@ -1,0 +1,482 @@
+{
+  "binSha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "hardware": false,
+  "panelInitHex": "e2a2a0c82381322fb0afa68125a4af",
+  "registersChangedByRuntimeRotation": false,
+  "controls": "both physical side keys and center / repeat / release; swap on and off; game enter and exit",
+  "helpUsedPixels": {
+    "Mitte halten: zur\u00fcck": [
+      47,
+      118,
+      121,
+      80,
+      81,
+      96,
+      121,
+      74
+    ],
+    "Hold center: back": [
+      36,
+      94,
+      94,
+      91,
+      86,
+      80,
+      119,
+      71
+    ]
+  },
+  "lifecycles": {
+    "tiny_arkanoid_hold": {
+      "titles": 1,
+      "starts": 0,
+      "terminalStage": 0,
+      "eventPolls": 3,
+      "frames": 1,
+      "logicalTraceSha256": "cd8c91b3cdd07d1ecd1ad38a68daea04a1966a5cddce3f0b66d1babb25ca6990"
+    },
+    "tiny_arkanoid_replay": {
+      "titles": 2,
+      "starts": 2,
+      "terminalStage": 2,
+      "eventPolls": 51,
+      "frames": 9,
+      "logicalTraceSha256": "c18b5652e65dd977eadeeb2e7eaf3d1af6fe799c3b443fd70cbb7d87ffab4978"
+    },
+    "tiny_invaders_hold": {
+      "titles": 1,
+      "starts": 0,
+      "terminalStage": 0,
+      "eventPolls": 3,
+      "frames": 1,
+      "logicalTraceSha256": "5e1bc3a53c224d3a1648d1b419aa7cc8b30e4252ba4d676ace81b19614d2ae51"
+    },
+    "tiny_invaders_replay": {
+      "titles": 2,
+      "starts": 2,
+      "terminalStage": 2,
+      "eventPolls": 34,
+      "frames": 38,
+      "logicalTraceSha256": "3b68ee78fd5da6921a2061454d794c1a98e5ff13c6d575a4ab4f7ef2da77ef8e"
+    },
+    "tiny_lander_hold": {
+      "titles": 1,
+      "starts": 0,
+      "terminalStage": 0,
+      "eventPolls": 3,
+      "frames": 3,
+      "logicalTraceSha256": "fa6029dd9c8be1bcb112f4fa37ec991e32c925d6d8681740abb84149f207f50f"
+    },
+    "tiny_lander_replay": {
+      "titles": 2,
+      "starts": 2,
+      "terminalStage": 2,
+      "eventPolls": 6,
+      "frames": 17,
+      "logicalTraceSha256": "e78ad1de3e039a6c3e5f8f075a3a042367ffeea06ba9561f2e4786803ef067d4"
+    },
+    "tiny_tris_hold": {
+      "titles": 1,
+      "starts": 0,
+      "terminalStage": 0,
+      "eventPolls": 3,
+      "frames": 4,
+      "logicalTraceSha256": "a5e629534135d9d17ab17b7a6bd7888881e5ce379dd22789e4a8c9810fda862f"
+    },
+    "tiny_tris_replay": {
+      "titles": 2,
+      "starts": 2,
+      "terminalStage": 2,
+      "eventPolls": 10,
+      "frames": 23,
+      "logicalTraceSha256": "c2f605a41e2050c2cbb1b5c8dd09853ef8c86d32b010cc09110eca1c13765f28"
+    }
+  },
+  "cases": [
+    {
+      "game": "tiny_arkanoid",
+      "wake": false,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "33d92ffa724d124b0e8ebd4a76a8dec84997fd4571e8894524654c0293e89a8b"
+    },
+    {
+      "game": "tiny_invaders",
+      "wake": false,
+      "rotation": 0,
+      "frames": 2,
+      "differingFrames": 0,
+      "panelSha256": "4d9637cbce79286a3d10877810b398872611d59de47479202fb5c60003b26eb9"
+    },
+    {
+      "game": "tiny_lander",
+      "wake": false,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "b90b01e7d6765d15425e28043d4e93d74f36bbfa54928b95ce5d6e7ea29e6dfa"
+    },
+    {
+      "game": "tiny_tris",
+      "wake": false,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "bff58c7767b0aebba9cad2860494119ccaa68164bee8f417744f02cb57abee11"
+    },
+    {
+      "game": "tiny_arkanoid_hold",
+      "wake": false,
+      "rotation": 0,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "ee673b9a9165e9019d9d056333604f8e75ee9c57c90fedede8a0ba948cb9cab5"
+    },
+    {
+      "game": "tiny_arkanoid_replay",
+      "wake": false,
+      "rotation": 0,
+      "frames": 9,
+      "differingFrames": 0,
+      "panelSha256": "b9d78e0c5d12e2339228b88c63f652192ca8b71b0a8a0f4d79e23fa2763c1651"
+    },
+    {
+      "game": "tiny_invaders_hold",
+      "wake": false,
+      "rotation": 0,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "3ab24e1cbfebebaab1c60629230b207e7b6b95876607ab5f2e47e1507e84535f"
+    },
+    {
+      "game": "tiny_invaders_replay",
+      "wake": false,
+      "rotation": 0,
+      "frames": 38,
+      "differingFrames": 0,
+      "panelSha256": "ed847f9eac6116d2bb011316728b83fb59e16210719812481d90d2987be3d087"
+    },
+    {
+      "game": "tiny_lander_hold",
+      "wake": false,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "06e08f2ece969725790bc7e19f9278ff9826f298f056af0a681b8338a2d4cc5f"
+    },
+    {
+      "game": "tiny_lander_replay",
+      "wake": false,
+      "rotation": 0,
+      "frames": 17,
+      "differingFrames": 0,
+      "panelSha256": "1a508e95143cfb13e27dd67207a2be571a9b0c7d64d85bb6ed157390305a4109"
+    },
+    {
+      "game": "tiny_tris_hold",
+      "wake": false,
+      "rotation": 0,
+      "frames": 4,
+      "differingFrames": 0,
+      "panelSha256": "a462baafa4c40ed9923a0a0f03ea68df0c170ab8238040fd13d2c357b20f7742"
+    },
+    {
+      "game": "tiny_tris_replay",
+      "wake": false,
+      "rotation": 0,
+      "frames": 23,
+      "differingFrames": 0,
+      "panelSha256": "a7330e989f8deeb49f0b15cd6bcdf1070ad347cc688d20f8d60297f7c7946f96"
+    },
+    {
+      "game": "tiny_arkanoid",
+      "wake": false,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "a28b5070d8605e7e519fceeb9956a8e25d8fa6d8d42e55ab4d0a89f5991c770a"
+    },
+    {
+      "game": "tiny_invaders",
+      "wake": false,
+      "rotation": 180,
+      "frames": 2,
+      "differingFrames": 0,
+      "panelSha256": "6a4b215499aae255c6219c608642691a4507179d2dde9c5697fea9793fe92c81"
+    },
+    {
+      "game": "tiny_lander",
+      "wake": false,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "8860617ff1755562be6f0d49d936aec407459cee0ec56859ee0e465eaeb97e46"
+    },
+    {
+      "game": "tiny_tris",
+      "wake": false,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "a5a5f1f62cc3411e59f30659b9ae6a61aebf1fbb2c94d078394c0cbfb0850f87"
+    },
+    {
+      "game": "tiny_arkanoid_hold",
+      "wake": false,
+      "rotation": 180,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "6bacf655e723137e803f6093e1f2a4a0af29423bdad86d261f7f455176ce6f57"
+    },
+    {
+      "game": "tiny_arkanoid_replay",
+      "wake": false,
+      "rotation": 180,
+      "frames": 9,
+      "differingFrames": 0,
+      "panelSha256": "0a709ca15f7392b03ed20c6e0754e5277b00949fcaaa45f04105ff4224faf2fb"
+    },
+    {
+      "game": "tiny_invaders_hold",
+      "wake": false,
+      "rotation": 180,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "ad2f96175a239e1ac2b5ecac78e84b72a86fc99881c444142d594e733f86be6a"
+    },
+    {
+      "game": "tiny_invaders_replay",
+      "wake": false,
+      "rotation": 180,
+      "frames": 38,
+      "differingFrames": 0,
+      "panelSha256": "216b9e01e8862be873b137dd9ce3ef4bd0eff98602d08efd60f7102b4472f5e6"
+    },
+    {
+      "game": "tiny_lander_hold",
+      "wake": false,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "8b16eb5c62eb28220885b2167dc12e906b11b3ec175d7b388a15993ee051bc68"
+    },
+    {
+      "game": "tiny_lander_replay",
+      "wake": false,
+      "rotation": 180,
+      "frames": 17,
+      "differingFrames": 0,
+      "panelSha256": "d2734f054144e871ea4de03064eb7d8e026e5faa7b54f26ee37217222019c899"
+    },
+    {
+      "game": "tiny_tris_hold",
+      "wake": false,
+      "rotation": 180,
+      "frames": 4,
+      "differingFrames": 0,
+      "panelSha256": "391dc15cb55826a40badc565939e02e8c4f59eb6b45fad7df31ab9f0ce8c0d4f"
+    },
+    {
+      "game": "tiny_tris_replay",
+      "wake": false,
+      "rotation": 180,
+      "frames": 23,
+      "differingFrames": 0,
+      "panelSha256": "427d5310cc36e9f44186a14260e59c6a90fdc8bf0bdfbfd0ce1658ca2c034db6"
+    },
+    {
+      "game": "tiny_arkanoid",
+      "wake": true,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "a28b5070d8605e7e519fceeb9956a8e25d8fa6d8d42e55ab4d0a89f5991c770a"
+    },
+    {
+      "game": "tiny_invaders",
+      "wake": true,
+      "rotation": 180,
+      "frames": 2,
+      "differingFrames": 0,
+      "panelSha256": "6a4b215499aae255c6219c608642691a4507179d2dde9c5697fea9793fe92c81"
+    },
+    {
+      "game": "tiny_lander",
+      "wake": true,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "8860617ff1755562be6f0d49d936aec407459cee0ec56859ee0e465eaeb97e46"
+    },
+    {
+      "game": "tiny_tris",
+      "wake": true,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "a5a5f1f62cc3411e59f30659b9ae6a61aebf1fbb2c94d078394c0cbfb0850f87"
+    },
+    {
+      "game": "tiny_arkanoid_hold",
+      "wake": true,
+      "rotation": 180,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "6bacf655e723137e803f6093e1f2a4a0af29423bdad86d261f7f455176ce6f57"
+    },
+    {
+      "game": "tiny_arkanoid_replay",
+      "wake": true,
+      "rotation": 180,
+      "frames": 9,
+      "differingFrames": 0,
+      "panelSha256": "0a709ca15f7392b03ed20c6e0754e5277b00949fcaaa45f04105ff4224faf2fb"
+    },
+    {
+      "game": "tiny_invaders_hold",
+      "wake": true,
+      "rotation": 180,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "ad2f96175a239e1ac2b5ecac78e84b72a86fc99881c444142d594e733f86be6a"
+    },
+    {
+      "game": "tiny_invaders_replay",
+      "wake": true,
+      "rotation": 180,
+      "frames": 38,
+      "differingFrames": 0,
+      "panelSha256": "216b9e01e8862be873b137dd9ce3ef4bd0eff98602d08efd60f7102b4472f5e6"
+    },
+    {
+      "game": "tiny_lander_hold",
+      "wake": true,
+      "rotation": 180,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "8b16eb5c62eb28220885b2167dc12e906b11b3ec175d7b388a15993ee051bc68"
+    },
+    {
+      "game": "tiny_lander_replay",
+      "wake": true,
+      "rotation": 180,
+      "frames": 17,
+      "differingFrames": 0,
+      "panelSha256": "d2734f054144e871ea4de03064eb7d8e026e5faa7b54f26ee37217222019c899"
+    },
+    {
+      "game": "tiny_tris_hold",
+      "wake": true,
+      "rotation": 180,
+      "frames": 4,
+      "differingFrames": 0,
+      "panelSha256": "391dc15cb55826a40badc565939e02e8c4f59eb6b45fad7df31ab9f0ce8c0d4f"
+    },
+    {
+      "game": "tiny_tris_replay",
+      "wake": true,
+      "rotation": 180,
+      "frames": 23,
+      "differingFrames": 0,
+      "panelSha256": "427d5310cc36e9f44186a14260e59c6a90fdc8bf0bdfbfd0ce1658ca2c034db6"
+    },
+    {
+      "game": "tiny_arkanoid",
+      "wake": true,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "33d92ffa724d124b0e8ebd4a76a8dec84997fd4571e8894524654c0293e89a8b"
+    },
+    {
+      "game": "tiny_invaders",
+      "wake": true,
+      "rotation": 0,
+      "frames": 2,
+      "differingFrames": 0,
+      "panelSha256": "4d9637cbce79286a3d10877810b398872611d59de47479202fb5c60003b26eb9"
+    },
+    {
+      "game": "tiny_lander",
+      "wake": true,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "b90b01e7d6765d15425e28043d4e93d74f36bbfa54928b95ce5d6e7ea29e6dfa"
+    },
+    {
+      "game": "tiny_tris",
+      "wake": true,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "bff58c7767b0aebba9cad2860494119ccaa68164bee8f417744f02cb57abee11"
+    },
+    {
+      "game": "tiny_arkanoid_hold",
+      "wake": true,
+      "rotation": 0,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "ee673b9a9165e9019d9d056333604f8e75ee9c57c90fedede8a0ba948cb9cab5"
+    },
+    {
+      "game": "tiny_arkanoid_replay",
+      "wake": true,
+      "rotation": 0,
+      "frames": 9,
+      "differingFrames": 0,
+      "panelSha256": "b9d78e0c5d12e2339228b88c63f652192ca8b71b0a8a0f4d79e23fa2763c1651"
+    },
+    {
+      "game": "tiny_invaders_hold",
+      "wake": true,
+      "rotation": 0,
+      "frames": 1,
+      "differingFrames": 0,
+      "panelSha256": "3ab24e1cbfebebaab1c60629230b207e7b6b95876607ab5f2e47e1507e84535f"
+    },
+    {
+      "game": "tiny_invaders_replay",
+      "wake": true,
+      "rotation": 0,
+      "frames": 38,
+      "differingFrames": 0,
+      "panelSha256": "ed847f9eac6116d2bb011316728b83fb59e16210719812481d90d2987be3d087"
+    },
+    {
+      "game": "tiny_lander_hold",
+      "wake": true,
+      "rotation": 0,
+      "frames": 3,
+      "differingFrames": 0,
+      "panelSha256": "06e08f2ece969725790bc7e19f9278ff9826f298f056af0a681b8338a2d4cc5f"
+    },
+    {
+      "game": "tiny_lander_replay",
+      "wake": true,
+      "rotation": 0,
+      "frames": 17,
+      "differingFrames": 0,
+      "panelSha256": "1a508e95143cfb13e27dd67207a2be571a9b0c7d64d85bb6ed157390305a4109"
+    },
+    {
+      "game": "tiny_tris_hold",
+      "wake": true,
+      "rotation": 0,
+      "frames": 4,
+      "differingFrames": 0,
+      "panelSha256": "a462baafa4c40ed9923a0a0f03ea68df0c170ab8238040fd13d2c357b20f7742"
+    },
+    {
+      "game": "tiny_tris_replay",
+      "wake": true,
+      "rotation": 0,
+      "frames": 23,
+      "differingFrames": 0,
+      "panelSha256": "a7330e989f8deeb49f0b15cd6bcdf1070ad347cc688d20f8d60297f7c7946f96"
+    }
+  ]
+}
+

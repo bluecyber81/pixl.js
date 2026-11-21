@@ -1,0 +1,928 @@
+{
+  "schema": 1,
+  "passed": true,
+  "createdAt": "2026-11-21T18:43:10.923041+00:00",
+  "scope": "Begrenzter finaler ELF-/Stackabgleich des normalen LCD DE3.98/App671 nach dem App3-Retentionsnachtrag; keine erneuten Linkedchecker, Builds, Firmwaretests oder Geräteaktionen.",
+  "repository": ".",
+  "branch": "work/lcd-de398-app671",
+  "headAtReview": "465a4b0572f8c0d22e899b2110fb88ff8c6015a4",
+  "sourceBindingNote": "Der Build ist durch seinen unveränderlichen Inputmanifest und die unten frisch geprüften Produktdateihashes gebunden; HEAD allein bildet den noch nicht abschließend committeden Produktnachtrag nicht ab.",
+  "previousReport": {
+    "path": "qualification-work/STACK_PHASES.json",
+    "bytes": 38945,
+    "sha256": "9241a1faddc4dbe802f9f20438ef0b7e7735465882e4ced61c7e8b03f93f98b8"
+  },
+  "previousReportPreserved": true,
+  "finalBuild": {
+    "directory": "builds/app671-release1",
+    "version": "2.22.0-DE3.98",
+    "counter": 671,
+    "board": "LCD",
+    "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+    "sourceIdFoundExactlyOnceAsAsciiInBinary": true,
+    "packedEngineIdentity": {
+      "engine_sha256": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d",
+      "header_sha256": "c1cba3df7acd70971a2d3bf9f491cc9d5e2282e23ce79485a7c3c1f7c8c4b57a",
+      "both_header_representations_verified": true
+    },
+    "artifacts": {
+      "pixljs.bin": {
+        "path": "builds/app671-release1/pixljs.bin",
+        "bytes": 364180,
+        "sha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4"
+      },
+      "pixljs.out": {
+        "path": "builds/app671-release1/pixljs.out",
+        "bytes": 621548,
+        "sha256": "d08f4c054459447c460139e0708e9b9c7f5181044e665f48c6781f48bbeb4c94"
+      },
+      "pixljs.map": {
+        "path": "builds/app671-release1/pixljs.map",
+        "bytes": 1129904,
+        "sha256": "276685709257eb2fb93ccd2c4b28331bfdba34b83900ac7cbb18e2d89e5afaa9"
+      },
+      "BUILD_RESULT.json": {
+        "path": "builds/app671-release1/BUILD_RESULT.json",
+        "bytes": 2628,
+        "sha256": "c053acc4a8381a17d5292a0e4857817ea19ffd32e938b384a2dce8c5a6bebe52"
+      },
+      "production-inputs.json": {
+        "path": "builds/app671-release1/production-inputs.json",
+        "bytes": 85213,
+        "sha256": "a274361b051853e464264bf1a630027b88633aa07a5ad87f713b6b6e3f0e0ae1"
+      },
+      "STACK_USAGE.json": {
+        "path": "builds/app671-release1/STACK_USAGE.json",
+        "bytes": 968416,
+        "sha256": "9cd061f4c2687110263a221ce6533381fa98e5c71b74c74abd94c000820689eb"
+      }
+    },
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "compilerSha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "sameCompilerAsPreliminary": true
+  },
+  "baselineApp670": {
+    "directory": "builds/app670-reference",
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+    "artifacts": {
+      "pixljs.bin": {
+        "bytes": 363888,
+        "sha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9"
+      },
+      "pixljs.out": {
+        "bytes": 621540,
+        "sha256": "c324b98ab7dac7d11e4c4342dbc90ca31dd2863c80615b40751eb48bf143a32f"
+      },
+      "pixljs.map": {
+        "bytes": 1130065,
+        "sha256": "ed8762d8edf946fa7e69cff34c7186597a9e08fa5914a60bfcaf18b3214a8a95"
+      },
+      "BUILD_RESULT.json": {
+        "bytes": 2370,
+        "sha256": "1bde5ec1152260ff88b7619ad431f3c1d2f3313a54205c5e368bb5b111389836"
+      },
+      "production-inputs.json": {
+        "bytes": 85213,
+        "sha256": "68578d27f183ff97f5399d5c962ceaf2491c20a667e533c0134bb89962993832"
+      },
+      "STACK_USAGE.json": {
+        "bytes": 967461,
+        "sha256": "6683d25ebce496362bf8779b235b4885a536bd4438aaf1d0bca2da2aac171897"
+      }
+    }
+  },
+  "preliminaryNormalBuild": {
+    "directory": "builds/app671-preliminary",
+    "sourceId": "4ae447347916fb26483ed7ffe8e3c1f712fd849fa1e42c276598ac992a1d12a7",
+    "artifacts": {
+      "pixljs.bin": {
+        "bytes": 363972,
+        "sha256": "de4c1b1ec9965ff31d266917dde2297e9b73691ebc6391553f6b35026384e172"
+      },
+      "pixljs.out": {
+        "bytes": 621548,
+        "sha256": "51a3150a1367f9d6eda4caf5c77f38a372c24aaf53417e00000dc915ea9fed9c"
+      },
+      "pixljs.map": {
+        "bytes": 1129904,
+        "sha256": "d343cad1494e48cdb253017d2ffccf78b301bb80340f373843bb4dcc76c45910"
+      },
+      "BUILD_RESULT.json": {
+        "bytes": 2628,
+        "sha256": "ed890e11615d44fb63fe45e83f0b8268b23057cbf2d7b52f99f491c0d6f38830"
+      },
+      "production-inputs.json": {
+        "bytes": 85213,
+        "sha256": "ce96f2efc215a803c60d9708e35649503062568ed7a2656e39b8587409583483"
+      },
+      "STACK_USAGE.json": {
+        "bytes": 968416,
+        "sha256": "64c69a955feec08b8e65fe538d7e1c88fe768709b5708473655bb10d4409befd"
+      }
+    }
+  },
+  "productSourceSha256": {
+    "fw/application/src/mod/vfs/packed_fs.c": "893edc1bf1a3858293b07cfef46f33505301f984a4c323535fefea349ad54bb6",
+    "fw/application/src/mod/vfs/packed_fs.h": "5faf4a60c668e6188e23fe4a5b1b735e18c5dff8cfb8be32cd834248f38a82ef",
+    "fw/application/src/app/amiibolink/scene/amiibolink_scene_main.c": "6bcf70ffe60361df8f41c5498be4d848a0aaeed37222c3fbba11548ae591e6a9",
+    "fw/application/src/ntag/ntag_emu_v2.c": "7859ea77b9dd97c2cf42364d262f85f06833f05626e29de71c462ba000c71ce1",
+    "fw/application/src/ntag/ntag_emu.h": "8cacba2a31a835f4b94ec5ade7645c54a268fa86f443acb7f806ee27cd9d0055",
+    "fw/application/Makefile": "b83ac0bc9b76a4a409ba59321b55acf3302028c2e9a2f0a831930edf6f05aab6",
+    "fw/ld/application.ld": "8bda6a0784af632ca3fbde5d643985c9dfb5650b4e8351885908d2791e1cf489",
+    "fw/application/src/app/amiidb/app_amiidb.h": "15be28a88c5bb5e543d04a1aa03588a4d154baaf5ff63292b24e0dcc09852b59",
+    "fw/application/src/app/amiidb/app_amiidb_resume.h": "9a92a889782cb6449009ee4e48b5fd5c47ff671c211dc2eca7998eb083fc358b",
+    "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c": "2b07c390a5f484641e686f9480c9f8867adc48cc6d33461e1c02796b887e5d24",
+    "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c": "3596a9d3434345cab2a6c99de3299f7f8c0d0630cf9a9f51071307a1e681f605",
+    "fw/application/src/app/amiidb/scene/amiidb_scene_data_select.c": "99bff5018ee19e37435feb0efb805da526f8de2650e1839aa845bc1cfb1871ae",
+    "fw/application/src/mod/cache.h": "65fed5241fd8c425ed8265e17dfa36653d52cf36893326c7fa04b7f17df114e1"
+  },
+  "allListedSourcesMatchFinalBuildInputs": true,
+  "coreSourceFilesUnchangedFromPreliminary": true,
+  "compilerSuFiles": {
+    "pixljs/packed_fs.c.su": {
+      "path": "builds/app671-release1/stack-usage/pixljs/packed_fs.c.su",
+      "bytes": 3976,
+      "sha256": "6ad34e5972f4620fa8e29b3ad556876d96c4dbf586a6801a1764927d660ab845"
+    },
+    "pixljs/amiibolink_scene_main.c.su": {
+      "path": "builds/app671-release1/stack-usage/pixljs/amiibolink_scene_main.c.su",
+      "bytes": 1315,
+      "sha256": "1c1f0aefa8447df9507aa88119b328363fec54c0b95c6a07ab077a0771104270"
+    },
+    "pixljs/ntag_emu_v2.c.su": {
+      "path": "builds/app671-release1/stack-usage/pixljs/ntag_emu_v2.c.su",
+      "bytes": 1313,
+      "sha256": "a7371b8c374bd70cbc2acac010a83372254ce7d4ed3027b270accdff20ed14e2"
+    },
+    "pixljs/app_amiidb.c.su": {
+      "path": "builds/app671-release1/stack-usage/pixljs/app_amiidb.c.su",
+      "bytes": 835,
+      "sha256": "efedc52584e299045ebcca468b7f6861ffe033eef445ea6cc3205511a5ee1340"
+    },
+    "pixljs/amiidb_scene_amiibo_detail.c.su": {
+      "path": "builds/app671-release1/stack-usage/pixljs/amiidb_scene_amiibo_detail.c.su",
+      "bytes": 1416,
+      "sha256": "d3ef20f460e74e1ebee38155a2a499f006074cbf5011e4ac15493faf88f003b1"
+    }
+  },
+  "linkedFrames": {
+    "pfs_remove": {
+      "address": "0x2b2b4",
+      "compilerFrameBytes": 632,
+      "linkedPrologueFrameBytes": 632,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 1575,
+      "selectedInstructions": [
+        "2b2b4:\te92d 43f0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, r9, lr}",
+        "2b2b8:\t460e      \tmov\tr6, r1",
+        "2b2ba:\tf5ad 7d17 \tsub.w\tsp, sp, #604\t; 0x25c",
+        "2b2be:\t2101      \tmovs\tr1, #1",
+        "2b358:\tf7ff f8e9 \tbl\t2a52e <transact>",
+        "2b35c:\tf50d 7d17 \tadd.w\tsp, sp, #604\t; 0x25c",
+        "2b360:\te8bd 83f0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, r9, pc}"
+      ]
+    },
+    "transact": {
+      "address": "0x2a52e",
+      "compilerFrameBytes": 8,
+      "linkedPrologueFrameBytes": 8,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 1444,
+      "selectedInstructions": [
+        "2a52e:\tb510      \tpush\t{r4, lr}",
+        "2a530:\t460c      \tmov\tr4, r1",
+        "2a532:\t2101      \tmovs\tr1, #1",
+        "2a534:\t4602      \tmov\tr2, r0",
+        "2a54c:\te8bd 4010 \tldmia.w\tsp!, {r4, lr}",
+        "2a550:\tf7ff bfa2 \tb.w\t2a498 <transact.part.0>"
+      ]
+    },
+    "transact.part.0": {
+      "address": "0x2a498",
+      "compilerFrameBytes": 336,
+      "linkedPrologueFrameBytes": 336,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 1444,
+      "selectedInstructions": [
+        "2a498:\tb5f0      \tpush\t{r4, r5, r6, r7, lr}",
+        "2a49a:\tf8d0 688c \tldr.w\tr6, [r0, #2188]\t; 0x88c",
+        "2a49e:\tb0cf      \tsub\tsp, #316\t; 0x13c",
+        "2a4a0:\t4605      \tmov\tr5, r0",
+        "2a4de:\tf7ff ff2d \tbl\t2a33c <build_transaction>",
+        "2a4f0:\tf7ff fc56 \tbl\t29da0 <publish>",
+        "2a524:\tb04f      \tadd\tsp, #316\t; 0x13c"
+      ]
+    },
+    "plan_transaction": {
+      "address": "0x29950",
+      "compilerFrameBytes": 648,
+      "linkedPrologueFrameBytes": 648,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 1307,
+      "selectedInstructions": [
+        "29950:\te92d 4ff0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}",
+        "29954:\t4615      \tmov\tr5, r2",
+        "29956:\t4604      \tmov\tr4, r0",
+        "29958:\tf5ad 7d19 \tsub.w\tsp, sp, #612\t; 0x264",
+        "29a7e:\tf50d 7d19 \tadd.w\tsp, sp, #612\t; 0x264",
+        "29a82:\te8bd 4ff0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}",
+        "29b6a:\tf50d 7d19 \tadd.w\tsp, sp, #612\t; 0x264",
+        "29b6e:\te8bd 8ff0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}"
+      ]
+    },
+    "build_transaction": {
+      "address": "0x2a33c",
+      "compilerFrameBytes": 656,
+      "linkedPrologueFrameBytes": 656,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 1398,
+      "selectedInstructions": [
+        "2a33c:\te92d 4ff0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}",
+        "2a340:\tf5ad 7d1b \tsub.w\tsp, sp, #620\t; 0x26c",
+        "2a344:\taf07      \tadd\tr7, sp, #28",
+        "2a346:\t4615      \tmov\tr5, r2",
+        "2a350:\tf7ff fafe \tbl\t29950 <plan_transaction>",
+        "2a392:\tf50d 7d1b \tadd.w\tsp, sp, #620\t; 0x26c",
+        "2a396:\te8bd 8ff0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}",
+        "2a3d6:\tf44f 729c \tmov.w\tr2, #312\t; 0x138",
+        "2a47e:\tf7ff fdd3 \tbl\t2a028 <rebuild>"
+      ]
+    },
+    "rebuild": {
+      "address": "0x2a028",
+      "compilerFrameBytes": 1056,
+      "linkedPrologueFrameBytes": 1056,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 1195,
+      "selectedInstructions": [
+        "2a028:\te92d 4ff0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}",
+        "2a02c:\tf5ad 7d7f \tsub.w\tsp, sp, #1020\t; 0x3fc",
+        "2a030:\t461f      \tmov\tr7, r3",
+        "2a032:\tf89d 3428 \tldrb.w\tr3, [sp, #1064]\t; 0x428",
+        "2a08e:\tf50d 7d7f \tadd.w\tsp, sp, #1020\t; 0x3fc",
+        "2a092:\te8bd 8ff0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}"
+      ]
+    },
+    "publish": {
+      "address": "0x29da0",
+      "compilerFrameBytes": 712,
+      "linkedPrologueFrameBytes": 712,
+      "qualifier": "static",
+      "suUnit": "pixljs/packed_fs.c.su",
+      "source": "packed_fs.c",
+      "sourceLine": 682,
+      "selectedInstructions": [
+        "29da0:\tb5f0      \tpush\t{r4, r5, r6, r7, lr}",
+        "29da2:\tf5ad 7d2d \tsub.w\tsp, sp, #692\t; 0x2b4",
+        "29da6:\t460d      \tmov\tr5, r1",
+        "29da8:\tf44f 72a2 \tmov.w\tr2, #324\t; 0x144",
+        "29e4a:\tf50d 7d2d \tadd.w\tsp, sp, #692\t; 0x2b4",
+        "29e4e:\te8bd 40f0 \tldmia.w\tsp!, {r4, r5, r6, r7, lr}",
+        "29eac:\tf50d 7d2d \tadd.w\tsp, sp, #692\t; 0x2b4",
+        "29eb2:\tf44f 729c \tmov.w\tr2, #312\t; 0x138"
+      ]
+    },
+    "ntag_reload": {
+      "address": "0x38780",
+      "compilerFrameBytes": 16,
+      "linkedPrologueFrameBytes": 16,
+      "qualifier": "static",
+      "suUnit": "pixljs/amiibolink_scene_main.c.su",
+      "source": "amiibolink_scene_main.c",
+      "sourceLine": 161,
+      "selectedInstructions": [
+        "38780:\tb538      \tpush\t{r3, r4, r5, lr}",
+        "38782:\t4604      \tmov\tr4, r0",
+        "38784:\t460d      \tmov\tr5, r1",
+        "38786:\tf7e9 fa39 \tbl\t21bfc <ntag_emu_prepare_change>",
+        "38790:\te8bd 4038 \tldmia.w\tsp!, {r3, r4, r5, lr}",
+        "38794:\tf7ff bf76 \tb.w\t38684 <ntag_reload_prepared>"
+      ]
+    },
+    "ntag_reload_prepared": {
+      "address": "0x38684",
+      "compilerFrameBytes": 2272,
+      "linkedPrologueFrameBytes": 2272,
+      "qualifier": "static",
+      "suUnit": "pixljs/amiibolink_scene_main.c.su",
+      "source": "amiibolink_scene_main.c",
+      "sourceLine": 138,
+      "selectedInstructions": [
+        "38684:\tb5f0      \tpush\t{r4, r5, r6, r7, lr}",
+        "38686:\tf6ad 0dcc \tsubw\tsp, sp, #2252\t; 0x8cc",
+        "3868a:\t460e      \tmov\tr6, r1",
+        "3868c:\tf640 0282 \tmovw\tr2, #2178\t; 0x882",
+        "38742:\tf60d 0dcc \taddw\tsp, sp, #2252\t; 0x8cc",
+        "38750:\tf7e9 fb1a \tbl\t21d88 <ntag_emu_set_tag>"
+      ]
+    },
+    "ntag_emu_prepare_change": {
+      "address": "0x21bfc",
+      "compilerFrameBytes": 24,
+      "linkedPrologueFrameBytes": 24,
+      "qualifier": "static",
+      "suUnit": "pixljs/ntag_emu_v2.c.su",
+      "source": "ntag_emu_v2.c",
+      "sourceLine": 537,
+      "selectedInstructions": [
+        "21bfc:\tb573      \tpush\t{r0, r1, r4, r5, r6, lr}",
+        "21bfe:\t4d1c      \tldr\tr5, [pc, #112]\t; (21c70 <ntag_emu_prepare_change+0x74>)",
+        "21c00:\tf895 3883 \tldrb.w\tr3, [r5, #2179]\t; 0x883",
+        "21c04:\t2400      \tmovs\tr4, #0",
+        "21c32:\tf7ff ff5f \tbl\t21af4 <ntag_emu_deliver>",
+        "21c62:\tb002      \tadd\tsp, #8"
+      ]
+    },
+    "ntag_emu_deliver": {
+      "address": "0x21af4",
+      "compilerFrameBytes": 32,
+      "linkedPrologueFrameBytes": 32,
+      "qualifier": "static",
+      "suUnit": "pixljs/ntag_emu_v2.c.su",
+      "source": "ntag_emu_v2.c",
+      "sourceLine": 432,
+      "selectedInstructions": [
+        "21af4:\te92d 41f3 \tstmdb\tsp!, {r0, r1, r4, r5, r6, r7, r8, lr}",
+        "21af8:\t4c3e      \tldr\tr4, [pc, #248]\t; (21bf4 <ntag_emu_deliver+0x100>)",
+        "21afa:\t2300      \tmovs\tr3, #0",
+        "21afc:\t4605      \tmov\tr5, r0",
+        "21b18:\tb002      \tadd\tsp, #8",
+        "21b1a:\te8bd 81f0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, pc}"
+      ]
+    },
+    "ntag_emu_set_tag": {
+      "address": "0x21d88",
+      "compilerFrameBytes": 32,
+      "linkedPrologueFrameBytes": 32,
+      "qualifier": "static",
+      "suUnit": "pixljs/ntag_emu_v2.c.su",
+      "source": "ntag_emu_v2.c",
+      "sourceLine": 615,
+      "selectedInstructions": [
+        "21d88:\tb5f7      \tpush\t{r0, r1, r2, r4, r5, r6, r7, lr}",
+        "21d8a:\t4606      \tmov\tr6, r0",
+        "21d8c:\tb918      \tcbnz\tr0, 21d96 <ntag_emu_set_tag+0xe>",
+        "21d8e:\t2500      \tmovs\tr5, #0",
+        "21d92:\tb003      \tadd\tsp, #12",
+        "21d96:\tf7ff ff31 \tbl\t21bfc <ntag_emu_prepare_change>"
+      ]
+    },
+    "app_amiidb_on_run": {
+      "address": "0x39568",
+      "compilerFrameBytes": 24,
+      "linkedPrologueFrameBytes": 24,
+      "qualifier": "static",
+      "suUnit": "pixljs/app_amiidb.c.su",
+      "source": "app_amiidb.c",
+      "sourceLine": 60,
+      "selectedInstructions": [
+        "39568:\te92d 41f0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, lr}",
+        "3956c:\t4606      \tmov\tr6, r0",
+        "3956e:\tf640 2008 \tmovw\tr0, #2568\t; 0xa08",
+        "39572:\tf7f7 febb \tbl\t312ec <mui_mem_malloc>",
+        "3957c:\te8bd 81f0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, pc}",
+        "39580:\tf640 2208 \tmovw\tr2, #2568\t; 0xa08",
+        "396fc:\tf7ff fd0e \tbl\t3911c <app_amiidb_restore_cache>",
+        "3970a:\te8bd 41f0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, lr}"
+      ]
+    },
+    "app_amiidb_save_cache": {
+      "address": "0x3976c",
+      "compilerFrameBytes": 344,
+      "linkedPrologueFrameBytes": 344,
+      "qualifier": "static",
+      "suUnit": "pixljs/app_amiidb.c.su",
+      "source": "app_amiidb_resume.h",
+      "sourceLine": 39,
+      "selectedInstructions": [
+        "3976c:\te92d 41f0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, lr}",
+        "39770:\tb0d0      \tsub\tsp, #320\t; 0x140",
+        "39772:\t4604      \tmov\tr4, r0",
+        "39774:\t4688      \tmov\tr8, r1",
+        "3977a:\tf44f 7296 \tmov.w\tr2, #300\t; 0x12c",
+        "39784:\tf44f 729c \tmov.w\tr2, #312\t; 0x138",
+        "397ce:\tf44f 7396 \tmov.w\tr3, #300\t; 0x12c",
+        "39958:\tf44f 7296 \tmov.w\tr2, #300\t; 0x12c",
+        "39964:\tb050      \tadd\tsp, #320\t; 0x140",
+        "39966:\te8bd 81f0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, pc}",
+        "3998c:\tf894 38a3 \tldrb.w\tr3, [r4, #2211]\t; 0x8a3",
+        "399cc:\tf894 38a3 \tldrb.w\tr3, [r4, #2211]\t; 0x8a3"
+      ]
+    },
+    "app_amiidb_restore_cache": {
+      "address": "0x3911c",
+      "compilerFrameBytes": 360,
+      "linkedPrologueFrameBytes": 360,
+      "qualifier": "static",
+      "suUnit": "pixljs/app_amiidb.c.su",
+      "source": "app_amiidb_resume.h",
+      "sourceLine": 119,
+      "selectedInstructions": [
+        "3911c:\te92d 4ff0 \tstmdb\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}",
+        "39120:\tb0d1      \tsub\tsp, #324\t; 0x144",
+        "39122:\t4604      \tmov\tr4, r0",
+        "39124:\t9101      \tstr\tr1, [sp, #4]",
+        "3912c:\tf44f 7296 \tmov.w\tr2, #300\t; 0x12c",
+        "3914c:\tf5b3 7f94 \tcmp.w\tr3, #296\t; 0x128",
+        "391da:\tf5b3 7f96 \tcmp.w\tr3, #300\t; 0x12c",
+        "391e0:\tf895 3128 \tldrb.w\tr3, [r5, #296]\t; 0x128",
+        "391e8:\tf895 2129 \tldrb.w\tr2, [r5, #297]\t; 0x129",
+        "391f6:\tb051      \tadd\tsp, #324\t; 0x144",
+        "391f8:\te8bd 8ff0 \tldmia.w\tsp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}",
+        "39432:\tf895 3128 \tldrb.w\tr3, [r5, #296]\t; 0x128",
+        "39440:\tf884 38a3 \tstrb.w\tr3, [r4, #2211]\t; 0x8a3",
+        "3954c:\tf884 38a3 \tstrb.w\tr3, [r4, #2211]\t; 0x8a3"
+      ]
+    },
+    "amiidb_nfc_return_to_list": {
+      "address": "0x3a3c6",
+      "compilerFrameBytes": 8,
+      "linkedPrologueFrameBytes": 8,
+      "qualifier": "static",
+      "suUnit": "pixljs/amiidb_scene_amiibo_detail.c.su",
+      "source": "amiidb_scene_amiibo_detail.c",
+      "sourceLine": 28,
+      "selectedInstructions": [
+        "3a3c6:\tb510      \tpush\t{r4, lr}",
+        "3a3c8:\tf890 38a3 \tldrb.w\tr3, [r0, #2211]\t; 0x8a3",
+        "3a3cc:\t4604      \tmov\tr4, r0",
+        "3a3ce:\tb9cb      \tcbnz\tr3, 3a404 <amiidb_nfc_return_to_list+0x3e>",
+        "3a3e8:\tf7e7 fc08 \tbl\t21bfc <ntag_emu_prepare_change>",
+        "3a3ee:\tf894 38a3 \tldrb.w\tr3, [r4, #2211]\t; 0x8a3",
+        "3a3f4:\te8bd 4010 \tldmia.w\tsp!, {r4, lr}",
+        "3a3f8:\tf7e7 bafe \tb.w\t219f8 <ntag_emu_cancel_change>",
+        "3a3fe:\tf000 fd35 \tbl\t3ae6c <amiidb_scene_detail_back_to_list>"
+      ]
+    }
+  },
+  "frameComparisonToPreliminary": {
+    "pfs_remove": {
+      "preliminaryBytes": 632,
+      "finalBytes": 632,
+      "changeBytes": 0
+    },
+    "transact": {
+      "preliminaryBytes": 8,
+      "finalBytes": 8,
+      "changeBytes": 0
+    },
+    "transact.part.0": {
+      "preliminaryBytes": 336,
+      "finalBytes": 336,
+      "changeBytes": 0
+    },
+    "plan_transaction": {
+      "preliminaryBytes": 648,
+      "finalBytes": 648,
+      "changeBytes": 0
+    },
+    "build_transaction": {
+      "preliminaryBytes": 656,
+      "finalBytes": 656,
+      "changeBytes": 0
+    },
+    "rebuild": {
+      "preliminaryBytes": 1056,
+      "finalBytes": 1056,
+      "changeBytes": 0
+    },
+    "publish": {
+      "preliminaryBytes": 712,
+      "finalBytes": 712,
+      "changeBytes": 0
+    },
+    "ntag_reload": {
+      "preliminaryBytes": 16,
+      "finalBytes": 16,
+      "changeBytes": 0
+    },
+    "ntag_reload_prepared": {
+      "preliminaryBytes": 2272,
+      "finalBytes": 2272,
+      "changeBytes": 0
+    },
+    "ntag_emu_prepare_change": {
+      "preliminaryBytes": 24,
+      "finalBytes": 24,
+      "changeBytes": 0
+    },
+    "ntag_emu_deliver": {
+      "preliminaryBytes": 32,
+      "finalBytes": 32,
+      "changeBytes": 0
+    },
+    "ntag_emu_set_tag": {
+      "preliminaryBytes": 32,
+      "finalBytes": 32,
+      "changeBytes": 0
+    },
+    "app_amiidb_on_run": {
+      "preliminaryBytes": 24,
+      "finalBytes": 24,
+      "changeBytes": 0
+    },
+    "app_amiidb_save_cache": {
+      "preliminaryBytes": 352,
+      "finalBytes": 344,
+      "changeBytes": -8
+    },
+    "app_amiidb_restore_cache": {
+      "preliminaryBytes": 360,
+      "finalBytes": 360,
+      "changeBytes": 0
+    },
+    "amiidb_nfc_return_to_list": {
+      "preliminaryBytes": 8,
+      "finalBytes": 8,
+      "changeBytes": 0
+    }
+  },
+  "twelveCoreFramesUnchanged": true,
+  "linkedPhaseAndTailcallProof": {
+    "removeToTransaction": "2b358:\tf7ff f8e9 \tbl\t2a52e <transact>",
+    "transactTail": {
+      "restoreInstruction": "2a54c:\te8bd 4010 \tldmia.w\tsp!, {r4, lr}",
+      "tailInstruction": "2a550:\tf7ff bfa2 \tb.w\t2a498 <transact.part.0>",
+      "wrapperFrameNotSimultaneouslyActive": true
+    },
+    "buildThenPublish": [
+      "2a4de:\tf7ff ff2d \tbl\t2a33c <build_transaction>",
+      "2a4f0:\tf7ff fc56 \tbl\t29da0 <publish>"
+    ],
+    "planThenRebuild": [
+      "2a350:\tf7ff fafe \tbl\t29950 <plan_transaction>",
+      "2a47e:\tf7ff fdd3 \tbl\t2a028 <rebuild>"
+    ],
+    "reloadPrepare": "38786:\tf7e9 fa39 \tbl\t21bfc <ntag_emu_prepare_change>",
+    "reloadTail": {
+      "restoreInstruction": "38790:\te8bd 4038 \tldmia.w\tsp!, {r3, r4, r5, lr}",
+      "tailInstruction": "38794:\tf7ff bf76 \tb.w\t38684 <ntag_reload_prepared>",
+      "wrapperFrameNotSimultaneouslyActive": true
+    },
+    "laterSetTag": "38750:\tf7e9 fb1a \tbl\t21d88 <ntag_emu_set_tag>",
+    "setTagPrepare": "21d96:\tf7ff ff31 \tbl\t21bfc <ntag_emu_prepare_change>",
+    "prepareDeliver": "21c32:\tf7ff ff5f \tbl\t21af4 <ntag_emu_deliver>"
+  },
+  "pfs": {
+    "publicationBefore": {
+      "frames": [
+        {
+          "function": "pfs_remove",
+          "bytes": 632
+        },
+        {
+          "function": "transact.part.0",
+          "bytes": 2208
+        },
+        {
+          "function": "publish",
+          "bytes": 712
+        }
+      ],
+      "partialSumBytes": 3552
+    },
+    "publicationAfter": {
+      "frames": [
+        {
+          "function": "pfs_remove",
+          "bytes": 632
+        },
+        {
+          "function": "transact.part.0",
+          "bytes": 336
+        },
+        {
+          "function": "publish",
+          "bytes": 712
+        }
+      ],
+      "partialSumBytes": 1680
+    },
+    "publicationReductionBytes": 1872,
+    "planningAfter": {
+      "frames": [
+        {
+          "function": "pfs_remove",
+          "bytes": 632
+        },
+        {
+          "function": "transact.part.0",
+          "bytes": 336
+        },
+        {
+          "function": "build_transaction",
+          "bytes": 656
+        },
+        {
+          "function": "plan_transaction",
+          "bytes": 648
+        }
+      ],
+      "partialSumBytes": 2272
+    },
+    "rebuildAfter": {
+      "frames": [
+        {
+          "function": "pfs_remove",
+          "bytes": 632
+        },
+        {
+          "function": "transact.part.0",
+          "bytes": 336
+        },
+        {
+          "function": "build_transaction",
+          "bytes": 656
+        },
+        {
+          "function": "rebuild",
+          "bytes": 1056
+        }
+      ],
+      "partialSumBytes": 2680
+    },
+    "oldCombinedPlanRebuildFrame": {
+      "function": "transact.part.0",
+      "bytes": 2208,
+      "note": "rebuild war in diesen Rahmen integriert, kein separat addierbarer alter Rebuild-Rahmen."
+    },
+    "oldRemoveWithCombinedBuildPartialSum": 2840,
+    "newRemoveWithRebuildPartialSum": 2680,
+    "rebuildPartialReductionBytes": 160,
+    "largestSelectedPhaseBefore": 3552,
+    "largestSelectedPhaseAfter": 2680,
+    "selectedPhaseReductionBytes": 872,
+    "phaseProof": [
+      "transact stellt seine 8 Wrapperbytes bei 0x2a54c vor dem Tailbranch 0x2a550 nach transact.part.0 wieder her; nicht doppelt addieren.",
+      "build_transaction ruft plan_transaction bei 0x2a350 und später rebuild bei 0x2a47e. Der Planhelfer ist beim Rebuild zurückgekehrt.",
+      "transact.part.0 ruft build_transaction bei 0x2a4de; erst nach dessen Rückkehr folgt publish bei 0x2a4f0. Der 656-Byte-Planrahmen bleibt bei publish nicht aktiv."
+    ],
+    "largeObjects": [
+      {
+        "phase": "transact.part.0",
+        "object": "manifest_t m",
+        "bytes": 312,
+        "frameBytes": 336
+      },
+      {
+        "phase": "build_transaction",
+        "object": "transaction_plan_t plan",
+        "bytes": 588,
+        "frameBytes": 656
+      },
+      {
+        "phase": "plan_transaction",
+        "object": "cursor_t plus pfs_info_t/kleine Planlokale",
+        "cursorBytes": 376,
+        "infoBytes": 200,
+        "frameBytes": 648
+      },
+      {
+        "phase": "rebuild",
+        "object": "input/output io_t und pfs_info_t",
+        "ioBytesEach": 356,
+        "infoBytes": 200,
+        "frameBytes": 1056
+      },
+      {
+        "phase": "publish",
+        "object": "serialisiertes Manifest und io_t",
+        "manifestBufferBytes": 324,
+        "ioBytes": 356,
+        "frameBytes": 712
+      }
+    ],
+    "allocationChange": "Keine zusätzliche Heapallokation, kein neuer statischer Arbeitsbereich. Bestehende Rebuild-Indexallokation und Fehlerpfade bleiben."
+  },
+  "ntag": {
+    "firstPendingSaveBefore": {
+      "frames": [
+        {
+          "function": "ntag_reload",
+          "bytes": 2272
+        },
+        {
+          "function": "ntag_emu_prepare_change",
+          "bytes": 24
+        },
+        {
+          "function": "ntag_emu_deliver",
+          "bytes": 32
+        }
+      ],
+      "partialSumBytes": 2328
+    },
+    "firstPendingSaveAfter": {
+      "frames": [
+        {
+          "function": "ntag_reload",
+          "bytes": 16
+        },
+        {
+          "function": "ntag_emu_prepare_change",
+          "bytes": 24
+        },
+        {
+          "function": "ntag_emu_deliver",
+          "bytes": 32
+        }
+      ],
+      "partialSumBytes": 72
+    },
+    "firstPendingSavePartialReductionBytes": 2256,
+    "laterTagInstallBefore": {
+      "frames": [
+        {
+          "function": "ntag_reload",
+          "bytes": 2272
+        },
+        {
+          "function": "ntag_emu_set_tag",
+          "bytes": 24
+        },
+        {
+          "function": "ntag_emu_prepare_change",
+          "bytes": 24
+        },
+        {
+          "function": "ntag_emu_deliver",
+          "bytes": 32
+        }
+      ],
+      "partialSumBytes": 2352
+    },
+    "laterTagInstallAfter": {
+      "frames": [
+        {
+          "function": "ntag_reload_prepared",
+          "bytes": 2272
+        },
+        {
+          "function": "ntag_emu_set_tag",
+          "bytes": 32
+        },
+        {
+          "function": "ntag_emu_prepare_change",
+          "bytes": 24
+        },
+        {
+          "function": "ntag_emu_deliver",
+          "bytes": 32
+        }
+      ],
+      "partialSumBytes": 2360
+    },
+    "laterTagInstallPartialChangeBytes": 8,
+    "phaseProof": [
+      "ntag_reload ruft prepare_change bei 0x38786 unter nur 16 eigenen Bytes auf.",
+      "Bei 0x38790 stellt ntag_reload seine 16 Bytes vor dem Tailbranch 0x38794 nach ntag_reload_prepared wieder her.",
+      "Der große 2178-Byte-Tagpuffer wird erst in ntag_reload_prepared (2272-Byte-Rahmen) angelegt. Er bleibt für Laden und set_tag erhalten.",
+      "Der spätere strukturelle set_tag/prepare/deliver-Teilpfad wächst um 8 Bytes, weil ntag_emu_set_tag im neuen ELF 32 statt 24 Bytes hat. Keine pauschale Verringerung jedes NTAG-Pfades behauptet."
+    ],
+    "sessionStatusPadding": {
+      "oldStateBytes": 2224,
+      "newStateBytes": 2224,
+      "newByteOffset": 2185,
+      "generationOffset": 2188,
+      "snapshotBytesUnchanged": 2178
+    },
+    "notClaimed": "ntag_reload ist AmiiboLink und kein nachgewiesener Verursacher des historischen Gerätestackmarkers oder des 512-Byte-Dateitests."
+  },
+  "app3": {
+    "applicationAllocation": {
+      "build_de397_final1": {
+        "allocationBytes": 2568,
+        "instructions": [
+          "396c6:\tf640 2008 \tmovw\tr0, #2568\t; 0xa08",
+          "396ca:\tf7f7 ff2d \tbl\t31528 <mui_mem_malloc>"
+        ]
+      },
+      "build_de398_final1": {
+        "allocationBytes": 2568,
+        "instructions": [
+          "3954e:\tf640 2008 \tmovw\tr0, #2568\t; 0xa08",
+          "39552:\tf7f7 fecb \tbl\t312ec <mui_mem_malloc>"
+        ]
+      },
+      "build_de398_release1": {
+        "allocationBytes": 2568,
+        "instructions": [
+          "3956e:\tf640 2008 \tmovw\tr0, #2568\t; 0xa08",
+          "39572:\tf7f7 febb \tbl\t312ec <mui_mem_malloc>"
+        ]
+      }
+    },
+    "allocationUnchangedBytes": 2568,
+    "snapshotBytes": 300,
+    "cacheCapacityBytes": 312,
+    "snapshotRemainingBytes": 12,
+    "snapshotEvidence": "Finale ARM-Instruktionen setzen 300 für lokalen Snapshot, Größenfeld und Save/Restore-Kopien; der vorhandene Retainbereich wird mit 312 initialisiert. Geänderte Marke wird an Offset 297 gelesen.",
+    "temporaryWriteFlagOffsetInApp": 2211,
+    "temporaryWriteFlagOffsetInSnapshot": 297,
+    "applicationPaddingEvidence": "Das zusätzliche Flag wird im verknüpften Actionpfad an App-Offset 2211 gelesen. Die unmittelbare malloc-Anforderung bleibt in App670, erster normaler Vorstufe und finalem Release exakt 2568 Bytes.",
+    "saveCacheFrameBefore": 352,
+    "saveCacheFrameFinal": 344,
+    "restoreCacheFrameFinal": 360,
+    "automaticReturnFrameFinal": 8,
+    "peerReview": {
+      "path": "DE3_98_evidence/APP3_RETENTION_PEER_REVIEW.json",
+      "bytes": 7346,
+      "sha256": "ae085f193ea7842d9858577008b9194bbc991e69ec3c75e8da5eb55afb03a61a",
+      "sourceReportSha256": "f240b46f94770287b1d585a011391ce47c701f982934269f08914a60945f24f9"
+    },
+    "peerReviewedFiveApp3FilesMatchFinalInputs": true,
+    "semanticTests": "Gezielte Retentions-/ID-WRITE-/Interleaving-Tests führt der verantwortliche Historie-Agent; dieser Nachtrag wiederholt sie nicht."
+  },
+  "resources": {
+    "buildRecord": {
+      "binary_bytes": 364180,
+      "linker_flash_used_bytes": 364200,
+      "observed": {
+        "flash_reserve_bytes": 8536,
+        "heap_stack_gap_bytes": 1720,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "linkedSymbols": {
+      "__HeapBase": {
+        "address": "0x2000d748",
+        "sizeBytes": 512,
+        "nmLine": "2000d748 00000200 N __HeapBase"
+      },
+      "__HeapLimit": {
+        "address": "0x2000d948",
+        "sizeBytes": null,
+        "nmLine": "2000d948 N __HeapLimit"
+      },
+      "__StackLimit": {
+        "address": "0x2000e000",
+        "sizeBytes": 8192,
+        "nmLine": "2000e000 00002000 A __StackLimit"
+      },
+      "__StackTop": {
+        "address": "0x20010000",
+        "sizeBytes": null,
+        "nmLine": "20010000 B __StackTop"
+      },
+      "m_cache_data": {
+        "address": "0x20002bd4",
+        "sizeBytes": 2500,
+        "nmLine": "20002bd4 000009c4 b m_cache_data"
+      },
+      "m_snapshot": {
+        "address": "0x20004709",
+        "sizeBytes": 2178,
+        "nmLine": "20004709 00000882 b m_snapshot"
+      },
+      "ntag_emu": {
+        "address": "0x20004f8c",
+        "sizeBytes": 2224,
+        "nmLine": "20004f8c 000008b0 B ntag_emu"
+      }
+    },
+    "heapStackGapFromLinkedSymbols": 1720,
+    "reservedStackFromLinkedSymbols": 8192,
+    "limitsUnchanged": true
+  },
+  "method": {
+    "staticInspectionOnly": true,
+    "objdump": "toolchains/rootfs/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump",
+    "nm": "toolchains/rootfs/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-nm",
+    "prologueArithmetic": "Gezählte Push/STMDB-Registerbytes plus unmittelbare SP-Absenkung stimmen für alle 16 ausgewählten Funktionen exakt mit dem statischen .su-Rahmen überein.",
+    "newBuilds": 0,
+    "newDeviceActions": 0,
+    "repeatedLinkedChecks": 0,
+    "fullWorstCaseClaim": false
+  },
+  "limits": [
+    "Nur tatsächlich gleichzeitig aktive ausgewählte Frames; getrennte Phasen und nachweislich abgebaute Tailcall-Wrapper werden nicht addiert.",
+    "Nicht enthalten: äußere Aufrufer, tiefere LittleFS-/IO-/libc-/SDK-Aufrufe, indirekte Allokator-/Driver-/Savecallbacks, S112/SVC, IRQ-Nesting und FPU-Kontext.",
+    "Die statische Teilsumme ist weder eine vollständige garantierte Stackhöchstlast noch ein Gerätelauf oder die Ursache des früheren 1936-Byte-Watermarks.",
+    "Vergleich gegen App670 TEST1 und App671 NORMAL mit derselben Compilerfassung; weitere Releaseänderungen und entfernte TEST-Instrumentierung sind in den gebundenen Quellen enthalten.",
+    "Die App3-Größen beziehen sich auf den einzelnen App-Datenblock und den vorhandenen Retentionssnapshot, nicht auf sämtliche zusätzlich dynamisch angelegten UI-Objekte.",
+    "Diese finale statische Qualifikation ersetzt keine physische Messung. Zweiter unabhängiger Build, vollständige Linkedchecker, Signierung und Veröffentlichung werden von Root separat gebunden."
+  ],
+  "nextStep": "Root übernimmt diesen finalen Teilbudgetnachweis in die normale Releasequalifikation; keine zusätzliche Gerätetestserie aus dieser Analyse.",
+  "releaseBinding": {
+    "sourceCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+    "sourceTree": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
+    "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a"
+  }
+}

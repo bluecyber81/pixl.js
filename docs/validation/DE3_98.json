@@ -1,0 +1,736 @@
+{
+  "schema": 1,
+  "date": "2026-11-21",
+  "board": "LCD",
+  "displayController": "ST7567",
+  "firmwareVersion": "2.22.0-DE3.98",
+  "applicationCounter": 671,
+  "releaseKind": "normal",
+  "testBuild": false,
+  "status": "software-qualified-signed-normal",
+  "hardwareAcceptance": "pending",
+  "physicalDeviceAccess": false,
+  "sourceRepository": "bluecyber81/pixl.js",
+  "sourceBranch": "release/lcd-de398-app671",
+  "sourceCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "productionTree": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
+  "localProductionCommit": "465a4b0572f8c0d22e899b2110fb88ff8c6015a4",
+  "sourceUrl": "https://github.com/bluecyber81/pixl.js/tree/7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "productionInputCount": 709,
+  "engineSha256": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d",
+  "applicationBytes": 364180,
+  "applicationSha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "storageFormat": "PFS1",
+  "migrationRequired": false,
+  "applicationOnly": {
+    "file": "fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+    "exists": true,
+    "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+    "bytes": 364781,
+    "signatureVerified": true,
+    "negativeSignatureControlsPassed": 3,
+    "containsBootloader": false,
+    "containsSoftDevice": false,
+    "requiredSystem": "Z21 / Nordic S112 7.3.0",
+    "softDeviceRequirements": [
+      294
+    ],
+    "z21AcceptanceVerified": true
+  },
+  "reproducibility": {
+    "independentBuilds": 2,
+    "identical": [
+      "pixljs.bin",
+      "pixljs.hex",
+      "production-inputs.json"
+    ],
+    "binaryBytes": 364180,
+    "binarySha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+    "intelHexSha256": "4a6c84a457cd220c9b3cb953dbbc6793af4664a2cdd38be4583f9deac7e5d072",
+    "evidence": {
+      "path": "DE3_98_evidence/BUILD_PAIR_FINAL.json",
+      "sha256": "e210a7eeb15d2dd6d3e753b992b35fcb2388723193440f637b48ef5db0753a2f",
+      "bytes": 2557
+    },
+    "limit": "ELF/map debug paths differ by isolated build directory; application BIN, HEX and input manifests match."
+  },
+  "validation": {
+    "fullFirmwareSuites": {
+      "executed": 186,
+      "qualifiedPassed": 186,
+      "unit": "test scripts",
+      "initialFullRunPassed": 185,
+      "initialFullRunFailed": 1,
+      "targetedRerunScripts": 1,
+      "targetedRerunCases": 4,
+      "method": "Complete 186-script full-profile execution, followed by only the one failed suite after correcting an outdated test-only mock. Original full report is preserved unchanged.",
+      "testOnlyFixtureCorrection": {
+        "path": "tests/de3/app_settings_save_ui.c.in",
+        "beforeSha256": "a1ba95fd9737bd9c0f588fba63cc97ea56c1f0ad300626b26ef86eeede6e3dec",
+        "afterSha256": "144bad3bcfb9bceb7ed5d4ecb9f9bc474c1d3a7c9bfff25cb77250294c2fe26f",
+        "soleFixtureConsumer": "fw/tests/de3/test_app_settings_save_ui.py",
+        "existingAssertionsChanged": false
+      },
+      "otherSnapshotInputsUnchanged": 813,
+      "productionInputsUnchanged": 709,
+      "originalFullRun": {
+        "path": "DE3_98_evidence/FULL_TESTS_FINAL.json",
+        "sha256": "3b383c5002a938b9853124a09c983b1d3d47883ae3efd786af0d1e4ed7116f4e",
+        "bytes": 271656
+      },
+      "qualification": {
+        "path": "DE3_98_evidence/FULL_TESTS_QUALIFIED.json",
+        "sha256": "1cfdeb68c762291bbafb4b4d3a58be8d9000c5eb779bcc10eb823dc4d577281b",
+        "bytes": 185538
+      }
+    },
+    "linkedArmCheckers": {
+      "executed": 13,
+      "passed": 13,
+      "evidence": {
+        "path": "DE3_98_evidence/ARM/LINKED_CHECKS.json",
+        "sha256": "e1cccf32f92e290fef5252ca9aaac91f7588c4ffb649130e12e49f25225c17b4",
+        "bytes": 14004
+      }
+    },
+    "normalBuildContract": {
+      "accepted": [
+        "INFO05 MTUD v1/v2",
+        "INFO09 startup v1-v4",
+        "VFS PXGC v1",
+        "revision-bound READ/DIGEST batches"
+      ],
+      "excluded": [
+        "MTUD v3 test selector",
+        "EVT! experiment setter",
+        "startup v5 test profile",
+        "test-only mount profiler"
+      ],
+      "actualLinkedHandlersVerified": true,
+      "absentTestSymbols": [
+        "ble_test_diagnostic",
+        "m_event_extension_enabled",
+        "m_event_extension_result",
+        "mount_profile",
+        "runtime_diag_mount_scan_begin",
+        "runtime_diag_profile_begin",
+        "runtime_diag_profile_end",
+        "runtime_diag_startup_profile_snapshot"
+      ],
+      "evidence": {
+        "path": "DE3_98_evidence/ARM/NORMAL_RELEASE.json",
+        "sha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+        "bytes": 2814
+      }
+    },
+    "nfcSessionEngine": {
+      "nativeAsanUbsanCases": 48,
+      "arm32QemuCases": 48,
+      "armStateBytesBefore": 2224,
+      "armStateBytesAfter": 2224,
+      "physicalRfTest": false
+    },
+    "targetedUiSuites": [
+      {
+        "suite": "test_import_return_de398.py",
+        "cases": 24,
+        "status": "native+ASan/UBSan passed before final App3-only guard; unchanged import source"
+      },
+      {
+        "suite": "test_amiidb_resume.py",
+        "cases": 258,
+        "includedTagGuardCases": 103,
+        "status": "ASan/UBSan passed on final guard"
+      },
+      {
+        "suite": "test_nfc_return_de398.py",
+        "cases": 64,
+        "app2": 13,
+        "app3": 51,
+        "status": "native+ASan/UBSan passed on final guard"
+      },
+      {
+        "suite": "test_database_focus_veto_review2.py",
+        "cases": 156,
+        "includedNewMenuReentryCases": 16,
+        "status": "native+ASan/UBSan passed on final guard"
+      },
+      {
+        "suite": "test_amiibo_guard_and_uid_review2.py",
+        "cases": 36,
+        "status": "ASan/UBSan passed; explicit UID success clears protection, failures retain it"
+      },
+      {
+        "suite": "test_standard_tag_rng_review2.py",
+        "cases": 45,
+        "status": "ASan/UBSan passed; existing sibling tests retained"
+      },
+      {
+        "suite": "test_amiidb_slot_persistence_de348.py",
+        "cases": 29,
+        "status": "passed"
+      },
+      {
+        "suite": "test_player_v3.py",
+        "tests": 5,
+        "status": "passed"
+      },
+      {
+        "suite": "test_chameleon_files.py",
+        "groups": 8,
+        "status": "passed; existing short/error/format assertions retained"
+      },
+      {
+        "suite": "test_slot_save_guard.py",
+        "status": "passed; accepted SaveAs clears, cancel/badtarget retains protection"
+      },
+      {
+        "suite": "test_nfc_app_handoffs_de3_3.py + test_nfc_save_retry_de337.py + test_amiidb_back_to_list_focus.py",
+        "status": "passed; prior retry/metadata/focus assertions retained"
+      },
+      {
+        "suite": "Settings recovery/focus/storage snapshot/locale width",
+        "status": "passed on unchanged settings source; width576rows, both locales"
+      },
+      {
+        "suite": "test_app_settings_save_ui.py",
+        "tests": 4,
+        "status": "Gezielter Rerun auf finalem Produkt bestanden, nur alte Fixture um bool-Setter/Flag ergänzt; tatsächliche Testasserts unverändert. Voller erster Root-Lauf und anschließender Einzel-Rerun bleiben getrennt."
+      }
+    ],
+    "targetedCaseCountsOverlap": true,
+    "packedFsCleanup": [
+      {
+        "passed": true,
+        "lifecycleCases": 36,
+        "readonlyCases": 4,
+        "maintenanceFailureCases": 2,
+        "norFaultCases": 243,
+        "postcommitNorFaultCases": 18,
+        "readFaultCases": 1306,
+        "pointerBytes": 8,
+        "pfsBytes": 3112,
+        "peakRequestedHeap": 9892,
+        "liveAtEnd": 0
+      }
+    ],
+    "packedFsAtomicMeta": [
+      {
+        "passed": true,
+        "atomicCases": 28,
+        "interruptedCases": 84,
+        "pointerBytes": 8,
+        "peakRequestedHeap": 10244,
+        "liveAtEnd": 0,
+        "separatePrograms": 14187,
+        "combinedPrograms": 7374,
+        "separateErases": 1062,
+        "combinedErases": 608
+      }
+    ],
+    "sanitizers": {
+      "address": true,
+      "undefinedBehavior": true,
+      "leakSanitizer": false,
+      "leakSanitizerReason": "Der erste Lauf scheiterte ausschließlich an LeakSanitizers ptrace-Inkompatibilität. Anschließend ASAN_OPTIONS=detect_leaks=0; tatsächliche Speicherallokationen/Freigaben bleiben im Harness erfasst und liveAtEnd muss 0 sein."
+    },
+    "pfsLayoutCases": 4,
+    "crossMount": {
+      "cases": 6,
+      "files": 1131,
+      "folders": 77,
+      "synthetic": true
+    },
+    "capacitySimulator": {
+      "profile": "de398",
+      "engineSha256": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d",
+      "wasmSha256": "30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273",
+      "reproducibleWasm": true,
+      "deviceFreeSpaceMeasurement": false
+    },
+    "ota": {
+      "signatureVerified": true,
+      "negativeControlsPassed": 3,
+      "applicationOnly": true
+    },
+    "repositoryOtaGate": {
+      "passed": true,
+      "exitCode": 0,
+      "evidence": {
+        "path": "DE3_98_evidence/RELEASE_OTA_GATE.json",
+        "sha256": "c42904f8a87b51eb536f36242cd5c6b79681ed3c5bdb0b804e29814d2524e005",
+        "bytes": 820
+      }
+    },
+    "z21": {
+      "passed": true,
+      "cryptoHashCrcCases": 7,
+      "signedInitCases": 2,
+      "bootCounter": 21,
+      "previousApplicationCounter": 670,
+      "physicalDeviceAccess": false
+    }
+  },
+  "stack": {
+    "evidence": {
+      "path": "DE3_98_evidence/STACK_PHASES_FINAL.json",
+      "sha256": "e4fb56009aae90c4e89897200d5226d1e1932faf2f367a1cdbf69e59d6347c15",
+      "bytes": 34789
+    },
+    "publicationPartialBytes": {
+      "before": 3552,
+      "after": 1680
+    },
+    "rebuildPartialBytes": {
+      "before": 2840,
+      "after": 2680
+    },
+    "largestSelectedPfsPhaseBytes": {
+      "before": 3552,
+      "after": 2680
+    },
+    "firstPendingNtagSavePrefixBytes": {
+      "before": 2328,
+      "after": 72
+    },
+    "laterNtagInstallPartialBytes": {
+      "before": 2352,
+      "after": 2360
+    },
+    "applicationDataBlockBytes": 2568,
+    "retainedSnapshotBytes": 300,
+    "retainedCapacityBytes": 312,
+    "newStaticWorkBuffers": 0,
+    "newTransactionHeapAllocations": 0,
+    "wholeFirmwareWorstCaseClaim": false
+  },
+  "resources": {
+    "binary_bytes": 364180,
+    "linker_flash_used_bytes": 364200,
+    "observed": {
+      "flash_reserve_bytes": 8536,
+      "heap_stack_gap_bytes": 1720,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "changes": [
+    "PackedFS separates transaction planning, rebuild and atomic publication into non-overlapping stack phases.",
+    "AmiiboLink completes a pending old-tag save before allocating the large next-tag stack buffer.",
+    "Normal LCD diagnostics retain PXGC and standard link/startup formats; experimental radio controls and mount profiles are excluded.",
+    "Successful Chameleon import saves through the existing retry/discard flow before returning to the selected card.",
+    "Settings display their known load basis using existing RAM state without an extra storage query.",
+    "Temporary AmiiboDB tag bytes and unsaved-write protection survive validated retained-RAM resume and menu reentry.",
+    "Completed NFC data sessions return to the correct selection only when ownership, generation, scene and unsaved-data guards permit."
+  ],
+  "inheritedFromApp670": [
+    "Revision-bound READ/SHA-256 batches: at most four files, each at most 572 bytes; request payload at most 243 bytes.",
+    "CRC loop optimization, storage publication/reader pins, save/retry/discard and confirmed link diagnostics remain.",
+    "The earlier Web test-status version-gate defect was corrected in Web3.60.0-test.2; this normal firmware is a separate release."
+  ],
+  "historicalEvidencePolicy": "App669/App670 device observations remain separate historical evidence. No old device export, filename, folder listing or timing observation is presented as a run of this App671 binary.",
+  "hardwareObservationsPending": [
+    "Installation and normal startup identity of this exact LCD App671 package.",
+    "Ordinary use of the new import/return/settings-load/temporary-tag-resume flows on the device.",
+    "Diagnostic memory and error observations during ordinary use; no complete static interrupt-inclusive maximum is claimed."
+  ],
+  "noRepeatRequirement": "Previously completed full-backup, radio comparison and small storage-function sessions are not turned into a new mandatory device-test series.",
+  "measurementLimits": [
+    "Host tests, QEMU ARM32 and linked Cortex-M4 checks model their stated hardware and transport boundaries.",
+    "NFC data-response plus field-end status does not certify a console/game operation.",
+    "Stack totals cover selected simultaneously active frames; deeper/indirect calls, outer callers, S112 and interrupts are not a complete worst-case bound.",
+    "Retained RAM depends on a valid CRC-bound cache and enabled resume; no persistence across power loss is claimed.",
+    "Synthetic cross-mount/capacity tests do not measure physical free space or radio/startup throughput.",
+    "Z21 checks execute actual linked validation code with simulated flash/radio/handover, not a physical OTA transfer."
+  ],
+  "releaseGatesPending": [],
+  "webIntegration": {
+    "targetVersion": "3.61.0",
+    "qualificationAndPublication": "separately bound by the Web release"
+  },
+  "evidencePathBase": "docs/validation",
+  "nextStep": "Publish the qualified normal application and its matching normal Web binding; retain physical App671 observations as a separate follow-up.",
+  "evidence": {
+    "BUILD_PAIR_FINAL.json": {
+      "path": "DE3_98_evidence/BUILD_PAIR_FINAL.json",
+      "sha256": "e210a7eeb15d2dd6d3e753b992b35fcb2388723193440f637b48ef5db0753a2f",
+      "bytes": 2557,
+      "sourceReportSha256": "47a9ee7ba854d9c7df98c8dfe6f58853ffcd0b4c8098b8818476969de4fc9b5d",
+      "sourceReportBytes": 2617,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "PRODUCTION_INPUTS.json": {
+      "path": "DE3_98_evidence/PRODUCTION_INPUTS.json",
+      "sha256": "a274361b051853e464264bf1a630027b88633aa07a5ad87f713b6b6e3f0e0ae1",
+      "bytes": 85213,
+      "sourceReportSha256": "a274361b051853e464264bf1a630027b88633aa07a5ad87f713b6b6e3f0e0ae1",
+      "sourceReportBytes": 85213,
+      "transformation": "Byte-identical source report."
+    },
+    "SOURCE_PUBLICATION.json": {
+      "path": "DE3_98_evidence/SOURCE_PUBLICATION.json",
+      "sha256": "ff2337627c0912ed0e393b8b8913112ddb5214158e03c722bd017723d2618ff7",
+      "bytes": 395,
+      "sourceReportSha256": "ff2337627c0912ed0e393b8b8913112ddb5214158e03c722bd017723d2618ff7",
+      "sourceReportBytes": 395,
+      "transformation": "Byte-identical source report."
+    },
+    "FULL_TESTS_FINAL.json": {
+      "path": "DE3_98_evidence/FULL_TESTS_FINAL.json",
+      "sha256": "3b383c5002a938b9853124a09c983b1d3d47883ae3efd786af0d1e4ed7116f4e",
+      "bytes": 271656,
+      "sourceReportSha256": "1c79e7e4d69065a749907322aa852efd51699de8318a5a827a69590f2b88fd8f",
+      "sourceReportBytes": 271966,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "FULL_TESTS_FINAL.environment.json": {
+      "path": "DE3_98_evidence/FULL_TESTS_FINAL.environment.json",
+      "sha256": "e9e0bdcca683b4662bb75138aa59b682fae4137437e2bfcb3d297507417caff5",
+      "bytes": 88107,
+      "sourceReportSha256": "e9e0bdcca683b4662bb75138aa59b682fae4137437e2bfcb3d297507417caff5",
+      "sourceReportBytes": 88107,
+      "transformation": "Byte-identical source report."
+    },
+    "RERUN/TEST.log": {
+      "path": "DE3_98_evidence/RERUN/TEST.log",
+      "sha256": "b9c510e4fddb627188584dd4dee8b7de124de048ecb61a97c4b75a12441b4ba1",
+      "bytes": 724,
+      "sourceReportSha256": "b9c510e4fddb627188584dd4dee8b7de124de048ecb61a97c4b75a12441b4ba1",
+      "sourceReportBytes": 724,
+      "transformation": "Byte-identical source report."
+    },
+    "RERUN/RESULTS.json": {
+      "path": "DE3_98_evidence/RERUN/RESULTS.json",
+      "sha256": "30afcb2e080618ff4258d6945b33886f7946e7f25b0a58eeb0715b6249ec564e",
+      "bytes": 806,
+      "sourceReportSha256": "74e793c9d3bcdcc1adb5104493062b3d4aa9751af637bb49a226eb654af89ece",
+      "sourceReportBytes": 799,
+      "transformation": "Local paths normalized; log reference rebound to public normalized log. Original hash retained."
+    },
+    "FULL_TESTS_QUALIFIED.json": {
+      "path": "DE3_98_evidence/FULL_TESTS_QUALIFIED.json",
+      "sha256": "1cfdeb68c762291bbafb4b4d3a58be8d9000c5eb779bcc10eb823dc4d577281b",
+      "bytes": 185538,
+      "sourceReportSha256": "7a85dffaffd4521924f837c25c6bcc81ed19ed3c98c93a841a32e72f3ef8587b",
+      "sourceReportBytes": 185361,
+      "transformation": "Original 185/186 result and sole four-case rerun retained; public normalized report/log hashes rebound, original hashes retained."
+    },
+    "ARM/STACK_WATERMARK.log": {
+      "path": "DE3_98_evidence/ARM/STACK_WATERMARK.log",
+      "sha256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953",
+      "bytes": 150,
+      "sourceReportSha256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953",
+      "sourceReportBytes": 150,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/AES_M4.log": {
+      "path": "DE3_98_evidence/ARM/AES_M4.log",
+      "sha256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1",
+      "bytes": 263,
+      "sourceReportSha256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1",
+      "sourceReportBytes": 263,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/SHA256_HMAC.log": {
+      "path": "DE3_98_evidence/ARM/SHA256_HMAC.log",
+      "sha256": "67be4d951f6c23acf105d4149b7918c91735f2fe8d77ed189d7f400628914b98",
+      "bytes": 129,
+      "sourceReportSha256": "67be4d951f6c23acf105d4149b7918c91735f2fe8d77ed189d7f400628914b98",
+      "sourceReportBytes": 129,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/SHA256_HMAC.json": {
+      "path": "DE3_98_evidence/ARM/SHA256_HMAC.json",
+      "sha256": "8205e0626a70f595ad1c796143cafda11569dd5e15fb5164d3431f65439162a3",
+      "bytes": 219,
+      "sourceReportSha256": "8205e0626a70f595ad1c796143cafda11569dd5e15fb5164d3431f65439162a3",
+      "sourceReportBytes": 219,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/BUILD_FAULT.log": {
+      "path": "DE3_98_evidence/ARM/BUILD_FAULT.log",
+      "sha256": "1b690664da2bb990ee700d57fed8e1b972ae487f9376773adde4a365f7a98043",
+      "bytes": 131,
+      "sourceReportSha256": "1b690664da2bb990ee700d57fed8e1b972ae487f9376773adde4a365f7a98043",
+      "sourceReportBytes": 131,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/BUILD_FAULT.json": {
+      "path": "DE3_98_evidence/ARM/BUILD_FAULT.json",
+      "sha256": "b9710862573bfbc3dd168693a0b44543566959a55c70a0d05df530247f089ffd",
+      "bytes": 1534,
+      "sourceReportSha256": "b9710862573bfbc3dd168693a0b44543566959a55c70a0d05df530247f089ffd",
+      "sourceReportBytes": 1534,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/LCD_DEVICE_TEST.log": {
+      "path": "DE3_98_evidence/ARM/LCD_DEVICE_TEST.log",
+      "sha256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5",
+      "bytes": 4885,
+      "sourceReportSha256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5",
+      "sourceReportBytes": 4885,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/LCD_DEVICE_TEST.json": {
+      "path": "DE3_98_evidence/ARM/LCD_DEVICE_TEST.json",
+      "sha256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5",
+      "bytes": 4885,
+      "sourceReportSha256": "aec451636d55253de8e95274cee80cff84f2a3a8fe66f472e49e671c321a20e5",
+      "sourceReportBytes": 4885,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/LCD_GAME_ROTATION.log": {
+      "path": "DE3_98_evidence/ARM/LCD_GAME_ROTATION.log",
+      "sha256": "7aee50cd2d9dc5ba04aa9b093647a701ed03efcab683755702b55f2fd3c7178c",
+      "bytes": 13272,
+      "sourceReportSha256": "7aee50cd2d9dc5ba04aa9b093647a701ed03efcab683755702b55f2fd3c7178c",
+      "sourceReportBytes": 13272,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/LCD_GAME_ROTATION.json": {
+      "path": "DE3_98_evidence/ARM/LCD_GAME_ROTATION.json",
+      "sha256": "27935ee0416f9aaea7f55731602d004e911ed0e0e4a4ad7c4b19dcd131ee85de",
+      "bytes": 13267,
+      "sourceReportSha256": "4fe0ff6cac06843078ef2072ab3a22fc6f2a855e5fe11a51829f80ee1d78373f",
+      "sourceReportBytes": 13271,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "ARM/FLASH_JEDEC.log": {
+      "path": "DE3_98_evidence/ARM/FLASH_JEDEC.log",
+      "sha256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca",
+      "bytes": 93,
+      "sourceReportSha256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca",
+      "sourceReportBytes": 93,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/DISPLAY_PROFILE.log": {
+      "path": "DE3_98_evidence/ARM/DISPLAY_PROFILE.log",
+      "sha256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86",
+      "bytes": 159,
+      "sourceReportSha256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86",
+      "sourceReportBytes": 159,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/CHAMELEON_SAVE_SCREEN.log": {
+      "path": "DE3_98_evidence/ARM/CHAMELEON_SAVE_SCREEN.log",
+      "sha256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2",
+      "bytes": 5216,
+      "sourceReportSha256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2",
+      "sourceReportBytes": 5216,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/CHAMELEON_SAVE_SCREEN.json": {
+      "path": "DE3_98_evidence/ARM/CHAMELEON_SAVE_SCREEN.json",
+      "sha256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2",
+      "bytes": 5216,
+      "sourceReportSha256": "6d3103f9b63cf2d13651d79b107815c05ed0e399c14fe4a6a1b403d66ca4b1f2",
+      "sourceReportBytes": 5216,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/FIRST_MENU.log": {
+      "path": "DE3_98_evidence/ARM/FIRST_MENU.log",
+      "sha256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9",
+      "bytes": 201,
+      "sourceReportSha256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9",
+      "sourceReportBytes": 201,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/BLE_LINK.log": {
+      "path": "DE3_98_evidence/ARM/BLE_LINK.log",
+      "sha256": "0041f32af6418f4514594f380cbcb670057b7ba81a809606adf68db26300e675",
+      "bytes": 109,
+      "sourceReportSha256": "0041f32af6418f4514594f380cbcb670057b7ba81a809606adf68db26300e675",
+      "sourceReportBytes": 109,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/BLE_LINK.json": {
+      "path": "DE3_98_evidence/ARM/BLE_LINK.json",
+      "sha256": "596b06bce9ccf6fc9f9d13cf83b8d6e44d8a57f0ff1461495dc2e0e3aa62482d",
+      "bytes": 743,
+      "sourceReportSha256": "596b06bce9ccf6fc9f9d13cf83b8d6e44d8a57f0ff1461495dc2e0e3aa62482d",
+      "sourceReportBytes": 743,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/BATCH_READ.log": {
+      "path": "DE3_98_evidence/ARM/BATCH_READ.log",
+      "sha256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa",
+      "bytes": 1116,
+      "sourceReportSha256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa",
+      "sourceReportBytes": 1116,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/BATCH_READ.json": {
+      "path": "DE3_98_evidence/ARM/BATCH_READ.json",
+      "sha256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa",
+      "bytes": 1116,
+      "sourceReportSha256": "899fd8aae91d8023127c70d7ed577fe7093ad3ee00bb9915bdc80c3f26ea2caa",
+      "sourceReportBytes": 1116,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/NORMAL_RELEASE.log": {
+      "path": "DE3_98_evidence/ARM/NORMAL_RELEASE.log",
+      "sha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+      "bytes": 2814,
+      "sourceReportSha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+      "sourceReportBytes": 2814,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/NORMAL_RELEASE.json": {
+      "path": "DE3_98_evidence/ARM/NORMAL_RELEASE.json",
+      "sha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+      "bytes": 2814,
+      "sourceReportSha256": "fc948e83e9e0df5b36aa045c6ca2f85575f55107537c509237d73aea05f0f822",
+      "sourceReportBytes": 2814,
+      "transformation": "Byte-identical source report."
+    },
+    "ARM/LINKED_CHECKS.json": {
+      "path": "DE3_98_evidence/ARM/LINKED_CHECKS.json",
+      "sha256": "e1cccf32f92e290fef5252ca9aaac91f7588c4ffb649130e12e49f25225c17b4",
+      "bytes": 14004,
+      "sourceReportSha256": "c12cfc08b5be21cb021723cf8caf85a6c1ca62438c47d294c55ff73de9275545",
+      "sourceReportBytes": 14382,
+      "transformation": "Paths normalized; all thirteen successful checker results retained and linked public log/report hashes rebound."
+    },
+    "APP3_RETENTION_PEER_REVIEW.json": {
+      "path": "DE3_98_evidence/APP3_RETENTION_PEER_REVIEW.json",
+      "sha256": "ae085f193ea7842d9858577008b9194bbc991e69ec3c75e8da5eb55afb03a61a",
+      "bytes": 7346,
+      "sourceReportSha256": "f240b46f94770287b1d585a011391ce47c701f982934269f08914a60945f24f9",
+      "sourceReportBytes": 7386,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "STACK_PHASES_FINAL.json": {
+      "path": "DE3_98_evidence/STACK_PHASES_FINAL.json",
+      "sha256": "e4fb56009aae90c4e89897200d5226d1e1932faf2f367a1cdbf69e59d6347c15",
+      "bytes": 34789,
+      "sourceReportSha256": "71e269d44fa701aed70651b328f8904166eaa30587768bed4115ecc499b250fb",
+      "sourceReportBytes": 35040,
+      "transformation": "Local paths normalized; peer-review reference rebound; immutable published release source binding appended. Measurements unchanged."
+    },
+    "NFC_SESSION_HOST.json": {
+      "path": "DE3_98_evidence/NFC_SESSION_HOST.json",
+      "sha256": "a940cc01225c3f83b86f90145e490dfaef21f9f05457c2f68b29c0128bebffdc",
+      "bytes": 1214,
+      "sourceReportSha256": "a940cc01225c3f83b86f90145e490dfaef21f9f05457c2f68b29c0128bebffdc",
+      "sourceReportBytes": 1214,
+      "transformation": "Byte-identical source report."
+    },
+    "NFC_SESSION_ARM32.json": {
+      "path": "DE3_98_evidence/NFC_SESSION_ARM32.json",
+      "sha256": "0a68c434356c8253889517c4fc4c9193ed712325f6452a0bce8b362c85659d6a",
+      "bytes": 1179,
+      "sourceReportSha256": "0a68c434356c8253889517c4fc4c9193ed712325f6452a0bce8b362c85659d6a",
+      "sourceReportBytes": 1179,
+      "transformation": "Byte-identical source report."
+    },
+    "PACKED_CLEANUP.json": {
+      "path": "DE3_98_evidence/PACKED_CLEANUP.json",
+      "sha256": "45eb8fc32ad093e6e1d75ac8bc77947ca3e4514a50885d94f15244695d05b077",
+      "bytes": 2384,
+      "sourceReportSha256": "45eb8fc32ad093e6e1d75ac8bc77947ca3e4514a50885d94f15244695d05b077",
+      "sourceReportBytes": 2384,
+      "transformation": "Byte-identical source report."
+    },
+    "PACKED_ATOMIC_META.json": {
+      "path": "DE3_98_evidence/PACKED_ATOMIC_META.json",
+      "sha256": "61305d5a5e49a971d9db0568218533e5d65036e6447145a1e83d9724948e239e",
+      "bytes": 4086,
+      "sourceReportSha256": "61305d5a5e49a971d9db0568218533e5d65036e6447145a1e83d9724948e239e",
+      "sourceReportBytes": 4086,
+      "transformation": "Byte-identical source report."
+    },
+    "RELOAD_TAG_HOST.json": {
+      "path": "DE3_98_evidence/RELOAD_TAG_HOST.json",
+      "sha256": "fff53b4c4dc5c6d9f651a19eb91dd43957be414b8e7ef55d515a5db8a56c6071",
+      "bytes": 9675,
+      "sourceReportSha256": "fff53b4c4dc5c6d9f651a19eb91dd43957be414b8e7ef55d515a5db8a56c6071",
+      "sourceReportBytes": 9675,
+      "transformation": "Byte-identical source report."
+    },
+    "PFS_CROSS_MOUNT.json": {
+      "path": "DE3_98_evidence/PFS_CROSS_MOUNT.json",
+      "sha256": "959b3785814d9414d8541b4bd8ed4a40e27c2f40e16dce84fbcede165b3093f4",
+      "bytes": 14139,
+      "sourceReportSha256": "c17f3a6402b5c61247bd21bc2a59cc5674475c1a984f7a8814ce414b8608d040",
+      "sourceReportBytes": 15143,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "PFS_LAYOUT.json": {
+      "path": "DE3_98_evidence/PFS_LAYOUT.json",
+      "sha256": "20c66cb44b86c0450b588c450eb3a5eb7dc7f0d36b403cd32314a01847ea3c41",
+      "bytes": 3733,
+      "sourceReportSha256": "aa9346deb01dbaac080ad07621638b3e1e7c12d80d3ab1e7671c5d75933d60fe",
+      "sourceReportBytes": 3631,
+      "transformation": "Final firmware/layout identity unchanged; cross-mount hash rebound to normalized public report, original hash retained."
+    },
+    "WASM_REPRODUCIBILITY.json": {
+      "path": "DE3_98_evidence/WASM_REPRODUCIBILITY.json",
+      "sha256": "da701554360a31835893fe76db407e1a53c800a057aa85b0d0c72ca8dda488b7",
+      "bytes": 3921,
+      "sourceReportSha256": "e072fd496dbb99c3590afe9635dbc94d9af9cd0fc8c7b112098c4d15a0047957",
+      "sourceReportBytes": 4304,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "UI_RETENTION_QUALIFICATION.json": {
+      "path": "DE3_98_evidence/UI_RETENTION_QUALIFICATION.json",
+      "sha256": "f85c1f704f8d481df6ba0c1004c590a2d087490c8d3d6f5313016cb7415c5d4a",
+      "bytes": 17615,
+      "sourceReportSha256": "cbb14cc428d1679d3528c99e1a853719e79f860a686b5d6727a17d3e8e781cb0",
+      "sourceReportBytes": 25133,
+      "transformation": "Curated implementation/test/memory sections only. Private chat references, device input references and original-plan filenames omitted."
+    },
+    "OTA_VERIFICATION.json": {
+      "path": "DE3_98_evidence/OTA_VERIFICATION.json",
+      "sha256": "298c186da1dd4b920875498b3ee5ec6a88c1eb9a2fc372f03d3e49caf46406bb",
+      "bytes": 1560,
+      "sourceReportSha256": "d425436234641ef6a199af4ac000956b071724a6f80c94127b22bd84113852d5",
+      "sourceReportBytes": 1831,
+      "transformation": "Public package/signature/negative-control results retained. Credential-source and private conversation authorization descriptions omitted."
+    },
+    "Z21/Z21_APP671_CRYPTO.json": {
+      "path": "DE3_98_evidence/Z21/Z21_APP671_CRYPTO.json",
+      "sha256": "03cbc9fe740b66422f54d64fb7353e4ed44963a014e6130999c234341e761709",
+      "bytes": 6140,
+      "sourceReportSha256": "cf62d7cc8caef84ecf1e85d0a41bccf0a24bd9f01f80eb9b9f127e5f37e2dcd1",
+      "sourceReportBytes": 6254,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "Z21/Z21_APP671_INIT_ACCEPTANCE.json": {
+      "path": "DE3_98_evidence/Z21/Z21_APP671_INIT_ACCEPTANCE.json",
+      "sha256": "4f5f8bf2f607617f71cab48e37c9228fc0cb286b78ac2b73c993e54f7b672dac",
+      "bytes": 1477,
+      "sourceReportSha256": "4c357a0a68afeb7a5a8bbf7311821b0c132862c5419c2c754a5a20dd1c336874",
+      "sourceReportBytes": 1517,
+      "transformation": "Path normalization only; original source report preserved."
+    },
+    "Z21/verify_z21_app671.py": {
+      "path": "DE3_98_evidence/Z21/verify_z21_app671.py",
+      "sha256": "c00eea2596130491e1d13b82802ec66a856a43fb0a01c7dc31760bd9652d25e0",
+      "bytes": 7219,
+      "sourceReportSha256": "c00eea2596130491e1d13b82802ec66a856a43fb0a01c7dc31760bd9652d25e0",
+      "sourceReportBytes": 7219,
+      "transformation": "Byte-identical source report."
+    },
+    "Z21_APPLICATION_VERIFICATION.json": {
+      "path": "DE3_98_evidence/Z21_APPLICATION_VERIFICATION.json",
+      "sha256": "a3b38ee3b85dcceecfb0bd3eacbada66562c5e8d450cca2f68c3c6f4b261dd04",
+      "bytes": 1898,
+      "sourceReportSha256": "546a863c1ee710bb270c592c92a572eb01dfa889b0f5432bb3263007b03d085e",
+      "sourceReportBytes": 1706,
+      "transformation": "Actual Z21 results retained; hashes of normalized public subreports rebound, original hashes retained. Executed checker is included byte-identically."
+    },
+    "RELEASE_OTA_GATE.json": {
+      "path": "DE3_98_evidence/RELEASE_OTA_GATE.json",
+      "sha256": "c42904f8a87b51eb536f36242cd5c6b79681ed3c5bdb0b804e29814d2524e005",
+      "bytes": 820,
+      "sourceReportSha256": "38ae86cd32fe9a173512a2eeaa70e2a6e646f1fba69d44ce0453f3cc21d7892f",
+      "sourceReportBytes": 725,
+      "transformation": "Actual repository OTA checker exit/result retained; build-pair reference rebound to normalized public report."
+    }
+  }
+}

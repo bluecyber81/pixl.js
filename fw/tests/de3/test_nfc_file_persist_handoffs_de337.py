@@ -23,6 +23,7 @@ typedef struct {const char *name_en;} db_amiibo_t;
 typedef struct {bool auto_gen_amiibo;} settings_data_t;
 static settings_data_t settings;
 static settings_data_t *settings_get_data(void){return &settings;}
+static void amiibo_nfc_return_to_list(void*context){(void)context;assert(false);}
 static int m_amiibo_gen_delay_timer;static uint32_t m_generate_generation;
 #define APP_TIMER_TICKS(n) (n)
 static void app_timer_stop(int t){(void)t;}
@@ -69,7 +70,7 @@ int main(void){
 '''
  run('file persistence handoff',code)
  link=(SRC/'app/amiibolink/scene/amiibolink_scene_main.c').read_text()
- external=link.split('#else',1)[1].split('#endif',1)[0]
+ external=link.split('#ifdef INTERNAL_ENABLE',1)[1].split('#else',1)[1].split('#endif',1)[0]  # External-storage branch, independent of earlier LCD attributes.
  code=prefix+r'''
 #define VFS_MAX_PATH_LEN 64
 #define VFS_DRIVE_EXT 1

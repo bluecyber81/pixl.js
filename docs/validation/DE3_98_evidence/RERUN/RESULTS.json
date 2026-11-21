@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-21T18:43:51.448034+00:00",
+  "passed": true,
+  "exitCode": 0,
+  "testCount": 4,
+  "scope": "Existing mocked interface only: bool setter return and temporary_tag_changed field. Existing assertions unchanged. No product changes.",
+  "testHashes": {
+    "fw/tests/de3/test_app_settings_save_ui.py": "157c3507d904ba19ce8f7cf6bb78ec002e103d4ee48e44f09563430b5bf8e85c",
+    "fw/tests/de3/app_settings_save_ui.c.in": "144bad3bcfb9bceb7ed5d4ecb9f9bc474c1d3a7c9bfff25cb77250294c2fe26f"
+  },
+  "testerUnchangedDuringRun": true,
+  "log": "TEST.log",
+  "logSha256": "b9c510e4fddb627188584dd4dee8b7de124de048ecb61a97c4b75a12441b4ba1",
+  "deviceAccess": false,
+  "fullSuiteRerun": false,
+  "sourceLogSha256": "b9c510e4fddb627188584dd4dee8b7de124de048ecb61a97c4b75a12441b4ba1"
+}

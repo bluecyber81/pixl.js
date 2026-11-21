@@ -90,6 +90,7 @@ typedef struct {
     ntag_t ntag;
     bool focus_detail_file;
     unsigned cur_slot_index, prev_scene_id;
+    bool temporary_tag_changed;
     const char *current_file;
     int amiibolink_mode;
 } test_app_t;
@@ -143,7 +144,7 @@ static void amiidb_scene_amiibo_detail_no_key_msg(app_amiidb_t *app) { (void)app
 static uint32_t to_little_endian_int32(const void *p) { (void)p; return 0; }
 static const db_amiibo_t *get_amiibo_by_id(uint32_t head, uint32_t tail) { (void)head; (void)tail; return NULL; }
 static int amiibo_helper_rand_amiibo_uuid(ntag_t *tag) { (void)tag; return 0; }
-static void ntag_emu_set_tag(ntag_t *tag) { (void)tag; }
+static bool ntag_emu_set_tag(ntag_t *tag) { (void)tag; return true; }
 static void ntag_store_get_uuid(ntag_t *tag, uint8_t uid[7]) { (void)tag; memset(uid, 0, 7); }
 static int amiibo_scene_amiibo_detail_set_readonly(app_amiibo_t *app, bool flag) { (void)app; (void)flag; return 0; }
 static int amiidb_api_slot_set_readonly(unsigned slot, bool flag) { (void)slot; (void)flag; return 0; }

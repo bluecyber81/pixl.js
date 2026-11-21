@@ -1,0 +1,210 @@
+/* Actual NTAG engine with explicit injected RF events, no physical RF claims. */
+static ntag_t first_tag, second_tag;
+static unsigned cases, callbacks, write_callbacks, return_calls, returned;
+static bool fail_save, request_return, restart_field, replace_owner, replace_tag;
+
+static void event(hal_nfc_event_t kind) { nfc_callback(NULL, kind, NULL, 0); }
+static void command(const uint8_t *data, size_t length) {
+    ack = -1;
+    tx_length = 0;
+    nfc_callback(NULL, HAL_NFC_EVENT_COMMAND, data, length);
+}
+static void return_to_selection(void *context) {
+    ++return_calls;
+    assert(context == (void *)1 && !critical_depth);
+    if (ntag_emu_session_used() && !ntag_emu_save_pending()) ++returned;
+}
+static void owner(ntag_event_type_t type, void *context, ntag_t *tag) {
+    (void)tag;
+    assert(!critical_depth);
+    ++callbacks;
+    if (type == NTAG_EVENT_TYPE_WRITTEN) ++write_callbacks;
+    if (request_return && ntag_emu_session_used())
+        ntag_emu_request_action(return_to_selection, context, ntag_emu_get_generation());
+    if (fail_save && type == NTAG_EVENT_TYPE_WRITTEN) ntag_emu_save_failed();
+    if (restart_field) event(HAL_NFC_EVENT_FIELD_ON);
+    if (replace_owner) assert(ntag_emu_set_update_cb(owner, (void *)2));
+    if (replace_tag) assert(ntag_emu_set_tag(&second_tag));
+}
+static void seed(void) {
+    memset(&ntag_emu, 0, sizeof(ntag_emu));
+    callbacks = write_callbacks = return_calls = returned = 0;
+    fail_save = restart_field = replace_owner = replace_tag = false;
+    request_return = true;
+    injected_send_result = 0;
+    assert(ntag_emu_set_tag(&first_tag));
+    assert(ntag_emu_set_update_cb(owner, (void *)1));
+    assert(!ntag_emu_session_used());
+}
+static void used(bool expected) {
+    ntag_emu_t before = ntag_emu;
+    assert(ntag_emu_session_used() == expected);
+    assert(!memcmp(&before, &ntag_emu, sizeof(before)) && !critical_depth);
+}
+static void completed_read(void) {
+    const uint8_t read[] = {NFC_CMD_READ, 4};
+    event(HAL_NFC_EVENT_FIELD_ON);
+    command(read, sizeof(read));
+    assert(tx_length == 16);
+    used(false);
+    event(HAL_NFC_EVENT_DATA_TRANSMITTED);
+    used(false); /* The first READ is never a navigation trigger. */
+    event(HAL_NFC_EVENT_FIELD_OFF);
+    used(true);
+}
+static void finish_unused(void) {
+    event(HAL_NFC_EVENT_FIELD_OFF);
+    event(HAL_NFC_EVENT_DATA_TRANSMITTED); /* stale TX cannot complete a lost field */
+    used(false);
+    ntag_emu_process_pending();
+    assert(!returned);
+    ++cases;
+}
+
+int main(void) {
+    first_tag.type = NTAG_215;
+    first_tag.data[0] = 0x41;
+    second_tag = first_tag;
+    second_tag.data[0] = 0x42;
+    /* The one status byte occupies old padding on both host and ARM ABIs. */
+    _Static_assert(sizeof(ntag_emu_t) == sizeof(previous_ntag_emu_t), "state grew");
+    _Static_assert(offsetof(ntag_emu_t, generation) == offsetof(previous_ntag_emu_t, generation), "generation moved");
+    _Static_assert(offsetof(ntag_emu_t, action) == offsetof(previous_ntag_emu_t, action), "action moved");
+    _Static_assert(offsetof(ntag_emu_t, update_cb) == offsetof(previous_ntag_emu_t, update_cb), "owner moved");
+
+    seed(); finish_unused();
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); finish_unused();
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); event(HAL_NFC_EVENT_DATA_TRANSMITTED); finish_unused();
+    seed(); completed_read(); ntag_emu_process_pending();
+    assert(returned == 1 && callbacks == 1 && !write_callbacks);
+    ntag_emu_process_pending(); assert(returned == 1); ++cases;
+
+    const uint8_t read[] = {NFC_CMD_READ, 4};
+    const uint8_t version[] = {NFC_CMD_GET_VERSION};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(read, sizeof(read)); finish_unused();
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(read, sizeof(read));
+    command(version, sizeof(version)); event(HAL_NFC_EVENT_DATA_TRANSMITTED); finish_unused();
+    seed(); completed_read(); event(HAL_NFC_EVENT_FIELD_ON); finish_unused();
+
+    const uint8_t controls[][5] = {
+        {NFC_CMD_GET_VERSION}, {NFC_CMD_READ_SIG}, {NFC_CMD_PWD_AUTH, 1, 2, 3, 4},
+        {N2_CMD_GET_INFO}, {N2_CMD_GET_ID}, {N2_CMD_SELECT_BANK, 1},
+        {NFC_CMD_SECTOR_SELECT, 0xff}, {0xff}
+    };
+    const uint8_t control_lengths[] = {1, 1, 5, 1, 1, 2, 2, 1};
+    for (unsigned i = 0; i < sizeof(control_lengths); ++i) {
+        seed(); event(HAL_NFC_EVENT_FIELD_ON);
+        command(controls[i], control_lengths[i]);
+        event(HAL_NFC_EVENT_DATA_TRANSMITTED); finish_unused();
+    }
+    const uint8_t rejected_reads[][4] = {
+        {NFC_CMD_READ}, {NFC_CMD_READ, 135}, {NFC_CMD_FAST_READ, 5, 4},
+        {NFC_CMD_FAST_READ, 0, 64}, {NFC_CMD_FAST_READ, 134, 135}, {N2_CMD_FAST_READ, 0, 1}
+    };
+    const uint8_t rejected_lengths[] = {1, 2, 3, 3, 3, 3};
+    for (unsigned i = 0; i < sizeof(rejected_lengths); ++i) {
+        seed(); event(HAL_NFC_EVENT_FIELD_ON);
+        command(rejected_reads[i], rejected_lengths[i]);
+        assert(ack == 0 && !tx_length);
+        event(HAL_NFC_EVENT_DATA_TRANSMITTED); finish_unused();
+    }
+    const uint8_t fast[][4] = {{NFC_CMD_FAST_READ, 4, 5}, {NFC_CMD_FAST_READ, 132, 134},
+                              {N2_CMD_FAST_READ, 4, 5, 0}};
+    for (unsigned i = 0; i < 3; ++i) {
+        seed(); event(HAL_NFC_EVENT_FIELD_ON); command(fast[i], i == 2 ? 4 : 3);
+        assert(tx_length == (i == 1 ? 12u : 8u));
+        used(false); event(HAL_NFC_EVENT_DATA_TRANSMITTED); used(false);
+        event(HAL_NFC_EVENT_FIELD_OFF); used(true);
+        ntag_emu_process_pending(); assert(returned == 1); ++cases;
+    }
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); injected_send_result = NRF_ERROR_BUSY;
+    command(fast[0], 3); assert(!tx_length);
+    event(HAL_NFC_EVENT_DATA_TRANSMITTED); finish_unused();
+
+    const uint8_t write[] = {NFC_CMD_WRITE, 4, 0x55, 0x55, 0x55, 0x55};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(write, sizeof(write));
+    assert(ack == 0xa && ntag_emu.dirty); used(false);
+    event(HAL_NFC_EVENT_FIELD_OFF); used(true); ntag_emu_process_pending();
+    assert(write_callbacks == 1 && returned == 1 && !ntag_emu.dirty); ++cases;
+    for (unsigned gate = 0; gate < 3; ++gate) {
+        seed(); event(HAL_NFC_EVENT_FIELD_ON);
+        if (gate == 0) ntag_emu.ntag.read_only = true;
+        if (gate == 1) ntag_emu.paused = true;
+        if (gate == 2) ntag_emu.busy = true;
+        command(write, sizeof(write)); assert(ack == 0 && !ntag_emu.dirty);
+        ntag_emu.busy = ntag_emu.paused = false; finish_unused();
+    }
+    const uint8_t invalid_write[] = {NFC_CMD_WRITE, 135, 1, 2, 3, 4};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(invalid_write, 6);
+    assert(ack == 0); finish_unused();
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(write, 5);
+    assert(ack == 0); finish_unused();
+    const uint8_t n2_write[] = {N2_CMD_WRITE, 4, 0, 1, 2, 3, 4};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(n2_write, sizeof(n2_write));
+    assert(ack == 0xa); event(HAL_NFC_EVENT_FIELD_OFF); used(true); ++cases;
+    const uint8_t n2_fast[] = {N2_CMD_FAST_WRITE, 4, 0, 4, 1, 2, 3, 4};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(n2_fast, sizeof(n2_fast));
+    assert(ack == 0xa); event(HAL_NFC_EVENT_FIELD_OFF); used(true); ++cases;
+    const uint8_t empty_fast[] = {N2_CMD_FAST_WRITE, 4, 0, 0};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(empty_fast, sizeof(empty_fast));
+    assert(ack == 0xa); finish_unused();
+    const uint8_t ignored_fast[] = {NFC_CMD_FAST_WRITE, 0xf0, 0xff};
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(ignored_fast, sizeof(ignored_fast));
+    assert(ack == 0xa && !ntag_emu.dirty); finish_unused();
+
+    seed(); completed_read(); assert(ntag_emu_set_tag(&second_tag));
+    used(false); ntag_emu_process_pending(); assert(!returned); ++cases;
+    seed(); completed_read(); assert(ntag_emu_set_update_cb(owner, (void *)2));
+    used(false); ntag_emu_process_pending(); assert(!returned); ++cases;
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(read, sizeof(read));
+    assert(ntag_emu_set_tag(&second_tag)); event(HAL_NFC_EVENT_DATA_TRANSMITTED);
+    finish_unused();
+    seed(); completed_read(); ntag_emu.generation = UINT32_MAX;
+    assert(ntag_emu_set_tag(&second_tag) && ntag_emu.generation == 0);
+    used(false); ntag_emu_process_pending(); assert(!returned); ++cases;
+
+    /* Queue identity remains the real engine's context/generation contract. */
+    seed(); completed_read(); request_return = false;
+    ntag_emu_request_action(return_to_selection, (void *)2, ntag_emu_get_generation());
+    ntag_emu_request_action(return_to_selection, (void *)1, ntag_emu_get_generation() - 1);
+    ntag_emu_process_pending(); assert(!return_calls); ++cases;
+    seed(); completed_read(); restart_field = true; ntag_emu_process_pending();
+    assert(!return_calls); used(false);
+    restart_field = false; event(HAL_NFC_EVENT_FIELD_OFF); ntag_emu_process_pending();
+    assert(return_calls == 1 && !returned); used(false); ++cases;
+    seed(); completed_read(); replace_owner = true; ntag_emu_process_pending();
+    assert(!return_calls && ntag_emu.cb_context == (void *)2); used(false); ++cases;
+    seed(); completed_read(); replace_tag = true; ntag_emu_process_pending();
+    assert(!return_calls && ntag_emu.ntag.data[0] == 0x42); used(false); ++cases;
+
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(write, sizeof(write));
+    event(HAL_NFC_EVENT_FIELD_OFF); used(true); fail_save = true;
+    ntag_emu_process_pending(); assert(ntag_emu_save_pending() && !return_calls);
+    used(false); assert(ntag_emu.ntag.data[16] == 0x55 && ntag_emu.cb_context == (void *)1);
+    fail_save = false; assert(ntag_emu_retry_save()); used(false);
+    ntag_emu_process_pending(); assert(!return_calls && !ntag_emu_save_pending()); ++cases;
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(write, sizeof(write));
+    event(HAL_NFC_EVENT_FIELD_OFF); fail_save = true; ntag_emu_process_pending();
+    assert(ntag_emu_discard_changes()); used(false); assert(!ntag_emu.action); ++cases;
+    seed(); event(HAL_NFC_EVENT_FIELD_ON); command(write, sizeof(write));
+    assert(ntag_emu_prepare_change()); assert(write_callbacks == 1 && !return_calls);
+    used(false); ntag_emu_cancel_change(); event(HAL_NFC_EVENT_FIELD_OFF);
+    ntag_emu_process_pending(); assert(!return_calls); ++cases;
+
+    /* I2C data replies qualify, but the SRAM write that only ACKs does not. */
+    first_tag.type = NTAG_I2C_PLUS_2K;
+    const uint8_t i2c[][3] = {{NFC_CMD_READ, 0xec}, {NFC_CMD_FAST_READ, 0xed, 0xed}};
+    for (unsigned i = 0; i < 2; ++i) {
+        seed(); event(HAL_NFC_EVENT_FIELD_ON); command(i2c[i], i ? 3 : 2);
+        assert(tx_length == (i ? 4u : 16u));
+        event(HAL_NFC_EVENT_DATA_TRANSMITTED); event(HAL_NFC_EVENT_FIELD_OFF); used(true); ++cases;
+    }
+    assert(!critical_depth);
+    printf("{\"passed\":true,\"cases\":%u,\"pointerBytes\":%zu,\"tagBytes\":%zu,"
+           "\"previousStateBytes\":%zu,\"stateBytes\":%zu,\"sessionOffset\":%zu,"
+           "\"generationOffset\":%zu}\n", cases, sizeof(void *), sizeof(ntag_t),
+           sizeof(previous_ntag_emu_t), sizeof(ntag_emu_t), offsetof(ntag_emu_t, rf_session),
+           offsetof(ntag_emu_t, generation));
+    puts("PASS actual LCD RF-session/parser/owner/save/queued-action boundaries; no physical reader/game acceptance claim");
+    return 0;
+}

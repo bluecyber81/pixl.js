@@ -63,7 +63,7 @@ typedef struct {void *user_data;} mui_text_input_t;
 typedef struct {void *p_toast_view; void *p_scene_dispatcher; void *browser_cache,*p_msg_box,*p_view_dispatcher;} app_chameleon_t;
 typedef int mui_msg_box_event_t;
 typedef struct { void *user_data; } mui_msg_box_t;
-enum {CHAMELEON_VIEW_ID_TEXT_INPUT,CHAMELEON_VIEW_ID_MSG_BOX};
+enum {CHAMELEON_VIEW_ID_TEXT_INPUT,CHAMELEON_VIEW_ID_MSG_BOX,CHAMELEON_SCENE_MAIN};
 static void (*ack)(mui_msg_box_event_t,mui_msg_box_t*);
 static int current_view;static const char *export_error;
 static void mui_msg_box_set_error(void *box,const char *msg,void (*cb)(mui_msg_box_event_t,mui_msg_box_t*)){
@@ -95,7 +95,8 @@ static void mui_mem_free(void *p) {if(p)allocations--;free(p);}
 static void mui_toast_view_show(void *v,const char *s) {(void)v;last_toast=s;}
 static void tag_helper_load_coll_res_from_block0(void) {collision_updates++;}
 static int tag_helper_set_nickname(const char *s) {(void)s;return 0;}
-static void mui_scene_dispatcher_back_scene(void *p,int n) {(void)p;(void)n;backs++;}
+static void mui_scene_dispatcher_next_scene(void *p,int n) {(void)p;assert(n==CHAMELEON_SCENE_MAIN);backs++;}
+static bool app_chameleon_save(app_chameleon_t *app) {(void)app;return true;}
 static void mui_scene_dispatcher_previous_scene(void *p) {(void)p;backs++;}
 static const char *mui_text_input_get_input_text(void *p) {(void)p;return input;}
 static void reset(void) {

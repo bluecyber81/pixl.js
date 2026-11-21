@@ -228,7 +228,7 @@ typedef int ret_code_t;
 typedef struct {uint32_t head,tail;} db_amiibo_t;
 typedef struct {unsigned char data[2048];} ntag_t;
 typedef struct {uint8_t game_id;} view_t;
-typedef struct {const db_amiibo_t *cur_amiibo;ntag_t ntag;view_t *p_amiibo_view;} app_amiidb_t;
+typedef struct {const db_amiibo_t *cur_amiibo;ntag_t ntag;bool resume_tag,temporary_tag_changed;view_t *p_amiibo_view;} app_amiidb_t;
 #define NRF_SUCCESS 0
 #define NRF_ERROR_INVALID_DATA 1
 #define NRF_ERROR_NOT_SUPPORTED 2

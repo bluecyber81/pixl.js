@@ -37,6 +37,7 @@ def harness(eager_mutant=False):
     code = code.replace('static int settings_reset(void){reset_calls++;return result;}',
                         'static int settings_reset(void){assert(observed&&!observed->valid);reset_calls++;return result;}')
     extras = r'''
+#define LANGUAGE_DE_DE 0
 static int stat_calls, stat_result;
 static vfs_stat_t current_stat={1,2048,1024};
 static int32_t mock_stat(vfs_stat_t*out){stat_calls++;*out=current_stat;return stat_result;}
@@ -45,6 +46,8 @@ static vfs_driver_t *active_driver=&driver;
 vfs_driver_t *vfs_get_default_driver(void){return active_driver;}
 static void *version_get(void){return NULL;}
 static const char*version_get_version(void*p){(void)p;return "test";}
+typedef enum { SETTINGS_LOAD_PENDING, SETTINGS_LOAD_DEFAULTS, SETTINGS_LOAD_VERIFIED } settings_load_state_t;
+static settings_load_state_t settings_load_state(void){return SETTINGS_LOAD_VERIFIED;}
 static const char*getLangDesc(unsigned n){(void)n;return "Deutsch";}
 static const char*getLangString(int id){(void)id;return "label";}
 static int nrf_pwr_mgmt_get_timeout(void){return 180;}

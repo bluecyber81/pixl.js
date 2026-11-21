@@ -75,7 +75,7 @@ class SlotPersistenceTests(unittest.TestCase):
         #include "vfs_set_readonly.c"
 #include "amiidb_api_slot.c"
         typedef enum {NTAG_EVENT_TYPE_WRITTEN,NTAG_EVENT_TYPE_READ} ntag_event_type_t;
-        typedef struct {ntag_t ntag;} app_amiidb_t;
+        typedef struct {ntag_t ntag;bool temporary_tag_changed;} app_amiidb_t;
         static unsigned m_amiibo_gen_delay_timer,m_generate_generation;
         static bool m_active_slot_persist=true;
         static uint8_t m_active_slot;
@@ -83,6 +83,11 @@ class SlotPersistenceTests(unittest.TestCase):
         static void app_timer_start(unsigned x,unsigned y,void*z){(void)x;(void)y;(void)z;}
         #define APP_TIMER_TICKS(x) (x)
         static unsigned ntag_emu_get_generation(void){return 1;}
+static bool ntag_emu_session_used(void){return false;}
+static bool ntag_emu_save_pending(void){return false;}
+static void ntag_emu_request_action(void(*fn)(void*),void*context,uint32_t generation){(void)fn;(void)context;(void)generation;assert(false);}
+static void amiidb_nfc_return_to_list(void*context){(void)context;assert(false);}
+
         static void ntag_emu_save_failed(void){save_errors++;}
         static void* mui(void){return NULL;}
         static void mui_update(void*p){(void)p;}
@@ -102,7 +107,7 @@ class SlotPersistenceTests(unittest.TestCase):
          unsigned lost_metadata=0,changed_size=0,lost_signature=0,cases=0;
          const unsigned sizes[]={532,540,572,2048};
          for(unsigned i=0;i<4;i++){
-          reset(sizes[i]);ntag_t tag;app_amiidb_t app;
+          reset(sizes[i]);ntag_t tag;app_amiidb_t app={0};
           assert(amiidb_api_slot_read(0,&tag)==0);
           assert(strcmp((char*)tag.notes,"my note / Spielstand 2")==0);
           unsigned char signature[32];memcpy(signature,tag.data+540,32);
@@ -121,7 +126,7 @@ class SlotPersistenceTests(unittest.TestCase):
          assert(lost_metadata==0 && changed_size==0 && lost_signature==0);
          /* Unknown metadata, duplicate fields and arbitrary padding remain byte exact. */
          for(unsigned mode=0;mode<4;mode++){
-          reset(540);ntag_t tag;app_amiidb_t app;
+          reset(540);ntag_t tag;app_amiidb_t app={0};
           if(mode==0){stored_meta[0]=3;stored_meta[1]=0x7e;}
           else if(mode==1)stored_meta[0]=0xff;
           else if(mode==2){stored_meta[0]=4;stored_meta[1]=2;stored_meta[2]=0;stored_meta[3]=2;stored_meta[4]=3;}
@@ -131,7 +136,7 @@ class SlotPersistenceTests(unittest.TestCase):
          }
          /* 2K data viewed as classic when its ID is not a v3 figure stays supported. */
          reset(2048);stored_data[91]=4;stored_meta[0]=0;memcpy(expected_meta,stored_meta,128);
-         ntag_t tag;app_amiidb_t app;assert(amiidb_api_slot_read(0,&tag)==0 && tag.type==NTAG_215);
+         ntag_t tag;app_amiidb_t app={0};assert(amiidb_api_slot_read(0,&tag)==0 && tag.type==NTAG_215);
          ntag_update_cb(NTAG_EVENT_TYPE_WRITTEN,&app,&tag);assert(file_size==2048 && writes==1 && save_errors==0 && memcmp(stored_meta,expected_meta,128)==0);cases++;
          const int errors[]={VFS_ERR_FAIL,VFS_ERR_NODEV,VFS_ERR_CRPT,VFS_ERR_NOSPC};
          for(unsigned i=0;i<4;i++){

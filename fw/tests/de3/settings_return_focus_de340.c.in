@@ -91,6 +91,8 @@ static const vfs_stat_t *settings_storage_snapshot_peek(const settings_storage_s
  (void)p;(void)d;return &fixture_drive;
 }
 static void *version_get(void){return NULL;}
+typedef enum { SETTINGS_LOAD_PENDING, SETTINGS_LOAD_DEFAULTS, SETTINGS_LOAD_VERIFIED } settings_load_state_t;
+static settings_load_state_t settings_load_state(void){return SETTINGS_LOAD_VERIFIED;}
 static const char *fixture_version="DE3.40";
 static const char *version_get_version(void*p){(void)p;return fixture_version;}
 static const char *getLangDesc(unsigned n){assert(n<LANGUAGE_COUNT);return n?"English":"Deutsch";}

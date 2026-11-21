@@ -32,11 +32,12 @@ def main():
     engine=re.sub(r"(?m)^\s*#include[^\n]*\n","",(SRC/"ntag/ntag_emu_v2.c").read_text())
     scene=(SRC/"app/amiidb/scene/amiidb_scene_amiibo_detail.c").read_text()
     code=prefix+engine+r'''
-typedef struct {ntag_t ntag;void *p_amiibo_view,*p_toast_view;} app_amiidb_t;
+typedef struct {ntag_t ntag;bool temporary_tag_changed;void *p_amiibo_view,*p_toast_view;} app_amiidb_t;
 typedef struct {bool auto_gen_amiibo;} settings_data_t;
 static settings_data_t settings;
 static settings_data_t *settings_get_data(void){return &settings;}
 static bool amiibo_helper_is_key_loaded(void){return true;}
+static void amiidb_nfc_return_to_list(void*context){(void)context;assert(false);}
 static unsigned save_calls,errors,reads;
 static int save_result,focus=8;
 static uint8_t persisted=0x11;

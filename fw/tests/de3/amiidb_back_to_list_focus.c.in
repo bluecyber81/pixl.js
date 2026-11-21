@@ -34,6 +34,7 @@ typedef struct {
     uint8_t fav_page_focus;
     uint16_t fav_page_number;
     char cur_fav_dir[48];
+    bool temporary_tag_changed;
 } app_amiidb_t;
 static struct {uint8_t amiidb_data_slot_num;} settings;
 #define settings_get_data() (&settings)

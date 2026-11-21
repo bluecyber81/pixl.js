@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "passed": true,
+  "firmwareVersion": "2.22.0-DE3.98",
+  "applicationCounter": 671,
+  "productionCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "productionTree": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
+  "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "applicationBinSha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "signedOta": {
+    "name": "Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+    "bytes": 364781,
+    "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138"
+  },
+  "bootloader": "Z21",
+  "bootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "softDeviceFwid": 294,
+  "cryptoCases": 7,
+  "acceptedInitCases": 2,
+  "reports": [
+    {
+      "path": "Z21/Z21_APP671_CRYPTO.json",
+      "sha256": "03cbc9fe740b66422f54d64fb7353e4ed44963a014e6130999c234341e761709",
+      "bytes": 6140,
+      "sourceReportSha256": "cf62d7cc8caef84ecf1e85d0a41bccf0a24bd9f01f80eb9b9f127e5f37e2dcd1"
+    },
+    {
+      "path": "Z21/Z21_APP671_INIT_ACCEPTANCE.json",
+      "sha256": "4f5f8bf2f607617f71cab48e37c9228fc0cb286b78ac2b73c993e54f7b672dac",
+      "bytes": 1477,
+      "sourceReportSha256": "4c357a0a68afeb7a5a8bbf7311821b0c132862c5419c2c754a5a20dd1c336874"
+    }
+  ],
+  "checker": {
+    "path": "Z21/verify_z21_app671.py",
+    "sha256": "c00eea2596130491e1d13b82802ec66a856a43fb0a01c7dc31760bd9652d25e0",
+    "exitCode": 0
+  },
+  "actualLinkedArmCodeExecuted": true,
+  "physicalDeviceAccess": false,
+  "limits": [
+    "Actual Z21 ELF signature, hash, CRC and init-execute/bank-selection paths were executed in simulated memory.",
+    "Flash operations, BLE transfer and handover to the application were simulated; this is not physical DFU acceptance.",
+    "No new bootloader or SoftDevice payload is included in the signed application-only package."
+  ]
+}

@@ -50,7 +50,7 @@ static ret_code_t backlight_level_apply(uint8_t v) {
 @APPLICATION@
 @MENU_ENUM@
 typedef struct { char label[48], value[48]; } menu_row_t;
-typedef struct { uint16_t focus, scroll; menu_row_t rows[SETTINGS_MAIN_MENU_LCD_DIM + 1]; } list_t;
+typedef struct { uint16_t focus, scroll; menu_row_t rows[SETTINGS_MAIN_MENU_LOAD_STATE + 1]; } list_t;
 typedef int mui_msg_box_event_t;
 typedef struct mui_msg_box_s mui_msg_box_t;
 struct mui_msg_box_s { void *user_data; void (*event_cb)(mui_msg_box_event_t, mui_msg_box_t *); unsigned focus; };
@@ -213,12 +213,19 @@ static void expect_recovered(void) {
 int main(void) {
     for (unsigned via_save = 0; via_save < 2; via_save++) {
         failed_start(180); start_runtime();
+        unsigned status_reads=read_calls; assert(settings_load_state()==SETTINGS_LOAD_PENDING);
+        assert(read_calls==status_reads);
         assert(getLanguage() == LANGUAGE_DE_DE && nrf_pwr_mgmt_get_timeout() == 30);
         unsigned initial_calls = hardware_calls;
         assert(settings_retry_load() != 0 && settings_save() != 0 && hardware_calls == initial_calls && drawn == 0);
         read_error = 0;
         assert((via_save ? settings_save() : settings_retry_load()) == 0 && drawn == 1);
         expect_recovered();
+        assert(settings_load_state()==SETTINGS_LOAD_VERIFIED);
+        bool old_anim=settings_get_data()->anim_enabled;
+        settings_get_data()->anim_enabled=!old_anim;
+        assert(settings_load_state()==SETTINGS_LOAD_VERIFIED);
+        settings_get_data()->anim_enabled=old_anim;
         assert(settings_retry_load() == 0 && settings_save() == 0 && drawn == 1 && writes == 0);
     }
     failed_start(180); read_error = 0;

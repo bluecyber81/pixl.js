@@ -3,6 +3,20 @@ globalThis.AllmiiboFirmwareReleases = {
   "schema": 1,
   "packages": [
     {
+      "id": "de3.98-lcd-app",
+      "version": "2.22.0-DE3.98",
+      "counter": 671,
+      "file": "Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+      "bytes": 364781,
+      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z21",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false
+    },
+    {
       "id": "de3.89-lcd-app",
       "version": "2.22.0-DE3.89",
       "counter": 662,

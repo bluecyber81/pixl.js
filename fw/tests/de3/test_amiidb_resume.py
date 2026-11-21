@@ -25,8 +25,9 @@ class App3ResumeTests(unittest.TestCase):
         paths = [SRC / "app/amiidb/app_amiidb.h", SRC / "app/amiidb/app_amiidb_resume.h",
                  SRC / "app/amiidb/api/amiidb_api_fav.h", SRC / "app/amiidb/api/amiidb_api_db.c",
                  SRC / "mui/mui_alloc.h", SRC / "mui/mui_scene_dispatcher.c",
-                 SRC / "app/amiidb/scene/amiidb_scene_config.h"]
-        header, resume, fav, history, alloc, dispatch, config = [p.read_text() for p in paths]
+                 SRC / "app/amiidb/scene/amiidb_scene_config.h", SRC / "mod/cache.c",
+                 SRC / "amiibo_helper.c", SRC / "app/amiidb/scene/amiidb_scene_amiibo_detail.c"]
+        header, resume, fav, history, alloc, dispatch, config, cache_source, helper, detail = [p.read_text() for p in paths]
         cache = re.search(r"typedef struct \{[^}]*\} app_amiidb_cache_data_t;", header).group(0)
         constants = "\n".join(re.findall(r"^#define APP_AMIIDB_RESUME_.*", header, re.M))
         fav_types = fav[fav.index("typedef struct"):fav.index("typedef void")]
@@ -45,6 +46,10 @@ class App3ResumeTests(unittest.TestCase):
                 "mui_scene_dispatcher_next_scene", "mui_scene_dispatcher_back_scene",
                 "mui_scene_dispatcher_previous_scene", "mui_scene_dispatcher_current_scene")),
             "/* ACTUAL_RESUME */": actual_resume,
+            "/* ACTUAL_CACHE_VALIDATE */": function(cache_source, "cache_valid"),
+            "/* ACTUAL_ID */": function(helper, "to_little_endian_int32"),
+            "/* ACTUAL_GENERATE */": function(detail, "amiidb_scene_amiibo_game_list_generate"),
+            "/* ACTUAL_CALLBACK */": function(detail, "ntag_update_cb"),
         }
         for mark, actual in replacements.items():
             self.assertIn(mark, code)
@@ -56,8 +61,8 @@ class App3ResumeTests(unittest.TestCase):
             cfile, binary = output / "amiidb_resume.c", output / "amiidb_resume"
             cfile.write_text(code)
             command = ["gcc", "-std=c11", "-O1", "-g", "-Wall", "-Wextra", "-Werror",
-                       "-Wno-unused-function", "-Wno-unused-parameter", "-I", str(FW / "components/mlib"),
-                       str(cfile), "-o", str(binary)]
+                       "-Wno-unused-function", "-Wno-unused-parameter", "-Wno-sign-compare", "-I", str(FW / "components/mlib"),
+                       "-I", str(SRC / "ntag"), str(cfile), "-o", str(binary)]
             if os.environ.get("UI_SANITIZE") == "1":
                 command += ["-fsanitize=address,undefined", "-fno-sanitize-recover=all", "-fno-omit-frame-pointer", "-no-pie"]
             built = subprocess.run(command, capture_output=True, text=True, timeout=60)
@@ -71,7 +76,7 @@ class App3ResumeTests(unittest.TestCase):
                       "limits": ["Synthetic native boundary tests; no App643 equivalence claim for this new feature.",
                                  "Actual snapshot/validation/history/scene-stack code; bounded catalog/UI/storage fixtures.",
                                  "Sleep from uncommitted text input resumes its stable list using the committed query.",
-                                 "Missing/empty slots and missing catalog/favorite targets resume the parent list; no raw tags retained."]}
+                                 "Missing/empty slots and missing targets resume the parent list; persisted slots reload. Temporary v3 tags reuse the existing CRC-bound cache only."]}
             (output / "RESULTS.json").write_text(json.dumps(report, indent=2) + "\n")
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)

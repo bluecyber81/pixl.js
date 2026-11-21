@@ -8,7 +8,7 @@
   "web_publication_date": null,
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": null,
+  "ota_sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
   "application_sha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
   "hardware_version": 52,
   "softdevice_requirements": [
@@ -37,17 +37,17 @@
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": null,
+  "host_firmware_suites": 186,
   "evidence": "docs/validation/DE3_98.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
   },
   "limits": [
-    "Matching LCD hardware/layout only.",
-    "Unsigned builds and host tests are not physical device proof.",
-    "Public inherited signing key does not prove exclusive publisher identity.",
-    "The App662 combined package was checked offline. Physical Android DFU interruption and resumption remain open."
+    "Matching LCD/ST7567 with existing PFS1, Z21 and S112 7.3.0 only.",
+    "Software, signed-package and actual linked ARM checks do not establish physical App671 device acceptance.",
+    "The inherited public signing key does not prove exclusive publisher identity.",
+    "The historical App662 combined system package remains separate; no new bootloader or SoftDevice is shipped."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
@@ -63,9 +63,9 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "The owner-supplied 3.58.2 LCD diagnostic reports App662, the bound Z21 boot region and Nordic S112 7.3.0."
+    "qualification": "Actual linked Z21 ARM signature/hash/CRC and init/bank-selection paths accept the final signed App671 payload in simulation. Earlier App670 diagnostics reported this Z21 region and S112 7.3.0; no physical App671 DFU is claimed."
   },
-  "web_host_test_scope": "Automated web suites, both production builds, download and launcher checks. See web_evidence and the workflow on the release commit.",
+  "web_host_test_scope": "The normal Web3.61.0 is maintained and qualified separately on web-app671. See its docs/validation/WEB3_61_0.json; firmware branch web content is not the deployed web source.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -81,7 +81,7 @@
     "evidence": "docs/validation/WEB3_58_1.json"
   },
   "web_release_status": "normal-release-in-preparation",
-  "web_release_notes": "web/LIESMICH_3_61_0.txt",
+  "web_release_notes": "https://github.com/bluecyber81/pixl.js/blob/web-app671/web/LIESMICH_3_61_0.txt",
   "web_personal_backup_status": "Personal backup benchmarks are recorded in the respective historical web evidence.",
   "web_changes": {
     "figure_usage": {
@@ -164,7 +164,8 @@
     "oled_browser_dfu": "Select the signed OLED Test 6 application for browser DFU. Test 5 and Test 4 remain available as earlier packages.",
     "web_3_58_0": "Compact mobile remote; bulk game-folder selection, default names and preview counts; App660 prerelease and release-asset links.",
     "web_3_58_1": "Offers OLED Test 6 browser DFU and phone downloads, bilingual guides and remote device selection by the advertised service or remote name. The file manager checks the remote status after connecting.",
-    "web_3_58_2": "Direct small-file reads, revision-checked folder upload and resume, cached directory listings for repeated searches, incremental CRC checks in browser DFU and an App662-specific capacity simulator."
+    "web_3_58_2": "Direct small-file reads, revision-checked folder upload and resume, cached directory listings for repeated searches, incremental CRC checks in browser DFU and an App662-specific capacity simulator.",
+    "web_3_61_0": "Normal App671 selection and exact package binding, matching PFS simulator and source archive, normal startup/radio/cleanup diagnostics, existing batch/digest backup path retained. Historical LCD test channels and OLED remain separately gated."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -176,17 +177,18 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "preparing-normal-release",
-  "web_evidence": "docs/validation/WEB3_61_0.json",
+  "status": "software-qualified-signed-normal",
+  "web_evidence": "https://github.com/bluecyber81/pixl.js/blob/web-app671/docs/validation/WEB3_61_0.json",
   "device_readback_evidence": null,
   "fresh_public_unsigned_rebuild_matches_signed_application": false,
   "firmware_downloads": {
     "application": {
       "file": "Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
-      "sha256": null,
+      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
       "counter": 671,
       "version": "2.22.0-DE3.98",
-      "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip"
+      "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+      "bytes": 364781
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
@@ -221,7 +223,7 @@
     "stable_default_counter_at_publication": 637
   },
   "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/workflows/unsigned-firmware.yml",
-  "device_validation_scope": "The LCD owner reports successful practical use. The 3.58.2 diagnostic matches the App662 SourceID, LCD board, Z21 and PFS1 engine. Timed App662 upload with interruption and physical Android DFU recovery remain open.",
+  "device_validation_scope": "App671 has not been installed or observed on a physical LCD by these qualification runs. Earlier App670 device readbacks and bounded owner tests are kept separately attributed. The newly implemented return, temporary-tag retention and wake flows require their first ordinary device observation.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "previous_lcd_release": {
     "version": "2.22.0-DE3.81",
@@ -233,7 +235,7 @@
     "device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.81"
   },
-  "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
+  "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671",
   "oled_test_release": {
     "version": "2.22.0-DE3.87-OLEDt6",
     "counter": 86,
@@ -475,8 +477,29 @@
     }
   ],
   "firmware_channel": "normal",
-  "release_status": "preparing-normal-release",
+  "release_status": "software-qualified-signed-normal",
   "version_header_sha256": "bebc0198bb9344f5e941414ab46254ae82aa5adbf8c014f30f47ed2ed34df1d1",
   "firmware_source_branch": "release/lcd-de398-app671",
-  "application_bytes": 364180
+  "application_bytes": 364180,
+  "firmware_source_commit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "local_production_commit": "465a4b0572f8c0d22e899b2110fb88ff8c6015a4",
+  "production_tree_sha": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
+  "ota_bytes": 364781,
+  "qualification_date": "2026-11-21",
+  "signature_verified": true,
+  "z21_application_acceptance_passed": true,
+  "application_ota_signature": "ECDSA-P256",
+  "firmware_notes": "docs/DE3_98_RELEASE.md",
+  "firmware_evidence": "docs/validation/DE3_98.json",
+  "host_firmware_suite_method": "Full run: 185/186 passed; the sole failed suite compiled against an obsolete fixture. After updating only that fixture to the existing boolean settings API and App3 field, the unchanged suite passed all 4 cases. All other test inputs and all 709 production inputs were unchanged. Original full-run report retained.",
+  "independent_local_unsigned_rebuilds_match_signed_application": true,
+  "unsigned_rebuild_scope": "Two local isolated builds of the published production tree have identical BIN and HEX bytes and match the signed payload. No new public CI rebuild is claimed.",
+  "web_source_branch": "web-app671",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app671/web",
+  "previous_normal_lcd_release": {
+    "version": "2.22.0-DE3.89",
+    "counter": 662,
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
+    "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
+  }
 }
