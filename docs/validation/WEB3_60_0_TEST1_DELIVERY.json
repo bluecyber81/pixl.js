@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-21T16:06:11.859046+00:00",
+  "status": "published-and-http-verified",
+  "scope": "Public isolated LCD App670 TEST1 software delivery; physical installation and performance acceptance remain separate.",
+  "webVersion": "3.60.0-test.1",
+  "firmwareVersion": "2.22.0-DE3.97",
+  "applicationCounter": 670,
+  "board": "LCD",
+  "displayDriver": "ST7567",
+  "urls": {
+    "fileManager": "https://bluecyber81.github.io/pixl.js/test/app670/?v=3.60.0-test.1",
+    "update": "https://bluecyber81.github.io/pixl.js/test/app670/dfu/web.html?v=3.60.0-test.1&package=de3.97-lcd-app-test1",
+    "ota": "https://bluecyber81.github.io/pixl.js/test/app670/firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip"
+  },
+  "firmware": {
+    "schema": 1,
+    "repository": "bluecyber81/pixl.js",
+    "branch": "test/lcd-de397-app670-test1",
+    "localCommit": "8511bad7b0901c3b72a58041073f7aa0b68d374a",
+    "localTree": "99fdb8b40d89d5fcd5948d072d94c54e29bf3933",
+    "publicParent": "963554df2e2f6824f8a0bd553053ca2f7bc37089",
+    "publicCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "publicTree": "99fdb8b40d89d5fcd5948d072d94c54e29bf3933",
+    "exactTreeMatch": true,
+    "changedPaths": 11,
+    "ota": {
+      "file": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "bytes": 364489,
+      "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786"
+    },
+    "hardwareAcceptance": "pending"
+  },
+  "webBuildSource": {
+    "schema": 1,
+    "repository": "bluecyber81/pixl.js",
+    "branch": "web-app670-test1",
+    "publicCommit": "613a0aa189c100a93fe04033d04a2ce7608769c0",
+    "publicTree": "bc3de425e035762f7f56c491957cdc6f27442338",
+    "publicParent": "fed97086398f63c6944940f24d96851d42146ee2",
+    "localCommit": "99436b8ed7e98f5f295fff2c675e025906956d6a",
+    "localTree": "bc3de425e035762f7f56c491957cdc6f27442338",
+    "exactTreeMatch": true,
+    "changedPaths": 97,
+    "firmwareValidationCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "webVersion": "3.60.0-test.1",
+    "hardwareAcceptance": "pending",
+    "pagesDeployment": "separate-operation"
+  },
+  "pages": {
+    "schema": 1,
+    "repository": "bluecyber81/pixl.js",
+    "branch": "gh-pages",
+    "publicCommit": "982c457fdfebb148ef2d25d3d8988ab1c29c50ed",
+    "publicTree": "d16ccbba6caa7da82bcae4141db91fbfe5c04609",
+    "publicParent": "5cbfe7c7dec9a5283f87bf834f49425beee121bf",
+    "localCommit": "4854d872b1d0effeb404a1ff3be3662222da1a72",
+    "localTree": "d16ccbba6caa7da82bcae4141db91fbfe5c04609",
+    "exactTreeMatch": true,
+    "newFiles": 275,
+    "preservedFiles": 2186,
+    "onlyNewSubtree": "test/app670/",
+    "builtFromWebCommit": "613a0aa189c100a93fe04033d04a2ce7608769c0",
+    "firmwareValidationCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "url": "https://bluecyber81.github.io/pixl.js/test/app670/",
+    "liveHttpVerification": "passed",
+    "hardwareAcceptance": "pending"
+  },
+  "firmwareIdentity": {
+    "board": "LCD",
+    "firmwareVersion": "2.22.0-DE3.97",
+    "applicationCounter": 670,
+    "testLabel": "TEST1",
+    "chipPart": 337970,
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+    "productionCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "sourceCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "localProductionCommit": "91364b0b349905bc09351b5b151bf271b03ab850",
+    "validationCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "otaSha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "otaBytes": 364489,
+    "applicationBytes": 363888,
+    "applicationBinSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "artifactStatus": "experimental-signed-application",
+    "hardwareAcceptance": "pending"
+  },
+  "sourceQualification": {
+    "path": "WEB3_60_0_TEST1.json",
+    "sha256": "ba57db244547841a59dba8e0c1bd353de06a4ba89d75a2619e2a82913ef33931"
+  },
+  "tests": {
+    "firmwareSuites": {
+      "executed": 183,
+      "passed": 183
+    },
+    "linkedArmCheckers": {
+      "executed": 13,
+      "passed": 13
+    },
+    "z21CryptoHashCrc": {
+      "executed": 7,
+      "passed": 7
+    },
+    "z21InitAcceptance": {
+      "executed": 2,
+      "passed": 2
+    },
+    "fullWebBaselineBeforeSigning": {
+      "executed": 2037,
+      "passed": 2034,
+      "failed": 0,
+      "skipped": 3
+    },
+    "finalSignedWebIntegration": {
+      "executed": 87,
+      "passed": 87,
+      "failed": 0,
+      "skipped": 0
+    },
+    "distributionEachBuild": {
+      "executed": 44,
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0,
+      "modes": [
+        "root",
+        "isolated-app670"
+      ]
+    },
+    "publicHttp": {
+      "executed": 285,
+      "passed": 285,
+      "newAssets": 275,
+      "preservedAssets": 10
+    },
+    "countingRule": "Overlapping suites, build variants and sequential validation phases are not added together."
+  },
+  "preservation": {
+    "existingPagesFiles": 2186,
+    "allExistingGitEntriesAndBytesUnchanged": true,
+    "onlyAddedSubtree": "test/app670/",
+    "stableMainWeb": "3.58.6",
+    "stableMainApplicationCounter": 668,
+    "previousTestCounter": 669,
+    "oledAndPrivateHistoricalManagerChanged": false
+  },
+  "evidence": {
+    "HTTP_VERIFICATION.json": {
+      "path": "WEB3_60_0_TEST1_DELIVERY_evidence/HTTP_VERIFICATION.json",
+      "bytes": 215554,
+      "sha256": "cb163b41486a4e245283bd8dda62c96ef67c2531eafdecdd0ca58f07627192cf"
+    },
+    "PAGES_LOCAL_PREPARATION.json": {
+      "path": "WEB3_60_0_TEST1_DELIVERY_evidence/PAGES_LOCAL_PREPARATION.json",
+      "bytes": 552608,
+      "sha256": "23b827ca643121d03f32396db7411099b311238bb3431a8e3cad4d37c265bdda"
+    },
+    "PAGES_WORKFLOW.json": {
+      "path": "WEB3_60_0_TEST1_DELIVERY_evidence/PAGES_WORKFLOW.json",
+      "bytes": 8185,
+      "sha256": "6d086c4ad4789986a6d123a11ab72f754b3f332639901b338a9778329ac9445b"
+    }
+  },
+  "hardwareAcceptance": "pending",
+  "physicalDeviceAccess": false,
+  "remainingDeviceWork": [
+    "Install the signed application-only package on the matching LCD/Z21/S112 device.",
+    "Run the read-only single/batch/single comparison on at most twelve small files and export its report.",
+    "Export restart diagnostics; observe settings save/discard/persistence and normal operation."
+  ],
+  "additionalFullBackupsRequired": false,
+  "performanceClaim": "No physical App670 speedup or startup reduction has been measured yet."
+}
