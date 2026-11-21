@@ -1,0 +1,340 @@
+{
+  "schema": 1,
+  "profile": "App669-to-App670-CRC-loop-only",
+  "passed": true,
+  "deviceAccess": false,
+  "syntheticDataOnly": true,
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "format": "PFS1",
+  "layoutConstantsUnchanged": true,
+  "identities": {
+    "old": {
+      "manifest": {
+        "schema": 1,
+        "format": "PFS1",
+        "constants": {
+          "FORMAT_VERSION": 1,
+          "BLOCK_SIZE": 4096,
+          "BLOCK_COUNT": 512,
+          "CACHE_SIZE": 256,
+          "SHARD_TARGET": 32768,
+          "MAX_SHARDS": 64,
+          "MAX_HANDLES": 8,
+          "PATH_MAX": 64,
+          "NAME_MAX": 48,
+          "META_SIZE": 128
+        },
+        "defines": [
+          "LFS_NO_ASSERT",
+          "LFS_NO_DEBUG",
+          "LFS_NO_ERROR",
+          "LFS_NO_MALLOC",
+          "LFS_NO_WARN"
+        ],
+        "files": {
+          "packed_fs.c": "b95f493ea53b545c7a17e2c7b6f76c01c348e84e1a8be791c8167e2ebeec8622",
+          "packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+          "lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+          "lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+          "lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+          "lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+        }
+      },
+      "engineSha256": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d"
+    },
+    "new": {
+      "manifest": {
+        "schema": 1,
+        "format": "PFS1",
+        "constants": {
+          "FORMAT_VERSION": 1,
+          "BLOCK_SIZE": 4096,
+          "BLOCK_COUNT": 512,
+          "CACHE_SIZE": 256,
+          "SHARD_TARGET": 32768,
+          "MAX_SHARDS": 64,
+          "MAX_HANDLES": 8,
+          "PATH_MAX": 64,
+          "NAME_MAX": 48,
+          "META_SIZE": 128
+        },
+        "defines": [
+          "LFS_NO_ASSERT",
+          "LFS_NO_DEBUG",
+          "LFS_NO_ERROR",
+          "LFS_NO_MALLOC",
+          "LFS_NO_WARN"
+        ],
+        "files": {
+          "packed_fs.c": "123fdef17c2c42d0d7374db931c7e738e44584fbd8bb2fc2953a7454033462a4",
+          "packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+          "lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+          "lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+          "lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+          "lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+        }
+      },
+      "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788"
+    }
+  },
+  "sourcesBefore": {
+    "harness": "73bff4818fa6619e3deedbbda848cfd71ec90bc2cec5894a57ffde086f9ebfc4",
+    "fixture": "0a03f00e8eace67596347265c5e8a6b7c49006b0cf4bb65843aabb633ca944eb",
+    "identity_script": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "old/packed_fs.c": "b95f493ea53b545c7a17e2c7b6f76c01c348e84e1a8be791c8167e2ebeec8622",
+    "old/packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+    "old/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "old/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "old/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "old/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "new/packed_fs.c": "123fdef17c2c42d0d7374db931c7e738e44584fbd8bb2fc2953a7454033462a4",
+    "new/packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+    "new/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "new/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "new/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "new/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+  },
+  "sourcesAfter": {
+    "harness": "73bff4818fa6619e3deedbbda848cfd71ec90bc2cec5894a57ffde086f9ebfc4",
+    "fixture": "0a03f00e8eace67596347265c5e8a6b7c49006b0cf4bb65843aabb633ca944eb",
+    "identity_script": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "old/packed_fs.c": "b95f493ea53b545c7a17e2c7b6f76c01c348e84e1a8be791c8167e2ebeec8622",
+    "old/packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+    "old/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "old/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "old/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "old/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "new/packed_fs.c": "123fdef17c2c42d0d7374db931c7e738e44584fbd8bb2fc2953a7454033462a4",
+    "new/packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+    "new/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "new/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "new/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "new/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+  },
+  "builds": [
+    {
+      "name": "old",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-DLFS_NO_ASSERT",
+        "-DLFS_NO_DEBUG",
+        "-DLFS_NO_ERROR",
+        "-DLFS_NO_MALLOC",
+        "-DLFS_NO_WARN",
+        "-I/workspace/scratch/0af425ec2cbb/app670_web/web/third-party/packed-simulator-de396/core",
+        "-I/workspace/scratch/0af425ec2cbb/app670_web/web/third-party/packed-simulator-de396/littlefs",
+        "/workspace/scratch/0af425ec2cbb/app670_web/web/tests/fixtures/pfs-compat-host.c",
+        "/workspace/scratch/0af425ec2cbb/app670_web/web/third-party/packed-simulator-de396/core/packed_fs.c",
+        "/workspace/scratch/0af425ec2cbb/app670_web/web/third-party/packed-simulator-de396/littlefs/lfs.c",
+        "/workspace/scratch/0af425ec2cbb/app670_web/web/third-party/packed-simulator-de396/littlefs/lfs_util.c",
+        "-o",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/old.exe"
+      ],
+      "exitCode": 0,
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/old-build.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "new",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-DLFS_NO_ASSERT",
+        "-DLFS_NO_DEBUG",
+        "-DLFS_NO_ERROR",
+        "-DLFS_NO_MALLOC",
+        "-DLFS_NO_WARN",
+        "-I/workspace/scratch/0af425ec2cbb/app670_fw/fw/application/src/mod/vfs",
+        "-I/workspace/scratch/0af425ec2cbb/app670_fw/fw/components/littlefs",
+        "/workspace/scratch/0af425ec2cbb/app670_web/web/tests/fixtures/pfs-compat-host.c",
+        "/workspace/scratch/0af425ec2cbb/app670_fw/fw/application/src/mod/vfs/packed_fs.c",
+        "/workspace/scratch/0af425ec2cbb/app670_fw/fw/components/littlefs/lfs.c",
+        "/workspace/scratch/0af425ec2cbb/app670_fw/fw/components/littlefs/lfs_util.c",
+        "-o",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/new.exe"
+      ],
+      "exitCode": 0,
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/new-build.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "cases": [
+    {
+      "engine": "old",
+      "action": "create",
+      "phase": 0,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/old.exe",
+        "create",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-disk.bin",
+        "0"
+      ],
+      "result": {
+        "passed": true,
+        "phase": 0,
+        "expectedRows": 1208,
+        "reads": 3721660,
+        "programs": 97693,
+        "erases": 7876,
+        "readonly": false
+      },
+      "imageBeforeSha256": null,
+      "imageAfterSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/1-old-create.log",
+      "logSha256": "31c70f23f1c109406f56cc9e89e0dcba906ceabab7ad7ca6c2a6222ee8bf86f1"
+    },
+    {
+      "engine": "new",
+      "action": "verify",
+      "phase": 0,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/new.exe",
+        "verify",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-disk.bin",
+        "0"
+      ],
+      "result": {
+        "passed": true,
+        "phase": 0,
+        "expectedRows": 1208,
+        "reads": 427304,
+        "programs": 0,
+        "erases": 0,
+        "readonly": true
+      },
+      "imageBeforeSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "imageAfterSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/2-new-verify.log",
+      "logSha256": "dc442e8c51281d9874309f1f3468e1ff8783f96cfcbfff093aef430d43f579a1"
+    },
+    {
+      "engine": "new",
+      "action": "modify",
+      "phase": 1,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/new.exe",
+        "modify",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-disk.bin",
+        "1"
+      ],
+      "result": {
+        "passed": true,
+        "phase": 1,
+        "expectedRows": 1209,
+        "reads": 703363,
+        "programs": 455,
+        "erases": 33,
+        "readonly": false
+      },
+      "imageBeforeSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "imageAfterSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/3-new-modify.log",
+      "logSha256": "ef26e91d1c8d67972e6197b2236ef323fb07bd20119a5ca204b0034e34e23510"
+    },
+    {
+      "engine": "old",
+      "action": "verify",
+      "phase": 1,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/old.exe",
+        "verify",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-disk.bin",
+        "1"
+      ],
+      "result": {
+        "passed": true,
+        "phase": 1,
+        "expectedRows": 1209,
+        "reads": 451819,
+        "programs": 0,
+        "erases": 0,
+        "readonly": true
+      },
+      "imageBeforeSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "imageAfterSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/4-old-verify.log",
+      "logSha256": "59bda24d0bb137222f448ea01a5cc2e1ff9313ae0e8cfbef64c31e2dae91ce4f"
+    },
+    {
+      "engine": "old",
+      "action": "modify",
+      "phase": 2,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/old.exe",
+        "modify",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-disk.bin",
+        "2"
+      ],
+      "result": {
+        "passed": true,
+        "phase": 2,
+        "expectedRows": 1209,
+        "reads": 594076,
+        "programs": 70,
+        "erases": 5,
+        "readonly": false
+      },
+      "imageBeforeSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "imageAfterSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/5-old-modify.log",
+      "logSha256": "77fc0826469ec0f91abe894f44555aa05581b932e0781d0c8f44b718d25f32b1"
+    },
+    {
+      "engine": "new",
+      "action": "verify",
+      "phase": 2,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/new.exe",
+        "verify",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/synthetic-disk.bin",
+        "2"
+      ],
+      "result": {
+        "passed": true,
+        "phase": 2,
+        "expectedRows": 1209,
+        "reads": 362482,
+        "programs": 0,
+        "erases": 0,
+        "readonly": true
+      },
+      "imageBeforeSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+      "imageAfterSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+      "log": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/6-new-verify.log",
+      "logSha256": "502cb94727a615467b8823f83c854296a2bfabd47f91360b55d5caa2d9928583"
+    }
+  ],
+  "filesInitially": 1131,
+  "directoriesInitially": 77,
+  "verification": "Every active path, kind, size, content byte, raw128 byte, import identity and complete namespace in each phase including remount. Read-only phases have identical image SHA256 and zero program/erase operations.",
+  "mutations": [
+    "replace content/raw128",
+    "rename",
+    "remove",
+    "add8193-byte file",
+    "add empty file",
+    "old-engine replacement after new-engine writes",
+    "GC"
+  ],
+  "limits": [
+    "Host synthetic flash only, no physical device timing or readback.",
+    "Native portable engine compiled without LCD profiling instrumentation; full ARM build checked separately.",
+    "No injected power-loss failures in this cross-mount; six injected I/O-error cases and CRC corruptions covered by focused mount-parser tests.",
+    "Not the WASM binary qualification; root builds and qualifies the matching new WASM snapshot separately."
+  ]
+}

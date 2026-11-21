@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "observedAt": "2026-11-21T15:33:12.651526+00:00",
+  "version": "2.22.0-DE3.97",
+  "counter": 670,
+  "board": "LCD",
+  "testLabel": "TEST1",
+  "localProductionCommit": "91364b0b349905bc09351b5b151bf271b03ab850",
+  "productionCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+  "productionTree": "2eb76b42aab5a19a6ea90aa371365ced0d238f00",
+  "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+  "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+  "independentBuilds": 2,
+  "sameFiles": {
+    "pixljs.bin": true,
+    "pixljs.hex": true,
+    "production-inputs.json": true
+  },
+  "binaryBytes": 363888,
+  "binarySha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "hexSha256": "46b7a099814c7d7feeafcf7807dbb16e914d5ad16e954e5c98d35c8b5a928eb5",
+  "linkerBudget": {
+    "binary_bytes": 363888,
+    "linker_flash_used_bytes": 363900,
+    "observed": {
+      "flash_reserve_bytes": 8836,
+      "heap_stack_gap_bytes": 1688,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "deviceAccess": false,
+  "passed": true,
+  "limits": [
+    "ELF/map/debug source paths differ between isolated build directories.",
+    "Two matching application builds do not constitute a hardware or radio test."
+  ],
+  "engineHeaderVerified": true
+}

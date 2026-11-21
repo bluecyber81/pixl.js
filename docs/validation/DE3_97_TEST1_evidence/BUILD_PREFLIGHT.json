@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "deviceAccess": false,
+  "buildExecuted": false,
+  "sdkCopied": false,
+  "productionInputsChanged": false,
+  "testCommand": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "tools/test_build_preflight.py",
+    "-v"
+  ],
+  "testExitCode": 0,
+  "unitTests": 7,
+  "checks": [
+    "Current actual checkout and temporary copy accepted",
+    "Stale string rejected with correct bytes",
+    "Stale bytes rejected with correct string",
+    "Changed engine rejects both stale representations",
+    "Missing, malformed, duplicated and shortened representations rejected",
+    "Changed PackedFS geometry still refused",
+    "Native and Docker entrypoints stop before output/archive/SDK/subprocess when stale"
+  ],
+  "preflight": {
+    "engine_sha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "header_sha256": "f7849b2dbcfbdbc7f616dc6265821249ebc7344a533c2f9e4d4632358d0e0a88",
+    "both_header_representations_verified": true
+  },
+  "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+  "unchangedApplicationBinSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "sourceHashes": {
+    "tools/build_lcd.py": "848b291c59d63953a065c57ccb35d963cff60629f75705a7ab8471b20ddcfbed",
+    "tools/test_build_preflight.py": "067af0c66044df64afa926d7e9b77037bdcec225f1abde061a2c2fcb63f23c47",
+    "fw/scripts/packed_identity.py": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee"
+  },
+  "log": "BUILD_PREFLIGHT.log",
+  "logSha256": "2d818ccdd3abd791d522e7818ea756dbbca20115ec1008d9ca60671bb73570e5",
+  "scope": "Read-only generated-header preflight and temporary unit fixtures. No firmware rebuild, signing or key action."
+}

@@ -1,0 +1,8 @@
+{
+  "sha256Cases": 32,
+  "hmacSha256Cases": 16,
+  "hmacShortBufferAndRetryCases": 8,
+  "hardware": false,
+  "applicationBinSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "passed": true
+}

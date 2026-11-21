@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fw/scripts"))
 from application_budget import check_budget
+from packed_identity import identity as packed_identity
 from production_id import fingerprint, source_hashes
 
 
@@ -74,6 +75,38 @@ def build_identity(root, mode, version, counter):
     if values.get("VERSION") != json.dumps(version):
         raise ValueError("First update VERSION in your development source version.inc.h to match --version.")
     return version, counter, sha256(header)
+
+
+def check_packed_identity(root):
+    """Refuse stale generated identity without changing any production input."""
+    core = root / "fw/application/src/mod/vfs"
+    header = core / "vfs_packed_identity.h"
+    try:
+        _, expected = packed_identity(core, root / "fw/components/littlefs")
+    except AssertionError as exc:
+        raise ValueError("PackedFS layout identity preflight failed: " + str(exc)) from exc
+    content = header.read_text(encoding="utf-8")
+    definitions = {}
+    for name, value in re.findall(
+            r"^\s*#define\s+(PIXL_PACKED_ENGINE_SHA256(?:_BYTES)?)\s+([^\r\n]+)$", content, re.M):
+        definitions.setdefault(name, []).append(value.strip())
+    wrong = []
+    text_name = "PIXL_PACKED_ENGINE_SHA256"
+    byte_name = text_name + "_BYTES"
+    if definitions.get(text_name) != [json.dumps(expected)]:
+        wrong.append(text_name)
+    byte_values = definitions.get(byte_name, [])
+    byte_match = re.fullmatch(r"\{\s*(0x[0-9a-fA-F]{2}(?:\s*,\s*0x[0-9a-fA-F]{2}){31})\s*\}",
+                             byte_values[0]) if len(byte_values) == 1 else None
+    if byte_match is None or bytes(int(token.strip(), 16) for token in byte_match[1].split(",")).hex() != expected:
+        wrong.append(byte_name)
+    if wrong:
+        raise ValueError("PackedFS engine identity preflight failed: " + ", ".join(wrong) +
+                         " missing, malformed, duplicated or stale in " + str(header) +
+                         ". Expected SHA-256: " + expected +
+                         ". Regenerate with fw/scripts/packed_identity.py and review the header before building.")
+    return {"engine_sha256": expected, "header_sha256": sha256(header),
+            "both_header_representations_verified": True}
 
 
 def archive_filter(info):
@@ -193,6 +226,7 @@ def main(argv=None):
             args.mode = "preview" if release_info.get("firmware_preview") else "release"
         preview = release_info.get("firmware_preview") if args.mode == "preview" else None
         version, counter, header_hash = build_identity(root, args.mode, args.version, args.counter)
+        packed_engine = check_packed_identity(root)
         if args.backend == "docker" and shutil.which("docker") is None:
             raise RuntimeError("Docker CLI is required. Install/configure it separately; this helper installs nothing.")
         # --pull never below prevents an implicit network download. Fetch this
@@ -216,6 +250,7 @@ def main(argv=None):
                   "network": "none" if args.backend == "docker" else "no downloads performed",
                   "signed": False, "device_access": False,
                   "version_header_sha256": header_hash,
+                  "packed_engine_identity": packed_engine,
                   "sdk_header_override": {"path": "components/softdevice/s112/headers/nrf_nvic.h",
                                           "before_sha256": NVIC_BEFORE_SHA256,
                                           "after_sha256": NVIC_AFTER_SHA256},

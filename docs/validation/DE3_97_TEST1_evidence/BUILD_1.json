@@ -1,0 +1,60 @@
+{
+  "status": "unsigned_development",
+  "mode": "development",
+  "version": "2.22.0-DE3.97",
+  "counter": 670,
+  "board": "LCD",
+  "backend": "native",
+  "sdk_image": null,
+  "network": "no downloads performed",
+  "signed": false,
+  "device_access": false,
+  "version_header_sha256": "fd4e4348a24c801e4828b59c3094cd6bb33b8f57c0d04de5cd070d56a9c2be7e",
+  "sdk_header_override": {
+    "path": "components/softdevice/s112/headers/nrf_nvic.h",
+    "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+    "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+  },
+  "expected_bin_sha256": null,
+  "source_tar_sha256": "edcfa68f43b1a5e2e15f230f3f26e4593f43928aac5cfe63409d548d2d190fe9",
+  "native_tools": {
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "compiler_sha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "make": "GNU Make 4.4.1",
+    "sdk_archive_sha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "sdk_copy_patched": true,
+    "input_sdk_modified": false,
+    "environment_policy": "PATH/HOME/TMPDIR only; fixed locale and build variables"
+  },
+  "exit_code": 0,
+  "source_id_sha256": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+  "source_input_count": 709,
+  "linker_budget": {
+    "binary_bytes": 363888,
+    "linker_flash_used_bytes": 363900,
+    "observed": {
+      "flash_reserve_bytes": 8836,
+      "heap_stack_gap_bytes": 1688,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "artifacts_sha256": {
+    "pixljs.bin": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "pixljs.hex": "46b7a099814c7d7feeafcf7807dbb16e914d5ad16e954e5c98d35c8b5a928eb5",
+    "pixljs.out": "c324b98ab7dac7d11e4c4342dbc90ca31dd2863c80615b40751eb48bf143a32f",
+    "pixljs.map": "ed8762d8edf946fa7e69cff34c7186597a9e08fa5914a60bfcaf18b3214a8a95"
+  },
+  "matches_archived_release_binary": false,
+  "archived_release_version": "2.22.0-DE3.89",
+  "matches_expected_binary": null,
+  "stack_usage": {
+    "report_sha256": "6683d25ebce496362bf8779b235b4885a536bd4438aaf1d0bca2da2aac171897",
+    "files": 372,
+    "frames": 4256
+  }
+}

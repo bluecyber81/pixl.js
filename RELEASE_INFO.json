@@ -275,7 +275,7 @@
     "counter": 670,
     "board": "LCD",
     "test_label": "TEST1",
-    "status": "candidate-unqualified",
+    "status": "software-qualified-unsigned-candidate",
     "hardware_acceptance": "pending",
     "source_branch": "test/lcd-de397-app670-test1",
     "source_publication_parent": "de9f457fac652153f71dc08243368f6283e1159c",
@@ -290,11 +290,10 @@
     "migration_required_for_existing_pfs1": false,
     "firmware_qualification_passed": false,
     "pending_release_gates": [
-      "full firmware regression",
-      "linked ARM checks",
-      "two identical final builds",
-      "signature verification",
-      "Web/DFU integration and delivery"
+      "Explicit current-transcript approval for the external project-key source.",
+      "Application-only package signing and positive/negative signature validation.",
+      "Z21 signed-init/CRC/BIN acceptance checks on the actual signed package.",
+      "Web binding to real OTA bytes, full signed-package integration and test-path publication."
     ],
     "evidence": "docs/validation/DE3_97_TEST1.json",
     "notes": "docs/validation/DE3_97_TEST1.md",
@@ -306,7 +305,23 @@
     ],
     "normal_build_policy": "Select measured improvements for a later higher-counter normal build. No additional full backup is required just for the short comparison.",
     "source_id": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
-    "storage_engine_sha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788"
+    "storage_engine_sha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "software_qualification_passed": true,
+    "source_commit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "production_source_commit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "local_production_source_commit": "91364b0b349905bc09351b5b151bf271b03ab850",
+    "production_tree_sha": "2eb76b42aab5a19a6ea90aa371365ced0d238f00",
+    "application_sha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "application_bytes": 363888,
+    "host_firmware_suites": 183,
+    "unsigned_review": {
+      "file": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_UNSIGNIERT_PRUEFPAKET.zip",
+      "bytes": 714576,
+      "sha256": "ba56f9c28792f72acb2ed164891698c14a97fcbb8f0bafd5bcd8b58823f85540",
+      "signed": false,
+      "installableDfuPackage": false
+    },
+    "delivery_status": "Unsigned review source only. No installable App670 package or App670 Pages deployment. App669 remains the last published test package."
   },
   "firmware_preview_history": [
     {
