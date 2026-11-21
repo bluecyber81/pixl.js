@@ -5,7 +5,7 @@ import {createHash, webcrypto} from 'node:crypto';
 import DfuPackage from '../public/dfu/package.js';
 import Bundled from '../public/dfu/bundled-packages.js';
 import Updater from '../public/dfu/updater.js';
-import {lcdPreview, lcdPreviews, lcdPreviewPackage} from '../public/dfu/lcd-private-reference.mjs';
+import {lcdPreview667 as lcdPreview, lcdPreviews, lcdPreviewPackage667 as lcdPreviewPackage, lcdPreviewPackages} from '../public/dfu/lcd-private-reference.mjs';
 import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {buildDiagnosticBoard} from '../src/lib/lcd-build-diagnostics.js';
@@ -21,7 +21,7 @@ function signedBytes() {
 }
 
 function directApp667(bytes = signedBytes()) {
-  const runtimeCatalog = Bundled.validateCatalog({schema:catalog.schema, packages:[...catalog.packages,lcdPreviewPackage]});
+  const runtimeCatalog = Bundled.validateCatalog({schema:catalog.schema, packages:[...catalog.packages,...lcdPreviewPackages]});
   const observed = {parserCalls:0, bluetoothSelections:0, requests:[], statuses:[], state:null, reference:null};
   // Count parser entry without replacing any ZIP, init-packet or BIN validation.
   class ObservedPackage extends DfuPackage {
@@ -135,7 +135,7 @@ test('private App667 recognition binds the actual signed application ZIP, BIN an
   assert.equal(state.ready, true);
   assert.equal(catalog.packages[0].counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 667), false);
-  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [667,665,664]);
+  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [668,667,665,664]);
 });
 
 test('App667 diagnostics and capacity require the new exact source, counter and engine while retaining previous profiles', () => {
@@ -169,13 +169,14 @@ test('App667 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('the mobile private download points to App667 and refreshes its versioned metadata without promoting the stable catalog', () => {
-  const html = readFileSync(new URL('../public/dfu/web.html', import.meta.url), 'utf8');
-  const page = readFileSync(new URL('../public/dfu/page.js', import.meta.url), 'utf8');
-  assert.match(html, /LCD App667/);
-  assert.ok(html.includes('../firmware/' + filename));
-  assert.match(html, /DE3\.94 \/ App667/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.58.5'"));
+test('historical App667 retains its exact runtime package and direct-link identity without replacing current App668', () => {
+  const runtime = Bundled.validateCatalog({schema:catalog.schema, packages:[...catalog.packages,...lcdPreviewPackages]});
+  const historical = runtime.packages.find(item => item.id === 'de3.94-lcd-app');
+  assert.equal(historical.file, filename);
+  assert.equal(historical.sha256, lcdPreview.otaSha256);
+  assert.equal(historical.bytes, lcdPreview.otaBytes);
+  assert.equal(historical.counter, 667);
+  assert.equal(runtime.packages.find(item => item.id === 'de3.95-lcd-app').counter, 668);
   assert.equal(catalog.packages[0].version, '2.22.0-DE3.89');
 });
 

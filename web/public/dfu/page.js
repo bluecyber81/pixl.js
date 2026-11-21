@@ -1,8 +1,8 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.5';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.58.6';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackage } from './lcd-private-reference.mjs?v=3.58.5';
+import { lcdPreviews, lcdPreviewPackage, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.58.6';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -269,7 +269,7 @@ function populateCatalog(id) {
 }
 try {
     const runtimeCatalog = {...AllmiiboFirmwareReleases,
-        packages:[...AllmiiboFirmwareReleases.packages, lcdPreviewPackage]};
+        packages:[...AllmiiboFirmwareReleases.packages, ...lcdPreviewPackages]};
     bundled = new AllmiiboBundledPackages.Loader({catalog:runtimeCatalog,updater,
         pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
     const requested = new URLSearchParams(globalThis.location.search).getAll('package');

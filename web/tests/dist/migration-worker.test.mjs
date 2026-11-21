@@ -13,6 +13,7 @@ assert.ok(['/', '/pixl.js/'].includes(base))
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={
+ de395:{url:'/lfs-capacity-de395.wasm',wasm:'311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c',engine:'a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd',counter:668,version:'2.22.0-DE3.95'},
  de394:{url:'/lfs-capacity-de393.wasm',wasm:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engine:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e',counter:667,version:'2.22.0-DE3.94'},
  de393:{url:'/lfs-capacity-de393.wasm',wasm:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engine:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e',counter:666,version:'2.22.0-DE3.93'},
  de392:{url:'/lfs-capacity-de392.wasm',wasm:'08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16',engine:'605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1',counter:665,version:'2.22.0-DE3.92'},
@@ -39,7 +40,7 @@ const bootstrap=`const {parentPort,workerData}=require('node:worker_threads');
  globalThis.fetch=async(url,options)=>{
    if(typeof url!=='string'||!url.startsWith(workerData.base))throw Error('Request escaped deployment base');
    const canonical='/'+url.slice(workerData.base.length);
-   if(!['/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
+   if(!['/lfs-capacity-de395.wasm','/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
    parentPort.postMessage({kind:'test-fetch',url,cache:options.cache,credentials:options.credentials});
    const selected=workerData.swapAsset?(canonical==='/lfs-capacity.wasm'?'/lfs-capacity-current.wasm':'/lfs-capacity.wasm'):canonical;
    const data=fs.readFileSync(path.join(workerData.dist,selected.slice(1)));

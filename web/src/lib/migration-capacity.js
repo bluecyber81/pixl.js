@@ -158,6 +158,19 @@ const de394 = {
   geometry: {...de393.geometry},
   layout: {...de393.layout},
 }
+// App668 has its own bounded-catalog engine and a separately reproduced WASM.
+// Exact linked LCD qualification: docs/validation/DE3_95_PFS.json.
+const de395 = {
+  ...de394,
+  approved: true,
+  url: '/lfs-capacity-de395.wasm',
+  wasmSha256: '311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c',
+  firmwareVersion: '2.22.0-DE3.95',
+  applicationCounter: 668,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.95', applicationCounter: 668}],
+  geometry: {...de394.geometry},
+  layout: {...de394.layout, engineSha256: 'a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd'},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -175,7 +188,9 @@ export const DE391_MIGRATION_CAPACITY_TARGET=freezeTarget(de391)
 export const DE392_MIGRATION_CAPACITY_TARGET=freezeTarget(de392)
 export const DE393_MIGRATION_CAPACITY_TARGET=freezeTarget(de393)
 export const DE394_MIGRATION_CAPACITY_TARGET=freezeTarget(de394)
+export const DE395_MIGRATION_CAPACITY_TARGET=freezeTarget(de395)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de395')return DE395_MIGRATION_CAPACITY_TARGET
   if(profile==='de394')return DE394_MIGRATION_CAPACITY_TARGET
   if(profile==='de393')return DE393_MIGRATION_CAPACITY_TARGET
   if(profile==='de392')return DE392_MIGRATION_CAPACITY_TARGET

@@ -3,86 +3,84 @@ import assert from 'node:assert/strict';
 import {readFileSync, existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import Bundled from '../public/dfu/bundled-packages.js';
-import {lcdPreview, lcdPreview665, lcdPreviousPreview, lcdPreviews} from '../public/dfu/lcd-private-reference.mjs';
+import {lcdPreview, lcdPreview667, lcdPreview665, lcdPreviousPreview, lcdPreviews,
+  lcdPreviewPackage, lcdPreviewPackage667, lcdPreviewPackages} from '../public/dfu/lcd-private-reference.mjs';
 import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
-import {simulateCapacity} from '../src/lib/migration-capacity-engine.js';
 import {buildDiagnosticBoard} from '../src/lib/lcd-build-diagnostics.js';
 import {LCD_Z21_COUNTERS, supportsFolderPublication, firmwareBoard, displayBuildReference} from '../src/lib/hardware-profile.js';
 
-const pending = lcdPreview.artifactStatus === 'pending-build';
-const target = getMigrationCapacityTarget('de394');
-const hashFields = ['sourceId','applicationBinSha256','otaSha256'];
-const allIdentityFields = [...hashFields,'sourceCommit','validationCommit','applicationBytes','otaBytes'];
+const target = getMigrationCapacityTarget('de395');
 const catalog = Bundled.validateCatalog(JSON.parse(readFileSync(new URL('../public/firmware/releases.json',import.meta.url))));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-test(`App667 ${pending ? 'pending' : 'signed'} reference has no borrowed package identity`, () => {
-  assert.equal(lcdPreview.firmwareVersion,'2.22.0-DE3.94');
-  assert.equal(lcdPreview.applicationCounter,667);
+test('current App668 signed reference is bound to its actual application and qualified engine', () => {
+  const qualification = JSON.parse(readFileSync(new URL('../../docs/validation/DE3_95_PFS.json',import.meta.url)));
+  assert.equal(lcdPreview.firmwareVersion,'2.22.0-DE3.95');
+  assert.equal(lcdPreview.applicationCounter,668);
   assert.equal(lcdPreview.board,'LCD');
   assert.equal(lcdPreview.hardwareAcceptance,'pending');
-  if (pending) {
-    for (const key of allIdentityFields) assert.equal(lcdPreview[key],null,key);
-    assert.equal(target.approved,false);
-    assert.deepEqual(target.approvedApplications,[]);
-    assert.equal(existsSync(new URL('../public/firmware/Allmiibo_LCD_DE3_94_667_NUR_APP.zip',import.meta.url)),false);
-  } else {
-    assert.equal(lcdPreview.artifactStatus,'experimental-signed-application');
-    for (const key of hashFields) assert.match(lcdPreview[key],/^[a-f0-9]{64}$/);
-    for (const key of ['sourceCommit','validationCommit']) assert.match(lcdPreview[key],/^[a-f0-9]{40}$/);
-    for (const key of ['applicationBytes','otaBytes']) assert(Number.isSafeInteger(lcdPreview[key]) && lcdPreview[key]>0);
-    assert.equal(target.approved,true);
-    assert.deepEqual(target.approvedApplications,[{firmwareVersion:lcdPreview.firmwareVersion,applicationCounter:667}]);
-  }
+  assert.equal(lcdPreview.artifactStatus,'experimental-signed-application');
+  for (const key of ['sourceId','applicationBinSha256','otaSha256']) assert.match(lcdPreview[key],/^[a-f0-9]{64}$/);
+  assert.equal(lcdPreview.sourceId,qualification.sourceId);
+  assert.equal(lcdPreview.applicationBinSha256,qualification.buildArtifacts['pixljs.bin']);
+  assert.equal(lcdPreview.applicationBytes,qualification.elfLoadBytesCompared);
+  assert.equal(lcdPreview.productionCommit,'2bcb743180e645bdf0d84fa0dc0148a15bd07f00');
+  assert.equal(lcdPreview.sourceCommit,'805e445aa072281d8db8645ec80ccae4023c90ba');
+  assert.equal(lcdPreview.validationCommit,'08a266ee8072bc75878cdfe533e2dc5b5c22e7ad');
+  assert.equal(target.approved,true);
+  assert.deepEqual(target.approvedApplications,[{firmwareVersion:lcdPreview.firmwareVersion,applicationCounter:668}]);
 });
 
-test('pending metadata cannot fabricate a firmware SourceID match or mismatch', () => {
-  const syntheticSource = pending ? 'a'.repeat(64) : lcdPreview.sourceId;
-  const report = diagnosticBuildIdentity({firmwareVersion:lcdPreview.firmwareVersion,
-    boot:{settingsCrcValid:true,applicationCounter:667},
-    build:{schemaVersion:1,board:'LCD',sourceId:syntheticSource,previousFault:null}});
-  assert.equal(report.observed.sourceId,syntheticSource);
+test('App668 build comparison distinguishes source observations from complete application identity', () => {
+  const options = {firmwareVersion:lcdPreview.firmwareVersion,boot:{settingsCrcValid:true,applicationCounter:668},
+    build:{schemaVersion:1,board:'LCD',sourceId:lcdPreview.sourceId,previousFault:null}};
+  const report = diagnosticBuildIdentity(options);
+  assert.equal(report.observed.sourceId,lcdPreview.sourceId);
   assert.equal(report.referenceRelation,'version-and-counter');
+  assert.equal(report.firmwareReportedSourceRelation,'matches-package');
   assert.equal(report.packageReference.artifactStatus,lcdPreview.artifactStatus);
-  assert.equal(report.firmwareReportedSourceRelation,pending ? null : 'matches-package');
   assert.equal(report.applicationHashVerified,false);
   assert.equal(report.samePhysicalDeviceVerified,false);
+  assert.equal(report.observed.applicationBinSha256,null);
+  assert.equal(diagnosticBuildIdentity({...options,build:{...options.build,sourceId:lcdPreview667.sourceId}}).firmwareReportedSourceRelation,'differs-from-package');
+  assert.equal(diagnosticBuildIdentity({...options,build:undefined}).observed.sourceId,null);
 });
 
-test('App667 recognition remains explicit and separate from unknown future firmware and OLED', () => {
-  assert.equal(LCD_Z21_COUNTERS[lcdPreview.firmwareVersion],667);
+test('App668 recognition is explicit and separate from future firmware and OLED', () => {
+  assert.equal(LCD_Z21_COUNTERS[lcdPreview.firmwareVersion],668);
   assert.equal(firmwareBoard(lcdPreview.firmwareVersion),'LCD');
   assert.equal(buildDiagnosticBoard(lcdPreview.firmwareVersion),'LCD');
   assert.equal(displayBuildReference(lcdPreview.firmwareVersion).controllerDriver,'ST7567');
-  assert.equal(buildDiagnosticBoard('2.22.0-DE3.95'),null);
-  assert.equal(LCD_Z21_COUNTERS['2.22.0-DE3.94-OLEDt7'],undefined);
-  assert.equal(supportsFolderPublication(lcdPreview.firmwareVersion,target.layout.engineSha256),!pending);
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.96'),null);
+  assert.equal(LCD_Z21_COUNTERS['2.22.0-DE3.95-OLEDt7'],undefined);
+  assert.equal(supportsFolderPublication(lcdPreview.firmwareVersion,target.layout.engineSha256),true);
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',target.layout.engineSha256),false);
 });
 
-test('App667 reuses exact simulator bytes without inheriting App666 firmware approval', async () => {
-  const previous = getMigrationCapacityTarget('de393');
+test('App668 has its own WASM and engine while App667 keeps the identical historical de393 simulator', () => {
+  const previous = getMigrationCapacityTarget('de394'), historical = getMigrationCapacityTarget('de393');
   assert.notEqual(target,previous);
   assert.notEqual(target.layout,previous.layout);
   assert.notEqual(target.approvedApplications,previous.approvedApplications);
-  assert.equal(target.url,'/lfs-capacity-de393.wasm');
-  assert.equal(target.wasmSha256,previous.wasmSha256);
-  assert.equal(target.layout.engineSha256,previous.layout.engineSha256);
-  const bytes = readFileSync(new URL('../public'+target.url,import.meta.url));
-  assert.equal(createHash('sha256').update(bytes).digest('hex'),target.wasmSha256);
+  assert.equal(target.url,'/lfs-capacity-de395.wasm');
+  assert.notEqual(target.wasmSha256,previous.wasmSha256);
+  assert.notEqual(target.layout.engineSha256,previous.layout.engineSha256);
+  assert.equal(previous.url,historical.url);
+  assert.equal(previous.wasmSha256,historical.wasmSha256);
+  assert.equal(previous.layout.engineSha256,historical.layout.engineSha256);
+  assert.equal(sha(readFileSync(new URL('../public'+target.url,import.meta.url))),target.wasmSha256);
   for (const value of [target,target.layout,target.geometry,target.approvedApplications]) assert(Object.isFrozen(value));
-  if (pending) {
-    await assert.rejects(simulateCapacity([],target,{archiveSha256:'ab'.repeat(32),
-      fetchImpl:()=>assert.fail('An unqualified App667 profile must not fetch or execute WASM')}),{code:'MIGRATION_CAPACITY'});
-  }
 });
 
-test('older private package identities and public stable/OLED catalogs stay separate', () => {
-  assert.deepEqual(lcdPreviews.map(item=>item.applicationCounter),[667,665,664]);
+test('historical private identities and stable/OLED catalogues remain unchanged and separate', () => {
+  assert.deepEqual(lcdPreviews.map(item=>item.applicationCounter),[668,667,665,664]);
+  assert.equal(lcdPreview667.otaSha256,'f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4');
+  assert.equal(lcdPreview667.sourceCommit,'22d5c92cc566fb7da9d43a538f2818d28bfb72a6');
   assert.equal(lcdPreview665.otaSha256,'65e9321309dc059b88adc490963c787fdbc01e35e201765b7cbb8d3ecd66e3a0');
   assert.equal(lcdPreviousPreview.otaSha256,'b3b0c8f967d3b3886680cfb5049635b5297591c16495dd74e1779654cfd0687e');
   assert.equal(catalog.packages[0].counter,662);
-  assert.equal(catalog.packages.some(item=>[666,667].includes(item.counter)),false);
+  assert.equal(catalog.packages.some(item=>[666,667,668].includes(item.counter)),false);
   const oldCandidate={archiveSha256:'b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e',archiveBytes:358565,
     image:{target:{counter:666,hardware:52,softDevices:[0x0126]}}};
   assert.equal(Bundled.validatePackage(oldCandidate,'LCD',catalog,lcdPreviews),undefined);
@@ -90,15 +88,27 @@ test('older private package identities and public stable/OLED catalogs stay sepa
   assert.equal(existsSync(new URL('../public/sources/LCD_DE3_93_App666_Simulatorquellen.zip',import.meta.url)),false);
 });
 
-test('mobile App667 preparation cannot advertise a nonexistent signed download', () => {
-  const html=readFileSync(new URL('../public/dfu/web.html',import.meta.url),'utf8');
-  assert.match(html,/LCD App667/);
-  assert.match(html,/DE3\.94 \/ App667/);
-  assert.doesNotMatch(html,/DE3_93_666|App666/);
-  if (pending) {
-    assert.match(html,/App667 wird vorbereitet/);
-    assert.doesNotMatch(html,/href="[^"]*Allmiibo_LCD_DE3_94_667_NUR_APP\.zip/);
-  } else {
-    assert.match(html,/href="\.\.\/firmware\/Allmiibo_LCD_DE3_94_667_NUR_APP\.zip"/);
+test('both current and historical direct-load packages have complete distinct catalog identities', () => {
+  const original = JSON.stringify(catalog);
+  const runtime = Bundled.validateCatalog({schema:catalog.schema,packages:[...catalog.packages,...lcdPreviewPackages]});
+  assert.deepEqual(lcdPreviewPackages,[lcdPreviewPackage,lcdPreviewPackage667]);
+  assert.deepEqual(lcdPreviewPackages.map(entry=>entry.counter),[668,667]);
+  assert.equal(runtime.packages.at(-2).id,'de3.95-lcd-app');
+  assert.equal(runtime.packages.at(-1).id,'de3.94-lcd-app');
+  assert.equal(JSON.stringify(catalog),original);
+  for (const entry of lcdPreviewPackages) {
+    const bytes=readFileSync(new URL('../public/firmware/'+entry.file,import.meta.url));
+    assert.equal(bytes.byteLength,entry.bytes);
+    assert.equal(sha(bytes),entry.sha256);
+    assert(Object.isFrozen(entry));
   }
+});
+
+test('mobile current App668 download and build label point to the actual new package', () => {
+  const html=readFileSync(new URL('../public/dfu/web.html',import.meta.url),'utf8');
+  assert.match(html,/LCD App668/);
+  assert.match(html,/DE3\.95 \/ App668/);
+  assert.doesNotMatch(html,/DE3_93_666|App666/);
+  assert.match(html,/href="\.\.\/firmware\/Allmiibo_LCD_DE3_95_668_NUR_APP\.zip"/);
+  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE3\.95 \/ App668/);
 });

@@ -164,6 +164,7 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
       ...(sectionData('mtu')?.effectiveAttMtu != null
         ? ['The firmware reported the effective ATT MTU for its connection in diagnosticSnapshot.sections.mtu.']
         : ['This report contains no firmware reading of the effective ATT MTU.']),
+      ...(sectionData('mtu')?.schemaVersion === 2 ? ['MTUD v2 link values come from firmware GAP events. Connection interval units are 1.25 ms and supervision timeout units are 10 ms. PHY 1/2 means 1M/2M; it does not measure file throughput or establish DLE. A successful PHY request is not proof that 2M was negotiated.'] : []),
       ...(sectionData('build') ? ['PXBI reports the current firmware’s compiled SourceID and board. A prior fault carries no build identity of its own. It can survive one application restart in retained RAM. Power loss can clear it.'] : []),
       'Sections were read sequentially; this is not an atomic device snapshot.',
       'Read timestamps describe browser receipt, not the age of cached firmware samples.',

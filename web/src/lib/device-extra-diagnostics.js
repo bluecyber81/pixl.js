@@ -18,7 +18,7 @@ function wire(buffer, length, magic, version = 1) {
 }
 
 export function normalizeMtuDiagnostics(value) {
-  if (!value || value.schemaVersion !== 1 || value.scope !== 'firmware-gatt-snapshot' ||
+  if (!value || ![1, 2].includes(value.schemaVersion) || value.scope !== 'firmware-gatt-snapshot' ||
       !booleanFields(value, ['sessionReady', 'fileMode', 'transferIdle'])) return null;
   const maximum = value.configuredMaxAttMtu, next = value.nextConnectionAttMtu;
   if (!uint(maximum, 250) || maximum < 23 || !uint(next, maximum) || next < 23) return null;
@@ -26,22 +26,65 @@ export function normalizeMtuDiagnostics(value) {
       (!uint(value.effectiveAttMtu, maximum) || value.effectiveAttMtu < 23 ||
        !uint(value.gattValueCapacity, value.effectiveAttMtu - 3) || value.gattValueCapacity < 20) :
       (value.effectiveAttMtu !== null || value.gattValueCapacity !== null)) return null;
-  return Object.freeze({schemaVersion: 1, scope: 'firmware-gatt-snapshot',
+  const link = value.schemaVersion === 2 ? normalizeLinkDiagnostics(value.link) : null;
+  if (value.schemaVersion === 2 && (!link || value.sessionReady && !link.connected)) return null;
+  return Object.freeze({schemaVersion: value.schemaVersion, scope: 'firmware-gatt-snapshot',
     sessionReady: value.sessionReady, fileMode: value.fileMode, transferIdle: value.transferIdle,
     effectiveAttMtu: value.effectiveAttMtu, nextConnectionAttMtu: next,
-    configuredMaxAttMtu: maximum, gattValueCapacity: value.gattValueCapacity});
+    configuredMaxAttMtu: maximum, gattValueCapacity: value.gattValueCapacity,
+    ...(link ? {link} : {})});
+}
+
+function normalizeLinkDiagnostics(value) {
+  if (!value || value.scope !== 'firmware-gap-link-snapshot' ||
+      !booleanFields(value, ['connected', 'phyRequestPending']) || !uint(value.phyRequestAttempts, 3) ||
+      (value.lastPhyUpdateStatus !== null && !uint(value.lastPhyUpdateStatus, 254)) ||
+      (value.lastPhyRequestResult !== null && !uint(value.lastPhyRequestResult, 0xfffffffe))) return null;
+  const {connectionIntervalUnits: interval, slaveLatency: latency, supervisionTimeoutUnits: timeout,
+    rxPhy, txPhy} = value;
+  const paramsKnown = interval !== null;
+  if (paramsKnown ? !value.connected || !uint(interval, 3200) || interval < 6 ||
+      !uint(latency, 499) || !uint(timeout, 3200) || timeout < 10 : latency !== null || timeout !== null) return null;
+  // These are actual GAP event values. Neither a requested PHY nor the ATT MTU
+  // establishes the current radio PHY or a file-transfer throughput.
+  if (rxPhy !== null ? !value.connected || ![1, 2].includes(rxPhy) || ![1, 2].includes(txPhy) : txPhy !== null) return null;
+  if (value.phyRequestPending && (!value.connected || !value.phyRequestAttempts || value.lastPhyRequestResult !== 0)) return null;
+  if (!value.phyRequestAttempts && value.lastPhyRequestResult !== null) return null;
+  if (!value.connected && (value.phyRequestAttempts || value.lastPhyUpdateStatus !== null || value.lastPhyRequestResult !== null)) return null;
+  return Object.freeze({scope: 'firmware-gap-link-snapshot', connected: value.connected,
+    connectionIntervalUnits: interval, slaveLatency: latency, supervisionTimeoutUnits: timeout,
+    rxPhy, txPhy, phyRequestPending: value.phyRequestPending, phyRequestAttempts: value.phyRequestAttempts,
+    lastPhyUpdateStatus: value.lastPhyUpdateStatus, lastPhyRequestResult: value.lastPhyRequestResult});
 }
 
 export function parseMtuDiagnostics(buffer) {
-  const {bytes, view} = wire(buffer, 16, 'MTUD');
+  const raw = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
+  if (!(raw instanceof Uint8Array) || ![1, 2].includes(raw[4])) invalid('MTU');
+  const version = raw[4];
+  const {bytes, view} = wire(raw, version === 2 ? 32 : 16, 'MTUD', version);
   const flags = bytes[5], ready = !!(flags & 1);
-  if ((flags & ~7) || bytes[14] || bytes[15] ||
+  if ((flags & ~7) || (version === 1 && (bytes[14] || bytes[15])) ||
       (!ready && (view.getUint16(6, true) || view.getUint16(12, true)))) invalid('MTU');
-  const result = normalizeMtuDiagnostics({schemaVersion: 1, scope: 'firmware-gatt-snapshot',
+  let link;
+  if (version === 2) {
+    const linkFlags = bytes[14], params = !!(linkFlags & 2), phy = !!(linkFlags & 4);
+    if ((linkFlags & ~15) || bytes[25] || bytes[26] || bytes[27] ||
+        (!params && (view.getUint16(16, true) || view.getUint16(18, true) || view.getUint16(20, true))) ||
+        (!phy && (bytes[22] || bytes[23]))) invalid('MTU link');
+    link = {scope: 'firmware-gap-link-snapshot', connected: !!(linkFlags & 1),
+      connectionIntervalUnits: params ? view.getUint16(16, true) : null,
+      slaveLatency: params ? view.getUint16(18, true) : null,
+      supervisionTimeoutUnits: params ? view.getUint16(20, true) : null,
+      rxPhy: phy ? bytes[22] : null, txPhy: phy ? bytes[23] : null,
+      phyRequestPending: !!(linkFlags & 8), phyRequestAttempts: bytes[24],
+      lastPhyUpdateStatus: bytes[15] === 255 ? null : bytes[15],
+      lastPhyRequestResult: view.getUint32(28, true) === 0xffffffff ? null : view.getUint32(28, true)};
+  }
+  const result = normalizeMtuDiagnostics({schemaVersion: version, scope: 'firmware-gatt-snapshot',
     sessionReady: ready, fileMode: !!(flags & 2), transferIdle: !!(flags & 4),
     effectiveAttMtu: ready ? view.getUint16(6, true) : null,
     nextConnectionAttMtu: view.getUint16(8, true), configuredMaxAttMtu: view.getUint16(10, true),
-    gattValueCapacity: ready ? view.getUint16(12, true) : null});
+    gattValueCapacity: ready ? view.getUint16(12, true) : null, ...(link ? {link} : {})});
   if (!result) invalid('MTU');
   return result;
 }

@@ -229,17 +229,37 @@ function storage(data) {
     ], note: pick('Konfigurationswerte des Geräts. Die Cachegröße ist keine Messung der Cachebelegung, Trefferquote oder gesamten RAM-Nutzung.', 'Device configuration values. Cache size does not measure cache occupancy, hit rate or total RAM use.'),
   };
 }
-const mtu = data => ({
-  summary: [[pick('Aktuelle ATT-MTU laut Firmware', 'Current ATT MTU reported by firmware'), data.effectiveAttMtu === null ? t.value.absent : number(data.effectiveAttMtu)],
-    [pick('Aktuelle GATT-Wertkapazität', 'Current GATT value capacity'), data.gattValueCapacity === null ? t.value.absent : bytes(data.gattValueCapacity)]],
-  details: [[pick('Grenze für nächste Verbindung', 'Next connection limit'), number(data.nextConnectionAttMtu)],
-    [pick('Konfigurierte maximale ATT-MTU', 'Configured maximum ATT MTU'), number(data.configuredMaxAttMtu)],
-    [pick('Dateiclient bereit / Dateimodus', 'File client ready / file mode'), `${yesNo(data.sessionReady)} / ${yesNo(data.fileMode)}`],
-    [pick('Übertragung im Leerlauf', 'Transfer idle'), yesNo(data.transferIdle)]],
-  note: data.effectiveAttMtu === null
-    ? pick('Für diese Verbindung hat die Firmware keine aktuelle ATT-MTU gemeldet. Die unten angezeigten Grenzen sind Einstellungen für die Verbindung.', 'The firmware reported no current ATT MTU for this connection. The limits below are connection settings.')
-    : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.'),
-});
+function mtu(data) {
+  const link = data.link;
+  const phy = value => value === null ? t.value.absent : value === 2 ? '2M' : '1M';
+  const interval = units => units === null ? t.value.absent : `${String(units * 1.25).replace('.', pick(',', '.'))} ms`;
+  return {
+    summary: [[pick('Aktuelle ATT-MTU laut Firmware', 'Current ATT MTU reported by firmware'), data.effectiveAttMtu === null ? t.value.absent : number(data.effectiveAttMtu)],
+      [pick('Aktuelle GATT-Wertkapazität', 'Current GATT value capacity'), data.gattValueCapacity === null ? t.value.absent : bytes(data.gattValueCapacity)],
+      ...(link ? [
+        [pick('Ausgehandeltes Verbindungsintervall', 'Negotiated connection interval'), interval(link.connectionIntervalUnits)],
+        [pick('Aktueller Funkmodus RX / TX', 'Current radio PHY RX / TX'), `${phy(link.rxPhy)} / ${phy(link.txPhy)}`],
+      ] : [])],
+    details: [[pick('Grenze für nächste Verbindung', 'Next connection limit'), number(data.nextConnectionAttMtu)],
+      [pick('Konfigurierte maximale ATT-MTU', 'Configured maximum ATT MTU'), number(data.configuredMaxAttMtu)],
+      [pick('Dateiclient bereit / Dateimodus', 'File client ready / file mode'), `${yesNo(data.sessionReady)} / ${yesNo(data.fileMode)}`],
+      [pick('Übertragung im Leerlauf', 'Transfer idle'), yesNo(data.transferIdle)],
+      ...(link ? [
+        [pick('Funkverbindung aktiv', 'Radio link connected'), yesNo(link.connected)],
+        [pick('Auslassbare Verbindungsereignisse', 'Peripheral latency events'), link.slaveLatency === null ? t.value.absent : number(link.slaveLatency)],
+        [pick('Verbindungsüberwachung', 'Supervision timeout'), link.supervisionTimeoutUnits === null ? t.value.absent : ms(link.supervisionTimeoutUnits * 10)],
+        [pick('PHY-Anforderung ausstehend', 'PHY request pending'), yesNo(link.phyRequestPending)],
+        [pick('Lokale PHY-Anfragen', 'Local PHY requests'), number(link.phyRequestAttempts)],
+        [pick('Letztes lokales Anfrageergebnis', 'Last local request result'), link.lastPhyRequestResult === null ? t.value.absent : hex(link.lastPhyRequestResult)],
+        [pick('Letzter PHY-Ereignisstatus', 'Last PHY event status'), link.lastPhyUpdateStatus === null ? t.value.absent : hex(link.lastPhyUpdateStatus)],
+      ] : [])],
+    note: (data.effectiveAttMtu === null
+      ? pick('Für diese Verbindung hat die Firmware keine aktuelle ATT-MTU gemeldet. Die unten angezeigten Grenzen sind Einstellungen für die Verbindung.', 'The firmware reported no current ATT MTU for this connection. The limits below are connection settings.')
+      : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.')) +
+      (link ? pick(' Intervall und Funkmodus stammen aus Bluetooth-Verbindungsereignissen. 2M ist die Funkdatenrate, keine gemessene Dateiübertragungsgeschwindigkeit. Eine erfolgreiche Anfrage allein bestätigt noch keinen Wechsel auf 2M.',
+        ' Interval and PHY come from Bluetooth connection events. 2M is the radio data rate, not measured file throughput. A successful request alone does not confirm a switch to 2M.') : ''),
+  };
+}
 function ui(data) {
   if (data.sessions === 0) {
     return {

@@ -1,12 +1,14 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.58.5 – LCD DE3.94 / App667
+## Dateimanager 3.58.6 – LCD DE3.95 / App668
 
-Ab 3.58.5 lässt sich das private LCD-Paket über **„App667 direkt laden und prüfen“** auf der DFU-Seite laden. Der Umweg über die lokale Dateiauswahl am Handy entfällt. Die vollständige ZIP wird vor der getrennten Bluetooth-Auswahl mit Größe, SHA-256, Inhalt und Zielprofil geprüft. Der Dateifilter berücksichtigt zusätzlich übliche ZIP- und Binär-MIME-Typen. [Direkt zur vorbereiteten App667-Auswahl](https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.5&package=de3.94-lcd-app).
+Das aktuelle private LCD-Paket lässt sich am Handy über **„App668 direkt laden und prüfen“** auf der DFU-Seite öffnen. Die vollständige ZIP wird vor der getrennten Bluetooth-Auswahl mit Größe, SHA-256, Inhalt und Zielprofil geprüft. [Direkt zur App668-Auswahl](https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.6&package=de3.95-lcd-app).
 
-Diese Ausgabe enthält das signierte private LCD-Prüfpaket DE3.94 / App667, die dazu passende Diagnose und ein für diesen tatsächlichen Firmwarebuild qualifiziertes Speicherbedarfsprofil. Die Übertragungskorrekturen aus Web 3.58.3 sind enthalten. App665 und App664 bleiben als frühere private Pakete erkennbar; die stabile LCD-Auswahl bleibt App662, OLED behält seine eigenen Profile. [Bedienung, Paketidentitäten und Prüfgrenzen](LIESMICH_LCD_APP667_PRIVAT.txt).
+Diese Ausgabe enthält das tatsächliche signierte LCD-Prüfpaket DE3.95 / App668. Der Web-Dateimanager behebt einen hängenden Upload nach lokalem Dateileseabbruch und beendet noch laufende lokale Dateileser beim Verbindungsabbruch. Die Diagnose zeigt das von App668 gemeldete Bluetooth-Verbindungsintervall und den tatsächlich ausgehandelten RX-/TX-Funkmodus; eine 2M-Anforderung wird getrennt von ihrem Ergebnis behandelt. Eine Funkdatenrate ist keine Messung des Dateidurchsatzes.
 
-Das Profil `de394` verwendet die bytegleichen [DE393-Enginequellen](third-party/packed-simulator-de393/SOURCE.txt) und `lfs-capacity-de393.wasm`. Der neue [ARM-/ELF-Nachweis](../docs/validation/DE3_94_PFS.json) bindet diese Engine an die tatsächliche App667-SourceID und deren BIN/HEX. Das [App667-Simulatorquellenpaket](public/sources/LCD_DE3_94_App667_Simulatorquellen.zip) enthält sämtliche bisherigen Simulatorquellen und eine separate `APP667_BINDING.json` mit der neuen Firmwarebindung. Die physische Geräteabnahme steht aus.
+App667 bleibt mit unveränderten Paketbytes und eigenem Direktlink in der privaten Auswahl. App665 und App664 bleiben ebenfalls erkennbar. Die stabile LCD-Auswahl bleibt App662; OLED verwendet seine eigenen Profile. [Bedienung, Paketidentitäten und Prüfgrenzen](LIESMICH_LCD_APP668_PRIVAT.txt).
+
+Das neue Profil `de395` verwendet eigene [App668-Enginequellen](third-party/packed-simulator-de395/SOURCE.txt) und `lfs-capacity-de395.wasm`. Der [ARM-/ELF-Nachweis](../docs/validation/DE3_95_PFS.json) bindet die Engine an die tatsächliche App668-SourceID und deren BIN/HEX. Das [App668-Simulatorquellenpaket](public/sources/LCD_DE3_95_App668_Simulatorquellen.zip) enthält die vollständigen Quellen, Lizenzen, Compilerpins, das Reproduktionsskript und die neue Firmwarebindung. App667 behält sein separates `de394`-Profil und seine bisherigen Quellen. Die physische Geräteabnahme steht aus.
 
 ## Private Ausgabe 3.58.2 für LCD DE3.92 / App665
 

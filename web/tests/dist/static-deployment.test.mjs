@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { noticeFiles, webRoot } from '../../scripts/copy-license-notices.mjs'
-import { lcdPreview } from '../../public/dfu/lcd-private-reference.mjs'
+import { lcdPreview, lcdPreview667, lcdPreviewPackages } from '../../public/dfu/lcd-private-reference.mjs'
 
 const dist = path.resolve(process.env.ALLMIIBO_DIST_DIR || fileURLToPath(new URL('../../dist', import.meta.url)))
 const base = process.env.ALLMIIBO_TEST_BASE_PATH || '/'
@@ -71,12 +71,14 @@ test(`${base}: production index, lazy chunks and DFU assets resolve to real file
   assert.equal(new URL('../', origin + base + 'dfu/web.html').pathname, base)
 })
 
-test(`${base}: real bundled firmware loader hashes and parses deployed ZIP without starting Bluetooth`, async () => {
+for (const privateId of [null,...lcdPreviewPackages.map(entry=>entry.id)])
+test(`${base}: real ${privateId || 'stable'} firmware loader hashes and parses deployed ZIP without starting Bluetooth`, async () => {
   const require = createRequire(import.meta.url)
   const { Loader } = require(path.join(dist, 'dfu/bundled-packages.js'))
   const Package = require(path.join(dist, 'dfu/package.js'))
-  const catalog = JSON.parse(read('firmware/releases.json'))
-  const entry = catalog.packages[0]
+  const stable = JSON.parse(read('firmware/releases.json'))
+  const catalog = {...stable,packages:[...stable.packages,...lcdPreviewPackages]}
+  const entry = privateId ? catalog.packages.find(item=>item.id === privateId) : catalog.packages[0]
   let parsed, requests = 0, status = []
   const updater = { busy: false, package: null, async setPackage(file) {
     if (!file) { this.package = null; return false }
@@ -120,8 +122,8 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   assert.match(index, /historische/)
 })
 
-test(`${base}: the App667 source download resolves to the complete archive with its current firmware binding`, async () => {
-  const name = 'LCD_DE3_94_App667_Simulatorquellen.zip'
+for (const [reference,profile,name] of [[lcdPreview,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
+test(`${base}: the App${reference.applicationCounter} source download resolves to its complete archive and exact firmware binding`, async () => {
   const index = read('licenses/index.html')
   const links = [...index.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(match => match[1].endsWith(name))
   assert.equal(links.length, 1)
@@ -134,15 +136,15 @@ test(`${base}: the App667 source download resolves to the complete archive with 
   const require = createRequire(import.meta.url)
   const JSZip = require(path.join(dist, 'dfu/vendor/jszip-3.10.2.min.js'))
   const archive = await JSZip.loadAsync(bytes, {checkCRC32:true})
-  const binding = JSON.parse(await archive.file('APP667_BINDING.json').async('string'))
-  assert.equal(binding.sourceId, lcdPreview.sourceId)
-  assert.equal(binding.applicationCounter, lcdPreview.applicationCounter)
-  assert.equal(binding.applicationBinSha256, lcdPreview.applicationBinSha256)
-  assert.equal(binding.applicationBytes, lcdPreview.applicationBytes)
-  assert.equal(binding.capacityProfile, 'de394')
+  const binding = JSON.parse(await archive.file(`APP${reference.applicationCounter}_BINDING.json`).async('string'))
+  assert.equal(binding.sourceId, reference.sourceId)
+  assert.equal(binding.applicationCounter, reference.applicationCounter)
+  assert.equal(binding.applicationBinSha256, reference.applicationBinSha256)
+  assert.equal(binding.applicationBytes, reference.applicationBytes)
+  assert.equal(binding.capacityProfile, profile)
   const qualification = await archive.file(binding.qualification.path).async('uint8array')
   assert.equal(sha(qualification), binding.qualification.sha256)
-  assert.equal(JSON.parse(new TextDecoder().decode(qualification)).sourceId, lcdPreview.sourceId)
+  assert.equal(JSON.parse(new TextDecoder().decode(qualification)).sourceId, reference.sourceId)
   assert.equal(sha(fs.readFileSync(path.join(dist, binding.wasm.path.slice('web/public/'.length)))), binding.wasm.sha256)
 })
 

@@ -1679,7 +1679,7 @@ export default {
               }
               return {info,layout};
             }),
-            mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.()),
+            mtu:read(()=>proto.get_mtu_diagnostics?.(this.firmwareVersion)), ui:read(()=>proto.get_ui_diagnostics?.()),
             ...(includeBuild ? {build:read(()=>proto.get_lcd_build_diagnostics(this.firmwareVersion))} : {}),
             ...(includeFlash ? {flash:read(()=>proto.get_flash_diagnostics(this.firmwareVersion))} : {}),
             ...(includeMenu ? {menu:read(()=>proto.get_menu_diagnostics(this.firmwareVersion))} : {})

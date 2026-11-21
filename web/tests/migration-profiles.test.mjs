@@ -69,7 +69,7 @@ test('unknown capacity IDs are rejected before constructing a worker',async()=>{
 test('worker messages carry the selected local profile ID and never a caller-supplied raw target',async()=>{
   const workers=[]
   class Worker{constructor(){workers.push(this)}postMessage(message){this.message=message}terminate(){this.stopped=true}}
-  for(const capacityProfile of ['de394','de393','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']){
+  for(const capacityProfile of ['de395','de394','de393','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']){
     const pending=simulateCapacityInWorker([],{capacityProfile,WorkerImpl:Worker,archiveSha256:'a'.repeat(64),target:{approved:true,url:'https://invalid.example/a.wasm'}})
     const worker=workers.at(-1)
     assert.deepEqual(worker.message,{rows:[],archiveSha256:'a'.repeat(64),capacityProfile})

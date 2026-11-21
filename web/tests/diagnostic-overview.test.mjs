@@ -4,6 +4,8 @@ import * as Vue from 'vue';
 import {loadSfc} from './helpers/vue-component-host.mjs';
 import {diagnosticSnapshot} from './fixtures/diagnostic-overview-data.mjs';
 import {normalizeDiagnosticSnapshot} from '../src/lib/diagnostic-snapshot.js';
+import {parseMtuDiagnostics} from '../src/lib/device-extra-diagnostics.js';
+import mtuLinkPacket from './mtu-link-fixture.cjs';
 
 // The actual SFC template and script run through Vue's real renderer/reactivity.
 // No browser, Bluetooth or arbitrary network requests are made by this host.
@@ -145,6 +147,27 @@ test('MTU capacity and next-connection configuration never substitute for an abs
   assert.equal(row(card(h.root,'mtu'),'Aktuelle GATT-Wertkapazität'),'Nicht erfasst');
   assert.equal(row(card(h.root,'mtu'),'Grenze für nächste Verbindung'),'23');
   assert.match(text(card(h.root,'mtu')),/keine aktuelle ATT-MTU gemeldet/);
+ }finally{h.app.unmount();}
+});
+
+test('MTUD v2 renders negotiated link values in both languages and distinguishes a pending request',async()=>{
+ const snapshot=diagnosticSnapshot();snapshot.sections.mtu.data=parseMtuDiagnostics(mtuLinkPacket());
+ const h=await mount({snapshot});
+ try{
+  assert.equal(row(card(h.root,'mtu'),'Ausgehandeltes Verbindungsintervall'),'7,5 ms');
+  assert.equal(row(card(h.root,'mtu'),'Aktueller Funkmodus RX / TX'),'2M / 2M');
+  assert.equal(row(card(h.root,'mtu'),'Verbindungsüberwachung'),'4000 ms');
+  assert.match(text(card(h.root,'mtu')),/keine gemessene Dateiübertragungsgeschwindigkeit/);
+  const pending=mtuLinkPacket();pending[14]|=8;pending[22]=pending[23]=1;pending[15]=255;
+  snapshot.sections.mtu.data=parseMtuDiagnostics(pending);
+  await change(h,{snapshot:structuredClone(snapshot),locale:'en_US'});
+  assert.equal(row(card(h.root,'mtu'),'Negotiated connection interval'),'7.5 ms');
+  assert.equal(row(card(h.root,'mtu'),'Current radio PHY RX / TX'),'1M / 1M');
+  assert.equal(row(card(h.root,'mtu'),'PHY request pending'),'Yes');
+  assert.equal(row(card(h.root,'mtu'),'Last PHY event status'),'Not recorded');
+  assert.match(text(card(h.root,'mtu')),/does not confirm a switch to 2M/);
+  await change(h,{snapshot:diagnosticSnapshot()});
+  assert.doesNotMatch(text(card(h.root,'mtu')),/Negotiated connection interval|Current radio PHY/);
  }finally{h.app.unmount();}
 });
 

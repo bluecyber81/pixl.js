@@ -1,0 +1,100 @@
+Allmiibo Dateimanager 3.58.6 – LCD DE3.95 / App668
+=================================================
+
+Enthaltene private Firmware
+---------------------------
+Board: LCD / ST7567
+Version: 2.22.0-DE3.95
+App-Zähler: 668
+Voraussetzungen: PackedFS/PFS1, Bootloader Z21, S112 7.3.0
+Paket: public/firmware/Allmiibo_LCD_DE3_95_668_NUR_APP.zip
+Paketgröße: 362593 Byte
+OTA-SHA-256:
+ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b
+Anwendungsgröße: 361992 Byte
+BIN-SHA-256:
+cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9
+Firmware-SourceID:
+75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec
+
+Öffentlicher Produktionsquellstand:
+https://github.com/bluecyber81/pixl.js/tree/805e445aa072281d8db8645ec80ccae4023c90ba
+Der identische lokale Produktionstree hat Commit
+2bcb743180e645bdf0d84fa0dc0148a15bd07f00. Die Quellenarchivbindung
+verwendet diesen lokalen Commit und die oben genannte tatsächliche SourceID.
+
+Bedienung am Handy
+------------------
+Diese Seite im Bluetooth-fähigen Browser öffnen:
+https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.6&package=de3.95-lcd-app
+
+Auf der DFU-Seite LCD wählen und „App668 direkt laden und prüfen“ antippen.
+Ein vorheriger Download oder eine lokale Dateiauswahl ist dafür nicht nötig.
+Nach erfolgreicher Prüfung das Allmiibo in den Update-/DFU-Modus bringen
+und „DFU-Gerät auswählen und übertragen“ antippen. Bluetooth startet erst
+durch diese zweite Aktion. Die Seite prüft Größe, SHA-256, ZIP, Zielzähler,
+Boardzuordnung und Paketidentität vor der Geräteauswahl.
+
+Alternativ die unveränderte Firmware-ZIP herunterladen und unter
+„Eigene Firmware-ZIP“ auswählen. Das große Übergabearchiv ist kein direkt
+installierbares Firmwarepaket. Für Android steht bei der App668-Auswahl
+auch „In nRF DFU öffnen“ bereit. Die Annahme dieses Links durch die lokal
+installierte Handy-App muss am Handy geprüft werden.
+Die Signatur und die Installationsvoraussetzungen prüft der Bootloader.
+
+Nach dem Update im Dateimanager die Diagnose neu lesen und Version,
+App-Zähler sowie gemeldete SourceID mit der Referenz vergleichen.
+Ein passender SourceID-String ist kein ausgelesener Hash des gesamten
+Geräte-BINs und identifiziert kein eindeutiges physisches Gerät.
+
+Die frühere private App667 bleibt im Auswahlfeld erhalten. Der eigene Link
+lautet ?package=de3.94-lcd-app. Ihre Paketbytes, Hashes und das Profil de394
+bleiben unverändert. App665 und App664 bleiben ebenfalls erkennbar.
+Die öffentliche stabile LCD-Auswahl bleibt App662; OLED hat eigene Pakete.
+
+Änderungen im Web-Dateimanager
+------------------------------
+Ein lokaler Dateileseabbruch konnte die Uploadwarteschlange offenhalten.
+Die Warteschlange bekommt jetzt genau einen Fehlerabschluss und kann die
+nächste Datei bearbeiten. Bei Verbindungsabbruch wird ein noch laufender
+Dateileser beendet. Späte Rückrufe starten keinen Auftrag der alten Sitzung.
+Die GATT-Befehle bleiben seriell; Bestätigungen und Hashprüfungen gelten weiter.
+
+App668 ergänzt die vorhandene MTU-Diagnose um tatsächliche GAP-Linkwerte:
+Verbindungsintervall, Peripheral Latency, Supervision Timeout und RX-/TX-PHY.
+Ausstehende PHY-Anfrage und Ergebnis stehen getrennt daneben. Unbekannte
+Werte bleiben als nicht erfasst gekennzeichnet. Ältere Firmware behält den
+bisherigen kompatiblen MTUD-v1-Leseaufruf. „2M“ bezeichnet die Funkdatenrate,
+nicht einen zugesagten oder gemessenen Dateidurchsatz.
+
+Speicherbedarfssimulator und Quellen
+------------------------------------
+Das eigene freigegebene Profil de395 gilt genau für DE3.95 / App668.
+Engine SHA-256:
+a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd
+WASM SHA-256:
+311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c
+Datei: public/lfs-capacity-de395.wasm
+Quellen: third-party/packed-simulator-de395
+Builder: scripts/build-capacity-de395.py
+
+Der tatsächliche App668-Build ist in ../docs/validation/DE3_95_PFS.json
+qualifiziert. Vier Fälle führen den wirklich gelinkten ARM-Layoutcode aus.
+Die sechs Engine-Dateien, alle zwölf Simulatorquellen, ELF/BIN/HEX und
+709 Produktionseingaben wurden abgeglichen. Sechs neue Cross-Mount-Schritte
+prüfen Lesen und Änderungen zwischen App667- und App668-Engine.
+
+Quellenpaket: public/sources/LCD_DE3_95_App668_Simulatorquellen.zip
+Das Archiv enthält vollständige Simulatorquellen, beide Lizenzen,
+Compilerpins, Builder, Referenz-WASM, neuen ARM-Nachweis, Cross-Mount-Bericht,
+Hashmanifest der Firmware-Produktionseingaben und APP668_BINDING.json.
+Die WASM wurde auch ausschließlich aus diesem entpackten Archiv bytegleich
+reproduziert. Der Download steht auf der Seite „Quellen und Lizenzen“.
+
+Prüfgrenzen und offene Geräteprüfung
+------------------------------------
+Die Build-/Signatur-/ARM-/WASM-Nachweise bestätigen keine physische
+Geräteabnahme. Offen bleiben die frische App668-Diagnose am Gerät, tatsächlicher
+PHY/Intervall und Dateidurchsatz, typische Übertragungen, Abbruch/Wiederaufnahme,
+Verwerfen bei Speicherfehler und frisch gelesener freier Speicher nach Löschen.
+Die Software kennzeichnet die Hardwareabnahme weiterhin als ausstehend.

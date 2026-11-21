@@ -72,7 +72,7 @@
 import { createMigrationBackup, loadMigrationArchive, verifyMigrationArchive, restoreMigrationArchive, checkMigrationCapacity, retainMigrationSource, inspectMigrationTarget, formatMigrationTarget, initializeMigrationImport, finishMigrationImport, restartAfterMigration } from '../lib/migration.js'
 import { getMigrationCapacityTarget } from '../lib/migration-capacity.js'
 import { saveBlob } from '../lib/browser-tools.js'
-const capacityProfileIds = ['de394','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']
+const capacityProfileIds = ['de395','de394','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']
 const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+(?:t[0-9]+)?)$/u, '$1')
 const applicationRanges = applications => {
   const groups = []
@@ -92,7 +92,7 @@ const applicationRanges = applications => {
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,language:String,getSession:{type:Function,required:true},confirmRestore:{type:Function,required:true},confirmFormat:Function,confirmInitialize:Function,confirmRestart:Function},
   emits:['busy','restored'],
-  data:()=>({capacityProfile:'de394',storageSnapshot:null,busy:false,cancelling:false,backup:null,archive:null,filename:'',report:null,status:'',progress:null,capacityProof:null,target:null,sourceRetained:null,repairVerification:null,actionError:null,completion:null}),
+  data:()=>({capacityProfile:'de395',storageSnapshot:null,busy:false,cancelling:false,backup:null,archive:null,filename:'',report:null,status:'',progress:null,capacityProof:null,target:null,sourceRetained:null,repairVerification:null,actionError:null,completion:null}),
   computed:{de(){return this.language==='de_DE'},capacityApproved(){return getMigrationCapacityTarget(this.capacityProfile).approved},capacityOptions() {
       return capacityProfileIds.map(id => {
         const target = getMigrationCapacityTarget(id)

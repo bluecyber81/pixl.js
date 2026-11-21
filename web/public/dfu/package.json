@@ -1,6 +1,6 @@
 {
   "name": "allmiibo-local-dfu",
-  "version": "3.58.5",
+  "version": "3.58.6",
   "private": true,
   "type": "commonjs",
   "license": "MIT"

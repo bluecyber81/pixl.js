@@ -469,3 +469,63 @@ test('actual App658 ARM PXBI replies survive queued file traffic and MTU23/185/2
         const following=next(f);f.rx(20,[8]);await following;
     }
 });
+
+const mtuLinkPacket = require('./mtu-link-fixture.cjs');
+
+test('App668 link snapshot selects MTUD v2 once, queues normally and reassembles all MTU sizes', async () => {
+    for (const mtu of [23,185,250]) {
+        const f=fixture(), prior=next(f), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95');
+        assert.deepEqual(f.writes,[[0x14,0,0,0]]);
+        f.rx(0x14,[3]);await prior;await flush();
+        assert.deepEqual(f.writes.at(-1),[5,0,0,0,1]);
+        const bytes=mtuLinkPacket(), capacity=mtu-7;
+        for(let offset=0;offset<bytes.length;offset+=capacity)
+            f.rx(5,bytes.subarray(offset,offset+capacity),(offset/capacity)|(offset+capacity<bytes.length?0x8000:0));
+        const data=await pending;
+        assert.equal(data.schemaVersion,2);assert.equal(data.link.connectionIntervalUnits,6);
+        assert.equal(data.link.rxPhy,2);assert.equal(data.link.txPhy,2);
+        assert.equal(f.disconnects,0);assert.equal(f.timers.size,0);
+        const following=next(f);f.rx(0x14,[7]);await following;
+    }
+    for(const version of [undefined,'2.22.0-DE3.94','2.22.0-DE3.96','2.22.0-DE3.95-OLEDt7']) {
+        const f=fixture(), pending=f.api.get_mtu_diagnostics(version);
+        assert.deepEqual(f.writes,[[5,0,0,0]]);f.rx(5,mtuPacket());
+        assert.equal((await pending).schemaVersion,1);
+    }
+});
+
+test('App668 MTUD selector falls back only on explicit unsupported status and retains real faults', async () => {
+    for(const status of [1,255]) {
+        const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95');
+        f.rx(5,[],0,status);await flush();
+        assert.deepEqual(f.writes,[[5,0,0,0,1],[5,0,0,0]]);
+        f.rx(5,mtuPacket());assert.equal((await pending).schemaVersion,1);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+        const bad=f.api.get_mtu_diagnostics(), failed=assert.rejects(bad);
+        f.rx(5,[],0,1);await failed;
+        const absent=f.api.get_mtu_diagnostics('2.22.0-DE3.95');
+        f.rx(5,[],0,status);await flush();f.rx(5,[],0,255);
+        assert.equal(await absent,null);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'DEVICE_STATUS');
+    }
+});
+
+test('App668 malformed MTUD success and timeouts never downgrade or change the MTU preference', async () => {
+    const corrupt=mtuLinkPacket();corrupt[25]=1;
+    for(const payload of [mtuPacket(),corrupt,new Uint8Array(33)]) {
+        const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95'), rejected=assert.rejects(pending);
+        f.rx(5,payload);await rejected;
+        assert.deepEqual(f.writes,[[5,0,0,0,1]]);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,payload.length>32?'RX_INVALID':'RESPONSE_INVALID');
+    }
+    const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95'), rejected=assert.rejects(pending);
+    for(const timeout of [...f.timers.values()]) timeout();await rejected;
+    assert.deepEqual(f.writes,[[5,0,0,0,1]]);assert.equal(f.disconnects,1);
+});
+
+test('App668 MTUD fallback cannot cross a replacement Bluetooth session', async () => {
+    const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95'), rejected=assert.rejects(pending);
+    f.rx(5,[],0,255);f.bus.emit('ble_disconnected');f.bus.emit('ble_connected');
+    await rejected;await flush();
+    assert.deepEqual(f.writes,[[5,0,0,0,1]]);assert.equal(f.timers.size,0);
+});

@@ -261,16 +261,28 @@ export function enter_dfu() {
 
 // Optional application diagnostics. Older firmware's UNKNOWN_COMMAND reply is
 // expected; a malformed successful reply must still be reported as an error.
-// Both requests are empty reads. In particular, never send the MTU! command
-// which changes the firmware's preference for its next Bluetooth connection.
-export function get_mtu_diagnostics() {
+// The new link selector is read-only, as is the legacy empty request. Never send
+// MTU!, which changes the preference for the next Bluetooth connection.
+export function get_mtu_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    return op_queue_push(0x05, () => {}, b =>
-        parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16 })
-        .then(response => {
-            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
-            return response.status === 255 ? null : checked_response(response);
-        });
+    const extended = firmwareVersion === '2.22.0-DE3.95';
+    const check = () => { if (generation !== transport_generation) throw new Error('Bluetooth session changed'); };
+    const read = v2 => op_queue_push(0x05, b => { if (v2) b.writeUint8(1); }, b => {
+        const data = parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+        if (data.schemaVersion !== (v2 ? 2 : 1)) throw new Error('Invalid MTU diagnostic version');
+        return data;
+    }, {max_bytes: v2 ? 32 : 16, optional_probe: v2});
+    const finish = response => {
+        check();
+        return response.status === 255 ? null : checked_response(response);
+    };
+    return read(extended).then(response => {
+        check();
+        // Only an explicit unsupported selector permits a legacy fallback.
+        // A malformed success, timeout or replacement session must stay visible.
+        return extended && (response.status === 1 || response.status === 255)
+            ? read(false).then(finish) : finish(response);
+    });
 }
 
 export function get_ui_diagnostics() {
@@ -958,6 +970,7 @@ function vfs_process_file_write_queue() {
         e.finish = (error, data) => {
             if (e.finished) return;
             e.finished = true;
+            e.cancelFileRead?.();
             file_write_current = null;
             file_write_ongoing = false;
             complete_file_entry(e, error, data);
@@ -974,7 +987,7 @@ function vfs_process_file_write(entry) {
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }
-    read_file_as_bytebuffer(entry.file, checkCurrent).then(buffer => {
+    read_file_as_bytebuffer(entry.file, checkCurrent, entry).then(buffer => {
         checkCurrent();
         return vfs_open_file(entry.path, "w", entry.rawMeta128).then(checked_response).then(opened => {
             checkCurrent();
@@ -1034,21 +1047,39 @@ function path_validation(path) {
 }
 
 
-function read_file_as_bytebuffer(file, checkCurrent) {
+function read_file_as_bytebuffer(file, checkCurrent, entry) {
     if (!ByteBuffer) return loadFileCodec().then(() => {
         checkCurrent();
-        return read_file_as_bytebuffer(file, checkCurrent);
+        return read_file_as_bytebuffer(file, checkCurrent, entry);
     });
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        let finished = false;
+        const cancelled = () => Object.assign(new Error('Local file read cancelled'), {name: 'AbortError'});
+        const finish = (error, value) => {
+            if (finished) return;
+            finished = true;
+            if (entry.cancelFileRead === cancel) entry.cancelFileRead = null;
+            reader.onload = reader.onerror = reader.onabort = null;
+            if (error) reject(error); else resolve(value);
+        };
+        const cancel = entry.cancelFileRead = () => {
+            finish(cancelled());
+            // Logical BLE cancellation must also release a pending local file
+            // read; its late completion cannot allocate or enter the new link.
+            try { reader.abort(); } catch (_) { /* Already stopped/unavailable. */ }
+        };
         reader.onload = function () {
-            resolve(ByteBuffer.wrap(reader.result));
+            if (finished) return;
+            try { checkCurrent(); finish(null, ByteBuffer.wrap(reader.result)); }
+            catch (error) { finish(error); }
         }
         reader.onerror = function () {
-            reject(reader.error);
+            finish(reader.error || new Error('Local file read failed'));
         }
-
-        reader.readAsArrayBuffer(file);
+        reader.onabort = () => finish(cancelled());
+        try { checkCurrent(); reader.readAsArrayBuffer(file); }
+        catch (error) { finish(error); }
     });
 }
 
@@ -1293,7 +1324,7 @@ function on_rx_data(data) {
         }
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
-        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
+        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x05 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
         if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';

@@ -51,7 +51,8 @@ function protocolFixture(i18n={global:{t:key=>key}}, codec={}) {
     const pixl={get_connection_state:()=> 'connected',tx_data(data){writes.push(Array.from(new Uint8Array(data)));return writeImpl(data);},
         disconnect(){disconnects++;bus.emit('ble_disconnected');}};
     class FileReader {
-        constructor(){readers.push(this);}
+        constructor(){readers.push(this);this.abortCalls=0;}
+        abort(){++this.abortCalls;this.onabort?.();}
         readAsArrayBuffer(file){this.file=file;if(file.error){this.error=new Error('FileReader failed');this.onerror();}
             else if(!file.pending){this.result=Uint8Array.from(file.bytes || []).buffer;this.onload();}}
     }
@@ -89,12 +90,13 @@ test('small-file capability requires an LCD generation and a strictly valid posi
     f.bus.emit('ble_disconnected');
     assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
 });
-test('App667 explicitly probes the existing small-file capability without allowing future or OLED versions', async () => {
+for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95']])
+test(`App${counter} explicitly probes the existing small-file capability without allowing future or OLED versions`, async () => {
     const f = protocolFixture();
-    for (const version of ['2.22.0-DE3.95','2.22.0-DE3.94-OLEDt7'])
-        assert.equal(await f.api.vfs_small_create_revision(version),null);
+    for (const unsupported of ['2.22.0-DE3.96',version + '-OLEDt7'])
+        assert.equal(await f.api.vfs_small_create_revision(unsupported),null);
     assert.equal(f.writes.length,0);
-    const query = f.api.vfs_small_create_revision('2.22.0-DE3.94');
+    const query = f.api.vfs_small_create_revision(version);
     assert.deepEqual(f.writes,[[0x22,0,0,0]]);
     f.rx(0x22,nativeCap);
     assert.equal(await query,'0000000700000001');
@@ -265,8 +267,8 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
 test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
  const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
  packet[40]=23;packet.set([8,6,0,1],80);
- for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94']) {
-  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94'].includes(version);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94','2.22.0-DE3.95']) {
+  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94','2.22.0-DE3.95'].includes(version);
   packet.set(expandedCache ? [26,26,0,1] : [8,6,0,1],80);
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,3]]);
@@ -1065,12 +1067,25 @@ test('FileReader failure releases upload queue; successful upload requires succe
     await flush();f.rx(0x12,[1]);await flush();f.rx(0x15);await flush();f.rx(0x13,[],0,1);await flush();
     assert.deepEqual([success,error],[0,2]);
 });
+test('local FileReader abort settles the current upload and releases the following file',async()=>{
+    const f=protocolFixture();let errors=0,success=0;
+    f.api.vfs_helper_write_file('E:/cancel.bin',{pending:true},undefined,()=>success++,()=>errors++);
+    f.api.vfs_helper_write_file('E:/next.bin',{bytes:[3]},undefined,()=>success++,()=>errors++);
+    f.readers[0].abort();await flush();
+    assert.equal(errors,1);assert.equal(success,0);
+    assert.equal(f.writes.length,1);assert.equal(f.writes[0][0],0x12);
+    f.rx(0x12,[1]);await flush();f.rx(0x15);await flush();f.rx(0x13);await flush();
+    assert.equal(success,1);assert.equal(errors,1);
+});
+
 test('disconnect cancels pending FileReader and queued files once, never writes after reconnect',async()=>{
     const f=protocolFixture();let errors=0,success=0;
     f.api.vfs_helper_write_file('E:/a.bin',{pending:true},()=>{},()=>success++,()=>errors++);
     f.api.vfs_helper_write_file('E:/b.bin',{bytes:[2]},()=>{},()=>success++,()=>errors++);
+    const lateLoad=f.readers[0].onload;
     f.bus.emit('ble_disconnected');assert.equal(errors,2);
-    f.readers[0].result=Uint8Array.from([1]).buffer;f.readers[0].onload();await flush();
+    assert.equal(f.readers[0].abortCalls,1);assert.equal(f.readers[0].onload,null);
+    f.readers[0].result=Uint8Array.from([1]).buffer;lateLoad();await flush();
     assert.equal(f.writes.length,0);assert.equal(errors,2);assert.equal(success,0);
 });
 test('successful upload reports progress and completion exactly once',async()=>{
