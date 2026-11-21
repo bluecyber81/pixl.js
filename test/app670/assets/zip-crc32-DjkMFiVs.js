@@ -1,0 +1,1 @@
+var e=Uint32Array.from({length:256},(e,t)=>{let n=t;for(let e=0;e<8;++e)n=n>>>1^3988292384&-(n&1);return n>>>0});function t(t,n){for(let r=0;r<n.length;++r)t=t>>>8^e[(t^n[r])&255];return t>>>0}export{t};

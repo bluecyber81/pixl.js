@@ -1,0 +1,42 @@
+Exact App670 / LCD DE3.97 TEST1 simulator source binding
+=======================================================
+Public firmware source commit: d34ecb44fa058a149b58de2dcbffbb751c015864
+https://github.com/bluecyber81/pixl.js/tree/d34ecb44fa058a149b58de2dcbffbb751c015864
+Production tree: 2eb76b42aab5a19a6ea90aa371365ced0d238f00
+Firmware SourceID: b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe
+Linked ARM binding: docs/validation/DE3_97_PFS.json
+Engine SHA256: a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788
+WASM SHA256: d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c
+
+The six core/LittleFS files are byte-identical to the frozen LCD App670 build.
+Only the CRC loop form changes from App669; the PFS1 geometry, checksums,
+generation validation, and read-only protection retain their existing meaning.
+The exact simulator is qualified separately from firmware hardware acceptance.
+The RAM-only harness and freestanding helpers are retained from App669; the
+complete 12-file source set is pinned individually. App669 and older snapshots,
+WASM binaries and public source archives remain unchanged.
+
+This freestanding build omits BOARD_LCD and PIXL_TEST_DIAGNOSTICS.
+It runs storage operations without SDK timing or GC diagnostic state.
+Its core-heap high-water mark is not a measurement of full firmware RAM.
+Fresh App669/App670 cross-mount and linked ARM layout/engine checks bind
+this modeled filesystem to the final application.
+
+Pinned official WASI SDK 34.0 Linux x86_64 toolchain:
+Clang 23.1.0-wasi-sdk / LLVM commit 895aa2c896ada719451be2e3673c83da8ddf1141.
+https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34
+https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz
+Archive SHA256: b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4
+Compiler/linker binary hashes and exact versions: SOURCE_BINDING.json.
+The compiler is not included. Verify the archive hash before extracting it.
+
+Reproduce from the root of the extracted source archive:
+  python3 web/scripts/build-capacity-de397.py --sdk /path/to/wasi-sdk-34.0-x86_64-linux --output /path/to/new-evidence-directory
+The builder checks compiler/linker hashes and versions, all source hashes,
+the engine identity and exact output bytes. SDK default config is disabled.
+
+No device operations are performed. Each real archive and current device
+still require the usual migration gates. Host tests do not prove physical
+free space, radio speed, power-loss safety or hardware acceptance.
+The signed application update is a separate artifact; this WASM never updates
+a device. GPL-2.0-LICENSE and LITTLEFS-LICENSE.md are included.

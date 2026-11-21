@@ -1,0 +1,400 @@
+{
+  "contract": "allmiibo-de-remote",
+  "version": 1,
+  "device_name": "Pixl.Remote",
+  "service_uuid": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+  "write_uuid": "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
+  "notify_uuid": "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
+  "request_bytes": 8,
+  "reply_bytes": 12,
+  "request_fields": [
+    "magicP80",
+    "magicX88",
+    "version1",
+    "opcode",
+    "sequenceLow",
+    "sequenceHigh",
+    "argument",
+    "reservedZero"
+  ],
+  "reply_fields": [
+    "magicP80",
+    "magicX88",
+    "version1",
+    "opcodeOr128",
+    "sequenceLow",
+    "sequenceHigh",
+    "status",
+    "state",
+    "capabilitiesLow",
+    "capabilitiesHigh",
+    "reservedZero",
+    "reservedZero"
+  ],
+  "opcodes": {
+    "STATUS": 0,
+    "OPEN_FILE": 1,
+    "TAP": 2,
+    "BACK": 3,
+    "OPEN_FILE_SAME_LINK": 4
+  },
+  "tap_arguments": {
+    "LEFT": 0,
+    "CENTER": 1,
+    "RIGHT": 2
+  },
+  "statuses": {
+    "DONE": 0,
+    "BUSY": 1,
+    "INVALID": 2,
+    "DISABLED": 3,
+    "UNSUPPORTED": 4,
+    "UNSAFE": 5,
+    "NO_MEMORY": 6,
+    "SEQUENCE": 7,
+    "REQUESTED": 8
+  },
+  "states": {
+    "OFF": 0,
+    "REMOTE": 1,
+    "TRANSITION": 2,
+    "FILE": 3,
+    "SUSPENDED": 4
+  },
+  "capabilities": {
+    "TAP": 1,
+    "BACK": 2,
+    "OPEN_FILE": 4,
+    "PHYSICAL_ACTIVE": 8,
+    "OPEN_FILE_SAME_LINK": 16
+  },
+  "capability_mask": 31,
+  "sequencing": {
+    "first": 1,
+    "maximum": 65535,
+    "wrap_to": 1,
+    "single_outstanding": true,
+    "exact_last_duplicate": "repeat identical cached reply, never repeat action",
+    "new_sequence": "only next expected sequence; supported or error reply consumes a valid next sequence",
+    "invalid_frame": "may return INVALID without advancing sequence",
+    "client_retry": "never automatically repeat a state-changing request after timeout/disconnect",
+    "status_handshake": "STATUS must return DONE/REMOTE and required capabilities before any button request"
+  },
+  "lifecycle": {
+    "authorization": "Local on-device toggle; RAM-only, default off after reboot/SYSTEMOFF; remote keys cannot grant permission",
+    "physical_buttons": "always active; local input cancels outstanding remote actions/handoff",
+    "remote_input": "One logical SHORT perTAP or centerLONG perBACK; no pressed-key state or repeats",
+    "handoff": "OPEN_FILE REQUESTED/TRANSITION acknowledges only the request; client disconnects. Device opens file application only after actual GAP disconnect and foreground cleanup. User explicitly connects separate file client; version handshake confirms file mode.",
+    "sleep": "Existing user standby remains; no SYSTEMOFF wake and no periodic keepalive requirement",
+    "conflicts": "NFC write/failure or active RF, another BLE owner, transition or unavailable UI may reject operation",
+    "transport": "Exclusive Remote NUS mode; no file protocol dispatch inRemote. Characteristic writeWithResponse plus separate matched notification required.",
+    "overflow": "Multiple different concurrent requests or exhausted bounded transport queue abort session; no input replay.",
+    "same_link_handoff": "Only when capability16 is advertised: OPEN_FILE_SAME_LINK returns DONE/FILE after the NUS file parser is ready on the same connection. Transfer exclusive client ownership without unsubscribe/disconnect. A new version handshake confirms the running application. Legacy OPEN_FILE remains unchanged."
+  },
+  "vectors": [
+    {
+      "name": "initial_status",
+      "request": [
+        80,
+        88,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        128,
+        1,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "left",
+      "request": [
+        80,
+        88,
+        1,
+        2,
+        2,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        130,
+        2,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "center",
+      "request": [
+        80,
+        88,
+        1,
+        2,
+        3,
+        0,
+        1,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        130,
+        3,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "right",
+      "request": [
+        80,
+        88,
+        1,
+        2,
+        4,
+        0,
+        2,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        130,
+        4,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "back",
+      "request": [
+        80,
+        88,
+        1,
+        3,
+        5,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        131,
+        5,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "file_requested",
+      "request": [
+        80,
+        88,
+        1,
+        1,
+        6,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        129,
+        6,
+        0,
+        8,
+        2,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "busy",
+      "request": [
+        80,
+        88,
+        1,
+        2,
+        7,
+        0,
+        1,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        130,
+        7,
+        0,
+        1,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "last_sequence",
+      "request": [
+        80,
+        88,
+        1,
+        0,
+        255,
+        255,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        128,
+        255,
+        255,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "duplicate_left",
+      "request": [
+        80,
+        88,
+        1,
+        2,
+        2,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        130,
+        2,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ],
+      "context": "Repeat exact most recent left request before sending next sequence; repeat cached reply only."
+    },
+    {
+      "name": "wrapped_status",
+      "request": [
+        80,
+        88,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        128,
+        1,
+        0,
+        0,
+        1,
+        15,
+        0,
+        0,
+        0
+      ],
+      "context": "Expected sequence wraps from65535 to1; not a replay of an earlier session."
+    },
+    {
+      "name": "file_ready_same_link",
+      "request": [
+        80,
+        88,
+        1,
+        4,
+        6,
+        0,
+        0,
+        0
+      ],
+      "reply": [
+        80,
+        88,
+        1,
+        132,
+        6,
+        0,
+        0,
+        3,
+        31,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "limits": [
+    "No encryption/pairing claimed; enabling local remote exposes button control to a nearby connected client until disabled or sleep.",
+    "Requested handoff is not proof filetransfer is ready.",
+    "Not compatible with upstream fire-and-forget button protocol; feature adapted for DE firmware with explicit ownership."
+  ]
+}

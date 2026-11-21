@@ -1,0 +1,11 @@
+Metadata only. Source pinned to https://github.com/8bitDream/AmiiboAPI/tree/855a0ff4308278de756bed01de1eca89936f456b
+SHA256 cacc7d31f935f43e601fa9f4f957f3f9b74956304206049c1cfadfa3b2e3278c
+Retrieved 2026-11-13; upstream last-updated.json is stale and is not used as retrieval date.
+Machine entries are not standalone figures and are not merged into this catalogue.
+Two reviewed rider additions: Sword Kirby (& Dragoon), Noir Dedede (& Hydra).
+No images, keys or tag dumps included.
+Firmware name flags use the 956 IDs in fw/data/amiidb_amiibo.csv from LCD DE3.81/App654.
+
+Game note update checks use the same immutable commit's database/games_info.json
+(SHA-256 bd100324c3d62a02759f28fa7454af35b5699ec7a87642bdb0e7a92592a228ce).
+Recreate the indexed reference with node web/scripts/build-usage-reference.mjs <downloaded games_info.json>.
