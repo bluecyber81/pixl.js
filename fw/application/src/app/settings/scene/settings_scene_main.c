@@ -309,12 +309,14 @@ static void settings_scene_main_reload(void *user_data) {
                                (void *)SETTINGS_MAIN_MENU_LANGUAGE);
 
     vfs_driver_t *p_driver = vfs_get_default_driver();
-    vfs_stat_t stat = {0};
-    int32_t res = settings_storage_snapshot_read(&app->storage_snapshot, p_driver, &stat);
-    const char *storage_value = _T(NOT_MOUNTED);
-    if (res == VFS_OK && stat.avaliable && stat.total_bytes && stat.free_bytes <= stat.total_bytes) {
+    const vfs_stat_t *stat = settings_storage_snapshot_peek(&app->storage_snapshot, p_driver);
+    /* Until the storage page has measured this session, leave the value blank.
+     * An unmeasured drive is not an unmounted drive. Never perform stat I/O
+     * here: this path is also used after a failed save or a confirmed discard. */
+    const char *storage_value = stat && !stat->avaliable ? _T(NOT_MOUNTED) : "";
+    if (stat && stat->avaliable && stat->total_bytes && stat->free_bytes <= stat->total_bytes) {
         snprintf(txt, sizeof(txt), "%s %d%%", _T(APP_SET_STORAGE_USED),
-                 (uint8_t)((stat.total_bytes - stat.free_bytes) / (float)stat.total_bytes * 100));
+                 (uint8_t)(((uint64_t)(stat->total_bytes - stat->free_bytes) * 100u) / stat->total_bytes));
         storage_value = txt;
     }
     mui_list_view_add_item_ext(app->p_list_view, 0xe146, _T(APP_SET_STORAGE), storage_value,

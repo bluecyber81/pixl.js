@@ -525,20 +525,34 @@ static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
   *out = c;
   return 0;
 }
+/* Keep the bounded cache useful when the manifest has more groups than slots.
+ * A still-live collision is cheaper to search directly than to rebuild its full
+ * index and evict another live filter on every lookup. Mount already validated
+ * the immutable group; direct search still checks every index entry it reads.
+ * Obsolete/free entries may be replaced normally, including after compaction. */
+static bool manifest_has(const manifest_t *m, uint32_t id);
 static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
                   pfs_info_t *info, location_t *loc) {
   uint32_t hash = path_hash(path);
   for (unsigned slot = 0; slot < m->count; slot++) {
-    catalog_t *cat;
-    int checked = get_catalog(fs, slot, &cat);
-    if (checked)
-      return checked;
-    unsigned bit = hash & 255u;
-    if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
-      continue;
-    bit = (hash >> 16) & 255u;
-    if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
-      continue;
+    catalog_t *cat = &fs->catalog[slot % CATALOG_SLOTS];
+    if (cat->id != m->ids[slot]) {
+      if (m->count > CATALOG_SLOTS && manifest_has(m, cat->id)) {
+        cat = NULL;
+      } else {
+        int checked = get_catalog(fs, slot, &cat);
+        if (checked)
+          return checked;
+      }
+    }
+    if (cat) {
+      unsigned bit = hash & 255u;
+      if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
+        continue;
+      bit = (hash >> 16) & 255u;
+      if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
+        continue;
+    }
     io_t io;
     char name[16];
     shard_name(m->ids[slot], name);
@@ -1181,6 +1195,27 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
     r = lfs_file_sync(&fs->lfs, &output.f);
   return io_close(fs, &output, r);
 }
+/* Planning needs only record count and body length, not a complete Bloom
+ * filter. Reading a cold header avoids scanning every index and preserves the
+ * verified parent filters of other live groups in the bounded catalogue. */
+static int shard_dimensions(pfs_t *fs, unsigned slot, uint32_t *count,
+                            uint32_t *body) {
+  const catalog_t *cat = &fs->catalog[slot % CATALOG_SLOTS];
+  uint32_t id = fs->current.ids[slot];
+  if (cat->id == id) {
+    *count = cat->count;
+    *body = cat->body;
+    return 0;
+  }
+  io_t io;
+  char path[16];
+  shard_name(id, path);
+  int r = io_open(fs, &io, path, LFS_O_RDONLY);
+  if (r)
+    return r;
+  r = shard_header(fs, &io, id, count, body);
+  return io_close(fs, &io, r);
+}
 static int transact(pfs_t *fs, const change_t *c) {
   int r = ready(fs, true);
   if (r)
@@ -1208,12 +1243,9 @@ static int transact(pfs_t *fs, const change_t *c) {
   location_t loc;
   uint32_t objects = fs->current.objects;
   for (unsigned i = 0; i < fs->current.count; i++) {
-    catalog_t *cat;
-    r = get_catalog(fs, i, &cat);
+    r = shard_dimensions(fs, i, &counts[i], &bodies[i]);
     if (r)
       return io_error(fs, r);
-    counts[i] = cat->count;
-    bodies[i] = cat->body;
   }
   if (c->subtree) {
     cursor_t cursor = {0};

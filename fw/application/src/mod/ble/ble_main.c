@@ -205,6 +205,77 @@ static ble_link_state_handler_t m_status_state_handler;
 #define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180 /**< Sleep timeout when ble connection established. */
 static volatile uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
 
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+/* Current GAP link only. NUS unsubscribe does not fabricate a disconnect.
+ * No heap or additional timer: the existing foreground poll owns retries. */
+typedef struct {
+    uint32_t request_result, retry_tick;
+    uint16_t interval, latency, timeout;
+    uint8_t rx_phy, tx_phy, attempts, phy_status;
+    bool params_valid, phy_valid, pending, retry;
+} ble_link_profile_t;
+static volatile ble_link_profile_t m_link_profile;
+
+static void ble_link_parameters_update(const ble_gap_conn_params_t *params) {
+    /* CONNECT/UPDATE contain the selected interval, not the PPCP preference. */
+    bool valid = params && params->min_conn_interval == params->max_conn_interval &&
+                 params->min_conn_interval >= 6 && params->max_conn_interval <= 3200 &&
+                 params->slave_latency <= 499 && params->conn_sup_timeout >= 10 &&
+                 params->conn_sup_timeout <= 3200;
+    m_link_profile.params_valid = valid;
+    m_link_profile.interval = valid ? params->min_conn_interval : 0;
+    m_link_profile.latency = valid ? params->slave_latency : 0;
+    m_link_profile.timeout = valid ? params->conn_sup_timeout : 0;
+}
+
+static void ble_link_profile_reset(const ble_gap_conn_params_t *params) {
+    m_link_profile = (ble_link_profile_t){.request_result = UINT32_MAX, .phy_status = UINT8_MAX,
+                                        .retry = params != NULL};
+    ble_link_parameters_update(params);
+}
+
+static void ble_link_phy_observe(const ble_gap_evt_phy_update_t *update) {
+    m_link_profile.phy_status = update->status;
+    m_link_profile.pending = false;
+    /* Failed updates do not make their unspecified PHY fields authoritative. */
+    if (update->status == BLE_HCI_STATUS_CODE_SUCCESS &&
+        (update->rx_phy == BLE_GAP_PHY_1MBPS || update->rx_phy == BLE_GAP_PHY_2MBPS) &&
+        (update->tx_phy == BLE_GAP_PHY_1MBPS || update->tx_phy == BLE_GAP_PHY_2MBPS)) {
+        m_link_profile.rx_phy = update->rx_phy;
+        m_link_profile.tx_phy = update->tx_phy;
+        m_link_profile.phy_valid = true;
+    }
+}
+
+static void ble_phy_tuning_poll(void) {
+#if (BLE_GAP_PHYS_SUPPORTED & BLE_GAP_PHY_2MBPS)
+    CRITICAL_REGION_ENTER();
+    if (m_link_profile.retry && !m_link_profile.pending && m_sessions_enabled && m_file_mode &&
+        !m_mode_pending && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
+        m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
+        ble_work_can_send()) {
+        if (m_link_profile.phy_valid && m_link_profile.rx_phy == BLE_GAP_PHY_2MBPS &&
+            m_link_profile.tx_phy == BLE_GAP_PHY_2MBPS) {
+            m_link_profile.retry = false;
+        } else if (m_link_profile.attempts == 0 ||
+                   app_timer_cnt_diff_compute(app_timer_cnt_get(), m_link_profile.retry_tick) >= APP_TIMER_TICKS(250)) {
+            const ble_gap_phys_t phys = {.rx_phys = BLE_GAP_PHY_2MBPS, .tx_phys = BLE_GAP_PHY_2MBPS};
+            uint32_t result = sd_ble_gap_phy_update(m_conn_handle, &phys);
+            m_link_profile.request_result = result;
+            m_link_profile.attempts++;
+            m_link_profile.retry_tick = app_timer_cnt_get();
+            m_link_profile.pending = result == NRF_SUCCESS;
+            /* S112 supports 2M. A busy procedure gets two bounded retries;
+             * unsupported peers and every other rejection retain the link.
+             * SUCCESS requests a procedure; only PHY_UPDATE proves its PHY. */
+            m_link_profile.retry = result == NRF_ERROR_BUSY && m_link_profile.attempts < 3;
+        }
+    }
+    CRITICAL_REGION_EXIT();
+#endif
+}
+#endif
+
 /* A connected file session owns the active timer until its disconnect IRQ. */
 void ble_set_standby_timeout(uint16_t seconds) {
     CRITICAL_REGION_ENTER();
@@ -362,6 +433,9 @@ void ble_process_pending(void) {
     ble_release_stopped_session();
     ble_file_link_poll();
     ble_pending_mode_poll();
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    ble_phy_tuning_poll();
+#endif
     ble_df_driver_poll();
     if (m_link_state_handler) {
         ble_link_state_t state = ble_link_state_get();
@@ -482,6 +556,9 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
         m_link_generation++;
         m_session_generation++;
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+        ble_link_profile_reset(&p_ble_evt->evt.gap_evt.params.connected.conn_params);
+#endif
         m_timeout_overridden = false;
         m_release_handle = BLE_CONN_HANDLE_INVALID;
         m_release_attempted = m_release_requested = false;
@@ -538,17 +615,35 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         if (m_timeout_overridden) nrf_pwr_mgmt_set_timeout(m_previous_pwr_mgmt_sleep_timeout);
         m_timeout_overridden = false;
 
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+        ble_link_profile_reset(NULL);
+#endif
         break;
 
     case BLE_GAP_EVT_PHY_UPDATE_REQUEST: {
+        if (p_ble_evt->evt.gap_evt.conn_handle != m_conn_handle || m_conn_handle == BLE_CONN_HANDLE_INVALID) break;
         NRF_LOG_DEBUG("PHY update request.");
         ble_gap_phys_t const phys = {
             .rx_phys = BLE_GAP_PHY_AUTO,
             .tx_phys = BLE_GAP_PHY_AUTO,
         };
         err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
-        APP_ERROR_CHECK(err_code);
+        /* A concurrent local/peer procedure or already closed controller link
+         * is not a reason to reset the application and lose an active edit. */
+        if (err_code != NRF_SUCCESS) NRF_LOG_INFO("BLE PHY reply deferred/rejected: %lu", (unsigned long)err_code);
     } break;
+
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    case BLE_GAP_EVT_CONN_PARAM_UPDATE:
+        if (p_ble_evt->evt.gap_evt.conn_handle == m_conn_handle && m_conn_handle != BLE_CONN_HANDLE_INVALID)
+            ble_link_parameters_update(&p_ble_evt->evt.gap_evt.params.conn_param_update.conn_params);
+        break;
+
+    case BLE_GAP_EVT_PHY_UPDATE:
+        if (p_ble_evt->evt.gap_evt.conn_handle == m_conn_handle && m_conn_handle != BLE_CONN_HANDLE_INVALID)
+            ble_link_phy_observe(&p_ble_evt->evt.gap_evt.params.phy_update);
+        break;
+#endif
 
     case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
         // Pairing not supported
@@ -1021,6 +1116,40 @@ bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capaci
     CRITICAL_REGION_EXIT();
     return success;
 }
+
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+bool ble_link_diagnostic(uint8_t *snapshot, size_t capacity) {
+    if (!snapshot || capacity < BLE_LINK_DIAGNOSTIC_SIZE) return false;
+    bool success;
+    CRITICAL_REGION_ENTER();
+    /* Keep both halves on the same GAP generation. Nested critical regions
+     * preserve the outer mask; no link event can split the MTU/link snapshot. */
+    success = ble_mtu_diagnostic(0, snapshot, capacity);
+    if (success) {
+        memset(snapshot + BLE_MTU_DIAGNOSTIC_SIZE, 0, BLE_LINK_DIAGNOSTIC_SIZE - BLE_MTU_DIAGNOSTIC_SIZE);
+        bool connected = m_conn_handle != BLE_CONN_HANDLE_INVALID;
+        snapshot[4] = 2;
+        snapshot[14] = (connected ? 1u : 0u) | (connected && m_link_profile.params_valid ? 2u : 0u) |
+                       (connected && m_link_profile.phy_valid ? 4u : 0u) |
+                       (connected && m_link_profile.pending ? 8u : 0u);
+        snapshot[15] = connected ? m_link_profile.phy_status : UINT8_MAX;
+        const uint16_t values[] = {connected ? m_link_profile.interval : 0,
+                                  connected ? m_link_profile.latency : 0,
+                                  connected ? m_link_profile.timeout : 0};
+        for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
+            snapshot[16 + i * 2] = (uint8_t)values[i];
+            snapshot[17 + i * 2] = (uint8_t)(values[i] >> 8);
+        }
+        snapshot[22] = connected ? m_link_profile.rx_phy : 0;
+        snapshot[23] = connected ? m_link_profile.tx_phy : 0;
+        snapshot[24] = connected ? m_link_profile.attempts : 0;
+        uint32_t result = connected ? m_link_profile.request_result : UINT32_MAX;
+        for (unsigned i = 0; i < 4; ++i) snapshot[28 + i] = (uint8_t)(result >> (8 * i));
+    }
+    CRITICAL_REGION_EXIT();
+    return success;
+}
+#endif
 
 void ble_nus_abort_transfer(void) {
     /* Discard queued work now; file-close/flush remains deferred to main after

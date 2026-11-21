@@ -97,6 +97,18 @@ size_t ble_nus_max_data_length(void);
  * two reserved zero bytes. Setting requires an active Pixl.js session. */
 #define BLE_MTU_DIAGNOSTIC_SIZE 16u
 bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capacity);
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+/* INFO05 selector 1: read-only MTUD v2. First 14 bytes retain v1 layout.
+ * Byte14: GAP connected/parameters valid/PHY valid/local request pending bits.
+ * Byte15: last PHY_UPDATE HCI status, FF if none. LE u16 at16/18/20:
+ * interval (1.25 ms), slave latency, supervision timeout (10 ms).
+ * Bytes22/23: observed RX/TX PHY (0 unknown,1 1M,2 2M). Byte24: local
+ * request attempts. Bytes25..27 reserved0. LE u32 at28: last local request
+ * result, FFFFFFFF if none. Disconnect clears all current-link observations.
+ * No radio query, new negotiation, flash I/O, or throughput claim on read. */
+#define BLE_LINK_DIAGNOSTIC_SIZE 32u
+bool ble_link_diagnostic(uint8_t *snapshot, size_t capacity);
+#endif
 /* Fail a foreground file-transfer session without retaining a lost TX frame. */
 void ble_nus_abort_transfer(void);
 void ble_get_addr_str(char addr_fmt[]);
