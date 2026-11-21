@@ -20,7 +20,12 @@
             const previewCounters = {84:657,85:658,86:659,87:660,88:661};
             const lcdPreview = !oled && version && Object.hasOwn(previewCounters,version[1]) &&
                 item.channel === 'prerelease' && item.counter === previewCounters[version[1]] && item.bootloader === 'Z21';
+            const measurementCounters = {96:669,97:670};
+            const lcdMeasurementTest = !oled && version && Object.hasOwn(measurementCounters,version[1]) && item.channel === 'prerelease' &&
+                item.counter === measurementCounters[version[1]] && item.bootloader === 'Z21';
+            if (!oled && version?.[1] === '97') need(lcdMeasurementTest, 'Unpassendes LCD-App670-TEST1-Profil.', 'Incorrect LCD App670 TEST1 profile.');
             const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
+                : lcdMeasurementTest ? `de3.${version[1]}-lcd-app-test1`
                 : lcdPreview ? `de3.${version[1]}-lcd-test1-app` : version && `de3.${version[1]}-lcd-app`;
             need(version&&item.id===expectedId&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
             if (!oled && version[1] === '89') need(!item.channel && item.counter === 662 && item.bootloader === 'Z21' && item.file === 'Allmiibo_LCD_DE3_89_662_NUR_APP.zip', 'Unpassendes LCD-App662-Profil.', 'Incorrect LCD App662 profile.');
@@ -29,6 +34,7 @@
                 ? [`Allmiibo_DE3_${version[1]}_App${item.counter}_NUR_APP_SIGNIERT.zip`]
                 : [`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`];
             if (!oled && item.channel === 'prerelease' && !testBuild) names.push(`Allmiibo_LCD_DE3_${version[1]}_App${item.counter}_TEST_DFU.zip`);
+            if (lcdMeasurementTest) names.splice(0, names.length, `Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TEST1_NUR_APP.zip`);
             need(names.includes(item.file) && (!testBuild || item.channel === 'prerelease'),'Ungültiger Firmware-Dateiname.', 'Invalid firmware filename.');
             need(Number.isInteger(item.bytes)&&item.bytes>0&&item.bytes<=MAX_BYTES&&typeof item.sha256==='string'&&/^[a-f0-9]{64}$/.test(item.sha256)&&!/^0{64}$/.test(item.sha256),'Paketgröße oder SHA-256 fehlt.', 'The package size or SHA-256 is missing or invalid.');
             const profile = oled
@@ -42,10 +48,10 @@
     }
     function validatePackage(candidate, board, catalog, preview) {
         need(board === 'LCD' || board === 'OLED', 'Wähle das Display deines Geräts.', 'Choose your device display.');
-        const previews = Array.isArray(preview) ? preview : [preview];
-        preview = previews.find(item => item && typeof item.otaSha256 === 'string' && candidate.archiveSha256 === item.otaSha256 && candidate.archiveBytes === item.otaBytes);
-        const isPreview = Boolean(preview);
-        const entry = isPreview ? {board: preview.board, counter: preview.applicationCounter, version: preview.firmwareVersion, privatePreview: true}
+        const references = Array.isArray(preview) ? preview : [preview];
+        const reference = references.find(item => item && typeof item.otaSha256 === 'string' && candidate.archiveSha256 === item.otaSha256 && candidate.archiveBytes === item.otaBytes);
+        const entry = reference ? {board: reference.board, counter: reference.applicationCounter, version: reference.firmwareVersion,
+            privatePreview: reference.artifactStatus !== 'stable-signed-application'}
             : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
         need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
             'This ZIP targets the other display. Select the matching device and package.');
