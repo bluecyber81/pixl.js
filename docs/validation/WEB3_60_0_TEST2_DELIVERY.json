@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-21T16:42:10.905132+00:00",
+  "status": "published-and-http-verified",
+  "webVersion": "3.60.0-test.2",
+  "board": "LCD",
+  "displayDriver": "ST7567",
+  "firmwareVersion": "2.22.0-DE3.97",
+  "applicationCounter": 670,
+  "firmwareTestLabel": "TEST1",
+  "fileManagerUrl": "https://bluecyber81.github.io/pixl.js/test/app670/?v=3.60.0-test.2",
+  "webBuildSource": {
+    "schema": 1,
+    "repository": "bluecyber81/pixl.js",
+    "branch": "web-app670-test1",
+    "publicCommit": "0ae7369c05ffc3c7d50618ad7c1c6d83c17a2ef2",
+    "publicTree": "7403cefd8ad86fb67d92667f14c1a53632ebf389",
+    "publicParent": "acf6729f2a33364f2cce127b014f89cb4de124f7",
+    "localCommit": "6c27cec3dea304b0930faf94a7e6236ad631a01a",
+    "localTree": "7403cefd8ad86fb67d92667f14c1a53632ebf389",
+    "qualifiedWebSubtree": "bab05d2931ca742ca7ac7cd34cba863bfde45136",
+    "exactTreeMatch": true,
+    "changedPaths": 39,
+    "webVersion": "3.60.0-test.2",
+    "firmwareChanged": false,
+    "hardwareAcceptance": "pending"
+  },
+  "pages": {
+    "schema": 1,
+    "repository": "bluecyber81/pixl.js",
+    "branch": "gh-pages",
+    "publicCommit": "99a274476f9acad6a13057e3fecd52e43af4f4aa",
+    "publicTree": "c46aedaddd946552a54ef9f3338181317285038a",
+    "publicParent": "982c457fdfebb148ef2d25d3d8988ab1c29c50ed",
+    "localCommit": "6fc94ddc22edd06349f4ba9bbbcd0c18afca0279",
+    "localTree": "c46aedaddd946552a54ef9f3338181317285038a",
+    "builtFromWebCommit": "0ae7369c05ffc3c7d50618ad7c1c6d83c17a2ef2",
+    "qualifiedWebSubtree": "bab05d2931ca742ca7ac7cd34cba863bfde45136",
+    "exactTreeMatch": true,
+    "changedPaths": 44,
+    "additions": 39,
+    "modifications": 5,
+    "deletions": 0,
+    "distributionFiles": 275,
+    "outsideFilesPreserved": 2186,
+    "previousHashedAssetsPreserved": 76,
+    "retainedPreviousFilesAbsentFromNewDist": 39,
+    "webVersion": "3.60.0-test.2",
+    "firmwareChanged": false,
+    "hardwareAcceptance": "pending"
+  },
+  "sourceQualification": {
+    "path": "WEB3_60_0_TEST2.json",
+    "bytes": 16221,
+    "sha256": "4a7373fce4c9248ab481f181bde50f331ec61d3dc2d46ff5422aabfaaa5831dc"
+  },
+  "firmware": {
+    "productionCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "validationCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "validationTree": "99fdb8b40d89d5fcd5948d072d94c54e29bf3933",
+    "branch": "test/lcd-de397-app670-test1",
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+    "applicationBytes": 363888,
+    "applicationBinSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "otaFile": "Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+    "otaBytes": 364489,
+    "otaSha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "artifactStatus": "experimental-signed-application",
+    "hardwareAcceptance": "pending",
+    "capacityProfile": "de397",
+    "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "wasmSha256": "d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c",
+    "changedByHotfix": false,
+    "rebuildRequired": false,
+    "reflashRequired": false
+  },
+  "tests": {
+    "redBeforeFix": {
+      "tests": 8,
+      "suites": 0,
+      "pass": 4,
+      "fail": 4,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 241.63201
+    },
+    "greenSameRegressions": {
+      "tests": 8,
+      "suites": 0,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 288.46057
+    },
+    "targetedTransportAndPanel": {
+      "tests": 254,
+      "suites": 0,
+      "pass": 254,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 2141.275439
+    },
+    "versionDfuAndUi": {
+      "command": "node --test tests/device-info.test.mjs tests/update-check.test.mjs tests/launcher.test.cjs tests/dfu-page.test.cjs tests/private-lcd-669.test.mjs tests/private-lcd-670.test.mjs tests/ui-modern.test.cjs",
+      "exitCode": 0,
+      "counts": {
+        "tests": 327,
+        "pass": 325,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 2,
+        "todo": 0
+      },
+      "logSha256": "c36c916d508317e1ea07b4bba22b467e9480c969f57cddef0bc2e728f3850cc9",
+      "scope": "Version, launcher, DFU, device report, update check and App integration regression suite"
+    },
+    "previousCoverageGap": "Die bisherigen Wiretests waren auf App669 konzentriert und stuften DE3.97 beim Legacy-MTUD-Pfad sowie beim Setter ausdrücklich als nicht unterstützt ein. Die App670-UI-Tests lieferten passende v3-Objekte über Mock-Callbacks und prüften dadurch nicht die echte Protokollauswahl. Die neue Versionsmatrix schließt diese konkrete Lücke.",
+    "fullWebSuiteRepeated": false,
+    "countingRule": "The eight green regressions are included in 254 targeted cases. Build modes and other suites overlap and are reported separately, not added."
+  },
+  "builds": [
+    {
+      "mode": "root",
+      "command": "npm run build",
+      "basePath": "/",
+      "exitCode": 0,
+      "counts": {
+        "tests": 44,
+        "pass": 44,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "BUILD_ROOT.log",
+      "manifest": "DIST_ROOT_MANIFEST.json",
+      "files": 275,
+      "bytes": 14155749,
+      "firmwareReferenceAndOtaUnchanged": true
+    },
+    {
+      "mode": "isolated-app670",
+      "command": "npm run build:test1",
+      "basePath": "/pixl.js/test/app670/",
+      "exitCode": 0,
+      "counts": {
+        "tests": 44,
+        "pass": 44,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "BUILD_TEST2.log",
+      "manifest": "DIST_TEST2_MANIFEST.json",
+      "files": 275,
+      "bytes": 14155929,
+      "firmwareReferenceAndOtaUnchanged": true
+    }
+  ],
+  "publicHttp": {
+    "count": 56,
+    "passedCount": 56,
+    "passed": true,
+    "changedAssets": 44,
+    "unchangedSpotChecks": 12,
+    "scope": "Every changed hotfix Pages asset, plus explicitly listed unchanged firmware/reference/source/WASM and main/App669/previous-hash spot checks. This is not a repeated HTTP scan of every unchanged file.",
+    "physicalDeviceAccess": false
+  },
+  "workflow": {
+    "id": 44925825998,
+    "head_sha": "99a274476f9acad6a13057e3fecd52e43af4f4aa",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/44925825998"
+  },
+  "preservation": {
+    "outsidePaths": {
+      "count": 2186,
+      "byteAndModeIdentical": true,
+      "gitEntriesUnchanged": true,
+      "beforeManifestSha256": "e3cfc9b6d402aa29968633a18f3f8226a74f62a78f6d8d297f19caae1a1bdacc",
+      "afterManifestSha256": "e3cfc9b6d402aa29968633a18f3f8226a74f62a78f6d8d297f19caae1a1bdacc"
+    },
+    "oldHashedAssets": {
+      "count": 76,
+      "allPreservedByteAndModeIdentical": true,
+      "beforeManifestSha256": "bf4058e16059d3f367d34ba918453547e4091acd8f5df465b159e4603cc63ff2",
+      "afterManifestSha256": "bf4058e16059d3f367d34ba918453547e4091acd8f5df465b159e4603cc63ff2"
+    },
+    "previousFilesRetainedBeyondNewDist": 39,
+    "allNewDistFilesMatch": true,
+    "newDistFileCount": 275,
+    "onlyChangedPrefix": "test/app670/",
+    "noDeletion": true,
+    "stableAndOledAndHistoricalPrivateManagerChanged": false
+  },
+  "evidenceDirectory": "WEB3_60_0_TEST2_DELIVERY_evidence",
+  "evidence": {
+    "HTTP_VERIFICATION.json": {
+      "path": "WEB3_60_0_TEST2_DELIVERY_evidence/HTTP_VERIFICATION.json",
+      "bytes": 44226,
+      "sha256": "2bdaa683513b6cddb142555302b7560d6ccf89fdd3d8e8e9b3085dce90a2cf2e"
+    },
+    "PAGES_PREPARATION.json": {
+      "path": "WEB3_60_0_TEST2_DELIVERY_evidence/PAGES_PREPARATION.json",
+      "bytes": 80020,
+      "sha256": "6dc330718b161fbaa8c64a50b3d0fc3ba1d2bcf621f0b92a00bec89d51f5c62e"
+    },
+    "PAGES_WORKFLOW.json": {
+      "path": "WEB3_60_0_TEST2_DELIVERY_evidence/PAGES_WORKFLOW.json",
+      "bytes": 450,
+      "sha256": "af83ee2e3e56265addd8f1cf0e711177eea75a9a0a3e9d8a1c2efb376b178f1e"
+    },
+    "WEB_PUBLICATION_RECEIPT.json": {
+      "path": "WEB3_60_0_TEST2_DELIVERY_evidence/WEB_PUBLICATION_RECEIPT.json",
+      "bytes": 606,
+      "sha256": "351a743e0d22ce497d695bf4a8b06ae646864b6c36f394cdd628472dbf81ed9c"
+    },
+    "PAGES_PUBLICATION_RECEIPT.json": {
+      "path": "WEB3_60_0_TEST2_DELIVERY_evidence/PAGES_PUBLICATION_RECEIPT.json",
+      "bytes": 873,
+      "sha256": "f43ce7ef90dbff2078ecaf09db6cfedec750f41644f4428d061f51adfcdf8401"
+    },
+    "verify_hotfix_http.py": {
+      "path": "WEB3_60_0_TEST2_DELIVERY_evidence/verify_hotfix_http.py",
+      "bytes": 4162,
+      "sha256": "670e962be3836fb99a0ceb56167ca8ee24372b67792c4d0594e532bdf21d652d"
+    }
+  },
+  "hardwareAcceptance": "pending",
+  "successfulTest2DeviceReadObserved": false,
+  "firmwareRebuildOrReflashRequired": false,
+  "additionalFullBackupsRequired": false,
+  "nextStep": "Open the new Web 3.60.0-test.2 link, reconnect the existing LCD App670 and choose Teststatus lesen. Expected: Teststatus gelesen; keine Einstellung verändert. Then continue the bounded read-only comparison. Successful physical status and performance remain to be observed.",
+  "limits": "This receipt proves the committed Web source and served bytes. It does not prove a physical device read, hardware acceptance or a measured App670 speedup."
+}
