@@ -1,0 +1,79 @@
+{
+  "originalVerifier": "/workspace/scratch/0af425ec2cbb/app670_fw/docs/validation/DE3_96_TEST1_evidence/verify_z21_app669.py",
+  "originalVerifierSha256": "81d5426fc0a0118d0e54366b9915f516a566b4884cf9e7f86495c913ae73f885",
+  "derivedVerifier": "/workspace/scratch/0af425ec2cbb/app670_validation/Z21/verify_z21_app670.py",
+  "derivedVerifierSha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05",
+  "parameterChanges": {
+    "applicationCounter": {
+      "from": 669,
+      "to": 670
+    },
+    "previousApplicationCounter": {
+      "from": 668,
+      "to": 669
+    },
+    "expectedApplicationSha256": {
+      "from": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+      "to": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9"
+    },
+    "labels": "App/APP669\u2192670 and App/APP668\u2192669"
+  },
+  "exactUnifiedDiff": "--- verify_z21_app669.py\n+++ verify_z21_app670.py\n@@ -1,4 +1,4 @@\n-\"\"\"Run the actual unchanged Z21 ARM validators on the signed App669 package.\n+\"\"\"Run the actual unchanged Z21 ARM validators on the signed App670 package.\n \n Uses the repository's existing Unicorn models. Hardware, flash and radio are\n simulated. The crypto implementations execute from the reproduced bootloader.\n@@ -27,7 +27,7 @@\n     REPO, BUILD, OUT = args.source_root.resolve(), args.boot_build.resolve(), args.out.resolve()\n     PACKAGE, PREVIOUS = args.application.resolve(), args.previous_application.resolve()\n     OUT.mkdir(parents=True, exist_ok=True)\n-    for name in ('Z21_APP669_CRYPTO.json', 'Z21_APP669_INIT_ACCEPTANCE.json'):\n+    for name in ('Z21_APP670_CRYPTO.json', 'Z21_APP670_INIT_ACCEPTANCE.json'):\n         if (OUT / name).exists():\n             raise ValueError('Preserve previous evidence; choose a new output directory.')\n     sys.path.insert(0, str(REPO / 'bootloader-z19/tests'))\n@@ -41,9 +41,9 @@\n     assert region_hash == 'd3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb'\n     app = update.package(PACKAGE, 'application')\n     previous = update.package(PREVIOUS, 'application')\n-    assert app['counter'] == 669 and previous['counter'] == 668\n+    assert app['counter'] == 670 and previous['counter'] == 669\n     payload = app['payload']\n-    assert SHA(payload) == '32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80'\n+    assert SHA(payload) == '2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9'\n     signature, init = crypto.signed_input(app['dat'])\n     rows = []\n \n@@ -74,10 +74,10 @@\n     for name, content, value in [('boot CRC', payload, 1), ('changed BIN boot CRC', changed, 0)]:\n         run(name, 'nrf_dfu_validation_boot_validate', [descriptor, app_addr, len(payload)], value,\n             [(descriptor, validation), (app_addr, content)])\n-    (OUT / 'Z21_APP669_CRYPTO.json').write_text(json.dumps({\n+    (OUT / 'Z21_APP670_CRYPTO.json').write_text(json.dumps({\n         'passed': True, 'signedZipSha256': SHA(PACKAGE.read_bytes()),\n         'paddedBootloaderSha256': region_hash, 'bootloaderElfBinding': binding,\n-        'applicationBinSha256': SHA(payload), 'counter': 669, 'bytes': len(payload),\n+        'applicationBinSha256': SHA(payload), 'counter': 670, 'bytes': len(payload),\n         'cases': rows, 'physicalDeviceAccess': False,\n         'limits': 'Actual linked ARM crypto/CRC with simulated memory, no RF/device transfer.'}, indent=2) + '\\n')\n     print('PASS: seven actual Z21 ARM signature/hash/CRC cases', flush=True)\n@@ -104,9 +104,9 @@\n         'softdeviceFwid': 294,\n         'mbrPage': 'Erased in simulation; neither MBR nor SoftDevice code is executed.'}\n     acceptance = []\n-    for state in ('App668 present', 'empty application bank'):\n+    for state in ('App669 present', 'empty application bank'):\n         machine = update.Machine(compiled, sd, 21, previous['payload'], 0x126)\n-        machine.put(machine.settings + 8, 668)\n+        machine.put(machine.settings + 8, 669)\n         if state == 'empty application bank':\n             for offset in (24, 28, 32):\n                 machine.put(machine.settings + offset, 0)\n@@ -114,13 +114,13 @@\n         result = machine.execute(app['dat'])\n         assert result == {'code': 1, 'destination': update.COPY_START, 'dataBytes': len(payload), 'bank0Code': 0}, result\n         acceptance.append({'before': state, 'signedInitAccepted': True, **result})\n-    (OUT / 'Z21_APP669_INIT_ACCEPTANCE.json').write_text(json.dumps({\n-        'passed': True, 'bootCounter': 21, 'appCounter': 669, 'previousAppCounter': 668,\n+    (OUT / 'Z21_APP670_INIT_ACCEPTANCE.json').write_text(json.dumps({\n+        'passed': True, 'bootCounter': 21, 'appCounter': 670, 'previousAppCounter': 669,\n         'softDeviceFwid': 294, 'bootRegionSha256': region_hash, 'applicationSha256': SHA(payload),\n         'previousApplicationSha256': SHA(previous['payload']), 'cases': acceptance,\n         'systemInputBinding': system_binding,\n         'physicalDeviceAccess': False, 'limits': 'Actual ELF init-execute and bank selection; flash, radio and handover simulated.'}, indent=2) + '\\n')\n-    print('PASS: signed App669 accepted with App668 present and empty bank on Z21/S1127.3.0', flush=True)\n+    print('PASS: signed App670 accepted with App669 present and empty bank on Z21/S1127.3.0', flush=True)\n \n \n if __name__ == '__main__':\n",
+  "inputHashes": {
+    "/workspace/scratch/0af425ec2cbb/app670_fw/docs/validation/DE3_96_TEST1_evidence/verify_z21_app669.py": {
+      "sha256": "81d5426fc0a0118d0e54366b9915f516a566b4884cf9e7f86495c913ae73f885",
+      "bytes": 7211
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_validation/Z21/verify_z21_app670.py": {
+      "sha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05",
+      "bytes": 7211
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/tools/verify_z21_application.py": {
+      "sha256": "5d80b97657bd12ce8c7606e53f04488f58a2281bdd2ef5691731889c7d365467",
+      "bytes": 6507
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/bootloader-z19/tests/elf_crypto_regression.py": {
+      "sha256": "794d6a9de8b4c7814d46248308675caf2b967c25f5791c3b412b6832fc6daa51",
+      "bytes": 19114
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/bootloader-z19/tests/arm_update_model.py": {
+      "sha256": "0fadd5d7f50f4526793fe9308592d38bf57413af188010de4b40301bdb43c26b",
+      "bytes": 4600
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/bootloader-z21/SOURCE_BINDING.json": {
+      "sha256": "8b2665ba9051eed507827a4bf845b57ed824449b060608fa2796acc62ba6188c",
+      "bytes": 2994
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip": {
+      "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+      "bytes": 364489
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_validation/OTA_VERIFICATION.json": {
+      "sha256": "64ae144fee8969096a1b14d36e36c1ff437572de182f907b56482834c43d0d7a",
+      "bytes": 1837
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip": {
+      "sha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+      "bytes": 343768
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip": {
+      "sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+      "bytes": 363913
+    },
+    "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/BUILD_RESULT.json": {
+      "sha256": "069f0c51c6572e41a7a66acb834dbb8808bc797ba7ea5fa36f2758c835b152c9",
+      "bytes": 1432
+    },
+    "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/bootloader.out": {
+      "sha256": "9149e4ab189ebde7acce738c43f4b2a146e2bc7489b94d1fd5cf5582a3b2bd54",
+      "bytes": 1396448
+    },
+    "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/BOOTLOADER_UNSIGNED_ANALYSIS.bin": {
+      "sha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+      "bytes": 26932
+    }
+  },
+  "reasonForHistoricalVerifier": "The original vendor S112 ZIP required by the generic runner is not present. Use the exact previously qualified App669 public signed-system-phase loader with unchanged payload, boot-region and FWID guards. No crypto/signature/negative-control gate was changed.",
+  "deviceAccess": false,
+  "privateKeyAccess": false
+}

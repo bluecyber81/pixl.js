@@ -6,7 +6,7 @@
   "firmwareVersion": "2.22.0-DE3.97",
   "applicationCounter": 670,
   "testLabel": "TEST1",
-  "status": "software-qualified-unsigned-candidate",
+  "status": "software-signature-z21-qualified-test1",
   "hardwareAcceptance": "pending",
   "deviceAccess": false,
   "sourceBranch": "test/lcd-de397-app670-test1",
@@ -22,26 +22,32 @@
   "migrationRequired": false,
   "applicationOnly": {
     "intendedFile": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
-    "exists": false,
-    "sha256": null,
-    "bytes": null,
-    "signatureVerified": false,
+    "exists": true,
+    "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "bytes": 364489,
+    "signatureVerified": true,
     "containsBootloader": false,
     "containsSoftDevice": false,
     "hardwareVersion": 52,
     "softDeviceRequirements": [
       294
-    ]
+    ],
+    "z21AcceptanceVerified": true
   },
   "signing": {
-    "status": "blocked-by-automatic-approval-review",
-    "action": "Retrieve the inherited project signing key from its pinned upstream source and sign this application.",
+    "status": "completed-and-verified",
+    "action": "Signed the unchanged App670 application and verified its signature, negative controls and actual Z21 ARM acceptance.",
     "sourceRepository": "solosky/pixl.js",
     "sourceCommit": "5521e315b62afe25289ce656e536202f7df8f89a",
     "publicPointMatchesZ21": true,
-    "reason": "Automatic approval review requires explicit authorization in the current transcript for this external credential source. Retrieved earlier permission was not accepted by that gate.",
+    "reason": "The user explicitly authorized signing in the current chat; the signed package and Z21 checks are complete.",
     "noBypassAttempted": true,
-    "privateKeyIncludedInDistribution": false
+    "privateKeyIncludedInDistribution": false,
+    "previousAutomaticReviewBlock": "Automatic approval review requires explicit authorization in the current transcript for this external credential source. Retrieved earlier permission was not accepted by that gate.",
+    "authorization": "User explicitly confirmed signing twice in the current chat after the automatic-review block; source public point independently verified.",
+    "temporaryKeyDeletedReported": true,
+    "signatureVerified": true,
+    "negativeSignatureControlsPassed": 3
   },
   "reproducibility": {
     "schema": 1,
@@ -114,7 +120,22 @@
     "crcMountSanitizerTests": 6,
     "linkedPfsLayoutCases": 4,
     "crossMountPhases": 6,
-    "crossMountSyntheticEntries": 1208
+    "crossMountSyntheticEntries": 1208,
+    "signedApplicationPackage": {
+      "passed": true,
+      "signatureVerified": true,
+      "negativeControlsPassed": 3,
+      "applicationOnly": true
+    },
+    "z21ApplicationAcceptance": {
+      "passed": true,
+      "actualArmSignatureHashCrcCases": 7,
+      "signedInitAcceptanceCases": 2,
+      "previousApplicationCounter": 669,
+      "bootloaderCounter": 21,
+      "softDeviceFwid": 294,
+      "hardwareAcceptance": "pending"
+    }
   },
   "resources": {
     "maximumBatchFiles": 4,
@@ -144,16 +165,14 @@
     "Fewer ARM instructions are not a measured startup-time improvement.",
     "Short benchmark timing includes browser/transport scheduling and fixed pass order; it is not a full backup.",
     "WNR retains the final response and TX-completion gate; physical event ordering remains a device test.",
-    "The direct modeled batch stack depth is not a whole firmware/interrupt watermark."
+    "The direct modeled batch stack depth is not a whole firmware/interrupt watermark.",
+    "Z21 signature/hash/CRC and signed-init acceptance execute actual bootloader ARM code with simulated memory/flash/radio; physical App670 installation remains pending."
   ],
   "releaseGatesPending": [
-    "Explicit current-transcript approval for the external project-key source.",
-    "Application-only package signing and positive/negative signature validation.",
-    "Z21 signed-init/CRC/BIN acceptance checks on the actual signed package.",
     "Web binding to real OTA bytes, full signed-package integration and test-path publication."
   ],
   "deviceTestsPending": [
-    "Install the later signed App670 package on the matching LCD/Z21/S112 device.",
+    "Install the signed App670 package on the matching LCD/Z21/S112 device.",
     "Run the bounded read-only single/batch/single comparison and export its report.",
     "Export a diagnostic after restart to observe the startup profile.",
     "Observe settings save/discard/persistence and ordinary longer operation."
@@ -312,6 +331,35 @@
     "STORAGE_CRC_REVIEW.json": {
       "path": "DE3_97_TEST1_evidence/STORAGE_CRC_REVIEW.json",
       "sha256": "e2a3c3627a95cfd30dc83f20c7b5f69555017afdc67e9d688f726a7de234bdc8"
+    },
+    "OTA_VERIFICATION.json": {
+      "path": "DE3_97_TEST1_evidence/OTA_VERIFICATION.json",
+      "sha256": "64ae144fee8969096a1b14d36e36c1ff437572de182f907b56482834c43d0d7a"
+    },
+    "Z21_APPLICATION_VERIFICATION.json": {
+      "path": "DE3_97_TEST1_evidence/Z21_APPLICATION_VERIFICATION.json",
+      "sha256": "dd3ae570cef23dbe02cfe248708fe980ba8e69bd6aaec8336a3e5c2e5537936b"
+    },
+    "Z21/VERIFIER_DERIVATION.json": {
+      "path": "DE3_97_TEST1_evidence/Z21/VERIFIER_DERIVATION.json",
+      "sha256": "447484c0578aedccebdc4ae39a37eb2831065f6f7a589df0dfff2bc18608034a"
+    },
+    "Z21/Z21_APP670_CRYPTO.json": {
+      "path": "DE3_97_TEST1_evidence/Z21/Z21_APP670_CRYPTO.json",
+      "sha256": "176b47cda1ea5c70853f42842ed94f48e303bf43ad64b6d4f26a5c2c336bed0c"
+    },
+    "Z21/Z21_APP670_INIT_ACCEPTANCE.json": {
+      "path": "DE3_97_TEST1_evidence/Z21/Z21_APP670_INIT_ACCEPTANCE.json",
+      "sha256": "08c1ceea1e3c2aa0b49c79d8506d943f0ccb3e9605d21c066dea3f9a1f992245"
+    },
+    "Z21/Z21_APPLICATION_VERIFICATION.log": {
+      "path": "DE3_97_TEST1_evidence/Z21/Z21_APPLICATION_VERIFICATION.log",
+      "sha256": "6483a0dd25c2f279e285347ce28519d247786084f12127176cac91540a44c3d7"
+    },
+    "Z21/verify_z21_app670.py": {
+      "path": "DE3_97_TEST1_evidence/Z21/verify_z21_app670.py",
+      "sha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05"
     }
-  }
+  },
+  "webDeployment": "pending"
 }

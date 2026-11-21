@@ -275,7 +275,7 @@
     "counter": 670,
     "board": "LCD",
     "test_label": "TEST1",
-    "status": "software-qualified-unsigned-candidate",
+    "status": "software-signature-z21-qualified-test1",
     "hardware_acceptance": "pending",
     "source_branch": "test/lcd-de397-app670-test1",
     "source_publication_parent": "de9f457fac652153f71dc08243368f6283e1159c",
@@ -288,11 +288,8 @@
     "application_only": true,
     "bootloader_and_softdevice_replaced": false,
     "migration_required_for_existing_pfs1": false,
-    "firmware_qualification_passed": false,
+    "firmware_qualification_passed": true,
     "pending_release_gates": [
-      "Explicit current-transcript approval for the external project-key source.",
-      "Application-only package signing and positive/negative signature validation.",
-      "Z21 signed-init/CRC/BIN acceptance checks on the actual signed package.",
       "Web binding to real OTA bytes, full signed-package integration and test-path publication."
     ],
     "evidence": "docs/validation/DE3_97_TEST1.json",
@@ -321,7 +318,13 @@
       "signed": false,
       "installableDfuPackage": false
     },
-    "delivery_status": "Unsigned review source only. No installable App670 package or App670 Pages deployment. App669 remains the last published test package."
+    "delivery_status": "Signed App670 application-only package exists and passed software, signature and actual Z21 ARM qualification. Web binding/deployment and physical device acceptance remain pending.",
+    "signature_verified": true,
+    "z21_application_acceptance_passed": true,
+    "ota_sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "ota_bytes": 364489,
+    "qualification_date": "2026-11-21",
+    "web_deployment": "pending"
   },
   "firmware_preview_history": [
     {

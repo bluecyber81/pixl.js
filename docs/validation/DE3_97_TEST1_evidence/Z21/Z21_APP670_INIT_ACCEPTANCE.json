@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "bootCounter": 21,
+  "appCounter": 670,
+  "previousAppCounter": 669,
+  "softDeviceFwid": 294,
+  "bootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "applicationSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "previousApplicationSha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+  "cases": [
+    {
+      "before": "App669 present",
+      "signedInitAccepted": true,
+      "code": 1,
+      "destination": 102400,
+      "dataBytes": 363888,
+      "bank0Code": 0
+    },
+    {
+      "before": "empty application bank",
+      "signedInitAccepted": true,
+      "code": 1,
+      "destination": 102400,
+      "dataBytes": 363888,
+      "bank0Code": 0
+    }
+  ],
+  "systemInputBinding": {
+    "input": "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
+    "packageSha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+    "signedSystemPhaseSha256": "aba8a0bedb8ad8cef3a00cdb865bdaaa8d7af0ed7daef4888c1ec6e4192694d0",
+    "softdevicePayloadSha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "softdeviceBytes": 98068,
+    "softdeviceLoadAddress": 4096,
+    "softdeviceFwid": 294,
+    "mbrPage": "Erased in simulation; neither MBR nor SoftDevice code is executed."
+  },
+  "physicalDeviceAccess": false,
+  "limits": "Actual ELF init-execute and bank selection; flash, radio and handover simulated."
+}
