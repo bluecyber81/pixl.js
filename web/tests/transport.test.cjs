@@ -13,8 +13,8 @@ const gattOwnership = require(path.join(process.env.PIXL_SOURCE_DIR || path.join
 
 function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib')) {
     const source = fs.readFileSync(path.join(sourceRoot, name), 'utf8');
-    const exports = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
-    const code = source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
+    const exports = [...source.matchAll(/export (?:async )?function (\w+)\(/g)].map(match => match[1]);
+    const code = source.replace(/^import .*$/gm, '').replace(/export ((?:async )?function )/g, '$1');
     const context = { ...require(path.join(sourceRoot,'hardware-profile.js')), ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
         // Production isolates consumer callback failures. Assertions inside a
         // mocked UI callback must nevertheless fail this regression harness.
@@ -90,10 +90,10 @@ test('small-file capability requires an LCD generation and a strictly valid posi
     f.bus.emit('ble_disconnected');
     assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
 });
-for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95']])
-test(`App${counter} explicitly probes the existing small-file capability without allowing future or OLED versions`, async () => {
+for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95'],[669,'2.22.0-DE3.96']])
+test(`App${counter} explicitly probes the existing small-file capability without allowing future or OLED versions`, {timeout:5000}, async () => {
     const f = protocolFixture();
-    for (const unsupported of ['2.22.0-DE3.96',version + '-OLEDt7'])
+    for (const unsupported of ['2.22.0-DE3.97',version + '-OLEDt7'])
         assert.equal(await f.api.vfs_small_create_revision(unsupported),null);
     assert.equal(f.writes.length,0);
     const query = f.api.vfs_small_create_revision(version);

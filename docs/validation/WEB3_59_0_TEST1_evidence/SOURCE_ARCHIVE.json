@@ -1,0 +1,9 @@
+{
+  "archive": "web/public/sources/LCD_DE3_96_App669_TEST1_Simulatorquellen.zip",
+  "sha256": "e135cea2079c45668a0392939dc3cf951b4270e6cdef6dcfe95e21f9211054dc",
+  "bytes": 153464,
+  "entries": 24,
+  "productionCommit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+  "sourceId": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+  "completeSimulatorSourceFiles": 12
+}

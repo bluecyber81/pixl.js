@@ -24,20 +24,30 @@
         <meter class="device-used-meter" :value="usage.used" :max="usage.total" min="0" :aria-label="de ? 'Belegter Speicher' : 'Used storage'" :aria-valuetext="meterText" :title="meterText"></meter>
       </div>
       <p v-else class="device-no-data">{{ de ? 'Noch keine Speicherwerte.' : 'Storage information unavailable.' }}</p>
+      <details v-if="cleanupSupported" class="device-cleanup">
+        <summary>{{ de ? 'Speicherfreigabe' : 'Storage cleanup' }}: {{ cleanupView?.state || (de ? 'Noch nicht ausgelesen' : 'Not read yet') }}</summary>
+        <template v-if="cleanupView">
+          <dl><div v-for="[label,value] in cleanupView.rows.slice(1)" :key="label"><dt>{{ label }}</dt><dd>{{ value }}</dd></div></dl>
+          <small>{{ cleanupView.note }}</small>
+          <small v-if="cleanupObservedAt">{{ de ? 'Status abgerufen: ' : 'Status read: ' }}<time :datetime="cleanupObservedAt">{{ cleanupObservedAt }}</time></small>
+        </template>
+        <small v-else>{{ de ? 'Unter Gerät → Alle Diagnosewerte auslesen wird der gespeicherte Zustand abgefragt.' : 'Use Device → Read all diagnostics to read the cached state.' }}</small>
+      </details>
     </template>
   </aside>
 </template>
 <script>
-import { storageUsage, storageAmount, occupiedPercent } from '../lib/device-storage-display.js';
+import { storageUsage, storageAmount, occupiedPercent, storageCleanupPresentation } from '../lib/device-storage-display.js';
 import { firmwareBoard } from '../lib/hardware-profile.js';
 export default {
   name:'DeviceStorageCard',
-  props:{ connected:Boolean, nickname:String, firmwareVersion:String, drive:Object, directory:String, entries:Number, locale:String, uploadDisabled:Boolean },
+  props:{ connected:Boolean, nickname:String, firmwareVersion:String, drive:Object, directory:String, entries:Number, locale:String, uploadDisabled:Boolean, cleanupSupported:Boolean, cleanup:Object, cleanupObservedAt:String },
   emits:['upload'],
   computed:{
     de(){ return this.locale?.startsWith('de'); },
     model(){ const board = firmwareBoard(this.firmwareVersion); return board ? 'Allmiibo ' + board : 'Allmiibo'; },
     usage(){ return this.connected ? storageUsage(this.drive) : null; },
+    cleanupView(){ return this.connected ? storageCleanupPresentation(this.cleanup,this.locale) : null; },
     percentage(){ return this.usage ? occupiedPercent(this.usage,this.locale) : ''; },
     meterText(){ const u=this.usage; return u ? this.amount(u.used)+' '+(this.de?'belegt':'used')+' · '+this.amount(u.free)+' '+(this.de?'frei':'free') : ''; },
   },
@@ -73,6 +83,10 @@ aside.device-card { --device-teal:#075a5a; --device-line:#c1d6d7; display:block;
 .device-used-meter::-moz-meter-bar{border-radius:99px;background:linear-gradient(90deg,#05746b,#287d91,#625398);}
 .workspace-nav .device-card button.device-upload{width:100%;display:flex;flex-direction:row;justify-content:center;gap:5px;margin:12px 0 0;min-height:34px;padding:5px 6px;border:1px solid #c8d7da;border-radius:8px;background:#ffffffc9;color:var(--device-teal);font-size:.76rem;}
 .workspace-nav .device-card button.device-upload:disabled{opacity:.58;}
+.device-cleanup{grid-column:1/-1;margin-top:8px;font-size:.72rem;}
+.device-cleanup summary{cursor:pointer;}
+.device-cleanup dl{margin:8px 0;}.device-cleanup dl>div{margin:5px 0;}.device-cleanup dd{margin:0;font-weight:600;}
+.device-cleanup small{display:block;margin-top:6px;overflow-wrap:anywhere;}
 .device-no-data{font-size:.76rem;color:#465f69;}
 @media(min-width:1024px){ :global(.filemanager .app-layout){grid-template-columns:clamp(238px,20vw,286px) minmax(0,1fr);} }
 @media(max-width:650px){

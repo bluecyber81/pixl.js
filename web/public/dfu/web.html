@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-  <title>Allmiibo DFU 3.58.6</title>
+  <title>Allmiibo DFU 3.59.0-test.1</title>
   <link rel="stylesheet" href="updater.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <a data-en="← Back to the file manager" href="../" class="back-link">← Zurück zum Dateimanager</a>
   <p><a data-en="OLED installation and test guide" id="oled-guide" href="../guide/index.html#oled">OLED-Anleitung für Installation und Prüfung</a></p>
   <div id="lcd-updater">
-  <p class="eyebrow">ALLMIIBO · LCD / OLED · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.58.6 · LCD App668</p>
+  <p class="eyebrow">ALLMIIBO · LCD / OLED · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.59.0-test.1 · LCD App669 TEST1</p>
   <h1 id="profile-title" data-en="Update LCD firmware">LCD-Firmware übertragen</h1>
   <p><a data-en="Guide to firmware, the bootloader and LittleFS" id="guide-link" href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
   <p class="notice" id="profile-description" data-en="LCD · PFS1 · S112 7.3.0. Choose an application for your bootloader.">LCD · PFS1 · S112 7.3.0. Wähle eine App für deinen Bootloader.</p>
@@ -27,7 +27,7 @@
     <button data-en="Cancel selection" id="cancel-bundled" type="button" hidden>Auswahl abbrechen</button>
     <p id="android-handoff" hidden><a id="android-dfu-link" data-en="Open in nRF DFU (Android)" rel="noreferrer">In nRF DFU öffnen (Android)</a> <span data-en="Choose your device and start the transfer in the installed app.">In der installierten App wählst du dein Gerät und startest die Übertragung.</span></p>
     <p data-en="Choose an application for an Allmiibo LCD with PFS1 and S112 7.3.0." id="bundled-info" role="status">Anwendung für Allmiibo LCD mit PFS1 und S112 7.3.0 wählen.</p>
-    <p id="lcd-preview-download" hidden><button id="load-lcd-preview" type="button" disabled data-en="Load and check App668 directly">App668 direkt laden und prüfen</button> <a href="../firmware/Allmiibo_LCD_DE3_95_668_NUR_APP.zip" download data-en="Download private LCD test package DE3.95 / App668">Privates LCD-Prüfpaket DE3.95 / App668 herunterladen</a> · <span data-en="Signed application for LCD with Z21 and S112 7.3.0. Hardware acceptance is pending.">Signierte App für LCD mit Z21 und S112 7.3.0. Die Geräteprüfung steht aus.</span></p>
+    <p id="lcd-preview-download" hidden><button id="load-lcd-preview" type="button" disabled data-en="Load and check App669 TEST1 directly">App669 TEST1 direkt laden und prüfen</button> <a href="../firmware/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip" download data-en="Download private LCD test package DE3.96 / App669 TEST1">Privates LCD-Prüfpaket DE3.96 / App669 TEST1 herunterladen</a> · <span data-en="Signed application for LCD with Z21 and S112 7.3.0. Hardware acceptance is pending.">Signierte App für LCD mit Z21 und S112 7.3.0. Die Geräteprüfung steht aus.</span></p>
     <p data-en="Load a bundled package or select a compatible application ZIP from your computer or phone.">Das mitgelieferte Paket laden oder eine passende Anwendungs-ZIP von deinem Computer oder Handy wählen.</p>
     <label data-en="Your firmware ZIP" for="file">Eigene Firmware-ZIP</label>
     <input id="file" type="file" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream" aria-describedby="firmware-file-help">
@@ -80,14 +80,14 @@
 </main>
 <script src="vendor/crc32.js"></script>
 <script src="vendor/jszip-3.10.2.min.js"></script>
-<script src="secure-dfu.js?v=3.58.6"></script>
-<script src="validation-error.js?v=3.58.6"></script>
-<script src="package.js?v=3.58.6"></script>
-<script src="updater.js?v=3.58.6"></script>
-<script src="../firmware/releases.js?v=3.58.6"></script>
-<script src="bundled-packages.js?v=3.58.6"></script>
-<script src="../language-preference.js?v=3.58.6"></script>
-<script src="phase-labels.js?v=3.58.6"></script>
-<script type="module" src="page.js?v=3.58.6"></script>
+<script src="secure-dfu.js?v=3.59.0-test.1"></script>
+<script src="validation-error.js?v=3.59.0-test.1"></script>
+<script src="package.js?v=3.59.0-test.1"></script>
+<script src="updater.js?v=3.59.0-test.1"></script>
+<script src="../firmware/releases.js?v=3.59.0-test.1"></script>
+<script src="bundled-packages.js?v=3.59.0-test.1"></script>
+<script src="../language-preference.js?v=3.59.0-test.1"></script>
+<script src="phase-labels.js?v=3.59.0-test.1"></script>
+<script type="module" src="page.js?v=3.59.0-test.1"></script>
 </body>
 </html>

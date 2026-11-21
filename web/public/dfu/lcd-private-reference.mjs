@@ -62,8 +62,8 @@ export const lcdPreviewPackage667 = Object.freeze({
   channel: 'prerelease'
 });
 
-// Actual signed App668 application; public commit references are filled after publication.
-export const lcdPreview = Object.freeze({
+// Retained signed App668 application and its exact historical provenance.
+export const lcdPreview668 = Object.freeze({
   "board": "LCD",
   "firmwareVersion": "2.22.0-DE3.95",
   "applicationCounter": 668,
@@ -79,11 +79,46 @@ export const lcdPreview = Object.freeze({
   "artifactStatus": "experimental-signed-application",
   "hardwareAcceptance": "pending"
 });
-export const lcdPreviewPackage = Object.freeze({
+export const lcdPreviewPackage668 = Object.freeze({
   id: 'de3.95-lcd-app',
+  version: lcdPreview668.firmwareVersion,
+  counter: lcdPreview668.applicationCounter,
+  file: 'Allmiibo_LCD_DE3_95_668_NUR_APP.zip',
+  bytes: lcdPreview668.otaBytes,
+  sha256: lcdPreview668.otaSha256,
+  board: lcdPreview668.board,
+  storage: 'PFS1',
+  bootloader: 'Z21',
+  softDevice: 'S112 7.3.0',
+  applicationOnly: true,
+  migrationRequired: false,
+  channel: 'prerelease'
+});
+
+// LCD TEST1: signed App669 application; physical device acceptance is pending.
+export const lcdPreview = Object.freeze({
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.96",
+  "applicationCounter": 669,
+  "testLabel": "TEST1",
+  "chipPart": 337970,
+  "sourceId": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+  "productionCommit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+  "sourceCommit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+  "localProductionCommit": "6243a79875e8e84e2d24cd7de07111b718dd6131",
+  "validationCommit": "de9f457fac652153f71dc08243368f6283e1159c",
+  "otaSha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+  "otaBytes": 363913,
+  "applicationBytes": 363312,
+  "applicationBinSha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+  "artifactStatus": "experimental-signed-application",
+  "hardwareAcceptance": "pending"
+});
+export const lcdPreviewPackage = Object.freeze({
+  id: 'de3.96-lcd-app-test1',
   version: lcdPreview.firmwareVersion,
   counter: lcdPreview.applicationCounter,
-  file: 'Allmiibo_LCD_DE3_95_668_NUR_APP.zip',
+  file: 'Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip',
   bytes: lcdPreview.otaBytes,
   sha256: lcdPreview.otaSha256,
   board: lcdPreview.board,
@@ -94,5 +129,5 @@ export const lcdPreviewPackage = Object.freeze({
   migrationRequired: false,
   channel: 'prerelease'
 });
-export const lcdPreviewPackages = Object.freeze([lcdPreviewPackage, lcdPreviewPackage667]);
-export const lcdPreviews = Object.freeze([lcdPreview, lcdPreview667, lcdPreview665, lcdPreviousPreview]);
+export const lcdPreviewPackages = Object.freeze([lcdPreviewPackage, lcdPreviewPackage668, lcdPreviewPackage667]);
+export const lcdPreviews = Object.freeze([lcdPreview, lcdPreview668, lcdPreview667, lcdPreview665, lcdPreviousPreview]);

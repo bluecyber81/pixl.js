@@ -107,7 +107,7 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
@@ -117,6 +117,8 @@ def main():
         assert record['version'] == '2.22.0-DE3.94' and record['counter'] == 667
     if args.profile == 'de395':
         assert record['version'] == '2.22.0-DE3.95' and record['counter'] == 668
+    if args.profile == 'de396':
+        assert record['version'] == '2.22.0-DE3.96' and record['counter'] == 669
     assert source_hashes(fw) == prod and fingerprint(prod) == record['source_id_sha256']
     artifacts = {name:digest(args.build/name) for name in ('pixljs.bin','pixljs.hex','pixljs.out','pixljs.map')}
     assert artifacts == record['artifacts_sha256']
@@ -150,6 +152,8 @@ def main():
         limits=['Mounted state and flash geometry are modeled in the linked ARM layout test.',
                 'Live settings CRC, exact version/counter and layout, archive identity and a fresh fit proof are required.',
                 'Host simulations do not measure physical free space or device acceptance.'])
+    if args.profile == 'de396':
+        report['limits'].append('BOARD_LCD/PIXL_TEST_DIAGNOSTICS instrumentation is omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
     args.output.write_text(json.dumps(report,indent=2)+'\n')
 
 

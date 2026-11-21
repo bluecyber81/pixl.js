@@ -9,10 +9,11 @@ import {createHash} from 'node:crypto'
 // tests/dist -> web/dist: production artifacts, not source-module substitutes.
 const actualDist=path.resolve(process.env.ALLMIIBO_DIST_DIR||fileURLToPath(new URL('../../dist',import.meta.url)))
 const base=process.env.ALLMIIBO_TEST_BASE_PATH||'/'
-assert.ok(['/', '/pixl.js/'].includes(base))
+assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/'].includes(base))
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={
+ de396:{url:'/lfs-capacity-de396.wasm',wasm:'d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56',engine:'3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d',counter:669,version:'2.22.0-DE3.96'},
  de395:{url:'/lfs-capacity-de395.wasm',wasm:'311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c',engine:'a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd',counter:668,version:'2.22.0-DE3.95'},
  de394:{url:'/lfs-capacity-de393.wasm',wasm:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engine:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e',counter:667,version:'2.22.0-DE3.94'},
  de393:{url:'/lfs-capacity-de393.wasm',wasm:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engine:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e',counter:666,version:'2.22.0-DE3.93'},
@@ -40,7 +41,7 @@ const bootstrap=`const {parentPort,workerData}=require('node:worker_threads');
  globalThis.fetch=async(url,options)=>{
    if(typeof url!=='string'||!url.startsWith(workerData.base))throw Error('Request escaped deployment base');
    const canonical='/'+url.slice(workerData.base.length);
-   if(!['/lfs-capacity-de395.wasm','/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
+   if(!['/lfs-capacity-de396.wasm','/lfs-capacity-de395.wasm','/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
    parentPort.postMessage({kind:'test-fetch',url,cache:options.cache,credentials:options.credentials});
    const selected=workerData.swapAsset?(canonical==='/lfs-capacity.wasm'?'/lfs-capacity-current.wasm':'/lfs-capacity.wasm'):canonical;
    const data=fs.readFileSync(path.join(workerData.dist,selected.slice(1)));

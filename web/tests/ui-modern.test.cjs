@@ -36,6 +36,7 @@ function harness(overrides = {}) {
   const timeouts = [];
   const context = vm.createContext({ module: { exports: {} }, proto, pixl, document, window, navigator,
     ...require('../src/lib/upload-names.js'),
+    ...require('../src/lib/transfer-observation.js'),
     ...require('../src/lib/rename-confirmation.js'),
     ...require('../src/lib/build-version.js'),
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
@@ -48,6 +49,7 @@ function harness(overrides = {}) {
     performance: require('node:perf_hooks').performance,
     setTimeout(callback, delay) { timeouts.push({ callback, delay }); return timeouts.length; },
     clearTimeout(id) { if (timeouts[id - 1]) timeouts[id - 1].cancelled = true; },
+    loadLcdStorageSelfTest: () => require('../src/lib/lcd-storage-self-test.js'),
     loadBackupTools: overrides.loadBackupTools || (() => ({ createBackup: context.createBackup, createBackupCheckpoint: context.createBackupCheckpoint })),
     createBackup: options => overrides.createBackup(options),
     createBackupCheckpoint: options => overrides.createBackupCheckpoint ? overrides.createBackupCheckpoint(options) : ({
@@ -69,7 +71,7 @@ function harness(overrides = {}) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/power-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/language-preference.js'), 'utf8'), context);
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nObject.assign(globalThis, { assertPortableEntryName, assertWritableDevicePath, portableNameKey, assertNameByteLimit, assertPathByteLimit, devicePathSpace, backupPathSpace }); }', context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/browser-tools.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/folder-navigation.js'), 'utf8').replace(/export /g, ''), context);
@@ -84,13 +86,13 @@ function harness(overrides = {}) {
     ['lcd-build-diagnostics.js',['buildDiagnosticBoard','normalizeBuildDiagnostics']],
     ['firmware-build-reference.js',['diagnosticBuildIdentity']],
     ['startup-diagnostics.js',['normalizeStartupDiagnostics']],
-    ['device-extra-diagnostics.js',['normalizeMenuDiagnostics','normalizeMtuDiagnostics','normalizeUiDiagnostics','supportsMenuDiagnostics']],
+    ['device-extra-diagnostics.js',['normalizeMenuDiagnostics','normalizeMtuDiagnostics','normalizeUiDiagnostics','normalizeStorageGcDiagnostics','supportsMenuDiagnostics','supportsBleTestDiagnostics']],
     ['diagnostic-snapshot.js',['diagnosticSectionKeys','collectDiagnosticSnapshot','createCombinedDiagnosticReport']]
   ]) {
     const source=fs.readFileSync(path.join(__dirname,'../src/lib/',file),'utf8').replace(/^import .*$/gm,'').replace(/export /g,'');
     vm.runInContext('{ '+source+'\n'+names.map(name=>'globalThis.'+name+'='+name+';').join('')+' }',context);
   }
-  vm.runInContext(descriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'module.exports ='), context);
+  vm.runInContext(descriptor.script.content.replace(/^import .*$/gm, '').replace("import('./lib/lcd-storage-self-test.js')", 'loadLcdStorageSelfTest()').replace('export default', 'module.exports ='), context);
   const options = context.module.exports;
   const instance = {
     $t: key => key, $i18n: { locale: 'de_DE', availableLocales: ['de_DE', 'en'] },
@@ -677,7 +679,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.58.6'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.59.0-test.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -689,7 +691,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.58.6.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.59.0-test.1.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -776,7 +778,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.58.6.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.59.0-test.1.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1958,10 +1960,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.58.6.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.59.0-test.1.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.58.6.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.59.0-test.1.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2876,7 +2878,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.58.6');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.59.0-test.1');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -3191,4 +3193,66 @@ test('App668 combined diagnostic passes the exact reported firmware identity to 
  app.firmwareVersion='2.22.0-DE3.95';await app.read_all_diagnostics();
  assert.deepEqual(versions,['2.22.0-DE3.95']);
  assert.equal(app.fullDiagnosticSnapshot.sections.mtu.state,'unavailable');
+});
+
+
+const test669Link = () => require('../src/lib/device-extra-diagnostics.js').parseMtuDiagnostics(Uint8Array.from(Buffer.from(JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/ble-link-diagnostic-v3.json'),'utf8')).responsePayloadHex,'hex')));
+const test669Archive = () => ({blob:new Blob(['zip']),filename:'private.zip',manifest:{completed:true,files:2,bytes:1000,resume:{reusedFiles:1,reusedBytes:540}},
+ profile:{schema:1,phasesMs:{listing:1,reading:2,verifying:1,packing:1,total:5},operations:{listingCalls:1,fileReads:1,digestReplies:1,rawMetadataReads:0,verificationListingCalls:1,previousZipFiles:1},transport:null}});
+const flush669 = async () => { for(let n=0;n<20;n++)await Promise.resolve(); };
+const idle669 = () => ({connectionState:'connected',activeCommand:null,queuedCommands:0,fileTransferActive:false,queuedFileTransfers:0});
+
+test('App669 backup binds only two endpoint link reads to the completed profile and exports no private file identity',async()=>{
+ const calls=[];
+ const h=harness({get_mtu_diagnostics:async version=>{assert.equal(version,'2.22.0-DE3.96');calls.push('link');return test669Link();},
+ createBackup:async options=>{calls.push('backup-start');await options.readDirectory('E:/');calls.push('backup-finish');return test669Archive();}}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.96';await app.on_backup();
+ assert.deepEqual(calls,['link','backup-start','backup-finish','link']);assert.equal(app.transferHistory.length,1);
+ const receipt=app.lastTransfer;assert.equal(receipt.status,'success');assert.equal(receipt.verified,false);
+ assert.equal(receipt.measurement.readFileBytes,460);assert.equal(receipt.measurement.reusedFileBytes,540);
+ assert.equal(receipt.measurement.link.before.data.schemaVersion,3);assert.equal(receipt.measurement.link.after.data.schemaVersion,3);
+ app.save_diagnostics();const report=JSON.parse(app.diagnosticsJson);assert.equal(report.recentTransfers[0].measurement.files,2);
+ assert.doesNotMatch(app.diagnosticsJson,/private\.zip|private-test-device/);assert.equal(app.busy,false);
+});
+
+test('App669 completed ZIP survives a disconnected final link read without a fake failed receipt or replacement-session measurement',async()=>{
+ const gate=deferred();let reads=0;
+ const h=harness({get_mtu_diagnostics:async()=>++reads===1?test669Link():gate.promise,createBackup:async()=>test669Archive()}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.96';const pending=app.on_backup();await flush669();
+ assert.equal(reads,2);assert.equal(app.lastTransfer.status,'success');assert.equal(app.lastBackup.filename,'private.zip');
+ app.on_ble_disconnected();assert.equal(app.transferHistory.length,1,'post-backup diagnostic is not a failed file operation');
+ app.connected=true;app.firmwareVersion='2.22.0-DE3.96';app.transferHistory=[];app.infoLoading=true;
+ gate.resolve(test669Link());await pending;
+ assert.equal(app.transferHistory.length,0);assert.equal(app.infoLoading,true);assert.equal(app.lastBackup.filename,'private.zip');
+});
+
+test('App669 failed or cancelled backup never captures a completed profile, and old backups add no link requests',async()=>{
+ for(const cancel of [false,true]){
+  let reads=0,app;const h=harness({get_mtu_diagnostics:async()=>{reads++;return test669Link();},createBackup:async()=>{if(cancel)app._backupController.abort();throw Error('unfinished');}});app=connected(h);app.firmwareVersion='2.22.0-DE3.96';await app.on_backup();
+  assert.equal(reads,1);assert.equal(app.lastTransfer.status,cancel?'cancelled':'failed');assert.equal(app.lastTransfer.measurement,undefined);
+ }
+ let reads=0;const h=harness({get_mtu_diagnostics:async()=>{reads++;return test669Link();},createBackup:async()=>test669Archive()}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.95';await app.on_backup();assert.equal(reads,0);assert.equal(app.lastTransfer.measurement.link.before.state,'unavailable');
+});
+
+test('App669 file adapter rejects a late write acknowledgement from a replacement session',async()=>{
+ let acknowledge;const h=harness({vfs_helper_write_file:(path,blob,progress,yes)=>{acknowledge=yes;}}),app=connected(h),generation=app.sessionGeneration;
+ const pending=app.transfer_adapters(generation).writeFile('E:/test',new Uint8Array([1]));const failed=assert.rejects(pending);
+ app.sessionGeneration++;acknowledge();await failed;
+});
+
+test('App669 phone test uses the real bounded module through the real App adapters and fresh capability guard',async()=>{
+ const {memoryVfs}=await import('./helpers/memory-vfs.mjs'),vfs=memoryVfs(),removed=[];
+ const h=harness({get_transport_diagnostics:idle669,get_mtu_diagnostics:async()=>test669Link(),
+ vfs_read_folder:async path=>({status:0,data:await vfs.api.readDirectory(path)}),
+ vfs_create_folder:async path=>{await vfs.api.createDirectory(path);return{status:0};},
+ vfs_helper_write_file:(path,blob,progress,yes,no)=>blob.arrayBuffer().then(buffer=>vfs.api.writeFile(path,new Uint8Array(buffer))).then(yes,no),
+ vfs_helper_read_file:(path,yes,no,done,options)=>vfs.api.readFile(path,{maxBytes:options.max_bytes}).then(yes,no),
+ vfs_remove:async path=>{removed.push(path);vfs.nodes.delete(path);return{status:0};}}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.95';await assert.rejects(app.run_lcd_storage_test(),{code:'BLE_TEST_UNSUPPORTED'});assert.equal(vfs.log.length,0);
+ app.firmwareVersion='2.22.0-DE3.96';h.proto.get_transport_diagnostics=()=>({...idle669(),queuedCommands:1});await assert.rejects(app.run_lcd_storage_test(),{code:'BLE_TEST_BUSY'});assert.equal(vfs.log.length,0);
+ h.proto.get_transport_diagnostics=idle669;const result=await app.run_lcd_storage_test();assert.equal(result.status,'passed');assert.equal(result.verified,true);assert.equal(result.removed,true);assert.equal(result.bytes,512);
+ assert.equal(result.radioBefore.data.schemaVersion,3);assert.equal(result.firmwareVersion,'2.22.0-DE3.96');
+ assert.equal(removed.length,2);assert.equal(removed[0],result.folder+'/probe.txt');assert.equal(removed[1],result.folder);
+ assert(vfs.nodes.has('E:/tags'));assert.equal(vfs.nodes.size,2);app.open_lcd_test_report(result);assert.equal(app.diagnosticsDialog,true);assert.equal(JSON.parse(app.diagnosticsJson).freeAfterBytes,2097152);
 });

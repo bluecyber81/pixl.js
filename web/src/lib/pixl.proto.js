@@ -9,7 +9,7 @@ import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
 import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
-import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
+import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
 import i18n from '../i18n'
@@ -265,24 +265,56 @@ export function enter_dfu() {
 // MTU!, which changes the preference for the next Bluetooth connection.
 export function get_mtu_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    const extended = firmwareVersion === '2.22.0-DE3.95';
+    const detail = firmwareVersion === '2.22.0-DE3.96' ? 2 : firmwareVersion === '2.22.0-DE3.95' ? 1 : 0;
     const check = () => { if (generation !== transport_generation) throw new Error('Bluetooth session changed'); };
-    const read = v2 => op_queue_push(0x05, b => { if (v2) b.writeUint8(1); }, b => {
-        const data = parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
-        if (data.schemaVersion !== (v2 ? 2 : 1)) throw new Error('Invalid MTU diagnostic version');
-        return data;
-    }, {max_bytes: v2 ? 32 : 16, optional_probe: v2});
-    const finish = response => {
-        check();
-        return response.status === 255 ? null : checked_response(response);
+    function read(selector) {
+        return op_queue_push(0x05, b => { if (selector) b.writeUint8(selector); }, b => {
+            const data = parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+            if (data.schemaVersion !== selector + 1) throw new Error('Invalid MTU diagnostic version');
+            return data;
+        }, {max_bytes: [16, 32, 40][selector], optional_probe: selector > 0}).then(response => {
+            check();
+            // Only an explicit unsupported selector permits a legacy fallback.
+            // Invalid data, timeout and session replacement never start another read.
+            if (selector && (response.status === 1 || response.status === 255)) return read(selector - 1);
+            return response.status === 255 ? null : checked_response(response);
+        });
+    }
+    return read(detail);
+}
+
+// Explicit App669 test action. A fresh capability/readiness check is bracketed
+// by local queue checks; this option is never set by ordinary diagnostic reads.
+export async function set_ble_test_extension(firmwareVersion, enabled) {
+    if (firmwareVersion !== '2.22.0-DE3.96' || typeof enabled !== 'boolean')
+        throw Object.assign(new Error('This firmware does not support the LCD Test 1 radio comparison.'), {code:'BLE_TEST_UNSUPPORTED'});
+    const generation = transport_generation;
+    const check = () => {
+        if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
+        const state = get_transport_diagnostics();
+        if (state.connectionState !== 'connected' || state.activeCommand !== null || state.queuedCommands ||
+            state.fileTransferActive || state.queuedFileTransfers)
+            throw Object.assign(new Error('Wait until all Bluetooth commands and file transfers have finished.'), {code:'BLE_TEST_BUSY'});
     };
-    return read(extended).then(response => {
-        check();
-        // Only an explicit unsupported selector permits a legacy fallback.
-        // A malformed success, timeout or replacement session must stay visible.
-        return extended && (response.status === 1 || response.status === 255)
-            ? read(false).then(finish) : finish(response);
-    });
+    check();
+    const before = await get_mtu_diagnostics(firmwareVersion);
+    check();
+    if (before?.schemaVersion !== 3 || before.experiment?.testBuild !== true)
+        throw Object.assign(new Error('The device did not confirm the LCD Test 1 radio capability.'), {code:'BLE_TEST_UNSUPPORTED'});
+    if (!before.sessionReady || !before.fileMode || !before.transferIdle)
+        throw Object.assign(new Error('The device file session is not idle and ready.'), {code:'BLE_TEST_BUSY'});
+    const response = await op_queue_push(0x05, b => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        for (const byte of [69,86,84,33,Number(enabled)]) b.writeUint8(byte);
+    }, b => {
+        const data = parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+        if (data.schemaVersion !== 3) throw new Error('Invalid BLE test reply');
+        return data;
+    }, {max_bytes:40, optional_probe:true});
+    if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
+    // SDK rejection is a valid bounded status response. The caller must inspect
+    // lastOptionResult before showing success; the previous enabled state remains.
+    return checked_response(response);
 }
 
 export function get_ui_diagnostics() {
@@ -399,8 +431,11 @@ export function get_startup_diagnostics(firmwareVersion) {
     const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
     const series = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
     function read(detail) {
-        return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b =>
-            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: [32,40,80,84][detail], optional_probe: detail > 0 })
+        return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b => {
+            const data=parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+            if (detail === 4 && data.schemaVersion !== 5) throw new Error('Invalid startup test diagnostic version');
+            return data;
+        }, { max_bytes: [32,40,80,84,112][detail], optional_probe: detail > 0 })
             .then(response => {
                 if (generation !== transport_generation) throw new Error('Bluetooth session changed');
                 if (detail && (response.status === 1 || response.status === 255)) return read(detail - 1);
@@ -409,6 +444,7 @@ export function get_startup_diagnostics(firmwareVersion) {
     }
     // Supported OLED trials record native VFS startup phases without a PackedFS mount profile.
     if (hasOledSystemDiagnostics(known)) return read(1);
+    if (known === '2.22.0-DE3.96') return read(4);
     if (Object.hasOwn(LCD_Z21_COUNTERS, known)) return read(3);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
@@ -474,6 +510,18 @@ export function vfs_drive_format(path) {
     return op_queue_push(0x11,
         b => { b.writeByte(path.charCodeAt(0)) },
         b => { });
+}
+
+// A cached PackedFS RAM snapshot: no filesystem scan or collection is run.
+export function get_storage_gc_diagnostics(firmwareVersion) {
+    if (firmwareVersion !== '2.22.0-DE3.96') return Promise.resolve(null);
+    const generation = transport_generation;
+    return op_queue_push(0x1c, b => { b.writeUint8(69); b.writeUint8(2); }, b =>
+        parseStorageGcDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), {max_bytes:24, optional_probe:true})
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 1 || response.status === 255 ? null : checked_response(response);
+        });
 }
 
 export function vfs_storage_info(drive) {

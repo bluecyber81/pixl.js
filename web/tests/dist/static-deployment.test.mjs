@@ -6,11 +6,11 @@ import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { noticeFiles, webRoot } from '../../scripts/copy-license-notices.mjs'
-import { lcdPreview, lcdPreview667, lcdPreviewPackages } from '../../public/dfu/lcd-private-reference.mjs'
+import { lcdPreview, lcdPreview668, lcdPreview667, lcdPreviewPackages } from '../../public/dfu/lcd-private-reference.mjs'
 
 const dist = path.resolve(process.env.ALLMIIBO_DIST_DIR || fileURLToPath(new URL('../../dist', import.meta.url)))
 const base = process.env.ALLMIIBO_TEST_BASE_PATH || '/'
-assert.ok(['/', '/pixl.js/'].includes(base))
+assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/'].includes(base))
 const origin = 'https://bluecyber81.github.io'
 const read = relative => fs.readFileSync(path.join(dist, relative), 'utf8')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -122,7 +122,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   assert.match(index, /historische/)
 })
 
-for (const [reference,profile,name] of [[lcdPreview,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
+for (const [reference,profile,name] of [[lcdPreview,'de396','LCD_DE3_96_App669_TEST1_Simulatorquellen.zip'],[lcdPreview668,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
 test(`${base}: the App${reference.applicationCounter} source download resolves to its complete archive and exact firmware binding`, async () => {
   const index = read('licenses/index.html')
   const links = [...index.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(match => match[1].endsWith(name))

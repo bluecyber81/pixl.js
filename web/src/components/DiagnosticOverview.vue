@@ -59,6 +59,7 @@
   </section>
 </template>
 <script setup>
+import { storageCleanupPresentation } from '../lib/device-storage-display.js';
 import { computed } from 'vue';
 import IdentifierCopy from './IdentifierCopy.vue';
 import { diagnosticBuildIdentity } from '../lib/firmware-build-reference.js';
@@ -212,9 +213,11 @@ function drives(data) {
 }
 function storage(data) {
   const { info, layout } = data;
+  const cleanup = storageCleanupPresentation(data.cleanup, props.locale);
   return { summary: [[pick('Dateisystem E:', 'Filesystem E:'), ['—', 'SPIFFS', 'LittleFS', 'Packed LittleFS (PFS1)'][info.backend]],
-    [pick('Eingebunden', 'Mounted'), yesNo(info.mounted)]],
+    [pick('Eingebunden', 'Mounted'), yesNo(info.mounted)], ...(cleanup ? [cleanup.rows[0]] : [])],
     details: [
+      ...(cleanup ? cleanup.rows.slice(1) : []),
       [pick('Metadaten pro Eintrag', 'Metadata per entry'), bytes(info.metaLen)],
       [pick('Pfad-/Namensgrenze', 'Path/name limit'), `${number(info.pathMax)} / ${number(info.nameMax)} B`],
       ...(layout ? [
@@ -226,7 +229,7 @@ function storage(data) {
         [pick('Maximale Packdateien / offene Handles', 'Maximum packed files / open handles'), `${number(layout.maxShards)} / ${number(layout.maxHandles)}`],
         [pick('Speicherkern SHA-256', 'Storage engine SHA-256'), layout.engineSha256],
       ] : [[pick('Geometrie/Cachekonfiguration', 'Geometry/cache configuration'), t.value.absent]]),
-    ], note: pick('Konfigurationswerte des Geräts. Die Cachegröße ist keine Messung der Cachebelegung, Trefferquote oder gesamten RAM-Nutzung.', 'Device configuration values. Cache size does not measure cache occupancy, hit rate or total RAM use.'),
+    ], note: pick('Konfigurationswerte des Geräts. Die Cachegröße ist keine Messung der Cachebelegung, Trefferquote oder gesamten RAM-Nutzung.', 'Device configuration values. Cache size does not measure cache occupancy, hit rate or total RAM use.') + (cleanup ? ' ' + cleanup.note : ''),
   };
 }
 function mtu(data) {
@@ -244,6 +247,11 @@ function mtu(data) {
       [pick('Konfigurierte maximale ATT-MTU', 'Configured maximum ATT MTU'), number(data.configuredMaxAttMtu)],
       [pick('Dateiclient bereit / Dateimodus', 'File client ready / file mode'), `${yesNo(data.sessionReady)} / ${yesNo(data.fileMode)}`],
       [pick('Übertragung im Leerlauf', 'Transfer idle'), yesNo(data.transferIdle)],
+      ...(data.experiment ? [
+        [pick('Test 1: Ereignisverlängerung konfiguriert','Test 1: event extension configured'),yesNo(data.experiment.eventLengthExtensionEnabled)],
+        [pick('Nominelle Ereignislänge (Konfiguration)','Nominal event length (configuration)'),interval(data.experiment.nominalEventLengthUnits)],
+        [pick('Letztes Ergebnis der Testumschaltung','Last test option request result'),data.experiment.lastOptionResult === null ? t.value.absent : hex(data.experiment.lastOptionResult)]
+      ] : []),
       ...(link ? [
         [pick('Funkverbindung aktiv', 'Radio link connected'), yesNo(link.connected)],
         [pick('Auslassbare Verbindungsereignisse', 'Peripheral latency events'), link.slaveLatency === null ? t.value.absent : number(link.slaveLatency)],
@@ -257,7 +265,8 @@ function mtu(data) {
       ? pick('Für diese Verbindung hat die Firmware keine aktuelle ATT-MTU gemeldet. Die unten angezeigten Grenzen sind Einstellungen für die Verbindung.', 'The firmware reported no current ATT MTU for this connection. The limits below are connection settings.')
       : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.')) +
       (link ? pick(' Intervall und Funkmodus stammen aus Bluetooth-Verbindungsereignissen. 2M ist die Funkdatenrate, keine gemessene Dateiübertragungsgeschwindigkeit. Eine erfolgreiche Anfrage allein bestätigt noch keinen Wechsel auf 2M.',
-        ' Interval and PHY come from Bluetooth connection events. 2M is the radio data rate, not measured file throughput. A successful request alone does not confirm a switch to 2M.') : ''),
+        ' Interval and PHY come from Bluetooth connection events. 2M is the radio data rate, not measured file throughput. A successful request alone does not confirm a switch to 2M.') : '') +
+      (data.experiment ? pick(' Die Testoption ist eine globale Funkstack-Konfiguration, keine ausgehandelte oder gemessene Funkzeit. Sie bleibt beim Neuverbinden bestehen; nach Geräteneustart ist sie AUS.', ' The test option is global radio-stack configuration, not negotiated or measured airtime. It persists across reconnection and is OFF after device restart.') : ''),
   };
 }
 function ui(data) {

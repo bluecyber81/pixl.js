@@ -3,6 +3,7 @@
 const SCOPE = 'application-storage-start-to-first-dispatch';
 const PHASES = ['storageBegin', 'storageDone', 'displayBegin', 'displayDone', 'launcherDone', 'dispatchDone'];
 const STORAGE_PHASES = ['mountDone', 'journalDone'];
+const PROFILE_COUNTERS = ['flashWaitTicks', 'flashTransferTicks', 'crcTicks', 'indexPassTicks', 'flashReadTransactions'];
 const MOUNT_COUNTERS = ['physicalReadAttempts', 'physicalReadBytes', 'cacheHits', 'cacheMisses', 'bypassReads', 'physicalReadErrors'];
 // Release versions, preparation builds and numbered test builds share this diagnostic format.
 const isStartupFirmware = value => typeof value === 'string' && value.length <= 64 &&
@@ -17,7 +18,7 @@ export function normalizeMountDiagnostics(value, schemaVersion = 3) {
   const timingValid = !!(value.flags & 16);
   if (['configureMilliseconds','scanMilliseconds'].some(key => timingValid ? !uint32(value[key]) : value[key] !== null)) return null;
   const detail = {};
-  if (schemaVersion === 4) {
+  if (schemaVersion >= 4) {
     const {cacheSlotsAllocated, cacheSlotsFilled, cachePageBytes} = value;
     if (![cacheSlotsAllocated, cacheSlotsFilled].every(n => Number.isInteger(n) && n >= 0 && n <= 255) ||
         !Number.isInteger(cachePageBytes) || cachePageBytes < 0 || cachePageBytes > 65535 ||
@@ -41,7 +42,7 @@ export function parseStartupDiagnostics(buffer) {
   if (!(bytes instanceof Uint8Array) || bytes[5] !== bytes.byteLength ||
       bytes[0] !== 80 || bytes[1] !== 88 || bytes[2] !== 83 || bytes[3] !== 84 ||
       !(bytes[4] === 1 && bytes.length === 32 && bytes[7] === 0 || bytes[4] === 2 && bytes.length === 40 ||
-        bytes[4] === 3 && bytes.length === 80 || bytes[4] === 4 && bytes.length === 84)) {
+        bytes[4] === 3 && bytes.length === 80 || bytes[4] === 4 && bytes.length === 84 || bytes[4] === 5 && bytes.length === 112)) {
     throw new Error('Invalid startup diagnostic response');
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), mask = bytes[6];
@@ -61,24 +62,31 @@ export function parseStartupDiagnostics(buffer) {
   if (bytes[4] >= 3) {
     const flags = view.getUint32(40,true);
     if (!(flags & 1)) {
-      if (bytes.subarray(40).some(byte => byte !== 0)) throw new Error('Inconsistent absent mount profile');
+      if (bytes.subarray(40, bytes[4] === 5 ? 84 : bytes.length).some(byte => byte !== 0)) throw new Error('Inconsistent absent mount profile');
       value.mount = null;
     } else {
       value.mount = {scope:'last-packedfs-mount',flags,result:view.getInt32(44,true),
         configureMilliseconds:flags & 16 ? view.getUint32(48,true) : null,
         scanMilliseconds:flags & 16 ? view.getUint32(52,true) : null,
         ...Object.fromEntries(MOUNT_COUNTERS.map((key,index) => [key,view.getUint32(56+index*4,true)]))};
-      if (bytes[4] === 4) Object.assign(value.mount, {
+      if (bytes[4] >= 4) Object.assign(value.mount, {
         cacheSlotsAllocated: bytes[80], cacheSlotsFilled: bytes[81], cachePageBytes: view.getUint16(82,true)
       });
     }
+  }
+  if (bytes[4] === 5) {
+    const flags = view.getUint32(84, true);
+    if ((flags & ~7) || !(flags & 4)) throw new Error('Invalid startup test profile flags');
+    value.mountProfile = {scope:'last-packedfs-mount-scan', testBuild:true, available:!!(flags & 1),
+      countersSaturated:!!(flags & 2), ticksPerSecond:view.getUint32(88,true),
+      ...Object.fromEntries(PROFILE_COUNTERS.map((key,index) => [key,view.getUint32(92+index*4,true)]))};
   }
   const normalized = normalizeStartupDiagnostics(value);
   if (!normalized) throw new Error('Inconsistent startup diagnostic response');
   return normalized;
 }
 export function normalizeStartupDiagnostics(value) {
-  if (!value || ![1, 2, 3, 4].includes(value.schemaVersion) || value.scope !== SCOPE ||
+  if (!value || ![1, 2, 3, 4, 5].includes(value.schemaVersion) || value.scope !== SCOPE ||
       !validSeries(value.phaseMask, value.elapsedMilliseconds)) return null;
   const info = {schemaVersion: value.schemaVersion, scope: SCOPE, phaseMask: value.phaseMask,
     elapsedMilliseconds: Object.freeze([...value.elapsedMilliseconds])};
@@ -95,7 +103,44 @@ export function normalizeStartupDiagnostics(value) {
     if (value.mount !== null && !mount) return null;
     info.mount = mount;
   }
+  if (value.schemaVersion === 5) {
+    const profile = normalizeMountTestProfile(value.mountProfile);
+    if (!profile || profile.available && !info.mount) return null;
+    info.mountProfile = profile;
+  }
   return Object.freeze(info);
+}
+export function normalizeMountTestProfile(value) {
+  if (!value || value.scope !== 'last-packedfs-mount-scan' || value.testBuild !== true ||
+      typeof value.available !== 'boolean' || typeof value.countersSaturated !== 'boolean' ||
+      !uint32(value.ticksPerSecond) || !value.ticksPerSecond ||
+      PROFILE_COUNTERS.some(key => !uint32(value[key])) ||
+      (!value.available && (value.countersSaturated || PROFILE_COUNTERS.some(key => value[key] !== 0))) ||
+      (!value.countersSaturated && PROFILE_COUNTERS.some(key => value[key] === 0xffffffff))) return null;
+  return Object.freeze({scope:'last-packedfs-mount-scan',testBuild:true,available:value.available,
+    countersSaturated:value.countersSaturated,ticksPerSecond:value.ticksPerSecond,
+    ...Object.fromEntries(PROFILE_COUNTERS.map(key => [key,value[key]]))});
+}
+export function mountTestProfilePresentation(value, locale = 'de_DE') {
+  const profile = normalizeMountTestProfile(value);
+  if (!profile) return null;
+  const de=locale.startsWith('de'), pick=(a,b)=>de?a:b;
+  const number = n => new Intl.NumberFormat(de?'de-DE':'en-GB',{maximumFractionDigits:3}).format(n);
+  const note = pick('Test 1: Zeitmessung nur während des letzten PackedFS-Mountscans, nach Vorbereitung und Cache-Zuteilung. RTC-Auflösung ',
+    'Test 1: timing during the last PackedFS mount scan, after setup and cache allocation. RTC resolution ') +
+    `${number(1000/profile.ticksPerSecond)} ms (${profile.ticksPerSecond} Hz). ` +
+    pick('Messung hat zusätzlichen Aufwand; dies ist keine CPU-Zeit. Die Indexprüfung enthält Flash- und CRC-Arbeit: Zeiten nicht aufsummieren.',
+      'Instrumentation adds overhead; these are not CPU times. The index pass includes flash and CRC work: do not add these times.') +
+    (profile.countersSaturated ? pick(' Gesättigte Werte sind Untergrenzen.',' Saturated values are lower bounds.') : '');
+  if (!profile.available) return {rows:[],note:pick('Noch kein abgeschlossener Test-Mountscan erfasst. ','No completed test mount scan recorded. ')+note};
+  const duration = key => `${profile[key] === 0xffffffff ? '≥ ' : ''}${number(profile[key]*1000/profile.ticksPerSecond)} ms (${profile[key]} ${pick('Ticks','ticks')})`;
+  return {rows:[
+    [pick('Flash: auf Bereitschaft warten','Flash: wait for ready'),duration('flashWaitTicks')],
+    [pick('Flash: READ-Befehl und Nutzdaten','Flash: READ command and payload'),duration('flashTransferTicks')],
+    [pick('PackedFS: CRC-Prüfungen','PackedFS: CRC checks'),duration('crcTicks')],
+    [pick('Indexprüfung inkl. Flash/CRC','Index check including flash/CRC'),duration('indexPassTicks')],
+    [pick('Flash-READ-Transaktionen im Scan','Flash READ transactions in scan'),`${profile.flashReadTransactions === 0xffffffff?'≥ ':''}${profile.flashReadTransactions}`]
+  ],note};
 }
 // Disjoint durations inside storageDone; a missing checkpoint leaves its interval unknown.
 export function startupStorageIntervals(value) {
@@ -115,6 +160,7 @@ export function startupMountPresentation(value, locale = 'de_DE') {
   const duration = n => n === null ? pick('Nicht gemessen','Not measured') : `${n} ms`;
   const counter = n => `${mount.flags & 8 ? '≥ ' : ''}${n}`;
   const eligible = mount.cacheHits + mount.cacheMisses;
+  const testProfile = info.schemaVersion === 5 ? mountTestProfilePresentation(info.mountProfile, locale) : null;
   const hitRate = (mount.flags & 4) && !(mount.flags & 8) && eligible > 0
     ? Intl.NumberFormat(de ? 'de-DE' : 'en-GB', {style:'percent', maximumFractionDigits:1}).format(mount.cacheHits / eligible)
     : null;
@@ -129,14 +175,16 @@ export function startupMountPresentation(value, locale = 'de_DE') {
     [pick('Geeignete Zugriffe ohne Cachetreffer','Eligible reads without a cache hit'), counter(mount.cacheMisses)],
     [pick('Zugriffe außerhalb des Cachepfads','Reads bypassing the cache'), counter(mount.bypassReads)],
     [pick('Physische Lesefehler','Physical read errors'), counter(mount.physicalReadErrors)],
-    ...(info.schemaVersion === 4 ? [
+    ...(info.schemaVersion >= 4 ? [
       [pick('Seiten am Mount-Ende gefüllt / zugeteilt','Pages filled / allocated at end of mount'), `${mount.cacheSlotsFilled} / ${mount.cacheSlotsAllocated}`],
       ...(mount.cacheSlotsAllocated ? [[pick('Bytes pro temporärer Cache-Seite','Bytes per temporary cache page'), `${mount.cachePageBytes} B`]] : [])
     ] : []),
+    ...(testProfile?.rows || []),
     ...(hitRate === null ? [] : [[pick('Treffer bei cachegeeigneten Zugriffen','Hit rate for cache-eligible reads'), hitRate]]),
   ], note:pick('Die Werte stammen vom letzten Einbinden von PackedFS. Die Abrufzeit ist kein Messzeitpunkt. Danach wird der temporäre Lesecache freigegeben. Die konfigurierte LittleFS-Cachegröße steht unter Speicher. Die Trefferquote berücksichtigt nur cachegeeignete Zugriffe.', 'Values come from the last PackedFS mount. Read time is not measurement time. The temporary read cache is released afterwards. See Storage for the configured LittleFS cache size. The hit rate covers cache-eligible reads only.') +
     (info.schemaVersion === 3 ? pick(' Dieser Bericht enthält keine Anzahl zugeteilter Cache-Seiten.', ' This report omits the number of allocated cache pages.') : '') +
-    (mount.flags & 8 ? pick(' Gesättigte Zugriffszähler liefern nur Untergrenzen.', ' Saturated access counters supply lower bounds only.') : '')};
+    (mount.flags & 8 ? pick(' Gesättigte Zugriffszähler liefern nur Untergrenzen.', ' Saturated access counters supply lower bounds only.') : '') +
+    (testProfile ? ' ' + testProfile.note : '')};
 }
 export function startupDiagnosticRows(value) {
   const info = normalizeStartupDiagnostics(value);
@@ -156,7 +204,8 @@ export function createStartupDiagnosticReport(value, observedAt, firmwareVersion
     limits: ['Excludes bootloader and early SDK startup.',
       'Software markers do not prove successful storage access or visible display output.',
       'A saved report is a dated observation, not a new device readback.',
-      ...(info.schemaVersion >= 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : [])] };
+      ...(info.schemaVersion >= 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
+      ...(info.schemaVersion === 5 ? ['Test mount profile ticks use ticksPerSecond; the inclusive index pass overlaps flash and CRC timing. Instrumentation adds overhead and does not measure CPU time.'] : [])] };
 }
 export function compareStartup(report, current) {
   const before = normalizeStartupDiagnostics(report?.startup), after = normalizeStartupDiagnostics(current);

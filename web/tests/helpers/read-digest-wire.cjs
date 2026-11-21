@@ -13,7 +13,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply } = {}
   let timer = 0, openPath = null;
   const root = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../../src/lib');
   const source = fs.readFileSync(path.join(root, 'pixl.proto.js'), 'utf8');
-  const names = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
+  const names = [...source.matchAll(/export (?:async )?function (\w+)\(/g)].map(match => match[1]);
   const file = name => {
     const node = vfs.nodes.get(name);
     if (node?.type !== 0) throw new Error('Missing mock file: ' + name);
@@ -74,7 +74,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply } = {}
     console, pixl, i18n: { global: { t: value => value } }, sharedEventDispatcher: () => bus,
     setTimeout: callback => { const id = ++timer; timers.set(id, callback); return id; },
     clearTimeout: id => timers.delete(id) };
-  vm.runInNewContext(source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ') +
+  vm.runInNewContext(source.replace(/^import .*$/gm, '').replace(/export ((?:async )?function )/g, '$1') +
     '\nmodule.exports = {' + names.join(',') + '};', context, { filename: 'pixl.proto.js' });
   const api = context.module.exports;
   api.init();

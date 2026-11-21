@@ -1,6 +1,6 @@
 {
   "name": "allmiibo-web",
-  "version": "3.58.6",
+  "version": "3.59.0-test.1",
   "description": "Allmiibo Bluetooth-Dateimanager mit ZIP-Sicherung und Übertragungsprüfung",
   "private": true,
   "type": "module",
@@ -13,7 +13,10 @@
     "postbuild": "node scripts/copy-license-notices.mjs root && npm run test:dist",
     "build:pages": "vite build --base=/pixl.js/ --outDir=dist-pages",
     "test:dist:pages": "node scripts/test-production-build.mjs pages",
-    "postbuild:pages": "node scripts/copy-license-notices.mjs pages && node scripts/legacy-downloads.mjs && npm run test:dist:pages"
+    "postbuild:pages": "node scripts/copy-license-notices.mjs pages && node scripts/legacy-downloads.mjs && npm run test:dist:pages",
+    "build:test1": "vite build --base=/pixl.js/test/app669/ --outDir=dist-test-app669",
+    "test:dist:test1": "node scripts/test-production-build.mjs test-app669",
+    "postbuild:test1": "node scripts/copy-license-notices.mjs test-app669 && npm run test:dist:test1"
   },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.2",

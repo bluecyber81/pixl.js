@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "capturedAt": "2026-11-21T14:43:41+01:00",
+  "passed": true,
+  "deviceAccess": false,
+  "sourceFiles": 822,
+  "sourceCanonicalFilesSha256": "bca69528043c1d598f3404f750e88df51e720a26887225e5a206478d805d7358",
+  "distributionFiles": 268,
+  "distributionCanonicalFilesSha256": "e957e9ad22fa040affa20ef5e908c5b2971579c2abaa7b1302eed5686d5f574d",
+  "localPagesCopyByteIdentical": true,
+  "publicSourceFilesByteIdenticalToDistribution": 85,
+  "simulatorArchiveCurrentSourceMatches": [
+    "docs/validation/DE3_96_CROSS_MOUNT.json",
+    "docs/validation/DE3_96_PFS.json",
+    "docs/validation/DE3_96_PRODUCTION_INPUTS.json",
+    "web/public/lfs-capacity-de396.wasm",
+    "web/scripts/build-capacity-de396.py",
+    "web/third-party/packed-simulator-de396/ENGINE_IDENTITY.json",
+    "web/third-party/packed-simulator-de396/GPL-2.0-LICENSE",
+    "web/third-party/packed-simulator-de396/LITTLEFS-LICENSE.md",
+    "web/third-party/packed-simulator-de396/SOURCE.txt",
+    "web/third-party/packed-simulator-de396/SOURCE_BINDING.json",
+    "web/third-party/packed-simulator-de396/core/packed_fs.c",
+    "web/third-party/packed-simulator-de396/core/packed_fs.h",
+    "web/third-party/packed-simulator-de396/littlefs/lfs.c",
+    "web/third-party/packed-simulator-de396/littlefs/lfs.h",
+    "web/third-party/packed-simulator-de396/littlefs/lfs_util.c",
+    "web/third-party/packed-simulator-de396/littlefs/lfs_util.h",
+    "web/third-party/packed-simulator-de396/packed_identity.py",
+    "web/third-party/packed-simulator-de396/sim/capacity_simulator.c",
+    "web/third-party/packed-simulator-de396/sim/freestanding/inttypes.h",
+    "web/third-party/packed-simulator-de396/sim/freestanding/string.h",
+    "web/third-party/packed-simulator-de396/sim/minilib.c",
+    "web/third-party/packed-simulator-de396/sim/sim_identity.h"
+  ],
+  "otaReferenceSizeHashAndApplicationContentsMatch": true,
+  "otaMembers": [
+    {
+      "path": "manifest.json",
+      "bytes": 139,
+      "sha256": "1733f0c3620aee328f3c8dfa2aa81ccaa38cd583613bd7191fdc1e4cd5d51728"
+    },
+    {
+      "path": "app_669.dat",
+      "bytes": 142,
+      "sha256": "8da17a3cc53a6f15d33ec5fd3f70b9e77c377e9b047fdc490d8fc6c6b4e1aec5"
+    },
+    {
+      "path": "app_669.bin",
+      "bytes": 363312,
+      "sha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80"
+    }
+  ],
+  "sourceChangesDuringDocumentation": false,
+  "credentialReview": {
+    "candidatePaths": 91,
+    "archiveMembers": 27,
+    "credentialPatternHits": [],
+    "envContainsOnlyPublicBuildLabel": true,
+    "scope": "Targeted known private-key/token/credential-URL patterns, archive inspection and task-path review; not a general security audit."
+  },
+  "limits": [
+    "No firmware or browser tests rerun in this finalization.",
+    "Local Pages equality is not an HTTP verification of the live deployment.",
+    "The source snapshot records current inputs and does not create a historical pre-test hash record."
+  ],
+  "whitespaceCheck": {
+    "command": "git -c core.whitespace=cr-at-eol diff --check",
+    "exitCode": 0,
+    "reason": "Recognize existing CRLF line endings without normalizing any checked source bytes.",
+    "scope": "Previously tracked changed files before staging new evidence and simulator files."
+  },
+  "completeStagedWhitespaceCheck": {
+    "command": "git -c core.whitespace=cr-at-eol diff --cached --check",
+    "exitCode": 2,
+    "warnings": [
+      "docs/validation/WEB3_59_0_TEST1_evidence/BUILD_TEST1_FINAL.log:89: trailing whitespace.",
+      "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log:1724: trailing whitespace.",
+      "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log:1726: trailing whitespace.",
+      "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log:1728: trailing whitespace.",
+      "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log:1730: trailing whitespace.",
+      "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log:1732: trailing whitespace.",
+      "web/tests/private-lcd-669.test.mjs:192: new blank line at EOF.",
+      "web/third-party/packed-simulator-de396/LITTLEFS-LICENSE.md:1: trailing whitespace.",
+      "web/third-party/packed-simulator-de396/littlefs/lfs.c:1084: trailing whitespace.",
+      "web/third-party/packed-simulator-de396/littlefs/lfs.c:6331: new blank line at EOF.",
+      "web/third-party/packed-simulator-de396/littlefs/lfs.h:270: trailing whitespace."
+    ],
+    "disposition": "Preserve byte-identical test logs, upstream simulator/license inputs, and the harmless final blank line in the already-tested App669 test file; no production/test rewrite during finalization."
+  }
+}

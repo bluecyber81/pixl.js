@@ -5,7 +5,7 @@ import {createHash, webcrypto} from 'node:crypto';
 import DfuPackage from '../public/dfu/package.js';
 import Bundled from '../public/dfu/bundled-packages.js';
 import Updater from '../public/dfu/updater.js';
-import {lcdPreview, lcdPreviews, lcdPreviewPackage, lcdPreviewPackages} from '../public/dfu/lcd-private-reference.mjs';
+import {lcdPreview668 as lcdPreview, lcdPreviews, lcdPreviewPackage668 as lcdPreviewPackage, lcdPreviewPackages} from '../public/dfu/lcd-private-reference.mjs';
 import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {buildDiagnosticBoard} from '../src/lib/lcd-build-diagnostics.js';
@@ -135,7 +135,7 @@ test('private App668 recognition binds the actual signed application ZIP, BIN an
   assert.equal(state.ready, true);
   assert.equal(catalog.packages[0].counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 668), false);
-  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [668,667,665,664]);
+  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [669,668,667,665,664]);
 });
 
 test('App668 diagnostics and capacity require the new exact source, counter and engine while retaining previous profiles', () => {
@@ -169,13 +169,8 @@ test('App668 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('the mobile private download points to App668 and refreshes its versioned metadata without promoting the stable catalog', () => {
-  const html = readFileSync(new URL('../public/dfu/web.html', import.meta.url), 'utf8');
-  const page = readFileSync(new URL('../public/dfu/page.js', import.meta.url), 'utf8');
-  assert.match(html, /LCD App668/);
-  assert.ok(html.includes('../firmware/' + filename));
-  assert.match(html, /DE3\.95 \/ App668/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.58.6'"));
+test('the retained App668 private package remains available without promoting the stable catalog', () => {
+  assert.equal(lcdPreviewPackage.file, filename);
+  assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
   assert.equal(catalog.packages[0].version, '2.22.0-DE3.89');
 });
-

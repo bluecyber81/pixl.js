@@ -1,0 +1,21 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "tests/private-lcd-669-capacity.test.mjs",
+    "tests/private-lcd-668-capacity.test.mjs",
+    "tests/migration-wasm.test.mjs",
+    "tests/capacity-collection.test.mjs",
+    "tests/migration-profiles.test.mjs"
+  ],
+  "exitCode": 0,
+  "deviceAccess": false,
+  "log": "CAPACITY_TESTS.log",
+  "tests": 87,
+  "pass": 87,
+  "fail": 0,
+  "cancelled": 0,
+  "skipped": 0,
+  "todo": 0,
+  "logSha256": "99003b077ed1ddcc63701413a9441feda09f7b1746612aab199c9bac3f343eec"
+}

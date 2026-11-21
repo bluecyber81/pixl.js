@@ -18,7 +18,7 @@ function wire(buffer, length, magic, version = 1) {
 }
 
 export function normalizeMtuDiagnostics(value) {
-  if (!value || ![1, 2].includes(value.schemaVersion) || value.scope !== 'firmware-gatt-snapshot' ||
+  if (!value || ![1, 2, 3].includes(value.schemaVersion) || value.scope !== 'firmware-gatt-snapshot' ||
       !booleanFields(value, ['sessionReady', 'fileMode', 'transferIdle'])) return null;
   const maximum = value.configuredMaxAttMtu, next = value.nextConnectionAttMtu;
   if (!uint(maximum, 250) || maximum < 23 || !uint(next, maximum) || next < 23) return null;
@@ -26,13 +26,63 @@ export function normalizeMtuDiagnostics(value) {
       (!uint(value.effectiveAttMtu, maximum) || value.effectiveAttMtu < 23 ||
        !uint(value.gattValueCapacity, value.effectiveAttMtu - 3) || value.gattValueCapacity < 20) :
       (value.effectiveAttMtu !== null || value.gattValueCapacity !== null)) return null;
-  const link = value.schemaVersion === 2 ? normalizeLinkDiagnostics(value.link) : null;
-  if (value.schemaVersion === 2 && (!link || value.sessionReady && !link.connected)) return null;
+  const link = value.schemaVersion >= 2 ? normalizeLinkDiagnostics(value.link) : null;
+  if (value.schemaVersion >= 2 && (!link || value.sessionReady && !link.connected)) return null;
+  const experiment = value.schemaVersion === 3 ? normalizeBleTestConfiguration(value.experiment) : null;
+  if (value.schemaVersion === 3 && !experiment) return null;
   return Object.freeze({schemaVersion: value.schemaVersion, scope: 'firmware-gatt-snapshot',
     sessionReady: value.sessionReady, fileMode: value.fileMode, transferIdle: value.transferIdle,
     effectiveAttMtu: value.effectiveAttMtu, nextConnectionAttMtu: next,
     configuredMaxAttMtu: maximum, gattValueCapacity: value.gattValueCapacity,
-    ...(link ? {link} : {})});
+    ...(link ? {link} : {}), ...(experiment ? {experiment} : {})});
+}
+
+// App669 Test 1 is an explicit experimental identity, not an assumption about
+// future release versions. A valid MTUD v3 capability is still required to act.
+export function supportsBleTestDiagnostics(version) { return version === '2.22.0-DE3.96'; }
+
+export function normalizeBleTestConfiguration(value) {
+  if (!value || value.scope !== 'softdevice-test-configuration' || value.testBuild !== true ||
+      typeof value.eventLengthExtensionEnabled !== 'boolean' ||
+      !uint(value.nominalEventLengthUnits, 65535) || value.nominalEventLengthUnits < 2 ||
+      (value.lastOptionResult !== null && !uint(value.lastOptionResult, 0xfffffffe)) ||
+      (value.lastOptionResult === null && value.eventLengthExtensionEnabled)) return null;
+  return Object.freeze({scope: 'softdevice-test-configuration', testBuild: true,
+    eventLengthExtensionEnabled: value.eventLengthExtensionEnabled,
+    nominalEventLengthUnits: value.nominalEventLengthUnits, lastOptionResult: value.lastOptionResult});
+}
+
+export function normalizeStorageGcDiagnostics(value) {
+  if (!value || value.schemaVersion !== 1 || value.scope !== 'packedfs-memory-status' || value.drive !== 'E' ||
+      !booleanFields(value, ['mounted', 'poisoned', 'transactionActive', 'writerActive']) ||
+      !['unknown', 'pending', 'clean'].includes(value.cleanupState) ||
+      !uint(value.fileReaders, 8) || !uint(value.directorySnapshots, 8) ||
+      value.fileReaders + value.directorySnapshots + Number(value.writerActive) > 8 ||
+      !uint(value.obsoletePinHandles, value.fileReaders + value.directorySnapshots) ||
+      !word(value.generation) ||
+      (value.lastGcResult !== null && (!Number.isInteger(value.lastGcResult) || value.lastGcResult > 0 || value.lastGcResult < -2147483648)) ||
+      (!value.mounted && (value.generation || value.fileReaders || value.directorySnapshots || value.obsoletePinHandles ||
+        value.writerActive || value.transactionActive || value.poisoned || value.cleanupState !== 'unknown' || value.lastGcResult !== null)) ||
+      (value.cleanupState === 'clean' && value.obsoletePinHandles)) return null;
+  return Object.freeze({schemaVersion: 1, scope: 'packedfs-memory-status', drive: 'E',
+    mounted: value.mounted, poisoned: value.poisoned, transactionActive: value.transactionActive,
+    writerActive: value.writerActive, cleanupState: value.cleanupState, fileReaders: value.fileReaders,
+    directorySnapshots: value.directorySnapshots, obsoletePinHandles: value.obsoletePinHandles,
+    generation: value.generation, lastGcResult: value.lastGcResult});
+}
+
+export function parseStorageGcDiagnostics(buffer) {
+  const {bytes, view} = wire(buffer, 24, 'PXGC');
+  const flags = bytes[7];
+  if (bytes[5] !== 24 || bytes[6] !== 69 || (flags & ~31) || bytes[8] > 2 || view.getUint32(20, true) ||
+      (!(flags & 16) && view.getInt32(16, true))) invalid('storage cleanup');
+  const result = normalizeStorageGcDiagnostics({schemaVersion: 1, scope: 'packedfs-memory-status', drive: 'E',
+    mounted: !!(flags & 1), poisoned: !!(flags & 2), transactionActive: !!(flags & 4), writerActive: !!(flags & 8),
+    cleanupState: ['unknown', 'pending', 'clean'][bytes[8]], fileReaders: bytes[9], directorySnapshots: bytes[10],
+    obsoletePinHandles: bytes[11], generation: view.getUint32(12, true),
+    lastGcResult: flags & 16 ? view.getInt32(16, true) : null});
+  if (!result) invalid('storage cleanup');
+  return result;
 }
 
 function normalizeLinkDiagnostics(value) {
@@ -59,14 +109,14 @@ function normalizeLinkDiagnostics(value) {
 
 export function parseMtuDiagnostics(buffer) {
   const raw = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
-  if (!(raw instanceof Uint8Array) || ![1, 2].includes(raw[4])) invalid('MTU');
+  if (!(raw instanceof Uint8Array) || ![1, 2, 3].includes(raw[4])) invalid('MTU');
   const version = raw[4];
-  const {bytes, view} = wire(raw, version === 2 ? 32 : 16, 'MTUD', version);
+  const {bytes, view} = wire(raw, version === 3 ? 40 : version === 2 ? 32 : 16, 'MTUD', version);
   const flags = bytes[5], ready = !!(flags & 1);
   if ((flags & ~7) || (version === 1 && (bytes[14] || bytes[15])) ||
       (!ready && (view.getUint16(6, true) || view.getUint16(12, true)))) invalid('MTU');
   let link;
-  if (version === 2) {
+  if (version >= 2) {
     const linkFlags = bytes[14], params = !!(linkFlags & 2), phy = !!(linkFlags & 4);
     if ((linkFlags & ~15) || bytes[25] || bytes[26] || bytes[27] ||
         (!params && (view.getUint16(16, true) || view.getUint16(18, true) || view.getUint16(20, true))) ||
@@ -80,11 +130,18 @@ export function parseMtuDiagnostics(buffer) {
       lastPhyUpdateStatus: bytes[15] === 255 ? null : bytes[15],
       lastPhyRequestResult: view.getUint32(28, true) === 0xffffffff ? null : view.getUint32(28, true)};
   }
+  let experiment;
+  if (version === 3) {
+    if ((bytes[32] & ~3) || !(bytes[32] & 1) || bytes[33]) invalid('BLE test');
+    experiment = {scope: 'softdevice-test-configuration', testBuild: true,
+      eventLengthExtensionEnabled: !!(bytes[32] & 2), nominalEventLengthUnits: view.getUint16(34, true),
+      lastOptionResult: view.getUint32(36, true) === 0xffffffff ? null : view.getUint32(36, true)};
+  }
   const result = normalizeMtuDiagnostics({schemaVersion: version, scope: 'firmware-gatt-snapshot',
     sessionReady: ready, fileMode: !!(flags & 2), transferIdle: !!(flags & 4),
     effectiveAttMtu: ready ? view.getUint16(6, true) : null,
     nextConnectionAttMtu: view.getUint16(8, true), configuredMaxAttMtu: view.getUint16(10, true),
-    gattValueCapacity: ready ? view.getUint16(12, true) : null, ...(link ? {link} : {})});
+    gattValueCapacity: ready ? view.getUint16(12, true) : null, ...(link ? {link} : {}), ...(experiment ? {experiment} : {})});
   if (!result) invalid('MTU');
   return result;
 }

@@ -11,6 +11,17 @@ export function nrfDfuLink(entry) {
             file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
+    // This isolated test distribution is intentionally not at the normal
+    // Pages root. Keep its native-app handoff bound to the exact test target.
+    if (entry?.id === 'de3.96-lcd-app-test1') {
+        if (entry.board !== 'LCD' || entry.version !== '2.22.0-DE3.96' || entry.counter !== 669 ||
+            entry.channel !== 'prerelease' || entry.applicationOnly !== true || entry.migrationRequired !== false ||
+            entry.storage !== 'PFS1' || entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
+            entry.file !== 'Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip') return null;
+        return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
+            file: 'https://bluecyber81.github.io/pixl.js/test/app669/firmware/' + entry.file
+        });
+    }
     const release = /^2\.22\.0-DE3\.([1-9]\d{0,3}(?:t[1-9]\d{0,2})?)$/.exec(entry?.version);
     if (!release || release[1] === '86') return null; // App659 has no public Android offering.
     const trialCounter = { '84': 657, '85': 658, '87': 660, '88': 661 }[release[1]];
