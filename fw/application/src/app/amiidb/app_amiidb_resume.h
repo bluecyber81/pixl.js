@@ -31,6 +31,11 @@ static bool app_amiidb_resume_game(uint16_t id, uint16_t parent, bool check_pare
     return false;
 }
 
+static bool app_amiidb_tag_matches(const ntag_t *tag, uint32_t head, uint32_t tail) {
+    return tag->type == NTAG_215 && to_little_endian_int32(&tag->data[84]) == head &&
+           to_little_endian_int32(&tag->data[88]) == tail;
+}
+
 static void app_amiidb_save_cache(app_amiidb_t *app, uint8_t *retain, uint32_t scene) {
     app_amiidb_cache_data_t data = {0};
     memset(retain, 0, CACHEDATASIZE);
@@ -48,6 +53,16 @@ static void app_amiidb_save_cache(app_amiidb_t *app, uint8_t *retain, uint32_t s
         data.selected_head = app->cur_amiibo->head;
         data.selected_tail = app->cur_amiibo->tail;
     }
+    /* main.c saves the active emulator bytes into the existing shared tag
+     * cache after this callback. Never bind an unrelated/failed detail or a
+     * persisted slot: slots are re-read from their accepted storage record. */
+    data.retained_tag = data.target_scene == AMIIDB_SCENE_AMIIBO_DETAIL &&
+                        data.origin_scene != AMIIDB_SCENE_DATA_LIST && app->cur_amiibo &&
+                        app->ntag.type == NTAG_215 &&
+                        (app->temporary_tag_changed ||
+                         app_amiidb_tag_matches(&app->ntag, data.selected_head, data.selected_tail)) &&
+                        !memcmp(&app->ntag, ntag_emu_get_current_tag(), sizeof(app->ntag));
+    data.temporary_tag_changed = data.retained_tag && app->temporary_tag_changed;
     data.current_fav = app->cur_fav;
     data.fav_page_anchor = app->fav_page_anchor;
     memcpy(data.game_id_path, app->game_id_path, sizeof(data.game_id_path));
@@ -105,8 +120,10 @@ static bool app_amiidb_restore_cache(app_amiidb_t *app, const uint8_t *retain) {
     if (!retain) return false;
     app_amiidb_cache_data_t data;
     memcpy(&data, retain, sizeof(data));
-    if (data.magic != APP_AMIIDB_RESUME_MAGIC || (data.version != 1 && data.version != APP_AMIIDB_RESUME_VERSION) ||
-        data.size != sizeof(data) || data.target_scene >= AMIIDB_SCENE_MAX ||
+    if (data.magic != APP_AMIIDB_RESUME_MAGIC || data.version < 1 || data.version > APP_AMIIDB_RESUME_VERSION ||
+        data.size != (data.version < 3 ? offsetof(app_amiidb_cache_data_t, retained_tag) : sizeof(data)) ||
+        (data.version >= 3 && (data.retained_tag > 1 || data.temporary_tag_changed > data.retained_tag)) ||
+        data.target_scene >= AMIIDB_SCENE_MAX ||
         app_amiidb_resume_target(data.target_scene) != data.target_scene ||
         (data.target_scene == AMIIDB_SCENE_AMIIBO_DETAIL && !app_amiidb_resume_origin(data.origin_scene)) ||
         data.game_id_index >= 8 || data.game_id_path[0] || data.recent_count > AMIIDB_RECENT_LIMIT ||
@@ -177,8 +194,24 @@ static bool app_amiidb_restore_cache(app_amiidb_t *app, const uint8_t *retain) {
             if (app->result_items[i] == app->cur_amiibo) found = true;
     }
     if (found) {
+        cache_data_t *saved = cache_get_data();
+        /* The navigation is independently validated above. Exact tag reuse
+         * additionally requires this CRC-checked App3 cache, the same identity
+         * and a temporary source. A confirmed NFC write may change the tag
+         * ID bytes; its selected catalog origin is still bound by this CRC.
+         * Unmarked tags must also match their payload ID. Old snapshots retain
+         * navigation only. */
+        app->resume_tag = data.version >= 3 && data.retained_tag && parent != AMIIDB_SCENE_DATA_LIST &&
+                          retain == saved->retain_data && saved->enabled == 1 && saved->id == MINI_APP_ID_AMIIDB &&
+                          cache_valid() && app->cur_amiibo &&
+                          app->cur_amiibo->head == data.selected_head && app->cur_amiibo->tail == data.selected_tail &&
+                          saved->ntag.type == NTAG_215 && (data.temporary_tag_changed ||
+                          app_amiidb_tag_matches(&saved->ntag, data.selected_head, data.selected_tail));
+        app->temporary_tag_changed = app->resume_tag && data.temporary_tag_changed;
+        if (app->resume_tag) memcpy(&app->ntag, &saved->ntag, sizeof(app->ntag));
         app->search_restore_focus = parent == AMIIDB_SCENE_AMIIBO_SEARCH;
         mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIDB_SCENE_AMIIBO_DETAIL);
+        app->resume_tag = false; /* Failed page/scene entry must never leak the one-use bypass. */
     }
     return true;
 }

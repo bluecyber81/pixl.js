@@ -123,10 +123,13 @@ static void amiidb_scene_figure_info_back(amiibo_view_event_t event, amiibo_view
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, AMIIDB_VIEW_ID_LIST);
 }
 
-static void amiidb_scene_detail_back_to_list(app_amiidb_t *app) {
+void amiidb_scene_detail_back_to_list(app_amiidb_t *app) {
     uint8_t parent = app->prev_scene_id;
     mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, parent);
     if (mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) != parent) return;
+    /* A protected temporary tag reaches this path only by explicit user exit.
+     * Automatic NFC return is blocked until the unsaved copy is kept or left. */
+    app->temporary_tag_changed = false;
 
     mui_list_view_t *list = app->p_list_view;
     uint32_t count = mui_list_view_item_size(list);
@@ -186,7 +189,7 @@ static void amiidb_scene_amiibo_detail_menu_on_selected(mui_list_view_event_t ev
 
         err_code = amiibo_helper_rand_amiibo_uuid(ntag_current);
         if (err_code == NRF_SUCCESS) {
-            ntag_emu_set_tag(&app->ntag);
+            if (ntag_emu_set_tag(&app->ntag)) app->temporary_tag_changed = false;
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
         } else {
             /* Invalid imported tag data or a random-source failure is a

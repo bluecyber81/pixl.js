@@ -16,6 +16,7 @@ static void save_to_slot(app_amiidb_t *app, uint8_t slot) {
         mui_toast_view_show(app->p_toast_view, _T(APP_AMIIDB_SLOT_SAVE_FAILED));
         return;
     }
+    app->temporary_tag_changed = false;
     mui_toast_view_show(app->p_toast_view, _T(APP_AMIIDB_SLOT_SAVE_SUCCESS));
     mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIDB_SCENE_AMIIBO_DETAIL);
 }

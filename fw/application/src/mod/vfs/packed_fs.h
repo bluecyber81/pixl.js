@@ -57,7 +57,7 @@ int pfs_space(pfs_t *fs, uint32_t *total, uint32_t *free_bytes);
  * still poisons subsequent writes until remount. Mount and ordinary reads on
  * a volume without a local mutation remain strictly read-only. */
 int pfs_gc(pfs_t *fs); /* only unreferenced, unpinned owned physical objects */
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
 /* Foreground-only RAM snapshot. No allocation, LittleFS call or mutation.
  * held_handles counts readers/snapshots retaining one or more obsolete groups,
  * not unique groups or reclaimable bytes. state: 0 unknown, 1 pending, 2 clean.

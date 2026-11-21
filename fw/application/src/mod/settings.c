@@ -54,6 +54,11 @@ static bool m_settings_init_attempted;
 static bool m_settings_file_absent;
 static void (*m_recovered)(const settings_data_t *previous);
 
+settings_load_state_t settings_load_state(void) {
+    return !m_settings_save_allowed ? SETTINGS_LOAD_PENDING :
+           m_settings_file_absent ? SETTINGS_LOAD_DEFAULTS : SETTINGS_LOAD_VERIFIED;
+}
+
 void settings_on_recovered(void (*apply)(const settings_data_t *previous)) {
     m_recovered = apply;
 }

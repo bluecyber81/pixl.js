@@ -25,7 +25,7 @@ bool vfs_packed_import_identity(uint8_t out[32]);
 int32_t vfs_packed_bind_import(const uint8_t digest[32]);
 int32_t vfs_packed_finish_import(void);
 bool vfs_packed_handles_idle(void);
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
 #define VFS_PACKED_GC_DIAGNOSTIC_SIZE 24u
 bool vfs_packed_gc_diagnostic(uint8_t *out, size_t capacity);
 #endif

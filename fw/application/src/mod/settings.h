@@ -72,6 +72,10 @@ void settings_discard_fields(uint32_t fields, uint16_t apps, const settings_chec
 int32_t settings_init();
 /* Resolve a temporarily unavailable settings record before using its slot count. */
 int32_t settings_retry_load(void);
+/* RAM-only source status. This describes the verified load base, not whether
+ * every current edit has been saved. Reading it performs no storage I/O. */
+typedef enum { SETTINGS_LOAD_PENDING, SETTINGS_LOAD_DEFAULTS, SETTINGS_LOAD_VERIFIED } settings_load_state_t;
+settings_load_state_t settings_load_state(void);
 /* Reapply live preferences after verified late recovery or scoped discard. */
 void settings_on_recovered(void (*apply)(const settings_data_t *previous));
 int32_t settings_save();

@@ -187,7 +187,7 @@ static int32_t configure(void) {
   store = pfs_new(&cfg, mui_mem_malloc, mui_mem_free);
   return store ? VFS_OK : VFS_ERR_NOMEM;
 }
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
 bool vfs_packed_gc_diagnostic(uint8_t *out, size_t capacity) {
   if (!out || capacity < VFS_PACKED_GC_DIAGNOSTIC_SIZE) return false;
   pfs_gc_diagnostic_t report;

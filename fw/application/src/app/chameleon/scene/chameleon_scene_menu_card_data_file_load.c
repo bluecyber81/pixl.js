@@ -128,9 +128,12 @@ static void chameleon_scene_menu_card_data_file_load_from_file(app_chameleon_t *
     // update tag coll res only after the active card was committed
     tag_helper_load_coll_res_from_block0();
 
+    /* Return to this selected card only after its imported bytes were saved.
+     * Failure keeps the import scene and the established retry/discard overlay. */
+    if (!app_chameleon_save(app)) return;
     NRF_LOG_INFO("load card data:%d", err);
     mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS));
-    mui_scene_dispatcher_back_scene(app->p_scene_dispatcher, 2);
+    mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, CHAMELEON_SCENE_MAIN);
 }
 
 /* A page scan accepts only regular files/directories on the requested side of

@@ -175,6 +175,17 @@ static void ntag_update(app_amiibo_t *app, ntag_t *p_ntag) {
     mui_update(mui());
 }
 
+static void amiibo_nfc_return_to_list(void *context) {
+    app_amiibo_t *app = context;
+    if (!ntag_emu_session_used() || settings_get_data()->auto_gen_amiibo ||
+        mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) != AMIIBO_SCENE_AMIIBO_DETAIL) return;
+    /* Same named parent/focus path as the manual file-browser return. This
+     * also works when resume entered the detail without a parent stack row. */
+    app->focus_detail_file = true;
+    mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
+    app->focus_detail_file = false;
+}
+
 static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag) {
 
     app_amiibo_t *app = context;
@@ -190,6 +201,8 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
             app_timer_start(m_amiibo_gen_delay_timer, APP_TIMER_TICKS(1000), app);
         }
     }
+    if (!settings_get_data()->auto_gen_amiibo && ntag_emu_session_used() && !ntag_emu_save_pending())
+        ntag_emu_request_action(amiibo_nfc_return_to_list, app, ntag_emu_get_generation());
 }
 
 static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *app, const char *file_name) {

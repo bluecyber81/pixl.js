@@ -36,7 +36,8 @@ enum settings_main_menu_t {
     SETTINGS_MAIN_MENU_EXIT,
     SETTINGS_MAIN_MENU_REMOTE,
     SETTINGS_MAIN_MENU_DEVICE_TEST,
-    SETTINGS_MAIN_MENU_LCD_DIM
+    SETTINGS_MAIN_MENU_LCD_DIM,
+    SETTINGS_MAIN_MENU_LOAD_STATE
 };
 
 static void settings_scene_main_reload(void *user_data);
@@ -157,6 +158,7 @@ static void settings_scene_main_list_view_on_selected(mui_list_view_event_t even
     settings_data_t *p_settings = settings_get_data();
 
     uint32_t selection = (uint32_t)p_item->user_data;
+    if (selection == SETTINGS_MAIN_MENU_LOAD_STATE) return; /* Read-only provenance row. */
     uint8_t diag_type = event == MUI_LIST_VIEW_EVENT_SELECTED ? INPUT_TYPE_SHORT : INPUT_TYPE_LONG;
     mui_nav_diag_settings(diag_type, selection);
     switch (selection) {
@@ -409,6 +411,15 @@ static void settings_scene_main_reload(void *user_data) {
                            p_settings->language == LANGUAGE_DE_DE ? "Gerätetest" : "Device test",
                            (void *)SETTINGS_MAIN_MENU_DEVICE_TEST);
 #endif
+    /* Read-only base provenance: a pending user edit is not a failed load.
+     * Keep the fast first frame; this accessor never reads the filesystem. */
+    settings_load_state_t load = settings_load_state();
+    bool german = p_settings->language == LANGUAGE_DE_DE;
+    const char *base = load == SETTINGS_LOAD_VERIFIED ? (german ? "gelesen" : "loaded") :
+                       load == SETTINGS_LOAD_DEFAULTS ? (german ? "Standard" : "defaults") :
+                                                       (german ? "Lesen offen" : "read pending");
+    mui_list_view_add_item_ext(app->p_list_view, 0xe1c7, german ? "Ladebasis" : "Load base", base,
+                               (void *)SETTINGS_MAIN_MENU_LOAD_STATE);
     mui_list_view_add_item(app->p_list_view, 0xe069, _T(BACK_TO_MAIN_MENU), (void *)SETTINGS_MAIN_MENU_EXIT);
 
     mui_list_view_set_focus(app->p_list_view, foucs_index);

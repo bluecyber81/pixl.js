@@ -38,6 +38,7 @@ typedef struct {
     /** amiibo detail */
     ntag_t ntag;
     uint8_t prev_scene_id;
+    bool temporary_tag_changed; /* NFC writes not yet saved as a slot; uses existing alignment padding. */
 
     /** search */
     string_t search_str;
@@ -50,6 +51,7 @@ typedef struct {
     uint8_t search_game_id;
     bool search_filter_select;
     bool search_restore_focus;
+    bool resume_tag; /* One-use retained temporary tag; occupies existing pointer-alignment padding. */
     const db_amiibo_t *result_items[AMIIDB_RESULT_PAGE_SIZE];
     uint16_t result_count;
     uint16_t result_total;
@@ -94,11 +96,12 @@ typedef enum {
     AMIIDB_VIEW_ID_TOAST
 } amiidb_view_id_t;
 
-/* Pointer-free navigation snapshot. Version 2 also retains the favorite page.
+/* Pointer-free navigation snapshot. Version 2 retains the favorite page;
+ * version 3 binds a temporary tag in the existing shared retained RAM cache.
  * It is copied through an aligned local object because retain_data is unaligned.
  * Older unversioned App3 snapshots are deliberately not accepted. */
 #define APP_AMIIDB_RESUME_MAGIC 0x31424441u
-#define APP_AMIIDB_RESUME_VERSION 2u
+#define APP_AMIIDB_RESUME_VERSION 3u
 typedef struct {
     uint32_t magic;
     uint16_t size;
@@ -120,8 +123,13 @@ typedef struct {
     char search_str[AMIIDB_SEARCH_MAX_BYTES + 1];
     char fav_dir[VFS_MAX_NAME_LEN];
     uint16_t fav_page_number; /* Occupies tail padding of version 1. */
+    uint8_t retained_tag; /* Version 3: complete tag is in the existing CRC-protected cache->ntag. */
+    uint8_t temporary_tag_changed; /* Same CRC/owner/identity binding; remains within the 300-byte snapshot. */
 } app_amiidb_cache_data_t;
 
+
+/* Shared manual/NFC-completion return with the selected row retained. */
+void amiidb_scene_detail_back_to_list(app_amiidb_t *app);
 
 extern const mini_app_t app_amiidb_info;
 

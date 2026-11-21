@@ -69,7 +69,7 @@ struct pfs {
   uint8_t read_cache[PFS_CACHE_SIZE], prog_cache[PFS_CACHE_SIZE], lookahead[64],
       copy[PFS_CACHE_SIZE];
   uint8_t gc_state;
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
   bool gc_result_known;
   int32_t gc_last_result;
 #endif
@@ -736,7 +736,7 @@ static bool referenced(pfs_t *fs, uint32_t id, const handle_t *except) {
   }
   return false;
 }
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
 /* Record the completed collector result, including a successful zero. This
  * does not change publication's best-effort maintenance error contract. */
 static int collected(pfs_t *fs, int result) {
@@ -925,7 +925,7 @@ int pfs_mount(pfs_t *fs) {
     return LFS_ERR_INVAL;
   if (fs->mounted)
     return fs->poisoned ? LFS_ERR_IO : 0;
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
   fs->gc_result_known = false;
   fs->gc_last_result = 0;
 #endif
@@ -1190,6 +1190,8 @@ static int write_record(pfs_t *fs, io_t *output, const pfs_info_t *info,
   put32(h, ~sum);
   return r ? r : emit(fs, output, h, 4, NULL, NULL);
 }
+/* Keep the two IO caches local to rebuilding, never to planning/publication. */
+__attribute__((noinline))
 static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
                    uint32_t count, uint32_t body, bool add) {
   if (count > MAX_RECORDS)
@@ -1290,6 +1292,155 @@ static int shard_dimensions(pfs_t *fs, unsigned slot, uint32_t *count,
   r = shard_header(fs, &io, id, count, body);
   return io_close(fs, &io, r);
 }
+/* Only this bounded plan survives the planning cursor. Rebuild has its own
+ * IO caches and record buffer, and returns before publication. These explicit
+ * call boundaries prevent -Os from merging all three phases into one frame.
+ * No additional heap allocation or persistent workspace is introduced. */
+typedef struct {
+  bool affected[PFS_MAX_SHARDS];
+  uint32_t counts[PFS_MAX_SHARDS], bodies[PFS_MAX_SHARDS];
+  uint32_t objects, slots;
+  int addslot;
+} transaction_plan_t;
+
+__attribute__((noinline))
+static int plan_transaction(pfs_t *fs, const change_t *c,
+                            transaction_plan_t *plan) {
+  memset(plan, 0, sizeof(*plan));
+  int r;
+  pfs_info_t info;
+  location_t loc;
+  plan->objects = fs->current.objects;
+  for (unsigned i = 0; i < fs->current.count; i++) {
+    r = shard_dimensions(fs, i, &plan->counts[i], &plan->bodies[i]);
+    if (r)
+      return io_error(fs, r);
+  }
+  if (c->subtree) {
+    cursor_t cursor = {0};
+    while ((r = next_record(fs, &fs->current, &cursor, &info, &loc, 64)) > 0) {
+      if (!matches(c, info.path))
+        continue;
+      unsigned slot = cursor.shard;
+      plan->affected[slot] = true;
+      bool keep;
+      r = transform(c, &info, &keep);
+      if (r)
+        break;
+      plan->bodies[slot] -= loc.size;
+      if (keep) {
+        uint32_t size = record_size(&info);
+        if (size > DISK - plan->bodies[slot]) {
+          r = LFS_ERR_NOSPC;
+          break;
+        }
+        plan->bodies[slot] += size;
+      } else {
+        plan->counts[slot]--;
+        plan->objects--;
+      }
+    }
+    r = cursor_close(fs, &cursor, r < 0 ? r : 0);
+    if (r)
+      return io_error(fs, r);
+  } else if (c->exists) {
+    r = lookup(fs, &fs->current, c->path, &info, &loc);
+    if (r)
+      return io_error(fs, r);
+    unsigned slot = 0;
+    while (slot < fs->current.count && fs->current.ids[slot] != loc.shard)
+      slot++;
+    if (slot == fs->current.count)
+      return io_error(fs, LFS_ERR_CORRUPT);
+    plan->affected[slot] = true;
+    bool keep;
+    r = transform(c, &info, &keep);
+    if (r)
+      return r;
+    plan->bodies[slot] -= loc.size;
+    if (keep) {
+      uint32_t size = record_size(&info);
+      if (size > DISK - plan->bodies[slot])
+        return LFS_ERR_NOSPC;
+      plan->bodies[slot] += size;
+    } else {
+      plan->counts[slot]--;
+      plan->objects--;
+    }
+  }
+  plan->addslot = -1;
+  bool append = c->op == PUT && !c->exists;
+  if (append) {
+    uint32_t size = record_size(&c->info);
+    if (size > DISK - SH - 4)
+      return LFS_ERR_NOSPC;
+    if (fs->current.count &&
+        plan->bodies[fs->current.count - 1] + size + SH + 4 +
+                (plan->counts[fs->current.count - 1] + 1) * IX <=
+            PFS_SHARD_TARGET &&
+        plan->counts[fs->current.count - 1] < MAX_RECORDS)
+      plan->addslot = (int)fs->current.count - 1;
+    else if (fs->current.count < PFS_MAX_SHARDS)
+      plan->addslot = (int)fs->current.count;
+    else
+      return LFS_ERR_NOSPC;
+    plan->affected[plan->addslot] = true;
+    plan->bodies[plan->addslot] += size;
+    plan->counts[plan->addslot]++;
+    plan->objects++;
+  }
+  plan->slots = fs->current.count +
+                (append && plan->addslot == (int)fs->current.count);
+  return 0;
+}
+
+__attribute__((noinline))
+static int build_transaction(pfs_t *fs, const change_t *c, manifest_t *m,
+                             bool staged) {
+  transaction_plan_t plan;
+  int r = plan_transaction(fs, c, &plan);
+  if (r)
+    return r;
+  uint32_t needed = 8;
+  for (unsigned i = 0; i < plan.slots; i++)
+    if (plan.affected[i] && plan.counts[i])
+      needed += blocks_for(SH + plan.bodies[i] + plan.counts[i] * IX + 4);
+  r = reserve(fs, needed);
+  if (r == LFS_ERR_NOSPC && staged) {
+    r = collect(fs);
+    if (!r)
+      r = reserve(fs, needed);
+  }
+  if (r)
+    return r;
+  *m = fs->current;
+  m->count = 0;
+  m->objects = plan.objects;
+  m->generation++;
+  if (staged)
+    c->stage->commit_started = true;
+  fs->transaction = true;
+  fs->gc_state = GC_PENDING;
+  for (unsigned i = 0; !r && i < plan.slots; i++) {
+    if (!plan.affected[i]) {
+      m->ids[m->count++] = fs->current.ids[i];
+      continue;
+    }
+    if (!plan.counts[i])
+      continue;
+    if (m->next_id == UINT32_MAX) {
+      r = LFS_ERR_NOSPC;
+      break;
+    }
+    uint32_t id = m->next_id++;
+    r = rebuild(fs, c, i < fs->current.count ? fs->current.ids[i] : 0, id,
+                plan.counts[i], plan.bodies[i], (int)i == plan.addslot);
+    if (!r)
+      m->ids[m->count++] = id;
+  }
+  return r;
+}
+
 static int transact(pfs_t *fs, const change_t *c) {
   int r = ready(fs, true);
   if (r)
@@ -1311,128 +1462,13 @@ static int transact(pfs_t *fs, const change_t *c) {
     if (r)
       return r;
   }
-  bool affected[PFS_MAX_SHARDS] = {0};
-  uint32_t counts[PFS_MAX_SHARDS] = {0}, bodies[PFS_MAX_SHARDS] = {0};
-  pfs_info_t info;
-  location_t loc;
-  uint32_t objects = fs->current.objects;
-  for (unsigned i = 0; i < fs->current.count; i++) {
-    r = shard_dimensions(fs, i, &counts[i], &bodies[i]);
-    if (r)
-      return io_error(fs, r);
-  }
-  if (c->subtree) {
-    cursor_t cursor = {0};
-    while ((r = next_record(fs, &fs->current, &cursor, &info, &loc, 64)) > 0) {
-      if (!matches(c, info.path))
-        continue;
-      unsigned slot = cursor.shard;
-      affected[slot] = true;
-      bool keep;
-      r = transform(c, &info, &keep);
-      if (r)
-        break;
-      bodies[slot] -= loc.size;
-      if (keep) {
-        uint32_t size = record_size(&info);
-        if (size > DISK - bodies[slot]) {
-          r = LFS_ERR_NOSPC;
-          break;
-        }
-        bodies[slot] += size;
-      } else {
-        counts[slot]--;
-        objects--;
-      }
-    }
-    r = cursor_close(fs, &cursor, r < 0 ? r : 0);
-    if (r)
-      return io_error(fs, r);
-  } else if (c->exists) {
-    r = lookup(fs, &fs->current, c->path, &info, &loc);
-    if (r)
-      return io_error(fs, r);
-    unsigned slot = 0;
-    while (slot < fs->current.count && fs->current.ids[slot] != loc.shard)
-      slot++;
-    if (slot == fs->current.count)
-      return io_error(fs, LFS_ERR_CORRUPT);
-    affected[slot] = true;
-    bool keep;
-    r = transform(c, &info, &keep);
-    if (r)
-      return r;
-    bodies[slot] -= loc.size;
-    if (keep) {
-      uint32_t size = record_size(&info);
-      if (size > DISK - bodies[slot])
-        return LFS_ERR_NOSPC;
-      bodies[slot] += size;
-    } else {
-      counts[slot]--;
-      objects--;
-    }
-  }
-  int addslot = -1;
-  bool append = c->op == PUT && !c->exists;
-  if (append) {
-    uint32_t size = record_size(&c->info);
-    if (size > DISK - SH - 4)
-      return LFS_ERR_NOSPC;
-    if (fs->current.count &&
-        bodies[fs->current.count - 1] + size + SH + 4 +
-                (counts[fs->current.count - 1] + 1) * IX <=
-            PFS_SHARD_TARGET &&
-        counts[fs->current.count - 1] < MAX_RECORDS)
-      addslot = (int)fs->current.count - 1;
-    else if (fs->current.count < PFS_MAX_SHARDS)
-      addslot = (int)fs->current.count;
-    else
-      return LFS_ERR_NOSPC;
-    affected[addslot] = true;
-    bodies[addslot] += size;
-    counts[addslot]++;
-    objects++;
-  }
-  uint32_t needed = 8;
-  unsigned slots =
-      fs->current.count + (append && addslot == (int)fs->current.count);
-  for (unsigned i = 0; i < slots; i++)
-    if (affected[i] && counts[i])
-      needed += blocks_for(SH + bodies[i] + counts[i] * IX + 4);
-  r = reserve(fs, needed);
-  if (r == LFS_ERR_NOSPC && staged) {
-    r = collect(fs);
-    if (!r)
-      r = reserve(fs, needed);
-  }
-  if (r)
+  manifest_t m;
+  r = build_transaction(fs, c, &m, staged);
+  /* The builder sets transaction only after successful planning/reservation,
+   * at exactly the old boundary before the first unpublished shard is made.
+   * Early refusal therefore retains its old no-maintenance error path. */
+  if (!fs->transaction)
     return r;
-  manifest_t m = fs->current;
-  m.count = 0;
-  m.objects = objects;
-  m.generation++;
-  if (staged)
-    c->stage->commit_started = true;
-  fs->transaction = true;
-  fs->gc_state = GC_PENDING;
-  for (unsigned i = 0; !r && i < slots; i++) {
-    if (!affected[i]) {
-      m.ids[m.count++] = fs->current.ids[i];
-      continue;
-    }
-    if (!counts[i])
-      continue;
-    if (m.next_id == UINT32_MAX) {
-      r = LFS_ERR_NOSPC;
-      break;
-    }
-    uint32_t id = m.next_id++;
-    r = rebuild(fs, c, i < fs->current.count ? fs->current.ids[i] : 0, id,
-                counts[i], bodies[i], (int)i == addslot);
-    if (!r)
-      m.ids[m.count++] = id;
-  }
   if (!r)
     r = publish(fs, &m);
   fs->transaction = false;
