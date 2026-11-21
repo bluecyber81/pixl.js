@@ -1,0 +1,68 @@
+{
+  "applicationBinSHA256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+  "sourceId": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+  "deviceAccess": false,
+  "checks": [
+    {
+      "name": "STACK_WATERMARK",
+      "script": "check_stack_watermark_elf.py",
+      "exitCode": 0,
+      "log": "STACK_WATERMARK.log"
+    },
+    {
+      "name": "AES_M4",
+      "script": "check_aes_m4_elf.py",
+      "exitCode": 0,
+      "log": "AES_M4.log"
+    },
+    {
+      "name": "SHA256_HMAC",
+      "script": "check_sha256_hmac_elf.py",
+      "exitCode": 0,
+      "log": "SHA256_HMAC.log"
+    },
+    {
+      "name": "BUILD_FAULT",
+      "script": "check_build_fault_elf.py",
+      "exitCode": 0,
+      "log": "BUILD_FAULT.log"
+    },
+    {
+      "name": "LCD_DEVICE_TEST",
+      "script": "check_lcd_device_test_elf.py",
+      "exitCode": 0,
+      "log": "LCD_DEVICE_TEST.log"
+    },
+    {
+      "name": "LCD_GAME_ROTATION",
+      "script": "check_lcd_game_rotation_elf.py",
+      "exitCode": 0,
+      "log": "LCD_GAME_ROTATION.log"
+    },
+    {
+      "name": "FLASH_JEDEC",
+      "script": "check_flash_jedec_elf.py",
+      "exitCode": 0,
+      "log": "FLASH_JEDEC.log"
+    },
+    {
+      "name": "DISPLAY_PROFILE",
+      "script": "check_display_profile_elf.py",
+      "exitCode": 0,
+      "log": "DISPLAY_PROFILE.log"
+    },
+    {
+      "name": "CHAMELEON_SAVE_SCREEN",
+      "script": "check_chameleon_save_screen_elf.py",
+      "exitCode": 0,
+      "log": "CHAMELEON_SAVE_SCREEN.log"
+    },
+    {
+      "name": "FIRST_MENU",
+      "script": "check_first_menu_elf.py",
+      "exitCode": 0,
+      "log": "FIRST_MENU.log"
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,476 @@
+{
+  "schema": 1,
+  "board": "LCD",
+  "baselineCommit": "22d5c92cc566fb7da9d43a538f2818d28bfb72a6",
+  "engine": {
+    "manifest": {
+      "schema": 1,
+      "format": "PFS1",
+      "constants": {
+        "FORMAT_VERSION": 1,
+        "BLOCK_SIZE": 4096,
+        "BLOCK_COUNT": 512,
+        "CACHE_SIZE": 256,
+        "SHARD_TARGET": 32768,
+        "MAX_SHARDS": 64,
+        "MAX_HANDLES": 8,
+        "PATH_MAX": 64,
+        "NAME_MAX": 48,
+        "META_SIZE": 128
+      },
+      "defines": [
+        "LFS_NO_ASSERT",
+        "LFS_NO_DEBUG",
+        "LFS_NO_ERROR",
+        "LFS_NO_MALLOC",
+        "LFS_NO_WARN"
+      ],
+      "files": {
+        "packed_fs.c": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+        "packed_fs.h": "0fafb3a3cc17f804424b74a80d0a0e2f1865d47834bbc4c162456043ab3f23de",
+        "lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+        "lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+        "lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+        "lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+      }
+    },
+    "engineSha256": "a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd"
+  },
+  "comparison": {
+    "passed": true,
+    "arm32": false,
+    "sanitize": false,
+    "sourceHashes": {
+      "application/src/mod/vfs/packed_fs.c": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+      "application/src/mod/vfs/packed_fs.h": "0fafb3a3cc17f804424b74a80d0a0e2f1865d47834bbc4c162456043ab3f23de",
+      "application/src/mod/vfs/vfs_driver_packed.c": "12df61a8e19d05c9b19fe2bcf6f376632cd8bd6751676de726e6bd8f4de2a584",
+      "components/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+      "components/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+      "components/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+      "components/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+    },
+    "current": {
+      "sourceSha256": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+      "observations": [
+        {
+          "groups": 28,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 62,
+          "lateRepeatReads": 62,
+          "earlyReads": 35,
+          "setattrReads": 3371,
+          "subtreeRemoveReads": 8997,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 32,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 133,
+          "lateRepeatReads": 133,
+          "earlyReads": 31,
+          "setattrReads": 3164,
+          "subtreeRemoveReads": 8614,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 33,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 26,
+          "absentRepeatReads": 26,
+          "lateFirstReads": 104,
+          "lateRepeatReads": 104,
+          "earlyReads": 31,
+          "setattrReads": 3412,
+          "subtreeRemoveReads": 9083,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 54,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 905,
+          "absentRepeatReads": 905,
+          "lateFirstReads": 910,
+          "lateRepeatReads": 910,
+          "earlyReads": 45,
+          "setattrReads": 11376,
+          "subtreeRemoveReads": 12368,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 64,
+          "recordsPerGroup": 32,
+          "absentFirstReads": 1205,
+          "absentRepeatReads": 1205,
+          "lateFirstReads": 1243,
+          "lateRepeatReads": 1243,
+          "earlyReads": 43,
+          "setattrReads": 12489,
+          "subtreeRemoveReads": 11052,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "passed": true,
+          "readFaultCases": 51,
+          "corruptionCases": 5,
+          "pointerBytes": 8,
+          "liveAtEnd": 0
+        }
+      ]
+    },
+    "baseline": {
+      "sourceSha256": "fa0c8e81ca09fcaec6c749b6ab1100cb954a85f07a1d08abc91fd729da19277f",
+      "observations": [
+        {
+          "groups": 28,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 62,
+          "lateRepeatReads": 62,
+          "earlyReads": 35,
+          "setattrReads": 3371,
+          "subtreeRemoveReads": 8997,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 32,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 133,
+          "lateRepeatReads": 133,
+          "earlyReads": 31,
+          "setattrReads": 3164,
+          "subtreeRemoveReads": 8614,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 33,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 52,
+          "absentRepeatReads": 52,
+          "lateFirstReads": 130,
+          "lateRepeatReads": 130,
+          "earlyReads": 58,
+          "setattrReads": 3465,
+          "subtreeRemoveReads": 9123,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 54,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 1726,
+          "absentRepeatReads": 1726,
+          "lateFirstReads": 1727,
+          "lateRepeatReads": 1727,
+          "earlyReads": 86,
+          "setattrReads": 13829,
+          "subtreeRemoveReads": 13011,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 64,
+          "recordsPerGroup": 32,
+          "absentFirstReads": 2284,
+          "absentRepeatReads": 2284,
+          "lateFirstReads": 2432,
+          "lateRepeatReads": 2432,
+          "earlyReads": 82,
+          "setattrReads": 15950,
+          "subtreeRemoveReads": 11908,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "passed": true,
+          "readFaultCases": 92,
+          "corruptionCases": 5,
+          "pointerBytes": 8,
+          "liveAtEnd": 0
+        }
+      ]
+    },
+    "limitations": [
+      "Synthetic legal PFS1 groups on a 2-MiB NOR model.",
+      "Read counts are host operations, not device time or Bluetooth throughput.",
+      "Heap count covers requested PackedFS allocations, not a whole-firmware RAM watermark.",
+      "Lookup verifies the immutable mounted groups and each visited entry; not every unrelated index entry on every query."
+    ]
+  },
+  "sanitizer": {
+    "passed": true,
+    "arm32": false,
+    "sanitize": true,
+    "sourceHashes": {
+      "application/src/mod/vfs/packed_fs.c": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+      "application/src/mod/vfs/packed_fs.h": "0fafb3a3cc17f804424b74a80d0a0e2f1865d47834bbc4c162456043ab3f23de",
+      "application/src/mod/vfs/vfs_driver_packed.c": "12df61a8e19d05c9b19fe2bcf6f376632cd8bd6751676de726e6bd8f4de2a584",
+      "components/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+      "components/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+      "components/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+      "components/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+    },
+    "current": {
+      "sourceSha256": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+      "observations": [
+        {
+          "groups": 28,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 62,
+          "lateRepeatReads": 62,
+          "earlyReads": 35,
+          "setattrReads": 3371,
+          "subtreeRemoveReads": 8997,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 32,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 133,
+          "lateRepeatReads": 133,
+          "earlyReads": 31,
+          "setattrReads": 3164,
+          "subtreeRemoveReads": 8614,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 33,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 26,
+          "absentRepeatReads": 26,
+          "lateFirstReads": 104,
+          "lateRepeatReads": 104,
+          "earlyReads": 31,
+          "setattrReads": 3412,
+          "subtreeRemoveReads": 9083,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 54,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 905,
+          "absentRepeatReads": 905,
+          "lateFirstReads": 910,
+          "lateRepeatReads": 910,
+          "earlyReads": 45,
+          "setattrReads": 11376,
+          "subtreeRemoveReads": 12368,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 64,
+          "recordsPerGroup": 32,
+          "absentFirstReads": 1205,
+          "absentRepeatReads": 1205,
+          "lateFirstReads": 1243,
+          "lateRepeatReads": 1243,
+          "earlyReads": 43,
+          "setattrReads": 12489,
+          "subtreeRemoveReads": 11052,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "passed": true,
+          "readFaultCases": 51,
+          "corruptionCases": 5,
+          "pointerBytes": 8,
+          "liveAtEnd": 0
+        }
+      ]
+    },
+    "baseline": null,
+    "limitations": [
+      "Synthetic legal PFS1 groups on a 2-MiB NOR model.",
+      "Read counts are host operations, not device time or Bluetooth throughput.",
+      "Heap count covers requested PackedFS allocations, not a whole-firmware RAM watermark.",
+      "Lookup verifies the immutable mounted groups and each visited entry; not every unrelated index entry on every query."
+    ]
+  },
+  "armObject": {
+    "baseline": {
+      "pfsBytes": 3032,
+      "textBytes": 11231,
+      "functions": {
+        "get_catalog": 242,
+        "lookup": 468,
+        "transact": 44,
+        "transact.part.0": 1904
+      },
+      "stack": {
+        "get_catalog": [
+          "440",
+          "static"
+        ],
+        "lookup": [
+          "496",
+          "static"
+        ],
+        "transact.part.0": [
+          "2208",
+          "static"
+        ],
+        "transact": [
+          "8",
+          "static"
+        ]
+      }
+    },
+    "current": {
+      "pfsBytes": 3032,
+      "textBytes": 11335,
+      "functions": {
+        "lookup": 718,
+        "transact": 44,
+        "transact.part.0": 1988
+      },
+      "stack": {
+        "lookup": [
+          "496",
+          "static"
+        ],
+        "transact.part.0": [
+          "2208",
+          "static"
+        ],
+        "transact": [
+          "8",
+          "static"
+        ]
+      }
+    }
+  },
+  "cleanup": {
+    "passed": true,
+    "deviceAccess": false,
+    "arm32": false,
+    "sanitize": false,
+    "sourceHashes": {
+      "application/src/mod/vfs/packed_fs.c": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+      "application/src/mod/vfs/packed_fs.h": "0fafb3a3cc17f804424b74a80d0a0e2f1865d47834bbc4c162456043ab3f23de",
+      "application/src/mod/vfs/vfs_driver_packed.c": "12df61a8e19d05c9b19fe2bcf6f376632cd8bd6751676de726e6bd8f4de2a584",
+      "application/src/mod/vfs/vfs_persist.c": "6253f86581611d95f9a087a76c749b38a97dd71b946013bbbd9df40a52ef3088",
+      "application/src/mod/vfs/vfs_persist.h": "3f0867ba098961569f5dda1f9d900958459293abc4f2ad52a73375f53802c609",
+      "application/src/mod/vfs/vfs.h": "5c0560c12b4db59c1150ba20cb41bad1209611fcb5bedacba52183882d265237",
+      "components/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+      "components/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+      "components/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+      "components/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+      "tests/de3/packed_vfs_persistence_de344.c": "4480ae139668ab0458c11e45c294e634c4b7e3cc575b205af3e033339c3d0132",
+      "tests/de3/packed_vfs_nor_de344.c": "dad3e253c84006baf1d7dc8a5e75cc4ad92d6d4ded343859e5df4093b53668de",
+      "tests/de3/packed_vfs_nor_de344.h": "f0343a307c44ab005cb0f8cb0797c02f4bdbc760eef32645972ae3ac3e6887f7",
+      "tests/de3/packed_cleanup_de392.c": "870e4ef6904df0e1c01b4a223fb3164839d9549640c0a3653e9e2a298ca64ad4"
+    },
+    "sourcesUnchanged": true,
+    "observations": [
+      {
+        "passed": true,
+        "lifecycleCases": 36,
+        "readonlyCases": 4,
+        "maintenanceFailureCases": 2,
+        "norFaultCases": 243,
+        "postcommitNorFaultCases": 18,
+        "readFaultCases": 1306,
+        "pointerBytes": 8,
+        "pfsBytes": 3112,
+        "peakRequestedHeap": 9892,
+        "liveAtEnd": 0
+      }
+    ],
+    "limitations": [
+      "Synthetic NOR and malloc; no physical SPI, BLE/NFC or power test.",
+      "Requested allocations bounded to18KiB; not real TLSF overhead or a whole-firmware RAM watermark.",
+      "Postcommit NOSPC is injected at lfs_remove; NOR IO/cut/torn and read failures use actual storage callbacks.",
+      "ARM32 QEMU verifies32-bit ABI, not Cortex-M4 timing."
+    ]
+  },
+  "gcIterator": {
+    "passed": true,
+    "deviceAccess": false,
+    "arm32": false,
+    "sanitize": false,
+    "sourceHashes": {
+      "application/src/mod/vfs/packed_fs.c": "ed6beea43d5d92a4c9fb337f6f2eb7d9ca43924402b90669827e51138bc3ed2f",
+      "application/src/mod/vfs/packed_fs.h": "0fafb3a3cc17f804424b74a80d0a0e2f1865d47834bbc4c162456043ab3f23de",
+      "application/src/mod/vfs/vfs_driver_packed.c": "12df61a8e19d05c9b19fe2bcf6f376632cd8bd6751676de726e6bd8f4de2a584",
+      "application/src/mod/vfs/vfs_persist.c": "6253f86581611d95f9a087a76c749b38a97dd71b946013bbbd9df40a52ef3088",
+      "application/src/mod/vfs/vfs_persist.h": "3f0867ba098961569f5dda1f9d900958459293abc4f2ad52a73375f53802c609",
+      "application/src/mod/vfs/vfs.h": "5c0560c12b4db59c1150ba20cb41bad1209611fcb5bedacba52183882d265237",
+      "components/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+      "components/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+      "components/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+      "components/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+      "tests/de3/packed_vfs_persistence_de344.c": "4480ae139668ab0458c11e45c294e634c4b7e3cc575b205af3e033339c3d0132",
+      "tests/de3/packed_vfs_nor_de344.c": "dad3e253c84006baf1d7dc8a5e75cc4ad92d6d4ded343859e5df4093b53668de",
+      "tests/de3/packed_vfs_nor_de344.h": "f0343a307c44ab005cb0f8cb0797c02f4bdbc760eef32645972ae3ac3e6887f7",
+      "tests/de3/packed_gc_iterator_de393.c": "35d12c736d156e1285aafef330134470095275582093e43bd47c083f5405ec03"
+    },
+    "sourcesUnchanged": true,
+    "observations": [
+      {
+        "garbageGroups": 160,
+        "rootPairsBefore": 3,
+        "rootPairsAfter": 2,
+        "gcScans": 1,
+        "protectedDataPreserved": true
+      },
+      {
+        "garbageGroups": 400,
+        "rootPairsBefore": 8,
+        "rootPairsAfter": 2,
+        "gcScans": 1,
+        "protectedDataPreserved": true
+      },
+      {
+        "passed": true,
+        "splitCases": 2,
+        "partialErrorCases": 2,
+        "liveAtEnd": 0,
+        "pointerBytes": 8,
+        "lfsVersion": 131080,
+        "lfsDiskVersion": 131073
+      }
+    ],
+    "limitations": [
+      "Synthetic NOR and malloc; no physical SPI, BLE/NFC or power test.",
+      "Requested allocations bounded to18KiB; not real TLSF overhead or a whole-firmware RAM watermark.",
+      "This test injects NOSPC/IO at the seventh lfs_remove; use test_packed_cleanup_de392.py for callback-level NOR/read fault coverage.",
+      "ARM32 QEMU verifies32-bit ABI, not Cortex-M4 timing."
+    ]
+  },
+  "additionalPassedScripts": [
+    "test_packed_vfs_persistence_de344.py",
+    "test_packed_small_compat_de389.py",
+    "test_packed_atomic_meta_de351.py",
+    "test_packed_stage_gc_de346.py",
+    "test_chameleon_packedfs.py"
+  ],
+  "limitations": [
+    "No physical device access; host NOR I/O counts are not elapsed device time or Bluetooth throughput.",
+    "Unchanged 32-entry catalogue; this is not the historical static Catalog64 candidate.",
+    "The full PFS1 mount checks remain unchanged; each lookup validates all visited header/index entries, not every unrelated index entry per lookup.",
+    "ARM object layout/stack comparison is not a complete firmware worst-case stack proof.",
+    "Final linked firmware, SourceID and signed package identity are established in the release build report."
+  ]
+}

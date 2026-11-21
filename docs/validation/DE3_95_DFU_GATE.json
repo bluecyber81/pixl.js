@@ -1,0 +1,113 @@
+{
+  "passed": true,
+  "finishedUtc": "2026-11-21T10:01:47.588261+00:00",
+  "scope": "Independent actual-linked Z21 ARM validation of the already signed App668 package; no signing or firmware changes",
+  "package": {
+    "file": "Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+    "sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+    "bytes": 362593,
+    "applicationOnly": true,
+    "applicationCounter": 668,
+    "applicationBytes": 361992,
+    "applicationSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+    "matchesBothIndependentApplicationBuilds": true,
+    "softdeviceRequirement": [
+      294
+    ],
+    "bootValidation": "GENERATED_CRC"
+  },
+  "z21": {
+    "paddedBootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "payloadBytes": 26932,
+    "exactHistoricalPayloadReproduced": true,
+    "elfPhysicalBytesBound": true,
+    "bootCounter": 21
+  },
+  "checks": {
+    "existingSignerGate": {
+      "signatureVerified": true,
+      "negativeControlsPassed": 3,
+      "source": "../App668_OTA_Verifikation.json",
+      "rerunByThisStep": false
+    },
+    "actualArmCryptoCrc": {
+      "passed": 7,
+      "positiveCases": 3,
+      "negativeCases": 4,
+      "cases": [
+        {
+          "name": "signed init",
+          "returnValue": 1,
+          "passed": true
+        },
+        {
+          "name": "changed signature",
+          "returnValue": 5,
+          "passed": true
+        },
+        {
+          "name": "changed init",
+          "returnValue": 5,
+          "passed": true
+        },
+        {
+          "name": "full BIN hash",
+          "returnValue": 1,
+          "passed": true
+        },
+        {
+          "name": "changed BIN hash",
+          "returnValue": 0,
+          "passed": true
+        },
+        {
+          "name": "boot CRC",
+          "returnValue": 1,
+          "passed": true
+        },
+        {
+          "name": "changed BIN boot CRC",
+          "returnValue": 0,
+          "passed": true
+        }
+      ]
+    },
+    "actualArmSignedInitBankSelection": {
+      "passed": 2,
+      "cases": [
+        {
+          "before": "App667 present",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361992,
+          "bank0Code": 0
+        },
+        {
+          "before": "empty application bank",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361992,
+          "bank0Code": 0
+        }
+      ]
+    }
+  },
+  "evidenceSha256": {
+    "Z21_APP668_CRYPTO.json": "1c6730e0106ea7f3ee26268c04f2eda2fa9ef741193a476f6d4bd6a1099e7a48",
+    "Z21_APP668_INIT_ACCEPTANCE.json": "9e41118792edacdb8f05cbd06b5fa8b1a7cbf5567d0ee6ff3f27068310d29d13",
+    "Z21_reproduction/BUILD_RESULT.json": "069f0c51c6572e41a7a66acb834dbb8808bc797ba7ea5fa36f2758c835b152c9",
+    "HELPER_DERIVATION.json": "c917a966052065d10517b12b5060c8e00f0f51490a16a9cdaf3b1ea4db05b7bf",
+    "verify_z21_app668.py": "9a8d287f6cdfd13f1376adaa1df3b9a54be7a1dbdf8e11f5efc91a8c026b6f8f"
+  },
+  "physicalDeviceAccess": false,
+  "privateKeyAccess": false,
+  "productionChanges": false,
+  "publication": false,
+  "limits": [
+    "Actual linked Z21 crypto, signed-init and bank-selection code execute in Unicorn; flash/radio/device handover are simulated.",
+    "The S112 payload comes from the exact existing signed system phase; the omitted MBR page is erased in this model. Neither MBR nor SoftDevice instructions execute.",
+    "This verifies artifact compatibility and rejection of the tested corruptions, not a completed physical DFU or radio transfer."
+  ]
+}

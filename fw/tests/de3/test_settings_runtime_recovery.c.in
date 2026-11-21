@@ -143,7 +143,7 @@ static void start_menu(void) {
 #define mui_list_view_set_focus(v,n) ((v)->focus = (n))
 #define mui_list_view_clear_items(v) memset((v),0,sizeof(*(v)))
 #define version_get_version(v) "test"
-#define settings_storage_snapshot_read(snapshot,driver,stat) VFS_ERR_FAIL
+#define settings_storage_snapshot_peek(snapshot,driver) ((const vfs_stat_t *)NULL)
 #define settings_storage_snapshot_invalidate(snapshot) ((void)0)
 #define ble_remote_enabled() false
 static void mui_list_view_add_item_ext(list_t *v,unsigned icon,const char *label,const char *value,void *id) {

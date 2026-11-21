@@ -106,6 +106,13 @@ bool enter_dfu(void) { ++dfu_calls; reset_reserved=false; return true; }
 bool ble_mtu_diagnostic(uint16_t requested,uint8_t *snapshot,size_t capacity) {
     (void)requested; (void)snapshot; (void)capacity; return false;
 }
+/* Link-v2 has separate actual-SDK and linked-ARM coverage. These legacy,
+ * runtime and build/fault transport fixtures must never request it. */
+bool ble_link_diagnostic(uint8_t *snapshot,size_t capacity) {
+    (void)snapshot; (void)capacity;
+    CHECK(false);
+    return false;
+}
 int32_t vfs_spiffs_storage_diagnose(uint8_t op,uint8_t candidate,uint8_t *out,size_t cap,size_t *len) {
     CHECK(op==0 && candidate==0 && cap>=200); *len=200;
     for(size_t i=0;i<*len;i++) out[i]=(uint8_t)(i*13+9);

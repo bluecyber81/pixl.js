@@ -1,0 +1,57 @@
+{
+  "name": "Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+  "sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+  "bytes": 362593,
+  "images": [
+    {
+      "type": "application",
+      "firmware_type": 0,
+      "counter": 668,
+      "sd_req": [
+        294
+      ],
+      "bytes": 361992,
+      "sha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "signature_verified": true,
+      "sd_size": 0,
+      "bl_size": 0,
+      "app_size": 361992,
+      "boot_validation": "GENERATED_CRC",
+      "negative_controls_passed": 3
+    }
+  ],
+  "version": "2.22.0-DE3.95",
+  "board": "LCD",
+  "source_id_sha256": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+  "production_input_count": 709,
+  "identical_independent_builds": true,
+  "linker_budget": {
+    "binary_bytes": 361992,
+    "linker_flash_used_bytes": 362012,
+    "observed": {
+      "flash_reserve_bytes": 10724,
+      "heap_stack_gap_bytes": 1720,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "signing_tool": "nrfutil version 6.1.7",
+  "private_key_exported": false,
+  "device_access": false,
+  "publication": false,
+  "bootloader": "Z21",
+  "boot_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "key_handling": {
+    "source_repository": "solosky/pixl.js",
+    "source_commit": "5521e315b62afe25289ce656e536202f7df8f89a",
+    "public_point_matches_z21": true,
+    "private_key_persistent_copy": false,
+    "temporary_key_deleted": true,
+    "private_key_output": false,
+    "authorization": "Explicit user authorization to use the project signing key; source public point verified after initial auto-review rejection."
+  }
+}

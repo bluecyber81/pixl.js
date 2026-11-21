@@ -87,8 +87,8 @@ static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){
 static vfs_driver_t driver;
 static vfs_stat_t fixture_drive={true,2048,1024};
 static vfs_driver_t *vfs_get_default_driver(void){return &driver;}
-static int32_t settings_storage_snapshot_read(settings_storage_snapshot_t*p,vfs_driver_t*d,vfs_stat_t*s){
- (void)p;(void)d;*s=fixture_drive;return VFS_OK;
+static const vfs_stat_t *settings_storage_snapshot_peek(const settings_storage_snapshot_t*p,const vfs_driver_t*d){
+ (void)p;(void)d;return &fixture_drive;
 }
 static void *version_get(void){return NULL;}
 static const char *fixture_version="DE3.40";

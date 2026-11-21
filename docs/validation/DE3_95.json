@@ -1,0 +1,646 @@
+{
+  "schema": 1,
+  "date": "2026-11-21",
+  "status": "signed-application-qualified",
+  "board": "LCD",
+  "displayController": "ST7567",
+  "firmwareVersion": "2.22.0-DE3.95",
+  "applicationCounter": 668,
+  "sourceBranch": "test/lcd-de395-app668",
+  "sourceCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+  "sourceParentCommit": "22d5c92cc566fb7da9d43a538f2818d28bfb72a6",
+  "productionSourceCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+  "sourceId": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+  "productionInputs": 709,
+  "applicationBytes": 361992,
+  "applicationSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+  "engineSha256": "a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd",
+  "storageFormat": "PFS1",
+  "storageFormatChanged": false,
+  "applicationOnly": {
+    "state": "verified",
+    "file": "fw/releases/Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+    "sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+    "bytes": 362593,
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "containsBootloader": false,
+    "containsSoftDevice": false,
+    "softDeviceRequirements": [
+      "0x0126"
+    ],
+    "applicationCounter": 668,
+    "applicationBinSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+    "bootValidation": "GENERATED_CRC"
+  },
+  "reproducibility": {
+    "sourceCommit": "2bcb743180e645bdf0d84fa0dc0148a15bd07f00",
+    "sourceId": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+    "productionInputCount": 709,
+    "binaryAndHexIdentical": true,
+    "productionInputsIdentical": true,
+    "binaryBytes": 361992,
+    "sha256": {
+      "pixljs.bin": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "pixljs.hex": "31b263f44ed078c59de6d85235f28a667a4ef1e4e42f810292d8353b29247234"
+    },
+    "linkerBudget": {
+      "binary_bytes": 361992,
+      "linker_flash_used_bytes": 362012,
+      "observed": {
+        "flash_reserve_bytes": 10724,
+        "heap_stack_gap_bytes": 1720,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "elfDebugPathsMayDiffer": true,
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "sdkArchiveSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "sdkHeaderOverride": {
+      "path": "components/softdevice/s112/headers/nrf_nvic.h",
+      "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+      "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+    },
+    "inputSdkModified": false,
+    "report": {
+      "path": "firmware_validation_de395/BUILD_PAIR.json",
+      "sha256": "377e5eda92680dabe17a690c1c2cb58ede0518afe8562981a9cc368e9136ff23"
+    },
+    "localSourceCommit": "2bcb743180e645bdf0d84fa0dc0148a15bd07f00",
+    "publicSourceCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+    "productionTree": "e8345c9096faf875648802fe493533ea1906414f"
+  },
+  "validation": {
+    "fullFirmwareSuites": {
+      "state": "passed",
+      "countUnit": "test scripts, not individual cases",
+      "passed": 180,
+      "executed": 180,
+      "omitted": 0,
+      "sourceId": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+      "sourcesUnchangedDuringTests": true,
+      "report": {
+        "path": "firmware_validation_de395/FULL_TESTS_FINAL.json",
+        "sha256": "ecd88ee007eeb5055384a99a72ce9685888282560f9949b783a4e43f832629d6"
+      },
+      "limits": "Default script arguments; optional ARM32, sanitizer and separate ELF runs need their own evidence. No device or RF measurement."
+    },
+    "linkedApplicationChecks": {
+      "state": "passed",
+      "passed": 10,
+      "executed": 10,
+      "checks": [
+        {
+          "name": "STACK_WATERMARK",
+          "script": "check_stack_watermark_elf.py",
+          "exitCode": 0,
+          "log": "STACK_WATERMARK.log"
+        },
+        {
+          "name": "AES_M4",
+          "script": "check_aes_m4_elf.py",
+          "exitCode": 0,
+          "log": "AES_M4.log"
+        },
+        {
+          "name": "SHA256_HMAC",
+          "script": "check_sha256_hmac_elf.py",
+          "exitCode": 0,
+          "log": "SHA256_HMAC.log"
+        },
+        {
+          "name": "BUILD_FAULT",
+          "script": "check_build_fault_elf.py",
+          "exitCode": 0,
+          "log": "BUILD_FAULT.log"
+        },
+        {
+          "name": "LCD_DEVICE_TEST",
+          "script": "check_lcd_device_test_elf.py",
+          "exitCode": 0,
+          "log": "LCD_DEVICE_TEST.log"
+        },
+        {
+          "name": "LCD_GAME_ROTATION",
+          "script": "check_lcd_game_rotation_elf.py",
+          "exitCode": 0,
+          "log": "LCD_GAME_ROTATION.log"
+        },
+        {
+          "name": "FLASH_JEDEC",
+          "script": "check_flash_jedec_elf.py",
+          "exitCode": 0,
+          "log": "FLASH_JEDEC.log"
+        },
+        {
+          "name": "DISPLAY_PROFILE",
+          "script": "check_display_profile_elf.py",
+          "exitCode": 0,
+          "log": "DISPLAY_PROFILE.log"
+        },
+        {
+          "name": "CHAMELEON_SAVE_SCREEN",
+          "script": "check_chameleon_save_screen_elf.py",
+          "exitCode": 0,
+          "log": "CHAMELEON_SAVE_SCREEN.log"
+        },
+        {
+          "name": "FIRST_MENU",
+          "script": "check_first_menu_elf.py",
+          "exitCode": 0,
+          "log": "FIRST_MENU.log"
+        }
+      ],
+      "applicationBinSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "report": {
+        "path": "firmware_validation_de395/ARM/LINKED_CHECKS.json",
+        "sha256": "8a9e210bb5f1731bd0d714d80348d72a5d53cfdad99d882270e293d5b5f98797"
+      },
+      "hardware": false
+    },
+    "sha256Hmac": {
+      "sha256Cases": 32,
+      "hmacSha256Cases": 16,
+      "hmacShortBufferAndRetryCases": 8,
+      "hardware": false,
+      "applicationBinSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "passed": true,
+      "report": {
+        "path": "firmware_validation_de395/ARM/SHA256_HMAC.json",
+        "sha256": "8326c1aaf7547145cfaa4ae0da11d41138caf55296ae114fc9d5fe057627ce56"
+      }
+    },
+    "bleLink": {
+      "state": "passed",
+      "hostCases": 19,
+      "negativeControls": 5,
+      "sanitizedHostCases": 19,
+      "sanitizedNegativeControls": 5,
+      "linkedArmCases": 9,
+      "linkStateBytes": 24,
+      "reports": [
+        {
+          "path": "ble_validation/LINK_DIAGNOSTIC.json",
+          "sha256": "709d7c651ff29b64b62c367677e09bebcc45df348705455313d6429fff740166"
+        },
+        {
+          "path": "ble_validation/LINK_DIAGNOSTIC_ASAN_UBSAN.json",
+          "sha256": "216290015ac68217c4fd23f6a57c161af6745ffbc149f1a49417b99c504d4136"
+        },
+        {
+          "path": "ble_validation/LINK_DIAGNOSTIC_ARM.json",
+          "sha256": "dae27053d1b48fac5a56b10cb76fd6cd7a2c96c29c4d0f259358557f5a54b6b8"
+        }
+      ],
+      "limits": [
+        "Real production functions and S112 types; modeled SoftDevice/timer/GATT boundary.",
+        "Neither successful 2M use on a handset nor increased throughput is established.",
+        "Linked release Cortex-M4 code, seeded GATT/GAP RAM, real update/serializer/critical paths. No radio/IRQ timing."
+      ]
+    },
+    "settingsLazyStorage": {
+      "state": "passed",
+      "testScript": "fw/tests/de3/test_settings_storage_snapshot.py",
+      "firstEntryStatCalls": 0,
+      "reopenStatCalls": 0,
+      "radioAndStorageBoundary": "modeled",
+      "explicitStoragePageRefreshRetained": true,
+      "sameSuiteIncludesEagerReadNegativeControl": true,
+      "exitCode": 0,
+      "fullSuiteReport": {
+        "path": "firmware_validation_de395/FULL_TESTS_FINAL.json",
+        "sha256": "ecd88ee007eeb5055384a99a72ce9685888282560f9949b783a4e43f832629d6"
+      }
+    },
+    "storageCatalogue": {
+      "state": "passed",
+      "report": "docs/validation/DE3_95_STORAGE.json",
+      "reportSha256": "7d8113a925599f8d8809ce6a8ee60ff3ae1ba063b4b894cd537bb43a5f42083f",
+      "catalogSlots": 32,
+      "additionalPermanentHeapBytes": 0,
+      "additionalAllocations": 0,
+      "comparisons": [
+        {
+          "groups": 28,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 62,
+          "lateRepeatReads": 62,
+          "earlyReads": 35,
+          "setattrReads": 3371,
+          "subtreeRemoveReads": 8997,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 32,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 133,
+          "lateRepeatReads": 133,
+          "earlyReads": 31,
+          "setattrReads": 3164,
+          "subtreeRemoveReads": 8614,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 33,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 26,
+          "absentRepeatReads": 26,
+          "lateFirstReads": 104,
+          "lateRepeatReads": 104,
+          "earlyReads": 31,
+          "setattrReads": 3412,
+          "subtreeRemoveReads": 9083,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 54,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 905,
+          "absentRepeatReads": 905,
+          "lateFirstReads": 910,
+          "lateRepeatReads": 910,
+          "earlyReads": 45,
+          "setattrReads": 11376,
+          "subtreeRemoveReads": 12368,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 64,
+          "recordsPerGroup": 32,
+          "absentFirstReads": 1205,
+          "absentRepeatReads": 1205,
+          "lateFirstReads": 1243,
+          "lateRepeatReads": 1243,
+          "earlyReads": 43,
+          "setattrReads": 12489,
+          "subtreeRemoveReads": 11052,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        }
+      ],
+      "baselineComparisons": [
+        {
+          "groups": 28,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 62,
+          "lateRepeatReads": 62,
+          "earlyReads": 35,
+          "setattrReads": 3371,
+          "subtreeRemoveReads": 8997,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 32,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 0,
+          "absentRepeatReads": 0,
+          "lateFirstReads": 133,
+          "lateRepeatReads": 133,
+          "earlyReads": 31,
+          "setattrReads": 3164,
+          "subtreeRemoveReads": 8614,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 33,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 52,
+          "absentRepeatReads": 52,
+          "lateFirstReads": 130,
+          "lateRepeatReads": 130,
+          "earlyReads": 58,
+          "setattrReads": 3465,
+          "subtreeRemoveReads": 9123,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 54,
+          "recordsPerGroup": 44,
+          "absentFirstReads": 1726,
+          "absentRepeatReads": 1726,
+          "lateFirstReads": 1727,
+          "lateRepeatReads": 1727,
+          "earlyReads": 86,
+          "setattrReads": 13829,
+          "subtreeRemoveReads": 13011,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        },
+        {
+          "groups": 64,
+          "recordsPerGroup": 32,
+          "absentFirstReads": 2284,
+          "absentRepeatReads": 2284,
+          "lateFirstReads": 2432,
+          "lateRepeatReads": 2432,
+          "earlyReads": 82,
+          "setattrReads": 15950,
+          "subtreeRemoveReads": 11908,
+          "pfsBytes": 3112,
+          "steadyRequestedHeap": 3112
+        }
+      ],
+      "newPathReadFaultCases": 51,
+      "corruptionCases": 5,
+      "sanitizePassed": true,
+      "limits": [
+        "Synthetische physische Host-NOR-Leseaufrufe; keine Gerätezeit oder Funkgeschwindigkeit.",
+        "28-/32-Gruppen-Fälle zeigen keine Verringerung gegenüber App667.",
+        "Jede Suche prüft gelesene Indexeinträge; vollständige Integritätsprüfung bleibt beim Mount."
+      ]
+    },
+    "capacityProfile": {
+      "state": "passed",
+      "profile": "de395",
+      "report": "docs/validation/DE3_95_PFS.json",
+      "reportSha256": "cc334685219c71c8d466831b6eddd8a478afbdd719ded38a0bcc615252cc8e27",
+      "engineSha256": "a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd",
+      "wasmSha256": "311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c",
+      "linkedArmLayoutCases": 4,
+      "crossMountCases": 6,
+      "syntheticFiles": 1131,
+      "syntheticFolders": 77,
+      "hardware": false
+    },
+    "nativeOtaVerification": {
+      "state": "passed",
+      "signatureVerified": true,
+      "negativeControlsPassed": 3,
+      "applicationBinSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "signingTool": "nrfutil version 6.1.7",
+      "z21PublicPointMatches": true,
+      "privateKeyExported": false,
+      "report": {
+        "path": "firmware_validation_de395/App668_OTA_Verifikation.json",
+        "sha256": "bd9268e9a008b6e658e3ea25616b42db5f6ac14afeb910545eed3f026cb1ce18"
+      }
+    },
+    "z21SignedInitAcceptance": {
+      "state": "passed",
+      "signedZipSha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+      "applicationBinSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "paddedBootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+      "bootloaderElfSha256": "9149e4ab189ebde7acce738c43f4b2a146e2bc7489b94d1fd5cf5582a3b2bd54",
+      "actualArmCryptoCases": [
+        {
+          "name": "signed init",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed signature",
+          "passed": true,
+          "returnValue": 5
+        },
+        {
+          "name": "changed init",
+          "passed": true,
+          "returnValue": 5
+        },
+        {
+          "name": "full BIN hash",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed BIN hash",
+          "passed": true,
+          "returnValue": 0
+        },
+        {
+          "name": "boot CRC",
+          "passed": true,
+          "returnValue": 1
+        },
+        {
+          "name": "changed BIN boot CRC",
+          "passed": true,
+          "returnValue": 0
+        }
+      ],
+      "actualArmInitAcceptanceCases": [
+        {
+          "before": "App667 present",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361992,
+          "bank0Code": 0
+        },
+        {
+          "before": "empty application bank",
+          "signedInitAccepted": true,
+          "code": 1,
+          "destination": 102400,
+          "dataBytes": 361992,
+          "bank0Code": 0
+        }
+      ],
+      "previousApplicationCounter": 667,
+      "softDeviceFwid": 294,
+      "physicalDeviceAccess": false,
+      "limits": [
+        "Actual linked ARM crypto/CRC with simulated memory, no RF/device transfer.",
+        "Actual ELF init-execute and bank selection; flash, radio and handover simulated."
+      ],
+      "reports": [
+        {
+          "path": "firmware_validation_de395/DFU/Z21_APP668_CRYPTO.json",
+          "sha256": "1c6730e0106ea7f3ee26268c04f2eda2fa9ef741193a476f6d4bd6a1099e7a48"
+        },
+        {
+          "path": "firmware_validation_de395/DFU/Z21_APP668_INIT_ACCEPTANCE.json",
+          "sha256": "9e41118792edacdb8f05cbd06b5fa8b1a7cbf5567d0ee6ff3f27068310d29d13"
+        }
+      ]
+    }
+  },
+  "changes": [
+    "Das Haupt-Einstellungsmenü liest nur bereits gemessene Sitzungswerte; erst die explizite Speicherinfoseite führt eine Freiraumabfrage aus. Erste Anzeige und Fehler-/Zurückpfade vermeiden diese VFS-I/O.",
+    "Katalogkollisionen werden mit direkter binärer Suche behandelt; die Transaktionsplanung liest kalte Gruppenmaße aus geprüften Headern. Der unveränderte 32er-Cache benötigt keine zusätzliche Dauerallokation.",
+    "Das LCD-Dateiprofil fordert nach bereiter NUS-Sitzung einmal RX/TX LE 2M an; ein belegter Vorgang erhält höchstens zwei zeitlich begrenzte Wiederholungen, andere Ablehnungen bleiben ohne Reset oder Disconnect.",
+    "Eine abgelehnte Antwort auf einen Peer-PHY-Antrag führt nicht mehr über APP_ERROR_CHECK zum Reset.",
+    "INFO05 selector01 ergänzt eine abwärtskompatible MTUDv2-Linkdiagnose mit tatsächlichem Intervall, Latenz, Timeout, beobachteter PHY und Antragsergebnis. Alte MTUDv1-Anfragen bleiben unverändert."
+  ],
+  "existingFeaturesRetained": [
+    "App667: bestätigtes Verwerfen in Hauptsettings und fünf Optionsmenüs, feldweise Wiederherstellung, vorhandene NFC-/Launcher-Vetos und kein sofortiger erneuter Save beim akzeptierten App-Abbau.",
+    "App665/App666: automatische Freigabe nach Commit/letztem alten Leser und einzelner Bereinigungsdurchlauf; gültige offene Leser bleiben geschützt.",
+    "Bisherige SmallRead-/SmallCreate-/SHA256- und bedingte Veröffentlichungspfade, ATT-MTU-Obergrenze250 und bestehender S112-/Z21-Systemstand."
+  ],
+  "notImplemented": [
+    {
+      "item": "statischer Catalog64",
+      "state": "durch begrenzte Kollisionsbehandlung ersetzt",
+      "reason": "Die behandelte Ursache benötigt keine zusätzlichen1664Byte Dauerheap."
+    },
+    {
+      "item": "neues CRC-/Offset-Streamingprotokoll für normale Dateien",
+      "state": "nicht eingebaut",
+      "reason": "Bestehende Protokoll- und Integritätspfade werden erhalten; ein eigener Protokollwechsel gehört nicht zu diesem Build."
+    },
+    {
+      "item": "Data Length Extension/Stackwechsel",
+      "state": "nicht eingebaut",
+      "reason": "Die neue LE-2M-Anforderung ändert weder Datenlänge noch SoftDevice."
+    }
+  ],
+  "countingPolicy": "Komponentensuiten, Einzelfälle, negative Kontrollen und ARM-Prüfungen werden nicht zur Zahl180 addiert; Prüfbereiche überlappen.",
+  "hardwareAcceptance": "pending",
+  "physicalDeviceAccess": false,
+  "publication": {
+    "state": "test-branch-distribution",
+    "targetBranch": "test/lcd-de395-app668",
+    "sourceCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+    "productionCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+    "localProductionCommit": "2bcb743180e645bdf0d84fa0dc0148a15bd07f00",
+    "productionTree": "e8345c9096faf875648802fe493533ea1906414f",
+    "stableOrMainModified": false
+  },
+  "sourceAndBinaryQualificationPassed": true,
+  "firmwareQualificationState": "source-binary-signed-package-and-z21-arm-passed",
+  "nextConcreteStep": "App668 über die passende mobile DFU-Seite installieren; danach Version/SourceID und die tatsächlich ausgehandelte Linkdiagnose auslesen und normale Einstellungsbedienung prüfen.",
+  "openDeviceChecks": [
+    "Nach Installation Firmwareversion, Counter und SourceID sowie BLE-Linkdiagnose auslesen.",
+    "Normales Öffnen der Einstellungen und explizite Speicherinfo bedienen; bereits vorhandene Verwerfenwege ohne absichtliche Beschädigung beobachten.",
+    "Tatsächlich ausgehandelte RX/TX-PHY und Verbindungsintervall auf dem Handy ablesen; gleiche geprüfte Datenmenge für einen Geschwindigkeitsvergleich verwenden.",
+    "Bei ohnehin beabsichtigter Änderung freien Speicher nach Commit/letztem Leser frisch lesen und Dateiintegrität prüfen."
+  ],
+  "limitations": [
+    "Keine physische Installation, Funkmessung oder vollständige Hardwareabnahme von App668 in diesen Belegen.",
+    "2M angefordert bedeutet nicht2M ausgehandelt; MTU250/LE2M beweisen weder Data Length Extension noch konkreten Dateidurchsatz.",
+    "Host-NOR-Leseaufrufe sind keine gemessenen Millisekunden am Gerät. Für den früher dokumentierten Nutzerbestand mit28Gruppen ist durch die Katalogänderung kein Geschwindigkeitsgewinn belegt.",
+    "Compiler-Stackrahmen und Linkerreserve sind kein vollständiger Laufzeit-Worst-Case inklusive aller indirekten Aufrufe und IRQs.",
+    "Die ältere Nutzerbeobachtung von App667 belegt keine Installation oder Abnahme dieses App668-Builds.",
+    "Der externe DateispeicherE bleibt2MiB; Programmflashreserve und RAM sind davon getrennt.",
+    "Kein privates Backup, Schlüsselmaterial oder eindeutige physische Gerätekennung in diesem Bericht."
+  ],
+  "evidenceIndex": [
+    {
+      "path": "build_de395_1/BUILD_RESULT.json",
+      "sha256": "a8b17a94aeaa900f690b07f5e10c10b1fbbcb342c0e98f416200192c0cbe6cb7"
+    },
+    {
+      "path": "build_de395_2/BUILD_RESULT.json",
+      "sha256": "04f16fa7f808152dd0ff5999910df5cbffa0d6b3c823c84a47379cccfc09a754"
+    },
+    {
+      "path": "firmware_validation_de395/BUILD_PAIR.json",
+      "sha256": "377e5eda92680dabe17a690c1c2cb58ede0518afe8562981a9cc368e9136ff23"
+    },
+    {
+      "path": "firmware_validation_de395/FULL_TESTS_FINAL.json",
+      "sha256": "ecd88ee007eeb5055384a99a72ce9685888282560f9949b783a4e43f832629d6"
+    },
+    {
+      "path": "firmware_validation_de395/ARM/LINKED_CHECKS.json",
+      "sha256": "8a9e210bb5f1731bd0d714d80348d72a5d53cfdad99d882270e293d5b5f98797"
+    },
+    {
+      "path": "ble_validation/LINK_DIAGNOSTIC.json",
+      "sha256": "709d7c651ff29b64b62c367677e09bebcc45df348705455313d6429fff740166"
+    },
+    {
+      "path": "ble_validation/LINK_DIAGNOSTIC_ASAN_UBSAN.json",
+      "sha256": "216290015ac68217c4fd23f6a57c161af6745ffbc149f1a49417b99c504d4136"
+    },
+    {
+      "path": "ble_validation/LINK_DIAGNOSTIC_ARM.json",
+      "sha256": "dae27053d1b48fac5a56b10cb76fd6cd7a2c96c29c4d0f259358557f5a54b6b8"
+    },
+    {
+      "path": "storage_review_de395/CATALOG_COMPARE.json",
+      "sha256": "baea41103abd28f78e0ca60aa8b346627f5a334d8034aab32564b21267c14259"
+    },
+    {
+      "path": "storage_review_de395/CATALOG_SANITIZED.json",
+      "sha256": "8613df811fc959a12a5a3e5c0925069811223ad4fef381c96cc7c99171d971e6"
+    },
+    {
+      "path": "storage_review_de395/CLEANUP.json",
+      "sha256": "b25c5e12688e02fbde4c7fc88a4a8ab1b0d94481f939440fc90b5f12f3a3a3da"
+    },
+    {
+      "path": "storage_review_de395/GC_ITERATOR.json",
+      "sha256": "7088f2d287b5128a243b6442fe5debb36451f6f2fbbbc120f52d5024742a1c3d"
+    },
+    {
+      "path": "firmware_validation_de395/App668_OTA_Verifikation.json",
+      "sha256": "bd9268e9a008b6e658e3ea25616b42db5f6ac14afeb910545eed3f026cb1ce18"
+    },
+    {
+      "path": "firmware_validation_de395/DFU/Z21_APP668_CRYPTO.json",
+      "sha256": "1c6730e0106ea7f3ee26268c04f2eda2fa9ef741193a476f6d4bd6a1099e7a48"
+    },
+    {
+      "path": "firmware_validation_de395/DFU/Z21_APP668_INIT_ACCEPTANCE.json",
+      "sha256": "9e41118792edacdb8f05cbd06b5fa8b1a7cbf5567d0ee6ff3f27068310d29d13"
+    }
+  ],
+  "artifactStatus": "experimental-signed-application",
+  "workingBranch": "work/lcd-de395-app668",
+  "localProductionSourceCommit": "2bcb743180e645bdf0d84fa0dc0148a15bd07f00",
+  "publicProductionCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+  "productionTree": "e8345c9096faf875648802fe493533ea1906414f",
+  "firmwareQualificationPassed": true,
+  "validationCommitReference": "The commit containing this report on test/lcd-de395-app668; immutable final commit recorded in the delivery receipt and Web 3.58.6 package reference.",
+  "publishedEvidence": [
+    {
+      "path": "docs/validation/DE3_95_FULL_TESTS.json",
+      "sha256": "ecd88ee007eeb5055384a99a72ce9685888282560f9949b783a4e43f832629d6"
+    },
+    {
+      "path": "docs/validation/DE3_95_PRODUCTION_INPUTS.json",
+      "sha256": "60af73a20029fe668877d2370c6828a2cef586f3ed56af49d4e5589afc6323b1"
+    },
+    {
+      "path": "docs/validation/DE3_95_BUILD_PAIR.json",
+      "sha256": "377e5eda92680dabe17a690c1c2cb58ede0518afe8562981a9cc368e9136ff23"
+    },
+    {
+      "path": "docs/validation/DE3_95_ARM.json",
+      "sha256": "8a9e210bb5f1731bd0d714d80348d72a5d53cfdad99d882270e293d5b5f98797"
+    },
+    {
+      "path": "docs/validation/DE3_95_BLE_HOST.json",
+      "sha256": "709d7c651ff29b64b62c367677e09bebcc45df348705455313d6429fff740166"
+    },
+    {
+      "path": "docs/validation/DE3_95_BLE_ARM.json",
+      "sha256": "dae27053d1b48fac5a56b10cb76fd6cd7a2c96c29c4d0f259358557f5a54b6b8"
+    },
+    {
+      "path": "docs/validation/DE3_95_OTA.json",
+      "sha256": "bd9268e9a008b6e658e3ea25616b42db5f6ac14afeb910545eed3f026cb1ce18"
+    },
+    {
+      "path": "docs/validation/DE3_95_Z21_CRYPTO.json",
+      "sha256": "1c6730e0106ea7f3ee26268c04f2eda2fa9ef741193a476f6d4bd6a1099e7a48"
+    },
+    {
+      "path": "docs/validation/DE3_95_Z21_INIT_ACCEPTANCE.json",
+      "sha256": "9e41118792edacdb8f05cbd06b5fa8b1a7cbf5567d0ee6ff3f27068310d29d13"
+    },
+    {
+      "path": "docs/validation/DE3_95_DFU_GATE.json",
+      "sha256": "68cc51ea0d81e3bcc4babeb9cdfa58ff5d5a8df87f1f1a7f00f9958ef9664caa"
+    }
+  ]
+}

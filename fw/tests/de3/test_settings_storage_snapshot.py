@@ -12,7 +12,7 @@ from root_host import HostTests
 SRC = Path(__file__).resolve().parents[2] / 'application/src'
 
 
-def harness():
+def harness(eager_mutant=False):
     captured = []
     fixture = fixture_module.SettingsSaveUiTests('test_real_reboot_exit_reset_and_forced_exit_error_paths')
     fixture.compile_run = captured.append
@@ -61,13 +61,19 @@ static void mui_list_view_add_item(void*p,int icon,const char*label,void*data){(
 '''
     main = (SRC / 'app/settings/scene/settings_scene_main.c').read_text()
     definition = main[main.rfind('\nstatic void settings_scene_main_reload('):]
+    if eager_mutant:
+        definition = definition.replace('const vfs_stat_t *stat = settings_storage_snapshot_peek',
+            'vfs_stat_t eager; settings_storage_snapshot_read(&app->storage_snapshot, p_driver, &eager);\n'
+            '    const vfs_stat_t *stat = settings_storage_snapshot_peek')
     code += (SRC / 'mui/mui_contrast.h').read_text().replace('#include "boards.h"', '')
     code += (SRC / "i18n/string_id.h").read_text() + extras + fixture_module.native.function(definition, 'settings_scene_main_reload')
     return code + r'''
 int main(void){
  app_settings_t app={0};mui_list_view_t list={&app};mui_msg_box_t box={&app};mui_list_item_t item={0};
  app.p_list_view=&list;observed=&app.storage_snapshot;
- settings_scene_main_reload(&app);assert(stat_calls==1&&strstr(storage_text,"50%"));
+ /* The first screen is usable without touching storage, including failed media. */
+ stat_result=VFS_ERR_FAIL;
+ settings_scene_main_reload(&app);assert(stat_calls==0&&!storage_text[0]&&!observed->valid);
  const unsigned toggles[]={SETTINGS_MAIN_MENU_LI_MODE,SETTINGS_MAIN_MENU_SHOW_MEM_USAGE,
   SETTINGS_MAIN_MENU_ENABLE_HIBERNATE,SETTINGS_MAIN_MENU_ANIM_ENABLED,SETTINGS_MAIN_MENU_NO_SLEEP,
   SETTINGS_MAIN_MENU_FLIP_DISPLAY,SETTINGS_MAIN_MENU_SWAP_BUTTONS};
@@ -75,22 +81,35 @@ int main(void){
   item.user_data=(void*)(uintptr_t)toggles[i];settings_scene_main_list_view_on_selected(0,&list,&item);
   settings_scene_main_reload(&app); /* Ordinary submenu return/redraw. */
  }
+ assert(stat_calls==0&&!observed->valid);
+ /* Only an explicit storage-page refresh reads the device. */
+ vfs_stat_t measured={0};stat_result=0;
+ assert(settings_storage_snapshot_read(observed,active_driver,&measured)==VFS_OK);
+ settings_scene_main_reload(&app);assert(stat_calls==1&&strstr(storage_text,"50%"));
+ for(unsigned i=0;i<20;i++)settings_scene_main_reload(&app);
  assert(stat_calls==1);
  /* Switching the selected storage driver cannot reuse the previous sample. */
  current_stat.free_bytes=512;active_driver=&other_driver;settings_scene_main_reload(&app);
- assert(stat_calls==2&&strstr(storage_text,"75%"));
+ assert(stat_calls==1&&!storage_text[0]);
+ settings_storage_snapshot_read(observed,active_driver,&measured);
+ settings_scene_main_reload(&app);assert(stat_calls==2&&strstr(storage_text,"75%"));
  /* Partial error results are discarded, and RAM-only UI redraws don't retry I/O. */
  stat_result=VFS_ERR_FAIL;settings_storage_snapshot_invalidate(observed);settings_scene_main_reload(&app);
- assert(stat_calls==3&&!observed->stat.total_bytes&&strstr(storage_text,"NOT_MOUNTED"));
+ assert(stat_calls==2&&!storage_text[0]);
+ settings_storage_snapshot_read(observed,active_driver,&measured);
+ settings_scene_main_reload(&app);assert(stat_calls==3&&!observed->stat.total_bytes&&!storage_text[0]);
  settings_scene_main_reload(&app);assert(stat_calls==3);
- stat_result=0;settings_storage_snapshot_invalidate(observed);settings_scene_main_reload(&app);assert(stat_calls==4);
+ stat_result=0;settings_storage_snapshot_invalidate(observed);
+ settings_storage_snapshot_read(observed,active_driver,&measured);
+ settings_scene_main_reload(&app);assert(stat_calls==4);
  /* These real callbacks invalidate even when journal/reset writes fail. */
  const unsigned saves[]={SETTINGS_MAIN_MENU_EXIT,SETTINGS_MAIN_MENU_REBOOT,SETTINGS_MAIN_MENU_DFU};
  result=VFS_ERR_FAIL;
  for(unsigned i=0;i<sizeof(saves)/sizeof(*saves);i++){
   assert(observed->valid);item.user_data=(void*)(uintptr_t)saves[i];
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(!observed->valid);
-  int old=stat_calls;settings_scene_main_reload(&app);assert(stat_calls==old+1);
+  int old=stat_calls;settings_scene_main_reload(&app);assert(stat_calls==old&&!storage_text[0]);
+  settings_storage_snapshot_read(observed,active_driver,&measured);assert(stat_calls==old+1);
  }
  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(!observed->valid);
  settings_scene_main_reload(&app);settings_scene_app_management_on_exit(&app);assert(!observed->valid);
@@ -98,10 +117,24 @@ int main(void){
  /* Cancelling reset does not force a new storage traversal. */
  int old=stat_calls;settings_scene_main_msg_box_reset_settings_cb(2,&box);settings_scene_main_reload(&app);assert(stat_calls==old);
  /* A fresh app gets a new snapshot; stale driver/stat errors never survive it. */
- app_settings_t reopened={0};settings_scene_main_reload(&reopened);assert(stat_calls==old+1);
- active_driver=NULL;settings_scene_main_reload(&app);assert(observed->result==VFS_ERR_NODEV&&!observed->stat.avaliable);
- other_driver.stat=NULL;active_driver=&other_driver;settings_scene_main_reload(&app);assert(observed->result==VFS_ERR_NODEV);
- puts("PASS actual settings UI: 140 toggles/280 redraws use one stat; driver/error/mutation/reopen boundaries remain fresh");
+ app_settings_t reopened={0};settings_scene_main_reload(&reopened);assert(stat_calls==old&&!storage_text[0]);
+ active_driver=NULL;settings_scene_main_reload(&app);assert(stat_calls==old&&!storage_text[0]);
+ settings_storage_snapshot_read(observed,active_driver,&measured);
+ assert(observed->result==VFS_ERR_NODEV&&!observed->stat.avaliable);
+ other_driver.stat=NULL;active_driver=&other_driver;settings_scene_main_reload(&app);assert(stat_calls==old&&!storage_text[0]);
+ settings_storage_snapshot_read(observed,active_driver,&measured);assert(observed->result==VFS_ERR_NODEV);
+ /* A measured unmounted drive is distinct from an unmeasured/error sample. */
+ other_driver.stat=mock_stat;current_stat.avaliable=0;settings_storage_snapshot_invalidate(observed);
+ settings_storage_snapshot_read(observed,active_driver,&measured);settings_scene_main_reload(&app);
+ assert(strstr(storage_text,"NOT_MOUNTED"));
+ /* Malformed/free>total or zero-capacity measurements cannot divide or wrap. */
+ current_stat=(vfs_stat_t){1,0,0};settings_storage_snapshot_invalidate(observed);
+ settings_storage_snapshot_read(observed,active_driver,&measured);settings_scene_main_reload(&app);assert(!storage_text[0]);
+ current_stat=(vfs_stat_t){1,100,101};settings_storage_snapshot_invalidate(observed);
+ settings_storage_snapshot_read(observed,active_driver,&measured);settings_scene_main_reload(&app);assert(!storage_text[0]);
+ current_stat=(vfs_stat_t){1,UINT32_MAX,0};settings_storage_snapshot_invalidate(observed);
+ settings_storage_snapshot_read(observed,active_driver,&measured);settings_scene_main_reload(&app);assert(strstr(storage_text,"100%"));
+ puts("PASS actual settings UI: first entry/reopen and 140 toggles do zero stat I/O; explicit refresh, errors and mutations remain correct");
 }
 '''
 
@@ -109,6 +142,11 @@ int main(void){
 class SettingsStorageSnapshotTests(HostTests):
     def test_actual_redraw_cost_and_storage_change_boundaries(self):
         self.compile_run(harness())
+
+    def test_regression_control_rejects_eager_first_read(self):
+        with self.assertRaises(AssertionError) as failure:
+            self.compile_run(harness(eager_mutant=True))
+        self.assertIn('stat_calls==0', str(failure.exception))
 
 
 if __name__ == '__main__':

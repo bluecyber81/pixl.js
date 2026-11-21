@@ -1,0 +1,247 @@
+/* Actual S112 event types and application functions; mocked radio boundary. */
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define SVCALL_AS_NORMAL_FUNCTION
+#define BOARD_LCD 1
+#define PIXL_RUNTIME_DIAGNOSTICS 1
+#include "ble.h"
+#include "ble_hci.h"
+#include "ble_main.h"
+#include "df_proto_info.h"
+#define CHECK(x) do { if (!(x)) { fprintf(stderr,"CHECK %d: %s\n",__LINE__,#x); exit(71); } } while (0)
+#define NRF_SDH_BLE_GATT_MAX_MTU_SIZE 250
+#define OPCODE_LENGTH 1
+#define HANDLE_LENGTH 2
+#define APP_TIMER_TICKS(ms) (ms)
+#define BSP_INDICATE_CONNECTED 1
+#define DEVICE_NAME_AMILOOP "AmiLoop"
+#define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180
+#define RUNTIME_DIAG_GATT_CLIENT_TIMEOUT 5
+#define RUNTIME_DIAG_GATT_SERVER_TIMEOUT 6
+#define NRF_LOG_INFO(...) ((void)0)
+#define NRF_LOG_DEBUG(...) ((void)0)
+#define APP_ERROR_CHECK(x) CHECK((x)==NRF_SUCCESS)
+#define CRITICAL_REGION_ENTER() do { ++critical_depth;
+#define CRITICAL_REGION_EXIT() test_critical_exit(); } while (0)
+static void test_critical_exit(void);
+
+static unsigned critical_depth, phy_calls, disconnect_calls, tx_calls, checks;
+static uint32_t now, phy_result;
+static uint8_t requested_rx, requested_tx;
+static uint16_t requested_handle;
+static bool work_ready, vfs_idle = true, m_ble_initialized = true;
+static bool inject_disconnect, pending_disconnect;
+static bool m_sessions_enabled = true, m_file_mode = true, m_remote_mode, m_mode_pending;
+static bool m_timeout_overridden, m_release_attempted, m_release_requested, m_file_join_pending;
+static bool m_advertising_active;
+static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID, m_nus_session_handle = BLE_CONN_HANDLE_INVALID;
+static uint16_t m_release_handle = BLE_CONN_HANDLE_INVALID, m_ble_nus_max_data_len = 20;
+static uint16_t m_previous_pwr_mgmt_sleep_timeout, power_timeout = 180;
+static uint32_t m_link_generation, m_session_generation, m_file_join_tick, m_file_join_generation;
+static ble_link_state_handler_t m_link_state_handler, m_status_state_handler;
+static uint8_t m_reported_link_state, m_reported_status_state;
+static int m_qwr;
+static struct { uint16_t att_mtu_desired_periph, effective; } m_gatt = {250, 23};
+static df_frame_t response;
+
+static uint32_t app_timer_cnt_get(void) { return now; }
+static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b) { return (a-b)&0xffffffu; }
+static bool ble_work_can_send(void) { return work_ready; }
+static void ble_work_connected(void) { work_ready = true; }
+static void ble_work_disconnected(void) { work_ready = false; }
+static void ble_file_join_poll(void) {}
+static void ble_on_disconnected(void) {}
+static void ble_work_process(void (*cleanup)(void)) { (void)cleanup; }
+static void ble_release_stopped_session(void) {}
+static void ble_file_link_poll(void) {}
+static void ble_pending_mode_poll(void) {}
+static void ble_df_driver_poll(void) {}
+ble_link_state_t ble_link_state_get(void) { return BLE_LINK_INACTIVE; }
+ble_link_state_t ble_status_state_get(void) { return BLE_LINK_INACTIVE; }
+static uint32_t bsp_indication_set(int indication) { (void)indication; return NRF_SUCCESS; }
+static uint32_t nrf_ble_qwr_conn_handle_assign(int *qwr,uint16_t handle) { (void)qwr;(void)handle;return NRF_SUCCESS; }
+static uint16_t nrf_pwr_mgmt_get_timeout(void) { return power_timeout; }
+static void nrf_pwr_mgmt_set_timeout(uint16_t value) { power_timeout = value; }
+static void nrf_pwr_mgmt_feed(void) {}
+static bool ble_device_name_is(const char *name) { (void)name;return false; }
+static void runtime_diag_ble_disconnected(uint8_t reason) { (void)reason; }
+static void runtime_diag_ble_abort(int reason) { (void)reason; }
+static uint16_t nrf_ble_gatt_eff_mtu_get(const void *gatt,uint16_t handle) {
+    (void)gatt;CHECK(handle==m_conn_handle);
+    if(inject_disconnect) { inject_disconnect=false;pending_disconnect=true; }
+    return m_gatt.effective;
+}
+static uint32_t nrf_ble_gatt_att_mtu_periph_set(void *gatt,uint16_t value) {
+    (void)gatt;m_gatt.att_mtu_desired_periph=value;return NRF_SUCCESS;
+}
+uint32_t sd_ble_gap_phy_update(uint16_t handle,const ble_gap_phys_t *phys) {
+    ++phy_calls;requested_handle=handle;requested_rx=phys->rx_phys;requested_tx=phys->tx_phys;
+    return phy_result;
+}
+uint32_t sd_ble_gap_disconnect(uint16_t handle,uint8_t reason) {
+    (void)handle;(void)reason;++disconnect_calls;return NRF_SUCCESS;
+}
+uint32_t sd_ble_gattc_exchange_mtu_request(uint16_t handle,uint16_t mtu) { (void)handle;(void)mtu;return NRF_SUCCESS; }
+uint32_t sd_ble_gap_sec_params_reply(uint16_t handle,uint8_t status,const ble_gap_sec_params_t *params,
+                                   const ble_gap_sec_keyset_t *keys) {
+    (void)handle;(void)status;(void)params;(void)keys;return NRF_SUCCESS;
+}
+uint32_t sd_ble_gatts_sys_attr_set(uint16_t handle,const uint8_t *data,uint16_t length,uint32_t flags) {
+    (void)handle;(void)data;(void)length;(void)flags;return NRF_SUCCESS;
+}
+static bool df_proto_vfs_is_idle(void) { return vfs_idle; }
+void df_core_send_frame(df_frame_t *frame) { response=*frame;++tx_calls; }
+
+/* ACTUAL_PROFILE */
+/* ACTUAL_FUNCTIONS */
+
+static void pass(const char *name) { ++checks;printf("{\"case\":\"%s\",\"passed\":true}\n",name); }
+static uint16_t u16(const uint8_t *p) { return p[0]|((uint16_t)p[1]<<8); }
+static uint32_t u32(const uint8_t *p) { return p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
+static void event(ble_evt_t *evt) { ble_evt_handler(evt,NULL);CHECK(!critical_depth); }
+static void connect_peer(uint16_t handle,uint16_t interval,uint16_t latency,uint16_t timeout) {
+    ble_evt_t e={0};e.header.evt_id=BLE_GAP_EVT_CONNECTED;e.evt.gap_evt.conn_handle=handle;
+    e.evt.gap_evt.params.connected.conn_params=(ble_gap_conn_params_t){interval,interval,latency,timeout};
+    m_nus_session_handle=BLE_CONN_HANDLE_INVALID;event(&e);CHECK(m_conn_handle==handle);
+    m_gatt.effective=250;m_ble_nus_max_data_len=247;
+}
+static void file_session(void) { m_nus_session_handle=m_conn_handle;work_ready=true; }
+static void disconnect_peer(uint16_t handle) {
+    ble_evt_t e={0};e.header.evt_id=BLE_GAP_EVT_DISCONNECTED;e.evt.gap_evt.conn_handle=handle;event(&e);
+}
+static void test_critical_exit(void) {
+    CHECK(critical_depth);--critical_depth;
+    if(!critical_depth&&pending_disconnect) { pending_disconnect=false;disconnect_peer(m_conn_handle); }
+}
+static void phy_event(uint16_t handle,uint8_t status,uint8_t rx,uint8_t tx) {
+    ble_evt_t e={0};e.header.evt_id=BLE_GAP_EVT_PHY_UPDATE;e.evt.gap_evt.conn_handle=handle;
+    e.evt.gap_evt.params.phy_update=(ble_gap_evt_phy_update_t){.status=status,.rx_phy=rx,.tx_phy=tx};event(&e);
+}
+static void issue(const uint8_t *data,size_t length,uint8_t status,uint16_t chunk) {
+    df_frame_t f={.length=length,.status=status,.chunk=chunk};CHECK(length<=sizeof(f.data));
+    if(length)memcpy(f.data,data,length);
+    df_event_t e={DF_EVENT_DATA_RECEVIED,&f};
+    unsigned before=tx_calls;df_proto_handler_info_mtu_diagnostic(&e);CHECK(tx_calls==before+1&&!critical_depth);
+}
+static void query(void) { const uint8_t selector=1;issue(&selector,1,0,0);CHECK(response.status==0&&response.length==32); }
+static void snapshot_flags(uint8_t flags) { query();CHECK(response.data[14]==flags); }
+
+int main(void) {
+    _Static_assert(sizeof(ble_link_profile_t)<=24,"bounded per-link state");
+    CHECK(BLE_GAP_PHYS_SUPPORTED==(BLE_GAP_PHY_1MBPS|BLE_GAP_PHY_2MBPS));
+    uint8_t guard[34];memset(guard,0xa5,sizeof(guard));
+    CHECK(!ble_link_diagnostic(NULL,32)&&!ble_link_diagnostic(guard+1,31));
+    m_ble_initialized=false;CHECK(!ble_link_diagnostic(guard+1,32));m_ble_initialized=true;
+    for(unsigned i=0;i<sizeof(guard);i++)CHECK(guard[i]==0xa5);
+    CHECK(ble_link_diagnostic(guard+1,32)&&guard[0]==0xa5&&guard[33]==0xa5);
+    snapshot_flags(0);CHECK(u32(response.data+28)==UINT32_MAX&&response.data[15]==255&&response.data[24]==0);
+    pass("uninitialized_bounds_disconnected_sentinels");
+
+    connect_peer(7,6,0,400);snapshot_flags(3);
+    CHECK(!(response.data[5]&1)&&u16(response.data+6)==0&&u16(response.data+16)==6);
+    CHECK(u16(response.data+18)==0&&u16(response.data+20)==400&&response.data[22]==0&&response.data[23]==0);
+    unsigned before=phy_calls;ble_process_pending();CHECK(phy_calls==before);
+    pass("actual_selected_7_5ms_interval_before_nus");
+    file_session();issue(NULL,0,0,0);CHECK(response.length==16&&response.data[4]==1&&response.data[5]==7);
+    CHECK(response.data[14]==0&&response.data[15]==0&&u16(response.data+6)==250);
+    const uint8_t mtu23[]={'M','T','U','!',23,0};issue(mtu23,sizeof(mtu23),0,0);
+    CHECK(response.length==16&&u16(response.data+8)==23&&m_gatt.effective==250);
+    pass("legacy_v1_and_mtu_setting_unchanged");
+
+    before=phy_calls;query();query();CHECK(phy_calls==before&&response.data[4]==2&&response.data[5]==7);
+    CHECK(response.data[25]==0&&response.data[26]==0&&response.data[27]==0);
+    pass("v2_read_has_no_radio_or_settings_side_effect");
+    phy_result=NRF_SUCCESS;ble_process_pending();CHECK(phy_calls==before+1&&requested_handle==7);
+    CHECK(requested_rx==BLE_GAP_PHY_2MBPS&&requested_tx==BLE_GAP_PHY_2MBPS);
+    snapshot_flags(11);CHECK(response.data[24]==1&&u32(response.data+28)==0&&response.data[22]==0);
+    for(unsigned i=0;i<20;i++){now+=250;ble_process_pending();}CHECK(phy_calls==before+1);
+    pass("one_2m_request_only_after_ready_and_no_early_success_claim");
+    phy_event(7,0,2,2);snapshot_flags(7);CHECK(response.data[22]==2&&response.data[23]==2&&response.data[15]==0);
+    ble_process_pending();CHECK(phy_calls==before+1);
+    pass("effective_phy_from_completed_event");
+
+    ble_evt_t params={0};params.header.evt_id=BLE_GAP_EVT_CONN_PARAM_UPDATE;params.evt.gap_evt.conn_handle=7;
+    params.evt.gap_evt.params.conn_param_update.conn_params=(ble_gap_conn_params_t){12,12,4,500};event(&params);
+    query();CHECK(u16(response.data+16)==12&&u16(response.data+18)==4&&u16(response.data+20)==500);
+    pass("connection_parameter_update_is_current_not_preferred");
+    params.evt.gap_evt.conn_handle=9;params.evt.gap_evt.params.conn_param_update.conn_params.min_conn_interval=100;
+    event(&params);phy_event(9,0,1,1);disconnect_peer(9);query();
+    CHECK(u16(response.data+16)==12&&response.data[22]==2&&m_conn_handle==7);
+    pass("old_handle_events_cannot_overwrite_new_link");
+    phy_event(7,BLE_HCI_UNSUPPORTED_REMOTE_FEATURE,1,1);snapshot_flags(7);
+    CHECK(response.data[22]==2&&response.data[23]==2&&response.data[15]==BLE_HCI_UNSUPPORTED_REMOTE_FEATURE);
+    pass("failed_phy_event_preserves_previous_confirmed_phy");
+    disconnect_peer(7);snapshot_flags(0);
+    CHECK(u16(response.data+16)==0&&u16(response.data+18)==0&&u16(response.data+20)==0&&response.data[22]==0);
+    CHECK(response.data[24]==0&&response.data[15]==255&&u32(response.data+28)==UINT32_MAX);
+    pass("disconnect_clears_current_link_diagnosis");
+
+    connect_peer(7,16,0,400);file_session();snapshot_flags(3);
+    CHECK(response.data[22]==0&&response.data[24]==0&&u32(response.data+28)==UINT32_MAX);
+    phy_result=NRF_ERROR_BUSY;before=phy_calls;now=0xffff80;ble_process_pending();
+    CHECK(phy_calls==before+1);now=(now+249)&0xffffff;ble_process_pending();CHECK(phy_calls==before+1);
+    now=(now+1)&0xffffff;ble_process_pending();CHECK(phy_calls==before+2);
+    now=(now+250)&0xffffff;ble_process_pending();CHECK(phy_calls==before+3);
+    for(unsigned i=0;i<8;i++){now=(now+1000)&0xffffff;ble_process_pending();}
+    CHECK(phy_calls==before+3);snapshot_flags(3);
+    CHECK(response.data[24]==3&&u32(response.data+28)==NRF_ERROR_BUSY);
+    pass("busy_retry_limit_and_rtc_wrap");
+    disconnect_peer(7);connect_peer(7,16,0,400);file_session();phy_result=NRF_ERROR_BUSY;
+    before=phy_calls;ble_process_pending();now+=250;phy_result=NRF_SUCCESS;ble_process_pending();
+    CHECK(phy_calls==before+2);snapshot_flags(11);CHECK(response.data[24]==2);
+    phy_event(7,0,1,1);snapshot_flags(7);CHECK(response.data[22]==1&&response.data[23]==1);
+    now+=10000;ble_process_pending();CHECK(phy_calls==before+2&&m_conn_handle==7);
+    pass("busy_then_successful_1m_fallback_keeps_link");
+
+    const uint32_t errors[]={NRF_ERROR_NOT_SUPPORTED,NRF_ERROR_INVALID_STATE,BLE_ERROR_INVALID_CONN_HANDLE,NRF_ERROR_INVALID_PARAM};
+    for(unsigned i=0;i<sizeof(errors)/sizeof(errors[0]);i++) {
+        disconnect_peer(7);connect_peer(7,16,0,400);file_session();before=phy_calls;phy_result=errors[i];
+        ble_process_pending();now+=1000;ble_process_pending();snapshot_flags(3);
+        CHECK(phy_calls==before+1&&response.data[24]==1&&u32(response.data+28)==errors[i]&&m_conn_handle==7);
+    }
+    pass("local_phy_rejection_is_nonfatal_and_not_retried_forever");
+    disconnect_peer(7);connect_peer(7,16,0,400);file_session();phy_result=NRF_SUCCESS;
+    phy_event(7,0,2,2);before=phy_calls;ble_process_pending();CHECK(phy_calls==before);
+    snapshot_flags(7);CHECK(response.data[24]==0&&u32(response.data+28)==UINT32_MAX);
+    pass("already_2m_peer_needs_no_extra_request");
+
+    disconnect_peer(7);connect_peer(7,16,0,400);file_session();before=phy_calls;
+    m_file_mode=false;m_remote_mode=true;ble_process_pending();CHECK(phy_calls==before);
+    m_file_mode=true;m_remote_mode=false;m_mode_pending=true;ble_process_pending();CHECK(phy_calls==before);m_mode_pending=false;
+    m_release_handle=7;ble_process_pending();CHECK(phy_calls==before);m_release_handle=BLE_CONN_HANDLE_INVALID;
+    m_sessions_enabled=false;ble_process_pending();CHECK(phy_calls==before);m_sessions_enabled=true;
+    work_ready=false;ble_process_pending();CHECK(phy_calls==before);work_ready=true;
+    ble_process_pending();CHECK(phy_calls==before+1);
+    pass("mode_handoff_and_closing_session_gates");
+
+    ble_evt_t peer={0};peer.header.evt_id=BLE_GAP_EVT_PHY_UPDATE_REQUEST;peer.evt.gap_evt.conn_handle=7;
+    before=phy_calls;phy_result=NRF_ERROR_BUSY;event(&peer);CHECK(phy_calls==before+1&&requested_rx==BLE_GAP_PHY_AUTO);
+    phy_result=NRF_ERROR_INVALID_STATE;event(&peer);CHECK(phy_calls==before+2&&m_conn_handle==7);
+    peer.evt.gap_evt.conn_handle=9;event(&peer);CHECK(phy_calls==before+2);
+    pass("peer_phy_busy_late_reply_never_resets_or_targets_other_handle");
+
+    uint8_t malformed[243]={0};for(unsigned x=0;x<=255;x++)if(x!=1){malformed[0]=x;issue(malformed,1,0,0);CHECK(response.status==1&&!response.length);}
+    for(unsigned length=2;length<=243;length++){issue(malformed,length,0,0);CHECK(response.status==1&&!response.length);}
+    malformed[0]=1;for(unsigned status=1;status<=255;status++){issue(malformed,1,status,0);CHECK(response.status==1&&!response.length);}
+    for(unsigned chunk=1;chunk<=65535;chunk++){issue(malformed,1,0,chunk);CHECK(response.status==1&&!response.length);}
+    pass("v2_rejects_malformed_selector_length_status_chunk");
+    vfs_idle=false;query();CHECK(!(response.data[5]&4));vfs_idle=true;query();CHECK(response.data[5]&4);
+    unsigned sent=tx_calls;df_event_t e={DF_EVENT_DATA_TRANSMIT_READY,NULL};df_proto_handler_info_mtu_diagnostic(&e);
+    e.type=DF_EVENT_LINK_DISCONNECTED;df_proto_handler_info_mtu_diagnostic(&e);CHECK(tx_calls==sent);
+    pass("v2_is_readonly_while_storage_busy_and_ignores_nonrequest_events");
+
+    inject_disconnect=true;query();
+    CHECK(response.data[5]&1);CHECK(response.data[14]&1);
+    CHECK(m_conn_handle==BLE_CONN_HANDLE_INVALID&&!pending_disconnect);
+    pass("mtu_and_link_snapshot_share_one_irq_generation");
+
+    connect_peer(7,16,0,400);file_session();phy_result=NRF_SUCCESS;ble_process_pending();phy_event(7,0,2,2);
+    m_gatt.att_mtu_desired_periph=250;query();
+    printf("WIRE ");for(unsigned i=0;i<response.length;i++)printf("%02x",response.data[i]);puts("");
+    CHECK(!critical_depth&&!disconnect_calls);
+    printf("PASS %u link/PHY/wire cases; state %zu B; actual S112 headers; no radio\n",checks,sizeof(ble_link_profile_t));
+}
