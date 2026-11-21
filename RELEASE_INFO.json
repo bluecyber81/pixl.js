@@ -305,7 +305,7 @@
       "Settings/save/discard persistence and longer normal operation"
     ],
     "normal_build_policy": "Select measured improvements for a later higher-counter normal build. No additional full backup is required just for the short comparison.",
-    "source_id": "7581c42a3d6ca685196aac1f70458b20815b43f295ed1646b67e557f2ed4d80a",
+    "source_id": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
     "storage_engine_sha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788"
   },
   "firmware_preview_history": [
