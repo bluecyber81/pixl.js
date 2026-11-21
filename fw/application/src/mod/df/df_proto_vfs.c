@@ -996,20 +996,39 @@ static void df_proto_handler_vfs_raw_meta(df_event_t *evt) {
 
 #ifdef VFS_PACKED_LFS_ENABLE
 #ifdef PIXL_SMALL_CREATE_ENABLE
+static bool read_small_item(buffer_t *buff, char path[VFS_MAX_FULL_PATH_LEN], uint16_t *expected) {
+    if (!read_path(buff, path, VFS_MAX_FULL_PATH_LEN) || path[0] != 'E' ||
+        !raw_meta_path_valid(path, false) || buff_get_remain_size(buff) < 2) return false;
+    *expected = buff_get_u16(buff);
+    return *expected <= VFS_SMALL_CREATE_MAX;
+}
+
+static void send_small_read(uint8_t command) {
+    size_t capacity = df_core_max_payload();
+    if (!capacity || capacity > DF_PAYLOAD_LEN) {
+        df_proto_vfs_cancel_small_read(); send_error(command); return;
+    }
+    df_frame_t out = {.cmd=command, .status=DF_STATUS_OK, .chunk=small_read.chunk++};
+    size_t remaining = small_read.length - small_read.offset;
+    out.length = remaining < capacity ? remaining : capacity;
+    memcpy(out.data, small_read.bytes + small_read.offset, out.length);
+    small_read.offset += out.length;
+    if (small_read.offset < small_read.length) out.chunk |= 0x8000;
+    else df_proto_vfs_cancel_small_read();
+    df_core_send_frame(&out);
+}
+
 static void df_proto_handler_vfs_small_read(df_event_t *evt) {
     const uint8_t command = DF_PROTO_CMD_VFS_SMALL_READ;
     if (evt->type == DF_EVENT_DATA_RECEVIED) {
         df_proto_vfs_cancel_small_read();
         NEW_BUFFER_READ(buff, evt->df->data, evt->df->length);
         char path[VFS_MAX_FULL_PATH_LEN];
+        uint16_t expected;
         if (evt->df->status || evt->df->chunk || !df_proto_vfs_is_idle() ||
-            !read_path(&buff, path, sizeof(path)) || path[0] != 'E' ||
-            !raw_meta_path_valid(path, false) || buff_get_remain_size(&buff) != 2) {
+            !read_small_item(&buff, path, &expected) || buff_get_remain_size(&buff)) {
             send_error(command); return;
         }
-        const uint8_t *size_bytes = buff_get_data_ptr_pos(&buff);
-        const uint16_t expected = size_bytes[0] | ((uint16_t)size_bytes[1] << 8);
-        if (expected > VFS_SMALL_CREATE_MAX) { send_error(command); return; }
         vfs_driver_t *driver = get_driver_by_label('E');
         if (!driver || !driver->mounted()) { send_vfs_error(command, VFS_ERR_NODEV); return; }
         small_read.bytes = mui_mem_malloc(expected + 1u);
@@ -1024,19 +1043,63 @@ static void df_proto_handler_vfs_small_read(df_event_t *evt) {
     } else if (evt->type != DF_EVENT_DATA_TRANSMIT_READY || !small_read.bytes) {
         return;
     }
-    size_t capacity = df_core_max_payload();
-    if (!capacity || capacity > DF_PAYLOAD_LEN) {
-        df_proto_vfs_cancel_small_read(); send_error(command); return;
-    }
-    df_frame_t out = {.cmd=command, .status=DF_STATUS_OK, .chunk=small_read.chunk++};
-    size_t remaining = small_read.length - small_read.offset;
-    out.length = remaining < capacity ? remaining : capacity;
-    memcpy(out.data, small_read.bytes + small_read.offset, out.length);
-    small_read.offset += out.length;
-    if (small_read.offset < small_read.length) out.chunk |= 0x8000;
-    else df_proto_vfs_cancel_small_read();
-    df_core_send_frame(&out);
+    send_small_read(command);
 }
+
+#ifdef PIXL_FILE_DIGEST_ENABLE
+/* The first pass validates the complete request before allocation or I/O. The
+ * second prepares all results before the first reply, with no retained handle.
+ * READ reuses the final extra byte to detect growth; DIGEST reuses one scratch
+ * region. Only the existing small_read allocation survives TX_READY. */
+static void df_proto_handler_vfs_batch_read(df_event_t *evt) {
+    const uint8_t command = DF_PROTO_CMD_VFS_BATCH_READ;
+    if (evt->type == DF_EVENT_DATA_RECEVIED) {
+        df_proto_vfs_cancel_small_read();
+        df_frame_t *in = evt->df;
+        if (in->status || in->chunk || in->length < 10 || in->length > DF_PAYLOAD_LEN ||
+            in->data[0] > 1 || !in->data[1] || in->data[1] > DF_VFS_BATCH_MAX_FILES ||
+            !df_proto_vfs_is_idle()) { send_error(command); return; }
+        const bool digest = in->data[0] != 0;
+        const uint8_t files = in->data[1];
+        NEW_BUFFER_READ(buff, in->data, in->length);
+        buff.pos = 2;
+        const uint64_t revision = buff_get_u64(&buff);
+        if (!revision || df_small_available_revision() != revision) { send_error(command); return; }
+        char path[VFS_MAX_FULL_PATH_LEN];
+        uint16_t expected, total = 0, largest = 0, offset = 0;
+        for (uint8_t i = 0; i < files; ++i) {
+            if (!read_small_item(&buff, path, &expected)) { send_error(command); return; }
+            total += digest ? 32 : expected;
+            if (expected > largest) largest = expected;
+        }
+        if (buff_get_remain_size(&buff)) { send_error(command); return; }
+        small_read.bytes = mui_mem_malloc(total + (digest ? largest : 0) + 1u);
+        if (!small_read.bytes) { send_vfs_error(command, VFS_ERR_NOMEM); return; }
+        small_read.length = total;
+        vfs_driver_t *driver = get_driver_by_label('E');
+        buff.pos = 10;
+        int32_t error = VFS_ERR_FAIL;
+        for (uint8_t i = 0; i < files; ++i) {
+            if (!read_small_item(&buff, path, &expected)) goto failed;
+            uint8_t *bytes = small_read.bytes + (digest ? total : offset);
+            const int32_t count = driver->read_file_data(get_file_path(path), bytes, expected + 1u);
+            if (count != expected) { error = count < 0 ? count : VFS_ERR_FAIL; goto failed; }
+            if (digest && mbedtls_sha256_ret(bytes, expected, small_read.bytes + offset, 0)) goto failed;
+            offset += digest ? 32 : expected;
+        }
+        /* Our response buffer is now owned, so df_proto_vfs_is_idle() would
+         * reject it. Recheck the storage revision/recovery/handle guards. */
+        if (df_small_available_revision() != revision) goto failed;
+        send_small_read(command);
+        return;
+failed:
+        df_proto_vfs_cancel_small_read();
+        send_vfs_error(command, error);
+    } else if (evt->type == DF_EVENT_DATA_TRANSMIT_READY && small_read.bytes) {
+        send_small_read(command);
+    }
+}
+#endif
 #endif
 
 #ifdef PIXL_FILE_DIGEST_ENABLE
@@ -1141,6 +1204,10 @@ const df_cmd_entry_t df_proto_handler_vfs_entries[] = {
     {DF_PROTO_CMD_VFS_SMALL_CAP, df_small_create_capability},
     {DF_PROTO_CMD_VFS_SMALL_CREATE, df_small_create_request},
     {DF_PROTO_CMD_VFS_SMALL_READ, df_proto_handler_vfs_small_read},
+#ifdef PIXL_FILE_DIGEST_ENABLE
+    {DF_PROTO_CMD_VFS_BATCH_CAP, df_small_create_capability},
+    {DF_PROTO_CMD_VFS_BATCH_READ, df_proto_handler_vfs_batch_read},
+#endif
 #endif
     {DF_PROTO_CMD_VFS_IMPORT_STATE, df_proto_handler_vfs_import_state},
 #ifdef PIXL_FILE_DIGEST_ENABLE

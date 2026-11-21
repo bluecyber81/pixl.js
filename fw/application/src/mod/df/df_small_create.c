@@ -94,7 +94,7 @@ static bool allowed_path(const uint8_t *p, size_t size, bool require_stage_paren
     return false;
 }
 
-static uint64_t available_revision(void) {
+uint64_t df_small_available_revision(void) {
     if (!vfs_drive_enabled(VFS_DRIVE_EXT) || vfs_packed_recovery_required() ||
         vfs_packed_import_pending() || !vfs_packed_handles_idle()) return 0;
     vfs_driver_t *driver = vfs_get_driver(VFS_DRIVE_EXT);
@@ -110,12 +110,18 @@ static void failure(uint8_t command, int32_t error) {
 void df_small_create_capability(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     df_frame_t *in = evt->df;
-    uint64_t revision = available_revision();
+    uint64_t revision = df_small_available_revision();
     if (in->length || in->status || in->chunk || !revision || !df_proto_vfs_is_idle()) {
         failure(in->cmd, VFS_ERR_FAIL);
         return;
     }
     df_frame_t out = {.cmd = in->cmd, .length = 16, .data = {'P','X','S','C',1,7}};
+#ifdef PIXL_FILE_DIGEST_ENABLE
+    /* A separate request preserves the strict legacy PXSC flag mask. */
+    if (in->cmd == DF_PROTO_CMD_VFS_BATCH_CAP) {
+        out.data[2] = 'B'; out.data[3] = 'R'; out.data[5] = DF_VFS_BATCH_MAX_FILES;
+    }
+#endif
     put16(out.data + 6, VFS_SMALL_CREATE_MAX);
     put64(out.data + 8, revision);
     df_core_send_frame(&out);
@@ -125,7 +131,7 @@ static bool start(const uint8_t *payload, size_t length, uint32_t id, size_t *he
     if (length < 49 || !id || !df_proto_vfs_is_idle()) return false;
     uint64_t revision = read64(payload + 5);
     uint16_t size = read16(payload + 13), path_size = read16(payload + 47);
-    if (!revision || available_revision() != revision || size > VFS_SMALL_CREATE_MAX ||
+    if (!revision || df_small_available_revision() != revision || size > VFS_SMALL_CREATE_MAX ||
         path_size > length - 49 || !allowed_path(payload + 49, path_size, true)) return false;
     *header = 49 + path_size;
     if (length - *header > size) return false;
@@ -156,18 +162,18 @@ static bool start(const uint8_t *payload, size_t length, uint32_t id, size_t *he
 static int32_t commit(df_frame_t *out) {
     uint8_t *digest = out->data + 11;
     if (mbedtls_sha256_ret(pending->bytes, pending->total, digest, 0) ||
-        memcmp(digest, pending->digest, 32) || available_revision() != pending->revision)
+        memcmp(digest, pending->digest, 32) || df_small_available_revision() != pending->revision)
         return VFS_ERR_FAIL;
     char *bare = pending->path + VFS_DRIVE_LABEL_LEN;
     int32_t result = vfs_packed_create_small(bare, pending->revision, pending->bytes, pending->total);
     if (result != VFS_OK) return result;
-    uint64_t revision = available_revision();
+    uint64_t revision = df_small_available_revision();
     vfs_driver_t *driver = vfs_get_driver(VFS_DRIVE_EXT);
     if (!revision || revision == pending->revision || !driver) return VFS_ERR_FAIL;
     int32_t seen = driver->read_file_data(bare, pending->bytes, pending->total + 1);
     if (seen < 0) return seen;
     if (seen != pending->total || mbedtls_sha256_ret(pending->bytes, seen, digest, 0) ||
-        memcmp(digest, pending->digest, 32) || available_revision() != revision) return VFS_ERR_FAIL;
+        memcmp(digest, pending->digest, 32) || df_small_available_revision() != revision) return VFS_ERR_FAIL;
     out->data[0] = 1;
     put64(out->data + 3, revision);
     out->length = 43;
@@ -188,10 +194,10 @@ static bool publish(const uint8_t *p, size_t length, df_frame_t *out) {
     size_t parent = (size_t)(sname - source);
     if ((size_t)(tname - target) != parent || memcmp(source, target, parent) ||
         !stage_name((uint8_t *)sname, a - parent) || stage_name((uint8_t *)tname, b - parent) ||
-        available_revision() != expected) return false;
+        df_small_available_revision() != expected) return false;
     if (vfs_packed_publish_small(source + VFS_DRIVE_LABEL_LEN, target + VFS_DRIVE_LABEL_LEN, expected) != VFS_OK)
         return false;
-    uint64_t after = available_revision();
+    uint64_t after = df_small_available_revision();
     if (!after || after == expected) return false;
     out->data[0] = 3; put64(out->data + 1, after); out->length = 9;
     return true;

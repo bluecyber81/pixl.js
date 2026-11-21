@@ -143,8 +143,13 @@ static uint32_t crc(uint32_t c, const void *data, size_t n) {
    * no additional heap, stack buffer or mutable state is needed. */
 
   const uint8_t *bytes = data;
-  for (size_t i = 0; i < n; i++)
-    c = (c >> 8) ^ table[(c ^ bytes[i]) & 0xffu];
+  /* Keep the loop exit in the backedge: Cortex-M4 -Os otherwise emits an
+   * extra branch for every byte. Zero length still never touches data. */
+  if (n) {
+    do {
+      c = (c >> 8) ^ table[(c ^ *bytes++) & 0xffu];
+    } while (--n);
+  }
 #if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
   runtime_diag_profile_end(MOUNT_PROFILE_CRC, profile);
 #endif
@@ -156,10 +161,12 @@ static uint32_t crc_pair(uint32_t c, uint32_t *second, const void *data, size_t 
 #endif
   const uint8_t *p = data;
   uint32_t d = *second;
-  for (size_t i = 0; i < n; i++) {
-    uint8_t b = p[i];
-    c = (c >> 8) ^ table[(c ^ b) & 255u];
-    d = (d >> 8) ^ table[(d ^ b) & 255u];
+  if (n) {
+    do {
+      uint8_t b = *p++;
+      c = (c >> 8) ^ table[(c ^ b) & 255u];
+      d = (d >> 8) ^ table[(d ^ b) & 255u];
+    } while (--n);
   }
   *second = d;
 #if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
