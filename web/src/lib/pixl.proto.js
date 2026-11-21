@@ -9,7 +9,7 @@ import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
 import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
-import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
+import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
 import i18n from '../i18n'
@@ -267,7 +267,7 @@ export function enter_dfu() {
 // MTU!, which changes the preference for the next Bluetooth connection.
 export function get_mtu_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    const detail = firmwareVersion === '2.22.0-DE3.96' ? 2 : firmwareVersion === '2.22.0-DE3.95' ? 1 : 0;
+    const detail = supportsBleTestDiagnostics(firmwareVersion) ? 2 : firmwareVersion === '2.22.0-DE3.95' ? 1 : 0;
     const check = () => { if (generation !== transport_generation) throw new Error('Bluetooth session changed'); };
     function read(selector) {
         return op_queue_push(0x05, b => { if (selector) b.writeUint8(selector); }, b => {
@@ -285,10 +285,10 @@ export function get_mtu_diagnostics(firmwareVersion) {
     return read(detail);
 }
 
-// Explicit App669 test action. A fresh capability/readiness check is bracketed
+// Explicit App669/670 test action. A fresh capability/readiness check is bracketed
 // by local queue checks; this option is never set by ordinary diagnostic reads.
 export async function set_ble_test_extension(firmwareVersion, enabled) {
-    if (firmwareVersion !== '2.22.0-DE3.96' || typeof enabled !== 'boolean')
+    if (!supportsBleTestDiagnostics(firmwareVersion) || typeof enabled !== 'boolean')
         throw Object.assign(new Error('This firmware does not support the LCD Test 1 radio comparison.'), {code:'BLE_TEST_UNSUPPORTED'});
     const generation = transport_generation;
     const check = () => {
@@ -446,7 +446,7 @@ export function get_startup_diagnostics(firmwareVersion) {
     }
     // Supported OLED trials record native VFS startup phases without a PackedFS mount profile.
     if (hasOledSystemDiagnostics(known)) return read(1);
-    if (known === '2.22.0-DE3.96') return read(4);
+    if (supportsBleTestDiagnostics(known)) return read(4);
     if (Object.hasOwn(LCD_Z21_COUNTERS, known)) return read(3);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
@@ -516,7 +516,7 @@ export function vfs_drive_format(path) {
 
 // A cached PackedFS RAM snapshot: no filesystem scan or collection is run.
 export function get_storage_gc_diagnostics(firmwareVersion) {
-    if (firmwareVersion !== '2.22.0-DE3.96') return Promise.resolve(null);
+    if (!supportsBleTestDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x1c, b => { b.writeUint8(69); b.writeUint8(2); }, b =>
         parseStorageGcDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), {max_bytes:24, optional_probe:true})

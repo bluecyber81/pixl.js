@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-21T16:32:04.552644+00:00",
+  "status": "Gezielte Softwareprüfung bestanden; Build, Veröffentlichung und erneuter Gerätetest werden separat belegt.",
+  "project": {
+    "board": "LCD",
+    "firmware": "2.22.0-DE3.97 / App670 TEST1",
+    "webTarget": "3.60.0-test.2",
+    "repository": "/workspace/scratch/0af425ec2cbb/app670_web",
+    "branch": "work/web-app670-test1",
+    "baseCommit": "fda2e6a46f2f4329e34b461ff532174db367402b",
+    "observedHead": "fda2e6a46f2f4329e34b461ff532174db367402b",
+    "observedHeadTree": "18a6f116832107c8659de4db1a23348e53f531f9",
+    "workingTreeClean": false,
+    "workingTreeNote": "Der Root-Agent bearbeitet parallel ausschließlich Webversionsmetadaten und zugehörige Erwartungen. Dieser Bericht bindet nur die unten genannten drei eigenen Änderungen; er ist keine finale Commit- oder Auslieferungsquittung."
+  },
+  "symptom": "Beim direkten Lesen des Teststatus meldet das App670-Panel: Dieses Gerät hat die Testfunktion nicht bestätigt.",
+  "rootCause": {
+    "summary": "Vier Protokollfunktionen prüften noch ausschließlich DE3.96. Die gemeinsame Erkennung und die Oberfläche erlaubten bereits DE3.97. Dadurch forderte der Teststatus unter App670 MTUD v1 statt v3 an; die strikte Oberfläche lehnte die zutreffend gelesene ältere Antwort ab.",
+    "path": [
+      {
+        "path": "web/src/App.vue",
+        "function": "read_ble_test_diagnostics",
+        "line": 1656,
+        "finding": "Übergibt die aktuelle Firmwareversion an proto.get_mtu_diagnostics und prüft danach dieselbe Sitzung. Kein Adapter- oder Normalisierungsfehler."
+      },
+      {
+        "path": "web/src/lib/pixl.proto.js",
+        "function": "get_mtu_diagnostics",
+        "line": 268,
+        "finding": "DE3.97 fiel durch den alten DE3.96-Vergleich auf den leeren INFO05-Payload zurück. Der nötige v3-Selektor ist Byte 2."
+      },
+      {
+        "path": "web/src/lib/device-extra-diagnostics.js",
+        "function": "parseMtuDiagnostics / normalizeMtuDiagnostics",
+        "finding": "Der unveränderte Produktionsparser verarbeitet v3 und dessen Testprofil. Der gemeinsame Helper unterstützt exakt DE3.96 und DE3.97."
+      },
+      {
+        "path": "web/src/components/LcdTestPanel.vue",
+        "function": "receive",
+        "line": 108,
+        "finding": "Normalisiert die Antwort und fordert schemaVersion 3. Bei v1 entsteht folgerichtig BLE_TEST_UNSUPPORTED; die Meldung verschleiert keine beschädigte v3-Antwort."
+      }
+    ]
+  },
+  "changedGates": [
+    {
+      "function": "get_mtu_diagnostics",
+      "line": 268,
+      "beforeApp670": "INFO05 ohne Selektor; MTUD v1 statt Testprofil v3",
+      "afterApp669And670": "INFO05 mit Payload [2]; MTUD v3; vollständiger Request [5,0,0,0,2]"
+    },
+    {
+      "function": "set_ble_test_extension",
+      "line": 290,
+      "beforeApp670": "BLE_TEST_UNSUPPORTED vor jedem Request",
+      "afterApp669And670": "Frischer INFO05-v3-Prüflauf vor explizitem EVT!-Payload [69,86,84,33,enabled]; bestehende Bereitschafts-, Queue- und Sitzungsprüfungen bleiben erhalten."
+    },
+    {
+      "function": "get_startup_diagnostics",
+      "line": 430,
+      "beforeApp670": "Selektor 3 / Startup v4 ohne Test-Mountprofil",
+      "afterApp669And670": "Selektor 4 / Startup v5; vollständiger Request [9,0,0,0,4]"
+    },
+    {
+      "function": "get_storage_gc_diagnostics",
+      "line": 518,
+      "beforeApp670": "null ohne Request",
+      "afterApp669And670": "PXGC-RAM-Snapshot über Payload [69,2]; vollständiger Request [28,0,0,0,69,2]; keine Speicherbereinigung."
+    }
+  ],
+  "productionChange": {
+    "file": "web/src/lib/pixl.proto.js",
+    "existingHelper": "supportsBleTestDiagnostics",
+    "helperSource": "web/src/lib/device-extra-diagnostics.js:42",
+    "exactlyFourGateReplacementsAndOneImportAndOneComment": true,
+    "expectedPatchByteComparisonPassed": true,
+    "parserFallbackBusyAndSessionLogicUnchanged": true
+  },
+  "tests": {
+    "regressionCommand": "node --test --test-name-pattern=APP670_STATUS_REGRESSION web/tests/extra-diagnostics-transport.test.cjs",
+    "red": {
+      "path": "REGRESSION_RED.log",
+      "bytes": 5084,
+      "sha256": "325675003875b9ac9301af9dec42a1e23da62db3e6fb7594fbb94acade18ebc3",
+      "summary": {
+        "tests": 8,
+        "suites": 0,
+        "pass": 4,
+        "fail": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 241.63201
+      },
+      "reporterCompleted": true,
+      "originalProductionSha256": "3f5ef7127b55db8c69e971c157461ef4a986fd7cba4021eb794616f7f3249fca",
+      "productionUnchangedFromBaseline": true,
+      "interpretation": "Alle vier App669-Verträge bestehen; die vier entsprechenden App670-Verträge scheitern an falschen oder fehlenden tatsächlichen Requestbytes."
+    },
+    "green": {
+      "path": "REGRESSION_GREEN.log",
+      "bytes": 1291,
+      "sha256": "ef4c1829e48f2d13b52a8b99eac120dd49c049738376f6a278675b528fb97ced",
+      "summary": {
+        "tests": 8,
+        "suites": 0,
+        "pass": 8,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 288.46057
+      },
+      "reporterCompleted": true,
+      "interpretation": "Identische acht Regressionen und identischer Testdateihash; nach dem Produktionsfix bestehen alle acht."
+    },
+    "targetedCommand": "node --test web/tests/extra-diagnostics-transport.test.cjs web/tests/transport.test.cjs web/tests/test-build-diagnostics.test.mjs web/tests/lcd-test-panel.test.mjs",
+    "targeted": {
+      "path": "TARGETED_SUITES.log",
+      "bytes": 27392,
+      "sha256": "9427f57a8e89a01713087819f668cf6fbf2ed0950d4c65918cbe9dedcad97b6f",
+      "summary": {
+        "tests": 254,
+        "suites": 0,
+        "pass": 254,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 2141.275439
+      },
+      "reporterCompleted": true
+    },
+    "countsAreNotAdditive": "Die acht grünen Regressionen sind in den 254 Tests enthalten. Die alte Vollsuite und frühere Paket-/Buildprüfungen gehören zu separaten Phasen.",
+    "scope": [
+      "Matrix für DE3.96 und DE3.97 mit echten Produktionsfunktionen, C-Serializer-Fixtures und fragmentierten Antworten.",
+      "Teststatus v3, Normalisierung und Bereitschaftsflags; Startup v5 und Mountprofil; PXGC ohne Nebenoperationen; expliziter EVT!-Vorprüflauf und SDK-Fehler.",
+      "Unsupported-Fallback nur bei den bisherigen expliziten Antwortstatus; fehlerhafte, verkürzte oder unerwartete erfolgreiche Antworten bleiben Fehler.",
+      "Busy-Grenzen und Sitzungswechsel verhindern spätere Schreiboperationen beziehungsweise die Übernahme veralteter Antworten.",
+      "Unbekannte DE3.98 und OLED-Identitäten bleiben außerhalb der Testfreigabe. Andere ältere Diagnosepfade behalten ihre bisherige Auswahl.",
+      "Die transport.test.cjs-VM bindet den tatsächlichen Helper aus device-extra-diagnostics.js ein; kein ersetzender Versionsstub."
+    ],
+    "previousCoverageGap": "Die bisherigen Wiretests waren auf App669 konzentriert und stuften DE3.97 beim Legacy-MTUD-Pfad sowie beim Setter ausdrücklich als nicht unterstützt ein. Die App670-UI-Tests lieferten passende v3-Objekte über Mock-Callbacks und prüften dadurch nicht die echte Protokollauswahl. Die neue Versionsmatrix schließt diese konkrete Lücke.",
+    "limitations": [
+      "Mock-BLE prüft die Produktionslogik und Wirebytes, keine physische Bluetooth-Verbindung.",
+      "Keine neue Vollsuite, kein Firmwarebuild und kein Gerätetest durch diesen Agenten.",
+      "Finale Webbuilds, Auslieferungsquittung und erneuter Klick auf Teststatus lesen nach Bereitstellung von TEST2 sind separate Schritte."
+    ]
+  },
+  "evidence": {
+    "baseline": {
+      "path": "BASELINE.json",
+      "bytes": 747,
+      "sha256": "50be595fd06f278103f3b9bd6d0946ff7ce5431625ffd4ae92c28ea6b4fa3be3"
+    },
+    "redReceipt": {
+      "path": "REGRESSION_RED.json",
+      "bytes": 721,
+      "sha256": "284a4a573cc3ef8e6f6a8f0089c17e8c452f5924b26cddaa2086f2fd95124a47"
+    },
+    "scopedPatch": {
+      "path": "HOTFIX_SCOPED.patch",
+      "bytes": 19265,
+      "sha256": "a637fa3898b911a8ebd933d0941458f08c373f48e90cae1219aebc70e8ff8f5e"
+    },
+    "changedFiles": [
+      {
+        "path": "web/src/lib/pixl.proto.js",
+        "bytes": 71423,
+        "sha256": "09e6e69dd6ef187c105fa7eb2ebf8ab525563ef50a0284bea32a2043d6554f8a"
+      },
+      {
+        "path": "web/tests/extra-diagnostics-transport.test.cjs",
+        "bytes": 39282,
+        "sha256": "23223ca608b5c6024ec05070b1de67b0d24c43781d9d7f14462c6bb70dccf900"
+      },
+      {
+        "path": "web/tests/transport.test.cjs",
+        "bytes": 132027,
+        "sha256": "6c912ef6b0217994f2bfd77e025d6232abfa6197ec45b38f3a9e416e40432f56"
+      }
+    ],
+    "testedFiles": [
+      {
+        "path": "web/tests/extra-diagnostics-transport.test.cjs",
+        "bytes": 39282,
+        "sha256": "23223ca608b5c6024ec05070b1de67b0d24c43781d9d7f14462c6bb70dccf900"
+      },
+      {
+        "path": "web/tests/transport.test.cjs",
+        "bytes": 132027,
+        "sha256": "6c912ef6b0217994f2bfd77e025d6232abfa6197ec45b38f3a9e416e40432f56"
+      },
+      {
+        "path": "web/tests/test-build-diagnostics.test.mjs",
+        "bytes": 8506,
+        "sha256": "abbff98e9ec06bf3329a9a4e6cd4b88463f6c6bf009a25044c0c2e58b31e2549"
+      },
+      {
+        "path": "web/tests/lcd-test-panel.test.mjs",
+        "bytes": 11657,
+        "sha256": "40cb7d9aba6d490ecc9af630676fdce2adb331c9125cf6d3a9bdf7ac8249bc1a"
+      }
+    ],
+    "unchangedRelatedProductionFiles": [
+      {
+        "path": "web/src/lib/device-extra-diagnostics.js",
+        "bytes": 18246,
+        "sha256": "04e4f264236eeab092b3a0604dfb401acbea73c2ee1fb7d60582ab4f849f59fe",
+        "unchangedFromBaseCommit": true
+      },
+      {
+        "path": "web/src/lib/startup-diagnostics.js",
+        "bytes": 27465,
+        "sha256": "0f0839bdf439909212b6e237d105e00c4b665801ff06c9e1e35c799c18a65c6d",
+        "unchangedFromBaseCommit": true
+      },
+      {
+        "path": "web/src/lib/hardware-profile.js",
+        "bytes": 3605,
+        "sha256": "a86b2d10cefb1204e38ee5091a0995084b06a3d2b5cbeab27180104d4a7910de",
+        "unchangedFromBaseCommit": true
+      },
+      {
+        "path": "web/src/lib/pixl.ble.js",
+        "bytes": 12876,
+        "sha256": "2edfa69f2f8e19fbd6191ca4e141ab3dc1d68dc5676d62e1284a6843a7fcaa65",
+        "unchangedFromBaseCommit": true
+      },
+      {
+        "path": "web/src/App.vue",
+        "bytes": 263411,
+        "sha256": "b2b4d2290e8154bad41c3b2d305fac4736ec7ddb081475d53b85dab16e9c1d81",
+        "unchangedFromBaseCommit": true
+      },
+      {
+        "path": "web/src/components/LcdTestPanel.vue",
+        "bytes": 19272,
+        "sha256": "271ff06ea6cea4f8759b767b66805ec964b40c0002b7c71490b09aea8db54eba",
+        "unchangedFromBaseCommit": true
+      }
+    ],
+    "cSerializerFixtures": [
+      {
+        "path": "web/tests/fixtures/ble-link-diagnostic-v3.json",
+        "bytes": 560,
+        "sha256": "65263e9345e2a0bc77312b02f616fe712730e7f722e36f944aac1fb4311d5a59"
+      },
+      {
+        "path": "web/tests/fixtures/packed-gc-diagnostic-v1.json",
+        "bytes": 872,
+        "sha256": "b374c6aabd1e16bcd76c32b4f77d8102e63b46c90fe9dc841c3b1711c67be219"
+      },
+      {
+        "path": "web/tests/fixtures/startup-profile-v5.json",
+        "bytes": 361,
+        "sha256": "993c38bc5709f5f0105011f457c667a6c05462e586db374e62511b9f9432ccbc"
+      }
+    ],
+    "whitespaceCheck": {
+      "command": "git -c core.whitespace=cr-at-eol diff --check -- web/src/lib/pixl.proto.js web/tests/extra-diagnostics-transport.test.cjs web/tests/transport.test.cjs",
+      "exitCode": 0
+    }
+  },
+  "operations": {
+    "ownChangedPaths": [
+      "web/src/lib/pixl.proto.js",
+      "web/tests/extra-diagnostics-transport.test.cjs",
+      "web/tests/transport.test.cjs"
+    ],
+    "firmwareChanged": false,
+    "firmwareRebuilt": false,
+    "fullWebSuiteRepeated": false,
+    "webBuiltByThisAgent": false,
+    "commitCreatedByThisAgent": false,
+    "externalWritesByThisAgent": false,
+    "historicalEvidenceModified": false
+  },
+  "nextStep": "Root prüft und baut Web 3.60.0-test.2, veröffentlicht den Web-Hotfix und belegt den ausgelieferten Stand. Danach verbindet der Nutzer App670 erneut und wählt Teststatus lesen; die erwartete bestätigte v3-Antwort ist am Gerät noch zu beobachten."
+}

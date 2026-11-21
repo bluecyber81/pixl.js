@@ -187,7 +187,7 @@ test('the mobile current download changes to App670 while retained App669 keeps 
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
   assert.ok(html.includes('../firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip'));
   assert.match(html, /DE3\.97 \/ App670 TEST1/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.60.0-test.1'"));
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.60.0-test.2'"));
   assert.equal(catalog.packages[0].version, '2.22.0-DE3.89');
 });
 

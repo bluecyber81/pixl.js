@@ -1,0 +1,427 @@
+{
+  "schema": 1,
+  "kind": "web-software-hotfix-qualification",
+  "qualifiedAt": "2026-11-21T16:35:59.501646+00:00",
+  "webVersion": "3.60.0-test.2",
+  "board": "LCD",
+  "displayDriver": "ST7567",
+  "firmwareVersion": "2.22.0-DE3.97",
+  "applicationCounter": 670,
+  "firmwareTestLabel": "TEST1",
+  "status": "Software checks and both builds passed; publication and HTTP readback are recorded separately.",
+  "rootCause": {
+    "summary": "Vier Protokollfunktionen prüften noch ausschließlich DE3.96. Die gemeinsame Erkennung und die Oberfläche erlaubten bereits DE3.97. Dadurch forderte der Teststatus unter App670 MTUD v1 statt v3 an; die strikte Oberfläche lehnte die zutreffend gelesene ältere Antwort ab.",
+    "path": [
+      {
+        "path": "web/src/App.vue",
+        "function": "read_ble_test_diagnostics",
+        "line": 1656,
+        "finding": "Übergibt die aktuelle Firmwareversion an proto.get_mtu_diagnostics und prüft danach dieselbe Sitzung. Kein Adapter- oder Normalisierungsfehler."
+      },
+      {
+        "path": "web/src/lib/pixl.proto.js",
+        "function": "get_mtu_diagnostics",
+        "line": 268,
+        "finding": "DE3.97 fiel durch den alten DE3.96-Vergleich auf den leeren INFO05-Payload zurück. Der nötige v3-Selektor ist Byte 2."
+      },
+      {
+        "path": "web/src/lib/device-extra-diagnostics.js",
+        "function": "parseMtuDiagnostics / normalizeMtuDiagnostics",
+        "finding": "Der unveränderte Produktionsparser verarbeitet v3 und dessen Testprofil. Der gemeinsame Helper unterstützt exakt DE3.96 und DE3.97."
+      },
+      {
+        "path": "web/src/components/LcdTestPanel.vue",
+        "function": "receive",
+        "line": 108,
+        "finding": "Normalisiert die Antwort und fordert schemaVersion 3. Bei v1 entsteht folgerichtig BLE_TEST_UNSUPPORTED; die Meldung verschleiert keine beschädigte v3-Antwort."
+      }
+    ]
+  },
+  "changedGates": [
+    {
+      "function": "get_mtu_diagnostics",
+      "line": 268,
+      "beforeApp670": "INFO05 ohne Selektor; MTUD v1 statt Testprofil v3",
+      "afterApp669And670": "INFO05 mit Payload [2]; MTUD v3; vollständiger Request [5,0,0,0,2]"
+    },
+    {
+      "function": "set_ble_test_extension",
+      "line": 290,
+      "beforeApp670": "BLE_TEST_UNSUPPORTED vor jedem Request",
+      "afterApp669And670": "Frischer INFO05-v3-Prüflauf vor explizitem EVT!-Payload [69,86,84,33,enabled]; bestehende Bereitschafts-, Queue- und Sitzungsprüfungen bleiben erhalten."
+    },
+    {
+      "function": "get_startup_diagnostics",
+      "line": 430,
+      "beforeApp670": "Selektor 3 / Startup v4 ohne Test-Mountprofil",
+      "afterApp669And670": "Selektor 4 / Startup v5; vollständiger Request [9,0,0,0,4]"
+    },
+    {
+      "function": "get_storage_gc_diagnostics",
+      "line": 518,
+      "beforeApp670": "null ohne Request",
+      "afterApp669And670": "PXGC-RAM-Snapshot über Payload [69,2]; vollständiger Request [28,0,0,0,69,2]; keine Speicherbereinigung."
+    }
+  ],
+  "productionChange": {
+    "file": "web/src/lib/pixl.proto.js",
+    "existingHelper": "supportsBleTestDiagnostics",
+    "helperSource": "web/src/lib/device-extra-diagnostics.js:42",
+    "exactlyFourGateReplacementsAndOneImportAndOneComment": true,
+    "expectedPatchByteComparisonPassed": true,
+    "parserFallbackBusyAndSessionLogicUnchanged": true
+  },
+  "sourceBinding": {
+    "schema": 1,
+    "repository": "bluecyber81/pixl.js",
+    "localBranch": "work/web-app670-test1",
+    "publicBranch": "web-app670-test1",
+    "localBaseCommit": "fda2e6a46f2f4329e34b461ff532174db367402b",
+    "publicBaseCommit": "acf6729f2a33364f2cce127b014f89cb4de124f7",
+    "baseTree": "18a6f116832107c8659de4db1a23348e53f531f9",
+    "qualifiedWebSubtree": "bab05d2931ca742ca7ac7cd34cba863bfde45136",
+    "scope": "Exact Git tree of all tracked web files used by the two final builds. Qualification and delivery documentation are outside this subtree.",
+    "versionChangesAreExactByteReplacement": true,
+    "changedFiles": [
+      {
+        "path": "web/Start-Dateimanager.ps1",
+        "bytes": 5745,
+        "sha256": "9efc680d46abc3d8685fb87aba09da66f8f5f445e0d75d6a642a988d10e9fcc2"
+      },
+      {
+        "path": "web/index.html",
+        "bytes": 508,
+        "sha256": "6558f5b0fa114ac36ac535008d77d2be02ce1f49bebb2528e7be0023587c4f5a"
+      },
+      {
+        "path": "web/package-lock.json",
+        "bytes": 48675,
+        "sha256": "c6596751da6b5bd7dfb1ed623786f22ef38968ab18a2fe06c256ed28b3517965"
+      },
+      {
+        "path": "web/package.json",
+        "bytes": 1494,
+        "sha256": "0467b9f5f3b9aaa6184ce8764b0efcfd099ea15f1d96d9fd422e9d54a9f63954"
+      },
+      {
+        "path": "web/public/dfu/package.json",
+        "bytes": 133,
+        "sha256": "9fe597ac855b7a4dde8b2fa64daf7c8ca37fbf5f59cc88f4c6d95e7702f37ab4"
+      },
+      {
+        "path": "web/public/dfu/page.js",
+        "bytes": 21937,
+        "sha256": "7bfd74a520de6430d6b7caf52fd840a3d6c1d4935a8893a0d6dbe5a389c6cdf5"
+      },
+      {
+        "path": "web/public/dfu/web.html",
+        "bytes": 13029,
+        "sha256": "2bfa18cf349e907cdf309b82e9016e68af39a600bd098b4f8185e0141a1cb689"
+      },
+      {
+        "path": "web/scripts/verify-collection-tools-browser.mjs",
+        "bytes": 33772,
+        "sha256": "aaa621b298926b6e24f428c15a7d52fcb6598c835f7ee8d00aacd5d208fb6bf3"
+      },
+      {
+        "path": "web/scripts/verify-screen-awake-browser.mjs",
+        "bytes": 14531,
+        "sha256": "aa02e2caf09c3b33c8e47eea34dbcc5259d34c4bccedb7800c627203eeb1dfbb"
+      },
+      {
+        "path": "web/serve_local.py",
+        "bytes": 8149,
+        "sha256": "fcaeb24585d4ecd5b2fadda8c91bd4f6066d3e0e016cb4ba33c8737e1c61eca1"
+      },
+      {
+        "path": "web/src/lib/device-info.js",
+        "bytes": 6853,
+        "sha256": "0853ad262b44f356c5077633e23f941e68709a13c0199790ffdbf1cb4dc4c842"
+      },
+      {
+        "path": "web/src/lib/pixl.proto.js",
+        "bytes": 71423,
+        "sha256": "09e6e69dd6ef187c105fa7eb2ebf8ab525563ef50a0284bea32a2043d6554f8a"
+      },
+      {
+        "path": "web/tests/device-info.test.mjs",
+        "bytes": 5692,
+        "sha256": "91eaddfe1456527b4351164836c8367aa2072886eee1aaa527555eceb5258faa"
+      },
+      {
+        "path": "web/tests/dfu-page.test.cjs",
+        "bytes": 36435,
+        "sha256": "6c411ea9326d86b69d007b2abfce488a7dce34629c44aca93ca71500efb480ea"
+      },
+      {
+        "path": "web/tests/extra-diagnostics-transport.test.cjs",
+        "bytes": 39282,
+        "sha256": "23223ca608b5c6024ec05070b1de67b0d24c43781d9d7f14462c6bb70dccf900"
+      },
+      {
+        "path": "web/tests/launcher.test.cjs",
+        "bytes": 13501,
+        "sha256": "bfff58355641c46ceb756f4274f90ebd212f079dcd34a61d42473259d1af368b"
+      },
+      {
+        "path": "web/tests/private-lcd-669.test.mjs",
+        "bytes": 12080,
+        "sha256": "4635fdb566df8b7a82ecefd73c854c676d13b6597c4b11444ba4dd560a92d29a"
+      },
+      {
+        "path": "web/tests/test_windows_launcher_r2.py",
+        "bytes": 22416,
+        "sha256": "3b78e4922c93bbac6a2aeaf01c1ddcaadf42d4053c943fb45c6ea43f9cb67a8a"
+      },
+      {
+        "path": "web/tests/transport.test.cjs",
+        "bytes": 132027,
+        "sha256": "6c912ef6b0217994f2bfd77e025d6232abfa6197ec45b38f3a9e416e40432f56"
+      },
+      {
+        "path": "web/tests/ui-modern.test.cjs",
+        "bytes": 229577,
+        "sha256": "007866f514cef6a8009406b72370f9023610c7cfa2ac81dd828fd34213588b93"
+      },
+      {
+        "path": "web/tests/update-check.test.mjs",
+        "bytes": 34530,
+        "sha256": "f930a02fd962265d1d16a8d0e65d5f1b5c5773f39d73bf37a1756645807de924"
+      }
+    ],
+    "unchangedCriticalFiles": [
+      {
+        "path": "web/src/data/firmware-releases.json",
+        "bytes": 8822,
+        "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+      },
+      {
+        "path": "web/public/firmware/releases.json",
+        "bytes": 8822,
+        "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+      },
+      {
+        "path": "web/public/firmware/releases.js",
+        "bytes": 8951,
+        "sha256": "421bd848b223c00b67ba1bd0deca30ab1cb0673a90a46373e78db1a6aa61bcfd"
+      },
+      {
+        "path": "web/.env",
+        "bytes": 60,
+        "sha256": "6aa7e09b3d73ede020590711b4b0f7b4a5c897ad93f90feb593bce82c5f3289f"
+      },
+      {
+        "path": "web/public/dfu/lcd-private-reference.mjs",
+        "bytes": 7208,
+        "sha256": "e0eb0857abcd0dd6bc5d4b6addc9e8cba7c757846f6330912c5f8a52d6478961"
+      },
+      {
+        "path": "web/public/firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+        "bytes": 364489,
+        "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786"
+      }
+    ]
+  },
+  "firmware": {
+    "productionCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "validationCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "validationTree": "99fdb8b40d89d5fcd5948d072d94c54e29bf3933",
+    "branch": "test/lcd-de397-app670-test1",
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+    "applicationBytes": 363888,
+    "applicationBinSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "otaFile": "Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+    "otaBytes": 364489,
+    "otaSha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "artifactStatus": "experimental-signed-application",
+    "hardwareAcceptance": "pending",
+    "capacityProfile": "de397",
+    "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "wasmSha256": "d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c",
+    "changedByHotfix": false,
+    "rebuildRequired": false,
+    "reflashRequired": false
+  },
+  "tests": {
+    "redBeforeFix": {
+      "tests": 8,
+      "suites": 0,
+      "pass": 4,
+      "fail": 4,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 241.63201
+    },
+    "greenSameRegressions": {
+      "tests": 8,
+      "suites": 0,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 288.46057
+    },
+    "targetedTransportAndPanel": {
+      "tests": 254,
+      "suites": 0,
+      "pass": 254,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 2141.275439
+    },
+    "versionDfuAndUi": {
+      "command": "node --test tests/device-info.test.mjs tests/update-check.test.mjs tests/launcher.test.cjs tests/dfu-page.test.cjs tests/private-lcd-669.test.mjs tests/private-lcd-670.test.mjs tests/ui-modern.test.cjs",
+      "exitCode": 0,
+      "counts": {
+        "tests": 327,
+        "pass": 325,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 2,
+        "todo": 0
+      },
+      "logSha256": "c36c916d508317e1ea07b4bba22b467e9480c969f57cddef0bc2e728f3850cc9",
+      "scope": "Version, launcher, DFU, device report, update check and App integration regression suite"
+    },
+    "previousCoverageGap": "Die bisherigen Wiretests waren auf App669 konzentriert und stuften DE3.97 beim Legacy-MTUD-Pfad sowie beim Setter ausdrücklich als nicht unterstützt ein. Die App670-UI-Tests lieferten passende v3-Objekte über Mock-Callbacks und prüften dadurch nicht die echte Protokollauswahl. Die neue Versionsmatrix schließt diese konkrete Lücke.",
+    "fullWebSuiteRepeated": false,
+    "countingRule": "The eight green regressions are included in 254 targeted cases. Build modes and other suites overlap and are reported separately, not added."
+  },
+  "builds": [
+    {
+      "mode": "root",
+      "command": "npm run build",
+      "basePath": "/",
+      "exitCode": 0,
+      "counts": {
+        "tests": 44,
+        "pass": 44,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "BUILD_ROOT.log",
+      "manifest": "DIST_ROOT_MANIFEST.json",
+      "files": 275,
+      "bytes": 14155749,
+      "firmwareReferenceAndOtaUnchanged": true
+    },
+    {
+      "mode": "isolated-app670",
+      "command": "npm run build:test1",
+      "basePath": "/pixl.js/test/app670/",
+      "exitCode": 0,
+      "counts": {
+        "tests": 44,
+        "pass": 44,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "BUILD_TEST2.log",
+      "manifest": "DIST_TEST2_MANIFEST.json",
+      "files": 275,
+      "bytes": 14155929,
+      "firmwareReferenceAndOtaUnchanged": true
+    }
+  ],
+  "unchangedCatalogs": [
+    {
+      "path": "web/src/data/firmware-releases.json",
+      "bytes": 8822,
+      "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+    },
+    {
+      "path": "web/public/firmware/releases.json",
+      "bytes": 8822,
+      "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+    },
+    {
+      "path": "web/public/firmware/releases.js",
+      "bytes": 8951,
+      "sha256": "421bd848b223c00b67ba1bd0deca30ab1cb0673a90a46373e78db1a6aa61bcfd"
+    }
+  ],
+  "hardwareAcceptance": "pending",
+  "observedDeviceEvidence": "User screenshot and direct report: choosing Teststatus lesen on the App670 panel produced Dieses Gerät hat die Testfunktion nicht bestätigt. No successful TEST2 hardware read has yet been observed.",
+  "limits": [
+    "Mock BLE verifies real production request selection and parsing, not physical Bluetooth behavior.",
+    "No new firmware build, signing or installation in this hotfix.",
+    "No measured App670 speedup is claimed."
+  ],
+  "nextDeviceStep": "After the separate live delivery succeeds, open 3.60.0-test.2 afresh, reconnect App670 and select Teststatus lesen. Expected: Teststatus gelesen; keine Einstellung verändert. Then continue the bounded read-only comparison of at most twelve small files.",
+  "additionalFullBackupsRequired": false,
+  "evidenceDirectory": "WEB3_60_0_TEST2_evidence",
+  "evidence": {
+    "BASELINE.json": {
+      "bytes": 747,
+      "sha256": "50be595fd06f278103f3b9bd6d0946ff7ce5431625ffd4ae92c28ea6b4fa3be3"
+    },
+    "BUILD_ROOT.log": {
+      "bytes": 12313,
+      "sha256": "28ea0e5bf075b12831ebd7867e358f034080ed581a519573da6e38f90bf0c077"
+    },
+    "BUILD_TEST2.log": {
+      "bytes": 13734,
+      "sha256": "fa7496ea3be2d37dc5a6d6042eb77d2821944d1b5733a77c81a9b4b9ea9eee09"
+    },
+    "DIST_ROOT_MANIFEST.json": {
+      "bytes": 45653,
+      "sha256": "0392386fd94abc65f04320d3c2d2ac0200c32a37ffa89eb3b5c764568dcdc61f"
+    },
+    "DIST_TEST2_MANIFEST.json": {
+      "bytes": 45673,
+      "sha256": "c1a82957a06b51e6042ac8bc6122d4677ddf439679be05cfe7acd45f2ba07b1e"
+    },
+    "HOTFIX_REPORT.json": {
+      "bytes": 12485,
+      "sha256": "1cb19aab5e22098474c43162e8d4a881ee9622f9d3b0c860d9a42a050dfd4e77"
+    },
+    "HOTFIX_REPORT.md": {
+      "bytes": 4220,
+      "sha256": "563594a78fb0e7d35f634bec36ebf5dcd47329fc8ed88d9e256c6e3469e18136"
+    },
+    "HOTFIX_SCOPED.patch": {
+      "bytes": 19265,
+      "sha256": "a637fa3898b911a8ebd933d0941458f08c373f48e90cae1219aebc70e8ff8f5e"
+    },
+    "REGRESSION_GREEN.log": {
+      "bytes": 1291,
+      "sha256": "ef4c1829e48f2d13b52a8b99eac120dd49c049738376f6a278675b528fb97ced"
+    },
+    "REGRESSION_RED.json": {
+      "bytes": 721,
+      "sha256": "284a4a573cc3ef8e6f6a8f0089c17e8c452f5924b26cddaa2086f2fd95124a47"
+    },
+    "REGRESSION_RED.log": {
+      "bytes": 5084,
+      "sha256": "325675003875b9ac9301af9dec42a1e23da62db3e6fb7594fbb94acade18ebc3"
+    },
+    "SOURCE_BINDING.json": {
+      "bytes": 5116,
+      "sha256": "749aeace77c8f5a7cc29f0ac4fbf6c038ff2dd8bbabbd23bf75e15b4a5b375e7"
+    },
+    "TARGETED_SUITES.log": {
+      "bytes": 27392,
+      "sha256": "9427f57a8e89a01713087819f668cf6fbf2ed0950d4c65918cbe9dedcad97b6f"
+    },
+    "VERSION_DFU_UI_TESTS.json": {
+      "bytes": 545,
+      "sha256": "5c13657679d23e66eb9616e7f556661075f648279f866286ed5e33969a158110"
+    },
+    "VERSION_DFU_UI_TESTS.log": {
+      "bytes": 35865,
+      "sha256": "c36c916d508317e1ea07b4bba22b467e9480c969f57cddef0bc2e728f3850cc9"
+    },
+    "VERSION_UPDATE.json": {
+      "bytes": 4764,
+      "sha256": "8319f6fd98ff57cd72ae842bcb52edc716c41ac6e215738f0b143a9088514761"
+    }
+  }
+}

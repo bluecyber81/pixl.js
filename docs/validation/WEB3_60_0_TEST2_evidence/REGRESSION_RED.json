@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-21T16:28:30.045289+00:00",
+  "productionSourceUnchangedFromBaseline": true,
+  "productionSourceSha256": "3f5ef7127b55db8c69e971c157461ef4a986fd7cba4021eb794616f7f3249fca",
+  "regressionTestSha256": "23223ca608b5c6024ec05070b1de67b0d24c43781d9d7f14462c6bb70dccf900",
+  "command": "node --test --test-name-pattern=APP670_STATUS_REGRESSION web/tests/extra-diagnostics-transport.test.cjs",
+  "exitCode": 1,
+  "tests": 8,
+  "passed": 4,
+  "failed": 4,
+  "cancelled": 0,
+  "skipped": 0,
+  "meaning": "Alle vier App669-Verträge bestanden. Die vier entsprechenden echten App670-Aufrufe scheiterten an den tatsächlich gesendeten bzw. fehlenden Requestbytes, bevor Produktionscode verändert wurde."
+}

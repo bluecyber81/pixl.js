@@ -1,0 +1,19 @@
+{
+  "capturedAt": "2026-11-21T16:28:06.704644+00:00",
+  "baseCommit": "fda2e6a46f2f4329e34b461ff532174db367402b",
+  "files": {
+    "web/src/lib/pixl.proto.js": {
+      "bytes": 71357,
+      "sha256": "3f5ef7127b55db8c69e971c157461ef4a986fd7cba4021eb794616f7f3249fca"
+    },
+    "web/tests/extra-diagnostics-transport.test.cjs": {
+      "bytes": 38084,
+      "sha256": "7bb52e990154241370c8ae3a755f09ba54de5c6feedfcb123aabe6c0a0d7ec11"
+    },
+    "web/tests/transport.test.cjs": {
+      "bytes": 131934,
+      "sha256": "8059ce088003c97ca9a2dee5d3abac59dfeddf812c959247ddd87bdf433674b3"
+    }
+  },
+  "scope": "Vier Gatebedingungen, bestehender Helperimport, gezielte Regressionen und VM-Fixtureverdrahtung. Keine Firmware- oder Parseränderung."
+}

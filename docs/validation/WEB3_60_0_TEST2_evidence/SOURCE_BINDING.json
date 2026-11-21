@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "repository": "bluecyber81/pixl.js",
+  "localBranch": "work/web-app670-test1",
+  "publicBranch": "web-app670-test1",
+  "localBaseCommit": "fda2e6a46f2f4329e34b461ff532174db367402b",
+  "publicBaseCommit": "acf6729f2a33364f2cce127b014f89cb4de124f7",
+  "baseTree": "18a6f116832107c8659de4db1a23348e53f531f9",
+  "qualifiedWebSubtree": "bab05d2931ca742ca7ac7cd34cba863bfde45136",
+  "scope": "Exact Git tree of all tracked web files used by the two final builds. Qualification and delivery documentation are outside this subtree.",
+  "versionChangesAreExactByteReplacement": true,
+  "changedFiles": [
+    {
+      "path": "web/Start-Dateimanager.ps1",
+      "bytes": 5745,
+      "sha256": "9efc680d46abc3d8685fb87aba09da66f8f5f445e0d75d6a642a988d10e9fcc2"
+    },
+    {
+      "path": "web/index.html",
+      "bytes": 508,
+      "sha256": "6558f5b0fa114ac36ac535008d77d2be02ce1f49bebb2528e7be0023587c4f5a"
+    },
+    {
+      "path": "web/package-lock.json",
+      "bytes": 48675,
+      "sha256": "c6596751da6b5bd7dfb1ed623786f22ef38968ab18a2fe06c256ed28b3517965"
+    },
+    {
+      "path": "web/package.json",
+      "bytes": 1494,
+      "sha256": "0467b9f5f3b9aaa6184ce8764b0efcfd099ea15f1d96d9fd422e9d54a9f63954"
+    },
+    {
+      "path": "web/public/dfu/package.json",
+      "bytes": 133,
+      "sha256": "9fe597ac855b7a4dde8b2fa64daf7c8ca37fbf5f59cc88f4c6d95e7702f37ab4"
+    },
+    {
+      "path": "web/public/dfu/page.js",
+      "bytes": 21937,
+      "sha256": "7bfd74a520de6430d6b7caf52fd840a3d6c1d4935a8893a0d6dbe5a389c6cdf5"
+    },
+    {
+      "path": "web/public/dfu/web.html",
+      "bytes": 13029,
+      "sha256": "2bfa18cf349e907cdf309b82e9016e68af39a600bd098b4f8185e0141a1cb689"
+    },
+    {
+      "path": "web/scripts/verify-collection-tools-browser.mjs",
+      "bytes": 33772,
+      "sha256": "aaa621b298926b6e24f428c15a7d52fcb6598c835f7ee8d00aacd5d208fb6bf3"
+    },
+    {
+      "path": "web/scripts/verify-screen-awake-browser.mjs",
+      "bytes": 14531,
+      "sha256": "aa02e2caf09c3b33c8e47eea34dbcc5259d34c4bccedb7800c627203eeb1dfbb"
+    },
+    {
+      "path": "web/serve_local.py",
+      "bytes": 8149,
+      "sha256": "fcaeb24585d4ecd5b2fadda8c91bd4f6066d3e0e016cb4ba33c8737e1c61eca1"
+    },
+    {
+      "path": "web/src/lib/device-info.js",
+      "bytes": 6853,
+      "sha256": "0853ad262b44f356c5077633e23f941e68709a13c0199790ffdbf1cb4dc4c842"
+    },
+    {
+      "path": "web/src/lib/pixl.proto.js",
+      "bytes": 71423,
+      "sha256": "09e6e69dd6ef187c105fa7eb2ebf8ab525563ef50a0284bea32a2043d6554f8a"
+    },
+    {
+      "path": "web/tests/device-info.test.mjs",
+      "bytes": 5692,
+      "sha256": "91eaddfe1456527b4351164836c8367aa2072886eee1aaa527555eceb5258faa"
+    },
+    {
+      "path": "web/tests/dfu-page.test.cjs",
+      "bytes": 36435,
+      "sha256": "6c411ea9326d86b69d007b2abfce488a7dce34629c44aca93ca71500efb480ea"
+    },
+    {
+      "path": "web/tests/extra-diagnostics-transport.test.cjs",
+      "bytes": 39282,
+      "sha256": "23223ca608b5c6024ec05070b1de67b0d24c43781d9d7f14462c6bb70dccf900"
+    },
+    {
+      "path": "web/tests/launcher.test.cjs",
+      "bytes": 13501,
+      "sha256": "bfff58355641c46ceb756f4274f90ebd212f079dcd34a61d42473259d1af368b"
+    },
+    {
+      "path": "web/tests/private-lcd-669.test.mjs",
+      "bytes": 12080,
+      "sha256": "4635fdb566df8b7a82ecefd73c854c676d13b6597c4b11444ba4dd560a92d29a"
+    },
+    {
+      "path": "web/tests/test_windows_launcher_r2.py",
+      "bytes": 22416,
+      "sha256": "3b78e4922c93bbac6a2aeaf01c1ddcaadf42d4053c943fb45c6ea43f9cb67a8a"
+    },
+    {
+      "path": "web/tests/transport.test.cjs",
+      "bytes": 132027,
+      "sha256": "6c912ef6b0217994f2bfd77e025d6232abfa6197ec45b38f3a9e416e40432f56"
+    },
+    {
+      "path": "web/tests/ui-modern.test.cjs",
+      "bytes": 229577,
+      "sha256": "007866f514cef6a8009406b72370f9023610c7cfa2ac81dd828fd34213588b93"
+    },
+    {
+      "path": "web/tests/update-check.test.mjs",
+      "bytes": 34530,
+      "sha256": "f930a02fd962265d1d16a8d0e65d5f1b5c5773f39d73bf37a1756645807de924"
+    }
+  ],
+  "unchangedCriticalFiles": [
+    {
+      "path": "web/src/data/firmware-releases.json",
+      "bytes": 8822,
+      "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+    },
+    {
+      "path": "web/public/firmware/releases.json",
+      "bytes": 8822,
+      "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+    },
+    {
+      "path": "web/public/firmware/releases.js",
+      "bytes": 8951,
+      "sha256": "421bd848b223c00b67ba1bd0deca30ab1cb0673a90a46373e78db1a6aa61bcfd"
+    },
+    {
+      "path": "web/.env",
+      "bytes": 60,
+      "sha256": "6aa7e09b3d73ede020590711b4b0f7b4a5c897ad93f90feb593bce82c5f3289f"
+    },
+    {
+      "path": "web/public/dfu/lcd-private-reference.mjs",
+      "bytes": 7208,
+      "sha256": "e0eb0857abcd0dd6bc5d4b6addc9e8cba7c757846f6330912c5f8a52d6478961"
+    },
+    {
+      "path": "web/public/firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "bytes": 364489,
+      "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786"
+    }
+  ]
+}
