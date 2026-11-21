@@ -108,6 +108,18 @@ bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capaci
  * No radio query, new negotiation, flash I/O, or throughput claim on read. */
 #define BLE_LINK_DIAGNOSTIC_SIZE 32u
 bool ble_link_diagnostic(uint8_t *snapshot, size_t capacity);
+#if defined(PIXL_TEST_DIAGNOSTICS)
+/* INFO05 selector 2: MTUDv3, v2 prefix (version=3), byte32 flags
+ * test-profile=1/configured-event-extension-enabled=2; byte33 reserved0;
+ * LEu16 at34 nominal event_length in 1.25ms units, LEu32 at36 last explicit
+ * option API result (FFFFFFFF before a request). No negotiated airtime claim.
+ * requested_extension=-1 reads,0 disables,1 enables; caller must gate mutations
+ * on VFS idle. An API rejection is reported without changing the last successful
+ * setting. The global SoftDevice option survives reconnects until changed or
+ * the stack/application restarts; it is never a persistent setting. */
+#define BLE_TEST_DIAGNOSTIC_SIZE 40u
+bool ble_test_diagnostic(int8_t requested_extension, uint8_t *snapshot, size_t capacity);
+#endif
 #endif
 /* Fail a foreground file-transfer session without retaining a lost TX frame. */
 void ble_nus_abort_transfer(void);

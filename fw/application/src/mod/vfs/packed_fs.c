@@ -3,6 +3,9 @@
  * All publication is through one atomic replacement of the small manifest.
  */
 #include "packed_fs.h"
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#include "../runtime_diag.h"
+#endif
 #include <limits.h>
 #include <string.h>
 
@@ -66,6 +69,10 @@ struct pfs {
   uint8_t read_cache[PFS_CACHE_SIZE], prog_cache[PFS_CACHE_SIZE], lookahead[64],
       copy[PFS_CACHE_SIZE];
   uint8_t gc_state;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  bool gc_result_known;
+  int32_t gc_last_result;
+#endif
 };
 struct pfs_file {
   handle_t h;
@@ -127,6 +134,9 @@ typedef struct {
     0xb3667a2eu, 0xc4614ab8u, 0x5d681b02u, 0x2a6f2b94u, 0xb40bbe37u, 0xc30c8ea1u, 0x5a05df1bu, 0x2d02ef8du,
   };
 static uint32_t crc(uint32_t c, const void *data, size_t n) {
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  uint32_t profile = runtime_diag_profile_begin();
+#endif
   /* The same reflected CRC32 and caller-owned seed/finalization as lfs_crc.
    * One byte per lookup avoids two nibble steps while mount validates every
    * payload twice (record and shard). The immutable 1-KiB table stays in flash;
@@ -135,9 +145,15 @@ static uint32_t crc(uint32_t c, const void *data, size_t n) {
   const uint8_t *bytes = data;
   for (size_t i = 0; i < n; i++)
     c = (c >> 8) ^ table[(c ^ bytes[i]) & 0xffu];
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  runtime_diag_profile_end(MOUNT_PROFILE_CRC, profile);
+#endif
   return c;
 }
 static uint32_t crc_pair(uint32_t c, uint32_t *second, const void *data, size_t n) {
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  uint32_t profile = runtime_diag_profile_begin();
+#endif
   const uint8_t *p = data;
   uint32_t d = *second;
   for (size_t i = 0; i < n; i++) {
@@ -146,6 +162,9 @@ static uint32_t crc_pair(uint32_t c, uint32_t *second, const void *data, size_t 
     d = (d >> 8) ^ table[(d ^ b) & 255u];
   }
   *second = d;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  runtime_diag_profile_end(MOUNT_PROFILE_CRC, profile);
+#endif
   return c;
 }
 
@@ -710,6 +729,44 @@ static bool referenced(pfs_t *fs, uint32_t id, const handle_t *except) {
   }
   return false;
 }
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+/* Record the completed collector result, including a successful zero. This
+ * does not change publication's best-effort maintenance error contract. */
+static int collected(pfs_t *fs, int result) {
+  fs->gc_last_result = result;
+  fs->gc_result_known = true;
+  return result;
+}
+bool pfs_gc_diagnostic(const pfs_t *fs, pfs_gc_diagnostic_t *out) {
+  if (!out) return false;
+  memset(out, 0, sizeof(*out));
+  if (!fs || !fs->mounted) return true;
+  out->flags = 1u | (fs->poisoned ? 2u : 0u) |
+               (fs->transaction ? 4u : 0u) | (fs->writer ? 8u : 0u) |
+               (fs->gc_result_known ? 16u : 0u);
+  out->state = fs->gc_state == GC_CLEAN ? 2u : fs->gc_state == GC_PENDING ? 1u : 0u;
+  out->generation = fs->current.generation;
+  out->last_result = fs->gc_result_known ? fs->gc_last_result : 0;
+  for (const handle_t *h = fs->handles; h; h = h->next) {
+    bool held = false;
+    if (h->kind == 1) {
+      const pfs_file_t *f = (const pfs_file_t *)h;
+      if (f->writing) continue;
+      out->readers++;
+      held = !manifest_has(&fs->current, f->loc.shard);
+    } else {
+      const manifest_t *snapshot = &((const pfs_dir_t *)h)->snapshot;
+      out->directories++;
+      for (unsigned i = 0; i < snapshot->count; i++)
+        if (!manifest_has(&fs->current, snapshot->ids[i])) { held = true; break; }
+    }
+    if (held) out->held_handles++;
+  }
+  return true;
+}
+#else
+static int collected(pfs_t *fs, int result) { (void)fs; return result; }
+#endif
 static int collect(pfs_t *fs) {
   /* Keep the request on error, and while a reader pins an obsolete group.
    * A mounted volume starts UNKNOWN: ordinary reads must never initiate GC. */
@@ -721,7 +778,7 @@ static int collect(pfs_t *fs) {
   lfs_dir_t dir;
   int r = lfs_dir_open(&fs->lfs, &dir, "/");
   if (r)
-    return io_error(fs, r);
+    return collected(fs, io_error(fs, r));
   struct lfs_info info;
   while ((r = lfs_dir_read(&fs->lfs, &dir, &info)) > 0) {
     uint32_t id;
@@ -747,9 +804,9 @@ static int collect(pfs_t *fs) {
   }
   int closed = lfs_dir_close(&fs->lfs, &dir);
   if (r < 0 || closed < 0)
-    return io_error(fs, r < 0 ? r : closed);
+    return collected(fs, io_error(fs, r < 0 ? r : closed));
   fs->gc_state = pinned || fs->writer ? GC_PENDING : GC_CLEAN;
-  return 0;
+  return collected(fs, 0);
 }
 /* Maintenance is best effort after publication. An I/O failure still poisons
  * subsequent writes, but cannot turn a durable commit into a retryable failure. */
@@ -861,6 +918,10 @@ int pfs_mount(pfs_t *fs) {
     return LFS_ERR_INVAL;
   if (fs->mounted)
     return fs->poisoned ? LFS_ERR_IO : 0;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  fs->gc_result_known = false;
+  fs->gc_last_result = 0;
+#endif
   int r = lfs_mount(&fs->lfs, &fs->cfg);
   if (r)
     return r;
@@ -905,6 +966,9 @@ int pfs_mount(pfs_t *fs) {
     if (!r && offset != SH + body)
       r = LFS_ERR_CORRUPT;
     uint32_t previous = 0, previous_offset = 0;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    uint32_t index_profile = runtime_diag_profile_begin();
+#endif
     for (unsigned j = 0; !r && j < count; j++) {
       uint8_t entry[IX];
       r = read_at(fs, &io, offset, entry, IX);
@@ -928,6 +992,9 @@ int pfs_mount(pfs_t *fs) {
       sum = crc(sum, entry, IX);
       offset += IX;
     }
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    runtime_diag_profile_end(MOUNT_PROFILE_INDEX, index_profile);
+#endif
     if (!r)
       r = read_at(fs, &io, offset, footer, 4);
     if (!r && u32(footer) != ~sum)

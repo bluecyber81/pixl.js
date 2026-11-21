@@ -3,6 +3,9 @@
 #include "app_util_platform.h"
 #include "mui_mem.h"
 #include <string.h>
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#include "app_timer.h"
+#endif
 
 #if (defined(__arm__) || defined(__thumb__)) && defined(NRF52832)
 #include "nrf.h"
@@ -184,6 +187,37 @@ static struct {
 } mount_state;
 _Static_assert(sizeof(mount_state) == 44, "bounded mount diagnostics");
 #define MOUNT_RECORDING (UINT32_C(1) << 31)
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+static struct {
+    uint32_t ticks[MOUNT_PROFILE_COUNT], read_calls;
+    uint8_t flags;
+} mount_profile;
+_Static_assert(sizeof(mount_profile) == 24, "bounded test mount profile");
+#define PROFILE_RECORDING 128u
+void runtime_diag_mount_scan_begin(void) {
+    if (mount_state.flags & MOUNT_RECORDING)
+        mount_profile.flags = PROFILE_RECORDING;
+}
+uint32_t runtime_diag_profile_begin(void) {
+#if (defined(__arm__) || defined(__thumb__)) && defined(NRF52832)
+    /* A flash reader in an application IRQ is not part of the mount worker. */
+    if (__get_IPSR()) return UINT32_MAX;
+#endif
+    return mount_profile.flags & PROFILE_RECORDING ? app_timer_cnt_get() : UINT32_MAX;
+}
+static void profile_add(uint32_t *value, uint32_t amount) {
+    if (UINT32_MAX - *value < amount) {
+        *value = UINT32_MAX;
+        mount_profile.flags |= 2u;
+    } else *value += amount;
+}
+void runtime_diag_profile_end(unsigned metric, uint32_t started) {
+    if (!(mount_profile.flags & PROFILE_RECORDING) || started == UINT32_MAX ||
+        metric >= MOUNT_PROFILE_COUNT) return;
+    profile_add(&mount_profile.ticks[metric], app_timer_cnt_diff_compute(app_timer_cnt_get(), started));
+    if (metric == MOUNT_PROFILE_FLASH_READ) profile_add(&mount_profile.read_calls, 1);
+}
+#endif
 static void mount_add(uint32_t *value, uint32_t amount) {
     if (UINT32_MAX - *value < amount) {
         *value = UINT32_MAX;
@@ -193,6 +227,9 @@ static void mount_add(uint32_t *value, uint32_t amount) {
 void runtime_diag_mount_begin(void) {
     memset(&mount_state, 0, sizeof(mount_state));
     mount_state.flags = MOUNT_RECORDING;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    memset(&mount_profile, 0, sizeof(mount_profile));
+#endif
 }
 void runtime_diag_mount_configured(uint32_t milliseconds) {
     if (!(mount_state.flags & MOUNT_RECORDING)) return;
@@ -208,6 +245,10 @@ void runtime_diag_mount_complete(int32_t result, uint32_t scan_ms, uint8_t slots
     mount_state.page_bytes = page_bytes;
     mount_state.flags = (mount_state.flags & 8u) | 1u | 16u |
                         (result == 0 ? 2u : 0u) | (slots ? 4u : 0u);
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    if (mount_profile.flags & PROFILE_RECORDING)
+        mount_profile.flags = (mount_profile.flags & 2u) | 1u;
+#endif
 }
 void runtime_diag_mount_cache(bool hit, bool eligible) {
     if (!(mount_state.flags & MOUNT_RECORDING)) return;
@@ -273,6 +314,22 @@ bool runtime_diag_startup_cache_snapshot(uint8_t *out, size_t capacity) {
     put16(out + 82, mount_state.page_bytes);
     return true;
 }
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+bool runtime_diag_startup_profile_snapshot(uint8_t *out, size_t capacity) {
+    if (capacity < STARTUP_PROFILE_DIAG_SIZE || !runtime_diag_startup_cache_snapshot(out, capacity))
+        return false;
+    out[4] = 5;
+    out[5] = STARTUP_PROFILE_DIAG_SIZE;
+    memset(out + 84, 0, STARTUP_PROFILE_DIAG_SIZE - 84);
+    put32(out + 84, 4u | ((mount_profile.flags & 1u) ? mount_profile.flags & 3u : 0u));
+    put32(out + 88, APP_TIMER_CLOCK_FREQ / (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u));
+    if (!(mount_profile.flags & 1u)) return true;
+    for (unsigned i = 0; i < MOUNT_PROFILE_COUNT; i++)
+        put32(out + 92 + 4u*i, mount_profile.ticks[i]);
+    put32(out + 108, mount_profile.read_calls);
+    return true;
+}
+#endif
 bool runtime_diag_power_snapshot(uint8_t *out, size_t capacity) {
     if (!out || capacity < POWER_DIAG_SIZE) return false;
     memset(out, 0, POWER_DIAG_SIZE);

@@ -738,6 +738,8 @@ pixljs: CFLAGS += -D__HEAP_SIZE=512
 pixljs: CFLAGS += -D__STACK_SIZE=8192
 ifeq ($(BOARD),LCD)
 pixljs: CFLAGS += -DPIXL_RUNTIME_DIAGNOSTICS=1
+# App669 TEST1: volatile measurement controls; no persisted experimental settings.
+pixljs: CFLAGS += -DPIXL_TEST_DIAGNOSTICS=1
 ifeq ($(RELEASE),1)
 # Production diagnostics keep warnings and errors. Debug builds keep verbose RTT.
 pixljs: CFLAGS += -DNRF_LOG_DEFAULT_LEVEL=2 -DNRF_LOG_BUFSIZE=512

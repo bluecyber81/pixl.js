@@ -216,6 +216,14 @@ typedef struct {
 } ble_link_profile_t;
 static volatile ble_link_profile_t m_link_profile;
 
+#if defined(PIXL_TEST_DIAGNOSTICS)
+/* This option belongs to the SoftDevice, not a GAP handle. It deliberately
+ * survives reconnects, just as the successful API setting does. A fresh BLE
+ * stack starts at the SDK default (disabled). No read changes the option. */
+static bool m_event_extension_enabled;
+static uint32_t m_event_extension_result = UINT32_MAX;
+#endif
+
 static void ble_link_parameters_update(const ble_gap_conn_params_t *params) {
     /* CONNECT/UPDATE contain the selected interval, not the PPCP preference. */
     bool valid = params && params->min_conn_interval == params->max_conn_interval &&
@@ -701,6 +709,11 @@ static void ble_stack_init(void) {
     err_code = nrf_sdh_ble_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
 
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS) && defined(PIXL_TEST_DIAGNOSTICS)
+    m_event_extension_enabled = false;
+    m_event_extension_result = UINT32_MAX;
+#endif
+
     // Register a handler for BLE events.
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 }
@@ -1149,6 +1162,43 @@ bool ble_link_diagnostic(uint8_t *snapshot, size_t capacity) {
     CRITICAL_REGION_EXIT();
     return success;
 }
+
+#if defined(PIXL_TEST_DIAGNOSTICS)
+bool ble_test_diagnostic(int8_t requested_extension, uint8_t *snapshot, size_t capacity) {
+    if (!snapshot || capacity < BLE_TEST_DIAGNOSTIC_SIZE ||
+        requested_extension < -1 || requested_extension > 1) return false;
+    bool success = false;
+    CRITICAL_REGION_ENTER();
+    /* The caller additionally requires the foreground VFS to be idle before
+     * a setting request. Recheck NUS ownership atomically with the option call;
+     * a disconnected/closing/remote session cannot change global radio policy. */
+    bool allowed = m_ble_initialized && m_sessions_enabled && m_file_mode && !m_remote_mode &&
+                   !m_mode_pending && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
+                   m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
+                   ble_work_can_send();
+    if (requested_extension < 0 || allowed) {
+        if (requested_extension >= 0) {
+            ble_opt_t option = {0};
+            option.common_opt.conn_evt_ext.enable = requested_extension != 0;
+            uint32_t result = sd_ble_opt_set(BLE_COMMON_OPT_CONN_EVT_EXT, &option);
+            m_event_extension_result = result;
+            if (result == NRF_SUCCESS) m_event_extension_enabled = requested_extension != 0;
+        }
+        success = ble_link_diagnostic(snapshot, capacity);
+        if (success) {
+            snapshot[4] = 3;
+            snapshot[32] = 1u | (m_event_extension_enabled ? 2u : 0u);
+            snapshot[33] = 0;
+            snapshot[34] = (uint8_t)NRF_SDH_BLE_GAP_EVENT_LENGTH;
+            snapshot[35] = (uint8_t)(NRF_SDH_BLE_GAP_EVENT_LENGTH >> 8);
+            for (unsigned i = 0; i < 4; ++i)
+                snapshot[36 + i] = (uint8_t)(m_event_extension_result >> (8 * i));
+        }
+    }
+    CRITICAL_REGION_EXIT();
+    return success;
+}
+#endif
 #endif
 
 void ble_nus_abort_transfer(void) {

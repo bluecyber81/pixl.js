@@ -12,6 +12,28 @@
 #define STARTUP_STORAGE_DIAG_SIZE 40u
 #define STARTUP_MOUNT_DIAG_SIZE 80u
 #define STARTUP_CACHE_DIAG_SIZE 84u
+#define STARTUP_PROFILE_DIAG_SIZE 112u
+/* RTC ticks during the actual PackedFS scan. INDEX includes nested flash/CRC;
+ * totals overlap and are not a partition of CPU or elapsed mount time. */
+enum runtime_diag_mount_profile_metric {
+    MOUNT_PROFILE_FLASH_WAIT, MOUNT_PROFILE_FLASH_READ,
+    MOUNT_PROFILE_CRC, MOUNT_PROFILE_INDEX, MOUNT_PROFILE_COUNT
+};
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+void runtime_diag_mount_scan_begin(void);
+uint32_t runtime_diag_profile_begin(void);
+void runtime_diag_profile_end(unsigned metric, uint32_t started);
+bool runtime_diag_startup_profile_snapshot(uint8_t *out, size_t capacity);
+#else
+static inline void runtime_diag_mount_scan_begin(void) {}
+static inline uint32_t runtime_diag_profile_begin(void) { return UINT32_MAX; }
+static inline void runtime_diag_profile_end(unsigned metric, uint32_t started) {
+    (void)metric; (void)started;
+}
+static inline bool runtime_diag_startup_profile_snapshot(uint8_t *out, size_t capacity) {
+    (void)out; (void)capacity; return false;
+}
+#endif
 enum startup_storage_checkpoint { STARTUP_MOUNT_READY, STARTUP_JOURNAL_READY };
 
 /* Milliseconds since the application starts storage initialization. This does

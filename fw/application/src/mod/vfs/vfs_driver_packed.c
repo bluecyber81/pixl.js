@@ -187,6 +187,23 @@ static int32_t configure(void) {
   store = pfs_new(&cfg, mui_mem_malloc, mui_mem_free);
   return store ? VFS_OK : VFS_ERR_NOMEM;
 }
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+bool vfs_packed_gc_diagnostic(uint8_t *out, size_t capacity) {
+  if (!out || capacity < VFS_PACKED_GC_DIAGNOSTIC_SIZE) return false;
+  pfs_gc_diagnostic_t report;
+  if (!pfs_gc_diagnostic(store, &report)) return false;
+  memset(out, 0, VFS_PACKED_GC_DIAGNOSTIC_SIZE);
+  memcpy(out, "PXGC", 4);
+  out[4] = 1; out[5] = VFS_PACKED_GC_DIAGNOSTIC_SIZE; out[6] = 'E';
+  out[7] = report.flags; out[8] = report.state;
+  out[9] = report.readers; out[10] = report.directories; out[11] = report.held_handles;
+  for (unsigned i = 0; i < 4; i++) {
+    out[12+i] = (uint8_t)(report.generation >> (8*i));
+    out[16+i] = (uint8_t)((uint32_t)report.last_result >> (8*i));
+  }
+  return true;
+}
+#endif
 bool vfs_packed_geometry_valid(void) { return geometry_valid; }
 bool vfs_packed_import_pending(void) {
   return pfs_poisoned(store) || pfs_import_pending(store);
@@ -281,6 +298,7 @@ static int32_t packed_mount(void) {
   mount_pages_t *pages = mount_cache_alloc();
   mount_pages = pages;
   started = mount_tick();
+  runtime_diag_mount_scan_begin();
   r = pfs_mount(store);
   runtime_diag_mount_complete(map_error(r), mount_elapsed_ms(started),
                               pages ? pages->capacity : 0, pages ? pages->used : 0,

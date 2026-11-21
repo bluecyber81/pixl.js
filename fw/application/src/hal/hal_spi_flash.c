@@ -12,6 +12,9 @@
 #include "nrf_log_ctrl.h"
 
 #include "boards.h"
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#include "../mod/runtime_diag.h"
+#endif
 
 #define PAGE_SIZE 256
 #define CMD_ADDR_SIZE 4
@@ -287,7 +290,13 @@ ret_code_t hal_spi_flash_read(uint32_t address, void *buffer, size_t size) {
         return NRF_ERROR_INVALID_PARAM;
     }
     if (!m_read_ready) {
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+        uint32_t profile = runtime_diag_profile_begin();
+#endif
         ret_code_t result = hal_spi_flash_wait_busy(APP_TIMER_TICKS(FLASH_READY_TIMEOUT_MS));
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+        runtime_diag_profile_end(MOUNT_PROFILE_FLASH_WAIT, profile);
+#endif
         if (result != NRF_SUCCESS) return result;
     }
     /* READ does not require WRDI. Do not clear another operation's WEL. */
@@ -296,7 +305,14 @@ ret_code_t hal_spi_flash_read(uint32_t address, void *buffer, size_t size) {
     tx[1] = (address >> 16);
     tx[2] = (address >> 8);
     tx[3] = (address);
-    return hal_spi_flash_write_read(tx, 4, buffer, size);
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    uint32_t profile = runtime_diag_profile_begin();
+#endif
+    ret_code_t result = hal_spi_flash_write_read(tx, 4, buffer, size);
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    runtime_diag_profile_end(MOUNT_PROFILE_FLASH_READ, profile);
+#endif
+    return result;
 }
 
 ret_code_t hal_spi_flash_prog(uint32_t address, const void *buffer, size_t size) {

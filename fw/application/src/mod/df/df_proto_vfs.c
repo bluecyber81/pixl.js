@@ -904,6 +904,16 @@ void df_proto_handler_vfs_storage_diag(df_event_t *evt) {
  * All attributes (including unknown TLVs and padding) are copied verbatim. */
 static void df_proto_handler_vfs_storage_info(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS) && defined(VFS_PACKED_LFS_ENABLE)
+    if (!evt->df->status && !evt->df->chunk && evt->df->length == 2 &&
+        evt->df->data[0] == 'E' && evt->df->data[1] == 2) {
+        df_frame_t out = {0};
+        if (!vfs_packed_gc_diagnostic(out.data, sizeof(out.data))) { send_error(evt->df->cmd); return; }
+        OUT_FRAME_WITH_DATA_0(out, evt->df->cmd, DF_STATUS_OK, VFS_PACKED_GC_DIAGNOSTIC_SIZE);
+        df_core_send_frame(&out);
+        return;
+    }
+#endif
     bool extended = evt->df->length == 2 && evt->df->data[1] == 1;
     if (evt->df->status != 0 || evt->df->chunk != 0 || (evt->df->length != 1 && !extended)) {
         send_error(evt->df->cmd);

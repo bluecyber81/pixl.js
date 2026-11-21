@@ -57,6 +57,19 @@ int pfs_space(pfs_t *fs, uint32_t *total, uint32_t *free_bytes);
  * still poisons subsequent writes until remount. Mount and ordinary reads on
  * a volume without a local mutation remain strictly read-only. */
 int pfs_gc(pfs_t *fs); /* only unreferenced, unpinned owned physical objects */
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+/* Foreground-only RAM snapshot. No allocation, LittleFS call or mutation.
+ * held_handles counts readers/snapshots retaining one or more obsolete groups,
+ * not unique groups or reclaimable bytes. state: 0 unknown, 1 pending, 2 clean.
+ * last_result belongs to the most recent completed collect attempt in this
+ * mount, and is meaningful only when flags bit4 is set. */
+typedef struct {
+  uint8_t flags, state, readers, directories, held_handles;
+  uint32_t generation;
+  int32_t last_result;
+} pfs_gc_diagnostic_t;
+bool pfs_gc_diagnostic(const pfs_t *fs, pfs_gc_diagnostic_t *out);
+#endif
 int pfs_stat(pfs_t *fs, const char *path, pfs_info_t *info);
 int pfs_create_small(pfs_t *fs, const char *path, const uint8_t *data, size_t size);
 int pfs_mkdir(pfs_t *fs, const char *path);
