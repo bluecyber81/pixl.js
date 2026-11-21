@@ -35,6 +35,8 @@ var file_digest_unsupported = false
 var small_create_generation = -1
 var small_read_supported = false
 var small_read_probe = null
+var small_batch_capability = null
+var small_batch_probe = null
 var small_create_tx = 0
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
@@ -667,6 +669,109 @@ export function vfs_probe_small_read(firmwareVersion) {
     return small_read_probe.promise;
 }
 
+// App670 advertises its bounded READ/DIGEST contract separately. Keep PXSC
+// unchanged so older file managers retain their strict existing parser.
+export function vfs_probe_small_batch(firmwareVersion) {
+    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
+    if (!version || Number(version[1]) < 97 || !Object.hasOwn(LCD_Z21_COUNTERS, firmwareVersion)) return Promise.resolve(null);
+    if (small_batch_capability?.generation === transport_generation && small_batch_capability.version === firmwareVersion)
+        return Promise.resolve(small_batch_capability.value);
+    if (small_batch_probe?.generation === transport_generation && small_batch_probe.version === firmwareVersion)
+        return small_batch_probe.promise;
+    const generation = transport_generation;
+    const promise = op_queue_push(0x25, () => {}, b => {
+        if (b.remaining() !== 16 || b.readUint32() !== 0x52425850 || b.readUint8() !== 1 ||
+            b.readUint8() !== 4 || b.readUint16() !== 572) throw new Error('Invalid small-file batch capability.');
+        // This revision describes the probe only. Every actual batch receives
+        // the backup's freshly observed revision, never this cached value.
+        return Object.freeze({maxCount:4, maxFileBytes:572, maxRequestBytes:243, observedRevision:read_revision(b)});
+    }, {max_bytes:16}).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        const value = response.status === 255 ? null : checked_response(response);
+        small_batch_capability = {generation, version:firmwareVersion, value};
+        return value;
+    });
+    small_batch_probe = {generation, version:firmwareVersion, promise};
+    promise.then(() => {
+        if (small_batch_probe?.promise === promise) small_batch_probe = null;
+    }, () => {
+        if (small_batch_probe?.promise === promise) small_batch_probe = null;
+    });
+    return promise;
+}
+
+function checked_small_batch(files, revision) {
+    if (!Array.isArray(files) || files.length < 1 || files.length > 4 ||
+        typeof revision !== 'string' || !/^[0-9a-f]{16}$/u.test(revision) || /^0{16}$/u.test(revision))
+        throw new Error('Invalid small-file batch request.');
+    let requestBytes = 10;
+    const seen = new Set();
+    const owned = files.map(file => {
+        const path = file?.path, size = file?.size;
+        path_validation(path);
+        if (!path.startsWith('E:/') || path.length <= 3 || !Number.isInteger(size) || size < 0 || size > 572 ||
+            seen.has(path) || new TextDecoder('utf-8', {fatal:true, ignoreBOM:true}).decode(new TextEncoder().encode(path)) !== path)
+            throw new Error('Invalid small-file batch entry.');
+        seen.add(path);
+        requestBytes += 4 + get_utf8_byte_size(path);
+        return Object.freeze({path, size});
+    });
+    if (requestBytes > 243) throw new Error('Small-file batch request is too large.');
+    return Object.freeze(owned);
+}
+
+function small_batch_fits(files) {
+    const maximum = Math.min(243, transport_capabilities?.maxRequestPayload ?? DF_MAX_DATA_SIZE);
+    return 10 + files.reduce((sum, file) => sum + 4 + get_utf8_byte_size(file.path), 0) <= maximum;
+}
+
+function queue_small_batch(files, revision, firmwareVersion, mode) {
+    let owned;
+    try { owned = checked_small_batch(files, revision); }
+    catch (error) { return Promise.reject(error); }
+    if (!small_batch_fits(owned)) return Promise.resolve(null);
+    return new Promise((resolve, reject) => {
+        file_write_queue.push({type:'batch', files:owned, revision, firmwareVersion, mode,
+            success_cb:resolve, error_cb:reject});
+        vfs_process_file_write_queue();
+    });
+}
+
+export function vfs_read_small_batch(files, revision, firmwareVersion) {
+    return queue_small_batch(files, revision, firmwareVersion, 0);
+}
+export function vfs_digest_small_batch(files, revision, firmwareVersion) {
+    return queue_small_batch(files, revision, firmwareVersion, 1);
+}
+
+function vfs_process_small_batch(entry) {
+    const generation = file_write_generation;
+    const current = () => {
+        if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
+    };
+    return vfs_probe_small_batch(entry.firmwareVersion).then(capability => {
+        current();
+        if (!capability || !small_batch_fits(entry.files)) return null;
+        const maximum = entry.mode === 1 ? entry.files.length * 32 : entry.files.reduce((sum, file) => sum + file.size, 0);
+        return op_queue_push(0x26, b => {
+            current();
+            b.writeUint8(entry.mode); b.writeUint8(entry.files.length);
+            b.writeUint32(parseInt(entry.revision.slice(8), 16)); b.writeUint32(parseInt(entry.revision.slice(0, 8), 16));
+            for (const file of entry.files) { write_string(b, file.path); b.writeUint16(file.size); }
+        }, b => {
+            if (b.remaining() !== maximum) throw new Error('Invalid small-file batch response length.');
+            // No element escapes until the final status and total size passed.
+            // The firmware prepares every member before sending the first byte.
+            return entry.files.map(file => {
+                const bytes = new Uint8Array(b.readBytes(entry.mode === 1 ? 32 : file.size).toArrayBuffer());
+                return entry.mode === 1 ? {path:file.path, size:file.size,
+                    sha256:Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')}
+                    : {path:file.path, size:file.size, bytes};
+            });
+        }, {max_bytes:maximum}).then(response => { current(); return checked_response(response); });
+    }).then(value => { current(); return value; }).then(value => entry.finish(null, value), error => entry.finish(error));
+}
+
 // Each fragment waits for the application acknowledgement, including when a
 // single GATT frame uses Write Without Response. Only the final reply proves
 // that the new, exclusively created file was hashed again from storage.
@@ -980,7 +1085,7 @@ function file_callback(callback, ...args) {
 
 function complete_file_entry(entry, error, data) {
     if (error) file_callback(entry.error_cb, error, entry.file);
-    else file_callback(entry.success_cb, entry.type === 'read' ? data : entry.file);
+    else file_callback(entry.success_cb, entry.type === 'read' || entry.type === 'batch' ? data : entry.file);
     file_callback(entry.done_cb);
     if (entry.completion) entry.completion();
 }
@@ -1025,6 +1130,7 @@ function vfs_process_file_write_queue() {
             vfs_process_file_write_queue();
         };
         if (e.type === 'read') vfs_process_file_read(e);
+        else if (e.type === 'batch') vfs_process_small_batch(e);
         else vfs_process_file_write(e);
     }
 }
@@ -1298,9 +1404,11 @@ async function tx_data_frame(cmd, status, chunk, data) {
         // Await every GATT write; no concurrent writes and no fragments from
         // an earlier connection can leak into a replacement session.
         const wire = frame.toArrayBuffer();
-        // A single negotiated WRITE frame already receives a file-protocol reply.
+        // A single negotiated read/write frame already receives a file-protocol reply.
         // Wait for both that reply and the browser send before advancing the offset.
-        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1;
+        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1 ||
+            cmd === 0x24 && vfs_small_read_capable() ||
+            cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value;
         await pixl.tx_data(wire, acknowledgedWrite && chunked && payload.length <= capacity);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
@@ -1373,7 +1481,7 @@ function on_rx_data(data) {
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
         const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x05 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22 || h.cmd === 0x25) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;
@@ -1389,6 +1497,8 @@ function on_ble_disconnected(reason) {
     ++transport_generation;
     transport_capabilities = null;
     file_digest_unsupported = false;
+    small_batch_capability = null;
+    small_batch_probe = null;
     transport_probe = null;
     storage_info_cache.clear();
     storage_info_queries.clear();

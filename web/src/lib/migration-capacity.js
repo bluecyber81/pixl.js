@@ -185,6 +185,19 @@ const de396 = {
   geometry: {...de395.geometry},
   layout: {...de395.layout, engineSha256: '3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d'},
 }
+// App670 TEST1: exact CRC-loop engine snapshot with fresh App669/App670
+// cross-mount and linked ARM qualification in docs/validation/DE3_97_PFS.json.
+const de397 = {
+  ...de396,
+  approved: true,
+  url: '/lfs-capacity-de397.wasm',
+  wasmSha256: 'd77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c',
+  firmwareVersion: '2.22.0-DE3.97',
+  applicationCounter: 670,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.97', applicationCounter: 670}],
+  geometry: {...de396.geometry},
+  layout: {...de396.layout, engineSha256: 'a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788'},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -204,7 +217,9 @@ export const DE393_MIGRATION_CAPACITY_TARGET=freezeTarget(de393)
 export const DE394_MIGRATION_CAPACITY_TARGET=freezeTarget(de394)
 export const DE395_MIGRATION_CAPACITY_TARGET=freezeTarget(de395)
 export const DE396_MIGRATION_CAPACITY_TARGET=freezeTarget(de396)
+export const DE397_MIGRATION_CAPACITY_TARGET=freezeTarget(de397)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de397')return DE397_MIGRATION_CAPACITY_TARGET
   if(profile==='de396')return DE396_MIGRATION_CAPACITY_TARGET
   if(profile==='de395')return DE395_MIGRATION_CAPACITY_TARGET
   if(profile==='de394')return DE394_MIGRATION_CAPACITY_TARGET

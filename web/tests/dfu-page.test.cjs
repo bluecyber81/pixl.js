@@ -32,6 +32,7 @@ test('an OLED handoff offers only OLED packages and never preselects a bookmarke
     const h = harness(true,{AllmiiboFirmwareReleases:catalog,location});
     assert.equal(h.nodes.get('board-profile').value,'OLED');
     assert.equal(h.nodes.get('lcd-downloads').hidden,true);
+    assert.equal(h.nodes.get('lcd-candidate-status').hidden,true);
     assert.equal(h.nodes.get('oled-downloads').hidden,false);
     assert.equal(h.nodes.get('bundled').disabled,false);
     assert.equal(h.nodes.get('bundled').value,'');
@@ -146,12 +147,12 @@ test('DFU speed and remaining time count only bytes acknowledged in this attempt
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
     for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource.split('?')[0])),resource);}
-    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.59.0-test.1"'));
-    assert.ok(html.indexOf('src="secure-dfu.js?v=3.59.0-test.1"')<html.indexOf('src="page.js?v=3.59.0-test.1"'));
-    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.59.0-test.1"'));
+    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.60.0-test.1"'));
+    assert.ok(html.indexOf('src="secure-dfu.js?v=3.60.0-test.1"')<html.indexOf('src="page.js?v=3.60.0-test.1"'));
+    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.60.0-test.1"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.89','https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','../guide/#android-de381','../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip','../guide/#lcd-de388','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.89','../guide/index.html#iphone','../','../licenses/index.html']);
+    assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','../firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.89','https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','../guide/#android-de381','../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip','../guide/#lcd-de388','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de3.89','../guide/index.html#iphone','../','../licenses/index.html']);
     assert.match(html,/<a\b[^>]* href="https:\/\/github.com\/[^"\s]+" target="_blank" rel="noopener noreferrer">/);
 });
 
@@ -383,13 +384,13 @@ test(`App${preview.counter} runtime choice and deep link retain the stable catal
     assert.equal(h.nodes.get('button').disabled, true);
     assert.deepEqual(h.calls, []);
     const native = new URL(h.nodes.get('android-dfu-link').href);
-    assert.deepEqual([...native.searchParams], [['file', 'https://bluecyber81.github.io/pixl.js/' + (preview.counter === 669 ? 'test/app669/' : '') + 'firmware/' + preview.file]]);
+    assert.deepEqual([...native.searchParams], [['file', 'https://bluecyber81.github.io/pixl.js/' + ([669,670].includes(preview.counter) ? 'test/app' + preview.counter + '/' : '') + 'firmware/' + preview.file]]);
     assert.equal(native.hash, '');
     assert.equal(h.nodes.get('android-handoff').hidden, false);
 });
 
-test('App669 TEST1 direct click uses the single bounded loader and keeps device selection a separate action', async () => {
-    const preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage;
+test('App670 TEST1 direct click uses the single bounded loader and keeps device selection a separate action', async () => {
+    const preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage670;
     const data = new Uint8Array(fs.readFileSync(path.join(__dirname, '../public/firmware', preview.file)));
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/data/firmware-releases.json'), 'utf8'));
     let resolve, loaders = 0, fetches = 0, fetchedUrl, fetchOptions;
@@ -439,11 +440,11 @@ test('App669 TEST1 direct click uses the single bounded loader and keeps device 
     assert.equal(h.calls.filter(([kind]) => kind === 'select').length, 1);
 });
 
-test('App669 TEST1 direct and catalogue handlers share board, recent boot, downgrade, busy and loading guards', () => {
-    const preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage;
+test('App670 TEST1 direct and catalogue handlers share board, recent boot, downgrade, busy and loading guards', () => {
+    const preview = require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage670;
     for (const sample of [
         {app:665, bl:21, sd:294, allowed:true}, {app:667, bl:21, sd:294, allowed:true}, {app:668, bl:21, sd:294, allowed:true},
-        {app:669, bl:21, sd:294, allowed:true}, {app:670, bl:21, sd:294}, {app:665, bl:20, sd:294}, {app:665, bl:21, sd:259},
+        {app:669, bl:21, sd:294, allowed:true}, {app:670, bl:21, sd:294, allowed:true}, {app:671, bl:21, sd:294}, {app:665, bl:20, sd:294}, {app:665, bl:21, sd:259},
         {app:665, bl:21, sd:294, board:'OLED'}, {app:665, bl:21, sd:294, duplicateBoard:true},
         {app:665, bl:21, sd:294, state:{busy:true}}, {app:665, bl:21, sd:294, state:{loading:true}}
     ]) {
@@ -464,7 +465,7 @@ test('App669 TEST1 direct and catalogue handlers share board, recent boot, downg
     }
 });
 
-test('changing board invalidates a pending direct App669 TEST1 download even if its response arrives later', async () => {
+test('changing board invalidates a pending direct App670 TEST1 download even if its response arrives later', async () => {
     let resolve, signal;
     const response = new Promise(done => { resolve = done; });
     class DelayedLoader extends Bundled.Loader {
@@ -491,7 +492,25 @@ test('firmware file picker advertises common ZIP and generic binary MIME types w
     assert.match(input, /accept="\.zip,application\/zip,application\/x-zip-compressed,application\/octet-stream"/);
     assert.match(input, /aria-describedby="firmware-file-help"/);
     assert.match(html, /Firmware-ZIP, nicht das große Übergabearchiv/);
-    assert.match(html, /App669 TEST1 direkt laden und prüfen/);
-    assert.match(html, /Load and check App669 TEST1 directly/);
-    assert(html.indexOf('id="load-lcd-preview"') < html.indexOf('for="file"'), 'Direct App669 TEST1 action precedes the manual file picker');
+    assert.match(html, /App670 TEST1 direkt laden und prüfen/);
+    assert.match(html, /Load and check App670 TEST1 directly/);
+    assert(html.indexOf('id="load-lcd-preview"') < html.indexOf('for="file"'), 'Direct App670 TEST1 action precedes the manual file picker');
+});
+
+test('App670 deep link selects only its signed isolated package and never implicitly loads or starts Bluetooth', () => {
+    const preview=require('../public/dfu/lcd-private-reference.mjs').lcdPreviewPackage670;
+    const location = new URL('https://bluecyber81.github.io/pixl.js/test/app670/dfu/web.html?package='+preview.id);
+    location.hash = new URLSearchParams({board:'LCD',read:Date.now(),app:669,bl:21,sd:294});
+    const h=harness(true,{location});
+    assert.equal(h.nodes.get('bundled').children.filter(option=>option.value===preview.id).length,1);
+    assert.equal(h.nodes.get('bundled').value,preview.id);
+    assert.equal(h.nodes.get('load-bundled').disabled,false);
+    assert.equal(h.nodes.get('android-handoff').hidden,false);
+    const native=new URL(h.nodes.get('android-dfu-link').href);
+    assert.equal(native.searchParams.get('file'),'https://bluecyber81.github.io/pixl.js/test/app670/firmware/'+preview.file);
+    assert.equal(h.nodes.get('button').disabled,true);
+    assert.deepEqual(h.calls,[]);
+    assert.match(html,/App670 TEST1: Das signierte Installationspaket ist geprüft/);
+    assert.match(html,/href="\.\.\/firmware\/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP\.zip"/);
+    assert.match(html,/App670 TEST1 direkt laden und prüfen/);
 });

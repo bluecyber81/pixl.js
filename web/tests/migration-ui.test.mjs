@@ -30,24 +30,24 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('the explicit App669 Test 1 default retains App668/App667/App665/App664 choices and the connected DE3.65 identity',async()=>{
+test('the explicit App670 Test 1 default retains App669/App668/App667/App665/App664 choices and the connected DE3.65 identity',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
-  assert.equal(options[0].props.value,'de396')
-  assert.equal(text(options[0]),'DE3.96 / 669 · Test 1')
-  for(const [index,id,label] of [[1,'de395','DE3.95 / 668'],[2,'de394','DE3.94 / 667'],[3,'de392','DE3.92 / 665'],[4,'de391','DE3.91 / 664']]) {
+  assert.equal(options[0].props.value,'de397')
+  assert.equal(text(options[0]),'DE3.97 / 670 · Test 1')
+  for(const [index,id,label] of [[1,'de396','DE3.96 / 669 · Test 1'],[2,'de395','DE3.95 / 668'],[3,'de394','DE3.94 / 667'],[4,'de392','DE3.92 / 665'],[5,'de391','DE3.91 / 664']]) {
     assert.equal(options[index].props.value,id);assert.equal(text(options[index]),label)
   }
-  assert.match(text(h.root),/DE3.96 \/ 669 · Test 1/)
+  assert.match(text(h.root),/DE3.97 \/ 670 · Test 1/)
   assert.match(text(h.root),/keine erneute Speicherumstellung/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.96 \/ 669 · Test 1/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.97 \/ 670 · Test 1/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE3.96 \/ 669 · Test 1/)
+  assert.match(text(h.root),/Simulated profile DE3.97 \/ 670 · Test 1/)
  }finally{h.app.unmount()}
 })
 
@@ -250,7 +250,7 @@ test('3.26 already-Packed notice requires a fresh explicit storage response, nev
 
 test('3.26 capacity profile is explicit and changes invalidate prior proof without modifying a bound import',async()=>{
  let observed;const h=mount({approved:true,capacity:async(a,o)=>{observed=o.capacityProfile;return{passed:true}}});try{
-  await load(h);assert.equal(h.vm.capacityProfile,'de396');await h.vm.checkCapacity();assert.equal(observed,'de396');
+  await load(h);assert.equal(h.vm.capacityProfile,'de397');await h.vm.checkCapacity();assert.equal(observed,'de397');
   h.vm.target={identity:{},state:{mounted:false}};h.vm.changeCapacityProfile('legacy');assert.equal(h.vm.capacityProfile,'legacy');assert.equal(h.vm.capacityProof,null);assert.equal(h.vm.target,null);
   await h.vm.checkCapacity();assert.equal(observed,'legacy');h.vm.target={identity:{},state:{pending:true,bound:true}};
   h.vm.changeCapacityProfile('current');assert.equal(h.vm.capacityProfile,'legacy');assert(h.vm.capacityProof);

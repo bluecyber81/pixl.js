@@ -337,7 +337,7 @@
         <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
       </form>
       <DiagnosticOverview v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
-      <LcdTestPanel v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :locale="language" :blocked="busy && !bleTestBusy || upload_diag_visible || diagnosticsBusy || disconnecting" :read-diagnostics="read_ble_test_diagnostics" :set-extension="set_ble_test_extension" :run-storage-test="run_lcd_storage_test" @busy="bleTestBusy = $event" @export="open_lcd_test_report" />
+      <LcdTestPanel v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :locale="language" :blocked="busy && !bleTestBusy || upload_diag_visible || diagnosticsBusy || disconnecting" :read-diagnostics="read_ble_test_diagnostics" :set-extension="set_ble_test_extension" :run-storage-test="run_lcd_storage_test" :run-read-comparison="run_lcd_read_comparison" @busy="bleTestBusy = $event" @export="open_lcd_test_report" />
       <details class="guided-check-panel" @toggle="guidedCheckOpened ||= $event.target.open">
         <summary>{{ language === 'de_DE' ? 'Geräteprüfung: Rückkehr und Aufwachen' : 'Device check: list return and wake-up' }}</summary>
         <GuidedDeviceCheck v-if="guidedCheckOpened" :snapshot="fullDiagnosticSnapshot" :firmware-version="firmwareVersion" :connected="connected" :reading="fullDiagnosticBusy" :export-busy="diagnosticsBusy" :locale="language" @export="open_guided_report" />
@@ -1682,9 +1682,33 @@ export default {
         throw error;
       }
     },
+    async run_lcd_read_comparison(options = {}) {
+      const generation=this.sessionGeneration; this.assert_lcd_test_idle(generation);
+      const firmwareVersion=this.firmwareVersion;
+      const {runLcdReadComparison}=await import('./lib/lcd-read-comparison.js');
+      this.assert_lcd_test_idle(generation);
+      try {
+      const result=await runLcdReadComparison({rootPath:this.current_dir?.startsWith('E:/')?this.current_dir:'E:/',
+        signal:options.signal,onProgress:options.onProgress,adapters:{
+          assertSession:()=>this.assert_session(generation),
+          probeBatch:()=>proto.vfs_probe_small_batch(firmwareVersion),
+          readRevision:()=>proto.vfs_small_create_revision(firmwareVersion),
+          readDirectory:async path=>this.checked(await proto.vfs_read_folder(path)),
+          readSingle:(path,size)=>proto.vfs_read_small_file(path,size),
+          readBatch:(files,revision)=>proto.vfs_read_small_batch(files,revision,firmwareVersion),
+          digestBatch:(files,revision)=>proto.vfs_digest_small_batch(files,revision,firmwareVersion),
+          readLink:()=>proto.get_mtu_diagnostics(firmwareVersion),
+          transport:()=>proto.get_transport_diagnostics()
+        }});
+      this.assert_session(generation);return {...result,firmwareVersion,applicationVersion:webVersion};
+      } catch(error) {
+        if(error?.testReport)error.testReport={...error.testReport,firmwareVersion,applicationVersion:webVersion};
+        throw error;
+      }
+    },
     open_lcd_test_report(report) {
       if (!report || this.diagnosticsSaving || this.diagnosticsCopying) return;
-      this.diagnosticsJson=JSON.stringify(report,null,2); this.diagnosticsFilename='Allmiibo-LCD-App669-Test1.json';
+      this.diagnosticsJson=JSON.stringify(report,null,2); this.diagnosticsFilename=report.kind==='lcd-small-read-comparison'?'Allmiibo-LCD-App670-Kurzvergleich.json':'Allmiibo-LCD-Test1.json';
       this.diagnosticsStatus='info.diagnosticReady'; this.diagnosticsDialog=true;
     },
     async read_all_diagnostics() {
@@ -1995,6 +2019,16 @@ export default {
             const digest = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
             this.assert_session(generation); return digest;
           },
+          readFilesBatch: typeof proto.vfs_read_small_batch === 'function' ? async (files, {revision}) => {
+            this.assert_session(generation);
+            const result = await proto.vfs_read_small_batch(files, revision, context.firmwareVersion);
+            this.assert_session(generation); return result;
+          } : undefined,
+          readFileDigestsBatch: typeof proto.vfs_digest_small_batch === 'function' ? async (files, {revision}) => {
+            this.assert_session(generation);
+            const result = await proto.vfs_digest_small_batch(files, revision, context.firmwareVersion);
+            this.assert_session(generation); return result;
+          } : undefined,
           readFile: async (path, options) => {
             this.assert_session(generation);
             const bytes = await this.read_device_file(path, { max_bytes: options.maxBytes, exact_size: options.maxBytes, firmware_version: this.firmwareVersion, progress_cb: options.onProgress });

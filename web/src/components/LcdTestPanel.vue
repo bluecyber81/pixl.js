@@ -1,8 +1,8 @@
 <template>
   <section v-if="eligible" class="lcd-test-panel" aria-labelledby="lcd-test-title">
-    <h3 id="lcd-test-title">LCD App669 · Test 1</h3>
-    <p>{{ pick('Hier vergleichst du dieselbe Übertragung mit zwei Funk-Konfigurationen. Erst Status lesen, dann eine Variante wählen und denselben Backup- oder Prüfdatei-Test wiederholen.',
-      'Compare the same transfer with two radio configurations. Read the status first, select a variant, then repeat the same backup or test-file operation.') }}</p>
+    <h3 id="lcd-test-title">LCD {{ batchEligible ? 'App670' : 'App669' }} · Test 1</h3>
+    <p>{{ pick('Hier prüfst du die Verbesserungen für kleine Dateien, die Funk-Konfiguration und die Speicherfreigabe. Zuerst den Teststatus lesen und danach den gewünschten Prüflauf starten.',
+      'Check small-file improvements, radio configuration and storage recovery. Read the test status first, then start the desired check.') }}</p>
     <p class="test-scope">{{ pick('Die Ereignisverlängerung ist eine globale Einstellung des Funkstacks. Sie bleibt beim Trennen und Neuverbinden bestehen. Nach einem Geräteneustart ist die Baseline AUS aktiv. Lesen allein verändert nichts.',
       'Event extension is a global radio-stack setting. It persists across disconnect and reconnect. Device restart restores baseline OFF. Reading alone changes nothing.') }}</p>
     <div class="test-actions">
@@ -21,6 +21,27 @@
     </dl>
     <small>{{ pick('Die nominelle Ereignislänge ist keine gemessene Funkzeit. 2M und gleiche Vorher-/Nachher-Werte beweisen keinen bestimmten Dateidurchsatz. Backups speichern Dauer, Phasen, Nutzdaten und Linkwerte vor und nach dem Vorgang in der Gesamtdiagnose.',
       'Nominal event length is not measured airtime. 2M and equal before/after values do not establish file throughput. Backups store duration, phases, payload counts and link observations before and after the operation in the full diagnosis.') }}</small>
+    <div v-if="batchEligible" class="test-storage">
+      <h4>{{ pick('Kurzer Vergleich mit vorhandenen Dateien', 'Short comparison with existing files') }}</h4>
+      <p>{{ pick('Liest höchstens zwölf kleine Dateien im aktuellen Ordner und seinen Unterordnern: einzeln, gesammelt und nochmals einzeln. Vergleicht alle Bytes und die Geräte-Prüfsummen. Die Suche endet nach höchstens acht Ordnern. Es wird nichts geschrieben oder gelöscht.',
+        'Reads up to twelve small files in the current folder and its subfolders: individually, in batches, then individually again. Compares all bytes and device hashes. Search stops after at most eight folders. Nothing is written or deleted.') }}</p>
+      <div class="test-actions">
+        <button type="button" :disabled="!canAct || !runReadComparison" @click="runComparison">{{ pick('Kurzvergleich starten', 'Start short comparison') }}</button>
+        <button v-if="comparisonRunning" type="button" :disabled="comparisonCancelling" @click="cancelComparison">{{ pick('Kurzvergleich abbrechen', 'Cancel short comparison') }}</button>
+      </div>
+      <p v-if="comparisonRunning" role="status">{{ comparisonCancelling ? pick('Abbruch nach der laufenden Leseanfrage …', 'Stopping after the current read request …') : comparisonProgress }}</p>
+      <div v-if="comparisonReport" class="test-result" :class="{'test-failed':comparisonReport.status!=='passed'}">
+        <strong>{{ comparisonReport.status==='passed' ? pick('Dateiinhalte und Geräte-Prüfsummen stimmen überein', 'File contents and device hashes match') : comparisonReport.status==='cancelled' ? pick('Kurzvergleich abgebrochen', 'Short comparison cancelled') : pick('Kurzvergleich nicht vollständig bestätigt', 'Short comparison not fully confirmed') }}</strong>
+        <p>{{ comparisonReport.files?.length || 0 }} {{ pick('Dateien', 'files') }} · {{ bytes(comparisonReport.payloadBytes) }} · <time :datetime="comparisonReport.startedAt">{{ comparisonReport.startedAt }}</time></p>
+        <dl class="test-grid">
+          <div v-for="pass in comparisonReport.passes || []" :key="pass.mode"><dt>{{ passLabel(pass.mode) }}</dt><dd>{{ number(pass.durationMilliseconds) }} ms · {{ pass.requests }} {{ pick('Leseanfragen', 'read requests') }}</dd></div>
+        </dl>
+        <p>{{ pick('Ergebnis dieses Prüflaufs; kein Livezustand einer späteren Verbindung.', 'Result of this test run; not the live state of a later connection.') }}</p>
+        <button type="button" :disabled="running" @click="exportComparison">{{ pick('Kurzvergleich speichern', 'Save short comparison') }}</button>
+      </div>
+      <small>{{ pick('Der kurze Vergleich zeigt das Verhalten dieser Stichprobe. Cache und Funkplanung können die Zeiten beeinflussen. Ein vollständiges Backup wird damit nicht ersetzt. Die Funkoption bleibt unverändert.',
+        'The short comparison describes this sample. Cache and radio scheduling can affect timing. It does not replace a complete backup. The radio option is unchanged.') }}</small>
+    </div>
     <div class="test-storage">
       <h4>{{ pick('Prüfdatei ohne Dateiauswahl', 'Test file without a file picker') }}</h4>
       <p>{{ pick('Schreibt 512 synthetische Bytes in einen eigenen neuen Testordner, liest und vergleicht sie und entfernt anschließend nur den geprüften Testinhalt. Freier Speicher wird vor dem Schreiben, danach und nach dem Löschen neu abgefragt.',
@@ -49,23 +70,30 @@
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { normalizeMtuDiagnostics, supportsBleTestDiagnostics } from '../lib/device-extra-diagnostics.js';
 const props = defineProps({connected:Boolean,firmwareVersion:String,generation:Number,blocked:Boolean,locale:String,
-  readDiagnostics:Function,setExtension:Function,runStorageTest:Function});
+  readDiagnostics:Function,setExtension:Function,runStorageTest:Function,runReadComparison:Function});
 const emit = defineEmits(['busy','export']);
 const snapshot=ref(null),observedAt=ref(null),running=ref(false),status=ref(''),report=ref(null);
+const comparisonReport=ref(null),comparisonRunning=ref(false),comparisonCancelling=ref(false),comparisonProgress=ref('');
+let comparisonController=null;
 let serial=0;
 const pick=(de,en)=>props.locale?.startsWith('de')?de:en;
 const eligible=computed(()=>supportsBleTestDiagnostics(props.firmwareVersion));
+const batchEligible=computed(()=>props.firmwareVersion==='2.22.0-DE3.97');
 const configuration=computed(()=>snapshot.value?.schemaVersion===3?snapshot.value.experiment:null);
 const canRead=computed(()=>eligible.value && props.connected && !props.blocked && !running.value);
 const canAct=computed(()=>canRead.value && !!configuration.value && snapshot.value.sessionReady && snapshot.value.fileMode && snapshot.value.transferIdle);
 const number=n=>new Intl.NumberFormat(props.locale?.startsWith('de')?'de-DE':'en-GB',{maximumFractionDigits:3}).format(n);
 const bytes=n=>Number.isSafeInteger(n)&&n>=0?number(n)+' B':'—';
 const phy=n=>n===1?'1M':n===2?'2M':'—';
-function reset(){++serial;snapshot.value=null;observedAt.value=null;status.value='';running.value=false;emit('busy',false);}
+function reset(){++serial;comparisonController?.abort();comparisonController=null;comparisonRunning.value=false;comparisonCancelling.value=false;snapshot.value=null;observedAt.value=null;status.value='';running.value=false;emit('busy',false);}
 watch(()=>[props.generation,props.firmwareVersion,props.connected],reset);
 onBeforeUnmount(reset);
 function current(token){return token===serial && props.connected && eligible.value;}
 function failure(error){
+  if(error?.code==='LCD_COMPARE_CANCELLED')return pick('Kurzvergleich abgebrochen. Es wurden keine Dateien verändert.', 'Short comparison cancelled. No files were changed.');
+  if(error?.code==='LCD_COMPARE_NO_FILES')return pick('Zu wenige kleine Dateien gefunden. Im Dateibereich einen Ordner mit mindestens zwei Dateien bis 572 Byte öffnen und erneut starten.', 'Too few small files found. Open a folder containing at least two files up to 572 bytes, then try again.');
+  if(error?.code==='LCD_COMPARE_CHANGED'||error?.code==='LCD_COMPARE_MISMATCH')return pick('Speicherstand oder Dateiinhalte haben sich unterschieden. Der Vergleich gilt nicht als bestanden; bitte den Bericht speichern.', 'Storage revision or contents differed. The comparison did not pass; please save the report.');
+  if(error?.code==='LCD_COMPARE_UNSUPPORTED')return pick('Die Sammelabfrage ist für diese Verbindung nicht bestätigt. App670 und den aktuellen Verbindungsstatus prüfen.', 'Batch reading is not confirmed for this connection. Check App670 and the current connection status.');
   if(error?.code==='BLE_TEST_BUSY'||error?.status===1) return pick('Noch eine Übertragung oder Geräteoperation aktiv. Bitte warten und den Status erneut lesen.', 'A transfer or device operation is still active. Wait, then read the status again.');
   if(error?.code==='BLE_TEST_UNSUPPORTED') return pick('Dieses Gerät hat die Testfunktion nicht bestätigt. Normale Dateioperationen bleiben verfügbar.', 'This device did not confirm the test feature. Normal file operations remain available.');
   if(['DISCONNECTED','SESSION_CHANGED','TIMEOUT','TX_FAILED'].includes(error?.code)) return pick('Verbindung unterbrochen. Nach dem Neuverbinden den Zustand erneut lesen; die Funkoption kann noch aktiv sein.', 'Connection interrupted. Read the state after reconnecting; the radio option may still be active.');
@@ -112,6 +140,27 @@ function runTest(){return operation('file',async token=>{
   }
 });}
 function exportReport(){if(!running.value && report.value)emit('export',report.value);}
+const passLabel=mode=>mode==='batch'?pick('Gesammelt', 'Batched'):mode==='single-before'?pick('Einzeln vorher', 'Individual before'):pick('Einzeln danach', 'Individual after');
+function runComparison(){return operation('compare',async token=>{
+  if(!batchEligible.value || !props.runReadComparison)return;
+  const controller=new AbortController();comparisonController=controller;
+  comparisonRunning.value=true;comparisonCancelling.value=false;comparisonReport.value=null;
+  try {
+    const value=await props.runReadComparison({signal:controller.signal,onProgress:progress=>{
+      if(!current(token))return;
+      comparisonProgress.value=progress.phase==='listing'?pick('Suche kleine Dateien …','Finding small files …'):
+        progress.phase==='digest'?pick('Vergleiche Geräte-Prüfsummen …','Comparing device hashes …'):passLabel(progress.phase)+' …';
+    }});
+    if(current(token)){comparisonReport.value=value;status.value=pick('Kurzvergleich abgeschlossen.','Short comparison completed.');}
+  } catch(error) {
+    if(token===serial || (!props.connected && token+1===serial))comparisonReport.value=error?.testReport||null;
+    throw error;
+  } finally {
+    if(comparisonController===controller){comparisonController=null;comparisonRunning.value=false;comparisonCancelling.value=false;}
+  }
+});}
+function cancelComparison(){if(comparisonController){comparisonCancelling.value=true;comparisonController.abort();}}
+function exportComparison(){if(!running.value&&comparisonReport.value)emit('export',comparisonReport.value);}
 </script>
 <style scoped>
 .lcd-test-panel{border:1px solid #c5a55e;border-radius:12px;padding:16px;margin:18px 0;background:#fffbef;color:#293c45;}

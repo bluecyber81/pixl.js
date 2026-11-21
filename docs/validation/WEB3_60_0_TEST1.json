@@ -1,0 +1,219 @@
+{
+  "schema": 1,
+  "kind": "web-software-qualification",
+  "qualifiedAt": "2026-11-21T15:56:46.935787+00:00",
+  "webVersion": "3.60.0-test.1",
+  "firmwareVersion": "2.22.0-DE3.97",
+  "applicationCounter": 670,
+  "testLabel": "TEST1",
+  "board": "LCD",
+  "scope": "Zustand bei Softwarequalifikation. Öffentlicher Webcommit, HTTP-Auslieferung und Live-Readback werden in einer separaten Auslieferungsquittung belegt. Eine spätere Auslieferung ändert diese zeitliche Einordnung nicht.",
+  "firmware": {
+    "productionCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "validationCommit": "898ba1bb46db2e67e3cc6a0216aefa3db4368f70",
+    "validationTree": "99fdb8b40d89d5fcd5948d072d94c54e29bf3933",
+    "branch": "test/lcd-de397-app670-test1",
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+    "applicationBytes": 363888,
+    "applicationBinSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "otaFile": "Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+    "otaBytes": 364489,
+    "otaSha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "artifactStatus": "experimental-signed-application",
+    "hardwareAcceptance": "pending",
+    "capacityProfile": "de397",
+    "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "wasmSha256": "d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c"
+  },
+  "sourceBinding": {
+    "algorithm": "SHA-256 über kanonisches JSON des files-Objekts (sort_keys=true, separators=(comma,colon), UTF-8).",
+    "scope": "Webquellen, Build-/Testskripte, statische Webartefakte und direkt gebundene PFS-/Firmware-Nachweise; kein Vollmanifest der Firmwarehistorie. Abhängigkeiten sind durch package-lock.json gebunden.",
+    "unsignedFullSuiteSourceSetSha256": "33a5e8bad8134d805b37a3308f832fb7a56df2258e51edd136c9eccd28e3f55f",
+    "finalSignedSourceSetSha256": "fee6838efb71b00cb4e401112b4783d98010c5bf49d847e49143c1723f6e13fe",
+    "unsignedManifest": "UNSIGNED_SOURCE_MANIFEST.json",
+    "finalManifest": "SIGNED_SOURCE_MANIFEST.json",
+    "coreFilesUnchangedSinceFullSuite": [
+      "web/src/lib/backup.js",
+      "web/src/lib/pixl.proto.js",
+      "web/src/lib/pixl.ble.js",
+      "web/src/lib/lcd-read-comparison.js",
+      "web/src/App.vue",
+      "web/src/components/LcdTestPanel.vue",
+      "web/src/lib/device-info.js"
+    ],
+    "changedSourcePathsAfterFullSuite": [
+      "web/public/firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "web/tests/private-lcd-670.test.mjs",
+      "web/.gitignore",
+      "web/public/dfu/bundled-packages.js",
+      "web/public/dfu/lcd-private-reference.mjs",
+      "web/public/dfu/nrf-dfu-link.mjs",
+      "web/public/dfu/web.html",
+      "web/scripts/copy-license-notices.mjs",
+      "web/tests/dfu-page.test.cjs",
+      "web/tests/dist/static-deployment.test.mjs",
+      "web/tests/private-lcd-669.test.mjs",
+      "web/tests/private-lcd-reference-state.test.mjs"
+    ],
+    "webCommit": "separate-delivery-receipt"
+  },
+  "environment": {
+    "node": "v24.22.3",
+    "npm": "11.19.1",
+    "platform": "Linux",
+    "dependencies": "Vorhandene, durch package-lock.json gepinnte Abhängigkeiten; kein Paketversionswechsel im Prüflauf."
+  },
+  "unsignedBasisPhase": {
+    "description": "Vollständiger Webtestlauf vor der später bestätigten App670-Signatur. Der komplette Log bleibt unverändert; dieser Lauf ist keine App670-OTA- oder Signaturfreigabe.",
+    "command": "npm test",
+    "cwd": "web",
+    "exitCode": 0,
+    "tests": 2037,
+    "pass": 2034,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "log": "UNSIGNED_WEB_TESTS.log",
+    "skips": [
+      "Optionaler historischer DE3.17-/Recovery575-OTA-Test: lokale optionale Dateien fehlen.",
+      "Windows-Launcher-Fall: in dieser Linux-Umgebung nicht ausgeführt.",
+      "Windows-Launcher-Persistenzfehler-Fall: in dieser Linux-Umgebung nicht ausgeführt."
+    ]
+  },
+  "signedFinalPhase": {
+    "description": "Gezielter finaler Lauf aller durch Paket, Referenz, Katalog, Android-Handoff und DFU-Seite betroffenen Fälle. Er verwendet die reale App670-ZIP und den finalen Firmware-Qualifikationscommit.",
+    "command": "node --test web/tests/private-lcd-667.test.mjs web/tests/private-lcd-668.test.mjs web/tests/private-lcd-669.test.mjs web/tests/private-lcd-670.test.mjs web/tests/private-lcd-reference-state.test.mjs web/tests/dfu-page.test.cjs web/tests/bundled-packages.test.cjs",
+    "cwd": "repository-root",
+    "exitCode": 0,
+    "tests": 87,
+    "pass": 87,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "log": "SIGNED_PACKAGE_TESTS.log",
+    "checks": [
+      "Ganze reale OTA-ZIP sowie BIN-Größe und -SHA-256.",
+      "Exaktes Init-Ziel: App670, Hardware 52, nur S112-FWID 0x0126.",
+      "Unabhängige P-256-ECDSA-Prüfung der inneren InitCommand-Bytes mit dem vorhandenen öffentlichen Z21-Punkt; geänderte Initdaten und Signatur werden verworfen.",
+      "Realer Loader, Updater und ZIP-Parser; geänderte gleich große ZIP wird vor Parser/Bluetooth verworfen.",
+      "Beide üblichen Handy-MIME-Typen; keine automatische Bluetooth-Auswahl beim Laden.",
+      "Striktes LCD/PFS1/Z21/S112-TEST1-Profil und Android-Pfad ausschließlich test/app670; normale Root-Aliase werden verworfen.",
+      "Beibehaltene reale App667/668/669-Paketprüfungen."
+    ],
+    "z21PublicPointSha256": "9ee942fb8b5fa84aa3287f02451c7f2bf2168f5df2c97af253172d2e90f03a83"
+  },
+  "builds": [
+    {
+      "mode": "root",
+      "command": "npm run build",
+      "basePath": "/",
+      "exitCode": 0,
+      "tests": {
+        "tests": 44,
+        "pass": 44,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "BUILD_ROOT.log",
+      "manifest": "DIST_ROOT_MANIFEST.json",
+      "files": 275,
+      "bytes": 14155803,
+      "referenceAndOtaByteEqualToSource": true,
+      "qualificationCommitPresentInCompiledAssets": [
+        "assets/index-EMd5YdAX.js"
+      ]
+    },
+    {
+      "mode": "test1",
+      "command": "npm run build:test1",
+      "basePath": "/pixl.js/test/app670/",
+      "exitCode": 0,
+      "tests": {
+        "tests": 44,
+        "pass": 44,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "BUILD_TEST1.log",
+      "manifest": "DIST_TEST1_MANIFEST.json",
+      "files": 275,
+      "bytes": 14155983,
+      "referenceAndOtaByteEqualToSource": true,
+      "qualificationCommitPresentInCompiledAssets": [
+        "assets/index-C956X8Z_.js"
+      ]
+    }
+  ],
+  "countingRule": "2034 bestandene Fälle des vollständigen unsigned Basislaufs, 87 finale gezielte signed Fälle und jeweils 44 Dist-Fälle werden getrennt angegeben. Die Läufe überlappen; es wird keine addierte Abdeckungszahl behauptet.",
+  "behavior": [
+    "Capability- und sitzungsgebundene kleine READ-/DIGEST-Batches sind in Backup, Wiederaufnahme und vorherigen ZIP-Abgleich integriert. Maximal vier Dateien à 572 Byte; Request maximal min(243, ausgehandeltes Requestlimit).",
+    "Ältere Firmware erhält keinen neuen Capability-Probe. Fehlende Fähigkeit oder zu kleines Requestlimit nutzt den Einzelpfad; fehlerhafte Antworten brechen ab.",
+    "Erst vollständig geprüfte Gruppen werden an den Backupcache freigegeben. TX-/RX-Abschluss, Reihenfolge, Revision, Manifestzuordnung und Session-/Abbruchgrenzen bleiben geschützt.",
+    "Gezieltes Write Without Response nur bei bestätigter Fähigkeit und einem vollständigen GATT-Frame. Keine Behauptung zur realen Funklaufzeit.",
+    "Expliziter kurzer read-only Vergleich mit höchstens zwölf kleinen Dateien, Einzel → Batch → Einzel und Hashabgleich; Abbruch wartet auf die aktive Antwort."
+  ],
+  "unchangedCatalogs": [
+    {
+      "path": "web/src/data/firmware-releases.json",
+      "bytes": 8822,
+      "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+    },
+    {
+      "path": "web/public/firmware/releases.json",
+      "bytes": 8822,
+      "sha256": "e40707758a9628dff79848b0abde1b87da60f3ab1ba15dfd73bf866888ff2694"
+    },
+    {
+      "path": "web/public/firmware/releases.js",
+      "bytes": 8951,
+      "sha256": "421bd848b223c00b67ba1bd0deca30ab1cb0673a90a46373e78db1a6aa61bcfd"
+    }
+  ],
+  "openDeviceTests": [
+    "App670 auf dem vorgesehenen LCD/Z21 installieren und danach frische Gesamtdiagnose mit Version, Zähler, SourceID und EngineID exportieren.",
+    "Expliziten kurzen read-only Vergleich ausführen und vollständigen JSON-Bericht prüfen.",
+    "Reale BLE-Laufzeit, schnelle WNR-Folgen, Abbruch und Wiederverbindung am Gerät beurteilen. Keine weitere vollständige Backupserie aus diesen Hostnachweisen ableiten."
+  ],
+  "limits": [
+    "Browser-Paketvorprüfung ist keine Signaturprüfung am verbundenen Gerät. Die zusätzliche ECDSA-Prüfung ist ein Qualifikationsnachweis; die authentische Installation erzwingt der Bootloader.",
+    "Keine physische Abnahme von App670, keine gemessene Durchsatzsteigerung, keine erneute Behauptung über App669-Gerätetests.",
+    "Keine Aussage über den späteren öffentlichen Webcommit oder HTTP-Livestatus; hierfür gilt die separate Auslieferungsquittung."
+  ],
+  "evidenceDirectory": "WEB3_60_0_TEST1_evidence",
+  "evidence": {
+    "BUILD_ROOT.log": {
+      "bytes": 12318,
+      "sha256": "36e5a3de74b83c4fb0923b0f82b3647f6f4e6cc4ab977ffc430a5517eb5767e5"
+    },
+    "BUILD_TEST1.log": {
+      "bytes": 13735,
+      "sha256": "c776172d7e46cf982c5feec80a13873c654725cc96e04d24a973ce13315739b1"
+    },
+    "DIST_ROOT_MANIFEST.json": {
+      "bytes": 45737,
+      "sha256": "1c0347c82e8577ba7361bf94d471bbcce84dbf3a4566384bc1e56bb2346ca0f2"
+    },
+    "DIST_TEST1_MANIFEST.json": {
+      "bytes": 45758,
+      "sha256": "413c9b0b834da6a7a29d30c274ac46db789bac16afb59566bf79b2908e2317fe"
+    },
+    "SIGNED_PACKAGE_TESTS.log": {
+      "bytes": 9771,
+      "sha256": "30d914466549b18b52263ded8ca00bd0d89bf6efffdb34a1a6551ccc3e620b64"
+    },
+    "SIGNED_SOURCE_MANIFEST.json": {
+      "bytes": 140572,
+      "sha256": "03c6c6233641ae835f89e8fe06024e53e9a0e682fe7ba050373d1fae428e958b"
+    },
+    "UNSIGNED_SOURCE_MANIFEST.json": {
+      "bytes": 140223,
+      "sha256": "fee17018c5e87b28dc888072f8a08f36877aeda68ee07e9aee5e03792317519b"
+    },
+    "UNSIGNED_WEB_TESTS.log": {
+      "bytes": 212418,
+      "sha256": "eac98ae8e6d60d02bf94d3947ae9187568aa305895c877bf443edfac6f5006b7"
+    }
+  }
+}

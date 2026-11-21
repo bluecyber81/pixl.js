@@ -20,8 +20,9 @@ test('MTUD v3 decodes the production C serializer and preserves the global optio
  assert.deepEqual(normalizeMtuDiagnostics({...value,path:'PRIVATE'}),value);
  const raw=link();raw[32]=1;new DataView(raw.buffer).setUint32(36,0xffffffff,true);
  assert.equal(parseMtuDiagnostics(raw).experiment.lastOptionResult,null);
- for(const version of ['2.22.0-DE3.95','2.22.0-DE3.97','2.22.0-DE3.96-OLEDt1','',null]) assert.equal(supportsBleTestDiagnostics(version),false);
+ for(const version of ['2.22.0-DE3.95','2.22.0-DE3.98','2.22.0-DE3.96-OLEDt1','',null]) assert.equal(supportsBleTestDiagnostics(version),false);
  assert.equal(supportsBleTestDiagnostics('2.22.0-DE3.96'),true);
+ assert.equal(supportsBleTestDiagnostics('2.22.0-DE3.97'),true);
 });
 
 test('test link parser rejects short/reserved/inconsistent payloads without a guessed option state',()=>{

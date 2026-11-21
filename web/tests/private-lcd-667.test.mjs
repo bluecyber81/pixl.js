@@ -135,7 +135,7 @@ test('private App667 recognition binds the actual signed application ZIP, BIN an
   assert.equal(state.ready, true);
   assert.equal(catalog.packages[0].counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 667), false);
-  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [669,668,667,665,664]);
+  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [670,669,668,667,665,664]);
 });
 
 test('App667 diagnostics and capacity require the new exact source, counter and engine while retaining previous profiles', () => {

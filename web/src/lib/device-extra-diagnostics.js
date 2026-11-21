@@ -37,9 +37,9 @@ export function normalizeMtuDiagnostics(value) {
     ...(link ? {link} : {}), ...(experiment ? {experiment} : {})});
 }
 
-// App669 Test 1 is an explicit experimental identity, not an assumption about
+// App669/670 Test 1 are explicit experimental identities, not assumptions about
 // future release versions. A valid MTUD v3 capability is still required to act.
-export function supportsBleTestDiagnostics(version) { return version === '2.22.0-DE3.96'; }
+export function supportsBleTestDiagnostics(version) { return ['2.22.0-DE3.96', '2.22.0-DE3.97'].includes(version); }
 
 export function normalizeBleTestConfiguration(value) {
   if (!value || value.scope !== 'softdevice-test-configuration' || value.testBuild !== true ||

@@ -20,7 +20,7 @@ test('test panel has no automatic calls and stays out of normal or older-device 
  const h=await mount();try{
   assert.deepEqual(h.calls,[]);assert.equal(button(h,on).props.disabled,true);await click(h,on);assert.deepEqual(h.calls,[]);
   assert.match(text(h.root),/App669 · Test 1/);assert.match(text(h.root),/Neuverbinden/);assert.match(text(h.root),/keine gemessene Funkzeit/);
-  for(const firmwareVersion of ['2.22.0-DE3.95','2.22.0-DE3.97','2.22.0-DE3.96-OLEDt1','']){h.state.firmwareVersion=firmwareVersion;await h.tick();assert.equal(nodes(h.root,'section').length,0);}
+  for(const firmwareVersion of ['2.22.0-DE3.95','2.22.0-DE3.98','2.22.0-DE3.96-OLEDt1','']){h.state.firmwareVersion=firmwareVersion;await h.tick();assert.equal(nodes(h.root,'section').length,0);}
   assert.deepEqual(h.calls,[]);
  }finally{h.app.unmount();}
 });
@@ -73,4 +73,66 @@ test('late file failure can retain its dated leftover-folder report while discon
   gate.reject(Object.assign(Error('lost'),{code:'DISCONNECTED',testReport:{status:'failed',cleanupRequired:true,folder:'E:/~t669-old',startedAt:'2026-11-21T12:00:00.000Z'}}));await p;await h.tick();assert.match(text(h.root),/Testordner übrig/);
   h.state.connected=true;await h.tick();assert.equal(button(h,file).props.disabled,true);assert.match(text(h.root),/kein Livezustand/);
  }finally{h.app.unmount();}
+});
+
+const comparison='Kurzvergleich starten',cancelComparison='Kurzvergleich abbrechen';
+function comparisonResult(status='passed',label='current') {
+ return {schema:1,kind:'lcd-small-read-comparison',status,runLabel:label,startedAt:'2026-11-21T15:00:00.000Z',
+  files:[{path:'E:/a',size:1},{path:'E:/b',size:1}],payloadBytes:2,
+  passes:[{mode:'single-before',durationMilliseconds:20,requests:2}],verified:status==='passed'};
+}
+
+test('App670 short comparison requires its own explicit click, current test capability and the App670 version',async()=>{
+ let comparisons=0;const h=await mount({runReadComparison:async()=>{comparisons++;return comparisonResult();}});
+ try {
+  assert.equal(nodes(h.root,'button').some(n=>text(n)===comparison),false);assert.equal(comparisons,0);
+  h.state.firmwareVersion='2.22.0-DE3.97';await h.tick();
+  assert.equal(button(h,comparison).props.disabled,true);await click(h,comparison);assert.equal(comparisons,0);
+  await click(h,read);assert.equal(button(h,comparison).props.disabled,false);assert.equal(comparisons,0);
+  h.state.blocked=true;await click(h,comparison);assert.equal(comparisons,0);
+  h.state.blocked=false;await click(h,comparison);assert.equal(comparisons,1);
+  assert.match(text(h.root),/Dateiinhalte und Geräte-Prüfsummen stimmen überein/);
+  assert.equal(h.events.filter(e=>e[0]==='export').length,0);
+  await click(h,'Kurzvergleich speichern');assert.equal(h.events.filter(e=>e[0]==='export').length,1);
+  const old={...data(),schemaVersion:2};delete old.experiment;h.state.readDiagnostics=async()=>old;
+  await click(h,read);await click(h,comparison);assert.equal(comparisons,1);assert.equal(button(h,comparison).props.disabled,true);
+ } finally {h.app.unmount();}
+});
+
+test('App670 short comparison cancellation holds the UI lock until the active read settles and preserves its incomplete report',async()=>{
+ const gate=deferred();let options,settled=false;
+ const h=await mount({firmwareVersion:'2.22.0-DE3.97',runReadComparison:input=>{options=input;return gate.promise;}});
+ try {
+  await click(h,read);const pending=button(h,comparison).props.onClick().then(()=>{settled=true;});await h.tick();
+  assert.equal(options.signal.aborted,false);assert.equal(button(h,file).props.disabled,true);
+  await click(h,cancelComparison);assert.equal(options.signal.aborted,true);assert.equal(settled,false);
+  assert.equal(button(h,comparison).props.disabled,true);assert.equal(button(h,read).props.disabled,true);
+  assert.equal(button(h,cancelComparison).props.disabled,true);assert.deepEqual(h.events.at(-1),['busy',true]);
+  assert.match(text(h.root),/Abbruch nach der laufenden Leseanfrage/);
+  gate.reject(Object.assign(Error('Stopped after current read'),{code:'LCD_COMPARE_CANCELLED',testReport:comparisonResult('cancelled')}));
+  await pending;await h.tick();assert.equal(settled,true);assert.deepEqual(h.events.at(-1),['busy',false]);
+  assert.match(text(h.root),/Kurzvergleich abgebrochen/);assert.equal(button(h,read).props.disabled,false);
+  await click(h,'Kurzvergleich speichern');assert.equal(h.events.at(-1)[1].status,'cancelled');
+ } finally {h.app.unmount();}
+});
+
+test('App670 late comparison progress, success or failure cannot replace a newer session report or release its active lock',async()=>{
+ for(const outcome of ['success','failure']) {
+  const old=deferred(),fresh=deferred();let oldOptions;
+  const h=await mount({firmwareVersion:'2.22.0-DE3.97',runReadComparison:options=>{oldOptions=options;return old.promise;}});
+  try {
+   await click(h,read);const pending=button(h,comparison).props.onClick();await h.tick();
+   h.state.generation=2;await h.tick();assert.equal(oldOptions.signal.aborted,true);
+   h.state.runReadComparison=options=>{options.onProgress({phase:'single-before'});return fresh.promise;};await h.tick();
+   await click(h,read);const replacement=button(h,comparison).props.onClick();await h.tick();
+   oldOptions.onProgress({phase:'batch'});
+   if(outcome==='success')old.resolve(comparisonResult('passed','old'));
+   else old.reject(Object.assign(Error('Old failure'),{testReport:comparisonResult('failed','old')}));
+   await pending;await h.tick();
+   assert.equal(button(h,comparison).props.disabled,true);assert.deepEqual(h.events.at(-1),['busy',true]);
+   assert.match(text(h.root),/Einzeln vorher …/);assert.doesNotMatch(text(h.root),/Dateiinhalte und Geräte-Prüfsummen stimmen überein/);
+   fresh.resolve(comparisonResult('passed','fresh'));await replacement;await h.tick();
+   await click(h,'Kurzvergleich speichern');assert.equal(h.events.at(-1)[1].runLabel,'fresh');
+  } finally {h.app.unmount();}
+ }
 });

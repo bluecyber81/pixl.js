@@ -93,7 +93,10 @@ def layout_cases(sym, binary, engine_hash, constants):
                 c['BLOCK_COUNT']*c['BLOCK_SIZE'], c['BLOCK_SIZE'], c['BLOCK_COUNT'],
                 c['CACHE_SIZE'], c['CACHE_SIZE'], c['CACHE_SIZE'], c['META_SIZE'],
                 c['SHARD_TARGET'], c['MAX_SHARDS'], c['PATH_MAX'], c['NAME_MAX'], c['MAX_HANDLES'], 7)
-            assert bytes(cpu.mem_read(out,72)) == expected + bytes.fromhex(engine_hash)
+            actual = bytes(cpu.mem_read(out,72))
+            assert actual == expected + bytes.fromhex(engine_hash), (
+                'linked PFS layout mismatch', drive, geometry, mounted,
+                'expected engine', engine_hash, 'actual layout72', actual.hex())
             case['layout72Hex'] = bytes(cpu.mem_read(out,72)).hex()
         else:
             assert cpu.mem_read(out,72) == bytes([0xa5])*72
@@ -107,7 +110,7 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
@@ -119,6 +122,8 @@ def main():
         assert record['version'] == '2.22.0-DE3.95' and record['counter'] == 668
     if args.profile == 'de396':
         assert record['version'] == '2.22.0-DE3.96' and record['counter'] == 669
+    if args.profile == 'de397':
+        assert record['version'] == '2.22.0-DE3.97' and record['counter'] == 670
     assert source_hashes(fw) == prod and fingerprint(prod) == record['source_id_sha256']
     artifacts = {name:digest(args.build/name) for name in ('pixljs.bin','pixljs.hex','pixljs.out','pixljs.map')}
     assert artifacts == record['artifacts_sha256']
@@ -152,7 +157,7 @@ def main():
         limits=['Mounted state and flash geometry are modeled in the linked ARM layout test.',
                 'Live settings CRC, exact version/counter and layout, archive identity and a fresh fit proof are required.',
                 'Host simulations do not measure physical free space or device acceptance.'])
-    if args.profile == 'de396':
+    if args.profile in ('de396', 'de397'):
         report['limits'].append('BOARD_LCD/PIXL_TEST_DIAGNOSTICS instrumentation is omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
     args.output.write_text(json.dumps(report,indent=2)+'\n')
 

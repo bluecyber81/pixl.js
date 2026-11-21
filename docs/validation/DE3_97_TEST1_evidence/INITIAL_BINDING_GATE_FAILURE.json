@@ -1,0 +1,12 @@
+{
+  "initialBuild": "/workspace/scratch/0af425ec2cbb/build_de397_1/pixljs.bin",
+  "expectedEngine": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+  "staleEngine": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d",
+  "initialLinkedLayoutCheck": "failed at exact 72-byte layout equality; no approval granted",
+  "binaryOldIdentityOccurrences": 1,
+  "binaryNewIdentityOccurrences": 0,
+  "cause": "Generated vfs_packed_identity.h still held App669 identity despite changed packed_fs.c",
+  "resolution": "Fixed by regeneration of vfs_packed_identity.h; final1 linked72byte layout matches new engine in all4cases. Earlier BINs are discarded.",
+  "resolvedByBuild": "/workspace/scratch/0af425ec2cbb/build_de397_final1",
+  "resolvedBySourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe"
+}

@@ -2,12 +2,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
-import {DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET, DE354_MIGRATION_CAPACITY_TARGET, DE350_MIGRATION_CAPACITY_TARGET, DE345_MIGRATION_CAPACITY_TARGET, DE344_MIGRATION_CAPACITY_TARGET, PREVIOUS_MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
+import {DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET, DE354_MIGRATION_CAPACITY_TARGET, DE350_MIGRATION_CAPACITY_TARGET, DE345_MIGRATION_CAPACITY_TARGET, DE344_MIGRATION_CAPACITY_TARGET, PREVIOUS_MIGRATION_CAPACITY_TARGET, LEGACY_MIGRATION_CAPACITY_TARGET, getMigrationCapacityTarget} from '../src/lib/migration-capacity.js'
 import {diagnosticBuildIdentity} from '../src/lib/firmware-build-reference.js'
 import {simulateCapacity} from '../src/lib/migration-capacity-engine.js'
 const root=new URL('../',import.meta.url),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
 const profiles=[
+ {id:'de397',folder:'packed-simulator-de397',target:DE397_MIGRATION_CAPACITY_TARGET,counter:670,version:'2.22.0-DE3.97',approvedCounters:[670],wasmSha256:'d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c',engineSha256:'a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788'},
  {id:'de396',folder:'packed-simulator-de396',target:DE396_MIGRATION_CAPACITY_TARGET,counter:669,version:'2.22.0-DE3.96',approvedCounters:[669],wasmSha256:'d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56',engineSha256:'3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d'},
  {id:'de395',folder:'packed-simulator-de395',target:DE395_MIGRATION_CAPACITY_TARGET,counter:668,version:'2.22.0-DE3.95',approvedCounters:[668],wasmSha256:'311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c',engineSha256:'a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd'},
  {id:'de393',folder:'packed-simulator-de393',target:DE393_MIGRATION_CAPACITY_TARGET,counter:666,version:'2.22.0-DE3.93',approvedCounters:[666],wasmSha256:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engineSha256:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e'},
@@ -39,6 +40,7 @@ const rows=[{path:'/Leer',kind:1,size:0},{path:'/Ordner',kind:1,size:0},{path:'/
  .map((row,index)=>({...row,rawMeta128Hex:Buffer.from(Array.from({length:128},(_,i)=>(i*11+index*7)&255)).toString('hex')}))
 
 for (const [version, counter, document, bytes, binSha256] of [
+  ['2.22.0-DE3.97', 670, 'DE3_97_PFS.json', 363888, '2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9'],
   ['2.22.0-DE3.96', 669, 'DE3_96_PFS.json', 363312, '32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80'],
   ['2.22.0-DE3.95', 668, 'DE3_95_PFS.json', 361992, 'cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9'],
   ['2.22.0-DE3.93', 666, 'DE3_93_PFS.json', 357964, 'bc08b79455d525667c03a1c03193bfb8d11a2e0416331dcc0d8ed90381550652'],
