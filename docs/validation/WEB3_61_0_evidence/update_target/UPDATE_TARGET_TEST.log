@@ -1,0 +1,256 @@
+TAP version 13
+# Subtest: application DFU guidance distinguishes browser version comparison from Z15 signature enforcement
+ok 1 - application DFU guidance distinguishes browser version comparison from Z15 signature enforcement
+  ---
+  duration_ms: 2.062061
+  type: 'test'
+  ...
+# Subtest: 2.22 base versions and PREP are recognized without claiming LittleFS installation or recommending downgrade
+ok 2 - 2.22 base versions and PREP are recognized without claiming LittleFS installation or recommending downgrade
+  ---
+  duration_ms: 1.653004
+  type: 'test'
+  ...
+# Subtest: exact independent Z21 / S112 7.3 / DE3.98 synthetic observations match the pinned target
+ok 3 - exact independent Z21 / S112 7.3 / DE3.98 synthetic observations match the pinned target
+  ---
+  duration_ms: 1.104677
+  type: 'test'
+  ...
+# Subtest: current App671 preserves verified bootloader, SoftDevice and memory geometry pins
+ok 4 - current App671 preserves verified bootloader, SoftDevice and memory geometry pins
+  ---
+  duration_ms: 0.161063
+  type: 'test'
+  ...
+# Subtest: normal App671 target agrees with the stable catalogue and preserves historical App662
+ok 5 - normal App671 target agrees with the stable catalogue and preserves historical App662
+  ---
+  duration_ms: 0.414255
+  type: 'test'
+  ...
+# Subtest: current application requires Z21 and rejects Z19 and Z20
+ok 6 - current application requires Z21 and rejects Z19 and Z20
+  ---
+  duration_ms: 0.922922
+  type: 'test'
+  ...
+# Subtest: historical App662 retains its known Z21 binding and rejects a mismatched region
+ok 7 - historical App662 retains its known Z21 binding and rejects a mismatched region
+  ---
+  duration_ms: 1.059819
+  type: 'test'
+  ...
+# Subtest: App655 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 8 - App655 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 1.119909
+  type: 'test'
+  ...
+# Subtest: App656 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 9 - App656 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.992788
+  type: 'test'
+  ...
+# Subtest: App657 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 10 - App657 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.894018
+  type: 'test'
+  ...
+# Subtest: App658 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 11 - App658 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 2.5924
+  type: 'test'
+  ...
+# Subtest: App664 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 12 - App664 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.432152
+  type: 'test'
+  ...
+# Subtest: App665 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 13 - App665 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.428216
+  type: 'test'
+  ...
+# Subtest: App666 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 14 - App666 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.260283
+  type: 'test'
+  ...
+# Subtest: App667 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 15 - App667 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.23876
+  type: 'test'
+  ...
+# Subtest: App668 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 16 - App668 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.212831
+  type: 'test'
+  ...
+# Subtest: App669 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 17 - App669 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.183407
+  type: 'test'
+  ...
+# Subtest: App670 preview uses its checked Z21/S112 profile separately from the bundled target
+ok 18 - App670 preview uses its checked Z21/S112 profile separately from the bundled target
+  ---
+  duration_ms: 0.232281
+  type: 'test'
+  ...
+# Subtest: current release cannot hide conflicting or missing device evidence
+ok 19 - current release cannot hide conflicting or missing device evidence
+  ---
+  duration_ms: 0.924344
+  type: 'test'
+  ...
+# Subtest: local comparison explains the prior DE3.64 build only for their own validated counter
+ok 20 - local comparison explains the prior DE3.64 build only for their own validated counter
+  ---
+  duration_ms: 0.305681
+  type: 'test'
+  ...
+# Subtest: a DE3.60 device with Z15 matches the bootloader and is offered an application update only
+ok 21 - a DE3.60 device with Z15 matches the bootloader and is offered an application update only
+  ---
+  duration_ms: 0.307865
+  type: 'test'
+  ...
+# Subtest: Z13 and BL8 identify the exact hash/counter pair; unknown images and BL8 rollbacks stay distinguishable
+ok 22 - Z13 and BL8 identify the exact hash/counter pair; unknown images and BL8 rollbacks stay distinguishable
+  ---
+  duration_ms: 3.934595
+  type: 'test'
+  ...
+# Subtest: Z18 is explicitly unchanged Z15 code with a new rollback counter, not the default Z17 implementation
+ok 23 - Z18 is explicitly unchanged Z15 code with a new rollback counter, not the default Z17 implementation
+  ---
+  duration_ms: 0.53062
+  type: 'test'
+  ...
+# Subtest: 3.30.1 identifies prior DE3.42 separately from unchanged BL8 and SoftDevice, without declaring installation
+ok 24 - 3.30.1 identifies prior DE3.42 separately from unchanged BL8 and SoftDevice, without declaring installation
+  ---
+  duration_ms: 0.331069
+  type: 'test'
+  ...
+# Subtest: 3.32.1 retains DE3.48 readback compatibility while identifying DE3.75 as the local target
+ok 25 - 3.32.1 retains DE3.48 readback compatibility while identifying DE3.75 as the local target
+  ---
+  duration_ms: 0.280433
+  type: 'test'
+  ...
+# Subtest: 3.30.1 complete-package target distinguishes the same BL8 code with earlier counters without inventing incompatibility
+ok 26 - 3.30.1 complete-package target distinguishes the same BL8 code with earlier counters without inventing incompatibility
+  ---
+  duration_ms: 0.498321
+  type: 'test'
+  ...
+# Subtest: the previous BL5, BL6 and BL7 fingerprints stay different even with a new application or a claimed BL8 counter
+ok 27 - the previous BL5, BL6 and BL7 fingerprints stay different even with a new application or a claimed BL8 counter
+  ---
+  duration_ms: 3.186397
+  type: 'test'
+  ...
+# Subtest: both overview languages show the exact new target without changing evidence limits
+ok 28 - both overview languages show the exact new target without changing evidence limits
+  ---
+  duration_ms: 0.357519
+  type: 'test'
+  ...
+# Subtest: browser, diagnostic, launcher and lockfile carry one patch-version identity
+ok 29 - browser, diagnostic, launcher and lockfile carry one patch-version identity
+  ---
+  duration_ms: 4.264293
+  type: 'test'
+  ...
+# Subtest: missing, failed and unavailable reads remain unknown, even with a matching version string
+ok 30 - missing, failed and unavailable reads remain unknown, even with a matching version string
+  ---
+  duration_ms: 0.496208
+  type: 'test'
+  ...
+# Subtest: disconnect invalidates all old values, and connecting alone does not confirm data
+ok 31 - disconnect invalidates all old values, and connecting alone does not confirm data
+  ---
+  duration_ms: 0.621568
+  type: 'test'
+  ...
+# Subtest: an installed DE3.25 is shown as older and different without downgrading matching BL8/SoftDevice
+ok 32 - an installed DE3.25 is shown as older and different without downgrading matching BL8/SoftDevice
+  ---
+  duration_ms: 3.432699
+  type: 'test'
+  ...
+# Subtest: each known version, counter, hash or metadata discrepancy stays different
+ok 33 - each known version, counter, hash or metadata discrepancy stays different
+  ---
+  duration_ms: 0.483329
+  type: 'test'
+  ...
+# Subtest: bootloader counter alone cannot identify BL8, and an address conflict prevents a match
+ok 34 - bootloader counter alone cannot identify BL8, and an address conflict prevents a match
+  ---
+  duration_ms: 0.273713
+  type: 'test'
+  ...
+# Subtest: CRC-unverified counters and invalid/partial input never turn green
+ok 35 - CRC-unverified counters and invalid/partial input never turn green
+  ---
+  duration_ms: 0.370909
+  type: 'test'
+  ...
+# Subtest: a valid unsupported-chip register observation is a hardware difference, not a bootloader verdict
+ok 36 - a valid unsupported-chip register observation is a hardware difference, not a bootloader verdict
+  ---
+  duration_ms: 0.217358
+  type: 'test'
+  ...
+# Subtest: raw extra fields, malformed version strings and mutable aliases are not copied
+ok 37 - raw extra fields, malformed version strings and mutable aliases are not copied
+  ---
+  duration_ms: 0.368647
+  type: 'test'
+  ...
+# Subtest: English and German have complete field/reason labels and explain evidence limits
+ok 38 - English and German have complete field/reason labels and explain evidence limits
+  ---
+  duration_ms: 0.300944
+  type: 'test'
+  ...
+# Subtest: real bundled-package component explains manual scope and removes downgrade actions for a newer device
+ok 39 - real bundled-package component explains manual scope and removes downgrade actions for a newer device
+  ---
+  duration_ms: 177.031016
+  type: 'test'
+  ...
+# Subtest: a legacy LCD can open the Z21 guide while incompatible DE3.89 application transfers are hidden
+ok 40 - a legacy LCD can open the Z21 guide while incompatible DE3.89 application transfers are hidden
+  ---
+  duration_ms: 24.584857
+  type: 'test'
+  ...
+# Subtest: real overview changes from unread to matching, then old application and disconnected; details stay collapsed
+ok 41 - real overview changes from unread to matching, then old application and disconnected; details stay collapsed
+  ---
+  duration_ms: 59.048256
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 460.497524

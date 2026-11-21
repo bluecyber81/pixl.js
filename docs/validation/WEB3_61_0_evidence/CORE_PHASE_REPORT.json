@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "status": "Kernimplementierung geprüft; folgende Kapazitäts- und Paketbindung separat zu prüfen.",
+  "webVersion": "3.61.0",
+  "firmwareVersion": "2.22.0-DE3.98",
+  "applicationCounter": 671,
+  "branch": "work/web-app671",
+  "baseCommit": "d52fa4ccdf438d923196947fa967bd9b1cc767d7",
+  "sourceManifest": "SOURCE_CORE_PHASE.json",
+  "sourceCanonicalSha256": "e2d1a57c3b67c825ece346fa796ba0033f98b7fdc87e478649483a5fe0df4cb6",
+  "results": [
+    {
+      "file": "APP671_FOCUSED_INITIAL.log",
+      "bytes": 1085,
+      "sha256": "79080e5c8b5597ce0f0d9320440f7f530f5f3f685c9abb7894eb2560cc5fbe2a",
+      "counts": {
+        "tests": 9,
+        "pass": 9,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 747.098634
+      },
+      "exitCode": 0
+    },
+    {
+      "file": "TARGETED_CORE_INITIAL.log",
+      "bytes": 61687,
+      "sha256": "38770bf1de28839001eb8ebd2f024277ab941c048a240cf4adbad01013c90ad6",
+      "counts": {
+        "tests": 572,
+        "pass": 572,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 3629.494897
+      },
+      "exitCode": 0
+    }
+  ],
+  "counting": "Der fokussierte Lauf mit neun Fällen ist Teil der 572 Fälle. Keine Addition.",
+  "normalContracts": {
+    "MTUD": "v2, INFO05 [1]",
+    "startup": "v4, INFO09 [3]",
+    "PXGC": "v1, VFS [69,2]",
+    "experimentalPanelAndEVT": "Nur DE3.96/App669 und DE3.97/App670; App671 bleibt ausgeschlossen."
+  },
+  "backup": "Vorhandene echte READ-/DIGEST-Sammelpfade werden für App671 durch die explizite Firmwareerkennung genutzt. Neue Integration führt normale App.vue-Backupadapter, createBackup, reale Protokollfunktionen und ZIP-Prüfung gemeinsam aus; nur Gerät/Browser sind simuliert. Fresh Revision, ausbleibende Capability, unvollständige Antwort und Abbruch werden geprüft.",
+  "downloadUi": "Aktuelle App kommt ausschließlich aus dem realen de3.98-lcd-app-Katalogeintrag und deploymentPath. Fehlender Eintrag erzeugt keinen App671-Link. Das alte App662-Komplettpaket behält seine eigene reale URL und seinen eigenen Downgrade-/Board-/Boot-Gate.",
+  "unchangedMechanisms": [
+    "Batch-/Digest-Payloadparser und Transaktionsgrenzen",
+    "Backup-Engine und BLE-Transportimplementierung",
+    "Alte experimentelle Setter und Formate",
+    "OLED-Funktionen und historische Pakete"
+  ],
+  "pending": [
+    "DE3.98-Kapazitätsprofil mit frischem WASM und exakten Belegen",
+    "Reale signierte App671-Paketbindung durch Root",
+    "Finale Gesamtprüfungen, Builds, Commit und Auslieferung durch Root"
+  ],
+  "limits": [
+    "Mock-BLE ist kein neuer Gerätetest.",
+    "Keine neue Geräteserie oder Vollbackupprüfung angefordert.",
+    "Kein neuer tatsächlicher App671-Geschwindigkeitsgewinn behauptet.",
+    "Keine Firmware, Signatur, Veröffentlichung oder Releasebuild durch diesen Agenten."
+  ]
+}

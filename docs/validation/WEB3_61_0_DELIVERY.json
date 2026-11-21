@@ -1,0 +1,277 @@
+{
+  "schema": 1,
+  "kind": "normal-web-public-delivery-qualification",
+  "documentedAt": "2026-11-21T19:49:00.712804+00:00",
+  "webVersion": "3.61.0",
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.98",
+  "applicationCounter": 671,
+  "firmwareChannel": "normal",
+  "passed": true,
+  "status": "Die bereits ausgeführten öffentlichen HTTP-Prüfungen und der separate Cloud-Desktop-UI-Nachweis sind abgeschlossen und an den gebauten Quellstand sowie den veröffentlichten Pagescommit gebunden.",
+  "provenance": "Abschlussdokumentation vorhandener, unverändert kopierter Prüfbelege. Die Vollsuite, Builds und die 306-HTTP-Dateiprüfung wurden hier nicht wiederholt. Ein zusätzlicher enger Remote-/Cloud-UI-Abschlusscheck vom 21.11.2026 wurde vom Root-Agenten ausgeführt und separat übermittelt; siehe continuationCheck.",
+  "softwareQualification": {
+    "json": "WEB3_61_0.json",
+    "markdown": "WEB3_61_0.md",
+    "separateScope": "Die vorherige Softwarequalifikation und ihre 33 Belege bleiben separat. Vier ursprüngliche Auslieferungsbelege und ein enger ergänzender Abschlusscheck sind hier getrennt gebunden; überlappende Prüffallzahlen werden nicht addiert."
+  },
+  "sourceBinding": {
+    "repository": "bluecyber81/pixl.js",
+    "publicBranch": "web-app671",
+    "publicBuildCommit": "39a183d6a2e86f8b9605d649c5cedfc0ccd20535",
+    "publicBuildTree": "155663c88245d3f048a79d920c319592b51309bc",
+    "localBuildCommit": "b3849cbe03fae75df0a6ae6a07cec21bd70ebf40",
+    "qualifiedWebSubtree": "e3ac900d892ddbab2c69ab3a708a1b4e2fd3678a",
+    "sourceCanonicalSha256": "4573fcd01699fba9a25f1d2a58cafcce055ee438256ba682317d8e154a4e839e",
+    "sourceFiles": 1107,
+    "sourceEvidence": "WEB3_61_0_evidence/WEB_PUBLIC_SOURCE.json",
+    "productionFilesChangedByThisDocumentation": false
+  },
+  "pagesBinding": {
+    "branch": "gh-pages",
+    "publicCommit": "f83275eb5568ca777a750f70e0b9bb504e5e7c62",
+    "publicTree": "0263ddb012fe02a337e98d520c8da28760babaac",
+    "localCommit": "0803388a95d3933938e80c11cc670ff6353e84b5",
+    "publicParent": "99a274476f9acad6a13057e3fecd52e43af4f4aa",
+    "distCanonicalSha256": "9537b5a15ef2e2aedcd61a22dab17f2c143c9bbb28fdd2d3edb3858f98b0f03f",
+    "distFileCount": 300,
+    "distBytes": 14797901,
+    "allHistoricalTestPathsPreserved": true,
+    "deletedPaths": 0
+  },
+  "firmwareBinding": {
+    "productionCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+    "qualificationCommit": "a3ae0e4063f1901e9da98f3ff37fd163388eb72a",
+    "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+    "applicationBinSha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+    "applicationBytes": 364180,
+    "package": {
+      "id": "de3.98-lcd-app",
+      "version": "2.22.0-DE3.98",
+      "counter": 671,
+      "file": "Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+      "bytes": 364781,
+      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z21",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false
+    },
+    "hardwareAcceptance": "pending-for-this-build"
+  },
+  "publicUrls": {
+    "manager": "https://bluecyber81.github.io/pixl.js/?v=3.61.0",
+    "updater": "https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.61.0&package=de3.98-lcd-app",
+    "ota": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+    "immutableOta": "https://raw.githubusercontent.com/bluecyber81/pixl.js/a3ae0e4063f1901e9da98f3ff37fd163388eb72a/fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip"
+  },
+  "deployment": {
+    "workflowId": 44939142530,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/44939142530",
+    "headSha": "f83275eb5568ca777a750f70e0b9bb504e5e7c62",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-11-21T19:06:32Z",
+    "updatedAt": "2026-11-21T19:07:16Z",
+    "evidence": "WEB3_61_0_DELIVERY_evidence/PAGES_WORKFLOW.json"
+  },
+  "httpVerification": {
+    "previouslyExecuted": true,
+    "startedAt": "2026-11-21T19:10:31.650896+00:00",
+    "completedAt": "2026-11-21T19:13:52.947788+00:00",
+    "passed": true,
+    "count": 306,
+    "passedCount": 306,
+    "normalPayloadCount": 298,
+    "preservedPathCount": 8,
+    "preservedPaths": [
+      "test/app669/index.html",
+      "test/app669/dfu/web.html",
+      "test/app669/dfu/package.json",
+      "test/app669/dfu/lcd-private-reference.mjs",
+      "test/app670/index.html",
+      "test/app670/dfu/web.html",
+      "test/app670/dfu/package.json",
+      "test/app670/dfu/lcd-private-reference.mjs"
+    ],
+    "excludedBuildControls": [
+      {
+        "path": ".nojekyll",
+        "bytes": 1,
+        "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "reason": "GitHub Pages build control marker; not a user-facing HTTP payload."
+      },
+      {
+        "path": "_redirects",
+        "bytes": 22,
+        "sha256": "faddc50d8b4f77f60a98186ba256e7ac0fd96f4bd68a26bd90b53fd4f24f4187",
+        "reason": "Host build/redirect configuration; not a user-facing HTTP payload on GitHub Pages."
+      }
+    ],
+    "distributionManifestFiles": 300,
+    "manifestSha256": "89b6914331fbb0cd433ce7b56438c017fdaf341cb21fc91067b12e14d211775a",
+    "maximumConcurrentRequests": 6,
+    "automaticRetries": 0,
+    "limit": "Public bytes and response metadata are checked. Device installation, RF transfer and browser execution are outside this HTTP verification.",
+    "evidence": "WEB3_61_0_DELIVERY_evidence/HTTP_DELIVERY_VERIFICATION.json"
+  },
+  "liveUiVerification": {
+    "previouslyExecuted": true,
+    "passed": true,
+    "completedChecks": 7,
+    "observations": [
+      {
+        "id": "normal-root",
+        "passed": true,
+        "evidence": "Page title and header show Allmiibo Dateimanager 3.61.0 and LCD DE3.98 / App671."
+      },
+      {
+        "id": "normal-lcd-download",
+        "passed": true,
+        "evidence": "The current LCD card links to Allmiibo_LCD_DE3_98_671_NUR_APP.zip and states PFS1, Z21 and S112 7.3.0."
+      },
+      {
+        "id": "update-target",
+        "passed": true,
+        "evidence": "Start-page firmware action and LCD selection show Aktuelle LCD-Ausgabe DE3.98 / App671 and application counter 671."
+      },
+      {
+        "id": "historical-system-package",
+        "passed": true,
+        "evidence": "The App662 combined system package remains explicitly older, requires bootloader counter below 21 and points to separate subsequent App671 installation."
+      },
+      {
+        "id": "updater-preselection",
+        "passed": true,
+        "evidence": "The actual App671 card URL opens Allmiibo DFU 3.61.0 with LCD and DE3.98 selected; package load remains an explicit action."
+      },
+      {
+        "id": "published-package-loader",
+        "passed": true,
+        "evidence": "After Paket laden und prüfen, the live page reports Paketidentität per SHA-256 bestätigt and selected counter 671, hardware field 52, allowed SoftDevice FWID 0x0126."
+      },
+      {
+        "id": "device-boundary",
+        "passed": true,
+        "evidence": "No Bluetooth device was connected or selected. The cloud browser displayed the expected unavailable-Bluetooth transfer state."
+      }
+    ],
+    "browser": "Dedicated cloud Chrome",
+    "surface": "desktop browser",
+    "exactStartOrEndTimeRecorded": false,
+    "timeNote": "Der originale UI-Beleg enthält keinen eigenen Zeitstempel. Er bindet die abgeschlossene Beobachtung an den gleichen Pagescommit; eine genaue Beobachtungszeit wird nicht erfunden.",
+    "localBrowserAttempt": {
+      "passed": false,
+      "reason": "Local headless Chromium failed before page navigation: ProcessSingleton socket() failed: Operation not permitted. The local extension lacked its originating browser context. The permitted cloud browser supplied the separate live UI observations above."
+    },
+    "physicalDeviceAccess": false,
+    "physicalFirmwareTransfer": false,
+    "mobileBrowserRun": false,
+    "evidence": "WEB3_61_0_DELIVERY_evidence/LIVE_WEB_UI.json"
+  },
+  "historicalPendingClarification": {
+    "source": "WEB3_61_0_DELIVERY_evidence/PAGES_PUBLICATION.json",
+    "preservedValues": {
+      "workflow": "pending",
+      "liveHttp": "pending",
+      "visualReview": "pending"
+    },
+    "interpretation": "Die pending-Felder beschreiben den Zeitpunkt der ursprünglichen Pagesveröffentlichung. Sie sind keine aktuellen fehlenden Prüfungen. Die späteren, separat gespeicherten Workflow-, HTTP- und UI-Belege schließen diese Schritte ab. Der Rohbeleg bleibt unverändert.",
+    "completedBy": {
+      "workflow": "WEB3_61_0_DELIVERY_evidence/PAGES_WORKFLOW.json",
+      "liveHttp": "WEB3_61_0_DELIVERY_evidence/HTTP_DELIVERY_VERIFICATION.json",
+      "visualReview": "WEB3_61_0_DELIVERY_evidence/LIVE_WEB_UI.json"
+    }
+  },
+  "limits": [
+    "Öffentliche Bytes, Deployment und Desktop-Weboberfläche sind nachgewiesen; physische App671-Installation, Bluetoothübertragung und NFC-/Konsolenbetrieb sind damit nicht nachgewiesen.",
+    "Der lokale Chromium-Versuch erreichte keine Seite. Der separate Cloud-Desktop-Nachweis ersetzt keine Android-Geräteprüfung.",
+    "Vorhandene App670-Geräteberichte bleiben getrennt und wurden nicht in diese öffentliche Quittung kopiert.",
+    "Die Dokumentation ändert keine Produktdateien, keine OTA, keine signierten Inhalte, keinen Build und keine historischen Testseiten."
+  ],
+  "nextStep": "Normale App671 über den normalen Web3.61-Einstieg installieren und die bereits beschriebenen neuen UI-/Wiederaufnahmepfade im normalen Gebrauch beobachten. Keine erneute vollständige Backup-, Speicher- oder Funkvergleichsserie als Voraussetzung verlangen.",
+  "evidence": [
+    {
+      "path": "WEB3_61_0_DELIVERY_evidence/HTTP_DELIVERY_VERIFICATION.json",
+      "bytes": 287708,
+      "sha256": "cef3246c53b164b2caf9274929b522b5ec57cb8a25ea6e4a698f1f9c57404329",
+      "copiedByteForByte": true
+    },
+    {
+      "path": "WEB3_61_0_DELIVERY_evidence/LIVE_WEB_UI.json",
+      "bytes": 2973,
+      "sha256": "1fbe656774d3f486eb244ac3a714fb4e68f28017c8e2a13949755d5d725bf003",
+      "copiedByteForByte": true
+    },
+    {
+      "path": "WEB3_61_0_DELIVERY_evidence/PAGES_WORKFLOW.json",
+      "bytes": 511,
+      "sha256": "316bf69fec759b3ffa1a254006615b4a598e22b97422cc7bba9a0136b2b30687",
+      "copiedByteForByte": true
+    },
+    {
+      "path": "WEB3_61_0_DELIVERY_evidence/PAGES_PUBLICATION.json",
+      "bytes": 925,
+      "sha256": "8e58425840d04805e3280c92c54d3fe11330fc399597a5e3d9f8dff95441e206",
+      "copiedByteForByte": true
+    },
+    {
+      "path": "WEB3_61_0_DELIVERY_evidence/CONTINUATION_READBACK_2026_11_21.json",
+      "bytes": 1186,
+      "sha256": "9a7efdd06cc9e40be18b727792588dc6b90cef5ffea2f9a0348c655d61556b64",
+      "copiedByteForByte": true,
+      "provenance": "Separat vom Root-Agenten erstellte Fortsetzungsquittung."
+    }
+  ],
+  "continuationCheck": {
+    "date": "2026-11-21",
+    "performedBy": "Root-Agent der Fortsetzungssitzung",
+    "reportedToDocumentationAgent": true,
+    "scope": "Read-only Bestätigung der drei öffentlichen Branchköpfe und des Pages-Workflows; normale Web-/DFU-Oberfläche öffnen und App671-Paket laden sowie SHA256 prüfen.",
+    "observed": {
+      "schema": 1,
+      "scope": "Read-only remote state confirmation during continuation; no hardware access",
+      "webBranch": {
+        "ref": "refs/heads/web-app671",
+        "sha": "39a183d6a2e86f8b9605d649c5cedfc0ccd20535"
+      },
+      "pagesBranch": {
+        "ref": "refs/heads/gh-pages",
+        "sha": "f83275eb5568ca777a750f70e0b9bb504e5e7c62"
+      },
+      "firmwareBranch": {
+        "ref": "refs/heads/release/lcd-de398-app671",
+        "sha": "a3ae0e4063f1901e9da98f3ff37fd163388eb72a"
+      },
+      "pagesWorkflow": {
+        "id": 44939142530,
+        "headSha": "f83275eb5568ca777a750f70e0b9bb504e5e7c62",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/bluecyber81/pixl.js/actions/runs/44939142530"
+      },
+      "uiObserved": {
+        "managerUrl": "https://bluecyber81.github.io/pixl.js/?v=3.61.0",
+        "managerVersion": "3.61.0",
+        "selectedBoard": "LCD",
+        "firmware": "2.22.0-DE3.98",
+        "applicationCounter": 671,
+        "updaterUrl": "https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.61.0&package=de3.98-lcd-app",
+        "loadedAndSha256Confirmed": true,
+        "hardwareField": 52,
+        "softDeviceFwid": "0x0126",
+        "deviceSelected": false,
+        "physicalFirmwareTransfer": false
+      }
+    },
+    "evidence": "WEB3_61_0_DELIVERY_evidence/CONTINUATION_READBACK_2026_11_21.json",
+    "exactObservationTimeRecorded": false,
+    "fullSuiteRepeated": false,
+    "buildRepeated": false,
+    "completeHttpFileSweepRepeated": false,
+    "physicalDeviceAccess": false,
+    "physicalFirmwareTransfer": false
+  }
+}

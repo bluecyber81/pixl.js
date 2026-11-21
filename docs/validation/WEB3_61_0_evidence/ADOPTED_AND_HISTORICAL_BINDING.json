@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "verifiedAt": "2026-11-21T19:02:06.148912+00:00",
+  "baselineCommit": "d52fa4ccdf438d923196947fa967bd9b1cc767d7",
+  "historicalCatalogEntries": 19,
+  "allHistoricalCatalogEntriesUnchanged": true,
+  "onlyAddedEntry": "de3.98-lcd-app",
+  "bothJsonCatalogsByteEqual": true,
+  "unchangedFiles": [
+    {
+      "path": "web/public/dfu/lcd-private-reference.mjs",
+      "bytes": 7208,
+      "sha256": "e0eb0857abcd0dd6bc5d4b6addc9e8cba7c757846f6330912c5f8a52d6478961"
+    },
+    {
+      "path": "web/src/lib/backup.js",
+      "bytes": 38021,
+      "sha256": "98d67a3b0c76f5b4716755f77b3abae83c4ad1417f9333921f85b45df27d6e8b"
+    },
+    {
+      "path": "web/src/lib/pixl.ble.js",
+      "bytes": 12876,
+      "sha256": "2edfa69f2f8e19fbd6191ca4e141ab3dc1d68dc5676d62e1284a6843a7fcaa65"
+    },
+    {
+      "path": "web/src/lib/stored-backup.js",
+      "bytes": 8541,
+      "sha256": "a820611e7ee26be12a0fe6876660807b082a953a595abdddb76a3ec5808eb4e3"
+    },
+    {
+      "path": "web/src/lib/lcd-read-comparison.js",
+      "bytes": 8640,
+      "sha256": "3a93a4b21e79f24b3e02bfc00097f0e5fff29c1403edaee47a0db42bb7e42797"
+    },
+    {
+      "path": "web/src/components/LcdTestPanel.vue",
+      "bytes": 19272,
+      "sha256": "271ff06ea6cea4f8759b767b66805ec964b40c0002b7c71490b09aea8db54eba"
+    }
+  ],
+  "note": "Source and metadata preservation inspection; not another device test or additive test-suite count."
+}

@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-21T18:58:02.533257+00:00",
+  "passed": true,
+  "launchCommand": "python3 serve_local.py --directory dist --port <ephemeral-loopback-port>",
+  "startupVersion": "3.61.0",
+  "serverSha256": "efe303c71c75364f6028bf47ee3354cdb66e96d2615738d15a4b8aeffc3329a2",
+  "checks": [
+    {
+      "check": "Actual launcher health endpoint",
+      "status": 200,
+      "version": "3.61.0"
+    },
+    {
+      "check": "Content download",
+      "path": "index.html",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 767,
+      "sha256": "b338cf4773658f18b2498d426f06f4ba602e81b3a8b6182abd6d42ec7c0483e7",
+      "contentEtagVerified": true
+    },
+    {
+      "check": "Content download",
+      "path": "dfu/lcd-release-reference.mjs",
+      "status": 200,
+      "mime": "text/javascript",
+      "bytes": 1357,
+      "sha256": "82b8e953e72b8d0f5a6d77b9447bce81c842beccff5afbac65021f3256daa647",
+      "contentEtagVerified": true
+    },
+    {
+      "check": "Content download",
+      "path": "lfs-capacity-de398.wasm",
+      "status": 200,
+      "mime": "application/wasm",
+      "bytes": 65569,
+      "sha256": "30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273",
+      "contentEtagVerified": true
+    },
+    {
+      "check": "Content download",
+      "path": "firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+      "status": 200,
+      "mime": "application/zip",
+      "bytes": 364781,
+      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+      "contentEtagVerified": true
+    },
+    {
+      "check": "Content download",
+      "path": "sources/LCD_DE3_98_App671_Simulatorquellen.zip",
+      "status": 200,
+      "mime": "application/zip",
+      "bytes": 153022,
+      "sha256": "49d6874f3562073b06081e80a5cfc09c871eaaac105b2e47583cd1ae66e164c6",
+      "contentEtagVerified": true
+    },
+    {
+      "check": "Exact OTA content cache validation",
+      "status": 304
+    }
+  ],
+  "failures": [],
+  "limits": [
+    "Actual Python launcher on Linux only. No native Windows GUI execution.",
+    "Local loopback delivery only; no public HTTP or Bluetooth transfer."
+  ]
+}

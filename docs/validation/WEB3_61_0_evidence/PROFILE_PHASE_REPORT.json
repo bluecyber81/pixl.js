@@ -1,0 +1,193 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-21T18:30:24.015050+00:00",
+  "status": "Gezielte normale App671-Kapazitätsintegration bestanden. Paket-/DFU-Prüfung ist eine separate noch laufende Phase.",
+  "project": {
+    "board": "LCD",
+    "branch": "work/web-app671",
+    "baseCommit": "d52fa4ccdf438d923196947fa967bd9b1cc767d7",
+    "webVersion": "3.61.0",
+    "firmwareVersion": "2.22.0-DE3.98",
+    "applicationCounter": 671
+  },
+  "identity": {
+    "engineSha256": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d",
+    "wasmSha256": "30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273",
+    "wasmBytes": 65569,
+    "sourceId": "4ae447347916fb26483ed7ffe8e3c1f712fd849fa1e42c276598ac992a1d12a7",
+    "applicationBinSha256": "de4c1b1ec9965ff31d266917dde2297e9b73691ebc6391553f6b35026384e172",
+    "applicationBytes": 363972
+  },
+  "changes": [
+    "Eigenes, eingefrorenes de398-Profil mit exakter Engine-/WASM-Bindung und ausschließlich App671 als erlaubter Anwendung.",
+    "Worker und Simulator erlauben den konkreten lokalen de398-Pfad; vorherige Profile bleiben unverändert.",
+    "Die Benutzeroberfläche startet bei de398 und kennzeichnet App671 als normale Firmware ohne Testlabel. App669/App670 bleiben als getrennte Testprofile wählbar.",
+    "Die Ordnerpublikation verlangt die genaue App671-Engine; ältere, fremde oder künftige Kombinationen werden abgewiesen."
+  ],
+  "apiCompatibility": "Die bestehenden Bibliotheksdefaults mit dem historischen Profilnamen current bleiben erhalten. Der sichtbare normale Ablauf übergibt de398 ausdrücklich an checkMigrationCapacity; Profilwechsel verwerfen alte Kapazitätsbelege und verändern keinen gebundenen Import.",
+  "qualification": {
+    "linkedArmCases": 4,
+    "linkedArmExpectedOutcomes": [
+      true,
+      true,
+      false,
+      false
+    ],
+    "crossMountCases": 6,
+    "syntheticFiles": 1131,
+    "syntheticDirectories": 77,
+    "deviceAccess": false,
+    "crossMountReportSha256": "c17f3a6402b5c61247bd21bc2a59cc5674475c1a984f7a8814ce414b8608d040",
+    "producer": "Frische Firmware-/Cross-Mount- und unabhängige Compilerbelege wurden vom Root-Agent erzeugt; dieses Teilpaket verifiziert ihre genaue Bindung."
+  },
+  "tests": [
+    {
+      "path": "app671_validation/web/PROFILE_UI_ROUTING.log",
+      "bytes": 4302,
+      "sha256": "95604d618f360cfcfbca01412a7b3203b77f5674b3afd415710d1f81efeef12c",
+      "command": "node --test tests/migration-ui.test.mjs tests/migration-profiles.test.mjs",
+      "counts": {
+        "tests": 38,
+        "pass": 38,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 632.564851
+      },
+      "exitCode": 0,
+      "scope": "38 UI-/Routingfälle. Dieser Lauf fand noch vor der endgültigen Profilfreigabe statt; seine gemockten Freigabefälle prüfen Auswahl, Abbruch und alte Beleggrenzen."
+    },
+    {
+      "path": "app671_validation/web/PROFILE_WASM_BINDING.log",
+      "bytes": 9361,
+      "sha256": "588f40fc6849d0def9137e954ba53f0d048115ae861ca24c95fb54c8cf94aad5",
+      "command": "node --test tests/migration-wasm.test.mjs tests/lcd-671-capacity.test.mjs tests/migration-capacity.test.mjs",
+      "counts": {
+        "tests": 79,
+        "pass": 79,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 663.804696
+      },
+      "exitCode": 0,
+      "scope": "79 Fälle nach realer ARM-/PFS-Freigabe; echte WASM-Ausführung, eingebettete Engine, Quellmanifest, alte Profile, falsche oder getauschte Assets und genaue Kapazitätsgrenzen."
+    },
+    {
+      "path": "app671_validation/web/PROFILE_FULL_COLLECTION_DE398.log",
+      "bytes": 232,
+      "sha256": "e84e2e11cbb50c58a16ae651215845f8592ff1f1ee251dbc1ffe61a9f6c26dc3",
+      "command": "node --test --test-name-pattern=de398 tests/capacity-collection.test.mjs",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 2929.791393
+      },
+      "exitCode": 0,
+      "scope": "Ein vollständiger de398-Fall mit 1.208 synthetischen Einträgen; Staging, Remount, vollständige Nutzbytes, Raw128 und Namespaceprüfung."
+    }
+  ],
+  "counting": "Die Läufe sind einzeln dokumentiert und werden nicht mit der früheren 572-Fälle-Kernphase addiert. Insbesondere ist die synthetische Sammlung ein Fall mit 1.208 Einträgen, keine 1.208 Geräteprüfungen.",
+  "sourceEvidence": [
+    {
+      "path": "app671_web/web/src/lib/migration-capacity.js",
+      "bytes": 14659,
+      "sha256": "d55a796154582cc9bd8fb5a67e9b04cb0c7ff276a6d00b2b299ec81da0b43217"
+    },
+    {
+      "path": "app671_web/web/src/lib/migration-capacity-worker-client.js",
+      "bytes": 2399,
+      "sha256": "a35b3e734f6c01a82cac3ed60f8f605cc6569b86fb149014bffca70173f78af4"
+    },
+    {
+      "path": "app671_web/web/src/lib/migration-capacity-engine.js",
+      "bytes": 7840,
+      "sha256": "6eb60aba3bb72c2b4cbddda28d191c67db3dc693d97a7b7ea53bc5a86d40de5a"
+    },
+    {
+      "path": "app671_web/web/src/components/MigrationAssistant.vue",
+      "bytes": 45984,
+      "sha256": "dc6a2f6876ce68817a89b0309ab5266afef42d539c6fb14f97387c25b18d0066"
+    },
+    {
+      "path": "app671_web/web/src/lib/hardware-profile.js",
+      "bytes": 3695,
+      "sha256": "722f37257c186005937020a1712a64587863397388ee54ad494880c5b3f712a0"
+    },
+    {
+      "path": "app671_web/web/tests/migration-wasm.test.mjs",
+      "bytes": 19312,
+      "sha256": "397d83507a6af7aa98ca551e600cc0ff92761cc5b742225c4e04a987782b8651"
+    },
+    {
+      "path": "app671_web/web/tests/migration-profiles.test.mjs",
+      "bytes": 6747,
+      "sha256": "58da708c76acf5beae45374427074e50080066ecb616054ce9659c106c3aeedf"
+    },
+    {
+      "path": "app671_web/web/tests/migration-ui.test.mjs",
+      "bytes": 30819,
+      "sha256": "debf31600ab3ed47e12123ea43f09367ad6fdfe8fa3b8bb8716f5294bffcd19f"
+    },
+    {
+      "path": "app671_web/web/tests/migration-capacity.test.mjs",
+      "bytes": 5122,
+      "sha256": "4c6522454c9be908db6924a16b820da6b4e6ebcea6b4ede0921d448657fe9dda"
+    },
+    {
+      "path": "app671_web/web/tests/capacity-collection.test.mjs",
+      "bytes": 1781,
+      "sha256": "5e887726675e64fbf48bbe963cb0539de561ca248a5860546516341793201419"
+    },
+    {
+      "path": "app671_web/web/tests/lcd-671-capacity.test.mjs",
+      "bytes": 3999,
+      "sha256": "2923f808d0f22214850847ab96a4075ca0ebcb5d4935490b5da1f0260c2a131a"
+    },
+    {
+      "path": "app671_web/web/public/lfs-capacity-de398.wasm",
+      "bytes": 65569,
+      "sha256": "30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273"
+    },
+    {
+      "path": "app671_web/web/third-party/packed-simulator-de398/SOURCE_BINDING.json",
+      "bytes": 2568,
+      "sha256": "e7d9825112e4bca48081a6895afbdfe26b2efd345369ae3893c3a13a9c5a1c15"
+    },
+    {
+      "path": "app671_web/web/third-party/packed-simulator-de398/ENGINE_IDENTITY.json",
+      "bytes": 1097,
+      "sha256": "a98e06e3adc906f1c45ee9f5212bd5aa337ec6eb46cb7203f1c4f7ede515b8b7"
+    },
+    {
+      "path": "app671_web/docs/validation/DE3_98_PFS.json",
+      "bytes": 3631,
+      "sha256": "2227b85c396ef03dd8507a9d514fdbb3aa5b778a74cd891ce27966e7c39455cb"
+    },
+    {
+      "path": "app671_web/docs/validation/DE3_98_CROSS_MOUNT.json",
+      "bytes": 15143,
+      "sha256": "c17f3a6402b5c61247bd21bc2a59cc5674475c1a984f7a8814ce414b8608d040"
+    },
+    {
+      "path": "app671_web/docs/validation/DE3_98_PRODUCTION_INPUTS.json",
+      "bytes": 85213,
+      "sha256": "ce96f2efc215a803c60d9708e35649503062568ed7a2656e39b8587409583483"
+    }
+  ],
+  "independentWasmRebuild": {
+    "path": "app671_validation/wasm_reproduced/REPRODUCIBLE_WASM.json",
+    "bytes": 4304,
+    "sha256": "e072fd496dbb99c3590afe9635dbc94d9af9cd0fc8c7b112098c4d15a0047957"
+  },
+  "limits": [
+    "Keine physische App671-Geräteabnahme.",
+    "Simulation und ARM-Layoutprüfung messen keine Bluetooth-Geschwindigkeit und keine tatsächliche freie Gerätespeichermenge.",
+    "Die Freigabe dieses exakten Simulators ersetzt keine aktuelle Gerätekonfiguration, Archivprüfung oder ausdrückliche Formatierentscheidung.",
+    "Keine Veröffentlichung, Firmwareänderung, Commit oder Releasebuild durch diesen Agenten."
+  ],
+  "nextStep": "Reale signierte lcdRelease-/Katalogreferenzen von Root integrieren lassen, dann die bereits vorbereiteten normalen DFU-/Handler-/Paketgates ausführen."
+}

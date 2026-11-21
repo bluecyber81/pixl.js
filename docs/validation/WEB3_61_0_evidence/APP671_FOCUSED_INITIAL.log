@@ -1,0 +1,17 @@
+✔ App671 normal get_mtu_diagnostics uses its exact wire selector without a test profile (23.994005ms)
+✔ App671 normal get_storage_gc_diagnostics uses its exact wire selector without a test profile (6.023938ms)
+✔ App671 normal get_startup_diagnostics uses its exact wire selector without a test profile (6.943124ms)
+✔ App671 exposes normal read-only diagnostics without enabling the old experiment (1.145468ms)
+✔ App671 explicitly probes the existing small-file capability without allowing future or OLED versions (23.02329ms)
+✔ App671 ordinary backup and cached ZIP use actual READ/DIGEST batches without a test panel (137.163268ms)
+✔ App671 ordinary backup falls back only when batch capability is explicitly absent (24.720542ms)
+✔ App671 ordinary backup never caches a partial batch or continues after abort at the response boundary (36.408242ms)
+✔ App671 full diagnosis keeps normal PXGC while the experimental panel stays unavailable (15.248192ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 747.098634

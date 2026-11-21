@@ -1,5 +1,11 @@
 # Firmware for Allmiibo LCD and Pixl.js OLED
 
+## This branch: normal file manager 3.61.0
+
+`web-app671` contains the normal Web3.61.0 source and its software/delivery evidence. [Open the website](https://bluecyber81.github.io/pixl.js/) · [Web release notes](web/LIESMICH_3_61_0.txt) · [Web qualification](docs/validation/WEB3_61_0.json) · [Live delivery](docs/validation/WEB3_61_0_DELIVERY.json).
+
+The matching signed LCD firmware is **DE3.98 / App671** on the separate [`release/lcd-de398-app671` branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671). The inherited firmware sources and earlier release descriptions below are historical references, not the production source of the App671 package. OLED and historical LCD test downloads retain their separate requirements.
+
 [Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
 ## LCD DE3.89 / App662 · stable firmware

@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "verifiedAt": "2026-11-21T19:11:35.079344+00:00",
+  "kind": "manifest-canonicalization-clarification",
+  "status": "Beide ursprünglichen Dist-Manifeste unverändert vollständig reproduziert. Keine Änderung an Dateien oder Auslieferungsbytes.",
+  "reason": "Die übernommene Kurzbeschreibung „Sorted by path“ war unpräzise. Der Dist-Generator sortierte pathlib.Path-Objekte nach ihren POSIX-Pfadkomponenten. Die Sortierung kompletter Pfadstrings ist ein anderer Algorithmus und erzeugt einen anderen Gesamtwert, obwohl alle Einzeldateihashes gleich sind.",
+  "scope": [
+    "DIST_NORMAL_ROOT.json",
+    "DIST_NORMAL_PAGES.json"
+  ],
+  "originalGenerator": "for p in sorted(root.rglob(\"*\")):\n    if p.is_file():\n        data = p.read_bytes()\n        files.append({\"path\": p.relative_to(root).as_posix(), \"bytes\": len(data), \"sha256\": hashlib.sha256(data).hexdigest()})\ncanonical = \"\".join(f\"{r['sha256']} {r['bytes']} {r['path']}\\n\" for r in files)\ncanonicalSha256 = hashlib.sha256(canonical.encode(\"utf-8\")).hexdigest()",
+  "reproductionAlgorithm": "from pathlib import PurePosixPath\nimport hashlib\nrows = sorted(manifest[\"files\"], key=lambda r: PurePosixPath(r[\"path\"]))\nassert rows == manifest[\"files\"]\ncanonical = \"\".join(f\"{r['sha256']} {r['bytes']} {r['path']}\\n\" for r in rows)\nassert hashlib.sha256(canonical.encode(\"utf-8\")).hexdigest() == manifest[\"canonicalSha256\"]",
+  "exactFormat": {
+    "ordering": "Aufsteigende, groß-/kleinschreibungssensitive POSIX-Pfadkomponentenreihenfolge, reproduzierbar durch PurePosixPath; gemeinsame absolute Rootkomponenten des Generators beeinflussen die relative Ordnung nicht.",
+    "encoding": "UTF-8",
+    "row": "lowercase SHA256 + U+0020 + decimal byte count + U+0020 + unchanged relative POSIX path + LF",
+    "finalNewline": true,
+    "headerOrBom": false,
+    "pathNormalizationAtVerification": "Keine Umbenennung oder Reparatur. Die vorhandenen eindeutigen relativen POSIX-Pfade werden unverändert geprüft."
+  },
+  "examples": "Die Komponente packed-simulator sortiert vor packed-simulator-current. Beim Vergleich kompletter Strings sortiert dagegen das Bindestrichzeichen vor dem folgenden Schrägstrich, wodurch die Reihenfolge abweicht.",
+  "manifests": [
+    {
+      "manifest": "DIST_NORMAL_ROOT.json",
+      "manifestFileSha256": "985906f05331ce8709fecc03643ba1033c96c6b40c4a827f8cef567e4fa821a1",
+      "fileCount": 282,
+      "storedOrderEqualsPathComponentOrder": true,
+      "storedCanonicalSha256": "78e00a26e244c1410a6b99765f307a180068bab5475324463f93c87f9ded7a5e",
+      "reproducedCanonicalSha256": "78e00a26e244c1410a6b99765f307a180068bab5475324463f93c87f9ded7a5e",
+      "alternativeRawPathStringSha256": "a72caedcda2da56396df1dc90237f43bb2a17b790a7ab9f4f9c3057b6ea4a567",
+      "firstOrderDifference": {
+        "zeroBasedIndex": 235,
+        "pathComponentOrder": "licenses/third-party/packed-simulator/GPL-2.0-LICENSE",
+        "rawPathStringOrder": "licenses/third-party/packed-simulator-current/GPL-2.0-LICENSE"
+      }
+    },
+    {
+      "manifest": "DIST_NORMAL_PAGES.json",
+      "manifestFileSha256": "89b6914331fbb0cd433ce7b56438c017fdaf341cb21fc91067b12e14d211775a",
+      "fileCount": 300,
+      "storedOrderEqualsPathComponentOrder": true,
+      "storedCanonicalSha256": "9537b5a15ef2e2aedcd61a22dab17f2c143c9bbb28fdd2d3edb3858f98b0f03f",
+      "reproducedCanonicalSha256": "9537b5a15ef2e2aedcd61a22dab17f2c143c9bbb28fdd2d3edb3858f98b0f03f",
+      "alternativeRawPathStringSha256": "7b4bcc2ad5506dce3db942d9e4695db8c7dc3a01bf9303a422eaf230399ca03e",
+      "firstOrderDifference": {
+        "zeroBasedIndex": 253,
+        "pathComponentOrder": "licenses/third-party/packed-simulator/GPL-2.0-LICENSE",
+        "rawPathStringOrder": "licenses/third-party/packed-simulator-current/GPL-2.0-LICENSE"
+      }
+    }
+  ],
+  "sourceManifestDistinction": {
+    "manifest": "SOURCE_FINAL_NORMAL.json",
+    "ordering": "Aufsteigend nach dem kompletten Pfadstring: sorted(set(paths)).",
+    "canonicalSha256": "4573fcd01699fba9a25f1d2a58cafcce055ee438256ba682317d8e154a4e839e",
+    "reproduced": true,
+    "note": "Die präzisierte Komponentenreihenfolge gilt nur für die beiden Dist-Manifeste, nicht für die separat erzeugten SOURCE-Manifeste."
+  },
+  "unchangedGates": [
+    "Alle individuellen Dateipfade, Größen und SHA256-Werte bleiben verbindlich.",
+    "Die vollständige Pfadmenge muss exakt zum Manifest passen.",
+    "Die manifestierte Reihenfolge muss der dokumentierten Komponentenreihenfolge entsprechen.",
+    "Der reproduzierte Gesamtwert muss weiterhin exakt dem ursprünglichen canonicalSha256 entsprechen.",
+    "Öffentliche HTTP-Status-, Größen- und Bytehashprüfungen werden nicht ersetzt oder abgeschwächt."
+  ],
+  "originalManifestBytesPreserved": true,
+  "productBytesChanged": false,
+  "testsOrBuildsRepeated": false
+}

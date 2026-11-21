@@ -1,0 +1,172 @@
+✔ normal App671 download uses the local package while the Z21 full package keeps its actual App662 identity (69.77108ms)
+✔ normal and legacy downloads keep separate real boot, board and downgrade guards (18.923224ms)
+✔ a catalog without the normal package never invents an App671 download (16.558385ms)
+✔ page binds one click to device selection and one file event to package load (16.281618ms)
+✔ an OLED handoff offers only OLED packages and never preselects a bookmarked LCD package (4.073697ms)
+✔ the OLED package link preselects the profile without loading or requesting a device (10.417899ms)
+✔ changing display clears package readiness, and conflicting handoff blocks a new transfer (7.938809ms)
+✔ iPad desktop mode keeps ZIP inspection available and updates the transfer action if Bluetooth appears (3.820766ms)
+✔ wake lock starts only in DFU, releases late/failed sessions and honors the opt-out (16.596362ms)
+✔ page locks changing package while busy and disables unsupported Bluetooth (4.80423ms)
+✔ selected ZIP is compared with a recent file-manager read, and clearing it clears the preview (11.824393ms)
+✔ progress clamps invalid values and unload warning only applies while running (7.71392ms)
+✔ DFU speed and remaining time count only bytes acknowledged in this attempt (27.492084ms)
+✔ all scripts/styles are bundled locally and order includes CRC before bounded package loader (0.969093ms)
+✔ phases distinguish full payload from acknowledged completion and reset on retry (12.230946ms)
+✔ DFU step labels follow all saved file-manager languages and tolerate blocked storage (31.515584ms)
+✖ empty OLED catalogue does not claim availability or offer the private LCD package (3.116683ms)
+✔ bundled loading disables manual/device controls while keeping cancellation available (3.381111ms)
+✔ only a unique bundled catalogue ID is preselected, with no load or transfer on navigation (23.696767ms)
+✔ bundled Web and Android actions honor fresh bootloader, SoftDevice and application counters (68.453451ms)
+✔ changing the selected package clears a previously ready image and a manual file clears the dropdown (2.568957ms)
+✔ native DFU follows the selected release, omits device data and clears the link for incompatible states (1.945776ms)
+✔ DFU changes display language during a transfer without starting or resetting it (1.572763ms)
+✔ the archived LCD application and the retained Z21 package identify App662 separately (1.504941ms)
+✔ App670 runtime choice and deep link retain the stable catalogue and never auto-load or select Bluetooth (1.752134ms)
+✔ App669 runtime choice and deep link retain the stable catalogue and never auto-load or select Bluetooth (1.356176ms)
+✔ App668 runtime choice and deep link retain the stable catalogue and never auto-load or select Bluetooth (1.363358ms)
+✔ App667 runtime choice and deep link retain the stable catalogue and never auto-load or select Bluetooth (1.233341ms)
+✔ normal App671 direct click uses the single bounded loader and keeps device selection a separate action (14.897509ms)
+✔ normal App671 direct and catalogue handlers share board, recent boot, downgrade, busy and loading guards (25.611135ms)
+✔ changing board invalidates a pending direct normal App671 download even if its response arrives later (1.533444ms)
+✔ firmware file picker advertises common ZIP and generic binary MIME types without promising native picker behavior (0.206782ms)
+✔ App670 deep link selects only its signed isolated package and never implicitly loads or starts Bluetooth (1.393743ms)
+✔ normal App671 is selected exactly once by default without loading a package or opening Bluetooth (1.22631ms)
+✔ the page validates the real normal App671 ZIP before historical references and does not label it private (24.349126ms)
+✔ DFU handoff preserves board and valid observed counters for OLED and LCD (6.990428ms)
+✔ the retained App662 signed package reaches Android and is compared when only the device version is available (6.973603ms)
+✔ DE3.76 preview offers its signed application ZIP on Android (0.493335ms)
+✔ DE3.77 preview offers its signed application ZIP on Android (0.401205ms)
+✔ DE3.79 preview offers its signed application ZIP on Android (0.526685ms)
+✔ DE3.80 preview offers its signed application ZIP on Android (0.562028ms)
+✔ package presentation is explicit local scope and never claims unread storage compatibility (4.474672ms)
+✔ newer application version or CRC-verified counter suppresses downgrade links (1.12024ms)
+✔ the LCD final reports incompatible boot details while the older stable profile still works for Z15 (3.407882ms)
+✔ disconnect ignores the former device version and private session fields are not copied (0.712125ms)
+✔ each card links its own catalogue ID and keeps the diagnostics fragment intact (0.58305ms)
+✔ only a named LCD app release can be handed to nRF DFU (4.350495ms)
+✔ retained App662 download choices respect the installed application, system profile and OLED variant (12.552471ms)
+✔ App658 stays a separate app-only Z21/S112 7.3 test package with exact mobile routing (1.506293ms)
+✔ App659 is available locally with the verified signature package and no unpublished Android URL (4.507562ms)
+✔ App660 uses its signed LCD ZIP, release notes and exact published Android target (4.409523ms)
+✔ the App661 test offers the local ZIP for the updater and the matching release asset for Android (0.359052ms)
+✔ the App662 phone download and LCD checks use the signed candidate and its own storage engine (1.452422ms)
+✔ normal App671 folder publication requires its own qualified engine and never accepts a test or future identity (2.794647ms)
+✔ normal App671 qualification binds the frozen production inputs and fresh cross-mount evidence without a device claim (5.588492ms)
+✔ normal App671 downloadable sources preserve the exact pinned engine, final qualification and real release identity (73.758146ms)
+✔ normal App671 archive binds its ZIP, BIN and init target to the qualified firmware without the private-test label (50.697504ms)
+✔ normal App671 native handoff requires the exact release profile and uses the normal Pages root (1.279871ms)
+✔ normal App671 bounded download uses the real parser and rejects a same-size changed ZIP before parsing (15.285594ms)
+✔ normal App671 manual phone ZIP selection preserves exact package validation without a test label or Bluetooth (7.156659ms)
+✔ App669 TEST1 native handoff uses the isolated published path and rejects mismatched profiles (2.910972ms)
+✔ App669 direct loading verifies the real signed ZIP through Loader, Updater and Package without Bluetooth selection (52.716165ms)
+✔ App669 direct loading blocks a same-length changed archive at ZIP SHA-256 before parsing or Bluetooth (12.07472ms)
+✔ App669 valid signed File with application/x-zip-compressed keeps the same package checks and requires a separate Bluetooth action (6.982436ms)
+✔ App669 valid signed File with application/octet-stream keeps the same package checks and requires a separate Bluetooth action (5.495823ms)
+✔ private App669 recognition binds the actual signed application ZIP, BIN and embedded target (17.981272ms)
+✔ App669 diagnostics and capacity require the new exact source, counter and engine while retaining previous profiles (3.290816ms)
+✔ the mobile current download uses normal App671 while retained App669 keeps its own runtime package (0.718744ms)
+✔ retained App669 signed reference is bound to its actual application and qualified engine (4.682155ms)
+✔ App669 build comparison distinguishes source observations from complete application identity (0.824113ms)
+✖ App669 recognition is explicit and separate from future firmware and OLED (1.608336ms)
+✔ App669 has its own WASM and engine while App667 keeps the identical historical de393 simulator (1.276396ms)
+✔ historical private identities and packages remain separate from the new normal App671 release (0.624101ms)
+✔ retained signed direct-load packages have complete distinct catalog identities (15.77952ms)
+✖ mobile normal App671 download uses its own package while historical TEST1 references remain available (1.431961ms)
+✔ retained App670 signed test reference has exact qualified source, binary and OTA identities (1.916787ms)
+✖ App670 diagnostic source matching still does not prove the installed application hash or physical identity (0.598883ms)
+✔ App670 TEST1 catalogue and native handoff require the exact isolated profile (1.812204ms)
+ℹ tests 78
+ℹ suites 0
+ℹ pass 74
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 527.361368
+
+✖ failing tests:
+
+test at tests/dfu-page.test.cjs:192:1
+✖ empty OLED catalogue does not claim availability or offer the private LCD package (3.116683ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Kein mitgeliefertes Paket/. Input:
+  
+  'Veröffentlichte OLED-App für SH1106 und S112 7.2.0 wählen.'
+  
+      at TestContext.<anonymous> (/workspace/scratch/0af425ec2cbb/app671_web/web/tests/dfu-page.test.cjs:193:98)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Veröffentlichte OLED-App für SH1106 und S112 7.2.0 wählen.',
+    expected: /Kein mitgeliefertes Paket/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/private-lcd-reference-state.test.mjs:52:1
+✖ App669 recognition is explicit and separate from future firmware and OLED (1.608336ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'LCD' !== null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/0af425ec2cbb/app671_web/web/tests/private-lcd-reference-state.test.mjs:57:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'LCD',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/private-lcd-reference-state.test.mjs:113:1
+✖ mobile normal App671 download uses its own package while historical TEST1 references remain available (1.431961ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /LCD DE3\.98 \/ App671/. Input:
+  
+  'VITE_BUILD_LABEL="LCD DE3.97 / App670 TEST1 · Testversion"\n'
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/0af425ec2cbb/app671_web/web/tests/private-lcd-reference-state.test.mjs:121:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'VITE_BUILD_LABEL="LCD DE3.97 / App670 TEST1 · Testversion"\n',
+    expected: /LCD DE3\.98 \/ App671/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/private-lcd-reference-state.test.mjs:154:1
+✖ App670 diagnostic source matching still does not prove the installed application hash or physical identity (0.598883ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'LCD' !== null
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/0af425ec2cbb/app671_web/web/tests/private-lcd-reference-state.test.mjs:169:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'LCD',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

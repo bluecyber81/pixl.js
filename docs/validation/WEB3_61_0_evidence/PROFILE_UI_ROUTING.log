@@ -1,0 +1,46 @@
+✔ all seven capacity proofs stay bound to their exact engine and application (49.702631ms)
+✔ omitted capacity ID selects current, while mismatched report IDs cannot create a proof (28.509838ms)
+✔ unknown capacity IDs are rejected before constructing a worker (0.477169ms)
+✔ worker messages carry the selected local profile ID and never a caller-supplied raw target (1.465341ms)
+✔ the normal App671 default retains separate test and historical choices and the connected DE3.65 identity (27.523901ms)
+✔ 3.29 selects each reviewed engine independently and never inherits approval from another profile (4.02385ms)
+✔ 3.25.5 deferred restore keeps overall progress separate and never claims intermediate verification (3.755275ms)
+✔ 3.25.5 a failed complete final report survives UI reset and is supplied for exact repair on next restore (4.378295ms)
+✔ 3.25.5 source and target readback immediately replace an old error with the active comparison state (4.564075ms)
+✔ 3.25.5 simulation immediately clears a previous error while the worker is active (1.698822ms)
+✔ migration UI keeps unavailable restore/capacity disabled and explicitly says not to format (0.986318ms)
+✔ backup must be explicitly saved and saved ZIP reselected before fresh verification (6.001303ms)
+✔ shared busy lock prevents all engine calls while another device operation is active (2.019947ms)
+✔ cancellation waits for active read settlement and preserves a partial error receipt without starting restore (4.679649ms)
+✔ disconnect/generation changes abort old reads and cannot approve a stale backup result (5.086313ms)
+✔ failed saved ZIP reread invalidates the earlier archive/proof and never permits a device operation (3.749897ms)
+✔ English view exposes identical limits and explicit journal exclusions; report download is local only (4.909106ms)
+✔ 3.27 unknown raw capability asks for a fresh query, never a PREP downgrade (2.33362ms)
+✔ 3.27 capability failures after a mounted LittleFS snapshot do not recommend SPIFFS preparation or claim no writes (11.041877ms)
+✔ 3.27 missing or mismatched recovery receipt offers context-specific recovery without a mutation (3.598678ms)
+✔ 3.25 backup progress shows real byte percent and known completed counts, never an unexplained 0/0 (3.563305ms)
+✔ 3.25 target inspection is read-only and mounted pending or ready targets never enable first format (9.083914ms)
+✔ 3.25 late target lookup after reconnect cannot enable any destructive action (2.170575ms)
+✔ 3.25 ambiguous format error preserves its receipt and never automatically binds or retries (2.03441ms)
+✔ 3.25 persistent finish and reboot remain separate, and acknowledged reboot accepts its expected disconnect (3.53335ms)
+✔ 3.25 cancelling restore confirmation cannot cross a connection generation (2.464608ms)
+✔ 3.25.5 completion report survives target refresh and explicit reboot, and exports separately (2.931052ms)
+✔ 3.25.5 completion stays acknowledged when the subsequent status query times out (1.969411ms)
+✔ 3.25.5 completion prevents repeated finish while a separately requested verification remains available (1.875399ms)
+✔ 3.25.5 completion keeps a prior report historical when a later verification is cancelled or fails (2.765111ms)
+✔ 3.25.5 completion cancellation after a seal ACK does not undo its known successful outcome (2.088941ms)
+✔ 3.25.5 completion progress labels restarted counters as successive phase progress, never a reset overall percentage (2.510207ms)
+✔ 3.26 already-Packed notice requires a fresh explicit storage response, never a firmware name (6.507317ms)
+✔ 3.26 capacity profile is explicit and changes invalidate prior proof without modifying a bound import (2.06177ms)
+✔ 3.26 next preparation action invokes one existing guarded step and never reformats a mounted store (1.750601ms)
+✔ 3.26 active migration stays open and separate full target verification is advanced-only (1.158288ms)
+✔ T1 storage qualification is listed separately without implying a continuous 643 approval (0.759376ms)
+✔ reviewed application lists with version or counter gaps are never displayed as one continuous range (0.676861ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 632.564851

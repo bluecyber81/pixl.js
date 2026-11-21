@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "scope": "Read-only remote state confirmation during continuation; no hardware access",
+  "webBranch": {
+    "ref": "refs/heads/web-app671",
+    "sha": "39a183d6a2e86f8b9605d649c5cedfc0ccd20535"
+  },
+  "pagesBranch": {
+    "ref": "refs/heads/gh-pages",
+    "sha": "f83275eb5568ca777a750f70e0b9bb504e5e7c62"
+  },
+  "firmwareBranch": {
+    "ref": "refs/heads/release/lcd-de398-app671",
+    "sha": "a3ae0e4063f1901e9da98f3ff37fd163388eb72a"
+  },
+  "pagesWorkflow": {
+    "id": 44939142530,
+    "headSha": "f83275eb5568ca777a750f70e0b9bb504e5e7c62",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/44939142530"
+  },
+  "uiObserved": {
+    "managerUrl": "https://bluecyber81.github.io/pixl.js/?v=3.61.0",
+    "managerVersion": "3.61.0",
+    "selectedBoard": "LCD",
+    "firmware": "2.22.0-DE3.98",
+    "applicationCounter": 671,
+    "updaterUrl": "https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.61.0&package=de3.98-lcd-app",
+    "loadedAndSha256Confirmed": true,
+    "hardwareField": 52,
+    "softDeviceFwid": "0x0126",
+    "deviceSelected": false,
+    "physicalFirmwareTransfer": false
+  }
+}
