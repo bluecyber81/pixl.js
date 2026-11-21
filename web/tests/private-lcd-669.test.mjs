@@ -144,7 +144,8 @@ test('private App669 recognition binds the actual signed application ZIP, BIN an
   assert.equal(await updater.setPackage(new File([bytes], 'renamed.zip')), true);
   assert.equal(state.previewVersion, '2.22.0-DE3.96');
   assert.equal(state.ready, true);
-  assert.equal(catalog.packages[0].counter, 662);
+  assert.equal(catalog.packages[0].counter, 671);
+  assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 669), false);
   assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [670,669,668,667,665,664]);
 });
@@ -180,14 +181,15 @@ test('App669 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('the mobile current download changes to App670 while retained App669 keeps its own runtime package', () => {
+test('the mobile current download uses normal App671 while retained App669 keeps its own runtime package', () => {
   const html = readFileSync(new URL('../public/dfu/web.html', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../public/dfu/page.js', import.meta.url), 'utf8');
-  assert.match(html, /App670 TEST1 direkt laden und prüfen/);
+  assert.match(html, /App671 direkt laden und prüfen/);
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
-  assert.ok(html.includes('../firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip'));
-  assert.match(html, /DE3\.97 \/ App670 TEST1/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.60.0-test.2'"));
-  assert.equal(catalog.packages[0].version, '2.22.0-DE3.89');
+  assert.ok(html.includes('../firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip'));
+  assert.match(html, /DE3\.98 \/ App671/);
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.61.0'"));
+  assert.equal(catalog.packages[0].version, '2.22.0-DE3.98');
+  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.61.0'"));
 });
 

@@ -56,7 +56,7 @@ function protocolFixture(i18n={global:{t:key=>key}}, codec={}) {
         readAsArrayBuffer(file){this.file=file;if(file.error){this.error=new Error('FileReader failed');this.onerror();}
             else if(!file.pending){this.result=Uint8Array.from(file.bytes || []).buffer;this.onload();}}
     }
-    const api=load('pixl.proto.js',{pixl,FileReader,i18n,...codec,supportsBleTestDiagnostics:load('device-extra-diagnostics.js',{}).supportsBleTestDiagnostics,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
+    const api=load('pixl.proto.js',{pixl,FileReader,i18n,...codec,supportsBleTestDiagnostics:load('device-extra-diagnostics.js',{}).supportsBleTestDiagnostics,supportsLinkDiagnostics:load('device-extra-diagnostics.js',{}).supportsLinkDiagnostics,supportsStorageGcDiagnostics:load('device-extra-diagnostics.js',{}).supportsStorageGcDiagnostics,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
         setTimeout:cb=>{const id=++timerId;timers.set(id,cb);return id;},clearTimeout:id=>timers.delete(id)});
     api.init();
     return {api,bus,writes,writeModes,timers,readers,get disconnects(){return disconnects;},setWrite:fn=>{writeImpl=fn;},
@@ -90,10 +90,10 @@ test('small-file capability requires an LCD generation and a strictly valid posi
     f.bus.emit('ble_disconnected');
     assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
 });
-for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95'],[669,'2.22.0-DE3.96'],[670,'2.22.0-DE3.97']])
+for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95'],[669,'2.22.0-DE3.96'],[670,'2.22.0-DE3.97'],[671,'2.22.0-DE3.98']])
 test(`App${counter} explicitly probes the existing small-file capability without allowing future or OLED versions`, {timeout:5000}, async () => {
     const f = protocolFixture();
-    for (const unsupported of ['2.22.0-DE3.98',version + '-OLEDt7'])
+    for (const unsupported of ['2.22.0-DE3.99',version + '-OLEDt7'])
         assert.equal(await f.api.vfs_small_create_revision(unsupported),null);
     assert.equal(f.writes.length,0);
     const query = f.api.vfs_small_create_revision(version);

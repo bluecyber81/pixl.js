@@ -41,6 +41,15 @@ export function normalizeMtuDiagnostics(value) {
 // future release versions. A valid MTUD v3 capability is still required to act.
 export function supportsBleTestDiagnostics(version) { return ['2.22.0-DE3.96', '2.22.0-DE3.97'].includes(version); }
 
+// Read-only observations are also part of the normal App671 build. Keeping
+// these gates separate must not enable the experimental EVT! setter.
+export function supportsLinkDiagnostics(version) {
+  return ['2.22.0-DE3.95', '2.22.0-DE3.96', '2.22.0-DE3.97', '2.22.0-DE3.98'].includes(version);
+}
+export function supportsStorageGcDiagnostics(version) {
+  return supportsBleTestDiagnostics(version) || version === '2.22.0-DE3.98';
+}
+
 export function normalizeBleTestConfiguration(value) {
   if (!value || value.scope !== 'softdevice-test-configuration' || value.testBuild !== true ||
       typeof value.eventLengthExtensionEnabled !== 'boolean' ||

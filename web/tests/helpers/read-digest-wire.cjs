@@ -8,7 +8,8 @@ const { createHash } = require('node:crypto');
 const ByteBuffer = require('bytebuffer');
 ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 
-exports.readDigestWire = async function readDigestWire(vfs, { digestReply } = {}) {
+exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch = false,
+  revision = '0000000000000001', batchReply, linkReply } = {}) {
   const bus = new EventEmitter(), requests = [], replies = [], errors = [], timers = new Map();
   let timer = 0, openPath = null;
   const root = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../../src/lib');
@@ -23,9 +24,35 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply } = {}
     const length = bytes.readUInt16LE(0);
     return { path: bytes.subarray(2, 2 + length).toString('utf8'), end: length + 2 };
   };
+  const revisionValue = () => typeof revision === 'function' ? revision() : revision;
+  const revisionBytes = () => {
+    const value = Buffer.alloc(8);
+    value.writeBigUInt64LE(BigInt('0x' + revisionValue()));
+    return [...value];
+  };
   async function response(cmd, bytes) {
     if (cmd === 0x03) return { payload: [80, 88, 68, 70, 1, 3, 243, 0, 247, 0] };
-    if (cmd === 0x22) return { payload: [80, 88, 83, 67, 1, 7, 60, 2, 1, 0, 0, 0, 0, 0, 0, 0] };
+    if (cmd === 0x22) return { payload: [80, 88, 83, 67, 1, 7, 60, 2, ...revisionBytes()] };
+    if (cmd === 0x25) return batch ? { payload: [80, 88, 66, 82, 1, 4, 60, 2, ...revisionBytes()] }
+      : { status: 255, payload: [] };
+    if (cmd === 0x05 && linkReply) return linkReply(bytes);
+    if (cmd === 0x26 && batch) {
+      const mode = bytes[0], count = bytes[1], files = [];
+      if (![0, 1].includes(mode) || count < 1 || count > 4 || bytes.length > 243 ||
+          bytes.readBigUInt64LE(2) !== BigInt('0x' + revisionValue())) throw new Error('Invalid mock batch contract');
+      let offset = 10;
+      for (let i = 0; i < count; ++i) {
+        const entry = readPath(bytes.subarray(offset)); offset += entry.end;
+        const size = bytes.readUInt16LE(offset); offset += 2;
+        const stored = file(entry.path);
+        if (size > 572 || stored.length !== size) return { status: 1, payload: [] };
+        files.push({ path: entry.path, size, bytes: stored });
+      }
+      if (offset !== bytes.length) throw new Error('Unexpected mock batch suffix');
+      const payload = Buffer.concat(files.map(entry => mode === 0 ? Buffer.from(entry.bytes)
+        : createHash('sha256').update(entry.bytes).digest()));
+      return batchReply ? batchReply({ mode, files, payload }) : { payload };
+    }
     if (cmd === 0x21 || cmd === 0x24) {
       const { path, end } = readPath(bytes), expected = bytes.readUInt16LE(end), stored = file(path);
       if (stored.length !== expected) return { status: 1, payload: [] };
@@ -70,6 +97,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply } = {}
     disconnect: () => bus.emit('ble_disconnected'),
   };
   const context = { module: { exports: {} }, ...require(path.join(root, 'hardware-profile.js')),
+    ...require(path.join(root, 'device-extra-diagnostics.js')),
     ByteBuffer, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextEncoder, TextDecoder,
     console, pixl, i18n: { global: { t: value => value } }, sharedEventDispatcher: () => bus,
     setTimeout: callback => { const id = ++timer; timers.set(id, callback); return id; },

@@ -1,6 +1,21 @@
 # Allmiibo Dateimanager
 
-## Dateimanager 3.58.6 – LCD DE3.95 / App668
+## Normale Ausgabe 3.61.0 und LCD DE3.98 / App671
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App671 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip)
+
+Die normale Ausgabe übernimmt die bereits in App670 erprobten Batch-/Digest-Pfade und bindet die neue LCD-Firmware App671 exakt an ihre signierten Paketbytes und den zugehörigen Speicherbedarfssimulator. Normale Link-, Start- und Speicherdiagnosen bleiben verfügbar. Experimentelle Funk- und Profilingfunktionen werden für App671 nicht angeboten.
+
+[Versionshinweise](LIESMICH_3_61_0.txt) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671) · [Simulatorquellen](third-party/packed-simulator-de398/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_98_PFS.json)
+
+Die vorherigen Testpfade bleiben getrennt erhalten. LCD/ST7567, OLED/SH1106 und historische private Ausgaben behalten eigene Paket- und Versionsbindungen. Die physische Erprobung der neuen App671 ist von den vorhandenen App670-Gerätebelegen getrennt.
+
+## Frühere Ausgaben
+
+Die folgenden Abschnitte dokumentieren den jeweiligen damaligen Stand.
+
+
+## Archiv: private Ausgabe 3.58.6 – LCD DE3.95 / App668
 
 Das aktuelle private LCD-Paket lässt sich am Handy über **„App668 direkt laden und prüfen“** auf der DFU-Seite öffnen. Die vollständige ZIP wird vor der getrennten Bluetooth-Auswahl mit Größe, SHA-256, Inhalt und Zielprofil geprüft. [Direkt zur App668-Auswahl](https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.6&package=de3.95-lcd-app).
 

@@ -30,7 +30,7 @@ test('private App664 recognition uses the entire local ZIP and its parsed applic
   assert.equal(await updater.setPackage(new File([bytes], 'renamed.zip')), true);
   assert.equal(state.previewVersion, '2.22.0-DE3.91');
   assert.equal(state.ready, true);
-  assert.equal(catalog.packages[0].counter, 662);
+  assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 664), false);
 });
 

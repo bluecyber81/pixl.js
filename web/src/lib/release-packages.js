@@ -40,7 +40,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
   ));
   const specialTags = { 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
-  return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:entry.id === 'de3.86-lcd-test1-app'
+  return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:entry.id === 'de3.98-lcd-app' ? deploymentPath('guide/index.html') + '#lcd-de398' : entry.id === 'de3.86-lcd-test1-app'
     ? deploymentPath('guide/LCD-' + entry.version.split('-')[1] + '.txt') : 'https://github.com/bluecyber81/pixl.js/releases/tag/' + releaseTag,
     downloadUrl:deploymentPath(`firmware/${entry.file}`),dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
 }
@@ -72,8 +72,8 @@ export function currentLcdDownloads(entry, session, boot) {
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     systemGuide:'Android-Komplettpaket mit Z21 und Anleitung',
-    source:'Quellcode der LCD-Firmware DE3.89',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. DE3.89 / App662 erfordert Z21. Der Besitzer bestätigte den Betrieb auf einem LCD. Die Gerätediagnose meldete die passende SourceID.',
+    source:'Quellcode der LCD-Firmware DE3.98 / App671',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE3.98 / App671 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -84,8 +84,8 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     systemGuide:'Full Android package with Z21 and instructions',
-    source:'Source code for LCD firmware DE3.89',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. DE3.89 / App662 requires Z21. The owner confirmed operation on one LCD. The device reported the expected SourceID.',
+    source:'Source code for LCD firmware DE3.98 / App671',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE3.98 / App671 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

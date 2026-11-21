@@ -48,10 +48,10 @@
     }
     function validatePackage(candidate, board, catalog, preview) {
         need(board === 'LCD' || board === 'OLED', 'Wähle das Display deines Geräts.', 'Choose your device display.');
-        const previews = Array.isArray(preview) ? preview : [preview];
-        preview = previews.find(item => item && typeof item.otaSha256 === 'string' && candidate.archiveSha256 === item.otaSha256 && candidate.archiveBytes === item.otaBytes);
-        const isPreview = Boolean(preview);
-        const entry = isPreview ? {board: preview.board, counter: preview.applicationCounter, version: preview.firmwareVersion, privatePreview: true}
+        const references = Array.isArray(preview) ? preview : [preview];
+        const reference = references.find(item => item && typeof item.otaSha256 === 'string' && candidate.archiveSha256 === item.otaSha256 && candidate.archiveBytes === item.otaBytes);
+        const entry = reference ? {board: reference.board, counter: reference.applicationCounter, version: reference.firmwareVersion,
+            privatePreview: reference.artifactStatus !== 'stable-signed-application'}
             : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
         need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
             'This ZIP targets the other display. Select the matching device and package.');

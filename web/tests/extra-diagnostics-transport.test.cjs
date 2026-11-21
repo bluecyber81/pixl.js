@@ -487,7 +487,7 @@ test('App668 link snapshot selects MTUD v2 once, queues normally and reassembles
         assert.equal(f.disconnects,0);assert.equal(f.timers.size,0);
         const following=next(f);f.rx(0x14,[7]);await following;
     }
-    for(const version of [undefined,'2.22.0-DE3.94','2.22.0-DE3.98','2.22.0-DE3.97-OLEDt1','2.22.0-DE3.95-OLEDt7']) {
+    for(const version of [undefined,'2.22.0-DE3.94','2.22.0-DE3.99','2.22.0-DE3.97-OLEDt1','2.22.0-DE3.95-OLEDt7']) {
         const f=fixture(), pending=f.api.get_mtu_diagnostics(version);
         assert.deepEqual(f.writes,[[5,0,0,0]]);f.rx(5,mtuPacket());
         assert.equal((await pending).schemaVersion,1);
@@ -557,7 +557,7 @@ test(`APP670_STATUS_REGRESSION ${version} ${method} selects the actual productio
   assert.equal(data.mountProfile.flashWaitTicks,32);assert.equal(data.mountProfile.ticksPerSecond,16384);
  }else{
   assert.equal(data.scope,'packedfs-memory-status');assert.equal(data.drive,'E');
-  for(const unsupported of ['2.22.0-DE3.95','2.22.0-DE3.98','2.22.0-DE3.97-OLEDt1'])
+  for(const unsupported of ['2.22.0-DE3.95','2.22.0-DE3.99','2.22.0-DE3.98-OLEDt1'])
    assert.equal(await f.api.get_storage_gc_diagnostics(unsupported),null);
  }
  assert.deepEqual(f.writes,[[cmd,0,0,0,...request]]);assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
@@ -645,3 +645,21 @@ test(testVersion+' '+'Test 1 startup v5 falls back only on explicit unsupported 
 });
 
 }
+
+// App671 has normal observations, while App669/670 retain their experimental selectors.
+for(const [method,cmd,request,makePacket,schema] of [
+ ['get_mtu_diagnostics',5,[1],mtuLinkPacket,2],
+ ['get_storage_gc_diagnostics',0x1c,[69,2],testGcPacket,1],
+ ['get_startup_diagnostics',9,[3],()=>{const bytes=testStartupPacket().slice(0,84);bytes[4]=4;bytes[5]=84;return bytes;},4]])
+test(`App671 normal ${method} uses its exact wire selector without a test profile`,async()=>{
+ const startup=await import('../src/lib/startup-diagnostics.js'),f=fixture(startup),packet=makePacket();
+ const pending=f.api[method]('2.22.0-DE3.98');pending.catch(()=>{});
+ assert.deepEqual(f.writes,[[cmd,0,0,0,...request]]);
+ for(let start=0;start<packet.length;start+=16)
+  f.rx(cmd,packet.subarray(start,start+16),(start/16)|(start+16<packet.length?0x8000:0));
+ const data=await pending;assert.equal(data.schemaVersion,schema);
+ assert.equal(data.experiment,undefined);assert.equal(data.mountProfile,undefined);
+ assert.equal(f.writes.length,1);assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+ await assert.rejects(f.api.set_ble_test_extension('2.22.0-DE3.98',true),{code:'BLE_TEST_UNSUPPORTED'});
+ assert.equal(f.writes.length,1,'normal diagnostic support must never permit an EVT! request');
+});

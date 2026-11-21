@@ -3,7 +3,8 @@
     <summary>{{ de ? 'LittleFS: Umstellung & Wiederherstellung' : 'LittleFS: migration & restoration' }}</summary>
     <div class="migration-intro"><p>{{ de ? 'Einmalig umstellen oder eine unterbrochene Wiederherstellung fortsetzen. Deine Sicherung bleibt privat; Formatieren braucht weiterhin deine ausdrückliche Bestätigung.' : 'Migrate once or resume an interrupted restoration. Your backup remains private; formatting still needs your explicit confirmation.' }}</p>
       <button type="button" :disabled="busy || blocked || !connected" @click="readStorageStatus">{{ de ? 'Speicherstatus lesen' : 'Read storage status' }}</button></div>
-    <p v-if="capacityProfile === 'de396' || capacityProfile === 'de397'" class="migration-already">{{ capacityProfile === 'de397' ? 'App670' : 'App669' }} · {{ de ? 'Test 1 verwendet weiterhin PFS1. Bei bereits vorhandenem Packed LittleFS genügt das passende Firmware-Update; für diesen Test ist keine erneute Speicherumstellung nötig.' : 'Test 1 continues to use PFS1. On an existing Packed LittleFS device, install the matching firmware update; this test does not require another storage migration.' }}</p>
+    <p v-if="capacityProfile === 'de398'" class="migration-already">App671 · {{ de ? 'Die normale Firmware verwendet weiterhin PFS1. Bei bereits vorhandenem Packed LittleFS genügt das passende Firmware-Update; dafür ist keine erneute Speicherumstellung nötig.' : 'The normal firmware continues to use PFS1. On an existing Packed LittleFS device, install the matching firmware update; it does not require another storage migration.' }}</p>
+    <p v-else-if="capacityProfile === 'de396' || capacityProfile === 'de397'" class="migration-already">{{ capacityProfile === 'de397' ? 'App670' : 'App669' }} · {{ de ? 'Test 1 verwendet weiterhin PFS1. Bei bereits vorhandenem Packed LittleFS genügt das passende Firmware-Update; für diesen Test ist keine erneute Speicherumstellung nötig.' : 'Test 1 continues to use PFS1. On an existing Packed LittleFS device, install the matching firmware update; this test does not require another storage migration.' }}</p>
     <p v-if="packedMounted" class="migration-already" role="status"><strong>{{ de ? 'E: verwendet bereits Packed LittleFS.' : 'E: already uses Packed LittleFS.' }}</strong> {{ de ? 'Nicht erneut formatieren. Eine noch offene Wiederherstellung kannst du mit derselben Sicherung fortsetzen. Diese Speicherabfrage allein bestätigt keinen Importabschluss.' : 'Do not format again. Resume any pending restoration with the same backup. This storage query alone does not confirm import completion.' }}</p>
     <p v-if="target?.state.ready" class="migration-already">{{ de ? 'Die letzte Zielabfrage meldet den Import als abgeschlossen.' : 'The last target query reports the import as complete.' }}</p>
     <p v-if="!capacityApproved" class="migration-limit">{{ de ? 'Dieser Prüfstand ist nicht für eine Umstellung freigegeben. Nicht formatieren.' : 'This build is not approved for migration. Do not format.' }}</p>
@@ -73,7 +74,7 @@
 import { createMigrationBackup, loadMigrationArchive, verifyMigrationArchive, restoreMigrationArchive, checkMigrationCapacity, retainMigrationSource, inspectMigrationTarget, formatMigrationTarget, initializeMigrationImport, finishMigrationImport, restartAfterMigration } from '../lib/migration.js'
 import { getMigrationCapacityTarget } from '../lib/migration-capacity.js'
 import { saveBlob } from '../lib/browser-tools.js'
-const capacityProfileIds = ['de397','de396','de395','de394','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']
+const capacityProfileIds = ['de398','de397','de396','de395','de394','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']
 const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+(?:t[0-9]+)?)$/u, '$1')
 const applicationRanges = applications => {
   const groups = []
@@ -93,7 +94,7 @@ const applicationRanges = applications => {
 export default {
   props:{connected:Boolean,blocked:Boolean,generation:Number,language:String,getSession:{type:Function,required:true},confirmRestore:{type:Function,required:true},confirmFormat:Function,confirmInitialize:Function,confirmRestart:Function},
   emits:['busy','restored'],
-  data:()=>({capacityProfile:'de397',storageSnapshot:null,busy:false,cancelling:false,backup:null,archive:null,filename:'',report:null,status:'',progress:null,capacityProof:null,target:null,sourceRetained:null,repairVerification:null,actionError:null,completion:null}),
+  data:()=>({capacityProfile:'de398',storageSnapshot:null,busy:false,cancelling:false,backup:null,archive:null,filename:'',report:null,status:'',progress:null,capacityProof:null,target:null,sourceRetained:null,repairVerification:null,actionError:null,completion:null}),
   computed:{de(){return this.language==='de_DE'},capacityApproved(){return getMigrationCapacityTarget(this.capacityProfile).approved},capacityOptions() {
       return capacityProfileIds.map(id => {
         const target = getMigrationCapacityTarget(id)

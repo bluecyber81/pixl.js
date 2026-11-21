@@ -80,7 +80,7 @@
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
       <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
-      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :firmware-version="firmwareVersion" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" :cleanup-supported="lcdTestSupported" :cleanup="storageCleanup" :cleanup-observed-at="storageCleanupObservedAt" @upload="on_btn_upload" />
+      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :firmware-version="firmwareVersion" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" :cleanup-supported="lcdCleanupSupported" :cleanup="storageCleanup" :cleanup-observed-at="storageCleanupObservedAt" @upload="on_btn_upload" />
     </nav>
     <div class="workspace-body">
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
@@ -337,7 +337,7 @@
         <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
       </form>
       <DiagnosticOverview v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
-      <LcdTestPanel v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :locale="language" :blocked="busy && !bleTestBusy || upload_diag_visible || diagnosticsBusy || disconnecting" :read-diagnostics="read_ble_test_diagnostics" :set-extension="set_ble_test_extension" :run-storage-test="run_lcd_storage_test" :run-read-comparison="run_lcd_read_comparison" @busy="bleTestBusy = $event" @export="open_lcd_test_report" />
+      <LcdTestPanel v-if="visitedWorkspaces.has('device') && lcdTestSupported" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :locale="language" :blocked="busy && !bleTestBusy || upload_diag_visible || diagnosticsBusy || disconnecting" :read-diagnostics="read_ble_test_diagnostics" :set-extension="set_ble_test_extension" :run-storage-test="run_lcd_storage_test" :run-read-comparison="run_lcd_read_comparison" @busy="bleTestBusy = $event" @export="open_lcd_test_report" />
       <details class="guided-check-panel" @toggle="guidedCheckOpened ||= $event.target.open">
         <summary>{{ language === 'de_DE' ? 'Geräteprüfung: Rückkehr und Aufwachen' : 'Device check: list return and wake-up' }}</summary>
         <GuidedDeviceCheck v-if="guidedCheckOpened" :snapshot="fullDiagnosticSnapshot" :firmware-version="firmwareVersion" :connected="connected" :reading="fullDiagnosticBusy" :export-busy="diagnosticsBusy" :locale="language" @export="open_guided_report" />
@@ -597,9 +597,10 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.58.2 (ZIP)' : 'Windows 3.58.2 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.58.2 (ZIP)' : '3.58.2 source code (ZIP)' }}</a>
-    <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app671" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.61.0' : '3.61.0 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: Windows 3.58.2 (ZIP)' : 'Archive: Windows 3.58.2 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: Quellcode 3.58.2 (ZIP)' : 'Archive: 3.58.2 source code (ZIP)' }}</a>
+    <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
@@ -628,7 +629,7 @@ import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnos
 import { buildDiagnosticBoard } from "./lib/lcd-build-diagnostics.js"
 import { supportsFlashDiagnostics } from "./lib/flash-diagnostics.js"
 import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference, firmwareBoard, supportsFolderPublication } from "./lib/hardware-profile.js"
-import { supportsMenuDiagnostics, supportsBleTestDiagnostics, normalizeMtuDiagnostics } from "./lib/device-extra-diagnostics.js"
+import { supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics, normalizeMtuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, assertWritableDevicePath, portableNameKey, devicePathSpace, backupPathSpace } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
@@ -750,6 +751,7 @@ export default {
     breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
     figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
     lcdTestSupported() { return supportsBleTestDiagnostics(this.firmwareVersion); },
+    lcdCleanupSupported() { return supportsStorageGcDiagnostics(this.firmwareVersion); },
     storageCleanup() { return this.fullDiagnosticSnapshot?.sections.storage?.data?.cleanup || null; },
     storageCleanupObservedAt() { return this.storageCleanup ? this.fullDiagnosticSnapshot.sections.storage.observedAt : null; },
     busy() { return this.bleTestBusy || this.displayPhotoBusy || this.fullDiagnosticBusy || this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
@@ -1751,7 +1753,7 @@ export default {
                 const result=await proto.vfs_storage_layout('E'); this.assert_session(generation);
                 if(result?.status!==255) layout=this.checked(result);
               }
-              if (info.backend===3 && supportsBleTestDiagnostics(this.firmwareVersion)) {
+              if (info.backend===3 && supportsStorageGcDiagnostics(this.firmwareVersion)) {
                 const cleanup=await proto.get_storage_gc_diagnostics(this.firmwareVersion); this.assert_session(generation);
                 return {info,layout,cleanup};
               }
@@ -1998,7 +2000,7 @@ export default {
         }
         // Read only at the operation boundaries; never inject diagnostic commands
         // into listing, file reads, verification or archive creation.
-        const linkReader=supportsBleTestDiagnostics(context.firmwareVersion) ? () => proto.get_mtu_diagnostics(context.firmwareVersion) : undefined;
+        const linkReader=supportsLinkDiagnostics(context.firmwareVersion) ? () => proto.get_mtu_diagnostics(context.firmwareVersion) : undefined;
         const before=linkReader ? await captureTransferLink({read:linkReader,isCurrent:()=>this.session_current(generation)})
           : {state:'unavailable',observedAt:new Date().toISOString(),data:null,errorCode:null};
         this.assert_session(generation); if (controller.signal.aborted) return;

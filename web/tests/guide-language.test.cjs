@@ -63,7 +63,7 @@ test('both guide languages link to a dedicated OLED chapter with the published p
 
 test('both guides offer the current LCD app, full package and aligned storage target', () => {
     const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
-    const app = release + 'Allmiibo_LCD_DE3_89_662_NUR_APP.zip';
+    const app = '../firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip';
     const combo = release + 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
@@ -72,7 +72,7 @@ test('both guides offer the current LCD app, full package and aligned storage ta
         assert.match(section('flash'), /Z21/);
         assert.ok(section('bootloader').includes(combo));
         assert.match(section('bootloader'), /(?:unter|below) 21/);
-        assert.match(section('littlefs'), /DE3\.89 \/ 662/);
+        assert.match(section('littlefs'), /DE3\.98 \/ 671/);
         const lcdDownloads = [...section('programme').matchAll(/href="([^"]*Allmiibo_LCD_[^"]*\.zip)"/g)].map(match => match[1]);
         assert.deepEqual(lcdDownloads, [app, combo]);
     }

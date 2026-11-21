@@ -1,19 +1,20 @@
 <template>
-  <section v-if="entry" class="lcd-downloads" :aria-label="de ? 'Aktuelle LCD-Firmware' : 'Current LCD firmware'">
+  <section v-if="entry || legacyEntry" class="lcd-downloads" :aria-label="de ? 'Aktuelle LCD-Firmware' : 'Current LCD firmware'">
     <h3>Allmiibo LCD</h3>
     <div class="lcd-options">
-      <div>
-        <a v-if="choices.app" :href="release + entry.file">{{ de ? 'Stabil · DE3.89 / App662 herunterladen (ZIP)' : 'Stable · Download DE3.89 / App662 (ZIP)' }}</a>
-        <strong v-else>{{ de ? 'Nur App662' : 'App662 only' }}</strong>
+      <div v-if="entry">
+        <a v-if="choices.app" :href="applicationUrl">{{ de ? `Aktuell · ${applicationLabel} herunterladen (ZIP)` : `Current · Download ${applicationLabel} (ZIP)` }}</a>
+        <strong v-else>{{ applicationLabel }}</strong>
         <p>{{ de ? 'Für LCD mit Packed LittleFS (PFS1), Z21 und S112 7.3.0.' : 'For LCD with Packed LittleFS (PFS1), Z21 and S112 7.3.0.' }}</p>
       </div>
-      <div>
-        <a v-if="choices.combo" :href="release + combo">{{ de ? 'Komplettpaket für Android (ZIP)' : 'Full package for Android (ZIP)' }}</a>
+      <div v-if="legacyEntry">
+        <a v-if="choices.combo" :href="legacyRelease + combo">{{ de ? 'Komplettpaket für Android (ZIP)' : 'Full package for Android (ZIP)' }}</a>
         <strong v-else>{{ de ? 'Komplettpaket für Android' : 'Full package for Android' }}</strong>
         <p>{{ de ? 'S112 7.3.0, Bootloader Z21 und App662 für passende LCD mit Bootloader-Zähler unter 21. Installation mit nRF Device Firmware Update.' : 'S112 7.3.0, Z21 bootloader and App662 for compatible LCD devices with bootloader counter below 21. Install with nRF Device Firmware Update.' }}</p>
+        <p v-if="entry">{{ de ? `Dieses Komplettpaket enthält die ältere App662. Danach ${applicationLabel} als separates Anwendungsupdate installieren.` : `This full package contains the older App662. Afterwards, install ${applicationLabel} as a separate application update.` }}</p>
       </div>
     </div>
-    <a class="instructions" :href="guide">{{ de ? 'Voraussetzungen und Installationsanleitung' : 'Requirements and installation guide' }}</a>
+    <a class="instructions" :href="guide">{{ de ? 'Z21-Komplettpaket: Voraussetzungen und Anleitung' : 'Z21 full package: requirements and instructions' }}</a>
   </section>
 </template>
 
@@ -24,12 +25,21 @@ import { currentLcdDownloads } from '../lib/release-packages.js';
 import releases from '../data/firmware-releases.json';
 
 const props = defineProps({ connected: Boolean, version: String, boot: Object, locale: String });
-const entry = releases.packages.find(item => item.id === 'de3.89-lcd-app');
-const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
+const entry = releases.packages.find(item => item.id === 'de3.98-lcd-app');
+const legacyEntry = releases.packages.find(item => item.id === 'de3.89-lcd-app');
+const applicationLabel = entry ? `${entry.version.replace(/^2\.22\.0-/, '')} / App${entry.counter}` : '';
+const applicationUrl = entry ? deploymentPath('firmware/' + entry.file) : null;
+const legacyRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
 const combo = 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
 const de = computed(() => props.locale?.startsWith('de'));
 const guide = computed(() => deploymentPath(de.value ? 'guide/index.html' : 'guide/en.html') + '#android-de389');
-const choices = computed(() => currentLcdDownloads(entry, { connected:props.connected, firmwareVersion:props.version }, props.boot));
+const choices = computed(() => {
+  const session = { connected:props.connected, firmwareVersion:props.version };
+  // The old full package keeps its own App662 downgrade guard. A newer current
+  // app must never make an older bundled application eligible for installation.
+  return { app:entry ? currentLcdDownloads(entry, session, props.boot).app : false,
+    combo:legacyEntry ? currentLcdDownloads(legacyEntry, session, props.boot).combo : false };
+});
 </script>
 
 <style scoped>

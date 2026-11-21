@@ -9,7 +9,7 @@ import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
 import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
-import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics } from "./device-extra-diagnostics.js"
+import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
 import i18n from '../i18n'
@@ -267,7 +267,7 @@ export function enter_dfu() {
 // MTU!, which changes the preference for the next Bluetooth connection.
 export function get_mtu_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    const detail = supportsBleTestDiagnostics(firmwareVersion) ? 2 : firmwareVersion === '2.22.0-DE3.95' ? 1 : 0;
+    const detail = supportsBleTestDiagnostics(firmwareVersion) ? 2 : supportsLinkDiagnostics(firmwareVersion) ? 1 : 0;
     const check = () => { if (generation !== transport_generation) throw new Error('Bluetooth session changed'); };
     function read(selector) {
         return op_queue_push(0x05, b => { if (selector) b.writeUint8(selector); }, b => {
@@ -516,7 +516,7 @@ export function vfs_drive_format(path) {
 
 // A cached PackedFS RAM snapshot: no filesystem scan or collection is run.
 export function get_storage_gc_diagnostics(firmwareVersion) {
-    if (!supportsBleTestDiagnostics(firmwareVersion)) return Promise.resolve(null);
+    if (!supportsStorageGcDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     return op_queue_push(0x1c, b => { b.writeUint8(69); b.writeUint8(2); }, b =>
         parseStorageGcDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), {max_bytes:24, optional_probe:true})
@@ -669,7 +669,7 @@ export function vfs_probe_small_read(firmwareVersion) {
     return small_read_probe.promise;
 }
 
-// App670 advertises its bounded READ/DIGEST contract separately. Keep PXSC
+// App670 and later known LCD builds advertise the bounded READ/DIGEST contract separately. Keep PXSC
 // unchanged so older file managers retain their strict existing parser.
 export function vfs_probe_small_batch(firmwareVersion) {
     const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);

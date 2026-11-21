@@ -133,7 +133,7 @@ test('private App667 recognition binds the actual signed application ZIP, BIN an
   assert.equal(await updater.setPackage(new File([bytes], 'renamed.zip')), true);
   assert.equal(state.previewVersion, '2.22.0-DE3.94');
   assert.equal(state.ready, true);
-  assert.equal(catalog.packages[0].counter, 662);
+  assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 667), false);
   assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [670,669,668,667,665,664]);
 });
@@ -169,7 +169,7 @@ test('App667 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('historical App667 retains its exact runtime package and direct-link identity without replacing current App668', () => {
+test('historical App667 retains its exact runtime package and direct-link identity alongside retained App668', () => {
   const runtime = Bundled.validateCatalog({schema:catalog.schema, packages:[...catalog.packages,...lcdPreviewPackages]});
   const historical = runtime.packages.find(item => item.id === 'de3.94-lcd-app');
   assert.equal(historical.file, filename);
@@ -177,7 +177,7 @@ test('historical App667 retains its exact runtime package and direct-link identi
   assert.equal(historical.bytes, lcdPreview.otaBytes);
   assert.equal(historical.counter, 667);
   assert.equal(runtime.packages.find(item => item.id === 'de3.95-lcd-app').counter, 668);
-  assert.equal(catalog.packages[0].version, '2.22.0-DE3.89');
+  assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').version, '2.22.0-DE3.89');
 });
 
 test('App667 simulator sources bind the new application while retaining complete reproducible engine sources', async () => {

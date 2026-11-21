@@ -133,7 +133,7 @@ test('private App668 recognition binds the actual signed application ZIP, BIN an
   assert.equal(await updater.setPackage(new File([bytes], 'renamed.zip')), true);
   assert.equal(state.previewVersion, '2.22.0-DE3.95');
   assert.equal(state.ready, true);
-  assert.equal(catalog.packages[0].counter, 662);
+  assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
   assert.equal(catalog.packages.some(item => item.counter === 668), false);
   assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [670,669,668,667,665,664]);
 });
@@ -169,8 +169,8 @@ test('App668 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('the retained App668 private package remains available without promoting the stable catalog', () => {
+test('the retained App668 private package remains available without promoting that test package into the stable catalog', () => {
   assert.equal(lcdPreviewPackage.file, filename);
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
-  assert.equal(catalog.packages[0].version, '2.22.0-DE3.89');
+  assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').version, '2.22.0-DE3.89');
 });

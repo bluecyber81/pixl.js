@@ -11,6 +11,17 @@ export function nrfDfuLink(entry) {
             file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
+    // The normal App671 application is served from the normal Pages root.
+    // Its exact profile must not inherit the permissive historical URL pattern.
+    if (entry?.id === 'de3.98-lcd-app' || entry?.version === '2.22.0-DE3.98') {
+        if (entry.board !== 'LCD' || entry.id !== 'de3.98-lcd-app' || entry.version !== '2.22.0-DE3.98' ||
+            entry.counter !== 671 || entry.channel || entry.applicationOnly !== true || entry.migrationRequired !== false ||
+            entry.storage !== 'PFS1' || entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
+            entry.file !== 'Allmiibo_LCD_DE3_98_671_NUR_APP.zip') return null;
+        return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
+            file: 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file
+        });
+    }
     // This isolated test distribution is intentionally not at the normal
     // Pages root. Keep its native-app handoff bound to the exact test target.
     const lcdTest = entry?.id === 'de3.96-lcd-app-test1' ? {minor:96,counter:669}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {parseMtuDiagnostics,normalizeMtuDiagnostics,parseStorageGcDiagnostics,normalizeStorageGcDiagnostics,supportsBleTestDiagnostics} from '../src/lib/device-extra-diagnostics.js';
+import {parseMtuDiagnostics,normalizeMtuDiagnostics,parseStorageGcDiagnostics,normalizeStorageGcDiagnostics,supportsBleTestDiagnostics,supportsLinkDiagnostics,supportsStorageGcDiagnostics} from '../src/lib/device-extra-diagnostics.js';
 import {parseStartupDiagnostics,normalizeStartupDiagnostics,startupMountPresentation,createStartupDiagnosticReport} from '../src/lib/startup-diagnostics.js';
 import {storageCleanupPresentation} from '../src/lib/device-storage-display.js';
 import {normalizeStorageDiagnostics,createCombinedDiagnosticReport} from '../src/lib/diagnostic-snapshot.js';
@@ -94,4 +94,15 @@ test('optional cleanup and test diagnostics survive the allowlisted combined JSO
  assert.equal(report.diagnosticSnapshot.sections.startup.data.mountProfile.ticksPerSecond,16384);
  assert.match(report.limitations.join(' '),/global SoftDevice/);assert.match(report.limitations.join(' '),/must not be summed/);
  assert.doesNotMatch(JSON.stringify(report),/PRIVATE|rawPayload/);
+});
+
+test('App671 exposes normal read-only diagnostics without enabling the old experiment',()=>{
+ assert.equal(supportsLinkDiagnostics('2.22.0-DE3.98'),true);
+ assert.equal(supportsStorageGcDiagnostics('2.22.0-DE3.98'),true);
+ assert.equal(supportsBleTestDiagnostics('2.22.0-DE3.98'),false);
+ for(const version of ['2.22.0-DE3.99','2.22.0-DE3.98-OLEDt1',undefined]){
+  assert.equal(supportsLinkDiagnostics(version),false);
+  assert.equal(supportsStorageGcDiagnostics(version),false);
+  assert.equal(supportsBleTestDiagnostics(version),false);
+ }
 });
