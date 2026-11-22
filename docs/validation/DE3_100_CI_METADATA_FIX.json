@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "at": "2026-11-22T18:17:03.190053+00:00",
+  "scope": "Firmware branch CI package catalog only; no maintained Web code or firmware production inputs imported",
+  "before": {
+    "web/public/firmware/releases.json": "c09e6f5d27cdb52bb5970b5886058ba59bfceede4fffce2604ffabebb8f48365",
+    "web/public/firmware/releases.js": "e26c3e04b3466bc9374e24a8bfad7d0eafac665f77874eaeed86a696ccef6251",
+    "web/src/data/firmware-releases.json": "9252fe7d9d82601dd78758a60efed324d8476d5e46866002b6a86ac30617d60e"
+  },
+  "after": {
+    "web/public/firmware/releases.json": "c05ba36da7ed765c467c05ee36bce40171207535528b220c6e06bea4b8f5e2f8",
+    "web/public/firmware/releases.js": "43b3bfd3bfb979b53970dc331f68c51488e5ea6593b63e8a449508812e5f66ad",
+    "web/src/data/firmware-releases.json": "c05ba36da7ed765c467c05ee36bce40171207535528b220c6e06bea4b8f5e2f8"
+  },
+  "packageEntry": {
+    "id": "de3.100-lcd-app",
+    "version": "2.22.0-DE3.100",
+    "counter": 673,
+    "file": "Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+    "bytes": 361681,
+    "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+    "board": "LCD",
+    "storage": "PFS1",
+    "bootloader": "Z21",
+    "softDevice": "S112 7.3.0",
+    "applicationOnly": true,
+    "migrationRequired": false
+  },
+  "publicCatalogExistingEntriesUnchanged": true,
+  "sourceMirrorAlsoReceivesExistingApp672Entry": true,
+  "addedPackage": {
+    "path": "web/public/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+    "bytes": 361681,
+    "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378"
+  },
+  "sourceBuildUnchanged": true,
+  "noFirmwareRebuild": true,
+  "gate": {
+    "command": [
+      "/workspace/scratch/01be954f2c61/work_20261122_next/deps/testenv/bin/python",
+      "tools/check_release_ota.py",
+      "--build-dir",
+      "/workspace/scratch/01be954f2c61/work_20261122_next/evidence/app673_final_release"
+    ],
+    "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+    "exitCode": 0,
+    "stdout": "Verified signature, payload and three negative controls for Allmiibo_LCD_DE3_100_673_NUR_APP.zip\n",
+    "signedOtaEvidence": "SIGNED_OTA.json",
+    "signedOtaEvidenceSha256": "62a9a4db990d9bf089b0cb30a1b760612aab30ba8f2d671f5fb42ee0048e2468"
+  },
+  "mirrorsStructurallyIdentical": true,
+  "currentAppOfferCount": 1,
+  "productionSourceIdAfter": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+  "unchangedProductionSourceId": true,
+  "commitNotCreated": true,
+  "pushed": false
+}

@@ -152,9 +152,15 @@
   "fullVerification": "DE3_100_evidence/APP673_FIRMWARE_FINAL_VERIFICATION.json",
   "evidenceBindings": "DE3_100_evidence/EVIDENCE_BINDINGS.json",
   "ci": {
-    "status": "pending",
-    "requiredHead": null,
-    "publicUnsignedRebuildVerified": false
+    "status": "first-run-catalog-gate-corrected-followup-pending",
+    "firstRun": "https://github.com/bluecyber81/pixl.js/actions/runs/45053828080",
+    "firstRunCommit": "0875a09935b00a60a4d3b20744f073a23cc53d59",
+    "publicUnsignedRebuildVerified": true,
+    "binAndHexEqualFinalRelease": true,
+    "failure": "Firmware-branch DFU test catalog lacked current App673; exact signed ZIP and catalog mirrors added. Production firmware inputs unchanged.",
+    "correction": "DE3_100_CI_METADATA_FIX.json",
+    "currentAppZ19AsanUbsanLsan": "passed",
+    "currentAppZ21Resume": "pending-followup-job"
   },
   "hardwareAcceptance": "pending-for-this-build",
   "physicalDeviceAccess": false,
