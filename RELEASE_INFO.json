@@ -5,7 +5,7 @@
   "counter": 672,
   "board": "LCD",
   "web_version": "3.62.0",
-  "web_publication_date": null,
+  "web_publication_date": "2026-11-22",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
@@ -65,7 +65,7 @@
     "installation_readback_observed": true,
     "qualification": "Seven actual linked Z21 ARM signature/hash/CRC checks and two init/bank-selection cases accept the signed App672 after App671 and on an empty application bank. Physical radio and flash are simulated."
   },
-  "web_host_test_scope": "Web3.62.0 unit, Python launcher, normal root and Pages builds, compiled workers, browser smoke and extracted portable checks. Exact counts and hash bindings are in web_evidence.",
+  "web_host_test_scope": "Full Web3.62.0 software and native Windows CI checks are bound to web_full_suite_binding. The final delivery-only URL correction is covered by targeted rendered download checks, both rebuilt production outputs and actual extracted portable checks in web_evidence.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -82,7 +82,7 @@
     "evidence": "docs/validation/WEB3_61_0.json",
     "delivery": "docs/validation/WEB3_61_0_DELIVERY.json"
   },
-  "web_release_status": "software-qualified-awaiting-publication",
+  "web_release_status": "normal-release",
   "web_release_notes": "web/LIESMICH_3_62_0.txt",
   "web_personal_backup_status": "Personal backup benchmarks are recorded in the respective historical web evidence.",
   "web_changes": {
@@ -184,7 +184,7 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "software-qualified-signed-normal",
-  "web_evidence": "docs/validation/WEB3_62_0.json",
+  "web_evidence": "docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json",
   "device_readback_evidence": null,
   "fresh_public_unsigned_rebuild_matches_signed_application": false,
   "firmware_downloads": {
@@ -521,11 +521,23 @@
       "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
     }
   ],
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.62.0",
+  "web_release": "https://bluecyber81.github.io/pixl.js/?v=3.62.0",
   "firmware_source_scope": "Production firmware is in the explicitly linked release/lcd-de399-app672 commit. Inherited fw/ files on this web branch are historical and are not the App672 production source.",
   "web_qualification_date": "2026-11-22",
   "web_test_total": 2118,
   "web_test_passed": 2115,
   "web_test_skipped": 3,
-  "web_test_failed": 0
+  "web_test_failed": 0,
+  "web_downloads": {
+    "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip",
+    "hosting": "Pages portable binary and GitHub source-branch archive; no web3.62.0 Release asset required.",
+    "deliveryEvidence": "docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json"
+  },
+  "web_qualification_evidence": "docs/validation/WEB3_62_0.json",
+  "web_full_suite_binding": {
+    "publicCommit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
+    "tree": "e779a59315b3c3c27461061394951790a7fa22da",
+    "scope": "Full software and Windows CI qualification before the delivery-only URL correction. Final targeted download/dist/portable checks are in web_evidence."
+  }
 }

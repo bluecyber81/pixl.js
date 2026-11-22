@@ -1,6 +1,8 @@
 Allmiibo Dateimanager 3.62.0 – normale Ausgabe für LCD DE3.99 / App672
 
 Online: https://bluecyber81.github.io/pixl.js/
+Windows-Portable: https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip
+Webquellen: https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip
 LCD-App: https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD
 
 Windows: lokale Ausgabe starten

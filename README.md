@@ -2,11 +2,11 @@
 
 ## Normal release: LCD DE3.99 / App672 and Web3.62.0
 
-[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [App672 in the updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signed App672 ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows package and web source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.62.0).
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [App672 in the updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signed App672 ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip).
 
 For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. The application-only update retains the existing PFS1 filesystem, bootloader and SoftDevice. App672 completes retried Chameleon imports and avoids repeated GC scans while the same older directory snapshots remain open. Web3.62.0 fixes the local Python/CMD launcher and adds active logging time and paused time.
 
-This `web-app672` branch contains the normal file manager. Actual LCD production sources are separately bound to [commit 9fb9d84](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637). Inherited firmware sources in this web branch and earlier descriptions below remain historical references. [Web notes](web/LIESMICH_3_62_0.txt) · [Web qualification](docs/validation/WEB3_62_0.json) · [ARM/PFS evidence](docs/validation/DE3_99_PFS.json) · [Deutsch](README.de.md). Physical acceptance of the new firmware is recorded separately.
+This `web-app672` branch contains the normal file manager. Actual LCD production sources are separately bound to [commit 9fb9d84](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637). Inherited firmware sources in this web branch and earlier descriptions below remain historical references. [Web notes](web/LIESMICH_3_62_0.txt) · [Web qualification](docs/validation/WEB3_62_0.json) · [Download delivery check](docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json) · [ARM/PFS evidence](docs/validation/DE3_99_PFS.json) · [Deutsch](README.de.md). Physical acceptance of the new firmware is recorded separately.
 
 ## Historical downloads and separate OLED releases
 

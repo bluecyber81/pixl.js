@@ -107,8 +107,11 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
+  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip" download'))
+  assert.ok(index.includes('pixl.js/blob/web-app672/docs/VERSIONEN_WEB.md'))
+  assert.ok(index.includes('pixl.js/blob/release/lcd-de399-app672/docs/VERSIONEN_FIRMWARE.md'))
+  assert.ok(!index.includes('releases/download/web3.62.0/'))
   for (const releaseFile of [
-    'web3.62.0/Allmiibo_Dateimanager_3_62_0_Quellcode.zip',
     'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'

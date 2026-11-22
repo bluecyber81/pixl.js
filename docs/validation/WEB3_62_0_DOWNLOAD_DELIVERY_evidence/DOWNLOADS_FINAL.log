@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: /: resources stay under the explicit build base, independent of page and worker paths
+ok 1 - /: resources stay under the explicit build base, independent of page and worker paths
+  ---
+  duration_ms: 3.254021
+  type: 'test'
+  ...
+# Subtest: /: query and fragment figure links work without server rewrites and retain fixed destinations
+ok 2 - /: query and fragment figure links work without server rewrites and retain fixed destinations
+  ---
+  duration_ms: 0.743553
+  type: 'test'
+  ...
+# Subtest: /pixl.js/: resources stay under the explicit build base, independent of page and worker paths
+ok 3 - /pixl.js/: resources stay under the explicit build base, independent of page and worker paths
+  ---
+  duration_ms: 0.225782
+  type: 'test'
+  ...
+# Subtest: /pixl.js/: query and fragment figure links work without server rewrites and retain fixed destinations
+ok 4 - /pixl.js/: query and fragment figure links work without server rewrites and retain fixed destinations
+  ---
+  duration_ms: 0.168487
+  type: 'test'
+  ...
+# Subtest: deployment helpers reject external roots, traversal, query injection and encoded separators
+ok 5 - deployment helpers reject external roots, traversal, query injection and encoded separators
+  ---
+  duration_ms: 0.433076
+  type: 'test'
+  ...
+# Subtest: capacity URL validation stays exact and precedes fetching for every base-looking injection
+ok 6 - capacity URL validation stays exact and precedes fetching for every base-looking injection
+  ---
+  duration_ms: 1.103442
+  type: 'test'
+  ...
+# Subtest: firmware presentation rejects filenames that could escape the build location
+ok 7 - firmware presentation rejects filenames that could escape the build location
+  ---
+  duration_ms: 0.4965
+  type: 'test'
+  ...
+# Subtest: production entry points use the common resolver and pass query/hash to the fixed-ID router
+ok 8 - production entry points use the common resolver and pass query/hash to the fixed-ID router
+  ---
+  duration_ms: 2.08212
+  type: 'test'
+  ...
+# Subtest: the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages
+ok 9 - the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages
+  ---
+  duration_ms: 69.419531
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 182.241168

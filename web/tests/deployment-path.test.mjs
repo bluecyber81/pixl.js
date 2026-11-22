@@ -69,11 +69,20 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
   const version = JSON.parse(read('package.json')).version
   const footer = read('src/App.vue').match(/<footer class="source-footer">[\s\S]*?<\/footer>/)[0]
   const expected = [
-    ['web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip', 'Windows 3.62.0 (ZIP)', 'Windows 3.62.0 (ZIP)'],
-    ['web3.62.0/Allmiibo_Dateimanager_3_62_0_Quellcode.zip', 'Quellcode 3.62.0 (ZIP)', '3.62.0 source code (ZIP)'],
+    ['https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip', 'Windows 3.62.0 (ZIP)', 'Windows 3.62.0 (ZIP)'],
+    ['https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip', 'Quellcode 3.62.0 (ZIP)', '3.62.0 source code (ZIP)'],
     ['de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip', 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)', 'Archive: LCD DE3.89 / App662 · test kit (ZIP)'],
     ['de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)']
   ]
+  const delivery = projectDownloads(version)
+  const metadata = JSON.parse(read('../RELEASE_INFO.json'))
+  assert.equal(metadata.web_downloads.portable, delivery.portable)
+  assert.equal(metadata.web_downloads.source, delivery.source)
+  for (const file of ['../README.md', '../README.de.md', 'README.md']) {
+    assert.ok(read(file).includes(delivery.portable), file)
+    assert.ok(read(file).includes(delivery.source), file)
+    assert.ok(!read(file).includes('releases/tag/web3.62.0'), file)
+  }
   for (const language of ['de_DE', 'en']) {
     for (const base of ['/', '/pixl.js/']) {
       const app = createSSRApp({ template:footer, setup:() => ({
@@ -83,7 +92,7 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
       const links = [...html.matchAll(/<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].map(match => match.slice(1))
       assert.deepEqual(links[0], ['https://github.com/bluecyber81/pixl.js/tree/web-app672', language === 'en' ? '3.62.0 source code' : 'Quellcode 3.62.0'])
       assert.deepEqual(links.slice(1, expected.length + 1), expected.map(([file, de, en]) => [
-        'https://github.com/bluecyber81/pixl.js/releases/download/' + file, language === 'en' ? en : de
+        file.startsWith('https://') ? file : 'https://github.com/bluecyber81/pixl.js/releases/download/' + file, language === 'en' ? en : de
       ]))
       assert.equal(links[expected.length + 1][0], base + 'licenses/index.html')
     }

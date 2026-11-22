@@ -1,5 +1,13 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.62.0 · normale LCD-Ausgabe DE3.99 / App672
+
+Der lokale Python-/CMD-Starter verwendet dieselbe Versionsquelle wie Weboberfläche und HTTP-Health. Der Akkuverlauf trennt Messwertspanne, sichtbare Protokollzeit, aktive Loggerzeit und Pausen. Die normale LCD-Auswahl ist exakt an App672 und dessen PFS-Simulator gebunden; frühere private Testprofile und OLED bleiben getrennt erhalten.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/?v=3.62.0) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip) · [Softwarequalifikation](validation/WEB3_62_0.json) · [Lieferkorrektur](validation/WEB3_62_0_DOWNLOAD_DELIVERY.json)
+
+Die Web3.62.0-Downloads verwenden GitHub Pages für das Portable und das Quellarchiv des gepflegten GitHub-Zweigs. Ein GitHub-Release-Asset ist dafür nicht erforderlich. Die folgenden Einträge behalten ihre damaligen Links.
+
 ## Dateimanager 3.58.2 · Ordnerübertragung mit DE3.89
 
 Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)

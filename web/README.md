@@ -2,11 +2,11 @@
 
 ## Normale Ausgabe 3.62.0 und LCD DE3.99 / App672
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App672 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App672 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip)
 
 Diese normale Ausgabe behebt den lokalen Python-/CMD-Start über eine gemeinsame Versionsquelle und prüft den tatsächlich gepackten Portable-Lieferweg. Der Akkuverlauf ergänzt aktive Loggerzeit und Pausendauer innerhalb des sichtbaren Protokollfensters. App672 behält die vorhandenen Batch-/Digest-Pfade und erhält eine eigene exakte Paket- und Simulatorbindung. Experimentelle Funksetter bleiben für die normale Firmware gesperrt.
 
-[Bedienung und Änderungen](LIESMICH_3_62_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_62_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637) · [Simulatorquellen](third-party/packed-simulator-de399/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_99_PFS.json)
+[Bedienung und Änderungen](LIESMICH_3_62_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_62_0.json) · [Prüfung der Downloadlieferung](../docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637) · [Simulatorquellen](third-party/packed-simulator-de399/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_99_PFS.json)
 
 Die vorherigen normalen, privaten und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete. Praktische Geräteabnahme und native Windowsausführung werden getrennt von den hier dokumentierten Softwareprüfungen berichtet.
 
