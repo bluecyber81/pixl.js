@@ -205,7 +205,7 @@ static void app_ble_stream_on_event(mini_app_inst_t *inst, mini_app_event_t *eve
 const mini_app_t app_ble_stream_info = {
     .id = MINI_APP_ID_BLE_STREAM, .name = "BLE Stream", .name_i18n_key = _L_APP_BLE_STREAM,
     .icon = 0xe1b5, .deamon = false, .sys = false, .hibernate_enabled = false,
-    .icon_32x32 = &app_player_32x32,
+    .icon_32x32 = &app_ble_stream_32x32,
     .run_cb = app_ble_stream_on_run, .kill_cb = app_ble_stream_on_kill,
     .on_event_cb = app_ble_stream_on_event,
 };
