@@ -58,7 +58,7 @@ test('production entry points use the common resolver and pass query/hash to the
   assert.doesNotMatch(read('index.html'), /jszip-3\.10\.2/)
   assert.match(read('public/dfu/web.html'), /src="vendor\/jszip-3\.10\.2\.min\.js"/)
   assert.match(read('src/main.js'), /search: window.location.search, hash: window.location.hash/)
-  for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /href="https:\/\/github\.com\/bluecyber81\/pixl\.js\/tree\/release\/lcd-de398-app671"/)
+  for (const name of ['src/components/FirmwarePackages.vue', 'public/dfu/web.html']) assert.match(read(name), /href="https:\/\/github\.com\/bluecyber81\/pixl\.js\/tree\/release\/lcd-de399-app672"/)
 })
 
 test('the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages', async () => {
@@ -69,8 +69,8 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
   const version = JSON.parse(read('package.json')).version
   const footer = read('src/App.vue').match(/<footer class="source-footer">[\s\S]*?<\/footer>/)[0]
   const expected = [
-    ['web3.58.2/Allmiibo_Dateimanager_3_58_2_Portable.zip', 'Archiv: Windows 3.58.2 (ZIP)', 'Archive: Windows 3.58.2 (ZIP)'],
-    ['web3.58.2/Allmiibo_Dateimanager_3_58_2_Quellcode.zip', 'Archiv: Quellcode 3.58.2 (ZIP)', 'Archive: 3.58.2 source code (ZIP)'],
+    ['web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip', 'Windows 3.62.0 (ZIP)', 'Windows 3.62.0 (ZIP)'],
+    ['web3.62.0/Allmiibo_Dateimanager_3_62_0_Quellcode.zip', 'Quellcode 3.62.0 (ZIP)', '3.62.0 source code (ZIP)'],
     ['de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip', 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)', 'Archive: LCD DE3.89 / App662 · test kit (ZIP)'],
     ['de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)']
   ]
@@ -81,7 +81,7 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
       }) })
       const html = await renderToString(app)
       const links = [...html.matchAll(/<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].map(match => match.slice(1))
-      assert.deepEqual(links[0], ['https://github.com/bluecyber81/pixl.js/tree/web-app671', language === 'en' ? '3.61.0 source code' : 'Quellcode 3.61.0'])
+      assert.deepEqual(links[0], ['https://github.com/bluecyber81/pixl.js/tree/web-app672', language === 'en' ? '3.62.0 source code' : 'Quellcode 3.62.0'])
       assert.deepEqual(links.slice(1, expected.length + 1), expected.map(([file, de, en]) => [
         'https://github.com/bluecyber81/pixl.js/releases/download/' + file, language === 'en' ? en : de
       ]))

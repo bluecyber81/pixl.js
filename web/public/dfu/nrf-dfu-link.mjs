@@ -11,13 +11,17 @@ export function nrfDfuLink(entry) {
             file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
-    // The normal App671 application is served from the normal Pages root.
-    // Its exact profile must not inherit the permissive historical URL pattern.
-    if (entry?.id === 'de3.98-lcd-app' || entry?.version === '2.22.0-DE3.98') {
-        if (entry.board !== 'LCD' || entry.id !== 'de3.98-lcd-app' || entry.version !== '2.22.0-DE3.98' ||
-            entry.counter !== 671 || entry.channel || entry.applicationOnly !== true || entry.migrationRequired !== false ||
+    // Normal releases use exact profiles at the normal Pages root. Retained
+    // App671 links remain valid and cannot alias the newer application.
+    const normal = [
+        {id:'de3.98-lcd-app',version:'2.22.0-DE3.98',counter:671,file:'Allmiibo_LCD_DE3_98_671_NUR_APP.zip'},
+        {id:'de3.99-lcd-app',version:'2.22.0-DE3.99',counter:672,file:'Allmiibo_LCD_DE3_99_672_NUR_APP.zip'}
+    ].find(profile => entry?.id === profile.id || entry?.version === profile.version);
+    if (normal) {
+        if (entry.board !== 'LCD' || entry.id !== normal.id || entry.version !== normal.version ||
+            entry.counter !== normal.counter || entry.channel || entry.applicationOnly !== true || entry.migrationRequired !== false ||
             entry.storage !== 'PFS1' || entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
-            entry.file !== 'Allmiibo_LCD_DE3_98_671_NUR_APP.zip') return null;
+            entry.file !== normal.file) return null;
         return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
             file: 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file
         });

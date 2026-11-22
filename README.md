@@ -1,14 +1,18 @@
-# Firmware for Allmiibo LCD and Pixl.js OLED
+# Allmiibo LCD and Pixl.js OLED
 
-## This branch: normal file manager 3.61.0
+## Normal release: LCD DE3.99 / App672 and Web3.62.0
 
-`web-app671` contains the normal Web3.61.0 source and its software/delivery evidence. [Open the website](https://bluecyber81.github.io/pixl.js/) · [Web release notes](web/LIESMICH_3_61_0.txt) · [Web qualification](docs/validation/WEB3_61_0.json) · [Live delivery](docs/validation/WEB3_61_0_DELIVERY.json).
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [App672 in the updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signed App672 ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows package and web source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.62.0).
 
-The matching signed LCD firmware is **DE3.98 / App671** on the separate [`release/lcd-de398-app671` branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671). The inherited firmware sources and earlier release descriptions below are historical references, not the production source of the App671 package. OLED and historical LCD test downloads retain their separate requirements.
+For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. The application-only update retains the existing PFS1 filesystem, bootloader and SoftDevice. App672 completes retried Chameleon imports and avoids repeated GC scans while the same older directory snapshots remain open. Web3.62.0 fixes the local Python/CMD launcher and adds active logging time and paused time.
 
-[Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
+This `web-app672` branch contains the normal file manager. Actual LCD production sources are separately bound to [commit 9fb9d84](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637). Inherited firmware sources in this web branch and earlier descriptions below remain historical references. [Web notes](web/LIESMICH_3_62_0.txt) · [Web qualification](docs/validation/WEB3_62_0.json) · [ARM/PFS evidence](docs/validation/DE3_99_PFS.json) · [Deutsch](README.de.md). Physical acceptance of the new firmware is recorded separately.
 
-## LCD DE3.89 / App662 · stable firmware
+## Historical downloads and separate OLED releases
+
+The old Android combined package includes App662 and is a separate system route; install normal App672 afterwards. OLED Test5/App85 and Test6/App86 keep their own packages and acceptance limits.
+
+## Archive: LCD DE3.89 / App662
 
 | Your LCD device | Download |
 | --- | --- |
@@ -20,7 +24,7 @@ Back up your files and select the intact ZIP in **nRF Device Firmware Update**. 
 
 On 19 November 2026 the owner confirmed successful practical testing on one LCD. File manager 3.58.2 reported App662, the matching LCD source ID, Z21 and S112 7.3.0. Timing against Mochi on App662 and resuming an interrupted Android firmware update still need separate device tests. [Device readback](docs/validation/DE3_89_LCD_READBACK.json)
 
-## File manager 3.58.2
+## Archive: file manager 3.58.2
 
 Preview, verification and backup can read a small file with a single request. A repeated search checks whether storage has changed before reusing the directory listings. Reconnect in the same browser tab to resume an interrupted folder upload. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
 

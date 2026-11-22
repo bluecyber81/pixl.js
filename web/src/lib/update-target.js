@@ -1,10 +1,11 @@
+import { lcdReleasePackage } from '../../public/dfu/lcd-release-reference.mjs';
 // A local release target, not an online 'latest version' lookup. A matching
 // observation is not permission to flash another device or proof of its wiring.
 const z13Hash = '97b2751f1b041de8bcba131d875be725fe91294bfc72e4a7f7a3dc5526e88002';
 export const UPDATE_TARGET = Object.freeze({
-  profileSchema: 1, profileRevision: '2026-11-21-de398-z21',
-  id: 'allmiibo-lcd-de3.98-z21-s112-7.3.0',
-  application: Object.freeze({ version: '2.22.0-DE3.98', counter: 671 }),
+  profileSchema: 1, profileRevision: '2026-11-22-de399-z21',
+  id: 'allmiibo-lcd-de3.99-z21-s112-7.3.0',
+  application: Object.freeze({ version: lcdReleasePackage.version, counter: lcdReleasePackage.counter }),
   localApplications: Object.freeze({ '2.22.0-DE3.64': 636, '2.22.0-DE3.65': 637, '2.22.0-DE3.66': 638, '2.22.0-DE3.67': 639, '2.22.0-DE3.68': 640, '2.22.0-DE3.69': 641, '2.22.0-DE3.70': 642, '2.22.0-DE3.71': 643, '2.22.0-DE3.71t1': 644, '2.22.0-DE3.72': 645, '2.22.0-DE3.73': 646, '2.22.0-DE3.74': 647, '2.22.0-DE3.75': 648, '2.22.0-DE3.76': 649, '2.22.0-DE3.77': 650, '2.22.0-DE3.79': 652, '2.22.0-DE3.80': 653, '2.22.0-DE3.81': 654 }),
   bootloader: Object.freeze({ name: 'BL8', counter: 11, address: 0x77000, bytes: 28672,
     sha256: 'add1f8f0422dc9da6c4e2ce90899e3fc7b5d0498993030c0bd5110cdc5b66130',

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import JSZip from '../public/dfu/vendor/jszip-3.10.2.min.js';
-import {lcdRelease} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdRelease} from '../public/dfu/lcd-app671-reference.mjs';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {supportsFolderPublication} from '../src/lib/hardware-profile.js';
 

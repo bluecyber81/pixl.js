@@ -22,7 +22,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 function fixture() {
   const parent = path.resolve(os.tmpdir());
   const dir = fs.mkdtempSync(path.join(parent, 'allmiibo-launcher-test-'));
-  for (const file of ['serve_local.py', 'Start-Dateimanager.ps1', 'Stop-Dateimanager.ps1', 'Start-Dateimanager.cmd', 'Stop-Dateimanager.cmd']) {
+  for (const file of ['serve_local.py', 'release_version.py', 'package.json', 'Start-Dateimanager.ps1', 'Stop-Dateimanager.ps1', 'Start-Dateimanager.cmd', 'Stop-Dateimanager.cmd']) {
     fs.copyFileSync(path.join(web, file), path.join(dir, file));
   }
   fs.mkdirSync(path.join(dir, 'dist/empty'), { recursive: true });
@@ -114,7 +114,7 @@ test('local server identity, routes and authenticated self-stop reject wrong tok
   });
   await once(child, 'spawn');
   const health = await waitHealth(port);
-  assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: '3.61.0', instance: crypto.createHash('sha256').update(token).digest('hex') });
+  assert.deepEqual(health, { application: 'allmiibo-dateimanager', version: require('../package.json').version, instance: crypto.createHash('sha256').update(token).digest('hex') });
   assert.ok(!JSON.stringify(health).includes(token));
   const head = await request(port, healthPath, 'HEAD');
   assert.equal(head.status, 200); assert.equal(head.body, ''); assert.ok(Number(head.headers['content-length']) > 0);

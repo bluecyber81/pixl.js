@@ -1,0 +1,1458 @@
+{
+  "schema": 1,
+  "version": "3.62.0",
+  "base": "/",
+  "files": [
+    {
+      "path": ".nojekyll",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "_redirects",
+      "bytes": 22,
+      "sha256": "faddc50d8b4f77f60a98186ba256e7ac0fd96f4bd68a26bd90b53fd4f24f4187"
+    },
+    {
+      "path": "assets/BackupComparison-Cc9wNeNa.js",
+      "bytes": 10117,
+      "sha256": "96d47cc733b3c4658208f7bfd3de3725dbcda05f750485a8bce88753f5db982d"
+    },
+    {
+      "path": "assets/BackupComparison-_WGSlmtw.css",
+      "bytes": 1392,
+      "sha256": "f19e16e352385f8238d5cb83278249ac676e64e271cbffb286de1c95562f13d3"
+    },
+    {
+      "path": "assets/BackupExportOptions-C2_-YBd4.css",
+      "bytes": 620,
+      "sha256": "59a764723751e660c625a803250f54cee714dea8cf59cffe44ae3cd0243aa7f1"
+    },
+    {
+      "path": "assets/BackupExportOptions-CF_SeqI-.js",
+      "bytes": 4469,
+      "sha256": "778fd23793e4acfd52f79a15ca0ccebf8579871e2b84f63b589b96d3704faf24"
+    },
+    {
+      "path": "assets/BatteryVoltageHistory-BTsI5PaO.js",
+      "bytes": 13337,
+      "sha256": "09d8067e972425ab9fbd85fa19da6abbe1b26ea726d39b09780f57c3fe31fb91"
+    },
+    {
+      "path": "assets/BatteryVoltageHistory-DvNaF5qe.css",
+      "bytes": 4758,
+      "sha256": "ce5b9062ab000218d89a1c41c74ebd88e6a23bac5951c6f8c3aa2a4143cd6232"
+    },
+    {
+      "path": "assets/CardSlotInspection-CGs7_TDU.js",
+      "bytes": 13396,
+      "sha256": "2588354858a247bfb9910b7216668423f05a501039e8ad74215a9129efaccb78"
+    },
+    {
+      "path": "assets/CardSlotInspection-DJE_jGiF.css",
+      "bytes": 692,
+      "sha256": "cb3cbf2ff904ce1bf1e64ff858a0b3b1252aa0b34f7b50bbb7832ba80af75f54"
+    },
+    {
+      "path": "assets/CataloguePanel-CD8Fd96n.css",
+      "bytes": 12634,
+      "sha256": "27bb92bb3c6d58151bd70a07ed8aabf1fb0e730596f947e2033194955e8f9b89"
+    },
+    {
+      "path": "assets/CataloguePanel-CD9QhAoh.js",
+      "bytes": 53921,
+      "sha256": "0beb204664a1cde266ddb50a90b7c91270735d58c691973121628c6edb7f5c9c"
+    },
+    {
+      "path": "assets/CollectionAssistant-Dt91n7rW.js",
+      "bytes": 114818,
+      "sha256": "aa38eef5451eef1ce4af8789f406fcb760ab0a2022a23d2d6908acab028c3008"
+    },
+    {
+      "path": "assets/CollectionAssistant-q6hXVjx8.css",
+      "bytes": 6616,
+      "sha256": "2e4a3d84b44e18dcdb26ab92016d6a20c0bc05be45e725c35e1f81c5f7baa35e"
+    },
+    {
+      "path": "assets/CollectionBackupAudit-C7wMT7_g.css",
+      "bytes": 817,
+      "sha256": "1fb2e31acefe2614e92efc3c55952cd6dcc55f9f69cf356e3c1313ddacd662f8"
+    },
+    {
+      "path": "assets/CollectionBackupAudit-D4oPdJF4.js",
+      "bytes": 10123,
+      "sha256": "2a262c3df5f1c2a6287895f4881c8a9915dbb36c9c844cfe8a375c0159aa57f3"
+    },
+    {
+      "path": "assets/CurrentLcdDownloads-CBPrDK69.js",
+      "bytes": 2571,
+      "sha256": "49ed2ae643a96bcf95581ace43a05cef9cd04271bc68322c7cebd62359dbb971"
+    },
+    {
+      "path": "assets/CurrentLcdDownloads-CpirbNTh.css",
+      "bytes": 706,
+      "sha256": "757948cd59b9d134053dd9e3840159ceed5da9332112df2947ba1ce397a4ac5e"
+    },
+    {
+      "path": "assets/DeviceSearch-DaqpJepg.js",
+      "bytes": 15784,
+      "sha256": "742e4a3f6ba8e3c55659cd1362d87b4fd506e477d66a96d32fab5822b8406474"
+    },
+    {
+      "path": "assets/DeviceSearch-aJlougZ8.css",
+      "bytes": 2192,
+      "sha256": "2e256cc6dfc2d974c715766507eed22c2bc3dcf7e8f9e4e68cae7ddb06f2f3a8"
+    },
+    {
+      "path": "assets/DiagnosticOverview-C7-dlKZB.css",
+      "bytes": 4399,
+      "sha256": "30c5bbb981e907b0b8b915359a9dfd1c11c184f382eec52f339200abe56a35ee"
+    },
+    {
+      "path": "assets/DiagnosticOverview-CpwyBPL6.js",
+      "bytes": 32814,
+      "sha256": "eff51c05f5fcd05f99832dbe41dd90e43dfb7c8fddd72d9ff17fb1614df9ce59"
+    },
+    {
+      "path": "assets/DisplayPhoto-BaS8wQqT.css",
+      "bytes": 1759,
+      "sha256": "8060d0a1a3cf2edb789d75e45ecdadd396b508f0d5607186bdac046bea1b048f"
+    },
+    {
+      "path": "assets/DisplayPhoto-DEfS9CL8.js",
+      "bytes": 7490,
+      "sha256": "af06e601582c96fa990e5923abcdc8d799ca8a687d6ff83fec2d4ba219d3220f"
+    },
+    {
+      "path": "assets/FigureDetails-B_cblxpl.js",
+      "bytes": 33590,
+      "sha256": "a9b8e4433ac23348be1e0f7e6c17f42a67c994334a09a686b87f0fc2c8ddc696"
+    },
+    {
+      "path": "assets/FigureDetails-BseEjObO.css",
+      "bytes": 4270,
+      "sha256": "78733e365387980715184cfe7026e040bec56176cea72a8ad16e55b3d996a5a2"
+    },
+    {
+      "path": "assets/FigureUsage-D6Y2x356.js",
+      "bytes": 9673,
+      "sha256": "863a7f201ecb0739e393464e381b78a69686a45b056f6a408f404c1bb98e8916"
+    },
+    {
+      "path": "assets/FigureUsage-DOIGiNS_.css",
+      "bytes": 1690,
+      "sha256": "61133c21a429f85a0ff437f778e5c1d5704291cbf45484699724d1e037c771d4"
+    },
+    {
+      "path": "assets/FirmwareBoardChoice-4gw4j9Wd.js",
+      "bytes": 4712,
+      "sha256": "a6c4d170d6c4b01072c456e1d907aff2dd1a588aa7e3541738c4f664ef0a27a5"
+    },
+    {
+      "path": "assets/FirmwareBoardChoice-BuGEXwMN.css",
+      "bytes": 1096,
+      "sha256": "c1fe3f5f0f02073caafebbafafa54345605acaac482d977b5a085cb268f79f49"
+    },
+    {
+      "path": "assets/GameFolder-CHMm-TcR.js",
+      "bytes": 10557,
+      "sha256": "6712d3bfb98f8b14d3a1bc0caace69ec16ff00e58b6dca05f4f7801667d82b90"
+    },
+    {
+      "path": "assets/GameFolder-qSwXhVzu.css",
+      "bytes": 874,
+      "sha256": "75a2ff067117a9b1ce34df83fcb38a5d687a09f6359ae3d39b88d73db80f189c"
+    },
+    {
+      "path": "assets/GuidedDeviceCheck-BL22WZFx.js",
+      "bytes": 29177,
+      "sha256": "9f9828b5944d8a03e5b644a271264eecdd795546536979c179942b16a6a0b8fb"
+    },
+    {
+      "path": "assets/GuidedDeviceCheck-BNexpmac.css",
+      "bytes": 6349,
+      "sha256": "9603baf13f0702ff528908b5d6cbb7ae038306769408c5e155a90d140d25f49e"
+    },
+    {
+      "path": "assets/GuidedReportComparison-BDuFBrq5.js",
+      "bytes": 5527,
+      "sha256": "91e600c6313f1a170c2a43ae94dfc20942eb5275b0d11dd82b119decdd39dac6"
+    },
+    {
+      "path": "assets/GuidedReportComparison-BhhMld0u.css",
+      "bytes": 1418,
+      "sha256": "816491c04121c039cbc980de1574197a31952e6ae3f8a076b0ce66515373691f"
+    },
+    {
+      "path": "assets/HardwareProfile-BuUO4l_T.css",
+      "bytes": 443,
+      "sha256": "285f615c524e6df3adb8276d7a043022c11972b408d73eac285cc9461aacd5d9"
+    },
+    {
+      "path": "assets/HardwareProfile-D2fg_Ogu.js",
+      "bytes": 4045,
+      "sha256": "1d3da6ff3c6e067b3ccfb9791b57414d6647535d6dad8ab21cd86cc6e8d45707"
+    },
+    {
+      "path": "assets/IdentifierCopy-Bs2_bB0i.css",
+      "bytes": 543,
+      "sha256": "0d877c7844f6d789e08bbea8d2af0a4bc5d560c787c11a51e6344a479e48ba4a"
+    },
+    {
+      "path": "assets/IdentifierCopy-CC2Sww4J.js",
+      "bytes": 1080,
+      "sha256": "70860d67d01ca5d0b10b0951784c52cdfc72fff273b0bae2b7d296cc8f5e45fc"
+    },
+    {
+      "path": "assets/LcdTestPanel-B6ZLK8c8.js",
+      "bytes": 15471,
+      "sha256": "17a13459c9d74905cd1413a948ef8d4dd2bfb77d3bf70e30d8f4ada3dd103b58"
+    },
+    {
+      "path": "assets/LcdTestPanel-QdggYZjo.css",
+      "bytes": 1300,
+      "sha256": "9a1f642c98335029feb316e51931f0ac39e7151375a0e6a206fbe80148350b62"
+    },
+    {
+      "path": "assets/MenuRunComparison-B8QYiK3W.js",
+      "bytes": 10419,
+      "sha256": "429610bb3a61790b1ae9199b29697e0e469891be6e603566b148ba75ea568b1a"
+    },
+    {
+      "path": "assets/MenuRunComparison-BiwC6dtn.css",
+      "bytes": 960,
+      "sha256": "e1b94137781ac1a86ab9c085cbe40a0b1470299a6ff02b6818a179907e130267"
+    },
+    {
+      "path": "assets/MigrationAssistant-BbyfLO1o.css",
+      "bytes": 4519,
+      "sha256": "a1704ebb07c445f42deba69d670170c632384440112a3f34cd0e5131d3f12c0a"
+    },
+    {
+      "path": "assets/MigrationAssistant-C5HWCwZ1.js",
+      "bytes": 71469,
+      "sha256": "d9e6886f0f706a4bfa6a756d06c2e69bfb3a760e6a315ca421f0d3e261568535"
+    },
+    {
+      "path": "assets/RemoteControl-oYzZ6rVx.css",
+      "bytes": 4899,
+      "sha256": "e0c86299c7be24ff4e002e61941b56e16718b32cc61184c5da30805aeb9cce53"
+    },
+    {
+      "path": "assets/RemoteControl-tZgi20v1.js",
+      "bytes": 39049,
+      "sha256": "33aec2a1bcc6b0852488f0b9e6731a691dce53c8d43c61d9674090ca37e3db08"
+    },
+    {
+      "path": "assets/ScreenAwake-CIE9Vw09.js",
+      "bytes": 3874,
+      "sha256": "f0f2a4c7382833d99b1bb480dfe5358d7925cff81625644eb98791b767218195"
+    },
+    {
+      "path": "assets/ScreenAwake-ypRNPhvM.css",
+      "bytes": 727,
+      "sha256": "e1755b2f842231ca459184b07b61c7cb9ff06ba346ed05c2543709939786ef2e"
+    },
+    {
+      "path": "assets/SelectionPreview-CWa12gLb.js",
+      "bytes": 5187,
+      "sha256": "cf299828a9f868564cbc3b4eccef998ccd03a2a48797cd4d3335b312d0123b4a"
+    },
+    {
+      "path": "assets/SelectionPreview-DOUTkQrT.css",
+      "bytes": 1674,
+      "sha256": "c4c1398a559def8fa7f46aded7c861a914fbd0ff773d3b19508d6f12564d1b96"
+    },
+    {
+      "path": "assets/StartupDiagnostics-CEsNsfTH.css",
+      "bytes": 3815,
+      "sha256": "ae5871a81957f95886fcb2ad7835ee49641d44ca867078f2b3fa46b01ba62f88"
+    },
+    {
+      "path": "assets/StartupDiagnostics-Cx0ehYlV.js",
+      "bytes": 11735,
+      "sha256": "dea9b2a0802bb772da6ca41f8427b06014949312ed0c523c50170e93a0747e91"
+    },
+    {
+      "path": "assets/TransferStatus-CDixcv35.js",
+      "bytes": 1902,
+      "sha256": "8f25b8821c058b68afd56ce25e365bb93d502f141f0f2e4b4254fe5a31ba52df"
+    },
+    {
+      "path": "assets/TransferStatus-nWAZERUQ.css",
+      "bytes": 1086,
+      "sha256": "fab2a74739d5553a89ebf48e008db5b398db75d1ff66e6b27a1f49d599fc6db7"
+    },
+    {
+      "path": "assets/UpdateCheck-ByBQ1Udn.js",
+      "bytes": 20228,
+      "sha256": "31bed1b6faaf23648e6a770d4a2903eab16ced77fc7b6bc403b8d1f0e28e2c81"
+    },
+    {
+      "path": "assets/UpdateCheck-D-b_9UO5.css",
+      "bytes": 3553,
+      "sha256": "de729ffba3e6b90bdd226f28b89ff541963e5b57f8c2ced084133b007be90207"
+    },
+    {
+      "path": "assets/UploadNameReview-FRFAcG1B.js",
+      "bytes": 4611,
+      "sha256": "1754288e779d109404988f1babb188eb28a58d748c188887e25fc959d7c8342a"
+    },
+    {
+      "path": "assets/UploadNameReview-dImUFujJ.css",
+      "bytes": 1164,
+      "sha256": "8c4c0d282c0e48d75afeacdc0e93914b1a3b34bca75caf925d9e4c25fd88b701"
+    },
+    {
+      "path": "assets/backup-DA385jC4.js",
+      "bytes": 20587,
+      "sha256": "ae0393f3399c3e49a348f61a909d5d9ea6639df9d3692cabaa64e7d699391a67"
+    },
+    {
+      "path": "assets/bytebuffer-BVjY3BzW.js",
+      "bytes": 50858,
+      "sha256": "1971f27d4c67bbce4bbcd5d469f43730ce5725e00b9fd8de21b58df78f2f894b"
+    },
+    {
+      "path": "assets/collection-audit-BFHicZ3F.js",
+      "bytes": 7830,
+      "sha256": "78f9d8c8855b697940d12d73dc6552ad178c8aab480462d09c8a97a8cf3702f9"
+    },
+    {
+      "path": "assets/csv-export-i82OsDJ4.js",
+      "bytes": 162,
+      "sha256": "c67d5b4bde1ce02582dcb9d8f127b0e99924489f4090dcb35996f434933ec870"
+    },
+    {
+      "path": "assets/figure-download-links-DFkMSdYE.js",
+      "bytes": 13604,
+      "sha256": "7fbd2f2e826712bf0a3602122b73f66168a59bc815e97c00a33e079d445f6df2"
+    },
+    {
+      "path": "assets/figure-usage-nWE3zv6y.js",
+      "bytes": 113844,
+      "sha256": "57f827755231d39a0d0cedff66466ca3e23000a2197b1b45cbbbc4f7a60fcc95"
+    },
+    {
+      "path": "assets/firmware-releases-zhnP8jRy.js",
+      "bytes": 6714,
+      "sha256": "e96afb665cf6ab876e0683550a335e500cb26f74a046474131277bc88044e3c9"
+    },
+    {
+      "path": "assets/guided-device-check-DYxw9-2c.js",
+      "bytes": 13451,
+      "sha256": "3454061358ee2d8ea97a8ccfdac08a109249b3699d81c54551e8121db286d569"
+    },
+    {
+      "path": "assets/hardware-profile-COZutGvO.js",
+      "bytes": 4827,
+      "sha256": "3fdb6770b1c987dc813b073920d4438c12088c39a41b437b1cd40bc1924164a5"
+    },
+    {
+      "path": "assets/index-B_hilqNQ.css",
+      "bytes": 183848,
+      "sha256": "3e860152c2643ec9f6f9666303f497293a9ed8ef70309c3a1d45cf1719b7c21a"
+    },
+    {
+      "path": "assets/index-Cjac7MEI.js",
+      "bytes": 1043637,
+      "sha256": "0e74c542958389cee5719fdad2570963b87d4ec9ddd825aae13683d90cca9a0c"
+    },
+    {
+      "path": "assets/lcd-read-comparison-BpO9Lk2t.js",
+      "bytes": 5565,
+      "sha256": "94430c165276daeb40024e3a26a62ca0a782af4b1296d077d3477279ba78df14"
+    },
+    {
+      "path": "assets/lcd-storage-self-test-dtd54pq9.js",
+      "bytes": 3870,
+      "sha256": "d0c6977a524ff99982d872faee7eff32e531952c979d625917b4ae2c6bef4a5a"
+    },
+    {
+      "path": "assets/migration-capacity-OpoPwdAK.js",
+      "bytes": 10228,
+      "sha256": "d364a849123bd8c0ad855de76e851fe150fbbe966bd2f7a589eab40516e53c60"
+    },
+    {
+      "path": "assets/migration-capacity-worker-BikNGYjT.js",
+      "bytes": 17096,
+      "sha256": "ad0ea5c8acb0915f047488c7c73856a8c49ef7305be3f951a2d60dcf345ec9b8"
+    },
+    {
+      "path": "assets/stored-backup-eqGMNWN4.js",
+      "bytes": 4654,
+      "sha256": "971b67998e7cbff3315e4d78cec62e05681d1854f4c66720cdd3df4dd236db40"
+    },
+    {
+      "path": "assets/zip-crc32-DjkMFiVs.js",
+      "bytes": 203,
+      "sha256": "b4f99544aea2e5f8b4398a8ac2179b9b07dd6a3ad5ffea5019b9a5c1ec577206"
+    },
+    {
+      "path": "assets/zip-import-DCU2VeOC.js",
+      "bytes": 17434,
+      "sha256": "36c3b138e0b59e817dcbdc85b17dfcf23d888d462f56e7772ba0d967a51febbc"
+    },
+    {
+      "path": "dfu/LICENSE.txt",
+      "bytes": 1158,
+      "sha256": "2afc378dc870b9cbade5270eeff6f86083fe3f99c2eb2583c74cad06db56538d"
+    },
+    {
+      "path": "dfu/bluetooth-access.mjs",
+      "bytes": 578,
+      "sha256": "405318a1987b65f811058e495e31345608cefab6d230b886baf5a5edc627e8dc"
+    },
+    {
+      "path": "dfu/bundled-packages.js",
+      "bytes": 12585,
+      "sha256": "bfd2cc416d375a621baae13488ad8e881d651ae891e7250cea6a7b6f46d3aa49"
+    },
+    {
+      "path": "dfu/lcd-app671-reference.mjs",
+      "bytes": 1356,
+      "sha256": "47a66f5a5893b0fe4d8bc9ea4d12715df29f2fff50f065edb9f1c3208f0070e3"
+    },
+    {
+      "path": "dfu/lcd-private-reference.mjs",
+      "bytes": 7208,
+      "sha256": "e0eb0857abcd0dd6bc5d4b6addc9e8cba7c757846f6330912c5f8a52d6478961"
+    },
+    {
+      "path": "dfu/lcd-release-reference.mjs",
+      "bytes": 1357,
+      "sha256": "b22556cba587c26562c31a89bf3492bb8678d2fe4db94f2f89bcdcfed8553188"
+    },
+    {
+      "path": "dfu/nrf-dfu-link.mjs",
+      "bytes": 4896,
+      "sha256": "6db05e4e21a9f9cbc0198465222a64ad65a6e06e782fe043532e541614c862ac"
+    },
+    {
+      "path": "dfu/package.js",
+      "bytes": 14921,
+      "sha256": "ed6eb5fe35e2cd14e159c5cf682d007897d77f1e072a0c289b1b04a74935c9f8"
+    },
+    {
+      "path": "dfu/package.json",
+      "bytes": 126,
+      "sha256": "b17de539bed56906b317ce4613d9b66ed75056397bb8e0d8f593d7e0c8de1154"
+    },
+    {
+      "path": "dfu/page.js",
+      "bytes": 22302,
+      "sha256": "b8ba6b3a3943059788e064a179406483785dbd7b01aaf6a3a8ccc6cc73ec7fbf"
+    },
+    {
+      "path": "dfu/phase-labels.js",
+      "bytes": 5531,
+      "sha256": "f1cae2bd91de8a68dd1331636de875a7723e53324a5ea0bfb6ae0c4ee1f8694e"
+    },
+    {
+      "path": "dfu/screen-awake.mjs",
+      "bytes": 3495,
+      "sha256": "d95a6a8fe27112c9b5379385deab50b478671e56184a20aef39c6c63c8bdcbaa"
+    },
+    {
+      "path": "dfu/secure-dfu.js",
+      "bytes": 20274,
+      "sha256": "adf291bfb93d0a4042309420e69ab30134b8305f49a878507f95897313e1fb8f"
+    },
+    {
+      "path": "dfu/updater.css",
+      "bytes": 5696,
+      "sha256": "df2ac54509803ef5e199c33ba1ac6e45ded2499fb6201eb73bdad9ec6be98848"
+    },
+    {
+      "path": "dfu/updater.js",
+      "bytes": 5924,
+      "sha256": "6d2f0c0f47ef6eae678ce9b43f2c275b188a0e11e4abc8a4f48e1d209d52fdb1"
+    },
+    {
+      "path": "dfu/validation-error.js",
+      "bytes": 435,
+      "sha256": "cb91c56140e37c897921ce572aa209a3c47c95595e3900c7e676915aa2b26555"
+    },
+    {
+      "path": "dfu/vendor/CRC32-LICENSE.txt",
+      "bytes": 11355,
+      "sha256": "c542ba7851b5d39a5face477e47a27cb7c00a9759e321b66824e79718bffe1ac"
+    },
+    {
+      "path": "dfu/vendor/JSZip-LICENSE.txt",
+      "bytes": 33753,
+      "sha256": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4"
+    },
+    {
+      "path": "dfu/vendor/SOURCES.json",
+      "bytes": 1367,
+      "sha256": "c676cd5bc18d21b784adebc4a1e13b78044da29b5549da2752ddea493fd3c452"
+    },
+    {
+      "path": "dfu/vendor/crc32.js",
+      "bytes": 3566,
+      "sha256": "8450a98f18b8a24ed088d07d64c5134896e54079757f783945054167a9d2e75e"
+    },
+    {
+      "path": "dfu/vendor/jszip-3.10.2.min.js",
+      "bytes": 97781,
+      "sha256": "7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1"
+    },
+    {
+      "path": "dfu/web.html",
+      "bytes": 12980,
+      "sha256": "bd54c269d58d8c81de6c697b199d93c8fd8c5042f76613f2123657c8c8cd8066"
+    },
+    {
+      "path": "firmware/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip",
+      "bytes": 249137,
+      "sha256": "e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+      "bytes": 362167,
+      "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip",
+      "bytes": 362663,
+      "sha256": "7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
+      "bytes": 364719,
+      "sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip",
+      "bytes": 364755,
+      "sha256": "891762b78ffbd6c7b30b4719e3539a9007b58918aea4ed19397a5f44b1ebc8fc"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip",
+      "bytes": 359351,
+      "sha256": "8056bc504552f20c14fc34b6b6677a1b3bba83afc3727208939d0eda59c83d00"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip",
+      "bytes": 359815,
+      "sha256": "03c438a1e4b561a6ddf9ed8c787ce82a4899c2bd416eb08f588bff5111a4f080"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
+      "bytes": 249275,
+      "sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip",
+      "bytes": 250473,
+      "sha256": "e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
+      "bytes": 250805,
+      "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
+      "bytes": 246554,
+      "sha256": "603d99133331fdb425647e27106b043f9f7f3347e889475153bfe7e828f1dafd"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_76_649_NUR_APP.zip",
+      "bytes": 259536,
+      "sha256": "41d07d2b4d4ca6092432beb5573a5c43e801cfa69f26499aadbae284991bd585"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_77_650_NUR_APP.zip",
+      "bytes": 249524,
+      "sha256": "72e30a092424e4414014b508c39f143f5896d11362719cd53ffb66c2b12f73f3"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_79_652_NUR_APP.zip",
+      "bytes": 259921,
+      "sha256": "161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
+      "bytes": 259943,
+      "sha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip",
+      "bytes": 249923,
+      "sha256": "6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_84_657_NUR_APP.zip",
+      "bytes": 246116,
+      "sha256": "6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_85_658_NUR_APP.zip",
+      "bytes": 247377,
+      "sha256": "a7f8b4aa6e01469c88433e40437618f199a47421e6a602e92c72eac0862fb411"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_86_659_NUR_APP.zip",
+      "bytes": 248604,
+      "sha256": "af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip",
+      "bytes": 249952,
+      "sha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip",
+      "bytes": 252473,
+      "sha256": "75543dc92ca18d55a81f8070a5ac72f58195419510bba893d7540b343b8fe2c0"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+      "bytes": 252544,
+      "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_91_664_NUR_APP.zip",
+      "bytes": 253238,
+      "sha256": "b3b0c8f967d3b3886680cfb5049635b5297591c16495dd74e1779654cfd0687e"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_92_665_NUR_APP.zip",
+      "bytes": 365125,
+      "sha256": "65e9321309dc059b88adc490963c787fdbc01e35e201765b7cbb8d3ecd66e3a0"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_94_667_NUR_APP.zip",
+      "bytes": 361633,
+      "sha256": "f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+      "bytes": 362593,
+      "sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip",
+      "bytes": 363913,
+      "sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "bytes": 364489,
+      "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+      "bytes": 364781,
+      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "bytes": 364877,
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
+      "bytes": 343768,
+      "sha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13"
+    },
+    {
+      "path": "firmware/Allmiibo_OLED_DE3_84_Test4_APP.zip",
+      "bytes": 248400,
+      "sha256": "8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7"
+    },
+    {
+      "path": "firmware/Allmiibo_OLED_DE3_85_Test5_APP.zip",
+      "bytes": 249461,
+      "sha256": "16e019fde2cd5283a462bba31fe4ee65fafc7dcddaa7c4bccd200f334af26a1f"
+    },
+    {
+      "path": "firmware/Allmiibo_OLED_DE3_87_Test6_APP.zip",
+      "bytes": 251986,
+      "sha256": "eaf4e645a04521268d4e39f03f5448048d43c7b66a5a5b9f48bcee91db2abaa8"
+    },
+    {
+      "path": "firmware/releases.js",
+      "bytes": 9813,
+      "sha256": "e26c3e04b3466bc9374e24a8bfad7d0eafac665f77874eaeed86a696ccef6251"
+    },
+    {
+      "path": "firmware/releases.json",
+      "bytes": 9684,
+      "sha256": "c09e6f5d27cdb52bb5970b5886058ba59bfceede4fffce2604ffabebb8f48365"
+    },
+    {
+      "path": "guide/LCD-DE3.86.txt",
+      "bytes": 1192,
+      "sha256": "6e359d79f908b529f3061c0a231602fab2fcea88c6991b397d5376b76fbd36a5"
+    },
+    {
+      "path": "guide/LCD-DE3.87.txt",
+      "bytes": 882,
+      "sha256": "2f884812dfdb9de9ebb95e56222993b9b1d75b7aedf85ab85bbd2387c03d1daf"
+    },
+    {
+      "path": "guide/en.html",
+      "bytes": 33837,
+      "sha256": "8d6bea6f09286cc58886fb3162711aa40305483b72c4e066d9c591c2dedf6775"
+    },
+    {
+      "path": "guide/guide.css",
+      "bytes": 5612,
+      "sha256": "d6bd795b55b39a5a668b02f138bc1cb3bffa25ff89dcef577fe492bd71af8051"
+    },
+    {
+      "path": "guide/index.html",
+      "bytes": 36063,
+      "sha256": "f09a0343505a964ba860ea6c9ae482698da2c790243ee18538bf3b60fa007eed"
+    },
+    {
+      "path": "guide/language.js",
+      "bytes": 879,
+      "sha256": "c3b48c33b4c0be2dede16424b4d1b0c886c597a131da401ee8e389ec81d0d4ba"
+    },
+    {
+      "path": "index.html",
+      "bytes": 767,
+      "sha256": "ab515b401983fb849b4b4f25057fc289f4e8b230349c224f921efb64bf57220d"
+    },
+    {
+      "path": "language-preference.js",
+      "bytes": 2797,
+      "sha256": "4aa17dd8ea395dccee4c0fb6fa167363364490e93c30fa8dafaf18fde714c3a6"
+    },
+    {
+      "path": "lfs-capacity-current.wasm",
+      "bytes": 63992,
+      "sha256": "50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105"
+    },
+    {
+      "path": "lfs-capacity-de344.wasm",
+      "bytes": 60644,
+      "sha256": "06500c5b69bd61310352cecc07eadb50a17b0eecd22c9381d1118c3cf0f8ec9f"
+    },
+    {
+      "path": "lfs-capacity-de345.wasm",
+      "bytes": 67117,
+      "sha256": "a4cfd3b1d823f2d596ba67625364260bbe74979b28c7123fc863e549b7199c99"
+    },
+    {
+      "path": "lfs-capacity-de350.wasm",
+      "bytes": 67215,
+      "sha256": "0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b"
+    },
+    {
+      "path": "lfs-capacity-de355.wasm",
+      "bytes": 63067,
+      "sha256": "652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9"
+    },
+    {
+      "path": "lfs-capacity-de389.wasm",
+      "bytes": 63590,
+      "sha256": "e62f5857d60acea148edc365b85aaa22756fba8bd7f566d03d2f70ef605cad5c"
+    },
+    {
+      "path": "lfs-capacity-de391.wasm",
+      "bytes": 63530,
+      "sha256": "91ca3ef469ea6ecfca1dc18c80ad39d60977fc591b823274324c516bb7024548"
+    },
+    {
+      "path": "lfs-capacity-de392.wasm",
+      "bytes": 64369,
+      "sha256": "08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16"
+    },
+    {
+      "path": "lfs-capacity-de393.wasm",
+      "bytes": 64351,
+      "sha256": "f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96"
+    },
+    {
+      "path": "lfs-capacity-de395.wasm",
+      "bytes": 64830,
+      "sha256": "311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c"
+    },
+    {
+      "path": "lfs-capacity-de396.wasm",
+      "bytes": 64830,
+      "sha256": "d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56"
+    },
+    {
+      "path": "lfs-capacity-de397.wasm",
+      "bytes": 65280,
+      "sha256": "d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c"
+    },
+    {
+      "path": "lfs-capacity-de398.wasm",
+      "bytes": 65569,
+      "sha256": "30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273"
+    },
+    {
+      "path": "lfs-capacity-de399.wasm",
+      "bytes": 65585,
+      "sha256": "068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c"
+    },
+    {
+      "path": "lfs-capacity-previous.wasm",
+      "bytes": 59194,
+      "sha256": "410f213e0818a3a5e1d0ce381e202514f7dd3b834b1cec854d5fe6f180574b1f"
+    },
+    {
+      "path": "lfs-capacity.wasm",
+      "bytes": 61305,
+      "sha256": "8830aece6d900679ccfec27e4b1321ffc160aba9381023cd26c397d3e0dcb1d4"
+    },
+    {
+      "path": "licenses/LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/index.html",
+      "bytes": 23401,
+      "sha256": "ff8b62b86178eb72852fd802439b5f8842c2f6c80bccc6ecd84e597e3416ab76"
+    },
+    {
+      "path": "licenses/language.js",
+      "bytes": 384,
+      "sha256": "a708c9e1e2fa45a0daf6112304282cad0609849d00c90abcc6938a7031a2c819"
+    },
+    {
+      "path": "licenses/qrcode-generator-MIT.txt",
+      "bytes": 1071,
+      "sha256": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c"
+    },
+    {
+      "path": "licenses/qrcode-generator-provenance.json",
+      "bytes": 916,
+      "sha256": "94be890bfbe9af7c95b7bd73820ca2dfa32e2302e13a417f8ee427044abbfe29"
+    },
+    {
+      "path": "licenses/third-party/amiiboapi/LICENSE",
+      "bytes": 1065,
+      "sha256": "9b56b63c5868ea07cc41314159b614cf689474e5b92bde94f3f32821ff9e05d3"
+    },
+    {
+      "path": "licenses/third-party/amiiboapi/SOURCE.txt",
+      "bytes": 838,
+      "sha256": "c217ab4016098f4bc76f85c2143d349856c8b5dff2bc067ebad97932cd334999"
+    },
+    {
+      "path": "licenses/third-party/npm/SOURCES.json",
+      "bytes": 34151,
+      "sha256": "a25d59460b7c434db0b689f4f8d0c342b8c8a98fa4132cbc18541beeead121fc"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/async-validator-4.2.5/LICENSE.md",
+      "bytes": 1083,
+      "sha256": "5d0427088e37071c4b942de990f6365d5c2d195f3e957ce925322d184784e2eb"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.11/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.7/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__helper-validator-identifier-7.29.7/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__parser-7.29.12/LICENSE",
+      "bytes": 1086,
+      "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__parser-7.29.9/LICENSE",
+      "bytes": 1086,
+      "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__types-7.29.11/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__types-7.29.8/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/bytebuffer-5.0.1/LICENSE",
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/csstype-3.2.3/LICENSE",
+      "bytes": 1062,
+      "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.1/LICENSE",
+      "bytes": 1072,
+      "sha256": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.2/LICENSE",
+      "bytes": 1072,
+      "sha256": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/dayjs-1.11.23/LICENSE",
+      "bytes": 1072,
+      "sha256": "5faab7526d055651be3aab769d58897be6bd91f3d39d137f25f12dba1b31d5dc"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/detect-libc-2.1.2/LICENSE",
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/element-plus-2.14.7/LICENSE",
+      "bytes": 1077,
+      "sha256": "0790118bb4d66681db1d63181f72ef68e632d632f6db0373ef87cf328561af27"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/element-plus__icons-vue-2.3.2/LICENSE",
+      "bytes": 1121,
+      "sha256": "5db4ebb3abd8353774ae148723ccc14087d6dab99473f77a7b799b55defd8dfe"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/entities-7.0.1/LICENSE",
+      "bytes": 1260,
+      "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/estree-walker-2.0.2/LICENSE",
+      "bytes": 1126,
+      "sha256": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/fdir-6.5.0/LICENSE",
+      "bytes": 1053,
+      "sha256": "9a39f2aadab11a3697edd668ff2d8ad885b649737b7ab4d3bf12b34e5ada0c86"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/floating-ui__core-1.8.0/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/floating-ui__dom-1.8.0/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/floating-ui__utils-0.2.12/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__core-base-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__devtools-types-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__message-compiler-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__shared-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/jridgewell__sourcemap-codec-1.6.0/LICENSE",
+      "bytes": 1080,
+      "sha256": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lightningcss-1.33.0/LICENSE",
+      "bytes": 15648,
+      "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lightningcss-win32-x64-msvc-1.33.0/LICENSE",
+      "bytes": 15648,
+      "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lodash-4.18.1/LICENSE",
+      "bytes": 1952,
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lodash-es-4.18.1/LICENSE",
+      "bytes": 1952,
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/long-3.2.0/LICENSE",
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/magic-string-0.30.21/LICENSE",
+      "bytes": 1051,
+      "sha256": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/memoize-one-6.0.0/LICENSE",
+      "bytes": 1073,
+      "sha256": "b1c501095de70182748cb8e8d97ac5577701a4ef3b755ba30d59fd87b24bdb0f"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/nanoid-3.3.20/LICENSE",
+      "bytes": 1095,
+      "sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/normalize-wheel-es-1.2.0/LICENSE",
+      "bytes": 1527,
+      "sha256": "658d037c5c078a24c27ab1e0f37050d407ad6628be94886a4e48f3e761f47f7d"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/oxc-project__types-0.155.0/LICENSE",
+      "bytes": 1119,
+      "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/oxc-project__types-0.156.0/LICENSE",
+      "bytes": 1119,
+      "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/picocolors-1.1.1/LICENSE",
+      "bytes": 787,
+      "sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/picomatch-4.0.7/LICENSE",
+      "bytes": 1091,
+      "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/postcss-8.5.31/LICENSE",
+      "bytes": 1095,
+      "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/postcss-8.5.32/LICENSE",
+      "bytes": 1095,
+      "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown-1.2.15/LICENSE",
+      "bytes": 1302,
+      "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown-1.2.18/LICENSE",
+      "bytes": 1302,
+      "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown-1.2.18/THIRD-PARTY-LICENSE",
+      "bytes": 2209,
+      "sha256": "a877291d800ed43692f3f9ae09d8e01cc6f7293ad39d43896059c188ffbb8b7c"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown__pluginutils-1.0.1/LICENSE",
+      "bytes": 1106,
+      "sha256": "e1919b3b98b8bf6c1b99fcc60a0ed46027c97ac947432e1278446c9606f50161"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/source-map-js-1.2.2/LICENSE",
+      "bytes": 1526,
+      "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/sxzz__popperjs-es-2.11.8/LICENSE.md",
+      "bytes": 1082,
+      "sha256": "bf67e2c9b7974543bb18ced3a0b37f53729aaff953b442dd89a3adaf90fd93e8"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/tinyglobby-0.2.17/LICENSE",
+      "bytes": 1076,
+      "sha256": "22c68811e174cbbfb3813d4135918df4f540959c14d872e601d9abe83d3cde8f"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/types__lodash-4.17.27/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/types__lodash-es-4.17.12/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/types__web-bluetooth-0.0.21/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vite-8.3.8/LICENSE.md",
+      "bytes": 98196,
+      "sha256": "a22152baa1aef74402443008e767e7c689a524c0909d19b0431d97f5ab066a13"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vitejs__plugin-vue-6.0.10/LICENSE",
+      "bytes": 1103,
+      "sha256": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.13/LICENSE",
+      "bytes": 1076,
+      "sha256": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.14/LICENSE",
+      "bytes": 1076,
+      "sha256": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-i18n-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-core-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-dom-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-sfc-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-ssr-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__reactivity-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__runtime-core-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__runtime-dom-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__server-renderer-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__shared-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vueuse__core-15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vueuse__metadata-15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vueuse__shared-15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-current/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-current/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de344/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de344/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de345/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de345/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de350/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de350/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de355/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de355/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de389/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de389/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de391/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de391/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de392/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de392/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de392/SOURCE.txt",
+      "bytes": 2481,
+      "sha256": "5407659d5d9655bdda01d8052d7af4e75cf9b152bc9eb6301ff50b4de9c6b160"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de393/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de393/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de393/SOURCE.txt",
+      "bytes": 2067,
+      "sha256": "e5fca9ea8c29153b83906f96fb8ee660fa9c310fa1bc9807921c942e0e5c4bd0"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de395/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de395/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de395/SOURCE.txt",
+      "bytes": 2134,
+      "sha256": "0fd1645b78cc4b857b8012c2d0ad4394ee867a6a613c22240b43b77e071c23c4"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de396/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de396/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de396/SOURCE.txt",
+      "bytes": 2540,
+      "sha256": "fabd97011a7b0cc35dd70efb632d5ec8fc81802fd3691f5ded8d649f26ebb8d4"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de397/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de397/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de397/SOURCE.txt",
+      "bytes": 2708,
+      "sha256": "90c3f012444e45b55b8571be6d7c5e7ad05956a45b99f2f8c3c1eeeabf6a160d"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de398/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de398/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de398/SOURCE.txt",
+      "bytes": 476,
+      "sha256": "ce4902174cb610d223cc5eb62c7bf06a97f943000fe90e5d7b646d273f4dc695"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de399/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de399/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de399/SOURCE.txt",
+      "bytes": 502,
+      "sha256": "e5fbb7d41e4f2f6557a3a29e3f9412fa826d7a1620b9acddcc81301eac6d08ea"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-previous/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-previous/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a"
+    },
+    {
+      "path": "licenses/third-party/project/LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "path": "licenses/third-party/qrcode-generator/LICENSE",
+      "bytes": 1071,
+      "sha256": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c"
+    },
+    {
+      "path": "release.json",
+      "bytes": 479,
+      "sha256": "21d8e4ad95b9fb19622b02da0acebdd191dd1d775f8f130e46f5702e0cda5001"
+    },
+    {
+      "path": "remote-lcd-v1.json",
+      "bytes": 1194,
+      "sha256": "43ecb1980ca1840ab499c2828cc08420a34e5e41f13853a8de6316afda9fda4f"
+    },
+    {
+      "path": "remote-protocol-v1.json",
+      "bytes": 7870,
+      "sha256": "466a406be11f010e452eca096ab3a01f6177f1078e8332d4473629e6931d0df3"
+    },
+    {
+      "path": "sources/LCD_DE3_91_App664_Simulatorquellen.zip",
+      "bytes": 79230,
+      "sha256": "526cc3383762009fb51fa70f0056930640ec2419ea224a9f29e17ab7722bec09"
+    },
+    {
+      "path": "sources/LCD_DE3_92_App665_Simulatorquellen.zip",
+      "bytes": 109332,
+      "sha256": "e87a623229d2670af4e89891a33386905b3a488f79a97a5c0557ee5a5ece55c8"
+    },
+    {
+      "path": "sources/LCD_DE3_94_App667_Simulatorquellen.zip",
+      "bytes": 113186,
+      "sha256": "f0ed195280830e35f7f4008841d572b131c8321a376bbc813d96b3064bd965e6"
+    },
+    {
+      "path": "sources/LCD_DE3_95_App668_Simulatorquellen.zip",
+      "bytes": 151894,
+      "sha256": "1cdab106676d84185f07a0686563f9e4c09e662ab2350264965729110358f776"
+    },
+    {
+      "path": "sources/LCD_DE3_96_App669_TEST1_Simulatorquellen.zip",
+      "bytes": 153464,
+      "sha256": "e135cea2079c45668a0392939dc3cf951b4270e6cdef6dcfe95e21f9211054dc"
+    },
+    {
+      "path": "sources/LCD_DE3_97_App670_TEST1_Simulatorquellen.zip",
+      "bytes": 153666,
+      "sha256": "a468091c0bba25424b2ba7ebcbfe9e147f7aeacb3c457ce808c5a63001d55608"
+    },
+    {
+      "path": "sources/LCD_DE3_98_App671_Simulatorquellen.zip",
+      "bytes": 153022,
+      "sha256": "49d6874f3562073b06081e80a5cfc09c871eaaac105b2e47583cd1ae66e164c6"
+    },
+    {
+      "path": "sources/LCD_DE3_99_App672_Simulatorquellen.zip",
+      "bytes": 151971,
+      "sha256": "dceecd21e37d0b02fd5bafc25f16bf7a90a7a8f0792d4479ea75878f5fb0c3bc"
+    }
+  ],
+  "fileCount": 290
+}

@@ -6,7 +6,7 @@ import DfuPackage from '../public/dfu/package.js';
 import Bundled from '../public/dfu/bundled-packages.js';
 import Updater from '../public/dfu/updater.js';
 import {nrfDfuLink} from '../public/dfu/nrf-dfu-link.mjs';
-import {lcdRelease, lcdReleasePackage as entry} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdRelease, lcdReleasePackage as entry} from '../public/dfu/lcd-app671-reference.mjs';
 import {lcdPreviews} from '../public/dfu/lcd-private-reference.mjs';
 import {packagePresentation, firmwarePackageText} from '../src/lib/release-packages.js';
 
@@ -25,11 +25,6 @@ test('normal App671 archive binds its ZIP, BIN and init target to the qualified 
   assert.equal(entry.file, 'Allmiibo_LCD_DE3_98_671_NUR_APP.zip');
   assert.equal(entry.channel, undefined);
   assert.equal(packagePresentation(entry).releaseNotesUrl, '/guide/index.html#lcd-de398');
-  for (const language of ['de_DE','en']) {
-    assert.match(firmwarePackageText(language).source, /DE3\.98 \/ App671/);
-    assert.match(firmwarePackageText(language).scope, /DE3\.98 \/ App671/);
-    assert.doesNotMatch(firmwarePackageText(language).scope, /confirmed operation|Besitzer bestätigte/);
-  }
   assert.equal(catalog.packages.filter(item => item.id === entry.id).length, 1);
   assert.deepEqual(catalog.packages.find(item => item.id === entry.id), entry);
   assert.equal(sha(original), lcdRelease.otaSha256);

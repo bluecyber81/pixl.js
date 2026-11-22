@@ -1,15 +1,15 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-19",
-  "version": "2.22.0-DE3.89",
-  "counter": 662,
+  "publication_date": "2026-11-22",
+  "version": "2.22.0-DE3.99",
+  "counter": 672,
   "board": "LCD",
-  "web_version": "3.58.2",
-  "web_publication_date": "2026-11-19",
+  "web_version": "3.62.0",
+  "web_publication_date": null,
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
-  "application_sha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+  "ota_sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+  "application_sha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0126"
@@ -37,26 +37,25 @@
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 170,
-  "evidence": "docs/validation/DE3_89.json",
+  "host_firmware_suites": 187,
+  "evidence": "https://github.com/bluecyber81/pixl.js/blob/release/lcd-de399-app672/docs/validation/DE3_99.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
   },
   "limits": [
-    "Matching LCD hardware/layout only.",
-    "Unsigned builds and host tests are not physical device proof.",
-    "Public inherited signing key does not prove exclusive publisher identity.",
-    "The App662 combined package was checked offline. Physical Android DFU interruption and resumption remain open."
+    "Matching LCD/ST7567 with existing PFS1, Z21 and S112 7.3.0 only.",
+    "Software, signed-package and actual linked ARM checks do not establish physical App672 device acceptance.",
+    "The inherited public signing key does not prove exclusive publisher identity.",
+    "The historical App662 combined system package remains separate; no new bootloader or SoftDevice is shipped."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
-  "device_validation_pending": false,
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2",
-  "web_device_readback_pending": false,
+  "device_validation_pending": true,
+  "web_device_readback_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
-  "device_readback_passed": true,
+  "device_readback_passed": false,
   "previous_device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
-  "production_source_id_sha256": "9596188378370a23812bb16e914dd7b47847e375cfd63e56279d8ffa9bbdf2e7",
+  "production_source_id_sha256": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
   "tested_bootloader": {
     "name": "Z21",
     "counter": 21,
@@ -64,9 +63,9 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "The owner-supplied 3.58.2 LCD diagnostic reports App662, the bound Z21 boot region and Nordic S112 7.3.0."
+    "qualification": "Seven actual linked Z21 ARM signature/hash/CRC checks and two init/bank-selection cases accept the signed App672 after App671 and on an empty application bank. Physical radio and flash are simulated."
   },
-  "web_host_test_scope": "Automated web suites, both production builds, download and launcher checks. See web_evidence and the workflow on the release commit.",
+  "web_host_test_scope": "Web3.62.0 unit, Python launcher, normal root and Pages builds, compiled workers, browser smoke and extracted portable checks. Exact counts and hash bindings are in web_evidence.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -76,14 +75,15 @@
     "ci_skipped": 3,
     "commit": "0df66ceafba94daee1c205de29e0f3df9d811b7c"
   },
-  "firmware_production_unchanged_since": "fecc8b750288f1028f109067dad9694c9f2c3628",
   "previous_web_validation": {
-    "version": "3.58.1",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1",
-    "evidence": "docs/validation/WEB3_58_1.json"
+    "version": "3.61.0",
+    "source_branch": "web-app671",
+    "source_commit": "72c33f42ab07baa76d6ba4aa92fac515441c0f8f",
+    "evidence": "docs/validation/WEB3_61_0.json",
+    "delivery": "docs/validation/WEB3_61_0_DELIVERY.json"
   },
-  "web_release_status": "release",
-  "web_release_notes": "web/LIESMICH_3_58_2.txt",
+  "web_release_status": "software-qualified-awaiting-publication",
+  "web_release_notes": "web/LIESMICH_3_62_0.txt",
   "web_personal_backup_status": "Personal backup benchmarks are recorded in the respective historical web evidence.",
   "web_changes": {
     "figure_usage": {
@@ -102,6 +102,8 @@
     "name_and_path_errors": "German and English explanations for name limits, alias collisions, reserved names and normalization, with affected name and suggested form.",
     "firmware_downloads": {
       "bundled": [
+        "DE3.99/672",
+        "DE3.98/671",
         "DE3.89/662",
         "DE3.88/661",
         "DE3.81/654",
@@ -122,7 +124,7 @@
         "DE3.73/646",
         "DE3.72/645"
       ],
-      "stable": "DE3.89/662",
+      "stable": "DE3.99/672",
       "prerelease": "DE3.87-OLEDt6/86 (OLED)"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
@@ -165,9 +167,13 @@
     "oled_browser_dfu": "Select the signed OLED Test 6 application for browser DFU. Test 5 and Test 4 remain available as earlier packages.",
     "web_3_58_0": "Compact mobile remote; bulk game-folder selection, default names and preview counts; App660 prerelease and release-asset links.",
     "web_3_58_1": "Offers OLED Test 6 browser DFU and phone downloads, bilingual guides and remote device selection by the advertised service or remote name. The file manager checks the remote status after connecting.",
-    "web_3_58_2": "Direct small-file reads, revision-checked folder upload and resume, cached directory listings for repeated searches, incremental CRC checks in browser DFU and an App662-specific capacity simulator."
+    "web_3_58_2": "Direct small-file reads, revision-checked folder upload and resume, cached directory listings for repeated searches, incremental CRC checks in browser DFU and an App662-specific capacity simulator.",
+    "web_3_61_0": "Normal App671 selection and exact package binding, matching PFS simulator and source archive, normal startup/radio/cleanup diagnostics, existing batch/digest backup path retained. Historical LCD test channels and OLED remain separately gated.",
+    "local_launcher": "Package version is shared by web UI, Python launcher/health and PowerShell; portable includes the same manifest.",
+    "battery_recording": "Displays record window, active logger duration and closed pauses separately; voltage samples are not measured current.",
+    "web_3_62_0": "One package version drives Web, Python launcher, health response and PowerShell; the release-branch CI runs Python launcher tests and portable verification. Normal App672 OTA, source identity and independently built PFS simulator are bound. Battery history separates measured-value span, record window, active logger time and closed pauses without estimating current or runtime."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+  "application_ota_path": "web/public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -177,16 +183,18 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "final",
-  "web_evidence": "docs/validation/WEB3_58_2.json",
-  "device_readback_evidence": "docs/validation/DE3_89_LCD_READBACK.json",
-  "fresh_public_unsigned_rebuild_matches_signed_application": true,
+  "status": "software-qualified-signed-normal",
+  "web_evidence": "docs/validation/WEB3_62_0.json",
+  "device_readback_evidence": null,
+  "fresh_public_unsigned_rebuild_matches_signed_application": false,
   "firmware_downloads": {
     "application": {
-      "file": "Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
-      "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
-      "counter": 662,
-      "url": "https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip"
+      "file": "Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+      "counter": 672,
+      "version": "2.22.0-DE3.99",
+      "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "bytes": 364877
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
@@ -200,7 +208,7 @@
       "androidPhases": 2,
       "applicationCounter": 662,
       "applicationVersion": "2.22.0-DE3.89",
-      "role": "Two-stage Android update for compatible LCD devices requiring S112 7.3.0 and Z21 before the App662 application. Follow the storage migration guide for SPIFFS.",
+      "role": "Historical two-stage Android system upgrade with App662 for compatible LCD devices requiring S112 7.3.0 and Z21. Afterwards install the separate App672 application; the package does not contain App672. Follow the storage migration guide for SPIFFS.",
       "url": "https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip"
     },
     "spiffs_preparation": {
@@ -221,7 +229,7 @@
     "stable_default_counter_at_publication": 637
   },
   "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/workflows/unsigned-firmware.yml",
-  "device_validation_scope": "The LCD owner reports successful practical use. The 3.58.2 diagnostic matches the App662 SourceID, LCD board, Z21 and PFS1 engine. Timed App662 upload with interruption and physical Android DFU recovery remain open.",
+  "device_validation_scope": "App672 has not been installed or observed on a physical device by these software qualification runs. The owner supplied an App671/DE3.98 diagnostic on 21 November; it is a preceding-build observation, not App672 acceptance.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "previous_lcd_release": {
     "version": "2.22.0-DE3.81",
@@ -233,7 +241,7 @@
     "device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.81"
   },
-  "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
+  "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de399-app672",
   "oled_test_release": {
     "version": "2.22.0-DE3.87-OLEDt6",
     "counter": 86,
@@ -266,8 +274,258 @@
     "host_firmware_suites": 169,
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1"
   },
-  "firmware_source_commit": "fecc8b750288f1028f109067dad9694c9f2c3628",
-  "hardware_acceptance": "owner-reported-general-use-and-system-readback-on-one-lcd",
-  "web_device_readback_scope": "Owner-supplied public 3.58.2 diagnostic with App662 on one LCD. No transfer was recorded.",
-  "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1"
+  "hardware_acceptance": "pending-for-this-build",
+  "web_device_readback_scope": "Web3.62.0 and App672 have no physical-device observation. Earlier App671/Web3.61.0 diagnostics remain separately attributed.",
+  "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1",
+  "firmware_preview_history": [
+    {
+      "version": "2.22.0-DE3.97",
+      "counter": 670,
+      "board": "LCD",
+      "test_label": "TEST1",
+      "status": "software-signature-z21-qualified-test1",
+      "hardware_acceptance": "pending",
+      "source_branch": "test/lcd-de397-app670-test1",
+      "source_publication_parent": "de9f457fac652153f71dc08243368f6283e1159c",
+      "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "ota_file": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "hardware_version": 52,
+      "softdevice_requirements": [
+        "0x0126"
+      ],
+      "application_only": true,
+      "bootloader_and_softdevice_replaced": false,
+      "migration_required_for_existing_pfs1": false,
+      "firmware_qualification_passed": true,
+      "pending_release_gates": [
+        "Web binding to real OTA bytes, full signed-package integration and test-path publication."
+      ],
+      "evidence": "docs/validation/DE3_97_TEST1.json",
+      "notes": "docs/validation/DE3_97_TEST1.md",
+      "web_version": "3.60.0-test.1",
+      "device_tests_pending": [
+        "Short bounded single/batch/single read and digest comparison",
+        "Startup diagnostic after device restart",
+        "Settings/save/discard persistence and longer normal operation"
+      ],
+      "normal_build_policy": "Select measured improvements for a later higher-counter normal build. No additional full backup is required just for the short comparison.",
+      "source_id": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+      "storage_engine_sha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+      "software_qualification_passed": true,
+      "source_commit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+      "production_source_commit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+      "local_production_source_commit": "91364b0b349905bc09351b5b151bf271b03ab850",
+      "production_tree_sha": "2eb76b42aab5a19a6ea90aa371365ced0d238f00",
+      "application_sha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+      "application_bytes": 363888,
+      "host_firmware_suites": 183,
+      "unsigned_review": {
+        "file": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_UNSIGNIERT_PRUEFPAKET.zip",
+        "bytes": 714576,
+        "sha256": "ba56f9c28792f72acb2ed164891698c14a97fcbb8f0bafd5bcd8b58823f85540",
+        "signed": false,
+        "installableDfuPackage": false
+      },
+      "delivery_status": "Signed App670 application-only package exists and passed software, signature and actual Z21 ARM qualification. Web binding/deployment and physical device acceptance remain pending.",
+      "signature_verified": true,
+      "z21_application_acceptance_passed": true,
+      "ota_sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+      "ota_bytes": 364489,
+      "qualification_date": "2026-11-21",
+      "web_deployment": "pending"
+    },
+    {
+      "version": "2.22.0-DE3.96",
+      "counter": 669,
+      "board": "LCD",
+      "test_label": "TEST1",
+      "status": "experimental-signed-application",
+      "hardware_acceptance": "pending",
+      "source_branch": "test/lcd-de396-app669-test1",
+      "source_publication_parent": "08a266ee8072bc75878cdfe533e2dc5b5c22e7ad",
+      "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip",
+      "ota_file": "fw/releases/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip",
+      "hardware_version": 52,
+      "softdevice_requirements": [
+        "0x0126"
+      ],
+      "application_only": true,
+      "bootloader_and_softdevice_replaced": false,
+      "migration_required_for_existing_pfs1": false,
+      "firmware_qualification_passed": true,
+      "pending_release_gates": [],
+      "evidence": "docs/validation/DE3_96_TEST1.json",
+      "notes": "docs/validation/DE3_96_TEST1.md",
+      "web_version": "3.59.0-test.1",
+      "device_tests_pending": [
+        "Complete verified backup in baseline and extended-event modes",
+        "Normal settings/save/discard and persistence",
+        "Read-only cleanup state before/after intended delete",
+        "Startup profile and longer normal operation"
+      ],
+      "normal_build_policy": "A later higher-counter normal build follows device results; this test does not claim hardware acceptance.",
+      "publication_date": "2026-11-21",
+      "qualification_date": "2026-11-21",
+      "source_commit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+      "production_source_commit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+      "local_production_source_commit": "6243a79875e8e84e2d24cd7de07111b718dd6131",
+      "production_tree_sha": "933cb36f17e6fb5f1bfb10eec3e56f11e9c70c4f",
+      "source_id": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+      "application_sha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+      "application_bytes": 363312,
+      "ota_sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+      "ota_bytes": 363913,
+      "storage_engine_sha256": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d",
+      "host_firmware_suites": 182,
+      "delivery_status": "Separate Web3.59.0-test.1/test/app669 publication recorded by its own delivery report."
+    },
+    {
+      "version": "2.22.0-DE3.95",
+      "counter": 668,
+      "board": "LCD",
+      "status": "experimental-signed-application",
+      "hardware_acceptance": "pending",
+      "publication_date": "2026-11-21",
+      "source_branch": "test/lcd-de395-app668",
+      "source_commit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+      "source_publication_parent": "22d5c92cc566fb7da9d43a538f2818d28bfb72a6",
+      "production_source_commit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+      "local_production_source_commit": "2bcb743180e645bdf0d84fa0dc0148a15bd07f00",
+      "production_tree_sha": "e8345c9096faf875648802fe493533ea1906414f",
+      "source_id": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+      "application_sha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+      "application_bytes": 361992,
+      "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+      "ota_file": "fw/releases/Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+      "ota_sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+      "ota_bytes": 362593,
+      "hardware_version": 52,
+      "softdevice_requirements": [
+        "0x0126"
+      ],
+      "application_only": true,
+      "storage_engine_sha256": "a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd",
+      "host_firmware_suites": 180,
+      "pending_release_gates": [],
+      "evidence": "docs/validation/DE3_95.json",
+      "notes": "docs/validation/DE3_95.md",
+      "bootloader_and_softdevice_replaced": false,
+      "migration_required_for_existing_pfs1": false,
+      "qualification_date": "2026-11-21",
+      "firmware_qualification_passed": true,
+      "device_tests_pending": [
+        "Observed phone RX/TX PHY and connection interval",
+        "Comparable end-to-end transfer timing",
+        "Physical upload abort/reconnect",
+        "Observed post-delete free-space update"
+      ],
+      "web_version": "3.58.6"
+    },
+    {
+      "version": "2.22.0-DE3.94",
+      "counter": 667,
+      "board": "LCD",
+      "status": "experimental-signed-application",
+      "hardware_acceptance": "pending",
+      "publication_date": "2026-11-20",
+      "source_branch": "test/lcd-de394-app667",
+      "source_commit": "22d5c92cc566fb7da9d43a538f2818d28bfb72a6",
+      "source_publication_parent": "acc045575cac6a1e81a22bf2626f73194dd35034",
+      "production_source_commit": "1d606c9faeedbb1fe31fb2c4547ad47818c04b75",
+      "validation_source_commit": "6f7b9c720f640f8487fe009509bb65cb56b5a79a",
+      "source_id": "1f5864e1279b7378d3cc685b73d80a3257aad8f6a29db27d1c880800b30c4e90",
+      "application_sha256": "99aa4dbe6f2bba9771b8b51d9e80cc26b4f38a96ad09ee3391ab13ed5fdf676f",
+      "application_bytes": 361032,
+      "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_94_667_NUR_APP.zip",
+      "ota_file": "fw/releases/Allmiibo_LCD_DE3_94_667_NUR_APP.zip",
+      "ota_sha256": "f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4",
+      "ota_bytes": 361633,
+      "hardware_version": 52,
+      "softdevice_requirements": [
+        "0x0126"
+      ],
+      "application_only": true,
+      "storage_engine_sha256": "7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e",
+      "host_firmware_suites": 178,
+      "pending_release_gates": [],
+      "evidence": "docs/validation/DE3_94.json",
+      "notes": "docs/validation/DE3_94.md",
+      "bootloader_and_softdevice_replaced": false,
+      "migration_required_for_existing_pfs1": false,
+      "qualification_date": "2026-11-20",
+      "firmware_qualification_passed": true
+    },
+    {
+      "version": "2.22.0-DE3.93",
+      "counter": 666,
+      "board": "LCD",
+      "status": "historical-preview-on-hold",
+      "hardware_acceptance": "pending",
+      "publication_date": "2026-11-20",
+      "source_branch": "test/lcd-de393-app666",
+      "source_id": "415e85895e35e4f06cede89d6efbbe7e905290205723f0b31e9ddda9f05ac12a",
+      "application_sha256": "bc08b79455d525667c03a1c03193bfb8d11a2e0416331dcc0d8ed90381550652",
+      "application_bytes": 357964,
+      "ota_file": "fw/releases/Allmiibo_LCD_DE3_93_666_NUR_APP.zip",
+      "ota_sha256": "b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e",
+      "ota_bytes": 358565,
+      "application_only": true,
+      "storage_engine_sha256": "7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e",
+      "host_firmware_suites": 177,
+      "evidence": "docs/validation/DE3_93.json",
+      "notes": "docs/validation/DE3_93_FIRMWARE.md",
+      "bootloader_and_softdevice_replaced": false,
+      "migration_required_for_existing_pfs1": false,
+      "source_commit": "73415809be417f1242c9ca409f77ad61ab07d876",
+      "audit_commit": "acc045575cac6a1e81a22bf2626f73194dd35034",
+      "installation_recommended": false,
+      "hold_reason": "AmiiboDB sorting could block its normal exit on permanent save failure; main Settings lacked a confirmed discard exit. Corrected by the subsequent App667 candidate."
+    }
+  ],
+  "firmware_channel": "normal",
+  "release_status": "software-qualified-signed-normal",
+  "version_header_sha256": "de1ad2cc8eca058c4946c8b303d5458d24d57b8402c11b1c4ed5d4c596599f31",
+  "firmware_source_branch": "release/lcd-de399-app672",
+  "application_bytes": 364276,
+  "firmware_source_commit": "9fb9d84b51365cf33f745896243f4cd6e934e637",
+  "local_production_commit": "5dab8cace08687101ea71aa3131f46fb1fef1d9e",
+  "production_tree_sha": "233aec9e567495ddd25d002ec05e61173f9eac7b",
+  "ota_bytes": 364877,
+  "qualification_date": "2026-11-22",
+  "signature_verified": true,
+  "z21_application_acceptance_passed": true,
+  "application_ota_signature": "ECDSA-P256",
+  "firmware_notes": "https://github.com/bluecyber81/pixl.js/blob/release/lcd-de399-app672/docs/DE3_99_RELEASE.md",
+  "firmware_evidence": "https://github.com/bluecyber81/pixl.js/blob/release/lcd-de399-app672/docs/validation/DE3_99.json",
+  "host_firmware_suite_method": "Final isolated full run: 187/187 passed, no omissions. The first 186/187 attempt is retained; its single stale DE2 app mock was updated to the new import continuation, preserving assertions, before the entire full run passed.",
+  "independent_local_unsigned_rebuilds_match_signed_application": true,
+  "unsigned_rebuild_scope": "Two isolated local builds have identical BIN and HEX bytes and match the signed application. A canonical release-mode build validates RELEASE_INFO and the same application hash.",
+  "web_source_branch": "web-app672",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app672/web",
+  "previous_normal_lcd_release": {
+    "version": "2.22.0-DE3.98",
+    "counter": 671,
+    "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671",
+    "application_sha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+    "ota_sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+    "production_source_id_sha256": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+    "evidence": "docs/validation/DE3_98.json",
+    "device_observation": "Owner-supplied diagnostic from 2026-11-21: reported version/counter/SourceID match App671; no on-device full-BIN hash or unique-device proof."
+  },
+  "normal_lcd_release_history": [
+    {
+      "version": "2.22.0-DE3.89",
+      "counter": 662,
+      "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
+      "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
+    }
+  ],
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.62.0",
+  "firmware_source_scope": "Production firmware is in the explicitly linked release/lcd-de399-app672 commit. Inherited fw/ files on this web branch are historical and are not the App672 production source.",
+  "web_qualification_date": "2026-11-22",
+  "web_test_total": 2118,
+  "web_test_passed": 2115,
+  "web_test_skipped": 3,
+  "web_test_failed": 0
 }

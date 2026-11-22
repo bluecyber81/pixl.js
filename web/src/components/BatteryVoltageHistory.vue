@@ -21,7 +21,10 @@
       </figcaption>
       <dl class="history-stats">
         <div><dt>{{ de ? 'Gültige Werte' : 'Valid readings' }}</dt><dd>{{ historySummary.count }}</dd></div>
-        <div><dt>{{ de ? 'Zeitraum inkl. Pausen' : 'Span including pauses' }}</dt><dd>{{ spanLabel }}</dd></div>
+        <div><dt>{{ de ? 'Erster bis letzter Messwert' : 'First to last reading' }}</dt><dd>{{ spanLabel }}</dd></div>
+        <div><dt>{{ de ? 'Protokollzeit inkl. Pausen' : 'Logged span including pauses' }}</dt><dd>{{ durationLabel(historyTiming.elapsedMilliseconds) }}</dd></div>
+        <div><dt>{{ de ? 'Aktive Loggerzeit' : 'Active logging time' }}</dt><dd>{{ durationLabel(historyTiming.activeMilliseconds) }}</dd></div>
+        <div><dt>{{ de ? 'Pausendauer' : 'Paused time' }}</dt><dd>{{ durationLabel(historyTiming.pausedMilliseconds) }}</dd></div>
         <div><dt>{{ de ? 'Minimum – Maximum' : 'Minimum – maximum' }}</dt><dd class="range-value">{{ voltage(historySummary.min) }} – {{ voltage(historySummary.max) }}</dd></div>
         <div><dt>{{ de ? 'Spannungsbereich' : 'Voltage spread' }}</dt><dd>{{ historySummary.range }} <small>mV</small></dd></div>
       </dl>
@@ -33,8 +36,11 @@
         </svg>
       </div>
       <div class="time-axis"><time :datetime="iso(chart.startAt)">{{ time(chart.startAt) }}</time><time :datetime="iso(chart.endAt)">{{ time(chart.endAt) }}</time></div>
-      <p class="chart-note">{{ de ? 'Die Höhenachse folgt dem sichtbaren Spannungsbereich. Lücken bleiben offen. Die Zeitachse zeigt die Uhrzeiten aller Einträge im Browser. Die Dauer oben reicht vom ersten bis zum letzten gültigen Messwert.' : 'The vertical axis follows the visible voltage range. Gaps stay open. The time axis shows when the browser received each entry. The duration above runs from the first to the last valid reading.' }}</p>
-      <p v-if="historySummary.clockAdjusted" class="chart-note">{{ de ? 'Die Browseruhr wurde zurückgestellt. Der Zeitraum wird deshalb nicht berechnet.' : 'The browser clock moved backwards, so the time span is unavailable.' }}</p>
+      <p class="chart-note">{{ de ? 'Die Höhenachse folgt dem sichtbaren Spannungsbereich. Lücken bleiben offen. Die Zeitachse zeigt die Uhrzeiten aller Einträge im Browser. Die Messwert-Zeitspanne reicht vom ersten bis zum letzten gültigen Wert. Die Protokollzeit umfasst auch Pausenmarker; aktive Loggerzeit zählt die Abschnitte ohne aufgezeichnete Pause.' : 'The vertical axis follows the visible voltage range. Gaps stay open. The time axis shows when the browser received each entry. The reading span runs from the first to the last valid value. The logged span also includes pause markers; active logging time counts intervals without a recorded pause.' }}</p>
+      <p class="chart-note">{{ de ? 'Alle Dauern beziehen sich auf das sichtbare Protokollfenster. Aktive Loggerzeit beschreibt den Loggerzustand zwischen den Ablesungen des gespeicherten Spannungswerts.' : 'All durations cover the visible log window. Active logging time describes the logger state between reads of the cached voltage value.' }}</p>
+      <p v-if="historyTiming.truncated" class="chart-note">{{ de ? 'Ältere Einträge sind bereits entfallen. Die Zeiten umfassen nur die letzten 120 gespeicherten Einträge.' : 'Older entries have been removed. Durations cover only the latest 120 retained entries.' }}</p>
+      <p v-if="historySummary.clockAdjusted || historyTiming.clockAdjusted" class="chart-note">{{ de ? 'Die Browseruhr wurde zurückgestellt. Die Dauern werden deshalb nicht berechnet.' : 'The browser clock moved backwards, so durations are unavailable.' }}</p>
+      <p v-else-if="historyTiming.invalidEntries" class="chart-note">{{ de ? 'Unvollständige Zeit- oder Zustandsangaben verhindern die Berechnung der Loggerdauer.' : 'Incomplete time or state information prevents calculation of logging durations.' }}</p>
     </figure>
     <p v-else class="history-empty">{{ de ? 'Noch kein gültiger Spannungswert in dieser Aufzeichnung.' : 'No valid voltage reading in this recording yet.' }}</p>
     <details v-if="rows.length">
@@ -54,7 +60,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { formatBatteryVoltage, normalizePowerDiagnostics } from '../lib/power-diagnostics.js';
-import { batteryHistoryChart, batteryHistoryCsv, batteryHistorySummary, BATTERY_HISTORY_INTERVAL, BATTERY_HISTORY_LIMIT } from '../lib/battery-history.js';
+import { batteryHistoryChart, batteryHistoryCsv, batteryHistorySummary, batteryHistoryTiming, BATTERY_HISTORY_INTERVAL, BATTERY_HISTORY_LIMIT } from '../lib/battery-history.js';
 import { saveBlob } from '../lib/browser-tools.js';
 
 const props = defineProps({ locale: String, connected: Boolean, blocked: Boolean, blockedReason: String,
@@ -69,6 +75,7 @@ const recentFirst = computed(() => [...rows.value].reverse());
 const lastValid = computed(() => recentFirst.value.find(row => row.mv !== null));
 const chart = computed(() => batteryHistoryChart(rows.value));
 const historySummary = computed(() => batteryHistorySummary(rows.value));
+const historyTiming = computed(() => batteryHistoryTiming(rows.value));
 const running = ref(false);
 const waitingForReading = computed(() => running.value && !paused.value && rows.value.at(-1)?.reason === 'pause');
 const saveFailed = ref(false);
@@ -89,13 +96,13 @@ const iso = at => new Date(at).toISOString();
 const voltage = mv => formatBatteryVoltage(mv, props.locale);
 const charge = flag => flag === null ? (de.value ? 'Unbekannt' : 'Unknown') :
   flag ? (de.value ? 'Lädt' : 'Charging') : (de.value ? 'Inaktiv' : 'Inactive');
-const spanLabel = computed(() => {
-  const ms = historySummary.value.elapsedMilliseconds;
+function durationLabel(ms) {
   if (ms === null) return '—';
   const seconds = Math.floor(ms / 1000);
   const hours = Math.floor(seconds / 3600), minutes = Math.floor(seconds / 60) % 60;
   return `${hours ? hours + ' h ' : ''}${minutes} min ${seconds % 60} s`;
-});
+}
+const spanLabel = computed(() => durationLabel(historySummary.value.elapsedMilliseconds));
 function eventLabel(row) {
   if (row.reason !== 'pause' && row.reason !== 'resume') return de.value ? 'Kein gültiger Spannungswert' : 'Voltage unavailable';
   const reasons = de.value ? {

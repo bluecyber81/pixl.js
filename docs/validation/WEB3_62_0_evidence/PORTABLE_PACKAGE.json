@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "3.62.0",
+  "archive": "Allmiibo_Dateimanager_3_62_0_Portable.zip",
+  "bytes": 11163187,
+  "sha256": "d917fe47fc9c6c66a1de8e73ff596a39ee6380ce55e7f8d3f6c61b63d00ca2c1",
+  "files": 303,
+  "portableManifestSha256": "09eb81b79e8020668ec72176d0a7a977b34159bb579876ef70040c2e0a9f7fb4",
+  "nativeExecutable": false,
+  "verification": {
+    "path": "PORTABLE_VERIFICATION.json",
+    "sha256": "39dc9caab5e782f902ca80b1900f7cbbbabdb04c89be6f90382b2cdce68a685d"
+  }
+}

@@ -8,6 +8,7 @@ import { createRequire } from 'node:module'
 import { noticeFiles, webRoot } from '../../scripts/copy-license-notices.mjs'
 import { lcdPreview, lcdPreview669, lcdPreview668, lcdPreview667, lcdPreviewPackages } from '../../public/dfu/lcd-private-reference.mjs'
 import { lcdRelease } from '../../public/dfu/lcd-release-reference.mjs'
+import { lcdRelease as app671 } from '../../public/dfu/lcd-app671-reference.mjs'
 
 const dist = path.resolve(process.env.ALLMIIBO_DIST_DIR || fileURLToPath(new URL('../../dist', import.meta.url)))
 const base = process.env.ALLMIIBO_TEST_BASE_PATH || '/'
@@ -107,7 +108,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.ok(index.includes(`href="${file}"`), file)
   }
   for (const releaseFile of [
-    'web3.58.2/Allmiibo_Dateimanager_3_58_2_Quellcode.zip',
+    'web3.62.0/Allmiibo_Dateimanager_3_62_0_Quellcode.zip',
     'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
@@ -123,7 +124,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   assert.match(index, /historische/)
 })
 
-for (const [reference,profile,name] of [[lcdRelease,'de398','LCD_DE3_98_App671_Simulatorquellen.zip'],[lcdPreview,'de397','LCD_DE3_97_App670_TEST1_Simulatorquellen.zip'],[lcdPreview669,'de396','LCD_DE3_96_App669_TEST1_Simulatorquellen.zip'],[lcdPreview668,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
+for (const [reference,profile,name] of [[lcdRelease,'de399','LCD_DE3_99_App672_Simulatorquellen.zip'],[app671,'de398','LCD_DE3_98_App671_Simulatorquellen.zip'],[lcdPreview,'de397','LCD_DE3_97_App670_TEST1_Simulatorquellen.zip'],[lcdPreview669,'de396','LCD_DE3_96_App669_TEST1_Simulatorquellen.zip'],[lcdPreview668,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
 test(`${base}: the App${reference.applicationCounter} source download resolves to its complete archive and exact firmware binding`, async () => {
   const index = read('licenses/index.html')
   const links = [...index.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(match => match[1].endsWith(name))
@@ -132,7 +133,7 @@ test(`${base}: the App${reference.applicationCounter} source download resolves t
   const file = localFile(new URL(links[0][1], origin + base + 'licenses/index.html'))
   const bytes = fs.readFileSync(file)
   assert.deepEqual(bytes, fs.readFileSync(path.join(webRoot, 'public/sources', name)))
-  const referenceFile = reference === lcdRelease ? 'lcd-release-reference.mjs' : 'lcd-private-reference.mjs'
+  const referenceFile = reference === lcdRelease ? 'lcd-release-reference.mjs' : reference === app671 ? 'lcd-app671-reference.mjs' : 'lcd-private-reference.mjs'
   assert.deepEqual(fs.readFileSync(path.join(dist, 'dfu', referenceFile)),
     fs.readFileSync(path.join(webRoot, 'public/dfu', referenceFile)))
   const require = createRequire(import.meta.url)
@@ -143,7 +144,7 @@ test(`${base}: the App${reference.applicationCounter} source download resolves t
   assert.equal(binding.applicationCounter, reference.applicationCounter)
   assert.equal(binding.applicationBinSha256, reference.applicationBinSha256)
   assert.equal(binding.applicationBytes, reference.applicationBytes)
-  if (reference === lcdRelease) {
+  if ([lcdRelease, app671].includes(reference)) {
     assert.equal(binding.firmwareChannel, 'normal')
     assert.equal(binding.hardwareAcceptance, 'pending-for-this-build')
     assert.equal(binding.productionCommit, reference.productionCommit)

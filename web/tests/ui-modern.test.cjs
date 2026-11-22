@@ -69,6 +69,8 @@ function harness(overrides = {}) {
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
   context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
+  context.app671 = require('../public/dfu/lcd-app671-reference.mjs').lcdRelease;
+  context.release = require('../package.json');
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/power-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/language-preference.js'), 'utf8'), context);
@@ -680,7 +682,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.61.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.62.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -692,7 +694,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.61.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.62.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -779,7 +781,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.61.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.62.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1961,10 +1963,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.61.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.62.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.61.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.62.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2879,7 +2881,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.61.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.62.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -3259,7 +3261,8 @@ test('App669 phone test uses the real bounded module through the real App adapte
 });
 
 
-// Exercise the normal App671 UI entry point, backup engine, wire queue and ZIP
+for (const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99']]) {
+// Exercise the normal LCD UI entry point, backup engine, wire queue and ZIP
 // reader together. Only the peripheral and the browser boundary are simulated.
 async function app671BackupHarness(settings={}) {
  const {createBackup,createBackupCheckpoint}=await import('../src/lib/backup.js');
@@ -3282,12 +3285,12 @@ async function app671BackupHarness(settings={}) {
   get_transport_diagnostics:()=>wire.api.get_transport_diagnostics(),
   get_mtu_diagnostics:(...args)=>wire.api.get_mtu_diagnostics(...args)
  });
- const app=connected(h);app.firmwareVersion='2.22.0-DE3.98';app.storeBackup=false;
+ const app=connected(h);app.firmwareVersion=normalVersion;app.storeBackup=false;
  wire.bus.on('ble_disconnected',()=>app.on_ble_disconnected());
  return{...h,app,vfs,wire,setRevision:value=>{revision=value;}};
 }
 
-test('App671 ordinary backup and cached ZIP use actual READ/DIGEST batches without a test panel',async()=>{
+test(`App${normalCounter} ordinary backup and cached ZIP use actual READ/DIGEST batches without a test panel`,async()=>{
  const {loadBackupReference,loadBackupZip,readBackupArchiveFile}=await import('../src/lib/zip-import.js');
  const JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js');
  const f=await app671BackupHarness();
@@ -3317,7 +3320,7 @@ test('App671 ordinary backup and cached ZIP use actual READ/DIGEST batches witho
  assert.equal(f.wire.errors.length,0);assert.equal(f.wire.timers.size,0);assert.equal(f.app.busy,false);
 });
 
-test('App671 ordinary backup falls back only when batch capability is explicitly absent',async()=>{
+test(`App${normalCounter} ordinary backup falls back only when batch capability is explicitly absent`,async()=>{
  const f=await app671BackupHarness({batch:false});await f.app.on_backup();
  assert.equal(f.app.lastTransfer.status,'success');assert.equal(f.app.lastBackup.manifest.files,6);
  assert.equal(f.wire.requests.filter(r=>r[0]===0x25).length,1);
@@ -3326,7 +3329,7 @@ test('App671 ordinary backup falls back only when batch capability is explicitly
  assert.equal(f.wire.errors.length,0);assert.equal(f.wire.timers.size,0);
 });
 
-test('App671 ordinary backup never caches a partial batch or continues after abort at the response boundary',async()=>{
+test(`App${normalCounter} ordinary backup never caches a partial batch or continues after abort at the response boundary`,async()=>{
  for(const mode of ['truncated','abort']){
   let app;
   const f=await app671BackupHarness({batchReply:({payload})=>{
@@ -3342,18 +3345,20 @@ test('App671 ordinary backup never caches a partial batch or continues after abo
  }
 });
 
-test('App671 full diagnosis keeps normal PXGC while the experimental panel stays unavailable',async()=>{
+test(`App${normalCounter} full diagnosis keeps normal PXGC while the experimental panel stays unavailable`,async()=>{
  const {parseStorageGcDiagnostics}=require('../src/lib/device-extra-diagnostics.js');
  const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/packed-gc-diagnostic-v1.json'),'utf8')).cases.find(x=>x.name==='clean');
  const cleanup=parseStorageGcDiagnostics(Buffer.from(fixture.hex,'hex')),versions=[];
  const h=harness({vfs_storage_info_extended:async()=>({status:0,data:storageInfo}),
   vfs_storage_layout:async()=>({status:0,data:storageLayout}),
   get_storage_gc_diagnostics:async version=>{versions.push(version);return cleanup;}}),app=connected(h);
- app.firmwareVersion='2.22.0-DE3.98';await app.read_all_diagnostics();
- assert.deepEqual(versions,['2.22.0-DE3.98']);assert.equal(app.lcdTestSupported,false);assert.equal(app.lcdCleanupSupported,true);
+ app.firmwareVersion=normalVersion;await app.read_all_diagnostics();
+ assert.deepEqual(versions,[normalVersion]);assert.equal(app.lcdTestSupported,false);assert.equal(app.lcdCleanupSupported,true);
  assert.equal(app.fullDiagnosticSnapshot.sections.storage.state,'available');
  assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.cleanup.cleanupState,'clean');
  assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.cleanup.lastGcResult,0);
  const panel=descriptor.template.content.match(/<LcdTestPanel[^>]+>/)[0];
  assert.match(panel,/v-if="visitedWorkspaces.has\('device'\) && lcdTestSupported"/);
 });
+
+}

@@ -1,14 +1,14 @@
 # Allmiibo Dateimanager
 
-## Normale Ausgabe 3.61.0 und LCD DE3.98 / App671
+## Normale Ausgabe 3.62.0 und LCD DE3.99 / App672
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App671 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App672 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip)
 
-Die normale Ausgabe übernimmt die bereits in App670 erprobten Batch-/Digest-Pfade und bindet die neue LCD-Firmware App671 exakt an ihre signierten Paketbytes und den zugehörigen Speicherbedarfssimulator. Normale Link-, Start- und Speicherdiagnosen bleiben verfügbar. Experimentelle Funk- und Profilingfunktionen werden für App671 nicht angeboten.
+Diese normale Ausgabe behebt den lokalen Python-/CMD-Start über eine gemeinsame Versionsquelle und prüft den tatsächlich gepackten Portable-Lieferweg. Der Akkuverlauf ergänzt aktive Loggerzeit und Pausendauer innerhalb des sichtbaren Protokollfensters. App672 behält die vorhandenen Batch-/Digest-Pfade und erhält eine eigene exakte Paket- und Simulatorbindung. Experimentelle Funksetter bleiben für die normale Firmware gesperrt.
 
-[Versionshinweise](LIESMICH_3_61_0.txt) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671) · [Simulatorquellen](third-party/packed-simulator-de398/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_98_PFS.json)
+[Bedienung und Änderungen](LIESMICH_3_62_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_62_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637) · [Simulatorquellen](third-party/packed-simulator-de399/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_99_PFS.json)
 
-Die vorherigen Testpfade bleiben getrennt erhalten. LCD/ST7567, OLED/SH1106 und historische private Ausgaben behalten eigene Paket- und Versionsbindungen. Die physische Erprobung der neuen App671 ist von den vorhandenen App670-Gerätebelegen getrennt.
+Die vorherigen normalen, privaten und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete. Praktische Geräteabnahme und native Windowsausführung werden getrennt von den hier dokumentierten Softwareprüfungen berichtet.
 
 ## Frühere Ausgaben
 
@@ -360,3 +360,13 @@ Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 Die Web-Tests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Für die stabile App DE3.65 sind Bluetooth-Auslesung, NFC, Scrollbalken und Aufwachen am LCD bestätigt. Mit DE3.66 und Web 3.40.0 wurden das Displayfoto sowie die Fortsetzung einer Sicherung mit zwei Dateien über Windows-Bluetooth bestätigt. [Geräteprüfung und Testumfang](https://github.com/bluecyber81/pixl.js/blob/main/docs/validation/DE3_66_LCD_READBACK.md). [Gerätebefund DE3.65](https://github.com/bluecyber81/pixl.js/blob/web3.39.5/docs/validation/DE3_65_LCD_READBACK.json) · [Prüfnachweise DE3.66](https://github.com/bluecyber81/pixl.js/blob/de3.66/docs/validation/DE3_66.json)
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.
+
+## Archiv: normale Ausgabe 3.61.0 und LCD DE3.98 / App671
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App671 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip)
+
+Die normale Ausgabe übernimmt die bereits in App670 erprobten Batch-/Digest-Pfade und bindet die neue LCD-Firmware App671 exakt an ihre signierten Paketbytes und den zugehörigen Speicherbedarfssimulator. Normale Link-, Start- und Speicherdiagnosen bleiben verfügbar. Experimentelle Funk- und Profilingfunktionen werden für App671 nicht angeboten.
+
+[Versionshinweise](LIESMICH_3_61_0.txt) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671) · [Simulatorquellen](third-party/packed-simulator-de398/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_98_PFS.json)
+
+Die vorherigen Testpfade bleiben getrennt erhalten. LCD/ST7567, OLED/SH1106 und historische private Ausgaben behalten eigene Paket- und Versionsbindungen. Die physische Erprobung der neuen App671 ist von den vorhandenen App670-Gerätebelegen getrennt.

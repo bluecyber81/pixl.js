@@ -13,8 +13,8 @@ const legacy = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.js
   .packages.find(entry => entry.id === 'de3.89-lcd-app');
 // UI-only identity fixture. Real package bytes, hashes and signatures have their
 // own release gates; this descriptor does not stand in for a signed package.
-const normal = { id:'de3.98-lcd-app', version:'2.22.0-DE3.98', counter:671,
-  file:'Allmiibo_LCD_DE3_98_671_NUR_APP.zip', bootloader:'Z21' };
+const normal = { id:'de3.99-lcd-app', version:'2.22.0-DE3.99', counter:672,
+  file:'Allmiibo_LCD_DE3_99_672_NUR_APP.zip', bootloader:'Z21' };
 const normalUrl = deploymentPath('firmware/' + normal.file);
 const comboUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/' +
   'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
@@ -32,16 +32,16 @@ const mount = (props = {}, packages = [normal, legacy]) => mountSfc(url,
   { connected:false, version:'', boot:null, locale:'de_DE', ...props },
   { '../data/firmware-releases.json':{default:{packages}} });
 
-test('normal App671 download uses the local package while the Z21 full package keeps its actual App662 identity', async () => {
+test('normal App672 download uses the local package while the Z21 full package keeps its actual App662 identity', async () => {
   const h = await mount();
   try {
     assert(links(h).includes(normalUrl)); assert(links(h).includes(comboUrl));
-    assert.match(text(h.root), /Aktuell · DE3\.98 \/ App671 herunterladen/);
-    assert.match(text(h.root), /ältere App662/); assert.match(text(h.root), /Danach DE3\.98 \/ App671/);
+    assert.match(text(h.root), /Aktuell · DE3\.99 \/ App672 herunterladen/);
+    assert.match(text(h.root), /ältere App662/); assert.match(text(h.root), /Danach DE3\.99 \/ App672/);
     assert.doesNotMatch(text(h.root), /TEST1|Test 1|Testversion/);
-    assert(!links(h).some(href => href.includes('/releases/download/de3.98/')));
+    assert(!links(h).some(href => href.includes('/releases/download/de3.99/')));
     h.state.locale = 'en'; await h.tick();
-    assert.match(text(h.root), /Current · Download DE3\.98 \/ App671/);
+    assert.match(text(h.root), /Current · Download DE3\.99 \/ App672/);
     assert.match(text(h.root), /older App662/);
   } finally { h.app.unmount(); }
 });
@@ -53,9 +53,9 @@ test('normal and legacy downloads keep separate real boot, board and downgrade g
     h.state.version = '2.22.0-DE3.60'; h.state.boot = boot(632, true); await h.tick();
     assert(!links(h).includes(normalUrl)); assert(links(h).includes(comboUrl));
     h.state.boot = boot(670, true); await h.tick();
-    assert(!links(h).includes(normalUrl)); assert(!links(h).includes(comboUrl), 'App671 must not authorize an App662 downgrade');
+    assert(!links(h).includes(normalUrl)); assert(!links(h).includes(comboUrl), 'App672 must not authorize an App662 downgrade');
     for (const [version, info] of [
-      ['2.22.0-DE3.97', null], ['2.22.0-DE3.99', boot(672)], ['2.22.0-DE3.87-OLEDt6', boot()]
+      ['2.22.0-DE3.97', null], ['2.22.0-DE3.100', boot(673)], ['2.22.0-DE3.87-OLEDt6', boot()]
     ]) {
       h.state.version = version; h.state.boot = info; await h.tick();
       assert(!links(h).includes(normalUrl)); assert(!links(h).includes(comboUrl));
@@ -63,10 +63,10 @@ test('normal and legacy downloads keep separate real boot, board and downgrade g
   } finally { h.app.unmount(); }
 });
 
-test('a catalog without the normal package never invents an App671 download', async () => {
+test('a catalog without the normal package never invents an App672 download', async () => {
   const h = await mount({}, [legacy]);
   try {
-    assert(!links(h).includes(normalUrl)); assert.doesNotMatch(text(h.root), /App671|DE3\.98/);
+    assert(!links(h).includes(normalUrl)); assert.doesNotMatch(text(h.root), /App672|DE3\.99/);
     assert(links(h).includes(comboUrl));
   } finally { h.app.unmount(); }
 });

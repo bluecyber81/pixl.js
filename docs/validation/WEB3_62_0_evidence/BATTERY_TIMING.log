@@ -1,0 +1,47 @@
+✔ battery CSV retains the first four columns and adds an explicit optional pause reason (2.263925ms)
+✔ pause reasons use a fixed vocabulary and cannot inject extra CSV columns (0.706337ms)
+✔ de_DE: statistics show valid cached readings and their receipt span, excluding a missing voltage (109.647585ms)
+✔ en_US: statistics show valid cached readings and their receipt span, excluding a missing voltage (32.426785ms)
+✔ German pause and resume labels preserve the cause and include the pause in the receipt span (21.474861ms)
+✔ waiting for a fresh response has a neutral badge and becomes recording only after the new reading (17.496697ms)
+✔ the last 120 entries include pause markers, so statistics count only the retained valid readings (146.568164ms)
+✔ moving the browser clock backwards hides duration without replacing valid voltages (28.99148ms)
+✔ empty or absent battery history has no invented voltage or elapsed time (1.331526ms)
+✔ summary describes received samples and separates explicit gaps from measured values (1.191399ms)
+✔ a single valid sample has a zero receipt span and zero voltage range (0.206964ms)
+✔ malformed rows never become zero volts, NaN statistics or valid samples (0.295113ms)
+✔ a backwards receipt clock preserves voltages but cannot claim an elapsed duration (0.321282ms)
+✔ duplicate receipt times are valid and malformed rows do not create clock adjustments (0.223999ms)
+✔ summary never changes or retains caller rows and counts missing readings separately (0.316625ms)
+✔ resume markers are counted separately and cannot double the number of gaps (0.172593ms)
+✔ empty recording has no observed interval; a single reading has a zero observed interval (2.022621ms)
+✔ uninterrupted readings measure elapsed logger time, independent of their voltage values (0.251049ms)
+✔ busy to hidden changes keep one paused interval and same-time resume/reading adds no time (0.250848ms)
+✔ terminal manual stop closes the observed window without extrapolating the later pause (0.470351ms)
+✔ completed manual pause and later restart contribute time only inside recorded markers (0.209487ms)
+✔ an invalid voltage reading is an active query outcome, not a fabricated pause (0.205682ms)
+✔ truncated history begins in pause state without inventing an earlier session start (0.173194ms)
+✔ a rolling 120-entry reading window measures only its retained time range (0.309054ms)
+✔ a retained resume or invalid observation starts an active visible interval (0.287763ms)
+✔ backwards browser clock makes duration unavailable instead of negative or apparently healthy zero (0.303565ms)
+✔ invalid timestamps invalidate the timing result rather than silently bridging bad entries (0.314482ms)
+✔ unknown or malformed state entries do not turn missing state into active or paused time (0.213183ms)
+✔ timing leaves supplied records intact (0.357685ms)
+✔ no traffic before opt-in; history records only valid voltage and distinguishes unavailable charge flag (102.957614ms)
+✔ blocks overlapping polls and discards replies from before a transfer, hidden tab or disconnect (34.544666ms)
+✔ old firmware and protocol errors stop with translated status; busy transport is retried (18.643382ms)
+✔ explicit CSV download includes UTC receipt times, raw mV and explicit gaps without identity or guessed values (16.472543ms)
+✔ history drops oldest entries and the chart leaves gaps across clock or sampling discontinuities (157.337602ms)
+✔ first recording has no resume marker; manual stop and restart preserve the reason once (32.746074ms)
+✔ overlapping busy, hidden and closed-view pauses record cause changes without duplicate markers (14.821709ms)
+✔ occupied transport, missing voltage, unsupported firmware and failure remain separate observations (18.77204ms)
+✔ rapid stop and start cannot reuse a pending pre-stop sample or overlap polls (18.36347ms)
+✔ reconnect clears the old history and cannot attach an old answer or resume marker to the new session (14.323687ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 719.231117

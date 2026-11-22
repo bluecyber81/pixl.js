@@ -46,7 +46,10 @@ for (const locale of ['de_DE', 'en_US']) {
     const de = locale === 'de_DE';
     const valuesOnScreen = stats(h.root);
     assert.equal(valuesOnScreen[de ? 'Gültige Werte' : 'Valid readings'], '2');
-    assert.equal(valuesOnScreen[de ? 'Zeitraum inkl. Pausen' : 'Span including pauses'], '0 min 10 s');
+    assert.equal(valuesOnScreen[de ? 'Erster bis letzter Messwert' : 'First to last reading'], '0 min 10 s');
+    assert.equal(valuesOnScreen[de ? 'Protokollzeit inkl. Pausen' : 'Logged span including pauses'], '0 min 20 s');
+    assert.equal(valuesOnScreen[de ? 'Aktive Loggerzeit' : 'Active logging time'], '0 min 20 s');
+    assert.equal(valuesOnScreen[de ? 'Pausendauer' : 'Paused time'], '0 min 0 s');
     assert.equal(valuesOnScreen[de ? 'Minimum – Maximum' : 'Minimum – maximum'],
       de ? '4,187 V – 4,189 V' : '4.187 V – 4.189 V');
     assert.match(valuesOnScreen[de ? 'Spannungsbereich' : 'Voltage spread'], /^2\s*mV$/);
@@ -71,7 +74,9 @@ test('German pause and resume labels preserve the cause and include the pause in
   await h.hide(false);
   assert.equal(reads, 2);
   assert.match(text(h.root), /Fortgesetzt · zuvor: Tab im Hintergrund/);
-  assert.equal(stats(h.root)['Zeitraum inkl. Pausen'], '1 min 1 s');
+  assert.equal(stats(h.root)['Erster bis letzter Messwert'], '1 min 1 s');
+  assert.equal(stats(h.root)['Aktive Loggerzeit'], '0 min 1 s');
+  assert.equal(stats(h.root)['Pausendauer'], '1 min 0 s');
   assert.equal(stats(h.root)['Gültige Werte'], '2');
   assert.equal(text(badge(h.root)), 'Aufzeichnung läuft.');
   assert.equal(nodes(h.root, 'polyline').length, 0, 'A resume must not connect the line across the gap');
@@ -108,7 +113,11 @@ test('the last 120 entries include pause markers, so statistics count only the r
   const valuesOnScreen = stats(h.root);
   assert.equal(valuesOnScreen['Valid readings'], '118');
   assert.equal(valuesOnScreen['Minimum – maximum'], '4.003 V – 4.120 V');
-  assert.equal(valuesOnScreen['Span including pauses'], '19 min 21 s');
+  assert.equal(valuesOnScreen['First to last reading'], '19 min 21 s');
+  assert.equal(valuesOnScreen['Logged span including pauses'], '19 min 21 s');
+  assert.equal(valuesOnScreen['Active logging time'], '19 min 20 s');
+  assert.equal(valuesOnScreen['Paused time'], '0 min 1 s');
+  assert.match(text(h.root), /latest 120 retained entries/);
   assert.match(text(nodes(h.root, 'summary')[0]), /\(120\)/);
   assert.equal(nodes(h.root, 'circle').length, 118);
 });
@@ -122,7 +131,8 @@ test('moving the browser clock backwards hides duration without replacing valid 
   const valuesOnScreen = stats(h.root);
   assert.equal(valuesOnScreen['Valid readings'], '3');
   assert.equal(valuesOnScreen['Minimum – maximum'], '4.198 V – 4.200 V');
-  assert.equal(valuesOnScreen['Span including pauses'], '—');
+  assert.equal(valuesOnScreen['First to last reading'], '—');
+  for (const label of ['Logged span including pauses', 'Active logging time', 'Paused time']) assert.equal(valuesOnScreen[label], '—');
   assert.match(text(h.root), /browser clock moved backwards/);
   const axis = nodes(h.root, 'div').find(node => node.props.class === 'time-axis');
   assert.deepEqual(nodes(axis, 'time').map(node => node.props.datetime),

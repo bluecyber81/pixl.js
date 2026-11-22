@@ -81,7 +81,7 @@ async function contextFor(viewport,mode,kind){
  });
  const page=await context.newPage();page.on('pageerror',e=>errors.push({kind,message:e.message}));
  await page.goto(origin+base);await page.locator('.version-context').waitFor();
- check(kind+' web version 3.61.0',(await page.locator('.version-context').innerText()).includes('3.61.0'));
+ check(kind+' web version 3.62.0',(await page.locator('.version-context').innerText()).includes('3.62.0'));
  await page.evaluate(()=>{window.__ui=document.querySelector('#app')._vnode.component.proxy;window.__ui.show_workspace('backup');});
  return {context,page};
 }

@@ -110,7 +110,7 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398', 'de399'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
@@ -126,6 +126,8 @@ def main():
         assert record['version'] == '2.22.0-DE3.97' and record['counter'] == 670
     if args.profile == 'de398':
         assert record['version'] == '2.22.0-DE3.98' and record['counter'] == 671
+    if args.profile == 'de399':
+        assert record['version'] == '2.22.0-DE3.99' and record['counter'] == 672
     assert source_hashes(fw) == prod and fingerprint(prod) == record['source_id_sha256']
     artifacts = {name:digest(args.build/name) for name in ('pixljs.bin','pixljs.hex','pixljs.out','pixljs.map')}
     assert artifacts == record['artifacts_sha256']
@@ -161,7 +163,7 @@ def main():
                 'Host simulations do not measure physical free space or device acceptance.'])
     if args.profile in ('de396', 'de397'):
         report['limits'].append('BOARD_LCD/PIXL_TEST_DIAGNOSTICS instrumentation is omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
-    if args.profile == 'de398':
+    if args.profile in ('de398', 'de399'):
         report['limits'].append('BOARD_LCD/runtime GC diagnostics are omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
     args.output.write_text(json.dumps(report,indent=2)+'\n')
 
