@@ -14,10 +14,10 @@ assert.ok(directory && evidence && ['/', '/pixl.js/'].includes(base), 'Expected 
 const root = path.resolve(directory), output = path.resolve(evidence);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const version = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
-assert.equal(version, '3.62.0');
+assert.equal(version, '3.63.0');
 assert.equal(lcdRelease.artifactStatus, 'stable-signed-application');
 assert.equal(lcdRelease.firmwareChannel, 'normal');
-assert.equal(entry.id, 'de3.99-lcd-app');
+assert.equal(entry.id, 'de3.100-lcd-app');
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright');
 await fs.mkdir(output, {recursive:true});
 async function manifest() {
@@ -76,7 +76,7 @@ try {
       await page.goto(startUrl);
       await page.locator('.version-context').waitFor();
       const contextText = await page.locator('.version-context').innerText();
-      check(`${width}: normal browser/version header`, contextText.includes(version) && /LCD DE3\.99 \/ App672/.test(contextText) && !/TEST1|test\.2/.test(contextText));
+      check(`${width}: normal browser/version header`, contextText.includes(version) && /LCD DE3\.100 \/ App673/.test(contextText) && !/TEST1|test\.2/.test(contextText));
       const download = page.locator('.lcd-downloads a[href$="' + entry.file + '"]').first();
       await download.waitFor();
       check(`${width}: current application link uses deployment base`, await download.getAttribute('href') === base + 'firmware/' + entry.file);
@@ -90,22 +90,22 @@ try {
       const migration = page.locator('.migration-panel');
       await migration.waitFor();
       if (!await migration.evaluate(element => element.open)) await migration.locator(':scope > summary').click();
-      check(`${width}: normal capacity default`, await migration.locator('select').inputValue() === 'de399');
-      check(`${width}: normal capacity label`, await migration.locator('option').first().textContent() === 'DE3.99 / 672');
+      check(`${width}: normal capacity default`, await migration.locator('select').inputValue() === 'de3100');
+      check(`${width}: normal capacity label`, await migration.locator('option').first().textContent() === 'DE3.100 / 673');
       check(`${width}: no migration needed for existing PFS1`, /normale Firmware verwendet weiterhin PFS1/.test(await migration.innerText()));
       packageRequests.length = 0;
       await page.goto(new URL('dfu/web.html', startUrl).href);
-      await page.waitForFunction(() => document.querySelector('#bundled')?.value === 'de3.99-lcd-app');
-      check(`${width}: single normal DFU default`, await page.locator('#bundled option[value="de3.99-lcd-app"]').count() === 1);
+      await page.waitForFunction(() => document.querySelector('#bundled')?.value === 'de3.100-lcd-app');
+      check(`${width}: single normal DFU default`, await page.locator('#bundled option[value="de3.100-lcd-app"]').count() === 1);
       check(`${width}: navigation does not load an OTA`, packageRequests.length === 0);
       check(`${width}: direct normal action available`, await page.locator('#load-lcd-preview').isEnabled());
       check(`${width}: no device action before validation`, await page.locator('#button').isDisabled());
-      check(`${width}: actual source branch`, await page.locator('#profile-source').getAttribute('href') === 'https://github.com/bluecyber81/pixl.js/tree/release/lcd-de399-app672');
+      check(`${width}: actual source branch`, await page.locator('#profile-source').getAttribute('href') === 'https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673');
       await page.locator('#load-lcd-preview').click();
       await page.waitForFunction(() => document.querySelector('#status')?.textContent.startsWith('Paket geprüft:'));
       check(`${width}: one explicit local OTA request`, packageRequests.length === 1 && packageRequests[0] === new URL('firmware/' + entry.file, startUrl).href);
       const target = await page.locator('#package-target').innerText();
-      check(`${width}: normal verified init target without private label`, /Zähler 671/.test(target) && !/Privates LCD-Prüfpaket/.test(target));
+      check(`${width}: normal verified init target without private label`, new RegExp('Zähler ' + lcdRelease.applicationCounter + '(?:\\D|$)').test(target) && !/Privates LCD-Prüfpaket/.test(target));
       check(`${width}: device choice remains a separate action`, await page.locator('#button').isEnabled());
       check(`${width}: DFU page fits viewport`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await screenshot(page, `dfu-checked-${width}`);
@@ -130,6 +130,6 @@ finally {
   await fs.writeFile(path.join(output, 'NORMAL_BROWSER.json'), JSON.stringify({schema:1,passed:failures.length === 0,webVersion:version,basePath:base,
     firmwareVersion:lcdRelease.firmwareVersion,applicationCounter:lcdRelease.applicationCounter,otaSha256:lcdRelease.otaSha256,otaBytes:lcdRelease.otaBytes,
     scriptSha256:sha(await fs.readFile(new URL(import.meta.url))),distribution:before,checks:results,screenshots,failures,
-    limits:['Local built assets only; no public HTTP verification.','Fresh isolated Chromium contexts; Bluetooth device access is replaced with a rejecting test function.','No App672 hardware acceptance, throughput measurement or DFU transfer.']}, null, 2) + '\n');
+    limits:['Local built assets only; no public HTTP verification.','Fresh isolated Chromium contexts; Bluetooth device access is replaced with a rejecting test function.','No App673 hardware acceptance, throughput measurement or DFU transfer.']}, null, 2) + '\n');
   console.log(JSON.stringify({passed:failures.length === 0,checks:results.length,report:path.join(output,'NORMAL_BROWSER.json'),failures}, null, 2));
 }

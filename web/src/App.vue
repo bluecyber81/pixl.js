@@ -438,7 +438,7 @@
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
     <CollectionAssistant v-if="visitedWorkspaces.has('catalogue')" ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery">
-      <template #backup-audit><CollectionBackupAudit :locale="language" :catalogue="collectionCatalogue" /></template>
+      <template #backup-audit><CollectionBackupAudit :locale="language" :catalogue="collectionCatalogue" :device-report="collectionReport" :device-stale="collectionStale || collectionWriting || mutating || pendingUploads > 0 || syncing || zipBusy || migrationBusy" :connected="connected" :blocked="busy || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :directory="current_dir" @open-sync="open_collection_sync" @open-device="show_workspace('files')" /></template>
     </CollectionAssistant>
     <details class="extra-tools" @toggle="gameFolderOpened = gameFolderOpened || $event.currentTarget.open">
       <summary>{{ language === 'de_DE' ? 'Spielordner auf dem LCD anlegen' : 'Create a game folder on the LCD' }}</summary>
@@ -597,9 +597,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app672" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.62.0' : '3.62.0 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.62.0 (ZIP)' : 'Windows 3.62.0 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.62.0 (ZIP)' : '3.62.0 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app673" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.63.0' : '3.63.0 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.63.0 (ZIP)' : 'Windows 3.63.0 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.63.0 (ZIP)' : '3.63.0 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -1323,6 +1323,12 @@ export default {
         if(this._zipController===controller)this._zipController=null;
         if(generation===this.sessionGeneration){this.workflowCancelling=false;this.zipBusy=false;this.zipPlan=null;this.zipSelected=[];this.set_transfer(null);await this.refresh_current();}
       }
+    },
+    open_collection_sync(selection) {
+      if (!this.connected || this.busy || this.upload_diag_visible || this.remoteActive || this.syncDialog || this.zipDialog || this.meta_diag_visible ||
+          !Array.isArray(selection?.files) || !selection.files.length) return;
+      this.open_sync();
+      if (this.syncDialog) this.on_sync_files({ target: { files: selection.files, value: '' } }, selection.folderContents === true);
     },
     open_sync() {
       if (this.btn_disabled() || this.upload_diag_visible) return;

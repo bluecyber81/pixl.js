@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "scope": "Public qualification outcomes, public product identities and final release distribution only.",
+  "detailedLocalInputInventoriesPublished": false,
+  "privateFixturePathsOrPerFixtureHashesPublished": false,
+  "ownerHandoverRetainsCompleteOriginalEvidence": true,
+  "runtimeOrDistributionChanged": false,
+  "reason": "Remove local input inventories from public Git publication; retain complete original proofs in the owner-only handover."
+}

@@ -19,7 +19,7 @@
       </div>
       <p v-if="packages.some(item => item.androidUrl && !item.newer && !item.profileMismatch)" class="hint">{{ text.androidHint }}</p>
       <p class="hint">{{ text.limits }}</p>
-      <p><a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de399-app672" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
+      <p><a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673" target="_blank" rel="noopener noreferrer">{{ text.source }}</a></p>
     </template>
     <p class="hint">{{ text.local }}</p>
   </section>

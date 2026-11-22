@@ -1,0 +1,13 @@
+{
+  "priorFullSuite": "WEB3_63_0_LOCAL.json",
+  "changedWebFiles": [
+    "web/public/dfu/lcd-release-reference.mjs",
+    "web/public/sources/LCD_DE3_100_App673_Simulatorquellen.zip"
+  ],
+  "changesLimitedToPublicSourceProvenance": true,
+  "productionGitTree": "1f83834c03e508b8794835f5d09fb23e33a22183",
+  "publicProductionCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+  "localProductionCommit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+  "allOtherWebSourcesByteIdentical": true,
+  "detailedLocalInputInventoriesPublished": false
+}

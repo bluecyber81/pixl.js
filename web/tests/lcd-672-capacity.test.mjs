@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import JSZip from '../public/dfu/vendor/jszip-3.10.2.min.js';
-import {lcdRelease} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdRelease} from '../public/dfu/lcd-app672-reference.mjs';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {supportsFolderPublication} from '../src/lib/hardware-profile.js';
 
@@ -26,7 +26,7 @@ test('normal App672 folder publication requires its own qualified engine and nev
     assert.equal(supportsFolderPublication(previous.firmwareVersion, normal.layout.engineSha256), false, id);
     assert.equal(supportsFolderPublication(previous.firmwareVersion, previous.layout.engineSha256), true, id);
   }
-  for (const version of ['2.22.0-DE3.100','2.22.0-DE3.99-OLEDt7'])
+  for (const version of ['2.22.0-DE3.101','2.22.0-DE3.99-OLEDt7'])
     assert.equal(supportsFolderPublication(version, normal.layout.engineSha256), false, version);
 });
 

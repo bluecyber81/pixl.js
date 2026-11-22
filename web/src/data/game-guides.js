@@ -1,8 +1,13 @@
 import { ocarinaUsage, ocarinaFigures } from './announced-figures.js';
+import nintendoSupplement from './usage-nintendo-supplement.json' with { type: 'json' };
 
 // Each ID identifies a reviewed catalogue edition. Matching an English name or
 // franchise alone could include another printing, card type or announced figure.
 export const gameGuides = [
+  ...nintendoSupplement.games.map(game => ({
+    id: game.id, title: game.title, platform: game.platform, source: game.source,
+    de: game.de, en: game.en, ids: game.rows.flatMap(row => row.ids),
+  })),
   {
     id: 'fatal-fury-cotw', title: 'Fatal Fury: City of the Wolves', platform: 'Switch 2',
     source: 'https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html',

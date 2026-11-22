@@ -7,6 +7,7 @@
     <p v-if="rows.some(row => row.sinceGameVersion === '1.3.3')" class="usage-limit">{{ de ? 'Nintendo führt diese Figur seit Version 1.3.3 von Kirby Air Riders als unterstützt.' : 'Nintendo lists this figure as supported since Kirby Air Riders version 1.3.3.' }}</p>
     <p v-else-if="rows.some(row => row.officialAssociation && row.groupId === 82)" class="usage-limit">{{ de ? 'Nintendo beschreibt diese Funktion für Ocarina of Time auf Nintendo Switch 2.' : 'Nintendo describes this feature for Ocarina of Time on Nintendo Switch 2.' }}</p>
     <p v-else-if="rows.some(row => row.officialAssociation && row.groupId === 75)" class="usage-limit">{{ de ? 'Die Figuren dieser Reihe bestehen aus Fahrer und Maschine. Setze den Fahrer zum Scannen auf die Maschine.' : 'Figures in this series consist of a rider and a machine. Place the rider on the machine to scan.' }}</p>
+    <p v-else-if="rows.some(row => row.webSupplement)" class="usage-limit">{{ de ? 'Die ergänzten Spielhinweise sind mit Nintendo abgeglichen. Sie gelten für die genannte Figur und Plattform; ein eigener Spieltest ist damit nicht verbunden.' : 'Supplementary game notes were checked against Nintendo for the listed figure and platform. They do not represent our own in-game test.' }}</p>
     <p v-else-if="rows.some(row => row.guideUrl)" class="usage-limit">{{ de ? 'Die Hinweise zu Breath of the Wild und Tears of the Kingdom sind mit Nintendo abgeglichen. Die übrigen Zuordnungen stammen aus dem Firmwarekatalog.' : 'The Breath of the Wild and Tears of the Kingdom notes were checked against Nintendo’s guides. Other associations come from the firmware catalogue.' }}</p>
     <p v-else class="usage-limit">{{ de ? 'Zuordnungen und Hinweise aus dem mitgelieferten Katalog. Keine Bestätigung der Spielkompatibilität oder Belohnungen.' : 'Associations and notes from the bundled catalogue. Game compatibility and rewards have not been verified.' }}</p>
     <p v-if="!rows.length" class="usage-empty">{{ de ? 'Für diese ID ist hier kein Kataloghinweis hinterlegt. Daraus lässt sich keine Aussage zur Spielunterstützung ableiten.' : 'No catalogue note is stored here for this ID. This does not establish whether a game supports it.' }}</p>
@@ -14,6 +15,7 @@
       <ul>
         <li v-for="row in visibleRows" :key="row.groupId">
           <strong>{{ row.label }}</strong>
+          <span v-if="row.platform" class="usage-language">Nintendo {{ row.platform }}</span>
           <p v-if="row.text" :lang="row.language">{{ row.text }}</p>
           <p v-else-if="!row.officialAssociation" class="usage-empty">{{ de ? 'Katalogzuordnung ohne deutschen oder englischen Nutzungshinweis.' : 'Catalogue association without a German or English usage note.' }}</p>
           <span v-if="row.translated" class="usage-language">{{ de ? 'Redaktionelle Übersetzung aus dem Englischen' : 'Editorial translation from English' }}</span>

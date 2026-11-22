@@ -224,6 +224,17 @@ const de399 = {
   geometry: {...de398.geometry},
   layout: {...de398.layout, engineSha256: '3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f'},
 }
+// App673 reuses the byte-identical App672 PFS engine and its existing WASM.
+// Enabled only after binding the actual App673 ARM output: DE3_100_PFS.json.
+const de3100 = {
+  ...de399,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.100',
+  applicationCounter: 673,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.100', applicationCounter: 673}],
+  geometry: {...de399.geometry},
+  layout: {...de399.layout},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -246,7 +257,9 @@ export const DE396_MIGRATION_CAPACITY_TARGET=freezeTarget(de396)
 export const DE397_MIGRATION_CAPACITY_TARGET=freezeTarget(de397)
 export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
+export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de3100')return DE3100_MIGRATION_CAPACITY_TARGET
   if(profile==='de399')return DE399_MIGRATION_CAPACITY_TARGET
   if(profile==='de398')return DE398_MIGRATION_CAPACITY_TARGET
   if(profile==='de397')return DE397_MIGRATION_CAPACITY_TARGET

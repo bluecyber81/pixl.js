@@ -1,0 +1,190 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-11-22T18:03:30.982257+00:00",
+  "status": "PASS_WITH_EXPLICIT_PLATFORM_LIMITS",
+  "webVersion": "3.63.0",
+  "baseCommit": "4dfd9dd6cc731a56abe4aa65af273ca499699989",
+  "workingBranch": "work/web363-app673",
+  "firmware": {
+    "board": "LCD",
+    "firmwareVersion": "2.22.0-DE3.100",
+    "applicationCounter": 673,
+    "firmwareChannel": "normal",
+    "chipPart": 337970,
+    "sourceId": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+    "productionCommit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+    "sourceCommit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+    "productionTree": "1f83834c03e508b8794835f5d09fb23e33a22183",
+    "otaSha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+    "otaBytes": 361681,
+    "applicationBytes": 361080,
+    "applicationBinSha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "artifactStatus": "stable-signed-application",
+    "hardwareAcceptance": "pending-for-this-build"
+  },
+  "node": {
+    "tests": 2148,
+    "pass": 2145,
+    "fail": 0,
+    "skipped": 3,
+    "cancelled": 0,
+    "todo": 0,
+    "run": {
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+      "exitCode": 0,
+      "durationSeconds": 66.97614336013794,
+      "log": "NODE_FULL.log"
+    },
+    "skips": [
+      "﹣ real immutable DE3.17 and recovery575 application archives pass without device access (0.176505ms) # Optional local OTA fixtures absent; set ALLMIIBO_DFU_FIXTURES to their folder",
+      "﹣ Windows launchers keep two ports independent, reject altered tokens and preserve legacy state (0.24609ms) # SKIP",
+      "﹣ Windows failed state persistence asks only the newly started server to stop itself (0.074522ms) # SKIP"
+    ],
+    "skipClassification": {
+      "nativeWindowsScenarios": 2,
+      "optionalHistoricalOtaFixtures": 1,
+      "historicalFixtures": [
+        "DE3.17",
+        "recovery575"
+      ]
+    }
+  },
+  "productionBuilds": {
+    "root": {
+      "tests": 53,
+      "pass": 53,
+      "fail": 0,
+      "skipped": 0,
+      "run": {
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+        "exitCode": 0,
+        "durationSeconds": 4.945068359375,
+        "log": "BUILD_ROOT.log"
+      },
+      "manifest": "DIST_FILES.json",
+      "manifestSha256": "a5d34b96a69a02e29f8145873ecd465a11f6a65c2ba26bd3cfaec664f4c7a2fb"
+    },
+    "pages": {
+      "tests": 53,
+      "pass": 53,
+      "fail": 0,
+      "skipped": 0,
+      "run": {
+        "command": [
+          "npm",
+          "run",
+          "build:pages"
+        ],
+        "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+        "exitCode": 0,
+        "durationSeconds": 4.691641330718994,
+        "log": "BUILD_PAGES.log"
+      },
+      "manifest": "DIST_PAGES_FILES.json",
+      "manifestSha256": "86412d178b819193388a88e8075657fe0add09c9ca915ba9908fa7726974b8d7"
+    }
+  },
+  "pythonLauncher": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "nativeWindowsExecuted": false,
+    "log": "PYTHON_LAUNCHER.log"
+  },
+  "catalogue": {
+    "figures": 956,
+    "firmwareAssociations": 1348,
+    "webAssociations": 1356,
+    "additionalWebAssociations": 8,
+    "additionalWebNoteAssociations": 33,
+    "exporterTestsPassed": 12,
+    "exporterTestsFailed": 0,
+    "germanEnglishReadmeDownloadCheck": "PASS"
+  },
+  "portable": {
+    "schema": 1,
+    "version": "3.63.0",
+    "archive": "Allmiibo_Dateimanager_3_63_0_Portable.zip",
+    "bytes": 11585754,
+    "sha256": "60e9ea39d0e489e6dc2081d6dfb1dbd7d70b56d31cc4234c9504de80367273c1",
+    "files": 306,
+    "portableManifestSha256": "8e0b0401b81825694354a30a0398a77703e978c4c760901eebc8eafdce2fe842",
+    "nativeExecutable": false,
+    "verification": {
+      "path": "PORTABLE_VERIFICATION.json",
+      "sha256": "bac001d3f9f51c4bc7037e22d81279e4f8da78851597bb5b7b89b69e5ca500bc"
+    },
+    "absolutePath": "/workspace/scratch/c49c60a68f9a/verification/web/portable/Allmiibo_Dateimanager_3_63_0_Portable.zip",
+    "verificationResult": {
+      "schema": 1,
+      "passed": true,
+      "version": "3.63.0",
+      "archiveSha256": "60e9ea39d0e489e6dc2081d6dfb1dbd7d70b56d31cc4234c9504de80367273c1",
+      "verifiedFiles": 304,
+      "normalControllerStartReuseStop": true,
+      "downloads": [
+        {
+          "path": "index.html",
+          "bytes": 767,
+          "sha256": "ad12ee1d1338b672177027e385ad3585e4e7dcc88b383b638d1c50e9e6db8698"
+        },
+        {
+          "path": "release.json",
+          "bytes": 482,
+          "sha256": "30e9b05f379b6dccad57b34c50cc226afbabe9846c0105ff8459050e6fb1625f"
+        },
+        {
+          "path": "firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+          "bytes": 361681,
+          "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378"
+        }
+      ],
+      "platform": "linux",
+      "nativeWindowsExecuted": false,
+      "limits": [
+        "Loopback HTTP and the real Python controller only; no device or Bluetooth transfer.",
+        "CMD/PowerShell native execution is covered separately by the Windows CI job."
+      ]
+    }
+  },
+  "browser": {
+    "status": "BLOCKED_ENVIRONMENT",
+    "casesExecuted": 0,
+    "report": "browser-root/NORMAL_BROWSER.json",
+    "reason": "Chromium process singleton socket() failed: Operation not permitted before any page loaded. No escalation or sandbox change attempted."
+  },
+  "sourceBinding": {
+    "filesChecked": 911,
+    "unchangedAtCompletion": true,
+    "detailsPublished": false,
+    "scope": "Detailed local input inventories remain in the owner-only handover. This public report provides test outcomes and public product identities only."
+  },
+  "continuationCorrections": [
+    "web/index.html browser title updated from 3.62.0 to 3.63.0.",
+    "VM UI regression harness explicitly supplies the retained App672 reference imported by the real module.",
+    "New collection component test waits for its actual asynchronously hashed report with a 5-second bound instead of assuming 12 eventloop ticks suffice.",
+    "Normal browser smoke checker verifies the current pinned release counter instead of historical constant 671."
+  ],
+  "limits": [
+    "No real Allmiibo, Bluetooth, DFU or in-game access occurred.",
+    "Two Node scenarios require native Windows; a third optional case requires the historical DE3.17 and recovery575 OTA archives, absent from the active fixture folder. Current Linux launcher and portable checks do not replace native Windows CI. All three omissions are named in node.skips.",
+    "No visual browser pass was possible in this executor because Chromium could not create its required local socket.",
+    "App673 capacity reuses the byte-identical App672 PFS1 engine/WASM with separately bound App673 production inputs and fresh ARM layout evidence."
+  ],
+  "nextSteps": [
+    "Root completes release metadata, including restoring historical Web3.62 metadata from the baseline and setting current stable to DE3.100/673.",
+    "Root saves source in the authorized repository and checks GitHub source/Windows CI.",
+    "Root delivers/deploys the exact qualified distribution and verifies public HTTP/browser results.",
+    "Observe normal usage of the new build separately from these software/model checks."
+  ],
+  "publicEvidenceRedaction": true
+}

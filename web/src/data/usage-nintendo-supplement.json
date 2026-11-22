@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "checkedDate": "2026-11-22",
+  "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied.",
+  "games": [
+    {
+      "id": "links-awakening",
+      "title": "The Legend of Zelda: Link's Awakening",
+      "platform": "Switch",
+      "groupId": 5,
+      "groupLabel": "The Legend of Zelda: Link's Awakening for Nintendo Switch",
+      "source": "https://zelda.nintendo.com/links-awakening/gameplay/",
+      "additionalSources": [
+        "https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-Spiele/The-Legend-of-Zelda-Link-s-Awakening-1514327.html"
+      ],
+      "de": "Bis zu fünf verschiedene Zelda-amiibo schalten je eine zusätzliche Kammer frei. Du kannst Kammerlabyrinthe auf einem kompatiblen Zelda-amiibo speichern und weitergeben. Die Link’s-Awakening-Ausgabe von Link schaltet außerdem Schatten-Link frei.",
+      "en": "Up to five different Zelda amiibo each unlock an extra chamber. A compatible Zelda amiibo can save and share Chamber Dungeons. The Link’s Awakening edition of Link also unlocks Shadow Link.",
+      "rows": [
+        {
+          "ids": [
+            "0100000000040002",
+            "01000000034b0902",
+            "01000000034c0902",
+            "01000000034d0902",
+            "01000000034e0902",
+            "01000000034f0902",
+            "0100000003530902",
+            "0100000003540902",
+            "01000000037c0002",
+            "0100010000160002",
+            "0100010003500902",
+            "01010000000e0002",
+            "0101000003520902",
+            "0101000003560902",
+            "0101010000170002",
+            "0101030004140902",
+            "01020100001b0002",
+            "01030000024f0902",
+            "0105000003580902",
+            "0106000003590902",
+            "01070000035a0902",
+            "01080000035b0902",
+            "0140000003550902",
+            "01410000035c0902"
+          ],
+          "en": "Unlock an extra Chamber Dungeon chamber, with five available through different Zelda amiibo. Save a Chamber Dungeon to this amiibo to share it.",
+          "de": "Eine zusätzliche Kammer für Kammerlabyrinthe freischalten; mit verschiedenen Zelda-amiibo sind insgesamt fünf erhältlich. Ein Kammerlabyrinth auf diesem amiibo speichern und weitergeben."
+        },
+        {
+          "ids": [
+            "0100000003990902"
+          ],
+          "en": "Unlock Shadow Link for Chamber Dungeons, plus an extra chamber. Save a Chamber Dungeon to this amiibo to share it.",
+          "de": "Schatten-Link für Kammerlabyrinthe und eine zusätzliche Kammer freischalten. Ein Kammerlabyrinth auf diesem amiibo speichern und weitergeben."
+        }
+      ]
+    },
+    {
+      "id": "yoshi-mysterious-book",
+      "title": "Yoshi and the Mysterious Book",
+      "platform": "Switch 2",
+      "groupId": "web-yoshi-mysterious-book",
+      "groupLabel": "Yoshi and the Mysterious Book",
+      "source": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71615/~/how-to-use-amiibo-figures-(yoshi-and-the-mysterious-book)",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/game/aakga/index.html",
+        "https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/Yoshi-and-the-Mysterious-Book-2915259.html"
+      ],
+      "de": "Kompatible Yoshi-, Poochy- und Bowser-Jr.-Figuren ermöglichen einmal täglich eine Vorhersage. Je nach Ergebnis erhältst du Glyphen, die Hinweise zu Entdeckungen freischalten.",
+      "en": "Compatible Yoshi, Poochy and Bowser Jr. figures allow a daily fortune reading. The resulting tokens unlock discovery hints.",
+      "mappingScope": "The eight reviewed Figure/Yarn editions are listed explicitly. Mario Sports cards, Power-Up Bands and My Mario blocks are not inferred from a character name.",
+      "rows": [
+        {
+          "ids": [
+            "0003000000020002",
+            "0003000000370102",
+            "0003010200410302",
+            "0003010200420302",
+            "0003010200430302",
+            "00030102023e0302",
+            "00800102035d0302",
+            "0006000000150002"
+          ],
+          "en": "Read your fortune once per day and receive tokens that unlock discovery hints.",
+          "de": "Einmal täglich wahrsagen lassen und Glyphen erhalten, mit denen du Hinweise zu Entdeckungen freischaltest."
+        }
+      ]
+    }
+  ]
+}

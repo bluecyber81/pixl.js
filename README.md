@@ -1,16 +1,16 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## Normal release: LCD DE3.99 / App672 and Web3.62.0
+## Normal release: LCD DE3.100 / App673 and Web3.63.0
 
-[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [App672 in the updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signed App672 ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip).
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [App673 in the updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD) · [Signed App673 ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip).
 
-For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. The application-only update retains the existing PFS1 filesystem, bootloader and SoftDevice. App672 completes retried Chameleon imports and avoids repeated GC scans while the same older directory snapshots remain open. Web3.62.0 fixes the local Python/CMD launcher and adds active logging time and paused time.
+For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. The application-only update retains the existing PFS1 filesystem, bootloader and SoftDevice. Web3.63.0 combines selected PC files or a backup ZIP with the inspected device collection in one comparison. An explicitly selected local file set can be passed to the existing synchronization dialog. Nintendo sources support additional usage notes for Link’s Awakening and Yoshi and the Mysterious Book.
 
-This `web-app672` branch contains the normal file manager. Actual LCD production sources are separately bound to [commit 9fb9d84](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637). Inherited firmware sources in this web branch and earlier descriptions below remain historical references. [Web notes](web/LIESMICH_3_62_0.txt) · [Web qualification](docs/validation/WEB3_62_0.json) · [Download delivery check](docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json) · [ARM/PFS evidence](docs/validation/DE3_99_PFS.json) · [Deutsch](README.de.md). Physical acceptance of the new firmware is recorded separately.
+This `web-app673` branch contains the normal file manager. Actual LCD production sources are separately maintained in the [App673 release branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673); the [ARM/PFS evidence](docs/validation/DE3_100_PFS.json) and package reference record the exact commit and SourceID binding. Inherited firmware sources in this web branch and earlier descriptions below remain historical references. [Web notes](web/LIESMICH_3_63_0.txt) · [Web qualification](docs/validation/WEB3_63_0.json) · [Deutsch](README.de.md). Physical acceptance and native Windows execution are recorded separately from software checks.
 
 ## Historical downloads and separate OLED releases
 
-The old Android combined package includes App662 and is a separate system route; install normal App672 afterwards. OLED Test5/App85 and Test6/App86 keep their own packages and acceptance limits.
+The old Android combined package includes App662 and is a separate system route; install normal App673 afterwards. App672 and App671 remain earlier normal LCD packages. OLED Test5/App85 and Test6/App86 keep their own packages and acceptance limits.
 
 ## Archive: LCD DE3.89 / App662
 

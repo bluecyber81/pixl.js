@@ -1,16 +1,16 @@
 # Allmiibo LCD und Pixl.js OLED
 
-## Normale Ausgabe: LCD DE3.99 / App672 und Web3.62.0
+## Normale Ausgabe: LCD DE3.100 / App673 und Web3.63.0
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App672 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signierte App672-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip).
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App673 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD) · [Signierte App673-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip).
 
-Für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Das reine App-Update erhält das bestehende PFS1-Dateisystem, Bootloader und SoftDevice. App672 korrigiert die Fortsetzung eines wiederholten Chameleon-Imports und vermeidet wiederholte GC-Scans bei unverändert gehaltenen alten Verzeichnissichten. Web3.62.0 korrigiert den lokalen Python-/CMD-Starter und ergänzt aktive Loggerzeit und Pausendauer.
+Für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Das reine App-Update erhält das bestehende PFS1-Dateisystem, Bootloader und SoftDevice. Web3.63.0 führt PC-Dateien oder eine Sicherungs-ZIP und die geprüfte Gerätesammlung in einer gemeinsamen Übersicht zusammen. Eine ausdrücklich gewählte lokale Dateiauswahl lässt sich an den bestehenden Synchronisationsdialog übergeben. Zusätzliche Spielhinweise für Link’s Awakening und Yoshi and the Mysterious Book sind mit Nintendo-Quellen belegt.
 
-Dieser Branch `web-app672` enthält den normalen Dateimanager. Die tatsächlichen LCD-Produktionsquellen sind separat an [Commit 9fb9d84](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637) gebunden. Die geerbten Firmwarequellen dieses Webzweigs und frühere Beschreibungen unten bleiben historische Referenzen. [Webhinweise](web/LIESMICH_3_62_0.txt) · [Web-Prüfbericht](docs/validation/WEB3_62_0.json) · [Prüfung der Downloadlieferung](docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json) · [ARM-/PFS-Nachweis](docs/validation/DE3_99_PFS.json) · [English](README.md). Die praktische Abnahme der neuen Firmware wird separat dokumentiert.
+Dieser Branch `web-app673` enthält den normalen Dateimanager. Die tatsächlichen LCD-Produktionsquellen liegen separat im [Releasezweig für App673](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673); ihre genaue Commit-/SourceID-Bindung steht im [ARM-/PFS-Nachweis](docs/validation/DE3_100_PFS.json) und der Paketreferenz. Die geerbten Firmwarequellen dieses Webzweigs und frühere Beschreibungen unten bleiben historische Referenzen. [Webhinweise](web/LIESMICH_3_63_0.txt) · [Web-Prüfbericht](docs/validation/WEB3_63_0.json) · [English](README.md). Praktische Geräteabnahme und native Windowsausführung werden getrennt von den Softwareprüfungen dokumentiert.
 
 ## Frühere Downloads und getrennte OLED-Ausgaben
 
-Das alte Android-Komplettpaket enthält App662 und ist ein eigener Systemweg; danach folgt die neue normale App672. OLED-Test5/App85 und Test6/App86 behalten eigene Pakete und Prüfgrenzen.
+Das alte Android-Komplettpaket enthält App662 und ist ein eigener Systemweg; danach folgt die neue normale App673. App672 und App671 bleiben als frühere normale LCD-Pakete erhalten. OLED-Test5/App85 und Test6/App86 behalten eigene Pakete und Prüfgrenzen.
 
 ## Archiv: LCD DE3.89 / App662
 

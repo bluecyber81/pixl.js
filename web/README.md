@@ -1,6 +1,22 @@
 # Allmiibo Dateimanager
 
-## Normale Ausgabe 3.62.0 und LCD DE3.99 / App672
+## Normale Ausgabe 3.63.0 und LCD DE3.100 / App673
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App673 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip)
+
+Unter **Figurenkatalog → PC und Gerät vergleichen** lassen sich lokale Figurendateien, ein lokaler Ordner oder eine Sicherungs-ZIP mit einer geprüften Gerätesammlung vergleichen. Unvollständige oder veraltete Prüfungen belegen keine fehlenden Figuren. Derselbe Figurenbezeichner kann unterschiedliche UID-, Spielstand- oder Fahrzeugdaten haben. Eine lokale Auswahl wird auf Wunsch an die vorhandene Ordnersynchronisation übergeben; Vorschau, Konfliktentscheidung und Übertragung bleiben dort getrennte Schritte.
+
+Die Nintendo-Ergänzung enthält 25 Hinweise für Link’s Awakening und acht passende Yoshi-/Poochy-/Bowser-Jr.-Zuordnungen für Yoshi and the Mysterious Book. Nur das Link’s-Awakening-Link-Amiibo erhält die Shadow-Link-Zuordnung. Die acht neuen Yoshi-Zeilen gelten nur im Web; sie erfinden keine Firmwaregruppen-ID und können keinen nicht vorhandenen Geräte-Spielordner erzeugen. Die bestehenden 55 deutschen Übersetzungen bleiben unverändert.
+
+[Bedienung und Änderungen](LIESMICH_3_63_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_63_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673) · [Simulatorquellen und App673-Bindung](public/sources/LCD_DE3_100_App673_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_100_PFS.json)
+
+App673 verwendet dieselbe PFS1-Engine und bytegleiche Simulator-WASM wie App672. Seine tatsächliche Firmware und der neue Standarddownload sind separat an BIN, OTA, Produktionsquellen und SourceID gebunden. Der normale Dateimanager erhält die vorhandenen Sicherungs-, Fernbedienungs- und Diagnosefunktionen. Experimentelle Funksetter bleiben für die normale Firmware gesperrt. Frühere normale, private und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete; praktische Geräteabnahme und native Windowsausführung werden gesondert berichtet.
+
+## Frühere Ausgaben
+
+Die folgenden Abschnitte dokumentieren den jeweiligen damaligen Stand.
+
+## Archiv: normale Ausgabe 3.62.0 und LCD DE3.99 / App672
 
 [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App672 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip)
 
@@ -9,11 +25,6 @@ Diese normale Ausgabe behebt den lokalen Python-/CMD-Start über eine gemeinsame
 [Bedienung und Änderungen](LIESMICH_3_62_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_62_0.json) · [Prüfung der Downloadlieferung](../docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637) · [Simulatorquellen](third-party/packed-simulator-de399/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_99_PFS.json)
 
 Die vorherigen normalen, privaten und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete. Praktische Geräteabnahme und native Windowsausführung werden getrennt von den hier dokumentierten Softwareprüfungen berichtet.
-
-## Frühere Ausgaben
-
-Die folgenden Abschnitte dokumentieren den jeweiligen damaligen Stand.
-
 
 ## Archiv: private Ausgabe 3.58.6 – LCD DE3.95 / App668
 

@@ -1,0 +1,234 @@
+{
+  "schema": 1,
+  "status": "software-qualified-awaiting-publication",
+  "date": "2026-11-22",
+  "webVersion": "3.63.0",
+  "sourceBranch": "web-app673",
+  "sourceCommit": null,
+  "sourceTree": null,
+  "sourceBaseCommit": "4dfd9dd6cc731a56abe4aa65af273ca499699989",
+  "firmware": {
+    "board": "LCD",
+    "firmwareVersion": "2.22.0-DE3.100",
+    "applicationCounter": 673,
+    "firmwareChannel": "normal",
+    "chipPart": 337970,
+    "sourceId": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+    "productionCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+    "sourceCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+    "productionTree": "1f83834c03e508b8794835f5d09fb23e33a22183",
+    "localProductionCommit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+    "otaSha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+    "otaBytes": 361681,
+    "applicationBytes": 361080,
+    "applicationBinSha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "artifactStatus": "stable-signed-application",
+    "hardwareAcceptance": "pending-for-this-build"
+  },
+  "node": {
+    "tests": 2148,
+    "pass": 2145,
+    "fail": 0,
+    "skipped": 3,
+    "cancelled": 0,
+    "todo": 0,
+    "run": {
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+      "exitCode": 0,
+      "durationSeconds": 66.97614336013794,
+      "log": "NODE_FULL.log"
+    },
+    "skips": [
+      "﹣ real immutable DE3.17 and recovery575 application archives pass without device access (0.176505ms) # Optional local OTA fixtures absent; set ALLMIIBO_DFU_FIXTURES to their folder",
+      "﹣ Windows launchers keep two ports independent, reject altered tokens and preserve legacy state (0.24609ms) # SKIP",
+      "﹣ Windows failed state persistence asks only the newly started server to stop itself (0.074522ms) # SKIP"
+    ],
+    "skipClassification": {
+      "nativeWindowsScenarios": 2,
+      "optionalHistoricalOtaFixtures": 1,
+      "historicalFixtures": [
+        "DE3.17",
+        "recovery575"
+      ]
+    }
+  },
+  "publicSourceFollowup": {
+    "tests": 204,
+    "pass": 204,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "run": {
+      "command": [
+        "node",
+        "--test",
+        "tests/lcd-673-package.test.mjs",
+        "tests/lcd-673-capacity.test.mjs",
+        "tests/lcd-672-package.test.mjs",
+        "tests/lcd-672-capacity.test.mjs",
+        "tests/firmware-packages.test.mjs",
+        "tests/bundled-packages.test.cjs",
+        "tests/current-lcd-downloads.test.mjs",
+        "tests/update-check.test.mjs",
+        "tests/private-lcd-reference-state.test.mjs",
+        "tests/lcd-build-diagnostics.test.mjs",
+        "tests/deployment-path.test.mjs",
+        "tests/migration-profiles.test.mjs",
+        "tests/migration-ui.test.mjs",
+        "tests/dfu-page.test.cjs",
+        "tests/test-build-diagnostics.test.mjs"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+      "exitCode": 0,
+      "durationSeconds": 1.1930341720581055,
+      "log": "TARGETED.log"
+    }
+  },
+  "fullSuiteContinuity": {
+    "passed": 2145,
+    "failed": 0,
+    "skipped": 3,
+    "total": 2148,
+    "report": "WEB3_63_0_LOCAL.json",
+    "sha256": "8d34783b652ba170a8a59df0f362bb1086617f11a47fd1d473f91ffdaad95eef",
+    "continuity": "FULL_SUITE_CONTINUITY.json",
+    "continuitySha256": "3f51024b6a39bff67874de7e70044f8b47f9a18096025dc4ac8b3069732f2399",
+    "rerun": false
+  },
+  "productionBuilds": {
+    "root": {
+      "tests": 53,
+      "pass": 53,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "run": {
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+        "exitCode": 0,
+        "durationSeconds": 5.303819179534912,
+        "log": "BUILD_ROOT.log"
+      },
+      "manifest": "DIST_FILES.json",
+      "manifestSha256": "f1cd6f4bee2b7e7edc7f117ea2161ced3dae9ea2564fad207763d7c572811399",
+      "files": 293,
+      "directory": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web/dist",
+      "releaseJsonSha256": "30e9b05f379b6dccad57b34c50cc226afbabe9846c0105ff8459050e6fb1625f"
+    },
+    "pages": {
+      "tests": 53,
+      "pass": 53,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "run": {
+        "command": [
+          "npm",
+          "run",
+          "build:pages"
+        ],
+        "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web",
+        "exitCode": 0,
+        "durationSeconds": 4.557406663894653,
+        "log": "BUILD_PAGES.log"
+      },
+      "manifest": "DIST_PAGES_FILES.json",
+      "manifestSha256": "3cf71df79190fd8385ef5bfd2c9dba174bb26916d5f826a6177f2403663f817d",
+      "files": 311,
+      "directory": "/workspace/scratch/01be954f2c61/work_20261122_next/web/web/dist-pages",
+      "releaseJsonSha256": "b731985fcf8da64bcef78bdbcfbe59b5b4bb9ae9a61851ea4aaa90ae22c9f504"
+    }
+  },
+  "pythonLauncher": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "nativeWindowsExecuted": false,
+    "log": "PYTHON_LAUNCHER.log"
+  },
+  "catalogue": {
+    "figures": 956,
+    "firmwareAssociations": 1348,
+    "webAssociations": 1356,
+    "additionalWebAssociations": 8,
+    "additionalWebNoteAssociations": 33,
+    "exporterTestsPassed": 12,
+    "exporterTestsFailed": 0,
+    "germanEnglishReadmeDownloadCheck": "PASS"
+  },
+  "portable": {
+    "schema": 1,
+    "version": "3.63.0",
+    "archive": "Allmiibo_Dateimanager_3_63_0_Portable.zip",
+    "bytes": 11585896,
+    "sha256": "3a735a792eb7aa7ff6eede77a02cc03409389445dbc35c668b09b82621a43dac",
+    "files": 306,
+    "portableManifestSha256": "9e8f8ad074981d09ba4102d31d82669c8c080bce472669fd995f723e93a0e986",
+    "nativeExecutable": false,
+    "verification": {
+      "path": "PORTABLE_VERIFICATION.json",
+      "sha256": "278822fe0e35e4c3207cc108c78dc4093db4fe462007cc3f8e5b0f3b563165a0"
+    },
+    "verificationResult": {
+      "schema": 1,
+      "passed": true,
+      "version": "3.63.0",
+      "archiveSha256": "3a735a792eb7aa7ff6eede77a02cc03409389445dbc35c668b09b82621a43dac",
+      "verifiedFiles": 304,
+      "normalControllerStartReuseStop": true,
+      "downloads": [
+        {
+          "path": "index.html",
+          "bytes": 767,
+          "sha256": "5d9538fdd4a93e1e81fc2131aec112c2c91221638ae21f1ba29d7c881e90b4d9"
+        },
+        {
+          "path": "release.json",
+          "bytes": 482,
+          "sha256": "30e9b05f379b6dccad57b34c50cc226afbabe9846c0105ff8459050e6fb1625f"
+        },
+        {
+          "path": "firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+          "bytes": 361681,
+          "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378"
+        }
+      ],
+      "platform": "linux",
+      "nativeWindowsExecuted": false,
+      "limits": [
+        "Loopback HTTP and the real Python controller only; no device or Bluetooth transfer.",
+        "CMD/PowerShell native execution is covered separately by the Windows CI job."
+      ]
+    }
+  },
+  "browser": {
+    "status": "BLOCKED_ENVIRONMENT",
+    "casesExecutedForThisFinalBuild": 0,
+    "previousAttempt": "../browser-root/NORMAL_BROWSER.json",
+    "reason": "Same executor: Chromium could not create a process singleton socket before page loading. No identical failed launch was repeated."
+  },
+  "evidenceDirectory": "WEB3_63_0_evidence/",
+  "ci": {
+    "status": "pending",
+    "windowsNativePassed": false
+  },
+  "deployment": {
+    "status": "pending",
+    "pagesCommit": null
+  },
+  "hardwareAcceptance": "pending-for-this-build",
+  "limits": [
+    "Targeted checks and fresh distributions apply to the final public source commit binding. The earlier full suite is separately retained; only the two documented public-source metadata/archive files differ.",
+    "Physical Allmiibo/Bluetooth/DFU/game tests and native Windows execution were not performed by this agent.",
+    "Visual browser verification remains pending in a working browser environment."
+  ],
+  "detailedLocalInputInventoriesPublished": false
+}

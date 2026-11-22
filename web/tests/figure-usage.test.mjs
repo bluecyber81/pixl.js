@@ -47,6 +47,14 @@ test('all exported rows keep a group path and pinned source line without externa
       if (row.translated) translated++;
       if (row.guideUrl) official++;
       assert.ok(row.label);
+      if (row.webSupplement) {
+        assert.equal(row.officialAssociation, true);
+        assert.ok([5, 'web-yoshi-mysterious-book'].includes(row.groupId));
+        assert.equal(row.platform, row.groupId === 5 ? 'Switch' : 'Switch 2');
+        assert.ok(new URL(row.sourceUrl).hostname.endsWith('.nintendo.com'));
+        assert.ok(row.text && row.original);
+        continue;
+      }
       if (row.officialAssociation && row.groupId === 82) {
         assert.ok(['0100000004fd0902','0101000004ff0902'].includes(figure.id));
         assert.match(row.sourceUrl, /^https:\/\/www\.nintendo\.com\/us\/amiibo\/detail\/young-(?:link|zelda)-/);
@@ -67,7 +75,22 @@ test('all exported rows keep a group path and pinned source line without externa
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1348, notes: 72, translated: 68, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1356, notes: 105, translated: 101, official: 4 });
+});
+
+test('reviewed Nintendo web notes use exact editions and platforms without firmware-only group inference', () => {
+  const shadow = figureUsage('0100000003990902', data).find(row => row.groupId === 5);
+  const ordinary = figureUsage('0100000000040002', data).find(row => row.groupId === 5);
+  assert.match(shadow.text, /Schatten-Link/);
+  assert.doesNotMatch(ordinary.text, /Schatten-Link/);
+  assert.match(ordinary.text, /fünf/);
+  assert.match(ordinary.text, /speichern/);
+  const yoshi = figureUsage('0003000000020002', data).find(row => row.groupId === 'web-yoshi-mysterious-book');
+  assert.equal(yoshi.platform, 'Switch 2');
+  assert.match(yoshi.text, /täglich.*Glyphen/);
+  for (const id of ['09c40101027d0e02', '00030003039fff02', '0003000404421c02']) {
+    assert.ok(!figureUsage(id, data).some(row => row.groupId === 'web-yoshi-mysterious-book'), 'no card/band/block inference');
+  }
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.

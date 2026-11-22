@@ -41,7 +41,16 @@ class UsageExportTests(unittest.TestCase):
         for figure in data['figures']:
             for association in figure['associations']:
                 note = notes.get(association['noteId'])
-                if 'sourceUrl' in association:
+                if association.get('webSupplement'):
+                    self.assertIn(association['groupId'], [5, 'web-yoshi-mysterious-book'])
+                    self.assertTrue(note['de'] and note['en'])
+                    if association.get('webOnly'):
+                        self.assertNotIn('sourceLine', association)
+                        continue
+                    self.assertEqual(association['groupId'], 5)
+                    self.assertIsNone(association['firmwareNoteId'])
+                    note = notes.get(association['firmwareNoteId'])
+                elif 'sourceUrl' in association:
                     nintendo_web_rows.append(figure['id'])
                     if figure['id'] in exporter.OCARINA_PRODUCTS:
                         self.assertEqual(association['sourceUrl'], exporter.OCARINA_PRODUCTS[figure['id']])
@@ -61,16 +70,53 @@ class UsageExportTests(unittest.TestCase):
         self.assertEqual(actual, {i: (int(row[0]), row[1].lower(), row[2]) for i, row in enumerate(rows, 1)})
         self.assertEqual(len(actual), 1348)
         self.assertEqual(nintendo_web_rows, sorted([*exporter.OCARINA_PRODUCTS, *exporter.TRAINING_IDS]))
-        self.assertEqual(data['coverage']['associations'], len(actual))
+        self.assertEqual(data['coverage']['firmwareAssociations'], len(actual))
+        self.assertEqual(data['coverage']['associations'], len(actual) + 8)
+        self.assertEqual(data['coverage']['nintendoWebAssociations'], 8)
         self.assertEqual(data['coverage']['figures'], 956)
-        self.assertEqual(data['coverage']['englishNoteAssociations'], 72)
-        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 55)
-        self.assertEqual(data['coverage']['germanNoteAssociations'], 72)
+        self.assertEqual(data['coverage']['englishNoteAssociations'], 105)
+        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 58)
+        self.assertEqual(data['coverage']['germanNoteAssociations'], 105)
         self.assertTrue(data['policy']['germanTranslationsAreComplete'])
-        self.assertEqual({row['en'] for row in data['notes'] if row['de']}, {row[2] for row in rows if row[2]})
+        self.assertEqual({row['en'] for row in data['notes'][:55] if row['de']}, {row[2] for row in rows if row[2]})
         self.assertFalse(data['policy']['verifiedInGame'])
         self.assertFalse(data['policy']['associationsAreCompatibilityProof'])
         self.assertFalse(data['policy']['notesAreComplete'])
+
+    def test_nintendo_supplement_is_hash_bound_and_has_no_firmware_group_or_source_line(self):
+        data = json.loads(self.output.read_text(encoding='utf8'))
+        source = data['source']['webSupplement']
+        self.assertEqual(source['sha256'], hashlib.sha256((ROOT / source['path']).read_bytes()).hexdigest())
+        group = next(group for group in data['groups'] if group['id'] == 'web-yoshi-mysterious-book')
+        self.assertTrue(group['webOnly'])
+        self.assertEqual(group['platform'], 'Switch 2')
+        self.assertNotIn('sourceLine', group)
+        originals = json.loads(self.translations.read_text())['texts']
+        self.assertEqual({note['en']: note['de'] for note in data['notes'][:55]}, originals)
+
+    def test_supplement_rejects_unknown_ids_firmware_group_fiction_and_unreviewed_note_replacement(self):
+        supplement = json.loads((ROOT / 'web/src/data/usage-nintendo-supplement.json').read_text())
+        path = self.root / 'supplement.json'
+        cases = [
+            ('unknown', lambda d: d['games'][0]['rows'][0]['ids'].__setitem__(0, 'ffffffffffffffff'), 'Unknown exact'),
+            ('duplicate', lambda d: d['games'][0]['rows'][0]['ids'].append(d['games'][0]['rows'][0]['ids'][0]), 'Duplicate'),
+            ('fake group', lambda d: d['games'][1].update(groupId=83), 'numeric firmware'),
+            ('external URL', lambda d: d['games'][0].update(source='https://example.com/guide'), 'official HTTPS'),
+            ('empty note', lambda d: d['games'][0]['rows'][0].update(de=''), 'non-empty'),
+        ]
+        for name, change, error in cases:
+            with self.subTest(name=name):
+                candidate = json.loads(json.dumps(supplement))
+                change(candidate)
+                path.write_text(json.dumps(candidate))
+                with self.assertRaisesRegex(ValueError, error):
+                    exporter.export_usage(self.data, self.translations, path)
+        candidate = json.loads(json.dumps(supplement))
+        candidate['games'] = [{**candidate['games'][0], 'groupId': 75, 'groupLabel': 'Kirby Air Riders',
+                               'rows': [{**candidate['games'][0]['rows'][0], 'ids': ['1f00000004c41e03']}]}]
+        path.write_text(json.dumps(candidate))
+        with self.assertRaisesRegex(ValueError, 'must not replace'):
+            exporter.export_usage(self.data, self.translations, path)
 
     def test_export_is_reproducible_and_check_detects_stale_json_without_rewriting(self):
         rendered = exporter.render_usage(exporter.export_usage(self.data, self.translations)).encode('utf8')

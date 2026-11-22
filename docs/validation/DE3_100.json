@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "status": "software-qualified",
+  "canonicalEvidenceUrl": "https://github.com/bluecyber81/pixl.js/blob/release/lcd-de3100-app673/docs/validation/DE3_100.json",
+  "source": {
+    "repository": "bluecyber81/pixl.js",
+    "branch": "release/lcd-de3100-app673",
+    "baseCommit": "96cc712f67b8d1376b1f86b30034da1209f82e0e",
+    "productionCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+    "localProductionCommit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+    "productionTree": "1f83834c03e508b8794835f5d09fb23e33a22183",
+    "identicalLocalAndPublicProductionTrees": true,
+    "sourceIdSha256": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+    "packedEngineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f"
+  },
+  "application": {
+    "filename": "Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+    "bytes": 361681,
+    "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+    "onlyApplication": true,
+    "binaryBytes": 361080,
+    "binarySha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "initSha256": "0dffe35c98c0add32cd04eeb3d222bb5296edd421ef89e31cf28a91daa90439d"
+  },
+  "hostSuites": {
+    "available": 196,
+    "executed": 196,
+    "passed": 196,
+    "failed": 0,
+    "omitted": 0,
+    "finishedUTC": "2026-11-22T17:54:40.189625+00:00",
+    "sourceSnapshotFiles": 843,
+    "allCurrentHashesMatch": true
+  },
+  "linkerBudget": {
+    "binary_bytes": 361080,
+    "linker_flash_used_bytes": 361092,
+    "observed": {
+      "flash_reserve_bytes": 11644,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "hardwareAcceptance": "pending-for-this-build"
+}

@@ -13,6 +13,7 @@ assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/', '/pixl.js/test/app670/'].i
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={
+ de3100:{url:'/lfs-capacity-de399.wasm',wasm:'068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',engine:'3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f',counter:673,version:'2.22.0-DE3.100'},
  de399:{url:'/lfs-capacity-de399.wasm',wasm:'068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',engine:'3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f',counter:672,version:'2.22.0-DE3.99'},
  de398:{url:'/lfs-capacity-de398.wasm',wasm:'30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273',engine:'a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d',counter:671,version:'2.22.0-DE3.98'},
  de397:{url:'/lfs-capacity-de397.wasm',wasm:'d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c',engine:'a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788',counter:670,version:'2.22.0-DE3.97'},

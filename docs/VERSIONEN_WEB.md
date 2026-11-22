@@ -1,5 +1,13 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.63.0 · normale LCD-Ausgabe DE3.100 / App673
+
+PC-Dateien, Ordner oder Sicherungs-ZIP und die geprüfte Gerätesammlung erscheinen in einer gemeinsamen Bestandsansicht. Vollständigkeit und Aktualität entscheiden, ob fehlende Figuren behauptet werden dürfen. Gewählte lokale Dateien lassen sich an die bestehende sichere Synchronisation übergeben. Die Spielhinweise ergänzen Link’s Awakening und Yoshi and the Mysterious Book anhand offizieller Nintendo-Quellen; bisherige Übersetzungen bleiben erhalten. Die zusätzlichen Yoshi-Zuordnungen sind Webdaten ohne neue Firmwaregruppen-ID.
+
+App673 erhält eine eigene genaue Firmware-/Paketbindung und verwendet den unveränderten App672-PFS-Simulator. Der gemeinsame Versionsursprung für Web, Python, PowerShell und HTTP-Health bleibt `web/package.json`.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/?v=3.63.0) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip) · [Softwarequalifikation](validation/WEB3_63_0.json) · [Bedienung](../web/LIESMICH_3_63_0.txt)
+
 ## Dateimanager 3.62.0 · normale LCD-Ausgabe DE3.99 / App672
 
 Der lokale Python-/CMD-Starter verwendet dieselbe Versionsquelle wie Weboberfläche und HTTP-Health. Der Akkuverlauf trennt Messwertspanne, sichtbare Protokollzeit, aktive Loggerzeit und Pausen. Die normale LCD-Auswahl ist exakt an App672 und dessen PFS-Simulator gebunden; frühere private Testprofile und OLED bleiben getrennt erhalten.
