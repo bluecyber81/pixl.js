@@ -1,0 +1,16 @@
+BLE-HARNESS-NACHTRAG APP673 — 22.11.2026
+
+Alle vier beanstandeten Gates sind nach reinen Testanpassungen gezielt PASS:
+- test_ble_event_extension_de396.py einschließlich aller bestehenden Mutant-Negativkontrollen.
+- test_ble_link_diagnostic.py einschließlich aller bestehenden Mutant-Negativkontrollen.
+- test_ble_remote_advertising_start.py für OLED und LCD; sechs zusätzliche LCD-Eigentümer-/Abschlussfälle.
+- test_ble_status_de320.py mit tatsächlichem LCD-Pfad, allen bisherigen Verhaltens-/Mutant-/historischen Gegenproben und einem zusätzlichen Guard-Mutanten.
+
+Ursachen und Anpassungen:
+1. Die Diagnoseharnesses teilen ble_link_diagnostic_host.c.in. Dessen Modelle enthielten die beiden neuen Foreground-Poll-Abhängigkeiten noch nicht. Die klar als Modelle gekennzeichneten Ergänzungen prüfen den Foreground-Kontext; der tatsächliche Radio-Lebenszyklus bleibt in den separaten neuen Miniapp-Harnesses geprüft.
+2. Der integrierte Remote-Starttest kannte nur die früheren beiden Appbesitzer. Er kennt jetzt auch Switch-2-/Stream-App sowie Such-/Werbe-Sitzung. Ein Stop-Aufruf gibt den Modellbesitzer ausdrücklich nicht frei. Zusätzliche Fälle halten die Freigabe bis zum simulierten tatsächlichen Abschluss zurück und prüfen danach den normalen Start.
+3. Der Statusharness kopierte ble_main.h flach in ein Tempverzeichnis. Der neue, legitime relative Protokollinclude fehlte dort. Der Test kopiert nun unveränderte Produktionsheader in ihre tatsächliche relative Verzeichnisstruktur. Er kompiliert den LCD-Pfad ausdrücklich und modelliert den neuen Funkbesitzer. Alle alten Races/Negativkontrollen bleiben erhalten; ein zusätzlicher Mutant ohne Restart-Owner-Guard muss scheitern.
+
+Kein Produktcode wurde geändert. PRODUCT_BEFORE.json wurde nach den Anpassungen vollständig gegen den unveränderten Produktionsbestand geprüft; RESULT.json nennt Anzahl und die Hashes der drei geänderten Testdateien. Binärdatei, Source-ID und Signatur müssen wegen dieser Testkorrekturen nicht neu erzeugt werden. Die ursprünglichen Fehlerprotokolle bleiben erhalten. Ein zwischenzeitlicher Signednessfehler in einem neu ergänzten Testzähler wurde ausschließlich im Harness korrigiert und als BLE_STATUS_DRAFT_FIX_COMPILE.log erhalten.
+
+Die vorhandenen Assertions wurden nicht entfernt oder abgeschwächt; kein Test wurde übersprungen. Die folgende vollständige Freigabesuite führt Root aus. Keine Geräte-/BLE-Funkabnahme aus diesem Testnachtrag.

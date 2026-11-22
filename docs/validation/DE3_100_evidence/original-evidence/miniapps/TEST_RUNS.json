@@ -1,0 +1,201 @@
+{
+  "status": "PASS",
+  "device_access": false,
+  "runs": [
+    {
+      "name": "test_miniapps_protocol.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_protocol.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:29.058927+00:00",
+      "sanitizers": [],
+      "leak_detection": null,
+      "environment_override": {},
+      "exit_code": 0,
+      "log": "test_miniapps_protocol_normal.log",
+      "log_sha256": "195856ffe20d0847382ef6393e5eec6b8809b308d43ec478510019fc41a929e0"
+    },
+    {
+      "name": "test_miniapps_radio_lifecycle.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_radio_lifecycle.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:29.296634+00:00",
+      "sanitizers": [],
+      "leak_detection": null,
+      "environment_override": {},
+      "exit_code": 0,
+      "log": "test_miniapps_radio_lifecycle_normal.log",
+      "log_sha256": "b6c78fcccb0f322d7cab7580c2277497dbdfbafab4c65db574b9be637f6043f4"
+    },
+    {
+      "name": "test_miniapps_ui.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_ui.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:29.713500+00:00",
+      "sanitizers": [],
+      "leak_detection": null,
+      "environment_override": {},
+      "exit_code": 0,
+      "log": "test_miniapps_ui_normal.log",
+      "log_sha256": "7f16885333b9f84c9c7943ad3235bbb4aee1c7fc305545993928b30b61b19c35"
+    },
+    {
+      "name": "test_miniapps_sleep.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_sleep.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:30.078214+00:00",
+      "sanitizers": [],
+      "leak_detection": null,
+      "environment_override": {},
+      "exit_code": 0,
+      "log": "test_miniapps_sleep_normal.log",
+      "log_sha256": "2ec74bbc46a97d4c06d7dcbc60b0dd6b4e03ba89c3c84f8b994a9c777a90675c"
+    },
+    {
+      "name": "test_miniapps_startup.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_startup.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:30.280977+00:00",
+      "sanitizers": [],
+      "leak_detection": null,
+      "environment_override": {},
+      "exit_code": 0,
+      "log": "test_miniapps_startup_normal.log",
+      "log_sha256": "337b2d087b4f7855205b5e8f425f57416711b365a6484907d45aa0b76d6d0dca"
+    },
+    {
+      "name": "test_stream_sender.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_stream_sender.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:30.465230+00:00",
+      "sanitizers": [],
+      "leak_detection": null,
+      "environment_override": {},
+      "exit_code": 0,
+      "log": "test_stream_sender_normal.log",
+      "log_sha256": "c4ee8e0daf42e5b8ba07e226f47dc86a17ff87e94a7d3883f4767c4832b9473d"
+    },
+    {
+      "name": "test_miniapps_protocol.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_protocol.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:30.699566+00:00",
+      "sanitizers": [
+        "address",
+        "undefined"
+      ],
+      "leak_detection": false,
+      "environment_override": {
+        "UI_SANITIZE": "1",
+        "ASAN_OPTIONS": "detect_leaks=0"
+      },
+      "exit_code": 0,
+      "log": "test_miniapps_protocol_asan_ubsan.log",
+      "log_sha256": "195856ffe20d0847382ef6393e5eec6b8809b308d43ec478510019fc41a929e0"
+    },
+    {
+      "name": "test_miniapps_radio_lifecycle.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_radio_lifecycle.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:31.255068+00:00",
+      "sanitizers": [
+        "address",
+        "undefined"
+      ],
+      "leak_detection": false,
+      "environment_override": {
+        "UI_SANITIZE": "1",
+        "ASAN_OPTIONS": "detect_leaks=0"
+      },
+      "exit_code": 0,
+      "log": "test_miniapps_radio_lifecycle_asan_ubsan.log",
+      "log_sha256": "b6c78fcccb0f322d7cab7580c2277497dbdfbafab4c65db574b9be637f6043f4"
+    },
+    {
+      "name": "test_miniapps_ui.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_ui.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:31.982610+00:00",
+      "sanitizers": [
+        "address",
+        "undefined"
+      ],
+      "leak_detection": false,
+      "environment_override": {
+        "UI_SANITIZE": "1",
+        "ASAN_OPTIONS": "detect_leaks=0"
+      },
+      "exit_code": 0,
+      "log": "test_miniapps_ui_asan_ubsan.log",
+      "log_sha256": "7f16885333b9f84c9c7943ad3235bbb4aee1c7fc305545993928b30b61b19c35"
+    },
+    {
+      "name": "test_miniapps_sleep.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_sleep.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:32.719840+00:00",
+      "sanitizers": [
+        "address",
+        "undefined"
+      ],
+      "leak_detection": false,
+      "environment_override": {
+        "UI_SANITIZE": "1",
+        "ASAN_OPTIONS": "detect_leaks=0"
+      },
+      "exit_code": 0,
+      "log": "test_miniapps_sleep_asan_ubsan.log",
+      "log_sha256": "9299f51e6354d9b0d6671660a3b3fcfcfb955a7cb220d8cff7d4f42d3a79a685"
+    },
+    {
+      "name": "test_miniapps_startup.py",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "fw/tests/de3/test_miniapps_startup.py"
+      ],
+      "cwd": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware",
+      "started_utc": "2026-11-22T17:45:33.135063+00:00",
+      "sanitizers": [
+        "address",
+        "undefined"
+      ],
+      "leak_detection": false,
+      "environment_override": {
+        "UI_SANITIZE": "1",
+        "ASAN_OPTIONS": "detect_leaks=0"
+      },
+      "exit_code": 0,
+      "log": "test_miniapps_startup_asan_ubsan.log",
+      "log_sha256": "285a525206009437403d433ea1425cd2f40b5ca64906afc9a245477b5355e982"
+    }
+  ]
+}

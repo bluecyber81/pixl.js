@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "mode": "release",
+  "version": "2.22.0-DE3.100",
+  "counter": 673,
+  "board": "LCD",
+  "backend": "native",
+  "sdk_image": null,
+  "network": "no downloads performed",
+  "signed": false,
+  "device_access": false,
+  "version_header_sha256": "5697eb0b98ea8fbab435f9dd05e260f56770e1d6009deba68ae968195c3e55b1",
+  "packed_engine_identity": {
+    "engine_sha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+    "header_sha256": "b9b33d3eb46429abd4a473ff1124086e2af984125f08f10e727d0455486ae713",
+    "both_header_representations_verified": true
+  },
+  "sdk_header_override": {
+    "path": "components/softdevice/s112/headers/nrf_nvic.h",
+    "before_sha256": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+    "after_sha256": "555417cf107cab5569878ee4f8b1d91e783b55dddc7e2900e204f624e107d7ef"
+  },
+  "expected_bin_sha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+  "source_tar_sha256": "682a15006f3d9413eb5b8df9e9db943dbcd9d97d949fdc165e96c4af07b3908e",
+  "native_tools": {
+    "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+    "compiler_sha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+    "make": "GNU Make 4.4.1",
+    "sdk_archive_sha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+    "sdk_copy_patched": true,
+    "input_sdk_modified": false,
+    "environment_policy": "PATH/HOME/TMPDIR only; fixed locale and build variables"
+  },
+  "exit_code": 0,
+  "source_id_sha256": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+  "source_input_count": 720,
+  "linker_budget": {
+    "binary_bytes": 361080,
+    "linker_flash_used_bytes": 361092,
+    "observed": {
+      "flash_reserve_bytes": 11644,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "artifacts_sha256": {
+    "pixljs.bin": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "pixljs.hex": "7fe9b81905b8eda2c3d35c5f23e26fc2a4bdff1b25f6bae91fac84a3f5a73091",
+    "pixljs.out": "c33dd35c1c85eddf75b4b78516c715e4a737073779a4a3776ea1fc21397a51b2",
+    "pixljs.map": "3b3f517aeb2aa0ce93cd08b84689449b9394371aa350b71f0b0051ea8de45419"
+  },
+  "matches_archived_release_binary": false,
+  "archived_release_version": "2.22.0-DE3.89",
+  "matches_expected_binary": true,
+  "stack_usage": {
+    "report_sha256": "de76d56100121ddb50da8417af4fd3608628c1dee11b911806a57e2cc309c93d",
+    "files": 377,
+    "frames": 4324
+  }
+}

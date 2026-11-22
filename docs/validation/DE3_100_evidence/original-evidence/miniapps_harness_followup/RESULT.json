@@ -1,0 +1,108 @@
+{
+  "created_utc": "2026-11-22T17:51:20.296192+00:00",
+  "status": "PASS",
+  "scope": "Only outdated test harnesses updated after App673 miniapp integration",
+  "product_changed": false,
+  "product_files_sha256_compared": 325,
+  "test_files": [
+    {
+      "path": "fw/tests/de3/ble_link_diagnostic_host.c.in",
+      "sha256": "2b7fa780677b84a4f6fd603362d3a5c29f9907ace00cc0c2b81f41be6ec5c4fd"
+    },
+    {
+      "path": "fw/tests/de3/test_ble_remote_advertising_start.py",
+      "sha256": "d7ce3931023808091d23a2da12c278c5128c137a4bada137f90b12c27880a5c3"
+    },
+    {
+      "path": "fw/tests/de3/test_ble_status_de320.py",
+      "sha256": "e83d7015f9891c6378f267aadc76ebb288659efa24486f5bc9cd816acd955122"
+    }
+  ],
+  "gates": [
+    {
+      "name": "test_ble_event_extension_de396.py",
+      "passed": true,
+      "log": "EVENT_EXTENSION.log"
+    },
+    {
+      "name": "test_ble_link_diagnostic.py",
+      "passed": true,
+      "log": "LINK_DIAGNOSTIC.log"
+    },
+    {
+      "name": "test_ble_remote_advertising_start.py",
+      "passed": true,
+      "log": "REMOTE_ADVERTISING.log"
+    },
+    {
+      "name": "test_ble_status_de320.py",
+      "passed": true,
+      "log": "BLE_STATUS.log"
+    }
+  ],
+  "causes": [
+    "Shared diagnostic template missing actual foreground poll dependencies ble_switch2_scan_process/ble_raw_adv_process",
+    "Integrated remote startup fixture missing new miniapp IDs and asynchronous radio-owner state",
+    "Status test copied production ble_main.h out of its relative include tree"
+  ],
+  "assertions_weakened": false,
+  "negative_controls_preserved": true,
+  "new_coverage": [
+    "Diagnostic radio-poll mocks assert foreground context",
+    "Four additional LCD owner/autostart cases and two explicit mode-transition completion cases",
+    "LCD status/restart blocked while radio owned, including after stop request",
+    "Additional mutant removes radio-owner restart guard and is rejected"
+  ],
+  "negative_controls": {
+    "EVENT_EXTENSION": {
+      "trust_rejected_setting": {
+        "detected": true,
+        "assertion": "CHECK 570: response.data[32] == (1u | (sdk_extension ? 2u : 0u))"
+      },
+      "omit_vfs_idle_gate": {
+        "detected": true,
+        "assertion": "CHECK 579: response.status == DF_STATUS_ERR && !response.length && option_calls == calls"
+      },
+      "mutate_on_read": {
+        "detected": true,
+        "assertion": "CHECK 497: m_conn_handle != BLE_CONN_HANDLE_INVALID && m_nus_session_handle == m_conn_handle"
+      },
+      "forget_global_state_on_disconnect": {
+        "detected": true,
+        "assertion": "CHECK 570: response.data[32] == (1u | (sdk_extension ? 2u : 0u))"
+      },
+      "omit_stack_default_reset": {
+        "detected": true,
+        "assertion": "CHECK 569: response.data[32] == (1u | (sdk_extension ? 2u : 0u))"
+      }
+    },
+    "LINK_DIAGNOSTIC": {
+      "reset_on_peer_busy": {
+        "detected": true,
+        "assertion": "CHECK 294: (err_code)==NRF_SUCCESS"
+      },
+      "extra_busy_retry": {
+        "detected": true,
+        "assertion": "CHECK 533: phy_calls==before+3"
+      },
+      "missing_connect_snapshot": {
+        "detected": true,
+        "assertion": "CHECK 474: response.data[14]==flags"
+      },
+      "trust_failed_phy_fields": {
+        "detected": true,
+        "assertion": "CHECK 519: response.data[22]==2&&response.data[23]==2&&response.data[15]==BLE_HCI_UNSUPPORTED_REMOTE_FEATURE"
+      },
+      "mixed_link_generation": {
+        "detected": true,
+        "assertion": "CHECK 581: response.data[14]&1"
+      }
+    }
+  },
+  "limits": [
+    "No new firmware build/signature required by these test-only edits",
+    "No physical radio/device validation",
+    "This targeted follow-up is not the subsequent full-suite result"
+  ],
+  "prior_failures": "Original full-suite failures remain in ../firmware_full/APP673_FULL.log; BLE_STATUS_DRAFT_FIX_COMPILE.log preserves the intermediate test-only signedness compile error before final correction"
+}

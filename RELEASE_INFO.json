@@ -1,11 +1,11 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-22",
+  "publication_date": null,
   "version": "2.22.0-DE3.100",
   "counter": 673,
   "board": "LCD",
   "web_version": "3.63.0",
-  "web_publication_date": "2026-11-22",
+  "web_publication_date": null,
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
@@ -37,7 +37,7 @@
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": null,
+  "host_firmware_suites": 196,
   "evidence": "docs/validation/DE3_100.json",
   "privacy": {
     "private_keys_in_distribution": false,
@@ -63,9 +63,10 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "App673 software qualification is in progress; no new acceptance result is claimed yet."
+    "qualification": "Final App673: seven linked ARM signature/hash/CRC cases, two init-bank cases, and full-BIN resume with ASan/UBSan passed. Local LSan unavailable under ptrace; hardware not exercised.",
+    "application_counter": 673
   },
-  "web_host_test_scope": "Web3.63.0 is qualified separately on web-app673. Firmware-branch web files are package verification inputs, not the maintained web source.",
+  "web_host_test_scope": "2145/2148 Node cases passed; two native Windows cases and one optional historical OTA-fixture case skipped. Root and Pages 53/53 each; Python launcher 26/26 and exporter 12/12. Native Windows and live browser results recorded separately.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -80,7 +81,7 @@
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1",
     "evidence": "docs/validation/WEB3_58_1.json"
   },
-  "web_release_status": "qualification-in-progress",
+  "web_release_status": "software-qualified-awaiting-publication",
   "web_release_notes": "https://github.com/bluecyber81/pixl.js/blob/web-app673/web/LIESMICH_3_63_0.txt",
   "web_personal_backup_status": "Personal backup benchmarks are recorded in the respective historical web evidence.",
   "web_changes": {
@@ -122,7 +123,7 @@
         "DE3.73/646",
         "DE3.72/645"
       ],
-      "stable": "DE3.99/672",
+      "stable": "DE3.100/673",
       "prerelease": "DE3.87-OLEDt6/86 (OLED)"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
@@ -181,7 +182,7 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "qualification-in-progress",
+  "status": "software-qualified-awaiting-publication",
   "web_evidence": "https://github.com/bluecyber81/pixl.js/blob/web-app673/docs/validation/WEB3_63_0.json",
   "device_readback_evidence": null,
   "fresh_public_unsigned_rebuild_matches_signed_application": false,
@@ -481,23 +482,23 @@
     }
   ],
   "firmware_channel": "normal",
-  "release_status": "qualification-in-progress",
+  "release_status": "software-qualified",
   "version_header_sha256": "5697eb0b98ea8fbab435f9dd05e260f56770e1d6009deba68ae968195c3e55b1",
   "firmware_source_branch": "release/lcd-de3100-app673",
   "application_bytes": 361080,
-  "firmware_source_commit": null,
-  "local_production_commit": null,
-  "production_tree_sha": null,
+  "firmware_source_commit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+  "local_production_commit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+  "production_tree_sha": "1f83834c03e508b8794835f5d09fb23e33a22183",
   "ota_bytes": 361681,
-  "qualification_date": null,
+  "qualification_date": "2026-11-22",
   "signature_verified": true,
-  "z21_application_acceptance_passed": false,
+  "z21_application_acceptance_passed": true,
   "application_ota_signature": "ECDSA-P256",
   "firmware_notes": "docs/DE3_100_RELEASE.md",
   "firmware_evidence": "docs/validation/DE3_100.json",
-  "host_firmware_suite_method": "Pending final isolated full run.",
-  "independent_local_unsigned_rebuilds_match_signed_application": false,
-  "unsigned_rebuild_scope": "Pending independent candidate and canonical release-mode rebuilds.",
+  "host_firmware_suite_method": "196/196 complete DE2/DE3 scripts, no omitted scripts; final source/test snapshot reverified; separate 13 linked ARM groups.",
+  "independent_local_unsigned_rebuilds_match_signed_application": true,
+  "unsigned_rebuild_scope": "Two isolated final LCD-only builds (candidate and canonical release mode), identical BIN and HEX, both matching final signed App673.",
   "web_source_branch": "web-app673",
   "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app673/web",
   "previous_normal_lcd_release": {
@@ -535,6 +536,24 @@
   "web_pages_commit": null,
   "web_qualification_source_commit": null,
   "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip",
-  "web_portable_sha256": null,
-  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip"
+  "web_portable_sha256": "3a735a792eb7aa7ff6eede77a02cc03409389445dbc35c668b09b82621a43dac",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip",
+  "web_qualification_date": "2026-11-22",
+  "web_test_total": 2148,
+  "web_test_passed": 2145,
+  "web_test_skipped": 3,
+  "web_test_failed": 0,
+  "web_portable_bytes": 11585896,
+  "web_full_suite_binding": {
+    "baseRun": "https://github.com/bluecyber81/pixl.js/blob/web-app673/docs/validation/WEB3_63_0.json",
+    "fullCases": 2148,
+    "passed": 2145,
+    "failed": 0,
+    "skipped": 3,
+    "publicProductionCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+    "metadataFollowupCases": 204,
+    "metadataFollowupPassed": 204,
+    "runtimeChangesAfterFullSuite": false,
+    "continuity": "The final public source reference and simulator-source ZIP were rebound to an identical Git tree; 204 targeted checks and both 53-case distribution checks pass."
+  }
 }

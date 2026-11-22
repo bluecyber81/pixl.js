@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "method": "GNU Make evaluation of actual pre-template Makefile with BOARD=LCD/OLED; no compilation/device run",
+  "lcd_full_source_multiset_unchanged": true,
+  "lcd_selected_sources": [
+    "./src/mod/ble/ble_switch2_scan.c",
+    "./src/app/switch2_wake/app_switch2_wake.c",
+    "./src/app/switch2_wake/switch2_protocol.c",
+    "./src/app/ble_stream/app_ble_stream.c",
+    "./src/app/ble_stream/stream_codec.c"
+  ],
+  "oled_selected_sources": [],
+  "before_makefile_sha256": "314640bd60791cc3ef694e8e6266d0e2cecec180ce6959a1ecce03c9cd596302",
+  "after_makefile_sha256": "2be7c63075a3a5c5f883612e71dee1c875b77fdb7ca3f913b38cd5241074e430"
+}

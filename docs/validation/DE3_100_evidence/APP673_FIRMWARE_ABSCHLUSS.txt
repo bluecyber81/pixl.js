@@ -1,0 +1,83 @@
+ALLMIIBO LCD DE3.100 / APP673 — ABSCHLUSSABGLEICH
+
+Geprüft: 2026-11-22T18:02:03.667901+00:00
+Repository: bluecyber81/pixl.js
+Branch: work/lcd-de3100-app673
+Commit: fe07e06dce6f1e9655dae7e7edf1b419b9eecf26
+Arbeitsbaum bei Prüfung: sauber
+Ziel: LCD/ST7567, nRF52832, S112 7.3.0, Bootloader Z21
+
+ERGEBNIS
+Die endgültige Firmware-Softwarequalifikation ist erfolgreich und gehört zu
+dem vorhandenen signierten App673-Paket. Der beim Chatabbruch laufende
+Gesamttest war am 22.11.2026 um 17:54:40 UTC bereits mit 196/196 Skripten
+beendet. Es musste kein Build und keine vollständige Testsuite wiederholt
+werden. Frisch wurden die Quell- und Artefakthashes, SourceID, Paketinhalt
+sowie die GNU-Make-Quellenauswahl LCD/OLED abgeglichen.
+
+BINDUNG
+SourceID: 33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778
+BIN: 361.080 Byte, SHA-256 ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e
+OTA: 361.681 Byte, SHA-256 1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378
+HEX SHA-256: 7fe9b81905b8eda2c3d35c5f23e26fc2a4bdff1b25f6bae91fac84a3f5a73091
+Paket: Allmiibo_LCD_DE3_100_673_NUR_APP.zip
+Das ZIP enthält ausschließlich die Anwendung (BIN und DAT) plus Manifest.
+Kein Bootloader- oder SoftDevice-Update ist darin enthalten.
+
+PRÜFUNGEN
+- Firmware-Gesamtlauf: 196/196 Skripte PASS, 0 Fehler, 0 ausgelassene Skripte.
+- 843 Quell-/Testdateien des Gesamtlaufs stimmen mit dem aktuellen Stand.
+- Alle 720 Produktionsinputs stimmen in beiden isolierten finalen Builds,
+  im Gesamtlauf und im aktuellen Checkout; frische SourceID stimmt überein.
+- 13/13 Prüfgruppen am tatsächlich gelinkten ARM-Programm bestanden;
+  ARM-Testskripte, ELF und BIN stimmen mit ihren aufgezeichneten Hashes.
+- Sechs Miniapp-Normalgruppen sowie fünf zusätzliche ASan/UBSan-Gruppen
+  bestanden. Diese sind nicht zusätzlich zu den 196 Skripten zu addieren.
+- Die vorhandene Signaturprüfung ist an das bytegenau vorliegende Paket
+  gebunden; drei Negativkontrollen bestanden. Keine Schlüssel neu gelesen.
+- Z21: sieben Kryptografie/CRC-Fälle, zwei Init/Bank-Fälle und vollständiges
+  Wiederaufnahmemodell mit finalen App673-Bytes bestanden. Unter anderem
+  455 modellierte Stromabbrüche an Checkpoints; kein physischer DFU-Test.
+- Zwei unabhängige isolierte Builds liefern bytegleiche BIN und HEX.
+  ELF/Map der isolierten Ausgaben unterscheiden sich; für diese Debug-/
+  Linkermetadaten wird keine Bytegleichheit behauptet.
+
+SPEICHERGRENZEN
+Flashreserve: 11.644 B (Mindestgrenze 8.192 B).
+Statischer Heap-/Stackabstand: 1.672 B (Mindestgrenze 1.536 B).
+Reservierter Stack: 8.192 B (Mindestgrenze 8.192 B).
+Das sind Linkergrenzen, keine gemessenen dynamischen Geräte-Minima.
+
+BEREINIGTER NACHWEISSTAND
+Die alte Datei evidence/APP673_REPRODUCIBILITY.json bezog sich auf den
+verworfenen Stand vor der LCD-only-Makefilekorrektur (SourceID 902463…).
+Sie wurde nicht überschrieben. Für den endgültigen Stand gilt die neue
+APP673_FINAL_REPRODUCIBILITY.json in diesem Nachweispaket.
+Der frühere Lauf mit 190/196 ist ebenfalls historisch: Sieben Anpassungen
+betrafen ausschließlich Testharnesses, nicht die Produktionsinputs. Der
+anschließende vollständige Lauf bestand alle 196 Skripte.
+
+LCD/OLED-ABGRENZUNG
+Die fünf neuen Miniapp-/Funkquellen werden ausschließlich bei BOARD=LCD
+ausgewählt; aktuelle GNU-Make-Auswertung für OLED enthält keine davon.
+Es wurde kein OLED-Paket erstellt oder verändert. Gemeinsame Katalog-,
+Font- und weitere Quellen sind im LCD-Zweig verändert; daraus folgt keine
+behauptete Bytegleichheit eines OLED-Builds aus genau diesem Zweig.
+Die separate OLED-Linie bleibt eine eigene Quelle und Gerätequalifikation.
+
+OFFENE GERÄTEPRÜFUNG
+Der Agent hatte keinen Gerätezugriff. Offen bleiben am eigenen Gerät:
+Controller-Erfassung und Speichern/Laden, tatsächliches Wecken der eigenen
+Switch 2, reale BLE-Bildübertragung mit Reconnect und Invertierung, Schlaf
+während Funkaktionen und anschließende normale Datei-/NFC-Nutzung.
+Auch Energieverbrauch und dauerhafte Heap-/Stackbelastung wurden hier
+nicht am Gerät gemessen. Lokaler LeakSanitizer ist unter ptrace nicht
+verfügbar; ASan/UBSan-Erfolge belegen keinen LSan-Erfolg.
+
+NÄCHSTER SCHRITT
+Root verbindet diese Firmwarebelege mit den endgültigen Web3.63-Tests,
+sichert den genauen Quellstand und schließt die Nutzerlieferung ab.
+
+Maschinenlesbarer Hauptnachweis: APP673_FIRMWARE_FINAL_VERIFICATION.json
+Unveränderte Originalnachweise und Hashliste: original-evidence/ und
+EVIDENCE_BINDINGS.json.

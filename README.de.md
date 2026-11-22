@@ -2,19 +2,19 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
-## LCD DE3.99 / App672 · normale Firmware
+## LCD DE3.100 / App673 · normale Firmware
 
-Für **Allmiibo LCD/ST7567 mit vorhandenem Packed LittleFS (PFS1), Z21 und S112 7.3.0**: [signierte App-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Web-Updater mit App672](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD).
+Für **Allmiibo LCD/ST7567 mit vorhandenem Packed LittleFS (PFS1), Z21 und S112 7.3.0**: [signierte App-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [Web-Updater mit App673](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD).
 
-App672 beendet die Import-Rückkehr auch nach einem erfolgreichen Speicher-Retry und vermeidet unnötige Bereinigungsscans, solange Altgruppen noch von Lesern gehalten werden. Fünf vollständige Modellabläufe benötigen 9,2–14,4 % weniger Flash-Lesezugriffe bei bytegleichen Endabbildern. Es entsteht keine zusätzliche dauerhafte RAM-Struktur. Die vorhandenen App671-Funktionen und das PFS1-Layout bleiben erhalten. [Änderungen](docs/DE3_99_RELEASE.md) · [Build- und Testnachweise](docs/validation/DE3_99.json)
+App673 ergänzt Switch-2-Wecken und BLE-Bildempfang, korrigiert NFC-Framelängen und spart durch Katalognamenspool und gezielte Symbolschrift Platz. Das BIN ist 3.196 Byte kleiner als App672; Flashreserve 11.644 Byte. Die vorherigen App672-Funktionen und PFS1 bleiben erhalten. [Änderungen und Bedienung](docs/DE3_100_RELEASE.md) · [Build- und Testnachweise](docs/validation/DE3_100.json)
 
-Der vollständige Firmwarelauf besteht mit 187/187 Suiten. 13 ARM-Prüfgruppen sowie die tatsächlichen Z21-Signatur-, Hash-, CRC- und Init-Pfade bestehen in Simulation. Unabhängige BIN-/HEX-Builds sind bytegleich. Die physische App672-Beobachtung steht aus. ZIP unverändert in nRF Device Firmware Update auswählen; sie aktualisiert ausschließlich die Anwendung.
+196/196 Firmware-Suiten, 13 ARM-Prüfgruppen sowie die finalen Z21-Signatur-, Hash-, CRC-, Init- und Wiederaufnahmemodelle bestehen. Zwei unabhängige finale BIN-/HEX-Builds sind bytegleich. Physische App673-Beobachtungen stehen aus. Die ZIP unverändert in nRF Device Firmware Update auswählen; sie aktualisiert ausschließlich die Anwendung.
 
-## Dateimanager 3.62.0 · normale Website und Portable
+## Dateimanager 3.63.0 · normale Website und Portable
 
-[Normalen Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Webquellen und Prüfungen](https://github.com/bluecyber81/pixl.js/tree/web-app672/web)
+[Normalen Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Webquellen und Prüfungen](https://github.com/bluecyber81/pixl.js/tree/web-app673/web)
 
-Eine gemeinsame Versionsquelle korrigiert den lokalen Python-/PowerShell-Start. Der Akkuverlauf zeigt aktive Loggerzeit und Pausen getrennt. App672-Downloads und der Kapazitätssimulator sind an das tatsächliche signierte Paket und die passende Speicherengine gebunden. Historische LCD-Testpfade und OLED-Pakete bleiben separat. Der gepflegte Webstand liegt auf `web-app672`; der Webordner dieses Firmwarebranches ist nicht die veröffentlichte Webquelle.
+Lokale Figurenbestände lassen sich mit der Geräteprüfung vergleichen und bewusst an den vorhandenen Ordnerabgleich übergeben. Zusätzliche Spielhinweise und eine genaue App673-Paket-/Quellenbindung ergänzen den Dateimanager. Der gepflegte Webstand liegt auf `web-app673`; dieser Firmwarezweig enthält historische Web-Testeingänge. OLED und historische private Webstände bleiben eigenständige Quellen und Pakete.
 
 ## Archiv: LCD DE3.89 / App662
 

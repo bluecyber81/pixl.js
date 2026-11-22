@@ -1,0 +1,82 @@
+{
+  "created_utc": "2026-11-22T17:47:22.155077+00:00",
+  "status": "IMPLEMENTED_TARGETED_CHECKS_PASS",
+  "production_frozen": true,
+  "scope": {
+    "board": "LCD",
+    "display": "ST7567",
+    "softdevice": "S112",
+    "device_access": false,
+    "upstream_oled_validation_transferred": false,
+    "global_connection_interval_changes": false,
+    "bootloader_changes": false,
+    "filesystem_format_or_mount_side_effects": false
+  },
+  "upstream": {
+    "pull_request": "https://github.com/solosky/pixl.js/pull/479",
+    "head": "b0ade162278d4fb4cced6d8b12aaaecb71d75539",
+    "selected_modules": [
+      "Switch-2 wake packet and config",
+      "S112 timeslot scan",
+      "incoming RAW/RLE/delta stream",
+      "PC sender"
+    ],
+    "not_blind_merged": true
+  },
+  "improvements": [
+    "Strict complete-frame and packet validation before publishing",
+    "Foreground decoding on existing bounded BLE queue",
+    "Session invalidation before first received chunk",
+    "Opt-in acknowledged sender, required ACK retained on RESOURCES until TX_READY",
+    "Exact CLOSED/data-unbind ownership before freeing temporary radio buffers",
+    "Asynchronous sleep continuation without early UI/flash teardown",
+    "Atomic config save with dirty-state exit guard and explicit discard",
+    "Truthful stop/retry UI during scan/advertising transition",
+    "Remote-mode ownership excludes both new apps and closing radio sessions",
+    "LCD-only source list verified by actual GNU Make evaluation"
+  ],
+  "targeted_tests": {
+    "protocol_assertions": 2182,
+    "scanner_assertions": 106,
+    "advertiser_assertions": 111,
+    "stream_ui_ack_assertions": 24,
+    "switch_ui_vfs_boot_assertions": 43,
+    "sleep_behavior_scenarios": 3,
+    "constructor_failure_stages": 9,
+    "sender_python_test_methods": 11,
+    "normal_groups": 6,
+    "asan_ubsan_groups": 5,
+    "all_pass": true,
+    "leak_sanitizer_local": {
+      "tested": false,
+      "reason": "ptrace limitation in this environment; sanitizer runs explicitly use detect_leaks=0"
+    },
+    "test_runs": "TEST_RUNS.json"
+  },
+  "additional_observed_regressions": {
+    "ble_remote_actual_source": "PASS non-LCD 197689 assertions and LCD 255851 assertions including new owner guards; exact legacy LCD wire vector unchanged",
+    "ble_foreground": "PASS 2 test methods",
+    "ble_remote_modes_de347": "PASS",
+    "ble_sdk_lifecycle": "PASS",
+    "ble_conn_preferences": "PASS 15 actual SDK/mocked radio cases using pinned SDK root"
+  },
+  "android_source_review": {
+    "repository": "https://github.com/Aragamiz/pixl.JS-BLE-screen-streaming",
+    "commit": "451b1b3ec95e9a98e542d7c8143d53b2c1cef2e7",
+    "path": "app/src/main/java/com/pixljs/blestream/PixlBleManager.java",
+    "sha256": "96e186fa16b2d5d735adcd098bf91710ae63a1837733c435105ee941c17ea325",
+    "finding": "handleTxData only processes RSSI: and catches NumberFormatException; unknown text ignored. No ACK handshake from this client, so new ACK notifications remain disabled. Its GATT pacing is not proof against this receiver queue overflow.",
+    "device_run": false
+  },
+  "board_scope_result": "BOARD_SCOPE_RESULT.json",
+  "instructions": "docs/LCD_SWITCH2_BLE_STREAM.md",
+  "source_files": "SOURCE_FILES.json",
+  "release_state": "Root runs final ARM/full suite/signing/publication after the Makefile board-scope correction; earlier candidate is not the final release binding",
+  "pending_physical": [
+    "Capture the user-owned paired controller and verify persistence",
+    "Actual wake of the user-owned Switch 2, including button-wake option",
+    "LCD stream over real BLE, reconnect/keyframe, inversion and measured display behavior",
+    "Sleep while scan/stream active, then normal file connection and NFC return",
+    "Energy consumption and sustained heap/stack under device workloads"
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "repository": "bluecyber81/pixl.js",
+  "baseline_commit": "96cc712f67b8d1376b1f86b30034da1209f82e0e",
+  "branch": "work/lcd-de3100-app673",
+  "scope": "Miniapp integration and associated tests; shared Makefile also contains root-owned version/resource changes",
+  "files": [
+    {
+      "path": "docs/LCD_SWITCH2_BLE_STREAM.md",
+      "bytes": 10561,
+      "sha256": "e920a4abf7365c37901393df494e08cd8f272d540ecf7c2db14dc5ec24849925"
+    },
+    {
+      "path": "fw/application/Makefile",
+      "bytes": 38594,
+      "sha256": "2be7c63075a3a5c5f883612e71dee1c875b77fdb7ca3f913b38cd5241074e430"
+    },
+    {
+      "path": "fw/application/src/app/ble_stream/app_ble_stream.c",
+      "bytes": 8825,
+      "sha256": "1584f092cd50ad9e026cc2583b599beb270514ab85025c5a4dac69666dae3921"
+    },
+    {
+      "path": "fw/application/src/app/ble_stream/app_ble_stream.h",
+      "bytes": 132,
+      "sha256": "f0206a25c289c99aba7fbe77138c4dd5ecab41c248f0a54e6d03e1cac82917e5"
+    },
+    {
+      "path": "fw/application/src/app/ble_stream/stream_codec.c",
+      "bytes": 3210,
+      "sha256": "5d1aeb32a66adafa40491e538968cc23bf02cfbefa813c8c4e8bdbb7c2a0d251"
+    },
+    {
+      "path": "fw/application/src/app/ble_stream/stream_codec.h",
+      "bytes": 655,
+      "sha256": "9617520ed5aac9d79df5fc8f77d3409e382bf8818b74b0e3318029ede8ddd79e"
+    },
+    {
+      "path": "fw/application/src/app/switch2_wake/app_switch2_wake.c",
+      "bytes": 20409,
+      "sha256": "3101c6e83e3081677ffbc7c8bf6153a96f2950100e153abbce86252a7c7f7eaf"
+    },
+    {
+      "path": "fw/application/src/app/switch2_wake/app_switch2_wake.h",
+      "bytes": 242,
+      "sha256": "bfa087c13fb76610ae14d5406b378938a68b8f364c6ee278f3325329dac08355"
+    },
+    {
+      "path": "fw/application/src/app/switch2_wake/switch2_protocol.c",
+      "bytes": 7527,
+      "sha256": "b17b3be2565fb4132c281630d4ca3f4843a597e91ca8b85430d156a96a84f272"
+    },
+    {
+      "path": "fw/application/src/app/switch2_wake/switch2_protocol.h",
+      "bytes": 1309,
+      "sha256": "92f650208c7b72a75d69b9cf248d800d6be07da50e6f9b401d95cd48e5aeb9f0"
+    },
+    {
+      "path": "fw/application/src/core/mini_app_data.c",
+      "bytes": 1002,
+      "sha256": "8808387c8720ef3da6b304bf5acc7e298f71ad1371487b35432c6354ac342223"
+    },
+    {
+      "path": "fw/application/src/core/mini_app_registry.h",
+      "bytes": 678,
+      "sha256": "4f5c860c697c7d1682370c470f53c96da00d85916aaafdd5ae6ac49d2160223c"
+    },
+    {
+      "path": "fw/application/src/i18n/de_DE.c",
+      "bytes": 13568,
+      "sha256": "d32eabda00b5485fa85ed64aa89f5655842f79d61edafe4b0f3471be0f1dc49a"
+    },
+    {
+      "path": "fw/application/src/i18n/en_US.c",
+      "bytes": 12924,
+      "sha256": "1d32808694057742e0d27a2e1c08011ef46823a118f3d67717314f69b9fec147"
+    },
+    {
+      "path": "fw/application/src/i18n/string_id.h",
+      "bytes": 7611,
+      "sha256": "59df15513afe808299135e0bc6f68843789aad7d4805315c6ebb5173f957d394"
+    },
+    {
+      "path": "fw/application/src/main.c",
+      "bytes": 16516,
+      "sha256": "8c314c83901baf12f5655ff358e568bd5544aa0ac81c4bd001ece65e971b8308"
+    },
+    {
+      "path": "fw/application/src/mod/ble/ble_main.c",
+      "bytes": 62389,
+      "sha256": "8138fc12f6810137ea4a2407089647c1c2029114520b97b28e7f38c495119e25"
+    },
+    {
+      "path": "fw/application/src/mod/ble/ble_main.h",
+      "bytes": 6863,
+      "sha256": "8cd067cca285eecb70804103dc3b475e9fabe8d3264ea6e7f9e2b5be0fe14fa7"
+    },
+    {
+      "path": "fw/application/src/mod/ble/ble_remote.c",
+      "bytes": 12936,
+      "sha256": "c4b675521e73d910ebe5940fb9b2013cedaeeef2c9471c7c965845ef0f13fddf"
+    },
+    {
+      "path": "fw/application/src/mod/ble/ble_switch2_scan.c",
+      "bytes": 9847,
+      "sha256": "ead8159b3c87ba2974574faa9ae69e0d658c3b4998d834d6446a3eef99a3e169"
+    },
+    {
+      "path": "fw/data/i18n.csv",
+      "bytes": 57414,
+      "sha256": "c76cab8b0c70b5d67060eeba75d37d403c52bb2e90d794f03e47b0c1bef70b0f"
+    },
+    {
+      "path": "fw/scripts/stream_video_to_pixl.py",
+      "bytes": 15528,
+      "sha256": "c6cf98c371abbfd84ac0396cd7069afffc4314cf82662ab9eae6923e45640da0"
+    },
+    {
+      "path": "fw/tests/de3/ble_remote_de347.c.in",
+      "bytes": 20563,
+      "sha256": "7312367b69a4e2bbf1cb61d7d22395a3e33e0b228580e16ac0ceb710140212be"
+    },
+    {
+      "path": "fw/tests/de3/miniapps_protocol_host.c.in",
+      "bytes": 6435,
+      "sha256": "9d1b7b51ab6e748c6e339ed26c2302dd30fe3a4e01c5d4613b9936080be2a1ee"
+    },
+    {
+      "path": "fw/tests/de3/miniapps_raw_lifecycle.c.in",
+      "bytes": 8181,
+      "sha256": "a1aa1ab88fdccdc5288104ad690f5ff4a2dd9b17660fe22aa8e5227a1e6f3f11"
+    },
+    {
+      "path": "fw/tests/de3/miniapps_scan_lifecycle.c.in",
+      "bytes": 9514,
+      "sha256": "ece5551aedcb739e3647dc6f072c0c2fe9fb04e15edbdbed5b6d91e18561ca36"
+    },
+    {
+      "path": "fw/tests/de3/miniapps_stream_ui.c.in",
+      "bytes": 6110,
+      "sha256": "7c6bf3f48d2478cdec5443e6e9efcffa34e44f0e9c0f5b5e1570fa4d2b39058a"
+    },
+    {
+      "path": "fw/tests/de3/miniapps_switch_ui.c.in",
+      "bytes": 7352,
+      "sha256": "4c2f255145c8fba1e35d7720499e4314873a9428ecbd7fe20d4c9a6dffde93b4"
+    },
+    {
+      "path": "fw/tests/de3/test_miniapps_protocol.py",
+      "bytes": 994,
+      "sha256": "607e54db506bbc7c6f85c409eb5fdd9da8ae050d025bb2c33ffb2368fd12fd4c"
+    },
+    {
+      "path": "fw/tests/de3/test_miniapps_radio_lifecycle.py",
+      "bytes": 1328,
+      "sha256": "841ef43804bc97da5d656d64ce888e1b35c822115f6336cf8b8ea5d5e9449892"
+    },
+    {
+      "path": "fw/tests/de3/test_miniapps_sleep.py",
+      "bytes": 2660,
+      "sha256": "66cf50ed9d3030686ce86086f94cef55800128dd5a79c7307e061612513d96f6"
+    },
+    {
+      "path": "fw/tests/de3/test_miniapps_startup.py",
+      "bytes": 2331,
+      "sha256": "eefabe1238008e07bbd3a6dc3ff73387a5537e435c1b490cb07f96dcb1929614"
+    },
+    {
+      "path": "fw/tests/de3/test_miniapps_ui.py",
+      "bytes": 2263,
+      "sha256": "a71a0140eecf873495775d5c9cceb68b7ca13e421b4774189aea378af5964f3f"
+    },
+    {
+      "path": "fw/tests/de3/test_stream_sender.py",
+      "bytes": 6104,
+      "sha256": "a1231a4e8115a181e3ddcdc5abacc302a36ad0b7cf0bc2b7f7412bf474cee2fc"
+    }
+  ]
+}

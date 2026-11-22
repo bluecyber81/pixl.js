@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "bootCounter": 21,
+  "appCounter": 673,
+  "previousAppCounter": 672,
+  "softDeviceFwid": 294,
+  "bootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "applicationSha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+  "previousApplicationSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+  "cases": [
+    {
+      "before": "App672 present",
+      "signedInitAccepted": true,
+      "code": 1,
+      "destination": 102400,
+      "dataBytes": 361080,
+      "bank0Code": 0
+    },
+    {
+      "before": "empty application bank",
+      "signedInitAccepted": true,
+      "code": 1,
+      "destination": 102400,
+      "dataBytes": 361080,
+      "bank0Code": 0
+    }
+  ],
+  "physicalDeviceAccess": false,
+  "limits": "Actual ELF init-execute and bank selection; flash, radio and handover simulated."
+}
