@@ -1,0 +1,146 @@
+[
+  {
+    "script": "check_stack_watermark_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_stack_watermark_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out"
+    ]
+  },
+  {
+    "script": "check_aes_m4_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_aes_m4_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+    ]
+  },
+  {
+    "script": "check_sha256_hmac_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_sha256_hmac_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin",
+      "--json",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/SHA256_HMAC.json"
+    ]
+  },
+  {
+    "script": "check_build_fault_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_build_fault_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--json",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/BUILD_FAULT.json"
+    ]
+  },
+  {
+    "script": "check_lcd_device_test_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_lcd_device_test_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/LCD_DEVICE_TEST.json"
+    ]
+  },
+  {
+    "script": "check_lcd_game_rotation_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_lcd_game_rotation_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/LCD_GAME_ROTATION.json"
+    ]
+  },
+  {
+    "script": "check_flash_jedec_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_flash_jedec_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+    ]
+  },
+  {
+    "script": "check_display_profile_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_display_profile_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+    ]
+  },
+  {
+    "script": "check_chameleon_save_screen_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_chameleon_save_screen_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/CHAMELEON_SAVE_SCREEN.json"
+    ]
+  },
+  {
+    "script": "check_first_menu_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_first_menu_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+    ]
+  },
+  {
+    "script": "check_ble_link_elf.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_ble_link_elf.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--json",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/BLE_LINK.json"
+    ]
+  },
+  {
+    "script": "check_batch_read_elf_de397.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_batch_read_elf_de397.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--expected-counter",
+      "672",
+      "--json",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/BATCH_READ.json"
+    ]
+  },
+  {
+    "script": "check_normal_lcd_release_elf_de398.py",
+    "command": [
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+      "-B",
+      "./fw/tests/de3/check_normal_lcd_release_elf_de398.py",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+      "--json",
+      "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/NORMAL_RELEASE.json",
+      "--expected-version",
+      "2.22.0-DE3.99",
+      "--expected-counter",
+      "672"
+    ]
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "deviceAccess": false,
+  "version": "2.22.0-DE3.99",
+  "counter": 672,
+  "sourceId": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
+  "binSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+  "elfSha256": "d33bddb7dfd025d02a0be0cf1ea5c2b07379fdd443f7f1465d906fdfc1df77c2",
+  "buildRecordSha256": "f7f13ee382723b554ff140fc119d1ba3fc9dc0097b42f448025ad28337454fee",
+  "checkerSha256": "bf34f6d53ca8cdb70c1e88e06d28ac6e19452004a4c81d821eaaa092c60be43a",
+  "cases": [
+    "actual_linked_version_and_source_id_bound_to_expected_build_record",
+    "registered_MTUDv1_v2_exact_lengths_link_fields_and_direct_bounds",
+    "MTUDv3_and_both_EVT_settings_rejected_without_RAM_mutation_or_SVC",
+    "actual_startup_recorders_registered_v1_to_v4_and_v5_rejected",
+    "actual_PXGCv1_unmounted_RAM_snapshot_bounds_and_legacy_storage_capabilities",
+    "malformed_frames_and_nonrequest_events_preserve_application_RAM_except_SDK_saved_IRQ_masks",
+    "test_eventextension_and_mount_profiler_code_and_state_symbols_absent"
+  ],
+  "absentTestSymbols": [
+    "ble_test_diagnostic",
+    "m_event_extension_enabled",
+    "m_event_extension_result",
+    "mount_profile",
+    "runtime_diag_mount_scan_begin",
+    "runtime_diag_profile_begin",
+    "runtime_diag_profile_end",
+    "runtime_diag_startup_profile_snapshot"
+  ],
+  "registeredHandlers": {
+    "INFO05": "0x2cfec",
+    "INFO09": "0x2ce70",
+    "VFS1c": "0x2d3fc"
+  },
+  "counterEvidence": "Exact BUILD_RESULT counter and artifact binding; signed DFU init counter is verified separately.",
+  "modeledBoundary": "df_core_send_frame response capture only; no SDK, storage, timer or radio success stubs.",
+  "ramComparisonException": {
+    "symbol": "nrf_nvic_state",
+    "offset": 0,
+    "bytes": 8,
+    "reason": "Actual SDK critical-region saved IRQ-mask bookkeeping; critical flag is checked zero separately.",
+    "observedChangedByteAddresses": [
+      "0x20004120",
+      "0x20004121",
+      "0x20004122",
+      "0x20004123",
+      "0x20004124",
+      "0x20004125",
+      "0x20004126",
+      "0x20004127"
+    ]
+  },
+  "malformedVfsExpectedMutation": "Exactly runtime_diag_vfs_error(command=0x1c,error=-1000), including its error counter; computed with the actual linked recorder and compared against the handler result.",
+  "seededObservations": "Explicit link RAM and synthetic startup-recorder inputs; these are not device measurements.",
+  "scope": "Actual linked normal LCD diagnostic handlers, registry, serializers and recorder functions. RAM/NVIC only; unknown peripheral access and every SVC fail. PXGC linked test covers unmounted state; real mounted/pinned/error state is covered by the separate C/NOR test. No hardware timing, BLE operation, complete stack bound or installation claim."
+}

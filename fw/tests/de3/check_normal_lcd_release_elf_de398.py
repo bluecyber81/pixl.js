@@ -24,11 +24,11 @@ from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M4, UC_ARM_REG_CONTROL,
                                UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3)
 
 
-def verify(folder):
+def verify(folder, expected_version='2.22.0-DE3.98', expected_counter=671):
     metadata, symbols, image, info = firmware(folder)
     s = symbols
-    assert metadata['version'] == '2.22.0-DE3.98'
-    assert metadata['counter'] == 671
+    assert metadata['version'] == expected_version
+    assert metadata['counter'] == expected_counter
     assert s['__StackTop'] - s['__StackLimit'] == 8192
     assert 'u8g2_Setup_st7567_enh_dg128064_f' in s
     assert 'u8g2_Setup_sh1106_128x64_noname_f' not in s
@@ -116,7 +116,7 @@ def verify(folder):
     version = text(call('version_get_version', 0))
     assert version == metadata['version']
     assert text(call('version_get_source_id')) == metadata['source_id_sha256']
-    cases.append('actual_linked_DE3_98_version_and_source_id_bound_to_App671_build_record')
+    cases.append('actual_linked_version_and_source_id_bound_to_expected_build_record')
 
     def request(command, payload=b'', status=0, chunk=0, event_type=2, expected_vfs_error=None):
         assert len(payload) <= 243
@@ -244,7 +244,7 @@ def verify(folder):
     cases.append('malformed_frames_and_nonrequest_events_preserve_application_RAM_except_SDK_saved_IRQ_masks')
     cases.append('test_eventextension_and_mount_profiler_code_and_state_symbols_absent')
     return {
-        'passed': True, 'deviceAccess': False, 'version': version, 'counter': 671,
+        'passed': True, 'deviceAccess': False, 'version': version, 'counter': expected_counter,
         'sourceId': metadata['source_id_sha256'],
         'binSha256': sha256(image).hexdigest(),
         'elfSha256': sha256((folder / 'pixljs.out').read_bytes()).hexdigest(),
@@ -269,9 +269,11 @@ def verify(folder):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('build', type=Path)
+    parser.add_argument('--expected-version', default='2.22.0-DE3.98')
+    parser.add_argument('--expected-counter', type=int, default=671)
     parser.add_argument('--json', type=Path)
     args = parser.parse_args()
-    result = verify(args.build)
+    result = verify(args.build, args.expected_version, args.expected_counter)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
         args.json.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')

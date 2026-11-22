@@ -1,5 +1,14 @@
 # Allmiibo LCD application and file manager history
 
+## DE3.99 / App672 · 22 November 2026
+
+- Complete the Chameleon import continuation after successful save retry; preserve cancel/discard behavior.
+- Avoid repeated pinned-only PackedFS cleanup scans using the existing state byte; invalidate on last-owner release and failed close.
+- Same complete NOR end images with 9.2–14.4% fewer reads across five controlled workloads.
+- Normal Web3.62.0 fixes launcher version identity and distinguishes active battery logging time from pauses.
+- 187/187 full firmware suites, 13 linked ARM groups and Z21 package acceptance; physical App672 observation remains pending.
+
+
 ## 2026-11-19 · LCD DE3.89 / App662 and file manager 3.58.2
 
 The signed LCD application from Test 1 is now the stable release. A general owner test and a build-matched diagnostic on one LCD are recorded. The public file manager promotes the same application and supports revision-checked small-file transfers. [LCD release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [Device readback](docs/validation/DE3_89_LCD_READBACK.json)

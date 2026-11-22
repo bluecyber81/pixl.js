@@ -47,7 +47,7 @@ typedef struct mui_msg_box_s {
 typedef struct {struct {uint32_t id; mui_view_t *view;} views[8]; uint8_t view_count; mui_view_t *p_active_view;} mui_view_dispatcher_t;
 typedef struct {void *user_data; uint32_t scene; bool active;} mui_scene_dispatcher_t;
 @APP_HEADER@
-enum {CHAMELEON_SCENE_MAIN=1, CHAMELEON_SCENE_FACTORY, CHAMELEON_SCENE_MENU, CHAMELEON_SCENE_MAX};
+enum {CHAMELEON_SCENE_MAIN=1, CHAMELEON_SCENE_FACTORY, CHAMELEON_SCENE_MENU, CHAMELEON_SCENE_MENU_CARD_DATA_FILE_LOAD, CHAMELEON_SCENE_MAX};
 enum {MUI_LAYER_FULLSCREEN, MUI_LAYER_TOAST};
 static const int chameleon_scene_defines[] = {0};
 static const uint8_t u8g2_font_wqy12_t_gb2312a[] = {0};
@@ -192,6 +192,7 @@ static void mui_scene_dispatcher_exit(mui_scene_dispatcher_t *d) {
     else if(d->scene==CHAMELEON_SCENE_MAIN){tag_emulation_sense_end();hal_nfc_set_nrfx_irq_enable(false);}
 }
 static void mui_list_view_clear_items(mui_list_view_t *p) {}
+static void mui_toast_view_show(mui_toast_view_t *p,const char *message) { (void)p; (void)message; assert(0); }
 static void mui_msg_box_set_header(mui_msg_box_t *p,const char *s) {p->header=s;}
 static void mui_msg_box_set_message(mui_msg_box_t *p,const char *s) {p->message=s;}
 static void mui_msg_box_set_btn_text(mui_msg_box_t *p,const char *l,const char *c,const char *r) {}

@@ -1,0 +1,225 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "script": "check_stack_watermark_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_stack_watermark_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out"
+      ],
+      "exitCode": 0,
+      "log": "check_stack_watermark_elf.py.log",
+      "logSha256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953",
+      "elapsedSeconds": 0.082
+    },
+    {
+      "script": "check_aes_m4_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_aes_m4_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "check_aes_m4_elf.py.log",
+      "logSha256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1",
+      "elapsedSeconds": 0.137
+    },
+    {
+      "script": "check_sha256_hmac_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_sha256_hmac_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin",
+        "--json",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/SHA256_HMAC.json"
+      ],
+      "exitCode": 0,
+      "log": "check_sha256_hmac_elf.py.log",
+      "logSha256": "67be4d951f6c23acf105d4149b7918c91735f2fe8d77ed189d7f400628914b98",
+      "elapsedSeconds": 0.14
+    },
+    {
+      "script": "check_build_fault_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_build_fault_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--json",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/BUILD_FAULT.json"
+      ],
+      "exitCode": 0,
+      "log": "check_build_fault_elf.py.log",
+      "logSha256": "398ab2d5b2913ca7585d5fe3895673c331988f49066c666b004e7741b2d0773a",
+      "elapsedSeconds": 0.099
+    },
+    {
+      "script": "check_lcd_device_test_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_lcd_device_test_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/LCD_DEVICE_TEST.json"
+      ],
+      "exitCode": 0,
+      "log": "check_lcd_device_test_elf.py.log",
+      "logSha256": "d5aad873a76908eae41ba34a065b48a9aecaf7452f9658ec393dc8030772dddb",
+      "elapsedSeconds": 0.343
+    },
+    {
+      "script": "check_lcd_game_rotation_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_lcd_game_rotation_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/LCD_GAME_ROTATION.json"
+      ],
+      "exitCode": 0,
+      "log": "check_lcd_game_rotation_elf.py.log",
+      "logSha256": "8baa25e045b12b70260de981de4399984eb00aebef046e6af3445d611ca1e52b",
+      "elapsedSeconds": 2.632
+    },
+    {
+      "script": "check_flash_jedec_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_flash_jedec_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "check_flash_jedec_elf.py.log",
+      "logSha256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca",
+      "elapsedSeconds": 0.104
+    },
+    {
+      "script": "check_display_profile_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_display_profile_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "check_display_profile_elf.py.log",
+      "logSha256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86",
+      "elapsedSeconds": 0.093
+    },
+    {
+      "script": "check_chameleon_save_screen_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_chameleon_save_screen_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/CHAMELEON_SAVE_SCREEN.json"
+      ],
+      "exitCode": 0,
+      "log": "check_chameleon_save_screen_elf.py.log",
+      "logSha256": "ff37e65e1e13756ccf62850bf28daf47c7536972601d6c292270c486e7826695",
+      "elapsedSeconds": 0.719
+    },
+    {
+      "script": "check_first_menu_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_first_menu_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.out",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1/pixljs.bin"
+      ],
+      "exitCode": 0,
+      "log": "check_first_menu_elf.py.log",
+      "logSha256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9",
+      "elapsedSeconds": 0.066
+    },
+    {
+      "script": "check_ble_link_elf.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_ble_link_elf.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--json",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/BLE_LINK.json"
+      ],
+      "exitCode": 0,
+      "log": "check_ble_link_elf.py.log",
+      "logSha256": "88a9ddbb9aeda512b29867d11f84c97ec1d93963de92ddbace01df2daf226598",
+      "elapsedSeconds": 0.08
+    },
+    {
+      "script": "check_batch_read_elf_de397.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_batch_read_elf_de397.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--expected-counter",
+        "672",
+        "--json",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/BATCH_READ.json"
+      ],
+      "exitCode": 0,
+      "log": "check_batch_read_elf_de397.py.log",
+      "logSha256": "6f056b970eebb85aebb119401ba5f5f7302316f137529db86103b06b77127ef1",
+      "elapsedSeconds": 4.07
+    },
+    {
+      "script": "check_normal_lcd_release_elf_de398.py",
+      "command": [
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/build_environment/qualification-venv/bin/python3",
+        "-B",
+        "./fw/tests/de3/check_normal_lcd_release_elf_de398.py",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/build1",
+        "--json",
+        "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/ARM/NORMAL_RELEASE.json",
+        "--expected-version",
+        "2.22.0-DE3.99",
+        "--expected-counter",
+        "672"
+      ],
+      "exitCode": 0,
+      "log": "check_normal_lcd_release_elf_de398.py.log",
+      "logSha256": "6dad3fd062ac94b084e042bcad96505028a36ad201409b6c6a965e742ac1dcb2",
+      "elapsedSeconds": 0.172
+    }
+  ],
+  "applicationBinSHA256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+  "elfSHA256": "d33bddb7dfd025d02a0be0cf1ea5c2b07379fdd443f7f1465d906fdfc1df77c2",
+  "sourceId": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
+  "deviceAccess": false,
+  "inputHashes": {
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_stack_watermark_elf.py": "8714ee998a76b77f9a60b1d039d4e6f63bf37b15b1ccf63332a420d05accc3e5",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_aes_m4_elf.py": "30472daebb64b69e2f10e1d80be939fbf66dbb51d98808216fae0aa61172a7c8",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_sha256_hmac_elf.py": "be980d7fc7c850d9f71e1f9b0a0535793915ddb49324b9ccf2ccb1e256ae131a",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_build_fault_elf.py": "74d36cf4ba76e96cde7664ee6a5aa2d4eb026fd4c6a6e39f96b52f4e2b51827e",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_lcd_device_test_elf.py": "3f54f31df7a7c068bb3183c277f26e0871d709eebad6be9b3b25f57dac2a7c2f",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_lcd_game_rotation_elf.py": "da56f3198d14f0148c1d540b12d6e3c6b277d432e35eddbf440ca2c69381643c",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_flash_jedec_elf.py": "95078d1bed7353feac3c4ec1cafbf406c9a6e3d239a478ecf0da287b93b46577",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_display_profile_elf.py": "5f6ff1a3d8c965a4b2d1eb4818cc3259c4932f2864fdace8342fd2c56fd9cbf8",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_chameleon_save_screen_elf.py": "35efccc373cd12dbcafd3397a505c01f43dc8154a109c47b9b90e0d0e090031e",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_first_menu_elf.py": "b53bced2a786c8d6e20b8dff37b547293c05ec860ea6424d2c41231bd8cdab34",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_ble_link_elf.py": "fd13bc488697aff09291bf5ab4d5a15f84d9b29725216eb8dd51c5cc911d16a2",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_batch_read_elf_de397.py": "b549be1c369b3ba85ae3e776435bdaba9a7391d1f9bfa12bd6d84690ab331acb",
+    "/workspace/scratch/01be954f2c61/normal_build_20261122/fw672/fw/tests/de3/check_normal_lcd_release_elf_de398.py": "bf34f6d53ca8cdb70c1e88e06d28ac6e19452004a4c81d821eaaa092c60be43a"
+  },
+  "inputsUnchanged": true,
+  "elapsedSeconds": 4.704,
+  "limitations": [
+    "Actual linked Cortex-M4 functions with explicit simulated boundaries; no physical device or RF test."
+  ]
+}

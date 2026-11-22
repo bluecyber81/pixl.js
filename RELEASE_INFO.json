@@ -1,15 +1,15 @@
 {
   "schema": 2,
-  "publication_date": null,
-  "version": "2.22.0-DE3.98",
-  "counter": 671,
+  "publication_date": "2026-11-22",
+  "version": "2.22.0-DE3.99",
+  "counter": 672,
   "board": "LCD",
-  "web_version": "3.61.0",
+  "web_version": "3.62.0",
   "web_publication_date": null,
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
-  "application_sha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "ota_sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+  "application_sha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0126"
@@ -37,15 +37,15 @@
   "bootloader_and_softdevice_replaced_by_application_ota": false,
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
-  "host_firmware_suites": 186,
-  "evidence": "docs/validation/DE3_98.json",
+  "host_firmware_suites": 187,
+  "evidence": "docs/validation/DE3_99.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
   },
   "limits": [
     "Matching LCD/ST7567 with existing PFS1, Z21 and S112 7.3.0 only.",
-    "Software, signed-package and actual linked ARM checks do not establish physical App671 device acceptance.",
+    "Software, signed-package and actual linked ARM checks do not establish physical App672 device acceptance.",
     "The inherited public signing key does not prove exclusive publisher identity.",
     "The historical App662 combined system package remains separate; no new bootloader or SoftDevice is shipped."
   ],
@@ -55,7 +55,7 @@
   "previous_web_device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
   "device_readback_passed": false,
   "previous_device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
-  "production_source_id_sha256": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "production_source_id_sha256": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
   "tested_bootloader": {
     "name": "Z21",
     "counter": 21,
@@ -63,9 +63,9 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Actual linked Z21 ARM signature/hash/CRC and init/bank-selection paths accept the final signed App671 payload in simulation. Earlier App670 diagnostics reported this Z21 region and S112 7.3.0; no physical App671 DFU is claimed."
+    "qualification": "Seven actual linked Z21 ARM signature/hash/CRC checks and two init/bank-selection cases accept the signed App672 after App671 and on an empty application bank. Physical radio and flash are simulated."
   },
-  "web_host_test_scope": "The normal Web3.61.0 is maintained and qualified separately on web-app671. See its docs/validation/WEB3_61_0.json; firmware branch web content is not the deployed web source.",
+  "web_host_test_scope": "Web3.62.0 is built and qualified separately on web-app672. Firmware-branch web files are package verification inputs, not the maintained web source.",
   "previous_web_full_suite": {
     "version": "3.38.0",
     "local_passed": 1180,
@@ -80,8 +80,8 @@
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1",
     "evidence": "docs/validation/WEB3_58_1.json"
   },
-  "web_release_status": "normal-release-in-preparation",
-  "web_release_notes": "https://github.com/bluecyber81/pixl.js/blob/web-app671/web/LIESMICH_3_61_0.txt",
+  "web_release_status": "qualification-in-progress",
+  "web_release_notes": "https://github.com/bluecyber81/pixl.js/blob/web-app672/web/LIESMICH_3_62_0.txt",
   "web_personal_backup_status": "Personal backup benchmarks are recorded in the respective historical web evidence.",
   "web_changes": {
     "figure_usage": {
@@ -100,6 +100,7 @@
     "name_and_path_errors": "German and English explanations for name limits, alias collisions, reserved names and normalization, with affected name and suggested form.",
     "firmware_downloads": {
       "bundled": [
+        "DE3.99/672",
         "DE3.98/671",
         "DE3.89/662",
         "DE3.88/661",
@@ -121,7 +122,7 @@
         "DE3.73/646",
         "DE3.72/645"
       ],
-      "stable": "DE3.98/671",
+      "stable": "DE3.99/672",
       "prerelease": "DE3.87-OLEDt6/86 (OLED)"
     },
     "sync_changed_after_comparison": "German and English messages for changed target and local contents; both stop before device mutation.",
@@ -165,9 +166,11 @@
     "web_3_58_0": "Compact mobile remote; bulk game-folder selection, default names and preview counts; App660 prerelease and release-asset links.",
     "web_3_58_1": "Offers OLED Test 6 browser DFU and phone downloads, bilingual guides and remote device selection by the advertised service or remote name. The file manager checks the remote status after connecting.",
     "web_3_58_2": "Direct small-file reads, revision-checked folder upload and resume, cached directory listings for repeated searches, incremental CRC checks in browser DFU and an App662-specific capacity simulator.",
-    "web_3_61_0": "Normal App671 selection and exact package binding, matching PFS simulator and source archive, normal startup/radio/cleanup diagnostics, existing batch/digest backup path retained. Historical LCD test channels and OLED remain separately gated."
+    "web_3_61_0": "Normal App671 selection and exact package binding, matching PFS simulator and source archive, normal startup/radio/cleanup diagnostics, existing batch/digest backup path retained. Historical LCD test channels and OLED remain separately gated.",
+    "local_launcher": "Package version is shared by web UI, Python launcher/health and PowerShell; portable includes the same manifest.",
+    "battery_recording": "Displays record window, active logger duration and closed pauses separately; voltage samples are not measured current."
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -178,17 +181,17 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "software-qualified-signed-normal",
-  "web_evidence": "https://github.com/bluecyber81/pixl.js/blob/web-app671/docs/validation/WEB3_61_0.json",
+  "web_evidence": "https://github.com/bluecyber81/pixl.js/blob/web-app672/docs/validation/WEB3_62_0.json",
   "device_readback_evidence": null,
   "fresh_public_unsigned_rebuild_matches_signed_application": false,
   "firmware_downloads": {
     "application": {
-      "file": "Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
-      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
-      "counter": 671,
-      "version": "2.22.0-DE3.98",
-      "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
-      "bytes": 364781
+      "file": "Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+      "counter": 672,
+      "version": "2.22.0-DE3.99",
+      "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "bytes": 364877
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
@@ -223,7 +226,7 @@
     "stable_default_counter_at_publication": 637
   },
   "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/workflows/unsigned-firmware.yml",
-  "device_validation_scope": "App671 has not been installed or observed on a physical LCD by these qualification runs. Earlier App670 device readbacks and bounded owner tests are kept separately attributed. The newly implemented return, temporary-tag retention and wake flows require their first ordinary device observation.",
+  "device_validation_scope": "App672 has not been installed or observed on a physical device by these software qualification runs. The owner supplied an App671/DE3.98 diagnostic on 21 November; it is a preceding-build observation, not App672 acceptance.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "previous_lcd_release": {
     "version": "2.22.0-DE3.81",
@@ -235,7 +238,7 @@
     "device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.81"
   },
-  "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671",
+  "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de399-app672",
   "oled_test_release": {
     "version": "2.22.0-DE3.87-OLEDt6",
     "counter": 86,
@@ -269,7 +272,7 @@
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1"
   },
   "hardware_acceptance": "pending-for-this-build",
-  "web_device_readback_scope": "App671 and Web3.61.0 have not been observed on a physical device; earlier App670 observations remain separately attributed.",
+  "web_device_readback_scope": "Web3.62.0 and App672 have no physical-device observation. Earlier App671/Web3.61.0 diagnostics remain separately attributed.",
   "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1",
   "firmware_preview_history": [
     {
@@ -478,28 +481,41 @@
   ],
   "firmware_channel": "normal",
   "release_status": "software-qualified-signed-normal",
-  "version_header_sha256": "bebc0198bb9344f5e941414ab46254ae82aa5adbf8c014f30f47ed2ed34df1d1",
-  "firmware_source_branch": "release/lcd-de398-app671",
-  "application_bytes": 364180,
-  "firmware_source_commit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
-  "local_production_commit": "465a4b0572f8c0d22e899b2110fb88ff8c6015a4",
-  "production_tree_sha": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
-  "ota_bytes": 364781,
-  "qualification_date": "2026-11-21",
+  "version_header_sha256": "de1ad2cc8eca058c4946c8b303d5458d24d57b8402c11b1c4ed5d4c596599f31",
+  "firmware_source_branch": "release/lcd-de399-app672",
+  "application_bytes": 364276,
+  "firmware_source_commit": "9fb9d84b51365cf33f745896243f4cd6e934e637",
+  "local_production_commit": "5dab8cace08687101ea71aa3131f46fb1fef1d9e",
+  "production_tree_sha": "233aec9e567495ddd25d002ec05e61173f9eac7b",
+  "ota_bytes": 364877,
+  "qualification_date": "2026-11-22",
   "signature_verified": true,
   "z21_application_acceptance_passed": true,
   "application_ota_signature": "ECDSA-P256",
-  "firmware_notes": "docs/DE3_98_RELEASE.md",
-  "firmware_evidence": "docs/validation/DE3_98.json",
-  "host_firmware_suite_method": "Full run: 185/186 passed; the sole failed suite compiled against an obsolete fixture. After updating only that fixture to the existing boolean settings API and App3 field, the unchanged suite passed all 4 cases. All other test inputs and all 709 production inputs were unchanged. Original full-run report retained.",
+  "firmware_notes": "docs/DE3_99_RELEASE.md",
+  "firmware_evidence": "docs/validation/DE3_99.json",
+  "host_firmware_suite_method": "Final isolated full run: 187/187 passed, no omissions. The first 186/187 attempt is retained; its single stale DE2 app mock was updated to the new import continuation, preserving assertions, before the entire full run passed.",
   "independent_local_unsigned_rebuilds_match_signed_application": true,
-  "unsigned_rebuild_scope": "Two local isolated builds of the published production tree have identical BIN and HEX bytes and match the signed payload. No new public CI rebuild is claimed.",
-  "web_source_branch": "web-app671",
-  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app671/web",
+  "unsigned_rebuild_scope": "Two isolated local builds have identical BIN and HEX bytes and match the signed application. A canonical release-mode build validates RELEASE_INFO and the same application hash.",
+  "web_source_branch": "web-app672",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app672/web",
   "previous_normal_lcd_release": {
-    "version": "2.22.0-DE3.89",
-    "counter": 662,
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
-    "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
-  }
+    "version": "2.22.0-DE3.98",
+    "counter": 671,
+    "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671",
+    "application_sha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+    "ota_sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+    "production_source_id_sha256": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+    "evidence": "docs/validation/DE3_98.json",
+    "device_observation": "Owner-supplied diagnostic from 2026-11-21: reported version/counter/SourceID match App671; no on-device full-BIN hash or unique-device proof."
+  },
+  "normal_lcd_release_history": [
+    {
+      "version": "2.22.0-DE3.89",
+      "counter": 662,
+      "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
+      "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
+    }
+  ]
 }

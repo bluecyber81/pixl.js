@@ -1,0 +1,72 @@
+Allmiibo – Änderungen für die normale LCD-Firmware DE3.99 / App672
+Stand: 2026-11-22T13:37:37.364722+00:00
+
+1. Ergebnis und Quellbindung
+
+Der bestätigte Import-Retry-Fehler ist im normalen LCD-Produktcode behoben. Außerdem verhindert PackedFS jetzt wiederholte vollständige Bereinigungsscans, wenn ein vorheriger vollständiger Scan ausschließlich noch gehaltene Altgruppen gefunden hat. Die spätere Bereinigung und sämtliche bestehenden Fehler-/Abbruchverträge bleiben erhalten.
+
+Basis ist App671, Commit a3ae0e4063f1901e9da98f3ff37fd163388eb72a. Die Arbeit liegt im isolierten Worktree ../fw672 auf work/normal-de399-app672. Die unveränderten Auditbäume von App664 und App671 wurden nicht bearbeitet. Dieser Bericht umfasst vier produktive Dateien und sieben Testdateien; Version, generierte Identität, Buildwerkzeuge, Signatur und Veröffentlichung verantwortet der übergeordnete Releaseabschluss. Die beobachtete HEAD-Referenz ist 5dab8cace08687101ea71aa3131f46fb1fef1d9e; die geprüften Dateien werden zusätzlich über die SHA-256-Liste in FIRMWARE_CHANGES_RESULT.json gebunden. APP672_FIRMWARE_PRODUCT.patch enthält den funktionalen Produktdelta dieser vier Dateien gegen App671.
+
+Produktions-SourceID: 1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d
+PackedFS-EngineID: 3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f
+
+2. Import: Erfolg nach Retry führt genau einmal zur gewählten Karte
+
+In App671 speicherte ein erfolgreicher erneuter Versuch nach einem Tag- oder Settings-Speicherfehler die importierten Bytes, führte aber die nur im ursprünglichen Importaufruf stehende Rückkehr zur Karte nicht mehr aus. Der Nutzer blieb in der Importansicht; die eigentliche Erfolgsfortsetzung wurde übersprungen.
+
+app_chameleon_t besitzt dafür jetzt import_return_pending. Der Import setzt dieses app-eigene Flag erst nach erfolgreicher Dateiprüfung, vollständigem Einlesen und Vorbereiten der gewählten Karte. app_chameleon_save führt bei vollständigem Erfolg die Fortsetzung aus, sofern die Importansicht noch aktuell ist: Erfolgsmeldung und Rückkehr zur Hauptansicht der ausgewählten Karte. app_chameleon_resume löscht den Auftrag vorher, damit er genau einmal ausgeführt wird. Zurück/Abbruch, ein weiterer Fehler oder eine inzwischen andere Szene führen nicht versehentlich zu einem späteren Importabschluss. Es werden keine Zeiger auf freigegebene Listeneinträge, Dateinamen oder Editoren aufbewahrt.
+
+Dateien/Symbole: ../fw672/fw/application/src/app/chameleon/app_chameleon.c – app_chameleon_save, app_chameleon_resume; app_chameleon.h – import_return_pending; scene/chameleon_scene_menu_card_data_file_load.c – chameleon_scene_menu_card_data_file_load_from_file.
+
+Die vorhandenen Duplizieren-/Name-/ID-Abläufe erhalten keine neue Importfortsetzung. Der Auftrag wird ausschließlich im tatsächlichen Dateiimport gesetzt; die Prüfung der aktuellen Szene und das Löschen beim Resume verhindern das Überspringen anderer Dialoge. Die bestehenden Chameleon-Exit-, Namens-, UID- und Zustandsprüfungen sind im vollständigen Lauf enthalten.
+
+3. PackedFS: weniger erneute Scans bei unverändert gehaltenen Altgruppen
+
+GC_PINNED ist ein zusätzlicher interner Wert im bereits vorhandenen gc_state-Byte. Er ist nur nach einem erfolgreichen vollständigen Collector-Durchlauf zulässig, wenn kein Writer aktiv ist und die verbleibenden alten Gruppen weiterhin Leser-/Verzeichnissnapshots gehören. Daraus folgt: Vor Beginn der nächsten Mutation gibt es noch nichts zusätzlich freigebbares; dieser vorbereitende Scan kann entfallen. Der ohnehin nötige Scan nach Veröffentlichung oder Abbruch bleibt bestehen.
+
+needs_collection wird am Beginn von transact und beim schreibenden pfs_open verwendet. Neue Stage-/Ausgabe-/Manifestdateien markieren den Zustand weiterhin vor ihrer Anlage als GC_PENDING. Ein aktiver Writer lässt auch nach einem Scan GC_PENDING bestehen. Jeder Collectorfehler behält GC_PENDING. pfs_gc als ausdrücklicher Auftrag führt weiterhin immer einen vollständigen Scan aus. Die vorhandene NOSPC-Ausweichbereinigung während einer staged Transaktion bleibt unverändert.
+
+releases_obsolete erkennt auch GC_PINNED. detach prüft vor dem Entfernen des Handles, ob dessen letzte Referenz eine Altgruppe freigibt, und setzt dann wieder GC_PENDING. Bei erfolgreichem Schließen folgt die automatische Bereinigung. Auch wenn das zugrunde liegende Close einen Fehler meldet, wird der interne Hinweis ungültig: Der RAM-Eigentümer ist bereits weg, und die nächste Mutation muss wieder bereinigen. Damit verschwindet kein freigewordener Altbestand hinter einem veralteten „nur noch gehalten“-Hinweis.
+
+Die öffentliche GC-Diagnose bleibt unverändert: unknown=0, pending=1, clean=2. GC_PINNED erscheint als pending; gehaltene Handles und letzter Collectorstatus behalten ihre Bedeutung. Normale Reads/Listen/Space-Abfragen starten weiterhin keine Bereinigung. Es gibt kein neues permanentes Array, keinen neuen Pointer und keine zusätzliche Heapallokation in diesem Produktpfad.
+
+Datei/Symbole: ../fw672/fw/application/src/mod/vfs/packed_fs.c – collect, needs_collection, releases_obsolete, detach, transact, pfs_open, pfs_gc_diagnostic.
+
+4. Gemessener Vergleich App671 -> App672
+
+gc_compare/APP671_APP672_GC_COMPARE.json und .log binden beide tatsächlichen Produktionsquellen, LittleFS und die Testvorlage. Derselbe Test erstellt legale Kataloggruppen mit dem produktiven Record-/Indexwriter auf einem synthetischen 2-MiB-NOR. Der erste vollständige Remount validiert die Ausgangsdaten. Gehalten werden ein alter Root-Snapshot, ein alter Verzeichnissnapshot und ein alter Dateileser.
+
+Gemessen wird der vollständige Ablauf: erste Metadatenänderung; sechs weitere Änderungen; Stage-Schreiben mit Abbruch; Stage-Schreiben mit erfolgreichem Commit; ausdrückliche GC; Lesen der alten Daten und Metadaten sowie Schließen nichtletzter Handles; Schließen der letzten haltenden Referenz; abschließende ausdrückliche GC. Die automatische Freigabe wird vor der abschließenden ausdrücklichen GC geprüft. Anschließend werden alle Dateien und raw128-Metadaten nach einem vollständigen Remount kontrolliert. Die fünf gesamten NOR-Endabbilder werden zwischen den beiden Implementierungen byteweise verglichen und zusätzlich mit SHA-256 protokolliert.
+
+Gruppen/Records     Reads 671   Reads 672      Reduktion       Root-Scans
+ 28 / 44         34828       29815       14.394 %       21 -> 13
+ 32 / 44         39838       35032       12.064 %       21 -> 13
+ 33 / 44         46843       40911       12.664 %       21 -> 13
+ 54 / 44         77847       70664        9.227 %       21 -> 13
+ 64 / 32         94246       84989        9.822 %       21 -> 13
+
+Alle fünf Endabbilder sind bytegleich. Generation, freie Bytes, Anzahl Program-/Erase-Vorgänge, pfs_t-Größe sowie angeforderter stationärer und maximaler Heap sind gleich. Die erste Änderung und die letzte Bereinigung bleiben gleich aufwendig; eingespart werden die überflüssigen Scans zwischenzeitlicher Vorgänge. Die gemessene Einsparung von 9,227 bis 14,394 Prozent betrifft diese Backend-Leseaufrufe. Daraus wird keine Akkulaufzeit- oder Gerätegeschwindigkeitszusage abgeleitet.
+
+Zusätzlich bestehen zwei neue Invalidierungsfälle je Quellstand: Fehler beim letzten Reader-Close, nachdem LittleFS den Handle bereits geschlossen hat; und NOSPC beim Lesen mitten in einem ausdrücklichen Collector-Durchlauf. Beide erfordern anschließend erneut vorbereitende Bereinigung. Daten, Metadaten, Eigentümer und anschließender Clean-Zustand werden geprüft.
+
+Nicht gewählt wurden eine neue dauerhafte Referenztabelle, eine weitere große RAM-Struktur, das pauschale Überspringen ausdrücklich angeforderter GC sowie die Verschiebung notwendiger Nachbereinigung. Die vorhandene Zustandsinformation genügt und der Zielbuild bestätigt unveränderten RAM-Abstand.
+
+5. Durchgeführte Prüfungen
+
+TARGETED_RESULTS.json: 11 gezielte Suites PASS mit ASan/UBSan. Produktionshashes vor/nach dem Lauf sind identisch. LeakSanitizer ist in dieser Sandbox deaktiviert; explizite Freigabe-/Eigentümerprüfungen der Harnesses bleiben aktiv.
+
+Import: 39 Fälle, bestehend aus 24 Eingabe-/Slotfällen und 15 gekoppelten Import-/Save-/Retry-/Cancel-/Discard-/Dispatcherabläufen; diese Gruppen nicht nochmals addieren. Chameleon-Exit: 54 Fälle. Browser: 31 Fälle mit echtem TLSF. Stage-GC: 20 Lebenszyklusfälle. Cleanup: 36 Lebenszyklus-, vier Read-only-, zwei Maintenance-Fehlerfälle, 243 NOR-Fehlerpunkte, 18 Postcommit-NOR-Fehlerpunkte und 1306 Read-Fehlerpunkte. Iterator: 160/400 Altgruppen, zwei Split- und zwei Teilfehlerfälle. Weitere vorhandene Gates prüfen atomare Daten plus raw128, Persistenz, bounded Katalog, Batch-Read und die öffentliche GC-Diagnose. Zahlen verschiedener Suites sind überlappende Szenarien und keine addierbare Anzahl unabhängiger Hardwareprüfungen.
+
+Der neue direkte GC-A/B-Lauf besteht ebenfalls mit ASan/UBSan. Ergebnis: fünf vollständige Vergleichsabläufe je Quellstand sowie zwei spezielle Fehler-Invalidierungsfälle je Quellstand; keine verlorenen Allokationen am Testende.
+
+Der erste vollständige Lauf enthielt genau eine nachzuziehende ältere Testattrappe: de2/test_chameleon_files.py hatte einen handgeschriebenen App-Typ ohne neues Flag und modellierte den früher inline abgeschlossenen Save. Diese Datei bekam das neue Feld und die nun gemeinsame erfolgreiche Save-Fortsetzung. Ihre bestehenden Datei-I/O-, Längen-, Sortier-, Pfad- und Speicherbehauptungen bleiben unverändert. Die wirkliche Save/Retry-Kopplung wird separat durch die 39 DE3-Fälle geprüft. Das erste Ergebnis bleibt unter ../firmware_results/FULL_TESTS_attempt1.json erhalten.
+
+Vollständiger Abschlusslauf: 187/187 Suites PASS, Profil full, keine ausgelassenen Suites. Quelle und eingefrorene Testreferenzen blieben während des isolierten Laufs unverändert. SourceID stimmt mit dem ARM-Build überein. Belege: ../firmware_results/FULL_TESTS.json, .log und .environment.json. Der Fulllauf verwendet die Standardargumente der einzelnen Suites; optionale Sanitizer-/ELF-Läufe werden anhand ihrer separaten Belege beurteilt.
+
+6. Zielbuild und verbleibende Gerätequalifikation
+
+Der separat erstellte tatsächliche ARM-Zielbuild ist erfolgreich: BIN 364276 Bytes, Flashreserve 8440 Bytes bei Mindestreserve 8192, Heap-/Stack-Abstand 1720 Bytes bei Mindestabstand 1536, reservierter Stack 8192 Bytes. Gegenüber App671 sind das +96 Bytes BIN; der RAM-Abstand bleibt unverändert. Quelle: ../firmware_results/build2/BUILD_RESULT.json. Dieser Buildbericht beschreibt den vor der Signierung erstellten Build; finaler Signatur-, ELF-/Z21- und Releaseabschluss werden in den übergeordneten Lieferbelegen geführt.
+
+Die hier genannten Tests sind Software-, Emulations- oder synthetische Speicherprüfungen. Dieser Agent hat App672 nicht auf ein physisches Gerät übertragen und weder RF-Kompatibilität, tatsächliche Stackminima noch Akkulaufzeit gemessen. Die bekannten App670-Gerätetests und die App671-Diagnose vom 21.11.2026 sind keine neue App672-Geräteabnahme.
+
+Nächster konkreter Schritt im Releaseabschluss ist die Bindung dieses unveränderten Quellstands an signiertes OTA und Quellenpaket durch Root. Eine spätere gezielte Geräteprüfung sollte den tatsächlich geänderten Ablauf bestätigen: fehlerhafter Import-Save, erfolgreicher Retry, richtige gewählte Karte und einmalige Rückkehr; außerdem normale Arbeit mit alten Dateiansichten und deren anschließendes Schließen. Dafür wird hier weder ein neuer breiter Testkatalog noch eine erneute App671-Installation verlangt.

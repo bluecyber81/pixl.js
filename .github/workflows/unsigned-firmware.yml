@@ -8,7 +8,7 @@ on:
   pull_request:
     paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', 'bootloader-z20/**', 'bootloader-z21/**', '.github/workflows/unsigned-firmware.yml']
   push:
-    branches: [main]
+    branches: [main, 'release/lcd-*']
     paths: ['fw/**', 'tools/**', 'RELEASE_INFO.json', 'web/public/firmware/*.zip', 'bootloader-bl8/fw/bootloader/src/dfu_public_key.c', 'bootloader-z17/**', 'bootloader-z19/**', 'bootloader-z20/**', 'bootloader-z21/**', '.github/workflows/unsigned-firmware.yml']
 
 permissions:
@@ -157,15 +157,20 @@ jobs:
           sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
       - name: Run source-bound reset, session, LCD and ARM crypto tests
         run: '"$RUNNER_TEMP/boot-venv/bin/python" tests/run_offline.py --output _checks'
-      - name: Check offline runner and resume current and previous signed LCD releases on the Z19 model
+      - name: Check Z19 runner and all frozen App662 and App654 stream-mode tests
         if: matrix.boot == 'z19'
         shell: bash
         run: |
           python3 -B tests/test_runner_modes.py
-          python3 -B tests/test_app_stream_modes.py
-          current="../$(jq -er .application_ota_path ../RELEASE_INFO.json)"
+          python3 -B ../tools/check_z19_stream_modes.py --output _checks/historical-stream-modes.json
+      - name: Resume the hash-bound current LCD release and pinned App654 on Z19
+        if: matrix.boot == 'z19'
+        shell: bash
+        run: |
+          python3 -B ../tools/extract_release_application.py --output _checks/current-release.bin --report _checks/current-release-input.json
+          current_sha="$(jq -er .applicationSha256 _checks/current-release-input.json)"
           previous="../$(jq -er .previous_lcd_release.application_ota_path ../RELEASE_INFO.json)"
-          python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$current" --output _checks/current-release-resume.json
+          python3 -B tests/DFU_Stream/check_app_stream.py --test-bin _checks/current-release.bin --expected-sha256 "$current_sha" --output _checks/current-release-resume.json
           python3 -B tests/DFU_Stream/check_app_stream.py --app-only "$previous" --output _checks/application-resume.json
       - name: Archive bootloader evidence
         if: success() || failure()

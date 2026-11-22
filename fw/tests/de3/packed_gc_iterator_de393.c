@@ -71,7 +71,7 @@ static void split_drop_case(unsigned garbage) {
     root_scans=0;
     REQUIRE(pfs_gc(store)==0 && !pfs_poisoned(store));
     unsigned scans=root_scans;
-    REQUIRE(scans==1 && store->gc_state==GC_PENDING);
+    REQUIRE(scans==1 && store->gc_state==GC_PINNED);
     REQUIRE(obsolete_count()==1);
     unsigned after_pairs=root_pairs(); REQUIRE(after_pairs<before_pairs);
     struct lfs_info physical;

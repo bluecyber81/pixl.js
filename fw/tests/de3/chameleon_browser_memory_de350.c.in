@@ -27,7 +27,17 @@ void mui_scene_dispatcher_previous_scene(mui_scene_dispatcher_t*d){(void)d;scene
 void mui_scene_dispatcher_back_scene(mui_scene_dispatcher_t*d,uint32_t n){(void)d;scenes+=n;}
 void mui_scene_dispatcher_next_scene(mui_scene_dispatcher_t*d,uint32_t n){(void)d;assert(n==CHAMELEON_SCENE_MAIN);scenes+=2;}
 static bool save_ok=true;static unsigned save_calls;
-bool app_chameleon_save(app_chameleon_t*a){(void)a;save_calls++;return save_ok;}
+/* This memory-only fixture models the shared save continuation. Its actual
+ * control flow is coupled to the importer in test_import_return_de398.py. */
+bool app_chameleon_save(app_chameleon_t*a){
+ save_calls++;
+ if(save_ok&&a->import_return_pending){
+  a->import_return_pending=false;
+  mui_toast_view_show(a->p_toast_view,_T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS));
+  mui_scene_dispatcher_next_scene(a->p_scene_dispatcher,CHAMELEON_SCENE_MAIN);
+ }
+ return save_ok;
+}
 void mui_toast_view_show(mui_toast_view_t*v,const char*t){(void)v;toast=t;errors++;}
 static vfs_obj_t objects[1000],expected[1000];
 static unsigned count,iter,fail_read,read_size;

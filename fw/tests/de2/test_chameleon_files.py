@@ -60,7 +60,7 @@ static int32_t fds_save_failure(uint16_t id, bool writing, int32_t code) { (void
 static void fds_map_file_name(uint16_t id,uint16_t key,char *p) {(void)id;(void)key;strcpy(p,"/slot.bin");}
 typedef int mui_text_input_event_t;
 typedef struct {void *user_data;} mui_text_input_t;
-typedef struct {void *p_toast_view; void *p_scene_dispatcher; void *browser_cache,*p_msg_box,*p_view_dispatcher;} app_chameleon_t;
+typedef struct {void *p_toast_view; void *p_scene_dispatcher; void *browser_cache,*p_msg_box,*p_view_dispatcher;bool import_return_pending;} app_chameleon_t;
 typedef int mui_msg_box_event_t;
 typedef struct { void *user_data; } mui_msg_box_t;
 enum {CHAMELEON_VIEW_ID_TEXT_INPUT,CHAMELEON_VIEW_ID_MSG_BOX,CHAMELEON_SCENE_MAIN};
@@ -96,7 +96,16 @@ static void mui_toast_view_show(void *v,const char *s) {(void)v;last_toast=s;}
 static void tag_helper_load_coll_res_from_block0(void) {collision_updates++;}
 static int tag_helper_set_nickname(const char *s) {(void)s;return 0;}
 static void mui_scene_dispatcher_next_scene(void *p,int n) {(void)p;assert(n==CHAMELEON_SCENE_MAIN);backs++;}
-static bool app_chameleon_save(app_chameleon_t *app) {(void)app;return true;}
+/* This file-I/O fixture models the shared successful save continuation.
+ * The real save/retry/dispatcher coupling is exercised by DE3 import_return. */
+static bool app_chameleon_save(app_chameleon_t *app) {
+    if (app->import_return_pending) {
+        app->import_return_pending=false;
+        mui_toast_view_show(app->p_toast_view,_T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS));
+        mui_scene_dispatcher_next_scene(app->p_scene_dispatcher,CHAMELEON_SCENE_MAIN);
+    }
+    return true;
+}
 static void mui_scene_dispatcher_previous_scene(void *p) {(void)p;backs++;}
 static const char *mui_text_input_get_input_text(void *p) {(void)p;return input;}
 static void reset(void) {

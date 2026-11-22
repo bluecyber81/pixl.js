@@ -2,19 +2,19 @@
 
 [Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
-## LCD DE3.98 / App671 · normal firmware
+## LCD DE3.99 / App672 · normal firmware
 
-For **Allmiibo LCD/ST7567 with existing Packed LittleFS (PFS1), Z21 and S112 7.3.0**: [download the signed application ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip) or [open the App671 web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app#board=LCD). Keep the ZIP intact when selecting it in nRF Device Firmware Update. This package updates the application; it does not contain a bootloader or SoftDevice.
+For **Allmiibo LCD/ST7567 with existing Packed LittleFS (PFS1), Z21 and S112 7.3.0**: [signed application ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [App672 updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD).
 
-App671 carries forward the batch-read, digest, CRC and safe-save improvements already present in App670. New changes reduce overlapping stack use, preserve unsaved temporary NFC changes through navigation and wake-up, complete the import/return flows, and retain normal cleanup diagnostics. The test-only radio extension and mount profiler are absent from the normal build. [Release notes](docs/DE3_98_RELEASE.md) · [Signed-package and software evidence](docs/validation/DE3_98.json)
+App672 completes the import return after a successful save retry and avoids redundant cleanup scans while obsolete groups remain held by readers. Five complete synthetic workloads use 9.2–14.4% fewer flash reads with byte-identical final images. No additional persistent RAM structure is introduced. The existing App671 features and PFS1 layout are retained. [Release notes](docs/DE3_99_RELEASE.md) · [Build and test evidence](docs/validation/DE3_99.json)
 
-Two independent local builds produce identical BIN and HEX bytes. The final signed payload passed the firmware suites, linked ARM checks and actual Z21 verification paths in simulation. A first physical run of this new App671 remains pending; earlier App670 observations are attributed separately.
+The full firmware run passes 187/187 suites; 13 linked ARM groups and the actual Z21 signature/hash/CRC and init paths pass in simulation. Independent BIN/HEX builds match. Physical App672 acceptance remains pending. Keep the ZIP intact in nRF Device Firmware Update; this package updates the application only.
 
-## File manager 3.61.0 · normal website
+## File manager 3.62.0 · normal website and portable
 
-[Open the normal file manager](https://bluecyber81.github.io/pixl.js/) · [Current web source and qualification](https://github.com/bluecyber81/pixl.js/tree/web-app671/web)
+[Open the normal file manager](https://bluecyber81.github.io/pixl.js/) · [Current web source and qualification](https://github.com/bluecyber81/pixl.js/tree/web-app672/web)
 
-The normal website selects App671, binds downloads to the actual signed bytes, and includes its matching capacity simulator. Existing batch/digest backup reads are retained. The older LCD test paths and OLED downloads remain separate. The web source is maintained on `web-app671`; this firmware branch is not the deployed web tree.
+A shared version source fixes the local Python/PowerShell launcher. Battery history reports active logging time and pauses separately. App672 downloads and its capacity simulator are bound to the actual signed package and exact storage engine. Historical LCD test paths and OLED packages remain separate. The maintained web source is `web-app672`; this firmware branch is not the deployed web source.
 
 ## Archive: LCD DE3.89 / App662
 

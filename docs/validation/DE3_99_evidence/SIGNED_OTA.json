@@ -1,0 +1,48 @@
+{
+  "name": "Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+  "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+  "bytes": 364877,
+  "images": [
+    {
+      "type": "application",
+      "firmware_type": 0,
+      "counter": 672,
+      "sd_req": [
+        294
+      ],
+      "bytes": 364276,
+      "sha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+      "signature_verified": true,
+      "sd_size": 0,
+      "bl_size": 0,
+      "app_size": 364276,
+      "boot_validation": "GENERATED_CRC",
+      "negative_controls_passed": 3
+    }
+  ],
+  "version": "2.22.0-DE3.99",
+  "board": "LCD",
+  "source_id_sha256": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
+  "production_input_count": 709,
+  "identical_independent_builds": true,
+  "linker_budget": {
+    "binary_bytes": 364276,
+    "linker_flash_used_bytes": 364296,
+    "observed": {
+      "flash_reserve_bytes": 8440,
+      "heap_stack_gap_bytes": 1720,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "signing_tool": "nrfutil version 6.1.7",
+  "private_key_exported": false,
+  "device_access": false,
+  "publication": false,
+  "bootloader": "Z21",
+  "boot_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb"
+}

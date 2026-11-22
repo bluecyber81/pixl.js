@@ -1,0 +1,11 @@
+{
+  "sourceBranch": "release/lcd-de399-app672",
+  "productionCommit": "9fb9d84b51365cf33f745896243f4cd6e934e637",
+  "productionTree": "233aec9e567495ddd25d002ec05e61173f9eac7b",
+  "localProductionCommit": "5dab8cace08687101ea71aa3131f46fb1fef1d9e",
+  "parentCommit": "a3ae0e4063f1901e9da98f3ff37fd163388eb72a",
+  "sourceId": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
+  "storageEngineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+  "sourceTreeByteIdentical": true,
+  "status": "production-source-published-qualification-in-progress"
+}
