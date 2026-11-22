@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "status": "software-qualified-publication-pending",
+  "date": "2026-11-22",
+  "version": "2.22.0-DE3.101",
+  "counter": 674,
+  "board": "LCD/ST7567",
+  "source": {
+    "repository": "bluecyber81/pixl.js",
+    "branch": "release/lcd-de3101-app674",
+    "basePublicCommit": "68b7d6e0cceadbc4c0801092ddc2e65947dd6e88",
+    "localProductionCommit": "3227b0ef33f70d3baf62d54bcd1807d45bbb21fb",
+    "productionTree": "a6f244f706888d07024e4d50a02ac31f4888c41f",
+    "publicProductionCommit": "c1aa53ed902e164a391e158b6cf45ba78f7bcab6",
+    "sourceIdSha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+    "productionInputCount": 720,
+    "packedEngineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+    "identicalLocalAndPublicProductionTrees": true
+  },
+  "scope": {
+    "change": "Two dedicated 32x32 monochrome menu icons for Switch 2 wake and BLE image reception, plus explicit App674 version identity.",
+    "newProtocolChanges": false,
+    "newFilesystemChanges": false,
+    "newBootloaderOrSoftdevice": false,
+    "oldIconArraysUnchanged": 8,
+    "oledBranchOrPackageChanged": false,
+    "physicalDeviceAccess": false
+  },
+  "application": {
+    "filename": "Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
+    "bytes": 361953,
+    "sha256": "76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca",
+    "binaryBytes": 361352,
+    "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "onlyApplication": true,
+    "softDeviceFwids": [
+      "0x0126"
+    ]
+  },
+  "hostSuites": {
+    "available": 197,
+    "executed": 197,
+    "passed": 197,
+    "failed": 0,
+    "omitted": 0,
+    "sourceUnchanged": true,
+    "sourceIdSha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+    "finishedUTC": "2026-11-22T19:13:36.603737+00:00"
+  },
+  "arm": {
+    "groups": 13,
+    "passedGroups": 13,
+    "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "candidateElfSha256": "216f810459193fff8a4566faff443543cd946d344f2710c752c9ef90e1d6aedd",
+    "scope": "Actual linked Cortex-M4 application executed with simulated peripherals. No physical LCD, RF, time or power measurement."
+  },
+  "linkedIcons": {
+    "passed": true,
+    "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "elfSha256": "3a12db7827529180e4ebb3d1416fd1426371d589293595387d7bb9af642b0f04",
+    "applicationOrigin": "0x19000",
+    "icons": {
+      "app_switch2_wake_32x32": {
+        "address": "0x5e94c",
+        "descriptorAddress": "0x5e944",
+        "bytes": 128,
+        "sha256": "91efd5a3ef9b1e001488fa6b725a5a97322594c711c119c4c4c9b50a114f0b99"
+      },
+      "app_ble_stream_32x32": {
+        "address": "0x5ec7c",
+        "descriptorAddress": "0x5ec74",
+        "bytes": 128,
+        "sha256": "33181d5594ede22e7eae60aa489f4715345e873230deba73e845a7e4cca0ce38"
+      }
+    },
+    "scope": "Fresh linked application contains the exact generated 128-byte bitmaps with 32x32 descriptors and bound pointers."
+  },
+  "linkerBudget": {
+    "binary_bytes": 361352,
+    "linker_flash_used_bytes": 361364,
+    "observed": {
+      "flash_reserve_bytes": 11372,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "previousApp673Budget": {
+    "binaryBytes": 361080,
+    "flashReserveBytes": 11644,
+    "heapStackGapBytes": 1672,
+    "stackReservedBytes": 8192
+  },
+  "signing": {
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "webPackageByteIdentical": true,
+    "temporarySigningKeyDeleted": true,
+    "privateKeyPrintedOrPublished": false
+  },
+  "reproducibility": {
+    "passed": true,
+    "sameBinAndHex": true,
+    "sourceIdSha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+    "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "candidate": "candidate_canonical/BUILD_RESULT.json",
+    "release": "release/BUILD_RESULT.json",
+    "scope": "Two independent isolated native builds, checked against the same pinned SDK and compiler. ELF debug paths may differ."
+  },
+  "z21": {
+    "linkedCryptoCrcCasesPassed": 7,
+    "initBankCasesPassed": 2,
+    "currentCounter": 674,
+    "precedingCounter": 673,
+    "resumePassed": true,
+    "resumeLinkCutsDuringCheckpoint": 5,
+    "resumeCheckpointPowerCutsModeled": 455,
+    "resumeAdmissionOrCompletionFailuresModeled": 8,
+    "finalAllBytesCompared": true,
+    "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "asan": "PASS",
+    "ubsan": "PASS",
+    "lsan": "UNAVAILABLE_LOCAL_PTRACE",
+    "ci": "pending-for-App674"
+  },
+  "precedingDeviceObservation": {
+    "version": "2.22.0-DE3.100",
+    "counter": 673,
+    "webVersion": "3.63.0",
+    "reportedSourceIdMatches": true,
+    "remoteControlOwnerReportedWorks": true,
+    "onDeviceBinHashVerified": false,
+    "qualification": "Owner-supplied diagnostic and message. No full App674 device acceptance."
+  },
+  "deviceTestsPending": [
+    "Observe both new symbols on the LCD in normal and selected display states.",
+    "Open and exit the two miniapps; confirm return to normal menu.",
+    "New website sender: image, video, inversion, stop/disconnect/reconnect on compatible LCD."
+  ],
+  "ci": {
+    "status": "pending"
+  }
+}
