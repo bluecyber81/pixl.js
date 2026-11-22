@@ -16,7 +16,8 @@ export function nrfDfuLink(entry) {
     const normal = [
         {id:'de3.98-lcd-app',version:'2.22.0-DE3.98',counter:671,file:'Allmiibo_LCD_DE3_98_671_NUR_APP.zip'},
         {id:'de3.99-lcd-app',version:'2.22.0-DE3.99',counter:672,file:'Allmiibo_LCD_DE3_99_672_NUR_APP.zip'},
-        {id:'de3.100-lcd-app',version:'2.22.0-DE3.100',counter:673,file:'Allmiibo_LCD_DE3_100_673_NUR_APP.zip'}
+        {id:'de3.100-lcd-app',version:'2.22.0-DE3.100',counter:673,file:'Allmiibo_LCD_DE3_100_673_NUR_APP.zip'},
+        {id:'de3.101-lcd-app',version:'2.22.0-DE3.101',counter:674,file:'Allmiibo_LCD_DE3_101_674_NUR_APP.zip'}
     ].find(profile => entry?.id === profile.id || entry?.version === profile.version);
     if (normal) {
         if (entry.board !== 'LCD' || entry.id !== normal.id || entry.version !== normal.version ||
