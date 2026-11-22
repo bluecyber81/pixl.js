@@ -126,8 +126,8 @@
   "releaseModeBuildPassed": true,
   "independentBuildCount": 3,
   "releaseBuildRecordSha256": "e127b1aff86c1932fc69c6f468f04c06fc4e8a897e6f4884c76489e8714023df",
-  "webSourceCommit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
-  "webPagesCommit": "7e6ef6d2500165f2466c229df02edc1d5bec0a40",
+  "webSourceCommit": "4dfd9dd6cc731a56abe4aa65af273ca499699989",
+  "webPagesCommit": "b64dffd59f7e763c57b6a6cb7033c8bd092892fa",
   "githubCurrentApplicationSanitizers": {
     "runId": 45029329393,
     "runUrl": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393",
@@ -136,5 +136,18 @@
     "ciBinHexMatchLocal": true,
     "fullRunStatus": "failure: one missing SDK test input; exported by follow-up workflow fix",
     "evidence": "DE3_99_evidence/CI_RUN_45029329393_RESULT.json"
+  },
+  "webQualificationSourceCommit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
+  "githubFullQualification": {
+    "runId": 45030117214,
+    "head": "4b5c3b6d98c9c28463537afdfffbaf66c9812fed",
+    "conclusion": "success",
+    "firmwareSuites": 187,
+    "firmwarePassed": 187,
+    "ciLinkedElfGroups": 8,
+    "localLinkedArmGroups": 13,
+    "ciBinHexMatchLocal": true,
+    "evidence": "DE3_99_evidence/CI_RUN_45030117214_RESULT.json",
+    "note": "Follow-up commits update delivery metadata and evidence only; compiled production inputs and OTA are unchanged."
   }
 }

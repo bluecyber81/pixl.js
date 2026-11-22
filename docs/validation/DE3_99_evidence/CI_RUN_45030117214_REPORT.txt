@@ -1,0 +1,46 @@
+Allmiibo LCD DE3.99 / App672 – erfolgreicher öffentlicher CI-Abschluss
+
+GitHub Actions: https://github.com/bluecyber81/pixl.js/actions/runs/45030117214
+Abschluss: 2026-11-22T14:00:49Z
+Head: 4b5c3b6d98c9c28463537afdfffbaf66c9812fed
+Tree: 90971325255dbeae7fbe08cccbc3df1a920e2f68
+Branch: release/lcd-de399-app672
+Gesamtergebnis: SUCCESS
+
+JOBS
+LCD application build: SUCCESS – https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638597
+z19 source-bound build and ARM tests: SUCCESS – https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638855
+z17 source-bound build and ARM tests: SUCCESS – https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638892
+z20 source-bound build and DFU recovery tests: SUCCESS – https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638896
+z21 source-bound build and DFU recovery tests: SUCCESS – https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638929
+BL8 corresponding-source build: SKIPPED – https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231639792
+
+BL8 ist bei einem Push planmäßig übersprungen; dieser historische Job wird nur über workflow_dispatch gestartet. Alle fünf für diesen Push vorgesehenen Jobs sind erfolgreich.
+
+APPLICATION UND HOSTTESTS
+187/187 Suites PASS, keine ausgelassenen Suites; Testquellen während des Laufs unverändert. Der zuvor wegen eines fehlenden SDK-Testinputs abgebrochene test_ble_conn_preferences.py besteht jetzt im tatsächlichen GitHub-Lauf. Der erste öffentliche Lauf 45029329393 mit 186/187 bleibt als historischer Fehlversuch erhalten. Sein korrigierter Umfang ist genau eine zusätzliche SDK-Tar-Exportzeile. Firmware-Produktcode und OTA wurden dafür nicht geändert.
+
+SourceID: 1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d
+BIN-SHA256: 3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7
+HEX-SHA256: 8054f73280b26b8cc0a4dc10ebc75a393339014ed4786ba66fd1593fab6b33e5
+Die tatsächlichen aus dem Actions-Artefakt gelesenen BIN- und HEX-Bytes sind bytegleich zum lokal qualifizierten Build. Das signierte App672-Paket wurde zusätzlich durch den Application-Job gegen den Build geprüft; Signaturprüfung und drei Negativkontrollen bestehen.
+OTA-SHA256: 4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704
+App-Bytes: 364276; Flashreserve 8440 Bytes; Heap-/Stack-Abstand 1720 Bytes; reservierter Stack 8192 Bytes. Diese Buildwerte sind keine gemessenen freien Hardware-Stackminima.
+
+LINKED-ELF-ABSCHLUSS
+Der nach dem Hostlauf ausgeführte CI-Schritt besteht vollständig. Er führt acht Gruppen aus: Stack-Watermark, First-Menu/PXMI, AES/Tag/AmiiboLink, Flash-JEDEC-Diagnose, LCD-Displayprofil, Spielrotation, LCD-Gerätetestmodell und Build-/Fault-Diagnose. Die zugehörigen acht TXT/JSON-Artefakte sind vorhanden und gehasht. Der frühere lokale Nachweis mit 13 ELF-Gruppen ist umfangreicher und wird als eigener Beleg geführt; er wird nicht als Anzahl dieses CI-Schritts ausgegeben.
+ELF-Schritt: https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638597#step:12:1
+
+TATSÄCHLICHER DEFAULT-LSAN-NACHWEIS
+Z19 mit aktueller App672: PASS, sanitizerControl=PASS, leakDetectionEnabled=true und leakDetectionConfirmed=true. ASAN_OPTIONS enthält detect_leaks=1; LSAN_OPTIONS enthält detect_leaks=1:exitcode=23. Es wurde kein --no-leak-check verwendet. Der vollständige Payload von 364276 Bytes hat den erwarteten SHA-256.
+Z19-Schritt: https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638855#step:8:1
+
+Z21 mit aktueller App672 im Application-Job: PASS, ASan, UBSan und LSan-positive-control. Drei modellierte Abbruch-/Wiederaufnahmepunkte ergeben ResumeOffsets 0/131072/327680. Zusätzlich sind 455 modellierte Checkpoint-Stromunterbrechungen und acht Aufnahme-/Abschlussfehler geprüft. Dieses Ergebnis gehört zur aktuellen App672, nicht zum historischen Z21-App662-Referenzlauf des separaten Bootloaderjobs.
+Aktueller Z21-Schritt: https://github.com/bluecyber81/pixl.js/actions/runs/45030117214/job/137231638597#step:9:1
+
+Die frühere lokale ptrace-LSan-Blockade bleibt separat dokumentiert. Die hier beschriebenen erfolgreichen Kontrollproben wurden tatsächlich auf GitHub ausgeführt. Sie sind keine Funk-, Batterie-, Installations- oder Hardwareabnahme.
+
+QUELLEN UND ARTEFAKTE
+CI_RUN_45030117214_RESULT.json enthält sämtliche Job- und Step-URLs/IDs, Source-/BIN-/HEX-/OTA-Identitäten und die vollständigen aktuellen Resume-Ergebnisse. Drei zentrale Actions-Artefakte wurden heruntergeladen und ihre kompletten ZIP-SHA-256-Werte gegen die GitHub-API geprüft. Die Application-Artefakte sowie Z19-/Z21-Resume-Ergebnisse wurden zusätzlich ausgelesen. Die Roh-ZIPs bleiben im Verzeichnis ci_live erhalten; detaillierte JSON/TXT-Dateien liegen unter extracted/app672-ci-final-... .
+
+Für diesen unveränderten Firmwarestand ist der öffentliche CI-Abschluss damit erledigt. Physische App672-Geräteabnahme bleibt ein getrenntes Thema; aus diesem Bericht folgt kein neuer Firmware-Build oder erneuter Software-Volltest.

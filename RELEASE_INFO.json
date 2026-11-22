@@ -519,7 +519,11 @@
       "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
     }
   ],
-  "web_source_commit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
-  "web_source_tree": "e779a59315b3c3c27461061394951790a7fa22da",
-  "web_pages_commit": "7e6ef6d2500165f2466c229df02edc1d5bec0a40"
+  "web_source_commit": "4dfd9dd6cc731a56abe4aa65af273ca499699989",
+  "web_source_tree": "4e973224649cef0788d68de582b048790a5293c8",
+  "web_pages_commit": "b64dffd59f7e763c57b6a6cb7033c8bd092892fa",
+  "web_qualification_source_commit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
+  "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip",
+  "web_portable_sha256": "96c70b03e5fdd3ad459da0c61eef095edb15cd1941f87403bd4b7a45578e026c",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip"
 }
