@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "software-qualified",
+  "status": "published-and-software-qualified",
   "date": "2026-11-22",
   "version": "2.22.0-DE3.100",
   "counter": 673,
@@ -77,7 +77,13 @@
     "asan": "PASS",
     "ubsan": "PASS",
     "lsan": "UNAVAILABLE_LOCAL_PTRACE",
-    "result": "original-evidence/z21_app673/Z21_APP673_FINAL_RESULT.json"
+    "result": "original-evidence/z21_app673/Z21_APP673_FINAL_RESULT.json",
+    "independentGithubCi": {
+      "passed": true,
+      "lsan": "PASS_WITH_POSITIVE_CONTROL",
+      "qualifiedCommit": "c728539b007514e19e9cff3ea44e3dc31db7db6d",
+      "runId": 45054539931
+    }
   },
   "miniapps": {
     "normalGroups": 6,
@@ -152,15 +158,25 @@
   "fullVerification": "DE3_100_evidence/APP673_FIRMWARE_FINAL_VERIFICATION.json",
   "evidenceBindings": "DE3_100_evidence/EVIDENCE_BINDINGS.json",
   "ci": {
-    "status": "first-run-catalog-gate-corrected-followup-pending",
-    "firstRun": "https://github.com/bluecyber81/pixl.js/actions/runs/45053828080",
-    "firstRunCommit": "0875a09935b00a60a4d3b20744f073a23cc53d59",
+    "status": "success",
+    "qualifiedCommit": "c728539b007514e19e9cff3ea44e3dc31db7db6d",
+    "runId": 45054539931,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45054539931",
     "publicUnsignedRebuildVerified": true,
     "binAndHexEqualFinalRelease": true,
-    "failure": "Firmware-branch DFU test catalog lacked current App673; exact signed ZIP and catalog mirrors added. Production firmware inputs unchanged.",
-    "correction": "DE3_100_CI_METADATA_FIX.json",
+    "hostSuitesPassed": 196,
+    "hostSuitesExecuted": 196,
+    "hostSuitesOmitted": 0,
     "currentAppZ19AsanUbsanLsan": "passed",
-    "currentAppZ21Resume": "pending-followup-job"
+    "currentAppZ21AsanUbsanLsan": "passed",
+    "currentAppZ21Resume": "passed",
+    "previousRun": {
+      "id": 45053828080,
+      "head": "0875a09935b00a60a4d3b20744f073a23cc53d59",
+      "conclusion": "failure",
+      "reason": "App673 was missing from the firmware branch Web DFU catalogue. This was fixed by c728539; application bytes and production source identity stayed unchanged.",
+      "evidence": "CI_45053828080_FIRST_FAILURE.json"
+    }
   },
   "hardwareAcceptance": "pending-for-this-build",
   "physicalDeviceAccess": false,
@@ -177,5 +193,6 @@
     "LCD stream over real BLE, reconnect/keyframe, inversion and measured display behavior",
     "Sleep while scan/stream active, then normal file connection and NFC return",
     "Energy consumption and sustained heap/stack under device workloads"
-  ]
+  ],
+  "deliveryEvidence": "APP673_WEB363_DELIVERY.json"
 }
