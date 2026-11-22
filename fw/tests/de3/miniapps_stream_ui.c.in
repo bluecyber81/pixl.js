@@ -1,0 +1,72 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include "stream_codec.h"
+typedef struct{void*user_data;}mui_view_t;
+typedef struct{int unused;}mui_view_dispatcher_t;
+typedef struct{int unused;}mui_canvas_t;
+typedef struct{unsigned type,key;}mui_input_event_t;
+typedef enum{BLE_LINK_INACTIVE,BLE_LINK_ADVERTISING,BLE_LINK_CONNECTED,BLE_LINK_HOST_CONNECTED,BLE_LINK_DISCONNECTING}ble_link_state_t;
+enum{NRF_SUCCESS,NRF_ERROR_RESOURCES,NRF_ERROR_INVALID_STATE,INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_KEY_LEFT,INPUT_KEY_RIGHT,INPUT_KEY_CENTER,MINI_APP_ID_BLE_STREAM};
+#define APP_TIMER_TICKS(x) (x)
+#define u8g2_font_wqy12_t_gb2312a 1
+#define _T(x) #x
+static uint32_t generation,tick;
+static unsigned credits,attempts,sent,aborts,updates,restarts,kills;
+static unsigned tx_error;
+static bool rssi_available,mode_pending;
+static char attempted[8][16],messages[8][16];
+static const uint8_t*drawn;
+static uint32_t app_timer_cnt_get(void){return tick;}
+static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return a-b;}
+static uint32_t ble_session_generation(void){return generation;}
+static void*mui(void){return NULL;}
+static void mui_update(void*p){(void)p;updates++;}
+static bool ble_stream_rssi(int8_t*p){*p=-45;return rssi_available;}
+static uint32_t ble_nus_tx_data(const void*p,size_t n){assert(n<16&&attempts<8);memcpy(attempted[attempts++],p,n);if(tx_error)return tx_error;if(!credits)return NRF_ERROR_RESOURCES;credits--;memcpy(messages[sent++],p,n);return 0;}
+static void ble_nus_abort_transfer(void){aborts++;}
+static void ble_get_addr_str(char*p){strcpy(p,"01:02:03:04:05:06");}
+static bool ble_mode_transition_pending(void){return mode_pending;}
+static bool ble_restart_advertising(void){restarts++;return true;}
+static const char*stream_tr(const char*a,const char*b){(void)b;return a;}
+static void mui_canvas_set_draw_color(mui_canvas_t*c,int x){(void)c;(void)x;}
+static void mui_canvas_draw_box(mui_canvas_t*c,int a,int b,int d,int e){(void)c;(void)a;(void)b;(void)d;(void)e;}
+static void mui_canvas_set_font(mui_canvas_t*c,int x){(void)c;(void)x;}
+static void mui_canvas_draw_xbm(mui_canvas_t*c,int a,int b,int d,int e,const uint8_t*p){(void)c;(void)a;(void)b;(void)d;(void)e;drawn=p;}
+static void mui_canvas_draw_utf8(mui_canvas_t*c,int a,int b,const char*p){(void)c;(void)a;(void)b;(void)p;}
+static void*mini_app_launcher(void){return NULL;}
+static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_BLE_STREAM);kills++;}
+/* ACTUAL_STREAM_UI */
+static unsigned checks;
+#define CHECK(x) do{assert(x);checks++;}while(0)
+static app_ble_stream_t app;
+static uint8_t raw[1029];
+static void notifications(void){credits=1;attempts=sent=tx_error=0;memset(attempted,0,sizeof attempted);memset(messages,0,sizeof messages);}
+static void reset(void){memset(&app,0,sizeof app);app.generation=UINT32_MAX;s_stream_app=&app;generation++;tick=0;aborts=updates=restarts=kills=0;notifications();rssi_available=mode_pending=false;drawn=NULL;stream_session(&app);}
+static void hello(void){stream_on_ble_rx((const uint8_t*)"PXSTREAM:ACK1\n",14);}
+static void feed(const uint8_t*p,size_t n){stream_on_ble_rx(p,n);}
+int main(void){
+ raw[0]=0xa5;raw[1]=0x5a;raw[2]=0;raw[3]=0;raw[4]=4;for(unsigned i=0;i<1024;i++)raw[5+i]=(uint8_t)(i*47u);
+ reset();feed(raw,sizeof raw);CHECK(app.codec.has_frame&&!app.chunk_ack&&!attempts); /* Legacy unchanged. */
+ reset();credits=0;hello();CHECK(app.chunk_ack&&app.pending_ack==1&&!sent);notifications();stream_flush_ack();CHECK(!app.pending_ack&&sent==1&&!strcmp(messages[0],"ACK1\n"));
+ notifications();credits=0;feed(raw,247);CHECK(app.pending_ack==2&&!sent);notifications();stream_flush_ack();CHECK(!app.pending_ack&&sent==1&&!strcmp(messages[0],"OK\n"));
+ notifications();credits=0;feed(raw+247,247);CHECK(app.pending_ack==2);generation++;stream_flush_ack();CHECK(!app.pending_ack&&!app.chunk_ack&&!app.codec.has_frame&&sent==0);CHECK(app.codec.used==0);
+ reset();hello();notifications();credits=0;feed(raw,247);CHECK(app.pending_ack==2);feed(raw+247,20);CHECK(aborts==1&&!app.pending_ack&&!app.chunk_ack&&!app.codec.has_frame);
+ reset();hello();notifications();tx_error=NRF_ERROR_INVALID_STATE;feed(raw,247);CHECK(aborts==1&&!app.pending_ack&&!app.chunk_ack&&!app.codec.has_frame);
+ reset();hello();notifications();tick=1000;rssi_available=true;feed(raw,sizeof raw);CHECK(sent==1&&!strcmp(messages[0],"OK\n"));CHECK(attempts==2&&!strcmp(attempted[0],"OK\n")&&!strcmp(attempted[1],"RSSI:-45\n"));CHECK(app.codec.has_frame);
+ notifications();credits=0;tick=2000;feed(raw,sizeof raw);CHECK(app.pending_ack==2&&attempts==1&&!strcmp(attempted[0],"OK\n"));notifications();stream_flush_ack();CHECK(!app.pending_ack&&sent==1);
+ reset();feed(raw,5);hello();CHECK(!app.chunk_ack&&app.codec.used==14&&!attempts); /* No control inside pixels. */
+ reset();feed(raw,sizeof raw);uint8_t reference[1024];memcpy(reference,app.codec.frame,1024);
+ mui_view_t v={.user_data=&app};mui_canvas_t c={0};mui_input_event_t ev={.type=INPUT_TYPE_SHORT,.key=INPUT_KEY_RIGHT};
+ stream_view_on_input(&v,&ev);stream_view_on_draw(&v,&c);CHECK(app.invert&&drawn==app.codec.frame&&!memcmp(reference,app.codec.frame,1024));
+ ev.key=INPUT_KEY_LEFT;stream_view_on_input(&v,&ev);CHECK(app.show_hud);ev.key=INPUT_KEY_CENTER;stream_view_on_input(&v,&ev);CHECK(kills==1);
+ generation++;uint8_t delta[]={0xa5,0x5a,2,16,0,255,0,255,0,255,0,255,0,255,0,255,0,255,0,248,0};feed(delta,sizeof delta);CHECK(!app.codec.has_frame&&!app.chunk_ack); /* No old generation reference. */
+ stream_link_changed(BLE_LINK_CONNECTED);CHECK(app.connected&&!strcmp(app.address,"01:02:03:04:05:06"));
+ mode_pending=true;stream_link_changed(BLE_LINK_INACTIVE);CHECK(!app.connected&&!restarts);mode_pending=false;stream_link_changed(BLE_LINK_INACTIVE);CHECK(restarts==1);
+ s_stream_app=NULL;stream_flush_ack();stream_on_ble_rx(raw,10);stream_link_changed(BLE_LINK_CONNECTED); /* No late callback after free. */
+ printf("PASS %u stream UI/ACK assertions; actual callbacks, session reset and canonical reference\n",checks);
+ return 0;
+}

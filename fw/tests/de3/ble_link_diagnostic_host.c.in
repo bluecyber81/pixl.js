@@ -58,6 +58,11 @@ static void ble_on_disconnected(void) {}
 static void ble_work_process(void (*cleanup)(void)) { (void)cleanup; }
 static void ble_release_stopped_session(void) {}
 static void ble_file_link_poll(void) {}
+/* New miniapp ownership has dedicated lifecycle harnesses. This diagnostic
+ * harness has no active raw/timeslot owner; still assert foreground dispatch. */
+static unsigned miniapp_scan_polls, miniapp_adv_polls;
+void ble_switch2_scan_process(void) { CHECK(!critical_depth); ++miniapp_scan_polls; }
+static void ble_raw_adv_process(void) { CHECK(!critical_depth); ++miniapp_adv_polls; }
 static void ble_pending_mode_poll(void) {}
 static void ble_df_driver_poll(void) {}
 ble_link_state_t ble_link_state_get(void) { return BLE_LINK_INACTIVE; }
@@ -243,5 +248,6 @@ int main(void) {
     m_gatt.att_mtu_desired_periph=250;query();
     printf("WIRE ");for(unsigned i=0;i<response.length;i++)printf("%02x",response.data[i]);puts("");
     CHECK(!critical_depth&&!disconnect_calls);
+    CHECK(miniapp_scan_polls && miniapp_scan_polls == miniapp_adv_polls);
     printf("PASS %u link/PHY/wire cases; state %zu B; actual S112 headers; no radio\n",checks,sizeof(ble_link_profile_t));
 }

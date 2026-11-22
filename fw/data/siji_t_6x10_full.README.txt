@@ -1,0 +1,24 @@
+SIJI FULL FONT GENERATION / TEST INPUT
+
+Exact original fw/application/src/mui/u8g2_font_siji_t_6x10.c from App672
+commit 96cc712f67b8d1376b1f86b30034da1209f82e0e.
+Compiled font: 10529 bytes, 726 glyphs. SHA256:
+50b8a2e592373d06fdc1bce7a9720339bfc49f8695110693df1412840b229298
+
+This file is not a firmware build input. The application still links only
+application/src/mui/u8g2_font_siji_t_6x10.c. Regenerate that subset with:
+  python3 fw/scripts/siji_subset_gen.py
+  python3 fw/scripts/siji_subset_gen.py --check
+
+The generator preserves all printable ASCII and all private-use glyph codes
+found in application C/H sources, including optional apps. Each retained
+glyph record is copied exactly; font metrics and ASCII lookup data stay
+unchanged. Unicode lookup indices are rebuilt in groups of at most 32 glyphs.
+Keep icon selection explicit; computed new codepoint expressions require
+review of their complete value range. All current dynamic list icons were
+traced to the included constants. User text uses the separate WQY font,
+which this optimization does not alter.
+
+Tests compare the full reference and subset with the actual u8g2 decoder
+for pixels, advance/size/offset metrics and missing-codepoint lookup bounds.
+An intentionally removed required icon must fail that runtime gate.

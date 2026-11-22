@@ -83,6 +83,10 @@
 #include "ble_amiibolink.h"
 #include "ble_df_driver.h"
 #include "ble_main.h"
+#ifdef BOARD_LCD
+#include "mui_mem.h"
+static void ble_raw_adv_process(void);
+#endif
 #include "ble_work.h"
 #include "ble_remote.h"
 #include "../runtime_diag.h"
@@ -440,6 +444,10 @@ void ble_process_pending(void) {
     ble_work_process(ble_on_disconnected);
     ble_release_stopped_session();
     ble_file_link_poll();
+#ifdef BOARD_LCD
+    ble_switch2_scan_process();
+    ble_raw_adv_process();
+#endif
     ble_pending_mode_poll();
 #if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
     ble_phy_tuning_poll();
@@ -881,6 +889,9 @@ static ret_code_t ble_apply_device_mode(ble_device_mode_t mode) {
 
 void ble_adv_start(void) {
     if (m_mode_pending) { m_mode_adv_requested = true; return; }
+#ifdef BOARD_LCD
+    if (ble_miniapp_radio_busy()) return;
+#endif
     if (m_ble_initialized && m_advertising.adv_mode_current == BLE_ADV_MODE_IDLE) {
         advertising_start();
     }
@@ -936,6 +947,9 @@ void ble_link_state_observe(ble_link_state_handler_t handler) {
 }
 
 bool ble_restart_advertising(void) {
+#ifdef BOARD_LCD
+    if (ble_miniapp_radio_busy()) return false;
+#endif
     ret_code_t result = NRF_ERROR_INVALID_STATE;
     CRITICAL_REGION_ENTER();
     if (m_ble_initialized && m_conn_handle == BLE_CONN_HANDLE_INVALID && !m_advertising_active) {
@@ -976,11 +990,19 @@ static void ble_stop_transport(void) {
 }
 
 void ble_disable(void) {
+#ifdef BOARD_LCD
+    ble_raw_adv_stop();
+    ble_switch2_scan_stop();
+#endif
     m_mode_pending = m_mode_adv_requested = m_mode_handlers_ready = m_mode_wait_reply = false;
     remote_init_step(BLE_REMOTE_INIT_IDLE, NRF_SUCCESS);
     ble_stop_transport();
 }
 void ble_device_mode_prepare(ble_device_mode_t mode) {
+#ifdef BOARD_LCD
+    ble_raw_adv_stop();
+    ble_switch2_scan_stop();
+#endif
     /* New owners register their handlers before the next foreground poll.
      * Never reconfigure the GAP address beneath an existing connection. */
     m_pending_mode = mode;
@@ -994,6 +1016,9 @@ void ble_device_mode_prepare(ble_device_mode_t mode) {
 }
 static void ble_pending_mode_poll(void) {
     if (!m_mode_pending) return;
+#ifdef BOARD_LCD
+    if (ble_miniapp_radio_busy()) return;
+#endif
     if (!m_mode_stop_requested) {
         if (m_mode_wait_reply && ble_is_connected() && ble_remote_response_pending() &&
             app_timer_cnt_diff_compute(app_timer_cnt_get(), m_mode_wait_tick) < APP_TIMER_TICKS(2000)) return;
@@ -1237,3 +1262,128 @@ void ble_get_addr_str(char addr_fmt[]) {
     sprintf(addr_fmt, "%02X:%02X:%02X:%02X:%02X:%02X", addr.addr[5], addr.addr[4], addr.addr[3], addr.addr[2],
             addr.addr[1], addr.addr[0]);
 }
+
+
+#ifdef BOARD_LCD
+/* A short Switch-2 advertisement temporarily borrows the existing S112
+ * advertising set. No second radio stack, connection or persistent buffer. */
+typedef struct {
+    ble_gap_addr_t saved_address;
+    ble_gap_adv_data_t data;
+    uint8_t bytes[SWITCH2_WAKE_ADV_LEN];
+    ble_raw_adv_done_cb_t callback;
+    uint32_t result;
+    volatile bool active, finished;
+    bool address_dirty, configured, power_dirty;
+} ble_raw_adv_state_t;
+static ble_raw_adv_state_t *m_raw_adv;
+
+static void ble_raw_adv_observer(const ble_evt_t *event, void *context) {
+    (void)context;
+    if (!m_raw_adv || !m_raw_adv->active) return;
+    if (event->header.evt_id == BLE_GAP_EVT_CONNECTED ||
+        (event->header.evt_id == BLE_GAP_EVT_ADV_SET_TERMINATED &&
+         event->evt.gap_evt.params.adv_set_terminated.adv_handle == m_advertising.adv_handle)) {
+        m_raw_adv->active = false;
+        m_raw_adv->finished = true;
+        /* The normal observer records/rejects a raw-mode connection because
+         * m_sessions_enabled is false. Its timeout was never overridden. */
+    }
+}
+NRF_SDH_BLE_OBSERVER(m_switch2_adv_observer, APP_BLE_OBSERVER_PRIO, ble_raw_adv_observer, NULL);
+
+bool ble_raw_adv_is_active(void) { return m_raw_adv != NULL; }
+bool ble_miniapp_radio_busy(void) { return m_raw_adv != NULL || ble_switch2_scan_is_active(); }
+static void ble_raw_adv_process(void) {
+    ble_raw_adv_state_t *state = m_raw_adv;
+    if (!state || !state->finished || !ble_transport_idle()) return;
+    /* Rebind the set away from the temporary bytes BEFORE freeing them. A
+     * rejected stop/restore keeps ownership and retries after pending events. */
+    if (state->configured) {
+        uint32_t stopped = sd_ble_gap_adv_stop(m_advertising.adv_handle);
+        if (stopped != NRF_SUCCESS && stopped != NRF_ERROR_INVALID_STATE) return;
+        if (advertising_init(m_remote_mode) != NRF_SUCCESS) return;
+        state->configured = false;
+    }
+    if (state->power_dirty) {
+        if (sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_advertising.adv_handle, 0) != NRF_SUCCESS) return;
+        state->power_dirty = false;
+    }
+    if (state->address_dirty) {
+        if (sd_ble_gap_addr_set(&state->saved_address) != NRF_SUCCESS) return;
+        state->address_dirty = false;
+    }
+    ble_raw_adv_done_cb_t callback = state->callback;
+    uint32_t result = state->result;
+    m_raw_adv = NULL;
+    mui_mem_free(state);
+    if (callback) callback(result); /* foreground, after complete restoration */
+}
+void ble_raw_adv_stop(void) {
+    if (!m_raw_adv) return;
+    m_raw_adv->callback = NULL;
+    if (m_raw_adv->active) (void)sd_ble_gap_adv_stop(m_advertising.adv_handle);
+    m_raw_adv->active = false;
+    m_raw_adv->finished = true;
+}
+uint32_t ble_raw_adv_start(const uint8_t mac[6], const uint8_t *data, uint8_t length,
+                          bool connectable, uint16_t duration, ble_raw_adv_done_cb_t callback) {
+    if (!mac || !data || length != SWITCH2_WAKE_ADV_LEN || !duration || duration > 300)
+        return NRF_ERROR_INVALID_PARAM;
+    if (ble_miniapp_radio_busy() || ble_mode_transition_pending() || !ble_transport_idle())
+        return NRF_ERROR_BUSY;
+    ble_raw_adv_state_t *state = mui_mem_malloc(sizeof(*state));
+    if (!state) return NRF_ERROR_NO_MEM;
+    memset(state, 0, sizeof(*state));
+    ble_init();
+    ble_disable();
+    m_raw_adv = state;
+    uint32_t result = sd_ble_gap_addr_get(&state->saved_address);
+    if (result != NRF_SUCCESS) goto failed;
+    if (!m_advertising.initialized) {
+        result = advertising_init(false);
+        if (result != NRF_SUCCESS) goto failed;
+    }
+    ble_gap_addr_t address = {.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC};
+    for (unsigned i = 0; i < 6; ++i) address.addr[i] = mac[5-i];
+    result = sd_ble_gap_addr_set(&address);
+    if (result != NRF_SUCCESS) goto failed;
+    state->address_dirty = true;
+    memcpy(state->bytes, data, length);
+    state->data.adv_data.p_data = state->bytes;
+    state->data.adv_data.len = length;
+    ble_gap_adv_params_t params = {0};
+    params.properties.type = connectable ? BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED :
+                                          BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED;
+    params.filter_policy = BLE_GAP_ADV_FP_ANY;
+    params.interval = BLE_GAP_ADV_INTERVAL_MIN;
+    params.duration = duration;
+    params.primary_phy = BLE_GAP_PHY_1MBPS;
+    result = sd_ble_gap_adv_set_configure(&m_advertising.adv_handle, &state->data, &params);
+    if (result != NRF_SUCCESS) goto failed;
+    state->configured = true;
+    result = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_advertising.adv_handle, 4);
+    if (result != NRF_SUCCESS) goto failed;
+    state->power_dirty = true;
+    state->active = true;
+    state->callback = callback;
+    result = sd_ble_gap_adv_start(m_advertising.adv_handle, APP_BLE_CONN_CFG_TAG);
+    if (result != NRF_SUCCESS) goto failed;
+    nrf_pwr_mgmt_feed();
+    return NRF_SUCCESS;
+failed:
+    state->result = result;
+    state->callback = NULL; /* synchronous rejection is returned to its caller */
+    state->active = false;
+    state->finished = true;
+    ble_raw_adv_process();
+    return result;
+}
+bool ble_stream_rssi(int8_t *rssi) {
+    if (!rssi || m_conn_handle == BLE_CONN_HANDLE_INVALID || !m_sessions_enabled) return false;
+    uint8_t channel;
+    uint32_t result = sd_ble_gap_rssi_get(m_conn_handle, rssi, &channel);
+    if (result == NRF_ERROR_INVALID_STATE) (void)sd_ble_gap_rssi_start(m_conn_handle, 2, 3);
+    return result == NRF_SUCCESS;
+}
+#endif

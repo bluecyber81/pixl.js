@@ -21,7 +21,7 @@ def main():
    src=fw/'application/src';lst=(src/'mui/view/mui_list_view.c').read_text();game=(src/'app/amiidb/scene/amiidb_scene_game_list.c').read_text();search=(src/'app/amiidb/scene/amiidb_scene_amiibo_search.c').read_text()
    bodies='\n'.join(extract(lst,f) for f in ['mui_list_view_try_add_item_ext','mui_list_view_add_item','mui_list_view_add_item_ext','mui_list_view_clear_items','mui_list_view_set_focus','mui_list_view_get_focus','mui_list_view_sort','mui_list_view_set_selected_cb','mui_list_view_set_user_data'])
    packed=packed_type_prefix((src/'mod/vfs/packed_fs.c').read_text())
-   sources=[src/'app/amiidb/api/amiidb_api_db.c',src/'app/amiidb/api/amiidb_api_db.h',src/'app/amiidb/app_amiidb.h',src/'app/amiidb/scene/amiidb_scene_game_list.c',src/'app/amiidb/scene/amiidb_scene_amiibo_search.c',src/'mui/view/mui_list_view.c',src/'mui/mui_alloc.h',src/'mui/mui_mem.c',src/'mod/vfs/packed_fs.c',src/'amiidb/db_game.c',src/'amiidb/db_amiibo.c',src/'amiidb/db_link.c',fw/'components/tlsf/tlsf.c']
+   sources=[src/'app/amiidb/api/amiidb_api_db.c',src/'app/amiidb/api/amiidb_api_db.h',src/'app/amiidb/app_amiidb.h',src/'app/amiidb/scene/amiidb_scene_game_list.c',src/'app/amiidb/scene/amiidb_scene_amiibo_search.c',src/'mui/view/mui_list_view.c',src/'mui/mui_alloc.h',src/'mui/mui_mem.c',src/'mod/vfs/packed_fs.c',src/'amiidb/db_header.h',src/'amiidb/db_game.c',src/'amiidb/db_amiibo.c',src/'amiidb/db_link.c',fw/'components/tlsf/tlsf.c']
    source_hashes={str(x.relative_to(fw)):hashlib.sha256(x.read_bytes()).hexdigest() for x in sources}
    cards=''
    if name=='candidate':
@@ -31,6 +31,7 @@ def main():
    path=td/(name+'.c');path.write_text(code,encoding='utf-8',newline='\n');exe=td/(name+'.exe')
    inc=[td,src,src/'mui',src/'mui/view',src/'core',src/'mod',src/'mod/vfs',src/'ntag',src/'app/amiidb',src/'app/amiidb/api',src/'app/amiidb/view',src/'app/amiidb/scene',src/'app/amiibo',src/'app/amiibo/view',src/'amiidb',src/'i18n',fw/'components/mlib',fw/'components/u8g2/csrc',fw/'components/tlsf',fw/'components/littlefs']
    cmd=['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-type-limits','-Wno-comment','-Wno-unused-value','-Wno-sign-compare','-Wno-missing-field-initializers','-Wno-pointer-to-int-cast','-DTEST_BASELINE='+str(int(name=='baseline'))]
+   cmd+=['-DTEST_NAME_POOL='+str(int('name_en_offset' in (src/'amiidb/db_header.h').read_text()))]
    if a.sanitize or os.environ.get('PIXL_SANITIZE')=='1':cmd+=['-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer','-fno-pie','-no-pie']
    for d in inc:cmd+=['-I',str(d)]
    cmd += [str(path),str(fw/'components/tlsf/tlsf.c'),str(src/'i18n/de_DE.c'),'-o',str(exe)]

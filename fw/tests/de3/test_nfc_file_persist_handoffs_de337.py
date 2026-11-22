@@ -20,6 +20,7 @@ typedef struct {int32_t(*stat_file)(const char*,vfs_obj_t*);int32_t(*rename_file
 typedef struct {ntag_t *ntag;char file_name[49];} amiibo_detail_view_t;
 typedef struct {ntag_t ntag;amiibo_detail_view_t*p_amiibo_detail_view;int current_drive;char current_file[49],current_folder[64];void*p_toast_view;} app_amiibo_t;
 typedef struct {const char *name_en;} db_amiibo_t;
+static const char *db_amiibo_name_en(const db_amiibo_t *a){return a->name_en;}
 typedef struct {bool auto_gen_amiibo;} settings_data_t;
 static settings_data_t settings;
 static settings_data_t *settings_get_data(void){return &settings;}

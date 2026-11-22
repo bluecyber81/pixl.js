@@ -1,6 +1,8 @@
 """Exercise the real generator in disposable projects; HTTP is always mocked."""
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
+import ast
+import re
 import csv
 import io
 import json
@@ -23,6 +25,18 @@ ADDED = "abcdef0123456789"
 def record(identifier=ADDED, name='New "figure" \\ test\nnext line'):
     return {"head": identifier[:8], "tail": identifier[8:],
             "name": name, "gameSeries": "Test series"}
+
+
+def decoded_figures(source):
+    """Inspect emitted offsets independently; the C roundtrip test checks accessors."""
+    pool_source = source.split('const char db_amiibo_name_pool[', 1)[1].split('\n;', 1)[0]
+    pool = b''.join(ast.literal_eval(token).encode('utf8')
+                    for token in re.findall(r'"(?:\\.|[^"\\])*"', pool_source))
+    def name(offset):
+        return pool[offset:pool.index(b'\0', offset)].decode('utf8')
+    return {(head + tail).lower(): (name(int(en)), name(int(cn)))
+            for head, tail, en, cn in re.findall(
+                r'\{0x([0-9a-fA-F]{8}), 0x([0-9a-fA-F]{8}), ([0-9]+), ([0-9]+)\}', source)}
 
 
 class DatabaseRefreshTests(unittest.TestCase):
@@ -96,7 +110,8 @@ class DatabaseRefreshTests(unittest.TestCase):
             else:
                 first_generated = generated
         self.assertEqual(csv_before, {p.name: p.read_bytes() for p in (self.project / "data").glob("*.csv")})
-        self.assertIn(b'{0x01000000, 0x00040002, "Local name", ', generated["db_amiibo.c"])
+        self.assertEqual(decoded_figures(generated["db_amiibo.c"].decode("utf8")),
+                         {EXISTING: ("Local name", "本地名称")})
 
     def test_success_preserves_local_names_adds_once_and_uses_translation_fallback(self):
         body = {"amiibo": [record(EXISTING, "API must not replace local alias"), record(ADDED.upper())]}
@@ -107,7 +122,8 @@ class DatabaseRefreshTests(unittest.TestCase):
             rows = list(csv.reader(stream))
         self.assertEqual(rows, [[EXISTING, "Local name", "本地名称"], [ADDED, record()["name"], ""]])
         generated = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
-        self.assertIn('{0xabcdef01, 0x23456789, "New \\"figure\\" \\\\ test\\nnext line", ""}', generated)
+        self.assertEqual(decoded_figures(generated),
+                         {EXISTING: ("Local name", "本地名称"), ADDED: (record()["name"], "")})
         self.assertNotIn('"None"', generated)
         links = (self.generated / "db_link.c").read_text(encoding="utf8")
         self.assertIn('{"", DB_NOTE_CN(""), DB_NOTE_IT("")}', links)
@@ -168,9 +184,9 @@ class DatabaseRefreshTests(unittest.TestCase):
         expected = "".join("\\%03o" % byte for byte in text.encode("utf8"))
         main.write_text('#include "db_header.h"\n#include <string.h>\n'
                         'int main(void) { const char *expected = "' + expected + '";\n'
-                        'return strcmp(amiibo_list[1].name_en, expected) || '
-                        'strcmp(game_list[0].name_en, expected) || '
-                        'strcmp(game_list[0].name_cn, expected) || '
+                        'return strcmp(db_amiibo_name_en(&amiibo_list[1]), expected) || '
+                        'strcmp(db_game_name_en(&game_list[0]), expected) || '
+                        'strcmp(db_game_name_cn(&game_list[0]), expected) || '
                         'strcmp(db_usage_notes[link_list[0].note_index].en, expected) || '
                         'strcmp(db_usage_notes[link_list[0].note_index].cn, expected) || '
                         'strcmp(db_usage_notes[link_list[0].note_index].it, expected); }\n', encoding="utf8")
@@ -219,7 +235,7 @@ class DatabaseRefreshTests(unittest.TestCase):
                 self.assertEqual(self.execute(mode, {"amiibo": [record(ADDED)]})[0], 0)
                 data = (self.generated / "db_amiibo.c").read_text(encoding="utf8")
                 links = (self.generated / "db_link.c").read_text(encoding="utf8")
-                self.assertIn('"Local alias", "Local translation"', data)
+                self.assertEqual(decoded_figures(data), {ADDED: ("Local alias", "Local translation")})
                 self.assertIn('{"Note", DB_NOTE_CN(""), DB_NOTE_IT("")}', links)
                 self.assertIn('{0, 1, 0}', links)
                 self.assertNotIn(", 255,", links)

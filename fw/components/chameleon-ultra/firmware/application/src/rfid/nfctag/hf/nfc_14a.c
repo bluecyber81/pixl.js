@@ -215,7 +215,7 @@ uint8_t nfc_tag_14a_wrap_frame(const uint8_t *pbtTx, const size_t szTxBits, cons
 *          pbtRxPar: The buffer of the bitstream Store after the packaging, the coupling school inspection area
 * @retval :The data length of the bitstream packaging, note that the length of the data area is the length of the data area.retval / 8
 */
-uint8_t nfc_tag_14a_unwrap_frame(const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, uint8_t *pbtRxPar) {
+uint16_t nfc_tag_14a_unwrap_frame(const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, uint8_t *pbtRxPar) {
     uint8_t btFrame;
     uint8_t btData;
     uint8_t uiBitPos;
@@ -223,6 +223,7 @@ uint8_t nfc_tag_14a_unwrap_frame(const uint8_t *pbtFrame, const size_t szFrameBi
     uint8_t *pbtFramePos = (uint8_t *)pbtFrame;
     size_t szBitsLeft = szFrameBits;
     size_t szRxBits = 0;
+    const size_t frameBytes = (szFrameBits + 7u) / 8u;
 
     // Make sure we should frame at least something
     if (szBitsLeft == 0)
@@ -244,15 +245,17 @@ uint8_t nfc_tag_14a_unwrap_frame(const uint8_t *pbtFrame, const size_t szFrameBi
         for (uiBitPos = 0; uiBitPos < 8; uiBitPos++) {
             btFrame = ByteMirror[pbtFramePos[uiDataPos]];
             btData = (btFrame << uiBitPos);
-            btFrame = ByteMirror[pbtFramePos[uiDataPos + 1]];
+            // A partial final byte may have no following input byte.
+            const size_t nextByte = (size_t)(pbtFramePos - pbtFrame) + uiDataPos + 1u;
+            btFrame = nextByte < frameBytes ? ByteMirror[pbtFrame[nextByte]] : 0;
             btData |= (btFrame >> (8 - uiBitPos));
             pbtRx[uiDataPos] = ByteMirror[btData];
-            if (pbtRxPar != NULL)
+            if (pbtRxPar != NULL && szBitsLeft >= 9)
                 pbtRxPar[uiDataPos] = ((btFrame >> (7 - uiBitPos)) & 0x01);
             // Increase the data (without parity bit) position
             uiDataPos++;
             // Test if we are done
-            if (szBitsLeft < 9)
+            if (szBitsLeft <= 9)
                 return szRxBits;
             szBitsLeft -= 9;
         }

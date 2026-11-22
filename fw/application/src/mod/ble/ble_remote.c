@@ -94,7 +94,13 @@ void ble_remote_shutdown(void) {
 }
 static bool other_owner(void) {
     mini_app_launcher_t *launcher = mini_app_launcher();
-    return mini_app_launcher_get_app_handle(launcher, MINI_APP_ID_BLE) ||
+    return
+#ifdef BOARD_LCD
+           ble_miniapp_radio_busy() ||
+           mini_app_launcher_get_app_handle(launcher, MINI_APP_ID_SWITCH2_WAKE) ||
+           mini_app_launcher_get_app_handle(launcher, MINI_APP_ID_BLE_STREAM) ||
+#endif
+           mini_app_launcher_get_app_handle(launcher, MINI_APP_ID_BLE) ||
            mini_app_launcher_get_app_handle(launcher, MINI_APP_ID_AMIIBOLINK);
 }
 static bool safe_nfc(void) {

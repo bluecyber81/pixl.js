@@ -149,7 +149,7 @@ static void ntag_update(app_amiibo_t *app, ntag_t *p_ntag) {
         if (amd && strncmp(string_get_cstr(app->current_file), "new", 3) == 0) {
             char new_path[VFS_MAX_PATH_LEN];
             char new_name[VFS_MAX_NAME_LEN];
-            snprintf(new_name, sizeof(new_name), "%s.bin", amd->name_en);
+            snprintf(new_name, sizeof(new_name), "%s.bin", db_amiibo_name_en(amd));
             if (!cwalk_append_segment(new_path, string_get_cstr(app->current_folder), new_name)) {
                 mui_toast_view_show(app->p_toast_view, _T(FAILED));
                 mui_update(mui());

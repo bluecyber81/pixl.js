@@ -9,6 +9,10 @@
 #include "app_amiidb.h"
 #include "app_chameleon.h"
 #include "app_game.h"
+#ifdef BOARD_LCD
+#include "app_switch2_wake.h"
+#include "app_ble_stream.h"
+#endif
 #include <stddef.h>
 
 const mini_app_t* mini_app_registry[] = {
@@ -28,6 +32,10 @@ const mini_app_t* mini_app_registry[] = {
 #endif
 #ifdef APP_LEGLAMIIBO_ENABLE
     &app_ble_info, 
+#endif
+#ifdef BOARD_LCD
+    &app_switch2_wake_info,
+    &app_ble_stream_info,
 #endif
     &app_settings_info
 };

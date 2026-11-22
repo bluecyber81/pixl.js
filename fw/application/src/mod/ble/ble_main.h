@@ -127,4 +127,22 @@ void ble_get_addr_str(char addr_fmt[]);
 
 
 
+
+/* LCD miniapps use the existing S112 stack. Callbacks run only in the
+ * foreground. Stop cancels callbacks; busy includes deferred restoration. */
+#include "../../app/switch2_wake/switch2_protocol.h"
+typedef void (*ble_raw_adv_done_cb_t)(uint32_t result);
+typedef void (*ble_switch2_scan_cb_t)(bool found, const ble_switch2_scan_result_t *result);
+uint32_t ble_raw_adv_start(const uint8_t mac[6], const uint8_t *data, uint8_t length,
+                          bool connectable, uint16_t duration, ble_raw_adv_done_cb_t callback);
+void ble_raw_adv_stop(void);
+bool ble_raw_adv_is_active(void);
+bool ble_miniapp_radio_busy(void);
+uint32_t ble_switch2_scan_start(uint16_t seconds, ble_switch2_scan_cb_t callback);
+void ble_switch2_scan_stop(void);
+bool ble_switch2_scan_is_active(void);
+void ble_switch2_scan_process(void);
+/* Stream-only foreground probe; starts RSSI sampling when not yet active. */
+bool ble_stream_rssi(int8_t *rssi);
+
 #endif /* BLE_H_ */

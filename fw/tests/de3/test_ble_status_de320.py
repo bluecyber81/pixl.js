@@ -60,6 +60,7 @@ HARNESS = r'''
 #include <stdio.h>
 #include <stdlib.h>
 #include "mui_include.h"
+#define BOARD_LCD 1
 #include "ble_main.h"
 #include "ble_status_view.h"
 #include "i18n/language.h"
@@ -128,6 +129,15 @@ static void ble_work_process(void (*cleanup)(void)) { (void)cleanup; CHECK(!crit
 static void ble_df_driver_poll(void) {}
 static void ble_pending_mode_poll(void) {} /* Remote modes have a dedicated harness. */
 static void ble_file_link_poll(void) {} /* Actual owner covered by DE351 handoff suite. */
+/* No real radio owner is started here. Completion is explicit in radio_owner;
+ * stop callbacks retain ownership just as the actual miniapp lifecycle does. */
+static bool miniapp_radio_owned;
+static unsigned miniapp_scan_polls,miniapp_adv_polls,miniapp_scan_stops,miniapp_adv_stops;
+bool ble_miniapp_radio_busy(void) { return miniapp_radio_owned; }
+void ble_switch2_scan_process(void) { CHECK(!critical_depth&&!irq);miniapp_scan_polls++; }
+static void ble_raw_adv_process(void) { CHECK(!critical_depth&&!irq);miniapp_adv_polls++; }
+void ble_switch2_scan_stop(void) { miniapp_scan_stops++; }
+void ble_raw_adv_stop(void) { miniapp_adv_stops++; }
 static bool m_mode_pending,m_mode_adv_requested,m_mode_handlers_ready,m_mode_wait_reply;
 static bool ble_remote_receive_irq(const uint8_t*p,size_t n){(void)p;(void)n;CHECK(false);return false;}
 void ble_get_addr_str(char *addr){strcpy(addr,"00:00:00:00:00:00");}
@@ -213,6 +223,14 @@ int main(int argc,char **argv) {
   event(BLE_GAP_EVT_DISCONNECTED);softdevice_connect_during_restart=1;
   CHECK(!ble_restart_advertising()&&adv_starts==1&&!disconnects);
   event(BLE_GAP_EVT_CONNECTED);CHECK(ble_link_state_get()==BLE_LINK_CONNECTED);
+ } else if(!strcmp(test,"radio_owner")) {
+  miniapp_radio_owned=true;CHECK(!ble_restart_advertising()&&!adv_starts);
+  ble_process_pending();CHECK(miniapp_scan_polls&&miniapp_scan_polls==miniapp_adv_polls);
+  ble_disable();CHECK(miniapp_scan_stops==1&&miniapp_adv_stops==1&&miniapp_radio_owned);
+  int stopped_starts=adv_starts;
+  CHECK(!ble_restart_advertising()&&adv_starts==stopped_starts);
+  miniapp_radio_owned=false;m_sessions_enabled=true;
+  CHECK(ble_restart_advertising()&&adv_starts==stopped_starts+1);
  } else if(!strcmp(test,"failed_restart")) {
   adv_error=99;CHECK(!ble_restart_advertising()&&ble_link_state_get()==BLE_LINK_INACTIVE&&!disconnects);
   adv_error=0;CHECK(ble_restart_advertising()&&ble_link_state_get()==BLE_LINK_ADVERTISING);
@@ -318,7 +336,12 @@ class StatusTests(unittest.TestCase):
             path = Path(directory)
             (path / "i18n").mkdir()
             (path / "mui_include.h").write_text(UI_STUB, encoding="utf-8")
-            (path / "ble_main.h").write_bytes((BLE / "ble_main.h").read_bytes())
+            # Preserve the production header's real relative include layout.
+            (path / "mod/ble").mkdir(parents=True)
+            (path / "app/switch2_wake").mkdir(parents=True)
+            (path / "mod/ble/ble_main.h").write_bytes((BLE / "ble_main.h").read_bytes())
+            (path / "app/switch2_wake/switch2_protocol.h").write_bytes(
+                (SRC / "app/switch2_wake/switch2_protocol.h").read_bytes())
             (path / "ble_status_view.h").write_bytes((VIEW / "ble_status_view.h").read_bytes())
             (path / "ble_status_view.c").write_text(view, encoding="utf-8")
             (path / "mui_qrcode_helper.h").write_text("void draw_qrcode(mui_canvas_t*,int,int,int,const char*);\n")
@@ -326,7 +349,7 @@ class StatusTests(unittest.TestCase):
             (path / "test.c").write_text(source, encoding="utf-8")
             exe = path / ("test.exe" if os.name == "nt" else "test")
             command = self.cc + ["-std=c11", "-O1", "-Wall", "-Wextra", "-Werror", "-Wno-unused-function",
-                                 "-Wno-unused-parameter", "-I", str(path), str(path / "test.c"), "-o", str(exe)]
+                                 "-Wno-unused-parameter", "-I", str(path), "-I", str(path / "mod/ble"), str(path / "test.c"), "-o", str(exe)]
             result = subprocess.run(command, capture_output=True, text=True, timeout=60)
             self.assertEqual(result.returncode, 0, result.stderr)
             for mode in modes:
@@ -335,7 +358,7 @@ class StatusTests(unittest.TestCase):
 
     def test_actual_ble_events_and_view(self):
         self.compile_run(("transitions", "observer_order", "guarded_restart", "failed_restart", "disable",
-                          "no_packet_redraw", "ui", "click_race", "lifetime", "session_ui"))
+                          "no_packet_redraw", "ui", "click_race", "lifetime", "session_ui", "radio_owner"))
 
     def test_mutants_are_detected(self):
         wrong = self.ble.replace("m_conn_handle = BLE_CONN_HANDLE_INVALID;\n        /* Do not clear", 
@@ -352,6 +375,10 @@ class StatusTests(unittest.TestCase):
                                  "    if (m_advertising.p_adv_data)")
         self.assertNotEqual(wrong, self.ble)
         self.compile_run(("disable",), ble=wrong, failure=True)
+
+        wrong = self.ble.replace("if (ble_miniapp_radio_busy()) return false;", "if (false) return false;")
+        self.assertNotEqual(wrong, self.ble)
+        self.compile_run(("radio_owner",), ble=wrong, failure=True)
 
     def test_published_static_view_fails_new_inactive_behavior(self):
         # Published static DE3.16 view, commit ec9c7f8ebd06ba449c0f8811c5c3b6dcfdcaa7bd.

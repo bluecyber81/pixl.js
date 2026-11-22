@@ -95,7 +95,7 @@ static void amiidb_scene_game_list_reload(app_amiidb_t *app) {
                                             AMIIDB_RESULT_PAGE_SIZE, games, &folders);
     mui_list_view_clear_items(app->p_list_view);
     for (int32_t i = 0; i < count; i++) {
-        snprintf(txt, sizeof(txt), "%s (%d)", isChineseLanguage() ? games[i]->name_cn : games[i]->name_en,
+        snprintf(txt, sizeof(txt), "%s (%d)", isChineseLanguage() ? db_game_name_cn(games[i]) : db_game_name_en(games[i]),
                  games[i]->link_cnt);
         mui_list_view_add_item(app->p_list_view, ICON_FOLDER, txt, (void *)games[i]);
     }

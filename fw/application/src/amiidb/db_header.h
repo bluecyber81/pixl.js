@@ -9,22 +9,43 @@
 typedef struct {
     uint32_t head;
     uint32_t tail;
-    const char *name_en;
-    const char *name_cn;
+    uint16_t name_en_offset;
+    uint16_t name_cn_offset;
 
 } db_amiibo_t;
+
+_Static_assert(sizeof(db_amiibo_t) == 12, "unexpected ROM figure padding");
 
 struct _db_link_t;
 
 typedef struct _db_game_t {
     uint8_t game_id;
     uint8_t parent_game_id;
-    const char *name_en;
-    const char *name_cn;
+    uint16_t name_en_offset;
+    uint16_t name_cn_offset;
     
     uint8_t order;
     uint16_t link_cnt;
 } db_game_t;
+
+/* Name offsets address immutable ROM pools. Empty strings use offset zero.
+ * These are internal catalog records, not persisted tag or slot layouts. */
+_Static_assert(sizeof(db_game_t) == 10, "unexpected ROM game padding");
+extern const char db_amiibo_name_pool[];
+extern const char db_game_name_pool[];
+
+static inline const char *db_amiibo_name_en(const db_amiibo_t *item) {
+    return db_amiibo_name_pool + item->name_en_offset;
+}
+static inline const char *db_amiibo_name_cn(const db_amiibo_t *item) {
+    return db_amiibo_name_pool + item->name_cn_offset;
+}
+static inline const char *db_game_name_en(const db_game_t *item) {
+    return db_game_name_pool + item->name_en_offset;
+}
+static inline const char *db_game_name_cn(const db_game_t *item) {
+    return db_game_name_pool + item->name_cn_offset;
+}
 
 typedef struct {
     const char *en;

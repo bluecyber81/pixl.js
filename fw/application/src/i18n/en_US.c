@@ -270,4 +270,6 @@ const char * const lang_en_US[_L_COUNT] = {
     [_L_DE3_SAVE_DISCARD_ACTION] = "Discard",
     [_L_DE3_SAVE_YES_SHORT] = "Yes",
     [_L_DE3_SAVE_NO_SHORT] = "No",
+    [_L_APP_SWITCH2_WAKE] = "Switch2 Wake",
+    [_L_APP_BLE_STREAM] = "BLE Stream",
 };
