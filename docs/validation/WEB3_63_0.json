@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "status": "software-qualified-awaiting-publication",
+  "status": "published-and-software-qualified",
   "date": "2026-11-22",
   "webVersion": "3.63.0",
   "sourceBranch": "web-app673",
-  "sourceCommit": null,
-  "sourceTree": null,
+  "sourceCommit": "37a5be6652f67ffeb6887a809b077909c0122550",
+  "sourceTree": "17fb07baecfbe8c324d8c43b18273cfd5edab49e",
   "sourceBaseCommit": "4dfd9dd6cc731a56abe4aa65af273ca499699989",
   "firmware": {
     "board": "LCD",
@@ -213,22 +213,184 @@
     "status": "BLOCKED_ENVIRONMENT",
     "casesExecutedForThisFinalBuild": 0,
     "previousAttempt": "../browser-root/NORMAL_BROWSER.json",
-    "reason": "Same executor: Chromium could not create a process singleton socket before page loading. No identical failed launch was repeated."
+    "reason": "Same executor: Chromium could not create a process singleton socket before page loading. No identical failed launch was repeated.",
+    "manualLiveFollowup": {
+      "passed": true,
+      "checks": [
+        {
+          "name": "Start page and workspaces render",
+          "passed": true
+        },
+        {
+          "name": "Catalogue opens with 956 catalogue IDs",
+          "passed": true
+        },
+        {
+          "name": "PC und Gerät vergleichen opens with backup ZIP, BIN and folder input controls",
+          "passed": true
+        },
+        {
+          "name": "Update workspace requires separate LCD/OLED selection",
+          "passed": true
+        },
+        {
+          "name": "LCD selection offers normal App673 for PFS1, Z21 and S112 7.3.0",
+          "passed": true
+        },
+        {
+          "name": "Selected App673 handoff opens the DFU page with the correct package preselected",
+          "passed": true
+        },
+        {
+          "name": "Paket laden und prüfen fetches actual public ZIP and confirms SHA-256 package identity",
+          "passed": true
+        }
+      ],
+      "dfu": {
+        "url": "https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app",
+        "title": "Allmiibo DFU 3.63.0",
+        "counter": 673,
+        "hardwareField": 52,
+        "softDeviceFwid": "0x0126",
+        "observedSuccess": "2.22.0-DE3.100: Paketidentität per SHA-256 bestätigt. Gerätekompatibilität nicht automatisch geprüft."
+      },
+      "deviceConnected": false,
+      "firmwareFlashed": false
+    }
   },
   "evidenceDirectory": "WEB3_63_0_evidence/",
   "ci": {
-    "status": "pending",
-    "windowsNativePassed": false
+    "runId": 45054407057,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45054407057",
+    "conclusion": "success",
+    "status": "success",
+    "windowsNativePassed": true,
+    "fullSuiteOnExactQualifiedCommit": true,
+    "portableByteIdentical": true
   },
   "deployment": {
-    "status": "pending",
-    "pagesCommit": null
+    "commit": "fa2a9641096e524c7334b9cf9dd4fb1c49e45bcf",
+    "tree": "f7d84e87ea746b37d15d4cdea9e9f217aa0c25a5",
+    "url": "https://bluecyber81.github.io/pixl.js/",
+    "updaterUrl": "https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app",
+    "ci": {
+      "runId": 45055210423,
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45055210423",
+      "conclusion": "success"
+    },
+    "payloadFiles": 312,
+    "preservedPreviousFiles": 1126,
+    "deletedFiles": 0,
+    "http": {
+      "passed": 81,
+      "total": 81,
+      "sourceLinksPassed": 4,
+      "sourceLinksTotal": 4,
+      "finishedAt": "2026-11-22T18:30:03.110357+00:00",
+      "downloads": [
+        {
+          "path": "downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip",
+          "url": "https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip",
+          "method": "GET",
+          "expectedBytes": 11585896,
+          "expectedSha256": "3a735a792eb7aa7ff6eede77a02cc03409389445dbc35c668b09b82621a43dac",
+          "status": 200,
+          "finalUrl": "https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip",
+          "bytes": 11585896,
+          "sha256": "3a735a792eb7aa7ff6eede77a02cc03409389445dbc35c668b09b82621a43dac",
+          "contentType": "application/x-zip-compressed",
+          "etag": "\"6b033440-b0c968\"",
+          "lastModified": "Sun, 22 Nov 2026 18:28:16 GMT",
+          "passed": true,
+          "durationSeconds": 2.898
+        },
+        {
+          "path": "firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+          "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+          "method": "GET",
+          "expectedBytes": 361681,
+          "expectedSha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+          "status": 200,
+          "finalUrl": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+          "bytes": 361681,
+          "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+          "contentType": "application/x-zip-compressed",
+          "etag": "\"6b033440-584d1\"",
+          "lastModified": "Sun, 22 Nov 2026 18:28:16 GMT",
+          "passed": true,
+          "durationSeconds": 2.416
+        },
+        {
+          "path": "sources/LCD_DE3_100_App673_Simulatorquellen.zip",
+          "url": "https://bluecyber81.github.io/pixl.js/sources/LCD_DE3_100_App673_Simulatorquellen.zip",
+          "method": "GET",
+          "expectedBytes": 161898,
+          "expectedSha256": "f7e503ef1c8b5687e6de1321ed21ccdfb6daecf8009b5d840ce0637505e7b6d0",
+          "status": 200,
+          "finalUrl": "https://bluecyber81.github.io/pixl.js/sources/LCD_DE3_100_App673_Simulatorquellen.zip",
+          "bytes": 161898,
+          "sha256": "f7e503ef1c8b5687e6de1321ed21ccdfb6daecf8009b5d840ce0637505e7b6d0",
+          "contentType": "application/x-zip-compressed",
+          "etag": "\"6b033440-2786a\"",
+          "lastModified": "Sun, 22 Nov 2026 18:28:16 GMT",
+          "passed": true,
+          "durationSeconds": 2.152
+        }
+      ]
+    },
+    "browser": {
+      "passed": true,
+      "checks": [
+        {
+          "name": "Start page and workspaces render",
+          "passed": true
+        },
+        {
+          "name": "Catalogue opens with 956 catalogue IDs",
+          "passed": true
+        },
+        {
+          "name": "PC und Gerät vergleichen opens with backup ZIP, BIN and folder input controls",
+          "passed": true
+        },
+        {
+          "name": "Update workspace requires separate LCD/OLED selection",
+          "passed": true
+        },
+        {
+          "name": "LCD selection offers normal App673 for PFS1, Z21 and S112 7.3.0",
+          "passed": true
+        },
+        {
+          "name": "Selected App673 handoff opens the DFU page with the correct package preselected",
+          "passed": true
+        },
+        {
+          "name": "Paket laden und prüfen fetches actual public ZIP and confirms SHA-256 package identity",
+          "passed": true
+        }
+      ],
+      "dfu": {
+        "url": "https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app",
+        "title": "Allmiibo DFU 3.63.0",
+        "counter": 673,
+        "hardwareField": 52,
+        "softDeviceFwid": "0x0126",
+        "observedSuccess": "2.22.0-DE3.100: Paketidentität per SHA-256 bestätigt. Gerätekompatibilität nicht automatisch geprüft."
+      },
+      "deviceConnected": false,
+      "firmwareFlashed": false
+    },
+    "status": "success"
   },
   "hardwareAcceptance": "pending-for-this-build",
   "limits": [
-    "Targeted checks and fresh distributions apply to the final public source commit binding. The earlier full suite is separately retained; only the two documented public-source metadata/archive files differ.",
-    "Physical Allmiibo/Bluetooth/DFU/game tests and native Windows execution were not performed by this agent.",
-    "Visual browser verification remains pending in a working browser environment."
+    "No physical LCD or OLED, real BLE/NFC radio, Switch 2 wake, gameplay, measured energy or hardware power-cut test.",
+    "Z21 resume is a host model after accepted init; signature and linked ARM crypto/init checks are separate gates.",
+    "Local leak sanitizer is unavailable under ptrace; the reported Z19/Z21 leak checks passed independently in GitHub CI.",
+    "The manual cloud-browser check does not assert a passing automated local Chromium suite or mobile viewport test.",
+    "OLED Test 6 and the historical private file manager remain separate; no OLED binary equivalence is claimed."
   ],
-  "detailedLocalInputInventoriesPublished": false
+  "detailedLocalInputInventoriesPublished": false,
+  "deliveryEvidence": "APP673_WEB363_DELIVERY.json"
 }

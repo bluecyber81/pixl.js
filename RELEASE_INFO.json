@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "publication_date": null,
+  "publication_date": "2026-11-22",
   "version": "2.22.0-DE3.100",
   "counter": 673,
   "board": "LCD",
@@ -60,7 +60,7 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Final App673: seven linked ARM signature/hash/CRC cases, two init-bank cases, and full-BIN resume with ASan/UBSan passed. Local LSan unavailable under ptrace; hardware not exercised.",
+    "qualification": "Final App673 linked ARM crypto/init and full-BIN host resume passed. Z21 and Z19 ASan/UBSan/LSan independently passed in GitHub CI 45054539931. No physical device acceptance is claimed.",
     "application_counter": 673
   },
   "previous_web_full_suite": {
@@ -87,9 +87,9 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "software-qualified-awaiting-publication",
+  "status": "published-and-software-qualified",
   "device_readback_evidence": null,
-  "fresh_public_unsigned_rebuild_matches_signed_application": false,
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
       "file": "Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
@@ -131,7 +131,7 @@
     "combined_zip_sha256": "4e0734788ead1192db8182eaea20a16fe070b480618f39da952c5bacb54f1b11",
     "stable_default_counter_at_publication": 637
   },
-  "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/workflows/unsigned-firmware.yml",
+  "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/runs/45054539931",
   "device_validation_scope": "App673 has not been installed or observed on a physical device in this work. Earlier owner observations are bound to their preceding versions.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "previous_lcd_release": {
@@ -385,7 +385,7 @@
     }
   ],
   "firmware_channel": "normal",
-  "release_status": "software-qualified",
+  "release_status": "published-and-software-qualified",
   "version_header_sha256": "5697eb0b98ea8fbab435f9dd05e260f56770e1d6009deba68ae968195c3e55b1",
   "firmware_source_branch": "release/lcd-de3100-app673",
   "application_bytes": 361080,
@@ -557,12 +557,12 @@
   },
   "firmware_source_scope": "App673 production commit is separately bound; inherited fw/ in this Web branch is historical and is not the App673 build source.",
   "web_version": "3.63.0",
-  "web_release_status": "software-qualified-awaiting-publication",
+  "web_release_status": "published-and-software-qualified",
   "web_release_notes": "web/LIESMICH_3_63_0.txt",
   "web_source_branch": "web-app673",
   "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app673/web",
   "web_release": "https://bluecyber81.github.io/pixl.js/?v=3.63.0",
-  "web_publication_date": null,
+  "web_publication_date": "2026-11-22",
   "web_device_readback_pending": true,
   "web_device_readback_scope": "No App673/Web3.63 device observation is claimed. Earlier App672/Web3.62 observations remain historical.",
   "web_evidence": "docs/validation/WEB3_63_0.json",
@@ -676,7 +676,7 @@
   "web_test_passed": 2145,
   "web_test_skipped": 3,
   "web_test_failed": 0,
-  "web_host_test_scope": "2145/2148 Node cases passed; two native Windows cases and one optional historical OTA-fixture case skipped. Root and Pages 53/53 each; Python launcher 26/26 and exporter 12/12. Native Windows and live browser results recorded separately.",
+  "web_host_test_scope": "2145/2148 Linux Node cases passed; 2 native Windows cases covered separately and 1 optional historical fixture skipped. Both distributions 53/53; Linux Python 26/26, native Windows Python 24 passed plus 2 POSIX-only skips, native PowerShell 4/4. Final CI portable is byte-identical; public HTTP and manual browser checks passed.",
   "web_portable_sha256": "3a735a792eb7aa7ff6eede77a02cc03409389445dbc35c668b09b82621a43dac",
   "web_portable_bytes": 11585896,
   "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip",
@@ -691,5 +691,13 @@
     "metadataFollowupPassed": 204,
     "runtimeChangesAfterFullSuite": false,
     "continuity": "The final public source reference and simulator-source ZIP were rebound to an identical Git tree; 204 targeted checks and both 53-case distribution checks pass."
-  }
+  },
+  "web_source_commit": "37a5be6652f67ffeb6887a809b077909c0122550",
+  "web_qualification_source_commit": "37a5be6652f67ffeb6887a809b077909c0122550",
+  "firmware_qualification_source_commit": "c728539b007514e19e9cff3ea44e3dc31db7db6d",
+  "web_pages_commit": "fa2a9641096e524c7334b9cf9dd4fb1c49e45bcf",
+  "delivery_evidence": "docs/validation/APP673_WEB363_DELIVERY.json",
+  "web_native_windows_ci_passed": true,
+  "web_live_browser_manual_check_passed": true,
+  "web_live_http_verified_checks": 81
 }

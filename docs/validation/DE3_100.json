@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "software-qualified",
+  "status": "published-and-software-qualified",
   "canonicalEvidenceUrl": "https://github.com/bluecyber81/pixl.js/blob/release/lcd-de3100-app673/docs/validation/DE3_100.json",
   "source": {
     "repository": "bluecyber81/pixl.js",
@@ -46,5 +46,27 @@
       "stack_reserved_bytes": 8192
     }
   },
-  "hardwareAcceptance": "pending-for-this-build"
+  "hardwareAcceptance": "pending-for-this-build",
+  "ci": {
+    "status": "success",
+    "qualifiedCommit": "c728539b007514e19e9cff3ea44e3dc31db7db6d",
+    "runId": 45054539931,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45054539931",
+    "publicUnsignedRebuildVerified": true,
+    "binAndHexEqualFinalRelease": true,
+    "hostSuitesPassed": 196,
+    "hostSuitesExecuted": 196,
+    "hostSuitesOmitted": 0,
+    "currentAppZ19AsanUbsanLsan": "passed",
+    "currentAppZ21AsanUbsanLsan": "passed",
+    "currentAppZ21Resume": "passed",
+    "previousRun": {
+      "id": 45053828080,
+      "head": "0875a09935b00a60a4d3b20744f073a23cc53d59",
+      "conclusion": "failure",
+      "reason": "App673 was missing from the firmware branch Web DFU catalogue. This was fixed by c728539; application bytes and production source identity stayed unchanged.",
+      "evidence": "CI_45053828080_FIRST_FAILURE.json"
+    }
+  },
+  "deliveryEvidence": "APP673_WEB363_DELIVERY.json"
 }
