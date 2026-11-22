@@ -111,9 +111,9 @@ def main():
     cross_input = parser.add_mutually_exclusive_group(required=True)
     cross_input.add_argument('--cross', type=Path, help='fresh check-pfs-compatibility.py output directory')
     cross_input.add_argument('--reuse-cross-report', type=Path,
-                             help='previous cross-mount JSON, only for the byte-identical App673 engine')
+                             help='previous cross-mount JSON, only for the explicitly bound byte-identical App673/App674 engine')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398', 'de399', 'de3100'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398', 'de399', 'de3100', 'de3101'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
@@ -133,12 +133,14 @@ def main():
         assert record['version'] == '2.22.0-DE3.99' and record['counter'] == 672
     if args.profile == 'de3100':
         assert record['version'] == '2.22.0-DE3.100' and record['counter'] == 673
+    if args.profile == 'de3101':
+        assert record['version'] == '2.22.0-DE3.101' and record['counter'] == 674
     assert source_hashes(fw) == prod and fingerprint(prod) == record['source_id_sha256']
     artifacts = {name:digest(args.build/name) for name in ('pixljs.bin','pixljs.hex','pixljs.out','pixljs.map')}
     assert artifacts == record['artifacts_sha256']
     manifest, engine = identity(fw/'application/src/mod/vfs', fw/'components/littlefs')
     engine_record = dict(manifest=manifest, engineSha256=engine)
-    simulator_profile = {'de394': 'de393', 'de3100': 'de399'}.get(args.profile, args.profile)
+    simulator_profile = {'de394': 'de393', 'de3100': 'de399', 'de3101': 'de399'}.get(args.profile, args.profile)
     simulator = ROOT/'web/third-party'/('packed-simulator-'+simulator_profile)
     assert engine_record == read(simulator/'ENGINE_IDENTITY.json')
     binding = read(simulator/'SOURCE_BINDING.json')
@@ -150,7 +152,7 @@ def main():
     assert cross['passed'] and cross['syntheticDataOnly'] and cross['engines']['new'] == engine
     assert len(cross['cases']) == 6 and all(case['exitCode'] == 0 for case in cross['cases'])
     if args.reuse_cross_report:
-        assert args.profile == 'de3100', 'Reuse requires the explicit identical-engine release profile'
+        assert args.profile in ('de3100', 'de3101'), 'Reuse requires an explicit identical-engine release profile'
         previous = read(ROOT/'docs/validation/DE3_99_PFS.json')
         assert previous['engine'] == engine_record and previous['wasmSha256'] == wasm_sha
         assert previous['crossMountReportSha256'] == digest(cross_path)
@@ -177,15 +179,15 @@ def main():
                 'Host simulations do not measure physical free space or device acceptance.'])
     if args.profile in ('de396', 'de397'):
         report['limits'].append('BOARD_LCD/PIXL_TEST_DIAGNOSTICS instrumentation is omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
-    if args.profile in ('de398', 'de399', 'de3100'):
+    if args.profile in ('de398', 'de399', 'de3100', 'de3101'):
         report['limits'].append('BOARD_LCD/runtime GC diagnostics are omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
     if args.reuse_cross_report:
-        report['scope'] = 'Fresh linked App673 ARM layout binding to the unchanged App672 engine and previously executed cross-mount evidence'
+        report['scope'] = f"Fresh linked App{record['counter']} ARM layout binding to the unchanged App672 engine and previously executed cross-mount evidence"
         report['crossMountEvidenceMode'] = 'reused-identical-engine'
         report['crossMountOriginFirmware'] = '2.22.0-DE3.99'
         report['previousQualificationPath'] = 'docs/validation/DE3_99_PFS.json'
         report['previousQualificationSha256'] = digest(ROOT/report['previousQualificationPath'])
-        report['limits'].append('The six cross-mount cases were executed for App672; they were not rerun or relabeled as fresh App673 tests.')
+        report['limits'].append(f"The six cross-mount cases were executed for App672; they were not rerun or relabeled as fresh App{record['counter']} tests.")
     args.output.write_text(json.dumps(report,indent=2)+'\n')
 
 

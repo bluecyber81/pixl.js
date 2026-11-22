@@ -40,9 +40,13 @@ export function packagePresentation(entry, session = {}, boot = null) {
   ));
   const specialTags = { 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
-  return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:['de3.98-lcd-app', 'de3.99-lcd-app', 'de3.100-lcd-app'].includes(entry.id) ? deploymentPath('guide/index.html') + '#lcd-' + entry.id.split('-')[0].replace('.', '') : entry.id === 'de3.86-lcd-test1-app'
+  const localDownloadUrl = deploymentPath(`firmware/${entry.file}`); // Validate even a pinned download's filename.
+  const phoneDownload = entry.id === 'de3.101-lcd-app' && entry.version === '2.22.0-DE3.101' && entry.counter === 674 &&
+    entry.file === 'Allmiibo_LCD_DE3_101_674_NUR_APP.zip' && entry.board === 'LCD' && entry.bytes === 361953 &&
+    entry.sha256 === '76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca';
+  return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:['de3.98-lcd-app', 'de3.99-lcd-app', 'de3.100-lcd-app', 'de3.101-lcd-app'].includes(entry.id) ? deploymentPath('guide/index.html') + '#lcd-' + entry.id.split('-')[0].replace('.', '') : entry.id === 'de3.86-lcd-test1-app'
     ? deploymentPath('guide/LCD-' + entry.version.split('-')[1] + '.txt') : 'https://github.com/bluecyber81/pixl.js/releases/tag/' + releaseTag,
-    downloadUrl:deploymentPath(`firmware/${entry.file}`),dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
+    downloadUrl:phoneDownload ? 'https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip' : localDownloadUrl,dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
 }
 
 export function currentLcdDownloads(entry, session, boot) {
@@ -72,8 +76,8 @@ export function currentLcdDownloads(entry, session, boot) {
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     systemGuide:'Android-Komplettpaket mit Z21 und Anleitung',
-    source:'Quellcode der LCD-Firmware DE3.100 / App673',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE3.100 / App673 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
+    source:'Quellcode der LCD-Firmware DE3.101 / App674',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE3.101 / App674 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -84,8 +88,8 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     systemGuide:'Full Android package with Z21 and instructions',
-    source:'Source code for LCD firmware DE3.100 / App673',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE3.100 / App673 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
+    source:'Source code for LCD firmware DE3.101 / App674',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE3.101 / App674 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

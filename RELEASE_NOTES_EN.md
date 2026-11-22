@@ -1,5 +1,11 @@
 # Allmiibo LCD and Pixl.js OLED release notes
 
+## LCD DE3.101 / App674 and file manager 3.64.0
+
+The LCD menu now has dedicated 32×32 icons for Switch 2 wake and BLE image reception. This application update preserves the existing PFS1 engine, BLE protocol, bootloader and SoftDevice. The website adds a local image/video preview and sender with explicit connection and send actions, bounded acknowledged transfers and stop/disconnect handling. It also works with the receiver already present in LCD App673.
+
+[Open Image & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Signed App674 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) · [Firmware qualification](docs/validation/DE3_101.json) · [Web qualification](docs/validation/WEB3_64_0.json). Physical acceptance of the new icons and browser sender remains pending. OLED has no new firmware package.
+
 ## LCD DE3.89 / App662 · stable firmware
 
 | Your LCD device | Download |

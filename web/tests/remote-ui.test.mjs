@@ -112,8 +112,9 @@ test('the actual main file-connect method refuses a concurrent remote session',(
  const start=source.indexOf('    on_btn_ble_connect() {'),end=source.indexOf('    async on_ble_connected()',start);assert(start>0&&end>start);
  const method=new Function('pixl','return ({'+source.slice(start,end)+'}).on_btn_ble_connect;')({connect(){throw Error('must not connect files');},disconnect(){throw Error('must not disconnect files');}});
  method.call({remoteActive:true,connected:false,connecting:false});
- assert.match(source,/:disabled="remoteActive \|\| disconnecting/);
- assert.match(source,/:blocked="connected \|\| connecting \|\| disconnecting \|\| busy"/);
+ method.call({remoteActive:false,streamActive:true,connected:false,connecting:false});
+ assert.match(source,/:disabled="remoteActive \|\| streamActive \|\| disconnecting/);
+ assert.match(source,/:blocked="connected \|\| connecting \|\| disconnecting \|\| busy \|\| streamActive"/);
 });
 test('holding a keyboard button does not synthesize native repeat clicks',()=>{
  const h=mount();try{

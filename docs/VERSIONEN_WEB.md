@@ -1,5 +1,15 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.64.0 · Bild & Video auf dem LCD
+
+Der neue Bereich **Bild & Video** rechnet lokale Bilder und Videos in eine 128×64-Schwarz-Weiß-Vorschau um. Einpassen, Ausschnitt, Strecken, Hell-Dunkel-Grenze und Invertierung sind einstellbar; eine bewegte Demo ist enthalten. Verbinden und Senden sind getrennte Aktionen. Die Datei wird lokal verarbeitet. Der Sender benötigt den BLE-Bildempfang der LCD-Firmware ab DE3.100/App673; App674 ergänzt passende 32×32-Menüsymbole für Bildempfang und Switch-2-Wecken.
+
+Der Browser wartet zuerst auf die Empfängerbestätigung und anschließend auf die Bestätigung jedes Datenstücks. Stoppen, Bereichswechsel, verborgene Seite und Verbindungsfehler beenden die Übertragung ohne automatische Wiederholung. Die LCD-Vorschau verwendet die tatsächliche ST7567-Pixelpolarität. Die eingestellte Bildrate ist ein Zielwert; die erreichte Rate hängt von Bildinhalt und Verbindung ab.
+
+App674 erhält eine eigene Paket-, Diagnose- und PFS-Profilbindung. App673 sowie frühere LCD- und OLED-Ausgaben bleiben getrennt erhalten. Der direkte App674-Download verwendet den geprüften, commitfesten GitHub-ZIP-Link für den Handy-Öffnenweg. Die Geräteabnahme des Websenders und der neuen Symbole steht aus.
+
+[Bild & Video öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.64.0/Allmiibo_Dateimanager_3_64_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app674.zip) · [Softwarequalifikation](validation/WEB3_64_0.json) · [Bedienung](../web/LIESMICH_3_64_0.txt)
+
 ## Dateimanager 3.63.0 · normale LCD-Ausgabe DE3.100 / App673
 
 PC-Dateien, Ordner oder Sicherungs-ZIP und die geprüfte Gerätesammlung erscheinen in einer gemeinsamen Bestandsansicht. Vollständigkeit und Aktualität entscheiden, ob fehlende Figuren behauptet werden dürfen. Gewählte lokale Dateien lassen sich an die bestehende sichere Synchronisation übergeben. Die Spielhinweise ergänzen Link’s Awakening und Yoshi and the Mysterious Book anhand offizieller Nintendo-Quellen; bisherige Übersetzungen bleiben erhalten. Die zusätzlichen Yoshi-Zuordnungen sind Webdaten ohne neue Firmwaregruppen-ID.

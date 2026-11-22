@@ -54,7 +54,7 @@ test('App669 recognition is explicit and separate from future firmware and OLED'
   assert.equal(firmwareBoard(lcdPreview669.firmwareVersion),'LCD');
   assert.equal(buildDiagnosticBoard(lcdPreview669.firmwareVersion),'LCD');
   assert.equal(displayBuildReference(lcdPreview669.firmwareVersion).controllerDriver,'ST7567');
-  assert.equal(buildDiagnosticBoard('2.22.0-DE3.101'),null);
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.102'),null);
   assert.equal(LCD_Z21_COUNTERS['2.22.0-DE3.96-OLEDt7'],undefined);
   assert.equal(supportsFolderPublication(lcdPreview669.firmwareVersion,target669.layout.engineSha256),true);
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',target669.layout.engineSha256),false);
@@ -75,15 +75,18 @@ test('App669 has its own WASM and engine while App667 keeps the identical histor
   for (const value of [target669,target669.layout,target669.geometry,target669.approvedApplications]) assert(Object.isFrozen(value));
 });
 
-test('historical private identities and packages remain separate from the new normal App673 release', () => {
+test('historical private identities and packages remain separate from the new normal App674 release', () => {
   assert.deepEqual(lcdPreviews.map(item=>item.applicationCounter),[670,669,668,667,665,664]);
   assert.equal(lcdPreview668.otaSha256,'ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b');
   assert.equal(lcdPreview667.otaSha256,'f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4');
   assert.equal(lcdPreview667.sourceCommit,'22d5c92cc566fb7da9d43a538f2818d28bfb72a6');
   assert.equal(lcdPreview665.otaSha256,'65e9321309dc059b88adc490963c787fdbc01e35e201765b7cbb8d3ecd66e3a0');
   assert.equal(lcdPreviousPreview.otaSha256,'b3b0c8f967d3b3886680cfb5049635b5297591c16495dd74e1779654cfd0687e');
-  assert.equal(catalog.packages[0].counter,673);
+  assert.equal(catalog.packages[0].counter,674);
   assert.equal(catalog.packages.find(item=>item.id==='de3.89-lcd-app').counter,662);
+  assert.equal(catalog.packages.find(item=>item.id==='de3.100-lcd-app').counter,673);
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.100'),'LCD');
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.101'),'LCD');
   assert.equal(catalog.packages.some(item=>[666,667,668,669,670].includes(item.counter)),false);
   const oldCandidate={archiveSha256:'b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e',archiveBytes:358565,
     image:{target:{counter:666,hardware:52,softDevices:[0x0126]}}};
@@ -110,15 +113,15 @@ test('retained signed direct-load packages have complete distinct catalog identi
   }
 });
 
-test('mobile normal App673 download uses its own package while historical TEST1 references remain available', () => {
+test('mobile normal App674 download uses its own package while historical TEST1 references remain available', () => {
   const html=readFileSync(new URL('../public/dfu/web.html',import.meta.url),'utf8');
-  assert.match(html,/LCD App673/);
-  assert.match(html,/App673: Normale Firmware/);
-  assert.doesNotMatch(html,/App673 TEST|App673.*(?:am Gerät bestanden|physically verified)/);
-  assert.match(html,/DE3\.100 \/ App673/);
+  assert.match(html,/LCD App674/);
+  assert.match(html,/App674: Normale Firmware/);
+  assert.doesNotMatch(html,/App674 TEST|App674.*(?:am Gerät bestanden|physically verified)/);
+  assert.match(html,/DE3\.101 \/ App674/);
   assert.doesNotMatch(html,/DE3_93_666|App666/);
-  assert.match(html,/href="\.\.\/firmware\/Allmiibo_LCD_DE3_100_673_NUR_APP\.zip"/);
-  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE3\.100 \/ App673/);
+  assert.ok(html.includes('href="https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip"'));
+  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE3\.101 \/ App674/);
 });
 
 
@@ -166,7 +169,7 @@ test('App670 diagnostic source matching still does not prove the installed appli
   assert.equal(diagnosticBuildIdentity({...options,build:{...options.build,sourceId:lcdPreview669.sourceId}}).firmwareReportedSourceRelation,'differs-from-package');
   assert.equal(LCD_Z21_COUNTERS[lcdPreview.firmwareVersion],670);
   assert.equal(LCD_Z21_COUNTERS['2.22.0-DE3.97-OLEDt7'],undefined);
-  assert.equal(buildDiagnosticBoard('2.22.0-DE3.101'),null);
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.102'),null);
 });
 
 test('App670 TEST1 catalogue and native handoff require the exact isolated profile', () => {

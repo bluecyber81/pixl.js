@@ -235,6 +235,17 @@ const de3100 = {
   geometry: {...de399.geometry},
   layout: {...de399.layout},
 }
+// App674 changes LCD menu icons and reuses the exact App672/App673 PFS engine.
+// Its own linked ARM output is bound in docs/validation/DE3_101_PFS.json.
+const de3101 = {
+  ...de3100,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.101',
+  applicationCounter: 674,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.101', applicationCounter: 674}],
+  geometry: {...de3100.geometry},
+  layout: {...de3100.layout},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -258,7 +269,9 @@ export const DE397_MIGRATION_CAPACITY_TARGET=freezeTarget(de397)
 export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
 export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
+export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de3101')return DE3101_MIGRATION_CAPACITY_TARGET
   if(profile==='de3100')return DE3100_MIGRATION_CAPACITY_TARGET
   if(profile==='de399')return DE399_MIGRATION_CAPACITY_TARGET
   if(profile==='de398')return DE398_MIGRATION_CAPACITY_TARGET

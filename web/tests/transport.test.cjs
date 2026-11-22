@@ -90,10 +90,10 @@ test('small-file capability requires an LCD generation and a strictly valid posi
     f.bus.emit('ble_disconnected');
     assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
 });
-for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95'],[669,'2.22.0-DE3.96'],[670,'2.22.0-DE3.97'],[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100']])
+for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95'],[669,'2.22.0-DE3.96'],[670,'2.22.0-DE3.97'],[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101']])
 test(`App${counter} explicitly probes the existing small-file capability without allowing future or OLED versions`, {timeout:5000}, async () => {
     const f = protocolFixture();
-    for (const unsupported of ['2.22.0-DE3.101',version + '-OLEDt7'])
+    for (const unsupported of ['2.22.0-DE3.102',version + '-OLEDt7'])
         assert.equal(await f.api.vfs_small_create_revision(unsupported),null);
     assert.equal(f.writes.length,0);
     const query = f.api.vfs_small_create_revision(version);

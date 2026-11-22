@@ -42,7 +42,7 @@
         </el-dropdown-menu></template>
       </el-dropdown>
     </div>
-<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="remoteActive || disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
+<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="remoteActive || streamActive || disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
               connBtnText
             }}</el-button></div>
     </header>
@@ -78,6 +78,7 @@
       <button type="button" @click="show_workspace('backup')" :aria-current="activeWorkspace === 'backup' ? 'page' : undefined" aria-controls="backup-workspace"><span class="workspace-icon" aria-hidden="true">↓</span><span><strong>{{ $t('workflow.backupShort') }}</strong><small>{{ $t('workflow.backupBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('update')" :aria-current="activeWorkspace === 'update' ? 'page' : undefined" aria-controls="update-workspace"><span class="workspace-icon" aria-hidden="true">↻</span><span><strong>{{ $t('workflow.updateShort') }}</strong><small>{{ $t('workflow.updateBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('stream')" :aria-current="activeWorkspace === 'stream' ? 'page' : undefined" aria-controls="stream-workspace"><span class="workspace-icon" aria-hidden="true">▧</span><span><strong>{{ language === 'de_DE' ? 'Bild & Video' : 'Image & video' }}</strong><small>{{ language === 'de_DE' ? 'Auf dem LCD anzeigen' : 'Display on the LCD' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
       <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
       <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :firmware-version="firmwareVersion" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" :cleanup-supported="lcdCleanupSupported" :cleanup="storageCleanup" :cleanup-observed-at="storageCleanupObservedAt" @upload="on_btn_upload" />
@@ -86,7 +87,8 @@
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
     <p v-if="collectionBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Sammlungsprüfung oder Figurenübertragung läuft …' : 'Collection check or figure transfer running …' }} <button type="button" @click="show_workspace('catalogue')">{{ language === 'de_DE' ? 'Vorgang anzeigen' : 'Show operation' }}</button></p>
     <p v-if="searchBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Gerätesuche läuft…' : 'Device search running…' }} <button type="button" @click="show_workspace('files')">{{ language === 'de_DE' ? 'Suche anzeigen' : 'Show search' }}</button></p>
-    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl v-if="visitedWorkspaces.has('remote')" :locale="language" :blocked="connected || connecting || disconnecting || busy" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
+    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl v-if="visitedWorkspaces.has('remote')" :locale="language" :blocked="connected || connecting || disconnecting || busy || streamActive" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
+    <details v-show="activeWorkspace === 'stream'" id="stream-workspace" ref="streamWorkspace" class="workspace-panel"><summary>{{ language === 'de_DE' ? 'Bild & Video · BLE-Bildempfang' : 'Image & video · BLE image receiver' }}</summary><BleImageSender v-if="activeWorkspace === 'stream'" :locale="language" :blocked="connected || connecting || disconnecting || busy || remoteActive" @active="streamActive = $event" @sending="streamSending = $event" /></details>
     <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
       <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
       <strong>{{ $t('tools.' + transfer.phase) }}</strong>
@@ -597,9 +599,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app673" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.63.0' : '3.63.0 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.63.0 (ZIP)' : 'Windows 3.63.0 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.63.0 (ZIP)' : '3.63.0 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app674" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.64.0' : '3.64.0 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.64.0 (ZIP)' : 'Windows 3.64.0 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.64.0 (ZIP)' : '3.64.0 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -654,6 +656,7 @@ import catalogueBaseline from "./data/catalogue.json"
 
 export default {
   components: {
+    BleImageSender: defineAsyncComponent(() => import('./components/BleImageSender.vue')),
     LcdTestPanel: defineAsyncComponent(() => import('./components/LcdTestPanel.vue')),
     CurrentLcdDownloads: defineAsyncComponent(() => import('./components/CurrentLcdDownloads.vue')),
     FirmwareBoardChoice: defineAsyncComponent(() => import('./components/FirmwareBoardChoice.vue')),
@@ -668,7 +671,7 @@ export default {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       zipPathAdvice: null, renameDraft: '', backupReferenceLoading: false, backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
-      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
+      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false, streamActive: false, streamSending: false,
       renameNotice: null,
       powerInfo: null, powerState: 'unknown', devicePanelOpen: false, startupBusy: false, displayPhotoBusy: false, bleTestBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
       flashInfo:null, flashState:'unknown', storageLayoutBytes:null, batteryLabelConfirmed:false, hardwareProfileError:false,
@@ -726,7 +729,7 @@ export default {
   },
   computed: {
     lcdGameFolderSupported() { return buildDiagnosticBoard(this.firmwareVersion) === 'LCD'; },
-    screenAwakeActive() { return this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
+    screenAwakeActive() { return this.streamSending || this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
     catalogueObservationHistorical() { return !this.connected && !this.connecting && !this.collectionStale && !!this.collectionObservation; },
     cataloguePresenceReport() { return this.catalogueObservationHistorical ? this.collectionObservation.report : this.collectionReport; },
     catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },
@@ -1092,7 +1095,7 @@ export default {
       target.scrollIntoView({ block: 'start' });
     },
     show_workspace(name) {
-      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
+      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', stream: 'streamWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
       const panel = Object.hasOwn(refs, name) ? this.$refs[refs[name]] : null;
       if (!panel || (this.migrationBusy && name !== 'backup')) return;
       this.figureImportFocusPending = false;
@@ -2167,14 +2170,14 @@ export default {
       this.$message({ type: 'error', message });
     },
     on_remote_file_handoff(session) {
-      if (this.connected || this.connecting || this.disconnecting || this.busy) throw new Error('File connection is busy');
+      if (this.connected || this.connecting || this.disconnecting || this.busy || this.streamActive) throw new Error('File connection is busy');
       if (this.demoMode) this.toggle_preview();
       const accepted = pixl.adopt_remote_connection(session);
       if (accepted) this.show_workspace('files');
       return accepted;
     },
     on_btn_ble_connect() {
-      if (this.remoteActive) return;
+      if (this.remoteActive || this.streamActive) return;
       if (this.disconnecting) return;
       if (this.connectionDisconnectLocked) { this.cancel_transfer(); return; }
       if (this.connected || this.connecting) {
@@ -2973,6 +2976,11 @@ export default {
     proto.init();
 
     this._unsubscribeLanguage = window.AllmiiboLanguage.subscribe(this.apply_language);
+    try {
+      if (new URL(window.location.href).searchParams.get('workspace') === 'stream') {
+        this.$nextTick(() => this.show_workspace('stream'));
+      }
+    } catch { /* A missing or non-URL location leaves the regular file workspace selected. */ }
   },
   beforeUnmount() {
     this._activeFolderUpload = null; this.syncResume = null;

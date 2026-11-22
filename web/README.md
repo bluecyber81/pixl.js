@@ -1,16 +1,26 @@
 # Allmiibo Dateimanager
 
-## Normale Ausgabe 3.63.0 und LCD DE3.100 / App673
+## Normale Ausgabe 3.64.0 und LCD DE3.101 / App674
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App673 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App674 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.101-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.64.0/Allmiibo_Dateimanager_3_64_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app674.zip)
+
+## Bild & Video direkt im Browser
+
+[Bildsender öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream). Wähle im neuen Bereich **Bild & Video** eine lokale Bild-/Videodatei oder die vorbereitete Demo. Die Vorschau zeigt 128 × 64 monochrome Pixel; Einpassen, Ausschnitt, Strecken, Schwellwert und Inversion lassen sich einstellen. Es wird keine Mediendatei hochgeladen.
+
+Trenne die Dateiverbindung oben auf der Seite beziehungsweise die Fernbedienung. Öffne auf dem LCD **BLE-Bildempfang** (ab DE3.100/App673), klicke **Mit Bildempfang verbinden** und starte danach ausdrücklich **Bild senden**, **Video senden** oder **Demo senden**. Die voreingestellten 5 Bilder/s sind ein Zielwert; die tatsächliche Rate hängt von Funkverbindung und Bildinhalt ab. Stoppen, Ausblenden der Seite und Verlassen des Bereichs trennen den Sender. Mit der Mitteltaste am Gerät kehrst du zur normalen Bedienung zurück. Es gibt keine automatische Wiederaufnahme.
+
+App674 ergänzt eigene Menüsymbole für **Switch 2 wecken** und **BLE-Bildempfang**. Das App673-Bildprotokoll und die PFS1-Speicherengine bleiben erhalten. Der Browser-Bildsender funktioniert bereits mit App673; OLED ist dafür kein unterstütztes Ziel. Die neue Firmware und der Sender benötigen eine eigene praktische Abnahme. [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video).
+
+## Weitere vorhandene Funktionen
 
 Unter **Figurenkatalog → PC und Gerät vergleichen** lassen sich lokale Figurendateien, ein lokaler Ordner oder eine Sicherungs-ZIP mit einer geprüften Gerätesammlung vergleichen. Unvollständige oder veraltete Prüfungen belegen keine fehlenden Figuren. Derselbe Figurenbezeichner kann unterschiedliche UID-, Spielstand- oder Fahrzeugdaten haben. Eine lokale Auswahl wird auf Wunsch an die vorhandene Ordnersynchronisation übergeben; Vorschau, Konfliktentscheidung und Übertragung bleiben dort getrennte Schritte.
 
 Die Nintendo-Ergänzung enthält 25 Hinweise für Link’s Awakening und acht passende Yoshi-/Poochy-/Bowser-Jr.-Zuordnungen für Yoshi and the Mysterious Book. Nur das Link’s-Awakening-Link-Amiibo erhält die Shadow-Link-Zuordnung. Die acht neuen Yoshi-Zeilen gelten nur im Web; sie erfinden keine Firmwaregruppen-ID und können keinen nicht vorhandenen Geräte-Spielordner erzeugen. Die bestehenden 55 deutschen Übersetzungen bleiben unverändert.
 
-[Bedienung und Änderungen](LIESMICH_3_63_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_63_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673) · [Simulatorquellen und App673-Bindung](public/sources/LCD_DE3_100_App673_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_100_PFS.json)
+[Bedienung und Änderungen](LIESMICH_3_64_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_64_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3101-app674) · [Simulatorquellen und App674-Bindung](public/sources/LCD_DE3_101_App674_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_101_PFS.json)
 
-App673 verwendet dieselbe PFS1-Engine und bytegleiche Simulator-WASM wie App672. Seine tatsächliche Firmware und der neue Standarddownload sind separat an BIN, OTA, Produktionsquellen und SourceID gebunden. Der normale Dateimanager erhält die vorhandenen Sicherungs-, Fernbedienungs- und Diagnosefunktionen. Experimentelle Funksetter bleiben für die normale Firmware gesperrt. Frühere normale, private und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete; praktische Geräteabnahme und native Windowsausführung werden gesondert berichtet.
+App674 verwendet dieselbe PFS1-Engine und bytegleiche Simulator-WASM wie App672. Seine tatsächliche Firmware und der neue Standarddownload sind separat an BIN, OTA, Produktionsquellen und SourceID gebunden. Der normale Dateimanager erhält die vorhandenen Sicherungs-, Fernbedienungs- und Diagnosefunktionen. Experimentelle Funksetter bleiben für die normale Firmware gesperrt. Frühere normale, private und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete; praktische Geräteabnahme und native Windowsausführung werden gesondert berichtet.
 
 ## Frühere Ausgaben
 

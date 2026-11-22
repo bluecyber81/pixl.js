@@ -96,12 +96,12 @@ test('optional cleanup and test diagnostics survive the allowlisted combined JSO
  assert.doesNotMatch(JSON.stringify(report),/PRIVATE|rawPayload/);
 });
 
-for (const [counter, version] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100']])
+for (const [counter, version] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101']])
 test(`App${counter} exposes normal read-only diagnostics without enabling the old experiment`,()=>{
  assert.equal(supportsLinkDiagnostics(version),true);
  assert.equal(supportsStorageGcDiagnostics(version),true);
  assert.equal(supportsBleTestDiagnostics(version),false);
- for(const version of ['2.22.0-DE3.101','2.22.0-DE3.98-OLEDt1',undefined]){
+ for(const version of ['2.22.0-DE3.102','2.22.0-DE3.98-OLEDt1',undefined]){
   assert.equal(supportsLinkDiagnostics(version),false);
   assert.equal(supportsStorageGcDiagnostics(version),false);
   assert.equal(supportsBleTestDiagnostics(version),false);

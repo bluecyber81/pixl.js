@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "version": "3.64.0",
+  "status": "local-software-qualified-ci-and-live-pending",
+  "date": "2026-11-22",
+  "sourceBranch": "web-app674",
+  "basePublicCommit": "19bc4f337b2b3603e3f6964a7c08872cef12b53b",
+  "scope": {
+    "websiteImageVideoSender": true,
+    "firmwareTarget": "LCD DE3.101/App674",
+    "streamReceiverMinimum": "LCD DE3.100/App673",
+    "oledFirmwareChanged": false,
+    "physicalDeviceAccess": false
+  },
+  "features": [
+    "Dedicated Image & video workspace with local image/video preview, fit/crop/stretch, threshold, invert and demo.",
+    "Explicit connect and send; ACK1 mode check before frames, one outstanding acknowledged 20-byte chunk, RAW/RLE/delta.",
+    "LCD polarity matches actual ST7567 display-photo mapping, bounded frame production and lifecycle cleanup.",
+    "App674 firmware, historical App673, exact capacity and diagnostic references stay separate.",
+    "Manual App674 phone ZIP uses verified commit-pinned GitHub application/zip download; updater loader stays local."
+  ],
+  "firmware": {
+    "board": "LCD",
+    "firmwareVersion": "2.22.0-DE3.101",
+    "applicationCounter": 674,
+    "firmwareChannel": "normal",
+    "chipPart": 337970,
+    "sourceId": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+    "productionCommit": "c1aa53ed902e164a391e158b6cf45ba78f7bcab6",
+    "sourceCommit": "c1aa53ed902e164a391e158b6cf45ba78f7bcab6",
+    "productionTree": "a6f244f706888d07024e4d50a02ac31f4888c41f",
+    "localProductionCommit": "3227b0ef33f70d3baf62d54bcd1807d45bbb21fb",
+    "otaSha256": "76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca",
+    "otaBytes": 361953,
+    "applicationBytes": 361352,
+    "applicationBinSha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "artifactStatus": "stable-signed-application",
+    "hardwareAcceptance": "pending-for-this-build"
+  },
+  "localNode": {
+    "runtime": "24.22.3",
+    "total": 2228,
+    "passed": 2225,
+    "failed": 0,
+    "skipped": 3,
+    "skipReasons": [
+      "Two native Windows launcher cases require Windows and will be checked by dedicated CI.",
+      "One optional historical DE3.17/recovery575 fixture is not present."
+    ]
+  },
+  "builds": {
+    "root": {
+      "tests": 56,
+      "passed": 56
+    },
+    "pages": {
+      "tests": 56,
+      "passed": 56
+    }
+  },
+  "linuxPythonLauncher": {
+    "tests": 26,
+    "passed": 26
+  },
+  "portable": {
+    "schema": 1,
+    "version": "3.64.0",
+    "archive": "Allmiibo_Dateimanager_3_64_0_Portable.zip",
+    "bytes": 12016746,
+    "sha256": "3acf1730950bd61a55c53912e17231a82d7a11eb56c8efae3b23202a48bb5fbf",
+    "files": 311,
+    "portableManifestSha256": "48c09140e010669ddc6cfcb9db3d65dcf72a67f6c59de04878669558c1a6154f",
+    "nativeExecutable": false,
+    "verification": {
+      "path": "PORTABLE_VERIFICATION.json",
+      "sha256": "8a57d75b6578d6b58f7a258a9918f979a566ce0a0fd2ec09b24b5c0723bf8055"
+    }
+  },
+  "codecCompatibility": {
+    "syntheticFrames": 129,
+    "actualCDecoderRuns": 387,
+    "chunkSizes": [
+      1,
+      20,
+      247
+    ],
+    "javascriptPythonPacketsIdentical": true,
+    "fixture": "web/tests/fixtures/ble-stream-app673-vectors.json",
+    "scope": "Actual C decoder and encoder packet comparison; no measured BLE rate."
+  },
+  "independentReview": {
+    "lcdPolarityBugFixed": true,
+    "targetedCases": 52,
+    "targetedCasesIncludedInFullSuite": true,
+    "newFirmwareChangesRequired": false
+  },
+  "localEvidence": {
+    "web364_full_node_final.log": {
+      "sha256": "adea3a149cf5b79d671f7bf1e8ae77d6506b814ece23f4146b0d657b898d037f"
+    },
+    "web364_build_root.log": {
+      "sha256": "7059577d7297c6d5fd7f97f7a4b16319f797004d190e993d95beb8eca53fdc68"
+    },
+    "web364_build_pages.log": {
+      "sha256": "6d6a75f1182228bf67a002c571f28f0eba5a084b5111583f32e2dcaea412c297"
+    },
+    "web364_linux_launcher.log": {
+      "sha256": "c960b05d641189343de76119c2926b2733b891f63ec74f2377d95b725a781e40"
+    },
+    "web364_portable.log": {
+      "sha256": "ae30aab3fc46ee9c96e7e640ec7e9420c48b21bca2d6e061ca386e2e6bcbf5a2"
+    }
+  },
+  "firmwareCI": {
+    "run": 45060195633,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
+    "commit": "a39d43c7dea2681be1981695837b2cb8473db926",
+    "conclusion": "success",
+    "fullHostSuites": 197,
+    "localAndCiBinHexIdentical": true,
+    "currentApp674Z21LsanPositiveControlPassed": true
+  },
+  "webCI": {
+    "status": "pending"
+  },
+  "live": {
+    "status": "pending"
+  },
+  "hardware": {
+    "precedingApp673RemoteOwnerReportedWorking": true,
+    "newApp674Icons": "pending",
+    "webImageVideoBluetooth": "pending",
+    "scope": "Owner message and supplied diagnostic concern App673; no on-device BIN hash or App674 acceptance was measured."
+  }
+}

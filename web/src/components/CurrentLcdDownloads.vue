@@ -21,7 +21,7 @@
 <script setup>
 import { computed } from 'vue';
 import { deploymentPath } from '../lib/deployment-path.js';
-import { currentLcdDownloads } from '../lib/release-packages.js';
+import { currentLcdDownloads, packagePresentation } from '../lib/release-packages.js';
 import releases from '../data/firmware-releases.json';
 import { lcdReleasePackage } from '../../public/dfu/lcd-release-reference.mjs';
 
@@ -29,7 +29,7 @@ const props = defineProps({ connected: Boolean, version: String, boot: Object, l
 const entry = releases.packages.find(item => item.id === lcdReleasePackage.id);
 const legacyEntry = releases.packages.find(item => item.id === 'de3.89-lcd-app');
 const applicationLabel = entry ? `${entry.version.replace(/^2\.22\.0-/, '')} / App${entry.counter}` : '';
-const applicationUrl = entry ? deploymentPath('firmware/' + entry.file) : null;
+const applicationUrl = entry ? packagePresentation(entry).downloadUrl : null;
 const legacyRelease = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
 const combo = 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
 const de = computed(() => props.locale?.startsWith('de'));

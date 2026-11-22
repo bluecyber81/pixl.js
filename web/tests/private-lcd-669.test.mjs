@@ -144,8 +144,9 @@ test('private App669 recognition binds the actual signed application ZIP, BIN an
   assert.equal(await updater.setPackage(new File([bytes], 'renamed.zip')), true);
   assert.equal(state.previewVersion, '2.22.0-DE3.96');
   assert.equal(state.ready, true);
-  assert.equal(catalog.packages[0].counter, 673);
+  assert.equal(catalog.packages[0].counter, 674);
   assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
+  assert.equal(catalog.packages.find(item => item.id === 'de3.100-lcd-app').counter, 673);
   assert.equal(catalog.packages.some(item => item.counter === 669), false);
   assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [670,669,668,667,665,664]);
 });
@@ -181,15 +182,15 @@ test('App669 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('the mobile current download uses normal App673 while retained App669 keeps its own runtime package', () => {
+test('the mobile current download uses normal App674 while retained App669 keeps its own runtime package', () => {
   const html = readFileSync(new URL('../public/dfu/web.html', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../public/dfu/page.js', import.meta.url), 'utf8');
-  assert.match(html, /App673 direkt laden und prüfen/);
+  assert.match(html, /App674 direkt laden und prüfen/);
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
-  assert.ok(html.includes('../firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip'));
-  assert.match(html, /DE3\.100 \/ App673/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.63.0'"));
-  assert.equal(catalog.packages[0].version, '2.22.0-DE3.100');
-  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.63.0'"));
+  assert.ok(html.includes('https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip'));
+  assert.match(html, /DE3\.101 \/ App674/);
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.64.0'"));
+  assert.equal(catalog.packages[0].version, '2.22.0-DE3.101');
+  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.64.0'"));
 });
 

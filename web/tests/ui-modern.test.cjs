@@ -69,6 +69,7 @@ function harness(overrides = {}) {
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
   context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
+  context.app673 = require('../public/dfu/lcd-app673-reference.mjs').lcdRelease;
   context.app672 = require('../public/dfu/lcd-app672-reference.mjs').lcdRelease;
   context.app671 = require('../public/dfu/lcd-app671-reference.mjs').lcdRelease;
   context.release = require('../package.json');
@@ -114,6 +115,40 @@ function harness(overrides = {}) {
     disconnects: () => disconnected, mount: () => options.mounted.call(instance), unmount: () => options.beforeUnmount.call(instance) };
 }
 const connected = h => { h.instance.connected = true; h.instance.current_dir = 'E:/'; return h.instance; };
+
+test('image streaming exclusively owns the device and keeps the screen awake only while sending', () => {
+  const h = harness(), app = h.instance;
+  let connects = 0, handoffs = 0;
+  h.pixl.connect = () => { connects++; };
+  h.pixl.adopt_remote_connection = () => { handoffs++; return true; };
+  app.streamActive = true;
+  app.on_btn_ble_connect();
+  assert.equal(connects, 0);
+  assert.throws(() => app.on_remote_file_handoff({}), /busy/);
+  assert.equal(handoffs, 0);
+  assert.equal(app.screenAwakeActive, false);
+  app.streamSending = true;
+  assert.equal(app.screenAwakeActive, true);
+  app.streamSending = false;
+  app.streamActive = false;
+  app.on_btn_ble_connect();
+  assert.equal(connects, 1);
+  assert.equal(app.screenAwakeActive, false);
+});
+
+test('the image sender leaves no hidden streaming component after workspace navigation', () => {
+  const h = harness(), app = h.instance;
+  let focused = 0;
+  app.$refs.streamWorkspace = {open:false,scrollIntoView(){},querySelector:() => ({focus(){focused++;}})};
+  app.show_workspace('stream');
+  assert.equal(app.activeWorkspace, 'stream');
+  assert.equal(app.$refs.streamWorkspace.open, true);
+  assert.equal(focused, 1);
+  assert.match(descriptor.template.content, /<BleImageSender v-if="activeWorkspace === 'stream'"/);
+  assert.match(descriptor.template.content, /:blocked="connected \|\| connecting \|\| disconnecting \|\| busy \|\| remoteActive" @active="streamActive = \$event"/);
+  assert.match(descriptor.template.content, /<RemoteControl[^>]+:blocked="[^"]+\|\| streamActive"/);
+  assert.match(appSource, /searchParams\.get\('workspace'\) === 'stream'/);
+});
 
 // Exercise the real upload entry point, its adapters, safeUpload and the real
 // protocol's digest/read queues. Only device storage and GATT are simulated.
@@ -683,7 +718,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.63.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.64.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -695,7 +730,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.63.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.64.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -782,7 +817,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.63.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.64.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -893,7 +928,7 @@ test('3.22.2 graceful disconnect clears device controls immediately but keeps re
   assert.equal(app.connected,false);assert.equal(app.disconnecting,true);assert.equal(app.firmwareVersion,'');
   assert.equal(app.current_dir,'');assert.equal(app.tableData.length,0);assert.equal(app.connBtnText,'info.disconnecting');
   app.on_btn_ble_connect();assert.equal(picks,0);
-  assert.match(appSource,/:disabled="remoteActive \|\| disconnecting \|\| connectionDisconnectLocked/);
+  assert.match(appSource,/:disabled="remoteActive \|\| streamActive \|\| disconnecting \|\| connectionDisconnectLocked/);
   state='disconnected';h.listeners.get('ble_disconnect_complete')();
   assert.equal(app.disconnecting,false);assert.equal(app.connBtnText,'conn.connect');app.on_btn_ble_connect();assert.equal(picks,1);
 });
@@ -1964,10 +1999,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.63.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.64.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.63.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.64.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2813,12 +2848,12 @@ test('3.32 preview disconnect cannot paint old image or unlock replacement sessi
 test('3.32 corrupt and truncated previews never assign an otherwise plausible figure image',async()=>{
  for(const bytes of [new Uint8Array(540).buffer,figureBytes(532)]){const h=harness({vfs_helper_read_file(path,yes){yes(bytes);}}),app=connected(h);await app.select_file_row(0,figureRow());assert.equal(app.previewSelection.id,null);assert.ok(['invalid','failed'].includes(app.previewSelection.state));}
 });
-test('3.32 all six workspaces remain mounted and navigation preserves table selection, jobs and preview',()=>{
+test('all seven workspace shells preserve table selection, jobs and preview',()=>{
  const h=harness(),app=connected(h);const selection={name:'keep'};app.table_selection=[selection];app.previewSelection={row:selection};app.transfer={phase:'reading',done:9};
- for(const [name,ref] of Object.entries({files:'fileWorkspace',backup:'backupWorkspace',update:'updateWorkspace',remote:'remoteWorkspace',device:'devicePanel',catalogue:'catalogueWorkspace'})){app.$refs[ref]={open:false,scrollIntoView(){},querySelector:()=>({focus(){}}),focus(){}};app.show_workspace(name);assert.equal(app.activeWorkspace,name);assert.equal(app.table_selection[0],selection);assert.equal(app.transfer.done,9);assert.equal(app.previewSelection.row,selection);assert.match(descriptor.template.content,new RegExp(`v-show="activeWorkspace === '${name}'"`));}
+ for(const [name,ref] of Object.entries({files:'fileWorkspace',backup:'backupWorkspace',update:'updateWorkspace',remote:'remoteWorkspace',stream:'streamWorkspace',device:'devicePanel',catalogue:'catalogueWorkspace'})){app.$refs[ref]={open:false,scrollIntoView(){},querySelector:()=>({focus(){}}),focus(){}};app.show_workspace(name);assert.equal(app.activeWorkspace,name);assert.equal(app.table_selection[0],selection);assert.equal(app.transfer.done,9);assert.equal(app.previewSelection.row,selection);assert.match(descriptor.template.content,new RegExp(`v-show="activeWorkspace === '${name}'"`));}
  assert.equal(app.catalogueOpen,true);assert.equal(h.disconnects(),0);
  app.show_workspace('files');
- assert.deepEqual([...app.visitedWorkspaces].sort(),['backup','catalogue','device','files','remote','update']);
+ assert.deepEqual([...app.visitedWorkspaces].sort(),['backup','catalogue','device','files','remote','stream','update']);
  for(const [child,area] of [['MigrationAssistant','backup'],['RemoteControl','remote'],['StartupDiagnostics','device']]) {
    assert.ok(descriptor.template.content.includes(`<${child} v-if="visitedWorkspaces.has('${area}')"`));
  }
@@ -2882,7 +2917,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.63.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.64.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -3262,7 +3297,7 @@ test('App669 phone test uses the real bounded module through the real App adapte
 });
 
 
-for (const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100']]) {
+for (const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101']]) {
 // Exercise the normal LCD UI entry point, backup engine, wire queue and ZIP
 // reader together. Only the peripheral and the browser boundary are simulated.
 async function app671BackupHarness(settings={}) {

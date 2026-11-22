@@ -29,7 +29,7 @@ test('DFU handoff preserves board and valid observed counters for OLED and LCD',
 test('the retained App662 signed package reaches Android and is compared when only the device version is available', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
   const candidate = packages.find(item => item.version === '2.22.0-DE3.89');
-  assert.equal(packages[0].counter, 673);
+  assert.equal(packages[0].counter, 674);
   assert.notEqual(candidate, packages[0]);
   assert.equal(candidate.channel, undefined);
   const android = new URL(nrfDfuLink(candidate));
@@ -40,7 +40,7 @@ test('the retained App662 signed package reaches Android and is compared when on
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, false);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.89');
-  assert.deepEqual(packages.map(item=>item.counter),[673,672,671,662,654,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[674,673,672,671,662,654,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');

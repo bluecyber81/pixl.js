@@ -8,7 +8,7 @@ export function projectDownloads(buildVersion) {
     version,
     labelSuffix: version === buildVersion ? '' : ' · ' + version,
     portable: directory + 'Allmiibo_Dateimanager_' + fileVersion + '_Portable.zip',
-    source: 'https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip',
+    source: 'https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app674.zip',
     candidatePortable: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89-lcd-test1/Allmiibo_Dateimanager_3_58_2_App662_Test1_Windows.zip',
     candidateSource: 'https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.89-lcd-test1.zip',
     lcdKit: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',

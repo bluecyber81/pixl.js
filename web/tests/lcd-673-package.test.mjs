@@ -6,7 +6,7 @@ import DfuPackage from '../public/dfu/package.js';
 import Bundled from '../public/dfu/bundled-packages.js';
 import Updater from '../public/dfu/updater.js';
 import {nrfDfuLink} from '../public/dfu/nrf-dfu-link.mjs';
-import {lcdRelease, lcdReleasePackage as entry} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdRelease, lcdReleasePackage as entry} from '../public/dfu/lcd-app673-reference.mjs';
 import {lcdPreviews} from '../public/dfu/lcd-private-reference.mjs';
 import {packagePresentation, firmwarePackageText} from '../src/lib/release-packages.js';
 

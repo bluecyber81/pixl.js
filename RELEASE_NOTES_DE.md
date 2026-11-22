@@ -1,5 +1,11 @@
 # Veröffentlichungen für Allmiibo LCD und Pixl.js OLED
 
+## LCD DE3.101 / App674 und Dateimanager 3.64.0
+
+Eigene 32×32-Menüsymbole kennzeichnen „Switch 2 wecken“ und „BLE-Bildempfang“. Das App-Update erhält PFS1-Engine, Funkprotokoll, Bootloader und SoftDevice. Die Webseite ergänzt eine lokale Bild-/Videovorschau und einen Sender mit ausdrücklichem Verbindungsaufbau, quittierten Datenstücken und sauberem Stoppen. Der Sender funktioniert bereits mit dem Empfänger aus LCD App673.
+
+[Bild & Video öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Signierte App674-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) · [Firmware-Prüfstand](docs/validation/DE3_101.json) · [Web-Prüfstand](docs/validation/WEB3_64_0.json). Die Geräteabnahme der neuen Symbole und des Websenders bleibt offen. Es gibt kein neues OLED-Paket.
+
 ## LCD DE3.89 / App662 · stabile Firmware
 
 | Dein LCD-Gerät | Passender Download |

@@ -1,0 +1,12 @@
+{
+  "path": "web/public/sources/LCD_DE3_101_App674_Simulatorquellen.zip",
+  "bytes": 159107,
+  "sha256": "ce30ce50ae50242327cbafe3e1d40b434db08773dac33c019c79b15202bbe052",
+  "files": 27,
+  "productionCommit": "c1aa53ed902e164a391e158b6cf45ba78f7bcab6",
+  "productionTree": "a6f244f706888d07024e4d50a02ac31f4888c41f",
+  "sourceId": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+  "capacityProfile": "de3101",
+  "simulatorProfile": "de399",
+  "wasmRebuilt": false
+}
