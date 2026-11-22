@@ -1,5 +1,11 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE3.101 / App674 · normale Firmware vom 22.11.2026
+
+Eigene monochrome 32×32-Menübilder für „Switch 2 wecken“ und „BLE-Bildempfang“. Die acht übrigen Symbole und die PFS1-Engine bleiben unverändert; das Anwendungs-BIN wächst um 272 Byte. Ziel bleibt **LCD/ST7567 mit vorhandenem PFS1, Z21 und S112 7.3.0**. [Signierte Nur-App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) · [Änderungen und Bildvorschau](DE3_101_RELEASE.md) · [Prüfnachweis](validation/DE3_101.json)
+
+197/197 Hostskripte, 13 lokale ARM-Prüfgruppen, Signatur und vollständige Z21-Wiederaufnahmeprüfung bestanden. [CI 45060195633](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) auf dem qualifizierten Commit `a39d43c…` liefert dieselben BIN-/HEX-Bytes und bestätigt das aktuelle App674-Modell einschließlich ASan/UBSan/LSan mit positiver Leckkontrolle. Die Geräteabnahme der neuen Menübilder bleibt offen. Der Nutzerbericht zur funktionierenden Fernbedienung und die passende Diagnose gehören zum Vorgänger **App673/DE3.100**. OLED bleibt eine getrennte Version.
+
 ## LCD DE3.89 / App662 · Freigabe vom 19.11.2026
 
 Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)

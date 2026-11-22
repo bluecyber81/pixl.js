@@ -2,13 +2,15 @@
 
 [English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
 
-## LCD DE3.100 / App673 · normale Firmware
+## LCD DE3.101 / App674 · normale Firmware
 
-Für **Allmiibo LCD/ST7567 mit vorhandenem Packed LittleFS (PFS1), Z21 und S112 7.3.0**: [signierte App-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [Web-Updater mit App673](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD).
+Für **Allmiibo LCD/ST7567 mit vorhandenem Packed LittleFS (PFS1), Z21 und S112 7.3.0**: [signierte App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip). Der Download bleibt an den qualifizierten Commit gebunden.
 
-App673 ergänzt Switch-2-Wecken und BLE-Bildempfang, korrigiert NFC-Framelängen und spart durch Katalognamenspool und gezielte Symbolschrift Platz. Das BIN ist 3.196 Byte kleiner als App672; Flashreserve 11.644 Byte. Die vorherigen App672-Funktionen und PFS1 bleiben erhalten. [Änderungen und Bedienung](docs/DE3_100_RELEASE.md) · [Build- und Testnachweise](docs/validation/DE3_100.json)
+App674 gibt „Switch 2 wecken“ und „BLE-Bildempfang“ eigene, passende 32×32-Menübilder. Die acht bisherigen Symbole, das BLE-Protokoll und die PFS1-Engine bleiben unverändert. Die zwei Bilder samt Deskriptoren benötigen zusammen 272 zusätzliche Byte; die Flashreserve beträgt 11.372 Byte. [Änderungen und Vorschau](docs/DE3_101_RELEASE.md) · [Build- und Testnachweise](docs/validation/DE3_101.json)
 
-196/196 Firmware-Suiten, 13 ARM-Prüfgruppen sowie die finalen Z21-Signatur-, Hash-, CRC-, Init- und Wiederaufnahmemodelle bestehen. Zwei unabhängige finale BIN-/HEX-Builds sind bytegleich. Physische App673-Beobachtungen stehen aus. Die ZIP unverändert in nRF Device Firmware Update auswählen; sie aktualisiert ausschließlich die Anwendung.
+197/197 Firmware-Suiten, 13 lokale ARM-Prüfgruppen sowie Z21-Signatur-, Hash-, CRC-, Init- und Wiederaufnahmemodelle bestehen. Zwei lokale Builds und die [aktuelle Firmware-CI](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) liefern identische BIN-/HEX-Dateien. Die CI ergänzt die lokale LSan-Grenze mit positiver Leckkontrolle für das aktuelle App674-Wiederaufnahmemodell. Alle fünf aktiven Jobs sind erfolgreich; BL8 ist beim Push planmäßig nicht angefordert.
+
+Der Nutzer bestätigt die Fernbedienung auf dem Vorgänger App673; seine Diagnose meldet dessen passende LCD-Version und Quellkennung. **Die physische App674-Abnahme steht aus.** Die ZIP unverändert in nRF Device Firmware Update auswählen; sie aktualisiert ausschließlich die Anwendung.
 
 ## Dateimanager 3.63.0 · normale Website und Portable
 

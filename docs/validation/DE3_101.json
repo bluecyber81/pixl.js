@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "software-qualified-publication-pending",
+  "status": "published-and-software-qualified",
   "date": "2026-11-22",
   "version": "2.22.0-DE3.101",
   "counter": 674,
@@ -15,7 +15,10 @@
     "sourceIdSha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
     "productionInputCount": 720,
     "packedEngineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
-    "identicalLocalAndPublicProductionTrees": true
+    "identicalLocalAndPublicProductionTrees": true,
+    "qualifiedReleaseCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
+    "qualifiedReleaseTree": "dcd322c155e5aa1d52cece3de330f4d88cbff32b",
+    "localQualifiedReleaseCommit": "5660b50ecb19c66b59da038b643e64605c614889"
   },
   "scope": {
     "change": "Two dedicated 32x32 monochrome menu icons for Switch 2 wake and BLE image reception, plus explicit App674 version identity.",
@@ -35,7 +38,9 @@
     "onlyApplication": true,
     "softDeviceFwids": [
       "0x0126"
-    ]
+    ],
+    "pinnedDownloadUrl": "https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
+    "pinnedSourceCommit": "a39d43c7dea2681be1981695837b2cb8473db926"
   },
   "hostSuites": {
     "available": 197,
@@ -109,7 +114,10 @@
     "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
     "candidate": "candidate_canonical/BUILD_RESULT.json",
     "release": "release/BUILD_RESULT.json",
-    "scope": "Two independent isolated native builds, checked against the same pinned SDK and compiler. ELF debug paths may differ."
+    "scope": "Two independent isolated native builds, checked against the same pinned SDK and compiler. ELF debug paths may differ.",
+    "ciBinAndHexByteIdentical": true,
+    "ciRun": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
+    "ciQualifiedCommit": "a39d43c7dea2681be1981695837b2cb8473db926"
   },
   "z21": {
     "linkedCryptoCrcCasesPassed": 7,
@@ -124,8 +132,23 @@
     "binarySha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
     "asan": "PASS",
     "ubsan": "PASS",
-    "lsan": "UNAVAILABLE_LOCAL_PTRACE",
-    "ci": "pending-for-App674"
+    "lsan": "PASS_IN_CURRENT_GITHUB_CI_WITH_POSITIVE_CONTROL",
+    "ci": "PASS_CURRENT_APP674",
+    "localLsan": "UNAVAILABLE_LOCAL_PTRACE",
+    "independentGithubCi": {
+      "runId": 45060195633,
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
+      "qualifiedCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
+      "counter": 674,
+      "checkpointPowerCuts": 455,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "finalAllBytesCompared": true,
+      "bootloaderLeakControl": "PASS"
+    }
   },
   "precedingDeviceObservation": {
     "version": "2.22.0-DE3.100",
@@ -142,6 +165,29 @@
     "New website sender: image, video, inversion, stop/disconnect/reconnect on compatible LCD."
   ],
   "ci": {
-    "status": "pending"
+    "status": "completed",
+    "conclusion": "success",
+    "runId": 45060195633,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
+    "qualifiedCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
+    "activeJobsPassed": 5,
+    "skippedJobs": [
+      "BL8 corresponding-source build: not requested by push policy"
+    ],
+    "hostSuitesExecuted": 197,
+    "hostSuitesPassed": 197,
+    "localAndCiBinByteIdentical": true,
+    "localAndCiHexByteIdentical": true,
+    "sourceIdSha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+    "artifactZipSha256": {
+      "App674_LCD_CI_evidence.zip": "92eda3081f281a9c7860697d1eab1f7dba9e5d0de7538d570820c558a61f3dfb",
+      "App674_Z21_CI_evidence.zip": "62406427f505ca2d7d4b539bc337bf906902c2953aae7614856c7270bd964751"
+    },
+    "scope": "Firmware App674 CI only; this does not qualify the separately developed Web3.64.0 or physical device behavior."
+  },
+  "documentationFollowup": {
+    "productionAndSignedPackageUnchanged": true,
+    "qualifiedBaseCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
+    "scope": "Documentation-only update recording the completed current-build CI. No self-referential publication commit is assigned."
   }
 }

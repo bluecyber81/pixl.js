@@ -1,6 +1,6 @@
 # LCD DE3.101 / App674 – passende Menübilder
 
-App674 ergänzt eigene Symbole für **„Switch 2 wecken“** und **„BLE-Bildempfang“**. Ziel ist das LCD-Gerät mit ST7567, bestehendem PFS1, Z21 und S112 7.3.0. Das Update enthält ausschließlich die Anwendung.
+App674 ist veröffentlicht und softwarequalifiziert. Es ergänzt eigene Symbole für **„Switch 2 wecken“** und **„BLE-Bildempfang“**. Ziel ist das LCD-Gerät mit ST7567, bestehendem PFS1, Z21 und S112 7.3.0. Das Update enthält ausschließlich die Anwendung.
 
 ## Was sich geändert hat
 
@@ -19,7 +19,7 @@ Der OLED-Testzweig und das OLED-Paket wurden nicht verändert. Die zwei Miniapps
 
 ## Paket und Ressourcen
 
-Datei: `Allmiibo_LCD_DE3_101_674_NUR_APP.zip` – **361.953 Bytes**.
+Datei: [Allmiibo_LCD_DE3_101_674_NUR_APP.zip](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) – **361.953 Bytes**. Der Download ist an den qualifizierten Veröffentlichungscommit gebunden und bleibt bei späteren Dokumentationskorrekturen unverändert.
 
 SHA-256 des signierten ZIP:
 `76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca`
@@ -44,7 +44,8 @@ Die PFS1-Enginekennung bleibt
 - Zwei voneinander getrennte Builds mit gebundenem SDK und Compiler lieferten **identische BIN- und HEX-Dateien**.
 - Signatur, Paketinhalt und drei Negativkontrollen bestanden. Release-ZIP und Web-DFU-ZIP sind bytegleich.
 - Z21: sieben Prüfungen für Signatur, Hash und CRC sowie zwei Annahmefälle für App674 mit vorhandenem App673 beziehungsweise leerer Anwendungsbank bestanden.
-- Die Wiederaufnahmeprüfung verwendete das vollständige neue App674-BIN. Sie umfasste 455 modellierte Stromabbrüche an Checkpoints, fünf Verbindungsabbrüche an Checkpoints und acht Annahme-/Abschlussfehler; die endgültigen Bytes wurden vollständig verglichen. ASan und UBSan bestanden. Lokales LSan ist durch die Ausführungsumgebung begrenzt; die aktuelle CI muss diesen Teil unabhängig bestätigen.
+- Die Wiederaufnahmeprüfung verwendete das vollständige neue App674-BIN. Sie umfasste 455 modellierte Stromabbrüche an Checkpoints, fünf Verbindungsabbrüche an Checkpoints und acht Annahme-/Abschlussfehler; die endgültigen Bytes wurden vollständig verglichen. ASan und UBSan bestanden. Lokales LSan bleibt durch die Ausführungsumgebung begrenzt. Die aktuelle unabhängige CI ergänzt diesen Nachweis mit bestandenem **ASan, UBSan und LSan einschließlich positiver Leckkontrolle** für App674.
+- [GitHub-CI 45060195633](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) auf Commit `a39d43c7dea2681be1981695837b2cb8473db926` bestand mit **fünf erfolgreichen aktiven Jobs** und **197/197 Hostskripten**. Der BL8-Job wird bei einem Push planmäßig nicht angefordert. Die CI-BIN- und HEX-Dateien stimmen bytegleich mit den qualifizierten lokalen Builds überein.
 
 Präzise Ergebnisse und Veröffentlichungsstatus stehen in [DE3_101.json](validation/DE3_101.json). Private Quellinventare und persönliche Gerätedaten werden nicht mit diesem öffentlichen Nachweis veröffentlicht.
 
@@ -54,4 +55,4 @@ Der Nutzer meldete eine funktionierende Fernbedienung. Seine vorherige Diagnose 
 
 Nach Installation von App674 die beiden neuen Menüsymbole am LCD ansehen, jeweils öffnen und mit der Mitteltaste wieder verlassen. Für den Website-Bildsender anschließend ein Bild, ein kurzes Video, Invertierung, Stoppen und erneutes Verbinden prüfen. Tatsächliche Bildrate, Funkqualität und Energieaufnahme bleiben ohne Gerätebeobachtung offen.
 
-Für den Handy-Download wird nach Veröffentlichung ein commitfester GitHub-Link mit geprüftem `Content-Type: application/zip` angeboten. Das signierte ZIP bleibt dabei unverändert.
+Den oben verlinkten GitHub-Download als vollständige ZIP in nRF Device Firmware Update auswählen. Er bleibt an den qualifizierten Commit `a39d43c…` gebunden; eine spätere Änderung der Dokumentation erzeugt kein neues Firmwarepaket. Die öffentliche Firmware-CI bestätigt die Software und das Paket. Die Gerätebeobachtung von App674 und die gesonderte Web3.64-Freigabe bleiben eigene Schritte.

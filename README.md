@@ -2,13 +2,15 @@
 
 [Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
 
-## LCD DE3.100 / App673 · normal firmware
+## LCD DE3.101 / App674 · normal firmware
 
-For **Allmiibo LCD/ST7567 with existing Packed LittleFS (PFS1), Z21 and S112 7.3.0**: [signed application ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip) · [App673 updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD).
+For **Allmiibo LCD/ST7567 with existing Packed LittleFS (PFS1), Z21 and S112 7.3.0**: [signed application ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip). The download stays pinned to the qualified commit.
 
-App673 adds Switch 2 wake and BLE image reception, fixes NFC frame lengths and saves space through a catalog name pool and a bounded symbol font. The BIN is 3,196 bytes smaller than App672, with 11,644 bytes of flash reserve. Previous App672 behavior and PFS1 remain the foundation. [Release and operation notes](docs/DE3_100_RELEASE.md) · [Build and test evidence](docs/validation/DE3_100.json)
+App674 gives “Switch 2 wake” and “BLE image reception” dedicated 32×32 menu icons. The eight previous icons, BLE protocol and PFS1 engine remain unchanged. The two bitmaps and their descriptors add 272 bytes; flash reserve is 11,372 bytes. [Changes and artwork preview](docs/DE3_101_RELEASE.md) · [Build and test evidence](docs/validation/DE3_101.json)
 
-196/196 firmware suites, 13 linked ARM groups and the final Z21 signature/hash/CRC, init and resume models pass. Two isolated final BIN/HEX builds match. Physical App673 observations remain pending. Keep the ZIP intact in nRF Device Firmware Update; this package updates the application only.
+197/197 firmware suites, 13 local linked ARM groups and the Z21 signature, hash, CRC, init and resume models pass. Two local builds and the [current firmware CI](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) produce identical BIN/HEX files. CI supplements the local LSan limitation with a positive leak control for the current App674 resume model. All five active jobs passed; BL8 is intentionally not requested for a push.
+
+The owner confirmed remote control on preceding App673, and their diagnostic reports its matching LCD version and source identity. **Physical App674 acceptance is pending.** Keep the ZIP intact in nRF Device Firmware Update; this package updates the application only.
 
 ## File manager 3.63.0 · normal website and portable
 

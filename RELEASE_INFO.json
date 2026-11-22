@@ -60,8 +60,14 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Current App674: seven linked ARM signature/hash/CRC cases, signed INIT with App673 present and an empty bank, and complete-BIN checkpoint/resume model passed. Local ASan/UBSan passed; local LSan is unavailable under the host ptrace boundary. Current-build GitHub CI pending; no physical App674 acceptance.",
-    "application_counter": 674
+    "qualification": "Current App674: seven linked ARM signature/hash/CRC cases, signed INIT with App673 present and an empty bank, and complete-BIN checkpoint/resume model passed. Local ASan/UBSan passed; local LSan remains unavailable under ptrace. Independent current App674 CI 45060195633 passed ASan/UBSan/LSan with a positive leak control and 455 modeled checkpoint power cuts. No physical App674 acceptance is claimed.",
+    "application_counter": 674,
+    "independent_ci": {
+      "run": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
+      "qualifiedCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
+      "counter": 674,
+      "lsanPositiveControlPassed": true
+    }
   },
   "previous_web_full_suite": {
     "version": "3.38.0",
@@ -87,17 +93,19 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "software-qualified-publication-pending",
+  "status": "published-and-software-qualified",
   "device_readback_evidence": null,
-  "fresh_public_unsigned_rebuild_matches_signed_application": false,
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
       "file": "Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
       "sha256": "76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca",
       "counter": 674,
       "version": "2.22.0-DE3.101",
-      "url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
-      "bytes": 361953
+      "url": "https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
+      "bytes": 361953,
+      "pages_url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
+      "pinned_source_commit": "a39d43c7dea2681be1981695837b2cb8473db926"
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
@@ -384,7 +392,7 @@
     }
   ],
   "firmware_channel": "normal",
-  "release_status": "software-qualified-publication-pending",
+  "release_status": "published-and-software-qualified",
   "version_header_sha256": "c26142ac2dcba45611c62a92f88403eb7bc12369651652540daacc5d85bc1ad2",
   "firmware_source_branch": "release/lcd-de3101-app674",
   "application_bytes": 361352,
@@ -443,7 +451,7 @@
       "device_observation": "Owner-supplied App672/Web3.62.0 diagnostic reports matching version/counter/SourceID and zero recorded runtime errors; it does not establish full BIN identity or complete physical acceptance."
     }
   ],
-  "public_rebuild_scope": "Current App674 GitHub CI not yet published.",
+  "public_rebuild_scope": "Current App674 CI 45060195633 on a39d43c7dea2681be1981695837b2cb8473db926 passed all five active jobs and 197/197 host suites. CI BIN and HEX match the qualified local builds. BL8 is intentionally not requested for a push. The current App674 Z21 resume model includes ASan, UBSan and a positive LSan control; this is software evidence, not device acceptance.",
   "firmware_changes": {
     "menu_icons": "Dedicated 32x32 monochrome menu art for Switch 2 wake and BLE image reception; all eight preceding icon byte arrays unchanged. No BLE protocol, NFC, filesystem or bootloader logic changed."
   },
@@ -584,5 +592,7 @@
   "web_release_notes": "https://github.com/bluecyber81/pixl.js/blob/web-app674/web/LIESMICH_3_64_0.txt",
   "web_host_test_scope": "Web3.64.0 qualification is in progress; previous Web3.63.0 results are archived separately and do not qualify the new browser sender.",
   "web_device_readback_pending": true,
-  "web_device_readback_scope": "Previous Web3.63.0/App673 owner diagnostic reports matching LCD/version/counter/SourceID; owner confirmed remote control works. Web3.64.0/App674 device acceptance is pending."
+  "web_device_readback_scope": "Previous Web3.63.0/App673 owner diagnostic reports matching LCD/version/counter/SourceID; owner confirmed remote control works. Web3.64.0/App674 device acceptance is pending.",
+  "firmware_qualification_source_commit": "a39d43c7dea2681be1981695837b2cb8473db926",
+  "public_rebuild_evidence": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633"
 }
