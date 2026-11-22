@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "application": "allmiibo-dateimanager",
+  "version": "3.62.0",
+  "base": "/pixl.js/",
+  "channel": "normal",
+  "packageManifestSha256": "199d94976eaf4b2aac1b0e6f66094e5cd521dcc380616d58ea637c341ff2471b",
+  "firmware": {
+    "id": "de3.99-lcd-app",
+    "version": "2.22.0-DE3.99",
+    "counter": 672,
+    "path": "firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+    "bytes": 364877,
+    "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704"
+  }
+}
