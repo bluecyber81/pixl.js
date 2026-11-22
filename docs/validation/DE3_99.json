@@ -119,11 +119,22 @@
   "limits": [
     "No physical App672 flash, radio, timing or battery-current measurement.",
     "GC read savings are measured in a synthetic NOR model with identical full end images.",
-    "LeakSanitizer cannot run under this execution host ptrace boundary; ASan/UBSan ran.",
-    "Windows execution is a separate CI gate; local launcher evidence is Linux."
+    "Local LeakSanitizer is blocked by ptrace; independent GitHub Z19/Z21 App672 resume checks passed including LSan positive controls.",
+    "Native Windows launcher CI passed for web source commit 2f93268192cfebb5bcc2d2efdc030ed171d520c0; no new native EXE was built."
   ],
   "evidenceDirectory": "docs/validation/DE3_99_evidence",
   "releaseModeBuildPassed": true,
   "independentBuildCount": 3,
-  "releaseBuildRecordSha256": "e127b1aff86c1932fc69c6f468f04c06fc4e8a897e6f4884c76489e8714023df"
+  "releaseBuildRecordSha256": "e127b1aff86c1932fc69c6f468f04c06fc4e8a897e6f4884c76489e8714023df",
+  "webSourceCommit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
+  "webPagesCommit": "7e6ef6d2500165f2466c229df02edc1d5bec0a40",
+  "githubCurrentApplicationSanitizers": {
+    "runId": 45029329393,
+    "runUrl": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393",
+    "z19CurrentApp672Resume": "PASS with LSan positive control",
+    "z21CurrentApp672Resume": "PASS with LSan positive control",
+    "ciBinHexMatchLocal": true,
+    "fullRunStatus": "failure: one missing SDK test input; exported by follow-up workflow fix",
+    "evidence": "DE3_99_evidence/CI_RUN_45029329393_RESULT.json"
+  }
 }

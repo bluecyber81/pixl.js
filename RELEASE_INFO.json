@@ -5,7 +5,7 @@
   "counter": 672,
   "board": "LCD",
   "web_version": "3.62.0",
-  "web_publication_date": null,
+  "web_publication_date": "2026-11-22",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
   "ota_sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
@@ -80,7 +80,7 @@
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1",
     "evidence": "docs/validation/WEB3_58_1.json"
   },
-  "web_release_status": "qualification-in-progress",
+  "web_release_status": "normal-release",
   "web_release_notes": "https://github.com/bluecyber81/pixl.js/blob/web-app672/web/LIESMICH_3_62_0.txt",
   "web_personal_backup_status": "Personal backup benchmarks are recorded in the respective historical web evidence.",
   "web_changes": {
@@ -168,7 +168,8 @@
     "web_3_58_2": "Direct small-file reads, revision-checked folder upload and resume, cached directory listings for repeated searches, incremental CRC checks in browser DFU and an App662-specific capacity simulator.",
     "web_3_61_0": "Normal App671 selection and exact package binding, matching PFS simulator and source archive, normal startup/radio/cleanup diagnostics, existing batch/digest backup path retained. Historical LCD test channels and OLED remain separately gated.",
     "local_launcher": "Package version is shared by web UI, Python launcher/health and PowerShell; portable includes the same manifest.",
-    "battery_recording": "Displays record window, active logger duration and closed pauses separately; voltage samples are not measured current."
+    "battery_recording": "Displays record window, active logger duration and closed pauses separately; voltage samples are not measured current.",
+    "web_3_62_0": "Normal App672 package and exact matching simulator; shared launcher version; active battery logging duration and pauses; Linux and native Windows launch checks retained."
   },
   "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
   "historical_bootloader_bl8": {
@@ -517,5 +518,8 @@
       "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89",
       "evidence": "docs/validation/DE3_89_LCD_READBACK.json"
     }
-  ]
+  ],
+  "web_source_commit": "2f93268192cfebb5bcc2d2efdc030ed171d520c0",
+  "web_source_tree": "e779a59315b3c3c27461061394951790a7fa22da",
+  "web_pages_commit": "7e6ef6d2500165f2466c229df02edc1d5bec0a40"
 }

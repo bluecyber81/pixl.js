@@ -1,0 +1,25 @@
+GitHub Actions – LCD DE3.99/App672, erster öffentlicher Lauf
+
+Run: https://github.com/bluecyber81/pixl.js/actions/runs/45029329393
+Head: 33bcbef30db52493b8d3a63cfc064e5bcb277b4f
+Tree: f0b2b735657a027612d702dd258af3124b994197
+Ergebnis: FAILURE ausschließlich im Host-Testschritt; 186/187 Suites.
+
+Z17, Z19, Z20 und Z21 Bootloaderjobs: SUCCESS. BL8: planmäßig nur workflow_dispatch, hier skipped.
+Application: Build und Budget, exakter signierter OTA-Abgleich und aktueller Z21-Resume SUCCESS. Der nachfolgende ELF-Schritt wurde wegen des einen Hostfehlers nicht ausgeführt; der lokale Nachweis mit 13 ELF-Gruppen bleibt separat.
+
+Die heruntergeladenen Actions-Artefakte wurden gegen ihre veröffentlichten SHA-256-Digests geprüft. Ihre tatsächlichen BIN- und HEX-Bytes stimmen mit dem lokal qualifizierten Build überein.
+BIN: 3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7
+HEX: 8054f73280b26b8cc0a4dc10ebc75a393339014ed4786ba66fd1593fab6b33e5
+SourceID: 1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d
+
+Default-LSan ist nun tatsächlich in CI nachgewiesen:
+- Z19-App672, Job137229201119, Step8: sanitizerControl=PASS, leakDetectionEnabled=true, leakDetectionConfirmed=true; ASAN detect_leaks=1 und LSAN detect_leaks=1:exitcode=23.
+- Aktueller Z21-App672-Resume, Application-Job137229201447, Step9: PASS mit ASan/UBSan/LSan-positive-control. ResumeOffsets 0/131072/327680, 455 modellierte Checkpoint-Stromunterbrechungen.
+- Der Z21-Bootloaderjob enthält zusätzlich einen historischen App662-Resume; dieser ist nicht mit App672 verwechselt.
+Alle sind Softwaremodelle mit den im JSON festgehaltenen Grenzen, keine Geräteabnahme. Der lokale ptrace-LSan-Block bleibt ein getrenntes historisches Ergebnis.
+
+Ursache des Hostfehlers: CI exportiert für Tests ein verkürztes SDK. Es fehlte einzig components/ble/common/ble_conn_params.c, das test_ble_conn_preferences.py vor der C-Kompilierung liest. Der qualifizierte Firmwarecode wurde nicht geändert.
+Minimaler Patch: CI_SDK_INPUT_FIX.patch; eine zusätzliche Exportzeile, kein Gate entfernt. Vollständige SDK-Eingabebestandsaufnahme aller187 ausgewählten Suites: sechs externe SDK-Verbraucher, nach Patch keine fehlende deklarierte Datei/Headers. Exakter Tar-Export aus dem gepinnten OCI-SDK:23 Dateien bytegleich; ausschließlich die zuvor fehlgeschlagene Suite damit erneut PASS. Beleg: CI_SDK_INPUT_INVENTORY.json.
+
+Nächster Schritt: Root übernimmt den isolierten Workflow-Patch und veröffentlicht einen kleinen Folgecommit. Der neue echte CI-Lauf muss den vollständigen Host- und anschließenden ELF-Abschluss bestätigen.
