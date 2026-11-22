@@ -40,6 +40,8 @@ typedef struct {
     mui_view_t save_error_view;
     chameleon_discard_state_t discard_state;
     bool save_error_drawn;
+    /* One-shot continuation owned by this app, never by a list item/editor. */
+    bool import_return_pending;
     uint32_t exit_view_id;
     bool exit_paused, exit_prepared, exit_resume_nfc;
     bool retry_slot_count; /* count in RAM; card already saved and NFC paused */

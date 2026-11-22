@@ -24,7 +24,9 @@
 #define BUSY LFS_ERR_BADF
 #define DISK (PFS_BLOCK_COUNT * PFS_BLOCK_SIZE)
 
-enum { GC_CLEAN, GC_PENDING, GC_UNKNOWN };
+/* PINNED is a completed scan whose only remaining garbage is still owned by
+ * old readers. It uses the existing state byte and remains pending on wire. */
+enum { GC_CLEAN, GC_PENDING, GC_UNKNOWN, GC_PINNED };
 
 typedef struct {
   uint32_t generation, next_id, count, objects, pending, bound;
@@ -751,7 +753,7 @@ bool pfs_gc_diagnostic(const pfs_t *fs, pfs_gc_diagnostic_t *out) {
   out->flags = 1u | (fs->poisoned ? 2u : 0u) |
                (fs->transaction ? 4u : 0u) | (fs->writer ? 8u : 0u) |
                (fs->gc_result_known ? 16u : 0u);
-  out->state = fs->gc_state == GC_CLEAN ? 2u : fs->gc_state == GC_PENDING ? 1u : 0u;
+  out->state = fs->gc_state == GC_UNKNOWN ? 0u : fs->gc_state == GC_CLEAN ? 2u : 1u;
   out->generation = fs->current.generation;
   out->last_result = fs->gc_result_known ? fs->gc_last_result : 0;
   for (const handle_t *h = fs->handles; h; h = h->next) {
@@ -812,8 +814,13 @@ static int collect(pfs_t *fs) {
   int closed = lfs_dir_close(&fs->lfs, &dir);
   if (r < 0 || closed < 0)
     return collected(fs, io_error(fs, r < 0 ? r : closed));
-  fs->gc_state = pinned || fs->writer ? GC_PENDING : GC_CLEAN;
+  fs->gc_state = fs->writer ? GC_PENDING : pinned ? GC_PINNED : GC_CLEAN;
   return collected(fs, 0);
+}
+/* A completed pinned-only scan has no reclaimable work until a last owner
+ * leaves. New staging/output/manifest files mark PENDING before creation. */
+static bool needs_collection(const pfs_t *fs) {
+  return fs->gc_state != GC_CLEAN && fs->gc_state != GC_PINNED;
 }
 /* Maintenance is best effort after publication. An I/O failure still poisons
  * subsequent writes, but cannot turn a durable commit into a retryable failure. */
@@ -826,7 +833,7 @@ static void maintain(pfs_t *fs) {
  * to at least one obsolete group. New metadata readers and overlapping directory
  * snapshots cannot repeatedly scan the medium while another reader pins it. */
 static bool releases_obsolete(pfs_t *fs, const handle_t *h) {
-  if (fs->gc_state != GC_PENDING)
+  if (fs->gc_state != GC_PENDING && fs->gc_state != GC_PINNED)
     return false;
   if (h->kind == 1) {
     const pfs_file_t *file = (const pfs_file_t *)h;
@@ -1457,7 +1464,7 @@ static int transact(pfs_t *fs, const change_t *c) {
    * only if the reserved transaction space actually needs them. A retry after
    * an earlier commit attempt must also collect its unpublished outputs. */
   bool staged = fs->writer && fs->writer == c->stage;
-  if (fs->gc_state != GC_CLEAN && (!staged || c->stage->commit_started)) {
+  if (needs_collection(fs) && (!staged || c->stage->commit_started)) {
     r = collect(fs);
     if (r)
       return r;
@@ -1614,8 +1621,8 @@ static void attach(pfs_t *fs, handle_t *h, unsigned kind) {
 }
 static void detach(handle_t *h, bool cleanup) {
   pfs_t *fs = h->fs;
-  cleanup = cleanup && ((h->kind == 1 && ((pfs_file_t *)h)->writing) ||
-                        releases_obsolete(fs, h));
+  bool released = releases_obsolete(fs, h);
+  cleanup = cleanup && ((h->kind == 1 && ((pfs_file_t *)h)->writing) || released);
   handle_t **p = &fs->handles;
   while (*p && *p != h)
     p = &(*p)->next;
@@ -1624,6 +1631,10 @@ static void detach(handle_t *h, bool cleanup) {
     fs->handle_count--;
   }
   fs->release(h);
+  /* A failed close still released the RAM owner. Defer I/O as before, but do
+   * not let the old pinned-only hint suppress the next mutation's cleanup. */
+  if (released)
+    fs->gc_state = GC_PENDING;
   if (cleanup)
     maintain(fs);
 }
@@ -1678,7 +1689,7 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   file->flags = flags;
   file->writing = writing;
   if (writing) {
-    r = fs->gc_state != GC_CLEAN ? collect(fs) : 0;
+    r = needs_collection(fs) ? collect(fs) : 0;
     if (!r)
       r = reserve(fs, 8 + blocks_for(flags & LFS_O_TRUNC ? 0 : info.size));
     if (!r) {

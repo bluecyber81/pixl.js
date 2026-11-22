@@ -32,6 +32,8 @@ static void app_chameleon_pause(app_chameleon_t *app) {
 static void app_chameleon_resume(app_chameleon_t *app) {
     app->exit_prepared = false;
     app->discard_state = CHAMELEON_SAVE_ERROR;
+    /* Back/cancel must not leave an import continuation for a later menu save. */
+    app->import_return_pending = false;
     if (!app->exit_paused) return;
     app->exit_paused = false;
     app->retry_slot_count = false;
@@ -64,7 +66,13 @@ bool app_chameleon_save(app_chameleon_t *app) {
         app_chameleon_show_save_error(app);
         return false;
     }
+    bool return_to_imported_card = app->import_return_pending &&
+        mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) == CHAMELEON_SCENE_MENU_CARD_DATA_FILE_LOAD;
     app_chameleon_resume(app);
+    if (return_to_imported_card) {
+        mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_DATA_LOAD_SUCCESS));
+        mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, CHAMELEON_SCENE_MAIN);
+    }
     return true;
 }
 
