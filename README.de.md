@@ -1,22 +1,26 @@
-# Firmware für Allmiibo LCD und Pixl.js OLED
+# Allmiibo LCD und Pixl.js OLED
 
-[English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
+## Aktuell: LCD DE3.102 / App675 und Dateimanager 3.65.0
 
-## LCD DE3.101 / App674 · normale Firmware
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App675-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip).
 
-Für **Allmiibo LCD/ST7567 mit vorhandenem Packed LittleFS (PFS1), Z21 und S112 7.3.0**: [signierte App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip). Der Download bleibt an den qualifizierten Commit gebunden.
+**Web 3.65.0** merkt die Bildoptionen und behält eine lokale Datei beim Wechsel zwischen Bereichen für höchstens 30 Minuten in der geöffneten Seite. Drehen um 90°, 180° oder 270°, ein optionales Punktraster für Fotos sowie Drag & Drop ergänzen die Vorschau. Unter **Für den Animationsplayer speichern** lassen sich ein Einzelbild, die Demo oder ein Videoausschnitt als Player-BIN herunterladen. Anfang, Ende, Bildrate und Dateigröße sind vor dem Export sichtbar; Fortschritt und Abbruch sind enthalten. Die Verarbeitung bleibt lokal. [Bedienung](https://bluecyber81.github.io/pixl.js/guide/index.html#bild-video).
 
-App674 gibt „Switch 2 wecken“ und „BLE-Bildempfang“ eigene, passende 32×32-Menübilder. Die acht bisherigen Symbole, das BLE-Protokoll und die PFS1-Engine bleiben unverändert. Die zwei Bilder samt Deskriptoren benötigen zusammen 272 zusätzliche Byte; die Flashreserve beträgt 11.372 Byte. [Änderungen und Vorschau](docs/DE3_101_RELEASE.md) · [Build- und Testnachweise](docs/validation/DE3_101.json)
+**LCD DE3.102 / App675** zeichnet den Bildempfang bei vollständigen Bildern oder geänderten Statusanzeigen neu. Im Animationsplayer lassen sich **Endlosschleife** und **Bildzähler** einschalten; beide starten ausgeschaltet und gelten für die aktuelle Playersitzung. Die neuen Menüsymbole aus App674 bleiben enthalten. Die Firmware ist für **LCD/ST7567, PFS1, Z21 und S112 7.3.0** bestimmt. Das reine App-Update erhält das PFS1-Dateisystem, den Bootloader und das SoftDevice.
 
-197/197 Firmware-Suiten, 13 lokale ARM-Prüfgruppen sowie Z21-Signatur-, Hash-, CRC-, Init- und Wiederaufnahmemodelle bestehen. Zwei lokale Builds und die [aktuelle Firmware-CI](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) liefern identische BIN-/HEX-Dateien. Die CI ergänzt die lokale LSan-Grenze mit positiver Leckkontrolle für das aktuelle App674-Wiederaufnahmemodell. Alle fünf aktiven Jobs sind erfolgreich; BL8 ist beim Push planmäßig nicht angefordert.
+Der Web-Bildsender arbeitet weiterhin mit **App673 oder neuer**. App675 wird für die neuen Player-Optionen und die verbesserte Anzeigeaktualisierung benötigt. Dateiauswahl und Export starten keine Bluetooth-Übertragung. Die fertige Player-BIN wird anschließend über **Dateien** nach **E:/player/** kopiert. Verlassen oder Ausblenden des Senders beendet die Übertragung; es gibt keine automatische Wiederaufnahme.
 
-Der Nutzer bestätigt die Fernbedienung auf dem Vorgänger App673; seine Diagnose meldet dessen passende LCD-Version und Quellkennung. **Die physische App674-Abnahme steht aus.** Die ZIP unverändert in nRF Device Firmware Update auswählen; sie aktualisiert ausschließlich die Anwendung.
+Der Figurenkatalog führt vorhandene Ocarina-/Fatal-Fury-Spielhinweise mit den Figurendetails zusammen und ergänzt belegte Spielzuordnungen für Sword Kirby & Dragoon und Noir Dedede & Hydra. Die Angaben nennen ihre Nintendo-Quellen. Bestehende Sicherungs-, Vergleichs-, Synchronisations-, Fernbedienungs- und Diagnosefunktionen bleiben verfügbar.
 
-## Dateimanager 3.63.0 · normale Website und Portable
+### Quellen und Prüfstand
 
-[Normalen Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Aktuelle Webquellen und Prüfungen](https://github.com/bluecyber81/pixl.js/tree/web-app673/web)
+[LCD-Produktionszweig](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Webzweig](https://github.com/bluecyber81/pixl.js/tree/web-app675) · [Firmware-Prüfbericht](docs/validation/DE3_102.json) · [ARM-/PFS-Bindung](https://github.com/bluecyber81/pixl.js/blob/web-app675/docs/validation/DE3_102_PFS.json) · [Web-Prüfbericht](https://github.com/bluecyber81/pixl.js/blob/web-app675/docs/validation/WEB3_65_0.json) · [Bedienhinweise](https://github.com/bluecyber81/pixl.js/blob/web-app675/web/LIESMICH_3_65_0.txt) · [English](README.md).
 
-Lokale Figurenbestände lassen sich mit der Geräteprüfung vergleichen und bewusst an den vorhandenen Ordnerabgleich übergeben. Zusätzliche Spielhinweise und eine genaue App673-Paket-/Quellenbindung ergänzen den Dateimanager. Der gepflegte Webstand liegt auf `web-app673`; dieser Firmwarezweig enthält historische Web-Testeingänge. OLED und historische private Webstände bleiben eigenständige Quellen und Pakete.
+Für Firmware-Builds den LCD-Produktionszweig verwenden; Web- und historische Firmwarezweige haben eigene Stände. Softwareprüfungen und praktische Geräteabnahme sind getrennt dokumentiert. Die offene Abnahme betrifft insbesondere Bildübertragung, Video-Codecs, Player-Wiederholung, Bildzähler und Switch-2-Wecken am tatsächlichen Gerät. OLED Test6/App86 bleibt ein eigener Geräte- und Paketpfad; private Web-Ausgaben bleiben historische, separate Stände.
+
+## Frühere Downloads und getrennte OLED-Ausgaben
+
+Das ältere Android-Komplettpaket enthält App662 und ist ein eigener Systemweg für passende ältere LCDs; danach folgt die normale App675 als separates App-Update. App674, App673 und App672 bleiben als frühere normale Pakete erhalten. OLED-Test5/App85 und Test6/App86 behalten ihre eigenen Pakete und Prüfgrenzen.
 
 ## Archiv: LCD DE3.89 / App662
 

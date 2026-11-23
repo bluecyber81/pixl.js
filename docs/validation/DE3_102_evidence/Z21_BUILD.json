@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "reproductionVerified": true,
+  "candidateDerivation": false,
+  "mode": "native",
+  "sdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "compilerSha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+  "sdkArchiveSha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6",
+  "payloadBytes": 26932,
+  "flashHeadroomBytes": 1740,
+  "paddedBootloaderSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "sourceManifestSha256": "8b2665ba9051eed507827a4bf845b57ed824449b060608fa2796acc62ba6188c",
+  "deviceAccess": false,
+  "signedPackageProduced": false,
+  "files": {
+    "bootloader.map": "916b462287ee8dcf84c79e803ba67422a01f5d0948aa7edb9e11c5f051064171",
+    "size.txt": "d128ac63f28730fa9c57f105d2de22316c31746e11602d1fa3f14878f0f24a61",
+    "bootloader.out": "1f310b685c34227c06f222a45a18e1f071bbbd3efb6828159dc4167e8c124715",
+    "STACK_USAGE.json": "63ba4f9a6c63eb294d26347c0cd2eb20382b117baa165483dcb9e4de0e986a4c",
+    "runner.log": "b24ed6a2748c36b203ad6b8d6ebddc0cb908013f73c958347c76bbe2aefd60e6",
+    "compiler.txt": "c5b52314a002a0906a0c280259b12e4fdd2213971bdc5e0e6d7e169bbbdbbae2",
+    "BOOTLOADER_UNSIGNED_ANALYSIS.bin": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+    "bootloader.hex": "73c41cb59738ff988d419af9030df0ceda440c2a53614f912b3fb6d623df01c4",
+    "build.log": "b24ed6a2748c36b203ad6b8d6ebddc0cb908013f73c958347c76bbe2aefd60e6"
+  }
+}

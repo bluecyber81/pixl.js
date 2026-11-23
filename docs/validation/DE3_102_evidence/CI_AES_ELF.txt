@@ -1,0 +1,3 @@
+PASS 27 Cortex-M4 AES cases: ECB FIPS-197 encrypt/decrypt and OpenSSL CTR, AES128/192/256
+PASS linked tag pack/unpack in both layouts with synthetic key records and payload
+PASS linked AmiiboLink v2 synthetic command/data match App647 at the modeled NUS boundary

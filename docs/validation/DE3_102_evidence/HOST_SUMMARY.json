@@ -1,0 +1,1004 @@
+{
+  "passed": true,
+  "finishedUtc": "2026-11-23T11:55:20.588306+00:00",
+  "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "executed": 198,
+  "passedCount": 198,
+  "omittedScripts": {},
+  "sourcesUnchangedDuringTests": true,
+  "fullReportSha256": "e129f89652823d66126db4ffdfa89e0575839b797c8a008c442e649dc4450622",
+  "scripts": [
+    {
+      "script": "de2/test_amiibo_file_io.py",
+      "exitCode": 0,
+      "scriptSha256": "327547c19533e14b90f33e1ed4cbd7ea7c44c68cd9d2a9c45f4e5c6545ea4bd8"
+    },
+    {
+      "script": "de2/test_amiibo_paths_uid.py",
+      "exitCode": 0,
+      "scriptSha256": "f4f7f03557e4e0ec1ad29e4dd31e3ec3cc019f24398ab79dfbf0640702a1abf2"
+    },
+    {
+      "script": "de2/test_cache_nfc.py",
+      "exitCode": 0,
+      "scriptSha256": "1245e2952665f2d374f4f1ba7ff2f31eca95f07130b8a7998f75c95d54e2b0a5"
+    },
+    {
+      "script": "de2/test_chameleon_files.py",
+      "exitCode": 0,
+      "scriptSha256": "dc20dfadd2fd47b2c68275d1990478d41e589b07eab711eb908580395bc6454b"
+    },
+    {
+      "script": "de2/test_cwalk2.py",
+      "exitCode": 0,
+      "scriptSha256": "cf32afa87ff6c205502fe803611bcbf84c54fa3eca08eff17425ba16f2c53a4c"
+    },
+    {
+      "script": "de2/test_metadata.py",
+      "exitCode": 0,
+      "scriptSha256": "f6e74ecca23ca511f8a7d6440b22df3b68b9b00393d7b592b911edd57d199c22"
+    },
+    {
+      "script": "de2/test_player_v3.py",
+      "exitCode": 0,
+      "scriptSha256": "931ece3a77f1c65e4c076e3ea10ddee4bc8b8d2d079a532cd3bf71ff39bc2e62"
+    },
+    {
+      "script": "de2/test_settings.py",
+      "exitCode": 0,
+      "scriptSha256": "c05f78b46d25ea3e05d05a9ed368e1293d80ea5c3b5360aa76c5d09a02b198de"
+    },
+    {
+      "script": "de2/test_vfs_protocol.py",
+      "exitCode": 0,
+      "scriptSha256": "bf0cceadd27146baeecdf17d816b1fac197e373b1de00c6ea2af8a0c58a8aa26"
+    },
+    {
+      "script": "de3/test_active_menu_hint.py",
+      "exitCode": 0,
+      "scriptSha256": "9180f5288ab35bee82aececfc864b10c518dc5e5331ae8a053c0f109c2ad1393"
+    },
+    {
+      "script": "de3/test_amiibo_file_errors.py",
+      "exitCode": 0,
+      "scriptSha256": "1a402b5f8803bb8d2a1a0cd1b07b0ca10966f43f4cd622c26acd7e12207fd152"
+    },
+    {
+      "script": "de3/test_amiibo_guard_and_uid_review2.py",
+      "exitCode": 0,
+      "scriptSha256": "53830408bb72764cddbce0216a641d6347b5cd8c31dfda0309a8b935e87266f2"
+    },
+    {
+      "script": "de3/test_amiibo_info_de323.py",
+      "exitCode": 0,
+      "scriptSha256": "63b5983aea9c1d7e954d5553f9e4c611576fa42c5a10cd5c45a605dd853eb905"
+    },
+    {
+      "script": "de3/test_amiibo_key_import.py",
+      "exitCode": 0,
+      "scriptSha256": "0db548b2c59d8d7659dc5b7bbc19d6cefeae1464c41707448eb098cafe91d1c8"
+    },
+    {
+      "script": "de3/test_amiibo_navigation_memory.py",
+      "exitCode": 0,
+      "scriptSha256": "5e8b0fd20bfa7a8e08b3ce2ea8f1f693e2bf7d30169ebb751b27a38e8c1c6955"
+    },
+    {
+      "script": "de3/test_amiibo_notes_de363.py",
+      "exitCode": 0,
+      "scriptSha256": "8065770fd593d0c59159b19a025ae241d26c1f766a1eceeff4005a0b922ddf28"
+    },
+    {
+      "script": "de3/test_amiibo_resume_missing_file.py",
+      "exitCode": 0,
+      "scriptSha256": "4c4b40235315907332af4cd1278e9fd5955aec081039ad56540237049bd1e398"
+    },
+    {
+      "script": "de3/test_amiibo_retain_port_de371.py",
+      "exitCode": 0,
+      "scriptSha256": "afe8fb79853cdca4d8e03aca686950e88da78e74a2804784503212aa48165ccc"
+    },
+    {
+      "script": "de3/test_amiibo_salt_rng_review2.py",
+      "exitCode": 0,
+      "scriptSha256": "d0df90862d56139641f55a0a268ff86fbe6aefd5765f3c3716f3d3795fd1ae7f"
+    },
+    {
+      "script": "de3/test_amiibolink_commit_de344.py",
+      "exitCode": 0,
+      "scriptSha256": "7ba561b30cd0ec8b4b5204effbb33fb940aa2c16e86afc38124d842ba3509f04"
+    },
+    {
+      "script": "de3/test_amiidb_back_to_list_focus.py",
+      "exitCode": 0,
+      "scriptSha256": "e4d75b1cbb51aa89742f4425a220f27ea37c6b8b086d00cad70066a49cbe13c5"
+    },
+    {
+      "script": "de3/test_amiidb_input_slots.py",
+      "exitCode": 0,
+      "scriptSha256": "e3cbe28265ff659c1917dbde862430539e1d21e0741cd3570f7b393ea32f25d7"
+    },
+    {
+      "script": "de3/test_amiidb_navigation_memory.py",
+      "exitCode": 0,
+      "scriptSha256": "b4cf9df7a301f71555970955f9e8043589074d52f136b7d9679b187ed82c84b7"
+    },
+    {
+      "script": "de3/test_amiidb_qr_de325.py",
+      "exitCode": 0,
+      "scriptSha256": "682747dc0f57a8b037b9166a9230df966ecfb2c40a1f48bd88a088f1f62c9cf3"
+    },
+    {
+      "script": "de3/test_amiidb_resume.py",
+      "exitCode": 0,
+      "scriptSha256": "5f5bf5d3aa2d70683e00549f0fe4f808227108ae082d2129e93ea9062d7eb0e4"
+    },
+    {
+      "script": "de3/test_amiidb_search_favorites.py",
+      "exitCode": 0,
+      "scriptSha256": "7d0be4a7a517ec2e63e418903cefd4d191f1ca4eb71454049957b72b28cbd19f"
+    },
+    {
+      "script": "de3/test_amiidb_slot_persistence_de348.py",
+      "exitCode": 0,
+      "scriptSha256": "4a946dd5676318fad5a5fb4027cc406f9a06c245ab5a79c747b8de8fb9f3c4d5"
+    },
+    {
+      "script": "de3/test_animation_iteration.py",
+      "exitCode": 0,
+      "scriptSha256": "a200faef9a38138af22cb565b79389d326e182bf4e9ae318d6a49980d99b33bb"
+    },
+    {
+      "script": "de3/test_app_settings_save_ui.py",
+      "exitCode": 0,
+      "scriptSha256": "157c3507d904ba19ce8f7cf6bb78ec002e103d4ee48e44f09563430b5bf8e85c"
+    },
+    {
+      "script": "de3/test_app_startup_allocations.py",
+      "exitCode": 0,
+      "scriptSha256": "7799f4b46eab892dde761bff1a53a00f7a999eb5c29a1f3da0c3b7bff577d199"
+    },
+    {
+      "script": "de3/test_application_budget.py",
+      "exitCode": 0,
+      "scriptSha256": "4781c9cc08cec576850a2ee29e7e68449737bf75ce40533f77f2c77d999e0528"
+    },
+    {
+      "script": "de3/test_backlight_busy_de343.py",
+      "exitCode": 0,
+      "scriptSha256": "064a87adccf320df4b771d01717e8461b9571e08ddc666daadd5fec64d13eec9"
+    },
+    {
+      "script": "de3/test_batch_read_de397.py",
+      "exitCode": 0,
+      "scriptSha256": "60944156cf1e037e07d57aad43ee147b971306fec2d1358071c29290d0296e04"
+    },
+    {
+      "script": "de3/test_ble_conn_preferences.py",
+      "exitCode": 0,
+      "scriptSha256": "87db38258cc982dcbce40a5c5d50974f17599d0be8898f85afebbe36a615c2d9"
+    },
+    {
+      "script": "de3/test_ble_event_extension_de396.py",
+      "exitCode": 0,
+      "scriptSha256": "0b822810c05a785bfc9ff2ab59de0011748a8ce6a665f7c18ae504f07bc30100"
+    },
+    {
+      "script": "de3/test_ble_foreground.py",
+      "exitCode": 0,
+      "scriptSha256": "5ba6b9845c833447490648f81ef2eb0f054e2582f33bc9c4fdd69f44583bcd5f"
+    },
+    {
+      "script": "de3/test_ble_link_diagnostic.py",
+      "exitCode": 0,
+      "scriptSha256": "273691c1b9daf167874b20e7e52cb9cef13aef76dc11b362f9e80f2cdbadc2fc"
+    },
+    {
+      "script": "de3/test_ble_mtu.py",
+      "exitCode": 0,
+      "scriptSha256": "0982f40739e201e855a7233804447139a847bf1b24bbb195b37ec0fb813a019a"
+    },
+    {
+      "script": "de3/test_ble_remote_advdata.py",
+      "exitCode": 0,
+      "scriptSha256": "4fc60279cb15d678868c9d27ab5c2e503c266485ccda189a8d21e053e1e91509"
+    },
+    {
+      "script": "de3/test_ble_remote_advertising_start.py",
+      "exitCode": 0,
+      "scriptSha256": "d7ce3931023808091d23a2da12c278c5128c137a4bada137f90b12c27880a5c3"
+    },
+    {
+      "script": "de3/test_ble_remote_de347.py",
+      "exitCode": 0,
+      "scriptSha256": "2abaaa9dcb27a38c9553de483e0894ce95097238eae70231d07066f353b50b44"
+    },
+    {
+      "script": "de3/test_ble_remote_modes_de347.py",
+      "exitCode": 0,
+      "scriptSha256": "81a44228cc00cacca6604e110cc5243605ab1a939ccb2f786a8b1163d8022095"
+    },
+    {
+      "script": "de3/test_ble_same_link_de351.py",
+      "exitCode": 0,
+      "scriptSha256": "6e67f018f9adcb73355f11c27a3acd67f2267a6489068e413f8c7ecd46b378af"
+    },
+    {
+      "script": "de3/test_ble_sdk_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "b6b99efc86849d83e01242be117f2b5de1d8032579d64596223dd93d442b0bfa"
+    },
+    {
+      "script": "de3/test_ble_session_de326.py",
+      "exitCode": 0,
+      "scriptSha256": "7a09551c27787838b044616da73b967843302032d9516cb2f81930655c2d0f2c"
+    },
+    {
+      "script": "de3/test_ble_status_de320.py",
+      "exitCode": 0,
+      "scriptSha256": "e83d7015f9891c6378f267aadc76ebb288659efa24486f5bc9cd816acd955122"
+    },
+    {
+      "script": "de3/test_ble_status_de357.py",
+      "exitCode": 0,
+      "scriptSha256": "d49be29dc1cdce075fee23456957cdc4a208bb68902da99a66afe6b15502acc1"
+    },
+    {
+      "script": "de3/test_boot_diagnostic.py",
+      "exitCode": 0,
+      "scriptSha256": "beb6b0de5ae11642476952c85a1a807bf57550b082af22e6224cf12086ad25e9"
+    },
+    {
+      "script": "de3/test_bounded_ui_startup.py",
+      "exitCode": 0,
+      "scriptSha256": "c84ebcd1c09f08ffb712e23500ab655b4a2467d0696c5a9246f8c641a911d2e9"
+    },
+    {
+      "script": "de3/test_build_evidence.py",
+      "exitCode": 0,
+      "scriptSha256": "fad12290d0594dafdf3b626894054d2658980b4592bd48496bd6280e98842e1e"
+    },
+    {
+      "script": "de3/test_build_fault_de384.py",
+      "exitCode": 0,
+      "scriptSha256": "17735506597a117f27ede5384ac396930ad05a40015483034a057d94b6db1d87"
+    },
+    {
+      "script": "de3/test_button_debounce_de343.py",
+      "exitCode": 0,
+      "scriptSha256": "e0c0079bb13e1e9b88488f2c8228e43ebb5ae03587f3462e83000633f62551ac"
+    },
+    {
+      "script": "de3/test_button_queue_pressure_de343.py",
+      "exitCode": 0,
+      "scriptSha256": "375e4bd5fb9cb6a55acea4accb3e6b9d4527cacb645c78772e95ba28486d3a84"
+    },
+    {
+      "script": "de3/test_canvas_bounds_utf8.py",
+      "exitCode": 0,
+      "scriptSha256": "905c71ac391852a55ff128b9756f1b923363e364fda8aadb2f689d8d0e999457"
+    },
+    {
+      "script": "de3/test_card_save_transactions_de354.py",
+      "exitCode": 0,
+      "scriptSha256": "c41d2e9c4569676ec4b9edb97e10758b80f03a5342ffa51f46e407863c9ab9c1"
+    },
+    {
+      "script": "de3/test_catalog_de3_9.py",
+      "exitCode": 0,
+      "scriptSha256": "fa3f08281f3dd2e8619655350441b33d2fa0e00b7ee3e0e896deffb3c50f0093"
+    },
+    {
+      "script": "de3/test_chameleon_browser_cache_de351.py",
+      "exitCode": 0,
+      "scriptSha256": "4f03d3c8bfe306b3252f7d0899c7ce41a35c52792d0555f01ec62938c4f03690"
+    },
+    {
+      "script": "de3/test_chameleon_browser_memory_de350.py",
+      "exitCode": 0,
+      "scriptSha256": "f9d3e0955008d1c235393bdd30dcaf84f90da44cd3c8fb3ae48dc191bf5e133c"
+    },
+    {
+      "script": "de3/test_chameleon_buffer_contract_de362.py",
+      "exitCode": 0,
+      "scriptSha256": "463f55829f40284684fcec22437f7fecedf3a07e551fd9ae3f6fabbdf1f69d1a"
+    },
+    {
+      "script": "de3/test_chameleon_config_count.py",
+      "exitCode": 0,
+      "scriptSha256": "e02ef60ec068b93aa5a815e08eb1d8e8f3e672fabf0b435cd059f19c931f21cf"
+    },
+    {
+      "script": "de3/test_chameleon_exit_guard.py",
+      "exitCode": 0,
+      "scriptSha256": "702c97fac1ccc5c8c88cb9e9280d24317a4189d49c32e8dd0bb1a7877cd96c52"
+    },
+    {
+      "script": "de3/test_chameleon_factory_errors_de349.py",
+      "exitCode": 0,
+      "scriptSha256": "8cd16a36a86972e455c8d28d8f8dd8058f2457a5c25e38cb18711dc2946f0da5"
+    },
+    {
+      "script": "de3/test_chameleon_frame_length_de3100.py",
+      "exitCode": 0,
+      "scriptSha256": "ce7c4e1ddd9f655a837f6867b15fdaea4637d595a242e57fe08e68837273e057"
+    },
+    {
+      "script": "de3/test_chameleon_inputs.py",
+      "exitCode": 0,
+      "scriptSha256": "00038c7a64f22ea8a05a4dde911d4efc892b5064ca0ee4716317c06c9250f5be"
+    },
+    {
+      "script": "de3/test_chameleon_nickname_retry.py",
+      "exitCode": 0,
+      "scriptSha256": "d2600c5418aec9b02ade0b08622d3996fd4dcf64bc451e15f695ddc8c2f76e88"
+    },
+    {
+      "script": "de3/test_chameleon_packedfs.py",
+      "exitCode": 0,
+      "scriptSha256": "986123c404ca65c540d01646ea34a883630dc7af0d21333f104ae0c3a711e89e"
+    },
+    {
+      "script": "de3/test_chameleon_shadow_ui.py",
+      "exitCode": 0,
+      "scriptSha256": "2b381add2167ce2e6b58d4463b872f17e34a9774c8b0a29023822db2552b1ba4"
+    },
+    {
+      "script": "de3/test_chameleon_state_load.py",
+      "exitCode": 0,
+      "scriptSha256": "9302aef5eba036c12ea9def67093ed218fb905cccd8b6d6ee177d75b937d1b4e"
+    },
+    {
+      "script": "de3/test_chameleon_uid_errors_de350.py",
+      "exitCode": 0,
+      "scriptSha256": "fc340a5695a75edd96d8f54d32ab07d046b22db3b4c194636ae83f736c2fc7a0"
+    },
+    {
+      "script": "de3/test_chameleon_write_mode.py",
+      "exitCode": 0,
+      "scriptSha256": "0a926f2ca264d77287f99178dbd314ab17e143ca0d8120e2908edf10d8239a67"
+    },
+    {
+      "script": "de3/test_database_catalog_validation.py",
+      "exitCode": 0,
+      "scriptSha256": "50bd962210380dc0e14436465111961e15fbebebe1906f619f8390a53d596edf"
+    },
+    {
+      "script": "de3/test_database_focus_veto_review2.py",
+      "exitCode": 0,
+      "scriptSha256": "94ed6beb2e2bbe1743af5011920ac8132706f4d91ecf577b1984d860d27e7c67"
+    },
+    {
+      "script": "de3/test_database_indexed_links.py",
+      "exitCode": 0,
+      "scriptSha256": "c41b997695f5720ba247709dd21e124d33f8195aeb926dae436a6e00c3acfd74"
+    },
+    {
+      "script": "de3/test_database_name_pool.py",
+      "exitCode": 0,
+      "scriptSha256": "e2a949fd7ffb345b1eeb7ff576522260266ea6c203a002a8ef19e771e7c7f115"
+    },
+    {
+      "script": "de3/test_database_refresh.py",
+      "exitCode": 0,
+      "scriptSha256": "056f17d215e520180910fbbd8d6f0b7f0524e7adb498acbf21e8e1e1243bbc44"
+    },
+    {
+      "script": "de3/test_desktop_animation_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "e61e75b4bff5a2d5dae26239d2733066557efd6684f88b4fe7efb71ffd18a5c5"
+    },
+    {
+      "script": "de3/test_device_info.py",
+      "exitCode": 0,
+      "scriptSha256": "10f2d5569fbf44bfafd1632f528c0338ef4df352eb59de377b9d3e1827a229d4"
+    },
+    {
+      "script": "de3/test_dfu_entry.py",
+      "exitCode": 0,
+      "scriptSha256": "03354d7d12b55b3677013f382f944ef255d5a4475dd6d6cc5f833e18f48c4955"
+    },
+    {
+      "script": "de3/test_dfu_transfer_guard.py",
+      "exitCode": 0,
+      "scriptSha256": "6385277383d6c06dc88bb71cb1b939f03b6238c76b011e1c6446e6bc6c70496f"
+    },
+    {
+      "script": "de3/test_directory_rename_de3_11.py",
+      "exitCode": 0,
+      "scriptSha256": "6a8ef58442702fef6cbffe4fdba7ad53fe7a98f4a89341c0c0ae0babe2806ff8"
+    },
+    {
+      "script": "de3/test_disney_profile_de353.py",
+      "exitCode": 0,
+      "scriptSha256": "f8823788a3cf6b44c8157eff350a39775bbd480eba8872070af852c58ddb8f16"
+    },
+    {
+      "script": "de3/test_display_photo.py",
+      "exitCode": 0,
+      "scriptSha256": "d672beb574bfdcf68c0435b63d07a02681deb55736355bd59193f3d042248a75"
+    },
+    {
+      "script": "de3/test_exit_contract_de358.py",
+      "exitCode": 0,
+      "scriptSha256": "bc040e7cf19055f887e3bfd6f184378f1539e52977bea2204ad0b78acf8eac3f"
+    },
+    {
+      "script": "de3/test_factory_helper_disabled.py",
+      "exitCode": 0,
+      "scriptSha256": "aab5a91ed1d11a3bbf62ec8e4f285358744470d57dd363d0c31a9004f18678dc"
+    },
+    {
+      "script": "de3/test_fault_reset_de346.py",
+      "exitCode": 0,
+      "scriptSha256": "681dc8b49788960116655a6e6b19661671e24c5fcbb153aae2e00ec79256f9dc"
+    },
+    {
+      "script": "de3/test_favorites_navigation_memory.py",
+      "exitCode": 0,
+      "scriptSha256": "2c345fccf130c5bffa1cfaf586312ef83267c7699437148dc5fcb87e66194aa1"
+    },
+    {
+      "script": "de3/test_file_create_safety.py",
+      "exitCode": 0,
+      "scriptSha256": "7ac9877898ea2359772c4f65b0b0d073fd0f61ca5f6959851b04733036cb7b02"
+    },
+    {
+      "script": "de3/test_flash_read_ready_de350.py",
+      "exitCode": 0,
+      "scriptSha256": "fb247766a6bd581d21529038fd15eba17a6c5e1abcdb131e15b122536152312b"
+    },
+    {
+      "script": "de3/test_font_german_de363.py",
+      "exitCode": 0,
+      "scriptSha256": "674e2a9182976e1dc26760f0908c34a2cd7cfb4b91bb241f8fafd56a25839c24"
+    },
+    {
+      "script": "de3/test_game_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "2273960aea8e1eb94ef86acf213d4b2a6629f550157fb4051e146e3b025b9f8f"
+    },
+    {
+      "script": "de3/test_generic_view_allocations.py",
+      "exitCode": 0,
+      "scriptSha256": "cc3246504fbdc204c49e47bdda0b92cdcfdb98013763b273ee6bc2540aae5ee4"
+    },
+    {
+      "script": "de3/test_hal_reliability.py",
+      "exitCode": 0,
+      "scriptSha256": "bd94d6b82a3bb0fde61a803a144e1621b125703a9d15c62895cd455ae5910cd5"
+    },
+    {
+      "script": "de3/test_hardware_de3_3.py",
+      "exitCode": 0,
+      "scriptSha256": "8d7fe3a6dd6b85046a1c88ab07d358c66c84c366bba297669379348092c46258"
+    },
+    {
+      "script": "de3/test_import_return_de398.py",
+      "exitCode": 0,
+      "scriptSha256": "43611689682d7509b62b0d81571eae63bd3b7f9c5b4b63e29fe415859c2be25d"
+    },
+    {
+      "script": "de3/test_kirby_v3_machines.py",
+      "exitCode": 0,
+      "scriptSha256": "df6694cef4791512bb4017ec0cbaedf3d15843b505d0ac3d6eb8f530355b29bb"
+    },
+    {
+      "script": "de3/test_lcd_device_test.py",
+      "exitCode": 0,
+      "scriptSha256": "e9df5762aba95e1b85273372136e90298a9994543ccf9c4b1d260c60697e4e2a"
+    },
+    {
+      "script": "de3/test_lcd_game_pixels.py",
+      "exitCode": 0,
+      "scriptSha256": "b9bd0e6f7ba5aa6bcc62fa37725b14031254119205498f7e036ab24b89c5e030"
+    },
+    {
+      "script": "de3/test_lcd_text_scroll.py",
+      "exitCode": 0,
+      "scriptSha256": "cfb24a5f95870fc79c0be20b3c1237718aa3dfc2d7d324cf6728067be4c451c9"
+    },
+    {
+      "script": "de3/test_lfs_backend.py",
+      "exitCode": 0,
+      "scriptSha256": "551e1b81c08505f9c81bcf13c8e2a6a9832b3c627e3453a873a8f54ac9f868a5"
+    },
+    {
+      "script": "de3/test_lfs_backports.py",
+      "exitCode": 0,
+      "scriptSha256": "767dac12c5f3cf4766ba84b7994e14be0ff6a6a22e81cfadb100b93e0b87a731"
+    },
+    {
+      "script": "de3/test_lfs_wear_de355.py",
+      "exitCode": 0,
+      "scriptSha256": "bda1ca67c409948dd3768e929c55a1bfc850c6138973edca1bc02bef334cd08a"
+    },
+    {
+      "script": "de3/test_list_capacity_release.py",
+      "exitCode": 0,
+      "scriptSha256": "8cca00ef35aaa51513e2ece66c3a442c65da7de077199a5f86f4558080c98790"
+    },
+    {
+      "script": "de3/test_list_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "5b6070683a4ae63ea0c7a7f36a971912798a3c42cd0e31b65cb5757ccc643657"
+    },
+    {
+      "script": "de3/test_main_menu_return_context.py",
+      "exitCode": 0,
+      "scriptSha256": "c7f438c08c8b2aebfa0b20da0e6ca26065b6fc866d4a36dc49bd1f31fbf06176"
+    },
+    {
+      "script": "de3/test_math_precision_de335.py",
+      "exitCode": 0,
+      "scriptSha256": "39a2f4108a7229e337fd9f178c11305b9bd05a3fb637b9d1c94f46ea55b74a9f"
+    },
+    {
+      "script": "de3/test_mf0_factory_target_de342.py",
+      "exitCode": 0,
+      "scriptSha256": "5400397b9247b86f5776e03475a914a4157cc843c40427da0e24b413a1dba8af"
+    },
+    {
+      "script": "de3/test_mf1_factory_de342.py",
+      "exitCode": 0,
+      "scriptSha256": "ba604f6551712406343980f204e1346f94938e75cb8a0dbb5bac995bd0987ad3"
+    },
+    {
+      "script": "de3/test_miniapp_menu_icons.py",
+      "exitCode": 0,
+      "scriptSha256": "147c14ea7cac0a7be072f4c4e51bd7cfc6483ffa6f1b140732cf8a6f994e15b2"
+    },
+    {
+      "script": "de3/test_miniapps_protocol.py",
+      "exitCode": 0,
+      "scriptSha256": "607e54db506bbc7c6f85c409eb5fdd9da8ae050d025bb2c33ffb2368fd12fd4c"
+    },
+    {
+      "script": "de3/test_miniapps_radio_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "841ef43804bc97da5d656d64ce888e1b35c822115f6336cf8b8ea5d5e9449892"
+    },
+    {
+      "script": "de3/test_miniapps_sleep.py",
+      "exitCode": 0,
+      "scriptSha256": "66cf50ed9d3030686ce86086f94cef55800128dd5a79c7307e061612513d96f6"
+    },
+    {
+      "script": "de3/test_miniapps_startup.py",
+      "exitCode": 0,
+      "scriptSha256": "eefabe1238008e07bbd3a6dc3ff73387a5537e435c1b490cb07f96dcb1929614"
+    },
+    {
+      "script": "de3/test_miniapps_ui.py",
+      "exitCode": 0,
+      "scriptSha256": "6445d51fddf4e43f235153307ac14babd8c45e756d991aa31150bfd3f5b963bc"
+    },
+    {
+      "script": "de3/test_mount_profile_de362.py",
+      "exitCode": 0,
+      "scriptSha256": "bb891712d546b099c5c219a4902cb8c4255cb451a3047ff614d4a2a66665118e"
+    },
+    {
+      "script": "de3/test_msgbox_actions_de394.py",
+      "exitCode": 0,
+      "scriptSha256": "93d3bcc27d872cee8ca2972f7f1bed2cedb62f19b229336c8f5b23d57d6348ec"
+    },
+    {
+      "script": "de3/test_mtu_diagnostic.py",
+      "exitCode": 0,
+      "scriptSha256": "4e59b83a316ecb612b7b3fad43ba8b7e1d0827c7384543a372e0ea6590c4b5c1"
+    },
+    {
+      "script": "de3/test_nfc_app_handoffs_de3_3.py",
+      "exitCode": 0,
+      "scriptSha256": "84754b8682ed3a784c7cc38466853b46576b88a49118019d443b4208a2c87bec"
+    },
+    {
+      "script": "de3/test_nfc_file_persist_handoffs_de337.py",
+      "exitCode": 0,
+      "scriptSha256": "d490a9249854f52feafced0f5cbdd3c1e8bbdf8163559c3ae7e888d8df07d0e5"
+    },
+    {
+      "script": "de3/test_nfc_frame_delay_de3_22.py",
+      "exitCode": 0,
+      "scriptSha256": "d8b312c48d90de6bbfedd7820abc220e8c025e95f825af3c7056aa823db9101e"
+    },
+    {
+      "script": "de3/test_nfc_frames_de346.py",
+      "exitCode": 0,
+      "scriptSha256": "08077a56200a976b5df8c519427b1c02eda738ab02ee61bdf8d867dc93b39723"
+    },
+    {
+      "script": "de3/test_nfc_lifecycle_de3_3.py",
+      "exitCode": 0,
+      "scriptSha256": "1932c00b226a37b4a600af51e75de4748602bc0e6df7d7535759a3784d687348"
+    },
+    {
+      "script": "de3/test_nfc_nvic_de339.py",
+      "exitCode": 0,
+      "scriptSha256": "a4240e161c6063c4762c095fe94a0d4b3ae15ab071ad71901314e057dedbec2c"
+    },
+    {
+      "script": "de3/test_nfc_remote_guard_de347.py",
+      "exitCode": 0,
+      "scriptSha256": "400dd45eeafc480136aa4544a431b5ff44f6117e0bd75adedf801425dfebf427"
+    },
+    {
+      "script": "de3/test_nfc_return_de398.py",
+      "exitCode": 0,
+      "scriptSha256": "e08ac66617b5b9c6c7369b8bfd2d5baa95455e41c0294e96ee106b6701b4eab1"
+    },
+    {
+      "script": "de3/test_nfc_save_dialog_de337.py",
+      "exitCode": 0,
+      "scriptSha256": "f5f5cc0fdd2bc13ee3265b771934467c4d32e7da921325a461bece6d8562d40a"
+    },
+    {
+      "script": "de3/test_nfc_save_retry_de337.py",
+      "exitCode": 0,
+      "scriptSha256": "bdea6acf57c703d042be4ad15bcf37af7de87be9474d2b1dc50e96ce43c4cba7"
+    },
+    {
+      "script": "de3/test_nfc_sector_de352.py",
+      "exitCode": 0,
+      "scriptSha256": "f28d43c00aa6354e8aec6e1c214a1dd5571270de9d5d986599fe2e3dbdc4f2fe"
+    },
+    {
+      "script": "de3/test_nfc_session_de398.py",
+      "exitCode": 0,
+      "scriptSha256": "511ed7418c51be28669f2f55a5d01c1e56758d2e12daade86d1e98d0a705bcd6"
+    },
+    {
+      "script": "de3/test_packed_atomic_meta_de351.py",
+      "exitCode": 0,
+      "scriptSha256": "d684615a112e723a85b59e73071164ff52a35d35bdae3695e38ed75acd01cb83"
+    },
+    {
+      "script": "de3/test_packed_catalog_bounded_de395.py",
+      "exitCode": 0,
+      "scriptSha256": "30e72b4fb667a6dabede53d133ca5b7ed52ffcc8f013d31739fde247bd2f3fec"
+    },
+    {
+      "script": "de3/test_packed_cleanup_de392.py",
+      "exitCode": 0,
+      "scriptSha256": "61a6ab943ec45874c5c37452cb61dbd4fefadaba33b815e2ef4f0a4106b3fb32"
+    },
+    {
+      "script": "de3/test_packed_crc_de345.py",
+      "exitCode": 0,
+      "scriptSha256": "79622484ec41598e7d4e17484458c8854c550405e5a3746e18c78b349c3f9674"
+    },
+    {
+      "script": "de3/test_packed_crc_pair_de355.py",
+      "exitCode": 0,
+      "scriptSha256": "904d666fdb5a08a9c9cff597b297b2f198f3ca56cd75b3736084f02a7ccb36fc"
+    },
+    {
+      "script": "de3/test_packed_gc_iterator_de393.py",
+      "exitCode": 0,
+      "scriptSha256": "14fbd798cd8f53952d9da618350ee82c919fa0c8c67a742266ca31fb0b1260e7"
+    },
+    {
+      "script": "de3/test_packed_gc_pinned_de399.py",
+      "exitCode": 0,
+      "scriptSha256": "0ee55a7b60ad321d876e0a2e296aa2524d7daf576a1353b33c89f6a4a592e1d9"
+    },
+    {
+      "script": "de3/test_packed_mount_stream_de341.py",
+      "exitCode": 0,
+      "scriptSha256": "9511e6c95bf762416814ac7436605ef41ce0abb92ce8e29d2e48e8cfd80de82c"
+    },
+    {
+      "script": "de3/test_packed_recovery_launcher.py",
+      "exitCode": 0,
+      "scriptSha256": "1b810f73633bf57221cf52b7449728b4b7423c7f83ced07f7aa0e5e6d715919b"
+    },
+    {
+      "script": "de3/test_packed_recovery_protocol.py",
+      "exitCode": 0,
+      "scriptSha256": "4b44ba5b5051893c0e7e7fd10a18952f1ef7846ba722a55c9ee5724e7e697300"
+    },
+    {
+      "script": "de3/test_packed_small_compat_de389.py",
+      "exitCode": 0,
+      "scriptSha256": "05b5afd0cd2490f6a9360dafb315270c384a3341249abdf6f1b44e4a3c5acd5e"
+    },
+    {
+      "script": "de3/test_packed_stage_gc_de346.py",
+      "exitCode": 0,
+      "scriptSha256": "4aca8c56188d5b3a1b5276c9ba69f2e03cbfe42799ca554493415aa68a70f12b"
+    },
+    {
+      "script": "de3/test_packed_vfs_persistence_de344.py",
+      "exitCode": 0,
+      "scriptSha256": "0e5ac5eaab021270e5cff7f1e9117192fcee35b7da32c2354e742887650fd850"
+    },
+    {
+      "script": "de3/test_persistence.py",
+      "exitCode": 0,
+      "scriptSha256": "57727f06be7cfedac277cd3bde1a2f7935b15c58ee5a8223cea65f3f39b21bad"
+    },
+    {
+      "script": "de3/test_player_browser_memory.py",
+      "exitCode": 0,
+      "scriptSha256": "5426fd8782c9c1f6319f464ae56eb5459cfd1fb3ecc6ae61165e2e9a434cd756"
+    },
+    {
+      "script": "de3/test_player_close_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "4677dc1b2ad721f846a9619f7d023f4b3b2fa69c2ffc9da85d2b769069bf7634"
+    },
+    {
+      "script": "de3/test_player_input_sequence.py",
+      "exitCode": 0,
+      "scriptSha256": "4fae9fe381b040465a6ab68ef8ef1fdb385ac5fddbd47d27400091ccd8490419"
+    },
+    {
+      "script": "de3/test_player_loop_de3102.py",
+      "exitCode": 0,
+      "scriptSha256": "a8bb3f43d04e0904fc561480602c8063f0fb0a890aaedd44acce301346d6f61f"
+    },
+    {
+      "script": "de3/test_progress_bar_bounds.py",
+      "exitCode": 0,
+      "scriptSha256": "6f8ad7455536d9998ee477c99655b6248da839130265d0abf84140a5f9ce015e"
+    },
+    {
+      "script": "de3/test_qrcode_stack.py",
+      "exitCode": 0,
+      "scriptSha256": "5a7351cd8790525b9ee5e809adb66a6ad1bb9bd85af83e477c6df0ee19badfcf"
+    },
+    {
+      "script": "de3/test_ram_list_growth.py",
+      "exitCode": 0,
+      "scriptSha256": "e0950e81fa6236e9a099eda7c115bd9df89b959e07241bc2612165605930ef72"
+    },
+    {
+      "script": "de3/test_read_reply_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "10b1046ff6acd3a511824474c70ab1fa772b53ceb6f90e9221a48eef895376cf"
+    },
+    {
+      "script": "de3/test_reset_exit_contract_de358.py",
+      "exitCode": 0,
+      "scriptSha256": "a7a391bf50d4f5a35b7866cec4ffa26b3bbd045e517ec45996b6281082424f87"
+    },
+    {
+      "script": "de3/test_retained_app_fallback.py",
+      "exitCode": 0,
+      "scriptSha256": "6a494e624575035a79e460770e0b8e92095d6db689bf8c1e32444c5a66981f04"
+    },
+    {
+      "script": "de3/test_runtime_diag.py",
+      "exitCode": 0,
+      "scriptSha256": "8603017d27b8ea4ea584c06b31513b9a85fcdedd5a7ba2a831da003775ef716b"
+    },
+    {
+      "script": "de3/test_settings_home_save_lifecycle.py",
+      "exitCode": 0,
+      "scriptSha256": "eed931dffc1238d40c48f7d3b2be778d9c5b2c95236ffd7ed631caf03dcb80eb"
+    },
+    {
+      "script": "de3/test_settings_label_width_de361.py",
+      "exitCode": 0,
+      "scriptSha256": "f0b88e7cc27ef083a791d3f26bf661c2e3701d6a0c0d0fe21b4e399685222e88"
+    },
+    {
+      "script": "de3/test_settings_return_focus_de340.py",
+      "exitCode": 0,
+      "scriptSha256": "f37ee30011d9aaabf9a0008f0044ba22b7cfd4123e357fd64cc3dc89f893c3c0"
+    },
+    {
+      "script": "de3/test_settings_runtime_recovery.py",
+      "exitCode": 0,
+      "scriptSha256": "363203fd90c76404b241dccdb7eb72e50f4b286ab3be7db5c74e780a8bb6b23c"
+    },
+    {
+      "script": "de3/test_settings_save_ui.py",
+      "exitCode": 0,
+      "scriptSha256": "661353195e825c7f0efd3952cc73241f82efe8539191b0f7912054d9ceb4d475"
+    },
+    {
+      "script": "de3/test_settings_slot_limit_de348.py",
+      "exitCode": 0,
+      "scriptSha256": "606b195d933ffe4b091c1ebd2c3437ddd2f0514c813f64dceedcd94c162ac773"
+    },
+    {
+      "script": "de3/test_settings_storage_snapshot.py",
+      "exitCode": 0,
+      "scriptSha256": "a4ea48e8442775427c99600755c724419446dec944e247fc7289519d6f945317"
+    },
+    {
+      "script": "de3/test_siji_subset.py",
+      "exitCode": 0,
+      "scriptSha256": "85f799635d6757422de85273388b9a546f4a54986a0cf5107da8cab5575a7da1"
+    },
+    {
+      "script": "de3/test_sleep_save.py",
+      "exitCode": 0,
+      "scriptSha256": "6d3a7b856e75f104391bd9336430ed8f0f466a80d2a5c9e0a6ac969eb40119cb"
+    },
+    {
+      "script": "de3/test_slot_save_guard.py",
+      "exitCode": 0,
+      "scriptSha256": "a2cbecea6bf171438196b68835bfbc21ab09294812dab37b948d25e8ad16ab3c"
+    },
+    {
+      "script": "de3/test_spi_completion.py",
+      "exitCode": 0,
+      "scriptSha256": "875ea84bb897175bb5ad4bc67efc6b8838918fb7c794fca1a706cad6b636d18b"
+    },
+    {
+      "script": "de3/test_spi_transactions.py",
+      "exitCode": 0,
+      "scriptSha256": "80feb5d49d5950a188ad3d8fc46204dd0702f096380b2503c8df3b6b7ac7c6ac"
+    },
+    {
+      "script": "de3/test_spiffs_allocator_read_failure.py",
+      "exitCode": 0,
+      "scriptSha256": "cfc31d7a9875ccb50db93482c39ed51d072ca0bdfc0800a066f33a60fb76638e"
+    },
+    {
+      "script": "de3/test_spiffs_cache_failures.py",
+      "exitCode": 0,
+      "scriptSha256": "d7b4f3d5f4fecd27825be24633b1937a54dbf11f3fda5f293cb2a56eb59a37f0"
+    },
+    {
+      "script": "de3/test_spiffs_erase_failures.py",
+      "exitCode": 0,
+      "scriptSha256": "b415ac8352d7b7e3d4527217ab4b57513eccdde7a75bc16fd37eb891fdd964de"
+    },
+    {
+      "script": "de3/test_spiffs_integration.py",
+      "exitCode": 0,
+      "scriptSha256": "db1077d1b22c2519438df2e0d835bb880358738d5a1a7c97771a8ca0e85951dc"
+    },
+    {
+      "script": "de3/test_spiffs_sentinel.py",
+      "exitCode": 0,
+      "scriptSha256": "6734a03233445cd80387f99ae5fd281e1c87335e89f32ab338ee55765d04733d"
+    },
+    {
+      "script": "de3/test_spiffs_writeback_failures.py",
+      "exitCode": 0,
+      "scriptSha256": "ff07075cb75995618f9d2eb9fc4d33876dbbb8f99db0c3c7638a884c1e974bed"
+    },
+    {
+      "script": "de3/test_standard_tag_rng_review2.py",
+      "exitCode": 0,
+      "scriptSha256": "701a15ae31398990af695c3b999ab266f6607e97eb9dbfb7c24c1f8facb35e6f"
+    },
+    {
+      "script": "de3/test_startup_diagnostics.py",
+      "exitCode": 0,
+      "scriptSha256": "cddc89001c4ec62fbec6410cde958a39feb9cde80b757b2b7dc9cba4566db43a"
+    },
+    {
+      "script": "de3/test_storage_battery.py",
+      "exitCode": 0,
+      "scriptSha256": "ddd0ff2bc7bc888c813bc53961e64e04962bf459c8903163402c7b2b8715e897"
+    },
+    {
+      "script": "de3/test_storage_diag.py",
+      "exitCode": 0,
+      "scriptSha256": "882bd42cae7f48f7b898dda8d702e8850ab68230826c8dc05020a13c5b296efb"
+    },
+    {
+      "script": "de3/test_storage_diag_tybalt.py",
+      "exitCode": 0,
+      "scriptSha256": "e68becc1a293f4e7f0e136badad8dd56576126331a5cba3a5d7c052bb79425e1"
+    },
+    {
+      "script": "de3/test_storage_measurements_de396.py",
+      "exitCode": 0,
+      "scriptSha256": "ea8fa7bf06adb7d600c19232954fcc1e72b9e076ba3e4ac70dd4a6d023391806"
+    },
+    {
+      "script": "de3/test_storage_metadata_protocol.py",
+      "exitCode": 0,
+      "scriptSha256": "c4f995526aca8a6a0de0abe636673a1097db16f63c4be77c3e3fe5b1faf6b63c"
+    },
+    {
+      "script": "de3/test_storage_paths_de3_7.py",
+      "exitCode": 0,
+      "scriptSha256": "572cdd41050f8588107ae6e8f2be124d0ed03fb7cfc6e6c071404126e1acbd91"
+    },
+    {
+      "script": "de3/test_stream_sender.py",
+      "exitCode": 0,
+      "scriptSha256": "a1231a4e8115a181e3ddcdc5abacc302a36ad0b7cf0bc2b7f7412bf474cee2fc"
+    },
+    {
+      "script": "de3/test_text_input_render_de344.py",
+      "exitCode": 0,
+      "scriptSha256": "f2664c671157c61e34a0e74eb1c8c7389d9a4bde9245847d7ba6bf3892a18a53"
+    },
+    {
+      "script": "de3/test_toast_layout.py",
+      "exitCode": 0,
+      "scriptSha256": "9fcf614ef030482796f039c70ac9dc17e063b5f01a1199920b696198cde991f5"
+    },
+    {
+      "script": "de3/test_tree_generator_preflight.py",
+      "exitCode": 0,
+      "scriptSha256": "2f8d218ef7499d4a3ffadd94219cf58ef1b11f7cb243ff483349a5df3efbf1ff"
+    },
+    {
+      "script": "de3/test_ui_comfort_de356.py",
+      "exitCode": 0,
+      "scriptSha256": "162ee3224b9e5cfdf71a4338c43a6e72ce73cf53333a9769c2d862118dbbeaeb"
+    },
+    {
+      "script": "de3/test_ui_diagnostic_reader.py",
+      "exitCode": 0,
+      "scriptSha256": "0d4c84c3402e8083a2dd7dc5f829a67ca39961246640ccdedd79cd160c1eb937"
+    },
+    {
+      "script": "de3/test_ui_lifecycle_de3_2.py",
+      "exitCode": 0,
+      "scriptSha256": "2455149735429099844e0264ef056f08171fc0eebf0c16e6e7071e554c576812"
+    },
+    {
+      "script": "de3/test_ui_nav_diag.py",
+      "exitCode": 0,
+      "scriptSha256": "39cabbbf368353e07a5917ae10842b364109ffe1a62b2157764ea697cfb260e0"
+    },
+    {
+      "script": "de3/test_ui_nav_diag_protocol.py",
+      "exitCode": 0,
+      "scriptSha256": "7d89d10df88f068030f068e12fc2d340da8e3932e808d4e672b9c62f064aeee2"
+    },
+    {
+      "script": "de3/test_ui_state_reset.py",
+      "exitCode": 0,
+      "scriptSha256": "f351887d5eb40c7132c7237599aa5ef0549059e8cf87c64dd740876443e636a2"
+    },
+    {
+      "script": "de3/test_ui_temporary_allocations.py",
+      "exitCode": 0,
+      "scriptSha256": "4ee545defe3467895a6e9aacb43c0e66d503d0862b129a05849fb83e43c66bfb"
+    },
+    {
+      "script": "de3/test_ui_views_de3_9.py",
+      "exitCode": 0,
+      "scriptSha256": "bbf077b92368abffe6c09f82a4932904cb83b95b476626508eca894368613cc1"
+    },
+    {
+      "script": "de3/test_upstream_startup_i18n.py",
+      "exitCode": 0,
+      "scriptSha256": "a91b8f4ab71f0b751ef77ad52f4576bcd5d9e6faa894f642159143ea2bcaefeb"
+    },
+    {
+      "script": "de3/test_version_source_archive.py",
+      "exitCode": 0,
+      "scriptSha256": "82c44e6cbe1d4fcb91bb4a2cc83c949ccfd47296864bf9552be6f25585ebfbea"
+    },
+    {
+      "script": "de3/test_vfs_abandon.py",
+      "exitCode": 0,
+      "scriptSha256": "6f95690a0625c3e184892aa9c6ef83581a120415f0949529c926e5830953a46e"
+    },
+    {
+      "script": "de3/test_vfs_drive_bounds_de342.py",
+      "exitCode": 0,
+      "scriptSha256": "17f4d4373a2f59edc9927a4be595239a3a29ce618e7106a9a999153a37233ad4"
+    },
+    {
+      "script": "de3/test_vfs_namespace.py",
+      "exitCode": 0,
+      "scriptSha256": "5aad7061bead4c59a40e70c56b5e3fbacd84b39053b6f4d952495e19ed5e7ced"
+    },
+    {
+      "script": "de3/test_vfs_remove_open.py",
+      "exitCode": 0,
+      "scriptSha256": "b68ea58c83c351d06d7957af2433584492d95ef2f6f15a791cd1943a7b826efa"
+    },
+    {
+      "script": "de3/test_wake_gpio.py",
+      "exitCode": 0,
+      "scriptSha256": "c24eb07ca7c545da3ec182b889acff5a72b63e508690a9f9bdb8b8926f4ec065"
+    }
+  ],
+  "physicalDeviceAccess": false,
+  "limits": "Host scripts execute actual source with their declared models. Optional ARM, sanitizers and physical hardware are separate evidence."
+}

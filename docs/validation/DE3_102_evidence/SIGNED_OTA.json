@@ -1,0 +1,28 @@
+{
+  "name": "Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+  "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+  "bytes": 362493,
+  "images": [
+    {
+      "type": "application",
+      "firmware_type": 0,
+      "counter": 675,
+      "sd_req": [
+        294
+      ],
+      "bytes": 361892,
+      "sha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+      "signature_verified": true,
+      "sd_size": 0,
+      "bl_size": 0,
+      "app_size": 361892,
+      "boot_validation": "GENERATED_CRC",
+      "negative_controls_passed": 3
+    }
+  ],
+  "version": "2.22.0-DE3.102",
+  "board": "LCD",
+  "source_id_sha256": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "signing_tool": "nrfutil 6.1.7",
+  "physicalDeviceAccess": false
+}

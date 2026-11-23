@@ -1,22 +1,26 @@
-# Firmware for Allmiibo LCD and Pixl.js OLED
+# Allmiibo LCD and Pixl.js OLED
 
-[Deutsch](README.de.md) · [Open the Bluetooth file manager](https://bluecyber81.github.io/pixl.js/)
+## Current: LCD DE3.102 / App675 and file manager 3.65.0
 
-## LCD DE3.101 / App674 · normal firmware
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Images & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 in updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signed App675 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip).
 
-For **Allmiibo LCD/ST7567 with existing Packed LittleFS (PFS1), Z21 and S112 7.3.0**: [signed application ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip). The download stays pinned to the qualified commit.
+**Web 3.65.0** remembers image options and keeps one local file available across workspace changes for up to 30 minutes in the open page. Rotation by 90°, 180° or 270°, an optional photo dot pattern and drag & drop extend the preview. **Save for the animation player** exports a still image, the demo or a video clip as a player BIN. Start, end, frame rate and output size are shown before export; progress and cancellation are included. Processing stays local. [Instructions](https://bluecyber81.github.io/pixl.js/guide/en.html#bild-video).
 
-App674 gives “Switch 2 wake” and “BLE image reception” dedicated 32×32 menu icons. The eight previous icons, BLE protocol and PFS1 engine remain unchanged. The two bitmaps and their descriptors add 272 bytes; flash reserve is 11,372 bytes. [Changes and artwork preview](docs/DE3_101_RELEASE.md) · [Build and test evidence](docs/validation/DE3_101.json)
+**LCD DE3.102 / App675** redraws image reception when a complete frame arrives or visible status changes. The animation player offers **Loop** and **Frame counter**; both start off and apply to the current player session. The menu icons added in App674 remain included. This firmware is for **LCD/ST7567, PFS1, Z21 and S112 7.3.0**. The application-only update preserves the PFS1 filesystem, bootloader and SoftDevice.
 
-197/197 firmware suites, 13 local linked ARM groups and the Z21 signature, hash, CRC, init and resume models pass. Two local builds and the [current firmware CI](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) produce identical BIN/HEX files. CI supplements the local LSan limitation with a positive leak control for the current App674 resume model. All five active jobs passed; BL8 is intentionally not requested for a push.
+The web image sender still works with **App673 or newer**. App675 provides the new player options and improved redraw scheduling. File selection and export do not start Bluetooth transmission. Copy the completed player BIN to **E:/player/** through **Files** afterwards. Leaving or hiding the sender stops transmission; it never resumes automatically.
 
-The owner confirmed remote control on preceding App673, and their diagnostic reports its matching LCD version and source identity. **Physical App674 acceptance is pending.** Keep the ZIP intact in nRF Device Firmware Update; this package updates the application only.
+The catalogue aligns existing Ocarina and Fatal Fury game notes with figure details and adds source-backed game associations for Sword Kirby & Dragoon and Noir Dedede & Hydra. Entries identify their Nintendo sources. Backup, collection comparison, synchronization, remote control and diagnostics remain available.
 
-## File manager 3.63.0 · normal website and portable
+### Sources and qualification
 
-[Open the normal file manager](https://bluecyber81.github.io/pixl.js/) · [Current web source and qualification](https://github.com/bluecyber81/pixl.js/tree/web-app673/web)
+[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web branch](https://github.com/bluecyber81/pixl.js/tree/web-app675) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](https://github.com/bluecyber81/pixl.js/blob/web-app675/docs/validation/DE3_102_PFS.json) · [Web qualification](https://github.com/bluecyber81/pixl.js/blob/web-app675/docs/validation/WEB3_65_0.json) · [Operating notes](https://github.com/bluecyber81/pixl.js/blob/web-app675/web/LIESMICH_3_65_0.txt) · [Deutsch](README.de.md).
 
-Compare local figure files with a current device audit and deliberately hand the selection to the existing folder synchronization preview. Additional game notes and an exact App673 package/source binding are included. The maintained web source is `web-app673`; this firmware branch retains historical web test inputs. OLED and historical private web releases remain separate sources and packages.
+Use the LCD production branch for firmware builds; web and historical firmware branches have their own revisions. Software checks and physical acceptance are recorded separately. Outstanding device checks include image transmission, real video codecs, player looping, frame counter and Switch 2 wake. OLED Test6/App86 retains its separate hardware and package route; private web editions remain separate historical revisions.
+
+## Historical downloads and separate OLED releases
+
+The older Android combined package contains App662 and is a separate system route for compatible older LCDs; install normal App675 afterwards as an application update. App674, App673 and App672 remain earlier normal packages. OLED Test5/App85 and Test6/App86 retain their own packages and acceptance limits.
 
 ## Archive: LCD DE3.89 / App662
 
@@ -30,7 +34,7 @@ Back up your files and select the intact ZIP in **nRF Device Firmware Update**. 
 
 On 19 November 2026 the owner confirmed successful practical testing on one LCD. File manager 3.58.2 reported App662, the matching LCD source ID, Z21 and S112 7.3.0. Timing against Mochi on App662 and resuming an interrupted Android firmware update still need separate device tests. [Device readback](docs/validation/DE3_89_LCD_READBACK.json)
 
-## Archive: File manager 3.58.2
+## Archive: file manager 3.58.2
 
 Preview, verification and backup can read a small file with a single request. A repeated search checks whether storage has changed before reusing the directory listings. Reconnect in the same browser tab to resume an interrupted folder upload. [Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows package and source](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
 

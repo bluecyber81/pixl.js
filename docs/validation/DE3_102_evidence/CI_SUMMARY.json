@@ -1,0 +1,231 @@
+{
+  "passed": true,
+  "retrievedAtUtc": "2026-11-23T12:07:22.575127+00:00",
+  "runId": 45169716170,
+  "runUrl": "https://github.com/bluecyber81/pixl.js/actions/runs/45169716170",
+  "runAttempt": 1,
+  "sourceCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+  "sourceTree": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
+  "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "runStatus": "completed",
+  "runConclusion": "success",
+  "lcdJobId": 137675750476,
+  "successfulJobs": 5,
+  "skippedJobs": 1,
+  "jobs": [
+    {
+      "id": 137675750050,
+      "name": "z17 source-bound build and ARM tests",
+      "conclusion": "success"
+    },
+    {
+      "id": 137675750476,
+      "name": "LCD application build",
+      "conclusion": "success"
+    },
+    {
+      "id": 137675750486,
+      "name": "z20 source-bound build and DFU recovery tests",
+      "conclusion": "success"
+    },
+    {
+      "id": 137675750492,
+      "name": "z21 source-bound build and DFU recovery tests",
+      "conclusion": "success"
+    },
+    {
+      "id": 137675750519,
+      "name": "z19 source-bound build and ARM tests",
+      "conclusion": "success"
+    },
+    {
+      "id": 137675752089,
+      "name": "BL8 corresponding-source build",
+      "conclusion": "skipped"
+    }
+  ],
+  "lcdSteps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Determine the required application check",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Fetch pinned external SDK and ARM toolchain",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Exercise linker budget gates",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Compile unsigned LCD and inspect actual flash and RAM reserves",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Install the pinned Cortex-M4 emulator and SDK test inputs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Verify the signed package against the compiled application and bound bootloader key",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Resume the verified signed LCD application on the bound Z21 data path",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Verify both Android DFU phases against the release packages",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Exercise every DE2 and DE3 host suite",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Exercise stack, menu, crypto, flash ID and LCD on the linked Cortex-M4 ELF",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Archive the actual build and test results",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27
+    }
+  ],
+  "artifact": {
+    "id": 14816023938,
+    "name": "lcd-firmware-evidence-658d43a7fe2777778d8efa8439f73aa48210e033-1",
+    "size_in_bytes": 1227836,
+    "digest": "sha256:bf2b77468311f52abc2372108b6c2fd945495d86a988e0f76ad25d44f35dc6ac",
+    "created_at": "2026-11-23T12:02:58Z",
+    "expires_at": "2026-12-23T12:02:56Z"
+  },
+  "archiveDigestAndCrcVerified": true,
+  "applicationBytes": 361892,
+  "applicationSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+  "applicationHexSha256": "adc87454dd86241ebf7e208220e40d725daf6d4f470abdd347a3375a04271fdd",
+  "productionInputsSha256": "79b7e5faaf967d22ebc98ee12d424cdebeb7c9aeee4657558c9f2ba8ea33aeb0",
+  "binHexAndProductionInputsIdenticalToBothLocalBuilds": true,
+  "signedPackageSha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+  "signatureNegativeControlsPassed": 3,
+  "hostGroupsPassed": 198,
+  "hostGroupsOmitted": 0,
+  "linkedArmGroupsPassedInLcdJob": 8,
+  "linkedArmGroupsPassedSeparatelyLocally": 13,
+  "currentApp675Z21ResumePassed": true,
+  "currentApp675LsanPositiveControlPassed": true,
+  "lsanEvidenceScope": "The unmodified, source-bound check_resume.py requires a successful no-leak control and detection of an intentional leak before it writes the successful current-App675 report. That report records LSan-positive-control. Its temporary raw control log is not part of the uploaded LCD artifact.",
+  "resumePayloadSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+  "resumeOffsets": [
+    0,
+    131072,
+    327680
+  ],
+  "modeledCheckpointPowerCuts": 455,
+  "modeledLinkCutsDuringCheckpoint": 5,
+  "modeledAdmissionOrCompletionFailures": 8,
+  "copiedReports": [
+    {
+      "sourceName": "BUILD_RESULT.json",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_BUILD.json",
+      "sha256": "a1c8e5fa2a64ea4f96129c8612641f8c31490dfdd9f558cffa71244282e94e88"
+    },
+    {
+      "sourceName": "SIGNED_OTA.json",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_SIGNED_OTA.json",
+      "sha256": "dc85cc9fed8c5fe4c850c7dfcee798537c9e7517b32aa134b4d0be313fb62792"
+    },
+    {
+      "sourceName": "Z21_PREVIEW_RESUME.json",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_Z21_PREVIEW_RESUME.json",
+      "sha256": "cfaea0d1b9c059012edeb74de9b93bc590383770e7245605dd8e8ce7a81b8b2d"
+    },
+    {
+      "sourceName": "STACK_ELF.txt",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_STACK_ELF.txt",
+      "sha256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953"
+    },
+    {
+      "sourceName": "FIRST_MENU_ELF.txt",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_FIRST_MENU_ELF.txt",
+      "sha256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9"
+    },
+    {
+      "sourceName": "AES_ELF.txt",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_AES_ELF.txt",
+      "sha256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1"
+    },
+    {
+      "sourceName": "FLASH_JEDEC_ELF.txt",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_FLASH_JEDEC_ELF.txt",
+      "sha256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca"
+    },
+    {
+      "sourceName": "DISPLAY_PROFILE_ELF.txt",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_DISPLAY_PROFILE_ELF.txt",
+      "sha256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86"
+    },
+    {
+      "sourceName": "GAME_ROTATION.json",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_GAME_ROTATION.json",
+      "sha256": "45fa427c4258f63c1e5efc9ffd58995cf83d591f2943ed0a097bcc979749ae41"
+    },
+    {
+      "sourceName": "LCD_DEVICE_TEST.json",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_LCD_DEVICE_TEST.json",
+      "sha256": "8772af098835380089522549b42d883c444bafc6862fd33051e77df940709050"
+    },
+    {
+      "sourceName": "BUILD_FAULT.json",
+      "publicFile": "docs/validation/DE3_102_evidence/CI_BUILD_FAULT.json",
+      "sha256": "a07468ac57efc46a9d37a5dd239131264ccc1f76c886a3eb6c33342e76b2ed63"
+    }
+  ],
+  "lcdLogSha256": "592280da85fec01d9bbe650b1a9c09d46ee13311b46abe2b106947cc4c33a66d",
+  "physicalDeviceAccess": false,
+  "limits": "The LCD job qualifies the current App675 package. Separate historical Z17/Z19/Z20/Z21 jobs and historical Android combined-package checks are retained as workflow results; they are not relabeled as fresh App675 package coverage. Local LSan remains unavailable under ptrace."
+}

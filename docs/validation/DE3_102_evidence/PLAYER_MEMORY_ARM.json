@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "physicalDeviceAccess": false,
+  "app674": {
+    "binSha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+    "playerAllocationRequestBytes": 52,
+    "playerWithViewHeapBytes": 80,
+    "playerAndMenuWithOneFileHeapBytes": 860,
+    "heapRestoredAfterFree": true
+  },
+  "app675": {
+    "binSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+    "playerAllocationRequestBytes": 120,
+    "playerWithViewHeapBytes": 148,
+    "playerAndMenuWithOneFileHeapBytes": 964,
+    "heapRestoredAfterFree": true
+  },
+  "playerStructureExtraBytes": 68,
+  "oneFileMenuScenarioExtraHeapBytes": 104,
+  "scope": "Actual linked ARM Player allocation, MUI list/string allocation and TLSF; timer-create/stop are successful stubs. One demo file, no frame buffer because playback has not started. Menu growth at different file counts can require different heap capacity. Not a physical runtime watermark."
+}

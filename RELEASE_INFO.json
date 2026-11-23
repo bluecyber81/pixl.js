@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "publication_date": null,
+  "publication_date": "2026-11-23",
   "version": "2.22.0-DE3.102",
   "counter": 675,
   "board": "LCD",
@@ -60,7 +60,7 @@
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
     "installation_readback_observed": true,
-    "qualification": "Current App675 software/signature/linked ARM/checkpoint-resume qualification pending. Existing Z21 bytes and source remain unchanged.",
+    "qualification": "Unchanged Z21 reproduced exactly. Current signed App675 passes seven actual linked ARM signature/hash/CRC cases, signed INIT with App674 present and an empty bank, and complete-BIN checkpoint/resume under local ASan/UBSan. Current independent CI 45169716170 LCD job 137675750476 also passed current-App675 resume under ASan/UBSan with a positive LSan control, 455 modeled checkpoint power cuts, five link cuts and eight admission/completion failures. Local LSan remains blocked by ptrace. No physical App675 acceptance is claimed.",
     "application_counter": 675
   },
   "previous_web_full_suite": {
@@ -87,19 +87,19 @@
     "standalone_ota_is_upgrade_for_counter_11": false,
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
-  "status": "signed-application-local-qualification-in-progress",
+  "status": "source-published-and-software-qualified",
   "device_readback_evidence": null,
-  "fresh_public_unsigned_rebuild_matches_signed_application": false,
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
       "file": "Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
       "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
       "counter": 675,
       "version": "2.22.0-DE3.102",
-      "url": null,
+      "url": "https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
       "bytes": 362493,
       "pages_url": null,
-      "pinned_source_commit": null
+      "pinned_source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033"
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
@@ -386,20 +386,20 @@
     }
   ],
   "firmware_channel": "normal",
-  "release_status": "signed-application-local-qualification-in-progress",
+  "release_status": "source-published-and-software-qualified",
   "version_header_sha256": "debbcb9e35ef035c9d4f9cb82be8a911dccf68c48851d893dabdb07499f98185",
   "firmware_source_branch": "release/lcd-de3102-app675",
   "application_bytes": 361892,
   "ota_bytes": 362493,
-  "qualification_date": null,
+  "qualification_date": "2026-11-23",
   "signature_verified": true,
-  "z21_application_acceptance_passed": false,
+  "z21_application_acceptance_passed": true,
   "application_ota_signature": "ECDSA-P256",
   "firmware_notes": "docs/DE3_102_RELEASE.md",
   "firmware_evidence": "docs/validation/DE3_102.json",
-  "host_firmware_suite_method": "198 current DE2/DE3 host scripts expected; current App675 qualification is pending.",
-  "independent_local_unsigned_rebuilds_match_signed_application": false,
-  "unsigned_rebuild_scope": "Current App675 isolated builds have not completed.",
+  "host_firmware_suite_method": "198/198 complete current DE2/DE3 host scripts, no omitted scripts; final source/test snapshot unchanged. 13 separate linked ARM groups; actual linked ARM Player/TLSF memory comparison; actual-code Stream/Player and Nordic timer ASan/UBSan checks.",
+  "independent_local_unsigned_rebuilds_match_signed_application": true,
+  "unsigned_rebuild_scope": "Two isolated native LCD builds reproduce identical BIN and HEX from the frozen App675 production inputs. Both BINs equal the signed App675 payload. ELF/map debug metadata are not claimed byte-identical.",
   "previous_normal_lcd_release": {
     "version": "2.22.0-DE3.101",
     "counter": 674,
@@ -471,7 +471,7 @@
       "device_observation": "Owner-supplied App673/Web3.63.0 diagnostic reports LCD, matching version/counter/SourceID and no recorded runtime errors; owner confirmed remote control works. This is not an on-device full-BIN hash measurement or full feature acceptance."
     }
   ],
-  "public_rebuild_scope": "Current App675 GitHub validation has not run; App674 CI evidence remains historical.",
+  "public_rebuild_scope": "Current App675 source commit 658d43a7fe2777778d8efa8439f73aa48210e033 passed GitHub Actions run 45169716170. The retrieved LCD artifact has byte-identical BIN, HEX and 720-input manifest to both local builds; the signed payload matches. Its 198/198 full host groups, eight linked ARM groups and current-App675 Z21 resume with positive LSan control passed. No device acceptance is inferred.",
   "firmware_changes": {
     "stream_redraw": "Keep every negotiated chunk ACK immediate; request drawing for complete frames or changed validity, including asynchronous failure and session resets.",
     "player_loop": "Session-only optional loop, off by default. Reopen read-only with exact validated-header and frame-buffer-size checks; retain one frame buffer and one timer.",
@@ -617,5 +617,21 @@
   "web_device_readback_scope": "The previous App673 owner diagnostic and remote-control confirmation are historical. Physical stream, Switch2 and App675 Player acceptance remain pending.",
   "web_source_commit": "b364222005f493a7d898560592fe1bd1423fa510",
   "web_source_tree": "25c08949335d3d9307ef6f4a144300aeffbfea61",
-  "web_pages_commit": "92bfdd0d15d5893d227aa5fcc8fd66974c6750d0"
+  "web_pages_commit": "92bfdd0d15d5893d227aa5fcc8fd66974c6750d0",
+  "firmware_source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+  "production_tree_sha": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
+  "firmware_qualification_source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+  "local_production_commit": "15b9c33744dc47cf80e606b42a883276a3f7a273",
+  "firmware_qualification_passed": true,
+  "current_firmware_ci": {
+    "run_id": 45169716170,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45169716170",
+    "conclusion": "success",
+    "source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "source_tree": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
+    "lcd_job_id": 137675750476,
+    "lcd_artifact_id": 14816023938,
+    "evidence": "docs/validation/DE3_102_evidence/CI_SUMMARY.json",
+    "current_app675_lsan_positive_control_passed": true
+  }
 }
