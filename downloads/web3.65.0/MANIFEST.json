@@ -4,21 +4,64 @@
   "application": "Allmiibo Dateimanager",
   "publicationStatus": "prepared-for-pages-publication",
   "sourcePublicationStatus": "public",
-  "sourceUrl": "https://github.com/bluecyber81/pixl.js/tree/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
-  "publicationNote": "The Web source snapshot is public. Pages deployment and live delivery verification are recorded separately.",
-  "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
-  "sourceTree": "2efcb146aabdbbedd3d717a888f007e91435923c",
-  "qualifiedBuildCommit": "76676c008f4c9bff41fd0ba23329f35e86f3bb57",
-  "qualifiedBuildTree": "b8d2cd8a8ea09fc3bcc6aec52f4e152fcee4d962",
+  "sourceUrl": "https://github.com/bluecyber81/pixl.js/tree/c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "publicationNote": "The source snapshot and its successful Source checks are public. This source archive is prepared for the second Pages delivery; deployment and HTTP verification are recorded separately. The product distribution and Portable bytes are unchanged.",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+  "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "qualifiedBuildTree": "2efcb146aabdbbedd3d717a888f007e91435923c",
   "metadataChangesAfterQualifiedBuild": [
-    "RELEASE_INFO.json"
+    "RELEASE_INFO.json",
+    "docs/validation/WEB3_65_0.json",
+    "docs/validation/WEB3_65_0_METADATA_CORRECTION.json",
+    "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/DEPLOYMENT_PATH_METADATA_FIX.log",
+    "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/FAILED_WEB_CI_JOB_137754178877.log",
+    "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/SHA256SUMS.txt",
+    "docs/validation/WEB3_65_0_evidence/Allmiibo_Web365_Bildsender.jpg",
+    "docs/validation/WEB3_65_0_evidence/CHECKER_USED.py",
+    "docs/validation/WEB3_65_0_evidence/CI_LOG_EXCERPTS.txt",
+    "docs/validation/WEB3_65_0_evidence/CI_PORTABLE_PACKAGE_FROM_LOG.json",
+    "docs/validation/WEB3_65_0_evidence/CI_PORTABLE_VERIFICATION_FROM_LOG.json",
+    "docs/validation/WEB3_65_0_evidence/CI_SUMMARY.json",
+    "docs/validation/WEB3_65_0_evidence/CI_WINDOWS_COUNTS.json",
+    "docs/validation/WEB3_65_0_evidence/EVIDENCE_SCOPE.txt",
+    "docs/validation/WEB3_65_0_evidence/FIRMWARE_SUBSET_JOB_137725847454.log",
+    "docs/validation/WEB3_65_0_evidence/GITHUB_JOBS.json",
+    "docs/validation/WEB3_65_0_evidence/GITHUB_RUN.json",
+    "docs/validation/WEB3_65_0_evidence/HTTP_RESULTS.json",
+    "docs/validation/WEB3_65_0_evidence/HTTP_STRICT_VALIDATION.json",
+    "docs/validation/WEB3_65_0_evidence/HTTP_SUMMARY.json",
+    "docs/validation/WEB3_65_0_evidence/LIVE_WEB_UI.json",
+    "docs/validation/WEB3_65_0_evidence/PAGES_DELIVERY_MANIFEST.json",
+    "docs/validation/WEB3_65_0_evidence/PAGES_DEPLOYMENT.json",
+    "docs/validation/WEB3_65_0_evidence/PAGES_INITIAL_PUBLICATION_RECEIPT.json",
+    "docs/validation/WEB3_65_0_evidence/PAGES_RUN_45189684248.json",
+    "docs/validation/WEB3_65_0_evidence/SHA256SUMS.txt",
+    "docs/validation/WEB3_65_0_evidence/WEB_JOB_137725847614.log",
+    "docs/validation/WEB3_65_0_evidence/WEB_PUBLICATION_RECEIPT.json",
+    "docs/validation/WEB3_65_0_evidence/WINDOWS_JOB_137725846959.log",
+    "docs/validation/WEB3_65_0_evidence/demo_lcd.bin"
   ],
   "packages": [
     {
       "filename": "Allmiibo_Dateimanager_3_65_0_Portable.zip",
       "bytes": 12444903,
       "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
-      "role": "Portable Web distribution; existing Python >=3.8 is required"
+      "role": "Portable Web distribution; existing Python >=3.8 is required",
+      "qualifiedSourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+      "qualifiedSourceCiRun": 45184306115,
+      "sourceWebSubtree": "17920de14a71fc2a07b00b644e88e6956bfe7d06"
+    },
+    {
+      "filename": "Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+      "bytes": 21249310,
+      "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+      "role": "Reproducible public Web source selection, including full Web tests, catalogue exporters and public licensing",
+      "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+      "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+      "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+      "sourceManifestSha256": "41b60637dcbaf626571d3eb8ad6c45fd6f41a08c45e23d4548990d0b3f258fd5",
+      "archiveFiles": 1894
     }
   ],
   "firmware": {
@@ -31,8 +74,15 @@
   "publicationReceipt": "Final Pages commit, deployment and HTTP results are recorded separately.",
   "sourceWebSubtree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
   "sourceArchive": {
-    "status": "pending-final-live-and-web-evidence",
-    "includedInPages": false,
-    "downloadUrl": null
-  }
+    "status": "prepared-for-pages-publication",
+    "includedInPages": true,
+    "downloadUrl": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+    "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+    "twoArchivesByteIdentical": true,
+    "uiBranchArchiveLinkUnchanged": true,
+    "sourceManifestSha256": "41b60637dcbaf626571d3eb8ad6c45fd6f41a08c45e23d4548990d0b3f258fd5"
+  },
+  "sourceQualificationCiRun": 45184306115,
+  "finalSourceHeadCiRun": 45193676314
 }
