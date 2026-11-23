@@ -1,9 +1,9 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.64.0';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.65.0';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.64.0';
-import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.64.0';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.65.0';
+import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.65.0';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -223,9 +223,9 @@ function profileInfo() {
     document.getElementById('lcd-downloads').hidden = oled;
     document.getElementById('oled-downloads').hidden = !oled;
     const sourceLink = document.getElementById('profile-source');
-    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.87-oled-t6' : 'release/lcd-de3101-app674'));
-    setText(sourceLink, oled ? 'Quellcode OLED DE3.87 Test 6' : 'Quellcode LCD DE3.101 / App674',
-        oled ? 'OLED DE3.87 Test 6 source code' : 'LCD DE3.101 / App674 source code');
+    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.87-oled-t6' : 'release/lcd-de3102-app675'));
+    setText(sourceLink, oled ? 'Quellcode OLED DE3.87 Test 6' : 'Quellcode LCD DE3.102 / App675',
+        oled ? 'OLED DE3.87 Test 6 source code' : 'LCD DE3.102 / App675 source code');
     setText(document.getElementById('profile-title'),
         oled ? 'OLED-Firmware übertragen' : 'LCD-Firmware übertragen',
         oled ? 'Update OLED firmware' : 'Update LCD firmware');
@@ -272,7 +272,7 @@ function populateCatalog(id) {
     }
 }
 try {
-    // App674 is already part of the stable catalogue. Append only the retained
+    // App675 is already part of the stable catalogue. Append only the retained
     // historical test choices, without adding a second release entry.
     const runtimeCatalog = {...AllmiiboFirmwareReleases,
         packages:[...AllmiiboFirmwareReleases.packages, ...lcdPreviewPackages]};

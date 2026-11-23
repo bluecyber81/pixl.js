@@ -1,0 +1,2 @@
+333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd  Allmiibo_Dateimanager_3_65_0_Portable.zip
+eec5b7421b63e3aa9f6cb694939a988b4f892351f0e063c8c8784b4a6da40584  MANIFEST.json

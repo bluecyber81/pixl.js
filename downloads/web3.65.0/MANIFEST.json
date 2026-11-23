@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "version": "3.65.0",
+  "application": "Allmiibo Dateimanager",
+  "publicationStatus": "prepared-for-pages-publication",
+  "sourcePublicationStatus": "public",
+  "sourceUrl": "https://github.com/bluecyber81/pixl.js/tree/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "publicationNote": "The Web source snapshot is public. Pages deployment and live delivery verification are recorded separately.",
+  "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourceTree": "2efcb146aabdbbedd3d717a888f007e91435923c",
+  "qualifiedBuildCommit": "76676c008f4c9bff41fd0ba23329f35e86f3bb57",
+  "qualifiedBuildTree": "b8d2cd8a8ea09fc3bcc6aec52f4e152fcee4d962",
+  "metadataChangesAfterQualifiedBuild": [
+    "RELEASE_INFO.json"
+  ],
+  "packages": [
+    {
+      "filename": "Allmiibo_Dateimanager_3_65_0_Portable.zip",
+      "bytes": 12444903,
+      "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+      "role": "Portable Web distribution; existing Python >=3.8 is required"
+    }
+  ],
+  "firmware": {
+    "version": "2.22.0-DE3.102",
+    "counter": 675,
+    "productionCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+  },
+  "zipSelfHashesInSourceArchive": false,
+  "publicationReceipt": "Final Pages commit, deployment and HTTP results are recorded separately.",
+  "sourceWebSubtree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "sourceArchive": {
+    "status": "pending-final-live-and-web-evidence",
+    "includedInPages": false,
+    "downloadUrl": null
+  }
+}
