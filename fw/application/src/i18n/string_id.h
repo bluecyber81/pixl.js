@@ -273,6 +273,8 @@ typedef enum {
     _L_DE3_SAVE_NO_SHORT,
     _L_APP_SWITCH2_WAKE,
     _L_APP_BLE_STREAM,
+    _L_PLAYER_LOOP,
+    _L_PLAYER_COUNTER,
     _L_COUNT,
 } L_StringID;
 #endif

@@ -90,9 +90,9 @@ def main():
             src = fw / 'application/src'; player = src / 'app/player/view'
             report[label + '_source_sha256'] = {name: hashlib.sha256((player / name).read_bytes()).hexdigest()
                                                  for name in ('player_view.c', 'player_view.h')}
-            for suite in ('timer', 'close'):
-                code = (HERE / ('player_timer_host.c' if suite == 'timer' else 'player_close_host.c')).read_text()
-                if suite == 'close':
+            for suite in (('timer', 'close', 'loop') if label == 'candidate' else ('timer', 'close')):
+                code = (HERE / ('player_' + suite + '_host.c')).read_text()
+                if suite in ('close', 'loop'):
                     # This harness uses the simpler existing timer fixture; close behavior is independent.
                     close_folder = temp / 'close'; close_folder.mkdir(exist_ok=True)
                     (close_folder / 'app_timer.h').write_text(fixture.STUB_TIMER)
@@ -112,7 +112,7 @@ def main():
                 built = subprocess.run(cmd + [str(c), '-o', str(exe)], capture_output=True, text=True, timeout=60)
                 assert built.returncode == 0, built.stdout + built.stderr
                 selected = modes if label == 'candidate' else ['init_once', 'delayed_stop', 'late_callback']
-                if suite == 'close': selected = ['close_lifecycles']
+                if suite != 'timer': selected = [suite + '_lifecycles']
                 for mode in selected:
                     result = subprocess.run([str(exe), mode], capture_output=True, text=True, timeout=15)
                     failure_expected = label == 'baseline'

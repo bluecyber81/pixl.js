@@ -31,6 +31,7 @@ def main():
             source=src/'app/player/scene/player_scene_file_browser.c';text=source.read_text()
             report[name+'_source_sha256']=hashlib.sha256(source.read_bytes()).hexdigest()
             code=(HERE/'player_browser_memory_host.c.in').read_text()
+            code=code.replace('@HAS_OPTIONS@',str(int('PLAYER_OPTION_LOOP' in text)))
             code=code.replace('@CALLBACK@',extract(text,'static void player_scene_file_browser_on_selected('))
             code=code.replace('@LOADER@',extract(text,'static void player_scene_file_browser_reload_folders('))
             path=temp/(name+'.c');path.write_text(code);exe=temp/(name+('.exe' if os.name=='nt' else ''))

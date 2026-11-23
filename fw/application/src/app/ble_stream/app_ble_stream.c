@@ -28,11 +28,18 @@ static app_ble_stream_t *s_stream_app;
 static const char *stream_tr(const char *de, const char *en) {
     return getLanguage() == LANGUAGE_DE_DE ? de : en;
 }
+static void stream_reset_codec(app_ble_stream_t *app) {
+    bool had_frame = app->codec.has_frame;
+    stream_codec_reset(&app->codec);
+    /* Session changes and deferred TX failures can clear the image without
+     * passing through RX or waiting for the next link-state notification. */
+    if (had_frame) mui_update(mui());
+}
 static void stream_session(app_ble_stream_t *app) {
     uint32_t generation = ble_session_generation();
     if (app->generation == generation) return;
     app->generation = generation;
-    stream_codec_reset(&app->codec);
+    stream_reset_codec(app);
     app->window_tick = app_timer_cnt_get();
     app->window_frames = app->fps = 0;
     app->has_rssi = false;
@@ -49,7 +56,7 @@ static void stream_flush_ack(void) {
     if (result == NRF_ERROR_RESOURCES) return; /* Retry on actual TX-ready. */
     app->pending_ack = 0;
     if (result != NRF_SUCCESS) {
-        stream_codec_reset(&app->codec);
+        stream_reset_codec(app);
         app->chunk_ack = false;
         ble_nus_abort_transfer();
     }
@@ -75,7 +82,7 @@ static void stream_on_ble_rx(const uint8_t *data, size_t length) {
     if (app->pending_ack) {
         /* A negotiated sender allows one outstanding chunk. Do not replace an
          * unsent acknowledgement and silently lose framing under backpressure. */
-        stream_codec_reset(&app->codec);
+        stream_reset_codec(app);
         app->chunk_ack = false;
         app->pending_ack = 0;
         ble_nus_abort_transfer();
@@ -89,6 +96,7 @@ static void stream_on_ble_rx(const uint8_t *data, size_t length) {
         stream_flush_ack();
         return;
     }
+    bool had_frame = app->codec.has_frame;
     unsigned frames = stream_codec_feed(&app->codec, data, length);
     if (app->chunk_ack) {
         app->pending_ack = 2;
@@ -112,9 +120,10 @@ static void stream_on_ble_rx(const uint8_t *data, size_t length) {
             }
         }
     }
-    /* mui_update only marks dirty: rendering and decoding share foreground
-     * ownership. No per-frame scheduler event or additional frame copy. */
-    mui_update(mui());
+    /* Partial payloads leave the displayed frame unchanged. Preserve immediate
+     * chunk ACKs above; only completed frames or lost validity need drawing.
+     * MUI still coalesces multiple completed frames before foreground drawing. */
+    if (frames || had_frame != app->codec.has_frame) mui_update(mui());
 }
 static void stream_view_on_draw(mui_view_t *view, mui_canvas_t *canvas) {
     app_ble_stream_t *app = view->user_data;

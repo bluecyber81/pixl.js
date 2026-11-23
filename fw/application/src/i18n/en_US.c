@@ -272,4 +272,6 @@ const char * const lang_en_US[_L_COUNT] = {
     [_L_DE3_SAVE_NO_SHORT] = "No",
     [_L_APP_SWITCH2_WAKE] = "Switch2 Wake",
     [_L_APP_BLE_STREAM] = "BLE Stream",
+    [_L_PLAYER_LOOP] = "Loop",
+    [_L_PLAYER_COUNTER] = "Frame counter",
 };

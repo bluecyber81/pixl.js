@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "version": "2.22.0-DE3.102",
+  "counter": 675,
+  "board": "LCD",
+  "status": "local-qualification-in-progress",
+  "productionSourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "applicationSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+  "applicationBytes": 361892,
+  "otaSha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+  "otaBytes": 362493,
+  "signatureVerified": true,
+  "signatureNegativeControls": 3,
+  "hostInitial": {
+    "executed": 198,
+    "passed": 198,
+    "sourceUnchangedDuringRun": true
+  },
+  "linkedArmGroups": {
+    "executed": 13,
+    "passed": 13
+  },
+  "pending": [
+    "Final host snapshot after test-only caption buffer correction",
+    "Independent canonical release build",
+    "Current App675 Z21 crypto/init/resume qualification",
+    "GitHub CI",
+    "Physical device acceptance"
+  ],
+  "physicalDeviceAccess": false,
+  "pfsEngineUnchanged": true,
+  "scope": "This in-progress evidence never upgrades the historical App674 CI results to fresh App675 results."
+}

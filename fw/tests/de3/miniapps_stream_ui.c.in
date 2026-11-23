@@ -20,11 +20,22 @@ static unsigned tx_error;
 static bool rssi_available,mode_pending;
 static char attempted[8][16],messages[8][16];
 static const uint8_t*drawn;
+/* ACTUAL_MUI_EVENT_TYPES */
+enum {MUI_EVENT_ID_ANIM, MUI_EVENT_ID_REDRAW, MUI_EVENT_ID_INPUT};
+#define NRF_LOG_WARNING(...) ((void)0)
+static void app_util_critical_region_enter(uint8_t*n){*n=0;}
+static void app_util_critical_region_exit(uint8_t n){(void)n;}
+static void mui_nav_diag_post(unsigned a,unsigned b,bool c,unsigned d){(void)a;(void)b;(void)c;(void)d;}
+static void mui_nav_diag_deliver(unsigned a,unsigned b){(void)a;(void)b;}
+/* ACTUAL_MUI_EVENT_FUNCTIONS */
+static mui_event_t queued_events[MAX_EVENT_MSG];
+static mui_event_queue_t event_queue;
+static unsigned redraws,frame_draws,waiting_draws;
 static uint32_t app_timer_cnt_get(void){return tick;}
 static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return a-b;}
 static uint32_t ble_session_generation(void){return generation;}
 static void*mui(void){return NULL;}
-static void mui_update(void*p){(void)p;updates++;}
+static void mui_update(void*p){(void)p;updates++;mui_event_t event={.id=MUI_EVENT_ID_REDRAW};mui_event_post(&event_queue,&event);}
 static bool ble_stream_rssi(int8_t*p){*p=-45;return rssi_available;}
 static uint32_t ble_nus_tx_data(const void*p,size_t n){assert(n<16&&attempts<8);memcpy(attempted[attempts++],p,n);if(tx_error)return tx_error;if(!credits)return NRF_ERROR_RESOURCES;credits--;memcpy(messages[sent++],p,n);return 0;}
 static void ble_nus_abort_transfer(void){aborts++;}
@@ -44,8 +55,14 @@ static unsigned checks;
 #define CHECK(x) do{assert(x);checks++;}while(0)
 static app_ble_stream_t app;
 static uint8_t raw[1029];
+static void draw_event(void*context,mui_event_t*event){
+ (void)context;assert(event->id==MUI_EVENT_ID_REDRAW);redraws++;
+ mui_view_t view={.user_data=&app};mui_canvas_t canvas={0};drawn=NULL;
+ stream_view_on_draw(&view,&canvas);if(drawn)frame_draws++;else waiting_draws++;
+}
+static void drain(void){mui_event_dispatch(&event_queue);}
 static void notifications(void){credits=1;attempts=sent=tx_error=0;memset(attempted,0,sizeof attempted);memset(messages,0,sizeof messages);}
-static void reset(void){memset(&app,0,sizeof app);app.generation=UINT32_MAX;s_stream_app=&app;generation++;tick=0;aborts=updates=restarts=kills=0;notifications();rssi_available=mode_pending=false;drawn=NULL;stream_session(&app);}
+static void reset(void){memset(&app,0,sizeof app);app.generation=UINT32_MAX;s_stream_app=&app;generation++;tick=0;aborts=updates=restarts=kills=redraws=frame_draws=waiting_draws=0;event_queue=(mui_event_queue_t){.events=queued_events,.dispatcher=draw_event};notifications();rssi_available=mode_pending=false;drawn=NULL;stream_session(&app);}
 static void hello(void){stream_on_ble_rx((const uint8_t*)"PXSTREAM:ACK1\n",14);}
 static void feed(const uint8_t*p,size_t n){stream_on_ble_rx(p,n);}
 int main(void){
@@ -66,7 +83,49 @@ int main(void){
  generation++;uint8_t delta[]={0xa5,0x5a,2,16,0,255,0,255,0,255,0,255,0,255,0,255,0,255,0,248,0};feed(delta,sizeof delta);CHECK(!app.codec.has_frame&&!app.chunk_ack); /* No old generation reference. */
  stream_link_changed(BLE_LINK_CONNECTED);CHECK(app.connected&&!strcmp(app.address,"01:02:03:04:05:06"));
  mode_pending=true;stream_link_changed(BLE_LINK_INACTIVE);CHECK(!app.connected&&!restarts);mode_pending=false;stream_link_changed(BLE_LINK_INACTIVE);CHECK(restarts==1);
+ /* Actual MUI queue plus actual decoder: separate main-loop passes do not
+  * redraw 51 unchanged partial payloads, while every chunk is ACKed. */
+ reset();hello();unsigned chunks=0,acks=0;
+ for(size_t offset=0;offset<sizeof raw;offset+=20){
+  size_t n=sizeof raw-offset;if(n>20)n=20;notifications();feed(raw+offset,n);chunks++;acks+=sent;drain();
+  CHECK(updates==(offset+n==sizeof raw));CHECK(redraws==updates);
+ }
+ CHECK(chunks==52&&acks==52&&updates==1&&redraws==1&&frame_draws==1&&!waiting_draws);
+ /* Keep the old complete frame while receiving the next one. */
+ unsigned previous=updates;notifications();feed(raw,1028);drain();CHECK(updates==previous&&frame_draws==1&&sent==1);
+ notifications();feed(raw+1028,1);drain();CHECK(updates==previous+1&&frame_draws==2&&sent==1);
+ /* Two complete frames before dispatch still use the real coalescing rule. */
+ reset();feed(raw,sizeof raw);feed(raw,sizeof raw);CHECK(updates==2&&event_queue.count==1);drain();CHECK(redraws==1&&frame_draws==1);
+ /* Invalid headers and RLE data clear a displayed reference exactly when
+  * validity changes. Further discarded bytes do not redraw unchanged UI. */
+ uint8_t bad_header[]={0xa5,0x5a,9,2,0};previous=updates;feed(bad_header,sizeof bad_header);drain();
+ CHECK(!app.codec.has_frame&&updates==previous+1&&waiting_draws==1);
+ uint8_t discard[]={0,0};previous=updates;feed(discard,sizeof discard);drain();CHECK(updates==previous&&waiting_draws==1);
+ feed(raw,sizeof raw);drain();uint8_t bad_rle[]={0xa5,0x5a,1,2,0,255,0};previous=updates;feed(bad_rle,sizeof bad_rle);drain();
+ CHECK(!app.codec.has_frame&&updates==previous+1&&waiting_draws==2);
+ /* TX-ready can fail later, outside RX. Its lost reference must be drawn
+  * before any optional link observer callback. */
+ reset();hello();notifications();feed(raw,sizeof raw);drain();notifications();credits=0;feed(raw,20);CHECK(app.pending_ack==2&&updates==1);
+ notifications();tx_error=NRF_ERROR_INVALID_STATE;stream_flush_ack();drain();CHECK(aborts==1&&!app.codec.has_frame&&!app.chunk_ack&&waiting_draws==1);
+ /* An unnegotiated second chunk while ACK is blocked aborts and invalidates. */
+ reset();hello();notifications();feed(raw,sizeof raw);drain();notifications();credits=0;feed(raw,20);feed(raw+20,20);drain();
+ CHECK(aborts==1&&!app.codec.has_frame&&waiting_draws==1);
+ /* A new generation observed by TX-ready or the first partial RX clears the
+  * old image without drawing partial pixels or retaining negotiation state. */
+ reset();hello();notifications();feed(raw,sizeof raw);drain();generation++;notifications();stream_flush_ack();drain();
+ CHECK(!app.codec.has_frame&&!app.chunk_ack&&!app.pending_ack&&!sent&&waiting_draws==1);
+ feed(raw,sizeof raw);drain();generation++;previous=updates;feed(raw,20);drain();
+ CHECK(!app.codec.has_frame&&app.codec.used==15&&!app.chunk_ack&&updates==previous+1&&waiting_draws==2);
+ stream_link_changed(BLE_LINK_CONNECTED);drain();CHECK(app.connected&&waiting_draws==3);
+ feed(raw+20,sizeof raw-20);drain();CHECK(app.codec.has_frame&&frame_draws==3);
+ /* HUD and inversion remain immediate redraw-only actions; delta reference
+  * bytes and complete-frame ownership are unchanged. */
+ memcpy(reference,app.codec.frame,1024);previous=updates;v.user_data=&app;ev.key=INPUT_KEY_LEFT;stream_view_on_input(&v,&ev);drain();
+ CHECK(app.show_hud&&updates==previous+1&&!memcmp(reference,app.codec.frame,1024));
+ previous=updates;ev.key=INPUT_KEY_RIGHT;stream_view_on_input(&v,&ev);drain();CHECK(app.invert&&updates==previous+1&&!memcmp(reference,app.codec.frame,1024));
+ unsigned late_updates=updates;
  s_stream_app=NULL;stream_flush_ack();stream_on_ble_rx(raw,10);stream_link_changed(BLE_LINK_CONNECTED); /* No late callback after free. */
- printf("PASS %u stream UI/ACK assertions; actual callbacks, session reset and canonical reference\n",checks);
+ CHECK(updates==late_updates);
+ printf("PASS %u stream UI/ACK/redraw assertions; actual callbacks, codec and MUI coalescing; 52 chunks -> 52 ACKs and 1 dispatched redraw\n",checks);
  return 0;
 }

@@ -18,8 +18,14 @@ def run(name,code,extra=()):
         subprocess.run(cmd,check=True,timeout=60);subprocess.run([str(exe)],check=True,timeout=30)
 stream=(SRC/'app/ble_stream/app_ble_stream.c').read_text()
 struct=stream[stream.index('typedef struct {'):stream.index('static const char *stream_tr')]
-callbacks='\n'.join(function(stream,n) for n in ('stream_session','stream_flush_ack','stream_link_changed','stream_on_ble_rx','stream_view_on_draw','stream_view_on_input'))
-run('miniapps_stream_ui',(HERE/'miniapps_stream_ui.c.in').read_text().replace('/* ACTUAL_STREAM_UI */',struct+callbacks),(SRC/'app/ble_stream/stream_codec.c',))
+callbacks='\n'.join(function(stream,n) for n in ('stream_reset_codec','stream_session','stream_flush_ack','stream_link_changed','stream_on_ble_rx','stream_view_on_draw','stream_view_on_input'))
+event_types='\n'.join(line for line in (SRC/'mui/mui_event.h').read_text().splitlines() if not line.startswith('#include'))
+event_source=(SRC/'mui/mui_event.c').read_text()
+event_functions='\n'.join(function(event_source,n) for n in ('mui_event_make_room_for_input','mui_event_post','mui_event_dispatch'))
+run('miniapps_stream_ui',(HERE/'miniapps_stream_ui.c.in').read_text()
+    .replace('/* ACTUAL_STREAM_UI */',struct+callbacks)
+    .replace('/* ACTUAL_MUI_EVENT_TYPES */',event_types)
+    .replace('/* ACTUAL_MUI_EVENT_FUNCTIONS */',event_functions),(SRC/'app/ble_stream/stream_codec.c',))
 
 switch=(SRC/'app/switch2_wake/app_switch2_wake.c').read_text()
 types=switch[switch.index('typedef enum {'):switch.index('static const char *s2_tr')]

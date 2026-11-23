@@ -11,6 +11,37 @@ static bool m_player_frame_timer_initialized;
 static bool m_player_frame_timer_faulted;
 static player_view_t *volatile m_player_timer_owner;
 
+static bool player_view_close_file(player_view_t *player) {
+    if (!player->file_open) return true;
+    player->file_open = false;
+    if (player->p_dirver->close_file(&player->fd) == VFS_OK) return true;
+    /* No retrying owner remains after a failed loop/stop close. */
+    vfs_abort_file(player->p_dirver, &player->fd);
+    return false;
+}
+
+static bool player_view_open_file(player_view_t *player, v_header_t *header, size_t *frame_size) {
+    vfs_driver_t *driver = player->p_dirver;
+    vfs_obj_t obj;
+    uint8_t raw[PLAYER_HEADER_BYTES];
+    if (driver->stat_file(player->path, &obj) != VFS_OK || obj.type != VFS_TYPE_REG ||
+        driver->open_file(player->path, &player->fd, VFS_MODE_READONLY) != VFS_OK) return false;
+    player->file_open = true;
+    return driver->read_file(&player->fd, raw, sizeof(raw)) == (int32_t)sizeof(raw) &&
+           player_parse_header(raw, sizeof(raw), obj.size, SCREEN_WIDTH, SCREEN_HEIGHT, header, frame_size);
+}
+
+static bool player_view_restart_file(player_view_t *player) {
+    /* The VFS has no seek operation. Reopen read-only, retaining the existing
+     * frame buffer and timer. A changed header must not resize or overrun it. */
+    v_header_t header;
+    size_t frame_size;
+    if (!player_view_close_file(player) || !player_view_open_file(player, &header, &frame_size) ||
+        frame_size != player->frame_buffer_size || memcmp(&header, &player->header, sizeof(header))) return false;
+    player->played_frames = 0;
+    return true;
+}
+
 static void player_view_finished(player_view_t *p_view) {
     player_view_stop(p_view);
     if (p_view->event_cb) p_view->event_cb(PLAYER_VIEW_EVENT_PLAY_STOPPED, p_view);
@@ -31,8 +62,15 @@ static void player_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     if (player->frame_due) {
         player->frame_due = false;
         if (player->played_frames >= player->header.frame_count) {
-            player_view_finished(player);
-            return;
+            if (!player->loop) {
+                player_view_finished(player);
+                return;
+            }
+            if (!player_view_restart_file(player)) {
+                player->play_error = true;
+                player_view_finished(player);
+                return;
+            }
         }
         int32_t read = player->p_dirver->read_file(&player->fd, player->frame_buffer, player->frame_buffer_size);
         if (read != (int32_t)player->frame_buffer_size) {
@@ -48,12 +86,14 @@ static void player_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         uint8_t x = (mui_canvas_get_width(p_canvas) - player->header.width) / 2;
         uint8_t y = (mui_canvas_get_height(p_canvas) - player->header.height) / 2;
         mui_canvas_draw_xbm(p_canvas, x, y, player->header.width, player->header.height, player->frame_buffer);
-        char txt[10];
-        snprintf(txt, sizeof(txt), "%u", (unsigned)player->played_frames);
-        mui_canvas_set_draw_color(p_canvas, 0);
-        mui_canvas_draw_box(p_canvas, 0, 0, mui_canvas_get_utf8_width(p_canvas, txt), 12);
-        mui_canvas_set_draw_color(p_canvas, 1);
-        mui_canvas_draw_utf8(p_canvas, 0, 10, txt);
+        if (player->show_counter) {
+            char txt[10];
+            snprintf(txt, sizeof(txt), "%u", (unsigned)player->played_frames);
+            mui_canvas_set_draw_color(p_canvas, 0);
+            mui_canvas_draw_box(p_canvas, 0, 0, mui_canvas_get_utf8_width(p_canvas, txt), 12);
+            mui_canvas_set_draw_color(p_canvas, 1);
+            mui_canvas_draw_utf8(p_canvas, 0, 10, txt);
+        }
     }
 }
 
@@ -117,15 +157,13 @@ bool player_view_play(player_view_t *p_view, vfs_drive_t drive, const char *path
      * silently redirecting the shared timer while its old file stays open. */
     if (m_player_frame_timer_faulted || (m_player_timer_owner && m_player_timer_owner != p_view)) return false;
     vfs_driver_t *driver = vfs_get_driver(drive);
-    vfs_obj_t obj;
-    uint8_t raw[PLAYER_HEADER_BYTES];
-    if (!driver || !path || driver->stat_file(path, &obj) != VFS_OK || obj.type != VFS_TYPE_REG) return false;
-    if (driver->open_file(path, &p_view->fd, VFS_MODE_READONLY) != VFS_OK) return false;
+    if (!driver || !path) return false;
+    size_t path_size = 0;
+    while (path_size < sizeof(p_view->path) && path[path_size]) path_size++;
+    if (!path_size || path_size == sizeof(p_view->path)) return false;
+    memmove(p_view->path, path, path_size + 1);
     p_view->p_dirver = driver;
-    p_view->file_open = true;
-    int32_t read = driver->read_file(&p_view->fd, raw, sizeof(raw));
-    if (read != (int32_t)sizeof(raw) || !player_parse_header(raw, sizeof(raw), obj.size, SCREEN_WIDTH, SCREEN_HEIGHT,
-                                                          &p_view->header, &p_view->frame_buffer_size)) {
+    if (!player_view_open_file(p_view, &p_view->header, &p_view->frame_buffer_size)) {
         player_view_stop(p_view);
         return false;
     }
@@ -167,14 +205,6 @@ void player_view_stop(player_view_t *p_view) {
         p_view->frame_buffer = NULL;
     }
     p_view->frame_buffer_size = 0;
-    if (p_view->file_open) {
-        p_view->file_open = false;
-        if (p_view->p_dirver->close_file(&p_view->fd) != VFS_OK) {
-            /* The stopped player has no retrying owner after exit. Release a
-             * failed-close descriptor like the other operation-local readers. */
-            p_view->play_error = true;
-            vfs_abort_file(p_view->p_dirver, &p_view->fd);
-        }
-    }
+    if (!player_view_close_file(p_view)) p_view->play_error = true;
     p_view->p_dirver = NULL;
 }
