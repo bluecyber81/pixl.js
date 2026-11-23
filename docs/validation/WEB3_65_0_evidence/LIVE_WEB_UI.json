@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "observedAtUtc": "2026-11-23T14:10:00.129181+00:00",
+  "repository": "bluecyber81/pixl.js",
+  "version": "3.65.0",
+  "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "pagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "pagesTree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+  "deploymentRun": 45189684248,
+  "method": "Interactive published-site UI checks using the approved CUA browser API; DOM/AX state, native UI actions, and actual completed download. No shell browser automation.",
+  "url": "https://bluecyber81.github.io/pixl.js/?workspace=stream",
+  "passed": true,
+  "checks": [
+    {
+      "name": "Published version and sender deep link",
+      "passed": true,
+      "observed": "Allmiibo Dateimanager 3.65.0; LCD DE3.102 / App675; stream workspace open; LCD 128 x 64 preview visibly renders the animated circle and wave."
+    },
+    {
+      "name": "Rotation, conversion, fit and rate controls",
+      "passed": true,
+      "observed": "90 degrees, Photo dot pattern, Crop to fill and 10 frames/s selectable; selected values confirmed in UI."
+    },
+    {
+      "name": "Options persist across workspace switch and page reload",
+      "passed": true,
+      "observed": "After Files -> Image & video -> Reload, the same four selected option values remained visible."
+    },
+    {
+      "name": "Reset restores defaults",
+      "passed": true,
+      "observed": "Fit whole image, 0 degrees, Clear shapes, threshold 128 and 5 frames/s restored."
+    },
+    {
+      "name": "Player export preparation and completion",
+      "passed": true,
+      "observed": "Default duration 10 seconds: 50 frames, 51,216 B, 5 frames/s. Create player file completed and exposed a separate Save file link. Nothing was automatically written to a device."
+    },
+    {
+      "name": "Actual player-file download",
+      "passed": true,
+      "observed": "Clicking Save file completed a browser download. Binary header and exact file length checked below."
+    },
+    {
+      "name": "German and English sender labels",
+      "passed": true,
+      "observed": "Language menu switches all observed sender controls, export summary and save instructions to English; restored German before completion."
+    },
+    {
+      "name": "App675 package selection and browser hash check",
+      "passed": true,
+      "observed": "LCD selection offers App675 and retains earlier packages. Opening the selected package in DFU then Load and check package completed with Package SHA-256 verified, application counter 675, hardware field 52 and accepted SoftDevice FWID 0x0126. No DFU device selected.",
+      "url": "https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app"
+    },
+    {
+      "name": "Catalogue game filter and new figure details",
+      "passed": true,
+      "observed": "956 entries. Kirby Star Allies plus search Sword returns Kirby mit Schwert & Dragoon, ID 1f00010004c51e03. Details contain the corresponding Star Allies usage and Nintendo source, along with the other supported Switch/ Switch 2 titles; Miitopia explicitly excludes 3DS for this figure."
+    }
+  ],
+  "download": {
+    "file": "demo_lcd.bin",
+    "bytes": 51216,
+    "sha256": "2e87ab889d7bc208d2ce63147f9345a455be176e02a1bb7c3f0198ff5089d369",
+    "magic": "0x50495856",
+    "frames": 50,
+    "fps": 5,
+    "width": 128,
+    "height": 64,
+    "reserved": 0,
+    "headerHex": "56584950320005008000400000000000",
+    "exactHeaderAndPayloadLength": true
+  },
+  "screenshot": {
+    "file": "Allmiibo_Web365_Bildsender.jpg",
+    "bytes": 115422,
+    "sha256": "d406ae576dd393bf90166110251a233a3e476caf0870bdecd280f16a341f7991"
+  },
+  "limits": [
+    "The cloud browser reports no Web Bluetooth support; sending and DFU transfer were not performed.",
+    "No physical LCD/OLED, NFC, Switch/Switch 2, radio throughput, energy or hardware frame-rate test.",
+    "These are nine scoped interactive checks, not a complete browser regression suite.",
+    "Local media upload, codec coverage, drag/drop and physical playback retain their separately documented automated or device-test scope."
+  ]
+}

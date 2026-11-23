@@ -1,0 +1,14 @@
+{
+  "branch": "gh-pages",
+  "commit": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "tree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+  "previousCommit": "92bfdd0d15d5893d227aa5fcc8fd66974c6750d0",
+  "localCandidateCommit": "bb79c35d48a11cece9738a88725009db4afd4709",
+  "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourceCiRun": 45184306115,
+  "sourceCiConclusion": "success",
+  "portableBlob": "14af628208fdc34be269e532d06b0b71f96da86b",
+  "publishedRef": true,
+  "deploymentVerified": false,
+  "expectedHttpFiles": 323
+}

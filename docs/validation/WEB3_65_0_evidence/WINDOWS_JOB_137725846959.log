@@ -1,0 +1,268 @@
+﻿2026-11-23T13:28:50.9718549Z Current runner version: '2.338.2'
+2026-11-23T13:28:50.9745476Z ##[group]Runner Image Provisioner
+2026-11-23T13:28:50.9746508Z Hosted Compute Agent
+2026-11-23T13:28:50.9747104Z Version: 20261111.635
+2026-11-23T13:28:50.9747732Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-23T13:28:50.9748429Z Build Date: 2026-11-11T01:49:01Z
+2026-11-23T13:28:50.9749102Z Worker ID: {e2f4b184-d9fb-467e-83b4-7df5456a9c7b}
+2026-11-23T13:28:50.9749784Z Region: westus
+2026-11-23T13:28:50.9750277Z Cloud: Azure
+2026-11-23T13:28:50.9750807Z ##[endgroup]
+2026-11-23T13:28:50.9752248Z ##[group]Operating System
+2026-11-23T13:28:50.9752912Z Microsoft Windows Server 2025
+2026-11-23T13:28:50.9753486Z 10.0.26100
+2026-11-23T13:28:50.9753951Z Datacenter
+2026-11-23T13:28:50.9754460Z ##[endgroup]
+2026-11-23T13:28:50.9754980Z ##[group]Runner Image
+2026-11-23T13:28:50.9755549Z Image: windows-2025-vs2026
+2026-11-23T13:28:50.9756129Z Version: 20261116.315.1
+2026-11-23T13:28:50.9757645Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261116.315/images/windows/Windows2025-VS2026-Readme.md
+2026-11-23T13:28:50.9759245Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261116.315
+2026-11-23T13:28:50.9760185Z ##[endgroup]
+2026-11-23T13:28:50.9761270Z ##[group]GITHUB_TOKEN Permissions
+2026-11-23T13:28:50.9763075Z Contents: read
+2026-11-23T13:28:50.9763669Z Metadata: read
+2026-11-23T13:28:50.9764210Z ##[endgroup]
+2026-11-23T13:28:50.9766875Z Secret source: Actions
+2026-11-23T13:28:50.9767776Z Cache mode: write
+2026-11-23T13:28:50.9768571Z Prepare workflow directory
+2026-11-23T13:28:51.0201150Z Prepare all required actions
+2026-11-23T13:28:51.0275206Z Getting action download info
+2026-11-23T13:28:51.3781997Z Download action repository 'actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-11-23T13:28:51.5189035Z Download action repository 'actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-11-23T13:28:51.8043731Z Complete job name: Windows portable launcher
+2026-11-23T13:28:51.9586595Z ##[group]Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+2026-11-23T13:28:51.9587889Z with:
+2026-11-23T13:28:51.9588345Z   persist-credentials: false
+2026-11-23T13:28:51.9588901Z   repository: bluecyber81/pixl.js
+2026-11-23T13:28:51.9593425Z   token: ***
+2026-11-23T13:28:51.9593875Z   ssh-strict: true
+2026-11-23T13:28:51.9594317Z   ssh-user: git
+2026-11-23T13:28:51.9594738Z   clean: true
+2026-11-23T13:28:51.9595181Z   sparse-checkout-cone-mode: true
+2026-11-23T13:28:51.9595716Z   fetch-depth: 1
+2026-11-23T13:28:51.9596375Z   fetch-tags: false
+2026-11-23T13:28:51.9596888Z   show-progress: true
+2026-11-23T13:28:51.9597338Z   lfs: false
+2026-11-23T13:28:51.9597751Z   submodules: false
+2026-11-23T13:28:51.9598207Z   set-safe-directory: true
+2026-11-23T13:28:51.9598720Z   allow-unsafe-pr-checkout: false
+2026-11-23T13:28:51.9599766Z ##[endgroup]
+2026-11-23T13:28:52.1125288Z Syncing repository: bluecyber81/pixl.js
+2026-11-23T13:28:52.1128366Z ##[group]Getting Git version info
+2026-11-23T13:28:52.1129634Z Working directory is 'D:\a\pixl.js\pixl.js'
+2026-11-23T13:28:52.2180110Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-23T13:28:52.5137844Z git version 2.56.1.windows.1
+2026-11-23T13:28:52.5195943Z ##[endgroup]
+2026-11-23T13:28:52.5215445Z Temporarily overriding HOME='D:\a\_temp\7a8ba1e1-bd81-465d-a4b9-a175405a4e37' before making global git config changes
+2026-11-23T13:28:52.5216888Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T13:28:52.5225784Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\pixl.js\pixl.js
+2026-11-23T13:28:52.5925771Z Deleting the contents of 'D:\a\pixl.js\pixl.js'
+2026-11-23T13:28:52.5931688Z ##[group]Determining repository object format
+2026-11-23T13:28:52.5934562Z ##[endgroup]
+2026-11-23T13:28:52.5935361Z ##[group]Initializing the repository
+2026-11-23T13:28:52.5943638Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\pixl.js\pixl.js
+2026-11-23T13:28:52.6852368Z Initialized empty Git repository in D:/a/pixl.js/pixl.js/.git/
+2026-11-23T13:28:52.6907961Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/bluecyber81/pixl.js
+2026-11-23T13:28:52.7533491Z ##[endgroup]
+2026-11-23T13:28:52.7534613Z ##[group]Disabling automatic garbage collection
+2026-11-23T13:28:52.7542313Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-11-23T13:28:52.7914607Z ##[endgroup]
+2026-11-23T13:28:52.7916317Z ##[group]Setting up auth
+2026-11-23T13:28:52.7917446Z Removing SSH command configuration
+2026-11-23T13:28:52.7927612Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T13:28:52.8304516Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-23T13:28:54.2069940Z Removing HTTP extra header
+2026-11-23T13:28:54.2079543Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T13:28:54.2460161Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-23T13:28:54.7974890Z Removing includeIf entries pointing to credentials config files
+2026-11-23T13:28:54.7991553Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T13:28:54.8371539Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-23T13:28:55.4105101Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-11-23T13:28:55.4526332Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/pixl.js/pixl.js/.git.path D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:28:55.4946001Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:28:55.5379199Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:28:55.5760153Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:28:55.6160159Z ##[endgroup]
+2026-11-23T13:28:55.6160978Z ##[group]Fetching the repository
+2026-11-23T13:28:55.6162691Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4:refs/remotes/origin/web-app675
+2026-11-23T13:28:59.4215905Z From https://github.com/bluecyber81/pixl.js
+2026-11-23T13:28:59.4216824Z  * [new ref]         a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4 -> origin/web-app675
+2026-11-23T13:28:59.4267961Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/web-app675
+2026-11-23T13:28:59.4679157Z   origin/web-app675
+2026-11-23T13:28:59.4725536Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/web-app675
+2026-11-23T13:28:59.5106155Z a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4
+2026-11-23T13:28:59.5137699Z ##[endgroup]
+2026-11-23T13:28:59.5138375Z ##[group]Determining the checkout info
+2026-11-23T13:28:59.5140564Z ##[endgroup]
+2026-11-23T13:28:59.5149625Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-11-23T13:28:59.5647678Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-11-23T13:28:59.6016198Z ##[group]Checking out the ref
+2026-11-23T13:28:59.6024998Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B web-app675 refs/remotes/origin/web-app675
+2026-11-23T13:29:00.6623440Z Updating files:  69% (2271/3287)
+2026-11-23T13:29:00.6759506Z Updating files:  70% (2301/3287)
+2026-11-23T13:29:00.6858208Z Updating files:  71% (2334/3287)
+2026-11-23T13:29:00.6935277Z Updating files:  72% (2367/3287)
+2026-11-23T13:29:00.7021567Z Updating files:  73% (2400/3287)
+2026-11-23T13:29:00.7170084Z Updating files:  74% (2433/3287)
+2026-11-23T13:29:00.7370862Z Updating files:  75% (2466/3287)
+2026-11-23T13:29:00.7514802Z Updating files:  76% (2499/3287)
+2026-11-23T13:29:00.7603435Z Updating files:  77% (2531/3287)
+2026-11-23T13:29:00.7713955Z Updating files:  78% (2564/3287)
+2026-11-23T13:29:00.7814627Z Updating files:  79% (2597/3287)
+2026-11-23T13:29:00.7904394Z Updating files:  80% (2630/3287)
+2026-11-23T13:29:00.7987194Z Updating files:  81% (2663/3287)
+2026-11-23T13:29:00.8094233Z Updating files:  82% (2696/3287)
+2026-11-23T13:29:00.8188698Z Updating files:  83% (2729/3287)
+2026-11-23T13:29:00.8326008Z Updating files:  84% (2762/3287)
+2026-11-23T13:29:00.8615406Z Updating files:  85% (2794/3287)
+2026-11-23T13:29:00.8706184Z Updating files:  86% (2827/3287)
+2026-11-23T13:29:00.8795748Z Updating files:  87% (2860/3287)
+2026-11-23T13:29:00.8882101Z Updating files:  88% (2893/3287)
+2026-11-23T13:29:00.9003322Z Updating files:  89% (2926/3287)
+2026-11-23T13:29:00.9118928Z Updating files:  90% (2959/3287)
+2026-11-23T13:29:00.9233146Z Updating files:  91% (2992/3287)
+2026-11-23T13:29:00.9349167Z Updating files:  92% (3025/3287)
+2026-11-23T13:29:00.9452849Z Updating files:  93% (3057/3287)
+2026-11-23T13:29:00.9551662Z Updating files:  94% (3090/3287)
+2026-11-23T13:29:00.9654529Z Updating files:  95% (3123/3287)
+2026-11-23T13:29:00.9751227Z Updating files:  96% (3156/3287)
+2026-11-23T13:29:00.9846969Z Updating files:  97% (3189/3287)
+2026-11-23T13:29:00.9946973Z Updating files:  98% (3222/3287)
+2026-11-23T13:29:01.0040784Z Updating files:  99% (3255/3287)
+2026-11-23T13:29:01.0043831Z Updating files: 100% (3287/3287)
+2026-11-23T13:29:01.0044399Z Updating files: 100% (3287/3287), done.
+2026-11-23T13:29:01.0217513Z Switched to a new branch 'web-app675'
+2026-11-23T13:29:01.0235802Z branch 'web-app675' set up to track 'origin/web-app675'.
+2026-11-23T13:29:01.0383948Z ##[endgroup]
+2026-11-23T13:29:01.0795336Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-11-23T13:29:01.1151823Z a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4
+2026-11-23T13:29:01.1193401Z ##[group]Removing auth
+2026-11-23T13:29:01.1193734Z Removing SSH command configuration
+2026-11-23T13:29:01.1202617Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T13:29:01.1582102Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-23T13:29:01.6920378Z Removing HTTP extra header
+2026-11-23T13:29:01.6928865Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T13:29:01.7330284Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-23T13:29:02.2804932Z Removing includeIf entries pointing to credentials config files
+2026-11-23T13:29:02.2812653Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T13:29:02.3149626Z includeif.gitdir:D:/a/pixl.js/pixl.js/.git.path
+2026-11-23T13:29:02.3150281Z includeif.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T13:29:02.3150761Z includeif.gitdir:/github/workspace/.git.path
+2026-11-23T13:29:02.3151916Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-23T13:29:02.3194178Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/pixl.js/pixl.js/.git.path
+2026-11-23T13:29:02.3530192Z D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.3573270Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/pixl.js/pixl.js/.git.path D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.3943359Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T13:29:02.4286300Z D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.4330926Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.4711225Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-23T13:29:02.5050362Z /github/runner_temp/git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.5091119Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.5479179Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-23T13:29:02.5828029Z /github/runner_temp/git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.5872352Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:02.6254467Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-23T13:29:03.1691548Z Removing credentials config 'D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config'
+2026-11-23T13:29:03.1703617Z ##[endgroup]
+2026-11-23T13:29:03.2115013Z ##[group]Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+2026-11-23T13:29:03.2115449Z with:
+2026-11-23T13:29:03.2115636Z   node-version: 26.13.0
+2026-11-23T13:29:03.2115867Z   check-latest: false
+2026-11-23T13:29:03.2175937Z   token: ***
+2026-11-23T13:29:03.2176187Z   package-manager-cache: true
+2026-11-23T13:29:03.2176442Z ##[endgroup]
+2026-11-23T13:29:03.3853212Z Attempting to download 26.13.0...
+2026-11-23T13:29:04.0705324Z Acquiring 26.13.0 - x64 from https://github.com/actions/node-versions/releases/download/26.13.0-41378513395/node-26.13.0-win32-x64.7z
+2026-11-23T13:29:04.4763333Z Extracting ...
+2026-11-23T13:29:06.8640804Z Adding to the cache ...
+2026-11-23T13:29:10.2142057Z ##[group]Environment details
+2026-11-23T13:29:11.2971613Z node: v26.13.0
+2026-11-23T13:29:11.2971947Z npm: 11.20.0
+2026-11-23T13:29:11.2972141Z yarn: 1.22.22
+2026-11-23T13:29:11.2972569Z ##[endgroup]
+2026-11-23T13:29:11.3285947Z ##[group]Run python -B tests/test_windows_launcher_r2.py
+2026-11-23T13:29:11.3286436Z [36;1mpython -B tests/test_windows_launcher_r2.py[0m
+2026-11-23T13:29:11.3937983Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-23T13:29:11.3938423Z ##[endgroup]
+2026-11-23T13:29:13.6235509Z test_ambiguous_port_timeout_preserves_state (__main__.LauncherTests.test_ambiguous_port_timeout_preserves_state) ... ok
+2026-11-23T13:29:14.2932357Z test_bind_failure_keeps_old_state_and_reports_own_error (__main__.LauncherTests.test_bind_failure_keeps_old_state_and_reports_own_error) ... ok
+2026-11-23T13:29:15.6475648Z test_bom_state_from_previous_powershell_launcher (__main__.LauncherTests.test_bom_state_from_previous_powershell_launcher) ... ok
+2026-11-23T13:29:16.6880656Z test_browser_failure_keeps_started_server (__main__.LauncherTests.test_browser_failure_keeps_started_server) ... ok
+2026-11-23T13:29:16.9199029Z test_cli_invalid_port_and_argument (__main__.LauncherTests.test_cli_invalid_port_and_argument) ... ok
+2026-11-23T13:29:17.9762343Z test_cold_start_ignores_simulated_failed_legacy_probe (__main__.LauncherTests.test_cold_start_ignores_simulated_failed_legacy_probe) ... ok
+2026-11-23T13:29:18.1104378Z test_direct_propagates_server_exit_code (__main__.LauncherTests.test_direct_propagates_server_exit_code) ... ok
+2026-11-23T13:29:19.3977882Z test_existing_health_match_reuses_without_probe_or_spawn (__main__.LauncherTests.test_existing_health_match_reuses_without_probe_or_spawn) ... ok
+2026-11-23T13:29:19.5077098Z test_folder_lock_rejects_second_operation (__main__.LauncherTests.test_folder_lock_rejects_second_operation) ... ok
+2026-11-23T13:29:20.3375021Z test_foreign_listener_is_never_adopted_or_stopped (__main__.LauncherTests.test_foreign_listener_is_never_adopted_or_stopped) ... ok
+2026-11-23T13:29:20.3491116Z test_health_errors_expose_exception_details_without_token (__main__.LauncherTests.test_health_errors_expose_exception_details_without_token) ... ok
+2026-11-23T13:29:20.3493212Z test_linux_bind_behavior_is_preserved (__main__.LauncherTests.test_linux_bind_behavior_is_preserved) ... skipped 'Linux/POSIX socket behavior check'
+2026-11-23T13:29:20.5592246Z test_malformed_state_kept_without_server_start (__main__.LauncherTests.test_malformed_state_kept_without_server_start) ... ok
+2026-11-23T13:29:21.9242753Z test_manifest_version_drives_real_controller_and_health_outside_working_directory (__main__.LauncherTests.test_manifest_version_drives_real_controller_and_health_outside_working_directory) ... ok
+2026-11-23T13:29:22.0370528Z test_missing_dist_fails_before_spawn (__main__.LauncherTests.test_missing_dist_fails_before_spawn) ... ok
+2026-11-23T13:29:22.1560616Z test_missing_version_manifest_fails_before_starting_a_server (__main__.LauncherTests.test_missing_version_manifest_fails_before_starting_a_server) ... ok
+2026-11-23T13:29:22.6674394Z test_real_direct_bind_error_has_no_probe_or_state_change (__main__.LauncherTests.test_real_direct_bind_error_has_no_probe_or_state_change) ... ok
+2026-11-23T13:29:22.6677369Z test_real_direct_start_ctrl_c_and_unchanged_state (__main__.LauncherTests.test_real_direct_start_ctrl_c_and_unchanged_state) ... skipped 'POSIX signal integration; native Windows Ctrl+C is not tested here'
+2026-11-23T13:29:24.0546986Z test_real_start_repeat_health_and_stop_in_nontrivial_path (__main__.LauncherTests.test_real_start_repeat_health_and_stop_in_nontrivial_path) ... ok
+2026-11-23T13:29:24.0691191Z test_spawn_failure_reports_errno_winerror_without_token (__main__.LauncherTests.test_spawn_failure_reports_errno_winerror_without_token) ... ok
+2026-11-23T13:29:27.3185464Z test_stale_valid_state_can_restart (__main__.LauncherTests.test_stale_valid_state_can_restart) ... ok
+2026-11-23T13:29:27.4294025Z test_state_token_mismatch_rejected (__main__.LauncherTests.test_state_token_mismatch_rejected) ... ok
+2026-11-23T13:29:28.4614280Z test_state_write_failure_cleans_owned_child (__main__.LauncherTests.test_state_write_failure_cleans_owned_child) ... ok
+2026-11-23T13:29:28.4732817Z test_stop_explicit_refusal_removes_stale_state (__main__.LauncherTests.test_stop_explicit_refusal_removes_stale_state) ... ok
+2026-11-23T13:29:28.4871359Z test_stop_timeout_and_simulated_winerror_keep_state_with_details (__main__.LauncherTests.test_stop_timeout_and_simulated_winerror_keep_state_with_details) ... ok
+2026-11-23T13:29:28.4999310Z test_windows_exclusive_bind_options_simulated_before_bind (__main__.LauncherTests.test_windows_exclusive_bind_options_simulated_before_bind) ... ok
+2026-11-23T13:29:28.5001767Z 
+2026-11-23T13:29:28.5003191Z ----------------------------------------------------------------------
+2026-11-23T13:29:28.5003837Z Ran 26 tests in 14.927s
+2026-11-23T13:29:28.5004060Z 
+2026-11-23T13:29:28.5004182Z OK (skipped=2)
+2026-11-23T13:29:28.5005175Z Der lokale Dateimanager auf Port 54690 ist beendet.
+2026-11-23T13:29:28.5006105Z Dateimanager 3.65.0: http://127.0.0.1:54696/ (nur auf diesem PC erreichbar)
+2026-11-23T13:29:28.5006882Z Beenden: Stop-Dateimanager.cmd -Port 54696
+2026-11-23T13:29:28.5007486Z Der lokale Dateimanager auf Port 54696 ist beendet.
+2026-11-23T13:29:28.5008079Z Der Dateimanager dieser Kopie laeuft bereits.
+2026-11-23T13:29:28.5008852Z Dateimanager 3.65.0: http://127.0.0.1:54702/ (nur auf diesem PC erreichbar)
+2026-11-23T13:29:28.5009591Z Beenden: Stop-Dateimanager.cmd -Port 54702
+2026-11-23T13:29:28.5010264Z Kein Server auf Port 54745 aktiv; veralteter Status entfernt.
+2026-11-23T13:29:28.6329593Z ##[group]Run node --test tests/launcher.test.cjs
+2026-11-23T13:29:28.6330028Z [36;1mnode --test tests/launcher.test.cjs[0m
+2026-11-23T13:29:28.6400197Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-23T13:29:28.6400547Z ##[endgroup]
+2026-11-23T13:29:29.4673307Z ✔ local server identity, routes and authenticated self-stop reject wrong token, Origin and Host (358.7074ms)
+2026-11-23T13:29:43.3966573Z ✔ Windows launchers keep two ports independent, reject altered tokens and preserve legacy state (11888.9078ms)
+2026-11-23T13:29:43.4212429Z ✔ Windows failed state persistence asks only the newly started server to stop itself (2160.4171ms)
+2026-11-23T13:29:43.4214062Z ✔ launcher wrappers forward arguments and have no PID-based termination (0.9494ms)
+2026-11-23T13:29:43.4330715Z ℹ tests 4
+2026-11-23T13:29:43.4331430Z ℹ suites 0
+2026-11-23T13:29:43.4331846Z ℹ pass 4
+2026-11-23T13:29:43.4332225Z ℹ fail 0
+2026-11-23T13:29:43.4332627Z ℹ cancelled 0
+2026-11-23T13:29:43.4334248Z ℹ skipped 0
+2026-11-23T13:29:43.4334759Z ℹ todo 0
+2026-11-23T13:29:43.4335066Z ℹ duration_ms 14484.6913
+2026-11-23T13:29:43.5649433Z Post job cleanup.
+2026-11-23T13:29:43.7635679Z Post job cleanup.
+2026-11-23T13:29:43.9586714Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-23T13:29:43.9971164Z git version 2.56.1.windows.1
+2026-11-23T13:29:44.0060776Z Temporarily overriding HOME='D:\a\_temp\3f88413e-d091-4e22-be26-798aa4dce48c' before making global git config changes
+2026-11-23T13:29:44.0062307Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T13:29:44.0073088Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\pixl.js\pixl.js
+2026-11-23T13:29:44.0543462Z Removing SSH command configuration
+2026-11-23T13:29:44.0556259Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T13:29:44.0986344Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-23T13:29:44.6594943Z Removing HTTP extra header
+2026-11-23T13:29:44.6605476Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T13:29:44.6999755Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-23T13:29:45.2960799Z Removing includeIf entries pointing to credentials config files
+2026-11-23T13:29:45.2973216Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T13:29:45.3324763Z includeif.gitdir:D:/a/pixl.js/pixl.js/.git.path
+2026-11-23T13:29:45.3325776Z includeif.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T13:29:45.3375881Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/pixl.js/pixl.js/.git.path
+2026-11-23T13:29:45.3756244Z D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:45.3803349Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/pixl.js/pixl.js/.git.path D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:45.4191725Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T13:29:45.4531598Z D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:45.4573479Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/pixl.js/pixl.js/.git/worktrees/*.path D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config
+2026-11-23T13:29:45.4950051Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-23T13:29:46.0834517Z Removing credentials config 'D:\a\_temp\git-credentials-999c2770-901f-444d-8fd2-a265f0ebee90.config'
+2026-11-23T13:29:46.1029628Z Cleaning up orphan processes

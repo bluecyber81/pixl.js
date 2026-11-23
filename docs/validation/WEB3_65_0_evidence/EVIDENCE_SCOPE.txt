@@ -1,0 +1,15 @@
+Web 3.65.0 – Nachweisumfang
+
+Die ursprünglichen lokalen Prüfdateien bleiben erhalten. CI_SUMMARY.json und die drei vollständigen Jobprotokolle belegen den tatsächlich erfolgreichen GitHub-Lauf 45184306115 auf a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4. Der unveränderte Web-Produktbaum lautet 17920de14a71fc2a07b00b644e88e6956bfe7d06. Die später ergänzten Metadaten werden nicht als erneut geprüfter Produktstand ausgegeben.
+
+Web: 2.270 bestandene von 2.273 Node-Fällen, keine Fehler; beide Distributionen 57/57. Unter Windows bestanden 24 von 26 Python-Fällen; zwei POSIX-Fälle wurden dort ausgelassen und im Linux-Lauf (26/26) bestanden. Die vier nativen PowerShell/Node-Fälle bestanden und decken die beiden auf Linux ausgelassenen Windows-Node-Fälle ab. Der optionale historische DE3.17/recovery575-Fixture-Test bleibt ausgelassen. Die Counts verschiedener Teilumfänge werden nicht addiert.
+
+PAGES_INITIAL_PUBLICATION_RECEIPT.json und PAGES_DELIVERY_MANIFEST.json bewahren den ursprünglichen Vorbereitungs-/Übertragungsstand. Ihre damals noch offenen Statusfelder werden durch PAGES_DEPLOYMENT.json, den tatsächlich erfolgreichen Lauf 45189684248 und die späteren HTTP-/UI-Belege abgeschlossen.
+
+HTTP_RESULTS.json enthält alle 323 ursprünglichen kanonischen GETs mit 29.576.556 Byte: überall HTTP 200 und passende Länge/SHA-256; keine Redirects, Retries, Cachebuster oder Fehler. HTTP_STRICT_VALIDATION.json prüft diese vorhandenen Records rein lesend. CHECKER_USED.py ist die unveränderte tatsächlich ausgeführte Prüfroutine; sie wurde für diese Metadatenübernahme nicht erneut ausgeführt. Ihre ursprünglichen Pfadannahmen gehören zum Laufkontext.
+
+LIVE_WEB_UI.json belegt neun gezielte Interaktionen auf der öffentlichen Webseite. demo_lcd.bin ist der tatsächlich abgeschlossene Browserdownload (50 Bilder, 5 FPS, 128 × 64, 51.216 Byte); die JPG-Datei ist das zugehörige öffentliche Testbild. Beide enthalten ausschließlich die erzeugte Demo, keine privaten Nutzerdateien. Die App675-Paketprüfung im Browser war erfolgreich; es wurde kein DFU-Gerät ausgewählt.
+
+Die portable ZIP wurde lokal und in CI entpackt und über den echten Controller gestartet, wiederverwendet und beendet. Der Live-HTTP-Hash stimmt mit dieser ZIP überein. Sie benötigt vorhandenes Python ab 3.8 und enthält keine installierbare EXE.
+
+Kein Gerätetest wird behauptet. Der Firmware-Teilumfang im Web-CI ersetzt weder die separate App675-Produktionsqualifikation noch die noch ausstehenden beiden vollständigen CIs auf dem kombinierten Main-Commit. Offen bleiben insbesondere echte LCD-/BLE-Übertragung, Player-Wiederholung und Bildzähler, Geräte-Codecs sowie Switch-2-Wecken.
